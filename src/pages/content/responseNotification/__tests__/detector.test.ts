@@ -101,4 +101,44 @@ describe('ResponseCompletionDetector', () => {
       }).type,
     ).toBe('notify');
   });
+
+  it('immediate notification path still deduplicates by response fingerprint', () => {
+    const detector = new ResponseCompletionDetector(1000);
+
+    detector.update({
+      conversationKey: '/app/background',
+      hasCompletedResponse: false,
+      isGenerating: true,
+      responseFingerprint: null,
+      now: 1000,
+    });
+
+    expect(
+      detector.notifyImmediately({
+        conversationKey: '/app/background',
+        hasCompletedResponse: true,
+        isGenerating: false,
+        responseFingerprint: '100:final answer',
+        now: 1200,
+      }).type,
+    ).toBe('notify');
+
+    detector.update({
+      conversationKey: '/app/background',
+      hasCompletedResponse: false,
+      isGenerating: true,
+      responseFingerprint: null,
+      now: 2000,
+    });
+
+    expect(
+      detector.notifyImmediately({
+        conversationKey: '/app/background',
+        hasCompletedResponse: true,
+        isGenerating: false,
+        responseFingerprint: '100:final answer',
+        now: 2200,
+      }).type,
+    ).toBe('none');
+  });
 });

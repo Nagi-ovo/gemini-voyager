@@ -30,6 +30,19 @@ export class ResponseCompletionDetector {
     this.candidateSince = 0;
   }
 
+  notifyImmediately(snapshot: ResponseCompletionSnapshot): ResponseCompletionDecision {
+    if (
+      !this.sawGeneration ||
+      snapshot.isGenerating ||
+      !snapshot.hasCompletedResponse ||
+      !snapshot.responseFingerprint
+    ) {
+      return { type: 'none' };
+    }
+
+    return this.notifyOnce(snapshot);
+  }
+
   update(snapshot: ResponseCompletionSnapshot): ResponseCompletionDecision {
     if (snapshot.isGenerating) {
       this.sawGeneration = true;
@@ -58,7 +71,14 @@ export class ResponseCompletionDetector {
       return { type: 'none' };
     }
 
-    const notificationKey = `${snapshot.conversationKey}|${snapshot.responseFingerprint}`;
+    return this.notifyOnce(snapshot);
+  }
+
+  private notifyOnce(snapshot: ResponseCompletionSnapshot): ResponseCompletionDecision {
+    const responseFingerprint = snapshot.responseFingerprint;
+    if (!responseFingerprint) return { type: 'none' };
+
+    const notificationKey = `${snapshot.conversationKey}|${responseFingerprint}`;
     if (this.notifiedKeys.has(notificationKey)) {
       return { type: 'none' };
     }
@@ -68,7 +88,7 @@ export class ResponseCompletionDetector {
     return {
       type: 'notify',
       conversationKey: snapshot.conversationKey,
-      responseFingerprint: snapshot.responseFingerprint,
+      responseFingerprint,
     };
   }
 }

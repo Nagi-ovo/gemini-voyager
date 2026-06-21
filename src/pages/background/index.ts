@@ -45,9 +45,14 @@ const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR = ': ';
 const RESPONSE_COMPLETE_NOTIFICATION_TITLE_MAX_LENGTH = 120;
 const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_MAX_LENGTH = 220;
 const RESPONSE_COMPLETE_NOTIFICATION_ICON = 'icon-128.png';
+const RESPONSE_COMPLETE_NOTIFICATION_ID_PREFIX = 'gv-response-complete-';
 const RESPONSE_COMPLETE_UNKNOWN_TAB_ID = 'unknown';
 
 const responseCompleteNotificationLastShown = new Map<string, number>();
+const responseCompleteNotificationTargets = new Map<
+  string,
+  { conversationUrl?: string; tabId?: number }
+>();
 const remoteAnnouncementService = startRemoteAnnouncementBackgroundService();
 
 // Gemini domains where the watermark fetch interceptor should run.
@@ -148,7 +153,12 @@ async function showResponseCompleteNotification(
   );
 
   try {
-    await browser.notifications.create(`gv-response-complete-${now}`, {
+    const notificationId = `${RESPONSE_COMPLETE_NOTIFICATION_ID_PREFIX}${sender.tab?.id ?? RESPONSE_COMPLETE_UNKNOWN_TAB_ID}-${now}`;
+    responseCompleteNotificationTargets.set(notificationId, {
+      conversationUrl,
+      tabId: sender.tab?.id,
+    });
+    await browser.notifications.create(notificationId, {
       type: 'basic',
       iconUrl: chrome.runtime.getURL(RESPONSE_COMPLETE_NOTIFICATION_ICON),
       title: conversationTitle
@@ -164,6 +174,46 @@ async function showResponseCompleteNotification(
     return false;
   }
 }
+
+function getResponseCompleteNotificationTabId(notificationId: string): number | undefined {
+  const match = new RegExp(`^${RESPONSE_COMPLETE_NOTIFICATION_ID_PREFIX}(\\d+)-`).exec(
+    notificationId,
+  );
+  if (!match) return undefined;
+  const tabId = Number(match[1]);
+  return Number.isFinite(tabId) ? tabId : undefined;
+}
+
+async function openResponseCompleteNotification(notificationId: string): Promise<void> {
+  const target = responseCompleteNotificationTargets.get(notificationId);
+  responseCompleteNotificationTargets.delete(notificationId);
+
+  try {
+    await browser.notifications.clear(notificationId);
+  } catch {}
+
+  const tabId = target?.tabId ?? getResponseCompleteNotificationTabId(notificationId);
+  if (typeof tabId === 'number') {
+    try {
+      const tab = await browser.tabs.update(tabId, { active: true });
+      if (typeof tab.windowId === 'number') {
+        await browser.windows.update(tab.windowId, { focused: true });
+      }
+      return;
+    } catch {
+      // Fall through to opening the saved URL if the tab was closed.
+    }
+  }
+
+  if (target?.conversationUrl) {
+    await browser.tabs.create({ url: target.conversationUrl });
+  }
+}
+
+chrome.notifications?.onClicked?.addListener?.((notificationId) => {
+  if (!notificationId.startsWith(RESPONSE_COMPLETE_NOTIFICATION_ID_PREFIX)) return;
+  void openResponseCompleteNotification(notificationId);
+});
 
 function isStarredMessagesData(value: unknown): value is StarredMessagesData {
   if (typeof value !== 'object' || value === null) return false;

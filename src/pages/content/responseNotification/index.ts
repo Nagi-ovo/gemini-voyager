@@ -92,7 +92,6 @@ let hasDeferredForegroundCompletion = false;
 let toastHideTimer: number | null = null;
 let latestCompletedResponse: HTMLElement | null = null;
 const foregroundToastArmedConversationKeys = new Set<string>();
-const suppressedInitialForegroundToastConversationKeys = new Set<string>();
 let storageListener:
   | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
   | null = null;
@@ -124,22 +123,19 @@ function isPromptInteractionTarget(target: EventTarget | null): boolean {
   return !!target.closest(PROMPT_SELECTORS);
 }
 
-function markForegroundToastArmed(): void {
+function markCompletionNotificationArmed(): void {
   foregroundToastArmedConversationKeys.add(getConversationKey());
 }
 
-function shouldSuppressInitialForegroundToast(): boolean {
+function shouldSuppressWithoutPromptInteraction(): boolean {
   const conversationKey = getConversationKey();
-  if (foregroundToastArmedConversationKeys.has(conversationKey)) return false;
-  if (suppressedInitialForegroundToastConversationKeys.has(conversationKey)) return false;
-
-  suppressedInitialForegroundToastConversationKeys.add(conversationKey);
+  if (foregroundToastArmedConversationKeys.delete(conversationKey)) return false;
   return true;
 }
 
 function handlePromptInteraction(event: Event): void {
   if (!isPromptInteractionTarget(event.target)) return;
-  markForegroundToastArmed();
+  markCompletionNotificationArmed();
 }
 
 function getPromptContainerRect(): DOMRect | null {
@@ -483,10 +479,28 @@ function flushDeferredForegroundCompletion(): void {
 }
 
 async function notifyOrQueueForegroundFallback(): Promise<void> {
+  if (shouldSuppressWithoutPromptInteraction()) return;
+
   const notified = await sendCompletionNotification();
   if (!notified) {
     queueDeferredForegroundCompletion();
   }
+}
+
+async function notifyLatestCompletedResponseNow(): Promise<void> {
+  const latestResponse = getLatestAssistantResponse();
+  const decision = detector.notifyImmediately({
+    conversationKey: getConversationKey(),
+    hasCompletedResponse: !!latestResponse && hasCompletionActions(latestResponse),
+    isGenerating: hasGeneratingIndicator(),
+    responseFingerprint: latestResponse ? getResponseFingerprint(latestResponse) : null,
+    now: Date.now(),
+  });
+
+  if (decision.type !== 'notify') return;
+
+  latestCompletedResponse = latestResponse;
+  await notifyOrQueueForegroundFallback();
 }
 
 function injectPageObserver(): void {
@@ -546,8 +560,7 @@ function handlePageObserverMessage(event: MessageEvent): void {
     return;
   }
 
-  void notifyOrQueueForegroundFallback();
-  detector.reset();
+  void notifyLatestCompletedResponseNow();
 }
 
 function evaluate(): void {
@@ -565,7 +578,11 @@ function evaluate(): void {
 
   if (decision.type === 'notify') {
     latestCompletedResponse = latestResponse;
-    if (shouldSuppressInitialForegroundToast()) return;
+    if (shouldNotifyForBackgroundCompletion()) {
+      void notifyOrQueueForegroundFallback();
+      return;
+    }
+    if (shouldSuppressWithoutPromptInteraction()) return;
     if (shouldShowForegroundCompletionToast(latestResponse)) {
       showForegroundCompletionToast();
     }
