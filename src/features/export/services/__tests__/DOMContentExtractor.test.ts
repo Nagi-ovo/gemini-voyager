@@ -246,7 +246,9 @@ describe('DOMContentExtractor', () => {
 
       expect(extracted.html).toContain('gv-canvas-export-section');
       expect(extracted.html).toContain('<h3>📄 Canvas Document: Doc Title</h3>');
-      expect(extracted.html).toContain('<pre style="white-space: pre-wrap;"># Heading 1\nThis is canvas content.</pre>');
+      expect(extracted.html).toContain(
+        '<pre style="white-space: pre-wrap;"># Heading 1\nThis is canvas content.</pre>',
+      );
     });
   });
 });

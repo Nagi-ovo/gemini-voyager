@@ -327,7 +327,9 @@ export class DOMContentExtractor {
         const headingText = headingEl?.textContent || 'Canvas Document';
         const contentText = contentEl?.textContent || '';
 
-        htmlParts.push(`<div class="gv-canvas-export-section"><h3>${this.escapeHtml(headingText)}</h3><pre style="white-space: pre-wrap;">${this.escapeHtml(contentText)}</pre></div>`);
+        htmlParts.push(
+          `<div class="gv-canvas-export-section"><h3>${this.escapeHtml(headingText)}</h3><pre style="white-space: pre-wrap;">${this.escapeHtml(contentText)}</pre></div>`,
+        );
         textParts.push(`\n### ${headingText}\n\n${contentText}\n`);
         continue;
       }

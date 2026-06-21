@@ -8,17 +8,15 @@
  *   - Document Canvas: content in <immersive-editor> .ProseMirror (HTML → Markdown)
  *   - Code/App Canvas: content in <code-immersive-panel> xap-code-editor .view-lines (code lines)
  */
-
-import { convertCanvasDomToMarkdown } from '../canvasExport/markdownConverter';
 import type { CanvasDoc } from '../../../features/export/types/export';
+import { convertCanvasDomToMarkdown } from '../canvasExport/markdownConverter';
 
 /**
  * Check whether any Canvas panel is open in the document.
  */
 export function isAnyCanvasOpen(): boolean {
   return !!(
-    document.querySelector('immersive-editor') ||
-    document.querySelector('code-immersive-panel')
+    document.querySelector('immersive-editor') || document.querySelector('code-immersive-panel')
   );
 }
 
@@ -84,9 +82,7 @@ function findCodeImmersivePanel(): HTMLElement | null {
  * Each .view-line holds one line of code; join them with \n to preserve line breaks.
  */
 function extractCodeContent(): string | null {
-  const linesContainer = document.querySelector<HTMLElement>(
-    'code-immersive-panel .view-lines',
-  );
+  const linesContainer = document.querySelector<HTMLElement>('code-immersive-panel .view-lines');
   if (!linesContainer) return null;
 
   const lines = linesContainer.querySelectorAll<HTMLElement>('.view-line');
@@ -113,9 +109,7 @@ function findCodeCanvasTitle(panel: HTMLElement): string {
  * Detect language from Monaco editor's data-mode-id attribute.
  */
 function detectCodeLanguage(): string {
-  const editor = document.querySelector<HTMLElement>(
-    'code-immersive-panel .xap-monaco-container',
-  );
+  const editor = document.querySelector<HTMLElement>('code-immersive-panel .xap-monaco-container');
   const lang = editor?.getAttribute('data-mode-id') || '';
   return lang;
 }
@@ -132,9 +126,7 @@ function extractCodeCanvasDocs(): CanvasDoc[] {
   const title = rawTitle || (lang ? `${lang} Code` : 'Code Canvas');
 
   // Prepend language annotation as first line so formatted output shows it
-  const annotatedContent = lang
-    ? `// ${lang.toUpperCase()}\n${content}`
-    : content;
+  const annotatedContent = lang ? `// ${lang.toUpperCase()}\n${content}` : content;
 
   return [{ title, content: annotatedContent }];
 }

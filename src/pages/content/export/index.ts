@@ -21,13 +21,14 @@ import {
   type ExportFormat,
 } from '../../../features/export/types/export';
 import type {
+  CanvasDoc,
   ConversationMetadata,
   ChatTurn as ExportChatTurn,
-  CanvasDoc,
 } from '../../../features/export/types/export';
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
 import { resolveExportErrorMessage } from '../../../features/export/ui/ExportErrorMessage';
 import { showExportToast } from '../../../features/export/ui/ExportToast';
+import { assistantHasCanvasDoc, extractAllCanvasDocs, isAnyCanvasOpen } from './canvasDocExtractor';
 import { filterOutDeepResearchImmersiveNodes, resolveConversationRoot } from './conversationDom';
 import {
   getConversationMenuContext,
@@ -39,7 +40,6 @@ import { resolveExportLogoAnchor } from './exportLogoAnchor';
 import { mountPersistentExportToolbar } from './persistentExportToolbar';
 import { injectResponseActionCopyImageButtons } from './responseActionImageButton';
 import { showResponseActionCopyImageMenu } from './responseActionImageMenu';
-import { assistantHasCanvasDoc, extractAllCanvasDocs, isAnyCanvasOpen } from './canvasDocExtractor';
 import { copyImageBlobToClipboard, downloadImageBlob } from './responseImageCopy';
 import { groupSelectedMessagesByTurn, resolveInitialSelectedMessageIds } from './selectionUtils';
 import { resolveSidebarConversationTarget } from './sidebarConversationTarget';
@@ -265,7 +265,7 @@ function dedupeByTextAndOffset(elements: HTMLElement[], firstTurnOffset: number)
 
   for (let idx = 0; idx < elements.length; idx++) {
     const el = elements[idx];
-    const offsetFromStart = offsetsAreZero ? idx : ((el.offsetTop || 0) - firstTurnOffset);
+    const offsetFromStart = offsetsAreZero ? idx : (el.offsetTop || 0) - firstTurnOffset;
     const key = `${normalizeText(el.textContent || '')}|${Math.round(offsetFromStart)}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -394,7 +394,8 @@ function collectChatPairs(): ChatTurn[] {
 
   const starredSet = readStarredSet();
   const pairs: ChatTurn[] = [];
-  const offsetsAreZero = userOffsets.every((o) => o === 0) && assistantOffsets.every((o) => o === 0);
+  const offsetsAreZero =
+    userOffsets.every((o) => o === 0) && assistantOffsets.every((o) => o === 0);
 
   for (let i = 0; i < users.length; i++) {
     const uEl = users[i] as HTMLElement;
@@ -421,11 +422,15 @@ function collectChatPairs(): ChatTurn[] {
       // An assistant belongs to this user if it is after this user and before the next user in the DOM
       for (let k = 0; k < assistants.length; k++) {
         const aElCandidate = assistants[k] as HTMLElement;
-        const isAfterUser = !!(uEl.compareDocumentPosition(aElCandidate) & Node.DOCUMENT_POSITION_FOLLOWING);
+        const isAfterUser = !!(
+          uEl.compareDocumentPosition(aElCandidate) & Node.DOCUMENT_POSITION_FOLLOWING
+        );
         let isBeforeNextUser = true;
         if (i + 1 < users.length) {
           const nextUser = users[i + 1] as HTMLElement;
-          isBeforeNextUser = !!(aElCandidate.compareDocumentPosition(nextUser) & Node.DOCUMENT_POSITION_FOLLOWING);
+          isBeforeNextUser = !!(
+            aElCandidate.compareDocumentPosition(nextUser) & Node.DOCUMENT_POSITION_FOLLOWING
+          );
         }
         if (isAfterUser && isBeforeNextUser) {
           bestIdx = k;
@@ -489,9 +494,13 @@ function collectChatPairs(): ChatTurn[] {
         finalAssistantEl &&
         !finalAssistantEl.querySelector('.gv-canvas-export-section')
       ) {
-        const canvasDocs = (cachedCanvasDocs && cachedCanvasDocs.length > 0) ? cachedCanvasDocs : extractAllCanvasDocs();
+        const canvasDocs =
+          cachedCanvasDocs && cachedCanvasDocs.length > 0
+            ? cachedCanvasDocs
+            : extractAllCanvasDocs();
         if (canvasDocs.length > 0) {
-          const targetContainer = finalAssistantEl.querySelector('.markdown, .markdown-main-panel') || finalAssistantEl;
+          const targetContainer =
+            finalAssistantEl.querySelector('.markdown, .markdown-main-panel') || finalAssistantEl;
           for (const doc of canvasDocs) {
             const section = document.createElement('div');
             section.className = 'gv-canvas-export-section';
