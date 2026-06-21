@@ -4,6 +4,16 @@
  */
 
 /**
+ * Canvas document content extracted from immersive-editor
+ */
+export interface CanvasDoc {
+  /** Title of the Canvas document */
+  title: string;
+  /** Full markdown content of the Canvas document */
+  content: string;
+}
+
+/**
  * Chat turn representing a user-assistant exchange
  */
 export interface ChatTurn {

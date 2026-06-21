@@ -23,6 +23,7 @@ import {
 import type {
   ConversationMetadata,
   ChatTurn as ExportChatTurn,
+  CanvasDoc,
 } from '../../../features/export/types/export';
 import { ExportDialog } from '../../../features/export/ui/ExportDialog';
 import { resolveExportErrorMessage } from '../../../features/export/ui/ExportErrorMessage';
@@ -38,6 +39,7 @@ import { resolveExportLogoAnchor } from './exportLogoAnchor';
 import { mountPersistentExportToolbar } from './persistentExportToolbar';
 import { injectResponseActionCopyImageButtons } from './responseActionImageButton';
 import { showResponseActionCopyImageMenu } from './responseActionImageMenu';
+import { assistantHasCanvasDoc, extractAllCanvasDocs, isAnyCanvasOpen } from './canvasDocExtractor';
 import { copyImageBlobToClipboard, downloadImageBlob } from './responseImageCopy';
 import { groupSelectedMessagesByTurn, resolveInitialSelectedMessageIds } from './selectionUtils';
 import { resolveSidebarConversationTarget } from './sidebarConversationTarget';
@@ -66,6 +68,7 @@ const EXPORT_PRELOAD_WAIT_OPTIONS = {
 const FINAL_EXPORT_PREPARE_DELAY_MS = 120;
 let conversationMenuObserver: MutationObserver | null = null;
 let responseActionObserver: MutationObserver | null = null;
+let cachedCanvasDocs: CanvasDoc[] | null = null;
 
 interface PendingExportState {
   format: ExportFormat;
@@ -258,8 +261,11 @@ function getAssistantSelectors(): string[] {
 function dedupeByTextAndOffset(elements: HTMLElement[], firstTurnOffset: number): HTMLElement[] {
   const seen = new Set<string>();
   const out: HTMLElement[] = [];
-  for (const el of elements) {
-    const offsetFromStart = (el.offsetTop || 0) - firstTurnOffset;
+  const offsetsAreZero = elements.every((el) => (el.offsetTop || 0) === 0);
+
+  for (let idx = 0; idx < elements.length; idx++) {
+    const el = elements[idx];
+    const offsetFromStart = offsetsAreZero ? idx : ((el.offsetTop || 0) - firstTurnOffset);
     const key = `${normalizeText(el.textContent || '')}|${Math.round(offsetFromStart)}`;
     if (seen.has(key)) continue;
     seen.add(key);
@@ -388,6 +394,8 @@ function collectChatPairs(): ChatTurn[] {
 
   const starredSet = readStarredSet();
   const pairs: ChatTurn[] = [];
+  const offsetsAreZero = userOffsets.every((o) => o === 0) && assistantOffsets.every((o) => o === 0);
+
   for (let i = 0; i < users.length; i++) {
     const uEl = users[i] as HTMLElement;
     const uText = normalizeText(uEl.innerText || uEl.textContent || '');
@@ -396,16 +404,36 @@ function collectChatPairs(): ChatTurn[] {
     let aText = '';
     let aEl: HTMLElement | null = null;
     let bestIdx = -1;
-    let bestOff = Number.POSITIVE_INFINITY;
-    for (let k = 0; k < assistants.length; k++) {
-      const off = assistantOffsets[k];
-      if (off >= start && off < end) {
-        if (off < bestOff) {
-          bestOff = off;
+
+    if (!offsetsAreZero) {
+      let bestOff = Number.POSITIVE_INFINITY;
+      for (let k = 0; k < assistants.length; k++) {
+        const off = assistantOffsets[k];
+        if (off >= start && off < end) {
+          if (off < bestOff) {
+            bestOff = off;
+            bestIdx = k;
+          }
+        }
+      }
+    } else {
+      // Fallback: Pair by DOM tree document position when offsets are zero (e.g. when Canvas is open)
+      // An assistant belongs to this user if it is after this user and before the next user in the DOM
+      for (let k = 0; k < assistants.length; k++) {
+        const aElCandidate = assistants[k] as HTMLElement;
+        const isAfterUser = !!(uEl.compareDocumentPosition(aElCandidate) & Node.DOCUMENT_POSITION_FOLLOWING);
+        let isBeforeNextUser = true;
+        if (i + 1 < users.length) {
+          const nextUser = users[i + 1] as HTMLElement;
+          isBeforeNextUser = !!(aElCandidate.compareDocumentPosition(nextUser) & Node.DOCUMENT_POSITION_FOLLOWING);
+        }
+        if (isAfterUser && isBeforeNextUser) {
           bestIdx = k;
+          break;
         }
       }
     }
+
     if (bestIdx >= 0) {
       aEl = assistants[bestIdx] as HTMLElement;
       aText = extractAssistantText(aEl);
@@ -450,6 +478,34 @@ function collectChatPairs(): ChatTurn[] {
         assistantElement: finalAssistantEl,
         assistantHostElement: aEl || undefined,
       });
+      // Canvas document content injection: if this assistant response references
+      // a Canvas doc and the immersive-editor is open, append full Canvas content
+      // directly into the DOM element so DOMContentExtractor can pick it up.
+      // Guard against duplicate injection (collectChatPairs may be called multiple times).
+      if (
+        aEl &&
+        assistantHasCanvasDoc(aEl) &&
+        (isAnyCanvasOpen() || (cachedCanvasDocs && cachedCanvasDocs.length > 0)) &&
+        finalAssistantEl &&
+        !finalAssistantEl.querySelector('.gv-canvas-export-section')
+      ) {
+        const canvasDocs = (cachedCanvasDocs && cachedCanvasDocs.length > 0) ? cachedCanvasDocs : extractAllCanvasDocs();
+        if (canvasDocs.length > 0) {
+          const targetContainer = finalAssistantEl.querySelector('.markdown, .markdown-main-panel') || finalAssistantEl;
+          for (const doc of canvasDocs) {
+            const section = document.createElement('div');
+            section.className = 'gv-canvas-export-section';
+            const heading = document.createElement('h3');
+            heading.textContent = `📄 Canvas Document: ${doc.title}`;
+            const content = document.createElement('div');
+            content.className = 'gv-canvas-content';
+            content.textContent = doc.content;
+            section.appendChild(heading);
+            section.appendChild(content);
+            targetContainer.appendChild(section);
+          }
+        }
+      }
     }
   }
   return pairs;
@@ -1188,6 +1244,12 @@ async function executeExportSequence(
   initialSelectedMessageId?: string,
   imageWidth?: number,
 ): Promise<void> {
+  // Cache Canvas documents at the very start of the export sequence,
+  // before we click the top node or cause any DOM updates/scrolling.
+  if (!paramState && isAnyCanvasOpen()) {
+    cachedCanvasDocs = extractAllCanvasDocs();
+  }
+
   const state: PendingExportState = paramState || {
     format,
     fontSize,
@@ -1318,6 +1380,7 @@ async function executeExportSequenceWithProgress(
     );
   } finally {
     hideProgress();
+    cachedCanvasDocs = null;
   }
 }
 
