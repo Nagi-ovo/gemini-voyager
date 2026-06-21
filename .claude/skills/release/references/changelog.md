@@ -6,8 +6,9 @@
 - Section headers per locale
 - Commit → entry filtering rules
 - Style guide
+- Closing gift line (classic-anime quote) — required
 - Template skeleton (copy-ready)
-- Translation approach
+- Authoring order — Chinese first
 - Reality check before saving
 
 ---
@@ -61,6 +62,32 @@ Rule of thumb: if a user couldn't see or feel the change, skip it.
 - Link to docs sparingly: `[→ Docs](/guide/{slug})` only when the doc genuinely helps. Don't link to a stub.
 - Translations should feel native. Arabic is RTL — don't worry about it in the raw file (the viewer handles direction), just get the text right.
 
+## Closing gift line (classic-anime quote) — required
+
+Every release ends each locale with a small gift: a thematic break, then one blockquoted, italic line — **a quote from a classic anime**. It's a present for the reader, not a changelog entry. (Introduced in v1.5.1, which used a 苏轼 couplet; from v1.5.2 onward the standard is a classic-anime line.)
+
+Format — after the last `### Fixes` bullet, in **every** locale:
+
+```markdown
+---
+
+> *"{the quote}" — {Character}, 《{Anime Title}》*
+```
+
+**Source it with WebSearch every release** — don't pull from memory (you'll misquote or repeat). Each release:
+
+1. **WebSearch** for a fitting line, e.g. `classic anime quotes about hope / kindness / moving forward`, or search within a specific classic series. Skim a few results.
+2. **Verify it's real**: confirm the wording, the character, and the anime via the search results — not an aggregator's paraphrase. Get the attribution right.
+3. **Confirm it's classic & pre-2026**: the anime must have aired/released **before 2026** and be genuinely well-known (e.g. *Naruto, One Piece, Fullmetal Alchemist, Mushishi, Violet Evergarden, Vinland Saga, Frieren, Your Name*…). No obscure or post-2025 titles.
+4. **Confirm it's fresh**: `grep -rh '^>' src/pages/content/changelog/notes/` and make sure neither the line nor the anime has shipped in a prior release.
+
+Rules:
+- **Tone — gentle, warm, and quietly hopeful; it should land like a soft exhale.** Pick a line that leaves the reader a little lighter — kind, tender, a touch beautiful. Steer firmly clear of the preachy and the motivational: no life lessons, no grand "work hard / never give up" declarations, no moralizing. Calm over loud, tender over triumphant. Journey/voyage themes suit the product name especially well.
+- **One quote per release, rendered natively in all 10 locales.** Use the line's *official/known* translation per language where one exists; otherwise translate naturally (never machine-literal). Keep the character + 《title》 attribution in each.
+- Renders fine in the viewer: `blockquote`, `em`, and `hr` are on the sanitizer allow-list in `src/pages/content/changelog/index.ts` — don't introduce other raw HTML.
+- The line sits at the *bottom* of each locale's body (the notes file can't touch the popup's version badge; this is the gift "for this version").
+- Optional, rare: this line may *softly* point readers to another of the maintainer's projects — same gentle, non-ad register (a tasteful nudge, never a banner). Not every release.
+
 ## Template skeleton
 
 ```markdown
@@ -75,6 +102,10 @@ Rule of thumb: if a user couldn't see or feel the change, skip it.
 
 - **{Title}**: {Description.}
 
+---
+
+> *"{quote}" — {Character}, 《{Anime Title}》*
+
 <!-- lang:zh -->
 
 ### 新功能
@@ -85,6 +116,10 @@ Rule of thumb: if a user couldn't see or feel the change, skip it.
 ### 修复
 
 - **{中文标题}**：{中文描述。}
+
+---
+
+> *"{台词}" —— {角色}，《{动漫名}》*
 
 <!-- lang:zh_TW -->
 
@@ -135,15 +170,19 @@ Rule of thumb: if a user couldn't see or feel the change, skip it.
 - ...
 ```
 
-Fill every locale — all 10 are non-negotiable. Writing English first and translating from it is the most reliable workflow.
+Fill every locale — all 10 are non-negotiable, including the closing gift line. Write **Chinese first**, render English from it, then the other 8 from English (see *Authoring order* below).
 
-## Translation approach
+## Authoring order — Chinese first
 
-- Write the English version first, polishing the phrasing until it's tight and product-voiced.
-- Translate to Chinese (`zh`) next — the second most important language for this project. Keep titles crisp; long Chinese phrasings ruin the list layout.
-- For the remaining 8 locales, translate from the English. Maintain the same structure (bullets, bold titles, optional-feature markers). Use romanization conventions and punctuation native to each language (e.g., `：` in Chinese, `：` in Japanese, `:` in others).
-- Arabic: RTL concerns are handled by the viewer — write natural RTL text; don't reorder for LTR display. Double-check that punctuation marks (commas, colons) are Arabic-style where applicable.
-- Read prior releases in the same locale before writing — there's an established voice per language.
+**Write and polish Chinese (`zh`) first.** It's the project's primary voice and the maintainer's native language — the notes read most naturally when zh is the *source*, not a back-translation. Then:
+
+- Render **English (`en`)** from the polished zh. `en` must always be complete: the in-product viewer falls back to `en` for any locale it can't find, so it stays the safety net even though it's no longer the source.
+- Translate the remaining **8 locales from the English** (`en` is a cleaner pivot than zh for non-CJK languages). Keep the same structure — bullets, bold titles, optional-feature markers, and the closing gift line (see below). Use punctuation native to each language (`：` in Chinese/Japanese, `:` in others).
+- Keep titles crisp in every language; long phrasings (especially zh) wreck the single-line list layout.
+- Arabic: RTL is handled by the viewer — write natural RTL text, don't reorder for LTR display; use Arabic-style punctuation.
+- Read the prior release in the same locale before writing — there's an established voice per language.
+
+**Do not reorder the file.** The `<!-- lang:xx -->` section order stays `en → zh → zh_TW → …` (the viewer parses in that order and `en` is the fallback). Only the *writing* order is zh-first — the sections on disk keep en first.
 
 ## Reality check before saving
 
@@ -152,3 +191,4 @@ Fill every locale — all 10 are non-negotiable. Writing English first and trans
 - No locale is missing a section that another locale has.
 - Optional-feature markers are present in all 10 where they appear in English.
 - No commit-speak leaked in (avoid things like "implement X" or "refactor Y to be more Z" — those are internal descriptions).
+- The closing gift line is present in all 10 locales, is a **real, verified classic-anime quote** (sourced via WebSearch this release), is **new vs. every prior release**, and fits the gentle/warm/unpreachy tone.

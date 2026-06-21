@@ -3,7 +3,7 @@ name: release
 description: Cut a new gemini-voyager release — open-issue triage, preflight checks, version bump, 10-locale changelog, commit, tag, push, curated GitHub release body, Chrome/Firefox artifacts, optional legacy Edge zip, and Safari DMG. Use whenever the user says "发版", "release", "bump", "cut a release", "ship vX.Y.Z", or otherwise signals shipping a new version. Also use when the user wants just an Edge compatibility zip or Safari DMG for an existing release.
 user-invocable: true
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Release Workflow
@@ -11,6 +11,8 @@ metadata:
 ## Overview
 
 Copy this checklist into your response and check items off as you progress. Each step gates the next — don't skip ahead.
+
+**Two places to parallelize for wall-clock (the gates still hold; only the *work* overlaps):** ① In Step 1, run `lint` first (it mutates source) then `typecheck` + `test` + `build:all` concurrently. ② After the Step 5 push, start Step 8's Safari build + `xcodebuild archive` in parallel with the ~5-min CI wait — the archive depends on none of the GitHub release, only the final upload. See the ⚡ notes inline.
 
 ```
 Release Progress:
@@ -40,16 +42,17 @@ Do these before touching the version. Bail out if any fails and surface the fail
 
 Summarize candidates to the user in a short table (`#`, title, status judgment, block/not-block). Ask whether to proceed. Do not silently skip this — a release without issue awareness tends to produce follow-up patch releases.
 
-**Verification commands** — run all of these; all must pass:
+**Verification commands** — all must pass. ⚡ **`lint` runs `eslint . --fix`, so it mutates source — run it FIRST, alone.** Then `typecheck`, `test`, and `build:all` only *read* source (the builds just write `dist_*`), so they're independent and should run **concurrently** — one message, three parallel Bash calls:
 
 ```bash
+bun run lint          # FIRST, alone — eslint --fix mutates source; inspect the diff it leaves
+# then these three in parallel (independent — read source / write dist_*):
 bun run typecheck
-bun run lint
 bun run test
-bun run build:all   # chrome + firefox + safari bundles (not the Safari DMG)
+bun run build:all     # chrome + firefox + safari bundles (not the Safari DMG)
 ```
 
-`build:all` is cheap and catches broken per-browser Vite configs. If the user is in a hurry and explicitly skips, note it and move on, but call out that the Safari bundle wasn't verified.
+`build:all` is itself serial (`build:chrome && build:firefox && build:safari`) — three independent Vite builds with separate output dirs; run the three `build:*` scripts concurrently if you want it faster still. `build:all` is cheap and catches broken per-browser Vite configs. If the user is in a hurry and explicitly skips, note it and call out that the Safari bundle wasn't verified.
 
 ## Step 2 — Version bump
 
@@ -67,7 +70,11 @@ grep -E '"version"' package.json manifest.json manifest.dev.json
 
 ## Step 3 — Changelog (required, all 10 locales)
 
-Write `src/pages/content/changelog/notes/{VERSION}.md` — shown to end users in-product. See **references/changelog.md** for the 10-locale template, per-language section headers, commit-filtering rules, and translation style guide.
+Write `src/pages/content/changelog/notes/{VERSION}.md` — shown to end users in-product. See **references/changelog.md** for the 10-locale template, per-language section headers, commit-filtering rules, and style guide.
+
+Two things that are easy to miss (full rules in the reference):
+- **Write Chinese (`zh`) first**, then render English from it, then the other 8 from English. `en` must still be complete (it's the viewer's fallback locale). Don't reorder the on-disk `<!-- lang:xx -->` sections — they stay en-first.
+- **Close every locale with a gift line: a real classic-anime quote (pre-2026), sourced via WebSearch this release** — gentle/warm/unpreachy, fresh vs. all prior releases. Format: `---` then `> *"{quote}" — {Character}, 《{Anime}》*`.
 
 ## Step 4 — Commit + tag
 
@@ -100,6 +107,8 @@ gh run list --workflow release.yml --limit 3
 ```
 
 If it fails, investigate — common causes: lint failing in CI (not locally because of cache), missing required secrets for Firefox signing.
+
+> ⚡ **Don't idle during the ~5–6 min CI build.** The Safari archive (Step 8) depends on **none** of the GitHub release — only the final `gh release upload`. So the moment the tag is pushed: start Step 8's `ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari` + `xcodebuild archive` **in the background**, and curate the release body (Step 6) while both CI and the archive run. Converge at the end — upload the Safari DMG once CI has created the release. This collapses the two ~5-min waits (CI + archive) into one. (Skip this overlap only if Xcode isn't available or the user deferred Safari.)
 
 ## Step 6 — Curated GitHub release body (required every release)
 
@@ -155,6 +164,8 @@ open https://partner.microsoft.com/en-us/dashboard/microsoftedge/overview
 ## Step 8 — Safari DMG sub-flow
 
 Safari gets its own asset (a signed DMG) because Safari extensions ship as native apps, not webstore uploads. This step requires **full Xcode.app** — `xcrun safari-web-extension-converter` and `xcodebuild archive` both fail with only Command Line Tools.
+
+> ⚡ **Start this right after the Step 5 push** — don't wait for Step 6. The Safari build + archive overlaps the CI build (see the ⚡ note in Step 5). Run `xcodebuild archive` in the background so you can curate the release body meanwhile; only the final `gh release upload` needs the release to exist.
 
 **First check whether Xcode is available:**
 
