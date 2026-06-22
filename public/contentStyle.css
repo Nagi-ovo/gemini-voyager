@@ -163,7 +163,8 @@
   top: 60px;
   right: 15px;
   width: 24px;
-  height: calc(100vh - 100px);
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 128px);
+  height: auto;
   z-index: 2147483646;
   display: flex;
   flex-direction: column;
@@ -275,11 +276,6 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
 
 .timeline-dot:hover::after {
   transform: translate(-50%, -50%) scale(1.15);
-}
-
-.gemini-timeline-bar[data-gv-claude-timeline='true'] {
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 128px);
-  height: auto;
 }
 
 .gemini-timeline-bar[data-gv-claude-timeline='true'] .timeline-dot:hover::after {

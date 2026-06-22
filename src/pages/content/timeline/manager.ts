@@ -134,6 +134,7 @@ export class TimelineManager {
   private pendingActiveId: string | null = null;
   private activeChangeTimer: number | null = null;
   private navigationCommitTimer: number | null = null;
+  private navigationActiveLockUntil = 0;
   private readonly tooltipShowDelay = 250;
   private tooltipHideDelay = 100;
   private scrollMode: 'jump' | 'flow' = 'flow';
@@ -2170,6 +2171,12 @@ export class TimelineManager {
       this.navigationCommitTimer = null;
       if (!this.markers.some((marker) => marker.id === targetId)) return;
 
+      if (this.activeChangeTimer) {
+        clearTimeout(this.activeChangeTimer);
+        this.activeChangeTimer = null;
+        this.pendingActiveId = null;
+      }
+      this.navigationActiveLockUntil = Date.now() + 900;
       this.activeTurnId = targetId;
       this.updateActiveDotUI();
       this.scheduleScrollSync();
@@ -2568,6 +2575,7 @@ export class TimelineManager {
 
   private computeActiveByScroll(): void {
     if (this.isScrolling || !this.scrollContainer || this.markers.length === 0) return;
+    if (Date.now() < this.navigationActiveLockUntil) return;
     const scrollTop = this.scrollContainer.scrollTop;
     const ref = scrollTop + this.scrollContainer.clientHeight * 0.45;
     let activeId = this.markers[0].id;
@@ -3854,6 +3862,7 @@ export class TimelineManager {
       this.smoothScrollTo(targetMarker.element, 0);
     }
 
+    this.navigationActiveLockUntil = Date.now() + 900;
     this.activeTurnId = targetMarker.id;
     this.updateActiveDotUI();
   }

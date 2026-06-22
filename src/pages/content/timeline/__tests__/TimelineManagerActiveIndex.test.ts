@@ -62,4 +62,41 @@ describe('TimelineManager active marker', () => {
     expect(internal.activeTurnId).toBe('m1');
     rectSpies.forEach((spy) => expect(spy).not.toHaveBeenCalled());
   });
+
+  it('keeps the navigated marker active during the post-scroll lock', () => {
+    const manager = new TimelineManager();
+
+    const scrollContainer = document.createElement('div');
+    Object.defineProperty(scrollContainer, 'clientHeight', { value: 400, configurable: true });
+    scrollContainer.scrollTop = 0;
+
+    const markers = ['m0', 'm1', 'm2'].map((id) => ({
+      id,
+      element: document.createElement('div'),
+      summary: '',
+      n: 0,
+      baseN: 0,
+      dotElement: null,
+      starred: false,
+    }));
+
+    const internal = manager as unknown as {
+      scrollContainer: HTMLElement | null;
+      markers: typeof markers;
+      markerTops: number[];
+      activeTurnId: string | null;
+      navigationActiveLockUntil: number;
+      computeActiveByScroll: () => void;
+    };
+
+    internal.scrollContainer = scrollContainer;
+    internal.markers = markers;
+    internal.markerTops = [0, 100, 200];
+    internal.activeTurnId = 'm0';
+    internal.navigationActiveLockUntil = Date.now() + 900;
+
+    internal.computeActiveByScroll();
+
+    expect(internal.activeTurnId).toBe('m0');
+  });
 });
