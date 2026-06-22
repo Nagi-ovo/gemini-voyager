@@ -166,6 +166,9 @@ describe('Claude timeline', () => {
 
     const tooltip = document.querySelector<HTMLElement>('#claude-timeline-tooltip')!;
     expect(tooltip.textContent).toBe('hover preview text');
+    expect(tooltip.querySelector('.claude-timeline-tooltip-text')?.textContent).toBe(
+      'hover preview text',
+    );
     expect(tooltip.classList.contains('visible')).toBe(true);
 
     dot.dispatchEvent(new PointerEvent('pointerleave', { bubbles: true }));

@@ -186,6 +186,9 @@ class ClaudeTimeline {
       this.tooltip.id = 'claude-timeline-tooltip';
       this.tooltip.className = 'timeline-tooltip';
       this.tooltip.setAttribute('aria-hidden', 'true');
+      const text = document.createElement('div');
+      text.className = 'claude-timeline-tooltip-text';
+      this.tooltip.appendChild(text);
       document.body.appendChild(this.tooltip);
     }
     if (!this.previewPanel) {
@@ -369,7 +372,7 @@ class ClaudeTimeline {
     const marker = this.markers.find((item) => item.id === dot.dataset.targetTurnId);
     if (!marker?.summary) return;
 
-    this.tooltip.textContent = `${marker.starred ? '★ ' : ''}${marker.summary}`;
+    this.getTooltipTextElement().textContent = `${marker.starred ? '★ ' : ''}${marker.summary}`;
     this.tooltip.setAttribute('dir', 'auto');
     this.tooltip.setAttribute('aria-hidden', 'false');
     this.tooltip.style.width = 'min(288px, calc(100vw - 32px))';
@@ -395,6 +398,10 @@ class ClaudeTimeline {
     this.tooltipTimer = null;
     this.tooltip?.classList.remove('visible');
     this.tooltip?.setAttribute('aria-hidden', 'true');
+  }
+
+  private getTooltipTextElement(): HTMLElement {
+    return (this.tooltip?.firstElementChild as HTMLElement | null) ?? this.tooltip!;
   }
 
   private refreshActive(): void {

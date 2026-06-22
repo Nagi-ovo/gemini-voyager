@@ -286,6 +286,21 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
   transform: translate(-50%, -50%);
 }
 
+#claude-timeline-tooltip {
+  display: block;
+  max-height: none;
+  overflow: visible;
+}
+
+#claude-timeline-tooltip .claude-timeline-tooltip-text {
+  display: -webkit-box;
+  max-height: calc(3 * var(--timeline-tooltip-lh));
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
 .timeline-dot:focus-visible::after {
   box-shadow: 0 0 6px var(--timeline-dot-active-color);
 }
