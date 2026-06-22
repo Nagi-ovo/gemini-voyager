@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { hasSeenCoachmark, markCoachmarkSeen, resetCoachmark, showCoachmark } from '../index';
+import {
+  hasSeenCoachmark,
+  markCoachmarkSeen,
+  resetCoachmark,
+  runCoachmarkSequence,
+  showCoachmark,
+} from '../index';
 
 // In-memory sync storage so the seen-set logic is deterministic.
 const store: Record<string, unknown> = {};
@@ -44,6 +50,24 @@ describe('coachmark seen-state', () => {
     await resetCoachmark('a');
     expect(await hasSeenCoachmark('a')).toBe(false);
     expect(await hasSeenCoachmark('b')).toBe(true);
+  });
+});
+
+describe('runCoachmarkSequence', () => {
+  it('runs coachmark steps in order', async () => {
+    const calls: string[] = [];
+
+    await runCoachmarkSequence([
+      async () => {
+        await Promise.resolve();
+        calls.push('usage');
+      },
+      () => {
+        calls.push('folder-search');
+      },
+    ]);
+
+    expect(calls).toEqual(['usage', 'folder-search']);
   });
 });
 

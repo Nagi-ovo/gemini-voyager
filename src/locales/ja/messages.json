@@ -311,6 +311,14 @@
     "message": "フォルダを作成",
     "description": "Create folder button tooltip"
   },
+  "folder_search_placeholder": {
+    "message": "フォルダとチャットを検索",
+    "description": "Folder sidebar search input placeholder"
+  },
+  "folder_search_empty": {
+    "message": "一致するフォルダまたはチャットはありません",
+    "description": "Folder sidebar empty state when search has no matches"
+  },
   "folder_name_prompt": {
     "message": "フォルダ名を入力：",
     "description": "Create folder name prompt"
@@ -702,6 +710,10 @@
   "hideArchivedConversations": {
     "message": "フォルダに入れた会話をメインリストから隠す",
     "description": "Hide conversations that are in folders from the main list"
+  },
+  "showFolderSearch": {
+    "message": "フォルダ検索を表示",
+    "description": "Popup toggle that shows or hides the folder sidebar search box"
   },
   "hideArchivedNudgeTitle": {
     "message": "サイドバーを整理",
@@ -2186,6 +2198,18 @@
   "usageCoachmarkToggle": {
     "message": "使用量ピルを表示",
     "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "folderSearchCoachmarkTitle": {
+    "message": "新機能: フォルダ検索",
+    "description": "Coachmark title introducing folder search"
+  },
+  "folderSearchCoachmarkBody": {
+    "message": "フォルダ欄からフォルダ名とチャットタイトルを直接検索できます。",
+    "description": "Coachmark body text introducing folder search"
+  },
+  "folderSearchCoachmarkToggle": {
+    "message": "フォルダ検索を表示",
+    "description": "Inline toggle label in the folder-search coachmark"
   },
   "coachmarkDismiss": {
     "message": "後で",

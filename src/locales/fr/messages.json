@@ -311,6 +311,14 @@
     "message": "Créer un dossier",
     "description": "Create folder button tooltip"
   },
+  "folder_search_placeholder": {
+    "message": "Rechercher des dossiers et des discussions",
+    "description": "Folder sidebar search input placeholder"
+  },
+  "folder_search_empty": {
+    "message": "Aucun dossier ou discussion correspondant",
+    "description": "Folder sidebar empty state when search has no matches"
+  },
   "folder_name_prompt": {
     "message": "Nom du dossier :",
     "description": "Create folder name prompt"
@@ -702,6 +710,10 @@
   "hideArchivedConversations": {
     "message": "Masquer les discussions archivées",
     "description": "Hide conversations that are in folders from the main list"
+  },
+  "showFolderSearch": {
+    "message": "Afficher la recherche de dossiers",
+    "description": "Popup toggle that shows or hides the folder sidebar search box"
   },
   "hideArchivedNudgeTitle": {
     "message": "Rangez votre barre latérale",
@@ -2186,6 +2198,18 @@
   "usageCoachmarkToggle": {
     "message": "Afficher la pastille d'utilisation",
     "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "folderSearchCoachmarkTitle": {
+    "message": "Nouveau : recherche de dossiers",
+    "description": "Coachmark title introducing folder search"
+  },
+  "folderSearchCoachmarkBody": {
+    "message": "Recherchez les titres de dossiers et de discussions directement depuis la section Dossiers.",
+    "description": "Coachmark body text introducing folder search"
+  },
+  "folderSearchCoachmarkToggle": {
+    "message": "Afficher la recherche de dossiers",
+    "description": "Inline toggle label in the folder-search coachmark"
   },
   "coachmarkDismiss": {
     "message": "Plus tard",

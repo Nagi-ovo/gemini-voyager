@@ -18,6 +18,7 @@ import { startInputVimMode } from './chatInput/vimMode';
 import { startChatLineHeightAdjuster } from './chatLineHeight/index';
 import { startChatParagraphSpacingAdjuster } from './chatParagraphSpacing/index';
 import { startChatWidthAdjuster } from './chatWidth/index';
+import { runCoachmarkSequence } from './coachmark';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
 import DefaultModelManager from './defaultModel/modelLocker';
@@ -26,6 +27,7 @@ import { startEdgeFinalVersionNotice } from './edgeFinalVersionNotice';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
+import { maybeShowFolderSearchCoachmark } from './folder/folderSearchCoachmark';
 import { startFolderManager } from './folder/index';
 import { startFolderItemFontSizeAdjuster } from './folderItemFontSize/index';
 import { startFolderProject } from './folderProject/index';
@@ -111,9 +113,9 @@ async function isForkFeatureEnabled(): Promise<boolean> {
   }
 }
 
-function showUsageCoachmarkWhenChangelogIsIdle(): void {
+function showOnboardingCoachmarksWhenChangelogIsIdle(): void {
   if (document.querySelector('.gv-changelog-overlay')) return;
-  void maybeShowUsageCoachmark();
+  void runCoachmarkSequence([maybeShowUsageCoachmark, maybeShowFolderSearchCoachmark]);
 }
 
 /**
@@ -345,10 +347,10 @@ async function initializeFeatures(): Promise<void> {
         await delay(LIGHT_FEATURE_INIT_DELAY);
       }
 
-      // Introduce the opt-in usage pill once the changelog is out of the way;
+      // Introduce new feature coachmarks once the changelog is out of the way;
       // if the changelog doesn't show (already read / badge mode), still try.
-      void startChangelog({ onClosed: showUsageCoachmarkWhenChangelogIsIdle }).then(() => {
-        window.setTimeout(showUsageCoachmarkWhenChangelogIsIdle, 1200);
+      void startChangelog({ onClosed: showOnboardingCoachmarksWhenChangelogIsIdle }).then(() => {
+        window.setTimeout(showOnboardingCoachmarksWhenChangelogIsIdle, 1200);
       });
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }

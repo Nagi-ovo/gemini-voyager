@@ -21,6 +21,7 @@ import browser from 'webextension-polyfill';
 import { StorageKeys } from '@/core/types/common';
 
 export type CoachmarkResult = 'enabled' | 'dismissed' | 'skipped';
+export type CoachmarkStep = () => void | Promise<void>;
 
 export interface CoachmarkToggle {
   label: string;
@@ -99,6 +100,16 @@ export async function resetCoachmark(id: string): Promise<void> {
     await browser.storage.sync.set({ [SEEN_KEY]: seen.filter((x) => x !== id) });
   } catch {
     /* non-critical */
+  }
+}
+
+export async function runCoachmarkSequence(steps: CoachmarkStep[]): Promise<void> {
+  for (const step of steps) {
+    try {
+      await step();
+    } catch {
+      /* non-critical */
+    }
   }
 }
 

@@ -311,6 +311,14 @@
     "message": "إنشاء مجلد",
     "description": "Create folder button tooltip"
   },
+  "folder_search_placeholder": {
+    "message": "البحث في المجلدات والمحادثات",
+    "description": "Folder sidebar search input placeholder"
+  },
+  "folder_search_empty": {
+    "message": "لا توجد مجلدات أو محادثات مطابقة",
+    "description": "Folder sidebar empty state when search has no matches"
+  },
   "folder_name_prompt": {
     "message": "أدخل اسم المجلد:",
     "description": "Create folder name prompt"
@@ -702,6 +710,10 @@
   "hideArchivedConversations": {
     "message": "إخفاء المحادثات المؤرشفة",
     "description": "Hide conversations that are in folders from the main list"
+  },
+  "showFolderSearch": {
+    "message": "إظهار بحث المجلدات",
+    "description": "Popup toggle that shows or hides the folder sidebar search box"
   },
   "hideArchivedNudgeTitle": {
     "message": "رتّب شريطك الجانبي",
@@ -2186,6 +2198,18 @@
   "usageCoachmarkToggle": {
     "message": "إظهار شارة الاستخدام",
     "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "folderSearchCoachmarkTitle": {
+    "message": "جديد: بحث المجلدات",
+    "description": "Coachmark title introducing folder search"
+  },
+  "folderSearchCoachmarkBody": {
+    "message": "ابحث عن عناوين المجلدات والمحادثات مباشرة من قسم المجلدات.",
+    "description": "Coachmark body text introducing folder search"
+  },
+  "folderSearchCoachmarkToggle": {
+    "message": "إظهار بحث المجلدات",
+    "description": "Inline toggle label in the folder-search coachmark"
   },
   "coachmarkDismiss": {
     "message": "لاحقًا",

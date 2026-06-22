@@ -230,6 +230,83 @@ describe('sidebarAutoHide', () => {
     expect(collapsedContainer.classList.contains('collapsed')).toBe(true);
   });
 
+  it('keeps the sidebar expanded while a coachmark holds it', async () => {
+    const sidenav = document.createElement('bard-sidenav');
+    mockVisibleRect(sidenav, 320, 800);
+
+    const sideNavigationContent = document.createElement('side-navigation-content');
+    const collapsedContainer = document.createElement('div');
+    collapsedContainer.className = 'collapsed';
+    sideNavigationContent.appendChild(collapsedContainer);
+    sidenav.appendChild(sideNavigationContent);
+    document.body.appendChild(sidenav);
+
+    const toggleButton = document.createElement('button');
+    toggleButton.setAttribute('data-test-id', 'side-nav-menu-button');
+    const toggleSpy = vi.fn(() => {
+      collapsedContainer.classList.toggle('collapsed');
+    });
+    toggleButton.addEventListener('click', toggleSpy);
+    document.body.appendChild(toggleButton);
+
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ gvSidebarAutoHide: true, gvSidebarFullHide: true });
+      },
+    );
+
+    const { keepSidebarExpanded, startSidebarAutoHide } = await import('../index');
+    startSidebarAutoHide();
+
+    expect(document.documentElement.classList.contains('gv-sidebar-full-hide-collapsed')).toBe(
+      true,
+    );
+
+    const release = keepSidebarExpanded();
+    expect(toggleSpy).toHaveBeenCalledTimes(1);
+    expect(collapsedContainer.classList.contains('collapsed')).toBe(false);
+    expect(document.documentElement.classList.contains('gv-sidebar-full-hide-collapsed')).toBe(
+      false,
+    );
+
+    sidenav.dispatchEvent(new Event('mouseleave'));
+    vi.advanceTimersByTime(600);
+    expect(toggleSpy).toHaveBeenCalledTimes(1);
+    expect(collapsedContainer.classList.contains('collapsed')).toBe(false);
+
+    release();
+    sidenav.dispatchEvent(new Event('mouseleave'));
+    vi.advanceTimersByTime(600);
+    expect(toggleSpy).toHaveBeenCalledTimes(2);
+    expect(collapsedContainer.classList.contains('collapsed')).toBe(true);
+  });
+
+  it('expands when Gemini marks bard-sidenav itself as collapsed', async () => {
+    const sidenav = document.createElement('bard-sidenav');
+    sidenav.className = 'collapsed';
+    mockVisibleRect(sidenav, 56, 800);
+
+    const sideNavigationContent = document.createElement('side-navigation-content');
+    sideNavigationContent.appendChild(document.createElement('div'));
+    sidenav.appendChild(sideNavigationContent);
+    document.body.appendChild(sidenav);
+
+    const toggleButton = document.createElement('button');
+    toggleButton.setAttribute('data-test-id', 'side-nav-menu-button');
+    const toggleSpy = vi.fn(() => {
+      sidenav.classList.remove('collapsed');
+      mockVisibleRect(sidenav, 320, 800);
+    });
+    toggleButton.addEventListener('click', toggleSpy);
+    document.body.appendChild(toggleButton);
+
+    const { keepSidebarExpanded } = await import('../index');
+    keepSidebarExpanded();
+
+    expect(toggleSpy).toHaveBeenCalledTimes(1);
+    expect(sidenav.classList.contains('collapsed')).toBe(false);
+  });
+
   it('delays full-hide after auto-collapse so the native close animation can run', async () => {
     const sidenav = document.createElement('bard-sidenav');
     mockVisibleRect(sidenav, 320, 800);

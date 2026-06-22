@@ -361,6 +361,7 @@ interface SettingsUpdate {
   floatingModeEnabled?: boolean;
   floatingOpenOnStart?: boolean;
   hideArchivedConversations?: boolean;
+  folderSearchEnabled?: boolean;
   customWebsites?: string[];
   watermarkDownloadEnabled?: boolean;
   watermarkPreviewEnabled?: boolean;
@@ -488,6 +489,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const [floatingModeEnabled, setFloatingModeEnabled] = useState<boolean>(false);
   const [floatingOpenOnStart, setFloatingOpenOnStart] = useState<boolean>(true);
   const [hideArchivedConversations, setHideArchivedConversations] = useState<boolean>(false);
+  const [folderSearchEnabled, setFolderSearchEnabled] = useState<boolean>(true);
   const [customWebsites, setCustomWebsites] = useState<string[]>([]);
   const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
   const [websiteError, setWebsiteError] = useState<string>('');
@@ -739,6 +741,8 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         payload[StorageKeys.FOLDER_FLOATING_OPEN_ON_START] = settings.floatingOpenOnStart;
       if (typeof settings.hideArchivedConversations === 'boolean')
         payload.geminiFolderHideArchivedConversations = settings.hideArchivedConversations;
+      if (typeof settings.folderSearchEnabled === 'boolean')
+        payload[StorageKeys.FOLDER_SEARCH_ENABLED] = settings.folderSearchEnabled;
       if (settings.resetPosition) payload.geminiTimelinePosition = null;
       if (settings.customWebsites) payload.gvPromptCustomWebsites = settings.customWebsites;
       if (typeof settings.watermarkDownloadEnabled === 'boolean') {
@@ -1167,6 +1171,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           [StorageKeys.FOLDER_FLOATING_MODE_ENABLED]: false,
           [StorageKeys.FOLDER_FLOATING_OPEN_ON_START]: true,
           geminiFolderHideArchivedConversations: false,
+          [StorageKeys.FOLDER_SEARCH_ENABLED]: true,
           gvPromptCustomWebsites: [],
           gvFormulaCopyFormat: 'latex',
           [StorageKeys.WATERMARK_REMOVER_ENABLED]: null,
@@ -1237,6 +1242,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           setFloatingModeEnabled(res?.[StorageKeys.FOLDER_FLOATING_MODE_ENABLED] === true);
           setFloatingOpenOnStart(res?.[StorageKeys.FOLDER_FLOATING_OPEN_ON_START] !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
+          setFolderSearchEnabled(res?.[StorageKeys.FOLDER_SEARCH_ENABLED] !== false);
           const loadedCustomWebsites = Array.isArray(res?.gvPromptCustomWebsites)
             ? res.gvPromptCustomWebsites.filter((w: unknown) => typeof w === 'string')
             : [];
@@ -2126,6 +2132,22 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                   onChange={(e) => {
                     setHideArchivedConversations(e.target.checked);
                     apply({ hideArchivedConversations: e.target.checked });
+                  }}
+                />
+              </div>
+              <div className="group flex items-center justify-between">
+                <Label
+                  htmlFor="folder-search-enabled"
+                  className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                >
+                  {t('showFolderSearch')}
+                </Label>
+                <Switch
+                  id="folder-search-enabled"
+                  checked={folderSearchEnabled}
+                  onChange={(e) => {
+                    setFolderSearchEnabled(e.target.checked);
+                    apply({ folderSearchEnabled: e.target.checked });
                   }}
                 />
               </div>

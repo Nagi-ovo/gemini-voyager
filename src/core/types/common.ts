@@ -39,6 +39,7 @@ export const StorageKeys = {
   FOLDER_ENABLED: 'geminiFolderEnabled',
   FOLDER_HIDE_ARCHIVED_CONVERSATIONS: 'geminiFolderHideArchivedConversations',
   FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN: 'geminiFolderHideArchivedNudgeShown',
+  FOLDER_SEARCH_ENABLED: 'gvFolderSearchEnabled',
   FOLDER_FLOATING_MODE_ENABLED: 'geminiFolderFloatingModeEnabled',
   FOLDER_FLOATING_OPEN_ON_START: 'geminiFolderFloatingOpenOnStart',
   FOLDER_FLOATING_NUDGE_SHOWN: 'geminiFolderFloatingNudgeShown',

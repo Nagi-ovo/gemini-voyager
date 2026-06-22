@@ -311,6 +311,14 @@
     "message": "建立資料夾",
     "description": "建立資料夾按鈕提示"
   },
+  "folder_search_placeholder": {
+    "message": "搜尋資料夾和對話",
+    "description": "資料夾側邊欄搜尋輸入佔位符"
+  },
+  "folder_search_empty": {
+    "message": "沒有符合的資料夾或對話",
+    "description": "資料夾側邊欄搜尋無符合結果時的空狀態"
+  },
   "folder_name_prompt": {
     "message": "輸入資料夾名稱：",
     "description": "建立資料夾名稱提示"
@@ -662,6 +670,10 @@
   "hideArchivedConversations": {
     "message": "隱藏已歸檔對話",
     "description": "從主清單隱藏已新增到資料夾的對話"
+  },
+  "showFolderSearch": {
+    "message": "顯示資料夾搜尋",
+    "description": "Popup toggle that shows or hides the folder sidebar search box"
   },
   "hideArchivedNudgeTitle": {
     "message": "整理你的側邊欄",
@@ -2186,6 +2198,18 @@
   "usageCoachmarkToggle": {
     "message": "顯示用量膠囊",
     "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "folderSearchCoachmarkTitle": {
+    "message": "新增：資料夾搜尋",
+    "description": "Coachmark title introducing folder search"
+  },
+  "folderSearchCoachmarkBody": {
+    "message": "直接在資料夾區域搜尋資料夾和對話標題。",
+    "description": "Coachmark body text introducing folder search"
+  },
+  "folderSearchCoachmarkToggle": {
+    "message": "顯示資料夾搜尋",
+    "description": "Inline toggle label in the folder-search coachmark"
   },
   "coachmarkDismiss": {
     "message": "之後再說",

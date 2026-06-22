@@ -311,6 +311,14 @@
     "message": "Criar pasta",
     "description": "Create folder button tooltip"
   },
+  "folder_search_placeholder": {
+    "message": "Pesquisar pastas e conversas",
+    "description": "Folder sidebar search input placeholder"
+  },
+  "folder_search_empty": {
+    "message": "Nenhuma pasta ou conversa correspondente",
+    "description": "Folder sidebar empty state when search has no matches"
+  },
   "folder_name_prompt": {
     "message": "Digite o nome da pasta:",
     "description": "Create folder name prompt"
@@ -702,6 +710,10 @@
   "hideArchivedConversations": {
     "message": "Ocultar conversas arquivadas",
     "description": "Hide conversations that are in folders from the main list"
+  },
+  "showFolderSearch": {
+    "message": "Mostrar pesquisa de pastas",
+    "description": "Popup toggle that shows or hides the folder sidebar search box"
   },
   "hideArchivedNudgeTitle": {
     "message": "Organize sua barra lateral",
@@ -2186,6 +2198,18 @@
   "usageCoachmarkToggle": {
     "message": "Mostrar a pílula de uso",
     "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "folderSearchCoachmarkTitle": {
+    "message": "Novo: pesquisa de pastas",
+    "description": "Coachmark title introducing folder search"
+  },
+  "folderSearchCoachmarkBody": {
+    "message": "Pesquise títulos de pastas e conversas diretamente na seção Pastas.",
+    "description": "Coachmark body text introducing folder search"
+  },
+  "folderSearchCoachmarkToggle": {
+    "message": "Mostrar pesquisa de pastas",
+    "description": "Inline toggle label in the folder-search coachmark"
   },
   "coachmarkDismiss": {
     "message": "Talvez depois",

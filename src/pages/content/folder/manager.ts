@@ -137,6 +137,10 @@ function normalizeFolderDialogSearchText(value: string): string {
     .replace(/\s*\/\s*/g, '/');
 }
 
+function normalizeFolderSearchText(value: string): string {
+  return value.trim().toLocaleLowerCase();
+}
+
 /**
  * Validate folder data structure
  */
@@ -215,6 +219,8 @@ export class FolderManager {
   private hideArchivedNudgeShown: boolean = false; // Whether the first-archive nudge has been shown/dismissed
   private folderTreeIndent: number = FOLDER_TREE_INDENT_DEFAULT; // Tree indentation width (px)
   private filterCurrentUserOnly: boolean = false; // Whether to show only current user's conversations
+  private folderSearchEnabled: boolean = true; // Whether to show the folder title search box
+  private folderSearchQuery: string = ''; // Filter the folder tree by folder/conversation title
   private accountIsolationEnabled: boolean = false; // Whether hard account isolation is enabled
   private accountScope: AccountScope | null = null; // Resolved account scope for current page
   private activeStorageKey: string = STORAGE_KEY; // Storage key currently used for folder data
@@ -391,6 +397,7 @@ export class FolderManager {
 
       // Load filter user setting
       await this.loadFilterUserSetting();
+      await this.loadFolderSearchEnabledSetting();
       await this.loadFolderTreeIndentSetting();
       await this.loadFolderProjectEnabledSetting();
 
@@ -1547,6 +1554,11 @@ export class FolderManager {
     const header = this.createHeader();
     this.containerElement.appendChild(header);
 
+    if (this.folderSearchEnabled) {
+      const search = this.createFolderSearch();
+      this.containerElement.appendChild(search);
+    }
+
     // Create folders list
     const foldersList = this.createFoldersList();
     this.containerElement.appendChild(foldersList);
@@ -1788,22 +1800,47 @@ export class FolderManager {
     return header;
   }
 
+  private createFolderSearch(): HTMLElement {
+    const searchContainer = document.createElement('div');
+    searchContainer.className = 'gv-folder-search';
+
+    const input = document.createElement('input');
+    input.className = 'gv-folder-search-input';
+    input.type = 'search';
+    input.placeholder = this.t('folder_search_placeholder');
+    input.setAttribute('aria-label', this.t('folder_search_placeholder'));
+    input.value = this.folderSearchQuery;
+
+    input.addEventListener('input', () => {
+      this.folderSearchQuery = input.value;
+      this.refresh();
+    });
+
+    searchContainer.appendChild(input);
+    return searchContainer;
+  }
+
   private createFoldersList(): HTMLElement {
     const list = document.createElement('div');
     list.className = 'gv-folder-list';
+    const isSearchActive = this.isFolderSearchActive();
+    let renderedItems = 0;
 
     // Setup root-level drop zone for dragging folders and conversations to root
     this.setupRootDropZone(list);
 
     // Render root-level conversations (favorites/pinned conversations)
     const rootConversations = this.data.folderContents[ROOT_CONVERSATIONS_ID] || [];
-    const filteredRootConversations = this.filterConversationsByCurrentUser(rootConversations);
+    const filteredRootConversations = this.filterVisibleConversations(rootConversations);
     if (filteredRootConversations.length > 0) {
       const sortedRootConversations = this.sortConversations(filteredRootConversations);
       sortedRootConversations.forEach((conv, i) => {
         const convEl = this.createConversationElement(conv, ROOT_CONVERSATIONS_ID, 0);
-        this.setupConversationReorderZone(convEl, ROOT_CONVERSATIONS_ID, i);
+        if (!isSearchActive) {
+          this.setupConversationReorderZone(convEl, ROOT_CONVERSATIONS_ID, i);
+        }
         list.appendChild(convEl);
+        renderedItems++;
       });
     }
 
@@ -1811,22 +1848,33 @@ export class FolderManager {
     const rootFolders = this.data.folders.filter((f) => f.parentId === null);
     const sortedRootFolders = this.sortFolders(rootFolders);
     let rootFolderIndex = 0;
-    list.appendChild(this.createReorderGap('__root__', 'folder', 0));
+    if (!isSearchActive) {
+      list.appendChild(this.createReorderGap('__root__', 'folder', 0));
+    }
     sortedRootFolders.forEach((folder) => {
       // Filter out empty folders if "Show current user only" is enabled
-      if (!this.hasVisibleContent(folder.id)) return;
+      if (
+        isSearchActive
+          ? !this.matchesFolderSearchTree(folder.id)
+          : !this.hasVisibleContent(folder.id)
+      ) {
+        return;
+      }
 
       const folderElement = this.createFolderElement(folder);
       list.appendChild(folderElement);
+      renderedItems++;
       rootFolderIndex++;
-      list.appendChild(this.createReorderGap('__root__', 'folder', rootFolderIndex));
+      if (!isSearchActive) {
+        list.appendChild(this.createReorderGap('__root__', 'folder', rootFolderIndex));
+      }
     });
 
     // If no folders and no root conversations, show empty state placeholder
-    if (rootFolders.length === 0 && rootConversations.length === 0) {
+    if (renderedItems === 0) {
       const emptyState = document.createElement('div');
       emptyState.className = 'gv-folder-empty';
-      emptyState.textContent = this.t('folder_empty');
+      emptyState.textContent = this.t(isSearchActive ? 'folder_search_empty' : 'folder_empty');
       list.appendChild(emptyState);
     }
 
@@ -1834,6 +1882,8 @@ export class FolderManager {
   }
 
   private createFolderElement(folder: Folder, level = 0): HTMLElement {
+    const isSearchActive = this.isFolderSearchActive();
+    const isExpanded = folder.isExpanded || isSearchActive;
     const folderEl = document.createElement('div');
     folderEl.className = 'gv-folder-item';
     folderEl.dataset.folderId = folder.id;
@@ -1847,7 +1897,7 @@ export class FolderManager {
     // Expand/collapse button
     const expandBtn = document.createElement('button');
     expandBtn.className = 'gv-folder-expand-btn';
-    expandBtn.innerHTML = folder.isExpanded
+    expandBtn.innerHTML = isExpanded
       ? '<span class="google-symbols">expand_more</span>'
       : '<span class="google-symbols">chevron_right</span>';
     expandBtn.addEventListener('click', () => this.toggleFolder(folder.id));
@@ -1921,7 +1971,7 @@ export class FolderManager {
     this.applyFolderDraggableBehavior(folderHeader, folder);
 
     // Folder content (conversations and subfolders)
-    if (folder.isExpanded) {
+    if (isExpanded) {
       const content = document.createElement('div');
       content.className = 'gv-folder-content';
       // Fix: Allow dropping into the content area of the folder (not just the header)
@@ -1929,11 +1979,13 @@ export class FolderManager {
 
       // Render conversations in this folder (sorted: starred first)
       const conversations = this.data.folderContents[folder.id] || [];
-      const filteredConversations = this.filterConversationsByCurrentUser(conversations);
+      const filteredConversations = this.filterVisibleConversations(conversations);
       const sortedConversations = this.sortConversations(filteredConversations);
       sortedConversations.forEach((conv, i) => {
         const convEl = this.createConversationElement(conv, folder.id, level + 1);
-        this.setupConversationReorderZone(convEl, folder.id, i);
+        if (!isSearchActive) {
+          this.setupConversationReorderZone(convEl, folder.id, i);
+        }
         content.appendChild(convEl);
       });
 
@@ -1941,17 +1993,21 @@ export class FolderManager {
       const subfolders = this.data.folders.filter((f) => f.parentId === folder.id);
       const sortedSubfolders = this.sortFolders(subfolders);
       let subfolderIndex = 0;
-      if (sortedSubfolders.length > 0) {
+      const visibleSubfolders = sortedSubfolders.filter((subfolder) =>
+        isSearchActive
+          ? this.matchesFolderSearchTree(subfolder.id)
+          : this.hasVisibleContent(subfolder.id),
+      );
+      if (!isSearchActive && visibleSubfolders.length > 0) {
         content.appendChild(this.createReorderGap(folder.id, 'folder', 0));
       }
-      sortedSubfolders.forEach((subfolder) => {
-        // Filter out empty folders if "Show current user only" is enabled
-        if (!this.hasVisibleContent(subfolder.id)) return;
-
+      visibleSubfolders.forEach((subfolder) => {
         const subfolderEl = this.createFolderElement(subfolder, level + 1);
         content.appendChild(subfolderEl);
         subfolderIndex++;
-        content.appendChild(this.createReorderGap(folder.id, 'folder', subfolderIndex));
+        if (!isSearchActive) {
+          content.appendChild(this.createReorderGap(folder.id, 'folder', subfolderIndex));
+        }
       });
 
       folderEl.appendChild(content);
@@ -7768,6 +7824,35 @@ export class FolderManager {
     }
   }
 
+  private async loadFolderSearchEnabledSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({
+        [StorageKeys.FOLDER_SEARCH_ENABLED]: true,
+      });
+      this.folderSearchEnabled = result[StorageKeys.FOLDER_SEARCH_ENABLED] !== false;
+    } catch {
+      this.folderSearchEnabled = true;
+    }
+  }
+
+  private applyFolderSearchEnabledSetting(value: unknown): void {
+    const next = value !== false;
+    if (next === this.folderSearchEnabled) return;
+
+    this.folderSearchEnabled = next;
+    if (!next) this.folderSearchQuery = '';
+    if (!this.containerElement) return;
+
+    this.containerElement.querySelector('.gv-folder-search')?.remove();
+
+    if (next) {
+      const list = this.containerElement.querySelector('.gv-folder-list');
+      this.containerElement.insertBefore(this.createFolderSearch(), list);
+    }
+
+    this.refresh();
+  }
+
   private async loadFolderTreeIndentSetting(): Promise<void> {
     try {
       const result = await browser.storage.sync.get({
@@ -7895,6 +7980,9 @@ export class FolderManager {
         }
         if (changes[StorageKeys.GV_FOLDER_TREE_INDENT]) {
           this.applyFolderTreeIndentSetting(changes[StorageKeys.GV_FOLDER_TREE_INDENT].newValue);
+        }
+        if (changes[StorageKeys.FOLDER_SEARCH_ENABLED]) {
+          this.applyFolderSearchEnabledSetting(changes[StorageKeys.FOLDER_SEARCH_ENABLED].newValue);
         }
         if (changes[StorageKeys.FOLDER_PROJECT_ENABLED]) {
           this.folderProjectEnabled = changes[StorageKeys.FOLDER_PROJECT_ENABLED].newValue === true;
@@ -8718,10 +8806,19 @@ export class FolderManager {
       });
     }
 
+    const searchInput =
+      this.containerElement.querySelector<HTMLInputElement>('.gv-folder-search-input');
+    if (searchInput) {
+      searchInput.placeholder = this.t('folder_search_placeholder');
+      searchInput.setAttribute('aria-label', this.t('folder_search_placeholder'));
+    }
+
     // Update empty state text if present
     const emptyState = this.containerElement.querySelector('.gv-folder-empty');
     if (emptyState) {
-      emptyState.textContent = this.t('folder_empty');
+      emptyState.textContent = this.t(
+        this.isFolderSearchActive() ? 'folder_search_empty' : 'folder_empty',
+      );
     }
 
     // Notebooks corner swap toggle is mounted on the Notebooks section, not
@@ -9290,6 +9387,40 @@ export class FolderManager {
     } finally {
       this.importInProgress = false;
     }
+  }
+
+  private isFolderSearchActive(): boolean {
+    return this.folderSearchEnabled && normalizeFolderSearchText(this.folderSearchQuery).length > 0;
+  }
+
+  private matchesFolderSearchText(value: string): boolean {
+    const query = normalizeFolderSearchText(this.folderSearchQuery);
+    return query.length === 0 || normalizeFolderSearchText(value).includes(query);
+  }
+
+  private filterVisibleConversations(
+    conversations: ConversationReference[],
+  ): ConversationReference[] {
+    const userConversations = this.filterConversationsByCurrentUser(conversations);
+    if (!this.isFolderSearchActive()) return userConversations;
+
+    return userConversations.filter((conversation) =>
+      this.matchesFolderSearchText(conversation.title),
+    );
+  }
+
+  private matchesFolderSearchTree(folderId: string): boolean {
+    if (!this.isFolderSearchActive()) return this.hasVisibleContent(folderId);
+
+    const folder = this.data.folders.find((item) => item.id === folderId);
+    if (!folder) return false;
+    if (this.matchesFolderSearchText(folder.name) && this.hasVisibleContent(folder.id)) return true;
+
+    const conversations = this.data.folderContents[folderId] || [];
+    if (this.filterVisibleConversations(conversations).length > 0) return true;
+
+    const subfolders = this.data.folders.filter((item) => item.parentId === folderId);
+    return subfolders.some((subfolder) => this.matchesFolderSearchTree(subfolder.id));
   }
 
   /**

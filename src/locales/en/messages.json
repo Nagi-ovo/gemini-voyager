@@ -311,6 +311,14 @@
     "message": "Create folder",
     "description": "Create folder button tooltip"
   },
+  "folder_search_placeholder": {
+    "message": "Search folders and chats",
+    "description": "Folder sidebar search input placeholder"
+  },
+  "folder_search_empty": {
+    "message": "No matching folders or chats",
+    "description": "Folder sidebar empty state when search has no matches"
+  },
   "folder_name_prompt": {
     "message": "Enter folder name:",
     "description": "Create folder name prompt"
@@ -702,6 +710,10 @@
   "hideArchivedConversations": {
     "message": "Hide archived conversations",
     "description": "Hide conversations that are in folders from the main list"
+  },
+  "showFolderSearch": {
+    "message": "Show folder search",
+    "description": "Popup toggle that shows or hides the folder sidebar search box"
   },
   "hideArchivedNudgeTitle": {
     "message": "Tidy up your sidebar",
@@ -2186,6 +2198,18 @@
   "usageCoachmarkToggle": {
     "message": "Show the usage pill",
     "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "folderSearchCoachmarkTitle": {
+    "message": "New: folder search",
+    "description": "Coachmark title introducing folder search"
+  },
+  "folderSearchCoachmarkBody": {
+    "message": "Search folder and chat titles right from the Folders section.",
+    "description": "Coachmark body text introducing folder search"
+  },
+  "folderSearchCoachmarkToggle": {
+    "message": "Show folder search",
+    "description": "Inline toggle label in the folder-search coachmark"
   },
   "coachmarkDismiss": {
     "message": "Maybe later",

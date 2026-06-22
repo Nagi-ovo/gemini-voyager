@@ -107,6 +107,7 @@ let internalToggleClickDepth = 0;
 let fullHideCollapsedSyncBlockedUntil = 0;
 let fullHideCollapseAnimationTimeoutId: number | null = null;
 let fullHideCollapseAnimationElements: HTMLElement[] = [];
+let keepExpandedLocks = 0;
 
 function isElementVisible(element: HTMLElement): boolean {
   const style = window.getComputedStyle(element);
@@ -292,19 +293,39 @@ function findToggleButton(): HTMLButtonElement | null {
   return null;
 }
 
+function getToggleCollapsedState(): boolean | null {
+  const btn = findToggleButton();
+  if (!btn) return null;
+
+  const icon = btn.querySelector('mat-icon[fonticon]');
+  const fonticon = icon?.getAttribute('fonticon');
+  if (fonticon === 'side_nav_expand') return true;
+  if (fonticon === 'side_nav') return false;
+
+  const label = (btn.getAttribute('aria-label') ?? '').toLowerCase();
+  if (label.includes('open sidebar')) return true;
+  if (label.includes('close sidebar')) return false;
+
+  return null;
+}
+
 function getSidebarContentContainer(): HTMLElement | null {
   return document.querySelector<HTMLElement>('bard-sidenav side-navigation-content > div');
 }
 
 function getStructuredSidebarCollapsedState(): boolean | null {
-  if (document.body.classList.contains('mat-sidenav-opened')) {
-    return false;
-  }
+  const sidenav = getSidenavElement();
+  if (sidenav?.classList.contains('collapsed')) return true;
 
   const sideContent = getSidebarContentContainer();
   if (sideContent) {
-    return sideContent.classList.contains('collapsed');
+    if (sideContent.classList.contains('collapsed')) return true;
   }
+
+  const toggleState = getToggleCollapsedState();
+  if (toggleState !== null) return toggleState;
+
+  if (document.body.classList.contains('mat-sidenav-opened')) return false;
 
   return null;
 }
@@ -333,6 +354,22 @@ function isSidebarVisible(): boolean {
 
 function isPaused(): boolean {
   return Date.now() < pausedUntil;
+}
+
+function isKeepExpandedLocked(): boolean {
+  return keepExpandedLocks > 0;
+}
+
+function clearAutoHideTimers(): void {
+  if (enterTimeoutId !== null) {
+    window.clearTimeout(enterTimeoutId);
+    enterTimeoutId = null;
+  }
+  if (leaveTimeoutId !== null) {
+    window.clearTimeout(leaveTimeoutId);
+    leaveTimeoutId = null;
+  }
+  resetPredictiveState();
 }
 
 function clearScheduledSidebarStateSync(): void {
@@ -532,6 +569,7 @@ function clickToggleButton(): boolean {
 }
 
 function collapseSidebar(): void {
+  if (isKeepExpandedLocked()) return;
   if (isPaused()) return;
   if (isPopupOrDialogOpen()) return;
   if (isMouseOverSidebarArea()) return;
@@ -898,6 +936,13 @@ function setFullHideCollapsedState(collapsed: boolean): void {
 }
 
 function syncFullHideState(): void {
+  if (isKeepExpandedLocked()) {
+    clearFullHideCollapseAnimation();
+    setFullHideCollapsedState(false);
+    hideEdgeTrigger();
+    return;
+  }
+
   const sidenav = getSidenavElement();
   const sidenavExists = Boolean(sidenav && sidenav.getBoundingClientRect().height > 0);
   const collapsed = sidenavExists && isSidebarCollapsed();
@@ -958,6 +1003,21 @@ function disableFullHide(): void {
   maybeRemoveMenuClickHandler();
 
   teardownInfrastructure();
+}
+
+export function keepSidebarExpanded(): () => void {
+  keepExpandedLocks += 1;
+  clearAutoHideTimers();
+  if (isSidebarCollapsed()) expandSidebar();
+  if (fullHideEnabled) syncFullHideState();
+
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    keepExpandedLocks = Math.max(0, keepExpandedLocks - 1);
+    if (!isKeepExpandedLocked()) checkAndReattach();
+  };
 }
 
 // ─── Entry Point ───────────────────────────────────────────────────────

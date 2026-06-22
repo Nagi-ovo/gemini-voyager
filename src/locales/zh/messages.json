@@ -311,6 +311,14 @@
     "message": "创建文件夹",
     "description": "创建文件夹按钮提示"
   },
+  "folder_search_placeholder": {
+    "message": "搜索文件夹和对话",
+    "description": "文件夹侧边栏搜索输入占位符"
+  },
+  "folder_search_empty": {
+    "message": "没有匹配的文件夹或对话",
+    "description": "文件夹侧边栏搜索无匹配结果时的空状态"
+  },
   "folder_name_prompt": {
     "message": "输入文件夹名称：",
     "description": "创建文件夹名称提示"
@@ -702,6 +710,10 @@
   "hideArchivedConversations": {
     "message": "隐藏已归档对话",
     "description": "从主列表隐藏已添加到文件夹的对话"
+  },
+  "showFolderSearch": {
+    "message": "显示文件夹搜索",
+    "description": "Popup toggle that shows or hides the folder sidebar search box"
   },
   "hideArchivedNudgeTitle": {
     "message": "整理你的侧边栏",
@@ -2186,6 +2198,18 @@
   "usageCoachmarkToggle": {
     "message": "显示用量胶囊",
     "description": "Inline toggle label in the usage-pill coachmark"
+  },
+  "folderSearchCoachmarkTitle": {
+    "message": "新增：文件夹搜索",
+    "description": "Coachmark title introducing folder search"
+  },
+  "folderSearchCoachmarkBody": {
+    "message": "直接在文件夹区域搜索文件夹和对话标题。",
+    "description": "Coachmark body text introducing folder search"
+  },
+  "folderSearchCoachmarkToggle": {
+    "message": "显示文件夹搜索",
+    "description": "Inline toggle label in the folder-search coachmark"
   },
   "coachmarkDismiss": {
     "message": "以后再说",
