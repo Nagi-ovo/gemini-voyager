@@ -11,6 +11,25 @@ interface StarredHistoryProps {
   sourceTabId?: number;
 }
 
+export function shouldOpenStarredMessageInCurrentTab(
+  currentUrl: string | undefined,
+  targetUrl: string,
+): boolean {
+  if (!currentUrl) return false;
+  try {
+    const currentHost = new URL(currentUrl).hostname;
+    const targetHost = new URL(targetUrl).hostname;
+    return (
+      currentHost === targetHost &&
+      (targetHost === 'gemini.google.com' ||
+        targetHost === 'aistudio.google.com' ||
+        targetHost === 'claude.ai')
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
   const { t } = useLanguage();
   const [messages, setMessages] = useState<StarredMessage[]>([]);
@@ -40,11 +59,7 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
         : (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
     const targetUrl = `${message.conversationUrl}#gv-turn-${message.turnId}`;
 
-    const isGeminiPage =
-      currentTab?.url?.includes('gemini.google.com') ||
-      currentTab?.url?.includes('aistudio.google.com');
-
-    if (isGeminiPage && currentTab?.id) {
+    if (shouldOpenStarredMessageInCurrentTab(currentTab?.url, targetUrl) && currentTab?.id) {
       // Navigate in the same tab (SPA navigation)
       await chrome.tabs.update(currentTab.id, { url: targetUrl });
       // Close the popup

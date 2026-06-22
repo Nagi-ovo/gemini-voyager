@@ -74,4 +74,58 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
     matches: ['https://claude.ai/*', 'https://chatgpt.com/*', 'https://chat.openai.com/*'],
     contributes: {},
   },
+  {
+    id: 'voyager.claude-timeline',
+    name: 'Claude · Timeline',
+    version: '1.0.0',
+    description: 'Adds a compact conversation timeline to Claude with starred messages and search.',
+    i18n: {
+      zh: {
+        name: 'Claude · 时间线',
+        description: '为 Claude 添加紧凑的对话时间线，支持星标消息和搜索。',
+      },
+      zh_TW: {
+        name: 'Claude · 時間線',
+        description: '為 Claude 加入緊湊的對話時間線，支援星標訊息與搜尋。',
+      },
+      ja: {
+        name: 'Claude · タイムライン',
+        description:
+          'Claude にコンパクトな会話タイムラインを追加し、スター付きメッセージと検索に対応します。',
+      },
+      ko: {
+        name: 'Claude · 타임라인',
+        description: 'Claude에 별표 메시지와 검색을 지원하는 간단한 대화 타임라인을 추가합니다.',
+      },
+      fr: {
+        name: 'Claude · Timeline',
+        description: 'Ajoute une timeline compacte à Claude avec messages favoris et recherche.',
+      },
+      es: {
+        name: 'Claude · Línea de tiempo',
+        description:
+          'Añade a Claude una línea de tiempo compacta con mensajes destacados y búsqueda.',
+      },
+      pt: {
+        name: 'Claude · Linha do tempo',
+        description:
+          'Adiciona ao Claude uma linha do tempo compacta com mensagens favoritas e busca.',
+      },
+      ru: {
+        name: 'Claude · Таймлайн',
+        description: 'Добавляет в Claude компактную шкалу диалога со звёздами и поиском.',
+      },
+      ar: {
+        name: 'Claude · المخطط الزمني',
+        description: 'يضيف إلى Claude مخططًا زمنيًا موجزًا مع الرسائل المميزة والبحث.',
+      },
+    },
+    author: 'voyager-official',
+    category: 'productivity',
+    license: 'GPL-3.0-or-later',
+    engine: '>=1.1.0',
+    tier: 'declarative',
+    matches: ['https://claude.ai/*'],
+    contributes: {},
+  },
 ];

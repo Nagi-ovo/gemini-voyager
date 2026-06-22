@@ -277,6 +277,15 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
   transform: translate(-50%, -50%) scale(1.15);
 }
 
+.gemini-timeline-bar[data-gv-claude-timeline='true'] {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 128px);
+  height: auto;
+}
+
+.gemini-timeline-bar[data-gv-claude-timeline='true'] .timeline-dot:hover::after {
+  transform: translate(-50%, -50%);
+}
+
 .timeline-dot:focus-visible::after {
   box-shadow: 0 0 6px var(--timeline-dot-active-color);
 }

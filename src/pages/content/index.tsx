@@ -5,6 +5,7 @@ import {
   isExtensionContextInvalidatedError,
 } from '@/core/utils/extensionContext';
 import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
+import { startClaudeTimeline, stopClaudeTimeline } from '@/features/claudeTimeline';
 import { startFormulaCopy, stopFormulaCopy } from '@/features/formulaCopy';
 import { startPluginHost } from '@/features/plugins';
 import { registerNativeHandler } from '@/features/plugins/runtime/nativeHandlers';
@@ -469,6 +470,10 @@ function handleVisibilityChange(): void {
     registerNativeHandler('voyager.formula-copy', {
       start: startFormulaCopy,
       stop: stopFormulaCopy,
+    });
+    registerNativeHandler('voyager.claude-timeline', {
+      start: startClaudeTimeline,
+      stop: stopClaudeTimeline,
     });
 
     pluginHostCleanup = startPluginHost();
