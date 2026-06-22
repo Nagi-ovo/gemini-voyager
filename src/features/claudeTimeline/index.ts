@@ -418,6 +418,10 @@ class ClaudeTimeline {
       return;
     }
     if (Date.now() < this.navigationActiveLockUntil) return;
+    if (this.isAtScrollBottom()) {
+      this.setActiveTurn(this.markers[this.markers.length - 1]?.id ?? null);
+      return;
+    }
     const ref = this.getScrollTop() + this.getViewportHeight() * ACTIVE_ANCHOR;
     let low = 0;
     let high = this.markerCenters.length;
@@ -505,6 +509,18 @@ class ClaudeTimeline {
     return this.scrollTarget && this.scrollTarget !== window
       ? (this.scrollTarget as HTMLElement).clientHeight
       : window.innerHeight || document.documentElement.clientHeight || 0;
+  }
+
+  private getScrollHeight(): number {
+    return this.scrollTarget && this.scrollTarget !== window
+      ? (this.scrollTarget as HTMLElement).scrollHeight
+      : (document.scrollingElement || document.documentElement).scrollHeight;
+  }
+
+  private isAtScrollBottom(): boolean {
+    const viewportHeight = this.getViewportHeight();
+    const scrollHeight = this.getScrollHeight();
+    return scrollHeight > viewportHeight && this.getScrollTop() + viewportHeight >= scrollHeight - 2;
   }
 
   private scrollMarkerIntoView(element: HTMLElement): void {

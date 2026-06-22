@@ -107,6 +107,33 @@ describe('Claude timeline', () => {
     expect(secondRect).not.toHaveBeenCalled();
   });
 
+  it('activates the last dot when scrolled to the bottom', async () => {
+    const first = addTurn('first prompt');
+    const second = addTurn('second prompt');
+    const third = addTurn('last prompt');
+    first.getBoundingClientRect = vi.fn(() => ({ top: 0, bottom: 40, height: 40 }) as DOMRect);
+    second.getBoundingClientRect = vi.fn(
+      () => ({ top: 1580, bottom: 1620, height: 40 }) as DOMRect,
+    );
+    third.getBoundingClientRect = vi.fn(
+      () => ({ top: 1950, bottom: 1990, height: 40 }) as DOMRect,
+    );
+    Object.defineProperty(document.documentElement, 'scrollHeight', {
+      configurable: true,
+      value: 2000,
+    });
+
+    startClaudeTimeline();
+    await flush();
+
+    const dots = document.querySelectorAll<HTMLButtonElement>('.timeline-dot');
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 1400 });
+    window.dispatchEvent(new Event('scroll'));
+
+    expect(dots[2].classList.contains('active')).toBe(true);
+    expect(dots[1].classList.contains('active')).toBe(false);
+  });
+
   it('keeps clicked dot active while smooth scroll is settling', async () => {
     const first = addTurn('first prompt');
     const second = addTurn('second prompt');
