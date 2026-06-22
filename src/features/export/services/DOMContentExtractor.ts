@@ -320,6 +320,20 @@ export class DOMContentExtractor {
         continue;
       }
 
+      // Canvas Export Section (Injected Canvas document content)
+      if (child.classList.contains('gv-canvas-export-section')) {
+        const headingEl = child.querySelector('h3');
+        const contentEl = child.querySelector('.gv-canvas-content');
+        const headingText = headingEl?.textContent || 'Canvas Document';
+        const contentText = contentEl?.textContent || '';
+
+        htmlParts.push(
+          `<div class="gv-canvas-export-section"><h3>${this.escapeHtml(headingText)}</h3><pre style="white-space: pre-wrap;">${this.escapeHtml(contentText)}</pre></div>`,
+        );
+        textParts.push(`\n### ${headingText}\n\n${contentText}\n`);
+        continue;
+      }
+
       // Images
       if (tagName === 'img') {
         const img = child as HTMLImageElement;
