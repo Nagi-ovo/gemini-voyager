@@ -62,6 +62,7 @@ scripts/chrome-profile/
 # Local agent outputs
 .entire/
 .agent/
+.hermes/
 docs/plans/
 output/
 src/pages/content/printBridge/
