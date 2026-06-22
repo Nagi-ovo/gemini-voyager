@@ -70,6 +70,11 @@ let conversationMenuObserver: MutationObserver | null = null;
 let responseActionObserver: MutationObserver | null = null;
 let cachedCanvasDocs: CanvasDoc[] | null = null;
 
+/** Remove all injected Canvas export sections from the DOM after export completes */
+function removeCanvasExportSections(): void {
+  document.querySelectorAll('.gv-canvas-export-section').forEach((el) => el.remove());
+}
+
 interface PendingExportState {
   format: ExportFormat;
   fontSize?: number;
@@ -486,6 +491,10 @@ function collectChatPairs(): ChatTurn[] {
       // Canvas document content injection: if this assistant response references
       // a Canvas doc and the immersive-editor is open, append full Canvas content
       // directly into the DOM element so DOMContentExtractor can pick it up.
+      // Guard against duplicate injection (collectChatPairs may be called multiple times).
+      // Canvas document content injection: if this assistant response references
+      // a Canvas doc, append full Canvas content directly into the DOM element
+      // so DOMContentExtractor can pick it up.
       // Guard against duplicate injection (collectChatPairs may be called multiple times).
       if (
         aEl &&
@@ -1390,6 +1399,7 @@ async function executeExportSequenceWithProgress(
   } finally {
     hideProgress();
     cachedCanvasDocs = null;
+    removeCanvasExportSections();
   }
 }
 
@@ -1772,6 +1782,7 @@ async function performFinalExport(
       alert('Export error occurred.');
     } finally {
       hideProgress();
+      removeCanvasExportSections();
     }
   });
 
@@ -2066,6 +2077,7 @@ async function handleResponseCopyImageClick(
     showExportToast(texts.failed, { autoDismissMs: 3200 });
   } finally {
     delete trigger.dataset.gvCopyImageBusy;
+    removeCanvasExportSections();
   }
 }
 
