@@ -19,29 +19,18 @@
  * - Colour: cool blue-grey (hsl 210–220) to evoke the melancholy
  *   atmosphere of Shinjuku Gyoen in the rain.
  */
-import { isFirefox } from '@/core/utils/browser';
 
 const CANVAS_ID = 'gv-rain-effect-canvas';
 const STORAGE_KEY = 'gvVisualEffect';
 const LEGACY_KEY = 'gvSnowEffect';
 const EFFECT_VALUE = 'rain';
-const BASE_FRAME_MS = 1000 / 60;
-const FIREFOX_FRAME_INTERVAL_MS = 1000 / 30;
 
 /** Wind angle in radians (~8° from vertical) */
 const WIND_ANGLE = 0.14;
 const WIND_DX = Math.sin(WIND_ANGLE);
 const WIND_DY = Math.cos(WIND_ANGLE);
 
-type RainLayer = {
-  count: number;
-  length: readonly [number, number];
-  speed: readonly [number, number];
-  opacity: readonly [number, number];
-  width: readonly [number, number];
-};
-
-const LAYERS: readonly RainLayer[] = [
+const LAYERS = [
   // far — misty fine drizzle
   {
     count: 80,
@@ -70,10 +59,6 @@ const LAYERS: readonly RainLayer[] = [
 
 /** Maximum concurrent splashes */
 const MAX_SPLASHES = 24;
-
-export function getRainFrameIntervalForBrowser(firefox: boolean = isFirefox()): number {
-  return firefox ? FIREFOX_FRAME_INTERVAL_MS : 0;
-}
 
 interface Raindrop {
   x: number;
@@ -105,8 +90,6 @@ let drops: Raindrop[] = [];
 let splashes: Splash[] = [];
 let resizeHandler: (() => void) | null = null;
 let visibilityHandler: (() => void) | null = null;
-let frameIntervalMs = 0;
-let lastDrawTime = 0;
 
 function rand(min: number, max: number): number {
   return min + Math.random() * (max - min);
@@ -115,7 +98,7 @@ function rand(min: number, max: number): number {
 function createDrop(
   canvasWidth: number,
   canvasHeight: number,
-  layer: RainLayer,
+  layer: (typeof LAYERS)[number],
   randomY: boolean,
   canSplash: boolean,
 ): Raindrop {
@@ -132,9 +115,8 @@ function createDrop(
 
 function initDrops(width: number, height: number): void {
   const items: Raindrop[] = [];
-  const layers = LAYERS;
-  for (let li = 0; li < layers.length; li++) {
-    const layer = layers[li];
+  for (let li = 0; li < LAYERS.length; li++) {
+    const layer = LAYERS[li];
     const canSplash = li >= 1; // mid + near
     for (let i = 0; i < layer.count; i++) {
       items.push(createDrop(width, height, layer, true, canSplash));
@@ -157,17 +139,8 @@ function spawnSplash(x: number, y: number): void {
   });
 }
 
-function updateAndDraw(time: number): void {
+function updateAndDraw(_time: number): void {
   if (!ctx || !canvas) return;
-
-  if (lastDrawTime > 0 && frameIntervalMs > 0 && time - lastDrawTime < frameIntervalMs) {
-    animationFrameId = requestAnimationFrame(updateAndDraw);
-    return;
-  }
-
-  const elapsedMs = lastDrawTime > 0 ? time - lastDrawTime : BASE_FRAME_MS;
-  const frameScale = Math.min(2.5, Math.max(0.5, elapsedMs / BASE_FRAME_MS));
-  lastDrawTime = time;
 
   const { width, height } = canvas;
   ctx.clearRect(0, 0, width, height);
@@ -183,8 +156,8 @@ function updateAndDraw(time: number): void {
     const prevY = d.y;
 
     // Move
-    d.x += d.speed * WIND_DX * frameScale;
-    d.y += d.speed * WIND_DY * frameScale;
+    d.x += d.speed * WIND_DX;
+    d.y += d.speed * WIND_DY;
 
     // Off-screen bottom
     if (d.y > height + d.length) {
@@ -235,8 +208,8 @@ function updateAndDraw(time: number): void {
   ctx.lineWidth = 0.6;
   for (let i = splashes.length - 1; i >= 0; i--) {
     const s = splashes[i];
-    s.radius += s.expandSpeed * frameScale;
-    s.opacity -= s.fadeSpeed * frameScale;
+    s.radius += s.expandSpeed;
+    s.opacity -= s.fadeSpeed;
 
     if (s.opacity <= 0 || s.radius >= s.maxRadius) {
       splashes.splice(i, 1);
@@ -292,8 +265,6 @@ function enable(): void {
     return;
   }
   state = 'active';
-  frameIntervalMs = getRainFrameIntervalForBrowser();
-  lastDrawTime = 0;
 
   canvas = document.createElement('canvas');
   canvas.id = CANVAS_ID;
@@ -350,8 +321,6 @@ function finalizeDrain(): void {
   ctx = null;
   drops = [];
   splashes = [];
-  frameIntervalMs = 0;
-  lastDrawTime = 0;
 }
 
 /** Immediate disable: remove everything without draining (e.g. page unload). */

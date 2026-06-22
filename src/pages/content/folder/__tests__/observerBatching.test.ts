@@ -36,7 +36,7 @@ type TestableManager = {
   legacyActionsProbe: { present: boolean; at: number } | null;
   flushMutationBatch: () => void;
   scheduleMutationBatchFlush: () => void;
-  drainEnhancementQueue: () => void;
+  drainEnhancementQueue: (deadline?: IdleDeadline) => void;
   scheduleConversationRemovalCheck: (conversationId: string) => void;
   makeConversationDraggable: (el: HTMLElement) => void;
   applyHideArchivedToConversation: (el: HTMLElement) => void;
@@ -376,7 +376,7 @@ describe('FolderManager — observer batching (issue #678)', () => {
     expect(archivedLookupSpy).not.toHaveBeenCalled();
   });
 
-  describe('budgeted enhancement drain + legacy layout probe (issue #753)', () => {
+  describe('idle enhancement drain + legacy layout probe (issue #753)', () => {
     it('defers per-row enhancement work to the queue instead of running it inside the flush', () => {
       const spy = vi.spyOn(typed, 'makeConversationDraggable');
 
@@ -396,14 +396,50 @@ describe('FolderManager — observer batching (issue #678)', () => {
       expect(typed.enhancementQueue.size).toBe(0);
     });
 
-    it('stops draining when the frame budget is exhausted and resumes on the next pass', () => {
+    it('schedules queued enhancement work with idle callback instead of animation frame', () => {
+      const originalRequestIdleCallback = window.requestIdleCallback;
+      const originalCancelIdleCallback = window.cancelIdleCallback;
+      const requestIdleCallback = vi.fn(() => 123);
+      const cancelIdleCallback = vi.fn();
+      Object.defineProperty(window, 'requestIdleCallback', {
+        configurable: true,
+        value: requestIdleCallback,
+      });
+      Object.defineProperty(window, 'cancelIdleCallback', {
+        configurable: true,
+        value: cancelIdleCallback,
+      });
+
+      try {
+        const rafSpy = vi.spyOn(window, 'requestAnimationFrame');
+        const conv = createConversationEl('cc00cc00');
+        typed.sidebarContainer!.appendChild(conv);
+
+        typed.mutationBatchQueue.push(makeChildListMutation({ added: [conv] }));
+        typed.flushMutationBatch();
+
+        expect(requestIdleCallback).toHaveBeenCalledTimes(1);
+        expect(rafSpy).not.toHaveBeenCalled();
+      } finally {
+        Object.defineProperty(window, 'requestIdleCallback', {
+          configurable: true,
+          value: originalRequestIdleCallback,
+        });
+        Object.defineProperty(window, 'cancelIdleCallback', {
+          configurable: true,
+          value: originalCancelIdleCallback,
+        });
+      }
+    });
+
+    it('stops draining when the idle budget is exhausted and resumes on the next pass', () => {
       const spy = vi.spyOn(typed, 'makeConversationDraggable');
 
       const rows = ['cc11cc11', 'cc22cc22', 'cc33cc33'].map((id) => createConversationEl(id));
       typed.sidebarContainer!.append(...rows);
       rows.forEach((row) => typed.enhancementQueue.add(row));
 
-      // drainEnhancementQueue reads performance.now() once for the deadline,
+      // drainEnhancementQueue reads performance.now() once for the fallback deadline,
       // once inside the legacy-layout probe of the first row, then once for
       // the budget check — exceed the 8ms budget right after the first row.
       const ticks = [0, 0, 100];
@@ -418,6 +454,29 @@ describe('FolderManager — observer batching (issue #678)', () => {
       typed.drainEnhancementQueue();
       expect(spy).toHaveBeenCalledTimes(3);
       expect(typed.enhancementQueue.size).toBe(0);
+    });
+
+    it('uses the fallback budget when idle callback fires from timeout', () => {
+      const spy = vi.spyOn(typed, 'makeConversationDraggable');
+      const deadline = {
+        didTimeout: true,
+        timeRemaining: vi.fn(() => 0),
+      } as unknown as IdleDeadline;
+
+      const rows = ['ce11ce11', 'ce22ce22'].map((id) => createConversationEl(id));
+      typed.sidebarContainer!.append(...rows);
+      rows.forEach((row) => typed.enhancementQueue.add(row));
+
+      const ticks = [0, 0, 100];
+      vi.spyOn(performance, 'now').mockImplementation(() =>
+        ticks.length > 0 ? (ticks.shift() as number) : 100,
+      );
+
+      typed.drainEnhancementQueue(deadline);
+
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(deadline.timeRemaining).not.toHaveBeenCalled();
+      expect(typed.enhancementQueue.size).toBe(1);
     });
 
     it('cancels pending removals synchronously during the flush, before any drain', () => {

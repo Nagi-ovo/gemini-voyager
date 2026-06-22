@@ -288,7 +288,7 @@ describe('sakuraEffect', () => {
     expect(mockCtx.fill).toHaveBeenCalledTimes(8);
   });
 
-  it('starts Firefox on a lower-load profile and caps drawing to roughly 40fps', async () => {
+  it('starts Firefox on the full sprite-backed sakura profile', async () => {
     vi.mocked(isFirefox).mockReturnValue(true);
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
@@ -300,13 +300,13 @@ describe('sakuraEffect', () => {
     startSakuraEffect();
 
     runAnimationFrame(16);
-    expect(mockCtx.drawImage).toHaveBeenCalledTimes(48);
+    expect(mockCtx.drawImage).toHaveBeenCalledTimes(88);
 
     runAnimationFrame(32);
-    expect(mockCtx.drawImage).toHaveBeenCalledTimes(48);
+    expect(mockCtx.drawImage).toHaveBeenCalledTimes(176);
 
     runAnimationFrame(42);
-    expect(mockCtx.drawImage).toHaveBeenCalledTimes(96);
+    expect(mockCtx.drawImage).toHaveBeenCalledTimes(264);
   });
 
   it('caps Firefox sakura canvas DPR', async () => {
@@ -349,9 +349,9 @@ describe('sakuraEffect', () => {
     runAnimationFrame(16);
     runAnimationFrame(50);
     runAnimationFrame(84);
-    expect(mockCtx.drawImage).toHaveBeenCalledTimes(144);
+    expect(mockCtx.drawImage).toHaveBeenCalledTimes(264);
 
     runAnimationFrame(118);
-    expect(mockCtx.drawImage).toHaveBeenCalledTimes(172);
+    expect(mockCtx.drawImage).toHaveBeenCalledTimes(312);
   });
 });

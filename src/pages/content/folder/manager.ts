@@ -71,9 +71,10 @@ const FOLDER_TREE_INDENT_MAX = 32;
 const FOLDER_TREE_INDENT_DEFAULT = -8;
 const NATIVE_TITLE_SYNC_DEBOUNCE_MS = 300;
 const ARCHIVED_CONVERSATION_ACTIONS_CLASS = 'gv-conversation-archived-actions';
-// Issue #753: per-frame time budget for draining queued per-row enhancement
-// work, and how long the legacy actions-container layout probe stays cached.
-const ENHANCEMENT_FRAME_BUDGET_MS = 8;
+// Issue #753: idle-slice budget for draining queued per-row enhancement work,
+// and how long the legacy actions-container layout probe stays cached.
+const ENHANCEMENT_IDLE_BUDGET_MS = 8;
+const ENHANCEMENT_IDLE_TIMEOUT_MS = 500;
 const LEGACY_ACTIONS_PROBE_TTL_MS = 1000;
 const SIDEBAR_ANCHOR_FALLBACK_GRACE_MS = 6000;
 // Grace before treating an attached-but-invisible folder as broken. Long enough
@@ -235,14 +236,13 @@ export class FolderManager {
   private mutationFlushScheduled: boolean = false;
   private mutationFlushRafId: number | null = null;
   // Per-row enhancement work (drag listeners, hide-archived state) for added
-  // conversations is drained from this queue under a per-frame time budget
-  // instead of synchronously inside one flush — a sidebar-open burst can add
-  // every Recents row at once, and doing all of it in a single animation
-  // frame blocked paint for the whole sweep (issue #753). Removal
+  // conversations is drained from this queue during idle time instead of the
+  // sidebar-open animation frame — a burst can add every Recents row at once
+  // and this work is allowed to lag behind paint (issue #753). Removal
   // *cancellation* stays synchronous in `flushMutationBatch`: it must beat
   // the `removalCheckDelay` timer.
   private enhancementQueue: Set<HTMLElement> = new Set();
-  private enhancementDrainRafId: number | null = null;
+  private enhancementDrainIdleId: number | null = null;
   // Cached result of the legacy `.conversation-actions-container` layout
   // probe — see `hasLegacyActionsContainer` (issue #753).
   private legacyActionsProbe: { present: boolean; at: number } | null = null;
@@ -2973,35 +2973,56 @@ export class FolderManager {
 
   private scheduleEnhancementDrain(): void {
     if (this.enhancementQueue.size === 0) return;
-    if (this.enhancementDrainRafId !== null) return;
-    this.enhancementDrainRafId = window.requestAnimationFrame(() => {
-      this.enhancementDrainRafId = null;
+    if (this.enhancementDrainIdleId !== null) return;
+
+    const drain = (deadline?: IdleDeadline) => {
+      this.enhancementDrainIdleId = null;
       if (this.isDestroyed) {
         this.enhancementQueue.clear();
         return;
       }
-      this.drainEnhancementQueue();
-    });
+      this.drainEnhancementQueue(deadline);
+    };
+
+    if (typeof window.requestIdleCallback === 'function') {
+      this.enhancementDrainIdleId = window.requestIdleCallback(drain, {
+        timeout: ENHANCEMENT_IDLE_TIMEOUT_MS,
+      });
+    } else {
+      this.enhancementDrainIdleId = window.setTimeout(() => drain(), 0);
+    }
   }
 
   private cancelEnhancementDrain(): void {
-    if (this.enhancementDrainRafId !== null) {
-      window.cancelAnimationFrame(this.enhancementDrainRafId);
-      this.enhancementDrainRafId = null;
+    if (this.enhancementDrainIdleId !== null) {
+      if (typeof window.cancelIdleCallback === 'function') {
+        window.cancelIdleCallback(this.enhancementDrainIdleId);
+      } else {
+        window.clearTimeout(this.enhancementDrainIdleId);
+      }
+      this.enhancementDrainIdleId = null;
     }
     this.enhancementQueue.clear();
   }
 
   // Exposed via the private surface so tests can drive draining
-  // deterministically without depending on animation-frame timing in jsdom.
-  private drainEnhancementQueue(): void {
-    const deadline = performance.now() + ENHANCEMENT_FRAME_BUDGET_MS;
+  // deterministically without depending on idle-callback timing in jsdom.
+  private drainEnhancementQueue(deadline?: IdleDeadline): void {
+    const fallbackDeadline = performance.now() + ENHANCEMENT_IDLE_BUDGET_MS;
+    let processed = 0;
+
     for (const convEl of this.enhancementQueue) {
       this.enhancementQueue.delete(convEl);
       if (!convEl.isConnected) continue; // removed while queued
       this.makeConversationDraggable(convEl);
       this.applyHideArchivedToConversation(convEl);
-      if (performance.now() >= deadline) break;
+      processed += 1;
+
+      const outOfIdleTime =
+        deadline && !deadline.didTimeout
+          ? deadline.timeRemaining() <= 0
+          : performance.now() >= fallbackDeadline;
+      if (processed > 0 && outOfIdleTime) break;
     }
     this.scheduleEnhancementDrain();
   }

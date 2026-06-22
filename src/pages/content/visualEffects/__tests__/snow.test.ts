@@ -57,13 +57,6 @@ describe('snowEffect', () => {
     expect(canvas).not.toBeNull();
   });
 
-  it('caps Firefox drawing cadence without reducing the particle budget', async () => {
-    const { getSnowFrameIntervalForBrowser } = await import('../snow');
-
-    expect(getSnowFrameIntervalForBrowser(false)).toBe(0);
-    expect(getSnowFrameIntervalForBrowser(true)).toBeCloseTo(1000 / 30);
-  });
-
   it('does not create canvas when disabled', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {

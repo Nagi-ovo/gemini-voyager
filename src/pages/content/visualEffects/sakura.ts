@@ -21,8 +21,6 @@
  * - Motion: slow fall, wide lazy drift + tiny fast flutter. Petals
  *   feel like they're floating, not dropping.
  */
-import { isFirefox } from '@/core/utils/browser';
-
 const CANVAS_ID = 'gv-sakura-effect-canvas';
 const STORAGE_KEY = 'gvVisualEffect';
 const LEGACY_KEY = 'gvSnowEffect';
@@ -175,7 +173,7 @@ function getActiveProfile(): SakuraQualityProfile {
 }
 
 function getInitialQualityLevel(): number {
-  return isFirefox() ? 1 : 0;
+  return 0;
 }
 
 function createPetal(
