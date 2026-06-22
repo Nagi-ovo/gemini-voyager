@@ -451,7 +451,8 @@ function patternToDomain(pattern: string | undefined): string | null {
   try {
     const withoutScheme = pattern.replace(/^[^:]+:\/\//, '');
     const hostPart = withoutScheme.replace(/\/.*$/, '').replace(/^\*\./, '');
-    return hostPart || null;
+    if (!hostPart || hostPart === '*') return null;
+    return hostPart;
   } catch {
     return null;
   }
@@ -1033,9 +1034,43 @@ class ForkNodesManager {
 
 const forkNodesManager = new ForkNodesManager();
 
+// Lesson from #779: captureVisibleTab needs required <all_urls>; runtime permission
+// requests after export awaits lose Chrome's user gesture and fail.
+function captureVisibleTab(windowId: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.captureVisibleTab(windowId, { format: 'png' }, (dataUrl) => {
+      const error = chrome.runtime.lastError?.message;
+      if (error || !dataUrl) {
+        reject(new Error(error || 'capture_failed'));
+        return;
+      }
+      resolve(dataUrl);
+    });
+  });
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     try {
+      if (message?.type === 'gv.generatedUi.captureVisibleTab') {
+        const windowId = sender.tab?.windowId;
+        if (typeof windowId !== 'number' || !chrome.tabs?.captureVisibleTab) {
+          sendResponse({ ok: false, error: 'capture_unavailable' });
+          return;
+        }
+
+        try {
+          const dataUrl = await captureVisibleTab(windowId);
+          sendResponse({ ok: true, dataUrl });
+        } catch (error) {
+          sendResponse({
+            ok: false,
+            error: error instanceof Error ? error.message : String(error),
+          });
+        }
+        return;
+      }
+
       if (message?.type === 'gv.account.resolve') {
         const payload = message.payload as {
           pageUrl?: string;
@@ -1475,7 +1510,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
 
       // Handle image fetch
-      if (!message || message.type !== 'gv.fetchImage') return;
+      if (!message || message.type !== 'gv.fetchImage') {
+        sendResponse({ ok: false, error: 'unknown_message_type' });
+        return;
+      }
+
       const url = String(message.url || '');
       if (!/^https?:\/\//i.test(url)) {
         sendResponse({ ok: false, error: 'invalid_url' });

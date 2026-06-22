@@ -251,4 +251,30 @@ describe('DOMContentExtractor', () => {
       );
     });
   });
+
+  describe('Generated UI screenshot export', () => {
+    it('exports injected generated UI screenshots as images', () => {
+      const assistant = document.createElement('div');
+      assistant.innerHTML = `
+        <message-content>
+          <div class="markdown">
+            <p>Here is the app:</p>
+            <div class="gv-generated-ui-screenshot-section">
+              <img src="data:image/png;base64,abc123" alt="Gemini interactive UI screenshot">
+            </div>
+          </div>
+        </message-content>
+      `;
+
+      const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+      expect(extracted.hasImages).toBe(true);
+      expect(extracted.text).toContain(
+        '![Gemini interactive UI screenshot](data:image/png;base64,abc123)',
+      );
+      expect(extracted.html).toContain(
+        '<img src="data:image/png;base64,abc123" alt="Gemini interactive UI screenshot" />',
+      );
+    });
+  });
 });

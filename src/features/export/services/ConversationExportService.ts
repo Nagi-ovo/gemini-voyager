@@ -512,9 +512,45 @@ export class ConversationExportService {
     });
   }
 
+  private static decodeDataImageUrl(url: string): { blob: Blob; contentType: string } | null {
+    const commaIndex = url.indexOf(',');
+    if (!url.startsWith('data:image/') || commaIndex < 0) return null;
+
+    const metadata = url.slice('data:'.length, commaIndex);
+    const contentType = metadata.split(';')[0] || 'image/png';
+    const payload = url.slice(commaIndex + 1);
+
+    try {
+      let bytes: Uint8Array;
+      if (metadata.includes(';base64')) {
+        const binary = atob(payload);
+        bytes = new Uint8Array(binary.length);
+        for (let idx = 0; idx < binary.length; idx++) {
+          bytes[idx] = binary.charCodeAt(idx);
+        }
+      } else {
+        bytes = new TextEncoder().encode(decodeURIComponent(payload));
+      }
+
+      const buffer = new ArrayBuffer(bytes.byteLength);
+      new Uint8Array(buffer).set(bytes);
+
+      return {
+        blob: new Blob([buffer], { type: contentType }),
+        contentType,
+      };
+    } catch {
+      return null;
+    }
+  }
+
   private static async fetchImageForMarkdownPackaging(
     url: string,
   ): Promise<{ blob: Blob; contentType: string | null } | null> {
+    if (url.startsWith('data:image/')) {
+      return this.decodeDataImageUrl(url);
+    }
+
     try {
       const response = await fetch(url, { credentials: 'include', mode: 'cors' as RequestMode });
       if (response.ok) {

@@ -35,10 +35,10 @@ export class MarkdownFormatter {
   }
 
   /**
-   * Extract image URLs from Markdown (http/https and blob: URLs)
+   * Extract image URLs from Markdown (http/https, blob:, and inline data images)
    */
   static extractImageUrls(markdown: string): string[] {
-    const imgRegex = /!\[[^\]]*\]\(((?:https?:\/\/|blob:)[^\s)]+)\)/g;
+    const imgRegex = /!\[[^\]]*\]\(((?:https?:\/\/|blob:|data:image\/)[^\s)]+)\)/g;
     const out = new Set<string>();
     let m: RegExpExecArray | null;
     while ((m = imgRegex.exec(markdown)) !== null) {
@@ -51,7 +51,7 @@ export class MarkdownFormatter {
    * Rewrite Markdown image URLs using provided mapping (original -> newUrl)
    */
   static rewriteImageUrls(markdown: string, mapping: Map<string, string>): string {
-    const imgRegex = /!\[([^\]]*)\]\(((?:https?:\/\/|blob:)[^\s)]+)\)/g;
+    const imgRegex = /!\[([^\]]*)\]\(((?:https?:\/\/|blob:|data:image\/)[^\s)]+)\)/g;
     return markdown.replace(imgRegex, (_all, alt, url) => {
       const next = mapping.get(url);
       return next ? `![${alt}](${next})` : _all;
@@ -62,7 +62,7 @@ export class MarkdownFormatter {
    * Replace markdown image syntax with a Safari-safe text placeholder.
    */
   static degradeImageMarkdownForSafari(markdown: string): string {
-    const imgRegex = /!\[([^\]]*)\]\(((?:https?:\/\/|blob:)[^\s)]+)\)/g;
+    const imgRegex = /!\[([^\]]*)\]\(((?:https?:\/\/|blob:|data:image\/)[^\s)]+)\)/g;
     return markdown.replace(imgRegex, (_all, altText) => {
       const alt = String(altText || '').trim();
       const label = alt || 'image';

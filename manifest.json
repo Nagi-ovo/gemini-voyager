@@ -31,6 +31,7 @@
     "scopes": ["https://www.googleapis.com/auth/drive.file"]
   },
   "host_permissions": [
+    "<all_urls>",
     "https://gemini.google.com/*",
     "https://business.gemini.google/*",
     "https://aistudio.google.com/*",
@@ -41,7 +42,6 @@
     "https://lh3.google.com/*",
     "https://*.ggpht.com/*"
   ],
-  "optional_host_permissions": ["https://*/*", "http://*/*"],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; worker-src 'self'"
   },

@@ -530,6 +530,29 @@ describe('ConversationExportService', () => {
       expect(capturedAssetOptions).toMatchObject({ base64: true });
     });
 
+    it('packages inline data images as zip assets instead of leaving base64 in markdown', async () => {
+      const dataUrl = 'data:image/png;base64,aGVsbG8=';
+
+      const finalFilename = await (
+        ConversationExportService as unknown as Record<string, (...args: unknown[]) => unknown>
+      ).downloadMarkdownOrZip(`![Interactive UI](${dataUrl})`, 'chat.md', 'chat.md');
+
+      expect(finalFilename).toBe('chat.zip');
+
+      const createObjectURLMock = global.URL.createObjectURL as unknown as {
+        mock: { calls: Array<[Blob]> };
+      };
+      const zipBlob = createObjectURLMock.mock.calls[0][0];
+      const zip = await JSZip.loadAsync(zipBlob);
+      const packagedMarkdown = await zip.file('chat.md')?.async('string');
+      const imageFile = zip.file('assets/img-001.png');
+
+      expect(packagedMarkdown).toBe('![Interactive UI](assets/img-001.png)');
+      expect(packagedMarkdown).not.toContain('data:image');
+      expect(imageFile).not.toBeNull();
+      expect(await imageFile?.async('string')).toBe('hello');
+    });
+
     it('does not append -s0 to Google authuser query params', () => {
       const toOriginalSizeUrl = (
         ConversationExportService as unknown as Record<string, (url: string) => string>

@@ -66,6 +66,9 @@ const EXPORT_PRELOAD_WAIT_OPTIONS = {
   maxSamples: 10,
 } as const;
 const FINAL_EXPORT_PREPARE_DELAY_MS = 120;
+const GENERATED_UI_FRAME_SELECTOR = 'iframe[src*="gemini-code-immersive"]';
+const GENERATED_UI_SCREENSHOT_MESSAGE_TYPE = 'gv.generatedUi.captureVisibleTab';
+const GENERATED_UI_SCREENSHOT_SECTION_CLASS = 'gv-generated-ui-screenshot-section';
 let conversationMenuObserver: MutationObserver | null = null;
 let responseActionObserver: MutationObserver | null = null;
 let cachedCanvasDocs: CanvasDoc[] | null = null;
@@ -73,6 +76,136 @@ let cachedCanvasDocs: CanvasDoc[] | null = null;
 /** Remove all injected Canvas export sections from the DOM after export completes */
 function removeCanvasExportSections(): void {
   document.querySelectorAll('.gv-canvas-export-section').forEach((el) => el.remove());
+}
+
+function removeGeneratedUiScreenshotSections(): void {
+  document
+    .querySelectorAll(`.${GENERATED_UI_SCREENSHOT_SECTION_CLASS}`)
+    .forEach((el) => {
+      // PDFPrintService owns the print container lifecycle after window.print().
+      if (el.closest('#gv-pdf-print-container')) return;
+      el.remove();
+    });
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('image_load_failed'));
+    img.src = src;
+  });
+}
+
+async function cropViewportScreenshot(dataUrl: string, rect: DOMRect): Promise<string | null> {
+  const img = await loadImage(dataUrl);
+  const scaleX = img.naturalWidth / window.innerWidth;
+  const scaleY = img.naturalHeight / window.innerHeight;
+  const left = Math.max(0, rect.left);
+  const top = Math.max(0, rect.top);
+  const right = Math.min(window.innerWidth, rect.right);
+  const bottom = Math.min(window.innerHeight, rect.bottom);
+  const width = Math.floor((right - left) * scaleX);
+  const height = Math.floor((bottom - top) * scaleY);
+  if (width <= 0 || height <= 0) return null;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext('2d');
+  if (!context) return null;
+  context.drawImage(img, left * scaleX, top * scaleY, width, height, 0, 0, width, height);
+  return canvas.toDataURL('image/png');
+}
+
+function insertGeneratedUiScreenshot(frame: HTMLIFrameElement, dataUrl: string): void {
+  const section = document.createElement('div');
+  section.className = GENERATED_UI_SCREENSHOT_SECTION_CLASS;
+  const img = document.createElement('img');
+  img.src = dataUrl;
+  img.alt = 'Gemini interactive UI screenshot';
+  section.appendChild(img);
+
+  const anchor =
+    (frame.closest('.attachment-container') as HTMLElement | null) ||
+    (frame.closest('response-element') as HTMLElement | null);
+  if (anchor?.parentElement) {
+    anchor.insertAdjacentElement('afterend', section);
+    return;
+  }
+
+  const container =
+    (frame.closest('message-content') as HTMLElement | null)?.querySelector(
+      '.markdown, .markdown-main-panel',
+    ) ||
+    (frame.closest('.markdown, .markdown-main-panel, message-content') as HTMLElement | null) ||
+    frame.parentElement;
+  container?.appendChild(section);
+}
+
+async function captureVisibleTab(): Promise<string | null> {
+  try {
+    const response = (await chrome.runtime.sendMessage({
+      type: GENERATED_UI_SCREENSHOT_MESSAGE_TYPE,
+    })) as { ok?: boolean; dataUrl?: string; error?: string };
+    if (response?.ok && typeof response.dataUrl === 'string') return response.dataUrl;
+    console.warn(
+      '[Gemini Voyager] Generated UI screenshot capture failed:',
+      response?.error || 'empty_response',
+      response,
+    );
+  } catch (error) {
+    console.warn('[Gemini Voyager] Generated UI screenshot capture failed:', error);
+  }
+  return null;
+}
+
+async function captureGeneratedUiScreenshots(): Promise<void> {
+  removeGeneratedUiScreenshotSections();
+  const frames = Array.from(
+    document.querySelectorAll<HTMLIFrameElement>(GENERATED_UI_FRAME_SELECTOR),
+  );
+  if (frames.length === 0) return;
+
+  const hiddenOverlays = Array.from(
+    document.querySelectorAll<HTMLElement>('.gv-export-progress-overlay'),
+  );
+  const previousDisplay = hiddenOverlays.map((overlay) => overlay.style.display);
+  hiddenOverlays.forEach((overlay) => {
+    overlay.style.display = 'none';
+  });
+
+  try {
+    for (const frame of frames) {
+      frame.scrollIntoView({ block: 'center', inline: 'nearest' });
+      await new Promise((resolve) => window.setTimeout(resolve, 120));
+      const screenshot = await captureVisibleTab();
+      if (!screenshot) continue;
+      const rect = frame.getBoundingClientRect();
+      const cropped = await cropViewportScreenshot(screenshot, rect);
+      if (cropped) {
+        insertGeneratedUiScreenshot(frame, cropped);
+      } else {
+        console.warn('[Gemini Voyager] Generated UI screenshot crop failed:', {
+          bottom: rect.bottom,
+          height: rect.height,
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          viewportHeight: window.innerHeight,
+          viewportWidth: window.innerWidth,
+          width: rect.width,
+        });
+      }
+    }
+  } catch (error) {
+    console.warn('[Gemini Voyager] Generated UI screenshot export failed:', error);
+    // Link/text fallback still exports if screenshot capture is unavailable.
+  } finally {
+    hiddenOverlays.forEach((overlay, index) => {
+      overlay.style.display = previousDisplay[index] || '';
+    });
+  }
 }
 
 interface PendingExportState {
@@ -1400,6 +1533,7 @@ async function executeExportSequenceWithProgress(
     hideProgress();
     cachedCanvasDocs = null;
     removeCanvasExportSections();
+    removeGeneratedUiScreenshotSections();
   }
 }
 
@@ -1417,6 +1551,7 @@ async function performFinalExport(
   const t = (key: TranslationKey) => dict[lang]?.[key] ?? dict.en?.[key] ?? key;
 
   await new Promise((r) => setTimeout(r, FINAL_EXPORT_PREPARE_DELAY_MS));
+  await captureGeneratedUiScreenshots();
 
   const pairs = collectChatPairs();
   const messages = buildExportMessagesFromPairs(pairs);
@@ -1732,14 +1867,19 @@ async function performFinalExport(
       return;
     }
 
-    const turnsForExport = buildTurnsForSelectedMessageIds(selectedIds, collectChatPairs());
+    const selectedIdsForExport = new Set(selectedIds);
+    // Cleanup before capture/export so selection UI is not included in screenshots.
+    finish();
+    await captureGeneratedUiScreenshots();
+
+    const turnsForExport = buildTurnsForSelectedMessageIds(
+      selectedIdsForExport,
+      collectChatPairs(),
+    );
     if (turnsForExport.length === 0) {
       alert(t('export_select_mode_empty'));
       return;
     }
-
-    // Cleanup before export so selection UI isn't captured.
-    finish();
 
     const metadata: ConversationMetadata = {
       url: location.href,
@@ -1783,6 +1923,7 @@ async function performFinalExport(
     } finally {
       hideProgress();
       removeCanvasExportSections();
+      removeGeneratedUiScreenshotSections();
     }
   });
 

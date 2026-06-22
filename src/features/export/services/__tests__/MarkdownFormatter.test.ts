@@ -127,4 +127,28 @@ describe('MarkdownFormatter', () => {
       expect(filename.endsWith('.md')).toBe(true);
     });
   });
+
+  describe('image URLs', () => {
+    it('extracts and rewrites inline data images', () => {
+      const dataUrl = 'data:image/png;base64,aGVsbG8=';
+      const markdown = `![Interactive UI](${dataUrl})`;
+
+      expect(MarkdownFormatter.extractImageUrls(markdown)).toEqual([dataUrl]);
+
+      const rewritten = MarkdownFormatter.rewriteImageUrls(
+        markdown,
+        new Map([[dataUrl, 'assets/img-001.png']]),
+      );
+
+      expect(rewritten).toBe('![Interactive UI](assets/img-001.png)');
+    });
+
+    it('degrades inline data images for Safari markdown export', () => {
+      const markdown = 'Screenshot: ![Interactive UI](data:image/png;base64,aGVsbG8=)';
+
+      expect(MarkdownFormatter.degradeImageMarkdownForSafari(markdown)).toContain(
+        '[Image unavailable in Safari export: Interactive UI]',
+      );
+    });
+  });
 });
