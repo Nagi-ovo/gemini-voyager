@@ -79,13 +79,11 @@ function removeCanvasExportSections(): void {
 }
 
 function removeGeneratedUiScreenshotSections(): void {
-  document
-    .querySelectorAll(`.${GENERATED_UI_SCREENSHOT_SECTION_CLASS}`)
-    .forEach((el) => {
-      // PDFPrintService owns the print container lifecycle after window.print().
-      if (el.closest('#gv-pdf-print-container')) return;
-      el.remove();
-    });
+  document.querySelectorAll(`.${GENERATED_UI_SCREENSHOT_SECTION_CLASS}`).forEach((el) => {
+    // PDFPrintService owns the print container lifecycle after window.print().
+    if (el.closest('#gv-pdf-print-container')) return;
+    el.remove();
+  });
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
