@@ -259,3 +259,22 @@ jobs:
             voyager-firefox-*.xpi
             voyager-*.dmg
           body: ${{ steps.release_body.outputs.body }}
+
+      # Last step on purpose: if Chrome publishing fails (e.g. store review,
+      # token expiry), the GitHub Release and the Firefox/AMO submission above
+      # have already completed and are unaffected.
+      - name: Publish to Chrome Web Store
+        run: |
+          TAG=${{ steps.vars.outputs.tag_name }}
+          bunx chrome-webstore-upload-cli@3 upload \
+            --source "voyager-chrome-${TAG}.zip" \
+            --extension-id "$EXTENSION_ID" \
+            --client-id "$CLIENT_ID" \
+            --client-secret "$CLIENT_SECRET" \
+            --refresh-token "$REFRESH_TOKEN" \
+            --auto-publish
+        env:
+          EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
