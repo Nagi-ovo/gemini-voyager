@@ -479,8 +479,6 @@ function flushDeferredForegroundCompletion(): void {
 }
 
 async function notifyOrQueueForegroundFallback(): Promise<void> {
-  if (shouldSuppressWithoutPromptInteraction()) return;
-
   const notified = await sendCompletionNotification();
   if (!notified) {
     queueDeferredForegroundCompletion();
