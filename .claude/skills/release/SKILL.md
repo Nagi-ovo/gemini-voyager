@@ -3,7 +3,7 @@ name: release
 description: Cut a new gemini-voyager release — open-issue triage, preflight checks, version bump, 10-locale changelog, commit, tag, push, curated GitHub release body, Chrome/Firefox artifacts, optional legacy Edge zip, and Safari DMG. Use whenever the user says "发版", "release", "bump", "cut a release", "ship vX.Y.Z", or otherwise signals shipping a new version. Also use when the user wants just an Edge compatibility zip or Safari DMG for an existing release.
 user-invocable: true
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Release Workflow
@@ -90,9 +90,9 @@ Commit message stays lowercase and imperative per the project's Conventional Com
 
 ## Step 5 — Push (external action — confirm first)
 
-Pushing the tag triggers `.github/workflows/release.yml`, which creates a public GitHub Release and uploads Chrome zip + Firefox xpi. This is visible to users. Confirm with the user before pushing:
+Pushing the tag triggers `.github/workflows/release.yml`, which creates a public GitHub Release (Chrome zip + Firefox xpi), signs and submits Firefox to AMO, and — as its final step — auto-publishes the Chrome build to the Chrome Web Store via `chrome-webstore-upload-cli` (`--auto-publish`). All of this is visible to users. Confirm with the user before pushing:
 
-> About to push `v{VERSION}` to origin. This triggers the public GitHub Release workflow (Chrome zip + Firefox xpi will be built and published automatically). OK to push?
+> About to push `v{VERSION}` to origin. This triggers the public release workflow: a GitHub Release (Chrome zip + Firefox xpi), Firefox submitted to AMO, and the Chrome build auto-published to the Chrome Web Store (submitted for Google review — not instantly live). OK to push?
 
 Once confirmed:
 
@@ -106,7 +106,7 @@ Monitor the release workflow briefly:
 gh run list --workflow release.yml --limit 3
 ```
 
-If it fails, investigate — common causes: lint failing in CI (not locally because of cache), missing required secrets for Firefox signing.
+If it fails, investigate — common causes: lint failing in CI (not locally because of cache), or missing/expired secrets for Firefox signing (`AMO_*`) or Chrome publishing (`CHROME_CLIENT_ID` / `CHROME_CLIENT_SECRET` / `CHROME_REFRESH_TOKEN` / `CHROME_EXTENSION_ID`). The Chrome Web Store step runs **last on purpose**, so if only it fails (expired refresh token, wrong extension id, store-review rejection), the GitHub Release and Firefox/AMO submission already went out — just re-publish Chrome (re-run the workflow job, or upload the Release's Chrome zip via `chrome-webstore-upload-cli`), don't re-cut the version. The `CHROME_REFRESH_TOKEN` can be regenerated locally with `bun run scripts/cws-refresh-token.ts <client_secret.json>`.
 
 > ⚡ **Don't idle during the ~5–6 min CI build.** The Safari archive (Step 8) depends on **none** of the GitHub release — only the final `gh release upload`. So the moment the tag is pushed: start Step 8's `ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari` + `xcodebuild archive` **in the background**, and curate the release body (Step 6) while both CI and the archive run. Converge at the end — upload the Safari DMG once CI has created the release. This collapses the two ~5-min waits (CI + archive) into one. (Skip this overlap only if Xcode isn't available or the user deferred Safari.)
 
@@ -187,6 +187,7 @@ xcodebuild -version 2>&1
 
 - Open the new release page: `gh release view v{VERSION} --web` (only if user asks).
 - Confirm asset list. Expected: `voyager-chrome-v{VERSION}.zip`, `voyager-firefox-v{VERSION}.xpi`, and (if Safari sub-flow ran) `voyager-v{VERSION}.dmg`. Any Edge zip from Step 7 lives only on disk, never on the release page.
+- Chrome Web Store publish is automatic now (the workflow's final step). To confirm it went through, check that step's log in the workflow run, or the [CWS developer dashboard](https://chrome.google.com/webstore/devconsole) — the new version sits in Google review before it goes live, so it won't be public immediately.
 - Summarize in one line what was shipped and what's still pending (if Safari was deferred).
 
 ## What NOT to do
