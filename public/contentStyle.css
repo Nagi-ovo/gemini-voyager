@@ -2861,6 +2861,16 @@ body.dark-theme .gv-pm-settings:hover {
   color: #e5e7eb;
 }
 
+.gv-pm-support svg {
+  flex: 0 0 auto;
+}
+
+.gv-pm-support-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .theme-host.light-theme .gv-pm-support,
 body.light-theme .gv-pm-support {
   background: transparent;

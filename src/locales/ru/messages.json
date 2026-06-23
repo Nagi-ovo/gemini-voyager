@@ -295,6 +295,10 @@
     "message": "Поддержать меня ⭐",
     "description": "Github callout"
   },
+  "sponsorMe": {
+    "message": "Спонсировать меня",
+    "description": "Sponsor callout"
+  },
   "officialDocs": {
     "message": "Официальная документация",
     "description": "Official docs link"

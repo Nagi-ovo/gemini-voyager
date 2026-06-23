@@ -115,9 +115,7 @@ describe('Claude timeline', () => {
     second.getBoundingClientRect = vi.fn(
       () => ({ top: 1580, bottom: 1620, height: 40 }) as DOMRect,
     );
-    third.getBoundingClientRect = vi.fn(
-      () => ({ top: 1950, bottom: 1990, height: 40 }) as DOMRect,
-    );
+    third.getBoundingClientRect = vi.fn(() => ({ top: 1950, bottom: 1990, height: 40 }) as DOMRect);
     Object.defineProperty(document.documentElement, 'scrollHeight', {
       configurable: true,
       value: 2000,
@@ -156,9 +154,7 @@ describe('Claude timeline', () => {
   it('scrolls clicked markers to the active anchor', async () => {
     addTurn('first prompt');
     const second = addTurn('second prompt');
-    second.getBoundingClientRect = vi.fn(
-      () => ({ top: 700, bottom: 740, height: 40 }) as DOMRect,
-    );
+    second.getBoundingClientRect = vi.fn(() => ({ top: 700, bottom: 740, height: 40 }) as DOMRect);
 
     startClaudeTimeline();
     await flush();

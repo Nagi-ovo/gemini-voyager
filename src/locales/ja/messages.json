@@ -295,6 +295,10 @@
     "message": "応援する ⭐",
     "description": "Github callout"
   },
+  "sponsorMe": {
+    "message": "スポンサーする",
+    "description": "Sponsor callout"
+  },
   "officialDocs": {
     "message": "公式ドキュメント",
     "description": "Official docs link"

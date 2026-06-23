@@ -43,6 +43,8 @@ const GITHUB_PROMOTION_PATH_PREFIX =
   '/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/';
 const RAW_GITHUBUSERCONTENT_PROMOTION_PATH_PREFIX =
   '/Nagi-ovo/gemini-voyager/main/docs/public/assets/promotion/';
+const SPONSOR_HEART_PATH_24 =
+  'M14 20.408c-.492.308-.903.546-1.192.709q-.23.129-.463.252h-.002a.75.75 0 0 1-.686 0a17 17 0 0 1-.465-.252a31 31 0 0 1-4.803-3.34C3.8 15.572 1 12.331 1 8.513C1 5.052 3.829 2.5 6.736 2.5C9.03 2.5 10.881 3.726 12 5.605C13.12 3.726 14.97 2.5 17.264 2.5C20.17 2.5 23 5.052 23 8.514c0 3.818-2.801 7.06-5.389 9.262A31 31 0 0 1 14 20.408';
 
 function getPromotionRuntimePath(filename: string): string | null {
   switch (filename) {
@@ -366,8 +368,7 @@ function createChangelogModal(
   sponsorLink.target = '_blank';
   sponsorLink.rel = 'noopener noreferrer';
   sponsorLink.setAttribute('aria-label', 'Sponsor');
-  sponsorLink.innerHTML =
-    '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>';
+  sponsorLink.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="${SPONSOR_HEART_PATH_24}"/></svg>`;
 
   // GitHub link
   const githubLink = document.createElement('a');

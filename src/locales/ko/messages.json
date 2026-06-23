@@ -295,6 +295,10 @@
     "message": "지원하기 ⭐",
     "description": "Github callout"
   },
+  "sponsorMe": {
+    "message": "후원하기",
+    "description": "Sponsor callout"
+  },
   "officialDocs": {
     "message": "공식 문서",
     "description": "Official docs link"

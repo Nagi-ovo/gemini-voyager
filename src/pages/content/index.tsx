@@ -7,10 +7,7 @@ import {
 import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy, stopFormulaCopy } from '@/features/formulaCopy';
 import { startPluginHost } from '@/features/plugins';
-import {
-  startClaudeTimeline,
-  stopClaudeTimeline,
-} from '@/features/plugins/builtin/claudeTimeline';
+import { startClaudeTimeline, stopClaudeTimeline } from '@/features/plugins/builtin/claudeTimeline';
 import { registerNativeHandler } from '@/features/plugins/runtime/nativeHandlers';
 import { resolvePluginPlatformId } from '@/features/plugins/sites/registry';
 import { initI18n } from '@/utils/i18n';

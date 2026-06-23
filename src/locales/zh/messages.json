@@ -295,6 +295,10 @@
     "message": "为项目点亮 ⭐️",
     "description": "Github 引导"
   },
+  "sponsorMe": {
+    "message": "为我赞助",
+    "description": "赞助引导"
+  },
   "officialDocs": {
     "message": "官方文档",
     "description": "Official docs link"

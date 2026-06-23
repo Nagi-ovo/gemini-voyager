@@ -152,8 +152,7 @@ class ClaudeTimeline {
   private touchesTurn(node: Node): boolean {
     const element = this.toElement(node);
     return !!(
-      element?.closest(USER_MESSAGE_SELECTOR) ||
-      element?.querySelector?.(USER_MESSAGE_SELECTOR)
+      element?.closest(USER_MESSAGE_SELECTOR) || element?.querySelector?.(USER_MESSAGE_SELECTOR)
     );
   }
 
@@ -385,7 +384,10 @@ class ClaudeTimeline {
     const left = leftPlacement ? rect.left - gap - tooltipWidth : rect.right + gap;
     const top = Math.max(
       8,
-      Math.min(window.innerHeight - tooltipHeight - 8, rect.top + rect.height / 2 - tooltipHeight / 2),
+      Math.min(
+        window.innerHeight - tooltipHeight - 8,
+        rect.top + rect.height / 2 - tooltipHeight / 2,
+      ),
     );
     this.tooltip.style.left = `${Math.max(8, Math.round(left))}px`;
     this.tooltip.style.top = `${Math.round(top)}px`;
@@ -520,7 +522,9 @@ class ClaudeTimeline {
   private isAtScrollBottom(): boolean {
     const viewportHeight = this.getViewportHeight();
     const scrollHeight = this.getScrollHeight();
-    return scrollHeight > viewportHeight && this.getScrollTop() + viewportHeight >= scrollHeight - 2;
+    return (
+      scrollHeight > viewportHeight && this.getScrollTop() + viewportHeight >= scrollHeight - 2
+    );
   }
 
   private scrollMarkerIntoView(element: HTMLElement): void {
