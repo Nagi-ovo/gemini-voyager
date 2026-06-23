@@ -2798,7 +2798,9 @@ body.dark-theme .gv-pm-backup-btn:hover {
 
 .gv-pm-settings::before {
   content: '⚙';
-  font-size: 13px;
+  flex: 0 0 auto;
+  font-size: 16px;
+  line-height: 1;
 }
 
 .gv-pm-settings:hover {
