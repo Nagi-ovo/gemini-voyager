@@ -71,6 +71,18 @@
     "message": "Поиск промптов или тегов",
     "description": "Search placeholder"
   },
+  "popupSettingsSearchPlaceholder": {
+    "message": "Поиск настроек",
+    "description": "Popup settings search input placeholder"
+  },
+  "popupSettingsSearchClear": {
+    "message": "Очистить поиск",
+    "description": "Popup settings search clear button label"
+  },
+  "popupSettingsSearchNoResults": {
+    "message": "Нет подходящих настроек",
+    "description": "Popup settings search empty state"
+  },
   "pm_import": {
     "message": "Импорт",
     "description": "Import button"

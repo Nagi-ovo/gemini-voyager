@@ -71,6 +71,18 @@
     "message": "搜尋 prompt 或標籤",
     "description": "搜尋佔位符"
   },
+  "popupSettingsSearchPlaceholder": {
+    "message": "搜尋設定",
+    "description": "Popup 設定搜尋框佔位符"
+  },
+  "popupSettingsSearchClear": {
+    "message": "清除搜尋",
+    "description": "Popup 設定搜尋清除按鈕標籤"
+  },
+  "popupSettingsSearchNoResults": {
+    "message": "沒有符合的設定",
+    "description": "Popup 設定搜尋無結果狀態"
+  },
   "pm_import": {
     "message": "匯入",
     "description": "匯入按鈕"

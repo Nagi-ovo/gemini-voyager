@@ -71,6 +71,18 @@
     "message": "البحث في المطالبات أو العلامات",
     "description": "Search placeholder"
   },
+  "popupSettingsSearchPlaceholder": {
+    "message": "البحث في الإعدادات",
+    "description": "Popup settings search input placeholder"
+  },
+  "popupSettingsSearchClear": {
+    "message": "مسح البحث",
+    "description": "Popup settings search clear button label"
+  },
+  "popupSettingsSearchNoResults": {
+    "message": "لا توجد إعدادات مطابقة",
+    "description": "Popup settings search empty state"
+  },
   "pm_import": {
     "message": "استيراد",
     "description": "Import button"

@@ -71,6 +71,18 @@
     "message": "搜索 prompt 或标签",
     "description": "搜索占位符"
   },
+  "popupSettingsSearchPlaceholder": {
+    "message": "搜索设置",
+    "description": "Popup 设置搜索框占位符"
+  },
+  "popupSettingsSearchClear": {
+    "message": "清除搜索",
+    "description": "Popup 设置搜索清除按钮标签"
+  },
+  "popupSettingsSearchNoResults": {
+    "message": "没有匹配的设置",
+    "description": "Popup 设置搜索无结果状态"
+  },
   "pm_import": {
     "message": "导入",
     "description": "导入按钮"

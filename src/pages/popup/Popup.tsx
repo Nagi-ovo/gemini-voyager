@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { Search, X } from 'lucide-react';
 import browser from 'webextension-polyfill';
 
 import {
@@ -68,6 +69,10 @@ import {
   IconQwen,
 } from './components/WebsiteLogos';
 import WidthSlider from './components/WidthSlider';
+import {
+  getSettingsSearchMatches,
+  type SettingsSearchItem,
+} from './utils/settingsSearch';
 
 type ScrollMode = 'jump' | 'flow';
 
@@ -111,6 +116,265 @@ const VALUE_BADGE_SECTION_IDS = new Set<PopupSectionId>([
   'editInputWidth',
   'sidebarWidth',
 ]);
+
+const POPUP_SECTION_SEARCH_ITEMS = [
+  {
+    id: 'cloudSync',
+    keys: [
+      'cloudSync',
+      'cloudSyncDescription',
+      'syncUpload',
+      'syncMerge',
+      'syncOverwrite',
+      'syncMode',
+      'signInWithGoogle',
+      'signOut',
+      'lastSynced',
+      'lastUploaded',
+      'syncSuccess',
+      'syncError',
+    ],
+    aliases: ['backup restore drive google cloud save 云端 云同步 备份 恢复'],
+  },
+  {
+    id: 'contextSync',
+    keys: [
+      'contextSync',
+      'contextSyncDescription',
+      'syncToIDE',
+      'syncServerPort',
+      'ideOnline',
+      'ideOffline',
+      'capturing',
+      'syncedSuccess',
+      'syncMode',
+    ],
+    aliases: ['ide vscode cursor local server code context 上下文 代码 编辑器 本地'],
+  },
+  {
+    id: 'timeline',
+    keys: [
+      'timelineOptions',
+      'scrollMode',
+      'flow',
+      'jump',
+      'hideOuterContainer',
+      'draggableTimeline',
+      'pinTimelinePreview',
+      'pinTimelinePreviewHint',
+      'preventAutoScroll',
+      'preventAutoScrollHint',
+      'enableMarkerLevel',
+      'enableMarkerLevelHint',
+      'showMessageTimestamps',
+      'showMessageTimestampsHint',
+      'resetTimelinePosition',
+      'viewStarredHistory',
+    ],
+    aliases: ['navigation nav node preview bookmark star history 时间轴 导航 节点 收藏 时间戳'],
+  },
+  {
+    id: 'folder',
+    keys: [
+      'folderOptions',
+      'enableFolderFeature',
+      'enableFolderFloatingMode',
+      'enableFolderFloatingModeHint',
+      'openFloatingFolderOnStartup',
+      'openFloatingFolderOnStartupHint',
+      'hideArchivedConversations',
+      'showFolderSearch',
+      'enableForkFeature',
+      'enableForkFeatureHint',
+      'enableAccountIsolation',
+      'enableAccountIsolationHint',
+      'folderAsProject_enable',
+      'folderAsProject_description',
+      'aiOrgCopyButton',
+      'aiOrgCopyHint',
+    ],
+    aliases: ['organize project archive account branch fork files 文件夹 分类 项目 归档 分叉 账号'],
+  },
+  {
+    id: 'folderSpacing',
+    keys: ['folderSpacing', 'folderSpacingCompact', 'folderSpacingSpacious'],
+    aliases: ['folder gap density padding margin 间距 密度 紧凑 宽松'],
+  },
+  {
+    id: 'folderTreeIndent',
+    keys: ['folderTreeIndent', 'folderTreeIndentCompact', 'folderTreeIndentSpacious'],
+    aliases: ['folder nesting tree indent hierarchy 层级 缩进 树'],
+  },
+  {
+    id: 'gemsSidebar',
+    keys: ['gemsSidebarCount', 'gemsSidebarCountOff', 'gemsSidebarCountMany'],
+    aliases: ['gems notebook recent side nav gem 宝石 侧边栏 最近'],
+  },
+  {
+    id: 'chatWidth',
+    keys: ['chatWidth', 'chatWidthNarrow', 'chatWidthWide'],
+    aliases: ['conversation width message width content width 宽 窄 对话宽度'],
+  },
+  {
+    id: 'chatFontSize',
+    keys: ['chatFontSize', 'chatFontSizeSmall', 'chatFontSizeLarge'],
+    aliases: ['font text size typography zoom 字号 字体 大小'],
+  },
+  {
+    id: 'chatLineHeight',
+    keys: [
+      'chatLineHeight',
+      'chatLineHeightTight',
+      'chatLineHeightLoose',
+      'chatParagraphSpacing',
+    ],
+    aliases: ['line spacing paragraph leading readability 行高 段落 间距'],
+  },
+  {
+    id: 'editInputWidth',
+    keys: ['editInputWidth', 'editInputWidthNarrow', 'editInputWidthWide'],
+    aliases: ['prompt input compose editor width 输入框 编辑框 宽度'],
+  },
+  {
+    id: 'sidebarWidth',
+    keys: ['sidebarWidth', 'sidebarWidthNarrow', 'sidebarWidthWide'],
+    aliases: ['side panel nav rail left width 侧边栏 宽度'],
+  },
+  {
+    id: 'sidebarBehavior',
+    keys: ['sidebarAutoHide', 'sidebarAutoHideHint', 'sidebarFullHide', 'sidebarFullHideHint'],
+    aliases: ['collapse hide sidebar navigation auto 自动隐藏 折叠 侧栏'],
+  },
+  {
+    id: 'visualEffect',
+    keys: [
+      'visualEffect',
+      'visualEffectHint',
+      'visualEffectOff',
+      'visualEffectSnow',
+      'visualEffectSakura',
+      'visualEffectRain',
+    ],
+    aliases: ['animation background sakura rain effects off snow 动效 背景 樱花 下雨 下雪 关闭'],
+  },
+  {
+    id: 'formulaCopy',
+    keys: [
+      'formulaCopyFormat',
+      'formulaCopyFormatHint',
+      'formulaCopyFormatLatex',
+      'formulaCopyFormatUnicodeMath',
+      'formulaCopyFormatNoDollar',
+      'formulaCopyFormatNotion',
+    ],
+    aliases: ['math equation latex unicode notion copy formula 数学 公式 复制'],
+  },
+  {
+    id: 'keyboardShortcuts',
+    keys: [
+      'keyboardShortcuts',
+      'enableShortcuts',
+      'previousNode',
+      'nextNode',
+      'firstNode',
+      'lastNode',
+      'resetShortcuts',
+    ],
+    aliases: ['hotkey keybinding vim navigation keyboard 快捷键 键盘 热键'],
+  },
+  {
+    id: 'inputCollapse',
+    keys: [
+      'inputCollapseOptions',
+      'enableInputCollapse',
+      'enableInputCollapseHint',
+      'inputCollapseShortcutHint',
+      'allowCollapseWhenNotEmpty',
+      'allowCollapseWhenNotEmptyHint',
+      'inputVimMode',
+      'inputVimModeHint',
+      'ctrlEnterSend',
+      'ctrlEnterSendHint',
+      'aistudioEnterSend',
+      'aistudioEnterSendHint',
+      'safariEnterFix',
+      'safariEnterFixHint',
+      'draftAutoSave',
+      'draftAutoSaveHint',
+    ],
+    aliases: ['compose box prompt enter send draft vim collapse 输入框 发送 草稿 折叠'],
+  },
+  {
+    id: 'promptManager',
+    keys: [
+      'promptManagerOptions',
+      'hidePromptManager',
+      'hidePromptManagerHint',
+      'promptInsertOnClick',
+      'promptInsertOnClickHint',
+      'customWebsites',
+      'customWebsitesPlaceholder',
+      'geminiOnlyNotice',
+      'addWebsite',
+      'removeWebsite',
+    ],
+    aliases: ['prompt library vault snippets templates websites 提示词 指令 宝库 网站 模板'],
+  },
+  {
+    id: 'plugins',
+    keys: [
+      'pluginsTitle',
+      'pluginsDescription',
+      'pluginsEmpty',
+      'pluginsRefresh',
+      'pluginViewSource',
+    ],
+    aliases: ['extension plugin marketplace add-on 插件 市场 扩展'],
+  },
+  {
+    id: 'general',
+    keys: [
+      'generalOptions',
+      'enableTabTitleUpdate',
+      'enableTabTitleUpdateHint',
+      'persistentExportToolbar',
+      'persistentExportToolbarHint',
+      'enableMermaidRendering',
+      'enableMermaidRenderingHint',
+      'enableQuoteReply',
+      'enableQuoteReplyHint',
+      'responseCompleteNotification',
+      'responseCompleteNotificationHint',
+      'responseCompleteNotificationHintSafari',
+      'remoteAnnouncementNotification',
+      'remoteAnnouncementNotificationHint',
+      'remoteAnnouncementSystemPermissionCta',
+      'usageStatusToggle',
+      'usageStatusToggleHint',
+      'hideInputHalo',
+      'hideInputHaloHint',
+      'enableDefaultModelAutoApply',
+      'enableDefaultModelAutoApplyHint',
+    ],
+    aliases: [
+      'export toolbar title diagram mermaid quote notification alert reminder notice usage model halo',
+      '导出 标题 图表 引用 通知 提醒 推送 用量 模型 光晕 水波纹',
+    ],
+  },
+  {
+    id: 'nanobanana',
+    keys: [
+      'nanobananaOptions',
+      'nanobananaDownloadLabel',
+      'nanobananaDownloadHint',
+      'nanobananaPreviewLabel',
+      'nanobananaPreviewHint',
+      'nanobananaBadgeRecommended',
+      'nanobananaBadgeUnstable',
+    ],
+    aliases: ['watermark image banana picture photo download preview 水印 图片 去水印 下载 预览'],
+  },
+] as const satisfies readonly SettingsSearchItem<PopupSectionId>[];
 
 const ROOT_CONVERSATIONS_ID = '__root_conversations__';
 
@@ -554,6 +818,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     'idle' | 'loading' | 'copied' | 'empty' | 'error'
   >('idle');
   const [sectionOrder, setSectionOrder] = useState<PopupSectionId[]>([...DEFAULT_SECTION_ORDER]);
+  const [settingsSearchQuery, setSettingsSearchQuery] = useState<string>('');
 
   const isAIStudio = activeAccountPlatform === 'aistudio';
   const currentPlatformLabel = isAIStudio ? t('platformAIStudio') : t('platformGemini');
@@ -1665,6 +1930,14 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   };
 
   const visibleSections = sectionOrder.filter(isSectionVisible);
+  const hasSettingsSearch = settingsSearchQuery.trim().length > 0;
+  const settingsSearchMatches = useMemo(
+    () => getSettingsSearchMatches(POPUP_SECTION_SEARCH_ITEMS, settingsSearchQuery),
+    [settingsSearchQuery],
+  );
+  const displayedSections = hasSettingsSearch
+    ? visibleSections.filter((id) => settingsSearchMatches.has(id))
+    : visibleSections;
 
   const moveSectionInOrder = (sectionId: PopupSectionId, direction: 'up' | 'down') => {
     setSectionOrder((prev) => {
@@ -1691,18 +1964,21 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     // Plugins section only. Gemini-specific settings, including Prompt Manager
     // custom-site controls, remain available from the native Gemini/AI Studio popup.
     if (isPluginSite) return null;
+    if (hasSettingsSearch && !settingsSearchMatches.has(id)) return null;
 
     return (
       <div key={id} style={{ order: sectionOrder.indexOf(id) }} className="group/reorder relative">
-        <SectionReorderControls
-          isFirst={visibleSections[0] === id}
-          isLast={visibleSections[visibleSections.length - 1] === id}
-          hasValueBadge={VALUE_BADGE_SECTION_IDS.has(id)}
-          onMoveUp={() => moveSectionInOrder(id, 'up')}
-          onMoveDown={() => moveSectionInOrder(id, 'down')}
-          moveUpLabel={t('moveSectionUp')}
-          moveDownLabel={t('moveSectionDown')}
-        />
+        {!hasSettingsSearch && (
+          <SectionReorderControls
+            isFirst={displayedSections[0] === id}
+            isLast={displayedSections[displayedSections.length - 1] === id}
+            hasValueBadge={VALUE_BADGE_SECTION_IDS.has(id)}
+            onMoveUp={() => moveSectionInOrder(id, 'up')}
+            onMoveDown={() => moveSectionInOrder(id, 'down')}
+            moveUpLabel={t('moveSectionUp')}
+            moveDownLabel={t('moveSectionDown')}
+          />
+        )}
         {content}
       </div>
     );
@@ -1737,6 +2013,38 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
       </div>
 
       <div className="flex flex-col gap-4 p-5">
+        {!isPluginSite && (
+          <div style={{ order: -3 }} className="relative">
+            <Search
+              className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+              aria-hidden="true"
+            />
+            <input
+              type="search"
+              value={settingsSearchQuery}
+              onChange={(e) => setSettingsSearchQuery(e.target.value)}
+              placeholder={t('popupSettingsSearchPlaceholder')}
+              aria-label={t('popupSettingsSearchPlaceholder')}
+              className="bg-card border-border focus:ring-primary/40 w-full rounded-lg border py-2 pr-9 pl-9 text-sm shadow-sm transition-all outline-none focus:ring-2"
+            />
+            {settingsSearchQuery && (
+              <button
+                type="button"
+                onClick={() => setSettingsSearchQuery('')}
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md transition-colors"
+                aria-label={t('popupSettingsSearchClear')}
+                title={t('popupSettingsSearchClear')}
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            )}
+          </div>
+        )}
+        {!isPluginSite && hasSettingsSearch && displayedSections.length === 0 && (
+          <Card style={{ order: -2.5 }} className="p-4 text-center" role="status">
+            <p className="text-muted-foreground text-sm">{t('popupSettingsSearchNoResults')}</p>
+          </Card>
+        )}
         {hasUpdate && normalizedLatestVersion && normalizedCurrentVersion && (
           <Card
             style={{ order: -2 }}

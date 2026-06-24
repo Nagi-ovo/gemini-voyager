@@ -71,6 +71,18 @@
     "message": "Search prompts or tags",
     "description": "Search placeholder"
   },
+  "popupSettingsSearchPlaceholder": {
+    "message": "Search settings",
+    "description": "Popup settings search input placeholder"
+  },
+  "popupSettingsSearchClear": {
+    "message": "Clear search",
+    "description": "Popup settings search clear button label"
+  },
+  "popupSettingsSearchNoResults": {
+    "message": "No settings match your search",
+    "description": "Popup settings search empty state"
+  },
   "pm_import": {
     "message": "Import",
     "description": "Import button"

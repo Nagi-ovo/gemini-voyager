@@ -71,6 +71,18 @@
     "message": "프롬프트 또는 태그 검색",
     "description": "Search placeholder"
   },
+  "popupSettingsSearchPlaceholder": {
+    "message": "설정 검색",
+    "description": "Popup settings search input placeholder"
+  },
+  "popupSettingsSearchClear": {
+    "message": "검색 지우기",
+    "description": "Popup settings search clear button label"
+  },
+  "popupSettingsSearchNoResults": {
+    "message": "일치하는 설정이 없습니다",
+    "description": "Popup settings search empty state"
+  },
   "pm_import": {
     "message": "가져오기",
     "description": "Import button"

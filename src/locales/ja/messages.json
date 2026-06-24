@@ -71,6 +71,18 @@
     "message": "プロンプトまたはタグを検索",
     "description": "Search placeholder"
   },
+  "popupSettingsSearchPlaceholder": {
+    "message": "設定を検索",
+    "description": "Popup settings search input placeholder"
+  },
+  "popupSettingsSearchClear": {
+    "message": "検索をクリア",
+    "description": "Popup settings search clear button label"
+  },
+  "popupSettingsSearchNoResults": {
+    "message": "一致する設定がありません",
+    "description": "Popup settings search empty state"
+  },
   "pm_import": {
     "message": "インポート",
     "description": "Import button"
