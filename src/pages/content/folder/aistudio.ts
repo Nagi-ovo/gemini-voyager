@@ -1374,7 +1374,9 @@ export class AIStudioFolderManager {
     }
 
     if (this.activeFolderInput) {
-      const existingInput = this.activeFolderInput.querySelector('input') as HTMLInputElement | null;
+      const existingInput = this.activeFolderInput.querySelector(
+        'input',
+      ) as HTMLInputElement | null;
       if (existingInput) {
         existingInput.focus();
         return;
@@ -1534,9 +1536,7 @@ export class AIStudioFolderManager {
   }
 
   private deleteFolder(folderId: string): void {
-    const existingDialog = document.querySelector(
-      '.gv-folder-confirm-dialog.gv-aistudio-confirm',
-    );
+    const existingDialog = document.querySelector('.gv-folder-confirm-dialog.gv-aistudio-confirm');
     existingDialog?.remove();
 
     const dialog = document.createElement('div');
