@@ -239,6 +239,7 @@ export class AIStudioFolderManager {
   private promptListBindTimer: number | null = null;
   private promptTitleSyncTimer: number | null = null;
   private promptTitleSyncInProgress: boolean = false;
+  private activeFolderInput: HTMLElement | null = null;
   private selectedLibraryPrompts: Set<string> = new Set();
   private isLibraryMultiSelectMode: boolean = false;
   private libraryOutsideClickHandler: ((e: MouseEvent) => void) | null = null;
@@ -426,6 +427,10 @@ export class AIStudioFolderManager {
       ]),
     );
     return { folders, folderContents };
+  }
+
+  private clearActiveFolderInput(): void {
+    this.activeFolderInput = null;
   }
 
   private async migrateLegacyFolderDataToScopedStorage(): Promise<FolderData | null> {
@@ -698,6 +703,7 @@ export class AIStudioFolderManager {
       if (nowTs - this.lastContainerReinjectAt < 250) return;
       this.lastContainerReinjectAt = nowTs;
 
+      this.clearActiveFolderInput();
       this.container = null;
       try {
         this.injectUI();
@@ -983,6 +989,7 @@ export class AIStudioFolderManager {
     if (!this.container) return;
     const list = this.container.querySelector('.gv-folder-list') as HTMLElement | null;
     if (!list) return;
+    this.clearActiveFolderInput();
     list.innerHTML = '';
 
     // Render only root-level folders here; children are rendered recursively
@@ -1087,6 +1094,7 @@ export class AIStudioFolderManager {
   private ensureContainerMounted(): void {
     if (!this.folderEnabled) return;
     if (this.container && document.body.contains(this.container)) return;
+    this.clearActiveFolderInput();
     this.container = null;
     try {
       this.injectUI();
@@ -1360,52 +1368,245 @@ export class AIStudioFolderManager {
     window.addEventListener('click', onClickAway, true);
   }
 
-  private async createFolder(parentId: string | null = null): Promise<void> {
-    const name = prompt(this.t('folder_name_prompt'));
-    if (!name) return;
-    const f: Folder = {
-      id: uid(),
-      name: name.trim(),
-      parentId: parentId || null,
-      isExpanded: true,
-      createdAt: now(),
-      updatedAt: now(),
+  private createFolder(parentId: string | null = null): void {
+    if (this.activeFolderInput && !this.activeFolderInput.isConnected) {
+      this.clearActiveFolderInput();
+    }
+
+    if (this.activeFolderInput) {
+      const existingInput = this.activeFolderInput.querySelector('input') as HTMLInputElement | null;
+      if (existingInput) {
+        existingInput.focus();
+        return;
+      }
+      this.clearActiveFolderInput();
+    }
+
+    const inputContainer = document.createElement('div');
+    inputContainer.className = 'gv-folder-inline-input';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'gv-folder-name-input';
+    input.placeholder = this.t('folder_name_prompt');
+    input.maxLength = 50;
+
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.className = 'gv-folder-inline-btn gv-folder-inline-save';
+    saveBtn.title = this.t('pm_save');
+    saveBtn.appendChild(this.createIcon('check'));
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'gv-folder-inline-btn gv-folder-inline-cancel';
+    cancelBtn.title = this.t('pm_cancel');
+    cancelBtn.appendChild(this.createIcon('close'));
+
+    inputContainer.appendChild(input);
+    inputContainer.appendChild(saveBtn);
+    inputContainer.appendChild(cancelBtn);
+
+    const cancel = () => {
+      inputContainer.remove();
+      this.clearActiveFolderInput();
     };
-    this.data.folders.push(f);
-    this.data.folderContents[f.id] = [];
-    await this.save();
-    this.render();
+
+    const save = async () => {
+      const name = input.value.trim();
+      if (!name) {
+        cancel();
+        return;
+      }
+
+      const f: Folder = {
+        id: uid(),
+        name,
+        parentId: parentId || null,
+        isExpanded: true,
+        createdAt: now(),
+        updatedAt: now(),
+      };
+      this.data.folders.push(f);
+      this.data.folderContents[f.id] = [];
+      await this.save();
+      this.render();
+    };
+
+    saveBtn.addEventListener('click', () => {
+      void save();
+    });
+    cancelBtn.addEventListener('click', cancel);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') void save();
+      if (e.key === 'Escape') cancel();
+    });
+
+    const folderList = this.container?.querySelector('.gv-folder-list');
+    if (!folderList) return;
+
+    if (parentId) {
+      const parentFolder = folderList.querySelector(`[data-folder-id="${parentId}"]`);
+      if (parentFolder) {
+        const parentContent = parentFolder.querySelector('.gv-folder-content');
+        if (parentContent) {
+          parentContent.insertBefore(inputContainer, parentContent.firstChild);
+        } else {
+          parentFolder.insertAdjacentElement('afterend', inputContainer);
+        }
+      } else {
+        folderList.appendChild(inputContainer);
+      }
+    } else {
+      folderList.insertBefore(inputContainer, folderList.firstChild);
+    }
+
+    input.focus();
+    this.activeFolderInput = inputContainer;
   }
 
-  private async renameFolder(folderId: string): Promise<void> {
+  private renameFolder(folderId: string): void {
     const folder = this.data.folders.find((f) => f.id === folderId);
     if (!folder) return;
-    const name = prompt(this.t('folder_rename_prompt'), folder.name);
-    if (!name) return;
-    folder.name = name.trim();
-    folder.updatedAt = now();
-    await this.save();
-    this.render();
+
+    const folderEl = this.container?.querySelector(`[data-folder-id="${folderId}"]`);
+    if (!folderEl) return;
+
+    const folderNameEl = folderEl.querySelector('.gv-folder-name');
+    if (!folderNameEl) return;
+
+    const inputContainer = document.createElement('span');
+    inputContainer.className = 'gv-folder-rename-inline';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'gv-folder-rename-input';
+    input.value = folder.name;
+    input.maxLength = 50;
+
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.className = 'gv-folder-inline-btn gv-folder-inline-save';
+    saveBtn.title = this.t('pm_save');
+    saveBtn.appendChild(this.createIcon('check'));
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'gv-folder-inline-btn gv-folder-inline-cancel';
+    cancelBtn.title = this.t('pm_cancel');
+    cancelBtn.appendChild(this.createIcon('close'));
+
+    inputContainer.appendChild(input);
+    inputContainer.appendChild(saveBtn);
+    inputContainer.appendChild(cancelBtn);
+
+    const restore = () => {
+      folderNameEl.classList.remove('gv-hidden');
+      inputContainer.remove();
+    };
+
+    const save = async () => {
+      const name = input.value.trim();
+      if (!name) {
+        restore();
+        return;
+      }
+
+      folder.name = name;
+      folder.updatedAt = now();
+      await this.save();
+      this.render();
+    };
+
+    saveBtn.addEventListener('click', () => {
+      void save();
+    });
+    cancelBtn.addEventListener('click', restore);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') void save();
+      if (e.key === 'Escape') restore();
+    });
+
+    folderNameEl.classList.add('gv-hidden');
+    folderNameEl.parentElement?.insertBefore(inputContainer, folderNameEl.nextSibling);
+    input.focus();
+    input.select();
   }
 
-  private async deleteFolder(folderId: string): Promise<void> {
-    if (!confirm(this.t('folder_delete_confirm'))) return;
+  private deleteFolder(folderId: string): void {
+    const existingDialog = document.querySelector(
+      '.gv-folder-confirm-dialog.gv-aistudio-confirm',
+    );
+    existingDialog?.remove();
 
-    // Collect all folder IDs to delete (including subfolders)
-    const folderIdsToDelete: string[] = [folderId];
-    const subfolders = this.data.folders.filter((f) => f.parentId === folderId);
-    for (const subfolder of subfolders) {
-      folderIdsToDelete.push(subfolder.id);
+    const dialog = document.createElement('div');
+    dialog.className = 'gv-folder-confirm-dialog gv-aistudio-confirm';
+
+    const folderEl = this.container?.querySelector(`[data-folder-id="${folderId}"]`);
+    const headerEl = folderEl?.querySelector('.gv-folder-item-header');
+    if (headerEl) {
+      const rect = headerEl.getBoundingClientRect();
+      dialog.style.position = 'fixed';
+      dialog.style.top = `${rect.bottom + 4}px`;
+      dialog.style.left = `${Math.max(10, rect.left + 24)}px`;
+      dialog.style.zIndex = String(2147483647);
     }
 
-    // Delete all collected folders and their contents
-    this.data.folders = this.data.folders.filter((f) => !folderIdsToDelete.includes(f.id));
-    for (const id of folderIdsToDelete) {
-      delete this.data.folderContents[id];
-    }
+    const msg = document.createElement('div');
+    msg.className = 'gv-confirm-message';
+    msg.textContent = this.t('folder_delete_confirm');
+    dialog.appendChild(msg);
 
-    await this.save();
-    this.render();
+    const actions = document.createElement('div');
+    actions.className = 'gv-confirm-actions';
+
+    const confirmBtn = document.createElement('button');
+    confirmBtn.type = 'button';
+    confirmBtn.className = 'gv-confirm-btn gv-confirm-delete';
+    confirmBtn.textContent = this.t('folder_remove_conversation_action') || 'Delete';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'gv-confirm-btn gv-confirm-cancel';
+    cancelBtn.textContent = this.t('pm_cancel') || 'Cancel';
+
+    const cleanup = () => {
+      dialog.remove();
+    };
+
+    confirmBtn.addEventListener('click', () => {
+      // Collect all folder IDs to delete (including subfolders)
+      const folderIdsToDelete: string[] = [folderId];
+      const subfolders = this.data.folders.filter((f) => f.parentId === folderId);
+      for (const subfolder of subfolders) {
+        folderIdsToDelete.push(subfolder.id);
+      }
+
+      // Delete all collected folders and their contents
+      this.data.folders = this.data.folders.filter((f) => !folderIdsToDelete.includes(f.id));
+      for (const id of folderIdsToDelete) {
+        delete this.data.folderContents[id];
+      }
+
+      void this.save().then(() => this.render());
+      cleanup();
+    });
+    cancelBtn.addEventListener('click', cleanup);
+
+    actions.appendChild(confirmBtn);
+    actions.appendChild(cancelBtn);
+    dialog.appendChild(actions);
+    document.body.appendChild(dialog);
+
+    setTimeout(() => {
+      const closeOnOutside = (e: MouseEvent) => {
+        if (!dialog.contains(e.target as Node)) {
+          cleanup();
+          document.removeEventListener('click', closeOnOutside);
+        }
+      };
+      document.addEventListener('click', closeOnOutside);
+    }, 0);
   }
 
   private removeConversationFromFolder(folderId: string, conversationId: string): void {
