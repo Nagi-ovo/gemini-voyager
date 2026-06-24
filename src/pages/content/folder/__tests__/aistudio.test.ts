@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AIStudioFolderManager, mutationAddsPromptLinks, parseDragDataPayload } from '../aistudio';
+import type { Folder } from '../types';
 
 type DragDataTransferMock = {
   effectAllowed: string;
@@ -95,15 +96,10 @@ function createLibraryPromptRow(
 }
 
 type AIStudioManagerInternals = {
+  container: HTMLElement | null;
+  activeFolderInput: HTMLElement | null;
   data: {
-    folders: Array<{
-      id: string;
-      name: string;
-      parentId: string | null;
-      isExpanded: boolean;
-      createdAt: number;
-      updatedAt: number;
-    }>;
+    folders: Folder[];
     folderContents: Record<
       string,
       Array<{
@@ -120,13 +116,228 @@ type AIStudioManagerInternals = {
   observeLibraryTable: () => void;
   bindDraggablesInLibraryTable: () => void;
   syncConversationTitlesFromPromptList: () => Promise<void>;
+  createFolder: (parentId?: string | null) => void;
+  renameFolder: (folderId: string) => void;
+  deleteFolder: (folderId: string) => void;
   save: () => Promise<void>;
   render: () => void;
 };
 
+function createFolderFixture(overrides: Partial<Folder> = {}): Folder {
+  return {
+    id: 'folder-a',
+    name: 'Alpha',
+    parentId: null,
+    isExpanded: true,
+    createdAt: 100,
+    updatedAt: 100,
+    ...overrides,
+  };
+}
+
+function mountAIStudioFolderList(internals: AIStudioManagerInternals): HTMLElement {
+  const container = document.createElement('div');
+  container.className = 'gv-folder-container gv-aistudio';
+  const list = document.createElement('div');
+  list.className = 'gv-folder-list';
+  container.appendChild(list);
+  document.body.appendChild(container);
+  internals.container = container;
+  return list;
+}
+
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
   document.body.innerHTML = '';
+});
+
+describe('AIStudio inline folder editing', () => {
+  it('reuses the active create input instead of opening duplicates', () => {
+    const manager = new AIStudioFolderManager();
+    const internals = manager as unknown as AIStudioManagerInternals;
+    mountAIStudioFolderList(internals);
+
+    internals.createFolder();
+
+    const input = document.querySelector('.gv-folder-name-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(document.querySelectorAll('.gv-folder-inline-input')).toHaveLength(1);
+    expect(internals.activeFolderInput).not.toBeNull();
+
+    const focusTrap = document.createElement('button');
+    document.body.appendChild(focusTrap);
+    focusTrap.focus();
+    expect(document.activeElement).toBe(focusTrap);
+
+    internals.createFolder();
+
+    expect(document.querySelectorAll('.gv-folder-inline-input')).toHaveLength(1);
+    expect(document.activeElement).toBe(input);
+  });
+
+  it('saves a trimmed root folder from the inline input', async () => {
+    const manager = new AIStudioFolderManager();
+    const internals = manager as unknown as AIStudioManagerInternals;
+    mountAIStudioFolderList(internals);
+    const saveSpy = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    internals.save = saveSpy;
+    const renderSpy = vi.spyOn(internals, 'render');
+
+    internals.createFolder();
+    const input = document.querySelector('.gv-folder-name-input') as HTMLInputElement;
+    input.value = '  Project Alpha  ';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await Promise.resolve();
+
+    expect(internals.data.folders).toHaveLength(1);
+    expect(internals.data.folders[0]?.name).toBe('Project Alpha');
+    expect(internals.data.folders[0]?.parentId).toBeNull();
+    expect(saveSpy).toHaveBeenCalledTimes(1);
+    expect(renderSpy).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('.gv-folder-inline-input')).toBeNull();
+  });
+
+  it('cancels inline root creation without saving data', () => {
+    const manager = new AIStudioFolderManager();
+    const internals = manager as unknown as AIStudioManagerInternals;
+    mountAIStudioFolderList(internals);
+    const saveSpy = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    internals.save = saveSpy;
+
+    internals.createFolder();
+    const input = document.querySelector('.gv-folder-name-input') as HTMLInputElement;
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+
+    expect(internals.data.folders).toHaveLength(0);
+    expect(saveSpy).not.toHaveBeenCalled();
+    expect(document.querySelector('.gv-folder-inline-input')).toBeNull();
+    expect(internals.activeFolderInput).toBeNull();
+  });
+
+  it('creates subfolders inline under the selected parent', async () => {
+    const manager = new AIStudioFolderManager();
+    const internals = manager as unknown as AIStudioManagerInternals;
+    mountAIStudioFolderList(internals);
+    internals.data = {
+      folders: [createFolderFixture({ id: 'parent', name: 'Parent' })],
+      folderContents: { parent: [] },
+    };
+    const saveSpy = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    internals.save = saveSpy;
+    internals.render();
+
+    internals.createFolder('parent');
+
+    const parentContent = document.querySelector('[data-folder-id="parent"] .gv-folder-content');
+    expect(parentContent?.querySelector('.gv-folder-inline-input')).not.toBeNull();
+
+    const input = document.querySelector('.gv-folder-name-input') as HTMLInputElement;
+    input.value = 'Child';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await Promise.resolve();
+
+    const child = internals.data.folders.find((folder) => folder.name === 'Child');
+    expect(child?.parentId).toBe('parent');
+    expect(saveSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('renames folders inline from double-click and restores on empty names', async () => {
+    const manager = new AIStudioFolderManager();
+    const internals = manager as unknown as AIStudioManagerInternals;
+    mountAIStudioFolderList(internals);
+    internals.data = {
+      folders: [createFolderFixture()],
+      folderContents: { 'folder-a': [] },
+    };
+    const saveSpy = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    internals.save = saveSpy;
+    internals.render();
+
+    const name = document.querySelector('.gv-folder-name') as HTMLElement;
+    name.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+
+    const emptyInput = document.querySelector('.gv-folder-rename-input') as HTMLInputElement;
+    expect(emptyInput.value).toBe('Alpha');
+    emptyInput.value = '   ';
+    emptyInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+    expect(saveSpy).not.toHaveBeenCalled();
+    expect(document.querySelector('.gv-folder-rename-input')).toBeNull();
+    expect(name.classList.contains('gv-hidden')).toBe(false);
+
+    name.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    const input = document.querySelector('.gv-folder-rename-input') as HTMLInputElement;
+    input.value = 'Beta';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await Promise.resolve();
+
+    expect(internals.data.folders[0]?.name).toBe('Beta');
+    expect(internals.data.folders[0]?.updatedAt).toBeGreaterThan(100);
+    expect(saveSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens inline rename from the folder context menu', () => {
+    const manager = new AIStudioFolderManager();
+    const internals = manager as unknown as AIStudioManagerInternals;
+    mountAIStudioFolderList(internals);
+    internals.data = {
+      folders: [createFolderFixture()],
+      folderContents: { 'folder-a': [] },
+    };
+    internals.render();
+
+    const moreBtn = document.querySelector('.gv-folder-actions-btn') as HTMLButtonElement;
+    moreBtn.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 20, clientY: 20 }));
+    const renameItem = Array.from(document.querySelectorAll('.gv-context-menu button')).find(
+      (button) => button.textContent === 'folder_rename',
+    ) as HTMLButtonElement | undefined;
+
+    expect(renameItem).not.toBeUndefined();
+    renameItem?.click();
+
+    const input = document.querySelector('.gv-folder-rename-input') as HTMLInputElement | null;
+    expect(input?.value).toBe('Alpha');
+  });
+
+  it('uses an in-page delete confirmation instead of window.confirm', async () => {
+    const manager = new AIStudioFolderManager();
+    const internals = manager as unknown as AIStudioManagerInternals;
+    mountAIStudioFolderList(internals);
+    internals.data = {
+      folders: [
+        createFolderFixture({ id: 'folder-a', name: 'Alpha' }),
+        createFolderFixture({ id: 'child-a', name: 'Child', parentId: 'folder-a' }),
+        createFolderFixture({ id: 'folder-b', name: 'Beta' }),
+      ],
+      folderContents: {
+        'folder-a': [],
+        'child-a': [],
+        'folder-b': [],
+      },
+    };
+    const saveSpy = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    internals.save = saveSpy;
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    internals.render();
+
+    internals.deleteFolder('folder-a');
+
+    expect(confirmSpy).not.toHaveBeenCalled();
+    const dialog = document.querySelector('.gv-folder-confirm-dialog.gv-aistudio-confirm');
+    expect(dialog).not.toBeNull();
+
+    const confirmBtn = dialog?.querySelector('.gv-confirm-delete') as HTMLButtonElement;
+    confirmBtn.click();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(internals.data.folders.map((folder) => folder.id)).toEqual(['folder-b']);
+    expect(internals.data.folderContents['folder-a']).toBeUndefined();
+    expect(internals.data.folderContents['child-a']).toBeUndefined();
+    expect(saveSpy).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('.gv-folder-confirm-dialog.gv-aistudio-confirm')).toBeNull();
+  });
 });
 
 describe('AIStudio prompt binding performance guards', () => {
