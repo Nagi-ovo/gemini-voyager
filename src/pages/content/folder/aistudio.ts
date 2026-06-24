@@ -1570,7 +1570,12 @@ export class AIStudioFolderManager {
     cancelBtn.className = 'gv-confirm-btn gv-confirm-cancel';
     cancelBtn.textContent = this.t('pm_cancel') || 'Cancel';
 
+    let closeOnOutside: ((e: MouseEvent) => void) | null = null;
     const cleanup = () => {
+      if (closeOnOutside) {
+        document.removeEventListener('click', closeOnOutside);
+        closeOnOutside = null;
+      }
       dialog.remove();
     };
 
@@ -1599,10 +1604,10 @@ export class AIStudioFolderManager {
     document.body.appendChild(dialog);
 
     setTimeout(() => {
-      const closeOnOutside = (e: MouseEvent) => {
+      if (!dialog.isConnected) return;
+      closeOnOutside = (e: MouseEvent) => {
         if (!dialog.contains(e.target as Node)) {
           cleanup();
-          document.removeEventListener('click', closeOnOutside);
         }
       };
       document.addEventListener('click', closeOnOutside);
