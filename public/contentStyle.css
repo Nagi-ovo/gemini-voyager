@@ -5746,10 +5746,39 @@ body.dark-theme .gv-folders-anchor-toggle:hover,
   min-height: 28px;
 }
 
+.gv-aistudio .gv-folder-item-header.gv-folder-editing {
+  gap: 4px;
+  padding-right: 6px;
+  cursor: default;
+  background: var(--mat-sys-surface-container, rgba(255, 255, 255, 0.62));
+}
+
+.gv-aistudio .gv-folder-item-header.gv-folder-editing .gv-folder-pin-btn,
+.gv-aistudio .gv-folder-item-header.gv-folder-editing .gv-folder-actions-btn {
+  display: none !important;
+}
+
+.gv-aistudio .gv-folder-item-header.gv-folder-editing .gv-folder-expand-btn,
+.gv-aistudio .gv-folder-item-header.gv-folder-editing .gv-folder-icon {
+  flex: 0 0 auto;
+}
+
+.gv-aistudio .gv-folder-item-header.gv-folder-editing .gv-folder-rename-inline {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.gv-aistudio .gv-folder-item-header.gv-folder-editing .gv-folder-rename-input {
+  flex: 1 1 auto;
+  width: 100%;
+}
+
 .gv-aistudio .gv-folder-name {
   font-size: 12px;
   /* Allow a bit more width visually */
-  letter-spacing: 0.1px;
+  letter-spacing: 0;
   /* Ensure folder name has minimum width to display at least a few characters */
   min-width: 40px;
   flex: 1;
@@ -5776,6 +5805,115 @@ body.dark-theme .gv-folders-anchor-toggle:hover,
 .gv-aistudio .gv-folder-list {
   padding-left: 0;
   padding-right: 0;
+}
+
+.gv-aistudio-folder-menu {
+  min-width: 176px;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-high, oklch(0.98 0.002 250));
+  border: 1px solid var(--mat-sys-outline-variant, oklch(0.88 0.004 250 / 0.8));
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.16),
+    0 3px 10px rgba(0, 0, 0, 0.08);
+  color: var(--mat-sys-on-surface, oklch(0.18 0.004 285));
+}
+
+.gv-aistudio-folder-menu .gv-folder-menu-item {
+  min-height: 34px;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  color: var(--mat-sys-on-surface, oklch(0.18 0.004 285));
+}
+
+.gv-aistudio-folder-menu .gv-folder-menu-item:hover {
+  background: var(--mat-sys-surface-container-highest, rgba(0, 0, 0, 0.06));
+}
+
+.gv-aistudio-folder-menu .gv-folder-menu-item .google-symbols {
+  width: 18px;
+  height: 18px;
+  margin-right: 0;
+  font-size: 18px;
+  line-height: 18px;
+  color: var(--mat-sys-on-surface-variant, #5f6368);
+  flex-shrink: 0;
+}
+
+.gv-aistudio-folder-menu .gv-folder-menu-item-danger,
+.gv-aistudio-folder-menu .gv-folder-menu-item-danger .google-symbols {
+  color: var(--mat-sys-error, #ba1a1a);
+}
+
+.gv-aistudio-folder-menu .gv-folder-menu-item-danger:hover {
+  background: color-mix(in srgb, var(--mat-sys-error, #ba1a1a) 10%, transparent);
+}
+
+.gv-aistudio .gv-folder-inline-input {
+  gap: 4px;
+  margin: 4px 6px;
+  padding: 4px;
+  border: 1px solid var(--mat-sys-outline-variant, rgba(95, 99, 104, 0.18));
+  border-radius: 10px;
+  background: var(--mat-sys-surface-container, rgba(255, 255, 255, 0.72));
+}
+
+.gv-aistudio .gv-folder-rename-inline {
+  min-width: 0;
+  gap: 3px;
+}
+
+.gv-aistudio .gv-folder-name-input,
+.gv-aistudio .gv-folder-rename-input {
+  min-width: 0;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border-color: transparent;
+  background: var(--mat-sys-surface-container-low, rgba(255, 255, 255, 0.9));
+  color: var(--mat-sys-on-surface, #202124);
+  font-size: 12px;
+}
+
+.gv-aistudio .gv-folder-name-input:focus,
+.gv-aistudio .gv-folder-rename-input:focus {
+  border-color: var(--mat-sys-primary, #1a73e8);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mat-sys-primary, #1a73e8) 18%, transparent);
+}
+
+.gv-aistudio .gv-folder-inline-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  color: var(--mat-sys-on-surface-variant, #5f6368);
+}
+
+.gv-aistudio .gv-folder-inline-btn:hover {
+  background: var(--mat-sys-surface-container-highest, rgba(0, 0, 0, 0.06));
+}
+
+.gv-aistudio .gv-folder-inline-save:hover {
+  color: #188038;
+  background: rgba(24, 128, 56, 0.1);
+}
+
+.gv-aistudio .gv-folder-inline-cancel:hover {
+  color: var(--mat-sys-error, #ba1a1a);
+  background: color-mix(in srgb, var(--mat-sys-error, #ba1a1a) 10%, transparent);
+}
+
+.gv-aistudio .gv-folder-inline-btn .google-symbols {
+  width: 18px;
+  height: 18px;
+  overflow: visible;
+  font-size: 18px;
+  line-height: 18px;
+}
+
+.gv-aistudio .gv-folder-inline-btn .google-symbols::before {
+  content: none;
+  display: none;
 }
 
 /* Make action buttons absolute so they don’t steal inline space */
