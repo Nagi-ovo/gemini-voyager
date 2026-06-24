@@ -396,10 +396,7 @@ function getResponseFingerprint(response: HTMLElement): string | null {
 }
 
 function normalizeNotificationText(text: string | null | undefined, maxLength: number): string {
-  const normalized = (text ?? '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .replace(TURN_LABEL_PREFIXES, '');
+  const normalized = (text ?? '').replace(/\s+/g, ' ').trim().replace(TURN_LABEL_PREFIXES, '');
   if (!normalized) return '';
   return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 1)}…` : normalized;
 }

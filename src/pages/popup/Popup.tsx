@@ -69,10 +69,7 @@ import {
   IconQwen,
 } from './components/WebsiteLogos';
 import WidthSlider from './components/WidthSlider';
-import {
-  getSettingsSearchMatches,
-  type SettingsSearchItem,
-} from './utils/settingsSearch';
+import { type SettingsSearchItem, getSettingsSearchMatches } from './utils/settingsSearch';
 
 type ScrollMode = 'jump' | 'flow';
 
@@ -222,12 +219,7 @@ const POPUP_SECTION_SEARCH_ITEMS = [
   },
   {
     id: 'chatLineHeight',
-    keys: [
-      'chatLineHeight',
-      'chatLineHeightTight',
-      'chatLineHeightLoose',
-      'chatParagraphSpacing',
-    ],
+    keys: ['chatLineHeight', 'chatLineHeightTight', 'chatLineHeightLoose', 'chatParagraphSpacing'],
     aliases: ['line spacing paragraph leading readability 行高 段落 间距'],
   },
   {

@@ -1,5 +1,6 @@
-import { StorageKeys } from '@/core/types/common';
 import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { StorageKeys } from '@/core/types/common';
 
 const PAGE_OBSERVER_SOURCE = 'gemini-voyager-response-complete-observer';
 

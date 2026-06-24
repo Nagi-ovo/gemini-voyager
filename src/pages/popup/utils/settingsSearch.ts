@@ -44,7 +44,11 @@ function editDistanceWithin(a: string, b: string, limit: number): boolean {
   return previous[b.length] <= limit;
 }
 
-function tokenMatches(token: string, corpusTokens: readonly string[], compactCorpus: string): boolean {
+function tokenMatches(
+  token: string,
+  corpusTokens: readonly string[],
+  compactCorpus: string,
+): boolean {
   if (compactCorpus.includes(token)) return true;
 
   return corpusTokens.some((candidate) => {
@@ -74,9 +78,7 @@ export function matchesFuzzySearch(corpus: string, query: string): boolean {
     .every((token) => tokenMatches(token, corpusTokens, compactCorpus));
 }
 
-export function buildSettingsSearchCorpus<Id extends string>(
-  item: SettingsSearchItem<Id>,
-): string {
+export function buildSettingsSearchCorpus<Id extends string>(item: SettingsSearchItem<Id>): string {
   const localized = Object.values(TRANSLATIONS).flatMap((messages) =>
     item.keys.map((key) => messages[key]),
   );
