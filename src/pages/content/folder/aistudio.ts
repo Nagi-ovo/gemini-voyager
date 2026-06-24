@@ -1587,12 +1587,9 @@ export class AIStudioFolderManager {
       input,
       saveBtn,
       cancelBtn,
-    } = this.createInlineFolderEditor(
-      'span',
-      'gv-folder-rename-inline',
-      'gv-folder-rename-input',
-      { value: folder.name },
-    );
+    } = this.createInlineFolderEditor('span', 'gv-folder-rename-inline', 'gv-folder-rename-input', {
+      value: folder.name,
+    });
 
     const restore = () => {
       headerEl.classList.remove('gv-folder-editing');
