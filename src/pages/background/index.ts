@@ -30,6 +30,8 @@ import {
   resolveTimelineHierarchyDataForStorageScope,
 } from '@/pages/content/timeline/hierarchyStorage';
 import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
+import { getTranslation } from '@/utils/i18n';
+import type { TranslationKey } from '@/utils/translations';
 
 const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
 const PLUGIN_CONTENT_SCRIPT_ID = 'gv-plugin-content-script';
@@ -37,7 +39,8 @@ const CUSTOM_WEBSITE_KEY = 'gvPromptCustomWebsites';
 const FETCH_INTERCEPTOR_SCRIPT_ID = 'gv-fetch-interceptor';
 const RESPONSE_COMPLETE_OBSERVER_SCRIPT_ID = 'gv-response-complete-observer';
 const RESPONSE_COMPLETE_NOTIFICATION_DEDUP_MS = 3000;
-const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_KEY = 'responseCompleteNotificationMessage';
+const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_KEY =
+  'responseCompleteNotificationMessage' satisfies TranslationKey;
 const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_FALLBACK = 'Gemini response complete';
 const RESPONSE_COMPLETE_NOTIFICATION_TITLE = 'Gemini Voyager';
 const RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR = ' - ';
@@ -47,6 +50,8 @@ const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_MAX_LENGTH = 220;
 const RESPONSE_COMPLETE_NOTIFICATION_ICON = 'icon-128.png';
 const RESPONSE_COMPLETE_NOTIFICATION_ID_PREFIX = 'gv-response-complete-';
 const RESPONSE_COMPLETE_UNKNOWN_TAB_ID = 'unknown';
+const RESPONSE_COMPLETE_TURN_LABEL_PREFIXES =
+  /^[\u200B\u200C\u200D\u200E\u200F\uFEFF]*(?:you said|you wrote|user message|your prompt|you asked)[:\s]*/i;
 
 const responseCompleteNotificationLastShown = new Map<string, number>();
 const responseCompleteNotificationTargets = new Map<
@@ -73,7 +78,13 @@ interface ResponseCompleteNotificationDetails {
   userPrompt?: string;
 }
 
-function getI18nMessage(key: string, fallback: string): string {
+async function getInternalI18nMessage(key: TranslationKey, fallback: string): Promise<string> {
+  try {
+    return await getTranslation(key);
+  } catch {
+    // Keep Chrome's extension locale as a last resort if storage-backed i18n fails.
+  }
+
   try {
     return chrome.i18n?.getMessage?.(key) || fallback;
   } catch {
@@ -105,7 +116,10 @@ function getTabDedupKey(
 
 function normalizeNotificationText(value: unknown, maxLength: number): string {
   if (typeof value !== 'string') return '';
-  const normalized = value.replace(/\s+/g, ' ').trim();
+  const normalized = value
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(RESPONSE_COMPLETE_TURN_LABEL_PREFIXES, '');
   if (!normalized) return '';
   return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 1)}…` : normalized;
 }
@@ -135,7 +149,7 @@ async function showResponseCompleteNotification(
   }
 
   responseCompleteNotificationLastShown.set(dedupKey, now);
-  const notificationMessage = getI18nMessage(
+  const notificationMessage = await getInternalI18nMessage(
     RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_KEY,
     RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_FALLBACK,
   );

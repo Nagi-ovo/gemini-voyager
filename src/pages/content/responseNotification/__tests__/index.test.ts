@@ -58,4 +58,32 @@ describe('startResponseCompleteNotification', () => {
       );
     });
   });
+
+  it('strips hidden Gemini user labels from notification prompt summaries', async () => {
+    document.body.innerHTML = `
+      <div class="user-query-bubble-with-background">
+        <span class="cdk-visually-hidden">You said</span>
+        <p>请总结这个页面</p>
+      </div>
+      <article data-author="assistant">
+        <p>Final answer</p>
+        <button aria-label="Copy response">Copy</button>
+      </article>
+    `;
+    const { startResponseCompleteNotification } = await import('../index');
+
+    cleanup = await startResponseCompleteNotification();
+    dispatchPageObserverMessage('request-start');
+    dispatchPageObserverMessage('request-complete');
+
+    await vi.waitFor(() => {
+      expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            userPrompt: '请总结这个页面',
+          }),
+        }),
+      );
+    });
+  });
 });

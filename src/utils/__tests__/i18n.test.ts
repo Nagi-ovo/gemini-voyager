@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import browser from 'webextension-polyfill';
 
-import { getCurrentLanguage } from '../i18n';
+import { getCurrentLanguage, getTranslation } from '../i18n';
 
 vi.mock('webextension-polyfill', () => {
   const storageArea = { get: vi.fn(), set: vi.fn() };
@@ -79,5 +79,18 @@ describe('getCurrentLanguage', () => {
     const lang = await getCurrentLanguage();
 
     expect(lang).toBe('fr');
+  });
+
+  it('translates response completion notifications using the saved app language', async () => {
+    const syncGet = browser.storage.sync.get as unknown as ReturnType<typeof vi.fn>;
+    const localGet = browser.storage.local.get as unknown as ReturnType<typeof vi.fn>;
+    const uiLang = browser.i18n.getUILanguage as unknown as ReturnType<typeof vi.fn>;
+    syncGet.mockResolvedValue({ language: 'zh' });
+    localGet.mockResolvedValue({});
+    uiLang.mockReturnValue('en-US');
+
+    await expect(getTranslation('responseCompleteNotificationMessage')).resolves.toBe(
+      'Gemini 思考完成',
+    );
   });
 });

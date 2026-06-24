@@ -29,6 +29,10 @@ const MAX_NOTIFICATION_PROMPT_LENGTH = 140;
 const LATEST_RESPONSE_VISIBLE_MARGIN_PX = 96;
 const BOTTOM_SCROLL_THRESHOLD_PX = 160;
 const PROMPT_SELECTORS = 'rich-textarea, textarea, [contenteditable="true"], div[role="textbox"]';
+const TURN_LABEL_PREFIXES =
+  /^[\u200B\u200C\u200D\u200E\u200F\uFEFF]*(?:you said|you wrote|user message|your prompt|you asked)[:\s]*/i;
+const VISUALLY_HIDDEN_CLASS_FRAGMENT = 'visually-hidden';
+const INJECTED_UI_SELECTOR = '.gv-fork-btn, .gv-fork-confirm, .gv-fork-indicator-group';
 const PROMPT_CONTAINER_MAX_PARENT_DEPTH = 10;
 const PROMPT_CONTAINER_MIN_WIDTH_PX = 280;
 const PROMPT_CONTAINER_MIN_HEIGHT_PX = 44;
@@ -392,7 +396,10 @@ function getResponseFingerprint(response: HTMLElement): string | null {
 }
 
 function normalizeNotificationText(text: string | null | undefined, maxLength: number): string {
-  const normalized = (text ?? '').replace(/\s+/g, ' ').trim();
+  const normalized = (text ?? '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(TURN_LABEL_PREFIXES, '');
   if (!normalized) return '';
   return normalized.length > maxLength ? `${normalized.slice(0, maxLength - 1)}…` : normalized;
 }
@@ -420,6 +427,32 @@ function isInsideAssistantResponse(element: Element): boolean {
   }
 }
 
+function hasVisuallyHiddenClass(element: Element): boolean {
+  if (!(element instanceof HTMLElement) || element.classList.length === 0) return false;
+  return Array.from(element.classList).some((className) =>
+    className.toLowerCase().includes(VISUALLY_HIDDEN_CLASS_FRAGMENT),
+  );
+}
+
+function getVisibleElementText(element: HTMLElement): string {
+  try {
+    const clone = element.cloneNode(true) as HTMLElement;
+    if (hasVisuallyHiddenClass(clone)) return '';
+
+    Array.from(clone.getElementsByTagName('*')).forEach((descendant) => {
+      if (hasVisuallyHiddenClass(descendant)) descendant.remove();
+    });
+    clone.querySelectorAll(INJECTED_UI_SELECTOR).forEach((descendant) => descendant.remove());
+    clone.querySelectorAll<HTMLElement>('[data-user-latex-original]').forEach((descendant) => {
+      descendant.textContent = descendant.dataset.userLatexOriginal ?? '';
+    });
+
+    return clone.textContent ?? '';
+  } catch {
+    return element.textContent ?? '';
+  }
+}
+
 function getLatestUserPrompt(): string {
   const candidates: HTMLElement[] = [];
 
@@ -434,7 +467,7 @@ function getLatestUserPrompt(): string {
   const promptTexts = candidates
     .filter((element) => !isInsideAssistantResponse(element) && !isPromptInteractionTarget(element))
     .map((element) =>
-      normalizeNotificationText(element.textContent, MAX_NOTIFICATION_PROMPT_LENGTH),
+      normalizeNotificationText(getVisibleElementText(element), MAX_NOTIFICATION_PROMPT_LENGTH),
     )
     .filter((text) => text.length > 0);
 
