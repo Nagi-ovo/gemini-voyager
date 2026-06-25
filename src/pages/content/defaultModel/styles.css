@@ -22,9 +22,9 @@
     color 0.2s;
 }
 
-/* Show on hover or if it's the default model */
-[role='menuitemradio']:hover .gv-default-star-btn,
-[role='menuitem']:hover .gv-default-star-btn,
+/* Show only for the row that owns this star, or if it's the default model. */
+.gv-default-star-btn.is-owner-hovered,
+.gv-default-star-btn:focus-visible,
 .gv-default-star-btn.is-default {
   opacity: 1;
 }

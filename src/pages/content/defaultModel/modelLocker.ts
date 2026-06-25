@@ -17,8 +17,9 @@ const FAST_MODEL_IDS = new Set([
   '56fdd199312815e2', // Gemini 2.0 Flash
 ]);
 
-// Known Flash/Fast model name patterns (case-insensitive)
-const FAST_MODEL_NAMES = ['flash', '2.0 flash', 'gemini 2.0 flash', 'fast', '高速', '高速モード'];
+// Generic Flash/Fast labels that Gemini already opens with. Specific variants
+// like "3.5 Flash" or "3.1 Flash-Lite" must still open the picker and confirm.
+const FAST_MODEL_NAMES = new Set(['flash', 'fast', '高速', '高速モード']);
 
 // Gemini may use either role="menuitemradio" or role="menuitem" depending on the UI variant.
 // The 2026 redesign uses <gem-menu-item data-mode-id="..." role="menuitem">.
@@ -459,6 +460,14 @@ class DefaultModelManager {
     items.forEach((item) => {
       const itemEl = item as HTMLElement;
 
+      if (this.isNestedThinkingLevelItem(itemEl)) {
+        // Gemini now renders Standard/Extended inline under the Thinking level row.
+        // Those child rows may still carry model-like metadata, so keep them out
+        // of the model default path and let the thinking-level injector own them.
+        itemEl.querySelectorAll('.gv-default-star-btn').forEach((star) => star.remove());
+        return;
+      }
+
       // Skip submenu triggers (e.g. "Thinking level" → Standard/Extended in the 2026 redesign).
       // Real model rows always resolve to a stable model id; submenu rows do not.
       if (itemEl.getAttribute('aria-haspopup') === 'true') return;
@@ -534,7 +543,21 @@ class DefaultModelManager {
       this.updateStarState(item as HTMLElement, modelName, currentDefault);
     });
 
+    await this.injectNestedThinkingLevelStars(menuPanel);
+
     return true;
+  }
+
+  private async injectNestedThinkingLevelStars(menuPanel: HTMLElement): Promise<void> {
+    const thinkingRow = this.findThinkingLevelTriggerRow();
+    if (!thinkingRow || !menuPanel.contains(thinkingRow)) return;
+    if (!thinkingRow.querySelector('gem-menu-item, [role="menuitem"]')) return;
+    await this.injectThinkingLevelStars(thinkingRow);
+  }
+
+  private isNestedThinkingLevelItem(item: HTMLElement): boolean {
+    const row = item.closest<HTMLElement>('[value="thinking_level"]');
+    return !!row && row !== item;
   }
 
   private async injectThinkingLevelStars(submenuPane: HTMLElement): Promise<boolean> {
@@ -645,6 +668,7 @@ class DefaultModelManager {
   ) {
     const btn = item.querySelector('.gv-default-star-btn') as HTMLElement | null;
     if (!btn) return;
+    this.bindStarOwnerHover(item, btn);
     if (!btn.hasAttribute('data-event-bound')) {
       btn.setAttribute('data-event-bound', 'true');
       btn.addEventListener('mousedown', (e) => e.stopPropagation());
@@ -750,6 +774,7 @@ class DefaultModelManager {
   ) {
     const btn = item.querySelector('.gv-default-star-btn') as HTMLElement;
     if (!btn) return;
+    this.bindStarOwnerHover(item, btn);
 
     // Ensure mousedown/click stops propagation (idempotent)
     if (!btn.hasAttribute('data-event-bound')) {
@@ -768,6 +793,27 @@ class DefaultModelManager {
       btn.innerHTML = this.getStarIcon(false);
       btn.title = chrome.i18n.getMessage('setAsDefaultModel');
     }
+  }
+
+  private bindStarOwnerHover(item: HTMLElement, btn: HTMLElement) {
+    if (btn.hasAttribute('data-hover-bound')) return;
+    btn.setAttribute('data-hover-bound', 'true');
+
+    item.addEventListener('mouseenter', () => {
+      btn.classList.add('is-owner-hovered');
+    });
+    item.addEventListener('mouseleave', () => {
+      btn.classList.remove('is-owner-hovered');
+    });
+    item.addEventListener('focusin', () => {
+      btn.classList.add('is-owner-hovered');
+    });
+    item.addEventListener('focusout', (event) => {
+      const nextTarget = event.relatedTarget;
+      if (!(nextTarget instanceof Node) || !item.contains(nextTarget)) {
+        btn.classList.remove('is-owner-hovered');
+      }
+    });
   }
 
   private getStarIcon(filled: boolean): string {
@@ -1173,6 +1219,7 @@ class DefaultModelManager {
     // expose the full variant ("3.1 Pro", "3 Flash") that we persisted. Accept the
     // reverse direction (line is a word-bounded substring of the stored name) so the
     // fast-path correctly recognises "Pro" === stored "3.1 Pro" and stops re-clicking.
+    if (['flash', 'fast'].includes(modelLine) && modelLine !== targetName) return false;
     if (modelLine.length >= 2 && wholeWordIn(modelLine, targetName)) return true;
     return false;
   }
@@ -1202,9 +1249,7 @@ class DefaultModelManager {
       return FAST_MODEL_IDS.has(model.id);
     }
     const normalizedName = model.name.toLowerCase().trim();
-    return FAST_MODEL_NAMES.some(
-      (fastName) => normalizedName === fastName || normalizedName.includes(fastName),
-    );
+    return FAST_MODEL_NAMES.has(normalizedName);
   }
 
   private getModelSwitchKey(model: DefaultModelSetting): string {
@@ -1401,7 +1446,7 @@ class DefaultModelManager {
         return false;
       }
 
-      thinkingRow.click();
+      this.openThinkingLevelSubmenu(thinkingRow);
 
       // Wait briefly for the submenu to mount.
       const submenu = await this.waitForThinkingLevelSubmenu(1500);
@@ -1460,6 +1505,36 @@ class DefaultModelManager {
     }
   }
 
+  private openThinkingLevelSubmenu(thinkingRow: HTMLElement): void {
+    const content = thinkingRow.querySelector<HTMLElement>(
+      'gem-menu-item-content, .label-container',
+    );
+    const targets = content && content !== thinkingRow ? [thinkingRow, content] : [thinkingRow];
+    const mouseInit: MouseEventInit = { bubbles: true, cancelable: true };
+    const enterInit: MouseEventInit = { bubbles: false, cancelable: true };
+
+    for (const target of targets) {
+      if ('PointerEvent' in window) {
+        const pointerInit: PointerEventInit = {
+          bubbles: true,
+          cancelable: true,
+          pointerType: 'mouse',
+        };
+        const pointerEnterInit: PointerEventInit = { ...pointerInit, bubbles: false };
+        target.dispatchEvent(new PointerEvent('pointerover', pointerInit));
+        target.dispatchEvent(new PointerEvent('pointerenter', pointerEnterInit));
+        target.dispatchEvent(new PointerEvent('pointermove', pointerInit));
+      }
+
+      target.dispatchEvent(new MouseEvent('mouseover', mouseInit));
+      target.dispatchEvent(new MouseEvent('mouseenter', enterInit));
+      target.dispatchEvent(new MouseEvent('mousemove', mouseInit));
+    }
+
+    thinkingRow.focus({ preventScroll: true });
+    thinkingRow.click();
+  }
+
   private async waitForThinkingLevelSubmenu(timeoutMs: number): Promise<HTMLElement | null> {
     const startedAt = Date.now();
     while (Date.now() - startedAt < timeoutMs) {
@@ -1515,10 +1590,13 @@ class DefaultModelManager {
   private findThinkingLevelSubmenuPane(): HTMLElement | null {
     const row = this.findThinkingLevelTriggerRow();
     const controlsId = row?.getAttribute('aria-controls');
-    if (!controlsId) return null;
-    const submenu = document.getElementById(controlsId);
-    if (!submenu) return null;
-    return submenu.closest<HTMLElement>('.cdk-overlay-pane') ?? submenu;
+    if (controlsId) {
+      const submenu = document.getElementById(controlsId);
+      if (submenu) {
+        return submenu.closest<HTMLElement>('.cdk-overlay-pane') ?? submenu;
+      }
+    }
+    return row?.querySelector('gem-menu-item, [role="menuitem"]') ? row : null;
   }
 
   private getThinkingLevelItems(): HTMLElement[] {
