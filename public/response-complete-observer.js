@@ -49,8 +49,7 @@
       haystack.includes('streamgenerate') ||
       haystack.includes('bardfrontendservice') ||
       haystack.includes('generatecontent') ||
-      haystack.includes('assistant.lamda') ||
-      (normalizedUrl.includes('batchexecute') && haystack.includes('f.req'))
+      haystack.includes('assistant.lamda')
     );
   }
 
