@@ -266,8 +266,16 @@ jobs:
       - name: Publish to Chrome Web Store
         run: |
           TAG=${{ steps.vars.outputs.tag_name }}
+          # Chrome Web Store rejects a manifest that still carries the local dev `key`
+          # field (PKG_MANIFEST_KEY_NOT_MATCH). Strip it into a store-only copy; the
+          # GitHub Release zip keeps the key for manual unpacked installs.
+          rm -rf cws_pkg "voyager-chrome-cws-${TAG}.zip"
+          mkdir cws_pkg
+          unzip -q "voyager-chrome-${TAG}.zip" -d cws_pkg
+          node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('cws_pkg/manifest.json','utf8'));delete m.key;fs.writeFileSync('cws_pkg/manifest.json',JSON.stringify(m,null,2)+'\n');"
+          (cd cws_pkg && zip -qr "../voyager-chrome-cws-${TAG}.zip" .)
           bunx chrome-webstore-upload-cli@3 upload \
-            --source "voyager-chrome-${TAG}.zip" \
+            --source "voyager-chrome-cws-${TAG}.zip" \
             --extension-id "$EXTENSION_ID" \
             --client-id "$CLIENT_ID" \
             --client-secret "$CLIENT_SECRET" \
