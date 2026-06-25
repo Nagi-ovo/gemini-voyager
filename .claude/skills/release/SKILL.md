@@ -68,6 +68,17 @@ After `bun run bump`, the script also runs `bun run format`. Confirm the new ver
 grep -E '"version"' package.json manifest.json manifest.dev.json
 ```
 
+**Also sync the Safari Xcode project version now** — `bun run bump` does NOT touch `project.pbxproj`. It's just a number with no dependency on the Safari build, so do it here at bump time rather than deep in Step 8, where it's easy to forget if anything goes sideways later (e.g. a Chrome publish failure pulls your attention away). Bump both fields for the main app + Extension targets; **leave the Tests targets' `1.0` / `1` alone**:
+
+```bash
+PBX="Gemini Voyager/Gemini Voyager.xcodeproj/project.pbxproj"
+sed -i '' -e 's/MARKETING_VERSION = {OLD};/MARKETING_VERSION = {NEW};/g' \
+          -e 's/CURRENT_PROJECT_VERSION = {OLD};/CURRENT_PROJECT_VERSION = {NEW};/g' "$PBX"
+grep -E "MARKETING_VERSION|CURRENT_PROJECT_VERSION" "$PBX" | sort -u   # expect {NEW} + the untouched 1.0 / 1
+```
+
+`project.pbxproj` is gitignored, so this won't appear in the Step 4 commit — that's expected; it only needs to be correct locally before the Step 8 archive. If Xcode is open, reopen it so the new version takes effect.
+
 ## Step 3 — Changelog (required, all 10 locales)
 
 Write `src/pages/content/changelog/notes/{VERSION}.md` — shown to end users in-product. See **references/changelog.md** for the 10-locale template, per-language section headers, commit-filtering rules, and style guide.

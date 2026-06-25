@@ -21,7 +21,9 @@ Get `VERSION` from `package.json`:
 VERSION=$(node -e "console.log(require('./package.json').version)")
 ```
 
-### 2. Sync Xcode project version to match `package.json`
+### 2. Verify the Xcode project version matches `package.json`
+
+This should already have been synced back in **SKILL Step 2** (right after `bun run bump`). Verify it here — only fix if it's still stale (e.g. the release was interrupted before Step 2 finished).
 
 The Xcode project's `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` drift from `package.json` because `bun run bump` only touches `package.json` + `manifest*.json`. Safari users see `MARKETING_VERSION` as the app version, so they must match before archiving.
 
@@ -71,6 +73,17 @@ NODE
 If this fails, do not archive. Fix the Vite env injection first; otherwise the Safari release will ship without update reminders even though the build command included `ENABLE_SAFARI_UPDATE_CHECK=true`.
 
 ### 4. Xcode export (manual user step)
+
+**Helper — open the project and jump straight to the Organizer (Archives) window:**
+
+```bash
+open "Gemini Voyager/Gemini Voyager.xcodeproj"
+# Then Window → Organizer, or open it directly:
+osascript -e 'tell application "Xcode" to activate' \
+          -e 'tell application "System Events" to tell process "Xcode" to click menu item "Organizer" of menu "Window" of menu bar 1'
+```
+
+This only opens the window (osascript needs Accessibility permission for the terminal). The archive itself is still a manual **Product → Archive** in Xcode — don't try to drive that for the user. Record this command so it's available next time; the user can run it themselves.
 
 Tell the user:
 
