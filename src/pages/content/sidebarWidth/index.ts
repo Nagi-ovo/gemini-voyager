@@ -96,6 +96,13 @@ function buildStyle(widthValue: number): string {
       pointer-events: none !important;
     }
 
+    /* Gemini now leaves this top-bar button at the default sidebar edge. With a
+       widened sidebar it sits over the real in-sidenav close button, but clicking
+       it does not collapse the sidebar (#748). Let the real button receive clicks. */
+    chat-app-side-nav-menu-button {
+      pointer-events: none !important;
+    }
+
     #app-root > main > div > bard-mode-switcher .top-bar-actions :is(
       button,
       a,
@@ -178,8 +185,14 @@ function buildStyle(widthValue: number): string {
        pointer-events re-enabled above let invisible legacy top-bar controls steal the
        hit-test (#748). Lift the sidenav's real toggle above that overlay. */
     bard-sidenav .close-sidenav-button,
-    bard-sidenav side-navigation-content > div > button.mat-mdc-icon-button {
-      z-index: 5 !important;
+    bard-sidenav side-navigation-content > div > button,
+    bard-sidenav button[aria-label="Close sidebar"],
+    bard-sidenav button[aria-label="Open sidebar"],
+    bard-sidenav button:has(mat-icon[fonticon="side_nav"]),
+    bard-sidenav button:has(mat-icon[fonticon="side_nav_expand"]) {
+      position: relative;
+      z-index: 10 !important;
+      pointer-events: auto !important;
     }
 
   `;

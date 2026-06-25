@@ -98,10 +98,25 @@ describe('sidebar width title centering', () => {
       'utf8',
     );
 
-    expect(code).toContain(
-      'bard-sidenav side-navigation-content > div > button.mat-mdc-icon-button',
-    );
+    expect(code).toContain('bard-sidenav side-navigation-content > div > button');
     expect(code).toContain('bard-sidenav .close-sidenav-button');
-    expect(code).toContain('z-index: 5 !important;');
+    expect(code).toContain('bard-sidenav button[aria-label="Close sidebar"]');
+    expect(code).toContain('bard-sidenav button[aria-label="Open sidebar"]');
+    expect(code).toContain('bard-sidenav button:has(mat-icon[fonticon="side_nav"])');
+    expect(code).toContain('bard-sidenav button:has(mat-icon[fonticon="side_nav_expand"])');
+    expect(code).toContain('pointer-events: auto !important;');
+    expect(code).toContain('z-index: 10 !important;');
+  });
+
+  it("lets Gemini's default-offset side-nav menu button pass through to the real close button", () => {
+    const code = readFileSync(
+      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
+      'utf8',
+    );
+
+    expect(code).toContain('chat-app-side-nav-menu-button {');
+    expect(code).toContain('pointer-events: none !important;');
+    expect(code).not.toContain('function setupSidebarToggleHitGuard()');
+    expect(code).not.toContain("window.addEventListener('click'");
   });
 });
