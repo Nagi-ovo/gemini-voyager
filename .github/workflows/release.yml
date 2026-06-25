@@ -44,6 +44,11 @@ on:
         description: 'Release notes (optional)'
         required: false
         type: string
+      publish_only:
+        description: 'Only re-publish an existing release to the Chrome Web Store (no bump/build). Requires version.'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -51,7 +56,7 @@ permissions:
 jobs:
   # Job 1: Calculate & Bump Version (Only runs on manual trigger)
   bump-version:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && !inputs.publish_only
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.next_version.outputs.version }}
@@ -286,3 +291,45 @@ jobs:
           CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
           REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+
+  # Job 3: Re-publish Chrome only (manual) — recover a failed Chrome Web Store
+  # upload without re-cutting the release. Downloads the existing release's Chrome
+  # zip, strips the dev `key`, and publishes. No version bump, no rebuild.
+  republish-chrome:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_only
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 'latest'
+
+      - name: Download Chrome zip from the existing release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ inputs.version }}"
+          gh release download "$TAG" --repo "${{ github.repository }}" --pattern 'voyager-chrome-v*.zip'
+          ls -la voyager-chrome-v*.zip
+
+      - name: Strip dev key and publish to Chrome Web Store
+        env:
+          EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+        run: |
+          TAG="v${{ inputs.version }}"
+          ZIP="voyager-chrome-${TAG}.zip"
+          rm -rf cws_pkg "voyager-chrome-cws-${TAG}.zip"
+          mkdir cws_pkg
+          unzip -q "$ZIP" -d cws_pkg
+          node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('cws_pkg/manifest.json','utf8'));delete m.key;fs.writeFileSync('cws_pkg/manifest.json',JSON.stringify(m,null,2)+'\n');"
+          (cd cws_pkg && zip -qr "../voyager-chrome-cws-${TAG}.zip" .)
+          bunx chrome-webstore-upload-cli@3 upload \
+            --source "voyager-chrome-cws-${TAG}.zip" \
+            --extension-id "$EXTENSION_ID" \
+            --client-id "$CLIENT_ID" \
+            --client-secret "$CLIENT_SECRET" \
+            --refresh-token "$REFRESH_TOKEN" \
+            --auto-publish
