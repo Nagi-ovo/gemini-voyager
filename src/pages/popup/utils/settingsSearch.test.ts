@@ -36,6 +36,24 @@ describe('settings search', () => {
     expect(matchesFuzzySearch('Gemini 用量限额', '用量')).toBe(true);
   });
 
+  it('keeps matches at option granularity inside the same section', () => {
+    const matches = getSettingsSearchMatches(
+      [
+        { id: 'general:section', keys: ['generalOptions'] },
+        { id: 'general:usage', keys: ['usageStatusToggle', 'usageStatusToggleHint'] },
+        {
+          id: 'general:notification',
+          keys: ['responseCompleteNotification', 'responseCompleteNotificationHint'],
+        },
+      ],
+      '用量',
+    );
+
+    expect(matches.has('general:usage')).toBe(true);
+    expect(matches.has('general:notification')).toBe(false);
+    expect(matches.has('general:section')).toBe(false);
+  });
+
   it('does not match unrelated words', () => {
     const matches = getSettingsSearchMatches(
       [{ id: 'general', keys: ['responseCompleteNotification'] }],

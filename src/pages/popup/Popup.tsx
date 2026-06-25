@@ -45,6 +45,7 @@ import {
   getManifestUpdateUrl,
 } from '@/pages/popup/utils/latestVersion';
 import { isPluginPopupSite } from '@/pages/popup/utils/siteMode';
+import type { TranslationKey } from '@/utils/translations';
 
 import { DarkModeToggle } from '../../components/DarkModeToggle';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
@@ -114,11 +115,44 @@ const VALUE_BADGE_SECTION_IDS = new Set<PopupSectionId>([
   'sidebarWidth',
 ]);
 
-const POPUP_SECTION_SEARCH_ITEMS = [
-  {
-    id: 'cloudSync',
-    keys: [
-      'cloudSync',
+type PopupSettingsSearchTargetId = `${PopupSectionId}:${string}`;
+
+interface PopupSettingsSearchItem extends SettingsSearchItem<PopupSettingsSearchTargetId> {
+  sectionId: PopupSectionId;
+  settingId: string;
+}
+
+const SECTION_SEARCH_SETTING_ID = '__section';
+
+function popupSearchTarget(
+  sectionId: PopupSectionId,
+  settingId: string,
+  keys: readonly TranslationKey[],
+  aliases?: readonly string[],
+): PopupSettingsSearchItem {
+  return {
+    id: `${sectionId}:${settingId}` as PopupSettingsSearchTargetId,
+    sectionId,
+    settingId,
+    keys,
+    aliases,
+  };
+}
+
+function popupSectionSearchTarget(
+  sectionId: PopupSectionId,
+  keys: readonly TranslationKey[],
+  aliases?: readonly string[],
+): PopupSettingsSearchItem {
+  return popupSearchTarget(sectionId, SECTION_SEARCH_SETTING_ID, keys, aliases);
+}
+
+const POPUP_SETTINGS_SEARCH_ITEMS = [
+  popupSectionSearchTarget('cloudSync', ['cloudSync']),
+  popupSearchTarget(
+    'cloudSync',
+    'controls',
+    [
       'cloudSyncDescription',
       'syncUpload',
       'syncMerge',
@@ -131,12 +165,13 @@ const POPUP_SECTION_SEARCH_ITEMS = [
       'syncSuccess',
       'syncError',
     ],
-    aliases: ['backup restore drive google cloud save 云端 云同步 备份 恢复'],
-  },
-  {
-    id: 'contextSync',
-    keys: [
-      'contextSync',
+    ['backup restore drive google cloud save 云端 云同步 备份 恢复'],
+  ),
+  popupSectionSearchTarget('contextSync', ['contextSync']),
+  popupSearchTarget(
+    'contextSync',
+    'controls',
+    [
       'contextSyncDescription',
       'syncToIDE',
       'syncServerPort',
@@ -146,100 +181,127 @@ const POPUP_SECTION_SEARCH_ITEMS = [
       'syncedSuccess',
       'syncMode',
     ],
-    aliases: ['ide vscode cursor local server code context 上下文 代码 编辑器 本地'],
-  },
-  {
-    id: 'timeline',
-    keys: [
-      'timelineOptions',
-      'scrollMode',
-      'flow',
-      'jump',
-      'hideOuterContainer',
-      'draggableTimeline',
-      'pinTimelinePreview',
-      'pinTimelinePreviewHint',
-      'preventAutoScroll',
-      'preventAutoScrollHint',
-      'enableMarkerLevel',
-      'enableMarkerLevelHint',
-      'showMessageTimestamps',
-      'showMessageTimestampsHint',
-      'resetTimelinePosition',
-      'viewStarredHistory',
-    ],
-    aliases: ['navigation nav node preview bookmark star history 时间轴 导航 节点 收藏 时间戳'],
-  },
-  {
-    id: 'folder',
-    keys: [
-      'folderOptions',
-      'enableFolderFeature',
-      'enableFolderFloatingMode',
-      'enableFolderFloatingModeHint',
-      'openFloatingFolderOnStartup',
-      'openFloatingFolderOnStartupHint',
-      'hideArchivedConversations',
-      'showFolderSearch',
-      'enableForkFeature',
-      'enableForkFeatureHint',
-      'enableAccountIsolation',
-      'enableAccountIsolationHint',
-      'folderAsProject_enable',
-      'folderAsProject_description',
-      'aiOrgCopyButton',
-      'aiOrgCopyHint',
-    ],
-    aliases: ['organize project archive account branch fork files 文件夹 分类 项目 归档 分叉 账号'],
-  },
-  {
-    id: 'folderSpacing',
-    keys: ['folderSpacing', 'folderSpacingCompact', 'folderSpacingSpacious'],
-    aliases: ['folder gap density padding margin 间距 密度 紧凑 宽松'],
-  },
-  {
-    id: 'folderTreeIndent',
-    keys: ['folderTreeIndent', 'folderTreeIndentCompact', 'folderTreeIndentSpacious'],
-    aliases: ['folder nesting tree indent hierarchy 层级 缩进 树'],
-  },
-  {
-    id: 'gemsSidebar',
-    keys: ['gemsSidebarCount', 'gemsSidebarCountOff', 'gemsSidebarCountMany'],
-    aliases: ['gems notebook recent side nav gem 宝石 侧边栏 最近'],
-  },
-  {
-    id: 'chatWidth',
-    keys: ['chatWidth', 'chatWidthNarrow', 'chatWidthWide'],
-    aliases: ['conversation width message width content width 宽 窄 对话宽度'],
-  },
-  {
-    id: 'chatFontSize',
-    keys: ['chatFontSize', 'chatFontSizeSmall', 'chatFontSizeLarge'],
-    aliases: ['font text size typography zoom 字号 字体 大小'],
-  },
-  {
-    id: 'chatLineHeight',
-    keys: ['chatLineHeight', 'chatLineHeightTight', 'chatLineHeightLoose', 'chatParagraphSpacing'],
-    aliases: ['line spacing paragraph leading readability 行高 段落 间距'],
-  },
-  {
-    id: 'editInputWidth',
-    keys: ['editInputWidth', 'editInputWidthNarrow', 'editInputWidthWide'],
-    aliases: ['prompt input compose editor width 输入框 编辑框 宽度'],
-  },
-  {
-    id: 'sidebarWidth',
-    keys: ['sidebarWidth', 'sidebarWidthNarrow', 'sidebarWidthWide'],
-    aliases: ['side panel nav rail left width 侧边栏 宽度'],
-  },
-  {
-    id: 'sidebarBehavior',
-    keys: ['sidebarAutoHide', 'sidebarAutoHideHint', 'sidebarFullHide', 'sidebarFullHideHint'],
-    aliases: ['collapse hide sidebar navigation auto 自动隐藏 折叠 侧栏'],
-  },
-  {
-    id: 'visualEffect',
-    keys: [
+    ['ide vscode cursor local server code context 上下文 代码 编辑器 本地'],
+  ),
+  popupSectionSearchTarget('timeline', ['timelineOptions']),
+  popupSearchTarget('timeline', 'scrollMode', ['scrollMode', 'flow', 'jump']),
+  popupSearchTarget('timeline', 'hideOuterContainer', ['hideOuterContainer']),
+  popupSearchTarget('timeline', 'draggableTimeline', ['draggableTimeline']),
+  popupSearchTarget('timeline', 'pinTimelinePreview', [
+    'pinTimelinePreview',
+    'pinTimelinePreviewHint',
+  ]),
+  popupSearchTarget('timeline', 'preventAutoScroll', [
+    'preventAutoScroll',
+    'preventAutoScrollHint',
+  ]),
+  popupSearchTarget('timeline', 'enableMarkerLevel', [
+    'enableMarkerLevel',
+    'enableMarkerLevelHint',
+  ]),
+  popupSearchTarget('timeline', 'showMessageTimestamps', [
+    'showMessageTimestamps',
+    'showMessageTimestampsHint',
+  ]),
+  popupSearchTarget('timeline', 'resetTimelinePosition', ['resetTimelinePosition']),
+  popupSearchTarget(
+    'timeline',
+    'viewStarredHistory',
+    ['viewStarredHistory'],
+    ['bookmark star history 收藏 历史'],
+  ),
+  popupSectionSearchTarget('folder', ['folderOptions']),
+  popupSearchTarget('folder', 'enableFolderFeature', ['enableFolderFeature']),
+  popupSearchTarget('folder', 'enableFolderFloatingMode', [
+    'enableFolderFloatingMode',
+    'enableFolderFloatingModeHint',
+  ]),
+  popupSearchTarget('folder', 'openFloatingFolderOnStartup', [
+    'openFloatingFolderOnStartup',
+    'openFloatingFolderOnStartupHint',
+  ]),
+  popupSearchTarget('folder', 'hideArchivedConversations', ['hideArchivedConversations']),
+  popupSearchTarget('folder', 'showFolderSearch', ['showFolderSearch'], ['search 查找 搜索']),
+  popupSearchTarget('folder', 'enableForkFeature', ['enableForkFeature', 'enableForkFeatureHint']),
+  popupSearchTarget('folder', 'enableAccountIsolation', [
+    'enableAccountIsolation',
+    'enableAccountIsolationHint',
+  ]),
+  popupSearchTarget('folder', 'folderAsProject', [
+    'folderAsProject_enable',
+    'folderAsProject_description',
+  ]),
+  popupSearchTarget('folder', 'aiOrgCopy', ['aiOrgCopyButton', 'aiOrgCopyHint']),
+  popupSectionSearchTarget('folderSpacing', ['folderSpacing']),
+  popupSearchTarget(
+    'folderSpacing',
+    'controls',
+    ['folderSpacing', 'folderSpacingCompact', 'folderSpacingSpacious'],
+    ['folder gap density padding margin 间距 密度 紧凑 宽松'],
+  ),
+  popupSectionSearchTarget('folderTreeIndent', ['folderTreeIndent']),
+  popupSearchTarget(
+    'folderTreeIndent',
+    'controls',
+    ['folderTreeIndent', 'folderTreeIndentCompact', 'folderTreeIndentSpacious'],
+    ['folder nesting tree indent hierarchy 层级 缩进 树'],
+  ),
+  popupSectionSearchTarget('gemsSidebar', ['gemsSidebarCount']),
+  popupSearchTarget(
+    'gemsSidebar',
+    'controls',
+    ['gemsSidebarCount', 'gemsSidebarCountOff', 'gemsSidebarCountMany'],
+    ['gems notebook recent side nav gem 宝石 侧边栏 最近'],
+  ),
+  popupSectionSearchTarget('chatWidth', ['chatWidth']),
+  popupSearchTarget(
+    'chatWidth',
+    'controls',
+    ['chatWidth', 'chatWidthNarrow', 'chatWidthWide'],
+    ['conversation width message width content width 宽 窄 对话宽度'],
+  ),
+  popupSectionSearchTarget('chatFontSize', ['chatFontSize']),
+  popupSearchTarget(
+    'chatFontSize',
+    'controls',
+    ['chatFontSize', 'chatFontSizeSmall', 'chatFontSizeLarge'],
+    ['font text size typography zoom 字号 字体 大小'],
+  ),
+  popupSectionSearchTarget('chatLineHeight', ['chatLineHeight']),
+  popupSearchTarget(
+    'chatLineHeight',
+    'controls',
+    ['chatLineHeight', 'chatLineHeightTight', 'chatLineHeightLoose', 'chatParagraphSpacing'],
+    ['line spacing paragraph leading readability 行高 段落 间距'],
+  ),
+  popupSectionSearchTarget('editInputWidth', ['editInputWidth']),
+  popupSearchTarget(
+    'editInputWidth',
+    'controls',
+    ['editInputWidth', 'editInputWidthNarrow', 'editInputWidthWide'],
+    ['prompt input compose editor width 输入框 编辑框 宽度'],
+  ),
+  popupSectionSearchTarget('sidebarWidth', ['sidebarWidth']),
+  popupSearchTarget(
+    'sidebarWidth',
+    'controls',
+    ['sidebarWidth', 'sidebarWidthNarrow', 'sidebarWidthWide'],
+    ['side panel nav rail left width 侧边栏 宽度'],
+  ),
+  popupSectionSearchTarget('sidebarBehavior', ['sidebarAutoHide']),
+  popupSearchTarget('sidebarBehavior', 'sidebarAutoHide', [
+    'sidebarAutoHide',
+    'sidebarAutoHideHint',
+  ]),
+  popupSearchTarget('sidebarBehavior', 'sidebarFullHide', [
+    'sidebarFullHide',
+    'sidebarFullHideHint',
+  ]),
+  popupSectionSearchTarget('visualEffect', ['visualEffect']),
+  popupSearchTarget(
+    'visualEffect',
+    'controls',
+    [
       'visualEffect',
       'visualEffectHint',
       'visualEffectOff',
@@ -247,11 +309,13 @@ const POPUP_SECTION_SEARCH_ITEMS = [
       'visualEffectSakura',
       'visualEffectRain',
     ],
-    aliases: ['animation background sakura rain effects off snow 动效 背景 樱花 下雨 下雪 关闭'],
-  },
-  {
-    id: 'formulaCopy',
-    keys: [
+    ['animation background sakura rain effects off snow 动效 背景 樱花 下雨 下雪 关闭'],
+  ),
+  popupSectionSearchTarget('formulaCopy', ['formulaCopyFormat']),
+  popupSearchTarget(
+    'formulaCopy',
+    'controls',
+    [
       'formulaCopyFormat',
       'formulaCopyFormatHint',
       'formulaCopyFormatLatex',
@@ -259,114 +323,121 @@ const POPUP_SECTION_SEARCH_ITEMS = [
       'formulaCopyFormatNoDollar',
       'formulaCopyFormatNotion',
     ],
-    aliases: ['math equation latex unicode notion copy formula 数学 公式 复制'],
-  },
-  {
-    id: 'keyboardShortcuts',
-    keys: [
-      'keyboardShortcuts',
-      'enableShortcuts',
-      'previousNode',
-      'nextNode',
-      'firstNode',
-      'lastNode',
-      'resetShortcuts',
-    ],
-    aliases: ['hotkey keybinding vim navigation keyboard 快捷键 键盘 热键'],
-  },
-  {
-    id: 'inputCollapse',
-    keys: [
-      'inputCollapseOptions',
-      'enableInputCollapse',
-      'enableInputCollapseHint',
-      'inputCollapseShortcutHint',
-      'allowCollapseWhenNotEmpty',
-      'allowCollapseWhenNotEmptyHint',
-      'inputVimMode',
-      'inputVimModeHint',
-      'ctrlEnterSend',
-      'ctrlEnterSendHint',
-      'aistudioEnterSend',
-      'aistudioEnterSendHint',
-      'safariEnterFix',
-      'safariEnterFixHint',
-      'draftAutoSave',
-      'draftAutoSaveHint',
-    ],
-    aliases: ['compose box prompt enter send draft vim collapse 输入框 发送 草稿 折叠'],
-  },
-  {
-    id: 'promptManager',
-    keys: [
-      'promptManagerOptions',
-      'hidePromptManager',
-      'hidePromptManagerHint',
-      'promptInsertOnClick',
-      'promptInsertOnClickHint',
+    ['math equation latex unicode notion copy formula 数学 公式 复制'],
+  ),
+  popupSectionSearchTarget('keyboardShortcuts', ['keyboardShortcuts']),
+  popupSearchTarget(
+    'keyboardShortcuts',
+    'controls',
+    ['enableShortcuts', 'previousNode', 'nextNode', 'firstNode', 'lastNode', 'resetShortcuts'],
+    ['hotkey keybinding vim navigation keyboard 快捷键 键盘 热键'],
+  ),
+  popupSectionSearchTarget('inputCollapse', ['inputCollapseOptions']),
+  popupSearchTarget('inputCollapse', 'enableInputCollapse', [
+    'enableInputCollapse',
+    'enableInputCollapseHint',
+    'inputCollapseShortcutHint',
+  ]),
+  popupSearchTarget('inputCollapse', 'allowCollapseWhenNotEmpty', [
+    'allowCollapseWhenNotEmpty',
+    'allowCollapseWhenNotEmptyHint',
+  ]),
+  popupSearchTarget('inputCollapse', 'inputVimMode', ['inputVimMode', 'inputVimModeHint']),
+  popupSearchTarget(
+    'inputCollapse',
+    'enterSend',
+    ['ctrlEnterSend', 'ctrlEnterSendHint', 'aistudioEnterSend', 'aistudioEnterSendHint'],
+    ['send enter return 发送 回车'],
+  ),
+  popupSearchTarget('inputCollapse', 'safariEnterFix', ['safariEnterFix', 'safariEnterFixHint']),
+  popupSearchTarget('inputCollapse', 'draftAutoSave', ['draftAutoSave', 'draftAutoSaveHint']),
+  popupSectionSearchTarget('promptManager', ['promptManagerOptions']),
+  popupSearchTarget('promptManager', 'hidePromptManager', [
+    'hidePromptManager',
+    'hidePromptManagerHint',
+  ]),
+  popupSearchTarget('promptManager', 'promptInsertOnClick', [
+    'promptInsertOnClick',
+    'promptInsertOnClickHint',
+  ]),
+  popupSearchTarget(
+    'promptManager',
+    'customWebsites',
+    [
       'customWebsites',
       'customWebsitesPlaceholder',
       'geminiOnlyNotice',
       'addWebsite',
       'removeWebsite',
     ],
-    aliases: ['prompt library vault snippets templates websites 提示词 指令 宝库 网站 模板'],
-  },
-  {
-    id: 'plugins',
-    keys: [
-      'pluginsTitle',
-      'pluginsDescription',
-      'pluginsEmpty',
-      'pluginsRefresh',
-      'pluginViewSource',
-    ],
-    aliases: ['extension plugin marketplace add-on 插件 市场 扩展'],
-  },
-  {
-    id: 'general',
-    keys: [
-      'generalOptions',
-      'enableTabTitleUpdate',
-      'enableTabTitleUpdateHint',
-      'persistentExportToolbar',
-      'persistentExportToolbarHint',
-      'enableMermaidRendering',
-      'enableMermaidRenderingHint',
-      'enableQuoteReply',
-      'enableQuoteReplyHint',
+    ['prompt library vault snippets templates websites 提示词 指令 宝库 网站 模板'],
+  ),
+  popupSectionSearchTarget('plugins', ['pluginsTitle']),
+  popupSearchTarget(
+    'plugins',
+    'controls',
+    ['pluginsDescription', 'pluginsEmpty', 'pluginsRefresh', 'pluginViewSource'],
+    ['extension plugin marketplace add-on 插件 市场 扩展'],
+  ),
+  popupSectionSearchTarget('general', ['generalOptions']),
+  popupSearchTarget('general', 'enableTabTitleUpdate', [
+    'enableTabTitleUpdate',
+    'enableTabTitleUpdateHint',
+  ]),
+  popupSearchTarget('general', 'persistentExportToolbar', [
+    'persistentExportToolbar',
+    'persistentExportToolbarHint',
+  ]),
+  popupSearchTarget('general', 'enableMermaidRendering', [
+    'enableMermaidRendering',
+    'enableMermaidRenderingHint',
+  ]),
+  popupSearchTarget('general', 'enableQuoteReply', ['enableQuoteReply', 'enableQuoteReplyHint']),
+  popupSearchTarget(
+    'general',
+    'responseCompleteNotification',
+    [
       'responseCompleteNotification',
       'responseCompleteNotificationHint',
       'responseCompleteNotificationHintSafari',
-      'remoteAnnouncementNotification',
-      'remoteAnnouncementNotificationHint',
-      'remoteAnnouncementSystemPermissionCta',
-      'usageStatusToggle',
-      'usageStatusToggleHint',
-      'hideInputHalo',
-      'hideInputHaloHint',
-      'enableDefaultModelAutoApply',
-      'enableDefaultModelAutoApplyHint',
     ],
-    aliases: [
-      'export toolbar title diagram mermaid quote notification alert reminder notice usage model halo',
-      '导出 标题 图表 引用 通知 提醒 推送 用量 模型 光晕 水波纹',
-    ],
-  },
-  {
-    id: 'nanobanana',
-    keys: [
-      'nanobananaOptions',
-      'nanobananaDownloadLabel',
-      'nanobananaDownloadHint',
-      'nanobananaPreviewLabel',
-      'nanobananaPreviewHint',
-      'nanobananaBadgeRecommended',
-      'nanobananaBadgeUnstable',
-    ],
-    aliases: ['watermark image banana picture photo download preview 水印 图片 去水印 下载 预览'],
-  },
-] as const satisfies readonly SettingsSearchItem<PopupSectionId>[];
+    ['notification alert reminder notice 通知 提醒 推送'],
+  ),
+  popupSearchTarget('general', 'remoteAnnouncementNotification', [
+    'remoteAnnouncementNotification',
+    'remoteAnnouncementNotificationHint',
+    'remoteAnnouncementSystemPermissionCta',
+  ]),
+  popupSearchTarget(
+    'general',
+    'usageStatusToggle',
+    ['usageStatusToggle', 'usageStatusToggleHint'],
+    ['usage quota limit 用量 限额'],
+  ),
+  popupSearchTarget(
+    'general',
+    'hideInputHalo',
+    ['hideInputHalo', 'hideInputHaloHint'],
+    ['halo ripple 光晕 水波纹'],
+  ),
+  popupSearchTarget('general', 'enableDefaultModelAutoApply', [
+    'enableDefaultModelAutoApply',
+    'enableDefaultModelAutoApplyHint',
+  ]),
+  popupSectionSearchTarget('nanobanana', ['nanobananaOptions']),
+  popupSearchTarget(
+    'nanobanana',
+    'download',
+    ['nanobananaDownloadLabel', 'nanobananaDownloadHint', 'nanobananaBadgeRecommended'],
+    ['watermark image banana picture photo download 水印 图片 去水印 下载'],
+  ),
+  popupSearchTarget(
+    'nanobanana',
+    'preview',
+    ['nanobananaPreviewLabel', 'nanobananaPreviewHint', 'nanobananaBadgeUnstable'],
+    ['watermark image banana picture photo preview 水印 图片 预览'],
+  ),
+] as const satisfies readonly PopupSettingsSearchItem[];
 
 const ROOT_CONVERSATIONS_ID = '__root_conversations__';
 
@@ -1924,12 +1995,39 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const visibleSections = sectionOrder.filter(isSectionVisible);
   const hasSettingsSearch = settingsSearchQuery.trim().length > 0;
   const settingsSearchMatches = useMemo(
-    () => getSettingsSearchMatches(POPUP_SECTION_SEARCH_ITEMS, settingsSearchQuery),
+    () => getSettingsSearchMatches(POPUP_SETTINGS_SEARCH_ITEMS, settingsSearchQuery),
     [settingsSearchQuery],
   );
+  const settingsSearchSections = useMemo(() => {
+    if (!hasSettingsSearch) return new Set<PopupSectionId>(visibleSections);
+    const sections = new Set<PopupSectionId>();
+    for (const item of POPUP_SETTINGS_SEARCH_ITEMS) {
+      if (settingsSearchMatches.has(item.id)) sections.add(item.sectionId);
+    }
+    return sections;
+  }, [hasSettingsSearch, settingsSearchMatches, visibleSections]);
   const displayedSections = hasSettingsSearch
-    ? visibleSections.filter((id) => settingsSearchMatches.has(id))
+    ? visibleSections.filter((id) => settingsSearchSections.has(id))
     : visibleSections;
+
+  const getSearchTargetId = (
+    sectionId: PopupSectionId,
+    settingId: string,
+  ): PopupSettingsSearchTargetId => `${sectionId}:${settingId}` as PopupSettingsSearchTargetId;
+
+  const sectionTitleMatchesSearch = (sectionId: PopupSectionId): boolean =>
+    settingsSearchMatches.has(getSearchTargetId(sectionId, SECTION_SEARCH_SETTING_ID));
+
+  const shouldShowSetting = (sectionId: PopupSectionId, settingId: string): boolean =>
+    !hasSettingsSearch ||
+    sectionTitleMatchesSearch(sectionId) ||
+    settingsSearchMatches.has(getSearchTargetId(sectionId, settingId));
+
+  const renderSetting = (
+    sectionId: PopupSectionId,
+    settingId: string,
+    content: React.ReactNode,
+  ): React.ReactNode => (shouldShowSetting(sectionId, settingId) ? content : null);
 
   const moveSectionInOrder = (sectionId: PopupSectionId, direction: 'up' | 'down') => {
     setSectionOrder((prev) => {
@@ -1956,7 +2054,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     // Plugins section only. Gemini-specific settings, including Prompt Manager
     // custom-site controls, remain available from the native Gemini/AI Studio popup.
     if (isPluginSite) return null;
-    if (hasSettingsSearch && !settingsSearchMatches.has(id)) return null;
+    if (hasSettingsSearch && !settingsSearchSections.has(id)) return null;
 
     return (
       <div key={id} style={{ order: sectionOrder.indexOf(id) }} className="group/reorder relative">
@@ -2144,7 +2242,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             <CardTitle className="mb-4">{t('timelineOptions')}</CardTitle>
             <CardContent className="space-y-4 p-0">
               {/* Scroll Mode */}
-              <div>
+              <div hidden={!shouldShowSetting('timeline', 'scrollMode')}>
                 <Label className="mb-2 block text-sm font-medium">{t('scrollMode')}</Label>
                 <div className="bg-secondary/60 relative grid grid-cols-2 gap-1 rounded-xl p-1">
                   <div
@@ -2179,7 +2277,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                   </button>
                 </div>
               </div>
-              <div className="group flex items-center justify-between">
+              <div
+                hidden={!shouldShowSetting('timeline', 'hideOuterContainer')}
+                className="group flex items-center justify-between"
+              >
                 <Label
                   htmlFor="hide-container"
                   className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
@@ -2195,7 +2296,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                   }}
                 />
               </div>
-              <div className="group flex items-center justify-between">
+              <div
+                hidden={!shouldShowSetting('timeline', 'draggableTimeline')}
+                className="group flex items-center justify-between"
+              >
                 <Label
                   htmlFor="draggable-timeline"
                   className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
@@ -2211,7 +2315,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                   }}
                 />
               </div>
-              <div className="group flex items-center justify-between">
+              <div
+                hidden={!shouldShowSetting('timeline', 'pinTimelinePreview')}
+                className="group flex items-center justify-between"
+              >
                 <div className="flex-1">
                   <Label
                     htmlFor="timeline-preview-pinned"
@@ -2232,7 +2339,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                   }}
                 />
               </div>
-              <div className="group flex items-center justify-between">
+              <div
+                hidden={!shouldShowSetting('timeline', 'preventAutoScroll')}
+                className="group flex items-center justify-between"
+              >
                 <div className="flex-1">
                   <Label
                     htmlFor="prevent-auto-scroll"
@@ -2251,7 +2361,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                   }}
                 />
               </div>
-              <div className="group flex items-center justify-between">
+              <div
+                hidden={!shouldShowSetting('timeline', 'enableMarkerLevel')}
+                className="group flex items-center justify-between"
+              >
                 <div className="flex-1">
                   <Label
                     htmlFor="marker-level-enabled"
@@ -2278,7 +2391,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                 />
               </div>
               {/* Message Timestamps */}
-              <div className="group flex items-center justify-between">
+              <div
+                hidden={!shouldShowSetting('timeline', 'showMessageTimestamps')}
+                className="group flex items-center justify-between"
+              >
                 <div className="flex-1">
                   <Label
                     htmlFor="show-message-timestamps"
@@ -2308,6 +2424,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
               </div>
               {/* Reset Timeline Position Button */}
               <Button
+                hidden={!shouldShowSetting('timeline', 'resetTimelinePosition')}
                 variant="outline"
                 size="sm"
                 className="group hover:border-primary/50 mt-2 w-full"
@@ -2321,6 +2438,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
               </Button>
               {/* View Starred History Button */}
               <Button
+                hidden={!shouldShowSetting('timeline', 'viewStarredHistory')}
                 variant="outline"
                 size="sm"
                 className="group hover:border-primary/50 mt-2 w-full"
@@ -2352,7 +2470,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           <Card className="p-4 transition-all hover:shadow-md">
             <CardTitle className="mb-4">{t('folderOptions')}</CardTitle>
             <CardContent className="space-y-4 p-0">
-              <div className="group flex items-center justify-between">
+              <div
+                hidden={!shouldShowSetting('folder', 'enableFolderFeature')}
+                className="group flex items-center justify-between"
+              >
                 <Label
                   htmlFor="folder-enabled"
                   className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
@@ -2368,7 +2489,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                   }}
                 />
               </div>
-              <div className="group flex items-center justify-between gap-3">
+              <div
+                hidden={!shouldShowSetting('folder', 'enableFolderFloatingMode')}
+                className="group flex items-center justify-between gap-3"
+              >
                 <div className="min-w-0 flex-1">
                   <Label
                     htmlFor="floating-mode"
@@ -2396,30 +2520,34 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                   }}
                 />
               </div>
-              {floatingModeEnabled && (
-                <div className="group flex items-center justify-between gap-3 pl-4">
-                  <div className="min-w-0 flex-1">
-                    <Label
-                      htmlFor="floating-open-on-start"
-                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                    >
-                      {t('openFloatingFolderOnStartup')}
-                    </Label>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      {t('openFloatingFolderOnStartupHint')}
-                    </p>
+              {floatingModeEnabled &&
+                shouldShowSetting('folder', 'openFloatingFolderOnStartup') && (
+                  <div className="group flex items-center justify-between gap-3 pl-4">
+                    <div className="min-w-0 flex-1">
+                      <Label
+                        htmlFor="floating-open-on-start"
+                        className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                      >
+                        {t('openFloatingFolderOnStartup')}
+                      </Label>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {t('openFloatingFolderOnStartupHint')}
+                      </p>
+                    </div>
+                    <Switch
+                      id="floating-open-on-start"
+                      checked={floatingOpenOnStart}
+                      onChange={(e) => {
+                        setFloatingOpenOnStart(e.target.checked);
+                        apply({ floatingOpenOnStart: e.target.checked });
+                      }}
+                    />
                   </div>
-                  <Switch
-                    id="floating-open-on-start"
-                    checked={floatingOpenOnStart}
-                    onChange={(e) => {
-                      setFloatingOpenOnStart(e.target.checked);
-                      apply({ floatingOpenOnStart: e.target.checked });
-                    }}
-                  />
-                </div>
-              )}
-              <div className="group flex items-center justify-between">
+                )}
+              <div
+                hidden={!shouldShowSetting('folder', 'hideArchivedConversations')}
+                className="group flex items-center justify-between"
+              >
                 <Label
                   htmlFor="hide-archived"
                   className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
@@ -2435,7 +2563,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                   }}
                 />
               </div>
-              <div className="group flex items-center justify-between">
+              <div
+                hidden={!shouldShowSetting('folder', 'showFolderSearch')}
+                className="group flex items-center justify-between"
+              >
                 <Label
                   htmlFor="folder-search-enabled"
                   className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
@@ -2451,7 +2582,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                   }}
                 />
               </div>
-              <div className="group flex items-center justify-between">
+              <div
+                hidden={!shouldShowSetting('folder', 'enableForkFeature')}
+                className="group flex items-center justify-between"
+              >
                 <div className="flex-1">
                   <Label
                     htmlFor="fork-enabled"
@@ -2477,7 +2611,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                   }}
                 />
               </div>
-              <div className="group flex items-center justify-between">
+              <div
+                hidden={!shouldShowSetting('folder', 'enableAccountIsolation')}
+                className="group flex items-center justify-between"
+              >
                 <div className="flex-1">
                   <Label
                     htmlFor="account-isolation-enabled"
@@ -2522,7 +2659,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                   }}
                 />
               </div>
-              <div className="group flex items-center justify-between">
+              <div
+                hidden={!shouldShowSetting('folder', 'folderAsProject')}
+                className="group flex items-center justify-between"
+              >
                 <div className="flex-1">
                   <Label
                     htmlFor="folder-project-enabled"
@@ -2551,7 +2691,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                 />
               </div>
               {/* Copy folder structure for AI organization */}
-              <div className="border-border/50 border-t pt-3">
+              <div
+                hidden={!shouldShowSetting('folder', 'aiOrgCopy')}
+                className="border-border/50 border-t pt-3"
+              >
                 <Button
                   variant="outline"
                   className="w-full text-sm"
@@ -2774,7 +2917,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             'sidebarBehavior',
             <Card className="p-4 transition-all hover:shadow-md">
               <CardContent className="space-y-3 p-0">
-                <div className="group flex items-center justify-between">
+                <div
+                  hidden={!shouldShowSetting('sidebarBehavior', 'sidebarAutoHide')}
+                  className="group flex items-center justify-between"
+                >
                   <div className="flex-1">
                     <Label
                       htmlFor="sidebar-auto-hide"
@@ -2793,7 +2939,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                     }}
                   />
                 </div>
-                <div className="group flex items-center justify-between">
+                <div
+                  hidden={!shouldShowSetting('sidebarBehavior', 'sidebarFullHide')}
+                  className="group flex items-center justify-between"
+                >
                   <div className="flex-1">
                     <Label
                       htmlFor="sidebar-full-hide"
@@ -3011,152 +3160,176 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           <Card className="p-4 transition-all hover:shadow-md">
             <CardTitle className="mb-4">{t('inputCollapseOptions')}</CardTitle>
             <CardContent className="space-y-4 p-0">
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="input-collapse-enabled"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('enableInputCollapse')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {t('enableInputCollapseHint')}{' '}
-                    <span className="text-muted-foreground/70">
-                      ({t('inputCollapseShortcutHint').replace('{modifier}', getModifierKey())})
-                    </span>
-                  </p>
-                </div>
-                <Switch
-                  id="input-collapse-enabled"
-                  checked={inputCollapseEnabled}
-                  onChange={(e) => {
-                    setInputCollapseEnabled(e.target.checked);
-                    apply({ inputCollapseEnabled: e.target.checked });
-                  }}
-                />
-              </div>
-              {/* Second toggle - Allow collapse when not empty (only visible when first is enabled) */}
-              {inputCollapseEnabled && (
-                <div className="group mt-3 ml-4 flex items-center justify-between">
-                  <div className="flex-1">
-                    <Label
-                      htmlFor="input-collapse-when-not-empty"
-                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                    >
-                      {t('allowCollapseWhenNotEmpty')}
-                    </Label>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      {t('allowCollapseWhenNotEmptyHint')}
-                    </p>
-                  </div>
-                  <Switch
-                    id="input-collapse-when-not-empty"
-                    checked={inputCollapseWhenNotEmpty}
-                    onChange={(e) => {
-                      setInputCollapseWhenNotEmpty(e.target.checked);
-                      apply({ inputCollapseWhenNotEmpty: e.target.checked });
-                    }}
-                  />
-                </div>
-              )}
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="input-vim-mode"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('inputVimMode')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">{t('inputVimModeHint')}</p>
-                </div>
-                <Switch
-                  id="input-vim-mode"
-                  checked={inputVimModeEnabled}
-                  onChange={(e) => {
-                    setInputVimModeEnabled(e.target.checked);
-                    apply({ inputVimModeEnabled: e.target.checked });
-                  }}
-                />
-              </div>
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor={isAIStudio ? 'aistudio-enter-send' : 'ctrl-enter-send'}
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {isAIStudio
-                      ? t('aistudioEnterSend').replace('{modifier}', getModifierKey())
-                      : t('ctrlEnterSend').replace('{modifier}', getModifierKey())}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {(isAIStudio ? t('aistudioEnterSendHint') : t('ctrlEnterSendHint')).replace(
-                      '{modifier}',
-                      getModifierKey(),
-                    )}
-                  </p>
-                  <div className="mt-1 flex items-center gap-2 text-xs">
-                    <span className="text-muted-foreground">{t('currentPlatform')}:</span>
-                    <span className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-medium">
-                      {currentPlatformLabel}
-                    </span>
-                  </div>
-                </div>
-                <Switch
-                  id={isAIStudio ? 'aistudio-enter-send' : 'ctrl-enter-send'}
-                  checked={isAIStudio ? aiStudioEnterSendEnabled : ctrlEnterSendEnabled}
-                  onChange={(e) => {
-                    if (isAIStudio) {
-                      setAiStudioEnterSendEnabled(e.target.checked);
-                      apply({ aiStudioEnterSendEnabled: e.target.checked });
-                    } else {
-                      setCtrlEnterSendEnabled(e.target.checked);
-                      apply({ ctrlEnterSendEnabled: e.target.checked });
-                    }
-                  }}
-                />
-              </div>
-              {/* Safari Enter Fix - only shown on Safari */}
-              {isSafariBrowser && (
+              {renderSetting(
+                'inputCollapse',
+                'enableInputCollapse',
                 <div className="group flex items-center justify-between">
                   <div className="flex-1">
                     <Label
-                      htmlFor="safari-enter-fix"
+                      htmlFor="input-collapse-enabled"
                       className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                     >
-                      {t('safariEnterFix')}
+                      {t('enableInputCollapse')}
                     </Label>
-                    <p className="text-muted-foreground mt-1 text-xs">{t('safariEnterFixHint')}</p>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('enableInputCollapseHint')}{' '}
+                      <span className="text-muted-foreground/70">
+                        ({t('inputCollapseShortcutHint').replace('{modifier}', getModifierKey())})
+                      </span>
+                    </p>
                   </div>
                   <Switch
-                    id="safari-enter-fix"
-                    checked={safariEnterFixEnabled}
+                    id="input-collapse-enabled"
+                    checked={inputCollapseEnabled}
                     onChange={(e) => {
-                      setSafariEnterFixEnabled(e.target.checked);
-                      apply({ safariEnterFixEnabled: e.target.checked });
+                      setInputCollapseEnabled(e.target.checked);
+                      apply({ inputCollapseEnabled: e.target.checked });
                     }}
                   />
-                </div>
+                </div>,
               )}
+              {/* Second toggle - Allow collapse when not empty (only visible when first is enabled) */}
+              {inputCollapseEnabled &&
+                renderSetting(
+                  'inputCollapse',
+                  'allowCollapseWhenNotEmpty',
+                  <div className="group mt-3 ml-4 flex items-center justify-between">
+                    <div className="flex-1">
+                      <Label
+                        htmlFor="input-collapse-when-not-empty"
+                        className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                      >
+                        {t('allowCollapseWhenNotEmpty')}
+                      </Label>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {t('allowCollapseWhenNotEmptyHint')}
+                      </p>
+                    </div>
+                    <Switch
+                      id="input-collapse-when-not-empty"
+                      checked={inputCollapseWhenNotEmpty}
+                      onChange={(e) => {
+                        setInputCollapseWhenNotEmpty(e.target.checked);
+                        apply({ inputCollapseWhenNotEmpty: e.target.checked });
+                      }}
+                    />
+                  </div>,
+                )}
+              {renderSetting(
+                'inputCollapse',
+                'inputVimMode',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="input-vim-mode"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('inputVimMode')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">{t('inputVimModeHint')}</p>
+                  </div>
+                  <Switch
+                    id="input-vim-mode"
+                    checked={inputVimModeEnabled}
+                    onChange={(e) => {
+                      setInputVimModeEnabled(e.target.checked);
+                      apply({ inputVimModeEnabled: e.target.checked });
+                    }}
+                  />
+                </div>,
+              )}
+              {renderSetting(
+                'inputCollapse',
+                'enterSend',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor={isAIStudio ? 'aistudio-enter-send' : 'ctrl-enter-send'}
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {isAIStudio
+                        ? t('aistudioEnterSend').replace('{modifier}', getModifierKey())
+                        : t('ctrlEnterSend').replace('{modifier}', getModifierKey())}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {(isAIStudio ? t('aistudioEnterSendHint') : t('ctrlEnterSendHint')).replace(
+                        '{modifier}',
+                        getModifierKey(),
+                      )}
+                    </p>
+                    <div className="mt-1 flex items-center gap-2 text-xs">
+                      <span className="text-muted-foreground">{t('currentPlatform')}:</span>
+                      <span className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-medium">
+                        {currentPlatformLabel}
+                      </span>
+                    </div>
+                  </div>
+                  <Switch
+                    id={isAIStudio ? 'aistudio-enter-send' : 'ctrl-enter-send'}
+                    checked={isAIStudio ? aiStudioEnterSendEnabled : ctrlEnterSendEnabled}
+                    onChange={(e) => {
+                      if (isAIStudio) {
+                        setAiStudioEnterSendEnabled(e.target.checked);
+                        apply({ aiStudioEnterSendEnabled: e.target.checked });
+                      } else {
+                        setCtrlEnterSendEnabled(e.target.checked);
+                        apply({ ctrlEnterSendEnabled: e.target.checked });
+                      }
+                    }}
+                  />
+                </div>,
+              )}
+              {/* Safari Enter Fix - only shown on Safari */}
+              {isSafariBrowser &&
+                renderSetting(
+                  'inputCollapse',
+                  'safariEnterFix',
+                  <div className="group flex items-center justify-between">
+                    <div className="flex-1">
+                      <Label
+                        htmlFor="safari-enter-fix"
+                        className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                      >
+                        {t('safariEnterFix')}
+                      </Label>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {t('safariEnterFixHint')}
+                      </p>
+                    </div>
+                    <Switch
+                      id="safari-enter-fix"
+                      checked={safariEnterFixEnabled}
+                      onChange={(e) => {
+                        setSafariEnterFixEnabled(e.target.checked);
+                        apply({ safariEnterFixEnabled: e.target.checked });
+                      }}
+                    />
+                  </div>,
+                )}
               {/* Draft Auto-Save */}
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="draft-auto-save"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('draftAutoSave')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">{t('draftAutoSaveHint')}</p>
-                </div>
-                <Switch
-                  id="draft-auto-save"
-                  checked={draftAutoSaveEnabled}
-                  onChange={(e) => {
-                    setDraftAutoSaveEnabled(e.target.checked);
-                    apply({ draftAutoSaveEnabled: e.target.checked });
-                  }}
-                />
-              </div>
+              {renderSetting(
+                'inputCollapse',
+                'draftAutoSave',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="draft-auto-save"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('draftAutoSave')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">{t('draftAutoSaveHint')}</p>
+                  </div>
+                  <Switch
+                    id="draft-auto-save"
+                    checked={draftAutoSaveEnabled}
+                    onChange={(e) => {
+                      setDraftAutoSaveEnabled(e.target.checked);
+                      apply({ draftAutoSaveEnabled: e.target.checked });
+                    }}
+                  />
+                </div>,
+              )}
             </CardContent>
           </Card>,
         )}
@@ -3168,166 +3341,184 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             <CardTitle className="mb-4">{t('promptManagerOptions')}</CardTitle>
             <CardContent className="space-y-3 p-0">
               {/* Hide Prompt Manager Toggle */}
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="hide-prompt-manager"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('hidePromptManager')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">{t('hidePromptManagerHint')}</p>
-                </div>
-                <Switch
-                  id="hide-prompt-manager"
-                  checked={hidePromptManager}
-                  onChange={(e) => {
-                    setHidePromptManager(e.target.checked);
-                    apply({ hidePromptManager: e.target.checked });
-                  }}
-                />
-              </div>
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="prompt-insert-on-click"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('promptInsertOnClick')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {t('promptInsertOnClickHint')}
-                  </p>
-                </div>
-                <Switch
-                  id="prompt-insert-on-click"
-                  checked={promptInsertOnClickEnabled}
-                  onChange={(e) => {
-                    setPromptInsertOnClickEnabled(e.target.checked);
-                    apply({ promptInsertOnClickEnabled: e.target.checked });
-                  }}
-                />
-              </div>
-              <div>
-                <Label className="mb-2 block text-sm font-medium">{t('customWebsites')}</Label>
-                {/* Gemini-default notice — only meaningful on Gemini itself, so
-                    hide it on Claude/ChatGPT where the user is already off-Gemini. */}
-                {!isPluginSite && (
-                  <div className="bg-primary/10 border-primary/20 mb-2 flex items-center gap-2 rounded-md border p-2">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 16 16"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="text-primary shrink-0"
+              {renderSetting(
+                'promptManager',
+                'hidePromptManager',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="hide-prompt-manager"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
                     >
-                      <path
-                        d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 11c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm1-4H7V5h2v3z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                    <p className="text-primary text-xs font-medium">{t('geminiOnlyNotice')}</p>
+                      {t('hidePromptManager')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('hidePromptManagerHint')}
+                    </p>
                   </div>
-                )}
+                  <Switch
+                    id="hide-prompt-manager"
+                    checked={hidePromptManager}
+                    onChange={(e) => {
+                      setHidePromptManager(e.target.checked);
+                      apply({ hidePromptManager: e.target.checked });
+                    }}
+                  />
+                </div>,
+              )}
+              {renderSetting(
+                'promptManager',
+                'promptInsertOnClick',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="prompt-insert-on-click"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('promptInsertOnClick')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('promptInsertOnClickHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="prompt-insert-on-click"
+                    checked={promptInsertOnClickEnabled}
+                    onChange={(e) => {
+                      setPromptInsertOnClickEnabled(e.target.checked);
+                      apply({ promptInsertOnClickEnabled: e.target.checked });
+                    }}
+                  />
+                </div>,
+              )}
+              {renderSetting(
+                'promptManager',
+                'customWebsites',
+                <div>
+                  <Label className="mb-2 block text-sm font-medium">{t('customWebsites')}</Label>
+                  {/* Gemini-default notice — only meaningful on Gemini itself, so
+                    hide it on Claude/ChatGPT where the user is already off-Gemini. */}
+                  {!isPluginSite && (
+                    <div className="bg-primary/10 border-primary/20 mb-2 flex items-center gap-2 rounded-md border p-2">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="text-primary shrink-0"
+                      >
+                        <path
+                          d="M8 1C4.13 1 1 4.13 1 8s3.13 7 7 7 7-3.13 7-7-3.13-7-7-7zm0 11c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm1-4H7V5h2v3z"
+                          fill="currentColor"
+                        />
+                      </svg>
+                      <p className="text-primary text-xs font-medium">{t('geminiOnlyNotice')}</p>
+                    </div>
+                  )}
 
-                {/* Quick-select buttons for popular websites. ChatGPT / Claude /
+                  {/* Quick-select buttons for popular websites. ChatGPT / Claude /
                     Grok are intentionally absent: they're plugin platforms (managed
                     via the Plugins section), not Prompt-Manager custom sites. */}
-                <div className="mb-3 flex flex-wrap gap-1.5">
-                  {[
-                    { domain: 'deepseek.com', label: 'DeepSeek', Icon: IconDeepSeek },
-                    { domain: 'qwen.ai', label: 'Qwen', Icon: IconQwen },
-                    { domain: 'kimi.com', label: 'Kimi', Icon: IconKimi },
-                    { domain: 'notebooklm.google.com', label: 'NotebookLM', Icon: IconNotebookLM },
-                    { domain: 'midjourney.com', label: 'Midjourney', Icon: IconMidjourney },
-                  ].map(({ domain, label, Icon }) => {
-                    const isEnabled = customWebsites.includes(domain);
-                    return (
-                      <button
-                        key={domain}
-                        onClick={() => {
-                          void toggleQuickWebsite(domain, isEnabled);
-                        }}
-                        className={`inline-flex min-w-[30%] grow items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all ${
-                          isEnabled
-                            ? 'bg-primary text-primary-foreground shadow-sm'
-                            : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
-                        }`}
-                        title={label}
-                      >
-                        <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
-                          <Icon />
-                        </span>
-                        <span className="truncate">{label}</span>
-                        <span
-                          className={`w-2.5 shrink-0 text-center text-[10px] transition-opacity ${isEnabled ? 'opacity-100' : 'opacity-0'}`}
-                        >
-                          ✓
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Website List */}
-                {customWebsites.length > 0 && (
-                  <div className="mb-3 space-y-2">
-                    {customWebsites.map((website) => (
-                      <div
-                        key={website}
-                        className="bg-secondary/30 group hover:bg-secondary/50 flex items-center justify-between rounded-md px-3 py-2 transition-colors"
-                      >
-                        <span className="text-foreground/90 font-mono text-sm">{website}</span>
+                  <div className="mb-3 flex flex-wrap gap-1.5">
+                    {[
+                      { domain: 'deepseek.com', label: 'DeepSeek', Icon: IconDeepSeek },
+                      { domain: 'qwen.ai', label: 'Qwen', Icon: IconQwen },
+                      { domain: 'kimi.com', label: 'Kimi', Icon: IconKimi },
+                      {
+                        domain: 'notebooklm.google.com',
+                        label: 'NotebookLM',
+                        Icon: IconNotebookLM,
+                      },
+                      { domain: 'midjourney.com', label: 'Midjourney', Icon: IconMidjourney },
+                    ].map(({ domain, label, Icon }) => {
+                      const isEnabled = customWebsites.includes(domain);
+                      return (
                         <button
+                          key={domain}
                           onClick={() => {
-                            void handleRemoveWebsite(website);
+                            void toggleQuickWebsite(domain, isEnabled);
                           }}
-                          className="text-destructive hover:text-destructive/80 text-xs font-medium opacity-70 transition-opacity group-hover:opacity-100"
+                          className={`inline-flex min-w-[30%] grow items-center justify-center gap-1 rounded-full px-2 py-1.5 text-[11px] font-medium transition-all ${
+                            isEnabled
+                              ? 'bg-primary text-primary-foreground shadow-sm'
+                              : 'bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground'
+                          }`}
+                          title={label}
                         >
-                          {t('removeWebsite')}
+                          <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center">
+                            <Icon />
+                          </span>
+                          <span className="truncate">{label}</span>
+                          <span
+                            className={`w-2.5 shrink-0 text-center text-[10px] transition-opacity ${isEnabled ? 'opacity-100' : 'opacity-0'}`}
+                          >
+                            ✓
+                          </span>
                         </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
-                )}
 
-                {/* Add Website Input */}
-                <div className="space-y-2">
-                  <div className="flex flex-wrap gap-2">
-                    <input
-                      type="text"
-                      value={newWebsiteInput}
-                      onChange={(e) => {
-                        setNewWebsiteInput(e.target.value);
-                        setWebsiteError('');
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
+                  {/* Website List */}
+                  {customWebsites.length > 0 && (
+                    <div className="mb-3 space-y-2">
+                      {customWebsites.map((website) => (
+                        <div
+                          key={website}
+                          className="bg-secondary/30 group hover:bg-secondary/50 flex items-center justify-between rounded-md px-3 py-2 transition-colors"
+                        >
+                          <span className="text-foreground/90 font-mono text-sm">{website}</span>
+                          <button
+                            onClick={() => {
+                              void handleRemoveWebsite(website);
+                            }}
+                            className="text-destructive hover:text-destructive/80 text-xs font-medium opacity-70 transition-opacity group-hover:opacity-100"
+                          >
+                            {t('removeWebsite')}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Add Website Input */}
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap gap-2">
+                      <input
+                        type="text"
+                        value={newWebsiteInput}
+                        onChange={(e) => {
+                          setNewWebsiteInput(e.target.value);
+                          setWebsiteError('');
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            void handleAddWebsite();
+                          }
+                        }}
+                        placeholder={t('customWebsitesPlaceholder')}
+                        className="bg-background border-border focus:ring-primary/50 min-w-0 flex-1 rounded-md border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
+                      />
+                      <Button
+                        onClick={() => {
                           void handleAddWebsite();
-                        }
-                      }}
-                      placeholder={t('customWebsitesPlaceholder')}
-                      className="bg-background border-border focus:ring-primary/50 min-w-0 flex-1 rounded-md border px-3 py-2 text-sm transition-all focus:ring-2 focus:outline-none"
-                    />
-                    <Button
-                      onClick={() => {
-                        void handleAddWebsite();
-                      }}
-                      size="sm"
-                      className="shrink-0 whitespace-nowrap"
-                    >
-                      {t('addWebsite')}
-                    </Button>
+                        }}
+                        size="sm"
+                        className="shrink-0 whitespace-nowrap"
+                      >
+                        {t('addWebsite')}
+                      </Button>
+                    </div>
+                    {websiteError && <p className="text-destructive text-xs">{websiteError}</p>}
                   </div>
-                  {websiteError && <p className="text-destructive text-xs">{websiteError}</p>}
-                </div>
 
-                {/* Note about reloading */}
-                <div className="bg-primary/5 border-primary/20 mt-3 rounded-md border p-2">
-                  <p className="text-muted-foreground text-xs">{t('customWebsitesNote')}</p>
-                </div>
-              </div>
+                  {/* Note about reloading */}
+                  <div className="bg-primary/5 border-primary/20 mt-3 rounded-md border p-2">
+                    <p className="text-muted-foreground text-xs">{t('customWebsitesNote')}</p>
+                  </div>
+                </div>,
+              )}
             </CardContent>
           </Card>,
         )}
@@ -3338,215 +3529,255 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           <Card className="p-4 transition-all hover:shadow-md">
             <CardTitle className="mb-4">{t('generalOptions')}</CardTitle>
             <CardContent className="space-y-4 p-0">
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="tab-title-update"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('enableTabTitleUpdate')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {t('enableTabTitleUpdateHint')}
-                  </p>
-                </div>
-                <Switch
-                  id="tab-title-update"
-                  checked={tabTitleUpdateEnabled}
-                  onChange={(e) => {
-                    setTabTitleUpdateEnabled(e.target.checked);
-                    apply({ tabTitleUpdateEnabled: e.target.checked });
-                  }}
-                />
-              </div>
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="persistent-export-toolbar"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('persistentExportToolbar')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {t('persistentExportToolbarHint')}
-                  </p>
-                </div>
-                <Switch
-                  id="persistent-export-toolbar"
-                  checked={persistentExportToolbarEnabled}
-                  onChange={(e) => {
-                    setPersistentExportToolbarEnabled(e.target.checked);
-                    apply({ persistentExportToolbarEnabled: e.target.checked });
-                  }}
-                />
-              </div>
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="mermaid-enabled"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('enableMermaidRendering')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {t('enableMermaidRenderingHint')}
-                  </p>
-                </div>
-                <Switch
-                  id="mermaid-enabled"
-                  checked={mermaidEnabled}
-                  onChange={(e) => {
-                    setMermaidEnabled(e.target.checked);
-                    apply({ mermaidEnabled: e.target.checked });
-                  }}
-                />
-              </div>
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="quote-reply-enabled"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('enableQuoteReply')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">{t('enableQuoteReplyHint')}</p>
-                </div>
-                <Switch
-                  id="quote-reply-enabled"
-                  checked={quoteReplyEnabled}
-                  onChange={(e) => {
-                    setQuoteReplyEnabled(e.target.checked);
-                    apply({ quoteReplyEnabled: e.target.checked });
-                  }}
-                />
-              </div>
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="response-complete-notification"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('responseCompleteNotification')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {t(
-                      isSafariBrowser
-                        ? 'responseCompleteNotificationHintSafari'
-                        : 'responseCompleteNotificationHint',
-                    )}
-                  </p>
-                </div>
-                <Switch
-                  id="response-complete-notification"
-                  checked={responseCompleteNotificationEnabled}
-                  onChange={async (e) => {
-                    const next = e.target.checked;
-                    // "notifications" is an optional permission — request it
-                    // inside this user gesture before enabling the feature.
-                    if (next && !(await ensureNotificationsPermission())) {
-                      setResponseCompleteNotificationEnabled(false);
-                      return;
-                    }
-                    if (next) setRemoteAnnouncementPermissionGranted(true);
-                    setResponseCompleteNotificationEnabled(next);
-                    apply({ responseCompleteNotificationEnabled: next });
-                  }}
-                />
-              </div>
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="remote-announcement-notification"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('remoteAnnouncementNotification')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {t('remoteAnnouncementNotificationHint')}
-                  </p>
-                  {remoteAnnouncementEnabled &&
-                    canUseSystemNotifications &&
-                    !remoteAnnouncementPermissionGranted && (
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        className="mt-2 h-7 px-2.5 text-xs"
-                        onClick={requestRemoteAnnouncementSystemPermission}
-                      >
-                        {t('remoteAnnouncementSystemPermissionCta')}
-                      </Button>
-                    )}
-                </div>
-                <Switch
-                  id="remote-announcement-notification"
-                  checked={remoteAnnouncementEnabled}
-                  onChange={(e) => {
-                    const next = e.target.checked;
-                    setRemoteAnnouncementEnabled(next);
-                    apply({ remoteAnnouncementEnabled: next });
-                  }}
-                />
-              </div>
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="usage-status-enabled"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('usageStatusToggle')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">{t('usageStatusToggleHint')}</p>
-                </div>
-                <Switch
-                  id="usage-status-enabled"
-                  checked={usageStatusEnabled}
-                  onChange={(e) => {
-                    setUsageStatusEnabled(e.target.checked);
-                    apply({ usageStatusEnabled: e.target.checked });
-                  }}
-                />
-              </div>
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="input-halo-hidden"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('hideInputHalo')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">{t('hideInputHaloHint')}</p>
-                </div>
-                <Switch
-                  id="input-halo-hidden"
-                  checked={inputHaloHidden}
-                  onChange={(e) => {
-                    setInputHaloHidden(e.target.checked);
-                    apply({ inputHaloHidden: e.target.checked });
-                  }}
-                />
-              </div>
-              <div className="group flex items-center justify-between">
-                <div className="flex-1">
-                  <Label
-                    htmlFor="default-model-auto-apply"
-                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                  >
-                    {t('enableDefaultModelAutoApply')}
-                  </Label>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    {t('enableDefaultModelAutoApplyHint')}
-                  </p>
-                </div>
-                <Switch
-                  id="default-model-auto-apply"
-                  checked={defaultModelAutoApplyEnabled}
-                  onChange={(e) => {
-                    setDefaultModelAutoApplyEnabled(e.target.checked);
-                    apply({ defaultModelAutoApplyEnabled: e.target.checked });
-                  }}
-                />
-              </div>
+              {renderSetting(
+                'general',
+                'enableTabTitleUpdate',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="tab-title-update"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('enableTabTitleUpdate')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('enableTabTitleUpdateHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="tab-title-update"
+                    checked={tabTitleUpdateEnabled}
+                    onChange={(e) => {
+                      setTabTitleUpdateEnabled(e.target.checked);
+                      apply({ tabTitleUpdateEnabled: e.target.checked });
+                    }}
+                  />
+                </div>,
+              )}
+              {renderSetting(
+                'general',
+                'persistentExportToolbar',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="persistent-export-toolbar"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('persistentExportToolbar')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('persistentExportToolbarHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="persistent-export-toolbar"
+                    checked={persistentExportToolbarEnabled}
+                    onChange={(e) => {
+                      setPersistentExportToolbarEnabled(e.target.checked);
+                      apply({ persistentExportToolbarEnabled: e.target.checked });
+                    }}
+                  />
+                </div>,
+              )}
+              {renderSetting(
+                'general',
+                'enableMermaidRendering',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="mermaid-enabled"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('enableMermaidRendering')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('enableMermaidRenderingHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="mermaid-enabled"
+                    checked={mermaidEnabled}
+                    onChange={(e) => {
+                      setMermaidEnabled(e.target.checked);
+                      apply({ mermaidEnabled: e.target.checked });
+                    }}
+                  />
+                </div>,
+              )}
+              {renderSetting(
+                'general',
+                'enableQuoteReply',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="quote-reply-enabled"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('enableQuoteReply')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('enableQuoteReplyHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="quote-reply-enabled"
+                    checked={quoteReplyEnabled}
+                    onChange={(e) => {
+                      setQuoteReplyEnabled(e.target.checked);
+                      apply({ quoteReplyEnabled: e.target.checked });
+                    }}
+                  />
+                </div>,
+              )}
+              {renderSetting(
+                'general',
+                'responseCompleteNotification',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="response-complete-notification"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('responseCompleteNotification')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t(
+                        isSafariBrowser
+                          ? 'responseCompleteNotificationHintSafari'
+                          : 'responseCompleteNotificationHint',
+                      )}
+                    </p>
+                  </div>
+                  <Switch
+                    id="response-complete-notification"
+                    checked={responseCompleteNotificationEnabled}
+                    onChange={async (e) => {
+                      const next = e.target.checked;
+                      // "notifications" is an optional permission — request it
+                      // inside this user gesture before enabling the feature.
+                      if (next && !(await ensureNotificationsPermission())) {
+                        setResponseCompleteNotificationEnabled(false);
+                        return;
+                      }
+                      if (next) setRemoteAnnouncementPermissionGranted(true);
+                      setResponseCompleteNotificationEnabled(next);
+                      apply({ responseCompleteNotificationEnabled: next });
+                    }}
+                  />
+                </div>,
+              )}
+              {renderSetting(
+                'general',
+                'remoteAnnouncementNotification',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="remote-announcement-notification"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('remoteAnnouncementNotification')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('remoteAnnouncementNotificationHint')}
+                    </p>
+                    {remoteAnnouncementEnabled &&
+                      canUseSystemNotifications &&
+                      !remoteAnnouncementPermissionGranted && (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="mt-2 h-7 px-2.5 text-xs"
+                          onClick={requestRemoteAnnouncementSystemPermission}
+                        >
+                          {t('remoteAnnouncementSystemPermissionCta')}
+                        </Button>
+                      )}
+                  </div>
+                  <Switch
+                    id="remote-announcement-notification"
+                    checked={remoteAnnouncementEnabled}
+                    onChange={(e) => {
+                      const next = e.target.checked;
+                      setRemoteAnnouncementEnabled(next);
+                      apply({ remoteAnnouncementEnabled: next });
+                    }}
+                  />
+                </div>,
+              )}
+              {renderSetting(
+                'general',
+                'usageStatusToggle',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="usage-status-enabled"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('usageStatusToggle')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('usageStatusToggleHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="usage-status-enabled"
+                    checked={usageStatusEnabled}
+                    onChange={(e) => {
+                      setUsageStatusEnabled(e.target.checked);
+                      apply({ usageStatusEnabled: e.target.checked });
+                    }}
+                  />
+                </div>,
+              )}
+              {renderSetting(
+                'general',
+                'hideInputHalo',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="input-halo-hidden"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('hideInputHalo')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">{t('hideInputHaloHint')}</p>
+                  </div>
+                  <Switch
+                    id="input-halo-hidden"
+                    checked={inputHaloHidden}
+                    onChange={(e) => {
+                      setInputHaloHidden(e.target.checked);
+                      apply({ inputHaloHidden: e.target.checked });
+                    }}
+                  />
+                </div>,
+              )}
+              {renderSetting(
+                'general',
+                'enableDefaultModelAutoApply',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="default-model-auto-apply"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('enableDefaultModelAutoApply')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('enableDefaultModelAutoApplyHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="default-model-auto-apply"
+                    checked={defaultModelAutoApplyEnabled}
+                    onChange={(e) => {
+                      setDefaultModelAutoApplyEnabled(e.target.checked);
+                      apply({ defaultModelAutoApplyEnabled: e.target.checked });
+                    }}
+                  />
+                </div>,
+              )}
             </CardContent>
           </Card>,
         )}
@@ -3558,7 +3789,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             <Card className="p-4 transition-all hover:shadow-md">
               <CardTitle className="mb-4">{t('nanobananaOptions')}</CardTitle>
               <CardContent className="space-y-4 p-0">
-                <div className="group flex items-center justify-between">
+                <div
+                  hidden={!shouldShowSetting('nanobanana', 'download')}
+                  className="group flex items-center justify-between"
+                >
                   <div className="flex-1">
                     <div className="flex items-center gap-1.5">
                       <Label
@@ -3584,7 +3818,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                     }}
                   />
                 </div>
-                <div className="group flex items-center justify-between">
+                <div
+                  hidden={!shouldShowSetting('nanobanana', 'preview')}
+                  className="group flex items-center justify-between"
+                >
                   <div className="flex-1">
                     <div className="flex items-center gap-1.5">
                       <Label
