@@ -192,8 +192,12 @@
       var freq = JSON.stringify([[[rpcid, args, null, 'generic']]]);
       var reqBody = 'f.req=' + encodeURIComponent(freq) + '&at=' + encodeURIComponent(at) + '&';
       var reqid = 100000 + (Math.floor(performance.now()) % 800000);
+      
+            var match = sourcePath.match(/^\/u\/\d+/);
+      var accountPrefix = match ? match[0] : '';
       var url =
         location.origin +
+        accountPrefix +
         '/_/BardChatUi/data/batchexecute?rpcids=' +
         encodeURIComponent(rpcid) +
         '&source-path=' +
