@@ -87,6 +87,7 @@ const SECTION_CONFIGS: readonly HidableSectionConfig[] = [
 let initialized = false;
 let observer: MutationObserver | null = null;
 let observerDebounceTimer: number | null = null;
+const observerPendingNodes = new Set<HTMLElement>();
 let languageChangeListener:
   | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
   | null = null;
@@ -416,6 +417,7 @@ async function setHiddenState(section: HidableSectionConfig, hidden: boolean): P
             `[Gemini Voyager] setHiddenState error for ${section.id}:`,
             chrome.runtime.lastError.message,
           );
+          localStorage.setItem(section.storageKey, String(hidden));
         }
         resolve();
       });
@@ -615,21 +617,21 @@ function initGemsHider(): void {
   setupSectionCandidates(document);
 
   observer = new MutationObserver((mutations) => {
-    // Debounce: batch DOM mutations to avoid processing every individual node
-    // addition during high-frequency Gemini re-renders (e.g. long conversations).
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node instanceof HTMLElement) {
+          observerPendingNodes.add(node);
+        }
+      }
+    }
+
     if (observerDebounceTimer !== null) {
       window.clearTimeout(observerDebounceTimer);
     }
     observerDebounceTimer = window.setTimeout(() => {
       observerDebounceTimer = null;
-      const pendingNodes = new Set<HTMLElement>();
-      for (const mutation of mutations) {
-        for (const node of mutation.addedNodes) {
-          if (node instanceof HTMLElement) {
-            pendingNodes.add(node);
-          }
-        }
-      }
+      const pendingNodes = Array.from(observerPendingNodes);
+      observerPendingNodes.clear();
       pendingNodes.forEach((node) => setupSectionCandidates(node));
     }, 100);
   });
@@ -650,6 +652,7 @@ function cleanup(): void {
     window.clearTimeout(observerDebounceTimer);
     observerDebounceTimer = null;
   }
+  observerPendingNodes.clear();
 
   if (observer) {
     observer.disconnect();
