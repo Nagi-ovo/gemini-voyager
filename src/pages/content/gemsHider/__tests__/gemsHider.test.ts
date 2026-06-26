@@ -42,6 +42,11 @@ describe('gemsHider', () => {
     vi.useFakeTimers();
     document.body.innerHTML = '';
     document.head.innerHTML = '';
+    localStorage.clear();
+    Object.defineProperty(chrome.runtime, 'lastError', {
+      value: null,
+      configurable: true,
+    });
 
     Object.defineProperty(window, 'location', {
       value: {
@@ -212,5 +217,53 @@ describe('gemsHider', () => {
     expect(document.querySelector('.gv-sidebar-collapse-nudge')?.textContent).toContain(
       'A slim bar stays in the sidebar.',
     );
+  });
+
+  it('processes all sections added across one debounce window', async () => {
+    await startFeature();
+
+    const gems = createLegacyGemsSection();
+    await flushAsyncWork();
+    await vi.advanceTimersByTimeAsync(50);
+
+    const folders = createFolderSection();
+    await flushAsyncWork();
+    await vi.advanceTimersByTimeAsync(100);
+    await flushAsyncWork();
+
+    expect(gems.querySelector('.gv-sidebar-section-toggle-btn')?.getAttribute('title')).toBe(
+      'Hide Gems',
+    );
+    expect(folders.querySelector('.gv-sidebar-section-toggle-btn')?.getAttribute('title')).toBe(
+      'Hide Folders',
+    );
+  });
+
+  it('falls back to localStorage when storage.local.set reports lastError', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    (chrome.storage.local.set as Mock).mockImplementation(
+      (_update: Record<string, boolean>, callback?: () => void) => {
+        Object.defineProperty(chrome.runtime, 'lastError', {
+          value: { message: 'storage failed' },
+          configurable: true,
+        });
+        callback?.();
+        Object.defineProperty(chrome.runtime, 'lastError', {
+          value: null,
+          configurable: true,
+        });
+      },
+    );
+
+    const folders = createFolderSection();
+    await startFeature();
+
+    folders
+      .querySelector<HTMLButtonElement>('.gv-sidebar-section-toggle-btn')
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+
+    expect(localStorage.getItem(StorageKeys.FOLDERS_HIDDEN)).toBe('true');
+    warn.mockRestore();
   });
 });

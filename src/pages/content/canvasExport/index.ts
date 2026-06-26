@@ -53,6 +53,7 @@ function getMenuPanelsFromNode(node: HTMLElement): HTMLElement[] {
 
 function tryInjectOnPanel(menuPanel: HTMLElement, retriesLeft = MENU_INJECTION_RETRY_LIMIT): void {
   if (!menuPanel.isConnected) return;
+
   if (!isCanvasShareMenuPanel(menuPanel)) {
     if (retriesLeft > 0) {
       window.setTimeout(
