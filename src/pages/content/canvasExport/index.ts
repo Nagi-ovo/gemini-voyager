@@ -53,6 +53,13 @@ function getMenuPanelsFromNode(node: HTMLElement): HTMLElement[] {
 
 function tryInjectOnPanel(menuPanel: HTMLElement, retriesLeft = MENU_INJECTION_RETRY_LIMIT): void {
   if (!menuPanel.isConnected) return;
+
+  // Guard: skip injection if Gemini's native Canvas mode is already active.
+  // Gemini auto-activates Canvas for certain conversations after page reload;
+  // injecting into the menu during this process can interfere with the native
+  // Canvas initialization flow and cause unwanted UI side effects (#780).
+  if (document.querySelector('[data-canvas-active="true"]')) return;
+
   if (!isCanvasShareMenuPanel(menuPanel)) {
     if (retriesLeft > 0) {
       window.setTimeout(
