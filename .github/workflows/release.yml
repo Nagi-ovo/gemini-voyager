@@ -49,6 +49,11 @@ on:
         required: false
         type: boolean
         default: false
+      publish_edge_only:
+        description: 'Only publish an existing release package to Microsoft Edge Add-ons (no bump/build). Requires version.'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -56,7 +61,7 @@ permissions:
 jobs:
   # Job 1: Calculate & Bump Version (Only runs on manual trigger)
   bump-version:
-    if: github.event_name == 'workflow_dispatch' && !inputs.publish_only
+    if: github.event_name == 'workflow_dispatch' && !inputs.publish_only && !inputs.publish_edge_only
     runs-on: ubuntu-latest
     outputs:
       new_version: ${{ steps.next_version.outputs.version }}
@@ -269,9 +274,8 @@ jobs:
             voyager-*.dmg
           body: ${{ steps.release_body.outputs.body }}
 
-      # Last step on purpose: if Chrome publishing fails (e.g. store review,
-      # token expiry), the GitHub Release and the Firefox/AMO submission above
-      # have already completed and are unaffected.
+      # Store publishing happens after the GitHub Release and Firefox/AMO
+      # submission, so a store-side failure does not prevent release assets.
       - name: Publish to Chrome Web Store
         run: |
           TAG=${{ steps.vars.outputs.tag_name }}
@@ -295,6 +299,17 @@ jobs:
           CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
           REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+
+      - name: Build and publish to Edge Add-ons
+        env:
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+        run: |
+          TAG=${{ steps.vars.outputs.tag_name }}
+          bun run build:edge
+          node scripts/publish-edge.js "voyager-edge-${TAG}.zip" \
+            --notes "Voyager ${TAG} automated release submission."
 
   # Job 3: Re-publish Chrome only (manual) — recover a failed Chrome Web Store
   # upload without re-cutting the release. Downloads the existing release's Chrome
@@ -337,3 +352,37 @@ jobs:
             --client-secret "$CLIENT_SECRET" \
             --refresh-token "$REFRESH_TOKEN" \
             --auto-publish
+
+  # Job 4: Publish Edge only (manual) — recover or retry Microsoft Edge Add-ons
+  # submission without re-cutting the release. Downloads the existing release's
+  # Chrome zip, strips the dev `key`, and submits the package to Edge review.
+  republish-edge:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_edge_only
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout scripts
+        uses: actions/checkout@v4
+
+      - name: Download Chrome zip from the existing release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ inputs.version }}"
+          gh release download "$TAG" --repo "${{ github.repository }}" --pattern "voyager-chrome-${TAG}.zip"
+          ls -la "voyager-chrome-${TAG}.zip"
+
+      - name: Prepare Edge package and publish to Edge Add-ons
+        env:
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+        run: |
+          TAG="v${{ inputs.version }}"
+          ZIP="voyager-chrome-${TAG}.zip"
+          rm -rf edge_pkg "voyager-edge-${TAG}.zip"
+          mkdir edge_pkg
+          unzip -q "$ZIP" -d edge_pkg
+          node -e "const fs=require('fs');const m=JSON.parse(fs.readFileSync('edge_pkg/manifest.json','utf8'));delete m.key;fs.writeFileSync('edge_pkg/manifest.json',JSON.stringify(m,null,2)+'\n');"
+          (cd edge_pkg && zip -qr "../voyager-edge-${TAG}.zip" .)
+          node scripts/publish-edge.js "voyager-edge-${TAG}.zip" \
+            --notes "Voyager ${TAG} automated Edge Add-ons submission."
