@@ -72,41 +72,119 @@ NODE
 
 If this fails, do not archive. Fix the Vite env injection first; otherwise the Safari release will ship without update reminders even though the build command included `ENABLE_SAFARI_UPDATE_CHECK=true`.
 
-### 4. Xcode export (manual user step)
+### 4. Verify bundle IDs and signing identity
 
-**Helper — open the project and jump straight to the Organizer (Archives) window:**
-
-```bash
-open "Gemini Voyager/Gemini Voyager.xcodeproj"
-# Then Window → Organizer, or open it directly:
-osascript -e 'tell application "Xcode" to activate' \
-          -e 'tell application "System Events" to tell process "Xcode" to click menu item "Organizer" of menu "Window" of menu bar 1'
-```
-
-This only opens the window (osascript needs Accessibility permission for the terminal). The archive itself is still a manual **Product → Archive** in Xcode — don't try to drive that for the user. Record this command so it's available next time; the user can run it themselves.
-
-Tell the user:
-
-> Safari bundle built (`dist_safari/`). Now do the Xcode export:
->
-> 1. Open the Xcode project (if not already open).
-> 2. **Product → Archive**
-> 3. **Window → Organizer** → select the new archive → **Distribute App**
-> 4. Export the signed `Gemini Voyager.app` into `safari/Models/dmg_source/`
->
-> Let me know when you're done.
-
-**Wait for confirmation.** Don't proceed until the user says done. This step requires Xcode GUI interaction and can't be scripted reliably.
-
-### 5. Verify the export landed
+Do this before archiving. The Safari converter can leave placeholder bundle IDs (`com.yourCompany...`), which look unprofessional and can create the wrong App IDs during automatic signing.
 
 ```bash
-ls "safari/Models/dmg_source/Gemini Voyager.app"
+grep -E "PRODUCT_BUNDLE_IDENTIFIER|DEVELOPMENT_TEAM" "Gemini Voyager/Gemini Voyager.xcodeproj/project.pbxproj"
 ```
 
-If the file is missing, ask the user to check their export path (Xcode sometimes saves to a default archive folder instead of the prompt-specified path).
+Expected bundle IDs:
 
-### 6. Build the DMG
+- App: `fun.nagi.voyager`
+- Extension: `fun.nagi.voyager.extension`
+- Team: `PJM828YBFJ`
+
+If the project still says `com.yourCompany.Gemini-Voyager`, update all app and extension `PRODUCT_BUNDLE_IDENTIFIER` entries before archive. The project file is gitignored, so this is local release configuration unless the repo policy changes.
+
+Confirm the Developer ID identity exists:
+
+```bash
+security find-identity -v -p codesigning
+```
+
+Expect `Developer ID Application: Zexi Zhang (PJM828YBFJ)`. If it isn't present, stop; the DMG can be built but won't be properly signed for distribution.
+
+### 5. Archive and export from CLI
+
+Use the `Any Mac` destination. In `xcodebuild`, that is `generic/platform=macOS`; it produces a universal app instead of binding the archive to the current machine.
+
+```bash
+ARCHIVE="/tmp/gemini-voyager-v${VERSION}.xcarchive"
+DERIVED="/tmp/gemini-voyager-v${VERSION}-derived"
+
+xcodebuild archive \
+  -project "Gemini Voyager/Gemini Voyager.xcodeproj" \
+  -scheme "Gemini Voyager" \
+  -configuration Release \
+  -destination 'generic/platform=macOS' \
+  -archivePath "$ARCHIVE" \
+  -derivedDataPath "$DERIVED" \
+  -allowProvisioningUpdates
+```
+
+Export as a Developer ID app:
+
+```bash
+EXPORT="/tmp/gemini-voyager-v${VERSION}-export"
+OPTIONS="/tmp/gemini-voyager-v${VERSION}-exportOptions.plist"
+
+cat > "$OPTIONS" <<'PLIST'
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>method</key>
+  <string>developer-id</string>
+  <key>destination</key>
+  <string>export</string>
+  <key>teamID</key>
+  <string>PJM828YBFJ</string>
+  <key>signingStyle</key>
+  <string>automatic</string>
+  <key>signingCertificate</key>
+  <string>Developer ID Application</string>
+  <key>stripSwiftSymbols</key>
+  <true/>
+  <key>distributionBundleIdentifier</key>
+  <string>fun.nagi.voyager</string>
+</dict>
+</plist>
+PLIST
+
+xcodebuild -exportArchive \
+  -archivePath "$ARCHIVE" \
+  -exportPath "$EXPORT" \
+  -exportOptionsPlist "$OPTIONS" \
+  -allowProvisioningUpdates
+```
+
+Replace the DMG source app with the exported app. Move the old app aside first; don't merge app bundles in place, because stale files can survive and invalidate signatures.
+
+```bash
+DEST="safari/Models/dmg_source/Gemini Voyager.app"
+if [ -e "$DEST" ]; then
+  mv "$DEST" "/tmp/gemini-voyager-v${VERSION}-old-dmg-source.app"
+fi
+cp -R "$EXPORT/Gemini Voyager.app" "safari/Models/dmg_source/"
+```
+
+### 6. Verify the exported app
+
+```bash
+APP="safari/Models/dmg_source/Gemini Voyager.app"
+
+/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/PlugIns/Gemini Voyager Extension.appex/Contents/Info.plist"
+lipo -info "$APP/Contents/MacOS/Gemini Voyager"
+codesign --verify --deep --strict --verbose=2 "$APP"
+```
+
+Expected:
+
+- App bundle ID: `fun.nagi.voyager`
+- Extension bundle ID: `fun.nagi.voyager.extension`
+- Version/build: `VERSION`
+- Architectures: `x86_64 arm64`
+- `codesign` says `valid on disk` and `satisfies its Designated Requirement`
+
+In Codex sandboxed shells, `codesign` may falsely report `Authority=(unavailable)` / invalid signature because trust services are blocked. Re-run the same command with elevated/unsandboxed execution before treating it as a real signing failure.
+
+`spctl --assess` may still report `Unnotarized Developer ID`; notarization is separate from the existing DMG flow. Don't claim notarization unless you ran `notarytool` and stapled the ticket.
+
+### 7. Build the DMG
 
 ```bash
 cd safari/Models && create-dmg \
@@ -121,7 +199,20 @@ cd safari/Models && create-dmg \
 
 Icon position `175 190` and app-drop-link `425 190` match the prior releases' DMG layout. Don't invent new values — users who drag-install by muscle memory will expect the icon in roughly the same place.
 
-### 7. Upload to the GitHub release
+Verify the DMG and packaged app:
+
+```bash
+hdiutil verify "safari/Models/voyager-v${VERSION}.dmg"
+
+MOUNT=$(mktemp -d /tmp/gemini-voyager-dmg-mount.XXXXXX)
+hdiutil attach -readonly -nobrowse -mountpoint "$MOUNT" "safari/Models/voyager-v${VERSION}.dmg"
+codesign --verify --deep --strict --verbose=2 "$MOUNT/Gemini Voyager.app"
+hdiutil detach "$MOUNT"
+```
+
+`create-dmg` and `hdiutil attach/verify` may require an unsandboxed shell because they need macOS disk image device access.
+
+### 8. Upload to the GitHub release
 
 ```bash
 gh release upload v${VERSION} safari/Models/voyager-v${VERSION}.dmg --clobber
@@ -129,7 +220,7 @@ gh release upload v${VERSION} safari/Models/voyager-v${VERSION}.dmg --clobber
 
 `--clobber` overwrites if a DMG with the same name already exists (useful when re-signing or rebuilding).
 
-### 8. Verify
+### 9. Verify
 
 ```bash
 gh release view v${VERSION} --json assets --jq '.assets[].name'
@@ -149,7 +240,7 @@ The release can still ship — Chrome/Firefox users won't block on it, and Edge 
 > #   MARKETING_VERSION / CURRENT_PROJECT_VERSION → {VERSION}
 > #   (leave the Tests targets' 1.0 / 1 alone)
 > ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari
-> # then follow the Xcode export + create-dmg steps
+> # then follow the CLI archive/export + create-dmg steps above
 > gh release upload v{VERSION} safari/Models/voyager-v{VERSION}.dmg --clobber
 > ```
 
