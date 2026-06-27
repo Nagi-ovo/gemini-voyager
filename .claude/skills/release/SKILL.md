@@ -3,7 +3,7 @@ name: release
 description: Cut a new gemini-voyager release — open-issue triage, preflight checks, version bump, 10-locale changelog, commit, tag, push, curated GitHub release body, Chrome/Firefox artifacts, optional legacy Edge zip, and Safari DMG. Use whenever the user says "发版", "release", "bump", "cut a release", "ship vX.Y.Z", or otherwise signals shipping a new version. Also use when the user wants just an Edge compatibility zip or Safari DMG for an existing release.
 user-invocable: true
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
 ---
 
 # Release Workflow
@@ -12,7 +12,7 @@ metadata:
 
 Copy this checklist into your response and check items off as you progress. Each step gates the next — don't skip ahead.
 
-**Two places to parallelize for wall-clock (the gates still hold; only the *work* overlaps):** ① In Step 1, run `lint` first (it mutates source) then `typecheck` + `test` + `build:all` concurrently. ② After the Step 5 push, start Step 8's Safari build + `xcodebuild archive` in parallel with the ~5-min CI wait — the archive depends on none of the GitHub release, only the final upload. See the ⚡ notes inline.
+**Two places to parallelize for wall-clock (the gates still hold; only the *work* overlaps):** ① In Step 1, run `lint` first (it mutates source) then `typecheck` + `test` + `build:all` concurrently. ② After the Step 5 push, the GitHub Actions job is mostly serial, but the agent's local work is not: monitor CI, start Step 8's Safari build/archive, and draft Step 6's release body at the same time. The AMO signing/submission step often sits quiet for ~3-6 minutes; treat that as normal unless logs show an error. See the ⚡ notes inline.
 
 ```
 Release Progress:
@@ -117,9 +117,14 @@ Monitor the release workflow briefly:
 gh run list --workflow release.yml --limit 3
 ```
 
-If it fails, investigate — common causes: lint failing in CI (not locally because of cache), or missing/expired secrets for Firefox signing (`AMO_*`) or Chrome publishing (`CHROME_CLIENT_ID` / `CHROME_CLIENT_SECRET` / `CHROME_REFRESH_TOKEN` / `CHROME_EXTENSION_ID`). The Chrome Web Store step runs **last on purpose**, so if only it fails (expired refresh token, wrong extension id, store-review rejection), the GitHub Release and Firefox/AMO submission already went out — just re-publish Chrome (re-run the workflow job, or upload the Release's Chrome zip via `chrome-webstore-upload-cli`), don't re-cut the version. The `CHROME_REFRESH_TOKEN` can be regenerated locally with `bun run scripts/cws-refresh-token.ts <client_secret.json>`.
+Normal wait points:
+- `Build All`: usually about a minute.
+- `Sign Firefox Extension and Submit to AMO`: often ~3-6 minutes with little output while `web-ext sign` waits on Mozilla signing/submission. Do not assume this is hung until it clearly exceeds the normal window or logs an error.
+- `Publish to Chrome Web Store`: runs last and may fail after upload if Google rejects publication or cannot validate store-listing URLs. The GitHub Release and AMO submission are already complete by then.
 
-> ⚡ **Don't idle during the ~5–6 min CI build.** The Safari archive (Step 8) depends on **none** of the GitHub release — only the final `gh release upload`. So the moment the tag is pushed: start Step 8's `ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari` + `xcodebuild archive` **in the background**, and curate the release body (Step 6) while both CI and the archive run. Converge at the end — upload the Safari DMG once CI has created the release. This collapses the two ~5-min waits (CI + archive) into one. (Skip this overlap only if Xcode isn't available or the user deferred Safari.)
+If it fails, investigate — common causes: lint failing in CI (not locally because of cache), missing/expired secrets for Firefox signing (`AMO_*`) or Chrome publishing (`CHROME_CLIENT_ID` / `CHROME_CLIENT_SECRET` / `CHROME_REFRESH_TOKEN` / `CHROME_EXTENSION_ID`), or Chrome Web Store publication checks timing out. The Chrome Web Store step runs **last on purpose**, so if only it fails (expired refresh token, wrong extension id, store-review rejection, temporary URL validation timeout), the GitHub Release and Firefox/AMO submission already went out — just re-publish Chrome (prefer the workflow's manual `publish_only` input with `version={VERSION}`, or upload the Release's Chrome zip via `chrome-webstore-upload-cli`), don't re-cut the version. The `CHROME_REFRESH_TOKEN` can be regenerated locally with `bun run scripts/cws-refresh-token.ts <client_secret.json>`.
+
+> ⚡ **Don't idle during the ~5–6 min CI build.** The remote workflow itself is serial, but local release work can overlap it. The moment the tag is pushed: monitor CI, start Step 8's `ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari` + `xcodebuild archive` **in the background**, and curate the release body (Step 6) while both CI and the archive run. Apply the release body only after the GitHub Release exists, and upload the Safari DMG only after CI has created the release. This collapses the CI wait, AMO wait, release-body drafting, and Safari archive into one wall-clock window. (Skip this overlap only if Xcode isn't available or the user deferred Safari.)
 
 ## Step 6 — Curated GitHub release body (required every release)
 
