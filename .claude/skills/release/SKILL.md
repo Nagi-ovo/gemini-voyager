@@ -85,7 +85,7 @@ Write `src/pages/content/changelog/notes/{VERSION}.md` — shown to end users in
 
 Two things that are easy to miss (full rules in the reference):
 - **Write Chinese (`zh`) first**, then render English from it, then the other 8 from English. `en` must still be complete (it's the viewer's fallback locale). Don't reorder the on-disk `<!-- lang:xx -->` sections — they stay en-first.
-- **Close every locale with a gift line: a real classic-anime quote (pre-2026), sourced via WebSearch this release** — gentle/warm/unpreachy, fresh vs. all prior releases. Format: `---` then `> *"{quote}" — {Character}, 《{Anime}》*`.
+- **Closing notes are optional, not required.** For hotfixes and security/privacy/permission releases, add one only when it directly fits the theme (responsibility, restraint, trust) and is instantly recognizable. If the line feels decorative, obscure, or like quote-hunting, skip it. Full rules live in `references/changelog.md`.
 
 ## Step 4 — Commit + tag
 

@@ -6,7 +6,7 @@
 - Section headers per locale
 - Commit → entry filtering rules
 - Style guide
-- Closing gift line (classic-anime quote) — required
+- Optional closing note
 - Template skeleton (copy-ready)
 - Authoring order — Chinese first
 - Reality check before saving
@@ -62,31 +62,43 @@ Rule of thumb: if a user couldn't see or feel the change, skip it.
 - Link to docs sparingly: `[→ Docs](/guide/{slug})` only when the doc genuinely helps. Don't link to a stub.
 - Translations should feel native. Arabic is RTL — don't worry about it in the raw file (the viewer handles direction), just get the text right.
 
-## Closing gift line (classic-anime quote) — required
+## Optional closing note
 
-Every release ends each locale with a small gift: a thematic break, then one blockquoted, italic line — **a quote from a classic anime**. It's a present for the reader, not a changelog entry. (Introduced in v1.5.1, which used a 苏轼 couplet; from v1.5.2 onward the standard is a classic-anime line.)
+Do **not** force a decorative quote into every release. Changelog notes are product communication first; a closing note is optional and should be omitted unless it genuinely fits the release.
 
-Format — after the last `### Fixes` bullet, in **every** locale:
+Use a closing note only when it passes all of these checks:
+
+- **Direct fit**: it matches the release theme without explanation. For security, privacy, or permission releases, the line should be about responsibility, restraint, trust, or care — not just something vaguely warm.
+- **High recognition**: a casual fan or general reader is likely to recognize the line or at least the source. Prefer iconic lines, not quiet one-off dialogue from a minor scene.
+- **Source confidence**: the wording and attribution can be verified from a reliable source. Avoid fan quote lists unless a better source confirms it.
+- **Tone fit**: it should feel like a small closing wink or reflection, not a motivational poster, sermon, ad, or inside joke.
+- **Localization fit**: it can be translated naturally in all 10 locales without getting awkward.
+
+Before writing it into the changelog, collect 3–5 candidates in scratch notes and reject anything that:
+
+- needs an explanation to connect to the release
+- is only "valid" because WebSearch found it
+- comes from an obscure source or an obscure moment in a famous source
+- was chosen mainly because previous releases have not used it
+- feels more clever than useful
+
+Prefer no quote over an obscure or merely searchable quote.
+
+If you add one, use a thematic break followed by one blockquoted, italic line in every locale:
 
 ```markdown
 ---
 
-> *"{the quote}" — {Character}, 《{Anime Title}》*
+> *"{the quote}" — {Character}, 《{Work Title}》*
 ```
 
-**Source it with WebSearch every release** — don't pull from memory (you'll misquote or repeat). Each release:
+When a closing note is used:
 
-1. **WebSearch** for a fitting line, e.g. `classic anime quotes about hope / kindness / moving forward`, or search within a specific classic series. Skim a few results.
-2. **Verify it's real**: confirm the wording, the character, and the anime via the search results — not an aggregator's paraphrase. Get the attribution right.
-3. **Confirm it's classic & pre-2026**: the anime must have aired/released **before 2026** and be genuinely well-known (e.g. *Naruto, One Piece, Fullmetal Alchemist, Mushishi, Violet Evergarden, Vinland Saga, Frieren, Your Name*…). No obscure or post-2025 titles.
-4. **Confirm it's fresh**: `grep -rh '^>' src/pages/content/changelog/notes/` and make sure neither the line nor the anime has shipped in a prior release.
-
-Rules:
-- **Tone — gentle, warm, and quietly hopeful; it should land like a soft exhale.** Pick a line that leaves the reader a little lighter — kind, tender, a touch beautiful. Steer firmly clear of the preachy and the motivational: no life lessons, no grand "work hard / never give up" declarations, no moralizing. Calm over loud, tender over triumphant. Journey/voyage themes suit the product name especially well.
-- **One quote per release, rendered natively in all 10 locales.** Use the line's *official/known* translation per language where one exists; otherwise translate naturally (never machine-literal). Keep the character + 《title》 attribution in each.
+- Verify it with WebSearch or another reliable source. Do not rely on memory, fan quote lists alone, or aggregator paraphrases.
+- Confirm it has not been used before with `grep -rh '^>' src/pages/content/changelog/notes/`.
+- Use one line across all 10 locales. Use official/known translations where they exist; otherwise translate naturally.
 - Renders fine in the viewer: `blockquote`, `em`, and `hr` are on the sanitizer allow-list in `src/pages/content/changelog/index.ts` — don't introduce other raw HTML.
-- The line sits at the *bottom* of each locale's body (the notes file can't touch the popup's version badge; this is the gift "for this version").
-- Optional, rare: this line may *softly* point readers to another of the maintainer's projects — same gentle, non-ad register (a tasteful nudge, never a banner). Not every release.
+- The line sits at the bottom of each locale's body.
 
 ## Template skeleton
 
@@ -102,10 +114,6 @@ Rules:
 
 - **{Title}**: {Description.}
 
----
-
-> *"{quote}" — {Character}, 《{Anime Title}》*
-
 <!-- lang:zh -->
 
 ### 新功能
@@ -116,10 +124,6 @@ Rules:
 ### 修复
 
 - **{中文标题}**：{中文描述。}
-
----
-
-> *"{台词}" —— {角色}，《{动漫名}》*
 
 <!-- lang:zh_TW -->
 
@@ -170,14 +174,14 @@ Rules:
 - ...
 ```
 
-Fill every locale — all 10 are non-negotiable, including the closing gift line. Write **Chinese first**, render English from it, then the other 8 from English (see *Authoring order* below).
+Fill every locale — all 10 are non-negotiable. Write **Chinese first**, render English from it, then the other 8 from English (see *Authoring order* below).
 
 ## Authoring order — Chinese first
 
 **Write and polish Chinese (`zh`) first.** It's the project's primary voice and the maintainer's native language — the notes read most naturally when zh is the *source*, not a back-translation. Then:
 
 - Render **English (`en`)** from the polished zh. `en` must always be complete: the in-product viewer falls back to `en` for any locale it can't find, so it stays the safety net even though it's no longer the source.
-- Translate the remaining **8 locales from the English** (`en` is a cleaner pivot than zh for non-CJK languages). Keep the same structure — bullets, bold titles, optional-feature markers, and the closing gift line (see below). Use punctuation native to each language (`：` in Chinese/Japanese, `:` in others).
+- Translate the remaining **8 locales from the English** (`en` is a cleaner pivot than zh for non-CJK languages). Keep the same structure — bullets, bold titles, and optional-feature markers. Use punctuation native to each language (`：` in Chinese/Japanese, `:` in others).
 - Keep titles crisp in every language; long phrasings (especially zh) wreck the single-line list layout.
 - Arabic: RTL is handled by the viewer — write natural RTL text, don't reorder for LTR display; use Arabic-style punctuation.
 - Read the prior release in the same locale before writing — there's an established voice per language.
@@ -191,4 +195,4 @@ Fill every locale — all 10 are non-negotiable, including the closing gift line
 - No locale is missing a section that another locale has.
 - Optional-feature markers are present in all 10 where they appear in English.
 - No commit-speak leaked in (avoid things like "implement X" or "refactor Y to be more Z" — those are internal descriptions).
-- The closing gift line is present in all 10 locales, is a **real, verified classic-anime quote** (sourced via WebSearch this release), is **new vs. every prior release**, and fits the gentle/warm/unpreachy tone.
+- If an optional closing note is present, it appears in all 10 locales, is verified, is new vs. prior release notes, and clearly fits the release. If it feels decorative or obscure, remove it.
