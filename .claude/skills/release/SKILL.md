@@ -12,7 +12,7 @@ metadata:
 
 Copy this checklist into your response and check items off as you progress. Each step gates the next — don't skip ahead.
 
-**Two places to parallelize for wall-clock (the gates still hold; only the *work* overlaps):** ① In Step 1, run `lint` first (it mutates source) then `typecheck` + `test` + `build:all` concurrently. ② After the Step 5 push, the GitHub Actions job is mostly serial, but the agent's local work is not: monitor CI, start Step 8's Safari build/archive, and draft Step 6's release body at the same time. The AMO signing/submission step often sits quiet for ~3-6 minutes; treat that as normal unless logs show an error. See the ⚡ notes inline.
+**Two places to parallelize for wall-clock (the gates still hold; only the *work* overlaps):** ① In Step 1, run `lint` first (it mutates source) then `typecheck` + `test` + `build:all` concurrently. ② After the Step 5 push, the GitHub Actions job is mostly serial, but the agent's local work is not: monitor CI, build the Safari bundle, prepare the Xcode export handoff, and draft Step 6's release body at the same time. The AMO signing/submission step often sits quiet for ~3-6 minutes; treat that as normal unless logs show an error. See the ⚡ notes inline.
 
 ```
 Release Progress:
@@ -124,7 +124,7 @@ Normal wait points:
 
 If it fails, investigate — common causes: lint failing in CI (not locally because of cache), missing/expired secrets for Firefox signing (`AMO_*`) or Chrome publishing (`CHROME_CLIENT_ID` / `CHROME_CLIENT_SECRET` / `CHROME_REFRESH_TOKEN` / `CHROME_EXTENSION_ID`), or Chrome Web Store publication checks timing out. The Chrome Web Store step runs **last on purpose**, so if only it fails (expired refresh token, wrong extension id, store-review rejection, temporary URL validation timeout), the GitHub Release and Firefox/AMO submission already went out — just re-publish Chrome (prefer the workflow's manual `publish_only` input with `version={VERSION}`, or upload the Release's Chrome zip via `chrome-webstore-upload-cli`), don't re-cut the version. The `CHROME_REFRESH_TOKEN` can be regenerated locally with `bun run scripts/cws-refresh-token.ts <client_secret.json>`.
 
-> ⚡ **Don't idle during the ~5–6 min CI build.** The remote workflow itself is serial, but local release work can overlap it. The moment the tag is pushed: monitor CI, start Step 8's `ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari` + `xcodebuild archive` **in the background**, and curate the release body (Step 6) while both CI and the archive run. Apply the release body only after the GitHub Release exists, and upload the Safari DMG only after CI has created the release. This collapses the CI wait, AMO wait, release-body drafting, and Safari archive into one wall-clock window. (Skip this overlap only if Xcode isn't available or the user deferred Safari.)
+> ⚡ **Don't idle during the ~5–6 min CI build.** The remote workflow itself is serial, but local release work can overlap it. The moment the tag is pushed: monitor CI, start Step 8's `ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari`, prepare/open the Xcode export handoff if Xcode is available, and curate the release body (Step 6) while CI runs. Apply the release body only after the GitHub Release exists, and upload the Safari DMG only after the user completes the Xcode export and CI has created the release. This overlaps the CI wait, AMO wait, release-body drafting, and Safari prep into one wall-clock window. (Skip this overlap only if Xcode isn't available or the user deferred Safari.)
 
 ## Step 6 — Curated GitHub release body (required every release)
 
@@ -181,7 +181,7 @@ open https://partner.microsoft.com/en-us/dashboard/microsoftedge/overview
 
 Safari gets its own asset (a signed DMG) because Safari extensions ship as native apps, not webstore uploads. This step requires **full Xcode.app** — `xcrun safari-web-extension-converter` and `xcodebuild archive` both fail with only Command Line Tools.
 
-> ⚡ **Start this right after the Step 5 push** — don't wait for Step 6. The Safari build + archive overlaps the CI build (see the ⚡ note in Step 5). Run `xcodebuild archive` in the background so you can curate the release body meanwhile; only the final `gh release upload` needs the release to exist.
+> ⚡ **Start this right after the Step 5 push** — don't wait for Step 6. The Safari bundle build and Xcode export handoff overlap the CI build (see the ⚡ note in Step 5). The archive/export itself is still a user-driven Xcode GUI step in `references/safari-dmg.md`; only the final `gh release upload` needs the release to exist.
 
 **First check whether Xcode is available:**
 
