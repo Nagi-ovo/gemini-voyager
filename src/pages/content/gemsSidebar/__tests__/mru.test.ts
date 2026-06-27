@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { type GemMruEntry, orderGemsByRecency, readGemMetadata, upsertMru } from '../index';
+import {
+  canPruneCatalogDeletes,
+  deletedCatalogGemIds,
+  type GemMruEntry,
+  orderGemsByRecency,
+  readGemMetadata,
+  upsertMru,
+} from '../index';
 import type { GemMetadata } from '../index';
 
 const gem = (id: string, name = id): GemMetadata => ({ id, name, href: `/gem/${id}` });
@@ -40,6 +47,22 @@ describe('gemsSidebar MRU ordering', () => {
     const catalog = [gem('a'), gem('b')];
     const recent = [mru('a', 100), mru('a', 50)];
     expect(orderGemsByRecency(recent, catalog).map((g) => g.id)).toEqual(['a', 'b']);
+  });
+});
+
+describe('gemsSidebar catalog deletion pruning', () => {
+  it('only treats gems missing from the previous user catalog as deleted', () => {
+    const previous = [gem('kept'), gem('deleted')];
+    const next = [gem('kept')];
+
+    expect([...deletedCatalogGemIds(previous, next)]).toEqual(['deleted']);
+    expect([...deletedCatalogGemIds([], next)]).toEqual([]);
+  });
+
+  it('does not prune catalog deletes across Google account segments', () => {
+    expect(canPruneCatalogDeletes('/u/1', '/u/2')).toBe(false);
+    expect(canPruneCatalogDeletes('/u/1', '/u/1')).toBe(true);
+    expect(canPruneCatalogDeletes(undefined, '')).toBe(true);
   });
 });
 

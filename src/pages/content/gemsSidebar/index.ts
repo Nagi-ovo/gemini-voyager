@@ -62,6 +62,7 @@ export interface GemMetadata {
 interface GemCacheEnvelope {
   items: GemMetadata[];
   cachedAt: number;
+  accountSegment?: string;
 }
 
 /** A gem the user has opened, plus when. Newest first in storage. */
@@ -166,6 +167,10 @@ export function scrapeGemsFromDocument(doc: Document = document): GemMetadata[] 
  */
 const ACCOUNT_SEGMENT_RE = /^\/u\/\d+/;
 
+function currentAccountSegment(): string {
+  return location.pathname.match(ACCOUNT_SEGMENT_RE)?.[0] ?? '';
+}
+
 function parseGemHref(href: string): { id: string; path: string } | null {
   try {
     const url = new URL(href, location.origin);
@@ -216,9 +221,28 @@ function isOnGemsViewPage(): boolean {
 }
 
 async function saveCache(items: GemMetadata[]): Promise<void> {
-  const envelope: GemCacheEnvelope = { items, cachedAt: Date.now() };
+  const accountSegment = currentAccountSegment();
+  const envelope: GemCacheEnvelope = { items, cachedAt: Date.now(), accountSegment };
+  const deletedIds = canPruneCatalogDeletes(currentCache.accountSegment, accountSegment)
+    ? deletedCatalogGemIds(currentCache.items, items)
+    : new Set();
   try {
     await browser.storage.local.set({ [StorageKeys.GV_GEMS_LIST_CACHE]: envelope });
+    currentCache = envelope;
+    if (deletedIds.size > 0) {
+      const nextMru = currentMru.filter((entry) => !deletedIds.has(entry.id));
+      if (nextMru.length !== currentMru.length) {
+        currentMru = nextMru;
+        await saveMru(currentMru);
+      }
+
+      const nextPinned = currentPinned.filter((id) => !deletedIds.has(id));
+      if (nextPinned.length !== currentPinned.length) {
+        currentPinned = nextPinned;
+        await browser.storage.sync.set({ [StorageKeys.GV_GEMS_PINNED]: currentPinned });
+      }
+      refreshInjector();
+    }
   } catch (error) {
     console.warn('[GemsSidebar] Failed to persist gems cache:', error);
   }
@@ -316,6 +340,21 @@ export function orderGemsByRecency(mru: GemMruEntry[], catalog: GemMetadata[]): 
     out.push(gem);
   }
   return out;
+}
+
+export function deletedCatalogGemIds(
+  previousCatalog: GemMetadata[],
+  nextCatalog: GemMetadata[],
+): Set<string> {
+  const nextIds = new Set(nextCatalog.map((gem) => gem.id));
+  return new Set(previousCatalog.filter((gem) => !nextIds.has(gem.id)).map((gem) => gem.id));
+}
+
+export function canPruneCatalogDeletes(
+  previousAccountSegment: string | undefined,
+  nextAccountSegment: string,
+): boolean {
+  return previousAccountSegment === undefined || previousAccountSegment === nextAccountSegment;
 }
 
 /**
