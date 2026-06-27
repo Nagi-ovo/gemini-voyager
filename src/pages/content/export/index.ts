@@ -68,6 +68,7 @@ const EXPORT_PRELOAD_WAIT_OPTIONS = {
 const FINAL_EXPORT_PREPARE_DELAY_MS = 120;
 const GENERATED_UI_FRAME_SELECTOR = 'iframe[src*="gemini-code-immersive"]';
 const GENERATED_UI_SCREENSHOT_MESSAGE_TYPE = 'gv.generatedUi.captureVisibleTab';
+const GENERATED_UI_CAPTURE_PERMISSION_MESSAGE_TYPE = 'gv.generatedUi.ensureCapturePermission';
 const GENERATED_UI_SCREENSHOT_SECTION_CLASS = 'gv-generated-ui-screenshot-section';
 let conversationMenuObserver: MutationObserver | null = null;
 let responseActionObserver: MutationObserver | null = null;
@@ -156,6 +157,21 @@ async function captureVisibleTab(): Promise<string | null> {
     console.warn('[Gemini Voyager] Generated UI screenshot capture failed:', error);
   }
   return null;
+}
+
+async function ensureGeneratedUiScreenshotPermission(): Promise<void> {
+  if (!document.querySelector(GENERATED_UI_FRAME_SELECTOR)) return;
+  try {
+    // Must run from export click handlers, before preload/capture awaits erase the gesture.
+    const response = (await chrome.runtime.sendMessage({
+      type: GENERATED_UI_CAPTURE_PERMISSION_MESSAGE_TYPE,
+    })) as { ok?: boolean };
+    if (!response?.ok) {
+      console.warn('[Gemini Voyager] Generated UI screenshot permission was not granted.');
+    }
+  } catch (error) {
+    console.warn('[Gemini Voyager] Generated UI screenshot permission request failed:', error);
+  }
 }
 
 async function captureGeneratedUiScreenshots(): Promise<void> {
@@ -1865,6 +1881,7 @@ async function performFinalExport(
       return;
     }
 
+    await ensureGeneratedUiScreenshotPermission();
     const selectedIdsForExport = new Set(selectedIds);
     // Cleanup before capture/export so selection UI is not included in screenshots.
     finish();
@@ -2718,6 +2735,7 @@ async function showExportDialog(
   dialog.show({
     onExport: async (format, fontSize, imageWidth) => {
       try {
+        await ensureGeneratedUiScreenshotPermission();
         if (format === 'image') {
           await saveImageExportWidth(imageWidth);
         }

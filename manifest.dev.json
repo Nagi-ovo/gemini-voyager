@@ -37,7 +37,6 @@
     }
   ],
   "host_permissions": [
-    "<all_urls>",
     "https://gemini.google.com/*",
     "https://business.gemini.google/*",
     "https://aistudio.google.com/*",
@@ -48,6 +47,7 @@
     "https://lh3.google.com/*",
     "https://*.ggpht.com/*"
   ],
+  "optional_host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "src/pages/background/index.ts",
     "type": "module"

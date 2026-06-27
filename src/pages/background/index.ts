@@ -50,6 +50,7 @@ const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_MAX_LENGTH = 220;
 const RESPONSE_COMPLETE_NOTIFICATION_ICON = 'icon-128.png';
 const RESPONSE_COMPLETE_NOTIFICATION_ID_PREFIX = 'gv-response-complete-';
 const RESPONSE_COMPLETE_UNKNOWN_TAB_ID = 'unknown';
+const GENERATED_UI_CAPTURE_PERMISSION_ORIGINS = ['<all_urls>'];
 const RESPONSE_COMPLETE_TURN_LABEL_PREFIXES =
   /^[\u200B\u200C\u200D\u200E\u200F\uFEFF]*(?:you said|you wrote|user message|your prompt|you asked)[:\s]*/i;
 
@@ -694,6 +695,7 @@ async function syncPluginContentScripts(): Promise<void> {
 }
 
 // Initial sync for persisted permissions
+void cleanupLegacyGeneratedUiCapturePermission();
 void syncCustomContentScripts();
 void syncPluginContentScripts();
 void refreshPluginSiteDomains();
@@ -1048,8 +1050,7 @@ class ForkNodesManager {
 
 const forkNodesManager = new ForkNodesManager();
 
-// Lesson from #779: captureVisibleTab needs required <all_urls>; runtime permission
-// requests after export awaits lose Chrome's user gesture and fail.
+// Generated UI screenshots are best-effort; export continues when Chrome denies capture.
 function captureVisibleTab(windowId: number): Promise<string> {
   return new Promise((resolve, reject) => {
     chrome.tabs.captureVisibleTab(windowId, { format: 'png' }, (dataUrl) => {
@@ -1063,9 +1064,50 @@ function captureVisibleTab(windowId: number): Promise<string> {
   });
 }
 
+async function ensureGeneratedUiCapturePermission(): Promise<boolean> {
+  if (!browser.permissions?.contains || !browser.permissions?.request) return false;
+  try {
+    if (await browser.permissions.contains({ origins: GENERATED_UI_CAPTURE_PERMISSION_ORIGINS })) {
+      return true;
+    }
+    return await browser.permissions.request({ origins: GENERATED_UI_CAPTURE_PERMISSION_ORIGINS });
+  } catch (error) {
+    console.warn('[Background] Generated UI screenshot permission request failed:', error);
+    return false;
+  }
+}
+
+async function cleanupLegacyGeneratedUiCapturePermission(): Promise<void> {
+  const key = StorageKeys.GENERATED_UI_CAPTURE_PERMISSION_CLEANUP_DONE;
+  try {
+    const stored = await chrome.storage.local.get({ [key]: false });
+    if (stored[key] === true || !browser.permissions?.getAll || !browser.permissions?.remove) {
+      return;
+    }
+
+    const current = await browser.permissions.getAll();
+    const removed = current.origins?.includes('<all_urls>')
+      ? await browser.permissions.remove({ origins: GENERATED_UI_CAPTURE_PERMISSION_ORIGINS })
+      : false;
+    await chrome.storage.local.set({ [key]: true });
+
+    if (removed) {
+      await syncCustomContentScripts();
+      await syncPluginContentScripts();
+    }
+  } catch (error) {
+    console.warn('[Background] Failed to clean up legacy generated UI capture permission:', error);
+  }
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   (async () => {
     try {
+      if (message?.type === 'gv.generatedUi.ensureCapturePermission') {
+        sendResponse({ ok: await ensureGeneratedUiCapturePermission() });
+        return;
+      }
+
       if (message?.type === 'gv.generatedUi.captureVisibleTab') {
         const windowId = sender.tab?.windowId;
         if (typeof windowId !== 'number' || !chrome.tabs?.captureVisibleTab) {

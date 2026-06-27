@@ -111,6 +111,7 @@ export const StorageKeys = {
   REMOTE_ANNOUNCEMENTS_ENABLED: 'gvRemoteAnnouncementsEnabled',
   REMOTE_ANNOUNCEMENTS_STATE: 'gvRemoteAnnouncementsState',
   REMOTE_ANNOUNCEMENTS_PENDING: 'gvRemoteAnnouncementsPending',
+  GENERATED_UI_CAPTURE_PERMISSION_CLEANUP_DONE: 'gvGeneratedUiCapturePermissionCleanupDone',
 
   // Input behavior
   CTRL_ENTER_SEND: 'gvCtrlEnterSend',
