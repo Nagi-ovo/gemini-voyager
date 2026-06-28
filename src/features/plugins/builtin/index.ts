@@ -128,4 +128,56 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
     matches: ['https://claude.ai/*'],
     contributes: {},
   },
+  {
+    id: 'voyager.claude-usage',
+    name: 'Claude · Usage Bar',
+    version: '1.0.0',
+    description: "Shows Claude's current session and weekly usage bars on Claude pages.",
+    i18n: {
+      zh: {
+        name: 'Claude · 用量条',
+        description: '在 Claude 页面显示当前会话和每周用量进度条。',
+      },
+      zh_TW: {
+        name: 'Claude · 用量條',
+        description: '在 Claude 頁面顯示目前工作階段和每週用量進度條。',
+      },
+      ja: {
+        name: 'Claude · 使用量バー',
+        description: 'Claude ページに現在のセッションと週次使用量バーを表示します。',
+      },
+      ko: {
+        name: 'Claude · 사용량 막대',
+        description: 'Claude 페이지에 현재 세션 및 주간 사용량 막대를 표시합니다.',
+      },
+      fr: {
+        name: "Claude · Barre d'utilisation",
+        description:
+          "Affiche les barres d'utilisation de la session en cours et de la semaine sur Claude.",
+      },
+      es: {
+        name: 'Claude · Barra de uso',
+        description: 'Muestra barras de uso de la sesión actual y semanal en Claude.',
+      },
+      pt: {
+        name: 'Claude · Barra de uso',
+        description: 'Mostra as barras de uso da sessão atual e semanal no Claude.',
+      },
+      ru: {
+        name: 'Claude · Индикатор лимитов',
+        description: 'Показывает текущую сессию и недельные лимиты на страницах Claude.',
+      },
+      ar: {
+        name: 'Claude · شريط الاستخدام',
+        description: 'يعرض أشرطة استخدام الجلسة الحالية والاستخدام الأسبوعي في Claude.',
+      },
+    },
+    author: 'voyager-official',
+    category: 'productivity',
+    license: 'GPL-3.0-or-later',
+    engine: '>=1.1.0',
+    tier: 'declarative',
+    matches: ['https://claude.ai/*'],
+    contributes: {},
+  },
 ];

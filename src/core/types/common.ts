@@ -184,6 +184,13 @@ export const StorageKeys = {
   // User-dragged position of the usage mini-bar ({ x, y } viewport px). Absent =
   // default bottom-right. Local since it's a per-device UI placement.
   GV_USAGE_POS: 'gvUsagePos',
+  // Local cache scraped from Claude's official settings usage page. Stored as
+  // { metrics: Array<{ label, percent, resetLabel }>, plan, lastUpdatedLabel, updatedAt }.
+  GV_CLAUDE_USAGE_CACHE: 'gvClaudeUsageCache',
+  // Short-lived local lock so multiple Claude tabs share one usage refresh cadence.
+  GV_CLAUDE_USAGE_REFRESH_LOCK: 'gvClaudeUsageRefreshLock',
+  // User-dragged position of the Claude usage mini-bar ({ x, y } viewport px).
+  GV_CLAUDE_USAGE_POS: 'gvClaudeUsagePos',
   // 'above-recents' (default) anchors the folder panel just above the Recents
   // expandable-section; 'above-notebooks' anchors it above the Notebooks
   // section instead. Persisted in chrome.storage.local since it's a UI-only

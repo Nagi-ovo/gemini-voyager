@@ -19,6 +19,7 @@ import {
   supportsExtensionNotifications,
   supportsOptionalHostPermissions,
 } from '@/core/utils/browser';
+import { normalizeCustomWebsite, sanitizeCustomWebsites } from '@/core/utils/customWebsites';
 import {
   ensureNotificationsPermission,
   hasNotificationsPermission,
@@ -1571,10 +1572,17 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           setFloatingOpenOnStart(res?.[StorageKeys.FOLDER_FLOATING_OPEN_ON_START] !== false);
           setHideArchivedConversations(!!res?.geminiFolderHideArchivedConversations);
           setFolderSearchEnabled(res?.[StorageKeys.FOLDER_SEARCH_ENABLED] !== false);
-          const loadedCustomWebsites = Array.isArray(res?.gvPromptCustomWebsites)
-            ? res.gvPromptCustomWebsites.filter((w: unknown) => typeof w === 'string')
+          const rawCustomWebsites = Array.isArray(res?.gvPromptCustomWebsites)
+            ? res.gvPromptCustomWebsites
             : [];
+          const loadedCustomWebsites = sanitizeCustomWebsites(rawCustomWebsites);
           setCustomWebsites(loadedCustomWebsites);
+          if (
+            rawCustomWebsites.length !== loadedCustomWebsites.length ||
+            rawCustomWebsites.some((website, index) => website !== loadedCustomWebsites[index])
+          ) {
+            void setSyncStorage({ gvPromptCustomWebsites: loadedCustomWebsites });
+          }
           {
             const watermarkSettings = resolveWatermarkSettings(res);
             setWatermarkDownloadEnabled(watermarkSettings.download);
@@ -1716,38 +1724,12 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
 
   // Validate and normalize URL
   const normalizeUrl = useCallback((url: string): string | null => {
-    try {
-      let normalized = url.trim().toLowerCase();
-
-      // Remove protocol if present
-      normalized = normalized.replace(/^https?:\/\//, '');
-
-      // Remove trailing slash
-      normalized = normalized.replace(/\/$/, '');
-
-      // Remove www. prefix
-      normalized = normalized.replace(/^www\./, '');
-
-      // Basic validation: must contain at least one dot and valid characters
-      if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(normalized)) {
-        return null;
-      }
-
-      return normalized;
-    } catch {
-      return null;
-    }
+    return normalizeCustomWebsite(url);
   }, []);
 
   const originPatternsForDomain = useCallback((domain: string): string[] | null => {
     try {
-      const normalized = domain
-        .trim()
-        .toLowerCase()
-        .replace(/^https?:\/\//, '')
-        .replace(/^www\./, '')
-        .replace(/\/.*$/, '')
-        .replace(/^\*\./, '');
+      const normalized = normalizeCustomWebsite(domain);
       if (!normalized) return null;
       return [`https://*.${normalized}/*`, `http://*.${normalized}/*`];
     } catch {

@@ -1,0 +1,495 @@
+import { type Mock, afterEach, describe, expect, it, vi } from 'vitest';
+
+import {
+  claudeUsageUrl,
+  isClaudeUsageSettings,
+  planFromClaudeBootstrap,
+  scrapeClaudeUsageFromDocument,
+  setClaudeUsageReloadForTest,
+  snapshotFromClaudeUsageApi,
+  startClaudeUsage,
+  stopClaudeUsage,
+} from '.';
+
+type StorageListener = (
+  changes: Record<string, chrome.storage.StorageChange>,
+  areaName: string,
+) => void;
+
+let restoreCookie: (() => void) | null = null;
+
+function flushPromises(): Promise<void> {
+  return Promise.resolve().then(() => Promise.resolve());
+}
+
+async function waitForAsyncWork(): Promise<void> {
+  for (let i = 0; i < 10; i += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+}
+
+function mockLocalStorageStore(store: Record<string, unknown>): void {
+  (chrome.storage.local.get as unknown as Mock).mockImplementation(async (query) => {
+    if (typeof query === 'string') return { [query]: store[query] };
+    if (Array.isArray(query)) {
+      return Object.fromEntries(query.map((key) => [key, store[key]]));
+    }
+    if (query && typeof query === 'object') {
+      return Object.fromEntries(
+        Object.entries(query).map(([key, fallback]) => [
+          key,
+          Object.prototype.hasOwnProperty.call(store, key) ? store[key] : fallback,
+        ]),
+      );
+    }
+    return { ...store };
+  });
+  (chrome.storage.local.set as unknown as Mock).mockImplementation(async (payload) => {
+    Object.assign(store, payload);
+  });
+}
+
+function mockDocumentCookie(cookie: string): void {
+  const cookieSpy = vi.spyOn(document, 'cookie', 'get').mockReturnValue(cookie);
+  restoreCookie = () => cookieSpy.mockRestore();
+}
+
+function mountUsageText(): void {
+  document.body.innerHTML = `
+    <section>
+      <h3>Plan usage limits Max (20x)</h3>
+      <p>Current session Starts when a message is sent</p>
+      <div role="progressbar" aria-label="Usage" aria-valuenow="0"></div>
+      <p>0% used</p>
+      <h3>Weekly limits</h3>
+      <p>All models Resets Tue 11:59 AM</p>
+      <div role="progressbar" aria-label="Usage" aria-valuenow="45"></div>
+      <p>45% used</p>
+      <p>Sonnet Resets Tue 11:59 AM</p>
+      <div role="progressbar" aria-label="Usage" aria-valuenow="2"></div>
+      <p>2% used</p>
+      <p>Last updated: 1 minute ago</p>
+      <h3>Usage credits</h3>
+      <p>0% used</p>
+    </section>`;
+}
+
+function mountUsageTextWithPlan(plan: string): void {
+  document.body.innerHTML = `
+    <section>
+      <h3>Plan usage limits ${plan}</h3>
+      <p>Current session Starts when a message is sent</p>
+      <p>12% used</p>
+    </section>`;
+}
+
+function mountUsageTextWithoutPlan(): void {
+  document.body.innerHTML = `
+    <section>
+      <h2>Usage</h2>
+      <p>Current session Starts when a message is sent</p>
+      <p>12% used</p>
+      <p>All models Resets Tue 11:59 AM</p>
+      <p>40% used</p>
+    </section>`;
+}
+
+afterEach(() => {
+  stopClaudeUsage();
+  setClaudeUsageReloadForTest(null);
+  document.body.innerHTML = '';
+  history.replaceState(null, '', '/');
+  restoreCookie?.();
+  restoreCookie = null;
+  document.cookie = 'lastActiveOrg=; Max-Age=0; path=/';
+  (chrome.storage.local.get as unknown as Mock).mockReset();
+  (chrome.storage.local.set as unknown as Mock).mockReset();
+  (chrome.storage.onChanged.addListener as unknown as Mock).mockReset();
+  (chrome.storage.onChanged.removeListener as unknown as Mock).mockReset();
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+
+describe('Claude usage bar', () => {
+  it('recognizes Claude settings usage hashes', () => {
+    expect(isClaudeUsageSettings('#settings/usage')).toBe(true);
+    expect(isClaudeUsageSettings('#settings/usage?x=1')).toBe(true);
+    expect(isClaudeUsageSettings('#settings/account')).toBe(false);
+  });
+
+  it('scrapes the visible Claude usage bars', () => {
+    mountUsageText();
+
+    expect(scrapeClaudeUsageFromDocument(document, 123)).toEqual({
+      plan: 'Max (20x)',
+      lastUpdatedLabel: '1 minute ago',
+      updatedAt: 123,
+      metrics: [
+        { label: '5h', percent: 0 },
+        { label: 'All', percent: 45, resetLabel: 'Tue 11:59 AM' },
+      ],
+    });
+  });
+
+  it.each(['Pro', 'Max (5x)', 'Max (20x)'])('scrapes Claude plan tier %s', (plan) => {
+    mountUsageTextWithPlan(plan);
+
+    expect(scrapeClaudeUsageFromDocument(document, 123)?.plan).toBe(plan);
+  });
+
+  it('normalizes Claude usage API windows', () => {
+    const snap = snapshotFromClaudeUsageApi(
+      {
+        five_hour: { utilization: 12.5, resets_at: '2026-06-28T12:00:00.000Z' },
+        seven_day: { utilization: 45 },
+        seven_day_sonnet: { utilization: 2 },
+        plan_name: 'claude_max_5x',
+      },
+      123,
+    );
+
+    expect(snap?.metrics.map(({ label, percent }) => ({ label, percent }))).toEqual([
+      { label: '5h', percent: 12.5 },
+      { label: 'All', percent: 45 },
+    ]);
+    expect(snap?.plan).toBe('Max (5x)');
+    expect(snap?.updatedAt).toBe(123);
+    expect(snap?.metrics[0].resetLabel).toBeTruthy();
+  });
+
+  it('extracts Claude subscription tier from bootstrap org metadata', () => {
+    expect(
+      planFromClaudeBootstrap(
+        {
+          account: {
+            memberships: [
+              {
+                organization: {
+                  uuid: 'org_123',
+                  capabilities: ['claude_max'],
+                  rate_limit_tier: 'default_claude_max_20x',
+                },
+              },
+            ],
+          },
+        },
+        'org_123',
+      ),
+    ).toBe('Max (20x)');
+
+    expect(
+      planFromClaudeBootstrap(
+        {
+          account: {
+            memberships: [
+              {
+                organization: {
+                  uuid: 'org_123',
+                  capabilities: ['claude_pro'],
+                  rate_limit_tier: 'default_claude_ai',
+                },
+              },
+            ],
+          },
+        },
+        'org_123',
+      ),
+    ).toBe('Pro');
+  });
+
+  it('returns null for unrelated usage API payloads', () => {
+    expect(snapshotFromClaudeUsageApi({ five_hour: { utilization: '12' } })).toBeNull();
+  });
+
+  it('builds an open link to Claude usage settings', () => {
+    startClaudeUsage();
+    expect(claudeUsageUrl()).toBe('https://claude.ai/new#settings/usage');
+    expect(document.querySelector<HTMLAnchorElement>('a.gv-usage-open')?.href).toBe(
+      'https://claude.ai/new#settings/usage',
+    );
+    expect(document.querySelector<HTMLAnchorElement>('a.gv-usage-open')?.target).toBe('');
+    expect(document.querySelector('.gv-usage-tier')).toBeNull();
+  });
+
+  it('keeps the current Claude chat path in the usage link', () => {
+    history.replaceState(null, '', '/chat/db82c53c-5c7c-4764-b35d-6329173eaf5b');
+
+    startClaudeUsage();
+
+    expect(claudeUsageUrl()).toBe(
+      'https://claude.ai/chat/db82c53c-5c7c-4764-b35d-6329173eaf5b#settings/usage',
+    );
+    expect(document.querySelector<HTMLAnchorElement>('a.gv-usage-open')?.href).toBe(
+      'https://claude.ai/chat/db82c53c-5c7c-4764-b35d-6329173eaf5b#settings/usage',
+    );
+  });
+
+  it('reloads after opening usage when Claude only changes the hash', async () => {
+    vi.useFakeTimers();
+    history.replaceState(null, '', '/chat/db82c53c-5c7c-4764-b35d-6329173eaf5b');
+    mockLocalStorageStore({});
+    const reload = vi.fn();
+    setClaudeUsageReloadForTest(reload);
+
+    startClaudeUsage();
+    document.querySelector<HTMLAnchorElement>('a.gv-usage-open')?.click();
+    await vi.advanceTimersByTimeAsync(700);
+
+    expect(location.pathname).toBe('/chat/db82c53c-5c7c-4764-b35d-6329173eaf5b');
+    expect(location.hash).toBe('#settings/usage');
+    expect(reload).toHaveBeenCalledOnce();
+  });
+
+  it('does not reload if usage content appears after opening', async () => {
+    vi.useFakeTimers();
+    history.replaceState(null, '', '/chat/db82c53c-5c7c-4764-b35d-6329173eaf5b');
+    mountUsageText();
+    mockLocalStorageStore({});
+    const reload = vi.fn();
+    setClaudeUsageReloadForTest(reload);
+
+    startClaudeUsage();
+    document.querySelector<HTMLAnchorElement>('a.gv-usage-open')?.click();
+    await vi.advanceTimersByTimeAsync(700);
+
+    expect(location.hash).toBe('#settings/usage');
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it('renders cached usage into mini bars when started', async () => {
+    vi.useFakeTimers();
+    (chrome.storage.local.get as unknown as Mock).mockResolvedValue({
+      gvClaudeUsageCache: {
+        plan: 'Max (20x)',
+        updatedAt: 1,
+        metrics: [{ label: 'All', percent: 45, resetLabel: 'Tue 11:59 AM' }],
+      },
+    });
+
+    startClaudeUsage();
+    await flushPromises();
+
+    expect(document.querySelector('.gv-usage-tier')?.textContent).toBe('Max (20x)');
+    expect(document.querySelector('.gv-usage-label')?.textContent).toBe('All');
+    expect(document.querySelector<HTMLElement>('.gv-usage-fill')?.style.width).toBe('45%');
+  });
+
+  it('uses shared cache to avoid multiplying API requests across Claude tabs', async () => {
+    vi.useFakeTimers();
+    const store = {
+      gvClaudeUsageCache: {
+        plan: 'Max (20x)',
+        updatedAt: Date.now(),
+        metrics: [{ label: 'All', percent: 45 }],
+      },
+    };
+    mockLocalStorageStore(store);
+    mockDocumentCookie('lastActiveOrg=org_123');
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    startClaudeUsage();
+    await flushPromises();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(4 * 60_000);
+    store.gvClaudeUsageCache = {
+      plan: 'Max (20x)',
+      updatedAt: Date.now(),
+      metrics: [{ label: 'All', percent: 48 }],
+    };
+    await vi.advanceTimersByTimeAsync(60_000);
+    await flushPromises();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(document.querySelector<HTMLElement>('.gv-usage-fill')?.style.width).toBe('48%');
+  });
+
+  it('fetches the plan tier from bootstrap when usage API omits it', async () => {
+    mockLocalStorageStore({});
+    mockDocumentCookie('lastActiveOrg=org_123');
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          five_hour: { utilization: 5 },
+          seven_day: { utilization: 40 },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          account: {
+            memberships: [
+              {
+                organization: {
+                  uuid: 'org_123',
+                  capabilities: ['claude_pro'],
+                  rate_limit_tier: 'default_claude_ai',
+                },
+              },
+            ],
+          },
+        }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    startClaudeUsage();
+    await waitForAsyncWork();
+
+    expect(document.querySelector('.gv-usage-tier')?.textContent).toBe('Pro');
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://claude.ai/api/bootstrap/org_123/app_start?statsig_hashing_algorithm=djb2',
+      expect.objectContaining({ credentials: 'include' }),
+    );
+  });
+
+  it('keeps the cached plan when Claude page text omits it', async () => {
+    vi.useFakeTimers();
+    history.replaceState(null, '', '/#settings/usage');
+    mountUsageTextWithoutPlan();
+    mockLocalStorageStore({
+      gvClaudeUsageCache: {
+        plan: 'Pro',
+        updatedAt: 10,
+        metrics: [{ label: 'All', percent: 45 }],
+      },
+    });
+
+    startClaudeUsage();
+    await flushPromises();
+    await vi.advanceTimersByTimeAsync(250);
+    await flushPromises();
+
+    expect(document.querySelector('.gv-usage-tier')?.textContent).toBe('Pro');
+    expect(document.querySelectorAll('.gv-usage-metric')).toHaveLength(2);
+  });
+
+  it('does not scrape again after only the pill itself changes', async () => {
+    vi.useFakeTimers();
+    history.replaceState(null, '', '/#settings/usage');
+    mountUsageText();
+    mockLocalStorageStore({});
+
+    startClaudeUsage();
+    await vi.advanceTimersByTimeAsync(250);
+    await flushPromises();
+    const writes = (chrome.storage.local.set as unknown as Mock).mock.calls.length;
+
+    await vi.advanceTimersByTimeAsync(1_000);
+    await flushPromises();
+
+    expect(chrome.storage.local.set).toHaveBeenCalled();
+    expect((chrome.storage.local.set as unknown as Mock).mock.calls.length).toBe(writes);
+  });
+
+  it('skips API refresh while another Claude tab holds the shared lock', async () => {
+    vi.useFakeTimers();
+    mockLocalStorageStore({
+      gvClaudeUsageRefreshLock: {
+        owner: 'other-tab',
+        expiresAt: Date.now() + 30_000,
+      },
+    });
+    mockDocumentCookie('lastActiveOrg=org_123');
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    startClaudeUsage();
+    await flushPromises();
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('loads and mirrors the dragged bar position', async () => {
+    const storageListeners: StorageListener[] = [];
+    (chrome.storage.onChanged.addListener as unknown as Mock).mockImplementation(
+      (listener: StorageListener) => {
+        storageListeners.push(listener);
+      },
+    );
+    mockLocalStorageStore({
+      gvClaudeUsageCache: {
+        updatedAt: 10,
+        metrics: [{ label: 'All', percent: 45 }],
+      },
+      gvClaudeUsagePos: { x: 40, y: 50 },
+    });
+
+    startClaudeUsage();
+    await flushPromises();
+
+    const el = document.getElementById('gv-claude-usage-pill') as HTMLElement;
+    expect(el.style.left).toBe('40px');
+    expect(el.style.top).toBe('50px');
+
+    storageListeners[0]?.(
+      {
+        gvClaudeUsagePos: {
+          newValue: { x: 70, y: 90 },
+        },
+      },
+      'local',
+    );
+
+    expect(el.style.left).toBe('70px');
+    expect(el.style.top).toBe('90px');
+  });
+
+  it('ignores stale storage updates after a newer snapshot is rendered', async () => {
+    const storageListeners: StorageListener[] = [];
+    (chrome.storage.onChanged.addListener as unknown as Mock).mockImplementation(
+      (listener: StorageListener) => {
+        storageListeners.push(listener);
+      },
+    );
+    (chrome.storage.local.get as unknown as Mock).mockResolvedValue({
+      gvClaudeUsageCache: {
+        plan: 'Fresh',
+        updatedAt: 10,
+        metrics: [{ label: 'All', percent: 45 }],
+      },
+    });
+
+    startClaudeUsage();
+    await flushPromises();
+
+    expect(document.querySelector('.gv-usage-tier')?.textContent).toBe('Fresh');
+    const storageListener = storageListeners[0];
+    expect(storageListener).toBeDefined();
+
+    storageListener(
+      {
+        gvClaudeUsageCache: {
+          newValue: {
+            plan: 'Old',
+            updatedAt: 5,
+            metrics: [{ label: 'All', percent: 12 }],
+          },
+        },
+      },
+      'local',
+    );
+
+    expect(document.querySelector('.gv-usage-tier')?.textContent).toBe('Fresh');
+    expect(document.querySelector<HTMLElement>('.gv-usage-fill')?.style.width).toBe('45%');
+
+    storageListener(
+      {
+        gvClaudeUsageCache: {
+          newValue: {
+            plan: 'New',
+            updatedAt: 11,
+            metrics: [{ label: 'All', percent: 60 }],
+          },
+        },
+      },
+      'local',
+    );
+
+    expect(document.querySelector('.gv-usage-tier')?.textContent).toBe('New');
+    expect(document.querySelector<HTMLElement>('.gv-usage-fill')?.style.width).toBe('60%');
+  });
+});

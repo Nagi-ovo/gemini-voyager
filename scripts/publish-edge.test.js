@@ -13,7 +13,8 @@ describe('publish-edge script helpers', () => {
   it('extracts the operation id from a Location header', () => {
     const response = {
       headers: new Headers({
-        location: 'https://api.addons.microsoftedge.microsoft.com/v1/products/product/submissions/operations/op-123',
+        location:
+          'https://api.addons.microsoftedge.microsoft.com/v1/products/product/submissions/operations/op-123',
       }),
     };
 

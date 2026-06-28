@@ -88,7 +88,9 @@ async function pollOperation(url, label) {
     const body = await readJson(response);
 
     if (!response.ok) {
-      throw new Error(`${label} status check failed with HTTP ${response.status}: ${JSON.stringify(body)}`);
+      throw new Error(
+        `${label} status check failed with HTTP ${response.status}: ${JSON.stringify(body)}`,
+      );
     }
 
     console.log(`${label} status: ${body.status || 'Unknown'} (${attempt}/${POLL_LIMIT})`);
