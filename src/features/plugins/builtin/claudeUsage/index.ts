@@ -15,6 +15,7 @@ export interface ClaudeUsageMetric {
   label: string;
   percent: number;
   resetLabel?: string;
+  resetEpoch?: number;
 }
 
 export interface ClaudeUsageSnapshot {
@@ -129,7 +130,8 @@ function sameSnapshotData(a: ClaudeUsageSnapshot, b: ClaudeUsageSnapshot): boole
       (metric, index) =>
         metric.label === b.metrics[index]?.label &&
         metric.percent === b.metrics[index]?.percent &&
-        metric.resetLabel === b.metrics[index]?.resetLabel,
+        metric.resetLabel === b.metrics[index]?.resetLabel &&
+        metric.resetEpoch === b.metrics[index]?.resetEpoch,
     )
   );
 }
@@ -207,8 +209,13 @@ function metricFromApi(raw: unknown, label: string, scale = 1): ClaudeUsageMetri
   const utilization = item?.utilization;
   if (typeof utilization !== 'number' || !Number.isFinite(utilization)) return null;
   const metric: ClaudeUsageMetric = { label, percent: clampPercent(utilization * scale) };
-  if (typeof item.resets_at === 'string')
-    metric.resetLabel = new Date(item.resets_at).toLocaleString();
+  if (typeof item.resets_at === 'string') {
+    const resetMs = Date.parse(item.resets_at);
+    if (Number.isFinite(resetMs)) {
+      metric.resetEpoch = Math.floor(resetMs / 1000);
+      metric.resetLabel = new Date(resetMs).toLocaleString();
+    }
+  }
   return metric;
 }
 
@@ -220,7 +227,7 @@ export function snapshotFromClaudeUsageApi(
   if (!data) return null;
   const metrics = [
     metricFromApi(data.five_hour, '5h'),
-    metricFromApi(data.seven_day, 'All'),
+    metricFromApi(data.seven_day, 'Week'),
   ].filter((metric): metric is ClaudeUsageMetric => metric !== null);
   if (!metrics.length) return null;
   const rawPlan = typeof data.plan_name === 'string' ? data.plan_name : undefined;
@@ -244,7 +251,7 @@ export function scrapeClaudeUsageFromDocument(
 
   const candidates: Array<{ label: string; percent?: number; resetLabel?: string }> = [
     { label: '5h', percent: values[0] },
-    { label: 'All', percent: values[1], resetLabel: extractReset(text, 'All models') },
+    { label: 'Week', percent: values[1], resetLabel: extractReset(text, 'All models') },
   ];
   const metrics = candidates.filter(
     (metric): metric is ClaudeUsageMetric => typeof metric.percent === 'number',
@@ -281,7 +288,22 @@ function openClaudeUsage(event: MouseEvent): void {
 }
 
 function metricTitle(metric: ClaudeUsageMetric): string {
-  return metric.resetLabel ? `${metric.label} resets ${metric.resetLabel}` : metric.label;
+  const label = metric.label === 'All' ? 'Week' : metric.label;
+  return metric.resetLabel ? `${label} resets ${metric.resetLabel}` : label;
+}
+
+function formatResetCountdown(epochSec: number | undefined, now: number): string {
+  if (typeof epochSec !== 'number') return '';
+  const diffMs = epochSec * 1000 - now;
+  if (diffMs <= 0) return '';
+  const mins = Math.floor(diffMs / 60_000);
+  const hours = Math.floor(mins / 60);
+  const restMins = mins % 60;
+  if (hours < 1) return `${mins}m`;
+  if (hours < 24) return restMins > 0 ? `${hours}h${restMins}m` : `${hours}h`;
+  const days = Math.floor(hours / 24);
+  const rest = hours % 24;
+  return `${days}d${rest}h`;
 }
 
 function buildMetric(doc: Document, metric: ClaudeUsageMetric): HTMLElement {
@@ -293,7 +315,7 @@ function buildMetric(doc: Document, metric: ClaudeUsageMetric): HTMLElement {
 
   const name = doc.createElement('span');
   name.className = 'gv-usage-label';
-  name.textContent = metric.label;
+  name.textContent = metric.label === 'All' ? 'Week' : metric.label;
   seg.appendChild(name);
 
   const track = doc.createElement('span');
@@ -306,7 +328,8 @@ function buildMetric(doc: Document, metric: ClaudeUsageMetric): HTMLElement {
 
   const pct = doc.createElement('span');
   pct.className = 'gv-usage-pct';
-  pct.textContent = `${metric.percent}%`;
+  const reset = formatResetCountdown(metric.resetEpoch, Date.now()) || metric.resetLabel;
+  pct.textContent = `${metric.percent}%${reset ? ` (${reset})` : ''}`;
   seg.appendChild(pct);
 
   return seg;

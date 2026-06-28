@@ -126,7 +126,7 @@ describe('Claude usage bar', () => {
       updatedAt: 123,
       metrics: [
         { label: '5h', percent: 0 },
-        { label: 'All', percent: 45, resetLabel: 'Tue 11:59 AM' },
+        { label: 'Week', percent: 45, resetLabel: 'Tue 11:59 AM' },
       ],
     });
   });
@@ -150,11 +150,12 @@ describe('Claude usage bar', () => {
 
     expect(snap?.metrics.map(({ label, percent }) => ({ label, percent }))).toEqual([
       { label: '5h', percent: 12.5 },
-      { label: 'All', percent: 45 },
+      { label: 'Week', percent: 45 },
     ]);
     expect(snap?.plan).toBe('Max (5x)');
     expect(snap?.updatedAt).toBe(123);
     expect(snap?.metrics[0].resetLabel).toBeTruthy();
+    expect(snap?.metrics[0].resetEpoch).toBeTypeOf('number');
   });
 
   it('extracts Claude subscription tier from bootstrap org metadata', () => {
@@ -270,8 +271,33 @@ describe('Claude usage bar', () => {
     await flushPromises();
 
     expect(document.querySelector('.gv-usage-tier')?.textContent).toBe('Max (20x)');
-    expect(document.querySelector('.gv-usage-label')?.textContent).toBe('All');
+    expect(document.querySelector('.gv-usage-label')?.textContent).toBe('Week');
+    expect(document.querySelector('.gv-usage-pct')?.textContent).toBe('45% (Tue 11:59 AM)');
     expect(document.querySelector<HTMLElement>('.gv-usage-fill')?.style.width).toBe('45%');
+  });
+
+  it('renders API reset epochs as countdowns', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-28T10:00:00.000Z'));
+    (chrome.storage.local.get as unknown as Mock).mockResolvedValue({
+      gvClaudeUsageCache: {
+        plan: 'Max (20x)',
+        updatedAt: Date.now(),
+        metrics: [
+          {
+            label: 'Week',
+            percent: 30,
+            resetEpoch: Math.floor(Date.parse('2026-06-28T11:30:00.000Z') / 1000),
+            resetLabel: '6/28/2026, 11:30:00 AM',
+          },
+        ],
+      },
+    });
+
+    startClaudeUsage();
+    await flushPromises();
+
+    expect(document.querySelector('.gv-usage-pct')?.textContent).toBe('30% (1h30m)');
   });
 
   it('uses shared cache to avoid multiplying API requests across Claude tabs', async () => {
