@@ -6,6 +6,7 @@ import {
   planFromClaudeBootstrap,
   scrapeClaudeUsageFromDocument,
   setClaudeUsageReloadForTest,
+  snapshotFromClaudeMessageLimit,
   snapshotFromClaudeUsageApi,
   startClaudeUsage,
   stopClaudeUsage,
@@ -58,6 +59,18 @@ function mockDocumentCookie(cookie: string): void {
   restoreCookie = () => cookieSpy.mockRestore();
 }
 
+function dispatchClaudeMessageLimit(payload: unknown): void {
+  const event = new MessageEvent('message', {
+    data: {
+      source: 'gv-claude-usage-observer',
+      type: 'message-limit',
+      payload,
+    },
+  });
+  Object.defineProperty(event, 'source', { value: window });
+  window.dispatchEvent(event);
+}
+
 function mountUsageText(): void {
   document.body.innerHTML = `
     <section>
@@ -93,7 +106,7 @@ function mountUsageTextWithoutPlan(): void {
       <h2>Usage</h2>
       <p>Current session Starts when a message is sent</p>
       <p>12% used</p>
-      <p>All models Resets Tue 11:59 AM</p>
+      <p>All models Resets Today 11:30 AM</p>
       <p>40% used</p>
     </section>`;
 }
@@ -123,14 +136,25 @@ describe('Claude usage bar', () => {
 
   it('scrapes the visible Claude usage bars', () => {
     mountUsageText();
+    const now = new Date(2026, 0, 4, 10, 0, 0).getTime();
 
-    expect(scrapeClaudeUsageFromDocument(document, 123)).toEqual({
+    expect(scrapeClaudeUsageFromDocument(document, now)).toEqual({
       plan: 'Max (20x)',
       lastUpdatedLabel: '1 minute ago',
-      updatedAt: 123,
+      updatedAt: now,
       metrics: [
-        { label: '5h', percent: 0, resetLabel: 'Tue 10:00 AM' },
-        { label: 'Week', percent: 45, resetLabel: 'Tue 11:59 AM' },
+        {
+          label: '5h',
+          percent: 0,
+          resetLabel: 'Tue 10:00 AM',
+          resetEpoch: Math.floor(new Date(2026, 0, 6, 10, 0, 0).getTime() / 1000),
+        },
+        {
+          label: 'Week',
+          percent: 45,
+          resetLabel: 'Tue 11:59 AM',
+          resetEpoch: Math.floor(new Date(2026, 0, 6, 11, 59, 0).getTime() / 1000),
+        },
       ],
     });
   });
@@ -162,6 +186,31 @@ describe('Claude usage bar', () => {
     expect(snap?.metrics[0].resetEpoch).toBeTypeOf('number');
     expect(snap?.metrics[1].resetLabel).toBeTruthy();
     expect(snap?.metrics[1].resetEpoch).toBeTypeOf('number');
+  });
+
+  it('normalizes Claude message_limit windows', () => {
+    const snap = snapshotFromClaudeMessageLimit(
+      {
+        windows: {
+          '5h': {
+            utilization: 0.125,
+            resets_at: Math.floor(Date.parse('2026-06-28T12:00:00.000Z') / 1000),
+          },
+          '7d': {
+            utilization: 0.45,
+            resets_at: Math.floor(Date.parse('2026-06-30T12:00:00.000Z') / 1000),
+          },
+        },
+      },
+      123,
+    );
+
+    expect(snap?.metrics.map(({ label, percent }) => ({ label, percent }))).toEqual([
+      { label: '5h', percent: 12.5 },
+      { label: 'Week', percent: 45 },
+    ]);
+    expect(snap?.metrics[0].resetEpoch).toBe(1_782_648_000);
+    expect(snap?.metrics[1].resetEpoch).toBe(1_782_820_800);
   });
 
   it('extracts Claude subscription tier from bootstrap org metadata', () => {
@@ -390,6 +439,40 @@ describe('Claude usage bar', () => {
     ]);
   });
 
+  it('fills the 5h countdown from Claude message_limit events', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-28T10:00:00.000Z'));
+    mockLocalStorageStore({
+      gvClaudeUsageCache: {
+        plan: 'Max (20x)',
+        updatedAt: Date.now(),
+        metrics: [{ label: 'Week', percent: 46 }],
+      },
+    });
+    vi.stubGlobal('fetch', vi.fn());
+
+    startClaudeUsage();
+    await flushPromises();
+    dispatchClaudeMessageLimit({
+      windows: {
+        '5h': {
+          utilization: 0.12,
+          resets_at: Math.floor(Date.parse('2026-06-28T10:30:00.000Z') / 1000),
+        },
+        '7d': {
+          utilization: 0.46,
+          resets_at: Math.floor(Date.parse('2026-06-28T11:30:00.000Z') / 1000),
+        },
+      },
+    });
+
+    expect(document.querySelector('.gv-usage-tier')?.textContent).toBe('Max (20x)');
+    expect([...document.querySelectorAll('.gv-usage-pct')].map((el) => el.textContent)).toEqual([
+      '12% (30m)',
+      '46% (1h30m)',
+    ]);
+  });
+
   it('discovers the Claude org when the active-org cookie is missing', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-28T10:00:00.000Z'));
@@ -512,7 +595,7 @@ describe('Claude usage bar', () => {
 
   it('keeps the cached plan when Claude page text omits it', async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-06-28T10:00:00.000Z'));
+    vi.setSystemTime(new Date(2026, 5, 28, 10, 0, 0));
     history.replaceState(null, '', '/#settings/usage');
     mountUsageTextWithoutPlan();
     mockLocalStorageStore({
@@ -523,7 +606,7 @@ describe('Claude usage bar', () => {
           {
             label: 'All',
             percent: 45,
-            resetEpoch: Math.floor(Date.parse('2026-06-28T11:30:00.000Z') / 1000),
+            resetEpoch: Math.floor(new Date(2026, 5, 28, 11, 30, 0).getTime() / 1000),
             resetLabel: '6/28/2026, 11:30:00 AM',
           },
         ],

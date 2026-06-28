@@ -74,6 +74,7 @@
         "icon-32.png",
         "katex-config.js",
         "fetchInterceptor.js",
+        "claude-usage-observer.js",
         "response-complete-observer.js",
         "usage-observer.js",
         "prevent-auto-scroll.js",

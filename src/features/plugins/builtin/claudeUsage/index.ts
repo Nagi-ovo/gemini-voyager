@@ -1,6 +1,8 @@
 import { StorageKeys } from '@/core/types/common';
 
 const PILL_ID = 'gv-claude-usage-pill';
+const OBSERVER_SCRIPT_ID = 'gv-claude-usage-observer-script';
+const OBSERVER_SOURCE = 'gv-claude-usage-observer';
 const CLAUDE_ORIGIN = 'https://claude.ai';
 const SCRAPE_DELAY_MS = 250;
 const REFRESH_INTERVAL_MS = 5 * 60_000;
@@ -8,6 +10,8 @@ const COUNTDOWN_REFRESH_MS = 30_000;
 const REFRESH_LOCK_TTL_MS = 30_000;
 const STALE_MS = 60_000;
 const MAX_METRICS = 2;
+const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
 const OPEN_ICON = `<svg viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z"/></svg>`;
 
@@ -38,6 +42,7 @@ let refreshTimer: number | null = null;
 let countdownTimer: number | null = null;
 let refreshInFlight = false;
 let visibilityHandler: (() => void) | null = null;
+let observerMessageHandler: ((ev: MessageEvent) => void) | null = null;
 let storageListener:
   | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
   | null = null;
@@ -95,6 +100,69 @@ function extractLastUpdated(text: string): string | undefined {
 function extractReset(text: string, label: string): string | undefined {
   const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return text.match(new RegExp(`${escaped}\\s+Resets\\s+([^\\n%]+)`, 'i'))?.[1]?.trim();
+}
+
+function normalizeHour(hour: number, meridiem?: string): number {
+  const lower = meridiem?.toLowerCase();
+  if (lower === 'am') return hour === 12 ? 0 : hour;
+  if (lower === 'pm') return hour === 12 ? 12 : hour + 12;
+  return hour;
+}
+
+function dateWithTime(base: Date, hour: number, minute: number, meridiem?: string): Date {
+  const next = new Date(base);
+  next.setHours(normalizeHour(hour, meridiem), minute, 0, 0);
+  return next;
+}
+
+function epochFromResetLabel(label: string | undefined, now: number): number | undefined {
+  if (!label) return undefined;
+  const text = label
+    .replace(/\bat\b/gi, ' ')
+    .replace(/,/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  const time = '(\\d{1,2})(?::(\\d{2}))?\\s*(AM|PM)?';
+  const relative = text.match(new RegExp(`^(Today|Tomorrow)\\s+${time}$`, 'i'));
+  if (relative) {
+    const base = new Date(now);
+    if (/^tomorrow$/i.test(relative[1])) base.setDate(base.getDate() + 1);
+    return Math.floor(
+      dateWithTime(base, Number(relative[2]), Number(relative[3] ?? 0), relative[4]).getTime() /
+        1000,
+    );
+  }
+
+  const weekday = text.match(new RegExp(`^(${WEEKDAYS.join('|')})(?:day)?\\s+${time}$`, 'i'));
+  if (weekday) {
+    const base = new Date(now);
+    const target = WEEKDAYS.indexOf(weekday[1].slice(0, 3).toLowerCase());
+    const next = new Date(base);
+    next.setDate(base.getDate() + ((target - base.getDay() + 7) % 7));
+    const reset = dateWithTime(next, Number(weekday[2]), Number(weekday[3] ?? 0), weekday[4]);
+    if (reset.getTime() <= now) reset.setDate(reset.getDate() + 7);
+    return Math.floor(reset.getTime() / 1000);
+  }
+
+  const month = text.match(
+    new RegExp(`^(${MONTHS.join('|')})[a-z]*\\s+(\\d{1,2})\\s+${time}$`, 'i'),
+  );
+  if (month) {
+    const base = new Date(now);
+    const reset = dateWithTime(
+      new Date(
+        base.getFullYear(),
+        MONTHS.indexOf(month[1].slice(0, 3).toLowerCase()),
+        Number(month[2]),
+      ),
+      Number(month[3]),
+      Number(month[4] ?? 0),
+      month[5],
+    );
+    if (reset.getTime() <= now) reset.setFullYear(reset.getFullYear() + 1);
+    return Math.floor(reset.getTime() / 1000);
+  }
+  return undefined;
 }
 
 function getLastActiveOrg(cookie = document.cookie): string | null {
@@ -265,6 +333,25 @@ export function snapshotFromClaudeUsageApi(
   };
 }
 
+export function snapshotFromClaudeMessageLimit(
+  raw: unknown,
+  now = Date.now(),
+): ClaudeUsageSnapshot | null {
+  const data = asRecord(raw);
+  const windows = asRecord(data?.windows);
+  if (!windows) return null;
+  const metrics = [
+    metricFromApi(windows['5h'], '5h', 100),
+    metricFromApi(windows['7d'], 'Week', 100),
+  ].filter((metric): metric is ClaudeUsageMetric => metric !== null);
+  if (!metrics.length) return null;
+  return {
+    metrics: metrics.slice(0, MAX_METRICS),
+    lastUpdatedLabel: 'just now',
+    updatedAt: now,
+  };
+}
+
 export function scrapeClaudeUsageFromDocument(
   doc: Document = document,
   now = Date.now(),
@@ -275,10 +362,22 @@ export function scrapeClaudeUsageFromDocument(
   const values = percentValues(text);
   if (!values.length) return null;
 
-  const candidates: Array<{ label: string; percent?: number; resetLabel?: string }> = [
-    { label: '5h', percent: values[0], resetLabel: extractReset(text, 'Current session') },
+  const candidates: Array<{
+    label: string;
+    percent?: number;
+    resetLabel?: string;
+    resetEpoch?: number;
+  }> = [
+    {
+      label: '5h',
+      percent: values[0],
+      resetLabel: extractReset(text, 'Current session'),
+    },
     { label: 'Week', percent: values[1], resetLabel: extractReset(text, 'All models') },
-  ];
+  ].map((metric) => ({
+    ...metric,
+    resetEpoch: epochFromResetLabel(metric.resetLabel, now),
+  }));
   const metrics = candidates.filter(
     (metric): metric is ClaudeUsageMetric => typeof metric.percent === 'number',
   );
@@ -550,6 +649,46 @@ async function saveCache(next: ClaudeUsageSnapshot): Promise<void> {
   }
 }
 
+function applySnapshot(next: ClaudeUsageSnapshot): void {
+  const merged = withFallbackCountdowns(withFallbackPlan(next));
+  if (snapshot && sameSnapshotData(snapshot, merged)) return;
+  snapshot = merged;
+  renderPill();
+  void saveCache(merged);
+}
+
+function injectClaudeUsageObserver(): void {
+  try {
+    if (document.getElementById(OBSERVER_SCRIPT_ID)) return;
+    const script = document.createElement('script');
+    script.id = OBSERVER_SCRIPT_ID;
+    script.src = chrome.runtime.getURL('claude-usage-observer.js');
+    script.async = false;
+    (document.documentElement || document.head || document.body).appendChild(script);
+    script.remove();
+  } catch {
+    // Missing page bridge only means we keep the API + DOM fallback path.
+  }
+}
+
+function setupObserverBridge(): void {
+  if (observerMessageHandler) return;
+  observerMessageHandler = (ev: MessageEvent) => {
+    if (ev.source !== window) return;
+    const data = ev.data as { source?: string; type?: string; payload?: unknown } | null;
+    if (!data || data.source !== OBSERVER_SOURCE || data.type !== 'message-limit') return;
+    const next = snapshotFromClaudeMessageLimit(data.payload);
+    if (next) applySnapshot(next);
+  };
+  window.addEventListener('message', observerMessageHandler);
+}
+
+function teardownObserverBridge(): void {
+  if (!observerMessageHandler) return;
+  window.removeEventListener('message', observerMessageHandler);
+  observerMessageHandler = null;
+}
+
 async function fetchPlanFromBootstrap(orgId: string): Promise<string | undefined> {
   try {
     const response = await fetch(
@@ -684,12 +823,8 @@ function scrapeNow(): void {
   if (!isClaudeUsageSettings()) return;
   const next = scrapeClaudeUsageFromDocument();
   if (!next) return;
-  const merged = withFallbackCountdowns(withFallbackPlan(next));
-  if (snapshot && sameSnapshotData(snapshot, merged)) return;
-  snapshot = merged;
-  renderPill();
-  void saveCache(merged);
-  if (!hasCountdownData(merged)) void refreshFromApi(true);
+  applySnapshot(next);
+  if (!snapshot || !hasCountdownData(snapshot)) void refreshFromApi(true);
 }
 
 function scheduleScrape(): void {
@@ -743,6 +878,8 @@ function stopRefreshLoop(): void {
 
 export function startClaudeUsage(): void {
   if (pill) return;
+  setupObserverBridge();
+  injectClaudeUsageObserver();
   renderPill();
   void loadCache().then(() => renderPill());
   void loadDragPos().then(() => {
@@ -785,6 +922,7 @@ export function stopClaudeUsage(): void {
   dragging = false;
   observer?.disconnect();
   observer = null;
+  teardownObserverBridge();
   stopRefreshLoop();
   window.removeEventListener('resize', onResize);
   window.removeEventListener('hashchange', refreshObserver);
