@@ -1392,8 +1392,8 @@
     "description": "Enable tab title sync toggle label"
   },
   "enableTabTitleUpdateHint": {
-    "message": "Atualiza automaticamente o título da guia do navegador para corresponder ao título da conversa atual",
-    "description": "Tab title sync feature hint"
+    "message": "O Gemini adicionou oficialmente este recurso em junho de 2026, então o Voyager mantém esta opção desativada.",
+    "description": "Retired tab title sync feature note"
   },
   "persistentExportToolbar": {
     "message": "Mostrar botão flutuante de exportação",

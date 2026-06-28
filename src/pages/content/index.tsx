@@ -54,7 +54,6 @@ import { startSendBehavior } from './sendBehavior/index';
 import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
-import { startTitleUpdater } from './titleUpdater';
 import { startUsageStatus } from './usageStatus/index';
 import { maybeShowUsageCoachmark } from './usageStatus/usageCoachmark';
 import { startUserLatex } from './userLatex/index';
@@ -103,7 +102,6 @@ let responseCompleteNotificationCleanup: (() => void) | null = null;
 let edgeFinalVersionNoticeCleanup: (() => void) | null = null;
 let pluginHostCleanup: (() => void) | null = null;
 let brandThemeCleanup: (() => void) | null = null;
-let titleUpdaterCleanup: (() => void) | null = null;
 let usageStatusCleanup: (() => void) | null = null;
 let remoteAnnouncementsCleanup: (() => void) | null = null;
 
@@ -286,9 +284,6 @@ async function initializeFeatures(): Promise<void> {
       if (!isSafari()) {
         startWatermarkRemover();
       }
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      titleUpdaterCleanup = await startTitleUpdater();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startDeepResearchExport();
@@ -657,10 +652,6 @@ function handleVisibilityChange(): void {
         if (remoteAnnouncementsCleanup) {
           remoteAnnouncementsCleanup();
           remoteAnnouncementsCleanup = null;
-        }
-        if (titleUpdaterCleanup) {
-          titleUpdaterCleanup();
-          titleUpdaterCleanup = null;
         }
         if (usageStatusCleanup) {
           usageStatusCleanup();

@@ -1392,8 +1392,8 @@
     "description": "Enable tab title sync toggle label"
   },
   "enableTabTitleUpdateHint": {
-    "message": "브라우저 탭 제목을 현재 대화 제목과 일치하도록 자동으로 업데이트합니다",
-    "description": "Tab title sync feature hint"
+    "message": "Gemini 공식 기능으로 2026년 6월에 추가되어 Voyager에서는 이 옵션을 비활성화했습니다.",
+    "description": "Retired tab title sync feature note"
   },
   "persistentExportToolbar": {
     "message": "플로팅 내보내기 버튼 표시",

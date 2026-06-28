@@ -1352,8 +1352,8 @@
     "description": "啟用分頁標題同步開關標籤"
   },
   "enableTabTitleUpdateHint": {
-    "message": "自動將瀏覽器分頁標題更新為目前對話的標題",
-    "description": "分頁標題同步功能提示"
+    "message": "Gemini 官方已於 2026 年 6 月實作此功能，因此 Voyager 已停用此開關。",
+    "description": "已停用的分頁標題同步功能說明"
   },
   "persistentExportToolbar": {
     "message": "顯示懸浮匯出按鈕",

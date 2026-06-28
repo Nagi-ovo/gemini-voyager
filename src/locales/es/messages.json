@@ -1392,8 +1392,8 @@
     "description": "Enable tab title sync toggle label"
   },
   "enableTabTitleUpdateHint": {
-    "message": "Actualiza automáticamente el título de la pestaña del navegador para que coincida con el título de la conversación actual",
-    "description": "Tab title sync feature hint"
+    "message": "Gemini añadió oficialmente esta función en junio de 2026, así que Voyager mantiene esta opción desactivada.",
+    "description": "Retired tab title sync feature note"
   },
   "persistentExportToolbar": {
     "message": "Mostrar botón flotante de exportación",

@@ -69,7 +69,7 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS: Record<string, unknown> = {
   [StorageKeys.WATERMARK_DOWNLOAD_ENABLED]: true,
   [StorageKeys.WATERMARK_PREVIEW_ENABLED]: true,
   [StorageKeys.HIDE_PROMPT_MANAGER]: false,
-  [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: true,
+  [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: false,
   [StorageKeys.MERMAID_ENABLED]: true,
   [StorageKeys.QUOTE_REPLY_ENABLED]: true,
   [StorageKeys.CTRL_ENTER_SEND]: false,
@@ -126,12 +126,18 @@ export function filterBackupableSyncSettings(value: unknown): BackupableSyncSett
   }
 
   const record = value as Record<string, unknown>;
-  return BACKUPABLE_SYNC_SETTINGS_KEYS.reduce<BackupableSyncSettings>((acc, key) => {
+  const settings = BACKUPABLE_SYNC_SETTINGS_KEYS.reduce<BackupableSyncSettings>((acc, key) => {
     if (Object.prototype.hasOwnProperty.call(record, key)) {
       acc[key] = record[key];
     }
     return acc;
   }, {});
+
+  if (Object.prototype.hasOwnProperty.call(settings, StorageKeys.TAB_TITLE_UPDATE_ENABLED)) {
+    settings[StorageKeys.TAB_TITLE_UPDATE_ENABLED] = false;
+  }
+
+  return settings;
 }
 
 export async function loadBackupableSyncSettings(

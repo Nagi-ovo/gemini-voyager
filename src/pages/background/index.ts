@@ -53,6 +53,7 @@ const RESPONSE_COMPLETE_UNKNOWN_TAB_ID = 'unknown';
 const GENERATED_UI_CAPTURE_PERMISSION_ORIGINS = ['<all_urls>'];
 const RESPONSE_COMPLETE_TURN_LABEL_PREFIXES =
   /^[\u200B\u200C\u200D\u200E\u200F\uFEFF]*(?:you said|you wrote|user message|your prompt|you asked)[:\s]*/i;
+const RETIRED_TAB_TITLE_UPDATE_SETTING = { [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: false };
 
 const responseCompleteNotificationLastShown = new Map<string, number>();
 const responseCompleteNotificationTargets = new Map<
@@ -60,6 +61,17 @@ const responseCompleteNotificationTargets = new Map<
   { conversationUrl?: string; tabId?: number }
 >();
 const remoteAnnouncementService = startRemoteAnnouncementBackgroundService();
+
+async function disableRetiredTabTitleUpdateSetting(): Promise<void> {
+  try {
+    const stored = await chrome.storage.sync.get(RETIRED_TAB_TITLE_UPDATE_SETTING);
+    if (stored[StorageKeys.TAB_TITLE_UPDATE_ENABLED] !== false) {
+      await chrome.storage.sync.set(RETIRED_TAB_TITLE_UPDATE_SETTING);
+    }
+  } catch (error) {
+    console.warn('[Background] Failed to disable retired tab-title sync setting:', error);
+  }
+}
 
 // Gemini domains where the watermark fetch interceptor should run.
 const GEMINI_FETCH_INTERCEPTOR_MATCHES = [
@@ -695,6 +707,7 @@ async function syncPluginContentScripts(): Promise<void> {
 }
 
 // Initial sync for persisted permissions
+void disableRetiredTabTitleUpdateSetting();
 void cleanupLegacyGeneratedUiCapturePermission();
 void syncCustomContentScripts();
 void syncPluginContentScripts();
@@ -708,6 +721,13 @@ void syncResponseCompleteObserverRegistration();
 
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== 'sync') return;
+
+  if (
+    Object.prototype.hasOwnProperty.call(changes, StorageKeys.TAB_TITLE_UPDATE_ENABLED) &&
+    changes[StorageKeys.TAB_TITLE_UPDATE_ENABLED]?.newValue !== false
+  ) {
+    void disableRetiredTabTitleUpdateSetting();
+  }
 
   if (Object.prototype.hasOwnProperty.call(changes, CUSTOM_WEBSITE_KEY)) {
     const newValue = changes[CUSTOM_WEBSITE_KEY]?.newValue;

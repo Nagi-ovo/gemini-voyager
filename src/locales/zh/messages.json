@@ -1392,8 +1392,8 @@
     "description": "启用标签页标题同步开关标签"
   },
   "enableTabTitleUpdateHint": {
-    "message": "自动将浏览器标签页标题更新为当前对话的标题",
-    "description": "标签页标题同步功能提示"
+    "message": "Gemini 官方已在 2026 年 6 月实现此功能，因此 Voyager 已停用该开关。",
+    "description": "已停用的标签页标题同步功能说明"
   },
   "persistentExportToolbar": {
     "message": "显示悬浮导出按钮",

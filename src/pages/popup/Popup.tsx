@@ -698,7 +698,6 @@ interface SettingsUpdate {
   inputCollapseEnabled?: boolean;
   inputCollapseWhenNotEmpty?: boolean;
   inputVimModeEnabled?: boolean;
-  tabTitleUpdateEnabled?: boolean;
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
   responseCompleteNotificationEnabled?: boolean;
@@ -835,7 +834,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(false);
   const [inputCollapseWhenNotEmpty, setInputCollapseWhenNotEmpty] = useState<boolean>(false);
   const [inputVimModeEnabled, setInputVimModeEnabled] = useState<boolean>(false);
-  const [tabTitleUpdateEnabled, setTabTitleUpdateEnabled] = useState<boolean>(true);
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
   const [showMessageTimestamps, setShowMessageTimestamps] = useState<boolean>(false);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
@@ -1094,8 +1092,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         payload.gvInputCollapseWhenNotEmpty = settings.inputCollapseWhenNotEmpty;
       if (typeof settings.inputVimModeEnabled === 'boolean')
         payload[StorageKeys.INPUT_VIM_MODE] = settings.inputVimModeEnabled;
-      if (typeof settings.tabTitleUpdateEnabled === 'boolean')
-        payload.gvTabTitleUpdateEnabled = settings.tabTitleUpdateEnabled;
       if (typeof settings.mermaidEnabled === 'boolean')
         payload.gvMermaidEnabled = settings.mermaidEnabled;
       if (typeof settings.quoteReplyEnabled === 'boolean')
@@ -1511,7 +1507,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           gvInputCollapseEnabled: false,
           gvInputCollapseWhenNotEmpty: false,
           [StorageKeys.INPUT_VIM_MODE]: false,
-          gvTabTitleUpdateEnabled: true,
+          [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: false,
           gvMermaidEnabled: true,
           gvQuoteReplyEnabled: true,
           [StorageKeys.USAGE_STATUS_ENABLED]: false,
@@ -1593,7 +1589,9 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           setInputCollapseEnabled(res?.gvInputCollapseEnabled !== false);
           setInputCollapseWhenNotEmpty(res?.gvInputCollapseWhenNotEmpty === true);
           setInputVimModeEnabled(res?.[StorageKeys.INPUT_VIM_MODE] === true);
-          setTabTitleUpdateEnabled(res?.gvTabTitleUpdateEnabled !== false);
+          if (res?.[StorageKeys.TAB_TITLE_UPDATE_ENABLED] !== false) {
+            void setSyncStorage({ [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: false });
+          }
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
           setResponseCompleteNotificationEnabled(
@@ -3514,11 +3512,11 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
               {renderSetting(
                 'general',
                 'enableTabTitleUpdate',
-                <div className="group flex items-center justify-between">
+                <div className="flex items-center justify-between opacity-60">
                   <div className="flex-1">
                     <Label
                       htmlFor="tab-title-update"
-                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                      className="text-muted-foreground cursor-not-allowed text-sm font-medium"
                     >
                       {t('enableTabTitleUpdate')}
                     </Label>
@@ -3526,14 +3524,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                       {t('enableTabTitleUpdateHint')}
                     </p>
                   </div>
-                  <Switch
-                    id="tab-title-update"
-                    checked={tabTitleUpdateEnabled}
-                    onChange={(e) => {
-                      setTabTitleUpdateEnabled(e.target.checked);
-                      apply({ tabTitleUpdateEnabled: e.target.checked });
-                    }}
-                  />
+                  <Switch id="tab-title-update" checked={false} disabled className="opacity-70" />
                 </div>,
               )}
               {renderSetting(

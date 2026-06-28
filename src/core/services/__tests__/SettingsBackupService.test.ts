@@ -62,6 +62,23 @@ describe('SettingsBackupService', () => {
     });
   });
 
+  it('does not restore retired tab title sync as enabled', async () => {
+    const storageArea = {
+      get: vi.fn(),
+      set: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const restored = await restoreBackupableSyncSettings(
+      { [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: true },
+      storageArea,
+    );
+
+    expect(restored).toEqual({ [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: false });
+    expect(storageArea.set).toHaveBeenCalledWith({
+      [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: false,
+    });
+  });
+
   it('skips storage writes for invalid settings payloads', async () => {
     const storageArea = {
       get: vi.fn(),

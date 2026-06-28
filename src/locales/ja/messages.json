@@ -1392,8 +1392,8 @@
     "description": "Enable tab title sync toggle label"
   },
   "enableTabTitleUpdateHint": {
-    "message": "ブラウザのタブタイトルを、現在の会話タイトルと自動的に同期します",
-    "description": "Tab title sync feature hint"
+    "message": "Gemini 公式が 2026 年 6 月にこの機能を実装したため、Voyager ではこの設定を無効化しています。",
+    "description": "Retired tab title sync feature note"
   },
   "persistentExportToolbar": {
     "message": "フローティングエクスポートボタンを表示",
