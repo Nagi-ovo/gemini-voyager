@@ -3,9 +3,13 @@ import { useData, withBase } from 'vitepress';
 import { computed, onMounted, ref } from 'vue';
 
 import {
+  CATEGORY_FALLBACKS,
+  CONTRIBUTE,
   MARKETPLACE_URL,
+  NATIVE_PLUGINS,
   type PluginManifest,
   displayName,
+  groupPluginsByFeature,
   localeKey,
   localePrefix,
   platformsFromMatches,
@@ -18,11 +22,8 @@ interface I18nData {
   title: string;
   subtitle: string;
   requires: string;
-  free: string;
   official: string;
-  worksOn: string;
   source: string;
-  loading: string;
   errorTitle: string;
   errorBody: string;
   retry: string;
@@ -30,13 +31,6 @@ interface I18nData {
   install: string;
   empty: string;
   disclaimer: string;
-  launch?: {
-    badge: string;
-    headline: string;
-    sub: string;
-    note: string;
-    pr: string;
-  };
   howto?: string;
   howtoAlt?: string;
   categories: Record<string, string>;
@@ -48,11 +42,8 @@ const i18n: Record<string, I18nData> = {
     subtitle:
       '由 Voyager 官方维护的声明式插件，把顺手体验带到更多 AI 网站。全部免费，随扩展自动更新。',
     requires: '需要 Voyager 1.4.8 及以上版本',
-    free: '免费',
     official: 'Voyager 官方',
-    worksOn: '适用于',
     source: '查看源码',
-    loading: '正在加载插件…',
     errorTitle: '插件列表加载失败',
     errorBody: '请检查网络后重试。',
     retry: '重试',
@@ -61,13 +52,6 @@ const i18n: Record<string, I18nData> = {
     empty: '暂无插件，敬请期待。',
     disclaimer:
       'Claude、ChatGPT 等名称与标志为其各自所有者的商标。本插件市场由 Voyager 维护，与 Anthropic、OpenAI 无关联，亦未获其背书。',
-    launch: {
-      badge: '✨ 全新登场',
-      headline: '隆重推出 · 插件市场',
-      sub: 'Voyager 跨出 Gemini —— 把熟悉的顺手体验，带到 Claude 与 ChatGPT。',
-      note: '我们不急于堆满功能，而是先打磨最重要的几个核心能力与体验升级。',
-      pr: '插件全部开源 —— 欢迎随时提交 PR，把你想要的效果做给所有人用。',
-    },
     howto: '🔎 怎么打开弹窗？',
     howtoAlt: '打开 Voyager 弹窗的两步：① 点击浏览器扩展（拼图）图标 ② 在列表里选择 Voyager。',
     categories: {
@@ -83,11 +67,8 @@ const i18n: Record<string, I18nData> = {
     subtitle:
       '由 Voyager 官方維護的宣告式外掛，把順手體驗帶到更多 AI 網站。全部免費，隨擴充功能自動更新。',
     requires: '需要 Voyager 1.4.8 或更新版本',
-    free: '免費',
     official: 'Voyager 官方',
-    worksOn: '適用於',
     source: '檢視原始碼',
-    loading: '正在載入外掛…',
     errorTitle: '外掛清單載入失敗',
     errorBody: '請檢查網路後重試。',
     retry: '重試',
@@ -96,13 +77,6 @@ const i18n: Record<string, I18nData> = {
     empty: '暫無外掛，敬請期待。',
     disclaimer:
       'Claude、ChatGPT 等名稱與標誌為其各自所有者的商標。本外掛市集由 Voyager 維護，與 Anthropic、OpenAI 無關聯，亦未獲其背書。',
-    launch: {
-      badge: '✨ 全新登場',
-      headline: '隆重推出 · 外掛市集',
-      sub: 'Voyager 跨出 Gemini —— 把熟悉的順手體驗，帶到 Claude 與 ChatGPT。',
-      note: '我們不急於堆滿功能，而是先打磨最重要的幾個核心能力與體驗升級。',
-      pr: '外掛全部開源 —— 歡迎隨時提交 PR，把你想要的效果做給所有人用。',
-    },
     howto: '🔎 怎麼打開彈窗？',
     howtoAlt: '打開 Voyager 彈窗的兩步：① 點擊瀏覽器擴充功能（拼圖）圖示 ② 在清單中選擇 Voyager。',
     categories: {
@@ -118,11 +92,8 @@ const i18n: Record<string, I18nData> = {
     subtitle:
       "Declarative plugins maintained by the Voyager team that bring Voyager's polish to more AI sites. All free, and they auto-update with the extension.",
     requires: 'Requires Voyager 1.4.8 or later',
-    free: 'Free',
     official: 'by Voyager',
-    worksOn: 'Works on',
     source: 'View source',
-    loading: 'Loading plugins…',
     errorTitle: "Couldn't load the plugin list",
     errorBody: 'Check your connection and try again.',
     retry: 'Retry',
@@ -131,13 +102,6 @@ const i18n: Record<string, I18nData> = {
     empty: 'No plugins yet — stay tuned.',
     disclaimer:
       'Claude, ChatGPT and other names and logos are trademarks of their respective owners. This marketplace is maintained by Voyager and is not affiliated with, or endorsed by, Anthropic or OpenAI.',
-    launch: {
-      badge: '✨ Just launched',
-      headline: 'Introducing · Plugin Marketplace',
-      sub: 'Voyager goes beyond Gemini — bringing the experience you know to Claude and ChatGPT.',
-      note: 'We’re not piling on features — we’re polishing the few that matter most first.',
-      pr: 'Every plugin is open source — send a PR anytime and build the experience you want, for everyone.',
-    },
     howto: '🔎 How to open the popup?',
     howtoAlt:
       'Two steps to open the Voyager popup: ① click the browser Extensions (puzzle) icon ② pick Voyager from the list.',
@@ -154,11 +118,8 @@ const i18n: Record<string, I18nData> = {
     subtitle:
       'Voyager 公式チームが維持する宣言型プラグイン。Voyager の使い心地をより多くの AI サイトへ。すべて無料で、拡張機能とともに自動更新されます。',
     requires: 'Voyager 1.4.8 以降が必要です',
-    free: '無料',
     official: 'Voyager 公式',
-    worksOn: '対応サイト',
     source: 'ソースを見る',
-    loading: 'プラグインを読み込み中…',
     errorTitle: 'プラグイン一覧を読み込めませんでした',
     errorBody: '接続を確認して再試行してください。',
     retry: '再試行',
@@ -167,13 +128,6 @@ const i18n: Record<string, I18nData> = {
     empty: 'プラグインはまだありません。お楽しみに。',
     disclaimer:
       'Claude、ChatGPT などの名称およびロゴは各所有者の商標です。本マーケットは Voyager が運営しており、Anthropic・OpenAI とは関係なく、承認も受けていません。',
-    launch: {
-      badge: '✨ 新登場',
-      headline: 'プラグインマーケット、新登場',
-      sub: 'Voyager は Gemini を越えて —— 慣れ親しんだ体験を Claude と ChatGPT へ。',
-      note: '機能を一気に盛り込むのではなく、まず最も重要な数点の体験を磨きます。',
-      pr: 'プラグインはすべてオープンソース —— いつでも PR を歓迎、思い描いた体験をみんなのために。',
-    },
     howto: '🔎 ポップアップの開き方は？',
     howtoAlt:
       'Voyager のポップアップを開く 2 ステップ：① ブラウザの拡張機能（パズル）アイコンをクリック ② 一覧から Voyager を選択。',
@@ -190,11 +144,8 @@ const i18n: Record<string, I18nData> = {
     subtitle:
       'Voyager 팀이 직접 관리하는 선언형 플러그인. Voyager의 편안한 경험을 더 많은 AI 사이트로. 모두 무료이며 확장 프로그램과 함께 자동 업데이트됩니다.',
     requires: 'Voyager 1.4.8 이상이 필요합니다',
-    free: '무료',
     official: 'Voyager 공식',
-    worksOn: '지원 사이트',
     source: '소스 보기',
-    loading: '플러그인을 불러오는 중…',
     errorTitle: '플러그인 목록을 불러오지 못했습니다',
     errorBody: '연결을 확인한 후 다시 시도하세요.',
     retry: '다시 시도',
@@ -203,13 +154,6 @@ const i18n: Record<string, I18nData> = {
     empty: '아직 플러그인이 없습니다. 기대해 주세요.',
     disclaimer:
       'Claude, ChatGPT 등의 이름과 로고는 각 소유자의 상표입니다. 본 마켓플레이스는 Voyager가 운영하며 Anthropic 또는 OpenAI와 제휴하거나 보증받지 않았습니다.',
-    launch: {
-      badge: '✨ 새롭게 출시',
-      headline: '플러그인 마켓플레이스 출시',
-      sub: 'Voyager가 Gemini를 넘어 —— 익숙한 경험을 Claude와 ChatGPT로.',
-      note: '기능을 한꺼번에 채우기보다, 가장 중요한 몇 가지 경험부터 다듬습니다.',
-      pr: '모든 플러그인은 오픈 소스입니다 —— 언제든 PR을 환영하며, 원하는 경험을 모두를 위해 만들어 보세요.',
-    },
     howto: '🔎 팝업을 여는 방법은?',
     howtoAlt:
       'Voyager 팝업을 여는 두 단계: ① 브라우저 확장 프로그램(퍼즐) 아이콘 클릭 ② 목록에서 Voyager 선택.',
@@ -226,11 +170,8 @@ const i18n: Record<string, I18nData> = {
     subtitle:
       "Des plugins déclaratifs maintenus par l'équipe Voyager qui apportent la finesse de Voyager à davantage de sites d'IA. Tous gratuits et mis à jour automatiquement avec l'extension.",
     requires: 'Nécessite Voyager 1.4.8 ou version ultérieure',
-    free: 'Gratuit',
     official: 'par Voyager',
-    worksOn: 'Compatible avec',
     source: 'Voir le code',
-    loading: 'Chargement des plugins…',
     errorTitle: 'Impossible de charger la liste des plugins',
     errorBody: 'Vérifiez votre connexion et réessayez.',
     retry: 'Réessayer',
@@ -239,13 +180,6 @@ const i18n: Record<string, I18nData> = {
     empty: 'Aucun plugin pour le moment — restez à l’écoute.',
     disclaimer:
       'Claude, ChatGPT et les autres noms et logos sont des marques de leurs propriétaires respectifs. Cette marketplace est maintenue par Voyager et n’est ni affiliée à Anthropic ou OpenAI, ni approuvée par eux.',
-    launch: {
-      badge: '✨ Tout juste lancé',
-      headline: 'Découvrez · la Marketplace des plugins',
-      sub: 'Voyager dépasse Gemini — il apporte l’expérience que vous connaissez à Claude et ChatGPT.',
-      note: 'Nous n’empilons pas les fonctionnalités — nous peaufinons d’abord les quelques-unes qui comptent le plus.',
-      pr: 'Tous les plugins sont open source — proposez une PR à tout moment et créez l’expérience que vous voulez, pour tous.',
-    },
     howto: '🔎 Comment ouvrir la fenêtre ?',
     howtoAlt:
       'Deux étapes pour ouvrir la fenêtre Voyager : ① cliquez sur l’icône Extensions (puzzle) du navigateur ② choisissez Voyager dans la liste.',
@@ -262,11 +196,8 @@ const i18n: Record<string, I18nData> = {
     subtitle:
       'Plugins declarativos mantenidos por el equipo de Voyager que llevan la comodidad de Voyager a más sitios de IA. Todos gratis y se actualizan automáticamente con la extensión.',
     requires: 'Requiere Voyager 1.4.8 o posterior',
-    free: 'Gratis',
     official: 'de Voyager',
-    worksOn: 'Compatible con',
     source: 'Ver código',
-    loading: 'Cargando plugins…',
     errorTitle: 'No se pudo cargar la lista de plugins',
     errorBody: 'Comprueba tu conexión e inténtalo de nuevo.',
     retry: 'Reintentar',
@@ -275,13 +206,6 @@ const i18n: Record<string, I18nData> = {
     empty: 'Aún no hay plugins, muy pronto.',
     disclaimer:
       'Claude, ChatGPT y otros nombres y logotipos son marcas de sus respectivos propietarios. Este mercado lo mantiene Voyager y no está afiliado ni respaldado por Anthropic u OpenAI.',
-    launch: {
-      badge: '✨ Recién llegado',
-      headline: 'Presentamos · el Mercado de plugins',
-      sub: 'Voyager va más allá de Gemini: lleva la experiencia que ya conoces a Claude y ChatGPT.',
-      note: 'No amontonamos funciones: primero pulimos las pocas que más importan.',
-      pr: 'Todos los plugins son de código abierto: envía un PR cuando quieras y crea la experiencia que deseas, para todos.',
-    },
     howto: '🔎 ¿Cómo abrir la ventana?',
     howtoAlt:
       'Dos pasos para abrir la ventana de Voyager: ① haz clic en el icono de Extensiones (pieza de puzle) del navegador ② elige Voyager en la lista.',
@@ -298,11 +222,8 @@ const i18n: Record<string, I18nData> = {
     subtitle:
       'Plugins declarativos mantidos pela equipa do Voyager que levam a fluidez do Voyager a mais sites de IA. Todos gratuitos e atualizados automaticamente com a extensão.',
     requires: 'Requer o Voyager 1.4.8 ou posterior',
-    free: 'Grátis',
     official: 'da Voyager',
-    worksOn: 'Compatível com',
     source: 'Ver código',
-    loading: 'A carregar plugins…',
     errorTitle: 'Não foi possível carregar a lista de plugins',
     errorBody: 'Verifique a sua ligação e tente novamente.',
     retry: 'Tentar novamente',
@@ -311,13 +232,6 @@ const i18n: Record<string, I18nData> = {
     empty: 'Ainda não há plugins — fique atento.',
     disclaimer:
       'Claude, ChatGPT e outros nomes e logótipos são marcas dos respetivos proprietários. Este mercado é mantido pela Voyager e não tem qualquer afiliação ou aprovação da Anthropic ou da OpenAI.',
-    launch: {
-      badge: '✨ Acabado de lançar',
-      headline: 'Apresentamos · o Mercado de plugins',
-      sub: 'O Voyager vai além do Gemini — leva a experiência que já conhece ao Claude e ao ChatGPT.',
-      note: 'Não acumulamos funcionalidades — primeiro aperfeiçoamos as poucas que mais importam.',
-      pr: 'Todos os plugins são open source — envie um PR quando quiser e crie a experiência que deseja, para todos.',
-    },
     howto: '🔎 Como abrir a janela?',
     howtoAlt:
       'Dois passos para abrir a janela do Voyager: ① clique no ícone de Extensões (peça de puzzle) do navegador ② escolha o Voyager na lista.',
@@ -334,11 +248,8 @@ const i18n: Record<string, I18nData> = {
     subtitle:
       'إضافات تعريفية يحافظ عليها فريق Voyager، تنقل سلاسة Voyager إلى مزيد من مواقع الذكاء الاصطناعي. جميعها مجانية وتُحدَّث تلقائيًا مع الامتداد.',
     requires: 'يتطلب الإصدار 1.4.8 من Voyager أو أحدث',
-    free: 'مجاني',
     official: 'من Voyager',
-    worksOn: 'يعمل على',
     source: 'عرض الكود',
-    loading: 'جارٍ تحميل الإضافات…',
     errorTitle: 'تعذّر تحميل قائمة الإضافات',
     errorBody: 'تحقق من اتصالك ثم أعد المحاولة.',
     retry: 'إعادة المحاولة',
@@ -347,13 +258,6 @@ const i18n: Record<string, I18nData> = {
     empty: 'لا توجد إضافات بعد — ترقّبوا المزيد.',
     disclaimer:
       'أسماء وشعارات Claude وChatGPT وغيرها علامات تجارية لأصحابها. يحافظ Voyager على هذا السوق، وهو غير مرتبط بـ Anthropic أو OpenAI ولا يحظى بموافقتهما.',
-    launch: {
-      badge: '✨ وصل حديثًا',
-      headline: 'نقدّم لكم · سوق الإضافات',
-      sub: 'يتجاوز Voyager منصة Gemini — لينقل التجربة التي اعتدتها إلى Claude وChatGPT.',
-      note: 'لا نكدّس الميزات — بل نصقل أولًا أهم القدرات والتحسينات.',
-      pr: 'جميع الإضافات مفتوحة المصدر — أرسل طلب دمج (PR) في أي وقت، واصنع التجربة التي تريدها للجميع.',
-    },
     howto: '🔎 كيف تفتح النافذة المنبثقة؟',
     howtoAlt:
       'خطوتان لفتح نافذة Voyager: ① انقر أيقونة الإضافات (قطعة الأحجية) في المتصفح ② اختر Voyager من القائمة.',
@@ -370,11 +274,8 @@ const i18n: Record<string, I18nData> = {
     subtitle:
       'Декларативные плагины, поддерживаемые командой Voyager, приносят удобство Voyager на другие сайты ИИ. Все бесплатны и обновляются автоматически вместе с расширением.',
     requires: 'Требуется Voyager 1.4.8 или новее',
-    free: 'Бесплатно',
     official: 'от Voyager',
-    worksOn: 'Работает на',
     source: 'Исходный код',
-    loading: 'Загрузка плагинов…',
     errorTitle: 'Не удалось загрузить список плагинов',
     errorBody: 'Проверьте подключение и повторите попытку.',
     retry: 'Повторить',
@@ -383,13 +284,6 @@ const i18n: Record<string, I18nData> = {
     empty: 'Плагинов пока нет — следите за обновлениями.',
     disclaimer:
       'Claude, ChatGPT и другие названия и логотипы являются товарными знаками их владельцев. Этот маркетплейс поддерживается Voyager и не связан с Anthropic или OpenAI и не одобрен ими.',
-    launch: {
-      badge: '✨ Только что вышло',
-      headline: 'Представляем · Маркетплейс плагинов',
-      sub: 'Voyager выходит за пределы Gemini — привычный опыт теперь в Claude и ChatGPT.',
-      note: 'Мы не нагромождаем функции — сначала шлифуем те немногие, что важнее всего.',
-      pr: 'Все плагины с открытым кодом — присылайте PR в любое время и создавайте нужный вам опыт для всех.',
-    },
     howto: '🔎 Как открыть всплывающее окно?',
     howtoAlt:
       'Два шага, чтобы открыть окно Voyager: ① нажмите значок расширений (пазл) в браузере ② выберите Voyager из списка.',
@@ -428,6 +322,10 @@ const t = computed(() => i18n[lang.value as string] || i18n['en-US']);
 const installLink = computed(() =>
   withBase(`${localePrefix(lang.value as string)}/guide/installation`),
 );
+const contributeLink = computed(() =>
+  withBase(`${localePrefix(lang.value as string)}/guide/plugin-contribution`),
+);
+const contribute = computed(() => CONTRIBUTE[localeKey(lang.value as string)] ?? CONTRIBUTE.en);
 
 interface PluginCard {
   id: string;
@@ -438,8 +336,13 @@ interface PluginCard {
   homepage?: string;
   official: boolean;
   platforms: ReturnType<typeof platformsFromMatches>;
+  /** Single fused colour for borders/glow: one platform's colour, or a blend. */
   accent: string;
-  icon: { viewBox: string; path: string } | null;
+  /** The two brand colours (equal when single-platform) for gradient fills. */
+  c1: string;
+  c2: string;
+  /** Up to two platform marks — rendered as "twins" when there are two. */
+  icons: { viewBox: string; path: string; color: string }[];
 }
 
 const rawPlugins = ref<(PluginManifest & { official: boolean })[]>([]);
@@ -448,27 +351,92 @@ const failed = ref(false);
 
 const cards = computed<PluginCard[]>(() => {
   const loc = localeKey(lang.value as string);
-  return rawPlugins.value.map((p) => {
-    const platforms = platformsFromMatches(p.matches);
-    const primary = platforms[0];
-    const localized = p.i18n?.[loc];
+  // Native first-party plugins are always present; remote catalog plugins are
+  // appended. Dedupe by id so a future overlap never renders twice.
+  const seen = new Set<string>();
+  const merged = [...NATIVE_PLUGINS, ...rawPlugins.value].filter((p) => {
+    if (seen.has(p.id)) return false;
+    seen.add(p.id);
+    return true;
+  });
+  // One card per feature: per-site variants of the same feature (e.g. the
+  // Claude / ChatGPT reading-width plugins) collapse into a single card that
+  // carries the union of their platforms — matching how a genuinely multi-site
+  // plugin (Formula Copy) already reads.
+  return groupPluginsByFeature(merged).map((group) => {
+    const primary = group[0];
+    const localized = primary.i18n?.[loc];
+    const platforms: PluginCard['platforms'] = [];
+    const platformSeen = new Set<string>();
+    for (const p of group) {
+      for (const platform of platformsFromMatches(p.matches)) {
+        if (platformSeen.has(platform.key)) continue;
+        platformSeen.add(platform.key);
+        platforms.push(platform);
+      }
+    }
+    // Twin treatment: a card spanning two platforms fuses both brand colours
+    // (gradient backdrop + blended accent) and shows both marks side by side.
+    const colors = platforms.map((p) => p.color);
+    const c1 = primary.theme?.brand || colors[0] || 'var(--vp-c-brand-1)';
+    const c2 = colors[1] ?? c1;
+    const icons = platforms
+      .map((p) => {
+        const mark = PLATFORM_ICONS[p.key];
+        return mark ? { ...mark, color: p.color } : null;
+      })
+      .filter((m): m is { viewBox: string; path: string; color: string } => m !== null)
+      .slice(0, 2);
     return {
-      id: p.id,
-      name: displayName(localized?.name ?? p.name),
-      version: p.version,
-      description: localized?.description ?? p.description,
-      category: p.category,
-      homepage: p.homepage,
-      official: p.official,
+      id: primary.id,
+      name: displayName(localized?.name ?? primary.name),
+      version: primary.version,
+      description: localized?.description ?? primary.description,
+      category: primary.category,
+      homepage: primary.homepage,
+      official: group.some((p) => p.official),
       platforms,
-      accent: p.theme?.brand || primary?.color || 'var(--vp-c-brand-1)',
-      icon: primary ? (PLATFORM_ICONS[primary.key] ?? null) : null,
+      accent: colors.length >= 2 ? `color-mix(in srgb, ${c1}, ${c2})` : c1,
+      c1,
+      c2,
+      icons,
     };
   });
 });
 
+// Category filter — "all" plus every category present in the loaded cards, in
+// first-seen order. The pill row hides itself when there is only one category.
+const activeCat = ref('all');
+const categories = computed<string[]>(() => {
+  const found = ['all'];
+  for (const c of cards.value) if (!found.includes(c.category)) found.push(c.category);
+  return found;
+});
+const visibleCards = computed<PluginCard[]>(() =>
+  activeCat.value === 'all'
+    ? cards.value
+    : cards.value.filter((c) => c.category === activeCat.value),
+);
+// Top two cards drive the hero preview stack (native plugins lead, so the
+// showcase always has real content even before the remote catalog loads).
+const previewCards = computed<PluginCard[]>(() => cards.value.slice(0, 2));
+
+function countFor(category: string): number {
+  return category === 'all'
+    ? cards.value.length
+    : cards.value.filter((c) => c.category === category).length;
+}
+
+function iconFor(key: string): { viewBox: string; path: string } | null {
+  return PLATFORM_ICONS[key] ?? null;
+}
+
 function categoryLabel(category: string): string {
-  return t.value.categories[category] || t.value.categories.other;
+  return (
+    t.value.categories[category] ||
+    CATEGORY_FALLBACKS[localeKey(lang.value as string)]?.[category] ||
+    t.value.categories.other
+  );
 }
 
 async function load() {
@@ -510,101 +478,169 @@ onMounted(load);
 
 <template>
   <div class="gv-store">
-    <header v-if="t.launch" class="gv-launch">
-      <div class="gv-launch__glow" aria-hidden="true" />
-      <span class="gv-launch__badge">{{ t.launch.badge }}</span>
-      <h1 class="gv-launch__title">{{ t.launch.headline }}</h1>
-      <p class="gv-launch__sub">{{ t.launch.sub }}</p>
-      <div class="gv-launch__logos" aria-hidden="true">
-        <span class="gv-launch__logo" style="--gv-accent: #d97757">
-          <svg :viewBox="PLATFORM_ICONS.claude.viewBox" width="28" height="28" fill="currentColor">
-            <path :d="PLATFORM_ICONS.claude.path" />
-          </svg>
-        </span>
-        <span class="gv-launch__plus">+</span>
-        <span class="gv-launch__logo" style="--gv-accent: #0ea5e9">
-          <svg :viewBox="PLATFORM_ICONS.chatgpt.viewBox" width="28" height="28" fill="currentColor">
-            <path :d="PLATFORM_ICONS.chatgpt.path" />
-          </svg>
-        </span>
+    <!-- Split hero: message on the lead side, a live preview on the other -->
+    <section class="gv-hero">
+      <div class="gv-hero__copy">
+        <h1 class="gv-hero__title">{{ t.title }}</h1>
+        <p class="gv-hero__sub">{{ t.subtitle }}</p>
+        <div class="gv-hero__actions">
+          <a :href="installLink" class="gv-cta">
+            {{ t.install }}
+            <svg
+              viewBox="0 0 24 24"
+              width="15"
+              height="15"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </a>
+          <span class="gv-req">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden="true">
+              <path
+                d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5Z"
+                fill="currentColor"
+                stroke="currentColor"
+                stroke-width="1.2"
+                stroke-linejoin="round"
+              />
+            </svg>
+            {{ t.requires }}
+          </span>
+        </div>
+        <p class="gv-hero__hint">
+          {{ t.hint }}
+          <span v-if="t.howto" class="gv-howto" tabindex="0">
+            {{ t.howto }}
+            <span class="gv-howto__pop" role="tooltip">
+              <img
+                :src="withBase('/assets/plugin-popup-guide.png')"
+                :alt="t.howtoAlt"
+                loading="lazy"
+              />
+            </span>
+          </span>
+        </p>
       </div>
-      <p class="gv-launch__note">{{ t.launch.note }}</p>
-      <p class="gv-launch__pr">{{ t.launch.pr }}</p>
-    </header>
-    <header v-else class="gv-store__head">
-      <h1 class="gv-store__title">{{ t.title }}</h1>
-      <p class="gv-store__subtitle">{{ t.subtitle }}</p>
-    </header>
 
-    <div class="gv-store__meta">
-      <span class="gv-store__requires">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" aria-hidden="true">
-          <path
-            d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5Z"
-            fill="currentColor"
-            stroke="currentColor"
-            stroke-width="1.2"
-            stroke-linejoin="round"
-          />
-        </svg>
-        {{ t.requires }}
-      </span>
-    </div>
-
-    <p class="gv-store__hint">
-      {{ t.hint }}
-      <a :href="installLink" class="gv-store__hint-link">{{ t.install }} →</a>
-      <span v-if="t.howto" class="gv-howto" tabindex="0">
-        {{ t.howto }}
-        <span class="gv-howto__pop" role="tooltip">
-          <img :src="withBase('/assets/plugin-popup-guide.png')" :alt="t.howtoAlt" loading="lazy" />
-        </span>
-      </span>
-    </p>
-
-    <!-- Loading skeletons -->
-    <div v-if="loading" class="gv-store__grid" aria-hidden="true">
-      <div v-for="n in 3" :key="n" class="gv-card gv-card--skeleton">
-        <div class="gv-skel gv-skel--icon" />
-        <div class="gv-skel gv-skel--line" style="width: 55%" />
-        <div class="gv-skel gv-skel--line" style="width: 100%" />
-        <div class="gv-skel gv-skel--line" style="width: 80%" />
+      <div class="gv-showcase" aria-hidden="true">
+        <span class="gv-showcase__glow" />
+        <div class="gv-showcase__stack">
+          <article
+            v-for="(card, i) in previewCards"
+            :key="card.id"
+            class="gv-mini"
+            :style="{
+              '--gv-accent': card.accent,
+              '--gv-c1': card.c1,
+              '--gv-c2': card.c2,
+              '--i': i,
+            }"
+          >
+            <span class="gv-mini__icon" :class="{ 'gv-mini__icon--twin': card.icons.length > 1 }">
+              <template v-if="card.icons.length > 1">
+                <span
+                  v-for="(ic, j) in card.icons"
+                  :key="j"
+                  class="gv-twin"
+                  :class="j === 0 ? 'gv-twin--a' : 'gv-twin--b'"
+                  :style="{ color: ic.color }"
+                >
+                  <svg :viewBox="ic.viewBox" width="13" height="13" fill="currentColor">
+                    <path :d="ic.path" />
+                  </svg>
+                </span>
+              </template>
+              <svg
+                v-else-if="card.icons.length === 1"
+                :viewBox="card.icons[0].viewBox"
+                width="20"
+                height="20"
+                fill="currentColor"
+              >
+                <path :d="card.icons[0].path" />
+              </svg>
+            </span>
+            <span class="gv-mini__text">
+              <span class="gv-mini__name">{{ card.name }}</span>
+              <span class="gv-mini__desc">{{ card.description }}</span>
+            </span>
+            <span class="gv-mini__switch"><span /></span>
+          </article>
+          <template v-if="previewCards.length === 0">
+            <div v-for="n in 2" :key="'s' + n" class="gv-mini gv-mini--skeleton">
+              <span class="gv-skel gv-skel--icon" />
+              <span class="gv-mini__text">
+                <span class="gv-skel gv-skel--line" style="width: 55%" />
+                <span class="gv-skel gv-skel--line" style="width: 88%" />
+              </span>
+            </div>
+          </template>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Error -->
-    <div v-else-if="failed" class="gv-store__state">
-      <p class="gv-store__state-title">{{ t.errorTitle }}</p>
-      <p class="gv-store__state-body">{{ t.errorBody }}</p>
-      <button type="button" class="gv-store__retry" @click="load">{{ t.retry }}</button>
-    </div>
-
-    <!-- Empty -->
-    <div v-else-if="cards.length === 0" class="gv-store__state">
-      <p class="gv-store__state-body">{{ t.empty }}</p>
-    </div>
+    <!-- Category filter -->
+    <nav v-if="categories.length > 1" class="gv-filter" :aria-label="t.title">
+      <button
+        v-for="cat in categories"
+        :key="cat"
+        type="button"
+        class="gv-filter__pill"
+        :class="{ 'is-active': activeCat === cat }"
+        :aria-pressed="activeCat === cat"
+        @click="activeCat = cat"
+      >
+        {{ categoryLabel(cat) }}
+        <span class="gv-filter__n">{{ countFor(cat) }}</span>
+      </button>
+    </nav>
 
     <!-- Cards -->
-    <div v-else class="gv-store__grid">
+    <div class="gv-grid">
       <article
-        v-for="card in cards"
+        v-for="card in visibleCards"
         :key="card.id"
         class="gv-card"
-        :style="{ '--gv-accent': card.accent }"
+        :style="{ '--gv-accent': card.accent, '--gv-c1': card.c1, '--gv-c2': card.c2 }"
       >
         <div class="gv-card__top">
-          <div class="gv-card__icon">
+          <span class="gv-card__icon" :class="{ 'gv-card__icon--twin': card.icons.length > 1 }">
+            <template v-if="card.icons.length > 1">
+              <span
+                v-for="(ic, i) in card.icons"
+                :key="i"
+                class="gv-twin"
+                :class="i === 0 ? 'gv-twin--a' : 'gv-twin--b'"
+                :style="{ color: ic.color }"
+              >
+                <svg
+                  :viewBox="ic.viewBox"
+                  width="15"
+                  height="15"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path :d="ic.path" />
+                </svg>
+              </span>
+            </template>
             <svg
-              v-if="card.icon"
-              :viewBox="card.icon.viewBox"
-              width="26"
-              height="26"
+              v-else-if="card.icons.length === 1"
+              :viewBox="card.icons[0].viewBox"
+              width="24"
+              height="24"
               fill="currentColor"
               aria-hidden="true"
             >
-              <path :d="card.icon.path" />
+              <path :d="card.icons[0].path" />
             </svg>
-            <svg v-else viewBox="0 0 24 24" width="24" height="24" fill="none" aria-hidden="true">
+            <svg v-else viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
               <path
                 d="M10 3a2 2 0 0 1 2 2v1a1 1 0 0 0 2 0V5a2 2 0 1 1 4 0v2h2v3h-1a2 2 0 1 0 0 4h1v3h-3v-1a2 2 0 1 0-4 0v1h-3a2 2 0 0 1-2-2v-2H4a2 2 0 1 1 0-4h1V9a2 2 0 0 1 2-2h1"
                 stroke="currentColor"
@@ -612,287 +648,231 @@ onMounted(load);
                 stroke-linejoin="round"
               />
             </svg>
-          </div>
-          <div class="gv-card__head">
-            <h3 class="gv-card__name">{{ card.name }}</h3>
-            <span class="gv-card__version">v{{ card.version }}</span>
-          </div>
-          <span v-if="card.official" class="gv-card__official">{{ t.official }}</span>
+          </span>
+          <span class="gv-card__head">
+            <span class="gv-card__name">{{ card.name }}</span>
+            <span class="gv-card__meta"
+              >v{{ card.version }} · {{ categoryLabel(card.category) }}</span
+            >
+          </span>
+          <span v-if="card.official" class="gv-card__badge">{{ t.official }}</span>
         </div>
 
         <p class="gv-card__desc">{{ card.description }}</p>
 
-        <div v-if="card.platforms.length" class="gv-card__platforms" :aria-label="t.worksOn">
-          <span class="gv-card__works">{{ t.worksOn }}</span>
-          <span
-            v-for="p in card.platforms"
-            :key="p.key"
-            class="gv-chip"
-            :style="{ '--gv-chip': p.color }"
-          >
-            <span class="gv-chip__dot" />{{ p.label }}
+        <div class="gv-card__foot">
+          <span class="gv-card__plats">
+            <span
+              v-for="p in card.platforms"
+              :key="p.key"
+              class="gv-plat"
+              :style="{ '--gv-plat': p.color }"
+            >
+              <svg
+                v-if="iconFor(p.key)"
+                :viewBox="iconFor(p.key).viewBox"
+                width="13"
+                height="13"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path :d="iconFor(p.key).path" />
+              </svg>
+              {{ p.label }}
+            </span>
           </span>
-        </div>
-
-        <footer class="gv-card__foot">
-          <span class="gv-tag gv-tag--cat">{{ categoryLabel(card.category) }}</span>
-          <span class="gv-tag gv-tag--free">{{ t.free }}</span>
-          <span class="gv-card__spacer" />
           <a
             v-if="card.homepage"
             :href="card.homepage"
             target="_blank"
             rel="noopener noreferrer"
             class="gv-card__src"
-            >{{ t.source }} ↗</a
           >
-        </footer>
+            {{ t.source }}
+            <svg
+              viewBox="0 0 24 24"
+              width="12"
+              height="12"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M7 17 17 7M9 7h8v8" />
+            </svg>
+          </a>
+        </div>
       </article>
+
+      <!-- Loading skeletons append after whatever is already loaded -->
+      <template v-if="loading">
+        <div v-for="n in 3" :key="'g' + n" class="gv-card gv-card--skeleton" aria-hidden="true">
+          <div class="gv-skel gv-skel--icon" />
+          <div class="gv-skel gv-skel--line" style="width: 55%" />
+          <div class="gv-skel gv-skel--line" style="width: 100%" />
+          <div class="gv-skel gv-skel--line" style="width: 78%" />
+        </div>
+      </template>
+
+      <!-- Contribute tile: a quiet, elegant invite that lives in the grid -->
+      <a v-if="!loading" :href="contributeLink" class="gv-contribute">
+        <span class="gv-contribute__icon">
+          <svg
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.9"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M8 9l-3 3 3 3M16 9l3 3-3 3M13.5 7l-3 10" />
+          </svg>
+        </span>
+        <span class="gv-contribute__title">{{ contribute.title }}</span>
+        <span class="gv-contribute__body">{{ contribute.body }}</span>
+        <span class="gv-contribute__cta">
+          {{ contribute.cta }}
+          <svg
+            viewBox="0 0 24 24"
+            width="14"
+            height="14"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </span>
+      </a>
     </div>
 
-    <p class="gv-store__disclaimer">{{ t.disclaimer }}</p>
+    <!-- States only when nothing is showing -->
+    <div v-if="!loading && visibleCards.length === 0" class="gv-state">
+      <p v-if="failed" class="gv-state__title">{{ t.errorTitle }}</p>
+      <p class="gv-state__body">{{ failed ? t.errorBody : t.empty }}</p>
+      <button v-if="failed" type="button" class="gv-cta gv-cta--ghost" @click="load">
+        {{ t.retry }}
+      </button>
+    </div>
+
+    <p class="gv-disclaimer">{{ t.disclaimer }}</p>
   </div>
 </template>
 
 <style scoped>
 .gv-store {
-  max-width: 1120px;
+  max-width: 1180px;
   margin: 0 auto;
-  padding: 64px 24px 96px;
+  padding: 56px 24px 96px;
 }
 
-.gv-store__head {
-  text-align: center;
-  margin-bottom: 12px;
-}
-
-/* Launch hero */
-.gv-launch {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  text-align: center;
-  padding: 36px 20px 4px;
-  animation: gv-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.gv-launch__glow {
-  position: absolute;
-  inset: -45% -10% auto -10%;
-  height: 380px;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(
-      40% 60% at 30% 30%,
-      color-mix(in oklch, var(--vp-c-brand-1) 38%, transparent),
-      transparent 70%
-    ),
-    radial-gradient(
-      45% 55% at 72% 42%,
-      color-mix(in oklch, var(--vp-c-brand-3) 30%, transparent),
-      transparent 70%
-    );
-  filter: blur(55px);
-  opacity: 0.7;
-  animation: gv-aurora 12s ease-in-out infinite alternate;
-}
-
-.gv-launch__badge {
-  display: inline-flex;
+/* ---- Split hero ---------------------------------------------------------- */
+.gv-hero {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
   align-items: center;
-  gap: 6px;
-  padding: 5px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
-  border: 1px solid color-mix(in srgb, var(--vp-c-brand-1) 32%, transparent);
-  animation: gv-badge-pulse 2.6s ease-in-out infinite;
+  gap: 48px;
+  padding: 24px 0 8px;
+  animation: gv-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.gv-launch__title {
-  margin: 18px 0 0;
-  font-size: clamp(34px, 6vw, 58px);
+.gv-hero__copy {
+  text-align: start;
+}
+
+.gv-hero__title {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 52px);
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.08;
-  background: linear-gradient(
-    100deg,
-    var(--vp-c-brand-1),
-    var(--vp-c-brand-3),
-    var(--vp-c-brand-2),
-    var(--vp-c-brand-1)
-  );
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  animation: gv-shimmer-text 6s linear infinite;
-}
-
-.gv-launch__sub {
-  max-width: 560px;
-  margin: 18px auto 0;
-  font-size: 18px;
-  font-weight: 500;
-  line-height: 1.6;
   color: var(--vp-c-text-1);
 }
 
-.gv-launch__logos {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  margin: 28px 0 6px;
-}
-
-.gv-launch__logo {
-  width: 52px;
-  height: 52px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  color: var(--gv-accent);
-  background: color-mix(in srgb, var(--gv-accent) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--gv-accent) 22%, transparent);
-  animation: gv-float 4s ease-in-out infinite;
-}
-
-.gv-launch__logo:last-of-type {
-  animation-delay: -2s;
-}
-
-.gv-launch__plus {
-  font-size: 22px;
-  font-weight: 300;
-  color: var(--vp-c-text-3);
-}
-
-.gv-launch__note {
-  max-width: 600px;
-  margin: 16px auto 0;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--vp-c-text-2);
-}
-
-.gv-launch__pr {
-  max-width: 600px;
-  margin: 10px auto 0;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--vp-c-text-3);
-}
-
-.gv-store__meta {
-  text-align: center;
-}
-
-@keyframes gv-shimmer-text {
-  to {
-    background-position: 200% center;
-  }
-}
-
-@keyframes gv-aurora {
-  0% {
-    transform: translateX(-4%) scale(1);
-    opacity: 0.5;
-  }
-  100% {
-    transform: translateX(4%) scale(1.08);
-    opacity: 0.8;
-  }
-}
-
-@keyframes gv-badge-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--vp-c-brand-1) 30%, transparent);
-  }
-  50% {
-    box-shadow: 0 0 0 7px transparent;
-  }
-}
-
-@keyframes gv-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
-  }
-}
-
-@keyframes gv-rise {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.gv-store__title {
-  font-size: clamp(32px, 5vw, 46px);
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.12;
-  background: linear-gradient(120deg, var(--vp-c-brand-1), var(--vp-c-brand-3) 70%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-}
-
-.gv-store__subtitle {
-  max-width: 620px;
-  margin: 18px auto 0;
+.gv-hero__sub {
+  max-width: 46ch;
+  margin: 18px 0 0;
   font-size: 17px;
-  line-height: 1.6;
+  line-height: 1.65;
   color: var(--vp-c-text-2);
 }
 
-.gv-store__requires {
+.gv-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.gv-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 650;
+  color: #fff;
+  background: var(--vp-c-brand-1);
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+
+.gv-cta:hover {
+  transform: translateY(-1px);
+  background: var(--vp-c-brand-2);
+}
+
+.gv-cta:active {
+  transform: translateY(0);
+}
+
+.gv-cta--ghost {
+  color: var(--vp-c-text-1);
+  background: transparent;
+  border: 1px solid var(--vp-c-divider);
+}
+
+.gv-cta--ghost:hover {
+  background: var(--vp-c-bg-soft);
+  border-color: color-mix(in srgb, var(--vp-c-brand-1) 50%, var(--vp-c-divider));
+}
+
+.gv-req {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 20px;
-  padding: 5px 14px;
+  padding: 6px 12px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-text-3);
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
 }
 
-.gv-store__hint {
-  max-width: 720px;
-  margin: 26px auto 44px;
-  font-size: 14px;
+.gv-hero__hint {
+  max-width: 52ch;
+  margin: 22px 0 0;
+  font-size: 13.5px;
   line-height: 1.6;
   color: var(--vp-c-text-3);
-  text-align: center;
-}
-
-.gv-store__hint-link {
-  color: var(--vp-c-brand-1);
-  font-weight: 600;
-  white-space: nowrap;
 }
 
 /* Hover-reveal "how to open the popup" preview */
 .gv-howto {
   position: relative;
-  margin-inline-start: 10px;
+  margin-inline-start: 8px;
   color: var(--vp-c-brand-1);
   font-weight: 600;
   white-space: nowrap;
@@ -904,7 +884,7 @@ onMounted(load);
 .gv-howto__pop {
   position: absolute;
   top: calc(100% + 12px);
-  left: 50%;
+  inset-inline-start: 0;
   width: 268px;
   padding: 8px;
   border-radius: 14px;
@@ -913,7 +893,7 @@ onMounted(load);
   box-shadow: 0 18px 48px -18px rgba(0, 0, 0, 0.5);
   opacity: 0;
   visibility: hidden;
-  transform: translateX(-50%) translateY(-6px) scale(0.97);
+  transform: translateY(-6px) scale(0.97);
   transform-origin: top center;
   transition:
     opacity 0.18s ease,
@@ -921,16 +901,6 @@ onMounted(load);
     visibility 0.18s;
   pointer-events: none;
   z-index: 30;
-}
-
-.gv-howto__pop::before {
-  content: '';
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 7px solid transparent;
-  border-bottom-color: var(--vp-c-divider);
 }
 
 .gv-howto__pop img {
@@ -944,20 +914,165 @@ onMounted(load);
 .gv-howto:focus .gv-howto__pop {
   opacity: 1;
   visibility: visible;
-  transform: translateX(-50%) translateY(0) scale(1);
+  transform: translateY(0) scale(1);
 }
 
-.gv-store__grid {
+/* ---- Hero showcase (right) ----------------------------------------------- */
+.gv-showcase {
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-  gap: 22px;
+  place-items: center;
+  min-height: 280px;
+}
+
+.gv-showcase__glow {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    60% 60% at 60% 40%,
+    color-mix(in srgb, var(--vp-c-brand-1) 22%, transparent),
+    transparent 72%
+  );
+  filter: blur(46px);
+  opacity: 0.8;
+}
+
+.gv-showcase__stack {
+  display: grid;
+  gap: 14px;
+  width: min(380px, 100%);
+}
+
+.gv-mini {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--vp-c-bg);
+  border: 1px solid var(--vp-c-divider);
+  box-shadow: 0 16px 40px -24px
+    color-mix(in srgb, var(--gv-accent, var(--vp-c-brand-1)) 60%, transparent);
+  transform: translateX(calc(var(--i, 0) * 18px));
+  animation: gv-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 90ms + 120ms);
+}
+
+.gv-mini__icon {
+  position: relative;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  color: var(--gv-c1, var(--gv-accent));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--gv-c1, var(--gv-accent)) 16%, transparent),
+    color-mix(in srgb, var(--gv-c2, var(--gv-accent)) 16%, transparent)
+  );
+}
+
+.gv-mini__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gv-mini__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--vp-c-text-1);
+}
+
+.gv-mini__desc {
+  font-size: 12px;
+  color: var(--vp-c-text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gv-mini__switch {
+  flex: none;
+  width: 32px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--vp-c-brand-1);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 2px;
+}
+
+.gv-mini__switch span {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+/* ---- Category filter ----------------------------------------------------- */
+.gv-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 36px 0 28px;
+}
+
+.gv-filter__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  transition:
+    color 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.gv-filter__pill:hover {
+  border-color: color-mix(in srgb, var(--vp-c-brand-1) 45%, var(--vp-c-divider));
+}
+
+.gv-filter__pill.is-active {
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+  border-color: color-mix(in srgb, var(--vp-c-brand-1) 40%, transparent);
+}
+
+.gv-filter__n {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--vp-c-text-3);
+}
+
+.gv-filter__pill.is-active .gv-filter__n {
+  color: inherit;
+}
+
+/* ---- Cards --------------------------------------------------------------- */
+.gv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 18px;
 }
 
 .gv-card {
-  position: relative;
   display: flex;
   flex-direction: column;
-  padding: 22px;
+  padding: 20px;
   border: 1px solid var(--vp-c-divider);
   border-radius: 16px;
   background: var(--vp-c-bg-soft);
@@ -974,45 +1089,87 @@ onMounted(load);
 }
 
 .gv-card__top {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 13px;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .gv-card__icon {
+  position: relative;
   flex: none;
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   border-radius: 12px;
-  color: var(--gv-accent);
-  background: color-mix(in srgb, var(--gv-accent) 14%, transparent);
+  color: var(--gv-c1, var(--gv-accent));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--gv-c1, var(--gv-accent)) 16%, transparent),
+    color-mix(in srgb, var(--gv-c2, var(--gv-accent)) 16%, transparent)
+  );
+}
+
+/* Twin marks: two platform logos as overlapping discs on the fused backdrop */
+.gv-twin {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--vp-c-bg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 38%, transparent);
+}
+
+.gv-twin--a {
+  z-index: 2;
+  transform: translateX(-7px);
+}
+
+.gv-twin--b {
+  z-index: 1;
+  transform: translateX(7px);
+}
+
+.gv-mini__icon--twin .gv-twin {
+  width: 22px;
+  height: 22px;
+}
+
+.gv-mini__icon--twin .gv-twin--a {
+  transform: translateX(-6px);
+}
+
+.gv-mini__icon--twin .gv-twin--b {
+  transform: translateX(6px);
 }
 
 .gv-card__head {
   min-width: 0;
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .gv-card__name {
-  margin: 0;
-  font-size: 16px;
+  font-size: 15.5px;
   font-weight: 700;
   line-height: 1.3;
   color: var(--vp-c-text-1);
 }
 
-.gv-card__version {
+.gv-card__meta {
   font-size: 12px;
   color: var(--vp-c-text-3);
   font-variant-numeric: tabular-nums;
 }
 
-.gv-card__official {
+.gv-card__badge {
   flex: none;
-  align-self: flex-start;
+  align-self: center;
   font-size: 11px;
   font-weight: 700;
   padding: 3px 9px;
@@ -1024,82 +1181,55 @@ onMounted(load);
 
 .gv-card__desc {
   margin: 0 0 16px;
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.6;
   color: var(--vp-c-text-2);
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-}
-
-.gv-card__platforms {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.gv-card__works {
-  font-size: 12px;
-  color: var(--vp-c-text-3);
-}
-
-.gv-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 999px;
-  color: var(--vp-c-text-1);
-  background: var(--vp-c-bg-mute);
-  border: 1px solid var(--vp-c-divider);
-}
-
-.gv-chip__dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--gv-chip);
 }
 
 .gv-card__foot {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
   margin-top: auto;
   padding-top: 14px;
   border-top: 1px solid var(--vp-c-divider);
 }
 
-.gv-tag {
-  font-size: 12px;
+.gv-card__plats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.gv-plat {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
   font-weight: 600;
   padding: 3px 9px;
-  border-radius: 6px;
-}
-
-.gv-tag--cat {
+  border-radius: 7px;
   color: var(--vp-c-text-2);
   background: var(--vp-c-bg-mute);
+  border: 1px solid var(--vp-c-divider);
 }
 
-.gv-tag--free {
-  color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
-}
-
-.gv-card__spacer {
-  flex: 1;
+.gv-plat svg {
+  color: var(--gv-plat);
 }
 
 .gv-card__src {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: var(--vp-c-text-2);
+  color: var(--vp-c-text-3);
   white-space: nowrap;
   transition: color 0.2s ease;
 }
@@ -1108,53 +1238,100 @@ onMounted(load);
   color: var(--vp-c-brand-1);
 }
 
-/* States */
-.gv-store__state {
+/* ---- Contribute tile ----------------------------------------------------- */
+.gv-contribute {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 72px 24px;
+  gap: 8px;
+  min-height: 168px;
+  padding: 24px 22px;
+  border: 1px dashed color-mix(in srgb, var(--vp-c-text-3) 32%, transparent);
+  border-radius: 16px;
+  background: transparent;
+  text-decoration: none;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.gv-contribute:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--vp-c-brand-1) 55%, transparent);
+  background: color-mix(in srgb, var(--vp-c-brand-1) 6%, transparent);
+}
+
+.gv-contribute__icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 2px;
+  border-radius: 12px;
+  color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+}
+
+.gv-contribute__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--vp-c-text-1);
+}
+
+.gv-contribute__body {
+  max-width: 30ch;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--vp-c-text-3);
+}
+
+.gv-contribute__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vp-c-brand-1);
+}
+
+/* ---- States -------------------------------------------------------------- */
+.gv-state {
+  text-align: center;
+  padding: 64px 24px;
   color: var(--vp-c-text-2);
 }
 
-.gv-store__state-title {
-  font-size: 17px;
+.gv-state__title {
+  font-size: 16px;
   font-weight: 700;
   color: var(--vp-c-text-1);
   margin: 0 0 6px;
 }
 
-.gv-store__state-body {
+.gv-state__body {
   margin: 0 0 18px;
 }
 
-.gv-store__retry {
-  font-size: 14px;
-  font-weight: 600;
-  padding: 8px 20px;
-  border-radius: 8px;
-  color: #fff;
-  background: var(--vp-c-brand-1);
-  transition: background 0.2s ease;
-}
-
-.gv-store__retry:hover {
-  background: var(--vp-c-brand-2);
-}
-
-.gv-store__disclaimer {
+.gv-disclaimer {
   max-width: 760px;
-  margin: 52px auto 0;
+  margin: 48px auto 0;
   font-size: 12px;
   line-height: 1.6;
   color: var(--vp-c-text-3);
   text-align: center;
 }
 
-/* Skeleton */
+/* ---- Skeleton ------------------------------------------------------------ */
 .gv-card--skeleton {
   gap: 12px;
 }
 
 .gv-skel {
+  display: block;
   border-radius: 8px;
   background: linear-gradient(
     90deg,
@@ -1167,13 +1344,19 @@ onMounted(load);
 }
 
 .gv-skel--icon {
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
 }
 
+.gv-mini .gv-skel--icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+}
+
 .gv-skel--line {
-  height: 14px;
+  height: 13px;
 }
 
 @keyframes gv-shimmer {
@@ -1185,16 +1368,41 @@ onMounted(load);
   }
 }
 
+@keyframes gv-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- Responsive ---------------------------------------------------------- */
+@media (max-width: 880px) {
+  .gv-hero {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding-top: 8px;
+  }
+
+  .gv-showcase {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .gv-hero,
+  .gv-mini,
   .gv-card,
   .gv-skel,
-  .gv-launch,
-  .gv-launch__glow,
-  .gv-launch__badge,
-  .gv-launch__title,
-  .gv-launch__logo {
+  .gv-cta,
+  .gv-filter__pill,
+  .gv-contribute {
     transition: none;
     animation: none;
+    transform: none;
   }
 }
 </style>
