@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  type GemMruEntry,
   canPruneCatalogDeletes,
   deletedCatalogGemIds,
-  type GemMruEntry,
   orderGemsByRecency,
   readGemMetadata,
   upsertMru,
