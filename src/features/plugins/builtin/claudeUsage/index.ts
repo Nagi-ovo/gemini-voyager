@@ -5,6 +5,7 @@ const CLAUDE_ORIGIN = 'https://claude.ai';
 const SCRAPE_DELAY_MS = 250;
 const OPEN_RELOAD_DELAY_MS = 700;
 const REFRESH_INTERVAL_MS = 5 * 60_000;
+const COUNTDOWN_REFRESH_MS = 30_000;
 const REFRESH_LOCK_TTL_MS = 30_000;
 const STALE_MS = 60_000;
 const MAX_METRICS = 2;
@@ -35,6 +36,7 @@ let snapshot: ClaudeUsageSnapshot | null = null;
 let observer: MutationObserver | null = null;
 let scrapeTimer: number | null = null;
 let refreshTimer: number | null = null;
+let countdownTimer: number | null = null;
 let refreshInFlight = false;
 let visibilityHandler: (() => void) | null = null;
 let storageListener:
@@ -250,7 +252,7 @@ export function scrapeClaudeUsageFromDocument(
   if (!values.length) return null;
 
   const candidates: Array<{ label: string; percent?: number; resetLabel?: string }> = [
-    { label: '5h', percent: values[0] },
+    { label: '5h', percent: values[0], resetLabel: extractReset(text, 'Current session') },
     { label: 'Week', percent: values[1], resetLabel: extractReset(text, 'All models') },
   ];
   const metrics = candidates.filter(
@@ -328,7 +330,7 @@ function buildMetric(doc: Document, metric: ClaudeUsageMetric): HTMLElement {
 
   const pct = doc.createElement('span');
   pct.className = 'gv-usage-pct';
-  const reset = formatResetCountdown(metric.resetEpoch, Date.now()) || metric.resetLabel;
+  const reset = formatResetCountdown(metric.resetEpoch, Date.now());
   pct.textContent = `${metric.percent}%${reset ? ` (${reset})` : ''}`;
   seg.appendChild(pct);
 
@@ -657,6 +659,9 @@ function startRefreshLoop(): void {
   refreshTimer = window.setInterval(() => {
     void refreshFromApi(true);
   }, REFRESH_INTERVAL_MS);
+  countdownTimer = window.setInterval(() => {
+    if (snapshot) renderPill();
+  }, COUNTDOWN_REFRESH_MS);
   visibilityHandler = () => {
     if (document.visibilityState === 'visible') void refreshFromApi();
   };
@@ -667,6 +672,10 @@ function stopRefreshLoop(): void {
   if (refreshTimer !== null) {
     clearInterval(refreshTimer);
     refreshTimer = null;
+  }
+  if (countdownTimer !== null) {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
   }
   if (visibilityHandler) {
     document.removeEventListener('visibilitychange', visibilityHandler);

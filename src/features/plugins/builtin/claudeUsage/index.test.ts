@@ -58,7 +58,7 @@ function mountUsageText(): void {
   document.body.innerHTML = `
     <section>
       <h3>Plan usage limits Max (20x)</h3>
-      <p>Current session Starts when a message is sent</p>
+      <p>Current session Resets Tue 10:00 AM</p>
       <div role="progressbar" aria-label="Usage" aria-valuenow="0"></div>
       <p>0% used</p>
       <h3>Weekly limits</h3>
@@ -125,7 +125,7 @@ describe('Claude usage bar', () => {
       lastUpdatedLabel: '1 minute ago',
       updatedAt: 123,
       metrics: [
-        { label: '5h', percent: 0 },
+        { label: '5h', percent: 0, resetLabel: 'Tue 10:00 AM' },
         { label: 'Week', percent: 45, resetLabel: 'Tue 11:59 AM' },
       ],
     });
@@ -141,7 +141,7 @@ describe('Claude usage bar', () => {
     const snap = snapshotFromClaudeUsageApi(
       {
         five_hour: { utilization: 12.5, resets_at: '2026-06-28T12:00:00.000Z' },
-        seven_day: { utilization: 45 },
+        seven_day: { utilization: 45, resets_at: '2026-06-30T12:00:00.000Z' },
         seven_day_sonnet: { utilization: 2 },
         plan_name: 'claude_max_5x',
       },
@@ -156,6 +156,8 @@ describe('Claude usage bar', () => {
     expect(snap?.updatedAt).toBe(123);
     expect(snap?.metrics[0].resetLabel).toBeTruthy();
     expect(snap?.metrics[0].resetEpoch).toBeTypeOf('number');
+    expect(snap?.metrics[1].resetLabel).toBeTruthy();
+    expect(snap?.metrics[1].resetEpoch).toBeTypeOf('number');
   });
 
   it('extracts Claude subscription tier from bootstrap org metadata', () => {
@@ -272,7 +274,10 @@ describe('Claude usage bar', () => {
 
     expect(document.querySelector('.gv-usage-tier')?.textContent).toBe('Max (20x)');
     expect(document.querySelector('.gv-usage-label')?.textContent).toBe('Week');
-    expect(document.querySelector('.gv-usage-pct')?.textContent).toBe('45% (Tue 11:59 AM)');
+    expect(document.querySelector('.gv-usage-pct')?.textContent).toBe('45%');
+    expect(document.querySelector('.gv-usage-metric')?.getAttribute('title')).toBe(
+      'Week resets Tue 11:59 AM',
+    );
     expect(document.querySelector<HTMLElement>('.gv-usage-fill')?.style.width).toBe('45%');
   });
 
@@ -284,6 +289,12 @@ describe('Claude usage bar', () => {
         plan: 'Max (20x)',
         updatedAt: Date.now(),
         metrics: [
+          {
+            label: '5h',
+            percent: 12,
+            resetEpoch: Math.floor(Date.parse('2026-06-28T10:30:00.000Z') / 1000),
+            resetLabel: '6/28/2026, 10:30:00 AM',
+          },
           {
             label: 'Week',
             percent: 30,
@@ -297,7 +308,45 @@ describe('Claude usage bar', () => {
     startClaudeUsage();
     await flushPromises();
 
-    expect(document.querySelector('.gv-usage-pct')?.textContent).toBe('30% (1h30m)');
+    expect([...document.querySelectorAll('.gv-usage-label')].map((el) => el.textContent)).toEqual([
+      '5h',
+      'Week',
+    ]);
+    expect([...document.querySelectorAll('.gv-usage-pct')].map((el) => el.textContent)).toEqual([
+      '12% (30m)',
+      '30% (1h30m)',
+    ]);
+  });
+
+  it('refreshes countdown labels without another API request', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-28T10:00:00.000Z'));
+    (chrome.storage.local.get as unknown as Mock).mockResolvedValue({
+      gvClaudeUsageCache: {
+        plan: 'Max (20x)',
+        updatedAt: Date.now(),
+        metrics: [
+          {
+            label: '5h',
+            percent: 12,
+            resetEpoch: Math.floor(Date.parse('2026-06-28T11:30:00.000Z') / 1000),
+            resetLabel: '6/28/2026, 11:30:00 AM',
+          },
+        ],
+      },
+    });
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    startClaudeUsage();
+    await flushPromises();
+    expect(document.querySelector('.gv-usage-pct')?.textContent).toBe('12% (1h30m)');
+
+    vi.setSystemTime(new Date('2026-06-28T10:30:00.000Z'));
+    await vi.advanceTimersByTimeAsync(30_000);
+
+    expect(document.querySelector('.gv-usage-pct')?.textContent).toBe('12% (59m)');
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('uses shared cache to avoid multiplying API requests across Claude tabs', async () => {
