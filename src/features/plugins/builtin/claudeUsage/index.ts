@@ -3,7 +3,6 @@ import { StorageKeys } from '@/core/types/common';
 const PILL_ID = 'gv-claude-usage-pill';
 const CLAUDE_ORIGIN = 'https://claude.ai';
 const SCRAPE_DELAY_MS = 250;
-const OPEN_RELOAD_DELAY_MS = 700;
 const REFRESH_INTERVAL_MS = 5 * 60_000;
 const COUNTDOWN_REFRESH_MS = 30_000;
 const REFRESH_LOCK_TTL_MS = 30_000;
@@ -48,7 +47,6 @@ let dragPos: { x: number; y: number } | null = null;
 let dragOffset = { x: 0, y: 0 };
 let dragStart = { x: 0, y: 0 };
 let pillMoveHandler: ((ev: PointerEvent) => void) | null = null;
-let openReloadTimer: number | null = null;
 let reloadPage = (): void => location.reload();
 const refreshOwnerId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
@@ -138,6 +136,32 @@ function sameSnapshotData(a: ClaudeUsageSnapshot, b: ClaudeUsageSnapshot): boole
   );
 }
 
+function metricDisplayLabel(metric: ClaudeUsageMetric): string {
+  return metric.label === 'All' ? 'Week' : metric.label;
+}
+
+function withFallbackCountdowns(
+  next: ClaudeUsageSnapshot,
+  fallback: ClaudeUsageSnapshot | null = snapshot,
+): ClaudeUsageSnapshot {
+  if (!fallback) return next;
+  const previous = new Map(fallback.metrics.map((metric) => [metricDisplayLabel(metric), metric]));
+  return {
+    ...next,
+    metrics: next.metrics.map((metric) => {
+      if (typeof metric.resetEpoch === 'number') return metric;
+      const match = previous.get(metricDisplayLabel(metric));
+      return typeof match?.resetEpoch === 'number'
+        ? {
+            ...metric,
+            resetEpoch: match.resetEpoch,
+            resetLabel: match.resetLabel ?? metric.resetLabel,
+          }
+        : metric;
+    }),
+  };
+}
+
 function withFallbackPlan(
   next: ClaudeUsageSnapshot,
   fallback: ClaudeUsageSnapshot | null = snapshot,
@@ -211,12 +235,12 @@ function metricFromApi(raw: unknown, label: string, scale = 1): ClaudeUsageMetri
   const utilization = item?.utilization;
   if (typeof utilization !== 'number' || !Number.isFinite(utilization)) return null;
   const metric: ClaudeUsageMetric = { label, percent: clampPercent(utilization * scale) };
-  if (typeof item.resets_at === 'string') {
-    const resetMs = Date.parse(item.resets_at);
-    if (Number.isFinite(resetMs)) {
-      metric.resetEpoch = Math.floor(resetMs / 1000);
-      metric.resetLabel = new Date(resetMs).toLocaleString();
-    }
+  const reset = item.resets_at ?? item.reset_at ?? item.resetsAt;
+  const resetMs =
+    typeof reset === 'string' ? Date.parse(reset) : typeof reset === 'number' ? reset * 1000 : NaN;
+  if (Number.isFinite(resetMs)) {
+    metric.resetEpoch = Math.floor(resetMs / 1000);
+    metric.resetLabel = new Date(resetMs).toLocaleString();
   }
   return metric;
 }
@@ -271,6 +295,12 @@ function hasClaudeUsageContent(): boolean {
   return scrapeClaudeUsageFromDocument() !== null;
 }
 
+function hasCountdownData(data: ClaudeUsageSnapshot): boolean {
+  return (
+    data.metrics.length > 0 && data.metrics.every((metric) => typeof metric.resetEpoch === 'number')
+  );
+}
+
 function openClaudeUsage(event: MouseEvent): void {
   event.stopPropagation();
   event.preventDefault();
@@ -282,15 +312,11 @@ function openClaudeUsage(event: MouseEvent): void {
     new HashChangeEvent('hashchange', { oldURL: previous, newURL: location.href }),
   );
 
-  if (openReloadTimer !== null) clearTimeout(openReloadTimer);
-  openReloadTimer = window.setTimeout(() => {
-    openReloadTimer = null;
-    if (isClaudeUsageSettings() && !hasClaudeUsageContent()) reloadPage();
-  }, OPEN_RELOAD_DELAY_MS);
+  if (!hasClaudeUsageContent()) reloadPage();
 }
 
 function metricTitle(metric: ClaudeUsageMetric): string {
-  const label = metric.label === 'All' ? 'Week' : metric.label;
+  const label = metricDisplayLabel(metric);
   return metric.resetLabel ? `${label} resets ${metric.resetLabel}` : label;
 }
 
@@ -317,7 +343,7 @@ function buildMetric(doc: Document, metric: ClaudeUsageMetric): HTMLElement {
 
   const name = doc.createElement('span');
   name.className = 'gv-usage-label';
-  name.textContent = metric.label === 'All' ? 'Week' : metric.label;
+  name.textContent = metricDisplayLabel(metric);
   seg.appendChild(name);
 
   const track = doc.createElement('span');
@@ -496,7 +522,9 @@ function onResize(): void {
 }
 
 function applyStoredSnapshot(cached: ClaudeUsageSnapshot): void {
-  if (!snapshot || cached.updatedAt > snapshot.updatedAt) snapshot = withFallbackPlan(cached);
+  if (!snapshot || cached.updatedAt > snapshot.updatedAt) {
+    snapshot = withFallbackCountdowns(withFallbackPlan(cached));
+  }
 }
 
 async function readCache(): Promise<ClaudeUsageSnapshot | null> {
@@ -537,6 +565,27 @@ async function fetchPlanFromBootstrap(orgId: string): Promise<string | undefined
   } catch {
     return undefined;
   }
+}
+
+async function discoverClaudeOrgId(): Promise<string | null> {
+  try {
+    const response = await fetch('https://claude.ai/api/organizations', {
+      method: 'GET',
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+    });
+    if (!response.ok) return null;
+    const orgs = await response.json();
+    if (!Array.isArray(orgs)) return null;
+    const first = orgs.find((org) => typeof asRecord(org)?.uuid === 'string');
+    return (asRecord(first)?.uuid as string | undefined) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function getClaudeOrgId(): Promise<string | null> {
+  return getLastActiveOrg() ?? discoverClaudeOrgId();
 }
 
 async function acquireRefreshLock(): Promise<boolean> {
@@ -587,16 +636,24 @@ async function hasFreshSharedCache(maxAgeMs: number): Promise<boolean> {
   applyStoredSnapshot(cached);
   if (Date.now() - cached.updatedAt >= maxAgeMs) return false;
   if (!cached.plan) return false;
+  if (!hasCountdownData(cached)) return false;
   renderPill();
   return true;
 }
 
 async function refreshFromApi(force = false): Promise<void> {
-  if (!force && snapshot?.plan && Date.now() - snapshot.updatedAt < STALE_MS) return;
+  if (
+    !force &&
+    snapshot?.plan &&
+    hasCountdownData(snapshot) &&
+    Date.now() - snapshot.updatedAt < STALE_MS
+  ) {
+    return;
+  }
   if (await hasFreshSharedCache(force ? REFRESH_INTERVAL_MS : STALE_MS)) return;
   if (!force && (await hasFreshSharedCache(REFRESH_INTERVAL_MS))) return;
   if (refreshInFlight) return;
-  const orgId = getLastActiveOrg();
+  const orgId = await getClaudeOrgId();
   if (!orgId) return;
   if (!(await acquireRefreshLock())) return;
   refreshInFlight = true;
@@ -627,11 +684,12 @@ function scrapeNow(): void {
   if (!isClaudeUsageSettings()) return;
   const next = scrapeClaudeUsageFromDocument();
   if (!next) return;
-  const merged = withFallbackPlan(next);
+  const merged = withFallbackCountdowns(withFallbackPlan(next));
   if (snapshot && sameSnapshotData(snapshot, merged)) return;
   snapshot = merged;
   renderPill();
   void saveCache(merged);
+  if (!hasCountdownData(merged)) void refreshFromApi(true);
 }
 
 function scheduleScrape(): void {
@@ -701,7 +759,7 @@ export function startClaudeUsage(): void {
       if (change?.newValue) {
         const next = change.newValue as ClaudeUsageSnapshot;
         if (!snapshot || next.updatedAt > snapshot.updatedAt) {
-          snapshot = next;
+          snapshot = withFallbackCountdowns(next);
           renderPill();
         }
       }
@@ -720,8 +778,6 @@ export function startClaudeUsage(): void {
 export function stopClaudeUsage(): void {
   if (scrapeTimer !== null) clearTimeout(scrapeTimer);
   scrapeTimer = null;
-  if (openReloadTimer !== null) clearTimeout(openReloadTimer);
-  openReloadTimer = null;
   if (pillMoveHandler) {
     window.removeEventListener('pointermove', pillMoveHandler);
     pillMoveHandler = null;

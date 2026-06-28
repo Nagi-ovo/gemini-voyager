@@ -22,6 +22,10 @@ function flushPromises(): Promise<void> {
   return Promise.resolve().then(() => Promise.resolve());
 }
 
+async function flushAsyncWork(): Promise<void> {
+  for (let i = 0; i < 10; i += 1) await flushPromises();
+}
+
 async function waitForAsyncWork(): Promise<void> {
   for (let i = 0; i < 10; i += 1) {
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -349,13 +353,92 @@ describe('Claude usage bar', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('refreshes fresh cached usage when reset epochs are missing', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-28T10:00:00.000Z'));
+    mockLocalStorageStore({
+      gvClaudeUsageCache: {
+        plan: 'Max (20x)',
+        updatedAt: Date.now(),
+        metrics: [
+          { label: '5h', percent: 12 },
+          { label: 'Week', percent: 46 },
+        ],
+      },
+    });
+    mockDocumentCookie('lastActiveOrg=org_123');
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        five_hour: { utilization: 12, resets_at: '2026-06-28T10:30:00.000Z' },
+        seven_day: { utilization: 46, resets_at: '2026-06-28T11:30:00.000Z' },
+        plan_name: 'claude_max_20x',
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    startClaudeUsage();
+    await flushAsyncWork();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://claude.ai/api/organizations/org_123/usage',
+      expect.objectContaining({ credentials: 'include' }),
+    );
+    expect([...document.querySelectorAll('.gv-usage-pct')].map((el) => el.textContent)).toEqual([
+      '12% (30m)',
+      '46% (1h30m)',
+    ]);
+  });
+
+  it('discovers the Claude org when the active-org cookie is missing', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-28T10:00:00.000Z'));
+    mockLocalStorageStore({});
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => [{ uuid: 'org_from_api' }],
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          five_hour: { utilization: 12, resets_at: '2026-06-28T10:30:00.000Z' },
+          seven_day: { utilization: 46, resets_at: '2026-06-28T11:30:00.000Z' },
+          plan_name: 'claude_max_20x',
+        }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    startClaudeUsage();
+    await flushAsyncWork();
+
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      'https://claude.ai/api/organizations',
+      expect.objectContaining({ credentials: 'include' }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      'https://claude.ai/api/organizations/org_from_api/usage',
+      expect.objectContaining({ credentials: 'include' }),
+    );
+    expect(document.querySelector('.gv-usage-pct')?.textContent).toBe('12% (30m)');
+  });
+
   it('uses shared cache to avoid multiplying API requests across Claude tabs', async () => {
     vi.useFakeTimers();
     const store = {
       gvClaudeUsageCache: {
         plan: 'Max (20x)',
         updatedAt: Date.now(),
-        metrics: [{ label: 'All', percent: 45 }],
+        metrics: [
+          {
+            label: 'All',
+            percent: 45,
+            resetEpoch: Math.floor((Date.now() + 60 * 60_000) / 1000),
+          },
+        ],
       },
     };
     mockLocalStorageStore(store);
@@ -372,7 +455,13 @@ describe('Claude usage bar', () => {
     store.gvClaudeUsageCache = {
       plan: 'Max (20x)',
       updatedAt: Date.now(),
-      metrics: [{ label: 'All', percent: 48 }],
+      metrics: [
+        {
+          label: 'All',
+          percent: 48,
+          resetEpoch: Math.floor((Date.now() + 60 * 60_000) / 1000),
+        },
+      ],
     };
     await vi.advanceTimersByTimeAsync(60_000);
     await flushPromises();
@@ -423,15 +512,25 @@ describe('Claude usage bar', () => {
 
   it('keeps the cached plan when Claude page text omits it', async () => {
     vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-28T10:00:00.000Z'));
     history.replaceState(null, '', '/#settings/usage');
     mountUsageTextWithoutPlan();
     mockLocalStorageStore({
       gvClaudeUsageCache: {
         plan: 'Pro',
         updatedAt: 10,
-        metrics: [{ label: 'All', percent: 45 }],
+        metrics: [
+          {
+            label: 'All',
+            percent: 45,
+            resetEpoch: Math.floor(Date.parse('2026-06-28T11:30:00.000Z') / 1000),
+            resetLabel: '6/28/2026, 11:30:00 AM',
+          },
+        ],
       },
     });
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
 
     startClaudeUsage();
     await flushPromises();
@@ -440,6 +539,11 @@ describe('Claude usage bar', () => {
 
     expect(document.querySelector('.gv-usage-tier')?.textContent).toBe('Pro');
     expect(document.querySelectorAll('.gv-usage-metric')).toHaveLength(2);
+    expect([...document.querySelectorAll('.gv-usage-pct')].map((el) => el.textContent)).toEqual([
+      '12%',
+      '40% (1h29m)',
+    ]);
+    expect(fetchMock).toHaveBeenCalled();
   });
 
   it('does not scrape again after only the pill itself changes', async () => {
