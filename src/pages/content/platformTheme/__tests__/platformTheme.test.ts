@@ -208,4 +208,17 @@ describe('platform theme CSS', () => {
     const focusRing = css.match(/\.timeline-preview-search input:focus\s*{([\s\S]*?)}/)?.[1] ?? '';
     expect(focusRing).toContain('var(--gv-pm-brand-h');
   });
+
+  it('uses the site accent for formula hover instead of hard-coded Gemini blue', () => {
+    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const formulaHover =
+      css.match(
+        /\.math-inline:hover,\s*\.math-display:hover,\s*\[data-math\]:hover\s*{([\s\S]*?)}/,
+      )?.[1] ?? '';
+
+    expect(formulaHover).toContain('var(--gv-pm-brand-soft)');
+    expect(formulaHover).toContain('var(--gv-pm-brand, var(--gv-pm-brand-default))');
+    expect(formulaHover).not.toContain('rgba(66, 133, 244');
+    expect(css).toContain(':root.gv-platform-themed .math-inline .katex:hover');
+  });
 });
