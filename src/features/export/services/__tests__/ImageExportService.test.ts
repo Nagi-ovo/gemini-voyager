@@ -134,6 +134,19 @@ describe('ImageExportService', () => {
     expect(capturedStyle).toContain('line-height: 1.9;');
     expect(capturedStyle).toContain('font-size: 50px;');
     expect(capturedStyle).toContain('max-width: 100%;');
+    expect(capturedStyle).toContain('.gv-image-export-doc .katex .base');
+    expect(capturedStyle).toContain('white-space: nowrap;');
+    expect(capturedStyle).toContain('width: min-content;');
+    expect(capturedStyle).toContain('.gv-image-export-doc .katex .vlist > span');
+    expect(capturedStyle).toContain('height: 0;');
+    expect(capturedStyle).toContain('.gv-image-export-doc .katex .mfrac .frac-line');
+    expect(capturedStyle).toContain('.gv-image-export-doc .katex .sqrt > .root');
+    expect(capturedStyle).toContain('.gv-image-export-doc .katex svg');
+    expect(capturedStyle).toContain('fill: currentColor;');
+    expect(capturedStyle).toContain('.gv-image-export-doc .katex img.katex-svg');
+    expect(capturedStyle).toContain('max-width: none;');
+    expect(capturedStyle).toContain('object-fit: fill;');
+    expect(capturedStyle).toContain('.gv-image-export-doc .katex .hide-tail');
   });
 
   it('retries image render without img elements on Safari when primary render fails', async () => {

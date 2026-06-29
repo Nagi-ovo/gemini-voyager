@@ -72,6 +72,46 @@ describe('DOMContentExtractor', () => {
     expect(extracted.html).not.toContain('mat-icon');
   });
 
+  it('preserves Gemini KaTeX radical image nodes nested in lists', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <ul>
+            <li>
+              <b>积的开方：</b>
+              <span class="math-inline" data-math="\\sqrt{ab} = \\sqrt{a}">
+                <span class="katex">
+                  <span class="katex-html" aria-hidden="true">
+                    <span class="base">
+                      <span class="mord sqrt">
+                        <span class="vlist-t">
+                          <span class="vlist">
+                            <span class="hide-tail">
+                              <img class="katex-svg" style="display:block;position:absolute;width:100%;height:inherit;" src="data:image/svg+xml,%3Csvg%3E%3C/svg%3E" />
+                            </span>
+                          </span>
+                        </span>
+                      </span>
+                    </span>
+                  </span>
+                </span>
+              </span>
+            </li>
+          </ul>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.hasFormulas).toBe(true);
+    expect(extracted.text).toContain('$\\sqrt{ab} = \\sqrt{a}$');
+    expect(extracted.html).toContain('class="katex-svg"');
+    expect(extracted.html).toContain('data:image/svg+xml');
+    expect(extracted.html).toContain('hide-tail');
+  });
+
   it('should extract assistant images as markdown and html', () => {
     const assistant = document.createElement('div');
     assistant.innerHTML = `

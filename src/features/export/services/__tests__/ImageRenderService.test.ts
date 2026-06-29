@@ -40,6 +40,53 @@ describe('ImageRenderService', () => {
     expect(toBlob).toHaveBeenCalledWith(target, expect.objectContaining({ skipFonts: false }));
   });
 
+  it('inlines KaTeX radical SVG layout before rendering', async () => {
+    const target = document.createElement('div');
+    target.innerHTML = `
+      <span class="katex">
+        <span class="sqrt">
+          <span class="svg-align">
+            <span class="hide-tail">
+              <svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0h10v10z"></path></svg>
+              <img class="katex-svg" src="data:image/svg+xml,%3Csvg%3E%3C/svg%3E" />
+            </span>
+          </span>
+        </span>
+      </span>
+    `;
+    const blob = new Blob(['ok'], { type: 'image/png' });
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(blob);
+
+    await renderElementToImageBlob(target);
+
+    const wrapper = target.querySelector('.hide-tail') as HTMLElement | null;
+    const aligner = target.querySelector('.svg-align') as HTMLElement | null;
+    const svg = target.querySelector('svg') as SVGSVGElement | null;
+    const img = target.querySelector('img.katex-svg') as HTMLImageElement | null;
+    const path = target.querySelector('path') as SVGPathElement | null;
+
+    expect(wrapper?.style.getPropertyValue('display')).toBe('block');
+    expect(wrapper?.style.getPropertyPriority('display')).toBe('important');
+    expect(wrapper?.style.getPropertyValue('overflow')).toBe('hidden');
+    expect(wrapper?.style.getPropertyValue('position')).toBe('relative');
+    expect(wrapper?.style.getPropertyValue('width')).toBe('100%');
+    expect(aligner?.style.getPropertyValue('text-align')).toBe('left');
+    expect(svg?.style.getPropertyValue('display')).toBe('block');
+    expect(svg?.style.getPropertyValue('fill')).toBe('currentColor');
+    expect(svg?.style.getPropertyValue('height')).toBe('inherit');
+    expect(svg?.style.getPropertyValue('position')).toBe('absolute');
+    expect(svg?.style.getPropertyValue('stroke')).toBe('currentColor');
+    expect(svg?.style.getPropertyValue('width')).toBe('100%');
+    expect(img?.style.getPropertyValue('display')).toBe('block');
+    expect(img?.style.getPropertyValue('height')).toBe('inherit');
+    expect(img?.style.getPropertyValue('margin')).toBe('0px');
+    expect(img?.style.getPropertyValue('max-width')).toBe('none');
+    expect(img?.style.getPropertyValue('object-fit')).toBe('fill');
+    expect(img?.style.getPropertyValue('position')).toBe('absolute');
+    expect(img?.style.getPropertyValue('width')).toBe('100%');
+    expect(path?.style.getPropertyValue('stroke')).toBe('none');
+  });
+
   it('retries when shouldRetry returns true and later succeeds', async () => {
     const target = document.createElement('div');
     const blob = new Blob(['ok'], { type: 'image/png' });

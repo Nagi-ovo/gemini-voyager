@@ -14,6 +14,10 @@ const MATH_RENDER_SELECTOR = '.katex, .math-inline, .math-block, [data-math]';
  */
 const XML_ILLEGAL_CONTROL_CHAR_RE = /[\x00-\x08\x0B\x0C\x0E-\x1F]/g;
 
+function setStyle(element: HTMLElement | SVGElement, property: string, value: string): void {
+  element.style.setProperty(property, value, 'important');
+}
+
 function stripXmlIllegalChars(root: HTMLElement): void {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   let node: Text | null;
@@ -22,6 +26,42 @@ function stripXmlIllegalChars(root: HTMLElement): void {
       node.data = node.data.replace(XML_ILLEGAL_CONTROL_CHAR_RE, '');
     }
   }
+}
+
+function inlineKatexSvgStyles(root: HTMLElement): void {
+  root.querySelectorAll<HTMLElement>('.katex .hide-tail, .katex .stretchy').forEach((element) => {
+    setStyle(element, 'display', 'block');
+    setStyle(element, 'overflow', 'hidden');
+    setStyle(element, 'position', 'relative');
+    setStyle(element, 'width', '100%');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .svg-align').forEach((element) => {
+    setStyle(element, 'text-align', 'left');
+  });
+
+  root.querySelectorAll<SVGSVGElement>('.katex svg').forEach((svg) => {
+    setStyle(svg, 'display', 'block');
+    setStyle(svg, 'fill', 'currentColor');
+    setStyle(svg, 'height', 'inherit');
+    setStyle(svg, 'position', 'absolute');
+    setStyle(svg, 'stroke', 'currentColor');
+    setStyle(svg, 'width', '100%');
+  });
+
+  root.querySelectorAll<SVGPathElement>('.katex svg path').forEach((path) => {
+    setStyle(path, 'stroke', 'none');
+  });
+
+  root.querySelectorAll<HTMLImageElement>('.katex img.katex-svg').forEach((img) => {
+    setStyle(img, 'display', 'block');
+    setStyle(img, 'height', 'inherit');
+    setStyle(img, 'margin', '0');
+    setStyle(img, 'max-width', 'none');
+    setStyle(img, 'object-fit', 'fill');
+    setStyle(img, 'position', 'absolute');
+    setStyle(img, 'width', '100%');
+  });
 }
 
 function hasMathContent(target: HTMLElement): boolean {
@@ -54,6 +94,7 @@ export function isImageResourceRenderError(error: unknown): boolean {
 
 async function renderTargetToBlob(target: HTMLElement): Promise<Blob> {
   stripXmlIllegalChars(target);
+  inlineKatexSvgStyles(target);
   const blob = await toBlob(target, {
     cacheBust: true,
     pixelRatio: 1.2,

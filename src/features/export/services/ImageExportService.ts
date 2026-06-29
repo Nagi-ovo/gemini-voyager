@@ -14,6 +14,7 @@ import {
 } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
 import { renderElementToImageBlob } from './ImageRenderService';
+import { buildKatexExportStyles } from './katexExportStyles';
 
 export interface RenderableDocumentContent {
   title: string;
@@ -268,6 +269,8 @@ export class ImageExportService {
         display: grid;
         gap: 8px;
       }
+
+      ${buildKatexExportStyles('.gv-image-export-doc')}
     `;
 
     const doc = document.createElement('div');
@@ -387,6 +390,8 @@ export class ImageExportService {
         display: grid;
         gap: 0.4em;
       }
+
+      ${buildKatexExportStyles('.gv-image-export-doc')}
     `;
 
     const doc = document.createElement('div');

@@ -7,6 +7,7 @@ import { isSafari } from '@/core/utils/browser';
 
 import type { ChatTurn, ConversationMetadata } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
+import { buildKatexExportStyles } from './katexExportStyles';
 
 export interface PrintableDocumentContent {
   title: string;
@@ -681,6 +682,8 @@ export class PDFPrintService {
         body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID} * {
           display: revert !important;
         }
+
+        ${buildKatexExportStyles(`body.${this.PRINT_BODY_CLASS} #${this.PRINT_CONTAINER_ID}`, true)}
 
         /* Preserve KaTeX layout primitives after the global display override above.
            Without these, sub/sup scripts (e.g. x_1) may become misaligned in PDF print. */

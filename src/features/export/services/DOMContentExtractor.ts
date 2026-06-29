@@ -522,6 +522,7 @@ export class DOMContentExtractor {
       // Lists
       if (tagName === 'ul' || tagName === 'ol') {
         const listContent = this.extractList(child as HTMLElement);
+        if (listContent.hasFormulas) flags.hasFormulas = true;
         htmlParts.push(listContent.html);
         textParts.push(`\n${listContent.text}\n`);
         continue;
@@ -905,12 +906,13 @@ export class DOMContentExtractor {
   private static extractList(
     element: HTMLElement,
     depth: number = 0,
-  ): { html: string; text: string } {
+  ): { html: string; text: string; hasFormulas: boolean } {
     const isOrdered = element.tagName === 'OL';
     const items = Array.from(element.querySelectorAll(':scope > li'));
     const indent = '  '.repeat(depth); // 2 spaces per level
 
     const textLines: string[] = [];
+    let hasFormulas = false;
     items.forEach((item, index) => {
       // Create a temporary container with only direct children (excluding nested lists)
       const tempContainer = document.createElement('div');
@@ -930,6 +932,7 @@ export class DOMContentExtractor {
 
       // Process inline content (handles formulas, emphasis, etc.)
       const processed = this.processInlineContent(tempContainer);
+      if (processed.hasFormulas) hasFormulas = true;
       const itemText = processed.text || this.normalizeText(tempContainer.textContent || '');
 
       const prefix = isOrdered ? `${index + 1}. ` : '- ';
@@ -939,6 +942,7 @@ export class DOMContentExtractor {
       const nestedLists = item.querySelectorAll(':scope > ul, :scope > ol');
       nestedLists.forEach((nestedList) => {
         const nestedResult = this.extractList(nestedList as HTMLElement, depth + 1);
+        if (nestedResult.hasFormulas) hasFormulas = true;
         if (nestedResult.text) {
           textLines.push(nestedResult.text);
         }
@@ -949,6 +953,7 @@ export class DOMContentExtractor {
     this.stripExportArtifacts(cleanList);
 
     return {
+      hasFormulas,
       html: cleanList.outerHTML,
       text: textLines.join('\n'),
     };

@@ -28,6 +28,7 @@
     "lint": "eslint . --fix",
     "format": "prettier --write .",
     "typecheck": "tsc --noEmit",
+    "verify:katex-export": "bun scripts/verify-katex-export.ts",
     "commitlint": "commitlint --edit $GIT_PARAMS",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
