@@ -74,8 +74,12 @@ function installScript(enabled = true): void {
   new Function(preventAutoScrollScript)();
 }
 
-function createScrollableElement(): { el: HTMLElement; getScrollTop: () => number } {
+function createScrollableElement(className = 'chat-history-scroll-container'): {
+  el: HTMLElement;
+  getScrollTop: () => number;
+} {
   const el = document.createElement('div');
+  el.className = className;
   let scrollTop = 0;
 
   Object.defineProperties(el, {
@@ -164,6 +168,25 @@ describe('prevent-auto-scroll page script', () => {
 
     expect(elementScrollToSpy).not.toHaveBeenCalled();
     expect(getScrollTop()).toBe(0);
+  });
+
+  it('allows the sidebar history list to scroll after a submit', () => {
+    installScript();
+    submitFromComposer();
+
+    const sidebar = document.createElement('bard-sidenav');
+    const overflow = document.createElement('div');
+    overflow.setAttribute('data-test-id', 'overflow-container');
+    sidebar.appendChild(overflow);
+    document.body.appendChild(sidebar);
+
+    const { el, getScrollTop } = createScrollableElement('');
+    overflow.appendChild(el);
+
+    el.scrollTo({ top: 1800 });
+
+    expect(elementScrollToSpy).toHaveBeenCalledTimes(1);
+    expect(getScrollTop()).toBe(1800);
   });
 
   it('re-allows native scrolls after route changes that are not part of a fresh submit', () => {

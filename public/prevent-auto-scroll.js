@@ -6,6 +6,24 @@
   console.log('[Gemini Voyager] Prevent auto scroll script loaded');
 
   const BRIDGE_ID = 'gv-prevent-auto-scroll-bridge';
+  const CHAT_SCROLL_SELECTOR = [
+    '#chat-history',
+    'infinite-scroller.chat-history',
+    '.chat-history-scroll-container',
+    'chat-window',
+    'chat-window-content',
+    '.conversation-container',
+  ].join(', ');
+  const SIDEBAR_SELECTOR = [
+    'bard-sidenav',
+    'side-navigation-content',
+    '[data-test-id="overflow-container"]',
+    '[data-test-id="all-conversations"]',
+    'expandable-section[data-test-id="chats-expandable-section"]',
+    '[data-test-id="conversation"]',
+    '.gv-folder-container',
+    '.gv-gems-inline-list',
+  ].join(', ');
   const INITIAL_NATIVE_SCROLL_ALLOW_MS = 8000;
   const ROUTE_NATIVE_SCROLL_ALLOW_MS = 4000;
   const SUBMIT_SCROLL_BLOCK_MS = 120000;
@@ -41,6 +59,17 @@
   function shouldBlockAutoScroll() {
     const now = Date.now();
     return isEnabled() && now >= nativeScrollAllowedUntil && now < blockScrollUntil;
+  }
+
+  function isSidebarElement(el) {
+    return el instanceof Element && Boolean(el.closest(SIDEBAR_SELECTOR));
+  }
+
+  function isChatScrollElement(el) {
+    if (el === window) return true;
+    if (!(el instanceof Element)) return false;
+    if (isSidebarElement(el)) return false;
+    return Boolean(el.matches(CHAT_SCROLL_SELECTOR) || el.closest(CHAT_SCROLL_SELECTOR));
   }
 
   function handlePossibleRouteChange() {
@@ -170,6 +199,7 @@
 
   function shouldBlockScrollTo(el, args) {
     if (!shouldBlockAutoScroll()) return false;
+    if (!isChatScrollElement(el)) return false;
     if (isScrolledUp(el) && isScrollingDownTo(el, args)) {
       return true;
     }
@@ -178,6 +208,7 @@
 
   function shouldBlockScrollBy(el, args) {
     if (!shouldBlockAutoScroll()) return false;
+    if (!isChatScrollElement(el)) return false;
     if (isScrolledUp(el) && isScrollingDownBy(args)) {
       return true;
     }
@@ -210,11 +241,13 @@
 
   const originalScrollIntoView = Element.prototype.scrollIntoView;
   Element.prototype.scrollIntoView = function (...args) {
-    if (shouldBlockAutoScroll()) {
+    if (shouldBlockAutoScroll() && isChatScrollElement(this)) {
       let ancestor = this.parentElement;
       let blocked = false;
       while (ancestor) {
+        if (isSidebarElement(ancestor)) break;
         if (ancestor.scrollHeight > ancestor.clientHeight) {
+          if (!isChatScrollElement(ancestor)) break;
           if (isScrolledUp(ancestor)) {
             const rect = this.getBoundingClientRect();
             if (rect.top > (window.innerHeight || document.documentElement.clientHeight)) {
@@ -247,7 +280,7 @@
     Object.defineProperty(Element.prototype, 'scrollTop', {
       get: originalScrollTopDescriptor.get,
       set: function (value) {
-        if (shouldBlockAutoScroll() && isScrolledUp(this)) {
+        if (shouldBlockAutoScroll() && isChatScrollElement(this) && isScrolledUp(this)) {
           const currentVal = originalScrollTopDescriptor.get.call(this);
           if (value > currentVal) {
             return;
