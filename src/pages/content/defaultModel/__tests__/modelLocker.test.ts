@@ -754,6 +754,60 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(darkItem.querySelector('.gv-default-star-btn')).toBeNull();
   });
 
+  it('does not inject star buttons into Gemini table options menu DOM', async () => {
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      `
+        <div class="cdk-overlay-container">
+          <div class="cdk-global-overlay-wrapper" dir="ltr">
+            <div class="cdk-overlay-pane">
+              <gem-menu role="menu" class="mat-mdc-menu-panel">
+                <gem-menu-item role="menuitem" jslog="121782;track:deadbeefcafebabe">
+                  <gem-menu-item-content>
+                    <div class="leading-container">
+                      <gem-icon>
+                        <mat-icon class="mat-icon notranslate lm-icon-m lumi-symbols mat-ligature-font" fonticon="content_copy" role="img"></mat-icon>
+                      </gem-icon>
+                    </div>
+                    <div class="label-container"><span class="label"><span>复制表格</span></span></div>
+                    <div class="trailing-container"></div>
+                  </gem-menu-item-content>
+                </gem-menu-item>
+                <gem-menu-item role="menuitem" jslog="121783;track:0123456789abcdef">
+                  <gem-menu-item-content>
+                    <div class="leading-container">
+                      <gem-icon>
+                        <mat-icon class="mat-icon notranslate lm-icon-m lumi-symbols mat-ligature-font" fonticon="open_in_new" role="img"></mat-icon>
+                      </gem-icon>
+                    </div>
+                    <div class="label-container"><span class="label"><span>在表格中打开</span></span></div>
+                    <div class="trailing-container"></div>
+                  </gem-menu-item-content>
+                </gem-menu-item>
+              </gem-menu>
+            </div>
+          </div>
+        </div>
+      `,
+    );
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    const pane = document.querySelector<HTMLElement>('.cdk-overlay-pane');
+    const items = Array.from(
+      document.querySelectorAll<HTMLElement>('gem-menu-item[role="menuitem"]'),
+    );
+    expect(pane).not.toBeNull();
+    expect(items).toHaveLength(2);
+    expect(pane?.querySelector('.gv-default-star-btn')).toBeNull();
+    expect(items.map((item) => item.textContent?.trim())).toEqual(['复制表格', '在表格中打开']);
+  });
+
   it('injects star buttons into the 2026 redesigned overlay (gem-menu-item + .label-container)', async () => {
     const { default: DefaultModelManager } = await import('../modelLocker');
     await DefaultModelManager.getInstance().init();

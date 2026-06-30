@@ -425,13 +425,12 @@ class DefaultModelManager {
     }
 
     // Guard: only inject into menus that look like a model selector.
-    // Model menus always contain .title-and-description, .mode-title, .label-container, or data-mode-id.
+    // `.label-container` alone is too broad: Gemini's table/options menus use it too.
     // Non-model menus (theme picker, help, etc.) lack these even if they use menuitemradio.
     const isModelMenu =
       menuPanel.querySelector('[data-mode-id]') !== null ||
       menuPanel.querySelector('.mode-title') !== null ||
-      menuPanel.querySelector('.title-and-description') !== null ||
-      menuPanel.querySelector('.label-container') !== null;
+      menuPanel.querySelector('.title-and-description') !== null;
     if (!isModelMenu) return false;
 
     // Sweep stars whose owning item is no longer in the current `items`
