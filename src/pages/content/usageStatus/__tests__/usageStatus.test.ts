@@ -315,6 +315,35 @@ describe('extractUsagePayload', () => {
     expect(r?.weekly).toEqual({ percent: 50, resetEpoch: 1781646433 });
   });
 
+  it('uses the period enum when weekly resets before the 5h window', () => {
+    const payload = [
+      2,
+      [
+        [48106, 0.5, 2, [[1781135233, 0]]],
+        [2400, 0.25, 1, [[1781149633, 0]]],
+      ],
+      false,
+    ];
+
+    const r = extractUsagePayload(payload);
+
+    expect(r?.daily).toEqual({ percent: 25, resetEpoch: 1781149633 });
+    expect(r?.weekly).toEqual({ percent: 50, resetEpoch: 1781135233 });
+  });
+
+  it('does not guess bucket labels from reset order when the period enum is unknown', () => {
+    const payload = [
+      2,
+      [
+        [48106, 0.5, 20, [[1781135233, 0]]],
+        [2400, 0.25, 10, [[1781149633, 0]]],
+      ],
+      false,
+    ];
+
+    expect(extractUsagePayload(payload)).toBeNull();
+  });
+
   it('rejects shapes without valid metric tuples', () => {
     expect(extractUsagePayload([1, 2, 3])).toBeNull();
     expect(extractUsagePayload('nope')).toBeNull();

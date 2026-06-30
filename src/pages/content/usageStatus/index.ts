@@ -55,6 +55,11 @@ export interface RawMetric {
   resetEpoch: number;
 }
 
+interface ParsedMetric {
+  metric: RawMetric;
+  period: number;
+}
+
 /** Captured recipe for replaying the usage RPC from any page. */
 interface UsageRecipe {
   rpcid: string;
@@ -467,16 +472,18 @@ function decodeBatchExecute(text: string): Array<{ rpcid: string; payload: unkno
   return out;
 }
 
-/** True for a `[limit, fraction, period, [[epoch, nanos]]]` metric tuple. */
-function readMetric(m: unknown): RawMetric | null {
+/** Read a `[limit, fraction, period, [[epoch, nanos]]]` metric tuple. */
+function readMetric(m: unknown): ParsedMetric | null {
   if (!Array.isArray(m) || m.length < 4) return null;
   const fraction = m[1];
+  const period = m[2];
   const resetWrap = m[3];
   if (typeof fraction !== 'number' || fraction < 0 || fraction > 1.5) return null;
+  if (typeof period !== 'number') return null;
   if (!Array.isArray(resetWrap) || !Array.isArray(resetWrap[0])) return null;
   const epoch = resetWrap[0][0];
   if (typeof epoch !== 'number' || epoch < 1_600_000_000) return null;
-  return { percent: Math.round(fraction * 100), resetEpoch: epoch };
+  return { metric: { percent: Math.round(fraction * 100), resetEpoch: epoch }, period };
 }
 
 /** Pull {daily, weekly} out of a usage RPC payload, or null if it isn't one. */
@@ -489,14 +496,13 @@ export function extractUsagePayload(
       Array.isArray(x) && x.length >= 1 && x.every((m) => readMetric(m) !== null),
   );
   if (!metricsArr) return null;
-  const metrics = metricsArr.map(readMetric).filter((m): m is RawMetric => m !== null);
+  const metrics = metricsArr.map(readMetric).filter((m): m is ParsedMetric => m !== null);
   if (metrics.length === 0) return null;
-  // Daily always resets sooner than weekly; sort by reset epoch.
-  metrics.sort((a, b) => a.resetEpoch - b.resetEpoch);
-  return {
-    daily: metrics[0] ?? null,
-    weekly: metrics.length > 1 ? metrics[metrics.length - 1] : null,
-  };
+  // Real captures show period 1 = rolling 5h window, period 2 = weekly limit.
+  // Do not infer from reset time: the weekly boundary can arrive before 5h.
+  const daily = metrics.find((m) => m.period === 1)?.metric ?? null;
+  const weekly = metrics.find((m) => m.period === 2)?.metric ?? null;
+  return daily || weekly ? { daily, weekly } : null;
 }
 
 /** Parse a raw batchexecute response into usage metrics + the carrying rpcid. */
