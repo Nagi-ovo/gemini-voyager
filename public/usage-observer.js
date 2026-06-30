@@ -35,12 +35,12 @@
 
   /** A Gemini message-generation request — usage changes right after one finishes. */
   function isGenRequest(url, body) {
-    var hay = (String(url || '') + '\n' + (typeof body === 'string' ? body : '')).toLowerCase();
-    return (
-      hay.indexOf('streamgenerate') > -1 ||
-      hay.indexOf('bardfrontendservice') > -1 ||
-      hay.indexOf('assistant.lamda') > -1
-    );
+    var urlText = String(url || '').toLowerCase();
+    if (urlText.indexOf('streamgenerate') > -1) return true;
+    if (urlText.indexOf('batchexecute') > -1) return false;
+
+    var hay = (urlText + '\n' + (typeof body === 'string' ? body : '')).toLowerCase();
+    return hay.indexOf('bardfrontendservice') > -1 || hay.indexOf('assistant.lamda') > -1;
   }
 
   function rpcOf(url) {

@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const observerScript = readFileSync(resolve(process.cwd(), 'public/usage-observer.js'), 'utf-8');
+const NativeXMLHttpRequest = window.XMLHttpRequest;
 
 type UsageWindow = Window &
   typeof globalThis & {
@@ -31,8 +32,17 @@ function dispatchReplay(sourcePath: string): void {
   window.dispatchEvent(event);
 }
 
+class MockXMLHttpRequest {
+  public readonly addEventListener = vi.fn(
+    (_type: string, _listener: EventListenerOrEventListenerObject) => {},
+  );
+  public readonly open = vi.fn();
+  public readonly send = vi.fn();
+}
+
 describe('usage-observer replay', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
+  let postMessageSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -53,6 +63,14 @@ describe('usage-observer replay', () => {
       writable: true,
       configurable: true,
     });
+    Object.defineProperty(window, 'XMLHttpRequest', {
+      value: NativeXMLHttpRequest,
+      writable: true,
+      configurable: true,
+    });
+    postMessageSpy = vi
+      .spyOn(window, 'postMessage')
+      .mockImplementation(() => {}) as unknown as ReturnType<typeof vi.fn>;
   });
 
   it('replays multi-account usage requests on the same account route', async () => {
@@ -64,5 +82,46 @@ describe('usage-observer replay', () => {
     const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
     expect(requestUrl.pathname).toBe('/u/2/_/BardChatUi/data/batchexecute');
     expect(requestUrl.searchParams.get('source-path')).toBe('/u/2/app');
+  });
+
+  it('does not treat copy batchexecute traffic as generation when text mentions generation APIs', async () => {
+    fetchMock.mockResolvedValue({
+      clone: vi.fn(() => new Response('copy-ok')),
+    });
+    installObserver();
+
+    await window.fetch('https://gemini.google.com/_/BardChatUi/data/batchexecute?rpcids=copyRpc', {
+      method: 'POST',
+      body: 'f.req=' + encodeURIComponent('BardFrontendService assistant.lamda'),
+    });
+    await Promise.resolve();
+
+    expect(postMessageSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({ source: 'gv-usage-observer', type: 'generation-complete' }),
+      expect.any(String),
+    );
+  });
+
+  it('does not treat copy XHR batchexecute traffic as generation', () => {
+    Object.defineProperty(window, 'XMLHttpRequest', {
+      value: MockXMLHttpRequest,
+      writable: true,
+      configurable: true,
+    });
+    installObserver();
+
+    const xhr = new window.XMLHttpRequest() as unknown as MockXMLHttpRequest;
+    xhr.open('POST', 'https://gemini.google.com/_/BardChatUi/data/batchexecute?rpcids=copyRpc');
+    xhr.send('f.req=' + encodeURIComponent('BardFrontendService assistant.lamda'));
+
+    expect(xhr.addEventListener).not.toHaveBeenCalledWith(
+      'loadend',
+      expect.any(Function),
+      expect.anything(),
+    );
+    expect(postMessageSpy).not.toHaveBeenCalledWith(
+      expect.objectContaining({ source: 'gv-usage-observer', type: 'generation-complete' }),
+      expect.any(String),
+    );
   });
 });

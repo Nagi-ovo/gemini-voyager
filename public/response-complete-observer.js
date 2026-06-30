@@ -44,9 +44,11 @@
       return false;
     }
 
+    if (normalizedUrl.includes('streamgenerate')) return true;
+    if (normalizedUrl.includes('batchexecute')) return false;
+
     const haystack = `${absoluteUrl}\n${bodyText}`.toLowerCase();
     return (
-      haystack.includes('streamgenerate') ||
       haystack.includes('bardfrontendservice') ||
       haystack.includes('generatecontent') ||
       haystack.includes('assistant.lamda')
@@ -143,16 +145,14 @@
 
         if (isCandidate) {
           post('request-start', { requestId, url: requestUrl });
+          xhr.addEventListener(
+            'loadend',
+            function () {
+              postComplete(requestId, requestUrl, startedAt);
+            },
+            { once: true },
+          );
         }
-
-        xhr.addEventListener(
-          'loadend',
-          function () {
-            if (!isCandidate) return;
-            postComplete(requestId, requestUrl, startedAt);
-          },
-          { once: true },
-        );
 
         return originalSend.apply(xhr, arguments);
       };
