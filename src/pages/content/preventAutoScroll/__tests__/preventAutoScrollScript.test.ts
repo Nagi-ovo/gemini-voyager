@@ -15,6 +15,7 @@ let originalWindowScrollBy: typeof window.scrollBy;
 let originalHistoryPushState: typeof history.pushState;
 let originalHistoryReplaceState: typeof history.replaceState;
 let elementScrollToSpy: ReturnType<typeof vi.fn>;
+let elementScrollIntoViewSpy: ReturnType<typeof vi.fn>;
 
 function defineBrowserScrollStubs(): void {
   elementScrollToSpy = vi.fn(function (this: Element, ...args: unknown[]) {
@@ -40,13 +41,25 @@ function defineBrowserScrollStubs(): void {
     writable: true,
     value: vi.fn(),
   });
+  elementScrollIntoViewSpy = vi.fn();
   Object.defineProperty(Element.prototype, 'scrollIntoView', {
     configurable: true,
     writable: true,
-    value: vi.fn(),
+    value: elementScrollIntoViewSpy,
   });
 
-  window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
+  window.scrollTo = vi.fn((...args: unknown[]) => {
+    let targetTop: unknown;
+    if (args.length === 1 && args[0] && typeof args[0] === 'object' && 'top' in args[0]) {
+      targetTop = (args[0] as { top?: unknown }).top;
+    } else if (args.length >= 2) {
+      targetTop = args[1];
+    }
+
+    if (typeof targetTop === 'number') {
+      document.documentElement.scrollTop = targetTop;
+    }
+  }) as unknown as typeof window.scrollTo;
   window.scrollBy = vi.fn() as unknown as typeof window.scrollBy;
 }
 
@@ -187,6 +200,120 @@ describe('prevent-auto-scroll page script', () => {
 
     expect(elementScrollToSpy).toHaveBeenCalledTimes(1);
     expect(getScrollTop()).toBe(1800);
+  });
+
+  it('lets Gemini run scrollIntoView side effects while preserving the chat scroll position', () => {
+    const { el, getScrollTop } = createScrollableElement();
+    const message = document.createElement('div');
+    el.appendChild(message);
+
+    vi.spyOn(el, 'getBoundingClientRect').mockReturnValue({
+      top: 0,
+      right: 500,
+      bottom: 500,
+      left: 0,
+      width: 500,
+      height: 500,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    vi.spyOn(message, 'getBoundingClientRect').mockReturnValue({
+      top: 900,
+      right: 500,
+      bottom: 960,
+      left: 0,
+      width: 500,
+      height: 60,
+      x: 0,
+      y: 900,
+      toJSON: () => ({}),
+    });
+    let nativeSideEffectRan = false;
+    elementScrollIntoViewSpy.mockImplementation(function (this: Element) {
+      nativeSideEffectRan = true;
+      if (this.parentElement instanceof HTMLElement) {
+        this.parentElement.scrollTop = 1800;
+      }
+    });
+
+    installScript();
+    submitFromComposer();
+
+    message.scrollIntoView({ block: 'end' });
+
+    expect(elementScrollIntoViewSpy).toHaveBeenCalledTimes(1);
+    expect(nativeSideEffectRan).toBe(true);
+    expect(getScrollTop()).toBe(0);
+  });
+
+  it('preserves the viewport scroll position when body/html is the scroll root', () => {
+    const originalHtmlScrollTop = Object.getOwnPropertyDescriptor(
+      document.documentElement,
+      'scrollTop',
+    );
+    const originalHtmlScrollHeight = Object.getOwnPropertyDescriptor(
+      document.documentElement,
+      'scrollHeight',
+    );
+    const originalHtmlClientHeight = Object.getOwnPropertyDescriptor(
+      document.documentElement,
+      'clientHeight',
+    );
+    let htmlScrollTop = 0;
+
+    try {
+      Object.defineProperties(document.documentElement, {
+        scrollTop: {
+          configurable: true,
+          get: () => htmlScrollTop,
+          set: (value: number) => {
+            htmlScrollTop = value;
+          },
+        },
+        scrollHeight: {
+          configurable: true,
+          get: () => 2000,
+        },
+        clientHeight: {
+          configurable: true,
+          get: () => 500,
+        },
+      });
+
+      const conversation = document.createElement('div');
+      conversation.className = 'conversation-container';
+      const message = document.createElement('div');
+      conversation.appendChild(message);
+      document.body.appendChild(conversation);
+
+      vi.spyOn(message, 'getBoundingClientRect').mockReturnValue({
+        top: 900,
+        right: 500,
+        bottom: 960,
+        left: 0,
+        width: 500,
+        height: 60,
+        x: 0,
+        y: 900,
+        toJSON: () => ({}),
+      });
+      elementScrollIntoViewSpy.mockImplementation(() => {
+        document.documentElement.scrollTop = 1800;
+      });
+
+      installScript();
+      submitFromComposer();
+
+      message.scrollIntoView({ block: 'end' });
+
+      expect(elementScrollIntoViewSpy).toHaveBeenCalledTimes(1);
+      expect(htmlScrollTop).toBe(0);
+    } finally {
+      restoreDescriptor(document.documentElement, 'scrollTop', originalHtmlScrollTop);
+      restoreDescriptor(document.documentElement, 'scrollHeight', originalHtmlScrollHeight);
+      restoreDescriptor(document.documentElement, 'clientHeight', originalHtmlClientHeight);
+    }
   });
 
   it('re-allows native scrolls after route changes that are not part of a fresh submit', () => {

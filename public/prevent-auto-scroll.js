@@ -227,6 +227,30 @@
     return originalWindowScrollBy.apply(this, args);
   };
 
+  function collectVerticalScrollPositions(target) {
+    const positions = [];
+    let ancestor = target.parentElement;
+    while (ancestor) {
+      if (isSidebarElement(ancestor)) break;
+      if (isChatScrollElement(ancestor) && ancestor.scrollHeight > ancestor.clientHeight) {
+        positions.push({ el: ancestor, top: getScrollTop(ancestor) });
+      }
+      ancestor = ancestor.parentElement;
+    }
+    positions.push({ el: window, top: getScrollTop(window) });
+    return positions;
+  }
+
+  function restoreVerticalScrollPositions(positions) {
+    for (const { el, top } of positions) {
+      if (el === window) {
+        originalWindowScrollTo.call(window, window.scrollX, top);
+      } else {
+        el.scrollTop = top;
+      }
+    }
+  }
+
   const originalElementScrollTo = Element.prototype.scrollTo;
   Element.prototype.scrollTo = function (...args) {
     if (shouldBlockScrollTo(this, args)) return;
@@ -247,7 +271,12 @@
       while (ancestor) {
         if (isSidebarElement(ancestor)) break;
         if (ancestor.scrollHeight > ancestor.clientHeight) {
-          if (!isChatScrollElement(ancestor)) break;
+          if (!isChatScrollElement(ancestor)) {
+            if (ancestor === document.body || ancestor === document.documentElement) {
+              ancestor = null;
+            }
+            break;
+          }
           if (isScrolledUp(ancestor)) {
             const rect = this.getBoundingClientRect();
             if (rect.top > (window.innerHeight || document.documentElement.clientHeight)) {
@@ -267,7 +296,14 @@
         }
       }
 
-      if (blocked) return;
+      if (blocked) {
+        const positions = collectVerticalScrollPositions(this);
+        try {
+          return originalScrollIntoView.apply(this, args);
+        } finally {
+          restoreVerticalScrollPositions(positions);
+        }
+      }
     }
     return originalScrollIntoView.apply(this, args);
   };
