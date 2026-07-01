@@ -29,6 +29,8 @@ export class ConversationExportService {
 
   private static readonly CHAT_JSON_FORMAT = 'gemini-voyager.chat.v1' as const;
 
+  private static readonly MARKDOWN_IMAGE_FETCH_TIMEOUT_MS = 15000;
+
   /**
    * Export conversation in specified format
    */
@@ -438,6 +440,11 @@ export class ConversationExportService {
       mapping.set(item.url, `assets/${fileName}`);
     }
 
+    if (mapping.size === 0) {
+      MarkdownFormatter.download(markdown, normalizedFilename);
+      return normalizedFilename;
+    }
+
     const packagedMarkdown = MarkdownFormatter.rewriteImageUrls(markdown, mapping);
     zip.file(markdownEntryName, packagedMarkdown);
 
@@ -544,6 +551,25 @@ export class ConversationExportService {
     }
   }
 
+  private static async fetchWithTimeout(
+    url: string,
+    init: RequestInit,
+  ): Promise<Response | null> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      this.MARKDOWN_IMAGE_FETCH_TIMEOUT_MS,
+    );
+
+    try {
+      return await fetch(url, { ...init, signal: controller.signal });
+    } catch {
+      return null;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
   private static async fetchImageForMarkdownPackaging(
     url: string,
   ): Promise<{ blob: Blob; contentType: string | null } | null> {
@@ -551,30 +577,28 @@ export class ConversationExportService {
       return this.decodeDataImageUrl(url);
     }
 
-    try {
-      const response = await fetch(url, { credentials: 'include', mode: 'cors' as RequestMode });
-      if (response.ok) {
-        return {
-          blob: await response.blob(),
-          contentType: response.headers.get('Content-Type'),
-        };
-      }
-    } catch {
-      /* ignore */
+    const directIncludeResponse = await this.fetchWithTimeout(url, {
+      credentials: 'include',
+      mode: 'cors' as RequestMode,
+    });
+    if (directIncludeResponse?.ok) {
+      return {
+        blob: await directIncludeResponse.blob(),
+        contentType: directIncludeResponse.headers.get('Content-Type'),
+      };
     }
 
     // Retry without credentials for servers with wildcard CORS
     // (Access-Control-Allow-Origin: * is incompatible with credentials: 'include')
-    try {
-      const response = await fetch(url, { credentials: 'omit', mode: 'cors' as RequestMode });
-      if (response.ok) {
-        return {
-          blob: await response.blob(),
-          contentType: response.headers.get('Content-Type'),
-        };
-      }
-    } catch {
-      /* ignore */
+    const directOmitResponse = await this.fetchWithTimeout(url, {
+      credentials: 'omit',
+      mode: 'cors' as RequestMode,
+    });
+    if (directOmitResponse?.ok) {
+      return {
+        blob: await directOmitResponse.blob(),
+        contentType: directOmitResponse.headers.get('Content-Type'),
+      };
     }
 
     type RuntimeFetchImageResponse =
@@ -612,12 +636,25 @@ export class ConversationExportService {
       const sendMessage = chrome.runtime?.sendMessage;
       if (typeof sendMessage !== 'function') return null;
       return await new Promise<RuntimeFetchImageResponse>((resolve) => {
+        let settled = false;
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+        const finish = (response: RuntimeFetchImageResponse) => {
+          if (settled) return;
+          settled = true;
+          if (timeoutId) clearTimeout(timeoutId);
+          resolve(response);
+        };
+
+        timeoutId = setTimeout(() => {
+          finish(null);
+        }, this.MARKDOWN_IMAGE_FETCH_TIMEOUT_MS);
+
         try {
           (sendMessage as (...args: unknown[]) => void)({ type, url }, (rawResponse: unknown) => {
-            resolve((rawResponse as RuntimeFetchImageResponse) ?? null);
+            finish((rawResponse as RuntimeFetchImageResponse) ?? null);
           });
         } catch {
-          resolve(null);
+          finish(null);
         }
       });
     };

@@ -530,6 +530,32 @@ describe('ConversationExportService', () => {
       expect(capturedAssetOptions).toMatchObject({ base64: true });
     });
 
+    it('downloads plain markdown when no image assets can be packaged', async () => {
+      const imageUrl = 'https://lh3.googleusercontent.com/gg/export-image=s0';
+      const markdown = `![uploaded image](${imageUrl})`;
+      vi.spyOn(MarkdownFormatter, 'extractImageUrls').mockReturnValue([imageUrl]);
+      const rewriteSpy = vi.spyOn(MarkdownFormatter, 'rewriteImageUrls');
+      const downloadSpy = vi.spyOn(MarkdownFormatter, 'download').mockImplementation(() => {});
+      const service = ConversationExportService as unknown as {
+        downloadMarkdownOrZip: (
+          markdown: string,
+          filename: string,
+          markdownEntryName: string,
+        ) => Promise<string>;
+        fetchImageForMarkdownPackaging: (url: string) => Promise<unknown>;
+      };
+      const fetchSpy = vi
+        .spyOn(service, 'fetchImageForMarkdownPackaging')
+        .mockResolvedValue(null);
+
+      const finalFilename = await service.downloadMarkdownOrZip(markdown, 'chat.md', 'chat.md');
+
+      expect(finalFilename).toBe('chat.md');
+      expect(fetchSpy).toHaveBeenCalledOnce();
+      expect(downloadSpy).toHaveBeenCalledWith(markdown, 'chat.md');
+      expect(rewriteSpy).not.toHaveBeenCalled();
+    });
+
     it('packages inline data images as zip assets instead of leaving base64 in markdown', async () => {
       const dataUrl = 'data:image/png;base64,aGVsbG8=';
 
@@ -608,6 +634,43 @@ describe('ConversationExportService', () => {
         { type: 'gv.fetchImageViaPage', url: imageUrl },
         expect.any(Function),
       );
+    });
+
+    it('resolves image fetch when runtime fetch callbacks do not answer', async () => {
+      vi.useFakeTimers();
+      const originalSendMessage = chrome.runtime.sendMessage;
+
+      try {
+        const imageUrl = 'https://lh3.googleusercontent.com/export-image.png';
+        vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network blocked'));
+
+        const sendMessageMock = vi.fn(
+          (_message: { type?: string; url?: string }, _callback?: (response: unknown) => void) => {
+            // Simulate an extension message channel that never answers.
+          },
+        );
+        chrome.runtime.sendMessage = sendMessageMock as unknown as typeof chrome.runtime.sendMessage;
+
+        const service = ConversationExportService as unknown as {
+          fetchImageForMarkdownPackaging: (url: string) => Promise<unknown>;
+        };
+        const fetchPromise = service.fetchImageForMarkdownPackaging(imageUrl);
+
+        await vi.runAllTimersAsync();
+
+        await expect(fetchPromise).resolves.toBeNull();
+        expect(sendMessageMock).toHaveBeenCalledWith(
+          { type: 'gv.fetchImage', url: imageUrl },
+          expect.any(Function),
+        );
+        expect(sendMessageMock).toHaveBeenCalledWith(
+          { type: 'gv.fetchImageViaPage', url: imageUrl },
+          expect.any(Function),
+        );
+      } finally {
+        chrome.runtime.sendMessage = originalSendMessage;
+        vi.useRealTimers();
+      }
     });
 
     it('should skip gv.fetchImageViaPage for blob urls', async () => {
