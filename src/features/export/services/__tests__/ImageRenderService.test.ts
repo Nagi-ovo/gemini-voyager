@@ -15,6 +15,7 @@ describe('ImageRenderService', () => {
 
   afterEach(() => {
     document.body.innerHTML = '';
+    document.querySelectorAll('[data-gv-test-style]').forEach((element) => element.remove());
   });
 
   it('renders element to blob directly when primary render succeeds', async () => {
@@ -37,7 +38,45 @@ describe('ImageRenderService', () => {
 
     await renderElementToImageBlob(target);
 
-    expect(toBlob).toHaveBeenCalledWith(target, expect.objectContaining({ skipFonts: false }));
+    expect(toBlob).toHaveBeenCalledWith(
+      target,
+      expect.objectContaining({ fontEmbedCSS: expect.any(String), skipFonts: false }),
+    );
+  });
+
+  it('passes scoped KaTeX font CSS instead of scanning page stylesheets', async () => {
+    const style = document.createElement('style');
+    style.dataset.gvTestStyle = 'katex-font';
+    style.textContent = `
+      @font-face {
+        font-family: KaTeX_Main;
+        src:
+          url(data:font/woff2;base64,AAAA) format("woff2"),
+          url(https://example.com/katex-main.woff) format("woff");
+      }
+
+      .katex {
+        font-family: KaTeX_Main;
+      }
+    `;
+    document.head.appendChild(style);
+
+    const target = document.createElement('div');
+    target.innerHTML = '<span class="katex"><span class="base">x</span></span>';
+    document.body.appendChild(target);
+    const blob = new Blob(['ok'], { type: 'image/png' });
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(blob);
+
+    await renderElementToImageBlob(target);
+
+    const options = (toBlob as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1] as {
+      fontEmbedCSS?: string;
+      skipFonts?: boolean;
+    };
+    expect(options.skipFonts).toBe(false);
+    expect(options.fontEmbedCSS).toContain('font-family: KaTeX_Main');
+    expect(options.fontEmbedCSS).toContain('data:font/woff2;base64,AAAA');
+    expect(options.fontEmbedCSS).not.toContain('katex-main.woff');
   });
 
   it('inlines KaTeX radical SVG layout before rendering', async () => {
@@ -65,7 +104,9 @@ describe('ImageRenderService', () => {
     const img = target.querySelector('img.katex-svg') as HTMLImageElement | null;
     const path = target.querySelector('path') as SVGPathElement | null;
 
-    expect(wrapper?.style.getPropertyValue('display')).toBe('block');
+    // Regression guard (#789): .hide-tail must stay inline-block so it shares
+    // a line box with the KaTeX pstrut; `block` drops the radical ~3em down.
+    expect(wrapper?.style.getPropertyValue('display')).toBe('inline-block');
     expect(wrapper?.style.getPropertyPriority('display')).toBe('important');
     expect(wrapper?.style.getPropertyValue('overflow')).toBe('hidden');
     expect(wrapper?.style.getPropertyValue('position')).toBe('relative');
@@ -85,6 +126,64 @@ describe('ImageRenderService', () => {
     expect(img?.style.getPropertyValue('position')).toBe('absolute');
     expect(img?.style.getPropertyValue('width')).toBe('100%');
     expect(path?.style.getPropertyValue('stroke')).toBe('none');
+  });
+
+  it('inlines KaTeX vlist layout before rendering radical formulas', async () => {
+    const target = document.createElement('div');
+    target.innerHTML = `
+      <span class="katex">
+        <span class="base">
+          <span class="sqrt">
+            <span class="root">3</span>
+            <span class="vlist-t vlist-t2">
+              <span class="vlist-r">
+                <span class="vlist">
+                  <span style="top: -0.9em;">
+                    <span class="pstrut"></span>
+                    <span class="mord">x</span>
+                  </span>
+                </span>
+                <span class="vlist-s"> </span>
+              </span>
+            </span>
+          </span>
+        </span>
+      </span>
+    `;
+    const blob = new Blob(['ok'], { type: 'image/png' });
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(blob);
+
+    await renderElementToImageBlob(target);
+
+    const katex = target.querySelector('.katex') as HTMLElement | null;
+    const base = target.querySelector('.base') as HTMLElement | null;
+    const vlistTable = target.querySelector('.vlist-t') as HTMLElement | null;
+    const vlistRow = target.querySelector('.vlist-r') as HTMLElement | null;
+    const vlist = target.querySelector('.vlist') as HTMLElement | null;
+    const vlistSpan = target.querySelector('.vlist > span') as HTMLElement | null;
+    const pstrut = target.querySelector('.pstrut') as HTMLElement | null;
+    const spacer = target.querySelector('.vlist-s') as HTMLElement | null;
+    const root = target.querySelector('.sqrt > .root') as HTMLElement | null;
+
+    expect(katex?.style.getPropertyValue('line-height')).toBe('1.2');
+    expect(base?.style.getPropertyValue('display')).toBe('inline-block');
+    expect(base?.style.getPropertyValue('white-space')).toBe('nowrap');
+    expect(base?.style.getPropertyValue('width')).toBe('min-content');
+    expect(vlistTable?.style.getPropertyValue('display')).toBe('inline-table');
+    expect(vlistTable?.style.getPropertyValue('border-collapse')).toBe('collapse');
+    expect(vlistTable?.style.getPropertyValue('table-layout')).toBe('fixed');
+    expect(vlistRow?.style.getPropertyValue('display')).toBe('table-row');
+    expect(vlist?.style.getPropertyValue('display')).toBe('table-cell');
+    expect(vlist?.style.getPropertyValue('vertical-align')).toBe('bottom');
+    expect(vlistSpan?.style.getPropertyValue('display')).toBe('block');
+    expect(vlistSpan?.style.getPropertyValue('height')).toBe('0px');
+    expect(pstrut?.style.getPropertyValue('overflow')).toBe('hidden');
+    expect(pstrut?.style.getPropertyValue('width')).toBe('0px');
+    expect(spacer?.style.getPropertyValue('display')).toBe('table-cell');
+    expect(spacer?.style.getPropertyValue('min-width')).toBe('2px');
+    expect(root?.style.getPropertyValue('margin-left')).toBe('0.2777777778em');
+    expect(root?.style.getPropertyValue('margin-right')).toBe('-0.5555555556em');
+    expect(root?.style.getPropertyPriority('margin-left')).toBe('important');
   });
 
   it('retries when shouldRetry returns true and later succeeds', async () => {

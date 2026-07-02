@@ -6,6 +6,8 @@ const DEFAULT_OFFSCREEN_LEFT = '-100000px';
 const DEFAULT_SANITIZE_SELECTOR = 'img, video, iframe, canvas, svg image';
 const DEFAULT_RENDER_WIDTH = 720;
 const MATH_RENDER_SELECTOR = '.katex, .math-inline, .math-block, [data-math]';
+const FONT_FACE_RULE_TYPE = 5;
+const WOFF2_SOURCE_RE = /url\((["']?)([^"')]+)\1\)\s*format\((["']?)woff2\3\)/i;
 
 /**
  * XML 1.0 §2.2 legal chars: #x9 | #xA | #xD | [#x20-#xD7FF] | [#xE000-#xFFFD] | [#x10000-#x10FFFF]
@@ -28,9 +30,136 @@ function stripXmlIllegalChars(root: HTMLElement): void {
   }
 }
 
-function inlineKatexSvgStyles(root: HTMLElement): void {
-  root.querySelectorAll<HTMLElement>('.katex .hide-tail, .katex .stretchy').forEach((element) => {
+function inlineKatexLayoutStyles(root: HTMLElement): void {
+  root.querySelectorAll<HTMLElement>('.katex').forEach((element) => {
+    setStyle(element, 'line-height', '1.2');
+    setStyle(element, 'text-indent', '0');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .base').forEach((element) => {
+    setStyle(element, 'display', 'inline-block');
+    setStyle(element, 'position', 'relative');
+    setStyle(element, 'white-space', 'nowrap');
+    setStyle(element, 'width', 'min-content');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .strut').forEach((element) => {
+    setStyle(element, 'display', 'inline-block');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .vlist-t').forEach((element) => {
+    setStyle(element, 'border-collapse', 'collapse');
+    setStyle(element, 'display', 'inline-table');
+    setStyle(element, 'table-layout', 'fixed');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .vlist-r').forEach((element) => {
+    setStyle(element, 'display', 'table-row');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .vlist').forEach((element) => {
+    setStyle(element, 'display', 'table-cell');
+    setStyle(element, 'position', 'relative');
+    setStyle(element, 'vertical-align', 'bottom');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .vlist > span').forEach((element) => {
     setStyle(element, 'display', 'block');
+    setStyle(element, 'height', '0');
+    setStyle(element, 'position', 'relative');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .vlist > span > span').forEach((element) => {
+    setStyle(element, 'display', 'inline-block');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .vlist > span > .pstrut').forEach((element) => {
+    setStyle(element, 'overflow', 'hidden');
+    setStyle(element, 'width', '0');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .vlist-t2').forEach((element) => {
+    setStyle(element, 'margin-right', '-2px');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .vlist-s').forEach((element) => {
+    setStyle(element, 'display', 'table-cell');
+    setStyle(element, 'font-size', '1px');
+    setStyle(element, 'min-width', '2px');
+    setStyle(element, 'vertical-align', 'bottom');
+    setStyle(element, 'width', '2px');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .vbox').forEach((element) => {
+    setStyle(element, 'align-items', 'baseline');
+    setStyle(element, 'display', 'inline-flex');
+    setStyle(element, 'flex-direction', 'column');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .hbox').forEach((element) => {
+    setStyle(element, 'display', 'inline-flex');
+    setStyle(element, 'flex-direction', 'row');
+    setStyle(element, 'width', '100%');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .thinbox').forEach((element) => {
+    setStyle(element, 'display', 'inline-flex');
+    setStyle(element, 'flex-direction', 'row');
+    setStyle(element, 'max-width', '0');
+    setStyle(element, 'width', '0');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .mfrac > span > span').forEach((element) => {
+    setStyle(element, 'text-align', 'center');
+  });
+
+  root
+    .querySelectorAll<HTMLElement>(
+      '.katex .mfrac .frac-line, .katex .overline .overline-line, .katex .underline .underline-line, .katex .hline, .katex .hdashline',
+    )
+    .forEach((element) => {
+      const lineStyle = element.classList.contains('hdashline') ? 'dashed' : 'solid';
+      setStyle(element, 'border-bottom-style', lineStyle);
+      setStyle(element, 'display', 'inline-block');
+      setStyle(element, 'min-height', '1px');
+      setStyle(element, 'width', '100%');
+    });
+
+  root.querySelectorAll<HTMLElement>('.katex .mspace').forEach((element) => {
+    setStyle(element, 'display', 'inline-block');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .rule').forEach((element) => {
+    setStyle(element, 'border', '0 solid');
+    setStyle(element, 'display', 'inline-block');
+    setStyle(element, 'min-height', '1px');
+    setStyle(element, 'position', 'relative');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .sqrt > .root').forEach((element) => {
+    setStyle(element, 'margin-left', '0.2777777778em');
+    setStyle(element, 'margin-right', '-0.5555555556em');
+  });
+
+  root.querySelectorAll<HTMLElement>('.katex .nulldelimiter').forEach((element) => {
+    setStyle(element, 'display', 'inline-block');
+    setStyle(element, 'width', '0.12em');
+  });
+}
+
+function inlineKatexSvgStyles(root: HTMLElement): void {
+  root.querySelectorAll<HTMLElement>('.katex .stretchy').forEach((element) => {
+    setStyle(element, 'display', 'block');
+    setStyle(element, 'overflow', 'hidden');
+    setStyle(element, 'position', 'relative');
+    setStyle(element, 'width', '100%');
+  });
+
+  // KaTeX's own stylesheet leaves .hide-tail at the `.vlist > span > span`
+  // inline-block display; forcing `block` breaks it onto its own line below
+  // the pstrut, dropping the radical glyph ~3em under the radicand (#789).
+  root.querySelectorAll<HTMLElement>('.katex .hide-tail').forEach((element) => {
+    setStyle(element, 'display', 'inline-block');
     setStyle(element, 'overflow', 'hidden');
     setStyle(element, 'position', 'relative');
     setStyle(element, 'width', '100%');
@@ -68,6 +197,112 @@ function hasMathContent(target: HTMLElement): boolean {
   return target.matches(MATH_RENDER_SELECTOR) || !!target.querySelector(MATH_RENDER_SELECTOR);
 }
 
+function normalizeFontFamily(font: string): string {
+  return font.trim().replace(/^["']|["']$/g, '');
+}
+
+function collectUsedFontFamilies(root: HTMLElement): Set<string> {
+  const fonts = new Set<string>();
+  [root, ...Array.from(root.querySelectorAll<HTMLElement>('*'))].forEach((element) => {
+    const fontFamily = element.style.fontFamily || getComputedStyle(element).fontFamily;
+    fontFamily
+      .split(',')
+      .map(normalizeFontFamily)
+      .forEach((font) => {
+        if (font) fonts.add(font);
+      });
+  });
+  return fonts;
+}
+
+async function blobToDataUrl(blob: Blob): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('readAsDataURL failed'));
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function resolveFontUrlAsDataUrl(url: string, baseUrl: string | null): Promise<string> {
+  if (/^data:/i.test(url)) return url;
+
+  const resolvedUrl = baseUrl ? new URL(url, baseUrl).href : new URL(url, document.baseURI).href;
+  const response = await fetch(resolvedUrl);
+  if (!response.ok) {
+    throw new Error(`Font fetch failed (${response.status})`);
+  }
+  return await blobToDataUrl(await response.blob());
+}
+
+type FontFaceRuleData = {
+  baseUrl: string | null;
+  display: string;
+  family: string;
+  stretch: string;
+  style: string;
+  weight: string;
+  src: string;
+};
+
+async function inlineWoff2Source(rule: FontFaceRuleData): Promise<string | null> {
+  const match = WOFF2_SOURCE_RE.exec(rule.src);
+  const fontUrl = match?.[2];
+  if (!fontUrl) return null;
+
+  try {
+    const dataUrl = await resolveFontUrlAsDataUrl(fontUrl, rule.baseUrl);
+    const declarations = [
+      `font-family: ${rule.family}`,
+      rule.style ? `font-style: ${rule.style}` : '',
+      rule.weight ? `font-weight: ${rule.weight}` : '',
+      rule.stretch ? `font-stretch: ${rule.stretch}` : '',
+      rule.display ? `font-display: ${rule.display}` : '',
+      `src: url(${dataUrl}) format("woff2")`,
+    ].filter(Boolean);
+    return `@font-face { ${declarations.join('; ')}; }`;
+  } catch {
+    return null;
+  }
+}
+
+async function buildKatexFontEmbedCss(target: HTMLElement): Promise<string> {
+  const usedFonts = collectUsedFontFamilies(target);
+  if (usedFonts.size === 0) return '';
+
+  const rules: FontFaceRuleData[] = [];
+
+  Array.from(target.ownerDocument.styleSheets).forEach((sheet) => {
+    let cssRules: CSSRuleList | undefined;
+    try {
+      cssRules = sheet.cssRules;
+    } catch {
+      return;
+    }
+
+    Array.from(cssRules || []).forEach((rule) => {
+      if (rule.type !== FONT_FACE_RULE_TYPE || !('style' in rule)) return;
+
+      const fontRule = rule as CSSFontFaceRule;
+      const family = normalizeFontFamily(fontRule.style.getPropertyValue('font-family'));
+      if (!family.startsWith('KaTeX_') || !usedFonts.has(family)) return;
+
+      rules.push({
+        baseUrl: fontRule.parentStyleSheet?.href ?? sheet.href ?? target.ownerDocument.baseURI,
+        display: fontRule.style.getPropertyValue('font-display'),
+        family,
+        stretch: fontRule.style.getPropertyValue('font-stretch'),
+        style: fontRule.style.getPropertyValue('font-style'),
+        weight: fontRule.style.getPropertyValue('font-weight'),
+        src: fontRule.style.getPropertyValue('src'),
+      });
+    });
+  });
+
+  const inlinedRules = await Promise.all(rules.map((rule) => inlineWoff2Source(rule)));
+  return inlinedRules.filter((rule): rule is string => Boolean(rule)).join('\n');
+}
+
 export type RenderElementToImageBlobOptions = {
   maxAttempts?: number;
   retryDelayMs?: number;
@@ -94,12 +329,15 @@ export function isImageResourceRenderError(error: unknown): boolean {
 
 async function renderTargetToBlob(target: HTMLElement): Promise<Blob> {
   stripXmlIllegalChars(target);
+  inlineKatexLayoutStyles(target);
   inlineKatexSvgStyles(target);
+  const containsMath = hasMathContent(target);
   const blob = await toBlob(target, {
     cacheBust: true,
     pixelRatio: 1.2,
     backgroundColor: '#ffffff',
-    skipFonts: !hasMathContent(target),
+    skipFonts: !containsMath,
+    fontEmbedCSS: containsMath ? await buildKatexFontEmbedCss(target) : undefined,
     imagePlaceholder: TRANSPARENT_IMAGE_PLACEHOLDER,
     onImageErrorHandler: () => undefined,
   });

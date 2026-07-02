@@ -174,6 +174,7 @@ async function main(): Promise<void> {
     throw new Error('Chrome not found. Set CHROME_BIN=/path/to/chrome and run again.');
   }
 
+  await buildPipelineBundle();
   const brokenHtml = writeFixture('broken', false);
   const fixedHtml = writeFixture('fixed', true);
 
@@ -193,7 +194,7 @@ async function main(): Promise<void> {
     const fixedAnalysis = analyze(fixedMetrics);
 
     await writePdf(client, fixedHtml, 'fixed.pdf');
-    await writeHtmlToImagePng(client, fixedHtml, 'fixed-html-to-image.png');
+    const radicalInk = await writeHtmlToImagePng(client, fixedHtml, 'fixed-html-to-image.png');
 
     const summary = {
       broken: { analysis: brokenAnalysis, metrics: brokenMetrics },
@@ -212,9 +213,25 @@ async function main(): Promise<void> {
     log(`KaTeX export verification written to ${outputDir}`);
     log(`broken checks: ${formatChecks(brokenAnalysis)}`);
     log(`fixed checks:  ${formatChecks(fixedAnalysis)}`);
+    log(
+      `radical ink (real pipeline PNG): ${radicalInk
+        .map((entry) => `${entry.label}=${entry.coverage.toFixed(2)}`)
+        .join(', ')}`,
+    );
 
     if (!fixedAnalysis.ok) {
       throw new Error('Fixed KaTeX export fixture failed layout checks.');
+    }
+
+    // Healthy renders paint the vinculum across ~96% of each radical band;
+    // the displaced-radical regression leaves only the radicand (~33%).
+    const missingInk = radicalInk.filter((entry) => entry.coverage < 0.6);
+    if (missingInk.length > 0) {
+      throw new Error(
+        `html-to-image output is missing radical ink where the live layout drew it: ${missingInk
+          .map((entry) => entry.label)
+          .join(', ')}`,
+      );
     }
   } finally {
     client?.close();
@@ -249,6 +266,7 @@ function writeFixture(name: string, fixed: boolean): string {
     <title>Voyager KaTeX Export ${name}</title>
     <link rel="stylesheet" href="${katexCssHref}" />
     <script src="${htmlToImageHref}"></script>
+    <script src="./pipeline-bundle.js"></script>
     <style>
       body {
         margin: 0;
@@ -410,30 +428,113 @@ async function writePdf(
   writeFileSync(join(outputDir, fileName), Buffer.from(data, 'base64'));
 }
 
+type RadicalInk = { label: string; coverage: number };
+
+/**
+ * Bundle the REAL image render pipeline (renderElementToImageBlob with its
+ * inline KaTeX style fixups) so the fixture exercises the shipped code path.
+ * The previous harness called html-to-image directly, which is exactly how
+ * the #789 regression slipped through with green checks.
+ */
+async function buildPipelineBundle(): Promise<void> {
+  const entryPath = join(outputDir, 'pipeline-entry.ts');
+  writeFileSync(
+    entryPath,
+    [
+      `import { renderElementToImageBlob } from '${resolve(
+        repoRoot,
+        'src/features/export/services/ImageRenderService',
+      )}';`,
+      `(window as unknown as Record<string, unknown>).gvRenderElementToImageBlob = renderElementToImageBlob;`,
+      '',
+    ].join('\n'),
+  );
+  const build = await Bun.build({
+    entrypoints: [entryPath],
+    minify: false,
+    target: 'browser',
+  });
+  if (!build.success) {
+    throw new Error(`pipeline bundle failed: ${build.logs.map(String).join('\n')}`);
+  }
+  writeFileSync(join(outputDir, 'pipeline-bundle.js'), await build.outputs[0].text());
+}
+
 async function writeHtmlToImagePng(
   client: DevtoolsClient,
   fixturePath: string,
   fileName: string,
-): Promise<void> {
+): Promise<RadicalInk[]> {
   await navigate(client, pathToFileURL(fixturePath).href);
-  const dataUrl = await evaluate<string>(
+  const result = await evaluate<{ dataUrl: string; radicalInk: RadicalInk[] }>(
     client,
     `(async () => {
       await document.fonts.ready;
       const node = document.querySelector('.gv-image-export-doc');
-      const dataUrl = await window.htmlToImage.toPng(node, {
-        backgroundColor: '#fff',
-        cacheBust: true,
-        pixelRatio: 1,
-        skipFonts: false,
+
+      // Live geometry of each radical glyph, relative to the doc box. The
+      // rendered PNG must contain ink (the vinculum) inside each band.
+      const docRect = node.getBoundingClientRect();
+      const bands = Array.from(node.querySelectorAll('.hide-tail')).map((el, index) => {
+        const rect = el.getBoundingClientRect();
+        return {
+          label: (el.closest('[data-case]')?.getAttribute('data-case') || 'radical') + '#' + index,
+          x: rect.x - docRect.x,
+          y: rect.y - docRect.y,
+          width: rect.width,
+          height: rect.height,
+        };
       });
-      return dataUrl;
+
+      const blob = await window.gvRenderElementToImageBlob(node, {});
+      const dataUrl = await new Promise((resolveRead, rejectRead) => {
+        const reader = new FileReader();
+        reader.onerror = () => rejectRead(new Error('blob read failed'));
+        reader.onload = () => resolveRead(String(reader.result || ''));
+        reader.readAsDataURL(blob);
+      });
+
+      const image = new Image();
+      await new Promise((resolveLoad, rejectLoad) => {
+        image.onload = resolveLoad;
+        image.onerror = () => rejectLoad(new Error('png decode failed'));
+        image.src = dataUrl;
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext('2d');
+      context.fillStyle = '#fff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0);
+      const scale = image.naturalWidth / docRect.width;
+
+      const radicalInk = bands.map((band) => {
+        const x0 = Math.max(0, Math.floor(band.x * scale));
+        const y0 = Math.max(0, Math.floor(band.y * scale));
+        const width = Math.max(1, Math.floor(band.width * scale));
+        const height = Math.max(1, Math.floor(band.height * scale));
+        const pixels = context.getImageData(x0, y0, width, height).data;
+        const columns = new Set();
+        for (let row = 0; row < height; row++) {
+          for (let column = 0; column < width; column++) {
+            const offset = (row * width + column) * 4;
+            if (pixels[offset + 3] > 50 && pixels[offset] < 200) {
+              columns.add(column);
+            }
+          }
+        }
+        return { label: band.label, coverage: columns.size / width };
+      });
+
+      return { dataUrl, radicalInk };
     })()`,
   );
 
-  const match = /^data:image\/png;base64,(.+)$/.exec(dataUrl);
+  const match = /^data:image\/png;base64,(.+)$/.exec(result.dataUrl);
   if (!match) throw new Error('html-to-image did not return a PNG data URL');
   writeFileSync(join(outputDir, fileName), Buffer.from(match[1], 'base64'));
+  return result.radicalInk;
 }
 
 async function writeScreenshot(
