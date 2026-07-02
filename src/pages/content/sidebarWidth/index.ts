@@ -96,13 +96,6 @@ function buildStyle(widthValue: number): string {
       pointer-events: none !important;
     }
 
-    /* Gemini now leaves this top-bar button at the default sidebar edge. With a
-       widened sidebar it sits over the real in-sidenav close button, but clicking
-       it does not collapse the sidebar (#748). Let the real button receive clicks. */
-    chat-app-side-nav-menu-button {
-      pointer-events: none !important;
-    }
-
     #app-root > main > div > bard-mode-switcher .top-bar-actions :is(
       button,
       a,
@@ -180,6 +173,52 @@ function buildStyle(widthValue: number): string {
       pointer-events: auto !important;
     }
 
+    /* Gemini can stretch this host across the header while the visible logo pill
+       stays narrow. Let the oversized transparent host pass through, but keep
+       the actual logo controls clickable. */
+    chat-app-side-nav-menu-button {
+      pointer-events: none !important;
+    }
+
+    chat-app-side-nav-menu-button side-nav-sparkle-button,
+    chat-app-side-nav-menu-button side-nav-sparkle-button :is(
+      a,
+      button,
+      [role='button'],
+      [tabindex]:not([tabindex='-1'])
+    ) {
+      pointer-events: auto !important;
+    }
+
+    /* Gemini now leaves this top-bar button at the default sidebar edge. With a
+       widened sidebar it sits over the real in-sidenav close button, but clicking
+       it does not collapse the sidebar (#748). Keep both the host and its inner
+       controls transparent after the top-bar allow-list above re-enables buttons. */
+    #app-root > main > div > bard-mode-switcher .top-bar-actions chat-app-side-nav-menu-button,
+    #app-root > main > div > bard-mode-switcher .top-bar-actions chat-app-side-nav-menu-button *,
+    #app-root > main > div > bard-mode-switcher .top-bar-actions chat-app-side-nav-menu-button :is(
+      button,
+      a,
+      input,
+      select,
+      textarea,
+      [role='button'],
+      [tabindex]:not([tabindex='-1'])
+    ),
+    top-bar-actions chat-app-side-nav-menu-button,
+    top-bar-actions chat-app-side-nav-menu-button *,
+    top-bar-actions chat-app-side-nav-menu-button :is(
+      button,
+      a,
+      input,
+      select,
+      textarea,
+      [role='button'],
+      [tabindex]:not([tabindex='-1'])
+    ) {
+      pointer-events: none !important;
+    }
+
     /* Gemini fixes top-bar-actions at the default sidebar offset (z-index: 3), so a
        custom-widened sidebar slides its own toggle button underneath it, where the
        pointer-events re-enabled above let invisible legacy top-bar controls steal the
@@ -190,7 +229,6 @@ function buildStyle(widthValue: number): string {
     bard-sidenav button[aria-label="Open sidebar"],
     bard-sidenav button:has(mat-icon[fonticon="side_nav"]),
     bard-sidenav button:has(mat-icon[fonticon="side_nav_expand"]) {
-      position: relative;
       z-index: 10 !important;
       pointer-events: auto !important;
     }

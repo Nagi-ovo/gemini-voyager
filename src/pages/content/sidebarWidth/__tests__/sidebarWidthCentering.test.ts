@@ -106,6 +106,9 @@ describe('sidebar width title centering', () => {
     expect(code).toContain('bard-sidenav button:has(mat-icon[fonticon="side_nav_expand"])');
     expect(code).toContain('pointer-events: auto !important;');
     expect(code).toContain('z-index: 10 !important;');
+
+    const liftBlock = code.match(/bard-sidenav \.close-sidenav-button,[\s\S]*?{([\s\S]*?)}/)?.[1] ?? '';
+    expect(liftBlock).not.toContain('position: relative');
   });
 
   it("lets Gemini's default-offset side-nav menu button pass through to the real close button", () => {
@@ -115,6 +118,19 @@ describe('sidebar width title centering', () => {
     );
 
     expect(code).toContain('chat-app-side-nav-menu-button {');
+    expect(code).toContain('chat-app-side-nav-menu-button side-nav-sparkle-button');
+    expect(code).toContain('chat-app-side-nav-menu-button side-nav-sparkle-button :is(');
+    expect(code).toContain(
+      '#app-root > main > div > bard-mode-switcher .top-bar-actions chat-app-side-nav-menu-button',
+    );
+    expect(code).toContain('top-bar-actions chat-app-side-nav-menu-button *');
+    expect(code).toContain('top-bar-actions chat-app-side-nav-menu-button :is(');
+    expect(code.indexOf('top-bar-actions chat-app-side-nav-menu-button :is(')).toBeGreaterThan(
+      code.indexOf('chat-app-side-nav-menu-button side-nav-sparkle-button :is('),
+    );
+    expect(code.indexOf('top-bar-actions chat-app-side-nav-menu-button :is(')).toBeGreaterThan(
+      code.indexOf('top-bar-actions :is('),
+    );
     expect(code).toContain('pointer-events: none !important;');
     expect(code).not.toContain('function setupSidebarToggleHitGuard()');
     expect(code).not.toContain("window.addEventListener('click'");
