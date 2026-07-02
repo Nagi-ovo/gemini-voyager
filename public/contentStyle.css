@@ -3807,6 +3807,49 @@ body.light-theme {
 
 .gv-folder-header .title-container {
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.gv-folder-section-toggle {
+  width: 20px;
+  height: 20px;
+  margin-left: -6px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--folder-icon-color);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  flex: 0 0 auto;
+  transition:
+    opacity 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.gv-folder-section-toggle .google-symbols {
+  font-size: 20px;
+  line-height: 20px;
+}
+
+.gv-folder-header:hover .gv-folder-section-toggle,
+.gv-folder-section-toggle:focus-visible,
+.gv-folder-collapsed .gv-folder-section-toggle {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gv-folder-section-toggle:hover {
+  background-color: var(--folder-hover-bg);
+  color: var(--folder-text);
 }
 
 /* Match Gemini's native section title (.expandable-section-title.gds-body-s). */
@@ -3897,6 +3940,15 @@ body.light-theme {
   transition:
     background-color 0.2s,
     border 0.2s;
+}
+
+.gv-folder-collapsed {
+  padding-bottom: 0;
+}
+
+.gv-folder-collapsed .gv-folder-search,
+.gv-folder-collapsed .gv-folder-list {
+  display: none;
 }
 
 .gv-folder-list-dragover {

@@ -199,6 +199,7 @@ export class FolderManager {
   // wants Folders to be the topmost section. Persisted via
   // `StorageKeys.FOLDERS_ANCHOR` in chrome.storage.local.
   private folderAnchor: 'above-recents' | 'above-notebooks' = 'above-recents';
+  private foldersCollapsed: boolean = false;
   // The small hover-reveal swap button we paint over Notebooks' top-right
   // corner (the same spot the section-hider's "eye" button used to live in).
   // Click flips `folderAnchor`. Tracked so we can detect a stale element when
@@ -394,6 +395,7 @@ export class FolderManager {
 
       // Load folder anchor preference (which native section to sit above)
       await this.loadFolderAnchorSetting();
+      await this.loadFoldersCollapsedSetting();
 
       // Load filter user setting
       await this.loadFilterUserSetting();
@@ -1562,6 +1564,7 @@ export class FolderManager {
     // Create folders list
     const foldersList = this.createFoldersList();
     this.containerElement.appendChild(foldersList);
+    this.applyFoldersCollapsedState();
 
     // Insert before Recent section
     this.recentSection.parentElement?.insertBefore(this.containerElement, this.recentSection);
@@ -1737,6 +1740,17 @@ export class FolderManager {
     title.textContent = this.t('folder_title');
     title.style.visibility = 'visible';
 
+    const collapseButton = document.createElement('button');
+    collapseButton.className = 'gv-folder-section-toggle';
+    collapseButton.type = 'button';
+    collapseButton.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      void this.toggleFoldersCollapsed();
+    });
+    collapseButton.innerHTML = '<span class="google-symbols" aria-hidden="true"></span>';
+
+    titleContainer.appendChild(collapseButton);
     titleContainer.appendChild(title);
 
     // Actions container for buttons
@@ -7609,6 +7623,50 @@ export class FolderManager {
     }
   }
 
+  private async loadFoldersCollapsedSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.local.get({
+        [StorageKeys.FOLDERS_COLLAPSED]: false,
+      });
+      this.foldersCollapsed = result[StorageKeys.FOLDERS_COLLAPSED] === true;
+      this.debug('Loaded folder collapsed preference:', this.foldersCollapsed);
+    } catch (error) {
+      console.error('[FolderManager] Failed to load folder collapsed preference:', error);
+      this.foldersCollapsed = false;
+    }
+  }
+
+  private applyFoldersCollapsedState(): void {
+    const container = this.containerElement;
+    if (!container) return;
+
+    container.classList.toggle('gv-folder-collapsed', this.foldersCollapsed);
+
+    const button = container.querySelector<HTMLButtonElement>('.gv-folder-section-toggle');
+    if (!button) return;
+
+    const label = this.t(this.foldersCollapsed ? 'pm_expand' : 'pm_collapse');
+    button.title = label;
+    button.setAttribute('aria-label', label);
+    button.setAttribute('aria-expanded', String(!this.foldersCollapsed));
+
+    const icon = button.querySelector<HTMLElement>('.google-symbols');
+    if (icon) {
+      icon.textContent = this.foldersCollapsed ? 'chevron_right' : 'expand_more';
+    }
+  }
+
+  private async toggleFoldersCollapsed(): Promise<void> {
+    this.foldersCollapsed = !this.foldersCollapsed;
+    this.applyFoldersCollapsedState();
+
+    try {
+      await browser.storage.local.set({ [StorageKeys.FOLDERS_COLLAPSED]: this.foldersCollapsed });
+    } catch (error) {
+      console.error('[FolderManager] Failed to persist folder collapsed preference:', error);
+    }
+  }
+
   /**
    * Flip the folder anchor between 'above-recents' and 'above-notebooks',
    * persist it, and re-anchor the panel immediately. Persistence triggers the
@@ -8026,6 +8084,13 @@ export class FolderManager {
           this.debug('Folder anchor changed via storage event:', next);
           this.refreshNotebooksAnchorButtonState();
           this.enforceFolderAboveRecents();
+        }
+      }
+      if (areaName === 'local' && changes[StorageKeys.FOLDERS_COLLAPSED]) {
+        const next = changes[StorageKeys.FOLDERS_COLLAPSED].newValue === true;
+        if (next !== this.foldersCollapsed) {
+          this.foldersCollapsed = next;
+          this.applyFoldersCollapsedState();
         }
       }
     });
@@ -8774,6 +8839,7 @@ export class FolderManager {
     if (title) {
       title.textContent = this.t('folder_title');
     }
+    this.applyFoldersCollapsedState();
 
     // Update button tooltips in header actions
     const actionsContainer = this.containerElement.querySelector('.gv-folder-header-actions');

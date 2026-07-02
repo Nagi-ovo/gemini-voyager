@@ -146,6 +146,7 @@ export const StorageKeys = {
   GEMS_HIDDEN: 'gvGemsHidden',
   NOTEBOOKS_HIDDEN: 'gvNotebooksHidden',
   FOLDERS_HIDDEN: 'gvFoldersHidden',
+  FOLDERS_COLLAPSED: 'gvFoldersCollapsed',
   // How many recent gems to show as an expandable section in the sidebar.
   // 0 disables the feature entirely (no section injected); 1-10 shows that
   // many items. Cached gem list lives in `GV_GEMS_LIST_CACHE`.
