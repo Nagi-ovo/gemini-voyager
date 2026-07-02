@@ -107,7 +107,8 @@ describe('sidebar width title centering', () => {
     expect(code).toContain('pointer-events: auto !important;');
     expect(code).toContain('z-index: 10 !important;');
 
-    const liftBlock = code.match(/bard-sidenav \.close-sidenav-button,[\s\S]*?{([\s\S]*?)}/)?.[1] ?? '';
+    const liftBlock =
+      code.match(/bard-sidenav \.close-sidenav-button,[\s\S]*?{([\s\S]*?)}/)?.[1] ?? '';
     expect(liftBlock).not.toContain('position: relative');
   });
 
