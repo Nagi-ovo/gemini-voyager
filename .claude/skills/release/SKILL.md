@@ -206,7 +206,7 @@ Safari gets its own asset (a signed DMG) because Safari extensions ship as nativ
 xcodebuild -version 2>&1
 ```
 
-- If it prints a version (e.g., `Xcode 15.4`): proceed to **references/safari-dmg.md** for the full flow.
+- If it prints a version (e.g., `Xcode 15.4`): proceed to **references/safari-dmg.md** for the full flow. Two things that flow now bakes in and must not be skipped: (1) the Safari bundle IDs stay the **placeholder** `com.yourCompany.Gemini-Voyager` (changing them breaks existing users' in-place update), and (2) the DMG is **notarized + stapled** headlessly via the `voyager-notary` keychain profile before upload — a signed-but-un-notarized DMG trips the Gatekeeper malware warning.
 - If it prints `xcode-select: error: tool 'xcodebuild' requires Xcode, but active developer directory ... is a command line tools instance`: tell the user they can't build the DMG here, note that the GitHub Release went out with Chrome/Firefox (Edge users should use the Chrome Web Store build), and show them how to finish later on a machine with Xcode:
   ```
   # On a machine with Xcode.app

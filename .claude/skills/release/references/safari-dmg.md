@@ -74,19 +74,19 @@ If this fails, do not archive. Fix the Vite env injection first; otherwise the S
 
 ### 4. Verify bundle IDs and signing identity
 
-Do this before archiving. The Safari converter can leave placeholder bundle IDs (`com.yourCompany...`), which look unprofessional and can create the wrong App IDs during automatic signing.
+Do this before archiving. Confirm the bundle IDs match what shipped users already have installed.
 
 ```bash
 grep -E "PRODUCT_BUNDLE_IDENTIFIER|DEVELOPMENT_TEAM" "Gemini Voyager/Gemini Voyager.xcodeproj/project.pbxproj"
 ```
 
-Expected bundle IDs:
+Expected bundle IDs — the **placeholder** `com.yourCompany` IDs, NOT `fun.nagi.*`:
 
-- App: `fun.nagi.voyager`
-- Extension: `fun.nagi.voyager.extension`
+- App: `com.yourCompany.Gemini-Voyager`
+- Extension: `com.yourCompany.Gemini-Voyager.Extension`
 - Team: `PJM828YBFJ`
 
-If the project still says `com.yourCompany.Gemini-Voyager`, update all app and extension `PRODUCT_BUNDLE_IDENTIFIER` entries before archive. The project file is gitignored, so this is local release configuration unless the repo policy changes.
+⚠️ **Do NOT "clean up" these to `fun.nagi.voyager`.** Every shipped Safari build has used the `com.yourCompany.Gemini-Voyager` bundle ID, so existing users are installed under it. Changing the bundle ID changes the app identity — macOS then treats the new build as a *different* app and existing users cannot update in place (they'd end up with two copies). Backward-compat beats tidy IDs. If the project somehow shows `fun.nagi.voyager`, revert both the app and extension `PRODUCT_BUNDLE_IDENTIFIER` entries to the `com.yourCompany.Gemini-Voyager` / `.Extension` placeholders before archiving. The project file is gitignored, so this is local release configuration.
 
 Confirm the Developer ID identity exists:
 
@@ -138,7 +138,7 @@ cat > "$OPTIONS" <<'PLIST'
   <key>stripSwiftSymbols</key>
   <true/>
   <key>distributionBundleIdentifier</key>
-  <string>fun.nagi.voyager</string>
+  <string>com.yourCompany.Gemini-Voyager</string>
 </dict>
 </plist>
 PLIST
@@ -212,7 +212,45 @@ hdiutil detach "$MOUNT"
 
 `create-dmg` and `hdiutil attach/verify` may require an unsandboxed shell because they need macOS disk image device access.
 
-### 8. Upload to the GitHub release
+### 8. Notarize and staple (required — or Gatekeeper warns)
+
+CLI `xcodebuild -exportArchive` (method=developer-id) signs but does **not** notarize. An un-notarized DMG makes users hit *"Apple could not verify 'Gemini Voyager.app' is free of malware"* on first open. Notarize before uploading. (Xcode's GUI "Distribute App → Direct Distribution" notarizes automatically — that was the old manual path; this replaces it headlessly.)
+
+A `notarytool` keychain profile named `voyager-notary` is stored on the release machine. If it's missing, create it once — the maintainer runs this so the password never reaches the agent or the repo:
+
+```bash
+# one-time; app-specific password from appleid.apple.com → Sign-In and Security → App-Specific Passwords
+xcrun notarytool store-credentials "voyager-notary" --apple-id <apple-id> --team-id PJM828YBFJ --password <app-specific-password>
+```
+
+Then submit → staple → rebuild:
+
+```bash
+# 1. submit the signed DMG; --wait blocks until Apple returns "status: Accepted" (~1-3 min)
+xcrun notarytool submit "safari/Models/voyager-v${VERSION}.dmg" --keychain-profile "voyager-notary" --wait
+
+# 2. staple the ticket to the APP (not just the DMG) so a copied-to-/Applications app passes offline
+xcrun stapler staple "safari/Models/dmg_source/Gemini Voyager.app"
+xcrun stapler validate "safari/Models/dmg_source/Gemini Voyager.app"
+
+# 3. rebuild the DMG from the now-stapled app (same create-dmg command as step 7)
+```
+
+Submitting the DMG notarizes the enclosed app's cdhash, so you can staple the app directly afterwards — no separate app submission. `notarytool`/`stapler` need network + keychain access; run unsandboxed if the shell blocks keychain reads.
+
+Verify before uploading — mount the rebuilt DMG and assess the app inside:
+
+```bash
+MOUNT=$(mktemp -d /tmp/gv-notary.XXXXXX)
+hdiutil attach -readonly -nobrowse -mountpoint "$MOUNT" "safari/Models/voyager-v${VERSION}.dmg"
+spctl -a -t exec -vvv "$MOUNT/Gemini Voyager.app"     # must say: accepted / source=Notarized Developer ID
+xcrun stapler validate "$MOUNT/Gemini Voyager.app"    # must say: The validate action worked!
+hdiutil detach "$MOUNT"
+```
+
+Only upload once `spctl` reports `Notarized Developer ID`. `spctl -t open` on the DMG itself may say "no usable signature" (create-dmg leaves the DMG unsigned) — that's fine; the stapled app inside is what Gatekeeper checks.
+
+### 9. Upload to the GitHub release
 
 ```bash
 gh release upload v${VERSION} safari/Models/voyager-v${VERSION}.dmg --clobber
@@ -220,7 +258,7 @@ gh release upload v${VERSION} safari/Models/voyager-v${VERSION}.dmg --clobber
 
 `--clobber` overwrites if a DMG with the same name already exists (useful when re-signing or rebuilding).
 
-### 9. Verify
+### 10. Verify
 
 ```bash
 gh release view v${VERSION} --json assets --jq '.assets[].name'
