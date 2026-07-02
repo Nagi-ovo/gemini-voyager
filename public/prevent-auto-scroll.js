@@ -41,6 +41,11 @@
     return bridge && bridge.dataset.enabled === 'true';
   }
 
+  function isCtrlEnterSendEnabled() {
+    const bridge = document.getElementById(BRIDGE_ID);
+    return bridge && bridge.dataset.ctrlEnterSend === 'true';
+  }
+
   function allowNativeScrollFor(durationMs) {
     const now = Date.now();
     if (now - lastSubmitIntentAt < SUBMIT_ROUTE_GRACE_MS) return;
@@ -92,7 +97,10 @@
 
   function isEditableTarget(target) {
     if (!(target instanceof Element)) return false;
-    return Boolean(target.closest('textarea, input, [contenteditable="true"], [role="textbox"]'));
+    const editable = target.closest('textarea, input, [contenteditable], [role="textbox"]');
+    if (!editable) return false;
+    const contentEditable = editable.getAttribute('contenteditable');
+    return !contentEditable || contentEditable.toLowerCase() !== 'false';
   }
 
   function closestButton(target) {
@@ -125,6 +133,7 @@
     'keydown',
     (event) => {
       if (event.key !== 'Enter' || event.shiftKey || event.altKey || event.isComposing) return;
+      if (isCtrlEnterSendEnabled() && !event.ctrlKey && !event.metaKey) return;
       if (isEditableTarget(event.target)) markSubmitIntent();
     },
     true,
@@ -312,8 +321,14 @@
     Element.prototype,
     'scrollTop',
   );
-  if (originalScrollTopDescriptor) {
+  if (
+    originalScrollTopDescriptor?.configurable &&
+    typeof originalScrollTopDescriptor.get === 'function' &&
+    typeof originalScrollTopDescriptor.set === 'function'
+  ) {
     Object.defineProperty(Element.prototype, 'scrollTop', {
+      configurable: originalScrollTopDescriptor.configurable,
+      enumerable: originalScrollTopDescriptor.enumerable,
       get: originalScrollTopDescriptor.get,
       set: function (value) {
         if (shouldBlockAutoScroll() && isChatScrollElement(this) && isScrolledUp(this)) {

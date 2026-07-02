@@ -1,3 +1,4 @@
+import { StorageKeys } from '@/core/types/common';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
 const GV_BRIDGE_ID = 'gv-prevent-auto-scroll-bridge';
@@ -13,9 +14,14 @@ function getBridgeElement(): HTMLElement {
   return bridge;
 }
 
-function notifyScript(enabled: boolean): void {
+function notifyScript(settings: { ctrlEnterSend?: boolean; enabled?: boolean }): void {
   const bridge = getBridgeElement();
-  bridge.dataset.enabled = String(enabled);
+  if (typeof settings.enabled === 'boolean') {
+    bridge.dataset.enabled = String(settings.enabled);
+  }
+  if (typeof settings.ctrlEnterSend === 'boolean') {
+    bridge.dataset.ctrlEnterSend = String(settings.ctrlEnterSend);
+  }
 }
 
 function injectScript(): void {
@@ -35,13 +41,27 @@ export async function startPreventAutoScroll(): Promise<void> {
   try {
     getBridgeElement();
 
-    const result = await chrome.storage?.sync?.get({ gvPreventAutoScrollEnabled: false });
-    notifyScript(result?.gvPreventAutoScrollEnabled === true);
+    const result = await chrome.storage?.sync?.get({
+      [StorageKeys.PREVENT_AUTO_SCROLL_ENABLED]: false,
+      [StorageKeys.CTRL_ENTER_SEND]: false,
+    });
+    notifyScript({
+      enabled: result?.[StorageKeys.PREVENT_AUTO_SCROLL_ENABLED] === true,
+      ctrlEnterSend: result?.[StorageKeys.CTRL_ENTER_SEND] === true,
+    });
     injectScript();
 
     chrome.storage.onChanged.addListener((changes, area) => {
-      if (area === 'sync' && changes.gvPreventAutoScrollEnabled) {
-        notifyScript(changes.gvPreventAutoScrollEnabled.newValue === true);
+      if (area !== 'sync') return;
+      if (changes[StorageKeys.PREVENT_AUTO_SCROLL_ENABLED]) {
+        notifyScript({
+          enabled: changes[StorageKeys.PREVENT_AUTO_SCROLL_ENABLED].newValue === true,
+        });
+      }
+      if (changes[StorageKeys.CTRL_ENTER_SEND]) {
+        notifyScript({
+          ctrlEnterSend: changes[StorageKeys.CTRL_ENTER_SEND].newValue === true,
+        });
       }
     });
   } catch (error) {

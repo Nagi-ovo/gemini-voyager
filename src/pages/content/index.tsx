@@ -258,6 +258,10 @@ async function initializeFeatures(): Promise<void> {
       inputVimModeCleanup = await startInputVimMode();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
+      // Send behavior must be ready before prevent-auto-scroll reads its bridge state.
+      sendBehaviorCleanup = await startSendBehavior('gemini');
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
       startPreventAutoScroll();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
@@ -293,10 +297,6 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startContextSync();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      // Send behavior (Ctrl+Enter to send)
-      sendBehaviorCleanup = await startSendBehavior('gemini');
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Draft auto-save

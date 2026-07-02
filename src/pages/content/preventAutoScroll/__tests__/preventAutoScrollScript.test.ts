@@ -10,6 +10,7 @@ type PatchedWindow = Window & { __gvPreventAutoScrollInstalled?: boolean };
 let originalElementScrollTo: PropertyDescriptor | undefined;
 let originalElementScrollBy: PropertyDescriptor | undefined;
 let originalElementScrollIntoView: PropertyDescriptor | undefined;
+let originalElementScrollTop: PropertyDescriptor | undefined;
 let originalWindowScrollTo: typeof window.scrollTo;
 let originalWindowScrollBy: typeof window.scrollBy;
 let originalHistoryPushState: typeof history.pushState;
@@ -75,15 +76,17 @@ function restoreDescriptor(
   }
 }
 
-function createBridge(enabled: boolean): void {
+function createBridge(enabled: boolean, ctrlEnterSend = false): void {
+  document.getElementById('gv-prevent-auto-scroll-bridge')?.remove();
   const bridge = document.createElement('div');
   bridge.id = 'gv-prevent-auto-scroll-bridge';
   bridge.dataset.enabled = String(enabled);
+  bridge.dataset.ctrlEnterSend = String(ctrlEnterSend);
   document.documentElement.appendChild(bridge);
 }
 
-function installScript(enabled = true): void {
-  createBridge(enabled);
+function installScript(enabled = true, ctrlEnterSend = false): void {
+  createBridge(enabled, ctrlEnterSend);
   new Function(preventAutoScrollScript)();
 }
 
@@ -134,6 +137,7 @@ describe('prevent-auto-scroll page script', () => {
       Element.prototype,
       'scrollIntoView',
     );
+    originalElementScrollTop = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop');
     originalWindowScrollTo = window.scrollTo;
     originalWindowScrollBy = window.scrollBy;
     originalHistoryPushState = history.pushState;
@@ -142,6 +146,7 @@ describe('prevent-auto-scroll page script', () => {
     document.body.innerHTML = '';
     document.documentElement.removeAttribute('data-test');
     history.replaceState({}, '', '/app/current');
+    document.getElementById('gv-prevent-auto-scroll-bridge')?.remove();
     delete (window as PatchedWindow).__gvPreventAutoScrollInstalled;
 
     defineBrowserScrollStubs();
@@ -151,10 +156,12 @@ describe('prevent-auto-scroll page script', () => {
     restoreDescriptor(Element.prototype, 'scrollTo', originalElementScrollTo);
     restoreDescriptor(Element.prototype, 'scrollBy', originalElementScrollBy);
     restoreDescriptor(Element.prototype, 'scrollIntoView', originalElementScrollIntoView);
+    restoreDescriptor(Element.prototype, 'scrollTop', originalElementScrollTop);
     window.scrollTo = originalWindowScrollTo;
     window.scrollBy = originalWindowScrollBy;
     history.pushState = originalHistoryPushState;
     history.replaceState = originalHistoryReplaceState;
+    document.getElementById('gv-prevent-auto-scroll-bridge')?.remove();
     delete (window as PatchedWindow).__gvPreventAutoScrollInstalled;
     vi.useRealTimers();
   });
@@ -174,6 +181,70 @@ describe('prevent-auto-scroll page script', () => {
   it('blocks downward auto-scroll after the user submits while reading older content', () => {
     installScript();
     submitFromComposer();
+
+    const { el, getScrollTop } = createScrollableElement();
+
+    el.scrollTo({ top: 1800 });
+
+    expect(elementScrollToSpy).not.toHaveBeenCalled();
+    expect(getScrollTop()).toBe(0);
+  });
+
+  it('detects non-false contenteditable composers as submit targets', () => {
+    installScript();
+
+    const input = document.createElement('div');
+    input.setAttribute('contenteditable', 'plaintext-only');
+    document.body.appendChild(input);
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+    const { el, getScrollTop } = createScrollableElement();
+
+    el.scrollTo({ top: 1800 });
+
+    expect(elementScrollToSpy).not.toHaveBeenCalled();
+    expect(getScrollTop()).toBe(0);
+  });
+
+  it('does not treat plain Enter as submit when Ctrl+Enter send mode is enabled', () => {
+    installScript(true, true);
+
+    const input = document.createElement('textarea');
+    document.body.appendChild(input);
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+    const { el, getScrollTop } = createScrollableElement();
+
+    el.scrollTo({ top: 1800 });
+
+    expect(elementScrollToSpy).toHaveBeenCalledTimes(1);
+    expect(getScrollTop()).toBe(1800);
+  });
+
+  it('treats Ctrl+Enter as submit when Ctrl+Enter send mode is enabled', () => {
+    installScript(true, true);
+
+    const input = document.createElement('textarea');
+    document.body.appendChild(input);
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true }),
+    );
+
+    const { el, getScrollTop } = createScrollableElement();
+
+    el.scrollTo({ top: 1800 });
+
+    expect(elementScrollToSpy).not.toHaveBeenCalled();
+    expect(getScrollTop()).toBe(0);
+  });
+
+  it('blocks downward auto-scroll after the user clicks the send button', () => {
+    installScript();
+
+    const sendButton = document.createElement('button');
+    sendButton.setAttribute('aria-label', 'Send');
+    document.body.appendChild(sendButton);
+    sendButton.click();
 
     const { el, getScrollTop } = createScrollableElement();
 
@@ -245,6 +316,29 @@ describe('prevent-auto-scroll page script', () => {
     expect(elementScrollIntoViewSpy).toHaveBeenCalledTimes(1);
     expect(nativeSideEffectRan).toBe(true);
     expect(getScrollTop()).toBe(0);
+  });
+
+  it('preserves the scrollTop descriptor flags when patching the prototype', () => {
+    const getScrollTop = vi.fn(function (this: Element) {
+      return this instanceof HTMLElement ? 0 : undefined;
+    });
+    const setScrollTop = vi.fn();
+
+    Object.defineProperty(Element.prototype, 'scrollTop', {
+      configurable: true,
+      enumerable: true,
+      get: getScrollTop,
+      set: setScrollTop,
+    });
+
+    installScript();
+
+    const descriptor = Object.getOwnPropertyDescriptor(Element.prototype, 'scrollTop');
+
+    expect(descriptor?.configurable).toBe(true);
+    expect(descriptor?.enumerable).toBe(true);
+    expect(typeof descriptor?.get).toBe('function');
+    expect(typeof descriptor?.set).toBe('function');
   });
 
   it('preserves the viewport scroll position when body/html is the scroll root', () => {
