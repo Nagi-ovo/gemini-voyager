@@ -54,5 +54,5 @@
     "service_worker": "src/pages/background/index.ts",
     "type": "module"
   },
-  "version": "1.5.3"
+  "version": "1.5.4"
 }
