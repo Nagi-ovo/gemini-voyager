@@ -155,6 +155,33 @@ Regression test:
 Commit:
 `fa059943 fix(export): preserve Gemini KaTeX radicals`
 
+## KaTeX image export does not follow the PDF path
+
+Symptom:
+PDF export rendered square-root formulas correctly, but image export still
+misplaced radicals/fraction layout. It was easy to think the fix worked by only
+checking the PDF output.
+
+Root cause:
+PDF and image exports use different render paths. The image path goes through
+`html-to-image`, which clones the target node and may scan the whole page's
+stylesheets. On Gemini, cross-origin stylesheets can trip `cssRules` access and
+KaTeX radicals/fractions depend on fragile `.vlist`, `.pstrut`, `.sqrt`, and
+stretchy SVG/image layout rules, not just the KaTeX font files.
+
+Fix:
+Use Fable 5's verified image-path fix: supply scoped KaTeX font CSS via
+`fontEmbedCSS` and inline the critical KaTeX layout primitives before capture.
+The verification harness must exercise `ImageRenderService.renderTargetToBlob`,
+not a direct `html-to-image` call or the PDF print flow.
+
+Regression test:
+`src/features/export/services/__tests__/ImageRenderService.test.ts`
+`bun run verify:katex-export`
+
+Commit:
+`5a28ef00 fix(export): preserve katex layout in image exports`
+
 ## Claude usage settings hash may not open the modal by itself
 
 Symptom:
