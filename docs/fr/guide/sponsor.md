@@ -5,7 +5,7 @@
 
 Maintenir des projets open-source est principalement motivé par la passion (et le café) ☕
 
-Ce site n'affiche aucune publicité (Google Ads ou autre) et l'extension n'a pas de version payante. L'intention est simple : construire un outil que j'utilise chaque jour et que je recommanderais à un ami —— en gardant une part de sincérité au milieu du bruit ambiant.
+Ce site n'affiche aucune publicité (Google Ads ou autre) et l'extension n'a pas de version payante ; j'ai aussi refusé le financement de services relais d'API, car je ne peux pas garantir la façon dont ils traitent les données des utilisateurs. L'intention est simple : construire un outil que j'utilise chaque jour et que je recommanderais à un ami —— en gardant une part de sincérité au milieu du bruit ambiant.
 
 ## Plateformes en Ligne
 

@@ -5,7 +5,7 @@
 
 Se o Voyager melhora a sua produtividade diária, considere patrocinar o projeto. O seu apoio ajuda-nos a manter o desenvolvimento ativo, corrigir bugs e adicionar novas funcionalidades.
 
-Este site não exibe Google Ads e a extensão não tem versão paga. A intenção é simples: construir uma ferramenta que eu mesmo uso todos os dias e recomendaria a um amigo —— mantendo a sinceridade em meio ao barulho.
+Este site não exibe Google Ads e a extensão não tem versão paga; também recusei financiamento de serviços de relay de API, porque não consigo confirmar como tratam os dados dos utilizadores. A intenção é simples: construir uma ferramenta que eu mesmo uso todos os dias e recomendaria a um amigo —— mantendo a sinceridade em meio ao barulho.
 
 ## Formas de Apoiar
 
