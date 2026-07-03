@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Search, X } from 'lucide-react';
+import { Download, Search, Upload, X } from 'lucide-react';
 import browser from 'webextension-polyfill';
 
 import {
@@ -27,6 +27,7 @@ import {
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import { resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
+import { PromptImportExportService } from '@/features/backup/services/PromptImportExportService';
 import { matchesAnyPattern } from '@/features/plugins/sites/matchPattern';
 import {
   listPluginManifests,
@@ -146,6 +147,13 @@ function popupSectionSearchTarget(
   aliases?: readonly string[],
 ): PopupSettingsSearchItem {
   return popupSearchTarget(sectionId, SECTION_SEARCH_SETTING_ID, keys, aliases);
+}
+
+function isEmptyPromptImportPayload(value: unknown): boolean {
+  if (Array.isArray(value)) return value.length === 0;
+  if (!value || typeof value !== 'object') return false;
+  const items = (value as { items?: unknown }).items;
+  return Array.isArray(items) && items.length === 0;
 }
 
 const POPUP_SETTINGS_SEARCH_ITEMS = [
@@ -361,6 +369,12 @@ const POPUP_SETTINGS_SEARCH_ITEMS = [
     'promptInsertOnClick',
     'promptInsertOnClickHint',
   ]),
+  popupSearchTarget(
+    'promptManager',
+    'promptDataMigration',
+    ['promptDataMigration', 'promptDataMigrationHint', 'pm_import', 'pm_export'],
+    ['prompt import export backup migrate 提示词 导入 导出 迁移 备份'],
+  ),
   popupSearchTarget(
     'promptManager',
     'customWebsites',
@@ -831,6 +845,11 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const [watermarkPreviewEnabled, setWatermarkPreviewEnabled] = useState<boolean>(true);
   const [hidePromptManager, setHidePromptManager] = useState<boolean>(false);
   const [promptInsertOnClickEnabled, setPromptInsertOnClickEnabled] = useState<boolean>(false);
+  const [promptMigrationStatus, setPromptMigrationStatus] = useState<{
+    kind: 'ok' | 'err';
+    text: string;
+  } | null>(null);
+  const [promptMigrationBusy, setPromptMigrationBusy] = useState<boolean>(false);
   const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(false);
   const [inputCollapseWhenNotEmpty, setInputCollapseWhenNotEmpty] = useState<boolean>(false);
   const [inputVimModeEnabled, setInputVimModeEnabled] = useState<boolean>(false);
@@ -874,6 +893,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const [accentColors, setAccentColors] = useState<Record<string, string>>({});
   // Debounce timer for persisting accent changes to throttled sync storage.
   const accentWriteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const promptImportInputRef = useRef<HTMLInputElement | null>(null);
   const [pluginsLoading, setPluginsLoading] = useState<boolean>(true);
   const [pluginsRefreshing, setPluginsRefreshing] = useState<boolean>(false);
   const [aiStructureCopyStatus, setAiStructureCopyStatus] = useState<
@@ -1147,6 +1167,68 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
       void setSyncStorage(payload);
     },
     [activeAccountPlatform, setSyncStorage],
+  );
+
+  const handlePromptExport = useCallback(async () => {
+    setPromptMigrationBusy(true);
+    setPromptMigrationStatus(null);
+    try {
+      const result = await PromptImportExportService.loadPrompts();
+      if (!result.success) throw result.error;
+
+      const prompts = result.data;
+      PromptImportExportService.downloadJSON(PromptImportExportService.exportToPayload(prompts));
+      setPromptMigrationStatus({
+        kind: 'ok',
+        text: t('promptExportSuccess').replace('{count}', String(prompts.length)),
+      });
+    } catch (error) {
+      console.error('[Gemini Voyager] Failed to export prompts:', error);
+      setPromptMigrationStatus({ kind: 'err', text: t('promptExportError') });
+    } finally {
+      setPromptMigrationBusy(false);
+    }
+  }, [t]);
+
+  const handlePromptImport = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      setPromptMigrationBusy(true);
+      setPromptMigrationStatus(null);
+      try {
+        const readResult = await PromptImportExportService.readJSONFile(file);
+        if (!readResult.success) throw readResult.error;
+
+        const payloadResult = PromptImportExportService.validatePayload(readResult.data);
+        if (!payloadResult.success) {
+          setPromptMigrationStatus({
+            kind: 'err',
+            text: isEmptyPromptImportPayload(readResult.data)
+              ? t('pm_import_empty')
+              : t('pm_import_invalid'),
+          });
+          return;
+        }
+
+        const importResult = await PromptImportExportService.importFromPayload(payloadResult.data);
+        if (!importResult.success) throw importResult.error;
+
+        const processed = importResult.data.imported + importResult.data.duplicates;
+        setPromptMigrationStatus({
+          kind: 'ok',
+          text: t('pm_import_success').replace('{count}', String(processed)),
+        });
+      } catch (error) {
+        console.error('[Gemini Voyager] Failed to import prompts:', error);
+        setPromptMigrationStatus({ kind: 'err', text: t('promptImportError') });
+      } finally {
+        event.target.value = '';
+        setPromptMigrationBusy(false);
+      }
+    },
+    [t],
   );
 
   // Copy folder structure for AI organization
@@ -3369,6 +3451,67 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                       apply({ promptInsertOnClickEnabled: e.target.checked });
                     }}
                   />
+                </div>,
+              )}
+              {renderSetting(
+                'promptManager',
+                'promptDataMigration',
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <Label className="text-sm font-medium">{t('promptDataMigration')}</Label>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {t('promptDataMigrationHint')}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={promptMigrationBusy}
+                        onClick={() => {
+                          void handlePromptExport();
+                        }}
+                      >
+                        <span className="inline-flex items-center gap-1.5">
+                          <Download className="h-3.5 w-3.5" />
+                          <span>{t('pm_export')}</span>
+                        </span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={promptMigrationBusy}
+                        onClick={() => promptImportInputRef.current?.click()}
+                      >
+                        <span className="inline-flex items-center gap-1.5">
+                          <Upload className="h-3.5 w-3.5" />
+                          <span>{t('pm_import')}</span>
+                        </span>
+                      </Button>
+                    </div>
+                  </div>
+                  <input
+                    ref={promptImportInputRef}
+                    type="file"
+                    aria-label={t('pm_import')}
+                    accept=".json,application/json"
+                    className="hidden"
+                    onChange={(event) => {
+                      void handlePromptImport(event);
+                    }}
+                  />
+                  {promptMigrationStatus && (
+                    <p
+                      className={`text-xs ${
+                        promptMigrationStatus.kind === 'ok'
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-destructive'
+                      }`}
+                    >
+                      {promptMigrationStatus.text}
+                    </p>
+                  )}
                 </div>,
               )}
               {renderSetting(

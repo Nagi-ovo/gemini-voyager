@@ -931,6 +931,26 @@
     "message": "When enabled, clicking a prompt inserts it into Gemini's input. Off keeps the default copy behavior.",
     "description": "Hint for prompt click insertion behavior"
   },
+  "promptDataMigration": {
+    "message": "Prompt data",
+    "description": "Prompt Manager prompt import/export setting label"
+  },
+  "promptDataMigrationHint": {
+    "message": "Export or import saved prompts as a local JSON file.",
+    "description": "Prompt Manager prompt import/export setting hint"
+  },
+  "promptExportSuccess": {
+    "message": "Exported {count} prompts",
+    "description": "Prompt export success message"
+  },
+  "promptExportError": {
+    "message": "Export failed",
+    "description": "Prompt export error message"
+  },
+  "promptImportError": {
+    "message": "Import failed",
+    "description": "Prompt import error message"
+  },
   "customWebsites": {
     "message": "Custom websites",
     "description": "Custom websites for prompt manager"

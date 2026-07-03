@@ -931,6 +931,26 @@
     "message": "オンにすると、プロンプトをクリックしたときに Gemini の入力欄へ直接挿入します。オフでは既定のコピー動作のままです。",
     "description": "Hint for prompt click insertion behavior"
   },
+  "promptDataMigration": {
+    "message": "プロンプトデータ",
+    "description": "Prompt Manager prompt import/export setting label"
+  },
+  "promptDataMigrationHint": {
+    "message": "保存済みプロンプトをローカル JSON ファイルとしてエクスポートまたはインポートします。",
+    "description": "Prompt Manager prompt import/export setting hint"
+  },
+  "promptExportSuccess": {
+    "message": "{count} 件のプロンプトをエクスポートしました",
+    "description": "Prompt export success message"
+  },
+  "promptExportError": {
+    "message": "エクスポートに失敗しました",
+    "description": "Prompt export error message"
+  },
+  "promptImportError": {
+    "message": "インポートに失敗しました",
+    "description": "Prompt import error message"
+  },
   "customWebsites": {
     "message": "カスタムウェブサイト",
     "description": "Custom websites for prompt manager"

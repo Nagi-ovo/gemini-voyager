@@ -931,6 +931,26 @@
     "message": "Если включено, клик по промпту вставляет его в поле Gemini. Если выключено, сохраняется стандартное поведение копирования.",
     "description": "Hint for prompt click insertion behavior"
   },
+  "promptDataMigration": {
+    "message": "Данные промптов",
+    "description": "Prompt Manager prompt import/export setting label"
+  },
+  "promptDataMigrationHint": {
+    "message": "Экспортируйте или импортируйте сохраненные промпты как локальный JSON-файл.",
+    "description": "Prompt Manager prompt import/export setting hint"
+  },
+  "promptExportSuccess": {
+    "message": "Экспортировано промптов: {count}",
+    "description": "Prompt export success message"
+  },
+  "promptExportError": {
+    "message": "Не удалось экспортировать",
+    "description": "Prompt export error message"
+  },
+  "promptImportError": {
+    "message": "Не удалось импортировать",
+    "description": "Prompt import error message"
+  },
   "customWebsites": {
     "message": "Пользовательские сайты",
     "description": "Custom websites for prompt manager"

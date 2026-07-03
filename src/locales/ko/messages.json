@@ -931,6 +931,26 @@
     "message": "켜면 프롬프트를 클릭할 때 Gemini 입력창에 바로 삽입합니다. 끄면 기본 복사 동작을 유지합니다.",
     "description": "Hint for prompt click insertion behavior"
   },
+  "promptDataMigration": {
+    "message": "프롬프트 데이터",
+    "description": "Prompt Manager prompt import/export setting label"
+  },
+  "promptDataMigrationHint": {
+    "message": "저장된 프롬프트를 로컬 JSON 파일로 내보내거나 가져옵니다.",
+    "description": "Prompt Manager prompt import/export setting hint"
+  },
+  "promptExportSuccess": {
+    "message": "{count}개 프롬프트를 내보냈습니다",
+    "description": "Prompt export success message"
+  },
+  "promptExportError": {
+    "message": "내보내기 실패",
+    "description": "Prompt export error message"
+  },
+  "promptImportError": {
+    "message": "가져오기 실패",
+    "description": "Prompt import error message"
+  },
   "customWebsites": {
     "message": "사용자 지정 웹사이트",
     "description": "Custom websites for prompt manager"
