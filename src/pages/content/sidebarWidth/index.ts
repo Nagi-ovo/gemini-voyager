@@ -9,9 +9,20 @@ const DEFAULT_PX = Math.round((DEFAULT_PERCENT / 100) * LEGACY_BASELINE_PX); // 
 const MIN_PX = Math.round((MIN_PERCENT / 100) * LEGACY_BASELINE_PX); // 180px
 const MAX_PX = Math.round((MAX_PERCENT / 100) * LEGACY_BASELINE_PX); // 540px
 const SEARCH_HIT_DEBUG_THROTTLE_MS = 1200;
+const SIDEBAR_TOGGLE_HIT_DEBUG_THROTTLE_MS = 1200;
 
 let searchHitDebugBound = false;
 let lastSearchHitDebugAt = 0;
+let sidebarToggleHitGuardBound = false;
+let lastSidebarToggleHitDebugAt = 0;
+
+const SIDEBAR_TOGGLE_BUTTON_SELECTOR = [
+  'bard-sidenav .close-sidenav-button',
+  'bard-sidenav button[aria-label="Close sidebar"]',
+  'bard-sidenav button[aria-label="Open sidebar"]',
+].join(', ');
+
+const SIDEBAR_TOGGLE_ICON_NAMES = new Set(['side_nav', 'side_nav_expand']);
 
 const clampNumber = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, Math.round(value)));
@@ -219,20 +230,6 @@ function buildStyle(widthValue: number): string {
       pointer-events: none !important;
     }
 
-    /* Gemini fixes top-bar-actions at the default sidebar offset (z-index: 3), so a
-       custom-widened sidebar slides its own toggle button underneath it, where the
-       pointer-events re-enabled above let invisible legacy top-bar controls steal the
-       hit-test (#748). Lift the sidenav's real toggle above that overlay. */
-    bard-sidenav .close-sidenav-button,
-    bard-sidenav side-navigation-content > div > button,
-    bard-sidenav button[aria-label="Close sidebar"],
-    bard-sidenav button[aria-label="Open sidebar"],
-    bard-sidenav button:has(mat-icon[fonticon="side_nav"]),
-    bard-sidenav button:has(mat-icon[fonticon="side_nav_expand"]) {
-      z-index: 10 !important;
-      pointer-events: auto !important;
-    }
-
   `;
 }
 
@@ -264,6 +261,45 @@ function formatElementForDebug(element: Element | null): string {
   return `${tag}${id}${classNames}`;
 }
 
+function rectContainsPoint(rect: DOMRect, x: number, y: number): boolean {
+  return (
+    rect.width > 0 &&
+    rect.height > 0 &&
+    x >= rect.left &&
+    x <= rect.right &&
+    y >= rect.top &&
+    y <= rect.bottom
+  );
+}
+
+function isVisibleElement(element: HTMLElement): boolean {
+  const rect = element.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return false;
+
+  const style = window.getComputedStyle(element);
+  return style.display !== 'none' && style.visibility !== 'hidden';
+}
+
+function isSidebarToggleButton(button: HTMLElement): boolean {
+  if (button.matches(SIDEBAR_TOGGLE_BUTTON_SELECTOR)) return true;
+
+  const icon = button.querySelector('mat-icon[fonticon]');
+  const iconName = icon?.getAttribute('fonticon') ?? '';
+  return SIDEBAR_TOGGLE_ICON_NAMES.has(iconName);
+}
+
+function getVisibleSidebarToggleButtons(): HTMLElement[] {
+  const buttons = new Set<HTMLElement>(
+    Array.from(document.querySelectorAll<HTMLElement>(SIDEBAR_TOGGLE_BUTTON_SELECTOR)),
+  );
+
+  document.querySelectorAll<HTMLElement>('bard-sidenav button').forEach((button) => {
+    if (isSidebarToggleButton(button)) buttons.add(button);
+  });
+
+  return Array.from(buttons).filter(isVisibleElement);
+}
+
 function setupSearchButtonHitTestDebug(): void {
   if (searchHitDebugBound) return;
   searchHitDebugBound = true;
@@ -273,11 +309,8 @@ function setupSearchButtonHitTestDebug(): void {
     if (!searchButton) return;
 
     const rect = searchButton.getBoundingClientRect();
-    if (rect.width <= 0 || rect.height <= 0) return;
-
     const { clientX: x, clientY: y } = event;
-    const isInSearchRect = x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
-    if (!isInSearchRect) return;
+    if (!rectContainsPoint(rect, x, y)) return;
 
     const target = event.target instanceof Element ? event.target : null;
     if (target && searchButton.contains(target)) return;
@@ -312,6 +345,56 @@ function setupSearchButtonHitTestDebug(): void {
   );
 }
 
+function setupSidebarToggleHitGuard(): void {
+  if (sidebarToggleHitGuardBound) return;
+  sidebarToggleHitGuardBound = true;
+
+  const onPointerDownCapture = (event: PointerEvent) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+
+    const { clientX: x, clientY: y } = event;
+    const toggleButton = getVisibleSidebarToggleButtons().find((button) =>
+      rectContainsPoint(button.getBoundingClientRect(), x, y),
+    );
+    if (!toggleButton) return;
+
+    const target = event.target instanceof Element ? event.target : null;
+    if (target && toggleButton.contains(target)) return;
+
+    const now = Date.now();
+    if (now - lastSidebarToggleHitDebugAt >= SIDEBAR_TOGGLE_HIT_DEBUG_THROTTLE_MS) {
+      lastSidebarToggleHitDebugAt = now;
+      const stack = document.elementsFromPoint(x, y).slice(0, 8);
+      const top = stack[0] ?? null;
+      const topStyle = top ? window.getComputedStyle(top) : null;
+
+      console.warn('[Gemini Voyager][sidebarWidth debug] Sidebar toggle hit blocked', {
+        point: { x, y },
+        target: formatElementForDebug(target),
+        toggleButton: formatElementForDebug(toggleButton),
+        topElement: formatElementForDebug(top),
+        topElementPointerEvents: topStyle?.pointerEvents ?? null,
+        topElementZIndex: topStyle?.zIndex ?? null,
+        stack: stack.map((element) => formatElementForDebug(element)),
+      });
+    }
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    toggleButton.click();
+  };
+
+  window.addEventListener('pointerdown', onPointerDownCapture, true);
+  window.addEventListener(
+    'beforeunload',
+    () => {
+      window.removeEventListener('pointerdown', onPointerDownCapture, true);
+      sidebarToggleHitGuardBound = false;
+    },
+    { once: true },
+  );
+}
+
 const ENABLED_KEY = 'gvSidebarWidthEnabled';
 
 /** Initialize and start the sidebar width adjuster */
@@ -319,6 +402,7 @@ export function startSidebarWidthAdjuster(): void {
   let currentWidthValue = DEFAULT_PX;
   let enabled = false;
   setupSearchButtonHitTestDebug();
+  setupSidebarToggleHitGuard();
 
   // 1) Read initial state — request keys without defaults so we can distinguish
   // "key never existed" (upgrade) from "explicitly set to false"
