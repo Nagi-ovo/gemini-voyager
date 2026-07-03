@@ -891,6 +891,26 @@
     "message": "開啟後，點擊提示詞會直接插入 Gemini 輸入框。關閉時維持預設複製行為。",
     "description": "提示詞點擊插入行為說明"
   },
+  "promptDataMigration": {
+    "message": "提示詞資料",
+    "description": "提示詞管理器匯入匯出設定標籤"
+  },
+  "promptDataMigrationHint": {
+    "message": "將已儲存的提示詞匯出或匯入為本機 JSON 檔案。",
+    "description": "提示詞管理器匯入匯出設定說明"
+  },
+  "promptExportSuccess": {
+    "message": "已匯出 {count} 則提示詞",
+    "description": "提示詞匯出成功提示"
+  },
+  "promptExportError": {
+    "message": "匯出失敗",
+    "description": "提示詞匯出失敗提示"
+  },
+  "promptImportError": {
+    "message": "匯入失敗",
+    "description": "提示詞匯入失敗提示"
+  },
   "customWebsites": {
     "message": "自訂網站",
     "description": "提示詞管理器的自訂網站"

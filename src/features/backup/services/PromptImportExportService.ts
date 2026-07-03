@@ -4,13 +4,62 @@
  * Extracted from prompt manager to follow DRY principle
  */
 import { AppError, ErrorCode } from '@/core/errors/AppError';
-import type { Result } from '@/core/types/common';
+import { type Result, StorageKeys } from '@/core/types/common';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 
 import type { PromptExportPayload, PromptItem } from '../types/backup';
 
 const EXPORT_FORMAT = 'gemini-voyager.prompts.v1' as const;
-const STORAGE_KEY = 'gvPromptItems';
+
+function generatePromptId(): string {
+  return `prompt-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function normalizeTags(tags: unknown): string[] {
+  if (!Array.isArray(tags)) return [];
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const tag of tags) {
+    const normalized = String(tag).trim().toLowerCase();
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    result.push(normalized);
+  }
+
+  return result;
+}
+
+function normalizePromptItem(value: unknown): PromptItem | null {
+  if (!value || typeof value !== 'object') return null;
+
+  const item = value as Record<string, unknown>;
+  const text = typeof item.text === 'string' ? item.text.trim() : '';
+  if (!text) return null;
+
+  const prompt: PromptItem = {
+    id: typeof item.id === 'string' && item.id ? item.id : generatePromptId(),
+    text,
+    tags: normalizeTags(item.tags),
+    createdAt:
+      typeof item.createdAt === 'number' && Number.isFinite(item.createdAt)
+        ? item.createdAt
+        : Date.now(),
+  };
+
+  if (typeof item.updatedAt === 'number' && Number.isFinite(item.updatedAt)) {
+    prompt.updatedAt = item.updatedAt;
+  }
+
+  const name = typeof item.name === 'string' ? item.name.trim() : '';
+  if (name) prompt.name = name;
+
+  return prompt;
+}
+
+function hasChromePromptStorage(): boolean {
+  return typeof chrome !== 'undefined' && !!chrome.storage?.local?.get && !!chrome.storage.local.set;
+}
 
 /**
  * Service for handling prompt import/export operations
@@ -33,8 +82,24 @@ export class PromptImportExportService {
    * Validate import payload format and structure
    */
   static validatePayload(payload: unknown): Result<PromptExportPayload> {
-    // Check if payload is an object
-    if (!payload || typeof payload !== 'object') {
+    let rawItems: unknown[] | null = null;
+
+    if (Array.isArray(payload)) {
+      rawItems = payload;
+    } else if (payload && typeof payload === 'object') {
+      const p = payload as Record<string, unknown>;
+      if (p.format !== EXPORT_FORMAT && !Array.isArray(p.items)) {
+        return {
+          success: false,
+          error: new AppError(
+            ErrorCode.VALIDATION_ERROR,
+            `Unsupported format: expected "${EXPORT_FORMAT}", got "${p.format}"`,
+            { format: p.format },
+          ),
+        };
+      }
+      rawItems = Array.isArray(p.items) ? p.items : [];
+    } else {
       return {
         success: false,
         error: new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid payload: expected an object', {
@@ -43,68 +108,32 @@ export class PromptImportExportService {
       };
     }
 
-    const p = payload as Record<string, unknown>;
-
-    // Check format version
-    if (p.format !== EXPORT_FORMAT) {
+    if (rawItems.length === 0) {
       return {
         success: false,
         error: new AppError(
           ErrorCode.VALIDATION_ERROR,
-          `Unsupported format: expected "${EXPORT_FORMAT}", got "${p.format}"`,
-          { format: p.format },
+          'Invalid "items" field: expected a non-empty array',
+          { items: rawItems },
         ),
       };
     }
 
-    // Check items array
-    if (!Array.isArray(p.items)) {
+    const items = rawItems.map(normalizePromptItem).filter((item): item is PromptItem => !!item);
+    if (items.length === 0) {
       return {
         success: false,
         error: new AppError(
           ErrorCode.VALIDATION_ERROR,
-          'Invalid "items" field: expected an array',
-          { items: p.items },
+          'Import file contains no valid prompts',
+          { items: rawItems },
         ),
       };
-    }
-
-    // Basic structure validation for items
-    for (const item of p.items) {
-      if (!item || typeof item !== 'object') {
-        return {
-          success: false,
-          error: new AppError(ErrorCode.VALIDATION_ERROR, 'Invalid prompt item object', { item }),
-        };
-      }
-
-      const i = item as Record<string, unknown>;
-      if (!i.text || typeof i.text !== 'string') {
-        return {
-          success: false,
-          error: new AppError(
-            ErrorCode.VALIDATION_ERROR,
-            'Prompt item missing valid "text" field',
-            { item },
-          ),
-        };
-      }
-
-      if (!Array.isArray(i.tags)) {
-        return {
-          success: false,
-          error: new AppError(
-            ErrorCode.VALIDATION_ERROR,
-            'Prompt item missing valid "tags" field',
-            { item },
-          ),
-        };
-      }
     }
 
     return {
       success: true,
-      data: payload as PromptExportPayload,
+      data: this.exportToPayload(items),
     };
   }
 
@@ -113,15 +142,33 @@ export class PromptImportExportService {
    */
   static async loadPrompts(): Promise<Result<PromptItem[]>> {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw === null) {
+      if (!hasChromePromptStorage()) {
+        const raw = localStorage.getItem(StorageKeys.PROMPT_ITEMS);
+        if (raw === null) {
+          return {
+            success: true,
+            data: [],
+          };
+        }
+
+        const localItems = JSON.parse(raw) as PromptItem[];
         return {
           success: true,
-          data: [],
+          data: Array.isArray(localItems) ? localItems : [],
         };
       }
 
-      const items = JSON.parse(raw) as PromptItem[];
+      const result = await new Promise<Record<string, unknown>>((resolve, reject) => {
+        chrome.storage.local.get([StorageKeys.PROMPT_ITEMS], (items) => {
+          if (chrome.runtime?.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          resolve(items);
+        });
+      });
+
+      const items = result[StorageKeys.PROMPT_ITEMS];
       return {
         success: true,
         data: Array.isArray(items) ? items : [],
@@ -131,8 +178,8 @@ export class PromptImportExportService {
         success: false,
         error: new AppError(
           ErrorCode.STORAGE_READ_FAILED,
-          'Failed to load prompts from localStorage',
-          { key: STORAGE_KEY },
+          'Failed to load prompts from extension storage',
+          { key: StorageKeys.PROMPT_ITEMS },
           error instanceof Error ? error : undefined,
         ),
       };
@@ -144,8 +191,24 @@ export class PromptImportExportService {
    */
   static async savePrompts(items: PromptItem[]): Promise<Result<void>> {
     try {
-      const raw = JSON.stringify(items);
-      localStorage.setItem(STORAGE_KEY, raw);
+      if (!hasChromePromptStorage()) {
+        localStorage.setItem(StorageKeys.PROMPT_ITEMS, JSON.stringify(items));
+        return {
+          success: true,
+          data: undefined,
+        };
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        chrome.storage.local.set({ [StorageKeys.PROMPT_ITEMS]: items }, () => {
+          if (chrome.runtime?.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          resolve();
+        });
+      });
+
       return {
         success: true,
         data: undefined,
@@ -155,8 +218,8 @@ export class PromptImportExportService {
         success: false,
         error: new AppError(
           ErrorCode.STORAGE_WRITE_FAILED,
-          'Failed to save prompts to localStorage',
-          { key: STORAGE_KEY, itemCount: items.length },
+          'Failed to save prompts to extension storage',
+          { key: StorageKeys.PROMPT_ITEMS, itemCount: items.length },
           error instanceof Error ? error : undefined,
         ),
       };
@@ -233,6 +296,9 @@ export class PromptImportExportService {
           const existing = existingMap.get(key)!;
           const mergedTags = Array.from(new Set([...(existing.tags || []), ...(item.tags || [])]));
           existing.tags = mergedTags;
+          if (!existing.name && item.name) {
+            existing.name = item.name;
+          }
           existing.updatedAt = Date.now();
           duplicates++;
         } else {

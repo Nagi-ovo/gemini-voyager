@@ -9,31 +9,60 @@ import { BackupService } from '../BackupService';
 type MockedChrome = typeof chrome;
 
 function createChromeMock(): MockedChrome {
+  const localStore: Record<string, unknown> = {
+    [StorageKeys.PROMPT_ITEMS]: [
+      {
+        id: 'prompt-1',
+        text: 'Test prompt',
+        tags: ['test'],
+        createdAt: 1,
+      },
+    ],
+    [StorageKeys.TIMELINE_HIERARCHY]: {
+      conversations: {
+        'gemini:conv:test': {
+          conversationUrl: 'https://gemini.google.com/app/test',
+          levels: { 'turn-1': 2 },
+          collapsed: ['turn-2'],
+          updatedAt: 1234,
+        },
+      },
+    },
+    [getTimelineHierarchyStorageKey(`email:${hashString('user@example.com')}`)]: {
+      conversations: {
+        'gemini:conv:scoped': {
+          conversationUrl: 'https://gemini.google.com/u/1/app/scoped',
+          levels: { 'turn-3': 3 },
+          collapsed: [],
+          updatedAt: 5678,
+        },
+      },
+    },
+  };
+
+  const getLocal = vi.fn((keys: unknown, callback?: (items: Record<string, unknown>) => void) => {
+    const result =
+      Array.isArray(keys) || typeof keys === 'string'
+        ? Object.fromEntries(
+            (Array.isArray(keys) ? keys : [keys]).map((key) => [key, localStore[String(key)]]),
+          )
+        : { ...(keys as Record<string, unknown>), ...localStore };
+
+    if (callback) {
+      callback(result);
+      return undefined;
+    }
+
+    return Promise.resolve(result);
+  });
+
   return {
+    runtime: {
+      lastError: undefined,
+    },
     storage: {
       local: {
-        get: vi.fn().mockResolvedValue({
-          [StorageKeys.TIMELINE_HIERARCHY]: {
-            conversations: {
-              'gemini:conv:test': {
-                conversationUrl: 'https://gemini.google.com/app/test',
-                levels: { 'turn-1': 2 },
-                collapsed: ['turn-2'],
-                updatedAt: 1234,
-              },
-            },
-          },
-          [getTimelineHierarchyStorageKey(`email:${hashString('user@example.com')}`)]: {
-            conversations: {
-              'gemini:conv:scoped': {
-                conversationUrl: 'https://gemini.google.com/u/1/app/scoped',
-                levels: { 'turn-3': 3 },
-                collapsed: [],
-                updatedAt: 5678,
-              },
-            },
-          },
-        }),
+        get: getLocal,
         set: vi.fn().mockResolvedValue(undefined),
         remove: vi.fn().mockResolvedValue(undefined),
       },
@@ -45,18 +74,6 @@ describe('BackupService', () => {
   beforeEach(() => {
     localStorage.clear();
     (globalThis as { chrome: MockedChrome }).chrome = createChromeMock();
-
-    localStorage.setItem(
-      'gvPromptItems',
-      JSON.stringify([
-        {
-          id: 'prompt-1',
-          text: 'Test prompt',
-          tags: ['test'],
-          createdAt: 1,
-        },
-      ]),
-    );
 
     localStorage.setItem(
       'gvFolderData',

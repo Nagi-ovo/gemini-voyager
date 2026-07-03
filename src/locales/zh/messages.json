@@ -931,6 +931,26 @@
     "message": "开启后，点击提示词会直接插入 Gemini 输入框。关闭时保持默认复制行为。",
     "description": "提示词点击插入行为说明"
   },
+  "promptDataMigration": {
+    "message": "提示词数据",
+    "description": "提示词管理器导入导出设置标签"
+  },
+  "promptDataMigrationHint": {
+    "message": "将已保存的提示词导出或导入为本地 JSON 文件。",
+    "description": "提示词管理器导入导出设置说明"
+  },
+  "promptExportSuccess": {
+    "message": "已导出 {count} 条提示词",
+    "description": "提示词导出成功提示"
+  },
+  "promptExportError": {
+    "message": "导出失败",
+    "description": "提示词导出失败提示"
+  },
+  "promptImportError": {
+    "message": "导入失败",
+    "description": "提示词导入失败提示"
+  },
   "customWebsites": {
     "message": "自定义网站",
     "description": "提示词管理器的自定义网站"

@@ -931,6 +931,26 @@
     "message": "Lorsque cette option est activee, cliquer sur un prompt l'insere dans le champ Gemini. Sinon, le comportement par defaut reste la copie.",
     "description": "Hint for prompt click insertion behavior"
   },
+  "promptDataMigration": {
+    "message": "Données de prompts",
+    "description": "Prompt Manager prompt import/export setting label"
+  },
+  "promptDataMigrationHint": {
+    "message": "Exporter ou importer les prompts enregistrés sous forme de fichier JSON local.",
+    "description": "Prompt Manager prompt import/export setting hint"
+  },
+  "promptExportSuccess": {
+    "message": "{count} prompts exportés",
+    "description": "Prompt export success message"
+  },
+  "promptExportError": {
+    "message": "Échec de l'export",
+    "description": "Prompt export error message"
+  },
+  "promptImportError": {
+    "message": "Échec de l'import",
+    "description": "Prompt import error message"
+  },
   "customWebsites": {
     "message": "Sites personnalisés",
     "description": "Custom websites for prompt manager"

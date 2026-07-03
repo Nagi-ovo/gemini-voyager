@@ -931,6 +931,26 @@
     "message": "Si se activa, al hacer clic en un prompt se insertará en la entrada de Gemini. Si está desactivado, se mantiene el comportamiento predeterminado de copiar.",
     "description": "Hint for prompt click insertion behavior"
   },
+  "promptDataMigration": {
+    "message": "Datos de prompts",
+    "description": "Prompt Manager prompt import/export setting label"
+  },
+  "promptDataMigrationHint": {
+    "message": "Exporta o importa prompts guardados como archivo JSON local.",
+    "description": "Prompt Manager prompt import/export setting hint"
+  },
+  "promptExportSuccess": {
+    "message": "{count} prompts exportados",
+    "description": "Prompt export success message"
+  },
+  "promptExportError": {
+    "message": "Error al exportar",
+    "description": "Prompt export error message"
+  },
+  "promptImportError": {
+    "message": "Error al importar",
+    "description": "Prompt import error message"
+  },
   "customWebsites": {
     "message": "Sitios web personalizados",
     "description": "Custom websites for prompt manager"

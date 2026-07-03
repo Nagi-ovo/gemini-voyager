@@ -931,6 +931,26 @@
     "message": "عند التفعيل، يؤدي النقر على المطالبة إلى إدراجها في حقل إدخال Gemini. عند الإيقاف يبقى السلوك الافتراضي هو النسخ.",
     "description": "Hint for prompt click insertion behavior"
   },
+  "promptDataMigration": {
+    "message": "بيانات المطالبات",
+    "description": "Prompt Manager prompt import/export setting label"
+  },
+  "promptDataMigrationHint": {
+    "message": "تصدير أو استيراد المطالبات المحفوظة كملف JSON محلي.",
+    "description": "Prompt Manager prompt import/export setting hint"
+  },
+  "promptExportSuccess": {
+    "message": "تم تصدير {count} من المطالبات",
+    "description": "Prompt export success message"
+  },
+  "promptExportError": {
+    "message": "فشل التصدير",
+    "description": "Prompt export error message"
+  },
+  "promptImportError": {
+    "message": "فشل الاستيراد",
+    "description": "Prompt import error message"
+  },
   "customWebsites": {
     "message": "مواقع مخصصة",
     "description": "Custom websites for prompt manager"
