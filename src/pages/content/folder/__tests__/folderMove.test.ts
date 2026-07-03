@@ -73,20 +73,6 @@ function createConversation(id: string, sortIndex: number): ConversationReferenc
   };
 }
 
-function setElementRect(element: HTMLElement, top: number, height = 24): void {
-  vi.spyOn(element, 'getBoundingClientRect').mockReturnValue({
-    x: 0,
-    y: top,
-    top,
-    left: 0,
-    right: 240,
-    bottom: top + height,
-    width: 240,
-    height,
-    toJSON: () => ({}),
-  } as DOMRect);
-}
-
 function createDataTransfer(payload: DragData): DataTransfer {
   return {
     types: ['application/json'],
@@ -330,7 +316,7 @@ describe('folder movement', () => {
     expect(refreshSpy).not.toHaveBeenCalled();
   });
 
-  it('coalesces rapid conversation reorder dragovers to the latest row', () => {
+  it('treats conversation rows as folder drop targets instead of reorder handles', () => {
     rafQueue = installRafQueue();
     manager = new FolderManager();
     const typedManager = manager as unknown as TestableManager;
@@ -350,7 +336,7 @@ describe('folder movement', () => {
     const folderElement = typedManager.createFolderElement(folder);
     document.body.appendChild(folderElement);
     const rows = Array.from(folderElement.querySelectorAll<HTMLElement>('.gv-folder-conversation'));
-    rows.forEach((row, index) => setElementRect(row, index * 30));
+    const content = folderElement.querySelector<HTMLElement>('.gv-folder-content');
 
     const dragData: DragData = {
       type: 'conversation',
@@ -359,23 +345,13 @@ describe('folder movement', () => {
       url: '/app/new-conversation',
     };
 
-    rows[2].dispatchEvent(createDragEvent('dragover', 72, dragData));
     rows[1].dispatchEvent(createDragEvent('dragover', 42, dragData));
-    rows[0].dispatchEvent(createDragEvent('dragover', 6, dragData));
 
-    expect(rafQueue.requestAnimationFrameMock).toHaveBeenCalledTimes(1);
+    expect(rafQueue.requestAnimationFrameMock).not.toHaveBeenCalled();
+    expect(content?.classList.contains('gv-folder-dragover')).toBe(true);
     rows.forEach((row) => {
       expect(row.classList.contains('gv-reorder-above')).toBe(false);
       expect(row.classList.contains('gv-reorder-below')).toBe(false);
     });
-
-    rafQueue.flush();
-
-    expect(rows[0].classList.contains('gv-reorder-above')).toBe(true);
-    expect(rows[0].classList.contains('gv-reorder-below')).toBe(false);
-    expect(rows[1].classList.contains('gv-reorder-above')).toBe(false);
-    expect(rows[1].classList.contains('gv-reorder-below')).toBe(false);
-    expect(rows[2].classList.contains('gv-reorder-above')).toBe(false);
-    expect(rows[2].classList.contains('gv-reorder-below')).toBe(false);
   });
 });

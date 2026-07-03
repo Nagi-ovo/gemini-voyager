@@ -26,6 +26,31 @@ Regression test:
 Commit:
 ```
 
+## Folder conversation navigation must not hard-refresh Gemini
+
+Symptom:
+Clicking a folder conversation sometimes forced a full Gemini page refresh
+instead of switching sessions inside the existing SPA.
+
+Root cause:
+The folder navigator tried to preserve Gemini's native SPA behavior by clicking
+the corresponding native sidebar link, but its fallback used `location.assign`.
+That fallback fired when the native sidebar row was virtualized/not rendered,
+or when Gemini's own route change was slower than the confirmation timeout.
+The floating folder panel had an even more direct `location.assign` path.
+
+Fix:
+Route folder and floating-panel conversation clicks through the shared
+conversation navigator. If the native link is missing or does not navigate,
+fall back to `history.pushState` plus `popstate`, not a hard page load.
+
+Regression test:
+`src/pages/content/folder/__tests__/folderNavigation.test.ts`
+`src/pages/content/folder/__tests__/folderDisabledRuntime.test.ts`
+
+Commit:
+`fix(folder): keep folder navigation in gemini spa`
+
 ## Prevent auto scroll swallowed `scrollIntoView` layout side effects
 
 Symptom:

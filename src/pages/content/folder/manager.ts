@@ -88,7 +88,7 @@ const FOLDER_HIDDEN_ANOMALY_GRACE_MS = 1500;
 // *new* creation. Moves remain unconstrained for the same reason.
 const MAX_FOLDER_DEPTH = 1;
 const FOLDER_NAME_SINGLE_CLICK_DELAY_MS = 220;
-const FOLDER_NAVIGATION_CONFIRM_DELAY_MS = 300;
+const FOLDER_NAVIGATION_CONFIRM_DELAY_MS = 1200;
 
 // Export session backup keys for use by FolderImportExportService (deprecated, kept for compatibility)
 export const SESSION_BACKUP_KEY = 'gvFolderBackup';
@@ -208,6 +208,7 @@ export class FolderManager {
   private importInProgress: boolean = false; // Lock to prevent concurrent imports
   private exportInProgress: boolean = false; // Lock to prevent concurrent exports
   private selectedConversations: Set<string> = new Set(); // For multi-select support
+  private activeFolderConversationKey: string | null = null; // Last clicked folder row for duplicate conversation IDs
   private isMultiSelectMode: boolean = false; // Multi-select mode state
   private multiSelectSource: 'folder' | 'native' | null = null; // Track where multi-select was initiated
   private multiSelectFolderId: string | null = null; // Track which folder multi-select was initiated from
@@ -1225,7 +1226,7 @@ export class FolderManager {
       },
       onNavigate: (conv) => {
         if (conv.url) {
-          location.assign(conv.url);
+          this.navigateToConversation(conv.url, conv);
         }
       },
       onCreateFolder: (name, parentId) => {
@@ -1848,11 +1849,8 @@ export class FolderManager {
     const filteredRootConversations = this.filterVisibleConversations(rootConversations);
     if (filteredRootConversations.length > 0) {
       const sortedRootConversations = this.sortConversations(filteredRootConversations);
-      sortedRootConversations.forEach((conv, i) => {
+      sortedRootConversations.forEach((conv) => {
         const convEl = this.createConversationElement(conv, ROOT_CONVERSATIONS_ID, 0);
-        if (!isSearchActive) {
-          this.setupConversationReorderZone(convEl, ROOT_CONVERSATIONS_ID, i);
-        }
         list.appendChild(convEl);
         renderedItems++;
       });
@@ -1995,11 +1993,8 @@ export class FolderManager {
       const conversations = this.data.folderContents[folder.id] || [];
       const filteredConversations = this.filterVisibleConversations(conversations);
       const sortedConversations = this.sortConversations(filteredConversations);
-      sortedConversations.forEach((conv, i) => {
+      sortedConversations.forEach((conv) => {
         const convEl = this.createConversationElement(conv, folder.id, level + 1);
-        if (!isSearchActive) {
-          this.setupConversationReorderZone(convEl, folder.id, i);
-        }
         content.appendChild(convEl);
       });
 
@@ -7089,16 +7084,31 @@ export class FolderManager {
     }
   }
 
+  private getFolderConversationInstanceKey(folderId: string, conversationId: string): string {
+    return `${folderId}:${conversationId}`;
+  }
+
   private highlightActiveConversationInFolders(): void {
     if (!this.containerElement) return;
     const hex = this.getCurrentHexIdFromLocation();
     const currentId = hex ? `c_${hex}` : null;
-    const rows = this.containerElement.querySelectorAll('.gv-folder-conversation');
-    rows.forEach((el) => {
-      const row = el as HTMLElement;
-      const isActive = currentId && row.dataset.conversationId === currentId;
-      row.classList.toggle('gv-folder-conversation-selected', !!isActive);
-    });
+    const rows = Array.from(
+      this.containerElement.querySelectorAll<HTMLElement>('.gv-folder-conversation'),
+    );
+
+    rows.forEach((row) => row.classList.remove('gv-folder-conversation-selected'));
+    if (!currentId) return;
+
+    const matches = rows.filter((row) => row.dataset.conversationId === currentId);
+    const activeRow =
+      matches.find(
+        (row) =>
+          row.dataset.folderId &&
+          this.getFolderConversationInstanceKey(row.dataset.folderId, currentId) ===
+            this.activeFolderConversationKey,
+      ) ?? matches[0];
+
+    activeRow?.classList.add('gv-folder-conversation-selected');
   }
 
   /**
@@ -8354,6 +8364,10 @@ export class FolderManager {
       gemId: conv.gemId,
     });
 
+    this.activeFolderConversationKey = this.getFolderConversationInstanceKey(
+      folderId,
+      conv.conversationId,
+    );
     this.navigateToConversation(conv.url, conv);
   }
 
@@ -8390,11 +8404,8 @@ export class FolderManager {
 
     if (!changed) return;
 
+    // Keep the visible row stable during navigation; the saved time affects the next natural render.
     void this.saveData();
-
-    if (this.folderEnabled && this.containerElement) {
-      this.renderAllFolders();
-    }
   }
 
   private normalizeConversationId(value: string | null | undefined): string | null {
@@ -8552,8 +8563,24 @@ export class FolderManager {
     target.dispatchEvent(new MouseEvent('click', options));
   }
 
-  private navigateWithFullReload(url: string): void {
-    window.location.assign(url);
+  private navigateWithSpaRoute(url: string): boolean {
+    try {
+      const targetUrl = new URL(url, window.location.origin);
+      window.history.pushState(
+        {},
+        '',
+        `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`,
+      );
+      const event =
+        typeof PopStateEvent === 'function'
+          ? new PopStateEvent('popstate', { state: window.history.state })
+          : new Event('popstate');
+      window.dispatchEvent(event);
+      return true;
+    } catch (error) {
+      this.debug('SPA route navigation failed:', error);
+      return false;
+    }
   }
 
   private navigateToConversation(url: string, conversation?: ConversationReference): void {
@@ -8587,12 +8614,34 @@ export class FolderManager {
       }
 
       const navigationUrl = this.accountIsolationEnabled && effectiveUrl ? effectiveUrl : url;
-      const hardNavigate = () => {
+      const finishNavigation = () => {
+        this.highlightActiveConversationInFolders();
+
+        // After navigation, sync title and check for gem updates
+        setTimeout(() => {
+          if (conversation && hexId) {
+            const syncedTitle = this.syncConversationTitleFromNative(hexId);
+            if (syncedTitle && syncedTitle !== conversation.title) {
+              this.updateConversationTitle(hexId, syncedTitle);
+              this.debug('Updated conversation title after navigation:', syncedTitle);
+            }
+          }
+
+          if (conversation && hexId && !conversation.gemId) {
+            this.checkAndUpdateGemId(hexId);
+          } else if (conversation?.gemId) {
+            this.debug('Known gem conversation:', conversation.gemId);
+          }
+        }, 300);
+      };
+      const spaNavigate = () => {
         if (hexId) {
           this.markConversationAsRecentlyOpened(hexId);
         }
 
-        this.navigateWithFullReload(navigationUrl);
+        if (this.navigateWithSpaRoute(navigationUrl)) {
+          finishNavigation();
+        }
       };
 
       if (hexId && currentConversationId === hexId) {
@@ -8602,8 +8651,8 @@ export class FolderManager {
 
       const sidebarLink = hexId ? this.findNativeConversationLinkById(hexId) : null;
       if (!sidebarLink) {
-        this.debug('Sidebar link not found, falling back to location.assign');
-        hardNavigate();
+        this.debug('Sidebar link not found, falling back to SPA route navigation');
+        spaNavigate();
         return;
       }
 
@@ -8612,34 +8661,15 @@ export class FolderManager {
 
       window.setTimeout(() => {
         if (!hexId || this.getCurrentConversationId() === hexId) {
-          this.highlightActiveConversationInFolders();
-
-          // After navigation, sync title and check for gem updates
-          setTimeout(() => {
-            if (conversation && hexId) {
-              const syncedTitle = this.syncConversationTitleFromNative(hexId);
-              if (syncedTitle && syncedTitle !== conversation.title) {
-                this.updateConversationTitle(hexId, syncedTitle);
-                this.debug('Updated conversation title after navigation:', syncedTitle);
-              }
-            }
-
-            if (conversation && hexId && !conversation.gemId) {
-              this.checkAndUpdateGemId(hexId);
-            } else if (conversation?.gemId) {
-              this.debug('Known gem conversation:', conversation.gemId);
-            }
-          }, 300);
+          finishNavigation();
           return;
         }
 
-        this.debug('Native sidebar click did not navigate, falling back to location.assign');
-        hardNavigate();
+        this.debug('Native sidebar click did not navigate, falling back to SPA route navigation');
+        spaNavigate();
       }, FOLDER_NAVIGATION_CONFIRM_DELAY_MS);
     } catch (error) {
       console.error('[FolderManager] Navigation error:', error);
-      // Fallback to regular navigation
-      this.navigateWithFullReload(url);
     }
   }
 

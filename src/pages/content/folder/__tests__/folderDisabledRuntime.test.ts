@@ -50,6 +50,7 @@ type TestableManager = {
   setupMutationObserver: () => void;
   setupSideNavObserver: () => void;
   startFloatingMode: (openPanel?: boolean) => Promise<void>;
+  navigateToConversation: (url: string, conversation?: unknown) => void;
 };
 
 function mountSidebar(): { appRoot: HTMLElement; sidebar: HTMLElement; recents: HTMLElement } {
@@ -151,6 +152,34 @@ describe('FolderManager disabled runtime teardown', () => {
 
     expect(mountFloatingPanelMock).toHaveBeenCalledTimes(1);
     expect(mountFloatingFabMock).not.toHaveBeenCalled();
+  });
+
+  it('routes floating panel conversation clicks through the SPA navigator', async () => {
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager;
+    const navigateSpy = vi.spyOn(typed, 'navigateToConversation').mockImplementation(() => {});
+    const conversation = {
+      conversationId: 'c_1234567890abcdef',
+      title: 'Conversation',
+      url: 'https://gemini.google.com/app/1234567890abcdef',
+      addedAt: 1,
+    };
+
+    typed.folderEnabled = true;
+
+    await typed.startFloatingMode();
+    const calls = mountFloatingPanelMock.mock.calls as unknown as Array<
+      [
+        {
+          onNavigate?: (conv: typeof conversation) => void;
+        },
+      ]
+    >;
+    const args = calls[0][0];
+    args.onNavigate?.(conversation);
+
+    expect(navigateSpy).toHaveBeenCalledTimes(1);
+    expect(navigateSpy).toHaveBeenCalledWith(conversation.url, conversation);
   });
 
   it('starts floating mode as a FAB only when startup panel is disabled', async () => {
