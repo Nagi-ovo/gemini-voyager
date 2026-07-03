@@ -25,6 +25,7 @@ vi.mock('@/utils/i18n', () => ({
 type TestableManager = {
   data: FolderData;
   accountIsolationEnabled: boolean;
+  containerElement: HTMLElement | null;
   createConversationElement: (
     conv: ConversationReference,
     folderId: string,
@@ -32,7 +33,8 @@ type TestableManager = {
   ) => HTMLElement;
   navigateToConversationById: (folderId: string, conversationId: string) => void;
   markConversationAsRecentlyOpened: (conversationId: string) => void;
-  navigateWithFullReload: (url: string) => void;
+  renderAllFolders: () => void;
+  saveData: () => Promise<boolean>;
 };
 
 function createConversation(hexId: string): ConversationReference {
@@ -94,9 +96,6 @@ describe('folder conversation navigation', () => {
     const markSpy = vi
       .spyOn(typedManager, 'markConversationAsRecentlyOpened')
       .mockImplementation(() => {});
-    const hardNavigateSpy = vi
-      .spyOn(typedManager, 'navigateWithFullReload')
-      .mockImplementation(() => {});
     const clickSpy = vi.fn((event: MouseEvent) => {
       event.preventDefault();
       window.history.pushState({}, '', `/app/${targetHexId}`);
@@ -109,11 +108,10 @@ describe('folder conversation navigation', () => {
 
     expect(clickSpy).toHaveBeenCalledTimes(1);
     expect(window.location.pathname).toBe(`/app/${targetHexId}`);
-    expect(hardNavigateSpy).not.toHaveBeenCalled();
     expect(markSpy).not.toHaveBeenCalled();
   });
 
-  it('falls back to hard navigation when the native click does not change the route', () => {
+  it('falls back to SPA route navigation when the native click does not change the route', () => {
     const targetHexId = '7c1b4e3a9d5f2a11';
 
     manager = new FolderManager();
@@ -128,9 +126,6 @@ describe('folder conversation navigation', () => {
     const markSpy = vi
       .spyOn(typedManager, 'markConversationAsRecentlyOpened')
       .mockImplementation(() => {});
-    const hardNavigateSpy = vi
-      .spyOn(typedManager, 'navigateWithFullReload')
-      .mockImplementation(() => {});
     const clickSpy = vi.fn((event: MouseEvent) => {
       event.preventDefault();
     });
@@ -138,16 +133,100 @@ describe('folder conversation navigation', () => {
     appendNativeConversation(targetHexId, clickSpy);
 
     typedManager.navigateToConversationById('folder-1', `c_${targetHexId}`);
-    vi.advanceTimersByTime(299);
-    expect(hardNavigateSpy).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1199);
+    expect(window.location.pathname).toBe('/app/original12345678');
 
     vi.advanceTimersByTime(1);
 
     expect(clickSpy).toHaveBeenCalledTimes(1);
     expect(markSpy).toHaveBeenCalledTimes(1);
     expect(markSpy).toHaveBeenCalledWith(targetHexId);
-    expect(hardNavigateSpy).toHaveBeenCalledTimes(1);
-    expect(hardNavigateSpy).toHaveBeenCalledWith(`https://gemini.google.com/app/${targetHexId}`);
+    expect(window.location.pathname).toBe(`/app/${targetHexId}`);
+  });
+
+  it('uses SPA route navigation when the native sidebar link is not rendered', () => {
+    const targetHexId = 'bbbbccccddddeeee';
+
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+    typedManager.data = {
+      folders: [],
+      folderContents: {
+        'folder-1': [createConversation(targetHexId)],
+      },
+    };
+
+    const markSpy = vi
+      .spyOn(typedManager, 'markConversationAsRecentlyOpened')
+      .mockImplementation(() => {});
+
+    typedManager.navigateToConversationById('folder-1', `c_${targetHexId}`);
+
+    expect(markSpy).toHaveBeenCalledTimes(1);
+    expect(markSpy).toHaveBeenCalledWith(targetHexId);
+    expect(window.location.pathname).toBe(`/app/${targetHexId}`);
+  });
+
+  it('highlights the clicked folder row when the same conversation is in multiple folders', () => {
+    const targetHexId = 'ccccddddeeeeffff';
+    const firstConversation = createConversation(targetHexId);
+    const secondConversation = createConversation(targetHexId);
+
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+    typedManager.data = {
+      folders: [],
+      folderContents: {
+        'folder-1': [firstConversation],
+        'folder-2': [secondConversation],
+      },
+    };
+    typedManager.containerElement = document.createElement('div');
+    const list = document.createElement('div');
+    list.className = 'gv-folder-list';
+    const firstRow = typedManager.createConversationElement(firstConversation, 'folder-1', 1);
+    const secondRow = typedManager.createConversationElement(secondConversation, 'folder-2', 1);
+    list.append(firstRow, secondRow);
+    typedManager.containerElement.appendChild(list);
+    document.body.appendChild(typedManager.containerElement);
+
+    typedManager.navigateToConversationById('folder-2', `c_${targetHexId}`);
+
+    expect(firstRow.classList.contains('gv-folder-conversation-selected')).toBe(false);
+    expect(secondRow.classList.contains('gv-folder-conversation-selected')).toBe(true);
+
+    typedManager.navigateToConversationById('folder-1', `c_${targetHexId}`);
+
+    expect(firstRow.classList.contains('gv-folder-conversation-selected')).toBe(true);
+    expect(secondRow.classList.contains('gv-folder-conversation-selected')).toBe(false);
+  });
+
+  it('does not hard navigate when the native SPA route changes after a short delay', () => {
+    const targetHexId = '88889999aaaabbbb';
+
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+    typedManager.data = {
+      folders: [],
+      folderContents: {
+        'folder-1': [createConversation(targetHexId)],
+      },
+    };
+
+    const clickSpy = vi.fn((event: MouseEvent) => {
+      event.preventDefault();
+      setTimeout(() => {
+        window.history.pushState({}, '', `/app/${targetHexId}`);
+      }, 500);
+    });
+
+    appendNativeConversation(targetHexId, clickSpy);
+
+    typedManager.navigateToConversationById('folder-1', `c_${targetHexId}`);
+    vi.advanceTimersByTime(1200);
+
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(window.location.pathname).toBe(`/app/${targetHexId}`);
   });
 
   it('renders folder conversations as real links for browser-native new-tab actions', () => {
@@ -207,5 +286,33 @@ describe('folder conversation navigation', () => {
     const link = row.querySelector<HTMLAnchorElement>('a.gv-folder-conversation-link');
 
     expect(link?.href).toBe(`https://gemini.google.com/u/2/app/${targetHexId}?hl=en`);
+  });
+
+  it('records recency without immediately reordering the visible folder list', () => {
+    const targetHexId = '1111222233334444';
+    const otherHexId = 'aaaabbbbccccdddd';
+
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+    typedManager.data = {
+      folders: [],
+      folderContents: {
+        'folder-1': [createConversation(otherHexId), createConversation(targetHexId)],
+      },
+    };
+    typedManager.containerElement = document.createElement('div');
+    typedManager.containerElement.innerHTML = '<div class="gv-folder-list"></div>';
+    document.body.appendChild(typedManager.containerElement);
+
+    const saveSpy = vi.spyOn(typedManager, 'saveData').mockResolvedValue(true);
+    const renderSpy = vi.spyOn(typedManager, 'renderAllFolders').mockImplementation(() => {});
+
+    typedManager.markConversationAsRecentlyOpened(targetHexId);
+
+    const target = typedManager.data.folderContents['folder-1'][1];
+    expect(target.lastOpenedAt).toEqual(expect.any(Number));
+    expect(target.updatedAt).toBe(target.lastOpenedAt);
+    expect(saveSpy).toHaveBeenCalledTimes(1);
+    expect(renderSpy).not.toHaveBeenCalled();
   });
 });
