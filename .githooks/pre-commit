@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v bun >/dev/null 2>&1; then
+  echo "bun is required to format staged files before commit." >&2
+  exit 1
+fi
+
+files=()
+while IFS= read -r -d '' file; do
+  case "$file" in
+    dist_*|dist_*/*|output|output/*|node_modules|node_modules/*) continue ;;
+    *.ts|*.tsx|*.js|*.jsx|*.json|*.css|*.md|*.html|*.yml|*.yaml) files+=("$file") ;;
+  esac
+done < <(git diff --cached --name-only --diff-filter=ACMR -z)
+
+if [ "${#files[@]}" -eq 0 ]; then
+  exit 0
+fi
+
+dirty=()
+for file in "${files[@]}"; do
+  if ! git diff --quiet -- "$file"; then
+    dirty+=("$file")
+  fi
+done
+
+if [ "${#dirty[@]}" -ne 0 ]; then
+  echo "Cannot safely format staged files with unstaged edits:" >&2
+  printf '  %s\n' "${dirty[@]}" >&2
+  echo "Stage or stash those edits first, then commit again." >&2
+  exit 1
+fi
+
+bun x prettier --write --ignore-unknown "${files[@]}"
+git add -- "${files[@]}"
+git diff --cached --check
