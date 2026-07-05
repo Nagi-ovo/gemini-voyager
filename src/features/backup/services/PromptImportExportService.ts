@@ -58,7 +58,9 @@ function normalizePromptItem(value: unknown): PromptItem | null {
 }
 
 function hasChromePromptStorage(): boolean {
-  return typeof chrome !== 'undefined' && !!chrome.storage?.local?.get && !!chrome.storage.local.set;
+  return (
+    typeof chrome !== 'undefined' && !!chrome.storage?.local?.get && !!chrome.storage.local.set
+  );
 }
 
 /**
@@ -123,11 +125,9 @@ export class PromptImportExportService {
     if (items.length === 0) {
       return {
         success: false,
-        error: new AppError(
-          ErrorCode.VALIDATION_ERROR,
-          'Import file contains no valid prompts',
-          { items: rawItems },
-        ),
+        error: new AppError(ErrorCode.VALIDATION_ERROR, 'Import file contains no valid prompts', {
+          items: rawItems,
+        }),
       };
     }
 

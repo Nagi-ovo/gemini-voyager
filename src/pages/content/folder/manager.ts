@@ -8566,11 +8566,7 @@ export class FolderManager {
   private navigateWithSpaRoute(url: string): boolean {
     try {
       const targetUrl = new URL(url, window.location.origin);
-      window.history.pushState(
-        {},
-        '',
-        `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`,
-      );
+      window.history.pushState({}, '', `${targetUrl.pathname}${targetUrl.search}${targetUrl.hash}`);
       const event =
         typeof PopStateEvent === 'function'
           ? new PopStateEvent('popstate', { state: window.history.state })
