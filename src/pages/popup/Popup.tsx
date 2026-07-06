@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Download, Search, Upload, X } from 'lucide-react';
+import { CloudDownload, CloudUpload, Download, Search, Upload, X } from 'lucide-react';
 import browser from 'webextension-polyfill';
 
 import {
@@ -1230,6 +1230,66 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     },
     [t],
   );
+
+  // Cloud (Google Drive) prompt sync — prompts-only, merge semantics.
+  // The whole merge runs in the background (see gv.sync.*PromptsMerge) so a
+  // first-time Google account picker closing the popup can't abandon it.
+  const handlePromptCloudPull = useCallback(async () => {
+    setPromptMigrationBusy(true);
+    setPromptMigrationStatus(null);
+    try {
+      const response = (await chrome.runtime.sendMessage({
+        type: 'gv.sync.pullPromptsMerge',
+        payload: { interactive: true },
+      })) as { ok?: boolean; empty?: boolean; imported?: number; duplicates?: number } | undefined;
+
+      if (!response?.ok) {
+        setPromptMigrationStatus({ kind: 'err', text: t('promptCloudError') });
+        return;
+      }
+      if (response.empty) {
+        setPromptMigrationStatus({ kind: 'ok', text: t('promptCloudPullEmpty') });
+        return;
+      }
+
+      const processed = (response.imported ?? 0) + (response.duplicates ?? 0);
+      setPromptMigrationStatus({
+        kind: 'ok',
+        text: t('promptCloudPullSuccess').replace('{count}', String(processed)),
+      });
+    } catch (error) {
+      console.error('[Gemini Voyager] Failed to pull prompts from cloud:', error);
+      setPromptMigrationStatus({ kind: 'err', text: t('promptCloudError') });
+    } finally {
+      setPromptMigrationBusy(false);
+    }
+  }, [t]);
+
+  const handlePromptCloudPush = useCallback(async () => {
+    setPromptMigrationBusy(true);
+    setPromptMigrationStatus(null);
+    try {
+      const response = (await chrome.runtime.sendMessage({
+        type: 'gv.sync.pushPromptsMerge',
+        payload: { interactive: true },
+      })) as { ok?: boolean; count?: number } | undefined;
+
+      if (!response?.ok) {
+        setPromptMigrationStatus({ kind: 'err', text: t('promptCloudError') });
+        return;
+      }
+
+      setPromptMigrationStatus({
+        kind: 'ok',
+        text: t('promptCloudPushSuccess').replace('{count}', String(response.count ?? 0)),
+      });
+    } catch (error) {
+      console.error('[Gemini Voyager] Failed to push prompts to cloud:', error);
+      setPromptMigrationStatus({ kind: 'err', text: t('promptCloudError') });
+    } finally {
+      setPromptMigrationBusy(false);
+    }
+  }, [t]);
 
   // Copy folder structure for AI organization
   const handleCopyFolderStructureForAI = useCallback(async () => {
@@ -3457,40 +3517,72 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                 'promptManager',
                 'promptDataMigration',
                 <div className="space-y-2">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <Label className="text-sm font-medium">{t('promptDataMigration')}</Label>
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        {t('promptDataMigrationHint')}
-                      </p>
-                    </div>
-                    <div className="flex shrink-0 flex-wrap gap-2">
+                  <div>
+                    <Label className="text-sm font-medium">{t('promptDataMigration')}</Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('promptDataMigrationHint')}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      disabled={promptMigrationBusy}
+                      onClick={() => {
+                        void handlePromptExport();
+                      }}
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        <Download className="h-3.5 w-3.5" />
+                        <span>{t('pm_export')}</span>
+                      </span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      disabled={promptMigrationBusy}
+                      onClick={() => promptImportInputRef.current?.click()}
+                    >
+                      <span className="inline-flex items-center gap-1.5">
+                        <Upload className="h-3.5 w-3.5" />
+                        <span>{t('pm_import')}</span>
+                      </span>
+                    </Button>
+                  </div>
+                  {!isSafariBrowser && (
+                    <div className="grid grid-cols-2 gap-2">
                       <Button
                         variant="outline"
                         size="sm"
+                        className="w-full"
                         disabled={promptMigrationBusy}
                         onClick={() => {
-                          void handlePromptExport();
+                          void handlePromptCloudPull();
                         }}
                       >
                         <span className="inline-flex items-center gap-1.5">
-                          <Download className="h-3.5 w-3.5" />
-                          <span>{t('pm_export')}</span>
+                          <CloudDownload className="h-3.5 w-3.5" />
+                          <span>{t('promptCloudPull')}</span>
                         </span>
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
+                        className="w-full"
                         disabled={promptMigrationBusy}
-                        onClick={() => promptImportInputRef.current?.click()}
+                        onClick={() => {
+                          void handlePromptCloudPush();
+                        }}
                       >
                         <span className="inline-flex items-center gap-1.5">
-                          <Upload className="h-3.5 w-3.5" />
-                          <span>{t('pm_import')}</span>
+                          <CloudUpload className="h-3.5 w-3.5" />
+                          <span>{t('promptCloudPush')}</span>
                         </span>
                       </Button>
                     </div>
-                  </div>
+                  )}
                   <input
                     ref={promptImportInputRef}
                     type="file"

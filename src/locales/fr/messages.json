@@ -2262,5 +2262,29 @@
   "themeColorReset": {
     "message": "Réinitialiser par défaut",
     "description": "Reset accent colour to default"
+  },
+  "promptCloudPull": {
+    "message": "Récupérer (fusion)",
+    "description": "Button: pull (merge) prompts from Google Drive into local"
+  },
+  "promptCloudPush": {
+    "message": "Envoyer (fusion)",
+    "description": "Button: push (merge) local prompts up to Google Drive"
+  },
+  "promptCloudPullSuccess": {
+    "message": "{count} prompt(s) fusionné(s) depuis le cloud",
+    "description": "Toast: prompts merged from cloud (with {count})"
+  },
+  "promptCloudPushSuccess": {
+    "message": "{count} prompt(s) fusionné(s) envoyé(s) vers le cloud",
+    "description": "Toast: merged prompts uploaded to cloud (with {count})"
+  },
+  "promptCloudPullEmpty": {
+    "message": "Aucun prompt dans le cloud pour l'instant",
+    "description": "Toast: no prompts in the cloud yet"
+  },
+  "promptCloudError": {
+    "message": "Échec de la synchronisation cloud. Vérifiez que vous êtes connecté à Google Drive.",
+    "description": "Toast: cloud prompt sync failed / not signed in"
   }
 }

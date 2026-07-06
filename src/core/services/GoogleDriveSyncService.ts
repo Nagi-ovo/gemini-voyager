@@ -325,6 +325,87 @@ export class GoogleDriveSyncService {
   }
 
   /**
+   * Upload ONLY the account-scoped prompts file, leaving folders / settings /
+   * starred untouched. Used by the popup "cloud merge" buttons, which merge
+   * cloud + local locally first and upload the union so both sides converge
+   * without data loss.
+   */
+  async uploadPromptsOnly(
+    prompts: PromptItem[],
+    accountScope: SyncAccountScope | null = null,
+    interactive: boolean = true,
+  ): Promise<boolean> {
+    try {
+      this.updateState({ isSyncing: true, error: null });
+
+      const token = await this.getAuthToken(interactive);
+      if (!token) {
+        if (!interactive) {
+          this.updateState({ isSyncing: false, isAuthenticated: false });
+          return false;
+        }
+        throw new Error('Not authenticated');
+      }
+
+      const promptPayload: PromptExportPayload = {
+        format: 'gemini-voyager.prompts.v1',
+        exportedAt: new Date().toISOString(),
+        version: EXTENSION_VERSION,
+        items: prompts,
+      };
+      const promptsFileName = this.getFileNameForScope(PROMPTS_FILE_NAME, accountScope);
+      const promptsFileId = await this.ensureFileId(token, promptsFileName, 'prompts');
+      await this.uploadFileWithRetry(token, promptsFileId, promptPayload);
+
+      this.updateState({ isSyncing: false, error: null });
+      await this.saveState();
+      console.log('[GoogleDriveSyncService] Prompts-only upload successful');
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      console.error('[GoogleDriveSyncService] Prompts-only upload failed:', error);
+      this.updateState({ isSyncing: false, error: errorMessage });
+      return false;
+    }
+  }
+
+  /**
+   * Download ONLY the account-scoped prompts file. Returns the payload, or null
+   * when no file exists or the user is not authenticated. The caller is
+   * responsible for merging the result into local data.
+   */
+  async downloadPromptsOnly(
+    accountScope: SyncAccountScope | null = null,
+    interactive: boolean = true,
+  ): Promise<PromptExportPayload | null> {
+    try {
+      this.updateState({ isSyncing: true, error: null });
+
+      const token = await this.getAuthToken(interactive);
+      if (!token) {
+        if (!interactive) {
+          this.updateState({ isSyncing: false, isAuthenticated: false });
+          return null;
+        }
+        throw new Error('Not authenticated');
+      }
+
+      const promptsFileId = await this.findFileForScope(token, PROMPTS_FILE_NAME, accountScope);
+      const prompts = promptsFileId
+        ? await this.downloadFileWithRetry<PromptExportPayload>(token, promptsFileId)
+        : null;
+
+      this.updateState({ isSyncing: false, error: null });
+      return prompts;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Download failed';
+      console.error('[GoogleDriveSyncService] Prompts-only download failed:', error);
+      this.updateState({ isSyncing: false, error: errorMessage });
+      return null;
+    }
+  }
+
+  /**
    * Download folders, prompts, and timeline data from separate files in Google Drive
    * Returns all available payloads or null if no files exist
    * @param interactive Whether to show auth prompt if needed

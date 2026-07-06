@@ -309,3 +309,52 @@ describe('GoogleDriveSyncService authentication', () => {
     expect(launchWebAuthFlowMock).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('GoogleDriveSyncService prompts-only sync', () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({}),
+      text: async () => '',
+    });
+    vi.stubGlobal('fetch', fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('uploadPromptsOnly returns false (does not throw) when not authenticated non-interactively', async () => {
+    const chromeMock = createChromeMock();
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+    (chromeMock.identity.getAuthToken as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_details: { interactive?: boolean }, callback: (token?: string) => void) =>
+        callback(undefined),
+    );
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+
+    await expect(service.uploadPromptsOnly([], null, false)).resolves.toBe(false);
+    // Never reached the Drive API — no file writes attempted.
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('downloadPromptsOnly returns null (does not throw) when not authenticated non-interactively', async () => {
+    const chromeMock = createChromeMock();
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+    (chromeMock.identity.getAuthToken as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_details: { interactive?: boolean }, callback: (token?: string) => void) =>
+        callback(undefined),
+    );
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+
+    await expect(service.downloadPromptsOnly(null, false)).resolves.toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});

@@ -20,6 +20,7 @@ import {
   isRemoteAnnouncementRuntimeMessage,
   startRemoteAnnouncementBackgroundService,
 } from '@/features/announcements/background';
+import { PromptImportExportService } from '@/features/backup/services/PromptImportExportService';
 import { pluginsToOriginPatterns } from '@/features/plugins/runtime/siteRegistration';
 import { listPluginManifests } from '@/features/plugins/sources/defaultSources';
 import type { PluginManifest } from '@/features/plugins/types';
@@ -1415,6 +1416,76 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({
               ok: true,
               data,
+              state: await googleDriveSyncService.getState(),
+            });
+            return;
+          }
+          // Prompts-only cloud merge, run END-TO-END in the background so the
+          // operation survives the extension popup closing when the Google
+          // account picker steals focus during interactive auth. Merging in the
+          // popup meant a first-time account selection abandoned the merge and
+          // the user had to click again.
+          case 'gv.sync.pullPromptsMerge': {
+            const { interactive, accountScope: rawScope } = (message.payload ?? {}) as {
+              interactive?: boolean;
+              accountScope?: unknown;
+            };
+            const accountScope = await resolveAccountScopeForMessage(
+              sender,
+              'gemini',
+              isSyncAccountScope(rawScope) ? rawScope : undefined,
+            );
+            const payload = await googleDriveSyncService.downloadPromptsOnly(
+              accountScope,
+              interactive !== false,
+            );
+            const validated = PromptImportExportService.validatePayload(payload);
+            if (!validated.success) {
+              sendResponse({
+                ok: true,
+                empty: true,
+                state: await googleDriveSyncService.getState(),
+              });
+              return;
+            }
+            const merged = await PromptImportExportService.importFromPayload(validated.data);
+            sendResponse({
+              ok: merged.success,
+              imported: merged.success ? merged.data.imported : 0,
+              duplicates: merged.success ? merged.data.duplicates : 0,
+              state: await googleDriveSyncService.getState(),
+            });
+            return;
+          }
+          case 'gv.sync.pushPromptsMerge': {
+            const { interactive, accountScope: rawScope } = (message.payload ?? {}) as {
+              interactive?: boolean;
+              accountScope?: unknown;
+            };
+            const accountScope = await resolveAccountScopeForMessage(
+              sender,
+              'gemini',
+              isSyncAccountScope(rawScope) ? rawScope : undefined,
+            );
+            // Merge cloud into local first so both sides converge to the union.
+            const cloudPayload = await googleDriveSyncService.downloadPromptsOnly(
+              accountScope,
+              interactive !== false,
+            );
+            const validated = PromptImportExportService.validatePayload(cloudPayload);
+            if (validated.success) {
+              await PromptImportExportService.importFromPayload(validated.data);
+            }
+            const localResult = await PromptImportExportService.loadPrompts();
+            const localPrompts = localResult.success ? localResult.data : [];
+            const uploaded = await googleDriveSyncService.uploadPromptsOnly(
+              localPrompts,
+              accountScope,
+              interactive !== false,
+            );
+            sendResponse({
+              ok: uploaded,
+              count: localPrompts.length,
               state: await googleDriveSyncService.getState(),
             });
             return;

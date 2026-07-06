@@ -2262,5 +2262,29 @@
   "themeColorReset": {
     "message": "기본값으로 재설정",
     "description": "Reset accent colour to default"
+  },
+  "promptCloudPull": {
+    "message": "가져오기(병합)",
+    "description": "Button: pull (merge) prompts from Google Drive into local"
+  },
+  "promptCloudPush": {
+    "message": "업로드(병합)",
+    "description": "Button: push (merge) local prompts up to Google Drive"
+  },
+  "promptCloudPullSuccess": {
+    "message": "클라우드에서 프롬프트 {count}개를 병합했습니다",
+    "description": "Toast: prompts merged from cloud (with {count})"
+  },
+  "promptCloudPushSuccess": {
+    "message": "병합된 프롬프트 {count}개를 클라우드에 업로드했습니다",
+    "description": "Toast: merged prompts uploaded to cloud (with {count})"
+  },
+  "promptCloudPullEmpty": {
+    "message": "클라우드에 아직 프롬프트가 없습니다",
+    "description": "Toast: no prompts in the cloud yet"
+  },
+  "promptCloudError": {
+    "message": "클라우드 동기화에 실패했습니다. Google Drive에 로그인했는지 확인하세요.",
+    "description": "Toast: cloud prompt sync failed / not signed in"
   }
 }

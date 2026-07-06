@@ -2262,5 +2262,29 @@
   "themeColorReset": {
     "message": "恢复默认",
     "description": "Reset accent colour to default"
+  },
+  "promptCloudPull": {
+    "message": "拉取（合并）",
+    "description": "Button: pull (merge) prompts from Google Drive into local"
+  },
+  "promptCloudPush": {
+    "message": "上传（合并）",
+    "description": "Button: push (merge) local prompts up to Google Drive"
+  },
+  "promptCloudPullSuccess": {
+    "message": "已从云端合并 {count} 条提示词",
+    "description": "Toast: prompts merged from cloud (with {count})"
+  },
+  "promptCloudPushSuccess": {
+    "message": "已上传合并后的 {count} 条提示词到云端",
+    "description": "Toast: merged prompts uploaded to cloud (with {count})"
+  },
+  "promptCloudPullEmpty": {
+    "message": "云端还没有提示词",
+    "description": "Toast: no prompts in the cloud yet"
+  },
+  "promptCloudError": {
+    "message": "云端同步失败，请确认已登录 Google Drive。",
+    "description": "Toast: cloud prompt sync failed / not signed in"
   }
 }

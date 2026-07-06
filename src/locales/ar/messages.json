@@ -2262,5 +2262,29 @@
   "themeColorReset": {
     "message": "إعادة التعيين إلى الافتراضي",
     "description": "Reset accent colour to default"
+  },
+  "promptCloudPull": {
+    "message": "سحب (دمج)",
+    "description": "Button: pull (merge) prompts from Google Drive into local"
+  },
+  "promptCloudPush": {
+    "message": "رفع (دمج)",
+    "description": "Button: push (merge) local prompts up to Google Drive"
+  },
+  "promptCloudPullSuccess": {
+    "message": "تم دمج {count} من الموجّهات من السحابة",
+    "description": "Toast: prompts merged from cloud (with {count})"
+  },
+  "promptCloudPushSuccess": {
+    "message": "تم رفع {count} من الموجّهات المدموجة إلى السحابة",
+    "description": "Toast: merged prompts uploaded to cloud (with {count})"
+  },
+  "promptCloudPullEmpty": {
+    "message": "لا توجد موجّهات في السحابة بعد",
+    "description": "Toast: no prompts in the cloud yet"
+  },
+  "promptCloudError": {
+    "message": "فشلت المزامنة السحابية. تأكد من تسجيل الدخول إلى Google Drive.",
+    "description": "Toast: cloud prompt sync failed / not signed in"
   }
 }
