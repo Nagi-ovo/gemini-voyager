@@ -528,6 +528,113 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(focusSpy).toHaveBeenCalled();
   });
 
+  it('does not auto-switch model after the user starts typing in the chat input', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({ gvDefaultModel: 'Pro' });
+      },
+    );
+
+    history.replaceState({}, '', '/u/0/app?hl=en');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.className = 'input-area-switch-label';
+    selectorBtn.textContent = 'Flash';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const menuPanel = document.createElement('div');
+    menuPanel.className = 'mat-mdc-menu-panel';
+    menuPanel.setAttribute('role', 'menu');
+
+    const proItem = document.createElement('button');
+    proItem.setAttribute('role', 'menuitemradio');
+    proItem.innerHTML = `
+      <div class="title-and-description">
+        <div class="mode-title">Pro</div>
+      </div>
+    `;
+    proItem.click = vi.fn();
+    menuPanel.appendChild(proItem);
+    document.body.appendChild(menuPanel);
+
+    const main = document.createElement('main');
+    const richTextarea = document.createElement('rich-textarea');
+    const input = document.createElement('div');
+    input.setAttribute('contenteditable', 'true');
+    input.setAttribute('role', 'textbox');
+    const focusSpy = vi.spyOn(input, 'focus').mockImplementation(() => {});
+    richTextarea.appendChild(input);
+    main.appendChild(richTextarea);
+    document.body.appendChild(main);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    input.textContent = 'hello';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(selectorBtn.click).not.toHaveBeenCalled();
+    expect(proItem.click).not.toHaveBeenCalled();
+    expect(focusSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not auto-switch model during recent chat-input key activity', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({ gvDefaultModel: 'Pro' });
+      },
+    );
+
+    history.replaceState({}, '', '/u/0/app?hl=en');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.className = 'input-area-switch-label';
+    selectorBtn.textContent = 'Flash';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const menuPanel = document.createElement('div');
+    menuPanel.className = 'mat-mdc-menu-panel';
+    menuPanel.setAttribute('role', 'menu');
+
+    const proItem = document.createElement('button');
+    proItem.setAttribute('role', 'menuitemradio');
+    proItem.innerHTML = `
+      <div class="title-and-description">
+        <div class="mode-title">Pro</div>
+      </div>
+    `;
+    proItem.click = vi.fn();
+    menuPanel.appendChild(proItem);
+    document.body.appendChild(menuPanel);
+
+    const main = document.createElement('main');
+    const richTextarea = document.createElement('rich-textarea');
+    const input = document.createElement('div');
+    input.setAttribute('contenteditable', 'true');
+    input.setAttribute('role', 'textbox');
+    const focusSpy = vi.spyOn(input, 'focus').mockImplementation(() => {});
+    richTextarea.appendChild(input);
+    main.appendChild(richTextarea);
+    document.body.appendChild(main);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'h', bubbles: true }));
+
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(selectorBtn.click).not.toHaveBeenCalled();
+    expect(proItem.click).not.toHaveBeenCalled();
+    expect(focusSpy).not.toHaveBeenCalled();
+  });
+
   it('does not focus chat input when target model is already selected', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
@@ -1133,6 +1240,155 @@ describe('DefaultModelManager (default model locker)', () => {
 
     expect(standard.querySelector('.gv-default-star-btn')).not.toBeNull();
     expect(extended.querySelector('.gv-default-star-btn')).not.toBeNull();
+  });
+
+  const buildThinkingSubmenu = (submenuId: string) => {
+    const mainPane = document.createElement('div');
+    mainPane.className = 'cdk-overlay-pane';
+    const thinkingRow = document.createElement('gem-menu-item');
+    thinkingRow.setAttribute('role', 'menuitem');
+    thinkingRow.setAttribute('value', 'thinking_level');
+    thinkingRow.setAttribute('aria-haspopup', 'true');
+    thinkingRow.setAttribute('aria-controls', submenuId);
+    thinkingRow.innerHTML = `
+      <gem-menu-item-content>
+        <div class="label-container"><span class="label">Thinking level</span></div>
+      </gem-menu-item-content>
+    `;
+    mainPane.appendChild(thinkingRow);
+    document.body.appendChild(mainPane);
+
+    const submenuPane = document.createElement('div');
+    submenuPane.className = 'cdk-overlay-pane';
+    const submenuList = document.createElement('div');
+    submenuList.id = submenuId;
+    submenuList.setAttribute('role', 'menu');
+    const standard = document.createElement('gem-menu-item');
+    standard.setAttribute('role', 'menuitem');
+    standard.classList.add('selected');
+    standard.innerHTML = `
+      <gem-menu-item-content>
+        <div class="label-container"><span class="label">Standard</span></div>
+      </gem-menu-item-content>
+    `;
+    const extended = document.createElement('gem-menu-item');
+    extended.setAttribute('role', 'menuitem');
+    extended.innerHTML = `
+      <gem-menu-item-content>
+        <div class="label-container"><span class="label">Extended</span></div>
+      </gem-menu-item-content>
+    `;
+    submenuList.append(standard, extended);
+    submenuPane.appendChild(submenuList);
+    document.body.appendChild(submenuPane);
+
+    return { standard, extended };
+  };
+
+  it('marks only one thinking level default when the stored index and label disagree', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_key: unknown, callback: (items: Record<string, unknown>) => void) => {
+        // Drifted pairing: label says Extended, but the stored index points at Standard.
+        // The old OR-match lit BOTH stars; the label must win and mark exactly one.
+        callback({ gvDefaultThinkingLevel: { index: 0, label: 'Extended' } });
+      },
+    );
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    const { standard, extended } = buildThinkingSubmenu('ng-menu-double-star');
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    const standardStar = standard.querySelector<HTMLElement>('.gv-default-star-btn');
+    const extendedStar = extended.querySelector<HTMLElement>('.gv-default-star-btn');
+    expect(standardStar).not.toBeNull();
+    expect(extendedStar).not.toBeNull();
+    expect(extendedStar?.classList.contains('is-default')).toBe(true);
+    expect(standardStar?.classList.contains('is-default')).toBe(false);
+  });
+
+  it('falls back to the stored index when the stored thinking label matches no row', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_key: unknown, callback: (items: Record<string, unknown>) => void) => {
+        // Label from a previous UI language no longer matches any row → index wins.
+        callback({ gvDefaultThinkingLevel: { index: 1, label: 'Reasoning' } });
+      },
+    );
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    const { standard, extended } = buildThinkingSubmenu('ng-menu-index-fallback');
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    const standardStar = standard.querySelector<HTMLElement>('.gv-default-star-btn');
+    const extendedStar = extended.querySelector<HTMLElement>('.gv-default-star-btn');
+    expect(extendedStar?.classList.contains('is-default')).toBe(true);
+    expect(standardStar?.classList.contains('is-default')).toBe(false);
+  });
+
+  it('never enforces the page-default Standard thinking level (no picker churn)', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_key: unknown, callback: (items: Record<string, unknown>) => void) => {
+        // Standard is Gemini's built-in default thinking level. Even when the
+        // user has starred it, locking to it is a no-op that must never open the
+        // picker — that churn was the "flashes open on an already-correct chat" bug.
+        callback({
+          gvDefaultModel: 'Flash',
+          gvDefaultThinkingLevel: { index: 0, label: 'Standard' },
+        });
+      },
+    );
+
+    history.replaceState({}, '', '/u/0/app?hl=en');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.className = 'input-area-switch-label';
+    selectorBtn.textContent = 'Flash';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(3000);
+
+    expect(selectorBtn.click).not.toHaveBeenCalled();
+  });
+
+  it('does not open the picker while the trigger pill is still empty (no load-time flash)', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_key: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({ gvDefaultModel: { id: 'e6fa609c3fa255c0', name: '3.1 Pro' } });
+      },
+    );
+
+    history.replaceState({}, '', '/app');
+
+    // Trigger button exists but its label has not painted yet (early load). A
+    // blind menu-open here — then finding Pro already selected and closing —
+    // was the intermittent flash that left a focus ring on the pill.
+    const selectorBtn = document.createElement('button');
+    selectorBtn.setAttribute('data-test-id', 'bard-mode-menu-button');
+    selectorBtn.textContent = '';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(3000);
+
+    expect(selectorBtn.click).not.toHaveBeenCalled();
   });
 
   it('treats inline Thinking level choices as thinking stars, not model stars', async () => {

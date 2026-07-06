@@ -115,6 +115,132 @@ Regression test:
 Commit:
 `2d7d8e12 fix(default-model): avoid table option menu stars`
 
+## Default model auto-apply must yield to active composer input
+
+Symptom:
+Typing in a fresh Gemini chat could lose focus while the page was still
+loading. Disabling default-model auto-apply made the problem disappear.
+
+Root cause:
+The default-model lock loop opened Gemini's model picker after startup even
+when the user had already started typing in the composer. The follow-up
+refocus helped after the switch, but the menu click still stole focus first.
+
+Fix:
+Track composer input/keydown activity and skip the current auto-apply attempt
+once the user has started editing the chat input.
+
+Regression test:
+`src/pages/content/defaultModel/__tests__/modelLocker.test.ts`
+
+Commit:
+`fix(default-model): avoid stealing composer focus`
+
+## Thinking-level default must resolve by label, not per-row OR
+
+Symptom:
+Both Standard and Extended showed a filled default star at once in the
+Thinking level submenu — two "defaults" selected simultaneously.
+
+Root cause:
+`isThinkingDefaultForItem` marked a row default when EITHER its label matched
+the stored label OR its position matched the stored index. When the stored
+`{index, label}` pair drifted apart (e.g. saved under a different submenu
+order/language), the label lit one row and the stale index lit another, so two
+stars turned gold. The stored index and label are separate keys and can
+disagree; an OR test over each row cannot stay single-valued.
+
+Fix:
+Resolve exactly one default row per render (`resolveThinkingDefaultIndex`):
+prefer the label match, fall back to the stored index only when no label
+matches and it addresses a real row. The star click now reads its own
+`is-default` class instead of re-deriving from `(index, label)`.
+
+Regression test:
+`src/pages/content/defaultModel/__tests__/modelLocker.test.ts`
+("marks only one thinking level default when the stored index and label
+disagree")
+
+Commit:
+`fix(default-model): resolve single thinking-level default`
+
+## Auto-applied thinking level must close the picker it opened
+
+Symptom:
+After auto-selection ran, the Thinking level row was unresponsive — clicking it
+did nothing until the whole model picker was closed and reopened by hand.
+
+Root cause:
+`tryLockToThinkingLevel` opened the picker and thinking-level submenu
+programmatically, clicked the target level, then refocused the composer but
+never closed the menu. The half-open picker (with a lingering submenu overlay)
+left the row's hover/submenu machinery in a state the user's next open could
+not drive.
+
+Fix:
+Close the menu (`document.body.click()`) right after the auto-switch click, so
+the next manual open starts clean — mirroring the already-selected branch.
+
+Regression test:
+`src/pages/content/defaultModel/__tests__/modelLocker.test.ts`
+
+Commit:
+`fix(default-model): close picker after auto thinking switch`
+
+## Never lock to the page-default Standard thinking level
+
+Symptom:
+On an already-correct new chat (model + thinking already at the starred value)
+the model picker still flashed open for a moment on load, intermittently.
+
+Root cause:
+The lock loop always started (first tick at 1s) and, in load-timing windows,
+opened the picker to "enforce" a thinking-level default even when Standard —
+Gemini's built-in default — was the target. Enforcing Standard is a pure no-op
+(the page already opens there) so the open was always wasted churn. A default
+corrupted to a non-Standard value by the double-star bug made it worse.
+
+Fix:
+Treat a Standard target (index 0 / label "standard") as "no thinking
+preference" for enforcement (`isPageDefaultThinkingLevel`), keeping the raw
+value only for the star display. Also bail before starting the loop when the
+trigger pill already shows the starred model + thinking level.
+
+Regression test:
+`src/pages/content/defaultModel/__tests__/modelLocker.test.ts`
+("never enforces the page-default Standard thinking level")
+
+Commit:
+`fix(default-model): don't enforce Standard thinking level`
+
+## tryLockToModel must reuse the bidirectional pill match
+
+Symptom:
+On load the model picker still flashed open for an instant and left a focus
+ring on the trigger pill, even though the model + thinking level were already
+the starred values (Pro + Standard).
+
+Root cause:
+`tryLockToModel`'s "already selected" early-return used a forward-only
+whole-word test: it checked whether the stored long name ("3.1 pro") appeared
+in the short pill label ("pro"), which is false. So whenever a tick reached
+it — e.g. a load-timing window where the pill briefly read empty and
+`modelMatchesLines` returned false — it opened the picker to "switch" to a
+model that was already selected, then closed it. Angular CDK restored focus to
+the trigger on close, leaving the ring.
+
+Fix:
+Early-return using the same `modelMatchesLines` (bidirectional short/long)
+check as the fast-path, and bail without opening the menu when the pill is not
+readable yet (retry next tick).
+
+Regression test:
+`src/pages/content/defaultModel/__tests__/modelLocker.test.ts`
+("does not open the picker while the trigger pill is still empty")
+
+Commit:
+`fix(default-model): reuse bidirectional match in tryLockToModel`
+
 ## Gemini native copy traffic is not generation traffic
 
 Symptom:

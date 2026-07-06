@@ -57,6 +57,8 @@ const CHAT_INPUT_SELECTORS = [
   'main textarea',
 ] as const;
 
+const RECENT_COMPOSER_ACTIVITY_MS = 8000;
+
 class DefaultModelManager {
   private static instance: DefaultModelManager;
   private observer: MutationObserver | null = null;
@@ -100,6 +102,9 @@ class DefaultModelManager {
   private storageChangeListener:
     | ((changes: Record<string, chrome.storage.StorageChange>, area: string) => void)
     | null = null;
+  private composerActivityHandler: ((event: Event) => void) | null = null;
+  private lastComposerActivityPath: string | null = null;
+  private lastComposerActivityAt = 0;
 
   private constructor() {}
 
@@ -137,6 +142,7 @@ class DefaultModelManager {
     }
 
     this.subscribeToAutoApplyChanges();
+    this.subscribeToComposerActivity();
 
     this.initObserver();
     void this.checkAndLockModel();
@@ -233,8 +239,12 @@ class DefaultModelManager {
       this.storageChangeListener = null;
     }
 
+    this.unsubscribeFromComposerActivity();
+
     this.pendingMenuPanelInjections = new WeakSet<HTMLElement>();
     this.menuPanelInjectAttempts = new WeakMap<HTMLElement, number>();
+    this.lastComposerActivityPath = null;
+    this.lastComposerActivityAt = 0;
   }
 
   private initObserver() {
@@ -589,13 +599,19 @@ class DefaultModelManager {
     }
 
     const currentDefault = this.currentDefaultThinkingLevel;
+    // Resolve the single default row up front. Deciding per-item let a drifted
+    // stored index light up a second star alongside the label match — the
+    // "both thinking levels selected" bug.
+    const defaultIndex = this.resolveThinkingDefaultIndex(items, currentDefault);
 
     items.forEach((item, index) => {
       const label = this.getThinkingLevelLabel(item);
       if (!label) return;
 
+      const isDefault = index === defaultIndex;
+
       if (item.querySelector('.gv-default-star-btn')) {
-        this.updateThinkingStarState(item, index, label, currentDefault);
+        this.updateThinkingStarState(item, isDefault);
         return;
       }
 
@@ -638,10 +654,40 @@ class DefaultModelManager {
         item.appendChild(btn);
       }
 
-      this.updateThinkingStarState(item, index, label, currentDefault);
+      this.updateThinkingStarState(item, isDefault);
     });
 
     return true;
+  }
+
+  /**
+   * Resolve which single thinking-level row is the stored default.
+   * The label is the stable, user-facing key; when it resolves to a concrete
+   * row that row is the ONLY default. We fall back to the stored positional
+   * index solely when no label matches (e.g. the UI language changed since the
+   * default was saved), and only when it addresses a real row. Deciding this
+   * once — instead of an OR test per row — is what prevents two stars from
+   * lighting up when the stored index and label disagree.
+   */
+  private resolveThinkingDefaultIndex(
+    items: HTMLElement[],
+    currentDefault: DefaultThinkingLevel | null,
+  ): number {
+    if (!currentDefault) return -1;
+
+    const targetLabel = currentDefault.label?.toLowerCase().trim();
+    if (targetLabel) {
+      const byLabel = items.findIndex(
+        (item) => this.getThinkingLevelLabel(item).toLowerCase().trim() === targetLabel,
+      );
+      if (byLabel !== -1) return byLabel;
+    }
+
+    if (currentDefault.index >= 0 && currentDefault.index < items.length) {
+      return currentDefault.index;
+    }
+
+    return -1;
   }
 
   private getThinkingLevelLabel(item: HTMLElement): string {
@@ -649,22 +695,7 @@ class DefaultModelManager {
     return titleEl?.textContent?.trim() || '';
   }
 
-  private isThinkingDefaultForItem(
-    currentDefault: DefaultThinkingLevel | null,
-    index: number,
-    label: string,
-  ): boolean {
-    if (!currentDefault) return false;
-    if (currentDefault.label && currentDefault.label === label) return true;
-    return currentDefault.index === index;
-  }
-
-  private updateThinkingStarState(
-    item: HTMLElement,
-    index: number,
-    label: string,
-    currentDefault: DefaultThinkingLevel | null,
-  ) {
+  private updateThinkingStarState(item: HTMLElement, isDefault: boolean) {
     const btn = item.querySelector('.gv-default-star-btn') as HTMLElement | null;
     if (!btn) return;
     this.bindStarOwnerHover(item, btn);
@@ -673,7 +704,6 @@ class DefaultModelManager {
       btn.addEventListener('mousedown', (e) => e.stopPropagation());
       btn.addEventListener('click', (e) => e.stopPropagation());
     }
-    const isDefault = this.isThinkingDefaultForItem(currentDefault, index, label);
     if (isDefault) {
       btn.classList.add('is-default');
       btn.innerHTML = this.getStarIcon(true);
@@ -698,18 +728,17 @@ class DefaultModelManager {
         .forEach((el) => el.remove());
       return;
     }
-    const isCurrentlyDefault = this.isThinkingDefaultForItem(
-      this.currentDefaultThinkingLevel,
-      index,
-      label,
-    );
+    // The star's own class is the source of truth for whether THIS row is the
+    // current default — re-deriving it from (index,label) is exactly what let a
+    // drifted index treat two rows as default.
+    const isCurrentlyDefault = btn.classList.contains('is-default');
     const nextDefault: DefaultThinkingLevel | null = isCurrentlyDefault ? null : { index, label };
 
     this.currentDefaultThinkingLevel = nextDefault;
 
     const itemEl = btn.closest('gem-menu-item, [role="menuitem"]');
     if (itemEl instanceof HTMLElement) {
-      this.updateThinkingStarState(itemEl, index, label, nextDefault);
+      this.updateThinkingStarState(itemEl, nextDefault !== null);
     }
 
     if (nextDefault) {
@@ -1080,16 +1109,38 @@ class DefaultModelManager {
     const targetThinking = thinkingResult.success
       ? this.parseStoredThinkingLevel(thinkingResult.data)
       : null;
+    // Keep the raw value for the in-menu star display, but never *enforce*
+    // Standard: it is Gemini's built-in default thinking level, so locking to it
+    // is always a no-op that can only make the picker flash open on an
+    // already-correct chat. Treat a Standard target as "no thinking preference".
     this.currentDefaultThinkingLevel = targetThinking;
+    const enforcedThinking = this.isPageDefaultThinkingLevel(targetThinking)
+      ? null
+      : targetThinking;
 
     this.initialized = true;
 
-    if (!targetModel && !targetThinking) return;
+    if (!targetModel && !enforcedThinking) return;
 
-    // Skip when the only target is the Flash/Fast model and no thinking preference exists —
-    // Gemini already defaults to Flash, so a no-op lock loop just wastes ticks.
-    if (targetModel && this.isFastModel(targetModel) && !targetThinking) {
+    // Skip when the only target is the Flash/Fast model and there is no thinking
+    // preference left to enforce — Gemini already defaults to Flash, so a no-op
+    // lock loop just wastes ticks.
+    if (targetModel && this.isFastModel(targetModel) && !enforcedThinking) {
       return;
+    }
+
+    // Nothing to do when the picker already shows the starred model + thinking
+    // level. A one-line pill ("Pro") already means Pro + Standard — Gemini hides
+    // the thinking line at Standard. Bail before starting the 1s lock loop so an
+    // already-correct new chat never spins up (or briefly opens) the picker. The
+    // `lines.length` guard keeps the startup case — pill not painted yet — on
+    // the loop path.
+    const pillLines = this.readTriggerPillLines();
+    if (pillLines.length) {
+      const modelOk = !targetModel || this.modelMatchesLines(targetModel, pillLines);
+      const thinkingOk =
+        !enforcedThinking || this.thinkingMatchesLines(enforcedThinking, pillLines);
+      if (modelOk && thinkingOk) return;
     }
 
     // Generate a unique session ID to prevent duplicate selections in the same navigation
@@ -1121,8 +1172,18 @@ class DefaultModelManager {
         return;
       }
 
-      await this.tickLock(targetModel, targetThinking);
+      await this.tickLock(targetModel, enforcedThinking);
     }, 1000);
+  }
+
+  /**
+   * Standard (index 0 / label "standard") is Gemini's built-in default thinking
+   * level. We never lock to it — the page already opens there, so enforcing it
+   * is a no-op that only risks flashing the picker open.
+   */
+  private isPageDefaultThinkingLevel(thinking: DefaultThinkingLevel | null): boolean {
+    if (!thinking) return false;
+    return thinking.index === 0 || thinking.label.toLowerCase().trim() === 'standard';
   }
 
   /**
@@ -1133,6 +1194,11 @@ class DefaultModelManager {
     targetModel: DefaultModelSetting | null,
     targetThinking: DefaultThinkingLevel | null,
   ) {
+    if (this.shouldYieldToUserComposerActivity()) {
+      this.stopLockTimer();
+      return;
+    }
+
     const lines = this.readTriggerPillLines();
     const modelOk = !targetModel || this.modelMatchesLines(targetModel, lines);
     const thinkingOk = !targetThinking || this.thinkingMatchesLines(targetThinking, lines);
@@ -1279,20 +1345,27 @@ class DefaultModelManager {
     const selectorBtn = this.findSelectorButton();
     if (!selectorBtn) return 'failed';
 
-    // 2. Check current model text - early return if already correct
-    const currentText = selectorBtn.textContent || '';
-    const normalizedCurrent = normalize(currentText);
-
-    // For both 'id' and 'name' kinds, we can check if the button text matches the target name
-    // This helps avoid unnecessary menu clicks when the model is already selected
-    if (targetAsWholeWord.test(normalizedCurrent) || normalizedCurrent === targetName) {
-      // Already correct
+    // 2. Early-return if already correct — using the SAME bidirectional match as
+    //    the fast-path (`modelMatchesLines`). The trigger pill shows the short
+    //    label ("Pro") while the stored default carries the long name ("3.1
+    //    Pro"); a forward-only whole-word test misses that, so this method used
+    //    to open the picker to "switch" to a model that was already selected —
+    //    the momentary flash + leftover focus ring on load. Also bail when the
+    //    pill isn't readable yet (page still painting) instead of opening the
+    //    menu on a blind guess; the loop retries on the next tick.
+    const currentLines = this.readTriggerPillLines();
+    if (!currentLines.length) return 'failed';
+    if (this.modelMatchesLines(targetModel, currentLines)) {
       this.stopLockTimer();
       return 'already-selected';
     }
 
     // 3. Switch model
     // This part is tricky because we need to open the menu and click safely
+    if (this.shouldYieldToUserComposerActivity()) {
+      this.stopLockTimer();
+      return 'failed';
+    }
     if (this.isLocked) return 'failed'; // Prevent concurrent locks
     this.isLocked = true;
 
@@ -1416,6 +1489,11 @@ class DefaultModelManager {
   }
 
   private async tryLockToThinkingLevel(target: DefaultThinkingLevel): Promise<boolean> {
+    if (this.shouldYieldToUserComposerActivity()) {
+      this.stopLockTimer();
+      return false;
+    }
+
     if (this.isLocked) return false;
     this.isLocked = true;
 
@@ -1485,6 +1563,11 @@ class DefaultModelManager {
       const alreadySelected = targetItem.classList.contains('selected');
       if (!alreadySelected) {
         targetItem.click();
+        // Auto-apply opened the picker programmatically. Close it (and the
+        // thinking-level submenu overlay) so the user's next manual open starts
+        // from a clean state — leaving it half-open left the Thinking level row
+        // unresponsive until the menu was closed and reopened by hand.
+        document.body.click();
         this.focusChatInputAfterAutoSwitch();
         this.consecutiveFailures = 0;
         return true;
@@ -1568,6 +1651,51 @@ class DefaultModelManager {
       }
     }
     return null;
+  }
+
+  private subscribeToComposerActivity(): void {
+    if (this.composerActivityHandler) return;
+
+    this.composerActivityHandler = (event) => {
+      const target = event.target instanceof HTMLElement ? event.target : null;
+      if (!this.isChatInputElement(target)) return;
+      this.lastComposerActivityPath = window.location.pathname;
+      this.lastComposerActivityAt = Date.now();
+    };
+
+    document.addEventListener('input', this.composerActivityHandler, { capture: true });
+    document.addEventListener('keydown', this.composerActivityHandler, { capture: true });
+  }
+
+  private unsubscribeFromComposerActivity(): void {
+    if (!this.composerActivityHandler) return;
+    document.removeEventListener('input', this.composerActivityHandler, { capture: true });
+    document.removeEventListener('keydown', this.composerActivityHandler, { capture: true });
+    this.composerActivityHandler = null;
+  }
+
+  private isChatInputElement(element: HTMLElement | null): boolean {
+    if (!element) return false;
+    const input = this.findChatInputElement();
+    return Boolean(input && (element === input || input.contains(element)));
+  }
+
+  private shouldYieldToUserComposerActivity(): boolean {
+    const input = this.findChatInputElement();
+    const text = input ? this.getChatInputText(input).trim() : '';
+    if (text.length > 0) return true;
+
+    return (
+      this.lastComposerActivityPath === window.location.pathname &&
+      Date.now() - this.lastComposerActivityAt < RECENT_COMPOSER_ACTIVITY_MS
+    );
+  }
+
+  private getChatInputText(input: HTMLElement): string {
+    if (input instanceof HTMLTextAreaElement) {
+      return input.value;
+    }
+    return input.innerText ?? input.textContent ?? '';
   }
 
   // ==================== Thinking level helpers (2026 redesign) ====================
