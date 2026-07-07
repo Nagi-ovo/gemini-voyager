@@ -170,23 +170,49 @@ export async function injectPinButtons(): Promise<void> {
   }
 }
 
+type PinnedChangesListener = (
+  changes: Record<string, chrome.storage.StorageChange>,
+  areaName: string,
+) => void;
+
+let pinnedChangesListener: PinnedChangesListener | null = null;
+
+function onPinnedStorageChanged(
+  changes: Record<string, chrome.storage.StorageChange>,
+  areaName: string,
+): void {
+  if (areaName !== 'sync') return;
+  if (!changes[StorageKeys.GV_GEMS_PINNED]) return;
+  const raw = changes[StorageKeys.GV_GEMS_PINNED].newValue;
+  currentPinned = Array.isArray(raw)
+    ? raw.filter((id: unknown): id is string => typeof id === 'string')
+    : [];
+  const pinnedSet = new Set(currentPinned);
+  document.querySelectorAll(`.${PIN_BTN_CLASS}`).forEach((btn) => {
+    const id = (btn as HTMLElement).dataset.gemId;
+    if (!id) return;
+    toggleBtn(btn as HTMLElement, pinnedSet.has(id));
+  });
+}
+
 /**
  * Listen for cross-tab changes to GV_GEMS_PINNED so the pin state
  * stays in sync if another window modifies it.
+ *
+ * Returns an unlisten function; the caller (gemsSidebar/index.ts) invokes it
+ * from its cleanup so the listener doesn't outlive the feature. Idempotent —
+ * a second call replaces the previous registration instead of stacking.
  */
-export function listenPinnedChanges(): void {
-  chrome.storage?.onChanged?.addListener((changes, areaName) => {
-    if (areaName !== 'sync') return;
-    if (!changes[StorageKeys.GV_GEMS_PINNED]) return;
-    const raw = changes[StorageKeys.GV_GEMS_PINNED].newValue;
-    currentPinned = Array.isArray(raw)
-      ? raw.filter((id: unknown): id is string => typeof id === 'string')
-      : [];
-    const pinnedSet = new Set(currentPinned);
-    document.querySelectorAll(`.${PIN_BTN_CLASS}`).forEach((btn) => {
-      const id = (btn as HTMLElement).dataset.gemId;
-      if (!id) return;
-      toggleBtn(btn as HTMLElement, pinnedSet.has(id));
-    });
-  });
+export function listenPinnedChanges(): () => void {
+  if (pinnedChangesListener) {
+    chrome.storage?.onChanged?.removeListener(pinnedChangesListener);
+  }
+  pinnedChangesListener = onPinnedStorageChanged;
+  chrome.storage?.onChanged?.addListener(onPinnedStorageChanged);
+  return () => {
+    chrome.storage?.onChanged?.removeListener(onPinnedStorageChanged);
+    if (pinnedChangesListener === onPinnedStorageChanged) {
+      pinnedChangesListener = null;
+    }
+  };
 }

@@ -59,7 +59,7 @@ export interface GemMetadata {
 }
 
 /** Cache envelope persisted in chrome.storage.local. */
-interface GemCacheEnvelope {
+export interface GemCacheEnvelope {
   items: GemMetadata[];
   cachedAt: number;
   accountSegment?: string;
@@ -220,8 +220,34 @@ function isOnGemsViewPage(): boolean {
   return isGemsViewPathname(location.pathname);
 }
 
-async function saveCache(items: GemMetadata[]): Promise<void> {
+/** Field-by-field content equality for cached gem items. Pure. */
+export function gemItemsEqual(a: GemMetadata[], b: GemMetadata[]): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((x, i) => {
+    const y = b[i];
+    return (
+      x.id === y.id &&
+      x.href === y.href &&
+      x.name === y.name &&
+      x.description === y.description &&
+      x.iconLetter === y.iconLetter
+    );
+  });
+}
+
+/**
+ * Exported for tests. Persists the scraped catalog, skipping the write when
+ * nothing changed: every storage.local.set fans out through storage.onChanged
+ * to every open Gemini tab, and the /gems/view observer re-scrapes on each
+ * re-render — without this check a no-op scrape would broadcast a fresh
+ * envelope (new cachedAt) to all tabs every time. `cachedAt` has no TTL
+ * consumer, so not refreshing it is safe.
+ */
+export async function saveCache(items: GemMetadata[]): Promise<void> {
   const accountSegment = currentAccountSegment();
+  if (currentCache.accountSegment === accountSegment && gemItemsEqual(currentCache.items, items)) {
+    return;
+  }
   const envelope: GemCacheEnvelope = { items, cachedAt: Date.now(), accountSegment };
   const deletedIds = canPruneCatalogDeletes(currentCache.accountSegment, accountSegment)
     ? deletedCatalogGemIds(currentCache.items, items)
@@ -358,6 +384,25 @@ export function canPruneCatalogDeletes(
 }
 
 /**
+ * Catalog items usable for the given account segment. The cache is shared
+ * across every window of the profile (chrome.storage.local), so a window
+ * signed into account B must not render account A's custom gems — clicking
+ * one would 404. A mismatched segment yields an empty catalog; the next
+ * /gems/view visit in this window re-scrapes and repopulates it. Legacy
+ * envelopes written before `accountSegment` existed (undefined/null) are
+ * treated as matching so an upgrade never blanks anyone's sidebar. Pure.
+ */
+export function catalogForAccount(
+  cache: Pick<GemCacheEnvelope, 'items' | 'accountSegment'>,
+  accountSegment: string,
+): GemMetadata[] {
+  if (cache.accountSegment == null || cache.accountSegment === accountSegment) {
+    return cache.items;
+  }
+  return [];
+}
+
+/**
  * Final visible list for the sidebar: pinned gems first, in pinned order, then
  * recently-used gems filling the remaining slots up to `count` total. Pinned
  * gems are never trimmed by `count` — naming a gem outranks the size limit —
@@ -424,9 +469,54 @@ function recordGemUsageFromPage(): void {
   }
 
   clearMruRetry();
+  // Already front-of-list with identical metadata? Skip the write — inside a
+  // gem, every conversation switch re-runs this capture, and rewriting an
+  // unchanged MRU just broadcasts storage.onChanged to every open tab.
+  // lastUsedAt stays stale in that case, which is fine: the entry is already
+  // ranked first and the ordering can't change until another gem is used.
+  const head = currentMru[0];
+  if (
+    head &&
+    head.id === meta.id &&
+    head.href === meta.href &&
+    head.name === meta.name &&
+    head.iconLetter === meta.iconLetter
+  ) {
+    return;
+  }
   currentMru = upsertMru(currentMru, meta, Date.now());
   void saveMru(currentMru);
   refreshInjector();
+}
+
+/** Does this element (or any ancestor) carry one of our injected gv- classes? */
+function isInsideGvNode(node: Node): boolean {
+  let el: Element | null = node instanceof Element ? node : node.parentElement;
+  while (el) {
+    for (const cls of el.classList) {
+      if (cls.startsWith('gv-')) return true;
+    }
+    el = el.parentElement;
+  }
+  return false;
+}
+
+/**
+ * True when every mutation in the batch only touches nodes we injected
+ * ourselves (gv- prefixed — e.g. the pin toggles that injectPinButtons adds
+ * after each scrape). Without this exemption our own injection feeds the
+ * scrape observer, scheduling a pointless scrape cycle per injection. A batch
+ * containing any non-gv (or indeterminate, e.g. detached text) node is NOT
+ * self-inflicted — when unsure we scrape, never the other way. Pure.
+ */
+export function isSelfInflictedMutation(mutations: MutationRecord[]): boolean {
+  return mutations.every((mutation) => {
+    if (mutation.type === 'childList') {
+      const nodes = [...Array.from(mutation.addedNodes), ...Array.from(mutation.removedNodes)];
+      return nodes.length > 0 && nodes.every(isInsideGvNode);
+    }
+    return isInsideGvNode(mutation.target);
+  });
 }
 
 function scheduleScrape(): void {
@@ -469,7 +559,16 @@ function setupScrapeObserver(): void {
   void injectPinButtons();
 
   scrapeObserver?.disconnect();
-  scrapeObserver = new MutationObserver(() => scheduleScrape());
+  scrapeObserver = new MutationObserver((mutations) => {
+    // Ignore mutations we caused ourselves (pin-button injection/toggling).
+    if (isSelfInflictedMutation(mutations)) return;
+    scheduleScrape();
+  });
+  // characterData stays on deliberately: a gem rename can land as a text-node
+  // update on the existing row (no childList change), and the scraper reads
+  // names via textContent. The churn cost is contained by the 300ms debounce,
+  // the self-inflicted-mutation exemption above, and saveCache's
+  // content-equality write skip.
   scrapeObserver.observe(list, { childList: true, subtree: true, characterData: true });
 }
 
@@ -581,7 +680,8 @@ function refreshExpandedState(): void {
 
 /** Gems to render: pinned first (pinned order), then recent up to the count. */
 function visibleGems(): GemMetadata[] {
-  return selectVisibleGems(currentPinned, currentMru, currentCache.items, currentCount);
+  const catalog = catalogForAccount(currentCache, currentAccountSegment());
+  return selectVisibleGems(currentPinned, currentMru, catalog, currentCount);
 }
 
 /** Mount / re-mount the chevron on the current Gems nav entry. */
@@ -844,7 +944,7 @@ export async function startGemsSidebar(): Promise<() => void> {
 
   await loadInitialState();
   setupStorageListener();
-  listenPinnedChanges();
+  const unlistenPinnedChanges = listenPinnedChanges();
 
   // Scrape only when we're on the gems management page; the injector runs on
   // every Gemini page (it's keyed off the cache, not the page).
@@ -903,10 +1003,15 @@ export async function startGemsSidebar(): Promise<() => void> {
       browser.storage.onChanged.removeListener(storageListener);
       storageListener = null;
     }
+    unlistenPinnedChanges();
   };
 }
 
 function handleNavigation(): void {
+  // Keep the poll's baseline in sync so a navigation already handled here
+  // (popstate / patched pushState) isn't re-handled by the next poll tick —
+  // that would double every re-render this handler triggers.
+  lastPolledPath = location.pathname;
   // Wait a tick for the new page to render before re-checking which observers
   // should be active.
   window.setTimeout(() => {
