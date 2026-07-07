@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { CloudDownload, CloudUpload, Download, Search, Upload, X } from 'lucide-react';
+import { Download, Search, Upload, X } from 'lucide-react';
 import browser from 'webextension-polyfill';
 
+import { CLOUD_SYNC_PATH, CLOUD_UPLOAD_PATH } from '@/core/icons/cloudSyncPaths';
 import {
   type AccountPlatform,
   detectAccountPlatformFromUrl,
@@ -75,6 +76,19 @@ import {
 } from './components/WebsiteLogos';
 import WidthSlider from './components/WidthSlider';
 import { type SettingsSearchItem, getSettingsSearchMatches } from './utils/settingsSearch';
+
+/**
+ * Inline Material Symbols glyph, so the prompt cloud-sync buttons match the
+ * injected Gemini folder panel exactly (which also inlines these SVG paths)
+ * rather than the thin lucide outline used elsewhere in the popup.
+ */
+function MaterialGlyphIcon({ path, className }: { path: string; className?: string }) {
+  return (
+    <svg viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true" className={className}>
+      <path d={path} />
+    </svg>
+  );
+}
 
 type ScrollMode = 'jump' | 'flow';
 
@@ -2233,7 +2247,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             }}
           >
             <span className="inline-flex items-center gap-1.5">
-              <CloudDownload className="h-3.5 w-3.5" />
+              <MaterialGlyphIcon path={CLOUD_SYNC_PATH} className="h-3.5 w-3.5" />
               <span>{t('promptCloudPull')}</span>
             </span>
           </Button>
@@ -2247,7 +2261,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             }}
           >
             <span className="inline-flex items-center gap-1.5">
-              <CloudUpload className="h-3.5 w-3.5" />
+              <MaterialGlyphIcon path={CLOUD_UPLOAD_PATH} className="h-3.5 w-3.5" />
               <span>{t('promptCloudPush')}</span>
             </span>
           </Button>
