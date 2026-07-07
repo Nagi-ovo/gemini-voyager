@@ -665,6 +665,40 @@ describe('Claude usage bar', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('does not resurrect the pill when an in-flight refresh resolves after stop', async () => {
+    vi.useFakeTimers();
+    mockLocalStorageStore({});
+    mockDocumentCookie('lastActiveOrg=org_123');
+    let resolveUsage: (value: unknown) => void = () => {};
+    const fetchMock = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveUsage = resolve;
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    startClaudeUsage();
+    await flushAsyncWork();
+    expect(document.getElementById('gv-claude-usage-pill')).toBeTruthy();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    stopClaudeUsage();
+    expect(document.getElementById('gv-claude-usage-pill')).toBeNull();
+
+    resolveUsage({
+      ok: true,
+      json: async () => ({
+        five_hour: { utilization: 12, resets_at: '2026-06-28T10:30:00.000Z' },
+        seven_day: { utilization: 46, resets_at: '2026-06-28T11:30:00.000Z' },
+        plan_name: 'claude_max_20x',
+      }),
+    });
+    await flushAsyncWork();
+
+    expect(document.getElementById('gv-claude-usage-pill')).toBeNull();
+  });
+
   it('loads and mirrors the dragged bar position', async () => {
     const storageListeners: StorageListener[] = [];
     (chrome.storage.onChanged.addListener as unknown as Mock).mockImplementation(

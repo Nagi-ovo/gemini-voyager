@@ -54,6 +54,11 @@ let dragStart = { x: 0, y: 0 };
 let pillMoveHandler: ((ev: PointerEvent) => void) | null = null;
 let reloadPage = (): void => location.reload();
 const refreshOwnerId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+// Bumped on every stopClaudeUsage(): async work still in flight (usage /
+// bootstrap fetches, cache reads) captures the generation at entry and must
+// re-check it before touching the DOM, or a disabled plugin resurrects the
+// pill as un-removable zombie UI.
+let generation = 0;
 
 export function claudeUsageUrl(pathname = location.pathname, search = location.search): string {
   return `${CLAUDE_ORIGIN}${pathname === '/' ? '/new' : pathname}${search}#settings/usage`;
@@ -770,8 +775,9 @@ async function releaseRefreshLock(): Promise<void> {
 }
 
 async function hasFreshSharedCache(maxAgeMs: number): Promise<boolean> {
+  const g = generation;
   const cached = await readCache();
-  if (!cached) return false;
+  if (g !== generation || !cached) return false;
   applyStoredSnapshot(cached);
   if (Date.now() - cached.updatedAt >= maxAgeMs) return false;
   if (!cached.plan) return false;
@@ -781,6 +787,7 @@ async function hasFreshSharedCache(maxAgeMs: number): Promise<boolean> {
 }
 
 async function refreshFromApi(force = false): Promise<void> {
+  const g = generation;
   if (
     !force &&
     snapshot?.plan &&
@@ -791,10 +798,14 @@ async function refreshFromApi(force = false): Promise<void> {
   }
   if (await hasFreshSharedCache(force ? REFRESH_INTERVAL_MS : STALE_MS)) return;
   if (!force && (await hasFreshSharedCache(REFRESH_INTERVAL_MS))) return;
-  if (refreshInFlight) return;
+  if (g !== generation || refreshInFlight) return;
   const orgId = await getClaudeOrgId();
-  if (!orgId) return;
+  if (g !== generation || !orgId) return;
   if (!(await acquireRefreshLock())) return;
+  if (g !== generation) {
+    void releaseRefreshLock();
+    return;
+  }
   refreshInFlight = true;
   try {
     const response = await fetch(`https://claude.ai/api/organizations/${orgId}/usage`, {
@@ -802,13 +813,12 @@ async function refreshFromApi(force = false): Promise<void> {
       credentials: 'include',
       headers: { Accept: 'application/json' },
     });
-    if (!response.ok) return;
+    if (g !== generation || !response.ok) return;
     const next = snapshotFromClaudeUsageApi(await response.json());
-    if (!next) return;
-    snapshot = {
-      ...next,
-      plan: next.plan ?? (await fetchPlanFromBootstrap(orgId)) ?? snapshot?.plan,
-    };
+    if (g !== generation || !next) return;
+    const plan = next.plan ?? (await fetchPlanFromBootstrap(orgId)) ?? snapshot?.plan;
+    if (g !== generation) return;
+    snapshot = { ...next, plan };
     renderPill();
     await saveCache(snapshot);
   } catch {
@@ -878,12 +888,15 @@ function stopRefreshLoop(): void {
 
 export function startClaudeUsage(): void {
   if (pill) return;
+  const g = generation;
   setupObserverBridge();
   injectClaudeUsageObserver();
   renderPill();
-  void loadCache().then(() => renderPill());
+  void loadCache().then(() => {
+    if (g === generation) renderPill();
+  });
   void loadDragPos().then(() => {
-    if (pill) positionPill(pill);
+    if (g === generation && pill) positionPill(pill);
   });
   refreshObserver();
   startRefreshLoop();
@@ -913,6 +926,7 @@ export function startClaudeUsage(): void {
 }
 
 export function stopClaudeUsage(): void {
+  generation++;
   if (scrapeTimer !== null) clearTimeout(scrapeTimer);
   scrapeTimer = null;
   if (pillMoveHandler) {
