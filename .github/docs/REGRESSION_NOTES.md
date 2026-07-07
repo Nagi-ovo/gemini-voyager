@@ -409,3 +409,40 @@ must be `1`, while `manifest.json` / `manifest.dev.json` must be `0`.
 
 Commit:
 `f0f4bebe feat(prompt-nudge): dot the toolbar icon on unenabled chatgpt/claude sites`
+
+## Claude timeline must treat the DOM as a sliding virtualized window
+
+Symptom:
+On claude.ai, the timeline "twitched" while scrolling long conversations —
+dot count and positions changed constantly; after a long jump the timeline
+suddenly shrank to a few dots; clicking a dot for an off-screen turn landed
+mid-conversation instead of on the target message.
+
+Root cause:
+Claude virtualizes long conversations: only ~6–9 turns are mounted, the
+window slides during scroll, and during long jumps the mounted set can be
+sparse and NON-contiguous (old + new window briefly coexist; the tail tends
+to stay mounted). Rebuilding markers from `querySelectorAll` each mutation
+made the timeline mirror the mounted window; mount-index-based turn ids
+(`c-<index>-<hash>`) changed as the window slid; any "drop what's missing
+between two mounted turns" pruning rule mass-deletes markers when the window
+goes sparse. Absolute offsets also drift because Claude re-measures content
+as it mounts, so one-shot smooth scrolls to remembered offsets land off
+target.
+
+Fix:
+`claudeTimeline` keeps a grow-only marker registry stitched by content-hash
+anchors across overlapping windows (never drops; ids `c-<textHash>`, `~n`
+for duplicates; legacy starred ids match via their hash segment). Navigation
+to unmounted turns homes in iteratively (instant probe + direction-aware
+bisection, smooth fine-aim once mounted); jumps >3 viewports are instant
+even for mounted turns. Reuse this pattern for any future Claude DOM
+feature.
+
+Regression test:
+`bun run test src/features/plugins/builtin/claudeTimeline/index.test.ts`
+(esp. "never shrinks when the mounted window turns sparse mid-transition",
+"keeps dots and ids stable when Claude virtualizes turns out during scroll").
+
+Commit:
+`05e0ef79 fix(claude-timeline): stop timeline jitter from claude's virtualized dom`
