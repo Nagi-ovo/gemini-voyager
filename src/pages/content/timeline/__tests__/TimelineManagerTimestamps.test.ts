@@ -83,6 +83,7 @@ describe('TimelineManager message timestamps', () => {
       userTurnSelector: string | null;
       conversationId: string | null;
       timestampService: TimestampService | null;
+      showMessageTimestampsEnabled: boolean;
       ui: { timelineBar: HTMLElement | null; trackContent: HTMLElement | null };
       activeTurnId: string | null;
       recalculateAndRenderMarkers: () => void;
@@ -104,6 +105,7 @@ describe('TimelineManager message timestamps', () => {
       formatTimestamp,
       formatAbsoluteTime: vi.fn(),
     } as unknown as TimestampService;
+    internal.showMessageTimestampsEnabled = true;
     internal.ui.timelineBar = timelineBar;
     internal.ui.trackContent = trackContent;
     internal.activeTurnId = null;
@@ -131,6 +133,33 @@ describe('TimelineManager message timestamps', () => {
 
     expect(recordTimestamp).toHaveBeenCalledTimes(1);
     expect(recordTimestamp).toHaveBeenCalledWith('gemini:conv:test', expect.stringMatching(/^u-/));
+  });
+
+  it('does not record timestamps while the timestamps feature is disabled', () => {
+    const recordTimestamp = vi.fn().mockResolvedValue(undefined);
+    const getTimestamp = vi.fn().mockReturnValue(null);
+
+    const manager = new TimelineManager();
+    const internal = manager as unknown as {
+      conversationId: string | null;
+      timestampService: TimestampService | null;
+      showMessageTimestampsEnabled: boolean;
+      recordTimestampForTurn: (turnId: string) => void;
+    };
+
+    internal.conversationId = 'gemini:conv:test';
+    internal.timestampService = {
+      getTimestamp,
+      recordTimestamp,
+    } as unknown as TimestampService;
+    internal.showMessageTimestampsEnabled = false;
+
+    internal.recordTimestampForTurn('u-1');
+    expect(recordTimestamp).not.toHaveBeenCalled();
+
+    internal.showMessageTimestampsEnabled = true;
+    internal.recordTimestampForTurn('u-1');
+    expect(recordTimestamp).toHaveBeenCalledTimes(1);
   });
 
   it('reuses existing timestamp nodes on reinjection', async () => {

@@ -363,4 +363,38 @@ describe('TimelinePreviewPanel', () => {
       expect(() => panel.destroy()).not.toThrow();
     });
   });
+
+  describe('resize debounce', () => {
+    it('coalesces a resize burst into a single reposition', () => {
+      vi.useFakeTimers();
+      try {
+        const spy = vi.spyOn(panel as unknown as { positionToggle: () => void }, 'positionToggle');
+
+        window.dispatchEvent(new Event('resize'));
+        window.dispatchEvent(new Event('resize'));
+        window.dispatchEvent(new Event('resize'));
+        expect(spy).not.toHaveBeenCalled();
+
+        vi.advanceTimersByTime(200);
+        expect(spy).toHaveBeenCalledTimes(1);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('cancels a pending resize reposition on destroy', () => {
+      vi.useFakeTimers();
+      try {
+        const spy = vi.spyOn(panel as unknown as { positionToggle: () => void }, 'positionToggle');
+
+        window.dispatchEvent(new Event('resize'));
+        panel.destroy();
+        vi.advanceTimersByTime(200);
+
+        expect(spy).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
 });

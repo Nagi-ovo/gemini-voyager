@@ -24,14 +24,20 @@ export function findMatchingStarredMessages(
   const sourceConversationIds = new Set<string>();
   const currentNativeConversationId = extractConversationIdFromUrl(currentUrl);
 
-  const directMessages = data.messages[conversationId] || [];
+  const rawDirectMessages = data.messages[conversationId];
+  const directMessages = Array.isArray(rawDirectMessages) ? rawDirectMessages : [];
   if (directMessages.length > 0) {
     sourceConversationIds.add(conversationId);
     directMessages.forEach((message) => upsertMessage(messageMap, message));
   }
 
   for (const [sourceConversationId, messages] of Object.entries(data.messages)) {
-    if (sourceConversationId === conversationId || messages.length === 0) continue;
+    if (
+      sourceConversationId === conversationId ||
+      !Array.isArray(messages) ||
+      messages.length === 0
+    )
+      continue;
 
     const matchedMessages = messages.filter((message) => {
       if (isSameConversationRoute(message.conversationUrl, currentUrl)) {

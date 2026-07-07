@@ -7,6 +7,7 @@ import { getTranslationSync } from '../../../utils/i18n';
 import type { PreviewMarkerData } from './types';
 
 const SEARCH_DEBOUNCE_MS = 200;
+const RESIZE_DEBOUNCE_MS = 120;
 
 const LIST_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`;
 
@@ -22,6 +23,7 @@ export class TimelinePreviewPanel {
   private activeTurnId: string | null = null;
   private searchQuery = '';
   private searchDebounceTimer: number | null = null;
+  private resizeDebounceTimer: number | null = null;
   private onNavigate: ((turnId: string, index: number) => void) | null = null;
   private onSearchChange: ((query: string) => void) | null = null;
   private onDocumentPointerDown: ((e: PointerEvent) => void) | null = null;
@@ -117,6 +119,10 @@ export class TimelinePreviewPanel {
       clearTimeout(this.searchDebounceTimer);
       this.searchDebounceTimer = null;
     }
+    if (this.resizeDebounceTimer !== null) {
+      clearTimeout(this.resizeDebounceTimer);
+      this.resizeDebounceTimer = null;
+    }
     if (this.onDocumentPointerDown) {
       document.removeEventListener('pointerdown', this.onDocumentPointerDown);
       this.onDocumentPointerDown = null;
@@ -207,10 +213,15 @@ export class TimelinePreviewPanel {
     };
     document.addEventListener('keydown', this.onKeyDown);
 
-    // Reposition on resize
+    // Reposition on resize (debounced: positionPanel reads offsetHeight after
+    // writing styles, which forces layout — avoid doing that per resize event)
     this.onWindowResize = () => {
-      this.positionToggle();
-      if (this._isOpen) this.positionPanel();
+      if (this.resizeDebounceTimer !== null) clearTimeout(this.resizeDebounceTimer);
+      this.resizeDebounceTimer = window.setTimeout(() => {
+        this.resizeDebounceTimer = null;
+        this.positionToggle();
+        if (this._isOpen) this.positionPanel();
+      }, RESIZE_DEBOUNCE_MS);
     };
     window.addEventListener('resize', this.onWindowResize);
 

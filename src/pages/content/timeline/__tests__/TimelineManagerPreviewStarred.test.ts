@@ -128,4 +128,57 @@ describe('TimelineManager preview starred sync', () => {
     expect(previewMarkers[1]?.starred).toBe(true);
     expect(previewMarkers[1]?.starredAt).toBe(200);
   });
+
+  it('keeps stars stored under a legacy conversation key when a star changes in another conversation', () => {
+    // Current conversation route: stars live under a legacy key, not the
+    // stable conversation id. A storage change caused by starring in ANOTHER
+    // conversation must not clear this conversation's stars.
+    history.replaceState({}, '', '/app/abc123');
+    try {
+      const manager = new TimelineManager();
+      const updateMarkers = vi.fn();
+      const internal = manager as unknown as TimelineManagerInternal;
+
+      internal.conversationId = 'gemini:conv:abc123';
+      internal.starred = new Set(['turn-0']);
+      internal.starredAtMap = new Map([['turn-0', 100]]);
+      internal.markers = [createMarker('turn-0', 'first', true)];
+      internal.previewPanel = { updateMarkers };
+      internal.saveStars = vi.fn();
+
+      internal.applySharedStarredData({
+        messages: {
+          'gemini:legacy-key': [
+            {
+              turnId: 'turn-0',
+              content: 'first',
+              conversationId: 'gemini:legacy-key',
+              conversationUrl: 'https://gemini.google.com/app/abc123',
+              conversationTitle: 'test',
+              starredAt: 100,
+            },
+          ],
+          'gemini:conv:other': [
+            {
+              turnId: 'turn-9',
+              content: 'unrelated',
+              conversationId: 'gemini:conv:other',
+              conversationUrl: 'https://gemini.google.com/app/other',
+              conversationTitle: 'other',
+              starredAt: 999,
+            },
+          ],
+        },
+      });
+
+      expect(internal.starred.has('turn-0')).toBe(true);
+      expect(internal.starred.has('turn-9')).toBe(false);
+      expect(internal.markers[0].starred).toBe(true);
+
+      const previewMarkers = getLastPreviewUpdate(updateMarkers);
+      expect(previewMarkers[0]?.starred).toBe(true);
+    } finally {
+      history.replaceState({}, '', '/');
+    }
+  });
 });
