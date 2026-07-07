@@ -7,6 +7,7 @@ import { isSafari } from '@/core/utils/browser';
 
 import type { ChatTurn, ConversationMetadata } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
+import { getOriginalSizeGoogleImageUrl } from './googleImageUrl';
 
 export interface PrintableDocumentContent {
   title: string;
@@ -260,16 +261,8 @@ export class PDFPrintService {
     await Promise.all(
       imgs.map(async (img) => {
         let src = img.getAttribute('src') || '';
-        // Handle both http(s) and blob: URLs (watermark-removed images use blob: URLs)
         if (!/^(https?:\/\/|blob:)/i.test(src)) return;
-        // For Google images, request original size (=s0) instead of thumbnail
-        if (
-          (src.includes('googleusercontent.com') || src.includes('ggpht.com')) &&
-          !src.startsWith('blob:')
-        ) {
-          const sizePattern = /=[swh]\d+[^?#]*/;
-          src = sizePattern.test(src) ? src.replace(sizePattern, '=s0') : src + '=s0';
-        }
+        src = getOriginalSizeGoogleImageUrl(src);
         const data = await toDataUrl(src);
         if (data) {
           try {

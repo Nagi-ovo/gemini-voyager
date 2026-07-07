@@ -13,6 +13,7 @@ import {
   DEFAULT_IMAGE_EXPORT_WIDTH,
 } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
+import { getOriginalSizeGoogleImageUrl } from './googleImageUrl';
 import { renderElementToImageBlob } from './ImageRenderService';
 
 export interface RenderableDocumentContent {
@@ -477,14 +478,7 @@ export class ImageExportService {
     await Promise.all(
       imgs.map(async (img) => {
         let src = img.getAttribute('src') || '';
-        // For Google images, request original size (=s0) instead of thumbnail
-        if (
-          /^https?:\/\//i.test(src) &&
-          (src.includes('googleusercontent.com') || src.includes('ggpht.com'))
-        ) {
-          const sizePattern = /=[swh]\d+[^?#]*/;
-          src = sizePattern.test(src) ? src.replace(sizePattern, '=s0') : src + '=s0';
-        }
+        src = getOriginalSizeGoogleImageUrl(src);
         const data = await toDataUrl(src);
         if (data) {
           try {
