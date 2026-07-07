@@ -84,6 +84,9 @@ export class TimestampService {
   async recordTimestamp(conversationId: string, turnId: TurnId, timestamp?: number): Promise<void> {
     const ts = timestamp ?? Date.now();
     const conversationTimestamps = this.getConversationTimestamps(conversationId, true);
+    // Re-recording the same value (e.g. API-derived times re-applied on every
+    // conversation load) must not churn storage.
+    if (conversationTimestamps.get(turnId) === ts) return;
     conversationTimestamps.set(turnId, ts);
     await this.schedulePersist();
   }

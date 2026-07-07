@@ -1,25 +1,30 @@
 /**
  * Usage observer loader — a tiny isolated-world content script that runs at
- * `document_start` and injects the MAIN-world `usage-observer.js` as early as
- * possible, before Gemini's Angular bundle bootstraps and fires the eager
- * `/usage` metrics RPC.
+ * `document_start` and injects MAIN-world observer scripts as early as
+ * possible, before Gemini's Angular bundle bootstraps and fires its eager
+ * bootstrap RPCs (the `/usage` metrics RPC, the conversation-load RPC).
  *
- * This is its own content-script entry (not part of the main bundle) precisely
- * so it can run at document_start; the main content script runs at the default
- * document_idle, which is far too late to hook that bootstrap request. Mirrors
- * the runtime `<script>`-injection pattern used by response-complete-observer,
- * just earlier in the page lifecycle. Cross-browser (no manifest `world: MAIN`
+ * Gemini saves its own references to `fetch`/`XMLHttpRequest` during
+ * bootstrap, so hooks installed any later never see those requests. This is
+ * its own content-script entry (not part of the main bundle) precisely so it
+ * can run at document_start; the main content script runs at the default
+ * document_idle, which is far too late. Mirrors the runtime
+ * `<script>`-injection pattern used by response-complete-observer, just
+ * earlier in the page lifecycle. Cross-browser (no manifest `world: MAIN`
  * needed, so it works on the Firefox floor too).
  *
- * Degrades silently: if injection throws (extension context invalidated, CSP),
- * the feature simply falls back to its DOM-scrape path with no silent refresh.
+ * Degrades silently: if injection throws (extension context invalidated,
+ * CSP), usage falls back to its DOM-scrape path and message timestamps fall
+ * back to first-seen recording.
  */
-try {
-  const script = document.createElement('script');
-  script.src = chrome.runtime.getURL('usage-observer.js');
-  script.async = false;
-  (document.documentElement || document.head || document.body).appendChild(script);
-  script.remove();
-} catch {
-  // No-op: the usage status pill still works via DOM scraping on /usage.
+for (const src of ['usage-observer.js', 'conversation-history-observer.js']) {
+  try {
+    const script = document.createElement('script');
+    script.src = chrome.runtime.getURL(src);
+    script.async = false;
+    (document.documentElement || document.head || document.body).appendChild(script);
+    script.remove();
+  } catch {
+    // No-op: each feature has its own degraded path.
+  }
 }
