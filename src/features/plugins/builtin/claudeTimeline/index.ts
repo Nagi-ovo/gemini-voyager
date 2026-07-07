@@ -14,18 +14,28 @@ const LONG_PRESS_MS = 550;
 const ACTIVE_ANCHOR = 0.45;
 const NAVIGATION_ACTIVE_LOCK_MS = 900;
 const TOOLTIP_DELAY_MS = 150;
+const PENDING_NAVIGATION_TIMEOUT_MS = 8000;
+const PENDING_NAVIGATION_HOP_MS = 200;
+const LONG_JUMP_VIEWPORTS = 3;
 
 type Dot = HTMLButtonElement & {
   dataset: DOMStringMap & { targetTurnId?: string; markerIndex?: string };
 };
 
+// Claude virtualizes long conversations: only a sliding window of turns is
+// mounted at any time, so the DOM is never the full conversation. Markers are
+// therefore ACCUMULATED across refreshes (ids keyed by content hash, not mount
+// index) and stitched into order via turns shared between overlapping windows.
 interface Marker {
   id: string;
+  hash: string;
   summary: string;
-  index: number;
   starred: boolean;
   starredAt?: number;
+  /** Last-seen element; disconnected once Claude virtualizes the turn out. */
   element: HTMLElement;
+  /** Last-known center offset within the scroll target; reused while unmounted. */
+  center: number;
   dotElement: Dot | null;
 }
 
@@ -41,8 +51,18 @@ export function buildClaudeConversationId(input = location.href): string {
   }
 }
 
-export function buildClaudeTurnId(index: number, text: string): string {
-  return `c-${index}-${hashString(text || String(index))}`;
+export function buildClaudeTurnId(text: string): string {
+  return `c-${hashString(text)}`;
+}
+
+/**
+ * Content hash shared by every historical turn-id format:
+ * legacy `c-<mountIndex>-<hash>`, current `c-<hash>` and `c-<hash>~<n>`.
+ */
+export function extractClaudeTurnHash(turnId: string): string {
+  const base = turnId.split('~')[0];
+  const segments = base.split('-');
+  return segments[segments.length - 1] || base;
 }
 
 class ClaudeTimeline {
@@ -54,7 +74,7 @@ class ClaudeTimeline {
   private markers: Marker[] = [];
   private markerCenters: number[] = [];
   private conversationId = '';
-  private starred = new Map<string, number>();
+  private starredByHash = new Map<string, { turnId: string; starredAt: number }>();
   private refreshTimer: number | null = null;
   private longPressTimer: number | null = null;
   private tooltipTimer: number | null = null;
@@ -62,6 +82,13 @@ class ClaudeTimeline {
   private suppressClickUntil = 0;
   private activeTurnId: string | null = null;
   private navigationActiveLockUntil = 0;
+  private pendingNavigationId: string | null = null;
+  private pendingNavigationUntil = 0;
+  private pendingNavigationTimer: number | null = null;
+  private pendingNavigationLo = 0;
+  private pendingNavigationHi = 0;
+  private pendingNavigationProbed = false;
+  private lastHandledHash: string | null = null;
   private scrollTarget: HTMLElement | Window | null = null;
   private storageListener:
     | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
@@ -83,6 +110,7 @@ class ClaudeTimeline {
     this.destroyed = true;
     if (this.refreshTimer !== null) clearTimeout(this.refreshTimer);
     if (this.tooltipTimer !== null) clearTimeout(this.tooltipTimer);
+    this.clearPendingNavigation();
     this.cancelLongPress();
     this.observer?.disconnect();
     this.observer = null;
@@ -207,35 +235,127 @@ class ClaudeTimeline {
   private async refresh(): Promise<void> {
     if (this.destroyed) return;
     this.ensureUi();
+    if (buildClaudeConversationId() !== this.conversationId) this.resetConversationState();
     await this.loadStars();
     if (this.destroyed) return;
-    const oldDots = new Map(this.markers.map((marker) => [marker.id, marker.dotElement]));
     const previousIds = this.markers.map((marker) => marker.id);
     const turns = Array.from(document.querySelectorAll<HTMLElement>(USER_MESSAGE_SELECTOR));
-    const nextMarkers = turns.map((element, index) => {
-      const summary = this.extractText(element);
-      const id = buildClaudeTurnId(index, summary);
-      element.dataset.gvClaudeTurnId = id;
-      return {
-        id,
-        element,
-        summary,
-        index,
-        starred: this.starred.has(id),
-        starredAt: this.starred.get(id),
-        dotElement: oldDots.get(id) ?? null,
-      };
-    });
-    const sameMarkers =
-      previousIds.length === nextMarkers.length &&
-      previousIds.every((id, index) => id === nextMarkers[index]?.id);
-    this.markers = nextMarkers;
-    this.setScrollTarget(this.markers[0] ? this.getScrollTarget(this.markers[0].element) : window);
+    if (turns[0]) this.setScrollTarget(this.getScrollTarget(turns[0]));
+    this.markers = this.mergeMountedTurns(turns);
     this.markerCenters = this.computeMarkerCenters();
+    const sameMarkers =
+      previousIds.length === this.markers.length &&
+      previousIds.every((id, index) => id === this.markers[index]?.id);
     if (!sameMarkers || this.markers.some((marker) => !marker.dotElement)) this.renderDots();
-    this.updatePreview();
+    this.applyStarredState();
     this.refreshActive();
     this.handleHash();
+  }
+
+  private resetConversationState(): void {
+    this.markers = [];
+    this.markerCenters = [];
+    this.activeTurnId = null;
+    this.clearPendingNavigation();
+    this.lastHandledHash = null;
+    if (this.trackContent) this.trackContent.textContent = '';
+  }
+
+  /**
+   * Stitch the currently mounted turns into the accumulated marker list.
+   * Mounted turns are anchored to known markers by content hash (order
+   * preserving) and new turns are woven in next to their anchors. Known turns
+   * are NEVER dropped: Claude's virtualization can mount sparse,
+   * non-contiguous windows mid-transition (old and new window briefly
+   * coexisting), so a missing turn only means "not mounted right now", not
+   * "deleted" — mirroring the Gemini timeline's grow-only behaviour.
+   */
+  private mergeMountedTurns(turns: HTMLElement[]): Marker[] {
+    const known = this.markers;
+    const mounted = turns.map((element) => {
+      const summary = this.extractText(element);
+      return { element, summary, hash: hashString(summary) };
+    });
+    if (!mounted.length) return known;
+
+    const matchedKnownIndex = new Array<number>(mounted.length).fill(-1);
+    let searchFrom = 0;
+    for (let i = 0; i < mounted.length; i++) {
+      for (let j = searchFrom; j < known.length; j++) {
+        if (known[j].hash === mounted[i].hash) {
+          matchedKnownIndex[i] = j;
+          searchFrom = j + 1;
+          break;
+        }
+      }
+    }
+
+    const usedIds = new Set(known.map((marker) => marker.id));
+    const createMarker = (entry: (typeof mounted)[number]): Marker => {
+      const id = this.claimTurnId(entry.hash, usedIds);
+      entry.element.dataset.gvClaudeTurnId = id;
+      return {
+        id,
+        hash: entry.hash,
+        summary: entry.summary,
+        starred: false,
+        element: entry.element,
+        center: this.computeElementCenter(entry.element),
+        dotElement: null,
+      };
+    };
+
+    const firstMatch = matchedKnownIndex.findIndex((index) => index >= 0);
+    if (firstMatch === -1) {
+      // Jumped into an unexplored region: place the whole block by its
+      // vertical position relative to the accumulated turns.
+      const fresh = mounted.map(createMarker);
+      const insertAt = known.findIndex((marker) => marker.center > fresh[0].center);
+      return insertAt === -1
+        ? [...known, ...fresh]
+        : [...known.slice(0, insertAt), ...fresh, ...known.slice(insertAt)];
+    }
+
+    const beforeFirstAnchor: Marker[] = [];
+    const afterKnownIndex = new Map<number, Marker[]>();
+    let lastAnchor = -1;
+    for (let i = 0; i < mounted.length; i++) {
+      const knownIndex = matchedKnownIndex[i];
+      if (knownIndex >= 0) {
+        const survivor = known[knownIndex];
+        survivor.element = mounted[i].element;
+        survivor.summary = mounted[i].summary;
+        mounted[i].element.dataset.gvClaudeTurnId = survivor.id;
+        lastAnchor = knownIndex;
+        continue;
+      }
+      const marker = createMarker(mounted[i]);
+      if (lastAnchor === -1) {
+        beforeFirstAnchor.push(marker);
+      } else {
+        const bucket = afterKnownIndex.get(lastAnchor);
+        if (bucket) bucket.push(marker);
+        else afterKnownIndex.set(lastAnchor, [marker]);
+      }
+    }
+
+    const firstAnchorKnownIndex = matchedKnownIndex[firstMatch];
+    const result: Marker[] = [];
+    known.forEach((marker, index) => {
+      if (index === firstAnchorKnownIndex) result.push(...beforeFirstAnchor);
+      result.push(marker);
+      const extras = afterKnownIndex.get(index);
+      if (extras) result.push(...extras);
+    });
+    return result;
+  }
+
+  private claimTurnId(hash: string, usedIds: Set<string>): string {
+    const base = `c-${hash}`;
+    let id = base;
+    for (let n = 2; usedIds.has(id); n++) id = `${base}~${n}`;
+    usedIds.add(id);
+    return id;
   }
 
   private async loadStars(force = false): Promise<void> {
@@ -245,7 +365,12 @@ class ClaudeTimeline {
     const messages = await StarredMessagesService.getStarredMessagesForConversation(
       this.conversationId,
     );
-    this.starred = new Map(messages.map((message) => [message.turnId, message.starredAt]));
+    this.starredByHash = new Map(
+      messages.map((message) => [
+        extractClaudeTurnHash(message.turnId),
+        { turnId: message.turnId, starredAt: message.starredAt },
+      ]),
+    );
   }
 
   private renderDots(): void {
@@ -309,14 +434,16 @@ class ClaudeTimeline {
   private async toggleStar(turnId: string): Promise<void> {
     const marker = this.markers.find((item) => item.id === turnId);
     if (!marker) return;
-    if (this.starred.has(turnId)) {
-      this.starred.delete(turnId);
-      await StarredMessagesService.removeStarredMessage(this.conversationId, turnId);
+    const existing = this.starredByHash.get(marker.hash);
+    if (existing) {
+      this.starredByHash.delete(marker.hash);
+      // Remove by the stored id, which may still be in the legacy format.
+      await StarredMessagesService.removeStarredMessage(this.conversationId, existing.turnId);
     } else {
       const starredAt = Date.now();
-      this.starred.set(turnId, starredAt);
+      this.starredByHash.set(marker.hash, { turnId: marker.id, starredAt });
       const message: StarredMessage = {
-        turnId,
+        turnId: marker.id,
         content: marker.summary,
         conversationId: this.conversationId,
         conversationUrl: location.href.split('#')[0],
@@ -330,8 +457,9 @@ class ClaudeTimeline {
 
   private applyStarredState(): void {
     this.markers.forEach((marker) => {
-      marker.starred = this.starred.has(marker.id);
-      marker.starredAt = this.starred.get(marker.id);
+      const entry = this.starredByHash.get(marker.hash);
+      marker.starred = !!entry;
+      marker.starredAt = entry?.starredAt;
       marker.dotElement?.classList.toggle('starred', marker.starred);
       marker.dotElement?.setAttribute('aria-pressed', marker.starred ? 'true' : 'false');
     });
@@ -339,7 +467,14 @@ class ClaudeTimeline {
   }
 
   private updatePreview(): void {
-    this.previewPanel?.updateMarkers(this.markers as PreviewMarkerData[]);
+    const previewMarkers: PreviewMarkerData[] = this.markers.map((marker, index) => ({
+      id: marker.id,
+      summary: marker.summary,
+      index,
+      starred: marker.starred,
+      starredAt: marker.starredAt,
+    }));
+    this.previewPanel?.updateMarkers(previewMarkers);
     this.previewPanel?.updateActiveTurn(this.activeTurnId);
   }
 
@@ -448,18 +583,190 @@ class ClaudeTimeline {
     this.scrollTarget?.addEventListener('scroll', this.updateActiveFromScroll, { passive: true });
   }
 
+  private findMarker(turnId: string): Marker | undefined {
+    return (
+      this.markers.find((item) => item.id === turnId) ??
+      this.markers.find((item) => item.hash === extractClaudeTurnHash(turnId))
+    );
+  }
+
   private navigateTo(turnId: string): void {
-    const marker = this.markers.find((item) => item.id === turnId);
+    const marker = this.findMarker(turnId);
     if (!marker) return;
     this.navigationActiveLockUntil = Date.now() + NAVIGATION_ACTIVE_LOCK_MS;
-    this.setActiveTurn(turnId);
-    this.scrollMarkerIntoView(marker.element);
+    this.setActiveTurn(marker.id);
+    if (marker.element.isConnected) {
+      const center = this.computeElementCenter(marker.element);
+      const anchorOffset = this.getViewportHeight() * ACTIVE_ANCHOR;
+      const distance = Math.abs(center - (this.getScrollTop() + anchorOffset));
+      if (distance <= this.getViewportHeight() * LONG_JUMP_VIEWPORTS) {
+        this.clearPendingNavigation();
+        this.scrollMarkerIntoView(marker.element);
+        return;
+      }
+      // Long jump to a mounted turn: smooth-scrolling across a virtualized
+      // conversation drifts as Claude re-measures content mid-flight — jump
+      // instantly, then let the homing loop fine-aim once the region settles.
+      this.beginPendingNavigation(marker);
+      this.pendingNavigationProbed = true;
+      this.scrollToOffset(center, 'auto');
+      this.schedulePendingNavigationHop();
+      return;
+    }
+    // Virtualized out: the remembered offset is only an estimate (Claude
+    // re-measures content as it mounts), so home in iteratively instead of
+    // trusting a single jump.
+    this.beginPendingNavigation(marker);
+    this.homePendingNavigation();
+  }
+
+  private beginPendingNavigation(marker: Marker): void {
+    this.clearPendingNavigation();
+    this.pendingNavigationId = marker.id;
+    this.pendingNavigationUntil = Date.now() + PENDING_NAVIGATION_TIMEOUT_MS;
+    this.pendingNavigationLo = 0;
+    this.pendingNavigationHi = Math.max(
+      this.getScrollHeight(),
+      marker.center + this.getViewportHeight(),
+    );
+    this.pendingNavigationProbed = false;
+    window.addEventListener('wheel', this.cancelPendingNavigationOnUserScroll, { passive: true });
+    window.addEventListener('touchmove', this.cancelPendingNavigationOnUserScroll, {
+      passive: true,
+    });
+  }
+
+  private clearPendingNavigation(): void {
+    this.pendingNavigationId = null;
+    if (this.pendingNavigationTimer !== null) {
+      clearTimeout(this.pendingNavigationTimer);
+      this.pendingNavigationTimer = null;
+    }
+    window.removeEventListener('wheel', this.cancelPendingNavigationOnUserScroll);
+    window.removeEventListener('touchmove', this.cancelPendingNavigationOnUserScroll);
+  }
+
+  private cancelPendingNavigationOnUserScroll = (): void => {
+    this.clearPendingNavigation();
+  };
+
+  /**
+   * One homing step toward a virtualized-out turn: bisect on the target's
+   * position (bounds tightened from which side of the mounted window the turn
+   * sits on), jump instantly, and let Claude mount content at the landing
+   * point. Once the turn's element is back in the DOM, aim precisely.
+   */
+  private homePendingNavigation = (): void => {
+    this.pendingNavigationTimer = null;
+    if (!this.pendingNavigationId || this.destroyed) return;
+    if (Date.now() > this.pendingNavigationUntil) {
+      this.clearPendingNavigation();
+      return;
+    }
+    const marker = this.markers.find((item) => item.id === this.pendingNavigationId);
+    if (!marker) {
+      this.clearPendingNavigation();
+      return;
+    }
+    this.navigationActiveLockUntil = Date.now() + NAVIGATION_ACTIVE_LOCK_MS;
+    if (marker.element.isConnected) {
+      this.clearPendingNavigation();
+      this.scrollMarkerIntoView(marker.element);
+      return;
+    }
+    const mountedIndexes = this.markers.reduce<number[]>((acc, item, index) => {
+      if (item.element.isConnected) acc.push(index);
+      return acc;
+    }, []);
+    if (mountedIndexes.length) {
+      // Direction info is only trustworthy once the mounted window has caught
+      // up with the last jump; otherwise wait a tick instead of moving.
+      const windowCurrent = mountedIndexes.some((index) =>
+        this.isElementInViewport(this.markers[index].element),
+      );
+      if (!windowCurrent) {
+        this.schedulePendingNavigationHop();
+        return;
+      }
+      const targetIndex = this.markers.indexOf(marker);
+      const firstMounted = mountedIndexes[0];
+      const lastMounted = mountedIndexes[mountedIndexes.length - 1];
+      if (targetIndex < firstMounted) {
+        this.pendingNavigationHi = Math.min(this.pendingNavigationHi, this.getScrollTop());
+      } else if (targetIndex > lastMounted) {
+        this.pendingNavigationLo = Math.max(
+          this.pendingNavigationLo,
+          this.getScrollTop() + this.getViewportHeight(),
+        );
+      } else {
+        // Inside a virtualization gap: bracket the target between its nearest
+        // mounted neighbours. (A truly deleted turn collapses the bracket and
+        // ends the search below.)
+        let beforeIndex = -1;
+        let afterIndex = -1;
+        for (const index of mountedIndexes) {
+          if (index < targetIndex) beforeIndex = index;
+          else if (index > targetIndex) {
+            afterIndex = index;
+            break;
+          }
+        }
+        if (beforeIndex >= 0) {
+          this.pendingNavigationLo = Math.max(
+            this.pendingNavigationLo,
+            this.computeElementCenter(this.markers[beforeIndex].element),
+          );
+        }
+        if (afterIndex >= 0) {
+          this.pendingNavigationHi = Math.min(
+            this.pendingNavigationHi,
+            this.computeElementCenter(this.markers[afterIndex].element),
+          );
+        }
+      }
+    }
+    if (this.pendingNavigationHi - this.pendingNavigationLo < 1) {
+      this.clearPendingNavigation();
+      return;
+    }
+    const staleCenterUsable =
+      !this.pendingNavigationProbed &&
+      marker.center > this.pendingNavigationLo &&
+      marker.center < this.pendingNavigationHi;
+    const probe = staleCenterUsable
+      ? marker.center
+      : (this.pendingNavigationLo + this.pendingNavigationHi) / 2;
+    this.pendingNavigationProbed = true;
+    this.scrollToOffset(probe, 'auto');
+    this.schedulePendingNavigationHop();
+  };
+
+  private schedulePendingNavigationHop(): void {
+    if (this.pendingNavigationTimer !== null) return;
+    this.pendingNavigationTimer = window.setTimeout(
+      this.homePendingNavigation,
+      PENDING_NAVIGATION_HOP_MS,
+    );
+  }
+
+  private isElementInViewport(element: HTMLElement): boolean {
+    const rect = element.getBoundingClientRect();
+    const top = this.getViewportTop();
+    const bottom = top + this.getViewportHeight();
+    return rect.bottom >= top && rect.top <= bottom;
   }
 
   private handleHash = (): void => {
-    const turnId = decodeURIComponent(location.hash.replace(/^#gv-turn-/, ''));
-    if (!turnId || turnId === location.hash) return;
-    this.navigateTo(turnId);
+    const hash = location.hash;
+    if (!hash.startsWith('#gv-turn-') || hash === this.lastHandledHash) return;
+    const turnId = decodeURIComponent(hash.slice('#gv-turn-'.length));
+    if (!turnId) return;
+    const marker = this.findMarker(turnId);
+    // Not discovered yet (virtualized out and never mounted): leave the hash
+    // unconsumed so later refreshes retry once the turn appears.
+    if (!marker) return;
+    this.lastHandledHash = hash;
+    this.navigateTo(marker.id);
   };
 
   private handleResize = (): void => {
@@ -490,15 +797,34 @@ class ClaudeTimeline {
   }
 
   private computeMarkerCenters(): number[] {
-    const viewportTop =
-      this.scrollTarget && this.scrollTarget !== window
-        ? (this.scrollTarget as HTMLElement).getBoundingClientRect().top
-        : 0;
     const scrollTop = this.getScrollTop();
-    return this.markers.map((marker) => {
-      const rect = marker.element.getBoundingClientRect();
-      return scrollTop + rect.top - viewportTop + rect.height / 2;
-    });
+    const viewportTop = this.getViewportTop();
+    const centers: number[] = [];
+    for (const marker of this.markers) {
+      if (marker.element.isConnected) {
+        marker.center = this.computeElementCenter(marker.element, scrollTop, viewportTop);
+      }
+      // Keep the array monotonic for the active-turn binary search: stale
+      // centers of virtualized-out turns can lag behind re-measured neighbours.
+      const previous = centers[centers.length - 1];
+      centers.push(previous !== undefined && marker.center < previous ? previous : marker.center);
+    }
+    return centers;
+  }
+
+  private computeElementCenter(
+    element: HTMLElement,
+    scrollTop = this.getScrollTop(),
+    viewportTop = this.getViewportTop(),
+  ): number {
+    const rect = element.getBoundingClientRect();
+    return scrollTop + rect.top - viewportTop + rect.height / 2;
+  }
+
+  private getViewportTop(): number {
+    return this.scrollTarget && this.scrollTarget !== window
+      ? (this.scrollTarget as HTMLElement).getBoundingClientRect().top
+      : 0;
   }
 
   private getScrollTop(): number {
@@ -525,6 +851,18 @@ class ClaudeTimeline {
     return (
       scrollHeight > viewportHeight && this.getScrollTop() + viewportHeight >= scrollHeight - 2
     );
+  }
+
+  private scrollToOffset(center: number, behavior: ScrollBehavior = 'smooth'): void {
+    const top = Math.max(0, center - this.getViewportHeight() * ACTIVE_ANCHOR);
+    const target = this.scrollTarget;
+    if (!target || target === window) {
+      window.scrollTo({ top, behavior });
+      return;
+    }
+    const container = target as HTMLElement;
+    if (container.scrollTo) container.scrollTo({ top, behavior });
+    else container.scrollTop = top;
   }
 
   private scrollMarkerIntoView(element: HTMLElement): void {
