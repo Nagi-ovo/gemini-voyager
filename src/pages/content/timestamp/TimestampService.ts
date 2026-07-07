@@ -27,8 +27,39 @@ function isTimestampMap(value: unknown): value is TimestampMap {
   return Object.values(value).every(isFiniteTimestamp);
 }
 
+/** Cap on stored conversations; oldest (by latest timestamp) are pruned first. */
+export const MAX_TIMESTAMP_CONVERSATIONS = 300;
+
+/**
+ * Pure helper: pick which conversation ids to drop so at most
+ * `maxConversations` remain. Conversations whose latest timestamp is oldest
+ * are dropped first; empty conversations count as oldest.
+ */
+export function selectConversationIdsToPrune<K>(
+  conversations: ReadonlyMap<string, ReadonlyMap<K, number>>,
+  maxConversations: number,
+): string[] {
+  if (maxConversations < 0 || conversations.size <= maxConversations) return [];
+
+  const latestByConversation: Array<[string, number]> = [];
+  conversations.forEach((turnTimestamps, conversationId) => {
+    let latest = -Infinity;
+    turnTimestamps.forEach((timestamp) => {
+      if (timestamp > latest) latest = timestamp;
+    });
+    latestByConversation.push([conversationId, latest]);
+  });
+
+  latestByConversation.sort((a, b) => a[1] - b[1]);
+  return latestByConversation
+    .slice(0, conversations.size - maxConversations)
+    .map(([conversationId]) => conversationId);
+}
+
 export class TimestampService {
   private timestamps: Map<string, Map<TurnId, number>> = new Map();
+  /** True when in-memory state has mutations not yet serialized to storage. */
+  private dirty = false;
   private pendingPersist: {
     promise: Promise<void>;
     resolve: () => void;
@@ -79,6 +110,15 @@ export class TimestampService {
   }
 
   private async persistTimestamps(): Promise<void> {
+    // The snapshot below is taken synchronously, so any mutation arriving
+    // after this point re-marks dirty and triggers another persist round.
+    this.dirty = false;
+
+    // Bound growth: prune the oldest conversations beyond the cap.
+    selectConversationIdsToPrune(this.timestamps, MAX_TIMESTAMP_CONVERSATIONS).forEach(
+      (conversationId) => this.timestamps.delete(conversationId),
+    );
+
     const conversations: Record<string, TimestampMap> = {};
     this.timestamps.forEach((conversationTimestamps, conversationId) => {
       if (conversationTimestamps.size === 0) return;
@@ -96,6 +136,7 @@ export class TimestampService {
   }
 
   private schedulePersist(): Promise<void> {
+    this.dirty = true;
     if (this.pendingPersist) {
       return this.pendingPersist.promise;
     }
@@ -120,13 +161,20 @@ export class TimestampService {
   }
 
   private async flushPersist(): Promise<void> {
+    const pending = this.pendingPersist;
     try {
       await this.persistTimestamps();
-      this.pendingPersist?.resolve();
+      pending?.resolve();
     } catch (error) {
-      this.pendingPersist?.reject(error);
+      pending?.reject(error);
     } finally {
       this.pendingPersist = null;
+      // Mutations that arrived while persistTimestamps was awaiting storage
+      // reused the now-settled pending promise; without this re-schedule they
+      // would sit in memory until the next unrelated mutation.
+      if (this.dirty) {
+        void this.schedulePersist();
+      }
     }
   }
 
