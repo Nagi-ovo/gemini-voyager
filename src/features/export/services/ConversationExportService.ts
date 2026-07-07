@@ -16,6 +16,7 @@ import type {
 } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
 import { DeepResearchPDFPrintService } from './DeepResearchPDFPrintService';
+import { getOriginalSizeGoogleImageUrl } from './googleImageUrl';
 import { ImageExportService } from './ImageExportService';
 import { MarkdownFormatter } from './MarkdownFormatter';
 import { PDFPrintService } from './PDFPrintService';
@@ -416,7 +417,7 @@ export class ConversationExportService {
     const fetchedByOrder = await Promise.all(
       imageUrls.map(async (url) => {
         // For Google images, request original size (=s0) instead of the display thumbnail
-        const fetchUrl = this.toOriginalSizeUrl(url);
+        const fetchUrl = getOriginalSizeGoogleImageUrl(url);
         const fetched = await this.fetchImageForMarkdownPackaging(fetchUrl);
         if (!fetched) return null;
         return {
@@ -459,20 +460,6 @@ export class ConversationExportService {
     }, 0);
 
     return zipFilename;
-  }
-
-  /**
-   * Replace Google image URL size parameter with =s0 for original resolution.
-   * Non-Google URLs are returned unchanged.
-   */
-  private static toOriginalSizeUrl(url: string): string {
-    const isGoogle = url.includes('googleusercontent.com') || url.includes('ggpht.com');
-    if (!isGoogle) return url;
-    const GOOGLE_SIZE_PATTERN = /=[swh]\d+[^?#]*/;
-    if (GOOGLE_SIZE_PATTERN.test(url)) {
-      return url.replace(GOOGLE_SIZE_PATTERN, '=s0');
-    }
-    return url.includes('=') ? url + '-s0' : url + '=s0';
   }
 
   private static pickImageExtension(contentType: string | null, url: string): string {
