@@ -630,6 +630,22 @@ async function getEnabledPluginOrigins(): Promise<string[]> {
   return pluginsToOriginPatterns(enabledPlugins);
 }
 
+/**
+ * A live Voyager content script answers this ping. Orphaned scripts (extension
+ * updated/reloaded underneath the page) have an invalidated runtime and cannot
+ * respond, so they correctly read as "not injected".
+ */
+async function hasLiveVoyagerContentScript(tabId: number): Promise<boolean> {
+  try {
+    const response = (await browser.tabs.sendMessage(tabId, { type: 'gv.content.ping' })) as
+      | { ok?: boolean }
+      | undefined;
+    return response?.ok === true;
+  } catch {
+    return false;
+  }
+}
+
 async function injectPluginScriptIntoOpenTabs(
   matches: string[],
   jsResources: string[],
@@ -645,6 +661,10 @@ async function injectPluginScriptIntoOpenTabs(
   for (const tab of tabs) {
     if (typeof tab.id !== 'number') continue;
     try {
+      // insertCSS APPENDS a fresh copy on every call — without this guard each
+      // plugin toggle / settings write stacks another full stylesheet into
+      // every open matching tab.
+      if (await hasLiveVoyagerContentScript(tab.id)) continue;
       if (cssResources?.length) {
         await chrome.scripting.insertCSS({ target: { tabId: tab.id }, files: cssResources });
       }
@@ -657,7 +677,17 @@ async function injectPluginScriptIntoOpenTabs(
   }
 }
 
-async function syncPluginContentScripts(): Promise<void> {
+// Serialized: concurrent syncs (storage listener + permission events) would
+// otherwise race the ping-then-inject sequence and double-inject.
+let pluginContentScriptSyncQueue: Promise<void> = Promise.resolve();
+
+function syncPluginContentScripts(): Promise<void> {
+  const next = pluginContentScriptSyncQueue.then(() => doSyncPluginContentScripts());
+  pluginContentScriptSyncQueue = next.catch(() => {});
+  return next;
+}
+
+async function doSyncPluginContentScripts(): Promise<void> {
   if (!chrome.scripting?.registerContentScripts) return;
 
   const manifestContentScript = chrome.runtime.getManifest().content_scripts?.[0];

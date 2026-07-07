@@ -446,6 +446,15 @@ function handleVisibilityChange(): void {
   try {
     if (!hasValidExtensionContext()) return;
 
+    // Answer the background's ping so injectPluginScriptIntoOpenTabs can tell
+    // a live content script from a missing/orphaned one and skip re-injecting
+    // CSS/JS into tabs that already run us.
+    chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      if ((message as { type?: string } | null)?.type === 'gv.content.ping') {
+        sendResponse({ ok: true });
+      }
+    });
+
     // Plugin ecosystem host. Started up-front on EVERY page the content script is
     // injected into (Gemini / AI Studio, and any site a user enabled a plugin for,
     // e.g. claude.ai via dynamic registration). It self-detects the site adapter
