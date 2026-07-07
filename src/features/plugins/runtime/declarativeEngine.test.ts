@@ -294,4 +294,47 @@ describe('DeclarativeEngine', () => {
     engine.unmount('plugin.a');
     expect(box?.style.color).toBe('blue');
   });
+
+  it('installs a MutationObserver only while an active plugin has domOps', () => {
+    const observe = vi.spyOn(MutationObserver.prototype, 'observe');
+    const disconnect = vi.spyOn(MutationObserver.prototype, 'disconnect');
+    const engine = new DeclarativeEngine({ doc: document });
+
+    engine.mount(makeManifest({ styles: [{ css: '.x{color:red}' }] }, 'css.only'));
+    expect(observe).not.toHaveBeenCalled();
+
+    engine.mount(
+      makeManifest(
+        { domOps: [{ op: 'addClass', target: cssRef('.t'), className: 'y' }] },
+        'with.ops',
+      ),
+    );
+    expect(observe).toHaveBeenCalledTimes(1);
+
+    engine.unmount('with.ops');
+    expect(disconnect).toHaveBeenCalled();
+
+    observe.mockRestore();
+    disconnect.mockRestore();
+  });
+
+  it('prunes ledger entries for elements that left the document', () => {
+    document.body.innerHTML = '<div class="target"></div>';
+    const el = document.querySelector('.target')!;
+    const engine = new DeclarativeEngine({ doc: document });
+    engine.mount(
+      makeManifest({
+        domOps: [{ op: 'addClass', target: cssRef('.target'), className: 'gv-plugin-on' }],
+      }),
+    );
+    expect(el.classList.contains('gv-plugin-on')).toBe(true);
+
+    // SPA re-render replaced the node: the engine must forget it instead of
+    // pinning the detached subtree in its ledgers until unmount.
+    el.remove();
+    engine.reapplyNow();
+
+    engine.unmount('test.plugin');
+    expect(el.classList.contains('gv-plugin-on')).toBe(true);
+  });
 });

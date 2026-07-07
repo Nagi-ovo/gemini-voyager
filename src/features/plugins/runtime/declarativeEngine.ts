@@ -107,7 +107,7 @@ export class DeclarativeEngine {
     // First-party builtin plugins (e.g. formula copy) run JS via a registered
     // native handler, in lockstep with the declarative lifecycle.
     entry.nativeHandler?.start?.();
-    this.ensureObserver();
+    this.syncObserver();
     logger.info('Plugin mounted', { id: manifest.id });
   }
 
@@ -130,7 +130,7 @@ export class DeclarativeEngine {
     this.releasePlugin(id);
 
     this.active.delete(id);
-    if (this.active.size === 0) this.disconnectObserver();
+    this.syncObserver();
     logger.info('Plugin unmounted', { id });
   }
 
@@ -142,7 +142,24 @@ export class DeclarativeEngine {
   /** Re-apply all active plugins' dom ops immediately (exposed for tests + the
    *  rAF scheduler). Idempotent. */
   reapplyNow(): void {
+    this.pruneDetachedLedgerEntries();
     for (const entry of this.active.values()) this.applyDomOps(entry);
+  }
+
+  /** Drop ledger entries whose element left the document. An SPA re-render
+   *  replaces nodes rather than reattaching them, so there is no original to
+   *  restore — and without pruning, the ledgers pin every replaced subtree in
+   *  memory for as long as the plugin stays mounted. */
+  private pruneDetachedLedgerEntries(): void {
+    for (const el of this.classOwners.keys()) {
+      if (!el.isConnected) this.classOwners.delete(el);
+    }
+    for (const el of this.attrLayers.keys()) {
+      if (!el.isConnected) this.attrLayers.delete(el);
+    }
+    for (const el of this.styleLayers.keys()) {
+      if (!el.isConnected) this.styleLayers.delete(el);
+    }
   }
 
   // --- internals -----------------------------------------------------------
@@ -312,6 +329,21 @@ export class DeclarativeEngine {
       }
       if (perEl.size === 0) this.styleLayers.delete(el);
     }
+  }
+
+  /** Observe only while some active plugin actually has domOps — pure-CSS
+   *  plugins get their behaviour from the stylesheet alone, and paying a
+   *  MutationObserver callback per DOM change for them is wasted work. */
+  private syncObserver(): void {
+    if (this.hasActiveDomOps()) this.ensureObserver();
+    else this.disconnectObserver();
+  }
+
+  private hasActiveDomOps(): boolean {
+    for (const entry of this.active.values()) {
+      if (entry.manifest.contributes.domOps?.length) return true;
+    }
+    return false;
   }
 
   private ensureObserver(): void {
