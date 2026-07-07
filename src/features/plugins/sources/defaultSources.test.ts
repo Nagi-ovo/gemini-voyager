@@ -31,11 +31,10 @@ class StaticSource implements PluginSource {
 }
 
 describe('default plugin sources', () => {
-  it('orders native, bundled official catalog, then remote marketplace', () => {
+  it('serves native then bundled official catalog (remote marketplace disabled)', () => {
     expect(createDefaultPluginSources().map((source) => source.id)).toEqual([
       'builtin',
       'bundled-catalog',
-      'marketplace',
     ]);
   });
 

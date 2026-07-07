@@ -3,14 +3,14 @@ import { logger } from '@/core/services/LoggerService';
 import type { PluginManifest, PluginSource } from '../types';
 import { BuiltinPluginSource } from './BuiltinPluginSource';
 import { BundledCatalogPluginSource } from './BundledCatalogPluginSource';
-import { MarketplacePluginSource } from './MarketplacePluginSource';
 
+// The remote third-party marketplace (MarketplacePluginSource →
+// nagi-studio/voyager-plugins) is temporarily disabled: official plugins now
+// ship in the bundled catalog, and no third-party channel is being promoted.
+// Re-add `new MarketplacePluginSource()` here (and in refreshPluginManifests)
+// to reopen it.
 export function createDefaultPluginSources(): readonly PluginSource[] {
-  return [
-    new BuiltinPluginSource(),
-    new BundledCatalogPluginSource(),
-    new MarketplacePluginSource(),
-  ];
+  return [new BuiltinPluginSource(), new BundledCatalogPluginSource()];
 }
 
 export async function listPluginManifests(
@@ -28,15 +28,7 @@ export async function listPluginManifests(
 }
 
 export async function refreshPluginManifests(): Promise<readonly PluginManifest[]> {
-  const marketplace = new MarketplacePluginSource();
-  return listPluginManifests([
-    new BuiltinPluginSource(),
-    new BundledCatalogPluginSource(),
-    {
-      id: marketplace.id,
-      list: () => marketplace.forceRefresh(),
-    },
-  ]);
+  return listPluginManifests([new BuiltinPluginSource(), new BundledCatalogPluginSource()]);
 }
 
 /** Merge manifest lists from multiple sources; first occurrence of an id wins. */
