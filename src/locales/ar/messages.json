@@ -2286,5 +2286,13 @@
   "promptCloudError": {
     "message": "فشلت المزامنة السحابية. تأكد من تسجيل الدخول إلى Google Drive.",
     "description": "Toast: cloud prompt sync failed / not signed in"
+  },
+  "enablePromptManagerOnSite": {
+    "message": "تفعيل مدير الموجّهات على {site}",
+    "description": "Top toggle label: enable Prompt Manager on the current plugin site ({site})"
+  },
+  "enablePromptManagerOnSiteHint": {
+    "message": "استخدم موجّهاتك المحفوظة على هذا الموقع. سيُطلب منك منح الإذن بالوصول.",
+    "description": "Top toggle hint for enabling Prompt Manager on a third-party site"
   }
 }

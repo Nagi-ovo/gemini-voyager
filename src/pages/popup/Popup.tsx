@@ -65,6 +65,8 @@ import { PluginManager } from './components/PluginManager';
 import { StarredHistory } from './components/StarredHistory';
 import { ThemeColorButton } from './components/ThemeColorButton';
 import {
+  IconChatGPT,
+  IconClaude,
   IconDeepSeek,
   IconKimi,
   IconMidjourney,
@@ -946,6 +948,16 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     };
     return activeSiteId ? (labels[activeSiteId] ?? activeSiteId) : '';
   }, [activeSiteId]);
+
+  // The registrable host of the active tab, used by the top-of-popup
+  // "enable Prompt Manager here" toggle on third-party plugin sites.
+  const activeSiteDomain = useMemo(() => {
+    try {
+      return new URL(activeUrl).hostname.replace(/^www\./, '').toLowerCase();
+    } catch {
+      return '';
+    }
+  }, [activeUrl]);
 
   // Load the per-site accent map once and keep it live (changes flow back in
   // from this same popup's writes, or another device's sync).
@@ -1924,10 +1936,30 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     [originPatternsForDomain, refreshActiveTabContext, t],
   );
 
+  // A domain any catalog plugin can run on (ChatGPT / Claude are both
+  // Prompt-Manager quick sites AND plugin platforms).
+  const isPluginCapableDomain = useCallback(
+    (domain: string): boolean => {
+      const normalized = domain
+        .trim()
+        .toLowerCase()
+        .replace(/^www\./, '');
+      if (!normalized) return false;
+      const url = `https://${normalized}/`;
+      return pluginManifests.some((plugin) => matchesAnyPattern(url, plugin.matches));
+    },
+    [pluginManifests],
+  );
+
   const revokeCustomWebsitePermission = useCallback(
     async (domain: string) => {
       const originPatterns = originPatternsForDomain(domain);
       if (!originPatterns || !browser.permissions?.remove) return;
+
+      // Keep the host permission when a plugin can run on this domain —
+      // revoking it would tear down an enabled plugin's content script on a
+      // site shared with the Prompt Manager (e.g. chatgpt.com / claude.ai).
+      if (isPluginCapableDomain(domain)) return;
 
       try {
         await browser.permissions.remove({ origins: originPatterns });
@@ -1935,7 +1967,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         console.warn('[Gemini Voyager] Failed to revoke permission for', domain, err);
       }
     },
-    [originPatternsForDomain],
+    [originPatternsForDomain, isPluginCapableDomain],
   );
 
   // Add website handler
@@ -2341,9 +2373,49 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         {/* Cloud Sync */}
         {!isSafariBrowser &&
           wrapSection('cloudSync', <CloudSyncSettings sourceTabId={sourceTabId} />)}
-        {/* Plugin ecosystem — pinned to the very top on third-party web pages,
-            scoped to plugins that target the active site. Hidden on native
-            Gemini / AI Studio, where the full settings surface belongs. */}
+        {/* Prompt Manager enable toggle for third-party plugin sites (ChatGPT /
+            Claude / …). Pinned ABOVE the plugin list so users who installed
+            Voyager for those platforms see the onboarding action first, instead
+            of scrolling past plugins to find it. */}
+        {isPluginSite && activeSiteDomain && (
+          <Card
+            style={{ order: -2 }}
+            className="border-primary/20 p-4 transition-all hover:shadow-md"
+          >
+            <CardContent className="p-0">
+              <div className="group flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <Label
+                    htmlFor="prompt-manager-site-enabled"
+                    className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                  >
+                    {t('enablePromptManagerOnSite').replace(
+                      '{site}',
+                      activeSiteLabel || activeSiteDomain,
+                    )}
+                  </Label>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('enablePromptManagerOnSiteHint')}
+                  </p>
+                </div>
+                <Switch
+                  id="prompt-manager-site-enabled"
+                  checked={customWebsites.includes(activeSiteDomain)}
+                  onChange={() => {
+                    void toggleQuickWebsite(
+                      activeSiteDomain,
+                      customWebsites.includes(activeSiteDomain),
+                    );
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        {/* Plugin ecosystem — pinned to the top on third-party web pages (just
+            below the Prompt Manager toggle), scoped to plugins that target the
+            active site. Hidden on native Gemini / AI Studio, where the full
+            settings surface belongs. */}
         {isPluginSite && (
           <div style={{ order: -1 }}>
             <PluginManager
@@ -3632,11 +3704,16 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                     </div>
                   )}
 
-                  {/* Quick-select buttons for popular websites. ChatGPT / Claude /
-                    Grok are intentionally absent: they're plugin platforms (managed
-                    via the Plugins section), not Prompt-Manager custom sites. */}
+                  {/* Quick-select buttons for popular websites. ChatGPT / Claude are
+                    ALSO plugin platforms, but the Prompt Manager is a separate
+                    feature — a plugin can't enable it — so keep the quick toggles
+                    here. The plugin-site exclusion in the background only blocks
+                    *auto*-adding these domains on a plugin permission grant; an
+                    explicit toggle here still enables the Prompt Manager on them. */}
                   <div className="mb-3 flex flex-wrap gap-1.5">
                     {[
+                      { domain: 'chatgpt.com', label: 'ChatGPT', Icon: IconChatGPT },
+                      { domain: 'claude.ai', label: 'Claude', Icon: IconClaude },
                       { domain: 'deepseek.com', label: 'DeepSeek', Icon: IconDeepSeek },
                       { domain: 'qwen.ai', label: 'Qwen', Icon: IconQwen },
                       { domain: 'kimi.com', label: 'Kimi', Icon: IconKimi },

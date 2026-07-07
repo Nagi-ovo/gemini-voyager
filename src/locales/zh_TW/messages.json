@@ -2286,5 +2286,13 @@
   "promptCloudError": {
     "message": "雲端同步失敗，請確認已登入 Google Drive。",
     "description": "Toast: cloud prompt sync failed / not signed in"
+  },
+  "enablePromptManagerOnSite": {
+    "message": "在 {site} 上開啟提示詞管理器",
+    "description": "Top toggle label: enable Prompt Manager on the current plugin site ({site})"
+  },
+  "enablePromptManagerOnSiteHint": {
+    "message": "在此網站使用你儲存的提示詞。開啟時需要授權存取該網站。",
+    "description": "Top toggle hint for enabling Prompt Manager on a third-party site"
   }
 }

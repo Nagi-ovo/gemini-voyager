@@ -2286,5 +2286,13 @@
   "promptCloudError": {
     "message": "Échec de la synchronisation cloud. Vérifiez que vous êtes connecté à Google Drive.",
     "description": "Toast: cloud prompt sync failed / not signed in"
+  },
+  "enablePromptManagerOnSite": {
+    "message": "Activer le gestionnaire de prompts sur {site}",
+    "description": "Top toggle label: enable Prompt Manager on the current plugin site ({site})"
+  },
+  "enablePromptManagerOnSiteHint": {
+    "message": "Utilisez vos prompts enregistrés sur ce site. Un accès vous sera demandé.",
+    "description": "Top toggle hint for enabling Prompt Manager on a third-party site"
   }
 }

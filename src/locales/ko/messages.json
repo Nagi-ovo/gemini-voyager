@@ -2286,5 +2286,13 @@
   "promptCloudError": {
     "message": "클라우드 동기화에 실패했습니다. Google Drive에 로그인했는지 확인하세요.",
     "description": "Toast: cloud prompt sync failed / not signed in"
+  },
+  "enablePromptManagerOnSite": {
+    "message": "{site}에서 프롬프트 관리자 사용",
+    "description": "Top toggle label: enable Prompt Manager on the current plugin site ({site})"
+  },
+  "enablePromptManagerOnSiteHint": {
+    "message": "이 사이트에서 저장한 프롬프트를 사용합니다. 사용 시 접근 권한을 요청합니다.",
+    "description": "Top toggle hint for enabling Prompt Manager on a third-party site"
   }
 }
