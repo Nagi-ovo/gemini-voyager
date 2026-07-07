@@ -2183,6 +2183,100 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     content: React.ReactNode,
   ): React.ReactNode => (shouldShowSetting(sectionId, settingId) ? content : null);
 
+  // Prompt data import/export/cloud-sync panel. The prompt library is global
+  // (shared across Gemini, ChatGPT and Claude), so this is rendered both inside
+  // the native Prompt Manager section AND, standalone, on plugin sites where
+  // wrapSection() would otherwise hide the whole section.
+  const renderPromptDataMigration = (): React.ReactNode => (
+    <div className="space-y-2">
+      <div>
+        <Label className="text-sm font-medium">{t('promptDataMigration')}</Label>
+        <p className="text-muted-foreground mt-1 text-xs">{t('promptDataMigrationHint')}</p>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          disabled={promptMigrationBusy}
+          onClick={() => {
+            void handlePromptExport();
+          }}
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <Download className="h-3.5 w-3.5" />
+            <span>{t('pm_export')}</span>
+          </span>
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          disabled={promptMigrationBusy}
+          onClick={() => promptImportInputRef.current?.click()}
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <Upload className="h-3.5 w-3.5" />
+            <span>{t('pm_import')}</span>
+          </span>
+        </Button>
+      </div>
+      {!isSafariBrowser && (
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            disabled={promptMigrationBusy}
+            onClick={() => {
+              void handlePromptCloudPull();
+            }}
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <CloudDownload className="h-3.5 w-3.5" />
+              <span>{t('promptCloudPull')}</span>
+            </span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            disabled={promptMigrationBusy}
+            onClick={() => {
+              void handlePromptCloudPush();
+            }}
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <CloudUpload className="h-3.5 w-3.5" />
+              <span>{t('promptCloudPush')}</span>
+            </span>
+          </Button>
+        </div>
+      )}
+      <input
+        ref={promptImportInputRef}
+        type="file"
+        aria-label={t('pm_import')}
+        accept=".json,application/json"
+        className="hidden"
+        onChange={(event) => {
+          void handlePromptImport(event);
+        }}
+      />
+      {promptMigrationStatus && (
+        <p
+          className={`text-xs ${
+            promptMigrationStatus.kind === 'ok'
+              ? 'text-emerald-600 dark:text-emerald-400'
+              : 'text-destructive'
+          }`}
+        >
+          {promptMigrationStatus.text}
+        </p>
+      )}
+    </div>
+  );
+
   const moveSectionInOrder = (sectionId: PopupSectionId, direction: 'up' | 'down') => {
     setSectionOrder((prev) => {
       const idx = prev.indexOf(sectionId);
@@ -2410,6 +2504,15 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                 />
               </div>
             </CardContent>
+          </Card>
+        )}
+        {/* Prompt data import/export on plugin sites. The Prompt Manager section
+            (which carries these controls on native Gemini) is hidden here by
+            wrapSection, but the prompt library is global, so surface the same
+            panel standalone so ChatGPT / Claude users can still migrate prompts. */}
+        {isPluginSite && (
+          <Card style={{ order: -2 }} className="border-primary/20 p-4">
+            <CardContent className="p-0">{renderPromptDataMigration()}</CardContent>
           </Card>
         )}
         {/* Plugin ecosystem — pinned to the top on third-party web pages (just
@@ -3585,99 +3688,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                   />
                 </div>,
               )}
-              {renderSetting(
-                'promptManager',
-                'promptDataMigration',
-                <div className="space-y-2">
-                  <div>
-                    <Label className="text-sm font-medium">{t('promptDataMigration')}</Label>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      {t('promptDataMigrationHint')}
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      disabled={promptMigrationBusy}
-                      onClick={() => {
-                        void handlePromptExport();
-                      }}
-                    >
-                      <span className="inline-flex items-center gap-1.5">
-                        <Download className="h-3.5 w-3.5" />
-                        <span>{t('pm_export')}</span>
-                      </span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      disabled={promptMigrationBusy}
-                      onClick={() => promptImportInputRef.current?.click()}
-                    >
-                      <span className="inline-flex items-center gap-1.5">
-                        <Upload className="h-3.5 w-3.5" />
-                        <span>{t('pm_import')}</span>
-                      </span>
-                    </Button>
-                  </div>
-                  {!isSafariBrowser && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        disabled={promptMigrationBusy}
-                        onClick={() => {
-                          void handlePromptCloudPull();
-                        }}
-                      >
-                        <span className="inline-flex items-center gap-1.5">
-                          <CloudDownload className="h-3.5 w-3.5" />
-                          <span>{t('promptCloudPull')}</span>
-                        </span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        disabled={promptMigrationBusy}
-                        onClick={() => {
-                          void handlePromptCloudPush();
-                        }}
-                      >
-                        <span className="inline-flex items-center gap-1.5">
-                          <CloudUpload className="h-3.5 w-3.5" />
-                          <span>{t('promptCloudPush')}</span>
-                        </span>
-                      </Button>
-                    </div>
-                  )}
-                  <input
-                    ref={promptImportInputRef}
-                    type="file"
-                    aria-label={t('pm_import')}
-                    accept=".json,application/json"
-                    className="hidden"
-                    onChange={(event) => {
-                      void handlePromptImport(event);
-                    }}
-                  />
-                  {promptMigrationStatus && (
-                    <p
-                      className={`text-xs ${
-                        promptMigrationStatus.kind === 'ok'
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-destructive'
-                      }`}
-                    >
-                      {promptMigrationStatus.text}
-                    </p>
-                  )}
-                </div>,
-              )}
+              {renderSetting('promptManager', 'promptDataMigration', renderPromptDataMigration())}
               {renderSetting(
                 'promptManager',
                 'customWebsites',
