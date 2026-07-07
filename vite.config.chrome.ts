@@ -13,6 +13,12 @@ export default mergeConfig(
       crx({
         manifest: {
           ...baseManifest,
+          // declarativeContent is Chrome/Edge-only (absent on Firefox/Safari).
+          // Injected here so the shared base manifest stays cross-browser clean.
+          permissions: [
+            ...((baseManifest as { permissions?: string[] }).permissions ?? []),
+            'declarativeContent',
+          ],
         } as ManifestV3Export,
         browser: 'chrome',
         contentScripts: {
