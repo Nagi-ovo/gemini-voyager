@@ -190,6 +190,19 @@ function createDragEvent(type: string, dataTransfer: DataTransfer): DragEvent {
   return event;
 }
 
+function pointerEvent(type: string, init: MouseEventInit): Event {
+  // jsdom has no PointerEvent constructor; MouseEvent carries everything the
+  // drag handlers read (button, clientX/Y).
+  return new MouseEvent(type, { bubbles: true, cancelable: true, ...init });
+}
+
+function stubPointerCapture(element: HTMLElement): void {
+  Object.assign(element, {
+    setPointerCapture: () => {},
+    releasePointerCapture: () => {},
+  });
+}
+
 function folderHeader(root: ParentNode, folderId: string): HTMLElement {
   return requireElement<HTMLElement>(
     root,
@@ -534,6 +547,86 @@ describe('mountFloatingPanel', () => {
 
     expect(handle.element.style.width).toBe('640px');
     expect(handle.element.style.height).toBe('320px');
+  });
+
+  it('ignores non-primary-button pointerdown on the header (no right/middle drags)', () => {
+    const handle = mountPanel();
+    const header = requireElement<HTMLElement>(handle.element, `.${FLOATING_PANEL_CLASS}__header`);
+    stubPointerCapture(header);
+    setElementRect(handle.element, 320, 420);
+    const initialLeft = handle.element.style.left;
+    const initialTop = handle.element.style.top;
+
+    header.dispatchEvent(pointerEvent('pointerdown', { button: 2, clientX: 700, clientY: 330 }));
+    header.dispatchEvent(pointerEvent('pointermove', { clientX: 500, clientY: 200 }));
+
+    expect(handle.element.style.left).toBe(initialLeft);
+    expect(handle.element.style.top).toBe(initialTop);
+    expect(header.classList.contains(`${FLOATING_PANEL_CLASS}__header--dragging`)).toBe(false);
+
+    // Sanity: a primary-button drag still moves the panel.
+    header.dispatchEvent(pointerEvent('pointerdown', { button: 0, clientX: 700, clientY: 330 }));
+    header.dispatchEvent(pointerEvent('pointermove', { clientX: 500, clientY: 200 }));
+
+    expect(handle.element.style.left).not.toBe(initialLeft);
+    header.dispatchEvent(pointerEvent('pointerup', { button: 0, clientX: 500, clientY: 200 }));
+  });
+
+  it('defers a background update while an inline form is focused, applying it on submit', () => {
+    const handle = mountPanel();
+
+    click(
+      requireElement<HTMLButtonElement>(
+        handle.element,
+        `.${FLOATING_PANEL_CLASS}__icon-button--create`,
+      ),
+    );
+    const input = requireElement<HTMLInputElement>(
+      handle.element,
+      `.${FLOATING_PANEL_CLASS}__inline-input`,
+    );
+    input.value = 'Half-typed name';
+    input.focus();
+
+    const next = createData();
+    next.folders[0] = createFolder('folder-a', 'Alpha Renamed', null, 0);
+    handle.update(next);
+
+    // The form (and the user's typed value) must survive the background update.
+    const inputAfter = requireElement<HTMLInputElement>(
+      handle.element,
+      `.${FLOATING_PANEL_CLASS}__inline-input`,
+    );
+    expect(inputAfter).toBe(input);
+    expect(inputAfter.value).toBe('Half-typed name');
+    expect(handle.element.textContent).toContain('Alpha');
+    expect(handle.element.textContent).not.toContain('Alpha Renamed');
+
+    // Closing the form applies the deferred data.
+    keydown(input, 'Enter');
+    expect(handle.element.textContent).toContain('Alpha Renamed');
+  });
+
+  it('rebuilds immediately when the folder being renamed was deleted by the update', () => {
+    const handle = mountPanel();
+
+    requireElement<HTMLElement>(
+      folderHeader(handle.element, 'folder-a'),
+      `.${FLOATING_PANEL_CLASS}__folder-name`,
+    ).dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+    const input = requireElement<HTMLInputElement>(
+      handle.element,
+      `.${FLOATING_PANEL_CLASS}__inline-input`,
+    );
+    input.focus();
+
+    handle.update({
+      folders: [createFolder('folder-b', 'Beta', null, 1)],
+      folderContents: { 'folder-b': [] },
+    });
+
+    expect(handle.element.querySelector(`.${FLOATING_PANEL_CLASS}__inline-input`)).toBeNull();
+    expect(handle.element.textContent).not.toContain('Alpha');
   });
 
   it('debounces onSizeChange and commits only the final observed size', () => {

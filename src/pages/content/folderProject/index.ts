@@ -536,6 +536,10 @@ async function injectPicker(manager: FolderManager): Promise<void> {
   // Target the model-picker-container inside trailing-actions-wrapper (right side)
   const modelPicker = await waitForElement('.model-picker-container', 5000);
 
+  // Guard: feature toggled off while we were waiting (slow page load) — the
+  // disable path already ran removePicker(), so injecting now would leave a
+  // picker and its document listener behind with nothing to clean them up.
+  if (!featureInitialized) return;
   // Guard: if we navigated away while waiting, abort
   if (!isNewChatPath(window.location.pathname)) return;
   // Guard: don't inject twice
@@ -552,19 +556,30 @@ async function injectPicker(manager: FolderManager): Promise<void> {
     return;
   }
 
-  // Fallback: insert before rich-textarea (original behavior)
+  // Fallback: insert before rich-textarea (original behavior). The picker (and
+  // its document-level outside-click listener) is already built — every abort
+  // below must run its cleanup or the listener leaks.
   const richTextarea = await waitForElement('rich-textarea', 3000);
-  if (!richTextarea) return;
-  if (!isNewChatPath(window.location.pathname)) return;
-  if (document.querySelector('.gv-fp-picker-container')) return;
+  if (
+    !richTextarea ||
+    !featureInitialized ||
+    !isNewChatPath(window.location.pathname) ||
+    document.querySelector('.gv-fp-picker-container')
+  ) {
+    cleanup();
+    return;
+  }
 
   const parent = richTextarea.parentElement;
-  if (parent) {
-    parent.insertBefore(element, richTextarea);
-    pickerContainer = element;
-    pickerCleanup = cleanup;
-    void applyPendingFolderSelection(manager, chip);
+  if (!parent) {
+    cleanup();
+    return;
   }
+
+  parent.insertBefore(element, richTextarea);
+  pickerContainer = element;
+  pickerCleanup = cleanup;
+  void applyPendingFolderSelection(manager, chip);
 }
 
 // ============================================================================

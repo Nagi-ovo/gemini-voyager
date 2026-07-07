@@ -1,4 +1,4 @@
-import browser from 'webextension-polyfill';
+import browser, { type Runtime } from 'webextension-polyfill';
 
 import {
   type AccountScope,
@@ -89,6 +89,15 @@ const FOLDER_HIDDEN_ANOMALY_GRACE_MS = 1500;
 const MAX_FOLDER_DEPTH = 1;
 const FOLDER_NAME_SINGLE_CLICK_DELAY_MS = 220;
 const FOLDER_NAVIGATION_CONFIRM_DELAY_MS = 1200;
+// Trailing debounce for persisting pure-UI state changes (expand/collapse,
+// recently-opened marks). Data mutations still save immediately.
+const SAVE_DEBOUNCE_MS = 300;
+// How long an armed self-write echo stays valid. If the mirror write's
+// onChanged echo never arrives (e.g. the chrome.storage mirror failed), the
+// stale counter expires so external writes can't be swallowed forever.
+const STORAGE_ECHO_SUPPRESS_WINDOW_MS = 2000;
+// Debounce for the folder search box so each keystroke doesn't rebuild the tree.
+const FOLDER_SEARCH_DEBOUNCE_MS = 200;
 
 // Export session backup keys for use by FolderImportExportService (deprecated, kept for compatibility)
 export const SESSION_BACKUP_KEY = 'gvFolderBackup';
@@ -121,13 +130,6 @@ interface FolderDialogOption {
   folder: Folder;
   level: number;
   path: string;
-}
-
-type ConversationReorderPlacement = 'above' | 'below';
-
-interface ConversationReorderTarget {
-  element: HTMLElement;
-  placement: ConversationReorderPlacement;
 }
 
 function normalizeFolderDialogSearchText(value: string): string {
@@ -259,9 +261,26 @@ export class FolderManager {
   private activeColorPicker: HTMLElement | null = null; // Currently open color picker dialog
   private activeColorPickerFolderId: string | null = null; // Folder ID of currently open color picker
   private activeColorPickerCloseHandler: ((e: MouseEvent) => void) | null = null; // Event handler for closing color picker
-  private pendingConversationReorderTarget: ConversationReorderTarget | null = null;
-  private activeConversationReorderTarget: ConversationReorderTarget | null = null;
-  private conversationReorderRafId: number | null = null;
+  // Echo suppression for our own chrome.storage.local mirror writes.
+  // FolderStorageAdapter.saveData mirrors folder data into chrome.storage.local
+  // and chrome fires storage.onChanged in the SAME context that initiated the
+  // write. Without suppression every local save triggered a redundant full
+  // reload + re-render (and a slightly stale snapshot could briefly overwrite
+  // this.data). A counter bounds concurrent saves; the time window prevents a
+  // stale counter (echo lost, e.g. mirror write failed) from swallowing a
+  // genuine external change forever.
+  private pendingStorageEchoes = 0;
+  private lastStorageEchoArmedAt = 0;
+  // Debounced persistence for high-frequency pure-UI state changes
+  // (expand/collapse, recently-opened marks). Data-shape mutations
+  // (create/delete/rename/import/move) still save immediately.
+  private saveDebounceTimer: number | null = null;
+  private beforeUnloadFlushHandler: (() => void) | null = null;
+  // Debounce for the folder search box so each keystroke doesn't rebuild the tree.
+  private folderSearchDebounceTimer: number | null = null;
+  // Per-render native-title lookup table (built once per createFoldersList pass
+  // instead of scanning the whole sidebar for every stored conversation).
+  private nativeTitleLookup: Map<string, string> | null = null;
 
   // Track active UI elements to prevent duplicate creation
   private activeFolderInput: HTMLElement | null = null; // Currently open folder name input
@@ -358,6 +377,12 @@ export class FolderManager {
 
       // Setup automatic backup before page unload
       this.backupService.setupBeforeUnloadBackup(() => this.data);
+
+      // Flush any pending debounced save on unload. The localStorage half of
+      // the save is synchronous, so the data itself is safe; the
+      // chrome.storage mirror is best-effort during unload.
+      this.beforeUnloadFlushHandler = () => this.flushPendingSaveData();
+      window.addEventListener('beforeunload', this.beforeUnloadFlushHandler);
 
       // Initialize storage quota monitor
       const storageMonitor = getStorageMonitor({
@@ -479,7 +504,15 @@ export class FolderManager {
     }
     this.teardownDomRecoveryWatchers();
     this.folderRecoveryInFlight = false;
-    this.clearConversationReorderIndicator();
+
+    // Flush a pending debounced save so a recent expand/collapse isn't lost,
+    // then drop the unload flush hook.
+    this.flushPendingSaveData();
+    if (this.beforeUnloadFlushHandler) {
+      window.removeEventListener('beforeunload', this.beforeUnloadFlushHandler);
+      this.beforeUnloadFlushHandler = null;
+    }
+    this.clearFolderSearchDebounceTimer();
 
     // Disconnect mutation observers
     if (this.sideNavObserver) {
@@ -633,7 +666,8 @@ export class FolderManager {
 
     this.teardownPositionEnforcer();
     this.cleanupNotebooksAnchorButton();
-    this.clearConversationReorderIndicator();
+    this.flushPendingSaveData();
+    this.clearFolderSearchDebounceTimer();
     this.stopFloatingMode();
 
     if (this.routeChangeCleanup) {
@@ -1189,12 +1223,12 @@ export class FolderManager {
 
     if (this.isDestroyed || !this.folderEnabled) return;
 
-    // All mutation callbacks share the same tail: persist to storage and push
-    // a fresh snapshot into the floating panel. Factored out so each callback
-    // body stays a single expression of intent.
+    // All mutation callbacks share the same tail: persist to storage, which
+    // itself pushes a fresh snapshot into the floating panel (saveData's
+    // centralised `floatingPanelHandle?.update` hook). Calling update here
+    // too rendered the panel twice per mutation.
     const afterMutation = (): void => {
       void this.saveData();
-      this.floatingPanelHandle?.update(this.data);
     };
 
     this.floatingPanelHandle = mountFloatingPanel({
@@ -1261,19 +1295,19 @@ export class FolderManager {
         });
         afterMutation();
       },
+      // These delegate to the shared data paths, which persist via saveData —
+      // and saveData's centralised hook already pushes the fresh snapshot into
+      // the floating panel, so no explicit update calls are needed here.
       onRemoveConversation: (folderId, conversationId) => {
         // Reuse the existing data-only removal path; it already calls saveData
         // + refresh (sidebar refresh is a no-op when the sidebar isn't mounted).
         this.removeConversationFromFolder(folderId, conversationId);
-        this.floatingPanelHandle?.update(this.data);
       },
       onToggleStar: (folderId, conversationId) => {
         this.toggleConversationStar(folderId, conversationId);
-        this.floatingPanelHandle?.update(this.data);
       },
       onToggleFolderPinned: (folderId) => {
         this.togglePinFolder(folderId);
-        this.floatingPanelHandle?.update(this.data);
       },
       // Intra-panel conversation move: user dragged a conversation row from
       // folder A to folder B inside the floating panel. Cross-document drag
@@ -1289,7 +1323,6 @@ export class FolderManager {
       },
       onSetFolderColor: (folderId, color) => {
         this.changeFolderColor(folderId, color);
-        this.floatingPanelHandle?.update(this.data);
       },
       // Cloud sync / upload — mirror what the sidebar's header buttons do.
       // Only wire on non-Safari; the floating panel hides these buttons on
@@ -1297,11 +1330,9 @@ export class FolderManager {
       // panel reads `isSafari()` itself, but we still guard here so callbacks
       // stay undefined on Safari and nothing fires by accident.
       //
-      // onCloudSync can mutate this.data (merges Drive payload locally), and
-      // the usual post-merge `refresh()` is a no-op when the sidebar isn't
-      // mounted. So after sync resolves we explicitly push the latest snapshot
-      // into the floating panel. onCloudUpload is read-only locally, so no
-      // post-hook is needed.
+      // onCloudSync can mutate this.data (merges Drive payload locally); it
+      // persists via saveData, whose centralised hook pushes the merged
+      // snapshot into the floating panel. onCloudUpload is read-only locally.
       ...(isSafari()
         ? {}
         : {
@@ -1309,10 +1340,7 @@ export class FolderManager {
               void this.handleCloudUpload();
             },
             onCloudSync: () => {
-              void (async () => {
-                await this.handleCloudSync();
-                this.floatingPanelHandle?.update(this.data);
-              })();
+              void this.handleCloudSync();
             },
             getCloudUploadTooltip: () => this.getCloudUploadTooltip(),
             getCloudSyncTooltip: () => this.getCloudSyncTooltip(),
@@ -1623,24 +1651,10 @@ export class FolderManager {
     let xOffset = 0;
     let yOffset = 0;
 
-    const dragStart = (e: MouseEvent) => {
-      // Ignore if clicking buttons inside the indicator
-      if ((e.target as HTMLElement).closest('button')) return;
-
-      initialX = e.clientX - xOffset;
-      initialY = e.clientY - yOffset;
-
-      if (e.target === indicator || indicator.contains(e.target as Node)) {
-        isDragging = true;
-        indicator.style.cursor = 'grabbing';
-      }
-    };
-
-    const dragEnd = () => {
-      isDragging = false;
-      indicator.style.cursor = 'move';
-    };
-
+    // Document-level mousemove/mouseup are attached only while a drag is in
+    // progress (mousedown → mouseup). Attaching them permanently leaked one
+    // listener pair per floating-mode/sidebar-mode switch, because that switch
+    // path rebuilds the indicator without running the cleanup task list.
     const drag = (e: MouseEvent) => {
       if (isDragging) {
         e.preventDefault();
@@ -1654,17 +1668,37 @@ export class FolderManager {
       }
     };
 
+    const dragEnd = () => {
+      isDragging = false;
+      indicator.style.cursor = 'move';
+      document.removeEventListener('mousemove', drag);
+      document.removeEventListener('mouseup', dragEnd);
+    };
+
+    const dragStart = (e: MouseEvent) => {
+      // Ignore if clicking buttons inside the indicator
+      if ((e.target as HTMLElement).closest('button')) return;
+
+      initialX = e.clientX - xOffset;
+      initialY = e.clientY - yOffset;
+
+      if (e.target === indicator || indicator.contains(e.target as Node)) {
+        isDragging = true;
+        indicator.style.cursor = 'grabbing';
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+      }
+    };
+
     const setTranslate = (xPos: number, yPos: number, el: HTMLElement) => {
       el.style.transform = `translate3d(calc(-50% + ${xPos}px), ${yPos}px, 0)`;
     };
 
     indicator.addEventListener('mousedown', dragStart);
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('mouseup', dragEnd);
 
-    // Cleanup listeners when destroyed (adding to a cleanup list if possible, or attaching to element)
-    // Since we attach to document, we MUST clean this up in destroy()
-    // We'll wrap these in a cleanup function and store it
+    // Belt-and-suspenders: if the indicator is torn down mid-drag, make sure
+    // the document-level listeners can't outlive it. removeEventListener is
+    // idempotent, so this is safe even when no drag is active.
     this.addCleanupTask(() => {
       indicator.removeEventListener('mousedown', dragStart);
       document.removeEventListener('mousemove', drag);
@@ -1828,17 +1862,49 @@ export class FolderManager {
 
     input.addEventListener('input', () => {
       this.folderSearchQuery = input.value;
-      this.refresh();
+      // Debounce the full tree rebuild — rebuilding on every keystroke made
+      // fast typing feel laggy on large trees. The query itself is applied
+      // immediately so a pending refresh from any source uses the latest text.
+      this.clearFolderSearchDebounceTimer();
+      this.folderSearchDebounceTimer = window.setTimeout(() => {
+        this.folderSearchDebounceTimer = null;
+        this.refresh();
+      }, FOLDER_SEARCH_DEBOUNCE_MS);
     });
 
     searchContainer.appendChild(input);
     return searchContainer;
   }
 
+  private clearFolderSearchDebounceTimer(): void {
+    if (this.folderSearchDebounceTimer === null) return;
+    window.clearTimeout(this.folderSearchDebounceTimer);
+    this.folderSearchDebounceTimer = null;
+  }
+
   private createFoldersList(): HTMLElement {
     const list = document.createElement('div');
     list.className = 'gv-folder-list';
     const isSearchActive = this.isFolderSearchActive();
+
+    // Native-title sync used to scan the whole sidebar once PER stored
+    // conversation (O(M×N) per render). Build one lookup table per render
+    // pass instead; `createConversationElement` consults it while this field
+    // is non-null. Search-triggered renders (and hide-archived mode, where the
+    // per-conversation guard skips syncing anyway) use an empty table so they
+    // skip the sidebar scan entirely.
+    this.nativeTitleLookup =
+      !this.hideArchivedConversations && !isSearchActive
+        ? this.buildNativeConversationTitleMap()
+        : new Map();
+    try {
+      return this.populateFoldersList(list, isSearchActive);
+    } finally {
+      this.nativeTitleLookup = null;
+    }
+  }
+
+  private populateFoldersList(list: HTMLElement, isSearchActive: boolean): HTMLElement {
     let renderedItems = 0;
 
     // Setup root-level drop zone for dragging folders and conversations to root
@@ -2068,7 +2134,11 @@ export class FolderManager {
     // Decide what title to display, respecting manual renames and hidden native list
     let displayTitle = conv.title;
     if (!conv.customTitle && !this.hideArchivedConversations) {
-      const syncedTitle = this.syncConversationTitleFromNative(conv.conversationId);
+      // Render passes populate `nativeTitleLookup` once up front (see
+      // createFoldersList); outside a render pass fall back to the direct scan.
+      const syncedTitle = this.nativeTitleLookup
+        ? this.lookupNativeConversationTitle(conv.conversationId)
+        : this.syncConversationTitleFromNative(conv.conversationId);
       if (syncedTitle && syncedTitle !== conv.title) {
         conv.title = syncedTitle;
         displayTitle = syncedTitle;
@@ -2133,7 +2203,6 @@ export class FolderManager {
         this.clearSelection();
         this.cleanupSelectionArtifacts();
       }
-      this.clearConversationReorderIndicator();
     });
 
     const link = document.createElement('a');
@@ -2792,7 +2861,6 @@ export class FolderManager {
         this.clearSelection();
         this.cleanupSelectionArtifacts();
       }
-      this.clearConversationReorderIndicator();
     });
   }
 
@@ -3732,7 +3800,9 @@ export class FolderManager {
 
     folder.isExpanded = !folder.isExpanded;
     folder.updatedAt = Date.now();
-    this.saveData();
+    // Pure UI state — debounce the full persistence pipeline instead of
+    // running stringify/verify/mirror/backup on every expand/collapse click.
+    this.scheduleSaveData();
     this.refresh();
   }
 
@@ -3839,172 +3909,6 @@ export class FolderManager {
     }
 
     return true;
-  }
-
-  /**
-   * Add reorder capability to a conversation element using top/bottom half detection.
-   * When dragging over the top half, an indicator line appears above; bottom half → below.
-   */
-  private setupConversationReorderZone(
-    convEl: HTMLElement,
-    folderId: string,
-    sortedIndex: number,
-  ): void {
-    convEl.addEventListener('dragover', (e) => {
-      const data = e.dataTransfer?.types.includes('application/json');
-      if (!data) return;
-
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-
-      this.scheduleConversationReorderIndicator(
-        convEl,
-        this.getConversationReorderPlacement(convEl, e.clientY),
-      );
-    });
-
-    convEl.addEventListener('dragleave', (e) => {
-      // Only remove if truly leaving the element (not entering a child)
-      const related = e.relatedTarget as Node | null;
-      if (!related || !convEl.contains(related)) {
-        this.clearConversationReorderIndicator(convEl);
-      }
-    });
-
-    convEl.addEventListener('drop', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const placement = this.getConversationReorderDropPlacement(
-        convEl,
-        this.getConversationReorderPlacement(convEl, e.clientY),
-      );
-      this.clearConversationReorderIndicator();
-
-      const rawData = e.dataTransfer?.getData('application/json');
-      if (!rawData) return;
-
-      try {
-        const dragData: DragData = JSON.parse(rawData);
-        if (dragData.type !== 'conversation') return;
-
-        // Restore opacity
-        this.selectedConversations.forEach((id) => {
-          const el = this.findConversationElement(id);
-          if (el) el.style.opacity = '1';
-        });
-
-        const insertIndex = placement === 'above' ? sortedIndex : sortedIndex + 1;
-        const convs = dragData.conversations ?? [];
-        const singleId = dragData.conversationId;
-        const sourceFolderId = dragData.sourceFolderId;
-
-        // If conversation(s) are from outside any folder (native sidebar drag),
-        // add them to the folder data first so reorderOrMoveConversations can find them
-        if (!sourceFolderId) {
-          this.ensureConversationsInFolder(folderId, dragData);
-        }
-
-        const effectiveSource = sourceFolderId ?? folderId;
-
-        if (convs.length > 0) {
-          this.reorderOrMoveConversations(
-            convs.map((c) => c.conversationId),
-            effectiveSource,
-            folderId,
-            insertIndex,
-          );
-        } else if (singleId) {
-          this.reorderOrMoveConversations([singleId], effectiveSource, folderId, insertIndex);
-        }
-
-        this.exitMultiSelectMode();
-      } catch (error) {
-        console.error('[FolderManager] Conversation reorder drop error:', error);
-      }
-    });
-  }
-
-  private getConversationReorderPlacement(
-    convEl: HTMLElement,
-    clientY: number,
-  ): ConversationReorderPlacement {
-    const rect = convEl.getBoundingClientRect();
-    const midY = rect.top + rect.height / 2;
-    return clientY < midY ? 'above' : 'below';
-  }
-
-  private getConversationReorderDropPlacement(
-    convEl: HTMLElement,
-    fallback: ConversationReorderPlacement,
-  ): ConversationReorderPlacement {
-    if (this.pendingConversationReorderTarget?.element === convEl) {
-      return this.pendingConversationReorderTarget.placement;
-    }
-
-    if (this.activeConversationReorderTarget?.element === convEl) {
-      return this.activeConversationReorderTarget.placement;
-    }
-
-    return fallback;
-  }
-
-  private scheduleConversationReorderIndicator(
-    element: HTMLElement,
-    placement: ConversationReorderPlacement,
-  ): void {
-    this.pendingConversationReorderTarget = { element, placement };
-
-    if (this.conversationReorderRafId !== null) return;
-
-    this.conversationReorderRafId = window.requestAnimationFrame(() => {
-      this.conversationReorderRafId = null;
-      const target = this.pendingConversationReorderTarget;
-      this.pendingConversationReorderTarget = null;
-      if (!target) return;
-      this.applyConversationReorderIndicator(target);
-    });
-  }
-
-  private applyConversationReorderIndicator(target: ConversationReorderTarget): void {
-    if (!target.element.isConnected) {
-      this.clearConversationReorderIndicator(target.element);
-      return;
-    }
-
-    const active = this.activeConversationReorderTarget;
-    if (active && (active.element !== target.element || active.placement !== target.placement)) {
-      active.element.classList.remove('gv-reorder-above', 'gv-reorder-below');
-    }
-
-    target.element.classList.toggle('gv-reorder-above', target.placement === 'above');
-    target.element.classList.toggle('gv-reorder-below', target.placement === 'below');
-    this.activeConversationReorderTarget = target;
-  }
-
-  private clearConversationReorderIndicator(element?: HTMLElement): void {
-    if (!element) {
-      if (this.conversationReorderRafId !== null) {
-        window.cancelAnimationFrame(this.conversationReorderRafId);
-        this.conversationReorderRafId = null;
-      }
-      this.pendingConversationReorderTarget = null;
-    } else if (this.pendingConversationReorderTarget?.element === element) {
-      this.pendingConversationReorderTarget = null;
-      if (this.conversationReorderRafId !== null) {
-        window.cancelAnimationFrame(this.conversationReorderRafId);
-        this.conversationReorderRafId = null;
-      }
-    }
-
-    if (!element || this.activeConversationReorderTarget?.element === element) {
-      this.activeConversationReorderTarget?.element.classList.remove(
-        'gv-reorder-above',
-        'gv-reorder-below',
-      );
-      this.activeConversationReorderTarget = null;
-    }
   }
 
   private setLightweightDragImage(event: DragEvent, label: string): void {
@@ -5764,10 +5668,25 @@ export class FolderManager {
         window.location.pathname === targetPath ||
         window.location.pathname === `${targetPath}/`
       ) {
+        // Already on the new-chat page. The Folder-as-Project picker only
+        // consumes the pending folder id when it (re)injects, and its URL
+        // watcher cannot observe a same-URL pushState, so an SPA "navigation"
+        // here would be a silent no-op. A full reload is the only way to
+        // re-run picker injection — accepted as the explicit reload exception
+        // to the no-full-refresh navigation rule.
         window.location.reload();
-      } else {
-        window.location.href = `${window.location.origin}${targetPath}`;
+        return;
       }
+      // Preferred path: SPA route change (History API + popstate), same helper
+      // the folder conversation navigation uses. folderProject's URL watcher
+      // picks this up, re-injects the picker, and applies the pending folder.
+      if (this.navigateWithSpaRoute(`${window.location.origin}${targetPath}`)) {
+        return;
+      }
+      // Last-resort fallback: the History API path failed (pushState threw).
+      // A full page load is acceptable here because the alternative is a dead
+      // menu item — this mirrors the rule's History-API-then-fallback order.
+      window.location.href = `${window.location.origin}${targetPath}`;
     };
 
     browser.storage.local
@@ -6303,6 +6222,19 @@ export class FolderManager {
       for (const mutation of mutations) {
         mutation.addedNodes.forEach((node) => {
           if (!(node instanceof HTMLElement)) return;
+          // Cheap gate before the matches/querySelectorAll/closest triple:
+          // menu panels only ever live inside a CDK overlay (or are a
+          // <gem-menu> themselves), while the overwhelming majority of body
+          // mutations are sidebar/chat re-renders that can't contain one.
+          // Missed edge cases are covered by the click-tracking fallback in
+          // setupConversationClickTracking.
+          const className = typeof node.className === 'string' ? node.className : '';
+          const mayHostMenuPanel =
+            node.tagName === 'GEM-MENU' ||
+            className.includes('mat-mdc-menu-panel') ||
+            className.includes('cdk-overlay') ||
+            node.parentElement?.closest('.cdk-overlay-container') != null;
+          if (!mayHostMenuPanel) return;
           const panels = new Set<HTMLElement>();
           if (node.matches(CONVERSATION_MENU_PANEL_SELECTOR)) panels.add(node);
           node
@@ -6640,6 +6572,68 @@ export class FolderManager {
     return null;
   }
 
+  /**
+   * Build a conversationId → native title lookup table with ONE sidebar scan.
+   *
+   * Mirrors the per-row matching semantics of `syncConversationTitleFromNative`
+   * (`jslog.includes(id)` and `link.href.includes(id)`): every `c_<hex>` id a
+   * row's jslog mentions and the id extracted from the row's link href are all
+   * registered, in both prefixed (`c_<hex>`) and bare (`<hex>`) forms, so
+   * callers can look up either id shape. First title-bearing row wins — same
+   * as the old first-match-in-DOM-order behavior.
+   */
+  private buildNativeConversationTitleMap(): Map<string, string> {
+    const map = new Map<string, string>();
+    try {
+      const conversations = document.querySelectorAll('[data-test-id="conversation"]');
+      for (const convEl of Array.from(conversations)) {
+        const element = convEl as HTMLElement;
+        const title = this.extractNativeConversationTitle(element);
+        if (!title) continue;
+
+        const register = (rawId: string | null | undefined): void => {
+          const hex = this.normalizeConversationId(rawId);
+          if (!hex) return;
+          if (!map.has(hex)) map.set(hex, title);
+          const prefixed = `c_${hex}`;
+          if (!map.has(prefixed)) map.set(prefixed, title);
+        };
+
+        const jslog = element.getAttribute('jslog');
+        if (jslog) {
+          for (const match of jslog.matchAll(/c_([a-f0-9]{8,})/gi)) {
+            register(match[1]);
+          }
+        }
+
+        const link = element.querySelector(
+          'a[href*="/app/"], a[href*="/gem/"]',
+        ) as HTMLAnchorElement | null;
+        if (link) {
+          register(this.extractConversationIdFromHref(link.href));
+        }
+      }
+    } catch (e) {
+      this.debug('Error building native title map:', e);
+    }
+    return map;
+  }
+
+  private lookupNativeConversationTitle(conversationId: string): string | null {
+    const map = this.nativeTitleLookup;
+    if (!map) return null;
+
+    const direct = map.get(conversationId);
+    if (direct) return direct;
+
+    const normalized = this.normalizeConversationId(conversationId);
+    if (normalized) {
+      const byHex = map.get(normalized);
+      if (byHex) return byHex;
+    }
+    return null;
+  }
+
   private syncConversationTitleFromNative(conversationId: string): string | null {
     try {
       // Try to find the conversation in the native sidebar by its ID
@@ -6925,17 +6919,34 @@ export class FolderManager {
   }
 
   private buildConversationUrlFromId(hexId: string): string {
+    // Mirror extractConversationData's account-scope semantics: preserve the
+    // current /u/<index>/ segment for multi-account users so jslog-fallback
+    // URLs don't open in the wrong account. Under hard account isolation the
+    // /u/<index> segment is intentionally NOT persisted (navigation rebuilds
+    // it from the live page context).
+    let accountPrefix = '';
+    try {
+      if (!this.accountIsolationEnabled) {
+        const userMatch = window.location.pathname.match(/\/u\/(\d+)\//);
+        if (userMatch) {
+          accountPrefix = `/u/${userMatch[1]}`;
+        }
+      }
+    } catch (e) {
+      this.debug('Failed to extract account prefix:', e);
+    }
+
     try {
       const path = window.location.pathname;
       const gemMatch = path.match(/\/gem\/([^\/]+)/);
       if (gemMatch && gemMatch[1]) {
         const gemId = gemMatch[1];
-        return `https://gemini.google.com/gem/${gemId}/${hexId}`;
+        return `https://gemini.google.com${accountPrefix}/gem/${gemId}/${hexId}`;
       }
     } catch (e) {
       this.debug('Failed to extract gem URL:', e);
     }
-    return `https://gemini.google.com/app/${hexId}`;
+    return `https://gemini.google.com${accountPrefix}/app/${hexId}`;
   }
 
   private extractFallbackTitle(conversationEl: HTMLElement): string | null {
@@ -7335,6 +7346,7 @@ export class FolderManager {
       }
 
       const migratedData = this.filterLegacyFolderDataByCurrentAccount(legacyData);
+      this.armStorageEchoSuppression();
       const saved = await this.storage.saveData(this.activeStorageKey, migratedData);
       if (!saved) {
         console.warn('[FolderManager] Failed to persist scoped migration data');
@@ -7449,6 +7461,61 @@ export class FolderManager {
   }
 
   /**
+   * Trailing-debounced save for high-frequency pure-UI state changes
+   * (expand/collapse, recently-opened marks). Coalesces a burst of calls into
+   * one `saveData()` run. Data-shape mutations (create/delete/rename/import/
+   * move) must keep calling `saveData()` directly.
+   */
+  private scheduleSaveData(): void {
+    if (this.saveDebounceTimer !== null) {
+      window.clearTimeout(this.saveDebounceTimer);
+    }
+    this.saveDebounceTimer = window.setTimeout(() => {
+      this.saveDebounceTimer = null;
+      void this.saveData();
+    }, SAVE_DEBOUNCE_MS);
+  }
+
+  /**
+   * Run a pending debounced save immediately. Called on beforeunload and
+   * teardown so a recent UI-state change isn't lost. The localStorage half of
+   * `saveData` is synchronous, so the data survives unload; the chrome.storage
+   * mirror is best-effort.
+   */
+  private flushPendingSaveData(): void {
+    if (this.saveDebounceTimer === null) return;
+    window.clearTimeout(this.saveDebounceTimer);
+    this.saveDebounceTimer = null;
+    void this.saveData();
+  }
+
+  /**
+   * Arm suppression of the chrome.storage.onChanged echo produced by our own
+   * mirror write. Must be called immediately before every
+   * `this.storage.saveData(...)` invocation. See `pendingStorageEchoes`.
+   */
+  private armStorageEchoSuppression(): void {
+    this.pendingStorageEchoes += 1;
+    this.lastStorageEchoArmedAt = Date.now();
+  }
+
+  /**
+   * Consume one armed echo. Returns true when the incoming onChanged event is
+   * our own mirror-write echo and should NOT trigger a reload. A stale counter
+   * (echo never delivered) expires after STORAGE_ECHO_SUPPRESS_WINDOW_MS so
+   * genuine external writes can never be swallowed indefinitely.
+   */
+  private consumeStorageEchoSuppression(): boolean {
+    if (this.pendingStorageEchoes <= 0) return false;
+    if (Date.now() - this.lastStorageEchoArmedAt > STORAGE_ECHO_SUPPRESS_WINDOW_MS) {
+      this.pendingStorageEchoes = 0;
+      return false;
+    }
+    this.pendingStorageEchoes -= 1;
+    return true;
+  }
+
+  /**
    * Save folder data to storage (async, browser-agnostic)
    * Uses storage adapter for automatic Safari/non-Safari handling
    */
@@ -7485,12 +7552,17 @@ export class FolderManager {
         }
       }
 
-      // Save via storage adapter (handles both Safari and non-Safari)
+      // Save via storage adapter (handles both Safari and non-Safari).
+      // Each write mirrors into chrome.storage.local and echoes back through
+      // storage.onChanged in this same context — arm suppression so the echo
+      // doesn't trigger a redundant full reload (see setupStorageListener).
+      this.armStorageEchoSuppression();
       success = await this.storage.saveData(this.activeStorageKey, this.data);
 
       // Retry once if the first attempt fails (for transient errors)
       if (!success) {
         console.warn('[FolderManager] Save failed, retrying once...');
+        this.armStorageEchoSuppression();
         success = await this.storage.saveData(this.activeStorageKey, this.data);
       }
 
@@ -8078,10 +8150,18 @@ export class FolderManager {
         this.debug('Language changed (local), updating UI text...');
         this.updateHeaderLanguageText();
       }
-      // Listen for folder data changes from cloud sync
+      // Listen for folder data changes from cloud sync / other tabs. Our own
+      // saveData mirror writes echo back here in the same context — skip
+      // those (each save arms one suppression token), otherwise every local
+      // save triggered a redundant reload + full re-render and a stale
+      // snapshot could briefly overwrite this.data mid-interaction.
       if (areaName === 'local' && changes[this.activeStorageKey]) {
-        this.debug('Folder data changed in chrome.storage.local, reloading...');
-        this.reloadFoldersFromStorage();
+        if (this.consumeStorageEchoSuppression()) {
+          this.debug('Ignoring self-write storage echo for folder data');
+        } else {
+          this.debug('Folder data changed in chrome.storage.local, reloading...');
+          this.reloadFoldersFromStorage();
+        }
       }
       // Folder anchor preference (local-only) — re-anchor the panel without
       // a full reinit. Mirrors `toggleFolderAnchor` for the cross-tab case.
@@ -8105,15 +8185,11 @@ export class FolderManager {
       }
     });
 
-    // Listen for reload message from popup after sync
-    chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-      if (message?.type === 'gv.folders.reload') {
-        this.debug('Received folder reload message');
-        this.reloadFoldersFromStorage();
-        sendResponse({ ok: true });
-      }
-      return true;
-    });
+    // NOTE: the popup's 'gv.folders.reload' message is handled in
+    // setupMessageListener. A second chrome.runtime.onMessage listener here
+    // used to double-handle it (double loadData + double render per sync) and
+    // its unconditional `return true` left responder-less broadcasts pending
+    // forever on the sender side.
 
     // Perform migration from legacy settings
     this.performMigration();
@@ -8404,8 +8480,10 @@ export class FolderManager {
 
     if (!changed) return;
 
-    // Keep the visible row stable during navigation; the saved time affects the next natural render.
-    void this.saveData();
+    // Keep the visible row stable during navigation; the saved time affects
+    // the next natural render. Debounced: rapid navigation shouldn't run the
+    // full save pipeline per click.
+    this.scheduleSaveData();
   }
 
   private normalizeConversationId(value: string | null | undefined): string | null {
@@ -8921,7 +8999,11 @@ export class FolderManager {
   }
 
   private setupMessageListener(): void {
-    browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    const listener = (
+      message: unknown,
+      _sender: Runtime.MessageSender,
+      sendResponse: (response: unknown) => void,
+    ): true | undefined => {
       const msg = message as Record<string, unknown>;
       // Handle request for current folder data
       if (msg.type === 'gv.sync.requestData') {
@@ -8931,18 +9013,16 @@ export class FolderManager {
           data: this.data,
           accountScope: this.toSyncAccountScope(this.accountScope),
         });
-        // Return true to indicate we might respond asynchronously (though we responded synchronously above)
-        // This is good practice in some browser implementations or if we change logic later
         return true;
       }
 
-      // Handle reload request (existing functionality might be handled elsewhere, but safe to add log)
+      // Handle reload request from the popup after a cloud sync. This is the
+      // single handler for this message (a duplicate listener used to live in
+      // setupStorageListener and double-processed every sync).
       if (msg.type === 'gv.folders.reload') {
         this.debug('Received reload request');
         this.loadData().then(() => {
           this.refresh();
-          // We can't easily respond to reload since it's fire-and-forget in some contexts,
-          // but if sendResponse is provided we can use it
           try {
             sendResponse({ ok: true });
           } catch {
@@ -8972,9 +9052,18 @@ export class FolderManager {
         return true; // respond asynchronously after rows populate
       }
 
-      // Return true for all messages to keep the channel open
-      return true;
-    });
+      // Not a message we handle. Returning `true` here would claim "I will
+      // respond asynchronously" and never do so, leaving the sender's promise
+      // pending forever (e.g. a background broadcast awaiting Promise.all over
+      // every tab). Return undefined so the channel closes normally.
+      return undefined;
+    };
+    // The polyfill's OnMessageListener typing cannot express "sync-respond to
+    // some messages, ignore the rest" (its callback variant requires a constant
+    // `true` return). Runtime behavior is well-defined for both values, so
+    // cast: `true` keeps the channel open for handled messages, `undefined`
+    // closes it for unknown ones.
+    browser.runtime.onMessage.addListener(listener as Runtime.OnMessageListenerCallback);
   }
 
   /**

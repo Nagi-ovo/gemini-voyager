@@ -446,3 +446,54 @@ Regression test:
 
 Commit:
 `05e0ef79 fix(claude-timeline): stop timeline jitter from claude's virtualized dom`
+
+## onMessage listeners must not return true unconditionally
+
+Symptom:
+Background broadcasts (e.g. `gv.remoteAnnouncement.show` via
+`chrome.tabs.sendMessage`) hung forever on tabs running the folder content
+scripts; `await Promise.all` over the broadcast never settled. Per-tab
+`catch` did not help because the promise neither resolved nor rejected.
+
+Root cause:
+Both folder `runtime.onMessage` listeners (Gemini `manager.ts` and
+`aistudio.ts`) ended with an unconditional `return true`, telling Chrome "I
+will respond asynchronously" for every message — including types they never
+answer. A message with no responder anywhere on the page then keeps the
+channel open forever. `return true` is only safe on branches that actually
+call `sendResponse`.
+
+Fix:
+Return `true` only from branches that respond; fall through to
+`return undefined` for unknown messages so the sender's promise settles
+immediately. Any new content-script onMessage listener must follow this.
+
+Regression test:
+`src/pages/content/folder/__tests__/auditFixes.test.ts`
+("returns undefined for unknown messages so the sender promise settles")
+`src/pages/content/folder/__tests__/aistudioAuditFixes.test.ts`
+
+## Folder storage mirror writes echo back through storage.onChanged
+
+Symptom:
+Every local folder save (star, drag, expand/collapse) triggered a redundant
+full `loadData` + `renderAllFolders`, and rapid consecutive edits could
+briefly flash the UI back to a stale state.
+
+Root cause:
+`FolderStorageAdapter.saveData` mirrors folder data into
+`chrome.storage.local`, and `chrome.storage.onChanged` fires in the SAME
+context that performed the write (unlike the window `storage` event). The
+manager's onChanged handler treated its own mirror write as an external
+change and reloaded.
+
+Fix:
+`armStorageEchoSuppression()` (counter + 2s window) is called before every
+`storage.saveData`; the onChanged handler consumes one suppression per echo
+and still reloads on genuine external writes (popup sync, other tabs). Any
+new `storage.saveData` call site must arm the suppression first.
+
+Regression test:
+`src/pages/content/folder/__tests__/auditFixes.test.ts`
+("skips the reload for our own mirror-write echo",
+"still reloads for external writes")

@@ -312,6 +312,9 @@ describe('folder conversation navigation', () => {
     const target = typedManager.data.folderContents['folder-1'][1];
     expect(target.lastOpenedAt).toEqual(expect.any(Number));
     expect(target.updatedAt).toBe(target.lastOpenedAt);
+    // Recency marks are pure UI state — the save is debounced, not immediate.
+    expect(saveSpy).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(350);
     expect(saveSpy).toHaveBeenCalledTimes(1);
     expect(renderSpy).not.toHaveBeenCalled();
   });

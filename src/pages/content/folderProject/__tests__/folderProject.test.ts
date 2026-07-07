@@ -292,6 +292,54 @@ describe('startFolderProject — runtime toggle', () => {
 
     expect(document.querySelector('.gv-fp-picker-container')).toBeNull();
   });
+
+  it('does not inject the picker when the feature is disabled during a slow page load (L9)', async () => {
+    vi.useFakeTimers();
+    window.history.pushState({}, '', '/app');
+
+    try {
+      // Feature starts enabled
+      (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+        (
+          _defaults: Record<string, unknown>,
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          callback({ [StorageKeys.FOLDER_PROJECT_ENABLED]: true });
+        },
+      );
+
+      const { startFolderProject } = await import('../index');
+      const mockManager = {
+        getFolders: vi.fn().mockReturnValue([]),
+        ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+        addConversationToFolderFromNative: vi.fn(),
+      };
+      // injectPicker starts awaiting .model-picker-container (not in DOM yet).
+      startFolderProject(mockManager as unknown as Parameters<typeof startFolderProject>[0]);
+
+      // Feature is toggled off while injectPicker is still waiting.
+      for (const listener of storageListeners) {
+        listener(
+          { [StorageKeys.FOLDER_PROJECT_ENABLED]: { newValue: false, oldValue: true } },
+          'sync',
+        );
+      }
+
+      // The slow page finally renders the anchor element.
+      const modelPicker = document.createElement('div');
+      modelPicker.className = 'model-picker-container';
+      vi.spyOn(modelPicker, 'getBoundingClientRect').mockReturnValue({ height: 20 } as DOMRect);
+      document.body.appendChild(modelPicker);
+
+      await vi.runAllTimersAsync();
+
+      // Nothing may be injected after the disable — nobody would clean it up.
+      expect(document.querySelector('.gv-fp-picker-container')).toBeNull();
+    } finally {
+      vi.useRealTimers();
+      window.history.pushState({}, '', '/');
+    }
+  });
 });
 
 // ============================================================================

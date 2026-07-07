@@ -166,10 +166,69 @@ export class FolderImportExportService {
       }
     }
 
+    // Per-entry validation of folderContents — lenient: malformed conversation
+    // entries are dropped (and counted) instead of rejecting the whole import.
+    const { contents: sanitizedContents, skipped } = this.sanitizeFolderContents(
+      data.folderContents as Record<string, unknown>,
+    );
+    if (skipped > 0) {
+      console.warn(
+        `[FolderImportExport] Skipped ${skipped} malformed folderContents entr${skipped === 1 ? 'y' : 'ies'} during import validation`,
+      );
+    }
+
+    // Return a sanitized copy — never hand back (or mutate) the caller's object.
     return {
       success: true,
-      data: payload as FolderExportPayload,
+      data: {
+        ...(payload as FolderExportPayload),
+        data: {
+          folders: data.folders as Folder[],
+          folderContents: sanitizedContents,
+        },
+      },
     };
+  }
+
+  /**
+   * Sanitize a raw folderContents record. Keeps only entries whose
+   * `conversationId` and `title` are non-empty strings; everything else is
+   * skipped and counted. A non-array folder value is treated as an empty list
+   * (counted once). Pure — never mutates the input.
+   */
+  static sanitizeFolderContents(raw: Record<string, unknown>): {
+    contents: Record<string, ConversationReference[]>;
+    skipped: number;
+  } {
+    const contents: Record<string, ConversationReference[]> = {};
+    let skipped = 0;
+
+    for (const [folderId, value] of Object.entries(raw)) {
+      if (!Array.isArray(value)) {
+        contents[folderId] = [];
+        skipped++;
+        continue;
+      }
+
+      const valid: ConversationReference[] = [];
+      for (const entry of value) {
+        if (
+          entry &&
+          typeof entry === 'object' &&
+          typeof (entry as Record<string, unknown>).conversationId === 'string' &&
+          (entry as Record<string, unknown>).conversationId !== '' &&
+          typeof (entry as Record<string, unknown>).title === 'string' &&
+          (entry as Record<string, unknown>).title !== ''
+        ) {
+          valid.push(entry as ConversationReference);
+        } else {
+          skipped++;
+        }
+      }
+      contents[folderId] = valid;
+    }
+
+    return { contents, skipped };
   }
 
   /**
@@ -193,26 +252,28 @@ export class FolderImportExportService {
       }
     }
 
-    // Merge folder contents
+    // Merge folder contents. The spread above is a *shallow* copy — the arrays
+    // are still shared with `existing` — so each folder's list is copied before
+    // any append. mergeData must stay a pure function: mutating the caller's
+    // live data would also poison any backup snapshot taken from it.
     const mergedContents: Record<string, ConversationReference[]> = { ...existing.folderContents };
     let conversationsImported = 0;
     let duplicatesConversationsSkipped = 0;
 
     for (const [folderId, conversations] of Object.entries(imported.folderContents)) {
-      if (!mergedContents[folderId]) {
-        mergedContents[folderId] = [];
-      }
-
-      const existingConvIds = new Set(mergedContents[folderId].map((c) => c.conversationId));
+      const target = [...(mergedContents[folderId] ?? [])];
+      const existingConvIds = new Set(target.map((c) => c.conversationId));
 
       for (const conv of conversations) {
         if (!existingConvIds.has(conv.conversationId)) {
-          mergedContents[folderId].push(conv);
+          target.push(conv);
           conversationsImported++;
         } else {
           duplicatesConversationsSkipped++;
         }
       }
+
+      mergedContents[folderId] = target;
     }
 
     const merged: FolderData = {
@@ -265,13 +326,14 @@ export class FolderImportExportService {
         }
       }
 
-      // Create backup if requested
+      // Create backup if requested — a deep snapshot taken BEFORE any merge
+      // work. A shallow copy would share array references with the live data,
+      // and any later mutation would silently rewrite the "pre-import" backup,
+      // breaking restoreFromBackup. JSON round-trip is safe here: FolderData is
+      // JSON-serializable (it is stringified into sessionStorage below anyway).
       let backupData: FolderData | null = null;
       if (createBackup) {
-        backupData = {
-          folders: [...currentData.folders],
-          folderContents: { ...currentData.folderContents },
-        };
+        backupData = JSON.parse(JSON.stringify(currentData)) as FolderData;
       }
 
       let resultData: FolderData;

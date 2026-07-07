@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 
@@ -42,6 +42,7 @@ describe('createNewChatInFolder', () => {
   let manager: FolderManager | null = null;
   let locationMock: LocationMock;
   let originalLocation: Location;
+  let pushStateSpy: MockInstance<typeof window.history.pushState>;
 
   beforeEach(() => {
     originalLocation = window.location;
@@ -56,6 +57,7 @@ describe('createNewChatInFolder', () => {
       writable: true,
       configurable: true,
     });
+    pushStateSpy = vi.spyOn(window.history, 'pushState');
     mockBrowserStorage.local.set.mockReset();
     mockBrowserStorage.local.set.mockResolvedValue(undefined);
     mockBrowserStorage.sync.get.mockResolvedValue({});
@@ -99,7 +101,7 @@ describe('createNewChatInFolder', () => {
     expect(locationMock.href).toBe('');
   });
 
-  it('navigates to /app from a conversation page', async () => {
+  it('navigates to /app via SPA route (no full page load) from a conversation page', async () => {
     locationMock.pathname = '/app/abc123def456';
     manager = new FolderManager();
     const typedManager = manager as unknown as TestableManager;
@@ -108,7 +110,8 @@ describe('createNewChatInFolder', () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(locationMock.href).toBe('https://gemini.google.com/app');
+    expect(pushStateSpy).toHaveBeenCalledWith({}, '', '/app');
+    expect(locationMock.href).toBe('');
     expect(locationMock.reload).not.toHaveBeenCalled();
   });
 
@@ -121,10 +124,27 @@ describe('createNewChatInFolder', () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(locationMock.href).toBe('https://gemini.google.com/u/2/app');
+    expect(pushStateSpy).toHaveBeenCalledWith({}, '', '/u/2/app');
+    expect(locationMock.href).toBe('');
   });
 
-  it('falls back to navigating when storage.set rejects with a generic error', async () => {
+  it('falls back to a hard navigation when the History API path fails', async () => {
+    locationMock.pathname = '/app/abc123def456';
+    pushStateSpy.mockImplementation(() => {
+      throw new Error('pushState blocked');
+    });
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+
+    typedManager.createNewChatInFolder('folder-1');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(locationMock.href).toBe('https://gemini.google.com/app');
+    expect(locationMock.reload).not.toHaveBeenCalled();
+  });
+
+  it('still navigates (SPA) when storage.set rejects with a generic error', async () => {
     mockBrowserStorage.local.set.mockRejectedValue(new Error('quota exceeded'));
     locationMock.pathname = '/app/abc';
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -137,7 +157,7 @@ describe('createNewChatInFolder', () => {
     await Promise.resolve();
     await Promise.resolve();
 
-    expect(locationMock.href).toBe('https://gemini.google.com/app');
+    expect(pushStateSpy).toHaveBeenCalledWith({}, '', '/app');
     expect(warnSpy).toHaveBeenCalled();
     warnSpy.mockRestore();
   });

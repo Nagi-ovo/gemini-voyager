@@ -1,4 +1,4 @@
-import browser from 'webextension-polyfill';
+import browser, { type Runtime } from 'webextension-polyfill';
 
 import {
   type AccountScope,
@@ -109,6 +109,10 @@ const BODY_PROMPT_POPOVER_SELECTOR = [
 ].join(', ');
 const PROMPT_LIST_BIND_DEBOUNCE_MS = 120;
 const PROMPT_TITLE_SYNC_DEBOUNCE_MS = 280;
+// If no dragover arrives for this long while the floating library drop zone is
+// visible, treat the drag as over (e.g. the source row was torn out of the DOM by an
+// Angular refresh, so dragend never fires) and hide the zone.
+const LIBRARY_DRAG_HEARTBEAT_MS = 800;
 const PROMPT_DRAG_HOST_SELECTORS = [
   '[data-test-id^="history-item"]',
   '[role="listitem"]',
@@ -261,6 +265,10 @@ export class AIStudioFolderManager {
   private activeStorageKey: string = StorageKeys.FOLDER_DATA_AISTUDIO; // Active folder data key
   private accountContextPoller: number | null = null; // Detect account switches
   private lastAccountContextFingerprint: string | null = null; // Debounce account scope refresh
+  private routeChangeUpdate: (() => void) | null = null; // Current route-change reaction; null after destroy()
+  private routePopstateHandler: (() => void) | null = null; // Registered popstate listener
+  private routePollerId: number | null = null; // 400ms fallback route poller
+  private historyPatchedForRouteChanges = false; // pushState/replaceState wrapped once per page
   private backupService!: DataBackupService<FolderData>; // Initialized in init()
   private sidebarWidth: number = 360; // Default sidebar width (increased to reduce text truncation)
   private readonly SIDEBAR_WIDTH_KEY = 'gvAIStudioSidebarWidth';
@@ -671,12 +679,8 @@ export class AIStudioFolderManager {
     this.accountContextPoller = window.setInterval(() => {
       void this.refreshScopedDataOnAccountContextChange();
     }, 1200);
-
-    this.cleanupFns.push(() => {
-      if (!this.accountContextPoller) return;
-      clearInterval(this.accountContextPoller);
-      this.accountContextPoller = null;
-    });
+    // No cleanupFns registration: destroy() clears this.accountContextPoller directly,
+    // so repeated setup calls cannot grow the cleanup list.
   }
 
   private async refreshScopedDataOnAccountContextChange(): Promise<void> {
@@ -699,7 +703,11 @@ export class AIStudioFolderManager {
    * Handles gv.sync.requestData and gv.folders.reload messages from popup
    */
   private setupMessageListener(): void {
-    browser.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    const listener = (
+      message: unknown,
+      _sender: Runtime.MessageSender,
+      sendResponse: (response: unknown) => void,
+    ): true | undefined => {
       const msg = message as Record<string, unknown>;
       // Handle request for folder data (for cloud sync upload)
       if (msg?.type === 'gv.sync.requestData') {
@@ -729,9 +737,17 @@ export class AIStudioFolderManager {
         return true;
       }
 
-      // Return true for all messages to keep the channel open
-      return true;
-    });
+      // Unknown message: return undefined so the sender's promise settles immediately.
+      // Returning true here would declare an async response that never arrives, leaving
+      // senders (e.g. background broadcasts awaiting chrome.tabs.sendMessage) hanging.
+      return undefined;
+    };
+    // The polyfill's OnMessageListener typing cannot express "sync-respond to some
+    // messages, ignore the rest" (its callback variant requires a constant `true`
+    // return). Runtime behavior is well-defined for both values, so cast: `true`
+    // keeps the channel open for handled messages, `undefined` closes it for
+    // unknown ones.
+    browser.runtime.onMessage.addListener(listener as Runtime.OnMessageListenerCallback);
   }
 
   private async initializeFolderUI(): Promise<void> {
@@ -843,11 +859,9 @@ export class AIStudioFolderManager {
       observer.observe(navContent, { childList: true, subtree: true });
     } catch {}
     this.containerMountObserver = observer;
-    this.cleanupFns.push(() => {
-      try {
-        observer.disconnect();
-      } catch {}
-    });
+    // No cleanupFns registration: this method re-arms on every route change, so a
+    // per-call push would grow the cleanup list without bound. destroy() disconnects
+    // this.containerMountObserver directly.
   }
 
   private async load(): Promise<void> {
@@ -1232,50 +1246,73 @@ export class AIStudioFolderManager {
   }
 
   private installRouteChangeListener(): void {
-    const update = () =>
+    this.routeChangeUpdate = () =>
       setTimeout(() => {
         this.ensureContainerMounted();
         this.updateLibraryShortcutVisibility();
-        if (!/\/library(\/|$)/.test(location.pathname) && this.isLibraryMultiSelectMode) {
-          this.exitLibraryMultiSelectMode();
+        if (!/\/library(\/|$)/.test(location.pathname)) {
+          if (this.isLibraryMultiSelectMode) {
+            this.exitLibraryMultiSelectMode();
+          }
+          // The /library table observer watches document.body; keep it disconnected
+          // while away from /library so unrelated SPA mutations stay cheap. It is
+          // recreated by ensureLibraryBindings() on re-entry.
+          this.disconnectLibraryTableObserver();
         }
         this.ensureLibraryBindings();
         this.highlightActiveConversation();
       }, 0);
-    try {
-      window.addEventListener('popstate', update);
-    } catch {}
-    try {
-      const hist = history as History & Record<string, unknown>;
-      const wrap = (method: 'pushState' | 'replaceState') => {
-        const orig = hist[method] as (...args: unknown[]) => unknown;
-        hist[method] = function (...args: unknown[]) {
-          const ret = orig.apply(this, args);
+    const update = () => {
+      try {
+        this.routeChangeUpdate?.();
+      } catch {}
+    };
+
+    if (this.routePopstateHandler === null) {
+      try {
+        window.addEventListener('popstate', update);
+        this.routePopstateHandler = update;
+      } catch {}
+    }
+
+    // Wrap pushState/replaceState once per page lifetime. The wrapper dispatches
+    // through this.routeChangeUpdate so destroy() can neutralize it (set to null)
+    // without unwrapping — another script may have wrapped history after us.
+    if (!this.historyPatchedForRouteChanges) {
+      this.historyPatchedForRouteChanges = true;
+      try {
+        const hist = history as History & Record<string, unknown>;
+        const notifyRouteChange = () => {
           try {
-            update();
+            this.routeChangeUpdate?.();
           } catch {}
-          return ret;
         };
-      };
-      wrap('pushState');
-      wrap('replaceState');
-    } catch {}
+        const wrap = (method: 'pushState' | 'replaceState') => {
+          const orig = hist[method] as (...args: unknown[]) => unknown;
+          hist[method] = function (...args: unknown[]) {
+            const ret = orig.apply(this, args);
+            notifyRouteChange();
+            return ret;
+          };
+        };
+        wrap('pushState');
+        wrap('replaceState');
+      } catch {}
+    }
+
     // Fallback poller for routers that bypass events
-    try {
-      let last = location.pathname;
-      const id = window.setInterval(() => {
-        const now = location.pathname;
-        if (now !== last) {
-          last = now;
-          update();
-        }
-      }, 400);
-      this.cleanupFns.push(() => {
-        try {
-          clearInterval(id);
-        } catch {}
-      });
-    } catch {}
+    if (this.routePollerId === null) {
+      try {
+        let last = location.pathname;
+        this.routePollerId = window.setInterval(() => {
+          const now = location.pathname;
+          if (now !== last) {
+            last = now;
+            update();
+          }
+        }, 400);
+      } catch {}
+    }
   }
 
   private renderFolder(folder: Folder, level: number = 0): HTMLElement {
@@ -1834,8 +1871,10 @@ export class AIStudioFolderManager {
       for (const mutation of mutations) {
         for (const node of Array.from(mutation.addedNodes)) {
           if (!(node instanceof Element)) continue;
-          if (!nodeContainsPromptLink(node)) continue;
+          // Cheap overlay-container gate first (class match + ancestor walk) before
+          // the expensive subtree scan for prompt links.
           if (!this.isBodyPromptPopoverElement(node)) continue;
+          if (!nodeContainsPromptLink(node)) continue;
           this.bindDraggablesInPromptList(node);
         }
       }
@@ -1845,12 +1884,7 @@ export class AIStudioFolderManager {
       observer.observe(document.body, { childList: true, subtree: true });
     } catch {}
     this.bodyPromptPopoverObserver = observer;
-    this.cleanupFns.push(() => {
-      try {
-        observer.disconnect();
-      } catch {}
-      this.bodyPromptPopoverObserver = null;
-    });
+    // destroy() disconnects and nulls this.bodyPromptPopoverObserver directly.
 
     this.bindDraggablesInBodyPromptPopovers();
   }
@@ -1905,30 +1939,45 @@ export class AIStudioFolderManager {
     return null;
   }
 
-  private getPromptTitleFromNative(conversationId: string): string | null {
-    const selectors = [
-      `a.prompt-link[href*="/prompts/${conversationId}"]`,
-      `a[href*="/prompts/${conversationId}"]`,
-      `a.name-btn[href*="/prompts/${conversationId}"]`,
-    ];
-
-    for (const selector of selectors) {
-      const anchor = document.querySelector(selector) as HTMLAnchorElement | null;
+  /**
+   * Collect every native prompt-link title in a single document scan and return a
+   * promptId -> title map. Anchors carrying the `prompt-link` class win over generic
+   * matches (mirroring the old per-conversation selector priority); within each tier
+   * the first anchor in document order with a usable title wins.
+   */
+  private collectNativePromptTitles(): Map<string, string> {
+    const preferred = new Map<string, string>();
+    const fallback = new Map<string, string>();
+    const anchors = document.querySelectorAll<HTMLAnchorElement>(PROMPT_LINK_SELECTOR);
+    anchors.forEach((anchor) => {
+      const promptId = extractPromptIdFromHref(anchor.getAttribute('href') || anchor.href || '');
+      if (!promptId) return;
       const title = this.extractPromptTitle(anchor);
-      if (title) return title;
-    }
-
-    return null;
+      if (!title) return;
+      if (anchor.classList.contains('prompt-link')) {
+        if (!preferred.has(promptId)) preferred.set(promptId, title);
+      } else if (!fallback.has(promptId)) {
+        fallback.set(promptId, title);
+      }
+    });
+    const titles = fallback;
+    preferred.forEach((title, promptId) => titles.set(promptId, title));
+    return titles;
   }
 
   private async syncConversationTitlesFromPromptList(): Promise<void> {
     if (!this.hasStoredConversations()) return;
 
+    // One full-document scan up front; per-conversation lookups are then O(1) instead
+    // of three full-document selector scans for every stored conversation.
+    const nativeTitles = this.collectNativePromptTitles();
+    if (nativeTitles.size === 0) return;
+
     let hasUpdates = false;
     for (const conversations of Object.values(this.data.folderContents)) {
       for (const conversation of conversations) {
         if (conversation.customTitle) continue;
-        const nativeTitle = this.getPromptTitleFromNative(conversation.conversationId);
+        const nativeTitle = nativeTitles.get(conversation.conversationId);
         if (!nativeTitle || nativeTitle === conversation.title) continue;
         conversation.title = nativeTitle;
         conversation.updatedAt = now();
@@ -2053,6 +2102,9 @@ export class AIStudioFolderManager {
     if (this.libraryTableObserver) return;
 
     const bodyObserver = new MutationObserver((mutations) => {
+      // Cheap gate: the library table only exists on /library; skip all selector work
+      // elsewhere (the observer is also disconnected on route-away, this is a backstop).
+      if (!/\/library(\/|$)/.test(location.pathname)) return;
       if (!this.libraryTableMutated(mutations)) return;
       this.bindDraggablesInLibraryTable();
     });
@@ -2060,12 +2112,16 @@ export class AIStudioFolderManager {
       bodyObserver.observe(document.body, { childList: true, subtree: true });
     } catch {}
     this.libraryTableObserver = bodyObserver;
-    this.cleanupFns.push(() => {
-      try {
-        bodyObserver.disconnect();
-      } catch {}
-      this.libraryTableObserver = null;
-    });
+    // Disconnected via disconnectLibraryTableObserver() on route-away and in destroy();
+    // no cleanupFns registration so repeated /library visits cannot grow the list.
+  }
+
+  private disconnectLibraryTableObserver(): void {
+    if (!this.libraryTableObserver) return;
+    try {
+      this.libraryTableObserver.disconnect();
+    } catch {}
+    this.libraryTableObserver = null;
   }
 
   private libraryTableMutated(mutations: MutationRecord[]): boolean {
@@ -2898,17 +2954,41 @@ export class AIStudioFolderManager {
     };
 
     // Show/hide the floating zone on drag events
+    let zoneVisible = false;
+    let dragHeartbeatTimer: number | null = null;
+
+    const clearDragHeartbeat = () => {
+      if (dragHeartbeatTimer === null) return;
+      clearTimeout(dragHeartbeatTimer);
+      dragHeartbeatTimer = null;
+    };
+
     const showZone = () => {
+      zoneVisible = true;
       updateFolderList();
       floatingZone.style.opacity = '1';
       floatingZone.style.pointerEvents = 'auto';
       floatingZone.style.transform = 'translateY(0)';
+      armDragHeartbeat();
     };
 
     const hideZone = () => {
+      zoneVisible = false;
+      clearDragHeartbeat();
       floatingZone.style.opacity = '0';
       floatingZone.style.pointerEvents = 'none';
       floatingZone.style.transform = 'translateY(10px)';
+    };
+
+    // Heartbeat: while the zone is up, every document dragover re-arms this timer. If
+    // the source row is removed mid-drag (Angular table refresh), dragend never fires
+    // and no drop arrives — the silent gap in dragover traffic hides the zone.
+    const armDragHeartbeat = () => {
+      clearDragHeartbeat();
+      dragHeartbeatTimer = window.setTimeout(() => {
+        dragHeartbeatTimer = null;
+        hideZone();
+      }, LIBRARY_DRAG_HEARTBEAT_MS);
     };
 
     // Listen for drag events on the document
@@ -2925,16 +3005,42 @@ export class AIStudioFolderManager {
       }
     };
 
-    document.addEventListener('dragstart', onDragStart);
+    const onDragOver = () => {
+      if (!zoneVisible) return;
+      armDragHeartbeat();
+    };
 
-    document.addEventListener('dragend', () => {
+    const onDragEnd = () => {
       setTimeout(hideZone, 100);
-    });
+    };
+
+    // Belt-and-suspenders alongside dragend: a drop anywhere in the document also
+    // dismisses the zone (covers sources whose dragend is swallowed).
+    const onDrop = () => {
+      setTimeout(hideZone, 100);
+    };
+
+    document.addEventListener('dragstart', onDragStart);
+    document.addEventListener('dragover', onDragOver);
+    document.addEventListener('dragend', onDragEnd);
+    document.addEventListener('drop', onDrop);
 
     this.cleanupFns.push(() => {
+      clearDragHeartbeat();
       try {
         document.removeEventListener('dragstart', onDragStart);
-        document.body.removeChild(floatingZone);
+      } catch {}
+      try {
+        document.removeEventListener('dragover', onDragOver);
+      } catch {}
+      try {
+        document.removeEventListener('dragend', onDragEnd);
+      } catch {}
+      try {
+        document.removeEventListener('drop', onDrop);
+      } catch {}
+      try {
+        floatingZone.remove();
       } catch {}
     });
   }
@@ -3033,7 +3139,7 @@ export class AIStudioFolderManager {
   private timestamp(): string {
     const d = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())} -${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())} `;
+    return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
   }
 
   private async loadFolderEnabledSetting(): Promise<void> {
@@ -3141,17 +3247,20 @@ export class AIStudioFolderManager {
   }
 
   /**
-   * A conversation is "archived" if any non-uncategorized folder contains it. We iterate
-   * all stored folder contents once per call — small N (tens of folders), cheap.
+   * A conversation is "archived" if any non-uncategorized folder contains it. Build
+   * the id set once per hide-archived pass so the per-row check is O(1) instead of
+   * scanning every folder's contents for every table row.
    */
-  private isConversationArchived(conversationId: string): boolean {
-    if (!conversationId) return false;
+  private collectArchivedConversationIds(): Set<string> {
+    const archived = new Set<string>();
     for (const [folderId, conversations] of Object.entries(this.data.folderContents)) {
       if (folderId === this.UNCATEGORIZED_KEY) continue;
       if (!Array.isArray(conversations)) continue;
-      if (conversations.some((c) => c.conversationId === conversationId)) return true;
+      for (const conversation of conversations) {
+        archived.add(conversation.conversationId);
+      }
     }
-    return false;
+    return archived;
   }
 
   /**
@@ -3161,6 +3270,8 @@ export class AIStudioFolderManager {
   private applyHideArchivedToLibraryTable(): void {
     if (!/\/library(\/|$)/.test(location.pathname)) return;
     const rows = document.querySelectorAll<HTMLElement>('tr.mat-mdc-row, tr[mat-row]');
+    if (rows.length === 0) return;
+    const archivedIds = this.collectArchivedConversationIds();
     rows.forEach((row) => {
       const anchor = row.querySelector(
         'a[href^="/prompts/"], a.name-btn[href*="/prompts/"]',
@@ -3168,8 +3279,7 @@ export class AIStudioFolderManager {
       if (!anchor) return;
       const id = extractPromptIdFromHref(anchor.getAttribute('href') || anchor.href || '');
       if (!id) return;
-      const archived = this.isConversationArchived(id);
-      const shouldHide = this.hideArchivedEnabled && archived;
+      const shouldHide = this.hideArchivedEnabled && archivedIds.has(id);
       row.classList.toggle('gv-conversation-archived', shouldHide);
     });
   }
@@ -3221,6 +3331,10 @@ export class AIStudioFolderManager {
 
   private applyFolderEnabledSetting(): void {
     if (this.folderEnabled) {
+      // Re-enabling after destroy(): restart the account-scope poller destroy() stopped.
+      if (this.accountContextPoller === null) {
+        this.setupAccountContextPoller();
+      }
       // If folder UI doesn't exist yet, initialize it
       if (!this.container) {
         this.initializeFolderUI().catch((error) => {
@@ -3231,11 +3345,107 @@ export class AIStudioFolderManager {
         this.container.style.display = '';
       }
     } else {
-      // Hide the folder UI if it exists
-      if (this.container) {
-        this.container.style.display = 'none';
-      }
+      // Fully tear down injected DOM, observers, pollers and document listeners so a
+      // disabled folder feature costs nothing. Re-enabling goes through
+      // initializeFolderUI() again because destroy() resets this.container to null.
+      this.destroy();
     }
+  }
+
+  /**
+   * Tear down everything the folder feature attached to the page: injected DOM,
+   * observers, pollers, timers and document/window listeners. Idempotent — safe to
+   * call multiple times. The storage-change and runtime message listeners stay alive
+   * so a later re-enable (folderEnabled -> true) can rebuild the UI from scratch via
+   * initializeFolderUI().
+   */
+  private destroy(): void {
+    const cleanups = this.cleanupFns.splice(0, this.cleanupFns.length);
+    for (const cleanup of cleanups) {
+      try {
+        cleanup();
+      } catch {}
+    }
+
+    // Field-managed observers (registered outside cleanupFns to stay idempotent).
+    try {
+      this.containerMountObserver?.disconnect();
+    } catch {}
+    this.containerMountObserver = null;
+    try {
+      this.bodyPromptPopoverObserver?.disconnect();
+    } catch {}
+    this.bodyPromptPopoverObserver = null;
+    this.disconnectLibraryTableObserver();
+
+    // Pollers and debounce timers.
+    if (this.accountContextPoller !== null) {
+      clearInterval(this.accountContextPoller);
+      this.accountContextPoller = null;
+    }
+    if (this.routePollerId !== null) {
+      clearInterval(this.routePollerId);
+      this.routePollerId = null;
+    }
+    if (this.promptListBindTimer !== null) {
+      clearTimeout(this.promptListBindTimer);
+      this.promptListBindTimer = null;
+    }
+    if (this.promptTitleSyncTimer !== null) {
+      clearTimeout(this.promptTitleSyncTimer);
+      this.promptTitleSyncTimer = null;
+    }
+
+    // Route-change listeners. The history pushState/replaceState wrappers stay in
+    // place but dispatch through routeChangeUpdate, which we null out here.
+    if (this.routePopstateHandler !== null) {
+      try {
+        window.removeEventListener('popstate', this.routePopstateHandler);
+      } catch {}
+      this.routePopstateHandler = null;
+    }
+    this.routeChangeUpdate = null;
+
+    // Library multi-select state and any floating UI hosted on document.body.
+    if (this.isLibraryMultiSelectMode) {
+      this.exitLibraryMultiSelectMode();
+    }
+    this.removeLibraryOutsideClickHandler();
+    try {
+      this.libraryMultiSelectHostElement?.remove();
+    } catch {}
+    this.libraryMultiSelectHostElement = null;
+    this.hideLibraryBatchDeleteProgress();
+
+    // Body-appended transient popovers we may have left open.
+    try {
+      document.querySelector('.gv-folder-confirm-dialog.gv-aistudio-confirm')?.remove();
+    } catch {}
+    try {
+      document.querySelector('.gv-folder-menu.gv-aistudio-folder-menu')?.remove();
+    } catch {}
+
+    // Un-hide any /library rows we hid; with the feature off nothing would restore them.
+    try {
+      document
+        .querySelectorAll('.gv-conversation-archived')
+        .forEach((row) => row.classList.remove('gv-conversation-archived'));
+    } catch {}
+
+    // Injected DOM. Resetting container/flags lets initializeFolderUI() re-init cleanly.
+    try {
+      this.container?.remove();
+    } catch {}
+    this.container = null;
+    this.libraryShortcutBtn = null;
+    this.historyRoot = null;
+    this.libraryDropZoneInjected = false;
+    try {
+      document.getElementById('gv-aistudio-folder-styles')?.remove();
+    } catch {}
+    try {
+      document.documentElement.classList.remove('gv-aistudio-root');
+    } catch {}
   }
 
   /**
@@ -3283,8 +3493,8 @@ export class AIStudioFolderManager {
   private showNotification(message: string, level: 'info' | 'warning' | 'error' = 'error'): void {
     try {
       const notification = document.createElement('div');
-      notification.className = `gv - notification gv - notification - ${level} `;
-      notification.textContent = `[Gemini Voyager] ${message} `;
+      notification.className = `gv-notification gv-notification-${level}`;
+      notification.textContent = `[Gemini Voyager] ${message}`;
 
       // Color based on level
       const colors = {

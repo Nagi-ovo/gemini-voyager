@@ -934,15 +934,24 @@ export function mountFloatingPanel({
   panel.style.width = `${initialSize.w}px`;
   panel.style.height = `${initialSize.h}px`;
 
-  // Drag support — header is the grabbable handle.
-  let dragState: { offsetX: number; offsetY: number } | null = null;
+  // Drag support — header is the grabbable handle. Panel dimensions are read
+  // once at drag start and reused on every move: interleaving offsetWidth/
+  // offsetHeight reads with style writes inside pointermove forces a layout
+  // pass per event (the panel doesn't resize mid-drag anyway).
+  let dragState: { offsetX: number; offsetY: number; width: number; height: number } | null = null;
 
   const onPointerDown = (e: PointerEvent) => {
+    if (e.button !== 0) return; // primary button only — no right/middle drags
     const target = e.target as HTMLElement;
     if (target.closest(`.${FLOATING_PANEL_CLASS}__close`)) return;
     if (target.closest(`.${FLOATING_PANEL_CLASS}__icon-button`)) return;
     const rect = panel.getBoundingClientRect();
-    dragState = { offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top };
+    dragState = {
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+      width: rect.width || panel.offsetWidth,
+      height: rect.height || panel.offsetHeight,
+    };
     header.setPointerCapture(e.pointerId);
     header.classList.add(`${FLOATING_PANEL_CLASS}__header--dragging`);
   };
@@ -950,8 +959,8 @@ export function mountFloatingPanel({
     if (!dragState) return;
     const next = clampPos(
       { x: e.clientX - dragState.offsetX, y: e.clientY - dragState.offsetY },
-      panel.offsetWidth,
-      panel.offsetHeight,
+      dragState.width,
+      dragState.height,
     );
     panel.style.left = `${next.x}px`;
     panel.style.top = `${next.y}px`;
@@ -1100,6 +1109,16 @@ export function mountFloatingPanel({
 
   document.body.appendChild(panel);
 
+  // Is the user currently typing into an inline create/rename input?
+  const isInlineFormInputFocused = () => {
+    const active = document.activeElement;
+    return (
+      active instanceof HTMLElement &&
+      panel.contains(active) &&
+      active.classList.contains(`${FLOATING_PANEL_CLASS}__inline-input`)
+    );
+  };
+
   return {
     element: panel,
     update: (next) => {
@@ -1117,6 +1136,14 @@ export function mountFloatingPanel({
       if (contextMenu && !next.folders.some((folder) => folder.id === contextMenu?.folderId)) {
         contextMenu = null;
       }
+      // A background update (storage sync, another tab) must not rebuild the
+      // tree while the user is typing in an inline form — the rebuild would
+      // recreate the form empty, losing their input. `currentData` is already
+      // updated above, and every form close path (submit / cancel / outside
+      // mousedown) calls render(), which then picks up the deferred data.
+      // If the edited folder was deleted remotely, inlineEditor is nulled
+      // above and we fall through to render immediately.
+      if (inlineEditor && isInlineFormInputFocused()) return;
       render();
     },
     destroy,
