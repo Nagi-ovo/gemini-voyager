@@ -843,6 +843,32 @@ export default defineConfig({
         // translated copies share the same git history via the source.
         include: ['docs/guide/**/*.md'],
         maxGitLogCount: 200,
+        // Collapse split identities into one contributor each, and give the
+        // ones whose commit email is not a GitHub account a real avatar.
+        mapAuthors: [
+          {
+            // The maintainer commits under two names and several emails
+            // (incl. a typo'd trailing-dot noreply and a personal gmail).
+            name: 'Nagi-ovo',
+            username: 'Nagi-ovo',
+            mapByNameAliases: ['Jesse Zhang'],
+            mapByEmailAliases: [
+              '101612750+Nagi-ovo@users.noreply.github.com',
+              '101612750+Nagi-ovo@users.noreply.github.com.',
+              'j3ssezhang102@gmail.com',
+            ],
+          },
+          {
+            // Every Claude model co-authors under noreply@anthropic.com but with
+            // a different display name (Sonnet 5, Opus 4.6/4.7/4.8, Fable 5, …).
+            // Merge them all by email and pin the Anthropic avatar so the
+            // gravatar "retro" placeholder is gone.
+            name: 'Claude',
+            username: 'anthropics',
+            links: 'https://www.anthropic.com/claude',
+            mapByEmailAliases: ['noreply@anthropic.com'],
+          },
+        ],
       }),
       GitChangelogMarkdownSection(),
     ],
