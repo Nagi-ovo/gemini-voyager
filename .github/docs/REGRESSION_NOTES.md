@@ -374,3 +374,38 @@ Regression test:
 
 Commit:
 `8adae20a fix(plugins): fill claude 5h reset countdown`
+
+## Chrome-only permissions must not leak into the shared base manifest
+
+Symptom:
+The Prompt Manager discovery nudge dots the toolbar icon via
+`chrome.declarativeContent`, which exists only on Chrome/Edge. Declaring
+`declarativeContent` in `manifest.json` would ship it to Firefox and Safari
+too, where it is an unknown permission (AMO lint failure / Safari conversion
+noise) even though the runtime code already no-ops there.
+
+Root cause:
+`manifest.json` is the single base manifest spread into every browser build
+(`vite.config.base.ts` → `baseManifest`, consumed by the chrome/firefox/safari
+configs). A permission added there is cross-browser by default. It is tempting
+to drop a new permission into `manifest.json` next to the others.
+
+Fix:
+Inject Chrome/Edge-only permissions in `vite.config.chrome.ts`, where it spreads
+`baseManifest` (`permissions: [...base, 'declarativeContent']`), keeping the base
+manifest cross-browser clean. Guard the runtime with
+`if (!chrome.declarativeContent?.onPageChanged) return;`. Two related traps for
+the same feature: declarativeContent has no badge action, so `SetIcon` needs
+`imageData` (an `ImageData`, not a `path`) — draw the dot with OffscreenCanvas;
+and the dot lives on the toolbar icon, so unpinned users only see it inside the
+puzzle menu (Chrome has no pin API; an in-page banner was rejected to preserve
+"No access needed").
+
+Regression test:
+`src/features/plugins/__tests__/promptNudge.test.ts` (pure domain math).
+Manifest scoping is verify-by-build:
+`bun run build:chrome && grep -c '"declarativeContent"' dist_chrome/manifest.json`
+must be `1`, while `manifest.json` / `manifest.dev.json` must be `0`.
+
+Commit:
+`f0f4bebe feat(prompt-nudge): dot the toolbar icon on unenabled chatgpt/claude sites`
