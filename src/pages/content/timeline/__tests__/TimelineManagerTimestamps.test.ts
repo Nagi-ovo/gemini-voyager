@@ -673,11 +673,10 @@ describe('TimelineManager applyHistoryTimestamps', () => {
     applyHistoryTimestamps: () => boolean;
   }
 
-  function setupManager(options: {
-    conversationId: string;
-    urlPath: string;
-    enabled?: boolean;
-  }): { internal: HistoryInternal; recordTimestamp: ReturnType<typeof vi.fn> } {
+  function setupManager(options: { conversationId: string; urlPath: string; enabled?: boolean }): {
+    internal: HistoryInternal;
+    recordTimestamp: ReturnType<typeof vi.fn>;
+  } {
     history.replaceState({}, '', options.urlPath);
 
     const recordTimestamp = vi.fn().mockResolvedValue(undefined);
