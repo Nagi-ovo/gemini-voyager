@@ -2088,6 +2088,9 @@ export class TimelineManager {
           const tsEnabledChange = changes[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS];
           if (tsEnabledChange) {
             this.showMessageTimestampsEnabled = tsEnabledChange.newValue === true;
+            // Recording is gated on the toggle, so captures that arrived while
+            // it was off have not been applied yet — apply before rendering.
+            if (this.showMessageTimestampsEnabled) this.applyHistoryTimestamps();
             this.injectMessageTimestamps().catch(() => {});
           }
         }
@@ -4418,9 +4421,17 @@ export class TimelineManager {
     const store = this.historyTimestampStore;
     const timestampService = this.timestampService;
     if (!store || !timestampService || this.markers.length === 0) return false;
+    // Recording is opt-in via the feature toggle, same as recordTimestampForTurn.
+    if (!this.showMessageTimestampsEnabled) return false;
 
     const nativeConversationId = extractConversationIdFromUrl(window.location.href);
     if (!nativeConversationId) return false;
+    // Stale-manager guard: during an SPA conversation switch there is a window
+    // where the URL already points at the next conversation while this instance
+    // (and its markers) still belongs to the previous one. Marker ids are
+    // per-index (`u-<n>`), not per-conversation, so writing through that window
+    // would persist conversation B's times under conversation A's storage key.
+    if (this.conversationId !== buildConversationIdFromUrl(window.location.href)) return false;
     const timestampConversationId = this.getTimestampConversationId();
     if (!timestampConversationId) return false;
 
