@@ -19,6 +19,7 @@
         "claude-usage-observer.js",
         "response-complete-observer.js",
         "usage-observer.js",
+        "conversation-history-observer.js",
         "prevent-auto-scroll.js",
         "assets/*.js",
         "assets/*.png"
@@ -36,6 +37,11 @@
       ],
       "js": ["src/pages/content/index.tsx"],
       "css": ["contentStyle.css"]
+    },
+    {
+      "matches": ["https://gemini.google.com/*", "https://business.gemini.google/*"],
+      "js": ["src/pages/content/usageObserverLoader.ts"],
+      "run_at": "document_start"
     }
   ],
   "host_permissions": [

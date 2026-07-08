@@ -268,6 +268,29 @@ describe('TimestampService', () => {
       expect(ids).not.toContain('gemini:conv:cap-0');
     }
   });
+
+  it('should overwrite an existing timestamp with a new value (API times replace first-seen)', async () => {
+    await timestampService.initialize();
+    const testId = 'turn-overwrite' as TurnId;
+
+    await timestampService.recordTimestamp(conversationId, testId, 1672531200000);
+    await timestampService.recordTimestamp(conversationId, testId, 1500000000000);
+
+    expect(timestampService.getTimestamp(conversationId, testId)).toBe(1500000000000);
+  });
+
+  it('should not persist when re-recording the same value', async () => {
+    await timestampService.initialize();
+    const testId = 'turn-same' as TurnId;
+
+    await timestampService.recordTimestamp(conversationId, testId, 1000);
+
+    const setSpy = vi.spyOn(storageService, 'set');
+    await timestampService.recordTimestamp(conversationId, testId, 1000);
+
+    expect(setSpy).not.toHaveBeenCalled();
+    expect(timestampService.getTimestamp(conversationId, testId)).toBe(1000);
+  });
 });
 
 describe('selectConversationIdsToPrune', () => {

@@ -654,3 +654,97 @@ describe('TimelineManager message timestamps', () => {
     expect(document.querySelector('.gv-timestamp')).toBeNull();
   });
 });
+
+describe('TimelineManager applyHistoryTimestamps', () => {
+  interface HistoryInternal {
+    conversationId: string | null;
+    timestampService: TimestampService | null;
+    showMessageTimestampsEnabled: boolean;
+    markers: Array<{
+      id: string;
+      element: HTMLElement;
+      summary: string;
+      n: number;
+      baseN: number;
+      dotElement: null;
+      starred: boolean;
+    }>;
+    historyTimestampStore: unknown;
+    applyHistoryTimestamps: () => boolean;
+  }
+
+  function setupManager(options: { conversationId: string; urlPath: string; enabled?: boolean }): {
+    internal: HistoryInternal;
+    recordTimestamp: ReturnType<typeof vi.fn>;
+  } {
+    history.replaceState({}, '', options.urlPath);
+
+    const recordTimestamp = vi.fn().mockResolvedValue(undefined);
+    const manager = new TimelineManager();
+    const internal = manager as unknown as HistoryInternal;
+
+    internal.conversationId = options.conversationId;
+    internal.showMessageTimestampsEnabled = options.enabled ?? true;
+    internal.timestampService = {
+      getTimestamp: vi.fn().mockReturnValue(null),
+      recordTimestamp,
+    } as unknown as TimestampService;
+    internal.markers = [
+      {
+        id: 'u-0',
+        element: document.createElement('div'),
+        summary: 'hello from this conversation',
+        n: 0,
+        baseN: 0,
+        dotElement: null,
+        starred: false,
+      },
+    ];
+    internal.historyTimestampStore = {
+      getTurns: vi.fn(() => [
+        { userText: 'hello from this conversation', timestampMs: 1_783_370_737_000 },
+      ]),
+    };
+
+    return { internal, recordTimestamp };
+  }
+
+  it('does not write timestamps when the manager identity no longer matches the URL', () => {
+    // SPA switch window: URL already points at conversation B while this
+    // manager instance still holds conversation A. Marker ids are per-index
+    // (`u-0`), so writing here would persist B's times under A's storage key.
+    const { internal, recordTimestamp } = setupManager({
+      conversationId: 'gemini:conv:convA',
+      urlPath: '/app/convB',
+    });
+
+    expect(internal.applyHistoryTimestamps()).toBe(false);
+    expect(recordTimestamp).not.toHaveBeenCalled();
+  });
+
+  it('writes matched timestamps when the manager identity matches the URL', () => {
+    const { internal, recordTimestamp } = setupManager({
+      conversationId: 'gemini:conv:convB',
+      urlPath: '/app/convB',
+    });
+
+    expect(internal.applyHistoryTimestamps()).toBe(true);
+    expect(recordTimestamp).toHaveBeenCalledTimes(1);
+    expect(recordTimestamp).toHaveBeenCalledWith('gemini:conv:convB', 'u-0', 1_783_370_737_000);
+  });
+
+  it('does not write timestamps while the feature toggle is off', () => {
+    const { internal, recordTimestamp } = setupManager({
+      conversationId: 'gemini:conv:convB',
+      urlPath: '/app/convB',
+      enabled: false,
+    });
+
+    expect(internal.applyHistoryTimestamps()).toBe(false);
+    expect(recordTimestamp).not.toHaveBeenCalled();
+
+    internal.showMessageTimestampsEnabled = true;
+    expect(internal.applyHistoryTimestamps()).toBe(true);
+    expect(recordTimestamp).toHaveBeenCalledTimes(1);
+  });
+});

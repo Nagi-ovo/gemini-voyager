@@ -18,6 +18,7 @@ import { GV_RTL_CLASS, applyRTLClass } from '@/core/utils/rtl';
 import { getTranslationSync, initI18n } from '../../../utils/i18n';
 import { makeStableTurnId } from '../fork/turnId';
 import { TimestampService } from '../timestamp/TimestampService';
+import { HistoryTimestampStore, matchTimestampsToMarkers } from '../timestamp/historyTimestamps';
 import { eventBus } from './EventBus';
 import { StarredMessagesService } from './StarredMessagesService';
 import { TimelinePreviewPanel } from './TimelinePreviewPanel';
@@ -247,6 +248,7 @@ export class TimelineManager {
   private previewPanel: TimelinePreviewPanel | null = null;
   private rtl = false;
   private timestampService: TimestampService | null = null;
+  private historyTimestampStore: HistoryTimestampStore | null = null;
   private showMessageTimestampsEnabled = false;
   private readonly initialTimestampSnapshotDelay = 800;
   private readonly draftTimestampAdoptionWindowMs = 5 * 60 * 1000;
@@ -290,6 +292,14 @@ export class TimelineManager {
     if (this.destroyed) return;
     await this.loadMessageTimestampsEnabledSetting();
     if (this.destroyed) return;
+    // Real server-side message times captured from Gemini's conversation-load
+    // RPC override first-seen recording whenever available.
+    this.historyTimestampStore = new HistoryTimestampStore();
+    this.historyTimestampStore.init(() => {
+      if (this.applyHistoryTimestamps()) {
+        this.injectMessageTimestamps().catch(() => {});
+      }
+    });
     // Ensure initial render even when Gemini DOM is already stable (no mutations after observer attaches)
     this.recalculateAndRenderMarkers();
     // Handle URL hash for starred message navigation
@@ -1645,6 +1655,9 @@ export class TimelineManager {
     });
     this.maybeAdoptDraftRouteTimestamps(this.markers.map((marker) => marker.id));
     this.updateTimestampTracking(this.markers.map((marker) => marker.id));
+    // Server-side times (if captured) overwrite first-seen recordings; runs
+    // before injectMessageTimestamps below so the same pass renders them.
+    this.applyHistoryTimestamps();
     // Remove orphaned dots (old dots not reused by any new marker)
     for (const dot of oldDots.values()) dot.remove();
     this.markersVersion++;
@@ -2075,6 +2088,9 @@ export class TimelineManager {
           const tsEnabledChange = changes[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS];
           if (tsEnabledChange) {
             this.showMessageTimestampsEnabled = tsEnabledChange.newValue === true;
+            // Recording is gated on the toggle, so captures that arrived while
+            // it was off have not been applied yet — apply before rendering.
+            if (this.showMessageTimestampsEnabled) this.applyHistoryTimestamps();
             this.injectMessageTimestamps().catch(() => {});
           }
         }
@@ -4308,6 +4324,8 @@ export class TimelineManager {
     this.clearSearchHighlights();
     this.previewPanel?.destroy();
     this.previewPanel = null;
+    this.historyTimestampStore?.dispose();
+    this.historyTimestampStore = null;
     document.body.classList.remove(GV_RTL_CLASS);
     this.ui = { timelineBar: null, tooltip: null };
     this.markers = [];
@@ -4391,6 +4409,53 @@ export class TimelineManager {
     this.timestampService
       .recordTimestamp(timestampConversationId, turnId as TurnId)
       .catch(() => {});
+  }
+
+  /**
+   * Overwrite first-seen timestamps with real server-side times captured from
+   * Gemini's conversation-load RPC. Matching goes by turn text, so unmatched
+   * markers (edited turns, drifted DOM text) safely keep their previous value.
+   * Returns whether any stored timestamp changed.
+   */
+  private applyHistoryTimestamps(): boolean {
+    const store = this.historyTimestampStore;
+    const timestampService = this.timestampService;
+    if (!store || !timestampService || this.markers.length === 0) return false;
+    // Recording is opt-in via the feature toggle, same as recordTimestampForTurn.
+    if (!this.showMessageTimestampsEnabled) return false;
+
+    const nativeConversationId = extractConversationIdFromUrl(window.location.href);
+    if (!nativeConversationId) return false;
+    // Stale-manager guard: during an SPA conversation switch there is a window
+    // where the URL already points at the next conversation while this instance
+    // (and its markers) still belongs to the previous one. Marker ids are
+    // per-index (`u-<n>`), not per-conversation, so writing through that window
+    // would persist conversation B's times under conversation A's storage key.
+    if (this.conversationId !== buildConversationIdFromUrl(window.location.href)) return false;
+    const timestampConversationId = this.getTimestampConversationId();
+    if (!timestampConversationId) return false;
+
+    const turns = store.getTurns(nativeConversationId);
+    if (!turns) return false;
+
+    const matches = matchTimestampsToMarkers(
+      turns,
+      this.markers.map((marker) => ({ id: marker.id, text: marker.summary })),
+    );
+
+    let changed = false;
+    matches.forEach((timestampMs, turnId) => {
+      if (
+        timestampService.getTimestamp(timestampConversationId, turnId as TurnId) === timestampMs
+      ) {
+        return;
+      }
+      changed = true;
+      timestampService
+        .recordTimestamp(timestampConversationId, turnId as TurnId, timestampMs)
+        .catch(() => {});
+    });
+    return changed;
   }
 
   private maybeAdoptDraftRouteTimestamps(markerIds: string[]): void {
