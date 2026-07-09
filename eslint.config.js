@@ -10,6 +10,7 @@ export default [
   {
     ignores: [
       'dist_*/**',
+      'output/**',
       'node_modules/**',
       'docs/.vitepress/cache/**',
       'docs/.vitepress/dist/**',
