@@ -1657,6 +1657,9 @@ export class TimelineManager {
     this.updateTimestampTracking(this.markers.map((marker) => marker.id));
     // Server-side times (if captured) overwrite first-seen recordings; runs
     // before injectMessageTimestamps below so the same pass renders them.
+    // TODO(perf): applyHistoryTimestamps re-runs the full O(turns×markers)
+    // match on every recalc even though the steady state changes nothing. Gate
+    // on a dirty flag set by the store onUpdate + marker-set changes.
     this.applyHistoryTimestamps();
     // Remove orphaned dots (old dots not reused by any new marker)
     for (const dot of oldDots.values()) dot.remove();

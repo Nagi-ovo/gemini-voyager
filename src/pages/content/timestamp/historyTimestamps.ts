@@ -200,6 +200,9 @@ export class HistoryTimestampStore {
     this.onUpdate = onUpdate;
     this.handler = (ev: MessageEvent) => {
       if (ev.source !== window) return;
+      // TODO(hardening): also check ev.origin === window.location.origin. Any
+      // same-window MAIN-world script can forge a `gv-history-observer` capture
+      // and get attacker-chosen timestamps persisted (low sev: display-only).
       const data = ev.data as { source?: string; type?: string; payload?: unknown } | null;
       if (!data || data.source !== OBS_SRC || data.type !== 'capture') return;
       this.ingest(data.payload as ObserverCapturePayload);

@@ -51,6 +51,9 @@
   if (typeof window.fetch === 'function') {
     var origFetch = window.fetch;
     window.fetch = function (input) {
+      // TODO(robustness): a URL/Request first-arg exposes .href, not .url, so a
+      // URL-object fetch yields '' here and skips capture. Currently Gemini
+      // passes a string for hNvQHb, so this is latent. Fall back to input.href.
       var url = typeof input === 'string' ? input : (input && input.url) || '';
       var p = origFetch.apply(this, arguments);
       if (isHistoryRequest(url)) {
@@ -86,6 +89,9 @@
 
       var origOpen = xhr.open;
       xhr.open = function (_method, url) {
+        // TODO(robustness): url may be a URL object; the send() guard below
+        // requires typeof reqUrl === 'string', so a URL-object open() is never
+        // captured. Store String(url) to match those too.
         reqUrl = url;
         return origOpen.apply(xhr, arguments);
       };
@@ -97,6 +103,9 @@
             'load',
             function () {
               try {
+                // TODO(robustness): responseText throws if responseType is
+                // 'json'/'blob'/'arraybuffer' — the capture is silently lost.
+                // Guard on xhr.responseType before reading, or read .response.
                 capture(reqUrl, xhr.responseText);
               } catch (e) {}
             },
