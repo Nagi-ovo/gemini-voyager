@@ -1466,6 +1466,64 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(extendedStar?.classList.contains('is-default')).toBe(false);
   });
 
+  it('treats the inline Extended thinking toggle as a thinking preference (#808)', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_key: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({
+          gvDefaultModel: { id: 'e6fa609c3fa255c0', name: '3.1 Pro' },
+        });
+      },
+    );
+    const setSpy = chrome.storage.sync.set as unknown as ReturnType<typeof vi.fn>;
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    const pane = document.createElement('div');
+    pane.className = 'cdk-overlay-pane';
+
+    const pro = document.createElement('gem-menu-item');
+    pro.setAttribute('role', 'menuitem');
+    pro.setAttribute('data-mode-id', 'e6fa609c3fa255c0');
+    pro.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">3.1 Pro</span></div></gem-menu-item-content>`;
+
+    const extended = document.createElement('gem-menu-item');
+    extended.setAttribute('role', 'menuitem');
+    extended.setAttribute(
+      'jslog',
+      '323336;track:generic_click,impression;BardVeMetadataKey:[["e6fa609c3fa255c0",2,3]]',
+    );
+    extended.innerHTML = `<gem-menu-item-content class="checkmark-only"><div class="label-container"><span class="label">Extended thinking</span><span class="sublabel">Complex problem solving</span></div></gem-menu-item-content>`;
+
+    pane.append(pro, extended);
+    document.body.appendChild(pane);
+
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    const proStar = pro.querySelector<HTMLButtonElement>('.gv-default-star-btn');
+    const extendedStar = extended.querySelector<HTMLButtonElement>('.gv-default-star-btn');
+
+    expect(proStar?.title).toBe('cancelDefaultModel');
+    expect(extendedStar?.title).toBe('setAsDefaultThinkingLevel');
+    expect(extendedStar?.dataset.gvDefaultKind).toBe('thinking');
+    expect(extendedStar?.classList.contains('is-default')).toBe(false);
+
+    extendedStar?.click();
+    await Promise.resolve();
+
+    const writes = setSpy.mock.calls.map(([payload]) => payload as Record<string, unknown>);
+    expect(writes).toContainEqual({
+      gvDefaultThinkingLevel: {
+        index: 0,
+        label: 'Extended thinking',
+        mode: 'extended',
+      },
+    });
+    expect(writes.some((payload) => 'gvDefaultModel' in payload)).toBe(false);
+  });
+
   it('fast-path: trigger pill short label ("Pro") matches stored long name ("3.1 Pro")', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_key: unknown, callback: (items: Record<string, unknown>) => void) => {
@@ -1640,11 +1698,15 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(standard.click).toHaveBeenCalledTimes(0);
   });
 
-  it('auto-locks an index-zero Extended thinking option in Firefox compact menus (#808)', async () => {
+  it('auto-locks the inline Extended thinking toggle without a Standard submenu (#808)', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_key: unknown, callback: (items: Record<string, unknown>) => void) => {
         callback({
-          gvDefaultThinkingLevel: { index: 0, label: 'Extended thinking' },
+          gvDefaultThinkingLevel: {
+            index: 0,
+            label: 'Extended thinking',
+            mode: 'extended',
+          },
         });
       },
     );
@@ -1663,27 +1725,16 @@ describe('DefaultModelManager (default model locker)', () => {
     modelItem.setAttribute('role', 'menuitem');
     modelItem.setAttribute('data-mode-id', '56fdd199312815e2');
     modelItem.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">3.5 Flash</span></div></gem-menu-item-content>`;
-    const thinkingRow = document.createElement('gem-menu-item');
-    thinkingRow.setAttribute('role', 'menuitem');
-    thinkingRow.setAttribute('value', 'thinking_level');
-    thinkingRow.setAttribute('aria-haspopup', 'true');
-    thinkingRow.setAttribute('aria-controls', 'ng-menu-thinking-firefox');
-    thinkingRow.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">Thinking level</span></div></gem-menu-item-content>`;
-    thinkingRow.click = vi.fn();
-    mainPane.append(modelItem, thinkingRow);
-    document.body.appendChild(mainPane);
-
-    const submenuPane = document.createElement('div');
-    submenuPane.className = 'cdk-overlay-pane';
-    const submenuList = document.createElement('div');
-    submenuList.id = 'ng-menu-thinking-firefox';
     const extended = document.createElement('gem-menu-item');
     extended.setAttribute('role', 'menuitem');
-    extended.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">Extended thinking</span></div></gem-menu-item-content>`;
+    extended.setAttribute(
+      'jslog',
+      '323336;track:generic_click,impression;BardVeMetadataKey:[["56fdd199312815e2",2,3]]',
+    );
+    extended.innerHTML = `<gem-menu-item-content class="checkmark-only"><div class="label-container"><span class="label">Extended thinking</span></div></gem-menu-item-content>`;
     extended.click = vi.fn();
-    submenuList.appendChild(extended);
-    submenuPane.appendChild(submenuList);
-    document.body.appendChild(submenuPane);
+    mainPane.append(modelItem, extended);
+    document.body.appendChild(mainPane);
 
     const { default: DefaultModelManager } = await import('../modelLocker');
     await DefaultModelManager.getInstance().init();
@@ -1691,7 +1742,6 @@ describe('DefaultModelManager (default model locker)', () => {
 
     await vi.advanceTimersByTimeAsync(1500);
 
-    expect(thinkingRow.click).toHaveBeenCalledTimes(1);
     expect(extended.click).toHaveBeenCalledTimes(1);
   });
 

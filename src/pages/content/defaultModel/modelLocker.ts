@@ -8,9 +8,12 @@ type DefaultModelSetting =
 
 type StoredDefaultModelSetting = { id: string; name: string };
 
-// 2026 redesign: the trigger pill optionally shows a "Thinking level" line below the model.
-// We let users star Standard / Extended and lock that too.
-type DefaultThinkingLevel = { index: number; label: string };
+type ThinkingMode = 'standard' | 'extended';
+
+// Older Gemini variants exposed a Standard / Extended submenu. The current
+// picker exposes only an opt-in Extended thinking row, so keep the positional
+// fields for compatibility and persist a semantic mode for the new toggle.
+type DefaultThinkingLevel = { index: number; label: string; mode?: ThinkingMode };
 
 // Known Flash/Fast model IDs that should skip auto-selection (page defaults to these)
 const FAST_MODEL_IDS = new Set([
@@ -45,6 +48,10 @@ const MODE_SWITCH_OBSERVER_ROOT_SELECTOR = [
   MODE_ITEM_SELECTOR,
 ].join(', ');
 const DEFAULT_MODEL_UI_SELECTOR = '.gv-default-star-btn, .gv-default-model-fail-toast';
+// Stable Gemini event id observed on the inline Extended thinking toggle. Its
+// jslog payload also contains the current model id, so treating the last hex id
+// as a model id makes this row impersonate Pro (#808).
+const EXTENDED_THINKING_TOGGLE_JSLOG_ID = '323336';
 
 const CHAT_INPUT_SELECTORS = [
   'main rich-textarea [contenteditable="true"]',
@@ -469,6 +476,19 @@ class DefaultModelManager {
     items.forEach((item) => {
       const itemEl = item as HTMLElement;
 
+      if (this.isInlineExtendedThinkingToggle(itemEl)) {
+        // The toggle's jslog metadata contains the current model id. A model
+        // star injected by an older build therefore looks valid by id, but its
+        // click handler writes the wrong storage key. Replace it with the
+        // dedicated thinking-preference star below.
+        itemEl
+          .querySelectorAll<HTMLElement>(
+            '.gv-default-star-btn:not([data-gv-default-kind="thinking"])',
+          )
+          .forEach((star) => star.remove());
+        return;
+      }
+
       if (this.isNestedThinkingLevelItem(itemEl)) {
         // Gemini now renders Standard/Extended inline under the Thinking level row.
         // Those child rows may still carry model-like metadata, so keep them out
@@ -498,6 +518,7 @@ class DefaultModelManager {
 
       const btn = document.createElement('button');
       btn.className = 'gv-default-star-btn';
+      btn.dataset.gvDefaultKind = 'model';
       btn.innerHTML = this.getStarIcon(false); // Default empty
       btn.title = chrome.i18n.getMessage('setAsDefaultModel');
 
@@ -552,6 +573,7 @@ class DefaultModelManager {
       this.updateStarState(item as HTMLElement, modelName, currentDefault);
     });
 
+    await this.injectInlineExtendedThinkingStar(menuPanel);
     await this.injectNestedThinkingLevelStars(menuPanel);
 
     return true;
@@ -567,6 +589,94 @@ class DefaultModelManager {
   private isNestedThinkingLevelItem(item: HTMLElement): boolean {
     const row = item.closest<HTMLElement>('[value="thinking_level"]');
     return !!row && row !== item;
+  }
+
+  private isInlineExtendedThinkingToggle(item: HTMLElement): boolean {
+    if (item.getAttribute('value') === 'thinking_level') return false;
+    const jslogId = item.getAttribute('jslog')?.split(';', 1)[0]?.trim();
+    return jslogId === EXTENDED_THINKING_TOGGLE_JSLOG_ID;
+  }
+
+  private findInlineExtendedThinkingToggle(root: ParentNode): HTMLElement | null {
+    return (
+      Array.from(root.querySelectorAll<HTMLElement>(MODE_ITEM_SELECTOR)).find((item) =>
+        this.isInlineExtendedThinkingToggle(item),
+      ) ?? null
+    );
+  }
+
+  private async injectInlineExtendedThinkingStar(menuPanel: HTMLElement): Promise<boolean> {
+    const item = this.findInlineExtendedThinkingToggle(menuPanel);
+    if (!item) return false;
+
+    if (!this.autoApplyEnabled) {
+      item.querySelectorAll('.gv-default-star-btn').forEach((star) => star.remove());
+      return false;
+    }
+
+    const label = this.getThinkingLevelLabel(item);
+    if (!label) return false;
+
+    let btn = item.querySelector<HTMLElement>(
+      '.gv-default-star-btn[data-gv-default-kind="thinking"]',
+    );
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.className = 'gv-default-star-btn';
+      btn.dataset.gvDefaultKind = 'thinking';
+      btn.innerHTML = this.getStarIcon(false);
+      btn.title = chrome.i18n.getMessage('setAsDefaultThinkingLevel');
+
+      btn.addEventListener('click', async (event) => {
+        event.stopPropagation();
+        event.preventDefault();
+        await this.handleThinkingLevelStarClick(0, label, btn!, 'extended');
+      });
+
+      const labelContainer = item.querySelector('.label-container');
+      const titleEl = labelContainer?.querySelector('.label, .gds-title-m, .gds-label-l');
+      if (labelContainer && titleEl) {
+        const titleParent = titleEl.parentElement;
+        let wrapper = labelContainer.querySelector<HTMLElement>('.gv-title-wrapper');
+        if (!wrapper && titleParent?.classList.contains('gv-title-wrapper')) {
+          wrapper = titleParent;
+        }
+        if (!wrapper) {
+          wrapper = document.createElement('div');
+          wrapper.className = 'gv-title-wrapper';
+          wrapper.style.cssText = 'display: flex; align-items: center; width: 100%;';
+          if (titleParent) {
+            titleParent.insertBefore(wrapper, titleEl);
+          } else {
+            labelContainer.appendChild(wrapper);
+          }
+          wrapper.appendChild(titleEl);
+        }
+        wrapper.appendChild(btn);
+      } else if (labelContainer) {
+        labelContainer.appendChild(btn);
+      } else {
+        item.appendChild(btn);
+      }
+    }
+
+    this.updateThinkingStarState(
+      item,
+      this.isInlineExtendedThinkingDefault(this.currentDefaultThinkingLevel, label),
+    );
+    return true;
+  }
+
+  private isInlineExtendedThinkingDefault(
+    currentDefault: DefaultThinkingLevel | null,
+    label: string,
+  ): boolean {
+    if (!currentDefault) return false;
+    if (currentDefault.mode) return currentDefault.mode === 'extended';
+    if (currentDefault.label.toLowerCase().trim() === label.toLowerCase().trim()) return true;
+    // Legacy submenu storage used index 1 for Extended. Do not treat an
+    // unmatched index 0 as Extended: that may be a localized Standard value.
+    return !this.isPageDefaultThinkingLevel(currentDefault) && currentDefault.index > 0;
   }
 
   private async injectThinkingLevelStars(submenuPane: HTMLElement): Promise<boolean> {
@@ -617,13 +727,15 @@ class DefaultModelManager {
 
       const btn = document.createElement('button');
       btn.className = 'gv-default-star-btn';
+      btn.dataset.gvDefaultKind = 'thinking';
       btn.innerHTML = this.getStarIcon(false);
       btn.title = chrome.i18n.getMessage('setAsDefaultThinkingLevel');
 
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         e.preventDefault();
-        await this.handleThinkingLevelStarClick(index, label, btn);
+        const mode: ThinkingMode = items.length === 1 || index > 0 ? 'extended' : 'standard';
+        await this.handleThinkingLevelStarClick(index, label, btn, mode);
       });
 
       const labelContainer = item.querySelector('.label-container');
@@ -715,7 +827,12 @@ class DefaultModelManager {
     }
   }
 
-  private async handleThinkingLevelStarClick(index: number, label: string, btn: HTMLElement) {
+  private async handleThinkingLevelStarClick(
+    index: number,
+    label: string,
+    btn: HTMLElement,
+    mode?: ThinkingMode,
+  ) {
     // Stale-click guard. Stars are normally swept the instant the user
     // toggles the kill switch off, but a star inside a detached overlay
     // pane (or attached to a closure from a previous on-session) can
@@ -732,7 +849,9 @@ class DefaultModelManager {
     // current default — re-deriving it from (index,label) is exactly what let a
     // drifted index treat two rows as default.
     const isCurrentlyDefault = btn.classList.contains('is-default');
-    const nextDefault: DefaultThinkingLevel | null = isCurrentlyDefault ? null : { index, label };
+    const nextDefault: DefaultThinkingLevel | null = isCurrentlyDefault
+      ? null
+      : { index, label, ...(mode ? { mode } : {}) };
 
     this.currentDefaultThinkingLevel = nextDefault;
 
@@ -1183,6 +1302,7 @@ class DefaultModelManager {
    */
   private isPageDefaultThinkingLevel(thinking: DefaultThinkingLevel | null): boolean {
     if (!thinking) return false;
+    if (thinking.mode) return thinking.mode === 'standard';
     return thinking.label.toLowerCase().trim() === 'standard';
   }
 
@@ -1323,7 +1443,7 @@ class DefaultModelManager {
   }
 
   private getThinkingSwitchKey(thinking: DefaultThinkingLevel): string {
-    return `thinking:${thinking.index}:${thinking.label.toLowerCase().trim()}`;
+    return `thinking:${thinking.mode ?? 'legacy'}:${thinking.index}:${thinking.label.toLowerCase().trim()}`;
   }
 
   private stopLockTimer() {
@@ -1386,15 +1506,14 @@ class DefaultModelManager {
         return 'failed';
       }
 
-      const items = menuPanel.querySelectorAll(MODE_ITEM_SELECTOR);
+      const items = Array.from(menuPanel.querySelectorAll<HTMLElement>(MODE_ITEM_SELECTOR)).filter(
+        (item) => !this.isInlineExtendedThinkingToggle(item),
+      );
       let found = false;
       let switchedModel = false;
 
       if (targetModel.kind === 'id') {
-        const targetItem = Array.from(items).find((item) => {
-          if (!(item instanceof HTMLElement)) return false;
-          return this.getModelIdFromItem(item) === targetModel.id;
-        });
+        const targetItem = items.find((item) => this.getModelIdFromItem(item) === targetModel.id);
 
         if (targetItem instanceof HTMLElement) {
           const alreadySelected =
@@ -1414,16 +1533,16 @@ class DefaultModelManager {
           found = true;
         }
       } else {
-        for (const item of Array.from(items)) {
-          const modelName = this.getModelNameFromItem(item as HTMLElement);
+        for (const item of items) {
+          const modelName = this.getModelNameFromItem(item);
           if (normalize(modelName) === targetName) {
             const alreadySelected =
-              (item as HTMLElement).getAttribute('aria-checked') === 'true' ||
-              (item as HTMLElement).classList.contains('is-selected') ||
-              (item as HTMLElement).classList.contains('selected');
+              item.getAttribute('aria-checked') === 'true' ||
+              item.classList.contains('is-selected') ||
+              item.classList.contains('selected');
 
             if (!alreadySelected) {
-              (item as HTMLElement).click();
+              item.click();
               switchedModel = true;
             } else {
               // Already selected, close menu to avoid stuck UI
@@ -1438,16 +1557,16 @@ class DefaultModelManager {
 
       if (!found) {
         // Fallback: whole-word match on the full text content (includes description).
-        for (const item of Array.from(items)) {
-          const text = (item as HTMLElement).textContent || '';
+        for (const item of items) {
+          const text = item.textContent || '';
           if (targetAsWholeWord.test(normalize(text))) {
             const alreadySelected =
-              (item as HTMLElement).getAttribute('aria-checked') === 'true' ||
-              (item as HTMLElement).classList.contains('is-selected') ||
-              (item as HTMLElement).classList.contains('selected');
+              item.getAttribute('aria-checked') === 'true' ||
+              item.classList.contains('is-selected') ||
+              item.classList.contains('selected');
 
             if (!alreadySelected) {
-              (item as HTMLElement).click();
+              item.click();
               switchedModel = true;
             } else {
               // Already selected, close menu to avoid stuck UI
@@ -1513,6 +1632,30 @@ class DefaultModelManager {
         if (this.consecutiveFailures >= this.maxConsecutiveFailures && this.checkTimer) {
           this.stopLockTimer();
         }
+        return false;
+      }
+
+      // Current Gemini UI no longer exposes a Standard / Extended submenu.
+      // Extended thinking is a single opt-in row in the model menu; Standard
+      // is the implicit state when that row is not selected.
+      const inlineToggle = this.findInlineExtendedThinkingToggle(modelPane);
+      if (inlineToggle) {
+        const alreadySelected =
+          inlineToggle.classList.contains('selected') ||
+          inlineToggle.getAttribute('aria-checked') === 'true' ||
+          inlineToggle.getAttribute('aria-selected') === 'true';
+
+        if (!alreadySelected) {
+          inlineToggle.click();
+          document.body.click();
+          this.focusChatInputAfterAutoSwitch();
+          this.consecutiveFailures = 0;
+          return true;
+        }
+
+        document.body.click();
+        this.consecutiveFailures = 0;
+        this.stopLockTimer();
         return false;
       }
 
@@ -1781,7 +1924,8 @@ class DefaultModelManager {
     const index = typeof record.index === 'number' ? record.index : NaN;
     const label = typeof record.label === 'string' ? record.label.trim() : '';
     if (!Number.isFinite(index) || index < 0 || !label) return null;
-    return { index, label };
+    const mode = record.mode === 'standard' || record.mode === 'extended' ? record.mode : undefined;
+    return { index, label, ...(mode ? { mode } : {}) };
   }
 
   private parseStoredDefaultModel(value: unknown): DefaultModelSetting | null {
