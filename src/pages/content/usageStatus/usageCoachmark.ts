@@ -6,8 +6,8 @@
  * reveal a non-interactive PREVIEW of the pill at its real spot, float a bubble
  * above it with a one-line intro and an inline switch — flipping the switch
  * enables the real feature live (the pill's storage listener mounts it
- * immediately) and the guide closes. Dismissing leaves it off. Either way it
- * never shows again.
+ * immediately). The guide stays open until the user confirms the selection or
+ * continues using the page. Either way it never shows again.
  */
 import browser from 'webextension-polyfill';
 
@@ -147,7 +147,7 @@ export async function maybeShowUsageCoachmark(opts: { force?: boolean } = {}): P
       initial: enabled,
       onChange: (on) => setUsageEnabled(on),
     },
-    dismissLabel: t('coachmarkDismiss', 'Maybe later'),
+    dismissLabel: t('coachmarkDismiss', 'Done'),
   });
 }
 

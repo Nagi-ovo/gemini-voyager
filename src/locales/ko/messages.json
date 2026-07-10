@@ -7,6 +7,22 @@
     "message": "타임라인 탐색, 폴더 관리, 프롬프트 저장소 및 채팅 내보내기 기능을 통해 Gemini™ 환경을 강화하세요.",
     "description": "Extension description"
   },
+  "timelineStyle": {
+    "message": "타임라인 스타일",
+    "description": "타임라인 시각 스타일 레이블"
+  },
+  "timelineStyleDots": {
+    "message": "노드",
+    "description": "기본 타임라인 노드 스타일"
+  },
+  "timelineStyleCompact": {
+    "message": "컴팩트",
+    "description": "컴팩트 타임라인 인덱스 스타일"
+  },
+  "timelineCompactOpenPreview": {
+    "message": "타임라인 미리보기 열기",
+    "description": "컴팩트 타임라인 레일의 접근성 레이블"
+  },
   "scrollMode": {
     "message": "스크롤 모드",
     "description": "Scroll mode label"
@@ -2247,9 +2263,21 @@
     "message": "폴더 검색 표시",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "timelineCoachmarkTitle": {
+    "message": "신규: 컴팩트 타임라인",
+    "description": "Coachmark title introducing the compact timeline style"
+  },
+  "timelineCoachmarkBody": {
+    "message": "오른쪽은 간결하게 유지하고, 컴팩트 인덱스에 마우스를 올리면 모든 메시지를 한 패널에서 확인할 수 있습니다.",
+    "description": "Coachmark body text introducing the compact timeline style"
+  },
+  "timelineCoachmarkToggle": {
+    "message": "컴팩트 타임라인 사용",
+    "description": "Inline toggle label in the compact-timeline coachmark"
+  },
   "coachmarkDismiss": {
-    "message": "나중에",
-    "description": "Generic dismiss/maybe-later label for feature coachmarks"
+    "message": "완료",
+    "description": "Generic confirmation label for feature coachmarks"
   },
   "themeColor": {
     "message": "테마 색상",

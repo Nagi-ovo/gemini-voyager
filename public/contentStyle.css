@@ -356,6 +356,144 @@ html.dark .timeline-dot:not(.active):not(.starred)::after,
   filter: drop-shadow(0 0 6px var(--timeline-dot-active-color));
 }
 
+/* Compact timeline style: the rail becomes one hover target and markers are
+ * rendered as quiet index ticks. Navigation happens from the preview panel. */
+.gemini-timeline-bar.timeline-style-compact {
+  cursor: pointer;
+}
+
+.gemini-timeline-bar.timeline-style-compact::before {
+  opacity: 0;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-track {
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-track-content {
+  height: 100% !important;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-dot {
+  top: calc(50% + var(--timeline-compact-offset, 0px));
+  width: 20px;
+  height: 12px;
+  pointer-events: none;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-dot::before {
+  display: none;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-dot::after {
+  width: 18px;
+  height: 2px;
+  border-radius: 9999px;
+  clip-path: none;
+  background-color: var(--timeline-dot-color);
+  box-shadow: none;
+  filter: none;
+  opacity: 0.72;
+  transform: translate(-50%, -50%);
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-dot.active::after {
+  width: 21px;
+  background-color: var(--timeline-dot-active-color);
+  opacity: 1;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-dot.starred::after {
+  background-color: var(--timeline-star-color);
+  opacity: 0.9;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-runner-ring,
+.timeline-left-slider.timeline-style-compact {
+  display: none;
+}
+
+/* Hide the live timeline while its coachmark preview is visible. This avoids
+ * drawing the classic rail and the preview on top of each other. */
+.gemini-timeline-bar.gv-coach-timeline-hidden,
+.timeline-left-slider.gv-coach-timeline-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Timeline replica used by the one-time coachmark. Its markers morph between
+ * the classic node style and compact index ticks as the inline switch changes. */
+.gv-timeline-style-preview {
+  position: fixed;
+  top: 50%;
+  right: 15px;
+  display: flex;
+  width: 24px;
+  height: 140px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  pointer-events: none;
+  transition: gap 180ms ease;
+}
+
+.gv-timeline-style-preview span {
+  display: block;
+  flex: 0 0 auto;
+  background: var(--timeline-dot-color);
+  opacity: 0.78;
+  transition:
+    width 180ms ease,
+    height 180ms ease,
+    border-radius 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.gv-timeline-style-preview.is-compact {
+  gap: 8px;
+}
+
+.gv-timeline-style-preview.is-compact span {
+  width: 18px;
+  height: 2px;
+  border-radius: 9999px;
+}
+
+.gv-timeline-style-preview.is-compact span.active {
+  width: 21px;
+  background: var(--timeline-dot-active-color);
+  opacity: 1;
+}
+
+.gv-timeline-style-preview.is-dots {
+  gap: 2px;
+}
+
+.gv-timeline-style-preview.is-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.gv-timeline-style-preview.is-dots span.active {
+  width: 9px;
+  height: 9px;
+  background: var(--timeline-dot-active-color);
+  box-shadow: 0 0 0 2px var(--timeline-dot-active-color);
+  opacity: 1;
+}
+
+body.gv-rtl .gv-timeline-style-preview {
+  right: auto;
+  left: 15px;
+}
+
 /* ===== Timeline Context Menu ===== */
 .timeline-context-menu {
   position: fixed;
@@ -707,6 +845,10 @@ html.dark .timeline-left-slider::before {
   opacity: 1;
 }
 
+.timeline-preview-toggle.timeline-preview-toggle-compact {
+  display: none;
+}
+
 .timeline-preview-toggle:hover {
   color: var(--timeline-dot-active-color);
   background-color: var(--timeline-tooltip-bg);
@@ -742,6 +884,24 @@ html.dark .timeline-left-slider::before {
   opacity: 1;
   transform: scale(1) translateX(0);
   pointer-events: auto;
+}
+
+.timeline-preview-panel.timeline-preview-panel-compact .timeline-preview-search {
+  display: none;
+}
+
+.timeline-preview-panel.timeline-preview-panel-compact .timeline-preview-list {
+  max-height: 100%;
+  padding: 6px;
+}
+
+.timeline-preview-panel.timeline-preview-panel-compact .timeline-preview-item {
+  gap: 0;
+  padding: 7px 9px;
+}
+
+.timeline-preview-panel.timeline-preview-panel-compact .timeline-preview-index {
+  display: none;
 }
 
 .timeline-preview-search {
@@ -11851,6 +12011,7 @@ body.gv-rtl .gv-usage-metric {
   z-index: 2147483640;
   background: rgba(8, 12, 20, 0.2);
   opacity: 0;
+  pointer-events: none;
   transition: opacity 180ms ease;
 }
 .gv-coach-scrim.--show {
@@ -12098,11 +12259,11 @@ body.dark-theme .gv-coach-switch {
 .gv-coach-dismiss {
   display: block;
   margin: 8px 0 0 auto;
-  padding: 5px 8px;
-  border: none;
+  padding: 6px 12px;
+  border: 1px solid var(--gv-pm-brand, var(--gv-pm-brand-default));
   border-radius: 999px;
-  background: transparent;
-  color: var(--gv-coach-muted);
+  background: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
   font-family: inherit;
   font-size: 12.5px;
   font-weight: 600;
@@ -12110,8 +12271,8 @@ body.dark-theme .gv-coach-switch {
   cursor: pointer;
 }
 .gv-coach-dismiss:hover {
-  background: var(--gv-coach-track);
-  color: var(--gv-coach-text);
+  background: var(--gv-pm-brand-hover);
+  border-color: var(--gv-pm-brand-hover);
 }
 
 /* Brief confirmation accent once the switch is flipped on. */

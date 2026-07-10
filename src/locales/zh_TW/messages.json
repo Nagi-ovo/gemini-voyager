@@ -7,6 +7,22 @@
     "message": "透過時間軸導覽、資料夾管理、提示詞庫和對話匯出功能，全面提升您的 Gemini™ 使用體驗。",
     "description": "擴充功能描述"
   },
+  "timelineStyle": {
+    "message": "時間軸樣式",
+    "description": "時間軸視覺樣式標籤"
+  },
+  "timelineStyleDots": {
+    "message": "節點",
+    "description": "經典時間軸節點樣式"
+  },
+  "timelineStyleCompact": {
+    "message": "精簡索引",
+    "description": "精簡時間軸索引樣式"
+  },
+  "timelineCompactOpenPreview": {
+    "message": "開啟時間軸預覽",
+    "description": "精簡時間軸索引的無障礙標籤"
+  },
   "scrollMode": {
     "message": "捲動模式",
     "description": "捲動模式標籤"
@@ -2247,9 +2263,21 @@
     "message": "顯示資料夾搜尋",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "timelineCoachmarkTitle": {
+    "message": "新增：精簡時間軸",
+    "description": "Coachmark title introducing the compact timeline style"
+  },
+  "timelineCoachmarkBody": {
+    "message": "右側只保留一列精簡索引。懸停即可在單一面板中查看所有訊息。",
+    "description": "Coachmark body text introducing the compact timeline style"
+  },
+  "timelineCoachmarkToggle": {
+    "message": "使用精簡索引",
+    "description": "Inline toggle label in the compact-timeline coachmark"
+  },
   "coachmarkDismiss": {
-    "message": "之後再說",
-    "description": "Generic dismiss/maybe-later label for feature coachmarks"
+    "message": "完成",
+    "description": "Generic confirmation label for feature coachmarks"
   },
   "themeColor": {
     "message": "主題色",

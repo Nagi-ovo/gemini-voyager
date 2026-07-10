@@ -5,7 +5,7 @@ import {
 } from '@/core/services/AccountIsolationService';
 import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
 import { storageService } from '@/core/services/StorageService';
-import { StorageKeys, type TurnId } from '@/core/types/common';
+import { StorageKeys, type TimelineStyle, type TurnId } from '@/core/types/common';
 import {
   buildConversationIdFromUrl,
   buildLegacyConversationIdFromUrl,
@@ -160,6 +160,7 @@ export class TimelineManager {
   private readonly tooltipShowDelay = 250;
   private tooltipHideDelay = 100;
   private scrollMode: 'jump' | 'flow' = 'flow';
+  private timelineStyle: TimelineStyle = 'dots';
   private hideContainer: boolean = false;
   private barWidth: number = 4;
   private readonly barWidthMin = 4;
@@ -335,6 +336,7 @@ export class TimelineManager {
       const g = globalThis as ExtGlobal;
       const defaults = {
         geminiTimelineScrollMode: 'flow',
+        [StorageKeys.TIMELINE_STYLE]: 'dots',
         geminiTimelineHideContainer: false,
         geminiTimelineBarWidth: null,
         geminiTimelineDraggable: false,
@@ -381,6 +383,10 @@ export class TimelineManager {
 
       const m = res?.geminiTimelineScrollMode;
       if (m === 'flow' || m === 'jump') this.scrollMode = m;
+      const storedTimelineStyle = res?.[StorageKeys.TIMELINE_STYLE];
+      if (storedTimelineStyle === 'dots' || storedTimelineStyle === 'compact') {
+        this.timelineStyle = storedTimelineStyle;
+      }
       this.hideContainer = !!res?.geminiTimelineHideContainer;
       const storedWidth = res?.geminiTimelineBarWidth;
       if (
@@ -391,6 +397,7 @@ export class TimelineManager {
         this.barWidth = storedWidth;
       }
       this.applyContainerVisibility();
+      this.applyTimelineStyle();
       this.toggleDraggable(!!res?.geminiTimelineDraggable);
       this.toggleMarkerLevel(!!res?.geminiTimelineMarkerLevel);
       this.previewPanel?.setPinned(res?.[StorageKeys.TIMELINE_PREVIEW_PINNED] === true);
@@ -459,6 +466,13 @@ export class TimelineManager {
         if (changes?.geminiTimelineScrollMode) {
           const n = changes.geminiTimelineScrollMode.newValue;
           if (n === 'flow' || n === 'jump') this.scrollMode = n;
+        }
+        if (changes?.[StorageKeys.TIMELINE_STYLE]) {
+          const nextStyle = changes[StorageKeys.TIMELINE_STYLE].newValue;
+          if (nextStyle === 'dots' || nextStyle === 'compact') {
+            this.timelineStyle = nextStyle;
+            this.applyTimelineStyle();
+          }
         }
         if (changes?.geminiTimelineHideContainer) {
           this.hideContainer = !!changes.geminiTimelineHideContainer.newValue;
@@ -557,8 +571,29 @@ export class TimelineManager {
     bar.classList.toggle('timeline-no-container', !!this.hideContainer);
   }
 
+  private applyTimelineStyle(): void {
+    const bar = this.ui.timelineBar;
+    if (!bar) return;
+    const compact = this.timelineStyle === 'compact';
+    bar.classList.toggle('timeline-style-compact', compact);
+    this.ui.slider?.classList.toggle('timeline-style-compact', compact);
+    if (compact) {
+      this.ui.track?.setAttribute('aria-hidden', 'true');
+      if (this.ui.track) this.ui.track.scrollTop = 0;
+      this.cancelPendingTooltipShow();
+      this.hideTooltip(true);
+    } else {
+      this.ui.track?.removeAttribute('aria-hidden');
+      this.syncTimelineTrackToMain();
+    }
+    this.previewPanel?.setCompactMode(compact);
+    this.updateVirtualRangeAndRender();
+    this.updateSlider();
+  }
+
   /** Check if pointer is near either edge of the visual background (::before, centered in the 24px bar). */
   private isInResizeEdge(ev: PointerEvent): boolean {
+    if (this.timelineStyle === 'compact') return false;
     if (!this.ui.timelineBar) return false;
     const rect = this.ui.timelineBar.getBoundingClientRect();
     const barCenter = rect.left + rect.width / 2;
@@ -2775,15 +2810,25 @@ export class TimelineManager {
   private updateVirtualRangeAndRender(): void {
     const localVersion = this.markersVersion;
     if (!this.ui.track || !this.ui.trackContent || this.markers.length === 0) return;
-    const st = this.ui.track.scrollTop || 0;
-    const vh = this.ui.track.clientHeight || 0;
-    const buffer = Math.max(100, vh);
-    const minY = st - buffer;
-    const maxY = st + vh + buffer;
-    const start = this.lowerBound(this.yPositions, minY);
-    const end = Math.max(start - 1, this.upperBound(this.yPositions, maxY));
-
     const hiddenIndices = this.getHiddenMarkerIndices();
+    const compact = this.timelineStyle === 'compact';
+    let start: number;
+    let end: number;
+    if (compact) {
+      start = 0;
+      end = this.markers.length - 1;
+    } else {
+      const st = this.ui.track.scrollTop || 0;
+      const vh = this.ui.track.clientHeight || 0;
+      const buffer = Math.max(100, vh);
+      const minY = st - buffer;
+      const maxY = st + vh + buffer;
+      start = this.lowerBound(this.yPositions, minY);
+      end = Math.max(start - 1, this.upperBound(this.yPositions, maxY));
+    }
+    const compactOffsets = compact
+      ? this.buildCompactMarkerOffsets(hiddenIndices)
+      : new Map<number, number>();
 
     let prevStart = this.visibleRange.start;
     let prevEnd = this.visibleRange.end;
@@ -2846,8 +2891,7 @@ export class TimelineManager {
         dot.setAttribute('aria-label', marker.summary);
         dot.setAttribute('tabindex', '0');
         dot.setAttribute('aria-describedby', 'gemini-timeline-tooltip');
-        dot.style.setProperty('--n', String(marker.n || 0));
-        if (this.usePixelTop) dot.style.top = `${Math.round(this.yPositions[i])}px`;
+        this.applyDotPosition(dot, i, compactOffsets.get(i));
         dot.classList.toggle('active', marker.id === this.activeTurnId);
         dot.classList.toggle('starred', !!marker.starred);
         dot.classList.toggle('collapsed', isCollapsed);
@@ -2861,8 +2905,7 @@ export class TimelineManager {
       } else {
         marker.dotElement.dataset.markerIndex = String(i);
         marker.dotElement.setAttribute('aria-label', marker.summary);
-        marker.dotElement.style.setProperty('--n', String(marker.n || 0));
-        if (this.usePixelTop) marker.dotElement.style.top = `${Math.round(this.yPositions[i])}px`;
+        this.applyDotPosition(marker.dotElement, i, compactOffsets.get(i));
         marker.dotElement.classList.toggle('starred', !!marker.starred);
         marker.dotElement.classList.toggle('collapsed', isCollapsed);
         marker.dotElement.setAttribute('aria-pressed', marker.starred ? 'true' : 'false');
@@ -2877,6 +2920,39 @@ export class TimelineManager {
     this.visibleRange = { start, end };
     // Note: callers are responsible for updateSlider(); calling it here forced
     // an extra getBoundingClientRect layout twice per scroll frame.
+  }
+
+  private buildCompactMarkerOffsets(hiddenIndices: ReadonlySet<number>): Map<number, number> {
+    const visibleIndices: number[] = [];
+    for (let index = 0; index < this.markers.length; index++) {
+      if (!hiddenIndices.has(index)) visibleIndices.push(index);
+    }
+
+    const offsets = new Map<number, number>();
+    const count = visibleIndices.length;
+    if (count === 0) return offsets;
+    const gap = count > 1 ? Math.min(10, 240 / (count - 1)) : 0;
+    const center = (count - 1) / 2;
+    visibleIndices.forEach((markerIndex, rank) => {
+      offsets.set(markerIndex, (rank - center) * gap);
+    });
+    return offsets;
+  }
+
+  private applyDotPosition(dot: DotElement, index: number, compactOffset?: number): void {
+    if (this.timelineStyle === 'compact') {
+      dot.style.removeProperty('top');
+      dot.style.setProperty('--timeline-compact-offset', `${compactOffset ?? 0}px`);
+      return;
+    }
+
+    dot.style.removeProperty('--timeline-compact-offset');
+    dot.style.setProperty('--n', String(this.markers[index]?.n || 0));
+    if (this.usePixelTop) {
+      dot.style.top = `${Math.round(this.yPositions[index])}px`;
+    } else {
+      dot.style.removeProperty('top');
+    }
   }
 
   private updateSlider(): void {

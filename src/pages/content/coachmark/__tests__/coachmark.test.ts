@@ -83,7 +83,7 @@ describe('showCoachmark', () => {
     expect(document.querySelector('.gv-coach')).toBeNull();
   });
 
-  it('resolves "enabled" when the inline switch is turned on, then marks seen', async () => {
+  it('keeps the guide open while switching and confirms the selected state with Done', async () => {
     const anchor = document.createElement('div');
     document.body.appendChild(anchor);
     const onChange = vi.fn();
@@ -93,6 +93,7 @@ describe('showCoachmark', () => {
       anchor: () => anchor,
       body: 'intro',
       toggle: { label: 'on', initial: false, onChange },
+      dismissLabel: 'Done',
     });
     await flush();
 
@@ -102,11 +103,34 @@ describe('showCoachmark', () => {
     sw.click();
     expect(onChange).toHaveBeenCalledWith(true);
     expect(sw.getAttribute('aria-checked')).toBe('true');
+    expect(document.querySelector('.gv-coach')).toBeTruthy();
+
+    await new Promise((resolve) => setTimeout(resolve, 1050));
+    expect(document.querySelector('.gv-coach')).toBeTruthy();
+
+    (document.querySelector('.gv-coach-dismiss') as HTMLElement).click();
 
     const res = await p;
     expect(res).toBe('enabled');
     expect(await hasSeenCoachmark('enable-me')).toBe(true);
     expect(document.querySelector('.gv-coach')).toBeNull(); // torn down
+  });
+
+  it('does not swallow a click on the page while the guide is visible', async () => {
+    const anchor = document.createElement('div');
+    const pageButton = document.createElement('button');
+    const onPageClick = vi.fn();
+    pageButton.addEventListener('click', onPageClick);
+    document.body.append(anchor, pageButton);
+
+    const p = showCoachmark({ id: 'page-stays-live', anchor: () => anchor, body: 'intro' });
+    await flush();
+    await flush();
+
+    pageButton.click();
+
+    expect(onPageClick).toHaveBeenCalledOnce();
+    expect(await p).toBe('dismissed');
   });
 
   it('resolves "dismissed" when the close button is clicked, and marks seen', async () => {
@@ -117,7 +141,7 @@ describe('showCoachmark', () => {
       id: 'dismiss-me',
       anchor: () => anchor,
       body: 'intro',
-      dismissLabel: 'later',
+      dismissLabel: 'Done',
     });
     await flush();
 

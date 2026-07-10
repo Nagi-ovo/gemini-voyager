@@ -80,7 +80,7 @@ export async function maybeShowFolderSearchCoachmark(
         initial: enabled,
         onChange: (on) => setFolderSearchEnabled(on),
       },
-      dismissLabel: t('coachmarkDismiss', 'Maybe later'),
+      dismissLabel: t('coachmarkDismiss', 'Done'),
     });
   } finally {
     releaseSidebar();

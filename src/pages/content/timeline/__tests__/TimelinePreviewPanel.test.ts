@@ -19,6 +19,7 @@ vi.mock('../../../../utils/i18n', () => ({
       timelinePreviewSearch: 'Search...',
       timelinePreviewNoResults: 'No results',
       timelinePreviewNoMessages: 'No messages',
+      timelineCompactOpenPreview: 'Open timeline preview',
     };
     return map[key] ?? key;
   },
@@ -110,6 +111,57 @@ describe('TimelinePreviewPanel', () => {
       panel.toggle();
       expect(panel.isOpen).toBe(true);
       expect(panel.isPinned).toBe(true);
+    });
+  });
+
+  describe('compact mode', () => {
+    it('turns the timeline rail into the accessible preview trigger', () => {
+      panel.setCompactMode(true);
+
+      const panelEl = document.querySelector('.timeline-preview-panel');
+      const toggle = document.querySelector('.timeline-preview-toggle');
+      expect(anchor.getAttribute('role')).toBe('button');
+      expect(anchor.getAttribute('tabindex')).toBe('0');
+      expect(anchor.getAttribute('aria-label')).toBe('Open timeline preview');
+      expect(panelEl?.classList.contains('timeline-preview-panel-compact')).toBe(true);
+      expect(toggle?.classList.contains('timeline-preview-toggle-compact')).toBe(true);
+    });
+
+    it('opens on rail hover and closes after leaving the rail and panel', () => {
+      vi.useFakeTimers();
+      try {
+        panel.setCompactMode(true);
+        anchor.dispatchEvent(new MouseEvent('mouseenter'));
+        expect(panel.isOpen).toBe(true);
+
+        anchor.dispatchEvent(new MouseEvent('mouseleave'));
+        vi.advanceTimersByTime(159);
+        expect(panel.isOpen).toBe(true);
+        vi.advanceTimersByTime(1);
+        expect(panel.isOpen).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('keeps the panel open while the pointer crosses from rail to panel', () => {
+      vi.useFakeTimers();
+      try {
+        panel.setCompactMode(true);
+        anchor.dispatchEvent(new MouseEvent('mouseenter'));
+        anchor.dispatchEvent(new MouseEvent('mouseleave'));
+
+        const panelEl = document.querySelector('.timeline-preview-panel') as HTMLElement;
+        panelEl.dispatchEvent(new MouseEvent('mouseenter'));
+        vi.advanceTimersByTime(200);
+        expect(panel.isOpen).toBe(true);
+
+        panelEl.dispatchEvent(new MouseEvent('mouseleave'));
+        vi.advanceTimersByTime(160);
+        expect(panel.isOpen).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 

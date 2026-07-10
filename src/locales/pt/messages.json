@@ -7,6 +7,22 @@
     "message": "Melhore sua experiência Gemini™: linha do tempo, pastas, prompts e exportação.",
     "description": "Extension description"
   },
+  "timelineStyle": {
+    "message": "Estilo da linha do tempo",
+    "description": "Rótulo do estilo visual da linha do tempo"
+  },
+  "timelineStyleDots": {
+    "message": "Nós",
+    "description": "Estilo clássico de nós da linha do tempo"
+  },
+  "timelineStyleCompact": {
+    "message": "Compacto",
+    "description": "Estilo de índice compacto da linha do tempo"
+  },
+  "timelineCompactOpenPreview": {
+    "message": "Abrir prévia da linha do tempo",
+    "description": "Rótulo acessível para a linha do tempo compacta"
+  },
   "scrollMode": {
     "message": "Modo de rolagem",
     "description": "Scroll mode label"
@@ -2247,9 +2263,21 @@
     "message": "Mostrar pesquisa de pastas",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "timelineCoachmarkTitle": {
+    "message": "Novo: linha do tempo compacta",
+    "description": "Coachmark title introducing the compact timeline style"
+  },
+  "timelineCoachmarkBody": {
+    "message": "Mantenha a lateral direita limpa. Passe o cursor pelo índice compacto para abrir todas as mensagens em um único painel.",
+    "description": "Coachmark body text introducing the compact timeline style"
+  },
+  "timelineCoachmarkToggle": {
+    "message": "Usar linha do tempo compacta",
+    "description": "Inline toggle label in the compact-timeline coachmark"
+  },
   "coachmarkDismiss": {
-    "message": "Talvez depois",
-    "description": "Generic dismiss/maybe-later label for feature coachmarks"
+    "message": "Concluir",
+    "description": "Generic confirmation label for feature coachmarks"
   },
   "themeColor": {
     "message": "Cor de destaque",

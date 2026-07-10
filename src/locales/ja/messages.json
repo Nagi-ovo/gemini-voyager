@@ -7,6 +7,22 @@
     "message": "タイムラインナビゲーション、フォルダ整理、プロンプトヴォルト、チャットのエクスポートなどで、Gemini™ の体験を強化します。",
     "description": "Extension description"
   },
+  "timelineStyle": {
+    "message": "タイムライン表示",
+    "description": "タイムラインの表示スタイル"
+  },
+  "timelineStyleDots": {
+    "message": "ノード",
+    "description": "従来のタイムラインノード表示"
+  },
+  "timelineStyleCompact": {
+    "message": "コンパクト",
+    "description": "コンパクトなタイムライン索引表示"
+  },
+  "timelineCompactOpenPreview": {
+    "message": "タイムラインプレビューを開く",
+    "description": "コンパクトタイムラインのアクセシビリティラベル"
+  },
   "scrollMode": {
     "message": "スクロールモード",
     "description": "Scroll mode label"
@@ -2247,9 +2263,21 @@
     "message": "フォルダ検索を表示",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "timelineCoachmarkTitle": {
+    "message": "新機能：コンパクトタイムライン",
+    "description": "Coachmark title introducing the compact timeline style"
+  },
+  "timelineCoachmarkBody": {
+    "message": "右端をすっきり保ち、コンパクトなインデックスにカーソルを合わせると、すべてのメッセージを1つのパネルで表示できます。",
+    "description": "Coachmark body text introducing the compact timeline style"
+  },
+  "timelineCoachmarkToggle": {
+    "message": "コンパクト表示を使う",
+    "description": "Inline toggle label in the compact-timeline coachmark"
+  },
   "coachmarkDismiss": {
-    "message": "後で",
-    "description": "Generic dismiss/maybe-later label for feature coachmarks"
+    "message": "完了",
+    "description": "Generic confirmation label for feature coachmarks"
   },
   "themeColor": {
     "message": "テーマカラー",

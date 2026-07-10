@@ -7,6 +7,22 @@
     "message": "عزز تجربة Gemini™: جدول زمني، مجلدات، مطالبات، وتصدير.",
     "description": "Extension description"
   },
+  "timelineStyle": {
+    "message": "نمط الخط الزمني",
+    "description": "تسمية النمط المرئي للخط الزمني"
+  },
+  "timelineStyleDots": {
+    "message": "العُقد",
+    "description": "نمط عُقد الخط الزمني التقليدي"
+  },
+  "timelineStyleCompact": {
+    "message": "مضغوط",
+    "description": "نمط فهرس الخط الزمني المضغوط"
+  },
+  "timelineCompactOpenPreview": {
+    "message": "فتح معاينة الخط الزمني",
+    "description": "تسمية إمكانية الوصول للخط الزمني المضغوط"
+  },
   "scrollMode": {
     "message": "وضع التمرير",
     "description": "Scroll mode label"
@@ -2247,9 +2263,21 @@
     "message": "إظهار بحث المجلدات",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "timelineCoachmarkTitle": {
+    "message": "جديد: مخطط زمني مضغوط",
+    "description": "Coachmark title introducing the compact timeline style"
+  },
+  "timelineCoachmarkBody": {
+    "message": "حافظ على بساطة الحافة اليمنى. مرّر المؤشر فوق الفهرس المضغوط لعرض جميع الرسائل في لوحة واحدة.",
+    "description": "Coachmark body text introducing the compact timeline style"
+  },
+  "timelineCoachmarkToggle": {
+    "message": "استخدام المخطط الزمني المضغوط",
+    "description": "Inline toggle label in the compact-timeline coachmark"
+  },
   "coachmarkDismiss": {
-    "message": "لاحقًا",
-    "description": "Generic dismiss/maybe-later label for feature coachmarks"
+    "message": "تم",
+    "description": "Generic confirmation label for feature coachmarks"
   },
   "themeColor": {
     "message": "لون التمييز",

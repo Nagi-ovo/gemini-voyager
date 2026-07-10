@@ -62,7 +62,6 @@ export interface CoachmarkConfig {
 
 const SEEN_KEY = StorageKeys.COACHMARKS_SEEN;
 const ARROW_GAP = 14; // px between the anchor and the bubble
-const ENABLE_CLOSE_DELAY = 1000; // dwell on the "enabled" state before closing
 const ANIM_MS = 220; // keep in sync with the CSS transition
 
 let activeId: string | null = null; // guard against stacking two coachmarks
@@ -259,12 +258,11 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
 
   return new Promise<CoachmarkResult>((resolve) => {
     let settled = false;
-    let enableTimer: ReturnType<typeof setTimeout> | null = null;
+    let toggleOn = cfg.toggle?.initial === true;
 
     const settle = (result: CoachmarkResult) => {
       if (settled) return;
       settled = true;
-      if (enableTimer) clearTimeout(enableTimer);
       if (once) void markCoachmarkSeen(cfg.id);
       window.removeEventListener('click', onOutside, true);
       window.removeEventListener('keydown', onKey, true);
@@ -321,17 +319,12 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
 
     if (cfg.toggle) {
       const handleFlip = (on: boolean) => {
+        toggleOn = on;
         void Promise.resolve(cfg.toggle?.onChange(on)).catch(() => {});
-        if (on) {
-          bubble.classList.add('gv-coach-enabled');
-          enableTimer = setTimeout(() => settle('enabled'), ENABLE_CLOSE_DELAY);
-        } else if (enableTimer) {
-          clearTimeout(enableTimer);
-          enableTimer = null;
-          bubble.classList.remove('gv-coach-enabled');
-        }
+        bubble.classList.toggle('gv-coach-enabled', on);
       };
       bubble.insertBefore(buildSwitch(cfg.toggle, handleFlip), arrow);
+      bubble.classList.toggle('gv-coach-enabled', toggleOn);
     }
 
     if (cfg.dismissLabel) {
@@ -341,7 +334,7 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
       dismiss.textContent = cfg.dismissLabel;
       dismiss.addEventListener('click', (e) => {
         e.stopPropagation();
-        settle('dismissed');
+        settle(toggleOn ? 'enabled' : 'dismissed');
       });
       bubble.insertBefore(dismiss, arrow);
     }

@@ -7,6 +7,22 @@
     "message": "Améliorez votre expérience Gemini™ : chronologie, dossiers, prompts et export.",
     "description": "Extension description"
   },
+  "timelineStyle": {
+    "message": "Style de la chronologie",
+    "description": "Libellé du style visuel de la chronologie"
+  },
+  "timelineStyleDots": {
+    "message": "Nœuds",
+    "description": "Style classique des nœuds de la chronologie"
+  },
+  "timelineStyleCompact": {
+    "message": "Compact",
+    "description": "Style d’index compact de la chronologie"
+  },
+  "timelineCompactOpenPreview": {
+    "message": "Ouvrir l’aperçu de la chronologie",
+    "description": "Libellé accessible pour la chronologie compacte"
+  },
   "scrollMode": {
     "message": "Mode défilement",
     "description": "Scroll mode label"
@@ -2247,9 +2263,21 @@
     "message": "Afficher la recherche de dossiers",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "timelineCoachmarkTitle": {
+    "message": "Nouveau : chronologie compacte",
+    "description": "Coachmark title introducing the compact timeline style"
+  },
+  "timelineCoachmarkBody": {
+    "message": "Gardez le bord droit épuré. Survolez l’index compact pour afficher tous les messages dans un seul panneau.",
+    "description": "Coachmark body text introducing the compact timeline style"
+  },
+  "timelineCoachmarkToggle": {
+    "message": "Utiliser la chronologie compacte",
+    "description": "Inline toggle label in the compact-timeline coachmark"
+  },
   "coachmarkDismiss": {
-    "message": "Plus tard",
-    "description": "Generic dismiss/maybe-later label for feature coachmarks"
+    "message": "Terminé",
+    "description": "Generic confirmation label for feature coachmarks"
   },
   "themeColor": {
     "message": "Couleur d'accent",

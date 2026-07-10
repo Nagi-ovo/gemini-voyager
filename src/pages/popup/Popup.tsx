@@ -9,7 +9,7 @@ import {
   detectAccountPlatformFromUrl,
   getAccountIsolationStorageKey,
 } from '@/core/services/AccountIsolationService';
-import { StorageKeys } from '@/core/types/common';
+import { StorageKeys, type TimelineStyle } from '@/core/types/common';
 import type { ConversationReference, Folder } from '@/core/types/folder';
 import {
   getModifierKey,
@@ -209,6 +209,11 @@ const POPUP_SETTINGS_SEARCH_ITEMS = [
     ['ide vscode cursor local server code context 上下文 代码 编辑器 本地'],
   ),
   popupSectionSearchTarget('timeline', ['timelineOptions']),
+  popupSearchTarget('timeline', 'timelineStyle', [
+    'timelineStyle',
+    'timelineStyleDots',
+    'timelineStyleCompact',
+  ]),
   popupSearchTarget('timeline', 'scrollMode', ['scrollMode', 'flow', 'jump']),
   popupSearchTarget('timeline', 'hideOuterContainer', ['hideOuterContainer']),
   popupSearchTarget('timeline', 'draggableTimeline', ['draggableTimeline']),
@@ -710,6 +715,7 @@ const toReleaseTag = (version?: string | null): string | null => {
 
 interface SettingsUpdate {
   mode?: ScrollMode | null;
+  timelineStyle?: TimelineStyle;
   hideContainer?: boolean;
   draggableTimeline?: boolean;
   timelinePreviewPinned?: boolean;
@@ -838,6 +844,7 @@ function SectionReorderControls({
 export default function Popup({ sourceTabId }: PopupProps = {}) {
   const { t, language } = useLanguage();
   const [mode, setMode] = useState<ScrollMode>('flow');
+  const [timelineStyle, setTimelineStyle] = useState<TimelineStyle>('dots');
   const [hideContainer, setHideContainer] = useState<boolean>(false);
   const [draggableTimeline, setDraggableTimeline] = useState<boolean>(false);
   const [timelinePreviewPinned, setTimelinePreviewPinned] = useState<boolean>(false);
@@ -1098,6 +1105,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     (settings: SettingsUpdate) => {
       const payload: Record<string, unknown> = {};
       if (settings.mode) payload.geminiTimelineScrollMode = settings.mode;
+      if (settings.timelineStyle) payload[StorageKeys.TIMELINE_STYLE] = settings.timelineStyle;
       if (typeof settings.hideContainer === 'boolean')
         payload.geminiTimelineHideContainer = settings.hideContainer;
       if (typeof settings.draggableTimeline === 'boolean')
@@ -1656,6 +1664,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
       chrome.storage?.sync?.get(
         {
           geminiTimelineScrollMode: 'flow',
+          [StorageKeys.TIMELINE_STYLE]: 'dots',
           geminiTimelineHideContainer: false,
           geminiTimelineDraggable: false,
           [StorageKeys.TIMELINE_PREVIEW_PINNED]: false,
@@ -1715,6 +1724,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         (res) => {
           const m = res?.geminiTimelineScrollMode as ScrollMode;
           if (m === 'jump' || m === 'flow') setMode(m);
+          const storedTimelineStyle = res?.[StorageKeys.TIMELINE_STYLE];
+          if (storedTimelineStyle === 'dots' || storedTimelineStyle === 'compact') {
+            setTimelineStyle(storedTimelineStyle);
+          }
           const format = res?.gvFormulaCopyFormat as
             | 'latex'
             | 'unicodemath'
@@ -2552,6 +2565,41 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           <Card className="p-4 transition-all hover:shadow-md">
             <CardTitle className="mb-4">{t('timelineOptions')}</CardTitle>
             <CardContent className="space-y-4 p-0">
+              <div hidden={!shouldShowSetting('timeline', 'timelineStyle')}>
+                <Label className="mb-2 block text-sm font-medium">{t('timelineStyle')}</Label>
+                <div className="bg-secondary/60 relative grid grid-cols-2 gap-1 rounded-xl p-1">
+                  <div
+                    className="bg-primary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg shadow-sm transition-all duration-300 ease-out"
+                    style={{ left: timelineStyle === 'dots' ? '4px' : 'calc(50% + 2px)' }}
+                  />
+                  <button
+                    className={`relative z-10 rounded-lg px-3 py-2 text-sm font-bold transition-all duration-200 ${
+                      timelineStyle === 'dots'
+                        ? 'text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                    onClick={() => {
+                      setTimelineStyle('dots');
+                      apply({ timelineStyle: 'dots' });
+                    }}
+                  >
+                    {t('timelineStyleDots')}
+                  </button>
+                  <button
+                    className={`relative z-10 rounded-lg px-3 py-2 text-sm font-bold transition-all duration-200 ${
+                      timelineStyle === 'compact'
+                        ? 'text-primary-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                    onClick={() => {
+                      setTimelineStyle('compact');
+                      apply({ timelineStyle: 'compact' });
+                    }}
+                  >
+                    {t('timelineStyleCompact')}
+                  </button>
+                </div>
+              </div>
               {/* Scroll Mode */}
               <div hidden={!shouldShowSetting('timeline', 'scrollMode')}>
                 <Label className="mb-2 block text-sm font-medium">{t('scrollMode')}</Label>

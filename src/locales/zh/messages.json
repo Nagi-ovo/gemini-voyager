@@ -7,6 +7,22 @@
     "message": "通过时间线导航、文件夹组织、指令宝库和对话导出功能，全面提升您的 Gemini™ 使用体验。",
     "description": "扩展程序描述"
   },
+  "timelineStyle": {
+    "message": "时间线样式",
+    "description": "时间线视觉样式标签"
+  },
+  "timelineStyleDots": {
+    "message": "节点",
+    "description": "经典时间线节点样式"
+  },
+  "timelineStyleCompact": {
+    "message": "紧凑索引",
+    "description": "紧凑时间线索引样式"
+  },
+  "timelineCompactOpenPreview": {
+    "message": "打开时间线预览",
+    "description": "紧凑时间线索引的无障碍标签"
+  },
   "scrollMode": {
     "message": "滚动模式",
     "description": "滚动模式标签"
@@ -2247,9 +2263,21 @@
     "message": "显示文件夹搜索",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "timelineCoachmarkTitle": {
+    "message": "新增：紧凑时间线",
+    "description": "Coachmark title introducing the compact timeline style"
+  },
+  "timelineCoachmarkBody": {
+    "message": "右侧只保留一列紧凑索引。悬浮即可在一个面板中查看所有消息。",
+    "description": "Coachmark body text introducing the compact timeline style"
+  },
+  "timelineCoachmarkToggle": {
+    "message": "使用紧凑索引",
+    "description": "Inline toggle label in the compact-timeline coachmark"
+  },
   "coachmarkDismiss": {
-    "message": "以后再说",
-    "description": "Generic dismiss/maybe-later label for feature coachmarks"
+    "message": "完成",
+    "description": "Generic confirmation label for feature coachmarks"
   },
   "themeColor": {
     "message": "主题色",

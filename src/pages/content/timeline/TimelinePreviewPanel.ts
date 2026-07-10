@@ -8,6 +8,7 @@ import type { PreviewMarkerData } from './types';
 
 const SEARCH_DEBOUNCE_MS = 200;
 const RESIZE_DEBOUNCE_MS = 120;
+const COMPACT_CLOSE_DELAY_MS = 160;
 
 const LIST_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`;
 
@@ -18,17 +19,27 @@ export class TimelinePreviewPanel {
   private toggleBtn: HTMLElement | null = null;
   private _isOpen = false;
   private _isPinned = false;
+  private _isCompactMode = false;
   private markers: ReadonlyArray<PreviewMarkerData> = [];
   private filteredMarkers: ReadonlyArray<PreviewMarkerData> = [];
   private activeTurnId: string | null = null;
   private searchQuery = '';
   private searchDebounceTimer: number | null = null;
   private resizeDebounceTimer: number | null = null;
+  private compactCloseTimer: number | null = null;
   private onNavigate: ((turnId: string, index: number) => void) | null = null;
   private onSearchChange: ((query: string) => void) | null = null;
   private onDocumentPointerDown: ((e: PointerEvent) => void) | null = null;
   private onKeyDown: ((e: KeyboardEvent) => void) | null = null;
   private onWindowResize: (() => void) | null = null;
+  private onAnchorMouseEnter: (() => void) | null = null;
+  private onAnchorMouseLeave: (() => void) | null = null;
+  private onPanelMouseEnter: (() => void) | null = null;
+  private onPanelMouseLeave: (() => void) | null = null;
+  private onAnchorFocusIn: (() => void) | null = null;
+  private onAnchorFocusOut: (() => void) | null = null;
+  private onAnchorKeyDown: ((event: KeyboardEvent) => void) | null = null;
+  private onAnchorClick: ((event: MouseEvent) => void) | null = null;
   private onStorageChanged:
     | ((changes: Record<string, browser.Storage.StorageChange>, areaName: string) => void)
     | null = null;
@@ -81,6 +92,30 @@ export class TimelinePreviewPanel {
     this._isPinned = pinned;
   }
 
+  setCompactMode(compact: boolean): void {
+    if (this._isCompactMode === compact) return;
+    this._isCompactMode = compact;
+    this.cancelCompactClose();
+    this.toggleBtn?.classList.toggle('timeline-preview-toggle-compact', compact);
+    this.panelEl?.classList.toggle('timeline-preview-panel-compact', compact);
+
+    if (compact) {
+      this.anchorElement.tabIndex = 0;
+      this.anchorElement.setAttribute('role', 'button');
+      this.anchorElement.setAttribute(
+        'aria-label',
+        getTranslationSync('timelineCompactOpenPreview'),
+      );
+      this.anchorElement.setAttribute('aria-expanded', this._isOpen ? 'true' : 'false');
+    } else {
+      this.anchorElement.removeAttribute('tabindex');
+      this.anchorElement.removeAttribute('role');
+      this.anchorElement.removeAttribute('aria-label');
+      this.anchorElement.removeAttribute('aria-expanded');
+      if (this._isOpen && !this._isPinned) this.close();
+    }
+  }
+
   toggle(): void {
     if (this._isOpen) {
       this.close();
@@ -97,6 +132,7 @@ export class TimelinePreviewPanel {
     this.panelEl.classList.add('visible');
     this.toggleBtn?.classList.add('active');
     this.toggleBtn?.setAttribute('aria-pressed', 'true');
+    if (this._isCompactMode) this.anchorElement.setAttribute('aria-expanded', 'true');
     this.scrollActiveIntoView();
   }
 
@@ -106,6 +142,7 @@ export class TimelinePreviewPanel {
     this.panelEl.classList.remove('visible');
     this.toggleBtn?.classList.remove('active');
     this.toggleBtn?.setAttribute('aria-pressed', 'false');
+    if (this._isCompactMode) this.anchorElement.setAttribute('aria-expanded', 'false');
     if (this.searchInput) {
       this.searchInput.value = '';
       this.searchQuery = '';
@@ -123,6 +160,7 @@ export class TimelinePreviewPanel {
       clearTimeout(this.resizeDebounceTimer);
       this.resizeDebounceTimer = null;
     }
+    this.cancelCompactClose();
     if (this.onDocumentPointerDown) {
       document.removeEventListener('pointerdown', this.onDocumentPointerDown);
       this.onDocumentPointerDown = null;
@@ -134,6 +172,38 @@ export class TimelinePreviewPanel {
     if (this.onWindowResize) {
       window.removeEventListener('resize', this.onWindowResize);
       this.onWindowResize = null;
+    }
+    if (this.onAnchorMouseEnter) {
+      this.anchorElement.removeEventListener('mouseenter', this.onAnchorMouseEnter);
+      this.onAnchorMouseEnter = null;
+    }
+    if (this.onAnchorMouseLeave) {
+      this.anchorElement.removeEventListener('mouseleave', this.onAnchorMouseLeave);
+      this.onAnchorMouseLeave = null;
+    }
+    if (this.onPanelMouseEnter && this.panelEl) {
+      this.panelEl.removeEventListener('mouseenter', this.onPanelMouseEnter);
+      this.onPanelMouseEnter = null;
+    }
+    if (this.onPanelMouseLeave && this.panelEl) {
+      this.panelEl.removeEventListener('mouseleave', this.onPanelMouseLeave);
+      this.onPanelMouseLeave = null;
+    }
+    if (this.onAnchorFocusIn) {
+      this.anchorElement.removeEventListener('focusin', this.onAnchorFocusIn);
+      this.onAnchorFocusIn = null;
+    }
+    if (this.onAnchorFocusOut) {
+      this.anchorElement.removeEventListener('focusout', this.onAnchorFocusOut);
+      this.onAnchorFocusOut = null;
+    }
+    if (this.onAnchorKeyDown) {
+      this.anchorElement.removeEventListener('keydown', this.onAnchorKeyDown);
+      this.onAnchorKeyDown = null;
+    }
+    if (this.onAnchorClick) {
+      this.anchorElement.removeEventListener('click', this.onAnchorClick);
+      this.onAnchorClick = null;
     }
     if (this.onStorageChanged) {
       browser.storage.onChanged.removeListener(this.onStorageChanged);
@@ -150,6 +220,10 @@ export class TimelinePreviewPanel {
     this.onSearchChange = null;
     this.markers = [];
     this.filteredMarkers = [];
+    this.anchorElement.removeAttribute('tabindex');
+    this.anchorElement.removeAttribute('role');
+    this.anchorElement.removeAttribute('aria-label');
+    this.anchorElement.removeAttribute('aria-expanded');
   }
 
   private createDOM(): void {
@@ -197,7 +271,12 @@ export class TimelinePreviewPanel {
       if (!this._isOpen) return;
       if (this._isPinned) return;
       const target = e.target as Node;
-      if (this.panelEl?.contains(target) || this.toggleBtn?.contains(target)) return;
+      if (
+        this.panelEl?.contains(target) ||
+        this.toggleBtn?.contains(target) ||
+        this.anchorElement.contains(target)
+      )
+        return;
       this.close();
     };
     document.addEventListener('pointerdown', this.onDocumentPointerDown);
@@ -225,6 +304,43 @@ export class TimelinePreviewPanel {
     };
     window.addEventListener('resize', this.onWindowResize);
 
+    this.onAnchorMouseEnter = () => {
+      if (!this._isCompactMode) return;
+      this.cancelCompactClose();
+      this.open();
+    };
+    this.onAnchorMouseLeave = () => this.scheduleCompactClose();
+    this.onPanelMouseEnter = () => {
+      if (!this._isCompactMode) return;
+      this.cancelCompactClose();
+    };
+    this.onPanelMouseLeave = () => this.scheduleCompactClose();
+    this.onAnchorFocusIn = () => {
+      if (!this._isCompactMode) return;
+      this.cancelCompactClose();
+      this.open();
+    };
+    this.onAnchorFocusOut = () => this.scheduleCompactClose();
+    this.onAnchorKeyDown = (event: KeyboardEvent) => {
+      if (!this._isCompactMode || (event.key !== 'Enter' && event.key !== ' ')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.toggle();
+    };
+    this.onAnchorClick = (event: MouseEvent) => {
+      if (!this._isCompactMode) return;
+      event.stopPropagation();
+      this.open();
+    };
+    this.anchorElement.addEventListener('mouseenter', this.onAnchorMouseEnter);
+    this.anchorElement.addEventListener('mouseleave', this.onAnchorMouseLeave);
+    this.panelEl?.addEventListener('mouseenter', this.onPanelMouseEnter);
+    this.panelEl?.addEventListener('mouseleave', this.onPanelMouseLeave);
+    this.anchorElement.addEventListener('focusin', this.onAnchorFocusIn);
+    this.anchorElement.addEventListener('focusout', this.onAnchorFocusOut);
+    this.anchorElement.addEventListener('keydown', this.onAnchorKeyDown);
+    this.anchorElement.addEventListener('click', this.onAnchorClick);
+
     // Re-render translated text on language change
     this.onStorageChanged = (changes, areaName) => {
       if ((areaName === 'sync' || areaName === 'local') && changes[StorageKeys.LANGUAGE]) {
@@ -239,9 +355,31 @@ export class TimelinePreviewPanel {
     if (this.searchInput) {
       this.searchInput.placeholder = getTranslationSync('timelinePreviewSearch');
     }
+    if (this._isCompactMode) {
+      this.anchorElement.setAttribute(
+        'aria-label',
+        getTranslationSync('timelineCompactOpenPreview'),
+      );
+    }
     if (this._isOpen) {
       this.renderList();
     }
+  }
+
+  private scheduleCompactClose(): void {
+    if (!this._isCompactMode || this._isPinned) return;
+    this.cancelCompactClose();
+    this.compactCloseTimer = window.setTimeout(() => {
+      this.compactCloseTimer = null;
+      if (!this._isCompactMode || this._isPinned) return;
+      this.close();
+    }, COMPACT_CLOSE_DELAY_MS);
+  }
+
+  private cancelCompactClose(): void {
+    if (this.compactCloseTimer === null) return;
+    clearTimeout(this.compactCloseTimer);
+    this.compactCloseTimer = null;
   }
 
   private isRTLContext(): boolean {
@@ -292,7 +430,9 @@ export class TimelinePreviewPanel {
     const barRect = this.anchorElement.getBoundingClientRect();
     const panelWidth = 320;
     const gap = 12;
-    const maxHeight = Math.min(500, window.innerHeight * 0.7);
+    const maxHeight = this._isCompactMode
+      ? Math.min(700, window.innerHeight * 0.82)
+      : Math.min(500, window.innerHeight * 0.7);
     const barCenterY = barRect.top + barRect.height / 2;
     const isRTL = this.isRTLContext();
 

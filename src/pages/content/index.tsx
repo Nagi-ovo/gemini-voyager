@@ -54,6 +54,7 @@ import { startSendBehavior } from './sendBehavior/index';
 import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startTimeline } from './timeline/index';
+import { maybeShowTimelineStyleCoachmark } from './timeline/timelineStyleCoachmark';
 import { startUsageStatus } from './usageStatus/index';
 import { maybeShowUsageCoachmark } from './usageStatus/usageCoachmark';
 import { startUserLatex } from './userLatex/index';
@@ -116,7 +117,11 @@ async function isForkFeatureEnabled(): Promise<boolean> {
 
 function showOnboardingCoachmarksWhenChangelogIsIdle(): void {
   if (document.querySelector('.gv-changelog-overlay')) return;
-  void runCoachmarkSequence([maybeShowUsageCoachmark, maybeShowFolderSearchCoachmark]);
+  void runCoachmarkSequence([
+    maybeShowTimelineStyleCoachmark,
+    maybeShowUsageCoachmark,
+    maybeShowFolderSearchCoachmark,
+  ]);
 }
 
 /**

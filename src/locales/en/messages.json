@@ -7,6 +7,22 @@
     "message": "Supercharge your Gemini™ experience: timeline, folders, prompt vault, and chat export.",
     "description": "Extension description"
   },
+  "timelineStyle": {
+    "message": "Timeline style",
+    "description": "Timeline visual style label"
+  },
+  "timelineStyleDots": {
+    "message": "Nodes",
+    "description": "Classic timeline node style"
+  },
+  "timelineStyleCompact": {
+    "message": "Compact",
+    "description": "Compact timeline index style"
+  },
+  "timelineCompactOpenPreview": {
+    "message": "Open timeline preview",
+    "description": "Accessible label for the compact timeline rail"
+  },
   "scrollMode": {
     "message": "Scroll mode",
     "description": "Scroll mode label"
@@ -2247,9 +2263,21 @@
     "message": "Show folder search",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "timelineCoachmarkTitle": {
+    "message": "New: compact timeline",
+    "description": "Coachmark title introducing the compact timeline style"
+  },
+  "timelineCoachmarkBody": {
+    "message": "Keep the right edge quiet. Hover the compact index to open every message in one panel.",
+    "description": "Coachmark body text introducing the compact timeline style"
+  },
+  "timelineCoachmarkToggle": {
+    "message": "Use compact timeline",
+    "description": "Inline toggle label in the compact-timeline coachmark"
+  },
   "coachmarkDismiss": {
-    "message": "Maybe later",
-    "description": "Generic dismiss/maybe-later label for feature coachmarks"
+    "message": "Done",
+    "description": "Generic confirmation label for feature coachmarks"
   },
   "themeColor": {
     "message": "Accent color",

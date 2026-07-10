@@ -28,6 +28,7 @@ export type Brand<K, T> = K & { __brand: T };
 export type ConversationId = Brand<string, 'ConversationId'>;
 export type FolderId = Brand<string, 'FolderId'>;
 export type TurnId = Brand<string, 'TurnId'>;
+export type TimelineStyle = 'dots' | 'compact';
 
 /**
  * Storage keys - centralized for type safety
@@ -53,6 +54,7 @@ export const StorageKeys = {
 
   // Timeline
   TIMELINE_SCROLL_MODE: 'geminiTimelineScrollMode',
+  TIMELINE_STYLE: 'geminiTimelineStyle',
   TIMELINE_HIDE_CONTAINER: 'geminiTimelineHideContainer',
   TIMELINE_BAR_WIDTH: 'geminiTimelineBarWidth',
   TIMELINE_DRAGGABLE: 'geminiTimelineDraggable',

@@ -7,6 +7,22 @@
     "message": "Улучшите опыт Gemini™: таймлайн, папки, промпты и экспорт чатов.",
     "description": "Extension description"
   },
+  "timelineStyle": {
+    "message": "Стиль временной шкалы",
+    "description": "Название визуального стиля временной шкалы"
+  },
+  "timelineStyleDots": {
+    "message": "Узлы",
+    "description": "Классический стиль узлов временной шкалы"
+  },
+  "timelineStyleCompact": {
+    "message": "Компактный",
+    "description": "Компактный стиль индекса временной шкалы"
+  },
+  "timelineCompactOpenPreview": {
+    "message": "Открыть обзор временной шкалы",
+    "description": "Метка доступности компактной временной шкалы"
+  },
   "scrollMode": {
     "message": "Режим прокрутки",
     "description": "Scroll mode label"
@@ -2247,9 +2263,21 @@
     "message": "Показывать поиск папок",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "timelineCoachmarkTitle": {
+    "message": "Новое: компактная шкала времени",
+    "description": "Coachmark title introducing the compact timeline style"
+  },
+  "timelineCoachmarkBody": {
+    "message": "Освободите правый край: наведите курсор на компактный указатель, чтобы открыть все сообщения в одной панели.",
+    "description": "Coachmark body text introducing the compact timeline style"
+  },
+  "timelineCoachmarkToggle": {
+    "message": "Использовать компактную шкалу",
+    "description": "Inline toggle label in the compact-timeline coachmark"
+  },
   "coachmarkDismiss": {
-    "message": "Позже",
-    "description": "Generic dismiss/maybe-later label for feature coachmarks"
+    "message": "Готово",
+    "description": "Generic confirmation label for feature coachmarks"
   },
   "themeColor": {
     "message": "Акцентный цвет",
