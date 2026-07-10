@@ -16,6 +16,7 @@ import { getTranslationSync, initI18n } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
 import { showCoachmark } from '../coachmark';
+import { USAGE_REFRESH_ICON } from './icons';
 
 const COACH_ID = 'usage-pill-intro';
 export const USAGE_COACHMARK_DEBUG_EVENT = 'gv:debug:usageCoachmark';
@@ -32,8 +33,6 @@ const t = (key: TranslationKey, fallback: string): string => {
 // Mini progress-bar glyph — echoes the pill's own bars.
 const USAGE_ICON =
   '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="10" width="18" height="4" rx="2" fill="currentColor" opacity="0.28"/><rect x="3" y="10" width="11" height="4" rx="2" fill="currentColor"/></svg>';
-const REFRESH_ICON =
-  '<svg viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-820q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>';
 const OPEN_ICON =
   '<svg viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h280v80H200v560h560v-280h80v280q0 33-23.5 56.5T760-120H200Zm188-212-56-56 372-372H560v-80h280v280h-80v-144L388-332Z"/></svg>';
 
@@ -105,7 +104,7 @@ function buildPreviewPill(): HTMLElement {
 
   const refresh = document.createElement('span');
   refresh.className = 'gv-usage-refresh';
-  refresh.innerHTML = REFRESH_ICON;
+  refresh.innerHTML = USAGE_REFRESH_ICON;
   const open = document.createElement('span');
   open.className = 'gv-usage-open';
   open.innerHTML = OPEN_ICON;
