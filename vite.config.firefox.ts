@@ -10,6 +10,13 @@ const FIREFOX_CHANGELOG_BANNER_RESOURCES = [
   'changelog-promo-banner-cn.png',
   'changelog-promo-banner-jp.png',
 ];
+const FIREFOX_SAKURA_RENDERER_RESOURCE = 'src/pages/sakuraRenderer/index.html';
+const FIREFOX_CONTENT_MATCHES = [
+  'https://gemini.google.com/*',
+  'https://business.gemini.google/*',
+  'https://aistudio.google.com/*',
+  'https://aistudio.google.cn/*',
+];
 
 type WebAccessibleResourceLike = {
   resources?: string[];
@@ -36,6 +43,10 @@ function appendFirefoxChangelogResources<
   return {
     ...manifest,
     web_accessible_resources: [
+      {
+        resources: [FIREFOX_SAKURA_RENDERER_RESOURCE],
+        matches: FIREFOX_CONTENT_MATCHES,
+      } as unknown as TResource,
       {
         ...first,
         resources: mergedResources,
@@ -90,6 +101,11 @@ export default mergeConfig(
     build: {
       ...baseBuildOptions,
       outDir,
+      rollupOptions: {
+        input: {
+          sakuraRenderer: resolve(__dirname, 'src/pages/sakuraRenderer/index.html'),
+        },
+      },
     },
     publicDir: resolve(__dirname, 'public'),
   }),
