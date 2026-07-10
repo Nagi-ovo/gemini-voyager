@@ -1640,6 +1640,61 @@ describe('DefaultModelManager (default model locker)', () => {
     expect(standard.click).toHaveBeenCalledTimes(0);
   });
 
+  it('auto-locks an index-zero Extended thinking option in Firefox compact menus (#808)', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_key: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({
+          gvDefaultThinkingLevel: { index: 0, label: 'Extended thinking' },
+        });
+      },
+    );
+
+    history.replaceState({}, '', '/app');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.setAttribute('data-test-id', 'bard-mode-menu-button');
+    selectorBtn.textContent = 'Flash';
+    selectorBtn.click = vi.fn();
+    document.body.appendChild(selectorBtn);
+
+    const mainPane = document.createElement('div');
+    mainPane.className = 'cdk-overlay-pane';
+    const modelItem = document.createElement('gem-menu-item');
+    modelItem.setAttribute('role', 'menuitem');
+    modelItem.setAttribute('data-mode-id', '56fdd199312815e2');
+    modelItem.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">3.5 Flash</span></div></gem-menu-item-content>`;
+    const thinkingRow = document.createElement('gem-menu-item');
+    thinkingRow.setAttribute('role', 'menuitem');
+    thinkingRow.setAttribute('value', 'thinking_level');
+    thinkingRow.setAttribute('aria-haspopup', 'true');
+    thinkingRow.setAttribute('aria-controls', 'ng-menu-thinking-firefox');
+    thinkingRow.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">Thinking level</span></div></gem-menu-item-content>`;
+    thinkingRow.click = vi.fn();
+    mainPane.append(modelItem, thinkingRow);
+    document.body.appendChild(mainPane);
+
+    const submenuPane = document.createElement('div');
+    submenuPane.className = 'cdk-overlay-pane';
+    const submenuList = document.createElement('div');
+    submenuList.id = 'ng-menu-thinking-firefox';
+    const extended = document.createElement('gem-menu-item');
+    extended.setAttribute('role', 'menuitem');
+    extended.innerHTML = `<gem-menu-item-content><div class="label-container"><span class="label">Extended thinking</span></div></gem-menu-item-content>`;
+    extended.click = vi.fn();
+    submenuList.appendChild(extended);
+    submenuPane.appendChild(submenuList);
+    document.body.appendChild(submenuPane);
+
+    const { default: DefaultModelManager } = await import('../modelLocker');
+    await DefaultModelManager.getInstance().init();
+    destroyManager = () => DefaultModelManager.getInstance().destroy();
+
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(thinkingRow.click).toHaveBeenCalledTimes(1);
+    expect(extended.click).toHaveBeenCalledTimes(1);
+  });
+
   it('backs off when Thinking level clicks do not move the pill', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_key: unknown, callback: (items: Record<string, unknown>) => void) => {

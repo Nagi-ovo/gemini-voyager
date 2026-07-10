@@ -1177,13 +1177,13 @@ class DefaultModelManager {
   }
 
   /**
-   * Standard (index 0 / label "standard") is Gemini's built-in default thinking
-   * level. We never lock to it — the page already opens there, so enforcing it
-   * is a no-op that only risks flashing the picker open.
+   * Standard is Gemini's built-in default thinking level. The label must be
+   * authoritative here: Firefox's compact picker can expose only
+   * "Extended thinking", making that non-default choice index 0 (#808).
    */
   private isPageDefaultThinkingLevel(thinking: DefaultThinkingLevel | null): boolean {
     if (!thinking) return false;
-    return thinking.index === 0 || thinking.label.toLowerCase().trim() === 'standard';
+    return thinking.label.toLowerCase().trim() === 'standard';
   }
 
   /**
@@ -1290,9 +1290,10 @@ class DefaultModelManager {
   }
 
   private thinkingMatchesLines(target: DefaultThinkingLevel, lines: string[]): boolean {
-    // Gemini omits the thinking-level line in the trigger pill when at Standard (index 0, the default).
+    // Gemini omits the thinking-level line in the trigger pill when at Standard.
+    // Index 0 is not sufficient: compact pickers may contain only Extended.
     if (lines.length < 2) {
-      return target.index === 0 || target.label.toLowerCase().trim() === 'standard';
+      return this.isPageDefaultThinkingLevel(target);
     }
     const thinkingLine = lines.slice(1).join(' ').toLowerCase().trim();
     return thinkingLine === target.label.toLowerCase().trim();
