@@ -1,9 +1,11 @@
 import { StorageKeys, type TimelineStyle } from '@/core/types/common';
 import { hashString } from '@/core/utils/hash';
+import { setPluginSetting } from '@/features/plugins/storage/pluginState';
 import type { PluginSettings } from '@/features/plugins/types';
 import { StarredMessagesService } from '@/pages/content/timeline/StarredMessagesService';
 import { TimelinePreviewPanel } from '@/pages/content/timeline/TimelinePreviewPanel';
 import type { StarredMessage } from '@/pages/content/timeline/starredTypes';
+import { showTimelineStyleCoachmark } from '@/pages/content/timeline/timelineStyleCoachmark';
 import type { PreviewMarkerData } from '@/pages/content/timeline/types';
 import { initI18n } from '@/utils/i18n';
 
@@ -18,6 +20,8 @@ const TOOLTIP_DELAY_MS = 150;
 const PENDING_NAVIGATION_TIMEOUT_MS = 8000;
 const PENDING_NAVIGATION_HOP_MS = 200;
 const LONG_JUMP_VIEWPORTS = 3;
+const CLAUDE_TIMELINE_PLUGIN_ID = 'voyager.claude-timeline';
+const CLAUDE_TIMELINE_COACHMARK_ID = 'claude-timeline-compact-style-intro-v1';
 const COMPACT_VIEW_SETTING = 'compactView';
 
 type Dot = HTMLButtonElement & {
@@ -108,6 +112,7 @@ class ClaudeTimeline {
     this.observe();
     window.addEventListener('hashchange', this.handleHash);
     window.addEventListener('resize', this.handleResize);
+    this.maybeShowStyleCoachmark();
   }
 
   updateSettings(settings: PluginSettings): void {
@@ -116,6 +121,19 @@ class ClaudeTimeline {
     this.timelineStyle = nextStyle;
     this.applyTimelineStyle();
     if (changed && this.markers.length > 0) this.renderDots();
+  }
+
+  private maybeShowStyleCoachmark(): void {
+    if (this.destroyed || this.timelineStyle === 'compact') return;
+    void showTimelineStyleCoachmark({
+      id: CLAUDE_TIMELINE_COACHMARK_ID,
+      enabled: false,
+      onStyleChange: async (compact) => {
+        if (this.destroyed) return;
+        this.updateSettings({ [COMPACT_VIEW_SETTING]: compact });
+        await setPluginSetting(CLAUDE_TIMELINE_PLUGIN_ID, COMPACT_VIEW_SETTING, compact);
+      },
+    });
   }
 
   destroy(): void {

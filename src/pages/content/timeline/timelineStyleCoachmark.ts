@@ -1,9 +1,8 @@
 /**
  * One-time guided intro for the compact timeline style.
  *
- * The guide reveals a static replica of the compact rail so introducing the
- * feature never changes the user's preference by itself. The real timeline is
- * switched only when the user flips the inline toggle.
+ * The guide reveals a static replica of the compact rail, temporarily hides the
+ * live rail, and lets the user compare both styles without overlapping UI.
  */
 import browser from 'webextension-polyfill';
 
@@ -50,6 +49,13 @@ async function setCompactTimelineEnabled(on: boolean): Promise<void> {
   }
 }
 
+interface TimelineStyleCoachmarkOptions {
+  id: string;
+  enabled: boolean;
+  force?: boolean;
+  onStyleChange: (compact: boolean) => void | Promise<void>;
+}
+
 /** A non-interactive timeline replica that can morph between both styles. */
 function buildTimelineStylePreview(compact: boolean): HTMLElement {
   const preview = document.createElement('div');
@@ -72,16 +78,14 @@ function setPreviewStyle(preview: HTMLElement | null, compact: boolean): void {
   preview.classList.toggle('is-dots', !compact);
 }
 
-/**
- * Show the compact-timeline intro once. `force` re-shows it for debugging and
- * bypasses the already-enabled short-circuit.
- */
-export async function maybeShowTimelineStyleCoachmark(
-  opts: { force?: boolean } = {},
-): Promise<void> {
-  if (location.hostname !== 'gemini.google.com') return;
-  const enabled = await loadCompactTimelineEnabled();
-  if (enabled && !opts.force) return;
+/** Shared compact-timeline intro used by native and plugin timelines. */
+export async function showTimelineStyleCoachmark({
+  id,
+  enabled,
+  force = false,
+  onStyleChange,
+}: TimelineStyleCoachmarkOptions): Promise<void> {
+  if (enabled && !force) return;
 
   try {
     await initI18n();
@@ -93,8 +97,8 @@ export async function maybeShowTimelineStyleCoachmark(
   let hiddenTimelineElements: HTMLElement[] = [];
 
   await showCoachmark({
-    id: COACH_ID,
-    once: !opts.force,
+    id,
+    once: !force,
     scrim: true,
     icon: TIMELINE_ICON,
     title: t('timelineCoachmarkTitle', 'New: compact timeline'),
@@ -112,7 +116,7 @@ export async function maybeShowTimelineStyleCoachmark(
           element.classList.add('gv-coach-timeline-hidden'),
         );
         preview = buildTimelineStylePreview(true);
-        void setCompactTimelineEnabled(true);
+        void Promise.resolve(onStyleChange(true)).catch(() => {});
         return preview;
       },
       unmount: (element) => {
@@ -130,10 +134,27 @@ export async function maybeShowTimelineStyleCoachmark(
       initial: true,
       onChange: (on) => {
         setPreviewStyle(preview, on);
-        return setCompactTimelineEnabled(on);
+        return onStyleChange(on);
       },
     },
     dismissLabel: t('coachmarkDismiss', 'Done'),
+  });
+}
+
+/**
+ * Show Gemini's compact-timeline intro once. `force` re-shows it for debugging
+ * and bypasses the already-enabled short-circuit.
+ */
+export async function maybeShowTimelineStyleCoachmark(
+  opts: { force?: boolean } = {},
+): Promise<void> {
+  if (location.hostname !== 'gemini.google.com') return;
+  const enabled = await loadCompactTimelineEnabled();
+  await showTimelineStyleCoachmark({
+    id: COACH_ID,
+    enabled,
+    force: opts.force,
+    onStyleChange: setCompactTimelineEnabled,
   });
 }
 
