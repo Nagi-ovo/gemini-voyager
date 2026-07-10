@@ -82,6 +82,26 @@ const widthPlugin: PluginManifest = {
   },
 };
 
+const compactTimelinePlugin: PluginManifest = {
+  ...widthPlugin,
+  name: 'Claude · Timeline',
+  description: 'Timeline with two visual styles',
+  i18n: {
+    zh: {
+      settings: { compactView: { label: '使用紧凑索引' } },
+    },
+  },
+  contributes: {
+    settings: {
+      compactView: {
+        type: 'boolean',
+        label: 'Use compact timeline',
+        default: false,
+      },
+    },
+  },
+};
+
 let container: HTMLElement;
 let root: Root;
 
@@ -92,9 +112,9 @@ function nativeSetSliderValue(input: HTMLInputElement, value: number): void {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-async function render(): Promise<void> {
+async function render(plugin: PluginManifest = widthPlugin): Promise<void> {
   await act(async () => {
-    root.render(React.createElement(PluginManager, { manifests: [widthPlugin] }));
+    root.render(React.createElement(PluginManager, { manifests: [plugin] }));
   });
   // Let the async state hydration (loadPluginState) resolve so the plugin shows
   // as enabled and its settings slider is rendered.
@@ -166,6 +186,23 @@ describe('PluginManager setting slider', () => {
 
     expect(setPluginSetting).toHaveBeenCalledTimes(1);
     expect(setPluginSetting).toHaveBeenCalledWith(PLUGIN_ID, 'width', 1024);
+  });
+});
+
+describe('PluginManager boolean setting', () => {
+  it('renders a localized switch and persists changes immediately', async () => {
+    mockLanguage.current = 'zh';
+    await render(compactTimelinePlugin);
+
+    const input = container.querySelector('input[aria-label="使用紧凑索引"]') as HTMLInputElement;
+    expect(input).toBeTruthy();
+    expect(input.checked).toBe(false);
+
+    act(() => input.click());
+
+    expect(input.checked).toBe(true);
+    expect(setPluginSetting).toHaveBeenCalledOnce();
+    expect(setPluginSetting).toHaveBeenCalledWith(PLUGIN_ID, 'compactView', true);
   });
 });
 

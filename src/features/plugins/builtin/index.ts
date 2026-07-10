@@ -77,47 +77,56 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   {
     id: 'voyager.claude-timeline',
     name: 'Claude · Timeline',
-    version: '1.0.0',
+    version: '1.1.0',
     description: 'Adds a compact conversation timeline to Claude with starred messages and search.',
     i18n: {
       zh: {
         name: 'Claude · 时间线',
         description: '为 Claude 添加紧凑的对话时间线，支持星标消息和搜索。',
+        settings: { compactView: { label: '使用紧凑索引' } },
       },
       zh_TW: {
         name: 'Claude · 時間線',
         description: '為 Claude 加入緊湊的對話時間線，支援星標訊息與搜尋。',
+        settings: { compactView: { label: '使用精簡索引' } },
       },
       ja: {
         name: 'Claude · タイムライン',
         description:
           'Claude にコンパクトな会話タイムラインを追加し、スター付きメッセージと検索に対応します。',
+        settings: { compactView: { label: 'コンパクト表示を使う' } },
       },
       ko: {
         name: 'Claude · 타임라인',
         description: 'Claude에 별표 메시지와 검색을 지원하는 간단한 대화 타임라인을 추가합니다.',
+        settings: { compactView: { label: '컴팩트 타임라인 사용' } },
       },
       fr: {
         name: 'Claude · Timeline',
         description: 'Ajoute une timeline compacte à Claude avec messages favoris et recherche.',
+        settings: { compactView: { label: 'Utiliser la chronologie compacte' } },
       },
       es: {
         name: 'Claude · Línea de tiempo',
         description:
           'Añade a Claude una línea de tiempo compacta con mensajes destacados y búsqueda.',
+        settings: { compactView: { label: 'Usar cronología compacta' } },
       },
       pt: {
         name: 'Claude · Linha do tempo',
         description:
           'Adiciona ao Claude uma linha do tempo compacta com mensagens favoritas e busca.',
+        settings: { compactView: { label: 'Usar linha do tempo compacta' } },
       },
       ru: {
         name: 'Claude · Таймлайн',
         description: 'Добавляет в Claude компактную шкалу диалога со звёздами и поиском.',
+        settings: { compactView: { label: 'Использовать компактную шкалу' } },
       },
       ar: {
         name: 'Claude · المخطط الزمني',
         description: 'يضيف إلى Claude مخططًا زمنيًا موجزًا مع الرسائل المميزة والبحث.',
+        settings: { compactView: { label: 'استخدام المخطط الزمني المضغوط' } },
       },
     },
     author: 'voyager-official',
@@ -126,7 +135,15 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
     engine: '>=1.1.0',
     tier: 'declarative',
     matches: ['https://claude.ai/*'],
-    contributes: {},
+    contributes: {
+      settings: {
+        compactView: {
+          type: 'boolean',
+          label: 'Use compact timeline',
+          default: false,
+        },
+      },
+    },
   },
   {
     id: 'voyager.claude-usage',

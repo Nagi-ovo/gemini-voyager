@@ -13,9 +13,13 @@
  * plugin-authored or remotely fetched. Marketplace manifests cannot reach this:
  * only code we ship calls `registerNativeHandler`.
  */
+import type { PluginSettings } from '../types';
+
 export interface NativeHandler {
   /** Run when the plugin mounts (URL matches + enabled). Should be idempotent. */
-  readonly start?: () => void;
+  readonly start?: (settings: PluginSettings) => void;
+  /** Apply changed settings without tearing down the native feature. */
+  readonly updateSettings?: (settings: PluginSettings) => void;
   /** Run when the plugin unmounts (disabled, or navigated away). */
   readonly stop?: () => void;
 }

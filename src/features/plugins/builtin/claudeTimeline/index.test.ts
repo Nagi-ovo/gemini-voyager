@@ -8,6 +8,7 @@ import {
   extractClaudeTurnHash,
   startClaudeTimeline,
   stopClaudeTimeline,
+  updateClaudeTimelineSettings,
 } from '.';
 
 const { addStarredMessage, getStarredMessagesForConversation, removeStarredMessage } = vi.hoisted(
@@ -107,6 +108,38 @@ describe('Claude timeline', () => {
     expect(window.scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
     expect(dots[0].classList.contains('active')).toBe(true);
     expect(dots[0].getAttribute('aria-current')).toBe('true');
+  });
+
+  it('switches live between node and compact hover-panel views', async () => {
+    addTurn('first prompt');
+    addTurn('second prompt');
+    addTurn('third prompt');
+
+    startClaudeTimeline({ compactView: true });
+    await flush();
+
+    const bar = document.querySelector<HTMLElement>('.gemini-timeline-bar')!;
+    expect(bar.classList.contains('timeline-style-compact')).toBe(true);
+    expect(bar.querySelector('.timeline-track')?.getAttribute('aria-hidden')).toBe('true');
+    expect(
+      queryDots().map((dot) => dot.style.getPropertyValue('--timeline-compact-offset')),
+    ).toEqual(['-10px', '0px', '10px']);
+    expect(document.querySelector('.timeline-preview-panel-compact')).toBeTruthy();
+
+    bar.dispatchEvent(new MouseEvent('mouseenter'));
+    expect(document.querySelector('.timeline-preview-panel')?.classList.contains('visible')).toBe(
+      true,
+    );
+
+    updateClaudeTimelineSettings({ compactView: false });
+
+    expect(bar.classList.contains('timeline-style-compact')).toBe(false);
+    expect(bar.querySelector('.timeline-track')?.hasAttribute('aria-hidden')).toBe(false);
+    expect(queryDots().every((dot) => dot.style.getPropertyValue('--n') !== '')).toBe(true);
+    expect(document.querySelector('.timeline-preview-panel-compact')).toBeNull();
+    expect(document.querySelector('.timeline-preview-panel')?.classList.contains('visible')).toBe(
+      false,
+    );
   });
 
   it('updates active dot from the current viewport', async () => {

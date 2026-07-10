@@ -50,18 +50,32 @@ describe('DeclarativeEngine', () => {
     expect(document.getElementById('gv-plugin-style-test.plugin')).toBeNull();
   });
 
-  it('runs a registered native handler: start on mount, stop on unmount, once each', () => {
+  it('runs a registered native handler and pushes live settings without remounting', () => {
     const start = vi.fn();
+    const updateSettings = vi.fn();
     const stop = vi.fn();
-    registerNativeHandler('test.native', { start, stop });
+    registerNativeHandler('test.native', { start, updateSettings, stop });
     const engine = new DeclarativeEngine({ doc: document });
+    const manifest = makeManifest(
+      {
+        settings: {
+          compactView: { type: 'boolean', label: 'Compact', default: false },
+        },
+      },
+      'test.native',
+    );
 
-    engine.mount(makeManifest({}, 'test.native'));
+    engine.mount(manifest, { compactView: false });
     expect(start).toHaveBeenCalledTimes(1);
+    expect(start).toHaveBeenCalledWith({ compactView: false });
 
     // Re-mounting an already-active plugin is a no-op → start not called again.
-    engine.mount(makeManifest({}, 'test.native'));
+    engine.mount(manifest, { compactView: false });
     expect(start).toHaveBeenCalledTimes(1);
+
+    engine.updateSettings('test.native', { compactView: true });
+    expect(updateSettings).toHaveBeenCalledOnce();
+    expect(updateSettings).toHaveBeenCalledWith({ compactView: true });
 
     engine.unmount('test.native');
     expect(stop).toHaveBeenCalledTimes(1);

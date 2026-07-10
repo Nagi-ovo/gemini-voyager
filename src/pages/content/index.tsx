@@ -8,7 +8,11 @@ import {
 import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy, stopFormulaCopy } from '@/features/formulaCopy';
 import { startPluginHost } from '@/features/plugins';
-import { startClaudeTimeline, stopClaudeTimeline } from '@/features/plugins/builtin/claudeTimeline';
+import {
+  startClaudeTimeline,
+  stopClaudeTimeline,
+  updateClaudeTimelineSettings,
+} from '@/features/plugins/builtin/claudeTimeline';
 import { startClaudeUsage, stopClaudeUsage } from '@/features/plugins/builtin/claudeUsage';
 import { registerNativeHandler } from '@/features/plugins/runtime/nativeHandlers';
 import { resolvePluginPlatformId } from '@/features/plugins/sites/registry';
@@ -476,6 +480,7 @@ function handleVisibilityChange(): void {
     });
     registerNativeHandler('voyager.claude-timeline', {
       start: startClaudeTimeline,
+      updateSettings: updateClaudeTimelineSettings,
       stop: stopClaudeTimeline,
     });
     registerNativeHandler('voyager.claude-usage', {

@@ -279,6 +279,14 @@ export function PluginManager({
     );
   }, []);
 
+  const handleImmediateSetting = useCallback(
+    (id: string, key: string, value: PluginSettingValue) => {
+      setSettingsMap((prev) => ({ ...prev, [id]: { ...prev[id], [key]: value } }));
+      void setPluginSetting(id, key, value);
+    },
+    [],
+  );
+
   // Flush any pending setting write if the popup closes mid-drag, so the user's
   // final value is never lost to the debounce window.
   useEffect(() => {
@@ -417,9 +425,29 @@ export function PluginManager({
                   {enabled && settingsSchema && (
                     <div className="mt-2 space-y-2.5">
                       {Object.entries(settingsSchema).map(([key, field]) => {
-                        if (field.type !== 'number') return null;
-                        const value = Number(settingsMap[plugin.id]?.[key] ?? field.default);
+                        const rawValue = settingsMap[plugin.id]?.[key] ?? field.default;
                         const settingText = pickLocalizedSetting(plugin, key, field, language);
+
+                        if (field.type === 'boolean') {
+                          const checked = rawValue === true;
+                          return (
+                            <div key={key} className="flex items-center justify-between gap-3">
+                              <span className="text-muted-foreground text-[11px]">
+                                {settingText.label}
+                              </span>
+                              <Switch
+                                checked={checked}
+                                aria-label={settingText.label}
+                                onChange={(event) =>
+                                  handleImmediateSetting(plugin.id, key, event.target.checked)
+                                }
+                              />
+                            </div>
+                          );
+                        }
+
+                        if (field.type !== 'number') return null;
+                        const value = Number(rawValue);
                         return (
                           <div key={key} title={`${settingText.label}: ${value}`}>
                             <div className="text-muted-foreground mb-1 flex items-center justify-between gap-2 text-[11px]">

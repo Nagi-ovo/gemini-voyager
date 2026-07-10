@@ -31,7 +31,13 @@ describe('BUILTIN_PLUGINS', () => {
     expect(timeline?.matches).toEqual(['https://claude.ai/*']);
     expect(timeline?.contributes.styles ?? []).toEqual([]);
     expect(timeline?.contributes.domOps ?? []).toEqual([]);
+    expect(timeline?.contributes.settings?.compactView).toEqual({
+      type: 'boolean',
+      label: 'Use compact timeline',
+      default: false,
+    });
     expect(timeline?.i18n?.zh?.name).toBe('Claude · 时间线');
+    expect(timeline?.i18n?.zh?.settings?.compactView?.label).toBe('使用紧凑索引');
   });
 
   it('includes the Claude usage native function plugin', () => {

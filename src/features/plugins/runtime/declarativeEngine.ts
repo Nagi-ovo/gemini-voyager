@@ -106,7 +106,7 @@ export class DeclarativeEngine {
     this.applyDomOps(entry);
     // First-party builtin plugins (e.g. formula copy) run JS via a registered
     // native handler, in lockstep with the declarative lifecycle.
-    entry.nativeHandler?.start?.();
+    entry.nativeHandler?.start?.(settings);
     this.syncObserver();
     logger.info('Plugin mounted', { id: manifest.id });
   }
@@ -119,6 +119,7 @@ export class DeclarativeEngine {
     if (entry.styleEl) entry.styleEl.textContent = this.renderCss(entry);
     this.releasePlugin(id);
     this.applyDomOps(entry);
+    entry.nativeHandler?.updateSettings?.(settings);
   }
 
   unmount(id: string): void {
