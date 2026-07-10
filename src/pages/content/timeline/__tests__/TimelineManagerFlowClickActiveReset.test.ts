@@ -102,8 +102,14 @@ describe('TimelineManager flow click highlight behavior', () => {
 
     expect(firstDot.classList.contains('active')).toBe(true);
 
-    const startRunnerSpy = vi.fn();
-    const smoothScrollSpy = vi.fn();
+    const callOrder: string[] = [];
+    const updateActiveDotUI = internal.updateActiveDotUI.bind(manager);
+    internal.updateActiveDotUI = vi.fn(() => {
+      callOrder.push('active');
+      updateActiveDotUI();
+    });
+    const startRunnerSpy = vi.fn(() => callOrder.push('runner'));
+    const smoothScrollSpy = vi.fn(() => callOrder.push('scroll'));
     const flowDurationSpy = vi.fn(() => 520);
     internal.startRunner = startRunnerSpy;
     internal.smoothScrollTo = smoothScrollSpy;
@@ -116,6 +122,7 @@ describe('TimelineManager flow click highlight behavior', () => {
     expect(firstDot.classList.contains('active')).toBe(false);
     expect(startRunnerSpy).toHaveBeenCalledWith(0, 1, 520);
     expect(smoothScrollSpy).toHaveBeenCalledWith(secondTarget, 520);
+    expect(callOrder).toEqual(['scroll', 'active', 'runner']);
 
     manager.destroy();
   });
@@ -320,6 +327,165 @@ describe('TimelineManager flow click highlight behavior', () => {
 
     expect(recalcSpy).toHaveBeenCalledTimes(1);
     expect(smoothScrollSpy).toHaveBeenCalledWith(freshTarget, 0);
+
+    manager.destroy();
+  });
+
+  it('skips document scans and computed-style walks for a current connected target', () => {
+    const manager = new TimelineManager();
+    const scrollContainer = document.createElement('div');
+    const target = document.createElement('div');
+    target.className = 'user';
+    scrollContainer.appendChild(target);
+    document.body.appendChild(scrollContainer);
+
+    const internal = manager as unknown as {
+      scrollContainer: HTMLElement | null;
+      conversationContainer: HTMLElement | null;
+      userTurnSelector: string;
+      markers: TimelineMarker[];
+      shouldRefreshForInteraction: (targetElement: HTMLElement | null) => boolean;
+    };
+    internal.scrollContainer = scrollContainer;
+    internal.conversationContainer = scrollContainer;
+    internal.userTurnSelector = '.user';
+    internal.markers = [
+      {
+        id: 'm0',
+        element: target,
+        summary: 'current',
+        n: 0,
+        baseN: 0,
+        dotElement: null,
+        starred: false,
+      },
+    ];
+
+    const querySelectorAll = vi.spyOn(document, 'querySelectorAll');
+    const getComputedStyle = vi.spyOn(window, 'getComputedStyle');
+
+    expect(internal.shouldRefreshForInteraction(target)).toBe(false);
+    expect(querySelectorAll).not.toHaveBeenCalled();
+    expect(getComputedStyle).not.toHaveBeenCalled();
+
+    manager.destroy();
+  });
+
+  it('moves the runner with a compositor transform and reads the spring profile once', () => {
+    const manager = new TimelineManager();
+    const trackContent = document.createElement('div');
+    document.body.appendChild(trackContent);
+
+    const internal = manager as unknown as {
+      ui: { trackContent?: HTMLElement | null };
+      yPositions: number[];
+      runnerRing: HTMLElement | null;
+      startRunner: (fromIdx: number, toIdx: number, duration: number) => void;
+    };
+    internal.ui.trackContent = trackContent;
+    internal.yPositions = [20, 120];
+
+    const requestAnimationFrame = vi
+      .spyOn(window, 'requestAnimationFrame')
+      .mockImplementation(() => 1);
+    const getItem = vi.spyOn(localStorage, 'getItem').mockReturnValue('ios');
+
+    internal.startRunner(0, 1, 600);
+
+    expect(getItem).toHaveBeenCalledTimes(1);
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(1);
+    expect(internal.runnerRing?.style.top).toBe('0px');
+    expect(internal.runnerRing?.style.transform).toMatch(/^translate3d\(-50%, /);
+    expect(internal.runnerRing?.style.willChange).toBe('transform, opacity');
+
+    manager.destroy();
+  });
+
+  it('updates slider position during scrolling without remeasuring geometry', () => {
+    const manager = new TimelineManager();
+    const track = document.createElement('div');
+    const sliderHandle = document.createElement('div');
+
+    track.scrollTop = 500;
+    const internal = manager as unknown as {
+      ui: {
+        track?: HTMLElement | null;
+        sliderHandle?: HTMLElement | null;
+      };
+      sliderAlwaysVisible: boolean;
+      sliderMaxTop: number;
+      sliderScrollRange: number;
+      updateSliderPosition: () => void;
+    };
+    internal.ui.track = track;
+    internal.ui.sliderHandle = sliderHandle;
+    internal.sliderAlwaysVisible = true;
+    internal.sliderMaxTop = 100;
+    internal.sliderScrollRange = 1_000;
+
+    const getBoundingClientRect = vi.spyOn(sliderHandle, 'getBoundingClientRect');
+    internal.updateSliderPosition();
+
+    expect(getBoundingClientRect).not.toHaveBeenCalled();
+    expect(sliderHandle.style.top).toBe('50px');
+
+    manager.destroy();
+  });
+
+  it('stops an older scroll animation when a newer timeline click takes over', () => {
+    const manager = new TimelineManager();
+    const scrollContainer = document.createElement('div');
+    const firstTarget = document.createElement('div');
+    const secondTarget = document.createElement('div');
+    scrollContainer.append(firstTarget, secondTarget);
+    document.body.appendChild(scrollContainer);
+
+    const rectAt = (top: number) =>
+      ({
+        x: 0,
+        y: top,
+        top,
+        left: 0,
+        right: 0,
+        bottom: top,
+        width: 0,
+        height: 0,
+        toJSON: () => ({}),
+      }) as DOMRect;
+    vi.spyOn(scrollContainer, 'getBoundingClientRect').mockReturnValue(rectAt(0));
+    vi.spyOn(firstTarget, 'getBoundingClientRect').mockReturnValue(rectAt(100));
+    vi.spyOn(secondTarget, 'getBoundingClientRect').mockReturnValue(rectAt(200));
+
+    const callbacks: FrameRequestCallback[] = [];
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      callbacks.push(callback);
+      return callbacks.length;
+    });
+    const getItem = vi.spyOn(localStorage, 'getItem').mockReturnValue('ios');
+
+    const internal = manager as unknown as {
+      scrollContainer: HTMLElement | null;
+      scrollMode: 'flow' | 'jump';
+      smoothScrollTo: (targetElement: HTMLElement, duration: number) => void;
+    };
+    internal.scrollContainer = scrollContainer;
+    internal.scrollMode = 'flow';
+
+    internal.smoothScrollTo(firstTarget, 600);
+    callbacks.shift()?.(0);
+    expect(callbacks).toHaveLength(1);
+
+    internal.smoothScrollTo(secondTarget, 600);
+    expect(callbacks).toHaveLength(2);
+
+    const scrollTopBeforeStaleFrame = scrollContainer.scrollTop;
+    callbacks.shift()?.(100);
+    expect(scrollContainer.scrollTop).toBe(scrollTopBeforeStaleFrame);
+    expect(callbacks).toHaveLength(1);
+
+    callbacks.shift()?.(100);
+    expect(callbacks).toHaveLength(1);
+    expect(getItem).toHaveBeenCalledTimes(2);
 
     manager.destroy();
   });

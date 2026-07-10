@@ -123,6 +123,8 @@ interface HistoryTimestampMatchKey {
   markerRevision: number;
 }
 
+type TimelineSpringProfile = 'ios' | 'snappy' | 'gentle';
+
 export class TimelineManager {
   private scrollContainer: HTMLElement | null = null;
   private conversationContainer: HTMLElement | null = null;
@@ -168,6 +170,8 @@ export class TimelineManager {
   private onBarCursorMove: ((ev: PointerEvent) => void) | null = null;
   private runnerRing: HTMLElement | null = null;
   private flowAnimating = false;
+  private scrollAnimationGeneration = 0;
+  private runnerAnimationGeneration = 0;
   private tooltipHideTimer: number | null = null;
   private tooltipShowTimer: number | null = null;
   private tooltipPendingDot: DotElement | null = null;
@@ -192,6 +196,8 @@ export class TimelineManager {
   private onSliderUp: ((ev: PointerEvent) => void) | null = null;
   private sliderStartClientY = 0;
   private sliderStartTop = 0;
+  private sliderMaxTop = 0;
+  private sliderScrollRange = 1;
   private markersVersion = 0;
   private resizeIdleTimer: number | null = null;
   private resizeIdleDelay = 140;
@@ -1866,13 +1872,16 @@ export class TimelineManager {
         const fromIdx = this.getActiveIndex();
         // toIdx is already determined above
         const dur = this.computeFlowDuration(fromIdx, toIdx);
+        // Measure the scroll target before active/runner DOM writes. Reading
+        // getBoundingClientRect() after those writes forced a synchronous
+        // style/layout flush on the click's first frame.
+        this.smoothScrollTo(targetElement, dur);
         if (this.scrollMode === 'flow' && fromIdx >= 0 && toIdx >= 0 && fromIdx !== toIdx) {
           // Clear previous highlight immediately so runner motion is visually obvious.
           this.activeTurnId = null;
           this.updateActiveDotUI();
           this.startRunner(fromIdx, toIdx, dur);
         }
-        this.smoothScrollTo(targetElement, dur);
         const targetId = this.markers[toIdx]?.id || dot.dataset.targetTurnId || null;
         this.commitActiveMarkerAfterNavigation(targetId, dur);
       }
@@ -2175,6 +2184,7 @@ export class TimelineManager {
   }
 
   private smoothScrollTo(targetElement: HTMLElement, duration = 600): void {
+    const animationGeneration = ++this.scrollAnimationGeneration;
     const containerRect = this.scrollContainer!.getBoundingClientRect();
     const targetRect = targetElement.getBoundingClientRect();
     const targetPosition = targetRect.top - containerRect.top + this.scrollContainer!.scrollTop;
@@ -2184,19 +2194,25 @@ export class TimelineManager {
 
     if (this.scrollMode === 'jump') {
       this.scrollContainer!.scrollTop = targetPosition;
+      this.isScrolling = false;
       return;
     }
+    const spring = this.getTimelineSpringProfile();
+    this.isScrolling = true;
     const animation = (currentTime: number) => {
       // Manager may be destroyed while frames are in flight (SPA navigation);
       // scrollContainer is nulled in destroy(), so bail out instead of throwing.
-      if (this.destroyed || !this.scrollContainer) {
-        this.isScrolling = false;
+      if (
+        this.destroyed ||
+        !this.scrollContainer ||
+        animationGeneration !== this.scrollAnimationGeneration
+      ) {
+        if (animationGeneration === this.scrollAnimationGeneration) this.isScrolling = false;
         return;
       }
-      this.isScrolling = true;
       if (startTime === null) startTime = currentTime;
       const timeElapsed = currentTime - startTime;
-      const run = this.easeInOutQuad(timeElapsed, startPosition, distance, duration);
+      const run = this.easeInOutQuad(timeElapsed, startPosition, distance, duration, spring);
       this.scrollContainer.scrollTop = run;
       if (timeElapsed < duration) {
         requestAnimationFrame(animation);
@@ -2208,15 +2224,21 @@ export class TimelineManager {
     requestAnimationFrame(animation);
   }
 
-  private easeInOutQuad(t: number, b: number, c: number, d: number): number {
-    // Overridable via spring profile
-    const spring = (() => {
-      try {
-        return localStorage.getItem('geminiTimelineSpring') || 'ios';
-      } catch {
-        return 'ios';
-      }
-    })();
+  private getTimelineSpringProfile(): TimelineSpringProfile {
+    try {
+      const value = localStorage.getItem('geminiTimelineSpring');
+      if (value === 'snappy' || value === 'gentle') return value;
+    } catch {}
+    return 'ios';
+  }
+
+  private easeInOutQuad(
+    t: number,
+    b: number,
+    c: number,
+    d: number,
+    spring: TimelineSpringProfile,
+  ): number {
     const clamp = (x: number) => Math.max(0, Math.min(1, x));
     const u = clamp(t / d);
     if (spring === 'snappy') {
@@ -2364,9 +2386,10 @@ export class TimelineManager {
       Object.assign(ring.style, {
         position: 'absolute',
         left: '50%',
+        top: '0',
         width: '20px',
         height: '20px',
-        transform: 'translate(-50%, -50%)',
+        transform: 'translate3d(-50%, -10px, 0)',
         borderRadius: '9999px',
         boxShadow: '0 0 0 2px var(--timeline-dot-active-color), 0 0 12px rgba(59,130,246,.45)',
         background: 'transparent',
@@ -2374,6 +2397,7 @@ export class TimelineManager {
         zIndex: '4',
         opacity: '0',
         transition: 'opacity 120ms ease',
+        willChange: 'transform, opacity',
       } as CSSStyleDeclaration);
       this.ui.trackContent.appendChild(ring);
       this.runnerRing = ring;
@@ -2383,34 +2407,28 @@ export class TimelineManager {
   private startRunner(fromIdx: number, toIdx: number, duration: number): void {
     this.ensureRunnerRing();
     if (!this.runnerRing) return;
+    const animationGeneration = ++this.runnerAnimationGeneration;
     const y1 = Math.round(this.yPositions[fromIdx]);
     const y2 = Math.round(this.yPositions[toIdx]);
+    const spring = this.getTimelineSpringProfile();
     const t0 =
       typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now();
     this.runnerRing.style.opacity = '1';
     const animate = () => {
-      if (this.destroyed) {
-        this.flowAnimating = false;
+      if (this.destroyed || animationGeneration !== this.runnerAnimationGeneration) {
+        if (animationGeneration === this.runnerAnimationGeneration) this.flowAnimating = false;
         return;
       }
       const now =
         typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now();
       const t = Math.min(1, (now - t0) / Math.max(1, duration));
-      // Use the same spring shaping as easeInOutQuad override
-      const spring = (() => {
-        try {
-          return localStorage.getItem('geminiTimelineSpring') || 'ios';
-        } catch {
-          return 'ios';
-        }
-      })();
       let eased: number;
       if (spring === 'snappy') eased = Math.min(1, t + 0.08 * Math.sin(t * 8));
       else if (spring === 'gentle') eased = t * t * (3 - 2 * t);
       else eased = t * t * (3 - 2 * t) * 0.85 + t * 0.15;
       const y = Math.round(y1 + (y2 - y1) * eased);
       if (this.runnerRing) {
-        this.runnerRing.style.top = `${y}px`;
+        this.runnerRing.style.transform = `translate3d(-50%, ${y - 10}px, 0)`;
       }
       if (t < 1) {
         this.flowAnimating = true;
@@ -2666,7 +2684,7 @@ export class TimelineManager {
       this.syncTimelineTrackToMain();
       this.updateVirtualRangeAndRender();
       this.computeActiveByScroll();
-      this.updateSlider();
+      this.updateSliderPosition();
     });
   }
 
@@ -2870,6 +2888,8 @@ export class TimelineManager {
     const innerH = Math.max(0, barH - 2 * pad);
     if (this.contentHeight <= barH + 1 || innerH <= 0) {
       this.sliderAlwaysVisible = false;
+      this.sliderMaxTop = 0;
+      this.sliderScrollRange = 1;
       this.ui.slider.classList.remove('visible');
       this.ui.slider.style.opacity = '';
       return;
@@ -2889,13 +2909,20 @@ export class TimelineManager {
     const handleH = 22;
     const maxTop = Math.max(0, railLen - handleH);
     const range = Math.max(1, this.contentHeight - barH);
-    const st = this.ui.track.scrollTop || 0;
-    const r = Math.max(0, Math.min(1, st / range));
-    const top = Math.round(r * maxTop);
+    this.sliderMaxTop = maxTop;
+    this.sliderScrollRange = range;
     this.ui.sliderHandle.style.height = `${handleH}px`;
-    this.ui.sliderHandle.style.top = `${top}px`;
+    this.updateSliderPosition();
     this.ui.slider.classList.add('visible');
     this.ui.slider.style.opacity = '';
+  }
+
+  private updateSliderPosition(): void {
+    if (!this.ui.track || !this.ui.sliderHandle || !this.sliderAlwaysVisible) return;
+    const st = this.ui.track.scrollTop || 0;
+    const ratio = Math.max(0, Math.min(1, st / this.sliderScrollRange));
+    const top = `${Math.round(ratio * this.sliderMaxTop)}px`;
+    if (this.ui.sliderHandle.style.top !== top) this.ui.sliderHandle.style.top = top;
   }
 
   private showSlider(): void {
@@ -3856,6 +3883,19 @@ export class TimelineManager {
   }
 
   private shouldRefreshForInteraction(targetElement: HTMLElement | null): boolean {
+    // The common click path already owns a live marker inside the current
+    // containers. Avoid a full-document selector scan plus an ancestor
+    // getComputedStyle() walk before every navigation.
+    if (
+      targetElement?.isConnected &&
+      this.conversationContainer?.isConnected &&
+      this.scrollContainer?.isConnected &&
+      this.conversationContainer.contains(targetElement) &&
+      this.scrollContainer.contains(targetElement)
+    ) {
+      return false;
+    }
+
     if (this.shouldAttemptRefreshForNavigation()) return true;
 
     if (targetElement && !targetElement.isConnected) return true;
