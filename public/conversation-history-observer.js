@@ -5,19 +5,18 @@
  *
  * Gemini loads a conversation's messages through a `batchexecute` RPC
  * (rpcid `hNvQHb`) whose payload carries a server-side `[seconds, nanos]`
- * timestamp for every turn. This observer passively captures those responses
- * and bridges them to the content script (isolated world) with
- * window.postMessage, where the timeline feature parses them to show real
- * message times instead of "when the extension first saw the message".
+ * timestamp for every turn. Captures stay buffered only until the isolated
+ * content script acknowledges them; SPA navigation therefore never replays
+ * already-parsed multi-megabyte responses.
  *
- * The content script loads at document_idle — long after the first
- * conversation-load RPC has fired — so captures are buffered here and
- * re-posted when the content script sends a `flush` command.
+ * The observer starts in an `unknown` state while the document_start loader
+ * reads the feature setting. It may preserve at most one response during that
+ * short race so enabled users do not lose the eager conversation-load RPC.
+ * Once configured disabled, it never clones or reads response bodies.
  *
- * Inert by construction: it only reads responses for `batchexecute` URLs
- * whose rpcids include `hNvQHb`, never modifies requests or responses, and
- * returns the original promise for passthrough (an async wrapper would break
- * Angular's zone.js change detection — see public/fetchInterceptor.js).
+ * The fetch wrapper deliberately returns the original promise. Making it an
+ * async wrapper breaks Angular's zone.js change detection (see
+ * public/fetchInterceptor.js).
  */
 (function () {
   if (window.__gvHistoryObserverInstalled) return;
@@ -25,7 +24,15 @@
 
   var SRC = 'gv-history-observer';
   var CMD = 'gv-history-observer-cmd';
-  var MAX_BUFFER = 8;
+  var MAX_BUFFER_COUNT = 4;
+  var MAX_CAPTURE_BYTES = 16 * 1024 * 1024;
+  var MAX_BUFFER_BYTES = 24 * 1024 * 1024;
+  var observerId = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  var sequence = 0;
+  var state = 'unknown';
+  var readGeneration = 0;
+  var unknownReadClaimed = false;
+  var bufferedBytes = 0;
   var buffer = [];
 
   function isHistoryRequest(url) {
@@ -39,37 +46,122 @@
     } catch (e) {}
   }
 
-  function capture(url, body) {
-    if (typeof body !== 'string' || !body) return;
-    var item = { url: String(url), body: body };
-    buffer.push(item);
-    if (buffer.length > MAX_BUFFER) buffer.shift();
-    post('capture', item);
+  function estimateStringBytes(value) {
+    return value.length * 2;
   }
+
+  function removeAt(index) {
+    var removed = buffer.splice(index, 1)[0];
+    if (removed) bufferedBytes = Math.max(0, bufferedBytes - removed.bytes);
+  }
+
+  function clearBuffer() {
+    buffer.length = 0;
+    bufferedBytes = 0;
+  }
+
+  function acknowledge(id) {
+    if (typeof id !== 'string' || !id) return;
+    for (var i = 0; i < buffer.length; i++) {
+      if (buffer[i].id === id) {
+        removeAt(i);
+        return;
+      }
+    }
+  }
+
+  function claimResponseRead() {
+    if (state === 'disabled') return null;
+    if (state === 'unknown') {
+      if (unknownReadClaimed) return null;
+      unknownReadClaimed = true;
+    }
+    return readGeneration;
+  }
+
+  function capture(url, body, generation) {
+    if (generation !== readGeneration || state === 'disabled') return;
+    if (typeof body !== 'string' || !body) return;
+
+    var bytes = estimateStringBytes(body);
+    if (bytes > MAX_CAPTURE_BYTES || bytes > MAX_BUFFER_BYTES) return;
+
+    while (
+      buffer.length > 0 &&
+      (buffer.length >= MAX_BUFFER_COUNT || bufferedBytes + bytes > MAX_BUFFER_BYTES)
+    ) {
+      removeAt(0);
+    }
+    if (buffer.length >= MAX_BUFFER_COUNT || bufferedBytes + bytes > MAX_BUFFER_BYTES) return;
+
+    var item = {
+      id: observerId + ':' + String(++sequence),
+      url: String(url),
+      body: body,
+      bytes: bytes,
+    };
+    buffer.push(item);
+    bufferedBytes += bytes;
+    post('capture', { id: item.id, url: item.url, body: item.body });
+  }
+
+  function configure(enabled) {
+    if (enabled) {
+      state = 'enabled';
+      return;
+    }
+
+    state = 'disabled';
+    readGeneration++;
+    unknownReadClaimed = false;
+    clearBuffer();
+  }
+
+  // Install the command bridge before network hooks so a fast setting read can
+  // configure the observer as soon as the external script executes.
+  function handleCommand(ev) {
+    if (ev.source !== window || ev.origin !== location.origin) return;
+    var d = ev.data;
+    if (!d || d.source !== CMD) return;
+
+    if (d.type === 'configure') {
+      configure(!!(d.payload && d.payload.enabled));
+      return;
+    }
+    if (d.type === 'ack') {
+      acknowledge(d.payload && d.payload.id);
+      return;
+    }
+    if (d.type === 'flush') {
+      for (var i = 0; i < buffer.length; i++) {
+        var item = buffer[i];
+        post('capture', { id: item.id, url: item.url, body: item.body });
+      }
+    }
+  }
+  window.addEventListener('message', handleCommand);
 
   // --- fetch hook (regular function — must not wrap the passthrough promise) ---
   if (typeof window.fetch === 'function') {
     var origFetch = window.fetch;
     window.fetch = function (input) {
-      // TODO(robustness): a URL/Request first-arg exposes .href, not .url, so a
-      // URL-object fetch yields '' here and skips capture. Currently Gemini
-      // passes a string for hNvQHb, so this is latent. Fall back to input.href.
-      var url = typeof input === 'string' ? input : (input && input.url) || '';
+      var url = typeof input === 'string' ? input : (input && (input.url || input.href)) || '';
       var p = origFetch.apply(this, arguments);
       if (isHistoryRequest(url)) {
         p.then(
           function (r) {
+            if (!r || typeof r.clone !== 'function') return r;
+            var generation = claimResponseRead();
+            if (generation === null) return r;
             try {
-              if (r && typeof r.clone === 'function') {
-                r.clone()
-                  .text()
-                  .then(
-                    function (t) {
-                      capture(url, t);
-                    },
-                    function () {},
-                  );
-              }
+              r.clone()
+                .text()
+                .then(
+                  function (t) {
+                    capture(url, t, generation);
+                  },
+                  function () {},
+                );
             } catch (e) {}
             return r;
           },
@@ -89,24 +181,21 @@
 
       var origOpen = xhr.open;
       xhr.open = function (_method, url) {
-        // TODO(robustness): url may be a URL object; the send() guard below
-        // requires typeof reqUrl === 'string', so a URL-object open() is never
-        // captured. Store String(url) to match those too.
-        reqUrl = url;
+        reqUrl = String(url || '');
         return origOpen.apply(xhr, arguments);
       };
 
       var origSend = xhr.send;
       xhr.send = function () {
-        if (typeof reqUrl === 'string' && isHistoryRequest(reqUrl)) {
+        if (isHistoryRequest(reqUrl)) {
           xhr.addEventListener(
             'load',
             function () {
               try {
-                // TODO(robustness): responseText throws if responseType is
-                // 'json'/'blob'/'arraybuffer' — the capture is silently lost.
-                // Guard on xhr.responseType before reading, or read .response.
-                capture(reqUrl, xhr.responseText);
+                if (xhr.responseType && xhr.responseType !== 'text') return;
+                var generation = claimResponseRead();
+                if (generation === null) return;
+                capture(reqUrl, xhr.responseText, generation);
               } catch (e) {}
             },
             { once: true },
@@ -119,13 +208,14 @@
     };
   }
 
-  // --- flush: re-post buffered captures once the content script is listening ---
-  window.addEventListener('message', function (ev) {
-    if (ev.source !== window) return;
-    var d = ev.data;
-    if (!d || d.source !== CMD || d.type !== 'flush') return;
-    for (var i = 0; i < buffer.length; i++) {
-      post('capture', buffer[i]);
-    }
-  });
+  window.addEventListener(
+    'beforeunload',
+    function () {
+      window.removeEventListener('message', handleCommand);
+      clearBuffer();
+    },
+    { once: true },
+  );
+
+  post('ready', { observerId: observerId });
 })();

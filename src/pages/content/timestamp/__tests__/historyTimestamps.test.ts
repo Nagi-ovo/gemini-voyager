@@ -16,10 +16,10 @@ const NATIVE_ID = '26dfc929fd75fe3d';
  * response candidates, metadata, and the `[seconds, nanos]` pair as a direct
  * child near the end.
  */
-function makeTurn(userText: string, epochSec: number, nanos = 261_574_000): unknown[] {
+function makeTurn(userText: string, epochSec: number, nanos = 261_574_000, cid = CID): unknown[] {
   return [
-    [CID, 'r_b6eb23222c6b10a2'],
-    [CID, 'r_a23872877afd8022', 'rc_27a9438ecdf0a13d'],
+    [cid, 'r_b6eb23222c6b10a2'],
+    [cid, 'r_a23872877afd8022', 'rc_27a9438ecdf0a13d'],
     [[userText, null, null, null, [[]]], 2, null, 1, '56fdd199312815e2', null, null, null, false],
     [[['rc_b2d1629d6a044d8a', ['model answer text'], null, null, null, null, null, [2], 'zh']]],
     [null, null, null, null, null, null, null, null, null, '3.5 Flash Extended', null, null, 1, 2],
@@ -38,10 +38,12 @@ function makeEnvelope(turns: unknown[][]): string {
   return `)]}'\n\n${rows.length}\n${rows}\n25\n[["e",4,null,null,226]]\n`;
 }
 
-function postCapture(body: string): void {
+let captureSequence = 0;
+
+function postCapture(body: string, id = `test-capture:${++captureSequence}`): void {
   window.dispatchEvent(
     new MessageEvent('message', {
-      data: { source: 'gv-history-observer', type: 'capture', payload: { body } },
+      data: { source: 'gv-history-observer', type: 'capture', payload: { id, body } },
       origin: window.location.origin,
       source: window as unknown as MessageEventSource,
     }),
@@ -168,14 +170,15 @@ describe('HistoryTimestampStore', () => {
   let store: HistoryTimestampStore | null = null;
 
   afterEach(() => {
-    store?.dispose();
+    store?.stop();
     store = null;
   });
 
   it('ingests bridged captures and exposes turns by native conversation id', () => {
     store = new HistoryTimestampStore();
     const onUpdate = vi.fn();
-    store.init(onUpdate);
+    store.start(true);
+    store.subscribe(onUpdate);
 
     postCapture(makeEnvelope([makeTurn('第一个问题', 1_783_370_737)]));
 
@@ -189,11 +192,15 @@ describe('HistoryTimestampStore', () => {
   it('merges later captures and dedupes repeats without re-notifying', () => {
     store = new HistoryTimestampStore();
     const onUpdate = vi.fn();
-    store.init(onUpdate);
+    store.start(true);
+    store.subscribe(onUpdate);
 
     const body = makeEnvelope([makeTurn('第一个问题', 1_783_370_737)]);
-    postCapture(body);
-    postCapture(body); // revisit: identical capture
+    postCapture(body, 'capture-a');
+    postCapture(
+      makeEnvelope([makeTurn('这个响应使用了重复 ID，不应再次解析', 1_783_370_800)]),
+      'capture-a',
+    );
     postCapture(makeEnvelope([makeTurn('第二个问题', 1_783_370_831)]));
 
     expect(onUpdate).toHaveBeenCalledTimes(2);
@@ -203,7 +210,8 @@ describe('HistoryTimestampStore', () => {
   it('ignores foreign messages and malformed bodies', () => {
     store = new HistoryTimestampStore();
     const onUpdate = vi.fn();
-    store.init(onUpdate);
+    store.start(true);
+    store.subscribe(onUpdate);
 
     window.dispatchEvent(
       new MessageEvent('message', {
@@ -222,10 +230,116 @@ describe('HistoryTimestampStore', () => {
   it('stops listening after dispose', () => {
     store = new HistoryTimestampStore();
     const onUpdate = vi.fn();
-    store.init(onUpdate);
-    store.dispose();
+    store.start(true);
+    store.subscribe(onUpdate);
+    store.stop();
 
     postCapture(makeEnvelope([makeTurn('第一个问题', 1_783_370_737)]));
     expect(onUpdate).not.toHaveBeenCalled();
+  });
+
+  it('keeps parsed data across UI subscriber replacement', () => {
+    store = new HistoryTimestampStore();
+    store.start(true);
+    const firstSubscriber = vi.fn();
+    const unsubscribe = store.subscribe(firstSubscriber);
+
+    postCapture(makeEnvelope([makeTurn('第一个问题', 1_783_370_737)]), 'capture-a');
+    unsubscribe();
+
+    const secondSubscriber = vi.fn();
+    store.subscribe(secondSubscriber);
+    expect(store.getTurns(NATIVE_ID)).toEqual([
+      { userText: '第一个问题', timestampMs: 1_783_370_737_262 },
+    ]);
+
+    postCapture(makeEnvelope([makeTurn('第二个问题', 1_783_370_831)]), 'capture-b');
+    expect(firstSubscriber).toHaveBeenCalledTimes(1);
+    expect(secondSubscriber).toHaveBeenCalledWith([CID]);
+  });
+
+  it('acks captures without decoding while disabled', () => {
+    store = new HistoryTimestampStore();
+    const postMessage = vi.spyOn(window, 'postMessage').mockImplementation(() => {});
+    const onUpdate = vi.fn();
+    store.start(false);
+    store.subscribe(onUpdate);
+    postMessage.mockClear();
+
+    postCapture(makeEnvelope([makeTurn('不应解析', 1_783_370_737)]), 'disabled-capture');
+
+    expect(onUpdate).not.toHaveBeenCalled();
+    expect(store.getTurns(NATIVE_ID)).toBeNull();
+    expect(postMessage).toHaveBeenCalledWith(
+      {
+        source: 'gv-history-observer-cmd',
+        type: 'ack',
+        payload: { id: 'disabled-capture' },
+      },
+      window.location.origin,
+    );
+  });
+
+  it('starts idempotently and clears parsed data when disabled', () => {
+    store = new HistoryTimestampStore();
+    const addEventListener = vi.spyOn(window, 'addEventListener');
+    store.start(true);
+    store.start(true);
+
+    const messageRegistrations = addEventListener.mock.calls.filter(([type]) => type === 'message');
+    expect(messageRegistrations).toHaveLength(1);
+
+    postCapture(makeEnvelope([makeTurn('第一个问题', 1_783_370_737)]), 'capture-a');
+    expect(store.getTurns(NATIVE_ID)).not.toBeNull();
+
+    store.setEnabled(false);
+    expect(store.getTurns(NATIVE_ID)).toBeNull();
+  });
+
+  it('tracks setting changes while no TimelineManager subscriber exists', () => {
+    store = new HistoryTimestampStore();
+    const addListener = chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>;
+    const callIndex = addListener.mock.calls.length;
+    store.start(false);
+    const storageListener = addListener.mock.calls[callIndex][0] as (
+      changes: Record<string, chrome.storage.StorageChange>,
+      areaName: string,
+    ) => void;
+
+    storageListener(
+      {
+        gvShowMessageTimestamps: {
+          oldValue: false,
+          newValue: true,
+        },
+      },
+      'sync',
+    );
+    postCapture(makeEnvelope([makeTurn('切换期间捕获', 1_783_370_737)]), 'capture-during-gap');
+
+    const subscriber = vi.fn();
+    store.subscribe(subscriber);
+    expect(store.getTurns(NATIVE_ID)).toEqual([
+      { userText: '切换期间捕获', timestampMs: 1_783_370_737_262 },
+    ]);
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+
+  it('bounds parsed conversation history with an LRU', () => {
+    store = new HistoryTimestampStore();
+    store.start(true);
+
+    for (let index = 0; index < 17; index++) {
+      const cid = `c_${String(index).padStart(16, '0')}`;
+      postCapture(
+        makeEnvelope([makeTurn(`问题 ${index}`, 1_783_370_737 + index, 0, cid)]),
+        `capture-${index}`,
+      );
+    }
+
+    expect(store.getTurns('0000000000000000')).toBeNull();
+    expect(store.getTurns('0000000000000016')).toEqual([
+      { userText: '问题 16', timestampMs: 1_783_370_753_000 },
+    ]);
   });
 });

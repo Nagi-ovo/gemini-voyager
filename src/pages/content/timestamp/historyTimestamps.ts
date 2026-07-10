@@ -23,6 +23,7 @@
  *   [seconds, nanos] ]                  // ★ turn timestamp (a direct child)
  * ```
  */
+import { StorageKeys } from '@/core/types/common';
 import { decodeBatchExecute } from '@/core/utils/batchexecute';
 
 // Bridge to the MAIN-world conversation-history-observer (document_start).
@@ -180,9 +181,15 @@ export function matchTimestampsToMarkers(
 }
 
 interface ObserverCapturePayload {
+  id?: string;
   url?: string;
   body?: string;
 }
+
+type HistoryTimestampSubscriber = (cids: string[]) => void;
+
+const MAX_CACHED_CONVERSATIONS = 16;
+const MAX_PROCESSED_CAPTURE_IDS = 64;
 
 /**
  * Receives observer captures and keeps parsed turns per conversation cid.
@@ -191,37 +198,93 @@ interface ObserverCapturePayload {
  */
 export class HistoryTimestampStore {
   private byCid = new Map<string, Map<string, HistoryTurnTimestamp>>();
+  private processedCaptureIds = new Set<string>();
+  private subscribers = new Set<HistoryTimestampSubscriber>();
   private handler: ((ev: MessageEvent) => void) | null = null;
-  private onUpdate: ((cids: string[]) => void) | null = null;
+  private storageHandler:
+    | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
+    | null = null;
+  private enabled = false;
 
-  /** Attach the bridge listener and ask the observer to flush buffered captures. */
-  init(onUpdate: (cids: string[]) => void): void {
-    if (this.handler) return;
-    this.onUpdate = onUpdate;
+  /** Start the page-lifetime bridge. Repeated calls never add another listener or flush. */
+  start(enabled: boolean): void {
+    if (this.handler) {
+      this.setEnabled(enabled);
+      return;
+    }
+
+    this.enabled = enabled;
     this.handler = (ev: MessageEvent) => {
-      if (ev.source !== window) return;
-      // TODO(hardening): also check ev.origin === window.location.origin. Any
-      // same-window MAIN-world script can forge a `gv-history-observer` capture
-      // and get attacker-chosen timestamps persisted (low sev: display-only).
+      if (ev.source !== window || ev.origin !== window.location.origin) return;
       const data = ev.data as { source?: string; type?: string; payload?: unknown } | null;
       if (!data || data.source !== OBS_SRC || data.type !== 'capture') return;
-      this.ingest(data.payload as ObserverCapturePayload);
+      this.consumeCapture(data.payload as ObserverCapturePayload);
     };
     window.addEventListener('message', this.handler);
+    this.storageHandler = (changes, areaName) => {
+      if (areaName !== 'sync') return;
+      const change = changes[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS];
+      if (!change) return;
+      this.setEnabled(change.newValue === true);
+    };
     try {
-      window.postMessage({ source: OBS_CMD, type: 'flush' }, window.location.origin);
+      chrome.storage?.onChanged?.addListener(this.storageHandler);
     } catch {
-      // Observer absent (Safari, injection blocked) — captures just never arrive.
+      // The document_start loader still keeps the MAIN-world observer in sync.
     }
+    this.configureObserver(enabled);
+    if (enabled) this.flushObserver();
   }
 
-  dispose(): void {
+  /** Update capture/parse state without rebuilding the bridge listener. */
+  setEnabled(enabled: boolean): void {
+    if (!this.handler) {
+      this.start(enabled);
+      return;
+    }
+
+    if (this.enabled === enabled) return;
+    this.enabled = enabled;
+    if (!enabled) {
+      this.byCid.clear();
+      this.processedCaptureIds.clear();
+    }
+    this.configureObserver(enabled);
+    if (enabled) this.flushObserver();
+  }
+
+  /** Subscribe a TimelineManager; destroying one manager only removes its callback. */
+  subscribe(subscriber: HistoryTimestampSubscriber): () => void {
+    this.subscribers.add(subscriber);
+    return () => {
+      this.subscribers.delete(subscriber);
+    };
+  }
+
+  /** Stop the page-lifetime bridge (page unload and isolated unit tests only). */
+  stop(): void {
     if (this.handler) {
       window.removeEventListener('message', this.handler);
       this.handler = null;
     }
-    this.onUpdate = null;
+    if (this.storageHandler) {
+      try {
+        chrome.storage?.onChanged?.removeListener(this.storageHandler);
+      } catch {
+        // Extension context already invalidated.
+      }
+      this.storageHandler = null;
+    }
+    this.enabled = false;
+    this.configureObserver(false);
     this.byCid.clear();
+    this.processedCaptureIds.clear();
+    this.subscribers.clear();
+  }
+
+  /** Backward-compatible test/helper alias. TimelineManager must not call this on SPA switches. */
+  dispose(): void {
+    this.stop();
   }
 
   /**
@@ -229,22 +292,96 @@ export class HistoryTimestampStore {
    * (e.g. `26dfc929fd75fe3d` for cid `c_26dfc929fd75fe3d`).
    */
   getTurns(nativeConversationId: string): HistoryTurnTimestamp[] | null {
-    const turns = this.byCid.get(`c_${nativeConversationId}`);
+    const cid = `c_${nativeConversationId}`;
+    const turns = this.byCid.get(cid);
     if (!turns || turns.size === 0) return null;
+    // Map insertion order doubles as a compact LRU for parsed conversations.
+    this.byCid.delete(cid);
+    this.byCid.set(cid, turns);
     return Array.from(turns.values());
   }
 
-  private ingest(payload: ObserverCapturePayload | null): void {
-    const body = payload?.body;
-    if (typeof body !== 'string' || !body) return;
+  private postCommand(type: 'configure' | 'flush' | 'ack', payload?: unknown): void {
+    try {
+      window.postMessage({ source: OBS_CMD, type, payload }, window.location.origin);
+    } catch {
+      // Observer absent (injection blocked or extension context invalidated).
+    }
+  }
 
-    const updatedCids: string[] = [];
+  private configureObserver(enabled: boolean): void {
+    this.postCommand('configure', { enabled });
+  }
+
+  private flushObserver(): void {
+    this.postCommand('flush');
+  }
+
+  private acknowledgeCapture(id: string): void {
+    this.postCommand('ack', { id });
+  }
+
+  private rememberCapture(id: string): boolean {
+    if (this.processedCaptureIds.has(id)) return false;
+    this.processedCaptureIds.add(id);
+    while (this.processedCaptureIds.size > MAX_PROCESSED_CAPTURE_IDS) {
+      const oldest = this.processedCaptureIds.values().next().value as string | undefined;
+      if (!oldest) break;
+      this.processedCaptureIds.delete(oldest);
+    }
+    return true;
+  }
+
+  private touchConversation(
+    cid: string,
+    turns?: Map<string, HistoryTurnTimestamp>,
+  ): Map<string, HistoryTurnTimestamp> {
+    const existing = turns ?? this.byCid.get(cid) ?? new Map<string, HistoryTurnTimestamp>();
+    this.byCid.delete(cid);
+    this.byCid.set(cid, existing);
+    while (this.byCid.size > MAX_CACHED_CONVERSATIONS) {
+      const oldest = this.byCid.keys().next().value as string | undefined;
+      if (!oldest) break;
+      this.byCid.delete(oldest);
+    }
+    return existing;
+  }
+
+  private notifySubscribers(cids: string[]): void {
+    if (cids.length === 0) return;
+    this.subscribers.forEach((subscriber) => {
+      try {
+        subscriber(cids);
+      } catch {
+        // One stale UI subscriber must not block the shared store.
+      }
+    });
+  }
+
+  private consumeCapture(payload: ObserverCapturePayload | null): void {
+    const id = payload?.id;
+    if (typeof id !== 'string' || !id) return;
+
+    try {
+      if (!this.enabled || !this.rememberCapture(id)) return;
+      const body = payload?.body;
+      if (typeof body !== 'string' || !body) return;
+      this.ingest(body);
+    } finally {
+      // ACK malformed and disabled captures too; otherwise they replay forever.
+      this.acknowledgeCapture(id);
+    }
+  }
+
+  private ingest(body: string): void {
+    const updatedCids = new Set<string>();
     decodeBatchExecute(body).forEach(({ payload: rpcPayload }) => {
       extractHistoryTurns(rpcPayload).forEach((turns, cid) => {
         let existing = this.byCid.get(cid);
         if (!existing) {
-          existing = new Map<string, HistoryTurnTimestamp>();
-          this.byCid.set(cid, existing);
+          existing = this.touchConversation(cid);
+        } else {
+          this.touchConversation(cid, existing);
         }
         let changed = false;
         turns.forEach((turn) => {
@@ -253,12 +390,13 @@ export class HistoryTimestampStore {
           existing!.set(key, turn);
           changed = true;
         });
-        if (changed) updatedCids.push(cid);
+        if (changed) updatedCids.add(cid);
       });
     });
 
-    if (updatedCids.length > 0) {
-      this.onUpdate?.(updatedCids);
-    }
+    this.notifySubscribers(Array.from(updatedCids));
   }
 }
+
+/** One parsed-data store per document; TimelineManager instances only subscribe to it. */
+export const historyTimestampStore = new HistoryTimestampStore();

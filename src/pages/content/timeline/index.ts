@@ -1,3 +1,4 @@
+import { historyTimestampStore } from '../timestamp/historyTimestamps';
 import { TimelineManager } from './manager';
 
 function isGeminiConversationRoute(pathname = location.pathname): boolean {
@@ -177,6 +178,10 @@ function cleanup(): void {
     }
   });
   cleanupHandlers = [];
+
+  // The parsed history cache intentionally survives SPA manager replacement,
+  // but the page-lifetime bridge must be released on a real unload.
+  historyTimestampStore.stop();
 
   // Reset flag
   routeListenersAttached = false;

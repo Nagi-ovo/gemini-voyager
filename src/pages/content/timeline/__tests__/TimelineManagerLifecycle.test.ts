@@ -39,6 +39,8 @@ type TimelineManagerInternal = {
   startResize: (ev: PointerEvent) => void;
   setupEventListeners: () => void;
   findCriticalElements: () => Promise<boolean>;
+  historyTimestampStore: { stop: () => void } | null;
+  historyTimestampUnsubscribe: (() => void) | null;
 };
 
 function asInternal(manager: TimelineManager): TimelineManagerInternal {
@@ -171,6 +173,24 @@ describe('TimelineManager lifecycle', () => {
 
       expect(document.querySelector('.gemini-timeline-bar')).toBeNull();
       expect(internal.ui.timelineBar).toBeNull();
+    });
+  });
+
+  describe('shared history timestamp lifecycle', () => {
+    it('unsubscribes the manager without stopping the page-lifetime store', () => {
+      const manager = new TimelineManager();
+      const internal = asInternal(manager);
+      const unsubscribe = vi.fn();
+      const stop = vi.fn();
+      internal.historyTimestampStore = { stop };
+      internal.historyTimestampUnsubscribe = unsubscribe;
+
+      manager.destroy();
+
+      expect(unsubscribe).toHaveBeenCalledOnce();
+      expect(stop).not.toHaveBeenCalled();
+      expect(internal.historyTimestampUnsubscribe).toBeNull();
+      expect(internal.historyTimestampStore).toBeNull();
     });
   });
 

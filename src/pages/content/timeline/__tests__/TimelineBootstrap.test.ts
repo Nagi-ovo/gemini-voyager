@@ -30,4 +30,18 @@ describe('Timeline bootstrap', () => {
 
     expect(initSpy).toHaveBeenCalledTimes(1);
   });
+
+  it('stops the shared history bridge only on page unload', async () => {
+    const managerModule = await import('../manager');
+    vi.spyOn(managerModule.TimelineManager.prototype, 'init').mockResolvedValue(undefined);
+    const historyModule = await import('../../timestamp/historyTimestamps');
+    const stopSpy = vi.spyOn(historyModule.historyTimestampStore, 'stop');
+    const { startTimeline } = await import('../index');
+
+    startTimeline();
+    expect(stopSpy).not.toHaveBeenCalled();
+
+    window.dispatchEvent(new Event('beforeunload'));
+    expect(stopSpy).toHaveBeenCalledOnce();
+  });
 });

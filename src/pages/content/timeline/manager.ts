@@ -18,7 +18,11 @@ import { GV_RTL_CLASS, applyRTLClass } from '@/core/utils/rtl';
 import { getTranslationSync, initI18n } from '../../../utils/i18n';
 import { makeStableTurnId } from '../fork/turnId';
 import { TimestampService } from '../timestamp/TimestampService';
-import { HistoryTimestampStore, matchTimestampsToMarkers } from '../timestamp/historyTimestamps';
+import {
+  type HistoryTimestampStore,
+  historyTimestampStore,
+  matchTimestampsToMarkers,
+} from '../timestamp/historyTimestamps';
 import { eventBus } from './EventBus';
 import { StarredMessagesService } from './StarredMessagesService';
 import { TimelinePreviewPanel } from './TimelinePreviewPanel';
@@ -249,6 +253,7 @@ export class TimelineManager {
   private rtl = false;
   private timestampService: TimestampService | null = null;
   private historyTimestampStore: HistoryTimestampStore | null = null;
+  private historyTimestampUnsubscribe: (() => void) | null = null;
   private showMessageTimestampsEnabled = false;
   private readonly initialTimestampSnapshotDelay = 800;
   private readonly draftTimestampAdoptionWindowMs = 5 * 60 * 1000;
@@ -294,8 +299,12 @@ export class TimelineManager {
     if (this.destroyed) return;
     // Real server-side message times captured from Gemini's conversation-load
     // RPC override first-seen recording whenever available.
-    this.historyTimestampStore = new HistoryTimestampStore();
-    this.historyTimestampStore.init(() => {
+    this.historyTimestampStore = historyTimestampStore;
+    this.historyTimestampStore.start(this.showMessageTimestampsEnabled);
+    this.historyTimestampUnsubscribe = this.historyTimestampStore.subscribe((updatedCids) => {
+      if (this.destroyed) return;
+      const nativeConversationId = extractConversationIdFromUrl(window.location.href);
+      if (!nativeConversationId || !updatedCids.includes(`c_${nativeConversationId}`)) return;
       if (this.applyHistoryTimestamps()) {
         this.injectMessageTimestamps().catch(() => {});
       }
@@ -2091,6 +2100,7 @@ export class TimelineManager {
           const tsEnabledChange = changes[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS];
           if (tsEnabledChange) {
             this.showMessageTimestampsEnabled = tsEnabledChange.newValue === true;
+            this.historyTimestampStore?.setEnabled(this.showMessageTimestampsEnabled);
             // Recording is gated on the toggle, so captures that arrived while
             // it was off have not been applied yet — apply before rendering.
             if (this.showMessageTimestampsEnabled) this.applyHistoryTimestamps();
@@ -4327,7 +4337,8 @@ export class TimelineManager {
     this.clearSearchHighlights();
     this.previewPanel?.destroy();
     this.previewPanel = null;
-    this.historyTimestampStore?.dispose();
+    this.historyTimestampUnsubscribe?.();
+    this.historyTimestampUnsubscribe = null;
     this.historyTimestampStore = null;
     document.body.classList.remove(GV_RTL_CLASS);
     this.ui = { timelineBar: null, tooltip: null };
