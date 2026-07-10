@@ -116,6 +116,13 @@ interface TimelineMarker {
   starred: boolean;
 }
 
+interface HistoryTimestampMatchKey {
+  nativeConversationId: string;
+  timestampConversationId: string;
+  storeRevision: number;
+  markerRevision: number;
+}
+
 export class TimelineManager {
   private scrollContainer: HTMLElement | null = null;
   private conversationContainer: HTMLElement | null = null;
@@ -254,6 +261,8 @@ export class TimelineManager {
   private timestampService: TimestampService | null = null;
   private historyTimestampStore: HistoryTimestampStore | null = null;
   private historyTimestampUnsubscribe: (() => void) | null = null;
+  private historyTimestampMarkerRevision = 0;
+  private lastHistoryTimestampMatch: HistoryTimestampMatchKey | null = null;
   private showMessageTimestampsEnabled = false;
   private readonly initialTimestampSnapshotDelay = 800;
   private readonly draftTimestampAdoptionWindowMs = 5 * 60 * 1000;
@@ -1202,46 +1211,23 @@ export class TimelineManager {
   }
 
   /**
-   * Performance-optimized filter to remove nested elements.
-   * Sorts elements by depth first, which can prune the search space in the average case.
-   * Worst-case complexity: O(n²), but average case is improved over naive implementation.
+   * Remove selector matches nested inside another match while preserving the
+   * original DOM/query order. Walking ancestors against a Set costs
+   * O(matches × DOM depth), instead of comparing every pair with contains().
    */
   private filterTopLevel(elements: Element[]): HTMLElement[] {
     const arr = elements.map((e) => e as HTMLElement);
     if (arr.length === 0) return arr;
 
-    // Use Set for O(1) lookup of descendants
-    const descendants = new Set<HTMLElement>();
-
-    // Sort by depth (shallower first) to optimize checking
-    const sorted = arr.slice().sort((a, b) => {
-      let aDepth = 0,
-        bDepth = 0;
-      let node: Element | null = a;
-      while (node.parentElement) {
-        aDepth++;
-        node = node.parentElement;
+    const candidates = new Set<HTMLElement>(arr);
+    return arr.filter((element) => {
+      let ancestor = element.parentElement;
+      while (ancestor) {
+        if (candidates.has(ancestor)) return false;
+        ancestor = ancestor.parentElement;
       }
-      node = b;
-      while (node.parentElement) {
-        bDepth++;
-        node = node.parentElement;
-      }
-      return aDepth - bDepth;
+      return true;
     });
-
-    // Only check if element is descendant of earlier elements
-    for (let i = 0; i < sorted.length; i++) {
-      const el = sorted[i];
-      for (let j = 0; j < i; j++) {
-        if (sorted[j].contains(el)) {
-          descendants.add(el);
-          break;
-        }
-      }
-    }
-
-    return arr.filter((el) => !descendants.has(el));
   }
 
   /**
@@ -1607,9 +1593,11 @@ export class TimelineManager {
     }
     this.zeroTurnsRetryCount = 0;
 
+    const previousMarkers = this.markers;
+
     // Build map of existing dots by turn ID for reuse (prevents hover/click disruption)
     const oldDots = new Map<string, DotElement>();
-    for (const m of this.markers) {
+    for (const m of previousMarkers) {
       if (m.dotElement) oldDots.set(m.id, m.dotElement);
     }
 
@@ -1637,7 +1625,7 @@ export class TimelineManager {
     const usedTurnIds = new Set<string>();
     const existingTurnIdOwners = this.collectExistingTurnIdOwners(allEls);
     const previousMarkerElementsById = this.collectPreviousMarkerElementsById();
-    this.markers = Array.from(allEls).map((el, idx) => {
+    const nextMarkers = Array.from(allEls).map((el, idx) => {
       const element = el as HTMLElement;
       const offsetFromStart = element.offsetTop - firstTurnOffset;
       let n = offsetFromStart / contentSpan;
@@ -1662,13 +1650,14 @@ export class TimelineManager {
       this.markerMap.set(id, m);
       return m;
     });
+    this.markers = nextMarkers;
+    if (this.didHistoryTimestampMarkerInputsChange(previousMarkers, nextMarkers)) {
+      this.historyTimestampMarkerRevision++;
+    }
     this.maybeAdoptDraftRouteTimestamps(this.markers.map((marker) => marker.id));
     this.updateTimestampTracking(this.markers.map((marker) => marker.id));
     // Server-side times (if captured) overwrite first-seen recordings; runs
     // before injectMessageTimestamps below so the same pass renders them.
-    // TODO(perf): applyHistoryTimestamps re-runs the full O(turns×markers)
-    // match on every recalc even though the steady state changes nothing. Gate
-    // on a dirty flag set by the store onUpdate + marker-set changes.
     this.applyHistoryTimestamps();
     // Remove orphaned dots (old dots not reused by any new marker)
     for (const dot of oldDots.values()) dot.remove();
@@ -2100,6 +2089,7 @@ export class TimelineManager {
           const tsEnabledChange = changes[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS];
           if (tsEnabledChange) {
             this.showMessageTimestampsEnabled = tsEnabledChange.newValue === true;
+            this.lastHistoryTimestampMatch = null;
             this.historyTimestampStore?.setEnabled(this.showMessageTimestampsEnabled);
             // Recording is gated on the toggle, so captures that arrived while
             // it was off have not been applied yet — apply before rendering.
@@ -4340,6 +4330,7 @@ export class TimelineManager {
     this.historyTimestampUnsubscribe?.();
     this.historyTimestampUnsubscribe = null;
     this.historyTimestampStore = null;
+    this.lastHistoryTimestampMatch = null;
     document.body.classList.remove(GV_RTL_CLASS);
     this.ui = { timelineBar: null, tooltip: null };
     this.markers = [];
@@ -4425,6 +4416,21 @@ export class TimelineManager {
       .catch(() => {});
   }
 
+  private didHistoryTimestampMarkerInputsChange(
+    previousMarkers: TimelineMarker[],
+    nextMarkers: TimelineMarker[],
+  ): boolean {
+    if (previousMarkers.length !== nextMarkers.length) return true;
+
+    for (let index = 0; index < nextMarkers.length; index++) {
+      const previous = previousMarkers[index];
+      const next = nextMarkers[index];
+      if (previous.id !== next.id || previous.summary !== next.summary) return true;
+    }
+
+    return false;
+  }
+
   /**
    * Overwrite first-seen timestamps with real server-side times captured from
    * Gemini's conversation-load RPC. Matching goes by turn text, so unmatched
@@ -4449,6 +4455,25 @@ export class TimelineManager {
     const timestampConversationId = this.getTimestampConversationId();
     if (!timestampConversationId) return false;
 
+    const storeRevision = store.getRevision(nativeConversationId);
+    if (storeRevision === 0) return false;
+
+    const matchKey: HistoryTimestampMatchKey = {
+      nativeConversationId,
+      timestampConversationId,
+      storeRevision,
+      markerRevision: this.historyTimestampMarkerRevision,
+    };
+    const previousMatch = this.lastHistoryTimestampMatch;
+    if (
+      previousMatch?.nativeConversationId === matchKey.nativeConversationId &&
+      previousMatch.timestampConversationId === matchKey.timestampConversationId &&
+      previousMatch.storeRevision === matchKey.storeRevision &&
+      previousMatch.markerRevision === matchKey.markerRevision
+    ) {
+      return false;
+    }
+
     const turns = store.getTurns(nativeConversationId);
     if (!turns) return false;
 
@@ -4456,6 +4481,7 @@ export class TimelineManager {
       turns,
       this.markers.map((marker) => ({ id: marker.id, text: marker.summary })),
     );
+    this.lastHistoryTimestampMatch = matchKey;
 
     let changed = false;
     matches.forEach((timestampMs, turnId) => {

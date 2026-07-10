@@ -660,6 +660,8 @@ describe('TimelineManager applyHistoryTimestamps', () => {
     conversationId: string | null;
     timestampService: TimestampService | null;
     showMessageTimestampsEnabled: boolean;
+    historyTimestampMarkerRevision: number;
+    lastHistoryTimestampMatch: unknown;
     markers: Array<{
       id: string;
       element: HTMLElement;
@@ -676,6 +678,8 @@ describe('TimelineManager applyHistoryTimestamps', () => {
   function setupManager(options: { conversationId: string; urlPath: string; enabled?: boolean }): {
     internal: HistoryInternal;
     recordTimestamp: ReturnType<typeof vi.fn>;
+    getTurns: ReturnType<typeof vi.fn>;
+    setStoreRevision: (nextRevision: number) => void;
   } {
     history.replaceState({}, '', options.urlPath);
 
@@ -700,14 +704,159 @@ describe('TimelineManager applyHistoryTimestamps', () => {
         starred: false,
       },
     ];
+    let storeRevision = 1;
+    const getTurns = vi.fn(() => [
+      { userText: 'hello from this conversation', timestampMs: 1_783_370_737_000 },
+    ]);
     internal.historyTimestampStore = {
-      getTurns: vi.fn(() => [
-        { userText: 'hello from this conversation', timestampMs: 1_783_370_737_000 },
-      ]),
+      getRevision: vi.fn(() => storeRevision),
+      getTurns,
     };
 
-    return { internal, recordTimestamp };
+    return {
+      internal,
+      recordTimestamp,
+      getTurns,
+      setStoreRevision: (nextRevision: number) => {
+        storeRevision = nextRevision;
+      },
+    };
   }
+
+  it('skips the full match while store and marker inputs are unchanged', () => {
+    const { internal, recordTimestamp, getTurns } = setupManager({
+      conversationId: 'gemini:conv:convB',
+      urlPath: '/app/convB',
+    });
+
+    expect(internal.applyHistoryTimestamps()).toBe(true);
+    expect(internal.applyHistoryTimestamps()).toBe(false);
+    expect(getTurns).toHaveBeenCalledTimes(1);
+    expect(recordTimestamp).toHaveBeenCalledTimes(1);
+  });
+
+  it('re-runs matching when the store revision changes', () => {
+    const { internal, getTurns, setStoreRevision } = setupManager({
+      conversationId: 'gemini:conv:convB',
+      urlPath: '/app/convB',
+    });
+
+    expect(internal.applyHistoryTimestamps()).toBe(true);
+    setStoreRevision(2);
+    expect(internal.applyHistoryTimestamps()).toBe(true);
+    expect(getTurns).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not copy or match turns before the store has data', () => {
+    const { internal, getTurns, setStoreRevision } = setupManager({
+      conversationId: 'gemini:conv:convB',
+      urlPath: '/app/convB',
+    });
+    setStoreRevision(0);
+
+    expect(internal.applyHistoryTimestamps()).toBe(false);
+    expect(getTurns).not.toHaveBeenCalled();
+  });
+
+  it('remembers completed no-match inputs instead of rescanning them', () => {
+    const { internal, recordTimestamp, getTurns } = setupManager({
+      conversationId: 'gemini:conv:convB',
+      urlPath: '/app/convB',
+    });
+    internal.markers[0].summary = 'a different question with no matching server turn';
+
+    expect(internal.applyHistoryTimestamps()).toBe(false);
+    expect(internal.applyHistoryTimestamps()).toBe(false);
+    expect(getTurns).toHaveBeenCalledTimes(1);
+    expect(recordTimestamp).not.toHaveBeenCalled();
+  });
+
+  it('keeps marker revision stable across unchanged recalculations and advances on summary change', () => {
+    history.replaceState({}, '', '/app/convB');
+
+    const main = document.createElement('main');
+    const scrollContainer = document.createElement('div');
+    const message = document.createElement('div');
+    const timelineBar = document.createElement('div');
+    const trackContent = document.createElement('div');
+
+    Object.defineProperty(scrollContainer, 'clientHeight', { value: 400, configurable: true });
+    vi.spyOn(scrollContainer, 'getBoundingClientRect').mockReturnValue({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: 0,
+      height: 0,
+      toJSON: () => ({}),
+    } as DOMRect);
+    message.className = 'user';
+    message.textContent = 'hello from this conversation';
+    setElementTop(message, 0);
+    scrollContainer.appendChild(message);
+    main.appendChild(scrollContainer);
+    timelineBar.appendChild(trackContent);
+    document.body.append(main, timelineBar);
+
+    const getTurns = vi.fn(() => [
+      { userText: 'hello from this conversation', timestampMs: 1_783_370_737_000 },
+    ]);
+    const manager = new TimelineManager();
+    const internal = manager as unknown as HistoryInternal & {
+      conversationContainer: HTMLElement | null;
+      scrollContainer: HTMLElement | null;
+      userTurnSelector: string;
+      timestampTrackingReady: boolean;
+      ui: { timelineBar: HTMLElement | null; trackContent: HTMLElement | null };
+      activeTurnId: string | null;
+      recalculateAndRenderMarkers: () => void;
+      updateTimelineGeometry: () => void;
+      updateIntersectionObserverTargetsFromMarkers: () => void;
+      syncTimelineTrackToMain: () => void;
+      updateVirtualRangeAndRender: () => void;
+      updateActiveDotUI: () => void;
+      scheduleScrollSync: () => void;
+    };
+
+    internal.conversationContainer = scrollContainer;
+    internal.scrollContainer = scrollContainer;
+    internal.userTurnSelector = '.user';
+    internal.conversationId = 'gemini:conv:convB';
+    internal.timestampService = {
+      getTimestamp: vi.fn().mockReturnValue(null),
+      recordTimestamp: vi.fn().mockResolvedValue(undefined),
+    } as unknown as TimestampService;
+    internal.historyTimestampStore = {
+      getRevision: vi.fn(() => 1),
+      getTurns,
+    };
+    internal.showMessageTimestampsEnabled = true;
+    internal.timestampTrackingReady = true;
+    internal.ui.timelineBar = timelineBar;
+    internal.ui.trackContent = trackContent;
+    internal.activeTurnId = null;
+    internal.updateTimelineGeometry = vi.fn();
+    internal.updateIntersectionObserverTargetsFromMarkers = vi.fn();
+    internal.syncTimelineTrackToMain = vi.fn();
+    internal.updateVirtualRangeAndRender = vi.fn();
+    internal.updateActiveDotUI = vi.fn();
+    internal.scheduleScrollSync = vi.fn();
+
+    internal.recalculateAndRenderMarkers();
+    const firstMarkerRevision = internal.historyTimestampMarkerRevision;
+    internal.recalculateAndRenderMarkers();
+
+    expect(internal.historyTimestampMarkerRevision).toBe(firstMarkerRevision);
+    expect(getTurns).toHaveBeenCalledTimes(1);
+
+    message.textContent = 'edited conversation question';
+    internal.recalculateAndRenderMarkers();
+
+    expect(internal.historyTimestampMarkerRevision).toBe(firstMarkerRevision + 1);
+    expect(getTurns).toHaveBeenCalledTimes(2);
+  });
 
   it('does not write timestamps when the manager identity no longer matches the URL', () => {
     // SPA switch window: URL already points at conversation B while this

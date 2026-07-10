@@ -196,15 +196,24 @@ describe('HistoryTimestampStore', () => {
     store.subscribe(onUpdate);
 
     const body = makeEnvelope([makeTurn('第一个问题', 1_783_370_737)]);
+    expect(store.getRevision(NATIVE_ID)).toBe(0);
+
     postCapture(body, 'capture-a');
+    const firstRevision = store.getRevision(NATIVE_ID);
+    expect(firstRevision).toBeGreaterThan(0);
+
     postCapture(
       makeEnvelope([makeTurn('这个响应使用了重复 ID，不应再次解析', 1_783_370_800)]),
       'capture-a',
     );
+    postCapture(body, 'capture-a-repeat');
+    expect(store.getRevision(NATIVE_ID)).toBe(firstRevision);
+
     postCapture(makeEnvelope([makeTurn('第二个问题', 1_783_370_831)]));
 
     expect(onUpdate).toHaveBeenCalledTimes(2);
     expect(store.getTurns(NATIVE_ID)).toHaveLength(2);
+    expect(store.getRevision(NATIVE_ID)).toBeGreaterThan(firstRevision);
   });
 
   it('ignores foreign messages and malformed bodies', () => {
@@ -291,9 +300,16 @@ describe('HistoryTimestampStore', () => {
 
     postCapture(makeEnvelope([makeTurn('第一个问题', 1_783_370_737)]), 'capture-a');
     expect(store.getTurns(NATIVE_ID)).not.toBeNull();
+    const firstRevision = store.getRevision(NATIVE_ID);
+    expect(firstRevision).toBeGreaterThan(0);
 
     store.setEnabled(false);
     expect(store.getTurns(NATIVE_ID)).toBeNull();
+    expect(store.getRevision(NATIVE_ID)).toBe(0);
+
+    store.setEnabled(true);
+    postCapture(makeEnvelope([makeTurn('第一个问题', 1_783_370_737)]), 'capture-b');
+    expect(store.getRevision(NATIVE_ID)).toBeGreaterThan(firstRevision);
   });
 
   it('tracks setting changes while no TimelineManager subscriber exists', () => {
@@ -338,8 +354,10 @@ describe('HistoryTimestampStore', () => {
     }
 
     expect(store.getTurns('0000000000000000')).toBeNull();
+    expect(store.getRevision('0000000000000000')).toBe(0);
     expect(store.getTurns('0000000000000016')).toEqual([
       { userText: '问题 16', timestampMs: 1_783_370_753_000 },
     ]);
+    expect(store.getRevision('0000000000000016')).toBeGreaterThan(0);
   });
 });

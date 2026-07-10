@@ -198,6 +198,8 @@ const MAX_PROCESSED_CAPTURE_IDS = 64;
  */
 export class HistoryTimestampStore {
   private byCid = new Map<string, Map<string, HistoryTurnTimestamp>>();
+  private cidRevisions = new Map<string, number>();
+  private revisionCounter = 0;
   private processedCaptureIds = new Set<string>();
   private subscribers = new Set<HistoryTimestampSubscriber>();
   private handler: ((ev: MessageEvent) => void) | null = null;
@@ -247,6 +249,7 @@ export class HistoryTimestampStore {
     this.enabled = enabled;
     if (!enabled) {
       this.byCid.clear();
+      this.cidRevisions.clear();
       this.processedCaptureIds.clear();
     }
     this.configureObserver(enabled);
@@ -278,6 +281,7 @@ export class HistoryTimestampStore {
     this.enabled = false;
     this.configureObserver(false);
     this.byCid.clear();
+    this.cidRevisions.clear();
     this.processedCaptureIds.clear();
     this.subscribers.clear();
   }
@@ -299,6 +303,11 @@ export class HistoryTimestampStore {
     this.byCid.delete(cid);
     this.byCid.set(cid, turns);
     return Array.from(turns.values());
+  }
+
+  /** Monotonic version of the parsed inputs for one native conversation. */
+  getRevision(nativeConversationId: string): number {
+    return this.cidRevisions.get(`c_${nativeConversationId}`) ?? 0;
   }
 
   private postCommand(type: 'configure' | 'flush' | 'ack', payload?: unknown): void {
@@ -343,6 +352,7 @@ export class HistoryTimestampStore {
       const oldest = this.byCid.keys().next().value as string | undefined;
       if (!oldest) break;
       this.byCid.delete(oldest);
+      this.cidRevisions.delete(oldest);
     }
     return existing;
   }
@@ -390,7 +400,10 @@ export class HistoryTimestampStore {
           existing!.set(key, turn);
           changed = true;
         });
-        if (changed) updatedCids.add(cid);
+        if (changed) {
+          this.cidRevisions.set(cid, ++this.revisionCounter);
+          updatedCids.add(cid);
+        }
       });
     });
 
