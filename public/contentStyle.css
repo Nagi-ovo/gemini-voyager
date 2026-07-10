@@ -11799,7 +11799,11 @@ body.light-theme .gv-usage-track,
     opacity 0.15s ease;
 }
 
-.gv-usage-refresh svg,
+.gv-usage-refresh svg {
+  width: 11px;
+  height: 11px;
+}
+
 .gv-usage-open svg {
   width: 13px;
   height: 13px;
