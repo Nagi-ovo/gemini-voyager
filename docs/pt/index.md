@@ -55,7 +55,7 @@ features:
     title: Efeitos Visuais
     details: Defina o ambiente. Alterne entre neve, chuva e pétalas de sakura na janela popup.
   - icon: 🍌
-    title: Remoção de Marca de Água NanoBanana
+    title: Image Refinement
     details: Remoção de marca de água sem perdas. Mantenha os momentos de IA puros.
   - icon: 📐
     title: Cópia de Fórmulas

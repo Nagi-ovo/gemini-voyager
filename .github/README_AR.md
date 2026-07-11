@@ -99,7 +99,7 @@
 - **💾 [تصدير الدردشة](https://voyager.nagi.fun/ar/guide/export)**: صَدّر المحادثات إلى تنسيقات JSON أو Markdown أو PDF مع تضمين الصور.
 - **🧜‍♀️ [رسم Mermaid](https://voyager.nagi.fun/ar/guide/mermaid)**: عرض تلقائي للمخططات الانسيابية ومخططات التتابع وغيرها من رسوم Mermaid.
 - **📝 [إصلاح عرض Markdown](https://voyager.nagi.fun/ar/guide/markdown-fix)**: إصلاح تلقائي لتنسيق Markdown العريض الذي تعطل بسبب عناصر HTML التي أدرجها Gemini.
-- **🍌 [NanoBanana](https://voyager.nagi.fun/ar/guide/nanobanana)**: إزالة العلامة المائية بدون فقدان الجودة للصور التي ينتجها Gemini.
+- **🍌 [Image Refinement](https://voyager.nagi.fun/ar/guide/nanobanana)**: إزالة العلامة المائية بدون فقدان الجودة للصور التي ينتجها Gemini.
 - **🔬 [البحث العميق](https://voyager.nagi.fun/ar/guide/deep-research)**: استخرج عمليات التفكير وروابط البحث من جلسات البحث العميق.
 - **🛠️ أدوات القوة**:
   - **[الحذف الجماعي](https://voyager.nagi.fun/ar/guide/batch-delete)**: تنظيف السجل الخاص بك دفعة واحدة.
@@ -226,7 +226,7 @@
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - مصدر الإلهام الأصلي لهذا المشروع.
 
-- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - تم بناء NanoBanana بالاعتماد على هذين المشروعين. إشعارات MIT الخاصة بالأطراف الثالثة والمحفوظة موجودة في [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - تم بناء Image Refinement بالاعتماد على هذين المشروعين. إشعارات MIT الخاصة بالأطراف الثالثة والمحفوظة موجودة في [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
 - **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - يتضمن منطق تثبيت النموذج الافتراضي أفكارًا تفاعلية مقتبسة من Gemini Helper، مع الاحتفاظ بالإسناد على مستوى المصدر.
 
@@ -247,7 +247,7 @@
 ## 📄 الترخيص
 
 يتم توزيع Voyager بموجب **GPL-3.0**.
-إشعارات MIT الخاصة بالأطراف الثالثة والمحفوظة لشفرة NanoBanana وموارده موجودة في [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+إشعارات MIT الخاصة بالأطراف الثالثة والمحفوظة لشفرة Image Refinement وموارده موجودة في [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
 ---
 

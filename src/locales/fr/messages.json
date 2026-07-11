@@ -1240,8 +1240,8 @@
     "description": "Sign in with Google button"
   },
   "nanobananaOptions": {
-    "message": "Options NanoBanana",
-    "description": "NanoBanana options section label"
+    "message": "Options Image Refinement",
+    "description": "Image Refinement options section label"
   },
   "nanobananaDownloadLabel": {
     "message": "Retirer le filigrane au téléchargement",
@@ -1268,7 +1268,7 @@
     "description": "Inline badge warning that the preview-time watermark removal option is unstable"
   },
   "nanobananaDownloadTooltip": {
-    "message": "Télécharger l'image sans filigrane (NanoBanana)",
+    "message": "Télécharger l'image sans filigrane (Image Refinement)",
     "description": "Download button tooltip"
   },
   "deepResearchDownload": {

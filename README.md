@@ -100,7 +100,7 @@ That's why I built **Voyager**. It's not just a tool; it's a companion that help
 - **💾 [Chat Export](https://voyager.nagi.fun/en/guide/export)**: Export conversations to JSON, Markdown, or PDF with images included.
 - **🧜‍♀️ [Mermaid Rendering](https://voyager.nagi.fun/en/guide/mermaid)**: Auto-render flowcharts, sequence diagrams, and other Mermaid charts.
 - **📝 [Markdown Rendering Fix](https://voyager.nagi.fun/en/guide/markdown-fix)**: Automatically fix broken bold syntax caused by Gemini's injected HTML elements.
-- **🍌 [NanoBanana](https://voyager.nagi.fun/en/guide/nanobanana)**: Lossless watermark removal for Gemini-generated images.
+- **🍌 [Image Refinement](https://voyager.nagi.fun/en/guide/nanobanana)**: Lossless watermark removal for Gemini-generated images.
 - **🔬 [Deep Research](https://voyager.nagi.fun/en/guide/deep-research)**: Extract thinking processes and research links from Deep Research sessions.
 - **🛠️ Power Tools**:
   - **[Quote Reply](https://voyager.nagi.fun/en/guide/quote-reply)**: Reply with context by selecting text.
@@ -274,7 +274,7 @@ Special thanks to all contributors for their contributions to Voyager ❤️
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - The original timeline navigation extension for ChatGPT that inspired this project.
 
-- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - NanoBanana is adapted from these projects. Third-party MIT notices are retained in [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - Image Refinement is adapted from these projects. Third-party MIT notices are retained in [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
 
 - **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - The default-model locking logic includes interaction ideas adapted from Gemini Helper, with source-level attribution retained.
 
@@ -295,7 +295,7 @@ If your project is inspired by Voyager, forked from it, or built on top of it, f
 ## 📄 License
 
 Voyager is licensed under **GPL-3.0**.
-Third-party MIT notices for NanoBanana-related code and assets are retained in [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
+Third-party MIT notices for Image Refinement-related code and assets are retained in [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
 
 ---
 

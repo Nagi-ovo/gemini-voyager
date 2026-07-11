@@ -127,7 +127,7 @@ function attachIndicatorToButton(nativeButton: HTMLButtonElement): void {
   indicator.textContent = '🍌';
   indicator.title =
     chrome.i18n.getMessage('nanobananaDownloadTooltip') ||
-    'NanoBanana: Downloads will have watermark removed';
+    'Image Refinement: Downloads will be processed automatically';
 
   Object.assign(indicator.style, {
     position: 'absolute',

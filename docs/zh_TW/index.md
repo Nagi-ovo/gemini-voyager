@@ -55,7 +55,7 @@ features:
     title: 視覺特效
     details: 頁面也有情緒。可在彈窗中切換飄雪、下雨與櫻花花瓣效果。
   - icon: 🍌
-    title: NanoBanana 水印去除
+    title: Image Refinement
     details: 無損去水印。讓 AI 生成的瞬間回歸純淨。
   - icon: 📐
     title: 公式複製

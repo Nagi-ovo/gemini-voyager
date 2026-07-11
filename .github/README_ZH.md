@@ -99,7 +99,7 @@
 - **💾 [对话导出](https://voyager.nagi.fun/guide/export)**: 支持导出为 JSON、Markdown 或 PDF（含图片）。
 - **🧜‍♀️ [Mermaid 渲染](https://voyager.nagi.fun/guide/mermaid)**: 自动渲染流程图、时序图等 Mermaid 图表。
 - **📝 [Markdown 渲染修复](https://voyager.nagi.fun/guide/markdown-fix)**: 自动修复 Gemini 注入 HTML 导致的 Markdown 加粗失效问题。
-- **🍌 [NanoBanana](https://voyager.nagi.fun/guide/nanobanana)**: 自动去除 Gemini 生成图片的无损水印。
+- **🍌 [Image Refinement](https://voyager.nagi.fun/guide/nanobanana)**: 自动去除 Gemini 生成图片的无损水印。
 - **🔬 [Deep Research](https://voyager.nagi.fun/guide/deep-research)**: 一键提取 Deep Research 对话的思考过程和研究链接。
 - **🛠️ 效率工具**:
   - **[批量删除](https://voyager.nagi.fun/guide/batch-delete)**: 批量清理对话记录。
@@ -275,7 +275,7 @@ bun run build:all
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 本项目的灵感来源。
 
-- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - NanoBanana 基于这些项目适配而来，相关第三方 MIT 声明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - Image Refinement 基于这些项目适配而来，相关第三方 MIT 声明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
 
 - **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - 默认模型锁定功能中的部分交互逻辑参考自 Gemini Helper，并已在源码中保留 attribution。
 
@@ -296,7 +296,7 @@ bun run build:all
 ## 📄 许可证
 
 Voyager 基于 **GPL-3.0** 许可证发布。
-NanoBanana 相关代码与资源的第三方 MIT 声明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
+Image Refinement 相关代码与资源的第三方 MIT 声明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
 
 ---
 

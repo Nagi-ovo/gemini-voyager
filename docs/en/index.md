@@ -55,7 +55,7 @@ features:
     title: Visual Effects
     details: Set the mood. Switch between snow, rain, and sakura petals from the popup.
   - icon: 🍌
-    title: NanoBanana Watermark Removal
+    title: Image Refinement
     details: Lossless watermark removal. Keeping AI moments pure.
   - icon: 📐
     title: Formula Copy

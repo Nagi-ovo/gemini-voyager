@@ -99,7 +99,7 @@ C'est pourquoi nous avons créé **Voyager**. Plus qu'un simple outil, c'est un 
 - **💾 [Export de Chat](https://voyager.nagi.fun/fr/guide/export)** : Exportez vos conversations en JSON, Markdown ou PDF avec les images incluses.
 - **🧜‍♀️ [Rendu Mermaid](https://voyager.nagi.fun/fr/guide/mermaid)**: Rendu automatique des organigrammes, diagrammes de séquence et autres graphiques Mermaid.
 - **📝 [Correction du Rendu Markdown](https://voyager.nagi.fun/fr/guide/markdown-fix)**: Répare automatiquement la syntaxe Markdown grasse corrompue par les éléments HTML injectés par Gemini.
-- **🍌 [NanoBanana](https://voyager.nagi.fun/fr/guide/nanobanana)** : Suppression sans perte du filigrane Gemini sur les images générées.
+- **🍌 [Image Refinement](https://voyager.nagi.fun/fr/guide/nanobanana)** : Suppression sans perte du filigrane Gemini sur les images générées.
 - **🔬 [Deep Research](https://voyager.nagi.fun/fr/guide/deep-research)** : Extrayez les processus de réflexion et les liens de recherche des sessions Deep Research.
 - **🛠️ Outils de Productivité** :
   - **[Suppression par Lot](https://voyager.nagi.fun/fr/guide/batch-delete)** : Nettoyage massif de votre historique.
@@ -226,7 +226,7 @@ Un grand merci à tous les contributeurs pour leurs contributions à Voyager ❤
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - La source d’inspiration originale pour ce projet.
 
-- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - NanoBanana est adapté de ces projets. Les mentions MIT tierces conservées figurent dans [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - Image Refinement est adapté de ces projets. Les mentions MIT tierces conservées figurent dans [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
 - **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - La logique de verrouillage du modèle par défaut inclut des idées d’interaction adaptées de Gemini Helper, avec une attribution conservée dans le code source.
 
@@ -247,7 +247,7 @@ Si votre projet est inspiré par Voyager, en est un fork direct ou est construit
 ## 📄 Licence
 
 Voyager est distribue sous **GPL-3.0**.
-Les mentions MIT tierces conservees pour le code et les ressources lies a NanoBanana figurent dans [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+Les mentions MIT tierces conservees pour le code et les ressources lies a Image Refinement figurent dans [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
 ---
 

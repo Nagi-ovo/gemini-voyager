@@ -1240,8 +1240,8 @@
     "description": "Sign in with Google button"
   },
   "nanobananaOptions": {
-    "message": "NanoBanana オプション",
-    "description": "NanoBanana options section label"
+    "message": "Image Refinement オプション",
+    "description": "Image Refinement options section label"
   },
   "nanobananaDownloadLabel": {
     "message": "ダウンロード時に透かしを除去",
@@ -1268,7 +1268,7 @@
     "description": "Inline badge warning that the preview-time watermark removal option is unstable"
   },
   "nanobananaDownloadTooltip": {
-    "message": "透かしなし画像をダウンロード (NanoBanana)",
+    "message": "透かしなし画像をダウンロード (Image Refinement)",
     "description": "Download button tooltip"
   },
   "deepResearchDownload": {

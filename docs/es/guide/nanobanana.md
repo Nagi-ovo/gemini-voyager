@@ -1,7 +1,7 @@
-# Opción NanoBanana
+# Opción Image Refinement
 
 ::: warning Compatibilidad de navegadores
-Actualmente, la función **NanoBanana** **no es compatible con Safari** debido a las limitaciones de la API del navegador. Recomendamos usar **Chrome** o **Firefox** si necesita usar esta función.
+Actualmente, la función **Image Refinement** **no es compatible con Safari** debido a las limitaciones de la API del navegador. Recomendamos usar **Chrome** o **Firefox** si necesita usar esta función.
 
 Los usuarios de Safari pueden cargar manualmente sus imágenes descargadas en sitios de herramientas como [banana.ovo.re](https://banana.ovo.re/) para su procesamiento (aunque no se garantiza el éxito para todas las imágenes debido a las diferentes resoluciones).
 :::
@@ -12,7 +12,7 @@ Las imágenes generadas por Gemini™ vienen con una marca de agua visible por d
 
 ## Restauración Sin Pérdidas
 
-NanoBanana utiliza un **Algoritmo de Mezcla Alfa Inversa (Reverse Alpha Blending)**.
+Image Refinement utiliza un **Algoritmo de Mezcla Alfa Inversa (Reverse Alpha Blending)**.
 
 - **Sin Repintado AI**: La eliminación de marcas de agua tradicional a menudo utiliza IA para difuminar, lo que puede destruir los detalles de la imagen.
 - **Precisión a Nivel de Píxel**: A través del cálculo matemático, eliminamos con precisión la capa transparente de la marca de agua superpuesta en los píxeles, restaurando el 100% de los puntos de píxel originales.
@@ -20,14 +20,14 @@ NanoBanana utiliza un **Algoritmo de Mezcla Alfa Inversa (Reverse Alpha Blending
 
 ## Cómo Usar
 
-1. **Habilitar Función**: Encuentra la "Opción NanoBanana" al final del panel de configuración de Voyager y activa "Eliminar marca de agua NanoBanana".
+1. **Habilitar Función**: Encuentra la "Opción Image Refinement" al final del panel de configuración de Voyager y activa "Eliminar marca de agua Image Refinement".
 2. **Disparo Automático**: A partir de entonces, para cada imagen que generes, completaremos automáticamente el procesamiento de eliminación de marca de agua en segundo plano.
 3. **Descarga Directa**:
    - Pasa el ratón sobre la imagen procesada y verás un botón 🍌.
    - **El botón 🍌 ha reemplazado completamente** al botón de descarga nativo, haz clic para descargar directamente la imagen 100% libre de marca de agua.
 
 <div style="text-align: center; margin-top: 30px;">
-  <img src="/assets/nanobanana.png" alt="Ejemplo NanoBanana" style="border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); max-width: 100%;"/>
+  <img src="/assets/nanobanana.png" alt="Ejemplo Image Refinement" style="border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); max-width: 100%;"/>
 </div>
 
 ## Agradecimientos Especiales

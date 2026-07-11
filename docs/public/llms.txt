@@ -26,7 +26,7 @@ Voyager is an open-source (GPLv3) browser extension that transforms the Google G
 - **Formula Copy**: One-click copy for LaTeX and MathML (Word-compatible) source codes
 - **Deep Research Export**: Extract research processes, thinking steps, and source links from Gemini Deep Research sessions
 - **Mermaid Diagrams**: Render flowcharts, sequence diagrams, Gantt charts, and more inline in conversations
-- **NanoBanana**: Lossless watermark removal from Gemini-generated images
+- **Image Refinement**: Lossless watermark removal from Gemini-generated images
 - **Quote Reply**: Select any text in a conversation to quote and reply with context
 - **Batch Delete**: Select multiple conversations and delete them all at once
 - **Default Model**: Auto-switch to your preferred Gemini model on every new chat

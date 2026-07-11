@@ -55,7 +55,7 @@ features:
     title: Efectos Visuales
     details: Crea el ambiente. Cambia entre nieve, lluvia y pétalos de sakura desde la ventana emergente.
   - icon: 🍌
-    title: Eliminación de Marca de Agua NanoBanana
+    title: Image Refinement
     details: Eliminación sin pérdidas. Deja que los momentos generados por IA vuelvan a ser puros.
   - icon: 📐
     title: Copie de Fórmulas

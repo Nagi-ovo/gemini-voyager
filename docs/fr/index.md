@@ -55,7 +55,7 @@ features:
     title: Effets Visuels
     details: Créez l'ambiance. Basculez entre neige, pluie et pétales de sakura depuis la fenêtre popup.
   - icon: 🍌
-    title: Suppression Filigrane
+    title: Image Refinement
     details: Suppression sans perte du filigrane. Gardez les moments IA purs.
   - icon: 📐
     title: Copie de Formules

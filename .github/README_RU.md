@@ -99,7 +99,7 @@
 - **💾 [Экспорт чатов](https://voyager.nagi.fun/ru/guide/export)**: Сохраняйте диалоги в форматах JSON, Markdown или PDF вместе с изображениями.
 - **🧜‍♀️ [Рендеринг Mermaid](https://voyager.nagi.fun/ru/guide/mermaid)**: Автоматический рендеринг блок-схем, диаграмм последовательности и других графиков Mermaid.
 - **📝 [Исправление рендеринга Markdown](https://voyager.nagi.fun/ru/guide/markdown-fix)**: Автоматическое исправление синтаксиса жирного шрифта Markdown, нарушенного вставленными Gemini HTML-элементами.
-- **🍌 [NanoBanana](https://voyager.nagi.fun/ru/guide/nanobanana)**: Автоматическое удаление водяных знаков с изображений, созданных Gemini, без потери качества.
+- **🍌 [Image Refinement](https://voyager.nagi.fun/ru/guide/nanobanana)**: Автоматическое удаление водяных знаков с изображений, созданных Gemini, без потери качества.
 - **🔬 [Deep Research](https://voyager.nagi.fun/ru/guide/deep-research)**: Извлечение цепочек рассуждений и ссылок из сессий Deep Research.
 - **🛠️ Инструменты продуктивности**:
   - **[Пакетное удаление](https://voyager.nagi.fun/ru/guide/batch-delete)**: Массовая очистка истории диалогов.
@@ -226,7 +226,7 @@
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - Оригинальное расширение, вдохновившее этот проект.
 
-- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - NanoBanana адаптирован на основе этих проектов. Сохраненные сторонние MIT-уведомления находятся в [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - Image Refinement адаптирован на основе этих проектов. Сохраненные сторонние MIT-уведомления находятся в [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
 - **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - Логика фиксации модели по умолчанию включает идеи взаимодействия, адаптированные из Gemini Helper, с сохранённой атрибуцией на уровне исходного кода.
 
@@ -247,7 +247,7 @@
 ## 📄 Лицензия
 
 Voyager распространяется под лицензией **GPL-3.0**.
-Сохраненные сторонние MIT-уведомления для кода и ресурсов NanoBanana находятся в [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+Сохраненные сторонние MIT-уведомления для кода и ресурсов Image Refinement находятся в [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
 ---
 

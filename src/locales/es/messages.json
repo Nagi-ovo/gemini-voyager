@@ -1240,8 +1240,8 @@
     "description": "Sign in with Google button"
   },
   "nanobananaOptions": {
-    "message": "Opciones de NanoBanana",
-    "description": "NanoBanana options section label"
+    "message": "Opciones de Image Refinement",
+    "description": "Image Refinement options section label"
   },
   "nanobananaDownloadLabel": {
     "message": "Eliminar marca de agua al descargar",
@@ -1268,7 +1268,7 @@
     "description": "Inline badge warning that the preview-time watermark removal option is unstable"
   },
   "nanobananaDownloadTooltip": {
-    "message": "Descargar imagen sin marca de agua (NanoBanana)",
+    "message": "Descargar imagen sin marca de agua (Image Refinement)",
     "description": "Download button tooltip"
   },
   "deepResearchDownload": {

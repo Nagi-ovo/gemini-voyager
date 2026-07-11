@@ -105,7 +105,7 @@ Para um guia completo, visite a nossa [Documentação](https://voyager.nagi.fun/
 - **💾 [Exportação de Chat](https://voyager.nagi.fun/pt/guide/export)**: Exporte conversas para JSON, Markdown ou PDF com imagens incluídas.
 - **🧜‍♀️ [Renderização Mermaid](https://voyager.nagi.fun/pt/guide/mermaid)**: Renderização automática de fluxogramas, diagramas de sequência e outros gráficos Mermaid.
 - **📝 [Correção de Renderização Markdown](https://voyager.nagi.fun/pt/guide/markdown-fix)**: Corrige automaticamente a sintaxe de negrito do Markdown quebrada pelos elementos HTML injetados pelo Gemini.
-- **🍌 [NanoBanana](https://voyager.nagi.fun/pt/guide/nanobanana)**: Remoção de marca de água sem perdas para imagens geradas pelo Gemini.
+- **🍌 [Image Refinement](https://voyager.nagi.fun/pt/guide/nanobanana)**: Remoção de marca de água sem perdas para imagens geradas pelo Gemini.
 - **🔬 [Deep Research](https://voyager.nagi.fun/pt/guide/deep-research)**: Extraia processos de pensamento e links de pesquisa de sessões de Deep Research.
 - **🛠️ Ferramentas de Produtividade**:
   - **[Exclusão em Lote](https://voyager.nagi.fun/pt/guide/batch-delete)**: Limpe o seu histórico em massa.
@@ -232,7 +232,7 @@ Um agradecimento especial a todos os colaboradores pelas suas contribuições ao
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - A fonte original de inspiração para este projeto.
 
-- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - O NanoBanana foi adaptado destes projetos. Os avisos MIT de terceiros retidos estão em [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - O Image Refinement foi adaptado destes projetos. Os avisos MIT de terceiros retidos estão em [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
 - **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - A lógica de bloqueio do modelo padrão inclui ideias de interação adaptadas do Gemini Helper, com atribuição mantida no código-fonte.
 
@@ -253,7 +253,7 @@ Se o seu projeto foi inspirado no Voyager, é um fork direto ou foi criado com b
 ## 📄 Licença
 
 Voyager é distribuído sob **GPL-3.0**.
-Os avisos MIT de terceiros retidos para o código e os recursos relacionados ao NanoBanana estão em [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+Os avisos MIT de terceiros retidos para o código e os recursos relacionados ao Image Refinement estão em [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
 ---
 

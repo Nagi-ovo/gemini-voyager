@@ -55,7 +55,7 @@ features:
     title: ビジュアルエフェクト
     details: 雰囲気を演出。ポップアップから雪、雨、桜の花びらエフェクトを切り替えられます。
   - icon: 🍌
-    title: NanoBanana 透かし除去
+    title: Image Refinement
     details: 生成された瞬間を、純粋なままに。ノイズのない美しさを。
   - icon: 📐
     title: 数式コピー

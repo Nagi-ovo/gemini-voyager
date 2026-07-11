@@ -161,7 +161,7 @@ Render Mermaid diagram code blocks inline in conversations. Supports flowcharts,
 
 Fix Gemini's occasional Markdown rendering issues where code blocks, lists, or formatting break mid-conversation.
 
-### NanoBanana (Watermark Removal)
+### Image Refinement (Watermark Removal)
 
 Lossless watermark removal from Gemini-generated images. Removes the "Made with Google" watermark while preserving full image quality. Not available on Safari.
 

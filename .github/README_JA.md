@@ -99,7 +99,7 @@
 - **💾 [エクスポート](https://voyager.nagi.fun/ja/guide/export)**: 会話を JSON、Markdown、PDF 形式で保存（画像込み）。
 - **🧜‍♀️ [Mermaid レンダリング](https://voyager.nagi.fun/ja/guide/mermaid)**: フローチャート、シーケンス図、その他の Mermaid チャートを自動レンダリングします。
 - **📝 [Markdown レンダリングの修正](https://voyager.nagi.fun/ja/guide/markdown-fix)**: Gemini が挿入した HTML 要素によって壊れた Markdown の太字構文を自動的に修正します。
-- **🍌 [NanoBanana](https://voyager.nagi.fun/ja/guide/nanobanana)**: Gemini で生成された画像からウォーターマークを自動除去。
+- **🍌 [Image Refinement](https://voyager.nagi.fun/ja/guide/nanobanana)**: Gemini で生成された画像からウォーターマークを自動除去。
 - **🔬 [Deep Research](https://voyager.nagi.fun/ja/guide/deep-research)**: 思考プロセスやリサーチリンクを Markdown で抽出。
 - **🛠️ パワーツール**:
   - **[一括削除](https://voyager.nagi.fun/ja/guide/batch-delete)**: 履歴をまとめてクリーンアップ。
@@ -246,7 +246,7 @@ Voyager に貢献してくださったすべてのコントリビューターに
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - このプロジェクトのインスピレーションの源です。
 
-- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - NanoBanana はこれらのプロジェクトをもとに適応されています。関連する第三者の MIT notice は [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) に記載しています。
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - Image Refinement はこれらのプロジェクトをもとに適応されています。関連する第三者の MIT notice は [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) に記載しています。
 
 - **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - デフォルトモデル固定機能の一部のインタラクション設計は Gemini Helper を参考にしており、ソースコード上にも attribution を残しています。
 
@@ -267,7 +267,7 @@ Voyager にインスパイアされたプロジェクト：
 ## 📄 ライセンス
 
 Voyager は **GPL-3.0** の下で提供されています。
-NanoBanana 関連のコードとアセットに関する第三者の MIT notice は [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) に記載しています。
+Image Refinement 関連のコードとアセットに関する第三者の MIT notice は [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) に記載しています。
 
 ---
 

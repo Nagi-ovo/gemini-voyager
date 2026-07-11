@@ -4140,7 +4140,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           </Card>,
         )}
 
-        {/* NanoBanana Options - Hidden on Safari due to fetch interceptor limitations */}
+        {/* Image Refinement Options - Hidden on Safari due to fetch interceptor limitations */}
         {!isSafariBrowser &&
           wrapSection(
             'nanobanana',
