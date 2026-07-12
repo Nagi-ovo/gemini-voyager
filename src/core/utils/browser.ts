@@ -17,10 +17,16 @@
  *
  * @returns true if running in Safari
  */
+const IOS_THIRD_PARTY_BROWSER_UA_PATTERN = /\b(?:CriOS|FxiOS|EdgiOS|OPiOS|DuckDuckGo|Brave|GSA)\//i;
+
 export function isSafari(): boolean {
   // Reliable detection using user agent and vendor
   const ua = navigator.userAgent?.toLowerCase() ?? '';
   const vendor = navigator.vendor?.toLowerCase() ?? '';
+
+  // iOS browsers all use WebKit and can expose Apple's vendor plus a Safari
+  // token. Their product-specific tokens must win over that shared shape.
+  if (IOS_THIRD_PARTY_BROWSER_UA_PATTERN.test(ua)) return false;
 
   // Safari has 'Apple' vendor and 'safari' in UA, but not 'chrome'
   const isAppleVendor = vendor.includes('apple');
@@ -143,6 +149,37 @@ export function getVoyagerBuildTarget(): VoyagerBuildTarget {
   }
 
   return 'chrome';
+}
+
+/**
+ * Parse Safari's product major version from the `Version/x` user-agent token.
+ *
+ * The Safari build target is authoritative because extension contexts can
+ * expose reduced user-agent/vendor values. The user agent is used only for the
+ * product version: WebKit/Safari engine build numbers are not Safari versions.
+ * Unknown or third-party iOS browsers return null instead of guessing.
+ */
+export function getSafariMajorVersion(): number | null {
+  const ua = navigator.userAgent ?? '';
+
+  if (IOS_THIRD_PARTY_BROWSER_UA_PATTERN.test(ua)) return null;
+  if (getVoyagerBuildTarget() !== 'safari' && !isSafari()) return null;
+
+  const match = ua.match(/\bVersion\/(\d+)(?:\.\d+)?/i);
+  if (!match) return null;
+
+  const majorVersion = Number.parseInt(match[1], 10);
+  return Number.isSafeInteger(majorVersion) && majorVersion > 0 ? majorVersion : null;
+}
+
+/**
+ * Safari before 16 keeps browser.storage.local quota-limited even when the
+ * unlimitedStorage permission is granted. Unknown versions are not assumed to
+ * be legacy; callers should use a generic fallback message in that case.
+ */
+export function hasLegacySafariStorageLimit(): boolean {
+  const majorVersion = getSafariMajorVersion();
+  return majorVersion !== null && majorVersion < 16;
 }
 
 export function getExtensionRuntimeId(): string | undefined {

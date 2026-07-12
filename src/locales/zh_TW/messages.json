@@ -264,11 +264,11 @@
     "description": "Button label for returning from the starred library to Prompt Manager"
   },
   "pm_starred_library": {
-    "message": "星號收藏庫",
+    "message": "收藏庫",
     "description": "Prompt Manager starred messages library title and entry button"
   },
   "pm_starred_search_placeholder": {
-    "message": "搜尋星號內容",
+    "message": "搜尋收藏內容",
     "description": "Search placeholder for starred messages in Prompt Manager"
   },
   "pm_starred_no_results": {
@@ -972,12 +972,12 @@
     "description": "自訂網站重新載入/權限提示"
   },
   "starredHistory": {
-    "message": "星號標記歷史",
-    "description": "星號標記歷史標題"
+    "message": "收藏庫",
+    "description": "收藏的星號與醒目標示標題"
   },
   "viewStarredHistory": {
-    "message": "檢視星號標記歷史",
-    "description": "檢視星號標記歷史按鈕"
+    "message": "檢視收藏庫",
+    "description": "檢視收藏的星號與醒目標示按鈕"
   },
   "noStarredMessages": {
     "message": "暫無星號標記訊息",
@@ -1414,6 +1414,14 @@
   "enableQuoteReplyHint": {
     "message": "在對話中選取文字時顯示懸浮按鈕，用於引用所選內容",
     "description": "引用回覆功能提示"
+  },
+  "enableHighlights": {
+    "message": "啟用醒目標記",
+    "description": "醒目標記功能開關標籤"
+  },
+  "enableHighlightsHint": {
+    "message": "標記選取的回答文字、選擇顏色，並記住上次使用的顏色。",
+    "description": "醒目標記功能提示"
   },
   "hideInputHalo": {
     "message": "隱藏輸入框光暈",
@@ -2322,5 +2330,57 @@
   "enablePromptManagerOnSiteHint": {
     "message": "在此網站使用你儲存的提示詞。開啟時需要授權存取該網站。",
     "description": "Top toggle hint for enabling Prompt Manager on a third-party site"
+  },
+  "storageQuotaTitle": { "message": "儲存空間" },
+  "storageQuotaManage": { "message": "管理儲存空間" },
+  "storageQuotaLocal": { "message": "擴充功能本機資料" },
+  "storageQuotaSync": { "message": "同步設定" },
+  "storageQuotaHealthy": { "message": "空間充足" },
+  "storageQuotaAttention": { "message": "接近上限" },
+  "storageQuotaCritical": { "message": "即將存滿" },
+  "storageQuotaUnknown": { "message": "無法讀取用量" },
+  "storageQuotaBreakdown": { "message": "儲存明細" },
+  "storageQuotaSoftLimit": { "message": "Voyager 軟上限" },
+  "storageQuotaEffectiveLimit": {
+    "message": "目前實際上限：{size}。Voyager 會採用此值與所選軟上限中較低者。"
+  },
+  "storageQuotaCache": { "message": "可重建快取" },
+  "storageQuotaHighlights": { "message": "醒目標記" },
+  "storageQuotaOther": { "message": "其他" },
+  "storageQuotaUnlock": { "message": "擴充本機空間" },
+  "storageQuotaSafariLimit": {
+    "message": "Safari 15 只能把本機儲存空間從約 5 MB 提升到約 10 MB，仍然可能存滿。"
+  },
+  "storageQuotaUnknownLimit": {
+    "message": "無法識別 Safari 版本；舊版本擴充後仍可能受限。"
+  },
+  "storageQuotaClearConfirm": {
+    "message": "清理「{category}」？只會刪除這個類別的資料。"
+  },
+  "storageQuotaHighlightClearConfirm": {
+    "message": "刪除所有已儲存的醒目標記與註解？此操作無法復原。"
+  },
+  "storageQuotaDraftClearConfirm": {
+    "message": "刪除所有尚未傳送的草稿？此操作無法復原。"
+  },
+  "highlightAction": { "message": "醒目標示" },
+  "highlightSaved": { "message": "醒目標示已儲存" },
+  "highlightSaveFailed": { "message": "無法儲存醒目標示" },
+  "highlightDeleteFailed": { "message": "無法刪除醒目標示" },
+  "highlightNotePlaceholder": { "message": "新增備註（選填）" },
+  "highlightColor": { "message": "醒目標示顏色" },
+  "highlightTooLong": { "message": "選取內容太長，請縮小範圍。" },
+  "highlightAriaLabel": { "message": "已儲存的醒目標示。開啟註解。" },
+  "highlightTimelineAriaLabel": { "message": "開啟已儲存的醒目標示" },
+  "savedLibraryAll": { "message": "全部" },
+  "savedLibraryStars": { "message": "星號" },
+  "savedLibraryHighlights": { "message": "醒目標示" },
+  "savedLibraryEmpty": { "message": "尚無收藏內容" },
+  "savedLibraryNoHighlights": { "message": "尚無醒目標示" },
+  "savedLibrarySearchPlaceholder": { "message": "搜尋星號與醒目標示" },
+  "highlightImportSuccess": { "message": "已匯入 {count} 則醒目標示" },
+  "highlightCloudSync": { "message": "同步醒目標示" },
+  "highlightCloudSyncHint": {
+    "message": "將醒目標示儲存在依帳號隔離的獨立 Drive 檔案中。同步一律採合併，預設關閉。"
   }
 }

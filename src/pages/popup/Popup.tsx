@@ -64,6 +64,8 @@ import { ContextSyncSettings } from './components/ContextSyncSettings';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
 import { PluginManager } from './components/PluginManager';
 import { StarredHistory } from './components/StarredHistory';
+import { StorageManager } from './components/StorageManager';
+import { StorageQuotaCard } from './components/StorageQuotaCard';
 import { ThemeColorButton } from './components/ThemeColorButton';
 import {
   IconChatGPT,
@@ -429,6 +431,7 @@ const POPUP_SETTINGS_SEARCH_ITEMS = [
     'enableMermaidRenderingHint',
   ]),
   popupSearchTarget('general', 'enableQuoteReply', ['enableQuoteReply', 'enableQuoteReplyHint']),
+  popupSearchTarget('general', 'enableHighlights', ['enableHighlights', 'enableHighlightsHint']),
   popupSearchTarget(
     'general',
     'responseCompleteNotification',
@@ -736,6 +739,7 @@ interface SettingsUpdate {
   inputVimModeEnabled?: boolean;
   mermaidEnabled?: boolean;
   quoteReplyEnabled?: boolean;
+  highlightEnabled?: boolean;
   responseCompleteNotificationEnabled?: boolean;
   remoteAnnouncementEnabled?: boolean;
   usageStatusEnabled?: boolean;
@@ -858,6 +862,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const [newWebsiteInput, setNewWebsiteInput] = useState<string>('');
   const [websiteError, setWebsiteError] = useState<string>('');
   const [showStarredHistory, setShowStarredHistory] = useState<boolean>(false);
+  const [showStorageManager, setShowStorageManager] = useState<boolean>(false);
   const [formulaCopyFormat, setFormulaCopyFormat] = useState<
     'latex' | 'unicodemath' | 'no-dollar' | 'notion'
   >('latex');
@@ -879,6 +884,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
   const [showMessageTimestamps, setShowMessageTimestamps] = useState<boolean>(false);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
+  const [highlightEnabled, setHighlightEnabled] = useState<boolean>(true);
   const [responseCompleteNotificationEnabled, setResponseCompleteNotificationEnabled] =
     useState<boolean>(false);
   const [remoteAnnouncementEnabled, setRemoteAnnouncementEnabled] = useState<boolean>(true);
@@ -1150,6 +1156,9 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         payload.gvMermaidEnabled = settings.mermaidEnabled;
       if (typeof settings.quoteReplyEnabled === 'boolean')
         payload.gvQuoteReplyEnabled = settings.quoteReplyEnabled;
+      if (typeof settings.highlightEnabled === 'boolean') {
+        payload[StorageKeys.HIGHLIGHT_ENABLED] = settings.highlightEnabled;
+      }
       if (typeof settings.responseCompleteNotificationEnabled === 'boolean') {
         payload[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] =
           settings.responseCompleteNotificationEnabled;
@@ -1687,6 +1696,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: false,
           gvMermaidEnabled: true,
           gvQuoteReplyEnabled: true,
+          [StorageKeys.HIGHLIGHT_ENABLED]: true,
           [StorageKeys.USAGE_STATUS_ENABLED]: false,
           [StorageKeys.DEFAULT_MODEL_AUTO_APPLY]: true,
           [StorageKeys.FOLDER_PROJECT_ENABLED]: false,
@@ -1775,6 +1785,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           }
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
+          setHighlightEnabled(res?.[StorageKeys.HIGHLIGHT_ENABLED] !== false);
           setResponseCompleteNotificationEnabled(
             res?.[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] === true,
           );
@@ -2356,6 +2367,20 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     );
   }
 
+  if (showStorageManager) {
+    return (
+      <div style={activeBrand ? createPopupBrandThemeStyle(activeBrand) : undefined}>
+        <StorageManager
+          onClose={() => setShowStorageManager(false)}
+          onManageHighlights={() => {
+            setShowStorageManager(false);
+            setShowStarredHistory(true);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className="bg-background text-foreground w-[360px]"
@@ -2461,6 +2486,11 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
               )}
             </div>
           </Card>
+        )}
+        {!isPluginSite && (
+          <div style={{ order: -1.5 }}>
+            <StorageQuotaCard onManage={() => setShowStorageManager(true)} />
+          </div>
         )}
         {/* AI Studio master toggle - only shown when on AI Studio */}
         {isAIStudio && (
@@ -3983,6 +4013,31 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                     onChange={(e) => {
                       setQuoteReplyEnabled(e.target.checked);
                       apply({ quoteReplyEnabled: e.target.checked });
+                    }}
+                  />
+                </div>,
+              )}
+              {renderSetting(
+                'general',
+                'enableHighlights',
+                <div className="group flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label
+                      htmlFor="highlights-enabled"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('enableHighlights')}
+                    </Label>
+                    <p className="text-muted-foreground mt-1 text-xs">
+                      {t('enableHighlightsHint')}
+                    </p>
+                  </div>
+                  <Switch
+                    id="highlights-enabled"
+                    checked={highlightEnabled}
+                    onChange={(e) => {
+                      setHighlightEnabled(e.target.checked);
+                      apply({ highlightEnabled: e.target.checked });
                     }}
                   />
                 </div>,

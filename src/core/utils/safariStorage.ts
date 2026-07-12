@@ -8,7 +8,7 @@
  * - Private mode quota exceeded errors
  *
  * Solution:
- * - Use browser.storage.local (persistent, 10MB quota)
+ * - Use browser.storage.local (persistent; quota depends on Safari version and permissions)
  * - Fallback to localStorage if storage API unavailable
  */
 import browser from 'webextension-polyfill';

@@ -30,6 +30,7 @@ import type { StarredMessagesData } from '@/pages/content/timeline/starredTypes'
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
 import { Label } from '../../../components/ui/label';
+import { Switch } from '../../../components/ui/switch';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import {
   mergeFolderData,
@@ -101,6 +102,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadMode, setDownloadMode] = useState<DownloadMode | null>(null);
   const [platform, setPlatform] = useState<SyncPlatform>('gemini');
+  const [highlightSyncEnabled, setHighlightSyncEnabled] = useState(false);
 
   const getBaseFolderStorageKey = useCallback(
     (targetPlatform: SyncPlatform) =>
@@ -230,10 +232,16 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
   useEffect(() => {
     const fetchState = async () => {
       try {
-        const response = await chrome.runtime.sendMessage({ type: 'gv.sync.getState' });
+        const [response, highlightSetting] = await Promise.all([
+          chrome.runtime.sendMessage({ type: 'gv.sync.getState' }),
+          chrome.storage.local.get({ [StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED]: false }),
+        ]);
         if (response?.ok && response.state) {
           setSyncState(response.state);
         }
+        setHighlightSyncEnabled(
+          highlightSetting[StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED] === true,
+        );
       } catch (error) {
         console.error('[CloudSyncSettings] Failed to get sync state:', error);
       }
@@ -320,6 +328,18 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
     }
   }, []);
 
+  const handleHighlightSyncChange = useCallback(async (enabled: boolean) => {
+    setHighlightSyncEnabled(enabled);
+    try {
+      await chrome.storage.local.set({
+        [StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED]: enabled,
+      });
+    } catch (error) {
+      setHighlightSyncEnabled(!enabled);
+      console.error('[CloudSyncSettings] Failed to save highlight sync setting:', error);
+    }
+  }, []);
+
   // Handle sign out
   const handleSignOut = useCallback(async () => {
     try {
@@ -340,6 +360,10 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
     try {
       const accountContext = await resolveAccountSyncContext();
       const timelineHierarchyContext = await resolveTimelineHierarchySyncContext();
+      const highlightAccountScope =
+        platform === 'gemini' && highlightSyncEnabled
+          ? await resolveCurrentPageSyncScope(false)
+          : null;
       let accountScope = accountContext.accountScope;
       let folderStorageKey = accountContext.folderStorageKey;
       const timelineHierarchyAccountScope = timelineHierarchyContext.accountScope;
@@ -415,6 +439,8 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
           platform,
           accountScope,
           timelineHierarchyAccountScope,
+          highlightAccountScope,
+          includeHighlights: platform === 'gemini' && highlightSyncEnabled,
         },
       })) as { ok?: boolean; error?: string; state?: SyncState } | undefined;
 
@@ -437,8 +463,10 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
   }, [
     getBaseFolderStorageKey,
     getTargetTab,
+    highlightSyncEnabled,
     platform,
     resolveAccountSyncContext,
+    resolveCurrentPageSyncScope,
     resolveTimelineHierarchySyncContext,
     t,
   ]);
@@ -457,6 +485,10 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
       try {
         const accountContext = await resolveAccountSyncContext();
         const timelineHierarchyContext = await resolveTimelineHierarchySyncContext();
+        const highlightAccountScope =
+          platform === 'gemini' && highlightSyncEnabled
+            ? await resolveCurrentPageSyncScope(false)
+            : null;
         let accountScope = accountContext.accountScope;
         let folderStorageKey = accountContext.folderStorageKey;
         const timelineHierarchyAccountScope = timelineHierarchyContext.accountScope;
@@ -465,12 +497,19 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
         // Download from Google Drive (platform-specific)
         const response = (await chrome.runtime.sendMessage({
           type: 'gv.sync.download',
-          payload: { platform, accountScope, timelineHierarchyAccountScope },
+          payload: {
+            platform,
+            accountScope,
+            timelineHierarchyAccountScope,
+            highlightAccountScope,
+            includeHighlights: platform === 'gemini' && highlightSyncEnabled,
+          },
         })) as
           | {
               ok?: boolean;
               error?: string;
               state?: SyncState;
+              highlights?: { synced?: boolean; count?: number; empty?: boolean };
               data?: {
                 folders?: { data?: FolderData };
                 prompts?: { items?: PromptItem[] };
@@ -490,6 +529,10 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
         }
 
         if (!response.data) {
+          if (response.highlights?.synced) {
+            setStatusMessage({ text: t('syncSuccess'), kind: 'ok' });
+            return;
+          }
           setStatusMessage({ text: t('syncNoData'), kind: 'err' });
           setIsDownloading(false);
           return;
@@ -700,8 +743,10 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
     [
       getBaseFolderStorageKey,
       getTargetTab,
+      highlightSyncEnabled,
       platform,
       resolveAccountSyncContext,
+      resolveCurrentPageSyncScope,
       resolveTimelineHierarchySyncContext,
       t,
     ],
@@ -757,6 +802,29 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
             </button>
           </div>
         </div>
+
+        {platform === 'gemini' && (
+          <div className="border-border/70 bg-muted/30 flex items-start gap-3 rounded-lg border px-3 py-2.5">
+            <Switch
+              id="highlight-cloud-sync"
+              className="mt-0.5 shrink-0"
+              checked={highlightSyncEnabled}
+              onChange={(event) => void handleHighlightSyncChange(event.target.checked)}
+              aria-describedby="highlight-cloud-sync-hint"
+            />
+            <div className="min-w-0">
+              <Label htmlFor="highlight-cloud-sync" className="text-sm font-medium">
+                {t('highlightCloudSync')}
+              </Label>
+              <p
+                id="highlight-cloud-sync-hint"
+                className="text-muted-foreground mt-0.5 text-xs leading-relaxed"
+              >
+                {t('highlightCloudSyncHint')}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Sync Actions - Only show if not disabled */}
         {syncState.mode !== 'disabled' && (

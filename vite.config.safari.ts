@@ -12,6 +12,40 @@ const outDir = resolve(__dirname, 'dist_safari');
 // Default: 'false' (disabled)
 const enableSafariUpdateCheck = process.env.ENABLE_SAFARI_UPDATE_CHECK === 'true';
 
+export const safariManifest = {
+  ...baseManifest,
+  browser_specific_settings: {
+    safari: {
+      // Manifest V3 support starts at Safari 15.4. The Vite target controls
+      // syntax only, so the compatibility floor must also live in manifest.
+      strict_min_version: '15.4',
+    },
+  },
+  // Safari renders toolbar icons as template images (monochrome).
+  // Use a transparent-background version so it doesn't appear as a solid square.
+  action: {
+    ...manifest.action,
+    default_icon: {
+      '32': 'icon-32-template.png',
+    },
+  },
+  permissions: manifest.permissions.filter((permission) => permission !== 'notifications'),
+  optional_permissions: Array.from(
+    new Set([
+      ...(manifest.optional_permissions ?? []).filter(
+        (permission) => permission !== 'notifications',
+      ),
+      'unlimitedStorage',
+    ]),
+  ),
+  // Safari-specific adjustments
+  background: {
+    // Safari supports both service_worker and scripts
+    // Using scripts for better compatibility
+    scripts: ['src/pages/background/index.ts'],
+  },
+} as unknown as ManifestV3Export;
+
 export default mergeConfig(
   baseConfig,
   defineConfig({
@@ -24,27 +58,7 @@ export default mergeConfig(
     },
     plugins: [
       crx({
-        manifest: {
-          ...baseManifest,
-          // Safari renders toolbar icons as template images (monochrome).
-          // Use a transparent-background version so it doesn't appear as a solid square.
-          action: {
-            ...manifest.action,
-            default_icon: {
-              '32': 'icon-32-template.png',
-            },
-          },
-          permissions: manifest.permissions.filter((permission) => permission !== 'notifications'),
-          optional_permissions: (manifest.optional_permissions ?? []).filter(
-            (permission) => permission !== 'notifications',
-          ),
-          // Safari-specific adjustments
-          background: {
-            // Safari supports both service_worker and scripts
-            // Using scripts for better compatibility
-            scripts: ['src/pages/background/index.ts'],
-          },
-        } as ManifestV3Export,
+        manifest: safariManifest,
         browser: 'chrome', // Use 'chrome' mode as Safari uses WebKit
         contentScripts: {
           injectCss: true,
@@ -55,7 +69,9 @@ export default mergeConfig(
       ...baseBuildOptions,
       outDir,
       // Safari-specific build optimizations
-      target: 'safari14', // Safari 14+ for better extension support
+      // JavaScript syntax floor only. It does not imply Safari 14 can run MV3;
+      // runtime quota messaging uses the actual Safari product version.
+      target: 'safari14',
     },
   }),
 );

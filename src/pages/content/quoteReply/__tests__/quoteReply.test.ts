@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { StorageKeys } from '@/core/types/common';
 import { getBrowserName } from '@/core/utils/browser';
 
+import { HighlightManager } from '../../highlight';
 import { expandInputCollapseIfNeeded } from '../../inputCollapse/index';
 import { startQuoteReply } from '../index';
 
@@ -66,12 +68,14 @@ function triggerQuoteReply() {
   }
 
   quoteButton.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+  quoteButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   vi.runAllTimers();
 }
 
 describe('quote reply', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.clearAllMocks();
     vi.mocked(getBrowserName).mockReturnValue('Chrome/Chromium');
     activeElement = document.body;
 
@@ -170,6 +174,21 @@ describe('quote reply', () => {
     expect(inputFocusMock).toHaveBeenCalledTimes(1);
     expect(document.activeElement).toBe(input);
 
+    cleanup();
+  });
+
+  it('activates Quote Reply from a keyboard-style click without mousedown', () => {
+    const cleanup = startQuoteReply();
+    selectSourceText();
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.runAllTimers();
+    const quoteButton = document.querySelector<HTMLElement>('.gv-quote-btn');
+    if (!quoteButton) throw new Error('Expected quote button');
+
+    quoteButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    vi.runAllTimers();
+
+    expect(document.getElementById('input')?.textContent).toBe('> Hello\n');
     cleanup();
   });
 
@@ -444,6 +463,7 @@ describe('quote reply', () => {
     const quoteButton = document.querySelector<HTMLElement>('.gv-quote-btn');
     if (!quoteButton) throw new Error('Expected quote button.');
     quoteButton.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    quoteButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     vi.runAllTimers();
 
     const input = document.getElementById('input');
@@ -474,6 +494,7 @@ describe('quote reply', () => {
     const quoteButton = document.querySelector<HTMLElement>('.gv-quote-btn');
     if (!quoteButton) throw new Error('Expected quote button.');
     quoteButton.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    quoteButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     vi.runAllTimers();
 
     const input = document.getElementById('input');
@@ -503,6 +524,7 @@ describe('quote reply', () => {
     const quoteButton = document.querySelector<HTMLElement>('.gv-quote-btn');
     if (!quoteButton) throw new Error('Expected quote button.');
     quoteButton.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    quoteButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     vi.runAllTimers();
 
     const input = document.getElementById('input');
@@ -510,6 +532,181 @@ describe('quote reply', () => {
 
     expect(input.textContent).toContain('$x^2$');
 
+    cleanup();
+  });
+
+  it('uses the same selection toolbar for Highlight when Quote Reply is disabled', () => {
+    document.querySelector('main')!.innerHTML = `
+      <div class="user-query-bubble-with-background">Question</div>
+      <model-response><message-content><p id="source">Hello world</p></message-content></model-response>
+    `;
+    const cleanup = startQuoteReply({ quoteEnabled: false });
+
+    selectSourceText();
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.advanceTimersByTime(300);
+
+    const toolbar = document.querySelector('.gv-selection-toolbar');
+    const quoteButton = toolbar?.querySelector('.gv-quote-btn');
+    const highlightButton = toolbar?.querySelector('.gv-highlight-action');
+    expect(document.querySelectorAll('.gv-selection-toolbar')).toHaveLength(1);
+    expect(quoteButton?.classList.contains('gv-hidden')).toBe(true);
+    expect(highlightButton?.classList.contains('gv-hidden')).toBe(false);
+
+    cleanup();
+  });
+
+  it('uses the current Lucide highlighter icon and remembers the selected color', async () => {
+    document.querySelector('main')!.innerHTML = `
+      <div class="user-query-bubble-with-background">Question</div>
+      <model-response><message-content><p id="source">Hello world</p></message-content></model-response>
+    `;
+    const createFromRange = vi
+      .spyOn(HighlightManager.prototype, 'createFromRange')
+      .mockResolvedValue(true);
+    const cleanup = startQuoteReply({ quoteEnabled: false, highlightDefaultColor: 'blue' });
+
+    selectSourceText();
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.advanceTimersByTime(300);
+
+    const iconPaths = Array.from(
+      document.querySelectorAll<SVGPathElement>('.gv-highlight-action .lucide-highlighter path'),
+      (path) => path.getAttribute('d'),
+    );
+    expect(iconPaths).toEqual([
+      'm9 11-6 6v3h9l3-3',
+      'm22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4',
+    ]);
+
+    const colorButton = document.querySelector<HTMLButtonElement>('.gv-highlight-color-trigger');
+    expect(colorButton?.classList.contains('gv-hidden')).toBe(false);
+    expect(colorButton?.style.backgroundColor).toBe('rgb(96, 165, 250)');
+    colorButton?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    colorButton?.click();
+
+    const palette = document.querySelector('.gv-highlight-color-palette');
+    expect(palette?.classList.contains('gv-hidden')).toBe(false);
+    expect(palette?.getAttribute('role')).toBe('group');
+    expect(palette?.querySelectorAll('.gv-highlight-color-option')).toHaveLength(4);
+    expect(
+      palette?.querySelector('[data-highlight-color="blue"]')?.getAttribute('aria-pressed'),
+    ).toBe('true');
+    expect(
+      palette?.querySelector('[data-highlight-color="pink"]')?.getAttribute('aria-label'),
+    ).toBe('Pink');
+    document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', bubbles: true }));
+    expect(palette?.classList.contains('gv-hidden')).toBe(true);
+    colorButton?.click();
+    const pink = palette?.querySelector<HTMLButtonElement>('[data-highlight-color="pink"]');
+    pink?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    pink?.click();
+
+    expect(chrome.storage.sync.set).toHaveBeenCalledWith(
+      { [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: 'pink' },
+      expect.any(Function),
+    );
+    const highlightButton = document.querySelector<HTMLButtonElement>('.gv-highlight-action');
+    highlightButton?.click();
+    await Promise.resolve();
+
+    expect(createFromRange).toHaveBeenCalledWith(expect.any(Range), 'pink');
+    cleanup();
+  });
+
+  it('keeps the palette inside the viewport near the bottom-right edge', () => {
+    document.querySelector('main')!.innerHTML = `
+      <div class="user-query-bubble-with-background">Question</div>
+      <model-response><message-content><p id="source">Hello world</p></message-content></model-response>
+    `;
+    const cleanup = startQuoteReply({ quoteEnabled: false });
+
+    selectSourceText();
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.advanceTimersByTime(300);
+
+    const colorButton = document.querySelector<HTMLButtonElement>('.gv-highlight-color-trigger');
+    const palette = document.querySelector<HTMLElement>('.gv-highlight-color-palette');
+    if (!colorButton || !palette) throw new Error('Expected highlight color controls');
+    colorButton.getBoundingClientRect = () =>
+      ({
+        top: window.innerHeight - 30,
+        bottom: window.innerHeight - 8,
+        left: window.innerWidth - 30,
+        right: window.innerWidth - 8,
+        width: 22,
+        height: 22,
+        x: window.innerWidth - 30,
+        y: window.innerHeight - 30,
+        toJSON: () => {},
+      }) as DOMRect;
+    palette.getBoundingClientRect = () =>
+      ({
+        top: 0,
+        bottom: 40,
+        left: 0,
+        right: 150,
+        width: 150,
+        height: 40,
+        x: 0,
+        y: 0,
+        toJSON: () => {},
+      }) as DOMRect;
+
+    colorButton.click();
+
+    expect(palette.style.top).toBe(`${window.innerHeight - 30 - 40 - 6}px`);
+    expect(palette.style.left).toBe(`${window.innerWidth - 150 - 10}px`);
+    cleanup();
+  });
+
+  it('does not leave an empty toolbar when Highlight is disabled live', () => {
+    document.querySelector('main')!.innerHTML = `
+      <div class="user-query-bubble-with-background">Question</div>
+      <model-response><message-content><p id="source">Hello world</p></message-content></model-response>
+    `;
+    const cleanup = startQuoteReply({ quoteEnabled: false, highlightEnabled: true });
+
+    selectSourceText();
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.advanceTimersByTime(300);
+
+    const listener = (
+      chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>
+    ).mock.calls.at(-1)?.[0];
+    if (typeof listener !== 'function') throw new Error('Expected storage change listener');
+    const toolbar = document.querySelector('.gv-selection-toolbar');
+    expect(toolbar?.classList.contains('gv-hidden')).toBe(false);
+
+    listener({ [StorageKeys.HIGHLIGHT_ENABLED]: { newValue: false } }, 'sync');
+    expect(toolbar?.classList.contains('gv-hidden')).toBe(true);
+
+    listener({ [StorageKeys.HIGHLIGHT_ENABLED]: { newValue: true } }, 'sync');
+    expect(document.querySelector('.gv-highlight-action')?.classList.contains('gv-hidden')).toBe(
+      false,
+    );
+    expect(toolbar?.classList.contains('gv-hidden')).toBe(false);
+    cleanup();
+  });
+
+  it('hides Highlight and its color picker when the feature is disabled', () => {
+    document.querySelector('main')!.innerHTML = `
+      <div class="user-query-bubble-with-background">Question</div>
+      <model-response><message-content><p id="source">Hello world</p></message-content></model-response>
+    `;
+    const cleanup = startQuoteReply({ quoteEnabled: true, highlightEnabled: false });
+
+    selectSourceText();
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.advanceTimersByTime(300);
+
+    expect(document.querySelector('.gv-highlight-action')?.classList.contains('gv-hidden')).toBe(
+      true,
+    );
+    expect(
+      document.querySelector('.gv-highlight-color-trigger')?.classList.contains('gv-hidden'),
+    ).toBe(true);
+    expect(document.querySelector('.gv-quote-btn')?.classList.contains('gv-hidden')).toBe(false);
     cleanup();
   });
 });

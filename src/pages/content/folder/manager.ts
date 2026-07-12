@@ -8,7 +8,6 @@ import {
   extractRouteUserIdFromPath,
 } from '@/core/services/AccountIsolationService';
 import { DataBackupService } from '@/core/services/DataBackupService';
-import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { StorageKeys } from '@/core/types/common';
 import type { PromptItem, SyncAccountScope } from '@/core/types/sync';
 import { isSafari } from '@/core/utils/browser';
@@ -383,19 +382,6 @@ export class FolderManager {
       // chrome.storage mirror is best-effort during unload.
       this.beforeUnloadFlushHandler = () => this.flushPendingSaveData();
       window.addEventListener('beforeunload', this.beforeUnloadFlushHandler);
-
-      // Initialize storage quota monitor
-      const storageMonitor = getStorageMonitor({
-        checkIntervalMs: 60000, // Check every minute for Gemini (more active)
-      });
-
-      // Use custom notification callback to match our style
-      storageMonitor.setNotificationCallback((message, level) => {
-        this.showNotificationByLevel(message, level);
-      });
-
-      // Start monitoring
-      storageMonitor.startMonitoring();
 
       // Load account isolation setting/scope before reading folder data.
       await this.loadAccountIsolationSetting();
@@ -10082,6 +10068,7 @@ export class FolderManager {
         | {
             ok?: boolean;
             error?: string;
+            highlights?: { synced?: boolean; count?: number; empty?: boolean };
             data?: {
               folders?: { data?: FolderData };
               prompts?: { items?: PromptItem[] };
@@ -10098,6 +10085,10 @@ export class FolderManager {
       }
 
       if (!response.data) {
+        if (response.highlights?.synced) {
+          this.showNotification(this.t('syncSuccess'), 'success');
+          return;
+        }
         this.showNotification(this.t('syncNoData') || 'No data in cloud', 'info');
         return;
       }

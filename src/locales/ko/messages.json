@@ -264,11 +264,11 @@
     "description": "Button label for returning from the starred library to Prompt Manager"
   },
   "pm_starred_library": {
-    "message": "별표 보관함",
+    "message": "저장 보관함",
     "description": "Prompt Manager starred messages library title and entry button"
   },
   "pm_starred_search_placeholder": {
-    "message": "별표 메시지 검색",
+    "message": "저장 항목 검색",
     "description": "Search placeholder for starred messages in Prompt Manager"
   },
   "pm_starred_no_results": {
@@ -1012,11 +1012,11 @@
     "description": "Custom websites reload/permission note"
   },
   "starredHistory": {
-    "message": "별표 표시된 기록",
+    "message": "저장 보관함",
     "description": "Starred history title"
   },
   "viewStarredHistory": {
-    "message": "별표 표시된 기록 보기",
+    "message": "저장 보관함 보기",
     "description": "View starred history button"
   },
   "noStarredMessages": {
@@ -1454,6 +1454,14 @@
   "enableQuoteReplyHint": {
     "message": "대화에서 텍스트를 선택할 때 선택한 텍스트를 인용할 수 있는 플로팅 버튼을 표시합니다",
     "description": "Quote reply feature hint"
+  },
+  "enableHighlights": {
+    "message": "하이라이트 활성화",
+    "description": "Highlight feature toggle label"
+  },
+  "enableHighlightsHint": {
+    "message": "선택한 답변 텍스트를 강조하고 색상을 선택하며 마지막으로 사용한 색상을 기억합니다.",
+    "description": "Highlight feature hint"
   },
   "hideInputHalo": {
     "message": "입력창 광채 숨기기",
@@ -2322,5 +2330,57 @@
   "enablePromptManagerOnSiteHint": {
     "message": "이 사이트에서 저장한 프롬프트를 사용합니다. 사용 시 접근 권한을 요청합니다.",
     "description": "Top toggle hint for enabling Prompt Manager on a third-party site"
+  },
+  "storageQuotaTitle": { "message": "저장 공간" },
+  "storageQuotaManage": { "message": "저장 공간 관리" },
+  "storageQuotaLocal": { "message": "확장 프로그램 로컬 데이터" },
+  "storageQuotaSync": { "message": "동기화된 설정" },
+  "storageQuotaHealthy": { "message": "공간 충분" },
+  "storageQuotaAttention": { "message": "한도에 가까움" },
+  "storageQuotaCritical": { "message": "거의 가득 참" },
+  "storageQuotaUnknown": { "message": "사용량을 확인할 수 없음" },
+  "storageQuotaBreakdown": { "message": "저장 공간 세부 정보" },
+  "storageQuotaSoftLimit": { "message": "Voyager 소프트 한도" },
+  "storageQuotaEffectiveLimit": {
+    "message": "현재 적용 한도: {size}. Voyager는 이 값과 선택한 소프트 한도 중 더 낮은 값을 적용합니다."
+  },
+  "storageQuotaCache": { "message": "다시 만들 수 있는 캐시" },
+  "storageQuotaHighlights": { "message": "하이라이트" },
+  "storageQuotaOther": { "message": "기타" },
+  "storageQuotaUnlock": { "message": "로컬 저장 공간 확장" },
+  "storageQuotaSafariLimit": {
+    "message": "Safari 15는 로컬 저장 공간을 약 5MB에서 약 10MB로만 늘릴 수 있으며, 여전히 가득 찰 수 있습니다."
+  },
+  "storageQuotaUnknownLimit": {
+    "message": "Safari 버전을 확인할 수 없습니다. 이전 버전에서는 확장 후에도 제한될 수 있습니다."
+  },
+  "storageQuotaClearConfirm": {
+    "message": "‘{category}’을(를) 정리할까요? 이 카테고리의 데이터만 삭제됩니다."
+  },
+  "storageQuotaHighlightClearConfirm": {
+    "message": "저장된 하이라이트와 주석을 모두 삭제할까요? 이 작업은 되돌릴 수 없습니다."
+  },
+  "storageQuotaDraftClearConfirm": {
+    "message": "전송하지 않은 초안을 모두 삭제할까요? 이 작업은 되돌릴 수 없습니다."
+  },
+  "highlightAction": { "message": "하이라이트" },
+  "highlightSaved": { "message": "하이라이트를 저장했습니다" },
+  "highlightSaveFailed": { "message": "하이라이트를 저장하지 못했습니다" },
+  "highlightDeleteFailed": { "message": "하이라이트를 삭제하지 못했습니다" },
+  "highlightNotePlaceholder": { "message": "메모 추가(선택 사항)" },
+  "highlightColor": { "message": "하이라이트 색상" },
+  "highlightTooLong": { "message": "선택 영역이 너무 깁니다. 더 짧게 선택하세요." },
+  "highlightAriaLabel": { "message": "저장된 하이라이트. 주석 열기." },
+  "highlightTimelineAriaLabel": { "message": "저장된 하이라이트 열기" },
+  "savedLibraryAll": { "message": "전체" },
+  "savedLibraryStars": { "message": "별표" },
+  "savedLibraryHighlights": { "message": "하이라이트" },
+  "savedLibraryEmpty": { "message": "저장된 항목이 없습니다" },
+  "savedLibraryNoHighlights": { "message": "하이라이트가 없습니다" },
+  "savedLibrarySearchPlaceholder": { "message": "별표 및 하이라이트 검색" },
+  "highlightImportSuccess": { "message": "하이라이트 {count}개를 가져왔습니다" },
+  "highlightCloudSync": { "message": "하이라이트 동기화" },
+  "highlightCloudSyncHint": {
+    "message": "하이라이트를 계정별 Drive 파일에 저장합니다. 동기화는 항상 병합되며 기본적으로 꺼져 있습니다."
   }
 }

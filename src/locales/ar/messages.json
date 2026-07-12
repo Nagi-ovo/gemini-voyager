@@ -264,11 +264,11 @@
     "description": "Button label for returning from the starred library to Prompt Manager"
   },
   "pm_starred_library": {
-    "message": "مكتبة العناصر المميزة",
+    "message": "مكتبة العناصر المحفوظة",
     "description": "Prompt Manager starred messages library title and entry button"
   },
   "pm_starred_search_placeholder": {
-    "message": "البحث في الرسائل المميزة",
+    "message": "البحث في العناصر المحفوظة",
     "description": "Search placeholder for starred messages in Prompt Manager"
   },
   "pm_starred_no_results": {
@@ -1012,11 +1012,11 @@
     "description": "Custom websites reload/permission note"
   },
   "starredHistory": {
-    "message": "السجل المميز بنجمة",
+    "message": "مكتبة العناصر المحفوظة",
     "description": "Starred history title"
   },
   "viewStarredHistory": {
-    "message": "عرض السجل المميز بنجمة",
+    "message": "عرض مكتبة العناصر المحفوظة",
     "description": "View starred history button"
   },
   "noStarredMessages": {
@@ -1454,6 +1454,14 @@
   "enableQuoteReplyHint": {
     "message": "إظهار زر عائم لاقتباس النص المحدد عند تحديد نص في المحادثات",
     "description": "Quote reply feature hint"
+  },
+  "enableHighlights": {
+    "message": "تمكين التمييز",
+    "description": "Highlight feature toggle label"
+  },
+  "enableHighlightsHint": {
+    "message": "يميز نص الإجابة المحدد ويتيح اختيار لون ويتذكر آخر لون استخدمته.",
+    "description": "Highlight feature hint"
   },
   "hideInputHalo": {
     "message": "إخفاء هالة مربع الإدخال",
@@ -2322,5 +2330,57 @@
   "enablePromptManagerOnSiteHint": {
     "message": "استخدم موجّهاتك المحفوظة على هذا الموقع. سيُطلب منك منح الإذن بالوصول.",
     "description": "Top toggle hint for enabling Prompt Manager on a third-party site"
+  },
+  "storageQuotaTitle": { "message": "مساحة التخزين" },
+  "storageQuotaManage": { "message": "إدارة التخزين" },
+  "storageQuotaLocal": { "message": "بيانات الإضافة المحلية" },
+  "storageQuotaSync": { "message": "الإعدادات المتزامنة" },
+  "storageQuotaHealthy": { "message": "مساحة كافية" },
+  "storageQuotaAttention": { "message": "قريب من الحد" },
+  "storageQuotaCritical": { "message": "ممتلئ تقريبًا" },
+  "storageQuotaUnknown": { "message": "تعذّر قراءة الاستخدام" },
+  "storageQuotaBreakdown": { "message": "تفاصيل التخزين" },
+  "storageQuotaSoftLimit": { "message": "الحد المرن لـ Voyager" },
+  "storageQuotaEffectiveLimit": {
+    "message": "الحد الفعلي الحالي: {size}. يطبق Voyager القيمة الأقل بينه وبين الحد المرن المحدد."
+  },
+  "storageQuotaCache": { "message": "ذاكرة مؤقتة قابلة لإعادة الإنشاء" },
+  "storageQuotaHighlights": { "message": "النصوص المميزة" },
+  "storageQuotaOther": { "message": "أخرى" },
+  "storageQuotaUnlock": { "message": "توسيع التخزين المحلي" },
+  "storageQuotaSafariLimit": {
+    "message": "يستطيع Safari 15 رفع التخزين المحلي من نحو 5 ميجابايت إلى نحو 10 ميجابايت فقط، وقد يمتلئ مع ذلك."
+  },
+  "storageQuotaUnknownLimit": {
+    "message": "تعذّر تحديد إصدار Safari. قد يظل التوسيع محدودًا في الإصدارات القديمة."
+  },
+  "storageQuotaClearConfirm": {
+    "message": "هل تريد مسح «{category}»؟ ستُحذف بيانات هذه الفئة فقط."
+  },
+  "storageQuotaHighlightClearConfirm": {
+    "message": "هل تريد حذف كل النصوص المميزة والتعليقات المحفوظة؟ لا يمكن التراجع عن هذا الإجراء."
+  },
+  "storageQuotaDraftClearConfirm": {
+    "message": "هل تريد حذف كل المسودات غير المرسلة؟ لا يمكن التراجع عن هذا الإجراء."
+  },
+  "highlightAction": { "message": "تمييز" },
+  "highlightSaved": { "message": "تم حفظ التمييز" },
+  "highlightSaveFailed": { "message": "تعذر حفظ التمييز" },
+  "highlightDeleteFailed": { "message": "تعذر حذف التمييز" },
+  "highlightNotePlaceholder": { "message": "إضافة ملاحظة (اختياري)" },
+  "highlightColor": { "message": "لون التمييز" },
+  "highlightTooLong": { "message": "التحديد طويل جدًا. حدد مقطعًا أقصر." },
+  "highlightAriaLabel": { "message": "تمييز محفوظ. فتح التعليق التوضيحي." },
+  "highlightTimelineAriaLabel": { "message": "فتح التمييز المحفوظ" },
+  "savedLibraryAll": { "message": "الكل" },
+  "savedLibraryStars": { "message": "المفضلة" },
+  "savedLibraryHighlights": { "message": "التمييزات" },
+  "savedLibraryEmpty": { "message": "لا توجد عناصر محفوظة بعد" },
+  "savedLibraryNoHighlights": { "message": "لا توجد تمييزات بعد" },
+  "savedLibrarySearchPlaceholder": { "message": "البحث في المفضلة والتمييزات" },
+  "highlightImportSuccess": { "message": "تم استيراد {count} من التمييزات" },
+  "highlightCloudSync": { "message": "مزامنة التمييزات" },
+  "highlightCloudSyncHint": {
+    "message": "يحفظ التمييزات في ملف Drive منفصل لكل حساب. تدمج المزامنة البيانات دائمًا وتكون معطلة افتراضيًا."
   }
 }

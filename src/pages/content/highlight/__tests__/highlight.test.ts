@@ -1,0 +1,382 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { accountIsolationService } from '@/core/services/AccountIsolationService';
+import type {
+  HighlightAccountScope,
+  HighlightCreateInput,
+  HighlightRecordV1,
+  HighlightUpdatePatch,
+} from '@/core/types/highlight';
+
+import { buildHighlightAnchor, resolveHighlightAnchor } from '../anchor';
+import { HighlightClient } from '../client';
+import { collectHighlightTurns, getHighlightSelectionContext } from '../dom';
+import { HighlightManager } from '../manager';
+
+vi.mock('@/core/services/AccountIsolationService', () => ({
+  detectAccountContextFromDocument: vi.fn(() => ({ routeUserId: '0', email: null })),
+  accountIsolationService: {
+    resolveAccountScope: vi.fn(async () => ({
+      accountKey: 'route:0',
+      accountId: 1,
+      routeUserId: '0',
+      emailHash: null,
+    })),
+  },
+}));
+
+function selectText(root: HTMLElement, exact: string): Range {
+  const textNode = root.firstChild;
+  if (!(textNode instanceof Text)) throw new Error('Expected a text node');
+  const start = textNode.data.indexOf(exact);
+  if (start < 0) throw new Error(`Could not find ${exact}`);
+  const range = document.createRange();
+  range.setStart(textNode, start);
+  range.setEnd(textNode, start + exact.length);
+  return range;
+}
+
+function makeRecord(
+  anchor: HighlightRecordV1['anchor'],
+  overrides: Partial<HighlightRecordV1> = {},
+): HighlightRecordV1 {
+  return {
+    id: 'highlight-1',
+    schemaVersion: 1,
+    platform: 'gemini',
+    accountHash: 'account-hash',
+    conversationId: 'gemini:conv:test',
+    conversationUrl: 'https://gemini.google.com/app/test',
+    conversationTitle: 'Test',
+    turnId: 'u-0',
+    role: 'assistant',
+    anchor,
+    color: 'yellow',
+    createdAt: 1,
+    updatedAt: 1,
+    revision: { counter: 1, deviceId: 'device-1' },
+    ...overrides,
+  };
+}
+
+class FakeHighlightClient extends HighlightClient {
+  readonly listScopes: HighlightAccountScope[] = [];
+
+  constructor(private listed: HighlightRecordV1[]) {
+    super();
+  }
+
+  override async list(
+    _scope: HighlightAccountScope,
+    _conversationId: string,
+  ): Promise<HighlightRecordV1[]> {
+    this.listScopes.push(_scope);
+    return this.listed;
+  }
+
+  override async create(
+    _scope: HighlightAccountScope,
+    input: HighlightCreateInput,
+  ): Promise<HighlightRecordV1> {
+    const record = makeRecord(input.anchor, {
+      conversationId: input.conversationId,
+      conversationUrl: input.conversationUrl,
+      conversationTitle: input.conversationTitle,
+      turnId: input.turnId,
+      role: input.role,
+      color: input.color ?? 'yellow',
+    });
+    this.listed = [...this.listed, record];
+    return record;
+  }
+
+  override async update(
+    _scope: HighlightAccountScope,
+    _conversationId: string,
+    id: string,
+    patch: HighlightUpdatePatch,
+  ): Promise<HighlightRecordV1> {
+    const current = this.listed.find((record) => record.id === id);
+    if (!current) throw new Error('missing record');
+    const updated = {
+      ...current,
+      ...patch,
+      conversationTitle:
+        patch.conversationTitle === null
+          ? undefined
+          : (patch.conversationTitle ?? current.conversationTitle),
+      note: patch.note === null ? undefined : (patch.note ?? current.note),
+    };
+    this.listed = this.listed.map((record) => (record.id === id ? updated : record));
+    return updated;
+  }
+
+  override async delete(
+    _scope: HighlightAccountScope,
+    _conversationId: string,
+    id: string,
+  ): Promise<void> {
+    this.listed = this.listed.filter((record) => record.id !== id);
+  }
+}
+
+function installConversation(responseText = 'Alpha target Omega'): HTMLElement {
+  document.body.innerHTML = `
+    <main>
+      <div class="user-query-bubble-with-background">Question</div>
+      <model-response><message-content id="response"></message-content></model-response>
+    </main>
+    <div class="gemini-timeline-bar">
+      <div class="timeline-track"><div class="timeline-track-content"></div></div>
+    </div>
+  `;
+  const response = document.getElementById('response');
+  if (!(response instanceof HTMLElement)) throw new Error('Expected response root');
+  response.textContent = responseText;
+  return response;
+}
+
+describe('highlight anchors', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('builds a position and quote anchor from the model response', () => {
+    const root = document.createElement('div');
+    root.textContent = 'Prefix selected text suffix';
+    document.body.appendChild(root);
+
+    const anchor = buildHighlightAnchor(root, selectText(root, 'selected text'));
+
+    expect(anchor).toMatchObject({
+      quote: { exact: 'selected text', prefix: 'Prefix ', suffix: ' suffix' },
+      position: { start: 7, end: 20 },
+    });
+    expect(anchor?.sourceTextHash).toBeTruthy();
+  });
+
+  it('falls back to quote context after the response moves', () => {
+    const original = document.createElement('div');
+    original.textContent = 'Before target after';
+    document.body.appendChild(original);
+    const anchor = buildHighlightAnchor(original, selectText(original, 'target'));
+    if (!anchor) throw new Error('Expected anchor');
+
+    const changed = document.createElement('div');
+    changed.textContent = 'Inserted. Before target after';
+    document.body.appendChild(changed);
+    const resolved = resolveHighlightAnchor(changed, anchor);
+
+    expect(resolved?.toString()).toBe('target');
+  });
+
+  it('does not resolve an ambiguous quote without distinguishing context', () => {
+    const root = document.createElement('div');
+    root.textContent = 'same same';
+    document.body.appendChild(root);
+    const anchor: HighlightRecordV1['anchor'] = {
+      quote: { exact: 'same', prefix: '', suffix: '' },
+      position: { start: 20, end: 24 },
+      sourceTextHash: 'old',
+    };
+
+    expect(resolveHighlightAnchor(root, anchor)).toBeNull();
+  });
+
+  it('does not trust the old position when the response hash and context changed', () => {
+    const root = document.createElement('div');
+    root.textContent = 'New xx target yy';
+    document.body.appendChild(root);
+    const anchor: HighlightRecordV1['anchor'] = {
+      quote: { exact: 'target', prefix: 'Old xx ', suffix: ' old suffix' },
+      position: { start: 7, end: 13 },
+      sourceTextHash: 'old-response-hash',
+    };
+
+    expect(resolveHighlightAnchor(root, anchor)).toBeNull();
+  });
+});
+
+describe('highlight conversation DOM', () => {
+  it('excludes Deep Research immersive nodes from turn pairing', () => {
+    document.body.innerHTML = `
+      <main>
+        <div class="user-query-bubble-with-background">Real question</div>
+        <model-response><message-content id="real-response">Real answer</message-content></model-response>
+        <deep-research-immersive-panel>
+          <div class="user-query-bubble-with-background">Report prompt</div>
+          <model-response><message-content id="report-response">Report body</message-content></model-response>
+        </deep-research-immersive-panel>
+      </main>
+    `;
+    const report = document.getElementById('report-response');
+    if (!(report instanceof HTMLElement)) throw new Error('Expected report response');
+
+    expect(collectHighlightTurns()).toHaveLength(1);
+    expect(getHighlightSelectionContext(selectText(report, 'Report body'))).toBeNull();
+  });
+});
+
+describe('HighlightManager rendering and navigation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    window.history.replaceState(null, '', '/app/test');
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+    document.getElementById('gv-highlight-style')?.remove();
+  });
+
+  it('renders persisted marks and an exact timeline tick', async () => {
+    const response = installConversation();
+    const anchor = buildHighlightAnchor(response, selectText(response, 'target'));
+    if (!anchor) throw new Error('Expected anchor');
+    const manager = new HighlightManager(new FakeHighlightClient([makeRecord(anchor)]));
+
+    await manager.init();
+
+    expect(document.querySelector('.gv-highlight-mark')?.textContent).toBe('target');
+    expect(document.querySelector('.gv-highlight-timeline-tick')).toBeInstanceOf(HTMLButtonElement);
+    expect(manager.navigateToHighlight('highlight-1', 'auto')).toBe('highlight');
+
+    manager.destroy();
+  });
+
+  it('discards a stale account scope when the route changes during initialization', async () => {
+    installConversation();
+    window.history.replaceState(null, '', '/u/0/app/test');
+    type ResolvedAccountScope = Awaited<
+      ReturnType<typeof accountIsolationService.resolveAccountScope>
+    >;
+    let releaseFirstScope = (_scope: ResolvedAccountScope): void => {};
+    const firstScopePromise = new Promise<ResolvedAccountScope>((resolve) => {
+      releaseFirstScope = resolve;
+    });
+    vi.mocked(accountIsolationService.resolveAccountScope)
+      .mockImplementationOnce(() => firstScopePromise)
+      .mockResolvedValueOnce({
+        accountKey: 'route:1',
+        accountId: 2,
+        routeUserId: '1',
+        emailHash: null,
+      });
+    const client = new FakeHighlightClient([]);
+    const manager = new HighlightManager(client);
+    const initializing = manager.init();
+
+    window.history.replaceState(null, '', '/u/1/app/test');
+    releaseFirstScope({
+      accountKey: 'route:0',
+      accountId: 1,
+      routeUserId: '0',
+      emailHash: null,
+    });
+    await initializing;
+
+    expect(client.listScopes).toHaveLength(1);
+    expect(client.listScopes[0].routeUserId).toBe('1');
+    manager.destroy();
+  });
+
+  it('moves timeline ticks when Timeline switches between classic and compact', async () => {
+    const response = installConversation();
+    const anchor = buildHighlightAnchor(response, selectText(response, 'target'));
+    if (!anchor) throw new Error('Expected anchor');
+    const manager = new HighlightManager(new FakeHighlightClient([makeRecord(anchor)]));
+    await manager.init();
+    const bar = document.querySelector<HTMLElement>('.gemini-timeline-bar');
+    const track = document.querySelector<HTMLElement>('.timeline-track-content');
+    if (!bar || !track) throw new Error('Expected timeline');
+    expect(document.querySelector('.gv-highlight-timeline-tick')?.parentElement).toBe(track);
+
+    bar.classList.add('timeline-style-compact');
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+    expect(document.querySelector('.gv-highlight-timeline-tick')?.parentElement).toBe(bar);
+
+    bar.classList.remove('timeline-style-compact');
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+    expect(document.querySelector('.gv-highlight-timeline-tick')?.parentElement).toBe(track);
+
+    manager.destroy();
+  });
+
+  it('falls back to the owning turn when the quote cannot be resolved', async () => {
+    const response = installConversation('Completely different response');
+    const unresolved = makeRecord({
+      quote: { exact: 'missing quote', prefix: 'before', suffix: 'after' },
+      position: { start: 10, end: 23 },
+      sourceTextHash: 'old-hash',
+    });
+    const user = document.querySelector<HTMLElement>('.user-query-bubble-with-background');
+    if (!user) throw new Error('Expected user turn');
+    user.scrollIntoView = vi.fn();
+    const manager = new HighlightManager(new FakeHighlightClient([unresolved]));
+
+    await manager.init();
+
+    expect(document.querySelector('.gv-highlight-mark')).toBeNull();
+    expect(manager.navigateToHighlight('highlight-1', 'auto')).toBe('turn');
+    expect(user.scrollIntoView).toHaveBeenCalled();
+    expect(response.textContent).toBe('Completely different response');
+
+    manager.destroy();
+  });
+
+  it('removes a stale mark instead of highlighting changed response text', async () => {
+    const response = installConversation();
+    const anchor = buildHighlightAnchor(response, selectText(response, 'target'));
+    if (!anchor) throw new Error('Expected anchor');
+    const manager = new HighlightManager(new FakeHighlightClient([makeRecord(anchor)]));
+    await manager.init();
+    const mark = document.querySelector<HTMLElement>('.gv-highlight-mark');
+    if (!mark) throw new Error('Expected rendered mark');
+
+    mark.textContent = 'changed';
+    await new Promise((resolve) => window.setTimeout(resolve, 180));
+
+    expect(document.querySelector('.gv-highlight-mark')).toBeNull();
+    expect(response.textContent).toBe('Alpha changed Omega');
+
+    manager.destroy();
+  });
+
+  it('keeps retrying an exact hash after the owning turn appears first', async () => {
+    const source = document.createElement('div');
+    source.textContent = 'Before target after';
+    document.body.appendChild(source);
+    const anchor = buildHighlightAnchor(source, selectText(source, 'target'));
+    if (!anchor) throw new Error('Expected anchor');
+    const response = installConversation('Loading response');
+    window.history.replaceState(null, '', '/app/test#gv-highlight-highlight-1');
+    const manager = new HighlightManager(new FakeHighlightClient([makeRecord(anchor)]));
+
+    await manager.init();
+    expect(document.querySelector('.gv-highlight-mark')).toBeNull();
+    response.textContent = 'Before target after';
+    await new Promise((resolve) => window.setTimeout(resolve, 180));
+
+    expect(document.querySelector('.gv-highlight-mark')?.textContent).toBe('target');
+    expect(document.querySelector('.gv-highlight-mark')?.classList).toContain(
+      'gv-highlight-active',
+    );
+
+    manager.destroy();
+  });
+
+  it('removes injected marks, ticks, listeners, and styles on cleanup', async () => {
+    const response = installConversation();
+    const anchor = buildHighlightAnchor(response, selectText(response, 'target'));
+    if (!anchor) throw new Error('Expected anchor');
+    const manager = new HighlightManager(new FakeHighlightClient([makeRecord(anchor)]));
+
+    await manager.init();
+    manager.destroy();
+
+    expect(document.querySelector('.gv-highlight-mark')).toBeNull();
+    expect(document.querySelector('.gv-highlight-timeline-tick')).toBeNull();
+    expect(document.getElementById('gv-highlight-style')).toBeNull();
+    expect(chrome.runtime.onMessage.removeListener).toHaveBeenCalled();
+    expect(response.textContent).toBe('Alpha target Omega');
+  });
+});

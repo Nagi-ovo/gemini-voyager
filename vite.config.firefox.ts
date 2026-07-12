@@ -56,6 +56,36 @@ function appendFirefoxChangelogResources<
   } as TManifest;
 }
 
+export const firefoxManifest = appendFirefoxChangelogResources({
+  ...baseManifest,
+  // Firefox models unlimitedStorage as a required no-prompt permission,
+  // rather than an optional permission requested at runtime.
+  permissions: Array.from(
+    new Set([
+      ...((baseManifest as { permissions?: string[] }).permissions ?? []),
+      'unlimitedStorage',
+    ]),
+  ),
+  browser_specific_settings: {
+    gecko: {
+      id: 'gemini-voyager@nagi-ovo',
+      // Keep the min version low so existing users aren't dropped. The MV3
+      // optional_host_permissions key is only honored from Firefox 128
+      // (Bugzilla 1766026); on older Firefox the plugin / custom-website
+      // host-grant flow is feature-gated off with an explanation rather
+      // than left to silently fail (see supportsOptionalHostPermissions()).
+      strict_min_version: '115.0',
+      data_collection_permissions: {
+        required: ['none'],
+      },
+    },
+  },
+  background: {
+    scripts: ['src/pages/background/index.ts'],
+    type: 'module',
+  },
+} as unknown as FirefoxManifestLike) as unknown as ManifestV3Export;
+
 export default mergeConfig(
   baseConfig,
   defineConfig({
@@ -64,27 +94,7 @@ export default mergeConfig(
     },
     plugins: [
       crx({
-        manifest: appendFirefoxChangelogResources({
-          ...baseManifest,
-          browser_specific_settings: {
-            gecko: {
-              id: 'gemini-voyager@nagi-ovo',
-              // Keep the min version low so existing users aren't dropped. The MV3
-              // optional_host_permissions key is only honored from Firefox 128
-              // (Bugzilla 1766026); on older Firefox the plugin / custom-website
-              // host-grant flow is feature-gated off with an explanation rather
-              // than left to silently fail (see supportsOptionalHostPermissions()).
-              strict_min_version: '115.0',
-              data_collection_permissions: {
-                required: ['none'],
-              },
-            },
-          },
-          background: {
-            scripts: ['src/pages/background/index.ts'],
-            type: 'module',
-          },
-        } as unknown as FirefoxManifestLike) as unknown as ManifestV3Export,
+        manifest: firefoxManifest,
         browser: 'firefox',
         contentScripts: {
           injectCss: true,

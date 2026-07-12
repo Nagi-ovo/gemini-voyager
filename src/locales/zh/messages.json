@@ -264,11 +264,11 @@
     "description": "Button label for returning from the starred library to Prompt Manager"
   },
   "pm_starred_library": {
-    "message": "星标收藏库",
+    "message": "收藏库",
     "description": "Prompt Manager starred messages library title and entry button"
   },
   "pm_starred_search_placeholder": {
-    "message": "搜索星标内容",
+    "message": "搜索收藏内容",
     "description": "Search placeholder for starred messages in Prompt Manager"
   },
   "pm_starred_no_results": {
@@ -1012,11 +1012,11 @@
     "description": "自定义网站重新加载/权限提示"
   },
   "starredHistory": {
-    "message": "星标历史",
+    "message": "收藏库",
     "description": "星标历史标题"
   },
   "viewStarredHistory": {
-    "message": "查看星标历史",
+    "message": "查看收藏库",
     "description": "查看星标历史按钮"
   },
   "noStarredMessages": {
@@ -1454,6 +1454,14 @@
   "enableQuoteReplyHint": {
     "message": "在对话中选中文字时显示悬浮按钮，用于引用所选内容",
     "description": "引用回复功能提示"
+  },
+  "enableHighlights": {
+    "message": "启用高亮",
+    "description": "高亮功能开关标签"
+  },
+  "enableHighlightsHint": {
+    "message": "高亮选中的回答文本、选择颜色，并记住你上次使用的颜色。",
+    "description": "高亮功能提示"
   },
   "hideInputHalo": {
     "message": "隐藏输入框光晕",
@@ -2322,5 +2330,57 @@
   "enablePromptManagerOnSiteHint": {
     "message": "在此站点使用你保存的提示词。开启时需要授权访问该站点。",
     "description": "Top toggle hint for enabling Prompt Manager on a third-party site"
+  },
+  "storageQuotaTitle": { "message": "存储空间" },
+  "storageQuotaManage": { "message": "管理存储" },
+  "storageQuotaLocal": { "message": "扩展本地数据" },
+  "storageQuotaSync": { "message": "同步设置" },
+  "storageQuotaHealthy": { "message": "空间充足" },
+  "storageQuotaAttention": { "message": "接近上限" },
+  "storageQuotaCritical": { "message": "即将存满" },
+  "storageQuotaUnknown": { "message": "无法读取用量" },
+  "storageQuotaBreakdown": { "message": "存储明细" },
+  "storageQuotaSoftLimit": { "message": "Voyager 软上限" },
+  "storageQuotaEffectiveLimit": {
+    "message": "当前实际上限：{size}。Voyager 会以它和所选软上限中的较低值为准。"
+  },
+  "storageQuotaCache": { "message": "可重建缓存" },
+  "storageQuotaHighlights": { "message": "高亮内容" },
+  "storageQuotaOther": { "message": "其他" },
+  "storageQuotaUnlock": { "message": "扩展本地空间" },
+  "storageQuotaSafariLimit": {
+    "message": "Safari 15 只能把本地存储从约 5 MB 提升到约 10 MB，仍然可能存满。"
+  },
+  "storageQuotaUnknownLimit": {
+    "message": "无法识别 Safari 版本；旧版本扩容后仍可能受限。"
+  },
+  "storageQuotaClearConfirm": {
+    "message": "清理“{category}”？只会删除这一类别的数据。"
+  },
+  "storageQuotaHighlightClearConfirm": {
+    "message": "删除所有已保存的高亮和批注？此操作无法撤销。"
+  },
+  "storageQuotaDraftClearConfirm": {
+    "message": "删除所有未发送的草稿？此操作无法撤销。"
+  },
+  "highlightAction": { "message": "高亮" },
+  "highlightSaved": { "message": "高亮已保存" },
+  "highlightSaveFailed": { "message": "无法保存高亮" },
+  "highlightDeleteFailed": { "message": "无法删除高亮" },
+  "highlightNotePlaceholder": { "message": "添加备注（可选）" },
+  "highlightColor": { "message": "高亮颜色" },
+  "highlightTooLong": { "message": "选中内容过长，请缩小范围。" },
+  "highlightAriaLabel": { "message": "已保存的高亮。打开批注。" },
+  "highlightTimelineAriaLabel": { "message": "打开已保存的高亮" },
+  "savedLibraryAll": { "message": "全部" },
+  "savedLibraryStars": { "message": "星标" },
+  "savedLibraryHighlights": { "message": "高亮" },
+  "savedLibraryEmpty": { "message": "暂无收藏内容" },
+  "savedLibraryNoHighlights": { "message": "暂无高亮" },
+  "savedLibrarySearchPlaceholder": { "message": "搜索星标和高亮" },
+  "highlightImportSuccess": { "message": "已导入 {count} 条高亮" },
+  "highlightCloudSync": { "message": "同步高亮" },
+  "highlightCloudSyncHint": {
+    "message": "将高亮保存在按账号隔离的独立 Drive 文件中。高亮同步始终合并，默认关闭。"
   }
 }

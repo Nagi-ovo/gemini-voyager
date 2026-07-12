@@ -9,14 +9,26 @@ import 'katex/dist/katex.min.css';
 import type { marked as MarkedFn } from 'marked';
 import browser from 'webextension-polyfill';
 
+import {
+  accountIsolationService,
+  detectAccountContextFromDocument,
+} from '@/core/services/AccountIsolationService';
 import { logger } from '@/core/services/LoggerService';
 import { promptStorageService } from '@/core/services/StorageService';
 import { type StorageKey, StorageKeys } from '@/core/types/common';
+import type { HighlightAccountScope, HighlightRecordV1 } from '@/core/types/highlight';
 import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
+import {
+  type SavedLibraryFilter,
+  type SavedLibraryItem,
+  buildSavedLibraryItemUrl,
+  filterSavedLibraryItems,
+  toSavedLibraryItems,
+} from '@/features/savedLibrary/model';
 import { getCurrentLanguage, getTranslationSync, initI18n, setCachedLanguage } from '@/utils/i18n';
 import {
   APP_LANGUAGES,
@@ -35,11 +47,7 @@ import type { StarredMessage } from '../timeline/starredTypes';
 import { extractPlainTitle } from './compactTitle';
 import { activatePromptText } from './promptClickAction';
 import { getScrollHintState } from './scrollHint';
-import {
-  buildStarredMessageUrl,
-  filterStarredMessages,
-  formatStarredMessageTime,
-} from './starredLibrary';
+import { formatStarredMessageTime } from './starredLibrary';
 import { sanitizeSelectedTags } from './tagFilterState';
 
 type PromptItem = {
@@ -86,6 +94,82 @@ const SPONSOR_HEART_PATH_16 =
 
 type PMTheme = 'light' | 'dark';
 type PMViewMode = 'compact' | 'comfortable';
+
+async function resolveCurrentHighlightScope(): Promise<HighlightAccountScope> {
+  const context = detectAccountContextFromDocument(window.location.href, document);
+  const resolved = await accountIsolationService.resolveAccountScope({
+    pageUrl: window.location.href,
+    routeUserId: context.routeUserId,
+    email: context.email,
+  });
+  return {
+    platform: window.location.hostname.startsWith('aistudio.') ? 'aistudio' : 'gemini',
+    accountKey: resolved.accountKey,
+    accountId: resolved.accountId,
+    routeUserId: resolved.routeUserId,
+  };
+}
+
+async function loadCurrentAccountHighlightRecords(): Promise<HighlightRecordV1[]> {
+  try {
+    const scope = await resolveCurrentHighlightScope();
+    const response = (await browser.runtime.sendMessage({
+      type: 'gv.highlight.list',
+      payload: { scope, includeDeleted: false },
+    })) as { ok?: boolean; records?: HighlightRecordV1[]; error?: string } | undefined;
+    if (!response?.ok) throw new Error(response?.error || 'Failed to load highlights');
+    return Array.isArray(response.records) ? response.records : [];
+  } catch (error) {
+    logger.warn('[PromptManager] Failed to load highlights', { error: String(error) });
+    throw error;
+  }
+}
+
+async function removeStoredHighlight(item: SavedLibraryItem): Promise<boolean> {
+  if (item.kind !== 'highlight' || !item.accountHash || !item.platform) return false;
+  try {
+    const scope = await resolveCurrentHighlightScope();
+    const response = (await browser.runtime.sendMessage({
+      type: 'gv.highlight.delete',
+      payload: {
+        scope,
+        conversationId: item.conversationId,
+        id: item.id,
+      },
+    })) as { ok?: boolean } | undefined;
+    return response?.ok === true;
+  } catch (error) {
+    logger.warn('[PromptManager] Failed to remove highlight', { error: String(error) });
+    return false;
+  }
+}
+
+function navigateToSavedLibraryItem(item: SavedLibraryItem): boolean {
+  let target: URL;
+  try {
+    target = new URL(buildSavedLibraryItemUrl(item), window.location.href);
+  } catch (error) {
+    logger.warn('[PromptManager] Blocked invalid saved item URL', { error: String(error) });
+    return false;
+  }
+  if (target.origin !== window.location.origin) {
+    window.open(target.href, '_blank', 'noopener,noreferrer');
+    return true;
+  }
+
+  window.history.pushState(
+    window.history.state,
+    '',
+    `${target.pathname}${target.search}${target.hash}`,
+  );
+  window.dispatchEvent(
+    typeof PopStateEvent === 'function'
+      ? new PopStateEvent('popstate', { state: window.history.state })
+      : new Event('popstate'),
+  );
+  return true;
+  window.dispatchEvent(new Event('hashchange'));
+}
 
 function detectPageTheme(): PMTheme {
   if (
@@ -383,6 +467,18 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         'Failed to check hide prompt manager setting, continuing with default behavior',
         { error },
       );
+    }
+
+    function downloadTextFile(data: string, filename: string, mimeType: string): void {
+      const url = URL.createObjectURL(new Blob([data], { type: mimeType }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
     }
 
     try {
@@ -754,6 +850,42 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     searchWrap.appendChild(searchInput);
     searchWrap.appendChild(viewModeBtn);
 
+    const savedToolbar = createEl('div', 'gv-pm-saved-toolbar gv-hidden');
+    const savedFilterGroup = createEl('div', 'gv-pm-saved-filters');
+    savedFilterGroup.setAttribute('role', 'group');
+    const savedFilterButtons = new Map<SavedLibraryFilter, HTMLButtonElement>();
+    for (const value of ['all', 'starred', 'highlights'] as const) {
+      const button = createEl('button', 'gv-pm-saved-filter');
+      button.setAttribute('type', 'button');
+      button.addEventListener('click', () => {
+        savedFilter = value;
+        applySavedFilterUI();
+        renderStarredList();
+      });
+      savedFilterButtons.set(value, button);
+      savedFilterGroup.appendChild(button);
+    }
+    savedToolbar.appendChild(savedFilterGroup);
+
+    const savedActions = createEl('div', 'gv-pm-saved-actions');
+    const exportJsonBtn = createEl('button', 'gv-pm-saved-action');
+    exportJsonBtn.type = 'button';
+    exportJsonBtn.textContent = 'JSON';
+    const exportMarkdownBtn = createEl('button', 'gv-pm-saved-action');
+    exportMarkdownBtn.type = 'button';
+    exportMarkdownBtn.textContent = 'Markdown';
+    const importHighlightsBtn = createEl('button', 'gv-pm-saved-action');
+    importHighlightsBtn.type = 'button';
+    const importHighlightsInput = createEl('input') as HTMLInputElement;
+    importHighlightsInput.type = 'file';
+    importHighlightsInput.accept = 'application/json,.json';
+    importHighlightsInput.className = 'gv-pm-saved-import-input';
+    savedActions.appendChild(exportJsonBtn);
+    savedActions.appendChild(exportMarkdownBtn);
+    savedActions.appendChild(importHighlightsBtn);
+    savedActions.appendChild(importHighlightsInput);
+    savedToolbar.appendChild(savedActions);
+
     const tagsWrapOuter = createEl('div', 'gv-pm-tags-wrap');
     const tagsWrap = createEl('div', 'gv-pm-tags');
     const tagsScrollHint = createEl('div', 'gv-pm-tags-scroll-hint');
@@ -819,6 +951,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     panel.appendChild(header);
     panel.appendChild(searchWrap);
+    panel.appendChild(savedToolbar);
     panel.appendChild(tagsWrapOuter);
     panel.appendChild(addForm);
     panel.appendChild(list);
@@ -850,6 +983,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     let promptSearchValue = '';
     let starredSearchValue = '';
     let starredMessages: StarredMessage[] = [];
+    let highlightRecords: HighlightRecordV1[] = [];
+    let savedFilter: SavedLibraryFilter = 'all';
     let starredLoading = false;
     let starredLoadError = false;
 
@@ -1094,6 +1229,27 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       } catch {}
     });
 
+    function applySavedFilterUI(): void {
+      const labels: Record<SavedLibraryFilter, TranslationKey> = {
+        all: 'savedLibraryAll',
+        starred: 'savedLibraryStars',
+        highlights: 'savedLibraryHighlights',
+      };
+      savedFilterButtons.forEach((button, value) => {
+        button.textContent = i18n.t(labels[value]);
+        button.classList.toggle('active', value === savedFilter);
+        button.setAttribute('aria-pressed', value === savedFilter ? 'true' : 'false');
+      });
+      savedFilterGroup.setAttribute('aria-label', i18n.t('pm_starred_library'));
+      exportJsonBtn.title = `${i18n.t('pm_export')} JSON`;
+      exportJsonBtn.setAttribute('aria-label', exportJsonBtn.title);
+      exportMarkdownBtn.title = `${i18n.t('pm_export')} Markdown`;
+      exportMarkdownBtn.setAttribute('aria-label', exportMarkdownBtn.title);
+      importHighlightsBtn.textContent = i18n.t('pm_import');
+      importHighlightsBtn.title = i18n.t('pm_import');
+      importHighlightsBtn.setAttribute('aria-label', i18n.t('pm_import'));
+    }
+
     function applyPanelViewUI(): void {
       const isStarredView = panelView === 'starred';
       panel.setAttribute('data-gv-panel-view', panelView);
@@ -1104,17 +1260,19 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       backupBtn.title = isStarredView ? i18n.t('pm_prompt_manager') : i18n.t('pm_starred_library');
       backupBtn.setAttribute('aria-label', backupBtn.title);
       searchInput.placeholder = isStarredView
-        ? i18n.t('pm_starred_search_placeholder')
+        ? i18n.t('savedLibrarySearchPlaceholder')
         : i18n.t('pm_search_placeholder');
       addBtn.classList.toggle('gv-hidden', isStarredView);
       viewModeBtn.classList.toggle('gv-hidden', isStarredView);
       tagsWrapOuter.classList.toggle('gv-hidden', isStarredView);
+      savedToolbar.classList.toggle('gv-hidden', !isStarredView);
       secondaryActions.classList.toggle('gv-hidden', isStarredView);
       if (isStarredView) {
         addForm.classList.add('gv-hidden');
         editingId = null;
         hideTooltip();
       }
+      applySavedFilterUI();
     }
 
     function renderActiveList(): void {
@@ -1139,15 +1297,65 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       starredLoadError = false;
       renderStarredList();
       try {
-        starredMessages = await StarredMessagesService.getAllStarredMessagesSorted();
+        [starredMessages, highlightRecords] = await Promise.all([
+          StarredMessagesService.getAllStarredMessagesSorted(),
+          loadCurrentAccountHighlightRecords(),
+        ]);
       } catch (error) {
-        console.warn('[PromptManager] Failed to load starred messages:', error);
+        console.warn('[PromptManager] Failed to load saved library:', error);
         starredLoadError = true;
         starredMessages = [];
+        highlightRecords = [];
         setNotice(i18n.t('pm_starred_load_error'), 'err');
       } finally {
         starredLoading = false;
         renderStarredList();
+      }
+    }
+
+    async function exportHighlights(format: 'json' | 'markdown'): Promise<void> {
+      try {
+        const response = (await browser.runtime.sendMessage({
+          type: 'gv.highlight.export',
+          payload: { format, scope: await resolveCurrentHighlightScope() },
+        })) as { ok?: boolean; data?: string; filename?: string; error?: string } | undefined;
+        if (!response?.ok || typeof response.data !== 'string') {
+          throw new Error(response?.error || 'Highlight export failed');
+        }
+        downloadTextFile(
+          response.data,
+          response.filename || `gemini-voyager-highlights.${format === 'json' ? 'json' : 'md'}`,
+          format === 'json' ? 'application/json' : 'text/markdown',
+        );
+      } catch (error) {
+        logger.warn('[PromptManager] Failed to export highlights', { error: String(error) });
+        setNotice(i18n.t('promptExportError'), 'err');
+      }
+    }
+
+    async function importHighlights(file: File): Promise<void> {
+      try {
+        const response = (await browser.runtime.sendMessage({
+          type: 'gv.highlight.import',
+          payload: { data: await file.text(), scope: await resolveCurrentHighlightScope() },
+        })) as
+          | {
+              ok?: boolean;
+              stats?: { imported: number; updated: number; duplicates: number };
+              error?: string;
+            }
+          | undefined;
+        if (!response?.ok || !response.stats) {
+          throw new Error(response?.error || 'Highlight import failed');
+        }
+        await loadStarredMessages();
+        const changed = response.stats.imported + response.stats.updated;
+        setNotice(i18n.t('highlightImportSuccess').replace('{count}', String(changed)), 'ok');
+      } catch (error) {
+        logger.warn('[PromptManager] Failed to import highlights', { error: String(error) });
+        setNotice(i18n.t('promptImportError'), 'err');
+      } finally {
+        importHighlightsInput.value = '';
       }
     }
 
@@ -1171,14 +1379,20 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     function getStarredEmptyText(query: string): string {
       if (starredLoadError) return i18n.t('pm_starred_load_error');
       if (query) return i18n.t('pm_starred_no_results');
-      return i18n.t('noStarredMessages');
+      if (savedFilter === 'highlights') return i18n.t('savedLibraryNoHighlights');
+      if (savedFilter === 'starred') return i18n.t('noStarredMessages');
+      return i18n.t('savedLibraryEmpty');
     }
 
     function renderStarredList(): void {
       hideTooltip();
       const savedScrollTop = list.scrollTop;
       const query = (searchInput.value || '').trim();
-      const filtered = filterStarredMessages(starredMessages, query);
+      const filtered = filterSavedLibraryItems(
+        toSavedLibraryItems(starredMessages, highlightRecords),
+        savedFilter,
+        query,
+      );
       list.innerHTML = '';
 
       if (starredLoading) {
@@ -1196,7 +1410,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       }
 
       const frag = document.createDocumentFragment();
-      for (const message of filtered) {
+      for (const item of filtered) {
         const row = createEl('button', 'gv-pm-starred-item');
         row.setAttribute('type', 'button');
         row.setAttribute('dir', 'auto');
@@ -1205,40 +1419,67 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           event.preventDefault();
           void (async () => {
             await persistPanelView('starred');
-            window.location.assign(buildStarredMessageUrl(message));
-            closePanel();
+            if (navigateToSavedLibraryItem(item)) closePanel();
           })();
         });
 
         const icon = createEl('span', 'gv-pm-starred-icon');
-        icon.textContent = '★';
+        icon.textContent = item.kind === 'starred' ? '★' : '';
+        icon.classList.toggle('gv-pm-highlight-icon', item.kind === 'highlight');
+        if (item.kind === 'highlight') {
+          icon.setAttribute('data-highlight-color', item.color || 'yellow');
+        }
         icon.setAttribute('aria-hidden', 'true');
 
         const body = createEl('span', 'gv-pm-starred-body');
         const title = createEl('span', 'gv-pm-starred-title');
         title.textContent =
-          (message.conversationTitle && message.conversationTitle.trim()) ||
+          (item.conversationTitle && item.conversationTitle.trim()) ||
           i18n.t('pm_starred_untitled');
         const content = createEl('span', 'gv-pm-starred-content');
-        content.textContent = message.content || '';
+        content.textContent = item.content || '';
+        let note: HTMLSpanElement | null = null;
+        if (item.note) {
+          note = createEl('span', 'gv-pm-highlight-note');
+          note.textContent = item.note;
+        }
         const meta = createEl('span', 'gv-pm-starred-meta');
-        meta.textContent = formatStarredMessageTime(message.starredAt);
+        meta.textContent = `${
+          item.kind === 'starred' ? i18n.t('savedLibraryStars') : i18n.t('savedLibraryHighlights')
+        } · ${formatStarredMessageTime(item.savedAt)}`;
         body.appendChild(title);
         body.appendChild(content);
+        if (note) body.appendChild(note);
         body.appendChild(meta);
 
         const removeBtn = createEl('button', 'gv-pm-starred-remove');
         removeBtn.setAttribute('type', 'button');
-        removeBtn.title = i18n.t('removeFromStarred');
-        removeBtn.setAttribute('aria-label', i18n.t('removeFromStarred'));
+        const removeLabel =
+          item.kind === 'starred' ? i18n.t('removeFromStarred') : i18n.t('pm_delete');
+        removeBtn.title = removeLabel;
+        removeBtn.setAttribute('aria-label', removeLabel);
         removeBtn.addEventListener('click', async (event) => {
           event.preventDefault();
           event.stopPropagation();
-          await StarredMessagesService.removeStarredMessage(message.conversationId, message.turnId);
-          starredMessages = starredMessages.filter(
-            (item) =>
-              item.conversationId !== message.conversationId || item.turnId !== message.turnId,
-          );
+          const removed =
+            item.kind === 'starred'
+              ? await StarredMessagesService.removeStarredMessage(
+                  item.conversationId,
+                  item.turnId,
+                ).then(() => true)
+              : await removeStoredHighlight(item);
+          if (!removed) {
+            setNotice(i18n.t('highlightDeleteFailed'), 'err');
+            return;
+          }
+          if (item.kind === 'starred') {
+            starredMessages = starredMessages.filter(
+              (message) =>
+                message.conversationId !== item.conversationId || message.turnId !== item.turnId,
+            );
+          } else {
+            highlightRecords = highlightRecords.filter((record) => record.id !== item.id);
+          }
           renderStarredList();
           setNotice(i18n.t('pm_deleted') || 'Deleted', 'ok');
         });
@@ -1964,7 +2205,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       }
       if (
         area === 'local' &&
-        changes[StorageKeys.TIMELINE_STARRED_MESSAGES] &&
+        (changes[StorageKeys.TIMELINE_STARRED_MESSAGES] ||
+          Object.keys(changes).some((key) => key.startsWith('gvAnnotation:'))) &&
         panelView === 'starred'
       ) {
         void loadStarredMessages();
@@ -2097,6 +2339,13 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     backupBtn.addEventListener('click', () => {
       switchPanelView(panelView === 'starred' ? 'prompts' : 'starred');
+    });
+    exportJsonBtn.addEventListener('click', () => void exportHighlights('json'));
+    exportMarkdownBtn.addEventListener('click', () => void exportHighlights('markdown'));
+    importHighlightsBtn.addEventListener('click', () => importHighlightsInput.click());
+    importHighlightsInput.addEventListener('change', () => {
+      const file = importHighlightsInput.files?.[0];
+      if (file) void importHighlights(file);
     });
 
     // Initialize

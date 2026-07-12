@@ -8,12 +8,15 @@
  * - gemini-voyager-folders.json
  * - gemini-voyager-prompts.json
  * - gemini-voyager-starred.json
+ * - gemini-voyager-highlights.json (account-scoped; independent from legacy sync data)
  */
 import type { FolderData } from '@/core/types/folder';
+import { isHighlightExportPayloadV1 } from '@/core/types/highlight';
 import type {
   FolderExportPayload,
   ForkExportPayload,
   ForkNodesDataSync,
+  HighlightExportPayload,
   PromptExportPayload,
   PromptItem,
   SettingsExportPayload,
@@ -38,6 +41,7 @@ const SETTINGS_FILE_NAME = 'gemini-voyager-settings.json';
 const STARRED_FILE_NAME = 'gemini-voyager-starred.json';
 const FORKS_FILE_NAME = 'gemini-voyager-forks.json';
 const TIMELINE_HIERARCHY_FILE_NAME = 'gemini-voyager-timeline-hierarchy.json';
+const HIGHLIGHTS_FILE_NAME = 'gemini-voyager-highlights.json';
 const BACKUP_FOLDER_NAME = 'Gemini Voyager Data';
 const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD_BASE = 'https://www.googleapis.com/upload/drive/v3';
@@ -68,6 +72,7 @@ export class GoogleDriveSyncService {
   private starredFileId: string | null = null;
   private forksFileId: string | null = null;
   private timelineHierarchyFileId: string | null = null;
+  private highlightsFileId: string | null = null;
   private backupFolderId: string | null = null;
   private fileIdByName: Record<string, string> = {};
   private stateChangeCallback: ((state: SyncState) => void) | null = null;
@@ -138,6 +143,7 @@ export class GoogleDriveSyncService {
     this.starredFileId = null;
     this.forksFileId = null;
     this.timelineHierarchyFileId = null;
+    this.highlightsFileId = null;
     this.backupFolderId = null;
     this.fileIdByName = {};
     this.updateState({ isAuthenticated: false, lastSyncTime: null, error: null });
@@ -400,6 +406,93 @@ export class GoogleDriveSyncService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Download failed';
       console.error('[GoogleDriveSyncService] Prompts-only download failed:', error);
+      this.updateState({ isSyncing: false, error: errorMessage });
+      return null;
+    }
+  }
+
+  /**
+   * Upload only the account-scoped highlight payload. Highlights intentionally
+   * live in their own file and are never added to the legacy SyncData aggregate.
+   *
+   * This primitive is last-write-wins. Drive v3's documented media-update API
+   * does not expose a reliable compare-and-swap revision contract here, so
+   * callers must download/merge before uploading when concurrent edits matter.
+   */
+  async uploadHighlightsOnly(
+    payload: HighlightExportPayload,
+    accountScope: SyncAccountScope,
+    interactive: boolean = true,
+  ): Promise<boolean> {
+    try {
+      this.updateState({ isSyncing: true, error: null });
+      this.assertHighlightPayloadForScope(payload, accountScope);
+
+      const token = await this.getAuthToken(interactive);
+      if (!token) {
+        if (!interactive) {
+          this.updateState({ isSyncing: false, isAuthenticated: false });
+          return false;
+        }
+        throw new Error('Not authenticated');
+      }
+
+      const fileName = this.getFileNameForScope(HIGHLIGHTS_FILE_NAME, accountScope);
+      const fileId = await this.ensureFileId(token, fileName, 'highlights');
+      // Upload the canonical payload verbatim. In particular, quote.exact must
+      // never be shortened as the exact text is required for anchor recovery.
+      await this.uploadFileWithRetry(token, fileId, payload);
+
+      this.updateState({ isSyncing: false, error: null });
+      await this.saveState();
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Upload failed';
+      console.error('[GoogleDriveSyncService] Highlights-only upload failed:', error);
+      this.updateState({ isSyncing: false, error: errorMessage });
+      return false;
+    }
+  }
+
+  /**
+   * Download only the exact account-scoped highlight file. Unlike older sync
+   * payloads, there is deliberately no fallback to an unscoped legacy file:
+   * highlights have been account-isolated since their first Drive format.
+   */
+  async downloadHighlightsOnly(
+    accountScope: SyncAccountScope,
+    interactive: boolean = true,
+  ): Promise<HighlightExportPayload | null> {
+    try {
+      this.updateState({ isSyncing: true, error: null });
+
+      const token = await this.getAuthToken(interactive);
+      if (!token) {
+        if (!interactive) {
+          this.updateState({ isSyncing: false, isAuthenticated: false });
+          return null;
+        }
+        throw new Error('Not authenticated');
+      }
+
+      const fileName = this.getFileNameForScope(HIGHLIGHTS_FILE_NAME, accountScope);
+      const fileId = await this.findFile(token, fileName);
+      if (!fileId) {
+        this.updateState({ isSyncing: false, error: null });
+        return null;
+      }
+
+      const downloaded = await this.downloadFileWithRetry<unknown>(token, fileId);
+      if (downloaded === null) {
+        this.updateState({ isSyncing: false, error: null });
+        return null;
+      }
+      this.assertHighlightPayloadForScope(downloaded, accountScope);
+      this.updateState({ isSyncing: false, error: null });
+      return downloaded;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Download failed';
+      console.error('[GoogleDriveSyncService] Highlights-only download failed:', error);
       this.updateState({ isSyncing: false, error: errorMessage });
       return null;
     }
@@ -766,6 +859,26 @@ export class GoogleDriveSyncService {
     return `${baseFileName.slice(0, dotIndex)}.${suffix}${baseFileName.slice(dotIndex)}`;
   }
 
+  private assertHighlightPayloadForScope(
+    value: unknown,
+    accountScope: SyncAccountScope,
+  ): asserts value is HighlightExportPayload {
+    if (!isHighlightExportPayloadV1(value)) {
+      throw new Error('Invalid highlight sync payload');
+    }
+
+    const expectedAccountHash = hashString(accountScope.accountKey);
+    if (
+      value.accountScope.accountHash !== expectedAccountHash ||
+      value.items.some(
+        (item) =>
+          item.accountHash !== expectedAccountHash || item.platform !== value.accountScope.platform,
+      )
+    ) {
+      throw new Error('Highlight sync payload does not match the requested account scope');
+    }
+  }
+
   private async findFileForScope(
     token: string,
     baseFileName: string,
@@ -793,7 +906,8 @@ export class GoogleDriveSyncService {
       | 'settings'
       | 'starred'
       | 'forks'
-      | 'timeline-hierarchy',
+      | 'timeline-hierarchy'
+      | 'highlights',
   ): Promise<string> {
     // 1. Ensure backup folder exists
     const folderId = await this.ensureBackupFolder(token);
@@ -847,7 +961,8 @@ export class GoogleDriveSyncService {
       | 'settings'
       | 'starred'
       | 'forks'
-      | 'timeline-hierarchy',
+      | 'timeline-hierarchy'
+      | 'highlights',
     fileId: string,
   ): void {
     switch (type) {
@@ -871,6 +986,9 @@ export class GoogleDriveSyncService {
         break;
       case 'timeline-hierarchy':
         this.timelineHierarchyFileId = fileId;
+        break;
+      case 'highlights':
+        this.highlightsFileId = fileId;
         break;
     }
   }

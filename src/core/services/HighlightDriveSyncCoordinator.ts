@@ -1,0 +1,185 @@
+import { googleDriveSyncService } from '@/core/services/GoogleDriveSyncService';
+import {
+  type HighlightAccountSnapshot,
+  type HighlightImportMergeOptions,
+  type HighlightScope,
+  compareHighlightRecords,
+  highlightAnnotationService,
+} from '@/core/services/HighlightAnnotationService';
+import type {
+  HighlightExportPayloadV1,
+  HighlightImportStats,
+  HighlightRecordV1,
+} from '@/core/types/highlight';
+import { HIGHLIGHT_EXPORT_FORMAT } from '@/core/types/highlight';
+import type { SyncAccountScope } from '@/core/types/sync';
+import { EXTENSION_VERSION } from '@/core/utils/version';
+
+export interface HighlightDrivePort {
+  downloadHighlightsOnly(
+    accountScope: SyncAccountScope,
+    interactive?: boolean,
+  ): Promise<HighlightExportPayloadV1 | null>;
+  uploadHighlightsOnly(
+    payload: HighlightExportPayloadV1,
+    accountScope: SyncAccountScope,
+    interactive?: boolean,
+  ): Promise<boolean>;
+  getState(): Promise<{ error: string | null }>;
+}
+
+export interface HighlightLocalPort {
+  getAccountSnapshot(scope: HighlightScope): Promise<HighlightAccountSnapshot>;
+  importMerge(
+    scope: HighlightScope,
+    records: readonly HighlightRecordV1[],
+    options?: HighlightImportMergeOptions,
+  ): Promise<HighlightImportStats>;
+}
+
+export interface HighlightDriveSyncResult {
+  ok: boolean;
+  empty?: boolean;
+  count: number;
+  stats?: HighlightImportStats;
+  error?: string;
+}
+
+function toHighlightScope(scope: SyncAccountScope): HighlightScope {
+  return { ...scope, platform: 'gemini' };
+}
+
+function payloadFromSnapshot(snapshot: HighlightAccountSnapshot): HighlightExportPayloadV1 {
+  return {
+    format: HIGHLIGHT_EXPORT_FORMAT,
+    exportedAt: new Date().toISOString(),
+    version: EXTENSION_VERSION,
+    accountScope: snapshot.accountScope,
+    ...(snapshot.clearMarker ? { clearMarker: snapshot.clearMarker } : {}),
+    items: snapshot.records,
+  };
+}
+
+function clearMarkerCovers(
+  actual: HighlightExportPayloadV1['clearMarker'],
+  expected: HighlightExportPayloadV1['clearMarker'],
+): boolean {
+  if (!expected) return true;
+  if (!actual) return false;
+  if (actual.revision.counter !== expected.revision.counter) {
+    return actual.revision.counter > expected.revision.counter;
+  }
+  if (actual.clearedAt !== expected.clearedAt) return actual.clearedAt > expected.clearedAt;
+  return actual.revision.deviceId >= expected.revision.deviceId;
+}
+
+function payloadCovers(
+  actual: HighlightExportPayloadV1,
+  expected: HighlightExportPayloadV1,
+): boolean {
+  if (!clearMarkerCovers(actual.clearMarker, expected.clearMarker)) return false;
+  const actualById = new Map(actual.items.map((record) => [record.id, record]));
+  return expected.items.every((record) => {
+    const actualRecord = actualById.get(record.id);
+    return actualRecord !== undefined && compareHighlightRecords(actualRecord, record) >= 0;
+  });
+}
+
+/**
+ * Coordinates the required download -> merge -> upload sequence around the
+ * Drive service's intentionally small last-write-wins primitives.
+ */
+export class HighlightDriveSyncCoordinator {
+  constructor(
+    private readonly drive: HighlightDrivePort = googleDriveSyncService,
+    private readonly local: HighlightLocalPort = highlightAnnotationService,
+  ) {}
+
+  async pull(
+    accountScope: SyncAccountScope,
+    interactive: boolean = true,
+  ): Promise<HighlightDriveSyncResult> {
+    const remote = await this.drive.downloadHighlightsOnly(accountScope, interactive);
+    if (!remote) {
+      const state = await this.drive.getState();
+      return state.error
+        ? { ok: false, count: 0, error: state.error }
+        : { ok: true, empty: true, count: 0 };
+    }
+
+    try {
+      const stats = await this.local.importMerge(toHighlightScope(accountScope), remote.items, {
+        clearMarker: remote.clearMarker,
+      });
+      return { ok: true, count: stats.total, stats };
+    } catch (error) {
+      return {
+        ok: false,
+        count: 0,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+
+  async push(
+    accountScope: SyncAccountScope,
+    interactive: boolean = true,
+  ): Promise<HighlightDriveSyncResult> {
+    const highlightScope = toHighlightScope(accountScope);
+    const remote = await this.drive.downloadHighlightsOnly(accountScope, interactive);
+    const remoteState = await this.drive.getState();
+    if (!remote && remoteState.error) {
+      return { ok: false, count: 0, error: remoteState.error };
+    }
+
+    try {
+      let stats: HighlightImportStats | undefined;
+      if (remote) {
+        stats = await this.local.importMerge(highlightScope, remote.items, {
+          clearMarker: remote.clearMarker,
+        });
+      }
+      const maximumAttempts = 3;
+      for (let attempt = 0; attempt < maximumAttempts; attempt += 1) {
+        const snapshot = await this.local.getAccountSnapshot(highlightScope);
+        const payload = payloadFromSnapshot(snapshot);
+        const uploaded = await this.drive.uploadHighlightsOnly(payload, accountScope, interactive);
+        if (!uploaded) {
+          const state = await this.drive.getState();
+          return { ok: false, count: 0, error: state.error ?? 'Highlight upload failed' };
+        }
+
+        const verified = await this.drive.downloadHighlightsOnly(accountScope, interactive);
+        if (verified) {
+          const verifyStats = await this.local.importMerge(highlightScope, verified.items, {
+            clearMarker: verified.clearMarker,
+          });
+          stats = verifyStats;
+          if (payloadCovers(verified, payload)) {
+            return {
+              ok: true,
+              count: verified.items.filter((item) => !item.deletedAt).length,
+              stats,
+            };
+          }
+        } else {
+          const state = await this.drive.getState();
+          if (state.error) return { ok: false, count: 0, error: state.error };
+        }
+      }
+      return {
+        ok: false,
+        count: 0,
+        error: 'Highlight upload could not be verified after 3 merge attempts',
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        count: 0,
+        error: error instanceof Error ? error.message : String(error),
+      };
+    }
+  }
+}
+
+export const highlightDriveSyncCoordinator = new HighlightDriveSyncCoordinator();

@@ -5,6 +5,7 @@
 import type { StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 import type { FolderData } from './folder';
+import type { HighlightExportPayloadV1 } from './highlight';
 
 /**
  * Sync mode configuration
@@ -139,6 +140,15 @@ export interface TimelineHierarchyExportPayload {
   version?: string;
   data: import('@/pages/content/timeline/hierarchyTypes').TimelineHierarchyData;
 }
+
+/**
+ * Highlight export payload format.
+ *
+ * Kept as an alias to the canonical annotation contract rather than embedding
+ * highlights in SyncData. Older Voyager versions therefore ignore the separate
+ * Drive file without trying to deserialize an unknown aggregate field.
+ */
+export type HighlightExportPayload = HighlightExportPayloadV1;
 
 /**
  * Data payload synced to Google Drive

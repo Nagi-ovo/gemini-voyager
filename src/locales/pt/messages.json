@@ -264,11 +264,11 @@
     "description": "Button label for returning from the starred library to Prompt Manager"
   },
   "pm_starred_library": {
-    "message": "Biblioteca com estrela",
+    "message": "Biblioteca salva",
     "description": "Prompt Manager starred messages library title and entry button"
   },
   "pm_starred_search_placeholder": {
-    "message": "Pesquisar mensagens com estrela",
+    "message": "Pesquisar itens salvos",
     "description": "Search placeholder for starred messages in Prompt Manager"
   },
   "pm_starred_no_results": {
@@ -1012,11 +1012,11 @@
     "description": "Custom websites reload/permission note"
   },
   "starredHistory": {
-    "message": "Histórico Favorito",
+    "message": "Biblioteca salva",
     "description": "Starred history title"
   },
   "viewStarredHistory": {
-    "message": "Ver Histórico Favorito",
+    "message": "Ver biblioteca salva",
     "description": "View starred history button"
   },
   "noStarredMessages": {
@@ -1454,6 +1454,14 @@
   "enableQuoteReplyHint": {
     "message": "Mostra um botão flutuante para citar o texto selecionado em conversas",
     "description": "Quote reply feature hint"
+  },
+  "enableHighlights": {
+    "message": "Ativar destaques",
+    "description": "Highlight feature toggle label"
+  },
+  "enableHighlightsHint": {
+    "message": "Destaca o texto selecionado, permite escolher uma cor e lembra a última usada.",
+    "description": "Highlight feature hint"
   },
   "hideInputHalo": {
     "message": "Ocultar halo do campo de entrada",
@@ -2322,5 +2330,57 @@
   "enablePromptManagerOnSiteHint": {
     "message": "Use seus prompts salvos neste site. Será solicitado acesso ao site.",
     "description": "Top toggle hint for enabling Prompt Manager on a third-party site"
+  },
+  "storageQuotaTitle": { "message": "Armazenamento" },
+  "storageQuotaManage": { "message": "Gerenciar armazenamento" },
+  "storageQuotaLocal": { "message": "Dados locais da extensão" },
+  "storageQuotaSync": { "message": "Configurações sincronizadas" },
+  "storageQuotaHealthy": { "message": "Espaço suficiente" },
+  "storageQuotaAttention": { "message": "Perto do limite" },
+  "storageQuotaCritical": { "message": "Quase cheio" },
+  "storageQuotaUnknown": { "message": "Uso indisponível" },
+  "storageQuotaBreakdown": { "message": "Detalhes do armazenamento" },
+  "storageQuotaSoftLimit": { "message": "Limite flexível do Voyager" },
+  "storageQuotaEffectiveLimit": {
+    "message": "Limite efetivo atual: {size}. O Voyager aplica o menor valor entre este e o limite flexível escolhido."
+  },
+  "storageQuotaCache": { "message": "Cache recriável" },
+  "storageQuotaHighlights": { "message": "Destaques" },
+  "storageQuotaOther": { "message": "Outros" },
+  "storageQuotaUnlock": { "message": "Ampliar armazenamento local" },
+  "storageQuotaSafariLimit": {
+    "message": "O Safari 15 só pode ampliar o armazenamento local de cerca de 5 MB para 10 MB. Ele ainda pode ficar cheio."
+  },
+  "storageQuotaUnknownLimit": {
+    "message": "Não foi possível identificar a versão do Safari. A ampliação pode continuar limitada em versões antigas."
+  },
+  "storageQuotaClearConfirm": {
+    "message": "Limpar “{category}”? Somente os dados desta categoria serão removidos."
+  },
+  "storageQuotaHighlightClearConfirm": {
+    "message": "Excluir todos os destaques e as anotações salvos? Esta ação não pode ser desfeita."
+  },
+  "storageQuotaDraftClearConfirm": {
+    "message": "Excluir todos os rascunhos não enviados? Esta ação não pode ser desfeita."
+  },
+  "highlightAction": { "message": "Destacar" },
+  "highlightSaved": { "message": "Destaque salvo" },
+  "highlightSaveFailed": { "message": "Não foi possível salvar o destaque" },
+  "highlightDeleteFailed": { "message": "Não foi possível excluir o destaque" },
+  "highlightNotePlaceholder": { "message": "Adicionar nota (opcional)" },
+  "highlightColor": { "message": "Cor do destaque" },
+  "highlightTooLong": { "message": "A seleção é muito longa. Selecione um trecho menor." },
+  "highlightAriaLabel": { "message": "Destaque salvo. Abrir anotação." },
+  "highlightTimelineAriaLabel": { "message": "Abrir destaque salvo" },
+  "savedLibraryAll": { "message": "Tudo" },
+  "savedLibraryStars": { "message": "Favoritos" },
+  "savedLibraryHighlights": { "message": "Destaques" },
+  "savedLibraryEmpty": { "message": "Nenhum item salvo" },
+  "savedLibraryNoHighlights": { "message": "Nenhum destaque" },
+  "savedLibrarySearchPlaceholder": { "message": "Pesquisar favoritos e destaques" },
+  "highlightImportSuccess": { "message": "{count} destaque(s) importado(s)" },
+  "highlightCloudSync": { "message": "Sincronizar destaques" },
+  "highlightCloudSyncHint": {
+    "message": "Mantém os destaques em um arquivo do Drive separado por conta. A sincronização sempre combina os dados e vem desativada por padrão."
   }
 }

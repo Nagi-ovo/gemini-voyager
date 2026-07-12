@@ -497,3 +497,29 @@ Regression test:
 `src/pages/content/folder/__tests__/auditFixes.test.ts`
 ("skips the reload for our own mirror-write echo",
 "still reloads for external writes")
+
+## Highlight cleanup must preserve account clear markers
+
+Symptom:
+After a user cleared all highlights from Storage Manager, a later Google
+Drive pull could restore the deleted highlights.
+
+Root cause:
+Deleting every `gvAnnotation:*` key also deleted the bounded account/platform
+clear marker. Without that marker, an older remote record looked newer than
+an empty local store and was imported again.
+
+Fix:
+Highlight cleanup must go through
+`HighlightAnnotationService.clearAllAccounts()`. It removes annotation
+buckets in one serialized commit while retaining small versioned clear
+markers. Quota classification counts only `gvAnnotation:bucket:*` as
+highlight content; `gvAnnotation:index:*` and the device id are protected
+metadata/settings. Do not replace this path with `storage.remove()` over the
+whole annotation namespace.
+
+Regression tests:
+`src/core/services/__tests__/HighlightAnnotationService.test.ts`
+(`clearAllAccounts` cases) and
+`src/core/services/__tests__/StorageQuotaService.test.ts`
+(`clears the narrowly matched highlights category`).

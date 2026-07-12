@@ -264,11 +264,11 @@
     "description": "Button label for returning from the starred library to Prompt Manager"
   },
   "pm_starred_library": {
-    "message": "Bibliothèque étoilée",
+    "message": "Bibliothèque enregistrée",
     "description": "Prompt Manager starred messages library title and entry button"
   },
   "pm_starred_search_placeholder": {
-    "message": "Rechercher dans les messages étoilés",
+    "message": "Rechercher dans les éléments enregistrés",
     "description": "Search placeholder for starred messages in Prompt Manager"
   },
   "pm_starred_no_results": {
@@ -1012,11 +1012,11 @@
     "description": "Custom websites reload/permission note"
   },
   "starredHistory": {
-    "message": "Favoris",
+    "message": "Bibliothèque enregistrée",
     "description": "Starred history title"
   },
   "viewStarredHistory": {
-    "message": "Voir les favoris",
+    "message": "Voir la bibliothèque enregistrée",
     "description": "View starred history button"
   },
   "noStarredMessages": {
@@ -1454,6 +1454,14 @@
   "enableQuoteReplyHint": {
     "message": "Affiche un bouton flottant pour citer le texte sélectionné dans les conversations",
     "description": "Quote reply feature hint"
+  },
+  "enableHighlights": {
+    "message": "Activer les surlignages",
+    "description": "Highlight feature toggle label"
+  },
+  "enableHighlightsHint": {
+    "message": "Surligne le texte sélectionné, permet de choisir une couleur et mémorise la dernière utilisée.",
+    "description": "Highlight feature hint"
   },
   "hideInputHalo": {
     "message": "Masquer le halo du champ de saisie",
@@ -2322,5 +2330,59 @@
   "enablePromptManagerOnSiteHint": {
     "message": "Utilisez vos prompts enregistrés sur ce site. Un accès vous sera demandé.",
     "description": "Top toggle hint for enabling Prompt Manager on a third-party site"
+  },
+  "storageQuotaTitle": { "message": "Stockage" },
+  "storageQuotaManage": { "message": "Gérer le stockage" },
+  "storageQuotaLocal": { "message": "Données locales de l’extension" },
+  "storageQuotaSync": { "message": "Réglages synchronisés" },
+  "storageQuotaHealthy": { "message": "Espace suffisant" },
+  "storageQuotaAttention": { "message": "Proche de la limite" },
+  "storageQuotaCritical": { "message": "Presque plein" },
+  "storageQuotaUnknown": { "message": "Utilisation indisponible" },
+  "storageQuotaBreakdown": { "message": "Répartition du stockage" },
+  "storageQuotaSoftLimit": { "message": "Limite souple de Voyager" },
+  "storageQuotaEffectiveLimit": {
+    "message": "Limite effective actuelle : {size}. Voyager applique la valeur la plus basse entre celle-ci et la limite souple choisie."
+  },
+  "storageQuotaCache": { "message": "Cache recréable" },
+  "storageQuotaHighlights": { "message": "Surlignages" },
+  "storageQuotaOther": { "message": "Autres" },
+  "storageQuotaUnlock": { "message": "Étendre le stockage local" },
+  "storageQuotaSafariLimit": {
+    "message": "Safari 15 ne peut augmenter le stockage local que d’environ 5 Mo à 10 Mo. Il peut toujours se remplir."
+  },
+  "storageQuotaUnknownLimit": {
+    "message": "La version de Safari est inconnue. L’extension du stockage peut rester limitée sur les anciennes versions."
+  },
+  "storageQuotaClearConfirm": {
+    "message": "Effacer « {category} » ? Seules les données de cette catégorie seront supprimées."
+  },
+  "storageQuotaHighlightClearConfirm": {
+    "message": "Supprimer tous les surlignages et toutes les annotations enregistrés ? Cette action est irréversible."
+  },
+  "storageQuotaDraftClearConfirm": {
+    "message": "Supprimer tous les brouillons non envoyés ? Cette action est irréversible."
+  },
+  "highlightAction": { "message": "Surligner" },
+  "highlightSaved": { "message": "Surlignage enregistré" },
+  "highlightSaveFailed": { "message": "Impossible d’enregistrer le surlignage" },
+  "highlightDeleteFailed": { "message": "Impossible de supprimer le surlignage" },
+  "highlightNotePlaceholder": { "message": "Ajouter une note (facultatif)" },
+  "highlightColor": { "message": "Couleur du surlignage" },
+  "highlightTooLong": {
+    "message": "La sélection est trop longue. Sélectionnez un passage plus court."
+  },
+  "highlightAriaLabel": { "message": "Surlignage enregistré. Ouvrir l’annotation." },
+  "highlightTimelineAriaLabel": { "message": "Ouvrir le surlignage enregistré" },
+  "savedLibraryAll": { "message": "Tout" },
+  "savedLibraryStars": { "message": "Favoris" },
+  "savedLibraryHighlights": { "message": "Surlignages" },
+  "savedLibraryEmpty": { "message": "Aucun élément enregistré" },
+  "savedLibraryNoHighlights": { "message": "Aucun surlignage" },
+  "savedLibrarySearchPlaceholder": { "message": "Rechercher favoris et surlignages" },
+  "highlightImportSuccess": { "message": "{count} surlignage(s) importé(s)" },
+  "highlightCloudSync": { "message": "Synchroniser les surlignages" },
+  "highlightCloudSyncHint": {
+    "message": "Conserve les surlignages dans un fichier Drive distinct par compte. La synchronisation fusionne toujours les données et est désactivée par défaut."
   }
 }

@@ -9,9 +9,22 @@ import {
   extractRouteUserIdFromUrl,
 } from '@/core/services/AccountIsolationService';
 import { googleDriveSyncService } from '@/core/services/GoogleDriveSyncService';
+import {
+  HighlightAnnotationError,
+  getHighlightAccountHash,
+  highlightAnnotationService,
+} from '@/core/services/HighlightAnnotationService';
+import { highlightDriveSyncCoordinator } from '@/core/services/HighlightDriveSyncCoordinator';
 import { exportBackupableSyncSettings } from '@/core/services/SettingsBackupService';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
+import type {
+  HighlightAccountScope,
+  HighlightCreateInput,
+  HighlightPlatform,
+  HighlightStoredAccountScope,
+  HighlightUpdatePatch,
+} from '@/core/types/highlight';
 import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
 import { isFirefox, supportsExtensionNotifications } from '@/core/utils/browser';
 import { hasNotificationsPermission } from '@/core/utils/notificationsPermission';
@@ -20,6 +33,10 @@ import {
   isRemoteAnnouncementRuntimeMessage,
   startRemoteAnnouncementBackgroundService,
 } from '@/features/announcements/background';
+import {
+  HighlightImportExportService,
+  highlightImportExportService,
+} from '@/features/backup/services/HighlightImportExportService';
 import { PromptImportExportService } from '@/features/backup/services/PromptImportExportService';
 import { computeNudgeDomains, normalizeIconResourcePath } from '@/features/plugins/promptNudge';
 import { pluginsToOriginPatterns } from '@/features/plugins/runtime/siteRegistration';
@@ -280,6 +297,125 @@ function toSyncAccountScope(scope: AccountScope): SyncAccountScope {
     accountId: scope.accountId,
     routeUserId: scope.routeUserId,
   };
+}
+
+function isHighlightPlatform(value: unknown): value is HighlightPlatform {
+  return value === 'gemini' || value === 'aistudio';
+}
+
+function isHighlightAccountScope(value: unknown): value is HighlightAccountScope {
+  if (typeof value !== 'object' || value === null) return false;
+  const scope = value as Record<string, unknown>;
+  return (
+    isHighlightPlatform(scope.platform) &&
+    typeof scope.accountKey === 'string' &&
+    typeof scope.accountId === 'number' &&
+    Number.isFinite(scope.accountId) &&
+    (typeof scope.routeUserId === 'string' || scope.routeUserId === null)
+  );
+}
+
+function isHighlightStoredAccountScope(value: unknown): value is HighlightStoredAccountScope {
+  if (typeof value !== 'object' || value === null) return false;
+  const scope = value as Record<string, unknown>;
+  return isHighlightPlatform(scope.platform) && typeof scope.accountHash === 'string';
+}
+
+function isTrustedExtensionPageSender(sender: chrome.runtime.MessageSender): boolean {
+  if (sender.tab || sender.id !== chrome.runtime.id || typeof sender.url !== 'string') return false;
+  try {
+    return sender.url.startsWith(chrome.runtime.getURL(''));
+  } catch {
+    return false;
+  }
+}
+
+async function resolveHighlightAccountScope(
+  sender: chrome.runtime.MessageSender,
+  payload: Record<string, unknown> | undefined,
+): Promise<HighlightAccountScope> {
+  if (isHighlightAccountScope(payload?.scope)) return payload.scope;
+
+  const pageUrl =
+    (typeof payload?.pageUrl === 'string' && payload.pageUrl) ||
+    (typeof payload?.conversationUrl === 'string' && payload.conversationUrl) ||
+    sender.tab?.url ||
+    null;
+  const detectedPlatform = detectAccountPlatformFromUrl(pageUrl);
+  const platform = isHighlightPlatform(payload?.platform)
+    ? payload.platform
+    : detectedPlatform === 'aistudio'
+      ? 'aistudio'
+      : 'gemini';
+  const scope = await accountIsolationService.resolveAccountScope({ pageUrl });
+  return {
+    platform,
+    accountKey: scope.accountKey,
+    accountId: scope.accountId,
+    routeUserId: scope.routeUserId,
+  };
+}
+
+function shouldKeepHighlightTombstones(platform: HighlightPlatform): boolean {
+  // Gemini records may already exist in Drive even when the user temporarily
+  // turns sync off. A compact tombstone prevents a later pull from reviving a
+  // deletion. AI Studio has no highlight Drive sync, so it can hard-delete.
+  return platform === 'gemini';
+}
+
+async function isHighlightCloudSyncRequested(
+  platform: 'gemini' | 'aistudio',
+  explicitlyIncluded: boolean,
+): Promise<boolean> {
+  if (platform !== 'gemini') return false;
+  if (explicitlyIncluded) return true;
+  try {
+    const stored = await chrome.storage.local.get({
+      [StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED]: false,
+    });
+    return stored[StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED] === true;
+  } catch {
+    return false;
+  }
+}
+
+async function notifyHighlightChanged(
+  scope: HighlightStoredAccountScope,
+  conversationId?: string,
+): Promise<void> {
+  try {
+    const tabs = await chrome.tabs.query({});
+    const targets = tabs.filter((tab) => {
+      if (typeof tab.id !== 'number' || !tab.url) return false;
+      try {
+        const hostname = new URL(tab.url).hostname;
+        return (
+          hostname === 'gemini.google.com' ||
+          hostname === 'aistudio.google.com' ||
+          hostname === 'aistudio.google.cn'
+        );
+      } catch {
+        return false;
+      }
+    });
+    await Promise.allSettled(
+      targets.map((tab) =>
+        chrome.tabs.sendMessage(tab.id as number, {
+          type: 'gv.highlight.changed',
+          payload: { ...scope, conversationId },
+        }),
+      ),
+    );
+  } catch {
+    // Storage listeners and route reloads remain safe fallbacks.
+  }
+}
+
+function highlightErrorResponse(error: unknown): { ok: false; error: string; code?: string } {
+  if (error instanceof HighlightAnnotationError) {
+    return { ok: false, error: error.message, code: error.code };
+  }
+  return { ok: false, error: error instanceof Error ? error.message : String(error) };
 }
 
 async function resolveAccountScopeForMessage(
@@ -1382,6 +1518,221 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
+      // Highlight annotations are always account-scoped. This is intentionally
+      // independent from the optional account-isolation setting used by legacy
+      // sync data so annotations can never leak between /u/<index> routes.
+      if (message && message.type && message.type.startsWith('gv.highlight.')) {
+        const payload = (message.payload ?? {}) as Record<string, unknown>;
+        try {
+          switch (message.type) {
+            case 'gv.highlight.listAll': {
+              if (!isTrustedExtensionPageSender(sender)) {
+                throw new HighlightAnnotationError(
+                  'INVALID_SCOPE',
+                  'Global highlight access is restricted to extension pages',
+                );
+              }
+              const records = await highlightAnnotationService.getAllAccounts({
+                includeDeleted: payload.includeDeleted === true,
+              });
+              sendResponse({ ok: true, records });
+              return;
+            }
+            case 'gv.highlight.list': {
+              const scope = await resolveHighlightAccountScope(sender, payload);
+              const records =
+                typeof payload.conversationId === 'string'
+                  ? await highlightAnnotationService.getConversation(
+                      scope,
+                      payload.conversationId,
+                      { includeDeleted: payload.includeDeleted === true },
+                    )
+                  : await highlightAnnotationService.getAll(scope, {
+                      includeDeleted: payload.includeDeleted === true,
+                    });
+              sendResponse({ ok: true, records });
+              return;
+            }
+            case 'gv.highlight.create': {
+              const scope = await resolveHighlightAccountScope(sender, payload);
+              const input = (payload.input ?? payload) as HighlightCreateInput;
+              const result = await highlightAnnotationService.add(scope, input);
+              await notifyHighlightChanged(
+                { platform: scope.platform, accountHash: getHighlightAccountHash(scope) },
+                result.record.conversationId,
+              );
+              sendResponse({ ok: true, ...result });
+              return;
+            }
+            case 'gv.highlight.update': {
+              if (
+                typeof payload.conversationId !== 'string' ||
+                typeof payload.id !== 'string' ||
+                !payload.patch ||
+                typeof payload.patch !== 'object'
+              ) {
+                throw new HighlightAnnotationError(
+                  'VALIDATION_FAILED',
+                  'Highlight update payload is invalid',
+                );
+              }
+              const scope = await resolveHighlightAccountScope(sender, payload);
+              const record = await highlightAnnotationService.update(
+                scope,
+                payload.conversationId,
+                payload.id,
+                payload.patch as HighlightUpdatePatch,
+              );
+              await notifyHighlightChanged(record, record.conversationId);
+              sendResponse({ ok: true, record });
+              return;
+            }
+            case 'gv.highlight.updateStored': {
+              if (!isTrustedExtensionPageSender(sender)) {
+                throw new HighlightAnnotationError(
+                  'INVALID_SCOPE',
+                  'Stored highlight access is restricted to extension pages',
+                );
+              }
+              if (
+                !isHighlightStoredAccountScope(payload) ||
+                typeof payload.conversationId !== 'string' ||
+                typeof payload.id !== 'string' ||
+                !payload.patch ||
+                typeof payload.patch !== 'object'
+              ) {
+                throw new HighlightAnnotationError(
+                  'VALIDATION_FAILED',
+                  'Stored highlight update payload is invalid',
+                );
+              }
+              const record = await highlightAnnotationService.update(
+                payload,
+                payload.conversationId,
+                payload.id,
+                payload.patch as HighlightUpdatePatch,
+              );
+              await notifyHighlightChanged(record, record.conversationId);
+              sendResponse({ ok: true, record });
+              return;
+            }
+            case 'gv.highlight.delete': {
+              if (typeof payload.conversationId !== 'string' || typeof payload.id !== 'string') {
+                throw new HighlightAnnotationError(
+                  'VALIDATION_FAILED',
+                  'Highlight delete payload is invalid',
+                );
+              }
+              const scope = await resolveHighlightAccountScope(sender, payload);
+              const result = await highlightAnnotationService.remove(
+                scope,
+                payload.conversationId,
+                payload.id,
+                { tombstone: shouldKeepHighlightTombstones(scope.platform) },
+              );
+              await notifyHighlightChanged(
+                { platform: scope.platform, accountHash: getHighlightAccountHash(scope) },
+                payload.conversationId,
+              );
+              sendResponse({ ok: true, ...result });
+              return;
+            }
+            case 'gv.highlight.deleteStored': {
+              if (!isTrustedExtensionPageSender(sender)) {
+                throw new HighlightAnnotationError(
+                  'INVALID_SCOPE',
+                  'Stored highlight access is restricted to extension pages',
+                );
+              }
+              if (
+                !isHighlightStoredAccountScope(payload) ||
+                typeof payload.conversationId !== 'string' ||
+                typeof payload.id !== 'string'
+              ) {
+                throw new HighlightAnnotationError(
+                  'VALIDATION_FAILED',
+                  'Stored highlight delete payload is invalid',
+                );
+              }
+              const result = await highlightAnnotationService.remove(
+                payload,
+                payload.conversationId,
+                payload.id,
+                { tombstone: shouldKeepHighlightTombstones(payload.platform) },
+              );
+              await notifyHighlightChanged(payload, payload.conversationId);
+              sendResponse({ ok: true, ...result });
+              return;
+            }
+            case 'gv.highlight.export': {
+              const scope = await resolveHighlightAccountScope(sender, payload);
+              const format = payload.format === 'markdown' ? 'markdown' : 'json';
+              const result =
+                format === 'markdown'
+                  ? await highlightImportExportService.exportToMarkdown(scope)
+                  : await highlightImportExportService.exportToJSON(scope);
+              if (!result.success) {
+                sendResponse(highlightErrorResponse(result.error));
+                return;
+              }
+              sendResponse({
+                ok: true,
+                data: result.data,
+                filename:
+                  format === 'markdown'
+                    ? HighlightImportExportService.generateMarkdownFilename()
+                    : HighlightImportExportService.generateExportFilename(),
+              });
+              return;
+            }
+            case 'gv.highlight.import': {
+              const scope = await resolveHighlightAccountScope(sender, payload);
+              const result = await highlightImportExportService.importFromJSON(
+                scope,
+                typeof payload.data === 'string' ? payload.data : '',
+              );
+              if (!result.success) {
+                sendResponse(highlightErrorResponse(result.error));
+                return;
+              }
+              await notifyHighlightChanged({
+                platform: scope.platform,
+                accountHash: getHighlightAccountHash(scope),
+              });
+              sendResponse({ ok: true, stats: result.data });
+              return;
+            }
+            case 'gv.highlight.clearAll': {
+              const scope = await resolveHighlightAccountScope(sender, payload);
+              const result = await highlightAnnotationService.clearAll(scope);
+              await notifyHighlightChanged({
+                platform: scope.platform,
+                accountHash: getHighlightAccountHash(scope),
+              });
+              sendResponse({ ok: true, removed: result.removed });
+              return;
+            }
+            case 'gv.highlight.clearAllAccounts': {
+              if (!isTrustedExtensionPageSender(sender)) {
+                throw new HighlightAnnotationError(
+                  'INVALID_SCOPE',
+                  'Global highlight cleanup is restricted to extension pages',
+                );
+              }
+              const result = await highlightAnnotationService.clearAllAccounts();
+              await Promise.allSettled(
+                result.accounts.map(({ accountScope }) => notifyHighlightChanged(accountScope)),
+              );
+              sendResponse({ ok: true, removed: result.removed });
+              return;
+            }
+          }
+        } catch (error) {
+          sendResponse(highlightErrorResponse(error));
+          return;
+        }
+      }
+
       // Handle starred messages operations
       if (message && message.type && message.type.startsWith('gv.starred.')) {
         switch (message.type) {
@@ -1491,6 +1842,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               platform: rawPlatform,
               accountScope: rawScope,
               timelineHierarchyAccountScope: rawTimelineHierarchyScope,
+              highlightAccountScope: rawHighlightScope,
+              includeHighlights,
             } = message.payload as {
               folders: FolderData;
               prompts: PromptItem[];
@@ -1498,8 +1851,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               platform?: 'gemini' | 'aistudio';
               accountScope?: unknown;
               timelineHierarchyAccountScope?: unknown;
+              highlightAccountScope?: unknown;
+              includeHighlights?: boolean;
             };
             const platform = rawPlatform || 'gemini';
+            const syncHighlights = await isHighlightCloudSyncRequested(
+              platform,
+              includeHighlights === true,
+            );
             const accountScope = await resolveAccountScopeForMessage(
               sender,
               platform,
@@ -1509,6 +1868,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               platform === 'gemini' && isSyncAccountScope(rawTimelineHierarchyScope)
                 ? rawTimelineHierarchyScope
                 : null;
+            const highlightAccountScope =
+              platform === 'gemini' && isSyncAccountScope(rawHighlightScope)
+                ? rawHighlightScope
+                : (timelineHierarchyAccountScope ??
+                  (isSyncAccountScope(rawScope) ? rawScope : null));
+            if (syncHighlights && !highlightAccountScope) {
+              sendResponse({ ok: false, error: 'Highlight account scope is unavailable' });
+              return;
+            }
             // Also get Gemini-only timeline data from local storage
             const starredDataRaw =
               platform !== 'aistudio' ? await starredMessagesManager.getAllStarredMessages() : null;
@@ -1558,14 +1926,45 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               timelineHierarchyAccountScope,
               settingsPayload.data,
             );
-            sendResponse({ ok: success, state: await googleDriveSyncService.getState() });
+            if (success && syncHighlights && highlightAccountScope) {
+              const highlightResult = await highlightDriveSyncCoordinator.push(
+                highlightAccountScope,
+                interactive !== false,
+              );
+              if (!highlightResult.ok) {
+                sendResponse({
+                  ok: false,
+                  error: highlightResult.error ?? 'Highlight upload failed',
+                  partial: true,
+                  state: await googleDriveSyncService.getState(),
+                });
+                return;
+              }
+              await notifyHighlightChanged({
+                platform: 'gemini',
+                accountHash: getHighlightAccountHash({
+                  ...highlightAccountScope,
+                  platform: 'gemini',
+                }),
+              });
+            }
+            sendResponse({
+              ok: success,
+              highlights: syncHighlights ? { synced: success } : undefined,
+              state: await googleDriveSyncService.getState(),
+            });
             return;
           }
           case 'gv.sync.download': {
             const interactive = message.payload?.interactive !== false;
             const platform = (message.payload?.platform as 'gemini' | 'aistudio') || 'gemini';
+            const syncHighlights = await isHighlightCloudSyncRequested(
+              platform,
+              message.payload?.includeHighlights === true,
+            );
             const rawScope = message.payload?.accountScope;
             const rawTimelineHierarchyScope = message.payload?.timelineHierarchyAccountScope;
+            const rawHighlightScope = message.payload?.highlightAccountScope;
             const accountScope = await resolveAccountScopeForMessage(
               sender,
               platform,
@@ -1575,12 +1974,49 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               platform === 'gemini' && isSyncAccountScope(rawTimelineHierarchyScope)
                 ? rawTimelineHierarchyScope
                 : null;
+            const highlightAccountScope =
+              platform === 'gemini' && isSyncAccountScope(rawHighlightScope)
+                ? rawHighlightScope
+                : (timelineHierarchyAccountScope ??
+                  (isSyncAccountScope(rawScope) ? rawScope : null));
+            if (syncHighlights && !highlightAccountScope) {
+              sendResponse({ ok: false, error: 'Highlight account scope is unavailable' });
+              return;
+            }
             const data = await googleDriveSyncService.download(
               interactive,
               platform,
               accountScope,
               timelineHierarchyAccountScope,
             );
+            let highlightSyncResult: { synced: boolean; count: number; empty: boolean } | undefined;
+            if (syncHighlights && highlightAccountScope) {
+              const highlightResult = await highlightDriveSyncCoordinator.pull(
+                highlightAccountScope,
+                interactive,
+              );
+              if (!highlightResult.ok) {
+                sendResponse({
+                  ok: false,
+                  error: highlightResult.error ?? 'Highlight download failed',
+                  partial: data !== null,
+                  state: await googleDriveSyncService.getState(),
+                });
+                return;
+              }
+              await notifyHighlightChanged({
+                platform: 'gemini',
+                accountHash: getHighlightAccountHash({
+                  ...highlightAccountScope,
+                  platform: 'gemini',
+                }),
+              });
+              highlightSyncResult = {
+                synced: true,
+                count: highlightResult.count,
+                empty: highlightResult.empty === true,
+              };
+            }
             // NOTE: We intentionally do NOT save to storage here.
             // The caller (Popup) is responsible for merging with local data and saving.
             // This prevents data loss from overwriting local changes.
@@ -1590,6 +2026,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({
               ok: true,
               data,
+              highlights: highlightSyncResult,
               state: await googleDriveSyncService.getState(),
             });
             return;

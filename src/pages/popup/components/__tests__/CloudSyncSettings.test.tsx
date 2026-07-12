@@ -142,6 +142,63 @@ describe('CloudSyncSettings auth flow', () => {
     );
   });
 
+  it('persists the opt-in and includes highlights in the next manual upload', async () => {
+    const sendMessageMock = vi.fn().mockImplementation((message: { type?: string }) => {
+      if (message.type === 'gv.sync.getState') {
+        return Promise.resolve({ ok: true, state: baseState });
+      }
+      if (message.type === 'gv.sync.upload') {
+        return Promise.resolve({ ok: true, state: baseState });
+      }
+      return Promise.resolve({ ok: true });
+    });
+    const chromeMock = createChromeMock(sendMessageMock);
+    vi.mocked(chromeMock.tabs.sendMessage).mockImplementation(async (_tabId, message) => {
+      if ((message as { type?: string }).type === 'gv.account.getContext') {
+        return {
+          ok: true,
+          context: { routeUserId: '0', email: 'user@example.com' },
+        } as never;
+      }
+      return { ok: true, data: { folders: [], folderContents: {} } } as never;
+    });
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(<CloudSyncSettings />);
+    });
+    await flushMicrotasks();
+
+    const toggle = container.querySelector<HTMLInputElement>('#highlight-cloud-sync');
+    expect(toggle).toBeTruthy();
+    await act(async () => {
+      toggle?.click();
+      await Promise.resolve();
+    });
+    expect(chromeMock.storage.local.set).toHaveBeenCalledWith({
+      [StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED]: true,
+    });
+
+    const uploadButton = Array.from(container.querySelectorAll('button')).find((button) =>
+      (button.textContent || '').includes('syncUpload'),
+    );
+    await act(async () => {
+      uploadButton?.click();
+    });
+    await flushMicrotasks();
+
+    expect(sendMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'gv.sync.upload',
+        payload: expect.objectContaining({
+          includeHighlights: true,
+          highlightAccountScope: expect.objectContaining({ routeUserId: '0' }),
+        }),
+      }),
+    );
+  });
+
   it('uses the source tab when options is opened as the popup fallback', async () => {
     const sendMessageMock = vi.fn().mockImplementation((message: { type?: string }) => {
       if (message.type === 'gv.sync.getState') {

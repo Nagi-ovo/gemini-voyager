@@ -5,8 +5,10 @@ import {
   EDGE_ADDONS_EXTENSION_ID,
   getExtensionRuntimeId,
   getModifierKey,
+  getSafariMajorVersion,
   getVoyagerBuildTarget,
   getWebStoreRatingChannel,
+  hasLegacySafariStorageLimit,
   isBrave,
   isChromeReleaseChannel,
   isChromeWebStoreInstall,
@@ -28,6 +30,10 @@ const CHROME_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 
 const EDGE_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Edg/120.0.0.0';
 const FIREFOX_UA = 'Mozilla/5.0 (Windows NT 10.0; rv:128.0) Gecko/20100101 Firefox/128.0';
+const SAFARI_15_UA =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 12_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6 Safari/605.1.15';
+const SAFARI_16_UA =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15';
 
 function setRuntimeId(id: string | undefined): void {
   Object.defineProperty(chrome.runtime, 'id', {
@@ -122,6 +128,71 @@ describe('Safari Update Reminder Control', () => {
 
       expect(isSafari()).toBe(false);
     });
+
+    it.each(['CriOS', 'FxiOS', 'EdgiOS', 'OPiOS'])(
+      'isSafari returns false for the iOS third-party browser token %s',
+      (browserToken) => {
+        setUserAgent(
+          `Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 ${browserToken}/120.0 Mobile/15E148 Safari/604.1`,
+          'Apple Computer, Inc.',
+        );
+
+        expect(isSafari()).toBe(false);
+      },
+    );
+  });
+});
+
+describe('Safari product version and storage boundary', () => {
+  it('reads only the Safari Version/x product token', () => {
+    setUserAgent(SAFARI_15_UA, 'Apple Computer, Inc.');
+    expect(getSafariMajorVersion()).toBe(15);
+    expect(hasLegacySafariStorageLimit()).toBe(true);
+
+    setUserAgent(SAFARI_16_UA, 'Apple Computer, Inc.');
+    expect(getSafariMajorVersion()).toBe(16);
+    expect(hasLegacySafariStorageLimit()).toBe(false);
+  });
+
+  it('does not treat a WebKit engine build as a Safari product version', () => {
+    setUserAgent(
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_0) AppleWebKit/605.1.15 Safari/605.1.15',
+      'Apple Computer, Inc.',
+    );
+
+    expect(getSafariMajorVersion()).toBeNull();
+    expect(hasLegacySafariStorageLimit()).toBe(false);
+  });
+
+  it('uses the Safari build target when extension-context vendor detection is reduced', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'safari');
+    setUserAgent(SAFARI_15_UA, '');
+
+    expect(isSafari()).toBe(false);
+    expect(getSafariMajorVersion()).toBe(15);
+    expect(hasLegacySafariStorageLimit()).toBe(true);
+  });
+
+  it.each(['CriOS', 'FxiOS', 'EdgiOS', 'OPiOS'])(
+    'rejects iOS third-party token %s even in a Safari-targeted bundle',
+    (browserToken) => {
+      vi.stubEnv('VOYAGER_BUILD_TARGET', 'safari');
+      setUserAgent(
+        `Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/15.6 ${browserToken}/120.0 Mobile/15E148 Safari/604.1`,
+        'Apple Computer, Inc.',
+      );
+
+      expect(getSafariMajorVersion()).toBeNull();
+      expect(hasLegacySafariStorageLimit()).toBe(false);
+    },
+  );
+
+  it('returns unknown outside Safari instead of parsing a misleading Version token', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'chrome');
+    setUserAgent(`${CHROME_UA} Version/15.6`, 'Google Inc.');
+
+    expect(getSafariMajorVersion()).toBeNull();
+    expect(hasLegacySafariStorageLimit()).toBe(false);
   });
 });
 

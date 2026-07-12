@@ -64,6 +64,10 @@ export const StorageKeys = {
   TIMELINE_STARRED_MESSAGES: 'geminiTimelineStarredMessages',
   TIMELINE_HIERARCHY: 'geminiTimelineHierarchy',
   TIMELINE_SHORTCUTS: 'geminiTimelineShortcuts',
+  HIGHLIGHT_CLOUD_SYNC_ENABLED: 'gvHighlightCloudSyncEnabled',
+  HIGHLIGHT_DEVICE_ID: 'gvAnnotationDeviceId',
+  HIGHLIGHT_ENABLED: 'gvHighlightEnabled',
+  HIGHLIGHT_DEFAULT_COLOR: 'gvHighlightDefaultColor',
 
   // UI customization
   CHAT_WIDTH: 'geminiChatWidth',

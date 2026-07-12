@@ -1,4 +1,5 @@
 import { StorageKeys } from '@/core/types/common';
+import { isHighlightColor } from '@/core/types/highlight';
 import { isSafari } from '@/core/utils/browser';
 import { customWebsitesIncludeHost, sanitizeCustomWebsites } from '@/core/utils/customWebsites';
 import {
@@ -279,16 +280,29 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Quote Reply - conditionally start based on storage setting
-      const quoteReplyResult = await new Promise<{ gvQuoteReplyEnabled?: boolean }>((resolve) => {
+      const quoteReplyResult = await new Promise<Record<string, unknown>>((resolve) => {
+        const defaults = {
+          [StorageKeys.QUOTE_REPLY_ENABLED]: true,
+          [StorageKeys.HIGHLIGHT_ENABLED]: true,
+          [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: 'yellow',
+        };
         try {
-          chrome.storage?.sync?.get({ gvQuoteReplyEnabled: true }, resolve);
+          chrome.storage?.sync?.get(defaults, resolve);
         } catch {
-          resolve({ gvQuoteReplyEnabled: true });
+          resolve(defaults);
         }
       });
-      if (quoteReplyResult.gvQuoteReplyEnabled !== false) {
-        quoteReplyCleanup = startQuoteReply();
-      }
+      const storedHighlightColor = quoteReplyResult[StorageKeys.HIGHLIGHT_DEFAULT_COLOR];
+      // Highlight shares Quote Reply's single selection toolbar/listener. Keep
+      // the toolbar manager alive when Quote Reply is disabled; only its Quote
+      // action is hidden in that case.
+      quoteReplyCleanup = startQuoteReply({
+        quoteEnabled: quoteReplyResult[StorageKeys.QUOTE_REPLY_ENABLED] !== false,
+        highlightEnabled: quoteReplyResult[StorageKeys.HIGHLIGHT_ENABLED] !== false,
+        highlightDefaultColor: isHighlightColor(storedHighlightColor)
+          ? storedHighlightColor
+          : 'yellow',
+      });
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Watermark remover - based on gemini-watermark-remover by journey-ad

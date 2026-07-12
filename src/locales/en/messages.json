@@ -264,12 +264,12 @@
     "description": "Button label for returning from the starred library to Prompt Manager"
   },
   "pm_starred_library": {
-    "message": "Starred Library",
-    "description": "Prompt Manager starred messages library title and entry button"
+    "message": "Saved Library",
+    "description": "Prompt Manager saved stars and highlights library title and entry button"
   },
   "pm_starred_search_placeholder": {
-    "message": "Search starred messages",
-    "description": "Search placeholder for starred messages in Prompt Manager"
+    "message": "Search saved items",
+    "description": "Search placeholder for stars and highlights in Prompt Manager"
   },
   "pm_starred_no_results": {
     "message": "No starred messages match your search",
@@ -1012,12 +1012,12 @@
     "description": "Custom websites reload/permission note"
   },
   "starredHistory": {
-    "message": "Starred History",
-    "description": "Starred history title"
+    "message": "Saved Library",
+    "description": "Saved stars and highlights library title"
   },
   "viewStarredHistory": {
-    "message": "View Starred History",
-    "description": "View starred history button"
+    "message": "View Saved Library",
+    "description": "View saved stars and highlights button"
   },
   "noStarredMessages": {
     "message": "No starred messages yet",
@@ -1454,6 +1454,14 @@
   "enableQuoteReplyHint": {
     "message": "Show a floating button to quote selected text when text is selected in conversations",
     "description": "Quote reply feature hint"
+  },
+  "enableHighlights": {
+    "message": "Enable highlights",
+    "description": "Highlight feature toggle label"
+  },
+  "enableHighlightsHint": {
+    "message": "Highlight selected response text, choose a color, and remember the last color you used.",
+    "description": "Highlight feature hint"
   },
   "hideInputHalo": {
     "message": "Hide input box halo",
@@ -2322,5 +2330,79 @@
   "enablePromptManagerOnSiteHint": {
     "message": "Use your saved prompts on this site. You'll be asked to grant access.",
     "description": "Top toggle hint for enabling Prompt Manager on a third-party site"
+  },
+  "storageQuotaTitle": { "message": "Storage" },
+  "storageQuotaManage": { "message": "Manage storage" },
+  "storageQuotaLocal": { "message": "Extension local" },
+  "storageQuotaSync": { "message": "Synced settings" },
+  "storageQuotaHealthy": { "message": "Healthy" },
+  "storageQuotaAttention": { "message": "Near limit" },
+  "storageQuotaCritical": { "message": "Almost full" },
+  "storageQuotaUnknown": { "message": "Usage unavailable" },
+  "storageQuotaBreakdown": { "message": "Storage breakdown" },
+  "storageQuotaSoftLimit": { "message": "Voyager soft limit" },
+  "storageQuotaEffectiveLimit": {
+    "message": "Current effective limit: {size}. Voyager uses the lower of this and your selected soft limit."
+  },
+  "storageQuotaCache": { "message": "Rebuildable cache" },
+  "storageQuotaHighlights": { "message": "Highlights" },
+  "storageQuotaOther": { "message": "Other" },
+  "storageQuotaUnlock": { "message": "Expand local storage" },
+  "storageQuotaSafariLimit": {
+    "message": "Safari 15 can only raise local storage from about 5 MB to about 10 MB. It can still fill up."
+  },
+  "storageQuotaUnknownLimit": {
+    "message": "Your Safari version could not be identified. Storage expansion may remain limited on older versions."
+  },
+  "storageQuotaClearConfirm": {
+    "message": "Clear {category}? Only data in this category will be removed."
+  },
+  "storageQuotaHighlightClearConfirm": {
+    "message": "Delete all saved highlights and annotations? This cannot be undone."
+  },
+  "storageQuotaDraftClearConfirm": {
+    "message": "Delete all unsent drafts? This cannot be undone."
+  },
+  "highlightAction": {
+    "message": "Highlight"
+  },
+  "highlightSaved": {
+    "message": "Highlight saved"
+  },
+  "highlightSaveFailed": {
+    "message": "Could not save highlight"
+  },
+  "highlightDeleteFailed": {
+    "message": "Could not delete highlight"
+  },
+  "highlightNotePlaceholder": {
+    "message": "Add a note (optional)"
+  },
+  "highlightColor": {
+    "message": "Highlight color"
+  },
+  "highlightTooLong": {
+    "message": "This selection is too long. Select a smaller passage."
+  },
+  "highlightAriaLabel": {
+    "message": "Saved highlight. Open annotation."
+  },
+  "highlightTimelineAriaLabel": {
+    "message": "Open saved highlight"
+  },
+  "savedLibraryAll": { "message": "All" },
+  "savedLibraryStars": { "message": "Stars" },
+  "savedLibraryHighlights": { "message": "Highlights" },
+  "savedLibraryEmpty": { "message": "No saved items yet" },
+  "savedLibraryNoHighlights": { "message": "No highlights yet" },
+  "savedLibrarySearchPlaceholder": { "message": "Search stars and highlights" },
+  "highlightImportSuccess": {
+    "message": "Imported {count} highlight(s)"
+  },
+  "highlightCloudSync": {
+    "message": "Sync highlights"
+  },
+  "highlightCloudSyncHint": {
+    "message": "Keep highlights in a separate account-scoped Drive file. Highlight sync always merges and is off by default."
   }
 }

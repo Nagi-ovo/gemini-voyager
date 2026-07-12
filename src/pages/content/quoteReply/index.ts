@@ -1,10 +1,18 @@
 import browser from 'webextension-polyfill';
 
+import { createHighlighterIcon } from '@/core/icons/highlighterIcon';
 import { StorageKeys } from '@/core/types/common';
+import {
+  HIGHLIGHT_COLORS,
+  HIGHLIGHT_COLOR_HEX,
+  type HighlightColor,
+  isHighlightColor,
+} from '@/core/types/highlight';
 import { getBrowserName } from '@/core/utils/browser';
 
-import { getTranslationSync } from '../../../utils/i18n';
+import { getTranslationSync, getTranslationSyncUnsafe } from '../../../utils/i18n';
 import { findChatInput } from '../chatInput/index';
+import { HighlightManager } from '../highlight';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
 
 // ============================================================================
@@ -13,7 +21,12 @@ import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
 
 /** CSS class names for quote reply button */
 const CSS_CLASSES = {
+  TOOLBAR: 'gv-selection-toolbar',
   BUTTON: 'gv-quote-btn',
+  ACTION: 'gv-selection-action',
+  HIGHLIGHT_BUTTON: 'gv-highlight-action',
+  HIGHLIGHT_COLOR_BUTTON: 'gv-highlight-color-trigger',
+  HIGHLIGHT_COLOR_PALETTE: 'gv-highlight-color-palette',
   HIDDEN: 'gv-hidden',
 } as const;
 
@@ -43,63 +56,151 @@ function injectStyles() {
   const style = document.createElement('style');
   style.id = STYLE_ID;
   style.textContent = `
-    .gv-quote-btn {
+    .gv-selection-toolbar {
       position: fixed;
       z-index: 9999;
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
+      gap: 2px;
+      padding: 3px;
       background-color: #1e1e1e;
       color: #fff;
-      border-radius: 6px;
+      border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      cursor: pointer;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       font-size: 13px;
       font-weight: 500;
-      transition: all 0.2s ease;
       border: 1px solid rgba(255,255,255,0.1);
-      transform: translateY(0);
       opacity: 1;
       pointer-events: auto;
     }
-    .gv-quote-btn:hover {
-      background-color: #2d2d2d;
-      transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    .gv-selection-action {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 30px;
+      padding: 5px 8px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font: inherit;
     }
-    .gv-quote-btn svg {
+    .gv-selection-action:hover,
+    .gv-selection-action:focus-visible {
+      background-color: #2d2d2d;
+      outline: none;
+    }
+    .gv-selection-action svg {
       width: 14px;
       height: 14px;
       opacity: 0.9;
     }
-    .gv-quote-btn.gv-hidden {
+    .gv-highlight-color-trigger {
+      box-sizing: border-box;
+      width: 22px;
+      height: 22px;
+      margin: 0 4px 0 1px;
+      padding: 0;
+      border: 2px solid rgba(255,255,255,0.72);
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.34);
+      cursor: pointer;
+    }
+    .gv-highlight-color-trigger:hover,
+    .gv-highlight-color-trigger:focus-visible {
+      outline: 2px solid #8ab4f8;
+      outline-offset: 2px;
+    }
+    .gv-highlight-color-palette {
+      position: fixed;
+      display: flex;
+      gap: 6px;
+      padding: 7px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      background: #1e1e1e;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.24);
+    }
+    .gv-highlight-color-option {
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border: 2px solid transparent;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .gv-highlight-color-option[aria-pressed="true"] {
+      border-color: currentColor;
+      box-shadow: 0 0 0 2px #1e1e1e inset;
+    }
+    .gv-selection-toolbar.gv-hidden {
       opacity: 0;
-      transform: translateY(4px);
       pointer-events: none;
       visibility: hidden;
     }
+    .gv-selection-action.gv-hidden { display: none; }
+    .gv-highlight-color-trigger.gv-hidden,
+    .gv-highlight-color-palette.gv-hidden { display: none; }
     /* Light mode support */
     @media (prefers-color-scheme: light) {
-      .gv-quote-btn {
+      .gv-selection-toolbar {
         background-color: #fff;
         color: #1f1f1f;
         border: 1px solid rgba(0,0,0,0.08);
       }
-      .gv-quote-btn:hover {
+      .gv-selection-action:hover,
+      .gv-selection-action:focus-visible {
         background-color: #f5f5f5;
+      }
+      .gv-highlight-color-trigger {
+        border-color: rgba(255,255,255,0.92);
+        box-shadow: 0 0 0 1px rgba(0,0,0,0.24);
+      }
+      .gv-highlight-color-palette {
+        border-color: rgba(0,0,0,0.10);
+        background: #fff;
+      }
+      .gv-highlight-color-option[aria-pressed="true"] {
+        box-shadow: 0 0 0 2px #fff inset;
       }
     }
     /* Check for specific theme attributes if Gemini uses them */
-    body[data-theme="light"] .gv-quote-btn {
+    .theme-host.light-theme .gv-selection-toolbar,
+    body[data-theme="light"] .gv-selection-toolbar {
       background-color: #fff;
       color: #1f1f1f;
       border: 1px solid rgba(0,0,0,0.08);
     }
-    body[data-theme="light"] .gv-quote-btn:hover {
+    .theme-host.light-theme .gv-selection-action:hover,
+    .theme-host.light-theme .gv-selection-action:focus-visible,
+    body[data-theme="light"] .gv-selection-action:hover,
+    body[data-theme="light"] .gv-selection-action:focus-visible {
        background-color: #f5f5f5;
     }
+    .theme-host.light-theme .gv-highlight-color-palette,
+    body[data-theme="light"] .gv-highlight-color-palette {
+      border-color: rgba(0,0,0,0.10);
+      background: #fff;
+    }
+    .theme-host.light-theme .gv-highlight-color-option[aria-selected="true"],
+    body[data-theme="light"] .gv-highlight-color-option[aria-selected="true"] {
+      box-shadow: 0 0 0 2px #fff inset;
+    }
+    .theme-host.dark-theme .gv-selection-toolbar,
+    body[data-theme="dark"] .gv-selection-toolbar {
+      background-color: #1e1e1e;
+      color: #fff;
+      border-color: rgba(255,255,255,0.1);
+    }
+    .theme-host.dark-theme .gv-selection-action:hover,
+    .theme-host.dark-theme .gv-selection-action:focus-visible,
+    body[data-theme="dark"] .gv-selection-action:hover,
+    body[data-theme="dark"] .gv-selection-action:focus-visible {
+      background-color: #2d2d2d;
+    }
+    body.gv-rtl .gv-selection-toolbar { flex-direction: row-reverse; }
   `;
   document.head.appendChild(style);
 }
@@ -259,18 +360,84 @@ function extractTextWithLatex(range: Range): string {
   return text;
 }
 
-export function startQuoteReply() {
+interface QuoteReplyOptions {
+  quoteEnabled?: boolean;
+  highlightEnabled?: boolean;
+  highlightDefaultColor?: HighlightColor;
+}
+
+export function startQuoteReply(options: QuoteReplyOptions = {}) {
   injectStyles();
 
+  const quoteEnabled = options.quoteEnabled !== false;
+  let highlightEnabled = options.highlightEnabled !== false;
+  let selectedHighlightColor = options.highlightDefaultColor ?? 'yellow';
+  const highlightManager = new HighlightManager();
+  void highlightManager.init();
+
+  let selectionToolbar: HTMLElement | null = null;
   let quoteBtn: HTMLElement | null = null;
+  let highlightBtn: HTMLButtonElement | null = null;
+  let highlightColorBtn: HTMLButtonElement | null = null;
+  let highlightColorPalette: HTMLElement | null = null;
   let currentSelectionRange: Range | null = null;
   let isInternalClick = false;
   let scrollRafId: number | null = null;
   let selectionDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
+  function closeHighlightColorPalette(): void {
+    highlightColorPalette?.classList.add(CSS_CLASSES.HIDDEN);
+    highlightColorBtn?.setAttribute('aria-expanded', 'false');
+  }
+
+  function getHighlightColorLabel(color: HighlightColor): string {
+    return getTranslationSyncUnsafe(`folder_color_${color}`);
+  }
+
+  function positionHighlightColorPalette(): void {
+    if (
+      !highlightColorBtn ||
+      !highlightColorPalette ||
+      highlightColorPalette.classList.contains(CSS_CLASSES.HIDDEN)
+    ) {
+      return;
+    }
+
+    const triggerRect = highlightColorBtn.getBoundingClientRect();
+    const paletteRect = highlightColorPalette.getBoundingClientRect();
+    const edge = POSITIONING.MIN_EDGE_OFFSET_PX;
+    const gap = 6;
+    const maxTop = Math.max(edge, window.innerHeight - paletteRect.height - edge);
+    const maxLeft = Math.max(edge, window.innerWidth - paletteRect.width - edge);
+    const opensAbove = triggerRect.bottom + gap + paletteRect.height > window.innerHeight - edge;
+    const preferredTop = opensAbove
+      ? triggerRect.top - paletteRect.height - gap
+      : triggerRect.bottom + gap;
+    const preferredLeft = triggerRect.left + triggerRect.width / 2 - paletteRect.width / 2;
+
+    highlightColorPalette.style.top = `${Math.min(maxTop, Math.max(edge, preferredTop))}px`;
+    highlightColorPalette.style.left = `${Math.min(maxLeft, Math.max(edge, preferredLeft))}px`;
+  }
+
+  function updateHighlightColorUi(): void {
+    if (highlightColorBtn) {
+      highlightColorBtn.style.backgroundColor = HIGHLIGHT_COLOR_HEX[selectedHighlightColor];
+      highlightColorBtn.title = getTranslationSync('highlightColor');
+      highlightColorBtn.setAttribute('aria-label', getTranslationSync('highlightColor'));
+    }
+    highlightColorPalette
+      ?.querySelectorAll<HTMLButtonElement>('.gv-highlight-color-option')
+      .forEach((swatch) => {
+        swatch.setAttribute(
+          'aria-pressed',
+          String(swatch.dataset.highlightColor === selectedHighlightColor),
+        );
+      });
+  }
+
   /** Update button position based on current selection range's viewport coordinates. */
   function updatePosition() {
-    if (!quoteBtn || !currentSelectionRange) return;
+    if (!selectionToolbar || !currentSelectionRange) return;
 
     const rangeRect = currentSelectionRange.getBoundingClientRect();
 
@@ -278,18 +445,18 @@ export function startQuoteReply() {
     const isOffScreen = rangeRect.bottom < 0 || rangeRect.top > window.innerHeight;
 
     if (isOffScreen) {
-      if (!quoteBtn.classList.contains(CSS_CLASSES.HIDDEN)) {
-        quoteBtn.classList.add(CSS_CLASSES.HIDDEN);
+      if (!selectionToolbar.classList.contains(CSS_CLASSES.HIDDEN)) {
+        selectionToolbar.classList.add(CSS_CLASSES.HIDDEN);
       }
       return;
     }
 
-    if (quoteBtn.classList.contains(CSS_CLASSES.HIDDEN)) {
-      quoteBtn.classList.remove(CSS_CLASSES.HIDDEN);
+    if (selectionToolbar.classList.contains(CSS_CLASSES.HIDDEN)) {
+      selectionToolbar.classList.remove(CSS_CLASSES.HIDDEN);
     }
 
     // Ensure the button is visible before measuring to get actual dimensions
-    const btnRect = quoteBtn.getBoundingClientRect();
+    const btnRect = selectionToolbar.getBoundingClientRect();
 
     // Use getClientRects to get the precise position of the first line.
     // This prevents the button from being pushed down by empty space in multi-line selections.
@@ -305,8 +472,9 @@ export function startQuoteReply() {
     // Edge protection: prevent the button from being clipped or overflowing the viewport
     const maxLeft = window.innerWidth - btnRect.width - POSITIONING.MIN_EDGE_OFFSET_PX;
 
-    quoteBtn.style.top = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, top)}px`;
-    quoteBtn.style.left = `${Math.min(maxLeft, Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, left))}px`;
+    selectionToolbar.style.top = `${Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, top)}px`;
+    selectionToolbar.style.left = `${Math.min(maxLeft, Math.max(POSITIONING.MIN_EDGE_OFFSET_PX, left))}px`;
+    positionHighlightColorPalette();
   }
 
   function onScrollOrResize() {
@@ -317,23 +485,116 @@ export function startQuoteReply() {
     });
   }
 
-  // Create button
+  // Create the shared selection toolbar. Quote and Highlight deliberately use
+  // the same listener/range so two floating controls never race each other.
   function createButton() {
-    if (quoteBtn) return;
-    quoteBtn = document.createElement('div');
-    quoteBtn.className = `${CSS_CLASSES.BUTTON} ${CSS_CLASSES.HIDDEN}`;
+    if (selectionToolbar) return;
+    selectionToolbar = document.createElement('div');
+    selectionToolbar.className = `${CSS_CLASSES.TOOLBAR} ${CSS_CLASSES.HIDDEN}`;
+    selectionToolbar.setAttribute('role', 'toolbar');
     const text = getTranslationSync('quoteReply');
+    selectionToolbar.setAttribute(
+      'aria-label',
+      `${text} / ${getTranslationSync('highlightAction')}`,
+    );
 
+    quoteBtn = document.createElement('button');
+    quoteBtn.className = `${CSS_CLASSES.BUTTON} ${CSS_CLASSES.ACTION}`;
+    quoteBtn.setAttribute('type', 'button');
     quoteBtn.innerHTML = `${QUOTE_ICON}<span>${text}</span>`;
+    quoteBtn.classList.toggle(CSS_CLASSES.HIDDEN, !quoteEnabled);
 
     quoteBtn.addEventListener('mousedown', (e) => {
       e.preventDefault();
       e.stopPropagation();
       isInternalClick = true;
+    });
+    quoteBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
       handleQuoteClick();
     });
 
-    document.body.appendChild(quoteBtn);
+    highlightBtn = document.createElement('button');
+    highlightBtn.className = `${CSS_CLASSES.HIGHLIGHT_BUTTON} ${CSS_CLASSES.ACTION} ${CSS_CLASSES.HIDDEN}`;
+    highlightBtn.type = 'button';
+    const highlightLabel = document.createElement('span');
+    highlightLabel.textContent = getTranslationSync('highlightAction');
+    highlightBtn.replaceChildren(createHighlighterIcon(16), highlightLabel);
+    highlightBtn.addEventListener('mousedown', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      isInternalClick = true;
+    });
+    highlightBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      void handleHighlightClick();
+    });
+
+    highlightColorBtn = document.createElement('button');
+    highlightColorBtn.type = 'button';
+    highlightColorBtn.className = `${CSS_CLASSES.HIGHLIGHT_COLOR_BUTTON} ${CSS_CLASSES.HIDDEN}`;
+    highlightColorBtn.setAttribute('aria-expanded', 'false');
+    highlightColorBtn.setAttribute('aria-controls', 'gv-highlight-color-palette');
+    highlightColorBtn.addEventListener('mousedown', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      isInternalClick = true;
+    });
+    highlightColorBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const willOpen = highlightColorPalette?.classList.contains(CSS_CLASSES.HIDDEN) === true;
+      highlightColorPalette?.classList.toggle(CSS_CLASSES.HIDDEN, !willOpen);
+      highlightColorBtn?.setAttribute('aria-expanded', String(willOpen));
+      if (willOpen) positionHighlightColorPalette();
+    });
+
+    highlightColorPalette = document.createElement('div');
+    highlightColorPalette.id = 'gv-highlight-color-palette';
+    highlightColorPalette.className = `${CSS_CLASSES.HIGHLIGHT_COLOR_PALETTE} ${CSS_CLASSES.HIDDEN}`;
+    highlightColorPalette.setAttribute('role', 'group');
+    highlightColorPalette.setAttribute('aria-label', getTranslationSync('highlightColor'));
+    HIGHLIGHT_COLORS.forEach((color) => {
+      const swatch = document.createElement('button');
+      swatch.type = 'button';
+      swatch.className = 'gv-highlight-color-option';
+      swatch.style.backgroundColor = HIGHLIGHT_COLOR_HEX[color];
+      swatch.dataset.highlightColor = color;
+      swatch.setAttribute('aria-label', getHighlightColorLabel(color));
+      swatch.addEventListener('mousedown', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        isInternalClick = true;
+      });
+      swatch.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        selectedHighlightColor = color;
+        updateHighlightColorUi();
+        closeHighlightColorPalette();
+        void browser.storage.sync
+          .set({ [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: color })
+          .catch(() => undefined);
+        highlightColorBtn?.focus({ preventScroll: true });
+      });
+      highlightColorPalette?.appendChild(swatch);
+    });
+    updateHighlightColorUi();
+
+    selectionToolbar.append(quoteBtn, highlightBtn, highlightColorBtn, highlightColorPalette);
+    document.body.appendChild(selectionToolbar);
+  }
+
+  async function handleHighlightClick() {
+    if (!currentSelectionRange) return;
+    const range = currentSelectionRange.cloneRange();
+    const saved = await highlightManager.createFromRange(range, selectedHighlightColor);
+    if (!saved) return;
+    hideButton();
+    currentSelectionRange = null;
+    window.getSelection()?.removeAllRanges();
   }
 
   function handleQuoteClick() {
@@ -481,8 +742,8 @@ export function startQuoteReply() {
   }
 
   function showButton() {
-    if (!quoteBtn) createButton();
-    if (!quoteBtn) return;
+    if (!selectionToolbar) createButton();
+    if (!selectionToolbar) return;
 
     // updatePosition() manages visibility (HIDDEN class) based on viewport check
     updatePosition();
@@ -493,8 +754,9 @@ export function startQuoteReply() {
   }
 
   function hideButton() {
-    if (quoteBtn) {
-      quoteBtn.classList.add(CSS_CLASSES.HIDDEN);
+    closeHighlightColorPalette();
+    if (selectionToolbar) {
+      selectionToolbar.classList.add(CSS_CLASSES.HIDDEN);
     }
     // Remove listeners
     window.removeEventListener('scroll', onScrollOrResize, { capture: true });
@@ -561,6 +823,16 @@ export function startQuoteReply() {
 
       const range = selection.getRangeAt(0);
       currentSelectionRange = range;
+      const canHighlight = highlightManager.canCreateFromRange(range);
+      if (!selectionToolbar) createButton();
+      quoteBtn?.classList.toggle(CSS_CLASSES.HIDDEN, !quoteEnabled);
+      highlightBtn?.classList.toggle(CSS_CLASSES.HIDDEN, !canHighlight || !highlightEnabled);
+      highlightColorBtn?.classList.toggle(CSS_CLASSES.HIDDEN, !canHighlight || !highlightEnabled);
+      if (!quoteEnabled && (!canHighlight || !highlightEnabled)) {
+        hideButton();
+        currentSelectionRange = null;
+        return;
+      }
       const rect = range.getBoundingClientRect();
 
       // If rect is zero (e.g. invisible), don't show
@@ -570,10 +842,18 @@ export function startQuoteReply() {
     }, TIMING.SELECTION_DEBOUNCE_MS);
   }
 
-  function onMouseUp(_: MouseEvent) {
+  function onMouseUp(event: MouseEvent) {
     if (isInternalClick) {
       isInternalClick = false;
       return;
+    }
+    if (
+      highlightColorPalette &&
+      !highlightColorPalette.classList.contains(CSS_CLASSES.HIDDEN) &&
+      !highlightColorPalette.contains(event.target as Node) &&
+      !highlightColorBtn?.contains(event.target as Node)
+    ) {
+      closeHighlightColorPalette();
     }
     handleSelectionChange();
   }
@@ -586,6 +866,28 @@ export function startQuoteReply() {
         span.textContent = getTranslationSync('quoteReply');
       }
     }
+    const highlightSpan = highlightBtn?.querySelector('span');
+    if (highlightSpan) {
+      highlightSpan.textContent = getTranslationSync('highlightAction');
+    }
+    if (selectionToolbar) {
+      selectionToolbar.setAttribute(
+        'aria-label',
+        `${getTranslationSync('quoteReply')} / ${getTranslationSync('highlightAction')}`,
+      );
+    }
+    if (highlightColorPalette) {
+      highlightColorPalette.setAttribute('aria-label', getTranslationSync('highlightColor'));
+      highlightColorPalette
+        .querySelectorAll<HTMLButtonElement>('.gv-highlight-color-option')
+        .forEach((swatch) => {
+          const color = swatch.dataset.highlightColor;
+          if (isHighlightColor(color)) {
+            swatch.setAttribute('aria-label', getHighlightColorLabel(color));
+          }
+        });
+    }
+    updateHighlightColorUi();
   }
 
   // Listen to selection changes via mouseup (often better for "finished" selection)
@@ -593,6 +895,15 @@ export function startQuoteReply() {
   document.addEventListener('mouseup', onMouseUp);
 
   function onKeys(e: KeyboardEvent) {
+    if (
+      e.key === 'Escape' &&
+      highlightColorPalette &&
+      !highlightColorPalette.classList.contains(CSS_CLASSES.HIDDEN)
+    ) {
+      closeHighlightColorPalette();
+      highlightColorBtn?.focus({ preventScroll: true });
+      return;
+    }
     if (e.key === 'Shift' || e.key.startsWith('Arrow')) {
       handleSelectionChange();
     }
@@ -609,6 +920,27 @@ export function startQuoteReply() {
     if ((areaName === 'sync' || areaName === 'local') && changes[StorageKeys.LANGUAGE]) {
       updateButtonText();
     }
+    if (areaName === 'sync' && changes[StorageKeys.HIGHLIGHT_ENABLED]) {
+      highlightEnabled = changes[StorageKeys.HIGHLIGHT_ENABLED].newValue !== false;
+      const canHighlight =
+        currentSelectionRange !== null &&
+        highlightManager.canCreateFromRange(currentSelectionRange);
+      highlightBtn?.classList.toggle(CSS_CLASSES.HIDDEN, !highlightEnabled || !canHighlight);
+      highlightColorBtn?.classList.toggle(CSS_CLASSES.HIDDEN, !highlightEnabled || !canHighlight);
+      if (!highlightEnabled) closeHighlightColorPalette();
+      if (!quoteEnabled && (!highlightEnabled || !canHighlight)) {
+        hideButton();
+      } else if (currentSelectionRange) {
+        showButton();
+      }
+    }
+    if (areaName === 'sync') {
+      const nextColor = changes[StorageKeys.HIGHLIGHT_DEFAULT_COLOR]?.newValue;
+      if (isHighlightColor(nextColor)) {
+        selectedHighlightColor = nextColor;
+        updateHighlightColorUi();
+      }
+    }
   }
   browser.storage.onChanged.addListener(onStorageChanged);
 
@@ -619,7 +951,8 @@ export function startQuoteReply() {
     document.removeEventListener('mouseup', onMouseUp);
     document.removeEventListener('keyup', onKeys);
     browser.storage.onChanged.removeListener(onStorageChanged);
-    if (quoteBtn) quoteBtn.remove();
+    highlightManager.destroy();
+    if (selectionToolbar) selectionToolbar.remove();
     const style = document.getElementById(STYLE_ID);
     if (style) style.remove();
   };

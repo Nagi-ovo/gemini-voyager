@@ -264,11 +264,11 @@
     "description": "Button label for returning from the starred library to Prompt Manager"
   },
   "pm_starred_library": {
-    "message": "Избранная библиотека",
+    "message": "Библиотека сохранённого",
     "description": "Prompt Manager starred messages library title and entry button"
   },
   "pm_starred_search_placeholder": {
-    "message": "Поиск по избранным сообщениям",
+    "message": "Поиск по сохранённым материалам",
     "description": "Search placeholder for starred messages in Prompt Manager"
   },
   "pm_starred_no_results": {
@@ -1012,11 +1012,11 @@
     "description": "Custom websites reload/permission note"
   },
   "starredHistory": {
-    "message": "Избранная история",
+    "message": "Библиотека сохранённого",
     "description": "Starred history title"
   },
   "viewStarredHistory": {
-    "message": "Просмотр избранной истории",
+    "message": "Открыть библиотеку сохранённого",
     "description": "View starred history button"
   },
   "noStarredMessages": {
@@ -1454,6 +1454,14 @@
   "enableQuoteReplyHint": {
     "message": "Показывать плавающую кнопку для цитирования выделенного текста при выделении текста в разговорах",
     "description": "Quote reply feature hint"
+  },
+  "enableHighlights": {
+    "message": "Включить выделения",
+    "description": "Highlight feature toggle label"
+  },
+  "enableHighlightsHint": {
+    "message": "Выделяет выбранный текст ответа, позволяет выбрать цвет и запоминает последний использованный.",
+    "description": "Highlight feature hint"
   },
   "hideInputHalo": {
     "message": "Скрыть ореол поля ввода",
@@ -2322,5 +2330,57 @@
   "enablePromptManagerOnSiteHint": {
     "message": "Используйте сохранённые промпты на этом сайте. Потребуется разрешение на доступ.",
     "description": "Top toggle hint for enabling Prompt Manager on a third-party site"
+  },
+  "storageQuotaTitle": { "message": "Хранилище" },
+  "storageQuotaManage": { "message": "Управление хранилищем" },
+  "storageQuotaLocal": { "message": "Локальные данные расширения" },
+  "storageQuotaSync": { "message": "Синхронизированные настройки" },
+  "storageQuotaHealthy": { "message": "Места достаточно" },
+  "storageQuotaAttention": { "message": "Близко к пределу" },
+  "storageQuotaCritical": { "message": "Почти заполнено" },
+  "storageQuotaUnknown": { "message": "Данные об использовании недоступны" },
+  "storageQuotaBreakdown": { "message": "Состав хранилища" },
+  "storageQuotaSoftLimit": { "message": "Мягкий лимит Voyager" },
+  "storageQuotaEffectiveLimit": {
+    "message": "Текущий действующий лимит: {size}. Voyager применяет меньшее из этого значения и выбранного мягкого лимита."
+  },
+  "storageQuotaCache": { "message": "Восстанавливаемый кэш" },
+  "storageQuotaHighlights": { "message": "Выделения" },
+  "storageQuotaOther": { "message": "Прочее" },
+  "storageQuotaUnlock": { "message": "Расширить локальное хранилище" },
+  "storageQuotaSafariLimit": {
+    "message": "Safari 15 может увеличить локальное хранилище лишь примерно с 5 до 10 МБ. Оно всё равно может заполниться."
+  },
+  "storageQuotaUnknownLimit": {
+    "message": "Не удалось определить версию Safari. В старых версиях расширение хранилища может оставаться ограниченным."
+  },
+  "storageQuotaClearConfirm": {
+    "message": "Очистить «{category}»? Будут удалены данные только этой категории."
+  },
+  "storageQuotaHighlightClearConfirm": {
+    "message": "Удалить все сохранённые выделения и аннотации? Это действие нельзя отменить."
+  },
+  "storageQuotaDraftClearConfirm": {
+    "message": "Удалить все неотправленные черновики? Это действие нельзя отменить."
+  },
+  "highlightAction": { "message": "Выделить" },
+  "highlightSaved": { "message": "Выделение сохранено" },
+  "highlightSaveFailed": { "message": "Не удалось сохранить выделение" },
+  "highlightDeleteFailed": { "message": "Не удалось удалить выделение" },
+  "highlightNotePlaceholder": { "message": "Добавить заметку (необязательно)" },
+  "highlightColor": { "message": "Цвет выделения" },
+  "highlightTooLong": { "message": "Выбранный фрагмент слишком длинный. Выберите более короткий." },
+  "highlightAriaLabel": { "message": "Сохранённое выделение. Открыть аннотацию." },
+  "highlightTimelineAriaLabel": { "message": "Открыть сохранённое выделение" },
+  "savedLibraryAll": { "message": "Все" },
+  "savedLibraryStars": { "message": "Избранное" },
+  "savedLibraryHighlights": { "message": "Выделения" },
+  "savedLibraryEmpty": { "message": "Сохранённых элементов пока нет" },
+  "savedLibraryNoHighlights": { "message": "Выделений пока нет" },
+  "savedLibrarySearchPlaceholder": { "message": "Поиск по избранному и выделениям" },
+  "highlightImportSuccess": { "message": "Импортировано выделений: {count}" },
+  "highlightCloudSync": { "message": "Синхронизировать выделения" },
+  "highlightCloudSyncHint": {
+    "message": "Хранит выделения в отдельном файле Drive для каждой учётной записи. Синхронизация всегда объединяет данные и по умолчанию отключена."
   }
 }

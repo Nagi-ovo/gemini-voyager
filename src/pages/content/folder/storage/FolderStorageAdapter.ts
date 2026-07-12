@@ -157,7 +157,7 @@ export class LocalStorageFolderAdapter implements IFolderStorageAdapter {
  * - Safari's localStorage has 7-day deletion policy
  * - Random data loss on iOS 13+
  * - Private mode quota exceeded errors
- * - browser.storage.local is more reliable (10MB quota, persistent)
+ * - browser.storage.local is more reliable (persistent; quota depends on Safari and permissions)
  */
 export class SafariFolderAdapter implements IFolderStorageAdapter {
   /**

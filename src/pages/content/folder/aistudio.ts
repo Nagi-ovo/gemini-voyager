@@ -7,7 +7,6 @@ import {
   detectAccountContextFromDocument,
 } from '@/core/services/AccountIsolationService';
 import { DataBackupService } from '@/core/services/DataBackupService';
-import { getStorageMonitor } from '@/core/services/StorageMonitor';
 import { StorageKeys } from '@/core/types/common';
 import type { PromptItem, SyncAccountScope } from '@/core/types/sync';
 import { isSafari } from '@/core/utils/browser';
@@ -433,19 +432,6 @@ export class AIStudioFolderManager {
 
     // Setup automatic backup before page unload
     this.backupService.setupBeforeUnloadBackup(() => this.data);
-
-    // Initialize storage quota monitor
-    const storageMonitor = getStorageMonitor({
-      checkIntervalMs: 120000, // Check every 2 minutes (less frequent for AI Studio)
-    });
-
-    // Use custom notification callback to match our style
-    storageMonitor.setNotificationCallback((message, level) => {
-      this.showNotification(message, level);
-    });
-
-    // Start monitoring
-    storageMonitor.startMonitoring();
 
     // Migrate data from chrome.storage.sync to chrome.storage.local (one-time)
     await this.migrateFromSyncToLocal();
