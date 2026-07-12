@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { GV_RTL_CLASS } from '@/core/utils/rtl';
 
@@ -338,6 +338,137 @@ describe('TimelinePreviewPanel', () => {
       (items[2] as HTMLElement).click();
 
       expect(onNavigate).toHaveBeenCalledWith('turn-2', 2);
+    });
+  });
+
+  describe('long press star', () => {
+    let onToggleStar: Mock<(turnId: string) => void>;
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      panel.destroy();
+      onToggleStar = vi.fn<(turnId: string) => void>();
+      panel = new TimelinePreviewPanel(anchor);
+      panel.init(onNavigate, undefined, onToggleStar);
+      panel.updateMarkers(makeMarkers(5));
+      panel.open();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function getItem(index = 0): HTMLElement {
+      const item = document.querySelectorAll<HTMLElement>('.timeline-preview-item')[index];
+      if (!item) throw new Error(`Expected preview item ${index}`);
+      return item;
+    }
+
+    function pointer(type: string, target: EventTarget, options: PointerEventInit = {}): void {
+      target.dispatchEvent(
+        new PointerEvent(type, {
+          bubbles: true,
+          button: 0,
+          clientX: 10,
+          clientY: 10,
+          isPrimary: true,
+          pointerType: 'mouse',
+          ...options,
+        }),
+      );
+    }
+
+    it('toggles the star after 550ms and suppresses the generated click', () => {
+      const item = getItem(1);
+
+      pointer('pointerdown', item);
+      expect(item.classList.contains('holding')).toBe(true);
+      vi.advanceTimersByTime(549);
+      expect(onToggleStar).not.toHaveBeenCalled();
+
+      vi.advanceTimersByTime(1);
+      expect(onToggleStar).toHaveBeenCalledOnce();
+      expect(onToggleStar).toHaveBeenCalledWith('turn-1');
+      expect(item.classList.contains('holding')).toBe(false);
+
+      pointer('pointerup', window);
+      item.click();
+      expect(onNavigate).not.toHaveBeenCalled();
+    });
+
+    it('supports touch long press', () => {
+      const item = getItem(2);
+
+      pointer('pointerdown', item, { pointerType: 'touch' });
+      vi.advanceTimersByTime(550);
+
+      expect(onToggleStar).toHaveBeenCalledWith('turn-2');
+      pointer('pointerup', window, { pointerType: 'touch' });
+      item.click();
+      expect(onNavigate).not.toHaveBeenCalled();
+    });
+
+    it('suppresses navigation even when the user keeps holding after the star toggles', () => {
+      const item = getItem(4);
+
+      pointer('pointerdown', item);
+      vi.advanceTimersByTime(550);
+      expect(onToggleStar).toHaveBeenCalledWith('turn-4');
+
+      vi.advanceTimersByTime(500);
+      pointer('pointerup', window);
+      item.click();
+
+      expect(onNavigate).not.toHaveBeenCalled();
+    });
+
+    it('keeps short press navigation unchanged', () => {
+      const item = getItem(3);
+
+      pointer('pointerdown', item);
+      vi.advanceTimersByTime(549);
+      pointer('pointerup', window);
+      item.click();
+
+      expect(onToggleStar).not.toHaveBeenCalled();
+      expect(onNavigate).toHaveBeenCalledWith('turn-3', 3);
+      expect(item.classList.contains('holding')).toBe(false);
+    });
+
+    it('cancels when the pointer moves beyond the tolerance', () => {
+      const item = getItem();
+
+      pointer('pointerdown', item);
+      pointer('pointermove', window, { clientX: 17 });
+      vi.advanceTimersByTime(550);
+
+      expect(onToggleStar).not.toHaveBeenCalled();
+      expect(item.classList.contains('holding')).toBe(false);
+    });
+
+    it('cancels on pointercancel', () => {
+      const item = getItem();
+
+      pointer('pointerdown', item);
+      pointer('pointercancel', window);
+      vi.advanceTimersByTime(550);
+
+      expect(onToggleStar).not.toHaveBeenCalled();
+      expect(item.classList.contains('holding')).toBe(false);
+    });
+
+    it('cancels a pending press when the list rerenders or is destroyed', () => {
+      pointer('pointerdown', getItem());
+      const changedMarkers = makeMarkers(5);
+      changedMarkers[0] = { ...changedMarkers[0], summary: 'Updated summary' };
+      panel.updateMarkers(changedMarkers);
+      vi.advanceTimersByTime(550);
+      expect(onToggleStar).not.toHaveBeenCalled();
+
+      pointer('pointerdown', getItem());
+      panel.destroy();
+      vi.advanceTimersByTime(550);
+      expect(onToggleStar).not.toHaveBeenCalled();
     });
   });
 

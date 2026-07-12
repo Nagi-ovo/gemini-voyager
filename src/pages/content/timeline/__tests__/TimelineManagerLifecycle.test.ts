@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { TimelinePreviewPanel } from '../TimelinePreviewPanel';
 import { TimelineManager } from '../manager';
 
 vi.mock('../../../../utils/i18n', () => ({
@@ -39,6 +40,8 @@ type TimelineManagerInternal = {
   startResize: (ev: PointerEvent) => void;
   setupEventListeners: () => void;
   findCriticalElements: () => Promise<boolean>;
+  injectTimelineUI: () => void;
+  toggleStar: (turnId: string) => Promise<void>;
   historyTimestampStore: { stop: () => void } | null;
   historyTimestampUnsubscribe: (() => void) | null;
 };
@@ -277,6 +280,28 @@ describe('TimelineManager lifecycle', () => {
       expect(bar.style.top).toBe('');
       expect(bar.style.left).toBe('');
 
+      manager.destroy();
+    });
+  });
+
+  describe('compact preview star integration', () => {
+    it('routes preview long-press star changes through the manager toggle path', async () => {
+      const manager = new TimelineManager();
+      const internal = asInternal(manager);
+      const toggleStar = vi.fn().mockResolvedValue(undefined);
+      internal.toggleStar = toggleStar;
+      const initSpy = vi
+        .spyOn(TimelinePreviewPanel.prototype, 'init')
+        .mockImplementation(() => undefined);
+
+      internal.injectTimelineUI();
+      const onToggleStar = initSpy.mock.calls[0]?.[2];
+      expect(onToggleStar).toBeTypeOf('function');
+
+      await onToggleStar?.('turn-compact');
+      expect(toggleStar).toHaveBeenCalledWith('turn-compact');
+
+      initSpy.mockRestore();
       manager.destroy();
     });
   });

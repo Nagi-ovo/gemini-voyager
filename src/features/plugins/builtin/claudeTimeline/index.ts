@@ -250,7 +250,11 @@ class ClaudeTimeline {
     }
     if (!this.previewPanel) {
       this.previewPanel = new TimelinePreviewPanel(bar);
-      this.previewPanel.init((turnId) => this.navigateTo(turnId));
+      this.previewPanel.init(
+        (turnId) => this.navigateTo(turnId),
+        undefined,
+        (turnId) => this.toggleStar(turnId),
+      );
     }
     this.applyTimelineStyle();
   }

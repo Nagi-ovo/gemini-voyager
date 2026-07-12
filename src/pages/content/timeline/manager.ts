@@ -1180,6 +1180,7 @@ export class TimelineManager {
           this.commitActiveMarkerAfterNavigation(marker.id, dur);
         },
         (query) => this.highlightSearchInDOM(query),
+        (turnId) => this.toggleStar(turnId),
       );
     }
   }

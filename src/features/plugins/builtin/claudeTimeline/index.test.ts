@@ -279,6 +279,41 @@ describe('Claude timeline', () => {
     expect(dot.getAttribute('aria-pressed')).toBe('true');
   });
 
+  it('long-presses a compact preview item to star without navigating', async () => {
+    addTurn('remember compact item');
+    startClaudeTimeline({ compactView: true });
+    await flush();
+
+    document
+      .querySelector<HTMLElement>('.gemini-timeline-bar')!
+      .dispatchEvent(new MouseEvent('mouseenter'));
+    const item = document.querySelector<HTMLElement>('.timeline-preview-item')!;
+    item.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        bubbles: true,
+        button: 0,
+        clientX: 10,
+        clientY: 10,
+        isPrimary: true,
+        pointerType: 'mouse',
+      }),
+    );
+    vi.advanceTimersByTime(550);
+    await flush();
+    window.dispatchEvent(
+      new PointerEvent('pointerup', { bubbles: true, isPrimary: true, pointerType: 'mouse' }),
+    );
+    item.click();
+
+    expect(addStarredMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ turnId: buildClaudeTurnId('remember compact item') }),
+    );
+    expect(window.scrollTo).not.toHaveBeenCalled();
+    expect(document.querySelector('.timeline-preview-item')?.classList.contains('starred')).toBe(
+      true,
+    );
+  });
+
   it('recognizes and unstars messages stored with the legacy index-based id', async () => {
     const legacyId = `c-0-${hashString('first prompt')}`;
     getStarredMessagesForConversation.mockResolvedValue([
@@ -304,6 +339,51 @@ describe('Claude timeline', () => {
 
     expect(removeStarredMessage).toHaveBeenCalledWith('claude:conv:claude-123', legacyId);
     expect(dot.classList.contains('starred')).toBe(false);
+  });
+
+  it('removes a legacy star from the compact preview without navigating', async () => {
+    const legacyId = `c-0-${hashString('compact legacy prompt')}`;
+    getStarredMessagesForConversation.mockResolvedValue([
+      {
+        turnId: legacyId,
+        content: 'compact legacy prompt',
+        conversationId: 'claude:conv:claude-123',
+        conversationUrl: 'https://claude.ai/chat/claude-123',
+        conversationTitle: 'test',
+        starredAt: 111,
+      },
+    ]);
+    addTurn('compact legacy prompt');
+    startClaudeTimeline({ compactView: true });
+    await flush();
+
+    document
+      .querySelector<HTMLElement>('.gemini-timeline-bar')!
+      .dispatchEvent(new MouseEvent('mouseenter'));
+    const item = document.querySelector<HTMLElement>('.timeline-preview-item')!;
+    expect(item.classList.contains('starred')).toBe(true);
+    item.dispatchEvent(
+      new PointerEvent('pointerdown', {
+        bubbles: true,
+        button: 0,
+        clientX: 10,
+        clientY: 10,
+        isPrimary: true,
+        pointerType: 'mouse',
+      }),
+    );
+    vi.advanceTimersByTime(550);
+    await flush();
+    window.dispatchEvent(
+      new PointerEvent('pointerup', { bubbles: true, isPrimary: true, pointerType: 'mouse' }),
+    );
+    item.click();
+
+    expect(removeStarredMessage).toHaveBeenCalledWith('claude:conv:claude-123', legacyId);
+    expect(window.scrollTo).not.toHaveBeenCalled();
+    expect(document.querySelector('.timeline-preview-item')?.classList.contains('starred')).toBe(
+      false,
+    );
   });
 
   it('shows message content when hovering a dot', async () => {

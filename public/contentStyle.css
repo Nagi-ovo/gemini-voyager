@@ -980,10 +980,19 @@ html.dark .timeline-left-slider::before {
   transition:
     background-color 0.12s ease,
     color 0.12s ease;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: pan-y;
 }
 
 .timeline-preview-item:hover {
   background-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.08);
+}
+
+.timeline-preview-item.holding {
+  background-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.16);
+  box-shadow: inset 0 0 0 1px var(--timeline-dot-active-color);
 }
 
 .timeline-preview-item.active {
