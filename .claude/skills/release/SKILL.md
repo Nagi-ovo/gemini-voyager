@@ -35,6 +35,16 @@ Do these before touching the version. Bail out if any fails and surface the fail
 - Confirm branch is `main` (or whatever the user explicitly asks). If not, stop and ask.
 - `git status` should show no unrelated modified files. Version files from a previous aborted bump (`package.json`, `manifest.json`, `manifest.dev.json`) are OK — they'll be overwritten.
 
+**Release scope — derive from the last RELEASED tag, never from unpushed commits.** This is the authoritative commit range for the changelog (Step 3) AND the release body (Step 6). Compute it once, here:
+
+```bash
+PREV_TAG=$(git describe --tags --abbrev=0)   # last released version, e.g. v1.5.5
+git log ${PREV_TAG}..HEAD --format='%h %s' --no-merges
+git rev-list --count ${PREV_TAG}..HEAD
+```
+
+⚠️ **Do NOT scope the release from `git log origin/main..HEAD` or "unpushed commits".** Commits that were pushed to `main` after the last release but never shipped (a common backlog) are already on the remote, so they don't appear as "unpushed" — yet they ARE part of this release. Scoping from unpushed commits silently drops them from the changelog and release body. Always diff against `PREV_TAG`. If the count is much larger than the handful you personally just added, that's expected — read every entry, don't assume the release is only your recent work.
+
 **Open-issue triage** — read `gh issue list --state open --limit 100 --json number,title,labels,createdAt,updatedAt,author`. Scan for:
 - Recent (non-stale) bug reports that would embarrass us if we shipped without them fixed.
 - Issues with the `important` label that haven't been addressed.
