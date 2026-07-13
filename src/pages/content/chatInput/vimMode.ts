@@ -65,7 +65,12 @@ interface BlockLineEntry {
 interface HudMountTarget {
   element: HTMLElement;
   input: HTMLElement | null;
-  placement: 'composer' | 'inline';
+  placement: 'composer' | 'edit' | 'inline';
+}
+
+interface FindVimInputOptions {
+  requireVisible?: boolean;
+  target?: HTMLElement | null;
 }
 
 type IntlWithSegmenter = typeof Intl & {
@@ -76,6 +81,11 @@ type IntlWithSegmenter = typeof Intl & {
 };
 
 const EDITABLE_SELECTOR = 'input, textarea, select, [contenteditable="true"], [role="textbox"]';
+const EDIT_PROMPT_SELECTOR = [
+  '.query-content.edit-mode textarea',
+  '.edit-container textarea',
+  'textarea[aria-label="Edit prompt"]',
+].join(',');
 const MODE_CLASS_PREFIX = 'gv-input-vim-mode-';
 const HUD_CLASS = 'gv-input-vim-hud';
 const HUD_MOUNT_CLASS = 'gv-input-vim-hud-mount';
@@ -84,6 +94,8 @@ const HUD_MODE_CLASS = 'gv-input-vim-hud-mode';
 const HUD_BUFFER_CLASS = 'gv-input-vim-hud-buffer';
 const CURSOR_CLASS = 'gv-input-vim-cursor';
 const CURSOR_MOVING_CLASS = 'gv-input-vim-cursor-moving';
+const TEXTAREA_MIRROR_CLASS = 'gv-input-vim-textarea-mirror';
+const TEXTAREA_MARKER_CLASS = 'gv-input-vim-textarea-marker';
 const NORMAL_CURSOR_WIDTH = 9;
 const MAX_UNDO_DEPTH = 50;
 const CARET_SCROLL_PADDING = 12;
@@ -858,8 +870,8 @@ function clearSendReconcileTimer(): void {
 function returnToInsertAfterSubmit(input: HTMLElement | null): void {
   const nextInput =
     (input?.isConnected ? input : null) ??
-    findChatInput() ??
-    findChatInput({ requireVisible: false });
+    findVimInput() ??
+    findVimInput({ requireVisible: false });
 
   if (!nextInput) {
     setActiveInput(null);
@@ -883,7 +895,7 @@ function reconcilePossibleSend(input: HTMLElement, previousText: string, attempt
     return;
   }
 
-  const currentInput = findChatInput() ?? findChatInput({ requireVisible: false });
+  const currentInput = findVimInput() ?? findVimInput({ requireVisible: false });
   const inputChanged = Boolean(currentInput && currentInput !== input);
   const becameEmpty = previousText.trim().length > 0 && getInputText(input).trim().length === 0;
 
@@ -927,11 +939,54 @@ function getTargetElement(event: KeyboardEvent): HTMLElement | null {
   return document.activeElement instanceof HTMLElement ? document.activeElement : null;
 }
 
-function isChatInputTarget(element: HTMLElement | null): boolean {
-  if (!element) return false;
+function isEditPromptInput(element: HTMLElement): boolean {
+  return element.matches(EDIT_PROMPT_SELECTOR);
+}
+
+function findEditPromptInput(requireVisible = true): HTMLElement | null {
+  let fallback: HTMLElement | null = null;
+
+  for (const element of Array.from(document.querySelectorAll<HTMLElement>(EDIT_PROMPT_SELECTOR))) {
+    if (!fallback && element.isConnected) fallback = element;
+    if (isVisibleHudMount(element)) return element;
+  }
+
+  return requireVisible ? null : fallback;
+}
+
+function findVimInputFromTarget(element: HTMLElement | null): HTMLElement | null {
+  if (!element) return null;
+
+  const editable = element.matches(EDITABLE_SELECTOR)
+    ? element
+    : element.closest<HTMLElement>(EDITABLE_SELECTOR);
+  if (!editable) return null;
+
+  if (isEditPromptInput(editable)) return editable;
 
   const input = findChatInput({ requireVisible: false });
-  return Boolean(input && (element === input || input.contains(element)));
+  return input && (editable === input || input.contains(editable)) ? input : null;
+}
+
+function findVimInput(options: FindVimInputOptions = {}): HTMLElement | null {
+  const requireVisible = options.requireVisible ?? true;
+  const activeElement =
+    options.target ??
+    (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+  const targetedInput = findVimInputFromTarget(activeElement);
+
+  if (targetedInput && (!requireVisible || isVisibleHudMount(targetedInput))) {
+    return targetedInput;
+  }
+
+  const editInput = findEditPromptInput(true);
+  if (editInput) return editInput;
+
+  const chatInput = findChatInput();
+  if (chatInput) return chatInput;
+
+  if (requireVisible) return null;
+  return findEditPromptInput(false) ?? findChatInput({ requireVisible: false });
 }
 
 function getSendButtonTarget(element: HTMLElement | null): HTMLElement | null {
@@ -952,12 +1007,13 @@ function focusElement(input: HTMLElement): void {
   }
 }
 
-function focusChatInput(mode: VimMode = 'insert'): boolean {
-  if (!findChatInput()) {
+function focusVimInput(mode: VimMode = 'insert'): boolean {
+  let input = findVimInput();
+  if (!input) {
     expandInputWithCursorAtEnd();
+    input = findVimInput() ?? findVimInput({ requireVisible: false });
   }
 
-  const input = findChatInput() ?? findChatInput({ requireVisible: false });
   if (!input) return false;
 
   setActiveInput(input);
@@ -1028,8 +1084,17 @@ function getHudMount(): HudMountTarget | null {
 
   const input =
     (activeInput?.isConnected ? activeInput : null) ??
-    findChatInput() ??
-    findChatInput({ requireVisible: false });
+    findVimInput() ??
+    findVimInput({ requireVisible: false });
+  const editForm =
+    input && isEditPromptInput(input)
+      ? input.closest<HTMLElement>('mat-form-field.edit-form, .edit-form')
+      : null;
+
+  if (editForm?.isConnected) {
+    return { element: editForm, input, placement: 'edit' };
+  }
+
   const composer = input?.closest<HTMLElement>('.text-input-field, input-area-v2, input-container');
 
   if (composer?.isConnected) {
@@ -1061,7 +1126,7 @@ function updateHudPlacement(
 ): void {
   hud.dataset.placement = placement;
 
-  if (placement !== 'composer' || !input) {
+  if (placement === 'inline' || !input) {
     hud.style.removeProperty('--gv-input-vim-hud-left');
     return;
   }
@@ -1078,7 +1143,7 @@ function clearHudMountClasses(mount: HTMLElement | null): void {
 
 function updateHudMountClass(mount: HTMLElement, placement: HudMountTarget['placement']): void {
   mount.classList.toggle(HUD_MOUNT_CLASS, placement === 'inline');
-  mount.classList.toggle(HUD_COMPOSER_MOUNT_CLASS, placement === 'composer');
+  mount.classList.toggle(HUD_COMPOSER_MOUNT_CLASS, placement !== 'inline');
 }
 
 function ensureHud(): HTMLElement | null {
@@ -1252,8 +1317,176 @@ function makeDomRect(left: number, top: number, width: number, height: number): 
   } as DOMRect;
 }
 
+const TEXTAREA_MIRROR_STYLE_PROPERTIES = [
+  'border-bottom-width',
+  'border-left-width',
+  'border-right-width',
+  'border-top-width',
+  'direction',
+  'font-family',
+  'font-feature-settings',
+  'font-kerning',
+  'font-size',
+  'font-stretch',
+  'font-style',
+  'font-variant',
+  'font-weight',
+  'letter-spacing',
+  'line-height',
+  'padding-bottom',
+  'padding-left',
+  'padding-right',
+  'padding-top',
+  'tab-size',
+  'text-align',
+  'text-indent',
+  'text-rendering',
+  'text-transform',
+  'word-break',
+  'word-spacing',
+] as const;
+
+function createTextareaMirror(input: HTMLTextAreaElement): {
+  inputRect: DOMRect;
+  mirror: HTMLDivElement;
+} {
+  const inputRect = input.getBoundingClientRect();
+  const computedStyle = getComputedStyle(input);
+  const mirror = document.createElement('div');
+
+  mirror.className = TEXTAREA_MIRROR_CLASS;
+  mirror.setAttribute('aria-hidden', 'true');
+
+  for (const property of TEXTAREA_MIRROR_STYLE_PROPERTIES) {
+    mirror.style.setProperty(property, computedStyle.getPropertyValue(property));
+  }
+
+  const borderLeft = Number.parseFloat(computedStyle.borderLeftWidth) || 0;
+  const borderRight = Number.parseFloat(computedStyle.borderRightWidth) || 0;
+  const measuredWidth =
+    input.clientWidth > 0 ? input.clientWidth + borderLeft + borderRight : inputRect.width;
+
+  mirror.style.position = 'fixed';
+  mirror.style.top = '0';
+  mirror.style.left = '0';
+  mirror.style.zIndex = '-1';
+  mirror.style.boxSizing = 'border-box';
+  mirror.style.width = `${measuredWidth}px`;
+  mirror.style.height = 'auto';
+  mirror.style.minHeight = '0';
+  mirror.style.overflow = 'hidden';
+  mirror.style.overflowWrap = 'break-word';
+  mirror.style.whiteSpace = input.wrap === 'off' ? 'pre' : 'pre-wrap';
+  mirror.style.visibility = 'hidden';
+  mirror.style.pointerEvents = 'none';
+
+  return { inputRect, mirror };
+}
+
+function translateTextareaMarkerRect(
+  input: HTMLTextAreaElement,
+  inputRect: DOMRect,
+  mirrorRect: DOMRect,
+  markerRect: DOMRect,
+  width: number,
+): DOMRect {
+  const left = inputRect.left + (markerRect.left - mirrorRect.left) - input.scrollLeft;
+  const top = inputRect.top + (markerRect.top - mirrorRect.top) - input.scrollTop;
+  return makeDomRect(left, top, width, markerRect.height);
+}
+
+function getTextareaTextRangeRect(
+  input: HTMLTextAreaElement,
+  start: number,
+  end: number,
+): DOMRect | null {
+  const text = input.value;
+  const rangeStart = clamp(start, 0, text.length);
+  const rangeEnd = clamp(end, rangeStart, text.length);
+  if (text.slice(rangeStart, rangeEnd).includes('\n')) return null;
+
+  const { inputRect, mirror } = createTextareaMirror(input);
+  const marker = document.createElement('span');
+  marker.className = TEXTAREA_MARKER_CLASS;
+  marker.dataset.gvVimOffset = String(rangeStart);
+
+  mirror.append(document.createTextNode(text.slice(0, rangeStart)));
+  marker.textContent = text.slice(rangeStart, rangeEnd) || '\u200b';
+  mirror.append(marker);
+  document.body.append(mirror);
+
+  try {
+    const mirrorRect = mirror.getBoundingClientRect();
+    const markerRect = marker.getBoundingClientRect();
+
+    if (!isUsableRect(markerRect)) return null;
+
+    return translateTextareaMarkerRect(
+      input,
+      inputRect,
+      mirrorRect,
+      markerRect,
+      rangeStart === rangeEnd ? 0 : markerRect.width,
+    );
+  } finally {
+    mirror.remove();
+  }
+}
+
+function getTextareaRenderedCharacters(input: HTMLTextAreaElement): RenderedCharacter[] {
+  const text = input.value;
+  const { inputRect, mirror } = createTextareaMirror(input);
+  const markers: Array<{ element: HTMLSpanElement; range: GraphemeRange }> = [];
+
+  for (const range of getGraphemeRanges(text)) {
+    const segment = text.slice(range.start, range.end);
+    if (segment === '\n') {
+      mirror.append(document.createTextNode(segment));
+      continue;
+    }
+
+    const marker = document.createElement('span');
+    marker.className = TEXTAREA_MARKER_CLASS;
+    marker.dataset.gvVimOffset = String(range.start);
+    marker.textContent = segment;
+    mirror.append(marker);
+    markers.push({ element: marker, range });
+  }
+
+  document.body.append(mirror);
+
+  try {
+    const mirrorRect = mirror.getBoundingClientRect();
+    const characters: RenderedCharacter[] = [];
+
+    for (const { element, range } of markers) {
+      const markerRect = element.getBoundingClientRect();
+      if (!isUsableRect(markerRect)) continue;
+
+      const rect = translateTextareaMarkerRect(
+        input,
+        inputRect,
+        mirrorRect,
+        markerRect,
+        markerRect.width,
+      );
+      characters.push({
+        ...range,
+        rect,
+        centerX: rect.left + rect.width / 2,
+      });
+    }
+
+    return characters;
+  } finally {
+    mirror.remove();
+  }
+}
+
 function getCollapsedTextOffsetRect(input: HTMLElement, offset: number): DOMRect | null {
-  if (input instanceof HTMLTextAreaElement) return null;
+  if (input instanceof HTMLTextAreaElement) {
+    return getTextareaTextRangeRect(input, offset, offset);
+  }
 
   const text = getInputText(input);
   const current = clamp(offset, 0, text.length);
@@ -1262,9 +1495,11 @@ function getCollapsedTextOffsetRect(input: HTMLElement, offset: number): DOMRect
 }
 
 function getTextRangeRect(input: HTMLElement, start: number, end: number): DOMRect | null {
-  if (input instanceof HTMLTextAreaElement) return null;
-
   if (start === end || getInputText(input).slice(start, end).includes('\n')) return null;
+
+  if (input instanceof HTMLTextAreaElement) {
+    return getTextareaTextRangeRect(input, start, end);
+  }
 
   const range = createRangeForTextOffsets(input, start, end);
   const rect = getFirstRangeRect(range);
@@ -1289,8 +1524,6 @@ function getCharacterRect(
   offset: number,
   direction: -1 | 1 = 1,
 ): DOMRect | null {
-  if (input instanceof HTMLTextAreaElement) return null;
-
   const text = getInputText(input);
   const current = clamp(offset, 0, text.length);
   const start = direction < 0 ? getPreviousGraphemeOffset(text, current) : current;
@@ -1312,7 +1545,7 @@ function estimateRenderedLineHeight(input: HTMLElement, lines: RenderedLine[]): 
 
 function getCaretRect(input: HTMLElement, offset: number): DOMRect | null {
   if (input instanceof HTMLTextAreaElement) {
-    return input.getBoundingClientRect();
+    return getTextareaTextRangeRect(input, offset, offset) ?? input.getBoundingClientRect();
   }
 
   const text = getInputText(input);
@@ -1483,7 +1716,7 @@ function handleVerticalMotion(input: HTMLElement, direction: -1 | 1): void {
 }
 
 function getRenderedCharacters(input: HTMLElement): RenderedCharacter[] {
-  if (input instanceof HTMLTextAreaElement) return [];
+  if (input instanceof HTMLTextAreaElement) return getTextareaRenderedCharacters(input);
 
   const blockEntries = getBlockLineEntries(input);
   if (blockEntries.length > 0) {
@@ -2235,21 +2468,19 @@ function handleKeyDown(event: KeyboardEvent): void {
   const target = getTargetElement(event);
 
   if (!activeInput && event.key === 'i' && !event.shiftKey && !isEditableTarget(target)) {
-    if (focusChatInput('insert')) {
+    if (focusVimInput('insert')) {
       event.preventDefault();
       event.stopPropagation();
     }
     return;
   }
 
-  if (!activeInput && isChatInputTarget(target)) {
-    const input = findChatInput() ?? findChatInput({ requireVisible: false });
-    if (input) {
-      setActiveInput(input);
-    }
+  const targetInput = findVimInputFromTarget(target);
+  if (!activeInput && targetInput) {
+    setActiveInput(targetInput);
   }
 
-  if (!activeInput || !isChatInputTarget(target)) return;
+  if (!activeInput || targetInput !== activeInput) return;
 
   if (
     event.repeat &&
@@ -2304,17 +2535,15 @@ function handleClick(event: MouseEvent): void {
   const target = event.target instanceof HTMLElement ? event.target : null;
   if (!getSendButtonTarget(target)) return;
 
-  scheduleSendReconcile(activeInput ?? findChatInput() ?? findChatInput({ requireVisible: false }));
+  scheduleSendReconcile(activeInput ?? findVimInput() ?? findVimInput({ requireVisible: false }));
 }
 
 function handleFocusIn(event: FocusEvent): void {
   const target = event.target instanceof HTMLElement ? event.target : null;
-  if (!isChatInputTarget(target)) return;
+  const input = findVimInputFromTarget(target);
+  if (!input) return;
 
-  const input = findChatInput() ?? findChatInput({ requireVisible: false });
-  if (input) {
-    setActiveInput(input);
-  }
+  setActiveInput(input);
 }
 
 function handleFocusOut(event: FocusEvent): void {

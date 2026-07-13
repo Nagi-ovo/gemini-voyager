@@ -204,6 +204,77 @@ function addPromptComposer(input: HTMLElement): HTMLElement {
   return composer;
 }
 
+function addEditPromptInput(value = 'hello'): {
+  editForm: HTMLElement;
+  input: HTMLTextAreaElement;
+  wrapper: HTMLElement;
+} {
+  const editContainer = document.createElement('div');
+  editContainer.className = 'query-content edit-mode';
+  editContainer.innerHTML = `
+    <div class="edit-container">
+      <mat-form-field class="edit-form">
+        <div class="mat-mdc-text-field-wrapper">
+          <textarea aria-label="Edit prompt"></textarea>
+        </div>
+      </mat-form-field>
+    </div>
+  `;
+  document.body.prepend(editContainer);
+
+  const input = editContainer.querySelector('textarea');
+  const editForm = editContainer.querySelector('.edit-form');
+  const wrapper = editContainer.querySelector('.mat-mdc-text-field-wrapper');
+  if (
+    !(input instanceof HTMLTextAreaElement) ||
+    !(editForm instanceof HTMLElement) ||
+    !(wrapper instanceof HTMLElement)
+  ) {
+    throw new Error('Expected edit prompt textarea.');
+  }
+
+  input.value = value;
+  input.focus = vi.fn();
+  editForm.getBoundingClientRect = () =>
+    ({
+      height: 152,
+      width: 484,
+      top: 0,
+      left: 20,
+      right: 504,
+      bottom: 152,
+      x: 20,
+      y: 0,
+      toJSON: () => {},
+    }) as DOMRect;
+  wrapper.getBoundingClientRect = () =>
+    ({
+      height: 136,
+      width: 484,
+      top: 0,
+      left: 20,
+      right: 504,
+      bottom: 136,
+      x: 20,
+      y: 0,
+      toJSON: () => {},
+    }) as DOMRect;
+  input.getBoundingClientRect = () =>
+    ({
+      height: 96,
+      width: 428,
+      top: 20,
+      left: 48,
+      right: 476,
+      bottom: 116,
+      x: 48,
+      y: 20,
+      toJSON: () => {},
+    }) as DOMRect;
+
+  return { editForm, input, wrapper };
+}
+
 function createTextareaInput(value: string): HTMLTextAreaElement {
   document.body.innerHTML = `<textarea id="question-input">${value}</textarea>`;
 
@@ -499,6 +570,65 @@ describe('input Vim mode', () => {
 
     const baseHudBlock = css.match(/\.gv-input-vim-hud\s*{([\s\S]*?)}/)?.[1] ?? '';
     expect(baseHudBlock).toContain('box-sizing: border-box;');
+  });
+
+  it('uses Vim commands in the visible edit prompt instead of the main composer', async () => {
+    mockInputVimModeStorage(true);
+    const mainInput = createQuestionInput('main prompt');
+    const { editForm, input, wrapper } = addEditPromptInput('hello');
+    input.selectionStart = 1;
+    input.selectionEnd = 1;
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    const escapeEvent = fireInputKey(input, 'Escape');
+
+    expect(escapeEvent.defaultPrevented).toBe(true);
+    expect(input.dataset.gvVimMode).toBe('normal');
+    expect(mainInput.dataset.gvVimMode).toBeUndefined();
+    const hud = editForm.querySelector<HTMLElement>('.gv-input-vim-hud');
+    expect(hud).not.toBeNull();
+    expect(hud?.dataset.placement).toBe('edit');
+    expect(hud?.style.getPropertyValue('--gv-input-vim-hud-left')).toBe('28px');
+    expect(wrapper.querySelector('.gv-input-vim-hud')).toBeNull();
+
+    fireInputKey(input, 'x');
+
+    expect(input.value).toBe('hllo');
+
+    cleanup();
+  });
+
+  it('keeps the edit prompt HUD in the reserved row below its outlined textarea', () => {
+    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const editHudBlock =
+      css.match(/\.gv-input-vim-hud\[data-placement='edit'\]\s*{([\s\S]*?)}/)?.[1] ?? '';
+
+    expect(editHudBlock).toContain('bottom: 0;');
+    expect(editHudBlock).toContain('height: 16px;');
+    expect(editHudBlock).toContain('left: var(--gv-input-vim-hud-left, 28px);');
+  });
+
+  it('does not mistake a newline in the edit prompt for submitting the main composer', async () => {
+    mockInputVimModeStorage(true);
+    const mainInput = createQuestionInput('main prompt');
+    const { input } = addEditPromptInput('edit prompt');
+    input.selectionStart = 4;
+    input.selectionEnd = 4;
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+    fireInputKey(input, 'Enter');
+
+    await new Promise((resolve) => setTimeout(resolve, 120));
+
+    expect(input.dataset.gvVimMode).toBe('normal');
+    expect(mainInput.dataset.gvVimMode).toBeUndefined();
+
+    cleanup();
   });
 
   it('mounts the HUD on a visible Tools label instead of a stale hidden one', async () => {
@@ -888,6 +1018,97 @@ describe('input Vim mode', () => {
     expect(input.selectionStart).toBe(1);
 
     fireInputKey(input, 'l');
+    expect(input.selectionStart).toBe(2);
+
+    cleanup();
+  });
+
+  it('moves the visible block cursor with the textarea caret', async () => {
+    mockInputVimModeStorage(true);
+    const input = createTextareaInput('hello');
+    input.selectionStart = 2;
+    input.selectionEnd = 2;
+    input.getBoundingClientRect = () =>
+      ({
+        height: 24,
+        width: 200,
+        top: 40,
+        left: 100,
+        right: 300,
+        bottom: 64,
+        x: 100,
+        y: 40,
+        toJSON: () => {},
+      }) as DOMRect;
+    Object.defineProperty(input, 'clientWidth', { configurable: true, value: 200 });
+
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      if (this.classList.contains('gv-input-vim-textarea-mirror')) {
+        return {
+          height: 24,
+          width: 200,
+          top: 0,
+          left: 0,
+          right: 200,
+          bottom: 24,
+          x: 0,
+          y: 0,
+          toJSON: () => {},
+        } as DOMRect;
+      }
+
+      if (this.classList.contains('gv-input-vim-textarea-marker')) {
+        const offset = Number(this.dataset.gvVimOffset ?? 0);
+        const line = offset >= 3 ? 1 : 0;
+        const left = (line === 0 ? offset : offset - 3) * 12;
+        const top = line * 24;
+        return {
+          height: 24,
+          width: 12,
+          top,
+          left,
+          right: left + 12,
+          bottom: top + 24,
+          x: left,
+          y: top,
+          toJSON: () => {},
+        } as DOMRect;
+      }
+
+      return originalGetBoundingClientRect.call(this);
+    });
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+    fireInputKey(input, 'h');
+    window.dispatchEvent(new Event('resize'));
+
+    const cursor = document.querySelector<HTMLElement>('.gv-input-vim-cursor');
+    expect(input.selectionStart).toBe(1);
+    expect(cursor?.style.left).toBe('112px');
+    expect(cursor?.style.top).toBe('40px');
+    expect(cursor?.style.width).toBe('12px');
+    expect(document.querySelector('.gv-input-vim-textarea-mirror')).toBeNull();
+
+    fireInputKey(input, 'l');
+    window.dispatchEvent(new Event('resize'));
+
+    expect(input.selectionStart).toBe(2);
+    expect(cursor?.style.left).toBe('124px');
+
+    fireInputKey(input, 'j');
+    window.dispatchEvent(new Event('resize'));
+
+    expect(input.selectionStart).toBe(4);
+    expect(cursor?.style.left).toBe('112px');
+    expect(cursor?.style.top).toBe('64px');
+
+    fireInputKey(input, 'k');
     expect(input.selectionStart).toBe(2);
 
     cleanup();

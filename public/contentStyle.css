@@ -10474,6 +10474,25 @@ html.light-theme .gv-floating-fab:hover .gv-floating-fab__icon {
   padding-left: 4px;
 }
 
+/* Gemini's historical-prompt editor reserves a small subscript row below the
+   outlined textarea. Keep Vim state there instead of covering its border/text. */
+.gv-input-vim-hud[data-placement='edit'] {
+  top: auto;
+  bottom: 0;
+  left: var(--gv-input-vim-hud-left, 28px);
+  transform: none;
+  gap: 4px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: 4px;
+  font-size: 9px;
+}
+
+.gv-input-vim-hud[data-placement='edit'] .gv-input-vim-hud-buffer {
+  min-width: 8px;
+  padding-left: 4px;
+}
+
 .gv-input-vim-hud[data-active='false'] {
   opacity: 0.56;
 }
