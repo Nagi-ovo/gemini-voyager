@@ -119,6 +119,28 @@ function createQuillParagraphInput(lines: string[]): HTMLElement {
   return input;
 }
 
+function createQuillInlineNewlineInput(text: string): HTMLElement {
+  document.body.innerHTML = `
+    <rich-textarea>
+      <div id="question-input" class="ql-editor" contenteditable="true" role="textbox">
+        <p></p>
+      </div>
+    </rich-textarea>
+  `;
+
+  const input = document.getElementById('question-input');
+  const paragraph = input?.querySelector('p');
+  if (!(input instanceof HTMLElement) || !(paragraph instanceof HTMLElement)) {
+    throw new Error('Expected Quill input with one paragraph.');
+  }
+
+  paragraph.textContent = text;
+  setVisibleRect(input);
+  input.focus = vi.fn();
+  input.blur = vi.fn();
+  return input;
+}
+
 function setParagraphRects(input: HTMLElement, topByLine: number[]): void {
   Array.from(input.children).forEach((child, index) => {
     if (!(child instanceof HTMLElement)) return;
@@ -406,7 +428,10 @@ function mockCollapsedCaretRects(): void {
 }
 
 function mockCharacterRects(
-  rects: Record<number, { left: number; top: number; width: number; height?: number }>,
+  rects: Record<
+    number,
+    { left: number; top: number; width: number; height?: number; missing?: boolean }
+  >,
 ): void {
   Object.defineProperty(Range.prototype, 'getClientRects', {
     configurable: true,
@@ -414,6 +439,7 @@ function mockCharacterRects(
       const start = this.startOffset;
       const end = this.endOffset;
       const characterRect = rects[start] ?? { left: 80 + start * 10, top: 10, width: 10 };
+      if (characterRect.missing) return [] as unknown as DOMRectList;
       const width = end > start ? characterRect.width : 0;
       const height = characterRect.height ?? 18;
       const right = characterRect.left + width;
@@ -1167,10 +1193,52 @@ describe('input Vim mode', () => {
 
     fireInputKey(input, 'Escape');
     fireInputKey(input, 'j');
+    window.dispatchEvent(new Event('resize'));
     expect(selection.anchorOffset).toBe(2);
+    const cursor = document.querySelector<HTMLElement>('.gv-input-vim-cursor');
+    expect(cursor?.style.top).toBe('30px');
 
     fireInputKey(input, 'j');
+    window.dispatchEvent(new Event('resize'));
     expect(selection.anchorOffset).toBe(3);
+    expect(cursor?.style.top).toBe('50px');
+
+    fireInputKey(input, 'j');
+    expect(selection.anchorOffset).toBe(4);
+
+    fireInputKey(input, 'k');
+    expect(selection.anchorOffset).toBe(3);
+
+    cleanup();
+  });
+
+  it('moves j/k through literal empty lines inside one Quill paragraph', async () => {
+    mockInputVimModeStorage(true);
+    mockCharacterRects({
+      0: { left: 80, top: 10, width: 10 },
+      2: { left: 0, top: 0, width: 0, missing: true },
+      3: { left: 0, top: 0, width: 0, missing: true },
+      4: { left: 80, top: 70, width: 10 },
+    });
+    const input = createQuillInlineNewlineInput('a\n\n\nb');
+    setParagraphSelection(input, 0);
+    const selection = window.getSelection();
+    if (!selection) throw new Error('Expected selection.');
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+    fireInputKey(input, 'j');
+    window.dispatchEvent(new Event('resize'));
+    expect(selection.anchorOffset).toBe(2);
+    const literalCursor = document.querySelector<HTMLElement>('.gv-input-vim-cursor');
+    expect(literalCursor?.style.top).toBe('30px');
+
+    fireInputKey(input, 'j');
+    window.dispatchEvent(new Event('resize'));
+    expect(selection.anchorOffset).toBe(3);
+    expect(literalCursor?.style.top).toBe('50px');
 
     fireInputKey(input, 'j');
     expect(selection.anchorOffset).toBe(4);

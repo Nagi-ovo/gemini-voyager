@@ -1835,33 +1835,39 @@ function findRenderedLineAfter(lines: RenderedLine[], offset: number): RenderedL
   );
 }
 
-function createSyntheticEmptyLineItem(
+function createSyntheticEmptyLineItems(
   input: HTMLElement,
   lines: RenderedLine[],
-  offset: number,
-): RenderedCharacter {
-  const previousLine = findRenderedLineBefore(lines, offset);
-  const nextLine = findRenderedLineAfter(lines, offset);
+  offsets: number[],
+): RenderedCharacter[] {
+  if (offsets.length === 0) return [];
+
+  const previousLine = findRenderedLineBefore(lines, offsets[0]);
+  const nextLine = findRenderedLineAfter(lines, offsets[offsets.length - 1]);
   const lineHeight = estimateRenderedLineHeight(input, lines);
   const inputRect = input.getBoundingClientRect();
   const left = previousLine?.items[0]?.rect.left ?? nextLine?.items[0]?.rect.left ?? inputRect.left;
-  let top = inputRect.top;
 
-  if (previousLine && nextLine) {
-    top = previousLine.bottom + Math.max(1, (nextLine.top - previousLine.bottom) / 2);
-  } else if (previousLine) {
-    top = previousLine.bottom + 1;
-  } else if (nextLine) {
-    top = nextLine.top - lineHeight - 1;
-  }
+  return offsets.map((offset, index) => {
+    let top = inputRect.top + lineHeight * index;
 
-  return {
-    start: offset,
-    end: offset,
-    rect: makeDomRect(left, top, 0, lineHeight),
-    centerX: left,
-    isEmptyLine: true,
-  };
+    if (previousLine && nextLine) {
+      const advance = Math.max(1, (nextLine.top - previousLine.top) / (offsets.length + 1));
+      top = previousLine.top + advance * (index + 1);
+    } else if (previousLine) {
+      top = previousLine.top + lineHeight * (index + 1);
+    } else if (nextLine) {
+      top = nextLine.top - lineHeight * (offsets.length - index);
+    }
+
+    return {
+      start: offset,
+      end: offset,
+      rect: makeDomRect(left, top, 0, lineHeight),
+      centerX: left,
+      isEmptyLine: true,
+    };
+  });
 }
 
 function pushEmptyLineItem(lines: RenderedLine[], item: RenderedCharacter | null): void {
@@ -1895,37 +1901,54 @@ function addBlockEmptyRenderedLines(input: HTMLElement, lines: RenderedLine[]): 
 function addTextEmptyRenderedLines(input: HTMLElement, lines: RenderedLine[]): RenderedLine[] {
   const text = getInputText(input);
   const nextLines = [...lines];
+  const syntheticGroups: Array<Array<{ lineIndex: number; offset: number }>> = [];
 
-  for (const logicalLine of getLogicalLines(text)) {
+  getLogicalLines(text).forEach((logicalLine, lineIndex) => {
     const isEmptyLineBetweenNewlines =
       logicalLine.start === logicalLine.end &&
       logicalLine.start > 0 &&
       text[logicalLine.start - 1] === '\n' &&
       text[logicalLine.start] === '\n';
 
-    if (!isEmptyLineBetweenNewlines) continue;
+    if (!isEmptyLineBetweenNewlines) return;
 
     const alreadyRepresented = nextLines.some((line) =>
       line.items.some((item) => isRenderedItemAtOffset(item, logicalLine.start)),
     );
-    if (alreadyRepresented) continue;
+    if (alreadyRepresented) return;
 
-    pushEmptyLineItem(
+    const measuredItem = createTextEmptyLineItem(input, nextLines, logicalLine.start);
+    if (measuredItem) {
+      pushEmptyLineItem(nextLines, measuredItem);
+      return;
+    }
+
+    const previousGroup = syntheticGroups.at(-1);
+    const previousItem = previousGroup?.at(-1);
+    if (previousGroup && previousItem?.lineIndex === lineIndex - 1) {
+      previousGroup.push({ lineIndex, offset: logicalLine.start });
+    } else {
+      syntheticGroups.push([{ lineIndex, offset: logicalLine.start }]);
+    }
+  });
+
+  for (const group of syntheticGroups) {
+    for (const item of createSyntheticEmptyLineItems(
+      input,
       nextLines,
-      createTextEmptyLineItem(input, nextLines, logicalLine.start) ??
-        createSyntheticEmptyLineItem(input, nextLines, logicalLine.start),
-    );
+      group.map(({ offset }) => offset),
+    )) {
+      pushEmptyLineItem(nextLines, item);
+    }
   }
 
   return nextLines;
 }
 
 function addEmptyRenderedLines(input: HTMLElement, lines: RenderedLine[]): RenderedLine[] {
-  if (getBlockLineEntries(input).length > 0) {
-    return addBlockEmptyRenderedLines(input, lines);
-  }
-
-  return addTextEmptyRenderedLines(input, lines);
+  const withBlockEmptyLines =
+    getBlockLineEntries(input).length > 0 ? addBlockEmptyRenderedLines(input, lines) : lines;
+  return addTextEmptyRenderedLines(input, withBlockEmptyLines);
 }
 
 function getRenderedLines(input: HTMLElement): RenderedLine[] {
