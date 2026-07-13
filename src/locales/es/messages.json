@@ -2338,6 +2338,9 @@
   "storageQuotaHealthy": { "message": "Espacio suficiente" },
   "storageQuotaAttention": { "message": "Cerca del límite" },
   "storageQuotaCritical": { "message": "Casi lleno" },
+  "storageQuotaWarningToast": {
+    "message": "El almacenamiento de Voyager está al {percent} %. Abre la ventana de la extensión para revisarlo o liberar espacio."
+  },
   "storageQuotaUnknown": { "message": "Uso no disponible" },
   "storageQuotaBreakdown": { "message": "Desglose del almacenamiento" },
   "storageQuotaSoftLimit": { "message": "Límite flexible de Voyager" },

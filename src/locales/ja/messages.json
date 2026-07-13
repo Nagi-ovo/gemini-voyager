@@ -2338,6 +2338,9 @@
   "storageQuotaHealthy": { "message": "十分な空き容量" },
   "storageQuotaAttention": { "message": "上限に近づいています" },
   "storageQuotaCritical": { "message": "まもなく満杯" },
+  "storageQuotaWarningToast": {
+    "message": "Voyager のストレージ使用量が {percent}% です。拡張機能のポップアップを開いて確認または整理してください。"
+  },
   "storageQuotaUnknown": { "message": "使用量を取得できません" },
   "storageQuotaBreakdown": { "message": "ストレージの内訳" },
   "storageQuotaSoftLimit": { "message": "Voyager のソフト上限" },

@@ -2338,6 +2338,9 @@
   "storageQuotaHealthy": { "message": "Healthy" },
   "storageQuotaAttention": { "message": "Near limit" },
   "storageQuotaCritical": { "message": "Almost full" },
+  "storageQuotaWarningToast": {
+    "message": "Voyager storage is {percent}% full. Open the extension popup to review or clean up stored data."
+  },
   "storageQuotaUnknown": { "message": "Usage unavailable" },
   "storageQuotaBreakdown": { "message": "Storage breakdown" },
   "storageQuotaSoftLimit": { "message": "Voyager soft limit" },

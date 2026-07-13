@@ -2338,6 +2338,9 @@
   "storageQuotaHealthy": { "message": "空间充足" },
   "storageQuotaAttention": { "message": "接近上限" },
   "storageQuotaCritical": { "message": "即将存满" },
+  "storageQuotaWarningToast": {
+    "message": "Voyager 存储空间已使用 {percent}%。请打开扩展弹窗查看或清理数据。"
+  },
   "storageQuotaUnknown": { "message": "无法读取用量" },
   "storageQuotaBreakdown": { "message": "存储明细" },
   "storageQuotaSoftLimit": { "message": "Voyager 软上限" },

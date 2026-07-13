@@ -2338,6 +2338,9 @@
   "storageQuotaHealthy": { "message": "공간 충분" },
   "storageQuotaAttention": { "message": "한도에 가까움" },
   "storageQuotaCritical": { "message": "거의 가득 참" },
+  "storageQuotaWarningToast": {
+    "message": "Voyager 저장 공간을 {percent}% 사용 중입니다. 확장 프로그램 팝업을 열어 확인하거나 데이터를 정리하세요."
+  },
   "storageQuotaUnknown": { "message": "사용량을 확인할 수 없음" },
   "storageQuotaBreakdown": { "message": "저장 공간 세부 정보" },
   "storageQuotaSoftLimit": { "message": "Voyager 소프트 한도" },

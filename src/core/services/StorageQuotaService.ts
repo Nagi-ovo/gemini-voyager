@@ -11,6 +11,8 @@ const KIBIBYTE = 1024;
 export const STORAGE_QUOTA_SOFT_CAP_KEY = 'gvStorageSoftCapMb';
 export const STORAGE_SOFT_CAP_OPTIONS_MB = [25, 50, 100] as const;
 export const DEFAULT_STORAGE_SOFT_CAP_MB = 25;
+export const STORAGE_QUOTA_WARNING_RATIO = 0.8;
+export const STORAGE_QUOTA_CRITICAL_RATIO = 0.95;
 
 export type StorageSoftCapMb = (typeof STORAGE_SOFT_CAP_OPTIONS_MB)[number];
 export type StorageAreaId = 'local' | 'sync';
@@ -87,6 +89,19 @@ export interface StorageQuotaSnapshot {
   categories: readonly StorageCategoryUsage[];
   permission: UnlimitedStoragePermissionStatus;
   estimated: boolean;
+}
+
+export function getStorageQuotaEffectiveUsageRatio(snapshot: StorageQuotaSnapshot): number | null {
+  const localRatio =
+    snapshot.local.available && snapshot.local.quotaBytes === null
+      ? snapshot.softCapUsageRatio
+      : snapshot.local.available
+        ? snapshot.local.usageRatio
+        : null;
+  const ratios = [localRatio, snapshot.sync.available ? snapshot.sync.usageRatio : null].filter(
+    (ratio): ratio is number => ratio !== null && Number.isFinite(ratio),
+  );
+  return ratios.length > 0 ? Math.max(...ratios) : null;
 }
 
 export interface StorageCleanupResult {

@@ -117,6 +117,7 @@ export const StorageKeys = {
   REMOTE_ANNOUNCEMENTS_ENABLED: 'gvRemoteAnnouncementsEnabled',
   REMOTE_ANNOUNCEMENTS_STATE: 'gvRemoteAnnouncementsState',
   REMOTE_ANNOUNCEMENTS_PENDING: 'gvRemoteAnnouncementsPending',
+  STORAGE_QUOTA_WARNING_LEVEL: 'gvStorageQuotaWarningLevel',
   GENERATED_UI_CAPTURE_PERMISSION_CLEANUP_DONE: 'gvGeneratedUiCapturePermissionCleanupDone',
 
   // Input behavior

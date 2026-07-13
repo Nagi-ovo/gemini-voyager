@@ -42,6 +42,7 @@ import { computeNudgeDomains, normalizeIconResourcePath } from '@/features/plugi
 import { pluginsToOriginPatterns } from '@/features/plugins/runtime/siteRegistration';
 import { listPluginManifests } from '@/features/plugins/sources/defaultSources';
 import type { PluginManifest } from '@/features/plugins/types';
+import { startStorageQuotaWarningBackgroundService } from '@/features/storageQuotaWarning/background';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import {
   filterTimelineHierarchyByRouteScope,
@@ -80,6 +81,7 @@ const responseCompleteNotificationTargets = new Map<
   { conversationUrl?: string; tabId?: number }
 >();
 const remoteAnnouncementService = startRemoteAnnouncementBackgroundService();
+startStorageQuotaWarningBackgroundService();
 
 async function disableRetiredTabTitleUpdateSetting(): Promise<void> {
   try {

@@ -2338,6 +2338,9 @@
   "storageQuotaHealthy": { "message": "Espace suffisant" },
   "storageQuotaAttention": { "message": "Proche de la limite" },
   "storageQuotaCritical": { "message": "Presque plein" },
+  "storageQuotaWarningToast": {
+    "message": "Le stockage de Voyager est utilisé à {percent} %. Ouvrez la fenêtre de l’extension pour le vérifier ou libérer de l’espace."
+  },
   "storageQuotaUnknown": { "message": "Utilisation indisponible" },
   "storageQuotaBreakdown": { "message": "Répartition du stockage" },
   "storageQuotaSoftLimit": { "message": "Limite souple de Voyager" },

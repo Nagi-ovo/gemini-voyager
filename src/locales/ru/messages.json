@@ -2338,6 +2338,9 @@
   "storageQuotaHealthy": { "message": "Места достаточно" },
   "storageQuotaAttention": { "message": "Близко к пределу" },
   "storageQuotaCritical": { "message": "Почти заполнено" },
+  "storageQuotaWarningToast": {
+    "message": "Хранилище Voyager заполнено на {percent} %. Откройте окно расширения, чтобы проверить или очистить данные."
+  },
   "storageQuotaUnknown": { "message": "Данные об использовании недоступны" },
   "storageQuotaBreakdown": { "message": "Состав хранилища" },
   "storageQuotaSoftLimit": { "message": "Мягкий лимит Voyager" },

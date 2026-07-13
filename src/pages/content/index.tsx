@@ -58,6 +58,7 @@ import { startResponseCompleteNotification } from './responseNotification/index'
 import { startSendBehavior } from './sendBehavior/index';
 import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
+import { startStorageQuotaWarningToast } from './storageQuotaWarning';
 import { startTimeline } from './timeline/index';
 import { maybeShowTimelineStyleCoachmark } from './timeline/timelineStyleCoachmark';
 import { startUsageStatus } from './usageStatus/index';
@@ -110,6 +111,7 @@ let pluginHostCleanup: (() => void) | null = null;
 let brandThemeCleanup: (() => void) | null = null;
 let usageStatusCleanup: (() => void) | null = null;
 let remoteAnnouncementsCleanup: (() => void) | null = null;
+let storageQuotaWarningCleanup: (() => void) | null = null;
 
 async function isForkFeatureEnabled(): Promise<boolean> {
   try {
@@ -567,6 +569,7 @@ function handleVisibilityChange(): void {
       initKaTeXConfig();
       // Initialize i18n early to ensure translations are available
       initI18n().catch((e) => console.error('[Gemini Voyager] i18n init error:', e));
+      storageQuotaWarningCleanup = startStorageQuotaWarningToast();
     }
 
     // If not a known site, check if it's a custom website (async)
@@ -685,6 +688,10 @@ function handleVisibilityChange(): void {
         if (remoteAnnouncementsCleanup) {
           remoteAnnouncementsCleanup();
           remoteAnnouncementsCleanup = null;
+        }
+        if (storageQuotaWarningCleanup) {
+          storageQuotaWarningCleanup();
+          storageQuotaWarningCleanup = null;
         }
         if (usageStatusCleanup) {
           usageStatusCleanup();

@@ -14,8 +14,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
+  STORAGE_QUOTA_CRITICAL_RATIO,
+  STORAGE_QUOTA_WARNING_RATIO,
   type StorageAreaUsage,
   type StorageQuotaSnapshot,
+  getStorageQuotaEffectiveUsageRatio,
   storageQuotaService,
 } from '@/core/services/StorageQuotaService';
 import { cn } from '@/lib/utils';
@@ -106,15 +109,10 @@ export function getStorageAreaForDisplay(
 }
 
 export function getStorageQuotaSeverity(snapshot: StorageQuotaSnapshot): QuotaSeverity {
-  const ratios = (['local', 'sync'] as const)
-    .map((area) => getStorageAreaForDisplay(snapshot, area))
-    .filter((usage) => usage.available && usage.usageRatio !== null)
-    .map((usage) => usage.usageRatio as number);
-
-  if (ratios.length === 0) return 'unknown';
-  const highestRatio = Math.max(...ratios);
-  if (highestRatio >= 0.95) return 'critical';
-  if (highestRatio >= 0.8) return 'warning';
+  const highestRatio = getStorageQuotaEffectiveUsageRatio(snapshot);
+  if (highestRatio === null) return 'unknown';
+  if (highestRatio >= STORAGE_QUOTA_CRITICAL_RATIO) return 'critical';
+  if (highestRatio >= STORAGE_QUOTA_WARNING_RATIO) return 'warning';
   return 'normal';
 }
 
@@ -263,9 +261,9 @@ export function StorageQuotaAreaRow({
   const severity: QuotaSeverity =
     usage.usageRatio === null
       ? 'unknown'
-      : usage.usageRatio >= 0.95
+      : usage.usageRatio >= STORAGE_QUOTA_CRITICAL_RATIO
         ? 'critical'
-        : usage.usageRatio >= 0.8
+        : usage.usageRatio >= STORAGE_QUOTA_WARNING_RATIO
           ? 'warning'
           : 'normal';
   const ratio = usage.usageRatio ?? 0;

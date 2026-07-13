@@ -2338,6 +2338,9 @@
   "storageQuotaHealthy": { "message": "مساحة كافية" },
   "storageQuotaAttention": { "message": "قريب من الحد" },
   "storageQuotaCritical": { "message": "ممتلئ تقريبًا" },
+  "storageQuotaWarningToast": {
+    "message": "تم استخدام {percent}% من مساحة تخزين Voyager. افتح نافذة الإضافة لمراجعة البيانات أو تنظيفها."
+  },
   "storageQuotaUnknown": { "message": "تعذّر قراءة الاستخدام" },
   "storageQuotaBreakdown": { "message": "تفاصيل التخزين" },
   "storageQuotaSoftLimit": { "message": "الحد المرن لـ Voyager" },
