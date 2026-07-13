@@ -1128,7 +1128,9 @@ mark.timeline-search-highlight {
     0 2px 8px color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 20%, transparent),
     inset 0 1px 0 oklch(1 0 0 / 0.15);
   color: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default));
-  z-index: 998;
+  /* Keep every prompt-manager surface above the floating usage bar
+     (2147483000), including when the two are dragged into the same area. */
+  z-index: 2147483100;
   cursor: pointer;
   transition:
     transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
@@ -1472,7 +1474,8 @@ body.gv-rtl .gv-persistent-export-toolbar {
   background: oklch(0.995 0.002 250);
   border: 1px solid oklch(0.92 0.004 250 / 0.7);
   box-shadow: none;
-  z-index: 999;
+  /* The panel must stay above both its trigger and the floating usage bar. */
+  z-index: 2147483200;
   color: oklch(0.14 0.004 285);
   font-family:
     ui-sans-serif,
