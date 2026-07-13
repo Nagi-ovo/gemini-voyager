@@ -93,6 +93,12 @@ grep -E "MARKETING_VERSION|CURRENT_PROJECT_VERSION" "$PBX" | sort -u   # expect 
 
 Write `src/pages/content/changelog/notes/{VERSION}.md` — shown to end users in-product. See **references/changelog.md** for the 10-locale template, per-language section headers, commit-filtering rules, and style guide.
 
+**Required first — cover EVERY commit in the release range with subagents before writing a single line.** Take the `PREV_TAG..HEAD` list from Step 1 (the full range, e.g. all 18 commits — NOT just the handful you personally added) and fan out subagents to read them: one subagent per commit, or per small group, each returning "what user-facing change does this ship, and does the code actually implement it." Then build the changelog from their combined findings. This is a hard gate for two reasons:
+- **Coverage** — it structurally prevents dropping commits that were pushed-but-unreleased. If you write the changelog from memory or from "the commits I just made," you WILL miss the backlog (this exact bug shipped a changelog covering 5 of 18 commits in v1.5.6).
+- **Correctness** — each subagent confirms the feature is real and works, so the notes describe what actually ships, not what a commit message claimed.
+
+Only after every commit in the range has been read and accounted for do you write the notes.
+
 Two things that are easy to miss (full rules in the reference):
 - **Write Chinese (`zh`) first**, then render English from it, then the other 8 from English. `en` must still be complete (it's the viewer's fallback locale). Don't reorder the on-disk `<!-- lang:xx -->` sections — they stay en-first.
 - **Closing notes are optional, not required.** For hotfixes and security/privacy/permission releases, add one only when it directly fits the theme (responsibility, restraint, trust) and is instantly recognizable. If the line feels decorative, obscure, or like quote-hunting, skip it. Full rules live in `references/changelog.md`.
