@@ -10421,12 +10421,17 @@ html.light-theme .gv-floating-fab:hover .gv-floating-fab__icon {
   overflow: visible;
 }
 
+.gv-input-vim-hud-composer-mount {
+  position: relative;
+}
+
 .gv-input-vim-hud {
   position: absolute;
   top: 50%;
   left: calc(100% + 14px);
   z-index: 2;
   display: inline-flex;
+  box-sizing: border-box;
   transform: translateY(-50%);
   align-items: center;
   gap: 6px;
@@ -10448,6 +10453,25 @@ html.light-theme .gv-floating-fab:hover .gv-floating-fab__icon {
   pointer-events: none;
   flex: 0 0 auto;
   white-space: nowrap;
+}
+
+/* Keep the mode badge in the composer's bottom gutter, below the editable text.
+   The left offset is measured from the live input so it also follows layout variants. */
+.gv-input-vim-hud[data-placement='composer'] {
+  top: auto;
+  bottom: 1px;
+  left: var(--gv-input-vim-hud-left, 48px);
+  transform: none;
+  gap: 4px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 5px;
+  font-size: 10px;
+}
+
+.gv-input-vim-hud[data-placement='composer'] .gv-input-vim-hud-buffer {
+  min-width: 8px;
+  padding-left: 4px;
 }
 
 .gv-input-vim-hud[data-active='false'] {

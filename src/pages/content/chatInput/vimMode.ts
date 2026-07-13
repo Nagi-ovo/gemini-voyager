@@ -62,6 +62,12 @@ interface BlockLineEntry {
   isEmpty: boolean;
 }
 
+interface HudMountTarget {
+  element: HTMLElement;
+  input: HTMLElement | null;
+  placement: 'composer' | 'inline';
+}
+
 type IntlWithSegmenter = typeof Intl & {
   Segmenter?: new (
     locales?: string | string[],
@@ -73,6 +79,7 @@ const EDITABLE_SELECTOR = 'input, textarea, select, [contenteditable="true"], [r
 const MODE_CLASS_PREFIX = 'gv-input-vim-mode-';
 const HUD_CLASS = 'gv-input-vim-hud';
 const HUD_MOUNT_CLASS = 'gv-input-vim-hud-mount';
+const HUD_COMPOSER_MOUNT_CLASS = 'gv-input-vim-hud-composer-mount';
 const HUD_MODE_CLASS = 'gv-input-vim-hud-mode';
 const HUD_BUFFER_CLASS = 'gv-input-vim-hud-buffer';
 const CURSOR_CLASS = 'gv-input-vim-cursor';
@@ -1016,33 +1023,80 @@ function queryHudMountCandidates(): HTMLElement[] {
   return candidates;
 }
 
-function getHudMount(): HTMLElement | null {
+function getHudMount(): HudMountTarget | null {
   if (typeof document === 'undefined') return null;
+
+  const input =
+    (activeInput?.isConnected ? activeInput : null) ??
+    findChatInput() ??
+    findChatInput({ requireVisible: false });
+  const composer = input?.closest<HTMLElement>('.text-input-field, input-area-v2, input-container');
+
+  if (composer?.isConnected) {
+    return { element: composer, input, placement: 'composer' };
+  }
 
   const candidates = queryHudMountCandidates();
   const visibleCandidate = candidates.find(isVisibleHudMount);
-  if (visibleCandidate) return visibleCandidate;
+  if (visibleCandidate) {
+    return { element: visibleCandidate, input, placement: 'inline' };
+  }
 
   const fallbackCandidate = candidates.find((element) => element.isConnected);
-  if (fallbackCandidate) return fallbackCandidate;
+  if (fallbackCandidate) {
+    return { element: fallbackCandidate, input, placement: 'inline' };
+  }
 
   const inputFallback = document.querySelector<HTMLElement>('rich-textarea')?.parentElement;
-  return inputFallback instanceof HTMLElement ? inputFallback : null;
+  return inputFallback instanceof HTMLElement
+    ? { element: inputFallback, input, placement: 'inline' }
+    : null;
+}
+
+function updateHudPlacement(
+  hud: HTMLElement,
+  mount: HTMLElement,
+  input: HTMLElement | null,
+  placement: HudMountTarget['placement'],
+): void {
+  hud.dataset.placement = placement;
+
+  if (placement !== 'composer' || !input) {
+    hud.style.removeProperty('--gv-input-vim-hud-left');
+    return;
+  }
+
+  const mountRect = mount.getBoundingClientRect();
+  const inputRect = input.getBoundingClientRect();
+  const left = clamp(inputRect.left - mountRect.left, 0, mountRect.width);
+  hud.style.setProperty('--gv-input-vim-hud-left', `${Math.round(left)}px`);
+}
+
+function clearHudMountClasses(mount: HTMLElement | null): void {
+  mount?.classList.remove(HUD_MOUNT_CLASS, HUD_COMPOSER_MOUNT_CLASS);
+}
+
+function updateHudMountClass(mount: HTMLElement, placement: HudMountTarget['placement']): void {
+  mount.classList.toggle(HUD_MOUNT_CLASS, placement === 'inline');
+  mount.classList.toggle(HUD_COMPOSER_MOUNT_CLASS, placement === 'composer');
 }
 
 function ensureHud(): HTMLElement | null {
-  const mount = getHudMount();
-  if (!mount) {
+  const target = getHudMount();
+  if (!target) {
     return hudElement?.isConnected ? hudElement : null;
   }
 
+  const { element: mount, input, placement } = target;
+
   if (hudElement?.isConnected) {
     if (hudElement.parentElement !== mount) {
-      hudMountElement?.classList.remove(HUD_MOUNT_CLASS);
-      mount.classList.add(HUD_MOUNT_CLASS);
+      clearHudMountClasses(hudMountElement);
       mount.appendChild(hudElement);
       hudMountElement = mount;
     }
+    updateHudMountClass(mount, placement);
+    updateHudPlacement(hudElement, mount, input, placement);
     return hudElement;
   }
 
@@ -1052,10 +1106,11 @@ function ensureHud(): HTMLElement | null {
     <span class="${HUD_MODE_CLASS}"></span>
     <span class="${HUD_BUFFER_CLASS}"></span>
   `;
-  mount.classList.add(HUD_MOUNT_CLASS);
+  updateHudMountClass(mount, placement);
   mount.appendChild(hud);
   hudMountElement = mount;
   hudElement = hud;
+  updateHudPlacement(hud, mount, input, placement);
   return hud;
 }
 
@@ -2397,7 +2452,7 @@ function cleanup(): void {
 
   hudElement?.remove();
   cursorElement?.remove();
-  hudMountElement?.classList.remove(HUD_MOUNT_CLASS);
+  clearHudMountClasses(hudMountElement);
   hudElement = null;
   hudMountElement = null;
   cursorElement = null;

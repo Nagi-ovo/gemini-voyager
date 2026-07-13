@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
@@ -162,6 +164,44 @@ function addToolboxLabel(options: { hidden?: boolean; text?: string } = {}): HTM
   drawer.appendChild(label);
   document.body.appendChild(drawer);
   return label;
+}
+
+function addPromptComposer(input: HTMLElement): HTMLElement {
+  const richTextarea = input.closest('rich-textarea');
+  if (!(richTextarea instanceof HTMLElement)) {
+    throw new Error('Expected rich-textarea parent.');
+  }
+
+  const composer = document.createElement('div');
+  composer.className = 'text-input-field';
+  composer.getBoundingClientRect = () =>
+    ({
+      height: 64,
+      width: 420,
+      top: 0,
+      left: 20,
+      right: 440,
+      bottom: 64,
+      x: 20,
+      y: 0,
+      toJSON: () => {},
+    }) as DOMRect;
+  input.getBoundingClientRect = () =>
+    ({
+      height: 24,
+      width: 320,
+      top: 20,
+      left: 74,
+      right: 394,
+      bottom: 44,
+      x: 74,
+      y: 20,
+      toJSON: () => {},
+    }) as DOMRect;
+
+  richTextarea.replaceWith(composer);
+  composer.appendChild(richTextarea);
+  return composer;
 }
 
 function createTextareaInput(value: string): HTMLTextAreaElement {
@@ -423,19 +463,42 @@ describe('input Vim mode', () => {
     cleanup();
   });
 
-  it('mounts the mode HUD directly next to the Tools label when available', async () => {
+  it('mounts the mode HUD below the prompt text instead of next to the Tools button', async () => {
     mockInputVimModeStorage(true);
-    createQuestionInput();
+    const input = createQuestionInput();
+    const composer = addPromptComposer(input);
     const label = addToolboxLabel();
 
     const { startInputVimMode } = await import('../vimMode');
     const cleanup = await startInputVimMode();
 
-    const hud = label.querySelector<HTMLElement>('.gv-input-vim-hud');
+    const hud = composer.querySelector<HTMLElement>('.gv-input-vim-hud');
     expect(hud).not.toBeNull();
-    expect(hud?.parentElement).toBe(label);
+    expect(hud?.parentElement).toBe(composer);
+    expect(hud?.dataset.placement).toBe('composer');
+    expect(hud?.style.getPropertyValue('--gv-input-vim-hud-left')).toBe('54px');
+    expect(label.querySelector('.gv-input-vim-hud')).toBeNull();
+    expect(composer.classList.contains('gv-input-vim-hud-composer-mount')).toBe(true);
+    expect(composer.classList.contains('gv-input-vim-hud-mount')).toBe(false);
 
     cleanup();
+
+    expect(composer.classList.contains('gv-input-vim-hud-composer-mount')).toBe(false);
+  });
+
+  it('anchors the composer HUD in the bottom gutter below editable text', () => {
+    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const composerHudBlock =
+      css.match(/\.gv-input-vim-hud\[data-placement='composer'\]\s*{([\s\S]*?)}/)?.[1] ?? '';
+
+    expect(composerHudBlock).toContain('top: auto;');
+    expect(composerHudBlock).toContain('bottom: 1px;');
+    expect(composerHudBlock).toContain('left: var(--gv-input-vim-hud-left, 48px);');
+    expect(composerHudBlock).toContain('transform: none;');
+    expect(composerHudBlock).not.toContain('top: 50%;');
+
+    const baseHudBlock = css.match(/\.gv-input-vim-hud\s*{([\s\S]*?)}/)?.[1] ?? '';
+    expect(baseHudBlock).toContain('box-sizing: border-box;');
   });
 
   it('mounts the HUD on a visible Tools label instead of a stale hidden one', async () => {
