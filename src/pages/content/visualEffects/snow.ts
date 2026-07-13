@@ -200,7 +200,7 @@ function enable(): void {
 
   resizeCanvas();
   initSnowflakes(canvas.width, canvas.height);
-  startAnimation();
+  if (document.visibilityState === 'visible') startAnimation();
 
   resizeHandler = resizeCanvas;
   window.addEventListener('resize', resizeHandler);

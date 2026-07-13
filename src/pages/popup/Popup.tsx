@@ -34,6 +34,11 @@ import {
   listPluginManifests,
   refreshPluginManifests,
 } from '@/features/plugins/sources/defaultSources';
+import {
+  type PluginStateMap,
+  loadPluginState,
+  subscribePluginState,
+} from '@/features/plugins/storage/pluginState';
 import type { PluginManifest } from '@/features/plugins/types';
 import {
   effectiveAccentForDisplay,
@@ -48,6 +53,7 @@ import {
   getManifestUpdateUrl,
 } from '@/pages/popup/utils/latestVersion';
 import { isPluginPopupSite } from '@/pages/popup/utils/siteMode';
+import { canUseVisualEffects } from '@/pages/popup/utils/visualEffectsAvailability';
 import type { TranslationKey } from '@/utils/translations';
 
 import { DarkModeToggle } from '../../components/DarkModeToggle';
@@ -918,6 +924,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const [activeAccountPlatform, setActiveAccountPlatform] = useState<AccountPlatform>('gemini');
   const [activeUrl, setActiveUrl] = useState<string>('');
   const [pluginManifests, setPluginManifests] = useState<readonly PluginManifest[]>([]);
+  const [pluginState, setPluginState] = useState<PluginStateMap>({});
   // Per-site custom accent overrides: Record<siteId, hex>.
   const [accentColors, setAccentColors] = useState<Record<string, string>>({});
   // Debounce timer for persisting accent changes to throttled sync storage.
@@ -985,6 +992,18 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
       return '';
     }
   }, [activeUrl]);
+
+  const visualEffectsAvailable = useMemo(
+    () =>
+      canUseVisualEffects({
+        isPluginSite,
+        activeSiteDomain,
+        customWebsites,
+        sitePluginIds: siteScopedManifests.map((plugin) => plugin.id),
+        pluginState,
+      }),
+    [isPluginSite, activeSiteDomain, customWebsites, siteScopedManifests, pluginState],
+  );
 
   // Load the per-site accent map once and keep it live (changes flow back in
   // from this same popup's writes, or another device's sync).
@@ -1076,6 +1095,20 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
       });
     return () => {
       active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void loadPluginState().then((state) => {
+      if (active) setPluginState(state);
+    });
+    const unsubscribe = subscribePluginState((state) => {
+      if (active) setPluginState(state);
+    });
+    return () => {
+      active = false;
+      unsubscribe();
     };
   }, []);
 
@@ -2173,7 +2206,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         return !isSafariBrowser;
       case 'folderTreeIndent':
       case 'sidebarBehavior':
-      case 'visualEffect':
         return !isAIStudio;
       case 'plugins':
         // The Plugins section is always rendered pinned to the top (and only on
@@ -2335,16 +2367,20 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     });
   };
 
-  const wrapSection = (id: PopupSectionId, content: React.ReactNode) => {
+  const wrapSection = (
+    id: PopupSectionId,
+    content: React.ReactNode,
+    options: { allowPluginSite?: boolean } = {},
+  ) => {
     // On plugin / third-party sites, keep the popup focused on the pinned
     // Plugins section only. Gemini-specific settings, including Prompt Manager
     // custom-site controls, remain available from the native Gemini/AI Studio popup.
-    if (isPluginSite) return null;
+    if (isPluginSite && !options.allowPluginSite) return null;
     if (hasSettingsSearch && !settingsSearchSections.has(id)) return null;
 
     return (
       <div key={id} style={{ order: sectionOrder.indexOf(id) }} className="group/reorder relative">
-        {!hasSettingsSearch && (
+        {!isPluginSite && !hasSettingsSearch && (
           <SectionReorderControls
             isFirst={displayedSections[0] === id}
             isLast={displayedSections[displayedSections.length - 1] === id}
@@ -3354,8 +3390,9 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             </Card>,
           )}
 
-        {/* Visual Effect - Gemini only */}
-        {!isAIStudio &&
+        {/* Platform-neutral visual effects. Third-party sites expose this only
+            after Prompt Manager or a matching plugin has activated the site. */}
+        {visualEffectsAvailable &&
           wrapSection(
             'visualEffect',
             <Card className="p-4 transition-all hover:shadow-md">
@@ -3481,6 +3518,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                 </div>
               </CardContent>
             </Card>,
+            { allowPluginSite: true },
           )}
 
         {/* Formula Copy Options */}

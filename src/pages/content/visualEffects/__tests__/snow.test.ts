@@ -6,6 +6,10 @@ describe('snowEffect', () => {
     vi.useFakeTimers();
     vi.clearAllMocks();
     document.body.innerHTML = '';
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      value: 'visible',
+    });
 
     // Mock canvas context
     const mockCtx = {
@@ -41,6 +45,30 @@ describe('snowEffect', () => {
     expect(canvas?.tagName).toBe('CANVAS');
     expect(canvas?.style.pointerEvents).toBe('none');
     expect(canvas?.style.position).toBe('fixed');
+  });
+
+  it('does not animate in a hidden tab and resumes when visible', async () => {
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      value: 'hidden',
+    });
+    const requestFrame = vi.spyOn(window, 'requestAnimationFrame').mockReturnValue(1);
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ gvVisualEffect: 'snow' });
+      },
+    );
+
+    const { startSnowEffect } = await import('../snow');
+    startSnowEffect();
+
+    expect(requestFrame).not.toHaveBeenCalled();
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      value: 'visible',
+    });
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(requestFrame).toHaveBeenCalledOnce();
   });
 
   it('creates canvas via legacy gvSnowEffect boolean (backward compat)', async () => {

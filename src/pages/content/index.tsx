@@ -64,7 +64,7 @@ import { maybeShowTimelineStyleCoachmark } from './timeline/timelineStyleCoachma
 import { startUsageStatus } from './usageStatus/index';
 import { maybeShowUsageCoachmark } from './usageStatus/usageCoachmark';
 import { startUserLatex } from './userLatex/index';
-import { startRainEffect, startSakuraEffect, startSnowEffect } from './visualEffects';
+import { startVisualEffects } from './visualEffects';
 import { startWatermarkRemover, stopWatermarkRemover } from './watermarkRemover/index';
 
 // Suppress Vite's CSS preload errors in the Chrome extension content script context.
@@ -254,11 +254,6 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startSidebarAutoHide();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      startSnowEffect();
-      startSakuraEffect();
-      startRainEffect();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startInputCollapse();
@@ -470,6 +465,12 @@ function handleVisibilityChange(): void {
 (function () {
   try {
     if (!hasValidExtensionContext()) return;
+
+    // Snow, rain and sakura are fullscreen canvas effects with no host-UI
+    // dependency. This bundle only reaches native Voyager sites or origins the
+    // user already enabled for Prompt Manager / plugins, so start them before
+    // platform-specific branches return.
+    startVisualEffects();
 
     // Answer the background's ping so injectPluginScriptIntoOpenTabs can tell
     // a live content script from a missing/orphaned one and skip re-injecting

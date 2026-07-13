@@ -280,7 +280,7 @@ function enable(): void {
 
   resizeCanvas();
   initDrops(canvas.width, canvas.height);
-  startAnimation();
+  if (document.visibilityState === 'visible') startAnimation();
 
   resizeHandler = resizeCanvas;
   window.addEventListener('resize', resizeHandler);

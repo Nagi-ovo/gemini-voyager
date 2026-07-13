@@ -11,12 +11,9 @@ const FIREFOX_CHANGELOG_BANNER_RESOURCES = [
   'changelog-promo-banner-jp.png',
 ];
 const FIREFOX_SAKURA_RENDERER_RESOURCE = 'src/pages/sakuraRenderer/index.html';
-const FIREFOX_CONTENT_MATCHES = [
-  'https://gemini.google.com/*',
-  'https://business.gemini.google/*',
-  'https://aistudio.google.com/*',
-  'https://aistudio.google.cn/*',
-];
+// This only makes the renderer frame loadable where a separately-authorized
+// content script creates it; it does not grant Voyager access to any new site.
+const FIREFOX_SAKURA_RENDERER_MATCHES = ['<all_urls>'];
 
 type WebAccessibleResourceLike = {
   resources?: string[];
@@ -45,7 +42,7 @@ function appendFirefoxChangelogResources<
     web_accessible_resources: [
       {
         resources: [FIREFOX_SAKURA_RENDERER_RESOURCE],
-        matches: FIREFOX_CONTENT_MATCHES,
+        matches: FIREFOX_SAKURA_RENDERER_MATCHES,
       } as unknown as TResource,
       {
         ...first,
