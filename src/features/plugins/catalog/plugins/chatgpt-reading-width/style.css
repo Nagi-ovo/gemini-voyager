@@ -16,10 +16,21 @@
   max-width: none !important;
 }
 
-/* Optional centered-turn mode: keep the composer at the selected width, while
- * pulling user and assistant turns back into ChatGPT's native 48rem column. */
+/* Optional centered-turn mode: keep the selected reading width and only change
+ * user content alignment. ChatGPT nests user media and bubbles under two
+ * end-aligned flex columns, so both levels need to be centered. Assistant prose
+ * remains left-aligned for readability. */
 .gv-plugin-chatgpt-readable[data-gv-center-conversation='true']
   section[data-testid^='conversation-turn-']
-  [class*='--thread-content-max-width'] {
-  max-width: min(var(--gv-plugin-reading-width, 768px), 48rem) !important;
+  [data-message-author-role='user'],
+.gv-plugin-chatgpt-readable[data-gv-center-conversation='true']
+  section[data-testid^='conversation-turn-']
+  [data-message-author-role='user']
+  > div,
+.gv-plugin-chatgpt-readable[data-gv-center-conversation='true']
+  section[data-testid^='conversation-turn-']
+  [data-message-author-role='user']
+  > div
+  > div {
+  align-items: center !important;
 }

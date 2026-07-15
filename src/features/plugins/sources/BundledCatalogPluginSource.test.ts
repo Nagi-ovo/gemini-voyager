@@ -49,7 +49,9 @@ describe('BundledCatalogPluginSource', () => {
     );
     expect(css).toContain("[data-gv-center-conversation='true']");
     expect(css).toContain("section[data-testid^='conversation-turn-']");
-    expect(css).toContain('min(var(--gv-plugin-reading-width, 768px), 48rem)');
+    expect(css).toContain("[data-message-author-role='user']");
+    expect(css).toContain('align-items: center !important');
+    expect(css).not.toContain('48rem');
 
     const regularWidthRule = css.indexOf(
       ".gv-plugin-chatgpt-readable [class*='--thread-content-max-width'] {",
@@ -63,7 +65,7 @@ describe('BundledCatalogPluginSource', () => {
     expect(centeredTurnRule).toBeGreaterThan(footerOverride);
   });
 
-  it('offers an opt-in centered conversation mode without narrowing the composer', async () => {
+  it('offers an opt-in centered conversation mode without narrowing the reading width', async () => {
     const manifests = await new BundledCatalogPluginSource().list();
     const chatgptWidth = manifests.find((plugin) => plugin.id === 'voyager.chatgpt-reading-width');
 
