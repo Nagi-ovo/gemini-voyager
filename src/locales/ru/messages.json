@@ -2295,6 +2295,14 @@
     "message": "Показывать поиск папок",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "conversationSortCoachmarkTitle": {
+    "message": "Новое: сортировка бесед",
+    "description": "Coachmark title introducing conversation sorting"
+  },
+  "conversationSortCoachmarkBody": {
+    "message": "Ручная сортировка сохраняет порядок, заданный перетаскиванием. Недавно открытые беседы возвращаются наверх. Режим можно сменить в любой момент в настройках папок.",
+    "description": "Coachmark body explaining manual and recently opened conversation sorting"
+  },
   "timelineCoachmarkTitle": {
     "message": "Новое: компактная шкала времени",
     "description": "Coachmark title introducing the compact timeline style"
@@ -2310,6 +2318,10 @@
   "coachmarkDismiss": {
     "message": "Готово",
     "description": "Generic confirmation label for feature coachmarks"
+  },
+  "coachmarkClose": {
+    "message": "Закрыть",
+    "description": "Accessible label for the feature coachmark close button"
   },
   "themeColor": {
     "message": "Акцентный цвет",

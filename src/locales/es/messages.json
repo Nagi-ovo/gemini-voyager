@@ -2295,6 +2295,14 @@
     "message": "Mostrar búsqueda de carpetas",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "conversationSortCoachmarkTitle": {
+    "message": "Novedad: orden de conversaciones",
+    "description": "Coachmark title introducing conversation sorting"
+  },
+  "conversationSortCoachmarkBody": {
+    "message": "El orden manual conserva la organización que defines al arrastrar. Abiertas recientemente devuelve arriba las conversaciones que visitas. Cambia de modo cuando quieras en los ajustes de carpetas.",
+    "description": "Coachmark body explaining manual and recently opened conversation sorting"
+  },
   "timelineCoachmarkTitle": {
     "message": "Nuevo: cronología compacta",
     "description": "Coachmark title introducing the compact timeline style"
@@ -2310,6 +2318,10 @@
   "coachmarkDismiss": {
     "message": "Listo",
     "description": "Generic confirmation label for feature coachmarks"
+  },
+  "coachmarkClose": {
+    "message": "Cerrar",
+    "description": "Accessible label for the feature coachmark close button"
   },
   "themeColor": {
     "message": "Color de acento",

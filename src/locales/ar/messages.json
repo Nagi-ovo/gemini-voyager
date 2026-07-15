@@ -2295,6 +2295,14 @@
     "message": "إظهار بحث المجلدات",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "conversationSortCoachmarkTitle": {
+    "message": "جديد: ترتيب المحادثات",
+    "description": "Coachmark title introducing conversation sorting"
+  },
+  "conversationSortCoachmarkBody": {
+    "message": "يحافظ الترتيب اليدوي على التنظيم الذي تحدده بالسحب والإفلات. ويعيد خيار المفتوحة مؤخرًا المحادثات التي تزورها إلى الأعلى. يمكنك التبديل في أي وقت من إعدادات المجلدات.",
+    "description": "Coachmark body explaining manual and recently opened conversation sorting"
+  },
   "timelineCoachmarkTitle": {
     "message": "جديد: مخطط زمني مضغوط",
     "description": "Coachmark title introducing the compact timeline style"
@@ -2310,6 +2318,10 @@
   "coachmarkDismiss": {
     "message": "تم",
     "description": "Generic confirmation label for feature coachmarks"
+  },
+  "coachmarkClose": {
+    "message": "إغلاق",
+    "description": "Accessible label for the feature coachmark close button"
   },
   "themeColor": {
     "message": "لون التمييز",

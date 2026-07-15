@@ -34,7 +34,7 @@ interface CapturedCoachmarkConfig {
   id: string;
   reveal: {
     mount: () => HTMLElement;
-    unmount: (element: HTMLElement) => void;
+    unmount: (element: HTMLElement | null) => void;
   };
   toggle: {
     initial: boolean;

@@ -4,7 +4,7 @@ import { StorageKeys } from '@/core/types/common';
 import { getTranslationSync, initI18n } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
-import { showCoachmark } from '../coachmark';
+import { type CoachmarkResult, showCoachmark } from '../coachmark';
 import { keepSidebarExpanded } from '../sidebarAutoHide';
 
 const COACH_ID = 'folder-search-intro';
@@ -50,10 +50,10 @@ function getVisibleSearchInput(): HTMLElement | null {
 
 export async function maybeShowFolderSearchCoachmark(
   opts: { force?: boolean } = {},
-): Promise<void> {
-  if (location.hostname !== 'gemini.google.com') return;
+): Promise<CoachmarkResult> {
+  if (location.hostname !== 'gemini.google.com') return 'skipped';
   const enabled = await loadFolderSearchEnabled();
-  if (!enabled && !opts.force) return;
+  if (!enabled && !opts.force) return 'skipped';
 
   try {
     await initI18n();
@@ -64,7 +64,7 @@ export async function maybeShowFolderSearchCoachmark(
   const releaseSidebar = keepSidebarExpanded();
   try {
     await wait(SIDEBAR_EXPAND_WAIT_MS);
-    await showCoachmark({
+    return await showCoachmark({
       id: COACH_ID,
       once: !opts.force,
       scrim: true,
@@ -81,6 +81,7 @@ export async function maybeShowFolderSearchCoachmark(
         onChange: (on) => setFolderSearchEnabled(on),
       },
       dismissLabel: t('coachmarkDismiss', 'Done'),
+      closeLabel: t('coachmarkClose', 'Close'),
     });
   } finally {
     releaseSidebar();

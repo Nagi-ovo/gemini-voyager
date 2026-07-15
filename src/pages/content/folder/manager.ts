@@ -1325,7 +1325,6 @@ export class FolderManager {
       onSetFolderColor: (folderId, color) => {
         this.changeFolderColor(folderId, color);
       },
-      onConversationSortModeChange: (mode) => this.setConversationSortMode(mode),
       // Cloud sync / upload — mirror what the sidebar's header buttons do.
       // Only wire on non-Safari; the floating panel hides these buttons on
       // Safari because our Drive OAuth2 flow is not supported there yet. The
@@ -1825,16 +1824,9 @@ export class FolderManager {
       actionsContainer.appendChild(cloudButton);
     }
 
-    const sortButton = document.createElement('button');
-    sortButton.className = 'gv-folder-action-btn gv-folder-sort-btn';
-    sortButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">sort</mat-icon>`;
-    this.updateConversationSortButton(sortButton);
-    sortButton.addEventListener('click', (e) => this.showConversationSortMenu(e));
-    actionsContainer.appendChild(sortButton);
-
-    // Folder settings (font size, future folder-scoped settings).
+    // Folder settings (conversation order, font size, spacing, and indentation).
     const settingsButton = document.createElement('button');
-    settingsButton.className = 'gv-folder-action-btn';
+    settingsButton.className = 'gv-folder-action-btn gv-folder-settings-btn';
     settingsButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">settings</mat-icon>`;
     settingsButton.title = this.t('folder_settings');
     settingsButton.addEventListener('click', (e) => this.showFolderSettingsMenu(e));
@@ -9196,8 +9188,6 @@ export class FolderManager {
             btn.title = this.t('folder_filter_current_user');
           } else if (icon?.textContent === 'folder_managed') {
             btn.title = this.t('folder_import_export');
-          } else if (icon?.textContent === 'sort') {
-            this.updateConversationSortButton(btn);
           } else if (icon?.textContent === 'settings') {
             btn.title = this.t('folder_settings');
           }
@@ -9970,26 +9960,6 @@ export class FolderManager {
     }, 3000);
   }
 
-  private updateConversationSortButton(button: Element): void {
-    const modeLabel = this.t(
-      this.conversationSortMode === 'manual' ? 'folder_sort_manual' : 'folder_sort_recent',
-    );
-    const label = `${this.t('folder_sort')}: ${modeLabel}`;
-    button.setAttribute('title', label);
-    button.setAttribute('aria-label', label);
-    button.classList.toggle('gv-filter-active', this.conversationSortMode === 'recent');
-  }
-
-  private showConversationSortMenu(event: MouseEvent): void {
-    const item = (mode: ConversationSortMode, icon: string) => ({
-      label: this.t(mode === 'manual' ? 'folder_sort_manual' : 'folder_sort_recent'),
-      icon: this.conversationSortMode === mode ? 'check' : icon,
-      action: () => this.setConversationSortMode(mode),
-    });
-
-    this.openHeaderMenu(event, [item('manual', 'drag_indicator'), item('recent', 'history')]);
-  }
-
   /**
    * Generic header dropdown menu opener. Used by import/export, cloud, and any
    * other header action that wants a "click button → click an item" popover.
@@ -10093,9 +10063,9 @@ export class FolderManager {
   }
 
   /**
-   * Folder settings popover. Hosts folder-scoped settings (font size, spacing,
-   * subfolder indent). Settings live next to the feature they control so users
-   * don't have to dig into the popup to tune them.
+   * Folder settings popover. Hosts folder-scoped settings (conversation order,
+   * font size, spacing, and subfolder indent). Settings live next to the feature
+   * they control so users don't have to dig into the popup to tune them.
    */
   private showFolderSettingsMenu(event: MouseEvent): void {
     event.stopPropagation();
@@ -10115,6 +10085,8 @@ export class FolderManager {
     menu.style.position = 'fixed';
     menu.style.left = `${event.clientX}px`;
     menu.style.top = `${event.clientY}px`;
+
+    menu.appendChild(this.createConversationSortSettingsRow());
 
     const steppers: Array<{
       labelKey: string;
@@ -10172,6 +10144,47 @@ export class FolderManager {
       document.addEventListener('click', closeMenu);
       this.activeImportExportMenuListenerTimeout = null;
     }, 0);
+  }
+
+  private createConversationSortSettingsRow(): HTMLElement {
+    const row = document.createElement('div');
+    row.className = 'gv-folder-settings-row gv-folder-sort-settings-row';
+
+    const label = document.createElement('span');
+    label.className = 'gv-folder-settings-label';
+    label.textContent = this.t('folder_sort');
+
+    const options = document.createElement('div');
+    options.className = 'gv-folder-sort-options';
+    options.setAttribute('role', 'group');
+    options.setAttribute('aria-label', this.t('folder_sort'));
+
+    const buttons = new Map<ConversationSortMode, HTMLButtonElement>();
+    const render = () => {
+      buttons.forEach((button, mode) => {
+        const active = this.conversationSortMode === mode;
+        button.classList.toggle('is-active', active);
+        button.setAttribute('aria-pressed', String(active));
+      });
+    };
+
+    (['manual', 'recent'] as const).forEach((mode) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'gv-folder-sort-option';
+      button.textContent = this.t(mode === 'manual' ? 'folder_sort_manual' : 'folder_sort_recent');
+      button.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.setConversationSortMode(mode);
+        render();
+      });
+      buttons.set(mode, button);
+      options.appendChild(button);
+    });
+
+    render();
+    row.append(label, options);
+    return row;
   }
 
   private createSettingsStepperRow(config: {

@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import browser from 'webextension-polyfill';
 
+import { StorageKeys } from '@/core/types/common';
+
 import { FolderManager } from '../manager';
 
 vi.mock('webextension-polyfill', () => ({
@@ -52,6 +54,8 @@ type TestableManager = {
   findNativeConversationElement: (conversationId: string) => HTMLElement | null;
   initializeFolderUI: () => Promise<void>;
   reinitializeFolderUI: () => void;
+  createHeader: () => HTMLElement;
+  showFolderSettingsMenu: (event: MouseEvent) => void;
   showImportDialog: () => void;
   showImportExportMenu: (event: MouseEvent) => void;
   startFloatingMode: () => Promise<void>;
@@ -174,6 +178,36 @@ describe('folder duplicate click guards', () => {
 
     expect(document.querySelectorAll('.gv-folder-menu')).toHaveLength(1);
     expect(typedManager.activeImportExportMenu).not.toBeNull();
+  });
+
+  it('keeps conversation order in folder settings instead of adding a header button', () => {
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+
+    const header = typedManager.createHeader();
+    expect(header.querySelector('.gv-folder-sort-btn')).toBeNull();
+
+    typedManager.showFolderSettingsMenu(
+      new MouseEvent('click', { bubbles: true, clientX: 24, clientY: 16 }),
+    );
+
+    const menu = document.querySelector('.gv-folder-settings-menu');
+    const options = Array.from(
+      menu?.querySelectorAll<HTMLButtonElement>('.gv-folder-sort-option') ?? [],
+    );
+
+    expect(options.map((button) => button.textContent)).toEqual([
+      'folder_sort_manual',
+      'folder_sort_recent',
+    ]);
+    expect(options[0]?.getAttribute('aria-pressed')).toBe('true');
+
+    options[1]?.click();
+
+    expect(options[1]?.getAttribute('aria-pressed')).toBe('true');
+    expect(browser.storage.sync.set).toHaveBeenCalledWith({
+      [StorageKeys.FOLDER_CONVERSATION_SORT_MODE]: 'recent',
+    });
   });
 
   it('removes stale menu listeners when toggling closed before reopening', () => {

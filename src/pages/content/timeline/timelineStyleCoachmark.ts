@@ -10,7 +10,7 @@ import { StorageKeys } from '@/core/types/common';
 import { getTranslationSync, initI18n } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
-import { showCoachmark } from '../coachmark';
+import { type CoachmarkResult, showCoachmark } from '../coachmark';
 
 const COACH_ID = 'timeline-compact-style-intro-v2';
 const PREVIEW_TICK_COUNT = 14;
@@ -84,8 +84,8 @@ export async function showTimelineStyleCoachmark({
   enabled,
   force = false,
   onStyleChange,
-}: TimelineStyleCoachmarkOptions): Promise<void> {
-  if (enabled && !force) return;
+}: TimelineStyleCoachmarkOptions): Promise<CoachmarkResult> {
+  if (enabled && !force) return 'skipped';
 
   try {
     await initI18n();
@@ -96,7 +96,7 @@ export async function showTimelineStyleCoachmark({
   let preview: HTMLElement | null = null;
   let hiddenTimelineElements: HTMLElement[] = [];
 
-  await showCoachmark({
+  return showCoachmark({
     id,
     once: !force,
     scrim: true,
@@ -125,7 +125,7 @@ export async function showTimelineStyleCoachmark({
         );
         hiddenTimelineElements = [];
         if (preview === element) preview = null;
-        element.remove();
+        element?.remove();
       },
     },
     anchor: () => null,
@@ -138,6 +138,7 @@ export async function showTimelineStyleCoachmark({
       },
     },
     dismissLabel: t('coachmarkDismiss', 'Done'),
+    closeLabel: t('coachmarkClose', 'Close'),
   });
 }
 
@@ -147,10 +148,10 @@ export async function showTimelineStyleCoachmark({
  */
 export async function maybeShowTimelineStyleCoachmark(
   opts: { force?: boolean } = {},
-): Promise<void> {
-  if (location.hostname !== 'gemini.google.com') return;
+): Promise<CoachmarkResult> {
+  if (location.hostname !== 'gemini.google.com') return 'skipped';
   const enabled = await loadCompactTimelineEnabled();
-  await showTimelineStyleCoachmark({
+  return showTimelineStyleCoachmark({
     id: COACH_ID,
     enabled,
     force: opts.force,

@@ -28,7 +28,6 @@ export type MountArgs = {
   onToggleFolderPinned?: (folderId: string) => void;
   onMoveConversation?: (conversationId: string, fromFolderId: string, toFolderId: string) => void;
   onSetFolderColor?: (folderId: string, color: string) => void;
-  onConversationSortModeChange?: (mode: ConversationSortMode) => void;
   onCloudUpload?: () => void;
   onCloudSync?: () => void;
   getCloudUploadTooltip?: () => Promise<string>;
@@ -856,7 +855,6 @@ export function mountFloatingPanel({
   onToggleFolderPinned,
   onMoveConversation,
   onSetFolderColor,
-  onConversationSortModeChange,
   onCloudUpload,
   onCloudSync,
   getCloudUploadTooltip,
@@ -910,27 +908,6 @@ export function mountFloatingPanel({
     headerActions.appendChild(cloudSyncBtn);
   }
 
-  const sortBtn = createIconButton('sort', 'folder_sort', '↕', (e) => {
-    e.stopPropagation();
-    currentConversationSortMode = currentConversationSortMode === 'manual' ? 'recent' : 'manual';
-    updateSortButton();
-    render();
-    onConversationSortModeChange?.(currentConversationSortMode);
-  });
-  const updateSortButton = () => {
-    const modeLabel = t(
-      currentConversationSortMode === 'manual' ? 'folder_sort_manual' : 'folder_sort_recent',
-    );
-    const label = `${t('folder_sort')}: ${modeLabel}`;
-    sortBtn.title = label;
-    sortBtn.setAttribute('aria-label', label);
-    sortBtn.classList.toggle(
-      `${FLOATING_PANEL_CLASS}__icon-button--active`,
-      currentConversationSortMode === 'recent',
-    );
-  };
-  updateSortButton();
-
   const createBtn = createIconButton('create', 'floatingPanelCreateFolder', '+', (e) => {
     e.stopPropagation();
     setInlineEditor({ mode: 'create', parentId: null });
@@ -945,7 +922,6 @@ export function mountFloatingPanel({
   closeBtn.textContent = '×';
 
   header.appendChild(title);
-  headerActions.appendChild(sortBtn);
   headerActions.appendChild(createBtn);
   headerActions.appendChild(closeBtn);
   header.appendChild(headerActions);
@@ -1154,7 +1130,6 @@ export function mountFloatingPanel({
     update: (next, nextConversationSortMode) => {
       currentData = next;
       if (nextConversationSortMode) currentConversationSortMode = nextConversationSortMode;
-      updateSortButton();
       const nextIds = new Set(next.folders.map((folder) => folder.id));
       for (const folderId of expandedFolders.keys()) {
         if (!nextIds.has(folderId)) expandedFolders.delete(folderId);

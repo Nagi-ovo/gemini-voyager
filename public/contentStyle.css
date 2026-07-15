@@ -5044,6 +5044,10 @@ body.light-theme .gv-folder-menu-item:hover {
   min-width: 220px;
 }
 
+.gv-folder-settings-menu.gv-coach-folder-settings-preview {
+  pointer-events: none;
+}
+
 .gv-folder-settings-row {
   display: flex;
   align-items: center;
@@ -5059,6 +5063,39 @@ body.light-theme .gv-folder-menu-item:hover {
   color: oklch(0.14 0.004 285);
 }
 
+.gv-folder-sort-options {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 9px;
+  background: oklch(0.95 0.004 250 / 0.8);
+}
+
+.gv-folder-sort-option {
+  min-height: 26px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: oklch(0.32 0.008 285);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+.gv-folder-sort-option:hover:not(.is-active) {
+  background: oklch(0.14 0.004 285 / 0.06);
+}
+
+.gv-folder-sort-option.is-active {
+  background: oklch(0.995 0.002 250);
+  color: oklch(0.14 0.004 285);
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.12);
+}
+
 @media (prefers-color-scheme: dark) {
   .gv-folder-settings-label {
     color: oklch(0.92 0.004 250);
@@ -5068,6 +5105,43 @@ body.light-theme .gv-folder-menu-item:hover {
 .theme-host.dark-theme .gv-folder-settings-label,
 body.dark-theme .gv-folder-settings-label {
   color: oklch(0.92 0.004 250);
+}
+
+@media (prefers-color-scheme: dark) {
+  .gv-folder-sort-options {
+    background: oklch(0.24 0.008 285 / 0.8);
+  }
+  .gv-folder-sort-option {
+    color: oklch(0.76 0.006 250);
+  }
+  .gv-folder-sort-option:hover:not(.is-active) {
+    background: oklch(0.92 0.004 250 / 0.08);
+  }
+  .gv-folder-sort-option.is-active {
+    background: oklch(0.34 0.01 285);
+    color: oklch(0.96 0.003 250);
+  }
+}
+
+.theme-host.dark-theme .gv-folder-sort-options,
+body.dark-theme .gv-folder-sort-options {
+  background: oklch(0.24 0.008 285 / 0.8);
+}
+
+.theme-host.dark-theme .gv-folder-sort-option,
+body.dark-theme .gv-folder-sort-option {
+  color: oklch(0.76 0.006 250);
+}
+
+.theme-host.dark-theme .gv-folder-sort-option:hover:not(.is-active),
+body.dark-theme .gv-folder-sort-option:hover:not(.is-active) {
+  background: oklch(0.92 0.004 250 / 0.08);
+}
+
+.theme-host.dark-theme .gv-folder-sort-option.is-active,
+body.dark-theme .gv-folder-sort-option.is-active {
+  background: oklch(0.34 0.01 285);
+  color: oklch(0.96 0.003 250);
 }
 
 .gv-folder-stepper {

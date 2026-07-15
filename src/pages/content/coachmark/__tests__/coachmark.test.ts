@@ -54,20 +54,27 @@ describe('coachmark seen-state', () => {
 });
 
 describe('runCoachmarkSequence', () => {
-  it('runs coachmark steps in order', async () => {
+  it('continues past skipped steps and stops after showing one coachmark', async () => {
     const calls: string[] = [];
 
-    await runCoachmarkSequence([
+    const result = await runCoachmarkSequence([
       async () => {
         await Promise.resolve();
         calls.push('usage');
+        return 'skipped' as const;
       },
       () => {
         calls.push('folder-search');
+        return 'dismissed' as const;
+      },
+      () => {
+        calls.push('conversation-sort');
+        return 'dismissed' as const;
       },
     ]);
 
     expect(calls).toEqual(['usage', 'folder-search']);
+    expect(result).toBe('dismissed');
   });
 });
 
@@ -95,6 +102,7 @@ describe('showCoachmark', () => {
       toggle: { label: 'on', initial: false, onChange },
       dismissLabel: 'Done',
     });
+    await flush();
     await flush();
 
     const sw = document.querySelector('.gv-coach-switch') as HTMLElement;
@@ -163,7 +171,7 @@ describe('showCoachmark', () => {
           document.body.appendChild(el);
           return el;
         },
-        unmount: (el) => el.remove(),
+        unmount: (el) => el?.remove(),
       },
       body: 'intro',
     });
@@ -174,6 +182,64 @@ describe('showCoachmark', () => {
     (document.querySelector('.gv-coach-close') as HTMLElement).click();
     await p;
     expect(document.querySelector('.prev')).toBeNull();
+  });
+
+  it('rolls back partial reveal setup when mount throws', async () => {
+    const cleanup = vi.fn((el: HTMLElement | null) => {
+      expect(el).toBeNull();
+      document.querySelector('.partial-preview')?.remove();
+    });
+
+    const result = await showCoachmark({
+      id: 'partial-preview',
+      anchor: () => null,
+      reveal: {
+        mount: () => {
+          const partial = document.createElement('div');
+          partial.className = 'partial-preview';
+          document.body.appendChild(partial);
+          throw new Error('preview failed after setup');
+        },
+        unmount: cleanup,
+      },
+      body: 'intro',
+    });
+
+    expect(result).toBe('skipped');
+    expect(cleanup).toHaveBeenCalledOnce();
+    expect(document.querySelector('.partial-preview')).toBeNull();
+  });
+
+  it('labels the dialog, focuses its action, and restores focus after explicit close', async () => {
+    const anchor = document.createElement('button');
+    document.body.appendChild(anchor);
+    anchor.focus();
+
+    const pending = showCoachmark({
+      id: 'accessible-guide',
+      anchor: () => anchor,
+      title: 'New feature',
+      body: 'Feature explanation',
+      dismissLabel: 'Done',
+      closeLabel: 'Close guide',
+    });
+    await flush();
+    await flush();
+
+    const dialog = document.querySelector<HTMLElement>('.gv-coach');
+    const title = document.querySelector<HTMLElement>('.gv-coach-title');
+    const body = document.querySelector<HTMLElement>('.gv-coach-body');
+    const done = document.querySelector<HTMLElement>('.gv-coach-dismiss');
+    const close = document.querySelector<HTMLButtonElement>('.gv-coach-close');
+
+    expect(dialog?.getAttribute('aria-labelledby')).toBe(title?.id);
+    expect(dialog?.getAttribute('aria-describedby')).toBe(body?.id);
+    expect(close?.getAttribute('aria-label')).toBe('Close guide');
+    expect(document.activeElement).toBe(done);
+
+    close?.click();
+    await pending;
+    expect(document.activeElement).toBe(anchor);
   });
 
   it('does not show twice when once is left default (second call skips)', async () => {

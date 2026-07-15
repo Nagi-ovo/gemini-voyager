@@ -21,7 +21,7 @@ import browser from 'webextension-polyfill';
 import { StorageKeys } from '@/core/types/common';
 
 export type CoachmarkResult = 'enabled' | 'dismissed' | 'skipped';
-export type CoachmarkStep = () => void | Promise<void>;
+export type CoachmarkStep = () => CoachmarkResult | Promise<CoachmarkResult>;
 
 export interface CoachmarkToggle {
   label: string;
@@ -34,8 +34,11 @@ export interface CoachmarkToggle {
 export interface CoachmarkReveal {
   /** Mount and return the preview element (appended to the page by the caller). */
   mount: () => HTMLElement;
-  /** Remove the preview element. Called when the coachmark closes. */
-  unmount: (el: HTMLElement) => void;
+  /**
+   * Undo every side effect from mount. Receives null when mount failed before
+   * returning an element, so partial setup can still be rolled back.
+   */
+  unmount: (el: HTMLElement | null) => void;
 }
 
 export interface CoachmarkConfig {
@@ -52,6 +55,8 @@ export interface CoachmarkConfig {
   toggle?: CoachmarkToggle;
   /** Text of the secondary "dismiss" affordance. Omit to hide it. */
   dismissLabel?: string;
+  /** Accessible label for the top-right close button. */
+  closeLabel?: string;
   /** Preferred side; auto-flips to stay on screen. Default 'top'. */
   placement?: 'top' | 'bottom';
   /** Dim the page behind the coachmark. Default true. */
@@ -102,14 +107,16 @@ export async function resetCoachmark(id: string): Promise<void> {
   }
 }
 
-export async function runCoachmarkSequence(steps: CoachmarkStep[]): Promise<void> {
+export async function runCoachmarkSequence(steps: CoachmarkStep[]): Promise<CoachmarkResult> {
   for (const step of steps) {
     try {
-      await step();
+      const result = await step();
+      if (result !== 'skipped') return result;
     } catch {
       /* non-critical */
     }
   }
+  return 'skipped';
 }
 
 // ── DOM helpers ─────────────────────────────────────────────────────────────
@@ -180,23 +187,38 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
 
   // Reveal the preview first so the anchor exists and the eye is drawn to it.
   let revealEl: HTMLElement | null = null;
+  let revealMountFailed = false;
   if (cfg.reveal) {
     try {
       revealEl = cfg.reveal.mount();
       revealEl.classList.add('gv-coach-reveal');
       requestAnimationFrame(() => revealEl?.classList.add('--show'));
     } catch {
+      revealMountFailed = true;
+      try {
+        cfg.reveal.unmount(null);
+      } catch {
+        /* cleanup is best-effort */
+      }
       revealEl = null;
     }
   }
 
   const anchor = cfg.anchor() ?? revealEl;
   if (!anchor || !anchor.isConnected) {
-    if (revealEl) cfg.reveal?.unmount(revealEl);
+    if (cfg.reveal && !revealMountFailed) {
+      try {
+        cfg.reveal.unmount(revealEl);
+      } catch {
+        /* cleanup is best-effort */
+      }
+    }
     return 'skipped';
   }
 
   activeId = cfg.id;
+  const previouslyFocused =
+    document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
   const scrim =
     cfg.scrim === false
@@ -207,12 +229,12 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
   const bubble = document.createElement('div');
   bubble.className = 'gv-coach';
   bubble.setAttribute('role', 'dialog');
-  bubble.setAttribute('aria-live', 'polite');
+  const accessibleId = `gv-coach-${cfg.id.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 
   const close = document.createElement('button');
   close.type = 'button';
   close.className = 'gv-coach-close';
-  close.setAttribute('aria-label', cfg.dismissLabel || 'Close');
+  close.setAttribute('aria-label', cfg.closeLabel || 'Close');
   close.innerHTML =
     '<svg viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z"/></svg>';
   bubble.appendChild(close);
@@ -229,16 +251,21 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
     if (cfg.title) {
       const ti = document.createElement('span');
       ti.className = 'gv-coach-title';
+      ti.id = `${accessibleId}-title`;
       ti.textContent = cfg.title;
       head.appendChild(ti);
+      bubble.setAttribute('aria-labelledby', ti.id);
     }
     bubble.appendChild(head);
   }
 
   const body = document.createElement('p');
   body.className = 'gv-coach-body';
+  body.id = `${accessibleId}-body`;
   body.textContent = cfg.body;
   bubble.appendChild(body);
+  if (cfg.title) bubble.setAttribute('aria-describedby', body.id);
+  else bubble.setAttribute('aria-label', cfg.body);
 
   const arrow = document.createElement('span');
   arrow.className = 'gv-coach-arrow';
@@ -260,7 +287,7 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
     let settled = false;
     let toggleOn = cfg.toggle?.initial === true;
 
-    const settle = (result: CoachmarkResult) => {
+    const settle = (result: CoachmarkResult, restoreFocus: boolean) => {
       if (settled) return;
       settled = true;
       if (once) void markCoachmarkSeen(cfg.id);
@@ -281,11 +308,18 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
         } catch {
           /* gone */
         }
-        if (revealEl) {
+        if (cfg.reveal) {
           try {
             cfg.reveal?.unmount(revealEl);
           } catch {
             /* gone */
+          }
+        }
+        if (restoreFocus && previouslyFocused?.isConnected) {
+          try {
+            previouslyFocused.focus({ preventScroll: true });
+          } catch {
+            previouslyFocused.focus();
           }
         }
         if (activeId === cfg.id) activeId = null;
@@ -300,12 +334,13 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
         (target.closest('.gv-coach') || target === revealEl || revealEl?.contains(target))
       )
         return;
-      settle('dismissed');
+      settle('dismissed', false);
     };
     const onKey = (ev: KeyboardEvent) => {
       if (ev.key === 'Escape') {
         ev.stopPropagation();
-        settle('dismissed');
+        ev.preventDefault();
+        settle('dismissed', true);
       }
     };
     const onReflow = () => {
@@ -314,7 +349,7 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
 
     close.addEventListener('click', (e) => {
       e.stopPropagation();
-      settle('dismissed');
+      settle('dismissed', true);
     });
 
     if (cfg.toggle) {
@@ -334,7 +369,7 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
       dismiss.textContent = cfg.dismissLabel;
       dismiss.addEventListener('click', (e) => {
         e.stopPropagation();
-        settle(toggleOn ? 'enabled' : 'dismissed');
+        settle(toggleOn ? 'enabled' : 'dismissed', true);
       });
       bubble.insertBefore(dismiss, arrow);
     }
@@ -345,6 +380,8 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
       window.addEventListener('click', onOutside, true);
       window.addEventListener('keydown', onKey, true);
       window.addEventListener('resize', onReflow);
+      const initialFocus = bubble.querySelector<HTMLElement>('.gv-coach-dismiss') ?? close;
+      initialFocus.focus({ preventScroll: true });
     }, 0);
   });
 }

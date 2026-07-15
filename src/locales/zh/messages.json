@@ -2295,6 +2295,14 @@
     "message": "显示文件夹搜索",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "conversationSortCoachmarkTitle": {
+    "message": "新增：会话排序",
+    "description": "Coachmark title introducing conversation sorting"
+  },
+  "conversationSortCoachmarkBody": {
+    "message": "“手动排序”会保留你拖拽调整后的顺序；“最近打开”会把刚访问的会话排到前面。可随时在文件夹设置中切换。",
+    "description": "Coachmark body explaining manual and recently opened conversation sorting"
+  },
   "timelineCoachmarkTitle": {
     "message": "新增：紧凑时间线",
     "description": "Coachmark title introducing the compact timeline style"
@@ -2310,6 +2318,10 @@
   "coachmarkDismiss": {
     "message": "完成",
     "description": "Generic confirmation label for feature coachmarks"
+  },
+  "coachmarkClose": {
+    "message": "关闭",
+    "description": "Accessible label for the feature coachmark close button"
   },
   "themeColor": {
     "message": "主题色",

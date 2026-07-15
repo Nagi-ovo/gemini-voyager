@@ -15,7 +15,7 @@ import { StorageKeys } from '@/core/types/common';
 import { getTranslationSync, initI18n } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
-import { showCoachmark } from '../coachmark';
+import { type CoachmarkResult, showCoachmark } from '../coachmark';
 import { USAGE_REFRESH_ICON } from './icons';
 
 const COACH_ID = 'usage-pill-intro';
@@ -118,10 +118,12 @@ function buildPreviewPill(): HTMLElement {
  * Show the usage-pill intro once. `force` re-shows it for debugging (ignores
  * both the once-flag and the already-enabled short-circuit).
  */
-export async function maybeShowUsageCoachmark(opts: { force?: boolean } = {}): Promise<void> {
-  if (location.hostname !== 'gemini.google.com') return;
+export async function maybeShowUsageCoachmark(
+  opts: { force?: boolean } = {},
+): Promise<CoachmarkResult> {
+  if (location.hostname !== 'gemini.google.com') return 'skipped';
   const enabled = await loadUsageEnabled();
-  if (enabled && !opts.force) return; // already using it — nothing to introduce
+  if (enabled && !opts.force) return 'skipped'; // already using it — nothing to introduce
 
   try {
     await initI18n();
@@ -129,7 +131,7 @@ export async function maybeShowUsageCoachmark(opts: { force?: boolean } = {}): P
     /* fall back to literals */
   }
 
-  await showCoachmark({
+  return showCoachmark({
     id: COACH_ID,
     once: !opts.force,
     scrim: true,
@@ -140,7 +142,7 @@ export async function maybeShowUsageCoachmark(opts: { force?: boolean } = {}): P
       'Keep your remaining Gemini 5-hour and weekly limits in view, right by the chat box.',
     ),
     placement: 'top',
-    reveal: { mount: buildPreviewPill, unmount: (el) => el.remove() },
+    reveal: { mount: buildPreviewPill, unmount: (el) => el?.remove() },
     anchor: () => null, // anchor to the revealed preview
     toggle: {
       label: t('usageCoachmarkToggle', 'Show the usage pill'),
@@ -148,6 +150,7 @@ export async function maybeShowUsageCoachmark(opts: { force?: boolean } = {}): P
       onChange: (on) => setUsageEnabled(on),
     },
     dismissLabel: t('coachmarkDismiss', 'Done'),
+    closeLabel: t('coachmarkClose', 'Close'),
   });
 }
 

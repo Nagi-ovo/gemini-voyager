@@ -2295,6 +2295,14 @@
     "message": "폴더 검색 표시",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "conversationSortCoachmarkTitle": {
+    "message": "새 기능: 대화 정렬",
+    "description": "Coachmark title introducing conversation sorting"
+  },
+  "conversationSortCoachmarkBody": {
+    "message": "‘수동 정렬’은 드래그하여 정한 순서를 유지합니다. ‘최근에 연 항목’은 방금 방문한 대화를 위로 올립니다. 폴더 설정에서 언제든 전환할 수 있습니다.",
+    "description": "Coachmark body explaining manual and recently opened conversation sorting"
+  },
   "timelineCoachmarkTitle": {
     "message": "신규: 컴팩트 타임라인",
     "description": "Coachmark title introducing the compact timeline style"
@@ -2310,6 +2318,10 @@
   "coachmarkDismiss": {
     "message": "완료",
     "description": "Generic confirmation label for feature coachmarks"
+  },
+  "coachmarkClose": {
+    "message": "닫기",
+    "description": "Accessible label for the feature coachmark close button"
   },
   "themeColor": {
     "message": "테마 색상",

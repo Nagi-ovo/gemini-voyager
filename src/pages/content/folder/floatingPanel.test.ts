@@ -245,14 +245,13 @@ describe('mountFloatingPanel', () => {
     expect(onNavigate).toHaveBeenCalledWith(expect.objectContaining({ conversationId: 'conv-a' }));
   });
 
-  it('switches between manual and recently-opened conversation order', () => {
-    const onConversationSortModeChange = vi.fn();
+  it('follows the conversation order selected in folder settings', () => {
     const data = createData();
     data.folderContents['folder-a'] = [
       createConversation('manual-first', 'Manual first', { sortIndex: 0, lastOpenedAt: 100 }),
       createConversation('recent-first', 'Recent first', { sortIndex: 1, lastOpenedAt: 200 }),
     ];
-    const handle = mountPanel({ data, onConversationSortModeChange });
+    const handle = mountPanel({ data });
     const getOrder = () =>
       Array.from(
         handle.element.querySelectorAll<HTMLElement>(`.${FLOATING_PANEL_CLASS}__conv`),
@@ -260,14 +259,9 @@ describe('mountFloatingPanel', () => {
 
     expect(getOrder()).toEqual(['manual-first', 'recent-first']);
 
-    click(
-      requireElement<HTMLButtonElement>(
-        handle.element,
-        `.${FLOATING_PANEL_CLASS}__icon-button--sort`,
-      ),
-    );
+    expect(handle.element.querySelector(`.${FLOATING_PANEL_CLASS}__icon-button--sort`)).toBeNull();
 
-    expect(onConversationSortModeChange).toHaveBeenCalledWith('recent');
+    handle.update(data, 'recent');
     expect(getOrder()).toEqual(['recent-first', 'manual-first']);
   });
 

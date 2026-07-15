@@ -2295,6 +2295,14 @@
     "message": "Show folder search",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "conversationSortCoachmarkTitle": {
+    "message": "New: conversation sorting",
+    "description": "Coachmark title introducing conversation sorting"
+  },
+  "conversationSortCoachmarkBody": {
+    "message": "Manual order keeps your drag-and-drop arrangement. Recently opened brings chats you visit back to the top. Switch anytime in Folder settings.",
+    "description": "Coachmark body explaining manual and recently opened conversation sorting"
+  },
   "timelineCoachmarkTitle": {
     "message": "New: compact timeline",
     "description": "Coachmark title introducing the compact timeline style"
@@ -2310,6 +2318,10 @@
   "coachmarkDismiss": {
     "message": "Done",
     "description": "Generic confirmation label for feature coachmarks"
+  },
+  "coachmarkClose": {
+    "message": "Close",
+    "description": "Accessible label for the feature coachmark close button"
   },
   "themeColor": {
     "message": "Accent color",

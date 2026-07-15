@@ -2295,6 +2295,14 @@
     "message": "Afficher la recherche de dossiers",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "conversationSortCoachmarkTitle": {
+    "message": "Nouveau : tri des conversations",
+    "description": "Coachmark title introducing conversation sorting"
+  },
+  "conversationSortCoachmarkBody": {
+    "message": "Le tri manuel conserve l’ordre défini par glisser-déposer. Récemment ouvertes replace en haut les conversations consultées. Changez de mode à tout moment dans les paramètres des dossiers.",
+    "description": "Coachmark body explaining manual and recently opened conversation sorting"
+  },
   "timelineCoachmarkTitle": {
     "message": "Nouveau : chronologie compacte",
     "description": "Coachmark title introducing the compact timeline style"
@@ -2310,6 +2318,10 @@
   "coachmarkDismiss": {
     "message": "Terminé",
     "description": "Generic confirmation label for feature coachmarks"
+  },
+  "coachmarkClose": {
+    "message": "Fermer",
+    "description": "Accessible label for the feature coachmark close button"
   },
   "themeColor": {
     "message": "Couleur d'accent",

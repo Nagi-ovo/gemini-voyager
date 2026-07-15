@@ -72,6 +72,7 @@ Conventional Commits: `<type>(<scope>): <imperative summary>`
 - **Types**: `src/core/types/common.ts` for StorageKeys and shared types.
 - **Translations**: `src/locales/*/messages.json` (10 languages).
 - **Injected CSS**: shared/static content CSS lives in `public/contentStyle.css`; feature-specific dynamic CSS may be injected by content modules or the plugin runtime when values are computed at runtime, with `gv-` prefixes and teardown.
+- **Feature coachmarks**: reuse the primitive in `src/pages/content/coachmark/`; keep feature-specific consumers beside their feature, and register Gemini onboarding in `showOnboardingCoachmarksWhenChangelogIsIdle` in `src/pages/content/index.tsx`. Each coachmark needs a stable ID, complete reveal cleanup (including partial mount failure), all 10 locales, a debug trigger, and tests. The scheduler intentionally shows at most one unseen coachmark per page visit.
 - **Plugins**: declarative CSS+JSON plugin system in `src/features/plugins/` (engine + `PluginHost` + popup `PluginManager`). Default sources are builtin native plugins, bundled official catalog plugins, and the remote marketplace. Official CSS/JSON plugins that ship with Voyager live in `src/features/plugins/catalog/` and load through `BundledCatalogPluginSource`; update them in this repo together with engine/popup changes. Third-party or experimental marketplace plugins can still live in `github.com/nagi-studio/voyager-plugins` and are fetched at runtime by `MarketplacePluginSource`. A local sibling clone may exist at `../voyager-plugins`, but treat it as the remote marketplace mirror, not the source of truth for bundled official plugins. Builtin/native-function plugins that need JS (e.g. **Formula Copy**, which targets Claude + ChatGPT) live in `src/features/plugins/builtin/index.ts`.
 
 ## Task Map
@@ -81,6 +82,7 @@ Conventional Commits: `<type>(<scope>): <imperative summary>`
 | Add storage key | `src/core/types/common.ts` → storage defaults/migrations (`SettingsBackupService.ts` for sync-backed settings) → popup/content consumers → locale keys only when new UI text is added |
 | Update translations | `src/locales/*/messages.json` (all 10) |
 | Change DOM injection | `src/pages/content/` |
+| Add a one-time feature guide | Reuse `src/pages/content/coachmark/` → add a feature-local consumer → register it in `src/pages/content/index.tsx` → add all 10 locale strings and tests |
 | Modify popup settings | Existing top-level settings often live in `src/pages/popup/Popup.tsx`; extracted sections live in `src/pages/popup/components/` |
 | Fix cloud sync | `src/core/services/GoogleDriveSyncService.ts` |
 | Add keyboard shortcut | `src/core/services/KeyboardShortcutService.ts` + related types + `src/pages/popup/components/KeyboardShortcutSettings.tsx` |

@@ -36,6 +36,7 @@ import { startEdgeFinalVersionNotice } from './edgeFinalVersionNotice';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
+import { maybeShowConversationSortCoachmark } from './folder/conversationSortCoachmark';
 import { maybeShowFolderSearchCoachmark } from './folder/folderSearchCoachmark';
 import { startFolderManager } from './folder/index';
 import { startFolderItemFontSizeAdjuster } from './folderItemFontSize/index';
@@ -124,13 +125,30 @@ async function isForkFeatureEnabled(): Promise<boolean> {
   }
 }
 
+let onboardingCoachmarkShownThisPage = false;
+let onboardingCoachmarkSequenceRunning = false;
+
 function showOnboardingCoachmarksWhenChangelogIsIdle(): void {
-  if (document.querySelector('.gv-changelog-overlay')) return;
+  if (
+    document.querySelector('.gv-changelog-overlay') ||
+    onboardingCoachmarkShownThisPage ||
+    onboardingCoachmarkSequenceRunning
+  )
+    return;
+
+  onboardingCoachmarkSequenceRunning = true;
   void runCoachmarkSequence([
     maybeShowTimelineStyleCoachmark,
     maybeShowUsageCoachmark,
     maybeShowFolderSearchCoachmark,
-  ]);
+    maybeShowConversationSortCoachmark,
+  ])
+    .then((result) => {
+      if (result !== 'skipped') onboardingCoachmarkShownThisPage = true;
+    })
+    .finally(() => {
+      onboardingCoachmarkSequenceRunning = false;
+    });
 }
 
 /**

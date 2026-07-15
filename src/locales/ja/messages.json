@@ -2295,6 +2295,14 @@
     "message": "フォルダ検索を表示",
     "description": "Inline toggle label in the folder-search coachmark"
   },
+  "conversationSortCoachmarkTitle": {
+    "message": "新機能：会話の並べ替え",
+    "description": "Coachmark title introducing conversation sorting"
+  },
+  "conversationSortCoachmarkBody": {
+    "message": "「手動並べ替え」はドラッグ＆ドロップで決めた順序を保持します。「最近開いた順」は、アクセスした会話を上位に移動します。フォルダ設定でいつでも切り替えられます。",
+    "description": "Coachmark body explaining manual and recently opened conversation sorting"
+  },
   "timelineCoachmarkTitle": {
     "message": "新機能：コンパクトタイムライン",
     "description": "Coachmark title introducing the compact timeline style"
@@ -2310,6 +2318,10 @@
   "coachmarkDismiss": {
     "message": "完了",
     "description": "Generic confirmation label for feature coachmarks"
+  },
+  "coachmarkClose": {
+    "message": "閉じる",
+    "description": "Accessible label for the feature coachmark close button"
   },
   "themeColor": {
     "message": "テーマカラー",
