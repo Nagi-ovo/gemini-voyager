@@ -2,7 +2,7 @@ import { CLOUD_SYNC_PATH, CLOUD_UPLOAD_PATH } from '@/core/icons/cloudSyncPaths'
 import { isSafari } from '@/core/utils/browser';
 import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
-import { sortConversationsByPriority } from './conversationSort';
+import { type ConversationSortMode, sortConversationsByPriority } from './conversationSort';
 import { FOLDER_COLORS, getFolderColor, isDarkMode } from './folderColors';
 import type { ConversationReference, Folder, FolderData } from './types';
 
@@ -13,6 +13,7 @@ export type FloatingPanelSize = { w: number; h: number };
 
 export type MountArgs = {
   data: FolderData;
+  conversationSortMode?: ConversationSortMode;
   storedPos?: FloatingPanelPos | null;
   storedSize?: FloatingPanelSize | null;
   onPosChange?: (pos: FloatingPanelPos) => void;
@@ -27,6 +28,7 @@ export type MountArgs = {
   onToggleFolderPinned?: (folderId: string) => void;
   onMoveConversation?: (conversationId: string, fromFolderId: string, toFolderId: string) => void;
   onSetFolderColor?: (folderId: string, color: string) => void;
+  onConversationSortModeChange?: (mode: ConversationSortMode) => void;
   onCloudUpload?: () => void;
   onCloudSync?: () => void;
   getCloudUploadTooltip?: () => Promise<string>;
@@ -37,7 +39,7 @@ export type FloatingPanelMountArgs = MountArgs;
 
 export type FloatingPanelHandle = {
   element: HTMLElement;
-  update: (data: FolderData) => void;
+  update: (data: FolderData, conversationSortMode?: ConversationSortMode) => void;
   destroy: () => void;
 };
 
@@ -84,6 +86,7 @@ type RenderActions = Pick<
 
 type RenderContext = {
   data: FolderData;
+  conversationSortMode: ConversationSortMode;
   actions: RenderActions;
   expandedFolders: Map<string, boolean>;
   inlineEditor: InlineEditorState | null;
@@ -563,7 +566,10 @@ function renderFolderNode(folder: Folder, context: RenderContext, depth: number)
     body.appendChild(renderFolderNode(child, context, depth + 1));
   }
 
-  for (const conv of sortConversationsByPriority(childConversations)) {
+  for (const conv of sortConversationsByPriority(
+    childConversations,
+    context.conversationSortMode,
+  )) {
     body.appendChild(renderConversationRow(conv, folder.id, depth, context));
   }
 
@@ -835,6 +841,7 @@ function renderContextMenu(container: HTMLElement, context: RenderContext): void
 
 export function mountFloatingPanel({
   data,
+  conversationSortMode = 'manual',
   storedPos,
   storedSize,
   onPosChange,
@@ -849,6 +856,7 @@ export function mountFloatingPanel({
   onToggleFolderPinned,
   onMoveConversation,
   onSetFolderColor,
+  onConversationSortModeChange,
   onCloudUpload,
   onCloudSync,
   getCloudUploadTooltip,
@@ -856,6 +864,9 @@ export function mountFloatingPanel({
 }: MountArgs): FloatingPanelHandle {
   const existing = document.querySelector(`.${FLOATING_PANEL_CLASS}`);
   if (existing) existing.remove();
+
+  let currentData = data;
+  let currentConversationSortMode = conversationSortMode;
 
   const panel = document.createElement('div');
   panel.className = FLOATING_PANEL_CLASS;
@@ -899,6 +910,27 @@ export function mountFloatingPanel({
     headerActions.appendChild(cloudSyncBtn);
   }
 
+  const sortBtn = createIconButton('sort', 'folder_sort', '↕', (e) => {
+    e.stopPropagation();
+    currentConversationSortMode = currentConversationSortMode === 'manual' ? 'recent' : 'manual';
+    updateSortButton();
+    render();
+    onConversationSortModeChange?.(currentConversationSortMode);
+  });
+  const updateSortButton = () => {
+    const modeLabel = t(
+      currentConversationSortMode === 'manual' ? 'folder_sort_manual' : 'folder_sort_recent',
+    );
+    const label = `${t('folder_sort')}: ${modeLabel}`;
+    sortBtn.title = label;
+    sortBtn.setAttribute('aria-label', label);
+    sortBtn.classList.toggle(
+      `${FLOATING_PANEL_CLASS}__icon-button--active`,
+      currentConversationSortMode === 'recent',
+    );
+  };
+  updateSortButton();
+
   const createBtn = createIconButton('create', 'floatingPanelCreateFolder', '+', (e) => {
     e.stopPropagation();
     setInlineEditor({ mode: 'create', parentId: null });
@@ -913,6 +945,7 @@ export function mountFloatingPanel({
   closeBtn.textContent = '×';
 
   header.appendChild(title);
+  headerActions.appendChild(sortBtn);
   headerActions.appendChild(createBtn);
   headerActions.appendChild(closeBtn);
   header.appendChild(headerActions);
@@ -1011,7 +1044,6 @@ export function mountFloatingPanel({
       : null;
   resizeObserver?.observe(panel);
 
-  let currentData = data;
   let inlineEditor: InlineEditorState | null = null;
   let contextMenu: ContextMenuState | null = null;
   let inlineFormCleanup: (() => void) | null = null;
@@ -1044,6 +1076,7 @@ export function mountFloatingPanel({
 
     renderFolderTree(body, {
       data: currentData,
+      conversationSortMode: currentConversationSortMode,
       actions: {
         onNavigate,
         onCreateFolder,
@@ -1118,8 +1151,10 @@ export function mountFloatingPanel({
 
   return {
     element: panel,
-    update: (next) => {
+    update: (next, nextConversationSortMode) => {
       currentData = next;
+      if (nextConversationSortMode) currentConversationSortMode = nextConversationSortMode;
+      updateSortButton();
       const nextIds = new Set(next.folders.map((folder) => folder.id));
       for (const folderId of expandedFolders.keys()) {
         if (!nextIds.has(folderId)) expandedFolders.delete(folderId);

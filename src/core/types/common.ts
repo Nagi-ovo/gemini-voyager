@@ -47,6 +47,9 @@ export const StorageKeys = {
   FOLDER_FLOATING_POS: 'geminiFolderFloatingPos',
   FOLDER_FLOATING_FAB_POS: 'geminiFolderFloatingFabPos',
   FOLDER_FLOATING_SIZE: 'geminiFolderFloatingSize',
+  // Global conversation ordering preference for folder views. Manual keeps
+  // persisted sortIndex authoritative; recent uses lastOpenedAt/addedAt.
+  FOLDER_CONVERSATION_SORT_MODE: 'gvFolderConversationSortMode',
   // AI Studio variants — intentionally separate from the Gemini keys so toggling the
   // behaviour on one platform does not surprise users on the other.
   FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO: 'aistudioFolderHideArchivedConversations',

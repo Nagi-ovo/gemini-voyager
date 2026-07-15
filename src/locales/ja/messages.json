@@ -563,6 +563,22 @@
     "message": "フォルダ設定",
     "description": "Tooltip for the gear icon that opens folder-scoped settings"
   },
+  "folder_sort": {
+    "message": "会話を並べ替え",
+    "description": "Folder header action for choosing conversation order"
+  },
+  "folder_sort_manual": {
+    "message": "手動順",
+    "description": "Conversation order option that follows drag-and-drop positions"
+  },
+  "folder_sort_recent": {
+    "message": "最近開いた順",
+    "description": "Conversation order option that shows recently opened chats first"
+  },
+  "folder_sort_recent_drag_hint": {
+    "message": "フォルダ内の会話を並べ替えるには「手動順」に切り替えてください。",
+    "description": "Notice shown when attempting an in-folder reorder in recently-opened mode"
+  },
   "folder_anchor_move_above_notebooks": {
     "message": "フォルダを Notebooks の上に移動",
     "description": "Tooltip on the folder header swap button shown when folders are currently above Recents — clicking moves them above Notebooks instead."

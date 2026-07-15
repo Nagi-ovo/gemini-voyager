@@ -563,6 +563,22 @@
     "message": "Настройки папок",
     "description": "Tooltip for the gear icon that opens folder-scoped settings"
   },
+  "folder_sort": {
+    "message": "Сортировка чатов",
+    "description": "Folder header action for choosing conversation order"
+  },
+  "folder_sort_manual": {
+    "message": "Ручной порядок",
+    "description": "Conversation order option that follows drag-and-drop positions"
+  },
+  "folder_sort_recent": {
+    "message": "Недавно открытые",
+    "description": "Conversation order option that shows recently opened chats first"
+  },
+  "folder_sort_recent_drag_hint": {
+    "message": "Переключитесь на ручной порядок, чтобы изменить порядок чатов в этой папке.",
+    "description": "Notice shown when attempting an in-folder reorder in recently-opened mode"
+  },
   "folder_anchor_move_above_notebooks": {
     "message": "Переместить папки над Notebooks",
     "description": "Tooltip on the folder header swap button shown when folders are currently above Recents — clicking moves them above Notebooks instead."

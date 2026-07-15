@@ -563,6 +563,22 @@
     "message": "文件夹设置",
     "description": "齿轮图标提示，打开文件夹相关设置"
   },
+  "folder_sort": {
+    "message": "会话排序",
+    "description": "文件夹标题栏中的会话排序方式入口"
+  },
+  "folder_sort_manual": {
+    "message": "手动排序",
+    "description": "按照拖拽位置排列会话"
+  },
+  "folder_sort_recent": {
+    "message": "最近打开",
+    "description": "最近打开的会话优先显示"
+  },
+  "folder_sort_recent_drag_hint": {
+    "message": "请切换到“手动排序”后再调整文件夹内的会话顺序。",
+    "description": "最近打开模式下尝试文件夹内排序时的提示"
+  },
   "folder_anchor_move_above_notebooks": {
     "message": "将文件夹移到 Notebooks 上方",
     "description": "Tooltip on the folder header swap button shown when folders are currently above Recents — clicking moves them above Notebooks instead."

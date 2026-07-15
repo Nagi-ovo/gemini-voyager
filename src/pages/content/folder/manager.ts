@@ -29,7 +29,7 @@ import {
   resolveTimelineHierarchyDataForStorageScope,
 } from '../timeline/hierarchyStorage';
 import type { TimelineHierarchyData } from '../timeline/hierarchyTypes';
-import { sortConversationsByPriority } from './conversationSort';
+import { type ConversationSortMode, sortConversationsByPriority } from './conversationSort';
 import { type FloatingFabPos, mountFloatingFab, unmountFloatingFab } from './floatingModeFab';
 import { unmountFloatingModeNudge } from './floatingModeNudge';
 import {
@@ -131,6 +131,13 @@ interface FolderDialogOption {
   path: string;
 }
 
+type ConversationReorderPlacement = 'above' | 'below';
+
+interface ConversationReorderTarget {
+  element: HTMLElement;
+  placement: ConversationReorderPlacement;
+}
+
 function normalizeFolderDialogSearchText(value: string): string {
   return value
     .trim()
@@ -224,6 +231,7 @@ export class FolderManager {
   private filterCurrentUserOnly: boolean = false; // Whether to show only current user's conversations
   private folderSearchEnabled: boolean = true; // Whether to show the folder title search box
   private folderSearchQuery: string = ''; // Filter the folder tree by folder/conversation title
+  private conversationSortMode: ConversationSortMode = 'manual';
   private accountIsolationEnabled: boolean = false; // Whether hard account isolation is enabled
   private accountScope: AccountScope | null = null; // Resolved account scope for current page
   private activeStorageKey: string = STORAGE_KEY; // Storage key currently used for folder data
@@ -260,6 +268,9 @@ export class FolderManager {
   private activeColorPicker: HTMLElement | null = null; // Currently open color picker dialog
   private activeColorPickerFolderId: string | null = null; // Folder ID of currently open color picker
   private activeColorPickerCloseHandler: ((e: MouseEvent) => void) | null = null; // Event handler for closing color picker
+  private pendingConversationReorderTarget: ConversationReorderTarget | null = null;
+  private activeConversationReorderTarget: ConversationReorderTarget | null = null;
+  private conversationReorderRafId: number | null = null;
   // Echo suppression for our own chrome.storage.local mirror writes.
   // FolderStorageAdapter.saveData mirrors folder data into chrome.storage.local
   // and chrome fires storage.onChanged in the SAME context that initiated the
@@ -414,6 +425,7 @@ export class FolderManager {
       await this.loadFolderSearchEnabledSetting();
       await this.loadFolderTreeIndentSetting();
       await this.loadFolderProjectEnabledSetting();
+      await this.loadConversationSortModeSetting();
 
       // Set up storage change listener (always needed to respond to setting changes)
       this.setupStorageListener();
@@ -483,6 +495,7 @@ export class FolderManager {
     }
 
     this.clearNativeTitleSyncTimer();
+    this.clearConversationReorderIndicator();
 
     if (this.navPoller) {
       clearInterval(this.navPoller);
@@ -652,6 +665,7 @@ export class FolderManager {
 
     this.teardownPositionEnforcer();
     this.cleanupNotebooksAnchorButton();
+    this.clearConversationReorderIndicator();
     this.flushPendingSaveData();
     this.clearFolderSearchDebounceTimer();
     this.stopFloatingMode();
@@ -1219,6 +1233,7 @@ export class FolderManager {
 
     this.floatingPanelHandle = mountFloatingPanel({
       data: this.data,
+      conversationSortMode: this.conversationSortMode,
       storedPos,
       storedSize,
       onPosChange: (pos) => {
@@ -1310,6 +1325,7 @@ export class FolderManager {
       onSetFolderColor: (folderId, color) => {
         this.changeFolderColor(folderId, color);
       },
+      onConversationSortModeChange: (mode) => this.setConversationSortMode(mode),
       // Cloud sync / upload — mirror what the sidebar's header buttons do.
       // Only wire on non-Safari; the floating panel hides these buttons on
       // Safari because our Drive OAuth2 flow is not supported there yet. The
@@ -1809,6 +1825,13 @@ export class FolderManager {
       actionsContainer.appendChild(cloudButton);
     }
 
+    const sortButton = document.createElement('button');
+    sortButton.className = 'gv-folder-action-btn gv-folder-sort-btn';
+    sortButton.innerHTML = `<mat-icon role="img" class="mat-icon notranslate google-symbols mat-ligature-font mat-icon-no-color" aria-hidden="true">sort</mat-icon>`;
+    this.updateConversationSortButton(sortButton);
+    sortButton.addEventListener('click', (e) => this.showConversationSortMenu(e));
+    actionsContainer.appendChild(sortButton);
+
     // Folder settings (font size, future folder-scoped settings).
     const settingsButton = document.createElement('button');
     settingsButton.className = 'gv-folder-action-btn';
@@ -1901,8 +1924,13 @@ export class FolderManager {
     const filteredRootConversations = this.filterVisibleConversations(rootConversations);
     if (filteredRootConversations.length > 0) {
       const sortedRootConversations = this.sortConversations(filteredRootConversations);
+      const groupIndices = { starred: 0, normal: 0 };
       sortedRootConversations.forEach((conv) => {
         const convEl = this.createConversationElement(conv, ROOT_CONVERSATIONS_ID, 0);
+        if (!isSearchActive && this.conversationSortMode === 'manual') {
+          const group = conv.starred ? 'starred' : 'normal';
+          this.setupConversationReorderZone(convEl, ROOT_CONVERSATIONS_ID, groupIndices[group]++);
+        }
         list.appendChild(convEl);
         renderedItems++;
       });
@@ -2045,8 +2073,13 @@ export class FolderManager {
       const conversations = this.data.folderContents[folder.id] || [];
       const filteredConversations = this.filterVisibleConversations(conversations);
       const sortedConversations = this.sortConversations(filteredConversations);
+      const groupIndices = { starred: 0, normal: 0 };
       sortedConversations.forEach((conv) => {
         const convEl = this.createConversationElement(conv, folder.id, level + 1);
+        if (!isSearchActive && this.conversationSortMode === 'manual') {
+          const group = conv.starred ? 'starred' : 'normal';
+          this.setupConversationReorderZone(convEl, folder.id, groupIndices[group]++);
+        }
         content.appendChild(convEl);
       });
 
@@ -2189,6 +2222,7 @@ export class FolderManager {
         this.clearSelection();
         this.cleanupSelectionArtifacts();
       }
+      this.clearConversationReorderIndicator();
     });
 
     const link = document.createElement('a');
@@ -2393,6 +2427,16 @@ export class FolderManager {
       try {
         const dragData: DragData = JSON.parse(data);
 
+        if (
+          this.conversationSortMode === 'recent' &&
+          dragData.type !== 'folder' &&
+          dragData.sourceFolderId === folderId
+        ) {
+          this.showNotification(this.t('folder_sort_recent_drag_hint'), 'info');
+          this.exitMultiSelectMode();
+          return;
+        }
+
         // Pre-cleanup: Restore opacity immediately before processing drop
         // This prevents visual artifacts if dragend doesn't fire properly
         this.selectedConversations.forEach((id) => {
@@ -2462,6 +2506,16 @@ export class FolderManager {
 
       try {
         const dragData: DragData = JSON.parse(data);
+
+        if (
+          this.conversationSortMode === 'recent' &&
+          dragData.type !== 'folder' &&
+          dragData.sourceFolderId === ROOT_CONVERSATIONS_ID
+        ) {
+          this.showNotification(this.t('folder_sort_recent_drag_hint'), 'info');
+          this.exitMultiSelectMode();
+          return;
+        }
 
         // Pre-cleanup: Restore opacity immediately before processing drop
         // This prevents visual artifacts if dragend doesn't fire properly
@@ -2847,6 +2901,7 @@ export class FolderManager {
         this.clearSelection();
         this.cleanupSelectionArtifacts();
       }
+      this.clearConversationReorderIndicator();
     });
   }
 
@@ -3825,7 +3880,7 @@ export class FolderManager {
   }
 
   private sortConversations(conversations: ConversationReference[]): ConversationReference[] {
-    return sortConversationsByPriority(conversations);
+    return sortConversationsByPriority(conversations, this.conversationSortMode);
   }
 
   /**
@@ -3895,6 +3950,164 @@ export class FolderManager {
     }
 
     return true;
+  }
+
+  /** Add manual reorder capability to a conversation row. */
+  private setupConversationReorderZone(
+    convEl: HTMLElement,
+    folderId: string,
+    groupIndex: number,
+  ): void {
+    convEl.addEventListener('dragover', (event) => {
+      if (this.conversationSortMode !== 'manual') return;
+      if (!event.dataTransfer?.types.includes('application/json')) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      event.dataTransfer.dropEffect = 'move';
+      this.scheduleConversationReorderIndicator(
+        convEl,
+        this.getConversationReorderPlacement(convEl, event.clientY),
+      );
+    });
+
+    convEl.addEventListener('dragleave', (event) => {
+      const related = event.relatedTarget as Node | null;
+      if (!related || !convEl.contains(related)) {
+        this.clearConversationReorderIndicator(convEl);
+      }
+    });
+
+    convEl.addEventListener('drop', (event) => {
+      if (this.conversationSortMode !== 'manual') return;
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const placement = this.getConversationReorderDropPlacement(
+        convEl,
+        this.getConversationReorderPlacement(convEl, event.clientY),
+      );
+      this.clearConversationReorderIndicator();
+
+      const rawData = event.dataTransfer?.getData('application/json');
+      if (!rawData) return;
+
+      try {
+        const dragData: DragData = JSON.parse(rawData);
+        if (dragData.type !== 'conversation') return;
+
+        this.selectedConversations.forEach((id) => {
+          const element = this.findConversationElement(id);
+          if (element) element.style.opacity = '1';
+        });
+
+        const insertIndex = placement === 'above' ? groupIndex : groupIndex + 1;
+        const conversations = dragData.conversations ?? [];
+        const sourceFolderId = dragData.sourceFolderId;
+
+        if (!sourceFolderId) {
+          this.ensureConversationsInFolder(folderId, dragData);
+        }
+
+        const effectiveSource = sourceFolderId ?? folderId;
+        if (conversations.length > 0) {
+          this.reorderOrMoveConversations(
+            conversations.map((conversation) => conversation.conversationId),
+            effectiveSource,
+            folderId,
+            insertIndex,
+          );
+        } else if (dragData.conversationId) {
+          this.reorderOrMoveConversations(
+            [dragData.conversationId],
+            effectiveSource,
+            folderId,
+            insertIndex,
+          );
+        }
+
+        this.exitMultiSelectMode();
+      } catch (error) {
+        console.error('[FolderManager] Conversation reorder drop error:', error);
+      }
+    });
+  }
+
+  private getConversationReorderPlacement(
+    convEl: HTMLElement,
+    clientY: number,
+  ): ConversationReorderPlacement {
+    const rect = convEl.getBoundingClientRect();
+    return clientY < rect.top + rect.height / 2 ? 'above' : 'below';
+  }
+
+  private getConversationReorderDropPlacement(
+    convEl: HTMLElement,
+    fallback: ConversationReorderPlacement,
+  ): ConversationReorderPlacement {
+    if (this.pendingConversationReorderTarget?.element === convEl) {
+      return this.pendingConversationReorderTarget.placement;
+    }
+    if (this.activeConversationReorderTarget?.element === convEl) {
+      return this.activeConversationReorderTarget.placement;
+    }
+    return fallback;
+  }
+
+  private scheduleConversationReorderIndicator(
+    element: HTMLElement,
+    placement: ConversationReorderPlacement,
+  ): void {
+    this.pendingConversationReorderTarget = { element, placement };
+    if (this.conversationReorderRafId !== null) return;
+
+    this.conversationReorderRafId = window.requestAnimationFrame(() => {
+      this.conversationReorderRafId = null;
+      const target = this.pendingConversationReorderTarget;
+      this.pendingConversationReorderTarget = null;
+      if (target) this.applyConversationReorderIndicator(target);
+    });
+  }
+
+  private applyConversationReorderIndicator(target: ConversationReorderTarget): void {
+    if (!target.element.isConnected) {
+      this.clearConversationReorderIndicator(target.element);
+      return;
+    }
+
+    const active = this.activeConversationReorderTarget;
+    if (active && (active.element !== target.element || active.placement !== target.placement)) {
+      active.element.classList.remove('gv-reorder-above', 'gv-reorder-below');
+    }
+
+    target.element.classList.toggle('gv-reorder-above', target.placement === 'above');
+    target.element.classList.toggle('gv-reorder-below', target.placement === 'below');
+    this.activeConversationReorderTarget = target;
+  }
+
+  private clearConversationReorderIndicator(element?: HTMLElement): void {
+    if (!element) {
+      if (this.conversationReorderRafId !== null) {
+        window.cancelAnimationFrame(this.conversationReorderRafId);
+        this.conversationReorderRafId = null;
+      }
+      this.pendingConversationReorderTarget = null;
+    } else if (this.pendingConversationReorderTarget?.element === element) {
+      this.pendingConversationReorderTarget = null;
+      if (this.conversationReorderRafId !== null) {
+        window.cancelAnimationFrame(this.conversationReorderRafId);
+        this.conversationReorderRafId = null;
+      }
+    }
+
+    if (!element || this.activeConversationReorderTarget?.element === element) {
+      this.activeConversationReorderTarget?.element.classList.remove(
+        'gv-reorder-above',
+        'gv-reorder-below',
+      );
+      this.activeConversationReorderTarget = null;
+    }
   }
 
   private setLightweightDragImage(event: DragEvent, label: string): void {
@@ -7560,7 +7773,7 @@ export class FolderManager {
         // data (sidebar actions, cloud download, native menu → "Move to
         // folder", etc.) ends up here, so one hook keeps the floating view
         // live without every call site having to remember.
-        this.floatingPanelHandle?.update(this.data);
+        this.floatingPanelHandle?.update(this.data, this.conversationSortMode);
       } else {
         console.error('[FolderManager] Save failed after retry');
       }
@@ -8003,6 +8216,38 @@ export class FolderManager {
     }
   }
 
+  private async loadConversationSortModeSetting(): Promise<void> {
+    try {
+      const result = await browser.storage.sync.get({
+        [StorageKeys.FOLDER_CONVERSATION_SORT_MODE]: 'manual',
+      });
+      this.conversationSortMode =
+        result[StorageKeys.FOLDER_CONVERSATION_SORT_MODE] === 'recent' ? 'recent' : 'manual';
+    } catch (error) {
+      console.error('[FolderManager] Failed to load conversation sort mode:', error);
+      this.conversationSortMode = 'manual';
+    }
+  }
+
+  private applyConversationSortMode(value: unknown): void {
+    const next: ConversationSortMode = value === 'recent' ? 'recent' : 'manual';
+    if (next === this.conversationSortMode) return;
+
+    this.conversationSortMode = next;
+    this.clearConversationReorderIndicator();
+    this.refresh();
+    this.floatingPanelHandle?.update(this.data, next);
+  }
+
+  private setConversationSortMode(mode: ConversationSortMode): void {
+    this.applyConversationSortMode(mode);
+    void browser.storage.sync
+      .set({ [StorageKeys.FOLDER_CONVERSATION_SORT_MODE]: mode })
+      .catch((error) => {
+        console.error('[FolderManager] Failed to persist conversation sort mode:', error);
+      });
+  }
+
   private applyFolderTreeIndentSetting(value: unknown): void {
     const nextIndent = clampFolderTreeIndent(value);
     if (nextIndent === this.folderTreeIndent) return;
@@ -8112,6 +8357,11 @@ export class FolderManager {
         }
         if (changes[StorageKeys.FOLDER_PROJECT_ENABLED]) {
           this.folderProjectEnabled = changes[StorageKeys.FOLDER_PROJECT_ENABLED].newValue === true;
+        }
+        if (changes[StorageKeys.FOLDER_CONVERSATION_SORT_MODE]) {
+          this.applyConversationSortMode(
+            changes[StorageKeys.FOLDER_CONVERSATION_SORT_MODE].newValue,
+          );
         }
         if (
           changes[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] ||
@@ -8946,6 +9196,10 @@ export class FolderManager {
             btn.title = this.t('folder_filter_current_user');
           } else if (icon?.textContent === 'folder_managed') {
             btn.title = this.t('folder_import_export');
+          } else if (icon?.textContent === 'sort') {
+            this.updateConversationSortButton(btn);
+          } else if (icon?.textContent === 'settings') {
+            btn.title = this.t('folder_settings');
           }
           // Cloud buttons use SVG, check for SVG content
           const svg = btn.querySelector('svg');
@@ -9714,6 +9968,26 @@ export class FolderManager {
       notification.classList.remove('show');
       setTimeout(() => notification.remove(), 300);
     }, 3000);
+  }
+
+  private updateConversationSortButton(button: Element): void {
+    const modeLabel = this.t(
+      this.conversationSortMode === 'manual' ? 'folder_sort_manual' : 'folder_sort_recent',
+    );
+    const label = `${this.t('folder_sort')}: ${modeLabel}`;
+    button.setAttribute('title', label);
+    button.setAttribute('aria-label', label);
+    button.classList.toggle('gv-filter-active', this.conversationSortMode === 'recent');
+  }
+
+  private showConversationSortMenu(event: MouseEvent): void {
+    const item = (mode: ConversationSortMode, icon: string) => ({
+      label: this.t(mode === 'manual' ? 'folder_sort_manual' : 'folder_sort_recent'),
+      icon: this.conversationSortMode === mode ? 'check' : icon,
+      action: () => this.setConversationSortMode(mode),
+    });
+
+    this.openHeaderMenu(event, [item('manual', 'drag_indicator'), item('recent', 'history')]);
   }
 
   /**

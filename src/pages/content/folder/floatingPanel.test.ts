@@ -245,6 +245,32 @@ describe('mountFloatingPanel', () => {
     expect(onNavigate).toHaveBeenCalledWith(expect.objectContaining({ conversationId: 'conv-a' }));
   });
 
+  it('switches between manual and recently-opened conversation order', () => {
+    const onConversationSortModeChange = vi.fn();
+    const data = createData();
+    data.folderContents['folder-a'] = [
+      createConversation('manual-first', 'Manual first', { sortIndex: 0, lastOpenedAt: 100 }),
+      createConversation('recent-first', 'Recent first', { sortIndex: 1, lastOpenedAt: 200 }),
+    ];
+    const handle = mountPanel({ data, onConversationSortModeChange });
+    const getOrder = () =>
+      Array.from(
+        handle.element.querySelectorAll<HTMLElement>(`.${FLOATING_PANEL_CLASS}__conv`),
+      ).map((row) => row.dataset.conversationId);
+
+    expect(getOrder()).toEqual(['manual-first', 'recent-first']);
+
+    click(
+      requireElement<HTMLButtonElement>(
+        handle.element,
+        `.${FLOATING_PANEL_CLASS}__icon-button--sort`,
+      ),
+    );
+
+    expect(onConversationSortModeChange).toHaveBeenCalledWith('recent');
+    expect(getOrder()).toEqual(['recent-first', 'manual-first']);
+  });
+
   it('renders the move-to-folder hint above the folder tree', () => {
     const handle = mountPanel();
 

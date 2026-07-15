@@ -563,6 +563,22 @@
     "message": "Paramètres des dossiers",
     "description": "Tooltip for the gear icon that opens folder-scoped settings"
   },
+  "folder_sort": {
+    "message": "Trier les conversations",
+    "description": "Folder header action for choosing conversation order"
+  },
+  "folder_sort_manual": {
+    "message": "Ordre manuel",
+    "description": "Conversation order option that follows drag-and-drop positions"
+  },
+  "folder_sort_recent": {
+    "message": "Ouvertes récemment",
+    "description": "Conversation order option that shows recently opened chats first"
+  },
+  "folder_sort_recent_drag_hint": {
+    "message": "Passez à l’ordre manuel pour réorganiser les conversations de ce dossier.",
+    "description": "Notice shown when attempting an in-folder reorder in recently-opened mode"
+  },
   "folder_anchor_move_above_notebooks": {
     "message": "Déplacer les dossiers au-dessus de Notebooks",
     "description": "Tooltip on the folder header swap button shown when folders are currently above Recents — clicking moves them above Notebooks instead."

@@ -31,12 +31,15 @@ describe('sortConversationsByPriority', () => {
     ]);
   });
 
-  it('sorts by lastOpenedAt (newest first) within the same starred state', () => {
-    const sorted = sortConversationsByPriority([
-      createConversation('opened-earlier', { addedAt: 999, lastOpenedAt: 100 }),
-      createConversation('opened-latest', { addedAt: 1, lastOpenedAt: 200 }),
-      createConversation('never-opened', { addedAt: 150 }),
-    ]);
+  it('sorts by lastOpenedAt in recently-opened mode', () => {
+    const sorted = sortConversationsByPriority(
+      [
+        createConversation('opened-earlier', { addedAt: 999, lastOpenedAt: 100 }),
+        createConversation('opened-latest', { addedAt: 1, lastOpenedAt: 200 }),
+        createConversation('never-opened', { addedAt: 150 }),
+      ],
+      'recent',
+    );
 
     expect(sorted.map((item) => item.conversationId)).toEqual([
       'opened-latest',
@@ -55,7 +58,7 @@ describe('sortConversationsByPriority', () => {
     expect(sorted.map((item) => item.conversationId)).toEqual(['newest', 'newer', 'older']);
   });
 
-  it('ignores legacy sortIndex and keeps newest conversations first', () => {
+  it('uses persisted sortIndex by default', () => {
     const sorted = sortConversationsByPriority([
       createConversation('manual-first-old', { sortIndex: 0, addedAt: 100 }),
       createConversation('manual-last-new', { sortIndex: 2, addedAt: 300 }),
@@ -63,13 +66,13 @@ describe('sortConversationsByPriority', () => {
     ]);
 
     expect(sorted.map((item) => item.conversationId)).toEqual([
-      'manual-last-new',
-      'manual-middle',
       'manual-first-old',
+      'manual-middle',
+      'manual-last-new',
     ]);
   });
 
-  it('keeps starred conversations first while ignoring legacy sortIndex within each group', () => {
+  it('keeps starred conversations first while respecting manual order within each group', () => {
     const sorted = sortConversationsByPriority([
       createConversation('normal-manual-first-old', { sortIndex: 0, addedAt: 100 }),
       createConversation('normal-manual-last-new', { sortIndex: 1, addedAt: 300 }),
@@ -78,10 +81,25 @@ describe('sortConversationsByPriority', () => {
     ]);
 
     expect(sorted.map((item) => item.conversationId)).toEqual([
-      'starred-manual-last-new',
       'starred-manual-first-old',
-      'normal-manual-last-new',
+      'starred-manual-last-new',
       'normal-manual-first-old',
+      'normal-manual-last-new',
+    ]);
+  });
+
+  it('ignores sortIndex in recently-opened mode', () => {
+    const sorted = sortConversationsByPriority(
+      [
+        createConversation('manual-first-old', { sortIndex: 0, lastOpenedAt: 100 }),
+        createConversation('manual-last-new', { sortIndex: 1, lastOpenedAt: 300 }),
+      ],
+      'recent',
+    );
+
+    expect(sorted.map((item) => item.conversationId)).toEqual([
+      'manual-last-new',
+      'manual-first-old',
     ]);
   });
 });

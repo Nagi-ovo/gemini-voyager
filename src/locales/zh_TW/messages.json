@@ -523,6 +523,22 @@
     "message": "資料夾設定",
     "description": "齒輪圖示提示，開啟資料夾相關設定"
   },
+  "folder_sort": {
+    "message": "對話排序",
+    "description": "資料夾標題列中的對話排序方式入口"
+  },
+  "folder_sort_manual": {
+    "message": "手動排序",
+    "description": "依照拖曳位置排列對話"
+  },
+  "folder_sort_recent": {
+    "message": "最近開啟",
+    "description": "最近開啟的對話優先顯示"
+  },
+  "folder_sort_recent_drag_hint": {
+    "message": "請切換到「手動排序」後再調整資料夾內的對話順序。",
+    "description": "最近開啟模式下嘗試資料夾內排序時的提示"
+  },
   "folder_anchor_move_above_notebooks": {
     "message": "將資料夾移到 Notebooks 上方",
     "description": "Tooltip on the folder header swap button shown when folders are currently above Recents — clicking moves them above Notebooks instead."
