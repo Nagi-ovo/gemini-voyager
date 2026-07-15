@@ -15,3 +15,11 @@
   width: 100% !important;
   max-width: none !important;
 }
+
+/* Optional centered-turn mode: keep the composer at the selected width, while
+ * pulling user and assistant turns back into ChatGPT's native 48rem column. */
+.gv-plugin-chatgpt-readable[data-gv-center-conversation='true']
+  section[data-testid^='conversation-turn-']
+  [class*='--thread-content-max-width'] {
+  max-width: min(var(--gv-plugin-reading-width, 768px), 48rem) !important;
+}

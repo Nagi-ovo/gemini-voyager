@@ -44,6 +44,29 @@ describe('BundledCatalogPluginSource', () => {
     expect(css).toMatch(
       /#thread-bottom-container\s*\{[\s\S]*width:\s*100%\s*!important;[\s\S]*max-width:\s*none\s*!important;/,
     );
+    expect(css).toContain("[data-gv-center-conversation='true']");
+    expect(css).toContain("section[data-testid^='conversation-turn-']");
+    expect(css).toContain('min(var(--gv-plugin-reading-width, 768px), 48rem)');
+  });
+
+  it('offers an opt-in centered conversation mode without narrowing the composer', async () => {
+    const manifests = await new BundledCatalogPluginSource().list();
+    const chatgptWidth = manifests.find((plugin) => plugin.id === 'voyager.chatgpt-reading-width');
+
+    expect(chatgptWidth?.contributes.settings?.centerConversation).toEqual({
+      type: 'boolean',
+      label: 'Center conversation content',
+      default: false,
+    });
+    expect(chatgptWidth?.i18n?.zh?.settings?.centerConversation).toEqual({
+      label: '对话内容居中',
+    });
+    expect(chatgptWidth?.contributes.domOps).toContainEqual({
+      op: 'setAttribute',
+      target: { kind: 'css', selector: 'body' },
+      name: 'data-gv-center-conversation',
+      value: '{{centerConversation}}',
+    });
   });
 
   it('keeps localized setting labels inside the plugin data layer', async () => {

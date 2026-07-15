@@ -1,7 +1,7 @@
 {
   "id": "voyager.chatgpt-reading-width",
   "name": "ChatGPT · Comfortable Reading Width",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Widen ChatGPT's conversation to one centered, adjustable column — drag the slider to fit your screen.",
   "i18n": {
     "zh": {
@@ -12,6 +12,9 @@
           "label": "阅读宽度（px）",
           "minLabel": "更窄",
           "maxLabel": "更宽"
+        },
+        "centerConversation": {
+          "label": "对话内容居中"
         }
       }
     },
@@ -23,6 +26,9 @@
           "label": "閱讀寬度（px）",
           "minLabel": "更窄",
           "maxLabel": "更寬"
+        },
+        "centerConversation": {
+          "label": "對話內容置中"
         }
       }
     },
@@ -34,6 +40,9 @@
           "label": "読書幅（px）",
           "minLabel": "狭く",
           "maxLabel": "広く"
+        },
+        "centerConversation": {
+          "label": "会話内容を中央に配置"
         }
       }
     },
@@ -45,6 +54,9 @@
           "label": "읽기 너비(px)",
           "minLabel": "좁게",
           "maxLabel": "넓게"
+        },
+        "centerConversation": {
+          "label": "대화 내용 가운데 정렬"
         }
       }
     },
@@ -56,6 +68,9 @@
           "label": "Largeur de lecture (px)",
           "minLabel": "Plus étroit",
           "maxLabel": "Plus large"
+        },
+        "centerConversation": {
+          "label": "Centrer le contenu de la conversation"
         }
       }
     },
@@ -67,6 +82,9 @@
           "label": "Ancho de lectura (px)",
           "minLabel": "Más estrecho",
           "maxLabel": "Más ancho"
+        },
+        "centerConversation": {
+          "label": "Centrar el contenido de la conversación"
         }
       }
     },
@@ -78,6 +96,9 @@
           "label": "Largura de leitura (px)",
           "minLabel": "Mais estreito",
           "maxLabel": "Mais largo"
+        },
+        "centerConversation": {
+          "label": "Centralizar o conteúdo da conversa"
         }
       }
     },
@@ -89,6 +110,9 @@
           "label": "Ширина чтения (px)",
           "minLabel": "Уже",
           "maxLabel": "Шире"
+        },
+        "centerConversation": {
+          "label": "Центрировать содержимое диалога"
         }
       }
     },
@@ -100,6 +124,9 @@
           "label": "عرض القراءة (px)",
           "minLabel": "أضيق",
           "maxLabel": "أوسع"
+        },
+        "centerConversation": {
+          "label": "توسيط محتوى المحادثة"
         }
       }
     }
@@ -121,6 +148,11 @@
         "default": 768,
         "min": 600,
         "max": 1600
+      },
+      "centerConversation": {
+        "type": "boolean",
+        "label": "Center conversation content",
+        "default": false
       }
     },
     "styles": [{ "file": "style.css" }],
@@ -134,6 +166,12 @@
         "op": "setStyle",
         "target": "body",
         "styles": { "--gv-plugin-reading-width": "{{width}}px" }
+      },
+      {
+        "op": "setAttribute",
+        "target": "body",
+        "name": "data-gv-center-conversation",
+        "value": "{{centerConversation}}"
       }
     ]
   }
