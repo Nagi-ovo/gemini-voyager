@@ -6,6 +6,7 @@ import {
   HIGHLIGHT_COLORS,
   HIGHLIGHT_COLOR_HEX,
   type HighlightColor,
+  getHighlightColorHex,
   isHighlightColor,
 } from '@/core/types/highlight';
 import { getBrowserName } from '@/core/utils/browser';
@@ -135,6 +136,21 @@ function injectStyles() {
       border-color: currentColor;
       box-shadow: 0 0 0 2px #1e1e1e inset;
     }
+    .gv-highlight-custom-color {
+      box-sizing: border-box;
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+    }
+    .gv-highlight-custom-color::-webkit-color-swatch-wrapper { padding: 2px; }
+    .gv-highlight-custom-color::-webkit-color-swatch { border: 0; border-radius: 50%; }
+    .gv-highlight-custom-color::-moz-color-swatch { border: 0; border-radius: 50%; }
     .gv-selection-toolbar.gv-hidden {
       opacity: 0;
       pointer-events: none;
@@ -364,6 +380,7 @@ interface QuoteReplyOptions {
   quoteEnabled?: boolean;
   highlightEnabled?: boolean;
   highlightDefaultColor?: HighlightColor;
+  highlightTimelineMarkersEnabled?: boolean;
 }
 
 export function startQuoteReply(options: QuoteReplyOptions = {}) {
@@ -373,6 +390,7 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
   let highlightEnabled = options.highlightEnabled !== false;
   let selectedHighlightColor = options.highlightDefaultColor ?? 'yellow';
   const highlightManager = new HighlightManager();
+  highlightManager.setTimelineMarkersEnabled(options.highlightTimelineMarkersEnabled !== false);
   void highlightManager.init();
 
   let selectionToolbar: HTMLElement | null = null;
@@ -380,6 +398,7 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
   let highlightBtn: HTMLButtonElement | null = null;
   let highlightColorBtn: HTMLButtonElement | null = null;
   let highlightColorPalette: HTMLElement | null = null;
+  let highlightCustomColorInput: HTMLInputElement | null = null;
   let currentSelectionRange: Range | null = null;
   let isInternalClick = false;
   let scrollRafId: number | null = null;
@@ -421,7 +440,7 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
 
   function updateHighlightColorUi(): void {
     if (highlightColorBtn) {
-      highlightColorBtn.style.backgroundColor = HIGHLIGHT_COLOR_HEX[selectedHighlightColor];
+      highlightColorBtn.style.backgroundColor = getHighlightColorHex(selectedHighlightColor);
       highlightColorBtn.title = getTranslationSync('highlightColor');
       highlightColorBtn.setAttribute('aria-label', getTranslationSync('highlightColor'));
     }
@@ -433,6 +452,9 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
           String(swatch.dataset.highlightColor === selectedHighlightColor),
         );
       });
+    if (highlightCustomColorInput) {
+      highlightCustomColorInput.value = getHighlightColorHex(selectedHighlightColor);
+    }
   }
 
   /** Update button position based on current selection range's viewport coordinates. */
@@ -581,6 +603,34 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
       });
       highlightColorPalette?.appendChild(swatch);
     });
+    highlightCustomColorInput = document.createElement('input');
+    highlightCustomColorInput.type = 'color';
+    highlightCustomColorInput.className = 'gv-highlight-custom-color';
+    highlightCustomColorInput.value = getHighlightColorHex(selectedHighlightColor);
+    highlightCustomColorInput.setAttribute(
+      'aria-label',
+      getTranslationSync('highlightCustomColor'),
+    );
+    highlightCustomColorInput.addEventListener('mousedown', (event) => {
+      event.stopPropagation();
+      isInternalClick = true;
+    });
+    highlightCustomColorInput.addEventListener('input', () => {
+      if (!highlightCustomColorInput) return;
+      selectedHighlightColor = highlightCustomColorInput.value as HighlightColor;
+      updateHighlightColorUi();
+    });
+    highlightCustomColorInput.addEventListener('change', () => {
+      if (!highlightCustomColorInput) return;
+      selectedHighlightColor = highlightCustomColorInput.value as HighlightColor;
+      updateHighlightColorUi();
+      closeHighlightColorPalette();
+      void browser.storage.sync
+        .set({ [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: selectedHighlightColor })
+        .catch(() => undefined);
+      highlightColorBtn?.focus({ preventScroll: true });
+    });
+    highlightColorPalette.appendChild(highlightCustomColorInput);
     updateHighlightColorUi();
 
     selectionToolbar.append(quoteBtn, highlightBtn, highlightColorBtn, highlightColorPalette);
@@ -939,6 +989,10 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
       if (isHighlightColor(nextColor)) {
         selectedHighlightColor = nextColor;
         updateHighlightColorUi();
+      }
+      const timelineMarkersChange = changes[StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED];
+      if (timelineMarkersChange) {
+        highlightManager.setTimelineMarkersEnabled(timelineMarkersChange.newValue !== false);
       }
     }
   }

@@ -142,7 +142,7 @@ describe('CloudSyncSettings auth flow', () => {
     );
   });
 
-  it('persists the opt-in and includes highlights in the next manual upload', async () => {
+  it('includes highlights by default in the next manual upload', async () => {
     const sendMessageMock = vi.fn().mockImplementation((message: { type?: string }) => {
       if (message.type === 'gv.sync.getState') {
         return Promise.resolve({ ok: true, state: baseState });
@@ -172,13 +172,7 @@ describe('CloudSyncSettings auth flow', () => {
 
     const toggle = container.querySelector<HTMLInputElement>('#highlight-cloud-sync');
     expect(toggle).toBeTruthy();
-    await act(async () => {
-      toggle?.click();
-      await Promise.resolve();
-    });
-    expect(chromeMock.storage.local.set).toHaveBeenCalledWith({
-      [StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED]: true,
-    });
+    expect(toggle?.checked).toBe(true);
 
     const uploadButton = Array.from(container.querySelectorAll('button')).find((button) =>
       (button.textContent || '').includes('syncUpload'),

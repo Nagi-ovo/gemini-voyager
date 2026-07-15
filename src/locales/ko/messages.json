@@ -1463,6 +1463,14 @@
     "message": "선택한 답변 텍스트를 강조하고 색상을 선택하며 마지막으로 사용한 색상을 기억합니다.",
     "description": "Highlight feature hint"
   },
+  "showHighlightTimelineMarkers": {
+    "message": "타임라인에 하이라이트 위치 표시",
+    "description": "Highlight timeline markers toggle label"
+  },
+  "showHighlightTimelineMarkersHint": {
+    "message": "저장된 각 하이라이트의 위치를 색상 마커로 표시합니다. 꺼도 하이라이트 자체는 유지됩니다.",
+    "description": "Highlight timeline markers toggle hint"
+  },
   "hideInputHalo": {
     "message": "입력창 광채 숨기기",
     "description": "Input halo hider toggle label"
@@ -2372,6 +2380,7 @@
   "highlightDeleteFailed": { "message": "하이라이트를 삭제하지 못했습니다" },
   "highlightNotePlaceholder": { "message": "메모 추가(선택 사항)" },
   "highlightColor": { "message": "하이라이트 색상" },
+  "highlightCustomColor": { "message": "사용자 지정 색상 선택" },
   "highlightTooLong": { "message": "선택 영역이 너무 깁니다. 더 짧게 선택하세요." },
   "highlightAriaLabel": { "message": "저장된 하이라이트. 주석 열기." },
   "highlightTimelineAriaLabel": { "message": "저장된 하이라이트 열기" },
@@ -2384,6 +2393,6 @@
   "highlightImportSuccess": { "message": "하이라이트 {count}개를 가져왔습니다" },
   "highlightCloudSync": { "message": "하이라이트 동기화" },
   "highlightCloudSyncHint": {
-    "message": "하이라이트를 계정별 Drive 파일에 저장합니다. 동기화는 항상 병합되며 기본적으로 꺼져 있습니다."
+    "message": "하이라이트를 계정별 Drive 파일에 저장합니다. Drive 동기화를 켜면 기본적으로 포함되며 항상 안전하게 병합됩니다."
   }
 }

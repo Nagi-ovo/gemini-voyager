@@ -16,7 +16,11 @@ import {
 import { logger } from '@/core/services/LoggerService';
 import { promptStorageService } from '@/core/services/StorageService';
 import { type StorageKey, StorageKeys } from '@/core/types/common';
-import type { HighlightAccountScope, HighlightRecordV1 } from '@/core/types/highlight';
+import {
+  type HighlightAccountScope,
+  type HighlightRecordV1,
+  getHighlightColorHex,
+} from '@/core/types/highlight';
 import { isSafari, shouldShowSafariUpdateReminder } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { migrateFromLocalStorage } from '@/core/utils/storageMigration';
@@ -1428,6 +1432,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         icon.classList.toggle('gv-pm-highlight-icon', item.kind === 'highlight');
         if (item.kind === 'highlight') {
           icon.setAttribute('data-highlight-color', item.color || 'yellow');
+          icon.style.backgroundColor = getHighlightColorHex(item.color || 'yellow');
         }
         icon.setAttribute('aria-hidden', 'true');
 

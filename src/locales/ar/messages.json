@@ -1463,6 +1463,14 @@
     "message": "يميز نص الإجابة المحدد ويتيح اختيار لون ويتذكر آخر لون استخدمته.",
     "description": "Highlight feature hint"
   },
+  "showHighlightTimelineMarkers": {
+    "message": "إظهار التمييزات على الخط الزمني",
+    "description": "Highlight timeline markers toggle label"
+  },
+  "showHighlightTimelineMarkersHint": {
+    "message": "يعرض علامة موضع ملونة لكل تمييز محفوظ. لا يؤدي إيقافه إلى حذف التمييزات نفسها.",
+    "description": "Highlight timeline markers toggle hint"
+  },
   "hideInputHalo": {
     "message": "إخفاء هالة مربع الإدخال",
     "description": "Input halo hider toggle label"
@@ -2372,6 +2380,7 @@
   "highlightDeleteFailed": { "message": "تعذر حذف التمييز" },
   "highlightNotePlaceholder": { "message": "إضافة ملاحظة (اختياري)" },
   "highlightColor": { "message": "لون التمييز" },
+  "highlightCustomColor": { "message": "اختيار لون مخصص" },
   "highlightTooLong": { "message": "التحديد طويل جدًا. حدد مقطعًا أقصر." },
   "highlightAriaLabel": { "message": "تمييز محفوظ. فتح التعليق التوضيحي." },
   "highlightTimelineAriaLabel": { "message": "فتح التمييز المحفوظ" },
@@ -2384,6 +2393,6 @@
   "highlightImportSuccess": { "message": "تم استيراد {count} من التمييزات" },
   "highlightCloudSync": { "message": "مزامنة التمييزات" },
   "highlightCloudSyncHint": {
-    "message": "يحفظ التمييزات في ملف Drive منفصل لكل حساب. تدمج المزامنة البيانات دائمًا وتكون معطلة افتراضيًا."
+    "message": "يحفظ التمييزات في ملف Drive منفصل لكل حساب. تُضمّن افتراضيًا عند تشغيل مزامنة Drive وتُدمج دائمًا بأمان."
   }
 }

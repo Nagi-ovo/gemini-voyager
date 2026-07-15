@@ -102,7 +102,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadMode, setDownloadMode] = useState<DownloadMode | null>(null);
   const [platform, setPlatform] = useState<SyncPlatform>('gemini');
-  const [highlightSyncEnabled, setHighlightSyncEnabled] = useState(false);
+  const [highlightSyncEnabled, setHighlightSyncEnabled] = useState(true);
 
   const getBaseFolderStorageKey = useCallback(
     (targetPlatform: SyncPlatform) =>
@@ -234,13 +234,13 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
       try {
         const [response, highlightSetting] = await Promise.all([
           chrome.runtime.sendMessage({ type: 'gv.sync.getState' }),
-          chrome.storage.local.get({ [StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED]: false }),
+          chrome.storage.local.get({ [StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED]: true }),
         ]);
         if (response?.ok && response.state) {
           setSyncState(response.state);
         }
         setHighlightSyncEnabled(
-          highlightSetting[StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED] === true,
+          highlightSetting[StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED] !== false,
         );
       } catch (error) {
         console.error('[CloudSyncSettings] Failed to get sync state:', error);

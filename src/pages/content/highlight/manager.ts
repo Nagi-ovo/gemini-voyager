@@ -10,6 +10,8 @@ import {
   type HighlightCreateInput,
   type HighlightRecordV1,
   type HighlightUpdatePatch,
+  getHighlightColorHex,
+  isHighlightPresetColor,
 } from '@/core/types/highlight';
 import { buildConversationIdFromUrl } from '@/core/utils/conversationIdentity';
 import { getTranslationSync } from '@/utils/i18n';
@@ -138,6 +140,21 @@ function injectStyles(): void {
     .gv-highlight-swatch-green { background: #4ade80; }
     .gv-highlight-swatch-blue { background: #60a5fa; }
     .gv-highlight-swatch-pink { background: #f472b6; }
+    .gv-highlight-custom-color {
+      box-sizing: border-box;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+    }
+    .gv-highlight-custom-color::-webkit-color-swatch-wrapper { padding: 2px; }
+    .gv-highlight-custom-color::-webkit-color-swatch { border: 0; border-radius: 50%; }
+    .gv-highlight-custom-color::-moz-color-swatch { border: 0; border-radius: 50%; }
     .gv-highlight-popover-actions {
       display: flex;
       justify-content: flex-end;
@@ -285,6 +302,51 @@ function unwrapMark(mark: HTMLElement): void {
   parent.normalize();
 }
 
+function highlightColorBackground(color: HighlightColor, alpha = 0.3): string {
+  const hex = getHighlightColorHex(color);
+  const red = Number.parseInt(hex.slice(1, 3), 16);
+  const green = Number.parseInt(hex.slice(3, 5), 16);
+  const blue = Number.parseInt(hex.slice(5, 7), 16);
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
+function applyMarkColor(element: HTMLElement, color: HighlightColor): void {
+  HIGHLIGHT_COLORS.forEach((candidate) =>
+    element.classList.remove(`gv-highlight-mark-${candidate}`),
+  );
+  element.style.removeProperty('background-color');
+  if (isHighlightPresetColor(color)) {
+    element.classList.add(`gv-highlight-mark-${color}`);
+  } else {
+    element.style.backgroundColor = highlightColorBackground(color);
+  }
+}
+
+function isVisibleHighlightMark(element: HTMLElement): boolean {
+  if (!element.isConnected) return false;
+  let current: HTMLElement | null = element;
+  while (current) {
+    if (
+      current.hidden ||
+      current.hasAttribute('inert') ||
+      current.getAttribute('aria-hidden') === 'true'
+    ) {
+      return false;
+    }
+    const style = window.getComputedStyle(current);
+    if (
+      style.display === 'none' ||
+      style.visibility === 'hidden' ||
+      style.visibility === 'collapse' ||
+      style.contentVisibility === 'hidden'
+    ) {
+      return false;
+    }
+    current = current.parentElement;
+  }
+  return true;
+}
+
 function getRangeTextNodes(range: Range): Text[] {
   const root = range.commonAncestorContainer;
   if (root instanceof Text) return [root];
@@ -321,7 +383,8 @@ export function wrapHighlightRange(
     if (start > 0) selected = selected.splitText(start);
 
     const mark = document.createElement('mark');
-    mark.className = `gv-highlight-mark gv-highlight-mark-${color}`;
+    mark.className = 'gv-highlight-mark';
+    applyMarkColor(mark, color);
     mark.dataset.gvHighlightId = id;
     mark.setAttribute('role', 'button');
     mark.setAttribute('aria-label', ariaLabel);
@@ -336,12 +399,7 @@ export function wrapHighlightRange(
 }
 
 function setRecordColor(elements: HTMLElement[], color: HighlightColor): void {
-  elements.forEach((element) => {
-    HIGHLIGHT_COLORS.forEach((candidate) =>
-      element.classList.remove(`gv-highlight-mark-${candidate}`),
-    );
-    element.classList.add(`gv-highlight-mark-${color}`);
-  });
+  elements.forEach((element) => applyMarkColor(element, color));
 }
 
 export class HighlightManager {
@@ -370,6 +428,7 @@ export class HighlightManager {
   private pendingHashId: string | null = null;
   private pendingHashDeadline = 0;
   private pendingTurnFallbackDone = false;
+  private timelineMarkersEnabled = true;
   private readonly onDocumentClick = (event: MouseEvent): void => {
     const target = event.target instanceof Element ? event.target : null;
     const mark = target?.closest<HTMLElement>('.gv-highlight-mark[data-gv-highlight-id]');
@@ -422,6 +481,16 @@ export class HighlightManager {
   };
 
   constructor(private readonly client: HighlightClient = highlightClient) {}
+
+  setTimelineMarkersEnabled(enabled: boolean): void {
+    this.timelineMarkersEnabled = enabled;
+    if (enabled) {
+      this.syncTimelineTicks();
+      return;
+    }
+    this.ticks.forEach((tick) => tick.remove());
+    this.ticks.clear();
+  }
 
   async init(): Promise<void> {
     if (this.destroyed) return;
@@ -499,7 +568,7 @@ export class HighlightManager {
     behavior: ScrollBehavior = 'smooth',
     allowTurnFallback = true,
   ): NavigationResult {
-    const mark = this.marks.get(id)?.find((element) => element.isConnected);
+    const mark = this.marks.get(id)?.find(isVisibleHighlightMark);
     if (mark) {
       mark.scrollIntoView?.({ behavior, block: 'center', inline: 'nearest' });
       try {
@@ -689,6 +758,11 @@ export class HighlightManager {
   }
 
   private syncTimelineTicks(): void {
+    if (!this.timelineMarkersEnabled) {
+      this.ticks.forEach((tick) => tick.remove());
+      this.ticks.clear();
+      return;
+    }
     const bar = document.querySelector<HTMLElement>('.gemini-timeline-bar');
     const trackContent = bar?.querySelector<HTMLElement>('.timeline-track-content');
     if (!bar || !trackContent) {
@@ -703,7 +777,7 @@ export class HighlightManager {
     const parent = compact ? bar : trackContent;
 
     for (const [id, record] of this.records) {
-      const mark = this.marks.get(id)?.find((element) => element.isConnected);
+      const mark = this.marks.get(id)?.find(isVisibleHighlightMark);
       if (!mark) {
         this.ticks.get(id)?.remove();
         this.ticks.delete(id);
@@ -728,7 +802,12 @@ export class HighlightManager {
       HIGHLIGHT_COLORS.forEach((color) =>
         tick!.classList.remove(`gv-highlight-timeline-tick-${color}`),
       );
-      tick.classList.add(`gv-highlight-timeline-tick-${record.color}`);
+      tick.style.removeProperty('background-color');
+      if (isHighlightPresetColor(record.color)) {
+        tick.classList.add(`gv-highlight-timeline-tick-${record.color}`);
+      } else {
+        tick.style.backgroundColor = getHighlightColorHex(record.color);
+      }
       tick.setAttribute(
         'aria-label',
         translateWith('highlightTimelineAriaLabel', 'Go to highlight: {text}', {
@@ -816,6 +895,12 @@ export class HighlightManager {
     colorRow.appendChild(colorLabel);
 
     let selectedColor: HighlightColor = record.color;
+    const updateColorSelection = (): void => {
+      swatches.forEach((item, itemIndex) => {
+        item.setAttribute('aria-pressed', String(HIGHLIGHT_COLORS[itemIndex] === selectedColor));
+      });
+      customColor.value = getHighlightColorHex(selectedColor);
+    };
     const swatches = HIGHLIGHT_COLORS.map((color, index) => {
       const swatch = document.createElement('button');
       swatch.type = 'button';
@@ -824,13 +909,24 @@ export class HighlightManager {
       swatch.setAttribute('aria-pressed', String(color === selectedColor));
       swatch.addEventListener('click', () => {
         selectedColor = color;
-        swatches.forEach((item, itemIndex) => {
-          item.setAttribute('aria-pressed', String(HIGHLIGHT_COLORS[itemIndex] === selectedColor));
-        });
+        updateColorSelection();
       });
       colorRow.appendChild(swatch);
       return swatch;
     });
+    const customColor = document.createElement('input');
+    customColor.type = 'color';
+    customColor.className = 'gv-highlight-custom-color';
+    customColor.value = getHighlightColorHex(selectedColor);
+    customColor.setAttribute(
+      'aria-label',
+      translate('highlightCustomColor', 'Choose a custom highlight color'),
+    );
+    customColor.addEventListener('input', () => {
+      selectedColor = customColor.value as HighlightColor;
+      updateColorSelection();
+    });
+    colorRow.appendChild(customColor);
 
     const actions = document.createElement('div');
     actions.className = 'gv-highlight-popover-actions';
@@ -854,6 +950,10 @@ export class HighlightManager {
       cancelButton.disabled = busy;
       saveButton.disabled = busy;
       note.disabled = busy;
+      customColor.disabled = busy;
+      swatches.forEach((swatch) => {
+        swatch.disabled = busy;
+      });
     };
     cancelButton.addEventListener('click', () => this.closePopover(true));
     saveButton.addEventListener('click', async () => {

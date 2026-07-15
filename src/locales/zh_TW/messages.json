@@ -1423,6 +1423,14 @@
     "message": "標記選取的回答文字、選擇顏色，並記住上次使用的顏色。",
     "description": "醒目標記功能提示"
   },
+  "showHighlightTimelineMarkers": {
+    "message": "在時間軸顯示醒目標記位置",
+    "description": "醒目標記時間軸位置開關標籤"
+  },
+  "showHighlightTimelineMarkersHint": {
+    "message": "為每個已儲存的醒目標記顯示彩色位置。關閉後醒目標記本身仍會保留。",
+    "description": "醒目標記時間軸位置開關說明"
+  },
   "hideInputHalo": {
     "message": "隱藏輸入框光暈",
     "description": "輸入框光暈開關標籤"
@@ -2372,6 +2380,7 @@
   "highlightDeleteFailed": { "message": "無法刪除醒目標示" },
   "highlightNotePlaceholder": { "message": "新增備註（選填）" },
   "highlightColor": { "message": "醒目標示顏色" },
+  "highlightCustomColor": { "message": "自訂醒目標示顏色" },
   "highlightTooLong": { "message": "選取內容太長，請縮小範圍。" },
   "highlightAriaLabel": { "message": "已儲存的醒目標示。開啟註解。" },
   "highlightTimelineAriaLabel": { "message": "開啟已儲存的醒目標示" },
@@ -2384,6 +2393,6 @@
   "highlightImportSuccess": { "message": "已匯入 {count} 則醒目標示" },
   "highlightCloudSync": { "message": "同步醒目標示" },
   "highlightCloudSyncHint": {
-    "message": "將醒目標示儲存在依帳號隔離的獨立 Drive 檔案中。同步一律採合併，預設關閉。"
+    "message": "將醒目標示儲存在依帳號隔離的獨立 Drive 檔案中。啟用 Drive 同步後預設包含醒目標示，並一律安全合併。"
   }
 }

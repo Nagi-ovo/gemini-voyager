@@ -1463,6 +1463,14 @@
     "message": "Surligne le texte sélectionné, permet de choisir une couleur et mémorise la dernière utilisée.",
     "description": "Highlight feature hint"
   },
+  "showHighlightTimelineMarkers": {
+    "message": "Afficher les surlignages dans la chronologie",
+    "description": "Highlight timeline markers toggle label"
+  },
+  "showHighlightTimelineMarkersHint": {
+    "message": "Affiche un repère coloré pour chaque surlignage enregistré. Les surlignages restent conservés si cette option est désactivée.",
+    "description": "Highlight timeline markers toggle hint"
+  },
   "hideInputHalo": {
     "message": "Masquer le halo du champ de saisie",
     "description": "Input halo hider toggle label"
@@ -2372,6 +2380,7 @@
   "highlightDeleteFailed": { "message": "Impossible de supprimer le surlignage" },
   "highlightNotePlaceholder": { "message": "Ajouter une note (facultatif)" },
   "highlightColor": { "message": "Couleur du surlignage" },
+  "highlightCustomColor": { "message": "Choisir une couleur personnalisée" },
   "highlightTooLong": {
     "message": "La sélection est trop longue. Sélectionnez un passage plus court."
   },
@@ -2386,6 +2395,6 @@
   "highlightImportSuccess": { "message": "{count} surlignage(s) importé(s)" },
   "highlightCloudSync": { "message": "Synchroniser les surlignages" },
   "highlightCloudSyncHint": {
-    "message": "Conserve les surlignages dans un fichier Drive distinct par compte. La synchronisation fusionne toujours les données et est désactivée par défaut."
+    "message": "Conserve les surlignages dans un fichier Drive distinct par compte. Ils sont inclus par défaut lorsque la synchronisation Drive est activée et sont toujours fusionnés en toute sécurité."
   }
 }

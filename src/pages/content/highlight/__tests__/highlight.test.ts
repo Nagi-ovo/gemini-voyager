@@ -7,6 +7,7 @@ import type {
   HighlightRecordV1,
   HighlightUpdatePatch,
 } from '@/core/types/highlight';
+import { isHighlightColor } from '@/core/types/highlight';
 
 import { buildHighlightAnchor, resolveHighlightAnchor } from '../anchor';
 import { HighlightClient } from '../client';
@@ -141,6 +142,12 @@ describe('highlight anchors', () => {
     document.body.innerHTML = '';
   });
 
+  it('accepts six-digit custom colors and rejects malformed values', () => {
+    expect(isHighlightColor('#12Abef')).toBe(true);
+    expect(isHighlightColor('#abc')).toBe(false);
+    expect(isHighlightColor('red')).toBe(false);
+  });
+
   it('builds a position and quote anchor from the model response', () => {
     const root = document.createElement('div');
     root.textContent = 'Prefix selected text suffix';
@@ -240,6 +247,48 @@ describe('HighlightManager rendering and navigation', () => {
     expect(document.querySelector('.gv-highlight-timeline-tick')).toBeInstanceOf(HTMLButtonElement);
     expect(manager.navigateToHighlight('highlight-1', 'auto')).toBe('highlight');
 
+    manager.destroy();
+  });
+
+  it('renders custom colors and can hide only the timeline markers', async () => {
+    const response = installConversation();
+    const anchor = buildHighlightAnchor(response, selectText(response, 'target'));
+    if (!anchor) throw new Error('Expected anchor');
+    const manager = new HighlightManager(
+      new FakeHighlightClient([makeRecord(anchor, { color: '#123456' })]),
+    );
+
+    await manager.init();
+
+    expect(document.querySelector<HTMLElement>('.gv-highlight-mark')?.style.backgroundColor).toBe(
+      'rgba(18, 52, 86, 0.3)',
+    );
+    expect(
+      document.querySelector<HTMLElement>('.gv-highlight-timeline-tick')?.style.backgroundColor,
+    ).toBe('rgb(18, 52, 86)');
+
+    manager.setTimelineMarkersEnabled(false);
+    expect(document.querySelector('.gv-highlight-timeline-tick')).toBeNull();
+    expect(document.querySelector('.gv-highlight-mark')?.textContent).toBe('target');
+
+    manager.setTimelineMarkersEnabled(true);
+    expect(document.querySelector('.gv-highlight-timeline-tick')).toBeInstanceOf(HTMLButtonElement);
+    manager.destroy();
+  });
+
+  it('does not show a timeline marker for a highlight inside hidden content', async () => {
+    const response = installConversation();
+    const anchor = buildHighlightAnchor(response, selectText(response, 'target'));
+    if (!anchor) throw new Error('Expected anchor');
+    const modelResponse = response.closest<HTMLElement>('model-response');
+    if (!modelResponse) throw new Error('Expected model response');
+    modelResponse.style.display = 'none';
+    const manager = new HighlightManager(new FakeHighlightClient([makeRecord(anchor)]));
+
+    await manager.init();
+
+    expect(document.querySelector('.gv-highlight-mark')?.textContent).toBe('target');
+    expect(document.querySelector('.gv-highlight-timeline-tick')).toBeNull();
     manager.destroy();
   });
 

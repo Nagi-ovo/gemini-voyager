@@ -1463,6 +1463,14 @@
     "message": "Resalta el texto seleccionado, permite elegir un color y recuerda el último usado.",
     "description": "Highlight feature hint"
   },
+  "showHighlightTimelineMarkers": {
+    "message": "Mostrar resaltados en la cronología",
+    "description": "Highlight timeline markers toggle label"
+  },
+  "showHighlightTimelineMarkersHint": {
+    "message": "Muestra un marcador de posición de color para cada resaltado guardado. Al desactivarlo, los resaltados se conservan.",
+    "description": "Highlight timeline markers toggle hint"
+  },
   "hideInputHalo": {
     "message": "Ocultar halo del cuadro de entrada",
     "description": "Input halo hider toggle label"
@@ -2372,6 +2380,7 @@
   "highlightDeleteFailed": { "message": "No se pudo eliminar el texto resaltado" },
   "highlightNotePlaceholder": { "message": "Añadir una nota (opcional)" },
   "highlightColor": { "message": "Color del resaltado" },
+  "highlightCustomColor": { "message": "Elegir un color personalizado" },
   "highlightTooLong": {
     "message": "La selección es demasiado larga. Selecciona un fragmento más corto."
   },
@@ -2386,6 +2395,6 @@
   "highlightImportSuccess": { "message": "Se importaron {count} resaltado(s)" },
   "highlightCloudSync": { "message": "Sincronizar resaltados" },
   "highlightCloudSyncHint": {
-    "message": "Guarda los resaltados en un archivo de Drive separado por cuenta. La sincronización siempre combina los datos y está desactivada de forma predeterminada."
+    "message": "Guarda los resaltados en un archivo de Drive separado por cuenta. Se incluyen de forma predeterminada al activar la sincronización y siempre se combinan de forma segura."
   }
 }

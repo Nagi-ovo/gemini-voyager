@@ -1463,6 +1463,14 @@
     "message": "選択した回答テキストをハイライトし、色を選んで最後に使った色を記憶します。",
     "description": "Highlight feature hint"
   },
+  "showHighlightTimelineMarkers": {
+    "message": "タイムラインにハイライト位置を表示",
+    "description": "Highlight timeline markers toggle label"
+  },
+  "showHighlightTimelineMarkersHint": {
+    "message": "保存したハイライトごとに色付きの位置マーカーを表示します。オフにしてもハイライト自体は残ります。",
+    "description": "Highlight timeline markers toggle hint"
+  },
   "hideInputHalo": {
     "message": "入力欄の光暈を非表示",
     "description": "Input halo hider toggle label"
@@ -2372,6 +2380,7 @@
   "highlightDeleteFailed": { "message": "ハイライトを削除できませんでした" },
   "highlightNotePlaceholder": { "message": "メモを追加（任意）" },
   "highlightColor": { "message": "ハイライトの色" },
+  "highlightCustomColor": { "message": "カスタム色を選択" },
   "highlightTooLong": { "message": "選択範囲が長すぎます。短く選択してください。" },
   "highlightAriaLabel": { "message": "保存済みハイライト。注釈を開く。" },
   "highlightTimelineAriaLabel": { "message": "保存済みハイライトを開く" },
@@ -2384,6 +2393,6 @@
   "highlightImportSuccess": { "message": "{count} 件のハイライトを読み込みました" },
   "highlightCloudSync": { "message": "ハイライトを同期" },
   "highlightCloudSyncHint": {
-    "message": "ハイライトをアカウント別の Drive ファイルに保存します。常にマージされ、初期設定はオフです。"
+    "message": "ハイライトをアカウント別の Drive ファイルに保存します。Drive 同期を有効にすると既定で含まれ、常に安全にマージされます。"
   }
 }

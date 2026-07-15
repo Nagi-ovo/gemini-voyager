@@ -10,7 +10,11 @@ import {
   detectAccountPlatformFromUrl,
   extractRouteUserIdFromUrl,
 } from '@/core/services/AccountIsolationService';
-import type { HighlightAccountScope, HighlightRecordV1 } from '@/core/types/highlight';
+import {
+  type HighlightAccountScope,
+  type HighlightRecordV1,
+  getHighlightColorHex,
+} from '@/core/types/highlight';
 import {
   type SavedLibraryFilter,
   type SavedLibraryItem,
@@ -25,13 +29,6 @@ interface StarredHistoryProps {
   onClose: () => void;
   sourceTabId?: number;
 }
-
-const HIGHLIGHT_COLOR_CLASS = {
-  yellow: 'bg-yellow-400',
-  green: 'bg-green-400',
-  blue: 'bg-blue-400',
-  pink: 'bg-pink-400',
-} as const;
 
 export function shouldOpenStarredMessageInCurrentTab(
   currentUrl: string | undefined,
@@ -437,10 +434,8 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
                       <Star className="text-primary h-4 w-4 fill-current" aria-hidden="true" />
                     ) : (
                       <span
-                        className={cn(
-                          'h-3.5 w-3.5 rounded-sm',
-                          HIGHLIGHT_COLOR_CLASS[item.color ?? 'yellow'],
-                        )}
+                        className="h-3.5 w-3.5 rounded-sm"
+                        style={{ backgroundColor: getHighlightColorHex(item.color ?? 'yellow') }}
                         aria-hidden="true"
                       />
                     )}

@@ -614,6 +614,39 @@ describe('quote reply', () => {
     cleanup();
   });
 
+  it('uses and remembers a custom highlight color', async () => {
+    document.querySelector('main')!.innerHTML = `
+      <div class="user-query-bubble-with-background">Question</div>
+      <model-response><message-content><p id="source">Hello world</p></message-content></model-response>
+    `;
+    const createFromRange = vi
+      .spyOn(HighlightManager.prototype, 'createFromRange')
+      .mockResolvedValue(true);
+    const cleanup = startQuoteReply({ quoteEnabled: false });
+
+    selectSourceText();
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.advanceTimersByTime(300);
+
+    const colorButton = document.querySelector<HTMLButtonElement>('.gv-highlight-color-trigger');
+    colorButton?.click();
+    const customColor = document.querySelector<HTMLInputElement>('.gv-highlight-custom-color');
+    if (!customColor) throw new Error('Expected custom color input');
+    customColor.value = '#123456';
+    customColor.dispatchEvent(new Event('input', { bubbles: true }));
+    customColor.dispatchEvent(new Event('change', { bubbles: true }));
+
+    expect(chrome.storage.sync.set).toHaveBeenCalledWith(
+      { [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: '#123456' },
+      expect.any(Function),
+    );
+    document.querySelector<HTMLButtonElement>('.gv-highlight-action')?.click();
+    await Promise.resolve();
+    expect(createFromRange).toHaveBeenCalledWith(expect.any(Range), '#123456');
+
+    cleanup();
+  });
+
   it('keeps the palette inside the viewport near the bottom-right edge', () => {
     document.querySelector('main')!.innerHTML = `
       <div class="user-query-bubble-with-background">Question</div>

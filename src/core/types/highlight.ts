@@ -27,13 +27,27 @@ export const HIGHLIGHT_LIMITS = {
 export type HighlightPlatform = 'gemini' | 'aistudio';
 export type HighlightRole = 'assistant' | 'user';
 export const HIGHLIGHT_COLORS = ['yellow', 'green', 'blue', 'pink'] as const;
-export type HighlightColor = (typeof HIGHLIGHT_COLORS)[number];
-export const HIGHLIGHT_COLOR_HEX: Record<HighlightColor, string> = {
+export type HighlightPresetColor = (typeof HIGHLIGHT_COLORS)[number];
+export type HighlightCustomColor = `#${string}`;
+export type HighlightColor = HighlightPresetColor | HighlightCustomColor;
+export const HIGHLIGHT_COLOR_HEX: Record<HighlightPresetColor, string> = {
   yellow: '#facc15',
   green: '#4ade80',
   blue: '#60a5fa',
   pink: '#f472b6',
 };
+
+export function isHighlightPresetColor(value: unknown): value is HighlightPresetColor {
+  return HIGHLIGHT_COLORS.includes(value as HighlightPresetColor);
+}
+
+export function isHighlightCustomColor(value: unknown): value is HighlightCustomColor {
+  return typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
+}
+
+export function getHighlightColorHex(color: HighlightColor): string {
+  return isHighlightPresetColor(color) ? HIGHLIGHT_COLOR_HEX[color] : color;
+}
 
 /** Input scope. The raw account key is hashed before anything is persisted. */
 export interface HighlightAccountScope {
@@ -285,7 +299,7 @@ function isRole(value: unknown): value is HighlightRole {
 }
 
 function isColor(value: unknown): value is HighlightColor {
-  return HIGHLIGHT_COLORS.includes(value as HighlightColor);
+  return isHighlightPresetColor(value) || isHighlightCustomColor(value);
 }
 
 export function isHighlightColor(value: unknown): value is HighlightColor {

@@ -74,6 +74,7 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS: Record<string, unknown> = {
   [StorageKeys.QUOTE_REPLY_ENABLED]: true,
   [StorageKeys.HIGHLIGHT_ENABLED]: true,
   [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: 'yellow',
+  [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: true,
   [StorageKeys.CTRL_ENTER_SEND]: false,
   [StorageKeys.SAFARI_ENTER_FIX]: false,
   [StorageKeys.INPUT_COLLAPSE_ENABLED]: false,

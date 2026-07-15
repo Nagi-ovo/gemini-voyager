@@ -373,9 +373,9 @@ async function isHighlightCloudSyncRequested(
   if (explicitlyIncluded) return true;
   try {
     const stored = await chrome.storage.local.get({
-      [StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED]: false,
+      [StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED]: true,
     });
-    return stored[StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED] === true;
+    return stored[StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED] !== false;
   } catch {
     return false;
   }

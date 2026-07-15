@@ -1463,6 +1463,14 @@
     "message": "高亮选中的回答文本、选择颜色，并记住你上次使用的颜色。",
     "description": "高亮功能提示"
   },
+  "showHighlightTimelineMarkers": {
+    "message": "在时间线显示高亮位置",
+    "description": "高亮时间线位置标记开关标签"
+  },
+  "showHighlightTimelineMarkersHint": {
+    "message": "为每条已保存的高亮显示彩色位置标记。关闭后高亮正文仍会保留。",
+    "description": "高亮时间线位置标记开关说明"
+  },
   "hideInputHalo": {
     "message": "隐藏输入框光晕",
     "description": "输入框光晕开关标签"
@@ -2372,6 +2380,7 @@
   "highlightDeleteFailed": { "message": "无法删除高亮" },
   "highlightNotePlaceholder": { "message": "添加备注（可选）" },
   "highlightColor": { "message": "高亮颜色" },
+  "highlightCustomColor": { "message": "自定义高亮颜色" },
   "highlightTooLong": { "message": "选中内容过长，请缩小范围。" },
   "highlightAriaLabel": { "message": "已保存的高亮。打开批注。" },
   "highlightTimelineAriaLabel": { "message": "打开已保存的高亮" },
@@ -2384,6 +2393,6 @@
   "highlightImportSuccess": { "message": "已导入 {count} 条高亮" },
   "highlightCloudSync": { "message": "同步高亮" },
   "highlightCloudSyncHint": {
-    "message": "将高亮保存在按账号隔离的独立 Drive 文件中。高亮同步始终合并，默认关闭。"
+    "message": "将高亮保存在按账号隔离的独立 Drive 文件中。开启 Drive 同步后默认包含高亮，并始终安全合并。"
   }
 }

@@ -282,6 +282,7 @@ async function initializeFeatures(): Promise<void> {
           [StorageKeys.QUOTE_REPLY_ENABLED]: true,
           [StorageKeys.HIGHLIGHT_ENABLED]: true,
           [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: 'yellow',
+          [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: true,
         };
         try {
           chrome.storage?.sync?.get(defaults, resolve);
@@ -299,6 +300,8 @@ async function initializeFeatures(): Promise<void> {
         highlightDefaultColor: isHighlightColor(storedHighlightColor)
           ? storedHighlightColor
           : 'yellow',
+        highlightTimelineMarkersEnabled:
+          quoteReplyResult[StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED] !== false,
       });
       await delay(LIGHT_FEATURE_INIT_DELAY);
 

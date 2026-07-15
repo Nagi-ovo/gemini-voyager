@@ -1463,6 +1463,14 @@
     "message": "Destaca o texto selecionado, permite escolher uma cor e lembra a última usada.",
     "description": "Highlight feature hint"
   },
+  "showHighlightTimelineMarkers": {
+    "message": "Mostrar destaques na linha do tempo",
+    "description": "Highlight timeline markers toggle label"
+  },
+  "showHighlightTimelineMarkersHint": {
+    "message": "Mostra um marcador colorido para cada destaque salvo. Desativar esta opção mantém os destaques.",
+    "description": "Highlight timeline markers toggle hint"
+  },
   "hideInputHalo": {
     "message": "Ocultar halo do campo de entrada",
     "description": "Input halo hider toggle label"
@@ -2372,6 +2380,7 @@
   "highlightDeleteFailed": { "message": "Não foi possível excluir o destaque" },
   "highlightNotePlaceholder": { "message": "Adicionar nota (opcional)" },
   "highlightColor": { "message": "Cor do destaque" },
+  "highlightCustomColor": { "message": "Escolher uma cor personalizada" },
   "highlightTooLong": { "message": "A seleção é muito longa. Selecione um trecho menor." },
   "highlightAriaLabel": { "message": "Destaque salvo. Abrir anotação." },
   "highlightTimelineAriaLabel": { "message": "Abrir destaque salvo" },
@@ -2384,6 +2393,6 @@
   "highlightImportSuccess": { "message": "{count} destaque(s) importado(s)" },
   "highlightCloudSync": { "message": "Sincronizar destaques" },
   "highlightCloudSyncHint": {
-    "message": "Mantém os destaques em um arquivo do Drive separado por conta. A sincronização sempre combina os dados e vem desativada por padrão."
+    "message": "Mantém os destaques em um arquivo do Drive separado por conta. Eles são incluídos por padrão ao ativar a sincronização e sempre são combinados com segurança."
   }
 }

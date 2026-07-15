@@ -1463,6 +1463,14 @@
     "message": "Highlight selected response text, choose a color, and remember the last color you used.",
     "description": "Highlight feature hint"
   },
+  "showHighlightTimelineMarkers": {
+    "message": "Show highlights on timeline",
+    "description": "Highlight timeline markers toggle label"
+  },
+  "showHighlightTimelineMarkersHint": {
+    "message": "Show a colored position marker for each saved highlight. Turning this off keeps the highlights themselves.",
+    "description": "Highlight timeline markers toggle hint"
+  },
   "hideInputHalo": {
     "message": "Hide input box halo",
     "description": "Input halo hider toggle label"
@@ -2384,6 +2392,9 @@
   "highlightColor": {
     "message": "Highlight color"
   },
+  "highlightCustomColor": {
+    "message": "Choose a custom highlight color"
+  },
   "highlightTooLong": {
     "message": "This selection is too long. Select a smaller passage."
   },
@@ -2406,6 +2417,6 @@
     "message": "Sync highlights"
   },
   "highlightCloudSyncHint": {
-    "message": "Keep highlights in a separate account-scoped Drive file. Highlight sync always merges and is off by default."
+    "message": "Keep highlights in a separate account-scoped Drive file. Highlights are included by default when Drive sync is enabled and always merge safely."
   }
 }

@@ -68,6 +68,7 @@ export const StorageKeys = {
   HIGHLIGHT_DEVICE_ID: 'gvAnnotationDeviceId',
   HIGHLIGHT_ENABLED: 'gvHighlightEnabled',
   HIGHLIGHT_DEFAULT_COLOR: 'gvHighlightDefaultColor',
+  HIGHLIGHT_TIMELINE_MARKERS_ENABLED: 'gvHighlightTimelineMarkersEnabled',
 
   // UI customization
   CHAT_WIDTH: 'geminiChatWidth',

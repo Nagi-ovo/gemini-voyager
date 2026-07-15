@@ -1463,6 +1463,14 @@
     "message": "Выделяет выбранный текст ответа, позволяет выбрать цвет и запоминает последний использованный.",
     "description": "Highlight feature hint"
   },
+  "showHighlightTimelineMarkers": {
+    "message": "Показывать выделения на шкале",
+    "description": "Highlight timeline markers toggle label"
+  },
+  "showHighlightTimelineMarkersHint": {
+    "message": "Показывает цветную метку положения для каждого сохранённого выделения. Отключение не удаляет сами выделения.",
+    "description": "Highlight timeline markers toggle hint"
+  },
   "hideInputHalo": {
     "message": "Скрыть ореол поля ввода",
     "description": "Input halo hider toggle label"
@@ -2372,6 +2380,7 @@
   "highlightDeleteFailed": { "message": "Не удалось удалить выделение" },
   "highlightNotePlaceholder": { "message": "Добавить заметку (необязательно)" },
   "highlightColor": { "message": "Цвет выделения" },
+  "highlightCustomColor": { "message": "Выбрать свой цвет" },
   "highlightTooLong": { "message": "Выбранный фрагмент слишком длинный. Выберите более короткий." },
   "highlightAriaLabel": { "message": "Сохранённое выделение. Открыть аннотацию." },
   "highlightTimelineAriaLabel": { "message": "Открыть сохранённое выделение" },
@@ -2384,6 +2393,6 @@
   "highlightImportSuccess": { "message": "Импортировано выделений: {count}" },
   "highlightCloudSync": { "message": "Синхронизировать выделения" },
   "highlightCloudSyncHint": {
-    "message": "Хранит выделения в отдельном файле Drive для каждой учётной записи. Синхронизация всегда объединяет данные и по умолчанию отключена."
+    "message": "Хранит выделения в отдельном файле Drive для каждой учётной записи. При включении синхронизации Drive они добавляются по умолчанию и всегда безопасно объединяются."
   }
 }
