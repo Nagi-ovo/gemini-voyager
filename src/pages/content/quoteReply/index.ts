@@ -3,15 +3,15 @@ import browser from 'webextension-polyfill';
 import { createHighlighterIcon } from '@/core/icons/highlighterIcon';
 import { StorageKeys } from '@/core/types/common';
 import {
-  HIGHLIGHT_COLORS,
-  HIGHLIGHT_COLOR_HEX,
   type HighlightColor,
+  areHighlightColorsEqual,
   getHighlightColorHex,
   isHighlightColor,
+  normalizeHighlightColorPalette,
 } from '@/core/types/highlight';
 import { getBrowserName } from '@/core/utils/browser';
 
-import { getTranslationSync, getTranslationSyncUnsafe } from '../../../utils/i18n';
+import { getTranslationSync } from '../../../utils/i18n';
 import { findChatInput } from '../chatInput/index';
 import { HighlightManager } from '../highlight';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
@@ -49,6 +49,7 @@ const POSITIONING = {
 
 /** SVG icon for the quote button */
 const QUOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"></path></svg>`;
+const EDIT_COLOR_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>`;
 
 const STYLE_ID = 'gemini-voyager-quote-reply-style';
 
@@ -125,6 +126,7 @@ function injectStyles() {
       box-shadow: 0 6px 18px rgba(0,0,0,0.24);
     }
     .gv-highlight-color-option {
+      position: relative;
       width: 24px;
       height: 24px;
       padding: 0;
@@ -133,24 +135,50 @@ function injectStyles() {
       cursor: pointer;
     }
     .gv-highlight-color-option[aria-pressed="true"] {
-      border-color: currentColor;
-      box-shadow: 0 0 0 2px #1e1e1e inset;
+      border-color: rgba(255, 255, 255, 0.94);
+      outline: 2px solid #8ab4f8;
+      outline-offset: 1px;
+      box-shadow: 0 2px 8px rgba(138, 180, 248, 0.34);
     }
-    .gv-highlight-custom-color {
-      box-sizing: border-box;
+    .gv-highlight-color-option[aria-pressed="true"]::after {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      content: "✓";
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.78);
+    }
+    .gv-highlight-color-edit {
+      display: grid;
       width: 26px;
       height: 26px;
+      margin-inline-start: 2px;
       padding: 0;
-      overflow: hidden;
-      border: 1px solid currentColor;
-      border-radius: 50%;
-      background: transparent;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
       color: inherit;
       cursor: pointer;
     }
-    .gv-highlight-custom-color::-webkit-color-swatch-wrapper { padding: 2px; }
-    .gv-highlight-custom-color::-webkit-color-swatch { border: 0; border-radius: 50%; }
-    .gv-highlight-custom-color::-moz-color-swatch { border: 0; border-radius: 50%; }
+    .gv-highlight-color-edit:hover,
+    .gv-highlight-color-edit:focus-visible {
+      border-color: #8ab4f8;
+      background: rgba(138, 180, 248, 0.16);
+      outline: none;
+    }
+    .gv-highlight-custom-color {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
     .gv-selection-toolbar.gv-hidden {
       opacity: 0;
       pointer-events: none;
@@ -178,8 +206,9 @@ function injectStyles() {
         border-color: rgba(0,0,0,0.10);
         background: #fff;
       }
-      .gv-highlight-color-option[aria-pressed="true"] {
-        box-shadow: 0 0 0 2px #fff inset;
+      .gv-highlight-color-edit {
+        border-color: rgba(0, 0, 0, 0.14);
+        background: rgba(0, 0, 0, 0.04);
       }
     }
     /* Check for specific theme attributes if Gemini uses them */
@@ -200,9 +229,10 @@ function injectStyles() {
       border-color: rgba(0,0,0,0.10);
       background: #fff;
     }
-    .theme-host.light-theme .gv-highlight-color-option[aria-selected="true"],
-    body[data-theme="light"] .gv-highlight-color-option[aria-selected="true"] {
-      box-shadow: 0 0 0 2px #fff inset;
+    .theme-host.light-theme .gv-highlight-color-edit,
+    body[data-theme="light"] .gv-highlight-color-edit {
+      border-color: rgba(0, 0, 0, 0.14);
+      background: rgba(0, 0, 0, 0.04);
     }
     .theme-host.dark-theme .gv-selection-toolbar,
     body[data-theme="dark"] .gv-selection-toolbar {
@@ -380,6 +410,7 @@ interface QuoteReplyOptions {
   quoteEnabled?: boolean;
   highlightEnabled?: boolean;
   highlightDefaultColor?: HighlightColor;
+  highlightColorPalette?: readonly HighlightColor[];
   highlightTimelineMarkersEnabled?: boolean;
 }
 
@@ -388,8 +419,19 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
 
   const quoteEnabled = options.quoteEnabled !== false;
   let highlightEnabled = options.highlightEnabled !== false;
-  let selectedHighlightColor = options.highlightDefaultColor ?? 'yellow';
+  let highlightColors = normalizeHighlightColorPalette(
+    options.highlightColorPalette,
+    options.highlightDefaultColor,
+  );
+  let selectedHighlightSlot = Math.max(
+    0,
+    highlightColors.findIndex((color) =>
+      areHighlightColorsEqual(color, options.highlightDefaultColor ?? 'yellow'),
+    ),
+  );
+  let selectedHighlightColor = highlightColors[selectedHighlightSlot];
   const highlightManager = new HighlightManager();
+  highlightManager.setColorPalette(highlightColors);
   highlightManager.setTimelineMarkersEnabled(options.highlightTimelineMarkersEnabled !== false);
   void highlightManager.init();
 
@@ -409,8 +451,12 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
     highlightColorBtn?.setAttribute('aria-expanded', 'false');
   }
 
-  function getHighlightColorLabel(color: HighlightColor): string {
-    return getTranslationSyncUnsafe(`folder_color_${color}`);
+  function getHighlightColorLabel(index: number): string {
+    return `${getTranslationSync('highlightColor')} ${index + 1}`;
+  }
+
+  function getHighlightColorEditLabel(): string {
+    return `${getTranslationSync('highlightCustomColor')} · ${getHighlightColorLabel(selectedHighlightSlot)}`;
   }
 
   function positionHighlightColorPalette(): void {
@@ -447,14 +493,40 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
     highlightColorPalette
       ?.querySelectorAll<HTMLButtonElement>('.gv-highlight-color-option')
       .forEach((swatch) => {
-        swatch.setAttribute(
-          'aria-pressed',
-          String(swatch.dataset.highlightColor === selectedHighlightColor),
-        );
+        const slot = Number(swatch.dataset.highlightSlot);
+        const color = highlightColors[slot];
+        if (!color) return;
+        swatch.style.backgroundColor = getHighlightColorHex(color);
+        swatch.dataset.highlightColor = color;
+        swatch.setAttribute('aria-pressed', String(slot === selectedHighlightSlot));
+        swatch.setAttribute('aria-label', getHighlightColorLabel(slot));
       });
     if (highlightCustomColorInput) {
       highlightCustomColorInput.value = getHighlightColorHex(selectedHighlightColor);
     }
+    const editColorButton = highlightColorPalette?.querySelector<HTMLButtonElement>(
+      '.gv-highlight-color-edit',
+    );
+    if (editColorButton) {
+      const label = getHighlightColorEditLabel();
+      editColorButton.title = label;
+      editColorButton.setAttribute('aria-label', label);
+    }
+  }
+
+  function selectHighlightColor(color: HighlightColor): void {
+    const matchingSlot = highlightColors.findIndex((candidate) =>
+      areHighlightColorsEqual(candidate, color),
+    );
+    if (matchingSlot >= 0) {
+      selectedHighlightSlot = matchingSlot;
+    } else {
+      highlightColors = [color, ...highlightColors.slice(1)];
+      selectedHighlightSlot = 0;
+      highlightManager.setColorPalette(highlightColors);
+    }
+    selectedHighlightColor = highlightColors[selectedHighlightSlot];
+    updateHighlightColorUi();
   }
 
   /** Update button position based on current selection range's viewport coordinates. */
@@ -578,13 +650,14 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
     highlightColorPalette.className = `${CSS_CLASSES.HIGHLIGHT_COLOR_PALETTE} ${CSS_CLASSES.HIDDEN}`;
     highlightColorPalette.setAttribute('role', 'group');
     highlightColorPalette.setAttribute('aria-label', getTranslationSync('highlightColor'));
-    HIGHLIGHT_COLORS.forEach((color) => {
+    highlightColors.forEach((color, index) => {
       const swatch = document.createElement('button');
       swatch.type = 'button';
       swatch.className = 'gv-highlight-color-option';
-      swatch.style.backgroundColor = HIGHLIGHT_COLOR_HEX[color];
+      swatch.style.backgroundColor = getHighlightColorHex(color);
       swatch.dataset.highlightColor = color;
-      swatch.setAttribute('aria-label', getHighlightColorLabel(color));
+      swatch.dataset.highlightSlot = String(index);
+      swatch.setAttribute('aria-label', getHighlightColorLabel(index));
       swatch.addEventListener('mousedown', (event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -593,16 +666,33 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
       swatch.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
-        selectedHighlightColor = color;
+        selectedHighlightSlot = index;
+        selectedHighlightColor = highlightColors[index];
         updateHighlightColorUi();
-        closeHighlightColorPalette();
         void browser.storage.sync
-          .set({ [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: color })
+          .set({ [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: selectedHighlightColor })
           .catch(() => undefined);
-        highlightColorBtn?.focus({ preventScroll: true });
       });
       highlightColorPalette?.appendChild(swatch);
     });
+    const editColorButton = document.createElement('button');
+    editColorButton.type = 'button';
+    editColorButton.className = 'gv-highlight-color-edit';
+    editColorButton.innerHTML = EDIT_COLOR_ICON;
+    editColorButton.title = getHighlightColorEditLabel();
+    editColorButton.setAttribute('aria-label', getHighlightColorEditLabel());
+    editColorButton.addEventListener('mousedown', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      isInternalClick = true;
+    });
+    editColorButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      highlightCustomColorInput?.click();
+    });
+    highlightColorPalette.appendChild(editColorButton);
+
     highlightCustomColorInput = document.createElement('input');
     highlightCustomColorInput.type = 'color';
     highlightCustomColorInput.className = 'gv-highlight-custom-color';
@@ -618,15 +708,22 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
     highlightCustomColorInput.addEventListener('input', () => {
       if (!highlightCustomColorInput) return;
       selectedHighlightColor = highlightCustomColorInput.value as HighlightColor;
+      highlightColors[selectedHighlightSlot] = selectedHighlightColor;
+      highlightManager.setColorPalette(highlightColors);
       updateHighlightColorUi();
     });
     highlightCustomColorInput.addEventListener('change', () => {
       if (!highlightCustomColorInput) return;
       selectedHighlightColor = highlightCustomColorInput.value as HighlightColor;
+      highlightColors[selectedHighlightSlot] = selectedHighlightColor;
+      highlightManager.setColorPalette(highlightColors);
       updateHighlightColorUi();
       closeHighlightColorPalette();
       void browser.storage.sync
-        .set({ [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: selectedHighlightColor })
+        .set({
+          [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: selectedHighlightColor,
+          [StorageKeys.HIGHLIGHT_COLOR_PALETTE]: [...highlightColors],
+        })
         .catch(() => undefined);
       highlightColorBtn?.focus({ preventScroll: true });
     });
@@ -931,11 +1028,17 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
       highlightColorPalette
         .querySelectorAll<HTMLButtonElement>('.gv-highlight-color-option')
         .forEach((swatch) => {
-          const color = swatch.dataset.highlightColor;
-          if (isHighlightColor(color)) {
-            swatch.setAttribute('aria-label', getHighlightColorLabel(color));
-          }
+          const slot = Number(swatch.dataset.highlightSlot);
+          if (Number.isInteger(slot))
+            swatch.setAttribute('aria-label', getHighlightColorLabel(slot));
         });
+      const editColorButton = highlightColorPalette.querySelector<HTMLButtonElement>(
+        '.gv-highlight-color-edit',
+      );
+      if (editColorButton) {
+        editColorButton.title = getHighlightColorEditLabel();
+        editColorButton.setAttribute('aria-label', getHighlightColorEditLabel());
+      }
     }
     updateHighlightColorUi();
   }
@@ -985,10 +1088,18 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
       }
     }
     if (areaName === 'sync') {
+      const paletteChange = changes[StorageKeys.HIGHLIGHT_COLOR_PALETTE];
+      if (paletteChange) {
+        highlightColors = normalizeHighlightColorPalette(
+          paletteChange.newValue,
+          selectedHighlightColor,
+        );
+        highlightManager.setColorPalette(highlightColors);
+        selectHighlightColor(selectedHighlightColor);
+      }
       const nextColor = changes[StorageKeys.HIGHLIGHT_DEFAULT_COLOR]?.newValue;
       if (isHighlightColor(nextColor)) {
-        selectedHighlightColor = nextColor;
-        updateHighlightColorUi();
+        selectHighlightColor(nextColor);
       }
       const timelineMarkersChange = changes[StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED];
       if (timelineMarkersChange) {

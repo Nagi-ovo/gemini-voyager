@@ -1,4 +1,5 @@
 import { StorageKeys } from '@/core/types/common';
+import { DEFAULT_HIGHLIGHT_COLOR_PALETTE } from '@/core/types/highlight';
 import type { SettingsExportPayload } from '@/core/types/sync';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 
@@ -74,6 +75,7 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS: Record<string, unknown> = {
   [StorageKeys.QUOTE_REPLY_ENABLED]: true,
   [StorageKeys.HIGHLIGHT_ENABLED]: true,
   [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: 'yellow',
+  [StorageKeys.HIGHLIGHT_COLOR_PALETTE]: [...DEFAULT_HIGHLIGHT_COLOR_PALETTE],
   [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: true,
   [StorageKeys.CTRL_ENTER_SEND]: false,
   [StorageKeys.SAFARI_ENTER_FIX]: false,

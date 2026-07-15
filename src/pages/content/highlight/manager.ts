@@ -3,6 +3,7 @@ import {
   detectAccountContextFromDocument,
 } from '@/core/services/AccountIsolationService';
 import {
+  DEFAULT_HIGHLIGHT_COLOR_PALETTE,
   HIGHLIGHT_COLORS,
   HIGHLIGHT_LIMITS,
   type HighlightAccountScope,
@@ -10,8 +11,10 @@ import {
   type HighlightCreateInput,
   type HighlightRecordV1,
   type HighlightUpdatePatch,
+  areHighlightColorsEqual,
   getHighlightColorHex,
   isHighlightPresetColor,
+  normalizeHighlightColorPalette,
 } from '@/core/types/highlight';
 import { buildConversationIdFromUrl } from '@/core/utils/conversationIdentity';
 import { getTranslationSync } from '@/utils/i18n';
@@ -125,6 +128,7 @@ function injectStyles(): void {
     }
     .gv-highlight-color-label { margin-inline-end: 2px; color: #bdc1c6; }
     .gv-highlight-swatch {
+      position: relative;
       width: 22px;
       height: 22px;
       padding: 0;
@@ -133,28 +137,23 @@ function injectStyles(): void {
       cursor: pointer;
     }
     .gv-highlight-swatch[aria-pressed="true"] {
-      border-color: currentColor;
-      box-shadow: 0 0 0 2px #202124 inset;
+      border-color: rgba(255, 255, 255, 0.94);
+      outline: 2px solid #8ab4f8;
+      outline-offset: 1px;
+      box-shadow: 0 2px 8px rgba(138, 180, 248, 0.34);
     }
-    .gv-highlight-swatch-yellow { background: #facc15; }
-    .gv-highlight-swatch-green { background: #4ade80; }
-    .gv-highlight-swatch-blue { background: #60a5fa; }
-    .gv-highlight-swatch-pink { background: #f472b6; }
-    .gv-highlight-custom-color {
-      box-sizing: border-box;
-      width: 24px;
-      height: 24px;
-      padding: 0;
-      overflow: hidden;
-      border: 1px solid currentColor;
-      border-radius: 50%;
-      background: transparent;
-      color: inherit;
-      cursor: pointer;
+    .gv-highlight-swatch[aria-pressed="true"]::after {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      content: "✓";
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.78);
     }
-    .gv-highlight-custom-color::-webkit-color-swatch-wrapper { padding: 2px; }
-    .gv-highlight-custom-color::-webkit-color-swatch { border: 0; border-radius: 50%; }
-    .gv-highlight-custom-color::-moz-color-swatch { border: 0; border-radius: 50%; }
     .gv-highlight-popover-actions {
       display: flex;
       justify-content: flex-end;
@@ -225,10 +224,6 @@ function injectStyles(): void {
       background: #f8f9fa;
       color: #202124;
     }
-    .theme-host.light-theme .gv-highlight-swatch[aria-pressed="true"],
-    body[data-theme="light"] .gv-highlight-swatch[aria-pressed="true"] {
-      box-shadow: 0 0 0 2px #fff inset;
-    }
     .theme-host.light-theme .gv-highlight-popover-button:hover,
     body[data-theme="light"] .gv-highlight-popover-button:hover { background: #f1f3f4; }
     .theme-host.light-theme .gv-highlight-popover-button-primary,
@@ -248,7 +243,6 @@ function injectStyles(): void {
       .gv-highlight-popover-quote,
       .gv-highlight-color-label { color: #5f6368; }
       .gv-highlight-note { border-color: #dadce0; background: #f8f9fa; color: #202124; }
-      .gv-highlight-swatch[aria-pressed="true"] { box-shadow: 0 0 0 2px #fff inset; }
       .gv-highlight-popover-button:hover { background: #f1f3f4; }
       .gv-highlight-popover-button-primary {
         border-color: #0b57d0;
@@ -272,10 +266,6 @@ function injectStyles(): void {
       border-color: #5f6368;
       background: #292a2d;
       color: #f1f3f4;
-    }
-    .theme-host.dark-theme .gv-highlight-swatch[aria-pressed="true"],
-    body[data-theme="dark"] .gv-highlight-swatch[aria-pressed="true"] {
-      box-shadow: 0 0 0 2px #202124 inset;
     }
     .theme-host.dark-theme .gv-highlight-popover-button:hover,
     body[data-theme="dark"] .gv-highlight-popover-button:hover {
@@ -429,6 +419,7 @@ export class HighlightManager {
   private pendingHashDeadline = 0;
   private pendingTurnFallbackDone = false;
   private timelineMarkersEnabled = true;
+  private colorPalette = [...DEFAULT_HIGHLIGHT_COLOR_PALETTE];
   private readonly onDocumentClick = (event: MouseEvent): void => {
     const target = event.target instanceof Element ? event.target : null;
     const mark = target?.closest<HTMLElement>('.gv-highlight-mark[data-gv-highlight-id]');
@@ -481,6 +472,10 @@ export class HighlightManager {
   };
 
   constructor(private readonly client: HighlightClient = highlightClient) {}
+
+  setColorPalette(colors: readonly HighlightColor[]): void {
+    this.colorPalette = normalizeHighlightColorPalette(colors);
+  }
 
   setTimelineMarkersEnabled(enabled: boolean): void {
     this.timelineMarkersEnabled = enabled;
@@ -909,16 +904,19 @@ export class HighlightManager {
     let selectedColor: HighlightColor = record.color;
     const updateColorSelection = (): void => {
       swatches.forEach((item, itemIndex) => {
-        item.setAttribute('aria-pressed', String(HIGHLIGHT_COLORS[itemIndex] === selectedColor));
+        item.setAttribute(
+          'aria-pressed',
+          String(areHighlightColorsEqual(this.colorPalette[itemIndex], selectedColor)),
+        );
       });
-      customColor.value = getHighlightColorHex(selectedColor);
     };
-    const swatches = HIGHLIGHT_COLORS.map((color, index) => {
+    const swatches = this.colorPalette.map((color, index) => {
       const swatch = document.createElement('button');
       swatch.type = 'button';
-      swatch.className = `gv-highlight-swatch gv-highlight-swatch-${color}`;
+      swatch.className = 'gv-highlight-swatch';
+      swatch.style.backgroundColor = getHighlightColorHex(color);
       swatch.setAttribute('aria-label', `${colorLabel.textContent} ${index + 1}`);
-      swatch.setAttribute('aria-pressed', String(color === selectedColor));
+      swatch.setAttribute('aria-pressed', String(areHighlightColorsEqual(color, selectedColor)));
       swatch.addEventListener('click', () => {
         selectedColor = color;
         updateColorSelection();
@@ -926,19 +924,6 @@ export class HighlightManager {
       colorRow.appendChild(swatch);
       return swatch;
     });
-    const customColor = document.createElement('input');
-    customColor.type = 'color';
-    customColor.className = 'gv-highlight-custom-color';
-    customColor.value = getHighlightColorHex(selectedColor);
-    customColor.setAttribute(
-      'aria-label',
-      translate('highlightCustomColor', 'Choose a custom highlight color'),
-    );
-    customColor.addEventListener('input', () => {
-      selectedColor = customColor.value as HighlightColor;
-      updateColorSelection();
-    });
-    colorRow.appendChild(customColor);
 
     const actions = document.createElement('div');
     actions.className = 'gv-highlight-popover-actions';
@@ -962,7 +947,6 @@ export class HighlightManager {
       cancelButton.disabled = busy;
       saveButton.disabled = busy;
       note.disabled = busy;
-      customColor.disabled = busy;
       swatches.forEach((swatch) => {
         swatch.disabled = busy;
       });

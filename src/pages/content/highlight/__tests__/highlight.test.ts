@@ -7,7 +7,7 @@ import type {
   HighlightRecordV1,
   HighlightUpdatePatch,
 } from '@/core/types/highlight';
-import { isHighlightColor } from '@/core/types/highlight';
+import { isHighlightColor, normalizeHighlightColorPalette } from '@/core/types/highlight';
 
 import { buildHighlightAnchor, resolveHighlightAnchor } from '../anchor';
 import { HighlightClient } from '../client';
@@ -150,6 +150,33 @@ describe('highlight anchors', () => {
     expect(isHighlightColor('red')).toBe(false);
   });
 
+  it('keeps exactly five palette slots and migrates a legacy custom default', () => {
+    expect(normalizeHighlightColorPalette(undefined, '#123456')).toEqual([
+      '#123456',
+      'green',
+      'blue',
+      'pink',
+      '#c084fc',
+    ]);
+    expect(normalizeHighlightColorPalette(['#111111', '#222222'])).toEqual([
+      '#111111',
+      '#222222',
+      'blue',
+      'pink',
+      '#c084fc',
+    ]);
+    expect(
+      normalizeHighlightColorPalette([
+        '#111111',
+        '#222222',
+        '#333333',
+        '#444444',
+        '#555555',
+        '#666666',
+      ]),
+    ).toHaveLength(5);
+  });
+
   it('builds a position and quote anchor from the model response', () => {
     const root = document.createElement('div');
     root.textContent = 'Prefix selected text suffix';
@@ -275,6 +302,28 @@ describe('HighlightManager rendering and navigation', () => {
 
     manager.setTimelineMarkersEnabled(true);
     expect(document.querySelector('.gv-highlight-timeline-tick')).toBeInstanceOf(HTMLButtonElement);
+    manager.destroy();
+  });
+
+  it('uses the five persistent palette slots when editing a highlight', async () => {
+    const response = installConversation();
+    const anchor = buildHighlightAnchor(response, selectText(response, 'target'));
+    if (!anchor) throw new Error('Expected anchor');
+    const manager = new HighlightManager(
+      new FakeHighlightClient([makeRecord(anchor, { color: '#333333' })]),
+    );
+    manager.setColorPalette(['#111111', '#222222', '#333333', '#444444', '#555555']);
+    await manager.init();
+
+    document.querySelector<HTMLElement>('.gv-highlight-mark')?.click();
+    const swatches = document.querySelectorAll<HTMLButtonElement>('.gv-highlight-swatch');
+    expect(swatches).toHaveLength(5);
+    expect(swatches[2].getAttribute('aria-pressed')).toBe('true');
+    expect(swatches[4].style.backgroundColor).toBe('rgb(85, 85, 85)');
+    expect(document.getElementById('gv-highlight-style')?.textContent).toContain(
+      'outline: 2px solid #8ab4f8',
+    );
+
     manager.destroy();
   });
 

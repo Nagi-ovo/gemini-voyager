@@ -588,13 +588,16 @@ describe('quote reply', () => {
     const palette = document.querySelector('.gv-highlight-color-palette');
     expect(palette?.classList.contains('gv-hidden')).toBe(false);
     expect(palette?.getAttribute('role')).toBe('group');
-    expect(palette?.querySelectorAll('.gv-highlight-color-option')).toHaveLength(4);
+    expect(palette?.querySelectorAll('.gv-highlight-color-option')).toHaveLength(5);
     expect(
       palette?.querySelector('[data-highlight-color="blue"]')?.getAttribute('aria-pressed'),
     ).toBe('true');
     expect(
       palette?.querySelector('[data-highlight-color="pink"]')?.getAttribute('aria-label'),
-    ).toBe('Pink');
+    ).toBe('Highlight color 4');
+    expect(document.getElementById('gemini-voyager-quote-reply-style')?.textContent).toContain(
+      'outline: 2px solid #8ab4f8',
+    );
     document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', bubbles: true }));
     expect(palette?.classList.contains('gv-hidden')).toBe(true);
     colorButton?.click();
@@ -630,14 +633,23 @@ describe('quote reply', () => {
 
     const colorButton = document.querySelector<HTMLButtonElement>('.gv-highlight-color-trigger');
     colorButton?.click();
+    document.querySelector<HTMLButtonElement>('[data-highlight-slot="2"]')?.click();
+    const editColorButton = document.querySelector<HTMLButtonElement>('.gv-highlight-color-edit');
+    expect(editColorButton).toBeInstanceOf(HTMLButtonElement);
     const customColor = document.querySelector<HTMLInputElement>('.gv-highlight-custom-color');
     if (!customColor) throw new Error('Expected custom color input');
+    const colorInputClick = vi.spyOn(customColor, 'click');
+    editColorButton?.click();
+    expect(colorInputClick).toHaveBeenCalledOnce();
     customColor.value = '#123456';
     customColor.dispatchEvent(new Event('input', { bubbles: true }));
     customColor.dispatchEvent(new Event('change', { bubbles: true }));
 
     expect(chrome.storage.sync.set).toHaveBeenCalledWith(
-      { [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: '#123456' },
+      {
+        [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: '#123456',
+        [StorageKeys.HIGHLIGHT_COLOR_PALETTE]: ['yellow', 'green', '#123456', 'pink', '#c084fc'],
+      },
       expect.any(Function),
     );
     document.querySelector<HTMLButtonElement>('.gv-highlight-action')?.click();

@@ -1,5 +1,5 @@
 import { StorageKeys } from '@/core/types/common';
-import { isHighlightColor } from '@/core/types/highlight';
+import { isHighlightColor, normalizeHighlightColorPalette } from '@/core/types/highlight';
 import { isSafari } from '@/core/utils/browser';
 import { customWebsitesIncludeHost, sanitizeCustomWebsites } from '@/core/utils/customWebsites';
 import {
@@ -284,6 +284,7 @@ async function initializeFeatures(): Promise<void> {
           [StorageKeys.QUOTE_REPLY_ENABLED]: true,
           [StorageKeys.HIGHLIGHT_ENABLED]: true,
           [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: 'yellow',
+          [StorageKeys.HIGHLIGHT_COLOR_PALETTE]: null,
           [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: true,
         };
         try {
@@ -302,6 +303,10 @@ async function initializeFeatures(): Promise<void> {
         highlightDefaultColor: isHighlightColor(storedHighlightColor)
           ? storedHighlightColor
           : 'yellow',
+        highlightColorPalette: normalizeHighlightColorPalette(
+          quoteReplyResult[StorageKeys.HIGHLIGHT_COLOR_PALETTE],
+          storedHighlightColor,
+        ),
         highlightTimelineMarkersEnabled:
           quoteReplyResult[StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED] !== false,
       });

@@ -30,12 +30,20 @@ export const HIGHLIGHT_COLORS = ['yellow', 'green', 'blue', 'pink'] as const;
 export type HighlightPresetColor = (typeof HIGHLIGHT_COLORS)[number];
 export type HighlightCustomColor = `#${string}`;
 export type HighlightColor = HighlightPresetColor | HighlightCustomColor;
+export const HIGHLIGHT_PALETTE_SIZE = 5 as const;
 export const HIGHLIGHT_COLOR_HEX: Record<HighlightPresetColor, string> = {
   yellow: '#facc15',
   green: '#4ade80',
   blue: '#60a5fa',
   pink: '#f472b6',
 };
+export const DEFAULT_HIGHLIGHT_COLOR_PALETTE: readonly HighlightColor[] = [
+  'yellow',
+  'green',
+  'blue',
+  'pink',
+  '#c084fc',
+];
 
 export function isHighlightPresetColor(value: unknown): value is HighlightPresetColor {
   return HIGHLIGHT_COLORS.includes(value as HighlightPresetColor);
@@ -47,6 +55,36 @@ export function isHighlightCustomColor(value: unknown): value is HighlightCustom
 
 export function getHighlightColorHex(color: HighlightColor): string {
   return isHighlightPresetColor(color) ? HIGHLIGHT_COLOR_HEX[color] : color;
+}
+
+export function areHighlightColorsEqual(left: HighlightColor, right: HighlightColor): boolean {
+  return getHighlightColorHex(left).toLowerCase() === getHighlightColorHex(right).toLowerCase();
+}
+
+/** Resolve exactly five persistent color slots and migrate a legacy custom default
+ * into the first slot when no palette has been stored yet. */
+export function normalizeHighlightColorPalette(
+  value: unknown,
+  legacyDefault?: unknown,
+): HighlightColor[] {
+  const stored = Array.isArray(value) ? value : null;
+  const palette = DEFAULT_HIGHLIGHT_COLOR_PALETTE.slice(0, HIGHLIGHT_PALETTE_SIZE).map(
+    (fallback, index) => {
+      const candidate = stored?.[index];
+      return isHighlightPresetColor(candidate) || isHighlightCustomColor(candidate)
+        ? candidate
+        : fallback;
+    },
+  );
+
+  if (
+    !stored &&
+    (isHighlightPresetColor(legacyDefault) || isHighlightCustomColor(legacyDefault)) &&
+    !palette.some((color) => areHighlightColorsEqual(color, legacyDefault))
+  ) {
+    palette[0] = legacyDefault;
+  }
+  return palette;
 }
 
 /** Input scope. The raw account key is hashed before anything is persisted. */
