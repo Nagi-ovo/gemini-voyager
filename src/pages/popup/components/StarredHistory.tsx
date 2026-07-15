@@ -140,6 +140,14 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
     () => filterSavedLibraryItems(items, filter, query),
     [filter, items, query],
   );
+  const filterCounts = useMemo(
+    () => ({
+      all: items.length,
+      starred: items.filter((item) => item.kind === 'starred').length,
+      highlights: items.filter((item) => item.kind === 'highlight').length,
+    }),
+    [items],
+  );
 
   const openItem = async (item: SavedLibraryItem) => {
     try {
@@ -265,35 +273,36 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
 
   return (
     <div className="bg-background text-foreground flex h-[600px] w-[360px] flex-col">
-      <header className="border-border/60 bg-card border-b px-4 pt-3 pb-3">
+      <header className="border-border/60 bg-background border-b px-4 pt-3">
         <div className="flex items-center justify-between gap-3">
-          <h1 className="truncate text-base font-semibold tracking-tight">{t('starredHistory')}</h1>
-          <Button
+          <h1 className="truncate text-[15px] leading-none font-semibold tracking-[-0.01em]">
+            {t('starredHistory')}
+          </h1>
+          <button
+            type="button"
             onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground h-8 w-8 rounded-full"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring grid h-7 w-7 shrink-0 place-items-center rounded-lg transition-all duration-200 hover:rotate-3 focus-visible:ring-2 focus-visible:outline-none active:scale-95"
             aria-label={t('pm_cancel')}
             title={t('pm_cancel')}
           >
             <X className="h-4 w-4" aria-hidden="true" />
-          </Button>
+          </button>
         </div>
 
-        <div className="border-border bg-background mt-3 flex items-center gap-2 rounded-lg border px-2.5">
-          <Search className="text-muted-foreground h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+        <div className="bg-muted/55 focus-within:bg-background focus-within:ring-primary/25 mt-2.5 flex items-center gap-2 rounded-xl border border-transparent px-3 transition-all duration-200 focus-within:ring-2">
+          <Search className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden="true" />
           <input
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={t('savedLibrarySearchPlaceholder')}
             aria-label={t('savedLibrarySearchPlaceholder')}
-            className="placeholder:text-muted-foreground h-9 min-w-0 flex-1 bg-transparent text-sm outline-none"
+            className="placeholder:text-muted-foreground/80 h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
           />
         </div>
 
         <div
-          className="bg-muted mt-2 grid grid-cols-3 gap-1 rounded-lg p-1"
+          className="border-border/60 mt-1.5 grid grid-cols-3 border-b"
           role="group"
           aria-label={t('starredHistory')}
         >
@@ -308,55 +317,71 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
               key={value}
               type="button"
               className={cn(
-                'rounded-md px-2 py-1.5 text-xs font-semibold transition-colors',
+                'relative flex min-w-0 items-center justify-center gap-1.5 px-1 pt-2 pb-2.5 text-xs font-medium transition-colors duration-200 focus-visible:outline-none',
                 filter === value
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
+                  ? 'text-foreground'
+                  : 'text-muted-foreground hover:text-foreground/80',
               )}
               aria-pressed={filter === value}
               onClick={() => setFilter(value)}
             >
-              {label}
+              <span className="truncate">{label}</span>
+              {!loading && (
+                <span
+                  className={cn(
+                    'min-w-4 rounded px-1 py-0.5 text-[9px] leading-none font-semibold tabular-nums',
+                    filter === value
+                      ? 'bg-primary/10 text-primary'
+                      : 'bg-muted text-muted-foreground/75',
+                  )}
+                >
+                  {filterCounts[value]}
+                </span>
+              )}
+              {filter === value && (
+                <span
+                  className="bg-primary absolute right-[28%] bottom-[-1px] left-[28%] h-0.5 rounded-full"
+                  aria-hidden="true"
+                />
+              )}
             </button>
           ))}
         </div>
 
-        <div className="mt-2 grid grid-cols-3 gap-1.5">
-          <Button
+        <div className="flex min-h-10 items-center gap-1 py-1.5" aria-busy={transferring}>
+          <span className="text-muted-foreground/75 mr-0.5 text-[10px] font-medium tracking-wide">
+            {t('pm_export')}
+          </span>
+          <button
             type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1 px-2 text-xs"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-[11px] font-medium transition-all focus-visible:ring-2 focus-visible:outline-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45"
             disabled={transferring}
             onClick={() => void exportHighlights('json')}
             title={`${t('pm_export')} JSON`}
           >
-            <Download className="h-3 w-3" aria-hidden="true" />
+            <Download className="h-3.5 w-3.5" aria-hidden="true" />
             JSON
-          </Button>
-          <Button
+          </button>
+          <button
             type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1 px-2 text-xs"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-[11px] font-medium transition-all focus-visible:ring-2 focus-visible:outline-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45"
             disabled={transferring}
             onClick={() => void exportHighlights('markdown')}
             title={`${t('pm_export')} Markdown`}
           >
-            <Download className="h-3 w-3" aria-hidden="true" />
+            <Download className="h-3.5 w-3.5" aria-hidden="true" />
             Markdown
-          </Button>
-          <Button
+          </button>
+          <span className="bg-border/80 mx-0.5 h-4 w-px" aria-hidden="true" />
+          <button
             type="button"
-            variant="outline"
-            size="sm"
-            className="h-8 gap-1 px-2 text-xs"
+            className="text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring ml-auto inline-flex h-7 items-center gap-1 rounded-md px-1.5 text-[11px] font-medium transition-all focus-visible:ring-2 focus-visible:outline-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-45"
             disabled={transferring}
             onClick={() => importInputRef.current?.click()}
           >
-            <FileUp className="h-3 w-3" aria-hidden="true" />
+            <FileUp className="h-3.5 w-3.5" aria-hidden="true" />
             {t('pm_import')}
-          </Button>
+          </button>
           <input
             ref={importInputRef}
             type="file"
@@ -372,7 +397,7 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
         {transferNotice && (
           <p
             className={cn(
-              'mt-2 text-xs',
+              'mt-1 pb-2.5 text-xs',
               transferNotice.error ? 'text-destructive' : 'text-muted-foreground',
             )}
             role={transferNotice.error ? 'alert' : 'status'}
@@ -383,7 +408,7 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
         )}
       </header>
 
-      <main className="flex-1 overflow-y-auto p-3">
+      <main className="flex-1 overflow-y-auto p-2.5">
         {loading ? (
           <div className="space-y-2" aria-label={t('loading')} role="status">
             {[0, 1, 2].map((row) => (
@@ -404,11 +429,11 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
             )}
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {visibleItems.map((item) => (
               <Card
                 key={`${item.kind}:${item.id}`}
-                className="group hover:border-primary/30 relative cursor-pointer p-3 transition-colors"
+                className="group hover:border-border/80 hover:bg-card active:bg-muted/45 focus-visible:ring-primary/20 relative cursor-pointer border-transparent bg-transparent p-3 shadow-none transition-all duration-200 focus-visible:ring-2 focus-visible:outline-none active:translate-y-px"
                 role="button"
                 tabIndex={0}
                 onClick={() => void openItem(item)}
