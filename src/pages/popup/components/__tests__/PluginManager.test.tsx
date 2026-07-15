@@ -11,10 +11,33 @@ import { PluginManager, platformBadge } from '../PluginManager';
 // layer is mocked so we can assert exactly how often (and with what value) the
 // persistence call fires. `vi.hoisted` lets the (hoisted) vi.mock factory below
 // reference these without a TDZ error.
-const { setPluginSetting, PLUGIN_ID, mockLanguage } = vi.hoisted(() => ({
+const {
+  setPluginEnabled,
+  setPluginSetting,
+  permissionContains,
+  permissionRequest,
+  permissionOrigins,
+  pluginState,
+  PLUGIN_ID,
+  mockLanguage,
+} = vi.hoisted(() => ({
+  setPluginEnabled: vi.fn().mockResolvedValue(undefined),
   setPluginSetting: vi.fn().mockResolvedValue(undefined),
+  permissionContains: vi.fn().mockResolvedValue(false),
+  permissionRequest: vi.fn().mockResolvedValue(true),
+  permissionOrigins: vi.fn().mockReturnValue([]),
+  pluginState: { current: {} as Record<string, { enabled: boolean; installedAt: number }> },
   PLUGIN_ID: 'voyager.test-width',
   mockLanguage: { current: 'en' },
+}));
+
+vi.mock('webextension-polyfill', () => ({
+  default: {
+    permissions: {
+      contains: permissionContains,
+      request: permissionRequest,
+    },
+  },
 }));
 
 vi.mock('@/contexts/LanguageContext', () => ({
@@ -28,18 +51,19 @@ vi.mock('@/contexts/LanguageContext', () => ({
 vi.mock('@/core/utils/browser', () => ({
   isFirefox: () => false,
   isSafari: () => false,
+  supportsOptionalHostPermissions: () => true,
 }));
 
 vi.mock('@/features/plugins/runtime/siteRegistration', () => ({
-  pluginsToOriginPatterns: () => [],
+  pluginToOriginPatternsForActiveUrl: permissionOrigins,
 }));
 
 vi.mock('@/features/plugins/storage/pluginState', () => ({
   setPluginSetting,
-  setPluginEnabled: vi.fn().mockResolvedValue(undefined),
+  setPluginEnabled,
   setPluginCollapsed: vi.fn().mockResolvedValue(undefined),
   loadCollapsedPlugins: vi.fn().mockResolvedValue([]),
-  loadPluginState: vi.fn().mockResolvedValue({ [PLUGIN_ID]: { enabled: true, installedAt: 0 } }),
+  loadPluginState: vi.fn().mockImplementation(async () => pluginState.current),
   subscribePluginState: vi.fn().mockReturnValue(() => {}),
 }));
 
@@ -127,7 +151,12 @@ beforeEach(() => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
   vi.useFakeTimers();
   mockLanguage.current = 'en';
+  pluginState.current = { [PLUGIN_ID]: { enabled: true, installedAt: 0 } };
+  setPluginEnabled.mockClear();
   setPluginSetting.mockClear();
+  permissionContains.mockReset().mockResolvedValue(false);
+  permissionRequest.mockReset().mockResolvedValue(true);
+  permissionOrigins.mockReset().mockReturnValue([]);
   container = document.createElement('div');
   document.body.appendChild(container);
   root = createRoot(container);
@@ -203,6 +232,74 @@ describe('PluginManager boolean setting', () => {
     expect(input.checked).toBe(true);
     expect(setPluginSetting).toHaveBeenCalledOnce();
     expect(setPluginSetting).toHaveBeenCalledWith(PLUGIN_ID, 'compactView', true);
+  });
+});
+
+describe('PluginManager host permission flow', () => {
+  beforeEach(() => {
+    pluginState.current = { [PLUGIN_ID]: { enabled: false, installedAt: 0 } };
+    permissionOrigins.mockReturnValue(['https://chatgpt.com/*']);
+  });
+
+  it('reuses an existing site grant without requesting permission again', async () => {
+    permissionContains.mockResolvedValue(true);
+    await act(async () => {
+      root.render(
+        React.createElement(PluginManager, {
+          manifests: [widthPlugin],
+          activeUrl: 'https://chatgpt.com/c/current',
+        }),
+      );
+      await Promise.resolve();
+    });
+
+    const toggle = container.querySelector<HTMLInputElement>('input[aria-label="Test · Width"]');
+    if (!toggle) throw new Error('Expected plugin toggle');
+    await act(async () => {
+      toggle.click();
+      await Promise.resolve();
+    });
+
+    expect(permissionContains).toHaveBeenCalledWith({ origins: ['https://chatgpt.com/*'] });
+    expect(permissionRequest).not.toHaveBeenCalled();
+    expect(setPluginEnabled).toHaveBeenCalledWith(PLUGIN_ID, true);
+  });
+
+  it('persists enable intent before opening the Chrome permission prompt', async () => {
+    let resolvePermission: (granted: boolean) => void = () => {};
+    permissionRequest.mockReturnValue(
+      new Promise<boolean>((resolve) => {
+        resolvePermission = resolve;
+      }),
+    );
+    await act(async () => {
+      root.render(
+        React.createElement(PluginManager, {
+          manifests: [widthPlugin],
+          activeUrl: 'https://chatgpt.com/c/current',
+        }),
+      );
+      await Promise.resolve();
+    });
+
+    const toggle = container.querySelector<HTMLInputElement>('input[aria-label="Test · Width"]');
+    if (!toggle) throw new Error('Expected plugin toggle');
+    await act(async () => {
+      toggle.click();
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(setPluginEnabled).toHaveBeenCalledWith(PLUGIN_ID, true);
+    expect(permissionRequest).toHaveBeenCalledWith({ origins: ['https://chatgpt.com/*'] });
+    expect(setPluginEnabled.mock.invocationCallOrder[0]).toBeLessThan(
+      permissionRequest.mock.invocationCallOrder[0],
+    );
+
+    await act(async () => {
+      resolvePermission(true);
+      await Promise.resolve();
+    });
   });
 });
 

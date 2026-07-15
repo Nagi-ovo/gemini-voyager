@@ -24,6 +24,7 @@
  */
 import { logger } from '@/core/services/LoggerService';
 
+import { matchesAnyPattern } from '../sites/matchPattern';
 import type { PluginManifest } from '../types';
 
 /**
@@ -40,6 +41,30 @@ export function pluginsToOriginPatterns(manifests: readonly PluginManifest[]): s
     }
   }
   return [...origins].sort();
+}
+
+/**
+ * Request only the origin of the site where the popup is currently open.
+ * Multi-host plugins often retain legacy domains (for example chat.openai.com),
+ * but enabling one on chatgpt.com must not trigger a second, unrelated grant.
+ * Outside a matching site (for example the full plugin list on Gemini), fall
+ * back to the complete declared origin set.
+ */
+export function pluginToOriginPatternsForActiveUrl(
+  manifest: PluginManifest,
+  activeUrl?: string,
+): string[] {
+  if (activeUrl && matchesAnyPattern(activeUrl, manifest.matches)) {
+    try {
+      const url = new URL(activeUrl);
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        return [`${url.protocol}//${url.hostname}/*`];
+      }
+    } catch {
+      // Fall back to all manifest origins below.
+    }
+  }
+  return pluginsToOriginPatterns([manifest]);
 }
 
 function matchPatternToOrigin(pattern: string): string | null {

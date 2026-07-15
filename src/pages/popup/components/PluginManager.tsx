@@ -3,7 +3,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import browser from 'webextension-polyfill';
 
 import { isFirefox, isSafari, supportsOptionalHostPermissions } from '@/core/utils/browser';
-import { pluginsToOriginPatterns } from '@/features/plugins/runtime/siteRegistration';
+import { pluginToOriginPatternsForActiveUrl } from '@/features/plugins/runtime/siteRegistration';
 import { SiteRegistry } from '@/features/plugins/sites/registry';
 import {
   loadCollapsedPlugins,
@@ -216,43 +216,58 @@ export function PluginManager({
     };
   }, []);
 
-  const handleToggle = useCallback(async (plugin: PluginManifest, next: boolean) => {
-    setDeniedId(null);
-    setUnsupportedId(null);
-    if (next) {
-      const origins = pluginsToOriginPatterns([plugin]);
-      if (origins.length > 0) {
-        // This plugin needs host access on a site Voyager reaches only via dynamic
-        // content-script registration. If the platform can't grant or inject that
-        // (Safari, a build without permissions.request, or Firefox < 128 which
-        // ignores optional_host_permissions), enabling would be a silent no-op —
-        // so refuse and explain, instead of a misleading toggle.
-        if (isSafari() || !browser.permissions?.request || !supportsOptionalHostPermissions()) {
-          setUnsupportedId(plugin.id);
-          return;
-        }
-        try {
-          // Firefox requires permissions.request to be the first await in the
-          // user gesture, so skip the contains() pre-check there.
-          if (!isFirefox() && browser.permissions.contains) {
-            const alreadyGranted = await browser.permissions.contains({ origins });
-            if (!alreadyGranted && !(await browser.permissions.request({ origins }))) {
+  const handleToggle = useCallback(
+    async (plugin: PluginManifest, next: boolean) => {
+      setDeniedId(null);
+      setUnsupportedId(null);
+      if (next) {
+        const origins = pluginToOriginPatternsForActiveUrl(plugin, activeUrl);
+        if (origins.length > 0) {
+          // This plugin needs host access on a site Voyager reaches only via dynamic
+          // content-script registration. If the platform can't grant or inject that
+          // (Safari, a build without permissions.request, or Firefox < 128 which
+          // ignores optional_host_permissions), enabling would be a silent no-op —
+          // so refuse and explain, instead of a misleading toggle.
+          if (isSafari() || !browser.permissions?.request || !supportsOptionalHostPermissions()) {
+            setUnsupportedId(plugin.id);
+            return;
+          }
+          try {
+            // Firefox requires permissions.request to be the first await in the
+            // user gesture, so skip the contains() pre-check there.
+            if (!isFirefox() && browser.permissions.contains) {
+              const alreadyGranted = await browser.permissions.contains({ origins });
+              if (!alreadyGranted) {
+                // Chrome closes extension popups while showing an optional-host
+                // prompt. Persist the user's intent BEFORE opening it so a
+                // successful grant can be completed by the background
+                // permissions.onAdded handler without another popup visit.
+                setEnabledMap((prev) => ({ ...prev, [plugin.id]: true }));
+                await setPluginEnabled(plugin.id, true);
+                if (!(await browser.permissions.request({ origins }))) {
+                  setEnabledMap((prev) => ({ ...prev, [plugin.id]: false }));
+                  await setPluginEnabled(plugin.id, false);
+                  setDeniedId(plugin.id);
+                }
+                return;
+              }
+            } else if (!(await browser.permissions.request({ origins }))) {
               setDeniedId(plugin.id);
               return;
             }
-          } else if (!(await browser.permissions.request({ origins }))) {
+          } catch {
+            setEnabledMap((prev) => ({ ...prev, [plugin.id]: false }));
+            await setPluginEnabled(plugin.id, false);
             setDeniedId(plugin.id);
             return;
           }
-        } catch {
-          setDeniedId(plugin.id);
-          return;
         }
       }
-    }
-    setEnabledMap((prev) => ({ ...prev, [plugin.id]: next }));
-    await setPluginEnabled(plugin.id, next);
-  }, []);
+      setEnabledMap((prev) => ({ ...prev, [plugin.id]: next }));
+      await setPluginEnabled(plugin.id, next);
+    },
+    [activeUrl],
+  );
 
   const handleSetting = useCallback((id: string, key: string, value: PluginSettingValue) => {
     // Keep the visible slider value instant via local state, but DEBOUNCE the

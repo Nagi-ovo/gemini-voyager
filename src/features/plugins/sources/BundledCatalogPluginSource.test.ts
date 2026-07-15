@@ -36,6 +36,16 @@ describe('BundledCatalogPluginSource', () => {
     }
   });
 
+  it('keeps ChatGPT footer structural wrapper full-width', () => {
+    const file = '../catalog/plugins/chatgpt-reading-width/style.css';
+    const css = readFileSync(new URL(file, import.meta.url), 'utf8');
+
+    expect(css).toContain(':not(#thread-bottom-container)');
+    expect(css).toMatch(
+      /#thread-bottom-container\s*\{[\s\S]*width:\s*100%\s*!important;[\s\S]*max-width:\s*none\s*!important;/,
+    );
+  });
+
   it('keeps localized setting labels inside the plugin data layer', async () => {
     const manifests = await new BundledCatalogPluginSource().list();
     const claudeWidth = manifests.find((plugin) => plugin.id === 'voyager.claude-reading-width');

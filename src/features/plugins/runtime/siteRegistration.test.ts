@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { PluginManifest } from '../types';
-import { pluginsToOriginPatterns } from './siteRegistration';
+import { pluginToOriginPatternsForActiveUrl, pluginsToOriginPatterns } from './siteRegistration';
 
 function mk(matches: string[]): PluginManifest {
   return {
@@ -38,5 +38,24 @@ describe('pluginsToOriginPatterns', () => {
 
   it('ignores <all_urls>', () => {
     expect(pluginsToOriginPatterns([mk(['<all_urls>'])])).toEqual([]);
+  });
+});
+
+describe('pluginToOriginPatternsForActiveUrl', () => {
+  const chatgptPlugin = mk(['https://chatgpt.com/*', 'https://chat.openai.com/*']);
+
+  it('requests only the currently open ChatGPT origin', () => {
+    expect(
+      pluginToOriginPatternsForActiveUrl(
+        chatgptPlugin,
+        'https://chatgpt.com/c/current-conversation',
+      ),
+    ).toEqual(['https://chatgpt.com/*']);
+  });
+
+  it('keeps all declared origins outside the plugin site', () => {
+    expect(
+      pluginToOriginPatternsForActiveUrl(chatgptPlugin, 'https://gemini.google.com/app'),
+    ).toEqual(['https://chat.openai.com/*', 'https://chatgpt.com/*']);
   });
 });

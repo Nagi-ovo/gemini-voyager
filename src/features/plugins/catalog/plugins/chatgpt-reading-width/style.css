@@ -1,10 +1,17 @@
 /* voyager.chatgpt-reading-width - one wider, centered reading column.
- * ChatGPT sizes every conversation turn (and the composer) from the CSS var
- * --thread-content-max-width (48rem / 768px), consumed via Tailwind
- * max-w-(--thread-content-max-width). Raising both the variable and the
- * resolved max-width on those containers widens the column; they are mx-auto,
- * so they stay centered. The slider drives --gv-plugin-reading-width. */
+ * The width variable is declared on both real content columns and structural
+ * wrappers. Only the content columns are centered; constraining
+ * #thread-bottom-container itself pins the composer to the left. Propagate the
+ * variable everywhere, but keep that outer footer wrapper full-width. */
 .gv-plugin-chatgpt-readable [class*='--thread-content-max-width'] {
   --thread-content-max-width: var(--gv-plugin-reading-width, 768px) !important;
+}
+
+.gv-plugin-chatgpt-readable [class*='--thread-content-max-width']:not(#thread-bottom-container) {
   max-width: var(--gv-plugin-reading-width, 768px) !important;
+}
+
+.gv-plugin-chatgpt-readable #thread-bottom-container {
+  width: 100% !important;
+  max-width: none !important;
 }
