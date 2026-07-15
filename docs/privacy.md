@@ -33,7 +33,7 @@ Voyager 不会出售用户数据，也不会将其用于广告、信用评估或
 - **Scripting（脚本注入）**：只在受支持网站注入扩展自身打包的脚本，不执行远程 JavaScript 或 WebAssembly。
 - **Active tab 和 Declarative content**：识别用户当前打开的受支持网站，并显示对应的网站设置。
 - **Notifications 和 Alarms**：提供可选的回复完成通知，并定期检查公开的兼容性公告。
-- **Host permissions（主机权限）**：在 Gemini 和 AI Studio 上提供 Voyager 功能，并支持用户主动发起的 Google Drive 和图片操作。
+- **Host permissions（主机权限）**：在 Gemini、AI Studio、Claude 和 ChatGPT 上提供 Voyager 功能，并支持用户主动发起的 Google Drive 和图片操作。
 - **Optional host permissions（可选主机权限）**：只申请用户明确启用的自定义网站或插件来源。用户选择捕获生成式界面内容的导出方式时，也可能临时申请 `<all_urls>`；如果用户拒绝，导出会跳过该捕获并继续进行。
 
 ## 保留期限和用户控制

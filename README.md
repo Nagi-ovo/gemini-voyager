@@ -1,9 +1,7 @@
 <div align="center">
-  <img src="docs/public/assets/promotion/Promo-Banner.png" alt="promotion"/>
-  <h3>Make Your Gemini™ Experience Truly Yours ✨</h3>
+  <h3>Make Your AI Chatbot Experience Truly Yours ✨</h3>
   <p>
-    Navigate conversations with an elegant timeline, organize chats with folders, and build your own prompt vault.<br>
-    <b>It's the missing power-up for Google Gemini.</b>
+    <b>Gemini · Claude · ChatGPT — finally, complete.</b>
   </p>
   
   <p>
@@ -62,15 +60,15 @@
   </p> -->
 
 > [!NOTE]
-> If Voyager helps you, feel free to share it on X, Reddit, YouTube, Threads, etc. Every share helps more people discover the project and improve the Gemini experience. Thanks.
+> If Voyager helps you, feel free to share it on X, Reddit, YouTube, Threads, etc. Every share helps more people discover the project. Thanks.
 
 ---
 
 ## 👋 Why Voyager?
 
-We love Gemini, but sometimes we wish it had just a _bit_ more structure.
+We love AI chatbots, but sometimes we wish they had just a _bit_ more structure.
 
-That's why I built **Voyager**. It's not just a tool; it's a companion that helps you keep your AI conversations organized, accessible, and productive. Whether you're a researcher juggling dozens of threads, a developer saving code snippets, or just someone who loves order, Voyager is designed for you.
+That's why I built **Voyager**. It's a companion that helps you keep your AI conversations organized, accessible, and productive — whether you're on Gemini, Claude, or ChatGPT. If you're a researcher juggling dozens of threads, a developer saving code snippets, or just someone who loves order, Voyager is designed for you.
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
@@ -109,6 +107,16 @@ That's why I built **Voyager**. It's not just a tool; it's a companion that help
   - **[Input Collapse](https://voyager.nagi.fun/en/guide/input-collapse)**: Auto-expandable input area for more reading space.
   - **[Default Model](https://voyager.nagi.fun/en/guide/default-model)**: Set your favorite model as default.
   - **[Hide Recent Items](https://voyager.nagi.fun/en/guide/recents-hider)**: Hide "Recent" list in the sidebar to reduce distraction.
+
+### 🔌 Claude & ChatGPT
+
+Powered by the [Voyager Plugin Engine](https://voyager.nagi.fun/en/plugins), these features extend your experience beyond Gemini:
+
+- **📍 Claude Timeline**: Conversation sidebar with starred messages and search — the same navigation flow, now on Claude.
+- **📊 Claude Usage Bar**: Track your session and weekly usage directly in the Claude interface.
+- **📐 Formula Copy**: One-click copy for LaTeX and MathML source codes (shared with Gemini).
+- **📖 Comfortable Reading Width**: Adjust chat width for a better reading experience on Claude and ChatGPT.
+- **🈶 CJK Render Fix**: Fix CJK character rendering issues on Claude.
 
 ### 🎨 Personalization
 
@@ -296,6 +304,8 @@ If your project is inspired by Voyager, forked from it, or built on top of it, f
 
 Voyager is licensed under **GPL-3.0**.
 Third-party MIT notices for Image Refinement-related code and assets are retained in [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
+
+Gemini is a trademark of Google LLC. Claude is a trademark of Anthropic, PBC. ChatGPT is a trademark of OpenAI, Inc. Voyager is an independent project and is not affiliated with, endorsed by, or sponsored by any of these companies.
 
 ---
 

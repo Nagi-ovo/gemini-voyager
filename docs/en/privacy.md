@@ -33,7 +33,7 @@ Voyager does not sell user data or transfer it for advertising, creditworthiness
 - **Scripting**: injects only extension-bundled scripts on supported sites; no remote JavaScript or WebAssembly is executed.
 - **Active tab and declarative content**: identifies the supported site opened by the user and displays the appropriate site-specific controls.
 - **Notifications and alarms**: provides opt-in response-completion notifications and periodic checks for public compatibility announcements.
-- **Host permissions**: enables Voyager features on Gemini and AI Studio and supports user-requested Google Drive and image operations.
+- **Host permissions**: enables Voyager features on Gemini, AI Studio, Claude, and ChatGPT and supports user-requested Google Drive and image operations.
 - **Optional host permissions**: requests only the origins a user explicitly enables for custom sites or plugins. `<all_urls>` may also be requested temporarily when the user chooses an export that captures generated interface content; if denied, export continues without that capture.
 
 ## Retention and User Control

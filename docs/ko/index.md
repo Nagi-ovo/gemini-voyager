@@ -4,8 +4,8 @@ gitChangelog: false
 
 hero:
   name: 'Voyager'
-  text: 'Gemini를 위한 완벽한 운영체제.'
-  tagline: '우리는 Gemini를 사랑합니다. 단지 그것이 완벽해지기를 원했습니다.'
+  text: 'AI 챗봇을 위한 완벽한 운영체제.'
+  tagline: 'Gemini · Claude · ChatGPT — 드디어, 완성되다.'
   image:
     src: /logo.png
     alt: Voyager 로고

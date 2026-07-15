@@ -1,9 +1,7 @@
 <div align="center">
-  <img src="../docs/public/assets/promotion/Promo-Banner-jp.png" alt="promotion"/>
-  <h3>Gemini™ 体験を自分好みに ✨</h3>
+  <h3>AI チャットボット体験を、あなた好みに ✨</h3>
   <p>
-    エレガントなタイムライン、フォルダ管理、そしてプロンプト管理。<br>
-    <b>Gemini に足りなかった「最後のピース」がここにあります。</b>
+    <b>Gemini · Claude · ChatGPT、ついに完成。</b>
   </p>
   
   <p>
@@ -62,13 +60,13 @@
   </p> -->
 
 > [!NOTE]
-> もし Voyager が役に立っているなら、X、YouTube、Reddit などで共有してもらえると嬉しいです。シェアが増えるほど、このプロジェクトをより多くの人に届けられ、Gemini の体験改善にもつながります。ありがとう。
+> もし Voyager が役に立っているなら、X、YouTube、Reddit などで共有してもらえると嬉しいです。シェアが増えるほど、このプロジェクトをより多くの人に届けられます。ありがとう。
 
 ---
 
 ## 👋 Voyager とは？
 
-私たちは Gemini が大好きですが、時にはもう少し「秩序」が欲しいと感じることがあります。
+AI チャットボット — Gemini、Claude、ChatGPT — は強力ですが、時にはもう少し「秩序」が欲しいと感じることがあります。
 
 それが **Voyager** を開発した理由です。これは単なるツールではなく、AI との会話を整理し、アクセスしやすく、生産的にするためのパートナーです。多くのスレッドを扱う研究者、コードを保存したい開発者、あるいは単に整理整頓が好きな方、Voyager はあなたのための拡張機能です。
 
@@ -109,6 +107,14 @@
   - **[入力欄の自動非表示](https://voyager.nagi.fun/ja/guide/input-collapse)**: 未入力時に折りたたんで表示スペースを確保。
   - **[デフォルトモデル](https://voyager.nagi.fun/ja/guide/default-model)**: 新しい対話に使用するデフォルトのモデルを設定します。
   - **[最近の項目と Gem を非表示](https://voyager.nagi.fun/ja/guide/recents-hider)**: サイドバーの「最近」リストを非表示にして、集中力を高めます。
+
+### 🔌 Claude & ChatGPT
+
+- **📍 Claude タイムライン**: 会話サイドバーでスター付きメッセージと検索を提供 — Gemini と同じナビゲーション体験を Claude でも。
+- **📊 Claude 使用量バー**: Claude インターフェース内でセッションと週間使用量を直接追跡。
+- **📐 数式コピー**: LaTeX と MathML ソースコードをワンクリックでコピー（Gemini と共有）。
+- **📏 快適な閲覧幅**: Claude と ChatGPT のチャット幅を調整し、より良い読書体験を。
+- **🈶 CJK レンダリング修正**: Claude での日中韓文字のレンダリング問題を修正。
 
 ### 🎨 パーソナライズ
 
@@ -268,6 +274,8 @@ Voyager にインスパイアされたプロジェクト：
 
 Voyager は **GPL-3.0** の下で提供されています。
 Image Refinement 関連のコードとアセットに関する第三者の MIT notice は [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) に記載しています。
+
+Gemini は Google LLC の商標です。Claude は Anthropic, PBC の商標です。ChatGPT は OpenAI, Inc. の商標です。Voyager は独立プロジェクトであり、上記企業との提携・推薦・後援関係はありません。
 
 ---
 

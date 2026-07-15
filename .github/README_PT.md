@@ -1,9 +1,7 @@
 <div align="center">
-  <img src="../docs/public/assets/promotion/Promo-Banner.png" alt="promotion"/>
-  <h3>Torne a sua experiência Gemini™ verdadeiramente sua ✨</h3>
+  <h3>Crie a sua própria experiência com AI Chatbots ✨</h3>
   <p>
-    Navegação elegante na linha do tempo, organização de chats com pastas e o seu próprio cofre de prompts.<br>
-    <b>É o "power-up" que faltava no Google Gemini.</b>
+    <b>Gemini · Claude · ChatGPT — finalmente, completo.</b>
   </p>
   
   <p>
@@ -62,13 +60,13 @@
   </p> -->
 
 > [!NOTE]
-> Se o Voyager for útil para você, compartilhe no X, Reddit, YouTube, etc. Cada partilha ajuda mais pessoas a descobrir o projeto e a melhorar a experiência com Gemini. Obrigado.
+> Se o Voyager for útil para você, compartilhe no X, Reddit, YouTube, etc. Cada partilha ajuda mais pessoas a descobrir o projeto. Obrigado.
 
 ---
 
 ## 👋 Porquê o Voyager?
 
-Nós adoramos o Gemini, mas às vezes desejaríamos que ele tivesse apenas um pouco mais de "estrutura".
+Adoramos os chatbots de IA — Gemini, Claude e ChatGPT — mas às vezes desejaríamos que tivessem apenas um pouco mais de "estrutura".
 
 Foi por isso que criámos o **Voyager**. Não é apenas uma ferramenta; é um companheiro que o ajuda a manter as suas conversas com IA organizadas, acessíveis e produtivas. Quer seja um investigador que lida com dezenas de threads, um programador que guarda snippets de código, ou apenas alguém que adora ordem, o Voyager foi desenhado para si.
 
@@ -115,6 +113,14 @@ Para um guia completo, visite a nossa [Documentação](https://voyager.nagi.fun/
   - **[Colapso de Entrada](https://voyager.nagi.fun/pt/guide/input-collapse)**: Área de entrada auto-colapsável para mais espaço de leitura.
   - **[Modelo Padrão](https://voyager.nagi.fun/pt/guide/default-model)**: Defina o seu modelo favorito como padrão.
   - **[Ocultar itens recentes e Gems](https://voyager.nagi.fun/pt/guide/recents-hider)**: Oculta a lista "Recentes" na barra lateral para reduzir distrações.
+
+### 🔌 Claude & ChatGPT
+
+- **📍 Claude Timeline**: Barra lateral de conversas com mensagens marcadas e pesquisa — a mesma navegação, agora no Claude.
+- **📊 Claude Usage Bar**: Acompanhe o uso de sessão e semanal diretamente na interface do Claude.
+- **📐 Cópia de Fórmulas**: Cópia com um clique de códigos-fonte LaTeX e MathML (partilhado com Gemini).
+- **📏 Largura de Leitura Confortável**: Ajuste a largura do chat para uma melhor experiência de leitura no Claude e ChatGPT.
+- **🈲 Correção CJK**: Correção de problemas de renderização de caracteres CJK no Claude.
 
 ### 🎨 Personalização
 
@@ -254,6 +260,8 @@ Se o seu projeto foi inspirado no Voyager, é um fork direto ou foi criado com b
 
 Voyager é distribuído sob **GPL-3.0**.
 Os avisos MIT de terceiros retidos para o código e os recursos relacionados ao Image Refinement estão em [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+
+Gemini é uma marca registada da Google LLC. Claude é uma marca registada da Anthropic, PBC. ChatGPT é uma marca registada da OpenAI, Inc. Voyager é um projeto independente, sem afiliação, endosso ou patrocínio destas empresas.
 
 ---
 

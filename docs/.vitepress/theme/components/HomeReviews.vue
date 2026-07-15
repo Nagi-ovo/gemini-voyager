@@ -17,21 +17,21 @@ interface I18nData {
 const i18n: Record<string, I18nData> = {
   'zh-CN': {
     title: '深受社区喜爱',
-    subtitle: '与数万名 Voyager 同行，从容掌控 Gemini 工作流。',
+    subtitle: '与数万名 Voyager 同行，从容掌控你的 AI 工作流。',
     highlightText: '🎉 感谢知名科技圈大 V 与社区的强烈推荐！',
     tryVoyagerText:
       '在 2 月 18 号 Google Gemini App 导致部分用户历史对话无法访问的问题中，Voyager 的用户仍然能够在其文件夹中看到被保存下来的对话。',
   },
   'en-US': {
     title: 'Loved by the Community',
-    subtitle: 'Join tens of thousands of users organizing their Gemini workspace.',
+    subtitle: 'Join tens of thousands of users organizing their AI workspace.',
     highlightText: '🎉 Highly recommended by top tech KOLs and the community!',
     tryVoyagerText:
       "During the issue on February 18th where the Google Gemini App caused some users' historical conversations to become inaccessible, Voyager users were still able to see their saved conversations in their folders.",
   },
   'ja-JP': {
     title: 'コミュニティから愛されています',
-    subtitle: '数万人のユーザーと一緒に、Gemini のワークフローを整理しましょう。',
+    subtitle: '数万人のユーザーと一緒に、AI ワークフローを整理しましょう。',
     highlightText: '🎉 トップテックKOLやコミュニティから強く推奨されています！',
     tryVoyagerText:
       '2月18日にGoogle Gemini Appが一部のユーザーの履歴会話にアクセスできなくなる問題を引き起こした際、Voyagerのユーザーは引き続きフォルダ内に保存された会話を見ることができました。',
@@ -39,14 +39,14 @@ const i18n: Record<string, I18nData> = {
   'fr-FR': {
     title: 'Aimé par la Communauté',
     subtitle:
-      "Rejoignez des dizaines de milliers d'utilisateurs qui organisent leur espace de travail Gemini.",
+      "Rejoignez des dizaines de milliers d'utilisateurs qui organisent leur espace de travail IA.",
     highlightText: '🎉 Fortement recommandé par les meilleurs influenceurs tech !',
     tryVoyagerText:
       "Lors du problème du 18 février où l'application Google Gemini a rendu inaccessibles les conversations historiques de certains utilisateurs, les utilisateurs de Voyager ont toujours pu voir leurs conversations enregistrées dans leurs dossiers.",
   },
   'es-ES': {
     title: 'Amado por la Comunidad',
-    subtitle: 'Únete a decenas de miles de usuarios organizando su espacio de trabajo en Gemini.',
+    subtitle: 'Únete a decenas de miles de usuarios organizando su espacio de trabajo de IA.',
     highlightText: '🎉 ¡Altamente recomendado por los principales influencers tecnológicos!',
     tryVoyagerText:
       'Durante el problema del 18 de febrero en el que la aplicación Google Gemini hizo inaccesibles las conversaciones históricas de algunos usuarios, los usuarios de Voyager aún pudieron ver sus conversaciones guardadas en sus carpetas.',

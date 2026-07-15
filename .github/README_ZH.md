@@ -1,9 +1,7 @@
 <div align="center">
-  <img src="../docs/public/assets/promotion/Promo-Banner-cn.png" alt="promotion"/>
-  <h3>打造属于你的 Gemini™ 体验 ✨</h3>
+  <h3>打造属于你的 AI Chatbot 体验 ✨</h3>
   <p>
-    优雅的时间轴导航、文件夹管理对话、构建专属提示词库。<br>
-    <b>这是 Google Gemini 缺失的那块拼图。</b>
+    <b>Gemini · Claude · ChatGPT，终于完整了。</b>
   </p>
   
   <p>
@@ -62,15 +60,15 @@
   </p> -->
 
 > [!NOTE]
-> 如果 Voyager 帮到了你，欢迎分享到 X、即刻、小红书、Linux.do、V2EX 等等，也欢迎推荐给海外 KOL。每一次分享都能让更多人看到这个项目，从而改善 Gemini 的使用体验。谢谢。
+> 如果 Voyager 帮到了你，欢迎分享到 X、即刻、小红书、Linux.do、V2EX 等等，也欢迎推荐给海外 KOL。每一次分享都能让更多人看到这个项目。谢谢。
 
 ---
 
 ## 👋 为什么开发 Voyager？
 
-我们都很喜欢 Gemini，但有时候总觉得它少了一点"秩序感"。
+我们热爱 AI 聊天助手，但有时候总觉得它们少了一点"秩序感"。
 
-这就是我开发 **Voyager** 的初衷。它不仅仅是一个工具，更是一个能帮你把 AI 对话变得井井有条、触手可及的得力助手。无论你是需要处理大量对话的研究人员，还是喜欢收藏代码片段的开发者，亦或是单纯的整理控，Voyager 都是为你准备的。
+这就是我开发 **Voyager** 的初衷。它能帮你把 AI 对话变得井井有条、触手可及——无论你用的是 Gemini、Claude 还是 ChatGPT。不管你是需要处理大量对话的研究人员，还是喜欢收藏代码片段的开发者，亦或是单纯的整理控，Voyager 都是为你准备的。
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
@@ -110,6 +108,16 @@
   - **[默认模型](https://voyager.nagi.fun/guide/default-model)**: 为新对话设置默认选中的模型。
   - **[隐藏最近项目](https://voyager.nagi.fun/guide/recents-hider)**: 隐藏侧边栏的“最近”列表，减少干扰。
   - **隐藏升级提醒**: 自动隐藏 Gemini 侧边栏和模型切换菜单中的“升级到 Google AI Ultra”按钮（默认开启）。
+
+### 🔌 Claude & ChatGPT
+
+通过 [Voyager 插件引擎](https://voyager.nagi.fun/plugins)，这些功能让你的体验延伸到 Gemini 之外：
+
+- **📍 Claude 时间线**: 对话侧边栏，支持星标消息和搜索——同样的导航体验，现在也能在 Claude 上使用。
+- **📊 Claude 用量条**: 直接在 Claude 界面中追踪会话和每周用量。
+- **📐 公式复制**: 一键复制 LaTeX 和 MathML 源码（与 Gemini 共享）。
+- **📖 舒适阅读宽度**: 调整 Claude 和 ChatGPT 的对话宽度，获得更好的阅读体验。
+- **🈶 CJK 渲染修复**: 修复 Claude 上的中日韩字符渲染问题。
 
 ### 🎨 个性化体验
 
@@ -297,6 +305,8 @@ bun run build:all
 
 Voyager 基于 **GPL-3.0** 许可证发布。
 Image Refinement 相关代码与资源的第三方 MIT 声明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
+
+Gemini 是 Google LLC 的商标。Claude 是 Anthropic, PBC 的商标。ChatGPT 是 OpenAI, Inc. 的商标。Voyager 是独立项目，与上述公司无隶属、背书或赞助关系。
 
 ---
 

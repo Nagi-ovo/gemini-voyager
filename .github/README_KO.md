@@ -1,9 +1,7 @@
 <div align="center">
-  <img src="../docs/public/assets/promotion/Promo-Banner-KO.png" alt="promotion"/>
-  <h3>Gemini™ 경험을 진정으로 당신의 것으로 만드세요 ✨</h3>
+  <h3>나만의 AI 챗봇 경험을 만들어 보세요 ✨</h3>
   <p>
-    우아한 타임라인으로 대화를 탐색하고, 폴더로 채팅을 정리하며, 자신만의 프롬프트 저장소를 구축하세요.<br>
-    <b>Google Gemini 를 위한 필수 강화 도구입니다.</b>
+    <b>Gemini · Claude · ChatGPT, 드디어 완성.</b>
   </p>
   
   <p>
@@ -62,13 +60,13 @@
   </p> -->
 
 > [!NOTE]
-> Voyager 가 도움이 되었다면 X, YouTube, Reddit 등에서 공유해 주세요. 공유가 늘수록 더 많은 사용자가 프로젝트를 발견하고 Gemini 사용 경험도 함께 좋아집니다. 감사합니다.
+> Voyager 가 도움이 되었다면 X, YouTube, Reddit 등에서 공유해 주세요. 공유가 늘수록 더 많은 사용자가 프로젝트를 발견하고 AI 챗봇 사용 경험도 함께 좋아집니다. 감사합니다.
 
 ---
 
 ## 👋 왜 Voyager 인가요?
 
-우리는 Gemini 를 사랑하지만, 때로는 조금 더 구조화된 정리가 필요하다고 느꼈습니다.
+우리는 Gemini, Claude, ChatGPT 같은 AI 챗봇을 사랑하지만, 때로는 조금 더 구조화된 정리가 필요하다고 느꼈습니다.
 
 그래서 우리는 **Voyager**를 만들었습니다. 이것은 단순한 도구가 아니라, AI 대화를 정리하고 액세스 가능하며 생산적으로 유지하도록 돕는 동반자입니다. 수십 개의 스레드를 관리하는 연구자이든, 코드 스니펫을 저장하는 개발자이든, 단순히 정리를 좋아하는 사람이든 Voyager 는 당신을 위해 설계되었습니다.
 
@@ -109,6 +107,14 @@
   - **[입력창 접기](https://voyager.nagi.fun/ko/guide/input-collapse)**: 더 많은 읽기 공간을 위해 자동으로 확장되는 입력 영역을 제공합니다.
   - **[기본 모델](https://voyager.nagi.fun/ko/guide/default-model)**: 좋아하는 모델을 기본값으로 설정하세요.
   - **[최근 항목 숨기기](https://voyager.nagi.fun/ko/guide/recents-hider)**: 사이드바에서 "최근" 목록을 숨겨 산만함을 줄입니다.
+
+### 🔌 Claude & ChatGPT
+
+- **📍 Claude 타임라인**: 대화 사이드바에서 별표 메시지와 검색 지원 — Gemini와 동일한 탐색 경험을 Claude에서도.
+- **📊 Claude 사용량 바**: Claude 인터페이스에서 세션 및 주간 사용량을 직접 추적.
+- **📐 수식 복사**: LaTeX 및 MathML 소스 코드를 원클릭 복사 (Gemini와 공유).
+- **📏 편안한 읽기 너비**: Claude와 ChatGPT의 대화 너비를 조절하여 더 나은 읽기 경험 제공.
+- **🔧 CJK 렌더링 수정**: Claude에서의 한중일 문자 렌더링 문제 수정.
 
 ### 🎨 개인화
 
@@ -296,6 +302,8 @@ Voyager에서 영감을 받은 프로젝트:
 
 Voyager 는 **GPL-3.0** 라이선스로 배포됩니다.
 Image Refinement 관련 코드와 에셋에 대한 제3자 MIT 고지는 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)에 보존되어 있습니다.
+
+Gemini은 Google LLC의 상표입니다. Claude는 Anthropic, PBC의 상표입니다. ChatGPT는 OpenAI, Inc.의 상표입니다. Voyager는 독립 프로젝트이며, 위 회사들과 제휴, 보증 또는 후원 관계가 없습니다.
 
 ---
 

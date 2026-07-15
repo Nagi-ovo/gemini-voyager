@@ -4,8 +4,8 @@ gitChangelog: false
 
 hero:
   name: 'Voyager'
-  text: 'O sistema operativo que faltava ao Gemini.'
-  tagline: 'Adoramos o Gemini. Só queríamos que fosse perfeito.'
+  text: 'O sistema operativo que faltava aos seus chatbots de IA.'
+  tagline: 'Gemini · Claude · ChatGPT — finalmente, completo.'
   image:
     src: /logo.png
     alt: Logótipo do Voyager

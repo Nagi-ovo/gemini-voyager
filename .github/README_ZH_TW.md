@@ -1,9 +1,7 @@
 <div align="center">
-  <img src="../docs/public/assets/promotion/Promo-Banner-cn.png" alt="promotion"/>
-  <h3>打造屬於你的 Gemini™ 體驗 ✨</h3>
+  <h3>打造屬於你的 AI Chatbot 體驗 ✨</h3>
   <p>
-    優雅的時間軸導航、資料夾管理對話、構建專屬提示詞庫。<br>
-    <b>這是 Google Gemini 缺失的那塊拼圖。</b>
+    <b>Gemini · Claude · ChatGPT，終於完整了。</b>
   </p>
   
   <p>
@@ -62,13 +60,13 @@
   </p> -->
 
 > [!NOTE]
-> 如果 Voyager 有幫助，歡迎分享到 X、Facebook、YouTube、Threads、Dcard 等等。每一次分享都能讓更多人看見這個專案，從而改善 Gemini 的使用體驗。謝謝。
+> 如果 Voyager 有幫助，歡迎分享到 X、Facebook、YouTube、Threads、Dcard 等等。每一次分享都能讓更多人看見這個專案。謝謝。
 
 ---
 
 ## 👋 為什麼開發 Voyager？
 
-我們都很喜歡 Gemini，但有時候總覺得它少了一點"秩序感"。
+我們熱愛 AI 聊天助手——Gemini、Claude、ChatGPT——但有時候總覺得它們少了一點"秩序感"。
 
 這就是我們開發 **Voyager** 的初衷。它不僅僅是一個工具，更是一個能幫你把 AI 對話變得井井有條、觸手可及的得力助手。無論你是需要處理大量對話的研究人員，還是喜歡收藏代碼片段的開發者，亦或是單純的整理控，Voyager 都是為你準備的。
 
@@ -115,6 +113,14 @@
   - **[輸入框摺疊](https://voyager.nagi.fun/zh_TW/guide/input-collapse)**: 輸入框自動收納，釋放閱讀空間。
   - **[預設模型](https://voyager.nagi.fun/zh_TW/guide/default-model)**: 為新對話設置預設選中的模型。
   - **[隱藏最近項目和 Gem](https://voyager.nagi.fun/zh_TW/guide/recents-hider)**: 隱藏側邊欄的”最近”列表，減少干擾。
+
+### 🔌 Claude & ChatGPT
+
+- **📍 Claude 時間線**: 對話側邊欄，支持星標訊息和搜尋——同樣的導航體驗，現在也能在 Claude 上使用。
+- **📊 Claude 用量條**: 直接在 Claude 介面中追蹤會話和每週用量。
+- **📐 公式複製**: 一鍵複製 LaTeX 和 MathML 源碼（與 Gemini 共享）。
+- **📏 舒適閱讀寬度**: 調整 Claude 和 ChatGPT 的對話寬度，獲得更好的閱讀體驗。
+- **🔤 CJK 渲染修復**: 修復 Claude 上的中日韓字元渲染問題。
 
 ### 🎨 個性化體驗
 
@@ -302,6 +308,8 @@ bun run build:all
 
 Voyager 基於 **GPL-3.0** 授權發布。
 Image Refinement 相關程式碼與資源的第三方 MIT 聲明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
+
+Gemini 是 Google LLC 的商標。Claude 是 Anthropic, PBC 的商標。ChatGPT 是 OpenAI, Inc. 的商標。Voyager 是獨立專案，與上述公司無隸屬、背書或贊助關係。
 
 ---
 

@@ -4,8 +4,8 @@ gitChangelog: false
 
 hero:
   name: 'Voyager'
-  text: 'نظام التشغيل المفقود لـ Gemini.'
-  tagline: 'نحن نحب Gemini. أردنا فقط أن يكون مثالياً.'
+  text: 'نظام التشغيل المفقود لروبوتات الدردشة الذكية.'
+  tagline: '.Gemini · Claude · ChatGPT — أخيراً، اكتمل'
   image:
     src: /logo.png
     alt: شعار Voyager

@@ -109,7 +109,7 @@ export default defineConfig({
             ],
           },
           {
-            text: '通用功能 (Gemini & AI Studio)',
+            text: '核心功能',
             items: [
               { text: '文件夹', link: '/guide/folders' },
               { text: '灵感库', link: '/guide/prompts' },
@@ -119,7 +119,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Gemini 专属功能',
+            text: 'Gemini & AI Studio',
             items: [
               { text: '时间轴', link: '/guide/timeline' },
               { text: '对话分支 (实验性)', link: '/guide/fork' },
@@ -145,6 +145,10 @@ export default defineConfig({
               { text: '发送行为', link: '/guide/send-behavior' },
               { text: '字体大小', link: '/guide/chat-font-size' },
             ],
+          },
+          {
+            text: 'Claude & ChatGPT',
+            items: [{ text: '浏览插件', link: '/plugins' }],
           },
         ],
         footer: {
@@ -180,7 +184,7 @@ export default defineConfig({
             ],
           },
           {
-            text: '通用功能 (Gemini & AI Studio)',
+            text: '核心功能',
             items: [
               { text: '資料夾', link: '/zh_TW/guide/folders' },
               { text: '提示詞庫', link: '/zh_TW/guide/prompts' },
@@ -190,7 +194,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Gemini 專屬功能',
+            text: 'Gemini & AI Studio',
             items: [
               { text: '時間軸導航', link: '/zh_TW/guide/timeline' },
               { text: '對話分支 (實驗性)', link: '/zh_TW/guide/fork' },
@@ -216,6 +220,10 @@ export default defineConfig({
               { text: '傳送行為', link: '/zh_TW/guide/send-behavior' },
               { text: '字體大小', link: '/zh_TW/guide/chat-font-size' },
             ],
+          },
+          {
+            text: 'Claude & ChatGPT',
+            items: [{ text: '瀏覽外掛', link: '/zh_TW/plugins' }],
           },
         ],
         footer: {
@@ -251,7 +259,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Common Features (Gemini & AI Studio)',
+            text: 'Core Features',
             items: [
               { text: 'Folder Organization', link: '/en/guide/folders' },
               { text: 'Prompt Library', link: '/en/guide/prompts' },
@@ -261,7 +269,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Gemini Exclusive Features',
+            text: 'Gemini & AI Studio',
             items: [
               { text: 'Timeline Navigation', link: '/en/guide/timeline' },
               { text: 'Conversation Fork (Experimental)', link: '/en/guide/fork' },
@@ -287,6 +295,10 @@ export default defineConfig({
               { text: 'Send Behavior', link: '/en/guide/send-behavior' },
               { text: 'Font Size', link: '/en/guide/chat-font-size' },
             ],
+          },
+          {
+            text: 'Claude & ChatGPT',
+            items: [{ text: 'Browse Plugins', link: '/en/plugins' }],
           },
         ],
         footer: {
@@ -322,7 +334,7 @@ export default defineConfig({
             ],
           },
           {
-            text: '共通機能 (Gemini & AI Studio)',
+            text: 'コア機能',
             items: [
               { text: 'フォルダ管理', link: '/ja/guide/folders' },
               { text: 'プロンプト', link: '/ja/guide/prompts' },
@@ -332,7 +344,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Gemini 専用機能',
+            text: 'Gemini & AI Studio',
             items: [
               { text: 'タイムライン', link: '/ja/guide/timeline' },
               { text: '会話の分岐 (実験的)', link: '/ja/guide/fork' },
@@ -358,6 +370,10 @@ export default defineConfig({
               { text: '送信動作', link: '/ja/guide/send-behavior' },
               { text: 'フォントサイズ', link: '/ja/guide/chat-font-size' },
             ],
+          },
+          {
+            text: 'Claude & ChatGPT',
+            items: [{ text: 'プラグインを見る', link: '/ja/plugins' }],
           },
         ],
         footer: {
@@ -393,7 +409,7 @@ export default defineConfig({
             ],
           },
           {
-            text: '공통 기능 (Gemini & AI Studio)',
+            text: '핵심 기능',
             items: [
               { text: '폴더 관리', link: '/ko/guide/folders' },
               { text: '프롬프트 라이브러리', link: '/ko/guide/prompts' },
@@ -403,7 +419,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Gemini 전용 기능',
+            text: 'Gemini & AI Studio',
             items: [
               { text: '타임라인 탐색', link: '/ko/guide/timeline' },
               { text: '대화 분기 (실험적)', link: '/ko/guide/fork' },
@@ -429,6 +445,10 @@ export default defineConfig({
               { text: '전송 동작', link: '/ko/guide/send-behavior' },
               { text: '글꼴 크기', link: '/ko/guide/chat-font-size' },
             ],
+          },
+          {
+            text: 'Claude & ChatGPT',
+            items: [{ text: '플러그인 둘러보기', link: '/ko/plugins' }],
           },
         ],
         footer: {
@@ -464,7 +484,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Fonctionnalités Communes (Gemini & AI Studio)',
+            text: 'Fonctionnalités principales',
             items: [
               { text: 'Dossiers', link: '/fr/guide/folders' },
               { text: 'Bibliothèque de Prompts', link: '/fr/guide/prompts' },
@@ -474,7 +494,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Fonctionnalités Exclusives Gemini',
+            text: 'Gemini & AI Studio',
             items: [
               { text: 'Navigation Temporelle', link: '/fr/guide/timeline' },
               { text: 'Bifurcation de Conversation (Expérimental)', link: '/fr/guide/fork' },
@@ -500,6 +520,10 @@ export default defineConfig({
               { text: "Comportement d'Envoi", link: '/fr/guide/send-behavior' },
               { text: 'Taille de Police', link: '/fr/guide/chat-font-size' },
             ],
+          },
+          {
+            text: 'Claude & ChatGPT',
+            items: [{ text: 'Parcourir les plugins', link: '/fr/plugins' }],
           },
         ],
         footer: {
@@ -535,7 +559,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Funciones Comunes (Gemini & AI Studio)',
+            text: 'Funciones principales',
             items: [
               { text: 'Carpetas', link: '/es/guide/folders' },
               { text: 'Biblioteca de Prompts', link: '/es/guide/prompts' },
@@ -545,7 +569,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Funciones Exclusivas de Gemini',
+            text: 'Gemini & AI Studio',
             items: [
               { text: 'Navegación de Línea de Tiempo', link: '/es/guide/timeline' },
               {
@@ -581,6 +605,10 @@ export default defineConfig({
               { text: 'Tamaño de Fuente', link: '/es/guide/chat-font-size' },
             ],
           },
+          {
+            text: 'Claude & ChatGPT',
+            items: [{ text: 'Explorar plugins', link: '/es/plugins' }],
+          },
         ],
         footer: {
           message:
@@ -615,7 +643,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Funcionalidades Comuns (Gemini & AI Studio)',
+            text: 'Funcionalidades principais',
             items: [
               { text: 'Pastas', link: '/pt/guide/folders' },
               { text: 'Biblioteca de Prompts', link: '/pt/guide/prompts' },
@@ -625,7 +653,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Funcionalidades Exclusivas Gemini',
+            text: 'Gemini & AI Studio',
             items: [
               { text: 'Navegação na Linha do Tempo', link: '/pt/guide/timeline' },
               { text: 'Bifurcação de Conversa (Experimental)', link: '/pt/guide/fork' },
@@ -651,6 +679,10 @@ export default defineConfig({
               { text: 'Comportamento de Envio', link: '/pt/guide/send-behavior' },
               { text: 'Tamanho da Fonte', link: '/pt/guide/chat-font-size' },
             ],
+          },
+          {
+            text: 'Claude & ChatGPT',
+            items: [{ text: 'Explorar plugins', link: '/pt/plugins' }],
           },
         ],
         footer: {
@@ -687,7 +719,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'الميزات العامة (Gemini & AI Studio)',
+            text: 'الميزات الأساسية',
             items: [
               { text: 'المجلدات', link: '/ar/guide/folders' },
               { text: 'مكتبة المطالبات', link: '/ar/guide/prompts' },
@@ -697,7 +729,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'ميزات Gemini الحصرية',
+            text: 'Gemini & AI Studio',
             items: [
               { text: 'تصفح الجدول الزمني', link: '/ar/guide/timeline' },
               { text: 'تفريع المحادثة (تجريبي)', link: '/ar/guide/fork' },
@@ -723,6 +755,10 @@ export default defineConfig({
               { text: 'سلوك الإرسال', link: '/ar/guide/send-behavior' },
               { text: 'حجم الخط', link: '/ar/guide/chat-font-size' },
             ],
+          },
+          {
+            text: 'Claude & ChatGPT',
+            items: [{ text: 'تصفح الإضافات', link: '/ar/plugins' }],
           },
         ],
         footer: {
@@ -758,7 +794,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Общие функции (Gemini & AI Studio)',
+            text: 'Основные функции',
             items: [
               { text: 'Папки', link: '/ru/guide/folders' },
               { text: 'Библиотека промптов', link: '/ru/guide/prompts' },
@@ -768,7 +804,7 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Эксклюзивные функции Gemini',
+            text: 'Gemini & AI Studio',
             items: [
               { text: 'Навигация по таймлайну', link: '/ru/guide/timeline' },
               {
@@ -804,6 +840,10 @@ export default defineConfig({
               { text: 'Размер шрифта', link: '/ru/guide/chat-font-size' },
             ],
           },
+          {
+            text: 'Claude & ChatGPT',
+            items: [{ text: 'Обзор плагинов', link: '/ru/plugins' }],
+          },
         ],
         footer: {
           message:
@@ -837,6 +877,7 @@ export default defineConfig({
   },
   vite: {
     plugins: [
+      // vite 7 ↔ vitepress-bundled vite 5 Plugin type mismatch
       GitChangelog({
         repoURL: () => 'https://github.com/Nagi-ovo/gemini-voyager',
         // Only track the Chinese source docs to avoid 281-file EAGAIN;
@@ -892,8 +933,10 @@ export default defineConfig({
             ],
           },
         ],
-      }),
-      GitChangelogMarkdownSection(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      }) as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      GitChangelogMarkdownSection() as any,
     ],
     ssr: {
       noExternal: ['vue3-marquee', '@nolebase/vitepress-plugin-git-changelog'],
