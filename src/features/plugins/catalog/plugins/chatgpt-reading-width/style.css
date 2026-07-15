@@ -7,7 +7,7 @@
   --thread-content-max-width: var(--gv-plugin-reading-width, 768px) !important;
 }
 
-.gv-plugin-chatgpt-readable [class*='--thread-content-max-width']:not(#thread-bottom-container) {
+.gv-plugin-chatgpt-readable [class*='--thread-content-max-width'] {
   max-width: var(--gv-plugin-reading-width, 768px) !important;
 }
 

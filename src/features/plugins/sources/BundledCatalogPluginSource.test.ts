@@ -40,13 +40,27 @@ describe('BundledCatalogPluginSource', () => {
     const file = '../catalog/plugins/chatgpt-reading-width/style.css';
     const css = readFileSync(new URL(file, import.meta.url), 'utf8');
 
-    expect(css).toContain(':not(#thread-bottom-container)');
+    expect(css).not.toContain(':not(#thread-bottom-container)');
+    expect(css).toMatch(
+      /\.gv-plugin-chatgpt-readable \[class\*='--thread-content-max-width'\]\s*\{[\s\S]*max-width:\s*var\(--gv-plugin-reading-width, 768px\)\s*!important;/,
+    );
     expect(css).toMatch(
       /#thread-bottom-container\s*\{[\s\S]*width:\s*100%\s*!important;[\s\S]*max-width:\s*none\s*!important;/,
     );
     expect(css).toContain("[data-gv-center-conversation='true']");
     expect(css).toContain("section[data-testid^='conversation-turn-']");
     expect(css).toContain('min(var(--gv-plugin-reading-width, 768px), 48rem)');
+
+    const regularWidthRule = css.indexOf(
+      ".gv-plugin-chatgpt-readable [class*='--thread-content-max-width'] {",
+    );
+    const footerOverride = css.indexOf('.gv-plugin-chatgpt-readable #thread-bottom-container {');
+    const centeredTurnRule = css.indexOf(
+      ".gv-plugin-chatgpt-readable[data-gv-center-conversation='true']",
+    );
+    expect(regularWidthRule).toBeGreaterThanOrEqual(0);
+    expect(footerOverride).toBeGreaterThan(regularWidthRule);
+    expect(centeredTurnRule).toBeGreaterThan(footerOverride);
   });
 
   it('offers an opt-in centered conversation mode without narrowing the composer', async () => {
