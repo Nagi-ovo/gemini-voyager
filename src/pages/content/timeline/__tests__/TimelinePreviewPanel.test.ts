@@ -163,6 +163,40 @@ describe('TimelinePreviewPanel', () => {
         vi.useRealTimers();
       }
     });
+
+    it('toggles the panel when the rail is clicked', () => {
+      panel.setCompactMode(true);
+
+      anchor.click();
+      expect(panel.isOpen).toBe(true);
+      expect(anchor.getAttribute('aria-expanded')).toBe('true');
+
+      anchor.click();
+      expect(panel.isOpen).toBe(false);
+      expect(anchor.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('stays open when pointer focus occurs between pointerdown and click', () => {
+      panel.setCompactMode(true);
+
+      anchor.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      anchor.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+      expect(panel.isOpen).toBe(true);
+      anchor.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+      expect(panel.isOpen).toBe(true);
+    });
+
+    it('allows the hidden compact toggle to be closed manually while pinned', () => {
+      panel.setCompactMode(true);
+      panel.setPinned(true);
+      panel.open();
+
+      anchor.click();
+
+      expect(panel.isOpen).toBe(false);
+      expect(panel.isPinned).toBe(true);
+    });
   });
 
   describe('updateMarkers', () => {

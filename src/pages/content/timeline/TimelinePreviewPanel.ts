@@ -54,7 +54,9 @@ export class TimelinePreviewPanel {
   private onAnchorFocusIn: (() => void) | null = null;
   private onAnchorFocusOut: (() => void) | null = null;
   private onAnchorKeyDown: ((event: KeyboardEvent) => void) | null = null;
+  private onAnchorPointerDown: (() => void) | null = null;
   private onAnchorClick: ((event: MouseEvent) => void) | null = null;
+  private anchorWasOpenOnPointerDown: boolean | null = null;
   private onStorageChanged:
     | ((changes: Record<string, browser.Storage.StorageChange>, areaName: string) => void)
     | null = null;
@@ -246,10 +248,15 @@ export class TimelinePreviewPanel {
       this.anchorElement.removeEventListener('keydown', this.onAnchorKeyDown);
       this.onAnchorKeyDown = null;
     }
+    if (this.onAnchorPointerDown) {
+      this.anchorElement.removeEventListener('pointerdown', this.onAnchorPointerDown);
+      this.onAnchorPointerDown = null;
+    }
     if (this.onAnchorClick) {
       this.anchorElement.removeEventListener('click', this.onAnchorClick);
       this.onAnchorClick = null;
     }
+    this.anchorWasOpenOnPointerDown = null;
     if (this.onStorageChanged) {
       browser.storage.onChanged.removeListener(this.onStorageChanged);
       this.onStorageChanged = null;
@@ -432,10 +439,19 @@ export class TimelinePreviewPanel {
       event.stopPropagation();
       this.toggle();
     };
+    this.onAnchorPointerDown = () => {
+      if (!this._isCompactMode) return;
+      // Pointer focus can open the panel before the subsequent click fires.
+      // Preserve the pre-click state so a closed rail still opens on touch.
+      this.anchorWasOpenOnPointerDown = this._isOpen;
+    };
     this.onAnchorClick = (event: MouseEvent) => {
       if (!this._isCompactMode) return;
       event.stopPropagation();
-      this.open();
+      const wasOpen = this.anchorWasOpenOnPointerDown ?? this._isOpen;
+      this.anchorWasOpenOnPointerDown = null;
+      if (wasOpen) this.close();
+      else this.open();
     };
     this.anchorElement.addEventListener('mouseenter', this.onAnchorMouseEnter);
     this.anchorElement.addEventListener('mouseleave', this.onAnchorMouseLeave);
@@ -444,6 +460,7 @@ export class TimelinePreviewPanel {
     this.anchorElement.addEventListener('focusin', this.onAnchorFocusIn);
     this.anchorElement.addEventListener('focusout', this.onAnchorFocusOut);
     this.anchorElement.addEventListener('keydown', this.onAnchorKeyDown);
+    this.anchorElement.addEventListener('pointerdown', this.onAnchorPointerDown);
     this.anchorElement.addEventListener('click', this.onAnchorClick);
 
     // Re-render translated text on language change
