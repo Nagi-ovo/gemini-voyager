@@ -556,7 +556,7 @@ describe('quote reply', () => {
     cleanup();
   });
 
-  it('uses the current Lucide highlighter icon and remembers the selected color', async () => {
+  it('previews the selected color immediately and saves it with Highlight', async () => {
     document.querySelector('main')!.innerHTML = `
       <div class="user-query-bubble-with-background">Question</div>
       <model-response><message-content><p id="source">Hello world</p></message-content></model-response>
@@ -604,16 +604,32 @@ describe('quote reply', () => {
     const pink = palette?.querySelector<HTMLButtonElement>('[data-highlight-color="pink"]');
     pink?.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
     pink?.click();
+    await Promise.resolve();
 
     expect(chrome.storage.sync.set).toHaveBeenCalledWith(
       { [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: 'pink' },
       expect.any(Function),
     );
+    expect(createFromRange).not.toHaveBeenCalled();
+    expect(
+      document.documentElement.classList.contains('gv-highlight-selection-preview-active'),
+    ).toBe(true);
+    expect(
+      document.documentElement.style.getPropertyValue('--gv-highlight-selection-preview-color'),
+    ).toBe('rgba(244, 114, 182, 0.38)');
+    expect(palette?.classList.contains('gv-hidden')).toBe(false);
+
     const highlightButton = document.querySelector<HTMLButtonElement>('.gv-highlight-action');
     highlightButton?.click();
     await Promise.resolve();
 
     expect(createFromRange).toHaveBeenCalledWith(expect.any(Range), 'pink');
+    expect(document.querySelector('.gv-selection-toolbar')?.classList.contains('gv-hidden')).toBe(
+      true,
+    );
+    expect(
+      document.documentElement.classList.contains('gv-highlight-selection-preview-active'),
+    ).toBe(false);
     cleanup();
   });
 
@@ -625,7 +641,7 @@ describe('quote reply', () => {
     const createFromRange = vi
       .spyOn(HighlightManager.prototype, 'createFromRange')
       .mockResolvedValue(true);
-    const cleanup = startQuoteReply({ quoteEnabled: false });
+    const cleanup = startQuoteReply({ quoteEnabled: false, highlightDefaultColor: 'blue' });
 
     selectSourceText();
     document.dispatchEvent(new MouseEvent('mouseup'));
@@ -633,17 +649,18 @@ describe('quote reply', () => {
 
     const colorButton = document.querySelector<HTMLButtonElement>('.gv-highlight-color-trigger');
     colorButton?.click();
-    document.querySelector<HTMLButtonElement>('[data-highlight-slot="2"]')?.click();
-    const editColorButton = document.querySelector<HTMLButtonElement>('.gv-highlight-color-edit');
-    expect(editColorButton).toBeInstanceOf(HTMLButtonElement);
+    const editColorControl = document.querySelector<HTMLLabelElement>('.gv-highlight-color-edit');
+    expect(editColorControl).toBeInstanceOf(HTMLLabelElement);
     const customColor = document.querySelector<HTMLInputElement>('.gv-highlight-custom-color');
     if (!customColor) throw new Error('Expected custom color input');
-    const colorInputClick = vi.spyOn(customColor, 'click');
-    editColorButton?.click();
-    expect(colorInputClick).toHaveBeenCalledOnce();
+    expect(editColorControl?.contains(customColor)).toBe(true);
+    expect(customColor.getAttribute('aria-label')).toBe(
+      'Choose a custom highlight color · Highlight color 3',
+    );
     customColor.value = '#123456';
     customColor.dispatchEvent(new Event('input', { bubbles: true }));
     customColor.dispatchEvent(new Event('change', { bubbles: true }));
+    await Promise.resolve();
 
     expect(chrome.storage.sync.set).toHaveBeenCalledWith(
       {
@@ -652,6 +669,14 @@ describe('quote reply', () => {
       },
       expect.any(Function),
     );
+    expect(createFromRange).not.toHaveBeenCalled();
+    expect(
+      document.documentElement.style.getPropertyValue('--gv-highlight-selection-preview-color'),
+    ).toBe('rgba(18, 52, 86, 0.38)');
+    expect(
+      document.querySelector('.gv-highlight-color-palette')?.classList.contains('gv-hidden'),
+    ).toBe(false);
+
     document.querySelector<HTMLButtonElement>('.gv-highlight-action')?.click();
     await Promise.resolve();
     expect(createFromRange).toHaveBeenCalledWith(expect.any(Range), '#123456');

@@ -52,6 +52,16 @@ const QUOTE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="1
 const EDIT_COLOR_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>`;
 
 const STYLE_ID = 'gemini-voyager-quote-reply-style';
+const HIGHLIGHT_PREVIEW_CLASS = 'gv-highlight-selection-preview-active';
+const HIGHLIGHT_PREVIEW_COLOR_PROPERTY = '--gv-highlight-selection-preview-color';
+
+function getHighlightPreviewBackground(color: HighlightColor): string {
+  const hex = getHighlightColorHex(color);
+  const red = Number.parseInt(hex.slice(1, 3), 16);
+  const green = Number.parseInt(hex.slice(3, 5), 16);
+  const blue = Number.parseInt(hex.slice(5, 7), 16);
+  return `rgba(${red}, ${green}, ${blue}, 0.38)`;
+}
 
 function injectStyles() {
   if (document.getElementById(STYLE_ID)) return;
@@ -153,6 +163,7 @@ function injectStyles() {
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.78);
     }
     .gv-highlight-color-edit {
+      position: relative;
       display: grid;
       width: 26px;
       height: 26px;
@@ -164,6 +175,7 @@ function injectStyles() {
       background: rgba(255, 255, 255, 0.08);
       color: inherit;
       cursor: pointer;
+      overflow: hidden;
     }
     .gv-highlight-color-edit:hover,
     .gv-highlight-color-edit:focus-visible {
@@ -173,11 +185,16 @@ function injectStyles() {
     }
     .gv-highlight-custom-color {
       position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       opacity: 0;
-      pointer-events: none;
+      cursor: pointer;
+    }
+    html.${HIGHLIGHT_PREVIEW_CLASS}::selection,
+    html.${HIGHLIGHT_PREVIEW_CLASS} *::selection {
+      background-color: var(${HIGHLIGHT_PREVIEW_COLOR_PROPERTY}) !important;
+      color: inherit !important;
     }
     .gv-selection-toolbar.gv-hidden {
       opacity: 0;
@@ -451,6 +468,27 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
     highlightColorBtn?.setAttribute('aria-expanded', 'false');
   }
 
+  function previewHighlightColor(): void {
+    document.documentElement.style.setProperty(
+      HIGHLIGHT_PREVIEW_COLOR_PROPERTY,
+      getHighlightPreviewBackground(selectedHighlightColor),
+    );
+    document.documentElement.classList.add(HIGHLIGHT_PREVIEW_CLASS);
+  }
+
+  function clearHighlightColorPreview(): void {
+    document.documentElement.classList.remove(HIGHLIGHT_PREVIEW_CLASS);
+    document.documentElement.style.removeProperty(HIGHLIGHT_PREVIEW_COLOR_PROPERTY);
+  }
+
+  function restoreCurrentSelection(): void {
+    if (!currentSelectionRange) return;
+    const selection = window.getSelection();
+    if (!selection) return;
+    selection.removeAllRanges();
+    selection.addRange(currentSelectionRange.cloneRange());
+  }
+
   function getHighlightColorLabel(index: number): string {
     return `${getTranslationSync('highlightColor')} ${index + 1}`;
   }
@@ -504,13 +542,13 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
     if (highlightCustomColorInput) {
       highlightCustomColorInput.value = getHighlightColorHex(selectedHighlightColor);
     }
-    const editColorButton = highlightColorPalette?.querySelector<HTMLButtonElement>(
+    const editColorControl = highlightColorPalette?.querySelector<HTMLElement>(
       '.gv-highlight-color-edit',
     );
-    if (editColorButton) {
+    if (editColorControl) {
       const label = getHighlightColorEditLabel();
-      editColorButton.title = label;
-      editColorButton.setAttribute('aria-label', label);
+      editColorControl.title = label;
+      highlightCustomColorInput?.setAttribute('aria-label', label);
     }
   }
 
@@ -672,35 +710,19 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
         void browser.storage.sync
           .set({ [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: selectedHighlightColor })
           .catch(() => undefined);
+        previewHighlightColor();
       });
       highlightColorPalette?.appendChild(swatch);
     });
-    const editColorButton = document.createElement('button');
-    editColorButton.type = 'button';
-    editColorButton.className = 'gv-highlight-color-edit';
-    editColorButton.innerHTML = EDIT_COLOR_ICON;
-    editColorButton.title = getHighlightColorEditLabel();
-    editColorButton.setAttribute('aria-label', getHighlightColorEditLabel());
-    editColorButton.addEventListener('mousedown', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      isInternalClick = true;
-    });
-    editColorButton.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      highlightCustomColorInput?.click();
-    });
-    highlightColorPalette.appendChild(editColorButton);
-
+    const editColorControl = document.createElement('label');
+    editColorControl.className = 'gv-highlight-color-edit';
+    editColorControl.innerHTML = EDIT_COLOR_ICON;
+    editColorControl.title = getHighlightColorEditLabel();
     highlightCustomColorInput = document.createElement('input');
     highlightCustomColorInput.type = 'color';
     highlightCustomColorInput.className = 'gv-highlight-custom-color';
     highlightCustomColorInput.value = getHighlightColorHex(selectedHighlightColor);
-    highlightCustomColorInput.setAttribute(
-      'aria-label',
-      getTranslationSync('highlightCustomColor'),
-    );
+    highlightCustomColorInput.setAttribute('aria-label', getHighlightColorEditLabel());
     highlightCustomColorInput.addEventListener('mousedown', (event) => {
       event.stopPropagation();
       isInternalClick = true;
@@ -711,6 +733,7 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
       highlightColors[selectedHighlightSlot] = selectedHighlightColor;
       highlightManager.setColorPalette(highlightColors);
       updateHighlightColorUi();
+      previewHighlightColor();
     });
     highlightCustomColorInput.addEventListener('change', () => {
       if (!highlightCustomColorInput) return;
@@ -718,16 +741,18 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
       highlightColors[selectedHighlightSlot] = selectedHighlightColor;
       highlightManager.setColorPalette(highlightColors);
       updateHighlightColorUi();
-      closeHighlightColorPalette();
       void browser.storage.sync
         .set({
           [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: selectedHighlightColor,
           [StorageKeys.HIGHLIGHT_COLOR_PALETTE]: [...highlightColors],
         })
         .catch(() => undefined);
-      highlightColorBtn?.focus({ preventScroll: true });
+      restoreCurrentSelection();
+      previewHighlightColor();
+      positionHighlightColorPalette();
     });
-    highlightColorPalette.appendChild(highlightCustomColorInput);
+    editColorControl.appendChild(highlightCustomColorInput);
+    highlightColorPalette.appendChild(editColorControl);
     updateHighlightColorUi();
 
     selectionToolbar.append(quoteBtn, highlightBtn, highlightColorBtn, highlightColorPalette);
@@ -902,6 +927,7 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
 
   function hideButton() {
     closeHighlightColorPalette();
+    clearHighlightColorPreview();
     if (selectionToolbar) {
       selectionToolbar.classList.add(CSS_CLASSES.HIDDEN);
     }
@@ -969,7 +995,7 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
       // Also check if we are selecting code block content? Might be fine.
 
       const range = selection.getRangeAt(0);
-      currentSelectionRange = range;
+      currentSelectionRange = range.cloneRange();
       const canHighlight = highlightManager.canCreateFromRange(range);
       if (!selectionToolbar) createButton();
       quoteBtn?.classList.toggle(CSS_CLASSES.HIDDEN, !quoteEnabled);
@@ -1032,12 +1058,13 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
           if (Number.isInteger(slot))
             swatch.setAttribute('aria-label', getHighlightColorLabel(slot));
         });
-      const editColorButton = highlightColorPalette.querySelector<HTMLButtonElement>(
+      const editColorControl = highlightColorPalette.querySelector<HTMLElement>(
         '.gv-highlight-color-edit',
       );
-      if (editColorButton) {
-        editColorButton.title = getHighlightColorEditLabel();
-        editColorButton.setAttribute('aria-label', getHighlightColorEditLabel());
+      if (editColorControl) {
+        const label = getHighlightColorEditLabel();
+        editColorControl.title = label;
+        highlightCustomColorInput?.setAttribute('aria-label', label);
       }
     }
     updateHighlightColorUi();
@@ -1080,7 +1107,10 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
         highlightManager.canCreateFromRange(currentSelectionRange);
       highlightBtn?.classList.toggle(CSS_CLASSES.HIDDEN, !highlightEnabled || !canHighlight);
       highlightColorBtn?.classList.toggle(CSS_CLASSES.HIDDEN, !highlightEnabled || !canHighlight);
-      if (!highlightEnabled) closeHighlightColorPalette();
+      if (!highlightEnabled) {
+        closeHighlightColorPalette();
+        clearHighlightColorPreview();
+      }
       if (!quoteEnabled && (!highlightEnabled || !canHighlight)) {
         hideButton();
       } else if (currentSelectionRange) {
