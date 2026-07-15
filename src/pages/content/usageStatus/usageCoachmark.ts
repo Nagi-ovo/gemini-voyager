@@ -15,10 +15,15 @@ import { StorageKeys } from '@/core/types/common';
 import { getTranslationSync, initI18n } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
-import { type CoachmarkResult, showCoachmark } from '../coachmark';
+import {
+  type CoachmarkProgress,
+  type CoachmarkResult,
+  type CoachmarkSequenceStep,
+  showCoachmark,
+} from '../coachmark';
 import { USAGE_REFRESH_ICON } from './icons';
 
-const COACH_ID = 'usage-pill-intro';
+export const USAGE_COACHMARK_ID = 'usage-pill-intro';
 export const USAGE_COACHMARK_DEBUG_EVENT = 'gv:debug:usageCoachmark';
 
 const t = (key: TranslationKey, fallback: string): string => {
@@ -119,7 +124,7 @@ function buildPreviewPill(): HTMLElement {
  * both the once-flag and the already-enabled short-circuit).
  */
 export async function maybeShowUsageCoachmark(
-  opts: { force?: boolean } = {},
+  opts: { force?: boolean; progress?: CoachmarkProgress } = {},
 ): Promise<CoachmarkResult> {
   if (location.hostname !== 'gemini.google.com') return 'skipped';
   const enabled = await loadUsageEnabled();
@@ -132,7 +137,7 @@ export async function maybeShowUsageCoachmark(
   }
 
   return showCoachmark({
-    id: COACH_ID,
+    id: USAGE_COACHMARK_ID,
     once: !opts.force,
     scrim: true,
     icon: USAGE_ICON,
@@ -150,9 +155,17 @@ export async function maybeShowUsageCoachmark(
       onChange: (on) => setUsageEnabled(on),
     },
     dismissLabel: t('coachmarkDismiss', 'Done'),
+    nextLabel: t('coachmarkNext', 'Next'),
     closeLabel: t('coachmarkClose', 'Close'),
+    progress: opts.progress,
   });
 }
+
+export const usageCoachmarkStep: CoachmarkSequenceStep = {
+  id: USAGE_COACHMARK_ID,
+  isEligible: async () => location.hostname === 'gemini.google.com' && !(await loadUsageEnabled()),
+  show: (progress) => maybeShowUsageCoachmark({ progress }),
+};
 
 const showDebugUsageCoachmark = () => void maybeShowUsageCoachmark({ force: true });
 

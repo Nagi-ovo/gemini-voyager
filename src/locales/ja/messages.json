@@ -2319,6 +2319,10 @@
     "message": "完了",
     "description": "Generic confirmation label for feature coachmarks"
   },
+  "coachmarkNext": {
+    "message": "次へ",
+    "description": "Button label for advancing to the next feature coachmark"
+  },
   "coachmarkClose": {
     "message": "閉じる",
     "description": "Accessible label for the feature coachmark close button"

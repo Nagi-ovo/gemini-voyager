@@ -10,9 +10,14 @@ import { StorageKeys } from '@/core/types/common';
 import { getTranslationSync, initI18n } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
-import { type CoachmarkResult, showCoachmark } from '../coachmark';
+import {
+  type CoachmarkProgress,
+  type CoachmarkResult,
+  type CoachmarkSequenceStep,
+  showCoachmark,
+} from '../coachmark';
 
-const COACH_ID = 'timeline-compact-style-intro-v2';
+export const TIMELINE_STYLE_COACHMARK_ID = 'timeline-compact-style-intro-v2';
 const PREVIEW_TICK_COUNT = 14;
 export const TIMELINE_STYLE_COACHMARK_DEBUG_EVENT = 'gv:debug:timelineStyleCoachmark';
 
@@ -53,6 +58,7 @@ interface TimelineStyleCoachmarkOptions {
   id: string;
   enabled: boolean;
   force?: boolean;
+  progress?: CoachmarkProgress;
   onStyleChange: (compact: boolean) => void | Promise<void>;
 }
 
@@ -83,6 +89,7 @@ export async function showTimelineStyleCoachmark({
   id,
   enabled,
   force = false,
+  progress,
   onStyleChange,
 }: TimelineStyleCoachmarkOptions): Promise<CoachmarkResult> {
   if (enabled && !force) return 'skipped';
@@ -138,7 +145,9 @@ export async function showTimelineStyleCoachmark({
       },
     },
     dismissLabel: t('coachmarkDismiss', 'Done'),
+    nextLabel: t('coachmarkNext', 'Next'),
     closeLabel: t('coachmarkClose', 'Close'),
+    progress,
   });
 }
 
@@ -147,17 +156,25 @@ export async function showTimelineStyleCoachmark({
  * and bypasses the already-enabled short-circuit.
  */
 export async function maybeShowTimelineStyleCoachmark(
-  opts: { force?: boolean } = {},
+  opts: { force?: boolean; progress?: CoachmarkProgress } = {},
 ): Promise<CoachmarkResult> {
   if (location.hostname !== 'gemini.google.com') return 'skipped';
   const enabled = await loadCompactTimelineEnabled();
   return showTimelineStyleCoachmark({
-    id: COACH_ID,
+    id: TIMELINE_STYLE_COACHMARK_ID,
     enabled,
     force: opts.force,
+    progress: opts.progress,
     onStyleChange: setCompactTimelineEnabled,
   });
 }
+
+export const timelineStyleCoachmarkStep: CoachmarkSequenceStep = {
+  id: TIMELINE_STYLE_COACHMARK_ID,
+  isEligible: async () =>
+    location.hostname === 'gemini.google.com' && !(await loadCompactTimelineEnabled()),
+  show: (progress) => maybeShowTimelineStyleCoachmark({ progress }),
+};
 
 const showDebugTimelineStyleCoachmark = () => void maybeShowTimelineStyleCoachmark({ force: true });
 

@@ -4,10 +4,15 @@ import { StorageKeys } from '@/core/types/common';
 import { getTranslationSync, initI18n } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
-import { type CoachmarkResult, showCoachmark } from '../coachmark';
+import {
+  type CoachmarkProgress,
+  type CoachmarkResult,
+  type CoachmarkSequenceStep,
+  showCoachmark,
+} from '../coachmark';
 import { keepSidebarExpanded } from '../sidebarAutoHide';
 
-const COACH_ID = 'folder-search-intro';
+export const FOLDER_SEARCH_COACHMARK_ID = 'folder-search-intro';
 const SIDEBAR_EXPAND_WAIT_MS = 320;
 export const FOLDER_SEARCH_COACHMARK_DEBUG_EVENT = 'gv:debug:folderSearchCoachmark';
 
@@ -49,7 +54,7 @@ function getVisibleSearchInput(): HTMLElement | null {
 }
 
 export async function maybeShowFolderSearchCoachmark(
-  opts: { force?: boolean } = {},
+  opts: { force?: boolean; progress?: CoachmarkProgress } = {},
 ): Promise<CoachmarkResult> {
   if (location.hostname !== 'gemini.google.com') return 'skipped';
   const enabled = await loadFolderSearchEnabled();
@@ -65,7 +70,7 @@ export async function maybeShowFolderSearchCoachmark(
   try {
     await wait(SIDEBAR_EXPAND_WAIT_MS);
     return await showCoachmark({
-      id: COACH_ID,
+      id: FOLDER_SEARCH_COACHMARK_ID,
       once: !opts.force,
       scrim: true,
       title: t('folderSearchCoachmarkTitle', 'New: folder search'),
@@ -81,12 +86,21 @@ export async function maybeShowFolderSearchCoachmark(
         onChange: (on) => setFolderSearchEnabled(on),
       },
       dismissLabel: t('coachmarkDismiss', 'Done'),
+      nextLabel: t('coachmarkNext', 'Next'),
       closeLabel: t('coachmarkClose', 'Close'),
+      progress: opts.progress,
     });
   } finally {
     releaseSidebar();
   }
 }
+
+export const folderSearchCoachmarkStep: CoachmarkSequenceStep = {
+  id: FOLDER_SEARCH_COACHMARK_ID,
+  isEligible: async () =>
+    location.hostname === 'gemini.google.com' && (await loadFolderSearchEnabled()),
+  show: (progress) => maybeShowFolderSearchCoachmark({ progress }),
+};
 
 const showDebugFolderSearchCoachmark = () => void maybeShowFolderSearchCoachmark({ force: true });
 

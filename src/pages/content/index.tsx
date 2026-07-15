@@ -36,8 +36,8 @@ import { startEdgeFinalVersionNotice } from './edgeFinalVersionNotice';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { startAIStudioFolderManager } from './folder/aistudio';
-import { maybeShowConversationSortCoachmark } from './folder/conversationSortCoachmark';
-import { maybeShowFolderSearchCoachmark } from './folder/folderSearchCoachmark';
+import { conversationSortCoachmarkStep } from './folder/conversationSortCoachmark';
+import { folderSearchCoachmarkStep } from './folder/folderSearchCoachmark';
 import { startFolderManager } from './folder/index';
 import { startFolderItemFontSizeAdjuster } from './folderItemFontSize/index';
 import { startFolderProject } from './folderProject/index';
@@ -62,9 +62,9 @@ import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { startStorageQuotaWarningToast } from './storageQuotaWarning';
 import { startTimeline } from './timeline/index';
-import { maybeShowTimelineStyleCoachmark } from './timeline/timelineStyleCoachmark';
+import { timelineStyleCoachmarkStep } from './timeline/timelineStyleCoachmark';
 import { startUsageStatus } from './usageStatus/index';
-import { maybeShowUsageCoachmark } from './usageStatus/usageCoachmark';
+import { usageCoachmarkStep } from './usageStatus/usageCoachmark';
 import { startUserLatex } from './userLatex/index';
 import { startVisualEffects } from './visualEffects';
 import { startWatermarkRemover, stopWatermarkRemover } from './watermarkRemover/index';
@@ -138,10 +138,10 @@ function showOnboardingCoachmarksWhenChangelogIsIdle(): void {
 
   onboardingCoachmarkSequenceRunning = true;
   void runCoachmarkSequence([
-    maybeShowTimelineStyleCoachmark,
-    maybeShowUsageCoachmark,
-    maybeShowFolderSearchCoachmark,
-    maybeShowConversationSortCoachmark,
+    timelineStyleCoachmarkStep,
+    usageCoachmarkStep,
+    folderSearchCoachmarkStep,
+    conversationSortCoachmarkStep,
   ])
     .then((result) => {
       if (result !== 'skipped') onboardingCoachmarkShownThisPage = true;

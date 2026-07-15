@@ -2319,6 +2319,10 @@
     "message": "Listo",
     "description": "Generic confirmation label for feature coachmarks"
   },
+  "coachmarkNext": {
+    "message": "Siguiente",
+    "description": "Button label for advancing to the next feature coachmark"
+  },
   "coachmarkClose": {
     "message": "Cerrar",
     "description": "Accessible label for the feature coachmark close button"

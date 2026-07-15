@@ -54,27 +54,109 @@ describe('coachmark seen-state', () => {
 });
 
 describe('runCoachmarkSequence', () => {
-  it('continues past skipped steps and stops after showing one coachmark', async () => {
-    const calls: string[] = [];
+  it('filters seen and ineligible steps, then shows the rest in order with progress', async () => {
+    await markCoachmarkSeen('timeline');
+    const calls: Array<string | { current: number; total: number }> = [];
 
     const result = await runCoachmarkSequence([
-      async () => {
-        await Promise.resolve();
-        calls.push('usage');
-        return 'skipped' as const;
+      {
+        id: 'timeline',
+        show: () => {
+          calls.push('timeline');
+          return 'confirmed';
+        },
       },
-      () => {
-        calls.push('folder-search');
-        return 'dismissed' as const;
+      {
+        id: 'usage',
+        isEligible: () => false,
+        show: () => {
+          calls.push('usage');
+          return 'confirmed';
+        },
       },
-      () => {
-        calls.push('conversation-sort');
-        return 'dismissed' as const;
+      {
+        id: 'folder-search',
+        show: (progress) => {
+          calls.push('folder-search', progress);
+          return 'confirmed';
+        },
+      },
+      {
+        id: 'conversation-sort',
+        show: (progress) => {
+          calls.push('conversation-sort', progress);
+          return 'enabled';
+        },
       },
     ]);
 
-    expect(calls).toEqual(['usage', 'folder-search']);
+    expect(calls).toEqual([
+      'folder-search',
+      { current: 1, total: 2 },
+      'conversation-sort',
+      { current: 2, total: 2 },
+    ]);
+    expect(result).toBe('enabled');
+  });
+
+  it('stops the current tour when a guide is explicitly dismissed', async () => {
+    const second = vi.fn(() => 'confirmed' as const);
+    const result = await runCoachmarkSequence([
+      { id: 'first', show: () => 'dismissed' },
+      { id: 'second', show: second },
+    ]);
+
+    expect(second).not.toHaveBeenCalled();
     expect(result).toBe('dismissed');
+  });
+
+  it('advances through multiple real coachmarks without a page refresh', async () => {
+    const firstAnchor = document.createElement('div');
+    const secondAnchor = document.createElement('div');
+    document.body.append(firstAnchor, secondAnchor);
+
+    const tour = runCoachmarkSequence([
+      {
+        id: 'real-first',
+        show: (progress) =>
+          showCoachmark({
+            id: 'real-first',
+            anchor: () => firstAnchor,
+            body: 'first',
+            progress,
+            nextLabel: 'Next',
+            dismissLabel: 'Done',
+          }),
+      },
+      {
+        id: 'real-second',
+        show: (progress) =>
+          showCoachmark({
+            id: 'real-second',
+            anchor: () => secondAnchor,
+            body: 'second',
+            progress,
+            nextLabel: 'Next',
+            dismissLabel: 'Done',
+          }),
+      },
+    ]);
+
+    await vi.waitFor(() => {
+      expect(document.querySelector('.gv-coach-progress')?.textContent).toBe('1/2');
+      expect(document.querySelector('.gv-coach-dismiss')?.textContent).toBe('Next');
+    });
+    (document.querySelector('.gv-coach-dismiss') as HTMLElement).click();
+
+    await vi.waitFor(() => {
+      expect(document.querySelector('.gv-coach-progress')?.textContent).toBe('2/2');
+      expect(document.querySelector('.gv-coach-dismiss')?.textContent).toBe('Done');
+    });
+    (document.querySelector('.gv-coach-dismiss') as HTMLElement).click();
+
+    expect(await tour).toBe('confirmed');
+    expect(await hasSeenCoachmark('real-first')).toBe(true);
+    expect(await hasSeenCoachmark('real-second')).toBe(true);
   });
 });
 
@@ -122,6 +204,29 @@ describe('showCoachmark', () => {
     expect(res).toBe('enabled');
     expect(await hasSeenCoachmark('enable-me')).toBe(true);
     expect(document.querySelector('.gv-coach')).toBeNull(); // torn down
+  });
+
+  it('shows sequence progress and uses Next before the final step', async () => {
+    const anchor = document.createElement('div');
+    document.body.appendChild(anchor);
+
+    const pending = showCoachmark({
+      id: 'sequence-step',
+      anchor: () => anchor,
+      body: 'intro',
+      progress: { current: 1, total: 3 },
+      nextLabel: 'Next',
+      dismissLabel: 'Done',
+    });
+    await flush();
+    await flush();
+
+    expect(document.querySelector('.gv-coach-progress')?.textContent).toBe('1/3');
+    const action = document.querySelector<HTMLButtonElement>('.gv-coach-dismiss');
+    expect(action?.textContent).toBe('Next');
+    action?.click();
+
+    expect(await pending).toBe('confirmed');
   });
 
   it('does not swallow a click on the page while the guide is visible', async () => {
@@ -182,6 +287,42 @@ describe('showCoachmark', () => {
     (document.querySelector('.gv-coach-close') as HTMLElement).click();
     await p;
     expect(document.querySelector('.prev')).toBeNull();
+  });
+
+  it('keeps the guide open while the user operates an interactive reveal', async () => {
+    const onSelect = vi.fn();
+    const pending = showCoachmark({
+      id: 'interactive-preview',
+      anchor: () => null,
+      reveal: {
+        interactive: true,
+        mount: () => {
+          const row = document.createElement('div');
+          row.className = 'interactive-row';
+          const option = document.createElement('button');
+          option.className = 'interactive-option';
+          option.addEventListener('click', onSelect);
+          row.appendChild(option);
+          document.body.appendChild(row);
+          return row;
+        },
+        unmount: (element) => element?.remove(),
+      },
+      body: 'Choose freely',
+      dismissLabel: 'Done',
+    });
+    await flush();
+    await flush();
+
+    const row = document.querySelector('.interactive-row');
+    expect(row?.classList.contains('gv-coach-reveal-interactive')).toBe(true);
+    (document.querySelector('.interactive-option') as HTMLElement).click();
+
+    expect(onSelect).toHaveBeenCalledOnce();
+    expect(document.querySelector('.gv-coach')).toBeTruthy();
+
+    (document.querySelector('.gv-coach-dismiss') as HTMLElement).click();
+    expect(await pending).toBe('confirmed');
   });
 
   it('rolls back partial reveal setup when mount throws', async () => {

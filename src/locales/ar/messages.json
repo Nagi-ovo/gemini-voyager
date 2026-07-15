@@ -2319,6 +2319,10 @@
     "message": "تم",
     "description": "Generic confirmation label for feature coachmarks"
   },
+  "coachmarkNext": {
+    "message": "التالي",
+    "description": "Button label for advancing to the next feature coachmark"
+  },
   "coachmarkClose": {
     "message": "إغلاق",
     "description": "Accessible label for the feature coachmark close button"

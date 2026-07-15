@@ -20,8 +20,21 @@ import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
 
-export type CoachmarkResult = 'enabled' | 'dismissed' | 'skipped';
-export type CoachmarkStep = () => CoachmarkResult | Promise<CoachmarkResult>;
+export type CoachmarkResult = 'confirmed' | 'enabled' | 'dismissed' | 'skipped';
+
+export interface CoachmarkProgress {
+  current: number;
+  total: number;
+}
+
+export interface CoachmarkSequenceStep {
+  /** Stable id used to remove already-seen steps before calculating progress. */
+  id: string;
+  /** Feature-specific availability check, without mounting any guide UI. */
+  isEligible?: () => boolean | Promise<boolean>;
+  /** Show this step with its position among the remaining eligible steps. */
+  show: (progress: CoachmarkProgress) => CoachmarkResult | Promise<CoachmarkResult>;
+}
 
 export interface CoachmarkToggle {
   label: string;
@@ -34,11 +47,13 @@ export interface CoachmarkToggle {
 export interface CoachmarkReveal {
   /** Mount and return the preview element (appended to the page by the caller). */
   mount: () => HTMLElement;
+  /** Let the user operate controls inside the revealed element while the guide stays open. */
+  interactive?: boolean;
   /**
    * Undo every side effect from mount. Receives null when mount failed before
    * returning an element, so partial setup can still be rolled back.
    */
-  unmount: (el: HTMLElement | null) => void;
+  unmount: (el: HTMLElement | null, result: CoachmarkResult) => void;
 }
 
 export interface CoachmarkConfig {
@@ -55,8 +70,12 @@ export interface CoachmarkConfig {
   toggle?: CoachmarkToggle;
   /** Text of the secondary "dismiss" affordance. Omit to hide it. */
   dismissLabel?: string;
+  /** Label used before the final step in a sequence. */
+  nextLabel?: string;
   /** Accessible label for the top-right close button. */
   closeLabel?: string;
+  /** Position in the active onboarding sequence. */
+  progress?: CoachmarkProgress;
   /** Preferred side; auto-flips to stay on screen. Default 'top'. */
   placement?: 'top' | 'bottom';
   /** Dim the page behind the coachmark. Default true. */
@@ -107,16 +126,32 @@ export async function resetCoachmark(id: string): Promise<void> {
   }
 }
 
-export async function runCoachmarkSequence(steps: CoachmarkStep[]): Promise<CoachmarkResult> {
+export async function runCoachmarkSequence(
+  steps: CoachmarkSequenceStep[],
+): Promise<CoachmarkResult> {
+  const pending: CoachmarkSequenceStep[] = [];
+
   for (const step of steps) {
     try {
-      const result = await step();
-      if (result !== 'skipped') return result;
+      if (await hasSeenCoachmark(step.id)) continue;
+      if (step.isEligible && !(await step.isEligible())) continue;
+      pending.push(step);
     } catch {
       /* non-critical */
     }
   }
-  return 'skipped';
+
+  let lastResult: CoachmarkResult = 'skipped';
+  for (let index = 0; index < pending.length; index += 1) {
+    try {
+      const result = await pending[index].show({ current: index + 1, total: pending.length });
+      if (result === 'dismissed') return result;
+      if (result !== 'skipped') lastResult = result;
+    } catch {
+      /* non-critical; continue to the next available guide */
+    }
+  }
+  return lastResult;
 }
 
 // ── DOM helpers ─────────────────────────────────────────────────────────────
@@ -192,11 +227,12 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
     try {
       revealEl = cfg.reveal.mount();
       revealEl.classList.add('gv-coach-reveal');
+      if (cfg.reveal.interactive) revealEl.classList.add('gv-coach-reveal-interactive');
       requestAnimationFrame(() => revealEl?.classList.add('--show'));
     } catch {
       revealMountFailed = true;
       try {
-        cfg.reveal.unmount(null);
+        cfg.reveal.unmount(null, 'skipped');
       } catch {
         /* cleanup is best-effort */
       }
@@ -208,7 +244,7 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
   if (!anchor || !anchor.isConnected) {
     if (cfg.reveal && !revealMountFailed) {
       try {
-        cfg.reveal.unmount(revealEl);
+        cfg.reveal.unmount(revealEl, 'skipped');
       } catch {
         /* cleanup is best-effort */
       }
@@ -310,7 +346,7 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
         }
         if (cfg.reveal) {
           try {
-            cfg.reveal?.unmount(revealEl);
+            cfg.reveal?.unmount(revealEl, result);
           } catch {
             /* gone */
           }
@@ -363,15 +399,30 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
     }
 
     if (cfg.dismissLabel) {
+      const footer = document.createElement('div');
+      footer.className = 'gv-coach-footer';
+
+      if (cfg.progress) {
+        const progress = document.createElement('span');
+        progress.className = 'gv-coach-progress';
+        progress.textContent = `${cfg.progress.current}/${cfg.progress.total}`;
+        progress.setAttribute('aria-label', `${cfg.progress.current} / ${cfg.progress.total}`);
+        footer.appendChild(progress);
+      }
+
       const dismiss = document.createElement('button');
       dismiss.type = 'button';
       dismiss.className = 'gv-coach-dismiss';
-      dismiss.textContent = cfg.dismissLabel;
+      dismiss.textContent =
+        cfg.progress && cfg.progress.current < cfg.progress.total
+          ? (cfg.nextLabel ?? cfg.dismissLabel)
+          : cfg.dismissLabel;
       dismiss.addEventListener('click', (e) => {
         e.stopPropagation();
-        settle(toggleOn ? 'enabled' : 'dismissed', true);
+        settle(toggleOn ? 'enabled' : 'confirmed', true);
       });
-      bubble.insertBefore(dismiss, arrow);
+      footer.appendChild(dismiss);
+      bubble.insertBefore(footer, arrow);
     }
 
     // Defer outside-click binding a tick so the opening interaction can't close it.

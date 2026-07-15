@@ -29,7 +29,8 @@ interface CapturedCoachmarkConfig {
   body: string;
   reveal: {
     mount: () => HTMLElement;
-    unmount: (element: HTMLElement | null) => void;
+    interactive?: boolean;
+    unmount: (element: HTMLElement | null, result: 'confirmed' | 'dismissed' | 'skipped') => void;
   };
   anchor: () => HTMLElement | null;
 }
@@ -82,19 +83,18 @@ describe('conversation sort coachmark', () => {
     expect(config.title).toBe('New: conversation sorting');
     expect(config.body).toContain('Manual order');
     expect(config.body).toContain('Recently opened');
+    expect(config.reveal.interactive).toBe(true);
 
-    const row = config.reveal.mount();
-    expect(row.textContent).toContain('folder_sort_manual');
-    expect(row.textContent).toContain('folder_sort_recent');
-    expect(config.anchor()).toBe(row);
-    expect(
-      row
-        .closest('.gv-folder-settings-menu')
-        ?.classList.contains('gv-coach-folder-settings-preview'),
-    ).toBe(true);
+    const menu = config.reveal.mount();
+    const row = menu.querySelector<HTMLElement>('.gv-folder-sort-settings-row');
+    expect(row?.textContent).toContain('folder_sort_manual');
+    expect(row?.textContent).toContain('folder_sort_recent');
+    expect(config.anchor()).toBe(menu);
+    expect(menu.classList.contains('gv-coach-folder-settings-preview')).toBe(true);
 
-    config.reveal.unmount(row);
-    expect(document.querySelector('.gv-folder-settings-menu')).toBeNull();
+    config.reveal.unmount(menu, 'confirmed');
+    expect(document.querySelector('.gv-folder-settings-menu')).not.toBeNull();
+    expect(menu.classList.contains('gv-coach-folder-settings-preview')).toBe(false);
     expect(mocks.keepSidebarExpanded).toHaveBeenCalledOnce();
     expect(mocks.releaseSidebar).toHaveBeenCalledOnce();
   });
@@ -125,7 +125,7 @@ describe('conversation sort coachmark', () => {
     expect(() => config.reveal.mount()).toThrow('Conversation sort settings are unavailable');
     expect(document.querySelector('.gv-folder-settings-menu')).not.toBeNull();
 
-    config.reveal.unmount(null);
+    config.reveal.unmount(null, 'skipped');
     expect(document.querySelector('.gv-folder-settings-menu')).toBeNull();
   });
 });

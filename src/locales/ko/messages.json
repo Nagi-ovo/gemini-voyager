@@ -2319,6 +2319,10 @@
     "message": "완료",
     "description": "Generic confirmation label for feature coachmarks"
   },
+  "coachmarkNext": {
+    "message": "다음",
+    "description": "Button label for advancing to the next feature coachmark"
+  },
   "coachmarkClose": {
     "message": "닫기",
     "description": "Accessible label for the feature coachmark close button"

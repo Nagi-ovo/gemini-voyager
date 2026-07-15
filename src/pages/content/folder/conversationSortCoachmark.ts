@@ -1,10 +1,15 @@
 import { getTranslationSync, initI18n } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
-import { type CoachmarkResult, showCoachmark } from '../coachmark';
+import {
+  type CoachmarkProgress,
+  type CoachmarkResult,
+  type CoachmarkSequenceStep,
+  showCoachmark,
+} from '../coachmark';
 import { keepSidebarExpanded } from '../sidebarAutoHide';
 
-const COACH_ID = 'folder-conversation-sort-intro-v1';
+export const CONVERSATION_SORT_COACHMARK_ID = 'folder-conversation-sort-intro-v1';
 const SIDEBAR_EXPAND_WAIT_MS = 320;
 export const CONVERSATION_SORT_COACHMARK_DEBUG_EVENT = 'gv:debug:conversationSortCoachmark';
 
@@ -48,17 +53,28 @@ function mountSortSettingsPreview(): HTMLElement {
   if (!button) throw new Error('Folder settings button is unavailable');
 
   dispatchSettingsClick(button);
-  settingsPreviewMenu = document.querySelector<HTMLElement>('.gv-folder-settings-menu');
-  const row = settingsPreviewMenu?.querySelector<HTMLElement>('.gv-folder-sort-settings-row');
-  if (!row) throw new Error('Conversation sort settings are unavailable');
+  const menu = document.querySelector<HTMLElement>('.gv-folder-settings-menu');
+  settingsPreviewMenu = menu;
+  const row = menu?.querySelector<HTMLElement>('.gv-folder-sort-settings-row');
+  if (!menu || !row) throw new Error('Conversation sort settings are unavailable');
 
-  settingsPreviewMenu?.classList.add('gv-coach-folder-settings-preview');
-  return row;
+  menu.classList.add('gv-coach-folder-settings-preview');
+  // The whole settings panel is the interactive reveal boundary. Users can
+  // try sorting, font size, spacing, and indentation without dismissing the
+  // guide; only interactions outside this panel should end the tour.
+  return menu;
 }
 
-function unmountSortSettingsPreview(row: HTMLElement | null): void {
-  const menu = row?.closest<HTMLElement>('.gv-folder-settings-menu') ?? settingsPreviewMenu;
+function unmountSortSettingsPreview(element: HTMLElement | null, result: CoachmarkResult): void {
+  const menu = element?.closest<HTMLElement>('.gv-folder-settings-menu') ?? settingsPreviewMenu;
   menu?.classList.remove('gv-coach-folder-settings-preview');
+
+  // "Next" / "Done" hands the open, now-interactive settings menu to the user.
+  // Explicitly abandoning the guide still rolls the temporary preview back.
+  if (result === 'confirmed' || result === 'enabled') {
+    settingsPreviewMenu = null;
+    return;
+  }
 
   const button = getVisibleSettingsButton();
   if (menu?.isConnected) {
@@ -69,7 +85,7 @@ function unmountSortSettingsPreview(row: HTMLElement | null): void {
 }
 
 export async function maybeShowConversationSortCoachmark(
-  opts: { force?: boolean } = {},
+  opts: { force?: boolean; progress?: CoachmarkProgress } = {},
 ): Promise<CoachmarkResult> {
   if (location.hostname !== 'gemini.google.com') return 'skipped';
 
@@ -83,7 +99,7 @@ export async function maybeShowConversationSortCoachmark(
   try {
     await wait(SIDEBAR_EXPAND_WAIT_MS);
     return await showCoachmark({
-      id: COACH_ID,
+      id: CONVERSATION_SORT_COACHMARK_ID,
       once: !opts.force,
       scrim: true,
       icon: SORT_ICON,
@@ -96,15 +112,24 @@ export async function maybeShowConversationSortCoachmark(
       reveal: {
         mount: mountSortSettingsPreview,
         unmount: unmountSortSettingsPreview,
+        interactive: true,
       },
-      anchor: () => document.querySelector<HTMLElement>('.gv-folder-sort-settings-row'),
+      anchor: () => document.querySelector<HTMLElement>('.gv-folder-settings-menu'),
       dismissLabel: t('coachmarkDismiss', 'Done'),
+      nextLabel: t('coachmarkNext', 'Next'),
       closeLabel: t('coachmarkClose', 'Close'),
+      progress: opts.progress,
     });
   } finally {
     releaseSidebar();
   }
 }
+
+export const conversationSortCoachmarkStep: CoachmarkSequenceStep = {
+  id: CONVERSATION_SORT_COACHMARK_ID,
+  isEligible: () => location.hostname === 'gemini.google.com',
+  show: (progress) => maybeShowConversationSortCoachmark({ progress }),
+};
 
 const showDebugConversationSortCoachmark = () =>
   void maybeShowConversationSortCoachmark({ force: true });
