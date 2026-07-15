@@ -7,6 +7,8 @@
  * Stores folders, prompts, and other sync data as separate files:
  * - gemini-voyager-folders.json
  * - gemini-voyager-prompts.json
+ * - gemini-voyager-settings.json
+ * - gemini-voyager-plugins.json
  * - gemini-voyager-starred.json
  * - gemini-voyager-highlights.json (account-scoped; independent from legacy sync data)
  */
@@ -17,6 +19,7 @@ import type {
   ForkExportPayload,
   ForkNodesDataSync,
   HighlightExportPayload,
+  PluginStateExportPayload,
   PromptExportPayload,
   PromptItem,
   SettingsExportPayload,
@@ -33,11 +36,13 @@ import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
 import { isBrave } from '@/core/utils/browser';
 import { hashString } from '@/core/utils/hash';
 import { EXTENSION_VERSION } from '@/core/utils/version';
+import type { PluginStateMap } from '@/features/plugins/storage/pluginState';
 
 const FOLDERS_FILE_NAME = 'gemini-voyager-folders.json';
 const AISTUDIO_FOLDERS_FILE_NAME = 'gemini-voyager-aistudio-folders.json';
 const PROMPTS_FILE_NAME = 'gemini-voyager-prompts.json';
 const SETTINGS_FILE_NAME = 'gemini-voyager-settings.json';
+const PLUGINS_FILE_NAME = 'gemini-voyager-plugins.json';
 const STARRED_FILE_NAME = 'gemini-voyager-starred.json';
 const FORKS_FILE_NAME = 'gemini-voyager-forks.json';
 const TIMELINE_HIERARCHY_FILE_NAME = 'gemini-voyager-timeline-hierarchy.json';
@@ -69,6 +74,7 @@ export class GoogleDriveSyncService {
   private aistudioFoldersFileId: string | null = null;
   private promptsFileId: string | null = null;
   private settingsFileId: string | null = null;
+  private pluginsFileId: string | null = null;
   private starredFileId: string | null = null;
   private forksFileId: string | null = null;
   private timelineHierarchyFileId: string | null = null;
@@ -140,6 +146,7 @@ export class GoogleDriveSyncService {
     this.aistudioFoldersFileId = null;
     this.promptsFileId = null;
     this.settingsFileId = null;
+    this.pluginsFileId = null;
     this.starredFileId = null;
     this.forksFileId = null;
     this.timelineHierarchyFileId = null;
@@ -169,6 +176,7 @@ export class GoogleDriveSyncService {
     accountScope: SyncAccountScope | null = null,
     timelineHierarchyAccountScope: SyncAccountScope | null = null,
     settings: Record<string, unknown> | null = null,
+    plugins: PluginStateMap | null = null,
   ): Promise<boolean> {
     try {
       this.updateState({ isSyncing: true, error: null });
@@ -212,6 +220,15 @@ export class GoogleDriveSyncService {
           }
         : null;
 
+      const pluginsPayload: PluginStateExportPayload | null = plugins
+        ? {
+            format: 'gemini-voyager.plugins.v1',
+            exportedAt: now.toISOString(),
+            version: EXTENSION_VERSION,
+            data: plugins,
+          }
+        : null;
+
       // Upload folders file (platform-specific)
       const foldersBaseFileName =
         platform === 'aistudio' ? AISTUDIO_FOLDERS_FILE_NAME : FOLDERS_FILE_NAME;
@@ -233,6 +250,11 @@ export class GoogleDriveSyncService {
         const settingsFileId = await this.ensureFileId(token, SETTINGS_FILE_NAME, 'settings');
         await this.uploadFileWithRetry(token, settingsFileId, settingsPayload);
         console.log('[GoogleDriveSyncService] Settings uploaded successfully');
+      }
+
+      if (pluginsPayload) {
+        const pluginsFileId = await this.ensureFileId(token, PLUGINS_FILE_NAME, 'plugins');
+        await this.uploadFileWithRetry(token, pluginsFileId, pluginsPayload);
       }
 
       // Upload starred messages file (only for Gemini platform)
@@ -315,6 +337,7 @@ export class GoogleDriveSyncService {
         1 +
         (prompts.length > 0 ? 1 : 0) +
         (settingsPayload ? 1 : 0) +
+        (pluginsPayload ? 1 : 0) +
         (platform === 'gemini' && starred ? 1 : 0) +
         (platform === 'gemini' && forks ? 1 : 0) +
         (platform === 'gemini' && timelineHierarchy ? 1 : 0);
@@ -513,6 +536,7 @@ export class GoogleDriveSyncService {
     folders: FolderExportPayload | null;
     prompts: PromptExportPayload | null;
     settings: SettingsExportPayload | null;
+    plugins: PluginStateExportPayload | null;
     starred: StarredExportPayload | null;
     forks: ForkExportPayload | null;
     timelineHierarchy: TimelineHierarchyExportPayload | null;
@@ -557,6 +581,12 @@ export class GoogleDriveSyncService {
         console.log('[GoogleDriveSyncService] Settings downloaded');
       }
 
+      let plugins: PluginStateExportPayload | null = null;
+      const pluginsFileId = await this.findFile(token, PLUGINS_FILE_NAME);
+      if (pluginsFileId) {
+        plugins = await this.downloadFileWithRetry(token, pluginsFileId);
+      }
+
       // Download starred messages file (only for Gemini platform)
       let starred: StarredExportPayload | null = null;
       if (platform === 'gemini') {
@@ -592,7 +622,15 @@ export class GoogleDriveSyncService {
         }
       }
 
-      if (!folders && !prompts && !settings && !starred && !forks && !timelineHierarchy) {
+      if (
+        !folders &&
+        !prompts &&
+        !settings &&
+        !plugins &&
+        !starred &&
+        !forks &&
+        !timelineHierarchy
+      ) {
         console.log(`[GoogleDriveSyncService] No sync files found for ${platform}`);
         this.updateState({ isSyncing: false });
         return null;
@@ -607,7 +645,7 @@ export class GoogleDriveSyncService {
       }
       await this.saveState();
 
-      return { folders, prompts, settings, starred, forks, timelineHierarchy };
+      return { folders, prompts, settings, plugins, starred, forks, timelineHierarchy };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Download failed';
       console.error('[GoogleDriveSyncService] Download failed:', error);
@@ -904,6 +942,7 @@ export class GoogleDriveSyncService {
       | 'aistudio-folders'
       | 'prompts'
       | 'settings'
+      | 'plugins'
       | 'starred'
       | 'forks'
       | 'timeline-hierarchy'
@@ -959,6 +998,7 @@ export class GoogleDriveSyncService {
       | 'aistudio-folders'
       | 'prompts'
       | 'settings'
+      | 'plugins'
       | 'starred'
       | 'forks'
       | 'timeline-hierarchy'
@@ -977,6 +1017,9 @@ export class GoogleDriveSyncService {
         break;
       case 'settings':
         this.settingsFileId = fileId;
+        break;
+      case 'plugins':
+        this.pluginsFileId = fileId;
         break;
       case 'starred':
         this.starredFileId = fileId;

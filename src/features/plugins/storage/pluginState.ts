@@ -22,6 +22,7 @@ export interface PluginStateEntry {
   readonly settings?: PluginSettings;
 }
 export type PluginStateMap = Readonly<Record<string, PluginStateEntry>>;
+export type PluginStateRestoreMode = 'merge' | 'overwrite';
 
 const KEY = StorageKeys.PLUGINS_STATE;
 
@@ -30,11 +31,57 @@ function localArea(): chrome.storage.LocalStorageArea | undefined {
   return g.chrome?.storage?.local;
 }
 
-function isStateMap(value: unknown): value is PluginStateMap {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
-  return Object.values(value as Record<string, unknown>).every(
-    (entry) => typeof entry === 'object' && entry !== null && 'enabled' in entry,
-  );
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isSafeRecordKey(value: string): boolean {
+  return value !== '__proto__' && value !== 'prototype' && value !== 'constructor';
+}
+
+function sanitizeSettings(value: unknown): PluginSettings | undefined {
+  if (!isRecord(value)) return undefined;
+
+  const settings: Record<string, PluginSettingValue> = {};
+  for (const [key, setting] of Object.entries(value)) {
+    if (!isSafeRecordKey(key)) continue;
+    if (
+      typeof setting === 'string' ||
+      typeof setting === 'boolean' ||
+      (typeof setting === 'number' && Number.isFinite(setting))
+    ) {
+      settings[key] = setting;
+    }
+  }
+
+  return settings;
+}
+
+/**
+ * Treat Drive payloads as untrusted input. Keep valid plugin entries/settings,
+ * drop malformed fields, and never allow prototype-mutating record keys.
+ */
+export function sanitizePluginState(value: unknown): PluginStateMap {
+  if (!isRecord(value)) return {};
+
+  const state: Record<string, PluginStateEntry> = {};
+  for (const [id, rawEntry] of Object.entries(value)) {
+    if (!id || !isSafeRecordKey(id) || !isRecord(rawEntry)) continue;
+    if (typeof rawEntry.enabled !== 'boolean') continue;
+
+    const installedAt =
+      typeof rawEntry.installedAt === 'number' && Number.isFinite(rawEntry.installedAt)
+        ? rawEntry.installedAt
+        : 0;
+    const settings = sanitizeSettings(rawEntry.settings);
+    state[id] = {
+      enabled: rawEntry.enabled,
+      installedAt,
+      ...(settings && Object.keys(settings).length > 0 ? { settings } : {}),
+    };
+  }
+
+  return state;
 }
 
 export async function loadPluginState(): Promise<PluginStateMap> {
@@ -42,14 +89,39 @@ export async function loadPluginState(): Promise<PluginStateMap> {
   if (!local) return {};
   try {
     const result = await local.get({ [KEY]: {} });
-    const raw = result?.[KEY];
-    return isStateMap(raw) ? raw : {};
+    return sanitizePluginState(result?.[KEY]);
   } catch (error) {
     if (!isExtensionContextInvalidatedError(error)) {
       logger.warn('loadPluginState failed', { error: String(error) });
     }
     return {};
   }
+}
+
+/** Restore plugin state downloaded from Drive. Cloud entries win on merge. */
+export async function restorePluginState(
+  value: unknown,
+  mode: PluginStateRestoreMode = 'merge',
+): Promise<PluginStateMap> {
+  const local = localArea();
+  if (!local) return {};
+
+  if (!isRecord(value)) {
+    return loadPluginState();
+  }
+  const cloudState = sanitizePluginState(value);
+  if (Object.keys(value).length > 0 && Object.keys(cloudState).length === 0) {
+    return loadPluginState();
+  }
+  const next =
+    mode === 'overwrite'
+      ? cloudState
+      : {
+          ...(await loadPluginState()),
+          ...cloudState,
+        };
+  await local.set({ [KEY]: next });
+  return next;
 }
 
 export async function setPluginEnabled(id: string, enabled: boolean): Promise<void> {
@@ -139,8 +211,7 @@ export function subscribePluginState(callback: (state: PluginStateMap) => void):
 
   const listener = (changes: Record<string, chrome.storage.StorageChange>, area: string): void => {
     if (area !== 'local' || !changes[KEY]) return;
-    const raw = changes[KEY].newValue;
-    callback(isStateMap(raw) ? raw : {});
+    callback(sanitizePluginState(changes[KEY].newValue));
   };
   onChanged.addListener(listener);
   return () => {

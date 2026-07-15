@@ -4,13 +4,14 @@ Voyager Cloud Sync backs up your folders, prompt library, and starred messages t
 
 ## What Gets Synced
 
-| Data Type            | Synced | Details                                                    |
-| -------------------- | ------ | ---------------------------------------------------------- |
-| Folder structure     | Yes    | All folders, nesting, colors, and conversation assignments |
-| Prompt library       | Yes    | All saved prompts with tags and folder organization        |
-| Starred messages     | Yes    | Timeline bookmarks from any conversation                   |
-| Extension settings   | No     | Settings remain local to each browser                      |
-| Conversation content | No     | Chat content stays on Google's servers                     |
+| Data Type            | Synced | Details                                                                      |
+| -------------------- | ------ | ---------------------------------------------------------------------------- |
+| Folder structure     | Yes    | All folders, nesting, colors, and conversation assignments                   |
+| Prompt library       | Yes    | All saved prompts with tags and folder organization                          |
+| Starred messages     | Yes    | Timeline bookmarks from any conversation                                     |
+| Extension settings   | Yes    | Cross-device preferences such as sorting, colors, and input behavior         |
+| Plugin configuration | Yes    | Install/enable state and plugin settings; site permissions remain per-device |
+| Conversation content | No     | Chat content stays on Google's servers                                       |
 
 ## Features
 
@@ -19,7 +20,7 @@ Voyager Cloud Sync backs up your folders, prompt library, and starred messages t
 - **Flexible Sync**: Support for manual uploading and downloading/merging of data.
 
 ::: info
-**Coming Soon**: The next version will support syncing starred conversations.
+Device identifiers, access tokens, caches, viewport coordinates, and temporary runtime state are intentionally not synced as personalization settings.
 :::
 
 ## How to Use
@@ -58,8 +59,8 @@ While Cloud Sync offers great convenience, we strongly recommend that you also p
 ## How It Works
 
 1. **Authorization**: You sign in with Google and grant Voyager the `drive.file` permission — the most restrictive Drive scope available. Voyager can only see files it created.
-2. **Upload**: When you click "Upload to Cloud," Voyager serializes your folders, prompts, and stars into a JSON file and writes it to a dedicated folder in your Google Drive.
-3. **Download & Merge**: When you click "Download & Merge" on another device, Voyager reads the JSON file and intelligently merges it with your local data. New folders and prompts are added; existing ones are updated without duplicating.
+2. **Upload**: When you click "Upload to Cloud," Voyager writes separate JSON files for folders, prompts, stars, forks, timeline hierarchy, personalization settings, and plugin configuration to a dedicated folder in your Google Drive. Highlight data is included when highlight cloud sync is enabled.
+3. **Download & Merge**: When you click "Download & Merge" on another device, Voyager reads those files and merges them by data type. New folders and prompts are added without duplication, cloud preferences are restored, and plugin entries are merged by plugin ID.
 4. **No background sync**: Sync is manual and on-demand. Voyager never syncs without your explicit action.
 
 ## Supported Platforms

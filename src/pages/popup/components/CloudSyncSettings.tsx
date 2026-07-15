@@ -10,6 +10,7 @@ import { restoreBackupableSyncSettings } from '@/core/services/SettingsBackupSer
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import type {
+  PluginStateExportPayload,
   PromptItem,
   SettingsExportPayload,
   SyncAccountScope,
@@ -19,6 +20,7 @@ import type {
 } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
 import { isSafari } from '@/core/utils/browser';
+import { restorePluginState } from '@/features/plugins/storage/pluginState';
 import {
   getTimelineHierarchyStorageKey,
   getTimelineHierarchyStorageKeysToRead,
@@ -514,6 +516,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
                 folders?: { data?: FolderData };
                 prompts?: { items?: PromptItem[] };
                 settings?: SettingsExportPayload;
+                plugins?: PluginStateExportPayload;
                 starred?: { data?: StarredMessagesData };
                 timelineHierarchy?: { data?: TimelineHierarchyData };
               } | null;
@@ -619,6 +622,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
           folders: cloudFoldersPayload,
           prompts: cloudPromptsPayload,
           settings: cloudSettingsPayload,
+          plugins: cloudPluginsPayload,
           starred: cloudStarredPayload,
           timelineHierarchy: cloudTimelineHierarchyPayload,
         } = response.data;
@@ -685,7 +689,17 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
         const nextTimelineHierarchy = shouldOverwrite
           ? cloudTimelineHierarchyData
           : mergeTimelineHierarchy(localTimelineHierarchy, cloudTimelineHierarchyData);
-        await restoreBackupableSyncSettings(cloudSettingsPayload?.data);
+        await restoreBackupableSyncSettings(
+          cloudSettingsPayload?.data,
+          undefined,
+          shouldOverwrite ? 'overwrite' : 'merge',
+        );
+        if (cloudPluginsPayload?.format === 'gemini-voyager.plugins.v1') {
+          await restorePluginState(
+            cloudPluginsPayload.data,
+            shouldOverwrite ? 'overwrite' : 'merge',
+          );
+        }
 
         console.log(
           '[CloudSyncSettings] Resolved folders count:',

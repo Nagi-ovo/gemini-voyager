@@ -2,6 +2,7 @@
  * Sync-related type definitions for Google Drive sync feature
  * Provides type safety for sync state management and data transfer
  */
+import type { PluginStateMap } from '@/features/plugins/storage/pluginState';
 import type { StarredMessagesData } from '@/pages/content/timeline/starredTypes';
 
 import type { FolderData } from './folder';
@@ -90,6 +91,14 @@ export interface SettingsExportPayload {
   version?: string;
   data: Record<string, unknown>;
 }
+
+/** Plugin installation, enablement, and declared plugin-setting values. */
+export interface PluginStateExportPayload {
+  format: 'gemini-voyager.plugins.v1';
+  exportedAt: string;
+  version?: string;
+  data: PluginStateMap;
+}
 /**
  * Re-export starred message types from their canonical source
  * These are used for Google Drive sync
@@ -165,6 +174,8 @@ export interface SyncData {
   prompts: PromptExportPayload;
   /** UI settings/preferences in export format */
   settings?: SettingsExportPayload;
+  /** Plugin installation/enablement/settings in a separate Drive file */
+  plugins?: PluginStateExportPayload;
   /** Starred messages in export format */
   starred?: StarredExportPayload;
   /** Fork metadata in export format */

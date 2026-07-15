@@ -596,3 +596,102 @@ describe('GoogleDriveSyncService highlights-only sync', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });
+
+describe('GoogleDriveSyncService plugin-state file', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('uploads plugin state as an independent global Drive file', async () => {
+    const chromeMock = createChromeMock();
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+    const internals = service as unknown as {
+      getAuthToken: (interactive: boolean) => Promise<string | null>;
+      ensureFileId: (token: string, name: string, type: string) => Promise<string>;
+      uploadFileWithRetry: (token: string, id: string, data: unknown) => Promise<void>;
+    };
+    vi.spyOn(internals, 'getAuthToken').mockResolvedValue('token');
+    vi.spyOn(internals, 'ensureFileId').mockImplementation(async (_token, name) => name);
+    const uploadSpy = vi.spyOn(internals, 'uploadFileWithRetry').mockResolvedValue(undefined);
+
+    const ok = await service.upload(
+      { folders: [], folderContents: {} },
+      [],
+      null,
+      true,
+      'gemini',
+      null,
+      null,
+      null,
+      null,
+      null,
+      {
+        'voyager.example': {
+          enabled: true,
+          installedAt: 123,
+          settings: { width: 80 },
+        },
+      },
+    );
+
+    expect(ok).toBe(true);
+    expect(internals.ensureFileId).toHaveBeenCalledWith(
+      'token',
+      'gemini-voyager-plugins.json',
+      'plugins',
+    );
+    expect(uploadSpy).toHaveBeenCalledWith(
+      'token',
+      'gemini-voyager-plugins.json',
+      expect.objectContaining({
+        format: 'gemini-voyager.plugins.v1',
+        data: {
+          'voyager.example': {
+            enabled: true,
+            installedAt: 123,
+            settings: { width: 80 },
+          },
+        },
+      }),
+    );
+  });
+
+  it('downloads the independent plugin-state file with the aggregate result', async () => {
+    const chromeMock = createChromeMock();
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+    const pluginPayload = {
+      format: 'gemini-voyager.plugins.v1' as const,
+      exportedAt: '2026-07-16T00:00:00.000Z',
+      version: '1.5.6',
+      data: {
+        'voyager.example': { enabled: false, installedAt: 456 },
+      },
+    };
+    const internals = service as unknown as {
+      getAuthToken: (interactive: boolean) => Promise<string | null>;
+      findFile: (token: string, name: string) => Promise<string | null>;
+      findFileForScope: () => Promise<string | null>;
+      downloadFileWithRetry: (token: string, id: string) => Promise<unknown>;
+    };
+    vi.spyOn(internals, 'getAuthToken').mockResolvedValue('token');
+    vi.spyOn(internals, 'findFileForScope').mockResolvedValue(null);
+    vi.spyOn(internals, 'findFile').mockImplementation(async (_token, name) =>
+      name === 'gemini-voyager-plugins.json' ? 'plugins-file' : null,
+    );
+    vi.spyOn(internals, 'downloadFileWithRetry').mockImplementation(async (_token, id) =>
+      id === 'plugins-file' ? pluginPayload : null,
+    );
+
+    const result = await service.download(true, 'gemini');
+
+    expect(result?.plugins).toEqual(pluginPayload);
+  });
+});

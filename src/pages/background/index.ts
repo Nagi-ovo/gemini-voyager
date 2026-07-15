@@ -41,6 +41,7 @@ import { PromptImportExportService } from '@/features/backup/services/PromptImpo
 import { computeNudgeDomains, normalizeIconResourcePath } from '@/features/plugins/promptNudge';
 import { pluginsToOriginPatterns } from '@/features/plugins/runtime/siteRegistration';
 import { listPluginManifests } from '@/features/plugins/sources/defaultSources';
+import { loadPluginState } from '@/features/plugins/storage/pluginState';
 import type { PluginManifest } from '@/features/plugins/types';
 import { startStorageQuotaWarningBackgroundService } from '@/features/storageQuotaWarning/background';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
@@ -1917,6 +1918,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                   )
                 : timelineHierarchyDataRaw;
             const settingsPayload = await exportBackupableSyncSettings();
+            const pluginState = await loadPluginState();
             const success = await googleDriveSyncService.upload(
               folders,
               prompts,
@@ -1928,6 +1930,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               accountScope,
               timelineHierarchyAccountScope,
               settingsPayload.data,
+              pluginState,
             );
             if (success && syncHighlights && highlightAccountScope) {
               const highlightResult = await highlightDriveSyncCoordinator.push(

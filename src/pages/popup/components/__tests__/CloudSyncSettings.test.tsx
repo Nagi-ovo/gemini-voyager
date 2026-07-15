@@ -496,6 +496,70 @@ describe('CloudSyncSettings auth flow', () => {
     });
   });
 
+  it('merges the independent cloud plugin-state file into local storage', async () => {
+    const sendMessageMock = vi.fn().mockImplementation((message: { type?: string }) => {
+      if (message.type === 'gv.sync.getState') {
+        return Promise.resolve({ ok: true, state: baseState });
+      }
+      if (message.type === 'gv.sync.download') {
+        return Promise.resolve({
+          ok: true,
+          state: { ...baseState, isAuthenticated: true },
+          data: {
+            folders: { data: { folders: [], folderContents: {} } },
+            prompts: { items: [] },
+            plugins: {
+              format: 'gemini-voyager.plugins.v1',
+              exportedAt: new Date().toISOString(),
+              version: '1.0.0',
+              data: {
+                shared: { enabled: true, installedAt: 3, settings: { width: 80 } },
+                cloud: { enabled: false, installedAt: 4 },
+              },
+            },
+            starred: { data: { messages: {} } },
+          },
+        });
+      }
+      return Promise.resolve({ ok: true });
+    });
+
+    const chromeMock = createChromeMock(sendMessageMock);
+    (chromeMock.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      gvFolderData: { folders: [], folderContents: {} },
+      gvPromptItems: [],
+      geminiTimelineStarredMessages: { messages: {} },
+      [StorageKeys.TIMELINE_HIERARCHY]: { conversations: {} },
+      [StorageKeys.PLUGINS_STATE]: {
+        local: { enabled: true, installedAt: 1 },
+        shared: { enabled: false, installedAt: 2, settings: { width: 60 } },
+      },
+    });
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(<CloudSyncSettings />);
+    });
+    await flushMicrotasks();
+
+    const downloadButton = Array.from(container.querySelectorAll('button')).find((btn) =>
+      (btn.textContent || '').includes('syncMerge'),
+    );
+    await act(async () => {
+      downloadButton?.click();
+    });
+    await flushMicrotasks();
+
+    expect(chromeMock.storage.local.set).toHaveBeenCalledWith({
+      [StorageKeys.PLUGINS_STATE]: {
+        local: { enabled: true, installedAt: 1 },
+        shared: { enabled: true, installedAt: 3, settings: { width: 80 } },
+        cloud: { enabled: false, installedAt: 4 },
+      },
+    });
+  });
+
   it('stores merged timeline hierarchy under the current account scope when isolation is enabled', async () => {
     const sendMessageMock = vi.fn().mockImplementation((message: { type?: string }) => {
       if (message.type === 'gv.sync.getState') {
