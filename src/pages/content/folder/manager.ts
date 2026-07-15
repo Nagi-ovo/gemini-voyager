@@ -9018,12 +9018,6 @@ export class FolderManager {
         return true;
       }
 
-      if (msg.type === 'gv.account.getContext') {
-        const context = detectAccountContextFromDocument(window.location.href, document);
-        sendResponse({ ok: true, context });
-        return true;
-      }
-
       // Handle request to collect all conversations and folder structure for AI organization
       if (msg.type === 'gv.folders.getStructureForAI') {
         this.debug('Received AI structure request');

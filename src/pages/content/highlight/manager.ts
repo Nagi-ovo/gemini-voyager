@@ -542,11 +542,7 @@ export class HighlightManager {
     try {
       const selectedUrl = new URL(context.conversationUrl);
       const selectedRoute = selectedUrl.pathname + selectedUrl.search;
-      if (
-        selectedRoute !== this.getRouteKey() ||
-        ((this.currentRoute !== this.getRouteKey() || !this.accountScope) &&
-          !(await this.refreshScopeForCurrentRoute()))
-      ) {
+      if (selectedRoute !== this.getRouteKey() || !(await this.refreshAccountScopeForMutation())) {
         throw new Error('The conversation changed before the highlight could be saved');
       }
       const scope = this.accountScope;
@@ -651,6 +647,22 @@ export class HighlightManager {
       return scope !== null;
     }
     return false;
+  }
+
+  private async refreshAccountScopeForMutation(): Promise<boolean> {
+    const previous = this.accountScope;
+    if (!(await this.refreshScopeForCurrentRoute())) return false;
+    const next = this.accountScope;
+    if (
+      previous &&
+      next &&
+      (previous.accountKey !== next.accountKey || previous.platform !== next.platform)
+    ) {
+      // Listing the newly resolved account also performs the one-time migration
+      // from a legacy `default` bucket before an edit/create continues.
+      await this.reload();
+    }
+    return true;
   }
 
   private async reload(): Promise<void> {
@@ -969,6 +981,9 @@ export class HighlightManager {
       setBusy(true);
       const patch: HighlightUpdatePatch = { note: note.value, color: selectedColor };
       try {
+        if (!(await this.refreshAccountScopeForMutation())) {
+          throw new Error('Highlight account scope is unavailable');
+        }
         const scope = this.accountScope;
         if (!scope) throw new Error('Highlight account scope is unavailable');
         const updated = await this.client.update(scope, record.conversationId, record.id, patch);
@@ -987,6 +1002,9 @@ export class HighlightManager {
     deleteButton.addEventListener('click', async () => {
       setBusy(true);
       try {
+        if (!(await this.refreshAccountScopeForMutation())) {
+          throw new Error('Highlight account scope is unavailable');
+        }
         const scope = this.accountScope;
         if (!scope) throw new Error('Highlight account scope is unavailable');
         await this.client.delete(scope, record.conversationId, record.id);

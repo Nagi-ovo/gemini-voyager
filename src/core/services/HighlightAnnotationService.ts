@@ -753,6 +753,35 @@ export class HighlightAnnotationService {
     });
   }
 
+  /**
+   * Claim highlights written before a route id/email was available. Older page
+   * loads could resolve to the unscoped `default` account during startup and
+   * later resolve the Saved Library to the real email account. Treat that
+   * default bucket as one-time legacy data: merge it into the first resolved
+   * account, then clear only the matching platform from the legacy bucket.
+   */
+  async claimLegacyDefaultHighlights(scope: HighlightAccountScope): Promise<number> {
+    if (scope.accountKey === 'default') return 0;
+
+    const legacyScope: HighlightAccountScope = {
+      platform: scope.platform,
+      accountKey: 'default',
+      accountId: 0,
+      routeUserId: null,
+    };
+    const snapshot = await this.getAccountSnapshot(legacyScope);
+    const legacyRecords = snapshot.records.filter((record) => record.platform === scope.platform);
+    if (legacyRecords.length === 0) return 0;
+
+    const accountHash = getHighlightAccountHash(scope);
+    await this.importMerge(
+      scope,
+      legacyRecords.map((record) => ({ ...record, accountHash })),
+    );
+    await this.clearAll(legacyScope);
+    return legacyRecords.filter((record) => record.deletedAt === undefined).length;
+  }
+
   private async assertWithinSoftCap(
     setItems: Record<string, unknown>,
     removeKeys: readonly string[] = [],

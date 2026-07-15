@@ -706,12 +706,6 @@ export class AIStudioFolderManager {
         return true;
       }
 
-      if (msg?.type === 'gv.account.getContext') {
-        const context = detectAccountContextFromDocument(window.location.href, document);
-        sendResponse({ ok: true, context });
-        return true;
-      }
-
       // Handle reload request (after cloud sync download)
       if (msg?.type === 'gv.folders.reload') {
         console.log('[AIStudioFolderManager] Received reload request from sync');

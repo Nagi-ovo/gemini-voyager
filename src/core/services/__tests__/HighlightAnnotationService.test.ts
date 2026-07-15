@@ -449,6 +449,28 @@ describe('HighlightAnnotationService', () => {
     });
   });
 
+  it('claims legacy default-account highlights for the resolved account', async () => {
+    const { service } = createHarness();
+    const legacyScope: HighlightAccountScope = {
+      platform: 'gemini',
+      accountKey: 'default',
+      accountId: 0,
+      routeUserId: null,
+    };
+    await service.add(legacyScope, input());
+
+    await expect(service.claimLegacyDefaultHighlights(SCOPE)).resolves.toBe(1);
+
+    const claimed = await service.getAll(SCOPE);
+    expect(claimed).toHaveLength(1);
+    expect(claimed[0]).toMatchObject({
+      conversationId: 'gemini:conv:abc',
+      accountHash: getHighlightAccountHash(SCOPE),
+    });
+    expect(await service.getAll(legacyScope)).toEqual([]);
+    await expect(service.claimLegacyDefaultHighlights(SCOPE)).resolves.toBe(0);
+  });
+
   it('clears every account while retaining one bounded marker per account/platform', async () => {
     const { service, storage, advanceTime } = createHarness();
     const otherScope: HighlightAccountScope = {

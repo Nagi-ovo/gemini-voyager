@@ -1542,6 +1542,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
             case 'gv.highlight.list': {
               const scope = await resolveHighlightAccountScope(sender, payload);
+              await highlightAnnotationService.claimLegacyDefaultHighlights(scope);
               const records =
                 typeof payload.conversationId === 'string'
                   ? await highlightAnnotationService.getConversation(

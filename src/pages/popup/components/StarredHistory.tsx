@@ -253,8 +253,9 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
       timeStyle: 'short',
     }).format(timestamp);
 
-  const emptyText =
-    query.trim().length > 0
+  const emptyText = error
+    ? t('pm_starred_load_error')
+    : query.trim().length > 0
       ? t('pm_starred_no_results')
       : filter === 'highlights'
         ? t('savedLibraryNoHighlights')

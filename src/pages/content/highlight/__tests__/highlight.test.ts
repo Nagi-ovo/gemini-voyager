@@ -62,6 +62,7 @@ function makeRecord(
 
 class FakeHighlightClient extends HighlightClient {
   readonly listScopes: HighlightAccountScope[] = [];
+  readonly createScopes: HighlightAccountScope[] = [];
 
   constructor(private listed: HighlightRecordV1[]) {
     super();
@@ -79,6 +80,7 @@ class FakeHighlightClient extends HighlightClient {
     _scope: HighlightAccountScope,
     input: HighlightCreateInput,
   ): Promise<HighlightRecordV1> {
+    this.createScopes.push(_scope);
     const record = makeRecord(input.anchor, {
       conversationId: input.conversationId,
       conversationUrl: input.conversationUrl,
@@ -325,6 +327,33 @@ describe('HighlightManager rendering and navigation', () => {
 
     expect(client.listScopes).toHaveLength(1);
     expect(client.listScopes[0].routeUserId).toBe('1');
+    manager.destroy();
+  });
+
+  it('refreshes a startup default scope before saving a new highlight', async () => {
+    const response = installConversation();
+    window.history.replaceState(null, '', '/app/test');
+    vi.mocked(accountIsolationService.resolveAccountScope)
+      .mockResolvedValueOnce({
+        accountKey: 'default',
+        accountId: 1,
+        routeUserId: null,
+        emailHash: null,
+      })
+      .mockResolvedValue({
+        accountKey: 'email:resolved-account',
+        accountId: 2,
+        routeUserId: null,
+        emailHash: 'resolved-account',
+      });
+    const client = new FakeHighlightClient([]);
+    const manager = new HighlightManager(client);
+    await manager.init();
+
+    await expect(manager.createFromRange(selectText(response, 'target'))).resolves.toBe(true);
+
+    expect(client.createScopes.at(-1)?.accountKey).toBe('email:resolved-account');
+    expect(client.listScopes.at(-1)?.accountKey).toBe('email:resolved-account');
     manager.destroy();
   });
 

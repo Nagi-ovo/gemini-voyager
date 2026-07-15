@@ -19,6 +19,7 @@ import { registerNativeHandler } from '@/features/plugins/runtime/nativeHandlers
 import { resolvePluginPlatformId } from '@/features/plugins/sites/registry';
 import { initI18n } from '@/utils/i18n';
 
+import { startAccountContextBridge } from './accountContext';
 import { startCanvasExport } from './canvasExport/index';
 import { startChangelog } from './changelog/index';
 import { startChatFontSizeAdjuster } from './chatFontSize/index';
@@ -112,6 +113,7 @@ let brandThemeCleanup: (() => void) | null = null;
 let usageStatusCleanup: (() => void) | null = null;
 let remoteAnnouncementsCleanup: (() => void) | null = null;
 let storageQuotaWarningCleanup: (() => void) | null = null;
+let accountContextBridgeCleanup: (() => void) | null = null;
 
 async function isForkFeatureEnabled(): Promise<boolean> {
   try {
@@ -484,6 +486,10 @@ function handleVisibilityChange(): void {
       }
     });
 
+    // Saved Library and cloud sync need the same account identity as highlights.
+    // This bridge must exist even when optional Folder Manager code never starts.
+    accountContextBridgeCleanup = startAccountContextBridge();
+
     // Plugin ecosystem host. Started up-front on EVERY page the content script is
     // injected into (Gemini / AI Studio, and any site a user enabled a plugin for,
     // e.g. claude.ai via dynamic registration). It self-detects the site adapter
@@ -696,6 +702,10 @@ function handleVisibilityChange(): void {
         if (storageQuotaWarningCleanup) {
           storageQuotaWarningCleanup();
           storageQuotaWarningCleanup = null;
+        }
+        if (accountContextBridgeCleanup) {
+          accountContextBridgeCleanup();
+          accountContextBridgeCleanup = null;
         }
         if (usageStatusCleanup) {
           usageStatusCleanup();
