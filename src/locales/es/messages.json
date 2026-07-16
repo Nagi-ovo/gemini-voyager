@@ -347,6 +347,10 @@
     "message": "Buscar carpetas y chats",
     "description": "Folder sidebar search input placeholder"
   },
+  "folder_search_mode_folder": {
+    "message": "Solo carpetas",
+    "description": "Insignia mostrada cuando está activo el modo de búsqueda solo en carpetas"
+  },
   "folder_search_empty": {
     "message": "No hay carpetas ni chats coincidentes",
     "description": "Folder sidebar empty state when search has no matches"

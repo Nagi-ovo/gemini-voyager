@@ -3,16 +3,25 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FolderManager } from '../manager';
 import type { FolderData } from '../types';
 
+const coachmarkMocks = vi.hoisted(() => ({
+  hasSeenCoachmark: vi.fn(async () => false),
+  markCoachmarkSeen: vi.fn(async () => undefined),
+}));
+
 vi.mock('@/utils/i18n', () => ({
   getTranslationSync: (key: string) => key,
   getTranslationSyncUnsafe: (key: string) => key,
   initI18n: () => Promise.resolve(),
 }));
 
+vi.mock('../../coachmark', () => coachmarkMocks);
+
 type TestableManager = {
   data: FolderData;
   folderSearchEnabled: boolean;
   folderSearchQuery: string;
+  folderOnlySearchHintSeen: boolean;
+  createFolderSearch: () => HTMLElement;
   createFoldersList: () => HTMLElement;
   destroy: () => void;
 };
@@ -99,6 +108,7 @@ describe('folder sidebar search', () => {
     manager?.destroy();
     manager = null;
     document.body.innerHTML = '';
+    coachmarkMocks.markCoachmarkSeen.mockClear();
     vi.restoreAllMocks();
   });
 
@@ -171,6 +181,53 @@ describe('folder sidebar search', () => {
 
     expect(getFolderNames(list)).toEqual(['Recipes']);
     expect(getConversationTitles(list)).toEqual(['Dinner plan']);
+  });
+
+  it('teaches the prefix until the first folder-only search, then keeps only the mode badge', () => {
+    manager = makeManager(folderData, '');
+    manager.folderOnlySearchHintSeen = false;
+
+    const search = manager.createFolderSearch();
+    const input = search.querySelector<HTMLInputElement>('.gv-folder-search-input');
+    const badge = search.querySelector<HTMLElement>('.gv-folder-search-mode-badge');
+
+    expect(input?.placeholder).toBe('folder_search_placeholder · f: folder_search_mode_folder');
+    expect(badge?.hidden).toBe(true);
+
+    input!.value = 'f:recipes';
+    input!.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(manager.folderOnlySearchHintSeen).toBe(true);
+    expect(input?.placeholder).toBe('folder_search_placeholder');
+    expect(search.classList.contains('gv-folder-search-folder-mode')).toBe(true);
+    expect(badge?.hidden).toBe(false);
+    expect(badge?.textContent).toBe('folder_search_mode_folder');
+    expect(coachmarkMocks.markCoachmarkSeen).toHaveBeenCalledWith('folder-only-search-prefix-hint');
+
+    input!.value = '';
+    input!.dispatchEvent(new Event('input', { bubbles: true }));
+
+    expect(search.classList.contains('gv-folder-search-folder-mode')).toBe(false);
+    expect(badge?.hidden).toBe(true);
+    expect(input?.placeholder).toBe('folder_search_placeholder');
+    expect(coachmarkMocks.markCoachmarkSeen).toHaveBeenCalledTimes(1);
+  });
+
+  it('always shows the compact mode badge for returning users', () => {
+    manager = makeManager(folderData, 'folder:recipes');
+    manager.folderOnlySearchHintSeen = true;
+
+    const search = manager.createFolderSearch();
+    const input = search.querySelector<HTMLInputElement>('.gv-folder-search-input');
+    const badge = search.querySelector<HTMLElement>('.gv-folder-search-mode-badge');
+
+    expect(input?.placeholder).toBe('folder_search_placeholder');
+    expect(input?.getAttribute('aria-label')).toBe(
+      'folder_search_placeholder: folder_search_mode_folder',
+    );
+    expect(search.classList.contains('gv-folder-search-folder-mode')).toBe(true);
+    expect(badge?.hidden).toBe(false);
+    expect(coachmarkMocks.markCoachmarkSeen).not.toHaveBeenCalled();
   });
 
   it('uses the search empty state when no titles match', () => {

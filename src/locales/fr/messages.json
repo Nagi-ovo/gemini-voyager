@@ -347,6 +347,10 @@
     "message": "Rechercher des dossiers et des discussions",
     "description": "Folder sidebar search input placeholder"
   },
+  "folder_search_mode_folder": {
+    "message": "Dossiers uniquement",
+    "description": "Badge affiché lorsque la recherche limitée aux dossiers est active"
+  },
   "folder_search_empty": {
     "message": "Aucun dossier ou discussion correspondant",
     "description": "Folder sidebar empty state when search has no matches"

@@ -347,6 +347,10 @@
     "message": "البحث في المجلدات والمحادثات",
     "description": "Folder sidebar search input placeholder"
   },
+  "folder_search_mode_folder": {
+    "message": "المجلدات فقط",
+    "description": "شارة تظهر عند تفعيل وضع البحث في المجلدات فقط"
+  },
   "folder_search_empty": {
     "message": "لا توجد مجلدات أو محادثات مطابقة",
     "description": "Folder sidebar empty state when search has no matches"

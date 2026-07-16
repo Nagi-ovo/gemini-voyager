@@ -347,6 +347,10 @@
     "message": "Поиск папок и чатов",
     "description": "Folder sidebar search input placeholder"
   },
+  "folder_search_mode_folder": {
+    "message": "Только папки",
+    "description": "Метка активного режима поиска только по папкам"
+  },
   "folder_search_empty": {
     "message": "Нет подходящих папок или чатов",
     "description": "Folder sidebar empty state when search has no matches"

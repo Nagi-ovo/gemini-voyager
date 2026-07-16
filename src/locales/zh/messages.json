@@ -347,6 +347,10 @@
     "message": "搜索文件夹和对话",
     "description": "文件夹侧边栏搜索输入占位符"
   },
+  "folder_search_mode_folder": {
+    "message": "仅文件夹",
+    "description": "仅文件夹搜索模式生效时显示的标记"
+  },
   "folder_search_empty": {
     "message": "没有匹配的文件夹或对话",
     "description": "文件夹侧边栏搜索无匹配结果时的空状态"

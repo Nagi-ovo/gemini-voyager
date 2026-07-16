@@ -347,6 +347,10 @@
     "message": "Search folders and chats",
     "description": "Folder sidebar search input placeholder"
   },
+  "folder_search_mode_folder": {
+    "message": "Folder only",
+    "description": "Badge shown while folder-only search mode is active"
+  },
   "folder_search_empty": {
     "message": "No matching folders or chats",
     "description": "Folder sidebar empty state when search has no matches"

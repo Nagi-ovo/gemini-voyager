@@ -347,6 +347,10 @@
     "message": "フォルダとチャットを検索",
     "description": "Folder sidebar search input placeholder"
   },
+  "folder_search_mode_folder": {
+    "message": "フォルダのみ",
+    "description": "フォルダ限定検索モードが有効なときに表示するバッジ"
+  },
   "folder_search_empty": {
     "message": "一致するフォルダまたはチャットはありません",
     "description": "Folder sidebar empty state when search has no matches"

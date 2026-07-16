@@ -17,6 +17,7 @@ import type { ImportStrategy } from '@/features/folder/types/import-export';
 import { getTranslationSync, getTranslationSyncUnsafe, initI18n } from '@/utils/i18n';
 import { mergeFolderData, mergeTimelineHierarchy } from '@/utils/merge';
 
+import { hasSeenCoachmark, markCoachmarkSeen } from '../coachmark';
 import {
   MENU_PANEL_SELECTOR as CONVERSATION_MENU_PANEL_SELECTOR,
   type ConversationMenuContext,
@@ -97,6 +98,7 @@ const SAVE_DEBOUNCE_MS = 300;
 const STORAGE_ECHO_SUPPRESS_WINDOW_MS = 2000;
 // Debounce for the folder search box so each keystroke doesn't rebuild the tree.
 const FOLDER_SEARCH_DEBOUNCE_MS = 200;
+export const FOLDER_ONLY_SEARCH_HINT_ID = 'folder-only-search-prefix-hint';
 
 // Export session backup keys for use by FolderImportExportService (deprecated, kept for compatibility)
 export const SESSION_BACKUP_KEY = 'gvFolderBackup';
@@ -247,6 +249,7 @@ export class FolderManager {
   private filterCurrentUserOnly: boolean = false; // Whether to show only current user's conversations
   private folderSearchEnabled: boolean = true; // Whether to show the folder title search box
   private folderSearchQuery: string = ''; // Filter the folder tree by folder/conversation title
+  private folderOnlySearchHintSeen: boolean = false;
   private conversationSortMode: ConversationSortMode = 'manual';
   private accountIsolationEnabled: boolean = false; // Whether hard account isolation is enabled
   private accountScope: AccountScope | null = null; // Resolved account scope for current page
@@ -439,6 +442,7 @@ export class FolderManager {
       // Load filter user setting
       await this.loadFilterUserSetting();
       await this.loadFolderSearchEnabledSetting();
+      await this.loadFolderOnlySearchHintState();
       await this.loadFolderTreeIndentSetting();
       await this.loadFolderProjectEnabledSetting();
       await this.loadConversationSortModeSetting();
@@ -1873,12 +1877,18 @@ export class FolderManager {
     const input = document.createElement('input');
     input.className = 'gv-folder-search-input';
     input.type = 'search';
-    input.placeholder = this.t('folder_search_placeholder');
-    input.setAttribute('aria-label', this.t('folder_search_placeholder'));
     input.value = this.folderSearchQuery;
+
+    const modeBadge = document.createElement('span');
+    modeBadge.className = 'gv-folder-search-mode-badge';
+    modeBadge.setAttribute('aria-hidden', 'true');
 
     input.addEventListener('input', () => {
       this.folderSearchQuery = input.value;
+      this.updateFolderSearchInputState(searchContainer, input, modeBadge);
+      if (this.isFolderOnlySearchActive()) {
+        this.markFolderOnlySearchHintSeen(input);
+      }
       // Debounce the full tree rebuild — rebuilding on every keystroke made
       // fast typing feel laggy on large trees. The query itself is applied
       // immediately so a pending refresh from any source uses the latest text.
@@ -1889,8 +1899,35 @@ export class FolderManager {
       }, FOLDER_SEARCH_DEBOUNCE_MS);
     });
 
-    searchContainer.appendChild(input);
+    searchContainer.append(input, modeBadge);
+    this.updateFolderSearchInputState(searchContainer, input, modeBadge);
     return searchContainer;
+  }
+
+  private updateFolderSearchInputState(
+    searchContainer: HTMLElement,
+    input: HTMLInputElement,
+    modeBadge: HTMLElement,
+  ): void {
+    const folderOnlyMode = this.isFolderOnlySearchActive();
+    const baseLabel = this.t('folder_search_placeholder');
+    const modeLabel = this.t('folder_search_mode_folder');
+
+    searchContainer.classList.toggle('gv-folder-search-folder-mode', folderOnlyMode);
+    modeBadge.hidden = !folderOnlyMode;
+    modeBadge.textContent = modeLabel;
+    input.placeholder = this.folderOnlySearchHintSeen
+      ? baseLabel
+      : `${baseLabel} · f: ${modeLabel}`;
+    input.setAttribute('aria-label', folderOnlyMode ? `${baseLabel}: ${modeLabel}` : baseLabel);
+  }
+
+  private markFolderOnlySearchHintSeen(input: HTMLInputElement): void {
+    if (this.folderOnlySearchHintSeen) return;
+
+    this.folderOnlySearchHintSeen = true;
+    input.placeholder = this.t('folder_search_placeholder');
+    void markCoachmarkSeen(FOLDER_ONLY_SEARCH_HINT_ID);
   }
 
   private clearFolderSearchDebounceTimer(): void {
@@ -8135,6 +8172,10 @@ export class FolderManager {
     }
   }
 
+  private async loadFolderOnlySearchHintState(): Promise<void> {
+    this.folderOnlySearchHintSeen = await hasSeenCoachmark(FOLDER_ONLY_SEARCH_HINT_ID);
+  }
+
   private applyFolderSearchEnabledSetting(value: unknown): void {
     const next = value !== false;
     if (next === this.folderSearchEnabled) return;
@@ -9178,8 +9219,11 @@ export class FolderManager {
     const searchInput =
       this.containerElement.querySelector<HTMLInputElement>('.gv-folder-search-input');
     if (searchInput) {
-      searchInput.placeholder = this.t('folder_search_placeholder');
-      searchInput.setAttribute('aria-label', this.t('folder_search_placeholder'));
+      const searchContainer = searchInput.closest<HTMLElement>('.gv-folder-search');
+      const modeBadge = searchContainer?.querySelector<HTMLElement>('.gv-folder-search-mode-badge');
+      if (searchContainer && modeBadge) {
+        this.updateFolderSearchInputState(searchContainer, searchInput, modeBadge);
+      }
     }
 
     // Update empty state text if present

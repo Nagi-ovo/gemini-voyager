@@ -347,6 +347,10 @@
     "message": "搜尋資料夾和對話",
     "description": "資料夾側邊欄搜尋輸入佔位符"
   },
+  "folder_search_mode_folder": {
+    "message": "僅資料夾",
+    "description": "僅資料夾搜尋模式啟用時顯示的標記"
+  },
   "folder_search_empty": {
     "message": "沒有符合的資料夾或對話",
     "description": "資料夾側邊欄搜尋無符合結果時的空狀態"

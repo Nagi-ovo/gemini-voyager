@@ -4202,6 +4202,7 @@ body.light-theme {
 }
 
 .gv-folder-search {
+  position: relative;
   padding: 0 8px 4px 14px;
 }
 
@@ -4220,6 +4221,31 @@ body.light-theme {
     Arial,
     sans-serif;
   outline: none;
+}
+
+.gv-folder-search-folder-mode .gv-folder-search-input {
+  padding-right: 92px;
+}
+
+.gv-folder-search-mode-badge {
+  position: absolute;
+  top: 14px;
+  right: 34px;
+  max-width: 72px;
+  overflow: hidden;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--folder-selected-bg-end);
+  color: var(--folder-text);
+  font:
+    500 11px/18px 'Google Sans',
+    Roboto,
+    Arial,
+    sans-serif;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateY(-50%);
 }
 
 .gv-folder-search-input::placeholder {

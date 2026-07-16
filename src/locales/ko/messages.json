@@ -347,6 +347,10 @@
     "message": "폴더 및 채팅 검색",
     "description": "Folder sidebar search input placeholder"
   },
+  "folder_search_mode_folder": {
+    "message": "폴더만",
+    "description": "폴더 전용 검색 모드가 활성화될 때 표시되는 배지"
+  },
   "folder_search_empty": {
     "message": "일치하는 폴더 또는 채팅이 없습니다",
     "description": "Folder sidebar empty state when search has no matches"
