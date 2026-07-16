@@ -591,6 +591,10 @@ export class TimelinePreviewPanel {
     }
     if (this._isOpen) {
       this.renderList();
+      // Lazy-loaded history can grow the list after the panel has already been
+      // positioned. Re-measure it so the old top offset cannot push the newly
+      // taller panel below the viewport.
+      this.positionPanel();
     }
     this.onSearchChange?.(this.searchQuery);
   }

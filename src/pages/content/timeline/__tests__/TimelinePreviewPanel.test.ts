@@ -200,6 +200,21 @@ describe('TimelinePreviewPanel', () => {
   });
 
   describe('updateMarkers', () => {
+    it('repositions an open panel when lazy-loaded markers increase its height', () => {
+      vi.spyOn(anchor, 'getBoundingClientRect').mockReturnValue(new DOMRect(900, 100, 24, 600));
+      const panelEl = document.querySelector('.timeline-preview-panel') as HTMLElement;
+
+      Object.defineProperty(panelEl, 'offsetHeight', { value: 200, configurable: true });
+      panel.updateMarkers(makeMarkers(3));
+      panel.open();
+      expect(panelEl.style.top).toBe('300px');
+
+      Object.defineProperty(panelEl, 'offsetHeight', { value: 500, configurable: true });
+      panel.updateMarkers(makeMarkers(30));
+
+      expect(panelEl.style.top).toBe('150px');
+    });
+
     it('renders correct number of items when open', () => {
       const markers = makeMarkers(5);
       panel.updateMarkers(markers);
