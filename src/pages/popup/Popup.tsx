@@ -25,7 +25,7 @@ import {
   ensureNotificationsPermission,
   hasNotificationsPermission,
 } from '@/core/utils/notificationsPermission';
-import { requestSafariNotificationPermission } from '@/core/utils/safariNativeNotifications';
+import { prepareSafariNativeNotifications } from '@/core/utils/safariNativeNotifications';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import { resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
@@ -4149,7 +4149,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                       const next = e.target.checked;
                       if (next) {
                         const granted = isSafariBrowser
-                          ? await requestSafariNotificationPermission()
+                          ? await prepareSafariNativeNotifications()
                           : await ensureNotificationsPermission();
                         if (!granted) {
                           setResponseCompleteNotificationEnabled(false);

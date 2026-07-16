@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  requestSafariNotificationPermission,
-  showSafariNativeNotification,
+  deliverSafariNativeNotification,
+  prepareSafariNativeNotifications,
 } from '../safariNativeNotifications';
 
 const sendNativeMessage = vi.hoisted(() => vi.fn());
@@ -16,12 +16,15 @@ afterEach(() => {
 });
 
 describe('Safari native notifications', () => {
-  it('requests notification permission through the native extension', async () => {
-    sendNativeMessage.mockResolvedValue({ success: true, data: { authorized: true } });
+  it('prepares notifications by delivering the native permission primer', async () => {
+    sendNativeMessage.mockResolvedValue({ success: true, data: { delivered: true } });
 
-    await expect(requestSafariNotificationPermission()).resolves.toBe(true);
+    await expect(prepareSafariNativeNotifications()).resolves.toBe(true);
     expect(sendNativeMessage).toHaveBeenCalledWith('com.yourCompany.Gemini-Voyager', {
-      action: 'requestNotificationPermission',
+      action: 'deliverNotification',
+      id: 'gemini-voyager-notification-permission',
+      title: 'Gemini Voyager',
+      body: 'Notifications are enabled.',
     });
   });
 
@@ -29,19 +32,19 @@ describe('Safari native notifications', () => {
     sendNativeMessage.mockResolvedValue({ success: true });
 
     await expect(
-      showSafariNativeNotification({ id: 'reply-1', title: 'Voyager', message: 'Done' }),
+      deliverSafariNativeNotification({ id: 'reply-1', title: 'Voyager', body: 'Done' }),
     ).resolves.toBe(true);
     expect(sendNativeMessage).toHaveBeenCalledWith('com.yourCompany.Gemini-Voyager', {
-      action: 'showNotification',
+      action: 'deliverNotification',
       id: 'reply-1',
       title: 'Voyager',
-      message: 'Done',
+      body: 'Done',
     });
   });
 
   it('returns false when native messaging is unavailable', async () => {
     sendNativeMessage.mockRejectedValue(new Error('unavailable'));
 
-    await expect(requestSafariNotificationPermission()).resolves.toBe(false);
+    await expect(prepareSafariNativeNotifications()).resolves.toBe(false);
   });
 });

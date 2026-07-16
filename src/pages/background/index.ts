@@ -32,7 +32,7 @@ import {
   supportsExtensionNotifications,
 } from '@/core/utils/browser';
 import { hasNotificationsPermission } from '@/core/utils/notificationsPermission';
-import { showSafariNativeNotification } from '@/core/utils/safariNativeNotifications';
+import { deliverSafariNativeNotification } from '@/core/utils/safariNativeNotifications';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import {
   isRemoteAnnouncementRuntimeMessage,
@@ -245,10 +245,10 @@ async function showResponseCompleteNotification(
       : notificationMessage;
 
     if (useSafariNativeNotification) {
-      return await showSafariNativeNotification({
+      return await deliverSafariNativeNotification({
         id: notificationId,
         title: RESPONSE_COMPLETE_NOTIFICATION_TITLE,
-        message: notificationMessage,
+        body: notificationMessage,
       });
     }
 

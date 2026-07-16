@@ -4,9 +4,6 @@ const SAFARI_NATIVE_APP_ID = 'com.yourCompany.Gemini-Voyager';
 
 type NativeNotificationResponse = {
   success?: boolean;
-  data?: {
-    authorized?: boolean;
-  };
 };
 
 async function sendNativeNotificationMessage(
@@ -22,20 +19,21 @@ async function sendNativeNotificationMessage(
   }
 }
 
-export async function requestSafariNotificationPermission(): Promise<boolean> {
-  const response = await sendNativeNotificationMessage({
-    action: 'requestNotificationPermission',
+export async function prepareSafariNativeNotifications(): Promise<boolean> {
+  return deliverSafariNativeNotification({
+    id: 'gemini-voyager-notification-permission',
+    title: 'Gemini Voyager',
+    body: 'Notifications are enabled.',
   });
-  return response?.success === true && response.data?.authorized === true;
 }
 
-export async function showSafariNativeNotification(details: {
+export async function deliverSafariNativeNotification(details: {
   id: string;
   title: string;
-  message: string;
+  body: string;
 }): Promise<boolean> {
   const response = await sendNativeNotificationMessage({
-    action: 'showNotification',
+    action: 'deliverNotification',
     ...details,
   });
   return response?.success === true;

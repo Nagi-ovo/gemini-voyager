@@ -20,23 +20,16 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
         switch action {
         case "ping":
             respondWithSuccess(context: context, data: ["status": "ok"])
-        case "requestNotificationPermission":
-            deliverLegacyNotification(
-                title: "Gemini Voyager",
-                body: "Notifications are enabled.",
-                identifier: "gemini-voyager-notification-permission"
-            )
-            respondWithSuccess(context: context, data: ["authorized": true])
-        case "showNotification":
-            showLegacyNotification(message: message, context: context)
+        case "deliverNotification":
+            deliverNotification(message: message, context: context)
         default:
             respondWithError(context: context, message: "Unknown action")
         }
     }
 
-    private func showLegacyNotification(message: [String: Any], context: NSExtensionContext) {
+    private func deliverNotification(message: [String: Any], context: NSExtensionContext) {
         guard let title = message["title"] as? String,
-              let body = message["message"] as? String else {
+              let body = message["body"] as? String else {
             respondWithError(context: context, message: "Invalid notification")
             return
         }
