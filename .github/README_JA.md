@@ -230,7 +230,7 @@ bun run dev:safari
 bun run build:all
 ```
 
-**Safari での開発**: 詳細は [safari/README.md](../safari/README.md) を参照してください。
+**Safari での開発**: `bun run build:safari` を実行し、`Gemini Voyager/` にある Xcode プロジェクトを開きます。
 
 </details>
 

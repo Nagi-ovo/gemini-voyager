@@ -260,7 +260,7 @@ bun run build:safari   # Safari
 bun run build:all      # All browsers
 ```
 
-**Safari Development**: See [safari/README.md](safari/README.md) for additional build steps.
+**Safari Development**: Run `bun run build:safari`, then open the tracked Xcode project under `Gemini Voyager/`.
 
 </details>
 

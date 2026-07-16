@@ -7,7 +7,7 @@
 ## 系统要求
 
 - **macOS 11+**
-- **Safari 14+**
+- **Safari 15.4+**
 
 ## 安装步骤
 
@@ -38,12 +38,15 @@
 
 ## 开发者
 
-想从源代码构建或参与开发？查看 [Safari 开发指南](../../../safari/README_ZH.md) 了解：
+先构建 Web 扩展，再打开仓库中的 Xcode 工程：
 
-- 从源代码构建
-- 开发工作流
-- 添加 Swift 原生代码
-- 高级调试
+```bash
+bun i
+bun run build:safari
+open "Gemini Voyager/Gemini Voyager.xcodeproj"
+```
+
+实际使用的 Swift 文件都在 `Gemini Voyager/` 中，不需要再手动添加另一套 Swift 文件。
 
 ## 卸载
 

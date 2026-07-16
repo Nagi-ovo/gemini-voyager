@@ -264,7 +264,7 @@ bun run build:safari
 bun run build:all
 ```
 
-**Safari 開發**：詳見 [safari/README.md](../safari/README.md)。
+**Safari 開發**：執行 `bun run build:safari`，然後開啟 `Gemini Voyager/` 中已納入版本控制的 Xcode 專案。
 
 </details>
 

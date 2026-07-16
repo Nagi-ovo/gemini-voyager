@@ -20,7 +20,6 @@ export default [
       '.agent/**',
       '.github/sponsors/**',
       'public/**',
-      'safari/Models/**',
       'Gemini Voyager/**',
     ],
   },

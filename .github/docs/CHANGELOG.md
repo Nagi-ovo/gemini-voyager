@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Safari browser support** 🎉
   - Safari build configuration and development mode
   - Installation guide ([EN](safari/INSTALLATION.md) | [中文](safari/INSTALLATION_ZH.md))
-  - Development guide ([EN](.../../../safari/README.md) | [中文](.../../../safari/README_ZH.md))
+  - Tracked Xcode project for native Safari development
   - New commands: `build:safari`, `dev:safari`, `build:all`
 - **Conversation export (Markdown/PDF)**
   - Rich Markdown export with formulas, code blocks, tables, lists, headings

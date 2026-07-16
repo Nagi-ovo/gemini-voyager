@@ -7,7 +7,7 @@ A simple guide for installing Voyager on Safari.
 ## Requirements
 
 - **macOS 11+**
-- **Safari 14+**
+- **Safari 15.4+**
 
 ## Installation Steps
 
@@ -38,12 +38,15 @@ Done! 🎉
 
 ## For Developers
 
-Want to build from source or contribute? See the [Safari Development Guide](../../../safari/README.md) for:
+Build the web extension, then open the tracked Xcode project:
 
-- Building from source
-- Development workflow
-- Adding Swift native code
-- Advanced debugging
+```bash
+bun i
+bun run build:safari
+open "Gemini Voyager/Gemini Voyager.xcodeproj"
+```
+
+The active Swift files live inside `Gemini Voyager/`; no separate Swift setup is required.
 
 ## Uninstall
 

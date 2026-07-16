@@ -151,7 +151,7 @@ A: Yes! Simply export from one browser and import to another.
 - **Deduplication Strategy**: Deduplicate by `id` and `conversationId`
 - **File Encoding**: UTF-8
 - **Max File Size**: Theoretically unlimited (limited by browser memory)
-- **Compatibility**: Chrome 88+, Firefox 85+, Safari 14+
+- **Compatibility**: Chrome 88+, Firefox 85+, Safari 15.4+
 
 ## Feedback & Support
 

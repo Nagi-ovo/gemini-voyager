@@ -258,7 +258,7 @@ bun run build:safari   # Safari
 bun run build:all      # 모든 브라우저
 ```
 
-**Safari 개발**: 추가 빌드 단계는 [safari/README.md](../safari/README.md) 를 참조하세요.
+**Safari 개발**: `bun run build:safari`를 실행한 뒤 `Gemini Voyager/`의 Xcode 프로젝트를 여세요.
 
 </details>
 
