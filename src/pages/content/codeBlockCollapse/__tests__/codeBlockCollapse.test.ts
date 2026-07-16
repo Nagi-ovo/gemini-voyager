@@ -68,6 +68,7 @@ describe('codeBlockCollapse', () => {
     expect(button.parentElement?.classList.contains('buttons')).toBe(true);
     expect(button.getAttribute('aria-label')).toBe('Collapse');
     expect(button.getAttribute('aria-expanded')).toBe('true');
+    expect(button.querySelector('.gv-code-block-toggle-label')?.textContent).toBe('Collapse');
     expect(host.classList.contains('gv-code-block-collapsed')).toBe(false);
   });
 
@@ -80,10 +81,12 @@ describe('codeBlockCollapse', () => {
     expect(host.classList.contains('gv-code-block-collapsed')).toBe(true);
     expect(button.getAttribute('aria-label')).toBe('Expand');
     expect(button.getAttribute('aria-expanded')).toBe('false');
+    expect(button.querySelector('.gv-code-block-toggle-label')?.textContent).toBe('Expand');
 
     button.click();
     expect(host.classList.contains('gv-code-block-collapsed')).toBe(false);
     expect(button.getAttribute('aria-label')).toBe('Collapse');
+    expect(button.querySelector('.gv-code-block-toggle-label')?.textContent).toBe('Collapse');
   });
 
   it('handles wrapped single-line code using rendered height', () => {

@@ -44,7 +44,7 @@ function isMermaidBlock(host: HTMLElement): boolean {
 }
 
 function toggleIcon(collapsed: boolean): string {
-  const path = collapsed ? 'M7 10l5 5 5-5' : 'M7 14l5-5 5 5';
+  const path = collapsed ? 'M8 8l4 4 4-4M8 13l4 4 4-4' : 'M8 16l4-4 4 4M8 11l4-4 4 4';
   return `
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="${path}" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" />
@@ -59,8 +59,10 @@ function updateToggle(host: HTMLElement, button: HTMLButtonElement): void {
 
   if (button.dataset.state !== state) {
     button.dataset.state = state;
-    button.innerHTML = toggleIcon(collapsed);
+    button.innerHTML = `${toggleIcon(collapsed)}<span class="gv-code-block-toggle-label"></span>`;
   }
+  const labelElement = button.querySelector<HTMLElement>('.gv-code-block-toggle-label');
+  if (labelElement && labelElement.textContent !== label) labelElement.textContent = label;
   if (button.title !== label) button.title = label;
   if (button.getAttribute('aria-label') !== label) button.setAttribute('aria-label', label);
   button.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
