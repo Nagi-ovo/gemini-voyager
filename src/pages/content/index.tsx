@@ -28,6 +28,7 @@ import { startChatLineHeightAdjuster } from './chatLineHeight/index';
 import { startChatParagraphSpacingAdjuster } from './chatParagraphSpacing/index';
 import { startChatWidthAdjuster } from './chatWidth/index';
 import { runCoachmarkSequence } from './coachmark';
+import { startCodeBlockCollapse } from './codeBlockCollapse';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
 import DefaultModelManager from './defaultModel/modelLocker';
@@ -115,6 +116,7 @@ let usageStatusCleanup: (() => void) | null = null;
 let remoteAnnouncementsCleanup: (() => void) | null = null;
 let storageQuotaWarningCleanup: (() => void) | null = null;
 let accountContextBridgeCleanup: (() => void) | null = null;
+let codeBlockCollapseCleanup: (() => void) | null = null;
 
 async function isForkFeatureEnabled(): Promise<boolean> {
   try {
@@ -368,6 +370,9 @@ async function initializeFeatures(): Promise<void> {
 
       // Markdown Patcher - fixes broken bold tags due to HTML injection
       startMarkdownPatcher();
+      await delay(LIGHT_FEATURE_INIT_DELAY);
+
+      codeBlockCollapseCleanup = startCodeBlockCollapse();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Default Model Manager
@@ -729,6 +734,10 @@ function handleVisibilityChange(): void {
         if (accountContextBridgeCleanup) {
           accountContextBridgeCleanup();
           accountContextBridgeCleanup = null;
+        }
+        if (codeBlockCollapseCleanup) {
+          codeBlockCollapseCleanup();
+          codeBlockCollapseCleanup = null;
         }
         if (usageStatusCleanup) {
           usageStatusCleanup();
