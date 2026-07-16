@@ -59,40 +59,9 @@ bun run build:safari
 # 然后在 Xcode 中重新构建（⌘R）
 ```
 
-## 添加 Swift 原生代码（可选）
+## macOS App 与 Swift 扩展
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
-
-本项目包含用于原生 macOS 功能的 Swift 代码。添加它是**可选的**，但推荐使用。
-
-### 包含的文件
-
-```
-safari/
-├── App/
-│   └── SafariWebExtensionHandler.swift  # 原生消息处理器
-└── Models/
-    └── SafariMessage.swift              # 消息定义
-```
-
-### 如何添加
-
-1. 打开 Xcode 项目
-2. 右键点击 **"Gemini Voyager Extension"** 目标
-3. 选择 **Add Files to "Gemini Voyager Extension"...**
-4. 导航到 `safari/App/` 和 `safari/Models/`
-5. 勾选 **"Copy items if needed"**
-6. 确保目标是 **"Gemini Voyager Extension"**
-
-### 原生功能
-
-添加后，你可以：
-
-- 访问 macOS 钥匙串（未来）
-- 使用原生通知
-- 通过原生选择器访问文件系统
-- 通过 iCloud 同步（未来）
-- 增强的调试日志
+不需要手动添加。仓库中的 Xcode 工程已经包含 macOS App 和 Swift Safari 扩展。Sparkle 在 App 中负责自动更新；Swift 扩展负责回答完成系统通知。
 
 ### 原生消息 API
 
@@ -101,22 +70,17 @@ safari/
 **从 JavaScript 调用：**
 
 ```javascript
-// 健康检查
-browser.runtime.sendNativeMessage({ action: 'ping' }, (response) => {
-  console.log(response); // { success: true, data: { status: "ok", message: "pong" } }
-});
-
-// 获取版本
-browser.runtime.sendNativeMessage({ action: 'getVersion' }, (response) => {
-  console.log(response.data); // { version: "1.0.0", platform: "macOS" }
-});
+const response = await browser.runtime.sendNativeMessage(
+  'com.yourCompany.Gemini-Voyager',
+  { action: 'ping' },
+);
 ```
 
 **可用操作：**
 
 - `ping` - 健康检查
-- `getVersion` - 获取扩展版本信息
-- `syncStorage` - 同步存储（未来功能的占位符）
+- `requestNotificationPermission` - 请求 macOS 通知权限
+- `showNotification` - 显示回答完成系统通知
 
 ## 调试
 

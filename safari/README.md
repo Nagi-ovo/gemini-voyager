@@ -59,40 +59,9 @@ bun run build:safari
 # Then rebuild in Xcode (⌘R)
 ```
 
-## Adding Swift Native Code (Optional)
+## macOS App and Swift Extension
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/gemini-voyager)
-
-This project includes Swift code for native macOS features. Adding it is **optional** but recommended.
-
-### Files Included
-
-```
-safari/
-├── App/
-│   └── SafariWebExtensionHandler.swift  # Native message handler
-└── Models/
-    └── SafariMessage.swift              # Message definitions
-```
-
-### How to Add
-
-1. Open the Xcode project
-2. Right-click **"Gemini Voyager Extension"** target
-3. Select **Add Files to "Gemini Voyager Extension"...**
-4. Navigate to `safari/App/` and `safari/Models/`
-5. Check **"Copy items if needed"**
-6. Ensure target is **"Gemini Voyager Extension"**
-
-### Native Features
-
-Once added, you can:
-
-- Access macOS Keychain (future)
-- Use native notifications
-- Access file system with native pickers
-- Sync via iCloud (future)
-- Enhanced debugging logs
+No manual setup is required. The tracked Xcode project already contains the macOS app and its Swift Safari extension. Sparkle runs in the app; response-completion notifications run in the Swift extension.
 
 ### Native Messaging API
 
@@ -101,22 +70,17 @@ Once added, you can:
 **From JavaScript:**
 
 ```javascript
-// Health check
-browser.runtime.sendNativeMessage({ action: 'ping' }, (response) => {
-  console.log(response); // { success: true, data: { status: "ok", message: "pong" } }
-});
-
-// Get version
-browser.runtime.sendNativeMessage({ action: 'getVersion' }, (response) => {
-  console.log(response.data); // { version: "1.0.0", platform: "macOS" }
-});
+const response = await browser.runtime.sendNativeMessage(
+  'com.yourCompany.Gemini-Voyager',
+  { action: 'ping' },
+);
 ```
 
 **Available Actions:**
 
 - `ping` - Health check
-- `getVersion` - Get extension version info
-- `syncStorage` - Sync storage (placeholder for future)
+- `requestNotificationPermission` - Ask for macOS notification permission
+- `showNotification` - Show a response-completion notification
 
 ## Debugging
 

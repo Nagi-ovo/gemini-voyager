@@ -85,8 +85,9 @@ describe('manifest permissions', () => {
     expect(chromeManifest.optional_permissions).not.toContain('unlimitedStorage');
   });
 
-  it('adds optional unlimitedStorage to Safari without restoring notifications', () => {
+  it('adds Safari native messaging without restoring WebExtension notifications', () => {
     expect(safariManifest.permissions).not.toContain('unlimitedStorage');
+    expect(safariManifest.permissions).toContain('nativeMessaging');
     expect(safariManifest.optional_permissions).toContain('unlimitedStorage');
     expect(safariManifest.optional_permissions).not.toContain('notifications');
   });

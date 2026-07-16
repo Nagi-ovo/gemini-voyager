@@ -25,6 +25,7 @@ import {
   ensureNotificationsPermission,
   hasNotificationsPermission,
 } from '@/core/utils/notificationsPermission';
+import { requestSafariNotificationPermission } from '@/core/utils/safariNativeNotifications';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import { resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
@@ -4146,13 +4147,16 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                     checked={responseCompleteNotificationEnabled}
                     onChange={async (e) => {
                       const next = e.target.checked;
-                      // "notifications" is an optional permission — request it
-                      // inside this user gesture before enabling the feature.
-                      if (next && !(await ensureNotificationsPermission())) {
-                        setResponseCompleteNotificationEnabled(false);
-                        return;
+                      if (next) {
+                        const granted = isSafariBrowser
+                          ? await requestSafariNotificationPermission()
+                          : await ensureNotificationsPermission();
+                        if (!granted) {
+                          setResponseCompleteNotificationEnabled(false);
+                          return;
+                        }
                       }
-                      if (next) setRemoteAnnouncementPermissionGranted(true);
+                      if (next && !isSafariBrowser) setRemoteAnnouncementPermissionGranted(true);
                       setResponseCompleteNotificationEnabled(next);
                       apply({ responseCompleteNotificationEnabled: next });
                     }}

@@ -2204,7 +2204,7 @@
     "description": "Gemini response completion notification hint"
   },
   "responseCompleteNotificationHintSafari": {
-    "message": "O Safari não oferece suporte a notificações do sistema de extensões; o Voyager mostrará um aviso na página quando você voltar.",
+    "message": "No Safari, o app Gemini Voyager para macOS envia esta notificação do sistema.",
     "description": "Safari-specific hint for response completion notifications"
   },
   "responseCompleteNotificationMessage": {

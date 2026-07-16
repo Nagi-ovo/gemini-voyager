@@ -32,6 +32,7 @@ import {
   supportsExtensionNotifications,
 } from '@/core/utils/browser';
 import { hasNotificationsPermission } from '@/core/utils/notificationsPermission';
+import { showSafariNativeNotification } from '@/core/utils/safariNativeNotifications';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import {
   isRemoteAnnouncementRuntimeMessage,
@@ -195,7 +196,8 @@ async function showResponseCompleteNotification(
   sender: chrome.runtime.MessageSender,
   details: ResponseCompleteNotificationDetails,
 ): Promise<boolean> {
-  if (!supportsExtensionNotifications()) return false;
+  const useSafariNativeNotification = getVoyagerBuildTarget() === 'safari';
+  if (!useSafariNativeNotification && !supportsExtensionNotifications()) return false;
 
   const setting = await chrome.storage.sync.get({
     [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
@@ -205,7 +207,7 @@ async function showResponseCompleteNotification(
   // "notifications" is an optional permission (granted from the popup toggle);
   // the namespace check above is not reliable across grant/revoke, so verify
   // explicitly before attempting to create a notification.
-  if (!(await hasNotificationsPermission())) return false;
+  if (!useSafariNativeNotification && !(await hasNotificationsPermission())) return false;
 
   const conversationUrl = details.conversationUrl;
   const dedupKey = getTabDedupKey(sender.tab?.id, sender.tab?.url, conversationUrl);
@@ -235,6 +237,17 @@ async function showResponseCompleteNotification(
 
   try {
     const notificationId = `${RESPONSE_COMPLETE_NOTIFICATION_ID_PREFIX}${sender.tab?.id ?? RESPONSE_COMPLETE_UNKNOWN_TAB_ID}-${now}`;
+    const title = conversationTitle
+      ? `${RESPONSE_COMPLETE_NOTIFICATION_TITLE}${RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR}${conversationTitle}`
+      : RESPONSE_COMPLETE_NOTIFICATION_TITLE;
+    const message = userPrompt
+      ? `${notificationMessage}${RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR}${userPrompt}`
+      : notificationMessage;
+
+    if (useSafariNativeNotification) {
+      return await showSafariNativeNotification({ id: notificationId, title, message });
+    }
+
     responseCompleteNotificationTargets.set(notificationId, {
       conversationUrl,
       tabId: sender.tab?.id,
@@ -242,12 +255,8 @@ async function showResponseCompleteNotification(
     await browser.notifications.create(notificationId, {
       type: 'basic',
       iconUrl: chrome.runtime.getURL(RESPONSE_COMPLETE_NOTIFICATION_ICON),
-      title: conversationTitle
-        ? `${RESPONSE_COMPLETE_NOTIFICATION_TITLE}${RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR}${conversationTitle}`
-        : RESPONSE_COMPLETE_NOTIFICATION_TITLE,
-      message: userPrompt
-        ? `${notificationMessage}${RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR}${userPrompt}`
-        : notificationMessage,
+      title,
+      message,
     });
     return true;
   } catch (error) {

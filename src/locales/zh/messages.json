@@ -2204,7 +2204,7 @@
     "description": "Gemini 回答完成系统通知提示"
   },
   "responseCompleteNotificationHintSafari": {
-    "message": "Safari 不支持扩展系统通知；返回页面时 Voyager 会显示页面内提示。",
+    "message": "在 Safari 上，此系统通知由 Gemini Voyager macOS App 发送。",
     "description": "Safari 上 Gemini 回答完成通知提示"
   },
   "responseCompleteNotificationMessage": {

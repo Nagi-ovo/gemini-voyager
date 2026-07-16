@@ -2204,7 +2204,7 @@
     "description": "Gemini response completion notification hint"
   },
   "responseCompleteNotificationHintSafari": {
-    "message": "Safari는 확장 프로그램의 시스템 알림을 지원하지 않습니다. 돌아오면 Voyager가 페이지 안에 알림을 표시합니다.",
+    "message": "Safari에서는 Gemini Voyager macOS 앱이 이 시스템 알림을 보냅니다.",
     "description": "Safari-specific hint for response completion notifications"
   },
   "responseCompleteNotificationMessage": {

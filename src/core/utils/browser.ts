@@ -147,9 +147,8 @@ export function supportsDynamicContentScriptRegistration(): boolean {
 }
 
 /**
- * Detect whether this extension runtime can show system notifications.
- * Safari Web Extensions do not support the WebExtensions notifications API,
- * so Safari must use in-page notification fallbacks instead.
+ * Detect whether this extension runtime exposes the WebExtensions notifications
+ * API. Safari response notifications use the native Swift bridge instead.
  */
 export function supportsExtensionNotifications(): boolean {
   if (isSafari()) return false;

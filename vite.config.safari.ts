@@ -91,7 +91,12 @@ export const safariManifest = {
       '32': 'icon-32-template.png',
     },
   },
-  permissions: manifest.permissions.filter((permission) => permission !== 'notifications'),
+  permissions: Array.from(
+    new Set([
+      ...manifest.permissions.filter((permission) => permission !== 'notifications'),
+      'nativeMessaging',
+    ]),
+  ),
   optional_permissions: Array.from(
     new Set([
       ...(manifest.optional_permissions ?? []).filter(
