@@ -149,6 +149,22 @@ function normalizeFolderSearchText(value: string): string {
   return value.trim().toLocaleLowerCase();
 }
 
+type FolderSearchMode = 'all' | 'folder';
+
+interface FolderSearchCriteria {
+  mode: FolderSearchMode;
+  query: string;
+}
+
+function parseFolderSearchCriteria(value: string): FolderSearchCriteria {
+  const normalized = normalizeFolderSearchText(value);
+  const folderOnlyMatch = normalized.match(/^(?:f|folder)\s*:\s*(.*)$/);
+
+  return folderOnlyMatch
+    ? { mode: 'folder', query: folderOnlyMatch[1] ?? '' }
+    : { mode: 'all', query: normalized };
+}
+
 /**
  * Validate folder data structure
  */
@@ -1965,8 +1981,15 @@ export class FolderManager {
     return list;
   }
 
-  private createFolderElement(folder: Folder, level = 0): HTMLElement {
+  private createFolderElement(
+    folder: Folder,
+    level = 0,
+    includeEntireSubtree = false,
+  ): HTMLElement {
     const isSearchActive = this.isFolderSearchActive();
+    const includeFolderSubtree =
+      includeEntireSubtree ||
+      (this.isFolderOnlySearchActive() && this.matchesFolderSearchText(folder.name));
     const isExpanded = folder.isExpanded || isSearchActive;
     const folderEl = document.createElement('div');
     folderEl.className = 'gv-folder-item';
@@ -2063,7 +2086,10 @@ export class FolderManager {
 
       // Render conversations in this folder (sorted: starred first)
       const conversations = this.data.folderContents[folder.id] || [];
-      const filteredConversations = this.filterVisibleConversations(conversations);
+      const filteredConversations = this.filterVisibleConversations(
+        conversations,
+        includeFolderSubtree,
+      );
       const sortedConversations = this.sortConversations(filteredConversations);
       const groupIndices = { starred: 0, normal: 0 };
       sortedConversations.forEach((conv) => {
@@ -2081,14 +2107,16 @@ export class FolderManager {
       let subfolderIndex = 0;
       const visibleSubfolders = sortedSubfolders.filter((subfolder) =>
         isSearchActive
-          ? this.matchesFolderSearchTree(subfolder.id)
+          ? includeFolderSubtree
+            ? this.hasVisibleContent(subfolder.id)
+            : this.matchesFolderSearchTree(subfolder.id)
           : this.hasVisibleContent(subfolder.id),
       );
       if (!isSearchActive && visibleSubfolders.length > 0) {
         content.appendChild(this.createReorderGap(folder.id, 'folder', 0));
       }
       visibleSubfolders.forEach((subfolder) => {
-        const subfolderEl = this.createFolderElement(subfolder, level + 1);
+        const subfolderEl = this.createFolderElement(subfolder, level + 1, includeFolderSubtree);
         content.appendChild(subfolderEl);
         subfolderIndex++;
         if (!isSearchActive) {
@@ -9739,16 +9767,28 @@ export class FolderManager {
     return this.folderSearchEnabled && normalizeFolderSearchText(this.folderSearchQuery).length > 0;
   }
 
+  private isFolderOnlySearchActive(): boolean {
+    return this.isFolderSearchActive() && this.getFolderSearchCriteria().mode === 'folder';
+  }
+
+  private getFolderSearchCriteria(): FolderSearchCriteria {
+    return parseFolderSearchCriteria(this.folderSearchQuery);
+  }
+
   private matchesFolderSearchText(value: string): boolean {
-    const query = normalizeFolderSearchText(this.folderSearchQuery);
+    const { query } = this.getFolderSearchCriteria();
     return query.length === 0 || normalizeFolderSearchText(value).includes(query);
   }
 
   private filterVisibleConversations(
     conversations: ConversationReference[],
+    includeForFolderOnlySearch = false,
   ): ConversationReference[] {
     const userConversations = this.filterConversationsByCurrentUser(conversations);
     if (!this.isFolderSearchActive()) return userConversations;
+    if (this.isFolderOnlySearchActive()) {
+      return includeForFolderOnlySearch ? userConversations : [];
+    }
 
     return userConversations.filter((conversation) =>
       this.matchesFolderSearchText(conversation.title),

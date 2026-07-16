@@ -65,6 +65,14 @@ const folderData: FolderData = {
     },
   ],
   folderContents: {
+    research: [
+      {
+        conversationId: 'research-overview',
+        title: 'Research overview',
+        url: 'https://gemini.google.com/app/research-overview',
+        addedAt: 9,
+      },
+    ],
     papers: [
       {
         conversationId: 'alpha-signals',
@@ -111,6 +119,58 @@ describe('folder sidebar search', () => {
 
     expect(getFolderNames(list)).toEqual(['Recipes']);
     expect(getConversationTitles(list)).toEqual([]);
+  });
+
+  it('shows every conversation inside a folder matched with the f: prefix', () => {
+    manager = makeManager(folderData, 'f:recipes');
+
+    const list = manager.createFoldersList();
+
+    expect(getFolderNames(list)).toEqual(['Recipes']);
+    expect(getConversationTitles(list)).toEqual(['Dinner plan']);
+  });
+
+  it('shows the full subtree when a parent folder matches folder:', () => {
+    manager = makeManager(folderData, 'folder:research');
+
+    const list = manager.createFoldersList();
+
+    expect(getFolderNames(list)).toEqual(['Research', 'Papers']);
+    expect(getConversationTitles(list)).toEqual(['Research overview', 'Alpha signals']);
+  });
+
+  it('keeps only the ancestor path when a nested folder matches f:', () => {
+    manager = makeManager(folderData, 'F: Papers');
+
+    const list = manager.createFoldersList();
+
+    expect(getFolderNames(list)).toEqual(['Research', 'Papers']);
+    expect(getConversationTitles(list)).toEqual(['Alpha signals']);
+  });
+
+  it('does not match root conversations in folder-only mode', () => {
+    manager = makeManager(
+      {
+        ...folderData,
+        folderContents: {
+          ...folderData.folderContents,
+          __root_conversations__: [
+            {
+              conversationId: 'recipes-root',
+              title: 'Recipes shortcut',
+              url: 'https://gemini.google.com/app/recipes-root',
+              addedAt: 8,
+            },
+          ],
+        },
+      },
+      'f:recipes',
+    );
+
+    const list = manager.createFoldersList();
+
+    expect(getFolderNames(list)).toEqual(['Recipes']);
+    expect(getConversationTitles(list)).toEqual(['Dinner plan']);
   });
 
   it('uses the search empty state when no titles match', () => {
