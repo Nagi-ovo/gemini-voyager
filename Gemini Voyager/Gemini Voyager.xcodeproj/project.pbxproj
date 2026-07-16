@@ -31,6 +31,11 @@
 		B60723ED2FB752BD00F3A4FD /* icon-128.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723E02FB752BD00F3A4FD /* icon-128.png */; };
 		B60723EE2FB752BD00F3A4FD /* icon-32.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723E12FB752BD00F3A4FD /* icon-32.png */; };
 		B60723EF2FB752BD00F3A4FD /* src in Resources */ = {isa = PBXBuildFile; fileRef = B60723E22FB752BD00F3A4FD /* src */; };
+		B60723F02FB752BD00F3A4FD /* claude-usage-observer.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723F52FB752BD00F3A4FD /* claude-usage-observer.js */; };
+		B60723F12FB752BD00F3A4FD /* conversation-history-observer.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723F62FB752BD00F3A4FD /* conversation-history-observer.js */; };
+		B60723F22FB752BD00F3A4FD /* fable-verified-badge.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723F72FB752BD00F3A4FD /* fable-verified-badge.png */; };
+		B60723F32FB752BD00F3A4FD /* response-complete-observer.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723F82FB752BD00F3A4FD /* response-complete-observer.js */; };
+		B60723F42FB752BD00F3A4FD /* usage-observer.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723F92FB752BD00F3A4FD /* usage-observer.js */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -84,6 +89,11 @@
 		B60723E02FB752BD00F3A4FD /* icon-128.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-128.png"; path = "../../dist_safari/icon-128.png"; sourceTree = "<group>"; };
 		B60723E12FB752BD00F3A4FD /* icon-32.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-32.png"; path = "../../dist_safari/icon-32.png"; sourceTree = "<group>"; };
 		B60723E22FB752BD00F3A4FD /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; name = src; path = ../../dist_safari/src; sourceTree = "<group>"; };
+		B60723F52FB752BD00F3A4FD /* claude-usage-observer.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "claude-usage-observer.js"; path = "../../dist_safari/claude-usage-observer.js"; sourceTree = "<group>"; };
+		B60723F62FB752BD00F3A4FD /* conversation-history-observer.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "conversation-history-observer.js"; path = "../../dist_safari/conversation-history-observer.js"; sourceTree = "<group>"; };
+		B60723F72FB752BD00F3A4FD /* fable-verified-badge.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "fable-verified-badge.png"; path = "../../dist_safari/fable-verified-badge.png"; sourceTree = "<group>"; };
+		B60723F82FB752BD00F3A4FD /* response-complete-observer.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "response-complete-observer.js"; path = "../../dist_safari/response-complete-observer.js"; sourceTree = "<group>"; };
+		B60723F92FB752BD00F3A4FD /* usage-observer.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "usage-observer.js"; path = "../../dist_safari/usage-observer.js"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -173,6 +183,11 @@
 				B60723E02FB752BD00F3A4FD /* icon-128.png */,
 				B60723E12FB752BD00F3A4FD /* icon-32.png */,
 				B60723E22FB752BD00F3A4FD /* src */,
+				B60723F52FB752BD00F3A4FD /* claude-usage-observer.js */,
+				B60723F62FB752BD00F3A4FD /* conversation-history-observer.js */,
+				B60723F72FB752BD00F3A4FD /* fable-verified-badge.png */,
+				B60723F82FB752BD00F3A4FD /* response-complete-observer.js */,
+				B60723F92FB752BD00F3A4FD /* usage-observer.js */,
 			);
 			name = Resources;
 			path = "Gemini Voyager Extension";
@@ -294,6 +309,11 @@
 				B60723E72FB752BD00F3A4FD /* prevent-auto-scroll.js in Resources */,
 				B60723EA2FB752BD00F3A4FD /* fonts in Resources */,
 				B60723EC2FB752BD00F3A4FD /* fetchInterceptor.js in Resources */,
+				B60723F02FB752BD00F3A4FD /* claude-usage-observer.js in Resources */,
+				B60723F12FB752BD00F3A4FD /* conversation-history-observer.js in Resources */,
+				B60723F22FB752BD00F3A4FD /* fable-verified-badge.png in Resources */,
+				B60723F32FB752BD00F3A4FD /* response-complete-observer.js in Resources */,
+				B60723F42FB752BD00F3A4FD /* usage-observer.js in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -541,7 +561,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CODE_SIGN_ENTITLEMENTS = "../safari/Gemini Voyager.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Gemini Voyager/Gemini Voyager.entitlements";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1.5.7;
 				DEVELOPMENT_TEAM = PJM828YBFJ;
@@ -584,7 +604,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CODE_SIGN_ENTITLEMENTS = "../safari/Gemini Voyager.entitlements";
+				CODE_SIGN_ENTITLEMENTS = "Gemini Voyager/Gemini Voyager.entitlements";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1.5.7;
 				DEVELOPMENT_TEAM = PJM828YBFJ;
