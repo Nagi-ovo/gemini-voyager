@@ -12763,6 +12763,21 @@ body.gv-rtl .gv-coach-dismiss {
   .formatted-code-block-internal-container {
   background: #eff1f5 !important; /* Latte base */
   border: 1px solid #dce0e8 !important; /* Latte crust — hairline edge on white */
+  border-radius: 16px !important;
+  overflow: clip !important;
+}
+/*
+ * Gemini now paints the dark surface on the nested pre/code elements rather
+ * than only on the luminous container. Keep every layer on the same light
+ * surface or the Latte token colors become unreadable on the native dark fill.
+ */
+.theme-host.light-theme code-block.enable-luminous-code-block pre,
+.theme-host.light-theme code-block.enable-luminous-code-block code.code-container {
+  background: #eff1f5 !important;
+}
+.theme-host.light-theme code-block.enable-luminous-code-block .code-block-decoration {
+  background: #e6e9ef !important; /* Latte mantle */
+  border-bottom: 1px solid #dce0e8 !important;
 }
 /* Base text + the header (language label, copy / expand icons). */
 .theme-host.light-theme code-block.enable-luminous-code-block code,
@@ -12856,6 +12871,7 @@ body.gv-rtl .gv-coach-dismiss {
 code-block .code-block-decoration,
 .code-block .code-block-decoration {
   position: sticky !important;
-  top: 0;
+  /* Gemini's new rule uses -16px and pushes the bar into its 72px top mask. */
+  top: 0 !important;
   z-index: 1;
 }
