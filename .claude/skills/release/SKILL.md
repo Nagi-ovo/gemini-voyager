@@ -87,7 +87,7 @@ sed -i '' -e 's/MARKETING_VERSION = {OLD};/MARKETING_VERSION = {NEW};/g' \
 grep -E "MARKETING_VERSION|CURRENT_PROJECT_VERSION" "$PBX" | sort -u   # expect {NEW} + the untouched 1.0 / 1
 ```
 
-`project.pbxproj` is gitignored, so this won't appear in the Step 4 commit — that's expected; it only needs to be correct locally before the Step 8 archive. If Xcode is open, reopen it so the new version takes effect.
+`project.pbxproj` is tracked because it contains the native Safari app's package and signing configuration. Include this version change in the Step 4 release commit. If Xcode is open, reopen it so the new version takes effect.
 
 ## Step 3 — Changelog (required, all 10 locales)
 
@@ -106,7 +106,8 @@ Two things that are easy to miss (full rules in the reference):
 ## Step 4 — Commit + tag
 
 ```bash
-git add package.json manifest.json manifest.dev.json src/pages/content/changelog/notes/{VERSION}.md
+git add package.json manifest.json manifest.dev.json src/pages/content/changelog/notes/{VERSION}.md \
+  "Gemini Voyager/Gemini Voyager.xcodeproj/project.pbxproj"
 git commit -m "chore: bump to v{VERSION}"
 git tag v{VERSION}
 ```
@@ -222,20 +223,21 @@ Safari gets its own asset (a signed DMG) because Safari extensions ship as nativ
 xcodebuild -version 2>&1
 ```
 
-- If it prints a version (e.g., `Xcode 15.4`): proceed to **references/safari-dmg.md** for the full flow. Two things that flow now bakes in and must not be skipped: (1) the Safari bundle IDs stay the **placeholder** `com.yourCompany.Gemini-Voyager` (changing them breaks existing users' in-place update), and (2) the DMG is **notarized + stapled** headlessly via the `voyager-notary` keychain profile before upload — a signed-but-un-notarized DMG trips the Gatekeeper malware warning.
+- If it prints a version (e.g., `Xcode 15.4`): proceed to **references/safari-dmg.md** for the full flow. Three things must not be skipped: (1) keep the shipped `com.yourCompany.Gemini-Voyager` bundle IDs, (2) notarize + staple via the `voyager-notary` keychain profile, and (3) generate and upload the signed Sparkle `appcast.xml` beside the DMG.
 - If it prints `xcode-select: error: tool 'xcodebuild' requires Xcode, but active developer directory ... is a command line tools instance`: tell the user they can't build the DMG here, note that the GitHub Release went out with Chrome/Firefox (Edge users should use the Chrome Web Store build), and show them how to finish later on a machine with Xcode:
   ```
   # On a machine with Xcode.app
   ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari
   # ... then follow references/safari-dmg.md from step "Xcode export" onward
-  gh release upload v{VERSION} safari/Models/voyager-v{VERSION}.dmg --clobber
+  scripts/generate-sparkle-appcast.sh safari/Models/voyager-v{VERSION}.dmg v{VERSION} /tmp/appcast.xml
+  gh release upload v{VERSION} safari/Models/voyager-v{VERSION}.dmg /tmp/appcast.xml --clobber
   ```
   Do not block the release on Safari — the historical pattern (see v1.3.9) is that the DMG lands a few hours after the main release.
 
 ## Step 9 — Final check
 
 - Open the new release page: `gh release view v{VERSION} --web` (only if user asks).
-- Confirm asset list. Expected: `voyager-chrome-v{VERSION}.zip`, `voyager-firefox-v{VERSION}.xpi`, and (if Safari sub-flow ran) `voyager-v{VERSION}.dmg`. Any Edge zip from Step 7 lives only on disk, never on the release page.
+- Confirm asset list. Expected: `voyager-chrome-v{VERSION}.zip`, `voyager-firefox-v{VERSION}.xpi`, and (if Safari sub-flow ran) `voyager-v{VERSION}.dmg` plus `appcast.xml`. Any Edge zip from Step 7 lives only on disk, never on the release page.
 - Chrome Web Store publish is automatic now (the workflow's final step). To confirm it went through, check that step's log in the workflow run, or the [CWS developer dashboard](https://chrome.google.com/webstore/devconsole) — the new version sits in Google review before it goes live, so it won't be public immediately.
 - Summarize in one line what was shipped and what's still pending (if Safari was deferred).
 

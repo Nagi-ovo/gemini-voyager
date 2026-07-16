@@ -187,17 +187,17 @@ bun run dev:safari     # Development with auto-reload
 bun run build:all      # Build for all browsers
 ```
 
-## Update Reminder Configuration
+## Direct-Install Updates
 
-By default, update reminders are **disabled** for Safari builds to avoid conflicts with App Store auto-updates.
+Direct-install builds use Sparkle in the containing macOS app. The existing JavaScript reminder remains enabled by default so older installs can discover the first Sparkle-enabled DMG.
 
-To enable update reminders (for manual distribution):
+For an App Store build, disable the direct-release reminder:
 
 ```bash
-ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari
+ENABLE_SAFARI_UPDATE_CHECK=false bun run build:safari
 ```
 
-**Note**: Only enable this if you're distributing the extension manually (not via App Store). App Store versions should use the default (disabled) to rely on automatic updates.
+Sparkle checks while the containing app is running. Users can also choose **Check for Updates…** from the app menu.
 
 ## Known Limitations
 

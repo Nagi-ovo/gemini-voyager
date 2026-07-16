@@ -1,4 +1,5 @@
 node_modules/
+.build/
 /dist_chrome/
 /dist_firefox/
 /dist_safari/
@@ -10,10 +11,9 @@ release_body.md
 coverage/
 .vitest/
 
-# Generated Xcode projects (users generate these locally)
-/Gemini Voyager/
-*.xcodeproj/xcuserdata/
-*.xcworkspace/xcuserdata/
+# Xcode user state and build output
+**/*.xcodeproj/xcuserdata/
+**/*.xcworkspace/xcuserdata/
 DerivedData/
 safari/Models/Gemini*
 safari/Models/dmg_source/

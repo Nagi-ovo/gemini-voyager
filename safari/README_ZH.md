@@ -187,17 +187,17 @@ bun run dev:safari     # 开发模式（自动重载）
 bun run build:all      # 为所有浏览器构建
 ```
 
-## 更新提醒配置
+## 直装版自动更新
 
-默认情况下，Safari 版本的更新提醒是**禁用的**，以避免与 App Store 自动更新冲突。
+直装版由 macOS 容器 App 内的 Sparkle 负责更新。原有 JavaScript 提醒默认保留，让旧版本用户能发现第一个支持 Sparkle 的 DMG。
 
-如需启用更新提醒（用于手动分发）：
+如需构建 App Store 版本，关闭直装更新提醒：
 
 ```bash
-ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari
+ENABLE_SAFARI_UPDATE_CHECK=false bun run build:safari
 ```
 
-**注意**：仅在手动分发扩展时启用此功能（非 App Store 分发）。App Store 版本应使用默认设置（禁用），以依赖自动更新。
+Sparkle 会在容器 App 运行时检查更新；用户也可以从 App 菜单选择 **Check for Updates…**。
 
 ## 已知限制
 

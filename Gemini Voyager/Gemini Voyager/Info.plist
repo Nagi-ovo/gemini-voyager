@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>SFSafariWebExtensionConverterVersion</key>
+	<string>26.5</string>
+	<key>SUAutomaticallyUpdate</key>
+	<true/>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUEnableInstallerLauncherService</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string>https://github.com/Nagi-ovo/gemini-voyager/releases/latest/download/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>uOB77S8Ti+ELfkD/GEto1hWWFrV5PpSkh++M7eHiYGE=</string>
+</dict>
+</plist>

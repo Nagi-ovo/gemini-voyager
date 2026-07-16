@@ -8,6 +8,7 @@ Previously this lived as a standalone `safari-release` skill; it's now merged in
 
 - **Full Xcode.app** (not just Command Line Tools). Check with `xcodebuild -version` — if it fails with "requires Xcode, but active developer directory ... is a command line tools instance", bail out and tell the user to either install Xcode.app or defer the Safari DMG to a later machine.
 - Apple Developer ID for signing (one-time setup on the machine).
+- Sparkle EdDSA private key in macOS Keychain under account `Nagi-ovo` (one-time setup; Sparkle does not require an account).
 - `create-dmg` installed (`brew install create-dmg`).
 - `gh` authenticated to the repo.
 
@@ -86,7 +87,7 @@ Expected bundle IDs — the **placeholder** `com.yourCompany` IDs, NOT `fun.nagi
 - Extension: `com.yourCompany.Gemini-Voyager.Extension`
 - Team: `PJM828YBFJ`
 
-⚠️ **Do NOT "clean up" these to `fun.nagi.voyager`.** Every shipped Safari build has used the `com.yourCompany.Gemini-Voyager` bundle ID, so existing users are installed under it. Changing the bundle ID changes the app identity — macOS then treats the new build as a *different* app and existing users cannot update in place (they'd end up with two copies). Backward-compat beats tidy IDs. If the project somehow shows `fun.nagi.voyager`, revert both the app and extension `PRODUCT_BUNDLE_IDENTIFIER` entries to the `com.yourCompany.Gemini-Voyager` / `.Extension` placeholders before archiving. The project file is gitignored, so this is local release configuration.
+⚠️ **Do NOT "clean up" these to `fun.nagi.voyager`.** Every shipped Safari build has used the `com.yourCompany.Gemini-Voyager` bundle ID, so existing users are installed under it. Changing the bundle ID changes the app identity — macOS then treats the new build as a *different* app and existing users cannot update in place (they'd end up with two copies). Backward-compat beats tidy IDs. If the project somehow shows `fun.nagi.voyager`, revert both the app and extension `PRODUCT_BUNDLE_IDENTIFIER` entries to the `com.yourCompany.Gemini-Voyager` / `.Extension` placeholders before archiving.
 
 Confirm the Developer ID identity exists:
 
@@ -170,12 +171,13 @@ APP="safari/Models/dmg_source/Gemini Voyager.app"
 /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Contents/PlugIns/Gemini Voyager Extension.appex/Contents/Info.plist"
 lipo -info "$APP/Contents/MacOS/Gemini Voyager"
 codesign --verify --deep --strict --verbose=2 "$APP"
+node scripts/verify-release-privacy.mjs "$APP"
 ```
 
 Expected:
 
-- App bundle ID: `fun.nagi.voyager`
-- Extension bundle ID: `fun.nagi.voyager.extension`
+- App bundle ID: `com.yourCompany.Gemini-Voyager`
+- Extension bundle ID: `com.yourCompany.Gemini-Voyager.Extension`
 - Version/build: `VERSION`
 - Architectures: `x86_64 arm64`
 - `codesign` says `valid on disk` and `satisfies its Designated Requirement`
@@ -250,21 +252,41 @@ hdiutil detach "$MOUNT"
 
 Only upload once `spctl` reports `Notarized Developer ID`. `spctl -t open` on the DMG itself may say "no usable signature" (create-dmg leaves the DMG unsigned) — that's fine; the stapled app inside is what Gatekeeper checks.
 
-### 9. Upload to the GitHub release
+### 9. Generate the signed Sparkle feed
+
+Generate the feed only from the final notarized DMG. The private key stays in Keychain; only its public signature is written to `appcast.xml`.
 
 ```bash
-gh release upload v${VERSION} safari/Models/voyager-v${VERSION}.dmg --clobber
+APPCAST="/tmp/appcast.xml"
+scripts/generate-sparkle-appcast.sh \
+  "safari/Models/voyager-v${VERSION}.dmg" \
+  "v${VERSION}" \
+  "$APPCAST"
+xmllint --noout "$APPCAST"
+grep -q 'sparkle:edSignature=' "$APPCAST"
+node scripts/verify-release-privacy.mjs "$APPCAST"
 ```
 
-`--clobber` overwrites if a DMG with the same name already exists (useful when re-signing or rebuilding).
+If the signature is missing, stop. This normally means the packaged app does not contain `SUPublicEDKey`, or the Sparkle private key is unavailable in Keychain.
 
-### 10. Verify
+### 10. Upload to the GitHub release
+
+```bash
+gh release upload v${VERSION} \
+  safari/Models/voyager-v${VERSION}.dmg \
+  /tmp/appcast.xml \
+  --clobber
+```
+
+`--clobber` overwrites existing release assets when re-signing or rebuilding.
+
+### 11. Verify
 
 ```bash
 gh release view v${VERSION} --json assets --jq '.assets[].name'
 ```
 
-Confirm `voyager-v${VERSION}.dmg` is in the list alongside the Chrome/Firefox assets.
+Confirm `voyager-v${VERSION}.dmg` and `appcast.xml` are in the list alongside the Chrome/Firefox assets.
 
 ## If Xcode isn't available on this machine
 
@@ -279,7 +301,8 @@ The release can still ship — Chrome/Firefox users won't block on it, and Edge 
 > #   (leave the Tests targets' 1.0 / 1 alone)
 > ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari
 > # then follow the CLI archive/export + create-dmg steps above
-> gh release upload v{VERSION} safari/Models/voyager-v{VERSION}.dmg --clobber
+> scripts/generate-sparkle-appcast.sh safari/Models/voyager-v{VERSION}.dmg v{VERSION} /tmp/appcast.xml
+> gh release upload v{VERSION} safari/Models/voyager-v{VERSION}.dmg /tmp/appcast.xml --clobber
 > ```
 
 Historical precedent (v1.3.9) had the Safari DMG land ~12 hours after the main release. That's acceptable — Safari users are a small subset and the delay doesn't break their existing install since the extension is already running locally.

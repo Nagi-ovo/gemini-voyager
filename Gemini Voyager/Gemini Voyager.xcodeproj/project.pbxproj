@@ -1,0 +1,676 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		F1A2B3C4D5E60718293A4B5C /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = F1A2B3C4D5E60718293A4B5E /* Sparkle */; };
+		B60723AD2FB752BC00F3A4FD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60723AC2FB752BC00F3A4FD /* AppDelegate.swift */; };
+		B60723B12FB752BC00F3A4FD /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = B60723AF2FB752BC00F3A4FD /* Main.html */; };
+		B60723B32FB752BC00F3A4FD /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723B22FB752BC00F3A4FD /* Icon.png */; };
+		B60723B52FB752BC00F3A4FD /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = B60723B42FB752BC00F3A4FD /* Style.css */; };
+		B60723B72FB752BC00F3A4FD /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723B62FB752BC00F3A4FD /* Script.js */; };
+		B60723B92FB752BC00F3A4FD /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60723B82FB752BC00F3A4FD /* ViewController.swift */; };
+		B60723BC2FB752BC00F3A4FD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B60723BA2FB752BC00F3A4FD /* Main.storyboard */; };
+		B60723BE2FB752BD00F3A4FD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B60723BD2FB752BD00F3A4FD /* Assets.xcassets */; };
+		B60723C52FB752BD00F3A4FD /* Gemini Voyager Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B60723C42FB752BD00F3A4FD /* Gemini Voyager Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B60723CA2FB752BD00F3A4FD /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60723C92FB752BD00F3A4FD /* SafariWebExtensionHandler.swift */; };
+		B60723E32FB752BD00F3A4FD /* icon-128-template.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723D62FB752BD00F3A4FD /* icon-128-template.png */; };
+		B60723E42FB752BD00F3A4FD /* katex-config.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723D72FB752BD00F3A4FD /* katex-config.js */; };
+		B60723E52FB752BD00F3A4FD /* icon-32-template.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723D82FB752BD00F3A4FD /* icon-32-template.png */; };
+		B60723E62FB752BD00F3A4FD /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = B60723D92FB752BD00F3A4FD /* manifest.json */; };
+		B60723E72FB752BD00F3A4FD /* prevent-auto-scroll.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723DA2FB752BD00F3A4FD /* prevent-auto-scroll.js */; };
+		B60723E82FB752BD00F3A4FD /* _locales in Resources */ = {isa = PBXBuildFile; fileRef = B60723DB2FB752BD00F3A4FD /* _locales */; };
+		B60723E92FB752BD00F3A4FD /* contentStyle.css in Resources */ = {isa = PBXBuildFile; fileRef = B60723DC2FB752BD00F3A4FD /* contentStyle.css */; };
+		B60723EA2FB752BD00F3A4FD /* fonts in Resources */ = {isa = PBXBuildFile; fileRef = B60723DD2FB752BD00F3A4FD /* fonts */; };
+		B60723EB2FB752BD00F3A4FD /* assets in Resources */ = {isa = PBXBuildFile; fileRef = B60723DE2FB752BD00F3A4FD /* assets */; };
+		B60723EC2FB752BD00F3A4FD /* fetchInterceptor.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723DF2FB752BD00F3A4FD /* fetchInterceptor.js */; };
+		B60723ED2FB752BD00F3A4FD /* icon-128.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723E02FB752BD00F3A4FD /* icon-128.png */; };
+		B60723EE2FB752BD00F3A4FD /* icon-32.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723E12FB752BD00F3A4FD /* icon-32.png */; };
+		B60723EF2FB752BD00F3A4FD /* src in Resources */ = {isa = PBXBuildFile; fileRef = B60723E22FB752BD00F3A4FD /* src */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B60723C62FB752BD00F3A4FD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B60723A12FB752BC00F3A4FD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B60723C32FB752BD00F3A4FD;
+			remoteInfo = "Gemini Voyager Extension";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B60723D12FB752BD00F3A4FD /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				B60723C52FB752BD00F3A4FD /* Gemini Voyager Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		B60723A92FB752BC00F3A4FD /* Gemini Voyager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Gemini Voyager.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B60723AC2FB752BC00F3A4FD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		B60723B02FB752BC00F3A4FD /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
+		B60723B22FB752BC00F3A4FD /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
+		B60723B42FB752BC00F3A4FD /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
+		B60723B62FB752BC00F3A4FD /* Script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Script.js; sourceTree = "<group>"; };
+		B60723B82FB752BC00F3A4FD /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		B60723BB2FB752BC00F3A4FD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		B60723BD2FB752BD00F3A4FD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B60723BF2FB752BD00F3A4FD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B60723C42FB752BD00F3A4FD /* Gemini Voyager Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Gemini Voyager Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B60723C92FB752BD00F3A4FD /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		B60723CB2FB752BD00F3A4FD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B60723D62FB752BD00F3A4FD /* icon-128-template.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-128-template.png"; path = "../../dist_safari/icon-128-template.png"; sourceTree = "<group>"; };
+		B60723D72FB752BD00F3A4FD /* katex-config.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "katex-config.js"; path = "../../dist_safari/katex-config.js"; sourceTree = "<group>"; };
+		B60723D82FB752BD00F3A4FD /* icon-32-template.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-32-template.png"; path = "../../dist_safari/icon-32-template.png"; sourceTree = "<group>"; };
+		B60723D92FB752BD00F3A4FD /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../dist_safari/manifest.json; sourceTree = "<group>"; };
+		B60723DA2FB752BD00F3A4FD /* prevent-auto-scroll.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "prevent-auto-scroll.js"; path = "../../dist_safari/prevent-auto-scroll.js"; sourceTree = "<group>"; };
+		B60723DB2FB752BD00F3A4FD /* _locales */ = {isa = PBXFileReference; lastKnownFileType = folder; name = _locales; path = ../../dist_safari/_locales; sourceTree = "<group>"; };
+		B60723DC2FB752BD00F3A4FD /* contentStyle.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; name = contentStyle.css; path = ../../dist_safari/contentStyle.css; sourceTree = "<group>"; };
+		B60723DD2FB752BD00F3A4FD /* fonts */ = {isa = PBXFileReference; lastKnownFileType = folder; name = fonts; path = ../../dist_safari/fonts; sourceTree = "<group>"; };
+		B60723DE2FB752BD00F3A4FD /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = ../../dist_safari/assets; sourceTree = "<group>"; };
+		B60723DF2FB752BD00F3A4FD /* fetchInterceptor.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = fetchInterceptor.js; path = ../../dist_safari/fetchInterceptor.js; sourceTree = "<group>"; };
+		B60723E02FB752BD00F3A4FD /* icon-128.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-128.png"; path = "../../dist_safari/icon-128.png"; sourceTree = "<group>"; };
+		B60723E12FB752BD00F3A4FD /* icon-32.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-32.png"; path = "../../dist_safari/icon-32.png"; sourceTree = "<group>"; };
+		B60723E22FB752BD00F3A4FD /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; name = src; path = ../../dist_safari/src; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B60723A62FB752BC00F3A4FD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F1A2B3C4D5E60718293A4B5C /* Sparkle in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B60723C12FB752BD00F3A4FD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		B60723A02FB752BC00F3A4FD = {
+			isa = PBXGroup;
+			children = (
+				B60723AB2FB752BC00F3A4FD /* Gemini Voyager */,
+				B60723C82FB752BD00F3A4FD /* Gemini Voyager Extension */,
+				B60723AA2FB752BC00F3A4FD /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		B60723AA2FB752BC00F3A4FD /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B60723A92FB752BC00F3A4FD /* Gemini Voyager.app */,
+				B60723C42FB752BD00F3A4FD /* Gemini Voyager Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B60723AB2FB752BC00F3A4FD /* Gemini Voyager */ = {
+			isa = PBXGroup;
+			children = (
+				B60723AC2FB752BC00F3A4FD /* AppDelegate.swift */,
+				B60723B82FB752BC00F3A4FD /* ViewController.swift */,
+				B60723BA2FB752BC00F3A4FD /* Main.storyboard */,
+				B60723BD2FB752BD00F3A4FD /* Assets.xcassets */,
+				B60723BF2FB752BD00F3A4FD /* Info.plist */,
+				B60723AE2FB752BC00F3A4FD /* Resources */,
+			);
+			path = "Gemini Voyager";
+			sourceTree = "<group>";
+		};
+		B60723AE2FB752BC00F3A4FD /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B60723AF2FB752BC00F3A4FD /* Main.html */,
+				B60723B22FB752BC00F3A4FD /* Icon.png */,
+				B60723B42FB752BC00F3A4FD /* Style.css */,
+				B60723B62FB752BC00F3A4FD /* Script.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		B60723C82FB752BD00F3A4FD /* Gemini Voyager Extension */ = {
+			isa = PBXGroup;
+			children = (
+				B60723D52FB752BD00F3A4FD /* Resources */,
+				B60723C92FB752BD00F3A4FD /* SafariWebExtensionHandler.swift */,
+				B60723CB2FB752BD00F3A4FD /* Info.plist */,
+			);
+			path = "Gemini Voyager Extension";
+			sourceTree = "<group>";
+		};
+		B60723D52FB752BD00F3A4FD /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B60723D62FB752BD00F3A4FD /* icon-128-template.png */,
+				B60723D72FB752BD00F3A4FD /* katex-config.js */,
+				B60723D82FB752BD00F3A4FD /* icon-32-template.png */,
+				B60723D92FB752BD00F3A4FD /* manifest.json */,
+				B60723DA2FB752BD00F3A4FD /* prevent-auto-scroll.js */,
+				B60723DB2FB752BD00F3A4FD /* _locales */,
+				B60723DC2FB752BD00F3A4FD /* contentStyle.css */,
+				B60723DD2FB752BD00F3A4FD /* fonts */,
+				B60723DE2FB752BD00F3A4FD /* assets */,
+				B60723DF2FB752BD00F3A4FD /* fetchInterceptor.js */,
+				B60723E02FB752BD00F3A4FD /* icon-128.png */,
+				B60723E12FB752BD00F3A4FD /* icon-32.png */,
+				B60723E22FB752BD00F3A4FD /* src */,
+			);
+			name = Resources;
+			path = "Gemini Voyager Extension";
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B60723A82FB752BC00F3A4FD /* Gemini Voyager */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B60723D22FB752BD00F3A4FD /* Build configuration list for PBXNativeTarget "Gemini Voyager" */;
+			buildPhases = (
+				B60723A52FB752BC00F3A4FD /* Sources */,
+				B60723A62FB752BC00F3A4FD /* Frameworks */,
+				B60723A72FB752BC00F3A4FD /* Resources */,
+				B60723D12FB752BD00F3A4FD /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B60723C72FB752BD00F3A4FD /* PBXTargetDependency */,
+			);
+			name = "Gemini Voyager";
+			packageProductDependencies = (
+				F1A2B3C4D5E60718293A4B5E /* Sparkle */,
+			);
+			productName = "Gemini Voyager";
+			productReference = B60723A92FB752BC00F3A4FD /* Gemini Voyager.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B60723C32FB752BD00F3A4FD /* Gemini Voyager Extension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B60723CE2FB752BD00F3A4FD /* Build configuration list for PBXNativeTarget "Gemini Voyager Extension" */;
+			buildPhases = (
+				B60723C02FB752BD00F3A4FD /* Sources */,
+				B60723C12FB752BD00F3A4FD /* Frameworks */,
+				B60723C22FB752BD00F3A4FD /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Gemini Voyager Extension";
+			packageProductDependencies = (
+			);
+			productName = "Gemini Voyager Extension";
+			productReference = B60723C42FB752BD00F3A4FD /* Gemini Voyager Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B60723A12FB752BC00F3A4FD /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2650;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					B60723A82FB752BC00F3A4FD = {
+						CreatedOnToolsVersion = 26.5;
+					};
+					B60723C32FB752BD00F3A4FD = {
+						CreatedOnToolsVersion = 26.5;
+					};
+				};
+			};
+			buildConfigurationList = B60723A42FB752BC00F3A4FD /* Build configuration list for PBXProject "Gemini Voyager" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = B60723A02FB752BC00F3A4FD;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B60723AA2FB752BC00F3A4FD /* Products */;
+			packageReferences = (
+				F1A2B3C4D5E60718293A4B5D /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B60723A82FB752BC00F3A4FD /* Gemini Voyager */,
+				B60723C32FB752BD00F3A4FD /* Gemini Voyager Extension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B60723A72FB752BC00F3A4FD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B60723B32FB752BC00F3A4FD /* Icon.png in Resources */,
+				B60723BC2FB752BC00F3A4FD /* Main.storyboard in Resources */,
+				B60723B72FB752BC00F3A4FD /* Script.js in Resources */,
+				B60723B12FB752BC00F3A4FD /* Main.html in Resources */,
+				B60723BE2FB752BD00F3A4FD /* Assets.xcassets in Resources */,
+				B60723B52FB752BC00F3A4FD /* Style.css in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B60723C22FB752BD00F3A4FD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B60723E82FB752BD00F3A4FD /* _locales in Resources */,
+				B60723E62FB752BD00F3A4FD /* manifest.json in Resources */,
+				B60723E52FB752BD00F3A4FD /* icon-32-template.png in Resources */,
+				B60723EF2FB752BD00F3A4FD /* src in Resources */,
+				B60723EB2FB752BD00F3A4FD /* assets in Resources */,
+				B60723ED2FB752BD00F3A4FD /* icon-128.png in Resources */,
+				B60723EE2FB752BD00F3A4FD /* icon-32.png in Resources */,
+				B60723E42FB752BD00F3A4FD /* katex-config.js in Resources */,
+				B60723E92FB752BD00F3A4FD /* contentStyle.css in Resources */,
+				B60723E32FB752BD00F3A4FD /* icon-128-template.png in Resources */,
+				B60723E72FB752BD00F3A4FD /* prevent-auto-scroll.js in Resources */,
+				B60723EA2FB752BD00F3A4FD /* fonts in Resources */,
+				B60723EC2FB752BD00F3A4FD /* fetchInterceptor.js in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B60723A52FB752BC00F3A4FD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B60723B92FB752BC00F3A4FD /* ViewController.swift in Sources */,
+				B60723AD2FB752BC00F3A4FD /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B60723C02FB752BD00F3A4FD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B60723CA2FB752BD00F3A4FD /* SafariWebExtensionHandler.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B60723C72FB752BD00F3A4FD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B60723C32FB752BD00F3A4FD /* Gemini Voyager Extension */;
+			targetProxy = B60723C62FB752BD00F3A4FD /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		B60723AF2FB752BC00F3A4FD /* Main.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B60723B02FB752BC00F3A4FD /* Base */,
+			);
+			name = Main.html;
+			sourceTree = "<group>";
+		};
+		B60723BA2FB752BC00F3A4FD /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				B60723BB2FB752BC00F3A4FD /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		B60723CC2FB752BD00F3A4FD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		B60723CD2FB752BD00F3A4FD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		B60723CF2FB752BD00F3A4FD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1.5.7;
+				DEVELOPMENT_TEAM = PJM828YBFJ;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Gemini Voyager Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Gemini Voyager Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.5.7;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourCompany.Gemini-Voyager.Extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B60723D02FB752BD00F3A4FD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1.5.7;
+				DEVELOPMENT_TEAM = PJM828YBFJ;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Gemini Voyager Extension/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Gemini Voyager Extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MARKETING_VERSION = 1.5.7;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourCompany.Gemini-Voyager.Extension;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		B60723D32FB752BD00F3A4FD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = "../safari/Gemini Voyager.entitlements";
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1.5.7;
+				DEVELOPMENT_TEAM = PJM828YBFJ;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Gemini Voyager/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Gemini Voyager";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.5.7;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourCompany.Gemini-Voyager;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		B60723D42FB752BD00F3A4FD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = "../safari/Gemini Voyager.entitlements";
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1.5.7;
+				DEVELOPMENT_TEAM = PJM828YBFJ;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Gemini Voyager/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "Gemini Voyager";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MARKETING_VERSION = 1.5.7;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.yourCompany.Gemini-Voyager;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B60723A42FB752BC00F3A4FD /* Build configuration list for PBXProject "Gemini Voyager" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B60723CC2FB752BD00F3A4FD /* Debug */,
+				B60723CD2FB752BD00F3A4FD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B60723CE2FB752BD00F3A4FD /* Build configuration list for PBXNativeTarget "Gemini Voyager Extension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B60723CF2FB752BD00F3A4FD /* Debug */,
+				B60723D02FB752BD00F3A4FD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B60723D22FB752BD00F3A4FD /* Build configuration list for PBXNativeTarget "Gemini Voyager" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B60723D32FB752BD00F3A4FD /* Debug */,
+				B60723D42FB752BD00F3A4FD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F1A2B3C4D5E60718293A4B5D /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = exactVersion;
+				version = 2.9.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F1A2B3C4D5E60718293A4B5E /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F1A2B3C4D5E60718293A4B5D /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = B60723A12FB752BC00F3A4FD /* Project object */;
+}
