@@ -162,6 +162,9 @@ jobs:
       - name: Build All
         run: bun run build:all
 
+      - name: Check release artifacts for private data
+        run: node scripts/verify-release-privacy.mjs dist_chrome dist_firefox dist_safari
+
       - name: Archive artifacts
         run: |
           TAG=${{ steps.vars.outputs.tag_name }}
@@ -178,12 +181,15 @@ jobs:
           grep -qx '_locales/en/messages.json' chrome-zip-files.txt
 
       - name: Sign Firefox Extension and Submit to AMO
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
         run: |
           TAG=${{ steps.vars.outputs.tag_name }}
           npx web-ext sign \
             --source-dir=dist_firefox \
-            --api-key=${{ secrets.AMO_JWT_ISSUER }} \
-            --api-secret=${{ secrets.AMO_JWT_SECRET }} \
+            --api-key="$AMO_JWT_ISSUER" \
+            --api-secret="$AMO_JWT_SECRET" \
             --channel=listed
           # Move signed XPI to root with proper naming
           mv web-ext-artifacts/*.xpi voyager-firefox-${TAG}.xpi
@@ -308,6 +314,7 @@ jobs:
         run: |
           TAG=${{ steps.vars.outputs.tag_name }}
           bun run build:edge
+          node scripts/verify-release-privacy.mjs dist_chrome
           node scripts/publish-edge.js "voyager-edge-${TAG}.zip" \
             --notes "Voyager ${TAG} automated release submission."
 
