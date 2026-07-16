@@ -4,7 +4,6 @@
 //
 
 import SafariServices
-import UserNotifications
 import os.log
 
 final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
@@ -22,45 +21,41 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
         case "ping":
             respondWithSuccess(context: context, data: ["status": "ok"])
         case "requestNotificationPermission":
-            requestNotificationPermission(context: context)
+            deliverLegacyNotification(
+                title: "Gemini Voyager",
+                body: "Notifications are enabled.",
+                identifier: "gemini-voyager-notification-permission"
+            )
+            respondWithSuccess(context: context, data: ["authorized": true])
         case "showNotification":
-            showNotification(message: message, context: context)
+            showLegacyNotification(message: message, context: context)
         default:
             respondWithError(context: context, message: "Unknown action")
         }
     }
 
-    private func requestNotificationPermission(context: NSExtensionContext) {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
-            if let error {
-                self.respondWithError(context: context, message: error.localizedDescription)
-                return
-            }
-            self.respondWithSuccess(context: context, data: ["authorized": granted])
-        }
-    }
-
-    private func showNotification(message: [String: Any], context: NSExtensionContext) {
+    private func showLegacyNotification(message: [String: Any], context: NSExtensionContext) {
         guard let title = message["title"] as? String,
               let body = message["message"] as? String else {
             respondWithError(context: context, message: "Invalid notification")
             return
         }
 
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-        content.sound = .default
+        deliverLegacyNotification(
+            title: title,
+            body: body,
+            identifier: message["id"] as? String ?? UUID().uuidString
+        )
+        respondWithSuccess(context: context, data: ["delivered": true])
+    }
 
-        let identifier = message["id"] as? String ?? UUID().uuidString
-        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error {
-                self.respondWithError(context: context, message: error.localizedDescription)
-                return
-            }
-            self.respondWithSuccess(context: context, data: ["delivered": true])
-        }
+    private func deliverLegacyNotification(title: String, body: String, identifier: String) {
+        let notification = NSUserNotification()
+        notification.identifier = identifier
+        notification.title = title
+        notification.informativeText = body
+        notification.soundName = NSUserNotificationDefaultSoundName
+        NSUserNotificationCenter.default.deliver(notification)
     }
 
     private func extensionMessage(from request: NSExtensionItem) -> [String: Any]? {
