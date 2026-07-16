@@ -11,47 +11,69 @@ import WebKit
 
 let extensionBundleIdentifier = "com.yourCompany.Gemini-Voyager.Extension"
 
-class ViewController: NSViewController, WKNavigationDelegate, WKScriptMessageHandler {
+class ViewController: NSViewController, WKScriptMessageHandler {
 
     @IBOutlet var webView: WKWebView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        self.webView.navigationDelegate = self
-
         self.webView.configuration.userContentController.add(self, name: "controller")
 
         self.webView.loadFileURL(Bundle.main.url(forResource: "Main", withExtension: "html")!, allowingReadAccessTo: Bundle.main.resourceURL!)
     }
 
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    private func updateExtensionState() {
         SFSafariExtensionManager.getStateOfSafariExtension(withIdentifier: extensionBundleIdentifier) { (state, error) in
             guard let state = state, error == nil else {
-                // Insert code to inform the user that something went wrong.
                 return
             }
 
             DispatchQueue.main.async {
                 if #available(macOS 13, *) {
-                    webView.evaluateJavaScript("show(\(state.isEnabled), true)")
+                    self.webView.evaluateJavaScript("show(\(state.isEnabled), true)")
                 } else {
-                    webView.evaluateJavaScript("show(\(state.isEnabled), false)")
+                    self.webView.evaluateJavaScript("show(\(state.isEnabled), false)")
                 }
             }
         }
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        if (message.body as! String != "open-preferences") {
-            return;
+        if message.body as? String == "open-preferences" {
+            SFSafariApplication.showPreferencesForExtension(withIdentifier: extensionBundleIdentifier) { error in
+                DispatchQueue.main.async {
+                    NSApplication.shared.terminate(nil)
+                }
+            }
+            return
         }
 
-        SFSafariApplication.showPreferencesForExtension(withIdentifier: extensionBundleIdentifier) { error in
-            DispatchQueue.main.async {
-                NSApplication.shared.terminate(nil)
-            }
+        guard let payload = message.body as? [String: Any],
+              let action = payload["action"] as? String,
+              let appDelegate = NSApp.delegate as? AppDelegate else {
+            return
         }
+
+        switch action {
+        case "ready":
+            updateUpdaterControls(appDelegate)
+            updateExtensionState()
+        case "setAutomaticUpdates":
+            appDelegate.setAutomaticUpdatesEnabled(payload["enabled"] as? Bool == true)
+            updateUpdaterControls(appDelegate)
+        case "checkForUpdates":
+            appDelegate.checkForUpdates(nil)
+            updateUpdaterControls(appDelegate)
+        default:
+            break
+        }
+    }
+
+    private func updateUpdaterControls(_ appDelegate: AppDelegate) {
+        webView.evaluateJavaScript(
+            "showUpdateControls(\(appDelegate.automaticUpdatesEnabled), \(appDelegate.canCheckForUpdates))"
+        )
     }
 
 }

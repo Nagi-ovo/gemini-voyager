@@ -16,6 +16,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         userDriverDelegate: nil
     )
 
+    var automaticUpdatesEnabled: Bool {
+        updaterController.updater.automaticallyChecksForUpdates
+    }
+
+    var canCheckForUpdates: Bool {
+        updaterController.updater.canCheckForUpdates
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         installCheckForUpdatesMenuItem()
     }
@@ -24,8 +32,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
-    @objc private func checkForUpdates(_ sender: Any?) {
+    @objc func checkForUpdates(_ sender: Any?) {
         updaterController.checkForUpdates(sender)
+    }
+
+    func setAutomaticUpdatesEnabled(_ enabled: Bool) {
+        let updater = updaterController.updater
+        if enabled {
+            updater.automaticallyChecksForUpdates = true
+            updater.automaticallyDownloadsUpdates = true
+        } else {
+            updater.automaticallyDownloadsUpdates = false
+            updater.automaticallyChecksForUpdates = false
+        }
     }
 
     private func installCheckForUpdatesMenuItem() {

@@ -10,10 +10,28 @@
     <script src="../Script.js" defer></script>
 </head>
 <body>
-    <img src="../Icon.png" width="128" height="128" alt="Gemini Voyager Icon">
-    <p class="state-unknown">You can turn on Gemini Voyager’s extension in Safari Extensions preferences.</p>
-    <p class="state-on">Gemini Voyager’s extension is currently on. You can turn it off in Safari Extensions preferences.</p>
-    <p class="state-off">Gemini Voyager’s extension is currently off. You can turn it on in Safari Extensions preferences.</p>
-    <button class="open-preferences">Quit and Open Safari Extensions Preferences…</button>
+    <main class="app-shell">
+        <header class="hero">
+            <img class="app-icon" src="../Icon.png" width="76" height="76" alt="Gemini Voyager Icon">
+            <h1>Voyager</h1>
+            <p class="state-unknown">Turn on Voyager in Safari Extensions to get started.</p>
+            <p class="state-on">The Safari extension is on and ready.</p>
+            <p class="state-off">The Safari extension is off. Turn it on in Safari Extensions.</p>
+            <button class="open-preferences">Open Safari Extensions…</button>
+        </header>
+
+        <section class="updates" aria-labelledby="updates-title">
+            <h2 id="updates-title">Updates</h2>
+            <label class="automatic-updates">
+                <span class="update-copy">
+                    <strong>Automatic updates</strong>
+                    <small>Keep Voyager up to date in the background.</small>
+                </span>
+                <input type="checkbox" aria-label="Automatic updates">
+                <span class="switch" aria-hidden="true"></span>
+            </label>
+            <button class="check-for-updates">Check for updates</button>
+        </section>
+    </main>
 </body>
 </html>

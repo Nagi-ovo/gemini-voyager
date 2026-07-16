@@ -1,9 +1,9 @@
 function show(enabled, useSettingsInsteadOfPreferences) {
     if (useSettingsInsteadOfPreferences) {
-        document.getElementsByClassName('state-on')[0].innerText = "Gemini Voyager’s extension is currently on. You can turn it off in the Extensions section of Safari Settings.";
-        document.getElementsByClassName('state-off')[0].innerText = "Gemini Voyager’s extension is currently off. You can turn it on in the Extensions section of Safari Settings.";
-        document.getElementsByClassName('state-unknown')[0].innerText = "You can turn on Gemini Voyager’s extension in the Extensions section of Safari Settings.";
-        document.getElementsByClassName('open-preferences')[0].innerText = "Quit and Open Safari Settings…";
+        document.getElementsByClassName('state-on')[0].innerText = "The Safari extension is on and ready.";
+        document.getElementsByClassName('state-off')[0].innerText = "The Safari extension is off. Turn it on in Safari Extensions.";
+        document.getElementsByClassName('state-unknown')[0].innerText = "Turn on Voyager in Safari Extensions to get started.";
+        document.getElementsByClassName('open-preferences')[0].innerText = "Open Safari Extensions…";
     }
 
     if (typeof enabled === "boolean") {
@@ -19,4 +19,28 @@ function openPreferences() {
     webkit.messageHandlers.controller.postMessage("open-preferences");
 }
 
+function showUpdateControls(automaticUpdatesEnabled, canCheckForUpdates) {
+    const automaticUpdates = document.querySelector(".automatic-updates");
+    automaticUpdates.querySelector("input").checked = automaticUpdatesEnabled;
+    automaticUpdates.classList.toggle("is-enabled", automaticUpdatesEnabled);
+    document.querySelector("button.check-for-updates").disabled = !canCheckForUpdates;
+}
+
+function setAutomaticUpdates(event) {
+    event.currentTarget.classList.toggle("is-enabled", event.target.checked);
+    webkit.messageHandlers.controller.postMessage({
+        action: "setAutomaticUpdates",
+        enabled: event.target.checked,
+    });
+}
+
+function checkForUpdates() {
+    webkit.messageHandlers.controller.postMessage({ action: "checkForUpdates" });
+}
+
 document.querySelector("button.open-preferences").addEventListener("click", openPreferences);
+document.querySelector(".automatic-updates").addEventListener("change", setAutomaticUpdates);
+document.querySelector("button.check-for-updates").addEventListener("click", checkForUpdates);
+window.addEventListener("pageshow", () => {
+    webkit.messageHandlers.controller.postMessage({ action: "ready" });
+}, { once: true });
