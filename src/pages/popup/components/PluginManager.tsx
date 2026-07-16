@@ -2,7 +2,11 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 
 import browser from 'webextension-polyfill';
 
-import { isFirefox, isSafari, supportsOptionalHostPermissions } from '@/core/utils/browser';
+import {
+  isFirefox,
+  supportsDynamicContentScriptRegistration,
+  supportsOptionalHostPermissions,
+} from '@/core/utils/browser';
 import { pluginToOriginPatternsForActiveUrl } from '@/features/plugins/runtime/siteRegistration';
 import { SiteRegistry } from '@/features/plugins/sites/registry';
 import {
@@ -225,10 +229,14 @@ export function PluginManager({
         if (origins.length > 0) {
           // This plugin needs host access on a site Voyager reaches only via dynamic
           // content-script registration. If the platform can't grant or inject that
-          // (Safari, a build without permissions.request, or Firefox < 128 which
+          // (an old Safari/build without the required APIs, or Firefox < 128 which
           // ignores optional_host_permissions), enabling would be a silent no-op —
           // so refuse and explain, instead of a misleading toggle.
-          if (isSafari() || !browser.permissions?.request || !supportsOptionalHostPermissions()) {
+          if (
+            !browser.permissions?.request ||
+            !supportsOptionalHostPermissions() ||
+            !supportsDynamicContentScriptRegistration()
+          ) {
             setUnsupportedId(plugin.id);
             return;
           }

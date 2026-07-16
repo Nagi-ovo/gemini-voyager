@@ -1,16 +1,78 @@
 import { ManifestV3Export, crx } from '@crxjs/vite-plugin';
+import { build as buildWithEsbuild } from 'esbuild';
+import { readFile, rename } from 'node:fs/promises';
 import { resolve } from 'path';
-import { defineConfig, mergeConfig } from 'vite';
+import { Plugin, defineConfig, mergeConfig } from 'vite';
 
 import manifest from './manifest.json';
 import baseConfig, { baseBuildOptions, baseManifest } from './vite.config.base';
 
 const outDir = resolve(__dirname, 'dist_safari');
 
-// Environment variable to control Safari update check
-// Set to 'true' to enable update reminders for Safari builds
-// Default: 'false' (disabled)
-const enableSafariUpdateCheck = process.env.ENABLE_SAFARI_UPDATE_CHECK === 'true';
+function safariClassicBackground(): Plugin {
+  return {
+    name: 'safari-classic-background',
+    apply: 'build',
+    enforce: 'post',
+    async closeBundle() {
+      const manifestPath = resolve(outDir, 'manifest.json');
+      const builtManifest = JSON.parse(await readFile(manifestPath, 'utf8')) as {
+        background?: { scripts?: string[] };
+      };
+      const backgroundScript = builtManifest.background?.scripts?.[0];
+      if (!backgroundScript) throw new Error('Safari background script was not emitted');
+
+      const entryPath = resolve(outDir, backgroundScript);
+      const bundledPath = `${entryPath}.classic.js`;
+      await buildWithEsbuild({
+        entryPoints: [entryPath],
+        outfile: bundledPath,
+        bundle: true,
+        format: 'iife',
+        platform: 'browser',
+        target: 'safari14',
+        minify: true,
+      });
+      await rename(bundledPath, entryPath);
+    },
+  };
+}
+
+// Direct-download Safari builds do not have a browser-store updater. Keep the
+// existing release reminder on by default; packagers can explicitly disable it.
+const enableSafariUpdateCheck = process.env.ENABLE_SAFARI_UPDATE_CHECK !== 'false';
+
+const safariMainWorldScripts = [
+  {
+    matches: ['https://gemini.google.com/*', 'https://business.gemini.google/*'],
+    js: ['public/usage-observer.js'],
+  },
+  {
+    matches: ['https://gemini.google.com/*', 'https://business.gemini.google/*'],
+    js: ['public/conversation-history-observer.js'],
+  },
+  {
+    matches: ['https://gemini.google.com/*', 'https://business.gemini.google/*'],
+    js: ['public/response-complete-observer.js'],
+  },
+  {
+    matches: ['https://gemini.google.com/*', 'https://business.gemini.google/*'],
+    js: ['public/prevent-auto-scroll.js'],
+  },
+  {
+    matches: [
+      'https://gemini.google.com/*',
+      'https://business.gemini.google/*',
+      'https://aistudio.google.com/*',
+      'https://aistudio.google.cn/*',
+    ],
+    js: ['public/katex-config.js'],
+  },
+].map((entry) => ({ ...entry, run_at: 'document_start' as const, world: 'MAIN' as const }));
+
+const sharedContentScripts = (
+  baseManifest as unknown as { content_scripts?: Array<Record<string, unknown>> }
+).content_scripts;
 
 export const safariManifest = {
   ...baseManifest,
@@ -38,10 +100,14 @@ export const safariManifest = {
       'unlimitedStorage',
     ]),
   ),
-  // Safari-specific adjustments
+  // Safari applies the page CSP to DOM-injected extension scripts. Native
+  // MAIN-world content scripts bypass that CSP and run early enough to observe
+  // Gemini's initial network requests. Keep one file per entry because Safari
+  // can partially execute multi-file MAIN-world registrations.
+  content_scripts: [...(sharedContentScripts ?? []), ...safariMainWorldScripts],
+  // Safari App Extensions load `background.scripts` as classic scripts. The
+  // post-build plugin below folds CRXJS's shared chunks into this one entry.
   background: {
-    // Safari supports both service_worker and scripts
-    // Using scripts for better compatibility
     scripts: ['src/pages/background/index.ts'],
   },
 } as unknown as ManifestV3Export;
@@ -64,6 +130,7 @@ export default mergeConfig(
           injectCss: true,
         },
       }),
+      safariClassicBackground(),
     ],
     build: {
       ...baseBuildOptions,

@@ -111,6 +111,42 @@ export function supportsOptionalHostPermissions(): boolean {
 }
 
 /**
+ * Whether optional host access can be followed by persistent dynamic content
+ * script registration. Safari added these registration APIs in 16.4.
+ */
+export function supportsDynamicContentScriptRegistration(): boolean {
+  if (!supportsOptionalHostPermissions()) return false;
+
+  const extensionGlobal = globalThis as {
+    chrome?: {
+      scripting?: {
+        registerContentScripts?: unknown;
+        unregisterContentScripts?: unknown;
+      };
+    };
+  };
+  const scripting = extensionGlobal.chrome?.scripting;
+  if (
+    typeof scripting?.registerContentScripts !== 'function' ||
+    typeof scripting.unregisterContentScripts !== 'function'
+  ) {
+    return false;
+  }
+
+  const safariBuild = getVoyagerBuildTarget() === 'safari' || isSafari();
+  if (!safariBuild) return true;
+
+  const match = (navigator.userAgent ?? '').match(/\bVersion\/(\d+)(?:\.(\d+))?/i);
+  // Extension contexts can expose a reduced UA. Trust runtime feature
+  // detection in that case instead of disabling a supported modern Safari.
+  if (!match) return true;
+
+  const major = Number.parseInt(match[1], 10);
+  const minor = Number.parseInt(match[2] ?? '0', 10);
+  return major > 16 || (major === 16 && minor >= 4);
+}
+
+/**
  * Detect whether this extension runtime can show system notifications.
  * Safari Web Extensions do not support the WebExtensions notifications API,
  * so Safari must use in-page notification fallbacks instead.

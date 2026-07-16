@@ -5,6 +5,7 @@
  * Uses DOM-to-image rendering and inlines remote images (best-effort).
  */
 import { isSafari } from '@/core/utils/browser';
+import { fetchImageViaExtensionRuntime } from '@/core/utils/runtimeImageFetch';
 
 import { isEventLikeImageRenderError } from '../types/errors';
 import {
@@ -455,23 +456,11 @@ export class ImageExportService {
         /* ignore */
       }
 
-      // Fallback to background fetch (bypasses page CORS)
+      // Fall back to the extension fetch chain. On Safari this ends in a
+      // MAIN-world fetch, which retains the page's Google authentication.
       try {
-        const data = await new Promise<string | null>((resolve) => {
-          try {
-            chrome.runtime?.sendMessage?.({ type: 'gv.fetchImage', url }, (resp) => {
-              if (resp && resp.ok && resp.base64) {
-                const contentType = String(resp.contentType || 'application/octet-stream');
-                resolve(`data:${contentType};base64,${resp.base64}`);
-              } else {
-                resolve(null);
-              }
-            });
-          } catch {
-            resolve(null);
-          }
-        });
-        if (data) return data;
+        const data = await fetchImageViaExtensionRuntime(url);
+        if (data) return `data:${data.contentType};base64,${data.base64}`;
       } catch {
         /* ignore */
       }

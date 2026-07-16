@@ -20,6 +20,7 @@ const {
   pluginState,
   PLUGIN_ID,
   mockLanguage,
+  supportsDynamicRegistration,
 } = vi.hoisted(() => ({
   setPluginEnabled: vi.fn().mockResolvedValue(undefined),
   setPluginSetting: vi.fn().mockResolvedValue(undefined),
@@ -29,6 +30,7 @@ const {
   pluginState: { current: {} as Record<string, { enabled: boolean; installedAt: number }> },
   PLUGIN_ID: 'voyager.test-width',
   mockLanguage: { current: 'en' },
+  supportsDynamicRegistration: vi.fn(() => true),
 }));
 
 vi.mock('webextension-polyfill', () => ({
@@ -50,7 +52,7 @@ vi.mock('@/contexts/LanguageContext', () => ({
 
 vi.mock('@/core/utils/browser', () => ({
   isFirefox: () => false,
-  isSafari: () => false,
+  supportsDynamicContentScriptRegistration: () => supportsDynamicRegistration(),
   supportsOptionalHostPermissions: () => true,
 }));
 
@@ -157,6 +159,7 @@ beforeEach(() => {
   permissionContains.mockReset().mockResolvedValue(false);
   permissionRequest.mockReset().mockResolvedValue(true);
   permissionOrigins.mockReset().mockReturnValue([]);
+  supportsDynamicRegistration.mockReset().mockReturnValue(true);
   container = document.createElement('div');
   document.body.appendChild(container);
   root = createRoot(container);
@@ -300,6 +303,29 @@ describe('PluginManager host permission flow', () => {
       resolvePermission(true);
       await Promise.resolve();
     });
+  });
+
+  it('refuses the host grant when dynamic registration is unavailable', async () => {
+    supportsDynamicRegistration.mockReturnValue(false);
+    await act(async () => {
+      root.render(
+        React.createElement(PluginManager, {
+          manifests: [widthPlugin],
+          activeUrl: 'https://chatgpt.com/c/current',
+        }),
+      );
+      await Promise.resolve();
+    });
+
+    const toggle = container.querySelector<HTMLInputElement>('input[aria-label="Test · Width"]');
+    if (!toggle) throw new Error('Expected plugin toggle');
+    await act(async () => {
+      toggle.click();
+      await Promise.resolve();
+    });
+
+    expect(permissionRequest).not.toHaveBeenCalled();
+    expect(setPluginEnabled).not.toHaveBeenCalledWith(PLUGIN_ID, true);
   });
 });
 

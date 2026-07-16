@@ -6,6 +6,7 @@
 import browser from 'webextension-polyfill';
 
 import { logger } from '@/core';
+import { getVoyagerBuildTarget } from '@/core/utils/browser';
 
 const katexLogger = logger.createChild('KaTeXConfig');
 
@@ -14,6 +15,10 @@ const katexLogger = logger.createChild('KaTeXConfig');
  * Must be called early in page load, before KaTeX renders formulas
  */
 export function configureKaTeX(): void {
+  // Safari injects this file natively in MAIN world from its manifest. DOM
+  // injection is blocked by Gemini's page CSP there.
+  if (getVoyagerBuildTarget() === 'safari') return;
+
   try {
     // Load external script to avoid CSP issues with inline scripts
     const script = document.createElement('script');

@@ -15,6 +15,7 @@
  * - Returns processed image to complete the download
  */
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
+import { fetchImageViaExtensionRuntime } from '@/core/utils/runtimeImageFetch';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import { getTranslationSync } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
@@ -52,25 +53,16 @@ const debounce = <T extends (...args: unknown[]) => void>(func: T, wait: number)
  * The background script has host_permissions that allow cross-origin requests
  */
 const fetchImageViaBackground = async (url: string): Promise<HTMLImageElement> => {
-  return new Promise((resolve, reject) => {
-    chrome.runtime.sendMessage({ type: 'gv.fetchImage', url }, (response) => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      if (!response || !response.ok) {
-        reject(new Error(response?.error || 'Failed to fetch image'));
-        return;
-      }
+  const response = await fetchImageViaExtensionRuntime(url);
+  if (!response) throw new Error('Failed to fetch image');
 
-      // Create image from base64 data
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('Failed to decode image'));
-      // Set crossOrigin before src to prevent canvas tainting in Firefox
-      img.crossOrigin = 'anonymous';
-      img.src = `data:${response.contentType};base64,${response.base64}`;
-    });
+  return await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Failed to decode image'));
+    // Set crossOrigin before src to prevent canvas tainting in Firefox.
+    img.crossOrigin = 'anonymous';
+    img.src = `data:${response.contentType};base64,${response.base64}`;
   });
 };
 

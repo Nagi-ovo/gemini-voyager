@@ -21,6 +21,7 @@ import {
   isMac,
   isSafari,
   shouldShowSafariUpdateReminder,
+  supportsDynamicContentScriptRegistration,
   supportsExtensionNotifications,
   supportsOptionalHostPermissions,
 } from '../browser';
@@ -34,6 +35,8 @@ const SAFARI_15_UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 12_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.6 Safari/605.1.15';
 const SAFARI_16_UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15';
+const SAFARI_16_4_UA =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.4 Safari/605.1.15';
 
 function setRuntimeId(id: string | undefined): void {
   Object.defineProperty(chrome.runtime, 'id', {
@@ -73,6 +76,28 @@ describe('supportsOptionalHostPermissions', () => {
   it('returns true on Chromium browsers', () => {
     setUA('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0');
     expect(supportsOptionalHostPermissions()).toBe(true);
+  });
+});
+
+describe('supportsDynamicContentScriptRegistration', () => {
+  it('accepts Safari 16.4+ when the runtime APIs are present', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'safari');
+    setUserAgent(SAFARI_16_4_UA, 'Apple Computer, Inc.');
+    Object.defineProperty(chrome, 'scripting', {
+      value: { registerContentScripts: vi.fn(), unregisterContentScripts: vi.fn() },
+      configurable: true,
+    });
+    expect(supportsDynamicContentScriptRegistration()).toBe(true);
+  });
+
+  it('rejects Safari before 16.4 even if the API shape is present', () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'safari');
+    setUserAgent(SAFARI_16_UA, 'Apple Computer, Inc.');
+    Object.defineProperty(chrome, 'scripting', {
+      value: { registerContentScripts: vi.fn(), unregisterContentScripts: vi.fn() },
+      configurable: true,
+    });
+    expect(supportsDynamicContentScriptRegistration()).toBe(false);
   });
 });
 

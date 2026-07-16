@@ -1,6 +1,5 @@
 import { StorageKeys } from '@/core/types/common';
 import { isHighlightColor, normalizeHighlightColorPalette } from '@/core/types/highlight';
-import { isSafari } from '@/core/utils/browser';
 import { customWebsitesIncludeHost, sanitizeCustomWebsites } from '@/core/utils/customWebsites';
 import {
   hasValidExtensionContext,
@@ -332,12 +331,10 @@ async function initializeFeatures(): Promise<void> {
       });
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
-      // Watermark remover - based on gemini-watermark-remover by journey-ad
-      // https://github.com/journey-ad/gemini-watermark-remover
-      // Skip on Safari due to fetch interceptor limitations in extension sandbox
-      if (!isSafari()) {
-        startWatermarkRemover();
-      }
+      // Watermark remover - based on gemini-watermark-remover by journey-ad.
+      // Safari uses the authenticated MAIN-world fetch fallback when the
+      // extension background cannot read the image directly.
+      startWatermarkRemover();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startDeepResearchExport();
@@ -673,7 +670,7 @@ function handleVisibilityChange(): void {
       try {
         window.removeEventListener('unhandledrejection', onUnhandledRejection);
         window.removeEventListener('error', onWindowError);
-        // Disconnect watermark-remover observers (no-op if it never started, e.g. Safari)
+        // Disconnect watermark-remover observers.
         stopWatermarkRemover();
         if (folderManagerInstance) {
           folderManagerInstance.destroy();

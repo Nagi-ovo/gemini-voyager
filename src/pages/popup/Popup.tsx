@@ -2217,8 +2217,9 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const isSectionVisible = (id: PopupSectionId): boolean => {
     switch (id) {
       case 'cloudSync':
-      case 'nanobanana':
         return !isSafariBrowser;
+      case 'nanobanana':
+        return true;
       case 'folderTreeIndent':
       case 'sidebarBehavior':
         return !isAIStudio;
@@ -4274,74 +4275,71 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           </Card>,
         )}
 
-        {/* Image Refinement Options - Hidden on Safari due to fetch interceptor limitations */}
-        {!isSafariBrowser &&
-          wrapSection(
-            'nanobanana',
-            <Card className="p-4 transition-all hover:shadow-md">
-              <CardTitle className="mb-4">{t('nanobananaOptions')}</CardTitle>
-              <CardContent className="space-y-4 p-0">
-                <div
-                  hidden={!shouldShowSetting('nanobanana', 'download')}
-                  className="group flex items-center justify-between"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <Label
-                        htmlFor="watermark-download"
-                        className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                      >
-                        {t('nanobananaDownloadLabel')}
-                      </Label>
-                      <span className="rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-600 uppercase dark:text-emerald-400">
-                        {t('nanobananaBadgeRecommended')}
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      {t('nanobananaDownloadHint')}
-                    </p>
+        {/* Image Refinement Options */}
+        {wrapSection(
+          'nanobanana',
+          <Card className="p-4 transition-all hover:shadow-md">
+            <CardTitle className="mb-4">{t('nanobananaOptions')}</CardTitle>
+            <CardContent className="space-y-4 p-0">
+              <div
+                hidden={!shouldShowSetting('nanobanana', 'download')}
+                className="group flex items-center justify-between"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <Label
+                      htmlFor="watermark-download"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('nanobananaDownloadLabel')}
+                    </Label>
+                    <span className="rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-600 uppercase dark:text-emerald-400">
+                      {t('nanobananaBadgeRecommended')}
+                    </span>
                   </div>
-                  <Switch
-                    id="watermark-download"
-                    checked={watermarkDownloadEnabled}
-                    onChange={(e) => {
-                      setWatermarkDownloadEnabled(e.target.checked);
-                      apply({ watermarkDownloadEnabled: e.target.checked });
-                    }}
-                  />
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {t('nanobananaDownloadHint')}
+                  </p>
                 </div>
-                <div
-                  hidden={!shouldShowSetting('nanobanana', 'preview')}
-                  className="group flex items-center justify-between"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-1.5">
-                      <Label
-                        htmlFor="watermark-preview"
-                        className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
-                      >
-                        {t('nanobananaPreviewLabel')}
-                      </Label>
-                      <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-amber-600 uppercase dark:text-amber-400">
-                        {t('nanobananaBadgeUnstable')}
-                      </span>
-                    </div>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      {t('nanobananaPreviewHint')}
-                    </p>
+                <Switch
+                  id="watermark-download"
+                  checked={watermarkDownloadEnabled}
+                  onChange={(e) => {
+                    setWatermarkDownloadEnabled(e.target.checked);
+                    apply({ watermarkDownloadEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+              <div
+                hidden={!shouldShowSetting('nanobanana', 'preview')}
+                className="group flex items-center justify-between"
+              >
+                <div className="flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <Label
+                      htmlFor="watermark-preview"
+                      className="group-hover:text-primary cursor-pointer text-sm font-medium transition-colors"
+                    >
+                      {t('nanobananaPreviewLabel')}
+                    </Label>
+                    <span className="rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-amber-600 uppercase dark:text-amber-400">
+                      {t('nanobananaBadgeUnstable')}
+                    </span>
                   </div>
-                  <Switch
-                    id="watermark-preview"
-                    checked={watermarkPreviewEnabled}
-                    onChange={(e) => {
-                      setWatermarkPreviewEnabled(e.target.checked);
-                      apply({ watermarkPreviewEnabled: e.target.checked });
-                    }}
-                  />
+                  <p className="text-muted-foreground mt-1 text-xs">{t('nanobananaPreviewHint')}</p>
                 </div>
-              </CardContent>
-            </Card>,
-          )}
+                <Switch
+                  id="watermark-preview"
+                  checked={watermarkPreviewEnabled}
+                  onChange={(e) => {
+                    setWatermarkPreviewEnabled(e.target.checked);
+                    apply({ watermarkPreviewEnabled: e.target.checked });
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>,
+        )}
       </div>
 
       {/* Footer */}

@@ -26,7 +26,11 @@ import type {
   HighlightUpdatePatch,
 } from '@/core/types/highlight';
 import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
-import { isFirefox, supportsExtensionNotifications } from '@/core/utils/browser';
+import {
+  getVoyagerBuildTarget,
+  isFirefox,
+  supportsExtensionNotifications,
+} from '@/core/utils/browser';
 import { hasNotificationsPermission } from '@/core/utils/notificationsPermission';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import {
@@ -58,6 +62,9 @@ import { resolveOptionalHighlightSetting } from './highlightOptionalSetting';
 
 const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
 const PLUGIN_CONTENT_SCRIPT_ID = 'gv-plugin-content-script';
+const CLAUDE_USAGE_MAIN_SCRIPT_ID = 'gv-plugin-claude-usage-main';
+const CLAUDE_USAGE_PLUGIN_ID = 'voyager.claude-usage';
+const CLAUDE_USAGE_MATCHES = ['https://claude.ai/*'];
 const CUSTOM_WEBSITE_KEY = 'gvPromptCustomWebsites';
 const FETCH_INTERCEPTOR_SCRIPT_ID = 'gv-fetch-interceptor';
 const RESPONSE_COMPLETE_OBSERVER_SCRIPT_ID = 'gv-response-complete-observer';
@@ -581,9 +588,9 @@ async function syncResponseCompleteObserverRegistration(): Promise<void> {
   await unregisterResponseCompleteObserver();
 
   // Firefox supports the MAIN world for registered content scripts only in
-  // newer versions than this extension's Firefox minimum. The content script
-  // injects the same observer into the page as a cross-version fallback.
-  if (isFirefox()) return;
+  // newer versions than this extension's Firefox minimum. Safari already has
+  // this observer as a manifest MAIN-world script so page CSP cannot block it.
+  if (isFirefox() || getVoyagerBuildTarget() === 'safari') return;
 
   const setting = await chrome.storage.sync.get({
     [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
@@ -861,12 +868,35 @@ async function doSyncPluginContentScripts(): Promise<void> {
   const grantedMatches = await filterGrantedOrigins(origins);
 
   try {
-    await chrome.scripting.unregisterContentScripts({ ids: [PLUGIN_CONTENT_SCRIPT_ID] });
+    await chrome.scripting.unregisterContentScripts({
+      ids: [PLUGIN_CONTENT_SCRIPT_ID, CLAUDE_USAGE_MAIN_SCRIPT_ID],
+    });
   } catch {
     // No-op if the script was not registered.
   }
 
   if (!grantedMatches.length) return;
+
+  if (
+    getVoyagerBuildTarget() === 'safari' &&
+    (await loadPluginState())[CLAUDE_USAGE_PLUGIN_ID]?.enabled === true &&
+    grantedMatches.includes(CLAUDE_USAGE_MATCHES[0])
+  ) {
+    try {
+      await chrome.scripting.registerContentScripts([
+        {
+          id: CLAUDE_USAGE_MAIN_SCRIPT_ID,
+          js: ['claude-usage-observer.js'],
+          matches: CLAUDE_USAGE_MATCHES,
+          world: 'MAIN',
+          runAt: 'document_start',
+          persistAcrossSessions: true,
+        },
+      ]);
+    } catch (error) {
+      console.error('[Background] Failed to register Claude usage observer:', error);
+    }
+  }
 
   const runAt =
     manifestContentScript.run_at === 'document_start'
@@ -1460,9 +1490,127 @@ async function cleanupLegacyGeneratedUiCapturePermission(): Promise<void> {
   }
 }
 
+type RuntimeImageMessage = {
+  type: 'gv.fetchImage' | 'gv.fetchImageViaPage';
+  url?: unknown;
+};
+
+type RuntimeImageSender = {
+  tab?: { id?: number };
+};
+
+function isRuntimeImageMessage(message: unknown): message is RuntimeImageMessage {
+  if (!message || typeof message !== 'object') return false;
+  const type = (message as { type?: unknown }).type;
+  return type === 'gv.fetchImage' || type === 'gv.fetchImageViaPage';
+}
+
+async function handleRuntimeImageMessage(
+  message: RuntimeImageMessage,
+  sender: RuntimeImageSender,
+): Promise<Record<string, unknown>> {
+  const url = String(message.url || '');
+  if (!/^https?:\/\//i.test(url)) {
+    return { ok: false, error: 'invalid_url' };
+  }
+
+  if (message.type === 'gv.fetchImageViaPage') {
+    const tabId = sender.tab?.id;
+    if (!tabId) return { ok: false, error: 'invalid' };
+    if (!chrome.scripting?.executeScript) {
+      return { ok: false, error: 'scripting_api_unavailable' };
+    }
+
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId },
+        world: 'MAIN' as chrome.scripting.ExecutionWorld,
+        func: async (imageUrl: string) => {
+          const safeFetch = async (credentials: RequestCredentials) => {
+            try {
+              const response = await fetch(imageUrl, { credentials });
+              return response.ok ? await response.blob() : null;
+            } catch {
+              return null;
+            }
+          };
+
+          const blob = (await safeFetch('include')) || (await safeFetch('omit'));
+          if (!blob) return null;
+
+          return await new Promise<{ contentType: string; base64: string } | null>((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const dataUrl = String(reader.result || '');
+              const commaIndex = dataUrl.indexOf(',');
+              resolve(
+                commaIndex < 0
+                  ? null
+                  : {
+                      contentType: blob.type || 'application/octet-stream',
+                      base64: dataUrl.substring(commaIndex + 1),
+                    },
+              );
+            };
+            reader.onerror = () => resolve(null);
+            reader.readAsDataURL(blob);
+          });
+        },
+        args: [url],
+      });
+      const result = results?.[0]?.result as { contentType: string; base64: string } | null;
+      return result?.base64
+        ? {
+            ok: true,
+            contentType: result.contentType,
+            base64: result.base64,
+            data: `data:${result.contentType};base64,${result.base64}`,
+          }
+        : { ok: false, error: 'page_fetch_failed' };
+    } catch (error) {
+      return { ok: false, error: error instanceof Error ? error.message : String(error) };
+    }
+  }
+
+  const fetchWithFallback = async (credentials: RequestCredentials) => {
+    try {
+      return await fetch(url, { credentials, redirect: 'follow' });
+    } catch {
+      return null;
+    }
+  };
+  let response = await fetchWithFallback('include');
+  if (!response?.ok) response = await fetchWithFallback('omit');
+  if (!response?.ok) {
+    return { ok: false, error: response ? `HTTP ${response.status}` : 'fetch_failed' };
+  }
+  const blob = await response.blob();
+  const base64 = arrayBufferToBase64(await blob.arrayBuffer());
+  const contentType = blob.type || 'image/png';
+  return {
+    ok: true,
+    data: `data:${contentType};base64,${base64}`,
+    contentType,
+    base64,
+  };
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (getVoyagerBuildTarget() === 'safari' && isRuntimeImageMessage(message)) {
+    void handleRuntimeImageMessage(message, sender)
+      .then(sendResponse)
+      .catch((error) => {
+        sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) });
+      });
+    return true;
+  }
   (async () => {
     try {
+      if (isRuntimeImageMessage(message)) {
+        sendResponse(await handleRuntimeImageMessage(message, sender));
+        return;
+      }
+
       if (message?.type === 'gv.generatedUi.ensureCapturePermission') {
         sendResponse({ ok: await ensureGeneratedUiCapturePermission() });
         return;
@@ -2212,144 +2360,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
         return;
       }
-
-      // Handle image fetch via page context (for Firefox/Safari cookie partitioning)
-      // Uses chrome.scripting.executeScript in MAIN world so the page's own fetch is used,
-      // which has access to the correct Google authentication cookies.
-      if (message?.type === 'gv.fetchImageViaPage') {
-        const url = String(message.url || '');
-        const tabId = sender?.tab?.id;
-        if (!tabId || !/^https?:\/\//i.test(url)) {
-          sendResponse({ ok: false, error: 'invalid' });
-          return;
-        }
-        if (!chrome.scripting?.executeScript) {
-          sendResponse({ ok: false, error: 'scripting_api_unavailable' });
-          return;
-        }
-        try {
-          const results = await chrome.scripting.executeScript({
-            target: { tabId },
-            world: 'MAIN' as chrome.scripting.ExecutionWorld,
-            func: async (imageUrl: string) => {
-              const safeFetch = async (credentials: RequestCredentials) => {
-                try {
-                  console.log(`[PageContext] Fetching with ${credentials}:`, imageUrl);
-                  const resp = await fetch(imageUrl, { credentials });
-                  if (resp.ok) return await resp.blob();
-                  console.warn(`[PageContext] Fetch (${credentials}) HTTP error:`, resp.status);
-                } catch (e) {
-                  console.warn(`[PageContext] Fetch (${credentials}) error:`, e);
-                }
-                return null;
-              };
-
-              try {
-                // Try with credentials first, then without (fix for Firefox CSP/CORS)
-                const blob = (await safeFetch('include')) || (await safeFetch('omit'));
-                if (!blob) {
-                  console.error('[PageContext] All fetch attempts failed');
-                  return null;
-                }
-
-                return new Promise<{
-                  contentType: string;
-                  base64: string;
-                } | null>((resolve) => {
-                  const reader = new FileReader();
-                  reader.onload = () => {
-                    const dataUrl = String(reader.result || '');
-                    const commaIdx = dataUrl.indexOf(',');
-                    if (commaIdx < 0) {
-                      resolve(null);
-                      return;
-                    }
-                    resolve({
-                      contentType: blob.type || 'application/octet-stream',
-                      base64: dataUrl.substring(commaIdx + 1),
-                    });
-                  };
-                  reader.onerror = () => resolve(null);
-                  reader.readAsDataURL(blob);
-                });
-              } catch {
-                return null;
-              }
-            },
-            args: [url],
-          });
-          const result = results?.[0]?.result as {
-            contentType: string;
-            base64: string;
-          } | null;
-          if (result?.base64) {
-            sendResponse({
-              ok: true,
-              contentType: result.contentType,
-              base64: result.base64,
-              data: `data:${result.contentType};base64,${result.base64}`,
-            });
-          } else {
-            sendResponse({ ok: false, error: 'page_fetch_failed' });
-          }
-        } catch (e: unknown) {
-          const errMsg = e instanceof Error ? e.message : String(e);
-          sendResponse({ ok: false, error: errMsg });
-        }
-        return;
-      }
-
-      // Handle image fetch
-      if (!message || message.type !== 'gv.fetchImage') {
-        sendResponse({ ok: false, error: 'unknown_message_type' });
-        return;
-      }
-
-      const url = String(message.url || '');
-      if (!/^https?:\/\//i.test(url)) {
-        sendResponse({ ok: false, error: 'invalid_url' });
-        return;
-      }
-
-      const fetchWithFallback = async (fetchUrl: string) => {
-        try {
-          const r1 = await fetch(fetchUrl, { credentials: 'include', redirect: 'follow' });
-          if (r1.ok) return r1;
-        } catch {
-          /* ignore include error */
-        }
-
-        try {
-          const r2 = await fetch(fetchUrl, { credentials: 'omit', redirect: 'follow' });
-          return r2;
-        } catch (e) {
-          throw e;
-        }
-      };
-
-      fetchWithFallback(url)
-        .then((response) => {
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return response.blob();
-        })
-        .then((blob) => {
-          return blob.arrayBuffer().then((ab) => {
-            const b64 = arrayBufferToBase64(ab);
-            const contentType = blob.type || 'image/png';
-            const dataUrl = `data:${contentType};base64,${b64}`;
-            sendResponse({
-              ok: true,
-              data: dataUrl,
-              contentType,
-              base64: b64,
-            });
-          });
-        })
-        .catch((err) => {
-          console.error('[Background] gv.fetchImage Final failure:', err);
-          sendResponse({ ok: false, error: err.message });
-        });
-      return;
     } catch (e) {
       try {
         sendResponse({ ok: false, error: e instanceof Error ? e.message : String(e) });

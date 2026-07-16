@@ -1,4 +1,5 @@
 import { StorageKeys } from '@/core/types/common';
+import { getVoyagerBuildTarget } from '@/core/utils/browser';
 
 const PILL_ID = 'gv-claude-usage-pill';
 const OBSERVER_SCRIPT_ID = 'gv-claude-usage-observer-script';
@@ -663,6 +664,9 @@ function applySnapshot(next: ClaudeUsageSnapshot): void {
 }
 
 function injectClaudeUsageObserver(): void {
+  // Safari registers this optional observer in MAIN world from the background.
+  // DOM-injected extension scripts are rejected by Claude's page CSP.
+  if (getVoyagerBuildTarget() === 'safari') return;
   try {
     if (document.getElementById(OBSERVER_SCRIPT_ID)) return;
     const script = document.createElement('script');

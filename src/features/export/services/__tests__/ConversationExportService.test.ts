@@ -415,7 +415,7 @@ describe('ConversationExportService', () => {
   });
 
   describe('markdown zip packaging', () => {
-    it('degrades image markdown to text placeholders on Safari instead of zip packaging', async () => {
+    it('uses the normal image-packaging path on Safari', async () => {
       setUserAgentVendor(
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_7_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
         'Apple Computer, Inc.',
@@ -444,13 +444,9 @@ describe('ConversationExportService', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.filename).toMatch(/\.md$/);
-      expect(downloadSpy).toHaveBeenCalledOnce();
-      expect(fetchSpy).not.toHaveBeenCalled();
-
-      const markdown = String(downloadSpy.mock.calls[0][0] ?? '');
-      expect(markdown).toContain('[Image unavailable in Safari export: chart]');
-      expect(markdown).not.toContain('![chart](https://example.com/chart.png)');
+      expect(result.filename).toMatch(/\.zip$/);
+      expect(downloadSpy).not.toHaveBeenCalled();
+      expect(fetchSpy).toHaveBeenCalledWith('https://example.com/chart.png');
     });
 
     it('should assign image filenames in source order even when fetch resolves out of order', async () => {

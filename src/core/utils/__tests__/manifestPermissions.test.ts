@@ -4,8 +4,16 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import manifestChrome from '../../../../manifest.json';
 
 type ManifestPermissions = {
+  background?: {
+    scripts?: string[];
+  };
   permissions?: string[];
   optional_permissions?: string[];
+  content_scripts?: Array<{
+    js?: string[];
+    run_at?: string;
+    world?: string;
+  }>;
   browser_specific_settings?: {
     safari?: { strict_min_version?: string };
   };
@@ -90,5 +98,24 @@ describe('manifest permissions', () => {
 
   it('declares Safari 15.4 as the Manifest V3 compatibility floor', () => {
     expect(safariManifest.browser_specific_settings?.safari?.strict_min_version).toBe('15.4');
+  });
+
+  it('declares a Safari classic background entry', () => {
+    expect(safariManifest.background).toEqual({
+      scripts: ['src/pages/background/index.ts'],
+    });
+  });
+
+  it('runs Safari page bridges as separate MAIN-world manifest scripts', () => {
+    const scripts = safariManifest.content_scripts?.filter((entry) => entry.world === 'MAIN') ?? [];
+    expect(scripts.map((entry) => entry.js?.[0])).toEqual([
+      'public/usage-observer.js',
+      'public/conversation-history-observer.js',
+      'public/response-complete-observer.js',
+      'public/prevent-auto-scroll.js',
+      'public/katex-config.js',
+    ]);
+    expect(scripts.every((entry) => entry.js?.length === 1)).toBe(true);
+    expect(scripts.every((entry) => entry.run_at === 'document_start')).toBe(true);
   });
 });

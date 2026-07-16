@@ -1,4 +1,5 @@
 import { StorageKeys } from '@/core/types/common';
+import { getVoyagerBuildTarget } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
 const GV_BRIDGE_ID = 'gv-prevent-auto-scroll-bridge';
@@ -25,6 +26,10 @@ function notifyScript(settings: { ctrlEnterSend?: boolean; enabled?: boolean }):
 }
 
 function injectScript(): void {
+  // Safari loads the page-world bridge through a native MAIN-world manifest
+  // entry because Gemini's CSP blocks extension <script> elements.
+  if (getVoyagerBuildTarget() === 'safari') return;
+
   const scriptId = 'gv-prevent-auto-scroll-script';
   if (document.getElementById(scriptId)) return;
 

@@ -1,4 +1,5 @@
 import { StorageKeys } from '@/core/types/common';
+import { getVoyagerBuildTarget } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { getAssistantTurnSelectors } from '@/core/utils/selectors';
 
@@ -533,6 +534,10 @@ async function notifyLatestCompletedResponseNow(): Promise<void> {
 
 function injectPageObserver(): void {
   if (pageObserverInjected) return;
+  if (getVoyagerBuildTarget() === 'safari') {
+    pageObserverInjected = true;
+    return;
+  }
   if (document.getElementById(PAGE_OBSERVER_SCRIPT_ID)) {
     pageObserverInjected = true;
     return;

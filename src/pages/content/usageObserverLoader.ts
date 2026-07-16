@@ -94,15 +94,17 @@ try {
   resolveHistorySetting(false, false);
 }
 
-for (const src of ['usage-observer.js', 'conversation-history-observer.js']) {
-  try {
-    const script = document.createElement('script');
-    script.src = chrome.runtime.getURL(src);
-    script.async = false;
-    (document.documentElement || document.head || document.body).appendChild(script);
-    script.remove();
-  } catch {
-    // Usage falls back to DOM scraping; timestamps fall back to first-seen time.
+if (import.meta.env.VOYAGER_BUILD_TARGET !== 'safari') {
+  for (const src of ['usage-observer.js', 'conversation-history-observer.js']) {
+    try {
+      const script = document.createElement('script');
+      script.src = chrome.runtime.getURL(src);
+      script.async = false;
+      (document.documentElement || document.head || document.body).appendChild(script);
+      script.remove();
+    } catch {
+      // Usage falls back to DOM scraping; timestamps fall back to first-seen time.
+    }
   }
 }
 

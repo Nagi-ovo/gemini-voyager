@@ -15,9 +15,8 @@
  * Platform notes:
  *   - Chrome/Edge/Firefox: supported. Firefox needs the same optional-permission
  *     grant; its `scripting.registerContentScripts` is compatible.
- *   - Safari: dynamic registration + optional host permissions are limited and
- *     subject to App Store review. Safari realistically stays on its
- *     manifest-declared sites. Gate any registration behind `!isSafari()`.
+ *   - Safari 16.4+: dynamic registration is supported. Keep the popup gate
+ *     capability-based so older Safari versions fail clearly.
  *
  * `pluginsToOriginPatterns` (pure) is unit-tested; background registration and
  * popup permission requests use the same derived origins.
