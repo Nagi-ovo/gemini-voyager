@@ -4,6 +4,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import manifestChrome from '../../../../manifest.json';
 
 type ManifestPermissions = {
+  action?: {
+    default_icon?: Record<string, string>;
+  };
   background?: {
     scripts?: string[];
   };
@@ -99,6 +102,15 @@ describe('manifest permissions', () => {
 
   it('declares Safari 15.4 as the Manifest V3 compatibility floor', () => {
     expect(safariManifest.browser_specific_settings?.safari?.strict_min_version).toBe('15.4');
+  });
+
+  it('provides native-size Safari toolbar icons', () => {
+    expect(safariManifest.action?.default_icon).toEqual({
+      '16': 'icon-16-template.png',
+      '19': 'icon-19-template.png',
+      '32': 'icon-32-template.png',
+      '38': 'icon-38-template.png',
+    });
   });
 
   it('declares a Safari classic background entry', () => {

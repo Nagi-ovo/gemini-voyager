@@ -21,6 +21,9 @@
 		B60723E32FB752BD00F3A4FD /* icon-128-template.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723D62FB752BD00F3A4FD /* icon-128-template.png */; };
 		B60723E42FB752BD00F3A4FD /* katex-config.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723D72FB752BD00F3A4FD /* katex-config.js */; };
 		B60723E52FB752BD00F3A4FD /* icon-32-template.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723D82FB752BD00F3A4FD /* icon-32-template.png */; };
+		B60724032FB752BD00F3A4FD /* icon-16-template.png in Resources */ = {isa = PBXBuildFile; fileRef = B60724002FB752BD00F3A4FD /* icon-16-template.png */; };
+		B60724042FB752BD00F3A4FD /* icon-19-template.png in Resources */ = {isa = PBXBuildFile; fileRef = B60724012FB752BD00F3A4FD /* icon-19-template.png */; };
+		B60724052FB752BD00F3A4FD /* icon-38-template.png in Resources */ = {isa = PBXBuildFile; fileRef = B60724022FB752BD00F3A4FD /* icon-38-template.png */; };
 		B60723E62FB752BD00F3A4FD /* manifest.json in Resources */ = {isa = PBXBuildFile; fileRef = B60723D92FB752BD00F3A4FD /* manifest.json */; };
 		B60723E72FB752BD00F3A4FD /* prevent-auto-scroll.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723DA2FB752BD00F3A4FD /* prevent-auto-scroll.js */; };
 		B60723E82FB752BD00F3A4FD /* _locales in Resources */ = {isa = PBXBuildFile; fileRef = B60723DB2FB752BD00F3A4FD /* _locales */; };
@@ -79,6 +82,9 @@
 		B60723D62FB752BD00F3A4FD /* icon-128-template.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-128-template.png"; path = "../../dist_safari/icon-128-template.png"; sourceTree = "<group>"; };
 		B60723D72FB752BD00F3A4FD /* katex-config.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "katex-config.js"; path = "../../dist_safari/katex-config.js"; sourceTree = "<group>"; };
 		B60723D82FB752BD00F3A4FD /* icon-32-template.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-32-template.png"; path = "../../dist_safari/icon-32-template.png"; sourceTree = "<group>"; };
+		B60724002FB752BD00F3A4FD /* icon-16-template.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-16-template.png"; path = "../../dist_safari/icon-16-template.png"; sourceTree = "<group>"; };
+		B60724012FB752BD00F3A4FD /* icon-19-template.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-19-template.png"; path = "../../dist_safari/icon-19-template.png"; sourceTree = "<group>"; };
+		B60724022FB752BD00F3A4FD /* icon-38-template.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-38-template.png"; path = "../../dist_safari/icon-38-template.png"; sourceTree = "<group>"; };
 		B60723D92FB752BD00F3A4FD /* manifest.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; name = manifest.json; path = ../../dist_safari/manifest.json; sourceTree = "<group>"; };
 		B60723DA2FB752BD00F3A4FD /* prevent-auto-scroll.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "prevent-auto-scroll.js"; path = "../../dist_safari/prevent-auto-scroll.js"; sourceTree = "<group>"; };
 		B60723DB2FB752BD00F3A4FD /* _locales */ = {isa = PBXFileReference; lastKnownFileType = folder; name = _locales; path = ../../dist_safari/_locales; sourceTree = "<group>"; };
@@ -171,8 +177,11 @@
 			isa = PBXGroup;
 			children = (
 				B60723D62FB752BD00F3A4FD /* icon-128-template.png */,
+				B60724002FB752BD00F3A4FD /* icon-16-template.png */,
+				B60724012FB752BD00F3A4FD /* icon-19-template.png */,
 				B60723D72FB752BD00F3A4FD /* katex-config.js */,
 				B60723D82FB752BD00F3A4FD /* icon-32-template.png */,
+				B60724022FB752BD00F3A4FD /* icon-38-template.png */,
 				B60723D92FB752BD00F3A4FD /* manifest.json */,
 				B60723DA2FB752BD00F3A4FD /* prevent-auto-scroll.js */,
 				B60723DB2FB752BD00F3A4FD /* _locales */,
@@ -298,7 +307,10 @@
 			files = (
 				B60723E82FB752BD00F3A4FD /* _locales in Resources */,
 				B60723E62FB752BD00F3A4FD /* manifest.json in Resources */,
+				B60724032FB752BD00F3A4FD /* icon-16-template.png in Resources */,
+				B60724042FB752BD00F3A4FD /* icon-19-template.png in Resources */,
 				B60723E52FB752BD00F3A4FD /* icon-32-template.png in Resources */,
+				B60724052FB752BD00F3A4FD /* icon-38-template.png in Resources */,
 				B60723EF2FB752BD00F3A4FD /* src in Resources */,
 				B60723EB2FB752BD00F3A4FD /* assets in Resources */,
 				B60723ED2FB752BD00F3A4FD /* icon-128.png in Resources */,

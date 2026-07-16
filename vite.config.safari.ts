@@ -88,7 +88,10 @@ export const safariManifest = {
   action: {
     ...manifest.action,
     default_icon: {
+      '16': 'icon-16-template.png',
+      '19': 'icon-19-template.png',
       '32': 'icon-32-template.png',
+      '38': 'icon-38-template.png',
     },
   },
   permissions: Array.from(
