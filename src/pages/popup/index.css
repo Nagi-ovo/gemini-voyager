@@ -1,5 +1,13 @@
+html {
+  width: 360px;
+  height: 600px;
+}
+
 body {
   margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
   font-family:
     -apple-system,
     BlinkMacSystemFont,
@@ -10,5 +18,8 @@ body {
     sans-serif;
 }
 #__root {
-  display: inline-block;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
 }
