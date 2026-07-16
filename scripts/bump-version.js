@@ -10,15 +10,27 @@ const __dirname = path.dirname(__filename);
 const packageJsonPath = path.resolve(__dirname, '../package.json');
 const manifestJsonPath = path.resolve(__dirname, '../manifest.json');
 const manifestDevJsonPath = path.resolve(__dirname, '../manifest.dev.json');
+const xcodeProjectPath = path.resolve(
+  __dirname,
+  '../Gemini Voyager/Gemini Voyager.xcodeproj/project.pbxproj',
+);
+
+const args = process.argv.slice(2);
+const explicitVersion = args.find((arg) => !arg.startsWith('--'));
+const shouldFormat = !args.includes('--no-format');
 
 // Helper to read JSON file
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, 'utf8'));
 }
 
-// Helper to write JSON file
-function writeJson(filePath, data) {
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n');
+function updateJsonVersion(filePath, version) {
+  const source = fs.readFileSync(filePath, 'utf8');
+  const updated = source.replace(/("version"\s*:\s*")[^"]+("\s*)/, `$1${version}$2`);
+  if (updated === source && readJson(filePath).version !== version) {
+    throw new Error(`Version field not found in ${filePath}`);
+  }
+  fs.writeFileSync(filePath, updated);
 }
 
 // Logic to bump version with rollover at 10
@@ -48,19 +60,19 @@ async function main() {
 
     console.log(`Current version: ${currentVersion}`);
 
-    const newVersion = bumpVersion(currentVersion);
+    const newVersion = explicitVersion ?? bumpVersion(currentVersion);
+    if (!/^\d+\.\d+\.\d+$/.test(newVersion)) {
+      throw new Error(`Invalid version: ${newVersion}`);
+    }
     console.log(`New version:     ${newVersion}`);
 
     // Update package.json
-    packageJson.version = newVersion;
-    writeJson(packageJsonPath, packageJson);
+    updateJsonVersion(packageJsonPath, newVersion);
     console.log('Updated package.json');
 
     // Update manifest.json
     if (fs.existsSync(manifestJsonPath)) {
-      const manifestJson = readJson(manifestJsonPath);
-      manifestJson.version = newVersion;
-      writeJson(manifestJsonPath, manifestJson);
+      updateJsonVersion(manifestJsonPath, newVersion);
       console.log('Updated manifest.json');
     } else {
       console.warn('manifest.json not found, skipping...');
@@ -68,17 +80,31 @@ async function main() {
 
     // Update manifest.dev.json
     if (fs.existsSync(manifestDevJsonPath)) {
-      const manifestDevJson = readJson(manifestDevJsonPath);
-      manifestDevJson.version = newVersion;
-      writeJson(manifestDevJsonPath, manifestDevJson);
+      updateJsonVersion(manifestDevJsonPath, newVersion);
       console.log('Updated manifest.dev.json');
     }
 
+    const xcodeProject = fs.readFileSync(xcodeProjectPath, 'utf8');
+    if (
+      !xcodeProject.includes('MARKETING_VERSION =') ||
+      !xcodeProject.includes('CURRENT_PROJECT_VERSION =')
+    ) {
+      throw new Error('Xcode version settings not found');
+    }
+    const updatedXcodeProject = xcodeProject.replace(
+      /(MARKETING_VERSION|CURRENT_PROJECT_VERSION) = [^;]+;/g,
+      `$1 = ${newVersion};`,
+    );
+    fs.writeFileSync(xcodeProjectPath, updatedXcodeProject);
+    console.log('Updated Xcode app and extension versions');
+
     console.log('Version bump complete! 🚀');
 
-    console.log('Running format...');
-    execSync('bun run format', { stdio: 'inherit' });
-    console.log('Format complete! ✨');
+    if (shouldFormat) {
+      console.log('Running format...');
+      execSync('bun run format', { stdio: 'inherit' });
+      console.log('Format complete! ✨');
+    }
   } catch (error) {
     console.error('Error bumping version:', error);
     process.exit(1);
