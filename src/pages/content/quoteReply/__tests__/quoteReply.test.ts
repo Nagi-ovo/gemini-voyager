@@ -779,4 +779,26 @@ describe('quote reply', () => {
     expect(document.querySelector('.gv-quote-btn')?.classList.contains('gv-hidden')).toBe(false);
     cleanup();
   });
+
+  it('does not run Highlight until enabled and destroys it when disabled again', () => {
+    const init = vi.spyOn(HighlightManager.prototype, 'init').mockResolvedValue();
+    const destroy = vi.spyOn(HighlightManager.prototype, 'destroy').mockImplementation(() => {});
+    const cleanup = startQuoteReply({ quoteEnabled: true, highlightEnabled: false });
+
+    expect(init).not.toHaveBeenCalled();
+
+    const listener = (
+      chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>
+    ).mock.calls.at(-1)?.[0];
+    if (typeof listener !== 'function') throw new Error('Expected storage change listener');
+
+    listener({ [StorageKeys.HIGHLIGHT_ENABLED]: { newValue: true } }, 'sync');
+    expect(init).toHaveBeenCalledOnce();
+
+    listener({ [StorageKeys.HIGHLIGHT_ENABLED]: { newValue: false } }, 'sync');
+    expect(destroy).toHaveBeenCalledOnce();
+
+    cleanup();
+    expect(destroy).toHaveBeenCalledOnce();
+  });
 });

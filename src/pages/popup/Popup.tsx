@@ -1740,7 +1740,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: false,
           gvMermaidEnabled: true,
           gvQuoteReplyEnabled: true,
-          [StorageKeys.HIGHLIGHT_ENABLED]: true,
+          [StorageKeys.HIGHLIGHT_ENABLED]: false,
           [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: true,
           [StorageKeys.USAGE_STATUS_ENABLED]: false,
           [StorageKeys.DEFAULT_MODEL_AUTO_APPLY]: true,
@@ -1830,7 +1830,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           }
           setMermaidEnabled(res?.gvMermaidEnabled !== false);
           setQuoteReplyEnabled(res?.gvQuoteReplyEnabled !== false);
-          setHighlightEnabled(res?.[StorageKeys.HIGHLIGHT_ENABLED] !== false);
+          setHighlightEnabled(res?.[StorageKeys.HIGHLIGHT_ENABLED] === true);
           setHighlightTimelineMarkersEnabled(
             res?.[StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED] !== false,
           );

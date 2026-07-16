@@ -447,10 +447,24 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
     ),
   );
   let selectedHighlightColor = highlightColors[selectedHighlightSlot];
-  const highlightManager = new HighlightManager();
-  highlightManager.setColorPalette(highlightColors);
-  highlightManager.setTimelineMarkersEnabled(options.highlightTimelineMarkersEnabled !== false);
-  void highlightManager.init();
+  let highlightTimelineMarkersEnabled = options.highlightTimelineMarkersEnabled !== false;
+  let highlightManager: HighlightManager | null = null;
+
+  const startHighlightManager = () => {
+    if (highlightManager) return;
+    const manager = new HighlightManager();
+    manager.setColorPalette(highlightColors);
+    manager.setTimelineMarkersEnabled(highlightTimelineMarkersEnabled);
+    highlightManager = manager;
+    void manager.init();
+  };
+
+  const stopHighlightManager = () => {
+    highlightManager?.destroy();
+    highlightManager = null;
+  };
+
+  if (highlightEnabled) startHighlightManager();
 
   let selectionToolbar: HTMLElement | null = null;
   let quoteBtn: HTMLElement | null = null;
@@ -561,7 +575,7 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
     } else {
       highlightColors = [color, ...highlightColors.slice(1)];
       selectedHighlightSlot = 0;
-      highlightManager.setColorPalette(highlightColors);
+      highlightManager?.setColorPalette(highlightColors);
     }
     selectedHighlightColor = highlightColors[selectedHighlightSlot];
     updateHighlightColorUi();
@@ -731,7 +745,7 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
       if (!highlightCustomColorInput) return;
       selectedHighlightColor = highlightCustomColorInput.value as HighlightColor;
       highlightColors[selectedHighlightSlot] = selectedHighlightColor;
-      highlightManager.setColorPalette(highlightColors);
+      highlightManager?.setColorPalette(highlightColors);
       updateHighlightColorUi();
       previewHighlightColor();
     });
@@ -739,7 +753,7 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
       if (!highlightCustomColorInput) return;
       selectedHighlightColor = highlightCustomColorInput.value as HighlightColor;
       highlightColors[selectedHighlightSlot] = selectedHighlightColor;
-      highlightManager.setColorPalette(highlightColors);
+      highlightManager?.setColorPalette(highlightColors);
       updateHighlightColorUi();
       void browser.storage.sync
         .set({
@@ -760,9 +774,10 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
   }
 
   async function handleHighlightClick() {
-    if (!currentSelectionRange) return;
+    const manager = highlightManager;
+    if (!currentSelectionRange || !manager) return;
     const range = currentSelectionRange.cloneRange();
-    const saved = await highlightManager.createFromRange(range, selectedHighlightColor);
+    const saved = await manager.createFromRange(range, selectedHighlightColor);
     if (!saved) return;
     hideButton();
     currentSelectionRange = null;
@@ -996,7 +1011,8 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
 
       const range = selection.getRangeAt(0);
       currentSelectionRange = range.cloneRange();
-      const canHighlight = highlightManager.canCreateFromRange(range);
+      const canHighlight =
+        highlightEnabled && (highlightManager?.canCreateFromRange(range) ?? false);
       if (!selectionToolbar) createButton();
       quoteBtn?.classList.toggle(CSS_CLASSES.HIDDEN, !quoteEnabled);
       highlightBtn?.classList.toggle(CSS_CLASSES.HIDDEN, !canHighlight || !highlightEnabled);
@@ -1101,10 +1117,13 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
       updateButtonText();
     }
     if (areaName === 'sync' && changes[StorageKeys.HIGHLIGHT_ENABLED]) {
-      highlightEnabled = changes[StorageKeys.HIGHLIGHT_ENABLED].newValue !== false;
+      highlightEnabled = changes[StorageKeys.HIGHLIGHT_ENABLED].newValue === true;
+      if (highlightEnabled) startHighlightManager();
+      else stopHighlightManager();
       const canHighlight =
         currentSelectionRange !== null &&
-        highlightManager.canCreateFromRange(currentSelectionRange);
+        highlightEnabled &&
+        (highlightManager?.canCreateFromRange(currentSelectionRange) ?? false);
       highlightBtn?.classList.toggle(CSS_CLASSES.HIDDEN, !highlightEnabled || !canHighlight);
       highlightColorBtn?.classList.toggle(CSS_CLASSES.HIDDEN, !highlightEnabled || !canHighlight);
       if (!highlightEnabled) {
@@ -1124,7 +1143,7 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
           paletteChange.newValue,
           selectedHighlightColor,
         );
-        highlightManager.setColorPalette(highlightColors);
+        highlightManager?.setColorPalette(highlightColors);
         selectHighlightColor(selectedHighlightColor);
       }
       const nextColor = changes[StorageKeys.HIGHLIGHT_DEFAULT_COLOR]?.newValue;
@@ -1133,7 +1152,8 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
       }
       const timelineMarkersChange = changes[StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED];
       if (timelineMarkersChange) {
-        highlightManager.setTimelineMarkersEnabled(timelineMarkersChange.newValue !== false);
+        highlightTimelineMarkersEnabled = timelineMarkersChange.newValue !== false;
+        highlightManager?.setTimelineMarkersEnabled(highlightTimelineMarkersEnabled);
       }
     }
   }
@@ -1146,7 +1166,7 @@ export function startQuoteReply(options: QuoteReplyOptions = {}) {
     document.removeEventListener('mouseup', onMouseUp);
     document.removeEventListener('keyup', onKeys);
     browser.storage.onChanged.removeListener(onStorageChanged);
-    highlightManager.destroy();
+    stopHighlightManager();
     if (selectionToolbar) selectionToolbar.remove();
     const style = document.getElementById(STYLE_ID);
     if (style) style.remove();

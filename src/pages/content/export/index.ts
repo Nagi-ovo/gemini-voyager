@@ -41,6 +41,7 @@ import { mountPersistentExportToolbar } from './persistentExportToolbar';
 import { injectResponseActionCopyImageButtons } from './responseActionImageButton';
 import { showResponseActionCopyImageMenu } from './responseActionImageMenu';
 import { copyImageBlobToClipboard, downloadImageBlob } from './responseImageCopy';
+import { resolveUniqueExportTurnIds } from './selectionIds';
 import { groupSelectedMessagesByTurn, resolveInitialSelectedMessageIds } from './selectionUtils';
 import { resolveSidebarConversationTarget } from './sidebarConversationTarget';
 import {
@@ -233,15 +234,6 @@ interface PendingExportState {
   timestamp: number;
 }
 
-function hashString(input: string): string {
-  let h = 2166136261 >>> 0;
-  for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0).toString(36);
-}
-
 function isExportFormat(value: unknown): value is ExportFormat {
   return value === 'json' || value === 'markdown' || value === 'pdf' || value === 'image';
 }
@@ -426,21 +418,6 @@ function dedupeByTextAndOffset(elements: HTMLElement[], firstTurnOffset: number)
   return out;
 }
 
-function ensureTurnId(el: Element, index: number): string {
-  const asEl = el as HTMLElement & {
-    dataset?: DOMStringMap & { turnId?: string };
-  };
-  let id = asEl.dataset?.turnId || '';
-  if (!id) {
-    const basis = normalizeText(asEl.textContent || '') || `user-${index}`;
-    id = `u-${index}-${hashString(basis)}`;
-    try {
-      if (asEl.dataset) asEl.dataset.turnId = id;
-    } catch {}
-  }
-  return id;
-}
-
 function readStarredSet(): Set<string> {
   const cid = computeConversationId();
   try {
@@ -536,6 +513,7 @@ function collectChatPairs(): ChatTurn[] {
 
   const firstOffset = (users[0] as HTMLElement).offsetTop || 0;
   users = dedupeByTextAndOffset(users, firstOffset);
+  const uniqueTurnIds = resolveUniqueExportTurnIds(users);
   const userOffsets = users.map((el) => (el as HTMLElement).offsetTop || 0);
 
   const assistantsAll = filterOutDeepResearchImmersiveNodes(
@@ -608,7 +586,7 @@ function collectChatPairs(): ChatTurn[] {
         }
       }
     }
-    const turnId = ensureTurnId(uEl, i);
+    const turnId = uniqueTurnIds[i];
     const starred = !!turnId && starredSet.has(turnId);
     if (uText || aText) {
       // Prefer a richer assistant container for downstream rich extraction

@@ -300,7 +300,7 @@ async function initializeFeatures(): Promise<void> {
       const quoteReplyResult = await new Promise<Record<string, unknown>>((resolve) => {
         const defaults = {
           [StorageKeys.QUOTE_REPLY_ENABLED]: true,
-          [StorageKeys.HIGHLIGHT_ENABLED]: true,
+          [StorageKeys.HIGHLIGHT_ENABLED]: false,
           [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: 'yellow',
           [StorageKeys.HIGHLIGHT_COLOR_PALETTE]: null,
           [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: true,
@@ -317,7 +317,7 @@ async function initializeFeatures(): Promise<void> {
       // action is hidden in that case.
       quoteReplyCleanup = startQuoteReply({
         quoteEnabled: quoteReplyResult[StorageKeys.QUOTE_REPLY_ENABLED] !== false,
-        highlightEnabled: quoteReplyResult[StorageKeys.HIGHLIGHT_ENABLED] !== false,
+        highlightEnabled: quoteReplyResult[StorageKeys.HIGHLIGHT_ENABLED] === true,
         highlightDefaultColor: isHighlightColor(storedHighlightColor)
           ? storedHighlightColor
           : 'yellow',

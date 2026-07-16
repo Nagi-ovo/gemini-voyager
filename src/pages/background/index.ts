@@ -54,6 +54,8 @@ import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeli
 import { getTranslation } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
+import { resolveOptionalHighlightSetting } from './highlightOptionalSetting';
+
 const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
 const PLUGIN_CONTENT_SCRIPT_ID = 'gv-plugin-content-script';
 const CUSTOM_WEBSITE_KEY = 'gvPromptCustomWebsites';
@@ -92,6 +94,29 @@ async function disableRetiredTabTitleUpdateSetting(): Promise<void> {
     }
   } catch (error) {
     console.warn('[Background] Failed to disable retired tab-title sync setting:', error);
+  }
+}
+
+/**
+ * Resolve the new optional Highlight default exactly once.
+ *
+ * Existing explicit choices always win. Users with live saved highlights keep
+ * the feature enabled; users who never used it start with the feature disabled.
+ */
+async function migrateOptionalHighlightSetting(): Promise<void> {
+  try {
+    const stored = await chrome.storage.sync.get(StorageKeys.HIGHLIGHT_ENABLED);
+    const storedValue = stored[StorageKeys.HIGHLIGHT_ENABLED];
+    if (typeof storedValue === 'boolean') return;
+
+    const hasExistingHighlights = (await highlightAnnotationService.getAllAccounts()).length > 0;
+    const resolution = resolveOptionalHighlightSetting(storedValue, hasExistingHighlights);
+    if (!resolution.shouldPersist) return;
+    await chrome.storage.sync.set({
+      [StorageKeys.HIGHLIGHT_ENABLED]: resolution.enabled,
+    });
+  } catch (error) {
+    console.warn('[Background] Failed to migrate optional Highlight setting:', error);
   }
 }
 
@@ -1014,6 +1039,7 @@ async function syncPromptNudgeIcon(): Promise<void> {
 
 // Initial sync for persisted permissions
 void disableRetiredTabTitleUpdateSetting();
+void migrateOptionalHighlightSetting();
 void cleanupLegacyGeneratedUiCapturePermission();
 void syncCustomContentScripts();
 void syncPluginContentScripts();
