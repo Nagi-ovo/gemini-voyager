@@ -12880,6 +12880,14 @@ code-block .code-block-decoration,
 code-block.gv-code-block-collapsible .formatted-code-block-internal-container {
   position: relative;
 }
+/*
+ * Once a long block has its own collapse action, keeping Gemini's whole header
+ * sticky makes it cut across the middle of the code while the page scrolls.
+ */
+code-block.gv-code-block-collapsible .code-block-decoration {
+  position: static !important;
+  top: auto !important;
+}
 code-block.gv-code-block-collapsed .formatted-code-block-internal-container {
   /* Compact enough that the state change is obvious even above the composer. */
   max-height: clamp(240px, 38vh, 340px);
@@ -12905,45 +12913,30 @@ code-block .gv-code-block-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  width: auto;
+  width: 32px;
   height: 32px;
-  padding: 0 8px 0 7px;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1;
+  padding: 6px;
   color: inherit;
   background: transparent;
   border: 0;
-  border-radius: 16px;
+  border-radius: 50%;
   box-shadow: none;
   cursor: pointer;
-  opacity: 0.88;
   transition:
     background-color 160ms ease,
-    opacity 160ms ease,
     transform 100ms ease;
 }
 code-block .gv-code-block-toggle:hover {
   background: rgb(127 127 127 / 14%);
-  opacity: 1;
 }
 code-block .gv-code-block-toggle:active {
   transform: scale(0.97);
-}
-code-block.gv-code-block-collapsed .gv-code-block-toggle {
-  background: rgb(127 127 127 / 10%);
 }
 code-block .gv-code-block-toggle:focus-visible {
   outline: 2px solid currentcolor;
   outline-offset: 1px;
 }
 code-block .gv-code-block-toggle svg {
-  flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
-}
-code-block .gv-code-block-toggle-label {
-  white-space: nowrap;
+  width: 20px;
+  height: 20px;
 }

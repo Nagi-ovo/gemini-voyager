@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -68,7 +70,8 @@ describe('codeBlockCollapse', () => {
     expect(button.parentElement?.classList.contains('buttons')).toBe(true);
     expect(button.getAttribute('aria-label')).toBe('Collapse');
     expect(button.getAttribute('aria-expanded')).toBe('true');
-    expect(button.querySelector('.gv-code-block-toggle-label')?.textContent).toBe('Collapse');
+    expect(button.querySelector('svg')).not.toBeNull();
+    expect(button.textContent?.trim()).toBe('');
     expect(host.classList.contains('gv-code-block-collapsed')).toBe(false);
   });
 
@@ -81,12 +84,10 @@ describe('codeBlockCollapse', () => {
     expect(host.classList.contains('gv-code-block-collapsed')).toBe(true);
     expect(button.getAttribute('aria-label')).toBe('Expand');
     expect(button.getAttribute('aria-expanded')).toBe('false');
-    expect(button.querySelector('.gv-code-block-toggle-label')?.textContent).toBe('Expand');
 
     button.click();
     expect(host.classList.contains('gv-code-block-collapsed')).toBe(false);
     expect(button.getAttribute('aria-label')).toBe('Collapse');
-    expect(button.querySelector('.gv-code-block-toggle-label')?.textContent).toBe('Collapse');
   });
 
   it('handles wrapped single-line code using rendered height', () => {
@@ -133,5 +134,16 @@ describe('codeBlockCollapse', () => {
     expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
     expect(host.classList.contains('gv-code-block-collapsible')).toBe(false);
     expect(host.classList.contains('gv-code-block-collapsed')).toBe(false);
+  });
+
+  it('keeps the header out of the sticky layer for collapsible blocks', () => {
+    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const rule =
+      css.match(
+        /code-block\.gv-code-block-collapsible \.code-block-decoration\s*{([\s\S]*?)}/,
+      )?.[1] ?? '';
+
+    expect(rule).toContain('position: static !important');
+    expect(rule).toContain('top: auto !important');
   });
 });

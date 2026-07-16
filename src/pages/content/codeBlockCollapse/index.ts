@@ -59,10 +59,8 @@ function updateToggle(host: HTMLElement, button: HTMLButtonElement): void {
 
   if (button.dataset.state !== state) {
     button.dataset.state = state;
-    button.innerHTML = `${toggleIcon(collapsed)}<span class="gv-code-block-toggle-label"></span>`;
+    button.innerHTML = toggleIcon(collapsed);
   }
-  const labelElement = button.querySelector<HTMLElement>('.gv-code-block-toggle-label');
-  if (labelElement && labelElement.textContent !== label) labelElement.textContent = label;
   if (button.title !== label) button.title = label;
   if (button.getAttribute('aria-label') !== label) button.setAttribute('aria-label', label);
   button.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
