@@ -186,9 +186,25 @@ describe('Gemini native conversation title sync', () => {
     const blurSpy = vi.spyOn(moreButton, 'blur');
     manager = new FolderManager();
     const internals = manager as unknown as TestableManager;
+    internals.data = {
+      folders: [],
+      folderContents: {
+        folderA: [
+          {
+            conversationId: `c_${hexId}`,
+            title: 'Folder-only title',
+            url: `https://gemini.google.com/app/${hexId}`,
+            addedAt: Date.now(),
+            customTitle: true,
+          },
+        ],
+      },
+    };
     internals.sidebarContainer = document.body;
     internals.hideArchivedConversations = true;
     internals.isVisibleElement = () => true;
+    const saveSpy = vi.spyOn(internals, 'saveData').mockResolvedValue(true);
+    const renderSpy = vi.spyOn(internals, 'renderAllFolders').mockImplementation(() => {});
 
     const result = await internals.openNativeRenameForFolderConversation({
       conversationId: hexId,
@@ -202,6 +218,35 @@ describe('Gemini native conversation title sync', () => {
     expect(blurSpy).toHaveBeenCalledTimes(1);
     expect(nativeRow.classList.contains('gv-conversation-archived')).toBe(true);
     expect(actions.classList.contains('gv-conversation-archived-actions')).toBe(true);
+    expect(internals.data.folderContents.folderA[0]?.title).toBe('Native title');
+    expect(internals.data.folderContents.folderA[0]?.customTitle).toBeUndefined();
+    expect(saveSpy).toHaveBeenCalledTimes(1);
+    expect(renderSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses native rename when a folder conversation title is double-clicked', async () => {
+    const hexId = '2468abcdef135790';
+    const conversation: ConversationReference = {
+      conversationId: `c_${hexId}`,
+      title: 'Folder title',
+      url: `https://gemini.google.com/app/${hexId}`,
+      addedAt: Date.now(),
+    };
+    manager = new FolderManager();
+    const internals = manager as unknown as TestableManager;
+    const nativeRenameSpy = vi
+      .spyOn(internals, 'openNativeRenameForFolderConversation')
+      .mockResolvedValue(true);
+
+    const row = internals.createConversationElement(conversation, 'folderA', 1);
+    const title = row.querySelector<HTMLElement>('.gv-conversation-title');
+
+    title?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+    await Promise.resolve();
+
+    expect(nativeRenameSpy).toHaveBeenCalledTimes(1);
+    expect(nativeRenameSpy).toHaveBeenCalledWith(conversation);
+    expect(row.querySelector('.gv-conversation-rename-input')).toBeNull();
   });
 
   it('shows a right-click menu that invokes native rename instead of folder-only rename', async () => {

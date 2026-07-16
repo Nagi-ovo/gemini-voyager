@@ -2351,8 +2351,9 @@ export class FolderManager {
 
     // Double-click to rename
     title.addEventListener('dblclick', (e) => {
+      e.preventDefault();
       e.stopPropagation();
-      this.renameConversation(folderId, conv.conversationId, title);
+      void this.openNativeRenameForFolderConversation(conv);
     });
 
     convEl.addEventListener('contextmenu', (e) => {
@@ -4931,6 +4932,7 @@ export class FolderManager {
     }
 
     const restoreArchivedVisibility = this.temporarilyRevealNativeConversation(conversationEl);
+    const nativeTitle = this.extractNativeConversationTitle(conversationEl);
     let moreButton: HTMLElement | null = null;
 
     try {
@@ -4943,6 +4945,8 @@ export class FolderManager {
       const renamed = await this.waitForRenameButtonAndClick();
       if (!renamed) {
         this.debugWarn('Could not find native rename button:', conversationId);
+      } else {
+        await this.restoreNativeTitleSync(conversationId, nativeTitle);
       }
       return renamed;
     } finally {
@@ -4951,6 +4955,37 @@ export class FolderManager {
       }
       restoreArchivedVisibility();
     }
+  }
+
+  private async restoreNativeTitleSync(
+    conversationId: string,
+    nativeTitle: string | null,
+  ): Promise<void> {
+    const title = nativeTitle?.trim() || null;
+    const updatedAt = Date.now();
+    let updated = false;
+
+    for (const folderId in this.data.folderContents) {
+      for (const conversation of this.data.folderContents[folderId]) {
+        if (!this.isSameConversation(conversationId, conversation)) continue;
+
+        if (conversation.customTitle) {
+          delete conversation.customTitle;
+          updated = true;
+        }
+
+        if (title && conversation.title !== title) {
+          conversation.title = title;
+          conversation.updatedAt = updatedAt;
+          updated = true;
+        }
+      }
+    }
+
+    if (!updated) return;
+
+    await this.saveData();
+    this.renderAllFolders();
   }
 
   private temporarilyRevealNativeConversation(conversationEl: HTMLElement): () => void {
@@ -5643,100 +5678,6 @@ export class FolderManager {
     }
 
     return result;
-  }
-
-  private renameConversation(
-    folderId: string,
-    conversationId: string,
-    titleElement: HTMLElement,
-  ): void {
-    // Get current title
-    const conv = this.data.folderContents[folderId]?.find(
-      (c) => c.conversationId === conversationId,
-    );
-    if (!conv) return;
-
-    const currentTitle = conv.title;
-
-    // Create inline input for renaming
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'gv-folder-name-input gv-conversation-rename-input';
-    input.value = currentTitle;
-    input.style.width = '100%';
-
-    // Replace title with input
-    const parent = titleElement.parentElement;
-    if (!parent) return;
-
-    titleElement.style.display = 'none';
-    parent.insertBefore(input, titleElement);
-    input.focus();
-    input.select();
-
-    let finished = false;
-    const cleanup = () => {
-      try {
-        input.removeEventListener('blur', onBlur);
-      } catch (e) {
-        this.debug('Failed to remove blur listener:', e);
-      }
-      try {
-        input.removeEventListener('keydown', onKeyDown);
-      } catch (e) {
-        this.debug('Failed to remove keydown listener:', e);
-      }
-    };
-    const finalize = (commit: boolean) => {
-      if (finished) return;
-      finished = true;
-      cleanup();
-      try {
-        if (commit) {
-          const newTitle = input.value.trim();
-          if (newTitle && newTitle !== currentTitle) {
-            conv.title = newTitle;
-            conv.customTitle = true; // mark as manually renamed, don't auto-sync from native
-            conv.updatedAt = Date.now(); // record update time for sync conflict resolution
-            this.saveData();
-          }
-        }
-      } catch (e) {
-        this.debug('Failed to save renamed conversation:', e);
-      }
-      // Restore title element gracefully even if DOM re-rendered
-      try {
-        if (input.isConnected) input.remove();
-      } catch (e) {
-        this.debug('Failed to remove input:', e);
-      }
-      try {
-        titleElement.style.display = '';
-      } catch (e) {
-        this.debug('Failed to restore title display:', e);
-      }
-      try {
-        titleElement.textContent = conv.title;
-      } catch (e) {
-        this.debug('Failed to restore title text:', e);
-      }
-    };
-    const onBlur = () => {
-      // Defer finalize to let Angular/SPA navigation settle
-      requestAnimationFrame(() => finalize(true));
-    };
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        finalize(true);
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        finalize(false);
-      }
-    };
-
-    input.addEventListener('blur', onBlur);
-    input.addEventListener('keydown', onKeyDown);
   }
 
   private showFolderMenu(event: MouseEvent, folderId: string): void {
