@@ -8,6 +8,15 @@ import SafariServices
 import os.log
 
 final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
+  override init() {
+    super.init()
+    // Claim the notification-center delegate as soon as this extension
+    // process handles any request: notification responses are routed to the
+    // scheduling process, so a click on a previously delivered notification
+    // must find a delegate here even after the process was relaunched.
+    _ = NativeNotificationService.shared
+  }
+
   func beginRequest(with context: NSExtensionContext) {
     guard let request = context.inputItems.first as? NSExtensionItem,
       let message = extensionMessage(from: request)

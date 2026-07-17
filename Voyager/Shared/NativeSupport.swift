@@ -232,7 +232,7 @@ struct VoyagerNotificationDestination: Equatable {
     let openAction = UNNotificationAction(
       identifier: openActionIdentifier,
       title: "Open Conversation",
-      options: [.foreground]
+      options: []
     )
     return UNNotificationCategory(
       identifier: categoryIdentifier,
@@ -240,6 +240,74 @@ struct VoyagerNotificationDestination: Equatable {
       intentIdentifiers: [],
       options: []
     )
+  }
+}
+
+/// Shared os_log subsystem for notification click routing. Follow along with:
+/// log stream --level debug --predicate 'subsystem == "fun.nagi.voyager.notif"'
+enum VoyagerNotifLog {
+  static let subsystem = "fun.nagi.voyager.notif"
+}
+
+/// gemini-voyager:// links understood by the containing app's kAEGetURL
+/// handler. macOS delivers a UNNotificationResponse to the notification
+/// center of the process that scheduled the request — for Voyager that is the
+/// Safari extension process, where SafariServices cannot open or message
+/// Safari. The extension therefore hands a notification click to the app over
+/// this URL scheme, the same production-proven channel the Google Drive auth
+/// flow uses.
+enum VoyagerAppLink {
+  static let scheme = "gemini-voyager"
+  static let openConversationHost = "open-conversation"
+  static let debugDeliverNotificationHost = "debug-deliver-notification"
+  static let conversationQueryItemName = "url"
+
+  /// RFC 3986 unreserved characters. Encoding everything else keeps '&', '=',
+  /// and '#' inside conversation URLs intact across the query round trip
+  /// (URLComponents' queryItems setter would leave '&' unescaped).
+  private static var unreservedCharacters: CharacterSet {
+    var set = CharacterSet.alphanumerics
+    set.insert(charactersIn: "-._~")
+    return set
+  }
+
+  static func openConversationURL(for destination: VoyagerNotificationDestination) -> URL? {
+    guard
+      let encoded = destination.url.absoluteString.addingPercentEncoding(
+        withAllowedCharacters: unreservedCharacters
+      )
+    else { return nil }
+    return URL(
+      string: "\(scheme)://\(openConversationHost)?\(conversationQueryItemName)=\(encoded)"
+    )
+  }
+
+  static func openConversationDestination(from url: URL) -> VoyagerNotificationDestination? {
+    conversationDestination(from: url, expectedHost: openConversationHost)
+  }
+
+  static func isDebugDeliverNotification(_ url: URL) -> Bool {
+    url.scheme?.lowercased() == scheme && url.host?.lowercased() == debugDeliverNotificationHost
+  }
+
+  static func debugConversationDestination(from url: URL) -> VoyagerNotificationDestination? {
+    conversationDestination(from: url, expectedHost: debugDeliverNotificationHost)
+  }
+
+  private static func conversationDestination(
+    from url: URL,
+    expectedHost: String
+  ) -> VoyagerNotificationDestination? {
+    guard url.scheme?.lowercased() == scheme,
+      url.host?.lowercased() == expectedHost,
+      let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+      let rawValue = components.queryItems?
+        .first(where: { $0.name == conversationQueryItemName })?
+        .value
+    else { return nil }
+    // Funnel through the notification allow-list so the URL scheme cannot
+    // smuggle in a target a notification could never carry.
+    return VoyagerNotificationDestination(rawValue: rawValue)
   }
 }
 

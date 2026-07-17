@@ -17,6 +17,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   private let googleDriveScope = "https://www.googleapis.com/auth/drive.file"
   private var pendingGoogleDriveSignIn = false
   private var canStartInteractiveSignIn = false
+  private let notifLog = OSLog(subsystem: VoyagerNotifLog.subsystem, category: "app")
 
   private let updaterController = SPUStandardUpdaterController(
     startingUpdater: true,
@@ -45,6 +46,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       andSelector: #selector(handleGetURLEvent(_:withReplyEvent:)),
       forEventClass: AEEventClass(kInternetEventClass),
       andEventID: AEEventID(kAEGetURL)
+    )
+    os_log(
+      .default,
+      log: notifLog,
+      "app willFinishLaunching: notification delegate + URL handler set (bundle=%{public}@)",
+      Bundle.main.bundleIdentifier ?? "?"
     )
   }
 
@@ -90,9 +97,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       let url = URL(string: urlString)
     else { return }
 
+    os_log(.default, log: notifLog, "app URL-scheme event: %{public}@", urlString)
+
     if GIDSignIn.sharedInstance.handle(url) {
       return
     }
+
+    // Notification clicks arrive in the Safari extension process (it owns the
+    // scheduling notification center); it hands them to this app over the URL
+    // scheme because SafariServices is unavailable there.
+    if let destination = VoyagerAppLink.openConversationDestination(from: url) {
+      os_log(
+        .default,
+        log: notifLog,
+        "app URL-scheme handoff -> openConversation: %{public}@",
+        destination.url.absoluteString
+      )
+      openConversation(destination) {}
+      return
+    }
+
+    #if DEBUG
+      if VoyagerAppLink.isDebugDeliverNotification(url) {
+        scheduleDebugNotification(link: url)
+        return
+      }
+    #endif
 
     guard url.scheme == "gemini-voyager", url.host == "google-drive-auth" else { return }
     pendingGoogleDriveSignIn = true
@@ -124,6 +154,65 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
   }
 
+  #if DEBUG
+    /// Debug-only twin of the extension's deliver path, so one click can prove
+    /// where app-scheduled notification responses are routed. Trigger with:
+    /// open "gemini-voyager://debug-deliver-notification?url=https%3A%2F%2Fgemini.google.com%2Fapp%2Fexample"
+    private func scheduleDebugNotification(link: URL) {
+      let destination =
+        VoyagerAppLink.debugConversationDestination(from: link)
+        ?? VoyagerNotificationDestination(rawValue: "https://gemini.google.com/app/voyager-debug")
+
+      let content = UNMutableNotificationContent()
+      content.title = "Voyager (app-scheduled debug)"
+      content.body = "Click Open Conversation to test app-owned routing."
+      content.sound = .default
+      content.categoryIdentifier = VoyagerNotificationDestination.categoryIdentifier
+      if let destination {
+        content.userInfo = destination.userInfo
+      }
+
+      let request = UNNotificationRequest(
+        identifier: "voyager-debug-\(UUID().uuidString)",
+        content: content,
+        trigger: nil
+      )
+
+      os_log(
+        .default,
+        log: notifLog,
+        "app scheduling debug notification url=%{public}@ (bundle=%{public}@)",
+        destination?.url.absoluteString ?? "none",
+        Bundle.main.bundleIdentifier ?? "?"
+      )
+
+      let center = UNUserNotificationCenter.current()
+      center.requestAuthorization(options: [.alert, .sound]) { granted, error in
+        guard granted, error == nil else {
+          os_log(
+            .error,
+            log: self.notifLog,
+            "app debug notification not authorized: %{public}@",
+            error?.localizedDescription ?? "denied"
+          )
+          return
+        }
+        center.add(request) { error in
+          if let error {
+            os_log(
+              .error,
+              log: self.notifLog,
+              "app debug notification add failed: %{public}@",
+              error.localizedDescription
+            )
+          } else {
+            os_log(.default, log: self.notifLog, "app debug notification delivered")
+          }
+        }
+      }
+    }
+  #endif
+
   private func installCheckForUpdatesMenuItem() {
     guard let applicationMenu = NSApp.mainMenu?.items.first?.submenu else { return }
 
@@ -144,6 +233,13 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     withCompletionHandler completionHandler: @escaping () -> Void
   ) {
     let actionIdentifier = response.actionIdentifier
+    os_log(
+      .default,
+      log: notifLog,
+      "app didReceive action=%{public}@ (bundle=%{public}@)",
+      actionIdentifier,
+      Bundle.main.bundleIdentifier ?? "?"
+    )
     guard
       actionIdentifier == UNNotificationDefaultActionIdentifier
         || actionIdentifier == VoyagerNotificationDestination.openActionIdentifier,
@@ -151,6 +247,11 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         userInfo: response.notification.request.content.userInfo
       )
     else {
+      os_log(
+        .default,
+        log: notifLog,
+        "app didReceive ignored (unrelated action or missing destination)"
+      )
       completionHandler()
       return
     }
@@ -165,17 +266,63 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     _ destination: VoyagerNotificationDestination,
     completion: @escaping () -> Void
   ) {
+    os_log(
+      .default,
+      log: notifLog,
+      "app openConversation start: %{public}@",
+      destination.url.absoluteString
+    )
+    var didFinish = false
+    let finish: (Bool) -> Void = { shouldOpenFallback in
+      DispatchQueue.main.async {
+        guard !didFinish else { return }
+        didFinish = true
+
+        if shouldOpenFallback {
+          os_log(
+            .default,
+            log: self.notifLog,
+            "app openConversation fallback: SFSafariApplication.openWindow"
+          )
+          SFSafariApplication.openWindow(with: destination.url) { _ in
+            self.activateSafari()
+            NSApp.hide(nil)
+            completion()
+          }
+          return
+        }
+
+        self.activateSafari()
+        NSApp.hide(nil)
+        completion()
+      }
+    }
+
     SFSafariApplication.dispatchMessage(
       withName: VoyagerNotificationDestination.openConversationMessageName,
       toExtensionWithIdentifier: extensionBundleIdentifier,
       userInfo: destination.dispatchUserInfo
     ) { error in
-      guard error == nil else {
-        SFSafariApplication.openWindow(with: destination.url) { _ in completion() }
-        return
+      if let error {
+        os_log(
+          .error,
+          log: self.notifLog,
+          "app dispatchMessage failed: %{public}@",
+          error.localizedDescription
+        )
+      } else {
+        os_log(.default, log: self.notifLog, "app dispatchMessage delivered to Safari")
       }
-      self.activateSafari()
-      completion()
+      finish(error != nil)
+    }
+
+    // Safari can leave the dispatch callback pending when no native port is
+    // connected. Never strand a notification click in the containing app.
+    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+      if !didFinish {
+        os_log(.default, log: self.notifLog, "app dispatch timed out; forcing fallback")
+      }
+      finish(true)
     }
   }
 
@@ -185,6 +332,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         withBundleIdentifier: "com.apple.Safari"
       )
     else { return }
-    NSWorkspace.shared.openApplication(at: safariURL, configuration: NSWorkspace.OpenConfiguration())
+    NSWorkspace.shared.openApplication(
+      at: safariURL, configuration: NSWorkspace.OpenConfiguration())
   }
 }

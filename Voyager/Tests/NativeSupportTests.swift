@@ -153,6 +153,7 @@ final class NativeSupportTests: XCTestCase {
       category.actions.map(\.identifier),
       [VoyagerNotificationDestination.openActionIdentifier]
     )
+    XCTAssertFalse(category.actions[0].options.contains(.foreground))
   }
 
   func testNotificationDestinationDispatchUserInfoRoundTrips() {
@@ -318,5 +319,76 @@ final class NativeSupportTests: XCTestCase {
     XCTAssertEqual(message["success"] as? Bool, false)
     XCTAssertEqual(message["code"] as? String, "icloud_temporarily_unavailable")
     XCTAssertEqual(message["retryAfterMs"] as? Int, 2_500)
+  }
+
+  func testAppLinkOpenConversationRoundTripsThroughURLScheme() throws {
+    let destination = try XCTUnwrap(
+      VoyagerNotificationDestination(
+        rawValue: "https://gemini.google.com/u/1/app/4fa1bc37ee39a169"
+      )
+    )
+
+    let handoff = try XCTUnwrap(VoyagerAppLink.openConversationURL(for: destination))
+    XCTAssertEqual(handoff.scheme, "gemini-voyager")
+    XCTAssertEqual(handoff.host, "open-conversation")
+    XCTAssertEqual(VoyagerAppLink.openConversationDestination(from: handoff), destination)
+  }
+
+  func testAppLinkEncodingKeepsQueryAndFragmentCharactersIntact() throws {
+    let raw = "https://chatgpt.com/c/abc?x=1&y=2#frag"
+    let destination = try XCTUnwrap(VoyagerNotificationDestination(rawValue: raw))
+
+    let handoff = try XCTUnwrap(VoyagerAppLink.openConversationURL(for: destination))
+    XCTAssertFalse(handoff.absoluteString.contains("&"))
+    XCTAssertFalse(handoff.absoluteString.contains("#"))
+    XCTAssertEqual(
+      VoyagerAppLink.openConversationDestination(from: handoff)?.url.absoluteString,
+      raw
+    )
+  }
+
+  func testAppLinkRejectsWrongSchemeHostAndDisallowedTargets() {
+    XCTAssertNil(
+      VoyagerAppLink.openConversationDestination(
+        from: URL(string: "https://open-conversation?url=https%3A%2F%2Fgemini.google.com")!
+      )
+    )
+    XCTAssertNil(
+      VoyagerAppLink.openConversationDestination(
+        from: URL(string: "gemini-voyager://google-drive-auth")!
+      )
+    )
+    XCTAssertNil(
+      VoyagerAppLink.openConversationDestination(
+        from: URL(string: "gemini-voyager://open-conversation?url=https%3A%2F%2Fevil.com%2Fapp%2Fx")!
+      )
+    )
+    XCTAssertNil(
+      VoyagerAppLink.openConversationDestination(
+        from: URL(string: "gemini-voyager://open-conversation")!
+      )
+    )
+  }
+
+  func testAppLinkDebugDeliverNotificationDetectionAndParsing() {
+    let debugLink = URL(
+      string:
+        "gemini-voyager://debug-deliver-notification?url=https%3A%2F%2Fgemini.google.com%2Fapp%2Fx"
+    )!
+    XCTAssertTrue(VoyagerAppLink.isDebugDeliverNotification(debugLink))
+    XCTAssertEqual(
+      VoyagerAppLink.debugConversationDestination(from: debugLink)?.url.absoluteString,
+      "https://gemini.google.com/app/x"
+    )
+
+    let handoffLink = URL(
+      string: "gemini-voyager://open-conversation?url=https%3A%2F%2Fgemini.google.com%2Fapp%2Fx"
+    )!
+    XCTAssertFalse(VoyagerAppLink.isDebugDeliverNotification(handoffLink))
+    XCTAssertNil(
+      VoyagerAppLink.debugConversationDestination(
+        from: URL(string: "gemini-voyager://debug-deliver-notification")!
+      )
+    )
   }
 }
