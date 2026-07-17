@@ -78,6 +78,22 @@ Do not use this route to validate native messaging. A temporary extension cannot
 
 For first-time Safari Google Drive authorization, click **Connect Google Drive** in the extension popup. That user gesture opens the containing app through its custom URL scheme; Google Sign-In then continues in the user's default browser. Return to Safari and run the sync action again. Do not try to launch the containing app from `SafariWebExtensionHandler` with `NSExtensionContext.open`; the Safari extension point may reject it even though native messaging itself is healthy.
 
+For native notification click testing, keep notification ownership in the containing app. The Safari app extension may display a notification, but macOS can still report `can launch: false` for the response and never run the extension's notification delegate. The working route is:
+
+```text
+web extension -> Safari app extension -> containing app schedules notification
+notification click -> containing app delegate -> Safari dispatchMessage -> target tab
+```
+
+Stream the project's privacy-safe notification logs during the live click:
+
+```sh
+log stream --level debug --style compact \
+  --predicate 'subsystem == "fun.nagi.voyager.notif"'
+```
+
+Require the app-owned chain to reach `app didReceive` and `app dispatchMessage delivered to Safari`, then visibly confirm that Safari focuses the target conversation. Seeing only notification delivery is not enough. If system logs say the response targets the `.Extension` process with `can launch: false`, do not keep retrying reloads or add `.foreground`; fix ownership so the app schedules the notification. Never log or paste the full notification handoff URL because its encoded payload can contain conversation text and destination details.
+
 Use `scripts/build-safari-release.sh` only for a release or explicit signed-distribution test. Do not use release installation as the routine CSS/TypeScript refresh loop.
 
 ## 4. Runtime verification checklist

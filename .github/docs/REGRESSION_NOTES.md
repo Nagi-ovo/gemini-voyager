@@ -523,3 +523,39 @@ Regression tests:
 (`clearAllAccounts` cases) and
 `src/core/services/__tests__/StorageQuotaService.test.ts`
 (`clears the narrowly matched highlights category`).
+
+## Safari notification clicks must be owned by the containing app
+
+Symptom:
+Safari showed the native response-complete notification, but clicking its
+Open Conversation action only brought Voyager's status window forward. The
+target conversation did not open or receive focus.
+
+Root cause:
+The notification was scheduled by the Safari app extension, so macOS routed
+the response back to that process. System logs showed the response target with
+`can launch: false`: the notification could be displayed, but Safari's app
+extension was not relaunched to run its notification delegate. Adding a
+foreground action or repeatedly reloading Safari did not change that process
+ownership.
+
+Fix:
+Let the app extension validate permission and hand the notification to the
+containing app before scheduling it. The app owns the notification category
+and delegate; on click it dispatches the typed open-conversation message back
+to Safari, which focuses the matching tab. Keep the handoff payload validated
+and never log its full URL because it can contain conversation details.
+
+Regression test:
+`Voyager/Tests/NativeSupportTests.swift`
+`src/pages/background/__tests__/responseCompleteNativeNotification.test.ts`
+`src/core/utils/__tests__/safariNativeNotifications.test.ts`
+`src/core/utils/__tests__/nativeOpenConversation.test.ts`
+
+This also requires a live macOS/Safari check. The privacy-safe log chain must
+reach `app didReceive` and `app dispatchMessage delivered to Safari`, and the
+browser must visibly focus the target conversation. A passing build or a
+visible notification alone does not verify the click route.
+
+Commit:
+`6e552732 fix(safari): route notification clicks through app`
