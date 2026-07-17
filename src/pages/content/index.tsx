@@ -251,51 +251,29 @@ async function initializeFeatures(): Promise<void> {
       if (folderManagerInstance) startFolderProject(folderManagerInstance);
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
+      // Layout preferences are independent and only install lightweight
+      // storage listeners/styles, so yield once for the group instead of once
+      // per setting.
       startFolderSpacingAdjuster('gemini');
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       startFolderItemFontSizeAdjuster();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       startChatWidthAdjuster();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       startChatFontSizeAdjuster();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       startChatLineHeightAdjuster();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       startChatParagraphSpacingAdjuster();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       startEditInputWidthAdjuster();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       startSidebarWidthAdjuster();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       startSidebarAutoHide();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startInputCollapse();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       startInputHaloHider();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       inputVimModeCleanup = await startInputVimMode();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Send behavior must be ready before prevent-auto-scroll reads its bridge state.
       sendBehaviorCleanup = await startSendBehavior('gemini');
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       startPreventAutoScroll();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       startFormulaCopy();
-
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Quote Reply - conditionally start based on storage setting
@@ -332,60 +310,45 @@ async function initializeFeatures(): Promise<void> {
       });
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
-      // Watermark remover - based on gemini-watermark-remover by journey-ad.
-      // Safari uses the authenticated MAIN-world fetch fallback when the
-      // extension background cannot read the image directly.
+      // Independent content helpers can initialize in the same idle slice.
       startWatermarkRemover();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       startDeepResearchExport();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      responseCompleteNotificationCleanup = await startResponseCompleteNotification();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       startContextSync();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      // Draft auto-save
-      draftSaveCleanup = await startDraftSave();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      // Gems hider - hide/show toggle for Gems list section
       startGemsHider();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
-      // Gems sidebar — recent gems list injected above Notebooks, populated
-      // from a local cache that's refreshed whenever the user visits the
-      // /gems/view management page. Count is controlled from the popup.
-      gemsSidebarCleanup = await startGemsSidebar();
+      // These modules only share the extension storage API and can hydrate in
+      // parallel without changing their runtime ordering.
+      const [notificationResult, draftResult, gemsResult, usageResult] = await Promise.allSettled([
+        startResponseCompleteNotification(),
+        startDraftSave(),
+        startGemsSidebar(),
+        startUsageStatus(),
+      ]);
+      if (notificationResult.status === 'fulfilled') {
+        responseCompleteNotificationCleanup = notificationResult.value;
+      }
+      if (draftResult.status === 'fulfilled') draftSaveCleanup = draftResult.value;
+      if (gemsResult.status === 'fulfilled') gemsSidebarCleanup = gemsResult.value;
+      if (usageResult.status === 'fulfilled') usageStatusCleanup = usageResult.value;
+
+      const failedInitializer = [notificationResult, draftResult, gemsResult, usageResult].find(
+        (result): result is PromiseRejectedResult => result.status === 'rejected',
+      );
+      if (failedInitializer) throw failedInitializer.reason;
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
-      // Usage status pill — scrapes /usage, shows daily/weekly quota near the
-      // composer. Self-gates on the GV usage-status setting (default off).
-      usageStatusCleanup = await startUsageStatus();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      // Markdown Patcher - fixes broken bold tags due to HTML injection
+      // DOM enhancements install observers/listeners but do not need separate
+      // idle waits between each initializer.
       startMarkdownPatcher();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       codeBlockCollapseCleanup = startCodeBlockCollapse();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
-      // Default Model Manager
       DefaultModelManager.getInstance().init();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       startExportButton();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       void startCanvasExport();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       if (await isForkFeatureEnabled()) {
         forkCleanup = startFork();
-        await delay(LIGHT_FEATURE_INIT_DELAY);
       }
 
       // Introduce new feature coachmarks once the changelog is out of the way;
@@ -393,7 +356,6 @@ async function initializeFeatures(): Promise<void> {
       void startChangelog({ onClosed: showOnboardingCoachmarksWhenChangelogIsIdle }).then(() => {
         window.setTimeout(showOnboardingCoachmarksWhenChangelogIsIdle, 1200);
       });
-      await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 
     if (
@@ -408,8 +370,6 @@ async function initializeFeatures(): Promise<void> {
     if (location.hostname === 'gemini.google.com') {
       // Initialize Mermaid rendering (lightweight)
       startMermaid();
-      await delay(LIGHT_FEATURE_INIT_DELAY);
-
       // Initialize user message LaTeX rendering
       startUserLatex();
       await delay(LIGHT_FEATURE_INIT_DELAY);
