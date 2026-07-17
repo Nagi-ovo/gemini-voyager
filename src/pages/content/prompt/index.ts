@@ -4,7 +4,6 @@
  * - Panel supports: i18n language switch, add prompt, tag chips, search, copy
  * - Optional lock to pin panel position; when locked, panel is draggable and persisted
  */
-import DOMPurify from 'dompurify';
 import 'katex/dist/katex.min.css';
 import type { marked as MarkedFn } from 'marked';
 import browser from 'webextension-polyfill';
@@ -426,6 +425,7 @@ function computeAnchoredPosition(
 
 export async function startPromptManager(): Promise<{ destroy: () => void }> {
   let marked!: typeof MarkedFn;
+  let DOMPurify!: typeof import('dompurify').default;
 
   // Lazily load marked + the KaTeX extension only when a markdown preview is
   // actually rendered. marked-katex-extension pulls in the ~265 KB KaTeX chunk,
@@ -435,8 +435,14 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
   const ensureMarkdown = (): Promise<void> => {
     if (!markdownReady) {
       markdownReady = (async () => {
-        marked = (await import('marked')).marked;
-        const { default: markedKatex } = await import('marked-katex-extension');
+        const [markedModule, katexModule, domPurifyModule] = await Promise.all([
+          import('marked'),
+          import('marked-katex-extension'),
+          import('dompurify'),
+        ]);
+        marked = markedModule.marked;
+        const { default: markedKatex } = katexModule;
+        DOMPurify = domPurifyModule.default;
         try {
           // markdown config: single newlines as <br> and KaTeX inline/display math
           marked.use(

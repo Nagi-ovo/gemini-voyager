@@ -1,6 +1,3 @@
-import DOMPurify from 'dompurify';
-import { marked } from 'marked';
-
 import { StorageKeys } from '@/core/types/common';
 import { getWebStoreRatingChannel, isFirefox } from '@/core/utils/browser';
 import { EXTENSION_VERSION } from '@/core/utils/version';
@@ -622,6 +619,10 @@ async function showChangelogModal(
   );
 
   // 4. Convert markdown to HTML
+  const [{ marked }, { default: DOMPurify }] = await Promise.all([
+    import('marked'),
+    import('dompurify'),
+  ]);
   const rawHtml = await marked.parse(localizedContent);
   const sanitizedHtml = DOMPurify.sanitize(rawHtml, {
     ALLOWED_TAGS: [

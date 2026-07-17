@@ -1,5 +1,3 @@
-import { toBlob } from 'html-to-image';
-
 const TRANSPARENT_IMAGE_PLACEHOLDER =
   'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 const DEFAULT_OFFSCREEN_LEFT = '-100000px';
@@ -332,6 +330,7 @@ async function renderTargetToBlob(target: HTMLElement): Promise<Blob> {
   inlineKatexLayoutStyles(target);
   inlineKatexSvgStyles(target);
   const containsMath = hasMathContent(target);
+  const { toBlob } = await import('html-to-image');
   const blob = await toBlob(target, {
     cacheBust: true,
     pixelRatio: 1.2,
