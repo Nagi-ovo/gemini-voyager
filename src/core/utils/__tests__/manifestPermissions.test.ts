@@ -90,6 +90,7 @@ describe('manifest permissions', () => {
 
   it('adds Safari native messaging without restoring WebExtension notifications', () => {
     expect(safariManifest.permissions).not.toContain('unlimitedStorage');
+    expect(safariManifest.permissions).not.toContain('identity');
     expect(safariManifest.permissions).toContain('nativeMessaging');
     expect(safariManifest.optional_permissions).toContain('unlimitedStorage');
     expect(safariManifest.optional_permissions).not.toContain('notifications');

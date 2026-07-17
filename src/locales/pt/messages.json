@@ -1147,6 +1147,13 @@
     "message": "Sincronizar pastas e prompts com o Google Drive",
     "description": "Cloud sync description"
   },
+  "cloudSyncDescriptionICloud": {
+    "message": "Sincronize os dados do Voyager com seu armazenamento privado do iCloud",
+    "description": "iCloud sync description"
+  },
+  "syncProvider": { "message": "Serviço de armazenamento" },
+  "syncProviderGoogleDrive": { "message": "Google Drive" },
+  "syncProviderICloud": { "message": "iCloud" },
   "syncModeDisabled": {
     "message": "Desativado",
     "description": "Sync mode disabled option"

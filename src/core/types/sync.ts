@@ -16,6 +16,8 @@ import type { HighlightExportPayloadV1 } from './highlight';
  */
 export type SyncMode = 'disabled' | 'manual' | 'auto';
 
+export type SyncProvider = 'googleDrive' | 'icloud';
+
 /**
  * Platform identifier for sync operations
  * - gemini: Main Gemini website (gemini.google.com)
@@ -33,6 +35,8 @@ export interface SyncAccountScope {
  * Current sync state for UI display
  */
 export interface SyncState {
+  /** Cloud storage provider. iCloud is available only in the Safari build. */
+  provider: SyncProvider;
   /** Current sync mode setting */
   mode: SyncMode;
   /** Timestamp of last successful sync/download (null if never synced) - Gemini */
@@ -199,6 +203,7 @@ export const SyncStorageKeys = {
  * Default sync state for initial load
  */
 export const DEFAULT_SYNC_STATE: SyncState = {
+  provider: 'googleDrive',
   mode: 'disabled',
   lastSyncTime: null,
   lastUploadTime: null,
@@ -218,7 +223,8 @@ export type SyncMessageType =
   | 'gv.sync.upload'
   | 'gv.sync.download'
   | 'gv.sync.getState'
-  | 'gv.sync.setMode';
+  | 'gv.sync.setMode'
+  | 'gv.sync.setProvider';
 
 /**
  * Message payload for sync operations
@@ -227,6 +233,7 @@ export interface SyncMessage {
   type: SyncMessageType;
   payload?: {
     mode?: SyncMode;
+    provider?: SyncProvider;
     data?: SyncData;
     interactive?: boolean;
     platform?: SyncPlatform;

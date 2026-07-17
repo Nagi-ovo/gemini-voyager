@@ -1147,6 +1147,13 @@
     "message": "폴더와 프롬프트를 Google Drive 에 동기화합니다",
     "description": "Cloud sync description"
   },
+  "cloudSyncDescriptionICloud": {
+    "message": "Voyager 데이터를 개인 iCloud 저장 공간에 동기화합니다",
+    "description": "iCloud sync description"
+  },
+  "syncProvider": { "message": "저장 서비스" },
+  "syncProviderGoogleDrive": { "message": "Google Drive" },
+  "syncProviderICloud": { "message": "iCloud" },
   "syncModeDisabled": {
     "message": "비활성화",
     "description": "Sync mode disabled option"

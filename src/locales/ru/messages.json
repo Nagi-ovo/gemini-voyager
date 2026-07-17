@@ -1147,6 +1147,13 @@
     "message": "Синхронизация папок и промптов с Google Drive",
     "description": "Cloud sync description"
   },
+  "cloudSyncDescriptionICloud": {
+    "message": "Синхронизация данных Voyager через ваше личное хранилище iCloud",
+    "description": "iCloud sync description"
+  },
+  "syncProvider": { "message": "Сервис хранения" },
+  "syncProviderGoogleDrive": { "message": "Google Drive" },
+  "syncProviderICloud": { "message": "iCloud" },
   "syncModeDisabled": {
     "message": "Отключено",
     "description": "Sync mode disabled option"

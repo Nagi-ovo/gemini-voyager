@@ -2218,7 +2218,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const isSectionVisible = (id: PopupSectionId): boolean => {
     switch (id) {
       case 'cloudSync':
-        return !isSafariBrowser;
+        return true;
       case 'nanobanana':
         return true;
       case 'folderTreeIndent':
@@ -2308,38 +2308,36 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           </span>
         </Button>
       </div>
-      {!isSafariBrowser && (
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            disabled={promptMigrationBusy}
-            onClick={() => {
-              void handlePromptCloudPull();
-            }}
-          >
-            <span className="inline-flex items-center gap-1.5">
-              <MaterialGlyphIcon path={CLOUD_SYNC_PATH} className="h-3.5 w-3.5" />
-              <span>{t('promptCloudPull')}</span>
-            </span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            disabled={promptMigrationBusy}
-            onClick={() => {
-              void handlePromptCloudPush();
-            }}
-          >
-            <span className="inline-flex items-center gap-1.5">
-              <MaterialGlyphIcon path={CLOUD_UPLOAD_PATH} className="h-3.5 w-3.5" />
-              <span>{t('promptCloudPush')}</span>
-            </span>
-          </Button>
-        </div>
-      )}
+      <div className="grid grid-cols-2 gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          disabled={promptMigrationBusy}
+          onClick={() => {
+            void handlePromptCloudPull();
+          }}
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <MaterialGlyphIcon path={CLOUD_SYNC_PATH} className="h-3.5 w-3.5" />
+            <span>{t('promptCloudPull')}</span>
+          </span>
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full"
+          disabled={promptMigrationBusy}
+          onClick={() => {
+            void handlePromptCloudPush();
+          }}
+        >
+          <span className="inline-flex items-center gap-1.5">
+            <MaterialGlyphIcon path={CLOUD_UPLOAD_PATH} className="h-3.5 w-3.5" />
+            <span>{t('promptCloudPush')}</span>
+          </span>
+        </Button>
+      </div>
       <input
         ref={promptImportInputRef}
         type="file"
@@ -2575,8 +2573,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           </Card>
         )}
         {/* Cloud Sync */}
-        {!isSafariBrowser &&
-          wrapSection('cloudSync', <CloudSyncSettings sourceTabId={sourceTabId} />)}
+        {wrapSection('cloudSync', <CloudSyncSettings sourceTabId={sourceTabId} />)}
         {/* Prompt Manager enable toggle for third-party plugin sites (ChatGPT /
             Claude / …). Pinned ABOVE the plugin list so users who installed
             Voyager for those platforms see the onboarding action first, instead

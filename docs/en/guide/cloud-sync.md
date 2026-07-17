@@ -1,6 +1,6 @@
 # Cloud Sync
 
-Voyager Cloud Sync backs up your folders, prompt library, and starred messages to your personal Google Drive. It uses OAuth2 with the `drive.file` scope, which means Voyager can only access files it created — it cannot read or modify any other file in your Drive. No third-party servers are involved; data flows directly between your browser and Google Drive.
+Voyager Cloud Sync backs up your folders, prompt library, starred messages, and supported settings. Choose Google Drive on any supported browser, or iCloud on Safari. Data moves directly between Voyager and the personal cloud account you select; Voyager does not operate a sync server.
 
 ## What Gets Synced
 
@@ -15,8 +15,8 @@ Voyager Cloud Sync backs up your folders, prompt library, and starred messages t
 
 ## Features
 
-- **Multi-Device Sync**: Keep your configurations in sync across multiple computers using Google Drive.
-- **Data Privacy**: Data is stored directly in your own Google Drive storage, ensuring privacy without third-party servers.
+- **Multi-Device Sync**: Keep your configurations in sync across multiple computers.
+- **Data Privacy**: Data is stored in your own Google Drive or private iCloud database, without a Voyager server.
 - **Flexible Sync**: Support for manual uploading and downloading/merging of data.
 
 ::: info
@@ -27,8 +27,9 @@ Device identifiers, access tokens, caches, viewport coordinates, and temporary r
 
 1. Click the extension icon in the bottom-right corner of the Gemini™ page to open the settings panel.
 2. Locate the **Cloud Sync** section.
-3. Click **Sign in with Google** and complete the authorization.
-4. Once authorized, click **Upload to Cloud** to sync your local data to the cloud, or **Download & Merge** to bring cloud data to your local machine.
+3. On Safari, choose **Google Drive** or **iCloud**. Other browsers use Google Drive.
+4. For Google Drive, click **Sign in with Google** and complete authorization. For iCloud, make sure the Mac is signed in to iCloud.
+5. Click **Upload to Cloud** to sync local data, or **Download & Merge** to merge cloud data into this browser.
 
 ### 💡 Quick Sync
 
@@ -48,21 +49,23 @@ While Cloud Sync offers great convenience, we strongly recommend that you also p
 
 ## Cloud Sync vs. Manual Backup
 
-| Aspect         | Manual Backup (Export/Import)     | Cloud Sync                                 |
-| -------------- | --------------------------------- | ------------------------------------------ |
-| Frequency      | Whenever you remember             | On-demand with one click                   |
-| Data location  | Local file on your computer       | Your Google Drive                          |
-| Cross-device   | Requires transferring files       | Any device with your Google account        |
-| Merge behavior | Replaces or requires manual merge | Intelligent merge without duplicating      |
-| Privacy        | File stays on your machine        | Encrypted in transit, stored in your Drive |
+| Aspect         | Manual Backup (Export/Import)     | Cloud Sync                                      |
+| -------------- | --------------------------------- | ----------------------------------------------- |
+| Frequency      | Whenever you remember             | On-demand with one click                        |
+| Data location  | Local file on your computer       | Your Google Drive or private iCloud database    |
+| Cross-device   | Requires transferring files       | Devices signed in to the selected cloud account |
+| Merge behavior | Replaces or requires manual merge | Intelligent merge without duplicating           |
+| Privacy        | File stays on your machine        | Stored in your personal cloud account           |
 
 ## How It Works
 
-1. **Authorization**: You sign in with Google and grant Voyager the `drive.file` permission — the most restrictive Drive scope available. Voyager can only see files it created.
-2. **Upload**: When you click "Upload to Cloud," Voyager writes separate JSON files for folders, prompts, stars, forks, timeline hierarchy, personalization settings, and plugin configuration to a dedicated folder in your Google Drive. Highlight data is included when highlight cloud sync is enabled.
+1. **Provider**: Google Drive uses the limited `drive.file` permission, so Voyager can only access files it created. On Safari, iCloud uses the app's private CloudKit database and does not expose an Apple ID token to Voyager.
+2. **Upload**: When you click "Upload to Cloud," Voyager writes separate backup files for folders, prompts, stars, forks, timeline hierarchy, personalization settings, and plugin configuration to the selected provider. Highlight data is included when highlight cloud sync is enabled.
 3. **Download & Merge**: When you click "Download & Merge" on another device, Voyager reads those files and merges them by data type. New folders and prompts are added without duplication, cloud preferences are restored, and plugin entries are merged by plugin ID.
 4. **No background sync**: Sync is manual and on-demand. Voyager never syncs without your explicit action.
 
+Switching providers does not copy data between them and does not write to both providers. Upload once after switching if you want the current local data in the newly selected provider.
+
 ## Supported Platforms
 
-Cloud Sync works on Chrome, Edge, and Firefox. It is not available on Safari due to browser limitations with OAuth2 flows in extensions. On all supported platforms, the same Google account accesses the same Drive data, making cross-browser usage seamless.
+Google Drive sync works on Chrome, Edge, Firefox, and Safari. iCloud sync is available only in the directly distributed Safari app and uses the iCloud account signed in on the Mac.

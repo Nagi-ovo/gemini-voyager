@@ -2,6 +2,27 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Google Sign-In</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.462948120910-788i0j7v47iuetls0cfajmroo6gtc71s</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Voyager Google Drive Sign-In</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>gemini-voyager</string>
+			</array>
+		</dict>
+	</array>
+	<key>GIDClientID</key>
+	<string>462948120910-788i0j7v47iuetls0cfajmroo6gtc71s.apps.googleusercontent.com</string>
 	<key>SFSafariWebExtensionConverterVersion</key>
 	<string>26.5</string>
 	<key>SUAutomaticallyUpdate</key>

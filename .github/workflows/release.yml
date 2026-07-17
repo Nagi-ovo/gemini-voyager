@@ -153,6 +153,8 @@ jobs:
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_APP_PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_APP_PROVISIONING_PROFILE_BASE64 }}
+          APPLE_EXTENSION_PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_EXTENSION_PROVISIONING_PROFILE_BASE64 }}
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
           missing=()
@@ -161,6 +163,8 @@ jobs:
             APPLE_CERTIFICATE_PASSWORD \
             APPLE_ID \
             APPLE_APP_SPECIFIC_PASSWORD \
+            APPLE_APP_PROVISIONING_PROFILE_BASE64 \
+            APPLE_EXTENSION_PROVISIONING_PROFILE_BASE64 \
             SPARKLE_PRIVATE_KEY
           do
             if [ -z "${!name:-}" ]; then
@@ -196,11 +200,53 @@ jobs:
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
           p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
+      - name: Install Developer ID provisioning profiles
+        env:
+          APPLE_APP_PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_APP_PROVISIONING_PROFILE_BASE64 }}
+          APPLE_EXTENSION_PROVISIONING_PROFILE_BASE64: ${{ secrets.APPLE_EXTENSION_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          profile_dir="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$profile_dir"
+
+          install_profile() {
+            local encoded=$1
+            local label=$2
+            local profile="$RUNNER_TEMP/$label.provisionprofile"
+            local plist="$RUNNER_TEMP/$label.plist"
+
+            printf '%s' "$encoded" | base64 --decode > "$profile"
+            security cms -D -i "$profile" > "$plist"
+
+            local uuid
+            local name
+            uuid=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$plist")
+            name=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$plist")
+
+            if [[ "$label" == "extension" ]]; then
+              /usr/libexec/PlistBuddy \
+                -c 'Print :Entitlements:com.apple.developer.icloud-services:0' \
+                "$plist" | grep -qx 'CloudKit'
+              /usr/libexec/PlistBuddy \
+                -c 'Print :Entitlements:com.apple.developer.icloud-container-identifiers:0' \
+                "$plist" | grep -qx 'iCloud.com.yourCompany.Gemini-Voyager'
+            fi
+
+            cp "$profile" "$profile_dir/$uuid.provisionprofile"
+            printf '%s\n' "$name"
+          }
+
+          app_profile_name=$(install_profile "$APPLE_APP_PROVISIONING_PROFILE_BASE64" app)
+          extension_profile_name=$(install_profile "$APPLE_EXTENSION_PROVISIONING_PROFILE_BASE64" extension)
+          echo "VOYAGER_APP_PROFILE_NAME=$app_profile_name" >> "$GITHUB_ENV"
+          echo "VOYAGER_EXTENSION_PROFILE_NAME=$extension_profile_name" >> "$GITHUB_ENV"
+
       - name: Build, sign, notarize and prepare Sparkle update
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: PJM828YBFJ
+          VOYAGER_APP_PROFILE_NAME: ${{ env.VOYAGER_APP_PROFILE_NAME }}
+          VOYAGER_EXTENSION_PROFILE_NAME: ${{ env.VOYAGER_EXTENSION_PROFILE_NAME }}
           SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
           chmod +x scripts/build-safari-release.sh scripts/generate-sparkle-appcast.sh
@@ -261,10 +307,7 @@ jobs:
 
       - name: Check release artifacts for private data
         run: >-
-          node scripts/verify-release-privacy.mjs
-          dist_chrome
-          dist_firefox
-          dist_safari
+          node scripts/verify-release-privacy.mjs dist_chrome dist_firefox dist_safari
           voyager-${{ steps.vars.outputs.tag_name }}.dmg
           appcast.xml
 
@@ -358,8 +401,8 @@ jobs:
 
           - **安装 (Installation)**: 下载并打开 \`voyager-${TAG}.dmg\`，按提示安装应用。
             Download and open \`voyager-${TAG}.dmg\`, then follow the prompts to install the app.
-          - **限制 (Limitations)**: 受限于 Safari 特性，以下功能暂不支持：(a) Image Refinement 水印去除 (b) 图片导出 (建议使用 PDF 导出) (c) Google Drive 云同步。
-            Due to Safari's nature, the following features are not supported: (a) Watermark removal (b) Image export (PDF recommended) (c) Cloud sync with Google Drive.
+          - **限制 (Limitations)**: 受限于 Safari 特性，以下功能暂不支持：(a) Image Refinement 水印去除 (b) 图片导出 (建议使用 PDF 导出)。云同步可选择 Google Drive 或 iCloud。
+            Due to Safari's nature, the following features are not supported: (a) Watermark removal (b) Image export (PDF recommended). Cloud sync supports Google Drive and iCloud.
           EOF
 
             # Combine: auto-generated notes first, then installation

@@ -16,10 +16,11 @@ import type {
   SyncAccountScope,
   SyncMode,
   SyncPlatform,
+  SyncProvider,
   SyncState,
 } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
-import { isSafari } from '@/core/utils/browser';
+import { getVoyagerBuildTarget, isSafari } from '@/core/utils/browser';
 import { restorePluginState } from '@/features/plugins/storage/pluginState';
 import {
   getTimelineHierarchyStorageKey,
@@ -94,7 +95,7 @@ interface CloudSyncSettingsProps {
 
 export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) {
   const { t } = useLanguage();
-  const isSafariBrowser = isSafari();
+  const supportsICloud = getVoyagerBuildTarget() === 'safari' || isSafari();
 
   const [syncState, setSyncState] = useState<SyncState>(DEFAULT_SYNC_STATE);
   const [statusMessage, setStatusMessage] = useState<{ text: string; kind: 'ok' | 'err' } | null>(
@@ -327,6 +328,21 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
       }
     } catch (error) {
       console.error('[CloudSyncSettings] Failed to set sync mode:', error);
+    }
+  }, []);
+
+  const handleProviderChange = useCallback(async (provider: SyncProvider) => {
+    setStatusMessage(null);
+    try {
+      const response = await chrome.runtime.sendMessage({
+        type: 'gv.sync.setProvider',
+        payload: { provider },
+      });
+      if (response?.ok && response.state) {
+        setSyncState(response.state);
+      }
+    } catch (error) {
+      console.error('[CloudSyncSettings] Failed to set sync provider:', error);
     }
   }, []);
 
@@ -774,15 +790,38 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
     }
   }, [statusMessage]);
 
-  // Don't render on Safari
-  if (isSafariBrowser) return null;
-
   return (
     <Card className="p-4 transition-all hover:shadow-md">
       <CardTitle className="mb-4">{t('cloudSync')}</CardTitle>
       <CardContent className="space-y-4 p-0">
         {/* Description */}
-        <p className="text-muted-foreground text-xs">{t('cloudSyncDescription')}</p>
+        <p className="text-muted-foreground text-xs">
+          {t(
+            syncState.provider === 'icloud' ? 'cloudSyncDescriptionICloud' : 'cloudSyncDescription',
+          )}
+        </p>
+
+        {supportsICloud && (
+          <div>
+            <Label className="mb-2 block text-sm font-medium">{t('syncProvider')}</Label>
+            <div className="bg-secondary/60 grid grid-cols-2 gap-1 rounded-xl p-1">
+              {(['googleDrive', 'icloud'] as const).map((provider) => (
+                <button
+                  key={provider}
+                  className={`rounded-lg px-2 py-2 text-xs font-bold transition-colors ${
+                    syncState.provider === provider
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  onClick={() => void handleProviderChange(provider)}
+                  aria-pressed={syncState.provider === provider}
+                >
+                  {provider === 'icloud' ? t('syncProviderICloud') : t('syncProviderGoogleDrive')}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Sync Mode Toggle */}
         <div>
@@ -995,7 +1034,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
             </div>
 
             {/* Sign Out Button - Only show if authenticated */}
-            {syncState.isAuthenticated && (
+            {syncState.provider === 'googleDrive' && syncState.isAuthenticated && (
               <Button
                 variant="ghost"
                 size="sm"

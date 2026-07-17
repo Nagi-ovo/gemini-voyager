@@ -25,7 +25,7 @@ import type {
   HighlightStoredAccountScope,
   HighlightUpdatePatch,
 } from '@/core/types/highlight';
-import type { PromptItem, SyncAccountScope, SyncMode } from '@/core/types/sync';
+import type { PromptItem, SyncAccountScope, SyncMode, SyncProvider } from '@/core/types/sync';
 import {
   getVoyagerBuildTarget,
   isFirefox,
@@ -2302,6 +2302,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const mode = message.payload?.mode as SyncMode;
             if (mode) {
               await googleDriveSyncService.setMode(mode);
+            }
+            sendResponse({ ok: true, state: await googleDriveSyncService.getState() });
+            return;
+          }
+          case 'gv.sync.setProvider': {
+            const provider = message.payload?.provider as SyncProvider;
+            if (provider === 'googleDrive' || provider === 'icloud') {
+              await googleDriveSyncService.setProvider(provider);
             }
             sendResponse({ ok: true, state: await googleDriveSyncService.getState() });
             return;

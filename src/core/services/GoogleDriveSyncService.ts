@@ -28,13 +28,23 @@ import type {
   SyncAccountScope,
   SyncMode,
   SyncPlatform,
+  SyncProvider,
   SyncState,
   TimelineHierarchyDataSync,
   TimelineHierarchyExportPayload,
 } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
-import { isBrave } from '@/core/utils/browser';
+import { isBrave, isSafari } from '@/core/utils/browser';
 import { hashString } from '@/core/utils/hash';
+import {
+  requestSafariGoogleDriveToken,
+  signOutSafariGoogleDrive,
+} from '@/core/utils/safariGoogleDriveAuth';
+import {
+  checkSafariICloudAccount,
+  readSafariICloudFile,
+  writeSafariICloudFile,
+} from '@/core/utils/safariICloudSync';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 import type { PluginStateMap } from '@/features/plugins/storage/pluginState';
 
@@ -110,6 +120,21 @@ export class GoogleDriveSyncService {
     this.notifyStateChange();
   }
 
+  async setProvider(provider: SyncProvider): Promise<void> {
+    if (provider === 'icloud' && !isSafari()) {
+      throw new Error('iCloud sync is available only in Safari');
+    }
+    if (provider === this.state.provider) return;
+
+    await this.clearToken();
+    this.state.provider = provider;
+    this.state.isAuthenticated = false;
+    this.state.error = null;
+    this.resetDriveFileCache();
+    await this.saveState();
+    this.notifyStateChange();
+  }
+
   async authenticate(interactive: boolean = true): Promise<boolean> {
     try {
       this.updateState({ isSyncing: true, error: null });
@@ -133,26 +158,27 @@ export class GoogleDriveSyncService {
   }
 
   async signOut(): Promise<void> {
+    if (this.state.provider === 'icloud') {
+      this.updateState({ isAuthenticated: false, error: null });
+      await this.saveState();
+      return;
+    }
+
     try {
+      if (isSafari()) {
+        await signOutSafariGoogleDrive();
+      }
       if (this.accessToken) {
-        await this.removeCachedAuthToken(this.accessToken);
+        if (!isSafari()) {
+          await this.removeCachedAuthToken(this.accessToken);
+        }
         await fetch(`https://accounts.google.com/o/oauth2/revoke?token=${this.accessToken}`);
       }
     } catch (error) {
       console.warn('[GoogleDriveSyncService] Sign out warning:', error);
     }
     await this.clearToken();
-    this.foldersFileId = null;
-    this.aistudioFoldersFileId = null;
-    this.promptsFileId = null;
-    this.settingsFileId = null;
-    this.pluginsFileId = null;
-    this.starredFileId = null;
-    this.forksFileId = null;
-    this.timelineHierarchyFileId = null;
-    this.highlightsFileId = null;
-    this.backupFolderId = null;
-    this.fileIdByName = {};
+    this.resetDriveFileCache();
     this.updateState({ isAuthenticated: false, lastSyncTime: null, error: null });
     await this.saveState();
   }
@@ -657,6 +683,8 @@ export class GoogleDriveSyncService {
   // ============== Private Methods ==============
 
   private async loadCachedToken(): Promise<void> {
+    if (isSafari()) return;
+
     try {
       const result = await chrome.storage.local.get(['gvAccessToken', 'gvTokenExpiry']);
       const cachedAccessToken = getStringValue(result.gvAccessToken);
@@ -674,6 +702,8 @@ export class GoogleDriveSyncService {
   private async saveToken(token: string, expiresIn: number): Promise<void> {
     this.accessToken = token;
     this.tokenExpiry = Date.now() + expiresIn * 1000 - 60000;
+    if (isSafari()) return;
+
     try {
       await chrome.storage.local.set({ gvAccessToken: token, gvTokenExpiry: this.tokenExpiry });
     } catch (error) {
@@ -833,6 +863,11 @@ export class GoogleDriveSyncService {
   }
 
   private async getAuthToken(interactive: boolean): Promise<string | null> {
+    if (this.state.provider === 'icloud') {
+      await checkSafariICloudAccount();
+      return 'icloud';
+    }
+
     if (this.accessToken && this.tokenExpiry > Date.now()) {
       return this.accessToken;
     }
@@ -845,6 +880,19 @@ export class GoogleDriveSyncService {
     await this.loadCachedToken();
     if (this.accessToken && this.tokenExpiry > Date.now()) {
       return this.accessToken;
+    }
+
+    if (isSafari()) {
+      const nativeToken = await requestSafariGoogleDriveToken(interactive);
+      if (nativeToken.accessToken) {
+        this.accessToken = nativeToken.accessToken;
+        this.tokenExpiry = Math.max(Date.now(), nativeToken.expiresAt - 60000);
+        return this.accessToken;
+      }
+      if (nativeToken.authorizationStarted) {
+        throw new Error('Finish signing in to Google in the Voyager app, then return to Safari.');
+      }
+      return null;
     }
 
     // Brave supports the identity API but chrome.identity.getAuthToken shows
@@ -876,6 +924,10 @@ export class GoogleDriveSyncService {
   }
 
   private async findFile(token: string, fileName: string): Promise<string | null> {
+    if (this.state.provider === 'icloud') {
+      return fileName;
+    }
+
     const query = encodeURIComponent(`name='${fileName}' and trashed=false`);
     const url = `${DRIVE_API_BASE}/files?q=${query}&fields=files(id,name)`;
     const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -948,6 +1000,10 @@ export class GoogleDriveSyncService {
       | 'timeline-hierarchy'
       | 'highlights',
   ): Promise<string> {
+    if (this.state.provider === 'icloud') {
+      return fileName;
+    }
+
     // 1. Ensure backup folder exists
     const folderId = await this.ensureBackupFolder(token);
 
@@ -1154,6 +1210,11 @@ export class GoogleDriveSyncService {
     let delay = INITIAL_RETRY_DELAY_MS;
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
+        if (this.state.provider === 'icloud') {
+          await writeSafariICloudFile(fileId, data);
+          return;
+        }
+
         const url = `${DRIVE_UPLOAD_BASE}/files/${fileId}?uploadType=media`;
         const response = await fetch(url, {
           method: 'PATCH',
@@ -1176,6 +1237,10 @@ export class GoogleDriveSyncService {
     let delay = INITIAL_RETRY_DELAY_MS;
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
+        if (this.state.provider === 'icloud') {
+          return await readSafariICloudFile<T>(fileId);
+        }
+
         const url = `${DRIVE_API_BASE}/files/${fileId}?alt=media`;
         const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
         if (!response.ok) {
@@ -1196,6 +1261,7 @@ export class GoogleDriveSyncService {
     try {
       const result = await chrome.storage.local.get([
         'gvSyncMode',
+        'gvSyncProvider',
         'gvLastSyncTime',
         'gvLastUploadTime',
         'gvLastSyncTimeAIStudio',
@@ -1203,6 +1269,7 @@ export class GoogleDriveSyncService {
         'gvSyncError',
       ]);
       this.state = {
+        provider: result.gvSyncProvider === 'icloud' && isSafari() ? 'icloud' : 'googleDrive',
         mode: (result.gvSyncMode as SyncMode) || 'disabled',
         lastSyncTime: getNumberValue(result.gvLastSyncTime),
         lastUploadTime: getNumberValue(result.gvLastUploadTime),
@@ -1225,6 +1292,7 @@ export class GoogleDriveSyncService {
     try {
       await chrome.storage.local.set({
         gvSyncMode: this.state.mode,
+        gvSyncProvider: this.state.provider,
         gvLastSyncTime: this.state.lastSyncTime,
         gvLastUploadTime: this.state.lastUploadTime,
         gvLastSyncTimeAIStudio: this.state.lastSyncTimeAIStudio,
@@ -1245,6 +1313,20 @@ export class GoogleDriveSyncService {
     if (this.stateChangeCallback) {
       this.stateChangeCallback({ ...this.state });
     }
+  }
+
+  private resetDriveFileCache(): void {
+    this.foldersFileId = null;
+    this.aistudioFoldersFileId = null;
+    this.promptsFileId = null;
+    this.settingsFileId = null;
+    this.pluginsFileId = null;
+    this.starredFileId = null;
+    this.forksFileId = null;
+    this.timelineHierarchyFileId = null;
+    this.highlightsFileId = null;
+    this.backupFolderId = null;
+    this.fileIdByName = {};
   }
 
   private sleep(ms: number): Promise<void> {

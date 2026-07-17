@@ -96,7 +96,9 @@ export const safariManifest = {
   },
   permissions: Array.from(
     new Set([
-      ...manifest.permissions.filter((permission) => permission !== 'notifications'),
+      ...manifest.permissions.filter(
+        (permission) => permission !== 'notifications' && permission !== 'identity',
+      ),
       'nativeMessaging',
     ]),
   ),

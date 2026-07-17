@@ -1139,6 +1139,13 @@
     "message": "Sync folders and prompts to Google Drive",
     "description": "Cloud sync description"
   },
+  "cloudSyncDescriptionICloud": {
+    "message": "Sync Voyager data using your private iCloud storage",
+    "description": "iCloud sync description"
+  },
+  "syncProvider": { "message": "Storage service" },
+  "syncProviderGoogleDrive": { "message": "Google Drive" },
+  "syncProviderICloud": { "message": "iCloud" },
   "preventAutoScroll": {
     "message": "Prevent auto-scroll to bottom",
     "description": "Feature to prevent auto scrolling to bottom when generating answers"

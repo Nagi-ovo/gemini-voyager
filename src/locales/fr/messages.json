@@ -1147,6 +1147,13 @@
     "message": "Synchro dossiers & prompts sur Drive",
     "description": "Cloud sync description"
   },
+  "cloudSyncDescriptionICloud": {
+    "message": "Synchronisez les données Voyager avec votre espace iCloud privé",
+    "description": "iCloud sync description"
+  },
+  "syncProvider": { "message": "Service de stockage" },
+  "syncProviderGoogleDrive": { "message": "Google Drive" },
+  "syncProviderICloud": { "message": "iCloud" },
   "syncModeDisabled": {
     "message": "Désactivé",
     "description": "Sync mode disabled option"

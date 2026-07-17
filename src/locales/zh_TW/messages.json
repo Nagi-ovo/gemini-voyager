@@ -1107,6 +1107,13 @@
     "message": "將資料夾和提示詞同步到 Google Drive",
     "description": "雲端同步描述"
   },
+  "cloudSyncDescriptionICloud": {
+    "message": "透過你的私人 iCloud 空間同步 Voyager 資料",
+    "description": "iCloud sync description"
+  },
+  "syncProvider": { "message": "儲存服務" },
+  "syncProviderGoogleDrive": { "message": "Google Drive" },
+  "syncProviderICloud": { "message": "iCloud" },
   "syncModeDisabled": {
     "message": "已停用",
     "description": "同步模式停用選項"

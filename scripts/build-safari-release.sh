@@ -13,6 +13,8 @@ OUTPUT_DIR=${2:A}
 PROJECT_PATH="$ROOT_DIR/Gemini Voyager/Gemini Voyager.xcodeproj"
 PACKAGE_DIR="$ROOT_DIR/.build/sparkle-source-packages"
 TEAM_ID=${APPLE_TEAM_ID:-PJM828YBFJ}
+: "${VOYAGER_APP_PROFILE_NAME:?VOYAGER_APP_PROFILE_NAME is required}"
+: "${VOYAGER_EXTENSION_PROFILE_NAME:?VOYAGER_EXTENSION_PROFILE_NAME is required}"
 
 if [[ ! $TAG =~ '^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.]+)?$' ]]; then
   echo "Invalid release tag: $TAG" >&2
@@ -72,7 +74,9 @@ xcodebuild archive \
   -clonedSourcePackagesDirPath "$PACKAGE_DIR" \
   CODE_SIGN_STYLE=Manual \
   CODE_SIGN_IDENTITY="Developer ID Application" \
-  DEVELOPMENT_TEAM="$TEAM_ID"
+  DEVELOPMENT_TEAM="$TEAM_ID" \
+  VOYAGER_APP_PROFILE_NAME="$VOYAGER_APP_PROFILE_NAME" \
+  VOYAGER_EXTENSION_PROFILE_NAME="$VOYAGER_EXTENSION_PROFILE_NAME"
 
 plutil -create xml1 "$EXPORT_OPTIONS"
 plutil -insert destination -string export "$EXPORT_OPTIONS"
@@ -80,6 +84,13 @@ plutil -insert method -string developer-id "$EXPORT_OPTIONS"
 plutil -insert signingCertificate -string "Developer ID Application" "$EXPORT_OPTIONS"
 plutil -insert signingStyle -string manual "$EXPORT_OPTIONS"
 plutil -insert teamID -string "$TEAM_ID" "$EXPORT_OPTIONS"
+/usr/libexec/PlistBuddy -c 'Add :provisioningProfiles dict' "$EXPORT_OPTIONS"
+/usr/libexec/PlistBuddy \
+  -c "Add :provisioningProfiles:com.yourCompany.Gemini-Voyager string $VOYAGER_APP_PROFILE_NAME" \
+  "$EXPORT_OPTIONS"
+/usr/libexec/PlistBuddy \
+  -c "Add :provisioningProfiles:com.yourCompany.Gemini-Voyager.Extension string $VOYAGER_EXTENSION_PROFILE_NAME" \
+  "$EXPORT_OPTIONS"
 
 xcodebuild -exportArchive \
   -archivePath "$ARCHIVE_PATH" \

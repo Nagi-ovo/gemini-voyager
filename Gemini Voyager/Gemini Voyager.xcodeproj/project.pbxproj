@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A1B2C3D4E5F60718293A4B5A /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B5E /* GoogleSignIn */; };
+		A1B2C3D4E5F60718293A4B5B /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B5F /* GoogleSignIn */; };
 		F1A2B3C4D5E60718293A4B5C /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = F1A2B3C4D5E60718293A4B5E /* Sparkle */; };
 		B60723AD2FB752BC00F3A4FD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60723AC2FB752BC00F3A4FD /* AppDelegate.swift */; };
 		B60723B12FB752BC00F3A4FD /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = B60723AF2FB752BC00F3A4FD /* Main.html */; };
@@ -18,6 +20,7 @@
 		B60723BE2FB752BD00F3A4FD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B60723BD2FB752BD00F3A4FD /* Assets.xcassets */; };
 		B60723C52FB752BD00F3A4FD /* Gemini Voyager Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B60723C42FB752BD00F3A4FD /* Gemini Voyager Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B60723CA2FB752BD00F3A4FD /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60723C92FB752BD00F3A4FD /* SafariWebExtensionHandler.swift */; };
+		C1D2E3F40516273849A5B6C7 /* ICloudSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D2E3F40516273849A5B6C8 /* ICloudSyncService.swift */; };
 		B60723E32FB752BD00F3A4FD /* icon-128-template.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723D62FB752BD00F3A4FD /* icon-128-template.png */; };
 		B60723E42FB752BD00F3A4FD /* katex-config.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723D72FB752BD00F3A4FD /* katex-config.js */; };
 		B60723E52FB752BD00F3A4FD /* icon-32-template.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723D82FB752BD00F3A4FD /* icon-32-template.png */; };
@@ -78,7 +81,9 @@
 		B60723BF2FB752BD00F3A4FD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B60723C42FB752BD00F3A4FD /* Gemini Voyager Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Gemini Voyager Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B60723C92FB752BD00F3A4FD /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		C1D2E3F40516273849A5B6C8 /* ICloudSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICloudSyncService.swift; sourceTree = "<group>"; };
 		B60723CB2FB752BD00F3A4FD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B5C /* Gemini Voyager Extension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Gemini Voyager Extension.entitlements"; sourceTree = "<group>"; };
 		B60723D62FB752BD00F3A4FD /* icon-128-template.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-128-template.png"; path = "../../dist_safari/icon-128-template.png"; sourceTree = "<group>"; };
 		B60723D72FB752BD00F3A4FD /* katex-config.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "katex-config.js"; path = "../../dist_safari/katex-config.js"; sourceTree = "<group>"; };
 		B60723D82FB752BD00F3A4FD /* icon-32-template.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "icon-32-template.png"; path = "../../dist_safari/icon-32-template.png"; sourceTree = "<group>"; };
@@ -107,6 +112,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1B2C3D4E5F60718293A4B5A /* GoogleSignIn in Frameworks */,
 				F1A2B3C4D5E60718293A4B5C /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -115,6 +121,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1B2C3D4E5F60718293A4B5B /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -168,7 +175,9 @@
 			children = (
 				B60723D52FB752BD00F3A4FD /* Resources */,
 				B60723C92FB752BD00F3A4FD /* SafariWebExtensionHandler.swift */,
+				C1D2E3F40516273849A5B6C8 /* ICloudSyncService.swift */,
 				B60723CB2FB752BD00F3A4FD /* Info.plist */,
+				A1B2C3D4E5F60718293A4B5C /* Gemini Voyager Extension.entitlements */,
 			);
 			path = "Gemini Voyager Extension";
 			sourceTree = "<group>";
@@ -221,6 +230,7 @@
 			);
 			name = "Gemini Voyager";
 			packageProductDependencies = (
+				A1B2C3D4E5F60718293A4B5E /* GoogleSignIn */,
 				F1A2B3C4D5E60718293A4B5E /* Sparkle */,
 			);
 			productName = "Gemini Voyager";
@@ -241,6 +251,7 @@
 			);
 			name = "Gemini Voyager Extension";
 			packageProductDependencies = (
+				A1B2C3D4E5F60718293A4B5F /* GoogleSignIn */,
 			);
 			productName = "Gemini Voyager Extension";
 			productReference = B60723C42FB752BD00F3A4FD /* Gemini Voyager Extension.appex */;
@@ -261,6 +272,11 @@
 					};
 					B60723C32FB752BD00F3A4FD = {
 						CreatedOnToolsVersion = 26.5;
+						SystemCapabilities = {
+							com.apple.iCloud = {
+								enabled = 1;
+							};
+						};
 					};
 				};
 			};
@@ -276,6 +292,7 @@
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B60723AA2FB752BC00F3A4FD /* Products */;
 			packageReferences = (
+				A1B2C3D4E5F60718293A4B5D /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				F1A2B3C4D5E60718293A4B5D /* XCRemoteSwiftPackageReference "Sparkle" */,
 			);
 			projectDirPath = "";
@@ -346,6 +363,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B60723CA2FB752BD00F3A4FD /* SafariWebExtensionHandler.swift in Sources */,
+				C1D2E3F40516273849A5B6C7 /* ICloudSyncService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -500,11 +518,14 @@
 		B60723CF2FB752BD00F3A4FD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLOUDKIT_CONTAINER_ENVIRONMENT = Development;
 				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = "Gemini Voyager Extension/Gemini Voyager Extension.entitlements";
 				CURRENT_PROJECT_VERSION = 1.5.7;
 				DEVELOPMENT_TEAM = PJM828YBFJ;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Gemini Voyager Extension/Info.plist";
@@ -515,7 +536,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MARKETING_VERSION = 1.5.7;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -535,11 +556,14 @@
 		B60723D02FB752BD00F3A4FD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLOUDKIT_CONTAINER_ENVIRONMENT = Production;
 				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = "Gemini Voyager Extension/Gemini Voyager Extension.entitlements";
 				CURRENT_PROJECT_VERSION = 1.5.7;
 				DEVELOPMENT_TEAM = PJM828YBFJ;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Gemini Voyager Extension/Info.plist";
@@ -550,7 +574,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MARKETING_VERSION = 1.5.7;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -558,6 +582,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.yourCompany.Gemini-Voyager.Extension;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "$(VOYAGER_EXTENSION_PROFILE_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -643,6 +668,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.yourCompany.Gemini-Voyager;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "$(VOYAGER_APP_PROFILE_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -686,6 +712,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		A1B2C3D4E5F60718293A4B5D /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = exactVersion;
+				version = 9.2.0;
+			};
+		};
 		F1A2B3C4D5E60718293A4B5D /* XCRemoteSwiftPackageReference "Sparkle" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/sparkle-project/Sparkle";
@@ -697,6 +731,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		A1B2C3D4E5F60718293A4B5E /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F60718293A4B5D /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		A1B2C3D4E5F60718293A4B5F /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F60718293A4B5D /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
 		F1A2B3C4D5E60718293A4B5E /* Sparkle */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = F1A2B3C4D5E60718293A4B5D /* XCRemoteSwiftPackageReference "Sparkle" */;

@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: July 11, 2026
+Last updated: July 17, 2026
 
 ## Overview
 
@@ -21,6 +21,7 @@ This data is stored locally in `chrome.storage.local` or, for supported settings
 ## User-Requested Transfers
 
 - **Google Drive sync (optional)**: selected backup data is transferred directly between the user's browser and the user's own Google Drive. Voyager uses the Chrome Identity API and the limited `drive.file` scope. We cannot access the user's Drive files or OAuth token.
+- **iCloud sync on Safari (optional)**: selected backup data is transferred by the native Safari extension directly to the user's private CloudKit database in their iCloud account. Voyager does not receive the user's Apple ID or an iCloud authentication token, and the developer cannot access records in that private database.
 - **Exports and images**: when the user requests an export, Voyager may fetch images from their existing page-hosted sources and may request temporary access needed to capture generated interface content. The resulting file is created for the user; it is not uploaded to a Voyager server.
 - **Public project resources**: Voyager may request public release, announcement, documentation, or plugin-catalog resources. These requests do not include conversation or prompt content.
 
@@ -29,7 +30,7 @@ Voyager does not sell user data or transfer it for advertising, creditworthiness
 ## Permissions
 
 - **Storage**: saves extension data and preferences locally and, where supported, through browser sync.
-- **Identity**: authenticates optional Google Drive sync after explicit user action.
+- **Identity**: authenticates optional Google Drive sync after explicit user action. Safari iCloud sync uses the Mac's system iCloud account instead of this browser permission.
 - **Scripting**: injects only extension-bundled scripts on supported sites; no remote JavaScript or WebAssembly is executed.
 - **Active tab and declarative content**: identifies the supported site opened by the user and displays the appropriate site-specific controls.
 - **Notifications and alarms**: provides opt-in response-completion notifications and periodic checks for public compatibility announcements.
@@ -38,7 +39,7 @@ Voyager does not sell user data or transfer it for advertising, creditworthiness
 
 ## Retention and User Control
 
-Local and browser-sync data remains until the user deletes it, clears extension storage, or uninstalls the extension. Google Drive backups remain in the user's Drive until the user removes them. Users can disable optional features and revoke optional site access or Google authorization through Voyager and browser settings.
+Local and browser-sync data remains until the user deletes it, clears extension storage, or uninstalls the extension. Cloud backups remain in the user's selected Google Drive or iCloud account until the user removes them from that account. Users can disable optional features and revoke optional site access or Google authorization through Voyager and browser settings.
 
 ## Google API Limited Use
 

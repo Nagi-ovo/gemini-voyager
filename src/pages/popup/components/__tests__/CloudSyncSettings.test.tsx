@@ -11,6 +11,8 @@ import { getTimelineHierarchyStorageKey } from '@/pages/content/timeline/hierarc
 
 import { CloudSyncSettings } from '../CloudSyncSettings';
 
+const browserTarget = vi.hoisted(() => ({ value: 'chrome' }));
+
 vi.mock('@/contexts/LanguageContext', () => ({
   useLanguage: () => ({
     language: 'en',
@@ -20,6 +22,7 @@ vi.mock('@/contexts/LanguageContext', () => ({
 }));
 
 vi.mock('@/core/utils/browser', () => ({
+  getVoyagerBuildTarget: () => browserTarget.value,
   isSafari: () => false,
 }));
 
@@ -93,9 +96,47 @@ describe('CloudSyncSettings auth flow', () => {
   });
 
   beforeEach(() => {
+    browserTarget.value = 'chrome';
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     container = document.createElement('div');
     document.body.appendChild(container);
+  });
+
+  it('lets Safari users select iCloud without changing the sync mode', async () => {
+    browserTarget.value = 'safari';
+    const sendMessageMock = vi.fn().mockImplementation((message: { type?: string }) => {
+      if (message.type === 'gv.sync.getState') {
+        return Promise.resolve({ ok: true, state: baseState });
+      }
+      if (message.type === 'gv.sync.setProvider') {
+        return Promise.resolve({
+          ok: true,
+          state: { ...baseState, provider: 'icloud' },
+        });
+      }
+      return Promise.resolve({ ok: true });
+    });
+    (globalThis as { chrome: MockedChrome }).chrome = createChromeMock(sendMessageMock);
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(<CloudSyncSettings />);
+    });
+    await flushMicrotasks();
+
+    const iCloudButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'syncProviderICloud',
+    );
+    expect(iCloudButton).toBeDefined();
+    await act(async () => {
+      iCloudButton?.click();
+    });
+
+    expect(sendMessageMock).toHaveBeenCalledWith({
+      type: 'gv.sync.setProvider',
+      payload: { provider: 'icloud' },
+    });
+    expect(container.textContent).toContain('cloudSyncDescriptionICloud');
   });
 
   it('triggers upload directly without a separate authenticate message', async () => {

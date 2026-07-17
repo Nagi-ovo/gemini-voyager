@@ -1147,6 +1147,13 @@
     "message": "フォルダとプロンプトを Google ドライブに同期します",
     "description": "Cloud sync description"
   },
+  "cloudSyncDescriptionICloud": {
+    "message": "Voyager データをプライベート iCloud ストレージで同期します",
+    "description": "iCloud sync description"
+  },
+  "syncProvider": { "message": "ストレージサービス" },
+  "syncProviderGoogleDrive": { "message": "Google ドライブ" },
+  "syncProviderICloud": { "message": "iCloud" },
   "syncModeDisabled": {
     "message": "無効",
     "description": "Sync mode disabled option"
