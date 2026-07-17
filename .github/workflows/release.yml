@@ -129,10 +129,102 @@ jobs:
           # Push commit and tag
           git push origin HEAD:main --tags
 
-  # Job 2: Build & Release (Runs on both manual and tag push)
-  build-and-release:
+  # Job 2: Build, sign and notarize the Safari direct-distribution app.
+  build-safari-release:
     needs: bump-version
-    if: always() && (needs.bump-version.result == 'success' || github.event_name == 'push')
+    if: >-
+      always() &&
+      (github.event_name == 'push' || needs.bump-version.result == 'success') &&
+      !(github.event_name == 'workflow_dispatch' && (inputs.publish_only || inputs.publish_edge_only))
+    runs-on: macos-15
+    steps:
+      - name: Set Release Tag Variable
+        id: vars
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "tag_name=${{ needs.bump-version.outputs.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag_name=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check required Safari release secrets
+        env:
+          APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          missing=()
+          for name in \
+            APPLE_CERTIFICATE_P12_BASE64 \
+            APPLE_CERTIFICATE_PASSWORD \
+            APPLE_ID \
+            APPLE_APP_SPECIFIC_PASSWORD \
+            SPARKLE_PRIVATE_KEY
+          do
+            if [ -z "${!name:-}" ]; then
+              missing+=("$name")
+            fi
+          done
+
+          if [ ${#missing[@]} -ne 0 ]; then
+            printf 'Missing Safari release secrets: %s\n' "${missing[*]}" >&2
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.vars.outputs.tag_name }}
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 'latest'
+
+      - name: Install dependencies
+        run: bun i
+
+      - name: Build Safari web extension
+        run: bun run build:safari
+
+      - name: Import Developer ID certificate
+        uses: Apple-Actions/import-codesign-certs@v7
+        with:
+          p12-file-base64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
+      - name: Build, sign, notarize and prepare Sparkle update
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: PJM828YBFJ
+          SPARKLE_PRIVATE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          chmod +x scripts/build-safari-release.sh scripts/generate-sparkle-appcast.sh
+          scripts/build-safari-release.sh \
+            "${{ steps.vars.outputs.tag_name }}" \
+            "$RUNNER_TEMP/safari-release"
+
+      - name: Upload Safari release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: safari-release
+          path: |
+            ${{ runner.temp }}/safari-release/voyager-*.dmg
+            ${{ runner.temp }}/safari-release/appcast.xml
+          if-no-files-found: error
+          retention-days: 7
+
+  # Job 3: Build & Release (Runs on both manual and tag push)
+  build-and-release:
+    needs: [bump-version, build-safari-release]
+    if: >-
+      always() &&
+      needs.build-safari-release.result == 'success' &&
+      (needs.bump-version.result == 'success' || github.event_name == 'push')
     runs-on: ubuntu-latest
     steps:
       - name: Set Release Tag Variable
@@ -161,8 +253,20 @@ jobs:
       - name: Build All
         run: bun run build:all
 
+      - name: Download Safari release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: safari-release
+          path: .
+
       - name: Check release artifacts for private data
-        run: node scripts/verify-release-privacy.mjs dist_chrome dist_firefox dist_safari
+        run: >-
+          node scripts/verify-release-privacy.mjs
+          dist_chrome
+          dist_firefox
+          dist_safari
+          voyager-${{ steps.vars.outputs.tag_name }}.dmg
+          appcast.xml
 
       - name: Archive artifacts
         run: |
@@ -277,6 +381,7 @@ jobs:
             voyager-chrome-*.zip
             voyager-firefox-*.xpi
             voyager-*.dmg
+            appcast.xml
           body: ${{ steps.release_body.outputs.body }}
 
       # Store publishing happens after the GitHub Release and Firefox/AMO
@@ -317,7 +422,7 @@ jobs:
           node scripts/publish-edge.js "voyager-edge-${TAG}.zip" \
             --notes "Voyager ${TAG} automated release submission."
 
-  # Job 3: Re-publish Chrome only (manual) — recover a failed Chrome Web Store
+  # Job 4: Re-publish Chrome only (manual) — recover a failed Chrome Web Store
   # upload without re-cutting the release. Downloads the existing release's Chrome
   # zip, strips the dev `key`, and publishes. No version bump, no rebuild.
   republish-chrome:
@@ -359,7 +464,7 @@ jobs:
             --refresh-token "$REFRESH_TOKEN" \
             --auto-publish
 
-  # Job 4: Publish Edge only (manual) — recover or retry Microsoft Edge Add-ons
+  # Job 5: Publish Edge only (manual) — recover or retry Microsoft Edge Add-ons
   # submission without re-cutting the release. Downloads the existing release's
   # Chrome zip, strips the dev `key`, and submits the package to Edge review.
   republish-edge:
