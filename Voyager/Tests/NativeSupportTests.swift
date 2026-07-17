@@ -63,6 +63,27 @@ final class NativeSupportTests: XCTestCase {
     XCTAssertNil(VoyagerGoogleDriveHTTPFailureMapper.map(statusCode: 302))
   }
 
+  func testDriveHTTPMapperIdentifiesOnlyMappedAuthorizationFailures() throws {
+    let authFailure = try XCTUnwrap(
+      VoyagerGoogleDriveHTTPFailureMapper.map(statusCode: 401)
+    )
+    let rateLimitFailure = try XCTUnwrap(
+      VoyagerGoogleDriveHTTPFailureMapper.map(statusCode: 429)
+    )
+
+    XCTAssertTrue(VoyagerGoogleDriveHTTPFailureMapper.isAuthorizationFailure(authFailure))
+    XCTAssertFalse(VoyagerGoogleDriveHTTPFailureMapper.isAuthorizationFailure(rateLimitFailure))
+    XCTAssertFalse(
+      VoyagerGoogleDriveHTTPFailureMapper.isAuthorizationFailure(
+        NSError(
+          domain: NSURLErrorDomain,
+          code: NSURLErrorNotConnectedToInternet,
+          userInfo: nil
+        )
+      )
+    )
+  }
+
   func testDriveHTTPMapperMapsAmbiguous403OnlyWithRateLimitBody() {
     let rateLimited = VoyagerGoogleDriveHTTPFailureMapper.map(
       statusCode: 403,

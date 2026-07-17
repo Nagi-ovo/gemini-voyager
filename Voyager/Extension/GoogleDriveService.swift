@@ -1,5 +1,6 @@
 import Foundation
 import GoogleSignIn
+import os.log
 
 final class GoogleDriveService {
   static let shared = GoogleDriveService()
@@ -42,10 +43,14 @@ final class GoogleDriveService {
 
     GIDSignIn.sharedInstance.disconnect { error in
       if let error {
-        completion(.failure(error))
-      } else {
-        completion(.success(()))
+        os_log(
+          .error,
+          "Google Drive revocation failed; completing local sign-out: %{public}@",
+          error.localizedDescription
+        )
+        GIDSignIn.sharedInstance.signOut()
       }
+      completion(.success(()))
     }
   }
 
@@ -150,8 +155,13 @@ final class GoogleDriveService {
       case .success(nil):
         self.findOrCreateFile(named: fileName, folderID: folderID, completion: completion)
       case .success(let parents?):
-        self.moveIfNeeded(fileID: cachedFileID, parents: parents, folderID: folderID) {
-          completion(.success(cachedFileID))
+        self.moveIfNeeded(fileID: cachedFileID, parents: parents, folderID: folderID) { moveResult in
+          switch moveResult {
+          case .failure(let error):
+            completion(.failure(error))
+          case .success:
+            completion(.success(cachedFileID))
+          }
         }
       }
     }
@@ -186,8 +196,13 @@ final class GoogleDriveService {
               completion: completion
             )
           case .success(let parents?):
-            self.moveIfNeeded(fileID: fileID, parents: parents, folderID: folderID) {
-              completion(.success(fileID))
+            self.moveIfNeeded(fileID: fileID, parents: parents, folderID: folderID) { moveResult in
+              switch moveResult {
+              case .failure(let error):
+                completion(.failure(error))
+              case .success:
+                completion(.success(fileID))
+              }
             }
           }
         }
@@ -348,10 +363,10 @@ final class GoogleDriveService {
     fileID: String,
     parents: [String],
     folderID: String,
-    completion: @escaping () -> Void
+    completion: @escaping (Result<Void, Error>) -> Void
   ) {
     guard !parents.contains(folderID) else {
-      completion()
+      completion(.success(()))
       return
     }
 
@@ -363,8 +378,37 @@ final class GoogleDriveService {
         URLQueryItem(name: "removeParents", value: parents.joined(separator: ",")),
         URLQueryItem(name: "fields", value: "id,parents"),
       ]
-    ) { _ in
-      completion()
+    ) { result in
+      switch result {
+      case .failure(let error):
+        os_log(
+          .error,
+          "Google Drive file move request failed: %{public}@",
+          error.localizedDescription
+        )
+        if VoyagerGoogleDriveHTTPFailureMapper.isAuthorizationFailure(error) {
+          completion(.failure(error))
+        } else {
+          completion(.success(()))
+        }
+      case .success(let response):
+        guard !response.isSuccessful else {
+          completion(.success(()))
+          return
+        }
+        let error = self.requestFailure(response)
+        os_log(
+          .error,
+          "Google Drive file move returned HTTP %{public}d: %{public}@",
+          response.statusCode,
+          error.localizedDescription
+        )
+        if VoyagerGoogleDriveHTTPFailureMapper.isAuthorizationFailure(error) {
+          completion(.failure(error))
+        } else {
+          completion(.success(()))
+        }
+      }
     }
   }
 

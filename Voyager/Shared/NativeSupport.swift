@@ -140,6 +140,10 @@ enum VoyagerGoogleDriveAuthErrorClassifier {
 }
 
 enum VoyagerGoogleDriveHTTPFailureMapper {
+  static func isAuthorizationFailure(_ error: Error) -> Bool {
+    (error as? VoyagerGoogleDriveFailure)?.code == .authRequired
+  }
+
   /// Maps a Drive REST status to a structured failure, or nil when the status
   /// carries no reliable semantics (callers keep their generic error).
   /// 403 is ambiguous (revoked permission vs. rate limit vs. storage quota),
