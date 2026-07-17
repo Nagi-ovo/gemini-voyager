@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Update Safari Extension'
+  short_description: 'Safely build, install, reload, and verify Safari'
+  default_prompt: 'Use $update-safari-extension to safely refresh and verify the current Voyager Safari extension.'
