@@ -97,32 +97,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
       let url = URL(string: urlString)
     else { return }
 
-    os_log(.default, log: notifLog, "app URL-scheme event: %{public}@", urlString)
+    os_log(
+      .default,
+      log: notifLog,
+      "app URL-scheme event: scheme=%{public}@ host=%{public}@",
+      url.scheme ?? "none",
+      url.host ?? "none"
+    )
 
     if GIDSignIn.sharedInstance.handle(url) {
       return
     }
 
-    // Notification clicks arrive in the Safari extension process (it owns the
-    // scheduling notification center); it hands them to this app over the URL
-    // scheme because SafariServices is unavailable there.
-    if let destination = VoyagerAppLink.openConversationDestination(from: url) {
+    if let notification = VoyagerAppLink.notificationDelivery(from: url) {
       os_log(
         .default,
         log: notifLog,
-        "app URL-scheme handoff -> openConversation: %{public}@",
-        destination.url.absoluteString
+        "app received notification delivery id=%{public}@",
+        notification.id
       )
-      openConversation(destination) {}
+      scheduleNotification(notification)
       return
     }
-
-    #if DEBUG
-      if VoyagerAppLink.isDebugDeliverNotification(url) {
-        scheduleDebugNotification(link: url)
-        return
-      }
-    #endif
 
     guard url.scheme == "gemini-voyager", url.host == "google-drive-auth" else { return }
     pendingGoogleDriveSignIn = true
@@ -154,64 +150,50 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
   }
 
-  #if DEBUG
-    /// Debug-only twin of the extension's deliver path, so one click can prove
-    /// where app-scheduled notification responses are routed. Trigger with:
-    /// open "gemini-voyager://debug-deliver-notification?url=https%3A%2F%2Fgemini.google.com%2Fapp%2Fexample"
-    private func scheduleDebugNotification(link: URL) {
-      let destination =
-        VoyagerAppLink.debugConversationDestination(from: link)
-        ?? VoyagerNotificationDestination(rawValue: "https://gemini.google.com/app/voyager-debug")
+  private func scheduleNotification(_ notification: VoyagerAppNotification) {
+    let content = UNMutableNotificationContent()
+    content.title = notification.title
+    content.body = notification.body
+    content.sound = .default
+    content.categoryIdentifier = VoyagerNotificationDestination.categoryIdentifier
+    if let destination = notification.destination {
+      content.userInfo = destination.userInfo
+    }
 
-      let content = UNMutableNotificationContent()
-      content.title = "Voyager (app-scheduled debug)"
-      content.body = "Click Open Conversation to test app-owned routing."
-      content.sound = .default
-      content.categoryIdentifier = VoyagerNotificationDestination.categoryIdentifier
-      if let destination {
-        content.userInfo = destination.userInfo
-      }
+    let request = UNNotificationRequest(
+      identifier: notification.id,
+      content: content,
+      trigger: nil
+    )
+    os_log(
+      .default,
+      log: notifLog,
+      "app scheduling notification id=%{public}@ destinationHost=%{public}@",
+      notification.id,
+      notification.destination?.url.host ?? "none"
+    )
 
-      let request = UNNotificationRequest(
-        identifier: "voyager-debug-\(UUID().uuidString)",
-        content: content,
-        trigger: nil
-      )
-
-      os_log(
-        .default,
-        log: notifLog,
-        "app scheduling debug notification url=%{public}@ (bundle=%{public}@)",
-        destination?.url.absoluteString ?? "none",
-        Bundle.main.bundleIdentifier ?? "?"
-      )
-
-      let center = UNUserNotificationCenter.current()
-      center.requestAuthorization(options: [.alert, .sound]) { granted, error in
-        guard granted, error == nil else {
-          os_log(
-            .error,
-            log: self.notifLog,
-            "app debug notification not authorized: %{public}@",
-            error?.localizedDescription ?? "denied"
-          )
-          return
-        }
-        center.add(request) { error in
-          if let error {
-            os_log(
-              .error,
-              log: self.notifLog,
-              "app debug notification add failed: %{public}@",
-              error.localizedDescription
-            )
-          } else {
-            os_log(.default, log: self.notifLog, "app debug notification delivered")
-          }
-        }
+    UNUserNotificationCenter.current().add(request) { error in
+      if let error {
+        os_log(
+          .error,
+          log: self.notifLog,
+          "app notification add failed: %{public}@",
+          error.localizedDescription
+        )
+      } else {
+        os_log(.default, log: self.notifLog, "app notification delivered to center")
       }
     }
-  #endif
+
+    // `NSWorkspace.open` uses activates=false for this handoff. Keep a cold
+    // background launch from leaving the containing app's panel on screen.
+    if !NSApp.isActive {
+      DispatchQueue.main.async {
+        NSApp.hide(nil)
+      }
+    }
+  }
 
   private func installCheckForUpdatesMenuItem() {
     guard let applicationMenu = NSApp.mainMenu?.items.first?.submenu else { return }
@@ -269,7 +251,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     os_log(
       .default,
       log: notifLog,
-      "app openConversation start: %{public}@",
+      "app openConversation start: %{private}@",
       destination.url.absoluteString
     )
     var didFinish = false

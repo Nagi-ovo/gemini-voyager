@@ -232,7 +232,10 @@ struct VoyagerNotificationDestination: Equatable {
     let openAction = UNNotificationAction(
       identifier: openActionIdentifier,
       title: "Open Conversation",
-      options: []
+      // The containing app owns Safari notifications so macOS can relaunch it
+      // for the response. The handler immediately focuses Safari and hides the
+      // app again after this foreground action.
+      options: [.foreground]
     )
     return UNNotificationCategory(
       identifier: categoryIdentifier,
@@ -249,65 +252,95 @@ enum VoyagerNotifLog {
   static let subsystem = "fun.nagi.voyager.notif"
 }
 
-/// gemini-voyager:// links understood by the containing app's kAEGetURL
-/// handler. macOS delivers a UNNotificationResponse to the notification
-/// center of the process that scheduled the request — for Voyager that is the
-/// Safari extension process, where SafariServices cannot open or message
-/// Safari. The extension therefore hands a notification click to the app over
-/// this URL scheme, the same production-proven channel the Google Drive auth
-/// flow uses.
+struct VoyagerAppNotification: Equatable {
+  let id: String
+  let title: String
+  let body: String
+  let destination: VoyagerNotificationDestination?
+
+  init?(
+    id: String,
+    title: String,
+    body: String,
+    destinationURL: String?
+  ) {
+    guard !id.isEmpty, id.count <= 256,
+      !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+      title.count <= 200,
+      body.count <= 2_000
+    else { return nil }
+
+    let destination: VoyagerNotificationDestination?
+    if let destinationURL {
+      guard let parsed = VoyagerNotificationDestination(rawValue: destinationURL) else {
+        return nil
+      }
+      destination = parsed
+    } else {
+      destination = nil
+    }
+
+    self.id = id
+    self.title = title
+    self.body = body
+    self.destination = destination
+  }
+}
+
+/// Typed `gemini-voyager://` handoff used to make the launchable containing
+/// app own notifications. Safari's native extension can display a notification
+/// but macOS doesn't grant it an execution window for the response callback.
 enum VoyagerAppLink {
   static let scheme = "gemini-voyager"
-  static let openConversationHost = "open-conversation"
-  static let debugDeliverNotificationHost = "debug-deliver-notification"
-  static let conversationQueryItemName = "url"
+  static let deliverNotificationHost = "deliver-notification"
+  private static let payloadQueryItemName = "payload"
 
-  /// RFC 3986 unreserved characters. Encoding everything else keeps '&', '=',
-  /// and '#' inside conversation URLs intact across the query round trip
-  /// (URLComponents' queryItems setter would leave '&' unescaped).
-  private static var unreservedCharacters: CharacterSet {
-    var set = CharacterSet.alphanumerics
-    set.insert(charactersIn: "-._~")
-    return set
+  private struct NotificationPayload: Codable {
+    let id: String
+    let title: String
+    let body: String
+    let url: String?
   }
 
-  static func openConversationURL(for destination: VoyagerNotificationDestination) -> URL? {
-    guard
-      let encoded = destination.url.absoluteString.addingPercentEncoding(
-        withAllowedCharacters: unreservedCharacters
-      )
-    else { return nil }
+  static func deliverNotificationURL(for notification: VoyagerAppNotification) -> URL? {
+    let payload = NotificationPayload(
+      id: notification.id,
+      title: notification.title,
+      body: notification.body,
+      url: notification.destination?.url.absoluteString
+    )
+    guard let data = try? JSONEncoder().encode(payload) else { return nil }
+    let encoded = data.base64EncodedString()
+      .replacingOccurrences(of: "+", with: "-")
+      .replacingOccurrences(of: "/", with: "_")
+      .replacingOccurrences(of: "=", with: "")
     return URL(
-      string: "\(scheme)://\(openConversationHost)?\(conversationQueryItemName)=\(encoded)"
+      string: "\(scheme)://\(deliverNotificationHost)?\(payloadQueryItemName)=\(encoded)"
     )
   }
 
-  static func openConversationDestination(from url: URL) -> VoyagerNotificationDestination? {
-    conversationDestination(from: url, expectedHost: openConversationHost)
-  }
-
-  static func isDebugDeliverNotification(_ url: URL) -> Bool {
-    url.scheme?.lowercased() == scheme && url.host?.lowercased() == debugDeliverNotificationHost
-  }
-
-  static func debugConversationDestination(from url: URL) -> VoyagerNotificationDestination? {
-    conversationDestination(from: url, expectedHost: debugDeliverNotificationHost)
-  }
-
-  private static func conversationDestination(
-    from url: URL,
-    expectedHost: String
-  ) -> VoyagerNotificationDestination? {
+  static func notificationDelivery(from url: URL) -> VoyagerAppNotification? {
     guard url.scheme?.lowercased() == scheme,
-      url.host?.lowercased() == expectedHost,
+      url.host?.lowercased() == deliverNotificationHost,
       let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-      let rawValue = components.queryItems?
-        .first(where: { $0.name == conversationQueryItemName })?
+      var encoded = components.queryItems?
+        .first(where: { $0.name == payloadQueryItemName })?
         .value
     else { return nil }
-    // Funnel through the notification allow-list so the URL scheme cannot
-    // smuggle in a target a notification could never carry.
-    return VoyagerNotificationDestination(rawValue: rawValue)
+
+    encoded = encoded.replacingOccurrences(of: "-", with: "+")
+      .replacingOccurrences(of: "_", with: "/")
+    encoded += String(repeating: "=", count: (4 - encoded.count % 4) % 4)
+    guard let data = Data(base64Encoded: encoded),
+      let payload = try? JSONDecoder().decode(NotificationPayload.self, from: data)
+    else { return nil }
+
+    return VoyagerAppNotification(
+      id: payload.id,
+      title: payload.title,
+      body: payload.body,
+      destinationURL: payload.url
+    )
   }
 }
 

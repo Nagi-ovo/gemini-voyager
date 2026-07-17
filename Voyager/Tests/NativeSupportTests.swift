@@ -153,7 +153,7 @@ final class NativeSupportTests: XCTestCase {
       category.actions.map(\.identifier),
       [VoyagerNotificationDestination.openActionIdentifier]
     )
-    XCTAssertFalse(category.actions[0].options.contains(.foreground))
+    XCTAssertTrue(category.actions[0].options.contains(.foreground))
   }
 
   func testNotificationDestinationDispatchUserInfoRoundTrips() {
@@ -321,73 +321,44 @@ final class NativeSupportTests: XCTestCase {
     XCTAssertEqual(message["retryAfterMs"] as? Int, 2_500)
   }
 
-  func testAppLinkOpenConversationRoundTripsThroughURLScheme() throws {
-    let destination = try XCTUnwrap(
-      VoyagerNotificationDestination(
-        rawValue: "https://gemini.google.com/u/1/app/4fa1bc37ee39a169"
+  func testAppNotificationRoundTripsThroughURLScheme() throws {
+    let notification = try XCTUnwrap(
+      VoyagerAppNotification(
+        id: "response-complete-42",
+        title: "Voyager — Kimi K3",
+        body: "Gemini finished responding.",
+        destinationURL: "https://gemini.google.com/u/1/app/4fa1bc37ee39a169?x=1&y=2#turn"
       )
     )
 
-    let handoff = try XCTUnwrap(VoyagerAppLink.openConversationURL(for: destination))
+    let handoff = try XCTUnwrap(VoyagerAppLink.deliverNotificationURL(for: notification))
     XCTAssertEqual(handoff.scheme, "gemini-voyager")
-    XCTAssertEqual(handoff.host, "open-conversation")
-    XCTAssertEqual(VoyagerAppLink.openConversationDestination(from: handoff), destination)
+    XCTAssertEqual(handoff.host, "deliver-notification")
+    XCTAssertEqual(VoyagerAppLink.notificationDelivery(from: handoff), notification)
   }
 
-  func testAppLinkEncodingKeepsQueryAndFragmentCharactersIntact() throws {
-    let raw = "https://chatgpt.com/c/abc?x=1&y=2#frag"
-    let destination = try XCTUnwrap(VoyagerNotificationDestination(rawValue: raw))
-
-    let handoff = try XCTUnwrap(VoyagerAppLink.openConversationURL(for: destination))
-    XCTAssertFalse(handoff.absoluteString.contains("&"))
-    XCTAssertFalse(handoff.absoluteString.contains("#"))
-    XCTAssertEqual(
-      VoyagerAppLink.openConversationDestination(from: handoff)?.url.absoluteString,
-      raw
-    )
-  }
-
-  func testAppLinkRejectsWrongSchemeHostAndDisallowedTargets() {
+  func testAppNotificationRejectsInvalidLinksAndTargets() {
     XCTAssertNil(
-      VoyagerAppLink.openConversationDestination(
-        from: URL(string: "https://open-conversation?url=https%3A%2F%2Fgemini.google.com")!
+      VoyagerAppLink.notificationDelivery(
+        from: URL(string: "https://deliver-notification?payload=e30")!
       )
     )
     XCTAssertNil(
-      VoyagerAppLink.openConversationDestination(
+      VoyagerAppLink.notificationDelivery(
         from: URL(string: "gemini-voyager://google-drive-auth")!
       )
     )
     XCTAssertNil(
-      VoyagerAppLink.openConversationDestination(
-        from: URL(string: "gemini-voyager://open-conversation?url=https%3A%2F%2Fevil.com%2Fapp%2Fx")!
+      VoyagerAppLink.notificationDelivery(
+        from: URL(string: "gemini-voyager://deliver-notification?payload=not-base64")!
       )
     )
     XCTAssertNil(
-      VoyagerAppLink.openConversationDestination(
-        from: URL(string: "gemini-voyager://open-conversation")!
-      )
-    )
-  }
-
-  func testAppLinkDebugDeliverNotificationDetectionAndParsing() {
-    let debugLink = URL(
-      string:
-        "gemini-voyager://debug-deliver-notification?url=https%3A%2F%2Fgemini.google.com%2Fapp%2Fx"
-    )!
-    XCTAssertTrue(VoyagerAppLink.isDebugDeliverNotification(debugLink))
-    XCTAssertEqual(
-      VoyagerAppLink.debugConversationDestination(from: debugLink)?.url.absoluteString,
-      "https://gemini.google.com/app/x"
-    )
-
-    let handoffLink = URL(
-      string: "gemini-voyager://open-conversation?url=https%3A%2F%2Fgemini.google.com%2Fapp%2Fx"
-    )!
-    XCTAssertFalse(VoyagerAppLink.isDebugDeliverNotification(handoffLink))
-    XCTAssertNil(
-      VoyagerAppLink.debugConversationDestination(
-        from: URL(string: "gemini-voyager://debug-deliver-notification")!
+      VoyagerAppNotification(
+        id: "unsafe",
+        title: "Voyager",
+        body: "Done",
+        destinationURL: "https://evil.com/app/x"
       )
     )
   }
