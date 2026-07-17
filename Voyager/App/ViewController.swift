@@ -8,6 +8,7 @@
 import Cocoa
 import SafariServices
 import WebKit
+import os.log
 
 let extensionBundleIdentifier = "com.yourCompany.Gemini-Voyager.Extension"
 
@@ -22,9 +23,14 @@ class ViewController: NSViewController, WKScriptMessageHandler {
 
     self.webView.configuration.userContentController.add(self, name: "controller")
 
-    self.webView.loadFileURL(
-      Bundle.main.url(forResource: "Main", withExtension: "html")!,
-      allowingReadAccessTo: Bundle.main.resourceURL!)
+    guard let mainURL = Bundle.main.url(forResource: "Main", withExtension: "html"),
+      let resourceURL = Bundle.main.resourceURL
+    else {
+      os_log(.error, "Voyager app resources are missing from the bundle")
+      return
+    }
+
+    self.webView.loadFileURL(mainURL, allowingReadAccessTo: resourceURL)
   }
 
   private func updateExtensionState() {
