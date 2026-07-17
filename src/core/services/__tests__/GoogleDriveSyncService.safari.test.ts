@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const requestSafariGoogleDriveToken = vi.hoisted(() => vi.fn());
+const downloadSafariGoogleDriveFile = vi.hoisted(() => vi.fn());
+const ensureSafariGoogleDriveFile = vi.hoisted(() => vi.fn());
+const findSafariGoogleDriveFile = vi.hoisted(() => vi.fn());
+const requestSafariGoogleDriveSession = vi.hoisted(() => vi.fn());
 const signOutSafariGoogleDrive = vi.hoisted(() => vi.fn());
+const uploadSafariGoogleDriveFile = vi.hoisted(() => vi.fn());
 const checkSafariICloudAccount = vi.hoisted(() => vi.fn());
 const getSafariICloudRetryDelay = vi.hoisted(() => vi.fn((): number | null => null));
 const isSafariICloudConflictError = vi.hoisted(() => vi.fn(() => false));
@@ -15,9 +19,13 @@ vi.mock('@/core/utils/browser', () => ({
   isSafari: () => safariRuntime.userAgentMatches,
 }));
 
-vi.mock('@/core/utils/safariGoogleDriveAuth', () => ({
-  requestSafariGoogleDriveToken,
+vi.mock('@/core/utils/safariGoogleDrive', () => ({
+  downloadSafariGoogleDriveFile,
+  ensureSafariGoogleDriveFile,
+  findSafariGoogleDriveFile,
+  requestSafariGoogleDriveSession,
   signOutSafariGoogleDrive,
+  uploadSafariGoogleDriveFile,
 }));
 
 vi.mock('@/core/utils/safariICloudSync', () => ({
@@ -57,13 +65,12 @@ afterEach(() => {
 });
 
 describe('GoogleDriveSyncService Safari authentication', () => {
-  it('uses the native token without persisting it in extension storage', async () => {
+  it('uses a native session without exposing or persisting a token', async () => {
     const chromeMock = createChromeMock();
     (globalThis as { chrome: typeof chrome }).chrome = chromeMock;
-    requestSafariGoogleDriveToken.mockResolvedValue({
-      accessToken: 'keychain-token',
-      expiresAt: Date.now() + 3_600_000,
-      authorizationStarted: false,
+    requestSafariGoogleDriveSession.mockResolvedValue({
+      signedIn: true,
+      requiresAppLaunch: false,
     });
 
     const GoogleDriveSyncService = await loadServiceClass();
@@ -71,36 +78,31 @@ describe('GoogleDriveSyncService Safari authentication', () => {
     await service.getState();
 
     await expect(service.authenticate(true)).resolves.toBe(true);
-    expect(requestSafariGoogleDriveToken).toHaveBeenCalledWith(true);
+    expect(requestSafariGoogleDriveSession).toHaveBeenCalledWith(true);
     expect(chromeMock.storage.local.set).not.toHaveBeenCalledWith(
       expect.objectContaining({ gvAccessToken: expect.anything() }),
     );
   });
 
-  it('handles a native authorization flow that has already started', async () => {
+  it('reports an unavailable non-interactive native session without an error', async () => {
     (globalThis as { chrome: typeof chrome }).chrome = createChromeMock();
-    requestSafariGoogleDriveToken.mockResolvedValue({
-      accessToken: null,
-      expiresAt: Date.now(),
-      authorizationStarted: true,
+    requestSafariGoogleDriveSession.mockResolvedValue({
+      signedIn: false,
+      requiresAppLaunch: false,
     });
 
     const GoogleDriveSyncService = await loadServiceClass();
     const service = new GoogleDriveSyncService();
     await service.getState();
 
-    await expect(service.authenticate(true)).resolves.toBe(false);
-    await expect(service.getState()).resolves.toMatchObject({
-      error: 'Finish signing in to Google in the Voyager app, then return to Safari.',
-    });
+    await expect(service.authenticate(false)).resolves.toBe(false);
+    await expect(service.getState()).resolves.toMatchObject({ error: null });
   });
 
   it('asks Safari users to open Voyager when the native extension cannot launch the app', async () => {
     (globalThis as { chrome: typeof chrome }).chrome = createChromeMock();
-    requestSafariGoogleDriveToken.mockResolvedValue({
-      accessToken: null,
-      expiresAt: Date.now(),
-      authorizationStarted: false,
+    requestSafariGoogleDriveSession.mockResolvedValue({
+      signedIn: false,
       requiresAppLaunch: true,
     });
 
@@ -116,11 +118,9 @@ describe('GoogleDriveSyncService Safari authentication', () => {
 
   it('clears the native Keychain session on sign out', async () => {
     (globalThis as { chrome: typeof chrome }).chrome = createChromeMock();
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
-    requestSafariGoogleDriveToken.mockResolvedValue({
-      accessToken: 'keychain-token',
-      expiresAt: Date.now() + 3_600_000,
-      authorizationStarted: false,
+    requestSafariGoogleDriveSession.mockResolvedValue({
+      signedIn: true,
+      requiresAppLaunch: false,
     });
 
     const GoogleDriveSyncService = await loadServiceClass();
@@ -131,6 +131,60 @@ describe('GoogleDriveSyncService Safari authentication', () => {
 
     expect(signOutSafariGoogleDrive).toHaveBeenCalledOnce();
     await expect(service.getState()).resolves.toMatchObject({ isAuthenticated: false });
+  });
+
+  it('keeps Safari Drive file transport in the native process', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    (globalThis as { chrome: typeof chrome }).chrome = createChromeMock();
+    requestSafariGoogleDriveSession.mockResolvedValue({
+      signedIn: true,
+      requiresAppLaunch: false,
+    });
+    ensureSafariGoogleDriveFile.mockResolvedValue('native-file-id');
+    uploadSafariGoogleDriveFile.mockResolvedValue(undefined);
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+
+    await expect(
+      service.uploadPromptsOnly([{ id: '1', text: 'Hi', tags: [], createdAt: 1 }]),
+    ).resolves.toBe(true);
+    expect(ensureSafariGoogleDriveFile).toHaveBeenCalledWith('gemini-voyager-prompts.json', null);
+    expect(uploadSafariGoogleDriveFile).toHaveBeenCalledWith(
+      'native-file-id',
+      expect.objectContaining({ format: 'gemini-voyager.prompts.v1' }),
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('downloads Safari Drive data through the native process', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    (globalThis as { chrome: typeof chrome }).chrome = createChromeMock();
+    requestSafariGoogleDriveSession.mockResolvedValue({
+      signedIn: true,
+      requiresAppLaunch: false,
+    });
+    findSafariGoogleDriveFile.mockResolvedValue('native-file-id');
+    downloadSafariGoogleDriveFile.mockResolvedValue({
+      format: 'gemini-voyager.prompts.v1',
+      exportedAt: '2026-07-17T00:00:00.000Z',
+      version: '1.0.0',
+      items: [{ id: '1', text: 'Hi', tags: [], createdAt: 1 }],
+    });
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+
+    await expect(service.downloadPromptsOnly()).resolves.toMatchObject({
+      items: [{ id: '1', text: 'Hi' }],
+    });
+    expect(findSafariGoogleDriveFile).toHaveBeenCalledWith('gemini-voyager-prompts.json');
+    expect(downloadSafariGoogleDriveFile).toHaveBeenCalledWith('native-file-id');
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });
 

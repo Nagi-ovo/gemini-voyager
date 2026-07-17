@@ -4,8 +4,12 @@ enum VoyagerNativeRequest: Codable, Equatable {
   case ping
   case deliverNotification(VoyagerNotificationRequest)
   case requestNotificationPermission
-  case googleDriveGetToken(interactive: Bool)
+  case googleDriveGetSession(interactive: Bool)
   case googleDriveSignOut
+  case googleDriveFindFile(fileName: String)
+  case googleDriveEnsureFile(VoyagerGoogleDriveEnsureRequest)
+  case googleDriveUploadFile(VoyagerGoogleDriveFileRequest)
+  case googleDriveDownloadFile(fileID: String)
   case iCloudAccountStatus
   case iCloudWriteFile(VoyagerICloudWriteRequest)
   case iCloudReadFile(fileName: String)
@@ -15,8 +19,12 @@ enum VoyagerNativeRequest: Codable, Equatable {
     case .ping: return Action.ping.rawValue
     case .deliverNotification: return Action.deliverNotification.rawValue
     case .requestNotificationPermission: return Action.requestNotificationPermission.rawValue
-    case .googleDriveGetToken: return Action.googleDriveGetToken.rawValue
+    case .googleDriveGetSession: return Action.googleDriveGetSession.rawValue
     case .googleDriveSignOut: return Action.googleDriveSignOut.rawValue
+    case .googleDriveFindFile: return Action.googleDriveFindFile.rawValue
+    case .googleDriveEnsureFile: return Action.googleDriveEnsureFile.rawValue
+    case .googleDriveUploadFile: return Action.googleDriveUploadFile.rawValue
+    case .googleDriveDownloadFile: return Action.googleDriveDownloadFile.rawValue
     case .iCloudAccountStatus: return Action.iCloudAccountStatus.rawValue
     case .iCloudWriteFile: return Action.iCloudWriteFile.rawValue
     case .iCloudReadFile: return Action.iCloudReadFile.rawValue
@@ -27,8 +35,12 @@ enum VoyagerNativeRequest: Codable, Equatable {
     case ping
     case deliverNotification
     case requestNotificationPermission
-    case googleDriveGetToken
+    case googleDriveGetSession
     case googleDriveSignOut
+    case googleDriveFindFile
+    case googleDriveEnsureFile
+    case googleDriveUploadFile
+    case googleDriveDownloadFile
     case iCloudAccountStatus
     case iCloudWriteFile
     case iCloudReadFile
@@ -37,6 +49,8 @@ enum VoyagerNativeRequest: Codable, Equatable {
   private enum CodingKeys: String, CodingKey {
     case action
     case body
+    case cachedFileID
+    case fileID
     case fileName
     case id
     case interactive
@@ -63,12 +77,34 @@ enum VoyagerNativeRequest: Codable, Equatable {
       )
     case .requestNotificationPermission:
       self = .requestNotificationPermission
-    case .googleDriveGetToken:
-      self = .googleDriveGetToken(
+    case .googleDriveGetSession:
+      self = .googleDriveGetSession(
         interactive: try container.decodeIfPresent(Bool.self, forKey: .interactive) ?? false
       )
     case .googleDriveSignOut:
       self = .googleDriveSignOut
+    case .googleDriveFindFile:
+      self = .googleDriveFindFile(
+        fileName: try container.decode(String.self, forKey: .fileName)
+      )
+    case .googleDriveEnsureFile:
+      self = .googleDriveEnsureFile(
+        VoyagerGoogleDriveEnsureRequest(
+          fileName: try container.decode(String.self, forKey: .fileName),
+          cachedFileID: try container.decodeIfPresent(String.self, forKey: .cachedFileID)
+        )
+      )
+    case .googleDriveUploadFile:
+      self = .googleDriveUploadFile(
+        VoyagerGoogleDriveFileRequest(
+          fileID: try container.decode(String.self, forKey: .fileID),
+          json: try container.decode(String.self, forKey: .json)
+        )
+      )
+    case .googleDriveDownloadFile:
+      self = .googleDriveDownloadFile(
+        fileID: try container.decode(String.self, forKey: .fileID)
+      )
     case .iCloudAccountStatus:
       self = .iCloudAccountStatus
     case .iCloudWriteFile:
@@ -99,11 +135,25 @@ enum VoyagerNativeRequest: Codable, Equatable {
       try container.encodeIfPresent(request.url, forKey: .url)
     case .requestNotificationPermission:
       try container.encode(Action.requestNotificationPermission, forKey: .action)
-    case .googleDriveGetToken(let interactive):
-      try container.encode(Action.googleDriveGetToken, forKey: .action)
+    case .googleDriveGetSession(let interactive):
+      try container.encode(Action.googleDriveGetSession, forKey: .action)
       try container.encode(interactive, forKey: .interactive)
     case .googleDriveSignOut:
       try container.encode(Action.googleDriveSignOut, forKey: .action)
+    case .googleDriveFindFile(let fileName):
+      try container.encode(Action.googleDriveFindFile, forKey: .action)
+      try container.encode(fileName, forKey: .fileName)
+    case .googleDriveEnsureFile(let request):
+      try container.encode(Action.googleDriveEnsureFile, forKey: .action)
+      try container.encode(request.fileName, forKey: .fileName)
+      try container.encodeIfPresent(request.cachedFileID, forKey: .cachedFileID)
+    case .googleDriveUploadFile(let request):
+      try container.encode(Action.googleDriveUploadFile, forKey: .action)
+      try container.encode(request.fileID, forKey: .fileID)
+      try container.encode(request.json, forKey: .json)
+    case .googleDriveDownloadFile(let fileID):
+      try container.encode(Action.googleDriveDownloadFile, forKey: .action)
+      try container.encode(fileID, forKey: .fileID)
     case .iCloudAccountStatus:
       try container.encode(Action.iCloudAccountStatus, forKey: .action)
     case .iCloudWriteFile(let request):
@@ -126,6 +176,16 @@ struct VoyagerNotificationRequest: Codable, Equatable {
 
 struct VoyagerICloudWriteRequest: Codable, Equatable {
   let fileName: String
+  let json: String
+}
+
+struct VoyagerGoogleDriveEnsureRequest: Codable, Equatable {
+  let fileName: String
+  let cachedFileID: String?
+}
+
+struct VoyagerGoogleDriveFileRequest: Codable, Equatable {
+  let fileID: String
   let json: String
 }
 
@@ -217,20 +277,14 @@ struct VoyagerNotificationPermissionResponse: Codable {
   let granted: Bool
 }
 
-struct VoyagerGoogleDriveTokenResponse: Codable {
-  let accessToken: String?
-  let expiresAt: Double?
+struct VoyagerGoogleDriveSessionResponse: Codable {
   let signedIn: Bool
   let requiresAppLaunch: Bool?
 
   init(
-    accessToken: String? = nil,
-    expiresAt: Double? = nil,
     signedIn: Bool,
     requiresAppLaunch: Bool? = nil
   ) {
-    self.accessToken = accessToken
-    self.expiresAt = expiresAt
     self.signedIn = signedIn
     self.requiresAppLaunch = requiresAppLaunch
   }
@@ -238,6 +292,19 @@ struct VoyagerGoogleDriveTokenResponse: Codable {
 
 struct VoyagerGoogleDriveSignOutResponse: Codable {
   let signedOut: Bool
+}
+
+struct VoyagerGoogleDriveFileResponse: Codable {
+  let fileID: String?
+}
+
+struct VoyagerGoogleDriveUploadResponse: Codable {
+  let saved: Bool
+}
+
+struct VoyagerGoogleDriveDownloadResponse: Codable {
+  let json: String?
+  let found: Bool
 }
 
 struct VoyagerICloudAccountResponse: Codable {

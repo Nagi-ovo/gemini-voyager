@@ -37,9 +37,13 @@ import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
 import { getVoyagerBuildTarget, isBrave, isSafari } from '@/core/utils/browser';
 import { hashString } from '@/core/utils/hash';
 import {
-  requestSafariGoogleDriveToken,
+  downloadSafariGoogleDriveFile,
+  ensureSafariGoogleDriveFile,
+  findSafariGoogleDriveFile,
+  requestSafariGoogleDriveSession,
   signOutSafariGoogleDrive,
-} from '@/core/utils/safariGoogleDriveAuth';
+  uploadSafariGoogleDriveFile,
+} from '@/core/utils/safariGoogleDrive';
 import {
   checkSafariICloudAccount,
   getSafariICloudRetryDelay,
@@ -173,11 +177,8 @@ export class GoogleDriveSyncService {
     try {
       if (isSafariRuntime()) {
         await signOutSafariGoogleDrive();
-      }
-      if (this.accessToken) {
-        if (!isSafariRuntime()) {
-          await this.removeCachedAuthToken(this.accessToken);
-        }
+      } else if (this.accessToken) {
+        await this.removeCachedAuthToken(this.accessToken);
         await fetch(`https://accounts.google.com/o/oauth2/revoke?token=${this.accessToken}`);
       }
     } catch (error) {
@@ -874,6 +875,17 @@ export class GoogleDriveSyncService {
       return 'icloud';
     }
 
+    if (isSafariRuntime()) {
+      const nativeSession = await requestSafariGoogleDriveSession(interactive);
+      if (nativeSession.signedIn) {
+        return 'safari-native';
+      }
+      if (nativeSession.requiresAppLaunch) {
+        throw new Error('Open Voyager to connect Google Drive, then try again.');
+      }
+      return null;
+    }
+
     if (this.accessToken && this.tokenExpiry > Date.now()) {
       return this.accessToken;
     }
@@ -886,22 +898,6 @@ export class GoogleDriveSyncService {
     await this.loadCachedToken();
     if (this.accessToken && this.tokenExpiry > Date.now()) {
       return this.accessToken;
-    }
-
-    if (isSafariRuntime()) {
-      const nativeToken = await requestSafariGoogleDriveToken(interactive);
-      if (nativeToken.accessToken) {
-        this.accessToken = nativeToken.accessToken;
-        this.tokenExpiry = Math.max(Date.now(), nativeToken.expiresAt - 60000);
-        return this.accessToken;
-      }
-      if (nativeToken.authorizationStarted) {
-        throw new Error('Finish signing in to Google in the Voyager app, then return to Safari.');
-      }
-      if (nativeToken.requiresAppLaunch) {
-        throw new Error('Open Voyager to connect Google Drive, then try again.');
-      }
-      return null;
     }
 
     // Brave supports the identity API but chrome.identity.getAuthToken shows
@@ -935,6 +931,10 @@ export class GoogleDriveSyncService {
   private async findFile(token: string, fileName: string): Promise<string | null> {
     if (this.state.provider === 'icloud') {
       return fileName;
+    }
+
+    if (isSafariRuntime()) {
+      return findSafariGoogleDriveFile(fileName);
     }
 
     const query = encodeURIComponent(`name='${fileName}' and trashed=false`);
@@ -1011,6 +1011,16 @@ export class GoogleDriveSyncService {
   ): Promise<string> {
     if (this.state.provider === 'icloud') {
       return fileName;
+    }
+
+    if (isSafariRuntime()) {
+      const fileId = await ensureSafariGoogleDriveFile(
+        fileName,
+        this.fileIdByName[fileName] ?? null,
+      );
+      this.setFileIdForType(type, fileId);
+      this.fileIdByName[fileName] = fileId;
+      return fileId;
     }
 
     // 1. Ensure backup folder exists
@@ -1224,6 +1234,11 @@ export class GoogleDriveSyncService {
           return;
         }
 
+        if (isSafariRuntime()) {
+          await uploadSafariGoogleDriveFile(fileId, data);
+          return;
+        }
+
         const url = `${DRIVE_UPLOAD_BASE}/files/${fileId}?uploadType=media`;
         const response = await fetch(url, {
           method: 'PATCH',
@@ -1249,6 +1264,10 @@ export class GoogleDriveSyncService {
       try {
         if (this.state.provider === 'icloud') {
           return await readSafariICloudFile<T>(fileId);
+        }
+
+        if (isSafariRuntime()) {
+          return await downloadSafariGoogleDriveFile<T>(fileId);
         }
 
         const url = `${DRIVE_API_BASE}/files/${fileId}?alt=media`;

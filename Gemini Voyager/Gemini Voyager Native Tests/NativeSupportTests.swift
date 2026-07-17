@@ -116,10 +116,41 @@ final class NativeSupportTests: XCTestCase {
       (["action": "ping"], .ping),
       (["action": "requestNotificationPermission"], .requestNotificationPermission),
       (
-        ["action": "googleDriveGetToken", "interactive": true],
-        .googleDriveGetToken(interactive: true)
+        ["action": "googleDriveGetSession", "interactive": true],
+        .googleDriveGetSession(interactive: true)
       ),
       (["action": "googleDriveSignOut"], .googleDriveSignOut),
+      (
+        ["action": "googleDriveFindFile", "fileName": "prompts.json"],
+        .googleDriveFindFile(fileName: "prompts.json")
+      ),
+      (
+        [
+          "action": "googleDriveEnsureFile",
+          "fileName": "prompts.json",
+          "cachedFileID": "cached-file",
+        ],
+        .googleDriveEnsureFile(
+          VoyagerGoogleDriveEnsureRequest(
+            fileName: "prompts.json",
+            cachedFileID: "cached-file"
+          )
+        )
+      ),
+      (
+        [
+          "action": "googleDriveUploadFile",
+          "fileID": "drive-file",
+          "json": "{}",
+        ],
+        .googleDriveUploadFile(
+          VoyagerGoogleDriveFileRequest(fileID: "drive-file", json: "{}")
+        )
+      ),
+      (
+        ["action": "googleDriveDownloadFile", "fileID": "drive-file"],
+        .googleDriveDownloadFile(fileID: "drive-file")
+      ),
       (["action": "iCloudAccountStatus"], .iCloudAccountStatus),
       (
         ["action": "iCloudWriteFile", "fileName": "prompts.json", "json": "{}"],

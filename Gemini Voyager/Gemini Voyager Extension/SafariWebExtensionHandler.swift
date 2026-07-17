@@ -3,13 +3,10 @@
 //  Gemini Voyager Extension
 //
 
-import GoogleSignIn
 import SafariServices
 import os.log
 
 final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
-  private let googleDriveScope = "https://www.googleapis.com/auth/drive.file"
-
   func beginRequest(with context: NSExtensionContext) {
     _ = NativeNotificationService.shared
 
@@ -37,14 +34,18 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       deliverNotification(request: request, context: context)
     case .requestNotificationPermission:
       requestNotificationPermission(context: context)
-    case .googleDriveGetToken(let interactive):
-      getGoogleDriveToken(interactive: interactive, context: context)
+    case .googleDriveGetSession(let interactive):
+      getGoogleDriveSession(interactive: interactive, context: context)
     case .googleDriveSignOut:
-      GIDSignIn.sharedInstance.signOut()
-      respondWithSuccess(
-        context: context,
-        data: VoyagerGoogleDriveSignOutResponse(signedOut: true)
-      )
+      signOutGoogleDrive(context: context)
+    case .googleDriveFindFile(let fileName):
+      findGoogleDriveFile(fileName: fileName, context: context)
+    case .googleDriveEnsureFile(let request):
+      ensureGoogleDriveFile(request: request, context: context)
+    case .googleDriveUploadFile(let request):
+      uploadGoogleDriveFile(request: request, context: context)
+    case .googleDriveDownloadFile(let fileID):
+      downloadGoogleDriveFile(fileID: fileID, context: context)
     case .iCloudAccountStatus:
       handleICloudAccountStatus(context: context)
     case .iCloudWriteFile(let request):
@@ -115,81 +116,113 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     )
   }
 
-  private func getGoogleDriveToken(interactive: Bool, context: NSExtensionContext) {
-    guard configureGoogleSignIn() else {
-      respondWithError(context: context, message: "Google Sign-In is not configured")
-      return
-    }
-
-    GIDSignIn.sharedInstance.restorePreviousSignIn { user, _ in
-      guard let user else {
-        self.respondWithGoogleDriveAuthorizationRequirement(
-          interactive: interactive,
-          context: context
-        )
-        return
-      }
-
-      user.refreshTokensIfNeeded { refreshedUser, _ in
-        guard let refreshedUser else {
-          self.respondWithGoogleDriveAuthorizationRequirement(
-            interactive: interactive,
-            context: context
-          )
-          return
-        }
-
-        guard refreshedUser.grantedScopes?.contains(self.googleDriveScope) == true else {
-          self.respondWithGoogleDriveAuthorizationRequirement(
-            interactive: interactive,
-            context: context
-          )
-          return
-        }
-
-        let expirationDate =
-          refreshedUser.accessToken.expirationDate
-          ?? Date().addingTimeInterval(55 * 60)
-
-        self.respondWithSuccess(
-          context: context,
-          data: VoyagerGoogleDriveTokenResponse(
-            accessToken: refreshedUser.accessToken.tokenString,
-            expiresAt: expirationDate.timeIntervalSince1970 * 1000,
-            signedIn: true
-          )
-        )
-      }
-    }
-  }
-
-  private func configureGoogleSignIn() -> Bool {
-    guard let clientID = Bundle.main.object(forInfoDictionaryKey: "GIDClientID") as? String,
-      !clientID.isEmpty
-    else { return false }
-    GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
-    return true
-  }
-
-  private func respondWithGoogleDriveAuthorizationRequirement(
+  private func getGoogleDriveSession(
     interactive: Bool,
     context: NSExtensionContext
   ) {
-    guard interactive else {
-      respondWithSuccess(
-        context: context,
-        data: VoyagerGoogleDriveTokenResponse(signedIn: false)
-      )
-      return
+    GoogleDriveService.shared.authorizationState(interactive: interactive) { result in
+      switch result {
+      case .failure(let error):
+        self.respondWithError(context: context, message: error.localizedDescription)
+      case .success(.signedIn):
+        self.respondWithSuccess(
+          context: context,
+          data: VoyagerGoogleDriveSessionResponse(signedIn: true)
+        )
+      case .success(.signedOut):
+        self.respondWithSuccess(
+          context: context,
+          data: VoyagerGoogleDriveSessionResponse(signedIn: false)
+        )
+      case .success(.requiresAppLaunch):
+        self.respondWithSuccess(
+          context: context,
+          data: VoyagerGoogleDriveSessionResponse(
+            signedIn: false,
+            requiresAppLaunch: true
+          )
+        )
+      }
     }
+  }
 
-    respondWithSuccess(
-      context: context,
-      data: VoyagerGoogleDriveTokenResponse(
-        signedIn: false,
-        requiresAppLaunch: true
-      )
-    )
+  private func signOutGoogleDrive(context: NSExtensionContext) {
+    GoogleDriveService.shared.signOut { result in
+      switch result {
+      case .success:
+        self.respondWithSuccess(
+          context: context,
+          data: VoyagerGoogleDriveSignOutResponse(signedOut: true)
+        )
+      case .failure(let error):
+        self.respondWithError(context: context, message: error.localizedDescription)
+      }
+    }
+  }
+
+  private func findGoogleDriveFile(fileName: String, context: NSExtensionContext) {
+    GoogleDriveService.shared.findFile(named: fileName) { result in
+      switch result {
+      case .success(let fileID):
+        self.respondWithSuccess(
+          context: context,
+          data: VoyagerGoogleDriveFileResponse(fileID: fileID)
+        )
+      case .failure(let error):
+        self.respondWithError(context: context, message: error.localizedDescription)
+      }
+    }
+  }
+
+  private func ensureGoogleDriveFile(
+    request: VoyagerGoogleDriveEnsureRequest,
+    context: NSExtensionContext
+  ) {
+    GoogleDriveService.shared.ensureFile(
+      named: request.fileName,
+      cachedFileID: request.cachedFileID
+    ) { result in
+      switch result {
+      case .success(let fileID):
+        self.respondWithSuccess(
+          context: context,
+          data: VoyagerGoogleDriveFileResponse(fileID: fileID)
+        )
+      case .failure(let error):
+        self.respondWithError(context: context, message: error.localizedDescription)
+      }
+    }
+  }
+
+  private func uploadGoogleDriveFile(
+    request: VoyagerGoogleDriveFileRequest,
+    context: NSExtensionContext
+  ) {
+    GoogleDriveService.shared.upload(fileID: request.fileID, json: request.json) { result in
+      switch result {
+      case .success:
+        self.respondWithSuccess(
+          context: context,
+          data: VoyagerGoogleDriveUploadResponse(saved: true)
+        )
+      case .failure(let error):
+        self.respondWithError(context: context, message: error.localizedDescription)
+      }
+    }
+  }
+
+  private func downloadGoogleDriveFile(fileID: String, context: NSExtensionContext) {
+    GoogleDriveService.shared.download(fileID: fileID) { result in
+      switch result {
+      case .success(let json):
+        self.respondWithSuccess(
+          context: context,
+          data: VoyagerGoogleDriveDownloadResponse(json: json, found: json != nil)
+        )
+      case .failure(let error):
+        self.respondWithError(context: context, message: error.localizedDescription)
+      }
+    }
   }
 
   private func deliverNotification(
