@@ -147,6 +147,7 @@ let storageListener:
   | null = null;
 let pill: HTMLElement | null = null;
 let observerMessageHandler: ((ev: MessageEvent) => void) | null = null;
+let observerReady = false;
 // User-placed position (viewport px, top-left). Null = default bottom-right.
 let dragPos: { x: number; y: number } | null = null;
 let dragging = false;
@@ -1156,6 +1157,9 @@ function handleReplayResult(payload: { id?: number; body?: string; error?: strin
   }
   const request = typeof payload.id === 'number' ? replayRequests.get(payload.id) : undefined;
   if (typeof payload.id === 'number') replayRequests.delete(payload.id);
+  if (typeof payload.error === 'string' && payload.error) {
+    console.warn('[UsageStatus] Usage refresh failed:', payload.error);
+  }
   if (!enabled || !payload || typeof payload.body !== 'string') return;
   const parsed = parseUsageRpcResponse(payload.body);
   if (!parsed) return;
@@ -1183,7 +1187,9 @@ function setupObserverBridge(): void {
     if (ev.source !== window) return;
     const data = ev.data as { source?: string; type?: string; payload?: unknown } | null;
     if (!data || data.source !== OBS_SRC) return;
-    if (data.type === 'capture') {
+    if (data.type === 'ready') {
+      observerReady = true;
+    } else if (data.type === 'capture') {
       handleCapture(data.payload as { rpcid?: string; args?: string | null; body?: string });
     } else if (data.type === 'replay-result') {
       handleReplayResult(data.payload as { id?: number; body?: string; error?: string });
@@ -1192,6 +1198,7 @@ function setupObserverBridge(): void {
     }
   };
   window.addEventListener('message', observerMessageHandler);
+  window.postMessage({ source: OBS_CMD, type: 'ping' }, window.location.origin);
 }
 
 function teardownObserverBridge(): void {
@@ -1199,6 +1206,7 @@ function teardownObserverBridge(): void {
     window.removeEventListener('message', observerMessageHandler);
     observerMessageHandler = null;
   }
+  observerReady = false;
   stopReplayLoop();
   if (spinTimer !== null) {
     clearTimeout(spinTimer);
@@ -1214,6 +1222,11 @@ function requestReplay(allowRegression = false): void {
   spinTimer = window.setTimeout(() => {
     spinTimer = null;
     setSpinning(false);
+    console.warn(
+      observerReady
+        ? '[UsageStatus] Usage refresh timed out.'
+        : '[UsageStatus] Usage observer unavailable; refresh could not run.',
+    );
   }, 6_000);
   const id = ++replaySeq;
   const startedAt = Date.now();

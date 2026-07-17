@@ -171,7 +171,12 @@
   window.addEventListener('message', function (ev) {
     if (ev.source !== window) return;
     var d = ev.data;
-    if (!d || d.source !== CMD || d.type !== 'replay' || !d.payload) return;
+    if (!d || d.source !== CMD) return;
+    if (d.type === 'ping') {
+      post('ready', {});
+      return;
+    }
+    if (d.type !== 'replay' || !d.payload) return;
 
     var id = d.payload.id;
     try {
@@ -229,4 +234,6 @@
       post('replay-result', { id: id, error: String(e) });
     }
   });
+
+  post('ready', {});
 })();

@@ -67,7 +67,7 @@ describe('usage observer loader history configuration', () => {
     );
   });
 
-  it('injects usage and history observers in document-start order', async () => {
+  it('does not DOM-inject observers in Chrome or Edge builds', async () => {
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
       (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
         callback({ [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: false });
@@ -76,6 +76,20 @@ describe('usage observer loader history configuration', () => {
     const appendChild = vi.spyOn(document.documentElement, 'appendChild');
 
     await import('../../usageObserverLoader');
+
+    expect(appendChild).not.toHaveBeenCalled();
+  });
+
+  it('retains ordered DOM injection as the Firefox compatibility fallback', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: false });
+      },
+    );
+    const appendChild = vi.spyOn(document.documentElement, 'appendChild');
+    const { injectObserverFallback } = await import('../../usageObserverLoader');
+
+    injectObserverFallback('firefox');
 
     const injectedSources = appendChild.mock.calls
       .map(([node]) => (node as HTMLScriptElement).src)

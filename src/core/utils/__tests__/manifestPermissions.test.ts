@@ -88,6 +88,16 @@ describe('manifest permissions', () => {
     expect(chromeManifest.optional_permissions).not.toContain('unlimitedStorage');
   });
 
+  it('runs Chrome and Edge usage bridges as native MAIN-world scripts', () => {
+    const scripts = chromeManifest.content_scripts?.filter((entry) => entry.world === 'MAIN') ?? [];
+    expect(scripts.map((entry) => entry.js?.[0])).toEqual([
+      'public/usage-observer.js',
+      'public/conversation-history-observer.js',
+    ]);
+    expect(scripts.every((entry) => entry.js?.length === 1)).toBe(true);
+    expect(scripts.every((entry) => entry.run_at === 'document_start')).toBe(true);
+  });
+
   it('adds Safari native messaging without restoring WebExtension notifications', () => {
     expect(safariManifest.permissions).not.toContain('unlimitedStorage');
     expect(safariManifest.permissions).not.toContain('identity');

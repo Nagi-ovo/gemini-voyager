@@ -32,6 +32,14 @@ function dispatchReplay(sourcePath: string): void {
   window.dispatchEvent(event);
 }
 
+function dispatchPing(): void {
+  const event = new MessageEvent('message', {
+    data: { source: 'gv-usage-observer-cmd', type: 'ping' },
+  });
+  Object.defineProperty(event, 'source', { value: window });
+  window.dispatchEvent(event);
+}
+
 class MockXMLHttpRequest {
   public readonly addEventListener = vi.fn(
     (_type: string, _listener: EventListenerOrEventListenerObject) => {},
@@ -71,6 +79,23 @@ describe('usage-observer replay', () => {
     postMessageSpy = vi
       .spyOn(window, 'postMessage')
       .mockImplementation(() => {}) as unknown as ReturnType<typeof vi.fn>;
+  });
+
+  it('announces readiness and answers bridge pings', () => {
+    installObserver();
+
+    expect(postMessageSpy).toHaveBeenCalledWith(
+      { source: 'gv-usage-observer', type: 'ready', payload: {} },
+      window.location.origin,
+    );
+
+    postMessageSpy.mockClear();
+    dispatchPing();
+
+    expect(postMessageSpy).toHaveBeenCalledWith(
+      { source: 'gv-usage-observer', type: 'ready', payload: {} },
+      window.location.origin,
+    );
   });
 
   it('replays multi-account usage requests on the same account route', async () => {

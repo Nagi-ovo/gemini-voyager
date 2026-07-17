@@ -1,5 +1,5 @@
 /**
- * Usage/history observer loader — an isolated-world content script that runs
+ * Usage/history observer bridge — an isolated-world content script that runs
  * at document_start, before Gemini captures its own fetch/XHR references.
  *
  * The usage observer is always active. The history observer performs a small
@@ -94,7 +94,9 @@ try {
   resolveHistorySetting(false, false);
 }
 
-if (import.meta.env.VOYAGER_BUILD_TARGET !== 'safari') {
+/** Firefox 115 lacks reliable manifest MAIN-world support, so retain its DOM fallback. */
+export function injectObserverFallback(buildTarget: string): void {
+  if (buildTarget !== 'firefox') return;
   for (const src of ['usage-observer.js', 'conversation-history-observer.js']) {
     try {
       const script = document.createElement('script');
@@ -107,6 +109,8 @@ if (import.meta.env.VOYAGER_BUILD_TARGET !== 'safari') {
     }
   }
 }
+
+injectObserverFallback(import.meta.env.VOYAGER_BUILD_TARGET);
 
 window.addEventListener(
   'beforeunload',
