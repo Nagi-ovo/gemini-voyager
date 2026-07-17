@@ -10,9 +10,16 @@ import {
   stopCodeBlockCollapse,
 } from '../index';
 
+const translationState = vi.hoisted(() => ({ language: 'en' }));
+
 vi.mock('@/utils/i18n', () => ({
-  getTranslationSync: (key: string) => (key === 'pm_expand' ? 'Expand' : 'Collapse'),
+  getTranslationSync: (key: string) => {
+    if (translationState.language === 'zh') return key === 'pm_expand' ? '展开' : '收起';
+    return key === 'pm_expand' ? 'Expand' : 'Collapse';
+  },
 }));
+
+let resizeCallback: ResizeObserverCallback | null = null;
 
 function createCodeBlock({
   lines = 1,
@@ -43,11 +50,26 @@ function createCodeBlock({
 describe('codeBlockCollapse', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.clearAllMocks();
+    translationState.language = 'en';
+    resizeCallback = null;
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          resizeCallback = callback;
+        }
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+      },
+    );
     document.body.innerHTML = '';
   });
 
   afterEach(() => {
     stopCodeBlockCollapse();
+    vi.unstubAllGlobals();
     vi.useRealTimers();
   });
 
@@ -98,6 +120,16 @@ describe('codeBlockCollapse', () => {
     expect(host.querySelector('.gv-code-block-toggle')).not.toBeNull();
   });
 
+  it('does not read layout when the line threshold already qualifies the block', () => {
+    const { host, code } = createCodeBlock({ lines: LONG_CODE_BLOCK_MIN_LINES });
+    const heightRead = vi.fn(() => 0);
+    Object.defineProperty(code, 'scrollHeight', { configurable: true, get: heightRead });
+
+    enhanceCodeBlock(host);
+
+    expect(heightRead).not.toHaveBeenCalled();
+  });
+
   it('detects a code block that grows while Gemini is streaming', async () => {
     const { host, code } = createCodeBlock({ lines: 2 });
     const cleanup = startCodeBlockCollapse();
@@ -110,6 +142,59 @@ describe('codeBlockCollapse', () => {
     await vi.runAllTimersAsync();
 
     expect(host.querySelector('.gv-code-block-toggle')).not.toBeNull();
+    cleanup();
+  });
+
+  it('does not rescan code blocks for unrelated page mutations', async () => {
+    const { code } = createCodeBlock({ lines: 2 });
+    let heightReads = 0;
+    Object.defineProperty(code, 'scrollHeight', {
+      configurable: true,
+      get: () => {
+        heightReads += 1;
+        return 0;
+      },
+    });
+    const cleanup = startCodeBlockCollapse();
+    const readsAfterInitialScan = heightReads;
+
+    const unrelated = document.createElement('div');
+    unrelated.textContent = 'Streaming text outside a code block';
+    document.body.appendChild(unrelated);
+    await vi.runAllTimersAsync();
+
+    expect(heightReads).toBe(readsAfterInitialScan);
+    cleanup();
+  });
+
+  it('re-evaluates a block when layout changes without a DOM mutation', async () => {
+    const { host, code } = createCodeBlock({ lines: 1, height: 0 });
+    const cleanup = startCodeBlockCollapse();
+    expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
+
+    Object.defineProperty(code, 'scrollHeight', {
+      configurable: true,
+      value: LONG_CODE_BLOCK_MIN_HEIGHT,
+    });
+    resizeCallback?.([{ target: host } as unknown as ResizeObserverEntry], {} as ResizeObserver);
+    await vi.runAllTimersAsync();
+
+    expect(host.querySelector('.gv-code-block-toggle')).not.toBeNull();
+    cleanup();
+  });
+
+  it('refreshes existing toggle labels after the Voyager language changes', async () => {
+    const { host } = createCodeBlock({ lines: LONG_CODE_BLOCK_MIN_LINES });
+    const cleanup = startCodeBlockCollapse();
+    const button = host.querySelector<HTMLButtonElement>('.gv-code-block-toggle')!;
+    expect(button.getAttribute('aria-label')).toBe('Collapse');
+
+    translationState.language = 'zh';
+    const listener = vi.mocked(chrome.storage.onChanged.addListener).mock.calls.at(-1)?.[0];
+    listener?.({ language: { newValue: 'zh' } }, 'sync');
+    await Promise.resolve();
+
+    expect(button.getAttribute('aria-label')).toBe('收起');
     cleanup();
   });
 

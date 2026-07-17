@@ -1,3 +1,4 @@
+import { StorageKeys } from '@/core/types/common';
 import { getTranslationSync } from '@/utils/i18n';
 
 export const LONG_CODE_BLOCK_MIN_LINES = 24;
@@ -11,9 +12,15 @@ const COLLAPSED_CLASS = 'gv-code-block-collapsed';
 const SCAN_DEBOUNCE_MS = 120;
 
 let observer: MutationObserver | null = null;
+let resizeObserver: ResizeObserver | null = null;
 let scanTimer: number | null = null;
 const managedBlocks = new Set<HTMLElement>();
+const observedBlocks = new Set<HTMLElement>();
 const buttonsByBlock = new Map<HTMLElement, HTMLButtonElement>();
+const pendingBlocks = new Set<HTMLElement>();
+let languageChangeListener:
+  | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
+  | null = null;
 
 function lineCount(text: string): number {
   if (!text) return 0;
@@ -21,16 +28,15 @@ function lineCount(text: string): number {
 }
 
 export function isLongCodeBlock(code: HTMLElement): boolean {
+  if (lineCount(code.textContent ?? '') >= LONG_CODE_BLOCK_MIN_LINES) return true;
+
   const pre = code.closest('pre');
   const renderedHeight = Math.max(
     code.scrollHeight,
     pre instanceof HTMLElement ? pre.scrollHeight : 0,
   );
 
-  return (
-    lineCount(code.textContent ?? '') >= LONG_CODE_BLOCK_MIN_LINES ||
-    renderedHeight >= LONG_CODE_BLOCK_MIN_HEIGHT
-  );
+  return renderedHeight >= LONG_CODE_BLOCK_MIN_HEIGHT;
 }
 
 function isMermaidBlock(host: HTMLElement): boolean {
@@ -75,12 +81,33 @@ function removeEnhancement(host: HTMLElement): void {
   host.classList.remove(COLLAPSIBLE_CLASS, COLLAPSED_CLASS);
 }
 
-export function enhanceCodeBlock(host: HTMLElement): void {
+interface CodeBlockMeasurement {
+  host: HTMLElement;
+  actions: HTMLElement | null;
+  shouldEnhance: boolean;
+}
+
+function observeBlock(host: HTMLElement): void {
+  if (!resizeObserver || observedBlocks.has(host)) return;
+  resizeObserver.observe(host);
+  observedBlocks.add(host);
+}
+
+function measureCodeBlock(host: HTMLElement): CodeBlockMeasurement {
+  observeBlock(host);
   const code = host.querySelector<HTMLElement>(CODE_SELECTOR);
   const decoration = host.querySelector<HTMLElement>('.code-block-decoration');
   const actions = decoration?.querySelector<HTMLElement>('.buttons') ?? decoration;
 
-  if (!code || !actions || isMermaidBlock(host) || !isLongCodeBlock(code)) {
+  return {
+    host,
+    actions: actions ?? null,
+    shouldEnhance: Boolean(code && actions && !isMermaidBlock(host) && isLongCodeBlock(code)),
+  };
+}
+
+function applyCodeBlockMeasurement({ host, actions, shouldEnhance }: CodeBlockMeasurement): void {
+  if (!shouldEnhance || !actions) {
     removeEnhancement(host);
     return;
   }
@@ -107,34 +134,103 @@ export function enhanceCodeBlock(host: HTMLElement): void {
   updateToggle(host, button);
 }
 
-export function processCodeBlocks(root: ParentNode = document): void {
-  root.querySelectorAll<HTMLElement>(HOST_SELECTOR).forEach(enhanceCodeBlock);
+export function enhanceCodeBlock(host: HTMLElement): void {
+  applyCodeBlockMeasurement(measureCodeBlock(host));
+}
 
-  for (const host of managedBlocks) {
-    if (!host.isConnected) removeEnhancement(host);
+function cleanupDisconnectedBlocks(): void {
+  for (const host of [...observedBlocks]) {
+    if (host.isConnected) continue;
+    resizeObserver?.unobserve(host);
+    observedBlocks.delete(host);
+    removeEnhancement(host);
   }
 }
 
-function scheduleScan(): void {
+export function processCodeBlocks(root: ParentNode = document): void {
+  root.querySelectorAll<HTMLElement>(HOST_SELECTOR).forEach(enhanceCodeBlock);
+
+  cleanupDisconnectedBlocks();
+}
+
+function collectContainingCodeBlock(node: Node): void {
+  const element = node instanceof Element ? node : node.parentElement;
+  if (!element) return;
+
+  const containingBlock = element.closest<HTMLElement>(HOST_SELECTOR);
+  if (containingBlock) pendingBlocks.add(containingBlock);
+}
+
+function collectAddedCodeBlocks(node: Node): void {
+  const element = node instanceof Element ? node : null;
+  if (!element) return;
+
+  if (element.matches(HOST_SELECTOR)) pendingBlocks.add(element as HTMLElement);
+  element.querySelectorAll<HTMLElement>(HOST_SELECTOR).forEach((block) => pendingBlocks.add(block));
+}
+
+function flushPendingBlocks(): void {
+  const measurements = [...pendingBlocks]
+    .filter((block) => block.isConnected)
+    .map(measureCodeBlock);
+  pendingBlocks.clear();
+
+  // Finish every layout read before adding/removing buttons and classes. This
+  // prevents one block's DOM write from forcing the next block's measurement.
+  measurements.forEach(applyCodeBlockMeasurement);
+  cleanupDisconnectedBlocks();
+}
+
+function schedulePendingFlush(): void {
   if (scanTimer !== null) window.clearTimeout(scanTimer);
   scanTimer = window.setTimeout(() => {
     scanTimer = null;
-    processCodeBlocks();
+    flushPendingBlocks();
   }, SCAN_DEBOUNCE_MS);
+}
+
+function scheduleScan(records: MutationRecord[]): void {
+  for (const record of records) {
+    collectContainingCodeBlock(record.target);
+    record.addedNodes.forEach(collectAddedCodeBlocks);
+  }
+
+  schedulePendingFlush();
 }
 
 export function stopCodeBlockCollapse(): void {
   observer?.disconnect();
   observer = null;
+  resizeObserver?.disconnect();
+  resizeObserver = null;
   if (scanTimer !== null) {
     window.clearTimeout(scanTimer);
     scanTimer = null;
   }
+  pendingBlocks.clear();
+  observedBlocks.clear();
   for (const host of [...managedBlocks]) removeEnhancement(host);
+  if (languageChangeListener) {
+    try {
+      chrome.storage?.onChanged?.removeListener(languageChangeListener);
+    } catch {}
+    languageChangeListener = null;
+  }
 }
 
 export function startCodeBlockCollapse(): () => void {
   stopCodeBlockCollapse();
+
+  if (typeof ResizeObserver !== 'undefined') {
+    resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.target instanceof HTMLElement && entry.target.matches(HOST_SELECTOR)) {
+          pendingBlocks.add(entry.target);
+        }
+      }
+      if (pendingBlocks.size > 0) schedulePendingFlush();
+    });
+  }
   processCodeBlocks();
 
   observer = new MutationObserver(scheduleScan);
@@ -143,6 +239,14 @@ export function startCodeBlockCollapse(): () => void {
     subtree: true,
     characterData: true,
   });
+
+  languageChangeListener = (changes, areaName) => {
+    if ((areaName !== 'sync' && areaName !== 'local') || !changes[StorageKeys.LANGUAGE]) return;
+    queueMicrotask(() => {
+      for (const [host, button] of buttonsByBlock) updateToggle(host, button);
+    });
+  };
+  chrome.storage?.onChanged?.addListener(languageChangeListener);
 
   return stopCodeBlockCollapse;
 }
