@@ -14,38 +14,43 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     _ = NativeNotificationService.shared
 
     guard let request = context.inputItems.first as? NSExtensionItem,
-      let message = extensionMessage(from: request),
-      let action = message["action"] as? String
+      let message = extensionMessage(from: request)
     else {
       respondWithError(context: context, message: "Invalid message")
       return
     }
 
-    os_log(.info, "Safari native action: %{public}@", action)
+    let nativeRequest: VoyagerNativeRequest
+    do {
+      nativeRequest = try VoyagerNativeMessageCodec.decodeRequest(from: message)
+    } catch {
+      respondWithError(context: context, message: "Invalid native message")
+      return
+    }
 
-    switch action {
-    case "ping":
-      respondWithSuccess(context: context, data: ["status": "ok"])
-    case "deliverNotification":
-      deliverNotification(message: message, context: context)
-    case "requestNotificationPermission":
+    os_log(.info, "Safari native action: %{public}@", nativeRequest.actionName)
+
+    switch nativeRequest {
+    case .ping:
+      respondWithSuccess(context: context, data: VoyagerPingResponse(status: "ok"))
+    case .deliverNotification(let request):
+      deliverNotification(request: request, context: context)
+    case .requestNotificationPermission:
       requestNotificationPermission(context: context)
-    case "googleDriveGetToken":
-      getGoogleDriveToken(
-        interactive: message["interactive"] as? Bool == true,
-        context: context
-      )
-    case "googleDriveSignOut":
+    case .googleDriveGetToken(let interactive):
+      getGoogleDriveToken(interactive: interactive, context: context)
+    case .googleDriveSignOut:
       GIDSignIn.sharedInstance.signOut()
-      respondWithSuccess(context: context, data: ["signedOut": true])
-    case "iCloudAccountStatus":
+      respondWithSuccess(
+        context: context,
+        data: VoyagerGoogleDriveSignOutResponse(signedOut: true)
+      )
+    case .iCloudAccountStatus:
       handleICloudAccountStatus(context: context)
-    case "iCloudWriteFile":
-      writeICloudFile(message: message, context: context)
-    case "iCloudReadFile":
-      readICloudFile(message: message, context: context)
-    default:
-      respondWithError(context: context, message: "Unknown action")
+    case .iCloudWriteFile(let request):
+      writeICloudFile(request: request, context: context)
+    case .iCloudReadFile(let fileName):
+      readICloudFile(fileName: fileName, context: context)
     }
   }
 
@@ -53,44 +58,40 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     ICloudSyncService.shared.accountStatus { result in
       switch result {
       case .success:
-        self.respondWithSuccess(context: context, data: ["available": true])
+        self.respondWithSuccess(
+          context: context,
+          data: VoyagerICloudAccountResponse(available: true)
+        )
       case .failure(let error):
         self.respondWithICloudError(context: context, error: error)
       }
     }
   }
 
-  private func writeICloudFile(message: [String: Any], context: NSExtensionContext) {
-    guard let fileName = message["fileName"] as? String,
-      let json = message["json"] as? String
-    else {
-      respondWithError(context: context, message: "Invalid iCloud write request")
-      return
-    }
-
-    ICloudSyncService.shared.write(fileName: fileName, json: json) { result in
+  private func writeICloudFile(
+    request: VoyagerICloudWriteRequest,
+    context: NSExtensionContext
+  ) {
+    ICloudSyncService.shared.write(fileName: request.fileName, json: request.json) { result in
       switch result {
       case .success:
-        self.respondWithSuccess(context: context, data: ["saved": true])
+        self.respondWithSuccess(
+          context: context,
+          data: VoyagerICloudWriteResponse(saved: true)
+        )
       case .failure(let error):
         self.respondWithICloudError(context: context, error: error)
       }
     }
   }
 
-  private func readICloudFile(message: [String: Any], context: NSExtensionContext) {
-    guard let fileName = message["fileName"] as? String else {
-      respondWithError(context: context, message: "Invalid iCloud read request")
-      return
-    }
-
+  private func readICloudFile(fileName: String, context: NSExtensionContext) {
     ICloudSyncService.shared.read(fileName: fileName) { result in
       switch result {
       case .success(let json):
         self.respondWithSuccess(
           context: context,
-          data: json.map { ["json": $0, "found": true] }
-            ?? ["found": false]
+          data: VoyagerICloudReadResponse(json: json, found: json != nil)
         )
       case .failure(let error):
         self.respondWithICloudError(context: context, error: error)
@@ -104,15 +105,14 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       return
     }
 
-    var response: [String: Any] = [
-      "success": false,
-      "error": failure.localizedDescription,
-      "code": failure.code.rawValue,
-    ]
-    if let retryAfterMilliseconds = failure.retryAfterMilliseconds {
-      response["retryAfterMs"] = retryAfterMilliseconds
-    }
-    respond(context: context, message: response)
+    respondWithError(
+      context: context,
+      failure: VoyagerNativeFailure(
+        error: failure.localizedDescription,
+        code: failure.code.rawValue,
+        retryAfterMs: failure.retryAfterMilliseconds
+      )
+    )
   }
 
   private func getGoogleDriveToken(interactive: Bool, context: NSExtensionContext) {
@@ -153,11 +153,11 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
 
         self.respondWithSuccess(
           context: context,
-          data: [
-            "accessToken": refreshedUser.accessToken.tokenString,
-            "expiresAt": expirationDate.timeIntervalSince1970 * 1000,
-            "signedIn": true,
-          ]
+          data: VoyagerGoogleDriveTokenResponse(
+            accessToken: refreshedUser.accessToken.tokenString,
+            expiresAt: expirationDate.timeIntervalSince1970 * 1000,
+            signedIn: true
+          )
         )
       }
     }
@@ -176,35 +176,40 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     context: NSExtensionContext
   ) {
     guard interactive else {
-      respondWithSuccess(context: context, data: ["signedIn": false])
+      respondWithSuccess(
+        context: context,
+        data: VoyagerGoogleDriveTokenResponse(signedIn: false)
+      )
       return
     }
 
     respondWithSuccess(
       context: context,
-      data: ["requiresAppLaunch": true, "signedIn": false]
+      data: VoyagerGoogleDriveTokenResponse(
+        signedIn: false,
+        requiresAppLaunch: true
+      )
     )
   }
 
-  private func deliverNotification(message: [String: Any], context: NSExtensionContext) {
-    guard let title = message["title"] as? String,
-      let body = message["body"] as? String
-    else {
-      respondWithError(context: context, message: "Invalid notification")
-      return
-    }
-
+  private func deliverNotification(
+    request: VoyagerNotificationRequest,
+    context: NSExtensionContext
+  ) {
     NativeNotificationService.shared.deliver(
-      id: message["id"] as? String ?? UUID().uuidString,
-      title: title,
-      body: body,
-      destination: (message["url"] as? String).flatMap {
+      id: request.id ?? UUID().uuidString,
+      title: request.title,
+      body: request.body,
+      destination: request.url.flatMap {
         VoyagerNotificationDestination(rawValue: $0)
       }
     ) { result in
       switch result {
       case .success:
-        self.respondWithSuccess(context: context, data: ["delivered": true])
+        self.respondWithSuccess(
+          context: context,
+          data: VoyagerNotificationDeliveryResponse(delivered: true)
+        )
       case .failure(let error):
         self.respondWithError(context: context, message: error.localizedDescription)
       }
@@ -215,7 +220,10 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     NativeNotificationService.shared.requestAuthorization { result in
       switch result {
       case .success(let granted):
-        self.respondWithSuccess(context: context, data: ["granted": granted])
+        self.respondWithSuccess(
+          context: context,
+          data: VoyagerNotificationPermissionResponse(granted: granted)
+        )
       case .failure(let error):
         self.respondWithError(context: context, message: error.localizedDescription)
       }
@@ -229,15 +237,33 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     return request.userInfo?["message"] as? [String: Any]
   }
 
-  private func respondWithSuccess(context: NSExtensionContext, data: [String: Any]) {
-    respond(context: context, message: ["success": true, "data": data])
+  private func respondWithSuccess<Payload: Codable>(
+    context: NSExtensionContext,
+    data: Payload
+  ) {
+    respond(context: context, response: VoyagerNativeResponse.success(data))
   }
 
   private func respondWithError(context: NSExtensionContext, message: String) {
-    respond(context: context, message: ["success": false, "error": message])
+    respondWithError(context: context, failure: VoyagerNativeFailure(error: message))
   }
 
-  private func respond(context: NSExtensionContext, message: [String: Any]) {
+  private func respondWithError(context: NSExtensionContext, failure: VoyagerNativeFailure) {
+    respond(
+      context: context,
+      response: VoyagerNativeResponse<VoyagerEmptyResponse>.failure(failure)
+    )
+  }
+
+  private func respond<Payload: Codable>(
+    context: NSExtensionContext,
+    response nativeResponse: VoyagerNativeResponse<Payload>
+  ) {
+    guard let message = try? VoyagerNativeMessageCodec.encodeResponse(nativeResponse) else {
+      context.cancelRequest(withError: VoyagerNativeHandlerError.responseEncodingFailed)
+      return
+    }
+
     let response = NSExtensionItem()
     if #available(macOS 11.0, *) {
       response.userInfo = [SFExtensionMessageKey: message]
@@ -245,5 +271,13 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       response.userInfo = ["message": message]
     }
     context.completeRequest(returningItems: [response])
+  }
+}
+
+private enum VoyagerNativeHandlerError: LocalizedError {
+  case responseEncodingFailed
+
+  var errorDescription: String? {
+    "Could not encode the native response"
   }
 }

@@ -88,4 +88,87 @@ final class NativeSupportTests: XCTestCase {
     let decoded = try JSONDecoder().decode(VoyagerDiagnosticsSnapshot.self, from: encoded)
     XCTAssertEqual(decoded, snapshot)
   }
+
+  func testNativeMessageDecodesTypedNotificationRequest() throws {
+    let request = try VoyagerNativeMessageCodec.decodeRequest(from: [
+      "action": "deliverNotification",
+      "id": "response-complete",
+      "title": "Voyager",
+      "body": "The response is ready.",
+      "url": "https://gemini.google.com/app/example",
+    ])
+
+    XCTAssertEqual(
+      request,
+      .deliverNotification(
+        VoyagerNotificationRequest(
+          id: "response-complete",
+          title: "Voyager",
+          body: "The response is ready.",
+          url: "https://gemini.google.com/app/example"
+        )
+      )
+    )
+  }
+
+  func testNativeMessageDecodesEverySupportedAction() throws {
+    let cases: [([String: Any], VoyagerNativeRequest)] = [
+      (["action": "ping"], .ping),
+      (["action": "requestNotificationPermission"], .requestNotificationPermission),
+      (
+        ["action": "googleDriveGetToken", "interactive": true],
+        .googleDriveGetToken(interactive: true)
+      ),
+      (["action": "googleDriveSignOut"], .googleDriveSignOut),
+      (["action": "iCloudAccountStatus"], .iCloudAccountStatus),
+      (
+        ["action": "iCloudWriteFile", "fileName": "prompts.json", "json": "{}"],
+        .iCloudWriteFile(VoyagerICloudWriteRequest(fileName: "prompts.json", json: "{}"))
+      ),
+      (
+        ["action": "iCloudReadFile", "fileName": "prompts.json"],
+        .iCloudReadFile(fileName: "prompts.json")
+      ),
+    ]
+
+    for (message, expected) in cases {
+      XCTAssertEqual(try VoyagerNativeMessageCodec.decodeRequest(from: message), expected)
+    }
+  }
+
+  func testNativeMessageRejectsMissingRequiredPayload() {
+    XCTAssertThrowsError(
+      try VoyagerNativeMessageCodec.decodeRequest(from: [
+        "action": "iCloudWriteFile",
+        "fileName": "prompts.json",
+      ])
+    )
+  }
+
+  func testNativeResponseKeepsWebExtensionEnvelope() throws {
+    let response = VoyagerNativeResponse.success(
+      VoyagerICloudReadResponse(json: "{\"version\":1}", found: true)
+    )
+    let message = try VoyagerNativeMessageCodec.encodeResponse(response)
+
+    XCTAssertEqual(message["success"] as? Bool, true)
+    let data = try XCTUnwrap(message["data"] as? [String: Any])
+    XCTAssertEqual(data["found"] as? Bool, true)
+    XCTAssertEqual(data["json"] as? String, "{\"version\":1}")
+  }
+
+  func testNativeFailureKeepsStructuredICloudRecoveryData() throws {
+    let response = VoyagerNativeResponse<VoyagerEmptyResponse>.failure(
+      VoyagerNativeFailure(
+        error: "iCloud is temporarily unavailable.",
+        code: "icloud_temporarily_unavailable",
+        retryAfterMs: 2_500
+      )
+    )
+    let message = try VoyagerNativeMessageCodec.encodeResponse(response)
+
+    XCTAssertEqual(message["success"] as? Bool, false)
+    XCTAssertEqual(message["code"] as? String, "icloud_temporarily_unavailable")
+    XCTAssertEqual(message["retryAfterMs"] as? Int, 2_500)
+  }
 }

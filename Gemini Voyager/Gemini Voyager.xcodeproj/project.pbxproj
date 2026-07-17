@@ -46,6 +46,7 @@
 		D10000000000000000000012 /* NativeSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000001 /* NativeSupport.swift */; };
 		D10000000000000000000013 /* NativeNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000002 /* NativeNotificationService.swift */; };
 		D10000000000000000000014 /* NativeDiagnosticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000003 /* NativeDiagnosticsService.swift */; };
+		D10000000000000000000015 /* NativeMessaging.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000004 /* NativeMessaging.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -112,6 +113,7 @@
 		D10000000000000000000001 /* NativeSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSupport.swift; sourceTree = "<group>"; };
 		D10000000000000000000002 /* NativeNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeNotificationService.swift; sourceTree = "<group>"; };
 		D10000000000000000000003 /* NativeDiagnosticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeDiagnosticsService.swift; sourceTree = "<group>"; };
+		D10000000000000000000004 /* NativeMessaging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeMessaging.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -225,6 +227,7 @@
 			isa = PBXGroup;
 			children = (
 				D10000000000000000000001 /* NativeSupport.swift */,
+				D10000000000000000000004 /* NativeMessaging.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -385,6 +388,7 @@
 				B60723CA2FB752BD00F3A4FD /* SafariWebExtensionHandler.swift in Sources */,
 				C1D2E3F40516273849A5B6C7 /* ICloudSyncService.swift in Sources */,
 				D10000000000000000000012 /* NativeSupport.swift in Sources */,
+				D10000000000000000000015 /* NativeMessaging.swift in Sources */,
 				D10000000000000000000013 /* NativeNotificationService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
