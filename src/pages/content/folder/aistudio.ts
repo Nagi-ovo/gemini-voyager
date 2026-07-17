@@ -13,6 +13,7 @@ import { isSafari } from '@/core/utils/browser';
 import { createTranslator, initI18n } from '@/utils/i18n';
 import { mergeFolderData as mergeSyncedFolderData } from '@/utils/merge';
 
+import { watchRouteChanges } from '../utils/routeWatcher';
 import {
   mountHideArchivedNudge,
   shouldShowHideArchivedNudge,
@@ -264,10 +265,7 @@ export class AIStudioFolderManager {
   private activeStorageKey: string = StorageKeys.FOLDER_DATA_AISTUDIO; // Active folder data key
   private accountContextPoller: number | null = null; // Detect account switches
   private lastAccountContextFingerprint: string | null = null; // Debounce account scope refresh
-  private routeChangeUpdate: (() => void) | null = null; // Current route-change reaction; null after destroy()
-  private routePopstateHandler: (() => void) | null = null; // Registered popstate listener
-  private routePollerId: number | null = null; // 400ms fallback route poller
-  private historyPatchedForRouteChanges = false; // pushState/replaceState wrapped once per page
+  private stopRouteWatcher: (() => void) | null = null;
   private backupService!: DataBackupService<FolderData>; // Initialized in init()
   private sidebarWidth: number = 360; // Default sidebar width (increased to reduce text truncation)
   private readonly SIDEBAR_WIDTH_KEY = 'gvAIStudioSidebarWidth';
@@ -1226,7 +1224,8 @@ export class AIStudioFolderManager {
   }
 
   private installRouteChangeListener(): void {
-    this.routeChangeUpdate = () =>
+    this.stopRouteWatcher?.();
+    const update = () =>
       setTimeout(() => {
         this.ensureContainerMounted();
         this.updateLibraryShortcutVisibility();
@@ -1242,57 +1241,7 @@ export class AIStudioFolderManager {
         this.ensureLibraryBindings();
         this.highlightActiveConversation();
       }, 0);
-    const update = () => {
-      try {
-        this.routeChangeUpdate?.();
-      } catch {}
-    };
-
-    if (this.routePopstateHandler === null) {
-      try {
-        window.addEventListener('popstate', update);
-        this.routePopstateHandler = update;
-      } catch {}
-    }
-
-    // Wrap pushState/replaceState once per page lifetime. The wrapper dispatches
-    // through this.routeChangeUpdate so destroy() can neutralize it (set to null)
-    // without unwrapping — another script may have wrapped history after us.
-    if (!this.historyPatchedForRouteChanges) {
-      this.historyPatchedForRouteChanges = true;
-      try {
-        const hist = history as History & Record<string, unknown>;
-        const notifyRouteChange = () => {
-          try {
-            this.routeChangeUpdate?.();
-          } catch {}
-        };
-        const wrap = (method: 'pushState' | 'replaceState') => {
-          const orig = hist[method] as (...args: unknown[]) => unknown;
-          hist[method] = function (...args: unknown[]) {
-            const ret = orig.apply(this, args);
-            notifyRouteChange();
-            return ret;
-          };
-        };
-        wrap('pushState');
-        wrap('replaceState');
-      } catch {}
-    }
-
-    // Fallback poller for routers that bypass events
-    if (this.routePollerId === null) {
-      try {
-        let last = location.pathname;
-        this.routePollerId = window.setInterval(() => {
-          const now = location.pathname;
-          if (now !== last) {
-            last = now;
-            update();
-          }
-        }, 400);
-      } catch {}
-    }
+    this.stopRouteWatcher = watchRouteChanges(update);
   }
 
   private renderFolder(folder: Folder, level: number = 0): HTMLElement {
@@ -3363,10 +3312,6 @@ export class AIStudioFolderManager {
       clearInterval(this.accountContextPoller);
       this.accountContextPoller = null;
     }
-    if (this.routePollerId !== null) {
-      clearInterval(this.routePollerId);
-      this.routePollerId = null;
-    }
     if (this.promptListBindTimer !== null) {
       clearTimeout(this.promptListBindTimer);
       this.promptListBindTimer = null;
@@ -3376,15 +3321,8 @@ export class AIStudioFolderManager {
       this.promptTitleSyncTimer = null;
     }
 
-    // Route-change listeners. The history pushState/replaceState wrappers stay in
-    // place but dispatch through routeChangeUpdate, which we null out here.
-    if (this.routePopstateHandler !== null) {
-      try {
-        window.removeEventListener('popstate', this.routePopstateHandler);
-      } catch {}
-      this.routePopstateHandler = null;
-    }
-    this.routeChangeUpdate = null;
+    this.stopRouteWatcher?.();
+    this.stopRouteWatcher = null;
 
     // Library multi-select state and any floating UI hosted on document.body.
     if (this.isLibraryMultiSelectMode) {

@@ -33,6 +33,7 @@ import { getCurrentLanguage, getTranslationSync, initI18n } from '@/utils/i18n';
 import type { AppLanguage } from '@/utils/language';
 import type { TranslationKey } from '@/utils/translations';
 
+import { watchRouteChanges } from '../utils/routeWatcher';
 import { USAGE_REFRESH_ICON } from './icons';
 
 /** Map a Voyager language to a BCP-47 tag for Intl date formatting. */
@@ -106,7 +107,6 @@ const PILL_ID = 'gv-usage-pill';
 const SCRAPE_DEBOUNCE_MS = 300;
 // Refresh the relative "updated X ago" stamp without re-scraping.
 const STAMP_REFRESH_MS = 30_000;
-const NAV_POLL_MS = 600;
 // Bridge to the MAIN-world usage-observer (document_start). Must match the
 // `source` strings in public/usage-observer.js.
 const OBS_SRC = 'gv-usage-observer';
@@ -142,8 +142,7 @@ let scrapeObserver: MutationObserver | null = null;
 let scrapeTimer: number | null = null;
 let scrapeRetryTimer: number | null = null;
 let stampTimer: number | null = null;
-let navPollTimer: number | null = null;
-let lastPolledPath = '';
+let stopRouteWatcher: (() => void) | null = null;
 let storageListener:
   | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
   | null = null;
@@ -1318,9 +1317,6 @@ function stopReplayLoop(): void {
   }
 }
 
-let origPush: typeof history.pushState | null = null;
-let origReplace: typeof history.replaceState | null = null;
-
 export async function startUsageStatus(): Promise<() => void> {
   if (started) return () => {};
   started = true;
@@ -1345,41 +1341,15 @@ export async function startUsageStatus(): Promise<() => void> {
   render();
   if (enabled) startReplayLoop();
 
-  window.addEventListener('popstate', handleNavigation);
-  origPush = history.pushState;
-  origReplace = history.replaceState;
-  history.pushState = function (...args: Parameters<typeof history.pushState>) {
-    const r = origPush!.apply(this, args);
-    handleNavigation();
-    return r;
-  };
-  history.replaceState = function (...args: Parameters<typeof history.replaceState>) {
-    const r = origReplace!.apply(this, args);
-    handleNavigation();
-    return r;
-  };
-
-  // Gemini's own router runs in the page's main world and bypasses the wrappers
-  // above, so poll the pathname to catch in-app navigations into/out of /usage.
-  lastPolledPath = location.pathname;
-  navPollTimer = window.setInterval(() => {
-    if (location.pathname === lastPolledPath) return;
-    lastPolledPath = location.pathname;
-    handleNavigation();
-  }, NAV_POLL_MS);
+  stopRouteWatcher = watchRouteChanges(handleNavigation);
 
   return () => {
     started = false;
     teardownScrapeObserver();
     teardownObserverBridge();
     removePill();
-    if (navPollTimer !== null) {
-      clearInterval(navPollTimer);
-      navPollTimer = null;
-    }
-    window.removeEventListener('popstate', handleNavigation);
-    if (origPush) history.pushState = origPush;
-    if (origReplace) history.replaceState = origReplace;
+    stopRouteWatcher?.();
+    stopRouteWatcher = null;
     if (storageListener) {
       browser.storage.onChanged.removeListener(storageListener);
       storageListener = null;

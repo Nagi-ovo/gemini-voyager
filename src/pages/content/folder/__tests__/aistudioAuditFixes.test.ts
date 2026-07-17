@@ -45,8 +45,7 @@ type ManagerInternals = {
   folderEnabled: boolean;
   hideArchivedEnabled: boolean;
   accountContextPoller: number | null;
-  routePollerId: number | null;
-  routePopstateHandler: (() => void) | null;
+  stopRouteWatcher: (() => void) | null;
   containerMountObserver: MutationObserver | null;
   bodyPromptPopoverObserver: MutationObserver | null;
   libraryTableObserver: MutationObserver | null;
@@ -295,8 +294,7 @@ describe('M11 — destroy() lifecycle teardown', () => {
 
     expect(vi.getTimerCount()).toBe(0);
     expect(internals.accountContextPoller).toBeNull();
-    expect(internals.routePollerId).toBeNull();
-    expect(internals.routePopstateHandler).toBeNull();
+    expect(internals.stopRouteWatcher).toBeNull();
     expect(internals.libraryTableObserver).toBeNull();
     expect(internals.bodyPromptPopoverObserver).toBeNull();
     expect(internals.containerMountObserver).toBeNull();

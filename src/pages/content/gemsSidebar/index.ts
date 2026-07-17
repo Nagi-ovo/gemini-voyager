@@ -42,6 +42,7 @@ import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
 
+import { watchRouteChanges } from '../utils/routeWatcher';
 import { injectPinButtons, listenPinnedChanges } from './pinToggle';
 
 /** Single gem as we cache and render it. Keep this small — chrome.storage. */
@@ -90,7 +91,6 @@ const MRU_CAPTURE_RETRY_MS = 400;
 const MRU_CAPTURE_MAX_ATTEMPTS = 6;
 // How often to poll the pathname for SPA navigations the pushState wrapper
 // can't see (Gemini's router lives in the page's main world).
-const NAV_POLL_MS = 600;
 const EXPANDED_STORAGE_KEY = 'gvGemsSidebarExpanded';
 
 /** Module-level singleton — only one injector ever needs to run per tab. */
@@ -111,8 +111,7 @@ let currentMru: GemMruEntry[] = [];
 let currentPinned: string[] = [];
 let mruRetryTimer: number | null = null;
 let mruCaptureAttempts = 0;
-let navPollTimer: number | null = null;
-let lastPolledPath = '';
+let stopRouteWatcher: (() => void) | null = null;
 // Default to expanded so users see the recent gems immediately the first time
 // they enable the feature; the chevron lets them collapse if they want it
 // out of the way. Persisted in chrome.storage.local.
@@ -956,49 +955,16 @@ export async function startGemsSidebar(): Promise<() => void> {
   // Capture the gem if we loaded directly onto a /gem/<id> page.
   recordGemUsageFromPage();
 
-  // Back/forward fire a real `popstate` event we can hear.
-  window.addEventListener('popstate', handleNavigation);
-  // Patch pushState/replaceState as a fast-path for same-world programmatic
-  // navigation. NOTE: this can't catch Gemini's OWN router — Angular runs in the
-  // page's main world and calls the unpatched main-world history, so an in-app
-  // click to a gem never reaches this wrapper. The poll below is the reliable
-  // catch-all for those forward SPA navigations.
-  const origPush = history.pushState;
-  const origReplace = history.replaceState;
-  history.pushState = function (...args: Parameters<typeof history.pushState>) {
-    const r = origPush.apply(this, args);
-    handleNavigation();
-    return r;
-  };
-  history.replaceState = function (...args: Parameters<typeof history.replaceState>) {
-    const r = origReplace.apply(this, args);
-    handleNavigation();
-    return r;
-  };
-
-  // Reliable navigation detector. Because the pushState wrapper above is blind to
-  // Gemini's main-world router, poll the pathname so opening a gem via an in-app
-  // click (the common case) still records MRU + re-checks the scraper.
-  lastPolledPath = location.pathname;
-  navPollTimer = window.setInterval(() => {
-    if (location.pathname === lastPolledPath) return;
-    lastPolledPath = location.pathname;
-    handleNavigation();
-  }, NAV_POLL_MS);
+  stopRouteWatcher = watchRouteChanges(handleNavigation);
 
   return () => {
     started = false;
     teardownScrapeObserver();
     teardownPositionEnforcer();
     clearMruRetry();
-    if (navPollTimer !== null) {
-      clearInterval(navPollTimer);
-      navPollTimer = null;
-    }
+    stopRouteWatcher?.();
+    stopRouteWatcher = null;
     cleanupSection();
-    window.removeEventListener('popstate', handleNavigation);
-    history.pushState = origPush;
-    history.replaceState = origReplace;
     if (storageListener) {
       browser.storage.onChanged.removeListener(storageListener);
       storageListener = null;
@@ -1008,10 +974,6 @@ export async function startGemsSidebar(): Promise<() => void> {
 }
 
 function handleNavigation(): void {
-  // Keep the poll's baseline in sync so a navigation already handled here
-  // (popstate / patched pushState) isn't re-handled by the next poll tick —
-  // that would double every re-render this handler triggers.
-  lastPolledPath = location.pathname;
   // Wait a tick for the new page to render before re-checking which observers
   // should be active.
   window.setTimeout(() => {

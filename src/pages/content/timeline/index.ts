@@ -1,4 +1,5 @@
 import { historyTimestampStore } from '../timestamp/historyTimestamps';
+import { watchRouteChanges } from '../utils/routeWatcher';
 import { TimelineManager } from './manager';
 
 function isGeminiConversationRoute(pathname = location.pathname): boolean {
@@ -7,18 +8,12 @@ function isGeminiConversationRoute(pathname = location.pathname): boolean {
   return /^\/(?:u\/\d+\/)?(app|gem)(\/|$)/.test(pathname);
 }
 
-type HistoryStateArgs = Parameters<History['pushState']>;
-
 let timelineManagerInstance: TimelineManager | null = null;
 let currentUrl = location.href;
 let currentPathAndSearch = location.pathname + location.search;
-let routeCheckIntervalId: number | null = null;
+let stopRouteWatcher: (() => void) | null = null;
 let routeListenersAttached = false;
 let activeObservers: MutationObserver[] = [];
-let cleanupHandlers: (() => void)[] = [];
-let historyPatched = false;
-let originalPushState: History['pushState'] | null = null;
-let originalReplaceState: History['replaceState'] | null = null;
 
 function initializeTimeline(previousUrl: string | null = null): void {
   if (timelineManagerInstance) {
@@ -96,50 +91,10 @@ function handleUrlChange(): void {
   }
 }
 
-function patchHistoryOnce(): void {
-  if (historyPatched) return;
-  try {
-    originalPushState = history.pushState;
-    originalReplaceState = history.replaceState;
-
-    history.pushState = (...args: HistoryStateArgs): void => {
-      originalPushState?.apply(history, args);
-      handleUrlChange();
-    };
-    history.replaceState = (...args: HistoryStateArgs): void => {
-      originalReplaceState?.apply(history, args);
-      handleUrlChange();
-    };
-
-    historyPatched = true;
-    cleanupHandlers.push(() => {
-      if (!historyPatched) return;
-      if (originalPushState) history.pushState = originalPushState;
-      if (originalReplaceState) history.replaceState = originalReplaceState;
-      historyPatched = false;
-      originalPushState = null;
-      originalReplaceState = null;
-    });
-  } catch (e) {
-    console.warn('[Timeline] Failed to patch history API:', e);
-  }
-}
-
 function attachRouteListenersOnce(): void {
   if (routeListenersAttached) return;
   routeListenersAttached = true;
-  patchHistoryOnce();
-  window.addEventListener('popstate', handleUrlChange);
-  window.addEventListener('hashchange', handleUrlChange);
-  routeCheckIntervalId = window.setInterval(() => {
-    if (location.href !== currentUrl) handleUrlChange();
-  }, 800);
-
-  // Register cleanup handlers for proper resource management
-  cleanupHandlers.push(() => {
-    window.removeEventListener('popstate', handleUrlChange);
-    window.removeEventListener('hashchange', handleUrlChange);
-  });
+  stopRouteWatcher = watchRouteChanges(handleUrlChange);
 }
 
 /**
@@ -163,21 +118,8 @@ function cleanup(): void {
   });
   activeObservers = [];
 
-  // Clear the route check interval
-  if (routeCheckIntervalId !== null) {
-    clearInterval(routeCheckIntervalId);
-    routeCheckIntervalId = null;
-  }
-
-  // Execute all registered cleanup handlers
-  cleanupHandlers.forEach((handler) => {
-    try {
-      handler();
-    } catch (e) {
-      console.error('[Gemini Voyager] Failed to run cleanup handler:', e);
-    }
-  });
-  cleanupHandlers = [];
+  stopRouteWatcher?.();
+  stopRouteWatcher = null;
 
   // The parsed history cache intentionally survives SPA manager replacement,
   // but the page-lifetime bridge must be released on a real unload.

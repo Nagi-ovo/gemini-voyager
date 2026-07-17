@@ -30,6 +30,7 @@ import {
   resolveTimelineHierarchyDataForStorageScope,
 } from '../timeline/hierarchyStorage';
 import type { TimelineHierarchyData } from '../timeline/hierarchyTypes';
+import { watchRouteChanges } from '../utils/routeWatcher';
 import { type ConversationSortMode, sortConversationsByPriority } from './conversationSort';
 import { type FloatingFabPos, mountFloatingFab, unmountFloatingFab } from './floatingModeFab';
 import { unmountFloatingModeNudge } from './floatingModeNudge';
@@ -254,7 +255,6 @@ export class FolderManager {
   private accountIsolationEnabled: boolean = false; // Whether hard account isolation is enabled
   private accountScope: AccountScope | null = null; // Resolved account scope for current page
   private activeStorageKey: string = STORAGE_KEY; // Storage key currently used for folder data
-  private navPoller: number | null = null;
   private lastPathname: string | null = null;
   private saveInProgress: boolean = false; // Lock to prevent concurrent saves
   private nativeTitleSyncTimer: number | null = null;
@@ -517,10 +517,6 @@ export class FolderManager {
     this.clearNativeTitleSyncTimer();
     this.clearConversationReorderIndicator();
 
-    if (this.navPoller) {
-      clearInterval(this.navPoller);
-      this.navPoller = null;
-    }
     this.teardownDomRecoveryWatchers();
     this.folderRecoveryInFlight = false;
 
@@ -654,11 +650,6 @@ export class FolderManager {
     }
 
     this.clearNativeTitleSyncTimer();
-
-    if (this.navPoller) {
-      clearInterval(this.navPoller);
-      this.navPoller = null;
-    }
 
     this.teardownDomRecoveryWatchers();
     this.folderRecoveryInFlight = false;
@@ -9116,30 +9107,25 @@ export class FolderManager {
       this.debug('Failed to wrap history methods:', e);
     }
 
-    // Fallback poller for routers/flows that don't emit events
+    // Shared fallback for routers/flows that don't emit events.
     try {
       this.lastPathname = window.location.pathname;
-      this.navPoller = window.setInterval(() => {
-        if (this.isDestroyed) {
-          if (this.navPoller) clearInterval(this.navPoller);
-          return;
-        }
-        const now = window.location.pathname;
-        if (now !== this.lastPathname) {
-          this.lastPathname = now;
-          update();
-        }
-      }, 400);
+      cleanupFns.push(
+        watchRouteChanges(() => {
+          if (this.isDestroyed) return;
+          const now = window.location.pathname;
+          if (now !== this.lastPathname) {
+            this.lastPathname = now;
+            update();
+          }
+        }),
+      );
     } catch (e) {
-      this.debug('Failed to setup navigation poller:', e);
+      this.debug('Failed to setup navigation watcher:', e);
     }
 
     this.routeChangeCleanup = () => {
       cleanupFns.forEach((fn) => fn());
-      if (this.navPoller) {
-        clearInterval(this.navPoller);
-        this.navPoller = null;
-      }
     };
   }
 

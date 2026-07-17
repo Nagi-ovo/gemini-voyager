@@ -1,5 +1,6 @@
 import { storageService } from '../../../core/services/StorageService';
 import { StorageKeys } from '../../../core/types/common';
+import { watchRouteChanges } from '../utils/routeWatcher';
 import './styles.css';
 
 type DefaultModelSetting =
@@ -77,12 +78,9 @@ class DefaultModelManager {
   private pendingMenuPanelInjections = new WeakSet<HTMLElement>();
   private menuPanelInjectAttempts = new WeakMap<HTMLElement, number>();
   private started = false;
-  private popStateHandler: (() => void) | null = null;
-  private originalPushState: History['pushState'] | null = null;
-  private originalReplaceState: History['replaceState'] | null = null;
   private lastCheckedPath: string | null = null;
-  private sidebarClickHandler: ((e: Event) => void) | null = null;
-  private urlCheckTimer: number | null = null;
+  private stopRouteWatcher: (() => void) | null = null;
+  private sameRouteNewChatClickHandler: ((event: Event) => void) | null = null;
   // Track if we've already auto-selected for this navigation to prevent duplicates
   private autoSelectSessionId: string | null = null;
   // Track consecutive failures to stop retrying when model is unavailable
@@ -153,49 +151,33 @@ class DefaultModelManager {
 
     this.initObserver();
     void this.checkAndLockModel();
-    // Listen for URL changes (SPA navigation)
-    this.popStateHandler = () => {
-      void this.checkAndLockModelWithDelay();
-    };
-    window.addEventListener('popstate', this.popStateHandler);
-
-    // Hack for SPA: hook into history methods
-    if (!this.originalPushState) {
-      this.originalPushState = history.pushState;
-    }
-    if (!this.originalReplaceState) {
-      this.originalReplaceState = history.replaceState;
-    }
-
-    history.pushState = (...args: Parameters<History['pushState']>) => {
-      this.originalPushState?.apply(history, args);
-      void this.checkAndLockModelWithDelay();
-    };
-    history.replaceState = (...args: Parameters<History['replaceState']>) => {
-      this.originalReplaceState?.apply(history, args);
-      void this.checkAndLockModelWithDelay();
-    };
-
-    // Listen for sidebar "New Chat" link clicks (SPA internal navigation)
-    this.sidebarClickHandler = (e: Event) => {
-      const target = e.target as HTMLElement;
-      // Check if clicked on a link that leads to /app (new conversation) or /gem/ (new gem conversation)
-      const link = target.closest('a[href*="/app"]') || target.closest('a[href*="/gem/"]');
-      if (link) {
-        // Delay to allow SPA navigation to complete
-        void this.checkAndLockModelWithDelay();
-      }
-    };
-    document.addEventListener('click', this.sidebarClickHandler, true);
-
-    // Periodic URL check as a fallback for edge cases
-    this.urlCheckTimer = window.setInterval(() => {
+    // One shared watcher covers browser history events and page-world SPA
+    // navigations without stacking per-feature History API wrappers.
+    this.stopRouteWatcher = watchRouteChanges(() => {
       const currentPath = window.location.pathname;
       if (currentPath !== this.lastCheckedPath && this.isNewConversation()) {
         this.lastCheckedPath = currentPath;
-        void this.checkAndLockModel();
+        void this.checkAndLockModelWithDelay();
       }
-    }, 500);
+    });
+
+    // A click on the already-active /app new-chat link does not change href, so
+    // the shared watcher cannot observe it. Keep only this semantic exception;
+    // all real URL changes go through watchRouteChanges.
+    this.sameRouteNewChatClickHandler = (event) => {
+      const target = event.target instanceof Element ? event.target : null;
+      const link = target?.closest<HTMLAnchorElement>('a[href]');
+      if (!link) return;
+      try {
+        const destination = new URL(link.href, window.location.href);
+        if (destination.href === window.location.href && this.isNewConversation()) {
+          void this.checkAndLockModelWithDelay();
+        }
+      } catch {
+        // Ignore malformed host links.
+      }
+    };
+    document.addEventListener('click', this.sameRouteNewChatClickHandler, true);
   }
 
   public destroy(): void {
@@ -212,29 +194,12 @@ class DefaultModelManager {
       this.checkTimer = null;
     }
 
-    if (this.urlCheckTimer) {
-      clearInterval(this.urlCheckTimer);
-      this.urlCheckTimer = null;
-    }
+    this.stopRouteWatcher?.();
+    this.stopRouteWatcher = null;
 
-    if (this.popStateHandler) {
-      window.removeEventListener('popstate', this.popStateHandler);
-      this.popStateHandler = null;
-    }
-
-    if (this.sidebarClickHandler) {
-      document.removeEventListener('click', this.sidebarClickHandler, true);
-      this.sidebarClickHandler = null;
-    }
-
-    if (this.originalPushState) {
-      history.pushState = this.originalPushState;
-      this.originalPushState = null;
-    }
-
-    if (this.originalReplaceState) {
-      history.replaceState = this.originalReplaceState;
-      this.originalReplaceState = null;
+    if (this.sameRouteNewChatClickHandler) {
+      document.removeEventListener('click', this.sameRouteNewChatClickHandler, true);
+      this.sameRouteNewChatClickHandler = null;
     }
 
     if (this.storageChangeListener) {
@@ -1192,6 +1157,7 @@ class DefaultModelManager {
         this.consecutiveRejectedModelSwitches = 0;
         this.pendingThinkingSwitchKey = null;
         this.consecutiveRejectedThinkingSwitches = 0;
+        void this.checkAndLockModel();
       }
     };
     try {

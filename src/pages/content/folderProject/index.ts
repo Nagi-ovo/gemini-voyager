@@ -12,6 +12,7 @@ import { findChatInput } from '../chatInput/index';
 import { getFolderColor, isDarkMode } from '../folder/folderColors';
 import type { FolderManager } from '../folder/manager';
 import { setInputText } from '../utils/inputHelper';
+import { watchRouteChanges } from '../utils/routeWatcher';
 import {
   buildInstructionBlock,
   hasInstructionBlock,
@@ -29,8 +30,7 @@ let selectedFolderInstructions: string | null = null;
 let pickerContainer: HTMLElement | null = null;
 let pickerCleanup: (() => void) | null = null;
 let lastHref = '';
-let urlWatcherInterval: ReturnType<typeof setInterval> | null = null;
-let urlWatcherCheckFn: (() => void) | null = null;
+let stopRouteWatcher: (() => void) | null = null;
 let ctrlEnterSendEnabled = false;
 let pendingSend = false;
 let pendingSendResetTimer: ReturnType<typeof setTimeout> | null = null;
@@ -649,15 +649,8 @@ function handleNavigation(manager: FolderManager, prevPath: string, newPath: str
 // ============================================================================
 
 function stopURLWatcher(): void {
-  if (urlWatcherInterval !== null) {
-    clearInterval(urlWatcherInterval);
-    urlWatcherInterval = null;
-  }
-  if (urlWatcherCheckFn) {
-    window.removeEventListener('popstate', urlWatcherCheckFn);
-    window.removeEventListener('hashchange', urlWatcherCheckFn);
-    urlWatcherCheckFn = null;
-  }
+  stopRouteWatcher?.();
+  stopRouteWatcher = null;
   teardownSendDetection();
 }
 
@@ -676,18 +669,10 @@ function startURLWatcher(manager: FolderManager): void {
     handleNavigation(manager, prevPath, newPath);
   };
 
-  // popstate / hashchange = user-initiated history nav (Gemini's SPA uses
-  // pushState, which doesn't fire either). Cancel pendingSend so the URL
-  // change isn't misattributed to the current send.
-  const onHistoryNav = () => {
-    clearPendingSendState();
+  stopRouteWatcher = watchRouteChanges(({ trigger }) => {
+    if (trigger !== 'poll') clearPendingSendState();
     checkUrl();
-  };
-
-  urlWatcherCheckFn = onHistoryNav;
-  urlWatcherInterval = setInterval(checkUrl, 500);
-  window.addEventListener('popstate', onHistoryNav);
-  window.addEventListener('hashchange', onHistoryNav);
+  });
 
   // Also check on initial load
   if (isNewChatPath(window.location.pathname)) {
