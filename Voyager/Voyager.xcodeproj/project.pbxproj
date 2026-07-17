@@ -18,7 +18,7 @@
 		B60723B92FB752BC00F3A4FD /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60723B82FB752BC00F3A4FD /* ViewController.swift */; };
 		B60723BC2FB752BC00F3A4FD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B60723BA2FB752BC00F3A4FD /* Main.storyboard */; };
 		B60723BE2FB752BD00F3A4FD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B60723BD2FB752BD00F3A4FD /* Assets.xcassets */; };
-		B60723C52FB752BD00F3A4FD /* Gemini Voyager Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B60723C42FB752BD00F3A4FD /* Gemini Voyager Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B60723C52FB752BD00F3A4FD /* Voyager Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B60723C42FB752BD00F3A4FD /* Voyager Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B60723CA2FB752BD00F3A4FD /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60723C92FB752BD00F3A4FD /* SafariWebExtensionHandler.swift */; };
 		C1D2E3F40516273849A5B6C7 /* ICloudSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1D2E3F40516273849A5B6C8 /* ICloudSyncService.swift */; };
 		B60723E32FB752BD00F3A4FD /* icon-128-template.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723D62FB752BD00F3A4FD /* icon-128-template.png */; };
@@ -56,7 +56,7 @@
 			containerPortal = B60723A12FB752BC00F3A4FD /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = B60723C32FB752BD00F3A4FD;
-			remoteInfo = "Gemini Voyager Extension";
+			remoteInfo = "Voyager Extension";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -67,7 +67,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 13;
 			files = (
-				B60723C52FB752BD00F3A4FD /* Gemini Voyager Extension.appex in Embed Foundation Extensions */,
+				B60723C52FB752BD00F3A4FD /* Voyager Extension.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -75,7 +75,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		B60723A92FB752BC00F3A4FD /* Gemini Voyager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Gemini Voyager.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B60723A92FB752BC00F3A4FD /* Voyager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Voyager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B60723AC2FB752BC00F3A4FD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		B60723B02FB752BC00F3A4FD /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
 		B60723B22FB752BC00F3A4FD /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Icon.png; sourceTree = "<group>"; };
@@ -85,7 +85,7 @@
 		B60723BB2FB752BC00F3A4FD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		B60723BD2FB752BD00F3A4FD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B60723BF2FB752BD00F3A4FD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		B60723C42FB752BD00F3A4FD /* Gemini Voyager Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Gemini Voyager Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		B60723C42FB752BD00F3A4FD /* Voyager Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Voyager Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B60723C92FB752BD00F3A4FD /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
 		C1D2E3F40516273849A5B6C8 /* ICloudSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ICloudSyncService.swift; sourceTree = "<group>"; };
 		B60723CB2FB752BD00F3A4FD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -152,8 +152,8 @@
 		B60723AA2FB752BC00F3A4FD /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				B60723A92FB752BC00F3A4FD /* Gemini Voyager.app */,
-				B60723C42FB752BD00F3A4FD /* Gemini Voyager Extension.appex */,
+				B60723A92FB752BC00F3A4FD /* Voyager.app */,
+				B60723C42FB752BD00F3A4FD /* Voyager Extension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -238,9 +238,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		B60723A82FB752BC00F3A4FD /* Gemini Voyager */ = {
+		B60723A82FB752BC00F3A4FD /* Voyager */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B60723D22FB752BD00F3A4FD /* Build configuration list for PBXNativeTarget "Gemini Voyager" */;
+			buildConfigurationList = B60723D22FB752BD00F3A4FD /* Build configuration list for PBXNativeTarget "Voyager" */;
 			buildPhases = (
 				B60723A52FB752BC00F3A4FD /* Sources */,
 				B60723A62FB752BC00F3A4FD /* Frameworks */,
@@ -252,18 +252,18 @@
 			dependencies = (
 				B60723C72FB752BD00F3A4FD /* PBXTargetDependency */,
 			);
-			name = "Gemini Voyager";
+			name = Voyager;
 			packageProductDependencies = (
 				A1B2C3D4E5F60718293A4B5E /* GoogleSignIn */,
 				F1A2B3C4D5E60718293A4B5E /* Sparkle */,
 			);
-			productName = "Gemini Voyager";
-			productReference = B60723A92FB752BC00F3A4FD /* Gemini Voyager.app */;
+			productName = Voyager;
+			productReference = B60723A92FB752BC00F3A4FD /* Voyager.app */;
 			productType = "com.apple.product-type.application";
 		};
-		B60723C32FB752BD00F3A4FD /* Gemini Voyager Extension */ = {
+		B60723C32FB752BD00F3A4FD /* Voyager Extension */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = B60723CE2FB752BD00F3A4FD /* Build configuration list for PBXNativeTarget "Gemini Voyager Extension" */;
+			buildConfigurationList = B60723CE2FB752BD00F3A4FD /* Build configuration list for PBXNativeTarget "Voyager Extension" */;
 			buildPhases = (
 				B60723C02FB752BD00F3A4FD /* Sources */,
 				B60723C12FB752BD00F3A4FD /* Frameworks */,
@@ -273,12 +273,12 @@
 			);
 			dependencies = (
 			);
-			name = "Gemini Voyager Extension";
+			name = "Voyager Extension";
 			packageProductDependencies = (
 				A1B2C3D4E5F60718293A4B5F /* GoogleSignIn */,
 			);
-			productName = "Gemini Voyager Extension";
-			productReference = B60723C42FB752BD00F3A4FD /* Gemini Voyager Extension.appex */;
+			productName = "Voyager Extension";
+			productReference = B60723C42FB752BD00F3A4FD /* Voyager Extension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
@@ -322,8 +322,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				B60723A82FB752BC00F3A4FD /* Gemini Voyager */,
-				B60723C32FB752BD00F3A4FD /* Gemini Voyager Extension */,
+				B60723A82FB752BC00F3A4FD /* Voyager */,
+				B60723C32FB752BD00F3A4FD /* Voyager Extension */,
 			);
 		};
 /* End PBXProject section */
@@ -402,7 +402,7 @@
 /* Begin PBXTargetDependency section */
 		B60723C72FB752BD00F3A4FD /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = B60723C32FB752BD00F3A4FD /* Gemini Voyager Extension */;
+			target = B60723C32FB752BD00F3A4FD /* Voyager Extension */;
 			targetProxy = B60723C62FB752BD00F3A4FD /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -712,7 +712,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		B60723A42FB752BC00F3A4FD /* Build configuration list for PBXProject "Gemini Voyager" */ = {
+		B60723A42FB752BC00F3A4FD /* Build configuration list for PBXProject "Voyager" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B60723CC2FB752BD00F3A4FD /* Debug */,
@@ -721,7 +721,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B60723CE2FB752BD00F3A4FD /* Build configuration list for PBXNativeTarget "Gemini Voyager Extension" */ = {
+		B60723CE2FB752BD00F3A4FD /* Build configuration list for PBXNativeTarget "Voyager Extension" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B60723CF2FB752BD00F3A4FD /* Debug */,
@@ -730,7 +730,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		B60723D22FB752BD00F3A4FD /* Build configuration list for PBXNativeTarget "Gemini Voyager" */ = {
+		B60723D22FB752BD00F3A4FD /* Build configuration list for PBXNativeTarget "Voyager" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				B60723D32FB752BD00F3A4FD /* Debug */,

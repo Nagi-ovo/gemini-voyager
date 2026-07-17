@@ -24,12 +24,12 @@ fi
 WORK_DIR=$(mktemp -d)
 trap 'rm -rf "$WORK_DIR"' EXIT
 
-ARCHIVE_PATH="$WORK_DIR/Gemini Voyager.xcarchive"
+ARCHIVE_PATH="$WORK_DIR/Voyager.xcarchive"
 DERIVED_DATA_PATH="$WORK_DIR/DerivedData"
 EXPORT_OPTIONS="$WORK_DIR/ExportOptions.plist"
 EXPORT_DIR="$WORK_DIR/export"
-APP_PATH="$EXPORT_DIR/Gemini Voyager.app"
-NOTARY_ZIP="$WORK_DIR/Gemini Voyager.zip"
+APP_PATH="$EXPORT_DIR/Voyager.app"
+NOTARY_ZIP="$WORK_DIR/Voyager.zip"
 DMG_ROOT="$WORK_DIR/dmg"
 DMG_PATH="$OUTPUT_DIR/voyager-$TAG.dmg"
 APPCAST_PATH="$OUTPUT_DIR/appcast.xml"
@@ -68,7 +68,7 @@ submit_for_notarization() {
 
 xcodebuild archive \
   -project "$PROJECT_PATH" \
-  -scheme "Gemini Voyager" \
+  -scheme "Voyager" \
   -configuration Release \
   -destination "generic/platform=macOS" \
   -archivePath "$ARCHIVE_PATH" \
@@ -108,7 +108,7 @@ fi
 
 codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
-APP_EXECUTABLE="$APP_PATH/Contents/MacOS/Gemini Voyager"
+APP_EXECUTABLE="$APP_PATH/Contents/MacOS/Voyager"
 ARCHITECTURES=" $(lipo -archs "$APP_EXECUTABLE") "
 if [[ $ARCHITECTURES != *' arm64 '* || $ARCHITECTURES != *' x86_64 '* ]]; then
   echo "Safari release must be universal; found:$ARCHITECTURES" >&2
@@ -120,10 +120,10 @@ submit_for_notarization "$NOTARY_ZIP"
 xcrun stapler staple "$APP_PATH"
 xcrun stapler validate "$APP_PATH"
 
-ditto "$APP_PATH" "$DMG_ROOT/Gemini Voyager.app"
+ditto "$APP_PATH" "$DMG_ROOT/Voyager.app"
 ln -s /Applications "$DMG_ROOT/Applications"
 hdiutil create \
-  -volname "Gemini Voyager" \
+  -volname "Voyager" \
   -srcfolder "$DMG_ROOT" \
   -format UDZO \
   -ov \

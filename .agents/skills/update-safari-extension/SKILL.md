@@ -14,7 +14,7 @@ Use the least invasive route that can test the change. Treat a successful build 
    - TypeScript, React, CSS, manifest, or bundled assets that stay inside the web extension: use the temporary-extension route.
    - Any feature that calls `browser.runtime.sendNativeMessage`, plus Swift, entitlements, Sparkle, signing, or packaging: use the containing-app route.
 3. Inspect Safari Settings > Developer/Extensions before touching registration. Record whether Voyager is temporary or app-installed and whether it is enabled.
-4. Do not replace `/Applications/Gemini Voyager.app`, change signing, or modify provisioning profiles unless the user explicitly asks to test the signed app.
+4. Do not replace `/Applications/Voyager.app`, change signing, or modify provisioning profiles unless the user explicitly asks to test the signed app. Treat `/Applications/Gemini Voyager.app` as a legacy installation path and never remove it automatically.
 
 ## 2. Default route: web-extension changes
 
@@ -44,7 +44,7 @@ Do not use this route to validate native messaging. A temporary extension cannot
    ```sh
    xcodebuild \
      -project "Voyager/Voyager.xcodeproj" \
-     -scheme "Gemini Voyager" \
+     -scheme "Voyager" \
      -configuration Debug \
      -destination "platform=macOS,arch=$(uname -m)" \
      -derivedDataPath .build/safari-native-test-derived \

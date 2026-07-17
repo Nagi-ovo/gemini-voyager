@@ -65,7 +65,7 @@ jobs:
       - run: >-
           xcodebuild
           -project "Voyager/Voyager.xcodeproj"
-          -scheme "Gemini Voyager"
+          -scheme "Voyager"
           -configuration Debug
           -destination "platform=macOS"
           -derivedDataPath .build/ci-xcode-derived

@@ -50,6 +50,19 @@ The Web Store review process can be slow. If you want the cutting-edge version i
 
 Safari now supports direct distribution! Download the pre-signed app:
 
+::: warning Upgrading from `Gemini Voyager.app`
+The containing app is now named `Voyager.app`. Because macOS does not replace apps whose filenames differ, do not leave both copies installed.
+
+1. In the old extension, open the Gemini and AI Studio tabs you use, then run **Cloud Sync > Upload to Cloud**. If you use synced highlights, enable highlight sync before uploading.
+2. Export the prompt library as a local JSON file for an independent fallback.
+3. Quit Safari and the containing app.
+4. Move `/Applications/Gemini Voyager.app` to the Trash. Do not click Safari's **Uninstall** button, and do not clear Safari extension data, website data, or containers.
+5. Copy `Voyager.app` into `/Applications`, open it once, and then enable Voyager in Safari if prompted.
+6. Verify your folders, prompts, settings, and starred items. If anything is missing, use **Download & Merge** or import the prompt JSON.
+
+Voyager keeps the existing app and extension bundle identifiers, so macOS and Safari continue to recognize the same product identity. The backup steps are a precaution for older manual installations.
+:::
+
 1. Download the <SafariDownloadLink>latest Safari version (.dmg)</SafariDownloadLink>.
 2. Double-click to open and follow the prompts to install.
 3. Double-click to launch the app.

@@ -50,6 +50,19 @@
 
 Safari 现在支持直接分发！下载预签名的应用：
 
+::: warning 从 `Gemini Voyager.app` 升级
+Safari 容器 App 现已改名为 `Voyager.app`。由于 macOS 不会自动替换文件名不同的 App，请不要同时保留两个版本。
+
+1. 在旧版扩展中打开你使用的 Gemini 和 AI Studio 页面，然后执行 **云同步 > 上传到云端**。如果你使用高亮同步，请先开启高亮云同步。
+2. 另外把提示词库导出为本地 JSON，作为独立备份。
+3. 完全退出 Safari 和旧版容器 App。
+4. 将 `/Applications/Gemini Voyager.app` 移到废纸篓。不要点击 Safari 的“卸载”，也不要清除 Safari 扩展数据、网站数据或容器。
+5. 将 `Voyager.app` 拖入 `/Applications`，打开一次；如果 Safari 提示，再重新启用 Voyager。
+6. 检查文件夹、提示词、设置和星标。若有缺失，使用 **下载并合并**，或导入提示词 JSON。
+
+Voyager 会继续沿用原有的 App 与扩展 bundle identifier，因此 macOS 和 Safari 仍会把它识别为同一个产品。以上备份步骤主要用于保护较早的手动安装版本。
+:::
+
 1. 下载 <SafariDownloadLink>最新 Safari 版本 (.dmg)</SafariDownloadLink>。
 2. 双击打开后按提示安装应用。
 3. 双击启动应用。
