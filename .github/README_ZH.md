@@ -261,7 +261,7 @@ bun run build:safari
 bun run build:all
 ```
 
-**Safari 开发**：运行 `bun run build:safari`，然后打开 `Gemini Voyager/` 中已纳入版本控制的 Xcode 工程。
+**Safari 开发**：运行 `bun run build:safari`，然后打开 `Voyager/` 中已纳入版本控制的 Xcode 工程。
 
 </details>
 

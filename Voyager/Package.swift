@@ -16,7 +16,7 @@ let package = Package(
     .testTarget(
       name: "VoyagerNativeCoreTests",
       dependencies: ["VoyagerNativeCore"],
-      path: "Gemini Voyager Native Tests"
+      path: "Tests"
     ),
   ]
 )

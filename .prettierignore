@@ -24,7 +24,7 @@ pnpm-lock.yaml
 coverage/
 
 # Safari Xcode project (Apple-generated files)
-Gemini Voyager/
+Voyager/
 safari/
 
 # Firefox signed extension output

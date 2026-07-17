@@ -28,10 +28,10 @@ This should already have been synced back in **SKILL Step 2** (right after `bun 
 
 The Xcode project's `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` drift from `package.json` because `bun run bump` only touches `package.json` + `manifest*.json`. Safari users see `MARKETING_VERSION` as the app version, so they must match before archiving.
 
-Check current values in `Gemini Voyager/Gemini Voyager.xcodeproj/project.pbxproj`:
+Check current values in `Voyager/Voyager.xcodeproj/project.pbxproj`:
 
 ```bash
-grep -E "MARKETING_VERSION|CURRENT_PROJECT_VERSION" "Gemini Voyager/Gemini Voyager.xcodeproj/project.pbxproj" | sort -u
+grep -E "MARKETING_VERSION|CURRENT_PROJECT_VERSION" "Voyager/Voyager.xcodeproj/project.pbxproj" | sort -u
 ```
 
 Expect 4 distinct lines. The main app + Extension targets (Debug + Release each, 8 occurrences total) share one version that must match `VERSION`. The two Tests targets (`Gemini-VoyagerTests`, `Gemini-VoyagerUITests`) use `MARKETING_VERSION = 1.0;` / `CURRENT_PROJECT_VERSION = 1;` — **do not touch these**, they're internal and unrelated.
@@ -78,7 +78,7 @@ If this fails, do not archive. Fix the Vite env injection first; otherwise the S
 Do this before archiving. Confirm the bundle IDs match what shipped users already have installed.
 
 ```bash
-grep -E "PRODUCT_BUNDLE_IDENTIFIER|DEVELOPMENT_TEAM" "Gemini Voyager/Gemini Voyager.xcodeproj/project.pbxproj"
+grep -E "PRODUCT_BUNDLE_IDENTIFIER|DEVELOPMENT_TEAM" "Voyager/Voyager.xcodeproj/project.pbxproj"
 ```
 
 Expected bundle IDs — the **placeholder** `com.yourCompany` IDs, NOT `fun.nagi.*`:
@@ -106,7 +106,7 @@ ARCHIVE="/tmp/gemini-voyager-v${VERSION}.xcarchive"
 DERIVED="/tmp/gemini-voyager-v${VERSION}-derived"
 
 xcodebuild archive \
-  -project "Gemini Voyager/Gemini Voyager.xcodeproj" \
+  -project "Voyager/Voyager.xcodeproj" \
   -scheme "Gemini Voyager" \
   -configuration Release \
   -destination 'generic/platform=macOS' \
@@ -296,7 +296,7 @@ The release can still ship — Chrome/Firefox users won't block on it, and Edge 
 >
 > ```bash
 > # sync Xcode project version to match package.json first (bun run bump doesn't touch pbxproj)
-> # edit "Gemini Voyager/Gemini Voyager.xcodeproj/project.pbxproj":
+> # edit "Voyager/Voyager.xcodeproj/project.pbxproj":
 > #   MARKETING_VERSION / CURRENT_PROJECT_VERSION → {VERSION}
 > #   (leave the Tests targets' 1.0 / 1 alone)
 > ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari

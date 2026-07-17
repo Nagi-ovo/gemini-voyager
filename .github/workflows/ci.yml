@@ -61,10 +61,10 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: bun run build:safari
-      - run: swift test --package-path "Gemini Voyager"
+      - run: swift test --package-path "Voyager"
       - run: >-
           xcodebuild
-          -project "Gemini Voyager/Gemini Voyager.xcodeproj"
+          -project "Voyager/Voyager.xcodeproj"
           -scheme "Gemini Voyager"
           -configuration Debug
           -destination "platform=macOS"

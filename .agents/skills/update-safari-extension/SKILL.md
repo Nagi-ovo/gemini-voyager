@@ -43,7 +43,7 @@ Do not use this route to validate native messaging. A temporary extension cannot
 
    ```sh
    xcodebuild \
-     -project "Gemini Voyager/Gemini Voyager.xcodeproj" \
+     -project "Voyager/Voyager.xcodeproj" \
      -scheme "Gemini Voyager" \
      -configuration Debug \
      -destination "platform=macOS,arch=$(uname -m)" \

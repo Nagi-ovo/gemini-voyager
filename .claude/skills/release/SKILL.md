@@ -81,7 +81,7 @@ grep -E '"version"' package.json manifest.json manifest.dev.json
 **Also sync the Safari Xcode project version now** — `bun run bump` does NOT touch `project.pbxproj`. It's just a number with no dependency on the Safari build, so do it here at bump time rather than deep in Step 8, where it's easy to forget if anything goes sideways later (e.g. a Chrome publish failure pulls your attention away). Bump both fields for the main app + Extension targets; **leave the Tests targets' `1.0` / `1` alone**:
 
 ```bash
-PBX="Gemini Voyager/Gemini Voyager.xcodeproj/project.pbxproj"
+PBX="Voyager/Voyager.xcodeproj/project.pbxproj"
 sed -i '' -e 's/MARKETING_VERSION = {OLD};/MARKETING_VERSION = {NEW};/g' \
           -e 's/CURRENT_PROJECT_VERSION = {OLD};/CURRENT_PROJECT_VERSION = {NEW};/g' "$PBX"
 grep -E "MARKETING_VERSION|CURRENT_PROJECT_VERSION" "$PBX" | sort -u   # expect {NEW} + the untouched 1.0 / 1
@@ -107,7 +107,7 @@ Two things that are easy to miss (full rules in the reference):
 
 ```bash
 git add package.json manifest.json manifest.dev.json src/pages/content/changelog/notes/{VERSION}.md \
-  "Gemini Voyager/Gemini Voyager.xcodeproj/project.pbxproj"
+  "Voyager/Voyager.xcodeproj/project.pbxproj"
 git commit -m "chore: bump to v{VERSION}"
 git tag v{VERSION}
 ```

@@ -10,10 +10,7 @@ const __dirname = path.dirname(__filename);
 const packageJsonPath = path.resolve(__dirname, '../package.json');
 const manifestJsonPath = path.resolve(__dirname, '../manifest.json');
 const manifestDevJsonPath = path.resolve(__dirname, '../manifest.dev.json');
-const xcodeProjectPath = path.resolve(
-  __dirname,
-  '../Gemini Voyager/Gemini Voyager.xcodeproj/project.pbxproj',
-);
+const xcodeProjectPath = path.resolve(__dirname, '../Voyager/Voyager.xcodeproj/project.pbxproj');
 
 const args = process.argv.slice(2);
 const explicitVersion = args.find((arg) => !arg.startsWith('--'));

@@ -43,10 +43,10 @@ Build the web extension, then open the tracked Xcode project:
 ```bash
 bun i
 bun run build:safari
-open "Gemini Voyager/Gemini Voyager.xcodeproj"
+open "Voyager/Voyager.xcodeproj"
 ```
 
-The active Swift files live inside `Gemini Voyager/`; no separate Swift setup is required.
+The active Swift files live inside `Voyager/`; no separate Swift setup is required.
 
 ## Uninstall
 

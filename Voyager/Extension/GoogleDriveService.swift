@@ -5,6 +5,7 @@ final class GoogleDriveService {
   static let shared = GoogleDriveService()
 
   private let scope = "https://www.googleapis.com/auth/drive.file"
+  // Keep the legacy folder name so existing Safari backups remain discoverable.
   private let backupFolderName = "Gemini Voyager Data"
   private let apiHost = "www.googleapis.com"
   private var backupFolderID: String?

@@ -43,10 +43,10 @@
 ```bash
 bun i
 bun run build:safari
-open "Gemini Voyager/Gemini Voyager.xcodeproj"
+open "Voyager/Voyager.xcodeproj"
 ```
 
-实际使用的 Swift 文件都在 `Gemini Voyager/` 中，不需要再手动添加另一套 Swift 文件。
+实际使用的 Swift 文件都在 `Voyager/` 中，不需要再手动添加另一套 Swift 文件。
 
 ## 卸载
 

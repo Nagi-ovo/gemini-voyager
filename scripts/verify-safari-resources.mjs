@@ -6,8 +6,8 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const distDir = path.join(rootDir, 'dist_safari');
 const projectPath = path.join(
   rootDir,
-  'Gemini Voyager',
-  'Gemini Voyager.xcodeproj',
+  'Voyager',
+  'Voyager.xcodeproj',
   'project.pbxproj',
 );
 

@@ -1,6 +1,6 @@
 //
 //  SafariWebExtensionHandler.swift
-//  Gemini Voyager Extension
+//  Voyager Extension
 //
 
 import AppKit

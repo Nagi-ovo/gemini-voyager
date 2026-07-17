@@ -18,7 +18,7 @@ INFO_PLIST=$ROOT_DIR/Gemini\ Voyager/Gemini\ Voyager/Info.plist
 
 if [[ ! -f $GENERATE_APPCAST ]]; then
   xcodebuild -resolvePackageDependencies \
-    -project "$ROOT_DIR/Gemini Voyager/Gemini Voyager.xcodeproj" \
+    -project "$ROOT_DIR/Voyager/Voyager.xcodeproj" \
     -clonedSourcePackagesDirPath "$PACKAGE_DIR"
 fi
 

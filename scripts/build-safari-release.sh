@@ -10,7 +10,7 @@ fi
 ROOT_DIR=${0:A:h:h}
 TAG=$1
 OUTPUT_DIR=${2:A}
-PROJECT_PATH="$ROOT_DIR/Gemini Voyager/Gemini Voyager.xcodeproj"
+PROJECT_PATH="$ROOT_DIR/Voyager/Voyager.xcodeproj"
 PACKAGE_DIR="$ROOT_DIR/.build/sparkle-source-packages"
 TEAM_ID=${APPLE_TEAM_ID:-PJM828YBFJ}
 : "${VOYAGER_APP_PROFILE_NAME:?VOYAGER_APP_PROFILE_NAME is required}"

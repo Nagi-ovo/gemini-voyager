@@ -1,6 +1,6 @@
 //
 //  AppDelegate.swift
-//  Gemini Voyager
+//  Voyager
 //
 //  Created by Jesse Zhang on 15/05/2026.
 //

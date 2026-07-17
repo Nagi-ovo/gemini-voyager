@@ -20,7 +20,7 @@ export default [
       '.agent/**',
       '.github/sponsors/**',
       'public/**',
-      'Gemini Voyager/**',
+      'Voyager/**',
       '.build/**',
       'safari/Models/dmg_source/**',
     ],
