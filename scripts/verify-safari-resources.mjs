@@ -4,12 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const distDir = path.join(rootDir, 'dist_safari');
-const projectPath = path.join(
-  rootDir,
-  'Voyager',
-  'Voyager.xcodeproj',
-  'project.pbxproj',
-);
+const projectPath = path.join(rootDir, 'Voyager', 'Voyager.xcodeproj', 'project.pbxproj');
 
 if (!fs.existsSync(distDir)) {
   throw new Error('dist_safari does not exist; run the Safari web build first');
