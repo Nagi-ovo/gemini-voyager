@@ -247,8 +247,8 @@ async function showResponseCompleteNotification(
     if (useSafariNativeNotification) {
       return await deliverSafariNativeNotification({
         id: notificationId,
-        title: RESPONSE_COMPLETE_NOTIFICATION_TITLE,
-        body: notificationMessage,
+        title,
+        body: message,
       });
     }
 

@@ -16,16 +16,19 @@ afterEach(() => {
 });
 
 describe('Safari native notifications', () => {
-  it('prepares notifications by delivering the native permission primer', async () => {
-    sendNativeMessage.mockResolvedValue({ success: true, data: { delivered: true } });
+  it('requests native notification permission without sending a placeholder notification', async () => {
+    sendNativeMessage.mockResolvedValue({ success: true, data: { granted: true } });
 
     await expect(prepareSafariNativeNotifications()).resolves.toBe(true);
     expect(sendNativeMessage).toHaveBeenCalledWith('com.yourCompany.Gemini-Voyager', {
-      action: 'deliverNotification',
-      id: 'gemini-voyager-notification-permission',
-      title: 'Gemini Voyager',
-      body: 'Notifications are enabled.',
+      action: 'requestNotificationPermission',
     });
+  });
+
+  it('keeps the notification setting off when native permission is denied', async () => {
+    sendNativeMessage.mockResolvedValue({ success: true, data: { granted: false } });
+
+    await expect(prepareSafariNativeNotifications()).resolves.toBe(false);
   });
 
   it('sends notification content through the native extension', async () => {

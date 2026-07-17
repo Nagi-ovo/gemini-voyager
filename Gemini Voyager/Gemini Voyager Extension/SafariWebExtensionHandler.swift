@@ -5,6 +5,7 @@
 
 import GoogleSignIn
 import SafariServices
+import UserNotifications
 import os.log
 
 final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
@@ -26,6 +27,8 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       respondWithSuccess(context: context, data: ["status": "ok"])
     case "deliverNotification":
       deliverNotification(message: message, context: context)
+    case "requestNotificationPermission":
+      requestNotificationPermission(context: context)
     case "googleDriveGetToken":
       getGoogleDriveToken(
         interactive: message["interactive"] as? Bool == true,
@@ -178,21 +181,36 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       return
     }
 
-    deliverLegacyNotification(
-      title: title,
-      body: body,
-      identifier: message["id"] as? String ?? UUID().uuidString
+    let content = UNMutableNotificationContent()
+    content.title = title
+    content.body = body
+    content.sound = .default
+
+    let request = UNNotificationRequest(
+      identifier: message["id"] as? String ?? UUID().uuidString,
+      content: content,
+      trigger: nil
     )
-    respondWithSuccess(context: context, data: ["delivered": true])
+    UNUserNotificationCenter.current().add(request) { [weak self] error in
+      guard let self else { return }
+      if let error {
+        self.respondWithError(context: context, message: error.localizedDescription)
+      } else {
+        self.respondWithSuccess(context: context, data: ["delivered": true])
+      }
+    }
   }
 
-  private func deliverLegacyNotification(title: String, body: String, identifier: String) {
-    let notification = NSUserNotification()
-    notification.identifier = identifier
-    notification.title = title
-    notification.informativeText = body
-    notification.soundName = NSUserNotificationDefaultSoundName
-    NSUserNotificationCenter.default.deliver(notification)
+  private func requestNotificationPermission(context: NSExtensionContext) {
+    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) {
+      [weak self] granted, error in
+      guard let self else { return }
+      if let error {
+        self.respondWithError(context: context, message: error.localizedDescription)
+      } else {
+        self.respondWithSuccess(context: context, data: ["granted": granted])
+      }
+    }
   }
 
   private func extensionMessage(from request: NSExtensionItem) -> [String: Any]? {
