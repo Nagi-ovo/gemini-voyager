@@ -560,6 +560,22 @@ describe('input Vim mode', () => {
     cleanup();
   });
 
+  it('can be forced on by the plugin lifecycle without the Gemini setting', async () => {
+    mockInputVimModeStorage(false);
+    const input = createQuestionInput();
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode({ forceEnabled: true });
+
+    const event = fireInputKey(input, 'Escape');
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(input.dataset.gvVimMode).toBe('normal');
+    expect(chrome.storage.sync.get).not.toHaveBeenCalled();
+
+    cleanup();
+  });
+
   it('mounts the mode HUD below the prompt text instead of next to the Tools button', async () => {
     mockInputVimModeStorage(true);
     const input = createQuestionInput();
@@ -598,6 +614,66 @@ describe('input Vim mode', () => {
     expect(baseHudBlock).toContain('box-sizing: border-box;');
   });
 
+  it.each([
+    {
+      site: 'Claude',
+      markup:
+        '<fieldset><div data-testid="chat-input" class="tiptap ProseMirror" contenteditable="true" role="textbox">hello</div></fieldset>',
+      inputSelector: '[data-testid="chat-input"]',
+      mountSelector: 'fieldset',
+    },
+    {
+      site: 'ChatGPT',
+      markup:
+        '<form><textarea aria-label="Chat with ChatGPT"></textarea><div id="prompt-textarea" class="ProseMirror" contenteditable="true" role="textbox">hello</div></form>',
+      inputSelector: '#prompt-textarea',
+      mountSelector: 'form',
+    },
+  ])(
+    'uses Vim commands and a non-overlapping HUD in $site',
+    async ({ markup, inputSelector, mountSelector }) => {
+      mockInputVimModeStorage(true);
+      document.body.innerHTML = markup;
+
+      const input = document.querySelector<HTMLElement>(inputSelector);
+      const mount = document.querySelector<HTMLElement>(mountSelector);
+      if (!input || !mount) throw new Error('Expected cross-site composer.');
+
+      setVisibleRect(input);
+      setVisibleRect(mount);
+      input.focus = vi.fn();
+      setContentEditableSelection(input, 1);
+
+      const onInput = vi.fn();
+      input.addEventListener('input', onInput);
+
+      const { startInputVimMode } = await import('../vimMode');
+      const cleanup = await startInputVimMode();
+
+      fireInputKey(input, 'Escape');
+      fireInputKey(input, 'x');
+
+      expect(input.textContent).toBe('hllo');
+      expect(onInput).toHaveBeenCalledTimes(1);
+      expect(input.dataset.gvVimMode).toBe('normal');
+      const hud = mount.querySelector<HTMLElement>('.gv-input-vim-hud');
+      expect(hud?.dataset.placement).toBe('floating');
+      expect(hud?.parentElement).toBe(mount);
+
+      cleanup();
+    },
+  );
+
+  it('floats the cross-site HUD above the composer instead of covering its input row', () => {
+    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const floatingHudBlock =
+      css.match(/\.gv-input-vim-hud\[data-placement='floating'\]\s*{([\s\S]*?)}/)?.[1] ?? '';
+
+    expect(floatingHudBlock).toContain('bottom: calc(100% + 6px);');
+    expect(floatingHudBlock).toContain('left: var(--gv-input-vim-hud-left, 16px);');
+    expect(floatingHudBlock).toContain('transform: none;');
+  });
+
   it('uses Vim commands in the visible edit prompt instead of the main composer', async () => {
     mockInputVimModeStorage(true);
     const mainInput = createQuestionInput('main prompt');
@@ -634,6 +710,61 @@ describe('input Vim mode', () => {
     expect(editHudBlock).toContain('bottom: 0;');
     expect(editHudBlock).toContain('height: 16px;');
     expect(editHudBlock).toContain('left: var(--gv-input-vim-hud-left, 28px);');
+  });
+
+  it.each([
+    { site: 'Claude', saveLabel: 'Save' },
+    { site: 'ChatGPT', saveLabel: 'Send' },
+  ])('uses Vim commands in the $site historical-message editor', async ({ saveLabel }) => {
+    mockInputVimModeStorage(true);
+    const mainInput = createQuestionInput('main prompt');
+    const editCard = document.createElement('div');
+    editCard.innerHTML = `
+        <div class="edit-scroll">
+          <textarea aria-label="Edit message">hello</textarea>
+        </div>
+        <div class="edit-actions">
+          <button type="button">Cancel</button>
+          <button type="button">${saveLabel}</button>
+        </div>
+      `;
+    document.body.prepend(editCard);
+
+    const input = editCard.querySelector('textarea');
+    if (!(input instanceof HTMLTextAreaElement)) {
+      throw new Error('Expected cross-site edit textarea.');
+    }
+
+    setVisibleRect(editCard);
+    setVisibleRect(input);
+    input.focus = vi.fn();
+    input.selectionStart = 1;
+    input.selectionEnd = 1;
+
+    const { startInputVimMode } = await import('../vimMode');
+    const cleanup = await startInputVimMode();
+
+    fireInputKey(input, 'Escape');
+    fireInputKey(input, 'x');
+
+    expect(input.value).toBe('hllo');
+    expect(input.dataset.gvVimMode).toBe('normal');
+    expect(mainInput.dataset.gvVimMode).toBeUndefined();
+    const hud = editCard.querySelector<HTMLElement>('.gv-input-vim-hud');
+    expect(hud?.dataset.placement).toBe('edit-floating');
+    expect(hud?.parentElement).toBe(editCard);
+
+    cleanup();
+  });
+
+  it('floats the cross-site edit HUD below the card without covering host controls', () => {
+    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const editFloatingHudBlock =
+      css.match(/\.gv-input-vim-hud\[data-placement='edit-floating'\]\s*{([\s\S]*?)}/)?.[1] ?? '';
+
+    expect(editFloatingHudBlock).toContain('top: calc(100% + 4px);');
+    expect(editFloatingHudBlock).toContain('bottom: auto;');
+    expect(editFloatingHudBlock).toContain('left: var(--gv-input-vim-hud-left, 12px);');
   });
 
   it('does not mistake a newline in the edit prompt for submitting the main composer', async () => {

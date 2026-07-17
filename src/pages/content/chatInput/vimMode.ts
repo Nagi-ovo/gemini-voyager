@@ -65,12 +65,17 @@ interface BlockLineEntry {
 interface HudMountTarget {
   element: HTMLElement;
   input: HTMLElement | null;
-  placement: 'composer' | 'edit' | 'inline';
+  placement: 'composer' | 'floating' | 'edit' | 'edit-floating' | 'inline';
 }
 
 interface FindVimInputOptions {
   requireVisible?: boolean;
   target?: HTMLElement | null;
+}
+
+interface StartInputVimModeOptions {
+  /** PluginHost owns enable/disable state on third-party platforms. */
+  forceEnabled?: boolean;
 }
 
 type IntlWithSegmenter = typeof Intl & {
@@ -85,6 +90,7 @@ const EDIT_PROMPT_SELECTOR = [
   '.query-content.edit-mode textarea',
   '.edit-container textarea',
   'textarea[aria-label="Edit prompt"]',
+  'textarea[aria-label="Edit message"]',
 ].join(',');
 const MODE_CLASS_PREFIX = 'gv-input-vim-mode-';
 const HUD_CLASS = 'gv-input-vim-hud';
@@ -1079,6 +1085,34 @@ function queryHudMountCandidates(): HTMLElement[] {
   return candidates;
 }
 
+function getCrossSiteComposerMount(input: HTMLElement | null): HTMLElement | null {
+  if (!input) return null;
+
+  if (input.matches('#prompt-textarea[contenteditable="true"]')) {
+    return input.closest<HTMLElement>('form');
+  }
+
+  if (input.matches('[data-testid="chat-input"][contenteditable="true"]')) {
+    return input.closest<HTMLElement>('fieldset');
+  }
+
+  return null;
+}
+
+function getCrossSiteEditMount(input: HTMLElement | null): HTMLElement | null {
+  if (!input?.matches('textarea[aria-label="Edit message"]')) return null;
+
+  let candidate = input.parentElement;
+  for (let depth = 0; candidate && candidate !== document.body && depth < 8; depth++) {
+    if (candidate.querySelectorAll('button').length >= 2) {
+      return candidate;
+    }
+    candidate = candidate.parentElement;
+  }
+
+  return input.parentElement;
+}
+
 function getHudMount(): HudMountTarget | null {
   if (typeof document === 'undefined') return null;
 
@@ -1093,6 +1127,16 @@ function getHudMount(): HudMountTarget | null {
 
   if (editForm?.isConnected) {
     return { element: editForm, input, placement: 'edit' };
+  }
+
+  const crossSiteEdit = getCrossSiteEditMount(input);
+  if (crossSiteEdit?.isConnected) {
+    return { element: crossSiteEdit, input, placement: 'edit-floating' };
+  }
+
+  const crossSiteComposer = getCrossSiteComposerMount(input);
+  if (crossSiteComposer?.isConnected) {
+    return { element: crossSiteComposer, input, placement: 'floating' };
   }
 
   const composer = input?.closest<HTMLElement>('.text-input-field, input-area-v2, input-container');
@@ -2710,9 +2754,15 @@ function cleanup(): void {
   cursorElement = null;
 }
 
-export async function startInputVimMode(): Promise<() => void> {
-  setupStorageListener();
-  await loadSettings();
+export async function startInputVimMode(
+  options: StartInputVimModeOptions = {},
+): Promise<() => void> {
+  if (options.forceEnabled) {
+    isEnabled = true;
+  } else {
+    setupStorageListener();
+    await loadSettings();
+  }
   reconcileListener();
 
   return cleanup;

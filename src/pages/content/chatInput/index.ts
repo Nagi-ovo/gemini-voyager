@@ -1,4 +1,6 @@
 const CHAT_INPUT_SELECTORS = [
+  '[data-testid="chat-input"][contenteditable="true"]',
+  '#prompt-textarea[contenteditable="true"]',
   'rich-textarea [contenteditable="true"]',
   'div[contenteditable="true"][role="textbox"]',
   '.input-area textarea',

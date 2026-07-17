@@ -135,6 +135,42 @@ describe('chat input helpers', () => {
     expect(findChatInput({ requireVisible: false })).toBe(visibleInput);
   });
 
+  it('prefers the visible ChatGPT ProseMirror editor over its hidden fallback textarea', () => {
+    document.body.innerHTML = `
+      <form>
+        <textarea aria-label="Chat with ChatGPT"></textarea>
+        <div id="prompt-textarea" contenteditable="true" role="textbox"></div>
+      </form>
+    `;
+
+    const fallback = document.querySelector('textarea');
+    const editor = document.getElementById('prompt-textarea');
+    if (!(fallback instanceof HTMLTextAreaElement) || !(editor instanceof HTMLElement)) {
+      throw new Error('Expected ChatGPT inputs.');
+    }
+
+    fallback.getBoundingClientRect = () =>
+      ({ height: 0, width: 0, top: 0, left: 0, right: 0, bottom: 0, x: 0, y: 0 }) as DOMRect;
+    setVisibleRect(editor);
+
+    expect(findChatInput()).toBe(editor);
+    expect(findChatInput({ requireVisible: false })).toBe(editor);
+  });
+
+  it('finds the Claude ProseMirror composer by its stable test id', () => {
+    document.body.innerHTML = `
+      <fieldset>
+        <div data-testid="chat-input" class="tiptap ProseMirror" contenteditable="true" role="textbox"></div>
+      </fieldset>
+    `;
+
+    const editor = document.querySelector<HTMLElement>('[data-testid="chat-input"]');
+    if (!editor) throw new Error('Expected Claude input.');
+    setVisibleRect(editor);
+
+    expect(findChatInput()).toBe(editor);
+  });
+
   it('replaces the current contenteditable selection and dispatches input', () => {
     document.body.innerHTML = `
       <rich-textarea>

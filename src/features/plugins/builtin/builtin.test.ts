@@ -25,6 +25,19 @@ describe('BUILTIN_PLUGINS', () => {
     expect(fc?.i18n?.ja?.description).toContain('LaTeX');
   });
 
+  it('includes the input Vim native function plugin scoped to Claude/ChatGPT', () => {
+    const vim = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.input-vim');
+    expect(vim).toBeDefined();
+    expect(vim?.matches).toEqual([
+      'https://claude.ai/*',
+      'https://chatgpt.com/*',
+      'https://chat.openai.com/*',
+    ]);
+    expect(vim?.contributes.styles ?? []).toEqual([]);
+    expect(vim?.contributes.domOps ?? []).toEqual([]);
+    expect(vim?.i18n?.zh?.name).toBe('Vim 输入');
+  });
+
   it('includes the Claude timeline native function plugin', () => {
     const timeline = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.claude-timeline');
     expect(timeline).toBeDefined();

@@ -75,6 +75,60 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
     contributes: {},
   },
   {
+    id: 'voyager.input-vim',
+    name: 'Vim Input',
+    version: '1.0.0',
+    description: 'Adds Vim-style modal editing and navigation to the prompt composer.',
+    i18n: {
+      zh: {
+        name: 'Vim 输入',
+        description: '为提示词输入框添加 Vim 风格的模式编辑与光标导航。',
+      },
+      zh_TW: {
+        name: 'Vim 輸入',
+        description: '為提示詞輸入框加入 Vim 風格的模式編輯與游標導覽。',
+      },
+      ja: {
+        name: 'Vim 入力',
+        description: 'プロンプト入力欄に Vim 風のモーダル編集とカーソル移動を追加します。',
+      },
+      ko: {
+        name: 'Vim 입력',
+        description: '프롬프트 입력창에 Vim 스타일 모달 편집과 커서 이동을 추가합니다.',
+      },
+      fr: {
+        name: 'Saisie Vim',
+        description:
+          "Ajoute l'édition modale et la navigation du curseur de style Vim au champ de saisie.",
+      },
+      es: {
+        name: 'Entrada Vim',
+        description:
+          'Añade edición modal y navegación del cursor al estilo Vim al cuadro de entrada.',
+      },
+      pt: {
+        name: 'Entrada Vim',
+        description:
+          'Adiciona edição modal e navegação de cursor no estilo Vim ao campo de entrada.',
+      },
+      ru: {
+        name: 'Vim-ввод',
+        description: 'Добавляет в поле ввода модальное редактирование и навигацию в стиле Vim.',
+      },
+      ar: {
+        name: 'إدخال Vim',
+        description: 'يضيف التحرير النمطي والتنقل بالمؤشر بأسلوب Vim إلى حقل الإدخال.',
+      },
+    },
+    author: 'voyager-official',
+    category: 'productivity',
+    license: 'GPL-3.0-or-later',
+    engine: '>=1.1.0',
+    tier: 'declarative',
+    matches: ['https://claude.ai/*', 'https://chatgpt.com/*', 'https://chat.openai.com/*'],
+    contributes: {},
+  },
+  {
     id: 'voyager.claude-timeline',
     name: 'Claude · Timeline',
     version: '1.1.0',

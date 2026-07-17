@@ -14,6 +14,7 @@ import {
   updateClaudeTimelineSettings,
 } from '@/features/plugins/builtin/claudeTimeline';
 import { startClaudeUsage, stopClaudeUsage } from '@/features/plugins/builtin/claudeUsage';
+import { startInputVimPlugin, stopInputVimPlugin } from '@/features/plugins/builtin/inputVim';
 import { registerNativeHandler } from '@/features/plugins/runtime/nativeHandlers';
 import { resolvePluginPlatformId } from '@/features/plugins/sites/registry';
 import { initI18n } from '@/utils/i18n';
@@ -521,13 +522,16 @@ function handleVisibilityChange(): void {
     // and only mounts plugins that match the current URL AND are enabled — inert by
     // default since all builtin plugins ship disabled, so it has no effect unless a
     // user turns a plugin on in the popup.
-    // Bind the formula-copy builtin "native function plugin" before the host
-    // starts, so PluginHost can run it when the user enables it on Claude/ChatGPT
-    // (default off). On Gemini/AI Studio formula copy stays a built-in always-on
-    // feature started in initializeFeatures().
+    // Bind builtin "native function plugins" before the host starts, so
+    // PluginHost can run them when enabled on Claude/ChatGPT (default off).
+    // Gemini/AI Studio keep their existing core feature lifecycle.
     registerNativeHandler('voyager.formula-copy', {
       start: startFormulaCopy,
       stop: stopFormulaCopy,
+    });
+    registerNativeHandler('voyager.input-vim', {
+      start: startInputVimPlugin,
+      stop: stopInputVimPlugin,
     });
     registerNativeHandler('voyager.claude-timeline', {
       start: startClaudeTimeline,
@@ -612,12 +616,11 @@ function handleVisibilityChange(): void {
       // Third-party plugin platforms (Claude / ChatGPT / Grok …): the plugin
       // host and platform theme already ran above. Start the cross-site Voyager
       // features that belong everywhere — currently just the Prompt Manager
-      // floating ball (formula-copy is now the opt-in voyager.formula-copy
-      // builtin plugin) — but NOT any Gemini-specific feature (folders, timeline, export, width
-      // adjusters, …). The platform-theme CSS re-skins the Prompt Manager and
-      // the copy toast with the site's brand colour. We set `initialized` so the
-      // visibilitychange handler doesn't later fall into initializeFeatures()
-      // (which is Gemini/AI-Studio/custom-site shaped, not plugin-platform).
+      // floating ball. Native function plugins such as formula-copy and input
+      // Vim are driven exclusively by PluginHost. Do NOT start Gemini-specific
+      // features (folders, timeline, export, width adjusters, …) here. We set
+      // `initialized` so the visibilitychange handler doesn't later fall into
+      // initializeFeatures() (which is Gemini/AI-Studio/custom-site shaped).
       if (pluginPlatformId) {
         console.log('[Gemini Voyager] Plugin platform: prompt manager');
         initialized = true;
