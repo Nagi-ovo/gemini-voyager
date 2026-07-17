@@ -16,6 +16,16 @@
   /** Timeout for watermark processing in milliseconds */
   const WATERMARK_PROCESSING_TIMEOUT_MS = 30000;
   const DOWNLOAD_INTENT_ATTRIBUTE = 'data-download-intent-expires-at';
+  const NOTEBOOK_PATH_PATTERN = /^\/(?:u\/\d+\/)?notebooks?(?:\/|$)/;
+
+  const isNotebookRoute = () => NOTEBOOK_PATH_PATTERN.test(window.location.pathname);
+
+  // Notebook pages do not use Voyager's watermark-removal download path. Avoid replacing
+  // the page's native fetch when a notebook route is loaded directly.
+  if (isNotebookRoute()) {
+    console.log('[Gemini Voyager] Fetch interceptor skipped on Notebook route');
+    return;
+  }
 
   // Prevent double injection
   if (window.__gvFetchInterceptorInstalled) {
@@ -147,6 +157,12 @@
   // Promise, which breaks Angular's zone.js change detection and causes link-block elements
   // to render with empty href attributes.
   window.fetch = function (...args) {
+    // Gemini is a SPA, so the interceptor may have been installed before navigating from a
+    // chat to a Notebook route. Keep every Notebook request on the untouched native path.
+    if (isNotebookRoute()) {
+      return originalFetch.apply(this, args);
+    }
+
     const url = typeof args[0] === 'string' ? args[0] : args[0]?.url;
 
     // Gemini page regularly triggers GTM telemetry requests that are blocked by page CSP.
