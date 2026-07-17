@@ -21,6 +21,8 @@ export default [
       '.github/sponsors/**',
       'public/**',
       'Gemini Voyager/**',
+      '.build/**',
+      'safari/Models/dmg_source/**',
     ],
   },
 
