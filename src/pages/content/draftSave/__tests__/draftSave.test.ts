@@ -206,6 +206,104 @@ describe('draftSave', () => {
     cleanup();
   });
 
+  it('keeps a pending draft bound to the route where typing happened', async () => {
+    setupMocks(true);
+    const input = createContentEditable();
+
+    const { startDraftSave } = await import('../index');
+    const cleanup = await startDraftSave();
+
+    input.textContent = 'Draft from the first conversation';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+
+    window.location.pathname = '/app/second-conversation';
+    input.textContent = '';
+    vi.advanceTimersByTime(500);
+
+    expect(localStore['gvDraft_/app/test-conversation-123']).toMatchObject({
+      content: 'Draft from the first conversation',
+      path: '/app/test-conversation-123',
+    });
+    expect(localStore['gvDraft_/app/second-conversation']).toBeUndefined();
+
+    cleanup();
+  });
+
+  it('uses the live route when typing starts before the shared route poller catches up', async () => {
+    setupMocks(true);
+    const input = createContentEditable();
+
+    const { startDraftSave } = await import('../index');
+    const cleanup = await startDraftSave();
+
+    window.location.pathname = '/app/second-conversation';
+    input.textContent = 'Draft typed immediately after navigation';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    vi.advanceTimersByTime(1000);
+
+    expect(localStore['gvDraft_/app/second-conversation']).toMatchObject({
+      content: 'Draft typed immediately after navigation',
+      path: '/app/second-conversation',
+    });
+    expect(localStore['gvDraft_/app/test-conversation-123']).toBeUndefined();
+
+    cleanup();
+  });
+
+  it('does not re-save sent text when the first message creates a conversation route', async () => {
+    setupMocks(true);
+    const input = createContentEditable();
+    const sendButton = document.createElement('button');
+    sendButton.setAttribute('aria-label', 'Send message');
+    document.body.appendChild(sendButton);
+
+    const { startDraftSave } = await import('../index');
+    const cleanup = await startDraftSave();
+
+    input.textContent = 'Message that is about to be sent';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    vi.advanceTimersByTime(1000);
+    expect(localStore['gvDraft_/app/test-conversation-123']).toBeDefined();
+
+    input.textContent = 'Updated message that is sent';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    sendButton.click();
+    window.location.pathname = '/app/new-conversation-id';
+    input.textContent = '';
+    vi.advanceTimersByTime(400);
+
+    expect(localStore['gvDraft_/app/test-conversation-123']).toBeUndefined();
+    expect(localStore['gvDraft_/app/new-conversation-id']).toBeUndefined();
+
+    cleanup();
+  });
+
+  it('does not delete the destination draft when navigation empties the input', async () => {
+    setupMocks(true);
+    const destinationKey = 'gvDraft_/app/second-conversation';
+    localStore[destinationKey] = {
+      content: 'Destination draft',
+      timestamp: Date.now(),
+      path: '/app/second-conversation',
+    };
+    const input = createContentEditable();
+    input.textContent = 'Source draft';
+    document.execCommand = vi.fn().mockReturnValue(true);
+
+    const { startDraftSave } = await import('../index');
+    const cleanup = await startDraftSave();
+
+    // Let send detection observe non-empty content on the source route.
+    vi.advanceTimersByTime(1000);
+    window.location.pathname = '/app/second-conversation';
+    input.textContent = '';
+    vi.advanceTimersByTime(1000);
+
+    expect(localStore[destinationKey]).toMatchObject({ content: 'Destination draft' });
+
+    cleanup();
+  });
+
   it('enables feature when storage setting changes to true', async () => {
     setupMocks(false);
     const input = createContentEditable();

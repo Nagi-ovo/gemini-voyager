@@ -20,6 +20,7 @@ import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContex
 
 import { stripInstructionBlock } from '../folderProject/instructionBlock';
 import { setInputText } from '../utils/inputHelper';
+import { watchRouteChanges } from '../utils/routeWatcher';
 
 // ============================================================================
 // Constants
@@ -45,6 +46,18 @@ const RESTORE_DELAY_MS = 500;
 /** Interval to check if a message was sent and clear draft (ms) */
 const SEND_CHECK_INTERVAL_MS = 1000;
 
+/** Keep a send intent only long enough to cover SPA navigation. */
+const SEND_INTENT_TIMEOUT_MS = 2000;
+
+const SEND_BUTTON_SELECTOR = [
+  'button[aria-label*="Send"]',
+  'button[aria-label*="send"]',
+  'button[data-tooltip*="Send"]',
+  'button[data-tooltip*="send"]',
+  '[data-send-button]',
+  '.send-button',
+].join(', ');
+
 /** Selectors for finding the chat input */
 const INPUT_SELECTORS = [
   'rich-textarea [contenteditable="true"]',
@@ -61,7 +74,7 @@ let isEnabled = false;
 let observer: MutationObserver | null = null;
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let sendCheckTimer: ReturnType<typeof setInterval> | null = null;
-let urlCheckTimer: ReturnType<typeof setInterval> | null = null;
+let stopRouteWatcher: (() => void) | null = null;
 let currentPath = '';
 let lastSavedContent = '';
 let saveCount = 0;
@@ -71,6 +84,10 @@ let storageListener:
 let inputListener: ((event: Event) => void) | null = null;
 let attachedInput: HTMLElement | null = null;
 let hasRestoredForCurrentPath = false;
+let pendingSave: { content: string; path: string } | null = null;
+let pendingSendPath: string | null = null;
+let sendIntentTimer: number | null = null;
+let sendIntentListener: ((event: Event) => void) | null = null;
 
 // ============================================================================
 // Helpers
@@ -167,7 +184,7 @@ function saveDraft(path: string, content: string): void {
         console.warn(LOG_PREFIX, 'Failed to save draft:', chrome.runtime.lastError.message);
         return;
       }
-      lastSavedContent = sanitizedContent;
+      if (path === currentPath) lastSavedContent = sanitizedContent;
       // Prune old drafts periodically (not every save)
       saveCount++;
       if (saveCount % PRUNE_EVERY_N_SAVES === 0) {
@@ -187,7 +204,7 @@ function removeDraft(path: string): void {
   const key = getDraftStorageKey(path);
   try {
     chrome.storage?.local?.remove(key);
-    lastSavedContent = '';
+    if (path === currentPath) lastSavedContent = '';
   } catch (error) {
     if (isExtensionContextInvalidatedError(error)) return;
     console.warn(LOG_PREFIX, 'Failed to remove draft:', error);
@@ -252,20 +269,64 @@ function pruneOldDrafts(): void {
 /**
  * Handle input changes with debounce.
  */
-function handleInputChange(): void {
+function flushPendingSave(): void {
   if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = null;
+
+  const pending = pendingSave;
+  pendingSave = null;
+  if (!pending) return;
+
+  if (pending.path === currentPath && pending.content === lastSavedContent) return;
+
+  saveDraft(pending.path, pending.content);
+}
+
+function discardPendingSave(path: string): void {
+  if (pendingSave?.path !== path) return;
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = null;
+  pendingSave = null;
+}
+
+function clearSendIntent(): void {
+  pendingSendPath = null;
+  if (sendIntentTimer !== null) {
+    window.clearTimeout(sendIntentTimer);
+    sendIntentTimer = null;
+  }
+}
+
+function markSendIntent(): void {
+  pendingSendPath = getConversationPath();
+  if (sendIntentTimer !== null) window.clearTimeout(sendIntentTimer);
+  sendIntentTimer = window.setTimeout(clearSendIntent, SEND_INTENT_TIMEOUT_MS);
+}
+
+function handleInputChange(input: HTMLElement): void {
+  if (saveTimer) {
+    clearTimeout(saveTimer);
+    saveTimer = null;
+  }
+
+  const content = stripInstructionBlock(getInputText(input)).trim();
+  if (!content && pendingSendPath) {
+    const sentPath = pendingSendPath;
+    discardPendingSave(sentPath);
+    removeDraft(sentPath);
+    clearSendIntent();
+    return;
+  }
+
+  pendingSave = {
+    content,
+    // Read the live route at the input event. The shared route watcher is a
+    // fallback poller and can intentionally lag a sidebar navigation by 400ms.
+    path: getConversationPath(),
+  };
 
   saveTimer = setTimeout(() => {
-    const input = findChatInput();
-    if (!input) return;
-
-    const content = stripInstructionBlock(getInputText(input)).trim();
-    const path = getConversationPath();
-
-    // Only save if content actually changed
-    if (content === lastSavedContent) return;
-
-    saveDraft(path, content);
+    flushPendingSave();
   }, SAVE_DEBOUNCE_MS);
 }
 
@@ -277,7 +338,7 @@ function attachInputListener(input: HTMLElement): void {
 
   detachInputListener();
 
-  inputListener = () => handleInputChange();
+  inputListener = () => handleInputChange(input);
   input.addEventListener('input', inputListener, { capture: true });
   attachedInput = input;
 }
@@ -305,8 +366,16 @@ function startSendDetection(): void {
   if (sendCheckTimer) return;
 
   let wasNonEmpty = false;
+  let observedPath = currentPath || getConversationPath();
 
   sendCheckTimer = setInterval(() => {
+    const path = getConversationPath();
+    if (path !== observedPath) {
+      observedPath = path;
+      wasNonEmpty = false;
+      return;
+    }
+
     const input = findChatInput();
     if (!input) return;
 
@@ -314,13 +383,47 @@ function startSendDetection(): void {
 
     if (wasNonEmpty && empty) {
       // Input went from non-empty to empty — message was likely sent
-      const path = getConversationPath();
-      removeDraft(path);
+      discardPendingSave(observedPath);
+      removeDraft(observedPath);
+      clearSendIntent();
       wasNonEmpty = false;
     } else if (!empty) {
       wasNonEmpty = true;
     }
   }, SEND_CHECK_INTERVAL_MS);
+}
+
+function startSendIntentDetection(): void {
+  if (sendIntentListener) return;
+
+  sendIntentListener = (event) => {
+    if (event.type === 'submit') {
+      const form = event.target;
+      if (form instanceof HTMLFormElement && attachedInput && form.contains(attachedInput)) {
+        markSendIntent();
+      }
+      return;
+    }
+
+    const target = event.target instanceof Element ? event.target : null;
+    const button = target?.closest(SEND_BUTTON_SELECTOR);
+    if (!button || !attachedInput) return;
+
+    const composer = button.closest('form, .text-input-field, ms-prompt-input-wrapper');
+    if (!composer || composer.contains(attachedInput)) markSendIntent();
+  };
+
+  document.addEventListener('click', sendIntentListener, true);
+  document.addEventListener('submit', sendIntentListener, true);
+}
+
+function stopSendIntentDetection(): void {
+  if (sendIntentListener) {
+    document.removeEventListener('click', sendIntentListener, true);
+    document.removeEventListener('submit', sendIntentListener, true);
+    sendIntentListener = null;
+  }
+  clearSendIntent();
 }
 
 /**
@@ -345,6 +448,8 @@ async function restoreDraft(): Promise<void> {
   if (hasRestoredForCurrentPath && path === currentPath) return;
 
   const savedContent = await loadDraft(path);
+  if (path !== currentPath || path !== getConversationPath()) return;
+
   const content = savedContent ? stripInstructionBlock(savedContent).trim() : null;
   if (!content) {
     hasRestoredForCurrentPath = true;
@@ -353,6 +458,8 @@ async function restoreDraft(): Promise<void> {
 
   // Wait for the input to be available
   const tryRestore = (attempts: number) => {
+    if (path !== currentPath || path !== getConversationPath()) return;
+
     const input = findChatInput();
     if (input && isInputEffectivelyEmpty(input)) {
       setInputText(input, content);
@@ -383,20 +490,24 @@ async function restoreDraft(): Promise<void> {
  * Watch for URL changes (SPA navigation) and restore drafts.
  */
 function startUrlWatcher(): void {
-  if (urlCheckTimer) return;
+  if (stopRouteWatcher) return;
 
   currentPath = getConversationPath();
 
-  urlCheckTimer = setInterval(() => {
+  stopRouteWatcher = watchRouteChanges(() => {
     const newPath = getConversationPath();
     if (newPath !== currentPath) {
-      // Save current draft before navigation (in case debounce hasn't fired)
-      const input = findChatInput();
-      if (input) {
-        const content = stripInstructionBlock(getInputText(input)).trim();
-        if (content && content !== lastSavedContent) {
-          saveDraft(currentPath, content);
-        }
+      const previousPath = currentPath;
+      if (pendingSendPath === previousPath) {
+        // Sending a first message navigates /app to /app/<id>. Do not flush the
+        // still-debounced, already-sent text back into the old draft key.
+        discardPendingSave(previousPath);
+        removeDraft(previousPath);
+        clearSendIntent();
+      } else {
+        // Sidebar navigation should preserve the source draft. The pending
+        // entry carries the route captured at the actual input event.
+        flushPendingSave();
       }
 
       currentPath = newPath;
@@ -406,17 +517,15 @@ function startUrlWatcher(): void {
       // Restore draft for the new page after a short delay
       setTimeout(() => restoreDraft(), RESTORE_DELAY_MS);
     }
-  }, 500);
+  });
 }
 
 /**
  * Stop URL watcher.
  */
 function stopUrlWatcher(): void {
-  if (urlCheckTimer) {
-    clearInterval(urlCheckTimer);
-    urlCheckTimer = null;
-  }
+  stopRouteWatcher?.();
+  stopRouteWatcher = null;
 }
 
 // ============================================================================
@@ -475,6 +584,7 @@ function enableFeature(): void {
 
   setupObserver();
   startSendDetection();
+  startSendIntentDetection();
   startUrlWatcher();
 
   // Restore draft for the current page
@@ -493,10 +603,12 @@ function disableFeature(): void {
     clearTimeout(saveTimer);
     saveTimer = null;
   }
+  pendingSave = null;
 
   detachInputListener();
   disconnectObserver();
   stopSendDetection();
+  stopSendIntentDetection();
   stopUrlWatcher();
 }
 
