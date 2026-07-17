@@ -11,14 +11,14 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
-const distDir = path.join(rootDir, 'dist_chrome');
+const distDir = path.join(rootDir, 'dist_edge');
 const manifestPath = path.join(distDir, 'manifest.json');
 
 // Fields that Edge doesn't accept
 const EDGE_INCOMPATIBLE_FIELDS = ['key'];
 
 async function buildForEdge() {
-  console.log('🔨 Building Chrome extension...');
+  console.log('🔨 Building Edge extension...');
 
   try {
     execSync('bun run build:chrome', {
@@ -38,7 +38,7 @@ async function buildForEdge() {
 
   // Read and parse manifest
   if (!fs.existsSync(manifestPath)) {
-    console.error('❌ manifest.json not found in dist_chrome/');
+    console.error('❌ manifest.json not found in dist_edge/');
     process.exit(1);
   }
 
@@ -78,7 +78,7 @@ async function buildForEdge() {
       fs.unlinkSync(zipPath);
     }
 
-    // Zip the *contents* of dist_chrome
+    // Zip the *contents* of dist_edge
     execSync(`zip -r "${zipPath}" .`, {
       cwd: distDir,
       stdio: 'inherit',

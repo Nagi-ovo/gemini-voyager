@@ -4,7 +4,10 @@ import { defineConfig, mergeConfig } from 'vite';
 
 import baseConfig, { baseBuildOptions, baseManifest } from './vite.config.base';
 
-const outDir = resolve(__dirname, 'dist_chrome');
+const outDir = resolve(
+  __dirname,
+  process.env.VOYAGER_BUILD_TARGET === 'edge' ? 'dist_edge' : 'dist_chrome',
+);
 const chromeSharedContentScripts = (
   baseManifest as unknown as { content_scripts?: Array<Record<string, unknown>> }
 ).content_scripts;

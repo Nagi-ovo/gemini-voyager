@@ -465,7 +465,7 @@ jobs:
         run: |
           TAG=${{ steps.vars.outputs.tag_name }}
           bun run build:edge
-          node scripts/verify-release-privacy.mjs dist_chrome
+          node scripts/verify-release-privacy.mjs dist_edge
           node scripts/publish-edge.js "voyager-edge-${TAG}.zip" \
             --notes "Voyager ${TAG} automated release submission."
 

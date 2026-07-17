@@ -194,13 +194,14 @@ bun run build:edge
 ```
 
 `bun run build:edge` calls `scripts/build-edge.js`, which:
-1. Re-runs `bun run build:chrome` (so it overwrites `dist_chrome/`)
-2. Strips `key` from `dist_chrome/manifest.json`
-3. Zips the contents of `dist_chrome/` as `voyager-edge-v{VERSION}.zip` in the repo root
+1. Reuses the Chromium build config with `VOYAGER_BUILD_TARGET=edge`
+2. Writes the Edge variant to the isolated `dist_edge/` directory
+3. Strips `key` from `dist_edge/manifest.json`
+4. Zips the contents of `dist_edge/` as `voyager-edge-v{VERSION}.zip` in the repo root
 
-**Do NOT upload this zip to the GitHub release.** It exists only as an Edge Add-ons submission artifact. `.gitignore` covers `voyager-edge-v*.zip` so it stays untracked.
+**Do NOT upload this zip to the GitHub release.** It exists only as an Edge Add-ons submission artifact. `.gitignore` covers both `dist_edge/` and `voyager-edge-v*.zip` so they stay untracked.
 
-Side-effect: `dist_chrome/` is now the Edge variant (no `key`), not the Chrome Web Store build. If you plan to dev-load Chrome locally afterwards, re-run `bun run build:chrome` to restore.
+There is no Chrome build side effect: `dist_chrome/` remains the Chrome variant and can still be dev-loaded after an Edge build.
 
 Runs anywhere — no Xcode, no code signing.
 

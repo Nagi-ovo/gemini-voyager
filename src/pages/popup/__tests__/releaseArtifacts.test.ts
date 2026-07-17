@@ -26,7 +26,19 @@ describe('release artifacts', () => {
     expect(workflow).toContain(
       'node scripts/verify-release-privacy.mjs dist_chrome dist_firefox dist_safari',
     );
+    expect(workflow).toContain('node scripts/verify-release-privacy.mjs dist_edge');
     expect(workflow).toContain('AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}');
     expect(workflow).not.toContain('--api-secret=${{ secrets.AMO_JWT_SECRET }}');
+  });
+
+  it('builds and stores the Edge release variant independently from Chrome', () => {
+    const ci = readFileSync(resolve(process.cwd(), '.github/workflows/ci.yml'), 'utf8');
+    const viteConfig = readFileSync(resolve(process.cwd(), 'vite.config.chrome.ts'), 'utf8');
+    const edgeBuild = readFileSync(resolve(process.cwd(), 'scripts/build-edge.js'), 'utf8');
+
+    expect(ci).toContain('browser: [chrome, edge, firefox, safari]');
+    expect(viteConfig).toContain("process.env.VOYAGER_BUILD_TARGET === 'edge'");
+    expect(viteConfig).toContain("'dist_edge' : 'dist_chrome'");
+    expect(edgeBuild).toContain("path.join(rootDir, 'dist_edge')");
   });
 });
