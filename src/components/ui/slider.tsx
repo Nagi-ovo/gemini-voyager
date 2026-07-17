@@ -17,10 +17,31 @@ const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
     };
 
     const handleCommit = (
-      e: React.MouseEvent<HTMLInputElement> | React.TouchEvent<HTMLInputElement>,
+      e:
+        | React.MouseEvent<HTMLInputElement>
+        | React.TouchEvent<HTMLInputElement>
+        | React.KeyboardEvent<HTMLInputElement>,
     ) => {
       const value = Number((e.target as HTMLInputElement).value);
       onValueCommit?.(value);
+    };
+
+    const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (
+        ![
+          'ArrowLeft',
+          'ArrowRight',
+          'ArrowUp',
+          'ArrowDown',
+          'Home',
+          'End',
+          'PageUp',
+          'PageDown',
+        ].includes(e.key)
+      ) {
+        return;
+      }
+      handleCommit(e);
     };
 
     return (
@@ -37,6 +58,7 @@ const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
         onChange={handleInput}
         onMouseUp={handleCommit}
         onTouchEnd={handleCommit}
+        onKeyUp={handleKeyUp}
         {...props}
       />
     );

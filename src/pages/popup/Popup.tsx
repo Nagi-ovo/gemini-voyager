@@ -858,6 +858,65 @@ function SectionReorderControls({
   );
 }
 
+interface ParagraphSpacingControlProps {
+  value: number;
+  label: string;
+  tightLabel: string;
+  looseLabel: string;
+  onChange: (value: number) => void;
+  onChangeComplete: (value: number) => void;
+}
+
+function ParagraphSpacingControl({
+  value,
+  label,
+  tightLabel,
+  looseLabel,
+  onChange,
+  onChangeComplete,
+}: ParagraphSpacingControlProps) {
+  const [draftValue, setDraftValue] = useState(value);
+  const isInteracting = useRef(false);
+
+  useEffect(() => {
+    if (!isInteracting.current) setDraftValue(value);
+  }, [value]);
+
+  const commit = (nextValue: number) => {
+    onChange(nextValue);
+    onChangeComplete(nextValue);
+    isInteracting.current = false;
+  };
+
+  return (
+    <div className="border-border/60 mt-4 border-t pt-3">
+      <div className="mb-2 flex items-center justify-between text-xs font-medium">
+        <span className="text-foreground">{label}</span>
+        <span className="text-primary bg-primary/10 rounded-md px-2 py-0.5 font-bold">
+          {draftValue}px
+        </span>
+      </div>
+      <Slider
+        min={CHAT_PARAGRAPH_SPACING.min}
+        max={CHAT_PARAGRAPH_SPACING.max}
+        step={1}
+        value={draftValue}
+        onValueChange={(nextValue) => {
+          isInteracting.current = true;
+          setDraftValue(nextValue);
+        }}
+        onValueCommit={commit}
+        aria-label={label}
+        aria-valuetext={`${draftValue}px`}
+      />
+      <div className="text-muted-foreground mt-3 flex items-center justify-between text-xs font-medium">
+        <span>{tightLabel}</span>
+        <span>{looseLabel}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function Popup({ sourceTabId }: PopupProps = {}) {
   const { t, language } = useLanguage();
   const [mode, setMode] = useState<ScrollMode>('flow');
@@ -3284,28 +3343,14 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
               } catch {}
             }}
           >
-            <div className="border-border/60 mt-4 border-t pt-3">
-              <div className="mb-2 flex items-center justify-between text-xs font-medium">
-                <span className="text-foreground">{t('chatParagraphSpacing')}</span>
-                <span className="text-primary bg-primary/10 rounded-md px-2 py-0.5 font-bold">
-                  {chatParagraphSpacingAdjuster.width}px
-                </span>
-              </div>
-              <Slider
-                min={CHAT_PARAGRAPH_SPACING.min}
-                max={CHAT_PARAGRAPH_SPACING.max}
-                step={1}
-                value={chatParagraphSpacingAdjuster.width}
-                onValueChange={chatParagraphSpacingAdjuster.handleChange}
-                onValueCommit={chatParagraphSpacingAdjuster.handleChangeComplete}
-                aria-label={t('chatParagraphSpacing')}
-                aria-valuetext={`${chatParagraphSpacingAdjuster.width}px`}
-              />
-              <div className="text-muted-foreground mt-3 flex items-center justify-between text-xs font-medium">
-                <span>{t('chatLineHeightTight')}</span>
-                <span>{t('chatLineHeightLoose')}</span>
-              </div>
-            </div>
+            <ParagraphSpacingControl
+              value={chatParagraphSpacingAdjuster.width}
+              label={t('chatParagraphSpacing')}
+              tightLabel={t('chatLineHeightTight')}
+              looseLabel={t('chatLineHeightLoose')}
+              onChange={chatParagraphSpacingAdjuster.handleChange}
+              onChangeComplete={chatParagraphSpacingAdjuster.handleChangeComplete}
+            />
           </WidthSlider>,
         )}
         {/* Edit Input Width */}

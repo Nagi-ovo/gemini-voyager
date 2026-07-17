@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { Card, CardContent, CardTitle } from '../../../components/ui/card';
 import { Slider } from '../../../components/ui/slider';
@@ -41,9 +41,26 @@ export default function WidthSlider({
   onToggle,
   children,
 }: WidthSliderProps) {
+  const [draftValue, setDraftValue] = useState(value);
+  const isInteracting = useRef(false);
   const formatValue = valueFormatter ?? ((v: number) => `${v}%`);
   const hasToggle = enabled !== undefined && onToggle !== undefined;
   const isExpanded = !hasToggle || enabled;
+
+  useEffect(() => {
+    if (!isInteracting.current) setDraftValue(value);
+  }, [value]);
+
+  const handleValueChange = (nextValue: number) => {
+    isInteracting.current = true;
+    setDraftValue(nextValue);
+  };
+
+  const handleValueCommit = (nextValue: number) => {
+    onChange(nextValue);
+    onChangeComplete?.(nextValue);
+    isInteracting.current = false;
+  };
 
   return (
     <Card className="p-4 transition-all hover:shadow-md">
@@ -63,7 +80,7 @@ export default function WidthSlider({
           className="text-primary bg-primary/10 rounded-md px-2.5 py-1 text-sm font-bold shadow-sm transition-opacity duration-200"
           style={{ opacity: isExpanded ? 1 : 0 }}
         >
-          {formatValue(value)}
+          {formatValue(draftValue)}
         </span>
       </div>
       <div
@@ -80,11 +97,11 @@ export default function WidthSlider({
               min={min}
               max={max}
               step={step}
-              value={value}
-              onValueChange={onChange}
-              onValueCommit={onChangeComplete}
+              value={draftValue}
+              onValueChange={handleValueChange}
+              onValueCommit={handleValueCommit}
               aria-label={label}
-              aria-valuetext={formatValue(value)}
+              aria-valuetext={formatValue(draftValue)}
             />
             <div className="text-muted-foreground mt-3 flex items-center justify-between text-xs font-medium">
               <span>{narrowLabel}</span>
