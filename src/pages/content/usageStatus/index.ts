@@ -71,7 +71,15 @@ interface UsageRecipe {
 
 interface MergeUsageSnapshotOptions {
   allowRegression?: boolean;
+  allowDailyRegression?: boolean;
+  allowWeeklyRegression?: boolean;
   now?: number;
+}
+
+export interface AutomaticUsageMergeResult {
+  snapshot: UsageSnapshot;
+  candidate: UsageSnapshot | null;
+  needsConfirmation: boolean;
 }
 
 /** Snapshot persisted in chrome.storage.local. Small by construction. */
@@ -84,6 +92,10 @@ export interface UsageSnapshot {
   tier?: string;
   /** Gemini account namespace from the URL, e.g. `u/0` or `default`. */
   accountKey?: string;
+  /** When the replay producing this snapshot started; rejects late older responses. */
+  sourceStartedAt?: number;
+  /** True when a lower value was verified by DOM/manual refresh/two fresh RPCs. */
+  regressionVerified?: boolean;
   /** Date.now() when scraped, for the "updated X ago" stamp. */
   updatedAt: number;
 }
@@ -105,6 +117,7 @@ const OBS_CMD = 'gv-usage-observer-cmd';
 const STALE_MS = 5 * 60_000; // consider a snapshot stale after 5 min
 const HEARTBEAT_MS = 2 * 60_000; // idle re-check cadence (staleness-gated)
 const GEN_DEBOUNCE_MS = 4_000; // wait after a generation completes, then refresh
+const REGRESSION_CONFIRM_MS = 2_000;
 const RESET_GRACE_MS = 2 * 60_000;
 const AUTO_REGRESSION_TOLERANCE_PCT = 5;
 // Known usage RPC (verified live: rpcid `jSf9Qc`, empty args). Used as the
@@ -144,7 +157,9 @@ let pillMoveHandler: ((ev: PointerEvent) => void) | null = null;
 let recipe: UsageRecipe | null = null;
 let replayTimer: number | null = null;
 let replaySeq = 0;
-const forcedReplayIds = new Set<number>();
+const replayRequests = new Map<number, { allowRegression: boolean; startedAt: number }>();
+let pendingRegression: UsageSnapshot | null = null;
+let regressionConfirmTimer: number | null = null;
 let genTimer: number | null = null;
 let spinTimer: number | null = null;
 let visibilityHandler: (() => void) | null = null;
@@ -191,7 +206,12 @@ export function usageUrlForPathname(pathname: string): string {
 }
 
 function scopeSnapshot(next: UsageSnapshot): UsageSnapshot {
-  return { ...next, accountKey: currentUsageAccountKey() };
+  return {
+    ...next,
+    accountKey: currentUsageAccountKey(),
+    sourceStartedAt: next.updatedAt,
+    regressionVerified: true,
+  };
 }
 
 function isCurrentAccountSnapshot(raw: UsageSnapshot | null | undefined): raw is UsageSnapshot {
@@ -237,6 +257,8 @@ function snapshotEquals(a: UsageSnapshot, b: UsageSnapshot): boolean {
   return (
     a.accountKey === b.accountKey &&
     a.tier === b.tier &&
+    a.sourceStartedAt === b.sourceStartedAt &&
+    a.regressionVerified === b.regressionVerified &&
     a.updatedAt === b.updatedAt &&
     metricEquals(a.daily, b.daily) &&
     metricEquals(a.weekly, b.weekly)
@@ -249,9 +271,22 @@ export function mergeUsageSnapshots(
   options: MergeUsageSnapshotOptions = {},
 ): UsageSnapshot {
   if (!current || current.accountKey !== next.accountKey) return next;
+  if (
+    typeof current.sourceStartedAt === 'number' &&
+    typeof next.sourceStartedAt === 'number' &&
+    next.sourceStartedAt < current.sourceStartedAt
+  ) {
+    return current;
+  }
 
-  const keepDaily = shouldKeepCurrentMetric(current.daily, next.daily, options);
-  const keepWeekly = shouldKeepCurrentMetric(current.weekly, next.weekly, options);
+  const keepDaily = shouldKeepCurrentMetric(current.daily, next.daily, {
+    ...options,
+    allowRegression: options.allowRegression || options.allowDailyRegression,
+  });
+  const keepWeekly = shouldKeepCurrentMetric(current.weekly, next.weekly, {
+    ...options,
+    allowRegression: options.allowRegression || options.allowWeeklyRegression,
+  });
   if (!keepDaily && !keepWeekly) return next;
 
   return {
@@ -260,6 +295,77 @@ export function mergeUsageSnapshots(
     weekly: keepWeekly ? current.weekly : next.weekly,
     tier: next.tier ?? current.tier,
     updatedAt: current.updatedAt,
+  };
+}
+
+function confirmsLowerMetric(
+  current: UsageMetric | null,
+  candidate: UsageMetric | null,
+  next: UsageMetric | null,
+): boolean {
+  if (!current || !candidate || !next) return false;
+  return (
+    candidate.percent < current.percent &&
+    next.percent < current.percent &&
+    sameResetWindow(candidate, next)
+  );
+}
+
+/**
+ * Keep a suspicious automatic decrease once, then accept it after a second
+ * fresh RPC confirms the same reset window. This preserves the stale-response
+ * guard while allowing real entitlement changes such as #820 (7% -> 1%).
+ */
+export function mergeAutomaticUsageSnapshots(
+  current: UsageSnapshot | null,
+  candidate: UsageSnapshot | null,
+  next: UsageSnapshot,
+  now: number = Date.now(),
+): AutomaticUsageMergeResult {
+  if (!current || current.accountKey !== next.accountKey) {
+    return { snapshot: next, candidate: null, needsConfirmation: false };
+  }
+  if (
+    typeof current.sourceStartedAt === 'number' &&
+    typeof next.sourceStartedAt === 'number' &&
+    next.sourceStartedAt < current.sourceStartedAt
+  ) {
+    return {
+      snapshot: current,
+      candidate,
+      needsConfirmation: candidate !== null,
+    };
+  }
+
+  const mergeOptions = { now };
+  const blockedDaily = shouldKeepCurrentMetric(current.daily, next.daily, mergeOptions);
+  const blockedWeekly = shouldKeepCurrentMetric(current.weekly, next.weekly, mergeOptions);
+  const sameCandidateAccount = candidate?.accountKey === next.accountKey;
+  const confirmDaily =
+    blockedDaily &&
+    sameCandidateAccount &&
+    confirmsLowerMetric(current.daily, candidate?.daily ?? null, next.daily);
+  const confirmWeekly =
+    blockedWeekly &&
+    sameCandidateAccount &&
+    confirmsLowerMetric(current.weekly, candidate?.weekly ?? null, next.weekly);
+
+  const merged = mergeUsageSnapshots(current, next, {
+    now,
+    allowDailyRegression: confirmDaily,
+    allowWeeklyRegression: confirmWeekly,
+  });
+  const needsConfirmation = (blockedDaily && !confirmDaily) || (blockedWeekly && !confirmWeekly);
+  const acceptedRegression =
+    (metricRegresses(current.daily, next.daily) && !blockedDaily) ||
+    (metricRegresses(current.weekly, next.weekly) && !blockedWeekly) ||
+    confirmDaily ||
+    confirmWeekly;
+
+  return {
+    snapshot: acceptedRegression ? { ...merged, regressionVerified: true } : merged,
+    candidate: needsConfirmation ? next : null,
+    needsConfirmation,
   };
 }
 
@@ -512,12 +618,16 @@ function snapshotFromParsed(
   parsed: { daily: RawMetric | null; weekly: RawMetric | null },
   now: number,
   tier: string | undefined,
+  sourceStartedAt: number = now,
+  regressionVerified = false,
 ): UsageSnapshot {
   return {
     daily: metricFromRaw(parsed.daily, now),
     weekly: metricFromRaw(parsed.weekly, now),
     tier,
     accountKey: currentUsageAccountKey(),
+    sourceStartedAt,
+    regressionVerified,
     updatedAt: now,
   };
 }
@@ -886,7 +996,9 @@ function setupStorageListener(): void {
     if (usageCacheChange) {
       const raw = usageCacheChange.newValue as UsageSnapshot | undefined;
       if (raw && typeof raw.updatedAt === 'number' && isCurrentAccountSnapshot(raw)) {
-        const merged = mergeUsageSnapshots(snapshot, raw);
+        const merged = mergeUsageSnapshots(snapshot, raw, {
+          allowRegression: raw.regressionVerified === true,
+        });
         if (!snapshotEquals(merged, raw)) void saveSnapshot(merged);
         snapshot = merged;
         render();
@@ -913,6 +1025,7 @@ function setupStorageListener(): void {
 }
 
 function handleNavigation(): void {
+  clearRegressionConfirmation();
   window.setTimeout(() => {
     void (async () => {
       snapshot = await loadSnapshot();
@@ -958,13 +1071,53 @@ function applyParsed(
   parsed: { daily: RawMetric | null; weekly: RawMetric | null },
   tier: string | undefined,
   options: MergeUsageSnapshotOptions = {},
+  sourceStartedAt: number = Date.now(),
 ): void {
   if (!parsed.daily && !parsed.weekly) return;
+  const now = Date.now();
   snapshot = mergeUsageSnapshots(
     snapshot,
-    snapshotFromParsed(parsed, Date.now(), tier ?? snapshot?.tier),
+    snapshotFromParsed(
+      parsed,
+      now,
+      tier ?? snapshot?.tier,
+      sourceStartedAt,
+      options.allowRegression === true,
+    ),
     options,
   );
+  void saveSnapshot(snapshot);
+  render();
+}
+
+function clearRegressionConfirmation(): void {
+  pendingRegression = null;
+  if (regressionConfirmTimer !== null) {
+    clearTimeout(regressionConfirmTimer);
+    regressionConfirmTimer = null;
+  }
+}
+
+function scheduleRegressionConfirmation(): void {
+  if (!enabled || regressionConfirmTimer !== null) return;
+  regressionConfirmTimer = window.setTimeout(() => {
+    regressionConfirmTimer = null;
+    requestReplay();
+  }, REGRESSION_CONFIRM_MS);
+}
+
+function applyAutomaticParsed(
+  parsed: { daily: RawMetric | null; weekly: RawMetric | null },
+  sourceStartedAt: number,
+): void {
+  if (!parsed.daily && !parsed.weekly) return;
+  const now = Date.now();
+  const next = snapshotFromParsed(parsed, now, snapshot?.tier, sourceStartedAt);
+  const result = mergeAutomaticUsageSnapshots(snapshot, pendingRegression, next, now);
+  snapshot = result.snapshot;
+  pendingRegression = result.candidate;
+  if (result.needsConfirmation) scheduleRegressionConfirmation();
+  else clearRegressionConfirmation();
   void saveSnapshot(snapshot);
   render();
 }
@@ -991,6 +1144,7 @@ function handleCapture(payload: { rpcid?: string; args?: string | null; body?: s
     rpcid: typeof payload.rpcid === 'string' ? payload.rpcid : parsed.rpcid,
     args: typeof payload.args === 'string' ? payload.args : '[]',
   });
+  clearRegressionConfirmation();
   applyParsed(parsed, dom?.tier, { allowRegression: true });
 }
 
@@ -1000,11 +1154,17 @@ function handleReplayResult(payload: { id?: number; body?: string; error?: strin
     clearTimeout(spinTimer);
     spinTimer = null;
   }
-  const allowRegression =
-    typeof payload.id === 'number' ? forcedReplayIds.delete(payload.id) : false;
+  const request = typeof payload.id === 'number' ? replayRequests.get(payload.id) : undefined;
+  if (typeof payload.id === 'number') replayRequests.delete(payload.id);
   if (!enabled || !payload || typeof payload.body !== 'string') return;
   const parsed = parseUsageRpcResponse(payload.body);
-  if (parsed) applyParsed(parsed, undefined, { allowRegression });
+  if (!parsed) return;
+  if (request?.allowRegression) {
+    clearRegressionConfirmation();
+    applyParsed(parsed, undefined, { allowRegression: true }, request.startedAt);
+  } else {
+    applyAutomaticParsed(parsed, request?.startedAt ?? Date.now());
+  }
 }
 
 /** A Gemini generation just finished → usage changed → refresh shortly after. */
@@ -1056,7 +1216,11 @@ function requestReplay(allowRegression = false): void {
     setSpinning(false);
   }, 6_000);
   const id = ++replaySeq;
-  if (allowRegression) forcedReplayIds.add(id);
+  const startedAt = Date.now();
+  for (const [requestId, request] of replayRequests) {
+    if (startedAt - request.startedAt > 30_000) replayRequests.delete(requestId);
+  }
+  replayRequests.set(id, { allowRegression, startedAt });
   try {
     window.postMessage(
       {
@@ -1104,6 +1268,8 @@ function stopReplayLoop(): void {
     clearTimeout(genTimer);
     genTimer = null;
   }
+  clearRegressionConfirmation();
+  replayRequests.clear();
   if (visibilityHandler) {
     document.removeEventListener('visibilitychange', visibilityHandler);
     visibilityHandler = null;

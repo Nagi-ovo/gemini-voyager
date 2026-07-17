@@ -6,6 +6,7 @@ import {
   formatResetLabel,
   formatUpdatedAgo,
   isUsagePathname,
+  mergeAutomaticUsageSnapshots,
   mergeUsageSnapshots,
   parseUsageRpcResponse,
   scrapeUsageFromDocument,
@@ -261,6 +262,101 @@ describe('mergeUsageSnapshots', () => {
     };
 
     expect(mergeUsageSnapshots(current, otherAccount)).toEqual(otherAccount);
+  });
+
+  it('rejects a replay response that started before the current snapshot', () => {
+    const current = {
+      accountKey: 'u/0',
+      daily: { percent: 7, resetLabel: '3:41 PM', resetEpoch: 1784302860 },
+      weekly: { percent: 9, resetLabel: 'Jul 21', resetEpoch: 1784652060 },
+      sourceStartedAt: 3000,
+      updatedAt: 3100,
+    };
+    const lateOlderResponse = {
+      accountKey: 'u/0',
+      daily: { percent: 1, resetLabel: '3:41 PM', resetEpoch: 1784302860 },
+      weekly: { percent: 9, resetLabel: 'Jul 21', resetEpoch: 1784652060 },
+      sourceStartedAt: 2000,
+      updatedAt: 3200,
+    };
+
+    expect(mergeUsageSnapshots(current, lateOlderResponse)).toBe(current);
+  });
+});
+
+describe('mergeAutomaticUsageSnapshots', () => {
+  const current = {
+    accountKey: 'default',
+    daily: { percent: 7, resetLabel: '3:41 PM', resetEpoch: 1784302860 },
+    weekly: { percent: 9, resetLabel: 'Jul 21 at 4:41 PM', resetEpoch: 1784652060 },
+    tier: 'PRO',
+    sourceStartedAt: 1000,
+    updatedAt: 1100,
+  };
+
+  const lower = (sourceStartedAt: number) => ({
+    accountKey: 'default',
+    daily: { percent: 1, resetLabel: '3:41 PM', resetEpoch: 1784302860 },
+    weekly: { percent: 9, resetLabel: 'Jul 21 at 4:41 PM', resetEpoch: 1784652060 },
+    tier: 'PRO',
+    sourceStartedAt,
+    updatedAt: sourceStartedAt + 100,
+  });
+
+  it('accepts the #820 7% -> 1% entitlement reset after a second fresh confirmation', () => {
+    const first = mergeAutomaticUsageSnapshots(current, null, lower(2000));
+
+    expect(first.snapshot.daily?.percent).toBe(7);
+    expect(first.snapshot.weekly?.percent).toBe(9);
+    expect(first.candidate?.daily?.percent).toBe(1);
+    expect(first.needsConfirmation).toBe(true);
+
+    const confirmed = mergeAutomaticUsageSnapshots(first.snapshot, first.candidate, lower(3000));
+
+    expect(confirmed.snapshot.daily?.percent).toBe(1);
+    expect(confirmed.snapshot.weekly?.percent).toBe(9);
+    expect(confirmed.snapshot.regressionVerified).toBe(true);
+    expect(confirmed.candidate).toBeNull();
+    expect(confirmed.needsConfirmation).toBe(false);
+  });
+
+  it('also confirms a lower RPC value when the cached DOM metric has no reset epoch', () => {
+    const domCurrent = {
+      ...current,
+      daily: { percent: 7, resetLabel: '3:41 PM' },
+    };
+    const first = mergeAutomaticUsageSnapshots(domCurrent, null, lower(2000));
+    const confirmed = mergeAutomaticUsageSnapshots(first.snapshot, first.candidate, lower(3000));
+
+    expect(first.snapshot.daily?.percent).toBe(7);
+    expect(first.needsConfirmation).toBe(true);
+    expect(confirmed.snapshot.daily?.percent).toBe(1);
+    expect(confirmed.snapshot.regressionVerified).toBe(true);
+  });
+
+  it('does not confirm when the second response returns to the current value', () => {
+    const first = mergeAutomaticUsageSnapshots(current, null, lower(2000));
+    const recovered = mergeAutomaticUsageSnapshots(first.snapshot, first.candidate, {
+      ...current,
+      sourceStartedAt: 3000,
+      updatedAt: 3100,
+    });
+
+    expect(recovered.snapshot.daily?.percent).toBe(7);
+    expect(recovered.snapshot.regressionVerified).not.toBe(true);
+    expect(recovered.candidate).toBeNull();
+    expect(recovered.needsConfirmation).toBe(false);
+  });
+
+  it('lets other tabs accept a confirmed lower snapshot', () => {
+    const first = mergeAutomaticUsageSnapshots(current, null, lower(2000));
+    const confirmed = mergeAutomaticUsageSnapshots(first.snapshot, first.candidate, lower(3000));
+    const mergedInOtherTab = mergeUsageSnapshots(current, confirmed.snapshot, {
+      allowRegression: confirmed.snapshot.regressionVerified === true,
+    });
+
+    expect(mergedInOtherTab.daily?.percent).toBe(1);
+    expect(mergedInOtherTab.sourceStartedAt).toBe(3000);
   });
 });
 
