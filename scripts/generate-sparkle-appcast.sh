@@ -14,7 +14,7 @@ OUTPUT_PATH=${3:-$ROOT_DIR/appcast.xml}
 PACKAGE_DIR=${SPARKLE_PACKAGE_DIR:-$ROOT_DIR/.build/sparkle-source-packages}
 GENERATE_APPCAST=$PACKAGE_DIR/artifacts/sparkle/Sparkle/bin/generate_appcast
 DERIVE_PUBLIC_KEY=$ROOT_DIR/scripts/derive-sparkle-public-key.swift
-INFO_PLIST=$ROOT_DIR/Gemini\ Voyager/Gemini\ Voyager/Info.plist
+INFO_PLIST=$ROOT_DIR/Voyager/App/Info.plist
 
 if [[ ! -f $GENERATE_APPCAST ]]; then
   xcodebuild -resolvePackageDependencies \
