@@ -13,6 +13,7 @@ import { StorageKeys, type TimelineStyle } from '@/core/types/common';
 import type { ConversationReference, Folder } from '@/core/types/folder';
 import {
   getModifierKey,
+  getVoyagerBuildTarget,
   getWebStoreRatingChannel,
   isFirefox,
   isSafari,
@@ -2158,7 +2159,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
 
   const normalizedCurrentVersion = normalizeVersionString(extVersion);
   const normalizedLatestVersion = normalizeVersionString(latestVersion);
-  const isSafariBrowser = isSafari();
+  const isSafariBrowser = getVoyagerBuildTarget() === 'safari' || isSafari();
   const canUseSystemNotifications = supportsExtensionNotifications();
   const webStoreRatingChannel = getWebStoreRatingChannel();
   const safariUpdateReminderEnabled = isSafariBrowser && shouldShowSafariUpdateReminder();

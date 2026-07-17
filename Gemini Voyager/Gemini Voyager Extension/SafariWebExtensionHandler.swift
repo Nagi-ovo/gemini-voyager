@@ -49,8 +49,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
   }
 
   private func handleICloudAccountStatus(context: NSExtensionContext) {
-    ICloudSyncService.shared.accountStatus { [weak self] result in
-      guard let self else { return }
+    ICloudSyncService.shared.accountStatus { result in
       switch result {
       case .success:
         self.respondWithSuccess(context: context, data: ["available": true])
@@ -68,8 +67,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       return
     }
 
-    ICloudSyncService.shared.write(fileName: fileName, json: json) { [weak self] result in
-      guard let self else { return }
+    ICloudSyncService.shared.write(fileName: fileName, json: json) { result in
       switch result {
       case .success:
         self.respondWithSuccess(context: context, data: ["saved": true])
@@ -85,8 +83,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       return
     }
 
-    ICloudSyncService.shared.read(fileName: fileName) { [weak self] result in
-      guard let self else { return }
+    ICloudSyncService.shared.read(fileName: fileName) { result in
       switch result {
       case .success(let json):
         self.respondWithSuccess(
@@ -106,8 +103,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       return
     }
 
-    GIDSignIn.sharedInstance.restorePreviousSignIn { [weak self] user, _ in
-      guard let self else { return }
+    GIDSignIn.sharedInstance.restorePreviousSignIn { user, _ in
       guard let user else {
         self.startGoogleDriveAuthorizationIfNeeded(interactive: interactive, context: context)
         return
@@ -115,6 +111,14 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
 
       user.refreshTokensIfNeeded { refreshedUser, _ in
         guard let refreshedUser else {
+          self.startGoogleDriveAuthorizationIfNeeded(
+            interactive: interactive,
+            context: context
+          )
+          return
+        }
+
+        guard refreshedUser.grantedScopes?.contains(self.googleDriveScope) == true else {
           self.startGoogleDriveAuthorizationIfNeeded(
             interactive: interactive,
             context: context
@@ -160,8 +164,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       return
     }
 
-    context.open(url) { [weak self] opened in
-      guard let self else { return }
+    context.open(url) { opened in
       if opened {
         self.respondWithSuccess(
           context: context,
@@ -191,8 +194,39 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       content: content,
       trigger: nil
     )
-    UNUserNotificationCenter.current().add(request) { [weak self] error in
-      guard let self else { return }
+
+    let center = UNUserNotificationCenter.current()
+    center.getNotificationSettings { settings in
+      switch settings.authorizationStatus {
+      case .authorized, .provisional:
+        self.addNotification(request, using: center, context: context)
+      case .notDetermined:
+        center.requestAuthorization(options: [.alert, .sound]) { granted, error in
+          if let error {
+            self.respondWithError(context: context, message: error.localizedDescription)
+          } else if granted {
+            self.addNotification(request, using: center, context: context)
+          } else {
+            self.respondWithError(context: context, message: "Notification permission was denied")
+          }
+        }
+      case .denied:
+        self.respondWithError(
+          context: context,
+          message: "Notifications are disabled in System Settings"
+        )
+      @unknown default:
+        self.respondWithError(context: context, message: "Notifications are unavailable")
+      }
+    }
+  }
+
+  private func addNotification(
+    _ request: UNNotificationRequest,
+    using center: UNUserNotificationCenter,
+    context: NSExtensionContext
+  ) {
+    center.add(request) { error in
       if let error {
         self.respondWithError(context: context, message: error.localizedDescription)
       } else {
@@ -203,8 +237,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
 
   private func requestNotificationPermission(context: NSExtensionContext) {
     UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) {
-      [weak self] granted, error in
-      guard let self else { return }
+      granted, error in
       if let error {
         self.respondWithError(context: context, message: error.localizedDescription)
       } else {
