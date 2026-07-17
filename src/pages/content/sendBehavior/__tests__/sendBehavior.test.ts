@@ -174,6 +174,37 @@ describe('sendBehavior', () => {
     cleanup();
   });
 
+  it('debounces listener attachment for inputs added by streaming mutations', async () => {
+    vi.useFakeTimers();
+    const inputContainer = document.createElement('div');
+    inputContainer.className = 'text-input-field';
+    const input = document.createElement('div');
+    input.setAttribute('contenteditable', 'true');
+    const sendButton = document.createElement('button');
+    sendButton.setAttribute('aria-label', 'Send message');
+    markElementVisible(sendButton);
+    inputContainer.append(input, sendButton);
+    const sendClickSpy = vi.spyOn(sendButton, 'click');
+
+    const { startSendBehavior } = await import('../index');
+    const cleanup = await startSendBehavior();
+    try {
+      document.body.append(inputContainer);
+      await Promise.resolve();
+
+      await vi.advanceTimersByTimeAsync(99);
+      fireCtrlEnter(input);
+      expect(sendClickSpy).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(1);
+      fireCtrlEnter(input);
+      expect(sendClickSpy).toHaveBeenCalledOnce();
+    } finally {
+      cleanup();
+      vi.useRealTimers();
+    }
+  });
+
   it('clicks a localized send button within the main chat container', async () => {
     const staleUpdateButton = document.createElement('button');
     staleUpdateButton.className = 'update-button';

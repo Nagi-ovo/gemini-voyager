@@ -25,6 +25,7 @@
  * - When both are disabled, no DOM observation or event handling occurs (zero performance overhead)
  * - Storage listener remains active to respond to setting changes
  */
+import { LoggerService } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
 import { isSafari } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
@@ -73,6 +74,8 @@ const EDITABLE_SELECTORS = '[contenteditable="true"], [role="textbox"], textarea
 
 /** Log prefix for consistent logging */
 const LOG_PREFIX = '[SendBehavior]';
+const OBSERVER_DEBOUNCE_MS = 100;
+const logger = LoggerService.getInstance().createChild('SendBehavior');
 
 type SendBehaviorPlatform = 'gemini' | 'aistudio';
 
@@ -86,6 +89,8 @@ let isSafariEnterFixEnabled = false;
 let isListenersActive = false;
 let currentPlatform: SendBehaviorPlatform = 'gemini';
 let observer: MutationObserver | null = null;
+let observerDebounceTimer: number | null = null;
+const observerPendingNodes = new Set<HTMLElement>();
 let cleanupFns: (() => void)[] = [];
 let storageListener:
   | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
@@ -415,7 +420,18 @@ function setupObserver(): void {
   observer = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
       for (const node of mutation.addedNodes) {
-        if (!(node instanceof HTMLElement)) continue;
+        if (node instanceof HTMLElement) observerPendingNodes.add(node);
+      }
+    }
+
+    if (observerPendingNodes.size === 0) return;
+    if (observerDebounceTimer !== null) window.clearTimeout(observerDebounceTimer);
+    observerDebounceTimer = window.setTimeout(() => {
+      observerDebounceTimer = null;
+      const pendingNodes = Array.from(observerPendingNodes);
+      observerPendingNodes.clear();
+      pendingNodes.forEach((node) => {
+        if (!node.isConnected) return;
 
         // Check if the node itself is an input
         if (
@@ -429,8 +445,8 @@ function setupObserver(): void {
         // Check descendants
         const editables = node.querySelectorAll<HTMLElement>(EDITABLE_SELECTORS);
         editables.forEach(attachToInput);
-      }
-    }
+      });
+    }, OBSERVER_DEBOUNCE_MS);
   });
 
   observer.observe(document.body, {
@@ -443,6 +459,11 @@ function setupObserver(): void {
  * Disconnect the observer
  */
 function disconnectObserver(): void {
+  if (observerDebounceTimer !== null) {
+    window.clearTimeout(observerDebounceTimer);
+    observerDebounceTimer = null;
+  }
+  observerPendingNodes.clear();
   if (observer) {
     observer.disconnect();
     observer = null;
@@ -477,7 +498,7 @@ function activateListeners(): void {
   attachToAllInputs();
   setupObserver();
 
-  console.log(LOG_PREFIX, 'Listeners activated');
+  logger.info('Listeners activated');
 }
 
 /**
@@ -496,7 +517,7 @@ function deactivateListeners(): void {
   // Stop observing DOM changes
   disconnectObserver();
 
-  console.log(LOG_PREFIX, 'Listeners deactivated');
+  logger.info('Listeners deactivated');
 }
 
 /**
@@ -608,7 +629,7 @@ function cleanup(): void {
     storageListener = null;
   }
 
-  console.log(LOG_PREFIX, 'Cleanup complete');
+  logger.info('Cleanup complete');
 }
 
 // ============================================================================
@@ -632,7 +653,7 @@ export async function startSendBehavior(
   reconcileListeners();
 
   if (!shouldBeActive()) {
-    console.log(LOG_PREFIX, 'All modes disabled, skipping initialization');
+    logger.info('All modes disabled, skipping initialization');
   }
 
   return cleanup;

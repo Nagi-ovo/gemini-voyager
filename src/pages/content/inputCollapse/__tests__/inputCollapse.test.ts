@@ -137,6 +137,23 @@ describe('inputCollapse', () => {
       expect(container.classList.contains('gv-input-collapsed')).toBe(true);
     });
 
+    it('debounces input discovery across mutation bursts', async () => {
+      const container = document.createElement('div');
+      container.style.backgroundColor = '#f0f0f0';
+      container.style.display = 'flex';
+      container.appendChild(document.createElement('rich-textarea'));
+
+      document.body.appendChild(container);
+      await Promise.resolve();
+
+      await vi.advanceTimersByTimeAsync(99);
+      expect(container.classList.contains('gv-processed')).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(1);
+      expect(container.classList.contains('gv-processed')).toBe(true);
+      expect(container.querySelector('.gv-collapse-placeholder')).not.toBeNull();
+    });
+
     it('does not collapse when input has content and loses focus', async () => {
       const container = await createMockContainer('test content');
 

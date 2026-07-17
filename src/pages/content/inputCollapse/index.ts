@@ -345,6 +345,7 @@ export function startInputCollapse() {
 }
 
 let observer: MutationObserver | null = null;
+let observerDebounceTimer: number | null = null;
 let initialized = false;
 let eventController: AbortController | null = null;
 let allowCollapseWhenNotEmpty = false; // Track the "collapse when not empty" setting
@@ -390,6 +391,10 @@ export function cleanup() {
   if (observer) {
     observer.disconnect();
     observer = null;
+  }
+  if (observerDebounceTimer !== null) {
+    window.clearTimeout(observerDebounceTimer);
+    observerDebounceTimer = null;
   }
 
   initialized = false;
@@ -450,11 +455,14 @@ function initInputCollapse(allowCollapseNotEmpty: boolean = false) {
   // MutationObserver to re-apply when Gemini re-renders and detect SPA navigation
   // Use MutationObserver so we re-apply if Gemini re-renders (common in SPAs)
   observer = new MutationObserver(() => {
-    // Check for URL changes on DOM mutations (catches SPA navigation)
-    urlChangeHandler?.();
+    if (observerDebounceTimer !== null) window.clearTimeout(observerDebounceTimer);
+    observerDebounceTimer = window.setTimeout(() => {
+      observerDebounceTimer = null;
+      // Check for URL changes on DOM mutations (catches SPA navigation)
+      urlChangeHandler();
 
-    const container = getInputContainer();
-    if (container && !container.classList.contains('gv-processed')) {
+      const container = getInputContainer();
+      if (!container || container.classList.contains('gv-processed')) return;
       container.classList.add('gv-processed');
       container.classList.add('element-to-collapse'); // Add transition class
 
@@ -532,7 +540,7 @@ function initInputCollapse(allowCollapseNotEmpty: boolean = false) {
       if (!shouldDisableAutoCollapse()) {
         tryCollapse(container);
       }
-    }
+    }, 100);
   });
 
   observer.observe(document.body, { childList: true, subtree: true });
