@@ -15,6 +15,12 @@ import BG_48_IMPORT from './assets/bg_48.png';
 import BG_96_IMPORT from './assets/bg_96.png';
 import BG_96_20260520_IMPORT from './assets/bg_96_20260520.png';
 import { type WatermarkPosition, removeWatermark } from './blendModes';
+import {
+  assessWatermarkRemovalCandidate,
+  getWatermarkSignalStrength,
+  hasReliableWatermarkSignal,
+  measureWatermarkSignal,
+} from './watermarkDetector';
 
 // For content scripts, we need to use chrome.runtime.getURL to resolve asset paths
 // The imported paths are relative to the bundle, which works in extension context
@@ -57,18 +63,7 @@ export interface WatermarkAnchorOption {
 }
 
 const LEGACY_LARGE_IMAGE_MIN_EDGE = 1024;
-const WATERMARK_ALPHA_MIN = 0.01;
-const WATERMARK_ALPHA_HIGH = 0.35;
-const WATERMARK_ALPHA_LOW = 0.08;
-const WATERMARK_ANCHOR_SWITCH_EVIDENCE_GAP = 8;
 const WATERMARK_MAX_REMOVAL_PASSES = 3;
-const WATERMARK_REPEAT_EVIDENCE_MIN = 20;
-const WATERMARK_REPEAT_LUMINANCE_DELTA_MIN = 12;
-
-interface WatermarkEvidence {
-  score: number;
-  luminanceDelta: number;
-}
 
 const LEGACY_96_WATERMARK_CONFIG: WatermarkConfig = {
   logoSize: 96,
@@ -171,90 +166,6 @@ export function calculateWatermarkPosition(
   };
 }
 
-function calculateLuminance(data: Uint8ClampedArray, index: number): number {
-  return data[index] * 0.2126 + data[index + 1] * 0.7152 + data[index + 2] * 0.0722;
-}
-
-function measureWatermarkEvidenceDetails(
-  imageData: ImageData,
-  alphaMap: Float32Array,
-  position: WatermarkPosition,
-): WatermarkEvidence {
-  let count = 0;
-  let alphaSum = 0;
-  let luminanceSum = 0;
-  let alphaSquaredSum = 0;
-  let luminanceSquaredSum = 0;
-  let alphaLuminanceSum = 0;
-  let highAlphaLuminanceSum = 0;
-  let highAlphaCount = 0;
-  let lowAlphaLuminanceSum = 0;
-  let lowAlphaCount = 0;
-
-  const { data, width: imageWidth, height: imageHeight } = imageData;
-  const { x, y, width, height } = position;
-
-  for (let row = 0; row < height; row++) {
-    const pixelY = y + row;
-    if (pixelY < 0 || pixelY >= imageHeight) continue;
-
-    for (let col = 0; col < width; col++) {
-      const alpha = alphaMap[row * width + col] ?? 0;
-      if (alpha < WATERMARK_ALPHA_MIN) continue;
-
-      const pixelX = x + col;
-      if (pixelX < 0 || pixelX >= imageWidth) continue;
-
-      const imageIndex = (pixelY * imageWidth + pixelX) * 4;
-      const luminance = calculateLuminance(data, imageIndex);
-
-      count++;
-      alphaSum += alpha;
-      luminanceSum += luminance;
-      alphaSquaredSum += alpha * alpha;
-      luminanceSquaredSum += luminance * luminance;
-      alphaLuminanceSum += alpha * luminance;
-
-      if (alpha > WATERMARK_ALPHA_HIGH) {
-        highAlphaLuminanceSum += luminance;
-        highAlphaCount++;
-      } else if (alpha < WATERMARK_ALPHA_LOW) {
-        lowAlphaLuminanceSum += luminance;
-        lowAlphaCount++;
-      }
-    }
-  }
-
-  if (count === 0) {
-    return { score: Number.NEGATIVE_INFINITY, luminanceDelta: Number.NEGATIVE_INFINITY };
-  }
-
-  const alphaMean = alphaSum / count;
-  const luminanceMean = luminanceSum / count;
-  const covariance = alphaLuminanceSum / count - alphaMean * luminanceMean;
-  const alphaVariance = alphaSquaredSum / count - alphaMean * alphaMean;
-  const luminanceVariance = luminanceSquaredSum / count - luminanceMean * luminanceMean;
-  const correlation =
-    covariance / (Math.sqrt(Math.max(alphaVariance, 0) * Math.max(luminanceVariance, 0)) + 1e-9);
-  const luminanceDelta =
-    highAlphaCount > 0 && lowAlphaCount > 0
-      ? highAlphaLuminanceSum / highAlphaCount - lowAlphaLuminanceSum / lowAlphaCount
-      : 0;
-
-  return {
-    score: correlation * 100 + luminanceDelta,
-    luminanceDelta,
-  };
-}
-
-function measureWatermarkEvidence(
-  imageData: ImageData,
-  alphaMap: Float32Array,
-  position: WatermarkPosition,
-): number {
-  return measureWatermarkEvidenceDetails(imageData, alphaMap, position).score;
-}
-
 export function chooseWatermarkAnchorOption(
   imageData: ImageData,
   options: WatermarkAnchorOption[],
@@ -269,23 +180,21 @@ export function chooseWatermarkAnchorOption(
     imageData.height,
     baseOption.config,
   );
-  const baseEvidence = measureWatermarkEvidence(imageData, baseOption.alphaMap, basePosition);
+  const baseSignal = measureWatermarkSignal(imageData, baseOption.alphaMap, basePosition);
 
   let strongestOption = baseOption;
-  let strongestEvidence = baseEvidence;
+  let strongestSignal = baseSignal;
 
   for (const option of options.slice(1)) {
     const position = calculateWatermarkPosition(imageData.width, imageData.height, option.config);
-    const evidence = measureWatermarkEvidence(imageData, option.alphaMap, position);
-    if (evidence > strongestEvidence) {
+    const signal = measureWatermarkSignal(imageData, option.alphaMap, position);
+    if (getWatermarkSignalStrength(signal) > getWatermarkSignalStrength(strongestSignal)) {
       strongestOption = option;
-      strongestEvidence = evidence;
+      strongestSignal = signal;
     }
   }
 
-  return strongestEvidence - baseEvidence >= WATERMARK_ANCHOR_SWITCH_EVIDENCE_GAP
-    ? strongestOption
-    : baseOption;
+  return hasReliableWatermarkSignal(strongestSignal) ? strongestOption : baseOption;
 }
 
 export function removeWatermarkWithResidualCheck(
@@ -296,17 +205,25 @@ export function removeWatermarkWithResidualCheck(
   let passes = 0;
 
   while (passes < WATERMARK_MAX_REMOVAL_PASSES) {
-    if (passes > 0) {
-      const residualEvidence = measureWatermarkEvidenceDetails(imageData, alphaMap, position);
-      if (
-        residualEvidence.score < WATERMARK_REPEAT_EVIDENCE_MIN ||
-        residualEvidence.luminanceDelta < WATERMARK_REPEAT_LUMINANCE_DELTA_MIN
-      ) {
-        break;
-      }
-    }
+    const originalSignal = measureWatermarkSignal(imageData, alphaMap, position);
+    if (!hasReliableWatermarkSignal(originalSignal)) break;
 
-    removeWatermark(imageData, alphaMap, position);
+    const candidateImageData = {
+      data: new Uint8ClampedArray(imageData.data),
+      width: imageData.width,
+      height: imageData.height,
+    } as ImageData;
+    removeWatermark(candidateImageData, alphaMap, position);
+    const assessment = assessWatermarkRemovalCandidate(
+      imageData,
+      candidateImageData,
+      alphaMap,
+      position,
+      originalSignal,
+    );
+    if (!assessment.safe) break;
+
+    imageData.data.set(candidateImageData.data);
     passes++;
   }
 

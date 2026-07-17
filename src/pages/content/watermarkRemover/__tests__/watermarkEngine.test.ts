@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { hasReliableWatermarkSignal, measureWatermarkSignal } from '../watermarkDetector';
 import {
   type WatermarkAnchorOption,
   type WatermarkConfig,
@@ -42,6 +43,24 @@ function createImageDataWithWatermark(config: WatermarkConfig, layers = 1): Imag
   }
 
   return { data, width, height } as ImageData;
+}
+
+function createImageDataWithWeakAlphaPattern(config: WatermarkConfig): ImageData {
+  const imageData = createImageDataWithWatermark(config, 0);
+  const position = calculateWatermarkPosition(imageData.width, imageData.height, config);
+
+  for (let row = 0; row < position.height; row++) {
+    for (let col = 0; col < position.width; col++) {
+      const alpha = TEST_ALPHA_MAP[row * position.width + col];
+      const value = Math.round(80 + alpha * 60);
+      const index = ((position.y + row) * imageData.width + position.x + col) * 4;
+      imageData.data[index] = value;
+      imageData.data[index + 1] = value;
+      imageData.data[index + 2] = value;
+    }
+  }
+
+  return imageData;
 }
 
 function createTestAnchorOption(config: WatermarkConfig): WatermarkAnchorOption {
@@ -209,5 +228,33 @@ describe('watermarkEngine config detection', () => {
 
     expect(passes).toBe(2);
     expectWatermarkAreaNearBase(imageData, config);
+  });
+
+  it('leaves a clean image pixel-identical when no watermark signal is present', () => {
+    const config = { logoSize: 4, marginRight: 1, marginBottom: 1 };
+    const imageData = createImageDataWithWatermark(config, 0);
+    const originalPixels = new Uint8ClampedArray(imageData.data);
+    const position = calculateWatermarkPosition(imageData.width, imageData.height, config);
+
+    const passes = removeWatermarkWithResidualCheck(imageData, TEST_ALPHA_MAP, position);
+
+    expect(passes).toBe(0);
+    expect(imageData.data).toEqual(originalPixels);
+  });
+
+  it('rejects a watermark-like pattern when trial removal would clip pixels', () => {
+    const config = { logoSize: 4, marginRight: 1, marginBottom: 1 };
+    const imageData = createImageDataWithWeakAlphaPattern(config);
+    const originalPixels = new Uint8ClampedArray(imageData.data);
+    const position = calculateWatermarkPosition(imageData.width, imageData.height, config);
+
+    expect(
+      hasReliableWatermarkSignal(measureWatermarkSignal(imageData, TEST_ALPHA_MAP, position)),
+    ).toBe(true);
+
+    const passes = removeWatermarkWithResidualCheck(imageData, TEST_ALPHA_MAP, position);
+
+    expect(passes).toBe(0);
+    expect(imageData.data).toEqual(originalPixels);
   });
 });
