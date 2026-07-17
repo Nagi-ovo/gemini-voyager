@@ -159,7 +159,7 @@ describe('runCoachmarkSequence', () => {
     expect(await hasSeenCoachmark('real-second')).toBe(true);
   });
 
-  it('continues to the next guide when the current one is closed by a page click', async () => {
+  it('keeps the current guide open when the page is clicked', async () => {
     const firstAnchor = document.createElement('div');
     const secondAnchor = document.createElement('div');
     const pageButton = document.createElement('button');
@@ -196,6 +196,12 @@ describe('runCoachmarkSequence', () => {
       expect(document.querySelector('.gv-coach-body')?.textContent).toBe('first');
     });
     pageButton.click();
+
+    expect(document.querySelector('.gv-coach-body')?.textContent).toBe('first');
+    expect(document.querySelector('.gv-coach-progress')?.textContent).toBe('1/2');
+    expect(await hasSeenCoachmark('outside-first')).toBe(false);
+
+    (document.querySelector('.gv-coach-dismiss') as HTMLElement).click();
 
     await vi.waitFor(() => {
       expect(document.querySelector('.gv-coach-body')?.textContent).toBe('second');
@@ -278,7 +284,7 @@ describe('showCoachmark', () => {
     expect(await pending).toBe('confirmed');
   });
 
-  it('does not swallow a click on the page while the guide is visible', async () => {
+  it('blocks page clicks while keeping the guide visible', async () => {
     const anchor = document.createElement('div');
     const pageButton = document.createElement('button');
     const onPageClick = vi.fn();
@@ -291,8 +297,12 @@ describe('showCoachmark', () => {
 
     pageButton.click();
 
-    expect(onPageClick).toHaveBeenCalledOnce();
-    expect(await p).toBe('advanced');
+    expect(onPageClick).not.toHaveBeenCalled();
+    expect(document.querySelector('.gv-coach')).toBeTruthy();
+    expect(await hasSeenCoachmark('page-stays-live')).toBe(false);
+
+    (document.querySelector('.gv-coach-close') as HTMLElement).click();
+    expect(await p).toBe('dismissed');
   });
 
   it('resolves "dismissed" when the close button is clicked, and marks seen', async () => {

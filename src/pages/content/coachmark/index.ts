@@ -13,7 +13,7 @@
  * consumer that mounts a preview and calls {@link showCoachmark}.
  *
  * Visual style mirrors the existing `gv-pm-*` body-appended popover (anchored,
- * arrow, click-outside / Escape to close) and the nudge cards' rAF `--show`
+ * arrow, explicit close / Escape to exit) and the nudge cards' rAF `--show`
  * entrance, so it feels native to the rest of the extension.
  */
 import browser from 'webextension-polyfill';
@@ -370,9 +370,11 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
         (target.closest('.gv-coach') || target === revealEl || revealEl?.contains(target))
       )
         return;
-      // Clicking back into the page only dismisses this step. The onboarding
-      // sequence should continue; explicit close / Escape still ends the tour.
-      settle('advanced', false);
+      // Keep accidental page clicks from dismissing the guide or triggering
+      // unrelated controls. Explicit buttons, Escape, and interactive reveals
+      // remain available.
+      ev.preventDefault();
+      ev.stopPropagation();
     };
     const onKey = (ev: KeyboardEvent) => {
       if (ev.key === 'Escape') {
