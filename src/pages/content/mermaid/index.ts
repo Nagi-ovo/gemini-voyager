@@ -365,7 +365,30 @@ const openFullscreen = (svgHtml: string) => {
     applyTransform();
   };
 
+  let closing = false;
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    translateX = e.clientX - startX;
+    translateY = e.clientY - startY;
+    applyTransform();
+  };
+  const handleMouseUp = () => {
+    isDragging = false;
+    content.classList.remove('dragging');
+  };
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') closeModal();
+  };
+  const removeDocumentListeners = () => {
+    document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  };
   const closeModal = () => {
+    if (closing) return;
+    closing = true;
+    removeDocumentListeners();
+    handleMouseUp();
     modal.classList.remove('visible');
     setTimeout(() => {
       modal.remove();
@@ -385,12 +408,6 @@ const openFullscreen = (svgHtml: string) => {
   });
 
   // ESC to close
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      closeModal();
-      document.removeEventListener('keydown', handleKeyDown);
-    }
-  };
   document.addEventListener('keydown', handleKeyDown);
 
   // Mouse wheel zoom
@@ -416,17 +433,8 @@ const openFullscreen = (svgHtml: string) => {
     content.classList.add('dragging');
   });
 
-  document.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-    translateX = e.clientX - startX;
-    translateY = e.clientY - startY;
-    applyTransform();
-  });
-
-  document.addEventListener('mouseup', () => {
-    isDragging = false;
-    content.classList.remove('dragging');
-  });
+  document.addEventListener('mousemove', handleMouseMove);
+  document.addEventListener('mouseup', handleMouseUp);
 
   // Auto-fit SVG to viewport
   const svgElement = content.querySelector('svg');
@@ -451,6 +459,9 @@ const openFullscreen = (svgHtml: string) => {
     modal.classList.add('visible');
   });
 };
+
+/** @internal Exported for lifecycle testing. */
+export const _openFullscreenForTest = openFullscreen;
 
 /**
  * Normalize whitespace characters in Mermaid code

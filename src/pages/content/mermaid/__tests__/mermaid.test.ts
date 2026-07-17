@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  _openFullscreenForTest,
   _resetMermaidLoader,
   isGenericLanguageLabel,
   isMermaidCode,
@@ -44,6 +45,26 @@ describe('Mermaid dynamic loading', () => {
       // Second call returns cached instance immediately (no new import)
       const second = await loadMermaid();
       expect(second).toBe(first);
+    });
+  });
+
+  describe('fullscreen lifecycle', () => {
+    it('removes document listeners for every close path', () => {
+      vi.useFakeTimers();
+      const removeSpy = vi.spyOn(document, 'removeEventListener');
+
+      _openFullscreenForTest('<svg width="100" height="100"><path d="M0 0" /></svg>');
+      document
+        .querySelector<HTMLButtonElement>('.gv-mermaid-modal-toolbar button:last-child')!
+        .click();
+
+      expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
+      expect(removeSpy).toHaveBeenCalledWith('mousemove', expect.any(Function));
+      expect(removeSpy).toHaveBeenCalledWith('mouseup', expect.any(Function));
+
+      vi.runAllTimers();
+      expect(document.querySelector('.gv-mermaid-modal')).toBeNull();
+      vi.useRealTimers();
     });
   });
 
