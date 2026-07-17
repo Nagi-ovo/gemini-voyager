@@ -32,7 +32,7 @@ Las revisiones de la tienda son lentas. Si quieres las últimas funciones, toma 
 
 **Chrome / Edge / Brave / Opera:**
 
-1. Ve a [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) y descarga el último `voyager-chrome-vX.Y.Z.zip`.
+1. Ve a [GitHub Releases](https://github.com/Nagi-ovo/voyager/releases) y descarga el último `voyager-chrome-vX.Y.Z.zip`.
 2. Descomprímelo.
 3. Abre la página de extensiones (`chrome://extensions`).
 4. Activa el **Modo de desarrollador** (arriba a la derecha).
@@ -40,7 +40,7 @@ Las revisiones de la tienda son lentas. Si quieres las últimas funciones, toma 
 
 **Firefox:**
 
-1. Ve a [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) y descarga el último `voyager-firefox-vX.Y.Z.xpi`.
+1. Ve a [Releases](https://github.com/Nagi-ovo/voyager/releases) y descarga el último `voyager-firefox-vX.Y.Z.xpi`.
 2. Abre la gestión de complementos (`about:addons`).
 3. Arrastra el archivo `.xpi` descargado allí para instalarlo (o haz clic en el engranaje ⚙️ arriba a la derecha -> **Instalar complemento desde archivo**).
 
@@ -61,4 +61,4 @@ Las revisiones de la tienda son lentas. Si quieres las últimas funciones, toma 
 
 ---
 
-_¿Quieres contribuir con código? Desarrolladores, por favor consulten la [Guía de Contribución](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/CONTRIBUTING.md)._
+_¿Quieres contribuir con código? Desarrolladores, por favor consulten la [Guía de Contribución](https://github.com/Nagi-ovo/voyager/blob/main/.github/CONTRIBUTING.md)._

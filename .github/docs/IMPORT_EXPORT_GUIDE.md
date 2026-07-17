@@ -156,4 +156,4 @@ A: Yes! Simply export from one browser and import to another.
 ## Feedback & Support
 
 For issues or suggestions, please visit:
-https://github.com/Nagi-ovo/gemini-voyager/issues/36
+https://github.com/Nagi-ovo/voyager/issues/36

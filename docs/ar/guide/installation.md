@@ -32,7 +32,7 @@
 
 **لـ Chrome / Edge / Brave / Opera:**
 
-1. قم بتنزيل أحدث `voyager-chrome-vX.Y.Z.zip` من [إصدارات GitHub](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. قم بتنزيل أحدث `voyager-chrome-vX.Y.Z.zip` من [إصدارات GitHub](https://github.com/Nagi-ovo/voyager/releases).
 2. قم بفك ضغط الملف.
 3. افتح صفحة الإضافات في متصفحك (`chrome://extensions`).
 4. قم بتمكين **وضع المطور** (أعلى اليسار أو اليمين حسب اللغة).
@@ -40,7 +40,7 @@
 
 **لـ Firefox:**
 
-1. قم بتنزيل أحدث `voyager-firefox-vX.Y.Z.xpi` من [الإصدارات](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. قم بتنزيل أحدث `voyager-firefox-vX.Y.Z.xpi` من [الإصدارات](https://github.com/Nagi-ovo/voyager/releases).
 2. افتح مدير الإضافات (`about:addons`).
 3. اسحب ملف `.xpi` وأفلته للتثبيت (أو انقر فوق أيقونة الترس ⚙️ -> **تثبيت إضافة من ملف**).
 
@@ -61,4 +61,4 @@ Safari يدعم الآن التوزيع المباشر! قم بتنزيل الت
 
 ---
 
-_إعداد التطوير؟ إذا كنت مطوراً وتتطلع للمساهمة، تحقق من [دليل المساهمة](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/CONTRIBUTING.md) الخاص بنا._
+_إعداد التطوير؟ إذا كنت مطوراً وتتطلع للمساهمة، تحقق من [دليل المساهمة](https://github.com/Nagi-ovo/voyager/blob/main/.github/CONTRIBUTING.md) الخاص بنا._

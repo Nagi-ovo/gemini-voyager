@@ -9,7 +9,7 @@ const CACHE_KEY = 'gemini-voyager-latest-version';
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 
 const downloadUrl = computed(() => {
-  return `https://github.com/Nagi-ovo/gemini-voyager/releases/v${latestVersion.value}`;
+  return `https://github.com/Nagi-ovo/voyager/releases/v${latestVersion.value}`;
 });
 
 onMounted(async () => {
@@ -29,9 +29,7 @@ onMounted(async () => {
     }
 
     // Fetch from API if cache is stale or missing
-    const response = await fetch(
-      'https://api.github.com/repos/Nagi-ovo/gemini-voyager/releases/latest',
-    );
+    const response = await fetch('https://api.github.com/repos/Nagi-ovo/voyager/releases/latest');
     if (!response.ok) throw new Error('Failed to fetch');
 
     const data = await response.json();

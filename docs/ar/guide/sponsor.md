@@ -25,7 +25,7 @@
 
 إنه مجاني ويساعد كثيراً! امنح مستودعنا نجمة لمساعدتنا في الوصول إلى المزيد من الأشخاص.
 
-[<img src="/badges/github-stars.svg" alt="نجوم GitHub" height="30"/>](https://github.com/Nagi-ovo/gemini-voyager)
+[<img src="/badges/github-stars.svg" alt="نجوم GitHub" height="30"/>](https://github.com/Nagi-ovo/voyager)
 
 ## أين تذهب الأموال؟
 

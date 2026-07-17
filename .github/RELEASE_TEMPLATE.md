@@ -30,8 +30,8 @@ Download the latest version for your browser:
 
 Edge users can keep using the Edge Add-ons build, which remains maintained for mobile and tablet needs. If Edge review is delayed, Chrome Web Store and GitHub manual packages remain available.
 
-See [README](https://github.com/Nagi-ovo/gemini-voyager#-installation) for installation instructions.
+See [README](https://github.com/Nagi-ovo/voyager#-installation) for installation instructions.
 
 ---
 
-**Full Changelog**: https://github.com/Nagi-ovo/gemini-voyager/compare/{PREV_VERSION}...{VERSION}
+**Full Changelog**: https://github.com/Nagi-ovo/voyager/compare/{PREV_VERSION}...{VERSION}

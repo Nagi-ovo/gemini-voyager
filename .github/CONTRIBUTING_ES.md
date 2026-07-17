@@ -49,8 +49,8 @@ Aunque las herramientas de IA son grandes asistentes, las contribuciones de "cop
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/Nagi-ovo/gemini-voyager.git
-cd gemini-voyager
+git clone https://github.com/Nagi-ovo/voyager.git
+cd voyager
 
 # Instalar dependencias
 bun install
@@ -271,9 +271,9 @@ Voyager mejora la experiencia de chat de Gemini AI con:
 
 ## Obtener Ayuda
 
-- 💬 [GitHub Discussions](https://github.com/Nagi-ovo/gemini-voyager/discussions) - Haz preguntas
-- 🐛 [Issues](https://github.com/Nagi-ovo/gemini-voyager/issues) - Reporta errores
-- 📖 [Documentación](https://gemini-voyager.vercel.app/) - Lee la documentación
+- 💬 [GitHub Discussions](https://github.com/Nagi-ovo/voyager/discussions) - Haz preguntas
+- 🐛 [Issues](https://github.com/Nagi-ovo/voyager/issues) - Reporta errores
+- 📖 [Documentación](https://voyager.nagi.fun/) - Lee la documentación
 
 ---
 

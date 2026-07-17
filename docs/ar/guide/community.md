@@ -46,7 +46,7 @@
 
 إذا وجدت خطأً في البرنامج (Bug) أو كان لديك طلب ميزة واضح (Feature Request)، نوصي بتقديم مشكلة (Issue) على GitHub:
 
-- [تقديم تقرير خطأ](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
-- [تقديم طلب ميزة](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
+- [تقديم تقرير خطأ](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml)
+- [تقديم طلب ميزة](https://github.com/Nagi-ovo/voyager/issues/new?template=feature_request.yml)
 
 شكراً لدعمك لـ Voyager! ❤️

@@ -102,7 +102,7 @@ images:
 describe('resolveChangelogImageUrl', () => {
   it('rewrites github raw promotion image URLs to runtime URLs', () => {
     const source =
-      'https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Banner.png';
+      'https://github.com/Nagi-ovo/voyager/raw/main/docs/public/assets/promotion/Promo-Banner.png';
 
     const result = resolveChangelogImageUrl(source, (path) => `moz-extension://test-id/${path}`);
 
@@ -111,7 +111,7 @@ describe('resolveChangelogImageUrl', () => {
 
   it('rewrites raw.githubusercontent.com promotion image URLs to runtime URLs', () => {
     const source =
-      'https://raw.githubusercontent.com/Nagi-ovo/gemini-voyager/main/docs/public/assets/promotion/Promo-Banner-jp.png';
+      'https://raw.githubusercontent.com/Nagi-ovo/voyager/main/docs/public/assets/promotion/Promo-Banner-jp.png';
 
     const result = resolveChangelogImageUrl(source, (path) => `moz-extension://test-id/${path}`);
 
@@ -120,7 +120,7 @@ describe('resolveChangelogImageUrl', () => {
 
   it('keeps unsupported image URLs unchanged', () => {
     const source =
-      'https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Unknown.png';
+      'https://github.com/Nagi-ovo/voyager/raw/main/docs/public/assets/promotion/Promo-Unknown.png';
 
     const result = resolveChangelogImageUrl(source, (path) => `moz-extension://test-id/${path}`);
 
@@ -131,7 +131,7 @@ describe('resolveChangelogImageUrl', () => {
 describe('rewriteChangelogImageUrls', () => {
   it('rewrites supported markdown image URLs and preserves others', () => {
     const source = [
-      '![banner](https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Banner-cn.png)',
+      '![banner](https://github.com/Nagi-ovo/voyager/raw/main/docs/public/assets/promotion/Promo-Banner-cn.png)',
       '![external](https://example.com/banner.png)',
     ].join('\n');
 
@@ -143,7 +143,7 @@ describe('rewriteChangelogImageUrls', () => {
 
   it('falls back to original URL when runtime URL resolution fails', () => {
     const source =
-      '![banner](https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Banner.png)';
+      '![banner](https://github.com/Nagi-ovo/voyager/raw/main/docs/public/assets/promotion/Promo-Banner.png)';
 
     const result = rewriteChangelogImageUrls(source, () => null);
 
@@ -152,7 +152,7 @@ describe('rewriteChangelogImageUrls', () => {
 
   it('skips rewriting when rewrite flag is disabled', () => {
     const source =
-      '![banner](https://github.com/Nagi-ovo/gemini-voyager/raw/main/docs/public/assets/promotion/Promo-Banner.png)';
+      '![banner](https://github.com/Nagi-ovo/voyager/raw/main/docs/public/assets/promotion/Promo-Banner.png)';
 
     const result = rewriteChangelogImageUrls(
       source,

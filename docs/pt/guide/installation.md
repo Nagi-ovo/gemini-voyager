@@ -32,7 +32,7 @@ O processo de revisão da Web Store pode ser lento. Se quiser a versão de ponta
 
 **Para Chrome / Edge / Brave / Opera:**
 
-1. Descarregue o último `voyager-chrome-vX.Y.Z.zip` das [Releases do GitHub](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. Descarregue o último `voyager-chrome-vX.Y.Z.zip` das [Releases do GitHub](https://github.com/Nagi-ovo/voyager/releases).
 2. Descompacte o ficheiro.
 3. Abra a página de Extensões do seu navegador (`chrome://extensions`).
 4. Ative o **Modo de programador** (canto superior direito).
@@ -40,7 +40,7 @@ O processo de revisão da Web Store pode ser lento. Se quiser a versão de ponta
 
 **Para Firefox:**
 
-1. Descarregue o último `voyager-firefox-vX.Y.Z.xpi` das [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. Descarregue o último `voyager-firefox-vX.Y.Z.xpi` das [Releases](https://github.com/Nagi-ovo/voyager/releases).
 2. Abra o Gestor de Add-ons (`about:addons`).
 3. Arraste e largue o ficheiro `.xpi` para instalar (ou clique no ícone de engrenagem ⚙️ -> **Instalar Add-on de Ficheiro**).
 
@@ -61,4 +61,4 @@ O Safari agora suporta distribuição direta! Descarregue a aplicação pré-ass
 
 ---
 
-_Configuração de desenvolvimento? Se é um programador à procura de contribuir, consulte o nosso [Guia de Contribuição](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/CONTRIBUTING.md)._
+_Configuração de desenvolvimento? Se é um programador à procura de contribuir, consulte o nosso [Guia de Contribuição](https://github.com/Nagi-ovo/voyager/blob/main/.github/CONTRIBUTING.md)._

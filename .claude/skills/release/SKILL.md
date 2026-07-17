@@ -146,7 +146,7 @@ If it fails, investigate — common causes: lint failing in CI (not locally beca
 
 Credential notes:
 - The `CHROME_REFRESH_TOKEN` can be regenerated locally with `bun run scripts/cws-refresh-token.ts <client_secret.json>`.
-- Microsoft Edge Publish API v1.1 uses `EDGE_CLIENT_ID`, `EDGE_PRODUCT_ID`, and `EDGE_API_KEY`. The API key currently expires after 72 days; rotate it in Partner Center > Edge > Publish API > New API key, then run `gh secret set EDGE_API_KEY -R Nagi-ovo/gemini-voyager`.
+- Microsoft Edge Publish API v1.1 uses `EDGE_CLIENT_ID`, `EDGE_PRODUCT_ID`, and `EDGE_API_KEY`. The API key currently expires after 72 days; rotate it in Partner Center > Edge > Publish API > New API key, then run `gh secret set EDGE_API_KEY -R Nagi-ovo/voyager`.
 
 > ⚡ **Don't idle during the ~5–6 min CI build.** The remote workflow itself is serial, but local release work can overlap it. The moment the tag is pushed: monitor CI, start Step 8's `ENABLE_SAFARI_UPDATE_CHECK=true bun run build:safari`, then run the `xcodebuild archive` / `xcodebuild -exportArchive` / DMG packaging flow while CI runs. Use the `Any Mac` CLI destination (`generic/platform=macOS`) so the app is universal instead of tied to the current Mac. Apply the release body only after the GitHub Release exists, and upload the Safari DMG only after CI has created the release. This overlaps the CI wait, AMO wait, release-body drafting, and Safari archive/export into one wall-clock window. (Skip this overlap only if Xcode/signing isn't available or the user deferred Safari.)
 

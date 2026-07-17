@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "owner": {
     "name": "voyager-official",
-    "url": "https://github.com/Nagi-ovo/gemini-voyager"
+    "url": "https://github.com/Nagi-ovo/voyager"
   },
   "description": "Bundled official plugin catalog for Voyager — declarative plugins that enhance AI chat sites (Claude, ChatGPT, …).",
   "plugins": [

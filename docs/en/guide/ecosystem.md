@@ -7,5 +7,5 @@ The following projects are inspired by or built on top of Voyager, bringing simi
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** — An advanced browser extension supercharging Doubao with enhanced navigation, organization, and productivity features.
 
 ::: tip Is your project inspired by Voyager?
-[Open an issue](https://github.com/Nagi-ovo/gemini-voyager/issues/new) to let me know and I'll add it here.
+[Open an issue](https://github.com/Nagi-ovo/voyager/issues/new) to let me know and I'll add it here.
 :::

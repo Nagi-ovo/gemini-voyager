@@ -16,7 +16,7 @@ import type {
 import { validateAnnouncementFeed } from './validate';
 
 export const DEFAULT_ANNOUNCEMENTS_URL =
-  'https://raw.githubusercontent.com/Nagi-ovo/gemini-voyager/main/docs/public/announcements.json';
+  'https://raw.githubusercontent.com/Nagi-ovo/voyager/main/docs/public/announcements.json';
 export const REMOTE_ANNOUNCEMENTS_ALARM_NAME = 'gv-remote-announcements-check';
 
 const CHECK_INTERVAL_MINUTES = 6 * 60;

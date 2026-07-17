@@ -32,7 +32,7 @@
 
 **Для Chrome / Edge / Brave / Opera:**
 
-1. Скачайте последний `voyager-chrome-vX.Y.Z.zip` из [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. Скачайте последний `voyager-chrome-vX.Y.Z.zip` из [GitHub Releases](https://github.com/Nagi-ovo/voyager/releases).
 2. Распакуйте файл.
 3. Откройте страницу Расширений вашего браузера (`chrome://extensions`).
 4. Включите **Режим разработчика** (вверху справа).
@@ -40,7 +40,7 @@
 
 **Для Firefox:**
 
-1. Скачайте последний `voyager-firefox-vX.Y.Z.xpi` из [Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. Скачайте последний `voyager-firefox-vX.Y.Z.xpi` из [Releases](https://github.com/Nagi-ovo/voyager/releases).
 2. Откройте Менеджер дополнений (`about:addons`).
 3. Перетащите файл `.xpi` для установки (или нажмите значок шестеренки ⚙️ -> **Установить дополнение из файла**).
 
@@ -61,4 +61,4 @@ Safari теперь поддерживает прямое распростран
 
 ---
 
-_Настройка для разработки? Если вы разработчик и хотите внести свой вклад, ознакомьтесь с нашим [Руководством по участию](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/CONTRIBUTING.md)._
+_Настройка для разработки? Если вы разработчик и хотите внести свой вклад, ознакомьтесь с нашим [Руководством по участию](https://github.com/Nagi-ovo/voyager/blob/main/.github/CONTRIBUTING.md)._

@@ -7,5 +7,5 @@ Les projets suivants sont inspirés par Voyager ou construits sur sa base, appor
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** — Une extension de navigateur avancée qui améliore Doubao avec une navigation optimisée, une meilleure organisation et des fonctionnalités de productivité.
 
 ::: tip Votre projet est inspiré par Voyager ?
-[Ouvrez une issue](https://github.com/Nagi-ovo/gemini-voyager/issues/new) pour me le faire savoir et je l'ajouterai ici.
+[Ouvrez une issue](https://github.com/Nagi-ovo/voyager/issues/new) pour me le faire savoir et je l'ajouterai ici.
 :::

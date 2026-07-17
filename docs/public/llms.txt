@@ -5,7 +5,7 @@
 ## Links
 
 - [Documentation](https://voyager.nagi.fun/en/)
-- [GitHub](https://github.com/Nagi-ovo/gemini-voyager)
+- [GitHub](https://github.com/Nagi-ovo/voyager)
 - [Chrome Web Store](https://chromewebstore.google.com/detail/voyager/iifacdnjakkhjjiengaffnegbndgingi)
 - [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
 - [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/gemini-voyager/)

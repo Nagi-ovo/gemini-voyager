@@ -41,4 +41,4 @@ Nous pouvons mettre à jour notre Politique de Confidentialité de temps à autr
 
 ## Nous Contacter
 
-Si vous avez des questions concernant cette Politique de Confidentialité, veuillez nous contacter via notre [Dépôt GitHub](https://github.com/Nagi-ovo/gemini-voyager).
+Si vous avez des questions concernant cette Politique de Confidentialité, veuillez nous contacter via notre [Dépôt GitHub](https://github.com/Nagi-ovo/voyager).

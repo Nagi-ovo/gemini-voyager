@@ -7,5 +7,5 @@
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** — 향상된 탐색, 정리 및 생산성 기능으로 Doubao를 강화하는 브라우저 확장 프로그램입니다.
 
 ::: tip Voyager에서 영감을 받은 프로젝트가 있나요?
-[Issue를 열어](https://github.com/Nagi-ovo/gemini-voyager/issues/new) 알려주시면 여기에 추가하겠습니다.
+[Issue를 열어](https://github.com/Nagi-ovo/voyager/issues/new) 알려주시면 여기에 추가하겠습니다.
 :::

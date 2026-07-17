@@ -46,7 +46,7 @@ Discord サーバーに参加して、他の Voyager ユーザーと交流しま
 
 バグを発見した場合や、具体的な機能リクエストがある場合は、GitHub で Issue を作成することをお勧めします：
 
-- [バグ報告を提出する](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
-- [機能提案を提出する](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
+- [バグ報告を提出する](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml)
+- [機能提案を提出する](https://github.com/Nagi-ovo/voyager/issues/new?template=feature_request.yml)
 
 Voyager をサポートしていただき、ありがとうございます！❤️

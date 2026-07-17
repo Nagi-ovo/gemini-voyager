@@ -7,5 +7,5 @@
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** — Doubao を強化するブラウザ拡張機能。ナビゲーション、整理、生産性機能を向上させます。
 
 ::: tip あなたのプロジェクトも Voyager にインスパイアされましたか？
-[Issue を作成](https://github.com/Nagi-ovo/gemini-voyager/issues/new)してお知らせいただければ、ここに追加します。
+[Issue を作成](https://github.com/Nagi-ovo/voyager/issues/new)してお知らせいただければ、ここに追加します。
 :::

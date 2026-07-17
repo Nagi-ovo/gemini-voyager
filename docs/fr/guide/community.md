@@ -46,7 +46,7 @@ Vous pouvez aussi me retrouver sur ces plateformes :
 
 Si vous avez trouvé un bug ou avez une demande de fonctionnalité spécifique, veuillez ouvrir une issue sur GitHub :
 
-- [Signaler un Bug](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
-- [Suggérer une Fonctionnalité](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
+- [Signaler un Bug](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml)
+- [Suggérer une Fonctionnalité](https://github.com/Nagi-ovo/voyager/issues/new?template=feature_request.yml)
 
 Merci de soutenir Voyager ! ❤️

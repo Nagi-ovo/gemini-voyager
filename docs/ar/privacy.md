@@ -41,4 +41,4 @@
 
 ## اتصل بنا
 
-إذا كان لديك أي أسئلة حول سياسة الخصوصية هذه، يرجى الاتصال بنا عبر [مستودع GitHub](https://github.com/Nagi-ovo/gemini-voyager).
+إذا كان لديك أي أسئلة حول سياسة الخصوصية هذه، يرجى الاتصال بنا عبر [مستودع GitHub](https://github.com/Nagi-ovo/voyager).

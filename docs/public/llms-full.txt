@@ -11,7 +11,7 @@ The extension is built with TypeScript and React, uses Manifest V3 for cross-bro
 - **Version**: 1.4.3
 - **License**: GPLv3
 - **Author**: Jesse Zhang
-- **Repository**: https://github.com/Nagi-ovo/gemini-voyager
+- **Repository**: https://github.com/Nagi-ovo/voyager
 - **Documentation**: https://voyager.nagi.fun
 - **Languages**: English, Simplified Chinese, Traditional Chinese, Japanese, Korean, French, Spanish, Portuguese, Russian, Arabic
 
@@ -22,13 +22,13 @@ The extension is built with TypeScript and React, uses Manifest V3 for cross-bro
 - **Chrome / Brave / Opera / Vivaldi**: Install from the [Chrome Web Store](https://chromewebstore.google.com/detail/voyager/iifacdnjakkhjjiengaffnegbndgingi)
 - **Microsoft Edge**: Install from [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne) or the Chrome Web Store
 - **Firefox**: Install from [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
-- **Safari (macOS)**: Download the pre-signed `.dmg` from [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases)
+- **Safari (macOS)**: Download the pre-signed `.dmg` from [GitHub Releases](https://github.com/Nagi-ovo/voyager/releases)
 
 Edge users can keep using the Edge Add-ons build, which remains maintained for mobile and tablet needs. If Edge review is delayed, Chrome Web Store and GitHub manual packages remain available.
 
 ### Manual Installation (Latest Features)
 
-1. Download the latest release from [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases).
+1. Download the latest release from [GitHub Releases](https://github.com/Nagi-ovo/voyager/releases).
 2. For Chrome/Edge: Unzip, open `chrome://extensions`, enable Developer Mode, click "Load unpacked."
 3. For Firefox: Drag and drop the `.xpi` file into the Add-ons Manager.
 4. For Safari: Open the `.dmg`, install the app, enable the extension in Safari Settings > Extensions.
@@ -253,19 +253,19 @@ Voyager is designed with privacy as a core principle:
 
 ## Community
 
-- **GitHub**: https://github.com/Nagi-ovo/gemini-voyager
+- **GitHub**: https://github.com/Nagi-ovo/voyager
 - **Discord**: https://discord.gg/TEUFxdMbGb
 - **X/Twitter**: https://x.com/Nag1ovo
 - **Product Hunt**: https://www.producthunt.com/posts/gemini-voyager
 
 ## Contributing
 
-Voyager welcomes contributions. See the [Contributing Guide](https://github.com/Nagi-ovo/gemini-voyager/blob/main/.github/CONTRIBUTING.md) for setup instructions, code style guidelines, and the PR process.
+Voyager welcomes contributions. See the [Contributing Guide](https://github.com/Nagi-ovo/voyager/blob/main/.github/CONTRIBUTING.md) for setup instructions, code style guidelines, and the PR process.
 
 ## Links
 
 - Documentation: https://voyager.nagi.fun/en/
-- GitHub: https://github.com/Nagi-ovo/gemini-voyager
+- GitHub: https://github.com/Nagi-ovo/voyager
 - Chrome Web Store: https://chromewebstore.google.com/detail/voyager/iifacdnjakkhjjiengaffnegbndgingi
 - Firefox Add-ons: https://addons.mozilla.org/firefox/addon/gemini-voyager/
 - Privacy Policy: https://voyager.nagi.fun/en/privacy

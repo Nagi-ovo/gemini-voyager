@@ -51,4 +51,4 @@ Voyager 对从 Google API 获取的信息的使用和传输，遵守 Chrome Web 
 
 ## 联系我们
 
-如有隐私问题，请通过 [Voyager GitHub 仓库](https://github.com/Nagi-ovo/gemini-voyager) 联系我们。
+如有隐私问题，请通过 [Voyager GitHub 仓库](https://github.com/Nagi-ovo/voyager) 联系我们。

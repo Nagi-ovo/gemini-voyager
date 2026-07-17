@@ -45,4 +45,4 @@ Voyager 不會與任何第三方服務、廣告商或分析提供商共享資料
 
 ## 聯絡我們
 
-如果您對本隱私政策有任何疑問，請透過我們的 [GitHub 儲存庫](https://github.com/Nagi-ovo/gemini-voyager) 聯絡我們。
+如果您對本隱私政策有任何疑問，請透過我們的 [GitHub 儲存庫](https://github.com/Nagi-ovo/voyager) 聯絡我們。

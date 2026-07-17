@@ -41,4 +41,4 @@ Voyager는 제3자 서비스, 광고주 또는 분석 제공업체와 어떠한 
 
 ## 문의하기
 
-이 개인정보 처리방침에 대해 궁금한 점이 있으면 [GitHub 저장소](https://github.com/Nagi-ovo/gemini-voyager)를 통해 문의해 주세요.
+이 개인정보 처리방침에 대해 궁금한 점이 있으면 [GitHub 저장소](https://github.com/Nagi-ovo/voyager)를 통해 문의해 주세요.

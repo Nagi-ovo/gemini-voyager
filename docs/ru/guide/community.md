@@ -46,7 +46,7 @@
 
 Если вы нашли ошибку или у вас есть конкретный запрос на функцию, пожалуйста, откройте issue на GitHub:
 
-- [Сообщить об ошибке](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
-- [Предложить функцию](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
+- [Сообщить об ошибке](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml)
+- [Предложить функцию](https://github.com/Nagi-ovo/voyager/issues/new?template=feature_request.yml)
 
 Спасибо за поддержку Voyager! ❤️

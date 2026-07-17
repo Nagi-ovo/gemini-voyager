@@ -41,4 +41,4 @@ Podemos atualizar a nossa Política de Privacidade ocasionalmente. Iremos notifi
 
 ## Contacte-nos
 
-Se tiver alguma dúvida sobre esta Política de Privacidade, por favor contacte-nos através do nosso [Repositório GitHub](https://github.com/Nagi-ovo/gemini-voyager).
+Se tiver alguma dúvida sobre esta Política de Privacidade, por favor contacte-nos através do nosso [Repositório GitHub](https://github.com/Nagi-ovo/voyager).

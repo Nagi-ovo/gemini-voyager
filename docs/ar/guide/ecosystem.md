@@ -7,5 +7,5 @@
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** — إضافة متصفح متقدمة تعزز Doubao بميزات التنقل المحسّن والتنظيم والإنتاجية.
 
 ::: tip مشروعك مستوحى من Voyager؟
-[افتح issue](https://github.com/Nagi-ovo/gemini-voyager/issues/new) لإخباري وسأضيفه هنا.
+[افتح issue](https://github.com/Nagi-ovo/voyager/issues/new) لإخباري وسأضيفه هنا.
 :::

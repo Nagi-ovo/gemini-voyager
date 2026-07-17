@@ -1665,7 +1665,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
 
         if (!latest) {
           const resp = await fetch(
-            'https://api.github.com/repos/Nagi-ovo/gemini-voyager/releases/latest',
+            'https://api.github.com/repos/Nagi-ovo/voyager/releases/latest',
             {
               headers: { Accept: 'application/vnd.github+json' },
             },
@@ -2195,12 +2195,12 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
       : false;
   const latestReleaseTag = toReleaseTag(latestVersion ?? normalizedLatestVersion ?? undefined);
   const latestReleaseUrl = latestReleaseTag
-    ? `https://github.com/Nagi-ovo/gemini-voyager/releases/tag/${latestReleaseTag}`
-    : 'https://github.com/Nagi-ovo/gemini-voyager/releases/latest';
+    ? `https://github.com/Nagi-ovo/voyager/releases/tag/${latestReleaseTag}`
+    : 'https://github.com/Nagi-ovo/voyager/releases/latest';
   const currentReleaseTag = toReleaseTag(extVersion);
   const releaseUrl = extVersion
-    ? `https://github.com/Nagi-ovo/gemini-voyager/releases/tag/${currentReleaseTag ?? `v${extVersion}`}`
-    : 'https://github.com/Nagi-ovo/gemini-voyager/releases';
+    ? `https://github.com/Nagi-ovo/voyager/releases/tag/${currentReleaseTag ?? `v${extVersion}`}`
+    : 'https://github.com/Nagi-ovo/voyager/releases';
 
   const websiteUrl =
     language === 'zh' ? 'https://voyager.nagi.fun' : `https://voyager.nagi.fun/${language}`;
@@ -4434,7 +4434,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         )}
 
         <a
-          href="https://github.com/Nagi-ovo/gemini-voyager"
+          href="https://github.com/Nagi-ovo/voyager"
           target="_blank"
           rel="noreferrer"
           className="bg-primary hover:bg-primary/90 text-primary-foreground hover:shadow-primary/25 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold tracking-wide transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.97]"

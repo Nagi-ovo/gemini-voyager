@@ -46,7 +46,7 @@ Também pode encontrar-me nestas plataformas:
 
 Se encontrou um erro no programa (Bug) ou tem um pedido de funcionalidade claro (Feature Request), recomendamos submeter um Issue no GitHub:
 
-- [Submeter Relatório de Bug](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
-- [Submeter Pedido de Funcionalidade](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
+- [Submeter Relatório de Bug](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml)
+- [Submeter Pedido de Funcionalidade](https://github.com/Nagi-ovo/voyager/issues/new?template=feature_request.yml)
 
 Obrigado pelo seu apoio ao Voyager! ❤️

@@ -32,7 +32,7 @@
 	<key>SUEnableInstallerLauncherService</key>
 	<true/>
 	<key>SUFeedURL</key>
-	<string>https://github.com/Nagi-ovo/gemini-voyager/releases/latest/download/appcast.xml</string>
+	<string>https://github.com/Nagi-ovo/voyager/releases/latest/download/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>uOB77S8Ti+ELfkD/GEto1hWWFrV5PpSkh++M7eHiYGE=</string>
 </dict>

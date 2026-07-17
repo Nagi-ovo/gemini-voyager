@@ -33,7 +33,7 @@ Image Refinement 採用的是 **反向 Alpha 混合算法 (Reverse Alpha Blendin
 ## 特別鳴謝
 
 本功能基於 [journey-ad (Jad)](https://github.com/journey-ad) 開發的 [gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) 項目。該項目是 [allenk](https://github.com/allenk) 開發的 [GeminiWatermarkTool C++ 版本](https://github.com/allenk/GeminiWatermarkTool) 的 JavaScript 移植版。感謝原作者們對開源社區的貢獻。🧡
-相關第三方 MIT 聲明見 [THIRD_PARTY_NOTICES.md](https://github.com/Nagi-ovo/gemini-voyager/blob/main/THIRD_PARTY_NOTICES.md)。
+相關第三方 MIT 聲明見 [THIRD_PARTY_NOTICES.md](https://github.com/Nagi-ovo/voyager/blob/main/THIRD_PARTY_NOTICES.md)。
 
 ## 隱私與安全
 

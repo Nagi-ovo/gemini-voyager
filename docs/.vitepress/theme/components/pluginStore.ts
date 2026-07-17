@@ -4,7 +4,7 @@
 
 /** Bundled official catalog, mirrored from the extension's main repository. */
 export const MARKETPLACE_URL =
-  'https://raw.githubusercontent.com/Nagi-ovo/gemini-voyager/main/src/features/plugins/catalog/marketplace.json';
+  'https://raw.githubusercontent.com/Nagi-ovo/voyager/main/src/features/plugins/catalog/marketplace.json';
 
 export interface MarketplaceEntry {
   name: string;
@@ -155,7 +155,7 @@ export const NATIVE_PLUGINS: (PluginManifest & { official: boolean })[] = [
     license: 'GPL-3.0-or-later',
     engine: '>=1.1.0',
     tier: 'declarative',
-    homepage: 'https://github.com/Nagi-ovo/gemini-voyager/tree/main/src/features/plugins/builtin',
+    homepage: 'https://github.com/Nagi-ovo/voyager/tree/main/src/features/plugins/builtin',
     matches: ['https://claude.ai/*', 'https://chatgpt.com/*', 'https://chat.openai.com/*'],
     official: true,
     i18n: {
@@ -215,7 +215,7 @@ export const NATIVE_PLUGINS: (PluginManifest & { official: boolean })[] = [
     engine: '>=1.1.0',
     tier: 'declarative',
     homepage:
-      'https://github.com/Nagi-ovo/gemini-voyager/tree/main/src/features/plugins/builtin/claudeTimeline',
+      'https://github.com/Nagi-ovo/voyager/tree/main/src/features/plugins/builtin/claudeTimeline',
     matches: ['https://claude.ai/*'],
     official: true,
     i18n: {

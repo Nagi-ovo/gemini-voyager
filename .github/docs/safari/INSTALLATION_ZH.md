@@ -13,7 +13,7 @@
 
 ### 1. 下载
 
-从 [GitHub Releases](https://github.com/Nagi-ovo/gemini-voyager/releases) 下载最新的 `voyager-vX.Y.Z.dmg`。
+从 [GitHub Releases](https://github.com/Nagi-ovo/voyager/releases) 下载最新的 `voyager-vX.Y.Z.dmg`。
 
 ### 2. 安装
 
@@ -55,4 +55,4 @@ open "Gemini Voyager/Gemini Voyager.xcodeproj"
 
 ---
 
-**需要帮助？** 在 [GitHub](https://github.com/Nagi-ovo/gemini-voyager/issues) 提交 Issue
+**需要帮助？** 在 [GitHub](https://github.com/Nagi-ovo/voyager/issues) 提交 Issue

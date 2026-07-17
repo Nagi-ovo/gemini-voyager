@@ -7,5 +7,5 @@
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** — 为豆包提供增强导航、组织管理和生产力功能的浏览器扩展。
 
 ::: tip 你的项目也受到了 Voyager 的启发？
-欢迎[提交 Issue](https://github.com/Nagi-ovo/gemini-voyager/issues/new) 告诉我，我会将你的项目添加到这里。
+欢迎[提交 Issue](https://github.com/Nagi-ovo/voyager/issues/new) 告诉我，我会将你的项目添加到这里。
 :::

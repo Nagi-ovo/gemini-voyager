@@ -7,5 +7,5 @@
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** — 為豆包提供增強導航、組織管理和生產力功能的瀏覽器擴充功能。
 
 ::: tip 你的項目也受到了 Voyager 的啟發？
-歡迎[提交 Issue](https://github.com/Nagi-ovo/gemini-voyager/issues/new) 告訴我，我會將你的項目添加到這裡。
+歡迎[提交 Issue](https://github.com/Nagi-ovo/voyager/issues/new) 告訴我，我會將你的項目添加到這裡。
 :::

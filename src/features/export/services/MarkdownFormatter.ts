@@ -226,7 +226,7 @@ export class MarkdownFormatter {
    */
   private static formatFooter(metadata: ConversationMetadata): string {
     return [
-      `*Exported from [Voyager](https://github.com/Nagi-ovo/gemini-voyager)*`,
+      `*Exported from [Voyager](https://github.com/Nagi-ovo/voyager)*`,
       `*Generated on ${this.formatDate(metadata.exportedAt)}*`,
     ].join('  \n'); // Two spaces for line break
   }

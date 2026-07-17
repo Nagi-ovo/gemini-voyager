@@ -9,7 +9,7 @@
 
 ---
 
-This is the body that lands on `https://github.com/Nagi-ovo/gemini-voyager/releases/tag/v{VERSION}`. It's **derivative of the in-product changelog** (`src/pages/content/changelog/notes/{VERSION}.md`) but reformatted for a developer audience:
+This is the body that lands on `https://github.com/Nagi-ovo/voyager/releases/tag/v{VERSION}`. It's **derivative of the in-product changelog** (`src/pages/content/changelog/notes/{VERSION}.md`) but reformatted for a developer audience:
 
 - Two languages (English + 简体中文), rendered as **separate sections** — not mixed per cell.
 - Table format with PR/commit attribution in a third column.
@@ -89,7 +89,7 @@ _除特别注明外，均由 @Nagi-ovo 提交。_
 
 * @{user} made their first contribution in PR #{NNN}
 
-**Full Changelog**: https://github.com/Nagi-ovo/gemini-voyager/compare/v{PREV_VERSION}...v{VERSION}
+**Full Changelog**: https://github.com/Nagi-ovo/voyager/compare/v{PREV_VERSION}...v{VERSION}
 ```
 
 ### Flavor 2 — Mixed contributors (keep attribution column)
@@ -122,7 +122,7 @@ Perform these steps after the tag push completes (see SKILL.md Step 6).
 ```bash
 PREV_TAG=$(git describe --tags --abbrev=0 v{VERSION}^)
 git log ${PREV_TAG}..v{VERSION} --oneline        # authoritative list of commits for the tables
-gh api repos/Nagi-ovo/gemini-voyager/releases/generate-notes \
+gh api repos/Nagi-ovo/voyager/releases/generate-notes \
   -f tag_name=v{VERSION} \
   -f previous_tag_name=${PREV_TAG} \
   --jq '.body'                                    # use ONLY for the New Contributors section
@@ -264,7 +264,7 @@ Two of the five commits are external PRs (#547 chang-xinhai, #567 LinJHS), so th
 * @chang-xinhai made their first contribution in PR #547
 * @LinJHS made their first contribution in PR #567
 
-**Full Changelog**: https://github.com/Nagi-ovo/gemini-voyager/compare/v1.3.8...v1.3.9
+**Full Changelog**: https://github.com/Nagi-ovo/voyager/compare/v1.3.8...v1.3.9
 ```
 
 ## Worked example — v1.4.2 (Flavor 1: owner-only)
@@ -311,5 +311,5 @@ _除特别注明外，均由 @Nagi-ovo 提交。_
 
 ---
 
-**Full Changelog**: https://github.com/Nagi-ovo/gemini-voyager/compare/v1.4.0...v1.4.2
+**Full Changelog**: https://github.com/Nagi-ovo/voyager/compare/v1.4.0...v1.4.2
 ```

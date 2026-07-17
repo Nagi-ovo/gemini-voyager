@@ -299,12 +299,9 @@ async function getLatestVersionCached(): Promise<string | null> {
       return cached.version;
     }
 
-    const resp = await fetch(
-      'https://api.github.com/repos/Nagi-ovo/gemini-voyager/releases/latest',
-      {
-        headers: { Accept: 'application/vnd.github+json' },
-      },
-    );
+    const resp = await fetch('https://api.github.com/repos/Nagi-ovo/voyager/releases/latest', {
+      headers: { Accept: 'application/vnd.github+json' },
+    });
     if (!resp.ok) {
       throw new Error(`HTTP ${resp.status}`);
     }
@@ -696,7 +693,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       // and log the error so site-specific failures (e.g. on Claude/ChatGPT
       // custom websites) are diagnosable from the console.
       const openReleasesFallback = () => {
-        window.open('https://github.com/Nagi-ovo/gemini-voyager/releases', '_blank', 'noopener');
+        window.open('https://github.com/Nagi-ovo/voyager/releases', '_blank', 'noopener');
       };
       // If badge was active, clear it
       if (changelogBadgeActive) {

@@ -46,7 +46,7 @@
 
 如果你发现了程序错误（Bug）或有明确的功能需求（Feature Request），建议在 GitHub 上提交 Issue：
 
-- [提交 Bug 报告](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=bug_report.yml)
-- [提交功能建议](https://github.com/Nagi-ovo/gemini-voyager/issues/new?template=feature_request.yml)
+- [提交 Bug 报告](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml)
+- [提交功能建议](https://github.com/Nagi-ovo/voyager/issues/new?template=feature_request.yml)
 
 感谢你对 Voyager 的支持！❤️

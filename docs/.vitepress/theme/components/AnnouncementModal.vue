@@ -16,7 +16,7 @@ interface Copy {
   dismiss: string;
 }
 
-const ISSUE_URL = 'https://github.com/Nagi-ovo/gemini-voyager/issues/new';
+const ISSUE_URL = 'https://github.com/Nagi-ovo/voyager/issues/new';
 const a = (text: string) => `<a href="${ISSUE_URL}" target="_blank" rel="noopener">${text}</a>`;
 
 const i18n: Record<string, Copy> = {
