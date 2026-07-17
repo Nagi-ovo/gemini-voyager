@@ -5,10 +5,12 @@ const signOutSafariGoogleDrive = vi.hoisted(() => vi.fn());
 const checkSafariICloudAccount = vi.hoisted(() => vi.fn());
 const readSafariICloudFile = vi.hoisted(() => vi.fn());
 const writeSafariICloudFile = vi.hoisted(() => vi.fn());
+const safariRuntime = vi.hoisted(() => ({ buildTarget: 'safari', userAgentMatches: false }));
 
 vi.mock('@/core/utils/browser', () => ({
+  getVoyagerBuildTarget: () => safariRuntime.buildTarget,
   isBrave: () => false,
-  isSafari: () => true,
+  isSafari: () => safariRuntime.userAgentMatches,
 }));
 
 vi.mock('@/core/utils/safariGoogleDriveAuth', () => ({
@@ -22,11 +24,11 @@ vi.mock('@/core/utils/safariICloudSync', () => ({
   writeSafariICloudFile,
 }));
 
-function createChromeMock() {
+function createChromeMock(stored: Record<string, unknown> = {}) {
   return {
     storage: {
       local: {
-        get: vi.fn().mockResolvedValue({}),
+        get: vi.fn().mockResolvedValue(stored),
         set: vi.fn().mockResolvedValue(undefined),
         remove: vi.fn().mockResolvedValue(undefined),
       },
@@ -43,6 +45,8 @@ async function loadServiceClass() {
 afterEach(() => {
   vi.clearAllMocks();
   vi.unstubAllGlobals();
+  safariRuntime.buildTarget = 'safari';
+  safariRuntime.userAgentMatches = false;
 });
 
 describe('GoogleDriveSyncService Safari authentication', () => {
@@ -105,6 +109,18 @@ describe('GoogleDriveSyncService Safari authentication', () => {
 });
 
 describe('GoogleDriveSyncService Safari iCloud provider', () => {
+  it('restores iCloud from the Safari build target when the background UA is reduced', async () => {
+    (globalThis as { chrome: typeof chrome }).chrome = createChromeMock({
+      gvSyncProvider: 'icloud',
+    });
+    checkSafariICloudAccount.mockResolvedValue(undefined);
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+
+    await expect(service.getState()).resolves.toMatchObject({ provider: 'icloud' });
+  });
+
   it('uses CloudKit as the file transport after switching providers', async () => {
     const chromeMock = createChromeMock();
     (globalThis as { chrome: typeof chrome }).chrome = chromeMock;

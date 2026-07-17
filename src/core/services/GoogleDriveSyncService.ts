@@ -34,7 +34,7 @@ import type {
   TimelineHierarchyExportPayload,
 } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
-import { isBrave, isSafari } from '@/core/utils/browser';
+import { getVoyagerBuildTarget, isBrave, isSafari } from '@/core/utils/browser';
 import { hashString } from '@/core/utils/hash';
 import {
   requestSafariGoogleDriveToken,
@@ -72,6 +72,10 @@ function getStringValue(value: unknown): string | null {
 
 function getNumberValue(value: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
+
+function isSafariRuntime(): boolean {
+  return getVoyagerBuildTarget() === 'safari' || isSafari();
 }
 
 /**
@@ -121,7 +125,7 @@ export class GoogleDriveSyncService {
   }
 
   async setProvider(provider: SyncProvider): Promise<void> {
-    if (provider === 'icloud' && !isSafari()) {
+    if (provider === 'icloud' && !isSafariRuntime()) {
       throw new Error('iCloud sync is available only in Safari');
     }
     if (provider === this.state.provider) return;
@@ -165,11 +169,11 @@ export class GoogleDriveSyncService {
     }
 
     try {
-      if (isSafari()) {
+      if (isSafariRuntime()) {
         await signOutSafariGoogleDrive();
       }
       if (this.accessToken) {
-        if (!isSafari()) {
+        if (!isSafariRuntime()) {
           await this.removeCachedAuthToken(this.accessToken);
         }
         await fetch(`https://accounts.google.com/o/oauth2/revoke?token=${this.accessToken}`);
@@ -683,7 +687,7 @@ export class GoogleDriveSyncService {
   // ============== Private Methods ==============
 
   private async loadCachedToken(): Promise<void> {
-    if (isSafari()) return;
+    if (isSafariRuntime()) return;
 
     try {
       const result = await chrome.storage.local.get(['gvAccessToken', 'gvTokenExpiry']);
@@ -702,7 +706,7 @@ export class GoogleDriveSyncService {
   private async saveToken(token: string, expiresIn: number): Promise<void> {
     this.accessToken = token;
     this.tokenExpiry = Date.now() + expiresIn * 1000 - 60000;
-    if (isSafari()) return;
+    if (isSafariRuntime()) return;
 
     try {
       await chrome.storage.local.set({ gvAccessToken: token, gvTokenExpiry: this.tokenExpiry });
@@ -882,7 +886,7 @@ export class GoogleDriveSyncService {
       return this.accessToken;
     }
 
-    if (isSafari()) {
+    if (isSafariRuntime()) {
       const nativeToken = await requestSafariGoogleDriveToken(interactive);
       if (nativeToken.accessToken) {
         this.accessToken = nativeToken.accessToken;
@@ -1269,7 +1273,8 @@ export class GoogleDriveSyncService {
         'gvSyncError',
       ]);
       this.state = {
-        provider: result.gvSyncProvider === 'icloud' && isSafari() ? 'icloud' : 'googleDrive',
+        provider:
+          result.gvSyncProvider === 'icloud' && isSafariRuntime() ? 'icloud' : 'googleDrive',
         mode: (result.gvSyncMode as SyncMode) || 'disabled',
         lastSyncTime: getNumberValue(result.gvLastSyncTime),
         lastUploadTime: getNumberValue(result.gvLastUploadTime),
