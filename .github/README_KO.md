@@ -1,4 +1,5 @@
 <div align="center">
+  <img src="../docs/public/logo.png" alt="Voyager logo" width="120" height="120">
   <h3>나만의 AI 챗봇 경험을 만들어 보세요 ✨</h3>
   <p>
     <b>Gemini · Claude · ChatGPT, 드디어 완성.</b>

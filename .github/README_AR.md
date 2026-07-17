@@ -1,4 +1,5 @@
 <div align="center" dir="rtl">
+  <img src="../docs/public/logo.png" alt="Voyager logo" width="120" height="120">
   <h3>اصنع تجربة روبوتات الدردشة الذكية الخاصة بك ✨</h3>
   <p>
     <b>.Gemini · Claude · ChatGPT — أخيراً، اكتمل</b>

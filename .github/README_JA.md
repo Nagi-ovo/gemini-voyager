@@ -1,4 +1,5 @@
 <div align="center">
+  <img src="../docs/public/logo.png" alt="Voyager logo" width="120" height="120">
   <h3>AI チャットボット体験を、あなた好みに ✨</h3>
   <p>
     <b>Gemini · Claude · ChatGPT、ついに完成。</b>

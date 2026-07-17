@@ -1,4 +1,5 @@
 <div align="center">
+  <img src="../docs/public/logo.png" alt="Voyager logo" width="120" height="120">
   <h3>打造属于你的 AI Chatbot 体验 ✨</h3>
   <p>
     <b>Gemini · Claude · ChatGPT，终于完整了。</b>
