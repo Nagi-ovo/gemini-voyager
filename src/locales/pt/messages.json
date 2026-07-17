@@ -1154,6 +1154,7 @@
   "syncProvider": { "message": "Serviço de armazenamento" },
   "syncProviderGoogleDrive": { "message": "Google Drive" },
   "syncProviderICloud": { "message": "iCloud" },
+  "syncConnectGoogleDrive": { "message": "Conectar ao Google Drive" },
   "syncModeDisabled": {
     "message": "Desativado",
     "description": "Sync mode disabled option"
@@ -1189,6 +1190,14 @@
   "syncSuccess": {
     "message": "✓ Sincronizado com sucesso",
     "description": "Sync success message"
+  },
+  "syncSuccessHighlightsSkipped": {
+    "message": "✓ Sincronizado; destaques ignorados. Abra o Gemini e tente novamente",
+    "description": "Sync success message when account-scoped highlights were skipped"
+  },
+  "syncSuccessFoldersMissing": {
+    "message": "✓ Outros dados sincronizados; nenhum backup de pastas foi encontrado",
+    "description": "Partial sync message when the cloud has no folders payload"
   },
   "syncError": {
     "message": "✗ Falha na sincronização: {error}",
@@ -1729,6 +1738,10 @@
   "usageStatusOpenHint": {
     "message": "Abrir limites de uso",
     "description": "Tooltip on the usage status pill; clicking opens the Gemini usage page."
+  },
+  "usageStatusEmptyHint": {
+    "message": "Clique para carregar o uso",
+    "description": "Placeholder shown before the usage pill has loaded its first snapshot."
   },
   "usageStatusJustUpdated": {
     "message": "Atualizado agora",

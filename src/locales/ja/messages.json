@@ -1154,6 +1154,7 @@
   "syncProvider": { "message": "ストレージサービス" },
   "syncProviderGoogleDrive": { "message": "Google ドライブ" },
   "syncProviderICloud": { "message": "iCloud" },
+  "syncConnectGoogleDrive": { "message": "Google ドライブに接続" },
   "syncModeDisabled": {
     "message": "無効",
     "description": "Sync mode disabled option"
@@ -1189,6 +1190,14 @@
   "syncSuccess": {
     "message": "✓ 同期に成功しました",
     "description": "Sync success message"
+  },
+  "syncSuccessHighlightsSkipped": {
+    "message": "✓ 同期完了。ハイライトはスキップされました。Geminiを開いて再試行してください",
+    "description": "Sync success message when account-scoped highlights were skipped"
+  },
+  "syncSuccessFoldersMissing": {
+    "message": "✓ その他のデータを同期しました。フォルダのバックアップはありません",
+    "description": "Partial sync message when the cloud has no folders payload"
   },
   "syncError": {
     "message": "✗ 同期に失敗しました：{error}",
@@ -1729,6 +1738,10 @@
   "usageStatusOpenHint": {
     "message": "利用上限を開く",
     "description": "Tooltip on the usage status pill; clicking opens the Gemini usage page."
+  },
+  "usageStatusEmptyHint": {
+    "message": "クリックして使用量を取得",
+    "description": "Placeholder shown before the usage pill has loaded its first snapshot."
   },
   "usageStatusJustUpdated": {
     "message": "たった今更新",

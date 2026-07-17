@@ -23,3 +23,13 @@ body {
   height: 100%;
   overflow-y: auto;
 }
+
+.highlight-cloud-sync-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.highlight-cloud-sync-control {
+  padding-top: 2px;
+}

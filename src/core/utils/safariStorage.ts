@@ -14,8 +14,8 @@
 import browser from 'webextension-polyfill';
 
 interface SafariStorageAdapter {
-  getItem(key: string): Promise<string | null>;
-  setItem(key: string, value: string): Promise<void>;
+  getItem(key: string): Promise<unknown>;
+  setItem(key: string, value: unknown): Promise<void>;
   removeItem(key: string): Promise<void>;
 }
 
@@ -27,15 +27,10 @@ export class SafariStorage implements SafariStorageAdapter {
   /**
    * Get item from browser.storage.local
    */
-  async getItem(key: string): Promise<string | null> {
+  async getItem(key: string): Promise<unknown> {
     try {
       const result = await browser.storage.local.get(key);
-      const value = result[key];
-      // Ensure we return string or null
-      if (typeof value === 'string') {
-        return value;
-      }
-      return null;
+      return result[key] ?? null;
     } catch (error) {
       console.error('[SafariStorage] Failed to get item:', key, error);
       // Fallback to localStorage
@@ -50,14 +45,16 @@ export class SafariStorage implements SafariStorageAdapter {
   /**
    * Set item to browser.storage.local
    */
-  async setItem(key: string, value: string): Promise<void> {
+  async setItem(key: string, value: unknown): Promise<void> {
     try {
       await browser.storage.local.set({ [key]: value });
     } catch (error) {
       console.error('[SafariStorage] Failed to set item:', key, error);
       // Fallback to localStorage
       try {
-        localStorage.setItem(key, value);
+        const fallbackValue = typeof value === 'string' ? value : JSON.stringify(value);
+        if (fallbackValue === undefined) throw error;
+        localStorage.setItem(key, fallbackValue);
       } catch (fallbackError) {
         console.error('[SafariStorage] Fallback to localStorage also failed:', fallbackError);
         throw error;

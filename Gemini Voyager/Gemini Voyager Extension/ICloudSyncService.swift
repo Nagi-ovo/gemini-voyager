@@ -13,11 +13,11 @@ final class ICloudSyncService {
   func accountStatus(completion: @escaping (Result<Void, Error>) -> Void) {
     container.accountStatus { status, error in
       if let error {
-        completion(.failure(error))
+        completion(.failure(VoyagerICloudFailureMapper.map(error: error)))
       } else if status == .available {
         completion(.success(()))
       } else {
-        completion(.failure(ICloudSyncError.accountUnavailable))
+        completion(.failure(VoyagerICloudFailure.accountUnavailable))
       }
     }
   }
@@ -33,22 +33,39 @@ final class ICloudSyncService {
       return
     }
 
-    let record = CKRecord(recordType: "VoyagerSyncFile", recordID: recordID(for: fileName))
-    record["name"] = fileName as CKRecordValue
-    record["payload"] = CKAsset(fileURL: temporaryURL)
-    record["updatedAt"] = Date() as CKRecordValue
-
-    let operation = CKModifyRecordsOperation(recordsToSave: [record])
-    operation.savePolicy = .allKeys
-    operation.modifyRecordsCompletionBlock = { _, _, error in
-      try? FileManager.default.removeItem(at: temporaryURL)
-      if let error {
-        completion(.failure(error))
-      } else {
-        completion(.success(()))
+    let recordID = recordID(for: fileName)
+    let fetchOperation = CKFetchRecordsOperation(recordIDs: [recordID])
+    fetchOperation.desiredKeys = []
+    fetchOperation.fetchRecordsCompletionBlock = { records, error in
+      if VoyagerICloudFailureMapper.primaryCloudKitError(from: error)?.code == .unknownItem {
+        self.save(
+          record: CKRecord(recordType: "VoyagerSyncFile", recordID: recordID),
+          fileName: fileName,
+          temporaryURL: temporaryURL,
+          completion: completion
+        )
+        return
       }
+      if let error {
+        try? FileManager.default.removeItem(at: temporaryURL)
+        completion(.failure(VoyagerICloudFailureMapper.map(error: error, fileName: fileName)))
+        return
+      }
+      let record = records?[recordID]
+      guard let record else {
+        try? FileManager.default.removeItem(at: temporaryURL)
+        completion(.failure(VoyagerICloudFailure.invalidPayload))
+        return
+      }
+
+      self.save(
+        record: record,
+        fileName: fileName,
+        temporaryURL: temporaryURL,
+        completion: completion
+      )
     }
-    database.add(operation)
+    database.add(fetchOperation)
   }
 
   func read(fileName: String, completion: @escaping (Result<String?, Error>) -> Void) {
@@ -58,20 +75,20 @@ final class ICloudSyncService {
         return
       }
       if let error {
-        completion(.failure(error))
+        completion(.failure(VoyagerICloudFailureMapper.map(error: error, fileName: fileName)))
         return
       }
       guard let asset = record?["payload"] as? CKAsset,
         let fileURL = asset.fileURL
       else {
-        completion(.failure(ICloudSyncError.invalidPayload))
+        completion(.failure(VoyagerICloudFailure.invalidPayload))
         return
       }
 
       do {
         let data = try Data(contentsOf: fileURL)
         guard let json = String(data: data, encoding: .utf8) else {
-          throw ICloudSyncError.invalidPayload
+          throw VoyagerICloudFailure.invalidPayload
         }
         completion(.success(json))
       } catch {
@@ -80,25 +97,32 @@ final class ICloudSyncService {
     }
   }
 
-  private func recordID(for fileName: String) -> CKRecord.ID {
-    let encoded = Data(fileName.utf8).base64EncodedString()
-      .replacingOccurrences(of: "+", with: "-")
-      .replacingOccurrences(of: "/", with: "_")
-      .replacingOccurrences(of: "=", with: "")
-    return CKRecord.ID(recordName: "file-\(encoded)")
-  }
-}
+  private func save(
+    record: CKRecord,
+    fileName: String,
+    temporaryURL: URL,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) {
+    record["name"] = fileName as CKRecordValue
+    record["payload"] = CKAsset(fileURL: temporaryURL)
+    record["updatedAt"] = Date() as CKRecordValue
 
-private enum ICloudSyncError: LocalizedError {
-  case accountUnavailable
-  case invalidPayload
-
-  var errorDescription: String? {
-    switch self {
-    case .accountUnavailable:
-      return "iCloud is unavailable. Sign in to iCloud in System Settings."
-    case .invalidPayload:
-      return "The iCloud sync file is invalid."
+    let operation = CKModifyRecordsOperation(recordsToSave: [record])
+    operation.isAtomic = true
+    operation.savePolicy = .ifServerRecordUnchanged
+    operation.modifyRecordsCompletionBlock = { _, _, error in
+      try? FileManager.default.removeItem(at: temporaryURL)
+      if let error {
+        completion(.failure(VoyagerICloudFailureMapper.map(error: error, fileName: fileName)))
+      } else {
+        completion(.success(()))
+      }
     }
+    database.add(operation)
   }
+
+  private func recordID(for fileName: String) -> CKRecord.ID {
+    CKRecord.ID(recordName: VoyagerICloudRecordIdentity.recordName(for: fileName))
+  }
+
 }

@@ -14,6 +14,7 @@ let extensionBundleIdentifier = "com.yourCompany.Gemini-Voyager.Extension"
 class ViewController: NSViewController, WKScriptMessageHandler {
 
   @IBOutlet var webView: WKWebView!
+  private let diagnosticsService = NativeDiagnosticsService()
   private var updaterAvailabilityObservation: NSKeyValueObservation?
 
   override func viewDidLoad() {
@@ -68,6 +69,10 @@ class ViewController: NSViewController, WKScriptMessageHandler {
       observeUpdaterAvailability(appDelegate)
       updateUpdaterControls(appDelegate)
       updateExtensionState()
+      updateDiagnostics(appDelegate)
+    case "refreshDiagnostics":
+      updateExtensionState()
+      updateDiagnostics(appDelegate)
     case "setAutomaticUpdates":
       appDelegate.setAutomaticUpdatesEnabled(payload["enabled"] as? Bool == true)
       updateUpdaterControls(appDelegate)
@@ -91,6 +96,18 @@ class ViewController: NSViewController, WKScriptMessageHandler {
       [weak self, weak appDelegate] in
       guard let self, let appDelegate else { return }
       self.updateUpdaterControls(appDelegate)
+    }
+  }
+
+  private func updateDiagnostics(_ appDelegate: AppDelegate) {
+    diagnosticsService.collect(appDelegate: appDelegate) { [weak self] snapshot in
+      guard let data = try? JSONEncoder().encode(snapshot),
+        let json = String(data: data, encoding: .utf8)
+      else { return }
+
+      DispatchQueue.main.async {
+        self?.webView.evaluateJavaScript("showDiagnostics(\(json))")
+      }
     }
   }
 

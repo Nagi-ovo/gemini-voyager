@@ -7,13 +7,16 @@
 
 import Cocoa
 import GoogleSignIn
+import SafariServices
 import Sparkle
+import UserNotifications
 import os.log
 
 @main
 class AppDelegate: NSObject, NSApplicationDelegate {
   private let googleDriveScope = "https://www.googleapis.com/auth/drive.file"
   private var pendingGoogleDriveSignIn = false
+  private var canStartInteractiveSignIn = false
 
   private let updaterController = SPUStandardUpdaterController(
     startingUpdater: true,
@@ -30,6 +33,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   }
 
   func applicationWillFinishLaunching(_ notification: Notification) {
+    UNUserNotificationCenter.current().delegate = self
     NSAppleEventManager.shared().setEventHandler(
       self,
       andSelector: #selector(handleGetURLEvent(_:withReplyEvent:)),
@@ -40,7 +44,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
   func applicationDidFinishLaunching(_ notification: Notification) {
     installCheckForUpdatesMenuItem()
-    startPendingGoogleDriveSignIn()
+    canStartInteractiveSignIn = true
   }
 
   func applicationDidBecomeActive(_ notification: Notification) {
@@ -86,11 +90,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     guard url.scheme == "gemini-voyager", url.host == "google-drive-auth" else { return }
     pendingGoogleDriveSignIn = true
-    startPendingGoogleDriveSignIn()
+    if canStartInteractiveSignIn {
+      startPendingGoogleDriveSignIn()
+    }
   }
 
   private func startPendingGoogleDriveSignIn() {
-    guard pendingGoogleDriveSignIn,
+    guard canStartInteractiveSignIn,
+      pendingGoogleDriveSignIn,
       let clientID = Bundle.main.object(forInfoDictionaryKey: "GIDClientID") as? String,
       !clientID.isEmpty,
       let window = NSApp.mainWindow ?? NSApp.windows.first
@@ -121,5 +128,29 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     )
     item.target = self
     applicationMenu.insertItem(item, at: min(2, applicationMenu.items.count))
+  }
+}
+
+extension AppDelegate: UNUserNotificationCenterDelegate {
+  func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    let actionIdentifier = response.actionIdentifier
+    guard
+      actionIdentifier == UNNotificationDefaultActionIdentifier
+        || actionIdentifier == VoyagerNotificationDestination.openActionIdentifier,
+      let destination = VoyagerNotificationDestination(
+        userInfo: response.notification.request.content.userInfo
+      )
+    else {
+      completionHandler()
+      return
+    }
+
+    SFSafariApplication.openWindow(with: destination.url) { _ in
+      completionHandler()
+    }
   }
 }

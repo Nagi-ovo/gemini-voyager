@@ -25,7 +25,7 @@ html {
 body {
     margin: 0;
     height: 100%;
-    overflow: hidden;
+    overflow: auto;
     background: var(--background);
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
@@ -37,7 +37,7 @@ body {
     flex-direction: column;
     width: 100%;
     min-height: 100%;
-    padding: 26px 36px 30px;
+    padding: 24px 32px 28px;
 }
 
 .hero {
@@ -85,11 +85,12 @@ h1 {
     box-shadow: 0 6px 16px rgba(22, 119, 232, 0.2);
 }
 
-.updates {
+.updates,
+.diagnostics {
     display: grid;
     gap: 13px;
     width: 100%;
-    margin-top: 22px;
+    margin-top: 18px;
     padding: 16px;
     border: 1px solid var(--border);
     border-radius: 16px;
@@ -98,12 +99,118 @@ h1 {
     text-align: left;
 }
 
-.updates h2 {
+.updates h2,
+.diagnostics h2 {
     margin: 0;
     font-size: 15px;
     font-weight: 650;
     line-height: 19px;
     letter-spacing: -0.15px;
+}
+
+.diagnostics {
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.section-heading p {
+    margin: 2px 0 0;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 15px;
+}
+
+.refresh-diagnostics {
+    min-height: 28px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--surface-subtle);
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.diagnostics-list {
+    display: grid;
+    gap: 1px;
+    min-height: 226px;
+    overflow: hidden;
+    overflow-anchor: none;
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    background: var(--border);
+}
+
+.diagnostic-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 6px 10px;
+    background: var(--surface);
+    text-align: left;
+}
+
+.diagnostic-copy {
+    display: grid;
+    min-width: 0;
+    gap: 1px;
+}
+
+.diagnostic-copy strong {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+}
+
+.diagnostic-copy small {
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.diagnostic-value {
+    padding: 3px 7px;
+    border-radius: 999px;
+    background: var(--surface-subtle);
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 650;
+    line-height: 14px;
+    white-space: nowrap;
+}
+
+.diagnostic-ready .diagnostic-value {
+    background: rgba(46, 125, 50, 0.11);
+    color: #2e7d32;
+}
+
+.diagnostic-attention .diagnostic-value {
+    background: rgba(196, 113, 0, 0.12);
+    color: #a45f00;
+}
+
+.diagnostics-loading {
+    display: grid;
+    place-items: center;
+    margin: 0;
+    padding: 16px;
+    background: var(--surface);
+    color: var(--muted);
+    font-size: 11px;
+    text-align: center;
 }
 
 .automatic-updates {
@@ -219,6 +326,10 @@ button:not(:disabled):hover {
     background: #e4e7eb;
 }
 
+.refresh-diagnostics:not(:disabled):hover {
+    background: #e4e7eb;
+}
+
 .check-for-updates:not(:disabled):active {
     transform: translateY(1px);
 }
@@ -267,5 +378,19 @@ body.state-off :is(.state-on, .state-unknown) {
 
     .check-for-updates:not(:disabled):hover {
         background: #363b42;
+    }
+
+    .refresh-diagnostics:not(:disabled):hover {
+        background: #363b42;
+    }
+
+    .diagnostic-ready .diagnostic-value {
+        background: rgba(91, 191, 95, 0.15);
+        color: #86d889;
+    }
+
+    .diagnostic-attention .diagnostic-value {
+        background: rgba(244, 169, 54, 0.16);
+        color: #f2b55e;
     }
 }

@@ -42,6 +42,8 @@ import {
 } from '@/core/utils/safariGoogleDriveAuth';
 import {
   checkSafariICloudAccount,
+  getSafariICloudRetryDelay,
+  isSafariICloudConflictError,
   readSafariICloudFile,
   writeSafariICloudFile,
 } from '@/core/utils/safariICloudSync';
@@ -896,6 +898,9 @@ export class GoogleDriveSyncService {
       if (nativeToken.authorizationStarted) {
         throw new Error('Finish signing in to Google in the Voyager app, then return to Safari.');
       }
+      if (nativeToken.requiresAppLaunch) {
+        throw new Error('Open Voyager to connect Google Drive, then try again.');
+      }
       return null;
     }
 
@@ -1230,8 +1235,9 @@ export class GoogleDriveSyncService {
         }
         return;
       } catch (error) {
+        if (isSafariICloudConflictError(error)) throw error;
         if (attempt === MAX_RETRIES) throw error;
-        await this.sleep(delay);
+        await this.sleep(Math.max(delay, getSafariICloudRetryDelay(error) ?? 0));
         delay *= 2;
       }
     }

@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const requestSafariGoogleDriveToken = vi.hoisted(() => vi.fn());
 const signOutSafariGoogleDrive = vi.hoisted(() => vi.fn());
 const checkSafariICloudAccount = vi.hoisted(() => vi.fn());
+const getSafariICloudRetryDelay = vi.hoisted(() => vi.fn((): number | null => null));
+const isSafariICloudConflictError = vi.hoisted(() => vi.fn(() => false));
 const readSafariICloudFile = vi.hoisted(() => vi.fn());
 const writeSafariICloudFile = vi.hoisted(() => vi.fn());
 const safariRuntime = vi.hoisted(() => ({ buildTarget: 'safari', userAgentMatches: false }));
@@ -20,6 +22,8 @@ vi.mock('@/core/utils/safariGoogleDriveAuth', () => ({
 
 vi.mock('@/core/utils/safariICloudSync', () => ({
   checkSafariICloudAccount,
+  getSafariICloudRetryDelay,
+  isSafariICloudConflictError,
   readSafariICloudFile,
   writeSafariICloudFile,
 }));
@@ -43,8 +47,11 @@ async function loadServiceClass() {
 }
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.clearAllMocks();
   vi.unstubAllGlobals();
+  getSafariICloudRetryDelay.mockReturnValue(null);
+  isSafariICloudConflictError.mockReturnValue(false);
   safariRuntime.buildTarget = 'safari';
   safariRuntime.userAgentMatches = false;
 });
@@ -70,7 +77,7 @@ describe('GoogleDriveSyncService Safari authentication', () => {
     );
   });
 
-  it('opens the containing app for first-time interactive sign-in', async () => {
+  it('handles a native authorization flow that has already started', async () => {
     (globalThis as { chrome: typeof chrome }).chrome = createChromeMock();
     requestSafariGoogleDriveToken.mockResolvedValue({
       accessToken: null,
@@ -85,6 +92,25 @@ describe('GoogleDriveSyncService Safari authentication', () => {
     await expect(service.authenticate(true)).resolves.toBe(false);
     await expect(service.getState()).resolves.toMatchObject({
       error: 'Finish signing in to Google in the Voyager app, then return to Safari.',
+    });
+  });
+
+  it('asks Safari users to open Voyager when the native extension cannot launch the app', async () => {
+    (globalThis as { chrome: typeof chrome }).chrome = createChromeMock();
+    requestSafariGoogleDriveToken.mockResolvedValue({
+      accessToken: null,
+      expiresAt: Date.now(),
+      authorizationStarted: false,
+      requiresAppLaunch: true,
+    });
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+
+    await expect(service.authenticate(true)).resolves.toBe(false);
+    await expect(service.getState()).resolves.toMatchObject({
+      error: 'Open Voyager to connect Google Drive, then try again.',
     });
   });
 
@@ -143,6 +169,53 @@ describe('GoogleDriveSyncService Safari iCloud provider', () => {
     expect(chromeMock.storage.local.set).toHaveBeenCalledWith(
       expect.objectContaining({ gvSyncProvider: 'icloud' }),
     );
+  });
+
+  it('does not retry an iCloud conflict and reports the merge-first recovery', async () => {
+    (globalThis as { chrome: typeof chrome }).chrome = createChromeMock();
+    checkSafariICloudAccount.mockResolvedValue(undefined);
+    writeSafariICloudFile.mockRejectedValue(
+      new Error('prompts changed on another device. Download and merge before uploading again.'),
+    );
+    isSafariICloudConflictError.mockReturnValue(true);
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+    await service.setProvider('icloud');
+
+    await expect(
+      service.uploadPromptsOnly([{ id: '1', text: 'Hi', tags: [], createdAt: 1 }]),
+    ).resolves.toBe(false);
+    expect(writeSafariICloudFile).toHaveBeenCalledOnce();
+    await expect(service.getState()).resolves.toMatchObject({
+      error: expect.stringContaining('Download and merge'),
+    });
+  });
+
+  it('honors the native iCloud retry delay before trying the upload again', async () => {
+    vi.useFakeTimers();
+    (globalThis as { chrome: typeof chrome }).chrome = createChromeMock();
+    checkSafariICloudAccount.mockResolvedValue(undefined);
+    writeSafariICloudFile
+      .mockRejectedValueOnce(new Error('Try again'))
+      .mockResolvedValue(undefined);
+    getSafariICloudRetryDelay.mockReturnValue(2_500);
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+    await service.setProvider('icloud');
+
+    const upload = service.uploadPromptsOnly([{ id: '1', text: 'Hi', tags: [], createdAt: 1 }]);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(writeSafariICloudFile).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(2_499);
+    expect(writeSafariICloudFile).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(1);
+
+    await expect(upload).resolves.toBe(true);
+    expect(writeSafariICloudFile).toHaveBeenCalledTimes(2);
   });
 
   it('reads missing CloudKit files as an empty cloud copy', async () => {

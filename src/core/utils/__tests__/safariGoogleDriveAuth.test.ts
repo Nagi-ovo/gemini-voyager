@@ -23,6 +23,7 @@ describe('Safari Google Drive authentication', () => {
       accessToken: 'native-token',
       expiresAt: 1_800_000_000_000,
       authorizationStarted: false,
+      requiresAppLaunch: false,
     });
     expect(sendNativeMessage).toHaveBeenCalledWith('com.yourCompany.Gemini-Voyager', {
       action: 'googleDriveGetToken',
@@ -30,16 +31,17 @@ describe('Safari Google Drive authentication', () => {
     });
   });
 
-  it('reports when interactive sign-in moved to the containing app', async () => {
+  it('reports when interactive sign-in requires the containing app', async () => {
     sendNativeMessage.mockResolvedValue({
       success: true,
-      data: { authorizationStarted: true },
+      data: { requiresAppLaunch: true },
     });
 
     await expect(requestSafariGoogleDriveToken(true)).resolves.toEqual({
       accessToken: null,
       expiresAt: expect.any(Number),
-      authorizationStarted: true,
+      authorizationStarted: false,
+      requiresAppLaunch: true,
     });
   });
 

@@ -26,7 +26,7 @@ import {
   ensureNotificationsPermission,
   hasNotificationsPermission,
 } from '@/core/utils/notificationsPermission';
-import { prepareSafariNativeNotifications } from '@/core/utils/safariNativeNotifications';
+import { requestSafariNativeNotificationPermission } from '@/core/utils/safariNativeNotifications';
 import { shouldShowUpdateReminderForCurrentVersion } from '@/core/utils/updateReminder';
 import { compareVersions } from '@/core/utils/version';
 import { resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
@@ -2395,7 +2395,11 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     if (hasSettingsSearch && !settingsSearchSections.has(id)) return null;
 
     return (
-      <div key={id} style={{ order: sectionOrder.indexOf(id) }} className="group/reorder relative">
+      <div
+        key={id}
+        style={{ order: sectionOrder.indexOf(id) * 2 }}
+        className="group/reorder relative"
+      >
         {!isPluginSite && !hasSettingsSearch && (
           <SectionReorderControls
             isFirst={displayedSections[0] === id}
@@ -2540,7 +2544,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           </Card>
         )}
         {!isPluginSite && (
-          <div style={{ order: -1.5 }}>
+          <div style={{ order: sectionOrder.indexOf('cloudSync') * 2 + 1 }}>
             <StorageQuotaCard onManage={() => setShowStorageManager(true)} />
           </div>
         )}
@@ -4145,16 +4149,20 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
                     checked={responseCompleteNotificationEnabled}
                     onChange={async (e) => {
                       const next = e.target.checked;
+                      if (next && isSafariBrowser) {
+                        setResponseCompleteNotificationEnabled(true);
+                        const granted = await requestSafariNativeNotificationPermission();
+                        setResponseCompleteNotificationEnabled(granted);
+                        return;
+                      }
                       if (next) {
-                        const granted = isSafariBrowser
-                          ? await prepareSafariNativeNotifications()
-                          : await ensureNotificationsPermission();
+                        const granted = await ensureNotificationsPermission();
                         if (!granted) {
                           setResponseCompleteNotificationEnabled(false);
                           return;
                         }
                       }
-                      if (next && !isSafariBrowser) setRemoteAnnouncementPermissionGranted(true);
+                      if (next) setRemoteAnnouncementPermissionGranted(true);
                       setResponseCompleteNotificationEnabled(next);
                       apply({ responseCompleteNotificationEnabled: next });
                     }}

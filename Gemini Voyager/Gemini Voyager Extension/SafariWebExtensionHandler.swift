@@ -5,13 +5,14 @@
 
 import GoogleSignIn
 import SafariServices
-import UserNotifications
 import os.log
 
 final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
   private let googleDriveScope = "https://www.googleapis.com/auth/drive.file"
 
   func beginRequest(with context: NSExtensionContext) {
+    _ = NativeNotificationService.shared
+
     guard let request = context.inputItems.first as? NSExtensionItem,
       let message = extensionMessage(from: request),
       let action = message["action"] as? String
@@ -54,7 +55,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       case .success:
         self.respondWithSuccess(context: context, data: ["available": true])
       case .failure(let error):
-        self.respondWithError(context: context, message: error.localizedDescription)
+        self.respondWithICloudError(context: context, error: error)
       }
     }
   }
@@ -72,7 +73,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       case .success:
         self.respondWithSuccess(context: context, data: ["saved": true])
       case .failure(let error):
-        self.respondWithError(context: context, message: error.localizedDescription)
+        self.respondWithICloudError(context: context, error: error)
       }
     }
   }
@@ -92,9 +93,26 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
             ?? ["found": false]
         )
       case .failure(let error):
-        self.respondWithError(context: context, message: error.localizedDescription)
+        self.respondWithICloudError(context: context, error: error)
       }
     }
+  }
+
+  private func respondWithICloudError(context: NSExtensionContext, error: Error) {
+    guard let failure = error as? VoyagerICloudFailure else {
+      respondWithError(context: context, message: error.localizedDescription)
+      return
+    }
+
+    var response: [String: Any] = [
+      "success": false,
+      "error": failure.localizedDescription,
+      "code": failure.code.rawValue,
+    ]
+    if let retryAfterMilliseconds = failure.retryAfterMilliseconds {
+      response["retryAfterMs"] = retryAfterMilliseconds
+    }
+    respond(context: context, message: response)
   }
 
   private func getGoogleDriveToken(interactive: Bool, context: NSExtensionContext) {
@@ -105,13 +123,16 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
 
     GIDSignIn.sharedInstance.restorePreviousSignIn { user, _ in
       guard let user else {
-        self.startGoogleDriveAuthorizationIfNeeded(interactive: interactive, context: context)
+        self.respondWithGoogleDriveAuthorizationRequirement(
+          interactive: interactive,
+          context: context
+        )
         return
       }
 
       user.refreshTokensIfNeeded { refreshedUser, _ in
         guard let refreshedUser else {
-          self.startGoogleDriveAuthorizationIfNeeded(
+          self.respondWithGoogleDriveAuthorizationRequirement(
             interactive: interactive,
             context: context
           )
@@ -119,7 +140,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
         }
 
         guard refreshedUser.grantedScopes?.contains(self.googleDriveScope) == true else {
-          self.startGoogleDriveAuthorizationIfNeeded(
+          self.respondWithGoogleDriveAuthorizationRequirement(
             interactive: interactive,
             context: context
           )
@@ -150,7 +171,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     return true
   }
 
-  private func startGoogleDriveAuthorizationIfNeeded(
+  private func respondWithGoogleDriveAuthorizationRequirement(
     interactive: Bool,
     context: NSExtensionContext
   ) {
@@ -159,21 +180,10 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       return
     }
 
-    guard let url = URL(string: "gemini-voyager://google-drive-auth") else {
-      respondWithError(context: context, message: "Invalid Google Sign-In URL")
-      return
-    }
-
-    context.open(url) { opened in
-      if opened {
-        self.respondWithSuccess(
-          context: context,
-          data: ["authorizationStarted": true, "signedIn": false]
-        )
-      } else {
-        self.respondWithError(context: context, message: "Could not open Voyager")
-      }
-    }
+    respondWithSuccess(
+      context: context,
+      data: ["requiresAppLaunch": true, "signedIn": false]
+    )
   }
 
   private func deliverNotification(message: [String: Any], context: NSExtensionContext) {
@@ -184,64 +194,30 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       return
     }
 
-    let content = UNMutableNotificationContent()
-    content.title = title
-    content.body = body
-    content.sound = .default
-
-    let request = UNNotificationRequest(
-      identifier: message["id"] as? String ?? UUID().uuidString,
-      content: content,
-      trigger: nil
-    )
-
-    let center = UNUserNotificationCenter.current()
-    center.getNotificationSettings { settings in
-      switch settings.authorizationStatus {
-      case .authorized, .provisional:
-        self.addNotification(request, using: center, context: context)
-      case .notDetermined:
-        center.requestAuthorization(options: [.alert, .sound]) { granted, error in
-          if let error {
-            self.respondWithError(context: context, message: error.localizedDescription)
-          } else if granted {
-            self.addNotification(request, using: center, context: context)
-          } else {
-            self.respondWithError(context: context, message: "Notification permission was denied")
-          }
-        }
-      case .denied:
-        self.respondWithError(
-          context: context,
-          message: "Notifications are disabled in System Settings"
-        )
-      @unknown default:
-        self.respondWithError(context: context, message: "Notifications are unavailable")
+    NativeNotificationService.shared.deliver(
+      id: message["id"] as? String ?? UUID().uuidString,
+      title: title,
+      body: body,
+      destination: (message["url"] as? String).flatMap {
+        VoyagerNotificationDestination(rawValue: $0)
       }
-    }
-  }
-
-  private func addNotification(
-    _ request: UNNotificationRequest,
-    using center: UNUserNotificationCenter,
-    context: NSExtensionContext
-  ) {
-    center.add(request) { error in
-      if let error {
-        self.respondWithError(context: context, message: error.localizedDescription)
-      } else {
+    ) { result in
+      switch result {
+      case .success:
         self.respondWithSuccess(context: context, data: ["delivered": true])
+      case .failure(let error):
+        self.respondWithError(context: context, message: error.localizedDescription)
       }
     }
   }
 
   private func requestNotificationPermission(context: NSExtensionContext) {
-    UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) {
-      granted, error in
-      if let error {
-        self.respondWithError(context: context, message: error.localizedDescription)
-      } else {
+    NativeNotificationService.shared.requestAuthorization { result in
+      switch result {
+      case .success(let granted):
         self.respondWithSuccess(context: context, data: ["granted": granted])
+      case .failure(let error):
+        self.respondWithError(context: context, message: error.localizedDescription)
       }
     }
   }

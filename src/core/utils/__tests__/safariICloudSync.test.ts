@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  SafariICloudSyncError,
   checkSafariICloudAccount,
+  getSafariICloudRetryDelay,
+  isSafariICloudConflictError,
   readSafariICloudFile,
   writeSafariICloudFile,
 } from '../safariICloudSync';
@@ -56,5 +59,29 @@ describe('Safari iCloud sync bridge', () => {
     sendNativeMessage.mockResolvedValue({ success: false, error: 'iCloud is unavailable' });
 
     await expect(checkSafariICloudAccount()).rejects.toThrow('iCloud is unavailable');
+  });
+
+  it('preserves native conflict metadata so uploads do not overwrite newer cloud data', async () => {
+    sendNativeMessage.mockResolvedValue({
+      success: false,
+      code: 'icloud_conflict',
+      error: 'prompts.json changed on another device',
+    });
+
+    const error = await writeSafariICloudFile('prompts.json', {}).catch((caught) => caught);
+    expect(error).toBeInstanceOf(SafariICloudSyncError);
+    expect(isSafariICloudConflictError(error)).toBe(true);
+  });
+
+  it('preserves the native CloudKit retry delay', async () => {
+    sendNativeMessage.mockResolvedValue({
+      success: false,
+      code: 'icloud_temporarily_unavailable',
+      error: 'Try again shortly',
+      retryAfterMs: 2500,
+    });
+
+    const error = await readSafariICloudFile('prompts.json').catch((caught) => caught);
+    expect(getSafariICloudRetryDelay(error)).toBe(2500);
   });
 });

@@ -42,6 +42,10 @@
 		B60723F22FB752BD00F3A4FD /* fable-verified-badge.png in Resources */ = {isa = PBXBuildFile; fileRef = B60723F72FB752BD00F3A4FD /* fable-verified-badge.png */; };
 		B60723F32FB752BD00F3A4FD /* response-complete-observer.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723F82FB752BD00F3A4FD /* response-complete-observer.js */; };
 		B60723F42FB752BD00F3A4FD /* usage-observer.js in Resources */ = {isa = PBXBuildFile; fileRef = B60723F92FB752BD00F3A4FD /* usage-observer.js */; };
+		D10000000000000000000011 /* NativeSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000001 /* NativeSupport.swift */; };
+		D10000000000000000000012 /* NativeSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000001 /* NativeSupport.swift */; };
+		D10000000000000000000013 /* NativeNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000002 /* NativeNotificationService.swift */; };
+		D10000000000000000000014 /* NativeDiagnosticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10000000000000000000003 /* NativeDiagnosticsService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -105,6 +109,9 @@
 		B60723F72FB752BD00F3A4FD /* fable-verified-badge.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "fable-verified-badge.png"; path = "../../dist_safari/fable-verified-badge.png"; sourceTree = "<group>"; };
 		B60723F82FB752BD00F3A4FD /* response-complete-observer.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "response-complete-observer.js"; path = "../../dist_safari/response-complete-observer.js"; sourceTree = "<group>"; };
 		B60723F92FB752BD00F3A4FD /* usage-observer.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; name = "usage-observer.js"; path = "../../dist_safari/usage-observer.js"; sourceTree = "<group>"; };
+		D10000000000000000000001 /* NativeSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSupport.swift; sourceTree = "<group>"; };
+		D10000000000000000000002 /* NativeNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeNotificationService.swift; sourceTree = "<group>"; };
+		D10000000000000000000003 /* NativeDiagnosticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeDiagnosticsService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -133,6 +140,7 @@
 			children = (
 				B60723AB2FB752BC00F3A4FD /* Gemini Voyager */,
 				B60723C82FB752BD00F3A4FD /* Gemini Voyager Extension */,
+				D10000000000000000000020 /* Shared */,
 				B60723AA2FB752BC00F3A4FD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -151,6 +159,7 @@
 			children = (
 				B60723AC2FB752BC00F3A4FD /* AppDelegate.swift */,
 				B60723B82FB752BC00F3A4FD /* ViewController.swift */,
+				D10000000000000000000003 /* NativeDiagnosticsService.swift */,
 				B60723BA2FB752BC00F3A4FD /* Main.storyboard */,
 				B60723BD2FB752BD00F3A4FD /* Assets.xcassets */,
 				B60723BF2FB752BD00F3A4FD /* Info.plist */,
@@ -176,6 +185,7 @@
 				B60723D52FB752BD00F3A4FD /* Resources */,
 				B60723C92FB752BD00F3A4FD /* SafariWebExtensionHandler.swift */,
 				C1D2E3F40516273849A5B6C8 /* ICloudSyncService.swift */,
+				D10000000000000000000002 /* NativeNotificationService.swift */,
 				B60723CB2FB752BD00F3A4FD /* Info.plist */,
 				A1B2C3D4E5F60718293A4B5C /* Gemini Voyager Extension.entitlements */,
 			);
@@ -210,6 +220,14 @@
 			name = Resources;
 			path = "Gemini Voyager Extension";
 			sourceTree = SOURCE_ROOT;
+		};
+		D10000000000000000000020 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				D10000000000000000000001 /* NativeSupport.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
@@ -355,6 +373,8 @@
 			files = (
 				B60723B92FB752BC00F3A4FD /* ViewController.swift in Sources */,
 				B60723AD2FB752BC00F3A4FD /* AppDelegate.swift in Sources */,
+				D10000000000000000000011 /* NativeSupport.swift in Sources */,
+				D10000000000000000000014 /* NativeDiagnosticsService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -364,6 +384,8 @@
 			files = (
 				B60723CA2FB752BD00F3A4FD /* SafariWebExtensionHandler.swift in Sources */,
 				C1D2E3F40516273849A5B6C7 /* ICloudSyncService.swift in Sources */,
+				D10000000000000000000012 /* NativeSupport.swift in Sources */,
+				D10000000000000000000013 /* NativeNotificationService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

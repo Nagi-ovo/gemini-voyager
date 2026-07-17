@@ -8,6 +8,7 @@ type NativeAuthResponse = {
     accessToken?: unknown;
     expiresAt?: unknown;
     authorizationStarted?: unknown;
+    requiresAppLaunch?: unknown;
   };
   error?: unknown;
 };
@@ -16,6 +17,7 @@ export type SafariGoogleDriveToken = {
   accessToken: string | null;
   expiresAt: number;
   authorizationStarted: boolean;
+  requiresAppLaunch: boolean;
 };
 
 async function sendAuthMessage(message: Record<string, unknown>): Promise<NativeAuthResponse> {
@@ -44,6 +46,7 @@ export async function requestSafariGoogleDriveToken(
     accessToken,
     expiresAt,
     authorizationStarted: response.data?.authorizationStarted === true,
+    requiresAppLaunch: response.data?.requiresAppLaunch === true,
   };
 }
 

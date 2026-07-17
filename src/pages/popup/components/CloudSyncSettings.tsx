@@ -52,6 +52,18 @@ function isFolderData(value: unknown): value is FolderData {
   );
 }
 
+function parseStoredFolderData(value: unknown): FolderData | null {
+  if (isFolderData(value)) return value;
+  if (typeof value !== 'string') return null;
+
+  try {
+    const parsed: unknown = JSON.parse(value);
+    return isFolderData(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
 function isPromptItemArray(value: unknown): value is PromptItem[] {
   return (
     Array.isArray(value) &&
@@ -98,9 +110,10 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
   const supportsICloud = getVoyagerBuildTarget() === 'safari' || isSafari();
 
   const [syncState, setSyncState] = useState<SyncState>(DEFAULT_SYNC_STATE);
-  const [statusMessage, setStatusMessage] = useState<{ text: string; kind: 'ok' | 'err' } | null>(
-    null,
-  );
+  const [statusMessage, setStatusMessage] = useState<{
+    text: string;
+    kind: 'ok' | 'warn' | 'err';
+  } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadMode, setDownloadMode] = useState<DownloadMode | null>(null);
@@ -147,6 +160,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
       let pageUrl = '';
       let routeUserId: string | null = null;
       let email: string | null = null;
+      let pageContextAvailable = false;
 
       try {
         const tab = await getTargetTab();
@@ -164,6 +178,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
             };
 
             if (response?.ok && response.context) {
+              pageContextAvailable = true;
               routeUserId = response.context.routeUserId ?? routeUserId;
               email = response.context.email ?? null;
             }
@@ -175,7 +190,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
         // Ignore tab query failure; account service will fallback to default scope.
       }
 
-      if (!routeUserId && !email) {
+      if (!routeUserId && !email && !pageContextAvailable) {
         return null;
       }
 
@@ -422,15 +437,12 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
           folderStorageKey,
           StorageKeys.PROMPT_ITEMS,
         ]);
-        const storedFoldersValue = storageResult[folderStorageKey];
+        const storedFolders = parseStoredFolderData(storageResult[folderStorageKey]);
         const storedPromptsValue = storageResult[StorageKeys.PROMPT_ITEMS];
 
         // Only use storage folders if we didn't get them from tab
-        if (
-          (!folders.folders || folders.folders.length === 0) &&
-          isFolderData(storedFoldersValue)
-        ) {
-          folders = storedFoldersValue;
+        if ((!folders.folders || folders.folders.length === 0) && storedFolders) {
+          folders = storedFolders;
           console.log(`[CloudSyncSettings] Loaded folders from ${folderStorageKey} (fallback)`);
         }
 
@@ -460,14 +472,24 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
           highlightAccountScope,
           includeHighlights: platform === 'gemini' && highlightSyncEnabled,
         },
-      })) as { ok?: boolean; error?: string; state?: SyncState } | undefined;
+      })) as
+        | {
+            ok?: boolean;
+            error?: string;
+            state?: SyncState;
+            highlights?: { synced?: boolean; skipped?: boolean };
+          }
+        | undefined;
 
       if (response?.state) {
         setSyncState(response.state);
       }
 
       if (response?.ok) {
-        setStatusMessage({ text: t('syncSuccess'), kind: 'ok' });
+        setStatusMessage({
+          text: t(response.highlights?.skipped ? 'syncSuccessHighlightsSkipped' : 'syncSuccess'),
+          kind: response.highlights?.skipped ? 'warn' : 'ok',
+        });
       } else {
         throw new Error(response?.error || response?.state?.error || t('syncUploadFailed'));
       }
@@ -527,7 +549,12 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
               ok?: boolean;
               error?: string;
               state?: SyncState;
-              highlights?: { synced?: boolean; count?: number; empty?: boolean };
+              highlights?: {
+                synced?: boolean;
+                skipped?: boolean;
+                count?: number;
+                empty?: boolean;
+              };
               data?: {
                 folders?: { data?: FolderData };
                 prompts?: { items?: PromptItem[] };
@@ -602,15 +629,12 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
             StorageKeys.PROMPT_ITEMS,
             ...getTimelineHierarchyStorageKeysToRead(timelineHierarchyAccountScope?.accountKey),
           ]);
-          const storedFoldersValue = storageResult[folderStorageKey];
+          const storedFolders = parseStoredFolderData(storageResult[folderStorageKey]);
           const storedPromptsValue = storageResult[StorageKeys.PROMPT_ITEMS];
 
           // Only use storage folders if we didn't get them from tab
-          if (
-            (!localFolders.folders || localFolders.folders.length === 0) &&
-            isFolderData(storedFoldersValue)
-          ) {
-            localFolders = storedFoldersValue;
+          if ((!localFolders.folders || localFolders.folders.length === 0) && storedFolders) {
+            localFolders = storedFolders;
             console.log(`[CloudSyncSettings] Loaded folders from ${folderStorageKey} (fallback)`);
           }
 
@@ -760,7 +784,17 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
           console.warn('[CloudSyncSettings] Could not notify content script:', err);
         }
 
-        setStatusMessage({ text: t('syncSuccess'), kind: 'ok' });
+        const foldersMissing = !hasCloudFolderData;
+        setStatusMessage({
+          text: t(
+            foldersMissing
+              ? 'syncSuccessFoldersMissing'
+              : response.highlights?.skipped
+                ? 'syncSuccessHighlightsSkipped'
+                : 'syncSuccess',
+          ),
+          kind: foldersMissing || response.highlights?.skipped ? 'warn' : 'ok',
+        });
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Download failed';
         console.error('[CloudSyncSettings] Download failed:', error);
@@ -791,9 +825,9 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
   }, [statusMessage]);
 
   return (
-    <Card className="p-4 transition-all hover:shadow-md">
-      <CardTitle className="mb-4">{t('cloudSync')}</CardTitle>
-      <CardContent className="space-y-4 p-0">
+    <Card className="p-3 transition-all hover:shadow-md">
+      <CardTitle className="mb-2">{t('cloudSync')}</CardTitle>
+      <CardContent className="space-y-3 p-0">
         {/* Description */}
         <p className="text-muted-foreground text-xs">
           {t(
@@ -802,13 +836,13 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
         </p>
 
         {supportsICloud && (
-          <div>
-            <Label className="mb-2 block text-sm font-medium">{t('syncProvider')}</Label>
+          <div className="grid grid-cols-[auto_1fr] items-center gap-3">
+            <Label className="text-sm font-medium">{t('syncProvider')}</Label>
             <div className="bg-secondary/60 grid grid-cols-2 gap-1 rounded-xl p-1">
               {(['googleDrive', 'icloud'] as const).map((provider) => (
                 <button
                   key={provider}
-                  className={`rounded-lg px-2 py-2 text-xs font-bold transition-colors ${
+                  className={`rounded-lg px-2 py-1.5 text-xs font-bold transition-colors ${
                     syncState.provider === provider
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground'
@@ -823,9 +857,18 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
           </div>
         )}
 
+        {supportsICloud && syncState.provider === 'googleDrive' && !syncState.isAuthenticated && (
+          <a
+            className="border-primary/25 bg-primary/5 text-primary hover:bg-primary/10 flex h-9 w-full items-center justify-center rounded-lg border text-xs font-semibold transition-colors"
+            href="gemini-voyager://google-drive-auth"
+          >
+            {t('syncConnectGoogleDrive')}
+          </a>
+        )}
+
         {/* Sync Mode Toggle */}
-        <div>
-          <Label className="mb-2 block text-sm font-medium">{t('syncMode')}</Label>
+        <div className="grid grid-cols-[auto_1fr] items-center gap-3">
+          <Label className="text-sm font-medium">{t('syncMode')}</Label>
           <div className="bg-secondary/60 relative grid grid-cols-2 gap-1 rounded-xl p-1">
             <div
               className="bg-primary pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg shadow-sm transition-all duration-300 ease-out"
@@ -834,7 +877,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
               }}
             />
             <button
-              className={`relative z-10 rounded-lg px-2 py-2 text-xs font-bold transition-all duration-200 ${
+              className={`relative z-10 rounded-lg px-2 py-1.5 text-xs font-bold transition-all duration-200 ${
                 syncState.mode === 'disabled'
                   ? 'text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -844,7 +887,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
               {t('syncModeDisabled')}
             </button>
             <button
-              className={`relative z-10 rounded-lg px-2 py-2 text-xs font-bold transition-all duration-200 ${
+              className={`relative z-10 rounded-lg px-2 py-1.5 text-xs font-bold transition-all duration-200 ${
                 syncState.mode === 'manual'
                   ? 'text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -857,24 +900,25 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
         </div>
 
         {platform === 'gemini' && (
-          <div className="border-border/70 bg-muted/30 flex items-start gap-3 rounded-lg border px-3 py-2.5">
-            <Switch
-              id="highlight-cloud-sync"
-              className="mt-0.5 shrink-0"
-              checked={highlightSyncEnabled}
-              onChange={(event) => void handleHighlightSyncChange(event.target.checked)}
-              aria-describedby="highlight-cloud-sync-hint"
-            />
+          <div className="highlight-cloud-sync-row border-border/70 bg-muted/30 gap-3 rounded-lg border px-3 py-2">
             <div className="min-w-0">
-              <Label htmlFor="highlight-cloud-sync" className="text-sm font-medium">
+              <Label htmlFor="highlight-cloud-sync" className="cursor-pointer text-sm font-medium">
                 {t('highlightCloudSync')}
               </Label>
               <p
                 id="highlight-cloud-sync-hint"
-                className="text-muted-foreground mt-0.5 text-xs leading-relaxed"
+                className="text-muted-foreground mt-0.5 text-xs leading-snug"
               >
                 {t('highlightCloudSyncHint')}
               </p>
+            </div>
+            <div className="highlight-cloud-sync-control">
+              <Switch
+                id="highlight-cloud-sync"
+                checked={highlightSyncEnabled}
+                onChange={(event) => void handleHighlightSyncChange(event.target.checked)}
+                aria-describedby="highlight-cloud-sync-hint"
+              />
             </div>
           </div>
         )}
@@ -1051,7 +1095,11 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
         {statusMessage && (
           <p
             className={`text-center text-xs ${
-              statusMessage.kind === 'ok' ? 'text-green-600' : 'text-destructive'
+              statusMessage.kind === 'ok'
+                ? 'text-green-600'
+                : statusMessage.kind === 'warn'
+                  ? 'text-amber-600'
+                  : 'text-destructive'
             }`}
           >
             {statusMessage.text}

@@ -1114,6 +1114,7 @@
   "syncProvider": { "message": "儲存服務" },
   "syncProviderGoogleDrive": { "message": "Google Drive" },
   "syncProviderICloud": { "message": "iCloud" },
+  "syncConnectGoogleDrive": { "message": "連接 Google Drive" },
   "syncModeDisabled": {
     "message": "已停用",
     "description": "同步模式停用選項"
@@ -1149,6 +1150,14 @@
   "syncSuccess": {
     "message": "✓ 同步成功",
     "description": "同步成功訊息"
+  },
+  "syncSuccessHighlightsSkipped": {
+    "message": "✓ 已同步；已略過醒目提示，請開啟 Gemini 後重試",
+    "description": "因無法識別帳號而略過醒目提示時的同步成功訊息"
+  },
+  "syncSuccessFoldersMissing": {
+    "message": "✓ 其他資料已同步；雲端沒有資料夾備份",
+    "description": "雲端沒有資料夾資料時的部分同步提示"
   },
   "syncError": {
     "message": "✗ 同步失敗：{error}",
@@ -1729,6 +1738,10 @@
   "usageStatusOpenHint": {
     "message": "開啟用量上限",
     "description": "Tooltip on the usage status pill; clicking opens the Gemini usage page."
+  },
+  "usageStatusEmptyHint": {
+    "message": "點此取得用量",
+    "description": "Placeholder shown before the usage pill has loaded its first snapshot."
   },
   "usageStatusJustUpdated": {
     "message": "剛剛更新",

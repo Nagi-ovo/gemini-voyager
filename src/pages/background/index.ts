@@ -32,7 +32,11 @@ import {
   supportsExtensionNotifications,
 } from '@/core/utils/browser';
 import { hasNotificationsPermission } from '@/core/utils/notificationsPermission';
-import { deliverSafariNativeNotification } from '@/core/utils/safariNativeNotifications';
+import {
+  SAFARI_NOTIFICATION_PERMISSION_REQUEST,
+  deliverSafariNativeNotification,
+  prepareSafariNativeNotifications,
+} from '@/core/utils/safariNativeNotifications';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import {
   isRemoteAnnouncementRuntimeMessage,
@@ -249,6 +253,7 @@ async function showResponseCompleteNotification(
         id: notificationId,
         title,
         body: message,
+        url: conversationUrl,
       });
     }
 
@@ -1693,6 +1698,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
       }
 
+      if (message?.type === SAFARI_NOTIFICATION_PERMISSION_REQUEST) {
+        const granted =
+          getVoyagerBuildTarget() === 'safari' && (await prepareSafariNativeNotifications());
+        await browser.storage.sync.set({
+          [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: granted,
+        });
+        sendResponse({ ok: true, granted });
+        return;
+      }
+
       if (isRemoteAnnouncementRuntimeMessage(message)) {
         if (message.type === 'gv.remoteAnnouncement.getPending') {
           sendResponse({
@@ -2064,10 +2079,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 ? rawHighlightScope
                 : (timelineHierarchyAccountScope ??
                   (isSyncAccountScope(rawScope) ? rawScope : null));
-            if (syncHighlights && !highlightAccountScope) {
-              sendResponse({ ok: false, error: 'Highlight account scope is unavailable' });
-              return;
-            }
+            const shouldSyncHighlights = syncHighlights && highlightAccountScope !== null;
             // Also get Gemini-only timeline data from local storage
             const starredDataRaw =
               platform !== 'aistudio' ? await starredMessagesManager.getAllStarredMessages() : null;
@@ -2119,7 +2131,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               settingsPayload.data,
               pluginState,
             );
-            if (success && syncHighlights && highlightAccountScope) {
+            if (success && shouldSyncHighlights && highlightAccountScope) {
               const highlightResult = await highlightDriveSyncCoordinator.push(
                 highlightAccountScope,
                 interactive !== false,
@@ -2143,7 +2155,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
             sendResponse({
               ok: success,
-              highlights: syncHighlights ? { synced: success } : undefined,
+              highlights: syncHighlights
+                ? { synced: success && shouldSyncHighlights, skipped: !shouldSyncHighlights }
+                : undefined,
               state: await googleDriveSyncService.getState(),
             });
             return;
@@ -2172,10 +2186,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 ? rawHighlightScope
                 : (timelineHierarchyAccountScope ??
                   (isSyncAccountScope(rawScope) ? rawScope : null));
-            if (syncHighlights && !highlightAccountScope) {
-              sendResponse({ ok: false, error: 'Highlight account scope is unavailable' });
-              return;
-            }
+            const shouldSyncHighlights = syncHighlights && highlightAccountScope !== null;
             const data = await googleDriveSyncService.download(
               interactive,
               platform,
@@ -2183,7 +2194,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               timelineHierarchyAccountScope,
             );
             let highlightSyncResult: { synced: boolean; count: number; empty: boolean } | undefined;
-            if (syncHighlights && highlightAccountScope) {
+            if (shouldSyncHighlights && highlightAccountScope) {
               const highlightResult = await highlightDriveSyncCoordinator.pull(
                 highlightAccountScope,
                 interactive,
@@ -2219,7 +2230,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({
               ok: true,
               data,
-              highlights: highlightSyncResult,
+              highlights:
+                highlightSyncResult ??
+                (syncHighlights ? { synced: false, skipped: !shouldSyncHighlights } : undefined),
               state: await googleDriveSyncService.getState(),
             });
             return;

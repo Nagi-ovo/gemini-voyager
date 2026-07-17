@@ -9,8 +9,22 @@ type NativeICloudResponse = {
     found?: unknown;
     json?: unknown;
   };
+  code?: unknown;
   error?: unknown;
+  retryAfterMs?: unknown;
 };
+
+export class SafariICloudSyncError extends Error {
+  readonly code: string | null;
+  readonly retryAfterMs: number | null;
+
+  constructor(message: string, code: string | null, retryAfterMs: number | null) {
+    super(message);
+    this.name = 'SafariICloudSyncError';
+    this.code = code;
+    this.retryAfterMs = retryAfterMs;
+  }
+}
 
 async function sendICloudMessage(message: Record<string, unknown>): Promise<NativeICloudResponse> {
   return browser.runtime.sendNativeMessage<Record<string, unknown>, NativeICloudResponse>(
@@ -20,7 +34,21 @@ async function sendICloudMessage(message: Record<string, unknown>): Promise<Nati
 }
 
 function responseError(response: NativeICloudResponse, fallback: string): Error {
-  return new Error(typeof response.error === 'string' ? response.error : fallback);
+  return new SafariICloudSyncError(
+    typeof response.error === 'string' ? response.error : fallback,
+    typeof response.code === 'string' ? response.code : null,
+    typeof response.retryAfterMs === 'number' && Number.isFinite(response.retryAfterMs)
+      ? Math.max(0, response.retryAfterMs)
+      : null,
+  );
+}
+
+export function isSafariICloudConflictError(error: unknown): boolean {
+  return error instanceof SafariICloudSyncError && error.code === 'icloud_conflict';
+}
+
+export function getSafariICloudRetryDelay(error: unknown): number | null {
+  return error instanceof SafariICloudSyncError ? error.retryAfterMs : null;
 }
 
 export async function checkSafariICloudAccount(): Promise<void> {

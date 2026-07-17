@@ -1146,6 +1146,7 @@
   "syncProvider": { "message": "Storage service" },
   "syncProviderGoogleDrive": { "message": "Google Drive" },
   "syncProviderICloud": { "message": "iCloud" },
+  "syncConnectGoogleDrive": { "message": "Connect Google Drive" },
   "preventAutoScroll": {
     "message": "Prevent auto-scroll to bottom",
     "description": "Feature to prevent auto scrolling to bottom when generating answers"
@@ -1189,6 +1190,14 @@
   "syncSuccess": {
     "message": "✓ Synced successfully",
     "description": "Sync success message"
+  },
+  "syncSuccessHighlightsSkipped": {
+    "message": "✓ Synced; highlights skipped — open Gemini and try again",
+    "description": "Sync success message when account-scoped highlights were skipped"
+  },
+  "syncSuccessFoldersMissing": {
+    "message": "✓ Other data synced; no folder backup was found",
+    "description": "Partial sync message when the cloud has no folders payload"
   },
   "syncError": {
     "message": "✗ Sync failed: {error}",
@@ -1729,6 +1738,10 @@
   "usageStatusOpenHint": {
     "message": "Open usage limits",
     "description": "Tooltip on the usage status pill; clicking opens the Gemini usage page."
+  },
+  "usageStatusEmptyHint": {
+    "message": "Click to load usage",
+    "description": "Placeholder shown before the usage pill has loaded its first snapshot."
   },
   "usageStatusJustUpdated": {
     "message": "Just updated",

@@ -1146,6 +1146,7 @@
   "syncProvider": { "message": "存储服务" },
   "syncProviderGoogleDrive": { "message": "Google Drive" },
   "syncProviderICloud": { "message": "iCloud" },
+  "syncConnectGoogleDrive": { "message": "连接 Google Drive" },
   "preventAutoScroll": {
     "message": "防自动跳转",
     "description": "功能选项：防止每次输入后生成答案时自动滚到底部"
@@ -1189,6 +1190,14 @@
   "syncSuccess": {
     "message": "✓ 同步成功",
     "description": "同步成功消息"
+  },
+  "syncSuccessHighlightsSkipped": {
+    "message": "✓ 已同步；高亮已跳过，请打开 Gemini 后重试",
+    "description": "因无法识别账号而跳过高亮时的同步成功消息"
+  },
+  "syncSuccessFoldersMissing": {
+    "message": "✓ 其他数据已同步；云端没有文件夹备份",
+    "description": "云端没有文件夹数据时的部分同步提示"
   },
   "syncError": {
     "message": "✗ 同步失败：{error}",
@@ -1729,6 +1738,10 @@
   "usageStatusOpenHint": {
     "message": "打开用量限额",
     "description": "Tooltip on the usage status pill; clicking opens the Gemini usage page."
+  },
+  "usageStatusEmptyHint": {
+    "message": "点此获取用量",
+    "description": "Placeholder shown before the usage pill has loaded its first snapshot."
   },
   "usageStatusJustUpdated": {
     "message": "刚刚更新",

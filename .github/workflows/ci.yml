@@ -52,13 +52,33 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run test
 
+  # ── Native Swift Tests + Xcode Build ─────────────────────────────────
+  native-test:
+    name: Native Swift Test & Xcode Build
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run build:safari
+      - run: swift test --package-path "Gemini Voyager"
+      - run: >-
+          xcodebuild
+          -project "Gemini Voyager/Gemini Voyager.xcodeproj"
+          -scheme "Gemini Voyager"
+          -configuration Debug
+          -destination "platform=macOS"
+          -derivedDataPath .build/ci-xcode-derived
+          CODE_SIGNING_ALLOWED=NO
+          build
+
   # ── Build (all browsers) ──────────────────────────────────────────────
   build:
     name: Build
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [chrome, firefox, safari]
+        browser: [chrome, edge, firefox, safari]
     steps:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2

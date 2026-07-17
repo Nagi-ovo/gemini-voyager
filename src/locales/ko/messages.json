@@ -1154,6 +1154,7 @@
   "syncProvider": { "message": "저장 서비스" },
   "syncProviderGoogleDrive": { "message": "Google Drive" },
   "syncProviderICloud": { "message": "iCloud" },
+  "syncConnectGoogleDrive": { "message": "Google Drive 연결" },
   "syncModeDisabled": {
     "message": "비활성화",
     "description": "Sync mode disabled option"
@@ -1189,6 +1190,14 @@
   "syncSuccess": {
     "message": "✓ 성공적으로 동기화되었습니다",
     "description": "Sync success message"
+  },
+  "syncSuccessHighlightsSkipped": {
+    "message": "✓ 동기화됨. 하이라이트는 건너뜀 — Gemini를 열고 다시 시도하세요",
+    "description": "Sync success message when account-scoped highlights were skipped"
+  },
+  "syncSuccessFoldersMissing": {
+    "message": "✓ 다른 데이터는 동기화되었습니다. 폴더 백업을 찾지 못했습니다",
+    "description": "Partial sync message when the cloud has no folders payload"
   },
   "syncError": {
     "message": "✗ 동기화 실패: {error}",
@@ -1729,6 +1738,10 @@
   "usageStatusOpenHint": {
     "message": "사용 한도 열기",
     "description": "Tooltip on the usage status pill; clicking opens the Gemini usage page."
+  },
+  "usageStatusEmptyHint": {
+    "message": "클릭하여 사용량 가져오기",
+    "description": "Placeholder shown before the usage pill has loaded its first snapshot."
   },
   "usageStatusJustUpdated": {
     "message": "방금 업데이트됨",
