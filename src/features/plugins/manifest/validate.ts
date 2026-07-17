@@ -146,10 +146,12 @@ function normalizeI18n(raw: unknown): Readonly<Record<string, PluginLocalization
  * self-contained data; remote fetches enable tracking/exfiltration and defeat
  * the "no remotely-hosted code/resources" posture. `data:` URIs stay allowed.
  */
+function cssHasExternalUrl(css: string): boolean {
+  return /url\(\s*['"]?\s*(?:https?:)?\/\//i.test(css);
+}
+
 function cssHasRemoteResource(css: string): boolean {
-  if (/@import\b/i.test(css)) return true;
-  if (/url\(\s*['"]?\s*(?:https?:)?\/\//i.test(css)) return true;
-  return false;
+  return /@import\b/i.test(css) || cssHasExternalUrl(css);
 }
 
 export function validateStyleCss(css: string, path: string): ManifestIssue[] {
@@ -169,6 +171,15 @@ export function validateStyleCss(css: string, path: string): ManifestIssue[] {
 /** Event-handler attributes (`onclick`, `onload`, …) inject executable code. */
 function isEventHandlerAttribute(name: string): boolean {
   return /^on/i.test(name);
+}
+
+const URL_ATTRIBUTES = new Set(['href', 'src', 'action', 'formaction', 'xlink:href']);
+
+function hasExecutableAttributeUrl(name: string, value: string): boolean {
+  return (
+    URL_ATTRIBUTES.has(name.trim().toLowerCase()) &&
+    /^(?:javascript|data|vbscript):/i.test(value.trim())
+  );
 }
 
 function normalizeSelector(
@@ -233,6 +244,13 @@ function normalizeOp(raw: unknown, path: string, issues: ManifestIssue[]): DomOp
         });
         return null;
       }
+      if (hasExecutableAttributeUrl(raw.name, raw.value)) {
+        issues.push({
+          path: `${path}.value`,
+          message: 'executable or data URLs are not allowed for URL attributes',
+        });
+        return null;
+      }
       return { op: 'setAttribute', target, name: raw.name, value: raw.value };
     case 'setStyle': {
       if (!isRecord(raw.styles)) {
@@ -243,6 +261,13 @@ function normalizeOp(raw: unknown, path: string, issues: ManifestIssue[]): DomOp
       for (const [prop, value] of Object.entries(raw.styles)) {
         if (!isString(value)) {
           issues.push({ path: `${path}.styles.${prop}`, message: 'value must be a string' });
+          return null;
+        }
+        if (cssHasExternalUrl(value)) {
+          issues.push({
+            path: `${path}.styles.${prop}`,
+            message: 'must not use an external url() (remote-resource fetch)',
+          });
           return null;
         }
         styles[prop] = value;

@@ -214,6 +214,63 @@ describe('validateManifest', () => {
     expect(result.error.some((e) => e.path === 'contributes.domOps[0].name')).toBe(true);
   });
 
+  it('rejects external url() values in setStyle operations', () => {
+    for (const value of [
+      'url(https://evil.example/x.png)',
+      "url('http://evil.example/x.png')",
+      'linear-gradient(red, blue), url(//evil.example/x.png)',
+    ]) {
+      const result = validateManifest({
+        ...valid,
+        contributes: {
+          domOps: [{ op: 'setStyle', target: 'body', styles: { background: value } }],
+        },
+      });
+      expect(result.success).toBe(false);
+      if (result.success) continue;
+      expect(result.error.some((e) => e.path === 'contributes.domOps[0].styles.background')).toBe(
+        true,
+      );
+    }
+  });
+
+  it('rejects executable schemes in URL-bearing setAttribute operations', () => {
+    for (const [name, value] of [
+      ['href', ' javascript:alert(1)'],
+      ['SRC', 'DATA:text/html,evil'],
+      ['formAction', ' vbscript:msgbox(1)'],
+      ['xlink:href', 'javascript:alert(1)'],
+    ]) {
+      const result = validateManifest({
+        ...valid,
+        contributes: {
+          domOps: [{ op: 'setAttribute', target: 'a', name, value }],
+        },
+      });
+      expect(result.success).toBe(false);
+      if (result.success) continue;
+      expect(result.error.some((e) => e.path === 'contributes.domOps[0].value')).toBe(true);
+    }
+  });
+
+  it('allows local style URLs and non-executable local attributes', () => {
+    const result = validateManifest({
+      ...valid,
+      contributes: {
+        domOps: [
+          {
+            op: 'setStyle',
+            target: 'body',
+            styles: { background: 'url(/assets/background.png)' },
+          },
+          { op: 'setAttribute', target: 'a', name: 'href', value: '#local-section' },
+        ],
+      },
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it('still allows normal setAttribute', () => {
     const result = validateManifest({
       ...valid,
