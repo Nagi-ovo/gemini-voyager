@@ -1,4 +1,5 @@
 import CloudKit
+import UserNotifications
 import XCTest
 
 @testable import VoyagerNativeCore
@@ -53,6 +54,65 @@ final class NativeSupportTests: XCTestCase {
 
     XCTAssertEqual(mapped?.code, .conflict)
     XCTAssertTrue(mapped?.localizedDescription.contains("Download and merge") == true)
+  }
+
+  func testDriveHTTPMapperFlagsAuthAndNotFoundStatuses() {
+    XCTAssertEqual(VoyagerGoogleDriveHTTPFailureMapper.map(statusCode: 401)?.code, .authRequired)
+    XCTAssertEqual(VoyagerGoogleDriveHTTPFailureMapper.map(statusCode: 404)?.code, .notFound)
+    XCTAssertNil(VoyagerGoogleDriveHTTPFailureMapper.map(statusCode: 200))
+    XCTAssertNil(VoyagerGoogleDriveHTTPFailureMapper.map(statusCode: 302))
+  }
+
+  func testDriveHTTPMapperMapsAmbiguous403OnlyWithRateLimitBody() {
+    let rateLimited = VoyagerGoogleDriveHTTPFailureMapper.map(
+      statusCode: 403,
+      bodyHint: "{\"error\":{\"errors\":[{\"reason\":\"userRateLimitExceeded\"}]}}"
+    )
+    XCTAssertEqual(rateLimited?.code, .rateLimited)
+
+    XCTAssertNil(
+      VoyagerGoogleDriveHTTPFailureMapper.map(
+        statusCode: 403,
+        bodyHint: "{\"error\":{\"errors\":[{\"reason\":\"storageQuotaExceeded\"}]}}"
+      )
+    )
+  }
+
+  func testDriveHTTPMapperKeepsRetryAfterInMilliseconds() {
+    let failure = VoyagerGoogleDriveHTTPFailureMapper.map(
+      statusCode: 429,
+      retryAfterSeconds: 2.5
+    )
+    XCTAssertEqual(failure?.code, .rateLimited)
+    XCTAssertEqual(failure?.retryAfterMilliseconds, 2_500)
+
+    XCTAssertEqual(
+      VoyagerGoogleDriveHTTPFailureMapper.map(statusCode: 503)?.code,
+      .temporarilyUnavailable
+    )
+  }
+
+  func testNotificationCategoryExposesOpenConversationAction() {
+    let category = VoyagerNotificationDestination.notificationCategory()
+
+    XCTAssertEqual(category.identifier, VoyagerNotificationDestination.categoryIdentifier)
+    XCTAssertEqual(
+      category.actions.map(\.identifier),
+      [VoyagerNotificationDestination.openActionIdentifier]
+    )
+  }
+
+  func testNotificationDestinationDispatchUserInfoRoundTrips() {
+    let destination = VoyagerNotificationDestination(
+      rawValue: "https://gemini.google.com/u/1/app/example"
+    )
+
+    let userInfo = destination?.dispatchUserInfo
+    XCTAssertEqual(
+      userInfo?["type"] as? String,
+      VoyagerNotificationDestination.openConversationMessageName
+    )
+    XCTAssertEqual(userInfo?["url"] as? String, "https://gemini.google.com/u/1/app/example")
   }
 
   func testNotificationDestinationAcceptsSupportedConversationURLs() {
@@ -159,6 +219,10 @@ final class NativeSupportTests: XCTestCase {
       (
         ["action": "iCloudReadFile", "fileName": "prompts.json"],
         .iCloudReadFile(fileName: "prompts.json")
+      ),
+      (
+        ["action": "copyImageToPasteboard", "pngBase64": "aGVsbG8="],
+        .copyImageToPasteboard(VoyagerClipboardImageRequest(pngBase64: "aGVsbG8="))
       ),
     ]
 

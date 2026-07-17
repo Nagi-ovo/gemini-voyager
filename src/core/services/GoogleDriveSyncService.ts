@@ -40,6 +40,8 @@ import {
   downloadSafariGoogleDriveFile,
   ensureSafariGoogleDriveFile,
   findSafariGoogleDriveFile,
+  getSafariGoogleDriveRetryDelay,
+  isSafariGoogleDriveAuthError,
   requestSafariGoogleDriveSession,
   signOutSafariGoogleDrive,
   uploadSafariGoogleDriveFile,
@@ -1251,8 +1253,15 @@ export class GoogleDriveSyncService {
         return;
       } catch (error) {
         if (isSafariICloudConflictError(error)) throw error;
+        if (this.markAuthLostIfNeeded(error)) throw error;
         if (attempt === MAX_RETRIES) throw error;
-        await this.sleep(Math.max(delay, getSafariICloudRetryDelay(error) ?? 0));
+        await this.sleep(
+          Math.max(
+            delay,
+            getSafariICloudRetryDelay(error) ?? 0,
+            getSafariGoogleDriveRetryDelay(error) ?? 0,
+          ),
+        );
         delay *= 2;
       }
     }
@@ -1278,12 +1287,24 @@ export class GoogleDriveSyncService {
         }
         return await response.json();
       } catch (error) {
+        if (this.markAuthLostIfNeeded(error)) throw error;
         if (attempt === MAX_RETRIES) throw error;
-        await this.sleep(delay);
+        await this.sleep(Math.max(delay, getSafariGoogleDriveRetryDelay(error) ?? 0));
         delay *= 2;
       }
     }
     return null;
+  }
+
+  /**
+   * Safari native bridge signals a permanently revoked/expired Google session
+   * with a structured code; retrying it is pointless, so surface it at once
+   * and flip the authenticated flag so the UI offers reconnecting.
+   */
+  private markAuthLostIfNeeded(error: unknown): boolean {
+    if (!isSafariGoogleDriveAuthError(error)) return false;
+    this.updateState({ isAuthenticated: false });
+    return true;
   }
 
   private async loadState(): Promise<void> {

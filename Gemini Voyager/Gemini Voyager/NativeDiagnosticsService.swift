@@ -11,6 +11,7 @@ final class NativeDiagnosticsService {
   ) {
     let automaticUpdatesEnabled = appDelegate.automaticUpdatesEnabled
     let canCheckForUpdates = appDelegate.canCheckForUpdates
+    let lastUpdateCheckDate = appDelegate.lastUpdateCheckDate
 
     SFSafariExtensionManager.getStateOfSafariExtension(
       withIdentifier: extensionBundleIdentifier
@@ -53,7 +54,7 @@ final class NativeDiagnosticsService {
             label: "Updates",
             value: automaticUpdatesEnabled ? "Automatic" : "Manual",
             detail: canCheckForUpdates
-              ? "Sparkle is ready to check for updates."
+              ? Self.updatesReadyDetail(lastCheck: lastUpdateCheckDate)
               : "Sparkle is still starting or unavailable.",
             level: canCheckForUpdates ? .ready : .attention
           ),
@@ -136,6 +137,16 @@ final class NativeDiagnosticsService {
         )
       }
     }
+  }
+
+  private static func updatesReadyDetail(lastCheck: Date?) -> String {
+    guard let lastCheck else {
+      return "Sparkle is ready to check for updates. No check has completed yet."
+    }
+    let formatter = DateFormatter()
+    formatter.dateStyle = .medium
+    formatter.timeStyle = .short
+    return "Sparkle is ready to check for updates. Last checked \(formatter.string(from: lastCheck))."
   }
 
   private func googleDriveItem(

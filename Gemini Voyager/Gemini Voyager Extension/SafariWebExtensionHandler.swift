@@ -3,13 +3,12 @@
 //  Gemini Voyager Extension
 //
 
+import AppKit
 import SafariServices
 import os.log
 
 final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
   func beginRequest(with context: NSExtensionContext) {
-    _ = NativeNotificationService.shared
-
     guard let request = context.inputItems.first as? NSExtensionItem,
       let message = extensionMessage(from: request)
     else {
@@ -52,6 +51,28 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       writeICloudFile(request: request, context: context)
     case .iCloudReadFile(let fileName):
       readICloudFile(fileName: fileName, context: context)
+    case .copyImageToPasteboard(let request):
+      copyImageToPasteboard(request: request, context: context)
+    }
+  }
+
+  private func copyImageToPasteboard(
+    request: VoyagerClipboardImageRequest,
+    context: NSExtensionContext
+  ) {
+    guard let imageData = Data(base64Encoded: request.pngBase64), !imageData.isEmpty else {
+      respondWithError(context: context, message: "Invalid image data")
+      return
+    }
+
+    DispatchQueue.main.async {
+      let pasteboard = NSPasteboard.general
+      pasteboard.clearContents()
+      let copied = pasteboard.setData(imageData, forType: .png)
+      self.respondWithSuccess(
+        context: context,
+        data: VoyagerClipboardWriteResponse(copied: copied)
+      )
     }
   }
 
@@ -116,6 +137,22 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     )
   }
 
+  private func respondWithGoogleDriveError(context: NSExtensionContext, error: Error) {
+    guard let failure = error as? VoyagerGoogleDriveFailure else {
+      respondWithError(context: context, message: error.localizedDescription)
+      return
+    }
+
+    respondWithError(
+      context: context,
+      failure: VoyagerNativeFailure(
+        error: failure.localizedDescription,
+        code: failure.code.rawValue,
+        retryAfterMs: failure.retryAfterMilliseconds
+      )
+    )
+  }
+
   private func getGoogleDriveSession(
     interactive: Bool,
     context: NSExtensionContext
@@ -123,7 +160,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
     GoogleDriveService.shared.authorizationState(interactive: interactive) { result in
       switch result {
       case .failure(let error):
-        self.respondWithError(context: context, message: error.localizedDescription)
+        self.respondWithGoogleDriveError(context: context, error: error)
       case .success(.signedIn):
         self.respondWithSuccess(
           context: context,
@@ -155,7 +192,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
           data: VoyagerGoogleDriveSignOutResponse(signedOut: true)
         )
       case .failure(let error):
-        self.respondWithError(context: context, message: error.localizedDescription)
+        self.respondWithGoogleDriveError(context: context, error: error)
       }
     }
   }
@@ -169,7 +206,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
           data: VoyagerGoogleDriveFileResponse(fileID: fileID)
         )
       case .failure(let error):
-        self.respondWithError(context: context, message: error.localizedDescription)
+        self.respondWithGoogleDriveError(context: context, error: error)
       }
     }
   }
@@ -189,7 +226,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
           data: VoyagerGoogleDriveFileResponse(fileID: fileID)
         )
       case .failure(let error):
-        self.respondWithError(context: context, message: error.localizedDescription)
+        self.respondWithGoogleDriveError(context: context, error: error)
       }
     }
   }
@@ -206,7 +243,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
           data: VoyagerGoogleDriveUploadResponse(saved: true)
         )
       case .failure(let error):
-        self.respondWithError(context: context, message: error.localizedDescription)
+        self.respondWithGoogleDriveError(context: context, error: error)
       }
     }
   }
@@ -220,7 +257,7 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
           data: VoyagerGoogleDriveDownloadResponse(json: json, found: json != nil)
         )
       case .failure(let error):
-        self.respondWithError(context: context, message: error.localizedDescription)
+        self.respondWithGoogleDriveError(context: context, error: error)
       }
     }
   }

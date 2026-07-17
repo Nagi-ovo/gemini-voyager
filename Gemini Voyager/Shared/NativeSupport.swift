@@ -1,5 +1,6 @@
 import CloudKit
 import Foundation
+import UserNotifications
 
 enum VoyagerICloudFailureCode: String, Codable {
   case accountUnavailable = "icloud_account_unavailable"
@@ -74,6 +75,82 @@ enum VoyagerICloudFailureMapper {
   }
 }
 
+enum VoyagerGoogleDriveFailureCode: String, Codable {
+  case authRequired = "drive_auth_required"
+  case notFound = "drive_not_found"
+  case rateLimited = "drive_rate_limited"
+  case temporarilyUnavailable = "drive_temporarily_unavailable"
+}
+
+struct VoyagerGoogleDriveFailure: LocalizedError, Equatable {
+  let code: VoyagerGoogleDriveFailureCode
+  let message: String
+  let retryAfterMilliseconds: Int?
+
+  var errorDescription: String? { message }
+
+  static let authRequired = VoyagerGoogleDriveFailure(
+    code: .authRequired,
+    message: "Google Drive access must be authorized again. Open Voyager to reconnect.",
+    retryAfterMilliseconds: nil
+  )
+
+  static let notFound = VoyagerGoogleDriveFailure(
+    code: .notFound,
+    message: "The Google Drive file no longer exists.",
+    retryAfterMilliseconds: nil
+  )
+
+  static func rateLimited(retryAfter seconds: TimeInterval?) -> VoyagerGoogleDriveFailure {
+    VoyagerGoogleDriveFailure(
+      code: .rateLimited,
+      message: "Google Drive is rate limiting requests. Try again shortly.",
+      retryAfterMilliseconds: seconds.map { max(0, Int(($0 * 1_000).rounded())) }
+    )
+  }
+
+  static func temporarilyUnavailable(statusCode: Int) -> VoyagerGoogleDriveFailure {
+    VoyagerGoogleDriveFailure(
+      code: .temporarilyUnavailable,
+      message: "Google Drive is temporarily unavailable (\(statusCode)). Try again shortly.",
+      retryAfterMilliseconds: nil
+    )
+  }
+}
+
+enum VoyagerGoogleDriveHTTPFailureMapper {
+  /// Maps a Drive REST status to a structured failure, or nil when the status
+  /// carries no reliable semantics (callers keep their generic error).
+  /// 403 is ambiguous (revoked permission vs. rate limit vs. storage quota),
+  /// so it is only mapped when the response body confirms rate limiting.
+  static func map(
+    statusCode: Int,
+    retryAfterSeconds: TimeInterval? = nil,
+    bodyHint: String? = nil
+  ) -> VoyagerGoogleDriveFailure? {
+    switch statusCode {
+    case 200..<300:
+      return nil
+    case 401:
+      return .authRequired
+    case 403:
+      let hint = bodyHint?.lowercased() ?? ""
+      if hint.contains("ratelimit") || hint.contains("dailylimitexceeded") {
+        return .rateLimited(retryAfter: retryAfterSeconds)
+      }
+      return nil
+    case 404:
+      return .notFound
+    case 429:
+      return .rateLimited(retryAfter: retryAfterSeconds)
+    case 500..<600:
+      return .temporarilyUnavailable(statusCode: statusCode)
+    default:
+      return nil
+    }
+  }
+}
+
 enum VoyagerICloudRecordIdentity {
   static func recordName(for fileName: String) -> String {
     let encoded = Data(fileName.utf8).base64EncodedString()
@@ -115,6 +192,29 @@ struct VoyagerNotificationDestination: Equatable {
 
   var userInfo: [AnyHashable: Any] {
     [Self.userInfoKey: url.absoluteString]
+  }
+
+  static let openConversationMessageName = "gvOpenConversation"
+
+  var dispatchUserInfo: [String: Any] {
+    [
+      "type": Self.openConversationMessageName,
+      "url": url.absoluteString,
+    ]
+  }
+
+  static func notificationCategory() -> UNNotificationCategory {
+    let openAction = UNNotificationAction(
+      identifier: openActionIdentifier,
+      title: "Open Conversation",
+      options: [.foreground]
+    )
+    return UNNotificationCategory(
+      identifier: categoryIdentifier,
+      actions: [openAction],
+      intentIdentifiers: [],
+      options: []
+    )
   }
 }
 

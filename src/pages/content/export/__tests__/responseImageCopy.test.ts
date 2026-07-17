@@ -4,11 +4,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   copyElementAsImageToClipboard,
   copyImageBlobToClipboard,
+  copyImageBlobViaSafariNativePasteboard,
   downloadImageBlob,
 } from '../responseImageCopy';
 
 vi.mock('html-to-image', () => ({
   toBlob: vi.fn(),
+}));
+
+vi.mock('@/core/utils/safariNativeClipboard', () => ({
+  requestSafariNativeImageCopy: vi.fn(),
 }));
 
 class MockClipboardItem {
@@ -130,6 +135,22 @@ describe('responseImageCopy', () => {
 
     expect(toBlob).toHaveBeenCalledTimes(2);
     expect(clipboardWrite).toHaveBeenCalledOnce();
+  });
+
+  it('copies through the Safari native pasteboard bridge as base64 png', async () => {
+    const request = vi.fn().mockResolvedValue(true);
+    const blob = new Blob(['img'], { type: 'image/png' });
+
+    await expect(copyImageBlobViaSafariNativePasteboard(blob, { request })).resolves.toBe(true);
+    expect(request).toHaveBeenCalledOnce();
+    expect(request).toHaveBeenCalledWith('aW1n');
+  });
+
+  it('returns false instead of throwing when the native pasteboard bridge fails', async () => {
+    const request = vi.fn().mockRejectedValue(new Error('no bridge'));
+    const blob = new Blob(['img'], { type: 'image/png' });
+
+    await expect(copyImageBlobViaSafariNativePasteboard(blob, { request })).resolves.toBe(false);
   });
 
   it('downloads image blob via object URL and revokes it', () => {

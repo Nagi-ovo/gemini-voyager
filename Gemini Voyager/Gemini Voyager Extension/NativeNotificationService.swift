@@ -1,14 +1,16 @@
-import SafariServices
+import Foundation
 import UserNotifications
 
-final class NativeNotificationService: NSObject, UNUserNotificationCenterDelegate {
+/// Delivers native notifications from the Safari extension process. Click
+/// handling deliberately lives in the containing app (AppDelegate): the
+/// extension process must not claim the notification-center delegate, because
+/// SafariServices APIs that open or message Safari are unavailable there.
+final class NativeNotificationService {
   static let shared = NativeNotificationService()
 
   private let center = UNUserNotificationCenter.current()
 
-  override private init() {
-    super.init()
-    center.delegate = self
+  private init() {
     registerCategory()
   }
 
@@ -73,28 +75,6 @@ final class NativeNotificationService: NSObject, UNUserNotificationCenterDelegat
     }
   }
 
-  func userNotificationCenter(
-    _ center: UNUserNotificationCenter,
-    didReceive response: UNNotificationResponse,
-    withCompletionHandler completionHandler: @escaping () -> Void
-  ) {
-    let actionIdentifier = response.actionIdentifier
-    guard
-      actionIdentifier == UNNotificationDefaultActionIdentifier
-        || actionIdentifier == VoyagerNotificationDestination.openActionIdentifier,
-      let destination = VoyagerNotificationDestination(
-        userInfo: response.notification.request.content.userInfo
-      )
-    else {
-      completionHandler()
-      return
-    }
-
-    SFSafariApplication.openWindow(with: destination.url) { _ in
-      completionHandler()
-    }
-  }
-
   private func add(
     _ request: UNNotificationRequest,
     completion: @escaping (Result<Void, Error>) -> Void
@@ -109,18 +89,7 @@ final class NativeNotificationService: NSObject, UNUserNotificationCenterDelegat
   }
 
   private func registerCategory() {
-    let openAction = UNNotificationAction(
-      identifier: VoyagerNotificationDestination.openActionIdentifier,
-      title: "Open Conversation",
-      options: [.foreground]
-    )
-    let category = UNNotificationCategory(
-      identifier: VoyagerNotificationDestination.categoryIdentifier,
-      actions: [openAction],
-      intentIdentifiers: [],
-      options: []
-    )
-    center.setNotificationCategories([category])
+    center.setNotificationCategories([VoyagerNotificationDestination.notificationCategory()])
   }
 }
 

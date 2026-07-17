@@ -40,7 +40,11 @@ import { resolveExportLogoAnchor } from './exportLogoAnchor';
 import { mountPersistentExportToolbar } from './persistentExportToolbar';
 import { injectResponseActionCopyImageButtons } from './responseActionImageButton';
 import { showResponseActionCopyImageMenu } from './responseActionImageMenu';
-import { copyImageBlobToClipboard, downloadImageBlob } from './responseImageCopy';
+import {
+  copyImageBlobToClipboard,
+  copyImageBlobViaSafariNativePasteboard,
+  downloadImageBlob,
+} from './responseImageCopy';
 import { resolveUniqueExportTurnIds } from './selectionIds';
 import { groupSelectedMessagesByTurn, resolveInitialSelectedMessageIds } from './selectionUtils';
 import { resolveSidebarConversationTarget } from './sidebarConversationTarget';
@@ -2199,6 +2203,10 @@ async function handleResponseCopyImageClick(
     showExportToast(texts.copied);
   } catch (error) {
     if (isSafari() && blobForFallback) {
+      if (await copyImageBlobViaSafariNativePasteboard(blobForFallback)) {
+        showExportToast(texts.copied);
+        return;
+      }
       downloadImageBlob(blobForFallback, buildResponseImageFilename());
       showExportToast(texts.downloaded, { autoDismissMs: 3200 });
       return;

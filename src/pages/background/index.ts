@@ -33,6 +33,10 @@ import {
 } from '@/core/utils/browser';
 import { hasNotificationsPermission } from '@/core/utils/notificationsPermission';
 import {
+  SAFARI_CLIPBOARD_IMAGE_COPY_REQUEST,
+  copySafariNativeImagePng,
+} from '@/core/utils/safariNativeClipboard';
+import {
   SAFARI_NOTIFICATION_PERMISSION_REQUEST,
   deliverSafariNativeNotification,
   prepareSafariNativeNotifications,
@@ -272,6 +276,75 @@ async function showResponseCompleteNotification(
     console.warn('[Background] Failed to show response completion notification:', error);
     return false;
   }
+}
+
+// Sent by the containing macOS app (SFSafariApplication.dispatchMessage) when
+// the user clicks a native notification; must match the Swift constant
+// VoyagerNotificationDestination.openConversationMessageName.
+const NATIVE_OPEN_CONVERSATION_MESSAGE = 'gvOpenConversation';
+const NATIVE_OPEN_CONVERSATION_ALLOWED_HOSTS = [
+  'gemini.google.com',
+  'aistudio.google.com',
+  'chatgpt.com',
+  'claude.ai',
+];
+
+function getNativeOpenConversationUrl(message: unknown): URL | null {
+  const record = message as {
+    type?: unknown;
+    name?: unknown;
+    url?: unknown;
+    userInfo?: unknown;
+  } | null;
+  if (!record || typeof record !== 'object') return null;
+
+  // Safari may deliver the dispatched message either as the raw userInfo
+  // dictionary or wrapped as {name, userInfo}; accept both shapes.
+  const payload = (
+    record.userInfo && typeof record.userInfo === 'object' ? record.userInfo : record
+  ) as { type?: unknown; url?: unknown };
+  const type = payload.type ?? record.name;
+  if (type !== NATIVE_OPEN_CONVERSATION_MESSAGE) return null;
+  if (typeof payload.url !== 'string') return null;
+
+  try {
+    const url = new URL(payload.url);
+    if (url.protocol !== 'https:') return null;
+    const host = url.hostname.toLowerCase();
+    const allowed = NATIVE_OPEN_CONVERSATION_ALLOWED_HOSTS.some(
+      (allowedHost) => host === allowedHost || host.endsWith(`.${allowedHost}`),
+    );
+    return allowed ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+async function focusOrOpenConversation(url: URL): Promise<void> {
+  try {
+    const tabs = await browser.tabs.query({});
+    const match = tabs.find((tab) => {
+      if (typeof tab.url !== 'string' || typeof tab.id !== 'number') return false;
+      try {
+        const tabUrl = new URL(tab.url);
+        return tabUrl.origin === url.origin && tabUrl.pathname === url.pathname;
+      } catch {
+        return false;
+      }
+    });
+
+    if (match && typeof match.id === 'number') {
+      const tab = await browser.tabs.update(match.id, { active: true });
+      if (typeof tab.windowId === 'number') {
+        await browser.windows.update(tab.windowId, { focused: true });
+      }
+      return;
+    }
+  } catch {
+    // Fall through to opening a fresh tab.
+  }
+
+  await browser.tabs.create({ url: url.toString() });
 }
 
 function getResponseCompleteNotificationTabId(notificationId: string): number | undefined {
@@ -1706,6 +1779,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         });
         sendResponse({ ok: true, granted });
         return;
+      }
+
+      if (message?.type === SAFARI_CLIPBOARD_IMAGE_COPY_REQUEST) {
+        const pngBase64 =
+          typeof message.payload?.pngBase64 === 'string' ? message.payload.pngBase64 : '';
+        const copied =
+          getVoyagerBuildTarget() === 'safari' &&
+          pngBase64.length > 0 &&
+          (await copySafariNativeImagePng(pngBase64));
+        sendResponse({ ok: true, copied });
+        return;
+      }
+
+      if (!sender.tab) {
+        const nativeOpenUrl = getNativeOpenConversationUrl(message);
+        if (nativeOpenUrl) {
+          await focusOrOpenConversation(nativeOpenUrl);
+          sendResponse({ ok: true });
+          return;
+        }
       }
 
       if (isRemoteAnnouncementRuntimeMessage(message)) {

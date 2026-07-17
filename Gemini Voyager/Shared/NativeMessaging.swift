@@ -13,6 +13,7 @@ enum VoyagerNativeRequest: Codable, Equatable {
   case iCloudAccountStatus
   case iCloudWriteFile(VoyagerICloudWriteRequest)
   case iCloudReadFile(fileName: String)
+  case copyImageToPasteboard(VoyagerClipboardImageRequest)
 
   var actionName: String {
     switch self {
@@ -28,6 +29,7 @@ enum VoyagerNativeRequest: Codable, Equatable {
     case .iCloudAccountStatus: return Action.iCloudAccountStatus.rawValue
     case .iCloudWriteFile: return Action.iCloudWriteFile.rawValue
     case .iCloudReadFile: return Action.iCloudReadFile.rawValue
+    case .copyImageToPasteboard: return Action.copyImageToPasteboard.rawValue
     }
   }
 
@@ -44,6 +46,7 @@ enum VoyagerNativeRequest: Codable, Equatable {
     case iCloudAccountStatus
     case iCloudWriteFile
     case iCloudReadFile
+    case copyImageToPasteboard
   }
 
   private enum CodingKeys: String, CodingKey {
@@ -55,6 +58,7 @@ enum VoyagerNativeRequest: Codable, Equatable {
     case id
     case interactive
     case json
+    case pngBase64
     case title
     case url
   }
@@ -118,6 +122,12 @@ enum VoyagerNativeRequest: Codable, Equatable {
       self = .iCloudReadFile(
         fileName: try container.decode(String.self, forKey: .fileName)
       )
+    case .copyImageToPasteboard:
+      self = .copyImageToPasteboard(
+        VoyagerClipboardImageRequest(
+          pngBase64: try container.decode(String.self, forKey: .pngBase64)
+        )
+      )
     }
   }
 
@@ -163,6 +173,9 @@ enum VoyagerNativeRequest: Codable, Equatable {
     case .iCloudReadFile(let fileName):
       try container.encode(Action.iCloudReadFile, forKey: .action)
       try container.encode(fileName, forKey: .fileName)
+    case .copyImageToPasteboard(let request):
+      try container.encode(Action.copyImageToPasteboard, forKey: .action)
+      try container.encode(request.pngBase64, forKey: .pngBase64)
     }
   }
 }
@@ -177,6 +190,10 @@ struct VoyagerNotificationRequest: Codable, Equatable {
 struct VoyagerICloudWriteRequest: Codable, Equatable {
   let fileName: String
   let json: String
+}
+
+struct VoyagerClipboardImageRequest: Codable, Equatable {
+  let pngBase64: String
 }
 
 struct VoyagerGoogleDriveEnsureRequest: Codable, Equatable {
@@ -309,6 +326,10 @@ struct VoyagerGoogleDriveDownloadResponse: Codable {
 
 struct VoyagerICloudAccountResponse: Codable {
   let available: Bool
+}
+
+struct VoyagerClipboardWriteResponse: Codable {
+  let copied: Bool
 }
 
 struct VoyagerICloudWriteResponse: Codable {

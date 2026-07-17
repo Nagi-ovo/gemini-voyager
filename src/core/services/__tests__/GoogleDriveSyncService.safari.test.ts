@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 const downloadSafariGoogleDriveFile = vi.hoisted(() => vi.fn());
 const ensureSafariGoogleDriveFile = vi.hoisted(() => vi.fn());
 const findSafariGoogleDriveFile = vi.hoisted(() => vi.fn());
+const getSafariGoogleDriveRetryDelay = vi.hoisted(() => vi.fn((): number | null => null));
+const isSafariGoogleDriveAuthError = vi.hoisted(() => vi.fn(() => false));
 const requestSafariGoogleDriveSession = vi.hoisted(() => vi.fn());
 const signOutSafariGoogleDrive = vi.hoisted(() => vi.fn());
 const uploadSafariGoogleDriveFile = vi.hoisted(() => vi.fn());
@@ -23,6 +25,8 @@ vi.mock('@/core/utils/safariGoogleDrive', () => ({
   downloadSafariGoogleDriveFile,
   ensureSafariGoogleDriveFile,
   findSafariGoogleDriveFile,
+  getSafariGoogleDriveRetryDelay,
+  isSafariGoogleDriveAuthError,
   requestSafariGoogleDriveSession,
   signOutSafariGoogleDrive,
   uploadSafariGoogleDriveFile,
@@ -60,6 +64,8 @@ afterEach(() => {
   vi.unstubAllGlobals();
   getSafariICloudRetryDelay.mockReturnValue(null);
   isSafariICloudConflictError.mockReturnValue(false);
+  getSafariGoogleDriveRetryDelay.mockReturnValue(null);
+  isSafariGoogleDriveAuthError.mockReturnValue(false);
   safariRuntime.buildTarget = 'safari';
   safariRuntime.userAgentMatches = false;
 });
@@ -157,6 +163,60 @@ describe('GoogleDriveSyncService Safari authentication', () => {
       expect.objectContaining({ format: 'gemini-voyager.prompts.v1' }),
     );
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('stops retrying and drops authentication when the native session is revoked', async () => {
+    (globalThis as { chrome: typeof chrome }).chrome = createChromeMock();
+    requestSafariGoogleDriveSession.mockResolvedValue({
+      signedIn: true,
+      requiresAppLaunch: false,
+    });
+    ensureSafariGoogleDriveFile.mockResolvedValue('native-file-id');
+    uploadSafariGoogleDriveFile.mockRejectedValue(
+      new Error('Google Drive access must be authorized again. Open Voyager to reconnect.'),
+    );
+    isSafariGoogleDriveAuthError.mockReturnValue(true);
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+
+    await expect(
+      service.uploadPromptsOnly([{ id: '1', text: 'Hi', tags: [], createdAt: 1 }]),
+    ).resolves.toBe(false);
+    expect(uploadSafariGoogleDriveFile).toHaveBeenCalledOnce();
+    await expect(service.getState()).resolves.toMatchObject({
+      isAuthenticated: false,
+      error: expect.stringContaining('authorized again'),
+    });
+  });
+
+  it('honors the native Drive rate-limit delay before retrying the upload', async () => {
+    vi.useFakeTimers();
+    (globalThis as { chrome: typeof chrome }).chrome = createChromeMock();
+    requestSafariGoogleDriveSession.mockResolvedValue({
+      signedIn: true,
+      requiresAppLaunch: false,
+    });
+    ensureSafariGoogleDriveFile.mockResolvedValue('native-file-id');
+    uploadSafariGoogleDriveFile
+      .mockRejectedValueOnce(new Error('Google Drive is rate limiting requests.'))
+      .mockResolvedValue(undefined);
+    getSafariGoogleDriveRetryDelay.mockReturnValue(2_500);
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+
+    const upload = service.uploadPromptsOnly([{ id: '1', text: 'Hi', tags: [], createdAt: 1 }]);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(uploadSafariGoogleDriveFile).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(2_499);
+    expect(uploadSafariGoogleDriveFile).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(1);
+
+    await expect(upload).resolves.toBe(true);
+    expect(uploadSafariGoogleDriveFile).toHaveBeenCalledTimes(2);
   });
 
   it('downloads Safari Drive data through the native process', async () => {

@@ -6,6 +6,8 @@ type NativeResponse<Data> = {
   success?: boolean;
   data?: Data;
   error?: unknown;
+  code?: unknown;
+  retryAfterMs?: unknown;
 };
 
 type NativeSessionData = {
@@ -27,6 +29,26 @@ export type SafariGoogleDriveSession = {
   requiresAppLaunch: boolean;
 };
 
+export class SafariGoogleDriveError extends Error {
+  readonly code: string | null;
+  readonly retryAfterMs: number | null;
+
+  constructor(message: string, code: string | null, retryAfterMs: number | null) {
+    super(message);
+    this.name = 'SafariGoogleDriveError';
+    this.code = code;
+    this.retryAfterMs = retryAfterMs;
+  }
+}
+
+export function isSafariGoogleDriveAuthError(error: unknown): boolean {
+  return error instanceof SafariGoogleDriveError && error.code === 'drive_auth_required';
+}
+
+export function getSafariGoogleDriveRetryDelay(error: unknown): number | null {
+  return error instanceof SafariGoogleDriveError ? error.retryAfterMs : null;
+}
+
 async function sendNativeMessage<Data>(
   message: Record<string, unknown>,
 ): Promise<NativeResponse<Data>> {
@@ -38,7 +60,13 @@ async function sendNativeMessage<Data>(
 
 function requireSuccess<Data>(response: NativeResponse<Data>, fallback: string): Data {
   if (response?.success !== true || response.data === undefined) {
-    throw new Error(typeof response?.error === 'string' ? response.error : fallback);
+    throw new SafariGoogleDriveError(
+      typeof response?.error === 'string' ? response.error : fallback,
+      typeof response?.code === 'string' ? response.code : null,
+      typeof response?.retryAfterMs === 'number' && Number.isFinite(response.retryAfterMs)
+        ? Math.max(0, response.retryAfterMs)
+        : null,
+    );
   }
   return response.data;
 }

@@ -32,8 +32,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     updaterController.updater.canCheckForUpdates
   }
 
+  var lastUpdateCheckDate: Date? {
+    updaterController.updater.lastUpdateCheckDate
+  }
+
   func applicationWillFinishLaunching(_ notification: Notification) {
-    UNUserNotificationCenter.current().delegate = self
+    let center = UNUserNotificationCenter.current()
+    center.delegate = self
+    center.setNotificationCategories([VoyagerNotificationDestination.notificationCategory()])
     NSAppleEventManager.shared().setEventHandler(
       self,
       andSelector: #selector(handleGetURLEvent(_:withReplyEvent:)),
@@ -149,8 +155,36 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
       return
     }
 
-    SFSafariApplication.openWindow(with: destination.url) { _ in
-      completionHandler()
+    openConversation(destination, completion: completionHandler)
+  }
+
+  /// Asks the extension's background script to focus an existing conversation
+  /// tab (falling back to a new tab there); only when Safari cannot take the
+  /// message at all does this fall back to opening a fresh window.
+  private func openConversation(
+    _ destination: VoyagerNotificationDestination,
+    completion: @escaping () -> Void
+  ) {
+    SFSafariApplication.dispatchMessage(
+      withName: VoyagerNotificationDestination.openConversationMessageName,
+      toExtensionWithIdentifier: extensionBundleIdentifier,
+      userInfo: destination.dispatchUserInfo
+    ) { error in
+      guard error == nil else {
+        SFSafariApplication.openWindow(with: destination.url) { _ in completion() }
+        return
+      }
+      self.activateSafari()
+      completion()
     }
+  }
+
+  private func activateSafari() {
+    guard
+      let safariURL = NSWorkspace.shared.urlForApplication(
+        withBundleIdentifier: "com.apple.Safari"
+      )
+    else { return }
+    NSWorkspace.shared.openApplication(at: safariURL, configuration: NSWorkspace.OpenConfiguration())
   }
 }

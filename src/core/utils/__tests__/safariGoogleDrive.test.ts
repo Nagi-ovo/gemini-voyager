@@ -1,9 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  SafariGoogleDriveError,
   downloadSafariGoogleDriveFile,
   ensureSafariGoogleDriveFile,
   findSafariGoogleDriveFile,
+  getSafariGoogleDriveRetryDelay,
+  isSafariGoogleDriveAuthError,
   requestSafariGoogleDriveSession,
   signOutSafariGoogleDrive,
   uploadSafariGoogleDriveFile,
@@ -91,5 +94,33 @@ describe('Safari Google Drive native transport', () => {
     sendNativeMessage.mockResolvedValue({ success: false, error: 'Missing client ID' });
 
     await expect(requestSafariGoogleDriveSession(true)).rejects.toThrow('Missing client ID');
+  });
+
+  it('preserves structured auth failure codes from the native bridge', async () => {
+    sendNativeMessage.mockResolvedValue({
+      success: false,
+      error: 'Google Drive access must be authorized again. Open Voyager to reconnect.',
+      code: 'drive_auth_required',
+    });
+
+    const failure = await uploadSafariGoogleDriveFile('file-1', {}).catch(
+      (error: unknown) => error,
+    );
+    expect(failure).toBeInstanceOf(SafariGoogleDriveError);
+    expect(isSafariGoogleDriveAuthError(failure)).toBe(true);
+    expect(getSafariGoogleDriveRetryDelay(failure)).toBeNull();
+  });
+
+  it('exposes native retry hints for rate-limited requests', async () => {
+    sendNativeMessage.mockResolvedValue({
+      success: false,
+      error: 'Google Drive is rate limiting requests. Try again shortly.',
+      code: 'drive_rate_limited',
+      retryAfterMs: 2500,
+    });
+
+    const failure = await downloadSafariGoogleDriveFile('file-1').catch((error: unknown) => error);
+    expect(isSafariGoogleDriveAuthError(failure)).toBe(false);
+    expect(getSafariGoogleDriveRetryDelay(failure)).toBe(2500);
   });
 });

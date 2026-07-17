@@ -23,8 +23,7 @@ final class GoogleDriveService {
       switch result {
       case .success:
         completion(.success(.signedIn))
-      case .failure(let error as GoogleDriveServiceError)
-      where error == .authorizationRequired || error == .missingScope:
+      case .failure(let error as VoyagerGoogleDriveFailure) where error.code == .authRequired:
         completion(.success(interactive ? .requiresAppLaunch : .signedOut))
       case .failure(let error):
         completion(.failure(error))
@@ -93,7 +92,16 @@ final class GoogleDriveService {
       contentType: "application/json",
       body: Data(json.utf8)
     ) { result in
-      completion(result.map { _ in () })
+      switch result {
+      case .failure(let error):
+        completion(.failure(error))
+      case .success(let response):
+        guard response.isSuccessful else {
+          completion(.failure(self.requestFailure(response)))
+          return
+        }
+        completion(.success(()))
+      }
     }
   }
 
@@ -115,7 +123,7 @@ final class GoogleDriveService {
         guard response.isSuccessful,
           let json = String(data: response.data, encoding: .utf8)
         else {
-          completion(.failure(GoogleDriveServiceError.httpStatus(response.statusCode)))
+          completion(.failure(self.requestFailure(response)))
           return
         }
         completion(.success(json))
@@ -259,7 +267,7 @@ final class GoogleDriveService {
       completion(
         result.flatMap { response in
           guard response.isSuccessful else {
-            return .failure(GoogleDriveServiceError.httpStatus(response.statusCode))
+            return .failure(self.requestFailure(response))
           }
           return Result {
             try JSONDecoder().decode(DriveFileList.self, from: response.data).files.first?.id
@@ -298,7 +306,7 @@ final class GoogleDriveService {
       completion(
         result.flatMap { response in
           guard response.isSuccessful else {
-            return .failure(GoogleDriveServiceError.httpStatus(response.statusCode))
+            return .failure(self.requestFailure(response))
           }
           return Result { try JSONDecoder().decode(DriveFile.self, from: response.data).id }
         }
@@ -322,7 +330,7 @@ final class GoogleDriveService {
         completion(.success(nil))
       case .success(let response):
         guard response.isSuccessful else {
-          completion(.failure(GoogleDriveServiceError.httpStatus(response.statusCode)))
+          completion(.failure(self.requestFailure(response)))
           return
         }
         do {
@@ -376,9 +384,17 @@ final class GoogleDriveService {
       case .success(let response) where response.isSuccessful:
         completion(.success(true))
       case .success(let response):
-        completion(.failure(GoogleDriveServiceError.httpStatus(response.statusCode)))
+        completion(.failure(self.requestFailure(response)))
       }
     }
+  }
+
+  private func requestFailure(_ response: DriveHTTPResponse) -> Error {
+    VoyagerGoogleDriveHTTPFailureMapper.map(
+      statusCode: response.statusCode,
+      retryAfterSeconds: response.retryAfterSeconds,
+      bodyHint: String(data: response.data, encoding: .utf8)
+    ) ?? GoogleDriveServiceError.httpStatus(response.statusCode)
   }
 
   private func performRequest(
@@ -421,9 +437,17 @@ final class GoogleDriveService {
             completion(.failure(GoogleDriveServiceError.invalidResponse))
             return
           }
+          let retryAfterSeconds = response.allHeaderFields
+            .first { ($0.key as? String)?.caseInsensitiveCompare("Retry-After") == .orderedSame }
+            .flatMap { $0.value as? String }
+            .flatMap(TimeInterval.init)
           completion(
             .success(
-              DriveHTTPResponse(data: data ?? Data(), statusCode: response.statusCode)
+              DriveHTTPResponse(
+                data: data ?? Data(),
+                statusCode: response.statusCode,
+                retryAfterSeconds: retryAfterSeconds
+              )
             )
           )
         }.resume()
@@ -446,7 +470,7 @@ final class GoogleDriveService {
 
     GIDSignIn.sharedInstance.restorePreviousSignIn { user, _ in
       guard let user else {
-        completion(.failure(GoogleDriveServiceError.authorizationRequired))
+        completion(.failure(VoyagerGoogleDriveFailure.authRequired))
         return
       }
       self.refresh(user: user, completion: completion)
@@ -463,11 +487,11 @@ final class GoogleDriveService {
         return
       }
       guard let refreshedUser else {
-        completion(.failure(GoogleDriveServiceError.authorizationRequired))
+        completion(.failure(VoyagerGoogleDriveFailure.authRequired))
         return
       }
       guard refreshedUser.grantedScopes?.contains(self.scope) == true else {
-        completion(.failure(GoogleDriveServiceError.missingScope))
+        completion(.failure(VoyagerGoogleDriveFailure.authRequired))
         return
       }
       completion(.success(refreshedUser.accessToken.tokenString))
@@ -492,6 +516,7 @@ final class GoogleDriveService {
 private struct DriveHTTPResponse {
   let data: Data
   let statusCode: Int
+  let retryAfterSeconds: TimeInterval?
 
   var isSuccessful: Bool {
     (200..<300).contains(statusCode)
@@ -518,22 +543,16 @@ private struct DriveParentMetadata: Decodable {
 }
 
 private enum GoogleDriveServiceError: LocalizedError, Equatable {
-  case authorizationRequired
   case httpStatus(Int)
   case invalidResponse
-  case missingScope
   case notConfigured
 
   var errorDescription: String? {
     switch self {
-    case .authorizationRequired:
-      return "Google Drive authorization is required"
     case .httpStatus(let statusCode):
       return "Google Drive request failed (\(statusCode))"
     case .invalidResponse:
       return "Google Drive returned an invalid response"
-    case .missingScope:
-      return "Google Drive access must be authorized again"
     case .notConfigured:
       return "Google Sign-In is not configured"
     }
