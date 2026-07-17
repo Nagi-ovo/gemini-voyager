@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Issue Review'
+  short_description: 'Review and fix GitHub issues with traceable commits'
+  default_prompt: 'Use $issue-review to investigate and fix this GitHub issue.'
