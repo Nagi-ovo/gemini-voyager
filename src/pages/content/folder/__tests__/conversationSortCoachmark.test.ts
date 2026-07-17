@@ -30,7 +30,10 @@ interface CapturedCoachmarkConfig {
   reveal: {
     mount: () => HTMLElement;
     interactive?: boolean;
-    unmount: (element: HTMLElement | null, result: 'confirmed' | 'dismissed' | 'skipped') => void;
+    unmount: (
+      element: HTMLElement | null,
+      result: 'confirmed' | 'enabled' | 'advanced' | 'dismissed' | 'skipped',
+    ) => void;
   };
   anchor: () => HTMLElement | null;
 }

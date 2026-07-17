@@ -20,7 +20,7 @@ import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
 
-export type CoachmarkResult = 'confirmed' | 'enabled' | 'dismissed' | 'skipped';
+export type CoachmarkResult = 'confirmed' | 'enabled' | 'advanced' | 'dismissed' | 'skipped';
 
 export interface CoachmarkProgress {
   current: number;
@@ -370,7 +370,9 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
         (target.closest('.gv-coach') || target === revealEl || revealEl?.contains(target))
       )
         return;
-      settle('dismissed', false);
+      // Clicking back into the page only dismisses this step. The onboarding
+      // sequence should continue; explicit close / Escape still ends the tour.
+      settle('advanced', false);
     };
     const onKey = (ev: KeyboardEvent) => {
       if (ev.key === 'Escape') {

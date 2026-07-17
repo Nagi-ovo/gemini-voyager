@@ -158,6 +158,55 @@ describe('runCoachmarkSequence', () => {
     expect(await hasSeenCoachmark('real-first')).toBe(true);
     expect(await hasSeenCoachmark('real-second')).toBe(true);
   });
+
+  it('continues to the next guide when the current one is closed by a page click', async () => {
+    const firstAnchor = document.createElement('div');
+    const secondAnchor = document.createElement('div');
+    const pageButton = document.createElement('button');
+    document.body.append(firstAnchor, secondAnchor, pageButton);
+
+    const tour = runCoachmarkSequence([
+      {
+        id: 'outside-first',
+        show: (progress) =>
+          showCoachmark({
+            id: 'outside-first',
+            anchor: () => firstAnchor,
+            body: 'first',
+            progress,
+            nextLabel: 'Next',
+            dismissLabel: 'Done',
+          }),
+      },
+      {
+        id: 'outside-second',
+        show: (progress) =>
+          showCoachmark({
+            id: 'outside-second',
+            anchor: () => secondAnchor,
+            body: 'second',
+            progress,
+            nextLabel: 'Next',
+            dismissLabel: 'Done',
+          }),
+      },
+    ]);
+
+    await vi.waitFor(() => {
+      expect(document.querySelector('.gv-coach-body')?.textContent).toBe('first');
+    });
+    pageButton.click();
+
+    await vi.waitFor(() => {
+      expect(document.querySelector('.gv-coach-body')?.textContent).toBe('second');
+      expect(document.querySelector('.gv-coach-progress')?.textContent).toBe('2/2');
+    });
+    (document.querySelector('.gv-coach-dismiss') as HTMLElement).click();
+
+    expect(await tour).toBe('confirmed');
+    expect(await hasSeenCoachmark('outside-first')).toBe(true);
+    expect(await hasSeenCoachmark('outside-second')).toBe(true);
+  });
 });
 
 describe('showCoachmark', () => {
@@ -243,7 +292,7 @@ describe('showCoachmark', () => {
     pageButton.click();
 
     expect(onPageClick).toHaveBeenCalledOnce();
-    expect(await p).toBe('dismissed');
+    expect(await p).toBe('advanced');
   });
 
   it('resolves "dismissed" when the close button is clicked, and marks seen', async () => {
