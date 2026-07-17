@@ -13,6 +13,8 @@ TAG=$2
 OUTPUT_PATH=${3:-$ROOT_DIR/appcast.xml}
 PACKAGE_DIR=${SPARKLE_PACKAGE_DIR:-$ROOT_DIR/.build/sparkle-source-packages}
 GENERATE_APPCAST=$PACKAGE_DIR/artifacts/sparkle/Sparkle/bin/generate_appcast
+DERIVE_PUBLIC_KEY=$ROOT_DIR/scripts/derive-sparkle-public-key.swift
+INFO_PLIST=$ROOT_DIR/Gemini\ Voyager/Gemini\ Voyager/Info.plist
 
 if [[ ! -f $GENERATE_APPCAST ]]; then
   xcodebuild -resolvePackageDependencies \
@@ -33,6 +35,13 @@ COMMON_ARGS=(
 )
 
 if [[ -n ${SPARKLE_PRIVATE_KEY:-} ]]; then
+  EXPECTED_PUBLIC_KEY=$(plutil -extract SUPublicEDKey raw -o - "$INFO_PLIST")
+  DERIVED_PUBLIC_KEY=$(print -rn -- "$SPARKLE_PRIVATE_KEY" | xcrun swift "$DERIVE_PUBLIC_KEY")
+  if [[ $DERIVED_PUBLIC_KEY != $EXPECTED_PUBLIC_KEY ]]; then
+    echo "SPARKLE_PRIVATE_KEY does not match SUPublicEDKey" >&2
+    exit 1
+  fi
+
   print -rn -- "$SPARKLE_PRIVATE_KEY" | "$GENERATE_APPCAST" --ed-key-file - "${COMMON_ARGS[@]}"
 else
   "$GENERATE_APPCAST" --account "${SPARKLE_KEY_ACCOUNT:-Nagi-ovo}" "${COMMON_ARGS[@]}"

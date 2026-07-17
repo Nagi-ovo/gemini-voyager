@@ -25,6 +25,7 @@ WORK_DIR=$(mktemp -d)
 trap 'rm -rf "$WORK_DIR"' EXIT
 
 ARCHIVE_PATH="$WORK_DIR/Gemini Voyager.xcarchive"
+DERIVED_DATA_PATH="$WORK_DIR/DerivedData"
 EXPORT_OPTIONS="$WORK_DIR/ExportOptions.plist"
 EXPORT_DIR="$WORK_DIR/export"
 APP_PATH="$EXPORT_DIR/Gemini Voyager.app"
@@ -71,10 +72,13 @@ xcodebuild archive \
   -configuration Release \
   -destination "generic/platform=macOS" \
   -archivePath "$ARCHIVE_PATH" \
+  -derivedDataPath "$DERIVED_DATA_PATH" \
   -clonedSourcePackagesDirPath "$PACKAGE_DIR" \
   CODE_SIGN_STYLE=Manual \
   CODE_SIGN_IDENTITY="Developer ID Application" \
   DEVELOPMENT_TEAM="$TEAM_ID" \
+  "OTHER_SWIFT_FLAGS=-debug-prefix-map $ROOT_DIR=. -file-prefix-map $ROOT_DIR=." \
+  "OTHER_CFLAGS=-fdebug-prefix-map=$ROOT_DIR=. -ffile-prefix-map=$ROOT_DIR=." \
   VOYAGER_APP_PROFILE_NAME="$VOYAGER_APP_PROFILE_NAME" \
   VOYAGER_EXTENSION_PROFILE_NAME="$VOYAGER_EXTENSION_PROFILE_NAME"
 
@@ -136,7 +140,7 @@ SPARKLE_PACKAGE_DIR="$PACKAGE_DIR" \
   "$TAG" \
   "$APPCAST_PATH"
 
-node "$ROOT_DIR/scripts/verify-release-privacy.mjs" "$DMG_PATH" "$APPCAST_PATH"
+node "$ROOT_DIR/scripts/verify-release-privacy.mjs" "$APP_PATH" "$DMG_PATH" "$APPCAST_PATH"
 
 echo "Safari release artifacts:"
 ls -lh "$DMG_PATH" "$APPCAST_PATH"
