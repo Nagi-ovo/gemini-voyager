@@ -71,6 +71,10 @@ function createChromeMock(syncSeed: Record<string, unknown> = {}): MockedChrome 
 describe('AccountIsolationService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.defineProperty(navigator, 'locks', {
+      configurable: true,
+      value: undefined,
+    });
     (globalThis as { chrome: MockedChrome }).chrome = createChromeMock({
       [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: true,
     });
@@ -129,6 +133,51 @@ describe('AccountIsolationService', () => {
     // (no updatedAt-only churn / storage.onChanged fan-out on the hot path).
     expect(setSpy.mock.calls.length).toBe(writesAfterFirst);
     expect(repeat.accountKey.startsWith('email:')).toBe(true);
+  });
+
+  it('serializes profile-map updates across service instances with Web Locks', async () => {
+    let lockQueue = Promise.resolve();
+    const request = vi.fn(async <T>(_name: string, operation: () => Promise<T>): Promise<T> => {
+      const previous = lockQueue;
+      let releaseQueue: () => void = () => undefined;
+      lockQueue = new Promise<void>((resolve) => {
+        releaseQueue = resolve;
+      });
+      await previous;
+      try {
+        return await operation();
+      } finally {
+        releaseQueue();
+      }
+    });
+    Object.defineProperty(navigator, 'locks', {
+      configurable: true,
+      value: { request },
+    });
+
+    const firstService = new AccountIsolationService();
+    const secondService = new AccountIsolationService();
+    const [first, second] = await Promise.all([
+      firstService.resolveAccountScope({ routeUserId: '1', email: 'first@example.com' }),
+      secondService.resolveAccountScope({ routeUserId: '2', email: 'second@example.com' }),
+    ]);
+
+    const stored = await chrome.storage.local.get(StorageKeys.GV_ACCOUNT_PROFILE_MAP);
+    const map = stored[StorageKeys.GV_ACCOUNT_PROFILE_MAP] as {
+      profiles: Record<string, { id: number }>;
+      routeAliases: Record<string, string>;
+      emailAliases: Record<string, string>;
+    };
+
+    expect(request).toHaveBeenCalledTimes(2);
+    expect(request).toHaveBeenNthCalledWith(1, 'gv-account-profile-map', expect.any(Function));
+    expect(Object.keys(map.profiles)).toEqual(
+      expect.arrayContaining([first.accountKey, second.accountKey]),
+    );
+    expect(map.routeAliases).toMatchObject({ '1': first.accountKey, '2': second.accountKey });
+    expect(map.emailAliases[first.emailHash!]).toBe(first.accountKey);
+    expect(map.emailAliases[second.emailHash!]).toBe(second.accountKey);
+    expect(new Set([first.accountId, second.accountId]).size).toBe(2);
   });
 
   it('extracts route user id from gemini urls', () => {
