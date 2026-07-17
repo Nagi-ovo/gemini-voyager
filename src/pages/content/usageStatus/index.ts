@@ -100,6 +100,8 @@ export interface UsageSnapshot {
   updatedAt: number;
 }
 
+export type UsagePillMode = 'hidden' | 'empty' | 'ready';
+
 const PILL_ID = 'gv-usage-pill';
 const SCRAPE_DEBOUNCE_MS = 300;
 // Refresh the relative "updated X ago" stamp without re-scraping.
@@ -709,6 +711,13 @@ function ensurePill(): HTMLElement {
   tier.className = 'gv-usage-tier';
   el.appendChild(tier);
 
+  const empty = document.createElement('a');
+  empty.className = 'gv-usage-empty';
+  empty.target = '_blank';
+  empty.rel = 'noopener noreferrer';
+  empty.addEventListener('click', (e) => e.stopPropagation());
+  el.appendChild(empty);
+
   el.appendChild(buildMetric('daily'));
   el.appendChild(buildMetric('weekly'));
 
@@ -769,19 +778,30 @@ function setMetric(el: HTMLElement, kind: 'daily' | 'weekly', metric: UsageMetri
   }
 }
 
-function updatePillContent(el: HTMLElement, snap: UsageSnapshot): void {
+function updatePillContent(el: HTMLElement, snap: UsageSnapshot | null): void {
   el.setAttribute('aria-label', t('usageStatusTitle', 'Gemini usage limits'));
+
+  const hasData = Boolean(snap?.daily || snap?.weekly);
+  const empty = el.querySelector<HTMLAnchorElement>('.gv-usage-empty');
+  if (empty) {
+    const label = t('usageStatusEmptyHint', 'Click to load usage');
+    empty.textContent = label;
+    empty.href = usageUrlForPathname(location.pathname);
+    empty.toggleAttribute('hidden', hasData);
+    empty.setAttribute('aria-label', label);
+  }
 
   const tier = el.querySelector<HTMLElement>('.gv-usage-tier');
   if (tier) {
-    tier.textContent = snap.tier ?? '';
-    tier.toggleAttribute('hidden', !snap.tier);
+    tier.textContent = snap?.tier ?? '';
+    tier.toggleAttribute('hidden', !snap?.tier);
   }
   const refresh = el.querySelector<HTMLElement>('.gv-usage-refresh');
   if (refresh) {
     const label = t('usageStatusRefresh', 'Refresh');
     refresh.setAttribute('aria-label', label);
     refresh.title = label;
+    refresh.toggleAttribute('hidden', !hasData);
   }
   const open = el.querySelector<HTMLElement>('.gv-usage-open');
   if (open) {
@@ -789,13 +809,16 @@ function updatePillContent(el: HTMLElement, snap: UsageSnapshot): void {
     open.setAttribute('aria-label', label);
     open.title = label;
     if (open instanceof HTMLAnchorElement) open.href = usageUrlForPathname(location.pathname);
+    open.toggleAttribute('hidden', !hasData);
   }
 
-  setMetric(el, 'daily', snap.daily);
-  setMetric(el, 'weekly', snap.weekly);
+  setMetric(el, 'daily', snap?.daily ?? null);
+  setMetric(el, 'weekly', snap?.weekly ?? null);
 
   // Freshness lives in the pill's own tooltip (segment tooltips show resets).
-  el.title = formatUpdatedAgo(snap.updatedAt, Date.now());
+  el.title = snap
+    ? formatUpdatedAgo(snap.updatedAt, Date.now())
+    : t('usageStatusEmptyHint', 'Click to load usage');
 }
 
 /** Clamp a top-left position so the pill stays fully on screen. */
@@ -831,7 +854,8 @@ function positionPill(el: HTMLElement): void {
 function onPillPointerDown(ev: PointerEvent): void {
   if (ev.button !== 0 || !pill) return;
   // Don't start a drag from the interactive controls.
-  if ((ev.target as Element | null)?.closest('.gv-usage-refresh, .gv-usage-open')) return;
+  if ((ev.target as Element | null)?.closest('.gv-usage-empty, .gv-usage-refresh, .gv-usage-open'))
+    return;
   dragging = true;
   dragMoved = false;
   const rect = pill.getBoundingClientRect();
@@ -923,13 +947,18 @@ function onResize(): void {
   if (pill) positionPill(pill);
 }
 
+export function getUsagePillMode(
+  isEnabled: boolean,
+  hostname: string,
+  currentSnapshot: UsageSnapshot | null,
+): UsagePillMode {
+  if (!isEnabled || hostname !== 'gemini.google.com') return 'hidden';
+  return currentSnapshot?.daily || currentSnapshot?.weekly ? 'ready' : 'empty';
+}
+
 function render(): void {
-  // Only on Gemini, only when enabled, only with data to show.
-  if (!enabled || location.hostname !== 'gemini.google.com' || !snapshot) {
-    removePill();
-    return;
-  }
-  if (!snapshot.daily && !snapshot.weekly) {
+  const mode = getUsagePillMode(enabled, location.hostname, snapshot);
+  if (mode === 'hidden') {
     removePill();
     return;
   }
@@ -941,7 +970,7 @@ function render(): void {
 
   if (stampTimer === null) {
     stampTimer = window.setInterval(() => {
-      if (pill && snapshot) updatePillContent(pill, snapshot);
+      if (pill) updatePillContent(pill, snapshot);
     }, STAMP_REFRESH_MS);
   }
 }

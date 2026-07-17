@@ -5,6 +5,7 @@ import {
   formatResetCountdown,
   formatResetLabel,
   formatUpdatedAgo,
+  getUsagePillMode,
   isUsagePathname,
   mergeAutomaticUsageSnapshots,
   mergeUsageSnapshots,
@@ -15,6 +16,28 @@ import {
   usageCacheKeyForAccount,
   usageUrlForPathname,
 } from '../index';
+
+describe('getUsagePillMode', () => {
+  it('shows an actionable empty pill before the first usage snapshot arrives', () => {
+    expect(getUsagePillMode(true, 'gemini.google.com', null)).toBe('empty');
+  });
+
+  it('shows metrics once either usage bucket is available', () => {
+    expect(
+      getUsagePillMode(true, 'gemini.google.com', {
+        accountKey: 'default',
+        daily: { percent: 0, resetLabel: '9:47 PM' },
+        weekly: null,
+        updatedAt: Date.now(),
+      }),
+    ).toBe('ready');
+  });
+
+  it('stays hidden when disabled or outside Gemini', () => {
+    expect(getUsagePillMode(false, 'gemini.google.com', null)).toBe('hidden');
+    expect(getUsagePillMode(true, 'example.com', null)).toBe('hidden');
+  });
+});
 
 /**
  * Build a /usage-like DOM into the live jsdom document and return it. Mirrors
