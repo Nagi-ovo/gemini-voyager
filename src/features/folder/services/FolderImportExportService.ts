@@ -5,7 +5,7 @@
 import { AppError, ErrorCode } from '@/core/errors/AppError';
 import type { Result } from '@/core/types/common';
 import type { ConversationReference, Folder, FolderData } from '@/core/types/folder';
-import { LOCK_KEYS, importExportLock } from '@/core/utils/concurrency';
+import { AsyncLockTimeoutError, LOCK_KEYS, importExportLock } from '@/core/utils/concurrency';
 import {
   EXTENSION_VERSION,
   type FormatVersion,
@@ -402,12 +402,23 @@ export class FolderImportExportService {
     currentData: FolderData,
     options: ImportOptions,
   ): Promise<Result<{ data: FolderData; stats: ImportResult }>> {
-    // Use lock to prevent concurrent imports
-    return await importExportLock.withLock(
-      LOCK_KEYS.FOLDER_IMPORT,
-      () => Promise.resolve(this.importFromPayloadInternal(payload, currentData, options)),
-      30000, // 30 second timeout
-    );
+    try {
+      // Use lock to prevent concurrent imports
+      return await importExportLock.withLock(
+        LOCK_KEYS.FOLDER_IMPORT,
+        () => Promise.resolve(this.importFromPayloadInternal(payload, currentData, options)),
+        30000, // 30 second timeout
+      );
+    } catch (error) {
+      const message =
+        error instanceof AsyncLockTimeoutError
+          ? 'Another folder import is already in progress. Please try again shortly.'
+          : 'Failed to acquire the folder import lock.';
+      return {
+        success: false,
+        error: new AppError(ErrorCode.UNKNOWN_ERROR, message, { originalError: error }),
+      };
+    }
   }
 
   /**

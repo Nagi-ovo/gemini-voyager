@@ -7,6 +7,16 @@
  * Simple async lock implementation to prevent concurrent operations
  * Useful for preventing data corruption during import/export operations
  */
+export class AsyncLockTimeoutError extends Error {
+  constructor(
+    public readonly key: string,
+    public readonly timeout: number,
+  ) {
+    super(`Lock timeout for key: ${key}`);
+    this.name = 'AsyncLockTimeoutError';
+  }
+}
+
 export class AsyncLock {
   private locks: Map<string, Promise<void>> = new Map();
   private lockHolders: Map<string, number> = new Map();
@@ -22,17 +32,16 @@ export class AsyncLock {
     // Wait for existing lock to be released
     while (this.locks.has(key)) {
       const existingLock = this.locks.get(key)!;
-      const timeoutPromise = new Promise<void>((_, reject) => {
-        setTimeout(() => reject(new Error(`Lock timeout for key: ${key}`)), timeout);
-      });
+      await new Promise<void>((resolve, reject) => {
+        const timeoutId = setTimeout(() => {
+          reject(new AsyncLockTimeoutError(key, timeout));
+        }, timeout);
 
-      try {
-        await Promise.race([existingLock, timeoutPromise]);
-      } catch (error) {
-        // Timeout occurred, force release the lock
-        this.forceRelease(key);
-        throw error;
-      }
+        void existingLock.then(() => {
+          clearTimeout(timeoutId);
+          resolve();
+        });
+      });
     }
 
     // Create new lock
@@ -46,8 +55,7 @@ export class AsyncLock {
 
     // Return release function
     return () => {
-      this.release(key);
-      releaseFn!();
+      this.release(key, lockPromise, releaseFn!);
     };
   }
 
@@ -70,24 +78,18 @@ export class AsyncLock {
     this.lockHolders.set(key, Date.now());
 
     return () => {
-      this.release(key);
-      releaseFn!();
+      this.release(key, lockPromise, releaseFn!);
     };
   }
 
   /**
    * Release a lock
    */
-  private release(key: string): void {
+  private release(key: string, lockPromise: Promise<void>, resolve: () => void): void {
+    if (this.locks.get(key) !== lockPromise) return;
     this.locks.delete(key);
     this.lockHolders.delete(key);
-  }
-
-  /**
-   * Force release a lock (use with caution)
-   */
-  private forceRelease(key: string): void {
-    this.release(key);
+    resolve();
   }
 
   /**

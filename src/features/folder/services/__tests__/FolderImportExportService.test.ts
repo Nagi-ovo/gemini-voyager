@@ -9,10 +9,11 @@
  * L10: validatePayload used to accept arbitrarily-shaped folderContents
  * entries; now malformed conversation entries are skipped leniently.
  */
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ConversationId, FolderId } from '@/core/types/common';
 import type { ConversationReference, Folder, FolderData } from '@/core/types/folder';
+import { AsyncLockTimeoutError, importExportLock } from '@/core/utils/concurrency';
 import { SESSION_BACKUP_KEY } from '@/pages/content/folder/manager';
 
 import type { FolderExportPayload } from '../../types/import-export';
@@ -66,6 +67,10 @@ beforeEach(() => {
   sessionStorage.clear();
 });
 
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe('FolderImportExportService.mergeData (H3)', () => {
   it('does not mutate the passed-in existing data', () => {
     const existing = createExistingData();
@@ -109,6 +114,24 @@ describe('FolderImportExportService.mergeData (H3)', () => {
 });
 
 describe('FolderImportExportService.importFromPayload backup (H3)', () => {
+  it('returns a readable error when another import holds the lock too long', async () => {
+    vi.spyOn(importExportLock, 'withLock').mockRejectedValueOnce(
+      new AsyncLockTimeoutError('folder:import', 30_000),
+    );
+
+    const result = await FolderImportExportService.importFromPayload(
+      createImportPayload(createExistingData()),
+      createExistingData(),
+      { strategy: 'merge', createBackup: true },
+    );
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.message).toBe(
+      'Another folder import is already in progress. Please try again shortly.',
+    );
+  });
+
   it('stores a pre-import snapshot in sessionStorage after a merge import', async () => {
     const existing = createExistingData();
     const preImportSnapshot = JSON.parse(JSON.stringify(existing)) as FolderData;

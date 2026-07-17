@@ -3,7 +3,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AsyncLock, LOCK_KEYS, OperationQueue } from '../concurrency';
+import { AsyncLock, AsyncLockTimeoutError, LOCK_KEYS, OperationQueue } from '../concurrency';
 
 describe('Concurrency Control', () => {
   describe('AsyncLock', () => {
@@ -55,13 +55,40 @@ describe('Concurrency Control', () => {
       release2();
     });
 
-    it('should timeout if lock is held too long', async () => {
-      const release = await lock.acquire('test', 100);
+    it('rejects a timed-out waiter without releasing the holder or its successor', async () => {
+      vi.useFakeTimers();
+      try {
+        const releaseHolder = await lock.acquire('test');
+        const timedOutWaiter = lock.acquire('test', 50);
+        const timeoutExpectation =
+          expect(timedOutWaiter).rejects.toBeInstanceOf(AsyncLockTimeoutError);
 
-      // Don't release, try to acquire with short timeout
-      await expect(lock.acquire('test', 50)).rejects.toThrow('Lock timeout');
+        await vi.advanceTimersByTimeAsync(50);
+        await timeoutExpectation;
+        expect(lock.isLocked('test')).toBe(true);
 
-      release();
+        let successorAcquired = false;
+        const successorPromise = lock.acquire('test').then((release) => {
+          successorAcquired = true;
+          return release;
+        });
+        await Promise.resolve();
+        expect(successorAcquired).toBe(false);
+
+        releaseHolder();
+        const releaseSuccessor = await successorPromise;
+        expect(successorAcquired).toBe(true);
+        expect(lock.isLocked('test')).toBe(true);
+
+        // A stale or repeated release belongs only to its original holder.
+        releaseHolder();
+        expect(lock.isLocked('test')).toBe(true);
+
+        releaseSuccessor();
+        expect(lock.isLocked('test')).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it('should track lock duration', async () => {
