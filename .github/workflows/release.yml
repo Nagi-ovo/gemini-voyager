@@ -223,9 +223,13 @@ jobs:
             name=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$plist")
 
             if [[ "$label" == "extension" ]]; then
-              /usr/libexec/PlistBuddy \
-                -c 'Print :Entitlements:com.apple.developer.icloud-services:0' \
-                "$plist" | grep -qx 'CloudKit'
+              icloud_services=$(/usr/libexec/PlistBuddy \
+                -c 'Print :Entitlements:com.apple.developer.icloud-services' \
+                "$plist")
+              if ! grep -Eq '(^\*$|CloudKit)' <<< "$icloud_services"; then
+                echo "Extension profile does not permit CloudKit" >&2
+                exit 1
+              fi
               /usr/libexec/PlistBuddy \
                 -c 'Print :Entitlements:com.apple.developer.icloud-container-identifiers:0' \
                 "$plist" | grep -qx 'iCloud.com.yourCompany.Gemini-Voyager'
