@@ -72,6 +72,7 @@ describe('Safari direct watermark download', () => {
 
   afterEach(() => {
     stopWatermarkRemover();
+    vi.restoreAllMocks();
     vi.clearAllMocks();
     vi.unstubAllGlobals();
   });
@@ -79,7 +80,7 @@ describe('Safari direct watermark download', () => {
   it('cancels the native click and downloads the Alpha-processed Blob', async () => {
     document.body.innerHTML = `
       <generated-image>
-        <img src="https://lh3.googleusercontent.com/example=s512" />
+        <img src="https://lh3.googleusercontent.com/example=w440-h248" />
         <download-generated-image-button>
           <button><mat-icon fonticon="download"></mat-icon></button>
         </download-generated-image-button>
@@ -114,5 +115,60 @@ describe('Safari direct watermark download', () => {
     expect(removeWatermarkFromImage).toHaveBeenCalledOnce();
     await vi.waitFor(() => expect(downloadedAnchors).toHaveLength(1));
     expect(downloadedAnchors[0].download).toMatch(/^Gemini_Generated_Image_\d+\.png$/);
+  });
+
+  it('falls back to Gemini native download when processing fails', async () => {
+    document.body.innerHTML = `
+      <generated-image>
+        <img src="https://lh3.googleusercontent.com/example=s512" />
+        <download-generated-image-button>
+          <button><mat-icon fonticon="download"></mat-icon></button>
+        </download-generated-image-button>
+      </generated-image>
+    `;
+    fetchImageViaExtensionRuntime.mockRejectedValueOnce(new Error('network failed'));
+    const button = document.querySelector('button')!;
+    const nativeClick = vi.fn();
+    button.addEventListener('click', nativeClick);
+
+    await startWatermarkRemover();
+    button.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+
+    await vi.waitFor(() => expect(nativeClick).toHaveBeenCalledOnce());
+  });
+
+  it('processes different image downloads concurrently', async () => {
+    document.body.innerHTML = `
+      <generated-image>
+        <img src="https://lh3.googleusercontent.com/first=s512" />
+        <download-generated-image-button>
+          <button><mat-icon fonticon="download"></mat-icon></button>
+        </download-generated-image-button>
+      </generated-image>
+      <generated-image>
+        <img src="https://lh3.googleusercontent.com/second=s512" />
+        <download-generated-image-button>
+          <button><mat-icon fonticon="download"></mat-icon></button>
+        </download-generated-image-button>
+      </generated-image>
+    `;
+    const downloadedAnchors: HTMLAnchorElement[] = [];
+    const appendChild = document.body.appendChild.bind(document.body);
+    vi.spyOn(document.body, 'appendChild').mockImplementation((node) => {
+      if (node.nodeName === 'A') {
+        const anchor = node as HTMLAnchorElement;
+        downloadedAnchors.push(anchor);
+        vi.spyOn(anchor, 'click').mockImplementation(() => {});
+      }
+      return appendChild(node);
+    });
+
+    await startWatermarkRemover();
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>('button')];
+    buttons[0].click();
+    buttons[1].click();
+
+    await vi.waitFor(() => expect(downloadedAnchors).toHaveLength(2));
+    expect(fetchImageViaExtensionRuntime).toHaveBeenCalledTimes(2);
   });
 });

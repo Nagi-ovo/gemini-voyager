@@ -49,6 +49,7 @@ describe('fetchInterceptor (MAIN world script)', () => {
       .__gvFetchInterceptorInstalled;
 
     document.documentElement.innerHTML = '';
+    window.history.replaceState({}, '', '/app');
 
     originalFetch = vi.fn().mockImplementation(() => Promise.resolve(createMockFetchResponse()));
     Object.defineProperty(window, 'fetch', {
@@ -81,6 +82,35 @@ describe('fetchInterceptor (MAIN world script)', () => {
 
     expect(originalFetch).toHaveBeenCalledTimes(1);
     expect(response.status).toBe(200);
+  });
+
+  it('stays installed when a Notebook load later navigates back to chat', async () => {
+    const bridge = createEnabledBridge();
+    window.history.replaceState({}, '', '/notebook/example');
+    installInterceptor();
+
+    await window.fetch(GEMINI_DOWNLOAD_URL);
+    expect(originalFetch).toHaveBeenNthCalledWith(1, GEMINI_DOWNLOAD_URL);
+    expect(bridge.dataset.status).toBeUndefined();
+
+    window.history.pushState({}, '', '/app');
+    bridge.dataset.downloadIntentExpiresAt = String(Date.now() + 1000);
+    const responsePromise = window.fetch(GEMINI_DOWNLOAD_URL);
+    const requestData = JSON.parse(await waitForBridgeRequest(bridge)) as {
+      requestId: string;
+      base64: string;
+    };
+    bridge.dataset.response = JSON.stringify({
+      requestId: requestData.requestId,
+      base64: 'data:image/png;base64,cHJvY2Vzc2Vk',
+    });
+
+    await responsePromise;
+    expect(originalFetch).toHaveBeenNthCalledWith(
+      2,
+      'https://lh3.googleusercontent.com/rd-gg-dl/example=s0',
+    );
+    expect(bridge.dataset.status).toContain('"type":"SUCCESS"');
   });
 
   it('passes Gemini download-looking requests through until the user clicks download', async () => {

@@ -20,13 +20,6 @@
 
   const isNotebookRoute = () => NOTEBOOK_PATH_PATTERN.test(window.location.pathname);
 
-  // Notebook pages do not use Voyager's watermark-removal download path. Avoid replacing
-  // the page's native fetch when a notebook route is loaded directly.
-  if (isNotebookRoute()) {
-    console.log('[Gemini Voyager] Fetch interceptor skipped on Notebook route');
-    return;
-  }
-
   // Prevent double injection
   if (window.__gvFetchInterceptorInstalled) {
     console.log('[Gemini Voyager] Fetch interceptor already installed, skipping');

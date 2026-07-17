@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { hasReliableWatermarkSignal, measureWatermarkSignal } from '../watermarkDetector';
+import {
+  getWatermarkSignalStrength,
+  hasReliableWatermarkSignal,
+  measureWatermarkSignal,
+} from '../watermarkDetector';
 import {
   type WatermarkAnchorOption,
   type WatermarkConfig,
@@ -68,6 +72,23 @@ function createTestAnchorOption(config: WatermarkConfig): WatermarkAnchorOption 
     config,
     alphaMap: TEST_ALPHA_MAP,
   };
+}
+
+function writeGrayscalePattern(
+  imageData: ImageData,
+  config: WatermarkConfig,
+  values: number[],
+): void {
+  const position = calculateWatermarkPosition(imageData.width, imageData.height, config);
+  for (let row = 0; row < position.height; row++) {
+    for (let col = 0; col < position.width; col++) {
+      const value = values[row * position.width + col];
+      const index = ((position.y + row) * imageData.width + position.x + col) * 4;
+      imageData.data[index] = value;
+      imageData.data[index + 1] = value;
+      imageData.data[index + 2] = value;
+    }
+  }
 }
 
 function expectWatermarkAreaNearBase(imageData: ImageData, config: WatermarkConfig): void {
@@ -199,6 +220,44 @@ describe('watermarkEngine config detection', () => {
       alphaVariant: '20260520' as const,
     };
     const imageData = createImageDataWithWatermark(newConfig);
+
+    expect(
+      chooseWatermarkAnchorOption(imageData, [
+        createTestAnchorOption(oldConfig),
+        createTestAnchorOption(newConfig),
+      ]).config,
+    ).toBe(newConfig);
+  });
+
+  it('prefers a reliable anchor over a stronger but unreliable candidate', () => {
+    const oldConfig = { logoSize: 4, marginRight: 1, marginBottom: 1 };
+    const newConfig = {
+      logoSize: 4,
+      marginRight: 9,
+      marginBottom: 9,
+      alphaVariant: '20260520' as const,
+    };
+    const imageData = createImageDataWithWatermark(oldConfig, 0);
+    writeGrayscalePattern(
+      imageData,
+      oldConfig,
+      [29, 49, 126, 66, 21, 97, 81, 47, 186, 39, 189, 109, 40, 25, 53, 120],
+    );
+    writeGrayscalePattern(
+      imageData,
+      newConfig,
+      [109, 154, 46, 13, 72, 122, 166, 144, 93, 183, 94, 168, 172, 80, 145, 104],
+    );
+
+    const oldPosition = calculateWatermarkPosition(imageData.width, imageData.height, oldConfig);
+    const newPosition = calculateWatermarkPosition(imageData.width, imageData.height, newConfig);
+    const oldSignal = measureWatermarkSignal(imageData, TEST_ALPHA_MAP, oldPosition);
+    const newSignal = measureWatermarkSignal(imageData, TEST_ALPHA_MAP, newPosition);
+    expect(hasReliableWatermarkSignal(oldSignal)).toBe(false);
+    expect(hasReliableWatermarkSignal(newSignal)).toBe(true);
+    expect(getWatermarkSignalStrength(oldSignal)).toBeGreaterThan(
+      getWatermarkSignalStrength(newSignal),
+    );
 
     expect(
       chooseWatermarkAnchorOption(imageData, [

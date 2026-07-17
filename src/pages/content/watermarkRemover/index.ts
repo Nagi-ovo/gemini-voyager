@@ -36,7 +36,8 @@ let enginePromise: Promise<WatermarkEngine> | null = null;
 const processingQueue = new Set<HTMLImageElement>();
 const usesDirectDownload = getVoyagerBuildTarget() === 'safari';
 let directDownloadEnabled = false;
-let directDownloadInProgress = false;
+let directDownloadsInProgress = new WeakSet<HTMLButtonElement>();
+let nativeDownloadBypass = new WeakSet<HTMLButtonElement>();
 
 // Observers are kept at module scope so they can be disconnected on teardown
 // and so re-running startWatermarkRemover() can't stack duplicate observers.
@@ -112,7 +113,7 @@ const findGeminiImages = (): HTMLImageElement[] =>
  */
 const replaceWithNormalSize = (src: string): string => {
   // Use normal size image to fit watermark
-  return src.replace(/=[swh]\d+/, '=s0');
+  return src.replace(/=[swh]\d+(?:-[wh]\d+)*/, '=s0');
 };
 
 const createDownloadFilename = (): string => `Gemini_Generated_Image_${Date.now()}.png`;
@@ -468,7 +469,8 @@ export function stopWatermarkRemover(): void {
   bridgeObserver = null;
   statusObserver = null;
   directDownloadEnabled = false;
-  directDownloadInProgress = false;
+  directDownloadsInProgress = new WeakSet<HTMLButtonElement>();
+  nativeDownloadBypass = new WeakSet<HTMLButtonElement>();
 
   // Tell the MAIN-world fetch interceptor the feature is off, so it stops
   // intercepting and doesn't wait on bridge responses that will never come.
@@ -579,8 +581,8 @@ function showImmediateDownloadToast(button: HTMLButtonElement, markIntent = true
 }
 
 async function downloadProcessedImage(button: HTMLButtonElement): Promise<void> {
-  if (directDownloadInProgress) return;
-  directDownloadInProgress = true;
+  if (directDownloadsInProgress.has(button)) return;
+  directDownloadsInProgress.add(button);
 
   try {
     const imageElement = findGeneratedImageForDownloadButton(button);
@@ -612,8 +614,11 @@ async function downloadProcessedImage(button: HTMLButtonElement): Promise<void> 
   } catch (error) {
     console.warn('[Gemini Voyager] Direct watermark download failed:', error);
     publishDownloadStatus('ERROR', error instanceof Error ? error.message : String(error));
+    nativeDownloadBypass.add(button);
+    button.click();
+    nativeDownloadBypass.delete(button);
   } finally {
-    directDownloadInProgress = false;
+    directDownloadsInProgress.delete(button);
   }
 }
 
@@ -626,6 +631,8 @@ function setupDownloadButtonTracking(): void {
     if (!button) return;
 
     if (usesDirectDownload && directDownloadEnabled) {
+      if (event.type === 'click' && nativeDownloadBypass.delete(button)) return;
+
       showImmediateDownloadToast(button, false);
       if (event.type !== 'click') return;
 

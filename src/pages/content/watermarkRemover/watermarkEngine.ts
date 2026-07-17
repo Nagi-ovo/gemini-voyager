@@ -174,27 +174,53 @@ export function chooseWatermarkAnchorOption(
     return options[0];
   }
 
-  const baseOption = options[0];
-  const basePosition = calculateWatermarkPosition(
-    imageData.width,
-    imageData.height,
-    baseOption.config,
-  );
-  const baseSignal = measureWatermarkSignal(imageData, baseOption.alphaMap, basePosition);
+  let strongestReliable:
+    | { option: WatermarkAnchorOption; signal: ReturnType<typeof measureWatermarkSignal> }
+    | undefined;
 
-  let strongestOption = baseOption;
-  let strongestSignal = baseSignal;
-
-  for (const option of options.slice(1)) {
+  for (const option of options) {
     const position = calculateWatermarkPosition(imageData.width, imageData.height, option.config);
     const signal = measureWatermarkSignal(imageData, option.alphaMap, position);
-    if (getWatermarkSignalStrength(signal) > getWatermarkSignalStrength(strongestSignal)) {
-      strongestOption = option;
-      strongestSignal = signal;
-    }
+    if (!hasReliableWatermarkSignal(signal)) continue;
+    if (
+      !strongestReliable ||
+      getWatermarkSignalStrength(signal) > getWatermarkSignalStrength(strongestReliable.signal)
+    )
+      strongestReliable = { option, signal };
   }
 
-  return hasReliableWatermarkSignal(strongestSignal) ? strongestOption : baseOption;
+  return strongestReliable?.option ?? options[0];
+}
+
+function snapshotWatermarkRegion(
+  imageData: ImageData,
+  position: WatermarkPosition,
+): Uint8ClampedArray {
+  const snapshot = new Uint8ClampedArray(position.width * position.height * 4);
+  for (let row = 0; row < position.height; row++) {
+    const sourceStart = ((position.y + row) * imageData.width + position.x) * 4;
+    const targetStart = row * position.width * 4;
+    snapshot.set(
+      imageData.data.subarray(sourceStart, sourceStart + position.width * 4),
+      targetStart,
+    );
+  }
+  return snapshot;
+}
+
+function restoreWatermarkRegion(
+  imageData: ImageData,
+  position: WatermarkPosition,
+  snapshot: Uint8ClampedArray,
+): void {
+  for (let row = 0; row < position.height; row++) {
+    const sourceStart = row * position.width * 4;
+    const targetStart = ((position.y + row) * imageData.width + position.x) * 4;
+    imageData.data.set(
+      snapshot.subarray(sourceStart, sourceStart + position.width * 4),
+      targetStart,
+    );
+  }
 }
 
 export function removeWatermarkWithResidualCheck(
@@ -203,28 +229,33 @@ export function removeWatermarkWithResidualCheck(
   position: WatermarkPosition,
 ): number {
   let passes = 0;
+  let currentSignal = measureWatermarkSignal(imageData, alphaMap, position);
+  if (!hasReliableWatermarkSignal(currentSignal)) return passes;
+
+  const originalImageData = {
+    data: new Uint8ClampedArray(imageData.data),
+    width: imageData.width,
+    height: imageData.height,
+  } as ImageData;
 
   while (passes < WATERMARK_MAX_REMOVAL_PASSES) {
-    const originalSignal = measureWatermarkSignal(imageData, alphaMap, position);
-    if (!hasReliableWatermarkSignal(originalSignal)) break;
-
-    const candidateImageData = {
-      data: new Uint8ClampedArray(imageData.data),
-      width: imageData.width,
-      height: imageData.height,
-    } as ImageData;
-    removeWatermark(candidateImageData, alphaMap, position);
+    const previousRegion = snapshotWatermarkRegion(imageData, position);
+    removeWatermark(imageData, alphaMap, position);
     const assessment = assessWatermarkRemovalCandidate(
+      originalImageData,
       imageData,
-      candidateImageData,
       alphaMap,
       position,
-      originalSignal,
+      currentSignal,
     );
-    if (!assessment.safe) break;
+    if (!assessment.safe) {
+      restoreWatermarkRegion(imageData, position, previousRegion);
+      break;
+    }
 
-    imageData.data.set(candidateImageData.data);
     passes++;
+    currentSignal = assessment.candidateSignal;
+    if (!hasReliableWatermarkSignal(currentSignal)) break;
   }
 
   return passes;
