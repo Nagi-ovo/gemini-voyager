@@ -11,4 +11,13 @@ describe('Safari response notification handoff', () => {
 
     expect(nativeCall).not.toBeNull();
   });
+
+  it('keeps the app-to-Safari native port alive at module scope', () => {
+    const source = readFileSync(resolve('src/pages/background/index.ts'), 'utf8');
+
+    expect(source).toMatch(
+      /let nativeOpenConversationPort:[\s\S]*?browser\.runtime\.connectNative[\s\S]*?= null;/,
+    );
+    expect(source).toContain('nativeOpenConversationPort = port;');
+  });
 });

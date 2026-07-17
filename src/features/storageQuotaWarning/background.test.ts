@@ -47,6 +47,30 @@ describe('storage quota warning transitions', () => {
 });
 
 describe('StorageQuotaWarningBackgroundService', () => {
+  it('acknowledges ready messages without holding the reply channel open', () => {
+    const service = new StorageQuotaWarningBackgroundService({
+      getUsageRatio: async () => null,
+    });
+    service.start();
+
+    const addListener = chrome.runtime.onMessage.addListener as unknown as ReturnType<typeof vi.fn>;
+    const listener = addListener.mock.calls.at(-1)?.[0] as (
+      message: unknown,
+      sender: chrome.runtime.MessageSender,
+      sendResponse: (response: unknown) => void,
+    ) => boolean | undefined;
+    const sendResponse = vi.fn();
+
+    const result = listener(
+      { type: 'gv.storageQuota.ready' },
+      { tab: { id: 42 } } as chrome.runtime.MessageSender,
+      sendResponse,
+    );
+
+    expect(sendResponse).toHaveBeenCalledWith({ ok: true });
+    expect(result).toBeUndefined();
+  });
+
   it('persists a delivered warning so repeated checks stay quiet', async () => {
     let storedLevel: StorageQuotaWarningLevel = 'normal';
     const writeLevel = vi.fn(async (level: StorageQuotaWarningLevel) => {

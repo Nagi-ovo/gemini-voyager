@@ -175,7 +175,7 @@ export class StorageQuotaWarningBackgroundService {
       this.scheduleCheck();
     });
 
-    chrome.runtime?.onMessage?.addListener?.((message, sender) => {
+    chrome.runtime?.onMessage?.addListener?.((message, sender, sendResponse) => {
       if ((message as { type?: unknown } | null)?.type !== 'gv.storageQuota.ready') return;
       const preferredTabId = sender.tab?.id;
       if (this.lastCheckedAt === 0 || this.now() - this.lastCheckedAt >= MIN_CHECK_INTERVAL_MS) {
@@ -183,6 +183,7 @@ export class StorageQuotaWarningBackgroundService {
       } else {
         this.scheduleCheck(preferredTabId);
       }
+      sendResponse({ ok: true });
     });
 
     void this.checkNow();

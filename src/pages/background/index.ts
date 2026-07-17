@@ -70,6 +70,7 @@ import { getTranslation } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
 import { resolveOptionalHighlightSetting } from './highlightOptionalSetting';
+import { isHandledBackgroundRuntimeMessage } from './runtimeMessageRouting';
 
 const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
 const PLUGIN_CONTENT_SCRIPT_ID = 'gv-plugin-content-script';
@@ -101,6 +102,7 @@ const responseCompleteNotificationTargets = new Map<
   string,
   { conversationUrl?: string; tabId?: number }
 >();
+let nativeOpenConversationPort: ReturnType<typeof browser.runtime.connectNative> | null = null;
 const remoteAnnouncementService = startRemoteAnnouncementBackgroundService();
 startStorageQuotaWarningBackgroundService();
 
@@ -314,16 +316,19 @@ async function focusOrOpenConversation(url: URL): Promise<void> {
 function connectNativeOpenConversationPort(): void {
   try {
     const port = browser.runtime.connectNative(SAFARI_NATIVE_APP_ID);
+    nativeOpenConversationPort = port;
     port.onMessage.addListener((message: unknown) => {
       const url = getNativeOpenConversationUrl(message);
       if (url) void focusOrOpenConversation(url);
     });
     port.onDisconnect.addListener(() => {
+      if (nativeOpenConversationPort === port) nativeOpenConversationPort = null;
       setTimeout(connectNativeOpenConversationPort, 1000);
     });
   } catch {
     // Native host unavailable (extension running without the containing app);
     // notification clicks fall back to the app's openWindow path.
+    nativeOpenConversationPort = null;
   }
 }
 
@@ -1671,6 +1676,8 @@ async function handleRuntimeImageMessage(
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (!isHandledBackgroundRuntimeMessage(message)) return undefined;
+
   if (getVoyagerBuildTarget() === 'safari' && isRuntimeImageMessage(message)) {
     void handleRuntimeImageMessage(message, sender)
       .then(sendResponse)
