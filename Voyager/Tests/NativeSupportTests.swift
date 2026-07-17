@@ -86,10 +86,42 @@ final class NativeSupportTests: XCTestCase {
     XCTAssertEqual(failure?.code, .rateLimited)
     XCTAssertEqual(failure?.retryAfterMilliseconds, 2_500)
 
-    XCTAssertEqual(
-      VoyagerGoogleDriveHTTPFailureMapper.map(statusCode: 503)?.code,
-      .temporarilyUnavailable
+    let serverFailure = VoyagerGoogleDriveHTTPFailureMapper.map(
+      statusCode: 503,
+      retryAfterSeconds: 60
     )
+    XCTAssertEqual(serverFailure?.code, .temporarilyUnavailable)
+    XCTAssertEqual(serverFailure?.retryAfterMilliseconds, 60_000)
+    XCTAssertNil(VoyagerGoogleDriveHTTPFailureMapper.map(statusCode: 500)?.retryAfterMilliseconds)
+  }
+
+  func testDriveAuthClassifierFlagsOnlyDefinitiveOAuthFailures() {
+    let invalidGrant = NSError(
+      domain: "org.openid.appauth.generic",
+      code: -1,
+      userInfo: [
+        NSUnderlyingErrorKey: NSError(
+          domain: "org.openid.appauth.oauth_token",
+          code: -10,
+          userInfo: nil
+        )
+      ]
+    )
+    XCTAssertTrue(VoyagerGoogleDriveAuthErrorClassifier.isPermanentAuthFailure(invalidGrant))
+
+    let invalidGrantByText = NSError(
+      domain: "com.google.GIDSignIn",
+      code: -1,
+      userInfo: [NSLocalizedDescriptionKey: "Token refresh failed: invalid_grant."]
+    )
+    XCTAssertTrue(VoyagerGoogleDriveAuthErrorClassifier.isPermanentAuthFailure(invalidGrantByText))
+
+    let offline = NSError(
+      domain: NSURLErrorDomain,
+      code: NSURLErrorNotConnectedToInternet,
+      userInfo: nil
+    )
+    XCTAssertFalse(VoyagerGoogleDriveAuthErrorClassifier.isPermanentAuthFailure(offline))
   }
 
   func testNotificationCategoryExposesOpenConversationAction() {

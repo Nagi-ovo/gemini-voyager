@@ -109,12 +109,33 @@ struct VoyagerGoogleDriveFailure: LocalizedError, Equatable {
     )
   }
 
-  static func temporarilyUnavailable(statusCode: Int) -> VoyagerGoogleDriveFailure {
+  static func temporarilyUnavailable(
+    statusCode: Int,
+    retryAfter seconds: TimeInterval? = nil
+  ) -> VoyagerGoogleDriveFailure {
     VoyagerGoogleDriveFailure(
       code: .temporarilyUnavailable,
       message: "Google Drive is temporarily unavailable (\(statusCode)). Try again shortly.",
-      retryAfterMilliseconds: nil
+      retryAfterMilliseconds: seconds.map { max(0, Int(($0 * 1_000).rounded())) }
     )
+  }
+}
+
+enum VoyagerGoogleDriveAuthErrorClassifier {
+  /// AppAuth surfaces a revoked or expired grant as OIDOAuthTokenErrorDomain
+  /// ("org.openid.appauth.oauth_token") or an OAuth invalid_grant response in
+  /// the underlying-error chain. Network failures (NSURLErrorDomain) must stay
+  /// retryable, so only those definitive markers count as permanent.
+  static func isPermanentAuthFailure(_ error: Error) -> Bool {
+    var current: NSError? = error as NSError
+    var depth = 0
+    while let nsError = current, depth < 8 {
+      if nsError.domain == "org.openid.appauth.oauth_token" { return true }
+      if nsError.localizedDescription.lowercased().contains("invalid_grant") { return true }
+      current = nsError.userInfo[NSUnderlyingErrorKey] as? NSError
+      depth += 1
+    }
+    return false
   }
 }
 
@@ -144,7 +165,7 @@ enum VoyagerGoogleDriveHTTPFailureMapper {
     case 429:
       return .rateLimited(retryAfter: retryAfterSeconds)
     case 500..<600:
-      return .temporarilyUnavailable(statusCode: statusCode)
+      return .temporarilyUnavailable(statusCode: statusCode, retryAfter: retryAfterSeconds)
     default:
       return nil
     }

@@ -31,9 +31,11 @@ import {
   isFirefox,
   supportsExtensionNotifications,
 } from '@/core/utils/browser';
+import { getNativeOpenConversationUrl } from '@/core/utils/nativeOpenConversation';
 import { hasNotificationsPermission } from '@/core/utils/notificationsPermission';
 import {
   SAFARI_CLIPBOARD_IMAGE_COPY_REQUEST,
+  SAFARI_NATIVE_APP_ID,
   copySafariNativeImagePng,
 } from '@/core/utils/safariNativeClipboard';
 import {
@@ -278,48 +280,6 @@ async function showResponseCompleteNotification(
   }
 }
 
-// Sent by the containing macOS app (SFSafariApplication.dispatchMessage) when
-// the user clicks a native notification; must match the Swift constant
-// VoyagerNotificationDestination.openConversationMessageName.
-const NATIVE_OPEN_CONVERSATION_MESSAGE = 'gvOpenConversation';
-const NATIVE_OPEN_CONVERSATION_ALLOWED_HOSTS = [
-  'gemini.google.com',
-  'aistudio.google.com',
-  'chatgpt.com',
-  'claude.ai',
-];
-
-function getNativeOpenConversationUrl(message: unknown): URL | null {
-  const record = message as {
-    type?: unknown;
-    name?: unknown;
-    url?: unknown;
-    userInfo?: unknown;
-  } | null;
-  if (!record || typeof record !== 'object') return null;
-
-  // Safari may deliver the dispatched message either as the raw userInfo
-  // dictionary or wrapped as {name, userInfo}; accept both shapes.
-  const payload = (
-    record.userInfo && typeof record.userInfo === 'object' ? record.userInfo : record
-  ) as { type?: unknown; url?: unknown };
-  const type = payload.type ?? record.name;
-  if (type !== NATIVE_OPEN_CONVERSATION_MESSAGE) return null;
-  if (typeof payload.url !== 'string') return null;
-
-  try {
-    const url = new URL(payload.url);
-    if (url.protocol !== 'https:') return null;
-    const host = url.hostname.toLowerCase();
-    const allowed = NATIVE_OPEN_CONVERSATION_ALLOWED_HOSTS.some(
-      (allowedHost) => host === allowedHost || host.endsWith(`.${allowedHost}`),
-    );
-    return allowed ? url : null;
-  } catch {
-    return null;
-  }
-}
-
 async function focusOrOpenConversation(url: URL): Promise<void> {
   try {
     const tabs = await browser.tabs.query({});
@@ -345,6 +305,30 @@ async function focusOrOpenConversation(url: URL): Promise<void> {
   }
 
   await browser.tabs.create({ url: url.toString() });
+}
+
+// App-dispatched messages (SFSafariApplication.dispatchMessage) are delivered
+// only through a native-messaging port the background opens first — they never
+// arrive via runtime.onMessage. See "Messaging between the app and JavaScript
+// in a Safari web extension" in the Apple docs.
+function connectNativeOpenConversationPort(): void {
+  try {
+    const port = browser.runtime.connectNative(SAFARI_NATIVE_APP_ID);
+    port.onMessage.addListener((message: unknown) => {
+      const url = getNativeOpenConversationUrl(message);
+      if (url) void focusOrOpenConversation(url);
+    });
+    port.onDisconnect.addListener(() => {
+      setTimeout(connectNativeOpenConversationPort, 1000);
+    });
+  } catch {
+    // Native host unavailable (extension running without the containing app);
+    // notification clicks fall back to the app's openWindow path.
+  }
+}
+
+if (getVoyagerBuildTarget() === 'safari') {
+  connectNativeOpenConversationPort();
 }
 
 function getResponseCompleteNotificationTabId(notificationId: string): number | undefined {
@@ -1790,15 +1774,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           (await copySafariNativeImagePng(pngBase64));
         sendResponse({ ok: true, copied });
         return;
-      }
-
-      if (!sender.tab) {
-        const nativeOpenUrl = getNativeOpenConversationUrl(message);
-        if (nativeOpenUrl) {
-          await focusOrOpenConversation(nativeOpenUrl);
-          sendResponse({ ok: true });
-          return;
-        }
       }
 
       if (isRemoteAnnouncementRuntimeMessage(message)) {

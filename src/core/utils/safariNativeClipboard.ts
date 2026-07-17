@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill';
 
-const SAFARI_NATIVE_APP_ID = 'com.yourCompany.Gemini-Voyager';
+export const SAFARI_NATIVE_APP_ID = 'com.yourCompany.Gemini-Voyager';
 
 export const SAFARI_CLIPBOARD_IMAGE_COPY_REQUEST = 'gv.clipboard.copyImagePng';
 

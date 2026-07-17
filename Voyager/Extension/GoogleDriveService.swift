@@ -484,7 +484,13 @@ final class GoogleDriveService {
   ) {
     user.refreshTokensIfNeeded { refreshedUser, error in
       if let error {
-        completion(.failure(error))
+        completion(
+          .failure(
+            VoyagerGoogleDriveAuthErrorClassifier.isPermanentAuthFailure(error)
+              ? VoyagerGoogleDriveFailure.authRequired
+              : error
+          )
+        )
         return
       }
       guard let refreshedUser else {
