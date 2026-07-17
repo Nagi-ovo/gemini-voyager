@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fixBrokenBoldTags } from '../index';
+import { fixBrokenBoldTags, startMarkdownPatcher } from '../index';
 
 describe('fixBrokenBoldTags', () => {
   let container: HTMLDivElement;
@@ -24,6 +24,26 @@ describe('fixBrokenBoldTags', () => {
     container.innerHTML = '**One** and **Two**';
     fixBrokenBoldTags(container);
     expect(container.innerHTML).toBe('<strong>One</strong> and <strong>Two</strong>');
+  });
+
+  it('debounces mutation scans on the streaming path', async () => {
+    vi.useFakeTimers();
+    const stop = startMarkdownPatcher();
+    try {
+      const streamed = document.createElement('div');
+      streamed.textContent = 'Streamed **bold text**';
+      container.appendChild(streamed);
+      await Promise.resolve();
+
+      await vi.advanceTimersByTimeAsync(99);
+      expect(streamed.querySelector('strong')).toBeNull();
+
+      await vi.advanceTimersByTimeAsync(1);
+      expect(streamed.querySelector('strong')?.textContent).toBe('bold text');
+    } finally {
+      stop();
+      vi.useRealTimers();
+    }
   });
 
   it('handles split-node bolding (interrupted by element)', () => {
