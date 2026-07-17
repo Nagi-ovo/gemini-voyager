@@ -54,9 +54,27 @@ Do not use this route to validate native messaging. A temporary extension cannot
      build
    ```
 
-3. Run the Debug containing app from Xcode when the change needs native messaging or app/extension interaction. Apple documents Product > Build as the normal macOS extension update path and Product > Run for installing the containing app.
-4. Use the Debug app explicitly. Do not test an unnotarized Developer ID Release build in Safari; release validation must use the notarized CI artifact.
-5. Confirm Safari still shows exactly the intended Voyager entry and that it remains enabled. Test the native action and the corresponding web behavior.
+3. Before opening the app, make sure macOS will not route the extension or custom URL to an older development copy:
+
+   ```sh
+   CURRENT_APP="$PWD/.build/safari-native-test-derived/Build/Products/Debug/Voyager.app"
+   ps -axo pid=,command= | rg '/(Gemini Voyager|Voyager)\.app/Contents/MacOS/'
+   pluginkit -m -A -D -v -i com.yourCompany.Gemini-Voyager.Extension
+   ```
+
+   The expected result is one current `Voyager.app` process at most and exactly one enabled extension path inside `$CURRENT_APP`. If an old app under a known `.build` or DerivedData directory appears, quit only that development process, unregister that exact stale app path, and register the current app again:
+
+   ```sh
+   LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+   "$LSREGISTER" -u "<exact-known-stale-development-app-path>"
+   "$LSREGISTER" -f "$CURRENT_APP"
+   ```
+
+   Re-run both read-only checks before continuing. Never bulk-reset LaunchServices, and never unregister or remove an app in `/Applications` without explicit permission.
+
+4. Run the Debug containing app from Xcode when the change needs native messaging or app/extension interaction. Apple documents Product > Build as the normal macOS extension update path and Product > Run for installing the containing app.
+5. Use the Debug app explicitly. Do not test an unnotarized Developer ID Release build in Safari; release validation must use the notarized CI artifact.
+6. Confirm Safari still shows exactly the intended Voyager entry and that it remains enabled. Test the native action and the corresponding web behavior.
 
 For first-time Safari Google Drive authorization, click **Connect Google Drive** in the extension popup. That user gesture opens the containing app through its custom URL scheme; Google Sign-In then continues in the user's default browser. Return to Safari and run the sync action again. Do not try to launch the containing app from `SafariWebExtensionHandler` with `NSExtensionContext.open`; the Safari extension point may reject it even though native messaging itself is healthy.
 
@@ -87,6 +105,7 @@ Safari may dismiss a toolbar popover before an accessibility-driven button click
 - Keep generated apps, archives, DerivedData, and signed release artifacts out of the commit unless the repository explicitly tracks that artifact.
 - Avoid launching copies from Archives, backup folders, mounted disk images, or old DerivedData. Multiple apps with the same bundle identifier can produce duplicate Safari rows or make the custom URL scheme open the wrong containing app.
 - When native launch or custom URL routing is wrong, first inspect LaunchServices and `pluginkit` read-only. Unregister only known stale app paths; never delete app data, extension containers, preferences, or permissions.
+- If clicking a native notification opens an old updates/status window or reports **Safari Extension Unavailable**, inspect the launched process path first. This usually means LaunchServices selected a stale containing-app copy; it is not evidence that the notification bridge or the repository rename failed.
 - If a reload looks stale, first verify the built asset, use Safari's own **Reload** control, reload the target tab, and reopen the popup.
 - If a feature disappears, stop. Preserve the installed app and extension data, return to the previously working extension route, and verify the feature before continuing.
 - Use `pluginkit -mAvvv -p com.apple.Safari.web-extension` only as read-only diagnosis. Prefer exact app paths over display names or bundle identifiers when several development copies exist. Escalate to targeted registration changes only with explicit user approval and a recovery plan.
