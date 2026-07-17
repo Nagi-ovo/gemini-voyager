@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { DOWNLOAD_ICON_SELECTOR, findNativeDownloadButton } from '../downloadButton';
+import {
+  DOWNLOAD_ICON_SELECTOR,
+  findGeneratedImageForDownloadButton,
+  findNativeDownloadButton,
+} from '../downloadButton';
 
 describe('findNativeDownloadButton', () => {
   it('finds button by data-test-id within generated-image container', () => {
@@ -110,5 +114,31 @@ describe('findNativeDownloadButton', () => {
     const target = document.querySelector('.target');
     const button = findNativeDownloadButton(target);
     expect(button?.classList.contains('lightbox-btn')).toBe(true);
+  });
+
+  it('finds the image paired with an in-message download button', () => {
+    document.body.innerHTML = `
+      <generated-image>
+        <img src="https://lh3.googleusercontent.com/example=s512" />
+        <download-generated-image-button><button></button></download-generated-image-button>
+      </generated-image>
+    `;
+
+    const button = document.querySelector('button')!;
+    expect(findGeneratedImageForDownloadButton(button)?.src).toContain('googleusercontent.com');
+  });
+
+  it('finds the displayed image paired with a lightbox download button', () => {
+    document.body.innerHTML = `
+      <expansion-dialog>
+        <img src="blob:https://gemini.google.com/processed" data-processed-url="blob:https://gemini.google.com/processed" />
+        <download-generated-image-button><button></button></download-generated-image-button>
+      </expansion-dialog>
+    `;
+
+    const button = document.querySelector('button')!;
+    expect(findGeneratedImageForDownloadButton(button)?.dataset.processedUrl).toBe(
+      'blob:https://gemini.google.com/processed',
+    );
   });
 });

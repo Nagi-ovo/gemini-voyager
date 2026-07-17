@@ -44,3 +44,18 @@ export function findNativeDownloadButton(target: EventTarget | null): HTMLButton
 
   return null;
 }
+
+const GENERATED_IMAGE_SOURCE_SELECTOR =
+  'img[data-watermark-original-src], img[data-processed-url], img[src^="blob:"], img[src*="googleusercontent.com"], img[src*="ggpht.com"]';
+
+/**
+ * Resolve the generated image associated with a native download button.
+ * Gemini renders toolbar buttons inside the generated-image container, while
+ * lightbox buttons live with the displayed image inside expansion-dialog.
+ */
+export function findGeneratedImageForDownloadButton(
+  button: HTMLButtonElement,
+): HTMLImageElement | null {
+  const scope = button.closest('generated-image, .generated-image-container, expansion-dialog');
+  return scope?.querySelector<HTMLImageElement>(GENERATED_IMAGE_SOURCE_SELECTOR) ?? null;
+}
