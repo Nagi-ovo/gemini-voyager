@@ -1239,6 +1239,15 @@
     "message": "クラウドのコピーでローカルデータを上書きしますか？アップロードしていないローカル変更は失われます。",
     "description": "Confirmation before overwriting local sync data"
   },
+  "syncDeleteICloudBackup": { "message": "iCloud バックアップを削除" },
+  "syncDeleteICloudConfirm": {
+    "message": "iCloud 上の Voyager バックアップをすべて削除しますか？この Mac のデータは残ります。この操作は元に戻せません。"
+  },
+  "syncDeletingICloudBackup": { "message": "iCloud バックアップを削除中…" },
+  "syncDeleteICloudSuccess": {
+    "message": "✓ iCloud バックアップ {count} 件を削除しました。ローカルデータは変更されていません"
+  },
+  "syncDeleteICloudFailed": { "message": "✗ iCloud バックアップを削除できませんでした: {error}" },
   "syncMode": {
     "message": "同期モード",
     "description": "Sync mode label"

@@ -1239,6 +1239,15 @@
     "message": "هل تريد استبدال البيانات المحلية بنسخة السحابة؟ ستُفقد التغييرات المحلية التي لم يتم رفعها.",
     "description": "Confirmation before overwriting local sync data"
   },
+  "syncDeleteICloudBackup": { "message": "حذف نسخة iCloud الاحتياطية" },
+  "syncDeleteICloudConfirm": {
+    "message": "هل تريد حذف جميع نسخ Voyager الاحتياطية من iCloud؟ ستبقى البيانات المحلية على هذا الـ Mac. لا يمكن التراجع عن هذا الإجراء."
+  },
+  "syncDeletingICloudBackup": { "message": "جارٍ حذف نسخة iCloud الاحتياطية…" },
+  "syncDeleteICloudSuccess": {
+    "message": "✓ تم حذف {count} من ملفات iCloud الاحتياطية؛ لم تتغير البيانات المحلية"
+  },
+  "syncDeleteICloudFailed": { "message": "✗ تعذر حذف نسخة iCloud الاحتياطية: {error}" },
   "syncMode": {
     "message": "وضع المزامنة",
     "description": "Sync mode label"

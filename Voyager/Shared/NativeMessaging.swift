@@ -13,6 +13,7 @@ enum VoyagerNativeRequest: Codable, Equatable {
   case iCloudAccountStatus
   case iCloudWriteFile(VoyagerICloudWriteRequest)
   case iCloudReadFile(fileName: String)
+  case iCloudDeleteBackup
   case copyImageToPasteboard(VoyagerClipboardImageRequest)
 
   var actionName: String {
@@ -29,6 +30,7 @@ enum VoyagerNativeRequest: Codable, Equatable {
     case .iCloudAccountStatus: return Action.iCloudAccountStatus.rawValue
     case .iCloudWriteFile: return Action.iCloudWriteFile.rawValue
     case .iCloudReadFile: return Action.iCloudReadFile.rawValue
+    case .iCloudDeleteBackup: return Action.iCloudDeleteBackup.rawValue
     case .copyImageToPasteboard: return Action.copyImageToPasteboard.rawValue
     }
   }
@@ -46,6 +48,7 @@ enum VoyagerNativeRequest: Codable, Equatable {
     case iCloudAccountStatus
     case iCloudWriteFile
     case iCloudReadFile
+    case iCloudDeleteBackup
     case copyImageToPasteboard
   }
 
@@ -122,6 +125,8 @@ enum VoyagerNativeRequest: Codable, Equatable {
       self = .iCloudReadFile(
         fileName: try container.decode(String.self, forKey: .fileName)
       )
+    case .iCloudDeleteBackup:
+      self = .iCloudDeleteBackup
     case .copyImageToPasteboard:
       self = .copyImageToPasteboard(
         VoyagerClipboardImageRequest(
@@ -173,6 +178,8 @@ enum VoyagerNativeRequest: Codable, Equatable {
     case .iCloudReadFile(let fileName):
       try container.encode(Action.iCloudReadFile, forKey: .action)
       try container.encode(fileName, forKey: .fileName)
+    case .iCloudDeleteBackup:
+      try container.encode(Action.iCloudDeleteBackup, forKey: .action)
     case .copyImageToPasteboard(let request):
       try container.encode(Action.copyImageToPasteboard, forKey: .action)
       try container.encode(request.pngBase64, forKey: .pngBase64)
@@ -339,6 +346,10 @@ struct VoyagerICloudWriteResponse: Codable {
 struct VoyagerICloudReadResponse: Codable {
   let json: String?
   let found: Bool
+}
+
+struct VoyagerICloudDeleteResponse: Codable {
+  let deleted: Int
 }
 
 struct VoyagerEmptyResponse: Codable {}

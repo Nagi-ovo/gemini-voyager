@@ -274,6 +274,7 @@ final class NativeSupportTests: XCTestCase {
         ["action": "iCloudReadFile", "fileName": "prompts.json"],
         .iCloudReadFile(fileName: "prompts.json")
       ),
+      (["action": "iCloudDeleteBackup"], .iCloudDeleteBackup),
       (
         ["action": "copyImageToPasteboard", "pngBase64": "aGVsbG8="],
         .copyImageToPasteboard(VoyagerClipboardImageRequest(pngBase64: "aGVsbG8="))

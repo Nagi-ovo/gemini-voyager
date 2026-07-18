@@ -51,6 +51,8 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
       writeICloudFile(request: request, context: context)
     case .iCloudReadFile(let fileName):
       readICloudFile(fileName: fileName, context: context)
+    case .iCloudDeleteBackup:
+      deleteICloudBackup(context: context)
     case .copyImageToPasteboard(let request):
       copyImageToPasteboard(request: request, context: context)
     }
@@ -114,6 +116,20 @@ final class SafariWebExtensionHandler: NSObject, NSExtensionRequestHandling {
         self.respondWithSuccess(
           context: context,
           data: VoyagerICloudReadResponse(json: json, found: json != nil)
+        )
+      case .failure(let error):
+        self.respondWithICloudError(context: context, error: error)
+      }
+    }
+  }
+
+  private func deleteICloudBackup(context: NSExtensionContext) {
+    ICloudSyncService.shared.deleteBackup { result in
+      switch result {
+      case .success(let deleted):
+        self.respondWithSuccess(
+          context: context,
+          data: VoyagerICloudDeleteResponse(deleted: deleted)
         )
       case .failure(let error):
         self.respondWithICloudError(context: context, error: error)

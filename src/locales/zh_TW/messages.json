@@ -1199,6 +1199,13 @@
     "message": "確定要用雲端資料覆蓋本機資料嗎？尚未上傳的本機變更將會遺失。",
     "description": "覆蓋本機同步資料前的確認"
   },
+  "syncDeleteICloudBackup": { "message": "刪除 iCloud 備份" },
+  "syncDeleteICloudConfirm": {
+    "message": "刪除 iCloud 中所有 Voyager 備份？本機資料會保留，此操作無法復原。"
+  },
+  "syncDeletingICloudBackup": { "message": "正在刪除 iCloud 備份…" },
+  "syncDeleteICloudSuccess": { "message": "✓ 已刪除 {count} 個 iCloud 備份檔案，本機資料未變更" },
+  "syncDeleteICloudFailed": { "message": "✗ 無法刪除 iCloud 備份：{error}" },
   "syncMode": {
     "message": "同步模式",
     "description": "同步模式標籤"

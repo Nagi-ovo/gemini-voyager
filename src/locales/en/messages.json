@@ -1239,6 +1239,15 @@
     "message": "Overwrite local data with the cloud copy? Local changes that have not been uploaded will be lost.",
     "description": "Confirmation before overwriting local sync data"
   },
+  "syncDeleteICloudBackup": { "message": "Delete iCloud backup" },
+  "syncDeleteICloudConfirm": {
+    "message": "Delete every Voyager backup from iCloud? Local data will stay on this Mac. This cannot be undone."
+  },
+  "syncDeletingICloudBackup": { "message": "Deleting iCloud backup…" },
+  "syncDeleteICloudSuccess": {
+    "message": "✓ Deleted {count} iCloud backup files; local data is unchanged"
+  },
+  "syncDeleteICloudFailed": { "message": "✗ Could not delete iCloud backup: {error}" },
   "syncMode": {
     "message": "Sync Mode",
     "description": "Sync mode label"

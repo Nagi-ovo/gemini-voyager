@@ -1239,6 +1239,13 @@
     "message": "确定要用云端数据覆盖本地数据吗？未上传的本地更改会丢失。",
     "description": "覆盖本地同步数据前的确认"
   },
+  "syncDeleteICloudBackup": { "message": "删除 iCloud 备份" },
+  "syncDeleteICloudConfirm": {
+    "message": "删除 iCloud 中的所有 Voyager 备份？本机数据会保留，此操作无法撤销。"
+  },
+  "syncDeletingICloudBackup": { "message": "正在删除 iCloud 备份…" },
+  "syncDeleteICloudSuccess": { "message": "✓ 已删除 {count} 个 iCloud 备份文件，本机数据未改变" },
+  "syncDeleteICloudFailed": { "message": "✗ 无法删除 iCloud 备份：{error}" },
   "syncMode": {
     "message": "同步模式",
     "description": "同步模式标签"

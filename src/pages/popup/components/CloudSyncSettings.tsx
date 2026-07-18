@@ -21,6 +21,7 @@ import type {
 } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
 import { getVoyagerBuildTarget, isSafari } from '@/core/utils/browser';
+import { deleteSafariICloudBackup } from '@/core/utils/safariICloudSync';
 import { restorePluginState } from '@/features/plugins/storage/pluginState';
 import {
   getTimelineHierarchyStorageKey,
@@ -116,6 +117,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
   } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDeletingICloudBackup, setIsDeletingICloudBackup] = useState(false);
   const [downloadMode, setDownloadMode] = useState<DownloadMode | null>(null);
   const [platform, setPlatform] = useState<SyncPlatform>('gemini');
   const [highlightSyncEnabled, setHighlightSyncEnabled] = useState(true);
@@ -384,6 +386,28 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
       console.error('[CloudSyncSettings] Sign out failed:', error);
     }
   }, []);
+
+  const handleDeleteICloudBackup = useCallback(async () => {
+    if (!window.confirm(t('syncDeleteICloudConfirm'))) return;
+
+    setStatusMessage(null);
+    setIsDeletingICloudBackup(true);
+    try {
+      const deleted = await deleteSafariICloudBackup();
+      setStatusMessage({
+        text: t('syncDeleteICloudSuccess').replace('{count}', String(deleted)),
+        kind: 'ok',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setStatusMessage({
+        text: t('syncDeleteICloudFailed').replace('{error}', message),
+        kind: 'err',
+      });
+    } finally {
+      setIsDeletingICloudBackup(false);
+    }
+  }, [t]);
 
   // Handle sync now (upload current data)
   const handleSyncNow = useCallback(async () => {
@@ -1089,6 +1113,18 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
               </Button>
             )}
           </>
+        )}
+
+        {supportsICloud && syncState.provider === 'icloud' && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-destructive w-full text-xs"
+            onClick={handleDeleteICloudBackup}
+            disabled={isUploading || isDownloading || isDeletingICloudBackup}
+          >
+            {isDeletingICloudBackup ? t('syncDeletingICloudBackup') : t('syncDeleteICloudBackup')}
+          </Button>
         )}
 
         {/* Status Message */}

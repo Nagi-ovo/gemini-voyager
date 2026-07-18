@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   SafariICloudSyncError,
   checkSafariICloudAccount,
+  deleteSafariICloudBackup,
   getSafariICloudRetryDelay,
   isSafariICloudConflictError,
   readSafariICloudFile,
@@ -53,6 +54,15 @@ describe('Safari iCloud sync bridge', () => {
     sendNativeMessage.mockResolvedValue({ success: true, data: { found: false } });
 
     await expect(readSafariICloudFile('prompts.json')).resolves.toBeNull();
+  });
+
+  it('deletes every native iCloud backup record', async () => {
+    sendNativeMessage.mockResolvedValue({ success: true, data: { deleted: 4 } });
+
+    await expect(deleteSafariICloudBackup()).resolves.toBe(4);
+    expect(sendNativeMessage).toHaveBeenCalledWith('com.yourCompany.Gemini-Voyager', {
+      action: 'iCloudDeleteBackup',
+    });
   });
 
   it('surfaces native CloudKit errors', async () => {

@@ -1239,6 +1239,15 @@
     "message": "클라우드 사본으로 로컬 데이터를 덮어쓸까요? 업로드하지 않은 로컬 변경사항은 손실됩니다.",
     "description": "Confirmation before overwriting local sync data"
   },
+  "syncDeleteICloudBackup": { "message": "iCloud 백업 삭제" },
+  "syncDeleteICloudConfirm": {
+    "message": "iCloud의 모든 Voyager 백업을 삭제할까요? 이 Mac의 로컬 데이터는 유지됩니다. 이 작업은 취소할 수 없습니다."
+  },
+  "syncDeletingICloudBackup": { "message": "iCloud 백업 삭제 중…" },
+  "syncDeleteICloudSuccess": {
+    "message": "✓ iCloud 백업 파일 {count}개를 삭제했습니다. 로컬 데이터는 그대로입니다"
+  },
+  "syncDeleteICloudFailed": { "message": "✗ iCloud 백업을 삭제하지 못했습니다: {error}" },
   "syncMode": {
     "message": "동기화 모드",
     "description": "Sync mode label"

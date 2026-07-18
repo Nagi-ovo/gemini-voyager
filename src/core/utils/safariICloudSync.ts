@@ -8,6 +8,7 @@ type NativeICloudResponse = {
     available?: unknown;
     found?: unknown;
     json?: unknown;
+    deleted?: unknown;
   };
   code?: unknown;
   error?: unknown;
@@ -79,4 +80,12 @@ export async function readSafariICloudFile<T>(fileName: string): Promise<T | nul
     throw new Error('The iCloud sync file is invalid');
   }
   return JSON.parse(response.data.json) as T;
+}
+
+export async function deleteSafariICloudBackup(): Promise<number> {
+  const response = await sendICloudMessage({ action: 'iCloudDeleteBackup' });
+  if (response.success !== true || typeof response.data?.deleted !== 'number') {
+    throw responseError(response, 'iCloud backup deletion failed');
+  }
+  return response.data.deleted;
 }

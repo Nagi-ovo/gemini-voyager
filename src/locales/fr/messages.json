@@ -1239,6 +1239,17 @@
     "message": "Remplacer les données locales par la copie du cloud ? Les modifications locales non téléversées seront perdues.",
     "description": "Confirmation before overwriting local sync data"
   },
+  "syncDeleteICloudBackup": { "message": "Supprimer la sauvegarde iCloud" },
+  "syncDeleteICloudConfirm": {
+    "message": "Supprimer toutes les sauvegardes Voyager d’iCloud ? Les données locales resteront sur ce Mac. Cette action est irréversible."
+  },
+  "syncDeletingICloudBackup": { "message": "Suppression de la sauvegarde iCloud…" },
+  "syncDeleteICloudSuccess": {
+    "message": "✓ {count} fichiers de sauvegarde iCloud supprimés ; les données locales sont inchangées"
+  },
+  "syncDeleteICloudFailed": {
+    "message": "✗ Impossible de supprimer la sauvegarde iCloud : {error}"
+  },
   "syncMode": {
     "message": "Mode",
     "description": "Sync mode label"

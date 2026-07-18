@@ -1239,6 +1239,15 @@
     "message": "Перезаписать локальные данные облачной копией? Локальные изменения, которые не были загружены, будут потеряны.",
     "description": "Confirmation before overwriting local sync data"
   },
+  "syncDeleteICloudBackup": { "message": "Удалить резервную копию iCloud" },
+  "syncDeleteICloudConfirm": {
+    "message": "Удалить все резервные копии Voyager из iCloud? Локальные данные останутся на этом Mac. Это действие нельзя отменить."
+  },
+  "syncDeletingICloudBackup": { "message": "Удаление резервной копии iCloud…" },
+  "syncDeleteICloudSuccess": {
+    "message": "✓ Удалено файлов iCloud: {count}; локальные данные не изменены"
+  },
+  "syncDeleteICloudFailed": { "message": "✗ Не удалось удалить резервную копию iCloud: {error}" },
   "syncMode": {
     "message": "Режим синхронизации",
     "description": "Sync mode label"

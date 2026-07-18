@@ -1239,6 +1239,15 @@
     "message": "¿Sobrescribir los datos locales con la copia de la nube? Se perderán los cambios locales que no se hayan subido.",
     "description": "Confirmation before overwriting local sync data"
   },
+  "syncDeleteICloudBackup": { "message": "Eliminar copia de iCloud" },
+  "syncDeleteICloudConfirm": {
+    "message": "¿Eliminar todas las copias de Voyager de iCloud? Los datos locales seguirán en este Mac. Esta acción no se puede deshacer."
+  },
+  "syncDeletingICloudBackup": { "message": "Eliminando copia de iCloud…" },
+  "syncDeleteICloudSuccess": {
+    "message": "✓ Se eliminaron {count} archivos de iCloud; los datos locales no cambiaron"
+  },
+  "syncDeleteICloudFailed": { "message": "✗ No se pudo eliminar la copia de iCloud: {error}" },
   "syncMode": {
     "message": "Modo sinc.",
     "description": "Sync mode label"

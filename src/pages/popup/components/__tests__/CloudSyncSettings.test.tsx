@@ -12,6 +12,7 @@ import { getTimelineHierarchyStorageKey } from '@/pages/content/timeline/hierarc
 import { CloudSyncSettings } from '../CloudSyncSettings';
 
 const browserTarget = vi.hoisted(() => ({ value: 'chrome' }));
+const deleteSafariICloudBackup = vi.hoisted(() => vi.fn());
 
 vi.mock('@/contexts/LanguageContext', () => ({
   useLanguage: () => ({
@@ -24,6 +25,10 @@ vi.mock('@/contexts/LanguageContext', () => ({
 vi.mock('@/core/utils/browser', () => ({
   getVoyagerBuildTarget: () => browserTarget.value,
   isSafari: () => false,
+}));
+
+vi.mock('@/core/utils/safariICloudSync', () => ({
+  deleteSafariICloudBackup,
 }));
 
 type MockedChrome = typeof chrome;
@@ -159,6 +164,36 @@ describe('CloudSyncSettings auth flow', () => {
       'a[href="gemini-voyager://google-drive-auth"]',
     );
     expect(connectLink?.textContent).toBe('syncConnectGoogleDrive');
+  });
+
+  it('lets Safari users delete their iCloud backup without deleting local data', async () => {
+    browserTarget.value = 'safari';
+    deleteSafariICloudBackup.mockResolvedValue(3);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const sendMessageMock = vi.fn().mockImplementation((message: { type?: string }) => {
+      if (message.type === 'gv.sync.getState') {
+        return Promise.resolve({ ok: true, state: { ...baseState, provider: 'icloud' } });
+      }
+      return Promise.resolve({ ok: true });
+    });
+    (globalThis as { chrome: MockedChrome }).chrome = createChromeMock(sendMessageMock);
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(<CloudSyncSettings />);
+    });
+    await flushMicrotasks();
+
+    const deleteButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'syncDeleteICloudBackup',
+    );
+    expect(deleteButton).toBeDefined();
+    await act(async () => {
+      deleteButton?.click();
+    });
+
+    expect(deleteSafariICloudBackup).toHaveBeenCalledOnce();
+    expect(container.textContent).toContain('syncDeleteICloudSuccess');
   });
 
   it('triggers upload directly without a separate authenticate message', async () => {

@@ -4,7 +4,12 @@ import Foundation
 final class ICloudSyncService {
   static let shared = ICloudSyncService()
 
+  private static let temporaryFilePrefix = "voyager-icloud-"
   private let container = CKContainer(identifier: "iCloud.com.yourCompany.Gemini-Voyager")
+
+  private init() {
+    removeOrphanedTemporaryFiles()
+  }
 
   private var database: CKDatabase {
     container.privateCloudDatabase
@@ -24,7 +29,7 @@ final class ICloudSyncService {
 
   func write(fileName: String, json: String, completion: @escaping (Result<Void, Error>) -> Void) {
     let temporaryURL = FileManager.default.temporaryDirectory
-      .appendingPathComponent("voyager-\(UUID().uuidString).json")
+      .appendingPathComponent("\(Self.temporaryFilePrefix)\(UUID().uuidString).json")
 
     do {
       try Data(json.utf8).write(to: temporaryURL, options: .atomic)
@@ -97,6 +102,68 @@ final class ICloudSyncService {
     }
   }
 
+  func deleteBackup(completion: @escaping (Result<Int, Error>) -> Void) {
+    collectRecordIDs(cursor: nil, collected: [], completion: completion)
+  }
+
+  private func collectRecordIDs(
+    cursor: CKQueryOperation.Cursor?,
+    collected: [CKRecord.ID],
+    completion: @escaping (Result<Int, Error>) -> Void
+  ) {
+    let operation: CKQueryOperation
+    if let cursor {
+      operation = CKQueryOperation(cursor: cursor)
+    } else {
+      operation = CKQueryOperation(
+        query: CKQuery(recordType: "VoyagerSyncFile", predicate: NSPredicate(value: true))
+      )
+    }
+
+    var recordIDs = collected
+    operation.desiredKeys = []
+    operation.recordFetchedBlock = { record in
+      recordIDs.append(record.recordID)
+    }
+    operation.queryCompletionBlock = { nextCursor, error in
+      if let error {
+        completion(.failure(VoyagerICloudFailureMapper.map(error: error)))
+        return
+      }
+      if let nextCursor {
+        self.collectRecordIDs(
+          cursor: nextCursor,
+          collected: recordIDs,
+          completion: completion
+        )
+        return
+      }
+      self.delete(recordIDs: recordIDs, completion: completion)
+    }
+    database.add(operation)
+  }
+
+  private func delete(
+    recordIDs: [CKRecord.ID],
+    completion: @escaping (Result<Int, Error>) -> Void
+  ) {
+    guard !recordIDs.isEmpty else {
+      completion(.success(0))
+      return
+    }
+
+    let operation = CKModifyRecordsOperation(recordIDsToDelete: recordIDs)
+    operation.isAtomic = true
+    operation.modifyRecordsCompletionBlock = { _, deletedRecordIDs, error in
+      if let error {
+        completion(.failure(VoyagerICloudFailureMapper.map(error: error)))
+      } else {
+        completion(.success(deletedRecordIDs?.count ?? recordIDs.count))
+      }
+    }
+    database.add(operation)
+  }
+
   private func save(
     record: CKRecord,
     fileName: String,
@@ -125,4 +192,18 @@ final class ICloudSyncService {
     CKRecord.ID(recordName: VoyagerICloudRecordIdentity.recordName(for: fileName))
   }
 
+  private func removeOrphanedTemporaryFiles() {
+    let fileManager = FileManager.default
+    let directory = fileManager.temporaryDirectory
+    guard
+      let files = try? fileManager.contentsOfDirectory(
+        at: directory,
+        includingPropertiesForKeys: nil
+      )
+    else { return }
+
+    for file in files where file.lastPathComponent.hasPrefix(Self.temporaryFilePrefix) {
+      try? fileManager.removeItem(at: file)
+    }
+  }
 }
