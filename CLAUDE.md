@@ -18,6 +18,12 @@ bun run docs:build         # Build docs
 bun run docs:preview       # Preview built docs
 ```
 
+## Chrome Development Builds
+
+- Use `bun run dev:chrome` for routine Chrome development. It watches the source and writes complete builds to `dist_chrome_dev`.
+- Load and reload `dist_chrome_dev` in Chrome when testing local changes.
+- `bun run build:chrome` and `bun run build:all` write production artifacts to `dist_chrome`; use them for production verification and releases, not as the normal local development target.
+
 ## Core Rules
 
 Path-scoped rules live in `.claude/rules/` and load automatically by glob: `typescript.md` (src/**/*.ts(x)), `content-scripts.md` (src/pages/content/** and public/contentStyle.css), `i18n.md` (src/locales/**), `high-complexity.md` (core storage/sync services plus folder/export services and content modules).
