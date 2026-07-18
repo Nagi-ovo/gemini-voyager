@@ -43,6 +43,7 @@ type TestableManager = {
   getNativeConversationActionsContainer: (el: HTMLElement) => HTMLElement | null;
   isConversationInFolders: (conversationId: string) => boolean;
   scheduleNativeConversationTitleSync: () => void;
+  setupConversationClickTracking: () => void;
 };
 
 function createConversationEl(
@@ -194,7 +195,7 @@ describe('FolderManager — observer batching (issue #678)', () => {
     expect(archivedSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('cancels removal when the same conversation is added AND removed in the same batch', () => {
+  it('does not treat a same-batch row replacement as conversation deletion', () => {
     const removalSpy = vi.spyOn(typed, 'scheduleConversationRemovalCheck');
 
     const conv = createConversationEl('bbbbbbbb');
@@ -208,7 +209,7 @@ describe('FolderManager — observer batching (issue #678)', () => {
     expect(removalSpy).not.toHaveBeenCalled();
   });
 
-  it('protects against bulk removal when not in multi-select mode', () => {
+  it('does not treat bulk sidebar re-rendering as conversation deletion', () => {
     const removalSpy = vi.spyOn(typed, 'scheduleConversationRemovalCheck');
 
     const c1 = createConversationEl('cccccccc1');
@@ -223,7 +224,7 @@ describe('FolderManager — observer batching (issue #678)', () => {
     expect(removalSpy).not.toHaveBeenCalled();
   });
 
-  it('honors bulk removal in multi-select mode', () => {
+  it('does not infer deletion from DOM removal even in multi-select mode', () => {
     const removalSpy = vi.spyOn(typed, 'scheduleConversationRemovalCheck');
 
     const c1 = createConversationEl('dddddddd1');
@@ -234,12 +235,10 @@ describe('FolderManager — observer batching (issue #678)', () => {
 
     typed.flushMutationBatch();
 
-    expect(removalSpy).toHaveBeenCalledTimes(2);
-    expect(removalSpy).toHaveBeenCalledWith('dddddddd1');
-    expect(removalSpy).toHaveBeenCalledWith('dddddddd2');
+    expect(removalSpy).not.toHaveBeenCalled();
   });
 
-  it('skips removals when navigator.onLine is false at flush time but still processes additions', () => {
+  it('still processes additions while offline without inferring deletion', () => {
     const removalSpy = vi.spyOn(typed, 'scheduleConversationRemovalCheck');
     const draggableSpy = vi.spyOn(typed, 'makeConversationDraggable');
 
@@ -256,6 +255,47 @@ describe('FolderManager — observer batching (issue #678)', () => {
 
     expect(draggableSpy).toHaveBeenCalledWith(added);
     expect(removalSpy).not.toHaveBeenCalled();
+  });
+
+  it('schedules cleanup only after the user confirms native Delete', () => {
+    const removalSpy = vi.spyOn(typed, 'scheduleConversationRemovalCheck');
+    typed.setupConversationClickTracking();
+
+    const conv = createConversationEl('abcddcba');
+    const trigger = document.createElement('button');
+    trigger.setAttribute('data-test-id', 'actions-menu-button');
+    trigger.setAttribute('aria-haspopup', 'menu');
+    trigger.setAttribute('aria-expanded', 'true');
+    trigger.setAttribute('aria-controls', 'native-conversation-menu');
+    conv.appendChild(trigger);
+    typed.sidebarContainer!.appendChild(conv);
+
+    trigger.click();
+
+    const menu = document.createElement('gem-menu');
+    menu.id = 'native-conversation-menu';
+    const deleteItem = document.createElement('gem-menu-item');
+    deleteItem.setAttribute('data-test-id', 'delete-button');
+    deleteItem.textContent = 'Delete';
+    menu.appendChild(deleteItem);
+    document.body.appendChild(menu);
+
+    deleteItem.click();
+
+    expect(removalSpy).not.toHaveBeenCalled();
+
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+    const confirmButton = document.createElement('button');
+    confirmButton.setAttribute('data-test-id', 'confirm-delete-button');
+    confirmButton.textContent = 'Delete';
+    dialog.appendChild(confirmButton);
+    document.body.appendChild(dialog);
+
+    confirmButton.click();
+
+    expect(removalSpy).toHaveBeenCalledTimes(1);
+    expect(removalSpy).toHaveBeenCalledWith('abcddcba');
   });
 
   it('triggers native title sync when characterData mutations affect a conversation row', () => {
@@ -479,7 +519,7 @@ describe('FolderManager — observer batching (issue #678)', () => {
       expect(typed.enhancementQueue.size).toBe(1);
     });
 
-    it('cancels pending removals synchronously during the flush, before any drain', () => {
+    it('keeps an explicit delete check pending across a transient row re-add', () => {
       const hexId = 'dd44dd44';
       const timerId = window.setTimeout(() => {}, 60_000);
       typed.pendingRemovals.set(hexId, timerId);
@@ -490,9 +530,10 @@ describe('FolderManager — observer batching (issue #678)', () => {
       typed.mutationBatchQueue.push(makeChildListMutation({ added: [conv] }));
       typed.flushMutationBatch();
 
-      expect(typed.pendingRemovals.has(hexId)).toBe(false);
-      // The rest of the per-row work is still queued — cancellation did not
-      // wait for the budgeted drain.
+      expect(typed.pendingRemovals.has(hexId)).toBe(true);
+      // The delayed check sees the visible row and safely keeps the folder
+      // assignment. A transient re-add must not cancel a later confirmation
+      // check before Gemini finishes its delete flow.
       expect(typed.enhancementQueue.size).toBe(1);
     });
 

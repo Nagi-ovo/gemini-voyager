@@ -52,7 +52,10 @@ type TestableManager = {
   runFolderRecoveryTick: () => Promise<void>;
   reinitializeFolderUI: () => void;
   initializeFolderUI: () => Promise<void>;
+  waitForSidebar: () => Promise<boolean>;
   ensureDomRecoveryWatchers: () => void;
+  setupConversationClickTracking: () => void;
+  setupNativeConversationMenuObserver: () => void;
   teardownDomRecoveryWatchers: () => void;
   runCleanupTasks: () => void;
   folderRecoveryTimer: number | null;
@@ -508,6 +511,28 @@ describe('folder position enforcer (above Recents)', () => {
     expect(typed.folderRecoveryTimer).toBeNull();
     expect(typed.domRecoveryHandler).toBeNull();
     expect(removeSpy).toHaveBeenCalledWith('resize', armedHandler);
+  });
+
+  it('arms recovery before the initial sidebar wait can time out', async () => {
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager;
+
+    const ensureRecoverySpy = vi
+      .spyOn(typed, 'ensureDomRecoveryWatchers')
+      .mockImplementation(() => {});
+    const clickTrackingSpy = vi
+      .spyOn(typed, 'setupConversationClickTracking')
+      .mockImplementation(() => {});
+    const menuObserverSpy = vi
+      .spyOn(typed, 'setupNativeConversationMenuObserver')
+      .mockImplementation(() => {});
+    vi.spyOn(typed, 'waitForSidebar').mockResolvedValue(false);
+
+    await typed.initializeFolderUI();
+
+    expect(ensureRecoverySpy).toHaveBeenCalledTimes(1);
+    expect(clickTrackingSpy).toHaveBeenCalledTimes(1);
+    expect(menuObserverSpy).toHaveBeenCalledTimes(1);
   });
 
   // Regression: recovery-driven reinit can call `createFolderUI` while an older

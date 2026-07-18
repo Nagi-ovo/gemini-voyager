@@ -403,6 +403,36 @@ describe('folder manager audit fixes', () => {
       internals.flushPendingSaveData();
       expect(saveSpy).not.toHaveBeenCalled();
     });
+
+    it('runs one trailing write when data changes during an in-flight save', async () => {
+      const { manager: m, internals } = makeManager();
+      manager = m;
+      internals.data = makeFolderData();
+
+      let finishFirstSave!: (value: boolean) => void;
+      const storageWriteSpy = vi
+        .spyOn(internals.storage, 'saveData')
+        .mockImplementationOnce(
+          () =>
+            new Promise<boolean>((resolve) => {
+              finishFirstSave = resolve;
+            }),
+        )
+        .mockResolvedValue(true);
+
+      const firstSave = internals.saveData();
+      const queuedSave = internals.saveData();
+
+      expect(await queuedSave).toBe(false);
+      expect(storageWriteSpy).toHaveBeenCalledTimes(1);
+
+      finishFirstSave(true);
+      await firstSave;
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(storageWriteSpy).toHaveBeenCalledTimes(2);
+    });
   });
 
   // ── M7: search input debounce ──────────────────────────────────────────────
