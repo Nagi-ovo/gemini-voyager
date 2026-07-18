@@ -122,6 +122,7 @@ xcrun stapler validate "$APP_PATH"
 
 ditto "$APP_PATH" "$DMG_ROOT/Voyager.app"
 ln -s /Applications "$DMG_ROOT/Applications"
+cp "$ROOT_DIR/scripts/safari-dmg-readme.html" "$DMG_ROOT/READ ME — Safari Upgrade.html"
 hdiutil create \
   -volname "Voyager" \
   -srcfolder "$DMG_ROOT" \

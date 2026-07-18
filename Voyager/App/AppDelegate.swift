@@ -19,6 +19,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   private var canStartInteractiveSignIn = false
   private let notifLog = OSLog(subsystem: VoyagerNotifLog.subsystem, category: "app")
 
+  /// The pre-rename host app. If it lingers in /Applications alongside the new
+  /// "Voyager.app", both Safari extensions coexist and conflict.
+  private let legacyAppPath = "/Applications/Gemini Voyager.app"
+  private let migrationGuideURL = URL(string: "https://voyager.nagi.fun/en/guide/safari-migration")
+  /// Set when this launch is a background notification/URL handoff, so the
+  /// leftover-app prompt never pops a modal over a silent hand-off launch.
+  private var launchedForHandoff = false
+
   private let updaterController = SPUStandardUpdaterController(
     startingUpdater: true,
     updaterDelegate: nil,
@@ -58,6 +66,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
   func applicationDidFinishLaunching(_ notification: Notification) {
     installCheckForUpdatesMenuItem()
     canStartInteractiveSignIn = true
+    // Defer so any early notification/URL hand-off event has landed first.
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1) { [weak self] in
+      self?.promptLegacyAppRemovalIfNeeded()
+    }
   }
 
   func applicationDidBecomeActive(_ notification: Notification) {
@@ -96,6 +108,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     guard let urlString = event?.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
       let url = URL(string: urlString)
     else { return }
+
+    // This launch/activation is a hand-off, not a plain user double-click.
+    launchedForHandoff = true
 
     os_log(
       .default,
@@ -191,6 +206,61 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     if !NSApp.isActive {
       DispatchQueue.main.async {
         NSApp.hide(nil)
+      }
+    }
+  }
+
+  /// If the pre-rename "Gemini Voyager.app" is still installed, nudge the user
+  /// to remove it so the two Safari extensions don't coexist. Shown on a normal
+  /// foreground launch only (never during a silent notification/URL hand-off),
+  /// and it self-resolves: once the old app is gone, this never fires again.
+  private func promptLegacyAppRemovalIfNeeded() {
+    guard !launchedForHandoff else { return }
+    guard FileManager.default.fileExists(atPath: legacyAppPath) else { return }
+
+    os_log(.default, log: notifLog, "legacy app detected at %{public}@", legacyAppPath)
+
+    let alert = NSAlert()
+    alert.alertStyle = .warning
+    alert.messageText = "Remove the old “Gemini Voyager” app"
+    alert.informativeText =
+      "Voyager was renamed. An older “Gemini Voyager.app” is still in your "
+      + "Applications folder, and keeping both can cause a duplicate Safari "
+      + "extension. Move the old app to the Trash to finish migrating — your "
+      + "folders, prompts, and settings are preserved."
+    alert.addButton(withTitle: "Move Old App to Trash")
+    alert.addButton(withTitle: "Migration Guide")
+    alert.addButton(withTitle: "Not Now")
+
+    switch alert.runModal() {
+    case .alertFirstButtonReturn:
+      trashLegacyApp()
+    case .alertSecondButtonReturn:
+      if let migrationGuideURL {
+        NSWorkspace.shared.open(migrationGuideURL)
+      }
+    default:
+      break
+    }
+  }
+
+  private func trashLegacyApp() {
+    let legacyURL = URL(fileURLWithPath: legacyAppPath)
+    NSWorkspace.shared.recycle([legacyURL]) { [weak self] _, error in
+      guard let self else { return }
+      DispatchQueue.main.async {
+        if let error {
+          os_log(
+            .error,
+            log: self.notifLog,
+            "legacy app trash failed: %{public}@",
+            error.localizedDescription
+          )
+          // Couldn't trash it directly — reveal it so the user can remove it.
+          NSWorkspace.shared.activateFileViewerSelecting([legacyURL])
+        } else {
+          os_log(.default, log: self.notifLog, "legacy app moved to Trash")
+        }
       }
     }
   }

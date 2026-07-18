@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voyager — Safari Upgrade</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f5f5f7;
+        --card: #ffffff;
+        --text: #1d1d1f;
+        --muted: #6e6e73;
+        --accent: #5f8f55;
+        --warn-bg: #fff4e5;
+        --warn-border: #f0b357;
+        --border: #e3e3e6;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1c1c1e;
+          --card: #2a2a2c;
+          --text: #f5f5f7;
+          --muted: #a1a1a6;
+          --accent: #a7c080;
+          --warn-bg: #3a2f1c;
+          --warn-border: #8a6d2f;
+          --border: #3a3a3c;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 32px 16px 64px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.55;
+      }
+      .wrap {
+        max-width: 640px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 24px;
+        margin: 0 0 4px;
+        text-align: center;
+      }
+      .sub {
+        text-align: center;
+        color: var(--muted);
+        margin: 0 0 24px;
+        font-size: 14px;
+      }
+      .warn {
+        background: var(--warn-bg);
+        border: 1px solid var(--warn-border);
+        border-radius: 12px;
+        padding: 16px 18px;
+        margin: 0 0 24px;
+        font-size: 15px;
+      }
+      section {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin: 0 0 14px;
+      }
+      section h2 {
+        font-size: 16px;
+        margin: 0 0 8px;
+      }
+      section[dir='rtl'] {
+        text-align: right;
+      }
+      ol {
+        margin: 8px 0;
+        padding-inline-start: 22px;
+      }
+      li {
+        margin: 3px 0;
+        font-size: 14px;
+      }
+      .dont {
+        color: #c0392b;
+        font-size: 13px;
+        margin: 8px 0 0;
+      }
+      @media (prefers-color-scheme: dark) {
+        .dont {
+          color: #ff6b5e;
+        }
+      }
+      a {
+        color: var(--accent);
+        font-weight: 600;
+      }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        background: rgba(128, 128, 128, 0.16);
+        padding: 1px 5px;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Voyager — Safari Upgrade</h1>
+      <p class="sub">
+        The app was renamed from “Gemini Voyager” to “Voyager”. Please migrate once.
+      </p>
+
+      <div class="warn">
+        <strong>Before you drag the app across:</strong> quit Safari, move the old
+        <strong>“Gemini Voyager.app”</strong> to the Trash, then drag
+        <strong>“Voyager.app”</strong> here. Don’t keep both apps. Your data (folders, prompts,
+        settings) is preserved.
+      </div>
+
+      <section lang="en">
+        <h2>English</h2>
+        <ol>
+          <li>Quit Safari completely (<code>⌘Q</code>).</li>
+          <li>
+            Drag the old <strong>“Gemini Voyager.app”</strong> from Applications to the Trash.
+          </li>
+          <li>
+            Drag <strong>“Voyager.app”</strong> into Applications, then enable “Voyager Extension”
+            in Safari → Settings → Extensions.
+          </li>
+        </ol>
+        <p class="dont">Don’t keep both apps, and don’t use Safari’s “Uninstall”.</p>
+        <p>
+          <a href="https://voyager.nagi.fun/en/guide/safari-migration">Full migration guide →</a>
+        </p>
+      </section>
+
+      <section lang="zh">
+        <h2>简体中文</h2>
+        <ol>
+          <li>完全退出 Safari（<code>⌘Q</code>）。</li>
+          <li>把「应用程序」里旧的「<strong>Gemini Voyager.app</strong>」拖到废纸篓。</li>
+          <li>
+            把「<strong>Voyager.app</strong>」拖进「应用程序」，再到 Safari →「设置 →
+            扩展」勾选「Voyager Extension」。
+          </li>
+        </ol>
+        <p class="dont">不要同时保留两个 App，也不要在 Safari 里点「卸载」。</p>
+        <p><a href="https://voyager.nagi.fun/guide/safari-migration">完整迁移指南 →</a></p>
+      </section>
+
+      <section lang="zh-Hant">
+        <h2>繁體中文</h2>
+        <ol>
+          <li>完全結束 Safari（<code>⌘Q</code>）。</li>
+          <li>把「應用程式」裡舊的「<strong>Gemini Voyager.app</strong>」拖到垃圾桶。</li>
+          <li>
+            把「<strong>Voyager.app</strong>」拖進「應用程式」，再到 Safari →「設定 →
+            擴充功能」勾選「Voyager Extension」。
+          </li>
+        </ol>
+        <p class="dont">不要同時保留兩個 App，也不要在 Safari 裡點「解除安裝」。</p>
+        <p><a href="https://voyager.nagi.fun/zh_TW/guide/safari-migration">完整遷移指南 →</a></p>
+      </section>
+
+      <section lang="ja">
+        <h2>日本語</h2>
+        <ol>
+          <li>Safari を完全に終了します（<code>⌘Q</code>）。</li>
+          <li>
+            「アプリケーション」内の古い「<strong>Gemini Voyager.app</strong
+            >」をゴミ箱へ移動します。
+          </li>
+          <li>
+            「<strong>Voyager.app</strong>」を「アプリケーション」へドラッグし、Safari →「設定 →
+            機能拡張」で「Voyager Extension」を有効にします。
+          </li>
+        </ol>
+        <p class="dont">
+          2 つのアプリを同時に残さず、Safari の「アンインストール」も使わないでください。
+        </p>
+        <p><a href="https://voyager.nagi.fun/ja/guide/safari-migration">移行ガイド →</a></p>
+      </section>
+
+      <section lang="ko">
+        <h2>한국어</h2>
+        <ol>
+          <li>Safari를 완전히 종료합니다(<code>⌘Q</code>).</li>
+          <li>
+            「응용 프로그램」의 기존 「<strong>Gemini Voyager.app</strong>」을 휴지통으로 옮깁니다.
+          </li>
+          <li>
+            「<strong>Voyager.app</strong>」을 「응용 프로그램」으로 드래그한 뒤 Safari →「설정 →
+            확장 프로그램」에서 「Voyager Extension」을 켭니다.
+          </li>
+        </ol>
+        <p class="dont">두 앱을 동시에 두지 말고, Safari의 「제거」도 사용하지 마세요.</p>
+        <p><a href="https://voyager.nagi.fun/ko/guide/safari-migration">마이그레이션 안내 →</a></p>
+      </section>
+
+      <section lang="fr">
+        <h2>Français</h2>
+        <ol>
+          <li>Quittez Safari complètement (<code>⌘Q</code>).</li>
+          <li>
+            Faites glisser l’ancienne « <strong>Gemini Voyager.app</strong> » depuis Applications
+            vers la Corbeille.
+          </li>
+          <li>
+            Faites glisser « <strong>Voyager.app</strong> » dans Applications, puis activez «
+            Voyager Extension » dans Safari → Réglages → Extensions.
+          </li>
+        </ol>
+        <p class="dont">
+          Ne gardez pas les deux apps et n’utilisez pas « Désinstaller » dans Safari.
+        </p>
+        <p><a href="https://voyager.nagi.fun/fr/guide/safari-migration">Guide de migration →</a></p>
+      </section>
+
+      <section lang="es">
+        <h2>Español</h2>
+        <ol>
+          <li>Cierra Safari por completo (<code>⌘Q</code>).</li>
+          <li>
+            Arrastra la antigua «<strong>Gemini Voyager.app</strong>» de Aplicaciones a la Papelera.
+          </li>
+          <li>
+            Arrastra «<strong>Voyager.app</strong>» a Aplicaciones y activa «Voyager Extension» en
+            Safari → Ajustes → Extensiones.
+          </li>
+        </ol>
+        <p class="dont">No conserves las dos apps ni uses «Desinstalar» en Safari.</p>
+        <p><a href="https://voyager.nagi.fun/es/guide/safari-migration">Guía de migración →</a></p>
+      </section>
+
+      <section lang="pt">
+        <h2>Português</h2>
+        <ol>
+          <li>Encerre o Safari completamente (<code>⌘Q</code>).</li>
+          <li>
+            Arraste o antigo “<strong>Gemini Voyager.app</strong>” de Aplicativos para a Lixeira.
+          </li>
+          <li>
+            Arraste o “<strong>Voyager.app</strong>” para Aplicativos e ative o “Voyager Extension”
+            em Safari → Ajustes → Extensões.
+          </li>
+        </ol>
+        <p class="dont">Não mantenha os dois apps nem use “Desinstalar” no Safari.</p>
+        <p><a href="https://voyager.nagi.fun/pt/guide/safari-migration">Guia de migração →</a></p>
+      </section>
+
+      <section lang="ru">
+        <h2>Русский</h2>
+        <ol>
+          <li>Полностью завершите Safari (<code>⌘Q</code>).</li>
+          <li>Перетащите старое «<strong>Gemini Voyager.app</strong>» из «Программ» в Корзину.</li>
+          <li>
+            Перетащите «<strong>Voyager.app</strong>» в «Программы», затем включите «Voyager
+            Extension» в Safari → Настройки → Расширения.
+          </li>
+        </ol>
+        <p class="dont">Не оставляйте оба приложения и не используйте «Удалить» в Safari.</p>
+        <p>
+          <a href="https://voyager.nagi.fun/ru/guide/safari-migration">Инструкция по переносу →</a>
+        </p>
+      </section>
+
+      <section lang="ar" dir="rtl">
+        <h2>العربية</h2>
+        <ol>
+          <li>أغلق Safari تمامًا (<code>⌘Q</code>).</li>
+          <li>
+            اسحب «<strong>Gemini Voyager.app</strong>» القديم من «التطبيقات» إلى سلة المهملات.
+          </li>
+          <li>
+            اسحب «<strong>Voyager.app</strong>» إلى «التطبيقات»، ثم فعّل «Voyager Extension» من
+            Safari ← الإعدادات ← الامتدادات.
+          </li>
+        </ol>
+        <p class="dont">لا تُبقِ التطبيقين معًا ولا تستخدم «إلغاء التثبيت» في Safari.</p>
+        <p><a href="https://voyager.nagi.fun/ar/guide/safari-migration">دليل النقل →</a></p>
+      </section>
+    </div>
+  </body>
+</html>
