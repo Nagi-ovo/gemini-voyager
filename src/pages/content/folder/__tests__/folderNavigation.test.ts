@@ -144,6 +144,58 @@ describe('folder conversation navigation', () => {
     expect(window.location.pathname).toBe(`/app/${targetHexId}`);
   });
 
+  it('keeps the latest destination when an older native-click fallback is pending', () => {
+    const firstHexId = '1111222233334444';
+    const secondHexId = '5555666677778888';
+
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+    typedManager.data = {
+      folders: [],
+      folderContents: {
+        'folder-1': [createConversation(firstHexId), createConversation(secondHexId)],
+      },
+    };
+
+    const firstClickSpy = vi.fn((event: MouseEvent) => {
+      event.preventDefault();
+    });
+    appendNativeConversation(firstHexId, firstClickSpy);
+
+    typedManager.navigateToConversationById('folder-1', `c_${firstHexId}`);
+    typedManager.navigateToConversationById('folder-1', `c_${secondHexId}`);
+    vi.advanceTimersByTime(1200);
+
+    expect(firstClickSpy).toHaveBeenCalledTimes(1);
+    expect(window.location.pathname).toBe(`/app/${secondHexId}`);
+  });
+
+  it('ignores a recycled native row whose href belongs to another conversation', () => {
+    const targetHexId = '9999aaaabbbbcccc';
+    const staleHexId = 'ddddeeeeffff0000';
+
+    manager = new FolderManager();
+    const typedManager = manager as unknown as TestableManager;
+    typedManager.data = {
+      folders: [],
+      folderContents: {
+        'folder-1': [createConversation(targetHexId)],
+      },
+    };
+
+    const staleClickSpy = vi.fn((event: MouseEvent) => {
+      event.preventDefault();
+      window.history.pushState({}, '', `/app/${staleHexId}`);
+    });
+    const staleLink = appendNativeConversation(staleHexId, staleClickSpy);
+    staleLink.parentElement?.setAttribute('jslog', `["c_${targetHexId}"]`);
+
+    typedManager.navigateToConversationById('folder-1', `c_${targetHexId}`);
+
+    expect(staleClickSpy).not.toHaveBeenCalled();
+    expect(window.location.pathname).toBe(`/app/${targetHexId}`);
+  });
+
   it('uses SPA route navigation when the native sidebar link is not rendered', () => {
     const targetHexId = 'bbbbccccddddeeee';
 

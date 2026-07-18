@@ -241,6 +241,7 @@ export class FolderManager {
   private multiSelectFolderId: string | null = null; // Track which folder multi-select was initiated from
   private longPressTimeout: number | null = null; // For long-press detection
   private folderNameClickTimeout: number | null = null; // Distinguish single-click toggle from double-click rename
+  private folderNavigationConfirmTimer: number | null = null;
   private longPressThreshold: number = 500; // Long-press duration in ms
   private folderEnabled: boolean = true; // Whether folder feature is enabled
   private folderProjectEnabled: boolean = false; // Whether Folder-as-Project feature is enabled
@@ -508,6 +509,8 @@ export class FolderManager {
       clearTimeout(this.folderNameClickTimeout);
       this.folderNameClickTimeout = null;
     }
+
+    this.clearFolderNavigationConfirmation();
 
     if (this.tooltipTimeout) {
       clearTimeout(this.tooltipTimeout);
@@ -8845,7 +8848,9 @@ export class FolderManager {
     const byJslog = document.querySelector(
       `[data-test-id="conversation"][jslog*="c_${normalizedId}"] a[href]`,
     ) as HTMLAnchorElement | null;
-    if (byJslog) return byJslog;
+    if (byJslog && this.extractConversationIdFromHref(byJslog.href) === normalizedId) {
+      return byJslog;
+    }
 
     const links = Array.from(
       document.querySelectorAll<HTMLAnchorElement>(
@@ -8886,7 +8891,16 @@ export class FolderManager {
     }
   }
 
+  private clearFolderNavigationConfirmation(): void {
+    if (this.folderNavigationConfirmTimer === null) return;
+    window.clearTimeout(this.folderNavigationConfirmTimer);
+    this.folderNavigationConfirmTimer = null;
+  }
+
   private navigateToConversation(url: string, conversation?: ConversationReference): void {
+    // A newer folder click supersedes any delayed fallback from an older one.
+    this.clearFolderNavigationConfirmation();
+
     // Use History API to navigate without page reload (SPA-style)
     // This mimics how Gemini's original conversation links work
     try {
@@ -8962,7 +8976,8 @@ export class FolderManager {
       this.triggerNativeConversationClick(sidebarLink);
       this.debug('Triggered native sidebar link click');
 
-      window.setTimeout(() => {
+      this.folderNavigationConfirmTimer = window.setTimeout(() => {
+        this.folderNavigationConfirmTimer = null;
         if (!hexId || this.getCurrentConversationId() === hexId) {
           finishNavigation();
           return;
