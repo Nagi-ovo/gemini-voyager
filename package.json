@@ -47,7 +47,7 @@
     "html-to-image": "^1.11.13",
     "jszip": "^3.10.1",
     "katex": "^0.16",
-    "lucide-react": "^0.553.0",
+    "lucide-react": "^1.25.0",
     "marked": "16.4.1",
     "marked-katex-extension": "^4",
     "mermaid": "11.12.2",
