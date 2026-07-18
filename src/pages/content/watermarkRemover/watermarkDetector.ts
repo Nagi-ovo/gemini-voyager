@@ -15,8 +15,8 @@ const DIRECT_MATCH_MIN_SPATIAL_SCORE = 0.3;
 const DIRECT_MATCH_MIN_GRADIENT_SCORE = 0.12;
 const STRONG_GRADIENT_MIN_SPATIAL_SCORE = 0.295;
 const STRONG_GRADIENT_MIN_GRADIENT_SCORE = 0.45;
-const MAX_RESIDUAL_SPATIAL_SCORE = 0.2;
-const MAX_RESIDUAL_GRADIENT_SCORE = 0.12;
+const MAX_RESIDUAL_SPATIAL_SCORE = 0.25;
+const MAX_RESIDUAL_GRADIENT_SCORE = 0.18;
 const MIN_SUPPRESSION_GAIN = 0.25;
 const NEAR_BLACK_THRESHOLD = 5;
 const MAX_NEAR_BLACK_INCREASE = 0.05;
@@ -167,6 +167,18 @@ export function getWatermarkSignalStrength(signal: WatermarkSignal): number {
   return Math.max(0, signal.spatialScore) * 0.5 + Math.max(0, signal.gradientScore) * 0.3;
 }
 
+export function hasAcceptableWatermarkRemovalEvidence(
+  candidateSignal: WatermarkSignal,
+  suppressionGain: number,
+): boolean {
+  const residualStillReliable = hasReliableWatermarkSignal(candidateSignal);
+  const residualCleared =
+    Math.abs(candidateSignal.spatialScore) <= MAX_RESIDUAL_SPATIAL_SCORE &&
+    candidateSignal.gradientScore <= MAX_RESIDUAL_GRADIENT_SCORE;
+
+  return residualStillReliable || (suppressionGain >= MIN_SUPPRESSION_GAIN && residualCleared);
+}
+
 function calculateTextureStats(
   imageData: ImageData,
   position: WatermarkPosition,
@@ -274,12 +286,7 @@ export function assessWatermarkRemovalCandidate(
   const nearBlackIncrease = Math.max(0, candidateNearBlack - originalNearBlack) / ratioDenominator;
   const newlyClippedRatio = newlyClipped / ratioDenominator;
   const visibleDarkHole = createsVisibleDarkHole(originalImageData, candidateImageData, position);
-  const residualStillReliable = hasReliableWatermarkSignal(candidateSignal);
-  const residualCleared =
-    Math.abs(candidateSignal.spatialScore) <= MAX_RESIDUAL_SPATIAL_SCORE &&
-    candidateSignal.gradientScore <= MAX_RESIDUAL_GRADIENT_SCORE;
-  const evidenceSafe =
-    residualStillReliable || (suppressionGain >= MIN_SUPPRESSION_GAIN && residualCleared);
+  const evidenceSafe = hasAcceptableWatermarkRemovalEvidence(candidateSignal, suppressionGain);
   const damageSafe =
     nearBlackIncrease <= MAX_NEAR_BLACK_INCREASE &&
     newlyClippedRatio <= MAX_NEWLY_CLIPPED_RATIO &&

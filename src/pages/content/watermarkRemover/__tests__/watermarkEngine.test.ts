@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   getWatermarkSignalStrength,
+  hasAcceptableWatermarkRemovalEvidence,
   hasReliableWatermarkSignal,
   measureWatermarkSignal,
 } from '../watermarkDetector';
@@ -108,6 +109,28 @@ function expectWatermarkAreaNearBase(imageData: ImageData, config: WatermarkConf
 }
 
 describe('watermarkEngine config detection', () => {
+  it('accepts a safely suppressed residual measured from a real moved-anchor output', () => {
+    const candidateSignal = {
+      spatialScore: 0.2143191174,
+      gradientScore: 0.1471584466,
+    };
+
+    expect(hasReliableWatermarkSignal(candidateSignal)).toBe(false);
+    expect(hasAcceptableWatermarkRemovalEvidence(candidateSignal, 0.3951623107)).toBe(true);
+  });
+
+  it('still rejects the same residual when the watermark was not sufficiently suppressed', () => {
+    expect(
+      hasAcceptableWatermarkRemovalEvidence(
+        {
+          spatialScore: 0.2143191174,
+          gradientScore: 0.1471584466,
+        },
+        0.24,
+      ),
+    ).toBe(false);
+  });
+
   it('keeps historical detection as the default for full-size 2816x1536 outputs', () => {
     expect(detectWatermarkConfig(2816, 1536)).toEqual({
       logoSize: 96,
