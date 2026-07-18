@@ -2,6 +2,78 @@
   "version": 1,
   "announcements": [
     {
+      "id": "safari-app-rename-2026-07",
+      "level": "warning",
+      "startsAt": "2026-07-18T00:00:00Z",
+      "endsAt": "2026-10-01T00:00:00Z",
+      "minExtensionVersion": "1.5.0",
+      "maxExtensionVersion": "1.5.7",
+      "platforms": ["safari"],
+      "requiresAction": true,
+      "locales": {
+        "default": {
+          "title": "Action needed: Safari app renamed to Voyager",
+          "body": "The Safari app was renamed from “Gemini Voyager” to “Voyager”. Before updating, please migrate once so you don’t end up with two apps installed. Your folders, prompts and settings are preserved.",
+          "link": "https://voyager.nagi.fun/en/guide/safari-migration",
+          "linkLabel": "How to migrate"
+        },
+        "zh": {
+          "title": "需要操作：Safari App 已更名为 Voyager",
+          "body": "Safari 宿主 App 从「Gemini Voyager」更名为「Voyager」。更新前请按指南迁移一次，避免两个 App 并存。你的文件夹、灵感库和设置都会保留。",
+          "link": "https://voyager.nagi.fun/guide/safari-migration",
+          "linkLabel": "查看迁移指南"
+        },
+        "zh_TW": {
+          "title": "需要操作：Safari App 已更名為 Voyager",
+          "body": "Safari 宿主 App 由「Gemini Voyager」更名為「Voyager」。更新前請依指南遷移一次，避免兩個 App 並存。你的資料夾、靈感庫與設定都會保留。",
+          "link": "https://voyager.nagi.fun/zh_TW/guide/safari-migration",
+          "linkLabel": "查看遷移指南"
+        },
+        "ja": {
+          "title": "要対応：Safari アプリ名が Voyager に変更されました",
+          "body": "Safari のホストアプリ名が「Gemini Voyager」から「Voyager」に変わりました。更新前に一度移行し、アプリが二重にならないようにしてください。フォルダ・プロンプト・設定は保持されます。",
+          "link": "https://voyager.nagi.fun/ja/guide/safari-migration",
+          "linkLabel": "移行手順を見る"
+        },
+        "fr": {
+          "title": "Action requise : l’app Safari renommée Voyager",
+          "body": "L’app Safari a été renommée de « Gemini Voyager » en « Voyager ». Avant de mettre à jour, effectuez la migration une fois pour éviter d’avoir deux apps installées. Vos dossiers, prompts et réglages sont conservés.",
+          "link": "https://voyager.nagi.fun/fr/guide/safari-migration",
+          "linkLabel": "Voir le guide"
+        },
+        "es": {
+          "title": "Acción necesaria: la app de Safari ahora es Voyager",
+          "body": "La app de Safari cambió de nombre de «Gemini Voyager» a «Voyager». Antes de actualizar, haz la migración una vez para no tener dos apps instaladas. Tus carpetas, prompts y ajustes se conservan.",
+          "link": "https://voyager.nagi.fun/es/guide/safari-migration",
+          "linkLabel": "Ver guía de migración"
+        },
+        "pt": {
+          "title": "Ação necessária: app do Safari renomeado para Voyager",
+          "body": "O app do Safari foi renomeado de “Gemini Voyager” para “Voyager”. Antes de atualizar, faça a migração uma vez para não ficar com dois apps instalados. Suas pastas, prompts e configurações são preservados.",
+          "link": "https://voyager.nagi.fun/pt/guide/safari-migration",
+          "linkLabel": "Ver guia de migração"
+        },
+        "ar": {
+          "title": "إجراء مطلوب: أُعيدت تسمية تطبيق Safari إلى Voyager",
+          "body": "أُعيدت تسمية تطبيق Safari من «Gemini Voyager» إلى «Voyager». قبل التحديث، نفّذ النقل مرة واحدة حتى لا يتبقى لديك تطبيقان. تُحفَظ مجلداتك وموجّهاتك وإعداداتك.",
+          "link": "https://voyager.nagi.fun/ar/guide/safari-migration",
+          "linkLabel": "دليل النقل"
+        },
+        "ru": {
+          "title": "Требуется действие: приложение Safari переименовано в Voyager",
+          "body": "Приложение Safari переименовано с «Gemini Voyager» на «Voyager». Перед обновлением выполните перенос один раз, чтобы не осталось двух приложений. Ваши папки, промпты и настройки сохранятся.",
+          "link": "https://voyager.nagi.fun/ru/guide/safari-migration",
+          "linkLabel": "Инструкция по переносу"
+        },
+        "ko": {
+          "title": "조치 필요: Safari 앱이 Voyager로 변경되었습니다",
+          "body": "Safari 앱 이름이 「Gemini Voyager」에서 「Voyager」로 변경되었습니다. 업데이트 전에 한 번 마이그레이션하여 두 앱이 함께 남지 않도록 하세요. 폴더, 프롬프트, 설정은 유지됩니다.",
+          "link": "https://voyager.nagi.fun/ko/guide/safari-migration",
+          "linkLabel": "마이그레이션 안내 보기"
+        }
+      }
+    },
+    {
       "id": "gemini-page-format-change-2026-06",
       "level": "warning",
       "startsAt": "2026-06-16T00:00:00Z",
