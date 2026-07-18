@@ -6,9 +6,11 @@ import {
   formatResetLabel,
   formatUpdatedAgo,
   getUsagePillMode,
+  hydrateUsageResetEpochs,
   isUsagePathname,
   mergeAutomaticUsageSnapshots,
   mergeUsageSnapshots,
+  parseResetEpoch,
   parseUsageRpcResponse,
   scrapeUsageFromDocument,
   selectUsageSnapshotForAccount,
@@ -46,11 +48,13 @@ describe('getUsagePillMode', () => {
  * carrying an `N% used` line and a `reset-time` element.
  */
 function mountUsage(opts: {
+  lang?: string;
   tier?: string;
   daily?: { percent: string; reset: string };
   weekly?: { percent: string; reset: string };
   emptyWindow?: boolean;
 }): Document {
+  document.documentElement.lang = opts.lang ?? 'en';
   if (opts.emptyWindow) {
     document.body.innerHTML = `<usage-metrics-window></usage-metrics-window>`;
     return document;
@@ -81,22 +85,33 @@ function mountUsage(opts: {
 
 afterEach(() => {
   document.body.innerHTML = '';
+  document.documentElement.lang = 'en';
 });
 
 describe('scrapeUsageFromDocument', () => {
   it('parses both buckets, percents, reset labels and the tier', () => {
+    const now = new Date(2026, 6, 18, 1, 26).getTime();
     const snap = scrapeUsageFromDocument(
       mountUsage({
         tier: 'PRO',
         daily: { percent: '0%', reset: 'Resets at 12:47 AM' },
         weekly: { percent: '1%', reset: 'Resets Jun 16 at 10:47 PM' },
       }),
+      now,
     );
     expect(snap).not.toBeNull();
     expect(snap?.tier).toBe('PRO');
-    expect(snap?.daily).toEqual({ percent: 0, resetLabel: '12:47 AM' });
-    expect(snap?.weekly).toEqual({ percent: 1, resetLabel: 'Jun 16 at 10:47 PM' });
-    expect(typeof snap?.updatedAt).toBe('number');
+    expect(snap?.daily).toEqual({
+      percent: 0,
+      resetLabel: '12:47 AM',
+      resetEpoch: Math.floor(new Date(2026, 6, 19, 0, 47).getTime() / 1000),
+    });
+    expect(snap?.weekly).toEqual({
+      percent: 1,
+      resetLabel: 'Jun 16 at 10:47 PM',
+      resetEpoch: Math.floor(new Date(2026, 5, 16, 22, 47).getTime() / 1000),
+    });
+    expect(snap?.updatedAt).toBe(now);
   });
 
   it('parses fractional percentages and clamps to 0-100', () => {
@@ -129,6 +144,54 @@ describe('scrapeUsageFromDocument', () => {
     );
     // No English "Resets" prefix to strip — show it as-is.
     expect(snap?.daily?.resetLabel).toBe('重置时间 凌晨 12:47');
+  });
+});
+
+describe('parseResetEpoch', () => {
+  const now = new Date(2026, 6, 18, 1, 26).getTime();
+
+  it.each([
+    ['Resets at 2:47 AM', 'en', new Date(2026, 6, 18, 2, 47)],
+    ['重設時間：上午2:47', 'zh-TW', new Date(2026, 6, 18, 2, 47)],
+    ['重置时间：02:47', 'zh-CN', new Date(2026, 6, 18, 2, 47)],
+    ['將於上午9:12重設', 'zh-TW', new Date(2026, 6, 18, 9, 12)],
+  ])('parses a localized time-only label: %s', (label, locale, expected) => {
+    expect(parseResetEpoch(label, now, locale)).toBe(Math.floor(expected.getTime() / 1000));
+  });
+
+  it.each([
+    ['Resets Jul 21 at 10:47 PM', 'en', new Date(2026, 6, 21, 22, 47)],
+    ['重設時間：7月21日 下午10:47', 'zh-TW', new Date(2026, 6, 21, 22, 47)],
+    ['重置时间：7月21日22:47', 'zh-CN', new Date(2026, 6, 21, 22, 47)],
+  ])('parses a localized dated label: %s', (label, locale, expected) => {
+    expect(parseResetEpoch(label, now, locale)).toBe(Math.floor(expected.getTime() / 1000));
+  });
+
+  it('rolls a time-only reset into the next day after that time has passed', () => {
+    expect(parseResetEpoch('Resets at 12:47 AM', now, 'en')).toBe(
+      Math.floor(new Date(2026, 6, 19, 0, 47).getTime() / 1000),
+    );
+  });
+
+  it('upgrades an older label-only cache without revisiting the usage page', () => {
+    const snapshot = {
+      accountKey: 'default',
+      daily: { percent: 0, resetLabel: '2:47 AM' },
+      weekly: { percent: 1, resetLabel: 'Jul 21 at 10:47 PM' },
+      updatedAt: now - 60_000,
+    };
+
+    expect(hydrateUsageResetEpochs(snapshot, now, ['zh-CN', 'en'])).toEqual({
+      ...snapshot,
+      daily: {
+        ...snapshot.daily,
+        resetEpoch: Math.floor(new Date(2026, 6, 18, 2, 47).getTime() / 1000),
+      },
+      weekly: {
+        ...snapshot.weekly,
+        resetEpoch: Math.floor(new Date(2026, 6, 21, 22, 47).getTime() / 1000),
+      },
+    });
   });
 });
 
@@ -304,6 +367,53 @@ describe('mergeUsageSnapshots', () => {
     };
 
     expect(mergeUsageSnapshots(current, lateOlderResponse)).toBe(current);
+  });
+
+  it('preserves future RPC reset epochs when a later DOM snapshot has no epochs', () => {
+    const current = {
+      accountKey: 'u/0',
+      daily: { percent: 0, resetLabel: '02:47', resetEpoch: 1784302860 },
+      weekly: { percent: 1, resetLabel: '7月21日 22:47', resetEpoch: 1784652060 },
+      sourceStartedAt: 1000,
+      updatedAt: 1100,
+    };
+    const domSnapshot = {
+      accountKey: 'u/0',
+      daily: { percent: 0, resetLabel: '2:47 AM' },
+      weekly: { percent: 1, resetLabel: 'Jul 21 at 10:47 PM' },
+      sourceStartedAt: 2000,
+      updatedAt: 2100,
+    };
+
+    expect(
+      mergeUsageSnapshots(current, domSnapshot, { now: (current.daily.resetEpoch - 60) * 1000 }),
+    ).toEqual({
+      ...domSnapshot,
+      daily: { ...domSnapshot.daily, resetEpoch: current.daily.resetEpoch },
+      weekly: { ...domSnapshot.weekly, resetEpoch: current.weekly.resetEpoch },
+    });
+  });
+
+  it('does not preserve an expired RPC reset epoch in a later DOM snapshot', () => {
+    const resetEpoch = 1784302860;
+    const current = {
+      accountKey: 'u/0',
+      daily: { percent: 0, resetLabel: '02:47', resetEpoch },
+      weekly: null,
+      sourceStartedAt: 1000,
+      updatedAt: 1100,
+    };
+    const domSnapshot = {
+      accountKey: 'u/0',
+      daily: { percent: 0, resetLabel: '3:47 AM' },
+      weekly: null,
+      sourceStartedAt: 2000,
+      updatedAt: 2100,
+    };
+
+    expect(mergeUsageSnapshots(current, domSnapshot, { now: (resetEpoch + 1) * 1000 })).toEqual(
+      domSnapshot,
+    );
   });
 });
 
