@@ -31,6 +31,13 @@ describe('release artifacts', () => {
     expect(workflow).not.toContain('--api-secret=${{ secrets.AMO_JWT_SECRET }}');
   });
 
+  it('does not assign to zsh reserved variables while reading notarization results', () => {
+    const script = readFileSync(resolve(process.cwd(), 'scripts/build-safari-release.sh'), 'utf8');
+
+    expect(script).toContain('local notary_status');
+    expect(script).not.toMatch(/\blocal status\b/);
+  });
+
   it('builds and stores the Edge release variant independently from Chrome', () => {
     const ci = readFileSync(resolve(process.cwd(), '.github/workflows/ci.yml'), 'utf8');
     const viteConfig = readFileSync(resolve(process.cwd(), 'vite.config.chrome.ts'), 'utf8');
