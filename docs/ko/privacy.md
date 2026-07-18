@@ -19,7 +19,7 @@ Voyager는 전적으로 사용자의 브라우저 내에서 작동합니다. 확
 
 ## Google 드라이브 동기화 (선택 사항)
 
-Google 드라이브 동기화 기능을 명시적으로 활성화한 경우, 확장 프로그램은 Chrome Identity API를 사용하여 OAuth2 토큰(`drive.file` 범위만)을 획득하고 폴더와 프롬프트를 **사용자 자신의 Google 드라이브**에 백업합니다. 이 전송은 사용자의 브라우저와 Google 서버 간에 직접 이루어집니다. 당사는 이 데이터에 접근할 수 없으며, 당사가 운영하는 어떤 서버로도 전송되지 않습니다.
+Google 드라이브 동기화를 명시적으로 활성화하면 Chrome, Edge 및 Firefox는 브라우저 Identity API를 사용하고 Safari 직접 설치 앱은 네이티브 Google Sign-In을 사용하며 자격 증명을 macOS 키체인에 저장합니다. 두 경로 모두 제한된 `drive.file` 범위만 요청하고 사용자 기기와 **사용자 자신의 Google 드라이브** 사이에서 직접 데이터를 전송합니다. OAuth 토큰은 Voyager 서버로 전송되지 않습니다.
 
 ## 권한
 

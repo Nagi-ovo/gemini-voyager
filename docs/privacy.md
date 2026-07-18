@@ -20,7 +20,7 @@ Voyager 是一个以本地处理为主的浏览器扩展，用于整理和增强
 
 ## 用户主动发起的数据传输
 
-- **Google Drive 同步（可选）**：选定的备份数据会在用户浏览器与用户自己的 Google Drive 之间直接传输。Voyager 通过 Chrome Identity API 使用权限受限的 `drive.file` 范围。我们无法访问用户的 Drive 文件或 OAuth 令牌。
+- **Google Drive 同步（可选）**：选定的备份数据会在用户设备与用户自己的 Google Drive 之间直接传输。Chrome、Edge 和 Firefox 使用浏览器身份 API；Safari 直装版使用原生 Google Sign-In，并将凭据保存在 macOS 钥匙串中。两种路径都只申请权限受限的 `drive.file` 范围，OAuth 令牌不会发送到 Voyager 服务器。
 - **Safari iCloud 同步（可选）**：选定的备份数据由 Safari 原生扩展直接传输到用户 iCloud 账户的私有 CloudKit 数据库。Voyager 不会取得用户的 Apple ID 或 iCloud 身份验证令牌，开发者也无法访问该私有数据库中的记录。
 - **导出和图片**：用户发起导出时，Voyager 可能从页面原有来源获取图片，并可能临时申请捕获生成式界面内容所需的访问权限。导出文件直接提供给用户，不会上传到 Voyager 服务器。
 - **公开项目资源**：Voyager 可能请求公开的版本、公告、文档或插件目录资源；这些请求不会携带对话或提示词内容。

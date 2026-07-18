@@ -19,7 +19,7 @@ Nous n'avons accès à aucune de vos données personnelles, historiques de chat 
 
 ## Synchronisation Google Drive (Optionnelle)
 
-Si vous activez explicitement la fonction de synchronisation Google Drive, l'extension utilise l'API Chrome Identity pour obtenir un jeton OAuth2 (avec le scope `drive.file` uniquement) afin de sauvegarder vos dossiers et prompts sur **votre propre Google Drive**. Ce transfert s'effectue directement entre votre navigateur et les serveurs de Google. Nous n'avons pas accès à ces données et elles ne sont jamais envoyées à un serveur que nous exploitons.
+Si vous activez la synchronisation Google Drive, Chrome, Edge et Firefox utilisent l'API d'identité du navigateur ; l'application Safari distribuée directement utilise Google Sign-In natif et conserve les identifiants dans le Trousseau macOS. Les deux méthodes demandent uniquement le scope limité `drive.file` et transfèrent les données directement entre votre appareil et **votre propre Google Drive**. Les jetons OAuth ne sont envoyés à aucun serveur Voyager.
 
 ## Permissions
 

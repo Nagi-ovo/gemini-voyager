@@ -19,7 +19,7 @@ Voyager 完全在您的瀏覽器本地運作。擴充功能產生或管理的所
 
 ## Google Drive 同步（選用）
 
-如果您主動啟用 Google Drive 同步功能，擴充功能會使用 Chrome Identity API 取得 OAuth2 權杖（僅限 `drive.file` 範圍），將您的資料夾和提示詞備份到**您自己的 Google Drive**。此傳輸直接發生在您的瀏覽器和 Google 伺服器之間。我們無法存取此資料，且絕不會傳送到我們營運的任何伺服器。
+如果您主動啟用 Google Drive 同步功能，Chrome、Edge 與 Firefox 會使用瀏覽器身分 API；Safari 直裝版則使用原生 Google Sign-In，並將憑證保存在 macOS 鑰匙圈中。兩種方式都只申請 `drive.file` 範圍，直接在您的裝置與**您自己的 Google Drive**之間傳輸資料；OAuth 權杖不會傳送到 Voyager 伺服器。
 
 ## Safari iCloud 同步（選用）
 

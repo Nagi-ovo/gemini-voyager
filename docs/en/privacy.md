@@ -20,7 +20,7 @@ This data is stored locally in `chrome.storage.local` or, for supported settings
 
 ## User-Requested Transfers
 
-- **Google Drive sync (optional)**: selected backup data is transferred directly between the user's browser and the user's own Google Drive. Voyager uses the Chrome Identity API and the limited `drive.file` scope. We cannot access the user's Drive files or OAuth token.
+- **Google Drive sync (optional)**: selected backup data is transferred directly between the user's device and their own Google Drive. Chrome, Edge, and Firefox use the browser identity API; the direct Safari app uses native Google Sign-In and stores credentials in the macOS Keychain. Both paths request only the limited `drive.file` scope, and OAuth tokens are not sent to a Voyager server.
 - **iCloud sync on Safari (optional)**: selected backup data is transferred by the native Safari extension directly to the user's private CloudKit database in their iCloud account. Voyager does not receive the user's Apple ID or an iCloud authentication token, and the developer cannot access records in that private database.
 - **Exports and images**: when the user requests an export, Voyager may fetch images from their existing page-hosted sources and may request temporary access needed to capture generated interface content. The resulting file is created for the user; it is not uploaded to a Voyager server.
 - **Public project resources**: Voyager may request public release, announcement, documentation, or plugin-catalog resources. These requests do not include conversation or prompt content.

@@ -19,7 +19,7 @@ No tenemos acceso a sus datos personales, historial de chat ni ninguna otra info
 
 ## Sincronización con Google Drive (Opcional)
 
-Si activa explícitamente la función de sincronización con Google Drive, la extensión utiliza la API Chrome Identity para obtener un token OAuth2 (solo con el scope `drive.file`) para realizar copias de seguridad de sus carpetas y prompts en **su propio Google Drive**. Esta transferencia ocurre directamente entre su navegador y los servidores de Google. No tenemos acceso a estos datos y nunca se envían a ningún servidor que operemos.
+Si activa la sincronización con Google Drive, Chrome, Edge y Firefox usan la API de identidad del navegador; la aplicación directa de Safari usa Google Sign-In nativo y guarda las credenciales en el Llavero de macOS. Ambas rutas solicitan únicamente el scope limitado `drive.file` y transfieren los datos directamente entre su dispositivo y **su propio Google Drive**. Los tokens OAuth no se envían a ningún servidor de Voyager.
 
 ## Permisos
 
