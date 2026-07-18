@@ -8,6 +8,11 @@ fi
 
 files=()
 while IFS= read -r -d '' file; do
+  # Prettier rejects symbolic links passed as explicit file arguments.
+  # Their contents are formatted through their canonical targets instead.
+  if [ -L "$file" ]; then
+    continue
+  fi
   case "$file" in
     dist_*|dist_*/*|output|output/*|node_modules|node_modules/*) continue ;;
     *.ts|*.tsx|*.js|*.jsx|*.json|*.css|*.md|*.html|*.yml|*.yaml) files+=("$file") ;;

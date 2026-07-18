@@ -23,29 +23,31 @@ This order matches the project's i18n convention. Use `<!-- lang:xx -->` as the 
 
 ## Section headers per locale
 
-| Locale | "What's New" | "Fixes" |
-|---|---|---|
-| en | `### What's New` | `### Fixes` |
-| zh | `### 新功能` | `### 修复` |
-| zh_TW | `### 新功能` | `### 修復` |
-| ja | `### 新機能` | `### 修正` |
-| fr | `### Nouveautés` | `### Corrections` |
-| es | `### Novedades` | `### Correcciones` |
-| pt | `### Novidades` | `### Correções` |
-| ar | `### الجديد` | `### الإصلاحات` |
-| ko | `### 새로운 기능` | `### 수정` |
-| ru | `### Новое` | `### Исправления` |
+| Locale | "What's New"      | "Fixes"            |
+| ------ | ----------------- | ------------------ |
+| en     | `### What's New`  | `### Fixes`        |
+| zh     | `### 新功能`      | `### 修复`         |
+| zh_TW  | `### 新功能`      | `### 修復`         |
+| ja     | `### 新機能`      | `### 修正`         |
+| fr     | `### Nouveautés`  | `### Corrections`  |
+| es     | `### Novedades`   | `### Correcciones` |
+| pt     | `### Novidades`   | `### Correções`    |
+| ar     | `### الجديد`      | `### الإصلاحات`    |
+| ko     | `### 새로운 기능` | `### 수정`         |
+| ru     | `### Новое`       | `### Исправления`  |
 
 Recent notes (e.g., `1.3.0.md` for a bigger release with a `### Highlights` section) may use different headers. Match the pattern of the immediately prior release unless you have reason to deviate.
 
 ## Commit → entry filtering
 
 Include:
+
 - `feat(scope): …` — user-visible new feature
 - `fix(scope): …` — user-visible bug fix
 - `perf(scope): …` — if the speedup is noticeable to users
 
 Exclude:
+
 - `chore`, `style`, `refactor`, `ci`, `build`, `test` — internal
 - `docs` — unless it's a brand-new user-facing guide page the user would care about
 - Sponsor updates, README updates, version bumps
@@ -89,7 +91,7 @@ If you add one, use a thematic break followed by one blockquoted, italic line in
 ```markdown
 ---
 
-> *"{the quote}" — {Character}, 《{Work Title}》*
+> _"{the quote}" — {Character}, 《{Work Title}》_
 ```
 
 When a closing note is used:
@@ -108,7 +110,7 @@ When a closing note is used:
 ### What's New
 
 - **{Title}**: {Description.}
-- **{Title}** *(off by default)*: {Description.} [→ Docs](/guide/{slug})
+- **{Title}** _(off by default)_: {Description.} [→ Docs](/guide/{slug})
 
 ### Fixes
 
@@ -119,7 +121,7 @@ When a closing note is used:
 ### 新功能
 
 - **{中文标题}**：{中文描述。}
-- **{中文标题}** *（默认关闭）*：{中文描述。}[→ 文档](/guide/{slug})
+- **{中文标题}** _（默认关闭）_：{中文描述。}[→ 文档](/guide/{slug})
 
 ### 修复
 
@@ -174,11 +176,11 @@ When a closing note is used:
 - ...
 ```
 
-Fill every locale — all 10 are non-negotiable. Write **Chinese first**, render English from it, then the other 8 from English (see *Authoring order* below).
+Fill every locale — all 10 are non-negotiable. Write **Chinese first**, render English from it, then the other 8 from English (see _Authoring order_ below).
 
 ## Authoring order — Chinese first
 
-**Write and polish Chinese (`zh`) first.** It's the project's primary voice and the maintainer's native language — the notes read most naturally when zh is the *source*, not a back-translation. Then:
+**Write and polish Chinese (`zh`) first.** It's the project's primary voice and the maintainer's native language — the notes read most naturally when zh is the _source_, not a back-translation. Then:
 
 - Render **English (`en`)** from the polished zh. `en` must always be complete: the in-product viewer falls back to `en` for any locale it can't find, so it stays the safety net even though it's no longer the source.
 - Translate the remaining **8 locales from the English** (`en` is a cleaner pivot than zh for non-CJK languages). Keep the same structure — bullets, bold titles, and optional-feature markers. Use punctuation native to each language (`：` in Chinese/Japanese, `:` in others).
@@ -186,7 +188,7 @@ Fill every locale — all 10 are non-negotiable. Write **Chinese first**, render
 - Arabic: RTL is handled by the viewer — write natural RTL text, don't reorder for LTR display; use Arabic-style punctuation.
 - Read the prior release in the same locale before writing — there's an established voice per language.
 
-**Do not reorder the file.** The `<!-- lang:xx -->` section order stays `en → zh → zh_TW → …` (the viewer parses in that order and `en` is the fallback). Only the *writing* order is zh-first — the sections on disk keep en first.
+**Do not reorder the file.** The `<!-- lang:xx -->` section order stays `en → zh → zh_TW → …` (the viewer parses in that order and `en` is the fallback). Only the _writing_ order is zh-first — the sections on disk keep en first.
 
 ## Reality check before saving
 

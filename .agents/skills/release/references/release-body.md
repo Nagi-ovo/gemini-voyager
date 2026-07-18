@@ -17,10 +17,10 @@ This is the body that lands on `https://github.com/Nagi-ovo/voyager/releases/tag
 
 ## Why this exists as a separate artifact from the in-product changelog
 
-| Audience | File | Format |
-|---|---|---|
-| End users (in-product) | `src/pages/content/changelog/notes/{VERSION}.md` | 10 locales, bullet lists |
-| Developers (GitHub release page) | posted via `gh release edit --notes-file` | en + zh, tables with PR/commit attribution |
+| Audience                         | File                                             | Format                                     |
+| -------------------------------- | ------------------------------------------------ | ------------------------------------------ |
+| End users (in-product)           | `src/pages/content/changelog/notes/{VERSION}.md` | 10 locales, bullet lists                   |
+| Developers (GitHub release page) | posted via `gh release edit --notes-file`        | en + zh, tables with PR/commit attribution |
 
 The workflow (`.github/workflows/release.yml`) generates a default body on tag push using `gh api releases/generate-notes`. The default has contributor attribution but is **not** the curated table. After the workflow finishes, overwrite the body with this template.
 
@@ -49,16 +49,18 @@ Two flavors — pick based on whether external contributors landed PRs in this r
 ```markdown
 ## ✨ What's New
 
-| Feature | Description |
-|---------|-------------|
-| **{Feature Name}** | {One-line description.} *(closes #NNN if applicable)* |
+| Feature            | Description                                           |
+| ------------------ | ----------------------------------------------------- |
+| **{Feature Name}** | {One-line description.} _(closes #NNN if applicable)_ |
+
 {repeat rows…}
 
 ## 🐛 Bug Fixes
 
-| Fix | Description |
-|-----|-------------|
+| Fix            | Description             |
+| -------------- | ----------------------- |
 | **{Fix Name}** | {One-line description.} |
+
 {repeat rows…}
 
 _All changes by @Nagi-ovo unless noted._
@@ -69,25 +71,27 @@ _All changes by @Nagi-ovo unless noted._
 
 ## ✨ 新功能
 
-| 功能 | 说明 |
-|------|------|
+| 功能         | 说明                              |
+| ------------ | --------------------------------- |
 | **{功能名}** | {一句话说明。}（关联 #NNN，可选） |
+
 {repeat rows…}
 
 ## 🐛 修复
 
-| 修复 | 说明 |
-|------|------|
+| 修复         | 说明           |
+| ------------ | -------------- |
 | **{修复名}** | {一句话说明。} |
+
 {repeat rows…}
 
 _除特别注明外，均由 @Nagi-ovo 提交。_
 
 ---
 
-## New Contributors  ← omit if none
+## New Contributors ← omit if none
 
-* @{user} made their first contribution in PR #{NNN}
+- @{user} made their first contribution in PR #{NNN}
 
 **Full Changelog**: https://github.com/Nagi-ovo/voyager/compare/v{PREV_VERSION}...v{VERSION}
 ```
@@ -99,10 +103,11 @@ When external PRs landed, the column carries information worth a column. Owner r
 ```markdown
 ## ✨ What's New
 
-| Feature | Description | By |
-|---------|-------------|----|
-| **{Feature Name}** | {One-line description.} | PR #{NNN} by @{author} |
-| **{Owner Feature}** | {One-line description.} | — |
+| Feature             | Description             | By                     |
+| ------------------- | ----------------------- | ---------------------- |
+| **{Feature Name}**  | {One-line description.} | PR #{NNN} by @{author} |
+| **{Owner Feature}** | {One-line description.} | —                      |
+
 {repeat rows…}
 
 (rest of the structure is identical to Flavor 1, with the matching `By` / `提交者` column in the ZH table; drop the trailer line since attribution is per-row)
@@ -133,10 +138,12 @@ gh api repos/Nagi-ovo/voyager/releases/generate-notes \
 ### 2. Filter commits for the tables
 
 Include:
+
 - `feat(…): …` → **What's New** row
 - `fix(…): …` → **Bug Fixes** row
 
 Exclude:
+
 - `chore`, `style`, `refactor`, `ci`, `build` — internal noise
 - `docs` — unless the doc change is user-visible (e.g., a new settings guide linked from the product)
 - Sponsor/README updates
@@ -149,12 +156,14 @@ When in doubt, ask: "Would a user care?"
 Each row appears **twice** in the final body — once in the English table, once in the Chinese table. Same PR/commit attribution in both. Keep EN and ZH rows in the same order so readers can cross-reference by position.
 
 **Feature/Fix column** — bold title, one language per table:
+
 ```
 EN:  | **Pinned timeline preview** |
 ZH:  | **固定时间线预览** |
 ```
 
 **Description column** — one sentence per language. Keep under ~15 words.
+
 ```
 EN:  | Keep the timeline preview panel pinned from the popup. |
 ZH:  | 可在弹窗中将时间线预览面板固定显示。 |
@@ -225,18 +234,18 @@ Two of the five commits are external PRs (#547 chang-xinhai, #567 LinJHS), so th
 ```markdown
 ## ✨ What's New
 
-| Feature | Description | By |
-|---------|-------------|----|
-| **Pinned timeline preview** | Keep the timeline preview panel pinned from the popup. (closes #570) | — |
-| **Configurable timeline jump shortcuts** | Customize the shortcut keys used to jump through the timeline. (closes #568) | — |
+| Feature                                  | Description                                                                  | By  |
+| ---------------------------------------- | ---------------------------------------------------------------------------- | --- |
+| **Pinned timeline preview**              | Keep the timeline preview panel pinned from the popup. (closes #570)         | —   |
+| **Configurable timeline jump shortcuts** | Customize the shortcut keys used to jump through the timeline. (closes #568) | —   |
 
 ## 🐛 Bug Fixes
 
-| Fix | Description | By |
-|-----|-------------|----|
-| **Experimental node hierarchy** | Timeline node hierarchy state now persists separately for each account. | — |
-| **Nested folder moves** | Moving folders with child folders now works correctly. | PR #547 by @chang-xinhai |
-| **Firefox permission flow** | Fixed permission request handling for Firefox. | PR #567 by @LinJHS |
+| Fix                             | Description                                                             | By                       |
+| ------------------------------- | ----------------------------------------------------------------------- | ------------------------ |
+| **Experimental node hierarchy** | Timeline node hierarchy state now persists separately for each account. | —                        |
+| **Nested folder moves**         | Moving folders with child folders now works correctly.                  | PR #547 by @chang-xinhai |
+| **Firefox permission flow**     | Fixed permission request handling for Firefox.                          | PR #567 by @LinJHS       |
 
 ---
 
@@ -244,25 +253,25 @@ Two of the five commits are external PRs (#547 chang-xinhai, #567 LinJHS), so th
 
 ## ✨ 新功能
 
-| 功能 | 说明 | 提交者 |
-|------|------|--------|
-| **固定时间线预览** | 可在弹窗中将时间线预览面板固定显示。（关联 #570） | — |
-| **时间线跳转快捷键可配置** | 可自定义在时间线中跳转使用的快捷键。（关联 #568） | — |
+| 功能                       | 说明                                              | 提交者 |
+| -------------------------- | ------------------------------------------------- | ------ |
+| **固定时间线预览**         | 可在弹窗中将时间线预览面板固定显示。（关联 #570） | —      |
+| **时间线跳转快捷键可配置** | 可自定义在时间线中跳转使用的快捷键。（关联 #568） | —      |
 
 ## 🐛 修复
 
-| 修复 | 说明 | 提交者 |
-|------|------|--------|
-| **实验性节点层级** | 时间线节点层级状态现在会按不同账号分别持久化保存。 | — |
-| **嵌套文件夹移动** | 现在可以正确移动带有子文件夹的文件夹。 | PR #547 by @chang-xinhai |
-| **Firefox 权限流程** | 修复了 Firefox 中的权限请求处理问题。 | PR #567 by @LinJHS |
+| 修复                 | 说明                                               | 提交者                   |
+| -------------------- | -------------------------------------------------- | ------------------------ |
+| **实验性节点层级**   | 时间线节点层级状态现在会按不同账号分别持久化保存。 | —                        |
+| **嵌套文件夹移动**   | 现在可以正确移动带有子文件夹的文件夹。             | PR #547 by @chang-xinhai |
+| **Firefox 权限流程** | 修复了 Firefox 中的权限请求处理问题。              | PR #567 by @LinJHS       |
 
 ---
 
 ## New Contributors
 
-* @chang-xinhai made their first contribution in PR #547
-* @LinJHS made their first contribution in PR #567
+- @chang-xinhai made their first contribution in PR #547
+- @LinJHS made their first contribution in PR #567
 
 **Full Changelog**: https://github.com/Nagi-ovo/voyager/compare/v1.3.8...v1.3.9
 ```
@@ -274,17 +283,17 @@ All commits attributable to @Nagi-ovo, so drop the `By` column entirely; `closes
 ```markdown
 ## ✨ What's New
 
-| Feature | Description |
-|---------|-------------|
-| **Floating folder mode** *(off by default)* | Pop the folder panel out as a draggable floating window instead of injecting it into the sidebar. Toggle from popup → Folder options. |
-| **AI Studio new nav support** | Folder panel now mounts on AI Studio's refreshed left nav (`/prompts` and `/library`), restoring the feature after Google's UI change. (closes #622) |
-| … (rest of rows) … |
+| Feature                                     | Description                                                                                                                                          |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Floating folder mode** _(off by default)_ | Pop the folder panel out as a draggable floating window instead of injecting it into the sidebar. Toggle from popup → Folder options.                |
+| **AI Studio new nav support**               | Folder panel now mounts on AI Studio's refreshed left nav (`/prompts` and `/library`), restoring the feature after Google's UI change. (closes #622) |
+| … (rest of rows) …                          |
 
 ## 🐛 Bug Fixes
 
-| Fix | Description |
-|-----|-------------|
-| **Vim mode line editing** | Stabilized cursor behavior at end-of-line during operations. |
+| Fix                                            | Description                                                                      |
+| ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| **Vim mode line editing**                      | Stabilized cursor behavior at end-of-line during operations.                     |
 | **Sidebar auto-hide / full-hide independence** | The two settings are now independent — toggling one no longer affects the other. |
 
 _All changes by @Nagi-ovo unless noted._
@@ -295,16 +304,16 @@ _All changes by @Nagi-ovo unless noted._
 
 ## ✨ 新功能
 
-| 功能 | 说明 |
-|------|------|
-| **悬浮文件夹模式** *（默认关闭）* | 把文件夹面板拆成可拖动的悬浮窗，不再注入到侧边栏。弹窗 → 文件夹选项中开启。 |
-| … (rest of rows) … |
+| 功能                              | 说明                                                                        |
+| --------------------------------- | --------------------------------------------------------------------------- |
+| **悬浮文件夹模式** _（默认关闭）_ | 把文件夹面板拆成可拖动的悬浮窗，不再注入到侧边栏。弹窗 → 文件夹选项中开启。 |
+| … (rest of rows) …                |
 
 ## 🐛 修复
 
-| 修复 | 说明 |
-|------|------|
-| **Vim 模式行尾编辑** | 行尾操作时光标行为更稳定。 |
+| 修复                             | 说明                             |
+| -------------------------------- | -------------------------------- |
+| **Vim 模式行尾编辑**             | 行尾操作时光标行为更稳定。       |
 | **侧边栏自动隐藏与完全隐藏独立** | 两项设置互相独立，不再相互干扰。 |
 
 _除特别注明外，均由 @Nagi-ovo 提交。_

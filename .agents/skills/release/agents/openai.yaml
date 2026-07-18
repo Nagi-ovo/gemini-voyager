@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Release Voyager'
+  short_description: 'Verify, publish, and recover Voyager releases'
+  default_prompt: 'Use $release to prepare and publish the next Voyager release safely.'
