@@ -953,9 +953,40 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const [inputCollapseEnabled, setInputCollapseEnabled] = useState<boolean>(false);
   const [inputCollapseWhenNotEmpty, setInputCollapseWhenNotEmpty] = useState<boolean>(false);
   const [inputVimModeEnabled, setInputVimModeEnabled] = useState<boolean>(false);
+  // Changelog notification mode: when true, new-version notes announce via a NEW
+  // badge on the floating ball instead of auto-popping the modal.
+  const [changelogBadgeMode, setChangelogBadgeMode] = useState<boolean>(false);
   const [mermaidEnabled, setMermaidEnabled] = useState<boolean>(true);
   const [showMessageTimestamps, setShowMessageTimestamps] = useState<boolean>(false);
   const [quoteReplyEnabled, setQuoteReplyEnabled] = useState<boolean>(true);
+
+  // Load the changelog notification-mode preference (StorageKeys.CHANGELOG_NOTIFY_MODE).
+  useEffect(() => {
+    try {
+      chrome.storage?.local?.get(StorageKeys.CHANGELOG_NOTIFY_MODE, (res) => {
+        setChangelogBadgeMode(res?.[StorageKeys.CHANGELOG_NOTIFY_MODE] === 'badge');
+      });
+    } catch {
+      // Ignore storage errors (e.g. invalidated extension context).
+    }
+  }, []);
+
+  // Mirror the modal's old behavior: switching to badge mode clears the dismissed
+  // version so the NEW badge appears for the current release.
+  const handleChangelogBadgeModeChange = (checked: boolean) => {
+    setChangelogBadgeMode(checked);
+    try {
+      const updates: Record<string, string> = {
+        [StorageKeys.CHANGELOG_NOTIFY_MODE]: checked ? 'badge' : 'popup',
+      };
+      if (checked) {
+        updates[StorageKeys.CHANGELOG_DISMISSED_VERSION] = '';
+      }
+      chrome.storage?.local?.set(updates);
+    } catch {
+      // Ignore storage errors.
+    }
+  };
   const [highlightEnabled, setHighlightEnabled] = useState<boolean>(true);
   const [highlightTimelineMarkersEnabled, setHighlightTimelineMarkersEnabled] =
     useState<boolean>(true);
@@ -4490,6 +4521,20 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           </svg>
           <span>{t('starProject')}</span>
         </a>
+
+        <div className="group border-border/40 flex items-center justify-between gap-3 border-t pt-3">
+          <Label
+            htmlFor="changelog-notify-badge"
+            className="text-muted-foreground group-hover:text-foreground/80 cursor-pointer text-xs leading-snug transition-colors"
+          >
+            {t('changelog_badge_mode')}
+          </Label>
+          <Switch
+            id="changelog-notify-badge"
+            checked={changelogBadgeMode}
+            onChange={(e) => handleChangelogBadgeModeChange(e.target.checked)}
+          />
+        </div>
       </div>
     </div>
   );

@@ -9114,7 +9114,7 @@ html.dark a.gv-changelog-social-item:hover,
 }
 
 .gv-changelog-icon-docs:hover {
-  color: #1a73e8;
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
 }
 
 .gv-changelog-icon-x:hover {
@@ -9148,7 +9148,7 @@ html.dark .gv-changelog-icon-github:hover,
 html.dark .gv-changelog-icon-docs:hover,
 [data-theme='dark'] .gv-changelog-icon-docs:hover,
 [data-color-scheme='dark'] .gv-changelog-icon-docs:hover {
-  color: #8ab4f8;
+  color: var(--gv-pm-brand, var(--gv-pm-brand-default));
 }
 
 html.dark .gv-changelog-icon-x:hover,
@@ -9187,33 +9187,34 @@ html.dark .gv-changelog-docs-annotation,
 }
 
 .gv-changelog-got-it {
-  background: #1a73e8;
-  color: white;
+  background: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  color: var(--gv-pm-brand-fg-default);
   border: none;
-  border-radius: 20px;
-  padding: 8px 24px;
+  border-radius: 999px;
+  padding: 9px 26px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition:
+    background-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.1s ease;
   white-space: nowrap;
+  box-shadow: 0 1px 2px
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent);
 }
 
 .gv-changelog-got-it:hover {
-  background: #1557b0;
+  background: var(--gv-pm-brand-hover);
+  box-shadow: 0 3px 12px
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 40%, transparent);
 }
 
-html.dark .gv-changelog-got-it,
-[data-theme='dark'] .gv-changelog-got-it,
-[data-color-scheme='dark'] .gv-changelog-got-it {
-  background: #8ab4f8;
-  color: #202124;
-}
-
-html.dark .gv-changelog-got-it:hover,
-[data-theme='dark'] .gv-changelog-got-it:hover,
-[data-color-scheme='dark'] .gv-changelog-got-it:hover {
-  background: #aecbfa;
+.gv-changelog-got-it:active {
+  transform: translateY(0.5px);
+  box-shadow: 0 1px 2px
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent);
 }
 
 /* Read-gate disabled state — used during the force-popup countdown.
@@ -9221,9 +9222,11 @@ html.dark .gv-changelog-got-it:hover,
  * feel so the " (5)" → " (1)" countdown digits don't reflow the button. */
 .gv-changelog-got-it--gated,
 .gv-changelog-got-it--gated:hover {
-  background: #c5d3e8;
-  color: rgba(255, 255, 255, 0.85);
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 32%, #cbcfc6);
+  color: rgba(255, 255, 255, 0.9);
   cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
   font-variant-numeric: tabular-nums;
 }
 
@@ -9233,8 +9236,8 @@ html.dark .gv-changelog-got-it--gated:hover,
 [data-theme='dark'] .gv-changelog-got-it--gated:hover,
 [data-color-scheme='dark'] .gv-changelog-got-it--gated,
 [data-color-scheme='dark'] .gv-changelog-got-it--gated:hover {
-  background: #4a5566;
-  color: rgba(255, 255, 255, 0.55);
+  background: color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 26%, #363d2e);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .gv-changelog-close--gated,
@@ -9258,11 +9261,12 @@ html.dark .gv-changelog-close--gated:hover,
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 11px 15px;
   margin-bottom: 12px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
-  border: 1px solid rgba(99, 102, 241, 0.12);
+  border-radius: 12px;
+  background: var(--gv-pm-brand-soft);
+  border: 1px solid
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 22%, transparent);
 }
 
 .gv-changelog-chrome-rating-text {
@@ -9275,48 +9279,40 @@ html.dark .gv-changelog-close--gated:hover,
 .gv-changelog-chrome-rating-link {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  padding: 6px 14px;
-  background: #1a73e8;
-  color: white !important;
-  border-radius: 20px;
+  gap: 5px;
+  padding: 6px 15px;
+  background: var(--gv-pm-brand, var(--gv-pm-brand-default));
+  color: var(--gv-pm-brand-fg-default) !important;
+  border-radius: 999px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   text-decoration: none !important;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: background-color 0.2s;
+  box-shadow: 0 1px 2px
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 45%, transparent);
+  transition:
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.gv-changelog-chrome-rating-star {
+  display: inline-flex;
+  align-items: center;
+  margin-top: -1px;
 }
 
 .gv-changelog-chrome-rating-link:hover {
-  background: #1557b0;
+  background: var(--gv-pm-brand-hover);
+  box-shadow: 0 3px 12px
+    color-mix(in srgb, var(--gv-pm-brand, var(--gv-pm-brand-default)) 40%, transparent);
   text-decoration: none !important;
-}
-
-html.dark .gv-changelog-chrome-rating,
-[data-theme='dark'] .gv-changelog-chrome-rating,
-[data-color-scheme='dark'] .gv-changelog-chrome-rating {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
-  border-color: rgba(139, 92, 246, 0.2);
 }
 
 html.dark .gv-changelog-chrome-rating-text,
 [data-theme='dark'] .gv-changelog-chrome-rating-text,
 [data-color-scheme='dark'] .gv-changelog-chrome-rating-text {
-  color: #bdc1c6;
-}
-
-html.dark .gv-changelog-chrome-rating-link,
-[data-theme='dark'] .gv-changelog-chrome-rating-link,
-[data-color-scheme='dark'] .gv-changelog-chrome-rating-link {
-  background: #8ab4f8;
-  color: #202124 !important;
-}
-
-html.dark .gv-changelog-chrome-rating-link:hover,
-[data-theme='dark'] .gv-changelog-chrome-rating-link:hover,
-[data-color-scheme='dark'] .gv-changelog-chrome-rating-link:hover {
-  background: #aecbfa;
+  color: #c3cabd;
 }
 
 .gv-changelog-lightbox {

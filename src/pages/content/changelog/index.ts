@@ -247,7 +247,6 @@ async function readNotifyMode(): Promise<'popup' | 'badge'> {
 function createChangelogModal(
   htmlContent: string,
   lang: AppLanguage,
-  initialNotifyMode: 'popup' | 'badge' = 'popup',
   readGateSeconds: number = 0,
 ): {
   overlay: HTMLDivElement;
@@ -411,48 +410,19 @@ function createChangelogModal(
   actionRow.appendChild(iconGroup);
   actionRow.appendChild(gotItBtn);
 
-  // Notification mode toggle
-  const notifyToggle = document.createElement('div');
-  notifyToggle.className = 'gv-changelog-notify-toggle';
-
-  const notifyLabel = document.createElement('label');
-  notifyLabel.className = 'gv-changelog-notify-label';
-
-  const notifyCheckbox = document.createElement('input');
-  notifyCheckbox.type = 'checkbox';
-  notifyCheckbox.className = 'gv-changelog-notify-checkbox';
-  notifyCheckbox.checked = initialNotifyMode === 'badge';
-
-  const notifyText = document.createElement('span');
-  notifyText.textContent = t('changelog_badge_mode', lang);
-
-  notifyLabel.appendChild(notifyCheckbox);
-  notifyLabel.appendChild(notifyText);
-  notifyToggle.appendChild(notifyLabel);
-
-  notifyCheckbox.addEventListener('change', () => {
-    const mode = notifyCheckbox.checked ? 'badge' : 'popup';
-    try {
-      const updates: Record<string, string> = {
-        [StorageKeys.CHANGELOG_NOTIFY_MODE]: mode,
-      };
-      // When switching to badge mode, clear dismissed version so badge appears
-      if (mode === 'badge') {
-        updates[StorageKeys.CHANGELOG_DISMISSED_VERSION] = '';
-      }
-      chrome.storage.local.set(updates);
-    } catch {
-      // Ignore errors
-    }
-  });
+  // The changelog notification-mode toggle now lives at the bottom of the
+  // extension popup (StorageKeys.CHANGELOG_NOTIFY_MODE), so it no longer renders
+  // inside this modal.
 
   followArea.appendChild(followText);
   followArea.appendChild(socialRow);
 
   footer.appendChild(followArea);
-  footer.appendChild(notifyToggle);
 
-  // Web store rating prompt (Chrome Web Store / Edge Add-ons)
+  // Web store rating prompt (Chrome Web Store / Edge Add-ons).
+  // Temporarily hidden — keep the code so we can re-enable it later by flipping
+  // this flag back to true.
+  const SHOW_STORE_RATING = false;
   const webStoreRatingChannel = getWebStoreRatingChannel();
   const storeRating: {
     url: string;
@@ -468,7 +438,7 @@ function createChangelogModal(
             ctaKey: 'changelog_rate_chrome_cta',
           }
         : null;
-  if (storeRating) {
+  if (storeRating && SHOW_STORE_RATING) {
     const ratingBanner = document.createElement('div');
     ratingBanner.className = 'gv-changelog-chrome-rating';
 
@@ -481,7 +451,14 @@ function createChangelogModal(
     ratingLink.href = storeRating.url;
     ratingLink.target = '_blank';
     ratingLink.rel = 'noopener noreferrer';
-    ratingLink.textContent = `⭐ ${t(storeRating.ctaKey, lang)}`;
+    const ratingStar = document.createElement('span');
+    ratingStar.className = 'gv-changelog-chrome-rating-star';
+    ratingStar.innerHTML =
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>';
+    const ratingCtaText = document.createElement('span');
+    ratingCtaText.textContent = t(storeRating.ctaKey, lang);
+    ratingLink.appendChild(ratingStar);
+    ratingLink.appendChild(ratingCtaText);
 
     ratingBanner.appendChild(ratingText);
     ratingBanner.appendChild(ratingLink);
@@ -662,10 +639,9 @@ async function showChangelogModal(
   }
 
   // 6. Inject modal
-  const notifyMode = await readNotifyMode();
   const readGateSeconds =
     applyReadGate && FORCE_POPUP_VERSIONS.has(version) ? FORCE_POPUP_READ_GATE_SECONDS : 0;
-  const { overlay } = createChangelogModal(sanitizedHtml, lang, notifyMode, readGateSeconds);
+  const { overlay } = createChangelogModal(sanitizedHtml, lang, readGateSeconds);
   document.body.appendChild(overlay);
   return overlay;
 }
