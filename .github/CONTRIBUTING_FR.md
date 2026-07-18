@@ -109,7 +109,7 @@ bun install
 1. Exécutez `bun run dev` pour démarrer le build de développement
 2. Ouvrez Chrome et allez sur `chrome://extensions/`
 3. Activez le "Mode développeur"
-4. Cliquez sur "Charger l'extension non empaquetée" et sélectionnez le dossier `dist_chrome`
+4. Cliquez sur "Charger l'extension non empaquetée" et sélectionnez le dossier `dist_chrome_dev`
 
 ---
 

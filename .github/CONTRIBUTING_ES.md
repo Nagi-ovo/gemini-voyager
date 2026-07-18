@@ -109,7 +109,7 @@ bun install
 1. Ejecuta `bun run dev` para iniciar la compilación de desarrollo
 2. Abre Chrome y ve a `chrome://extensions/`
 3. Habilita el "Modo de desarrollador"
-4. Haz clic en "Cargar descomprimida" y selecciona la carpeta `dist_chrome`
+4. Haz clic en "Cargar descomprimida" y selecciona la carpeta `dist_chrome_dev`
 
 ---
 

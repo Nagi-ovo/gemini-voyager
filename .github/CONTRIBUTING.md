@@ -118,7 +118,7 @@ bun install
 1. 运行 `bun run dev` 启动开发构建
 2. 打开 Chrome，访问 `chrome://extensions/`
 3. 启用"开发者模式"
-4. 点击"加载已解压的扩展程序"，选择 `dist_chrome` 文件夹
+4. 点击"加载已解压的扩展程序"，选择 `dist_chrome_dev` 文件夹
 
 ---
 
@@ -396,7 +396,7 @@ bun install
 1. Run `bun run dev` to start the development build
 2. Open Chrome and go to `chrome://extensions/`
 3. Enable "Developer mode"
-4. Click "Load unpacked" and select the `dist_chrome` folder
+4. Click "Load unpacked" and select the `dist_chrome_dev` folder
 
 ---
 

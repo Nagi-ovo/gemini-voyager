@@ -11,8 +11,9 @@ const BUILD_TIMEOUT_MS = Number(process.env.CHROME_OPEN_BUILD_TIMEOUT_MS) || 120
 const BUILD_POLL_INTERVAL_MS = Number(process.env.CHROME_OPEN_POLL_INTERVAL_MS) || 500; // ms
 
 const repoRoot = path.resolve(__dirname, '..');
-const distDir = path.join(repoRoot, 'dist_chrome');
+const distDir = path.join(repoRoot, 'dist_chrome_dev');
 const manifestPath = path.join(distDir, 'manifest.json');
+const buildReadyPath = path.join(distDir, '.voyager-build-ready');
 const profileDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gemini-voyager-chrome-'));
 
 let devProcess,
@@ -20,6 +21,7 @@ let devProcess,
   debugPort,
   reloadTimer,
   lastBuildTime = 0,
+  reloadInFlight = false,
   shuttingDown = false;
 let devtoolsCommandId = 0;
 
@@ -32,8 +34,8 @@ async function main() {
   debugPort = await getAvailablePort();
 
   devProcess = startDevBuild();
-  await waitForManifest(Date.now());
-  lastBuildTime = manifestMtime();
+  await waitForBuild(Date.now());
+  lastBuildTime = buildReadyMtime();
 
   chromeRunner = await launchChrome();
   attachProcessHandlers();
@@ -67,6 +69,10 @@ async function launchChrome() {
     chromiumProfile: profileDir,
     args,
     noInput: true,
+    // launch-chrome.cjs owns the complete build -> extension -> page reload
+    // sequence. web-ext-run's per-file watcher can otherwise reload Chrome in
+    // the middle of Vite writing hashed chunks.
+    noReload: true,
   };
   if (process.env.CHROME_BIN) config.chromiumBinary = process.env.CHROME_BIN;
   log('Launching Chrome via web-ext-run.');
@@ -93,36 +99,43 @@ function attachProcessHandlers() {
   process.on('exit', cleanup);
 }
 
-async function waitForManifest(startTime) {
+async function waitForBuild(startTime) {
   const deadline = Date.now() + BUILD_TIMEOUT_MS;
   while (Date.now() < deadline) {
     try {
-      const stat = fs.statSync(manifestPath);
-      if (stat.mtimeMs >= startTime && stat.size > 0) return;
+      const ready = fs.statSync(buildReadyPath);
+      const manifest = fs.statSync(manifestPath);
+      if (ready.mtimeMs >= startTime && ready.size > 0 && manifest.size > 0) return;
     } catch {}
     await new Promise((r) => setTimeout(r, BUILD_POLL_INTERVAL_MS));
   }
-  throw new Error('Timed out waiting for dist_chrome/manifest.json');
+  throw new Error('Timed out waiting for a complete dist_chrome_dev build');
 }
 
 function startReloadWatcher() {
   if (reloadTimer) return;
   reloadTimer = setInterval(async () => {
     if (shuttingDown) return;
-    const mtime = manifestMtime();
+    const mtime = buildReadyMtime();
     if (mtime <= lastBuildTime) return;
-    lastBuildTime = mtime;
+    if (reloadInFlight) return;
+    reloadInFlight = true;
     try {
+      await chromeRunner.reloadAllExtensions();
       await reloadTargetTabs();
+      lastBuildTime = mtime;
+      log('Extension and matching tabs reloaded from a complete build.');
     } catch (error) {
-      log(`Tab reload failed: ${error.message}`);
+      log(`Reload failed: ${error.message}`);
+    } finally {
+      reloadInFlight = false;
     }
   }, BUILD_POLL_INTERVAL_MS);
 }
 
-function manifestMtime() {
+function buildReadyMtime() {
   try {
-    return fs.statSync(manifestPath).mtimeMs;
+    return fs.statSync(buildReadyPath).mtimeMs;
   } catch {
     return 0;
   }
@@ -132,7 +145,17 @@ async function reloadTargetTabs() {
   const targets = await fetchJson(`http://127.0.0.1:${debugPort}/json`);
   const matches = Array.isArray(targets)
     ? targets.filter(
-        (t) => t?.type === 'page' && typeof t?.url === 'string' && t.url.startsWith(TARGET_URL),
+        (t) =>
+          t?.type === 'page' &&
+          typeof t?.url === 'string' &&
+          [
+            TARGET_URL,
+            'https://gemini.google.com/',
+            'https://business.gemini.google/',
+            'https://aistudio.google.com/',
+            'https://chatgpt.com/',
+            'https://claude.ai/',
+          ].some((prefix) => t.url.startsWith(prefix)),
       )
     : [];
   if (matches.length === 0) return;
@@ -156,6 +179,7 @@ function sendDevtoolsCommand(url, method, params) {
     const ws = new WebSocket(url);
     const id = (devtoolsCommandId += 1);
     let settled = false;
+    let commandSent = false;
     const settle = (error) => {
       if (settled) return;
       settled = true;
@@ -168,7 +192,10 @@ function sendDevtoolsCommand(url, method, params) {
       ws.close();
     }, 5000);
 
-    ws.onopen = () => ws.send(JSON.stringify({ id, method, params }));
+    ws.onopen = () => {
+      commandSent = true;
+      ws.send(JSON.stringify({ id, method, params }));
+    };
     ws.onmessage = (event) => {
       const payload =
         typeof event.data === 'string' ? event.data : (event.data?.toString?.() ?? '');
@@ -183,7 +210,13 @@ function sendDevtoolsCommand(url, method, params) {
       }
     };
     ws.onerror = (error) => settle(error);
-    ws.onclose = () => settle(new Error('Devtools connection closed before response.'));
+    ws.onclose = () => {
+      // Page.reload commonly destroys the inspected target before CDP can send
+      // the response frame. Once the command was sent, that close is the
+      // expected success signal rather than a reload failure.
+      if (method === 'Page.reload' && commandSent) settle();
+      else settle(new Error('Devtools connection closed before response.'));
+    };
   });
 }
 

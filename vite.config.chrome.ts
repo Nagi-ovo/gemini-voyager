@@ -1,13 +1,34 @@
 import { ManifestV3Export, crx } from '@crxjs/vite-plugin';
+import { writeFileSync } from 'fs';
 import { resolve } from 'path';
-import { defineConfig, mergeConfig } from 'vite';
+import { Plugin, defineConfig, mergeConfig } from 'vite';
 
 import baseConfig, { baseBuildOptions, baseManifest } from './vite.config.base';
 
-const outDir = resolve(
-  __dirname,
-  process.env.VOYAGER_BUILD_TARGET === 'edge' ? 'dist_edge' : 'dist_chrome',
-);
+const isDev = process.env.__DEV__ === 'true';
+const outDirName =
+  process.env.VOYAGER_BUILD_TARGET === 'edge'
+    ? 'dist_edge'
+    : isDev
+      ? 'dist_chrome_dev'
+      : 'dist_chrome';
+const outDir = resolve(__dirname, outDirName);
+
+function devBuildReadyPlugin(): Plugin | null {
+  if (!isDev || outDirName !== 'dist_chrome_dev') return null;
+
+  return {
+    name: 'voyager-dev-build-ready',
+    apply: 'build',
+    enforce: 'post',
+    writeBundle() {
+      // This is the commit marker consumed by launch-chrome.cjs. It is written
+      // only after Rollup has finished writing every asset, so Chrome never
+      // reloads against a half-written hashed bundle.
+      writeFileSync(resolve(outDir, '.voyager-build-ready'), `${Date.now()}\n`);
+    },
+  };
+}
 const chromeSharedContentScripts = (
   baseManifest as unknown as { content_scripts?: Array<Record<string, unknown>> }
 ).content_scripts;
@@ -59,6 +80,7 @@ export default mergeConfig(
           injectCss: true,
         },
       }),
+      devBuildReadyPlugin(),
     ],
     build: {
       ...baseBuildOptions,

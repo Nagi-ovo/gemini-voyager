@@ -1,6 +1,7 @@
 node_modules/
 .build/
 /dist_chrome/
+/dist_chrome_dev/
 /dist_edge/
 /dist_firefox/
 /dist_safari/
