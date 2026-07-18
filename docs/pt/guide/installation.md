@@ -57,7 +57,7 @@ O Safari agora suporta distribuição direta! Descarregue a aplicação pré-ass
 
 > 💡 A versão do Safari está agora diretamente assinada para distribuição — não é necessária conversão com Xcode!
 >
-> ⚠️ **Limitações**: Devido à natureza do Safari, (a) a remoção de marca d'água (b) a exportação de imagens (PDF recomendado) não são suportadas.
+> ✅ **Suporte oficial ao Safari**: desde a v1.6.0, há suporte para remoção de marca d'água, exportação de imagens, sincronização com Google Drive/iCloud, notificações de resposta e atualizações pelo Sparkle.
 
 ---
 

@@ -103,7 +103,7 @@ A personal repository for saving, organizing, and reusing prompts across any AI 
 Export any Gemini conversation to Markdown, PDF, or JSON format.
 
 **Format comparison**:
-- **Markdown**: Best for note apps (Obsidian, Notion). Smallest file size. Preserves code blocks with syntax. Images embedded (except Safari).
+- **Markdown**: Best for note apps (Obsidian, Notion). Smallest file size. Preserves code blocks with syntax. Images embedded.
 - **PDF**: Best for sharing and printing. Largest file size. All images included. Beautifully formatted.
 - **JSON**: Best for developers and data analysis. Raw data preserved. Re-importable. Programmatic access to conversation structure.
 
@@ -111,7 +111,7 @@ Export any Gemini conversation to Markdown, PDF, or JSON format.
 
 **Deep Research export**: Voyager extracts the full research process including thinking steps, source links, and the final report from Gemini Deep Research sessions.
 
-**Safari limitations**: Images cannot be extracted in Markdown (use PDF). PDF requires manual Command+P after clicking export.
+**Safari support**: Markdown and JSON image extraction are supported. PDF export uses a manual Command+P step after clicking export.
 
 **Availability**: Both Gemini and AI Studio. All browsers.
 
@@ -236,7 +236,7 @@ Voyager is designed with privacy as a core principle:
 | Chrome | Full support | Primary development target |
 | Microsoft Edge | Full support | Install via Edge Add-ons or Chrome Web Store |
 | Firefox | Full support | Signed XPI for permanent installation |
-| Safari (macOS) | Supported | No watermark removal, no image export (use PDF), no cloud sync |
+| Safari (macOS) | Full support | Native Google Drive/iCloud sync, notifications, and Sparkle updates |
 | Opera | Full support | Install via Chrome Web Store |
 | Brave | Full support | Install via Chrome Web Store |
 | Vivaldi | Full support | Install via Chrome Web Store |

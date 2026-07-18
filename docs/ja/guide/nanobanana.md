@@ -1,9 +1,7 @@
 # Image Refinement オプション
 
-::: warning ブラウザの互換性
-現在、**Image Refinement** ウォーターマーク除去機能は、ブラウザの API の制限により **Safari ではサポートされていません**。この機能を使用する必要がある場合は、**Chrome** または **Firefox** を使用することをお勧めします。
-
-Safari ユーザーは、ダウンロードした画像を [banana.ovo.re](https://banana.ovo.re/) などのツールサイトにアップロードして手動で除去することも可能です（ただし、画像の解像度の違いにより、すべての画像で成功するとは限りません）。
+::: tip Safari サポート
+v1.6.0 以降、**Image Refinement** は Safari で直接動作し、フルサイズのウォーターマークなし画像をダウンロードできます。Chrome、Edge、Firefox、Safari で同じ組み込みフローを利用できます。
 :::
 
 **AI 画像、あるべき純粋な姿へ。**

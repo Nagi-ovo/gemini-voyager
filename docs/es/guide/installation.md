@@ -57,7 +57,7 @@ Las revisiones de la tienda son lentas. Si quieres las últimas funciones, toma 
 
 > 💡 La versión de Safari ahora está firmada directamente para distribución — ¡no necesitas conversión con Xcode!
 >
-> ⚠️ **Limitaciones**: Debido a la naturaleza de Safari, (a) la eliminación de marcas de agua (b) la exportación de imágenes (se recomienda PDF) no son compatibles.
+> ✅ **Compatibilidad oficial con Safari**: desde la v1.6.0 se admiten la eliminación de marcas de agua, la exportación de imágenes, la sincronización con Google Drive/iCloud, las notificaciones de respuesta y las actualizaciones de Sparkle.
 
 ---
 

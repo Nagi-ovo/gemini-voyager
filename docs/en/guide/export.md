@@ -10,7 +10,7 @@ We believe that if you create it, you own it.
 | Feature     | Markdown                     | PDF                  | JSON                      |
 | ----------- | ---------------------------- | -------------------- | ------------------------- |
 | Best for    | Note apps (Obsidian, Notion) | Sharing and printing | Developers, data analysis |
-| Images      | Embedded (except Safari)     | Fully included       | Base64 encoded            |
+| Images      | Embedded                     | Fully included       | Base64 encoded            |
 | Code blocks | Preserved with syntax        | Rendered visually    | Raw text preserved        |
 | File size   | Smallest                     | Largest              | Medium                    |
 | Searchable  | Plain text                   | PDF reader search    | Programmatic access       |
@@ -21,7 +21,7 @@ Voyager lets you pull your data out of the cloud and into your hands.
 
 ### The Formats
 
-- **Markdown**: For your Obsidian vault or Notion. Clean, formatted text. (Safari Users: Images cannot be extracted due to browser limitations, use PDF export for images)
+- **Markdown**: For your Obsidian vault or Notion. Clean, formatted text with embedded images.
 - **PDF**: For sharing or printing. Beautifully laid out, images included.
 - **JSON**: Raw data. For developers who want to build on top of their history.
 
@@ -76,4 +76,4 @@ This is useful for academic research, competitive analysis, and technical docume
 
 ## Supported Platforms
 
-Export works on both Gemini and AI Studio across Chrome, Edge, Firefox, Safari, Opera, and Brave. Safari has specific limitations: images cannot be extracted in Markdown format (use PDF instead), and PDF export requires a manual print step (Command+P after clicking export).
+Export works on both Gemini and AI Studio across Chrome, Edge, Firefox, Safari, Opera, and Brave. On Safari, PDF export uses a manual print step (Command+P after clicking export); Markdown and JSON image extraction are supported.

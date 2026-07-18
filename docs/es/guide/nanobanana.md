@@ -1,9 +1,7 @@
 # Opción Image Refinement
 
-::: warning Compatibilidad de navegadores
-Actualmente, la función **Image Refinement** **no es compatible con Safari** debido a las limitaciones de la API del navegador. Recomendamos usar **Chrome** o **Firefox** si necesita usar esta función.
-
-Los usuarios de Safari pueden cargar manualmente sus imágenes descargadas en sitios de herramientas como [banana.ovo.re](https://banana.ovo.re/) para su procesamiento (aunque no se garantiza el éxito para todas las imágenes debido a las diferentes resoluciones).
+::: tip Compatibilidad con Safari
+Desde la v1.6.0, **Image Refinement** funciona directamente en Safari, incluida la descarga de imágenes sin marca de agua a tamaño completo. Chrome, Edge, Firefox y Safari comparten ahora el mismo flujo integrado.
 :::
 
 **Imágenes de IA, como deben ser: puras.**

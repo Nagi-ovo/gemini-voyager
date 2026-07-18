@@ -1,9 +1,7 @@
 # Image Refinement 選項
 
-::: warning 瀏覽器相容性
-目前 **Image Refinement** 去浮水印功能由於瀏覽器 API 限制，**暫不支持 Safari 瀏覽器**。如果您需要使用此功能，建議使用 **Chrome** 或 **Firefox**。
-
-Safari 用戶可以將下載的圖片上傳到 [banana.ovo.re](https://banana.ovo.re/) 等工具網站進行手動去除（但由於 Gemini™ 圖片尺寸的多樣性，不能保證每張圖片都能成功還原）。
+::: tip Safari 支援
+自 v1.6.0 起，**Image Refinement** 可直接在 Safari 使用，並支援下載全尺寸的無浮水印圖片。Chrome、Edge、Firefox 與 Safari 現在使用相同的內建流程。
 :::
 
 **AI 圖片，本該純淨。**

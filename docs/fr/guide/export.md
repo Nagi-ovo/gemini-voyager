@@ -9,7 +9,7 @@ Voyager vous permet de retirer vos données du cloud pour les mettre entre vos m
 
 ### Les Formats
 
-- **Markdown** : Pour votre coffre Obsidian ou Notion. Texte propre et formaté. (Utilisateurs de Safari : les images ne peuvent pas être extraites en raison des limitations du navigateur, utilisez l'export PDF)
+- **Markdown** : Pour votre coffre Obsidian ou Notion. Texte propre et formaté avec images intégrées.
 - **PDF** : Pour partager ou imprimer. Mise en page magnifique, images incluses.
 - **JSON** : Données brutes. Pour les développeurs qui veulent construire par-dessus leur historique.
 

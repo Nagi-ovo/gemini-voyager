@@ -57,7 +57,7 @@ Safari prend désormais en charge la distribution directe ! Téléchargez l'appl
 
 > 💡 La version Safari est désormais directement signée pour la distribution — pas besoin de conversion Xcode !
 >
-> ⚠️ **Limitations** : En raison de la nature de Safari, (a) la suppression du filigrane (b) l'exportation d'images (PDF recommandé) ne sont pas prises en charge.
+> ✅ **Prise en charge officielle de Safari** : depuis la v1.6.0, la suppression du filigrane, l'exportation d'images, la synchronisation Google Drive/iCloud, les notifications de fin de réponse et les mises à jour Sparkle sont pris en charge.
 
 ---
 

@@ -559,12 +559,23 @@ jobs:
 
           > Do not use GitHub's auto-generated **Source code (zip/tar.gz)** archives for manual extension installs. Those files are repository source snapshots, not browser-ready extension packages.
 
-          ### 🍎 Safari 安装与限制 (Safari Installation & Limitations)
+          ### 🍎✨ Safari 正式支持！(Safari Is Officially Supported!)
 
-          - **安装 (Installation)**: 下载并打开 \`voyager-${TAG}.dmg\`，按提示安装应用。
+          > 🎉 从 v1.6.0 起，Voyager 的核心功能已正式覆盖 Safari。
+          > Starting with v1.6.0, Voyager's core experience is officially supported on Safari.
+
+          - 📦 **安装 (Installation)**: 下载并打开 \`voyager-${TAG}.dmg\`，按提示安装应用。
             Download and open \`voyager-${TAG}.dmg\`, then follow the prompts to install the app.
-          - **Safari 差异 (Safari differences)**: Image Refinement 水印去除、Google Drive 与 iCloud 云同步均受支持。聊天导出中的图片提取仍受 Safari 限制，建议使用 PDF 导出。
-            Image Refinement watermark removal and Google Drive/iCloud sync are supported. Image extraction in chat exports remains limited by Safari; use PDF export when images matter.
+          - ⚠️ **旧版升级 (Legacy upgrade)**: 如果仍安装着 \`Gemini Voyager.app\`，请先完成一次 [Safari 迁移步骤](https://voyager.nagi.fun/guide/safari-migration)，避免两个 App 并存。
+            If \`Gemini Voyager.app\` is still installed, follow the one-time [Safari migration guide](https://voyager.nagi.fun/en/guide/safari-migration) first so the two apps do not conflict.
+          - 🖼️ **图片能力 (Images)**: Image Refinement 水印去除、全尺寸图片下载与聊天导出中的图片提取均已支持。
+            Image Refinement watermark removal, full-size image downloads, and image extraction in conversation exports are supported.
+          - ☁️ **原生云同步 (Native cloud sync)**: Google Drive 与 iCloud 同步均已接入 Safari 原生层。
+            Google Drive and iCloud sync are integrated through Safari's native layer.
+          - 🔔 **系统通知 (Notifications)**: Gemini 回复完成后可发送 macOS 通知，并直达对应对话。
+            macOS can notify you when a Gemini response finishes and open the matching conversation.
+          - 🔄 **自动更新 (Automatic updates)**: 完成这次迁移后，后续版本可通过 Sparkle 自动更新。
+            After this one-time migration, future versions can update automatically through Sparkle.
           EOF
 
             # Combine: auto-generated notes first, then installation

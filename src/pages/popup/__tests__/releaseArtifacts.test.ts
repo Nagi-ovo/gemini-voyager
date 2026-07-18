@@ -31,6 +31,15 @@ describe('release artifacts', () => {
     expect(workflow).not.toContain('--api-secret=${{ secrets.AMO_JWT_SECRET }}');
   });
 
+  it('announces full Safari support without restoring obsolete image limitations', () => {
+    const workflow = readFileSync(resolve(process.cwd(), '.github/workflows/release.yml'), 'utf8');
+
+    expect(workflow).toContain('🍎✨ Safari 正式支持！');
+    expect(workflow).toContain('image extraction in conversation exports are supported');
+    expect(workflow).toContain('voyager.nagi.fun/guide/safari-migration');
+    expect(workflow).not.toContain('Image extraction in chat exports remains limited by Safari');
+  });
+
   it('does not assign to zsh reserved variables while reading notarization results', () => {
     const script = readFileSync(resolve(process.cwd(), 'scripts/build-safari-release.sh'), 'utf8');
 

@@ -1,9 +1,7 @@
 # Image Refinement 옵션
 
-::: warning 브라우저 호환성
-현재 **Image Refinement** 워터마크 제거 기능은 브라우저 API 제한으로 인해 **Safari에서 지원되지 않습니다**. 이 기능을 사용해야 하는 경우 **Chrome** 또는 **Firefox**를 사용하는 것을 권장합니다.
-
-Safari 사용자는 다운로드한 이미지를 [banana.ovo.re](https://banana.ovo.re/)와 같은 도구 사이트에 업로드하여 수동으로 제거할 수 있습니다(단, 이미지 해상도에 따라 모든 이미지가 성공적으로 복구되는 것은 아닙니다).
+::: tip Safari 지원
+v1.6.0부터 **Image Refinement**가 Safari에서 직접 작동하며, 워터마크가 제거된 전체 크기 이미지 다운로드도 지원합니다. Chrome, Edge, Firefox, Safari에서 동일한 내장 흐름을 사용할 수 있습니다.
 :::
 
 **AI 이미지를 순수하게 유지하세요.**

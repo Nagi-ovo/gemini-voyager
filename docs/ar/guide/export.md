@@ -9,7 +9,7 @@ Voyager lets you pull your data out of the cloud and into your hands.
 
 ### The Formats
 
-- **Markdown**: For your Obsidian vault or Notion. Clean, formatted text. (مستخدمو Safari: لا يمكن استخراج الصور بسبب قيود المتصفح، استخدم تصدير PDF للصور)
+- **Markdown**: لخزنة Obsidian أو Notion. نص منسّق ونظيف مع صور مضمنة.
 - **PDF**: For sharing or printing. Beautifully laid out, images included.
 - **JSON**: Raw data. For developers who want to build on top of their history.
 

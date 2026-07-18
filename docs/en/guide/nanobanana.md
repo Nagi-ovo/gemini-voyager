@@ -1,9 +1,7 @@
 # Image Refinement Option
 
-::: warning Browser Compatibility
-Currently, the **Image Refinement** feature is **not supported on Safari** due to browser API limitations. We recommend using **Chrome** or **Firefox** if you need to use this feature.
-
-Safari users can manually upload their downloaded images to [banana.ovo.re](https://banana.ovo.re/) for processing (though success is not guaranteed for all images due to varying resolutions).
+::: tip Safari Support
+Since v1.6.0, **Image Refinement** works directly in Safari, including full-size watermark-free downloads. Chrome, Edge, Firefox, and Safari now share the same built-in workflow.
 :::
 
 **AI Images, kept pure.**

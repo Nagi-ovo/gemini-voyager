@@ -1,9 +1,7 @@
 # Option Image Refinement
 
-::: warning Compatibilité du navigateur
-Actuellement, la fonction **Image Refinement** n'est **pas prise en charge sur Safari** en raison des limitations de l'API du navigateur. Nous vous recommandons d'utiliser **Chrome** ou **Firefox** si vous avez besoin d'utiliser cette fonction.
-
-Les utilisateurs de Safari peuvent télécharger manuellement leurs images sur des sites d'outils comme [banana.ovo.re](https://banana.ovo.re/) pour le traitement (bien que le succès ne soit pas garanti pour toutes les images en raison des différentes résolutions).
+::: tip Prise en charge de Safari
+Depuis la v1.6.0, **Image Refinement** fonctionne directement dans Safari, y compris pour télécharger les images sans filigrane en pleine résolution. Chrome, Edge, Firefox et Safari utilisent désormais le même flux intégré.
 :::
 
 **Images IA, gardées pures.**

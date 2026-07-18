@@ -70,7 +70,7 @@ Voyager 会继续沿用原有的 App 与扩展 bundle identifier，因此 macOS 
 
 > 💡 Safari 版本现已直接签名分发——不再需要 Xcode 转换！
 >
-> ⚠️ **已知限制**：由于 Safari 特性，(a) 水印去除 (b) 图片导出（推荐用 PDF）暂不支持。
+> ✅ **Safari 正式支持**：自 v1.6.0 起，水印去除、图片导出、Google Drive / iCloud 同步、回复完成通知与 Sparkle 自动更新均已支持。
 
 ---
 

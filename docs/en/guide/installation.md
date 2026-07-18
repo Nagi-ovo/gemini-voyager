@@ -70,7 +70,7 @@ Voyager keeps the existing app and extension bundle identifiers, so macOS and Sa
 
 > 💡 The Safari build is now directly signed for distribution—no Xcode conversion needed!
 >
-> ⚠️ **Limitations**: Due to Safari's nature, (a) Watermark removal (b) Image export (PDF recommended) are not supported.
+> ✅ **Official Safari support**: Since v1.6.0, watermark removal, image export, Google Drive/iCloud sync, response notifications, and Sparkle updates are supported.
 
 ---
 
