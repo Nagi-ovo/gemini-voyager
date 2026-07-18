@@ -58,9 +58,13 @@ submit_for_notarization() {
       --output-format json > "$result_file"
   fi
 
-  plutil -p "$result_file"
+  local status
+  local submission_id
+  status=$(plutil -extract status raw -o - "$result_file")
+  submission_id=$(plutil -extract id raw -o - "$result_file")
+  printf 'Notarization %s (submission %s)\n' "$status" "$submission_id"
 
-  if [[ $(plutil -extract status raw -o - "$result_file") != Accepted ]]; then
+  if [[ $status != Accepted ]]; then
     echo "Apple notarization rejected: $artifact" >&2
     exit 1
   fi
@@ -108,6 +112,32 @@ fi
 
 codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 
+APPEX_PATH=$(find "$APP_PATH/Contents/PlugIns" -maxdepth 1 -name '*.appex' -type d -print -quit)
+if [[ -z $APPEX_PATH ]]; then
+  echo "Safari web extension bundle was not exported" >&2
+  exit 1
+fi
+
+APP_BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Contents/Info.plist")
+EXTENSION_BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APPEX_PATH/Contents/Info.plist")
+if [[ $APP_BUNDLE_ID != com.yourCompany.Gemini-Voyager ]]; then
+  echo "Unexpected app bundle identifier: $APP_BUNDLE_ID" >&2
+  exit 1
+fi
+if [[ $EXTENSION_BUNDLE_ID != com.yourCompany.Gemini-Voyager.Extension ]]; then
+  echo "Unexpected extension bundle identifier: $EXTENSION_BUNDLE_ID" >&2
+  exit 1
+fi
+
+EXTENSION_ENTITLEMENTS="$WORK_DIR/extension-entitlements.plist"
+codesign -d --entitlements :- "$APPEX_PATH" > "$EXTENSION_ENTITLEMENTS" 2>/dev/null
+/usr/libexec/PlistBuddy \
+  -c 'Print :com.apple.developer.icloud-container-identifiers:0' \
+  "$EXTENSION_ENTITLEMENTS" | grep -qx 'iCloud.com.yourCompany.Gemini-Voyager'
+/usr/libexec/PlistBuddy \
+  -c 'Print :com.apple.developer.icloud-container-environment' \
+  "$EXTENSION_ENTITLEMENTS" | grep -qx 'Production'
+
 APP_EXECUTABLE="$APP_PATH/Contents/MacOS/Voyager"
 ARCHITECTURES=" $(lipo -archs "$APP_EXECUTABLE") "
 if [[ $ARCHITECTURES != *' arm64 '* || $ARCHITECTURES != *' x86_64 '* ]]; then
@@ -123,6 +153,7 @@ xcrun stapler validate "$APP_PATH"
 ditto "$APP_PATH" "$DMG_ROOT/Voyager.app"
 ln -s /Applications "$DMG_ROOT/Applications"
 cp "$ROOT_DIR/scripts/safari-dmg-readme.html" "$DMG_ROOT/READ ME — Safari Upgrade.html"
+node "$ROOT_DIR/scripts/verify-release-privacy.mjs" "$DMG_ROOT"
 hdiutil create \
   -volname "Voyager" \
   -srcfolder "$DMG_ROOT" \

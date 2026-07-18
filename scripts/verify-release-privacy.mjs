@@ -13,19 +13,27 @@ if (roots.length === 0) {
 const forbiddenNames = [
   /\.map$/i,
   /^\.env(?:\.|$)/i,
-  /\.(?:p12|pfx|pem|key|mobileprovision)$/i,
+  /\.(?:cer|crt|p12|pfx|pem|key|mobileprovision|provisionprofile)$/i,
   /^\.DS_Store$/,
   /^\._/,
 ];
 
 const forbiddenContent = [
   ['/Users/', 'local macOS path'],
+  ['/private/var/folders/', 'local macOS temporary path'],
   ['/home/runner/work/', 'GitHub Actions workspace path'],
   ['-----BEGIN PRIVATE KEY-----', 'private key'],
   ['-----BEGIN RSA PRIVATE KEY-----', 'RSA private key'],
   ['-----BEGIN OPENSSH PRIVATE KEY-----', 'OpenSSH private key'],
   ['github_pat_', 'GitHub personal access token'],
   ['SPARKLE_PRIVATE_KEY=', 'Sparkle private key assignment'],
+];
+
+const forbiddenPatterns = [
+  [/\b(?:gh[pousr]_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{30,})\b/, 'GitHub token'],
+  [/\bxox[baprs]-[A-Za-z0-9-]{20,}\b/, 'Slack token'],
+  [/\bAKIA[A-Z0-9]{16}\b/, 'AWS access key'],
+  [/\bAIza[0-9A-Za-z_-]{35}\b/, 'Google API key'],
 ];
 
 const files = [];
@@ -54,6 +62,10 @@ for (const file of files) {
   const content = await readFile(file);
   for (const [needle, label] of forbiddenContent) {
     if (content.includes(Buffer.from(needle))) failures.push(`${file}: contains ${label}`);
+  }
+  const text = content.toString('latin1');
+  for (const [pattern, label] of forbiddenPatterns) {
+    if (pattern.test(text)) failures.push(`${file}: contains ${label}`);
   }
 }
 

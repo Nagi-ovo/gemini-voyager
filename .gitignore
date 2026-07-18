@@ -20,6 +20,14 @@ DerivedData/
 safari/Models/Gemini*
 safari/Models/dmg_source/
 *.dmg
+*.cer
+*.crt
+*.p12
+*.pfx
+*.pem
+*.key
+*.mobileprovision
+*.provisionprofile
 
 .git-commit-message.txt
 

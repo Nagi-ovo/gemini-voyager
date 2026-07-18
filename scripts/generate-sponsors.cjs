@@ -88,7 +88,7 @@ async function fetchGitHubSponsors(token) {
       query: `
         query($login: String!, $cursor: String) {
           user(login: $login) {
-            sponsorshipsAsMaintainer(first: 100, after: $cursor, includePrivate: true, activeOnly: false, orderBy: {field: CREATED_AT, direction: DESC}) {
+            sponsorshipsAsMaintainer(first: 100, after: $cursor, includePrivate: false, activeOnly: true, orderBy: {field: CREATED_AT, direction: DESC}) {
               nodes {
                 sponsorEntity {
                   ... on User {
