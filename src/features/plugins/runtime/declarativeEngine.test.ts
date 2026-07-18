@@ -332,23 +332,41 @@ describe('DeclarativeEngine', () => {
     disconnect.mockRestore();
   });
 
-  it('prunes ledger entries for elements that left the document', () => {
-    document.body.innerHTML = '<div class="target"></div>';
-    const el = document.querySelector('.target')!;
+  it('restores a detached element before pruning and remains reversible after reattachment', () => {
+    document.body.innerHTML = '<div class="target" data-orig="yes" style="color: blue;"></div>';
     const engine = new DeclarativeEngine({ doc: document });
     engine.mount(
       makeManifest({
-        domOps: [{ op: 'addClass', target: cssRef('.target'), className: 'gv-plugin-on' }],
+        domOps: [
+          { op: 'addClass', target: cssRef('.target'), className: 'gv-plugin-added' },
+          { op: 'setAttribute', target: cssRef('.target'), name: 'data-orig', value: 'no' },
+          { op: 'setStyle', target: cssRef('.target'), styles: { color: 'red' } },
+        ],
       }),
     );
-    expect(el.classList.contains('gv-plugin-on')).toBe(true);
 
-    // SPA re-render replaced the node: the engine must forget it instead of
-    // pinning the detached subtree in its ledgers until unmount.
+    const el = document.querySelector<HTMLElement>('.target')!;
+    expect(el.classList.contains('gv-plugin-added')).toBe(true);
+    expect(el.getAttribute('data-orig')).toBe('no');
+    expect(el.style.color).toBe('red');
+
     el.remove();
     engine.reapplyNow();
 
+    expect(el.classList.contains('gv-plugin-added')).toBe(false);
+    expect(el.getAttribute('data-orig')).toBe('yes');
+    expect(el.style.color).toBe('blue');
+
+    document.body.appendChild(el);
+    engine.reapplyNow();
+
+    expect(el.classList.contains('gv-plugin-added')).toBe(true);
+    expect(el.getAttribute('data-orig')).toBe('no');
+    expect(el.style.color).toBe('red');
+
     engine.unmount('test.plugin');
-    expect(el.classList.contains('gv-plugin-on')).toBe(true);
+    expect(el.classList.contains('gv-plugin-added')).toBe(false);
+    expect(el.getAttribute('data-orig')).toBe('yes');
+    expect(el.style.color).toBe('blue');
   });
 });

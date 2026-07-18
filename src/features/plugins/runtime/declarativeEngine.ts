@@ -143,23 +143,36 @@ export class DeclarativeEngine {
   /** Re-apply all active plugins' dom ops immediately (exposed for tests + the
    *  rAF scheduler). Idempotent. */
   reapplyNow(): void {
-    this.pruneDetachedLedgerEntries();
+    this.restoreDetachedLedgerEntries();
     for (const entry of this.active.values()) this.applyDomOps(entry);
   }
 
-  /** Drop ledger entries whose element left the document. An SPA re-render
-   *  replaces nodes rather than reattaching them, so there is no original to
-   *  restore — and without pruning, the ledgers pin every replaced subtree in
-   *  memory for as long as the plugin stays mounted. */
-  private pruneDetachedLedgerEntries(): void {
-    for (const el of this.classOwners.keys()) {
-      if (!el.isConnected) this.classOwners.delete(el);
+  /** Restore detached elements before dropping their ledger entries. This
+   *  prevents the ledgers from pinning replaced SPA subtrees while preserving
+   *  reversibility if a framework later reattaches the same element. */
+  private restoreDetachedLedgerEntries(): void {
+    for (const [el, perEl] of this.classOwners) {
+      if (this.doc.contains(el)) continue;
+      for (const className of perEl.keys()) el.classList.remove(className);
+      this.classOwners.delete(el);
     }
-    for (const el of this.attrLayers.keys()) {
-      if (!el.isConnected) this.attrLayers.delete(el);
+
+    for (const [el, perEl] of this.attrLayers) {
+      if (this.doc.contains(el)) continue;
+      for (const [name, layer] of perEl) {
+        if (layer.original === null) el.removeAttribute(name);
+        else el.setAttribute(name, layer.original);
+      }
+      this.attrLayers.delete(el);
     }
-    for (const el of this.styleLayers.keys()) {
-      if (!el.isConnected) this.styleLayers.delete(el);
+
+    for (const [el, perEl] of this.styleLayers) {
+      if (this.doc.contains(el)) continue;
+      for (const [prop, layer] of perEl) {
+        if (!layer.original) el.style.removeProperty(prop);
+        else el.style.setProperty(prop, layer.original);
+      }
+      this.styleLayers.delete(el);
     }
   }
 
