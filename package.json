@@ -1,6 +1,6 @@
 {
   "name": "gemini-voyager",
-  "version": "1.5.7",
+  "version": "1.6.0",
   "description": "A better workspace for Gemini, Claude, and ChatGPT: prompts, reading tools, organization, export, and more.",
   "packageManager": "bun@1.3.12",
   "license": "GPL-3.0",
