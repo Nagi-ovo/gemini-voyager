@@ -36,6 +36,7 @@ describe('release artifacts', () => {
 
     expect(script).toContain('local notary_status');
     expect(script).not.toMatch(/\blocal status\b/);
+    expect(script).not.toContain('submission_id');
   });
 
   it('builds and stores the Edge release variant independently from Chrome', () => {

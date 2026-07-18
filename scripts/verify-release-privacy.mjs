@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { lstat, readFile, readdir, readlink } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
 const roots = process.argv.slice(2);
@@ -37,9 +37,15 @@ const forbiddenPatterns = [
 ];
 
 const files = [];
+const symlinks = [];
 
 async function collect(path) {
-  const metadata = await stat(path);
+  const metadata = await lstat(path);
+  if (metadata.isSymbolicLink()) {
+    symlinks.push({ path, target: await readlink(path) });
+    return;
+  }
+
   if (!metadata.isDirectory()) {
     files.push(path);
     return;
@@ -53,20 +59,32 @@ async function collect(path) {
 for (const root of roots) await collect(root);
 
 const failures = [];
+function scanContent(path, content) {
+  for (const [needle, label] of forbiddenContent) {
+    if (content.includes(Buffer.from(needle))) failures.push(`${path}: contains ${label}`);
+  }
+  const text = content.toString('latin1');
+  for (const [pattern, label] of forbiddenPatterns) {
+    if (pattern.test(text)) failures.push(`${path}: contains ${label}`);
+  }
+}
+
 for (const file of files) {
   if (forbiddenNames.some((pattern) => pattern.test(basename(file)))) {
     failures.push(`${file}: forbidden release filename`);
     continue;
   }
 
-  const content = await readFile(file);
-  for (const [needle, label] of forbiddenContent) {
-    if (content.includes(Buffer.from(needle))) failures.push(`${file}: contains ${label}`);
+  scanContent(file, await readFile(file));
+}
+
+for (const { path, target } of symlinks) {
+  if (forbiddenNames.some((pattern) => pattern.test(basename(path)))) {
+    failures.push(`${path}: forbidden release filename`);
+    continue;
   }
-  const text = content.toString('latin1');
-  for (const [pattern, label] of forbiddenPatterns) {
-    if (pattern.test(text)) failures.push(`${file}: contains ${label}`);
-  }
+
+  scanContent(`${path} -> ${target}`, Buffer.from(target));
 }
 
 if (failures.length > 0) {
@@ -74,4 +92,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(`Release privacy check passed (${files.length} files)`);
+console.log(`Release privacy check passed (${files.length} files, ${symlinks.length} symlinks)`);

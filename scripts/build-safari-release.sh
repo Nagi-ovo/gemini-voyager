@@ -59,10 +59,8 @@ submit_for_notarization() {
   fi
 
   local notary_status
-  local submission_id
   notary_status=$(plutil -extract status raw -o - "$result_file")
-  submission_id=$(plutil -extract id raw -o - "$result_file")
-  printf 'Notarization %s (submission %s)\n' "$notary_status" "$submission_id"
+  printf 'Notarization %s\n' "$notary_status"
 
   if [[ $notary_status != Accepted ]]; then
     echo "Apple notarization rejected: $artifact" >&2
