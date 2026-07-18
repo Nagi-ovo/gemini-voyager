@@ -38,7 +38,9 @@ describe('release artifacts', () => {
 
     expect(ci).toContain('browser: [chrome, edge, firefox, safari]');
     expect(viteConfig).toContain("process.env.VOYAGER_BUILD_TARGET === 'edge'");
-    expect(viteConfig).toContain("'dist_edge' : 'dist_chrome'");
+    expect(viteConfig).toContain("? 'dist_edge'");
+    expect(viteConfig).toContain("? 'dist_chrome_dev'");
+    expect(viteConfig).toContain(": 'dist_chrome'");
     expect(edgeBuild).toContain("path.join(rootDir, 'dist_edge')");
   });
 });
