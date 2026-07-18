@@ -91,6 +91,35 @@ describe('ImageExportService', () => {
     expect(global.URL.createObjectURL).not.toHaveBeenCalled();
   });
 
+  it('renders uploaded file placeholders in image exports', async () => {
+    let renderedAttachmentText = '';
+    let renderedStyles = '';
+    const userElement = document.createElement('div');
+    userElement.innerHTML = `
+      <user-query-file-preview>
+        <div data-test-id="uploaded-file">
+          <button class="new-file-preview-file" aria-label="proposal.pdf">PDF</button>
+        </div>
+      </user-query-file-preview>
+    `;
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      async (node: HTMLElement) => {
+        renderedAttachmentText = node.querySelector('.gv-export-attachment')?.textContent ?? '';
+        renderedStyles = node.parentElement?.querySelector('style')?.textContent ?? '';
+        return new Blob(['x'], { type: 'image/png' });
+      },
+    );
+
+    await ImageExportService.renderConversationBlob(
+      [{ user: '', assistant: 'Reviewed', starred: false, userElement }],
+      mockMetadata,
+      {},
+    );
+
+    expect(renderedAttachmentText).toContain('proposal.pdf');
+    expect(renderedStyles).toContain('.gv-image-export-content .gv-export-attachment');
+  });
+
   it('retries transient image render failures on Chrome and succeeds', async () => {
     (toBlob as unknown as ReturnType<typeof vi.fn>).mockReset();
     (toBlob as unknown as ReturnType<typeof vi.fn>)

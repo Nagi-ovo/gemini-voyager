@@ -2,10 +2,12 @@
  * DOM Content Extractor
  * Extracts rich content from Gemini's DOM structure preserving formatting
  */
+import type { ExportAttachment } from '../types/export';
 
 export interface ExtractedContent {
   text: string;
   html: string;
+  attachments: ExportAttachment[];
   hasImages: boolean;
   hasFormulas: boolean;
   hasTables: boolean;
@@ -50,6 +52,7 @@ export class DOMContentExtractor {
     const result: ExtractedContent = {
       text: '',
       html: '',
+      attachments: [],
       hasImages: false,
       hasFormulas: false,
       hasTables: false,
@@ -59,6 +62,9 @@ export class DOMContentExtractor {
     // Check for images
     const images = element.querySelectorAll('user-query-file-preview img, .preview-image');
     result.hasImages = images.length > 0;
+
+    const attachments = this.extractUserAttachments(element);
+    result.attachments = attachments;
 
     // Extract text from query-text-line paragraphs
     const textLines = element.querySelectorAll('.query-text-line');
@@ -83,10 +89,19 @@ export class DOMContentExtractor {
       imageMarkdown.push(`![${alt}](${src})`);
     });
 
+    attachments.forEach((attachment) => {
+      htmlParts.push(
+        `<div class="gv-export-attachment"><span class="gv-export-attachment-icon" aria-hidden="true">📄</span><span class="gv-export-attachment-name">${this.escapeHtml(attachment.name)}</span></div>`,
+      );
+    });
+
     // Combine image markdown and text
     const allTextParts: string[] = [];
     if (imageMarkdown.length > 0) {
       allTextParts.push(imageMarkdown.join('\n\n'));
+    }
+    if (attachments.length > 0) {
+      allTextParts.push(attachments.map(({ name }) => `📎 ${name}`).join('\n'));
     }
     if (textParts.length > 0) {
       allTextParts.push(textParts.join('\n'));
@@ -113,6 +128,7 @@ export class DOMContentExtractor {
     const result: ExtractedContent = {
       text: '',
       html: '',
+      attachments: [],
       hasImages: false,
       hasFormulas: false,
       hasTables: false,
@@ -282,6 +298,55 @@ export class DOMContentExtractor {
     result.text = combinedText;
 
     return result;
+  }
+
+  /**
+   * Extract non-image uploads from Gemini's user-query-file-preview elements.
+   * Image previews are already exported as images above, so they are not duplicated.
+   */
+  private static extractUserAttachments(element: HTMLElement): ExportAttachment[] {
+    const uploadedFiles = Array.from(
+      element.querySelectorAll<HTMLElement>(
+        'user-query-file-preview [data-test-id="uploaded-file"]',
+      ),
+    );
+    const candidates =
+      uploadedFiles.length > 0
+        ? uploadedFiles
+        : Array.from(
+            element.querySelectorAll<HTMLElement>('user-query-file-preview .new-file-preview-file'),
+          );
+    const attachments: ExportAttachment[] = [];
+    const seen = new Set<string>();
+
+    candidates.forEach((candidate) => {
+      const labelledElement = candidate.matches('[aria-label]')
+        ? candidate
+        : candidate.querySelector<HTMLElement>('[aria-label]');
+      const name =
+        labelledElement?.getAttribute('aria-label')?.trim() ||
+        candidate.getAttribute('title')?.trim() ||
+        this.normalizeText(candidate.textContent ?? '').replace(
+          /^(?:PDF|DOCX?|PPTX?|XLSX?|CSV|TXT|ZIP|FILE)\s+/i,
+          '',
+        );
+
+      if (!name) return;
+
+      const type = name.match(/\.([a-z0-9]{1,12})$/i)?.[1].toLowerCase() ?? 'file';
+      const preview = candidate.closest('user-query-file-preview') ?? candidate;
+      const isImage =
+        /^(?:avif|bmp|gif|heic|heif|jpe?g|png|svg|tiff?|webp)$/i.test(type) &&
+        !!preview.querySelector('img');
+      const key = `${name}\u0000${type}`;
+
+      if (isImage || seen.has(key)) return;
+
+      seen.add(key);
+      attachments.push({ name, type });
+    });
+
+    return attachments;
   }
 
   /**

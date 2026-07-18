@@ -14,12 +14,22 @@ export interface CanvasDoc {
 }
 
 /**
+ * File attached to a user message.
+ * The export preserves context only; it does not bundle the original file.
+ */
+export interface ExportAttachment {
+  name: string;
+  type: string;
+}
+
+/**
  * Chat turn representing a user-assistant exchange
  */
 export interface ChatTurn {
   user: string;
   assistant: string;
   starred: boolean;
+  attachments?: ExportAttachment[];
   omitEmptySections?: boolean;
   // Optional DOM elements for rich content extraction
   userElement?: HTMLElement;

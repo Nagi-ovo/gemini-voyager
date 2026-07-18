@@ -250,6 +250,27 @@ export class ImageExportService {
         margin: 12px 0;
       }
 
+      .gv-image-export-content .gv-export-attachment {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: fit-content;
+        max-width: 100%;
+        margin: 12px 0;
+        padding: 10px 14px;
+        border: 1px solid rgba(0,0,0,0.14);
+        border-radius: 8px;
+        background: rgba(0,0,0,0.025);
+      }
+
+      .gv-image-export-content .gv-export-attachment-icon {
+        flex: none;
+      }
+
+      .gv-image-export-content .gv-export-attachment-name {
+        overflow-wrap: anywhere;
+      }
+
       .gv-image-export-content pre {
         background: rgba(0,0,0,0.05);
         padding: 14px 16px;

@@ -409,9 +409,37 @@ describe('ConversationExportService', () => {
       expect(items[0].userElement).toBeUndefined();
     });
 
-    // Note: Testing DOMContentExtractor integration is skipped per ROI testing strategy.
-    // DOM operations (Content Scripts) are in the "Fragile" category.
-    // The extractUserContent/extractAssistantContent calls are covered by defensive programming.
+    it('includes structured attachment metadata without serializing DOM elements', async () => {
+      const userElement = document.createElement('div');
+      userElement.innerHTML = `
+        <user-query-file-preview>
+          <div data-test-id="uploaded-file">
+            <button class="new-file-preview-file" aria-label="research.pdf">PDF</button>
+          </div>
+        </user-query-file-preview>
+        <p class="query-text-line">Summarize this</p>
+      `;
+      const downloadSpy = vi.spyOn(
+        ConversationExportService as unknown as { downloadJSON: (...args: unknown[]) => unknown },
+        'downloadJSON',
+      );
+
+      const result = await ConversationExportService.export(
+        [{ user: '', assistant: 'Done', starred: false, userElement }],
+        mockMetadata,
+        { format: ExportFormat.JSON },
+      );
+
+      expect(result.success).toBe(true);
+      const payload = downloadSpy.mock.calls[0][0] as {
+        items: Array<Record<string, unknown>>;
+      };
+      expect(payload.items[0]).toMatchObject({
+        user: '📎 research.pdf\n\nSummarize this',
+        attachments: [{ name: 'research.pdf', type: 'pdf' }],
+      });
+      expect(payload.items[0].userElement).toBeUndefined();
+    });
   });
 
   describe('markdown zip packaging', () => {

@@ -881,6 +881,28 @@ export class PDFPrintService {
           page-break-inside: avoid;
         }
 
+        .gv-print-turn-text .gv-export-attachment {
+          display: flex;
+          align-items: center;
+          gap: 0.55em;
+          width: fit-content;
+          max-width: 100%;
+          margin: 0.5em 0;
+          padding: 0.55em 0.75em;
+          border: 1px solid #d1d5db;
+          border-radius: 6px;
+          background: #f8fafc;
+          page-break-inside: avoid;
+        }
+
+        .gv-print-turn-text .gv-export-attachment-icon {
+          flex: none;
+        }
+
+        .gv-print-turn-text .gv-export-attachment-name {
+          overflow-wrap: anywhere;
+        }
+
         .gv-print-turn-assistant .gv-print-turn-text {
           border-left-color: #93c5fd;
         }

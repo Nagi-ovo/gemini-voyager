@@ -6,6 +6,51 @@ import { describe, expect, it } from 'vitest';
 import { DOMContentExtractor } from '../DOMContentExtractor';
 
 describe('DOMContentExtractor', () => {
+  it('exports non-image user uploads as filename placeholders', () => {
+    const user = document.createElement('div');
+    user.innerHTML = `
+      <user-query-file-carousel>
+        <user-query-file-preview>
+          <div data-test-id="uploaded-file">
+            <button class="new-file-preview-file" aria-label="Agent notes &amp; review.pdf">
+              <span>PDF</span>
+              <span>Agent notes &amp; review</span>
+            </button>
+          </div>
+        </user-query-file-preview>
+      </user-query-file-carousel>
+      <p class="query-text-line">Please review this file</p>
+    `;
+
+    const extracted = DOMContentExtractor.extractUserContent(user);
+
+    expect(extracted.attachments).toEqual([{ name: 'Agent notes & review.pdf', type: 'pdf' }]);
+    expect(extracted.text).toContain('📎 Agent notes & review.pdf');
+    expect(extracted.text).toContain('Please review this file');
+    expect(extracted.html).toContain('class="gv-export-attachment"');
+    expect(extracted.html).toContain('Agent notes &amp; review.pdf');
+    expect(extracted.hasImages).toBe(false);
+  });
+
+  it('does not duplicate image uploads as file placeholders', () => {
+    const user = document.createElement('div');
+    user.innerHTML = `
+      <user-query-file-preview>
+        <div data-test-id="uploaded-file">
+          <button class="new-file-preview-file" aria-label="photo.png">Image</button>
+          <img src="https://example.com/photo.png" alt="Photo" />
+        </div>
+      </user-query-file-preview>
+    `;
+
+    const extracted = DOMContentExtractor.extractUserContent(user);
+
+    expect(extracted.hasImages).toBe(true);
+    expect(extracted.attachments).toEqual([]);
+    expect(extracted.text).toContain('![Photo](https://example.com/photo.png)');
+    expect(extracted.text).not.toContain('📎 photo.png');
+  });
+
   it('should strip Gemini inline source chips (link icons) from assistant export', () => {
     const assistant = document.createElement('div');
     assistant.innerHTML = `

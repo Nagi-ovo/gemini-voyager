@@ -60,6 +60,26 @@ describe('MarkdownFormatter', () => {
       expect(markdown).toContain('Can you help me with TypeScript?');
     });
 
+    it('includes uploaded file names from the live user message DOM', () => {
+      const userElement = document.createElement('div');
+      userElement.innerHTML = `
+        <user-query-file-preview>
+          <div data-test-id="uploaded-file">
+            <button class="new-file-preview-file" aria-label="meeting-notes.pdf">PDF</button>
+          </div>
+        </user-query-file-preview>
+        <p class="query-text-line">Summarize it</p>
+      `;
+
+      const markdown = MarkdownFormatter.format(
+        [{ user: '', assistant: 'Done', starred: false, userElement }],
+        mockMetadata,
+      );
+
+      expect(markdown).toContain('📎 meeting-notes.pdf');
+      expect(markdown).toContain('Summarize it');
+    });
+
     it('should include assistant content', () => {
       const markdown = MarkdownFormatter.format(mockTurns, mockMetadata);
 

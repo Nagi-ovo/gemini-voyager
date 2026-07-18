@@ -171,6 +171,33 @@ describe('PDFPrintService', () => {
     expect(container?.querySelector('header, main, article, footer')).toBeNull();
   });
 
+  it('renders uploaded file placeholders in conversation PDFs', async () => {
+    window.print = vi.fn();
+    const userElement = document.createElement('div');
+    userElement.innerHTML = `
+      <user-query-file-preview>
+        <div data-test-id="uploaded-file">
+          <button class="new-file-preview-file" aria-label="proposal.pdf">PDF</button>
+        </div>
+      </user-query-file-preview>
+    `;
+
+    await PDFPrintService.export(
+      [{ user: '', assistant: 'Reviewed', starred: false, userElement }],
+      {
+        url: 'https://gemini.google.com/app/x',
+        exportedAt: new Date().toISOString(),
+        count: 1,
+        title: 'Attachment',
+      },
+    );
+
+    const attachment = document.querySelector('.gv-export-attachment');
+    const styleText = document.getElementById('gv-pdf-print-styles')?.textContent ?? '';
+    expect(attachment?.textContent).toContain('proposal.pdf');
+    expect(styleText).toContain('.gv-print-turn-text .gv-export-attachment');
+  });
+
   it('normalizes metadata title suffix when page title is generic', async () => {
     document.title = 'Gemini';
     window.print = vi.fn();

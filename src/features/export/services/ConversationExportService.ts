@@ -127,6 +127,7 @@ export class ConversationExportService {
     const processedItems = turns.map((turn) => {
       let userContent = turn.user;
       let assistantContent = turn.assistant;
+      let attachments = turn.attachments ?? [];
 
       // Extract rich content with Markdown formatting from DOM elements if available
       if (turn.userElement) {
@@ -134,6 +135,7 @@ export class ConversationExportService {
         if (extracted.text) {
           userContent = extracted.text;
         }
+        attachments = extracted.attachments;
       }
 
       if (turn.assistantElement) {
@@ -147,6 +149,7 @@ export class ConversationExportService {
         user: userContent,
         assistant: assistantContent,
         starred: turn.starred,
+        ...(attachments.length > 0 ? { attachments } : {}),
       };
     });
 
