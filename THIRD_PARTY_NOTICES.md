@@ -17,6 +17,7 @@ assets, including:
 - `src/pages/content/watermarkRemover/watermarkEngine.ts`
 - `src/pages/content/watermarkRemover/assets/bg_48.png`
 - `src/pages/content/watermarkRemover/assets/bg_96.png`
+- `src/pages/content/watermarkRemover/assets/bg_36_20260520.png`
 - `src/pages/content/watermarkRemover/assets/bg_96_20260520.png`
 
 Source repositories:

@@ -92,6 +92,22 @@ function writeGrayscalePattern(
   }
 }
 
+function fillRegionAboveWatermark(
+  imageData: ImageData,
+  config: WatermarkConfig,
+  value: number,
+): void {
+  const position = calculateWatermarkPosition(imageData.width, imageData.height, config);
+  for (let row = 0; row < position.height; row++) {
+    for (let col = 0; col < position.width; col++) {
+      const index = ((position.y - position.height + row) * imageData.width + position.x + col) * 4;
+      imageData.data[index] = value;
+      imageData.data[index + 1] = value;
+      imageData.data[index + 2] = value;
+    }
+  }
+}
+
 function expectWatermarkAreaNearBase(imageData: ImageData, config: WatermarkConfig): void {
   const position = calculateWatermarkPosition(imageData.width, imageData.height, config);
 
@@ -119,14 +135,46 @@ describe('watermarkEngine config detection', () => {
     expect(hasAcceptableWatermarkRemovalEvidence(candidateSignal, 0.3951623107)).toBe(true);
   });
 
-  it('still rejects the same residual when the watermark was not sufficiently suppressed', () => {
+  it('accepts a full-size residual once removal makes the watermark signal unreliable', () => {
+    const candidateSignal = {
+      spatialScore: 0.2565236249,
+      gradientScore: 0.3808002233,
+    };
+
+    expect(hasReliableWatermarkSignal(candidateSignal)).toBe(false);
+    expect(hasAcceptableWatermarkRemovalEvidence(candidateSignal, 0.2442947403)).toBe(true);
+  });
+
+  it('accepts a pale-background removal when spatial evidence clears but gradients remain', () => {
+    const candidateSignal = {
+      spatialScore: -0.103115824,
+      gradientScore: 0.6026689081,
+    };
+
+    expect(hasReliableWatermarkSignal(candidateSignal)).toBe(false);
+    expect(hasAcceptableWatermarkRemovalEvidence(candidateSignal, 0.2945188229)).toBe(true);
+  });
+
+  it('rejects an unreliable residual when removal did not suppress its spatial signal', () => {
     expect(
       hasAcceptableWatermarkRemovalEvidence(
         {
           spatialScore: 0.2143191174,
           gradientScore: 0.1471584466,
         },
-        0.24,
+        0,
+      ),
+    ).toBe(false);
+  });
+
+  it('keeps the reliability-transition fallback narrow enough to reject weak suppression', () => {
+    expect(
+      hasAcceptableWatermarkRemovalEvidence(
+        {
+          spatialScore: 0.2565236249,
+          gradientScore: 0.3808002233,
+        },
+        0.19,
       ),
     ).toBe(false);
   });
@@ -173,6 +221,12 @@ describe('watermarkEngine config detection', () => {
         marginBottom: 32,
       },
       {
+        logoSize: 36,
+        marginRight: 98,
+        marginBottom: 98,
+        alphaVariant: '20260520-small',
+      },
+      {
         logoSize: 48,
         marginRight: 96,
         marginBottom: 96,
@@ -180,6 +234,12 @@ describe('watermarkEngine config detection', () => {
       },
     ]);
     expect(calculateWatermarkPosition(1408, 768, options[1])).toEqual({
+      x: 1274,
+      y: 634,
+      width: 36,
+      height: 36,
+    });
+    expect(calculateWatermarkPosition(1408, 768, options[2])).toEqual({
       x: 1264,
       y: 624,
       width: 48,
@@ -193,6 +253,12 @@ describe('watermarkEngine config detection', () => {
         logoSize: 48,
         marginRight: 32,
         marginBottom: 32,
+      },
+      {
+        logoSize: 36,
+        marginRight: 71,
+        marginBottom: 71,
+        alphaVariant: '20260520-small',
       },
       {
         logoSize: 48,
@@ -299,6 +365,36 @@ describe('watermarkEngine config detection', () => {
 
     expect(passes).toBe(1);
     expectWatermarkAreaNearBase(imageData, config);
+  });
+
+  it('does not mistake unrelated brighter content above the watermark for removal damage', () => {
+    const config = { logoSize: 4, marginRight: 1, marginBottom: 1 };
+    const alphaMap = Float32Array.from([0, 0, 0, 0, 0, 0.5, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 0, 0]);
+    const imageData = createImageDataWithWatermark(config, 0);
+    fillRegionAboveWatermark(imageData, config, 240);
+    const position = calculateWatermarkPosition(imageData.width, imageData.height, config);
+    for (let row = 0; row < position.height; row++) {
+      for (let col = 0; col < position.width; col++) {
+        const alpha = alphaMap[row * position.width + col];
+        const value = alpha === 0 ? 81 : 168;
+        const index = ((position.y + row) * imageData.width + position.x + col) * 4;
+        imageData.data[index] = value;
+        imageData.data[index + 1] = value;
+        imageData.data[index + 2] = value;
+      }
+    }
+
+    const passes = removeWatermarkWithResidualCheck(imageData, alphaMap, position);
+
+    expect(passes).toBe(1);
+    for (let row = 0; row < position.height; row++) {
+      for (let col = 0; col < position.width; col++) {
+        const index = ((position.y + row) * imageData.width + position.x + col) * 4;
+        expect(imageData.data[index]).toBe(81);
+        expect(imageData.data[index + 1]).toBe(81);
+        expect(imageData.data[index + 2]).toBe(81);
+      }
+    }
   });
 
   it('repeats removal while a stacked watermark layer remains', () => {

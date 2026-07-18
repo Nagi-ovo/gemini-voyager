@@ -18,16 +18,13 @@ const STRONG_GRADIENT_MIN_GRADIENT_SCORE = 0.45;
 const MAX_RESIDUAL_SPATIAL_SCORE = 0.25;
 const MAX_RESIDUAL_GRADIENT_SCORE = 0.18;
 const MIN_SUPPRESSION_GAIN = 0.25;
+const MIN_RELIABILITY_TRANSITION_GAIN = 0.2;
+const MIN_RELIABILITY_TRANSITION_RATIO = 0.4;
 const NEAR_BLACK_THRESHOLD = 5;
 const MAX_NEAR_BLACK_INCREASE = 0.05;
 const CLIP_ORIGINAL_THRESHOLD = 5;
 const CLIP_CANDIDATE_THRESHOLD = 0;
 const MAX_NEWLY_CLIPPED_RATIO = 0.03;
-const TEXTURE_REFERENCE_MARGIN = 1;
-const TEXTURE_STD_FLOOR_RATIO = 0.8;
-const DARKNESS_VISIBILITY_HARD_REJECT_THRESHOLD = 1.5;
-const DARKNESS_HARD_REJECT_PENALTY_THRESHOLD = 0.5;
-const FLATNESS_HARD_REJECT_PENALTY_THRESHOLD = 0.2;
 
 export interface WatermarkSignal {
   spatialScore: number;
@@ -41,12 +38,6 @@ export interface WatermarkRemovalAssessment {
   suppressionGain: number;
   nearBlackIncrease: number;
   newlyClippedRatio: number;
-  visibleDarkHole: boolean;
-}
-
-interface TextureStats {
-  meanLuminance: number;
-  standardDeviation: number;
 }
 
 function calculateLuminance(data: Uint8ClampedArray, index: number): number {
@@ -167,71 +158,38 @@ export function getWatermarkSignalStrength(signal: WatermarkSignal): number {
   return Math.max(0, signal.spatialScore) * 0.5 + Math.max(0, signal.gradientScore) * 0.3;
 }
 
+export function hasResidualWatermarkEdges(signal: WatermarkSignal): boolean {
+  return !hasReliableWatermarkSignal(signal) && signal.gradientScore > MAX_RESIDUAL_GRADIENT_SCORE;
+}
+
 export function hasAcceptableWatermarkRemovalEvidence(
   candidateSignal: WatermarkSignal,
   suppressionGain: number,
 ): boolean {
   const residualStillReliable = hasReliableWatermarkSignal(candidateSignal);
-  const residualCleared =
-    Math.abs(candidateSignal.spatialScore) <= MAX_RESIDUAL_SPATIAL_SCORE &&
-    candidateSignal.gradientScore <= MAX_RESIDUAL_GRADIENT_SCORE;
+  const residualCleared = hasStrongWatermarkRemovalEvidence(candidateSignal, suppressionGain);
+  const inferredOriginalSpatialMagnitude =
+    Math.abs(candidateSignal.spatialScore) + Math.max(0, suppressionGain);
+  const suppressionRatio =
+    inferredOriginalSpatialMagnitude > EPSILON
+      ? Math.max(0, suppressionGain) / inferredOriginalSpatialMagnitude
+      : 0;
+  const residualSuppressedBelowReliability =
+    !residualStillReliable &&
+    suppressionGain >= MIN_RELIABILITY_TRANSITION_GAIN &&
+    suppressionRatio >= MIN_RELIABILITY_TRANSITION_RATIO;
 
-  return residualStillReliable || (suppressionGain >= MIN_SUPPRESSION_GAIN && residualCleared);
+  return residualStillReliable || residualCleared || residualSuppressedBelowReliability;
 }
 
-function calculateTextureStats(
-  imageData: ImageData,
-  position: WatermarkPosition,
-): TextureStats | null {
-  const luminance = extractLuminanceRegion(imageData, position);
-  if (!luminance) return null;
-
-  let sum = 0;
-  let squaredSum = 0;
-  for (const value of luminance) {
-    const byteValue = value * 255;
-    sum += byteValue;
-    squaredSum += byteValue * byteValue;
-  }
-
-  const meanLuminance = sum / luminance.length;
-  return {
-    meanLuminance,
-    standardDeviation: Math.sqrt(
-      Math.max(0, squaredSum / luminance.length - meanLuminance * meanLuminance),
-    ),
-  };
-}
-
-function createsVisibleDarkHole(
-  originalImageData: ImageData,
-  candidateImageData: ImageData,
-  position: WatermarkPosition,
+function hasStrongWatermarkRemovalEvidence(
+  candidateSignal: WatermarkSignal,
+  suppressionGain: number,
 ): boolean {
-  const referencePosition = {
-    ...position,
-    y: position.y - position.height,
-  };
-  const reference = calculateTextureStats(originalImageData, referencePosition);
-  const candidate = calculateTextureStats(candidateImageData, position);
-  if (!reference || !candidate) return false;
-
-  const luminanceDeficit = Math.max(
-    0,
-    reference.meanLuminance - candidate.meanLuminance - TEXTURE_REFERENCE_MARGIN,
-  );
-  const darknessPenalty = luminanceDeficit / Math.max(1, reference.meanLuminance);
-  const flatnessPenalty =
-    Math.max(
-      0,
-      reference.standardDeviation * TEXTURE_STD_FLOOR_RATIO - candidate.standardDeviation,
-    ) / Math.max(1, reference.standardDeviation);
-  const darknessVisibility = luminanceDeficit / Math.max(1, reference.standardDeviation);
-
   return (
-    darknessVisibility >= DARKNESS_VISIBILITY_HARD_REJECT_THRESHOLD ||
-    (darknessPenalty >= DARKNESS_HARD_REJECT_PENALTY_THRESHOLD &&
-      flatnessPenalty >= FLATNESS_HARD_REJECT_PENALTY_THRESHOLD)
+    suppressionGain >= MIN_SUPPRESSION_GAIN &&
+    Math.abs(candidateSignal.spatialScore) <= MAX_RESIDUAL_SPATIAL_SCORE &&
+    candidateSignal.gradientScore <= MAX_RESIDUAL_GRADIENT_SCORE
   );
 }
 
@@ -285,12 +243,9 @@ export function assessWatermarkRemovalCandidate(
   const ratioDenominator = Math.max(1, totalPixels);
   const nearBlackIncrease = Math.max(0, candidateNearBlack - originalNearBlack) / ratioDenominator;
   const newlyClippedRatio = newlyClipped / ratioDenominator;
-  const visibleDarkHole = createsVisibleDarkHole(originalImageData, candidateImageData, position);
   const evidenceSafe = hasAcceptableWatermarkRemovalEvidence(candidateSignal, suppressionGain);
   const damageSafe =
-    nearBlackIncrease <= MAX_NEAR_BLACK_INCREASE &&
-    newlyClippedRatio <= MAX_NEWLY_CLIPPED_RATIO &&
-    !visibleDarkHole;
+    nearBlackIncrease <= MAX_NEAR_BLACK_INCREASE && newlyClippedRatio <= MAX_NEWLY_CLIPPED_RATIO;
 
   return {
     safe: hasReliableWatermarkSignal(originalSignal) && evidenceSafe && damageSafe,
@@ -299,6 +254,5 @@ export function assessWatermarkRemovalCandidate(
     suppressionGain,
     nearBlackIncrease,
     newlyClippedRatio,
-    visibleDarkHole,
   };
 }
