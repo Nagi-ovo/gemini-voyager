@@ -11,9 +11,11 @@ run-name: >
 # -------------------------
 # This workflow supports two modes of operation:
 #
-# 1. Manual Release (Recommended for "One-Click" Releases)
+# 1. Manual Release (Only for an Already-Prepared Release)
 #    - How: Go to "Actions" -> "Release" -> "Run workflow".
 #    - Input: Optional "Version" (e.g., 1.2.0). If left empty, it auto-increments the patch version.
+#    - Requirement: The target version's 10-locale in-product changelog must already be committed.
+#      This workflow can bump and tag, but it does not author changelog content.
 #    - What it does:
 #      1. Calculates the next version.
 #      2. Bumps the web manifests and Xcode app/extension versions together.
@@ -405,8 +407,8 @@ jobs:
 
           - **安装 (Installation)**: 下载并打开 \`voyager-${TAG}.dmg\`，按提示安装应用。
             Download and open \`voyager-${TAG}.dmg\`, then follow the prompts to install the app.
-          - **限制 (Limitations)**: 受限于 Safari 特性，以下功能暂不支持：(a) Image Refinement 水印去除 (b) 图片导出 (建议使用 PDF 导出)。云同步可选择 Google Drive 或 iCloud。
-            Due to Safari's nature, the following features are not supported: (a) Watermark removal (b) Image export (PDF recommended). Cloud sync supports Google Drive and iCloud.
+          - **Safari 差异 (Safari differences)**: Image Refinement 水印去除、Google Drive 与 iCloud 云同步均受支持。聊天导出中的图片提取仍受 Safari 限制，建议使用 PDF 导出。
+            Image Refinement watermark removal and Google Drive/iCloud sync are supported. Image extraction in chat exports remains limited by Safari; use PDF export when images matter.
           EOF
 
             # Combine: auto-generated notes first, then installation
