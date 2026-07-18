@@ -39,6 +39,12 @@ const forbiddenPatterns = [
 const files = [];
 const symlinks = [];
 
+function isExpectedEmbeddedProfile(path) {
+  return /\.app\/Contents\/(?:PlugIns\/[^/]+\.appex\/Contents\/)?embedded\.provisionprofile$/.test(
+    path,
+  );
+}
+
 async function collect(path) {
   const metadata = await lstat(path);
   if (metadata.isSymbolicLink()) {
@@ -70,7 +76,10 @@ function scanContent(path, content) {
 }
 
 for (const file of files) {
-  if (forbiddenNames.some((pattern) => pattern.test(basename(file)))) {
+  if (
+    forbiddenNames.some((pattern) => pattern.test(basename(file))) &&
+    !isExpectedEmbeddedProfile(file)
+  ) {
     failures.push(`${file}: forbidden release filename`);
     continue;
   }
