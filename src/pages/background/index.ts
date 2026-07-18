@@ -616,6 +616,18 @@ function filterForkNodesByRouteScope(
 async function registerFetchInterceptor(): Promise<void> {
   if (!chrome.scripting?.registerContentScripts) return;
 
+  // Safari ships the interceptor as a static MAIN-world content script. A
+  // dynamic copy can outlive a rebuilt temporary extension and win the
+  // double-injection guard with stale code.
+  if (getVoyagerBuildTarget() === 'safari') {
+    try {
+      await chrome.scripting.unregisterContentScripts({ ids: [FETCH_INTERCEPTOR_SCRIPT_ID] });
+    } catch {
+      // No-op if an older Safari build never registered it.
+    }
+    return;
+  }
+
   // The fetch interceptor only matters for the download path. Preview-time
   // watermark removal happens in the content script and never touches fetch.
   const result = await chrome.storage.sync.get([...WATERMARK_STORAGE_KEYS]);

@@ -45,6 +45,10 @@ const enableSafariUpdateCheck = process.env.ENABLE_SAFARI_UPDATE_CHECK !== 'fals
 const safariMainWorldScripts = [
   {
     matches: ['https://gemini.google.com/*', 'https://business.gemini.google/*'],
+    js: ['public/fetchInterceptor.js'],
+  },
+  {
+    matches: ['https://gemini.google.com/*', 'https://business.gemini.google/*'],
     js: ['public/usage-observer.js'],
   },
   {

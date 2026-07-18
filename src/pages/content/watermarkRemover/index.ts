@@ -9,35 +9,24 @@
  *
  * Automatically detects and removes watermarks from Gemini-generated images on the page.
  *
- * Safari handles downloads directly from the button click, then saves the
- * Alpha-processed Blob with an anchor download. Other browsers currently use
- * the fetch interceptor (running in MAIN world):
+ * The fetch interceptor (running in MAIN world) handles download requests:
  * - Intercepts download requests and modifies URL to get original size
  * - Sends image data to this content script for watermark removal
  * - Returns processed image to complete the download
  */
-import { getVoyagerBuildTarget } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { fetchImageViaExtensionRuntime } from '@/core/utils/runtimeImageFetch';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import { getTranslationSync } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
-import {
-  DOWNLOAD_ICON_SELECTOR,
-  findGeneratedImageForDownloadButton,
-  findNativeDownloadButton,
-} from './downloadButton';
+import { DOWNLOAD_ICON_SELECTOR, findNativeDownloadButton } from './downloadButton';
 import { type StatusToastManager, createStatusToastManager } from './statusToast';
 import { WatermarkEngine } from './watermarkEngine';
 
 let engine: WatermarkEngine | null = null;
 let enginePromise: Promise<WatermarkEngine> | null = null;
 const processingQueue = new Set<HTMLImageElement>();
-const usesDirectDownload = getVoyagerBuildTarget() === 'safari';
-let directDownloadEnabled = false;
-let directDownloadsInProgress = new WeakSet<HTMLButtonElement>();
-let nativeDownloadBypass = new WeakSet<HTMLButtonElement>();
 
 // Observers are kept at module scope so they can be disconnected on teardown
 // and so re-running startWatermarkRemover() can't stack duplicate observers.
@@ -47,6 +36,7 @@ let previewObserver: MutationObserver | null = null;
 let indicatorObserver: MutationObserver | null = null;
 let bridgeObserver: MutationObserver | null = null;
 let statusObserver: MutationObserver | null = null;
+const pendingDebounceTimeouts = new Set<ReturnType<typeof setTimeout>>();
 
 /**
  * Debounce function to limit execution frequency
@@ -54,8 +44,16 @@ let statusObserver: MutationObserver | null = null;
 const debounce = <T extends (...args: unknown[]) => void>(func: T, wait: number): T => {
   let timeout: ReturnType<typeof setTimeout> | null = null;
   return ((...args: unknown[]) => {
-    if (timeout) clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
+    if (timeout) {
+      clearTimeout(timeout);
+      pendingDebounceTimeouts.delete(timeout);
+    }
+    timeout = setTimeout(() => {
+      if (timeout) pendingDebounceTimeouts.delete(timeout);
+      timeout = null;
+      func(...args);
+    }, wait);
+    pendingDebounceTimeouts.add(timeout);
   }) as T;
 };
 
@@ -115,20 +113,6 @@ const replaceWithNormalSize = (src: string): string => {
   // Use normal size image to fit watermark
   return src.replace(/=[swh]\d+(?:-[wh]\d+)*/, '=s0');
 };
-
-const createDownloadFilename = (): string => `Gemini_Generated_Image_${Date.now()}.png`;
-
-function saveBlob(blob: Blob): void {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement('a');
-  anchor.href = url;
-  anchor.download = createDownloadFilename();
-  anchor.style.display = 'none';
-  document.body.appendChild(anchor);
-  anchor.click();
-  anchor.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 
 /**
  * Attach the 🍌 badge to a download button. The badge lives INSIDE the button
@@ -400,11 +384,7 @@ export async function startWatermarkRemover(): Promise<void> {
     const { download: downloadEnabled, preview: previewEnabled } = resolveWatermarkSettings(
       result ?? null,
     );
-    directDownloadEnabled = usesDirectDownload && downloadEnabled;
-
-    // Safari owns the click and downloads the processed Blob directly. Keep
-    // any previously registered MAIN-world interceptor in pass-through mode.
-    notifyFetchInterceptor(downloadEnabled && !usesDirectDownload);
+    notifyFetchInterceptor(downloadEnabled);
 
     if (!downloadEnabled && !previewEnabled) {
       console.log('[Gemini Voyager] Watermark remover is disabled');
@@ -420,7 +400,7 @@ export async function startWatermarkRemover(): Promise<void> {
       `[Gemini Voyager] Initializing watermark remover (download=${downloadEnabled}, preview=${previewEnabled})`,
     );
 
-    if (downloadEnabled && !usesDirectDownload) {
+    if (downloadEnabled) {
       // Install the bridge observer BEFORE awaiting engine init so requests
       // that arrive during the asset-loading window (typically 100ms-2s, and
       // larger after a hard navigation like an account switch) are not lost.
@@ -468,9 +448,8 @@ export function stopWatermarkRemover(): void {
   indicatorObserver = null;
   bridgeObserver = null;
   statusObserver = null;
-  directDownloadEnabled = false;
-  directDownloadsInProgress = new WeakSet<HTMLButtonElement>();
-  nativeDownloadBypass = new WeakSet<HTMLButtonElement>();
+  for (const timeout of pendingDebounceTimeouts) clearTimeout(timeout);
+  pendingDebounceTimeouts.clear();
 
   // Tell the MAIN-world fetch interceptor the feature is off, so it stops
   // intercepting and doesn't wait on bridge responses that will never come.
@@ -529,13 +508,8 @@ function markDownloadIntent(): void {
   bridge.dataset.downloadIntentExpiresAt = String(Date.now() + DOWNLOAD_INTENT_TTL_MS);
 }
 
-function publishDownloadStatus(type: string, message?: string): void {
-  const bridge = getBridgeElement();
-  bridge.dataset.status = JSON.stringify({ type, message, timestamp: Date.now() });
-}
-
-function showImmediateDownloadToast(button: HTMLButtonElement, markIntent = true): void {
-  if (markIntent) markDownloadIntent();
+function showImmediateDownloadToast(button: HTMLButtonElement): void {
+  markDownloadIntent();
 
   const now = Date.now();
   if (now - lastImmediateToastAt < 300) return;
@@ -580,48 +554,6 @@ function showImmediateDownloadToast(button: HTMLButtonElement, markIntent = true
   };
 }
 
-async function downloadProcessedImage(button: HTMLButtonElement): Promise<void> {
-  if (directDownloadsInProgress.has(button)) return;
-  directDownloadsInProgress.add(button);
-
-  try {
-    const imageElement = findGeneratedImageForDownloadButton(button);
-    if (!imageElement) throw new Error('Generated image not found');
-
-    publishDownloadStatus('DOWNLOADING');
-
-    const processedPreviewUrl = imageElement.dataset.processedUrl;
-    let processedBlob: Blob;
-    if (processedPreviewUrl) {
-      const response = await fetch(processedPreviewUrl);
-      if (!response.ok) throw new Error(`Preview fetch failed: ${response.status}`);
-      processedBlob = await response.blob();
-    } else {
-      const source =
-        imageElement.dataset.watermarkOriginalSrc || imageElement.currentSrc || imageElement.src;
-      if (!source || source.startsWith('blob:')) throw new Error('Original image URL not found');
-
-      const sourceImage = await fetchImageViaBackground(replaceWithNormalSize(source));
-      publishDownloadStatus('PROCESSING');
-
-      if (!engine && enginePromise) await enginePromise;
-      if (!engine) throw new Error('Watermark engine not initialized');
-      processedBlob = await canvasToBlob(await engine.removeWatermarkFromImage(sourceImage));
-    }
-
-    saveBlob(processedBlob);
-    publishDownloadStatus('SUCCESS');
-  } catch (error) {
-    console.warn('[Gemini Voyager] Direct watermark download failed:', error);
-    publishDownloadStatus('ERROR', error instanceof Error ? error.message : String(error));
-    nativeDownloadBypass.add(button);
-    button.click();
-    nativeDownloadBypass.delete(button);
-  } finally {
-    directDownloadsInProgress.delete(button);
-  }
-}
-
 function setupDownloadButtonTracking(): void {
   if (downloadTrackingReady) return;
   downloadTrackingReady = true;
@@ -629,18 +561,6 @@ function setupDownloadButtonTracking(): void {
   downloadCaptureHandler = (event: Event): void => {
     const button = findNativeDownloadButton(event.target);
     if (!button) return;
-
-    if (usesDirectDownload && directDownloadEnabled) {
-      if (event.type === 'click' && nativeDownloadBypass.delete(button)) return;
-
-      showImmediateDownloadToast(button, false);
-      if (event.type !== 'click') return;
-
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      void downloadProcessedImage(button);
-      return;
-    }
 
     showImmediateDownloadToast(button);
   };

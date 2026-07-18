@@ -133,6 +133,7 @@ describe('manifest permissions', () => {
   it('runs Safari page bridges as separate MAIN-world manifest scripts', () => {
     const scripts = safariManifest.content_scripts?.filter((entry) => entry.world === 'MAIN') ?? [];
     expect(scripts.map((entry) => entry.js?.[0])).toEqual([
+      'public/fetchInterceptor.js',
       'public/usage-observer.js',
       'public/conversation-history-observer.js',
       'public/response-complete-observer.js',
