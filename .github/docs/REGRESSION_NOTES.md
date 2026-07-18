@@ -559,3 +559,32 @@ visible notification alone does not verify the click route.
 
 Commit:
 `6e552732 fix(safari): route notification clicks through app`
+
+## Safari full-size watermark downloads require a static page-world interceptor
+
+Symptom:
+Safari watermark downloads failed with **Original Image Not Found**. Processing
+the image visible in Gemini appeared to work, but produced only a low-resolution
+preview instead of the full-size generated image.
+
+Root cause:
+Gemini exposed only a `blob:` preview in the DOM. The full-size image URL was
+available to `public/fetchInterceptor.js`, but Safari did not reliably install
+the dynamically registered `MAIN`-world script for the temporary extension. A
+stale dynamic registration could also win the interceptor's double-injection
+guard after a rebuild.
+
+Fix:
+Declare `public/fetchInterceptor.js` as a static Safari `MAIN`-world manifest
+content script, and unregister the legacy dynamic Safari copy. Keep the shared
+fetch-interceptor download path instead of adding a Safari-only path that saves
+the visible preview Blob.
+
+Regression test:
+`src/core/utils/__tests__/manifestPermissions.test.ts` verifies that the Safari
+manifest loads the interceptor first in `MAIN` world. A live Safari check must
+also confirm that the bridge is installed and enabled and that the downloaded
+image has full-size pixel dimensions, not merely that a PNG file exists.
+
+Commit:
+`d3f0e71a fix(safari): restore full-size watermark downloads`

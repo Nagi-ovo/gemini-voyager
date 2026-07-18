@@ -123,16 +123,9 @@ Safari may dismiss a toolbar popover before an accessibility-driven button click
 - When native launch or custom URL routing is wrong, first inspect LaunchServices and `pluginkit` read-only. Unregister only known stale app paths; never delete app data, extension containers, preferences, or permissions.
 - If clicking a native notification opens an old updates/status window or reports **Safari Extension Unavailable**, inspect the launched process path first. This usually means LaunchServices selected a stale containing-app copy; it is not evidence that the notification bridge or the repository rename failed.
 - If a reload looks stale, first verify the built asset, use Safari's own **Reload** control, reload the target tab, and reopen the popup.
-- If Safari watermark downloads report **Original Image Not Found**, inspect the
-  page-world fetch bridge before changing image-selection code. Gemini may expose
-  only a low-resolution `blob:` preview in the DOM, while the full-size URL is
-  available only to the fetch interceptor. For Safari, load
-  `public/fetchInterceptor.js` as a static `MAIN`-world manifest content script
-  and unregister any legacy dynamic copy so stale code cannot win the
-  double-injection guard. Do not treat downloading or processing the visible
-  preview Blob as a complete fix. After rebuilding and reloading, verify that
-  the bridge reports installed and enabled, then confirm the downloaded image's
-  pixel dimensions—not merely that a PNG file appeared.
+- When a failure matches a previously fixed regression, consult
+  `.github/docs/REGRESSION_NOTES.md` on demand instead of loading its history for
+  every Safari update.
 - If a feature disappears, stop. Preserve the installed app and extension data, return to the previously working extension route, and verify the feature before continuing.
 - Use `pluginkit -mAvvv -p com.apple.Safari.web-extension` only as read-only diagnosis. Prefer exact app paths over display names or bundle identifiers when several development copies exist. Escalate to targeted registration changes only with explicit user approval and a recovery plan.
 
