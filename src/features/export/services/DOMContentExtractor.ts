@@ -458,12 +458,11 @@ export class DOMContentExtractor {
       }
 
       // Code block (check for nested code-block first)
-      const codeBlock = child.querySelector('code-block');
-      if (
-        tagName === 'code-block' ||
-        child.classList.contains('code-block') ||
-        (tagName !== 'ul' && tagName !== 'ol' && codeBlock)
-      ) {
+      const codeBlock = Array.from(child.querySelectorAll('code-block')).find((candidate) => {
+        const containingList = candidate.closest('ul, ol');
+        return !containingList || !child.contains(containingList);
+      });
+      if (tagName === 'code-block' || child.classList.contains('code-block') || codeBlock) {
         if (this.DEBUG) console.log('[DOMContentExtractor] Found code block!');
         const elementToExtract = (codeBlock || child) as HTMLElement;
         const codeContent = this.extractCodeBlock(elementToExtract);
@@ -1055,11 +1054,26 @@ export class DOMContentExtractor {
         }
       });
 
+      // Keep regular block code in list items as fenced Markdown instead of
+      // letting inline processing flatten it to a single backtick span.
+      const codeTexts: string[] = [];
+      tempContainer.querySelectorAll('code-block, .code-block').forEach((codeBlock) => {
+        if (codeBlock.closest('.gv-mermaid-wrapper')) return;
+        if (codeBlock.parentElement?.closest('code-block, .code-block')) return;
+
+        const codeContent = this.extractCodeBlock(codeBlock as HTMLElement);
+        if (codeContent.text) {
+          hasCode = true;
+          codeTexts.push(codeContent.text);
+        }
+        codeBlock.remove();
+      });
+
       // Process inline content (handles formulas, emphasis, etc.)
       const processed = this.processInlineContent(tempContainer);
       if (processed.hasFormulas) hasFormulas = true;
       const plainItemText = processed.text || this.normalizeText(tempContainer.textContent || '');
-      const itemText = [plainItemText, ...mermaidTexts].filter(Boolean).join('\n');
+      const itemText = [plainItemText, ...codeTexts, ...mermaidTexts].filter(Boolean).join('\n');
 
       const prefix = isOrdered ? `${index + 1}. ` : '- ';
       textLines.push(indent + prefix + itemText);
@@ -1086,6 +1100,19 @@ export class DOMContentExtractor {
       replacement.innerHTML = mermaidContent.html;
       const renderedDiagram = replacement.firstElementChild;
       if (renderedDiagram) wrapper.replaceWith(renderedDiagram);
+    });
+
+    cleanList.querySelectorAll('code-block, .code-block').forEach((codeBlock) => {
+      if (codeBlock.closest('.gv-mermaid-wrapper')) return;
+      if (codeBlock.parentElement?.closest('code-block, .code-block')) return;
+
+      const codeContent = this.extractCodeBlock(codeBlock as HTMLElement);
+      if (!codeContent.html) return;
+
+      const replacement = document.createElement('div');
+      replacement.innerHTML = codeContent.html;
+      const pre = replacement.firstElementChild;
+      if (pre) codeBlock.replaceWith(pre);
     });
 
     return {

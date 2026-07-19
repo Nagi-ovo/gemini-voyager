@@ -467,5 +467,38 @@ describe('DOMContentExtractor', () => {
       expect(extracted.text).toMatch(/-\s+Diagram/);
       expect(extracted.text).toContain('```mermaid\ngraph TD;\nA-->B;\n```');
     });
+
+    it('preserves regular code blocks inside list items', () => {
+      const assistant = document.createElement('div');
+      assistant.innerHTML = `
+        <message-content>
+          <div class="markdown">
+            <response-element>
+              <ul>
+                <li>
+                  Example
+                  <code-block>
+                    <div class="code-block-decoration">js</div>
+                    <code role="text">const answer = 42;</code>
+                  </code-block>
+                </li>
+              </ul>
+            </response-element>
+          </div>
+        </message-content>
+      `;
+
+      const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+      expect(extracted.hasCode).toBe(true);
+      expect(extracted.html).toContain('<ul>');
+      expect(extracted.html).toContain('<li>');
+      expect(extracted.html).toContain(
+        '<pre><code class="language-js">const answer = 42;</code></pre>',
+      );
+      expect(extracted.html).not.toContain('<code-block');
+      expect(extracted.text).toMatch(/-\s+Example/);
+      expect(extracted.text).toContain('```js\nconst answer = 42;\n```');
+    });
   });
 });
