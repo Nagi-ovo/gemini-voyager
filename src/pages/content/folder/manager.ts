@@ -1577,12 +1577,27 @@ export class FolderManager {
   private createFolderUI(): void {
     if (!this.recentSection) return;
 
-    // Idempotency guard. A recovery-driven reinit can reach this while a
-    // container already exists; drop any prior container first so we never
-    // strand a duplicate folder in the sidebar.
+    // Idempotency guard. Gemini can clone the sidebar subtree during
+    // virtualization, leaving behind a folder container that this manager did
+    // not create (and therefore does not track via `containerElement`). Remove
+    // both the tracked container and any untracked direct sibling before
+    // mounting the current panel.
     if (this.containerElement) {
       this.containerElement.remove();
       this.containerElement = null;
+    }
+    const sectionParent = this.recentSection.parentElement;
+    if (sectionParent) {
+      Array.from(sectionParent.children).forEach((child) => {
+        if (
+          child instanceof HTMLElement &&
+          child.classList.contains('gv-folder-container') &&
+          !child.classList.contains('gv-aistudio') &&
+          !child.classList.contains('gv-multi-select-floating-host')
+        ) {
+          child.remove();
+        }
+      });
     }
 
     // Create folder container

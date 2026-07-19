@@ -26,6 +26,30 @@ Regression test:
 Commit:
 ```
 
+## Folder recovery must remove untracked sidebar clones
+
+Symptom:
+Gemini's sidebar showed two complete Voyager folder panels, which displaced the
+native conversation history and could make it appear unable to scroll.
+
+Root cause:
+Gemini can clone its virtualized sidebar subtree after Voyager mounts the folder
+panel. The cloned `.gv-folder-container` is not referenced by
+`FolderManager.containerElement`, so the old instance-only cleanup left that
+orphan in place when recovery injected a replacement.
+
+Fix:
+Before mounting, remove both the tracked panel and untracked direct folder-panel
+siblings from the current sidebar section host. Keep AI Studio and floating
+multi-select containers out of this cleanup.
+
+Regression test:
+`src/pages/content/folder/__tests__/folderPositionEnforcer.test.ts`
+(`removes an untracked folder clone before recovery mounts a replacement`).
+
+Commit:
+`fix(folder): remove cloned sidebar duplicates`
+
 ## Folder conversation navigation must not hard-refresh Gemini
 
 Symptom:

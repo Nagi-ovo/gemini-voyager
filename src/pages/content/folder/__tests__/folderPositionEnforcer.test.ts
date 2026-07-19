@@ -561,6 +561,32 @@ describe('folder position enforcer (above Recents)', () => {
     expect(typed.containerElement?.isConnected).toBe(true);
   });
 
+  it('removes an untracked folder clone before recovery mounts a replacement', () => {
+    manager = new FolderManager();
+    const typed = manager as unknown as TestableManager &
+      Record<'createFolderUI', () => void> & { data: unknown };
+
+    const { sidebar, sectionParent, recentsSection } = mountSidebar();
+    typed.sidebarContainer = sidebar;
+    typed.recentSection = recentsSection;
+    typed.folderEnabled = true;
+    typed.floatingModeActive = false;
+
+    typed.createFolderUI();
+    const tracked = typed.containerElement;
+    const untrackedClone = tracked?.cloneNode(true) as HTMLElement;
+    sectionParent.insertBefore(untrackedClone, recentsSection);
+    expect(sectionParent.querySelectorAll('.gv-folder-container')).toHaveLength(2);
+
+    // Gemini can clone the sidebar subtree without updating our tracked node.
+    // Recovery must remove both the tracked original and the orphaned clone.
+    typed.createFolderUI();
+    expect(sectionParent.querySelectorAll('.gv-folder-container')).toHaveLength(1);
+    expect(tracked?.isConnected).toBe(false);
+    expect(untrackedClone.isConnected).toBe(false);
+    expect(typed.containerElement?.isConnected).toBe(true);
+  });
+
   it('does not partially mount from findRecentSection when the anchor appears late', async () => {
     vi.useFakeTimers();
 
