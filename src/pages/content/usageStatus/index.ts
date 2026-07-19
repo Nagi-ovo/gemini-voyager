@@ -203,8 +203,12 @@ function currentUsageCacheKey(): string {
 }
 
 export function usageUrlForPathname(pathname: string): string {
+  return `https://gemini.google.com${usagePathForPathname(pathname)}`;
+}
+
+export function usagePathForPathname(pathname: string): string {
   const match = pathname.match(/^\/u\/\d+(?=\/|$)/);
-  return `https://gemini.google.com${match?.[0] ?? ''}/usage`;
+  return `${match?.[0] ?? ''}/usage`;
 }
 
 function scopeSnapshot(next: UsageSnapshot): UsageSnapshot {
@@ -1455,7 +1459,11 @@ function requestReplay(allowRegression = false): void {
           id,
           rpcid: recipe.rpcid,
           args: recipe.args,
-          sourcePath: location.pathname || '/app',
+          // This RPC belongs to Gemini's usage surface. Passing the current
+          // conversation route worked only while the backend ignored
+          // `source-path`; account-scoped `/usage` keeps replay faithful to the
+          // request we originally captured.
+          sourcePath: usagePathForPathname(location.pathname),
         },
       },
       location.origin,

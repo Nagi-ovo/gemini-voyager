@@ -98,7 +98,7 @@ describe('usage-observer replay', () => {
     );
   });
 
-  it('replays multi-account usage requests on the same account route', async () => {
+  it('replays multi-account usage requests against the account-scoped usage route', async () => {
     installObserver();
 
     dispatchReplay('/u/2/app');
@@ -106,7 +106,18 @@ describe('usage-observer replay', () => {
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
     const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
     expect(requestUrl.pathname).toBe('/u/2/_/BardChatUi/data/batchexecute');
-    expect(requestUrl.searchParams.get('source-path')).toBe('/u/2/app');
+    expect(requestUrl.searchParams.get('source-path')).toBe('/u/2/usage');
+  });
+
+  it('replays default-account usage requests against /usage', async () => {
+    installObserver();
+
+    dispatchReplay('/app/some-conversation');
+
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledOnce());
+    const requestUrl = new URL(String(fetchMock.mock.calls[0][0]));
+    expect(requestUrl.pathname).toBe('/_/BardChatUi/data/batchexecute');
+    expect(requestUrl.searchParams.get('source-path')).toBe('/usage');
   });
 
   it('does not treat copy batchexecute traffic as generation when text mentions generation APIs', async () => {

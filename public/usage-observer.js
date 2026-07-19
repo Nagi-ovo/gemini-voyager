@@ -190,16 +190,20 @@
       }
       var rpcid = d.payload.rpcid;
       var args = d.payload.args;
-      var sourcePath =
+      var requestedSourcePath =
         typeof d.payload.sourcePath === 'string' && d.payload.sourcePath
           ? d.payload.sourcePath
-          : location.pathname || '/app';
+          : location.pathname || '/usage';
       var freq = JSON.stringify([[[rpcid, args, null, 'generic']]]);
       var reqBody = 'f.req=' + encodeURIComponent(freq) + '&at=' + encodeURIComponent(at) + '&';
       var reqid = 100000 + (Math.floor(performance.now()) % 800000);
 
-      var match = sourcePath.match(/^\/u\/\d+/);
+      var match = requestedSourcePath.match(/^\/u\/\d+(?=\/|$)/);
       var accountPrefix = match ? match[0] : '';
+      // The replayed RPC originates from Gemini's usage surface even while the
+      // user stays on a conversation. Some backend variants reject or return a
+      // non-usage payload when this is mislabeled as `/app`.
+      var sourcePath = accountPrefix + '/usage';
       var url =
         location.origin +
         accountPrefix +

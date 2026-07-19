@@ -16,6 +16,7 @@ import {
   selectUsageSnapshotForAccount,
   usageAccountKeyFromPathname,
   usageCacheKeyForAccount,
+  usagePathForPathname,
   usageUrlForPathname,
 } from '../index';
 
@@ -221,6 +222,8 @@ describe('usage account scoping', () => {
   it('uses per-account cache keys and usage urls', () => {
     expect(usageCacheKeyForAccount('default')).toBe('gvUsageCache:default');
     expect(usageCacheKeyForAccount('u/2')).toBe('gvUsageCache:u/2');
+    expect(usagePathForPathname('/app')).toBe('/usage');
+    expect(usagePathForPathname('/u/2/app')).toBe('/u/2/usage');
     expect(usageUrlForPathname('/app')).toBe('https://gemini.google.com/usage');
     expect(usageUrlForPathname('/u/2/app')).toBe('https://gemini.google.com/u/2/usage');
   });
