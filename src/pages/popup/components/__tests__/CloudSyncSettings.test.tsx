@@ -107,6 +107,56 @@ describe('CloudSyncSettings auth flow', () => {
     document.body.appendChild(container);
   });
 
+  it('shows Gemini as a branded platform summary without decorative emoji text', async () => {
+    const sendMessageMock = vi.fn().mockImplementation((message: { type?: string }) => {
+      if (message.type === 'gv.sync.getState') {
+        return Promise.resolve({ ok: true, state: baseState });
+      }
+      return Promise.resolve({ ok: true });
+    });
+    (globalThis as { chrome: MockedChrome }).chrome = createChromeMock(sendMessageMock);
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(<CloudSyncSettings />);
+    });
+    await flushMicrotasks();
+
+    const summary = container.querySelector('[data-testid="sync-platform-summary"]');
+    const logo = summary?.querySelector('img');
+
+    expect(summary?.textContent).toContain('platformGemini');
+    expect(summary?.textContent).not.toContain('✨');
+    expect(logo?.getAttribute('src')).toContain('gemini_sparkle');
+    expect(logo?.getAttribute('alt')).toBe('');
+  });
+
+  it('switches the platform summary artwork and label for AI Studio', async () => {
+    const sendMessageMock = vi.fn().mockImplementation((message: { type?: string }) => {
+      if (message.type === 'gv.sync.getState') {
+        return Promise.resolve({ ok: true, state: baseState });
+      }
+      return Promise.resolve({ ok: true });
+    });
+    const chromeMock = createChromeMock(sendMessageMock);
+    (chromeMock.tabs.query as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([
+      { id: 2, url: 'https://aistudio.google.com/prompts/new_chat' },
+    ]);
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    await act(async () => {
+      root = createRoot(container);
+      root.render(<CloudSyncSettings />);
+    });
+    await flushMicrotasks();
+
+    const summary = container.querySelector('[data-testid="sync-platform-summary"]');
+    const logo = summary?.querySelector('img');
+
+    expect(summary?.textContent).toContain('platformAIStudio');
+    expect(logo?.getAttribute('src')).toContain('/productlogos/ai_studio/');
+  });
+
   it('lets Safari users select iCloud without changing the sync mode', async () => {
     browserTarget.value = 'safari';
     const sendMessageMock = vi.fn().mockImplementation((message: { type?: string }) => {
