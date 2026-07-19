@@ -33,9 +33,26 @@ NOTARY_ZIP="$WORK_DIR/Voyager.zip"
 DMG_ROOT="$WORK_DIR/dmg"
 DMG_PATH="$OUTPUT_DIR/voyager-$TAG.dmg"
 APPCAST_PATH="$OUTPUT_DIR/appcast.xml"
+DMG_BACKGROUND="$ROOT_DIR/scripts/assets/safari-dmg-background.png"
+DMG_SETTINGS="$ROOT_DIR/scripts/safari-dmg-settings.py"
 
 mkdir -p "$OUTPUT_DIR" "$DMG_ROOT"
 rm -f "$DMG_PATH" "$APPCAST_PATH"
+
+if ! command -v dmgbuild >/dev/null 2>&1; then
+  echo "dmgbuild is required to build the branded Safari installer" >&2
+  exit 1
+fi
+
+if [[ ! -f $DMG_BACKGROUND ]]; then
+  echo "Safari DMG background not found: $DMG_BACKGROUND" >&2
+  exit 1
+fi
+
+if [[ ! -f $DMG_SETTINGS ]]; then
+  echo "Safari DMG settings not found: $DMG_SETTINGS" >&2
+  exit 1
+fi
 
 submit_for_notarization() {
   local artifact=$1
@@ -149,14 +166,14 @@ xcrun stapler staple "$APP_PATH"
 xcrun stapler validate "$APP_PATH"
 
 ditto "$APP_PATH" "$DMG_ROOT/Voyager.app"
-ln -s /Applications "$DMG_ROOT/Applications"
 cp "$ROOT_DIR/scripts/safari-dmg-readme.html" "$DMG_ROOT/READ ME — Safari Upgrade.html"
 node "$ROOT_DIR/scripts/verify-release-privacy.mjs" "$DMG_ROOT"
-hdiutil create \
-  -volname "Voyager" \
-  -srcfolder "$DMG_ROOT" \
-  -format UDZO \
-  -ov \
+
+dmgbuild \
+  -s "$DMG_SETTINGS" \
+  -D "source=$DMG_ROOT" \
+  -D "background=$DMG_BACKGROUND" \
+  "Voyager" \
   "$DMG_PATH"
 
 submit_for_notarization "$DMG_PATH"

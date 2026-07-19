@@ -79,7 +79,11 @@ The script then:
 2. Exports `Voyager.app` using the app and extension provisioning profiles.
 3. Verifies code signing and requires both `arm64` and `x86_64`.
 4. Notarizes a zip containing the app, then staples and validates the app.
-5. Builds a DMG with `Voyager.app`, `/Applications`, and the migration README.
+5. Builds a branded DMG with `Voyager.app`, an `/Applications` drop target, the
+   migration README, and `scripts/assets/safari-dmg-background.png`. The fixed
+   Finder layout is produced by pinned `dmgbuild`, which writes `.DS_Store`
+   directly instead of relying on Finder automation. CI installs it into the
+   explicit Python version prepared by `actions/setup-python`.
 6. Notarizes, staples, and validates the DMG.
 7. Generates signed `appcast.xml` from the final DMG.
 8. Runs the privacy scanner over the app, DMG, and appcast.

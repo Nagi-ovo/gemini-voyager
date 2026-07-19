@@ -48,6 +48,28 @@ describe('release artifacts', () => {
     expect(script).not.toContain('submission_id');
   });
 
+  it('builds a branded Safari DMG with a fixed drag-to-Applications layout', () => {
+    const workflow = readFileSync(resolve(process.cwd(), '.github/workflows/release.yml'), 'utf8');
+    const script = readFileSync(resolve(process.cwd(), 'scripts/build-safari-release.sh'), 'utf8');
+    const background = readFileSync(
+      resolve(process.cwd(), 'scripts/assets/safari-dmg-background.png'),
+    );
+
+    const settings = readFileSync(resolve(process.cwd(), 'scripts/safari-dmg-settings.py'), 'utf8');
+
+    expect(workflow).toContain("'dmgbuild==1.6.7'");
+    expect(script).toContain('dmgbuild');
+    expect(script).toContain('-D "background=$DMG_BACKGROUND"');
+    expect(settings).toContain('"Voyager.app": (174, 255)');
+    expect(settings).toContain('"Applications": (665, 215)');
+    expect(settings).toContain('"READ ME — Safari Upgrade.html": (426, 330)');
+    expect(settings).toContain('show_sidebar = False');
+    expect(background.subarray(1, 4).toString()).toBe('PNG');
+    expect(background.readUInt32BE(16)).toBe(840);
+    expect(background.readUInt32BE(20)).toBe(460);
+    expect(background[25]).toBe(6);
+  });
+
   it('builds and stores the Edge release variant independently from Chrome', () => {
     const ci = readFileSync(resolve(process.cwd(), '.github/workflows/ci.yml'), 'utf8');
     const viteConfig = readFileSync(resolve(process.cwd(), 'vite.config.chrome.ts'), 'utf8');
