@@ -282,6 +282,31 @@ Regression test:
 Commit:
 `146a698f fix(usage): map Gemini usage buckets by period`
 
+## Gemini usage parsing must tolerate unknown sibling buckets
+
+Symptom:
+On both Chrome and Edge, refreshing the usage pill from a conversation could
+finish without an error but leave the quota and "updated" timestamp unchanged.
+Opening `/usage` still refreshed the values.
+
+Root cause:
+Gemini added a `period=4` quota bucket whose tuple layout differs from the
+existing 5h (`period=1`) and weekly (`period=2`) buckets. The parser required
+every sibling tuple to match the known layout, so one unfamiliar bucket caused
+it to discard the entire otherwise-valid HTTP 200 RPC response.
+
+Fix:
+Recognize a candidate metric array when it contains any valid known tuple,
+parse its members independently, and ignore unfamiliar buckets. Continue to
+map only `period=1` and `period=2`; do not infer unknown periods by position.
+
+Regression test:
+`src/pages/content/usageStatus/__tests__/usageStatus.test.ts`
+("ignores unfamiliar sibling quota buckets without dropping daily and weekly usage")
+
+Commit:
+`335572c6 fix(usage): tolerate unknown quota buckets`
+
 ## KaTeX radicals need their SVG layout preserved before export
 
 Symptom:
