@@ -251,4 +251,55 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
     matches: ['https://claude.ai/*'],
     contributes: {},
   },
+  {
+    id: 'voyager.claude-export',
+    name: 'Claude · Chat Export',
+    version: '1.0.0',
+    description: 'Exports complete Claude conversations as JSON, Markdown, PDF, or PNG.',
+    i18n: {
+      zh: {
+        name: 'Claude · 对话导出',
+        description: '将完整的 Claude 对话导出为 JSON、Markdown、PDF 或 PNG。',
+      },
+      zh_TW: {
+        name: 'Claude · 對話匯出',
+        description: '將完整的 Claude 對話匯出為 JSON、Markdown、PDF 或 PNG。',
+      },
+      ja: {
+        name: 'Claude · チャット書き出し',
+        description: 'Claude の会話全体を JSON、Markdown、PDF、PNG で書き出します。',
+      },
+      ko: {
+        name: 'Claude · 채팅 내보내기',
+        description: '전체 Claude 대화를 JSON, Markdown, PDF 또는 PNG로 내보냅니다.',
+      },
+      fr: {
+        name: 'Claude · Export du chat',
+        description: 'Exporte les conversations Claude complètes en JSON, Markdown, PDF ou PNG.',
+      },
+      es: {
+        name: 'Claude · Exportar chat',
+        description: 'Exporta conversaciones completas de Claude como JSON, Markdown, PDF o PNG.',
+      },
+      pt: {
+        name: 'Claude · Exportar conversa',
+        description: 'Exporta conversas completas do Claude como JSON, Markdown, PDF ou PNG.',
+      },
+      ru: {
+        name: 'Claude · Экспорт чата',
+        description: 'Экспортирует диалоги Claude целиком в JSON, Markdown, PDF или PNG.',
+      },
+      ar: {
+        name: 'Claude · تصدير المحادثة',
+        description: 'يصدّر محادثات Claude كاملة بصيغة JSON أو Markdown أو PDF أو PNG.',
+      },
+    },
+    author: 'voyager-official',
+    category: 'productivity',
+    license: 'GPL-3.0-or-later',
+    engine: '>=1.1.0',
+    tier: 'declarative',
+    matches: ['https://claude.ai/*'],
+    contributes: {},
+  },
 ];

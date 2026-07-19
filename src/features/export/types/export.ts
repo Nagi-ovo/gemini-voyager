@@ -44,6 +44,8 @@ export interface ConversationMetadata {
   exportedAt: string;
   title?: string;
   count: number;
+  /** Source platform; omitted for backward-compatible Gemini exports. */
+  source?: 'gemini' | 'claude';
 }
 
 /**

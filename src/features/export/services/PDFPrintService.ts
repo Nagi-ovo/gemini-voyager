@@ -501,7 +501,7 @@ export class PDFPrintService {
       : pageConversationTitle || metadataTitle || 'Untitled Conversation';
     // For PDF, avoid repeating the same title in smaller text under the H1.
     // Always derive a neutral "source" label from the URL instead of using metadata.title.
-    const urlTitle = this.extractTitleFromURL(metadata.url);
+    const urlTitle = this.extractTitleFromURL(metadata.url, metadata.source);
     const date = this.formatDate(metadata.exportedAt);
     const turnsCount = metadata.count;
 
@@ -1044,18 +1044,19 @@ export class PDFPrintService {
   /**
    * Helper: Extract title from URL
    */
-  private static extractTitleFromURL(url: string): string {
+  private static extractTitleFromURL(url: string, source: ConversationMetadata['source']): string {
+    const sourceName = source === 'claude' ? 'Claude' : 'Gemini';
     try {
       const urlObj = new URL(url);
       const pathname = urlObj.pathname;
       const match = pathname.match(/\/(app|chat)\/([^/]+)/);
       if (match) {
         const id = match[2];
-        return `Gemini Conversation ${id.substring(0, 8)}`;
+        return `${sourceName} Conversation ${id.substring(0, 8)}`;
       }
-      return 'Gemini Conversation';
+      return `${sourceName} Conversation`;
     } catch {
-      return 'Gemini Conversation';
+      return `${sourceName} Conversation`;
     }
   }
 
@@ -1083,6 +1084,7 @@ export class PDFPrintService {
       .trim()
       .replace(/\s+-\s+Gemini$/i, '')
       .replace(/\s+-\s+Google Gemini$/i, '')
+      .replace(/\s*[|-]\s*Claude$/i, '')
       .replace(/\s+/g, ' ')
       .trim();
     return this.isMeaningfulConversationTitle(normalized) ? normalized : '';
@@ -1092,16 +1094,18 @@ export class PDFPrintService {
     metadata: ConversationMetadata,
     preferMetadataTitle: boolean,
   ): string {
+    const sourceName = metadata.source === 'claude' ? 'Claude' : 'Gemini';
+    const fallbackTitle = `${sourceName} Conversation`;
     const metadataTitle = this.normalizeConversationTitle(metadata.title);
     const conversationTitle = this.normalizeConversationTitle(this.getConversationTitle());
 
     if (preferMetadataTitle) {
-      return metadataTitle || conversationTitle || 'Gemini Conversation';
+      return metadataTitle || conversationTitle || fallbackTitle;
     }
 
     const base = conversationTitle || metadataTitle;
-    if (!base) return 'Gemini Conversation';
-    return `${base} - Gemini`;
+    if (!base) return fallbackTitle;
+    return `${base} - ${sourceName}`;
   }
 
   /**

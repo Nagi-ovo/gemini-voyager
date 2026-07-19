@@ -105,14 +105,15 @@ export class MarkdownFormatter {
     const lines: string[] = [];
 
     // Title
-    const title = metadata.title || this.extractTitleFromURL(metadata.url);
+    const title = metadata.title || this.extractTitleFromURL(metadata.url, metadata.source);
     lines.push(`# ${this.escapeMarkdown(title)}`);
     lines.push('');
 
     // Metadata table
     lines.push(`**Date**: ${this.formatDate(metadata.exportedAt)}`);
     lines.push(`**Turns**: ${metadata.count}`);
-    lines.push(`**Source**: [Gemini Chat](${metadata.url})`);
+    const sourceLabel = metadata.source === 'claude' ? 'Claude Chat' : 'Gemini Chat';
+    lines.push(`**Source**: [${sourceLabel}](${metadata.url})`);
 
     return lines.join('\n');
   }
@@ -234,7 +235,8 @@ export class MarkdownFormatter {
   /**
    * Extract title from URL
    */
-  private static extractTitleFromURL(url: string): string {
+  private static extractTitleFromURL(url: string, source: ConversationMetadata['source']): string {
+    const sourceName = source === 'claude' ? 'Claude' : 'Gemini';
     try {
       const urlObj = new URL(url);
       const pathname = urlObj.pathname;
@@ -244,12 +246,12 @@ export class MarkdownFormatter {
       const match = pathname.match(/\/(app|chat)\/([^/]+)/);
       if (match) {
         const id = match[2];
-        return `Gemini Conversation ${id.substring(0, 8)}`;
+        return `${sourceName} Conversation ${id.substring(0, 8)}`;
       }
 
-      return 'Gemini Conversation';
+      return `${sourceName} Conversation`;
     } catch {
-      return 'Gemini Conversation';
+      return `${sourceName} Conversation`;
     }
   }
 

@@ -61,4 +61,14 @@ describe('BUILTIN_PLUGINS', () => {
     expect(usage?.contributes.domOps ?? []).toEqual([]);
     expect(usage?.i18n?.zh?.name).toBe('Claude · 用量条');
   });
+
+  it('includes the Claude export native function plugin', () => {
+    const exporter = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.claude-export');
+    expect(exporter).toBeDefined();
+    expect(exporter?.matches).toEqual(['https://claude.ai/*']);
+    expect(exporter?.contributes.styles ?? []).toEqual([]);
+    expect(exporter?.contributes.domOps ?? []).toEqual([]);
+    expect(exporter?.i18n?.zh?.name).toBe('Claude · 对话导出');
+    expect(exporter?.i18n?.ja?.description).toContain('Markdown');
+  });
 });

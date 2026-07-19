@@ -213,6 +213,21 @@ describe('PDFPrintService', () => {
     expect(coverTitle?.textContent).toBe('房贷还款方式对比分析');
   });
 
+  it('uses Claude in the print dialog title for Claude exports', async () => {
+    document.title = 'Async progress | Claude';
+    window.print = vi.fn();
+
+    await PDFPrintService.export([{ user: 'u', assistant: 'a', starred: false }], {
+      url: 'https://claude.ai/chat/abc12345',
+      exportedAt: new Date().toISOString(),
+      count: 1,
+      title: 'Async progress',
+      source: 'claude',
+    });
+
+    expect(document.title).toBe('Async progress - Claude');
+  });
+
   it('extracts title from native sidebar by conversation id and restores page title after print', async () => {
     vi.useFakeTimers();
     document.title = 'Google Gemini';

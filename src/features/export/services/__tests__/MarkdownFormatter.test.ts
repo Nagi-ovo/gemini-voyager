@@ -44,6 +44,17 @@ describe('MarkdownFormatter', () => {
       expect(markdown).toContain('[Gemini Chat]');
     });
 
+    it('labels Claude conversations with their source platform', () => {
+      const markdown = MarkdownFormatter.format(mockTurns, {
+        ...mockMetadata,
+        url: 'https://claude.ai/chat/test-conversation',
+        source: 'claude',
+      });
+
+      expect(markdown).toContain('[Claude Chat](https://claude.ai/chat/test-conversation)');
+      expect(markdown).not.toContain('[Gemini Chat]');
+    });
+
     it('should format turns correctly', () => {
       const markdown = MarkdownFormatter.format(mockTurns, mockMetadata);
 

@@ -8,6 +8,7 @@ import {
 import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { startFormulaCopy, stopFormulaCopy } from '@/features/formulaCopy';
 import { startPluginHost } from '@/features/plugins';
+import { startClaudeExport, stopClaudeExport } from '@/features/plugins/builtin/claudeExport';
 import {
   startClaudeTimeline,
   stopClaudeTimeline,
@@ -501,6 +502,10 @@ function handleVisibilityChange(): void {
     registerNativeHandler('voyager.claude-usage', {
       start: startClaudeUsage,
       stop: stopClaudeUsage,
+    });
+    registerNativeHandler('voyager.claude-export', {
+      start: startClaudeExport,
+      stop: stopClaudeExport,
     });
 
     pluginHostCleanup = startPluginHost();
