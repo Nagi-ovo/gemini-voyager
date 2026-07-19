@@ -428,5 +428,40 @@ describe('DOMContentExtractor', () => {
       expect(extracted.html).not.toContain('<button');
       expect(extracted.text).toContain('```mermaid\ngraph TD;\nA-->B;\n```');
     });
+
+    it('preserves list structure when a list item contains rendered Mermaid', () => {
+      const assistant = document.createElement('div');
+      assistant.innerHTML = `
+        <message-content>
+          <div class="markdown">
+            <response-element>
+              <ul>
+                <li>
+                  Diagram
+                  <div class="gv-mermaid-wrapper">
+                    <code-block style="display: none">
+                      <div class="code-block-decoration">mermaid</div>
+                      <code role="text">graph TD;\nA--&gt;B;</code>
+                    </code-block>
+                    <div class="gv-mermaid-toggle"><button>Code</button></div>
+                    <div class="gv-mermaid-diagram">
+                      <svg id="list-diagram" viewBox="0 0 100 50"></svg>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </response-element>
+          </div>
+        </message-content>
+      `;
+
+      const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+      expect(extracted.html).toContain('<ul>');
+      expect(extracted.html).toContain('<li>');
+      expect(extracted.html).toContain('id="list-diagram"');
+      expect(extracted.html).not.toContain('<button');
+      expect(extracted.text).toMatch(/-\s+Diagram/);
+    });
   });
 });

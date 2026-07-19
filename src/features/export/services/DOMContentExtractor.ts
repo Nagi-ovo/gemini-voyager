@@ -398,7 +398,10 @@ export class DOMContentExtractor {
 
       // A response-element can wrap the Mermaid component. Recurse until the wrapper
       // is reached instead of letting the nested code-block shortcut export raw code.
-      if (child.querySelector('.gv-mermaid-wrapper .gv-mermaid-diagram svg')) {
+      if (
+        tagName === 'response-element' &&
+        child.querySelector('.gv-mermaid-wrapper .gv-mermaid-diagram svg')
+      ) {
         this.processNodes(child, htmlParts, textParts, flags);
         continue;
       }
@@ -456,7 +459,11 @@ export class DOMContentExtractor {
 
       // Code block (check for nested code-block first)
       const codeBlock = child.querySelector('code-block');
-      if (tagName === 'code-block' || child.classList.contains('code-block') || codeBlock) {
+      if (
+        tagName === 'code-block' ||
+        child.classList.contains('code-block') ||
+        (tagName !== 'ul' && tagName !== 'ol' && codeBlock)
+      ) {
         if (this.DEBUG) console.log('[DOMContentExtractor] Found code block!');
         const elementToExtract = (codeBlock || child) as HTMLElement;
         const codeContent = this.extractCodeBlock(elementToExtract);
