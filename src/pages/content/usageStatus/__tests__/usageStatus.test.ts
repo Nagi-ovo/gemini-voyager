@@ -506,6 +506,16 @@ const REAL_USAGE_RESPONSE = `)]}'
 [["e",4,null,null,234]]
 `;
 
+// Gemini added a third period=4 quota bucket in July 2026. Its reset metadata
+// uses a different tuple layout; the known period=1/2 metrics must still parse.
+const REAL_USAGE_RESPONSE_WITH_EXTRA_BUCKET = `)]}'
+
+246
+[["wrb.fr","jSf9Qc","[2,[[48106,0.01453888,2,[[1781646433,197701000]]],[2400,0.05,1,[[1781135233,197509000]]],[10,0,4,null,null,[[1781732833,0],4]]],false]",null,null,null,"generic"],["di",247],["af.httprm",247,"7026120334830552683",47]]
+25
+[["e",4,null,null,282]]
+`;
+
 describe('parseUsageRpcResponse (real captured response)', () => {
   it('extracts daily/weekly metrics and the rpcid', () => {
     const parsed = parseUsageRpcResponse(REAL_USAGE_RESPONSE);
@@ -519,6 +529,13 @@ describe('parseUsageRpcResponse (real captured response)', () => {
   it('rounds the fraction to a percent like the Gemini UI does', () => {
     // 0.00572625 -> 0.57% -> "1% used" in the DOM
     expect(parseUsageRpcResponse(REAL_USAGE_RESPONSE)?.weekly?.percent).toBe(1);
+  });
+
+  it('ignores unfamiliar sibling quota buckets without dropping daily and weekly usage', () => {
+    const parsed = parseUsageRpcResponse(REAL_USAGE_RESPONSE_WITH_EXTRA_BUCKET);
+
+    expect(parsed?.daily).toEqual({ percent: 5, resetEpoch: 1781135233 });
+    expect(parsed?.weekly).toEqual({ percent: 1, resetEpoch: 1781646433 });
   });
 
   it('returns null for non-usage batchexecute payloads', () => {

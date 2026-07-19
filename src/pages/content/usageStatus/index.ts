@@ -735,9 +735,11 @@ export function extractUsagePayload(
   payload: unknown,
 ): { daily: RawMetric | null; weekly: RawMetric | null } | null {
   if (!Array.isArray(payload)) return null;
+  // Gemini may append new quota buckets with a different tuple layout. Keep
+  // parsing the known 5h/weekly metrics instead of rejecting the whole array
+  // because one sibling bucket is unfamiliar.
   const metricsArr = payload.find(
-    (x): x is unknown[] =>
-      Array.isArray(x) && x.length >= 1 && x.every((m) => readMetric(m) !== null),
+    (x): x is unknown[] => Array.isArray(x) && x.some((m) => readMetric(m) !== null),
   );
   if (!metricsArr) return null;
   const metrics = metricsArr.map(readMetric).filter((m): m is ParsedMetric => m !== null);
