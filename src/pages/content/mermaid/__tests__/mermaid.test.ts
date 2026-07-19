@@ -6,6 +6,7 @@ import {
   isGenericLanguageLabel,
   isMermaidCode,
   loadMermaid,
+  normalizeMermaidCode,
   normalizeWhitespace,
 } from '../index';
 
@@ -364,6 +365,39 @@ describe('Mermaid dynamic loading', () => {
     it('should leave standard whitespace unchanged', () => {
       const input = 'graph TD\n  A --> B\n  B --> C';
       expect(normalizeWhitespace(input)).toBe('graph TD\n  A --> B\n  B --> C');
+    });
+  });
+
+  describe('normalizeMermaidCode', () => {
+    it('moves a trailing comment after linkStyle onto its own line', () => {
+      const input = `graph TD
+        A --> B
+        linkStyle 0 stroke:#FF5722,stroke-width:3px; %% emphasize the edge`;
+
+      expect(normalizeMermaidCode(input)).toBe(`graph TD
+        A --> B
+        linkStyle 0 stroke:#FF5722,stroke-width:3px;
+        %% emphasize the edge`);
+    });
+
+    it('handles trailing comments on other style directives', () => {
+      const input = `graph TD
+        classDef result fill:#C8E6C9; %% result style
+        class A result; %% apply result style`;
+
+      expect(normalizeMermaidCode(input)).toBe(`graph TD
+        classDef result fill:#C8E6C9;
+        %% result style
+        class A result;
+        %% apply result style`);
+    });
+
+    it('leaves standalone comments and diagram text unchanged', () => {
+      const input = `graph TD
+        %% standalone comment
+        A[Progress %% complete] --> B`;
+
+      expect(normalizeMermaidCode(input)).toBe(input);
     });
   });
 

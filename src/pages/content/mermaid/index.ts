@@ -490,11 +490,31 @@ export const normalizeWhitespace = (code: string): string => {
 };
 
 /**
+ * Move model-generated trailing comments after Mermaid style directives onto
+ * their own line. Mermaid only accepts `%%` comments at the start of a line.
+ * Keep this deliberately narrow so text inside diagram nodes is not rewritten.
+ *
+ * @internal Exported for testing
+ */
+export const normalizeMermaidCode = (code: string): string => {
+  return normalizeWhitespace(code)
+    .split('\n')
+    .flatMap((line) => {
+      const match = line.match(/^(\s*)((?:classDef|class|style|linkStyle)\b.*?;\s*)%%(.*)$/i);
+      if (!match) return [line];
+
+      const [, indent, statement, comment] = match;
+      return [`${indent}${statement.trimEnd()}`, `${indent}%%${comment}`];
+    })
+    .join('\n');
+};
+
+/**
  * Render Mermaid diagram for a code block
  */
 const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
-  // Normalize whitespace before processing
-  const normalizedCode = normalizeWhitespace(code);
+  // Normalize common copy/paste and model-output issues before processing.
+  const normalizedCode = normalizeMermaidCode(code);
   if (codeBlock.dataset.mermaidCode === normalizedCode) return;
   if (codeBlock.dataset.mermaidProcessing === 'true') return;
 
