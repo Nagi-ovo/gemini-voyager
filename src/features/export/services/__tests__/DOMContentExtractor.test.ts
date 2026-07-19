@@ -457,11 +457,15 @@ describe('DOMContentExtractor', () => {
 
       const extracted = DOMContentExtractor.extractAssistantContent(assistant);
 
+      expect(extracted.hasCode).toBe(true);
       expect(extracted.html).toContain('<ul>');
       expect(extracted.html).toContain('<li>');
+      expect(extracted.html).toContain('<div class="gv-export-mermaid"><svg');
       expect(extracted.html).toContain('id="list-diagram"');
       expect(extracted.html).not.toContain('<button');
+      expect(extracted.html).not.toContain('<code-block');
       expect(extracted.text).toMatch(/-\s+Diagram/);
+      expect(extracted.text).toContain('```mermaid\ngraph TD;\nA-->B;\n```');
     });
   });
 });

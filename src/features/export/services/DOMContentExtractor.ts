@@ -613,6 +613,7 @@ export class DOMContentExtractor {
       if (tagName === 'ul' || tagName === 'ol') {
         const listContent = this.extractList(child as HTMLElement);
         if (listContent.hasFormulas) flags.hasFormulas = true;
+        if (listContent.hasCode) flags.hasCode = true;
         htmlParts.push(listContent.html);
         textParts.push(`\n${listContent.text}\n`);
         continue;
@@ -1018,13 +1019,14 @@ export class DOMContentExtractor {
   private static extractList(
     element: HTMLElement,
     depth: number = 0,
-  ): { html: string; text: string; hasFormulas: boolean } {
+  ): { html: string; text: string; hasFormulas: boolean; hasCode: boolean } {
     const isOrdered = element.tagName === 'OL';
     const items = Array.from(element.querySelectorAll(':scope > li'));
     const indent = '  '.repeat(depth); // 2 spaces per level
 
     const textLines: string[] = [];
     let hasFormulas = false;
+    let hasCode = false;
     items.forEach((item, index) => {
       // Create a temporary container with only direct children (excluding nested lists)
       const tempContainer = document.createElement('div');
@@ -1042,10 +1044,22 @@ export class DOMContentExtractor {
         }
       });
 
+      // Mermaid needs separate rich HTML and fenced Markdown representations.
+      const mermaidTexts: string[] = [];
+      tempContainer.querySelectorAll('.gv-mermaid-wrapper').forEach((wrapper) => {
+        const mermaidContent = this.extractRenderedMermaid(wrapper as HTMLElement);
+        if (mermaidContent) {
+          hasCode = true;
+          mermaidTexts.push(mermaidContent.text);
+          wrapper.remove();
+        }
+      });
+
       // Process inline content (handles formulas, emphasis, etc.)
       const processed = this.processInlineContent(tempContainer);
       if (processed.hasFormulas) hasFormulas = true;
-      const itemText = processed.text || this.normalizeText(tempContainer.textContent || '');
+      const plainItemText = processed.text || this.normalizeText(tempContainer.textContent || '');
+      const itemText = [plainItemText, ...mermaidTexts].filter(Boolean).join('\n');
 
       const prefix = isOrdered ? `${index + 1}. ` : '- ';
       textLines.push(indent + prefix + itemText);
@@ -1055,6 +1069,7 @@ export class DOMContentExtractor {
       nestedLists.forEach((nestedList) => {
         const nestedResult = this.extractList(nestedList as HTMLElement, depth + 1);
         if (nestedResult.hasFormulas) hasFormulas = true;
+        if (nestedResult.hasCode) hasCode = true;
         if (nestedResult.text) {
           textLines.push(nestedResult.text);
         }
@@ -1063,9 +1078,19 @@ export class DOMContentExtractor {
 
     const cleanList = element.cloneNode(true) as HTMLElement;
     this.stripExportArtifacts(cleanList);
+    cleanList.querySelectorAll('.gv-mermaid-wrapper').forEach((wrapper) => {
+      const mermaidContent = this.extractRenderedMermaid(wrapper as HTMLElement);
+      if (!mermaidContent) return;
+
+      const replacement = document.createElement('div');
+      replacement.innerHTML = mermaidContent.html;
+      const renderedDiagram = replacement.firstElementChild;
+      if (renderedDiagram) wrapper.replaceWith(renderedDiagram);
+    });
 
     return {
       hasFormulas,
+      hasCode,
       html: cleanList.outerHTML,
       text: textLines.join('\n'),
     };
