@@ -1080,7 +1080,9 @@ export class DOMContentExtractor {
       if (blockTexts.length === 0) {
         textLines.push(indent + prefix + plainItemText);
       } else {
-        const firstLine = plainItemText ? indent + prefix + plainItemText : indent + prefix.trimEnd();
+        const firstLine = plainItemText
+          ? indent + prefix + plainItemText
+          : indent + prefix.trimEnd();
         textLines.push(firstLine);
         for (const block of blockTexts) {
           const indentedBlock = block
