@@ -447,7 +447,19 @@ describe('GoogleDriveSyncService highlights-only sync', () => {
       if (url.origin === 'https://www.googleapis.com' && url.pathname === '/drive/v3/files') {
         const query = url.searchParams.get('q') ?? '';
         if (query.includes("mimeType='application/vnd.google-apps.folder'")) {
-          return responseJson({ files: [{ id: 'backup-folder' }] });
+          return responseJson({
+            files: [
+              {
+                id: 'backup-folder',
+                name: 'Voyager Data',
+                mimeType: 'application/vnd.google-apps.folder',
+                appProperties: { voyagerDataFolder: '1' },
+              },
+            ],
+          });
+        }
+        if (query.includes("name='gemini-voyager-folders.json'")) {
+          return responseJson({ files: [] });
         }
         const name = /name='([^']+)'/.exec(query)?.[1];
         if (name) searchedFileNames.push(name);
@@ -456,6 +468,14 @@ describe('GoogleDriveSyncService highlights-only sync', () => {
       if (url.pathname === '/drive/v3/files/highlight-file') {
         if (url.searchParams.get('alt') === 'media') return responseJson(uploadedPayload);
         return responseJson({ parents: ['backup-folder'], trashed: false });
+      }
+      if (url.pathname === '/drive/v3/files/backup-folder') {
+        return responseJson({
+          id: 'backup-folder',
+          name: 'Voyager Data',
+          mimeType: 'application/vnd.google-apps.folder',
+          appProperties: { voyagerDataFolder: '1' },
+        });
       }
       if (url.pathname === '/upload/drive/v3/files/highlight-file') {
         expect(init?.method).toBe('PATCH');
@@ -489,7 +509,7 @@ describe('GoogleDriveSyncService highlights-only sync', () => {
       const url = new URL(String(input));
       const query = url.searchParams.get('q') ?? '';
       const name = /name='([^']+)'/.exec(query)?.[1];
-      if (name) searchedFileNames.push(name);
+      if (name?.startsWith('gemini-voyager-highlights.')) searchedFileNames.push(name);
       return responseJson({ files: [] });
     });
 
@@ -562,7 +582,16 @@ describe('GoogleDriveSyncService highlights-only sync', () => {
       const url = new URL(String(input));
       const query = url.searchParams.get('q') ?? '';
       if (query.includes("mimeType='application/vnd.google-apps.folder'")) {
-        return responseJson({ files: [{ id: 'backup-folder' }] });
+        return responseJson({
+          files: [
+            {
+              id: 'backup-folder',
+              name: 'Voyager Data',
+              mimeType: 'application/vnd.google-apps.folder',
+              appProperties: { voyagerDataFolder: '1' },
+            },
+          ],
+        });
       }
       return responseJson({ error: 'unavailable' }, 503);
     });
@@ -594,6 +623,420 @@ describe('GoogleDriveSyncService highlights-only sync', () => {
     await expect(service.uploadHighlightsOnly(payload, accountScope, false)).resolves.toBe(false);
     await expect(service.downloadHighlightsOnly(accountScope, false)).resolves.toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('GoogleDriveSyncService backup folder migration', () => {
+  const fetchMock = vi.fn();
+
+  type BackupFolderInternals = {
+    ensureBackupFolder: (token: string) => Promise<string>;
+    ensureFileId: (token: string, fileName: string, type: 'prompts') => Promise<string>;
+  };
+
+  function authenticate(chromeMock: MockedChrome): void {
+    (chromeMock.identity.getAuthToken as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_details: { interactive?: boolean }, callback: (token?: string) => void) => {
+        callback('folder-token');
+      },
+    );
+  }
+
+  function driveQuery(url: URL): string {
+    return url.searchParams.get('q') ?? '';
+  }
+
+  function isFolderMarkerSearch(url: URL): boolean {
+    return driveQuery(url).includes("appProperties has { key='voyagerDataFolder'");
+  }
+
+  function isFolderNameSearch(url: URL): boolean {
+    const query = driveQuery(url);
+    return query.includes("name='Voyager Data'") && query.includes("name='Gemini Voyager Data'");
+  }
+
+  function isRecoveryFileSearch(url: URL): boolean {
+    const query = driveQuery(url);
+    return query.includes("name='gemini-voyager-folders.json'") && !query.includes('mimeType=');
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.stubGlobal('fetch', fetchMock);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('renames and marks the moved legacy folder without changing its parent or ID', async () => {
+    const chromeMock = createChromeMock();
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input));
+      if (url.pathname === '/drive/v3/files' && isFolderMarkerSearch(url)) {
+        return responseJson({ files: [] });
+      }
+      if (url.pathname === '/drive/v3/files' && isFolderNameSearch(url)) {
+        expect(driveQuery(url)).not.toContain('in parents');
+        return responseJson({
+          files: [
+            {
+              id: 'legacy-folder',
+              name: 'Gemini Voyager Data',
+              mimeType: 'application/vnd.google-apps.folder',
+              parents: ['nested-parent'],
+            },
+          ],
+        });
+      }
+      if (url.pathname === '/drive/v3/files' && isRecoveryFileSearch(url)) {
+        return responseJson({
+          files: [
+            {
+              id: 'folders-file',
+              name: 'gemini-voyager-folders.json',
+              parents: ['legacy-folder'],
+            },
+          ],
+        });
+      }
+      if (url.pathname === '/drive/v3/files/legacy-folder' && init?.method === 'PATCH') {
+        expect(JSON.parse(String(init.body))).toEqual({
+          name: 'Voyager Data',
+          appProperties: { voyagerDataFolder: '1' },
+        });
+        return responseJson({
+          id: 'legacy-folder',
+          name: 'Voyager Data',
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: ['nested-parent'],
+          appProperties: { voyagerDataFolder: '1' },
+        });
+      }
+      throw new Error(`Unexpected Drive request: ${url.toString()}`);
+    });
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+    const internals = service as unknown as BackupFolderInternals;
+
+    await expect(internals.ensureBackupFolder('token')).resolves.toBe('legacy-folder');
+    expect(
+      fetchMock.mock.calls.some(
+        ([input, init]) =>
+          new URL(String(input)).pathname === '/drive/v3/files' && init?.method === 'POST',
+      ),
+    ).toBe(false);
+  });
+
+  it('creates one marked Voyager Data folder for concurrent first uploads', async () => {
+    const chromeMock = createChromeMock();
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input));
+      if (url.pathname === '/drive/v3/files' && init?.method === 'POST') {
+        expect(JSON.parse(String(init.body))).toEqual({
+          name: 'Voyager Data',
+          mimeType: 'application/vnd.google-apps.folder',
+          appProperties: { voyagerDataFolder: '1' },
+        });
+        return responseJson({ id: 'created-folder' });
+      }
+      if (url.pathname === '/drive/v3/files') return responseJson({ files: [] });
+      throw new Error(`Unexpected Drive request: ${url.toString()}`);
+    });
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+    const internals = service as unknown as BackupFolderInternals;
+
+    await expect(
+      Promise.all([internals.ensureBackupFolder('token'), internals.ensureBackupFolder('token')]),
+    ).resolves.toEqual(['created-folder', 'created-folder']);
+    expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(1);
+  });
+
+  it('keeps a user-renamed and moved folder when its private marker is present', async () => {
+    const chromeMock = createChromeMock();
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input));
+      if (url.pathname === '/drive/v3/files' && isFolderMarkerSearch(url)) {
+        return responseJson({
+          files: [
+            {
+              id: 'custom-folder',
+              name: 'My Personal Voyager Backup',
+              mimeType: 'application/vnd.google-apps.folder',
+              parents: ['deeply-nested-parent'],
+              appProperties: { voyagerDataFolder: '1' },
+            },
+          ],
+        });
+      }
+      if (
+        url.pathname === '/drive/v3/files' &&
+        driveQuery(url).startsWith("name='gemini-voyager-prompts.json' and trashed=false")
+      ) {
+        expect(driveQuery(url)).toContain("'custom-folder' in parents");
+        return responseJson({ files: [{ id: 'prompts-file' }] });
+      }
+      if (url.pathname === '/drive/v3/files') return responseJson({ files: [] });
+      if (url.pathname === '/drive/v3/files/custom-folder' && !init?.method) {
+        return responseJson({
+          id: 'custom-folder',
+          name: 'My Personal Voyager Backup',
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: ['deeply-nested-parent'],
+          appProperties: { voyagerDataFolder: '1' },
+        });
+      }
+      if (url.pathname === '/drive/v3/files/prompts-file') {
+        return responseJson({ parents: ['custom-folder'], trashed: false });
+      }
+      if (init?.method === 'PATCH' || init?.method === 'POST') {
+        throw new Error('A marked custom folder must not be renamed or recreated');
+      }
+      throw new Error(`Unexpected Drive request: ${url.toString()}`);
+    });
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+    const internals = service as unknown as BackupFolderInternals;
+
+    await expect(internals.ensureBackupFolder('token')).resolves.toBe('custom-folder');
+    await expect(
+      internals.ensureFileId('token', 'gemini-voyager-prompts.json', 'prompts'),
+    ).resolves.toBe('prompts-file');
+  });
+
+  it('recovers a pre-upgrade custom rename from its existing sync-file parents', async () => {
+    const chromeMock = createChromeMock();
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input));
+      if (url.pathname === '/drive/v3/files' && isRecoveryFileSearch(url)) {
+        return responseJson({
+          files: [
+            {
+              id: 'folders-file',
+              name: 'gemini-voyager-folders.json',
+              parents: ['custom-folder'],
+            },
+            {
+              id: 'settings-file',
+              name: 'gemini-voyager-settings.json',
+              parents: ['custom-folder'],
+            },
+            {
+              id: 'prompts-file',
+              name: 'gemini-voyager-prompts.json',
+              parents: ['custom-folder'],
+            },
+          ],
+        });
+      }
+      if (url.pathname === '/drive/v3/files') return responseJson({ files: [] });
+      if (url.pathname === '/drive/v3/files/custom-folder' && !init?.method) {
+        return responseJson({
+          id: 'custom-folder',
+          name: 'Already Renamed By User',
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: ['nested-parent'],
+        });
+      }
+      if (url.pathname === '/drive/v3/files/custom-folder' && init?.method === 'PATCH') {
+        expect(JSON.parse(String(init.body))).toEqual({
+          appProperties: { voyagerDataFolder: '1' },
+        });
+        return responseJson({
+          id: 'custom-folder',
+          name: 'Already Renamed By User',
+          mimeType: 'application/vnd.google-apps.folder',
+          parents: ['nested-parent'],
+          appProperties: { voyagerDataFolder: '1' },
+        });
+      }
+      throw new Error(`Unexpected Drive request: ${url.toString()}`);
+    });
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+    const internals = service as unknown as BackupFolderInternals;
+
+    await expect(internals.ensureBackupFolder('token')).resolves.toBe('custom-folder');
+  });
+
+  it('does not rename a legacy data folder into an ambiguous canonical-name conflict', async () => {
+    const chromeMock = createChromeMock();
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input));
+      if (url.pathname === '/drive/v3/files' && isFolderMarkerSearch(url)) {
+        return responseJson({ files: [] });
+      }
+      if (url.pathname === '/drive/v3/files' && isFolderNameSearch(url)) {
+        return responseJson({
+          files: [
+            {
+              id: 'canonical-empty',
+              name: 'Voyager Data',
+              mimeType: 'application/vnd.google-apps.folder',
+            },
+            {
+              id: 'legacy-with-data',
+              name: 'Gemini Voyager Data',
+              mimeType: 'application/vnd.google-apps.folder',
+            },
+          ],
+        });
+      }
+      if (url.pathname === '/drive/v3/files' && isRecoveryFileSearch(url)) {
+        return responseJson({
+          files: [
+            {
+              id: 'folders-file',
+              name: 'gemini-voyager-folders.json',
+              parents: ['legacy-with-data'],
+            },
+            {
+              id: 'settings-file',
+              name: 'gemini-voyager-settings.json',
+              parents: ['legacy-with-data'],
+            },
+          ],
+        });
+      }
+      if (url.pathname === '/drive/v3/files/legacy-with-data' && init?.method === 'PATCH') {
+        expect(JSON.parse(String(init.body))).toEqual({
+          appProperties: { voyagerDataFolder: '1' },
+        });
+        return responseJson({
+          id: 'legacy-with-data',
+          name: 'Gemini Voyager Data',
+          mimeType: 'application/vnd.google-apps.folder',
+          appProperties: { voyagerDataFolder: '1' },
+        });
+      }
+      throw new Error(`Unexpected Drive request: ${url.toString()}`);
+    });
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+    const internals = service as unknown as BackupFolderInternals;
+
+    await expect(internals.ensureBackupFolder('token')).resolves.toBe('legacy-with-data');
+    expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(0);
+  });
+
+  it('keeps syncing with the stable legacy ID when metadata migration is temporarily denied', async () => {
+    const chromeMock = createChromeMock();
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input));
+      if (url.pathname === '/drive/v3/files' && isFolderMarkerSearch(url)) {
+        return responseJson({ files: [] });
+      }
+      if (url.pathname === '/drive/v3/files' && isFolderNameSearch(url)) {
+        return responseJson({
+          files: [
+            {
+              id: 'legacy-folder',
+              name: 'Gemini Voyager Data',
+              mimeType: 'application/vnd.google-apps.folder',
+            },
+          ],
+        });
+      }
+      if (url.pathname === '/drive/v3/files' && isRecoveryFileSearch(url)) {
+        return responseJson({ files: [] });
+      }
+      if (url.pathname === '/drive/v3/files/legacy-folder' && init?.method === 'PATCH') {
+        return responseJson({ error: 'forbidden' }, 403);
+      }
+      throw new Error(`Unexpected Drive request: ${url.toString()}`);
+    });
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+    const internals = service as unknown as BackupFolderInternals;
+
+    await expect(internals.ensureBackupFolder('token')).resolves.toBe('legacy-folder');
+    expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(0);
+  });
+
+  it('migrates the legacy folder during a download without creating a new folder', async () => {
+    const chromeMock = createChromeMock();
+    (globalThis as { chrome: MockedChrome }).chrome = chromeMock;
+    authenticate(chromeMock);
+
+    fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input));
+      if (url.pathname === '/drive/v3/files' && isFolderMarkerSearch(url)) {
+        return responseJson({ files: [] });
+      }
+      if (url.pathname === '/drive/v3/files' && isFolderNameSearch(url)) {
+        return responseJson({
+          files: [
+            {
+              id: 'legacy-folder',
+              name: 'Gemini Voyager Data',
+              mimeType: 'application/vnd.google-apps.folder',
+            },
+          ],
+        });
+      }
+      if (url.pathname === '/drive/v3/files' && isRecoveryFileSearch(url)) {
+        return responseJson({ files: [] });
+      }
+      if (url.pathname === '/drive/v3/files/legacy-folder' && init?.method === 'PATCH') {
+        return responseJson({
+          id: 'legacy-folder',
+          name: 'Voyager Data',
+          mimeType: 'application/vnd.google-apps.folder',
+          appProperties: { voyagerDataFolder: '1' },
+        });
+      }
+      if (
+        url.pathname === '/drive/v3/files' &&
+        driveQuery(url).startsWith("name='gemini-voyager-prompts.json' and trashed=false")
+      ) {
+        expect(driveQuery(url)).toContain("'legacy-folder' in parents");
+        return responseJson({ files: [{ id: 'prompts-file' }] });
+      }
+      if (
+        url.pathname === '/drive/v3/files/prompts-file' &&
+        url.searchParams.get('alt') === 'media'
+      ) {
+        return responseJson({
+          format: 'gemini-voyager.prompts.v1',
+          exportedAt: '2026-07-19T00:00:00.000Z',
+          version: '1.0.0',
+          items: [],
+        });
+      }
+      throw new Error(`Unexpected Drive request: ${url.toString()}`);
+    });
+
+    const GoogleDriveSyncService = await loadServiceClass();
+    const service = new GoogleDriveSyncService();
+    await service.getState();
+
+    await expect(service.downloadPromptsOnly()).resolves.toMatchObject({ items: [] });
+    expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(0);
   });
 });
 
@@ -677,11 +1120,13 @@ describe('GoogleDriveSyncService plugin-state file', () => {
     };
     const internals = service as unknown as {
       getAuthToken: (interactive: boolean) => Promise<string | null>;
+      migrateBackupFolderIfPresent: (token: string) => Promise<void>;
       findFile: (token: string, name: string) => Promise<string | null>;
       findFileForScope: () => Promise<string | null>;
       downloadFileWithRetry: (token: string, id: string) => Promise<unknown>;
     };
     vi.spyOn(internals, 'getAuthToken').mockResolvedValue('token');
+    vi.spyOn(internals, 'migrateBackupFolderIfPresent').mockResolvedValue(undefined);
     vi.spyOn(internals, 'findFileForScope').mockResolvedValue(null);
     vi.spyOn(internals, 'findFile').mockImplementation(async (_token, name) =>
       name === 'gemini-voyager-plugins.json' ? 'plugins-file' : null,

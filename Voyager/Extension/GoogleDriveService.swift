@@ -6,10 +6,13 @@ final class GoogleDriveService {
   static let shared = GoogleDriveService()
 
   private let scope = "https://www.googleapis.com/auth/drive.file"
-  // Keep the legacy folder name so existing Safari backups remain discoverable.
-  private let backupFolderName = "Gemini Voyager Data"
   private let apiHost = "www.googleapis.com"
   private var backupFolderID: String?
+  private let backupFolderResolutionLock = NSLock()
+  private var backupFolderResolutionInFlight = false
+  private var backupFolderResolutionWaiters: [
+    (Result<String, Error>) -> Void
+  ] = []
 
   enum AuthorizationState {
     case signedIn
@@ -58,12 +61,50 @@ final class GoogleDriveService {
     named fileName: String,
     completion: @escaping (Result<String?, Error>) -> Void
   ) {
+    migrateBackupFolderIfPresent {
+      self.findFileInResolvedFolder(named: fileName, completion: completion)
+    }
+  }
+
+  private func findFileInResolvedFolder(
+    named fileName: String,
+    completion: @escaping (Result<String?, Error>) -> Void
+  ) {
+    guard let backupFolderID else {
+      findItem(
+        named: fileName,
+        mimeType: nil,
+        fields: "files(id,name)",
+        completion: completion
+      )
+      return
+    }
+
     findItem(
-      named: fileName,
-      mimeType: nil,
-      fields: "files(id,name)",
-      completion: completion
-    )
+      clauses: [
+        "name='\(escapeQueryValue(fileName))'",
+        "'\(escapeQueryValue(backupFolderID))' in parents",
+        "trashed=false",
+      ],
+      fields: "files(id,name)"
+    ) { scopedResult in
+      switch scopedResult {
+      case .failure(let error):
+        completion(.failure(error))
+      case .success(let fileID?):
+        completion(.success(fileID))
+      case .success(nil):
+        // Older versions searched globally and may have left a sync file in a
+        // previous folder. Keep one global fallback so it can be recovered and
+        // moved into the resolved folder by ensureFile.
+        self.findItem(
+          named: fileName,
+          mimeType: nil,
+          fields: "files(id,name)",
+          completion: completion
+        )
+      }
+    }
   }
 
   func ensureFile(
@@ -213,6 +254,28 @@ final class GoogleDriveService {
   private func ensureBackupFolder(
     completion: @escaping (Result<String, Error>) -> Void
   ) {
+    backupFolderResolutionLock.lock()
+    backupFolderResolutionWaiters.append(completion)
+    guard !backupFolderResolutionInFlight else {
+      backupFolderResolutionLock.unlock()
+      return
+    }
+    backupFolderResolutionInFlight = true
+    backupFolderResolutionLock.unlock()
+
+    resolveBackupFolder { result in
+      self.backupFolderResolutionLock.lock()
+      let waiters = self.backupFolderResolutionWaiters
+      self.backupFolderResolutionWaiters.removeAll()
+      self.backupFolderResolutionInFlight = false
+      self.backupFolderResolutionLock.unlock()
+      waiters.forEach { $0(result) }
+    }
+  }
+
+  private func resolveBackupFolder(
+    completion: @escaping (Result<String, Error>) -> Void
+  ) {
     if let backupFolderID {
       itemExists(fileID: backupFolderID) { result in
         switch result {
@@ -234,11 +297,7 @@ final class GoogleDriveService {
   private func findOrCreateBackupFolder(
     completion: @escaping (Result<String, Error>) -> Void
   ) {
-    findItem(
-      named: backupFolderName,
-      mimeType: "application/vnd.google-apps.folder",
-      fields: "files(id)"
-    ) { result in
+    findExistingBackupFolder { result in
       switch result {
       case .failure(let error):
         completion(.failure(error))
@@ -247,9 +306,13 @@ final class GoogleDriveService {
         completion(.success(folderID))
       case .success(nil):
         self.createItem(
-          name: self.backupFolderName,
+          name: VoyagerGoogleDriveFolderIdentity.currentName,
           mimeType: "application/vnd.google-apps.folder",
-          parentID: nil
+          parentID: nil,
+          appProperties: [
+            VoyagerGoogleDriveFolderIdentity.markerKey:
+              VoyagerGoogleDriveFolderIdentity.markerValue
+          ]
         ) { createResult in
           if case .success(let folderID) = createResult {
             self.backupFolderID = folderID
@@ -257,6 +320,174 @@ final class GoogleDriveService {
           completion(createResult)
         }
       }
+    }
+  }
+
+  private func migrateBackupFolderIfPresent(completion: @escaping () -> Void) {
+    if backupFolderID != nil {
+      completion()
+      return
+    }
+
+    findExistingBackupFolder { result in
+      switch result {
+      case .success(let folderID?):
+        self.backupFolderID = folderID
+      case .failure(let error):
+        os_log(
+          .error,
+          "Google Drive folder migration deferred: %{public}@",
+          error.localizedDescription
+        )
+      case .success(nil):
+        break
+      }
+      completion()
+    }
+  }
+
+  private func findExistingBackupFolder(
+    completion: @escaping (Result<String?, Error>) -> Void
+  ) {
+    findMarkedBackupFolder { markedResult in
+      switch markedResult {
+      case .failure(let error):
+        completion(.failure(error))
+      case .success(let folderID?):
+        completion(.success(folderID))
+      case .success(nil):
+        self.findNamedBackupFolders(completion: completion)
+      }
+    }
+  }
+
+  private func findMarkedBackupFolder(
+    completion: @escaping (Result<String?, Error>) -> Void
+  ) {
+    let identity = VoyagerGoogleDriveFolderIdentity.self
+    findItem(
+      clauses: [
+        "appProperties has { key='\(escapeQueryValue(identity.markerKey))' and value='\(escapeQueryValue(identity.markerValue))' }",
+        "mimeType='application/vnd.google-apps.folder'",
+        "trashed=false",
+      ],
+      fields: "files(id)"
+    ) { result in
+      completion(result)
+    }
+  }
+
+  private func findNamedBackupFolders(
+    completion: @escaping (Result<String?, Error>) -> Void
+  ) {
+    findItem(
+      named: VoyagerGoogleDriveFolderIdentity.currentName,
+      mimeType: "application/vnd.google-apps.folder",
+      fields: "files(id)"
+    ) { canonicalResult in
+      switch canonicalResult {
+      case .failure(let error):
+        completion(.failure(error))
+      case .success(let folderID?):
+        self.markBackupFolder(folderID: folderID, renameLegacyFolder: false) {
+          completion(.success(folderID))
+        }
+      case .success(nil):
+        self.findLegacyOrRecoveredBackupFolder(completion: completion)
+      }
+    }
+  }
+
+  private func findLegacyOrRecoveredBackupFolder(
+    completion: @escaping (Result<String?, Error>) -> Void
+  ) {
+    findItem(
+      named: VoyagerGoogleDriveFolderIdentity.legacyName,
+      mimeType: "application/vnd.google-apps.folder",
+      fields: "files(id)"
+    ) { legacyResult in
+      switch legacyResult {
+      case .failure(let error):
+        completion(.failure(error))
+      case .success(let folderID?):
+        self.markBackupFolder(folderID: folderID, renameLegacyFolder: true) {
+          completion(.success(folderID))
+        }
+      case .success(nil):
+        self.recoverBackupFolderFromSyncFile(completion: completion)
+      }
+    }
+  }
+
+  private func recoverBackupFolderFromSyncFile(
+    completion: @escaping (Result<String?, Error>) -> Void
+  ) {
+    findItem(
+      named: "gemini-voyager-folders.json",
+      mimeType: nil,
+      fields: "files(id)"
+    ) { fileResult in
+      switch fileResult {
+      case .failure(let error):
+        completion(.failure(error))
+      case .success(nil):
+        completion(.success(nil))
+      case .success(let fileID?):
+        self.getFileParents(fileID: fileID) { parentsResult in
+          switch parentsResult {
+          case .failure(let error):
+            completion(.failure(error))
+          case .success(let parents?):
+            guard let folderID = parents.first else {
+              completion(.success(nil))
+              return
+            }
+            self.markBackupFolder(folderID: folderID, renameLegacyFolder: false) {
+              completion(.success(folderID))
+            }
+          case .success(nil):
+            completion(.success(nil))
+          }
+        }
+      }
+    }
+  }
+
+  private func markBackupFolder(
+    folderID: String,
+    renameLegacyFolder: Bool,
+    completion: @escaping () -> Void
+  ) {
+    let metadata = DriveUpdateMetadata(
+      name: renameLegacyFolder ? VoyagerGoogleDriveFolderIdentity.currentName : nil,
+      appProperties: [
+        VoyagerGoogleDriveFolderIdentity.markerKey:
+          VoyagerGoogleDriveFolderIdentity.markerValue
+      ]
+    )
+
+    let body: Data
+    do {
+      body = try JSONEncoder().encode(metadata)
+    } catch {
+      os_log(.error, "Google Drive folder metadata encoding failed: %{public}@", error.localizedDescription)
+      completion()
+      return
+    }
+
+    performRequest(
+      method: "PATCH",
+      path: "/drive/v3/files/\(folderID)",
+      queryItems: [URLQueryItem(name: "fields", value: "id,name,appProperties")],
+      contentType: "application/json",
+      body: body
+    ) { result in
+      if case .failure(let error) = result {
+        os_log(.error, "Google Drive folder migration failed: %{public}@", error.localizedDescription)
+      } else if case .success(let response) = result, !response.isSuccessful {
+        os_log(.error, "Google Drive folder migration returned HTTP %{public}d", response.statusCode)
+      }
+      completion()
     }
   }
 
@@ -270,6 +501,15 @@ final class GoogleDriveService {
     if let mimeType {
       clauses.insert("mimeType='\(escapeQueryValue(mimeType))'", at: 1)
     }
+
+    findItem(clauses: clauses, fields: fields, completion: completion)
+  }
+
+  private func findItem(
+    clauses: [String],
+    fields: String,
+    completion: @escaping (Result<String?, Error>) -> Void
+  ) {
 
     performRequest(
       method: "GET",
@@ -297,12 +537,14 @@ final class GoogleDriveService {
     name: String,
     mimeType: String,
     parentID: String?,
+    appProperties: [String: String]? = nil,
     completion: @escaping (Result<String, Error>) -> Void
   ) {
     let metadata = DriveCreateMetadata(
       name: name,
       mimeType: mimeType,
-      parents: parentID.map { [$0] }
+      parents: parentID.map { [$0] },
+      appProperties: appProperties
     )
 
     let body: Data
@@ -586,6 +828,12 @@ private struct DriveCreateMetadata: Encodable {
   let name: String
   let mimeType: String
   let parents: [String]?
+  let appProperties: [String: String]?
+}
+
+private struct DriveUpdateMetadata: Encodable {
+  let name: String?
+  let appProperties: [String: String]
 }
 
 private struct DriveParentMetadata: Decodable {

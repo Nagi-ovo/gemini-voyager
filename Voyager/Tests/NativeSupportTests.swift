@@ -63,6 +63,30 @@ final class NativeSupportTests: XCTestCase {
     XCTAssertNil(VoyagerGoogleDriveHTTPFailureMapper.map(statusCode: 302))
   }
 
+  func testDriveFolderIdentityMigratesOnlyAnUnambiguousLegacyName() {
+    XCTAssertEqual(VoyagerGoogleDriveFolderIdentity.currentName, "Voyager Data")
+    XCTAssertEqual(VoyagerGoogleDriveFolderIdentity.legacyName, "Gemini Voyager Data")
+    XCTAssertEqual(VoyagerGoogleDriveFolderIdentity.markerKey, "voyagerDataFolder")
+    XCTAssertTrue(
+      VoyagerGoogleDriveFolderIdentity.shouldRenameLegacyFolder(
+        named: "Gemini Voyager Data",
+        canonicalNameAlreadyExists: false
+      )
+    )
+    XCTAssertFalse(
+      VoyagerGoogleDriveFolderIdentity.shouldRenameLegacyFolder(
+        named: "Gemini Voyager Data",
+        canonicalNameAlreadyExists: true
+      )
+    )
+    XCTAssertFalse(
+      VoyagerGoogleDriveFolderIdentity.shouldRenameLegacyFolder(
+        named: "My Custom Backup",
+        canonicalNameAlreadyExists: false
+      )
+    )
+  }
+
   func testDriveHTTPMapperIdentifiesOnlyMappedAuthorizationFailures() throws {
     let authFailure = try XCTUnwrap(
       VoyagerGoogleDriveHTTPFailureMapper.map(statusCode: 401)

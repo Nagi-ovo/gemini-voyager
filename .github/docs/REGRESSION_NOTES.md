@@ -588,3 +588,33 @@ image has full-size pixel dimensions, not merely that a PNG file exists.
 
 Commit:
 `d3f0e71a fix(safari): restore full-size watermark downloads`
+
+## Google Drive backup folders need a stable identity beyond their display name
+
+Symptom:
+Renaming `Gemini Voyager Data`, or resolving two syncs concurrently after the
+folder cache was lost, could make Voyager create another root-level backup
+folder. Changing the product name to `Voyager Data` would amplify this for
+every existing user.
+
+Root cause:
+The Drive service rediscovered its folder only through an exact display-name
+query. Drive keeps the file ID stable across moves and renames, but the ID was
+cached only in memory and the folder carried no app-owned identity metadata.
+
+Fix:
+Create and tag `Voyager Data` with the private `voyagerDataFolder=1`
+`appProperties` marker. Resolve marked folders first, recover pre-marker custom
+renames from known sync-file parents, rename an unambiguous legacy folder in
+place, and serialize first-time resolution so concurrent uploads cannot create
+duplicates. Preserve custom names after marking. If both canonical and legacy
+folders exist, never delete or ambiguously rename either folder automatically.
+Search sync files inside the resolved folder before any global fallback.
+
+Regression tests:
+`src/core/services/__tests__/GoogleDriveSyncService.test.ts`
+(`GoogleDriveSyncService backup folder migration`) and
+`Voyager/Tests/NativeSupportTests.swift`
+(`testDriveFolderIdentityMigratesOnlyAnUnambiguousLegacyName`). A live Drive
+check must also preserve the original folder ID, parent location, and JSON
+contents while changing only the legacy display name.

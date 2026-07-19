@@ -82,6 +82,20 @@ enum VoyagerGoogleDriveFailureCode: String, Codable {
   case temporarilyUnavailable = "drive_temporarily_unavailable"
 }
 
+enum VoyagerGoogleDriveFolderIdentity {
+  static let currentName = "Voyager Data"
+  static let legacyName = "Gemini Voyager Data"
+  static let markerKey = "voyagerDataFolder"
+  static let markerValue = "1"
+
+  static func shouldRenameLegacyFolder(
+    named name: String,
+    canonicalNameAlreadyExists: Bool
+  ) -> Bool {
+    name == legacyName && !canonicalNameAlreadyExists
+  }
+}
+
 struct VoyagerGoogleDriveFailure: LocalizedError, Equatable {
   let code: VoyagerGoogleDriveFailureCode
   let message: String
