@@ -333,4 +333,48 @@ describe('PDFPrintService', () => {
     }).not.toThrow();
     expect(title).toBe('Escaped Selector Title');
   });
+
+  it('prints rendered Mermaid SVGs without controls and constrains page layout', async () => {
+    window.print = vi.fn();
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <response-element>
+            <div class="gv-mermaid-wrapper">
+              <code-block style="display: none">
+                <div class="code-block-decoration">mermaid</div>
+                <code role="text">graph TD;\nA--&gt;B;</code>
+              </code-block>
+              <div class="gv-mermaid-toggle"><button>Code</button></div>
+              <div class="gv-mermaid-diagram">
+                <svg id="pdf-mermaid" viewBox="0 0 100 50"></svg>
+              </div>
+            </div>
+          </response-element>
+        </div>
+      </message-content>
+    `;
+
+    await PDFPrintService.export(
+      [{ user: 'u', assistant: '', assistantElement: assistant, starred: false }],
+      {
+        url: 'https://gemini.google.com/app/x',
+        exportedAt: new Date().toISOString(),
+        count: 1,
+        title: 'Mermaid Export',
+      },
+    );
+
+    const container = document.getElementById('gv-pdf-print-container');
+    const styles = document.getElementById('gv-pdf-print-styles')?.textContent || '';
+
+    expect(container?.querySelector('.gv-export-mermaid svg#pdf-mermaid')).toBeTruthy();
+    expect(container?.querySelector('.gv-mermaid-toggle')).toBeNull();
+    expect(container?.querySelector('button')).toBeNull();
+    expect(styles).toContain('.gv-print-turn-text .gv-export-mermaid svg');
+    expect(styles).toContain('max-width: 100%');
+    expect(styles).toContain('height: auto');
+    expect(styles).toContain('break-inside: avoid');
+  });
 });

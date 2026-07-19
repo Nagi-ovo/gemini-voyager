@@ -362,4 +362,71 @@ describe('DOMContentExtractor', () => {
       );
     });
   });
+
+  describe('Mermaid export', () => {
+    it('exports the rendered SVG as HTML and keeps fenced source as text', () => {
+      const assistant = document.createElement('div');
+      assistant.innerHTML = `
+        <message-content>
+          <div class="markdown">
+            <response-element>
+              <div class="gv-mermaid-wrapper">
+                <code-block style="display: none">
+                  <div class="code-block-decoration">mermaid</div>
+                  <code role="text">graph TD;\nA--&gt;B;</code>
+                </code-block>
+                <div class="gv-mermaid-toggle">
+                  <button>Diagram</button>
+                  <button>Code</button>
+                </div>
+                <div class="gv-mermaid-diagram">
+                  <svg id="diagram" viewBox="0 0 100 50">
+                    <path d="M0 0 L100 50"></path>
+                  </svg>
+                </div>
+              </div>
+            </response-element>
+          </div>
+        </message-content>
+      `;
+
+      const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+      expect(extracted.hasCode).toBe(true);
+      expect(extracted.html).toContain('<div class="gv-export-mermaid"><svg');
+      expect(extracted.html).toContain('id="diagram"');
+      expect(extracted.html).not.toContain('gv-mermaid-toggle');
+      expect(extracted.html).not.toContain('<button');
+      expect(extracted.html).not.toContain('<pre>');
+      expect(extracted.text).toContain('```mermaid\ngraph TD;\nA-->B;\n```');
+    });
+
+    it('falls back to fenced source when no rendered SVG is available', () => {
+      const assistant = document.createElement('div');
+      assistant.innerHTML = `
+        <message-content>
+          <div class="markdown">
+            <response-element>
+              <div class="gv-mermaid-wrapper">
+                <code-block>
+                  <div class="code-block-decoration">mermaid</div>
+                  <code role="text">graph TD;\nA--&gt;B;</code>
+                </code-block>
+                <div class="gv-mermaid-toggle"><button>Code</button></div>
+                <div class="gv-mermaid-diagram"></div>
+              </div>
+            </response-element>
+          </div>
+        </message-content>
+      `;
+
+      const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+      expect(extracted.hasCode).toBe(true);
+      expect(extracted.html).toContain('<pre><code class="language-mermaid">');
+      expect(extracted.html).not.toContain('gv-export-mermaid');
+      expect(extracted.html).not.toContain('<button');
+      expect(extracted.text).toContain('```mermaid\ngraph TD;\nA-->B;\n```');
+    });
+  });
 });

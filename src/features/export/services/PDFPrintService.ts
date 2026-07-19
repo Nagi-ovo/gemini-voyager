@@ -933,6 +933,21 @@ export class PDFPrintService {
           word-wrap: break-word;
         }
 
+        /* Rendered Mermaid diagrams */
+        .gv-print-turn-text .gv-export-mermaid {
+          max-width: 100%;
+          margin: 1em 0;
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+
+        .gv-print-turn-text .gv-export-mermaid svg {
+          display: block;
+          max-width: 100%;
+          height: auto;
+          margin: 0 auto;
+        }
+
         /* Math formulas */
         .gv-print-turn-text .math-inline,
         .gv-print-turn-text .math-block,

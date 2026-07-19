@@ -385,6 +385,24 @@ export class DOMContentExtractor {
         continue;
       }
 
+      // Export the rendered Mermaid SVG while retaining the source for Markdown output.
+      if (child.classList.contains('gv-mermaid-wrapper')) {
+        const mermaidContent = this.extractRenderedMermaid(child as HTMLElement);
+        if (mermaidContent) {
+          flags.hasCode = true;
+          htmlParts.push(mermaidContent.html);
+          textParts.push(`\n${mermaidContent.text}\n`);
+          continue;
+        }
+      }
+
+      // A response-element can wrap the Mermaid component. Recurse until the wrapper
+      // is reached instead of letting the nested code-block shortcut export raw code.
+      if (child.querySelector('.gv-mermaid-wrapper .gv-mermaid-diagram svg')) {
+        this.processNodes(child, htmlParts, textParts, flags);
+        continue;
+      }
+
       // Canvas Export Section (Injected Canvas document content)
       if (child.classList.contains('gv-canvas-export-section')) {
         const headingEl = child.querySelector('h3');
@@ -847,6 +865,28 @@ export class DOMContentExtractor {
   } {
     const processed = this.processInlineContent(element);
     return { html: processed.html, text: processed.text };
+  }
+
+  /**
+   * Extract an already-rendered Mermaid diagram for rich exports.
+   * The original fenced source remains the text representation used by Markdown.
+   */
+  private static extractRenderedMermaid(
+    wrapper: HTMLElement,
+  ): { html: string; text: string } | null {
+    const svg = wrapper.querySelector('.gv-mermaid-diagram svg');
+    const codeBlock = wrapper.querySelector('code-block, .code-block') as HTMLElement | null;
+
+    if (!svg || !codeBlock) return null;
+
+    const codeContent = this.extractCodeBlock(codeBlock);
+    if (!codeContent.text) return null;
+
+    const clonedSvg = svg.cloneNode(true) as SVGElement;
+    return {
+      html: `<div class="gv-export-mermaid">${clonedSvg.outerHTML}</div>`,
+      text: codeContent.text,
+    };
   }
 
   /**
