@@ -299,6 +299,8 @@ If your project is inspired by Voyager, forked from it, or built on top of it, f
 
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - An advanced browser extension supercharging Doubao with enhanced navigation, organization, and productivity features.
 
+- **[DeepSeek Enhancer](https://github.com/dlshuangchenyue1210/DeepSeek-Enhancer)** - A Voyager-inspired enhancement extension for the DeepSeek web app, offering multi-level folders, chat export, formula copy, data backup, and more.
+
 ---
 
 ## 📄 License
