@@ -8924,6 +8924,28 @@ html.dark .gv-changelog-body code,
   margin: 0 0 12px;
 }
 
+.gv-changelog-body > .gv-changelog-quote {
+  display: block;
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-left: 3px solid #5f8f5c;
+  border-radius: 0 8px 8px 0;
+  background: rgba(95, 143, 92, 0.1);
+  color: #3c4043;
+}
+
+.gv-changelog-body > .gv-changelog-quote p {
+  margin: 0;
+}
+
+html.dark .gv-changelog-body > .gv-changelog-quote,
+[data-theme='dark'] .gv-changelog-body > .gv-changelog-quote,
+[data-color-scheme='dark'] .gv-changelog-body > .gv-changelog-quote {
+  border-left-color: #81c784;
+  background: rgba(129, 199, 132, 0.12);
+  color: #e8eaed;
+}
+
 .gv-changelog-body img {
   max-width: 100%;
   border-radius: 8px;

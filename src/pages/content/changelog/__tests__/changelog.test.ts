@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
@@ -96,6 +98,32 @@ images:
     const result = extractLocalizedContent(sampleMarkdown, 'en');
     expect(result).not.toMatch(/^\s/);
     expect(result).not.toMatch(/\s$/);
+  });
+
+  it('keeps the 1.6.0 quote at the start of each localized section', () => {
+    const notes = readFileSync(
+      resolve(process.cwd(), 'src/pages/content/changelog/notes/1.6.0.md'),
+      'utf8',
+    );
+
+    expect(extractLocalizedContent(notes, 'en')).toMatch(
+      /^> \*"Not all those who wander are lost\."/,
+    );
+    expect(extractLocalizedContent(notes, 'zh')).toMatch(/^> \*「并非所有流浪者都迷失了方向。/);
+  });
+});
+
+describe('changelog quote styles', () => {
+  it('gives the leading quote an explicit cross-browser presentation', () => {
+    const source = readFileSync(
+      resolve(process.cwd(), 'src/pages/content/changelog/index.ts'),
+      'utf8',
+    );
+    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+
+    expect(source).toContain("'gv-changelog-quote'");
+    expect(source).toContain("leadingElement?.tagName === 'BLOCKQUOTE'");
+    expect(css).toMatch(/\.gv-changelog-body > \.gv-changelog-quote\s*\{[^}]*display:\s*block;/s);
   });
 });
 
