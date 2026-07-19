@@ -490,20 +490,47 @@ export const normalizeWhitespace = (code: string): string => {
 };
 
 /**
- * Move model-generated trailing comments after Mermaid style directives onto
- * their own line. Mermaid only accepts `%%` comments at the start of a line.
- * Keep this deliberately narrow so text inside diagram nodes is not rewritten.
+ * Repair a small set of unambiguous Mermaid mistakes commonly produced by
+ * models. Keep these rules narrow so valid diagram text is not rewritten.
  *
  * @internal Exported for testing
  */
 export const normalizeMermaidCode = (code: string): string => {
-  return normalizeWhitespace(code)
-    .split('\n')
-    .flatMap((line) => {
-      const match = line.match(/^(\s*)((?:classDef|class|style|linkStyle)\b.*?;\s*)%%(.*)$/i);
-      if (!match) return [line];
+  const lines = normalizeWhitespace(code).split('\n');
+  const hasActivationParticipant = lines.some((line) =>
+    /^\s*(?:actor|participant)\s+激活(?:\s+as\b|\s*$)/i.test(line),
+  );
+  const lastDeactivationByParticipant = new Map<string, number>();
 
-      const [, indent, statement, comment] = match;
+  lines.forEach((line, index) => {
+    const match = line.match(/^\s*deactivate\s+(\S+)\s*$/i);
+    if (match) lastDeactivationByParticipant.set(match[1], index);
+  });
+
+  return lines
+    .flatMap((line, index) => {
+      const activationMatch = line.match(/^(\s*)激活\s*->>\s*([^:\s]+)\s*:\s*$/);
+      if (
+        activationMatch &&
+        !hasActivationParticipant &&
+        (lastDeactivationByParticipant.get(activationMatch[2]) ?? -1) > index
+      ) {
+        return [`${activationMatch[1]}activate ${activationMatch[2]}`];
+      }
+
+      const subgraphMatch = line.match(
+        /^(\s*subgraph\s+)([^"[\]\r\n]*\([^"[\]\r\n]*\)[^"[\]\r\n]*)\s*$/i,
+      );
+      if (subgraphMatch) {
+        return [`${subgraphMatch[1]}"${subgraphMatch[2].trim()}"`];
+      }
+
+      const trailingCommentMatch = line.match(
+        /^(\s*)((?:classDef|class|style|linkStyle)\b.*?;\s*)%%(.*)$/i,
+      );
+      if (!trailingCommentMatch) return [line];
+
+      const [, indent, statement, comment] = trailingCommentMatch;
       return [`${indent}${statement.trimEnd()}`, `${indent}%%${comment}`];
     })
     .join('\n');

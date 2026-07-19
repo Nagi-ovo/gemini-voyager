@@ -399,6 +399,52 @@ describe('Mermaid dynamic loading', () => {
 
       expect(normalizeMermaidCode(input)).toBe(input);
     });
+
+    it('quotes unquoted subgraph titles that contain parentheses', () => {
+      const input = `graph LR
+        subgraph 流量层 (日活十亿)
+          A --> B
+        end`;
+
+      expect(normalizeMermaidCode(input)).toBe(`graph LR
+        subgraph "流量层 (日活十亿)"
+          A --> B
+        end`);
+    });
+
+    it('leaves quoted and id-based subgraph titles unchanged', () => {
+      const input = `graph LR
+        subgraph "流量层 (日活十亿)"
+        end
+        subgraph traffic["流量层 (日活十亿)"]
+        end`;
+
+      expect(normalizeMermaidCode(input)).toBe(input);
+    });
+
+    it('repairs a translated empty activation when the participant is later deactivated', () => {
+      const input = `sequenceDiagram
+        participant 你
+        激活->>你:
+        你->>系统: 修复
+        deactivate 你`;
+
+      expect(normalizeMermaidCode(input)).toBe(`sequenceDiagram
+        participant 你
+        activate 你
+        你->>系统: 修复
+        deactivate 你`);
+    });
+
+    it('does not reinterpret a participant named 激活 or an unmatched empty message', () => {
+      const input = `sequenceDiagram
+        participant 激活
+        participant 你
+        激活->>你:
+        你->>系统: 修复`;
+
+      expect(normalizeMermaidCode(input)).toBe(input);
+    });
   });
 
   describe('isGenericLanguageLabel', () => {
