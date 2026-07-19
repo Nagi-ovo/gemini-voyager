@@ -1073,10 +1073,23 @@ export class DOMContentExtractor {
       const processed = this.processInlineContent(tempContainer);
       if (processed.hasFormulas) hasFormulas = true;
       const plainItemText = processed.text || this.normalizeText(tempContainer.textContent || '');
-      const itemText = [plainItemText, ...codeTexts, ...mermaidTexts].filter(Boolean).join('\n');
-
+      const blockTexts = [...codeTexts, ...mermaidTexts].filter(Boolean);
       const prefix = isOrdered ? `${index + 1}. ` : '- ';
-      textLines.push(indent + prefix + itemText);
+      // Indent fenced/code continuation lines so Markdown keeps them inside the list item.
+      const continuationIndent = indent + ' '.repeat(prefix.length);
+      if (blockTexts.length === 0) {
+        textLines.push(indent + prefix + plainItemText);
+      } else {
+        const firstLine = plainItemText ? indent + prefix + plainItemText : indent + prefix.trimEnd();
+        textLines.push(firstLine);
+        for (const block of blockTexts) {
+          const indentedBlock = block
+            .split('\n')
+            .map((line) => (line.length ? continuationIndent + line : continuationIndent.trimEnd()))
+            .join('\n');
+          textLines.push(indentedBlock);
+        }
+      }
 
       // Process nested lists
       const nestedLists = item.querySelectorAll(':scope > ul, :scope > ol');

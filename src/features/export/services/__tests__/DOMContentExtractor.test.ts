@@ -465,7 +465,8 @@ describe('DOMContentExtractor', () => {
       expect(extracted.html).not.toContain('<button');
       expect(extracted.html).not.toContain('<code-block');
       expect(extracted.text).toMatch(/-\s+Diagram/);
-      expect(extracted.text).toContain('```mermaid\ngraph TD;\nA-->B;\n```');
+      // Fenced block lines after the list marker must be indented as list continuations.
+      expect(extracted.text).toMatch(/-\s+Diagram\n\s+```mermaid\n\s+graph TD;\n\s+A-->B;\n\s+```/);
     });
 
     it('preserves regular code blocks inside list items', () => {
@@ -498,7 +499,7 @@ describe('DOMContentExtractor', () => {
       );
       expect(extracted.html).not.toContain('<code-block');
       expect(extracted.text).toMatch(/-\s+Example/);
-      expect(extracted.text).toContain('```js\nconst answer = 42;\n```');
+      expect(extracted.text).toMatch(/-\s+Example\n\s+```js\n\s+const answer = 42;\n\s+```/);
     });
   });
 });
