@@ -35,7 +35,7 @@ También puedes encontrarme en estas plataformas:
 
 <div style="margin: 1rem 0; display: flex; gap: 12px; flex-wrap: wrap;">
   <a href="https://www.xiaohongshu.com/user/profile/5d366136000000001101950a" target="_blank" style="text-decoration: none;">
-    <img src="https://img.shields.io/badge/Xiaohongshu-@Nagi--ovo-FF2442?style=for-the-badge" alt="Xiaohongshu">
+    <img src="https://img.shields.io/badge/Xiaohongshu-@卡普迪姆-FF2442?style=for-the-badge" alt="Xiaohongshu">
   </a>
   <a href="https://space.bilibili.com/312249633" target="_blank" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/Bilibili-@卡普迪姆-FB7299?style=for-the-badge&logo=bilibili&logoColor=white" alt="Bilibili">
