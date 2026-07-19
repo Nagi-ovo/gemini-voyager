@@ -17,6 +17,11 @@ hero:
       text: 开始旅程
       link: ./guide/getting-started
 
+safariLaunch:
+  image: /assets/promotion/voyager-safari-1.6.0-twitter-zh.png
+  alt: Voyager 1.6.0 现已原生支持 Safari
+  link: ./guide/installation#_3-safari-macos
+
 teaser:
   title: '重新定义交互。'
   description: '我们不造扩展，我们重塑思考。<br>用 Voyager，不再是人适应界面，而是界面顺应心流。'
@@ -74,7 +79,7 @@ features:
     details: 一键清理。选中多个对话，批量删除，告别繁琐。
   - icon: ☁️
     title: 云同步
-    details: 永远在线。文件夹与提示词库同步至 Google Drive，多设备无缝衔接。
+    details: 永远在线。文件夹与提示词库可同步至 Google Drive；Safari 还支持原生 iCloud。
   - icon: ⚡️
     title: 默认模型
     details: 拒绝重复劳动。新建对话自动切换至你最爱的模型。

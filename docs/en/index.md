@@ -17,6 +17,11 @@ hero:
       text: Start the Journey
       link: ./guide/getting-started
 
+safariLaunch:
+  image: /assets/promotion/voyager-safari-1.6.0-twitter-en.png
+  alt: Voyager 1.6.0 now supports Safari natively
+  link: ./guide/installation#_3-safari-macos
+
 teaser:
   title: 'It just works.'
   description: ‘We didn’t want to build another extension. We wanted to build a better way to think.<br>When you use Voyager, you stop fighting the interface and start flowing with it.’
@@ -74,7 +79,7 @@ features:
     details: Clean up in bulk. Select multiple conversations and delete them all at once.
   - icon: ☁️
     title: Cloud Sync
-    details: Always in sync. Back up folders and prompts to Google Drive across devices.
+    details: Always in sync. Back up folders and prompts through Google Drive, or native iCloud on Safari.
   - icon: ⚡️
     title: Default Model
     details: Stop repeating yourself. Auto-switch to your preferred model on new chats.
