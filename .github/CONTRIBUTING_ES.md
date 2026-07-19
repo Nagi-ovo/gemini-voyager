@@ -71,13 +71,23 @@ Antes de comenzar, verifica si el problema ya está asignado a alguien mirando l
 
 ### 2. Reclamar un Problema
 
-Comenta `/claim` en cualquier problema no asignado para asignártelo automáticamente. Un bot confirmará la asignación.
+En un problema no asignado **sin** la etiqueta `community-only`, comenta `/claim` para asignártelo automáticamente. Un bot confirmará la asignación.
 
-### 3. Liberar si es Necesario
+### 3. Problemas exclusivos de la comunidad
+
+Los problemas con la etiqueta `community-only` están reservados para miembros verificados de la comunidad Voyager:
+
+1. El miembro de la comunidad comenta `/claim`.
+2. Un mantenedor verifica su membresía y comenta `/approve @usuario`.
+3. Empieza la implementación o abre un PR solo después de que el bot asigne el problema.
+
+La etiqueta elimina automáticamente `help wanted` y `good first issue`. Otros colaboradores pueden unirse al [Discord de Voyager](https://discord.gg/TEUFxdMbGb) o elegir un problema sin `community-only`.
+
+### 4. Liberar si es Necesario
 
 Si ya no puedes trabajar en un problema, comenta `/unclaim` para liberarlo para otros.
 
-### 4. Casilla de Verificación de Contribución
+### 5. Casilla de Verificación de Contribución
 
 Al crear problemas, puedes marcar la casilla "I am willing to contribute code" para indicar tu interés en implementar la funcionalidad o corrección.
 

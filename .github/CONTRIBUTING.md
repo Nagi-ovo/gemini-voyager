@@ -80,13 +80,23 @@ bun run dev
 
 ### 2. 认领 Issue
 
-在任何未分配的 issue 上评论 `/claim`，机器人将自动将你分配为负责人。
+对于未分配且**没有** `community-only` 标签的 issue，评论 `/claim`，机器人会自动将你分配为负责人。
 
-### 3. 取消认领
+### 3. 社群专属 Issue
+
+带有 `community-only` 标签的 issue 仅供经确认的 Voyager 社群成员认领：
+
+1. 社群成员评论 `/claim`。
+2. 维护者确认社群身份后评论 `/approve @用户名`。
+3. 机器人完成分配后再开始实现或提交 PR。
+
+该标签会自动移除 `help wanted` 和 `good first issue`，避免把社群任务作为公开招募任务展示。尚未加入社群的贡献者可以先加入 [Voyager Discord](https://discord.gg/TEUFxdMbGb)，或选择没有 `community-only` 标签的 issue。
+
+### 4. 取消认领
 
 如果你无法继续处理某个 issue，评论 `/unclaim` 即可释放它供他人处理。
 
-### 4. 贡献意愿复选框
+### 5. 贡献意愿复选框
 
 创建 issue 时，你可以勾选"我愿意贡献代码"复选框，表明你有兴趣实现该功能或修复。
 
@@ -358,13 +368,23 @@ Before starting, check if the issue is already assigned to someone by looking at
 
 ### 2. Claim an Issue
 
-Comment `/claim` on any unassigned issue to automatically assign yourself. A bot will confirm the assignment.
+For an unassigned issue **without** the `community-only` label, comment `/claim` to assign yourself automatically. A bot will confirm the assignment.
 
-### 3. Unclaim if Needed
+### 3. Community-only Issues
+
+Issues labeled `community-only` are reserved for verified members of the Voyager community:
+
+1. A community member comments `/claim`.
+2. A maintainer verifies their community membership and comments `/approve @username`.
+3. Start implementation or open a PR only after the bot assigns the issue.
+
+The label automatically removes `help wanted` and `good first issue` so reserved work is not advertised as a public contribution task. Other contributors can join the [Voyager Discord](https://discord.gg/TEUFxdMbGb) or choose an issue without the `community-only` label.
+
+### 4. Unclaim if Needed
 
 If you can no longer work on an issue, comment `/unclaim` to release it for others.
 
-### 4. Contribution Checkbox
+### 5. Contribution Checkbox
 
 When creating issues, you can check the "I am willing to contribute code" checkbox to indicate your interest in implementing the feature or fix.
 

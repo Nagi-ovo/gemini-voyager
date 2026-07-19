@@ -90,4 +90,4 @@ body:
       label: '💻 贡献意愿 | Contribution'
       options:
         - label: '我愿意为该问题贡献修复代码 / I am willing to contribute a fix for this bug'
-        - label: '💡 其他贡献者可评论 `/claim` 认领此 Issue / Other contributors can comment `/claim` to claim'
+        - label: '💡 若 Issue 未标记 `community-only`，其他贡献者可评论 `/claim` 认领 / Other contributors may use `/claim` unless the issue is labeled `community-only`'
