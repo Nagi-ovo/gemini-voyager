@@ -198,6 +198,47 @@ describe('PDFPrintService', () => {
     expect(styleText).toContain('.gv-print-turn-text .gv-export-attachment');
   });
 
+  it('renders Mermaid SVG with print-safe scoped styles', async () => {
+    window.print = vi.fn();
+    const assistantElement = document.createElement('div');
+    assistantElement.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <div class="gv-mermaid-wrapper">
+            <code-block style="display: none;">
+              <div class="code-block-decoration">mermaid</div>
+              <pre><code role="text">flowchart TD\nA --&gt; B</code></pre>
+            </code-block>
+            <div class="gv-mermaid-toggle"><button>Diagram</button></div>
+            <div class="gv-mermaid-diagram">
+              <svg viewBox="0 0 120 80"><g><text>A</text><text>B</text></g></svg>
+            </div>
+          </div>
+        </div>
+      </message-content>
+    `;
+
+    await PDFPrintService.export(
+      [{ user: 'Diagram', assistant: '', starred: false, assistantElement }],
+      {
+        url: 'https://gemini.google.com/app/x',
+        exportedAt: new Date().toISOString(),
+        count: 1,
+        title: 'Mermaid Export',
+      },
+    );
+
+    const turnText = document.querySelector('.gv-print-turn-assistant .gv-print-turn-text');
+    const styleText = document.getElementById('gv-pdf-print-styles')?.textContent ?? '';
+    expect(turnText?.querySelector('.gv-export-mermaid svg')).toBeTruthy();
+    expect(turnText?.querySelector('pre, code-block, .gv-mermaid-toggle')).toBeNull();
+    expect(styleText).toContain('.gv-print-turn-text .gv-export-mermaid');
+    expect(styleText).toContain('break-inside: avoid;');
+    expect(styleText).toContain('page-break-inside: avoid;');
+    expect(styleText).toContain('max-width: 100%;');
+    expect(styleText).toContain('height: auto;');
+  });
+
   it('normalizes metadata title suffix when page title is generic', async () => {
     document.title = 'Gemini';
     window.print = vi.fn();

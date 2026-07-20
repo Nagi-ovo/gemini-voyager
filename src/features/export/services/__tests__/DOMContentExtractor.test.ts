@@ -51,6 +51,155 @@ describe('DOMContentExtractor', () => {
     expect(extracted.text).not.toContain('📎 photo.png');
   });
 
+  it('exports rendered Mermaid SVG in HTML while preserving Mermaid source in text', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <div class="gv-mermaid-wrapper">
+            <code-block style="display: none;">
+              <div class="code-block-decoration">mermaid</div>
+              <pre><code role="text">flowchart TD\nA --&gt; B</code></pre>
+            </code-block>
+            <div class="gv-mermaid-toggle">
+              <button class="active">Diagram</button>
+              <button>Code</button>
+            </div>
+            <div class="gv-mermaid-diagram">
+              <svg viewBox="0 0 120 80" aria-label="Flowchart">
+                <g><text>A</text><text>B</text></g>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.hasCode).toBe(true);
+    expect(extracted.html).toContain('class="gv-export-mermaid"');
+    expect(extracted.html).toContain('<svg viewBox="0 0 120 80" aria-label="Flowchart">');
+    expect(extracted.html).not.toContain('<pre><code');
+    expect(extracted.html).not.toContain('gv-mermaid-toggle');
+    expect(extracted.text).toContain('```mermaid\nflowchart TD\nA --> B\n```');
+  });
+
+  it('falls back to Mermaid source when a rendered SVG is unavailable', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <div class="gv-mermaid-wrapper">
+            <code-block>
+              <div class="code-block-decoration">mermaid</div>
+              <pre><code role="text">flowchart TD\nA --&gt; B</code></pre>
+            </code-block>
+            <div class="gv-mermaid-diagram"></div>
+          </div>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.hasCode).toBe(true);
+    expect(extracted.html).toContain('<pre><code class="language-mermaid">');
+    expect(extracted.html).not.toContain('class="gv-export-mermaid"');
+    expect(extracted.text).toContain('```mermaid\nflowchart TD\nA --> B\n```');
+  });
+
+  it('reaches a rendered Mermaid wrapper nested in a response element', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <response-element>
+            <div class="gv-mermaid-wrapper">
+              <code-block style="display: none;">
+                <div class="code-block-decoration">mermaid</div>
+                <pre><code role="text">flowchart TD\nA --&gt; B</code></pre>
+              </code-block>
+              <div class="gv-mermaid-toggle"><button>Diagram</button></div>
+              <div class="gv-mermaid-diagram">
+                <svg viewBox="0 0 120 80"><text>Rendered diagram</text></svg>
+              </div>
+            </div>
+          </response-element>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.html).toContain('class="gv-export-mermaid"');
+    expect(extracted.html).toContain('<svg viewBox="0 0 120 80">');
+    expect(extracted.html).not.toContain('<pre><code');
+    expect(extracted.text).toContain('```mermaid\nflowchart TD\nA --> B\n```');
+  });
+
+  it('preserves rendered Mermaid diagrams and fenced source inside list items', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <ul>
+            <li>
+              <span>Diagram</span>
+              <div class="gv-mermaid-wrapper">
+                <code-block style="display: none;">
+                  <div class="code-block-decoration">mermaid</div>
+                  <pre><code role="text">flowchart TD\nA --&gt; B</code></pre>
+                </code-block>
+                <div class="gv-mermaid-toggle"><button>Diagram</button></div>
+                <div class="gv-mermaid-diagram">
+                  <svg viewBox="0 0 120 80"><text>Rendered diagram</text></svg>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.hasCode).toBe(true);
+    expect(extracted.html).toContain('<ul>');
+    expect(extracted.html).toContain('class="gv-export-mermaid"');
+    expect(extracted.html).toContain('<svg viewBox="0 0 120 80">');
+    expect(extracted.html).not.toContain('gv-mermaid-wrapper');
+    expect(extracted.html).not.toContain('<pre><code');
+    expect(extracted.text).toContain('- Diagram\n  ```mermaid\n  flowchart TD\n  A --> B\n  ```');
+  });
+
+  it('preserves regular fenced code when list extraction handles block content', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <ul>
+            <li>
+              <span>Example</span>
+              <code-block>
+                <div class="code-block-decoration">typescript</div>
+                <pre><code role="text">const answer = 42;</code></pre>
+              </code-block>
+            </li>
+          </ul>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.hasCode).toBe(true);
+    expect(extracted.html).toContain('<ul>');
+    expect(extracted.html).toContain('<pre><code class="language-typescript">');
+    expect(extracted.html).not.toContain('<code-block>');
+    expect(extracted.text).toContain('- Example\n  ```typescript\n  const answer = 42;\n  ```');
+  });
+
   it('should strip Gemini inline source chips (link icons) from assistant export', () => {
     const assistant = document.createElement('div');
     assistant.innerHTML = `

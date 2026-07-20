@@ -120,6 +120,48 @@ describe('ImageExportService', () => {
     expect(renderedStyles).toContain('.gv-image-export-content .gv-export-attachment');
   });
 
+  it('renders Mermaid SVG with scoped image export styles', async () => {
+    let renderedTarget: HTMLElement | null = null;
+    let renderedStyles = '';
+    const assistantElement = document.createElement('div');
+    assistantElement.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <div class="gv-mermaid-wrapper">
+            <code-block style="display: none;">
+              <div class="code-block-decoration">mermaid</div>
+              <pre><code role="text">flowchart TD\nA --&gt; B</code></pre>
+            </code-block>
+            <div class="gv-mermaid-toggle"><button>Diagram</button></div>
+            <div class="gv-mermaid-diagram">
+              <svg viewBox="0 0 120 80"><g><text>A</text><text>B</text></g></svg>
+            </div>
+          </div>
+        </div>
+      </message-content>
+    `;
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      async (node: HTMLElement) => {
+        renderedTarget = node;
+        renderedStyles = node.parentElement?.querySelector('style')?.textContent ?? '';
+        return new Blob(['x'], { type: 'image/png' });
+      },
+    );
+
+    await ImageExportService.renderConversationBlob(
+      [{ user: 'Diagram', assistant: '', starred: false, assistantElement }],
+      mockMetadata,
+      {},
+    );
+
+    const target = renderedTarget as HTMLElement | null;
+    expect(target?.querySelector('.gv-image-export-content .gv-export-mermaid svg')).toBeTruthy();
+    expect(target?.querySelector('pre, code-block, .gv-mermaid-toggle')).toBeNull();
+    expect(renderedStyles).toContain('.gv-image-export-content .gv-export-mermaid');
+    expect(renderedStyles).toContain('max-width: 100%;');
+    expect(renderedStyles).toContain('height: auto;');
+  });
+
   it('retries transient image render failures on Chrome and succeeds', async () => {
     (toBlob as unknown as ReturnType<typeof vi.fn>).mockReset();
     (toBlob as unknown as ReturnType<typeof vi.fn>)
@@ -250,6 +292,35 @@ describe('ImageExportService', () => {
 
     expect(capturedWidth).toBe('1360px');
     expect(capturedFontSize).toBe('24px');
+  });
+
+  it('applies scoped Mermaid sizing to document image exports', async () => {
+    let renderedTarget: HTMLElement | null = null;
+    let renderedStyles = '';
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockReset();
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      async (node: HTMLElement) => {
+        renderedTarget = node;
+        renderedStyles = node.parentElement?.querySelector('style')?.textContent ?? '';
+        return new Blob(['x'], { type: 'image/png' });
+      },
+    );
+
+    await ImageExportService.renderDocumentBlob({
+      title: 'Report',
+      url: 'https://gemini.google.com/app/report',
+      exportedAt: '2026-01-01T00:00:00.000Z',
+      markdown: 'Diagram',
+      html: '<div class="gv-export-mermaid"><svg viewBox="0 0 120 80"></svg></div>',
+    });
+
+    const target = renderedTarget as HTMLElement | null;
+    expect(
+      target?.querySelector('.gv-image-export-report-content .gv-export-mermaid svg'),
+    ).toBeTruthy();
+    expect(renderedStyles).toContain('.gv-image-export-report-content .gv-export-mermaid');
+    expect(renderedStyles).toContain('max-width: 100%;');
+    expect(renderedStyles).toContain('height: auto;');
   });
 
   it('fetches blob: image URLs so dom-to-image can rasterize generated images', async () => {

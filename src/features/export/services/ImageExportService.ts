@@ -250,6 +250,18 @@ export class ImageExportService {
         margin: 12px 0;
       }
 
+      .gv-image-export-content .gv-export-mermaid {
+        margin: 20px auto;
+        text-align: center;
+      }
+
+      .gv-image-export-content .gv-export-mermaid svg {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 0 auto;
+      }
+
       .gv-image-export-content .gv-export-attachment {
         display: flex;
         align-items: center;
@@ -390,6 +402,18 @@ export class ImageExportService {
         height: auto;
         display: block;
         margin: 0.6em 0;
+      }
+
+      .gv-image-export-report-content .gv-export-mermaid {
+        margin: 1em auto;
+        text-align: center;
+      }
+
+      .gv-image-export-report-content .gv-export-mermaid svg {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        margin: 0 auto;
       }
 
       .gv-image-export-report-content pre {

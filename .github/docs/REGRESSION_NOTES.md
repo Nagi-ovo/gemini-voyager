@@ -751,3 +751,30 @@ Regression tests:
 (`testDriveFolderIdentityMigratesOnlyAnUnambiguousLegacyName`). A live Drive
 check must also preserve the original folder ID, parent location, and JSON
 contents while changing only the legacy display name.
+
+## Mermaid exports must prefer the rendered diagram over hidden source
+
+Symptom:
+PDF and image exports showed Mermaid source code even when Voyager displayed a
+rendered diagram in the conversation.
+
+Root cause:
+The Mermaid wrapper contains both the hidden `code-block` and the rendered SVG.
+The DOM extractor's generic nested-code-block branch matched the wrapper first,
+emitted `<pre><code>`, and skipped the diagram. The same shortcut could match a
+parent `response-element` or list before traversal reached the wrapper.
+
+Fix:
+When a `.gv-mermaid-wrapper` contains a rendered diagram SVG, emit a clean
+`.gv-export-mermaid` clone for rich exports while preserving the original fenced
+source in text output. Recurse through Mermaid response wrappers and preserve
+list structure with indented fenced source. Fall back to the source block when
+no SVG is available.
+
+Regression test:
+`src/features/export/services/__tests__/DOMContentExtractor.test.ts`
+`src/features/export/services/__tests__/PDFPrintService.test.ts`
+`src/features/export/services/__tests__/ImageExportService.test.ts`
+
+Commit:
+`fix(export): render Mermaid diagrams in exports`

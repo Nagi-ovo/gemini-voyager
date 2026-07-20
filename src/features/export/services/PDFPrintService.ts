@@ -903,6 +903,20 @@ export class PDFPrintService {
           overflow-wrap: anywhere;
         }
 
+        .gv-print-turn-text .gv-export-mermaid {
+          margin: 1em auto;
+          text-align: center;
+          break-inside: avoid;
+          page-break-inside: avoid;
+        }
+
+        .gv-print-turn-text .gv-export-mermaid svg {
+          display: block !important;
+          max-width: 100%;
+          height: auto;
+          margin: 0 auto;
+        }
+
         .gv-print-turn-assistant .gv-print-turn-text {
           border-left-color: #93c5fd;
         }
