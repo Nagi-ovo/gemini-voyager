@@ -158,7 +158,9 @@ describe('DeepResearchPDFPrintService', () => {
       'dark',
     );
     expect(styleText).toContain('.gv-dr-print-report .gv-export-mermaid > img');
+    expect(styleText).toContain('margin: 0.75em auto;');
     expect(styleText).toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
+    expect(styleText).toContain('background: #1f2020;');
     expect(styleText).toContain('print-color-adjust: exact;');
     expect(styleText).toContain('-webkit-print-color-adjust: exact;');
     expect(styleText).toContain('page-break-inside: avoid;');

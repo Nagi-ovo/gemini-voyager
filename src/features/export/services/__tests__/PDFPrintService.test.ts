@@ -233,6 +233,8 @@ describe('PDFPrintService', () => {
     expect(turnText?.querySelector('.gv-export-mermaid svg')).toBeTruthy();
     expect(turnText?.querySelector('pre, code-block, .gv-mermaid-toggle')).toBeNull();
     expect(styleText).toContain('.gv-print-turn-text .gv-export-mermaid');
+    expect(styleText).toContain('.gv-print-turn-text .gv-export-mermaid svg {');
+    expect(styleText).toContain('display: block !important;');
     expect(styleText).toContain('break-inside: avoid;');
     expect(styleText).toContain('page-break-inside: avoid;');
     expect(styleText).toContain('max-width: 100%;');
@@ -241,6 +243,7 @@ describe('PDFPrintService', () => {
       turnText?.querySelector('.gv-export-mermaid')?.getAttribute('data-gv-mermaid-theme'),
     ).toBe('dark');
     expect(styleText).toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
+    expect(styleText).toContain('background: #1f2020;');
     expect(styleText).toContain('print-color-adjust: exact;');
     expect(styleText).toContain('-webkit-print-color-adjust: exact;');
   });

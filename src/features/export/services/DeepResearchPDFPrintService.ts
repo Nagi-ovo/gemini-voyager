@@ -2,6 +2,7 @@ import { isSafari } from '@/core/utils/browser';
 
 import type { PrintableDocumentContent } from './PDFPrintService';
 import { buildKatexExportStyles } from './katexExportStyles';
+import { buildMermaidExportStyles } from './mermaidExportStyles';
 
 /**
  * Dedicated PDF print path for Deep Research reports.
@@ -484,29 +485,14 @@ export class DeepResearchPDFPrintService {
           page-break-inside: avoid;
         }
 
-        body.${this.PRINT_BODY_CLASS} .gv-dr-print-report .gv-export-mermaid {
-          max-width: 100%;
-          text-align: center;
-          break-inside: avoid;
-          page-break-inside: avoid;
-        }
-
-        body.${this.PRINT_BODY_CLASS} .gv-dr-print-report .gv-export-mermaid > img {
-          max-width: 100%;
-          height: auto;
-          display: block;
-          margin: 0.75em auto;
-          break-inside: avoid;
-          page-break-inside: avoid;
-        }
-
-        body.${this.PRINT_BODY_CLASS} .gv-dr-print-report .gv-export-mermaid[data-gv-mermaid-theme="dark"] {
-          background: #1f2020;
-          padding: 16px;
-          border-radius: 8px;
-          print-color-adjust: exact;
-          -webkit-print-color-adjust: exact;
-        }
+        ${buildMermaidExportStyles(`body.${this.PRINT_BODY_CLASS} .gv-dr-print-report`, {
+          containerMaxWidth: true,
+          avoidContainerBreak: true,
+          diagramSelector: '> img',
+          diagramMargin: '0.75em auto',
+          avoidDiagramBreak: true,
+          preservePrintBackground: true,
+        })}
 
         body.${this.PRINT_BODY_CLASS} .gv-dr-print-report pre,
         body.${this.PRINT_BODY_CLASS} .gv-dr-print-report code {

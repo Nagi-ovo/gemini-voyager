@@ -8,6 +8,7 @@ import { isSafari } from '@/core/utils/browser';
 import type { ChatTurn, ConversationMetadata } from '../types/export';
 import { DOMContentExtractor } from './DOMContentExtractor';
 import { buildKatexExportStyles } from './katexExportStyles';
+import { buildMermaidExportStyles } from './mermaidExportStyles';
 
 export interface PrintableDocumentContent {
   title: string;
@@ -903,27 +904,12 @@ export class PDFPrintService {
           overflow-wrap: anywhere;
         }
 
-        .gv-print-turn-text .gv-export-mermaid {
-          margin: 1em auto;
-          text-align: center;
-          break-inside: avoid;
-          page-break-inside: avoid;
-        }
-
-        .gv-print-turn-text .gv-export-mermaid svg {
-          display: block !important;
-          max-width: 100%;
-          height: auto;
-          margin: 0 auto;
-        }
-
-        .gv-print-turn-text .gv-export-mermaid[data-gv-mermaid-theme="dark"] {
-          background: #1f2020;
-          padding: 16px;
-          border-radius: 8px;
-          print-color-adjust: exact;
-          -webkit-print-color-adjust: exact;
-        }
+        ${buildMermaidExportStyles('.gv-print-turn-text', {
+          containerMargin: '1em auto',
+          avoidContainerBreak: true,
+          importantDisplay: true,
+          preservePrintBackground: true,
+        })}
 
         .gv-print-turn-assistant .gv-print-turn-text {
           border-left-color: #93c5fd;

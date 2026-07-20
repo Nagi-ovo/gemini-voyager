@@ -16,6 +16,7 @@ import {
 import { DOMContentExtractor } from './DOMContentExtractor';
 import { renderElementToImageBlob } from './ImageRenderService';
 import { buildKatexExportStyles } from './katexExportStyles';
+import { buildMermaidExportStyles } from './mermaidExportStyles';
 
 export interface RenderableDocumentContent {
   title: string;
@@ -250,23 +251,9 @@ export class ImageExportService {
         margin: 12px 0;
       }
 
-      .gv-image-export-content .gv-export-mermaid {
-        margin: 20px auto;
-        text-align: center;
-      }
-
-      .gv-image-export-content .gv-export-mermaid svg {
-        display: block;
-        max-width: 100%;
-        height: auto;
-        margin: 0 auto;
-      }
-
-      .gv-image-export-content .gv-export-mermaid[data-gv-mermaid-theme="dark"] {
-        background: #1f2020;
-        padding: 16px;
-        border-radius: 8px;
-      }
+      ${buildMermaidExportStyles('.gv-image-export-content', {
+        containerMargin: '20px auto',
+      })}
 
       .gv-image-export-content .gv-export-attachment {
         display: flex;
@@ -410,23 +397,9 @@ export class ImageExportService {
         margin: 0.6em 0;
       }
 
-      .gv-image-export-report-content .gv-export-mermaid {
-        margin: 1em auto;
-        text-align: center;
-      }
-
-      .gv-image-export-report-content .gv-export-mermaid svg {
-        display: block;
-        max-width: 100%;
-        height: auto;
-        margin: 0 auto;
-      }
-
-      .gv-image-export-report-content .gv-export-mermaid[data-gv-mermaid-theme="dark"] {
-        background: #1f2020;
-        padding: 16px;
-        border-radius: 8px;
-      }
+      ${buildMermaidExportStyles('.gv-image-export-report-content', {
+        containerMargin: '1em auto',
+      })}
 
       .gv-image-export-report-content pre {
         background: rgba(0,0,0,0.05);

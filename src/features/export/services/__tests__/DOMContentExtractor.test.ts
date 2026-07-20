@@ -58,7 +58,7 @@ describe('DOMContentExtractor', () => {
         <div class="markdown">
           <div class="gv-mermaid-wrapper" data-gv-mermaid-theme="dark">
             <code-block style="display: none;">
-              <div class="code-block-decoration">mermaid</div>
+              <div class="code-block-decoration">Code snippet</div>
               <pre><code role="text">flowchart TD\nA --&gt; B</code></pre>
             </code-block>
             <div class="gv-mermaid-toggle">
@@ -84,6 +84,7 @@ describe('DOMContentExtractor', () => {
     expect(extracted.html).not.toContain('gv-mermaid-toggle');
     expect(extracted.html).toContain('data-gv-mermaid-theme="dark"');
     expect(extracted.text).toContain('```mermaid\nflowchart TD\nA --> B\n```');
+    expect(extracted.text).not.toContain('```code snippet');
   });
 
   it('does not copy an invalid Mermaid theme marker into exports', () => {
@@ -362,6 +363,46 @@ describe('DOMContentExtractor', () => {
     expect(extracted.text).toContain(
       '- Before wrapped Mermaid.\n  ```mermaid\n  flowchart LR\n  A --> B\n  ```\n  After wrapped Mermaid.',
     );
+  });
+
+  it('preserves block order through section and div containers inside list items', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <ul>
+            <li>
+              <section>
+                <p>Before ordinary code.</p>
+                <div>
+                  <code-block><div class="code-block-decoration">typescript</div><pre><code role="text">const answer = 42;</code></pre></code-block>
+                </div>
+                <p>Before Mermaid.</p>
+                <div>
+                  <div>
+                    <div class="gv-mermaid-wrapper">
+                      <code-block><div class="code-block-decoration">Code snippet</div><pre><code role="text">flowchart TD\nA --&gt; B</code></pre></code-block>
+                      <div class="gv-mermaid-diagram"><svg viewBox="0 0 120 80"><text>Diagram</text></svg></div>
+                    </div>
+                  </div>
+                </div>
+                <ol><li>Nested item</li></ol>
+                <p>After nested list.</p>
+              </section>
+            </li>
+          </ul>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.hasCode).toBe(true);
+    expect(extracted.html).toContain('class="gv-export-mermaid"');
+    expect(extracted.text).toContain(
+      '- Before ordinary code.\n  ```typescript\n  const answer = 42;\n  ```\n  Before Mermaid.\n  ```mermaid\n  flowchart TD\n  A --> B\n  ```\n  1. Nested item\n  After nested list.',
+    );
+    expect(extracted.text).not.toContain('```code snippet');
   });
 
   it('should strip Gemini inline source chips (link icons) from assistant export', () => {

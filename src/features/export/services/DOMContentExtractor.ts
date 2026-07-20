@@ -52,6 +52,10 @@ const MERMAID_THEME_ATTRIBUTE = 'data-gv-mermaid-theme';
 const isMermaidTheme = (value: string | null): value is 'dark' | 'light' =>
   value === 'dark' || value === 'light';
 
+type ExportCodeBlock =
+  | { kind: 'mermaid'; element: HTMLElement }
+  | { kind: 'code'; element: HTMLElement };
+
 export class DOMContentExtractor {
   private static DEBUG = false;
   /**
@@ -445,47 +449,27 @@ export class DOMContentExtractor {
         }
       }
 
-      // Mermaid keeps the hidden source code and rendered diagram in the same wrapper.
-      // Export the rendered SVG for rich formats while preserving source for text formats.
-      const mermaidContent = child.matches(MERMAID_WRAPPER_SELECTOR)
-        ? this.extractMermaidContent(child as HTMLElement)
-        : null;
-      if (mermaidContent) {
-        htmlParts.push(mermaidContent.html);
-        if (mermaidContent.text) {
+      const exportCodeBlocks = this.findExportCodeBlocks(child);
+      const directExportCodeBlock = exportCodeBlocks.find(({ element }) => element === child);
+      if (directExportCodeBlock) {
+        const content =
+          directExportCodeBlock.kind === 'mermaid'
+            ? this.extractMermaidContent(directExportCodeBlock.element)
+            : this.extractCodeBlock(directExportCodeBlock.element);
+        if (content) {
+          htmlParts.push(content.html);
+        }
+        if (content?.text) {
           flags.hasCode = true;
-          textParts.push(`\n${mermaidContent.text}\n`);
+          textParts.push(`\n${content.text}\n`);
         }
         continue;
       }
 
-      // Recurse through non-list containers with a rendered Mermaid wrapper before the
-      // generic descendant code-block shortcut can consume its hidden source. Lists keep
-      // their dedicated extraction path to preserve item structure and Markdown indentation.
-      if (
-        tagName !== 'ul' &&
-        tagName !== 'ol' &&
-        child.querySelector(`${MERMAID_WRAPPER_SELECTOR} ${MERMAID_RENDERED_SVG_SELECTOR}`)
-      ) {
+      // Traverse containers that own export blocks instead of consuming only their first
+      // descendant. This keeps prose, code, and Mermaid output in DOM order.
+      if (tagName !== 'ul' && tagName !== 'ol' && exportCodeBlocks.length > 0) {
         this.processNodes(child, htmlParts, textParts, flags);
-        continue;
-      }
-
-      // Code block (check for nested code-block first)
-      const codeBlock = Array.from(child.querySelectorAll('code-block')).find((candidate) => {
-        const containingList = candidate.closest('ul, ol');
-        return !containingList || !child.contains(containingList);
-      });
-      if (tagName === 'code-block' || child.classList.contains('code-block') || codeBlock) {
-        if (this.DEBUG) console.log('[DOMContentExtractor] Found code block!');
-        const elementToExtract = (codeBlock || child) as HTMLElement;
-        const codeContent = this.extractCodeBlock(elementToExtract);
-        if (this.DEBUG) console.log('[DOMContentExtractor] Code content:', codeContent.text);
-        if (codeContent.text) {
-          flags.hasCode = true;
-          htmlParts.push(codeContent.html);
-          textParts.push(`\n${codeContent.text}\n`);
-        }
         continue;
       }
 
@@ -897,7 +881,9 @@ export class DOMContentExtractor {
   ): { html: string; text: string } | null {
     const svg = wrapper.querySelector<SVGSVGElement>(MERMAID_RENDERED_SVG_SELECTOR);
     const codeBlock = wrapper.querySelector<HTMLElement>('code-block, .code-block');
-    const codeContent = codeBlock ? this.extractCodeBlock(codeBlock) : { html: '', text: '' };
+    const codeContent = codeBlock
+      ? this.extractCodeBlock(codeBlock, 'mermaid')
+      : { html: '', text: '' };
 
     if (svg) {
       const exportContainer = document.createElement('div');
@@ -914,15 +900,39 @@ export class DOMContentExtractor {
   }
 
   /**
+   * Find top-level Mermaid and ordinary code blocks in DOM order.
+   * Hidden source blocks inside Mermaid wrappers and nested code-block shells are excluded.
+   */
+  private static findExportCodeBlocks(container: Element): ExportCodeBlock[] {
+    const selector = `${MERMAID_WRAPPER_SELECTOR}, code-block, .code-block`;
+    const elements = [
+      ...(container.matches(selector) ? [container as HTMLElement] : []),
+      ...Array.from(container.querySelectorAll<HTMLElement>(selector)),
+    ];
+
+    return elements.flatMap((element): ExportCodeBlock[] => {
+      if (element.matches(MERMAID_WRAPPER_SELECTOR)) {
+        return [{ kind: 'mermaid', element }];
+      }
+      if (element.closest(MERMAID_WRAPPER_SELECTOR)) return [];
+      if (element.parentElement?.closest('code-block, .code-block')) return [];
+      return [{ kind: 'code', element }];
+    });
+  }
+
+  /**
    * Extract code block content
    */
-  private static extractCodeBlock(element: HTMLElement): { html: string; text: string } {
+  private static extractCodeBlock(
+    element: HTMLElement,
+    languageOverride?: string,
+  ): { html: string; text: string } {
     const codeElement = element.querySelector('code[role="text"], code');
     const code = codeElement?.textContent || '';
 
     // Try to detect language from class or label
-    let language = '';
-    const langLabel = element.querySelector('.code-block-decoration');
+    let language = languageOverride ?? '';
+    const langLabel = languageOverride ? null : element.querySelector('.code-block-decoration');
     if (langLabel) {
       language = this.normalizeText(langLabel.textContent || '').toLowerCase();
     }
@@ -1072,57 +1082,58 @@ export class DOMContentExtractor {
         hasItemContent = true;
       };
 
-      Array.from(item.childNodes).forEach((node) => {
-        if (node.nodeType !== Node.ELEMENT_NODE) {
-          proseNodes.push(node);
-          return;
-        }
-
-        const child = node as HTMLElement;
-        if (child.tagName === 'UL' || child.tagName === 'OL') {
-          flushProse();
-          const nestedResult = this.extractList(child, depth + 1);
-          if (nestedResult.hasFormulas) hasFormulas = true;
-          if (nestedResult.hasCode) hasCode = true;
-          if (nestedResult.text) {
-            ensureItemMarker();
-            textLines.push(nestedResult.text);
+      const processItemNodes = (nodes: Node[]): void => {
+        nodes.forEach((node) => {
+          if (node.nodeType !== Node.ELEMENT_NODE) {
+            proseNodes.push(node);
+            return;
           }
-          return;
-        }
 
-        const directMermaid = child.matches(MERMAID_WRAPPER_SELECTOR) ? child : null;
-        const wrappedMermaid =
-          child.tagName === 'RESPONSE-ELEMENT'
-            ? child.querySelector<HTMLElement>(MERMAID_WRAPPER_SELECTOR)
-            : null;
-        const mermaidBlock = directMermaid || wrappedMermaid;
-        const directCodeBlock = child.matches('code-block, .code-block') ? child : null;
-        const wrappedCodeBlock =
-          child.tagName === 'RESPONSE-ELEMENT' && !mermaidBlock
-            ? child.querySelector<HTMLElement>('code-block, .code-block')
-            : null;
-        const codeBlock = directCodeBlock || wrappedCodeBlock;
-        if (!mermaidBlock && !codeBlock) {
+          const child = node as HTMLElement;
+          if (child.tagName === 'UL' || child.tagName === 'OL') {
+            flushProse();
+            const nestedResult = this.extractList(child, depth + 1);
+            if (nestedResult.hasFormulas) hasFormulas = true;
+            if (nestedResult.hasCode) hasCode = true;
+            if (nestedResult.text) {
+              ensureItemMarker();
+              textLines.push(nestedResult.text);
+            }
+            return;
+          }
+
+          const exportCodeBlocks = this.findExportCodeBlocks(child);
+          const directExportCodeBlock = exportCodeBlocks.find(({ element }) => element === child);
+          if (directExportCodeBlock) {
+            flushProse();
+            const content =
+              directExportCodeBlock.kind === 'mermaid'
+                ? this.extractMermaidContent(directExportCodeBlock.element)
+                : this.extractCodeBlock(directExportCodeBlock.element);
+            if (!content?.text) return;
+
+            ensureItemMarker();
+            hasCode = true;
+            textLines.push(
+              content.text
+                .split('\n')
+                .map((line) => continuationIndent + line)
+                .join('\n'),
+            );
+            return;
+          }
+
+          if (exportCodeBlocks.length > 0 || child.querySelector('ul, ol')) {
+            flushProse();
+            processItemNodes(Array.from(child.childNodes));
+            return;
+          }
+
           proseNodes.push(node);
-          return;
-        }
+        });
+      };
 
-        flushProse();
-        const content = mermaidBlock
-          ? this.extractMermaidContent(mermaidBlock)
-          : this.extractCodeBlock(codeBlock!);
-        if (!content?.text) return;
-
-        ensureItemMarker();
-        hasCode = true;
-        textLines.push(
-          content.text
-            .split('\n')
-            .map((line) => continuationIndent + line)
-            .join('\n'),
-        );
-      });
+      processItemNodes(Array.from(item.childNodes));
 
       flushProse();
       if (!hasItemContent) {

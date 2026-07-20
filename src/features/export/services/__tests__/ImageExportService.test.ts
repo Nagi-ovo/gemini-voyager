@@ -158,6 +158,7 @@ describe('ImageExportService', () => {
     expect(target?.querySelector('.gv-image-export-content .gv-export-mermaid svg')).toBeTruthy();
     expect(target?.querySelector('pre, code-block, .gv-mermaid-toggle')).toBeNull();
     expect(renderedStyles).toContain('.gv-image-export-content .gv-export-mermaid');
+    expect(renderedStyles).toContain('.gv-image-export-content .gv-export-mermaid svg {');
     expect(renderedStyles).toContain('max-width: 100%;');
     expect(renderedStyles).toContain('height: auto;');
     expect(
@@ -166,6 +167,7 @@ describe('ImageExportService', () => {
         ?.getAttribute('data-gv-mermaid-theme'),
     ).toBe('dark');
     expect(renderedStyles).toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
+    expect(renderedStyles).toContain('background: #1f2020;');
   });
 
   it('retries transient image render failures on Chrome and succeeds', async () => {
@@ -325,9 +327,11 @@ describe('ImageExportService', () => {
       target?.querySelector('.gv-image-export-report-content .gv-export-mermaid svg'),
     ).toBeTruthy();
     expect(renderedStyles).toContain('.gv-image-export-report-content .gv-export-mermaid');
+    expect(renderedStyles).toContain('.gv-image-export-report-content .gv-export-mermaid svg {');
     expect(renderedStyles).toContain('max-width: 100%;');
     expect(renderedStyles).toContain('height: auto;');
     expect(renderedStyles).toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
+    expect(renderedStyles).toContain('background: #1f2020;');
   });
 
   it('fetches blob: image URLs so dom-to-image can rasterize generated images', async () => {
