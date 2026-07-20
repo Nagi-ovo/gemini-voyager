@@ -126,7 +126,7 @@ describe('DeepResearchPDFPrintService', () => {
         <p class="outer-style" onclick="alert('unsafe')">Body</p>
         <span class="katex">x</span>
         <div class="gv-export-mermaid">
-          <svg viewBox="0 0 120 80" onclick="alert('unsafe')">
+          <svg viewBox="0 0 120 80" width="100%" style="max-width: 640px" onclick="alert('unsafe')">
             <style>.node { fill: red; }</style>
             <script>alert('unsafe')</script>
             <template><g></g></template>
@@ -145,6 +145,8 @@ describe('DeepResearchPDFPrintService', () => {
 
     expect(mermaidImage).toBeTruthy();
     expect(dataUrl).toMatch(/^data:image\/svg\+xml;charset=utf-8,/);
+    expect(mermaidImage?.style.width).toBe('100%');
+    expect(mermaidImage?.style.maxWidth).toBe('640px');
     expect(serializedSvg).toContain('<style>.node { fill: red; }</style>');
     expect(serializedSvg).not.toContain('<script');
     expect(serializedSvg).not.toContain('<template');

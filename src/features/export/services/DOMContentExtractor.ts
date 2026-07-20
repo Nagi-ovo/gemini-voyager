@@ -1081,17 +1081,27 @@ export class DOMContentExtractor {
           return;
         }
 
-        const isMermaid = child.matches(MERMAID_WRAPPER_SELECTOR);
-        const isCodeBlock = child.matches('code-block, .code-block');
-        if (!isMermaid && !isCodeBlock) {
+        const directMermaid = child.matches(MERMAID_WRAPPER_SELECTOR) ? child : null;
+        const wrappedMermaid =
+          child.tagName === 'RESPONSE-ELEMENT'
+            ? child.querySelector<HTMLElement>(MERMAID_WRAPPER_SELECTOR)
+            : null;
+        const mermaidBlock = directMermaid || wrappedMermaid;
+        const directCodeBlock = child.matches('code-block, .code-block') ? child : null;
+        const wrappedCodeBlock =
+          child.tagName === 'RESPONSE-ELEMENT' && !mermaidBlock
+            ? child.querySelector<HTMLElement>('code-block, .code-block')
+            : null;
+        const codeBlock = directCodeBlock || wrappedCodeBlock;
+        if (!mermaidBlock && !codeBlock) {
           proseNodes.push(node);
           return;
         }
 
         flushProse();
-        const content = isMermaid
-          ? this.extractMermaidContent(child)
-          : this.extractCodeBlock(child);
+        const content = mermaidBlock
+          ? this.extractMermaidContent(mermaidBlock)
+          : this.extractCodeBlock(codeBlock!);
         if (!content?.text) return;
 
         ensureItemMarker();

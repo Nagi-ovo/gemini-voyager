@@ -234,6 +234,9 @@ export class DeepResearchPDFPrintService {
         const image = document.createElement('img');
         image.className = this.MERMAID_EXPORT_IMAGE_CLASS;
         image.alt = svg.getAttribute('aria-label') || 'Mermaid diagram';
+        const width = svg.getAttribute('width') || svg.style.width;
+        if (width) image.style.width = width;
+        if (svg.style.maxWidth) image.style.maxWidth = svg.style.maxWidth;
         image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(serializedSvg)}`;
         svg.replaceWith(image);
       } catch {
