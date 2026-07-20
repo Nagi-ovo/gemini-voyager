@@ -4,6 +4,9 @@ const DEFAULT_OFFSCREEN_LEFT = '-100000px';
 const DEFAULT_SANITIZE_SELECTOR = 'img, video, iframe, canvas, svg image';
 const DEFAULT_RENDER_WIDTH = 720;
 const MATH_RENDER_SELECTOR = '.katex, .math-inline, .math-block, [data-math]';
+const MERMAID_FOREIGN_OBJECT_SELECTOR = '.gv-export-mermaid svg foreignObject';
+const MERMAID_FOREIGN_OBJECT_STYLE_PROPERTIES = ['color', 'fill'] as const;
+const WEBKIT_TEXT_FILL_COLOR_PROPERTY = '-webkit-text-fill-color';
 const FONT_FACE_RULE_TYPE = 5;
 const WOFF2_SOURCE_RE = /url\((["']?)([^"')]+)\1\)\s*format\((["']?)woff2\3\)/i;
 
@@ -191,6 +194,22 @@ function inlineKatexSvgStyles(root: HTMLElement): void {
   });
 }
 
+function inlineMermaidForeignObjectStyles(root: HTMLElement): void {
+  root
+    .querySelectorAll<SVGForeignObjectElement>(MERMAID_FOREIGN_OBJECT_SELECTOR)
+    .forEach((foreignObject) => {
+      foreignObject.querySelectorAll<HTMLElement>('*').forEach((element) => {
+        const computedStyle = getComputedStyle(element);
+        MERMAID_FOREIGN_OBJECT_STYLE_PROPERTIES.forEach((property) => {
+          const value = computedStyle.getPropertyValue(property);
+          if (value) setStyle(element, property, value);
+        });
+        const color = computedStyle.getPropertyValue('color');
+        if (color) setStyle(element, WEBKIT_TEXT_FILL_COLOR_PROPERTY, color);
+      });
+    });
+}
+
 function hasMathContent(target: HTMLElement): boolean {
   return target.matches(MATH_RENDER_SELECTOR) || !!target.querySelector(MATH_RENDER_SELECTOR);
 }
@@ -329,6 +348,7 @@ async function renderTargetToBlob(target: HTMLElement): Promise<Blob> {
   stripXmlIllegalChars(target);
   inlineKatexLayoutStyles(target);
   inlineKatexSvgStyles(target);
+  inlineMermaidForeignObjectStyles(target);
   const containsMath = hasMathContent(target);
   const { toBlob } = await import('html-to-image');
   const blob = await toBlob(target, {
