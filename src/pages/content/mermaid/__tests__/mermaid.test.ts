@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  _initMermaidForTest,
   _openFullscreenForTest,
   _renderMermaidForTest,
   _resetMermaidLoader,
@@ -24,6 +25,8 @@ describe('Mermaid dynamic loading', () => {
   beforeEach(() => {
     _resetMermaidLoader();
     vi.clearAllMocks();
+    document.body.innerHTML = '';
+    document.body.className = '';
   });
 
   describe('loadMermaid', () => {
@@ -120,8 +123,21 @@ describe('Mermaid dynamic loading', () => {
   });
 
   describe('rendered diagram theme marker', () => {
-    const renderIntoTheme = async (theme: 'dark' | 'light'): Promise<HTMLElement | null> => {
+    const setPageTheme = (theme: 'dark' | 'light') => {
       document.body.className = theme === 'dark' ? 'dark-theme' : '';
+    };
+
+    const initializeTheme = async (theme: 'dark' | 'light') => {
+      setPageTheme(theme);
+      await _initMermaidForTest();
+
+      const mermaid = await loadMermaid();
+      expect(mermaid?.initialize).toHaveBeenLastCalledWith(
+        expect.objectContaining({ theme: theme === 'dark' ? 'dark' : 'default' }),
+      );
+    };
+
+    const renderDiagram = async (): Promise<HTMLElement | null> => {
       const host = document.createElement('code-block');
       const code = document.createElement('code');
       host.appendChild(code);
@@ -136,6 +152,15 @@ describe('Mermaid dynamic loading', () => {
       return host.parentElement;
     };
 
+    const renderIntoTheme = async (
+      initialTheme: 'dark' | 'light',
+      renderTheme: 'dark' | 'light' = initialTheme,
+    ): Promise<HTMLElement | null> => {
+      await initializeTheme(initialTheme);
+      setPageTheme(renderTheme);
+      return renderDiagram();
+    };
+
     it('marks rendered Mermaid wrappers with the active dark theme', async () => {
       const wrapper = await renderIntoTheme('dark');
 
@@ -144,6 +169,50 @@ describe('Mermaid dynamic loading', () => {
 
     it('marks rendered Mermaid wrappers with the active light theme', async () => {
       const wrapper = await renderIntoTheme('light');
+
+      expect(wrapper?.dataset.gvMermaidTheme).toBe('light');
+    });
+
+    it('keeps the dark marker after the page switches to light mode', async () => {
+      const wrapper = await renderIntoTheme('dark', 'light');
+
+      expect(wrapper?.dataset.gvMermaidTheme).toBe('dark');
+    });
+
+    it('keeps the light marker after the page switches to dark mode', async () => {
+      const wrapper = await renderIntoTheme('light', 'dark');
+
+      expect(wrapper?.dataset.gvMermaidTheme).toBe('light');
+    });
+
+    it('does not retain a reset Mermaid theme after reinitialization', async () => {
+      await initializeTheme('dark');
+      _resetMermaidLoader();
+
+      const wrapperAfterReset = await renderDiagram();
+      expect(wrapperAfterReset?.dataset.gvMermaidTheme).toBeUndefined();
+
+      await initializeTheme('light');
+      setPageTheme('dark');
+      const wrapperAfterReinitialization = await renderDiagram();
+
+      expect(wrapperAfterReinitialization?.dataset.gvMermaidTheme).toBe('light');
+    });
+
+    it('does not write a marker when Mermaid has not initialized', async () => {
+      setPageTheme('dark');
+
+      const wrapper = await renderDiagram();
+
+      expect(wrapper?.dataset.gvMermaidTheme).toBeUndefined();
+    });
+
+    it('updates the marker when Mermaid initializes again without a reset', async () => {
+      await initializeTheme('dark');
+      await initializeTheme('light');
+      setPageTheme('dark');
+
+      const wrapper = await renderDiagram();
 
       expect(wrapper?.dataset.gvMermaidTheme).toBe('light');
     });

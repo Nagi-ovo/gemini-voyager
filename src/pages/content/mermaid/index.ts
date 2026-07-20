@@ -8,6 +8,8 @@ let mermaidLoadFailed = false;
 
 type MermaidTheme = 'dark' | 'light';
 
+let initializedMermaidTheme: MermaidTheme | null = null;
+
 const getMermaidTheme = (): MermaidTheme => {
   const isDarkMode =
     document.body.classList.contains('dark-theme') ||
@@ -25,6 +27,7 @@ const getMermaidTheme = (): MermaidTheme => {
 export const _resetMermaidLoader = () => {
   mermaidInstance = null;
   mermaidLoadFailed = false;
+  initializedMermaidTheme = null;
 };
 
 /**
@@ -86,21 +89,26 @@ const initMermaid = async (): Promise<boolean> => {
   const mermaid = await loadMermaid();
   if (!mermaid) return false;
 
-  const theme = resolveMermaidTheme(
-    document,
-    window.matchMedia('(prefers-color-scheme: dark)').matches,
-  );
+  const theme: MermaidTheme =
+    resolveMermaidTheme(document, window.matchMedia('(prefers-color-scheme: dark)').matches) ===
+    'dark'
+      ? 'dark'
+      : 'light';
 
   mermaid.initialize({
     startOnLoad: false,
-    theme,
+    theme: theme === 'dark' ? 'dark' : 'default',
     securityLevel: 'loose',
     fontFamily: 'Google Sans, Roboto, sans-serif',
     logLevel: 5, // 5 = fatal, only log fatal errors (v9.x uses numbers)
   });
+  initializedMermaidTheme = theme;
 
   return true;
 };
+
+/** @internal Exported for theme-marker testing. */
+export const _initMermaidForTest = initMermaid;
 
 /**
  * Check if a code block contains Mermaid syntax and appears complete enough to render
@@ -712,7 +720,9 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
       });
     }
 
-    wrapper.dataset.gvMermaidTheme = getMermaidTheme();
+    if (initializedMermaidTheme) {
+      wrapper.dataset.gvMermaidTheme = initializedMermaidTheme;
+    }
 
     const diagramContainer = wrapper.querySelector('.gv-mermaid-diagram') as HTMLElement;
     if (!diagramContainer) {
