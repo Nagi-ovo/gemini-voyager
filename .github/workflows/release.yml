@@ -669,7 +669,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: release
     permissions:
-      contents: read
+      contents: write
     steps:
       - name: Checkout main
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -724,6 +724,20 @@ jobs:
           path: voyager-firefox-v${{ inputs.version }}.xpi
           if-no-files-found: error
           retention-days: 7
+
+      - name: Refresh Firefox asset on the base GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          BASE_VERSION=${VERSION%.*}
+          HOTFIX_ASSET="voyager-firefox-v${VERSION}.xpi"
+          RELEASE_ASSET="voyager-firefox-v${BASE_VERSION}.xpi"
+          cp "$HOTFIX_ASSET" "$RELEASE_ASSET"
+          gh release view "v${BASE_VERSION}" --repo "$GITHUB_REPOSITORY" >/dev/null
+          gh release upload "v${BASE_VERSION}" "$RELEASE_ASSET" \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
 
   # Job 5: Re-publish Chrome only (manual) — recover a failed Chrome Web Store
   # upload without re-cutting the release. Downloads the existing release's Chrome

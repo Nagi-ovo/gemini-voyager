@@ -40,6 +40,10 @@ describe('release artifacts', () => {
     expect(workflow).toContain('VOYAGER_FIREFOX_VERSION: ${{ inputs.version }}');
     expect(workflow).toContain('node scripts/verify-release-privacy.mjs dist_firefox');
     expect(workflow).toContain('--channel=listed');
+    expect(workflow).toContain('Refresh Firefox asset on the base GitHub Release');
+    expect(workflow).toContain('permissions:\n      contents: write');
+    expect(workflow).toContain('gh release upload "v${BASE_VERSION}" "$RELEASE_ASSET"');
+    expect(workflow).toContain('--clobber');
     expect(firefoxConfig).toContain('process.env.VOYAGER_FIREFOX_VERSION');
     expect(firefoxConfig).toContain('version: firefoxVersionOverride ?? pkg.version');
   });
