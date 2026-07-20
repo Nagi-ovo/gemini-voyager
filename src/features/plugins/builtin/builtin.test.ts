@@ -53,12 +53,8 @@ describe('BUILTIN_PLUGINS', () => {
     expect(timeline?.i18n?.zh?.settings?.compactView?.label).toBe('使用紧凑索引');
   });
 
-  it('includes the Claude usage native function plugin', () => {
+  it('does not expose the retired Claude usage plugin', () => {
     const usage = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.claude-usage');
-    expect(usage).toBeDefined();
-    expect(usage?.matches).toEqual(['https://claude.ai/*']);
-    expect(usage?.contributes.styles ?? []).toEqual([]);
-    expect(usage?.contributes.domOps ?? []).toEqual([]);
-    expect(usage?.i18n?.zh?.name).toBe('Claude · 用量条');
+    expect(usage).toBeUndefined();
   });
 });

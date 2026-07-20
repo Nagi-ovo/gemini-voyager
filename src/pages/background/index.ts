@@ -75,8 +75,6 @@ import { isHandledBackgroundRuntimeMessage } from './runtimeMessageRouting';
 const CUSTOM_CONTENT_SCRIPT_ID = 'gv-custom-content-script';
 const PLUGIN_CONTENT_SCRIPT_ID = 'gv-plugin-content-script';
 const CLAUDE_USAGE_MAIN_SCRIPT_ID = 'gv-plugin-claude-usage-main';
-const CLAUDE_USAGE_PLUGIN_ID = 'voyager.claude-usage';
-const CLAUDE_USAGE_MATCHES = ['https://claude.ai/*'];
 const CUSTOM_WEBSITE_KEY = 'gvPromptCustomWebsites';
 const FETCH_INTERCEPTOR_SCRIPT_ID = 'gv-fetch-interceptor';
 const RESPONSE_COMPLETE_OBSERVER_SCRIPT_ID = 'gv-response-complete-observer';
@@ -968,27 +966,6 @@ async function doSyncPluginContentScripts(): Promise<void> {
   }
 
   if (!grantedMatches.length) return;
-
-  if (
-    getVoyagerBuildTarget() === 'safari' &&
-    (await loadPluginState())[CLAUDE_USAGE_PLUGIN_ID]?.enabled === true &&
-    grantedMatches.includes(CLAUDE_USAGE_MATCHES[0])
-  ) {
-    try {
-      await chrome.scripting.registerContentScripts([
-        {
-          id: CLAUDE_USAGE_MAIN_SCRIPT_ID,
-          js: ['claude-usage-observer.js'],
-          matches: CLAUDE_USAGE_MATCHES,
-          world: 'MAIN',
-          runAt: 'document_start',
-          persistAcrossSessions: true,
-        },
-      ]);
-    } catch (error) {
-      console.error('[Background] Failed to register Claude usage observer:', error);
-    }
-  }
 
   const runAt =
     manifestContentScript.run_at === 'document_start'

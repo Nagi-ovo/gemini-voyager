@@ -13,7 +13,6 @@ import {
   stopClaudeTimeline,
   updateClaudeTimelineSettings,
 } from '@/features/plugins/builtin/claudeTimeline';
-import { startClaudeUsage, stopClaudeUsage } from '@/features/plugins/builtin/claudeUsage';
 import { startInputVimPlugin, stopInputVimPlugin } from '@/features/plugins/builtin/inputVim';
 import { registerNativeHandler } from '@/features/plugins/runtime/nativeHandlers';
 import { resolvePluginPlatformId } from '@/features/plugins/sites/registry';
@@ -498,11 +497,6 @@ function handleVisibilityChange(): void {
       updateSettings: updateClaudeTimelineSettings,
       stop: stopClaudeTimeline,
     });
-    registerNativeHandler('voyager.claude-usage', {
-      start: startClaudeUsage,
-      stop: stopClaudeUsage,
-    });
-
     pluginHostCleanup = startPluginHost();
 
     // Cosmetic: on Claude / ChatGPT, re-skin Voyager's accent to the host
