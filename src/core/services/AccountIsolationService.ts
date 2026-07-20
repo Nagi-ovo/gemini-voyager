@@ -1,9 +1,11 @@
 import { StorageKeys } from '@/core/types/common';
+import { getVoyagerBuildTarget } from '@/core/utils/browser';
 import { hashString } from '@/core/utils/hash';
 
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
 const PROFILE_MAP_VERSION = 1;
 const PROFILE_MAP_LOCK_NAME = 'gv-account-profile-map';
+const ACCOUNT_SCOPE_RESOLVE_MESSAGE = 'gv.account.resolve';
 const ACCOUNT_ISOLATION_KEY_BY_PLATFORM = {
   gemini: StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI,
   aistudio: StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO,
@@ -45,6 +47,11 @@ export interface AccountContext {
 
 export type AccountPlatform = 'gemini' | 'aistudio';
 
+interface AccountScopeResolveResponse {
+  ok: true;
+  scope: AccountScope;
+}
+
 function parseHostname(url: string): string | null {
   try {
     return new URL(url).hostname.toLowerCase();
@@ -73,6 +80,25 @@ export function getAccountIsolationStorageKey(platform: AccountPlatform): string
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function isAccountScope(value: unknown): value is AccountScope {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.accountKey === 'string' &&
+    typeof value.accountId === 'number' &&
+    (typeof value.routeUserId === 'string' || value.routeUserId === null) &&
+    (typeof value.emailHash === 'string' || value.emailHash === null)
+  );
+}
+
+function isAccountScopeResolveResponse(value: unknown): value is AccountScopeResolveResponse {
+  return isRecord(value) && value.ok === true && isAccountScope(value.scope);
+}
+
+function shouldResolveScopeInBackground(): boolean {
+  if (getVoyagerBuildTarget() !== 'firefox' || typeof location === 'undefined') return false;
+  return location.protocol === 'http:' || location.protocol === 'https:';
 }
 
 function toStringRecord(value: unknown): Record<string, string> {
@@ -297,6 +323,20 @@ export class AccountIsolationService {
   }
 
   async resolveAccountScope(hints: AccountScopeHints = {}): Promise<AccountScope> {
+    // Firefox bug 1873028 prevents Web Locks callbacks from returning a content-script
+    // Promise. Resolve in the extension background page instead, where the existing
+    // lock remains available and shared across tabs without exposing account data.
+    if (shouldResolveScopeInBackground()) {
+      const response: unknown = await chrome.runtime.sendMessage({
+        type: ACCOUNT_SCOPE_RESOLVE_MESSAGE,
+        payload: hints,
+      });
+      if (!isAccountScopeResolveResponse(response)) {
+        throw new Error('Failed to resolve Firefox account scope in the extension background');
+      }
+      return response.scope;
+    }
+
     return this.serialize(() =>
       this.withProfileMapLock(async () => {
         const routeUserId =

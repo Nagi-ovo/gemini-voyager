@@ -36,6 +36,9 @@ function createChromeMock(syncSeed: Record<string, unknown> = {}): MockedChrome 
   };
 
   return {
+    runtime: {
+      sendMessage: vi.fn(),
+    },
     storage: {
       local: {
         get: vi.fn(async (keys?: unknown) => getFromStore(localStore, keys)),
@@ -71,6 +74,7 @@ function createChromeMock(syncSeed: Record<string, unknown> = {}): MockedChrome 
 describe('AccountIsolationService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
     Object.defineProperty(navigator, 'locks', {
       configurable: true,
       value: undefined,
@@ -178,6 +182,39 @@ describe('AccountIsolationService', () => {
     expect(map.emailAliases[first.emailHash!]).toBe(first.accountKey);
     expect(map.emailAliases[second.emailHash!]).toBe(second.accountKey);
     expect(new Set([first.accountId, second.accountId]).size).toBe(2);
+  });
+
+  it('resolves Firefox content-script scopes in the background instead of using Web Locks', async () => {
+    vi.stubEnv('VOYAGER_BUILD_TARGET', 'firefox');
+    const request = vi.fn(async () => {
+      throw new Error('Permission denied to access property "then"');
+    });
+    Object.defineProperty(navigator, 'locks', {
+      configurable: true,
+      value: { request },
+    });
+
+    const scope = {
+      accountKey: 'email:firefox-account',
+      accountId: 7,
+      routeUserId: '2',
+      emailHash: 'firefox-account',
+    };
+    const sendMessage = chrome.runtime.sendMessage as unknown as ReturnType<typeof vi.fn>;
+    sendMessage.mockResolvedValue({ ok: true, scope });
+    const hints = {
+      pageUrl: 'https://gemini.google.com/u/2/app',
+      routeUserId: '2',
+      email: 'firefox@example.com',
+    };
+
+    await expect(new AccountIsolationService().resolveAccountScope(hints)).resolves.toEqual(scope);
+    expect(sendMessage).toHaveBeenCalledWith({
+      type: 'gv.account.resolve',
+      payload: hints,
+    });
+    expect(request).not.toHaveBeenCalled();
+    expect(chrome.storage.local.get).not.toHaveBeenCalled();
   });
 
   it('extracts route user id from gemini urls', () => {

@@ -50,6 +50,31 @@ Regression test:
 Commit:
 `fix(folder): remove cloned sidebar duplicates`
 
+## Firefox content scripts must not hold Web Locks with async callbacks
+
+Symptom:
+On Firefox, account-scoped folders appeared empty and timeline/highlight scope
+resolution logged `Permission denied to access property "then"`.
+
+Root cause:
+Firefox Bug 1873028 runs a Web Locks callback from a different security realm
+than the WebExtension content script. Returning the content script's Promise
+from `navigator.locks.request()` therefore fails even though the same code works
+in Chrome and Safari.
+
+Fix:
+Firefox web-page content scripts route account-scope resolution through the
+existing extension-background message. The background page keeps the shared Web
+Lock and serialized profile-map update; other browser builds keep their original
+path unchanged.
+
+Regression test:
+`src/core/services/__tests__/AccountIsolationService.test.ts`
+(`resolves Firefox content-script scopes in the background instead of using Web Locks`).
+
+Commit:
+`fix(firefox): resolve account scopes outside content scripts`
+
 ## Folder conversation navigation must not hard-refresh Gemini
 
 Symptom:
