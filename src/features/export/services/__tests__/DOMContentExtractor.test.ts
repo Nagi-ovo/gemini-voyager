@@ -200,6 +200,92 @@ describe('DOMContentExtractor', () => {
     expect(extracted.text).toContain('- Example\n  ```typescript\n  const answer = 42;\n  ```');
   });
 
+  it('preserves prose, ordinary code, and subsequent prose order inside list items', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <ul>
+            <li>
+              <span>Before ordinary code.</span>
+              <code-block>
+                <div class="code-block-decoration">typescript</div>
+                <pre><code role="text">const answer = 42;</code></pre>
+              </code-block>
+              <span>After ordinary code.</span>
+            </li>
+          </ul>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.hasCode).toBe(true);
+    expect(extracted.text).toContain(
+      '- Before ordinary code.\n  ```typescript\n  const answer = 42;\n  ```\n  After ordinary code.',
+    );
+  });
+
+  it('preserves Mermaid blocks and nested lists at their original list-item positions', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <ul>
+            <li>
+              <span>Before Mermaid.</span>
+              <div class="gv-mermaid-wrapper">
+                <code-block><div class="code-block-decoration">mermaid</div><pre><code role="text">flowchart TD\nA --&gt; B</code></pre></code-block>
+                <div class="gv-mermaid-diagram"><svg viewBox="0 0 120 80"><text>Diagram</text></svg></div>
+              </div>
+              <ul><li>Nested item</li></ul>
+              <span>After Mermaid.</span>
+            </li>
+          </ul>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.hasCode).toBe(true);
+    expect(extracted.html).toContain('class="gv-export-mermaid"');
+    expect(extracted.text).toContain(
+      '- Before Mermaid.\n  ```mermaid\n  flowchart TD\n  A --> B\n  ```\n  - Nested item\n  After Mermaid.',
+    );
+  });
+
+  it('keeps interleaved ordinary and Mermaid blocks in list DOM order', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <ol>
+            <li>
+              <span>First prose.</span>
+              <code-block><div class="code-block-decoration">json</div><pre><code role="text">{}</code></pre></code-block>
+              <span>Second prose.</span>
+              <div class="gv-mermaid-wrapper">
+                <code-block><div class="code-block-decoration">mermaid</div><pre><code role="text">graph LR\nA --&gt; B</code></pre></code-block>
+                <div class="gv-mermaid-diagram"><svg viewBox="0 0 120 80"><text>Diagram</text></svg></div>
+              </div>
+              <span>Third prose with <span class="math-inline" data-math="x^2">x²</span>.</span>
+            </li>
+          </ol>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.hasCode).toBe(true);
+    expect(extracted.hasFormulas).toBe(true);
+    expect(extracted.text).toContain(
+      '1. First prose.\n   ```json\n   {}\n   ```\n   Second prose.\n   ```mermaid\n   graph LR\n   A --> B\n   ```\n   Third prose with $x^2$.',
+    );
+  });
+
   it('should strip Gemini inline source chips (link icons) from assistant export', () => {
     const assistant = document.createElement('div');
     assistant.innerHTML = `

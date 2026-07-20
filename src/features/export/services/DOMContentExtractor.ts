@@ -1034,71 +1034,80 @@ export class DOMContentExtractor {
     let hasFormulas = false;
     let hasCode = false;
     items.forEach((item, index) => {
-      // Create a temporary container with only direct children (excluding nested lists)
-      const tempContainer = document.createElement('div');
-      const childNodes = Array.from(item.childNodes);
-
-      childNodes.forEach((node) => {
-        if (node.nodeType === Node.TEXT_NODE) {
-          tempContainer.appendChild(node.cloneNode(true));
-        } else if (node.nodeType === Node.ELEMENT_NODE) {
-          const el = node as Element;
-          // Skip nested lists, we'll process them separately
-          if (el.tagName !== 'UL' && el.tagName !== 'OL') {
-            tempContainer.appendChild(el.cloneNode(true));
-          }
-        }
-      });
-
-      const blockTexts: string[] = [];
-      tempContainer
-        .querySelectorAll<HTMLElement>(`${MERMAID_WRAPPER_SELECTOR}, code-block, .code-block`)
-        .forEach((block) => {
-          const isMermaid = block.matches(MERMAID_WRAPPER_SELECTOR);
-          if (!isMermaid && block.closest(MERMAID_WRAPPER_SELECTOR)) return;
-          if (!isMermaid && block.parentElement?.closest('code-block, .code-block')) return;
-
-          const content = isMermaid
-            ? this.extractMermaidContent(block)
-            : this.extractCodeBlock(block);
-          if (content?.text) {
-            hasCode = true;
-            blockTexts.push(content.text);
-          }
-          block.remove();
-        });
-
-      // Process inline content (handles formulas, emphasis, etc.)
-      const processed = this.processInlineContent(tempContainer);
-      if (processed.hasFormulas) hasFormulas = true;
-      const itemText = processed.text || this.normalizeText(tempContainer.textContent || '');
-
       const prefix = isOrdered ? `${index + 1}. ` : '- ';
-      if (blockTexts.length === 0) {
-        textLines.push(indent + prefix + itemText);
-      } else {
-        textLines.push(itemText ? indent + prefix + itemText : indent + prefix.trimEnd());
-        const continuationIndent = indent + ' '.repeat(prefix.length);
-        blockTexts.forEach((blockText) => {
-          textLines.push(
-            blockText
-              .split('\n')
-              .map((line) => continuationIndent + line)
-              .join('\n'),
-          );
-        });
-      }
+      const continuationIndent = indent + ' '.repeat(prefix.length);
+      let hasItemContent = false;
+      let proseNodes: Node[] = [];
 
-      // Process nested lists
-      const nestedLists = item.querySelectorAll(':scope > ul, :scope > ol');
-      nestedLists.forEach((nestedList) => {
-        const nestedResult = this.extractList(nestedList as HTMLElement, depth + 1);
-        if (nestedResult.hasFormulas) hasFormulas = true;
-        if (nestedResult.hasCode) hasCode = true;
-        if (nestedResult.text) {
-          textLines.push(nestedResult.text);
+      const ensureItemMarker = (): void => {
+        if (!hasItemContent) {
+          textLines.push(indent + prefix.trimEnd());
+          hasItemContent = true;
         }
+      };
+
+      const flushProse = (): void => {
+        if (proseNodes.length === 0) return;
+
+        const proseContainer = document.createElement('div');
+        proseNodes.forEach((node) => proseContainer.appendChild(node.cloneNode(true)));
+        proseNodes = [];
+
+        const processed = this.processInlineContent(proseContainer);
+        if (processed.hasFormulas) hasFormulas = true;
+        const prose = this.normalizeText(processed.text || proseContainer.textContent || '');
+        if (!prose) return;
+
+        textLines.push((hasItemContent ? continuationIndent : indent + prefix) + prose);
+        hasItemContent = true;
+      };
+
+      Array.from(item.childNodes).forEach((node) => {
+        if (node.nodeType !== Node.ELEMENT_NODE) {
+          proseNodes.push(node);
+          return;
+        }
+
+        const child = node as HTMLElement;
+        if (child.tagName === 'UL' || child.tagName === 'OL') {
+          flushProse();
+          const nestedResult = this.extractList(child, depth + 1);
+          if (nestedResult.hasFormulas) hasFormulas = true;
+          if (nestedResult.hasCode) hasCode = true;
+          if (nestedResult.text) {
+            ensureItemMarker();
+            textLines.push(nestedResult.text);
+          }
+          return;
+        }
+
+        const isMermaid = child.matches(MERMAID_WRAPPER_SELECTOR);
+        const isCodeBlock = child.matches('code-block, .code-block');
+        if (!isMermaid && !isCodeBlock) {
+          proseNodes.push(node);
+          return;
+        }
+
+        flushProse();
+        const content = isMermaid
+          ? this.extractMermaidContent(child)
+          : this.extractCodeBlock(child);
+        if (!content?.text) return;
+
+        ensureItemMarker();
+        hasCode = true;
+        textLines.push(
+          content.text
+            .split('\n')
+            .map((line) => continuationIndent + line)
+            .join('\n'),
+        );
       });
+
+      flushProse();
+      if (!hasItemContent) {
+        textLines.push(indent + prefix);
+      }
     });
 
     const cleanList = element.cloneNode(true) as HTMLElement;
