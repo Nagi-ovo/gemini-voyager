@@ -58,7 +58,7 @@ Conventional Commits: `<type>(<scope>): <imperative summary>`
 - Scope: short, feature-focused, lowercase when possible; commitlint currently enforces lowercase scopes and a 100-character header limit
 - Summary: imperative, preferably lowercase, no trailing period
 - If the commit relates to a GitHub issue or discussion, include `Closes #xxx` or `Fixes #xxx` in the commit body or PR description
-- GPT-5.5-authored commits should include `Co-authored-by: GPT-5.5 <codex@openai.com>` in the commit body.
+- Codex-authored commits should include `Co-authored-by: Codex <codex@users.noreply.github.com>` in the commit body.
 
 ## Design Principles
 
