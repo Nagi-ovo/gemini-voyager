@@ -158,6 +158,34 @@ describe('DOMContentExtractor', () => {
     expect(extracted.text).toContain('```mermaid\nflowchart TD\nA --> B\n```');
   });
 
+  it('reaches a rendered Mermaid wrapper through an intervening container', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <response-element>
+            <section>
+              <div class="gv-mermaid-wrapper">
+                <code-block style="display: none;">
+                  <div class="code-block-decoration">mermaid</div>
+                  <pre><code role="text">flowchart TD\nA --&gt; B</code></pre>
+                </code-block>
+                <div class="gv-mermaid-diagram"><svg viewBox="0 0 120 80"><text>Rendered diagram</text></svg></div>
+              </div>
+            </section>
+          </response-element>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.html).toContain('class="gv-export-mermaid"');
+    expect(extracted.html).toContain('<svg viewBox="0 0 120 80">');
+    expect(extracted.html).not.toContain('<pre><code');
+    expect(extracted.text).toContain('```mermaid\nflowchart TD\nA --> B\n```');
+  });
+
   it('preserves rendered Mermaid diagrams and fenced source inside list items', () => {
     const assistant = document.createElement('div');
     assistant.innerHTML = `

@@ -459,10 +459,12 @@ export class DOMContentExtractor {
         continue;
       }
 
-      // Gemini may wrap the Mermaid component in a response-element. Recurse to the
-      // wrapper before the generic descendant code-block shortcut can consume it.
+      // Recurse through non-list containers with a rendered Mermaid wrapper before the
+      // generic descendant code-block shortcut can consume its hidden source. Lists keep
+      // their dedicated extraction path to preserve item structure and Markdown indentation.
       if (
-        tagName === 'response-element' &&
+        tagName !== 'ul' &&
+        tagName !== 'ol' &&
         child.querySelector(`${MERMAID_WRAPPER_SELECTOR} ${MERMAID_RENDERED_SVG_SELECTOR}`)
       ) {
         this.processNodes(child, htmlParts, textParts, flags);
