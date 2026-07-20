@@ -31,6 +31,19 @@ describe('release artifacts', () => {
     expect(workflow).not.toContain('--api-secret=${{ secrets.AMO_JWT_SECRET }}');
   });
 
+  it('supports a Firefox-only four-part hotfix without changing other store versions', () => {
+    const workflow = readFileSync(resolve(process.cwd(), '.github/workflows/release.yml'), 'utf8');
+    const firefoxConfig = readFileSync(resolve(process.cwd(), 'vite.config.firefox.ts'), 'utf8');
+
+    expect(workflow).toContain('publish_firefox_only');
+    expect(workflow).toContain('publish-firefox-hotfix:');
+    expect(workflow).toContain('VOYAGER_FIREFOX_VERSION: ${{ inputs.version }}');
+    expect(workflow).toContain('node scripts/verify-release-privacy.mjs dist_firefox');
+    expect(workflow).toContain('--channel=listed');
+    expect(firefoxConfig).toContain('process.env.VOYAGER_FIREFOX_VERSION');
+    expect(firefoxConfig).toContain('version: firefoxVersionOverride ?? pkg.version');
+  });
+
   it('announces full Safari support without restoring obsolete image limitations', () => {
     const workflow = readFileSync(resolve(process.cwd(), '.github/workflows/release.yml'), 'utf8');
 

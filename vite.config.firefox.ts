@@ -2,9 +2,14 @@ import { ManifestV3Export, crx } from '@crxjs/vite-plugin';
 import { resolve } from 'path';
 import { defineConfig, mergeConfig } from 'vite';
 
+import pkg from './package.json';
 import baseConfig, { baseBuildOptions, baseManifest } from './vite.config.base';
 
 const outDir = resolve(__dirname, 'dist_firefox');
+const firefoxVersionOverride = process.env.VOYAGER_FIREFOX_VERSION?.trim();
+if (firefoxVersionOverride && !/^\d+(?:\.\d+){0,3}$/.test(firefoxVersionOverride)) {
+  throw new Error(`Invalid Firefox extension version: ${firefoxVersionOverride}`);
+}
 const FIREFOX_CHANGELOG_BANNER_RESOURCES = [
   'changelog-promo-banner.png',
   'changelog-promo-banner-cn.png',
@@ -55,6 +60,7 @@ function appendFirefoxChangelogResources<
 
 export const firefoxManifest = appendFirefoxChangelogResources({
   ...baseManifest,
+  version: firefoxVersionOverride ?? pkg.version,
   // Firefox models unlimitedStorage as a required no-prompt permission,
   // rather than an optional permission requested at runtime.
   permissions: Array.from(

@@ -2,7 +2,7 @@
 name: release
 description: Cut or recover a Voyager release, including issue triage, verification, versioning, the 10-locale in-product changelog, commit and tag creation, GitHub Actions monitoring, Chrome Web Store, Firefox AMO, Edge Add-ons, and the signed/notarized Safari DMG with Sparkle updates. Use for “发版”, “release”, “bump”, “ship vX.Y.Z”, store retries, or Safari release failures.
 metadata:
-  version: '1.3.0'
+  version: '1.4.0'
 ---
 
 # Voyager Release Workflow
@@ -224,6 +224,14 @@ If only a store submission failed, do not cut another version:
 
 - Chrome: run `release.yml` with `version={VERSION}`, `publish_only=true`.
 - Edge: run `release.yml` with `version={VERSION}`, `publish_edge_only=true`.
+
+For an urgent Firefox-only code hotfix, keep the shared three-part product
+version unchanged and run `release.yml` from `main` with a four-part version
+(for example `version=1.6.0.1`) and `publish_firefox_only=true`. This path builds
+only `dist_firefox`, injects the override into its manifest, runs the privacy
+scan, signs/submits to AMO, and retains the signed XPI as a workflow artifact.
+It creates no shared release tag and does not touch Chrome, Edge, or Safari.
+The next normal three-part release sorts above it (`1.6.1 > 1.6.0.1`).
 
 ## Do not
 

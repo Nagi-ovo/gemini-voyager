@@ -1,6 +1,7 @@
 name: Release
 run-name: >
   ${{
+    (github.event_name == 'workflow_dispatch' && inputs.publish_firefox_only && inputs.version && format('Firefox hotfix {0}', inputs.version)) ||
     (github.event_name == 'workflow_dispatch' && inputs.version && format('chore(release): v{0}', inputs.version)) ||
     (github.event_name == 'workflow_dispatch' && !inputs.version && 'chore(release): auto-increment') ||
     (startsWith(github.ref, 'refs/tags/') && format('Release {0}', github.ref_name)) ||
@@ -56,6 +57,11 @@ on:
         required: false
         type: boolean
         default: false
+      publish_firefox_only:
+        description: 'Build and publish a Firefox-only four-part hotfix from main (for example 1.6.0.1). Requires version.'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -74,7 +80,8 @@ jobs:
       github.event_name == 'workflow_dispatch' &&
       github.ref == 'refs/heads/main' &&
       !inputs.publish_only &&
-      !inputs.publish_edge_only
+      !inputs.publish_edge_only &&
+      !inputs.publish_firefox_only
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -179,7 +186,7 @@ jobs:
     if: >-
       always() &&
       (github.event_name == 'push' || needs.bump-version.result == 'success') &&
-      !(github.event_name == 'workflow_dispatch' && (inputs.publish_only || inputs.publish_edge_only))
+      !(github.event_name == 'workflow_dispatch' && (inputs.publish_only || inputs.publish_edge_only || inputs.publish_firefox_only))
     runs-on: macos-15
     environment: release
     permissions:
@@ -648,11 +655,85 @@ jobs:
           node scripts/publish-edge.js "voyager-edge-${TAG}.zip" \
             --notes "Voyager ${TAG} automated release submission."
 
-  # Job 4: Re-publish Chrome only (manual) — recover a failed Chrome Web Store
+  # Job 4: Build and publish a Firefox-only four-part hotfix from main. This
+  # leaves the shared product version and every other store untouched; the next
+  # three-part release still sorts above the hotfix (1.6.1 > 1.6.0.1).
+  publish-firefox-hotfix:
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      inputs.publish_firefox_only &&
+      !inputs.publish_only &&
+      !inputs.publish_edge_only &&
+      inputs.version != ''
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Validate Firefox hotfix version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          CURRENT=$(node -p "require('./package.json').version")
+          BASE=${VERSION%.*}
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[1-9][0-9]*$ ]] || [ "$BASE" != "$CURRENT" ]; then
+            echo "Firefox hotfix must be a four-part version above the current base (${CURRENT}.1)." >&2
+            exit 64
+          fi
+
+      - name: Build and verify Firefox hotfix
+        env:
+          VERSION: ${{ inputs.version }}
+          VOYAGER_FIREFOX_VERSION: ${{ inputs.version }}
+        run: |
+          bun run build:firefox
+          node -e "const fs=require('fs');const actual=JSON.parse(fs.readFileSync('dist_firefox/manifest.json','utf8')).version;if(actual!==process.env.VERSION)throw new Error('Firefox manifest version mismatch: '+actual);"
+          node scripts/verify-release-privacy.mjs dist_firefox
+
+      - name: Sign Firefox hotfix and submit to AMO
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          node_modules/.bin/web-ext sign \
+            --source-dir=dist_firefox \
+            --api-key="$AMO_JWT_ISSUER" \
+            --api-secret="$AMO_JWT_SECRET" \
+            --channel=listed
+          mv web-ext-artifacts/*.xpi "voyager-firefox-v${VERSION}.xpi"
+
+      - name: Upload signed Firefox hotfix artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: firefox-hotfix-${{ inputs.version }}
+          path: voyager-firefox-v${{ inputs.version }}.xpi
+          if-no-files-found: error
+          retention-days: 7
+
+  # Job 5: Re-publish Chrome only (manual) — recover a failed Chrome Web Store
   # upload without re-cutting the release. Downloads the existing release's Chrome
   # zip, strips the dev `key`, and publishes. No version bump, no rebuild.
   republish-chrome:
-    if: github.event_name == 'workflow_dispatch' && inputs.publish_only && inputs.version != ''
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.publish_only &&
+      !inputs.publish_firefox_only &&
+      inputs.version != ''
     runs-on: ubuntu-latest
     environment: release
     permissions:
@@ -709,11 +790,15 @@ jobs:
             --source "voyager-chrome-cws-${TAG}.zip" \
             --extension-id "$EXTENSION_ID"
 
-  # Job 5: Publish Edge only (manual) — recover or retry Microsoft Edge Add-ons
+  # Job 6: Publish Edge only (manual) — recover or retry Microsoft Edge Add-ons
   # submission without re-cutting the release. Downloads the existing release's
   # Chrome zip, strips the dev `key`, and submits the package to Edge review.
   republish-edge:
-    if: github.event_name == 'workflow_dispatch' && inputs.publish_edge_only && inputs.version != ''
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      inputs.publish_edge_only &&
+      !inputs.publish_firefox_only &&
+      inputs.version != ''
     runs-on: ubuntu-latest
     environment: release
     permissions:
