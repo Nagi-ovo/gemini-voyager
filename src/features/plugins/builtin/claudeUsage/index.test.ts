@@ -82,7 +82,7 @@ function mountUsageText(): void {
       <p>All models Resets Tue 11:59 AM</p>
       <div role="progressbar" aria-label="Usage" aria-valuenow="45"></div>
       <p>45% used</p>
-      <p>Sonnet Resets Tue 11:59 AM</p>
+      <p>Fable Resets Tue 11:59 AM</p>
       <div role="progressbar" aria-label="Usage" aria-valuenow="2"></div>
       <p>2% used</p>
       <p>Last updated: 1 minute ago</p>
@@ -155,8 +155,30 @@ describe('Claude usage bar', () => {
           resetLabel: 'Tue 11:59 AM',
           resetEpoch: Math.floor(new Date(2026, 0, 6, 11, 59, 0).getTime() / 1000),
         },
+        {
+          label: 'Fable',
+          percent: 2,
+          resetLabel: 'Tue 11:59 AM',
+          resetEpoch: Math.floor(new Date(2026, 0, 6, 11, 59, 0).getTime() / 1000),
+        },
       ],
     });
+  });
+
+  it('does not mistake usage credits for Fable when background content mentions the model', () => {
+    document.body.innerHTML = `
+      <main><p>A conversation about Fable</p></main>
+      <section>
+        <h3>Plan usage limits Max (20x)</h3>
+        <p>Current session Resets Tue 10:00 AM</p>
+        <p>12% used</p>
+        <p>All models Resets Tue 11:59 AM</p>
+        <p>45% used</p>
+        <h3>Usage credits</h3>
+        <p>2% used</p>
+      </section>`;
+
+    expect(scrapeClaudeUsageFromDocument(document, 123)?.metrics).toHaveLength(2);
   });
 
   it.each(['Pro', 'Max (5x)', 'Max (20x)'])('scrapes Claude plan tier %s', (plan) => {
@@ -170,7 +192,7 @@ describe('Claude usage bar', () => {
       {
         five_hour: { utilization: 12.5, resets_at: '2026-06-28T12:00:00.000Z' },
         seven_day: { utilization: 45, resets_at: '2026-06-30T12:00:00.000Z' },
-        seven_day_sonnet: { utilization: 2 },
+        seven_day_opus: { utilization: 82, resets_at: '2026-06-30T12:00:00.000Z' },
         plan_name: 'claude_max_5x',
       },
       123,
@@ -179,6 +201,7 @@ describe('Claude usage bar', () => {
     expect(snap?.metrics.map(({ label, percent }) => ({ label, percent }))).toEqual([
       { label: '5h', percent: 12.5 },
       { label: 'Week', percent: 45 },
+      { label: 'Fable', percent: 82 },
     ]);
     expect(snap?.plan).toBe('Max (5x)');
     expect(snap?.updatedAt).toBe(123);
@@ -376,7 +399,7 @@ describe('Claude usage bar', () => {
     vi.setSystemTime(new Date('2026-06-28T10:00:00.000Z'));
     (chrome.storage.local.get as unknown as Mock).mockResolvedValue({
       gvClaudeUsageCache: {
-        plan: 'Max (20x)',
+        plan: 'Pro',
         updatedAt: Date.now(),
         metrics: [
           {
@@ -439,6 +462,45 @@ describe('Claude usage bar', () => {
     ]);
   });
 
+  it('refreshes an old Max cache that does not contain the Fable bucket', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-28T10:00:00.000Z'));
+    mockLocalStorageStore({
+      gvClaudeUsageCache: {
+        plan: 'Max (20x)',
+        updatedAt: Date.now(),
+        metrics: [
+          { label: '5h', percent: 12, resetEpoch: 1_782_642_600 },
+          { label: 'Week', percent: 46, resetEpoch: 1_782_646_200 },
+        ],
+      },
+    });
+    mockDocumentCookie('lastActiveOrg=org_123');
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        five_hour: { utilization: 12, resets_at: '2026-06-28T10:30:00.000Z' },
+        seven_day: { utilization: 46, resets_at: '2026-06-28T11:30:00.000Z' },
+        seven_day_opus: { utilization: 82, resets_at: '2026-06-30T12:00:00.000Z' },
+        plan_name: 'claude_max_20x',
+      }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    startClaudeUsage();
+    await flushAsyncWork();
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://claude.ai/api/organizations/org_123/usage',
+      expect.objectContaining({ credentials: 'include' }),
+    );
+    expect([...document.querySelectorAll('.gv-usage-label')].map((el) => el.textContent)).toEqual([
+      '5h',
+      'Week',
+      'Fable',
+    ]);
+  });
+
   it('fills the 5h countdown from Claude message_limit events', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-06-28T10:00:00.000Z'));
@@ -446,7 +508,10 @@ describe('Claude usage bar', () => {
       gvClaudeUsageCache: {
         plan: 'Max (20x)',
         updatedAt: Date.now(),
-        metrics: [{ label: 'Week', percent: 46 }],
+        metrics: [
+          { label: 'Week', percent: 46 },
+          { label: 'Fable', percent: 82, resetEpoch: 1_782_820_800 },
+        ],
       },
     });
     vi.stubGlobal('fetch', vi.fn());
@@ -470,6 +535,7 @@ describe('Claude usage bar', () => {
     expect([...document.querySelectorAll('.gv-usage-pct')].map((el) => el.textContent)).toEqual([
       '12% (30m)',
       '46% (1h30m)',
+      '82% (2d2h)',
     ]);
   });
 
@@ -513,7 +579,7 @@ describe('Claude usage bar', () => {
     vi.useFakeTimers();
     const store = {
       gvClaudeUsageCache: {
-        plan: 'Max (20x)',
+        plan: 'Pro',
         updatedAt: Date.now(),
         metrics: [
           {
@@ -536,7 +602,7 @@ describe('Claude usage bar', () => {
 
     await vi.advanceTimersByTimeAsync(4 * 60_000);
     store.gvClaudeUsageCache = {
-      plan: 'Max (20x)',
+      plan: 'Pro',
       updatedAt: Date.now(),
       metrics: [
         {

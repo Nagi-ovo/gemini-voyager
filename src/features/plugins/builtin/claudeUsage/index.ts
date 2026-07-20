@@ -10,7 +10,7 @@ const REFRESH_INTERVAL_MS = 5 * 60_000;
 const COUNTDOWN_REFRESH_MS = 30_000;
 const REFRESH_LOCK_TTL_MS = 30_000;
 const STALE_MS = 60_000;
-const MAX_METRICS = 2;
+const MAX_METRICS = 3;
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
 
@@ -92,6 +92,15 @@ function percentValues(text: string): number[] {
   return [...text.matchAll(/(\d+(?:\.\d+)?)\s*%\s*used/gi)]
     .map((match) => clampPercent(Number(match[1])))
     .filter((value) => Number.isFinite(value));
+}
+
+function percentAfterLabel(text: string, label: string): number | undefined {
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = text.match(
+    new RegExp(`${escaped}[\\s\\S]{0,300}?(\\d+(?:\\.\\d+)?)\\s*%\\s*used`, 'i'),
+  );
+  const value = Number(match?.[1]);
+  return Number.isFinite(value) ? clampPercent(value) : undefined;
 }
 
 function extractPlan(lines: string[]): string | undefined {
@@ -243,6 +252,21 @@ function withFallbackPlan(
   return next.plan || !fallback?.plan ? next : { ...next, plan: fallback.plan };
 }
 
+function withSupplementalModelMetric(
+  next: ClaudeUsageSnapshot,
+  fallback: ClaudeUsageSnapshot | null = snapshot,
+): ClaudeUsageSnapshot {
+  if (!fallback || next.metrics.length >= MAX_METRICS) return next;
+  const existing = new Set(next.metrics.map((metric) => metricDisplayLabel(metric)));
+  const modelMetric = fallback.metrics.find((metric) => {
+    const label = metricDisplayLabel(metric);
+    return label !== '5h' && label !== 'Week' && !existing.has(label);
+  });
+  return modelMetric
+    ? { ...next, metrics: [...next.metrics, modelMetric].slice(0, MAX_METRICS) }
+    : next;
+}
+
 function isPillNode(node: Node): boolean {
   const el = node instanceof Element ? node : node.parentElement;
   return Boolean(el?.closest(`#${PILL_ID}`));
@@ -328,6 +352,9 @@ export function snapshotFromClaudeUsageApi(
   const metrics = [
     metricFromApi(data.five_hour, '5h'),
     metricFromApi(data.seven_day, 'Week'),
+    // Claude currently reuses the former Opus-only weekly bucket for Fable.
+    // Keep Sonnet as a fallback for accounts that expose that model bucket instead.
+    metricFromApi(data.seven_day_opus, 'Fable') ?? metricFromApi(data.seven_day_sonnet, 'Sonnet'),
   ].filter((metric): metric is ClaudeUsageMetric => metric !== null);
   if (!metrics.length) return null;
   const rawPlan = typeof data.plan_name === 'string' ? data.plan_name : undefined;
@@ -368,6 +395,14 @@ export function scrapeClaudeUsageFromDocument(
   const values = percentValues(text);
   if (!values.length) return null;
 
+  const weeklyStart = text.search(/\bAll models\b/i);
+  const weeklyTail = weeklyStart >= 0 ? text.slice(weeklyStart) : '';
+  const creditsStart = weeklyTail.search(/\bUsage credits\b/i);
+  const weeklyText = creditsStart >= 0 ? weeklyTail.slice(0, creditsStart) : weeklyTail;
+  const modelLabel = ['Fable', 'Opus only', 'Opus', 'Sonnet only', 'Sonnet'].find((label) =>
+    new RegExp(`\\b${label.replace(/\s+/g, '\\s+')}\\b`, 'i').test(weeklyText),
+  );
+
   const candidates: Array<{
     label: string;
     percent?: number;
@@ -380,6 +415,15 @@ export function scrapeClaudeUsageFromDocument(
       resetLabel: extractReset(text, 'Current session'),
     },
     { label: 'Week', percent: values[1], resetLabel: extractReset(text, 'All models') },
+    ...(modelLabel && typeof percentAfterLabel(weeklyText, modelLabel) === 'number'
+      ? [
+          {
+            label: /^fable$/i.test(modelLabel) ? 'Fable' : modelLabel.replace(/ only$/i, ''),
+            percent: percentAfterLabel(weeklyText, modelLabel),
+            resetLabel: extractReset(text, modelLabel),
+          },
+        ]
+      : []),
   ].map((metric) => ({
     ...metric,
     resetEpoch: epochFromResetLabel(metric.resetLabel, now),
@@ -404,6 +448,14 @@ function hasCountdownData(data: ClaudeUsageSnapshot): boolean {
   return (
     data.metrics.length > 0 && data.metrics.every((metric) => typeof metric.resetEpoch === 'number')
   );
+}
+
+function hasExpectedModelMetric(data: ClaudeUsageSnapshot): boolean {
+  if (!/^Max\b/i.test(data.plan ?? '')) return true;
+  return data.metrics.some((metric) => {
+    const label = metricDisplayLabel(metric);
+    return label !== '5h' && label !== 'Week';
+  });
 }
 
 function openClaudeUsage(event: MouseEvent): void {
@@ -687,7 +739,7 @@ function setupObserverBridge(): void {
     const data = ev.data as { source?: string; type?: string; payload?: unknown } | null;
     if (!data || data.source !== OBSERVER_SOURCE || data.type !== 'message-limit') return;
     const next = snapshotFromClaudeMessageLimit(data.payload);
-    if (next) applySnapshot(next);
+    if (next) applySnapshot(withSupplementalModelMetric(next));
   };
   window.addEventListener('message', observerMessageHandler);
 }
@@ -786,6 +838,9 @@ async function hasFreshSharedCache(maxAgeMs: number): Promise<boolean> {
   if (Date.now() - cached.updatedAt >= maxAgeMs) return false;
   if (!cached.plan) return false;
   if (!hasCountdownData(cached)) return false;
+  // Older builds cached only 5h + Week. Do not let that otherwise-fresh
+  // snapshot hide the newly exposed Fable bucket after an extension update.
+  if (!hasExpectedModelMetric(cached)) return false;
   renderPill();
   return true;
 }
