@@ -917,6 +917,14 @@ export class PDFPrintService {
           margin: 0 auto;
         }
 
+        .gv-print-turn-text .gv-export-mermaid[data-gv-mermaid-theme="dark"] {
+          background: #1f2020;
+          padding: 16px;
+          border-radius: 8px;
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+
         .gv-print-turn-assistant .gv-print-turn-text {
           border-left-color: #93c5fd;
         }

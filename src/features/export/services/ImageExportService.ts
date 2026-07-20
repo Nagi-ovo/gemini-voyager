@@ -262,6 +262,12 @@ export class ImageExportService {
         margin: 0 auto;
       }
 
+      .gv-image-export-content .gv-export-mermaid[data-gv-mermaid-theme="dark"] {
+        background: #1f2020;
+        padding: 16px;
+        border-radius: 8px;
+      }
+
       .gv-image-export-content .gv-export-attachment {
         display: flex;
         align-items: center;
@@ -414,6 +420,12 @@ export class ImageExportService {
         max-width: 100%;
         height: auto;
         margin: 0 auto;
+      }
+
+      .gv-image-export-report-content .gv-export-mermaid[data-gv-mermaid-theme="dark"] {
+        background: #1f2020;
+        padding: 16px;
+        border-radius: 8px;
       }
 
       .gv-image-export-report-content pre {

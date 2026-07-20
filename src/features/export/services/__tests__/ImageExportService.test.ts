@@ -127,7 +127,7 @@ describe('ImageExportService', () => {
     assistantElement.innerHTML = `
       <message-content>
         <div class="markdown">
-          <div class="gv-mermaid-wrapper">
+          <div class="gv-mermaid-wrapper" data-gv-mermaid-theme="dark">
             <code-block style="display: none;">
               <div class="code-block-decoration">mermaid</div>
               <pre><code role="text">flowchart TD\nA --&gt; B</code></pre>
@@ -160,6 +160,12 @@ describe('ImageExportService', () => {
     expect(renderedStyles).toContain('.gv-image-export-content .gv-export-mermaid');
     expect(renderedStyles).toContain('max-width: 100%;');
     expect(renderedStyles).toContain('height: auto;');
+    expect(
+      target
+        ?.querySelector('.gv-image-export-content .gv-export-mermaid')
+        ?.getAttribute('data-gv-mermaid-theme'),
+    ).toBe('dark');
+    expect(renderedStyles).toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
   });
 
   it('retries transient image render failures on Chrome and succeeds', async () => {
@@ -311,7 +317,7 @@ describe('ImageExportService', () => {
       url: 'https://gemini.google.com/app/report',
       exportedAt: '2026-01-01T00:00:00.000Z',
       markdown: 'Diagram',
-      html: '<div class="gv-export-mermaid"><svg viewBox="0 0 120 80"></svg></div>',
+      html: '<div class="gv-export-mermaid" data-gv-mermaid-theme="dark"><svg viewBox="0 0 120 80"></svg></div>',
     });
 
     const target = renderedTarget as HTMLElement | null;
@@ -321,6 +327,7 @@ describe('ImageExportService', () => {
     expect(renderedStyles).toContain('.gv-image-export-report-content .gv-export-mermaid');
     expect(renderedStyles).toContain('max-width: 100%;');
     expect(renderedStyles).toContain('height: auto;');
+    expect(renderedStyles).toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
   });
 
   it('fetches blob: image URLs so dom-to-image can rasterize generated images', async () => {

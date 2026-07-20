@@ -6,6 +6,18 @@
 let mermaidInstance: Awaited<typeof import('mermaid')>['default'] | null = null;
 let mermaidLoadFailed = false;
 
+type MermaidTheme = 'dark' | 'light';
+
+const getMermaidTheme = (): MermaidTheme => {
+  const isDarkMode =
+    document.body.classList.contains('dark-theme') ||
+    document.body.getAttribute('data-theme') === 'dark' ||
+    document.documentElement.classList.contains('dark') ||
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  return isDarkMode ? 'dark' : 'light';
+};
+
 /**
  * Reset internal loader state. Only for testing.
  * @internal
@@ -700,6 +712,8 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
       });
     }
 
+    wrapper.dataset.gvMermaidTheme = getMermaidTheme();
+
     const diagramContainer = wrapper.querySelector('.gv-mermaid-diagram') as HTMLElement;
     if (!diagramContainer) {
       codeBlock.dataset.mermaidProcessing = 'false';
@@ -721,6 +735,9 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
     }
   }
 };
+
+/** @internal Exported for theme-marker testing. */
+export const _renderMermaidForTest = renderMermaid;
 
 /**
  * Get the language label from a code block's header decoration

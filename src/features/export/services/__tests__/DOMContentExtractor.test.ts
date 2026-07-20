@@ -56,7 +56,7 @@ describe('DOMContentExtractor', () => {
     assistant.innerHTML = `
       <message-content>
         <div class="markdown">
-          <div class="gv-mermaid-wrapper">
+          <div class="gv-mermaid-wrapper" data-gv-mermaid-theme="dark">
             <code-block style="display: none;">
               <div class="code-block-decoration">mermaid</div>
               <pre><code role="text">flowchart TD\nA --&gt; B</code></pre>
@@ -82,7 +82,27 @@ describe('DOMContentExtractor', () => {
     expect(extracted.html).toContain('<svg viewBox="0 0 120 80" aria-label="Flowchart">');
     expect(extracted.html).not.toContain('<pre><code');
     expect(extracted.html).not.toContain('gv-mermaid-toggle');
+    expect(extracted.html).toContain('data-gv-mermaid-theme="dark"');
     expect(extracted.text).toContain('```mermaid\nflowchart TD\nA --> B\n```');
+  });
+
+  it('does not copy an invalid Mermaid theme marker into exports', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <div class="gv-mermaid-wrapper" data-gv-mermaid-theme="neon">
+            <code-block><div class="code-block-decoration">mermaid</div><pre><code role="text">flowchart TD\nA --&gt; B</code></pre></code-block>
+            <div class="gv-mermaid-diagram"><svg viewBox="0 0 120 80"><text>Diagram</text></svg></div>
+          </div>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.html).toContain('class="gv-export-mermaid"');
+    expect(extracted.html).not.toContain('data-gv-mermaid-theme');
   });
 
   it('falls back to Mermaid source when a rendered SVG is unavailable', () => {

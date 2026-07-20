@@ -47,6 +47,10 @@ function queryOutsideThoughts<T extends Element = Element>(
 const MERMAID_WRAPPER_SELECTOR = '.gv-mermaid-wrapper';
 const MERMAID_RENDERED_SVG_SELECTOR = '.gv-mermaid-diagram svg';
 const MERMAID_EXPORT_CLASS = 'gv-export-mermaid';
+const MERMAID_THEME_ATTRIBUTE = 'data-gv-mermaid-theme';
+
+const isMermaidTheme = (value: string | null): value is 'dark' | 'light' =>
+  value === 'dark' || value === 'light';
 
 export class DOMContentExtractor {
   private static DEBUG = false;
@@ -896,6 +900,10 @@ export class DOMContentExtractor {
     if (svg) {
       const exportContainer = document.createElement('div');
       exportContainer.className = MERMAID_EXPORT_CLASS;
+      const theme = wrapper.getAttribute(MERMAID_THEME_ATTRIBUTE);
+      if (isMermaidTheme(theme)) {
+        exportContainer.setAttribute(MERMAID_THEME_ATTRIBUTE, theme);
+      }
       exportContainer.appendChild(svg.cloneNode(true));
       return { html: exportContainer.outerHTML, text: codeContent.text };
     }

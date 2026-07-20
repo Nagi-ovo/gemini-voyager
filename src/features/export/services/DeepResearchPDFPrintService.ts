@@ -500,6 +500,14 @@ export class DeepResearchPDFPrintService {
           page-break-inside: avoid;
         }
 
+        body.${this.PRINT_BODY_CLASS} .gv-dr-print-report .gv-export-mermaid[data-gv-mermaid-theme="dark"] {
+          background: #1f2020;
+          padding: 16px;
+          border-radius: 8px;
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+
         body.${this.PRINT_BODY_CLASS} .gv-dr-print-report pre,
         body.${this.PRINT_BODY_CLASS} .gv-dr-print-report code {
           font-family: 'Courier New', monospace;

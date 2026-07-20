@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   _openFullscreenForTest,
+  _renderMermaidForTest,
   _resetMermaidLoader,
   isGenericLanguageLabel,
   isMermaidCode,
@@ -115,6 +116,36 @@ describe('Mermaid dynamic loading', () => {
       vi.runAllTimers();
       expect(document.querySelector('.gv-mermaid-modal')).toBeNull();
       vi.useRealTimers();
+    });
+  });
+
+  describe('rendered diagram theme marker', () => {
+    const renderIntoTheme = async (theme: 'dark' | 'light'): Promise<HTMLElement | null> => {
+      document.body.className = theme === 'dark' ? 'dark-theme' : '';
+      const host = document.createElement('code-block');
+      const code = document.createElement('code');
+      host.appendChild(code);
+      document.body.appendChild(host);
+
+      const mermaid = await loadMermaid();
+      (mermaid?.render as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        '<svg viewBox="0 0 120 80"></svg>',
+      );
+
+      await _renderMermaidForTest(code, 'flowchart TD\nA --> B\nB --> C');
+      return host.parentElement;
+    };
+
+    it('marks rendered Mermaid wrappers with the active dark theme', async () => {
+      const wrapper = await renderIntoTheme('dark');
+
+      expect(wrapper?.dataset.gvMermaidTheme).toBe('dark');
+    });
+
+    it('marks rendered Mermaid wrappers with the active light theme', async () => {
+      const wrapper = await renderIntoTheme('light');
+
+      expect(wrapper?.dataset.gvMermaidTheme).toBe('light');
     });
   });
 

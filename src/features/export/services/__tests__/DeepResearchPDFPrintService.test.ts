@@ -125,7 +125,7 @@ describe('DeepResearchPDFPrintService', () => {
         <style>.outer-style { color: red; }</style>
         <p class="outer-style" onclick="alert('unsafe')">Body</p>
         <span class="katex">x</span>
-        <div class="gv-export-mermaid">
+        <div class="gv-export-mermaid" data-gv-mermaid-theme="dark">
           <svg viewBox="0 0 120 80" width="100%" style="max-width: 640px" onclick="alert('unsafe')">
             <style>.node { fill: red; }</style>
             <script>alert('unsafe')</script>
@@ -154,7 +154,13 @@ describe('DeepResearchPDFPrintService', () => {
     expect(report?.querySelector('style')).toBeNull();
     expect(report?.querySelector('p')?.getAttribute('onclick')).toBeNull();
     expect(report?.querySelector('.katex')?.textContent).toBe('x');
+    expect(report?.querySelector('.gv-export-mermaid')?.getAttribute('data-gv-mermaid-theme')).toBe(
+      'dark',
+    );
     expect(styleText).toContain('.gv-dr-print-report .gv-export-mermaid > img');
+    expect(styleText).toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
+    expect(styleText).toContain('print-color-adjust: exact;');
+    expect(styleText).toContain('-webkit-print-color-adjust: exact;');
     expect(styleText).toContain('page-break-inside: avoid;');
   });
 

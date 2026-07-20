@@ -204,7 +204,7 @@ describe('PDFPrintService', () => {
     assistantElement.innerHTML = `
       <message-content>
         <div class="markdown">
-          <div class="gv-mermaid-wrapper">
+          <div class="gv-mermaid-wrapper" data-gv-mermaid-theme="dark">
             <code-block style="display: none;">
               <div class="code-block-decoration">mermaid</div>
               <pre><code role="text">flowchart TD\nA --&gt; B</code></pre>
@@ -237,6 +237,12 @@ describe('PDFPrintService', () => {
     expect(styleText).toContain('page-break-inside: avoid;');
     expect(styleText).toContain('max-width: 100%;');
     expect(styleText).toContain('height: auto;');
+    expect(
+      turnText?.querySelector('.gv-export-mermaid')?.getAttribute('data-gv-mermaid-theme'),
+    ).toBe('dark');
+    expect(styleText).toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
+    expect(styleText).toContain('print-color-adjust: exact;');
+    expect(styleText).toContain('-webkit-print-color-adjust: exact;');
   });
 
   it('normalizes metadata title suffix when page title is generic', async () => {
