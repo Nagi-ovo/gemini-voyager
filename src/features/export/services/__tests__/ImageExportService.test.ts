@@ -134,8 +134,9 @@ describe('ImageExportService', () => {
             </code-block>
             <div class="gv-mermaid-toggle"><button>Diagram</button></div>
             <div class="gv-mermaid-diagram">
-              <svg viewBox="0 0 120 80"><g><text>A</text><text>B</text></g></svg>
+              <svg data-render-theme="dark" viewBox="0 0 120 80"><g><text>A</text><text>B</text></g></svg>
             </div>
+            <template class="gv-mermaid-light-export"><svg data-export-theme="light" viewBox="0 0 120 80"><g><text>A</text><text>B</text></g></svg></template>
           </div>
         </div>
       </message-content>
@@ -165,9 +166,12 @@ describe('ImageExportService', () => {
       target
         ?.querySelector('.gv-image-export-content .gv-export-mermaid')
         ?.getAttribute('data-gv-mermaid-theme'),
-    ).toBe('dark');
-    expect(renderedStyles).toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
-    expect(renderedStyles).toContain('background: #1f2020;');
+    ).toBe('light');
+    expect(target?.querySelector('.gv-export-mermaid svg')?.getAttribute('data-export-theme')).toBe(
+      'light',
+    );
+    expect(renderedStyles).not.toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
+    expect(renderedStyles).not.toContain('background: #1f2020;');
   });
 
   it('retries transient image render failures on Chrome and succeeds', async () => {
@@ -319,7 +323,7 @@ describe('ImageExportService', () => {
       url: 'https://gemini.google.com/app/report',
       exportedAt: '2026-01-01T00:00:00.000Z',
       markdown: 'Diagram',
-      html: '<div class="gv-export-mermaid" data-gv-mermaid-theme="dark"><svg viewBox="0 0 120 80"></svg></div>',
+      html: '<div class="gv-export-mermaid" data-gv-mermaid-theme="light"><svg viewBox="0 0 120 80"></svg></div>',
     });
 
     const target = renderedTarget as HTMLElement | null;
@@ -330,8 +334,8 @@ describe('ImageExportService', () => {
     expect(renderedStyles).toContain('.gv-image-export-report-content .gv-export-mermaid svg {');
     expect(renderedStyles).toContain('max-width: 100%;');
     expect(renderedStyles).toContain('height: auto;');
-    expect(renderedStyles).toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
-    expect(renderedStyles).toContain('background: #1f2020;');
+    expect(renderedStyles).not.toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
+    expect(renderedStyles).not.toContain('background: #1f2020;');
   });
 
   it('fetches blob: image URLs so dom-to-image can rasterize generated images', async () => {

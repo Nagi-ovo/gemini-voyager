@@ -66,10 +66,15 @@ describe('DOMContentExtractor', () => {
               <button>Code</button>
             </div>
             <div class="gv-mermaid-diagram">
-              <svg viewBox="0 0 120 80" aria-label="Flowchart">
+              <svg data-render-theme="dark" viewBox="0 0 120 80" aria-label="Flowchart">
                 <g><text>A</text><text>B</text></g>
               </svg>
             </div>
+            <template class="gv-mermaid-light-export">
+              <svg data-export-theme="light" viewBox="0 0 120 80" aria-label="Flowchart">
+                <g><text>A</text><text>B</text></g>
+              </svg>
+            </template>
           </div>
         </div>
       </message-content>
@@ -79,15 +84,16 @@ describe('DOMContentExtractor', () => {
 
     expect(extracted.hasCode).toBe(true);
     expect(extracted.html).toContain('class="gv-export-mermaid"');
-    expect(extracted.html).toContain('<svg viewBox="0 0 120 80" aria-label="Flowchart">');
+    expect(extracted.html).toContain('data-export-theme="light"');
+    expect(extracted.html).not.toContain('data-render-theme="dark"');
     expect(extracted.html).not.toContain('<pre><code');
     expect(extracted.html).not.toContain('gv-mermaid-toggle');
-    expect(extracted.html).toContain('data-gv-mermaid-theme="dark"');
+    expect(extracted.html).toContain('data-gv-mermaid-theme="light"');
     expect(extracted.text).toContain('```mermaid\nflowchart TD\nA --> B\n```');
     expect(extracted.text).not.toContain('```code snippet');
   });
 
-  it('does not copy an invalid Mermaid theme marker into exports', () => {
+  it('falls back to source for an invalid Mermaid theme marker', () => {
     const assistant = document.createElement('div');
     assistant.innerHTML = `
       <message-content>
@@ -102,8 +108,28 @@ describe('DOMContentExtractor', () => {
 
     const extracted = DOMContentExtractor.extractAssistantContent(assistant);
 
-    expect(extracted.html).toContain('class="gv-export-mermaid"');
+    expect(extracted.html).toContain('<pre><code class="language-mermaid">');
+    expect(extracted.html).not.toContain('class="gv-export-mermaid"');
     expect(extracted.html).not.toContain('data-gv-mermaid-theme');
+  });
+
+  it('falls back to source when a dark diagram has no light export SVG', () => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `
+      <message-content>
+        <div class="markdown">
+          <div class="gv-mermaid-wrapper" data-gv-mermaid-theme="dark">
+            <code-block><pre><code role="text">flowchart TD\nA --&gt; B</code></pre></code-block>
+            <div class="gv-mermaid-diagram"><svg viewBox="0 0 120 80"></svg></div>
+          </div>
+        </div>
+      </message-content>
+    `;
+
+    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+
+    expect(extracted.html).toContain('<pre><code class="language-mermaid">');
+    expect(extracted.html).not.toContain('class="gv-export-mermaid"');
   });
 
   it('falls back to Mermaid source when a rendered SVG is unavailable', () => {
@@ -136,7 +162,7 @@ describe('DOMContentExtractor', () => {
       <message-content>
         <div class="markdown">
           <response-element>
-            <div class="gv-mermaid-wrapper">
+            <div class="gv-mermaid-wrapper" data-gv-mermaid-theme="light">
               <code-block style="display: none;">
                 <div class="code-block-decoration">mermaid</div>
                 <pre><code role="text">flowchart TD\nA --&gt; B</code></pre>
@@ -166,7 +192,7 @@ describe('DOMContentExtractor', () => {
         <div class="markdown">
           <response-element>
             <section>
-              <div class="gv-mermaid-wrapper">
+              <div class="gv-mermaid-wrapper" data-gv-mermaid-theme="light">
                 <code-block style="display: none;">
                   <div class="code-block-decoration">mermaid</div>
                   <pre><code role="text">flowchart TD\nA --&gt; B</code></pre>
@@ -195,7 +221,7 @@ describe('DOMContentExtractor', () => {
           <ul>
             <li>
               <span>Diagram</span>
-              <div class="gv-mermaid-wrapper">
+              <div class="gv-mermaid-wrapper" data-gv-mermaid-theme="light">
                 <code-block style="display: none;">
                   <div class="code-block-decoration">mermaid</div>
                   <pre><code role="text">flowchart TD\nA --&gt; B</code></pre>
@@ -284,7 +310,7 @@ describe('DOMContentExtractor', () => {
           <ul>
             <li>
               <span>Before Mermaid.</span>
-              <div class="gv-mermaid-wrapper">
+              <div class="gv-mermaid-wrapper" data-gv-mermaid-theme="light">
                 <code-block><div class="code-block-decoration">mermaid</div><pre><code role="text">flowchart TD\nA --&gt; B</code></pre></code-block>
                 <div class="gv-mermaid-diagram"><svg viewBox="0 0 120 80"><text>Diagram</text></svg></div>
               </div>
@@ -315,7 +341,7 @@ describe('DOMContentExtractor', () => {
               <span>First prose.</span>
               <code-block><div class="code-block-decoration">json</div><pre><code role="text">{}</code></pre></code-block>
               <span>Second prose.</span>
-              <div class="gv-mermaid-wrapper">
+              <div class="gv-mermaid-wrapper" data-gv-mermaid-theme="light">
                 <code-block><div class="code-block-decoration">mermaid</div><pre><code role="text">graph LR\nA --&gt; B</code></pre></code-block>
                 <div class="gv-mermaid-diagram"><svg viewBox="0 0 120 80"><text>Diagram</text></svg></div>
               </div>
@@ -344,7 +370,7 @@ describe('DOMContentExtractor', () => {
             <li>
               <span>Before wrapped Mermaid.</span>
               <response-element>
-                <div class="gv-mermaid-wrapper">
+                <div class="gv-mermaid-wrapper" data-gv-mermaid-theme="light">
                   <code-block><div class="code-block-decoration">mermaid</div><pre><code role="text">flowchart LR\nA --&gt; B</code></pre></code-block>
                   <div class="gv-mermaid-diagram"><svg viewBox="0 0 120 80"><text>Diagram</text></svg></div>
                 </div>
@@ -380,7 +406,7 @@ describe('DOMContentExtractor', () => {
                 <p>Before Mermaid.</p>
                 <div>
                   <div>
-                    <div class="gv-mermaid-wrapper">
+                    <div class="gv-mermaid-wrapper" data-gv-mermaid-theme="light">
                       <code-block><div class="code-block-decoration">Code snippet</div><pre><code role="text">flowchart TD\nA --&gt; B</code></pre></code-block>
                       <div class="gv-mermaid-diagram"><svg viewBox="0 0 120 80"><text>Diagram</text></svg></div>
                     </div>

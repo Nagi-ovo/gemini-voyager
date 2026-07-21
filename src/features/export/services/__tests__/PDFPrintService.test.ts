@@ -211,8 +211,9 @@ describe('PDFPrintService', () => {
             </code-block>
             <div class="gv-mermaid-toggle"><button>Diagram</button></div>
             <div class="gv-mermaid-diagram">
-              <svg viewBox="0 0 120 80"><g><text>A</text><text>B</text></g></svg>
+              <svg data-render-theme="dark" viewBox="0 0 120 80"><g><text>A</text><text>B</text></g></svg>
             </div>
+            <template class="gv-mermaid-light-export"><svg data-export-theme="light" viewBox="0 0 120 80"><g><text>A</text><text>B</text></g></svg></template>
           </div>
         </div>
       </message-content>
@@ -241,9 +242,12 @@ describe('PDFPrintService', () => {
     expect(styleText).toContain('height: auto;');
     expect(
       turnText?.querySelector('.gv-export-mermaid')?.getAttribute('data-gv-mermaid-theme'),
-    ).toBe('dark');
-    expect(styleText).toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
-    expect(styleText).toContain('background: #1f2020;');
+    ).toBe('light');
+    expect(
+      turnText?.querySelector('.gv-export-mermaid svg')?.getAttribute('data-export-theme'),
+    ).toBe('light');
+    expect(styleText).not.toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
+    expect(styleText).not.toContain('background: #1f2020;');
     expect(styleText).toContain('print-color-adjust: exact;');
     expect(styleText).toContain('-webkit-print-color-adjust: exact;');
   });

@@ -42,7 +42,7 @@ export function buildMermaidExportStyles(
 
   return `
       ${scope} .gv-export-mermaid {${containerMargin}${containerMaxWidth}
-        text-align: center;${containerBreakStyles}
+        text-align: center;${containerBreakStyles}${printBackgroundStyles}
       }
 
       ${scope} .gv-export-mermaid ${diagramSelector} {
@@ -52,10 +52,5 @@ export function buildMermaidExportStyles(
         margin: ${diagramMargin};${diagramBreakStyles}
       }
 
-      ${scope} .gv-export-mermaid[data-gv-mermaid-theme="dark"] {
-        background: #1f2020;
-        padding: 16px;
-        border-radius: 8px;${printBackgroundStyles}
-      }
   `;
 }

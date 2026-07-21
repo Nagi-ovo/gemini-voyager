@@ -137,15 +137,21 @@ describe('Mermaid dynamic loading', () => {
       );
     };
 
-    const renderDiagram = async (): Promise<HTMLElement | null> => {
+    const renderDiagram = async (failLightExport = false): Promise<HTMLElement | null> => {
       const host = document.createElement('code-block');
       const code = document.createElement('code');
       host.appendChild(code);
       document.body.appendChild(host);
 
       const mermaid = await loadMermaid();
-      (mermaid?.render as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-        '<svg viewBox="0 0 120 80"></svg>',
+      (mermaid?.render as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+        async (_id: string, source: string) => {
+          if (source.includes('config:\n  theme: default')) {
+            if (failLightExport) throw new Error('light export failed');
+            return { svg: '<svg data-export-theme="light" viewBox="0 0 120 80"></svg>' };
+          }
+          return '<svg data-page-theme="active" viewBox="0 0 120 80"></svg>';
+        },
       );
 
       await _renderMermaidForTest(code, 'flowchart TD\nA --> B\nB --> C');
@@ -165,12 +171,34 @@ describe('Mermaid dynamic loading', () => {
       const wrapper = await renderIntoTheme('dark');
 
       expect(wrapper?.dataset.gvMermaidTheme).toBe('dark');
+      expect(
+        wrapper
+          ?.querySelector<HTMLTemplateElement>('template.gv-mermaid-light-export')
+          ?.content.querySelector('svg')
+          ?.getAttribute('data-export-theme'),
+      ).toBe('light');
+      const mermaid = await loadMermaid();
+      const renderMock = mermaid?.render as unknown as ReturnType<typeof vi.fn>;
+      expect(renderMock).toHaveBeenCalledTimes(2);
+      expect(renderMock.mock.calls[1][1]).toMatch(
+        /^---\nconfig:\n  theme: default\n---\nflowchart TD/,
+      );
     });
 
     it('marks rendered Mermaid wrappers with the active light theme', async () => {
       const wrapper = await renderIntoTheme('light');
 
       expect(wrapper?.dataset.gvMermaidTheme).toBe('light');
+      expect(wrapper?.querySelector('template.gv-mermaid-light-export')).toBeNull();
+    });
+
+    it('keeps the page diagram when light export rendering fails', async () => {
+      await initializeTheme('dark');
+
+      const wrapper = await renderDiagram(true);
+
+      expect(wrapper?.querySelector('.gv-mermaid-diagram svg')).toBeTruthy();
+      expect(wrapper?.querySelector('template.gv-mermaid-light-export')).toBeNull();
     });
 
     it('keeps the dark marker after the page switches to light mode', async () => {
