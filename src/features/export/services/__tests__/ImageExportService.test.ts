@@ -118,6 +118,8 @@ describe('ImageExportService', () => {
 
     expect(renderedAttachmentText).toContain('proposal.pdf');
     expect(renderedStyles).toContain('.gv-image-export-content .gv-export-attachment');
+    expect(renderedStyles).toContain('.gv-image-export-doc a {');
+    expect(renderedStyles).toContain('color: #2563eb !important;');
   });
 
   it('renders Mermaid SVG with scoped image export styles', async () => {
@@ -334,6 +336,8 @@ describe('ImageExportService', () => {
     expect(renderedStyles).toContain('.gv-image-export-report-content .gv-export-mermaid svg {');
     expect(renderedStyles).toContain('max-width: 100%;');
     expect(renderedStyles).toContain('height: auto;');
+    expect(renderedStyles).toContain('.gv-image-export-doc a {');
+    expect(renderedStyles).toContain('color: #2563eb !important;');
     expect(renderedStyles).not.toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
     expect(renderedStyles).not.toContain('background: #1f2020;');
   });

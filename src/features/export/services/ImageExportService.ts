@@ -214,6 +214,10 @@ export class ImageExportService {
         gap: 8px;
       }
 
+      .gv-image-export-doc a {
+        color: #2563eb !important;
+      }
+
       .gv-image-export-turn {
         margin: 24px 0;
         padding: 20px 0;
@@ -378,6 +382,10 @@ export class ImageExportService {
         font-size: 0.9em;
         display: grid;
         gap: 0.4em;
+      }
+
+      .gv-image-export-doc a {
+        color: #2563eb !important;
       }
 
       .gv-image-export-report-content {
