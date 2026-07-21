@@ -11,10 +11,7 @@ type MermaidTheme = 'dark' | 'light';
 let initializedMermaidTheme: MermaidTheme | null = null;
 
 const MERMAID_LIGHT_EXPORT_TEMPLATE_CLASS = 'gv-mermaid-light-export';
-const MERMAID_LIGHT_THEME_FRONTMATTER = `---
-config:
-  theme: default
----`;
+const MERMAID_LIGHT_THEME_DIRECTIVE = '%%{init: {"theme":"default"}}%%';
 
 const getMermaidTheme = (): MermaidTheme => {
   const isDarkMode =
@@ -659,7 +656,7 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
       try {
         const exportResult = await mermaid.render(
           exportId,
-          `${MERMAID_LIGHT_THEME_FRONTMATTER}\n${normalizedCode}`,
+          `${normalizedCode}\n${MERMAID_LIGHT_THEME_DIRECTIVE}`,
         );
         lightExportSvg =
           typeof exportResult === 'string' ? exportResult : (exportResult as { svg: string }).svg;

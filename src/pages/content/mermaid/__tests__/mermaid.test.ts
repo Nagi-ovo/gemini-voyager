@@ -137,7 +137,10 @@ describe('Mermaid dynamic loading', () => {
       );
     };
 
-    const renderDiagram = async (failLightExport = false): Promise<HTMLElement | null> => {
+    const renderDiagram = async (
+      failLightExport = false,
+      source = 'flowchart TD\nA --> B\nB --> C',
+    ): Promise<HTMLElement | null> => {
       const host = document.createElement('code-block');
       const code = document.createElement('code');
       host.appendChild(code);
@@ -146,7 +149,7 @@ describe('Mermaid dynamic loading', () => {
       const mermaid = await loadMermaid();
       (mermaid?.render as unknown as ReturnType<typeof vi.fn>).mockImplementation(
         async (_id: string, source: string) => {
-          if (source.includes('config:\n  theme: default')) {
+          if (source.endsWith('%%{init: {"theme":"default"}}%%')) {
             if (failLightExport) throw new Error('light export failed');
             return { svg: '<svg data-export-theme="light" viewBox="0 0 120 80"></svg>' };
           }
@@ -154,7 +157,7 @@ describe('Mermaid dynamic loading', () => {
         },
       );
 
-      await _renderMermaidForTest(code, 'flowchart TD\nA --> B\nB --> C');
+      await _renderMermaidForTest(code, source);
       return host.parentElement;
     };
 
@@ -180,9 +183,27 @@ describe('Mermaid dynamic loading', () => {
       const mermaid = await loadMermaid();
       const renderMock = mermaid?.render as unknown as ReturnType<typeof vi.fn>;
       expect(renderMock).toHaveBeenCalledTimes(2);
-      expect(renderMock.mock.calls[1][1]).toMatch(
-        /^---\nconfig:\n  theme: default\n---\nflowchart TD/,
+      expect(renderMock.mock.calls[1][1]).toBe(
+        'flowchart TD\nA --> B\nB --> C\n%%{init: {"theme":"default"}}%%',
       );
+    });
+
+    it('keeps existing frontmatter before the cross-version light theme directive', async () => {
+      await initializeTheme('dark');
+      const mermaid = await loadMermaid();
+      const renderMock = mermaid?.render as unknown as ReturnType<typeof vi.fn>;
+      const source = `---
+title: Existing metadata
+config:
+  theme: dark
+---
+flowchart TD
+A --> B
+B --> C`;
+
+      await renderDiagram(false, source);
+
+      expect(renderMock.mock.calls[1][1]).toBe(`${source}\n%%{init: {"theme":"default"}}%%`);
     });
 
     it('marks rendered Mermaid wrappers with the active light theme', async () => {
