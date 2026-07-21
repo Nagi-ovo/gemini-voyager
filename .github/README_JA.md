@@ -212,7 +212,7 @@ Voyager の開発中、私は AI 音声入力ツール **[Typeless (typeless.com
 
 バグ報告、機能提案、ドキュメントの改善など、あらゆる貢献を歓迎します！
 
-- **Issues**: [バグ報告](https://github.com/Nagi-ovo/voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) または [機能提案](https://github.com/Nagi-ovo/voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml) テンプレートを使用してください。
+- **Issues**: [バグ報告](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml) または [機能提案](https://github.com/Nagi-ovo/voyager/issues/new?template=feature_request.yml) テンプレートを使用してください。
 - **Pull Requests**: [CONTRIBUTING.md](./CONTRIBUTING.md) をご確認ください。
 
 <details>
@@ -228,7 +228,8 @@ bun run dev:firefox
 bun run dev:safari
 
 # ビルド
-bun run build:all
+bun run build:edge  # Edge 専用パッケージ
+bun run build:all   # Chrome + Firefox + Safari
 ```
 
 **Safari での開発**: `bun run build:safari` を実行し、`Voyager/` にある Xcode プロジェクトを開きます。

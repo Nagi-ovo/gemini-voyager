@@ -1,7 +1,7 @@
 name: '🌠 功能需求 Feature Request'
 description: '需求或建议 | Suggest an idea for Voyager'
 title: '[Feature] '
-labels: '🌠 Feature Request'
+labels: 'enhancement'
 body:
   - type: markdown
     attributes:
@@ -37,6 +37,16 @@ body:
       required: true
   - type: textarea
     attributes:
+      label: '✅ 验收标准 | Acceptance Criteria'
+      description: 'Describe the smallest observable outcome that would make this request complete, including affected sites or browsers.'
+      placeholder: |
+        - On <site/browser>, when ...
+        - Voyager should ...
+        - Existing ... must remain unchanged
+    validations:
+      required: true
+  - type: textarea
+    attributes:
       label: '🔄 替代方案 | Alternatives Considered'
       description: 'Describe any alternative solutions or features you have considered.'
       placeholder: 'Describe alternative solutions...'
@@ -51,3 +61,9 @@ body:
       options:
         - label: '我愿意为该功能贡献代码 / I am willing to contribute code for this feature'
         - label: '💡 若 Issue 未标记 `community-only`，其他贡献者可评论 `/claim` 认领 / Other contributors may use `/claim` unless the issue is labeled `community-only`'
+  - type: checkboxes
+    attributes:
+      label: '🧭 开始编码前 | Before Coding'
+      options:
+        - label: '我理解 `/claim` 或被分配不代表功能已获批准；编码前仍需等待维护者明确同意方案 / I understand that `/claim` or assignment is not feature approval; explicit maintainer approval is still required before coding'
+          required: true

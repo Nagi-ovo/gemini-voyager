@@ -237,7 +237,7 @@ Voyager 개발 중에 광범위하게 사용한 AI 음성 - 텍스트 변환 도
 
 여러분의 기여를 환영합니다! 버그 보고, 기능 제안, 문서 개선 또는 코드 제출 등 무엇이든 환영합니다:
 
-- **이슈**: [버그 보고](https://github.com/Nagi-ovo/voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) 또는 [기능 제안](https://github.com/Nagi-ovo/voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml) 템플릿을 사용하세요.
+- **이슈**: [버그 보고](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml) 또는 [기능 제안](https://github.com/Nagi-ovo/voyager/issues/new?template=feature_request.yml) 템플릿을 사용하세요.
 - **풀 리퀘스트**: 가이드라인은 [CONTRIBUTING.md](../.github/CONTRIBUTING.md)를 확인하세요.
 
 <details>
@@ -254,9 +254,10 @@ bun run dev:safari   # Safari (macOS 필요)
 
 # 프로덕션 빌드
 bun run build:chrome   # Chrome
+bun run build:edge     # Edge 독립 패키징
 bun run build:firefox  # Firefox
 bun run build:safari   # Safari
-bun run build:all      # 모든 브라우저
+bun run build:all      # Chrome + Firefox + Safari
 ```
 
 **Safari 개발**: `bun run build:safari`를 실행한 뒤 `Voyager/`의 Xcode 프로젝트를 여세요.

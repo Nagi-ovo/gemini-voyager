@@ -240,7 +240,7 @@
 
 欢迎参与贡献！
 
-- **Issue**：使用 [Bug 报告](https://github.com/Nagi-ovo/voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.yml) 或 [功能请求](https://github.com/Nagi-ovo/voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml) 模板。
+- **Issue**：使用 [Bug 报告](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml) 或 [功能请求](https://github.com/Nagi-ovo/voyager/issues/new?template=feature_request.yml) 模板。
 - **Pull Request**：请查看 [贡献指南](./CONTRIBUTING.md)。
 
 <details>
@@ -257,9 +257,10 @@ bun run dev:safari
 
 # 生产构建
 bun run build:chrome
+bun run build:edge     # Edge 独立打包
 bun run build:firefox
 bun run build:safari
-bun run build:all
+bun run build:all      # Chrome + Firefox + Safari
 ```
 
 **Safari 开发**：运行 `bun run build:safari`，然后打开 `Voyager/` 中已纳入版本控制的 Xcode 工程。

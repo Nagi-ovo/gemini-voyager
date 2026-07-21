@@ -28,9 +28,21 @@
 
 ### Browser Testing / 浏览器测试
 
-- [ ] **Chrome / Edge (Chromium)**: Tested / 已测试
-- [ ] **Firefox**: Tested (Mandatory) / 已测试（必填）
-- [ ] **Safari**: Tested (Optional) or labeled as unsupported / 已测试（可选）或已标注为不支持
+<!-- Follow .github/BROWSER_TESTING.md. Build != Loaded != Live behavior. Use N/A only with a reason; use "Needs <browser> test; owner: @name" when required coverage is missing. -->
+<!-- 按 .github/BROWSER_TESTING.md 填写。构建成功 ≠ 已加载 ≠ 已实测。N/A 必须说明理由；缺少必测环境时填写 "Needs <browser> test; owner: @name"。 -->
+
+Risk / 风险等级: <!-- R0 / R1 / R2 / R3 -->
+
+Commit tested / 测试提交: <!-- SHA -->
+
+| Browser / version | OS  | Command → artifact | Highest level | Scenario and result | Evidence / missing owner / N/A reason |
+| ----------------- | --- | ------------------ | ------------- | ------------------- | ------------------------------------- |
+| Chrome            |     |                    |               |                     |                                       |
+| Edge              |     |                    |               |                     |                                       |
+| Firefox           |     |                    |               |                     |                                       |
+| Safari            |     |                    |               |                     |                                       |
+
+Commands not run and reason / 未运行的命令及原因:
 
 ### Checklist / 检查清单
 
@@ -40,5 +52,6 @@
 - [ ] For UI/behavior changes, I have included visual proof after verification. / 对于 UI/行为改动，我已在验证后提供可视化证据。
 - [ ] I have confirmed that this PR does not break existing functionality. / 我已确认此 PR 不会破坏原有功能。
 - [ ] This PR focuses on one issue or one coherent change. / 此 PR 只聚焦一个问题或一个清晰完整的改动。
-- [ ] I have run `bun run lint`, `bun run typecheck`, `bun run format` and `bun run build`. / 我已运行代码校验、类型检查、格式化及构建。
-- [ ] I have added/updated necessary tests and they pass (`bun run test`). / 我已添加/更新了必要的测试并确保通过（`bun run test`）。
+- [ ] I ran `bun run format`, `bun run lint`, then the standard local `bun run verify:pr`, or listed every omitted command and reason above. / 我已依次运行格式化、自动修复及标准本地 `bun run verify:pr` 验证，或在上方逐项说明未运行命令及原因。
+- [ ] I added/updated regression tests for behavior changes, or explained why no test is useful. / 行为改动已添加或更新回归测试；若无需测试，我已说明理由。
+- [ ] Each required browser has real loading/smoke evidence, or a named owner is assigned to complete it before merge. / 每个必测浏览器已有真实加载/冒烟证据，或已指定合并前补测的负责人。

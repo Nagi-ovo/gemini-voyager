@@ -212,7 +212,7 @@
 
 نرحب بالمساهمات!
 
-- **Issues**: استخدم نماذجنا لـ [تقرير الأخطاء](https://github.com/Nagi-ovo/voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) أو [طلب الميزات](https://github.com/Nagi-ovo/voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml).
+- **Issues**: استخدم نماذجنا لـ [تقرير الأخطاء](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml) أو [طلب الميزات](https://github.com/Nagi-ovo/voyager/issues/new?template=feature_request.yml).
 - **Pull Requests**: تحقق من [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 شكراً لمساعدتك في جعل Voyager أفضل! ❤️

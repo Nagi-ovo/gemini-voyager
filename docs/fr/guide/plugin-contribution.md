@@ -7,7 +7,7 @@ Cette approche rend les plugins plus faciles à relire et à maintenir. Si vous 
 ## Parcours recommandé
 
 1. Vérifiez d'abord que l'idée convient à un plugin : largeur de lecture, corrections de mise en page, ajustements de thème, masquage ou marquage d'éléments, adaptations simples de sites.
-2. Ouvrez d'abord une Issue ou une PR dans le dépôt Voyager. Expliquez le problème, le site cible et la différence avec les plugins existants.
+2. Ouvrez d'abord une Issue dans le dépôt Voyager. Expliquez le problème, le site cible et la différence avec les plugins existants ; attendez l'accord explicite d'un mainteneur avant de coder ou d'ouvrir une PR.
 3. Utilisez `plugin.json` pour les métadonnées, les sites ciblés, les réglages et les contributions.
 4. Placez les styles dans `style.css` dans le même dossier, puis référencez-le depuis `contributes.styles`.
 5. Testez localement et ajoutez à la PR des pages de test, captures d'écran ou une courte vidéo. Les mainteneurs décideront ensuite si le plugin est prêt pour le catalog officiel.
@@ -122,5 +122,6 @@ Ouvrez d'abord une Issue pour expliquer le besoin. Si une capacité intégrée e
 - Aucune ressource distante n'est référencée.
 - Le dossier du plugin contient `plugin.json`, les fichiers CSS nécessaires et un court README.
 - La PR décrit les pages de test, captures ou vidéos, ainsi que les zones de page affectées.
+- Vous avez effectué les contrôles requis de chargement, activation/désactivation, rechargement et navigation SPA de la [matrice de tests des navigateurs](https://github.com/Nagi-ovo/voyager/blob/main/.github/BROWSER_TESTING.md), avec versions et preuves.
 
 Restez simple, ciblé et réversible. Un plugin qui résout un problème clair est beaucoup plus facile à fusionner et maintenir.

@@ -1,7 +1,7 @@
 name: '🐛 反馈缺陷 Bug Report'
 description: '反馈一个问题缺陷 | Report a bug'
 title: '[Bug] '
-labels: '🐛 Bug'
+labels: 'bug'
 body:
   - type: markdown
     attributes:
@@ -50,9 +50,41 @@ body:
       required: true
   - type: input
     attributes:
+      label: '🌐 浏览器版本 | Browser Version'
+      description: 'Use the exact version from the browser About page.'
+      placeholder: 'e.g. Chrome 140.0.7339.81'
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: '🎯 受影响的网站或区域 | Affected Site or Area'
+      options:
+        - Gemini
+        - Gemini Business
+        - Google AI Studio
+        - ChatGPT
+        - Claude
+        - Extension popup / background
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: '📥 安装来源 | Installation Source'
+      options:
+        - Chrome Web Store
+        - Edge Add-ons
+        - Firefox Add-ons
+        - Safari DMG
+        - GitHub release package
+        - Local development build
+    validations:
+      required: true
+  - type: input
+    attributes:
       label: '📦 扩展版本 | Extension Version'
-      description: 'Which version of Voyager are you using? Please check the extension popup. 1.1.3 is unsupported.'
-      placeholder: 'e.g. 1.4.3'
+      description: 'Which version of Voyager are you using? Please check the extension popup.'
+      placeholder: 'e.g. 1.6.0'
     validations:
       required: true
   - type: textarea
@@ -67,6 +99,8 @@ body:
       label: '🚦 期望结果 | Expected Behavior'
       description: 'A clear and concise description of what you expected to happen.'
       placeholder: 'Describe what you expected...'
+    validations:
+      required: true
   - type: textarea
     attributes:
       label: '📷 复现步骤 | Recurrence Steps'
@@ -75,6 +109,8 @@ body:
         1. Go to '...'
         2. Click on '...'
         3. See error
+    validations:
+      required: true
   - type: textarea
     attributes:
       label: '📸 截图 | Screenshots'
@@ -83,8 +119,8 @@ body:
   - type: textarea
     attributes:
       label: '📝 补充信息 | Additional Information'
-      description: 'If your problem needs further explanation, please add more information here.'
-      placeholder: 'Any additional context, error messages, or console logs...'
+      description: 'Add the last known working version, account route such as /u/0, or sanitized console/background errors when relevant. Remove tokens, account data, and conversation content.'
+      placeholder: 'Last known working version, regression timing, sanitized errors, or other context...'
   - type: checkboxes
     attributes:
       label: '💻 贡献意愿 | Contribution'
