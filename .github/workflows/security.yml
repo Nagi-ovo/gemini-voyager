@@ -51,6 +51,9 @@ jobs:
       - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4
         with:
           fail-on-severity: high
+          # Default scope is runtime only; build/dev tooling is part of the
+          # extension's supply chain, so block those too. unknown fails closed.
+          fail-on-scopes: runtime, development, unknown
 
   # ── Bun Audit ──────────────────────────────────────────────────────────
   # Audits the full bun.lock tree against known advisories. Writes severity
