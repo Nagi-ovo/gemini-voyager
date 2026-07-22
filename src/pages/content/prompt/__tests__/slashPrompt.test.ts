@@ -110,6 +110,88 @@ describe('slash prompt completion', () => {
     );
   });
 
+  it('anchors completion beside the slash inside a fullscreen composer', () => {
+    const originalDescriptor = Object.getOwnPropertyDescriptor(
+      Range.prototype,
+      'getBoundingClientRect',
+    );
+    Object.defineProperty(Range.prototype, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({
+        left: 52,
+        top: 80,
+        right: 60,
+        bottom: 102,
+        width: 8,
+        height: 22,
+        x: 52,
+        y: 80,
+        toJSON: () => ({}),
+      }),
+    });
+
+    try {
+      const input = createContentEditable('/');
+      setRect(input, { top: 40, bottom: 720, height: 680 });
+      destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+      const list = document.getElementById('gv-pm-slash-list')!;
+      setRect(list, { height: 144 });
+
+      typeInto(input);
+
+      const root = document.getElementById('gv-pm-slash-root')!;
+      expect(root.style.left).toBe('52px');
+      expect(root.style.top).toBe('108px');
+    } finally {
+      if (originalDescriptor) {
+        Object.defineProperty(Range.prototype, 'getBoundingClientRect', originalDescriptor);
+      } else {
+        Reflect.deleteProperty(Range.prototype, 'getBoundingClientRect');
+      }
+    }
+  });
+
+  it('keeps completion above a bottom composer when there is no room below the slash', () => {
+    const originalDescriptor = Object.getOwnPropertyDescriptor(
+      Range.prototype,
+      'getBoundingClientRect',
+    );
+    Object.defineProperty(Range.prototype, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({
+        left: 52,
+        top: 700,
+        right: 60,
+        bottom: 722,
+        width: 8,
+        height: 22,
+        x: 52,
+        y: 700,
+        toJSON: () => ({}),
+      }),
+    });
+
+    try {
+      const input = createContentEditable('/');
+      setRect(input, { top: 680, bottom: 748, height: 68 });
+      destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+      const list = document.getElementById('gv-pm-slash-list')!;
+      setRect(list, { height: 144 });
+
+      typeInto(input);
+
+      const root = document.getElementById('gv-pm-slash-root')!;
+      expect(root.style.left).toBe('52px');
+      expect(root.style.top).toBe('550px');
+    } finally {
+      if (originalDescriptor) {
+        Object.defineProperty(Range.prototype, 'getBoundingClientRect', originalDescriptor);
+      } else {
+        Reflect.deleteProperty(Range.prototype, 'getBoundingClientRect');
+      }
+    }
+  });
+
   it('confirms with Enter and renders an inline name token backed by the prompt body', () => {
     const input = createContentEditable('/trans');
     destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;

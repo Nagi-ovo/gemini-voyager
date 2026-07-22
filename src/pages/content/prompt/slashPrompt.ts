@@ -230,6 +230,20 @@ function createQueryRange(query: PromptQuery): Range | null {
   return range;
 }
 
+function getQueryAnchorRect(query: PromptQuery, inputRect: DOMRect): DOMRect {
+  const range = createQueryRange(query);
+  if (!range || typeof range.getBoundingClientRect !== 'function') return inputRect;
+
+  const rect = range.getBoundingClientRect();
+  const isVisibleInsideInput =
+    rect.height > 0 &&
+    rect.bottom >= inputRect.top &&
+    rect.top <= inputRect.bottom &&
+    rect.right >= inputRect.left &&
+    rect.left <= inputRect.right;
+  return isVisibleInsideInput ? rect : inputRect;
+}
+
 function setCaretAfter(input: HTMLElement, node: Node): void {
   const range = document.createRange();
   range.selectNodeContents(node);
@@ -761,15 +775,22 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     const theme = detectTheme();
     root.dataset.gvTheme = theme;
     textareaTokens.dataset.gvTheme = theme;
-    if (activeInput && !root.hidden) {
+    if (activeInput && activeQuery && !root.hidden) {
       const rect = activeInput.getBoundingClientRect();
+      const anchorRect = getQueryAnchorRect(activeQuery, rect);
       const width = Math.max(120, Math.min(380, rect.width || 320, window.innerWidth - 16));
       root.style.width = `${Math.round(width)}px`;
-      root.style.left = `${Math.round(Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)))}px`;
+      root.style.left = `${Math.round(
+        Math.max(8, Math.min(anchorRect.left, window.innerWidth - width - 8)),
+      )}px`;
       const listHeight = list.getBoundingClientRect().height || 240;
-      const above = rect.top - listHeight - 6;
-      const below = Math.min(rect.bottom + 6, window.innerHeight - listHeight - 8);
-      root.style.top = `${Math.round(Math.max(8, above >= 8 ? above : below))}px`;
+      const below = anchorRect.bottom + 6;
+      const above = anchorRect.top - listHeight - 6;
+      const spaceBelow = window.innerHeight - below - 8;
+      const spaceAbove = anchorRect.top - 14;
+      const preferredTop = spaceBelow >= listHeight || spaceBelow >= spaceAbove ? below : above;
+      const maxTop = Math.max(8, window.innerHeight - listHeight - 8);
+      root.style.top = `${Math.round(Math.max(8, Math.min(preferredTop, maxTop)))}px`;
     }
     if (textareaTokenInput) positionTextareaTokens(textareaTokens, textareaTokenInput);
   }
