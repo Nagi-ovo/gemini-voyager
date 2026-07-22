@@ -14,10 +14,10 @@
     <img src="https://img.shields.io/badge/Brave-✓-FB542B?style=flat-square&logo=brave&logoColor=white" alt="Brave">
   </p>
   <p>
-    <img src="../badges/github-stars.svg" alt="GitHub stars">
-    <img src="../badges/github-forks.svg" alt="GitHub forks">
-    <img src="../badges/github-release.svg" alt="Latest version">
-    <img src="../badges/github-downloads.svg" alt="GitHub downloads">
+    <img src="../docs/public/badges/github-stars.svg" alt="GitHub stars">
+    <img src="../docs/public/badges/github-forks.svg" alt="GitHub forks">
+    <img src="../docs/public/badges/github-release.svg" alt="Latest version">
+    <img src="../docs/public/badges/github-downloads.svg" alt="GitHub downloads">
     <img src="https://img.shields.io/chrome-web-store/users/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome Web Store users">
     <img src="https://img.shields.io/chrome-web-store/rating/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome Web Store rating">
     <img src="https://img.shields.io/badge/edge%20users-50k%2B-0078D7?style=flat-square&logo=microsoftedge&logoColor=white" alt="Edge Add-ons users">
@@ -218,7 +218,7 @@ Recomendo vivamente o **[Typeless (typeless.com)](https://www.typeless.com/?via=
 
 Damos as boas-vindas a contribuições!
 
-- **Issues**: Use os nossos templates de [relatório de erros](https://github.com/Nagi-ovo/voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) ou [pedido de funcionalidade](https://github.com/Nagi-ovo/voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml).
+- **Issues**: Use os nossos templates de [relatório de erros](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml) ou [pedido de funcionalidade](https://github.com/Nagi-ovo/voyager/issues/new?template=feature_request.yml).
 - **Pull Requests**: Consulte [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 Obrigado por ajudar a tornar o Voyager melhor! ❤️
