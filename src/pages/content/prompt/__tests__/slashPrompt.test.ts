@@ -981,6 +981,32 @@ describe('slash prompt completion', () => {
     expect(input.classList.contains('gv-pm-slash-textarea-hide-value')).toBe(false);
   });
 
+  it('reveals textarea text typed after a selected prompt and preserves it when sending', () => {
+    document.body.innerHTML = '<div class="input-area"><textarea></textarea></div>';
+    const input = document.querySelector('textarea')!;
+    input.value = '/review';
+    input.setSelectionRange(input.value.length, input.value.length);
+    setRect(input);
+    input.focus();
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Tab');
+
+    expect(input.classList.contains('gv-pm-slash-textarea-hide-value')).toBe(true);
+
+    input.setRangeText('Focus on security.', input.selectionStart, input.selectionEnd, 'end');
+    typeInto(input);
+
+    expect(input.value).toContain('Code Review\u00a0Focus on security.');
+    expect(input.classList.contains('gv-pm-slash-textarea-hide-value')).toBe(false);
+    expect(document.querySelector('.gv-pm-slash-textarea-token')?.textContent).toBe('Code Review');
+
+    press(input, 'Enter');
+    expect(input.value).toContain(
+      'Review this code and report correctness issues.\u00a0Focus on security.',
+    );
+  });
+
   it('removes a selected textarea prompt with two Backspaces', () => {
     document.body.innerHTML = '<div class="input-area"><textarea></textarea></div>';
     const input = document.querySelector('textarea')!;

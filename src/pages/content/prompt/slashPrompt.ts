@@ -13,6 +13,7 @@ const TOKEN_CLASS = 'gv-pm-slash-token';
 const TEXTAREA_TOKEN_CLASS = 'gv-pm-slash-textarea-token';
 const TEXTAREA_TOKEN_NAME_CLASS = 'gv-pm-slash-textarea-token-name';
 const NATIVE_TOKEN_MARKER_CLASS = 'gv-pm-slash-textarea-token-native';
+const TEXTAREA_HIDE_VALUE_CLASS = 'gv-pm-slash-textarea-hide-value';
 const MAX_RESULTS = 8;
 const TOKEN_SPACER = '\u00a0';
 const TOOLTIP_HIDE_GRACE_MS = 150;
@@ -305,6 +306,14 @@ function rememberPrompt(input: HTMLElement, prompt: PromptItem, start: number): 
   selectedPrompts.set(input, selected);
 }
 
+function isTextareaPromptOnlyValue(inputText: string, selected: SelectedPrompt[]): boolean {
+  return (
+    selected.length === 1 &&
+    selected[0].start === 0 &&
+    inputText === `${selected[0].name}${TOKEN_SPACER}`
+  );
+}
+
 function createPromptToken(prompt: PromptItem): HTMLSpanElement {
   const token = document.createElement('span');
   token.className = TOKEN_CLASS;
@@ -578,7 +587,7 @@ function removeTextareaTokens(container: HTMLElement, input: HTMLElement | null 
   if (input) {
     selectedPrompts.delete(input);
     input.classList.remove('gv-pm-slash-textarea-has-token');
-    input.classList.remove('gv-pm-slash-textarea-hide-value');
+    input.classList.remove(TEXTAREA_HIDE_VALUE_CLASS);
     input.classList.remove('gv-pm-slash-contenteditable-hide-value');
     if (input instanceof HTMLTextAreaElement) {
       input.style.removeProperty('--gv-pm-slash-native-padding-top');
@@ -826,7 +835,7 @@ export function expandAllPromptTokens(): void {
   document
     .querySelectorAll<HTMLTextAreaElement>('textarea.gv-pm-slash-textarea-has-token')
     .forEach((input) => {
-      input.classList.remove('gv-pm-slash-textarea-has-token', 'gv-pm-slash-textarea-hide-value');
+      input.classList.remove('gv-pm-slash-textarea-has-token', TEXTAREA_HIDE_VALUE_CLASS);
       input.style.removeProperty('--gv-pm-slash-native-padding-top');
       input.style.removeProperty('--gv-pm-slash-token-offset');
     });
@@ -922,7 +931,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     textareaTokens.classList.add('gv-pm-slash-textarea-tokens-visible');
     positionTextareaTokens(textareaTokens, input);
     if (hideValue && input instanceof HTMLTextAreaElement) {
-      input.classList.add('gv-pm-slash-textarea-hide-value');
+      input.classList.add(TEXTAREA_HIDE_VALUE_CLASS);
     }
     if (
       input instanceof HTMLTextAreaElement &&
@@ -1057,6 +1066,9 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
       }
     }
     const selected = selectedPrompts.get(input) || [];
+    if (input instanceof HTMLTextAreaElement && !isTextareaPromptOnlyValue(inputText, selected)) {
+      input.classList.remove(TEXTAREA_HIDE_VALUE_CLASS);
+    }
     if (
       selected.length > 0 &&
       (!inputText.trim() || !selected.every((prompt) => inputText.includes(prompt.name)))
