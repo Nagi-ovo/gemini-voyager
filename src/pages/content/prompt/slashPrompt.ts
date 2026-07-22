@@ -406,6 +406,15 @@ function syncMarkerTypography(marker: HTMLElement, source: Element, rect: DOMRec
     sourceStyle.lineHeight === 'normal' && rect ? `${rect.height}px` : sourceStyle.lineHeight;
 }
 
+function isRectInsideInput(rect: DOMRect, inputRect: DOMRect): boolean {
+  return (
+    rect.top >= inputRect.top &&
+    rect.bottom <= inputRect.bottom &&
+    rect.left >= inputRect.left &&
+    rect.right <= inputRect.right
+  );
+}
+
 function positionTextareaTokens(container: HTMLElement, input: HTMLElement): void {
   const rect = input.getBoundingClientRect();
   if (input instanceof HTMLTextAreaElement) {
@@ -436,6 +445,10 @@ function positionTextareaTokens(container: HTMLElement, input: HTMLElement): voi
     const left = anchorRect?.left ?? rect.left;
     syncMarkerTypography(marker, anchor.styleSource, anchorRect);
     marker.classList.toggle(NATIVE_TOKEN_MARKER_CLASS, Boolean(anchor.nativeToken));
+    // The marker is fixed to the viewport while the editor scrolls its own
+    // content. Hide it once the prompt range leaves the editor's visible area;
+    // otherwise a long collapsed composer can leak the name outside the box.
+    marker.hidden = Boolean(anchorRect && !isRectInsideInput(anchorRect, rect));
     marker.style.left = `${Math.round(left)}px`;
     marker.style.top = `${Math.round(anchorRect?.top ?? rect.top)}px`;
     marker.style.maxWidth = `${Math.max(20, rect.right - left)}px`;

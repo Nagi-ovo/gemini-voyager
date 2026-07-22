@@ -219,6 +219,48 @@ describe('slash prompt completion', () => {
     }
   });
 
+  it('hides the marker when the prompt range is outside the editor viewport', () => {
+    const originalDescriptor = Object.getOwnPropertyDescriptor(
+      Range.prototype,
+      'getBoundingClientRect',
+    );
+    Object.defineProperty(Range.prototype, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({
+        left: 140,
+        top: 220,
+        right: 220,
+        bottom: 246,
+        width: 80,
+        height: 26,
+        x: 140,
+        y: 220,
+        toJSON: () => ({}),
+      }),
+    });
+
+    try {
+      const input = createContentEditable('/review');
+      setRect(input, { top: 300, bottom: 360 });
+      destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+      typeInto(input);
+      press(input, 'Enter');
+
+      const marker = document.querySelector<HTMLElement>('.gv-pm-slash-textarea-token')!;
+      expect(marker.hidden).toBe(true);
+
+      setRect(input, { top: 180, bottom: 260 });
+      typeInto(input);
+      expect(marker.hidden).toBe(false);
+    } finally {
+      if (originalDescriptor) {
+        Object.defineProperty(Range.prototype, 'getBoundingClientRect', originalDescriptor);
+      } else {
+        Reflect.deleteProperty(Range.prototype, 'getBoundingClientRect');
+      }
+    }
+  });
+
   it('positions each rebuilt marker over its own prompt name', () => {
     const originalDescriptor = Object.getOwnPropertyDescriptor(
       Range.prototype,

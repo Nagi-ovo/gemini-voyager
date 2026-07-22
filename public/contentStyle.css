@@ -10309,6 +10309,10 @@ html.light .gv-pm-slash-token[contenteditable='false'],
   white-space: nowrap;
 }
 
+.gv-pm-slash-textarea-token[hidden] {
+  display: none !important;
+}
+
 .gv-pm-slash-textarea-tokens[data-gv-input-kind='textarea'] .gv-pm-slash-textarea-token {
   position: static;
 }
