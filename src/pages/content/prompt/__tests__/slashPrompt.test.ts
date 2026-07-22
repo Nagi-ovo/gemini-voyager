@@ -616,6 +616,37 @@ describe('slash prompt completion', () => {
     );
   });
 
+  it.each(['/ ', 'A / B'])('does not complete a slash query containing whitespace: %s', (text) => {
+    const input = createContentEditable(text);
+    const promptsWithB: PromptItem[] = [
+      ...prompts,
+      { id: 'b', name: 'B', text: 'Prompt B body.', tags: [], createdAt: 4 },
+    ];
+    destroy = startPromptSlashCommand({ initialItems: promptsWithB }).destroy;
+
+    typeInto(input);
+
+    expect(document.getElementById('gv-pm-slash-root')?.hidden).toBe(true);
+    expect(press(input, 'Enter').defaultPrevented).toBe(false);
+    expect(input.querySelector('.gv-pm-slash-token')).toBeNull();
+  });
+
+  it('still completes a slash query when the name immediately follows the slash', () => {
+    const input = createContentEditable('/B');
+    const promptsWithB: PromptItem[] = [
+      ...prompts,
+      { id: 'b', name: 'B', text: 'Prompt B body.', tags: [], createdAt: 4 },
+    ];
+    destroy = startPromptSlashCommand({ initialItems: promptsWithB }).destroy;
+
+    typeInto(input);
+
+    expect(document.getElementById('gv-pm-slash-root')?.hidden).toBe(false);
+    expect(document.getElementById('gv-pm-slash-list')?.textContent).toContain('B');
+    expect(press(input, 'Enter').defaultPrevented).toBe(true);
+    expect(input.querySelector<HTMLElement>('.gv-pm-slash-token')?.dataset.gvPromptName).toBe('B');
+  });
+
   it('closes completion immediately when the slash query is deleted', () => {
     const input = createContentEditable('/');
     destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
