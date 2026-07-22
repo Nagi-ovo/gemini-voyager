@@ -176,6 +176,47 @@ function findTextBoundary(
   return last ? { node: last, offset: last.data.length } : null;
 }
 
+function placeCaretAtTextOffset(input: HTMLElement, offset: number): void {
+  if (input instanceof HTMLTextAreaElement) {
+    input.focus();
+    input.setSelectionRange(offset, offset);
+    return;
+  }
+
+  const range = document.createRange();
+  const boundary = findTextBoundary(input, offset);
+  if (boundary) {
+    range.setStart(boundary.node, boundary.offset);
+    range.collapse(true);
+  } else {
+    range.selectNodeContents(input);
+    range.collapse(true);
+  }
+  const selection = window.getSelection();
+  if (!selection) return;
+  input.focus();
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+function restoreCaretAfterInput(input: HTMLElement, offset: number): void {
+  const prefix = readText(input).slice(0, offset);
+  placeCaretAtTextOffset(input, offset);
+
+  // Gemini can reconcile the editor in a microtask after handling `input` and
+  // reset its selection to the end. Reapply only while this edit still owns
+  // focus and the text before the deletion point is unchanged.
+  queueMicrotask(() => {
+    if (
+      input.isConnected &&
+      document.activeElement === input &&
+      readText(input).slice(0, offset) === prefix
+    ) {
+      placeCaretAtTextOffset(input, offset);
+    }
+  });
+}
+
 function createQueryRange(query: PromptQuery): Range | null {
   if (query.input instanceof HTMLTextAreaElement) return null;
   const selectionRange = query.range;
@@ -593,6 +634,7 @@ function removePromptBeforeCaret(input: HTMLElement): boolean {
       if (gap !== '' && gap !== TOKEN_SPACER) continue;
       input.setRangeText('', start, caret, 'end');
       dispatchInput(input);
+      restoreCaretAfterInput(input, start);
       return true;
     }
     return false;
@@ -635,6 +677,7 @@ function removePromptBeforeCaret(input: HTMLElement): boolean {
     selection.removeAllRanges();
     selection.addRange(deleteRange);
     dispatchInput(input);
+    restoreCaretAfterInput(input, startOffset);
     return true;
   }
   return false;

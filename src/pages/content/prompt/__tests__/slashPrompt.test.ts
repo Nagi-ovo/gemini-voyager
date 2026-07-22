@@ -594,6 +594,45 @@ describe('slash prompt completion', () => {
     expect(document.querySelector('.gv-pm-slash-textarea-token')).toBeNull();
   });
 
+  it('keeps the caret at the removed prompt when Gemini rebuilds the editor', async () => {
+    const input = createContentEditable('/review');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+
+    const token = input.querySelector<HTMLElement>('.gv-pm-slash-token')!;
+    const spacer = token.nextSibling!;
+    token.before(document.createTextNode('Three '));
+    spacer.after(document.createTextNode('after'));
+    const caret = document.createRange();
+    caret.setStartAfter(spacer);
+    caret.collapse(true);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(caret);
+
+    input.addEventListener('input', () => {
+      const text = input.textContent || '';
+      queueMicrotask(() => {
+        input.textContent = text;
+        const end = document.createRange();
+        end.selectNodeContents(input);
+        end.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(end);
+      });
+    });
+
+    press(input, 'Backspace');
+    await Promise.resolve();
+
+    const prefix = selection.getRangeAt(0).cloneRange();
+    prefix.selectNodeContents(input);
+    prefix.setEnd(selection.focusNode!, selection.focusOffset);
+    expect(input.textContent).toBe('Three after');
+    expect(prefix.toString()).toBe('Three ');
+  });
+
   it('does not remove the prompt when Backspace follows two line breaks', () => {
     const input = createContentEditable('/review');
     destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
