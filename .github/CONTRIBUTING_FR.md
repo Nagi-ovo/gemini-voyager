@@ -15,17 +15,23 @@ Merci d'envisager de contribuer à Voyager ! 🚀
 
 Ce document fournit des directives et des instructions pour contribuer. Nous accueillons les corrections de bugs, les améliorations de la documentation et les traductions. Pour les nouvelles fonctionnalités, veuillez d'abord en discuter via un Issue.
 
-## Politique des PR assistées par IA
+## 🚫 Politique IA
 
-**Les contributions assistées par IA sont les bienvenues, mais chaque PR doit être relue et vérifiée personnellement par la personne qui la soumet.**
+**Nous rejetons explicitement les PR générées par l'IA qui n'ont pas été vérifiées manuellement.**
 
-Les outils d'IA peuvent être utiles, mais les contributions copiées-collées sans objectif clair, périmètre ciblé ni vérification réelle font perdre du temps aux mainteneurs.
+Bien que les outils d'IA soient d'excellents assistants, les contributions "paresseuses" de copier-coller font perdre du temps aux mainteneurs.
 
-- Vous êtes responsable de l'objectif, du périmètre, des changements de comportement et des résultats de vérification de votre PR. Vous n'avez pas besoin de comprendre entièrement chaque ligne générée par un agent, mais vous devez pouvoir expliquer ce que la PR résout et pourquoi l'approche est raisonnable.
-- Avant de coder, clarifiez avec l'agent les exigences, le périmètre affecté, le comportement attendu et la méthode de vérification.
-- Gardez la PR ciblée : une PR doit résoudre un seul problème ou apporter une modification cohérente, sans regrouper de changements sans rapport.
-- La vérification est essentielle : testez vous-même le parcours réel après la modification. Pour les changements d'interface ou de comportement, essayez de l'utiliser pendant environ 15 minutes lorsque c'est possible.
-- Soumettez la PR après vérification et joignez une preuve visuelle, par exemple des captures d'écran, des enregistrements ou une comparaison avant/après.
+- **Les PR d'IA de mauvaise qualité** seront fermées immédiatement sans discussion.
+- **Les PR sans explication** de la logique ou manquant de tests nécessaires seront rejetées.
+- Vous devez comprendre et assumer la responsabilité de chaque ligne de code que vous soumettez.
+
+## Processus Obligatoire
+
+1. Pour une nouvelle fonctionnalité, ouvrez un Issue et attendez l'accord explicite sur l'approche ; `/claim` ou une assignation désigne seulement la personne responsable.
+2. Soumettez chaque changement dans une PR ciblée depuis une branche thématique ; ne poussez pas directement sur `main`.
+3. Exécutez `bun run format`, `bun run lint` et `bun run verify:pr`, dans cet ordre, et indiquez toute omission.
+4. Ajoutez des tests de régression pour les changements de comportement ou expliquez pourquoi l'automatisation n'est pas utile.
+5. Chargez l'artefact réel dans les navigateurs concernés et testez le parcours modifié ; indiquez dans la PR la couverture restante et son responsable.
 
 ## Table des Matières
 
@@ -45,13 +51,7 @@ Les outils d'IA peuvent être utiles, mais les contributions copiées-collées s
 ### Prérequis
 
 - **Bun 1.3.12** (aligné sur `packageManager` et la CI)
-- Chrome et Firefox pour les tests réels par défaut des changements d'exécution partagés
-- Edge pour les changements touchant Chromium, les permissions, le manifeste ou l'empaquetage
-- Safari/macOS pour les changements affectant Safari avant fusion
-
-Consultez [Chargement et tests de fumée des navigateurs](BROWSER_TESTING.md) pour la matrice de risque et les procédures exactes. Si un environnement n'est pas disponible, indiquez `Needs <browser> test` et désignez une personne responsable ; une déduction de l'IA ne constitue pas une preuve de test.
-
-`bun run build:edge` et `bun run verify:pr` nécessitent l'outil en ligne de commande `zip`. Sous Windows, utilisez WSL ou indiquez dans la PR les vérifications non exécutées et la personne chargée de les compléter.
+- Les navigateurs concernés pour charger l'extension et tester le parcours réel
 
 ### Démarrage Rapide
 
@@ -111,23 +111,25 @@ bun install
 
 ### Commandes Disponibles
 
-| Commande                 | Description                                                                                   |
-| ------------------------ | --------------------------------------------------------------------------------------------- |
-| `bun run dev`            | Démarrer le mode dev Chrome avec rechargement à chaud                                         |
-| `bun run dev:firefox`    | Démarrer le mode dev Firefox                                                                  |
-| `bun run dev:safari`     | Démarrer le mode dev Safari (macOS uniquement)                                                |
-| `bun run build`          | Build de production pour Chrome                                                               |
-| `bun run build:edge`     | Build et paquet Edge indépendants                                                             |
-| `bun run build:all`      | Builds Chrome + Firefox + Safari (Edge exclu)                                                 |
-| `bun run build:browsers` | Builds Chrome + Edge + Firefox + Safari                                                       |
-| `bun run lint`           | Exécuter ESLint avec correction automatique                                                   |
-| `bun run typecheck`      | Exécuter la vérification de type TypeScript                                                   |
-| `bun run test`           | Exécuter la suite de tests                                                                    |
-| `bun run verify:pr`      | Validation automatisée locale standard (hors macOS natif et tests réels dans les navigateurs) |
+| Commande              | Description                                           |
+| --------------------- | ----------------------------------------------------- |
+| `bun run dev`         | Démarrer le mode dev Chrome avec rechargement à chaud |
+| `bun run dev:firefox` | Démarrer le mode dev Firefox                          |
+| `bun run dev:safari`  | Démarrer le mode dev Safari (macOS uniquement)        |
+| `bun run build`       | Build de production pour Chrome                       |
+| `bun run build:edge`  | Build et paquet Edge indépendants                     |
+| `bun run build:all`   | Builds Chrome + Firefox + Safari                      |
+| `bun run lint`        | Exécuter ESLint avec correction automatique           |
+| `bun run typecheck`   | Exécuter la vérification de type TypeScript           |
+| `bun run test`        | Exécuter la suite de tests                            |
+| `bun run verify:pr`   | Vérification automatisée locale standard d'une PR     |
 
 ### Charger l'Extension
 
-Pour le développement courant dans Chrome, exécutez `bun run dev:chrome` et chargez `dist_chrome_dev` depuis `chrome://extensions/`. Consultez [Chargement et tests de fumée des navigateurs](BROWSER_TESTING.md) pour les artefacts exacts, les procédures de chargement et de rechargement, ainsi que les critères de validation pour Chrome, Edge, Firefox et Safari.
+1. Exécutez `bun run dev` pour démarrer le build de développement
+2. Ouvrez Chrome et allez sur `chrome://extensions/`
+3. Activez le "Mode développeur"
+4. Cliquez sur "Charger l'extension non empaquetée" et sélectionnez le dossier `dist_chrome_dev`
 
 ---
 
@@ -143,8 +145,9 @@ Pour le développement courant dans Chrome, exécutez `bun run dev:chrome` et ch
    git checkout -b fix/votre-correction-de-bug
    ```
 
-2. **Lier les Issues** - Pour une nouvelle fonctionnalité, **ouvrez un Issue et attendez l'accord explicite du mainteneur sur l'approche**. Une commande `/claim` ou une assignation désigne seulement la personne responsable ; elle ne constitue pas une approbation de la fonctionnalité. Liez l'Issue depuis la PR.
-3. **Utiliser systématiquement une PR** - Soumettez chaque modification du dépôt depuis une branche thématique vers une PR ciblant `main` ; ne poussez jamais de commits directement sur `main`.
+2. **Lier les Issues** - Lors de l'implémentation d'une nouvelle fonctionnalité, vous devez **d'abord ouvrir un Issue pour discussion**. Les PR pour de nouvelles fonctionnalités soumises sans discussion préalable seront fermées. Lors de la soumission d'une PR, veuillez lier cet Issue.
+
+3. **Gardez les modifications ciblées** - une fonctionnalité ou correction par PR
 
 ### Liste de Contrôle Pré-Commit
 
@@ -152,25 +155,20 @@ Avant de soumettre, exécutez toujours :
 
 ```bash
 bun run format     # Formater le code
-bun run lint       # Appliquer les corrections de lint sûres
-bun run verify:pr  # Validation locale standard ; hors macOS natif et tests réels dans les navigateurs
+bun run lint       # Corriger les problèmes de linting
+bun run verify:pr  # Exécuter la vérification locale standard
 ```
 
 Assurez-vous que :
 
 1. Vos modifications réalisent la fonctionnalité souhaitée.
 2. Vos modifications n'affectent pas négativement les fonctionnalités existantes.
-3. La PR indique les versions des navigateurs, les artefacts, les résultats et les preuves exigés par la [matrice de tests des navigateurs](BROWSER_TESTING.md).
 
 ---
 
 ## Stratégie de Test
 
-Les tests doivent couvrir l'interface la plus susceptible de régresser, plutôt que d'être ignorés selon le type de fichier :
-
-1. **Logique et état** : Les services principaux, le stockage, les analyseurs, les utilitaires et les états d'interface complexes nécessitent des tests automatisés.
-2. **Scripts de contenu / DOM** : Lorsque les sélecteurs, le montage et le nettoyage, la navigation SPA ou les contrats DOM tiers changent, ajoutez un test de régression avec un fixture DOM minimal.
-3. **Navigateurs réels** : Les tests automatisés ne remplacent ni le chargement de l'extension ni la vérification du parcours réel. Suivez la [matrice de tests des navigateurs](BROWSER_TESTING.md). Une modification purement visuelle peut expliquer pourquoi aucun nouveau test unitaire n'est utile.
+Testez l'interface la plus susceptible de régresser : automatisez la logique et les états complexes, ajoutez un test DOM minimal lorsque les sélecteurs ou la navigation SPA changent, puis vérifiez le parcours réel avec l'extension chargée.
 
 ---
 
@@ -183,8 +181,6 @@ Les tests doivent couvrir l'interface la plus susceptible de régresser, plutôt
 3. **Impact Utilisateur** : Décrivez comment les utilisateurs seront affectés
 4. **Preuve Visuelle (Strict)** : Pour TOUT changement d'interface ou nouvelle fonctionnalité, vous **DEVEZ** fournir des captures d'écran ou des enregistrements. **Pas de capture = Pas de revue/réponse.**
 5. **Référence de Ticket** : Liez les tickets associés (ex: "Closes #123")
-6. **Tests et Logique** : Les changements de comportement doivent inclure des tests de régression automatisés pertinents. Si aucun test n'est utile, expliquez pourquoi et décrivez clairement la logique. Les corrections « magiques » sans contexte ne sont pas acceptées.
-7. **Preuves par Navigateur** : Indiquez séparément l'état de Chrome, Edge, Firefox et Safari. Si un navigateur requis n'est pas disponible, notez `Needs <browser> test` et désignez une personne responsable ; ne présentez pas un build réussi comme une extension chargée ou testée dans le parcours réel.
 
 ### Format du Message de Commit
 

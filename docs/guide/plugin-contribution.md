@@ -122,6 +122,5 @@ Voyager 的插件系统优先支持声明式插件：用 `plugin.json` 描述插
 - 没有远程资源引用。
 - 插件目录包含 `plugin.json`、必要的 CSS 文件和简短 README。
 - PR 描述里写清楚测试页面、截图或录屏，以及可能影响的页面区域。
-- 已按[浏览器测试矩阵](https://github.com/Nagi-ovo/voyager/blob/main/.github/BROWSER_TESTING.md)完成必需的加载、启用/禁用、刷新与 SPA 导航检查，并记录浏览器版本和证据。
 
 保持简单、克制、可撤销。一个插件只解决一个明确问题，通常会更容易合并和维护。

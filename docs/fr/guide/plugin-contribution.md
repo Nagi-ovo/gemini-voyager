@@ -122,6 +122,5 @@ Ouvrez d'abord une Issue pour expliquer le besoin. Si une capacité intégrée e
 - Aucune ressource distante n'est référencée.
 - Le dossier du plugin contient `plugin.json`, les fichiers CSS nécessaires et un court README.
 - La PR décrit les pages de test, captures ou vidéos, ainsi que les zones de page affectées.
-- Vous avez effectué les contrôles requis de chargement, activation/désactivation, rechargement et navigation SPA de la [matrice de tests des navigateurs](https://github.com/Nagi-ovo/voyager/blob/main/.github/BROWSER_TESTING.md), avec versions et preuves.
 
 Restez simple, ciblé et réversible. Un plugin qui résout un problème clair est beaucoup plus facile à fusionner et maintenir.

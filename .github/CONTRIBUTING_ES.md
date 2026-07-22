@@ -15,17 +15,23 @@
 
 Este documento proporciona pautas e instrucciones para contribuir. Damos la bienvenida a correcciones de errores, mejoras en la documentación y traducciones. Para nuevas funcionalidades, por favor discútelo primero mediante un Issue.
 
-## Política de PR asistidas por IA
+## 🚫 Política de IA
 
-**Las contribuciones asistidas por IA son bienvenidas, pero cada PR debe ser revisada y verificada personalmente por quien la envía.**
+**Rechazamos explícitamente los PR generados por IA que no hayan sido verificados manualmente.**
 
-Las herramientas de IA pueden ayudar, pero las contribuciones copiadas y pegadas sin un objetivo claro, un alcance enfocado ni una verificación real hacen perder tiempo a los mantenedores.
+Aunque las herramientas de IA son grandes asistentes, las contribuciones de "copiar y pegar" sin revisión hacen perder tiempo a los mantenedores.
 
-- Eres responsable del objetivo, el alcance, los cambios de comportamiento y los resultados de verificación de tu PR. No necesitas comprender por completo cada línea generada por un agente, pero debes poder explicar qué resuelve la PR y por qué el enfoque es razonable.
-- Antes de programar, aclara con el agente los requisitos, el alcance afectado, el comportamiento esperado y cómo verificar el cambio.
-- Mantén la PR enfocada: una PR debe resolver un problema o realizar un cambio coherente, sin agrupar modificaciones no relacionadas.
-- La verificación es lo más importante: prueba personalmente el flujo real después del cambio. Para cambios de UI o comportamiento, intenta usarlo durante unos 15 minutos cuando sea posible.
-- Envía la PR después de verificarla e incluye evidencia visual, como capturas de pantalla, grabaciones o comparaciones antes/después.
+- **Los PR de IA de baja calidad** se cerrarán inmediatamente sin discusión.
+- **Los PR sin explicación** de la lógica o que carezcan de las pruebas necesarias serán rechazados.
+- Debes entender y asumir la responsabilidad de cada línea de código que envíes.
+
+## Flujo Obligatorio
+
+1. Para una nueva funcionalidad, abre un Issue y espera la aprobación explícita del enfoque; `/claim` o una asignación solo selecciona a la persona responsable.
+2. Envía cada cambio mediante una PR enfocada desde una rama temática; no envíes directamente a `main`.
+3. Ejecuta `bun run format`, `bun run lint` y `bun run verify:pr`, en ese orden, e indica cualquier omisión.
+4. Añade pruebas de regresión para cambios de comportamiento o explica por qué la automatización no es útil.
+5. Carga el artefacto real en los navegadores afectados y prueba el flujo modificado; indica en la PR la cobertura pendiente y su responsable.
 
 ## Tabla de Contenidos
 
@@ -45,13 +51,7 @@ Las herramientas de IA pueden ayudar, pero las contribuciones copiadas y pegadas
 ### Requisitos Previos
 
 - **Bun 1.3.12** (coincide con `packageManager` y CI)
-- Chrome y Firefox para las pruebas reales predeterminadas de cambios en el runtime compartido
-- Edge para cambios de Chromium, permisos, manifest o empaquetado
-- Safari/macOS para cambios que afecten a Safari antes de fusionarlos
-
-Consulta [Carga y pruebas de humo en navegadores](BROWSER_TESTING.md) para conocer la matriz de riesgos y los procedimientos exactos. Si no dispones de un entorno, registra `Needs <browser> test` y asigna a una persona responsable; una inferencia de IA no es evidencia de prueba.
-
-`bun run build:edge` y `bun run verify:pr` requieren la herramienta de línea de comandos `zip`. En Windows, usa WSL o indica en la PR qué comprobaciones no ejecutaste y quién las completará.
+- Los navegadores afectados para cargar la extensión y probar el flujo real
 
 ### Inicio Rápido
 
@@ -111,23 +111,25 @@ bun install
 
 ### Comandos Disponibles
 
-| Comando                  | Descripción                                                                              |
-| ------------------------ | ---------------------------------------------------------------------------------------- |
-| `bun run dev`            | Iniciar modo desarrollo Chrome con recarga automática                                    |
-| `bun run dev:firefox`    | Iniciar modo desarrollo Firefox                                                          |
-| `bun run dev:safari`     | Iniciar modo desarrollo Safari (solo macOS)                                              |
-| `bun run build`          | Compilación de producción para Chrome                                                    |
-| `bun run build:edge`     | Compilación y paquete independientes para Edge                                           |
-| `bun run build:all`      | Compila Chrome + Firefox + Safari (no incluye Edge)                                      |
-| `bun run build:browsers` | Compila Chrome + Edge + Firefox + Safari                                                 |
-| `bun run lint`           | Ejecutar ESLint con corrección automática                                                |
-| `bun run typecheck`      | Ejecutar comprobación de tipos TypeScript                                                |
-| `bun run test`           | Ejecutar conjunto de pruebas                                                             |
-| `bun run verify:pr`      | Validación automática local estándar (sin macOS nativo ni pruebas reales en navegadores) |
+| Comando               | Descripción                                           |
+| --------------------- | ----------------------------------------------------- |
+| `bun run dev`         | Iniciar modo desarrollo Chrome con recarga automática |
+| `bun run dev:firefox` | Iniciar modo desarrollo Firefox                       |
+| `bun run dev:safari`  | Iniciar modo desarrollo Safari (solo macOS)           |
+| `bun run build`       | Compilación de producción para Chrome                 |
+| `bun run build:edge`  | Compilación y paquete independientes para Edge        |
+| `bun run build:all`   | Compilación para Chrome + Firefox + Safari            |
+| `bun run lint`        | Ejecutar ESLint con corrección automática             |
+| `bun run typecheck`   | Ejecutar comprobación de tipos TypeScript             |
+| `bun run test`        | Ejecutar conjunto de pruebas                          |
+| `bun run verify:pr`   | Verificación automática local estándar de una PR      |
 
 ### Cargar la Extensión
 
-Para el desarrollo habitual en Chrome, ejecuta `bun run dev:chrome` y carga `dist_chrome_dev` desde `chrome://extensions/`. Consulta [Carga y pruebas de humo en navegadores](BROWSER_TESTING.md) para conocer los artefactos exactos, los procedimientos de carga y recarga, y los criterios de aprobación para Chrome, Edge, Firefox y Safari.
+1. Ejecuta `bun run dev` para iniciar la compilación de desarrollo
+2. Abre Chrome y ve a `chrome://extensions/`
+3. Habilita el "Modo de desarrollador"
+4. Haz clic en "Cargar descomprimida" y selecciona la carpeta `dist_chrome_dev`
 
 ---
 
@@ -143,8 +145,8 @@ Para el desarrollo habitual en Chrome, ejecuta `bun run dev:chrome` y carga `dis
    git checkout -b fix/tu-correccion-de-error
    ```
 
-2. **Vincular Issues** - Para una nueva funcionalidad, **abre un Issue y espera la aprobación explícita del mantenedor sobre el enfoque**. Usar `/claim` o recibir una asignación solo identifica a la persona responsable; no significa que la funcionalidad esté aprobada. Enlaza el Issue desde la PR.
-3. **Usa siempre una PR** - Envía cada cambio del repositorio desde una rama temática a una PR dirigida a `main`; nunca envíes commits directamente a `main`.
+2. **Vincular Issues** - Al implementar una nueva funcionalidad, **primero debes abrir un Issue de discusión**. Los PR de nuevas funcionalidades enviados sin discusión previa serán cerrados. Al enviar un PR, por favor enlaza ese Issue.
+3. **Mantén los cambios enfocados** - una funcionalidad o corrección por PR
 
 ### Lista de Verificación Pre-Commit
 
@@ -152,25 +154,20 @@ Antes de enviar, ejecuta siempre:
 
 ```bash
 bun run format     # Formatear código
-bun run lint       # Aplicar correcciones seguras de linting
-bun run verify:pr  # Validación local estándar; no incluye macOS nativo ni pruebas reales en navegadores
+bun run lint       # Corregir problemas de linting
+bun run verify:pr  # Ejecutar la verificación local estándar
 ```
 
 Asegúrate de que:
 
 1. Tus cambios logran la funcionalidad deseada.
 2. Tus cambios no afectan negativamente a las funciones existentes.
-3. La PR registra las versiones de navegador, los artefactos, los resultados y las evidencias exigidas por la [matriz de pruebas de navegador](BROWSER_TESTING.md).
 
 ---
 
 ## Estrategia de Pruebas
 
-Las pruebas deben cubrir la interfaz con mayor riesgo de regresión, en lugar de omitirlas según el tipo de archivo:
-
-1. **Lógica y estado**: Los servicios principales, el almacenamiento, los analizadores, las utilidades y el estado complejo de la UI requieren pruebas automatizadas.
-2. **Content scripts / DOM**: Cuando cambien los selectores, el montaje y desmontaje, la navegación SPA o los contratos con el DOM de terceros, añade una prueba de regresión con un fixture DOM mínimo.
-3. **Navegadores reales**: Las pruebas automatizadas no sustituyen la carga de la extensión ni la comprobación del flujo real. Sigue la [matriz de pruebas de navegador](BROWSER_TESTING.md). Un cambio puramente visual puede explicar por qué no resulta útil añadir una prueba unitaria.
+Prueba la interfaz con mayor riesgo de regresión: automatiza la lógica y el estado complejo, añade una prueba DOM mínima cuando cambien selectores o navegación SPA, y verifica el flujo real cargando la extensión.
 
 ---
 
@@ -183,8 +180,6 @@ Las pruebas deben cubrir la interfaz con mayor riesgo de regresión, en lugar de
 3. **Impacto en el Usuario**: Describe cómo se verán afectados los usuarios
 4. **Prueba Visual (Estricto)**: Para CUALQUIER cambio de UI o nueva funcionalidad, **DEBES** proporcionar capturas de pantalla o grabaciones. **Sin captura = Sin revisión/respuesta.**
 5. **Referencia de Problema**: Enlaza problemas relacionados (ej: "Closes #123")
-6. **Pruebas y Lógica**: Los cambios de comportamiento deben incluir pruebas automatizadas de regresión pertinentes. Si ninguna prueba resulta útil, explica el motivo y describe claramente la lógica. No se aceptan correcciones "mágicas" sin contexto.
-7. **Evidencia por Navegador**: Registra por separado el estado de Chrome, Edge, Firefox y Safari. Si no está disponible un navegador requerido, indica `Needs <browser> test` y una persona responsable; no presentes una compilación correcta como una extensión cargada o probada en el flujo real.
 
 ### Formato de Mensaje de Commit
 

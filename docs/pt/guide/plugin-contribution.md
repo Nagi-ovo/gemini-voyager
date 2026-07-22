@@ -122,6 +122,5 @@ Abra primeiro uma Issue e explique a necessidade. Se exigir mesmo uma capacidade
 - Não há referências a recursos remotos.
 - O diretório do plugin contém `plugin.json`, os ficheiros CSS necessários e um README curto.
 - A PR descreve páginas de teste, capturas ou gravações, e as áreas de página afetadas.
-- Concluiu as verificações obrigatórias de carregamento, ativação/desativação, recarregamento e navegação SPA da [matriz de testes de navegadores](https://github.com/Nagi-ovo/voyager/blob/main/.github/BROWSER_TESTING.md), com versões e provas.
 
 Mantenha simples, focado e reversível. Um plugin que resolve um problema claro é muito mais fácil de fundir e manter.

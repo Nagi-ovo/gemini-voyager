@@ -122,6 +122,5 @@ Open an Issue first and describe the need. If it truly requires built-in capabil
 - There are no remote resources.
 - The plugin directory includes `plugin.json`, required CSS files, and a short README.
 - The PR describes test pages, screenshots or recordings, and affected page areas.
-- You completed the required load, enable/disable, reload, and SPA-navigation checks in the [browser test matrix](https://github.com/Nagi-ovo/voyager/blob/main/.github/BROWSER_TESTING.md), with browser versions and evidence.
 
 Keep it simple, focused, and reversible. A plugin that solves one clear problem is much easier to merge and maintain.

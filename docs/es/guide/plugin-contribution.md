@@ -122,6 +122,5 @@ Abre primero una Issue y explica la necesidad. Si realmente requiere una capacid
 - No hay recursos remotos.
 - El directorio del plugin contiene `plugin.json`, los CSS necesarios y un README breve.
 - La PR describe páginas de prueba, capturas o grabaciones, y las zonas de página afectadas.
-- Completaste las comprobaciones requeridas de carga, activación/desactivación, recarga y navegación SPA de la [matriz de pruebas de navegadores](https://github.com/Nagi-ovo/voyager/blob/main/.github/BROWSER_TESTING.md), con versiones y evidencias.
 
 Manténlo simple, enfocado y reversible. Un plugin que resuelve un problema claro es mucho más fácil de fusionar y mantener.

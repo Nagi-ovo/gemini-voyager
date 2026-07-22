@@ -122,6 +122,5 @@ Voyager 的外掛系統優先支援宣告式外掛：用 `plugin.json` 描述外
 - 沒有遠端資源引用。
 - 外掛目錄包含 `plugin.json`、必要的 CSS 檔案和簡短 README。
 - PR 描述裡寫清楚測試頁面、截圖或錄影，以及可能影響的頁面區域。
-- 已依照[瀏覽器測試矩陣](https://github.com/Nagi-ovo/voyager/blob/main/.github/BROWSER_TESTING.md)完成必要的載入、啟用/停用、重新整理與 SPA 導覽檢查，並記錄瀏覽器版本和證據。
 
 保持簡單、克制、可撤銷。一個外掛只解決一個明確問題，通常會更容易合併和維護。
