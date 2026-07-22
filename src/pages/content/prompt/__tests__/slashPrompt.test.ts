@@ -1030,6 +1030,30 @@ describe('slash prompt completion', () => {
     expect(input.classList.contains('gv-pm-slash-contenteditable-hide-value')).toBe(false);
   });
 
+  it('expands each live inline prompt exactly once when sending', () => {
+    const input = createContentEditable('First /review');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+
+    input.append(document.createTextNode(', then /trans'));
+    const range = document.createRange();
+    range.selectNodeContents(input);
+    range.collapse(false);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    typeInto(input);
+    press(input, 'Enter');
+    input.append(document.createTextNode('.'));
+
+    press(input, 'Enter');
+
+    expect(input.textContent).toBe(
+      'First Review this code and report correctness issues.\u00a0, then Translate the following text into Chinese.\u00a0.',
+    );
+  });
+
   it('unwraps inline tokens before a programmatic send-button click', () => {
     const input = createContentEditable('/review');
     const send = document.createElement('button');

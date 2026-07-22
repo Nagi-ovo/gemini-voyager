@@ -650,6 +650,11 @@ function expandPromptTokens(input?: HTMLElement | null): void {
       (left, right) => right.start - left.start,
     );
     for (const prompt of selected) {
+      // A live token is expanded by the DOM-token pass below. The remembered
+      // offset exists so a token that Gemini rebuilt as plain text can still
+      // be expanded; applying both paths to the same live token duplicates
+      // its body because a Range can insert text inside contenteditable=false.
+      if (getPromptAnchor(input, prompt).nativeToken) continue;
       if (readText(input).slice(prompt.start, prompt.start + prompt.name.length) !== prompt.name) {
         continue;
       }
