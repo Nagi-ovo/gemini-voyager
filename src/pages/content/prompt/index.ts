@@ -52,7 +52,7 @@ import { activatePromptText } from './promptClickAction';
 import { normalizePromptName } from './promptName';
 import { getScrollHintState } from './scrollHint';
 import {
-  type SlashPromptController,
+  createSlashPromptLifecycle,
   isGeminiSlashPromptSurface,
   startStoredPromptSlashCommand,
 } from './slashPrompt';
@@ -429,14 +429,17 @@ function computeAnchoredPosition(
 }
 
 export async function startPromptManager(): Promise<{ destroy: () => void }> {
-  let slashPromptController: SlashPromptController | null = null;
-  if (isGeminiSlashPromptSurface()) {
+  const slashPromptLifecycle = isGeminiSlashPromptSurface()
+    ? createSlashPromptLifecycle(startStoredPromptSlashCommand)
+    : null;
+  const setSlashPromptEnabled = async (enabled: boolean): Promise<void> => {
+    if (!slashPromptLifecycle) return;
     try {
-      slashPromptController = await startStoredPromptSlashCommand();
+      await slashPromptLifecycle.setEnabled(enabled);
     } catch (error) {
-      pmLogger.warn('Failed to start slash prompt completion', { error });
+      pmLogger.warn('Failed to update slash prompt completion state', { enabled, error });
     }
-  }
+  };
 
   let marked!: typeof MarkedFn;
   let DOMPurify!: typeof import('dompurify').default;
@@ -525,9 +528,10 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       // Ignore errors
     }
 
+    await setSlashPromptEnabled(!pmHiddenByUser);
+
     if (pmHiddenByUser && !changelogBadgeActive) {
       pmLogger.info('Prompt Manager is hidden by user settings');
-      slashPromptController?.destroy();
       return { destroy: () => {} };
     }
 
@@ -582,7 +586,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     // Prevent duplicate injection
     if (document.getElementById(ID.trigger)) {
-      return { destroy: () => slashPromptController?.destroy() };
+      return { destroy: () => slashPromptLifecycle?.destroy() };
     }
 
     // Trigger button
@@ -2151,6 +2155,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         const shouldHide = changes.gvHidePromptManager.newValue === true;
         pmHiddenByUser = shouldHide;
         pmLogger.info('Hide prompt manager setting changed', { shouldHide });
+        void setSlashPromptEnabled(!shouldHide);
         if (shouldHide && !changelogBadgeActive) {
           // Hide trigger and panel
           trigger.style.display = 'none';
@@ -2382,7 +2387,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     return {
       destroy: () => {
         try {
-          slashPromptController?.destroy();
+          slashPromptLifecycle?.destroy();
           window.removeEventListener('resize', onWindowResize);
           window.removeEventListener('scroll', onReposition);
           window.removeEventListener('pointerdown', onWindowPointerDown, { capture: true });
@@ -2420,7 +2425,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       },
     };
   } catch (err) {
-    slashPromptController?.destroy();
+    slashPromptLifecycle?.destroy();
     try {
       if (isExtensionContextInvalidatedError(err)) {
         return { destroy: () => {} };

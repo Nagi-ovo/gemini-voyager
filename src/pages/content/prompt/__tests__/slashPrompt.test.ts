@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { vi } from 'vitest';
 
+import { StorageKeys } from '@/core/types/common';
 import type { PromptItem } from '@/core/types/sync';
 
 import {
@@ -67,8 +68,17 @@ function typeInto(input: HTMLElement): void {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-function press(input: HTMLElement, key: string): KeyboardEvent {
-  const event = new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+function press(
+  input: HTMLElement,
+  key: string,
+  init: Omit<KeyboardEventInit, 'key'> = {},
+): KeyboardEvent {
+  const event = new KeyboardEvent('keydown', {
+    ...init,
+    key,
+    bubbles: true,
+    cancelable: true,
+  });
   input.dispatchEvent(event);
   return event;
 }
@@ -1030,6 +1040,79 @@ describe('slash prompt completion', () => {
     expect(input.classList.contains('gv-pm-slash-contenteditable-hide-value')).toBe(false);
   });
 
+  it('preserves the token on plain Enter when Ctrl/Cmd+Enter send mode is enabled', () => {
+    const input = createContentEditable('/review');
+    destroy = startPromptSlashCommand({
+      initialItems: prompts,
+      initialCtrlEnterSend: true,
+    }).destroy;
+    typeInto(input);
+    press(input, 'Tab');
+
+    const newlineEvent = press(input, 'Enter');
+
+    expect(newlineEvent.defaultPrevented).toBe(false);
+    expect(input.querySelector('.gv-pm-slash-token')).not.toBeNull();
+    expect(input.textContent).toBe('Code Review\u00a0');
+
+    const sendEvent = press(input, 'Enter', { ctrlKey: true });
+
+    expect(sendEvent.defaultPrevented).toBe(true);
+    expect(input.querySelector('.gv-pm-slash-token')).toBeNull();
+    expect(input.textContent).toContain('Review this code and report correctness issues.');
+  });
+
+  it('updates the Ctrl/Cmd+Enter send mode when the sync setting changes', () => {
+    const input = createContentEditable('/review');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Tab');
+    const addStorageListener = chrome.storage.onChanged.addListener as unknown as ReturnType<
+      typeof vi.fn
+    >;
+    const storageListener = addStorageListener.mock.calls.at(-1)?.[0] as
+      | ((changes: Record<string, chrome.storage.StorageChange>, area: string) => void)
+      | undefined;
+
+    storageListener?.(
+      { [StorageKeys.CTRL_ENTER_SEND]: { oldValue: false, newValue: true } },
+      'sync',
+    );
+    const newlineEvent = press(input, 'Enter');
+
+    expect(storageListener).toBeDefined();
+    expect(newlineEvent.defaultPrevented).toBe(false);
+    expect(input.querySelector('.gv-pm-slash-token')).not.toBeNull();
+  });
+
+  it('does not reopen completion from a slash in the expanded body before replaying Enter', async () => {
+    const input = createContentEditable('/slash');
+    const slashBodyPrompt: PromptItem = {
+      id: 'slash-body',
+      name: 'Slash Body',
+      text: 'Use /review',
+      tags: [],
+      createdAt: 4,
+    };
+    destroy = startPromptSlashCommand({
+      initialItems: [slashBodyPrompt, ...prompts],
+    }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+
+    let hostEnterCount = 0;
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') hostEnterCount++;
+    });
+    press(input, 'Enter');
+    await new Promise((resolve) => window.setTimeout(resolve, 10));
+
+    expect(hostEnterCount).toBe(1);
+    expect(input.textContent).toBe('Use /review\u00a0');
+    expect(input.querySelector('.gv-pm-slash-token')).toBeNull();
+    expect(document.getElementById('gv-pm-slash-root')?.hidden).toBe(true);
+  });
+
   it('expands each live inline prompt exactly once when sending', () => {
     const input = createContentEditable('First /review');
     destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
@@ -1055,10 +1138,22 @@ describe('slash prompt completion', () => {
   });
 
   it('unwraps inline tokens before a programmatic send-button click', () => {
-    const input = createContentEditable('/review');
-    const send = document.createElement('button');
-    send.setAttribute('aria-label', 'Send message');
-    document.body.appendChild(send);
+    document.body.innerHTML = `
+      <form>
+        <rich-textarea><div id="question-input" contenteditable="true" role="textbox">/review</div></rich-textarea>
+        <button type="button" aria-label="Send message"></button>
+      </form>
+    `;
+    const input = document.getElementById('question-input')!;
+    const send = document.querySelector<HTMLButtonElement>('button')!;
+    setRect(input);
+    input.focus();
+    const range = document.createRange();
+    range.selectNodeContents(input);
+    range.collapse(false);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
     destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
     typeInto(input);
     press(input, 'Enter');
@@ -1067,6 +1162,55 @@ describe('slash prompt completion', () => {
 
     expect(input.querySelector('.gv-pm-slash-token')).toBeNull();
     expect(input.textContent).toContain('Review this code and report correctness issues.');
+  });
+
+  it.each([
+    ['localized label', '<button type="button" aria-label="发送消息"></button>', 'button'],
+    [
+      'icon only',
+      '<button type="button"><span class="material-symbols-outlined">send</span></button>',
+      '.material-symbols-outlined',
+    ],
+  ])('unwraps inline tokens for a %s send button', (_name, buttonHtml, clickSelector) => {
+    document.body.innerHTML = `
+      <form>
+        <rich-textarea><div id="question-input" contenteditable="true" role="textbox">/review</div></rich-textarea>
+        ${buttonHtml}
+      </form>
+    `;
+    const input = document.getElementById('question-input')!;
+    const clickTarget = document.querySelector<HTMLElement>(clickSelector)!;
+    setRect(input);
+    input.focus();
+    const range = document.createRange();
+    range.selectNodeContents(input);
+    range.collapse(false);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+
+    clickTarget.click();
+
+    expect(input.querySelector('.gv-pm-slash-token')).toBeNull();
+    expect(input.textContent).toContain('Review this code and report correctness issues.');
+  });
+
+  it('does not unwrap prompts for an unrelated send-looking button', () => {
+    const input = createContentEditable('/review');
+    const feedback = document.createElement('button');
+    feedback.setAttribute('aria-label', 'Send feedback');
+    document.body.appendChild(feedback);
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+
+    feedback.click();
+
+    expect(input.querySelector('.gv-pm-slash-token')).not.toBeNull();
+    expect(input.textContent).toBe('Code Review\u00a0');
   });
 
   it('unwraps tokens only when their chat form is submitted', () => {
@@ -1190,6 +1334,63 @@ describe('slash prompt completion', () => {
     expect(event.defaultPrevented).toBe(true);
     expect(input.value).toBe('');
     expect(document.querySelector('.gv-pm-slash-textarea-token')).toBeNull();
+  });
+
+  it('keeps later textarea prompts tracked when a selected earlier prompt is deleted', () => {
+    document.body.innerHTML = '<div class="input-area"><textarea></textarea></div>';
+    const input = document.querySelector('textarea')!;
+    setRect(input);
+    input.value = '/review';
+    input.setSelectionRange(input.value.length, input.value.length);
+    input.focus();
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+    input.setRangeText(' /trans', input.value.length, input.value.length, 'end');
+    typeInto(input);
+    press(input, 'Enter');
+
+    input.setSelectionRange(0, 'Code Review'.length);
+    const deleteEvent = press(input, 'Delete');
+    input.setRangeText('', 0, 'Code Review'.length, 'start');
+    typeInto(input);
+
+    expect(deleteEvent.defaultPrevented).toBe(false);
+    expect(document.querySelectorAll('.gv-pm-slash-textarea-token')).toHaveLength(1);
+    expect(document.querySelector('.gv-pm-slash-textarea-token')?.textContent).toBe('Translator');
+
+    input.setSelectionRange(input.value.length, input.value.length);
+    const sendEvent = press(input, 'Enter');
+
+    expect(sendEvent.defaultPrevented).toBe(true);
+    expect(input.value).toContain('Translate the following text into Chinese.');
+    expect(input.value).not.toContain('Translator');
+  });
+
+  it('does not forget a textarea prompt when deleting ordinary text with the same name', () => {
+    document.body.innerHTML = '<div class="input-area"><textarea></textarea></div>';
+    const input = document.querySelector('textarea')!;
+    setRect(input);
+    input.value = '/review';
+    input.setSelectionRange(input.value.length, input.value.length);
+    input.focus();
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+    input.setRangeText('Code Review', input.value.length, input.value.length, 'end');
+    typeInto(input);
+
+    const ordinaryStart = input.value.lastIndexOf('Code Review');
+    input.setSelectionRange(ordinaryStart, ordinaryStart + 'Code Review'.length);
+    press(input, 'Delete');
+    input.setRangeText('', ordinaryStart, ordinaryStart + 'Code Review'.length, 'start');
+    typeInto(input);
+
+    expect(document.querySelectorAll('.gv-pm-slash-textarea-token')).toHaveLength(1);
+    input.setSelectionRange(input.value.length, input.value.length);
+    const sendEvent = press(input, 'Enter');
+    expect(sendEvent.defaultPrevented).toBe(true);
+    expect(input.value).toContain('Review this code and report correctness issues.');
   });
 
   it('ignores the Prompt Manager form textarea', () => {

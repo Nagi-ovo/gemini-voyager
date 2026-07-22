@@ -5,6 +5,7 @@ import { StorageKeys } from '@/core/types/common';
 import { type PromptItem } from '@/core/types/sync';
 
 import { findChatInput } from '../chatInput/index';
+import { findClosestSendActionButton } from '../sendBehavior/sendButton';
 
 const ROOT_ID = 'gv-pm-slash-root';
 const LIST_ID = 'gv-pm-slash-list';
@@ -23,12 +24,15 @@ const CHAT_INPUT_SELECTOR =
   'rich-textarea [contenteditable="true"], div[contenteditable="true"][role="textbox"], ' +
   '.input-area textarea, textarea[placeholder*="Ask"], textarea';
 
-const SEND_BUTTON_SELECTOR =
-  'button[aria-label*="Send"], button[aria-label*="send"], button[data-tooltip*="Send"], ' +
-  'button[data-tooltip*="send"], button[data-testid*="send"], button[data-testid*="submit"], ' +
-  '[data-send-button], .send-button';
+const SEND_COMPOSER_SELECTOR =
+  'form, .text-input-field, .input-area, ms-prompt-input-wrapper, chat-message';
 
 export interface SlashPromptController {
+  destroy: () => void;
+}
+
+export interface SlashPromptLifecycle {
+  setEnabled: (enabled: boolean) => Promise<void>;
   destroy: () => void;
 }
 
@@ -42,6 +46,7 @@ interface PromptQuery {
 
 interface SlashPromptOptions {
   initialItems?: PromptItem[];
+  initialCtrlEnterSend?: boolean;
 }
 
 interface SelectedPrompt {
@@ -56,6 +61,50 @@ type PromptBackspaceResult =
   | { kind: 'prompt'; index: number; caretOffset: number };
 
 const selectedPrompts = new Map<HTMLElement, SelectedPrompt[]>();
+
+/** Keeps one slash controller alive while enabled and safely absorbs async enable/disable races. */
+export function createSlashPromptLifecycle(
+  start: () => Promise<SlashPromptController>,
+): SlashPromptLifecycle {
+  let enabled = false;
+  let controller: SlashPromptController | null = null;
+  let pendingStart: Promise<void> | null = null;
+
+  const stopController = (): void => {
+    controller?.destroy();
+    controller = null;
+  };
+
+  const setEnabled = async (nextEnabled: boolean): Promise<void> => {
+    enabled = nextEnabled;
+    if (!enabled) {
+      stopController();
+      return;
+    }
+    if (controller) return;
+    if (pendingStart) return pendingStart;
+
+    const startAttempt = (async () => {
+      const nextController = await start();
+      if (enabled && !controller) controller = nextController;
+      else nextController.destroy();
+    })();
+    pendingStart = startAttempt;
+    try {
+      await startAttempt;
+    } finally {
+      if (pendingStart === startAttempt) pendingStart = null;
+    }
+  };
+
+  return {
+    setEnabled,
+    destroy: () => {
+      enabled = false;
+      stopController();
+    },
+  };
+}
 
 export function isGeminiSlashPromptSurface(pageUrl = window.location.href): boolean {
   try {
@@ -697,29 +746,55 @@ function expandTextareaPromptTokens(input: HTMLTextAreaElement): void {
   selectedPrompts.delete(input);
 }
 
-function hasPromptToken(input?: HTMLElement): boolean {
-  if (input && selectedPrompts.has(input)) return true;
-  if (!input && selectedPrompts.size > 0) return true;
-  if (input?.querySelector(`.${TOKEN_CLASS}`)) return true;
-  return Boolean(document.querySelector(`.${TEXTAREA_TOKEN_CLASS}`));
+function hasPromptToken(input: HTMLElement): boolean {
+  return selectedPrompts.has(input) || Boolean(input.querySelector(`.${TOKEN_CLASS}`));
 }
 
-function selectionContainsPrompt(input: HTMLElement): boolean {
+function getSelectedPromptIndexes(input: HTMLElement): number[] {
   const prompts = selectedPrompts.get(input) || [];
-  if (prompts.length === 0) return false;
+  if (prompts.length === 0) return [];
+
+  let selectionStart: number;
+  let selectionEnd: number;
   if (input instanceof HTMLTextAreaElement) {
-    const start = input.selectionStart ?? 0;
-    const end = input.selectionEnd ?? start;
-    if (start === end) return false;
-    const selectedText = input.value.slice(start, end);
-    return prompts.some((prompt) => selectedText.includes(prompt.name));
+    selectionStart = input.selectionStart ?? 0;
+    selectionEnd = input.selectionEnd ?? selectionStart;
+  } else {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return [];
+    const range = selection.getRangeAt(0);
+    if (!input.contains(range.startContainer) || !input.contains(range.endContainer)) {
+      return [];
+    }
+    const startRange = document.createRange();
+    startRange.selectNodeContents(input);
+    startRange.setEnd(range.startContainer, range.startOffset);
+    selectionStart = startRange.toString().length;
+    const endRange = document.createRange();
+    endRange.selectNodeContents(input);
+    endRange.setEnd(range.endContainer, range.endOffset);
+    selectionEnd = endRange.toString().length;
   }
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return false;
-  const range = selection.getRangeAt(0);
-  if (!input.contains(range.commonAncestorContainer)) return false;
-  const selectedText = range.toString();
-  return prompts.some((prompt) => selectedText.includes(prompt.name));
+
+  if (selectionStart === selectionEnd) return [];
+  return prompts.flatMap((prompt, index) => {
+    const promptEnd = prompt.start + prompt.name.length;
+    return selectionStart < promptEnd && selectionEnd > prompt.start ? [index] : [];
+  });
+}
+
+function findPromptInputForSendButton(button: HTMLElement): HTMLElement | null {
+  let ancestor = button.parentElement;
+  while (ancestor && ancestor !== document.body) {
+    if (ancestor.matches(SEND_COMPOSER_SELECTOR)) {
+      const input = Array.from(ancestor.querySelectorAll<HTMLElement>(CHAT_INPUT_SELECTOR)).find(
+        (candidate) => hasPromptToken(candidate),
+      );
+      if (input) return input;
+    }
+    ancestor = ancestor.parentElement;
+  }
+  return null;
 }
 
 function refreshPromptStarts(input: HTMLElement, inputText: string): void {
@@ -889,6 +964,8 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
   let selectedIndex = 0;
   let results: PromptItem[] = [];
   let textareaTokenInput: HTMLElement | null = null;
+  let ctrlEnterSendEnabled = options.initialCtrlEnterSend === true;
+  const slashRefreshSuppressedInputs = new WeakSet<HTMLElement>();
 
   const root = document.createElement('div');
   root.id = ROOT_ID;
@@ -925,6 +1002,51 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     activeQuery = null;
     results = [];
     hideTooltip();
+  }
+
+  function expandTokensForSend(input: HTMLElement): void {
+    close();
+    slashRefreshSuppressedInputs.add(input);
+    try {
+      if (input instanceof HTMLTextAreaElement) {
+        expandTextareaPromptTokens(input);
+      } else {
+        expandPromptTokens(input);
+      }
+    } finally {
+      slashRefreshSuppressedInputs.delete(input);
+    }
+    if (textareaTokenInput === input) {
+      removeTextareaTokens(textareaTokens, input);
+      textareaTokenInput = null;
+    }
+  }
+
+  function removeSelectedPromptRecords(input: HTMLElement, indexes: number[]): void {
+    if (indexes.length === 0) return;
+    const prompts = selectedPrompts.get(input);
+    if (!prompts) return;
+    const markers =
+      textareaTokenInput === input
+        ? Array.from(textareaTokens.querySelectorAll<HTMLElement>(`.${TEXTAREA_TOKEN_CLASS}`))
+        : [];
+    const descendingIndexes = [...new Set(indexes)].sort((left, right) => right - left);
+    for (const index of descendingIndexes) {
+      if (index < 0 || index >= prompts.length) continue;
+      prompts.splice(index, 1);
+      markers[index]?.remove();
+    }
+    if (prompts.length === 0) {
+      if (textareaTokenInput === input) {
+        removeTextareaTokens(textareaTokens, input);
+        textareaTokenInput = null;
+      } else {
+        selectedPrompts.delete(input);
+      }
+      return;
+    }
+    selectedPrompts.set(input, prompts);
+    input.classList.remove(TEXTAREA_HIDE_VALUE_CLASS);
   }
 
   function position(): void {
@@ -1086,6 +1208,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
   function onInput(event: Event): void {
     const input = inputFromTarget(event.target);
     if (!input) return;
+    if (slashRefreshSuppressedInputs.has(input)) return;
     const inputText = readText(input);
     if (textareaTokenInput && textareaTokenInput !== input) {
       const rememberedInput = textareaTokenInput;
@@ -1160,10 +1283,10 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
       close();
     }
 
-    if ((event.key === 'Backspace' || event.key === 'Delete') && selectionContainsPrompt(input)) {
-      removeTextareaTokens(textareaTokens, textareaTokenInput);
-      textareaTokenInput = null;
-      selectedPrompts.delete(input);
+    const selectedPromptIndexes =
+      event.key === 'Backspace' || event.key === 'Delete' ? getSelectedPromptIndexes(input) : [];
+    if (selectedPromptIndexes.length > 0) {
+      removeSelectedPromptRecords(input, selectedPromptIndexes);
       return;
     }
 
@@ -1218,18 +1341,15 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
       return;
     }
 
-    if (event.key === 'Enter' && (!event.shiftKey || event.ctrlKey || event.metaKey)) {
+    const isSendEnter = ctrlEnterSendEnabled
+      ? event.ctrlKey || event.metaKey
+      : !event.shiftKey || event.ctrlKey || event.metaKey;
+    if (event.key === 'Enter' && isSendEnter) {
       if (!hasPromptToken(input)) return;
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
-      if (input instanceof HTMLTextAreaElement) {
-        expandTextareaPromptTokens(input);
-      } else {
-        expandPromptTokens(input);
-      }
-      removeTextareaTokens(textareaTokens, textareaTokenInput);
-      textareaTokenInput = null;
+      expandTokensForSend(input);
       window.setTimeout(() => {
         input.dispatchEvent(
           new KeyboardEvent('keydown', {
@@ -1251,10 +1371,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     const input = inputFromTarget(event.target);
     if (!input) return;
     if (!root.hidden && activeInput === input) close();
-    if (!selectionContainsPrompt(input)) return;
-    removeTextareaTokens(textareaTokens, textareaTokenInput);
-    textareaTokenInput = null;
-    selectedPrompts.delete(input);
+    removeSelectedPromptRecords(input, getSelectedPromptIndexes(input));
   }
 
   function onPointerDown(event: Event): void {
@@ -1271,13 +1388,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    if (input instanceof HTMLTextAreaElement) {
-      expandTextareaPromptTokens(input);
-    } else {
-      expandPromptTokens(input);
-    }
-    removeTextareaTokens(textareaTokens, textareaTokenInput);
-    textareaTokenInput = null;
+    expandTokensForSend(input);
     const submitter = event instanceof SubmitEvent ? event.submitter : null;
     window.setTimeout(() => {
       if (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement) {
@@ -1290,14 +1401,14 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
 
   function onClick(event: Event): void {
     const target = event.target instanceof Element ? event.target : null;
-    const button = target?.closest<HTMLElement>(SEND_BUTTON_SELECTOR);
-    if (!button || !hasPromptToken()) return;
+    const button = target ? findClosestSendActionButton(target) : null;
+    if (!button) return;
+    const input = findPromptInputForSendButton(button);
+    if (!input) return;
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    expandAllPromptTokens();
-    removeTextareaTokens(textareaTokens, textareaTokenInput);
-    textareaTokenInput = null;
+    expandTokensForSend(input);
     window.setTimeout(() => button.click(), 0);
   }
 
@@ -1316,6 +1427,10 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     changes: Record<string, chrome.storage.StorageChange>,
     area: string,
   ): void {
+    if (area === 'sync' && changes[StorageKeys.CTRL_ENTER_SEND]) {
+      ctrlEnterSendEnabled = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;
+      return;
+    }
     if (area !== 'local') return;
     const change = changes[StorageKeys.PROMPT_ITEMS];
     if (!change || !Array.isArray(change.newValue)) return;
@@ -1361,8 +1476,14 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
 }
 
 export async function startStoredPromptSlashCommand(): Promise<SlashPromptController> {
-  const stored = await promptStorageService.get<PromptItem[]>(StorageKeys.PROMPT_ITEMS);
+  const [stored, sendMode] = await Promise.all([
+    promptStorageService.get<PromptItem[]>(StorageKeys.PROMPT_ITEMS),
+    browser.storage.sync
+      .get({ [StorageKeys.CTRL_ENTER_SEND]: false })
+      .catch(() => ({ [StorageKeys.CTRL_ENTER_SEND]: false })),
+  ]);
   return startPromptSlashCommand({
     initialItems: stored.success && Array.isArray(stored.data) ? stored.data : [],
+    initialCtrlEnterSend: sendMode[StorageKeys.CTRL_ENTER_SEND] === true,
   });
 }
