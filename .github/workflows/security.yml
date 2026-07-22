@@ -3,10 +3,12 @@ name: Security
 # Dependency vulnerability checks (#850).
 #
 # Exit behavior by event:
-#   pull_request       -> report-only, always green (baseline not yet clean)
-#   push (main)        -> report-only, always green
-#   workflow_dispatch  -> report-only, always green (manual verification)
+#   pull_request       -> advisory findings never fail this event (baseline not yet clean)
+#   push (main)        -> advisory findings never fail this event
+#   workflow_dispatch  -> advisory findings never fail this event (manual verification)
 #   schedule           -> fails when high/critical advisories exist, to notify maintainers
+# Operational failures fail the job on EVERY event: a missing, empty, or
+# malformed audit output is never treated as "no findings".
 #
 # This workflow only checks and reports. It never modifies package.json or
 # bun.lock and never opens upgrade PRs.
