@@ -854,12 +854,13 @@ function handlePromptBackspace(input: HTMLElement): PromptBackspaceResult | null
   if (input instanceof HTMLTextAreaElement) {
     const caret = input.selectionStart ?? 0;
     if (caret !== input.selectionEnd) return null;
-    const prefix = input.value.slice(0, caret);
     for (let index = prompts.length - 1; index >= 0; index--) {
       const prompt = prompts[index];
-      const start = prefix.lastIndexOf(prompt.name);
-      if (start < 0) continue;
-      const gap = prefix.slice(start + prompt.name.length);
+      const start = prompt.start;
+      const promptEnd = start + prompt.name.length;
+      if (input.value.slice(start, promptEnd) !== prompt.name) continue;
+      if (caret < promptEnd) continue;
+      const gap = input.value.slice(promptEnd, caret);
       if (gap !== '' && gap !== TOKEN_SPACER) continue;
       if (gap === TOKEN_SPACER) {
         const caretOffset = caret - TOKEN_SPACER.length;

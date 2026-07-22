@@ -1393,6 +1393,30 @@ describe('slash prompt completion', () => {
     expect(input.value).toContain('Review this code and report correctness issues.');
   });
 
+  it('does not treat matching ordinary text before the caret as a textarea prompt', () => {
+    document.body.innerHTML = '<div class="input-area"><textarea></textarea></div>';
+    const input = document.querySelector('textarea')!;
+    setRect(input);
+    input.value = '/review';
+    input.setSelectionRange(input.value.length, input.value.length);
+    input.focus();
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+    input.setRangeText('Code Review', input.value.length, input.value.length, 'end');
+    typeInto(input);
+
+    const backspaceEvent = press(input, 'Backspace');
+
+    expect(backspaceEvent.defaultPrevented).toBe(false);
+    expect(input.value).toBe('Code Review\u00a0Code Review');
+    expect(document.querySelectorAll('.gv-pm-slash-textarea-token')).toHaveLength(1);
+
+    const sendEvent = press(input, 'Enter');
+    expect(sendEvent.defaultPrevented).toBe(true);
+    expect(input.value).toBe('Review this code and report correctness issues.\u00a0Code Review');
+  });
+
   it('ignores the Prompt Manager form textarea', () => {
     document.body.innerHTML = `
       <div class="gv-pm-panel"><textarea class="gv-pm-input-text"></textarea></div>
