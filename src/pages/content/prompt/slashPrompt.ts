@@ -50,7 +50,20 @@ interface SelectedPrompt {
   text: string;
 }
 
+type PromptBackspaceResult =
+  | { kind: 'spacer'; caretOffset: number; token: HTMLElement | null }
+  | { kind: 'prompt'; index: number; caretOffset: number };
+
 const selectedPrompts = new Map<HTMLElement, SelectedPrompt[]>();
+
+export function isGeminiSlashPromptSurface(pageUrl = window.location.href): boolean {
+  try {
+    const hostname = new URL(pageUrl).hostname.toLowerCase();
+    return hostname === 'gemini.google.com' || hostname === 'business.gemini.google';
+  } catch {
+    return false;
+  }
+}
 
 function isPromptItem(value: unknown): value is PromptItem {
   if (!value || typeof value !== 'object') return false;
@@ -214,6 +227,33 @@ function restoreCaretAfterInput(input: HTMLElement, offset: number): void {
     ) {
       placeCaretAtTextOffset(input, offset);
     }
+  });
+}
+
+function restoreCaretAfterPrompt(
+  input: HTMLElement,
+  token: HTMLElement | null,
+  offset: number,
+): void {
+  const prefix = readText(input).slice(0, offset);
+  const place = () => {
+    if (!input.isConnected) return;
+    if (token?.isConnected) {
+      const range = document.createRange();
+      range.setStartAfter(token);
+      range.collapse(true);
+      const selection = window.getSelection();
+      if (!selection) return;
+      input.focus();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      return;
+    }
+    placeCaretAtTextOffset(input, offset);
+  };
+  place();
+  queueMicrotask(() => {
+    if (document.activeElement === input && readText(input).slice(0, offset) === prefix) place();
   });
 }
 
@@ -547,6 +587,17 @@ function removeTextareaTokens(container: HTMLElement, input: HTMLElement | null 
   }
 }
 
+function removeTextareaTokenAt(container: HTMLElement, input: HTMLElement, index: number): boolean {
+  const remaining = selectedPrompts.get(input) || [];
+  if (remaining.length === 0) {
+    removeTextareaTokens(container, input);
+    return true;
+  }
+  const marker = container.querySelectorAll<HTMLElement>(`.${TEXTAREA_TOKEN_CLASS}`)[index];
+  marker?.remove();
+  return false;
+}
+
 function expandPromptTokens(input?: HTMLElement | null): void {
   const tokens = Array.from(
     (input || document).querySelectorAll<HTMLElement>(`.${TOKEN_CLASS}`),
@@ -556,10 +607,21 @@ function expandPromptTokens(input?: HTMLElement | null): void {
     token.replaceWith(document.createTextNode(body));
   }
   if (input && tokens.length === 0) {
-    const selected = selectedPrompts.get(input) || [];
+    const selected = [...(selectedPrompts.get(input) || [])].sort(
+      (left, right) => right.start - left.start,
+    );
     for (const prompt of selected) {
-      const textNode = allTextNodes(input).find((node) => node.data.includes(prompt.name));
-      if (textNode) textNode.data = textNode.data.replace(prompt.name, prompt.text);
+      if (readText(input).slice(prompt.start, prompt.start + prompt.name.length) !== prompt.name) {
+        continue;
+      }
+      const start = findTextBoundary(input, prompt.start);
+      const end = findTextBoundary(input, prompt.start + prompt.name.length);
+      if (!start || !end) continue;
+      const range = document.createRange();
+      range.setStart(start.node, start.offset);
+      range.setEnd(end.node, end.offset);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(prompt.text));
     }
   }
   if (input && (tokens.length > 0 || selectedPrompts.has(input))) {
@@ -569,12 +631,15 @@ function expandPromptTokens(input?: HTMLElement | null): void {
 }
 
 function expandTextareaPromptTokens(input: HTMLTextAreaElement): void {
-  const selected = selectedPrompts.get(input) || [];
+  const selected = [...(selectedPrompts.get(input) || [])].sort(
+    (left, right) => right.start - left.start,
+  );
   let value = input.value;
   for (const prompt of selected) {
     const name = prompt.name;
     const body = prompt.text;
-    const index = name && body ? value.indexOf(name) : -1;
+    const index =
+      value.slice(prompt.start, prompt.start + name.length) === name ? prompt.start : -1;
     if (index >= 0) value = `${value.slice(0, index)}${body}${value.slice(index + name.length)}`;
   }
   if (value !== input.value) {
@@ -625,49 +690,81 @@ function refreshPromptStarts(input: HTMLElement, inputText: string): void {
   }
 }
 
-function isAtomicPromptGap(range: Range): boolean {
+function getAtomicPromptGap(range: Range): string | null {
   const contents = range.cloneContents();
-  if (contents.querySelector('*')) return false;
+  if (contents.querySelector('*')) return null;
   const gap = contents.textContent || '';
-  return gap === '' || gap === TOKEN_SPACER;
+  return gap === '' || gap === TOKEN_SPACER ? gap : null;
 }
 
-function removePromptBeforeCaret(input: HTMLElement): boolean {
+function findPromptTokenBeforeCaret(
+  input: HTMLElement,
+  promptId: string,
+  startOffset: number,
+  caretRange: Range,
+): HTMLElement | null {
+  const candidates = Array.from(input.querySelectorAll<HTMLElement>(`.${TOKEN_CLASS}`))
+    .filter((candidate) => candidate.dataset.gvPromptId === promptId)
+    .map((token) => {
+      const prefixRange = document.createRange();
+      prefixRange.selectNodeContents(input);
+      prefixRange.setEndBefore(token);
+      return { token, start: prefixRange.toString().length };
+    });
+  const exact = candidates.find((candidate) => candidate.start === startOffset);
+  if (exact) return exact.token;
+  return (
+    candidates
+      .filter(({ token }) => {
+        const tokenRange = document.createRange();
+        tokenRange.selectNode(token);
+        return tokenRange.compareBoundaryPoints(Range.END_TO_END, caretRange) <= 0;
+      })
+      .sort((left, right) => right.start - left.start)[0]?.token || null
+  );
+}
+
+function handlePromptBackspace(input: HTMLElement): PromptBackspaceResult | null {
   const prompts = selectedPrompts.get(input) || [];
-  if (prompts.length === 0) return false;
+  if (prompts.length === 0) return null;
 
   if (input instanceof HTMLTextAreaElement) {
     const caret = input.selectionStart ?? 0;
-    if (caret !== input.selectionEnd) return false;
+    if (caret !== input.selectionEnd) return null;
     const prefix = input.value.slice(0, caret);
-    for (const prompt of [...prompts].reverse()) {
+    for (let index = prompts.length - 1; index >= 0; index--) {
+      const prompt = prompts[index];
       const start = prefix.lastIndexOf(prompt.name);
       if (start < 0) continue;
       const gap = prefix.slice(start + prompt.name.length);
       if (gap !== '' && gap !== TOKEN_SPACER) continue;
+      if (gap === TOKEN_SPACER) {
+        const caretOffset = caret - TOKEN_SPACER.length;
+        input.setRangeText('', caretOffset, caret, 'end');
+        return { kind: 'spacer', caretOffset, token: null };
+      }
       input.setRangeText('', start, caret, 'end');
-      dispatchInput(input);
-      restoreCaretAfterInput(input, start);
-      return true;
+      prompts.splice(index, 1);
+      if (prompts.length === 0) selectedPrompts.delete(input);
+      return { kind: 'prompt', index, caretOffset: start };
     }
-    return false;
+    return null;
   }
 
   const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) return false;
+  if (!selection || selection.rangeCount === 0) return null;
   const caretRange = selection.getRangeAt(0);
-  if (!caretRange.collapsed || !input.contains(caretRange.commonAncestorContainer)) return false;
+  if (!caretRange.collapsed || !input.contains(caretRange.commonAncestorContainer)) return null;
   const prefixRange = caretRange.cloneRange();
   prefixRange.selectNodeContents(input);
   prefixRange.setEnd(caretRange.endContainer, caretRange.endOffset);
   const prefix = prefixRange.toString();
 
-  for (const prompt of [...prompts].reverse()) {
+  for (let index = prompts.length - 1; index >= 0; index--) {
+    const prompt = prompts[index];
     const startOffset = prefix.lastIndexOf(prompt.name);
     if (startOffset < 0) continue;
-    const token = Array.from(input.querySelectorAll<HTMLElement>(`.${TOKEN_CLASS}`)).find(
-      (candidate) => candidate.dataset.gvPromptId === prompt.id,
-    );
+    const token = findPromptTokenBeforeCaret(input, prompt.id, startOffset, caretRange);
     const gapRange = caretRange.cloneRange();
     if (token) {
       gapRange.setStartAfter(token);
@@ -676,24 +773,36 @@ function removePromptBeforeCaret(input: HTMLElement): boolean {
       if (!promptEnd) continue;
       gapRange.setStart(promptEnd.node, promptEnd.offset);
     }
-    if (!isAtomicPromptGap(gapRange)) continue;
+    const gap = getAtomicPromptGap(gapRange);
+    if (gap === null) continue;
+    if (gap === TOKEN_SPACER) {
+      gapRange.deleteContents();
+      gapRange.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(gapRange);
+      return {
+        kind: 'spacer',
+        caretOffset: startOffset + prompt.name.length,
+        token,
+      };
+    }
     const deleteRange = caretRange.cloneRange();
     if (token) {
       deleteRange.setStartBefore(token);
     } else {
       const start = findTextBoundary(input, startOffset);
-      if (!start) return false;
+      if (!start) return null;
       deleteRange.setStart(start.node, start.offset);
     }
     deleteRange.deleteContents();
     deleteRange.collapse(true);
     selection.removeAllRanges();
     selection.addRange(deleteRange);
-    dispatchInput(input);
-    restoreCaretAfterInput(input, startOffset);
-    return true;
+    prompts.splice(index, 1);
+    if (prompts.length === 0) selectedPrompts.delete(input);
+    return { kind: 'prompt', index, caretOffset: startOffset };
   }
-  return false;
+  return null;
 }
 
 export function expandAllPromptTokens(): void {
@@ -996,12 +1105,25 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
       return;
     }
 
-    if (event.key === 'Backspace' && removePromptBeforeCaret(input)) {
+    const backspaceResult = event.key === 'Backspace' ? handlePromptBackspace(input) : null;
+    if (backspaceResult) {
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
-      removeTextareaTokens(textareaTokens, textareaTokenInput);
-      textareaTokenInput = null;
+      if (backspaceResult.kind === 'prompt') {
+        const removedLastPrompt = removeTextareaTokenAt(
+          textareaTokens,
+          input,
+          backspaceResult.index,
+        );
+        if (removedLastPrompt) textareaTokenInput = null;
+      }
+      dispatchInput(input);
+      if (backspaceResult.kind === 'spacer') {
+        restoreCaretAfterPrompt(input, backspaceResult.token, backspaceResult.caretOffset);
+      } else {
+        restoreCaretAfterInput(input, backspaceResult.caretOffset);
+      }
       return;
     }
 

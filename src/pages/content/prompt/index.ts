@@ -51,7 +51,11 @@ import { extractPlainTitle } from './compactTitle';
 import { activatePromptText } from './promptClickAction';
 import { normalizePromptName } from './promptName';
 import { getScrollHintState } from './scrollHint';
-import { type SlashPromptController, startStoredPromptSlashCommand } from './slashPrompt';
+import {
+  type SlashPromptController,
+  isGeminiSlashPromptSurface,
+  startStoredPromptSlashCommand,
+} from './slashPrompt';
 import { formatStarredMessageTime } from './starredLibrary';
 import { sanitizeSelectedTags } from './tagFilterState';
 
@@ -426,10 +430,12 @@ function computeAnchoredPosition(
 
 export async function startPromptManager(): Promise<{ destroy: () => void }> {
   let slashPromptController: SlashPromptController | null = null;
-  try {
-    slashPromptController = await startStoredPromptSlashCommand();
-  } catch (error) {
-    pmLogger.warn('Failed to start slash prompt completion', { error });
+  if (isGeminiSlashPromptSurface()) {
+    try {
+      slashPromptController = await startStoredPromptSlashCommand();
+    } catch (error) {
+      pmLogger.warn('Failed to start slash prompt completion', { error });
+    }
   }
 
   let marked!: typeof MarkedFn;

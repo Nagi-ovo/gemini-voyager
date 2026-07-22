@@ -3,7 +3,11 @@ import { vi } from 'vitest';
 
 import type { PromptItem } from '@/core/types/sync';
 
-import { matchSlashPrompts, startPromptSlashCommand } from '../slashPrompt';
+import {
+  isGeminiSlashPromptSurface,
+  matchSlashPrompts,
+  startPromptSlashCommand,
+} from '../slashPrompt';
 
 const prompts: PromptItem[] = [
   {
@@ -74,6 +78,16 @@ describe('matchSlashPrompts', () => {
     expect(matchSlashPrompts(prompts, 'review').map((item) => item.id)).toEqual(['review']);
     expect(matchSlashPrompts(prompts, 'correctness')).toEqual([]);
     expect(matchSlashPrompts(prompts, 'legacy')).toEqual([]);
+  });
+});
+
+describe('isGeminiSlashPromptSurface', () => {
+  it('allows Gemini surfaces and rejects AI Studio and plugin platforms', () => {
+    expect(isGeminiSlashPromptSurface('https://gemini.google.com/app')).toBe(true);
+    expect(isGeminiSlashPromptSurface('https://business.gemini.google/app')).toBe(true);
+    expect(isGeminiSlashPromptSurface('https://aistudio.google.com/prompts/new_chat')).toBe(false);
+    expect(isGeminiSlashPromptSurface('https://chatgpt.com/c/abc')).toBe(false);
+    expect(isGeminiSlashPromptSurface('https://claude.ai/chat/abc')).toBe(false);
   });
 });
 
@@ -662,18 +676,129 @@ describe('slash prompt completion', () => {
     }
   });
 
-  it('keeps visual spacing after a prompt and removes it atomically with Backspace', () => {
+  it('removes the prompt spacer before removing the prompt with Backspace', () => {
     const input = createContentEditable('/review');
     destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
     typeInto(input);
     press(input, 'Enter');
 
     expect(input.textContent).toBe('Code Review\u00a0');
-    const event = press(input, 'Backspace');
+    const spacerEvent = press(input, 'Backspace');
 
-    expect(event.defaultPrevented).toBe(true);
+    expect(spacerEvent.defaultPrevented).toBe(true);
+    expect(input.textContent).toBe('Code Review');
+    expect(input.querySelector('.gv-pm-slash-token')).not.toBeNull();
+    expect(document.querySelector('.gv-pm-slash-textarea-token')).not.toBeNull();
+    expect(document.activeElement).toBe(input);
+
+    const promptEvent = press(input, 'Backspace');
+
+    expect(promptEvent.defaultPrevented).toBe(true);
     expect(input.textContent).toBe('');
     expect(document.querySelector('.gv-pm-slash-textarea-token')).toBeNull();
+  });
+
+  it('expands the stored prompt occurrence when the same name already appears earlier', () => {
+    const input = createContentEditable('Code Review notes: /review');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+
+    input.textContent = 'Code Review notes: Code Review\u00a0';
+    const caret = document.createRange();
+    caret.selectNodeContents(input);
+    caret.collapse(false);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(caret);
+    typeInto(input);
+
+    press(input, 'Enter');
+
+    expect(input.textContent).toBe(
+      'Code Review notes: Review this code and report correctness issues.\u00a0',
+    );
+  });
+
+  it('removes the repeated prompt token immediately before the caret', () => {
+    const input = createContentEditable('/review');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+    const firstToken = input.querySelector<HTMLElement>('.gv-pm-slash-token')!;
+
+    input.append(document.createTextNode('/review'));
+    const caret = document.createRange();
+    caret.selectNodeContents(input);
+    caret.collapse(false);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(caret);
+    typeInto(input);
+    press(input, 'Enter');
+    const tokens = input.querySelectorAll<HTMLElement>('.gv-pm-slash-token');
+    const secondToken = tokens[1];
+
+    const spacerEvent = press(input, 'Backspace');
+    const event = press(input, 'Backspace');
+
+    expect(spacerEvent.defaultPrevented).toBe(true);
+    expect(event.defaultPrevented).toBe(true);
+    expect(firstToken.isConnected).toBe(true);
+    expect(secondToken.isConnected).toBe(false);
+    expect(input.querySelectorAll('.gv-pm-slash-token')).toHaveLength(1);
+  });
+
+  it('preserves the first prompt styling and focus after deleting a later prompt', () => {
+    const input = createContentEditable('/review');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+    const firstToken = input.querySelector<HTMLElement>('.gv-pm-slash-token')!;
+    const firstColor = firstToken.style.getPropertyValue('color');
+
+    input.append(document.createTextNode('hello /trans'));
+    const secondCaret = document.createRange();
+    secondCaret.selectNodeContents(input);
+    secondCaret.collapse(false);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(secondCaret);
+    typeInto(input);
+    press(input, 'Enter');
+    const secondToken = input.querySelectorAll<HTMLElement>('.gv-pm-slash-token')[1];
+
+    press(input, 'Backspace');
+    press(input, 'Backspace');
+
+    expect(firstToken.isConnected).toBe(true);
+    expect(secondToken.isConnected).toBe(false);
+    expect(document.querySelectorAll('.gv-pm-slash-textarea-token')).toHaveLength(1);
+    expect(firstToken.style.getPropertyValue('color')).toBe(firstColor);
+    expect(firstToken.style.getPropertyPriority('color')).toBe('important');
+
+    const spacer = firstToken.nextSibling!;
+    while (spacer.nextSibling) spacer.nextSibling.remove();
+    const firstCaret = document.createRange();
+    firstCaret.setStartAfter(spacer);
+    firstCaret.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(firstCaret);
+    typeInto(input);
+
+    const spacerEvent = press(input, 'Backspace');
+
+    expect(spacerEvent.defaultPrevented).toBe(true);
+    expect(firstToken.isConnected).toBe(true);
+    expect(document.activeElement).toBe(input);
+
+    const firstEvent = press(input, 'Backspace');
+
+    expect(firstEvent.defaultPrevented).toBe(true);
+    expect(firstToken.isConnected).toBe(false);
+    expect(document.activeElement).toBe(input);
+    expect(selection.rangeCount).toBe(1);
+    expect(input.contains(selection.getRangeAt(0).commonAncestorContainer)).toBe(true);
   });
 
   it('keeps the caret at the removed prompt when Gemini rebuilds the editor', async () => {
@@ -705,6 +830,8 @@ describe('slash prompt completion', () => {
       });
     });
 
+    press(input, 'Backspace');
+    await Promise.resolve();
     press(input, 'Backspace');
     await Promise.resolve();
 
@@ -854,7 +981,7 @@ describe('slash prompt completion', () => {
     expect(input.classList.contains('gv-pm-slash-textarea-hide-value')).toBe(false);
   });
 
-  it('removes a selected textarea prompt with one Backspace', () => {
+  it('removes a selected textarea prompt with two Backspaces', () => {
     document.body.innerHTML = '<div class="input-area"><textarea></textarea></div>';
     const input = document.querySelector('textarea')!;
     input.value = '/review';
@@ -864,6 +991,12 @@ describe('slash prompt completion', () => {
     destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
     typeInto(input);
     press(input, 'Tab');
+
+    const spacerEvent = press(input, 'Backspace');
+
+    expect(spacerEvent.defaultPrevented).toBe(true);
+    expect(input.value).toBe('Code Review');
+    expect(document.querySelector('.gv-pm-slash-textarea-token')).not.toBeNull();
 
     const event = press(input, 'Backspace');
 
