@@ -615,7 +615,7 @@ function expandPromptTokens(input?: HTMLElement | null): void {
     const body = token.dataset.gvPromptText || token.textContent || '';
     token.replaceWith(document.createTextNode(body));
   }
-  if (input && tokens.length === 0) {
+  if (input) {
     const selected = [...(selectedPrompts.get(input) || [])].sort(
       (left, right) => right.start - left.start,
     );
