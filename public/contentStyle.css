@@ -10264,90 +10264,80 @@ body.gv-rtl .gv-pm-item-compact .gv-pm-bottom {
   display: inline-flex;
   max-width: min(280px, 80%);
   align-items: center;
-  box-sizing: border-box;
-  padding: 2px 7px;
-  border: 1px solid rgba(52, 168, 83, 0.36);
-  border-radius: 6px;
-  background: rgba(52, 168, 83, 0.14);
-  color: transparent;
+  color: #a8c7fa;
   cursor: default;
-  font-size: 0;
-  line-height: 0;
-  vertical-align: middle;
-}
-
-.gv-pm-slash-token[contenteditable='false']::before {
-  display: block;
-  max-width: 100%;
-  overflow: hidden;
-  color: #81c995;
-  content: attr(data-gv-prompt-name);
-  font-family: 'Google Sans', Roboto, Arial, sans-serif;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 20px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font: inherit;
+  font-weight: inherit;
+  vertical-align: baseline;
 }
 
 .theme-host.light-theme .gv-pm-slash-token[contenteditable='false'],
 body.light-theme .gv-pm-slash-token[contenteditable='false'],
 html.light .gv-pm-slash-token[contenteditable='false'],
 .gv-pm-slash-token[contenteditable='false'][data-gv-theme='light'] {
-  border-color: rgba(19, 115, 51, 0.3);
-  background: rgba(52, 168, 83, 0.1);
-}
-
-.theme-host.light-theme .gv-pm-slash-token[contenteditable='false']::before,
-body.light-theme .gv-pm-slash-token[contenteditable='false']::before,
-html.light .gv-pm-slash-token[contenteditable='false']::before,
-.gv-pm-slash-token[contenteditable='false'][data-gv-theme='light']::before {
-  color: #137333;
+  color: #0b57d0;
 }
 
 .gv-pm-slash-textarea-tokens {
   position: fixed;
   z-index: 2147483644;
   display: none;
-  flex-wrap: wrap;
-  gap: 4px;
   pointer-events: none;
 }
 
 .gv-pm-slash-textarea-tokens-visible {
+  display: block;
+}
+
+.gv-pm-slash-textarea-tokens[data-gv-input-kind='textarea'] {
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.gv-pm-slash-textarea-tokens-visible[data-gv-input-kind='textarea'] {
   display: flex;
 }
 
 .gv-pm-slash-textarea-token {
+  position: fixed;
   display: inline-flex;
   max-width: 180px;
-  overflow: hidden;
-  align-items: center;
-  padding: 2px 7px;
-  border: 1px solid rgba(52, 168, 83, 0.36);
-  border-radius: 6px;
-  background: rgba(32, 33, 36, 0.96);
-  color: #81c995;
+  color: #a8c7fa !important;
   cursor: default;
-  font-family: 'Google Sans', Roboto, Arial, sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 20px;
+  font-weight: inherit;
   pointer-events: auto;
+  white-space: nowrap;
+}
+
+.gv-pm-slash-textarea-tokens[data-gv-input-kind='textarea'] .gv-pm-slash-textarea-token {
+  position: static;
+}
+
+.gv-pm-slash-textarea-token-name {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .gv-pm-slash-textarea-tokens[data-gv-theme='light'] .gv-pm-slash-textarea-token {
-  border-color: rgba(19, 115, 51, 0.3);
-  background: rgba(255, 255, 255, 0.98);
-  color: #137333;
+  color: #0b57d0 !important;
+}
+
+.gv-pm-slash-textarea-token-native {
+  color: transparent !important;
 }
 
 textarea.gv-pm-slash-textarea-has-token {
   padding-top: calc(
     var(--gv-pm-slash-native-padding-top, 0px) + var(--gv-pm-slash-token-offset, 36px)
   ) !important;
+}
+
+textarea.gv-pm-slash-textarea-hide-value {
+  color: transparent !important;
+  caret-color: auto;
 }
 
 .gv-pm-slash-tooltip {
@@ -10373,6 +10363,7 @@ textarea.gv-pm-slash-textarea-has-token {
 
 .gv-pm-slash-tooltip-visible {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .gv-pm-slash-tooltip[data-gv-theme='light'] {

@@ -11,7 +11,11 @@ const LIST_ID = 'gv-pm-slash-list';
 const TOOLTIP_ID = 'gv-pm-slash-tooltip';
 const TOKEN_CLASS = 'gv-pm-slash-token';
 const TEXTAREA_TOKEN_CLASS = 'gv-pm-slash-textarea-token';
+const TEXTAREA_TOKEN_NAME_CLASS = 'gv-pm-slash-textarea-token-name';
+const NATIVE_TOKEN_MARKER_CLASS = 'gv-pm-slash-textarea-token-native';
 const MAX_RESULTS = 8;
+const TOKEN_SPACER = '\u00a0';
+const TOOLTIP_HIDE_GRACE_MS = 150;
 
 const CHAT_INPUT_SELECTOR =
   '[data-testid="chat-input"][contenteditable="true"], #prompt-textarea[contenteditable="true"], ' +
@@ -38,6 +42,15 @@ interface PromptQuery {
 interface SlashPromptOptions {
   initialItems?: PromptItem[];
 }
+
+interface SelectedPrompt {
+  id: string;
+  name: string;
+  start: number;
+  text: string;
+}
+
+const selectedPrompts = new Map<HTMLElement, SelectedPrompt[]>();
 
 function isPromptItem(value: unknown): value is PromptItem {
   if (!value || typeof value !== 'object') return false;
@@ -191,18 +204,23 @@ function dispatchInput(input: HTMLElement): void {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
+function rememberPrompt(input: HTMLElement, prompt: PromptItem, start: number): void {
+  const selected = selectedPrompts.get(input) || [];
+  selected.push({ id: prompt.id, name: prompt.name!.trim(), start, text: prompt.text });
+  selectedPrompts.set(input, selected);
+}
+
 function createPromptToken(prompt: PromptItem): HTMLSpanElement {
   const token = document.createElement('span');
   token.className = TOKEN_CLASS;
   token.contentEditable = 'false';
   token.dataset.gvPromptId = prompt.id;
   token.dataset.gvPromptName = prompt.name!.trim();
+  token.dataset.gvPromptText = prompt.text;
   token.dataset.gvTheme = detectTheme();
   token.setAttribute('role', 'button');
   token.setAttribute('aria-label', prompt.name!.trim());
-  // Keep the body as the token's real text so editor integrations and native
-  // send handlers still see the complete prompt even if they ignore metadata.
-  token.textContent = prompt.text;
+  token.textContent = prompt.name!.trim();
   return token;
 }
 
@@ -212,7 +230,7 @@ function replaceContentEditableQuery(query: PromptQuery, prompt: PromptItem): bo
   range.deleteContents();
   const token = createPromptToken(prompt);
   range.insertNode(token);
-  const spacer = document.createTextNode('\u00a0');
+  const spacer = document.createTextNode(TOKEN_SPACER);
   token.after(spacer);
   setCaretAfter(query.input, spacer);
   dispatchInput(query.input);
@@ -222,7 +240,7 @@ function replaceContentEditableQuery(query: PromptQuery, prompt: PromptItem): bo
 function replaceTextareaQuery(query: PromptQuery, prompt: PromptItem): boolean {
   const textarea = query.input as HTMLTextAreaElement;
   textarea.focus();
-  textarea.setRangeText(prompt.text, query.start, query.end, 'end');
+  textarea.setRangeText(`${prompt.name!.trim()}${TOKEN_SPACER}`, query.start, query.end, 'end');
   dispatchInput(textarea);
   return true;
 }
@@ -234,8 +252,18 @@ function createTooltip(): HTMLDivElement {
   tooltip.id = TOOLTIP_ID;
   tooltip.className = 'gv-pm-slash-tooltip';
   tooltip.setAttribute('role', 'tooltip');
+  tooltip.addEventListener('mouseenter', cancelTooltipHide);
+  tooltip.addEventListener('mouseleave', scheduleTooltipHide);
   document.body.appendChild(tooltip);
   return tooltip;
+}
+
+let tooltipHideTimer: number | null = null;
+
+function cancelTooltipHide(): void {
+  if (tooltipHideTimer === null) return;
+  window.clearTimeout(tooltipHideTimer);
+  tooltipHideTimer = null;
 }
 
 function detectTheme(): 'light' | 'dark' {
@@ -262,7 +290,9 @@ function detectTheme(): 'light' | 'dark' {
 }
 
 function showTooltip(target: HTMLElement, text: string): void {
+  cancelTooltipHide();
   const tooltip = createTooltip();
+  tooltip.scrollTop = 0;
   tooltip.textContent = text;
   tooltip.dataset.gvTheme = detectTheme();
   tooltip.style.left = '0px';
@@ -289,14 +319,14 @@ function showTooltip(target: HTMLElement, text: string): void {
       top = listRect.top - tooltipRect.height - 6;
       if (top < padding) top = listRect.bottom + 6;
     }
-    top = Math.max(
-      padding,
-      Math.min(top, window.innerHeight - tooltipRect.height - padding),
-    );
+    top = Math.max(padding, Math.min(top, window.innerHeight - tooltipRect.height - padding));
   } else {
     left = Math.max(
       padding,
-      Math.min(targetRect.right - tooltipRect.width, window.innerWidth - tooltipRect.width - padding),
+      Math.min(
+        targetRect.right - tooltipRect.width,
+        window.innerWidth - tooltipRect.width - padding,
+      ),
     );
     top = targetRect.bottom + 6;
     if (top + tooltipRect.height > window.innerHeight - padding) {
@@ -308,26 +338,123 @@ function showTooltip(target: HTMLElement, text: string): void {
 }
 
 function hideTooltip(): void {
+  cancelTooltipHide();
   document.getElementById(TOOLTIP_ID)?.classList.remove('gv-pm-slash-tooltip-visible');
 }
 
-function positionTextareaTokens(container: HTMLElement, input: HTMLTextAreaElement): void {
-  const rect = input.getBoundingClientRect();
-  container.style.left = `${Math.round(rect.left + 8)}px`;
-  container.style.top = `${Math.round(rect.top + 6)}px`;
-  container.style.maxWidth = `${Math.max(120, rect.width - 16)}px`;
+function scheduleTooltipHide(): void {
+  cancelTooltipHide();
+  tooltipHideTimer = window.setTimeout(() => {
+    tooltipHideTimer = null;
+    document.getElementById(TOOLTIP_ID)?.classList.remove('gv-pm-slash-tooltip-visible');
+  }, TOOLTIP_HIDE_GRACE_MS);
 }
 
-function removeTextareaTokens(
-  container: HTMLElement,
-  input: HTMLTextAreaElement | null = null,
-): void {
+function getPromptAnchor(
+  input: HTMLElement,
+  prompt: SelectedPrompt,
+): { nativeToken: HTMLElement | null; rect: DOMRect | null; styleSource: Element } {
+  const start = findTextBoundary(input, prompt.start);
+  const end = findTextBoundary(input, prompt.start + prompt.name.length);
+  if (!start || !end) return { nativeToken: null, rect: null, styleSource: input };
+
+  const range = document.createRange();
+  range.setStart(start.node, start.offset);
+  range.setEnd(end.node, end.offset);
+  const startElement = start.node.parentElement;
+  const nativeToken =
+    startElement?.closest<HTMLElement>(`.${TOKEN_CLASS}`) ||
+    Array.from(input.querySelectorAll<HTMLElement>(`.${TOKEN_CLASS}`)).find(
+      (token) => token.dataset.gvPromptId === prompt.id && range.intersectsNode(token),
+    ) ||
+    null;
+  const styleSource = nativeToken || startElement || input;
+  if (typeof range.getBoundingClientRect === 'function') {
+    const rangeRect = range.getBoundingClientRect();
+    if (rangeRect.width && rangeRect.height) return { nativeToken, rect: rangeRect, styleSource };
+  }
+  const tokenRect = nativeToken?.getBoundingClientRect();
+  return {
+    nativeToken,
+    rect: tokenRect?.width && tokenRect.height ? tokenRect : null,
+    styleSource,
+  };
+}
+
+function syncMarkerTypography(marker: HTMLElement, source: Element, rect: DOMRect | null): void {
+  const sourceStyle = window.getComputedStyle(source);
+  const properties = [
+    'font-family',
+    'font-size',
+    'font-style',
+    'font-weight',
+    'font-stretch',
+    'font-variant',
+    'font-kerning',
+    'font-feature-settings',
+    'font-variation-settings',
+    'font-optical-sizing',
+    'letter-spacing',
+    'word-spacing',
+    'text-rendering',
+    'text-transform',
+  ];
+  properties.forEach((property) =>
+    marker.style.setProperty(property, sourceStyle.getPropertyValue(property)),
+  );
+  marker.style.lineHeight =
+    sourceStyle.lineHeight === 'normal' && rect ? `${rect.height}px` : sourceStyle.lineHeight;
+}
+
+function positionTextareaTokens(container: HTMLElement, input: HTMLElement): void {
+  const rect = input.getBoundingClientRect();
+  if (input instanceof HTMLTextAreaElement) {
+    container.dataset.gvInputKind = 'textarea';
+    container.style.left = `${Math.round(rect.left + 8)}px`;
+    container.style.top = `${Math.round(rect.top + 6)}px`;
+    container.style.maxWidth = `${Math.max(120, rect.width - 16)}px`;
+    container.querySelectorAll<HTMLElement>(`.${TEXTAREA_TOKEN_CLASS}`).forEach((marker) => {
+      marker.classList.remove(NATIVE_TOKEN_MARKER_CLASS);
+      marker.style.removeProperty('left');
+      marker.style.removeProperty('top');
+      marker.style.removeProperty('max-width');
+    });
+    return;
+  }
+
+  container.dataset.gvInputKind = 'contenteditable';
+  container.style.left = '0px';
+  container.style.top = '0px';
+  container.style.removeProperty('max-width');
+  const prompts = selectedPrompts.get(input) || [];
+  const markers = Array.from(container.querySelectorAll<HTMLElement>(`.${TEXTAREA_TOKEN_CLASS}`));
+  prompts.forEach((prompt, index) => {
+    const marker = markers[index];
+    if (!marker) return;
+    const anchor = getPromptAnchor(input, prompt);
+    const anchorRect = anchor.rect;
+    const left = anchorRect?.left ?? rect.left;
+    syncMarkerTypography(marker, anchor.styleSource, anchorRect);
+    marker.classList.toggle(NATIVE_TOKEN_MARKER_CLASS, Boolean(anchor.nativeToken));
+    marker.style.left = `${Math.round(left)}px`;
+    marker.style.top = `${Math.round(anchorRect?.top ?? rect.top)}px`;
+    marker.style.maxWidth = `${Math.max(20, rect.right - left)}px`;
+  });
+}
+
+function removeTextareaTokens(container: HTMLElement, input: HTMLElement | null = null): void {
   container.replaceChildren();
   container.classList.remove('gv-pm-slash-textarea-tokens-visible');
+  delete container.dataset.gvInputKind;
   if (input) {
+    selectedPrompts.delete(input);
     input.classList.remove('gv-pm-slash-textarea-has-token');
-    input.style.removeProperty('--gv-pm-slash-native-padding-top');
-    input.style.removeProperty('--gv-pm-slash-token-offset');
+    input.classList.remove('gv-pm-slash-textarea-hide-value');
+    input.classList.remove('gv-pm-slash-contenteditable-hide-value');
+    if (input instanceof HTMLTextAreaElement) {
+      input.style.removeProperty('--gv-pm-slash-native-padding-top');
+      input.style.removeProperty('--gv-pm-slash-token-offset');
+    }
   }
 }
 
@@ -336,10 +463,146 @@ function expandPromptTokens(input?: HTMLElement | null): void {
     (input || document).querySelectorAll<HTMLElement>(`.${TOKEN_CLASS}`),
   ).reverse();
   for (const token of tokens) {
-    const body = token.textContent || '';
+    const body = token.dataset.gvPromptText || token.textContent || '';
     token.replaceWith(document.createTextNode(body));
   }
-  if (tokens.length > 0 && input) dispatchInput(input);
+  if (input && tokens.length === 0) {
+    const selected = selectedPrompts.get(input) || [];
+    for (const prompt of selected) {
+      const textNode = allTextNodes(input).find((node) => node.data.includes(prompt.name));
+      if (textNode) textNode.data = textNode.data.replace(prompt.name, prompt.text);
+    }
+  }
+  if (input && (tokens.length > 0 || selectedPrompts.has(input))) {
+    selectedPrompts.delete(input);
+    dispatchInput(input);
+  }
+}
+
+function expandTextareaPromptTokens(input: HTMLTextAreaElement): void {
+  const selected = selectedPrompts.get(input) || [];
+  let value = input.value;
+  for (const prompt of selected) {
+    const name = prompt.name;
+    const body = prompt.text;
+    const index = name && body ? value.indexOf(name) : -1;
+    if (index >= 0) value = `${value.slice(0, index)}${body}${value.slice(index + name.length)}`;
+  }
+  if (value !== input.value) {
+    input.value = value;
+    dispatchInput(input);
+  }
+  selectedPrompts.delete(input);
+}
+
+function hasPromptToken(input?: HTMLElement): boolean {
+  if (input && selectedPrompts.has(input)) return true;
+  if (!input && selectedPrompts.size > 0) return true;
+  if (input?.querySelector(`.${TOKEN_CLASS}`)) return true;
+  return Boolean(document.querySelector(`.${TEXTAREA_TOKEN_CLASS}`));
+}
+
+function selectionContainsPrompt(input: HTMLElement): boolean {
+  const prompts = selectedPrompts.get(input) || [];
+  if (prompts.length === 0) return false;
+  if (input instanceof HTMLTextAreaElement) {
+    const start = input.selectionStart ?? 0;
+    const end = input.selectionEnd ?? start;
+    if (start === end) return false;
+    const selectedText = input.value.slice(start, end);
+    return prompts.some((prompt) => selectedText.includes(prompt.name));
+  }
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return false;
+  const range = selection.getRangeAt(0);
+  if (!input.contains(range.commonAncestorContainer)) return false;
+  const selectedText = range.toString();
+  return prompts.some((prompt) => selectedText.includes(prompt.name));
+}
+
+function refreshPromptStarts(input: HTMLElement, inputText: string): void {
+  for (const prompt of selectedPrompts.get(input) || []) {
+    const candidates: number[] = [];
+    let index = inputText.indexOf(prompt.name);
+    while (index >= 0) {
+      candidates.push(index);
+      index = inputText.indexOf(prompt.name, index + prompt.name.length);
+    }
+    if (candidates.length > 0) {
+      prompt.start = candidates.reduce((closest, candidate) =>
+        Math.abs(candidate - prompt.start) < Math.abs(closest - prompt.start) ? candidate : closest,
+      );
+    }
+  }
+}
+
+function isAtomicPromptGap(range: Range): boolean {
+  const contents = range.cloneContents();
+  if (contents.querySelector('*')) return false;
+  const gap = contents.textContent || '';
+  return gap === '' || gap === TOKEN_SPACER;
+}
+
+function removePromptBeforeCaret(input: HTMLElement): boolean {
+  const prompts = selectedPrompts.get(input) || [];
+  if (prompts.length === 0) return false;
+
+  if (input instanceof HTMLTextAreaElement) {
+    const caret = input.selectionStart ?? 0;
+    if (caret !== input.selectionEnd) return false;
+    const prefix = input.value.slice(0, caret);
+    for (const prompt of [...prompts].reverse()) {
+      const start = prefix.lastIndexOf(prompt.name);
+      if (start < 0) continue;
+      const gap = prefix.slice(start + prompt.name.length);
+      if (gap !== '' && gap !== TOKEN_SPACER) continue;
+      input.setRangeText('', start, caret, 'end');
+      dispatchInput(input);
+      return true;
+    }
+    return false;
+  }
+
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return false;
+  const caretRange = selection.getRangeAt(0);
+  if (!caretRange.collapsed || !input.contains(caretRange.commonAncestorContainer)) return false;
+  const prefixRange = caretRange.cloneRange();
+  prefixRange.selectNodeContents(input);
+  prefixRange.setEnd(caretRange.endContainer, caretRange.endOffset);
+  const prefix = prefixRange.toString();
+
+  for (const prompt of [...prompts].reverse()) {
+    const startOffset = prefix.lastIndexOf(prompt.name);
+    if (startOffset < 0) continue;
+    const token = Array.from(input.querySelectorAll<HTMLElement>(`.${TOKEN_CLASS}`)).find(
+      (candidate) => candidate.dataset.gvPromptId === prompt.id,
+    );
+    const gapRange = caretRange.cloneRange();
+    if (token) {
+      gapRange.setStartAfter(token);
+    } else {
+      const promptEnd = findTextBoundary(input, startOffset + prompt.name.length);
+      if (!promptEnd) continue;
+      gapRange.setStart(promptEnd.node, promptEnd.offset);
+    }
+    if (!isAtomicPromptGap(gapRange)) continue;
+    const deleteRange = caretRange.cloneRange();
+    if (token) {
+      deleteRange.setStartBefore(token);
+    } else {
+      const start = findTextBoundary(input, startOffset);
+      if (!start) return false;
+      deleteRange.setStart(start.node, start.offset);
+    }
+    deleteRange.deleteContents();
+    deleteRange.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(deleteRange);
+    dispatchInput(input);
+    return true;
+  }
+  return false;
 }
 
 export function expandAllPromptTokens(): void {
@@ -349,10 +612,24 @@ export function expandAllPromptTokens(): void {
     if (input) inputs.add(input);
   });
   for (const input of inputs) expandPromptTokens(input);
+  for (const input of selectedPrompts.keys()) {
+    if (input instanceof HTMLTextAreaElement) expandTextareaPromptTokens(input);
+    else expandPromptTokens(input);
+  }
+  document
+    .querySelectorAll<HTMLTextAreaElement>('textarea.gv-pm-slash-textarea-has-token')
+    .forEach((input) => expandTextareaPromptTokens(input));
   document.querySelectorAll<HTMLElement>(`.${TEXTAREA_TOKEN_CLASS}`).forEach((token) => {
     token.parentElement?.classList.remove('gv-pm-slash-textarea-tokens-visible');
     token.remove();
   });
+  document
+    .querySelectorAll<HTMLTextAreaElement>('textarea.gv-pm-slash-textarea-has-token')
+    .forEach((input) => {
+      input.classList.remove('gv-pm-slash-textarea-has-token', 'gv-pm-slash-textarea-hide-value');
+      input.style.removeProperty('--gv-pm-slash-native-padding-top');
+      input.style.removeProperty('--gv-pm-slash-token-offset');
+    });
 }
 
 export function startPromptSlashCommand(options: SlashPromptOptions = {}): SlashPromptController {
@@ -363,7 +640,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
   let activeQuery: PromptQuery | null = null;
   let selectedIndex = 0;
   let results: PromptItem[] = [];
-  let textareaTokenInput: HTMLTextAreaElement | null = null;
+  let textareaTokenInput: HTMLElement | null = null;
 
   const root = document.createElement('div');
   root.id = ROOT_ID;
@@ -380,6 +657,19 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
   textareaTokens.className = 'gv-pm-slash-textarea-tokens';
   textareaTokens.setAttribute('aria-hidden', 'false');
   document.body.appendChild(textareaTokens);
+
+  const tokenResizeObserver =
+    typeof ResizeObserver === 'function'
+      ? new ResizeObserver(() => {
+          if (!textareaTokenInput?.isConnected) return;
+          positionTextareaTokens(textareaTokens, textareaTokenInput);
+          requestAnimationFrame(() => {
+            if (textareaTokenInput?.isConnected) {
+              positionTextareaTokens(textareaTokens, textareaTokenInput);
+            }
+          });
+        })
+      : null;
 
   function close(): void {
     root.hidden = true;
@@ -406,20 +696,32 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     if (textareaTokenInput) positionTextareaTokens(textareaTokens, textareaTokenInput);
   }
 
-  function addTextareaToken(prompt: PromptItem, input: HTMLTextAreaElement): void {
+  function addTextareaToken(prompt: PromptItem, input: HTMLElement, hideValue: boolean): void {
+    tokenResizeObserver?.disconnect();
     textareaTokenInput = input;
+    tokenResizeObserver?.observe(input);
     const chip = document.createElement('span');
     chip.className = TEXTAREA_TOKEN_CLASS;
-    chip.textContent = prompt.name!.trim();
+    const name = document.createElement('span');
+    name.className = TEXTAREA_TOKEN_NAME_CLASS;
+    name.textContent = prompt.name!.trim();
+    chip.appendChild(name);
+    syncMarkerTypography(chip, input, null);
     chip.dataset.gvPromptText = prompt.text;
     chip.setAttribute('role', 'button');
     chip.setAttribute('aria-label', prompt.name!.trim());
     chip.addEventListener('mouseenter', () => showTooltip(chip, prompt.text));
-    chip.addEventListener('mouseleave', hideTooltip);
+    chip.addEventListener('mouseleave', scheduleTooltipHide);
     textareaTokens.appendChild(chip);
     textareaTokens.classList.add('gv-pm-slash-textarea-tokens-visible');
     positionTextareaTokens(textareaTokens, input);
-    if (!input.classList.contains('gv-pm-slash-textarea-has-token')) {
+    if (hideValue && input instanceof HTMLTextAreaElement) {
+      input.classList.add('gv-pm-slash-textarea-hide-value');
+    }
+    if (
+      input instanceof HTMLTextAreaElement &&
+      !input.classList.contains('gv-pm-slash-textarea-has-token')
+    ) {
       input.style.setProperty(
         '--gv-pm-slash-native-padding-top',
         window.getComputedStyle(input).paddingTop || '0px',
@@ -429,6 +731,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     const syncTokenOffset = () => {
       if (
         !textareaTokens.isConnected ||
+        !(input instanceof HTMLTextAreaElement) ||
         !input.classList.contains('gv-pm-slash-textarea-has-token')
       ) {
         return;
@@ -444,12 +747,19 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     if (!activeQuery || !results[index]) return false;
     const prompt = results[index];
     const query = activeQuery;
+    const hideInputValue = query.start === 0 && query.end === readText(query.input).length;
     const inserted =
       query.input instanceof HTMLTextAreaElement
         ? replaceTextareaQuery(query, prompt)
         : replaceContentEditableQuery(query, prompt);
     if (!inserted) return false;
-    if (query.input instanceof HTMLTextAreaElement) addTextareaToken(prompt, query.input);
+    rememberPrompt(query.input, prompt, query.start);
+    if (query.input instanceof HTMLTextAreaElement) {
+      const textarea = query.input;
+      addTextareaToken(prompt, textarea, hideInputValue);
+    } else {
+      addTextareaToken(prompt, query.input, hideInputValue);
+    }
     close();
     return true;
   }
@@ -487,7 +797,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
         renderSelectionState();
         showTooltip(row, prompt.text);
       });
-      row.addEventListener('mouseleave', hideTooltip);
+      row.addEventListener('mouseleave', scheduleTooltipHide);
       row.addEventListener('mousedown', (event) => {
         if (event.button !== 0) return;
         event.preventDefault();
@@ -522,9 +832,46 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
   function onInput(event: Event): void {
     const input = inputFromTarget(event.target);
     if (!input) return;
+    const inputText = readText(input);
+    if (textareaTokenInput && textareaTokenInput !== input) {
+      const rememberedInput = textareaTokenInput;
+      const rememberedPrompts = selectedPrompts.get(rememberedInput) || [];
+      if (
+        rememberedPrompts.length > 0 &&
+        rememberedPrompts.every((prompt) => inputText.includes(prompt.name))
+      ) {
+        selectedPrompts.delete(rememberedInput);
+        selectedPrompts.set(input, rememberedPrompts);
+        textareaTokenInput = input;
+        tokenResizeObserver?.disconnect();
+        tokenResizeObserver?.observe(input);
+      } else {
+        removeTextareaTokens(textareaTokens, rememberedInput);
+        textareaTokenInput = null;
+      }
+    }
+    const selected = selectedPrompts.get(input) || [];
+    if (
+      selected.length > 0 &&
+      (!inputText.trim() || !selected.every((prompt) => inputText.includes(prompt.name)))
+    ) {
+      removeTextareaTokens(textareaTokens, textareaTokenInput);
+      textareaTokenInput = null;
+      selectedPrompts.delete(input);
+    }
+    refreshPromptStarts(input, inputText);
     if (input instanceof HTMLTextAreaElement && !input.value.trim()) {
       removeTextareaTokens(textareaTokens, textareaTokenInput);
       textareaTokenInput = null;
+      selectedPrompts.delete(input);
+    }
+    if (textareaTokenInput?.isConnected) {
+      positionTextareaTokens(textareaTokens, textareaTokenInput);
+      requestAnimationFrame(() => {
+        if (textareaTokenInput?.isConnected) {
+          positionTextareaTokens(textareaTokens, textareaTokenInput);
+        }
+      });
     }
     refresh(event.target);
   }
@@ -533,6 +880,22 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     const input = inputFromTarget(event.target);
     if (!input) return;
     if (event.isComposing) return;
+
+    if ((event.key === 'Backspace' || event.key === 'Delete') && selectionContainsPrompt(input)) {
+      removeTextareaTokens(textareaTokens, textareaTokenInput);
+      textareaTokenInput = null;
+      selectedPrompts.delete(input);
+      return;
+    }
+
+    if (event.key === 'Backspace' && removePromptBeforeCaret(input)) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      removeTextareaTokens(textareaTokens, textareaTokenInput);
+      textareaTokenInput = null;
+      return;
+    }
 
     if (!root.hidden && activeInput === input && results.length > 0) {
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -564,55 +927,95 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     }
 
     if (event.key === 'Enter' && (!event.shiftKey || event.ctrlKey || event.metaKey)) {
-      expandPromptTokens(input);
+      if (!hasPromptToken(input)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
       if (input instanceof HTMLTextAreaElement) {
-        removeTextareaTokens(textareaTokens, textareaTokenInput);
-        textareaTokenInput = null;
+        expandTextareaPromptTokens(input);
+      } else {
+        expandPromptTokens(input);
       }
+      removeTextareaTokens(textareaTokens, textareaTokenInput);
+      textareaTokenInput = null;
+      window.setTimeout(() => {
+        input.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            key: 'Enter',
+            code: event.code || 'Enter',
+            bubbles: true,
+            cancelable: true,
+            ctrlKey: event.ctrlKey,
+            metaKey: event.metaKey,
+            shiftKey: event.shiftKey,
+          }),
+        );
+      }, 0);
     }
+  }
+
+  function onBeforeInput(event: InputEvent): void {
+    if (!event.inputType.startsWith('delete')) return;
+    const input = inputFromTarget(event.target);
+    if (!input || !selectionContainsPrompt(input)) return;
+    removeTextareaTokens(textareaTokens, textareaTokenInput);
+    textareaTokenInput = null;
+    selectedPrompts.delete(input);
   }
 
   function onPointerDown(event: Event): void {
     const target = event.target instanceof Element ? event.target : null;
-    if (target?.closest(`#${ROOT_ID}`)) return;
+    if (target?.closest(`#${ROOT_ID}, #${TOOLTIP_ID}`)) return;
     if (!target?.closest(CHAT_INPUT_SELECTOR)) close();
-    const button = target?.closest(SEND_BUTTON_SELECTOR);
-    if (button) {
-      expandAllPromptTokens();
-      removeTextareaTokens(textareaTokens, textareaTokenInput);
-      textareaTokenInput = null;
-    }
   }
 
   function onSubmit(event: Event): void {
     const form = event.target instanceof HTMLFormElement ? event.target : null;
     if (!form) return;
     const input = form.querySelector<HTMLElement>(CHAT_INPUT_SELECTOR);
-    if (!input) return;
-    expandPromptTokens(input);
+    if (!input || !hasPromptToken(input)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
     if (input instanceof HTMLTextAreaElement) {
-      removeTextareaTokens(textareaTokens, textareaTokenInput);
-      textareaTokenInput = null;
+      expandTextareaPromptTokens(input);
+    } else {
+      expandPromptTokens(input);
     }
+    removeTextareaTokens(textareaTokens, textareaTokenInput);
+    textareaTokenInput = null;
+    const submitter = event instanceof SubmitEvent ? event.submitter : null;
+    window.setTimeout(() => {
+      if (submitter instanceof HTMLButtonElement || submitter instanceof HTMLInputElement) {
+        form.requestSubmit(submitter);
+      } else {
+        form.requestSubmit();
+      }
+    }, 0);
   }
 
   function onClick(event: Event): void {
     const target = event.target instanceof Element ? event.target : null;
-    if (!target?.closest(SEND_BUTTON_SELECTOR)) return;
+    const button = target?.closest<HTMLElement>(SEND_BUTTON_SELECTOR);
+    if (!button || !hasPromptToken()) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
     expandAllPromptTokens();
     removeTextareaTokens(textareaTokens, textareaTokenInput);
     textareaTokenInput = null;
+    window.setTimeout(() => button.click(), 0);
   }
 
   function onPointerOver(event: PointerEvent): void {
     const target =
       event.target instanceof Element ? event.target.closest<HTMLElement>(`.${TOKEN_CLASS}`) : null;
-    if (target) showTooltip(target, target.textContent || '');
+    if (target) showTooltip(target, target.dataset.gvPromptText || target.textContent || '');
   }
 
   function onPointerOut(event: PointerEvent): void {
     const target = event.target instanceof Element ? event.target.closest(`.${TOKEN_CLASS}`) : null;
-    if (target) hideTooltip();
+    if (target) scheduleTooltipHide();
   }
 
   function onStorageChanged(
@@ -628,6 +1031,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
 
   const onScrollOrResize = () => position();
   document.addEventListener('input', onInput, true);
+  document.addEventListener('beforeinput', onBeforeInput, true);
   document.addEventListener('keydown', onKeydown, true);
   document.addEventListener('pointerdown', onPointerDown, true);
   document.addEventListener('click', onClick, true);
@@ -641,6 +1045,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
   return {
     destroy: () => {
       document.removeEventListener('input', onInput, true);
+      document.removeEventListener('beforeinput', onBeforeInput, true);
       document.removeEventListener('keydown', onKeydown, true);
       document.removeEventListener('pointerdown', onPointerDown, true);
       document.removeEventListener('click', onClick, true);
@@ -650,6 +1055,9 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
       document.removeEventListener('scroll', onScrollOrResize, true);
       window.removeEventListener('resize', onScrollOrResize);
       browser.storage.onChanged.removeListener(onStorageChanged);
+      tokenResizeObserver?.disconnect();
+      hideTooltip();
+      selectedPrompts.clear();
       removeTextareaTokens(textareaTokens, textareaTokenInput);
       root.remove();
       textareaTokens.remove();
