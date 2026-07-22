@@ -438,6 +438,56 @@ describe('slash prompt completion', () => {
     );
   });
 
+  it('closes completion immediately when the slash query is deleted', () => {
+    const input = createContentEditable('/');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+
+    expect(document.getElementById('gv-pm-slash-root')?.hidden).toBe(false);
+
+    const event = press(input, 'Backspace');
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(document.getElementById('gv-pm-slash-root')?.hidden).toBe(true);
+  });
+
+  it('closes completion for beforeinput deletion commands', () => {
+    const input = createContentEditable('/');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+
+    const event = new InputEvent('beforeinput', {
+      bubbles: true,
+      cancelable: true,
+      inputType: 'deleteContentBackward',
+    });
+    input.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(document.getElementById('gv-pm-slash-root')?.hidden).toBe(true);
+  });
+
+  it('reopens completion after deletion when the remaining text is still a slash query', () => {
+    const input = createContentEditable('/trans');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+
+    press(input, 'Backspace');
+    expect(document.getElementById('gv-pm-slash-root')?.hidden).toBe(true);
+
+    input.textContent = '/tran';
+    const range = document.createRange();
+    range.selectNodeContents(input);
+    range.collapse(false);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    typeInto(input);
+
+    expect(document.getElementById('gv-pm-slash-root')?.hidden).toBe(false);
+    expect(document.getElementById('gv-pm-slash-list')?.textContent).toContain('Translator');
+  });
+
   it('removes the external prompt marker when the editor content is deleted', () => {
     const input = createContentEditable('/review');
     destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;

@@ -916,6 +916,17 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     if (!input) return;
     if (event.isComposing) return;
 
+    if (
+      (event.key === 'Backspace' || event.key === 'Delete') &&
+      !root.hidden &&
+      activeInput === input
+    ) {
+      // Gemini can rebuild the editor while deleting, which means the ensuing
+      // input event may no longer resolve to this active input. Invalidate the
+      // old completion now; a still-valid slash query will reopen on input.
+      close();
+    }
+
     if ((event.key === 'Backspace' || event.key === 'Delete') && selectionContainsPrompt(input)) {
       removeTextareaTokens(textareaTokens, textareaTokenInput);
       textareaTokenInput = null;
@@ -992,7 +1003,9 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
   function onBeforeInput(event: InputEvent): void {
     if (!event.inputType.startsWith('delete')) return;
     const input = inputFromTarget(event.target);
-    if (!input || !selectionContainsPrompt(input)) return;
+    if (!input) return;
+    if (!root.hidden && activeInput === input) close();
+    if (!selectionContainsPrompt(input)) return;
     removeTextareaTokens(textareaTokens, textareaTokenInput);
     textareaTokenInput = null;
     selectedPrompts.delete(input);
