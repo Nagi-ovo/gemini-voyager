@@ -220,7 +220,10 @@ function createPromptToken(prompt: PromptItem): HTMLSpanElement {
   token.dataset.gvTheme = detectTheme();
   token.setAttribute('role', 'button');
   token.setAttribute('aria-label', prompt.name!.trim());
+  token.title = prompt.text;
   token.textContent = prompt.name!.trim();
+  applyPromptTokenColor(token);
+  bindPromptTooltip(token, prompt.text);
   return token;
 }
 
@@ -287,6 +290,24 @@ function detectTheme(): 'light' | 'dark' {
     window.matchMedia('(prefers-color-scheme: dark)').matches
     ? 'dark'
     : 'light';
+}
+
+function applyPromptTokenColor(token: HTMLElement): void {
+  token.dataset.gvTheme = detectTheme();
+  // Gemini's editor applies host styles to contenteditable=false spans. An
+  // inline important declaration keeps the selected prompt visibly branded in
+  // Firefox as well as Chromium, where the host selector can win over the
+  // injected stylesheet.
+  token.style.setProperty(
+    'color',
+    token.dataset.gvTheme === 'light' ? '#0b57d0' : '#a8c7fa',
+    'important',
+  );
+}
+
+function bindPromptTooltip(target: HTMLElement, text: string): void {
+  target.addEventListener('mouseenter', () => showTooltip(target, text));
+  target.addEventListener('mouseleave', scheduleTooltipHide);
 }
 
 function showTooltip(target: HTMLElement, text: string): void {
@@ -453,6 +474,7 @@ function positionTextareaTokens(container: HTMLElement, input: HTMLElement): voi
     marker.style.top = `${Math.round(anchorRect?.top ?? rect.top)}px`;
     marker.style.maxWidth = `${Math.max(20, rect.right - left)}px`;
   });
+  input.querySelectorAll<HTMLElement>(`.${TOKEN_CLASS}`).forEach(applyPromptTokenColor);
 }
 
 function removeTextareaTokens(container: HTMLElement, input: HTMLElement | null = null): void {
@@ -723,8 +745,8 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     chip.dataset.gvPromptText = prompt.text;
     chip.setAttribute('role', 'button');
     chip.setAttribute('aria-label', prompt.name!.trim());
-    chip.addEventListener('mouseenter', () => showTooltip(chip, prompt.text));
-    chip.addEventListener('mouseleave', scheduleTooltipHide);
+    chip.title = prompt.text;
+    bindPromptTooltip(chip, prompt.text);
     textareaTokens.appendChild(chip);
     textareaTokens.classList.add('gv-pm-slash-textarea-tokens-visible');
     positionTextareaTokens(textareaTokens, input);

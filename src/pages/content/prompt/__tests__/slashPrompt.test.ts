@@ -122,14 +122,17 @@ describe('slash prompt completion', () => {
     expect(token.dataset.gvPromptName).toBe('Translator');
     expect(token.textContent).toBe('Translator');
     expect(token.dataset.gvPromptText).toBe('Translate the following text into Chinese.');
+    expect(token.title).toBe('Translate the following text into Chinese.');
     expect(input.classList.contains('gv-pm-slash-contenteditable-hide-value')).toBe(false);
+    expect(token.style.getPropertyValue('color')).toBe('rgb(11, 87, 208)');
+    expect(token.style.getPropertyPriority('color')).toBe('important');
     const marker = document.querySelector<HTMLElement>('.gv-pm-slash-textarea-token')!;
     expect(marker.classList.contains('gv-pm-slash-textarea-token-native')).toBe(true);
     expect(marker.style.left).toBe('20px');
     expect(marker.style.top).toBe('300px');
     expect(document.getElementById('gv-pm-slash-root')?.hidden).toBe(true);
 
-    token.dispatchEvent(new Event('pointerover', { bubbles: true }));
+    token.dispatchEvent(new MouseEvent('mouseenter'));
     expect(document.getElementById('gv-pm-slash-tooltip')?.textContent).toBe(
       'Translate the following text into Chinese.',
     );
