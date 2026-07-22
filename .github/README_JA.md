@@ -14,10 +14,10 @@
     <img src="https://img.shields.io/badge/Brave-✓-FB542B?style=flat-square&logo=brave&logoColor=white" alt="Brave">
   </p>
   <p>
-    <img src="../badges/github-stars.svg" alt="GitHub Star">
-    <img src="../badges/github-forks.svg" alt="GitHub Fork">
-    <img src="../badges/github-release.svg" alt="最新バージョン">
-    <img src="../badges/github-downloads.svg" alt="GitHub ダウンロード数">
+    <img src="../docs/public/badges/github-stars.svg" alt="GitHub Star">
+    <img src="../docs/public/badges/github-forks.svg" alt="GitHub Fork">
+    <img src="../docs/public/badges/github-release.svg" alt="最新バージョン">
+    <img src="../docs/public/badges/github-downloads.svg" alt="GitHub ダウンロード数">
     <img src="https://img.shields.io/chrome-web-store/users/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome ユーザー数">
     <img src="https://img.shields.io/chrome-web-store/rating/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome 評価">
     <img src="https://img.shields.io/badge/edge%20users-50k%2B-0078D7?style=flat-square&logo=microsoftedge&logoColor=white" alt="Edge ユーザー数">
@@ -212,7 +212,7 @@ Voyager の開発中、私は AI 音声入力ツール **[Typeless (typeless.com
 
 バグ報告、機能提案、ドキュメントの改善など、あらゆる貢献を歓迎します！
 
-- **Issues**: [バグ報告](https://github.com/Nagi-ovo/voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) または [機能提案](https://github.com/Nagi-ovo/voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml) テンプレートを使用してください。
+- **Issues**: [バグ報告](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml) または [機能提案](https://github.com/Nagi-ovo/voyager/issues/new?template=feature_request.yml) テンプレートを使用してください。
 - **Pull Requests**: [CONTRIBUTING.md](./CONTRIBUTING.md) をご確認ください。
 
 <details>

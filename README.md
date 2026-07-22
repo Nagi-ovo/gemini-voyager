@@ -239,7 +239,7 @@ I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/refer?co
 
 We welcome contributions! Whether you want to report bugs, suggest features, improve documentation, or submit code:
 
-- **Issues**: Use our [bug report](https://github.com/Nagi-ovo/voyager/blob/main/.github/ISSUE_TEMPLATE/bug_report.md) or [feature request](https://github.com/Nagi-ovo/voyager/blob/main/.github/ISSUE_TEMPLATE/feature_request.yml) templates
+- **Issues**: Use our [bug report](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml) or [feature request](https://github.com/Nagi-ovo/voyager/issues/new?template=feature_request.yml) templates
 - **Pull Requests**: Check out [CONTRIBUTING.md](./.github/CONTRIBUTING.md) for guidelines
 
 <details>
