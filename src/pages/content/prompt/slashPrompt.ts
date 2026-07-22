@@ -275,7 +275,6 @@ function createPromptToken(prompt: PromptItem): HTMLSpanElement {
   token.dataset.gvTheme = detectTheme();
   token.setAttribute('role', 'button');
   token.setAttribute('aria-label', prompt.name!.trim());
-  token.title = prompt.text;
   token.textContent = prompt.name!.trim();
   applyPromptTokenColor(token);
   bindPromptTooltip(token, prompt.text);
@@ -809,7 +808,6 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     chip.dataset.gvPromptText = prompt.text;
     chip.setAttribute('role', 'button');
     chip.setAttribute('aria-label', prompt.name!.trim());
-    chip.title = prompt.text;
     bindPromptTooltip(chip, prompt.text);
     textareaTokens.appendChild(chip);
     textareaTokens.classList.add('gv-pm-slash-textarea-tokens-visible');

@@ -204,7 +204,7 @@ describe('slash prompt completion', () => {
     expect(token.dataset.gvPromptName).toBe('Translator');
     expect(token.textContent).toBe('Translator');
     expect(token.dataset.gvPromptText).toBe('Translate the following text into Chinese.');
-    expect(token.title).toBe('Translate the following text into Chinese.');
+    expect(token.hasAttribute('title')).toBe(false);
     expect(input.classList.contains('gv-pm-slash-contenteditable-hide-value')).toBe(false);
     expect(token.style.getPropertyValue('color')).toBe('rgb(11, 87, 208)');
     expect(token.style.getPropertyPriority('color')).toBe('important');
@@ -842,6 +842,7 @@ describe('slash prompt completion', () => {
     expect(input.value.trimEnd()).toBe('Code Review');
     expect(input.classList.contains('gv-pm-slash-textarea-hide-value')).toBe(true);
     expect(token.textContent).toBe('Code Review');
+    expect(token.hasAttribute('title')).toBe(false);
 
     token.dispatchEvent(new MouseEvent('mouseenter'));
     expect(document.getElementById('gv-pm-slash-tooltip')?.textContent).toBe(
