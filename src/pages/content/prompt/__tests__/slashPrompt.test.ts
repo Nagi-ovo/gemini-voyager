@@ -334,6 +334,37 @@ describe('slash prompt completion', () => {
     expect(sentText).toContain('Review this code and report correctness issues.');
   });
 
+  it('expands a rebuilt prompt after an earlier live token when sending', async () => {
+    const input = createContentEditable('/review');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+
+    input.append(document.createTextNode('/trans'));
+    const caret = document.createRange();
+    caret.selectNodeContents(input);
+    caret.collapse(false);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(caret);
+    typeInto(input);
+    press(input, 'Enter');
+
+    const tokens = input.querySelectorAll<HTMLElement>('.gv-pm-slash-token');
+    tokens[1].replaceWith(document.createTextNode(tokens[1].textContent || ''));
+    expect(input.querySelectorAll('.gv-pm-slash-token')).toHaveLength(1);
+
+    let sentText = '';
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') sentText = input.textContent || '';
+    });
+    press(input, 'Enter');
+    await new Promise((resolve) => window.setTimeout(resolve, 10));
+
+    expect(sentText).toContain('Review this code and report correctness issues.');
+    expect(sentText).toContain('Translate the following text into Chinese.');
+  });
+
   it('anchors the marker to a prompt range after preceding text and multiline reflow', () => {
     const originalDescriptor = Object.getOwnPropertyDescriptor(
       Range.prototype,

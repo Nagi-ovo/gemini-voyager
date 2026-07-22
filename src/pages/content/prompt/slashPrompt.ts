@@ -644,11 +644,8 @@ function expandPromptTokens(input?: HTMLElement | null): void {
   const tokens = Array.from(
     (input || document).querySelectorAll<HTMLElement>(`.${TOKEN_CLASS}`),
   ).reverse();
-  for (const token of tokens) {
-    const body = token.dataset.gvPromptText || token.textContent || '';
-    token.replaceWith(document.createTextNode(body));
-  }
   if (input) {
+    // These offsets describe the editor before live token bodies change its text length.
     const selected = [...(selectedPrompts.get(input) || [])].sort(
       (left, right) => right.start - left.start,
     );
@@ -665,6 +662,10 @@ function expandPromptTokens(input?: HTMLElement | null): void {
       range.deleteContents();
       range.insertNode(document.createTextNode(prompt.text));
     }
+  }
+  for (const token of tokens) {
+    const body = token.dataset.gvPromptText || token.textContent || '';
+    token.replaceWith(document.createTextNode(body));
   }
   if (input && (tokens.length > 0 || selectedPrompts.has(input))) {
     selectedPrompts.delete(input);
