@@ -213,6 +213,39 @@ function placeCaretAtTextOffset(input: HTMLElement, offset: number): void {
   selection.addRange(range);
 }
 
+function placeCaretAtInputStart(input: HTMLElement): void {
+  if (input instanceof HTMLTextAreaElement) {
+    input.focus();
+    input.setSelectionRange(0, 0);
+    return;
+  }
+
+  const range = document.createRange();
+  const firstToken = input.querySelector<HTMLElement>(`.${TOKEN_CLASS}`);
+  if (firstToken) {
+    const prefixRange = document.createRange();
+    prefixRange.selectNodeContents(input);
+    prefixRange.setEndBefore(firstToken);
+    if (prefixRange.toString() === '') {
+      range.setStartBefore(firstToken);
+      range.collapse(true);
+    } else {
+      const boundary = findTextBoundary(input, 0);
+      if (boundary) range.setStart(boundary.node, boundary.offset);
+    }
+  } else {
+    const boundary = findTextBoundary(input, 0);
+    if (boundary) range.setStart(boundary.node, boundary.offset);
+  }
+  range.collapse(true);
+
+  const selection = window.getSelection();
+  if (!selection) return;
+  input.focus();
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
 function restoreCaretAfterInput(input: HTMLElement, offset: number): void {
   const prefix = readText(input).slice(0, offset);
   placeCaretAtTextOffset(input, offset);
@@ -1098,6 +1131,17 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
     const input = inputFromTarget(event.target);
     if (!input) return;
     if (event.isComposing) return;
+
+    if (event.key === 'Home' && !event.shiftKey && !event.altKey && hasPromptToken(input)) {
+      // A selected prompt starts with an atomic contenteditable=false token.
+      // Native Home can place the selection inside that token, where browsers
+      // keep focus on the editor but do not paint a caret.
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      placeCaretAtInputStart(input);
+      return;
+    }
 
     if (
       (event.key === 'Backspace' || event.key === 'Delete') &&

@@ -234,6 +234,26 @@ describe('slash prompt completion', () => {
     );
   });
 
+  it('keeps the caret visible at the input start when Home is pressed after selection', () => {
+    const input = createContentEditable('/review');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+
+    const token = input.querySelector<HTMLElement>('.gv-pm-slash-token')!;
+    const event = press(input, 'Home');
+    const range = window.getSelection()!.getRangeAt(0);
+
+    expect(event.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(input);
+    expect(range.collapsed).toBe(true);
+    expect(token.contains(range.startContainer)).toBe(false);
+    const prefixRange = document.createRange();
+    prefixRange.selectNodeContents(input);
+    prefixRange.setEnd(range.startContainer, range.startOffset);
+    expect(prefixRange.toString()).toBe('');
+  });
+
   it('does not reopen completion for a slash contained inside a selected prompt body', () => {
     const input = createContentEditable('/review');
     const withPath = prompts.map((prompt) =>
