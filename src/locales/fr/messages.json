@@ -256,8 +256,12 @@
     "description": "View-mode toggle tooltip - switch from compact rows to comfortable cards with markdown preview"
   },
   "pm_name_placeholder": {
-    "message": "Nom (optionnel)",
-    "description": "Placeholder for the optional prompt name/label input used as the compact-mode headline"
+    "message": "Nom",
+    "description": "Placeholder for the required prompt name input"
+  },
+  "pm_name_required": {
+    "message": "Le nom du prompt est obligatoire",
+    "description": "Validation shown when saving a prompt without a name"
   },
   "pm_prompt_manager": {
     "message": "Gestionnaire de prompts",

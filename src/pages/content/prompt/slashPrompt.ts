@@ -1,0 +1,666 @@
+import browser from 'webextension-polyfill';
+
+import { promptStorageService } from '@/core/services/StorageService';
+import { StorageKeys } from '@/core/types/common';
+import { type PromptItem } from '@/core/types/sync';
+
+import { findChatInput } from '../chatInput/index';
+
+const ROOT_ID = 'gv-pm-slash-root';
+const LIST_ID = 'gv-pm-slash-list';
+const TOOLTIP_ID = 'gv-pm-slash-tooltip';
+const TOKEN_CLASS = 'gv-pm-slash-token';
+const TEXTAREA_TOKEN_CLASS = 'gv-pm-slash-textarea-token';
+const MAX_RESULTS = 8;
+
+const CHAT_INPUT_SELECTOR =
+  '[data-testid="chat-input"][contenteditable="true"], #prompt-textarea[contenteditable="true"], ' +
+  'rich-textarea [contenteditable="true"], div[contenteditable="true"][role="textbox"], ' +
+  '.input-area textarea, textarea[placeholder*="Ask"], textarea';
+
+const SEND_BUTTON_SELECTOR =
+  'button[aria-label*="Send"], button[aria-label*="send"], button[data-tooltip*="Send"], ' +
+  'button[data-tooltip*="send"], button[data-testid*="send"], button[data-testid*="submit"], ' +
+  '[data-send-button], .send-button';
+
+export interface SlashPromptController {
+  destroy: () => void;
+}
+
+interface PromptQuery {
+  input: HTMLElement;
+  query: string;
+  start: number;
+  end: number;
+  range: Range | null;
+}
+
+interface SlashPromptOptions {
+  initialItems?: PromptItem[];
+}
+
+function isPromptItem(value: unknown): value is PromptItem {
+  if (!value || typeof value !== 'object') return false;
+  const item = value as Partial<PromptItem>;
+  return typeof item.id === 'string' && typeof item.text === 'string';
+}
+
+function usablePrompts(items: PromptItem[]): PromptItem[] {
+  return items.filter((item) => typeof item.name === 'string' && item.name.trim() !== '');
+}
+
+/** Matches names only. Prompt body and tags are deliberately excluded. */
+export function matchSlashPrompts(items: PromptItem[], query: string): PromptItem[] {
+  const normalizedQuery = query.trim().toLocaleLowerCase();
+  return usablePrompts(items)
+    .filter((item) => item.name!.toLocaleLowerCase().includes(normalizedQuery))
+    .sort((left, right) => {
+      const leftName = left.name!.toLocaleLowerCase();
+      const rightName = right.name!.toLocaleLowerCase();
+      const leftPrefix = leftName.startsWith(normalizedQuery) ? 0 : 1;
+      const rightPrefix = rightName.startsWith(normalizedQuery) ? 0 : 1;
+      return leftPrefix - rightPrefix || leftName.localeCompare(rightName);
+    })
+    .slice(0, MAX_RESULTS);
+}
+
+function inputFromTarget(target: EventTarget | null): HTMLElement | null {
+  if (!(target instanceof Element)) return null;
+  if (target.closest('.gv-pm-panel, .gv-pm-slash-root, .gv-pm-slash-tooltip')) return null;
+  const input = target.closest<HTMLElement>(CHAT_INPUT_SELECTOR);
+  if (!input) return null;
+  if (findChatInput({ requireVisible: false }) !== input) return null;
+  if (input instanceof HTMLTextAreaElement) return input;
+  if (input.isContentEditable || input.getAttribute('contenteditable') === 'true') return input;
+  return null;
+}
+
+function readText(input: HTMLElement): string {
+  return input instanceof HTMLTextAreaElement
+    ? input.value
+    : input.innerText || input.textContent || '';
+}
+
+function getCaretOffset(input: HTMLElement): {
+  prefix: string;
+  range: Range | null;
+  baseOffset: number;
+} {
+  if (input instanceof HTMLTextAreaElement) {
+    const end = input.selectionStart ?? input.value.length;
+    return { prefix: input.value.slice(0, end), range: null, baseOffset: 0 };
+  }
+
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) {
+    return { prefix: readText(input), range: null, baseOffset: 0 };
+  }
+  const selectionRange = selection.getRangeAt(0);
+  if (!input.contains(selectionRange.commonAncestorContainer)) {
+    return { prefix: readText(input), range: null, baseOffset: 0 };
+  }
+
+  const prefixRange = selectionRange.cloneRange();
+  prefixRange.selectNodeContents(input);
+  prefixRange.setEnd(selectionRange.endContainer, selectionRange.endOffset);
+  const fullPrefix = prefixRange.toString();
+
+  // An inserted token's real DOM text is the full prompt body. Slash parsing
+  // must only inspect text typed after the last token, otherwise a URL or path
+  // inside that hidden body could reopen completion immediately.
+  const tokens = Array.from(input.querySelectorAll<HTMLElement>(`.${TOKEN_CLASS}`));
+  for (let index = tokens.length - 1; index >= 0; index--) {
+    const tokenRange = document.createRange();
+    tokenRange.selectNode(tokens[index]);
+    if (tokenRange.compareBoundaryPoints(Range.END_TO_END, selectionRange) > 0) continue;
+    const suffixRange = selectionRange.cloneRange();
+    suffixRange.setStartAfter(tokens[index]);
+    const prefix = suffixRange.toString();
+    return {
+      prefix,
+      range: selectionRange.cloneRange(),
+      baseOffset: fullPrefix.length - prefix.length,
+    };
+  }
+
+  return { prefix: fullPrefix, range: selectionRange.cloneRange(), baseOffset: 0 };
+}
+
+function getPromptQuery(input: HTMLElement): PromptQuery | null {
+  const { prefix, range, baseOffset } = getCaretOffset(input);
+  const slashIndex = prefix.lastIndexOf('/');
+  if (slashIndex < 0) return null;
+  const previous = slashIndex === 0 ? '' : prefix[slashIndex - 1];
+  if (previous && !/\s/.test(previous)) return null;
+
+  const query = prefix.slice(slashIndex + 1);
+  if (query.includes('\n') || query.includes('\r') || query.includes('/')) return null;
+  const end = baseOffset + prefix.length;
+  return { input, query, start: baseOffset + slashIndex, end, range };
+}
+
+function allTextNodes(root: Node): Text[] {
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const nodes: Text[] = [];
+  let current = walker.nextNode();
+  while (current) {
+    nodes.push(current as Text);
+    current = walker.nextNode();
+  }
+  return nodes;
+}
+
+function findTextBoundary(
+  root: HTMLElement,
+  offset: number,
+): { node: Text; offset: number } | null {
+  let remaining = Math.max(0, offset);
+  for (const node of allTextNodes(root)) {
+    if (remaining <= node.data.length) return { node, offset: remaining };
+    remaining -= node.data.length;
+  }
+  const last = allTextNodes(root).at(-1);
+  return last ? { node: last, offset: last.data.length } : null;
+}
+
+function createQueryRange(query: PromptQuery): Range | null {
+  if (query.input instanceof HTMLTextAreaElement) return null;
+  const selectionRange = query.range;
+  if (!selectionRange) return null;
+  const start = findTextBoundary(query.input, query.start);
+  const end = findTextBoundary(query.input, query.end);
+  if (!start || !end) return null;
+  const range = document.createRange();
+  range.setStart(start.node, start.offset);
+  range.setEnd(end.node, end.offset);
+  return range;
+}
+
+function setCaretAfter(input: HTMLElement, node: Node): void {
+  const range = document.createRange();
+  range.selectNodeContents(node);
+  range.collapse(false);
+  const selection = window.getSelection();
+  if (!selection) return;
+  input.focus();
+  selection.removeAllRanges();
+  selection.addRange(range);
+}
+
+function dispatchInput(input: HTMLElement): void {
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function createPromptToken(prompt: PromptItem): HTMLSpanElement {
+  const token = document.createElement('span');
+  token.className = TOKEN_CLASS;
+  token.contentEditable = 'false';
+  token.dataset.gvPromptId = prompt.id;
+  token.dataset.gvPromptName = prompt.name!.trim();
+  token.dataset.gvTheme = detectTheme();
+  token.setAttribute('role', 'button');
+  token.setAttribute('aria-label', prompt.name!.trim());
+  // Keep the body as the token's real text so editor integrations and native
+  // send handlers still see the complete prompt even if they ignore metadata.
+  token.textContent = prompt.text;
+  return token;
+}
+
+function replaceContentEditableQuery(query: PromptQuery, prompt: PromptItem): boolean {
+  const range = createQueryRange(query);
+  if (!range) return false;
+  range.deleteContents();
+  const token = createPromptToken(prompt);
+  range.insertNode(token);
+  const spacer = document.createTextNode('\u00a0');
+  token.after(spacer);
+  setCaretAfter(query.input, spacer);
+  dispatchInput(query.input);
+  return true;
+}
+
+function replaceTextareaQuery(query: PromptQuery, prompt: PromptItem): boolean {
+  const textarea = query.input as HTMLTextAreaElement;
+  textarea.focus();
+  textarea.setRangeText(prompt.text, query.start, query.end, 'end');
+  dispatchInput(textarea);
+  return true;
+}
+
+function createTooltip(): HTMLDivElement {
+  let tooltip = document.getElementById(TOOLTIP_ID) as HTMLDivElement | null;
+  if (tooltip) return tooltip;
+  tooltip = document.createElement('div');
+  tooltip.id = TOOLTIP_ID;
+  tooltip.className = 'gv-pm-slash-tooltip';
+  tooltip.setAttribute('role', 'tooltip');
+  document.body.appendChild(tooltip);
+  return tooltip;
+}
+
+function detectTheme(): 'light' | 'dark' {
+  if (
+    document.querySelector('.theme-host.dark-theme') ||
+    document.body.classList.contains('dark-theme') ||
+    document.documentElement.classList.contains('dark') ||
+    document.body.getAttribute('data-theme') === 'dark'
+  ) {
+    return 'dark';
+  }
+  if (
+    document.querySelector('.theme-host.light-theme') ||
+    document.body.classList.contains('light-theme') ||
+    document.documentElement.classList.contains('light') ||
+    document.body.getAttribute('data-theme') === 'light'
+  ) {
+    return 'light';
+  }
+  return typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+}
+
+function showTooltip(target: HTMLElement, text: string): void {
+  const tooltip = createTooltip();
+  tooltip.textContent = text;
+  tooltip.dataset.gvTheme = detectTheme();
+  tooltip.style.left = '0px';
+  tooltip.style.top = '0px';
+  tooltip.classList.add('gv-pm-slash-tooltip-visible');
+  const targetRect = target.getBoundingClientRect();
+  const tooltipRect = tooltip.getBoundingClientRect();
+  const padding = 8;
+  let left: number;
+  let top: number;
+  if (target.closest(`#${ROOT_ID}`)) {
+    left = targetRect.right + 6;
+    if (left + tooltipRect.width <= window.innerWidth - padding) {
+      top = targetRect.top;
+    } else if (targetRect.left - tooltipRect.width - 6 >= padding) {
+      left = targetRect.left - tooltipRect.width - 6;
+      top = targetRect.top;
+    } else {
+      const listRect = target.closest<HTMLElement>(`#${ROOT_ID}`)!.getBoundingClientRect();
+      left = Math.max(
+        padding,
+        Math.min(targetRect.left, window.innerWidth - tooltipRect.width - padding),
+      );
+      top = listRect.top - tooltipRect.height - 6;
+      if (top < padding) top = listRect.bottom + 6;
+    }
+    top = Math.max(
+      padding,
+      Math.min(top, window.innerHeight - tooltipRect.height - padding),
+    );
+  } else {
+    left = Math.max(
+      padding,
+      Math.min(targetRect.right - tooltipRect.width, window.innerWidth - tooltipRect.width - padding),
+    );
+    top = targetRect.bottom + 6;
+    if (top + tooltipRect.height > window.innerHeight - padding) {
+      top = Math.max(padding, targetRect.top - tooltipRect.height - 6);
+    }
+  }
+  tooltip.style.left = `${Math.round(left)}px`;
+  tooltip.style.top = `${Math.round(top)}px`;
+}
+
+function hideTooltip(): void {
+  document.getElementById(TOOLTIP_ID)?.classList.remove('gv-pm-slash-tooltip-visible');
+}
+
+function positionTextareaTokens(container: HTMLElement, input: HTMLTextAreaElement): void {
+  const rect = input.getBoundingClientRect();
+  container.style.left = `${Math.round(rect.left + 8)}px`;
+  container.style.top = `${Math.round(rect.top + 6)}px`;
+  container.style.maxWidth = `${Math.max(120, rect.width - 16)}px`;
+}
+
+function removeTextareaTokens(
+  container: HTMLElement,
+  input: HTMLTextAreaElement | null = null,
+): void {
+  container.replaceChildren();
+  container.classList.remove('gv-pm-slash-textarea-tokens-visible');
+  if (input) {
+    input.classList.remove('gv-pm-slash-textarea-has-token');
+    input.style.removeProperty('--gv-pm-slash-native-padding-top');
+    input.style.removeProperty('--gv-pm-slash-token-offset');
+  }
+}
+
+function expandPromptTokens(input?: HTMLElement | null): void {
+  const tokens = Array.from(
+    (input || document).querySelectorAll<HTMLElement>(`.${TOKEN_CLASS}`),
+  ).reverse();
+  for (const token of tokens) {
+    const body = token.textContent || '';
+    token.replaceWith(document.createTextNode(body));
+  }
+  if (tokens.length > 0 && input) dispatchInput(input);
+}
+
+export function expandAllPromptTokens(): void {
+  const inputs = new Set<HTMLElement>();
+  document.querySelectorAll<HTMLElement>(`.${TOKEN_CLASS}`).forEach((token) => {
+    const input = token.closest<HTMLElement>(CHAT_INPUT_SELECTOR);
+    if (input) inputs.add(input);
+  });
+  for (const input of inputs) expandPromptTokens(input);
+  document.querySelectorAll<HTMLElement>(`.${TEXTAREA_TOKEN_CLASS}`).forEach((token) => {
+    token.parentElement?.classList.remove('gv-pm-slash-textarea-tokens-visible');
+    token.remove();
+  });
+}
+
+export function startPromptSlashCommand(options: SlashPromptOptions = {}): SlashPromptController {
+  if (!document.body || document.getElementById(ROOT_ID)) return { destroy: () => {} };
+
+  let items = Array.isArray(options.initialItems) ? options.initialItems.filter(isPromptItem) : [];
+  let activeInput: HTMLElement | null = null;
+  let activeQuery: PromptQuery | null = null;
+  let selectedIndex = 0;
+  let results: PromptItem[] = [];
+  let textareaTokenInput: HTMLTextAreaElement | null = null;
+
+  const root = document.createElement('div');
+  root.id = ROOT_ID;
+  root.className = 'gv-pm-slash-root';
+  root.hidden = true;
+  const list = document.createElement('div');
+  list.id = LIST_ID;
+  list.className = 'gv-pm-slash-list';
+  list.setAttribute('role', 'listbox');
+  root.appendChild(list);
+  document.body.appendChild(root);
+
+  const textareaTokens = document.createElement('div');
+  textareaTokens.className = 'gv-pm-slash-textarea-tokens';
+  textareaTokens.setAttribute('aria-hidden', 'false');
+  document.body.appendChild(textareaTokens);
+
+  function close(): void {
+    root.hidden = true;
+    activeInput = null;
+    activeQuery = null;
+    results = [];
+    hideTooltip();
+  }
+
+  function position(): void {
+    const theme = detectTheme();
+    root.dataset.gvTheme = theme;
+    textareaTokens.dataset.gvTheme = theme;
+    if (activeInput && !root.hidden) {
+      const rect = activeInput.getBoundingClientRect();
+      const width = Math.max(120, Math.min(380, rect.width || 320, window.innerWidth - 16));
+      root.style.width = `${Math.round(width)}px`;
+      root.style.left = `${Math.round(Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)))}px`;
+      const listHeight = list.getBoundingClientRect().height || 240;
+      const above = rect.top - listHeight - 6;
+      const below = Math.min(rect.bottom + 6, window.innerHeight - listHeight - 8);
+      root.style.top = `${Math.round(Math.max(8, above >= 8 ? above : below))}px`;
+    }
+    if (textareaTokenInput) positionTextareaTokens(textareaTokens, textareaTokenInput);
+  }
+
+  function addTextareaToken(prompt: PromptItem, input: HTMLTextAreaElement): void {
+    textareaTokenInput = input;
+    const chip = document.createElement('span');
+    chip.className = TEXTAREA_TOKEN_CLASS;
+    chip.textContent = prompt.name!.trim();
+    chip.dataset.gvPromptText = prompt.text;
+    chip.setAttribute('role', 'button');
+    chip.setAttribute('aria-label', prompt.name!.trim());
+    chip.addEventListener('mouseenter', () => showTooltip(chip, prompt.text));
+    chip.addEventListener('mouseleave', hideTooltip);
+    textareaTokens.appendChild(chip);
+    textareaTokens.classList.add('gv-pm-slash-textarea-tokens-visible');
+    positionTextareaTokens(textareaTokens, input);
+    if (!input.classList.contains('gv-pm-slash-textarea-has-token')) {
+      input.style.setProperty(
+        '--gv-pm-slash-native-padding-top',
+        window.getComputedStyle(input).paddingTop || '0px',
+      );
+      input.classList.add('gv-pm-slash-textarea-has-token');
+    }
+    const syncTokenOffset = () => {
+      if (
+        !textareaTokens.isConnected ||
+        !input.classList.contains('gv-pm-slash-textarea-has-token')
+      ) {
+        return;
+      }
+      const height = textareaTokens.getBoundingClientRect().height || 28;
+      input.style.setProperty('--gv-pm-slash-token-offset', `${Math.ceil(height + 8)}px`);
+    };
+    syncTokenOffset();
+    requestAnimationFrame(syncTokenOffset);
+  }
+
+  function confirm(index: number): boolean {
+    if (!activeQuery || !results[index]) return false;
+    const prompt = results[index];
+    const query = activeQuery;
+    const inserted =
+      query.input instanceof HTMLTextAreaElement
+        ? replaceTextareaQuery(query, prompt)
+        : replaceContentEditableQuery(query, prompt);
+    if (!inserted) return false;
+    if (query.input instanceof HTMLTextAreaElement) addTextareaToken(prompt, query.input);
+    close();
+    return true;
+  }
+
+  function render(nextResults: PromptItem[]): void {
+    results = nextResults;
+    selectedIndex = Math.min(selectedIndex, Math.max(0, results.length - 1));
+    list.replaceChildren();
+    if (results.length === 0) {
+      close();
+      return;
+    }
+    root.hidden = false;
+    results.forEach((prompt, index) => {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'gv-pm-slash-option';
+      row.setAttribute('role', 'option');
+      row.setAttribute('aria-selected', index === selectedIndex ? 'true' : 'false');
+      const name = document.createElement('span');
+      name.className = 'gv-pm-slash-option-name';
+      name.textContent = prompt.name!.trim();
+      row.appendChild(name);
+      const tags = document.createElement('span');
+      tags.className = 'gv-pm-slash-option-tags';
+      for (const tag of prompt.tags || []) {
+        const tagEl = document.createElement('span');
+        tagEl.className = 'gv-pm-slash-option-tag';
+        tagEl.textContent = tag;
+        tags.appendChild(tagEl);
+      }
+      row.appendChild(tags);
+      row.addEventListener('mouseenter', () => {
+        selectedIndex = index;
+        renderSelectionState();
+        showTooltip(row, prompt.text);
+      });
+      row.addEventListener('mouseleave', hideTooltip);
+      row.addEventListener('mousedown', (event) => {
+        if (event.button !== 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        confirm(index);
+      });
+      list.appendChild(row);
+    });
+    position();
+  }
+
+  function renderSelectionState(): void {
+    list.querySelectorAll<HTMLElement>('.gv-pm-slash-option').forEach((option, index) => {
+      option.setAttribute('aria-selected', index === selectedIndex ? 'true' : 'false');
+    });
+  }
+
+  function refresh(target: EventTarget | null): void {
+    const input = inputFromTarget(target);
+    if (!input) return;
+    const query = getPromptQuery(input);
+    if (!query) {
+      close();
+      return;
+    }
+    activeInput = input;
+    activeQuery = query;
+    selectedIndex = 0;
+    render(matchSlashPrompts(items, query.query));
+  }
+
+  function onInput(event: Event): void {
+    const input = inputFromTarget(event.target);
+    if (!input) return;
+    if (input instanceof HTMLTextAreaElement && !input.value.trim()) {
+      removeTextareaTokens(textareaTokens, textareaTokenInput);
+      textareaTokenInput = null;
+    }
+    refresh(event.target);
+  }
+
+  function onKeydown(event: KeyboardEvent): void {
+    const input = inputFromTarget(event.target);
+    if (!input) return;
+    if (event.isComposing) return;
+
+    if (!root.hidden && activeInput === input && results.length > 0) {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        event.stopPropagation();
+        selectedIndex =
+          (selectedIndex + (event.key === 'ArrowDown' ? 1 : results.length - 1)) % results.length;
+        renderSelectionState();
+        return;
+      }
+      if (event.key === 'Tab' || (event.key === 'Enter' && !event.shiftKey && !event.altKey)) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        confirm(selectedIndex);
+        return;
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        close();
+        return;
+      }
+    }
+
+    if (event.key === 'Escape' && !root.hidden) {
+      close();
+      return;
+    }
+
+    if (event.key === 'Enter' && (!event.shiftKey || event.ctrlKey || event.metaKey)) {
+      expandPromptTokens(input);
+      if (input instanceof HTMLTextAreaElement) {
+        removeTextareaTokens(textareaTokens, textareaTokenInput);
+        textareaTokenInput = null;
+      }
+    }
+  }
+
+  function onPointerDown(event: Event): void {
+    const target = event.target instanceof Element ? event.target : null;
+    if (target?.closest(`#${ROOT_ID}`)) return;
+    if (!target?.closest(CHAT_INPUT_SELECTOR)) close();
+    const button = target?.closest(SEND_BUTTON_SELECTOR);
+    if (button) {
+      expandAllPromptTokens();
+      removeTextareaTokens(textareaTokens, textareaTokenInput);
+      textareaTokenInput = null;
+    }
+  }
+
+  function onSubmit(event: Event): void {
+    const form = event.target instanceof HTMLFormElement ? event.target : null;
+    if (!form) return;
+    const input = form.querySelector<HTMLElement>(CHAT_INPUT_SELECTOR);
+    if (!input) return;
+    expandPromptTokens(input);
+    if (input instanceof HTMLTextAreaElement) {
+      removeTextareaTokens(textareaTokens, textareaTokenInput);
+      textareaTokenInput = null;
+    }
+  }
+
+  function onClick(event: Event): void {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target?.closest(SEND_BUTTON_SELECTOR)) return;
+    expandAllPromptTokens();
+    removeTextareaTokens(textareaTokens, textareaTokenInput);
+    textareaTokenInput = null;
+  }
+
+  function onPointerOver(event: PointerEvent): void {
+    const target =
+      event.target instanceof Element ? event.target.closest<HTMLElement>(`.${TOKEN_CLASS}`) : null;
+    if (target) showTooltip(target, target.textContent || '');
+  }
+
+  function onPointerOut(event: PointerEvent): void {
+    const target = event.target instanceof Element ? event.target.closest(`.${TOKEN_CLASS}`) : null;
+    if (target) hideTooltip();
+  }
+
+  function onStorageChanged(
+    changes: Record<string, chrome.storage.StorageChange>,
+    area: string,
+  ): void {
+    if (area !== 'local') return;
+    const change = changes[StorageKeys.PROMPT_ITEMS];
+    if (!change || !Array.isArray(change.newValue)) return;
+    items = change.newValue.filter(isPromptItem);
+    if (activeInput && activeQuery) render(matchSlashPrompts(items, activeQuery.query));
+  }
+
+  const onScrollOrResize = () => position();
+  document.addEventListener('input', onInput, true);
+  document.addEventListener('keydown', onKeydown, true);
+  document.addEventListener('pointerdown', onPointerDown, true);
+  document.addEventListener('click', onClick, true);
+  document.addEventListener('submit', onSubmit, true);
+  document.addEventListener('pointerover', onPointerOver, true);
+  document.addEventListener('pointerout', onPointerOut, true);
+  document.addEventListener('scroll', onScrollOrResize, true);
+  window.addEventListener('resize', onScrollOrResize);
+  browser.storage.onChanged.addListener(onStorageChanged);
+
+  return {
+    destroy: () => {
+      document.removeEventListener('input', onInput, true);
+      document.removeEventListener('keydown', onKeydown, true);
+      document.removeEventListener('pointerdown', onPointerDown, true);
+      document.removeEventListener('click', onClick, true);
+      document.removeEventListener('submit', onSubmit, true);
+      document.removeEventListener('pointerover', onPointerOver, true);
+      document.removeEventListener('pointerout', onPointerOut, true);
+      document.removeEventListener('scroll', onScrollOrResize, true);
+      window.removeEventListener('resize', onScrollOrResize);
+      browser.storage.onChanged.removeListener(onStorageChanged);
+      removeTextareaTokens(textareaTokens, textareaTokenInput);
+      root.remove();
+      textareaTokens.remove();
+      document.getElementById(TOOLTIP_ID)?.remove();
+    },
+  };
+}
+
+export async function startStoredPromptSlashCommand(): Promise<SlashPromptController> {
+  const stored = await promptStorageService.get<PromptItem[]>(StorageKeys.PROMPT_ITEMS);
+  return startPromptSlashCommand({
+    initialItems: stored.success && Array.isArray(stored.data) ? stored.data : [],
+  });
+}

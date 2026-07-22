@@ -49,7 +49,9 @@ import { StarredMessagesService } from '../timeline/StarredMessagesService';
 import type { StarredMessage } from '../timeline/starredTypes';
 import { extractPlainTitle } from './compactTitle';
 import { activatePromptText } from './promptClickAction';
+import { normalizePromptName } from './promptName';
 import { getScrollHintState } from './scrollHint';
+import { type SlashPromptController, startStoredPromptSlashCommand } from './slashPrompt';
 import { formatStarredMessageTime } from './starredLibrary';
 import { sanitizeSelectedTags } from './tagFilterState';
 
@@ -60,9 +62,8 @@ type PromptItem = {
   createdAt: number;
   updatedAt?: number;
   /**
-   * Optional user-authored label used as the headline in compact list view.
-   * Falls back to `extractPlainTitle(text)` when absent so existing prompts
-   * render without any migration. Introduced for issue #586 feedback item 4c.
+   * Required for newly saved prompts. It remains optional in the stored type
+   * so legacy prompts keep rendering without a destructive migration.
    */
   name?: string;
 };
@@ -424,6 +425,13 @@ function computeAnchoredPosition(
 }
 
 export async function startPromptManager(): Promise<{ destroy: () => void }> {
+  let slashPromptController: SlashPromptController | null = null;
+  try {
+    slashPromptController = await startStoredPromptSlashCommand();
+  } catch (error) {
+    pmLogger.warn('Failed to start slash prompt completion', { error });
+  }
+
   let marked!: typeof MarkedFn;
   let DOMPurify!: typeof import('dompurify').default;
 
@@ -513,7 +521,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     if (pmHiddenByUser && !changelogBadgeActive) {
       pmLogger.info('Prompt Manager is hidden by user settings');
-      return { destroy: () => {} };
+      return { destroy: () => slashPromptController?.destroy() };
     }
 
     // Monkey patch console.warn to suppress KaTeX quirks mode warning in content script
@@ -566,7 +574,9 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     const i18n = createI18n();
 
     // Prevent duplicate injection
-    if (document.getElementById(ID.trigger)) return { destroy: () => {} };
+    if (document.getElementById(ID.trigger)) {
+      return { destroy: () => slashPromptController?.destroy() };
+    }
 
     // Trigger button
     const trigger = createEl('button', 'gv-pm-trigger');
@@ -934,8 +944,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     const addForm = elFromHTML(
       `<form class="gv-pm-add-form gv-hidden">
-        <input class="gv-pm-input-name" type="text" maxlength="60" placeholder="${escapeHtml(
-          i18n.t('pm_name_placeholder') || 'Name (optional)',
+        <input class="gv-pm-input-name" type="text" maxlength="60" required aria-required="true" placeholder="${escapeHtml(
+          i18n.t('pm_name_placeholder') || 'Name',
         )}" />
         <textarea class="gv-pm-input-text" placeholder="${escapeHtml(
           i18n.t('pm_prompt_placeholder') || 'Prompt text',
@@ -2229,15 +2239,14 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       ev.preventDefault();
       ev.stopPropagation();
       editingId = null;
-      // Reset every field before opening. Without this, state from a cancelled
-      // edit (especially the optional name, which sits at the top and is easy
-      // to overlook) would leak into the new prompt.
+      // Reset every field before opening so state from a cancelled edit cannot
+      // leak into a new prompt.
       (addForm.querySelector('.gv-pm-input-name') as HTMLInputElement).value = '';
       (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).value = '';
       (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).value = '';
       setInlineHint('');
       addForm.classList.remove('gv-hidden');
-      (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement)?.focus();
+      (addForm.querySelector('.gv-pm-input-name') as HTMLInputElement)?.focus();
     });
 
     settingsBtn.addEventListener('click', async (ev) => {
@@ -2293,11 +2302,16 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     );
     addForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const nameRaw = (addForm.querySelector('.gv-pm-input-name') as HTMLInputElement).value;
-      const name = nameRaw.trim();
+      const nameInput = addForm.querySelector('.gv-pm-input-name') as HTMLInputElement;
+      const name = normalizePromptName(nameInput.value);
       const text = (addForm.querySelector('.gv-pm-input-text') as HTMLTextAreaElement).value;
       const tagsRaw = (addForm.querySelector('.gv-pm-input-tags') as HTMLInputElement).value;
       const tags = dedupeTags((tagsRaw || '').split(',').map((s) => s.trim()));
+      if (!name) {
+        setInlineHint(i18n.t('pm_name_required') || 'Prompt name is required', 'err');
+        nameInput.focus();
+        return;
+      }
       if (!text.trim()) return;
       if (editingId) {
         const dup = items.some(
@@ -2311,8 +2325,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         if (target) {
           target.text = text;
           target.tags = tags;
-          if (name) target.name = name;
-          else delete target.name;
+          target.name = name;
           target.updatedAt = Date.now();
           await writeStorage(STORAGE_KEYS.items, items);
           setNotice(i18n.t('pm_saved') || 'Saved', 'ok');
@@ -2325,8 +2338,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
           setInlineHint(i18n.t('pm_duplicate') || 'Duplicate prompt', 'err');
           return;
         }
-        const it: PromptItem = { id: uid(), text, tags, createdAt: Date.now() };
-        if (name) it.name = name;
+        const it: PromptItem = { id: uid(), name, text, tags, createdAt: Date.now() };
         items = [it, ...items];
         await writeStorage(STORAGE_KEYS.items, items);
       }
@@ -2363,6 +2375,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
     return {
       destroy: () => {
         try {
+          slashPromptController?.destroy();
           window.removeEventListener('resize', onWindowResize);
           window.removeEventListener('scroll', onReposition);
           window.removeEventListener('pointerdown', onWindowPointerDown, { capture: true });
@@ -2400,6 +2413,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       },
     };
   } catch (err) {
+    slashPromptController?.destroy();
     try {
       if (isExtensionContextInvalidatedError(err)) {
         return { destroy: () => {} };

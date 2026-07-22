@@ -256,8 +256,12 @@
     "description": "View-mode toggle tooltip - switch from compact rows to comfortable cards with markdown preview"
   },
   "pm_name_placeholder": {
-    "message": "备注名（可选）",
-    "description": "Placeholder for the optional prompt name/label input used as the compact-mode headline"
+    "message": "备注名",
+    "description": "Placeholder for the required prompt name input"
+  },
+  "pm_name_required": {
+    "message": "必须填写 Prompt 名称",
+    "description": "Validation shown when saving a prompt without a name"
   },
   "pm_prompt_manager": {
     "message": "提示词管理器",
