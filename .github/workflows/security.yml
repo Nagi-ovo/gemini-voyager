@@ -67,16 +67,35 @@ jobs:
       - run: bun install --frozen-lockfile
       - name: Run bun audit
         run: |
-          bun audit --json > audit.json || true
-          # An invalid file means the audit itself broke (network, registry) —
-          # that must fail on every event, unlike advisory findings below.
-          jq empty audit.json
+          audit_exit=0
+          bun audit --json > audit.json || audit_exit=$?
+
+          # Fail closed on every event when the audit itself broke (network,
+          # registry, CLI error): advisory findings are a valid result and stay
+          # report-only below, but a missing, empty, or malformed report must
+          # never pass as "no findings".
+          if [ ! -s audit.json ]; then
+            echo "::error::bun audit produced no output (exit $audit_exit)"
+            exit 1
+          fi
+          if ! jq -e 'type == "object" and ([.[][]] | all(type == "object" and has("severity")))' audit.json > /dev/null; then
+            echo "::error::bun audit output is not the expected advisory map (exit $audit_exit)"
+            exit 1
+          fi
 
           TOTAL=$(jq '[.[][]] | length' audit.json)
           CRITICAL=$(jq '[.[][] | select(.severity == "critical")] | length' audit.json)
           HIGH=$(jq '[.[][] | select(.severity == "high")] | length' audit.json)
           MODERATE=$(jq '[.[][] | select(.severity == "moderate")] | length' audit.json)
           LOW=$(jq '[.[][] | select(.severity == "low")] | length' audit.json)
+
+          # A nonzero exit with zero parsed advisories cannot be a real audit
+          # result (bun exits nonzero because it found advisories) — treat it
+          # as a failed audit rather than a clean one.
+          if [ "$audit_exit" -ne 0 ] && [ "$TOTAL" -eq 0 ]; then
+            echo "::error::bun audit exited $audit_exit without reporting advisories"
+            exit 1
+          fi
 
           if [ "${{ github.event_name }}" = "schedule" ]; then
             MODE="enforcing: fails on high/critical"
