@@ -161,7 +161,7 @@ function getPromptQuery(input: HTMLElement): PromptQuery | null {
   if (previous && !/\s/.test(previous)) return null;
 
   const query = prefix.slice(slashIndex + 1);
-  if (/\s/.test(query) || query.includes('/')) return null;
+  if (/^\s/.test(query) || /[\r\n]/.test(query) || query.includes('/')) return null;
   const end = baseOffset + prefix.length;
   return { input, query, start: baseOffset + slashIndex, end, range };
 }
