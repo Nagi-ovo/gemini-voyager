@@ -527,7 +527,8 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
     if (pmHiddenByUser && !changelogBadgeActive) {
       pmLogger.info('Prompt Manager is hidden by user settings');
-      return { destroy: () => slashPromptController?.destroy() };
+      slashPromptController?.destroy();
+      return { destroy: () => {} };
     }
 
     // Monkey patch console.warn to suppress KaTeX quirks mode warning in content script
