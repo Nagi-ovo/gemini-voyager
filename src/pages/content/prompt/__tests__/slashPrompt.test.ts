@@ -344,6 +344,34 @@ describe('slash prompt completion', () => {
     expect(sentText).toContain('Review this code and report correctness issues.');
   });
 
+  it('preserves blank lines when expanding a rebuilt multiline prompt', async () => {
+    const multilinePrompt: PromptItem = {
+      ...prompts[0],
+      text: 'Line 1\n\nLine 3',
+    };
+    const input = createContentEditable('/trans');
+    destroy = startPromptSlashCommand({ initialItems: [multilinePrompt] }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+
+    const rebuiltToken = input.querySelector<HTMLElement>('.gv-pm-slash-token')!;
+    rebuiltToken.replaceWith(document.createTextNode(rebuiltToken.textContent || ''));
+    expect(input.querySelector('.gv-pm-slash-token')).toBeNull();
+
+    press(input, 'Enter');
+    await new Promise((resolve) => window.setTimeout(resolve, 10));
+
+    const renderedChildren = Array.from(input.childNodes).filter(
+      (node) => node.nodeName === 'BR' || node.textContent?.trim() !== '',
+    );
+    expect(renderedChildren.map((node) => `${node.nodeName}:${node.textContent}`)).toEqual([
+      '#text:Line 1',
+      'BR:',
+      'BR:',
+      '#text:Line 3',
+    ]);
+  });
+
   it('expands a rebuilt prompt after an earlier live token when sending', async () => {
     const input = createContentEditable('/review');
     destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
