@@ -1513,6 +1513,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
       browser.storage.onChanged.removeListener(onStorageChanged);
       tokenResizeObserver?.disconnect();
       hideTooltip();
+      expandAllPromptTokens();
       selectedPrompts.clear();
       removeTextareaTokens(textareaTokens, textareaTokenInput);
       root.remove();

@@ -244,6 +244,19 @@ describe('slash prompt completion', () => {
     );
   });
 
+  it('expands a selected contenteditable prompt before destroying slash completion', () => {
+    const input = createContentEditable('/review');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+
+    destroy();
+
+    expect(input.textContent?.trim()).toBe('Review this code and report correctness issues.');
+    expect(input.querySelector('.gv-pm-slash-token')).toBeNull();
+    expect(document.querySelector('.gv-pm-slash-textarea-token')).toBeNull();
+  });
+
   it('keeps the caret visible at the input start when Home is pressed after selection', () => {
     const input = createContentEditable('/review');
     destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
@@ -1367,6 +1380,24 @@ describe('slash prompt completion', () => {
     press(input, 'Enter');
     expect(input.value.trimEnd()).toBe('Review this code and report correctness issues.');
     expect(input.classList.contains('gv-pm-slash-textarea-hide-value')).toBe(false);
+  });
+
+  it('expands a selected textarea prompt before destroying slash completion', () => {
+    document.body.innerHTML = '<div class="input-area"><textarea></textarea></div>';
+    const input = document.querySelector('textarea')!;
+    input.value = '/review';
+    input.setSelectionRange(input.value.length, input.value.length);
+    setRect(input);
+    input.focus();
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Tab');
+
+    destroy();
+
+    expect(input.value.trimEnd()).toBe('Review this code and report correctness issues.');
+    expect(input.classList.contains('gv-pm-slash-textarea-hide-value')).toBe(false);
+    expect(document.querySelector('.gv-pm-slash-textarea-token')).toBeNull();
   });
 
   it('reveals textarea text typed after a selected prompt and preserves it when sending', () => {
