@@ -240,8 +240,9 @@ export interface PromptMergeResult {
 
 /**
  * Preserves every historical local prompt while preventing a merge from
- * introducing a new duplicate name. Newer same-ID content still wins, but a
- * conflicting cloud rename keeps the local name.
+ * introducing a new duplicate name. Newer same-ID content still wins, but the
+ * local name survives a legacy cloud record that omits it or a conflicting
+ * cloud rename.
  */
 export function mergePromptsWithStats(local: PromptItem[], cloud: PromptItem[]): PromptMergeResult {
   const itemMap = new Map<string, PromptItem>(local.map((item) => [item.id, item]));
@@ -271,7 +272,10 @@ export function mergePromptsWithStats(local: PromptItem[], cloud: PromptItem[]):
       continue;
     }
 
-    itemMap.set(cloudItem.id, cloudItem);
+    itemMap.set(
+      cloudItem.id,
+      cloudItem.name === undefined ? { ...cloudItem, name: localItem.name } : cloudItem,
+    );
   }
 
   return { items: Array.from(itemMap.values()), nameConflicts };

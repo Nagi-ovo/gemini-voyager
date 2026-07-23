@@ -320,4 +320,22 @@ describe('mergePromptsWithStats', () => {
       text: 'Updated body',
     });
   });
+
+  it('keeps the local name when a newer legacy cloud prompt omits it', () => {
+    const local = [prompt('editing', 'Translator', 'Old body')];
+    const cloud = [{ ...prompt('editing', undefined, 'Updated body', 2), tags: ['cloud'] }];
+
+    const result = mergePromptsWithStats(local, cloud);
+
+    expect(result.nameConflicts).toBe(0);
+    expect(result.items).toEqual([
+      expect.objectContaining({
+        id: 'editing',
+        name: 'Translator',
+        text: 'Updated body',
+        tags: ['cloud'],
+        updatedAt: 2,
+      }),
+    ]);
+  });
 });
