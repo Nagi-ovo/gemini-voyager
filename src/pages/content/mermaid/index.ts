@@ -39,21 +39,48 @@ export const loadMermaid = async (): Promise<typeof mermaidInstance> => {
 };
 
 /**
+ * Resolve the Mermaid theme from Gemini's explicit page state before falling
+ * back to the browser's system preference.
+ * @internal Exported for testing
+ */
+export function resolveMermaidTheme(doc: Document, prefersDark: boolean): 'dark' | 'default' {
+  const body = doc.body;
+  const root = doc.documentElement;
+
+  const hasExplicitDarkTheme = Boolean(
+    doc.querySelector('.theme-host.dark-theme') ||
+      body.classList.contains('dark-theme') ||
+      root.classList.contains('dark') ||
+      body.getAttribute('data-theme') === 'dark',
+  );
+  if (hasExplicitDarkTheme) return 'dark';
+
+  const hasExplicitLightTheme = Boolean(
+    doc.querySelector('.theme-host.light-theme') ||
+      body.classList.contains('light-theme') ||
+      root.classList.contains('light') ||
+      body.getAttribute('data-theme') === 'light',
+  );
+  if (hasExplicitLightTheme) return 'default';
+
+  return prefersDark ? 'dark' : 'default';
+}
+
+/**
  * Initialize Mermaid configuration
  */
 const initMermaid = async (): Promise<boolean> => {
   const mermaid = await loadMermaid();
   if (!mermaid) return false;
 
-  const isDarkMode =
-    document.body.classList.contains('dark-theme') ||
-    document.body.getAttribute('data-theme') === 'dark' ||
-    document.documentElement.classList.contains('dark') ||
-    window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const theme = resolveMermaidTheme(
+    document,
+    window.matchMedia('(prefers-color-scheme: dark)').matches,
+  );
 
   mermaid.initialize({
     startOnLoad: false,
-    theme: isDarkMode ? 'dark' : 'default',
+    theme,
     securityLevel: 'loose',
     fontFamily: 'Google Sans, Roboto, sans-serif',
     logLevel: 5, // 5 = fatal, only log fatal errors (v9.x uses numbers)

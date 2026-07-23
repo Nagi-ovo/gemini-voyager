@@ -8,6 +8,7 @@ import {
   loadMermaid,
   normalizeMermaidCode,
   normalizeWhitespace,
+  resolveMermaidTheme,
 } from '../index';
 
 // Mock the dynamic import of 'mermaid'
@@ -46,6 +47,36 @@ describe('Mermaid dynamic loading', () => {
       // Second call returns cached instance immediately (no new import)
       const second = await loadMermaid();
       expect(second).toBe(first);
+    });
+  });
+
+  describe('resolveMermaidTheme', () => {
+    it('prefers an explicit Gemini light theme over a dark system preference', () => {
+      const page = document.implementation.createHTMLDocument();
+      const themeHost = page.createElement('div');
+      themeHost.className = 'theme-host light-theme';
+      page.body.append(themeHost);
+
+      expect(resolveMermaidTheme(page, true)).toBe('default');
+    });
+
+    it('prefers an explicit Gemini dark theme over a light system preference', () => {
+      const page = document.implementation.createHTMLDocument();
+      page.body.dataset.theme = 'dark';
+
+      expect(resolveMermaidTheme(page, false)).toBe('dark');
+    });
+
+    it('falls back to a dark system preference when Gemini exposes no theme', () => {
+      const page = document.implementation.createHTMLDocument();
+
+      expect(resolveMermaidTheme(page, true)).toBe('dark');
+    });
+
+    it('falls back to the default theme when Gemini exposes no theme and the system is light', () => {
+      const page = document.implementation.createHTMLDocument();
+
+      expect(resolveMermaidTheme(page, false)).toBe('default');
     });
   });
 
