@@ -674,16 +674,23 @@ Root cause:
 Name uniqueness was enforced while merging stored data. Conflict branches
 skipped new records or replaced a newer same-ID name, while slash completion
 accepted every non-empty name without grouping normalized equivalents.
+Two page-level Drive merge paths also kept parallel timestamp-merge
+implementations, so a newer legacy cloud record without `name` could erase the
+local name even after the shared merge helper was fixed.
 
 Fix:
 Always preserve imported and synced Prompt records. Detect duplicate groups
 with the shared trimmed, NFKC-normalized, case-insensitive key; exclude every
 member of a duplicate group from slash completion and show a non-blocking
-Prompt Manager badge until the names become unique.
+Prompt Manager badge until the names become unique. Route every Drive prompt
+merge through the shared helper, which carries forward a local name when the
+newer cloud record predates prompt names.
 
 Regression tests:
 `src/features/backup/services/__tests__/PromptImportExportService.test.ts`
 `src/utils/merge.test.ts`
+`src/pages/content/folder/__tests__/auditFixes.test.ts`
+`src/pages/content/folder/__tests__/aistudioAuditFixes.test.ts`
 `src/pages/content/prompt/__tests__/promptName.test.ts`
 `src/pages/content/prompt/__tests__/slashPrompt.test.ts`
 `src/pages/background/__tests__/runtimeMessageRouting.test.ts`
