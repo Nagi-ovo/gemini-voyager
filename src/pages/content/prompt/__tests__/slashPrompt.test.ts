@@ -1040,6 +1040,31 @@ describe('slash prompt completion', () => {
     expect(input.classList.contains('gv-pm-slash-contenteditable-hide-value')).toBe(false);
   });
 
+  it('materializes line breaks when expanding a multiline prompt for send', () => {
+    const multilinePrompt: PromptItem = {
+      id: 'structured',
+      name: 'Structured',
+      text: 'Please analyze:\n\n1. Find the issue\n2. Suggest a fix',
+      tags: [],
+      createdAt: 4,
+    };
+    const input = createContentEditable('/structured');
+    destroy = startPromptSlashCommand({ initialItems: [multilinePrompt] }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+
+    press(input, 'Enter');
+
+    expect(input.querySelector('.gv-pm-slash-token')).toBeNull();
+    expect(input.querySelectorAll('br')).toHaveLength(3);
+    expect(input.textContent).toContain('Please analyze:');
+    expect(input.textContent).toContain('1. Find the issue');
+    expect(input.textContent).toContain('2. Suggest a fix');
+    expect(
+      Array.from(input.childNodes).some((node) => node instanceof Text && node.data.includes('\n')),
+    ).toBe(false);
+  });
+
   it('preserves the token on plain Enter when Ctrl/Cmd+Enter send mode is enabled', () => {
     const input = createContentEditable('/review');
     destroy = startPromptSlashCommand({

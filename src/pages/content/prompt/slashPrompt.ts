@@ -4,7 +4,7 @@ import { promptStorageService } from '@/core/services/StorageService';
 import { StorageKeys } from '@/core/types/common';
 import { type PromptItem } from '@/core/types/sync';
 
-import { findChatInput } from '../chatInput/index';
+import { findChatInput, insertTextIntoChatInput } from '../chatInput/index';
 import { findClosestSendActionButton } from '../sendBehavior/sendButton';
 
 const ROOT_ID = 'gv-pm-slash-root';
@@ -689,6 +689,19 @@ function removeTextareaTokenAt(container: HTMLElement, input: HTMLElement, index
   return false;
 }
 
+function replaceRangeWithPromptBody(input: HTMLElement, range: Range, body: string): boolean {
+  if (!body.includes('\n')) {
+    range.deleteContents();
+    if (body.length > 0) range.insertNode(document.createTextNode(body));
+    return true;
+  }
+  const selection = window.getSelection();
+  if (!selection) return false;
+  selection.removeAllRanges();
+  selection.addRange(range);
+  return insertTextIntoChatInput(body, input);
+}
+
 function expandPromptTokens(input?: HTMLElement | null): void {
   const tokens = Array.from(
     (input || document).querySelectorAll<HTMLElement>(`.${TOKEN_CLASS}`),
@@ -713,13 +726,16 @@ function expandPromptTokens(input?: HTMLElement | null): void {
       const range = document.createRange();
       range.setStart(start.node, start.offset);
       range.setEnd(end.node, end.offset);
-      range.deleteContents();
-      range.insertNode(document.createTextNode(prompt.text));
+      replaceRangeWithPromptBody(input, range, prompt.text);
     }
   }
   for (const token of tokens) {
     const body = token.dataset.gvPromptText || token.textContent || '';
-    token.replaceWith(document.createTextNode(body));
+    const tokenInput = input || token.closest<HTMLElement>(CHAT_INPUT_SELECTOR);
+    if (!tokenInput) continue;
+    const range = document.createRange();
+    range.selectNode(token);
+    replaceRangeWithPromptBody(tokenInput, range, body);
   }
   if (input && (tokens.length > 0 || selectedPrompts.has(input))) {
     selectedPrompts.delete(input);
