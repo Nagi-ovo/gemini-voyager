@@ -263,6 +263,10 @@
     "message": "프롬프트 이름을 입력해야 합니다",
     "description": "Validation shown when saving a prompt without a name"
   },
+  "pm_name_duplicate": {
+    "message": "같은 프롬프트 이름이 이미 있습니다",
+    "description": "Validation shown when saving a prompt with an existing name"
+  },
   "pm_prompt_manager": {
     "message": "프롬프트 관리자",
     "description": "Button label for returning from the starred library to Prompt Manager"

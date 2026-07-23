@@ -263,6 +263,10 @@
     "message": "Название промпта обязательно",
     "description": "Validation shown when saving a prompt without a name"
   },
+  "pm_name_duplicate": {
+    "message": "Промпт с таким названием уже существует",
+    "description": "Validation shown when saving a prompt with an existing name"
+  },
   "pm_prompt_manager": {
     "message": "Менеджер промптов",
     "description": "Button label for returning from the starred library to Prompt Manager"

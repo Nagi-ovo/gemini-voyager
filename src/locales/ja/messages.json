@@ -263,6 +263,10 @@
     "message": "プロンプト名は必須です",
     "description": "Validation shown when saving a prompt without a name"
   },
+  "pm_name_duplicate": {
+    "message": "同じプロンプト名が既に存在します",
+    "description": "Validation shown when saving a prompt with an existing name"
+  },
   "pm_prompt_manager": {
     "message": "プロンプトマネージャー",
     "description": "Button label for returning from the starred library to Prompt Manager"

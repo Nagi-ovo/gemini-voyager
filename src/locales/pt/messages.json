@@ -263,6 +263,10 @@
     "message": "O nome do prompt é obrigatório",
     "description": "Validation shown when saving a prompt without a name"
   },
+  "pm_name_duplicate": {
+    "message": "Já existe um prompt com este nome",
+    "description": "Validation shown when saving a prompt with an existing name"
+  },
   "pm_prompt_manager": {
     "message": "Gestor de prompts",
     "description": "Button label for returning from the starred library to Prompt Manager"

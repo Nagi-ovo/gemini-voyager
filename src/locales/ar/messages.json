@@ -263,6 +263,10 @@
     "message": "اسم الموجّه مطلوب",
     "description": "Validation shown when saving a prompt without a name"
   },
+  "pm_name_duplicate": {
+    "message": "يوجد بالفعل موجّه بهذا الاسم",
+    "description": "Validation shown when saving a prompt with an existing name"
+  },
   "pm_prompt_manager": {
     "message": "مدير المطالبات",
     "description": "Button label for returning from the starred library to Prompt Manager"

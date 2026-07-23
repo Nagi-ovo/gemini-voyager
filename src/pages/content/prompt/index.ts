@@ -49,7 +49,7 @@ import { StarredMessagesService } from '../timeline/StarredMessagesService';
 import type { StarredMessage } from '../timeline/starredTypes';
 import { extractPlainTitle } from './compactTitle';
 import { activatePromptText } from './promptClickAction';
-import { normalizePromptName } from './promptName';
+import { isPromptNameTaken, normalizePromptName } from './promptName';
 import { getScrollHintState } from './scrollHint';
 import {
   createSlashPromptLifecycle,
@@ -2321,6 +2321,11 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
       const tags = dedupeTags((tagsRaw || '').split(',').map((s) => s.trim()));
       if (!name) {
         setInlineHint(i18n.t('pm_name_required') || 'Prompt name is required', 'err');
+        nameInput.focus();
+        return;
+      }
+      if (isPromptNameTaken(items, name, editingId)) {
+        setInlineHint(i18n.t('pm_name_duplicate') || 'Prompt name already exists', 'err');
         nameInput.focus();
         return;
       }

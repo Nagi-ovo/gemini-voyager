@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizePromptName } from '../promptName';
+import { isPromptNameTaken, normalizePromptName } from '../promptName';
 
 describe('normalizePromptName', () => {
   it('trims a required prompt name', () => {
@@ -9,5 +9,23 @@ describe('normalizePromptName', () => {
 
   it('rejects a blank prompt name', () => {
     expect(normalizePromptName('   ')).toBeNull();
+  });
+
+  it('treats trimmed, case-only, and Unicode-width variants as the same name', () => {
+    const items = [{ id: 'one', name: 'Code Review' }];
+
+    expect(isPromptNameTaken(items, '  code review  ')).toBe(true);
+    expect(isPromptNameTaken([{ id: 'one', name: 'Ｐｒｏｍｐｔ' }], 'Prompt')).toBe(true);
+  });
+
+  it('excludes the prompt being edited and ignores legacy unnamed prompts', () => {
+    const items = [
+      { id: 'legacy' },
+      { id: 'editing', name: 'Translator' },
+      { id: 'other', name: 'Summarizer' },
+    ];
+
+    expect(isPromptNameTaken(items, 'Translator', 'editing')).toBe(false);
+    expect(isPromptNameTaken(items, 'Summarizer', 'editing')).toBe(true);
   });
 });
