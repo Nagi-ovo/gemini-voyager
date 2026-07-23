@@ -171,9 +171,9 @@
     "message": "{count} prompts importés",
     "description": "Import success"
   },
-  "promptNameConflictsSkipped": {
-    "message": "{count} prompts ignorés, car leurs noms existent déjà",
-    "description": "Non-blocking notice when import or cloud merge skips duplicate prompt names"
+  "promptNameConflictsDetected": {
+    "message": "Tous les prompts ont été conservés. {count} ont un nom en double et ne peuvent pas utiliser / tant qu’ils ne sont pas renommés",
+    "description": "Avertissement non bloquant lorsque l’importation ou la fusion cloud conserve des noms en double"
   },
   "pm_duplicate": {
     "message": "Dupliquer le prompt",
@@ -270,6 +270,10 @@
   "pm_name_duplicate": {
     "message": "Ce nom de prompt existe déjà",
     "description": "Validation shown when saving a prompt with an existing name"
+  },
+  "pm_name_conflict_badge": {
+    "message": "Nom en double — renommez pour utiliser /",
+    "description": "Badge des prompts exclus de la saisie avec / à cause d’un nom en double"
   },
   "pm_prompt_manager": {
     "message": "Gestionnaire de prompts",

@@ -15,6 +15,14 @@ describe('prompt manager lifecycle', () => {
     expect(hideSettingBranch).toContain('void setSlashPromptEnabled(!shouldHide);');
   });
 
+  it('marks duplicate-name prompts with a persistent non-blocking badge', () => {
+    const code = readFileSync(resolve(process.cwd(), 'src/pages/content/prompt/index.ts'), 'utf8');
+
+    expect(code).toContain('const nameConflictIds = getPromptNameConflictIds(items);');
+    expect(code).toContain("createEl('span', 'gv-pm-chip gv-pm-name-conflict')");
+    expect(code).toContain("i18n.t('pm_name_conflict_badge')");
+  });
+
   it('destroys slash completion while hidden and starts one fresh controller when restored', async () => {
     const firstDestroy = vi.fn();
     const secondDestroy = vi.fn();

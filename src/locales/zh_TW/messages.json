@@ -171,9 +171,9 @@
     "message": "已匯入 {count} 條",
     "description": "匯入成功"
   },
-  "promptNameConflictsSkipped": {
-    "message": "已略過 {count} 個名稱重複的 Prompt",
-    "description": "匯入或雲端合併略過重名 Prompt 時的非阻斷提示"
+  "promptNameConflictsDetected": {
+    "message": "已保留全部 Prompt；其中 {count} 個名稱重複，重新命名後才能使用 / 快速插入",
+    "description": "匯入或雲端合併保留重名 Prompt 時的非阻斷提示"
   },
   "pm_duplicate": {
     "message": "重複的 prompt",
@@ -270,6 +270,10 @@
   "pm_name_duplicate": {
     "message": "Prompt 名稱已存在",
     "description": "Validation shown when saving a prompt with an existing name"
+  },
+  "pm_name_conflict_badge": {
+    "message": "名稱重複——重新命名後可使用 /",
+    "description": "名稱重複而無法使用 / 快速插入時顯示的標記"
   },
   "pm_prompt_manager": {
     "message": "提示詞管理器",

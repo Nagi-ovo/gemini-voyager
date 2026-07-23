@@ -5,7 +5,7 @@
  */
 import { AppError, ErrorCode } from '@/core/errors/AppError';
 import { type Result, StorageKeys } from '@/core/types/common';
-import { isPromptNameTaken } from '@/core/utils/promptName';
+import { getPromptNameConflictIds } from '@/core/utils/promptName';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 
 import type { PromptExportPayload, PromptItem } from '../types/backup';
@@ -295,7 +295,6 @@ export class PromptImportExportService {
 
       let imported = 0;
       let duplicates = 0;
-      let nameConflicts = 0;
 
       for (const item of importItems) {
         const key = item.text.toLowerCase();
@@ -311,11 +310,7 @@ export class PromptImportExportService {
             existingWithId === existing && incomingTime > existingTime;
 
           if (item.name && (shouldApplySameIdUpdate || !existing.name)) {
-            if (isPromptNameTaken(mergedItems, item.name, existing.id)) {
-              nameConflicts++;
-            } else {
-              existing.name = item.name;
-            }
+            existing.name = item.name;
           }
 
           if (shouldApplySameIdUpdate) {
@@ -331,10 +326,6 @@ export class PromptImportExportService {
           existing.updatedAt = Date.now();
           duplicates++;
         } else {
-          if (item.name && isPromptNameTaken(mergedItems, item.name)) {
-            nameConflicts++;
-            continue;
-          }
           const importedItem = {
             ...item,
             createdAt: Date.now(),
@@ -348,6 +339,7 @@ export class PromptImportExportService {
 
       // Save merged results
       mergedItems.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const nameConflicts = getPromptNameConflictIds(mergedItems).size;
 
       const saveResult = await this.savePrompts(mergedItems);
       if (!saveResult.success) {

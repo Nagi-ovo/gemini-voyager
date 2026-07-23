@@ -171,9 +171,9 @@
     "message": "{count}개의 프롬프트를 가져왔습니다",
     "description": "Import success"
   },
-  "promptNameConflictsSkipped": {
-    "message": "이름이 중복된 프롬프트 {count}개를 건너뛰었습니다",
-    "description": "Non-blocking notice when import or cloud merge skips duplicate prompt names"
+  "promptNameConflictsDetected": {
+    "message": "모든 프롬프트를 유지했습니다. 이름이 중복된 {count}개는 이름을 바꿀 때까지 / 빠른 삽입에서 사용할 수 없습니다",
+    "description": "가져오기 또는 클라우드 병합에서 중복 이름을 보존할 때 표시하는 비차단 알림"
   },
   "pm_duplicate": {
     "message": "중복 프롬프트",
@@ -270,6 +270,10 @@
   "pm_name_duplicate": {
     "message": "같은 프롬프트 이름이 이미 있습니다",
     "description": "Validation shown when saving a prompt with an existing name"
+  },
+  "pm_name_conflict_badge": {
+    "message": "이름 중복 — / 사용을 위해 이름 변경",
+    "description": "이름 중복으로 / 자동 완성에서 제외된 프롬프트 배지"
   },
   "pm_prompt_manager": {
     "message": "프롬프트 관리자",

@@ -171,9 +171,9 @@
     "message": "تم استيراد {count} مطالبة",
     "description": "Import success"
   },
-  "promptNameConflictsSkipped": {
-    "message": "تم تخطي {count} مطالبة لأن أسماءها موجودة بالفعل",
-    "description": "Non-blocking notice when import or cloud merge skips duplicate prompt names"
+  "promptNameConflictsDetected": {
+    "message": "تم الاحتفاظ بجميع المطالبات. هناك {count} بأسماء مكررة ولن تتاح عبر / حتى إعادة تسميتها",
+    "description": "إشعار غير معيق عند الاحتفاظ بأسماء مطالبات مكررة أثناء الاستيراد أو الدمج السحابي"
   },
   "pm_duplicate": {
     "message": "تكرار المطالبة",
@@ -270,6 +270,10 @@
   "pm_name_duplicate": {
     "message": "يوجد بالفعل موجّه بهذا الاسم",
     "description": "Validation shown when saving a prompt with an existing name"
+  },
+  "pm_name_conflict_badge": {
+    "message": "اسم مكرر — أعد التسمية لاستخدام /",
+    "description": "شارة للمطالبات المستبعدة من الإكمال عبر / بسبب تكرار الاسم"
   },
   "pm_prompt_manager": {
     "message": "مدير المطالبات",

@@ -21,6 +21,7 @@ import type {
 } from '@/core/types/sync';
 import { DEFAULT_SYNC_STATE } from '@/core/types/sync';
 import { getVoyagerBuildTarget, isSafari } from '@/core/utils/browser';
+import { getPromptNameConflictIds } from '@/core/utils/promptName';
 import { deleteSafariICloudBackup } from '@/core/utils/safariICloudSync';
 import { restorePluginState } from '@/features/plugins/storage/pluginState';
 import {
@@ -751,7 +752,10 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
           ? cloudFolderData
           : mergeFolderData(localFolders, cloudFolderData);
         const promptMerge = shouldOverwrite
-          ? { items: cloudPromptItems, nameConflicts: 0 }
+          ? {
+              items: cloudPromptItems,
+              nameConflicts: getPromptNameConflictIds(cloudPromptItems).size,
+            }
           : mergePromptsWithStats(localPrompts, cloudPromptItems);
         const nextPrompts = promptMerge.items;
         const nextStarred = shouldOverwrite
@@ -819,7 +823,7 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
         setStatusMessage({
           text:
             promptMerge.nameConflicts > 0
-              ? t('promptNameConflictsSkipped').replace(
+              ? t('promptNameConflictsDetected').replace(
                   '{count}',
                   String(promptMerge.nameConflicts),
                 )

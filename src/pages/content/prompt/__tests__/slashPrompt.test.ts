@@ -90,16 +90,31 @@ describe('matchSlashPrompts', () => {
     expect(matchSlashPrompts(prompts, 'legacy')).toEqual([]);
   });
 
-  it('keeps every historical prompt that shares the same name in slash completion', () => {
+  it('excludes every member of a normalized duplicate-name group', () => {
     const duplicateNames: PromptItem[] = [
       { id: 'first', name: 'Translator', text: 'First body', tags: [], createdAt: 1 },
-      { id: 'second', name: 'Translator', text: 'Second body', tags: [], createdAt: 2 },
+      { id: 'second', name: 'ＴＲＡＮＳＬＡＴＯＲ', text: 'Second body', tags: [], createdAt: 2 },
+      { id: 'unique', name: 'Summarizer', text: 'Unique body', tags: [], createdAt: 3 },
     ];
 
-    expect(matchSlashPrompts(duplicateNames, 'translator').map((item) => item.id)).toEqual([
-      'first',
-      'second',
+    expect(matchSlashPrompts(duplicateNames, 'translator')).toEqual([]);
+    expect(matchSlashPrompts(duplicateNames, 'summarizer').map((item) => item.id)).toEqual([
+      'unique',
     ]);
+  });
+
+  it('restores slash eligibility as soon as duplicate prompts have unique names', () => {
+    const items: PromptItem[] = [
+      { id: 'first', name: 'Translator', text: 'First body', tags: [], createdAt: 1 },
+      { id: 'second', name: 'translator', text: 'Second body', tags: [], createdAt: 2 },
+    ];
+
+    expect(matchSlashPrompts(items, 'translator')).toEqual([]);
+
+    items[1] = { ...items[1], name: 'Editor' };
+
+    expect(matchSlashPrompts(items, 'translator').map((item) => item.id)).toEqual(['first']);
+    expect(matchSlashPrompts(items, 'editor').map((item) => item.id)).toEqual(['second']);
   });
 });
 

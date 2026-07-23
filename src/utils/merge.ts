@@ -1,5 +1,5 @@
 import type { PromptItem } from '@/core/types/sync';
-import { isPromptNameTaken } from '@/core/utils/promptName';
+import { getPromptNameConflictIds } from '@/core/utils/promptName';
 import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 import type {
   TimelineHierarchyConversationData,
@@ -239,22 +239,17 @@ export interface PromptMergeResult {
 }
 
 /**
- * Preserves every historical local prompt while preventing a merge from
- * introducing a new duplicate name. Newer same-ID content still wins, but the
- * local name survives a legacy cloud record that omits it or a conflicting
- * cloud rename.
+ * Preserves every prompt even when names conflict. Newer same-ID content wins,
+ * while a local name survives a legacy cloud record that omits the field.
+ * Duplicate-name groups are reported so callers can show a non-blocking
+ * warning and slash completion can disable the ambiguous names.
  */
 export function mergePromptsWithStats(local: PromptItem[], cloud: PromptItem[]): PromptMergeResult {
   const itemMap = new Map<string, PromptItem>(local.map((item) => [item.id, item]));
-  let nameConflicts = 0;
 
   for (const cloudItem of cloud) {
     const localItem = itemMap.get(cloudItem.id);
     if (!localItem) {
-      if (cloudItem.name && isPromptNameTaken(Array.from(itemMap.values()), cloudItem.name)) {
-        nameConflicts++;
-        continue;
-      }
       itemMap.set(cloudItem.id, cloudItem);
       continue;
     }
@@ -263,22 +258,14 @@ export function mergePromptsWithStats(local: PromptItem[], cloud: PromptItem[]):
     const localTime = localItem.updatedAt || localItem.createdAt || 0;
     if (cloudTime <= localTime) continue;
 
-    if (
-      cloudItem.name &&
-      isPromptNameTaken(Array.from(itemMap.values()), cloudItem.name, cloudItem.id)
-    ) {
-      itemMap.set(cloudItem.id, { ...cloudItem, name: localItem.name });
-      nameConflicts++;
-      continue;
-    }
-
     itemMap.set(
       cloudItem.id,
       cloudItem.name === undefined ? { ...cloudItem, name: localItem.name } : cloudItem,
     );
   }
 
-  return { items: Array.from(itemMap.values()), nameConflicts };
+  const items = Array.from(itemMap.values());
+  return { items, nameConflicts: getPromptNameConflictIds(items).size };
 }
 
 /**

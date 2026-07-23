@@ -33,6 +33,7 @@ import {
 } from '@/core/utils/browser';
 import { getNativeOpenConversationUrl } from '@/core/utils/nativeOpenConversation';
 import { hasNotificationsPermission } from '@/core/utils/notificationsPermission';
+import { getPromptNameConflictIds } from '@/core/utils/promptName';
 import {
   SAFARI_CLIPBOARD_IMAGE_COPY_REQUEST,
   SAFARI_NATIVE_APP_ID,
@@ -2364,17 +2365,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 });
                 return;
               }
-              if (merged.data.nameConflicts > 0) {
-                // Keep the remote file untouched: uploading the filtered local
-                // result would erase the cloud-side historical conflict.
-                sendResponse({
-                  ok: true,
-                  skipped: true,
-                  nameConflicts: merged.data.nameConflicts,
-                  state: await googleDriveSyncService.getState(),
-                });
-                return;
-              }
             }
             const localResult = await PromptImportExportService.loadPrompts();
             const localPrompts = localResult.success ? localResult.data : [];
@@ -2386,6 +2376,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({
               ok: uploaded,
               count: localPrompts.length,
+              nameConflicts: getPromptNameConflictIds(localPrompts).size,
               state: await googleDriveSyncService.getState(),
             });
             return;

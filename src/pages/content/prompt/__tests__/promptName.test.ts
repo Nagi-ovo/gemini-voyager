@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isPromptNameTaken, normalizePromptName } from '../promptName';
+import { getPromptNameConflictIds, isPromptNameTaken, normalizePromptName } from '../promptName';
 
 describe('normalizePromptName', () => {
   it('trims a required prompt name', () => {
@@ -38,5 +38,20 @@ describe('normalizePromptName', () => {
 
     expect(isPromptNameTaken(items, 'translator', 'editing')).toBe(false);
     expect(isPromptNameTaken(items, 'Summarizer', 'editing')).toBe(true);
+  });
+
+  it('groups normalized duplicate names and clears conflicts after a unique rename', () => {
+    const items = [
+      { id: 'first', name: ' Translator ' },
+      { id: 'second', name: 'Ｔｒａｎｓｌａｔｏｒ' },
+      { id: 'unique', name: 'Summarizer' },
+      { id: 'legacy' },
+    ];
+
+    expect(Array.from(getPromptNameConflictIds(items)).sort()).toEqual(['first', 'second']);
+
+    items[1].name = 'Editor';
+
+    expect(Array.from(getPromptNameConflictIds(items))).toEqual([]);
   });
 });

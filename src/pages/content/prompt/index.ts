@@ -49,7 +49,7 @@ import { StarredMessagesService } from '../timeline/StarredMessagesService';
 import type { StarredMessage } from '../timeline/starredTypes';
 import { extractPlainTitle } from './compactTitle';
 import { activatePromptText } from './promptClickAction';
-import { isPromptNameTaken, normalizePromptName } from './promptName';
+import { getPromptNameConflictIds, isPromptNameTaken, normalizePromptName } from './promptName';
 import { getScrollHintState } from './scrollHint';
 import {
   createSlashPromptLifecycle,
@@ -1616,6 +1616,7 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
 
       const q = (searchInput.value || '').trim().toLowerCase();
       const selectedTagList = Array.from(selectedTags);
+      const nameConflictIds = getPromptNameConflictIds(items);
       const filtered = items.filter((it) => {
         const okTag =
           selectedTagList.length === 0 || selectedTagList.every((t) => it.tags.includes(t));
@@ -1774,6 +1775,13 @@ export async function startPromptManager(): Promise<{ destroy: () => void }> {
         });
         const bottom = createEl('div', 'gv-pm-bottom');
         const meta = createEl('div', 'gv-pm-item-meta');
+        if (nameConflictIds.has(it.id)) {
+          row.classList.add('gv-pm-item-name-conflict');
+          const conflict = createEl('span', 'gv-pm-chip gv-pm-name-conflict');
+          conflict.textContent =
+            i18n.t('pm_name_conflict_badge') || 'Duplicate name — rename to use /';
+          meta.appendChild(conflict);
+        }
         for (const t of it.tags) {
           const chip = createEl('span', 'gv-pm-chip');
           chip.textContent = t;

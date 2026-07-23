@@ -1399,7 +1399,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           kind: importResult.data.nameConflicts > 0 ? 'warn' : 'ok',
           text:
             importResult.data.nameConflicts > 0
-              ? t('promptNameConflictsSkipped').replace(
+              ? t('promptNameConflictsDetected').replace(
                   '{count}',
                   String(importResult.data.nameConflicts),
                 )
@@ -1450,7 +1450,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         kind: (response.nameConflicts ?? 0) > 0 ? 'warn' : 'ok',
         text:
           (response.nameConflicts ?? 0) > 0
-            ? t('promptNameConflictsSkipped').replace(
+            ? t('promptNameConflictsDetected').replace(
                 '{count}',
                 String(response.nameConflicts ?? 0),
               )
@@ -1471,28 +1471,21 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
       const response = (await chrome.runtime.sendMessage({
         type: 'gv.sync.pushPromptsMerge',
         payload: { interactive: true },
-      })) as
-        | { ok?: boolean; count?: number; skipped?: boolean; nameConflicts?: number }
-        | undefined;
+      })) as { ok?: boolean; count?: number; nameConflicts?: number } | undefined;
 
       if (!response?.ok) {
         setPromptMigrationStatus({ kind: 'err', text: t('promptCloudError') });
         return;
       }
-      if (response.skipped && (response.nameConflicts ?? 0) > 0) {
-        setPromptMigrationStatus({
-          kind: 'warn',
-          text: t('promptNameConflictsSkipped').replace(
-            '{count}',
-            String(response.nameConflicts ?? 0),
-          ),
-        });
-        return;
-      }
-
       setPromptMigrationStatus({
-        kind: 'ok',
-        text: t('promptCloudPushSuccess').replace('{count}', String(response.count ?? 0)),
+        kind: (response.nameConflicts ?? 0) > 0 ? 'warn' : 'ok',
+        text:
+          (response.nameConflicts ?? 0) > 0
+            ? t('promptNameConflictsDetected').replace(
+                '{count}',
+                String(response.nameConflicts ?? 0),
+              )
+            : t('promptCloudPushSuccess').replace('{count}', String(response.count ?? 0)),
       });
     } catch (error) {
       console.error('[Gemini Voyager] Failed to push prompts to cloud:', error);

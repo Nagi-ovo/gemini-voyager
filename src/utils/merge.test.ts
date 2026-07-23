@@ -273,7 +273,7 @@ describe('mergePromptsWithStats', () => {
     return { id, name, text, tags: [], createdAt: 1, updatedAt };
   }
 
-  it('preserves a historical local duplicate-name group and skips new cloud conflicts', () => {
+  it('preserves every cloud prompt and reports all members of duplicate-name groups', () => {
     const local = [
       prompt('legacy-a', 'Translator', 'First local body'),
       prompt('legacy-b', 'Ｔｒａｎｓｌａｔｏｒ', 'Second local body'),
@@ -285,11 +285,16 @@ describe('mergePromptsWithStats', () => {
 
     const result = mergePromptsWithStats(local, cloud);
 
-    expect(result.nameConflicts).toBe(1);
-    expect(result.items.map((item) => item.id)).toEqual(['legacy-a', 'legacy-b', 'unique']);
+    expect(result.nameConflicts).toBe(3);
+    expect(result.items.map((item) => item.id)).toEqual([
+      'legacy-a',
+      'legacy-b',
+      'conflict',
+      'unique',
+    ]);
   });
 
-  it('allows same-ID updates to keep a legacy duplicate name', () => {
+  it('applies same-ID updates while reporting a legacy duplicate-name group', () => {
     const local = [
       prompt('first', 'Translator', 'First body'),
       prompt('editing', 'translator', 'Old body'),
@@ -298,14 +303,14 @@ describe('mergePromptsWithStats', () => {
 
     const result = mergePromptsWithStats(local, cloud);
 
-    expect(result.nameConflicts).toBe(0);
+    expect(result.nameConflicts).toBe(2);
     expect(result.items.find((item) => item.id === 'editing')).toMatchObject({
       name: 'TRANSLATOR',
       text: 'Updated body',
     });
   });
 
-  it('keeps the local name when a cloud rename conflicts with another prompt', () => {
+  it('keeps a newer conflicting cloud rename and reports both affected prompts', () => {
     const local = [
       prompt('editing', 'Translator', 'Old body'),
       prompt('other', 'Summarizer', 'Other body'),
@@ -314,9 +319,9 @@ describe('mergePromptsWithStats', () => {
 
     const result = mergePromptsWithStats(local, cloud);
 
-    expect(result.nameConflicts).toBe(1);
+    expect(result.nameConflicts).toBe(2);
     expect(result.items.find((item) => item.id === 'editing')).toMatchObject({
-      name: 'Translator',
+      name: 'summarizer',
       text: 'Updated body',
     });
   });

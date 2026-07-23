@@ -3,6 +3,7 @@ import browser from 'webextension-polyfill';
 import { promptStorageService } from '@/core/services/StorageService';
 import { StorageKeys } from '@/core/types/common';
 import { type PromptItem } from '@/core/types/sync';
+import { getPromptNameComparisonKey, getPromptNameConflictIds } from '@/core/utils/promptName';
 
 import { findChatInput, insertTextIntoChatInput } from '../chatInput/index';
 import { findClosestSendActionButton } from '../sendBehavior/sendButton';
@@ -128,17 +129,20 @@ function isPromptItem(value: unknown): value is PromptItem {
 }
 
 function usablePrompts(items: PromptItem[]): PromptItem[] {
-  return items.filter((item) => typeof item.name === 'string' && item.name.trim() !== '');
+  const conflictIds = getPromptNameConflictIds(items);
+  return items.filter(
+    (item) => typeof item.name === 'string' && item.name.trim() !== '' && !conflictIds.has(item.id),
+  );
 }
 
 /** Matches names only. Prompt body and tags are deliberately excluded. */
 export function matchSlashPrompts(items: PromptItem[], query: string): PromptItem[] {
-  const normalizedQuery = query.trim().toLocaleLowerCase();
+  const normalizedQuery = getPromptNameComparisonKey(query);
   return usablePrompts(items)
-    .filter((item) => item.name!.toLocaleLowerCase().includes(normalizedQuery))
+    .filter((item) => getPromptNameComparisonKey(item.name!).includes(normalizedQuery))
     .sort((left, right) => {
-      const leftName = left.name!.toLocaleLowerCase();
-      const rightName = right.name!.toLocaleLowerCase();
+      const leftName = getPromptNameComparisonKey(left.name!);
+      const rightName = getPromptNameComparisonKey(right.name!);
       const leftPrefix = leftName.startsWith(normalizedQuery) ? 0 : 1;
       const rightPrefix = rightName.startsWith(normalizedQuery) ? 0 : 1;
       return leftPrefix - rightPrefix || leftName.localeCompare(rightName);

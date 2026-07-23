@@ -171,9 +171,9 @@
     "message": "{count} 件のプロンプトをインポートしました",
     "description": "Import success"
   },
-  "promptNameConflictsSkipped": {
-    "message": "名前が重複しているため、{count} 件のプロンプトをスキップしました",
-    "description": "Non-blocking notice when import or cloud merge skips duplicate prompt names"
+  "promptNameConflictsDetected": {
+    "message": "すべてのプロンプトを保持しました。名前が重複する {count} 件は、名前を変更するまで / から使用できません",
+    "description": "インポートまたはクラウド統合で重複名を保持したときの非ブロッキング通知"
   },
   "pm_duplicate": {
     "message": "プロンプトを複製",
@@ -270,6 +270,10 @@
   "pm_name_duplicate": {
     "message": "同じプロンプト名が既に存在します",
     "description": "Validation shown when saving a prompt with an existing name"
+  },
+  "pm_name_conflict_badge": {
+    "message": "名前が重複 — / で使うには変更してください",
+    "description": "名前の重複により / 補完から除外されたプロンプトのバッジ"
   },
   "pm_prompt_manager": {
     "message": "プロンプトマネージャー",

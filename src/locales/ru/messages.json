@@ -171,9 +171,9 @@
     "message": "Импортировано {count} промптов",
     "description": "Import success"
   },
-  "promptNameConflictsSkipped": {
-    "message": "Пропущено промптов с уже существующими именами: {count}",
-    "description": "Non-blocking notice when import or cloud merge skips duplicate prompt names"
+  "promptNameConflictsDetected": {
+    "message": "Все промпты сохранены. У {count} совпадают имена, поэтому они недоступны через / до переименования",
+    "description": "Неблокирующее уведомление о сохранённых совпадающих именах при импорте или облачном слиянии"
   },
   "pm_duplicate": {
     "message": "Дублировать промпт",
@@ -270,6 +270,10 @@
   "pm_name_duplicate": {
     "message": "Промпт с таким названием уже существует",
     "description": "Validation shown when saving a prompt with an existing name"
+  },
+  "pm_name_conflict_badge": {
+    "message": "Имя дублируется — переименуйте для /",
+    "description": "Метка промптов, исключённых из дополнения через / из-за совпадающего имени"
   },
   "pm_prompt_manager": {
     "message": "Менеджер промптов",

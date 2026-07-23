@@ -2926,6 +2926,29 @@ body.dark-theme .gv-pm-chip {
   border: none;
 }
 
+.gv-pm-chip.gv-pm-name-conflict,
+.gv-pm-chip.gv-pm-name-conflict:hover {
+  cursor: default;
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+.theme-host.light-theme .gv-pm-chip.gv-pm-name-conflict,
+.theme-host.light-theme .gv-pm-chip.gv-pm-name-conflict:hover,
+body.light-theme .gv-pm-chip.gv-pm-name-conflict,
+body.light-theme .gv-pm-chip.gv-pm-name-conflict:hover {
+  background: rgba(217, 119, 6, 0.12);
+  color: #92400e;
+}
+
+.theme-host.dark-theme .gv-pm-chip.gv-pm-name-conflict,
+.theme-host.dark-theme .gv-pm-chip.gv-pm-name-conflict:hover,
+body.dark-theme .gv-pm-chip.gv-pm-name-conflict,
+body.dark-theme .gv-pm-chip.gv-pm-name-conflict:hover {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
 .gv-pm-actions {
   display: inline-flex;
   gap: 8px;
