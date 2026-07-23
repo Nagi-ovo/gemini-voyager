@@ -28,4 +28,15 @@ describe('normalizePromptName', () => {
     expect(isPromptNameTaken(items, 'Translator', 'editing')).toBe(false);
     expect(isPromptNameTaken(items, 'Summarizer', 'editing')).toBe(true);
   });
+
+  it('allows a legacy duplicate-name item to keep its name while editing other fields', () => {
+    const items = [
+      { id: 'first', name: 'Translator' },
+      { id: 'editing', name: 'Ｔｒａｎｓｌａｔｏｒ' },
+      { id: 'other', name: 'Summarizer' },
+    ];
+
+    expect(isPromptNameTaken(items, 'translator', 'editing')).toBe(false);
+    expect(isPromptNameTaken(items, 'Summarizer', 'editing')).toBe(true);
+  });
 });

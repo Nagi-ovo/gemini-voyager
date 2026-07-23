@@ -171,6 +171,10 @@
     "message": "已匯入 {count} 條",
     "description": "匯入成功"
   },
+  "promptNameConflictsSkipped": {
+    "message": "已略過 {count} 個名稱重複的 Prompt",
+    "description": "匯入或雲端合併略過重名 Prompt 時的非阻斷提示"
+  },
   "pm_duplicate": {
     "message": "重複的 prompt",
     "description": "新增重複"

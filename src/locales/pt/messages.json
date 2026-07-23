@@ -171,6 +171,10 @@
     "message": "Importado(s) {count} prompt(s)",
     "description": "Import success"
   },
+  "promptNameConflictsSkipped": {
+    "message": "{count} prompt(s) ignorado(s) porque os nomes já existem",
+    "description": "Non-blocking notice when import or cloud merge skips duplicate prompt names"
+  },
   "pm_duplicate": {
     "message": "Duplicar prompt",
     "description": "Duplicate on add"

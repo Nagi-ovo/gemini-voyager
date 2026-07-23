@@ -2334,6 +2334,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               ok: merged.success,
               imported: merged.success ? merged.data.imported : 0,
               duplicates: merged.success ? merged.data.duplicates : 0,
+              nameConflicts: merged.success ? merged.data.nameConflicts : 0,
               state: await googleDriveSyncService.getState(),
             });
             return;
@@ -2355,7 +2356,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             );
             const validated = PromptImportExportService.validatePayload(cloudPayload);
             if (validated.success) {
-              await PromptImportExportService.importFromPayload(validated.data);
+              const merged = await PromptImportExportService.importFromPayload(validated.data);
+              if (!merged.success) {
+                sendResponse({
+                  ok: false,
+                  state: await googleDriveSyncService.getState(),
+                });
+                return;
+              }
+              if (merged.data.nameConflicts > 0) {
+                // Keep the remote file untouched: uploading the filtered local
+                // result would erase the cloud-side historical conflict.
+                sendResponse({
+                  ok: true,
+                  skipped: true,
+                  nameConflicts: merged.data.nameConflicts,
+                  state: await googleDriveSyncService.getState(),
+                });
+                return;
+              }
             }
             const localResult = await PromptImportExportService.loadPrompts();
             const localPrompts = localResult.success ? localResult.data : [];

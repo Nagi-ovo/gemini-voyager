@@ -171,6 +171,10 @@
     "message": "Импортировано {count} промптов",
     "description": "Import success"
   },
+  "promptNameConflictsSkipped": {
+    "message": "Пропущено промптов с уже существующими именами: {count}",
+    "description": "Non-blocking notice when import or cloud merge skips duplicate prompt names"
+  },
   "pm_duplicate": {
     "message": "Дублировать промпт",
     "description": "Duplicate on add"

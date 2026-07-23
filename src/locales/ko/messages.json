@@ -171,6 +171,10 @@
     "message": "{count}개의 프롬프트를 가져왔습니다",
     "description": "Import success"
   },
+  "promptNameConflictsSkipped": {
+    "message": "이름이 중복된 프롬프트 {count}개를 건너뛰었습니다",
+    "description": "Non-blocking notice when import or cloud merge skips duplicate prompt names"
+  },
   "pm_duplicate": {
     "message": "중복 프롬프트",
     "description": "Duplicate on add"

@@ -171,6 +171,10 @@
     "message": "تم استيراد {count} مطالبة",
     "description": "Import success"
   },
+  "promptNameConflictsSkipped": {
+    "message": "تم تخطي {count} مطالبة لأن أسماءها موجودة بالفعل",
+    "description": "Non-blocking notice when import or cloud merge skips duplicate prompt names"
+  },
   "pm_duplicate": {
     "message": "تكرار المطالبة",
     "description": "Duplicate on add"

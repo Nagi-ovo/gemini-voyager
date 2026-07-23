@@ -89,6 +89,18 @@ describe('matchSlashPrompts', () => {
     expect(matchSlashPrompts(prompts, 'correctness')).toEqual([]);
     expect(matchSlashPrompts(prompts, 'legacy')).toEqual([]);
   });
+
+  it('keeps every historical prompt that shares the same name in slash completion', () => {
+    const duplicateNames: PromptItem[] = [
+      { id: 'first', name: 'Translator', text: 'First body', tags: [], createdAt: 1 },
+      { id: 'second', name: 'Translator', text: 'Second body', tags: [], createdAt: 2 },
+    ];
+
+    expect(matchSlashPrompts(duplicateNames, 'translator').map((item) => item.id)).toEqual([
+      'first',
+      'second',
+    ]);
+  });
 });
 
 describe('isGeminiSlashPromptSurface', () => {

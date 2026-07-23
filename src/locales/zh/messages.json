@@ -171,6 +171,10 @@
     "message": "已导入 {count} 条",
     "description": "导入成功"
   },
+  "promptNameConflictsSkipped": {
+    "message": "已跳过 {count} 个名称重复的 Prompt",
+    "description": "导入或云端合并跳过重名 Prompt 时的非阻断提示"
+  },
   "pm_duplicate": {
     "message": "重复的 prompt",
     "description": "新增重复"

@@ -38,7 +38,7 @@ import { Switch } from '../../../components/ui/switch';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import {
   mergeFolderData,
-  mergePrompts,
+  mergePromptsWithStats,
   mergeStarredMessages,
   mergeTimelineHierarchy,
 } from '../../../utils/merge';
@@ -750,9 +750,10 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
         const nextFolders = shouldOverwrite
           ? cloudFolderData
           : mergeFolderData(localFolders, cloudFolderData);
-        const nextPrompts = shouldOverwrite
-          ? cloudPromptItems
-          : mergePrompts(localPrompts, cloudPromptItems);
+        const promptMerge = shouldOverwrite
+          ? { items: cloudPromptItems, nameConflicts: 0 }
+          : mergePromptsWithStats(localPrompts, cloudPromptItems);
+        const nextPrompts = promptMerge.items;
         const nextStarred = shouldOverwrite
           ? cloudStarredData
           : mergeStarredMessages(localStarred, cloudStarredData);
@@ -816,14 +817,23 @@ export function CloudSyncSettings({ sourceTabId }: CloudSyncSettingsProps = {}) 
 
         const foldersMissing = !hasCloudFolderData;
         setStatusMessage({
-          text: t(
-            foldersMissing
-              ? 'syncSuccessFoldersMissing'
-              : response.highlights?.skipped
-                ? 'syncSuccessHighlightsSkipped'
-                : 'syncSuccess',
-          ),
-          kind: foldersMissing || response.highlights?.skipped ? 'warn' : 'ok',
+          text:
+            promptMerge.nameConflicts > 0
+              ? t('promptNameConflictsSkipped').replace(
+                  '{count}',
+                  String(promptMerge.nameConflicts),
+                )
+              : t(
+                  foldersMissing
+                    ? 'syncSuccessFoldersMissing'
+                    : response.highlights?.skipped
+                      ? 'syncSuccessHighlightsSkipped'
+                      : 'syncSuccess',
+                ),
+          kind:
+            foldersMissing || response.highlights?.skipped || promptMerge.nameConflicts > 0
+              ? 'warn'
+              : 'ok',
         });
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Download failed';

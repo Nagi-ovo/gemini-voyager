@@ -171,6 +171,10 @@
     "message": "{count} 件のプロンプトをインポートしました",
     "description": "Import success"
   },
+  "promptNameConflictsSkipped": {
+    "message": "名前が重複しているため、{count} 件のプロンプトをスキップしました",
+    "description": "Non-blocking notice when import or cloud merge skips duplicate prompt names"
+  },
   "pm_duplicate": {
     "message": "プロンプトを複製",
     "description": "Duplicate on add"
