@@ -56,6 +56,12 @@ interface SelectedPrompt {
   text: string;
 }
 
+interface PendingPromptEdit {
+  start: number;
+  end: number;
+  previousLength: number;
+}
+
 type PromptBackspaceResult =
   | { kind: 'spacer'; caretOffset: number; token: HTMLElement | null }
   | { kind: 'prompt'; index: number; caretOffset: number };
@@ -766,36 +772,36 @@ function hasPromptToken(input: HTMLElement): boolean {
   return selectedPrompts.has(input) || Boolean(input.querySelector(`.${TOKEN_CLASS}`));
 }
 
+function getInputSelectionOffsets(input: HTMLElement): { start: number; end: number } | null {
+  if (input instanceof HTMLTextAreaElement) {
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    return start === null || end === null ? null : { start, end };
+  }
+
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return null;
+  const range = selection.getRangeAt(0);
+  if (!input.contains(range.startContainer) || !input.contains(range.endContainer)) return null;
+
+  const startRange = document.createRange();
+  startRange.selectNodeContents(input);
+  startRange.setEnd(range.startContainer, range.startOffset);
+  const endRange = document.createRange();
+  endRange.selectNodeContents(input);
+  endRange.setEnd(range.endContainer, range.endOffset);
+  return { start: startRange.toString().length, end: endRange.toString().length };
+}
+
 function getSelectedPromptIndexes(input: HTMLElement): number[] {
   const prompts = selectedPrompts.get(input) || [];
   if (prompts.length === 0) return [];
 
-  let selectionStart: number;
-  let selectionEnd: number;
-  if (input instanceof HTMLTextAreaElement) {
-    selectionStart = input.selectionStart ?? 0;
-    selectionEnd = input.selectionEnd ?? selectionStart;
-  } else {
-    const selection = window.getSelection();
-    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return [];
-    const range = selection.getRangeAt(0);
-    if (!input.contains(range.startContainer) || !input.contains(range.endContainer)) {
-      return [];
-    }
-    const startRange = document.createRange();
-    startRange.selectNodeContents(input);
-    startRange.setEnd(range.startContainer, range.startOffset);
-    selectionStart = startRange.toString().length;
-    const endRange = document.createRange();
-    endRange.selectNodeContents(input);
-    endRange.setEnd(range.endContainer, range.endOffset);
-    selectionEnd = endRange.toString().length;
-  }
-
-  if (selectionStart === selectionEnd) return [];
+  const selection = getInputSelectionOffsets(input);
+  if (!selection || selection.start === selection.end) return [];
   return prompts.flatMap((prompt, index) => {
     const promptEnd = prompt.start + prompt.name.length;
-    return selectionStart < promptEnd && selectionEnd > prompt.start ? [index] : [];
+    return selection.start < promptEnd && selection.end > prompt.start ? [index] : [];
   });
 }
 
@@ -813,8 +819,17 @@ function findPromptInputForSendButton(button: HTMLElement): HTMLElement | null {
   return null;
 }
 
-function refreshPromptStarts(input: HTMLElement, inputText: string): void {
+function refreshPromptStarts(
+  input: HTMLElement,
+  inputText: string,
+  pendingEdit: PendingPromptEdit | null,
+): void {
   for (const prompt of selectedPrompts.get(input) || []) {
+    // Move the remembered occurrence by the real edit delta before matching names.
+    // Otherwise an identical name inserted at the old offset can steal this prompt.
+    if (pendingEdit && pendingEdit.end <= prompt.start) {
+      prompt.start = Math.max(0, prompt.start + inputText.length - pendingEdit.previousLength);
+    }
     const candidates: number[] = [];
     let index = inputText.indexOf(prompt.name);
     while (index >= 0) {
@@ -983,6 +998,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
   let textareaTokenInput: HTMLElement | null = null;
   let ctrlEnterSendEnabled = options.initialCtrlEnterSend === true;
   const slashRefreshSuppressedInputs = new WeakSet<HTMLElement>();
+  const pendingPromptEdits = new WeakMap<HTMLElement, PendingPromptEdit>();
 
   const root = document.createElement('div');
   root.id = ROOT_ID;
@@ -1236,6 +1252,11 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
       ) {
         selectedPrompts.delete(rememberedInput);
         selectedPrompts.set(input, rememberedPrompts);
+        const pendingEdit = pendingPromptEdits.get(rememberedInput);
+        if (pendingEdit) {
+          pendingPromptEdits.delete(rememberedInput);
+          pendingPromptEdits.set(input, pendingEdit);
+        }
         textareaTokenInput = input;
         tokenResizeObserver?.disconnect();
         tokenResizeObserver?.observe(input);
@@ -1256,7 +1277,9 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
       textareaTokenInput = null;
       selectedPrompts.delete(input);
     }
-    refreshPromptStarts(input, inputText);
+    const pendingEdit = pendingPromptEdits.get(input) || null;
+    pendingPromptEdits.delete(input);
+    refreshPromptStarts(input, inputText, pendingEdit);
     if (input instanceof HTMLTextAreaElement && !input.value.trim()) {
       removeTextareaTokens(textareaTokens, textareaTokenInput);
       textareaTokenInput = null;
@@ -1384,9 +1407,16 @@ export function startPromptSlashCommand(options: SlashPromptOptions = {}): Slash
   }
 
   function onBeforeInput(event: InputEvent): void {
-    if (!event.inputType.startsWith('delete')) return;
     const input = inputFromTarget(event.target);
     if (!input) return;
+    const selection = getInputSelectionOffsets(input);
+    if (selection) {
+      pendingPromptEdits.set(input, {
+        ...selection,
+        previousLength: readText(input).length,
+      });
+    }
+    if (!event.inputType.startsWith('delete')) return;
     if (!root.hidden && activeInput === input) close();
     removeSelectedPromptRecords(input, getSelectedPromptIndexes(input));
   }

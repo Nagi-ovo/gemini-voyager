@@ -867,6 +867,36 @@ describe('slash prompt completion', () => {
     );
   });
 
+  it('keeps a rebuilt prompt anchored when the same name is inserted before it', () => {
+    const input = createContentEditable('/review');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+
+    input.textContent = 'Code Review';
+    typeInto(input);
+    const selection = window.getSelection()!;
+    const range = document.createRange();
+    range.setStart(input.firstChild!, 0);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    input.dispatchEvent(
+      new InputEvent('beforeinput', {
+        bubbles: true,
+        cancelable: true,
+        data: 'Code Review ',
+        inputType: 'insertFromPaste',
+      }),
+    );
+    input.textContent = 'Code Review Code Review';
+    typeInto(input);
+
+    press(input, 'Enter');
+
+    expect(input.textContent).toBe('Code Review Review this code and report correctness issues.');
+  });
+
   it('removes the repeated prompt token immediately before the caret', () => {
     const input = createContentEditable('/review');
     destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
