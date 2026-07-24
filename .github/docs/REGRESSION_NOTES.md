@@ -35,13 +35,14 @@ Mermaid diagrams rendered with the dark theme.
 
 Root cause:
 
-Mermaid combined explicit dark-page markers and `prefers-color-scheme: dark`
-with OR logic, so it could not represent an explicit light page state.
+Mermaid treated generic `body`/`html` dark markers as equal to Gemini's
+higher-priority `.theme-host.light-theme`, so stale outer markers could
+override the active Gemini theme.
 
 Fix:
 
-Resolve explicit Gemini dark and light signals before falling back to the
-browser preference.
+Resolve `.theme-host` first, then generic page markers, and only then fall back
+to the browser preference.
 
 Regression test:
 

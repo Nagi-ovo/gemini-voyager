@@ -51,20 +51,38 @@ describe('Mermaid dynamic loading', () => {
   });
 
   describe('resolveMermaidTheme', () => {
-    it('prefers an explicit Gemini light theme over a dark system preference', () => {
+    it('prefers an explicit Gemini light host over generic dark markers', () => {
       const page = document.implementation.createHTMLDocument();
       const themeHost = page.createElement('div');
       themeHost.className = 'theme-host light-theme';
       page.body.append(themeHost);
+      page.body.classList.add('dark-theme');
+      page.documentElement.classList.add('dark');
+      page.body.dataset.theme = 'dark';
 
       expect(resolveMermaidTheme(page, true)).toBe('default');
     });
 
-    it('prefers an explicit Gemini dark theme over a light system preference', () => {
+    it('prefers an explicit Gemini dark host over generic light markers', () => {
       const page = document.implementation.createHTMLDocument();
-      page.body.dataset.theme = 'dark';
+      const themeHost = page.createElement('div');
+      themeHost.className = 'theme-host dark-theme';
+      page.body.append(themeHost);
+      page.body.classList.add('light-theme');
+      page.documentElement.classList.add('light');
+      page.body.dataset.theme = 'light';
 
       expect(resolveMermaidTheme(page, false)).toBe('dark');
+    });
+
+    it('uses generic page markers when Gemini exposes no theme host', () => {
+      const darkPage = document.implementation.createHTMLDocument();
+      darkPage.body.dataset.theme = 'dark';
+      expect(resolveMermaidTheme(darkPage, false)).toBe('dark');
+
+      const lightPage = document.implementation.createHTMLDocument();
+      lightPage.body.dataset.theme = 'light';
+      expect(resolveMermaidTheme(lightPage, true)).toBe('default');
     });
 
     it('falls back to a dark system preference when Gemini exposes no theme', () => {

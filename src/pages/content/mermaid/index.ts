@@ -47,17 +47,18 @@ export function resolveMermaidTheme(doc: Document, prefersDark: boolean): 'dark'
   const body = doc.body;
   const root = doc.documentElement;
 
+  if (doc.querySelector('.theme-host.dark-theme')) return 'dark';
+  if (doc.querySelector('.theme-host.light-theme')) return 'default';
+
   const hasExplicitDarkTheme = Boolean(
-    doc.querySelector('.theme-host.dark-theme') ||
-      body.classList.contains('dark-theme') ||
+    body.classList.contains('dark-theme') ||
       root.classList.contains('dark') ||
       body.getAttribute('data-theme') === 'dark',
   );
   if (hasExplicitDarkTheme) return 'dark';
 
   const hasExplicitLightTheme = Boolean(
-    doc.querySelector('.theme-host.light-theme') ||
-      body.classList.contains('light-theme') ||
+    body.classList.contains('light-theme') ||
       root.classList.contains('light') ||
       body.getAttribute('data-theme') === 'light',
   );
