@@ -721,6 +721,18 @@ const getCodeBlockLanguage = (codeEl: Element): string | null => {
  * These are labels that don't represent a specific programming language
  */
 const GENERIC_LANGUAGE_LABELS = new Set([
+  // Arabic
+  'مقتطف الرمز',
+  // Spanish
+  'fragmento de código',
+  // French
+  'extrait de code',
+  // Korean
+  '코드 스니펫',
+  // Portuguese
+  'snippet de código',
+  // Russian
+  'фрагмент кода',
   // Simplified Chinese
   '代码段',
   '代码',

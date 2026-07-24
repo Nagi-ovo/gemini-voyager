@@ -474,6 +474,21 @@ describe('Mermaid dynamic loading', () => {
       expect(isGenericLanguageLabel('コード スニペット')).toBe(true);
     });
 
+    it('should return true for the remaining verified Gemini localized labels', () => {
+      const labels = [
+        'مقتطف الرمز',
+        'Fragmento de código',
+        'Extrait de code',
+        '코드 스니펫',
+        'Snippet de código',
+        'Фрагмент кода',
+      ];
+
+      labels.forEach((label) => {
+        expect(isGenericLanguageLabel(label)).toBe(true);
+      });
+    });
+
     it('should return false for specific programming languages', () => {
       expect(isGenericLanguageLabel('python')).toBe(false);
       expect(isGenericLanguageLabel('javascript')).toBe(false);
