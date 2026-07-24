@@ -33,6 +33,7 @@ import {
 } from '@/core/utils/browser';
 import { getNativeOpenConversationUrl } from '@/core/utils/nativeOpenConversation';
 import { hasNotificationsPermission } from '@/core/utils/notificationsPermission';
+import { getPromptNameConflictIds } from '@/core/utils/promptName';
 import {
   SAFARI_CLIPBOARD_IMAGE_COPY_REQUEST,
   SAFARI_NATIVE_APP_ID,
@@ -2334,6 +2335,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               ok: merged.success,
               imported: merged.success ? merged.data.imported : 0,
               duplicates: merged.success ? merged.data.duplicates : 0,
+              nameConflicts: merged.success ? merged.data.nameConflicts : 0,
               state: await googleDriveSyncService.getState(),
             });
             return;
@@ -2355,7 +2357,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             );
             const validated = PromptImportExportService.validatePayload(cloudPayload);
             if (validated.success) {
-              await PromptImportExportService.importFromPayload(validated.data);
+              const merged = await PromptImportExportService.importFromPayload(validated.data);
+              if (!merged.success) {
+                sendResponse({
+                  ok: false,
+                  state: await googleDriveSyncService.getState(),
+                });
+                return;
+              }
             }
             const localResult = await PromptImportExportService.loadPrompts();
             const localPrompts = localResult.success ? localResult.data : [];
@@ -2367,6 +2376,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             sendResponse({
               ok: uploaded,
               count: localPrompts.length,
+              nameConflicts: getPromptNameConflictIds(localPrompts).size,
               state: await googleDriveSyncService.getState(),
             });
             return;

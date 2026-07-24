@@ -171,6 +171,10 @@
     "message": "Importados {count} prompts",
     "description": "Import success"
   },
+  "promptNameConflictsDetected": {
+    "message": "Se conservaron todos los prompts. {count} tienen nombres duplicados y no podrán usarse con / hasta que se cambien",
+    "description": "Aviso no bloqueante cuando la importación o la combinación en la nube conserva nombres duplicados"
+  },
   "pm_duplicate": {
     "message": "Duplicar prompt",
     "description": "Duplicate on add"
@@ -256,8 +260,20 @@
     "description": "View-mode toggle tooltip - switch from compact rows to comfortable cards with markdown preview"
   },
   "pm_name_placeholder": {
-    "message": "Nombre (opcional)",
-    "description": "Placeholder for the optional prompt name/label input used as the compact-mode headline"
+    "message": "Nombre",
+    "description": "Placeholder for the required prompt name input"
+  },
+  "pm_name_required": {
+    "message": "El nombre del prompt es obligatorio",
+    "description": "Validation shown when saving a prompt without a name"
+  },
+  "pm_name_duplicate": {
+    "message": "Ya existe un prompt con este nombre",
+    "description": "Validation shown when saving a prompt with an existing name"
+  },
+  "pm_name_conflict_badge": {
+    "message": "Nombre duplicado — cámbialo para usar /",
+    "description": "Etiqueta para prompts excluidos del autocompletado con / por tener un nombre duplicado"
   },
   "pm_prompt_manager": {
     "message": "Gestor de prompts",

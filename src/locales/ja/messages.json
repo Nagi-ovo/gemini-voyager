@@ -171,6 +171,10 @@
     "message": "{count} 件のプロンプトをインポートしました",
     "description": "Import success"
   },
+  "promptNameConflictsDetected": {
+    "message": "すべてのプロンプトを保持しました。名前が重複する {count} 件は、名前を変更するまで / から使用できません",
+    "description": "インポートまたはクラウド統合で重複名を保持したときの非ブロッキング通知"
+  },
   "pm_duplicate": {
     "message": "プロンプトを複製",
     "description": "Duplicate on add"
@@ -256,8 +260,20 @@
     "description": "View-mode toggle tooltip - switch from compact rows to comfortable cards with markdown preview"
   },
   "pm_name_placeholder": {
-    "message": "名前（任意）",
-    "description": "Placeholder for the optional prompt name/label input used as the compact-mode headline"
+    "message": "名前",
+    "description": "Placeholder for the required prompt name input"
+  },
+  "pm_name_required": {
+    "message": "プロンプト名は必須です",
+    "description": "Validation shown when saving a prompt without a name"
+  },
+  "pm_name_duplicate": {
+    "message": "同じプロンプト名が既に存在します",
+    "description": "Validation shown when saving a prompt with an existing name"
+  },
+  "pm_name_conflict_badge": {
+    "message": "名前が重複 — / で使うには変更してください",
+    "description": "名前の重複により / 補完から除外されたプロンプトのバッジ"
   },
   "pm_prompt_manager": {
     "message": "プロンプトマネージャー",

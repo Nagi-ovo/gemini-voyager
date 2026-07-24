@@ -946,7 +946,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const [hidePromptManager, setHidePromptManager] = useState<boolean>(false);
   const [promptInsertOnClickEnabled, setPromptInsertOnClickEnabled] = useState<boolean>(false);
   const [promptMigrationStatus, setPromptMigrationStatus] = useState<{
-    kind: 'ok' | 'err';
+    kind: 'ok' | 'warn' | 'err';
     text: string;
   } | null>(null);
   const [promptMigrationBusy, setPromptMigrationBusy] = useState<boolean>(false);
@@ -1396,8 +1396,14 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
 
         const processed = importResult.data.imported + importResult.data.duplicates;
         setPromptMigrationStatus({
-          kind: 'ok',
-          text: t('pm_import_success').replace('{count}', String(processed)),
+          kind: importResult.data.nameConflicts > 0 ? 'warn' : 'ok',
+          text:
+            importResult.data.nameConflicts > 0
+              ? t('promptNameConflictsDetected').replace(
+                  '{count}',
+                  String(importResult.data.nameConflicts),
+                )
+              : t('pm_import_success').replace('{count}', String(processed)),
         });
       } catch (error) {
         console.error('[Gemini Voyager] Failed to import prompts:', error);
@@ -1420,7 +1426,15 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
       const response = (await chrome.runtime.sendMessage({
         type: 'gv.sync.pullPromptsMerge',
         payload: { interactive: true },
-      })) as { ok?: boolean; empty?: boolean; imported?: number; duplicates?: number } | undefined;
+      })) as
+        | {
+            ok?: boolean;
+            empty?: boolean;
+            imported?: number;
+            duplicates?: number;
+            nameConflicts?: number;
+          }
+        | undefined;
 
       if (!response?.ok) {
         setPromptMigrationStatus({ kind: 'err', text: t('promptCloudError') });
@@ -1433,8 +1447,14 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
 
       const processed = (response.imported ?? 0) + (response.duplicates ?? 0);
       setPromptMigrationStatus({
-        kind: 'ok',
-        text: t('promptCloudPullSuccess').replace('{count}', String(processed)),
+        kind: (response.nameConflicts ?? 0) > 0 ? 'warn' : 'ok',
+        text:
+          (response.nameConflicts ?? 0) > 0
+            ? t('promptNameConflictsDetected').replace(
+                '{count}',
+                String(response.nameConflicts ?? 0),
+              )
+            : t('promptCloudPullSuccess').replace('{count}', String(processed)),
       });
     } catch (error) {
       console.error('[Gemini Voyager] Failed to pull prompts from cloud:', error);
@@ -1451,16 +1471,21 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
       const response = (await chrome.runtime.sendMessage({
         type: 'gv.sync.pushPromptsMerge',
         payload: { interactive: true },
-      })) as { ok?: boolean; count?: number } | undefined;
+      })) as { ok?: boolean; count?: number; nameConflicts?: number } | undefined;
 
       if (!response?.ok) {
         setPromptMigrationStatus({ kind: 'err', text: t('promptCloudError') });
         return;
       }
-
       setPromptMigrationStatus({
-        kind: 'ok',
-        text: t('promptCloudPushSuccess').replace('{count}', String(response.count ?? 0)),
+        kind: (response.nameConflicts ?? 0) > 0 ? 'warn' : 'ok',
+        text:
+          (response.nameConflicts ?? 0) > 0
+            ? t('promptNameConflictsDetected').replace(
+                '{count}',
+                String(response.nameConflicts ?? 0),
+              )
+            : t('promptCloudPushSuccess').replace('{count}', String(response.count ?? 0)),
       });
     } catch (error) {
       console.error('[Gemini Voyager] Failed to push prompts to cloud:', error);
@@ -2444,7 +2469,9 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           className={`text-xs ${
             promptMigrationStatus.kind === 'ok'
               ? 'text-emerald-600 dark:text-emerald-400'
-              : 'text-destructive'
+              : promptMigrationStatus.kind === 'warn'
+                ? 'text-amber-600 dark:text-amber-400'
+                : 'text-destructive'
           }`}
         >
           {promptMigrationStatus.text}

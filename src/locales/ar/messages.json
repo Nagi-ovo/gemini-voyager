@@ -171,6 +171,10 @@
     "message": "تم استيراد {count} مطالبة",
     "description": "Import success"
   },
+  "promptNameConflictsDetected": {
+    "message": "تم الاحتفاظ بجميع المطالبات. هناك {count} بأسماء مكررة ولن تتاح عبر / حتى إعادة تسميتها",
+    "description": "إشعار غير معيق عند الاحتفاظ بأسماء مطالبات مكررة أثناء الاستيراد أو الدمج السحابي"
+  },
   "pm_duplicate": {
     "message": "تكرار المطالبة",
     "description": "Duplicate on add"
@@ -256,8 +260,20 @@
     "description": "View-mode toggle tooltip - switch from compact rows to comfortable cards with markdown preview"
   },
   "pm_name_placeholder": {
-    "message": "الاسم (اختياري)",
-    "description": "Placeholder for the optional prompt name/label input used as the compact-mode headline"
+    "message": "الاسم",
+    "description": "Placeholder for the required prompt name input"
+  },
+  "pm_name_required": {
+    "message": "اسم الموجّه مطلوب",
+    "description": "Validation shown when saving a prompt without a name"
+  },
+  "pm_name_duplicate": {
+    "message": "يوجد بالفعل موجّه بهذا الاسم",
+    "description": "Validation shown when saving a prompt with an existing name"
+  },
+  "pm_name_conflict_badge": {
+    "message": "اسم مكرر — أعد التسمية لاستخدام /",
+    "description": "شارة للمطالبات المستبعدة من الإكمال عبر / بسبب تكرار الاسم"
   },
   "pm_prompt_manager": {
     "message": "مدير المطالبات",
