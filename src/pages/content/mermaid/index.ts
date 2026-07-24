@@ -13,16 +13,6 @@ let initializedMermaidTheme: MermaidTheme | null = null;
 const MERMAID_LIGHT_EXPORT_TEMPLATE_CLASS = 'gv-mermaid-light-export';
 const MERMAID_LIGHT_THEME_DIRECTIVE = '%%{init: {"theme":"default"}}%%';
 
-const getMermaidTheme = (): MermaidTheme => {
-  const isDarkMode =
-    document.body.classList.contains('dark-theme') ||
-    document.body.getAttribute('data-theme') === 'dark' ||
-    document.documentElement.classList.contains('dark') ||
-    window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-  return isDarkMode ? 'dark' : 'light';
-};
-
 /**
  * Reset internal loader state. Only for testing.
  * @internal
@@ -85,6 +75,12 @@ export function resolveMermaidTheme(doc: Document, prefersDark: boolean): 'dark'
   return prefersDark ? 'dark' : 'default';
 }
 
+const getMermaidTheme = (): MermaidTheme =>
+  resolveMermaidTheme(document, window.matchMedia('(prefers-color-scheme: dark)').matches) ===
+  'dark'
+    ? 'dark'
+    : 'light';
+
 /**
  * Initialize Mermaid configuration
  */
@@ -92,11 +88,7 @@ const initMermaid = async (): Promise<boolean> => {
   const mermaid = await loadMermaid();
   if (!mermaid) return false;
 
-  const theme: MermaidTheme =
-    resolveMermaidTheme(document, window.matchMedia('(prefers-color-scheme: dark)').matches) ===
-    'dark'
-      ? 'dark'
-      : 'light';
+  const theme = getMermaidTheme();
 
   mermaid.initialize({
     startOnLoad: false,

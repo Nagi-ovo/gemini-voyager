@@ -3,6 +3,7 @@ import { isSafari } from '@/core/utils/browser';
 import type { PrintableDocumentContent } from './PDFPrintService';
 import { buildKatexExportStyles } from './katexExportStyles';
 import { buildMermaidExportStyles } from './mermaidExportStyles';
+import { isolateMermaidSvgImages } from './mermaidSvgImage';
 
 /**
  * Dedicated PDF print path for Deep Research reports.
@@ -13,8 +14,6 @@ export class DeepResearchPDFPrintService {
   private static PRINT_CONTAINER_ID = 'gv-deep-research-pdf-print-container';
   private static PRINT_BODY_CLASS = 'gv-deep-research-pdf-printing';
   private static PRINT_SAFARI_BODY_CLASS = 'gv-deep-research-pdf-safari-printing';
-  private static MERMAID_EXPORT_SELECTOR = '.gv-export-mermaid';
-  private static MERMAID_EXPORT_IMAGE_CLASS = 'gv-export-mermaid-image';
   private static CLEANUP_FALLBACK_DELAY_MS = 60_000;
   private static INLINE_FETCH_TIMEOUT_MS = 2_000;
   private static INLINE_DECODE_TIMEOUT_MS = 1_000;
@@ -193,7 +192,7 @@ export class DeepResearchPDFPrintService {
 
     const container = document.createElement('div');
     container.innerHTML = trimmed;
-    this.isolateMermaidSvgImages(container);
+    isolateMermaidSvgImages(container);
     container.querySelectorAll('script, style, template').forEach((element) => element.remove());
 
     const elements = Array.from(container.querySelectorAll<HTMLElement>('*'));
@@ -207,43 +206,6 @@ export class DeepResearchPDFPrintService {
     });
 
     return container.innerHTML.trim();
-  }
-
-  /**
-   * Mermaid SVGs depend on embedded styles. Keep those styles inside a data image so the
-   * generic printable HTML sanitizer can continue to remove arbitrary document styles.
-   */
-  private static isolateMermaidSvgImages(container: HTMLElement): void {
-    const svgSelector = `${this.MERMAID_EXPORT_SELECTOR} svg`;
-    const svgs = Array.from(container.querySelectorAll<SVGSVGElement>(svgSelector));
-
-    svgs.forEach((svg) => {
-      try {
-        const cleanSvg = svg.cloneNode(true) as SVGSVGElement;
-        cleanSvg.querySelectorAll('script, template').forEach((element) => element.remove());
-
-        const svgElements: Element[] = [cleanSvg, ...Array.from(cleanSvg.querySelectorAll('*'))];
-        svgElements.forEach((element) => {
-          Array.from(element.attributes).forEach((attribute) => {
-            if (attribute.name.toLowerCase().startsWith('on')) {
-              element.removeAttribute(attribute.name);
-            }
-          });
-        });
-
-        const serializedSvg = new XMLSerializer().serializeToString(cleanSvg);
-        const image = document.createElement('img');
-        image.className = this.MERMAID_EXPORT_IMAGE_CLASS;
-        image.alt = svg.getAttribute('aria-label') || 'Mermaid diagram';
-        const width = svg.getAttribute('width') || svg.style.width;
-        if (width) image.style.width = width;
-        if (svg.style.maxWidth) image.style.maxWidth = svg.style.maxWidth;
-        image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(serializedSvg)}`;
-        svg.replaceWith(image);
-      } catch {
-        // Leave the SVG for the existing sanitizer fallback if serialization is unavailable.
-      }
-    });
   }
 
   private static extractPlainTextFromHtml(html: string): string {
@@ -492,6 +454,7 @@ export class DeepResearchPDFPrintService {
           diagramMargin: '0.75em auto',
           avoidDiagramBreak: true,
           preservePrintBackground: true,
+          diagramMaxHeight: '160mm',
         })}
 
         body.${this.PRINT_BODY_CLASS} .gv-dr-print-report pre,

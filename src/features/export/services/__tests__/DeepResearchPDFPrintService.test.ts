@@ -164,6 +164,8 @@ describe('DeepResearchPDFPrintService', () => {
     expect(styleText).toContain('print-color-adjust: exact;');
     expect(styleText).toContain('-webkit-print-color-adjust: exact;');
     expect(styleText).toContain('page-break-inside: avoid;');
+    expect(styleText).toContain('max-height: 160mm;');
+    expect(styleText).toContain('object-fit: contain;');
   });
 
   it('applies Safari-only print override class and style rules', async () => {

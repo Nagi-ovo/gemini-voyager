@@ -6,6 +6,7 @@ interface MermaidExportStyleOptions {
   diagramMargin?: string;
   importantDisplay?: boolean;
   avoidDiagramBreak?: boolean;
+  diagramMaxHeight?: string;
   preservePrintBackground?: boolean;
 }
 
@@ -34,6 +35,11 @@ export function buildMermaidExportStyles(
         break-inside: avoid;
         page-break-inside: avoid;`
     : '';
+  const diagramMaxHeight = options.diagramMaxHeight
+    ? `
+        max-height: ${options.diagramMaxHeight};
+        object-fit: contain;`
+    : '';
   const printBackgroundStyles = options.preservePrintBackground
     ? `
         print-color-adjust: exact;
@@ -49,7 +55,7 @@ export function buildMermaidExportStyles(
         display: block${displayImportant};
         max-width: 100%;
         height: auto;
-        margin: ${diagramMargin};${diagramBreakStyles}
+        margin: ${diagramMargin};${diagramBreakStyles}${diagramMaxHeight}
       }
 
   `;

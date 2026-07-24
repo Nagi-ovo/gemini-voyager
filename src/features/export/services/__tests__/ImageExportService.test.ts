@@ -38,6 +38,7 @@ describe('ImageExportService', () => {
   ];
 
   beforeEach(() => {
+    vi.clearAllMocks();
     setUserAgentVendor(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
       'Google Inc.',
@@ -158,10 +159,14 @@ describe('ImageExportService', () => {
     );
 
     const target = renderedTarget as HTMLElement | null;
-    expect(target?.querySelector('.gv-image-export-content .gv-export-mermaid svg')).toBeTruthy();
+    const mermaidImage = target?.querySelector<HTMLImageElement>(
+      '.gv-image-export-content .gv-export-mermaid > img.gv-export-mermaid-image',
+    );
+    expect(mermaidImage?.src).toMatch(/^data:image\/png;base64,/);
+    expect(target?.querySelector('.gv-image-export-content .gv-export-mermaid svg')).toBeNull();
     expect(target?.querySelector('pre, code-block, .gv-mermaid-toggle')).toBeNull();
     expect(renderedStyles).toContain('.gv-image-export-content .gv-export-mermaid');
-    expect(renderedStyles).toContain('.gv-image-export-content .gv-export-mermaid svg {');
+    expect(renderedStyles).toContain('.gv-image-export-content .gv-export-mermaid > img {');
     expect(renderedStyles).toContain('max-width: 100%;');
     expect(renderedStyles).toContain('height: auto;');
     expect(
@@ -169,9 +174,7 @@ describe('ImageExportService', () => {
         ?.querySelector('.gv-image-export-content .gv-export-mermaid')
         ?.getAttribute('data-gv-mermaid-theme'),
     ).toBe('light');
-    expect(target?.querySelector('.gv-export-mermaid svg')?.getAttribute('data-export-theme')).toBe(
-      'light',
-    );
+    expect(toBlob).toHaveBeenCalledTimes(2);
     expect(renderedStyles).not.toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');
     expect(renderedStyles).not.toContain('background: #1f2020;');
   });
@@ -330,12 +333,18 @@ describe('ImageExportService', () => {
 
     const target = renderedTarget as HTMLElement | null;
     expect(
-      target?.querySelector('.gv-image-export-report-content .gv-export-mermaid svg'),
+      target?.querySelector(
+        '.gv-image-export-report-content .gv-export-mermaid > img.gv-export-mermaid-image',
+      ),
     ).toBeTruthy();
+    expect(
+      target?.querySelector('.gv-image-export-report-content .gv-export-mermaid svg'),
+    ).toBeNull();
     expect(renderedStyles).toContain('.gv-image-export-report-content .gv-export-mermaid');
-    expect(renderedStyles).toContain('.gv-image-export-report-content .gv-export-mermaid svg {');
+    expect(renderedStyles).toContain('.gv-image-export-report-content .gv-export-mermaid > img {');
     expect(renderedStyles).toContain('max-width: 100%;');
     expect(renderedStyles).toContain('height: auto;');
+    expect(toBlob).toHaveBeenCalledTimes(2);
     expect(renderedStyles).toContain('.gv-image-export-doc a {');
     expect(renderedStyles).toContain('color: #2563eb !important;');
     expect(renderedStyles).not.toContain('.gv-export-mermaid[data-gv-mermaid-theme="dark"]');

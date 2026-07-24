@@ -27,7 +27,20 @@ describe('ImageRenderService', () => {
 
     expect(result).toBe(blob);
     expect(toBlob).toHaveBeenCalledTimes(1);
-    expect(toBlob).toHaveBeenCalledWith(target, expect.objectContaining({ skipFonts: true }));
+    expect(toBlob).toHaveBeenCalledWith(
+      target,
+      expect.objectContaining({ pixelRatio: 1.2, skipFonts: true }),
+    );
+  });
+
+  it('uses the requested pixel ratio', async () => {
+    const target = document.createElement('div');
+    const blob = new Blob(['ok'], { type: 'image/png' });
+    (toBlob as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(blob);
+
+    await renderElementToImageBlob(target, { pixelRatio: 2 });
+
+    expect(toBlob).toHaveBeenCalledWith(target, expect.objectContaining({ pixelRatio: 2 }));
   });
 
   it('embeds fonts for math content so KaTeX radicals render correctly', async () => {
