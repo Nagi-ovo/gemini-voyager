@@ -729,6 +729,8 @@ const GENERIC_LANGUAGE_LABELS = new Set([
   '示例代码',
   // Traditional Chinese
   '程式碼片段',
+  // Japanese
+  'コード スニペット',
   // English
   'code',
   'code snippet',

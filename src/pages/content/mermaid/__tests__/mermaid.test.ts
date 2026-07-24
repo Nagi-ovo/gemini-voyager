@@ -470,6 +470,10 @@ describe('Mermaid dynamic loading', () => {
       expect(isGenericLanguageLabel('程式碼片段')).toBe(true);
     });
 
+    it('should return true for generic Japanese labels', () => {
+      expect(isGenericLanguageLabel('コード スニペット')).toBe(true);
+    });
+
     it('should return false for specific programming languages', () => {
       expect(isGenericLanguageLabel('python')).toBe(false);
       expect(isGenericLanguageLabel('javascript')).toBe(false);
