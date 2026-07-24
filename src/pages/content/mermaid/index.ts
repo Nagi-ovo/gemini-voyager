@@ -6,6 +6,13 @@
 let mermaidInstance: Awaited<typeof import('mermaid')>['default'] | null = null;
 let mermaidLoadFailed = false;
 
+type MermaidTheme = 'dark' | 'light';
+
+let initializedMermaidTheme: MermaidTheme | null = null;
+
+const MERMAID_LIGHT_EXPORT_TEMPLATE_CLASS = 'gv-mermaid-light-export';
+const MERMAID_LIGHT_THEME_DIRECTIVE = '%%{init: {"theme":"default"}}%%';
+
 /**
  * Reset internal loader state. Only for testing.
  * @internal
@@ -13,6 +20,7 @@ let mermaidLoadFailed = false;
 export const _resetMermaidLoader = () => {
   mermaidInstance = null;
   mermaidLoadFailed = false;
+  initializedMermaidTheme = null;
 };
 
 /**
@@ -67,6 +75,12 @@ export function resolveMermaidTheme(doc: Document, prefersDark: boolean): 'dark'
   return prefersDark ? 'dark' : 'default';
 }
 
+const getMermaidTheme = (): MermaidTheme =>
+  resolveMermaidTheme(document, window.matchMedia('(prefers-color-scheme: dark)').matches) ===
+  'dark'
+    ? 'dark'
+    : 'light';
+
 /**
  * Initialize Mermaid configuration
  */
@@ -74,21 +88,22 @@ const initMermaid = async (): Promise<boolean> => {
   const mermaid = await loadMermaid();
   if (!mermaid) return false;
 
-  const theme = resolveMermaidTheme(
-    document,
-    window.matchMedia('(prefers-color-scheme: dark)').matches,
-  );
+  const theme = getMermaidTheme();
 
   mermaid.initialize({
     startOnLoad: false,
-    theme,
+    theme: theme === 'dark' ? 'dark' : 'default',
     securityLevel: 'loose',
     fontFamily: 'Google Sans, Roboto, sans-serif',
     logLevel: 5, // 5 = fatal, only log fatal errors (v9.x uses numbers)
   });
+  initializedMermaidTheme = theme;
 
   return true;
 };
+
+/** @internal Exported for theme-marker testing. */
+export const _initMermaidForTest = initMermaid;
 
 /**
  * Check if a code block contains Mermaid syntax and appears complete enough to render
@@ -593,11 +608,13 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
     // First, try to render to validate the code
     const uniqueId = `mermaid-${Math.random().toString(36).substr(2, 9)}`;
     let svg: string;
+    let renderedDiagram = false;
 
     try {
       // v9.x render returns string directly, v10.x returns {svg: string}
       const result = await mermaid.render(uniqueId, normalizedCode);
       svg = typeof result === 'string' ? result : (result as { svg: string }).svg;
+      renderedDiagram = true;
     } catch (renderError) {
       // Mermaid failed - likely incomplete or invalid syntax
 
@@ -623,6 +640,21 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
                     <div style="margin-top: 12px; font-size: 13px;">Click <b>"&lt;/&gt; Code"</b> to view source</div>
                 </div>
             `;
+    }
+
+    let lightExportSvg: string | null = null;
+    if (renderedDiagram && initializedMermaidTheme === 'dark') {
+      const exportId = `${uniqueId}-export`;
+      try {
+        const exportResult = await mermaid.render(
+          exportId,
+          `${normalizedCode}\n${MERMAID_LIGHT_THEME_DIRECTIVE}`,
+        );
+        lightExportSvg =
+          typeof exportResult === 'string' ? exportResult : (exportResult as { svg: string }).svg;
+      } catch {
+        document.getElementById(exportId)?.remove();
+      }
     }
 
     // Rendering succeeded! Now create or update the UI
@@ -700,6 +732,22 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
       });
     }
 
+    if (initializedMermaidTheme) {
+      wrapper.dataset.gvMermaidTheme = initializedMermaidTheme;
+    }
+
+    const existingLightExport = wrapper.querySelector<HTMLTemplateElement>(
+      `template.${MERMAID_LIGHT_EXPORT_TEMPLATE_CLASS}`,
+    );
+    if (lightExportSvg) {
+      const lightExport = existingLightExport ?? document.createElement('template');
+      lightExport.className = MERMAID_LIGHT_EXPORT_TEMPLATE_CLASS;
+      lightExport.innerHTML = lightExportSvg;
+      if (!existingLightExport) wrapper.appendChild(lightExport);
+    } else {
+      existingLightExport?.remove();
+    }
+
     const diagramContainer = wrapper.querySelector('.gv-mermaid-diagram') as HTMLElement;
     if (!diagramContainer) {
       codeBlock.dataset.mermaidProcessing = 'false';
@@ -721,6 +769,9 @@ const renderMermaid = async (codeBlock: HTMLElement, code: string) => {
     }
   }
 };
+
+/** @internal Exported for theme-marker testing. */
+export const _renderMermaidForTest = renderMermaid;
 
 /**
  * Get the language label from a code block's header decoration

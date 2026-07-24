@@ -400,6 +400,7 @@ rendering.
 
 Regression test:
 `src/features/export/services/__tests__/DOMContentExtractor.test.ts`
+`src/features/export/services/__tests__/PDFPrintService.test.ts`
 `src/features/export/services/__tests__/ImageRenderService.test.ts`
 `src/features/export/services/__tests__/PDFPrintService.test.ts`
 `bun run verify:katex-export`
@@ -751,3 +752,37 @@ Regression tests:
 (`testDriveFolderIdentityMigratesOnlyAnUnambiguousLegacyName`). A live Drive
 check must also preserve the original folder ID, parent location, and JSON
 contents while changing only the legacy display name.
+
+## Mermaid exports must prefer the rendered diagram over hidden source
+
+Symptom:
+PDF and image exports showed Mermaid source code even when Voyager displayed a
+rendered diagram in the conversation.
+
+Root cause:
+The Mermaid wrapper contains both the hidden `code-block` and the rendered SVG.
+The DOM extractor's generic nested-code-block branch matched the wrapper first,
+emitted `<pre><code>`, and skipped the diagram. The same shortcut could match a
+parent `response-element` or list before traversal reached the wrapper.
+
+Fix:
+When a `.gv-mermaid-wrapper` contains a rendered diagram SVG, emit a clean
+`.gv-export-mermaid` clone for rich exports while preserving the original fenced
+source in text output. Recurse through Mermaid response wrappers and preserve
+list structure with indented fenced source. Fall back to the source block when
+no SVG is available. Before opening the regular PDF print dialog or rendering a
+whole-document PNG, rasterize only the Mermaid clone at 2x resolution: browser
+renderers can otherwise preserve the SVG shapes while dropping or clipping
+labels inside `foreignObject`. Keep the rest of the PDF as native text, and cap
+the diagram to one printable page with proportional scaling. If rasterization
+fails, replace the original SVG with a sanitized SVG data image directly; never
+leave the raw SVG in the print DOM.
+
+Regression test:
+`src/features/export/services/__tests__/DOMContentExtractor.test.ts`
+`src/features/export/services/__tests__/PDFPrintService.test.ts`
+`src/features/export/services/__tests__/ImageRenderService.test.ts`
+`src/features/export/services/__tests__/ImageExportService.test.ts`
+
+Commit:
+`fix(export): render Mermaid diagrams in exports`
