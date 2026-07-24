@@ -721,12 +721,16 @@ const getCodeBlockLanguage = (codeEl: Element): string | null => {
  * These are labels that don't represent a specific programming language
  */
 const GENERIC_LANGUAGE_LABELS = new Set([
-  // Chinese
+  // Simplified Chinese
   '代码段',
   '代码',
   '代码块',
   '示例',
   '示例代码',
+  // Traditional Chinese
+  '程式碼片段',
+  // Japanese
+  'コード スニペット',
   // English
   'code',
   'code snippet',
