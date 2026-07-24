@@ -860,7 +860,7 @@ function findPromptTokenBeforeCaret(
   promptId: string,
   startOffset: number,
   caretRange: Range,
-): HTMLElement | null {
+): { token: HTMLElement; start: number } | null {
   const candidates = Array.from(input.querySelectorAll<HTMLElement>(`.${TOKEN_CLASS}`))
     .filter((candidate) => candidate.dataset.gvPromptId === promptId)
     .map((token) => {
@@ -869,17 +869,14 @@ function findPromptTokenBeforeCaret(
       prefixRange.setEndBefore(token);
       return { token, start: prefixRange.toString().length };
     });
-  const exact = candidates.find((candidate) => candidate.start === startOffset);
-  if (exact) return exact.token;
-  return (
-    candidates
-      .filter(({ token }) => {
-        const tokenRange = document.createRange();
-        tokenRange.selectNode(token);
-        return tokenRange.compareBoundaryPoints(Range.END_TO_END, caretRange) <= 0;
-      })
-      .sort((left, right) => right.start - left.start)[0]?.token || null
-  );
+  const candidatesBeforeCaret = candidates.filter(({ token }) => {
+    const tokenRange = document.createRange();
+    tokenRange.selectNode(token);
+    return tokenRange.compareBoundaryPoints(Range.END_TO_END, caretRange) <= 0;
+  });
+  const exact = candidatesBeforeCaret.find((candidate) => candidate.start === startOffset);
+  if (exact) return exact;
+  return candidatesBeforeCaret.sort((left, right) => right.start - left.start)[0] || null;
 }
 
 function handlePromptBackspace(input: HTMLElement): PromptBackspaceResult | null {
@@ -921,9 +918,16 @@ function handlePromptBackspace(input: HTMLElement): PromptBackspaceResult | null
 
   for (let index = prompts.length - 1; index >= 0; index--) {
     const prompt = prompts[index];
-    const startOffset = prefix.lastIndexOf(prompt.name);
-    if (startOffset < 0) continue;
-    const token = findPromptTokenBeforeCaret(input, prompt.id, startOffset, caretRange);
+    let startOffset = prompt.start;
+    const tokenMatch = findPromptTokenBeforeCaret(input, prompt.id, startOffset, caretRange);
+    const token = tokenMatch?.token || null;
+    if (tokenMatch) {
+      startOffset = tokenMatch.start;
+      prompt.start = startOffset;
+    }
+    if (!token && prefix.slice(startOffset, startOffset + prompt.name.length) !== prompt.name) {
+      continue;
+    }
     const gapRange = caretRange.cloneRange();
     if (token) {
       gapRange.setStartAfter(token);

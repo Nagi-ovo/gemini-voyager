@@ -913,6 +913,62 @@ describe('slash prompt completion', () => {
     expect(document.querySelector('.gv-pm-slash-textarea-token')).toBeNull();
   });
 
+  it('does not treat matching ordinary text after a rebuilt prompt as an atomic prompt', () => {
+    const input = createContentEditable('/review');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+
+    const token = input.querySelector<HTMLElement>('.gv-pm-slash-token')!;
+    token.replaceWith(document.createTextNode(token.textContent || ''));
+    input.append(document.createTextNode('Code Review'));
+    const caret = document.createRange();
+    caret.selectNodeContents(input);
+    caret.collapse(false);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(caret);
+    typeInto(input);
+
+    const backspaceEvent = press(input, 'Backspace');
+
+    expect(backspaceEvent.defaultPrevented).toBe(false);
+    expect(input.textContent).toBe('Code Review\u00a0Code Review');
+    expect(document.querySelectorAll('.gv-pm-slash-textarea-token')).toHaveLength(1);
+
+    const sendEvent = press(input, 'Enter');
+
+    expect(sendEvent.defaultPrevented).toBe(true);
+    expect(input.textContent).toBe(
+      'Review this code and report correctness issues.\u00a0Code Review',
+    );
+  });
+
+  it('removes a rebuilt prompt spacer before removing its remembered range', () => {
+    const input = createContentEditable('/review');
+    destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
+    typeInto(input);
+    press(input, 'Enter');
+
+    const token = input.querySelector<HTMLElement>('.gv-pm-slash-token')!;
+    token.replaceWith(document.createTextNode(token.textContent || ''));
+    const caret = document.createRange();
+    caret.selectNodeContents(input);
+    caret.collapse(false);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(caret);
+    typeInto(input);
+
+    const spacerEvent = press(input, 'Backspace');
+    const promptEvent = press(input, 'Backspace');
+
+    expect(spacerEvent.defaultPrevented).toBe(true);
+    expect(promptEvent.defaultPrevented).toBe(true);
+    expect(input.textContent).toBe('');
+    expect(document.querySelector('.gv-pm-slash-textarea-token')).toBeNull();
+  });
+
   it('expands the stored prompt occurrence when the same name already appears earlier', () => {
     const input = createContentEditable('Code Review notes: /review');
     destroy = startPromptSlashCommand({ initialItems: prompts }).destroy;
