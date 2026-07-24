@@ -26,6 +26,33 @@ Regression test:
 Commit:
 ```
 
+## Mermaid must honor Gemini explicit light theme
+
+Symptom:
+
+With Gemini set to light while the browser reported a dark system preference,
+Mermaid diagrams rendered with the dark theme.
+
+Root cause:
+
+Mermaid treated generic `body`/`html` dark markers as equal to Gemini's
+higher-priority `.theme-host.light-theme`, so stale outer markers could
+override the active Gemini theme.
+
+Fix:
+
+Resolve `.theme-host` first, then generic page markers, and only then fall back
+to the browser preference.
+
+Regression test:
+
+`src/pages/content/mermaid/__tests__/mermaid.test.ts`
+(`resolveMermaidTheme`).
+
+Commit:
+
+`fix(mermaid): honor explicit Gemini light theme`
+
 ## Folder recovery must remove untracked sidebar clones
 
 Symptom:
