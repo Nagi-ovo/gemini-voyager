@@ -1,7 +1,7 @@
 name: '🌠 功能需求 Feature Request'
 description: '需求或建议 | Suggest an idea for Voyager'
 title: '[Feature] '
-labels: '🌠 Feature Request'
+labels: 'enhancement'
 body:
   - type: markdown
     attributes:
@@ -20,7 +20,7 @@ body:
 
         - 无法保证能够投入精力，及时实现新的功能需求。 | The maintainer cannot guarantee they will be able to dedicate time to implement new features in a timely manner.
         - 我们非常**欢迎并鼓励社区贡献**！ | However, we **welcome and encourage community contributions**!
-        - 如果您希望该功能被实现，提交高质量的 Pull Request 是最佳途径。但在提交 PR 前，**请务必先在此 Issue 中进行讨论**。未经讨论直接提交的新功能 PR 将被关闭。 | The best way to see this feature realized is to submit a Pull Request. However, before submitting a PR, **you MUST first discuss it in this Issue**. PRs for new features submitted without prior discussion will be closed.
+        - 如果您希望该功能被实现，提交高质量的 Pull Request 是最佳途径。编码前请先讨论并等待维护者明确同意方案；`/claim` 或被分配只代表负责人。 | A high-quality Pull Request is the best path to implementation. Before coding, discuss the approach and wait for explicit maintainer approval; `/claim` or assignment only selects an owner.
   - type: textarea
     attributes:
       label: '🥰 需求描述 | Feature Description'
@@ -33,6 +33,16 @@ body:
       label: '🧐 解决方案 | Proposed Solution'
       description: "Describe the solution you'd like in a clear and concise manner."
       placeholder: 'Describe what you want to happen...'
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: '✅ 验收标准 | Acceptance Criteria'
+      description: 'Describe the smallest observable outcome that would make this request complete, including affected sites or browsers.'
+      placeholder: |
+        - On <site/browser>, when ...
+        - Voyager should ...
+        - Existing ... must remain unchanged
     validations:
       required: true
   - type: textarea

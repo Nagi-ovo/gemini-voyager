@@ -7,7 +7,7 @@ Esto hace que los plugins sean más fáciles de revisar y mantener. Si quieres c
 ## Ruta recomendada
 
 1. Confirma primero que la idea encaja como plugin: ancho de lectura, arreglos de diseño, ajustes de tema, ocultar o marcar elementos de la página y adaptaciones simples de sitios suelen ser buenos casos.
-2. Abre primero una Issue o PR en el repositorio principal de Voyager. Explica el problema, el sitio objetivo y en qué se diferencia de los plugins existentes.
+2. Abre primero una Issue en el repositorio principal de Voyager. Explica el problema, el sitio objetivo y la diferencia con los plugins existentes; espera la aprobación explícita del mantenedor antes de programar o abrir una PR.
 3. Usa `plugin.json` para los metadatos, sitios coincidentes, ajustes y contribuciones.
 4. Coloca los estilos en `style.css` dentro del mismo directorio y referencia el archivo desde `contributes.styles`.
 5. Prueba en local y adjunta páginas de prueba, capturas o una grabación breve en la PR. Los mantenedores decidirán si está listo para el catalog oficial.

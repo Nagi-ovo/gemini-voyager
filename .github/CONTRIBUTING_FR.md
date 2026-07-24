@@ -25,6 +25,14 @@ Bien que les outils d'IA soient d'excellents assistants, les contributions "pare
 - **Les PR sans explication** de la logique ou manquant de tests nécessaires seront rejetées.
 - Vous devez comprendre et assumer la responsabilité de chaque ligne de code que vous soumettez.
 
+## Processus Obligatoire
+
+1. Pour une nouvelle fonctionnalité, ouvrez un Issue et attendez l'accord explicite sur l'approche ; `/claim` ou une assignation désigne seulement la personne responsable.
+2. Soumettez chaque changement dans une PR ciblée depuis une branche thématique ; ne poussez pas directement sur `main`.
+3. Exécutez `bun run format`, `bun run lint` et `bun run verify:pr`, dans cet ordre, et indiquez toute omission.
+4. Ajoutez des tests de régression pour les changements de comportement ou expliquez pourquoi l'automatisation n'est pas utile.
+5. Chargez l'artefact réel dans les navigateurs concernés et testez le parcours modifié ; indiquez dans la PR la couverture restante et son responsable.
+
 ## Table des Matières
 
 - [Commencer](#commencer)
@@ -42,8 +50,8 @@ Bien que les outils d'IA soient d'excellents assistants, les contributions "pare
 
 ### Prérequis
 
-- **Bun** 1.0+ (Requis)
-- Un navigateur basé sur Chromium pour les tests (Chrome, Edge, Brave, etc.)
+- **Bun 1.3.12** (aligné sur `packageManager` et la CI)
+- Les navigateurs concernés pour charger l'extension et tester le parcours réel
 
 ### Démarrage Rapide
 
@@ -109,10 +117,12 @@ bun install
 | `bun run dev:firefox` | Démarrer le mode dev Firefox                          |
 | `bun run dev:safari`  | Démarrer le mode dev Safari (macOS uniquement)        |
 | `bun run build`       | Build de production pour Chrome                       |
-| `bun run build:all`   | Build de production pour tous les navigateurs         |
+| `bun run build:edge`  | Build et paquet Edge indépendants                     |
+| `bun run build:all`   | Builds Chrome + Firefox + Safari                      |
 | `bun run lint`        | Exécuter ESLint avec correction automatique           |
 | `bun run typecheck`   | Exécuter la vérification de type TypeScript           |
 | `bun run test`        | Exécuter la suite de tests                            |
+| `bun run verify:pr`   | Vérification automatisée locale standard d'une PR     |
 
 ### Charger l'Extension
 
@@ -144,11 +154,9 @@ bun install
 Avant de soumettre, exécutez toujours :
 
 ```bash
-bun run lint       # Corriger les problèmes de linting
 bun run format     # Formater le code
-bun run typecheck  # Vérifier les types
-bun run build      # Vérifier que le build réussit
-bun run test       # Exécuter les tests
+bun run lint       # Corriger les problèmes de linting
+bun run verify:pr  # Exécuter la vérification locale standard
 ```
 
 Assurez-vous que :
@@ -160,11 +168,7 @@ Assurez-vous que :
 
 ## Stratégie de Test
 
-Nous suivons une stratégie de test basée sur le ROI : **Testez la logique, pas le DOM.**
-
-1. **Indispensable (Logique)** : Services principaux (Stockage, Sauvegarde), analyseurs de données et utilitaires. Le TDD est requis ici.
-2. **Recommandé (État)** : État d'interface utilisateur complexe (ex: Reducer de dossiers).
-3. **Ignorer (Fragile)** : Manipulation directe du DOM (Scripts de contenu) et composants d'interface utilisateur purs. Utilisez plutôt la programmation défensive.
+Testez l'interface la plus susceptible de régresser : automatisez la logique et les états complexes, ajoutez un test DOM minimal lorsque les sélecteurs ou la navigation SPA changent, puis vérifiez le parcours réel avec l'extension chargée.
 
 ---
 

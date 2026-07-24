@@ -254,9 +254,10 @@ bun run dev:safari   # Safari (macOS 필요)
 
 # 프로덕션 빌드
 bun run build:chrome   # Chrome
+bun run build:edge     # Edge 독립 패키징
 bun run build:firefox  # Firefox
 bun run build:safari   # Safari
-bun run build:all      # 모든 브라우저
+bun run build:all      # Chrome + Firefox + Safari
 ```
 
 **Safari 개발**: `bun run build:safari`를 실행한 뒤 `Voyager/`의 Xcode 프로젝트를 여세요.

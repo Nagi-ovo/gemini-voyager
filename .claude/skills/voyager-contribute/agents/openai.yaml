@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Contribute to Voyager'
+  short_description: 'Prepare focused Voyager contributions and PR evidence'
+  default_prompt: 'Use $voyager-contribute to prepare and publish this Voyager contribution safely.'

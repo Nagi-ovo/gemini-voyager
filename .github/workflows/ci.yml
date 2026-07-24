@@ -27,7 +27,7 @@ jobs:
         with:
           bun-version: '1.3.12'
       - run: bun install --frozen-lockfile
-      - run: bun x prettier --check .
+      - run: bun run format:check
 
   # ── ESLint ─────────────────────────────────────────────────────────────
   lint:
@@ -41,7 +41,7 @@ jobs:
         with:
           bun-version: '1.3.12'
       - run: bun install --frozen-lockfile
-      - run: bun run lint
+      - run: bun run lint:check
 
   # ── TypeScript ─────────────────────────────────────────────────────────
   typecheck:
@@ -70,6 +70,20 @@ jobs:
           bun-version: '1.3.12'
       - run: bun install --frozen-lockfile
       - run: bun run test
+
+  # ── Documentation ─────────────────────────────────────────────────────
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: '1.3.12'
+      - run: bun install --frozen-lockfile
+      - run: bun run docs:build
 
   # ── Native Swift Tests + Xcode Build ─────────────────────────────────
   native-test:
@@ -121,36 +135,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Check locale key consistency
-        run: |
-          echo "Comparing locale keys across all 10 locales..."
-          node -e "
-            const fs = require('fs');
-            const path = require('path');
-            const dir = 'src/locales';
-            const locales = fs.readdirSync(dir).sort();
-            const allKeys = {};
-            for (const loc of locales) {
-              const file = path.join(dir, loc, 'messages.json');
-              if (!fs.existsSync(file)) continue;
-              allKeys[loc] = new Set(Object.keys(JSON.parse(fs.readFileSync(file, 'utf8'))));
-            }
-            const ref = allKeys['en'];
-            if (!ref) { console.error('ERROR: en locale not found'); process.exit(1); }
-            let failed = false;
-            for (const [loc, keys] of Object.entries(allKeys)) {
-              if (loc === 'en') continue;
-              const missing = [...ref].filter(k => !keys.has(k));
-              const extra = [...keys].filter(k => !ref.has(k));
-              if (missing.length || extra.length) {
-                failed = true;
-                console.error(loc + ': missing=' + missing.length + ' extra=' + extra.length);
-                for (const k of missing.slice(0, 5)) console.error('  - ' + k);
-                for (const k of extra.slice(0, 5)) console.error('  + ' + k);
-              }
-            }
-            if (failed) { console.error('\nFAILED: locale keys are inconsistent'); process.exit(1); }
-            console.error('OK: all ' + locales.length + ' locales are consistent (' + ref.size + ' keys)');
-          "
+        run: node scripts/check-locale-keys.mjs
 
   # ── PR size label ─────────────────────────────────────────────────────
   pr-size:

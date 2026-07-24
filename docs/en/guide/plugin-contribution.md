@@ -7,7 +7,7 @@ This keeps plugins easier to review and maintain. If you want to contribute a pl
 ## Recommended path
 
 1. Confirm that the idea fits a plugin: reading width, layout fixes, theme tweaks, hiding or marking page elements, and simple site adaptations are usually good candidates.
-2. Open an Issue or PR in the Voyager repository first. Explain the problem, the target website, and how it differs from existing plugins.
+2. Open an Issue in the Voyager repository first. Explain the problem, target website, and difference from existing plugins; wait for explicit maintainer approval before coding or opening a PR.
 3. Use `plugin.json` for metadata, site matches, settings, and contributions.
 4. Put styles in `style.css` in the same plugin directory, then reference it from `contributes.styles`.
 5. Test locally and include test pages, screenshots, or a short recording in the PR. Maintainers will decide whether it is ready for the official catalog.

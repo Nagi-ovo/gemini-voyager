@@ -228,7 +228,8 @@ bun run dev:firefox
 bun run dev:safari
 
 # ビルド
-bun run build:all
+bun run build:edge  # Edge 専用パッケージ
+bun run build:all   # Chrome + Firefox + Safari
 ```
 
 **Safari での開発**: `bun run build:safari` を実行し、`Voyager/` にある Xcode プロジェクトを開きます。

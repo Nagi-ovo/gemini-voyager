@@ -25,6 +25,14 @@ Aunque las herramientas de IA son grandes asistentes, las contribuciones de "cop
 - **Los PR sin explicación** de la lógica o que carezcan de las pruebas necesarias serán rechazados.
 - Debes entender y asumir la responsabilidad de cada línea de código que envíes.
 
+## Flujo Obligatorio
+
+1. Para una nueva funcionalidad, abre un Issue y espera la aprobación explícita del enfoque; `/claim` o una asignación solo selecciona a la persona responsable.
+2. Envía cada cambio mediante una PR enfocada desde una rama temática; no envíes directamente a `main`.
+3. Ejecuta `bun run format`, `bun run lint` y `bun run verify:pr`, en ese orden, e indica cualquier omisión.
+4. Añade pruebas de regresión para cambios de comportamiento o explica por qué la automatización no es útil.
+5. Carga el artefacto real en los navegadores afectados y prueba el flujo modificado; indica en la PR la cobertura pendiente y su responsable.
+
 ## Tabla de Contenidos
 
 - [Comenzando](#comenzando)
@@ -42,8 +50,8 @@ Aunque las herramientas de IA son grandes asistentes, las contribuciones de "cop
 
 ### Requisitos Previos
 
-- **Bun** 1.0+ (Requerido)
-- Un navegador basado en Chromium para pruebas (Chrome, Edge, Brave, etc.)
+- **Bun 1.3.12** (coincide con `packageManager` y CI)
+- Los navegadores afectados para cargar la extensión y probar el flujo real
 
 ### Inicio Rápido
 
@@ -109,10 +117,12 @@ bun install
 | `bun run dev:firefox` | Iniciar modo desarrollo Firefox                       |
 | `bun run dev:safari`  | Iniciar modo desarrollo Safari (solo macOS)           |
 | `bun run build`       | Compilación de producción para Chrome                 |
-| `bun run build:all`   | Compilación de producción para todos los navegadores  |
+| `bun run build:edge`  | Compilación y paquete independientes para Edge        |
+| `bun run build:all`   | Compilación para Chrome + Firefox + Safari            |
 | `bun run lint`        | Ejecutar ESLint con corrección automática             |
 | `bun run typecheck`   | Ejecutar comprobación de tipos TypeScript             |
 | `bun run test`        | Ejecutar conjunto de pruebas                          |
+| `bun run verify:pr`   | Verificación automática local estándar de una PR      |
 
 ### Cargar la Extensión
 
@@ -143,11 +153,9 @@ bun install
 Antes de enviar, ejecuta siempre:
 
 ```bash
-bun run lint       # Corregir problemas de linting
 bun run format     # Formatear código
-bun run typecheck  # Comprobar tipos
-bun run build      # Verificar que la compilación tiene éxito
-bun run test       # Ejecutar pruebas
+bun run lint       # Corregir problemas de linting
+bun run verify:pr  # Ejecutar la verificación local estándar
 ```
 
 Asegúrate de que:
@@ -159,11 +167,7 @@ Asegúrate de que:
 
 ## Estrategia de Pruebas
 
-Seguimos una estrategia de pruebas basada en el ROI: **Prueba la lógica, no el DOM.**
-
-1. **Imprescindible (Lógica)**: Servicios principales (Almacenamiento, Copia de seguridad), analizadores de datos y utilidades. Aquí se requiere TDD.
-2. **Recomendable (Estado)**: Estado de UI complejo (ej: Reducer de carpetas).
-3. **Omitir (Frágil)**: Manipulación directa del DOM (Content Scripts) y componentes de UI puros. Usa programación defensiva en su lugar.
+Prueba la interfaz con mayor riesgo de regresión: automatiza la lógica y el estado complejo, añade una prueba DOM mínima cuando cambien selectores o navegación SPA, y verifica el flujo real cargando la extensión.
 
 ---
 

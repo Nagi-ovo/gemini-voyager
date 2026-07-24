@@ -256,9 +256,10 @@ bun run dev:safari   # Safari (requires macOS)
 
 # Production builds
 bun run build:chrome   # Chrome
+bun run build:edge     # Edge package (separate)
 bun run build:firefox  # Firefox
 bun run build:safari   # Safari
-bun run build:all      # All browsers
+bun run build:all      # Chrome + Firefox + Safari
 ```
 
 **Safari Development**: Run `bun run build:safari`, then open the tracked Xcode project under `Voyager/`.
