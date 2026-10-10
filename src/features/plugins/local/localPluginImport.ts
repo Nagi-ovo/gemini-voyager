@@ -11,11 +11,9 @@
  * example restored from Drive, or the previous version's) must never switch on
  * code the user has not inspected yet. A failed write reports the failure.
  */
-import type { Result } from '@/core/types/common';
-
 import type { ManifestIssue } from '../manifest/validate';
-import { resolveStyleFileContributions } from '../sources/styleFiles';
 import type { PluginManifest } from '../types';
+import { type LocalPluginFile, readLocalPluginFiles } from './localPluginFiles';
 import { toLocalPluginId } from './localPluginId';
 import {
   LocalPluginChangedError,
@@ -27,108 +25,16 @@ import {
 } from './localPluginStore';
 import { validateLocalManifest } from './validateLocalManifest';
 
-/** One picked file: its relative path (or bare name) and text. */
-export interface LocalPluginFile {
-  readonly name: string;
-  readonly text: string;
-}
-
-/** Ceiling on everything one import reads (manifest plus CSS), and on the CSS it expands to. */
-export const MAX_LOCAL_PLUGIN_IMPORT_CHARS = 1_000_000;
-/** Ceiling on `contributes.styles` entries, checked before any file is expanded. */
-export const MAX_LOCAL_PLUGIN_STYLES = 32;
+// The file read moved to `localPluginFiles.ts` (no storage, so the CLI can use it).
+export {
+  type LocalPluginFile,
+  MAX_LOCAL_PLUGIN_IMPORT_CHARS,
+  MAX_LOCAL_PLUGIN_STYLES,
+  readLocalPluginFiles,
+} from './localPluginFiles';
 
 function issue(path: string, message: string): ManifestIssue {
   return { path, message };
-}
-
-function extension(name: string): string {
-  const dot = name.lastIndexOf('.');
-  return dot < 0 ? '' : name.slice(dot + 1).toLowerCase();
-}
-
-function dirname(path: string): string {
-  const slash = path.lastIndexOf('/');
-  return slash < 0 ? '' : path.slice(0, slash + 1);
-}
-
-function basename(path: string): string {
-  return path.slice(path.lastIndexOf('/') + 1);
-}
-
-/**
- * Turn picked files into one raw manifest: exactly one `.json` file, with each
- * `contributes.styles[].file` resolved against the `.css` files picked with it
- * (by path relative to the manifest, then by unique file name). The CSS goes
- * through the same file-path and stylesheet checks as the bundled catalog.
- */
-export async function readLocalPluginFiles(
-  files: readonly LocalPluginFile[],
-): Promise<Result<unknown, ManifestIssue[]>> {
-  const total = files.reduce((sum, file) => sum + file.text.length, 0);
-  if (total > MAX_LOCAL_PLUGIN_IMPORT_CHARS) {
-    return {
-      success: false,
-      error: [issue('file', `exceeds ${MAX_LOCAL_PLUGIN_IMPORT_CHARS} characters`)],
-    };
-  }
-  const manifests = files.filter((file) => extension(file.name) === 'json');
-  if (manifests.length !== 1) {
-    return {
-      success: false,
-      error: [issue('file', 'pick exactly one manifest .json file, plus its .css files')],
-    };
-  }
-  const manifestFile = manifests[0];
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(manifestFile.text) as unknown;
-  } catch (error) {
-    return {
-      success: false,
-      error: [
-        issue('', `not valid JSON (${error instanceof Error ? error.message : 'parse error'})`),
-      ],
-    };
-  }
-
-  // A small manifest can name one big file thousands of times: bound the entry
-  // count before expanding, and the CSS the expansion produces while it runs,
-  // so nothing past the import ceiling is ever copied or scanned.
-  const styles = (parsed as { contributes?: { styles?: unknown } } | null)?.contributes?.styles;
-  if (Array.isArray(styles) && styles.length > MAX_LOCAL_PLUGIN_STYLES) {
-    return {
-      success: false,
-      error: [issue('contributes.styles', `at most ${MAX_LOCAL_PLUGIN_STYLES} style entries`)],
-    };
-  }
-  const base = dirname(manifestFile.name);
-  const cssFiles = files.filter((file) => extension(file.name) === 'css');
-  let expanded = 0;
-  const loadCss = async (file: string): Promise<string> => {
-    const exact = cssFiles.find((css) => css.name === `${base}${file}` || css.name === file);
-    const byName = cssFiles.filter((css) => basename(css.name) === basename(file));
-    const match = exact ?? (byName.length === 1 ? byName[0] : undefined);
-    if (!match) throw new Error(`style file ${file} was not picked with the manifest`);
-    const text = match.text;
-    expanded += text.length;
-    if (expanded > MAX_LOCAL_PLUGIN_IMPORT_CHARS) {
-      throw new Error(`style files expand past ${MAX_LOCAL_PLUGIN_IMPORT_CHARS} characters`);
-    }
-    return text;
-  };
-  try {
-    return {
-      success: true,
-      data: await resolveStyleFileContributions(parsed, basename(manifestFile.name), loadCss),
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: [issue('contributes.styles', error instanceof Error ? error.message : String(error))],
-    };
-  }
 }
 
 export type LocalPluginImportResult =
