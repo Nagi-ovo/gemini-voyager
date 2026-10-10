@@ -71,20 +71,22 @@ function withStyles(
   title: string,
   manifest: Record<string, unknown>,
   contributes: Record<string, unknown>,
-  css: string,
+  cssRules: readonly string[],
   styles: ExampleStyles,
 ): PluginExample {
-  const style = styles === 'file' ? { file: 'style.css' } : { css };
+  // Inlined CSS is a JSON string, so it stays on one line; a style.css file gets a rule per line.
+  const style = styles === 'file' ? { file: 'style.css' } : { css: cssRules.join('') };
   return {
     title,
     manifest: { ...manifest, contributes: { styles: [style], ...contributes } },
-    ...(styles === 'file' ? { css } : {}),
+    ...(styles === 'file' ? { css: `${cssRules.join('\n')}\n` } : {}),
   };
 }
 
-const ROUNDED_CSS =
-  '.gv-plugin-rounded-turn{border-radius:16px}' +
-  "html[data-gv-scheme='dark'] .gv-plugin-rounded-turn{outline:1px solid #ffffff22}";
+const ROUNDED_CSS = [
+  '.gv-plugin-rounded-turn { border-radius: 16px; }',
+  "html[data-gv-scheme='dark'] .gv-plugin-rounded-turn { outline: 1px solid #ffffff22; }",
+];
 
 /** A minimal manifest for `site` that the local gate accepts (CSS inlined). */
 export function buildPluginExample(site: SiteAdapter): Record<string, unknown> {
@@ -129,9 +131,10 @@ export function buildSettingsExample(site: SiteAdapter, styles: ExampleStyles): 
       { op: 'setStyle', target, styles: { '--gv-plugin-turn-accent-w': '{{width}}px' } },
     ],
   };
-  const css =
-    '.gv-plugin-turn-accent{border-left:var(--gv-plugin-turn-accent-w,3px) solid #8888}' +
-    "html[data-gv-scheme='dark'] .gv-plugin-turn-accent{border-left-color:#fff6}";
+  const css = [
+    '.gv-plugin-turn-accent { border-left: var(--gv-plugin-turn-accent-w, 3px) solid #8888; }',
+    "html[data-gv-scheme='dark'] .gv-plugin-turn-accent { border-left-color: #fff6; }",
+  ];
   return withStyles('A setting the user adjusts in the popup', shell, contributes, css, styles);
 }
 

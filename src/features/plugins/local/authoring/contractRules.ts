@@ -10,6 +10,7 @@ import { PLUGIN_ENGINE_VERSION } from '../../constants';
 import { ALLOWED_ATTRIBUTE_NAMES, ALLOWED_ATTRIBUTE_PREFIXES } from '../../manifest/sinkGuards';
 import { REQUIRED_STRINGS } from '../../manifest/validate';
 import type { SemanticSelectorKey } from '../../sites/semanticKeys';
+import { PLUGIN_CATEGORIES } from '../../types';
 import { LOCAL_PLUGIN_ID_PREFIX } from '../localPluginId';
 import { LOCAL_SETTING_TYPES } from '../localPluginRules';
 import { inlineJson } from './jsonText';
@@ -22,17 +23,6 @@ export interface ContractSection {
   readonly title: string;
   readonly lines: readonly string[];
 }
-
-/** The categories the docs plugin store groups by; any non-empty string imports. */
-export const PLUGIN_CATEGORIES = [
-  'render-fix',
-  'theme',
-  'layout',
-  'readability',
-  'productivity',
-  'integration',
-  'other',
-] as const;
 
 /** The setAttribute names the gate allows, as the text lists them. */
 export function allowedAttributeText(): string {
@@ -68,7 +58,7 @@ export function stylesSection(audience: ContractAudience): ContractSection {
       ...(audience === 'agent'
         ? [
             '- "contributes.styles": [{ "file": "style.css" }] with the CSS in style.css beside plugin.json. The popup’s Import files reads plugin.json plus the .css files picked with it; Paste JSON only takes inlined CSS ([{ "css": "..." }]).',
-            '- Keep plugin.json the only .json file in the plugin folder: Import files takes exactly one manifest.',
+            '- Import files takes exactly one .json file: the user picks plugin.json and its .css files, nothing else.',
           ]
         : ['- "contributes.styles": a list of { "css": "..." } with the CSS inlined as a string.']),
       '- CSS may not load anything, not even from the same site: no @import, image-set(), image(), cross-fade() or src(), and url() only with a #fragment or a png, jpeg, gif, webp or avif data: URI (never SVG). No web fonts, no remote images.',
@@ -104,7 +94,7 @@ export function settingsSection(): ContractSection {
     title: 'Settings (optional)',
     lines: [
       `- "contributes.settings": { "<key>": { "type", "label", "default", … } }. Types: ${LOCAL_SETTING_TYPES.join(', ')}. string and color settings are refused: the popup has no control for them yet.`,
-      '- number: optional "min" and "max" (the popup shows a slider), "minLabel", "maxLabel".',
+      '- number: the popup shows a slider from "min" to "max" (0 and 100 when omitted), with optional "minLabel" and "maxLabel" at its ends.',
       '- select: "options": [{ "value": "…", "label": "…" }] with at least one option and unique values, and a "default" that is one of the values.',
       '- Use a setting through a {{key}} token in CSS text, a setStyle value or a setAttribute value; Voyager substitutes the current value (the default until the user changes it). A common pattern: setStyle sets a custom property from the setting, and the CSS reads var(...).',
       '- A boolean renders as "true" or "false": set data-gv-… to "{{key}}" with setAttribute and style [data-gv-…=\'true\'].',

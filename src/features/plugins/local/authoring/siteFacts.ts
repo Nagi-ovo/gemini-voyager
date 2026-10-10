@@ -21,7 +21,7 @@ const SELECTOR_PREVIEW_CHARS = 240;
 const SITE_NOTES: Readonly<Record<string, readonly string[]>> = {
   gemini: [
     'The `sidebar` anchor also matches Voyager’s own folder panel (`.gv-folder-container`). To change only Gemini’s navigation rail, target `bard-sidenav` with a CSS selector.',
-    'Gemini already runs Voyager’s timeline, formula copy and Vim natively, so primitives are not available here.',
+    'Voyager’s own features (timeline, formula copy, Vim input) already run on Gemini, so a plugin cannot call primitives here.',
   ],
   aistudio: [
     'The `sidebar` anchor is Voyager’s own folder panel on AI Studio, not AI Studio’s navigation. Use a CSS selector for AI Studio’s own panels.',

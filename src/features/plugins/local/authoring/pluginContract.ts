@@ -90,6 +90,8 @@ export function renderExample(example: PluginExample, level = 3): string[] {
     formatJson(example.manifest),
     '```',
     '',
-    ...(example.css !== undefined ? ['style.css:', '', '```css', example.css, '```', ''] : []),
+    ...(example.css !== undefined
+      ? ['style.css:', '', '```css', example.css.trimEnd(), '```', '']
+      : []),
   ];
 }

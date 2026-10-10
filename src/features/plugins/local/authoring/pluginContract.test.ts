@@ -83,6 +83,6 @@ describe('plugin contract', () => {
     const text = renderExample(example).join('\n');
     const json = /```json\n([\s\S]*?)\n```/.exec(text)![1];
     expect(JSON.parse(json)).toEqual(example.manifest);
-    expect(text).toContain(`\`\`\`css\n${example.css}\n\`\`\``);
+    expect(text).toContain(`\`\`\`css\n${example.css!.trimEnd()}\n\`\`\``);
   });
 });
