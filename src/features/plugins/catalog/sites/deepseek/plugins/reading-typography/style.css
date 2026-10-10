@@ -1,0 +1,34 @@
+/* Answer prose only: thinking, user turns and the composer sit outside
+ * .ds-assistant-message-main-content. Only top-level paragraphs and list items
+ * are sized; nested ones inherit, so a percentage never compounds. Inline code
+ * (0.875em) and inline math follow the text; code blocks use fixed pixel sizes.
+ * A paragraph or item holding block math stays native, because KaTeX sizes it
+ * in em. */
+.gv-plugin-deepseek-reading-typography[data-gv-font-size='true']
+  .ds-assistant-message-main-content
+  :is(p, li):not(li *, table *, pre *):not(:has(.katex-display)) {
+  font-size: var(--gv-plugin-reading-text-size, 100%) !important;
+  /* DeepSeek's 28px line box is fixed; keep its 1.75 ratio as the text grows. */
+  line-height: 1.75 !important;
+}
+
+/* After the size rule, so a custom line height wins over the kept ratio. */
+.gv-plugin-deepseek-reading-typography[data-gv-spacing='true']
+  .ds-assistant-message-main-content
+  :is(p, li):not(li *, table *, pre *):not(:has(.katex-display)) {
+  line-height: calc(var(--gv-plugin-reading-line-height, 160) / 100) !important;
+}
+
+/* DeepSeek spaces paragraphs on both sides and zeroes the outer edges; both
+ * sides change because collapsed margins keep the larger one. */
+.gv-plugin-deepseek-reading-typography[data-gv-spacing='true']
+  .ds-assistant-message-main-content
+  p:not(li *, table *, pre *):not(:first-child) {
+  margin-block-start: var(--gv-plugin-reading-paragraph-spacing, 16px) !important;
+}
+
+.gv-plugin-deepseek-reading-typography[data-gv-spacing='true']
+  .ds-assistant-message-main-content
+  p:not(li *, table *, pre *):not(:last-child) {
+  margin-block-end: var(--gv-plugin-reading-paragraph-spacing, 16px) !important;
+}
