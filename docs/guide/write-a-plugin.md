@@ -23,7 +23,7 @@ Voyager 不会把提示词发到任何地方：用哪个 AI 由你决定，文�
 https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md
 ```
 
-「本地插件」卡片里有一个「复制 skill 链接」按钮。这个 skill 包含完整的约定：清单字段、每个网站声明了什么、可用的原语，以及插件做不到的事。告诉 Agent 你想要的改动，它会生成目录、写好 `plugin.json` 和 `style.css`，并离线检查。之后在 popup 里选择「导入文件」，选中这两个文件即可。
+在「本地插件」卡片里打开「用一句话改造界面」，就能看到「复制 skill 链接」按钮。这个 skill 包含完整的约定：清单字段、每个网站声明了什么、可用的原语，以及插件做不到的事。告诉 Agent 你想要的改动，它会生成目录、写好 `plugin.json` 和 `style.css`，并离线检查。之后在 popup 里选择「导入文件」，选中这两个文件即可。
 
 想让 Agent 一直带着这个 skill，可以把文件保存为 Agent skills 目录下的 `write-voyager-plugin/SKILL.md`（Claude Code 是 `~/.claude/skills/`）。
 

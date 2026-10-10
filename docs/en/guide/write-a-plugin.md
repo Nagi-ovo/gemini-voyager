@@ -23,7 +23,7 @@ If you use a coding agent (Claude Code, Codex, Cursor and the like), give it Voy
 https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md
 ```
 
-The **Local plugins** card has a **Copy skill link** button for it. The skill holds the full contract: the manifest fields, what each site declares, the primitives, and what a plugin cannot do. Ask the agent for the change you want; it scaffolds a folder, writes `plugin.json` and `style.css`, and checks them offline. You then choose **Import files** in the popup and pick both files.
+In the **Local plugins** card, open **Describe a change** to find a **Copy skill link** button for it. The skill holds the full contract: the manifest fields, what each site declares, the primitives, and what a plugin cannot do. Ask the agent for the change you want; it scaffolds a folder, writes `plugin.json` and `style.css`, and checks them offline. You then choose **Import files** in the popup and pick both files.
 
 To keep the skill installed, save the file as `write-voyager-plugin/SKILL.md` in your agent's skills folder (for Claude Code, `~/.claude/skills/`).
 
