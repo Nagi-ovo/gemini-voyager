@@ -200,6 +200,33 @@ export const PRIMITIVE_CONTRACTS: readonly PrimitiveContract[] = [
     description:
       'Renders WaveDrom (WaveJSON) code blocks in replies as timing diagrams with a Diagram / Code toggle, using the renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the diagrams.',
   },
+  {
+    name: 'codeCollapse',
+    sinceEngine: '1.8.0',
+    semantic: ['assistantTurn', 'codeBlock'],
+    params: {
+      codeBlock: {
+        type: 'selector',
+        required: false,
+        description:
+          "One code block inside a reply, the element that carries the collapsed state. Defaults to the site adapter's codeBlock.",
+      },
+      code: {
+        type: 'selector',
+        required: false,
+        description:
+          'Element inside the code block holding the code, measured for length and clipped while collapsed; defaults to pre, else the block itself.',
+      },
+      action: {
+        type: 'selector',
+        required: false,
+        description:
+          "A native control inside the code block, such as its copy button; the toggle joins that control's row. Without it the toggle goes at the end of the block.",
+      },
+    },
+    description:
+      "Collapses long code blocks in replies with Gemini's code block collapse: a toggle per block plus expand all / collapse all, with the code and the host's copy controls left intact. Long blocks start collapsed, the user's choice holds while a reply streams, and turning the plugin off restores every block.",
+  },
 ];
 
 export function getPrimitiveContract(name: string): PrimitiveContract | undefined {

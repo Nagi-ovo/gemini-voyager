@@ -71,9 +71,12 @@ describe('bundled plugin lifecycle (parametric)', async () => {
     it(`${manifest.id}: mount → updateSettings → unmount restores the host`, () => {
       document.body.className = 'host-class';
       document.body.setAttribute('style', '--host-var: 1px;');
-      // Semantic answer operations need real target markup, not an empty body.
+      // Semantic answer operations need real target markup, not an empty body;
+      // the DeepSeek code block is long enough for code folding to collapse it.
       document.body.innerHTML =
-        '<div class="ds-message"><div class="ds-assistant-message-main-content"><pre><code>sample</code></pre></div></div>';
+        '<div class="ds-message"><div class="ds-assistant-message-main-content"><pre><code>sample</code></pre>' +
+        '<div class="md-code-block"><div class="md-code-block-banner"><div><div role="button">Copy</div></div></div>' +
+        `<pre>${'line\n'.repeat(40)}</pre></div></div></div>`;
       const before = {
         head: headWithoutBaseStyle(),
         body: document.body.outerHTML,

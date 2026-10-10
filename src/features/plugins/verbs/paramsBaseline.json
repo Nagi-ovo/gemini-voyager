@@ -92,6 +92,14 @@
         "codeLine": { "type": "selector", "required": false },
         "language": { "type": "selector", "required": false }
       }
+    },
+    "codeCollapse": {
+      "sinceEngine": "1.8.0",
+      "params": {
+        "codeBlock": { "type": "selector", "required": false },
+        "code": { "type": "selector", "required": false },
+        "action": { "type": "selector", "required": false }
+      }
     }
   }
 }

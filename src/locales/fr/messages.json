@@ -246,6 +246,14 @@
     "message": "Réduire",
     "description": "Collapse prompt text"
   },
+  "codeBlockExpandAll": {
+    "message": "Déplier tous les blocs de code",
+    "description": "Button that expands every collapsed long code block on the page"
+  },
+  "codeBlockCollapseAll": {
+    "message": "Replier tous les blocs de code",
+    "description": "Button that collapses every long code block on the page"
+  },
   "pm_reorder": {
     "message": "Glisser pour réordonner (touches ↑/↓)",
     "description": "Prompt list reorder handle"
