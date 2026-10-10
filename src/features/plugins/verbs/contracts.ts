@@ -82,38 +82,6 @@ const CODE_BLOCK_DIAGRAM_PARAMS: Readonly<Record<string, PrimitiveParamSpec>> = 
 
 export const PRIMITIVE_CONTRACTS: readonly PrimitiveContract[] = [
   {
-    name: 'codeCollapse',
-    sinceEngine: '1.5.0',
-    semantic: ['assistantTurn'],
-    params: {
-      code: {
-        type: 'selector',
-        required: false,
-        description: 'Code block selector; defaults to pre elements inside assistant turns.',
-      },
-      thresholdLines: {
-        type: 'number',
-        required: false,
-        description: 'Fold code beyond this line count, from 5 to 200; defaults to 20.',
-      },
-    },
-    description:
-      'Reversibly fold long code blocks without changing their text or native copy controls.',
-  },
-  {
-    name: 'tableCopy',
-    sinceEngine: '1.5.0',
-    semantic: ['assistantTurn'],
-    params: {
-      table: {
-        type: 'selector',
-        required: false,
-        description: 'Table elements inside assistant turns; defaults to table.',
-      },
-    },
-    description: 'Explicitly copy a rendered answer table as Markdown or spreadsheet-safe TSV.',
-  },
-  {
     name: 'formulaCopy',
     sinceEngine: '1.3.0',
     semantic: [],

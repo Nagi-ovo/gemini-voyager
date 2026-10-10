@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { DeclarativeEngine } from '../runtime/declarativeEngine';
 import { matchesAnyPattern } from '../sites/matchPattern';
@@ -68,7 +68,7 @@ describe('bundled plugin lifecycle (parametric)', async () => {
   expect(manifests.length).toBeGreaterThan(0);
 
   for (const manifest of manifests) {
-    it(`${manifest.id}: mount → updateSettings → unmount restores the host`, async () => {
+    it(`${manifest.id}: mount → updateSettings → unmount restores the host`, () => {
       document.body.className = 'host-class';
       document.body.setAttribute('style', '--host-var: 1px;');
       // Semantic answer operations need real target markup, not an empty body.
@@ -100,7 +100,7 @@ describe('bundled plugin lifecycle (parametric)', async () => {
 
       engine.unmount(manifest.id);
       expect(engine.isActive(manifest.id)).toBe(false);
-      await vi.waitFor(() => expect(headWithoutBaseStyle()).toBe(before.head));
+      expect(headWithoutBaseStyle()).toBe(before.head);
       expect(document.body.outerHTML).toBe(before.body);
       expect(document.documentElement.getAttribute('class')).toBe(before.root);
     });
