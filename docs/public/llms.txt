@@ -49,6 +49,15 @@ Beyond Gemini, these run on the Voyager Plugin Engine:
 - **Code Wrapping** (DeepSeek): Long code lines scroll sideways instead of wrapping
 - **Prompt Manager** (any site you add, localhost included): The prompt vault follows you off Gemini
 
+### Write your own plugin
+
+Users can make local plugins (a declarative `plugin.json` plus CSS, no code) for Gemini, AI Studio, ChatGPT, Claude and DeepSeek and import them in the popup.
+
+- [Guide](https://voyager.nagi.fun/en/guide/write-a-plugin)
+- [Agent skill](https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md): the full authoring contract for coding agents
+- [Manifest JSON Schema](https://voyager.nagi.fun/plugin.schema.json)
+- `npx create-voyager-plugin@latest init|check`: scaffold a plugin and run the import checks offline
+
 ### What Makes Voyager Different
 
 Voyager is designed as a comprehensive workspace layer for AI chat, not just a single-feature extension. It combines navigation, organization, export, and customization into one cohesive tool. Unlike alternatives that focus on one aspect or one site, Voyager provides a unified experience across Gemini and AI Studio, extends it to Claude, ChatGPT, and DeepSeek through a declarative plugin engine, and lets the Prompt Manager follow you to any site you add. Full privacy (local-only storage), cross-browser support, and 10-language localization.

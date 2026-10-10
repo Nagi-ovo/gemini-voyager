@@ -5,6 +5,7 @@ node_modules/
 /dist_edge/
 /dist_firefox/
 /dist_safari/
+packages/*/dist/
 voyager-edge-v*.zip
 final_body.md
 release_body.md

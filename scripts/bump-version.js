@@ -10,6 +10,11 @@ const __dirname = path.dirname(__filename);
 const packageJsonPath = path.resolve(__dirname, '../package.json');
 const manifestJsonPath = path.resolve(__dirname, '../manifest.json');
 const manifestDevJsonPath = path.resolve(__dirname, '../manifest.dev.json');
+// The plugin CLI ships with the extension version it checks against.
+const pluginCliPackagePath = path.resolve(
+  __dirname,
+  '../packages/create-voyager-plugin/package.json',
+);
 const xcodeProjectPath = path.resolve(__dirname, '../Voyager/Voyager.xcodeproj/project.pbxproj');
 
 const args = process.argv.slice(2);
@@ -80,6 +85,9 @@ async function main() {
       updateJsonVersion(manifestDevJsonPath, newVersion);
       console.log('Updated manifest.dev.json');
     }
+
+    updateJsonVersion(pluginCliPackagePath, newVersion);
+    console.log('Updated packages/create-voyager-plugin/package.json');
 
     const xcodeProject = fs.readFileSync(xcodeProjectPath, 'utf8');
     if (

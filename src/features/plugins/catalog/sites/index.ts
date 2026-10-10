@@ -12,14 +12,17 @@
  * `marketplace.json` next to this folder is an index kept only for the docs
  * plugin store; a test keeps it in sync with what this module discovers.
  *
- * Vite-only: `import.meta.glob` is not available under Bun, so
- * `scripts/build-plugin-catalog.ts` reads the same files from disk instead of
- * importing this module.
+ * Vite-only: `import.meta.glob` is not available under Bun or Node, so this
+ * module stays a thin shell over `loadBundledSites.ts`.
+ * `scripts/build-plugin-catalog.ts` reads the same files from disk, and the
+ * `create-voyager-plugin` CLI build replaces this module with one fed from disk.
  */
 import { logger } from '@/core/services/LoggerService';
 
-import { validateSiteAdapterData } from '../../sites/siteAdapterData';
 import type { SiteAdapter } from '../../types';
+import { type BundledSiteEntry, loadBundledSiteAdapters } from './loadBundledSites';
+
+export type { BundledSiteEntry } from './loadBundledSites';
 
 // The publisher stamps its site data from the same source revision as every browser build.
 const catalogRevision = Number(import.meta.env.VOYAGER_CATALOG_REVISION);
@@ -41,13 +44,6 @@ const styleModules = import.meta.glob('./*/plugins/*/*.css', {
   import: 'default',
   eager: true,
 }) as Record<string, string>;
-
-export interface BundledSiteEntry {
-  /** Directory name under `sites/`; must equal `site.json`'s `id`. */
-  readonly siteDir: string;
-  readonly path: string;
-  readonly siteJson: string;
-}
 
 export interface BundledPluginEntry {
   readonly siteDir: string;
@@ -106,32 +102,11 @@ export function listBundledPluginEntries(): readonly BundledPluginEntry[] {
     });
 }
 
-function loadBundledSiteAdapters(): readonly SiteAdapter[] {
-  const adapters: SiteAdapter[] = [];
-  for (const entry of listBundledSiteEntries()) {
-    try {
-      const result = validateSiteAdapterData(JSON.parse(entry.siteJson) as unknown);
-      if (!result.success) {
-        logger.error('Invalid bundled site.json', { path: entry.path, issues: result.error });
-        continue;
-      }
-      if (result.data.id !== entry.siteDir) {
-        logger.error('Bundled site.json id must match its directory', {
-          path: entry.path,
-          id: result.data.id,
-        });
-        continue;
-      }
-      adapters.push({ ...result.data, catalogRevision });
-    } catch (error) {
-      logger.error('Failed to parse bundled site.json', { path: entry.path, error: String(error) });
-    }
-  }
-  return adapters;
-}
-
 /** Validated adapters of every bundled plugin platform, in directory order. */
-export const BUNDLED_SITE_ADAPTERS: readonly SiteAdapter[] = loadBundledSiteAdapters();
+export const BUNDLED_SITE_ADAPTERS: readonly SiteAdapter[] = loadBundledSiteAdapters(
+  listBundledSiteEntries(),
+  { catalogRevision, onInvalid: (message, details) => logger.error(message, details) },
+);
 
 /**
  * The thin-shell adapters in `sites/adapters/` export these by id. A missing or

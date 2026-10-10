@@ -8,6 +8,7 @@
   "categories": { "correctness": "error" },
   "ignorePatterns": [
     "dist_*/**",
+    "packages/*/dist/**",
     "output/**",
     "node_modules/**",
     "docs/.vitepress/cache/**",

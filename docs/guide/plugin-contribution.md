@@ -4,6 +4,10 @@ Voyager 的插件系统优先支持声明式插件：用 `plugin.json` 描述插
 
 这让插件更容易审核和维护。如果你想贡献一个插件，建议先从这个方向开始。
 
+## 只给自己用：本地插件
+
+只在自己浏览器里用的插件不需要走这套流程。把它做成本地插件，在 popup 里导入即可：不用提 Issue、不用提 PR，也不用拉取仓库。[编写自己的插件](./write-a-plugin.md)介绍了三种做法，包括 `create-voyager-plugin` 检查工具和给编程 Agent 用的 skill。
+
 ## 推荐路径
 
 1. 先确认它适合做成插件：阅读宽度、排版修复、主题微调、隐藏/标记页面元素、简单的站点适配，通常都适合声明式插件。
@@ -169,7 +173,7 @@ src/features/plugins/catalog/
 
 用到原语的插件要遵守两条规则：
 
-- `requires.handlers` 里必须列出这个原语。
+- 插件匹配的每个站点都必须声明该原语读取的语义键（例如 `mermaid` 读取 `assistantTurn` 和 `codeBlock`）。`requires.handlers` 可写可不写：`native` 操作本身就隐含了它用到的原语。
 - `engine` 至少要写到首次提供该原语的引擎版本。`formulaCopy` 从引擎 1.3.0 开始提供，所以用到它的插件写 `">=1.3.0"`。写低了 `bun run catalog:build` 会失败，因为旧版 Voyager 那时会报缺少 handler，而不是提示用户升级。
 
 原语只增不改：新参数一定是可选的，破坏性变更会换一个新名字。

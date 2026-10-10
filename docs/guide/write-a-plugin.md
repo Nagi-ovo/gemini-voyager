@@ -1,0 +1,69 @@
+# 编写自己的插件
+
+本地插件是你给自己做的插件：它改变 Gemini、AI Studio、ChatGPT、Claude 或 DeepSeek 的外观和布局，只存在于你的浏览器里，不需要提 PR，也不需要 Voyager 的源码。
+
+和所有 Voyager 插件一样，它是声明式的：一个 `plugin.json` 清单加上 CSS，本身不运行任何代码。Voyager 在导入时检查它、应用它的改动，关掉时撤销全部改动。导入的插件默认是关闭的，你可以先看一遍再打开。
+
+## 三种做法
+
+### 用一句话描述，交给任意 AI 来写
+
+1. 打开想要改造的网站，打开 Voyager popup，找到「本地插件」卡片（在 Gemini 和 AI Studio 上，它是设置里的最后一项）。
+2. 选择「用一句话改造界面」，写一句话（例如「把我的消息变窄，并隐藏侧边栏」），再选择「生成提示词」。
+3. 自己把提示词复制到任意 AI 对话里，再把它的完整回复粘贴回来，选择「检查回复」。
+4. Voyager 会用大白话说明这个插件改了什么。导入后，在插件列表里打开它。
+
+Voyager 不会把提示词发到任何地方：用哪个 AI 由你决定，文字也由你来回搬运。
+
+### 交给编程 Agent
+
+如果你在用编程 Agent（Claude Code、Codex、Cursor 等），把 Voyager 的插件 skill 给它：
+
+```text
+https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md
+```
+
+在「本地插件」卡片里打开「用一句话改造界面」，就能看到「复制 skill 链接」按钮。这个 skill 包含完整的约定：清单字段、每个网站声明了什么、可用的原语，以及插件做不到的事。告诉 Agent 你想要的改动，它会生成目录、写好 `plugin.json` 和 `style.css`，并离线检查。之后在 popup 里选择「导入文件」，选中这两个文件即可。
+
+想让 Agent 一直带着这个 skill，可以把文件保存为 Agent skills 目录下的 `write-voyager-plugin/SKILL.md`（Claude Code 是 `~/.claude/skills/`）。
+
+### 自己动手写
+
+需要 Node.js 18 或更新版本：
+
+```sh
+npx create-voyager-plugin@latest init my-plugin --site claude
+# 编辑 my-plugin/plugin.json 和 my-plugin/style.css
+npx create-voyager-plugin@latest check my-plugin
+```
+
+`init` 会写出一个已经能通过检查的 `plugin.json` 和 `style.css`，外加一份写有该网站规则的 `AGENTS.md`。`--site` 可选 `gemini`、`aistudio`、`chatgpt`、`claude` 或 `deepseek`。
+
+`check` 离线运行和 popup 导入完全相同的检查。插件能导入时退出码为 0，否则每个问题输出一行 `path: message`。加 `--json` 可得到机器可读的输出。
+
+## 插件能做什么
+
+- 添加 CSS，作用域限定在插件给页面加上的 `gv-` 类名下。
+- 添加类名、设置安全的属性或内联样式、隐藏元素。目标可以是网站声明的语义锚点（`userTurn`、`assistantTurn`、`composer` 等），也可以是 CSS 选择器。
+- 在 popup 里提供设置：开关、滑块和下拉框，设置值通过 `{{key}}` 写进 CSS。
+- 在 ChatGPT、Claude 和 DeepSeek 上，启用 Voyager 的原语（公式复制、时间轴、Mermaid 图表等），并给 Voyager 自己的界面换色。
+
+## 插件做不到什么
+
+插件不能运行 JavaScript，不能响应点击或按键，不能从网络加载任何东西（字体、图片、样式表），不能读取或改写消息内容，也不能在其他网站上运行。如果需求涉及这些，写作材料会让 AI 直接说明，并做出最接近、能实现的版本。
+
+## 导入时检查的规则
+
+除了通用的清单检查（见[插件贡献说明](./plugin-contribution.md)），本地插件还必须：
+
+- 只匹配 Voyager 支持的网站范围内的 URL；
+- 只使用每个匹配网站都声明了的语义锚点；
+- 每个 `addClass` 只加一个类名，并以 `gv-` 开头；
+- 只使用 boolean、number 或 select 设置（string 和 color 目前在 popup 里还没有对应控件）；
+- 在 Gemini 和 AI Studio 上不使用 `theme` 和原语。
+
+翻译（`i18n`）是可选的。
+
+## 分享
+
+本地插件只存在于你的浏览器里；需要换到别处时，在插件列表里导出它的 JSON。如果它对大家都有用，可以提议收进官方插件目录，流程见[插件贡献说明](./plugin-contribution.md)。

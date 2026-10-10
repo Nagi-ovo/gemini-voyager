@@ -157,6 +157,30 @@ describe('describe a change → prompt → pasted reply → preview → import',
     expect(container.querySelector('textarea[readonly]')).toBeNull();
   });
 
+  it('copies the public plugin skill link for a coding agent, opening nothing', async () => {
+    await openComposer();
+    await act(async () => button(container, 'localPluginSkillCopy').click());
+    await flush();
+    expect(writeText).toHaveBeenCalledWith(
+      'https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md',
+    );
+    expect(
+      container.querySelector('[data-testid="local-plugin-skill-link"]')?.textContent,
+    ).toContain('localPluginDescribeCopied');
+  });
+
+  it('shows the skill link to copy by hand when the clipboard refuses it', async () => {
+    writeText.mockRejectedValueOnce(new Error('denied'));
+    await openComposer();
+    await act(async () => button(container, 'localPluginSkillCopy').click());
+    await flush();
+    const link = container.querySelector<HTMLInputElement>(
+      '[data-testid="local-plugin-skill-link"] input[readonly]',
+    );
+    expect(link?.value).toBe('https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md');
+    expect(container.textContent).toContain('localPluginSkillCopyFailed');
+  });
+
   it('shows why a reply was refused and stores nothing', async () => {
     await openComposer();
 

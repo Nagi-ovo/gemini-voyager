@@ -31,6 +31,8 @@
   },
   "include": [
     "src",
+    "packages/create-voyager-plugin/src",
+    "packages/create-voyager-plugin/test",
     "utils",
     "vite.config.base.ts",
     "vite.config.chrome.ts",

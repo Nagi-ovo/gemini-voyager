@@ -2913,6 +2913,18 @@
     "message": "No se pudo copiar. Selecciona el prompt y cópialo tú mismo.",
     "description": "Shown when the clipboard refused the prompt"
   },
+  "localPluginSkillHint": {
+    "message": "¿Trabajas con un agente de programación? Dale la skill de plugins de Voyager: escribe plugin.json y style.css y los comprueba sin conexión; luego elige ambos con Importar archivos.",
+    "description": "Points coding-agent users at the public write-voyager-plugin skill"
+  },
+  "localPluginSkillCopy": {
+    "message": "Copiar enlace de la skill",
+    "description": "Button that copies the skill link"
+  },
+  "localPluginSkillCopyFailed": {
+    "message": "No se pudo copiar. Copia este enlace tú mismo:",
+    "description": "Shown with the link when the clipboard refused it"
+  },
   "localPluginDescribeReplyLabel": {
     "message": "Respuesta de la IA",
     "description": "Label of the field for the AI reply"

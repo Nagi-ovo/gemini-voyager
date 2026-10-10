@@ -2913,6 +2913,18 @@
     "message": "复制失败。请选中提示词后手动复制。",
     "description": "Shown when the clipboard refused the prompt"
   },
+  "localPluginSkillHint": {
+    "message": "在用编程 Agent？把 Voyager 的插件 skill 交给它：它会写好 plugin.json 和 style.css 并离线检查，之后用「导入文件」选中这两个文件即可。",
+    "description": "Points coding-agent users at the public write-voyager-plugin skill"
+  },
+  "localPluginSkillCopy": {
+    "message": "复制 skill 链接",
+    "description": "Button that copies the skill link"
+  },
+  "localPluginSkillCopyFailed": {
+    "message": "复制失败，请手动复制这个链接：",
+    "description": "Shown with the link when the clipboard refused it"
+  },
   "localPluginDescribeReplyLabel": {
     "message": "AI 的回复",
     "description": "Label of the field for the AI reply"

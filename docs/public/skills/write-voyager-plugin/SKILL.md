@@ -1,0 +1,319 @@
+---
+name: write-voyager-plugin
+description: "Write and check a local plugin for the Voyager browser extension (Gemini, AI Studio, ChatGPT, Claude, DeepSeek). A plugin is a JSON manifest plus CSS that restyles or rearranges the chat page. Use when the user wants to change how one of these sites looks or is laid out through Voyager."
+---
+
+# Write a Voyager plugin
+
+Voyager is a browser extension for AI chat sites. A local plugin is a declarative JSON manifest (plugin.json) plus CSS that restyles or rearranges a chat page through reversible page changes. It runs no code of its own: Voyager checks it strictly on import, applies it, and removes every change when the plugin is turned off.
+
+This skill is generated from Voyager’s plugin engine 1.7.0. The latest copy is at https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md.
+
+## Workflow
+
+1. Find out which site the change is for and what should change. Then scaffold a folder:
+   `npx create-voyager-plugin@latest init my-plugin --site <site>` (site: gemini, aistudio, chatgpt, claude, deepseek) writes plugin.json, style.css and an AGENTS.md with this contract for that site. Without Node, write the two files by hand from the examples below.
+2. Edit plugin.json and style.css for the request. Give the plugin its own "id", "name" and class names.
+3. Run `npx create-voyager-plugin@latest check my-plugin`. It runs the same checks as Voyager’s popup import, offline, and exits 0 only when the plugin would import. Fix every `path: message` line it prints and run it again. `--json` prints the issues as a JSON array of { path, message }, empty when it imports.
+4. Hand over to the user: open the target site, open the Voyager popup, find the "Local plugins" card (the last entry on Gemini and AI Studio), choose Import files and pick plugin.json together with style.css. The plugin lands switched off; the user turns it on in the plugin list. Re-importing the same "id" replaces the installed version (raise "version" when you change it).
+5. Ask the user to look at the page in both light and dark theme. If a selector matches nothing, see "Finding selectors".
+
+## Manifest contract
+
+- Required non-empty string fields: id, name, version, description, author, category, license, engine. Also "tier": "declarative", "matches" (see the target site) and "contributes".
+- "id": a short lowercase reverse-dotted slug such as "me.short-name" (a-z, 0-9, ".", "_", "-"). Voyager stores it as "local.<id>"; you do not add that prefix.
+- "version": "1.0.0"; raise it when you change the plugin. "author": "me". "license": "MIT".
+- "engine": ">=1.0.0", or ">=" the sinceEngine of every primitive the plugin uses. This build's plugin engine is 1.7.0.
+- "category": one of render-fix, theme, layout, readability, productivity, integration, other.
+- Write "name" and "description" in the language of the user. "i18n" translations are optional for a local plugin.
+- Optional: "$schema": "https://voyager.nagi.fun/plugin.schema.json" lets an editor check the file as you type. The import gate is stricter than the schema; `check` is the authority.
+
+## Styles
+
+- "contributes.styles": [{ "file": "style.css" }] with the CSS in style.css beside plugin.json. The popup’s Import files reads plugin.json plus the .css files picked with it; Paste JSON only takes inlined CSS ([{ "css": "..." }]).
+- Import files takes exactly one .json file: the user picks plugin.json and its .css files, nothing else.
+- CSS may not load anything, not even from the same site: no @import, image-set(), image(), cross-fade() or src(), and url() only with a #fragment or a png, jpeg, gif, webp or avif data: URI (never SVG). No web fonts, no remote images.
+- Scope every rule under a class your plugin adds (see addClass), so nothing else changes. Site styles often win on specificity: add !important where a rule does not apply.
+- Light or dark only rules: scope them with html[data-gv-scheme='dark'] or html[data-gv-scheme='light'], never with the site's own theme classes.
+
+## Page changes
+
+- "contributes.domOps": reversible page changes. Allowed "op" values: addClass, setAttribute, setStyle, hide, and "native" where the site allows primitives. Voyager applies them to every match, again as the page changes, and removes them when the plugin is turned off. One example of each:
+  - addClass: { "op": "addClass", "target": { "kind": "semantic", "key": "userTurn" }, "className": "gv-plugin-my-change" }
+  - setAttribute: { "op": "setAttribute", "target": { "kind": "semantic", "key": "userTurn" }, "name": "data-gv-plugin", "value": "my-change" }
+  - setStyle: { "op": "setStyle", "target": { "kind": "semantic", "key": "userTurn" }, "styles": { "max-width": "960px" } }
+  - hide: { "op": "hide", "target": { "kind": "semantic", "key": "userTurn" } }
+- "target": prefer { "kind": "semantic", "key": <anchor> } with an anchor the target site declares. Use a plain CSS selector string only for something no anchor names; it breaks on a redesign.
+- addClass "className": exactly one class that starts with "gv-"; use "gv-plugin-<plugin-name>". Then style that class in "contributes.styles".
+- setAttribute "name" must be one of: title, role, lang, dir, hidden, tabindex, draggable, spellcheck, translate, style, data-*, aria-*. Never href, src, on*, class or id. Values may not contain an external URL.
+- setStyle "styles": CSS property -> value, custom properties (--gv-…) included; values may not load anything either.
+
+## Settings (optional)
+
+- "contributes.settings": { "<key>": { "type", "label", "default", … } }. Types: boolean, number, select. string and color settings are refused: the popup has no control for them yet.
+- number: the popup shows a slider from "min" to "max" (0 and 100 when omitted), with optional "minLabel" and "maxLabel" at its ends.
+- select: "options": [{ "value": "…", "label": "…" }] with at least one option and unique values, and a "default" that is one of the values.
+- Use a setting through a {{key}} token in CSS text, a setStyle value or a setAttribute value; Voyager substitutes the current value (the default until the user changes it). A common pattern: setStyle sets a custom property from the setting, and the CSS reads var(...).
+- A boolean renders as "true" or "false": set data-gv-… to "{{key}}" with setAttribute and style [data-gv-…='true'].
+
+## Local plugin rules
+
+- "matches" may only use patterns inside a site Voyager supports (listed per site).
+- Every semantic key the plugin relies on must be declared by every site its "matches" cover.
+- On Gemini and AI Studio: no "theme" and no "native" op (Voyager already runs its own features there).
+- "theme": { "brand": "#rrggbb" } optionally recolors Voyager’s own UI on Claude, ChatGPT or DeepSeek. "requires" is optional: native ops already imply "requires.handlers".
+- An import lands switched off; the user reviews it and turns it on in the popup.
+
+## Primitives
+
+A primitive is behavior Voyager ships as code; a plugin can only call it by name and configure it: { "op": "native", "handler": "<name>", "params": { … } }. Every param is optional. Set "engine" to ">=" the primitive’s sinceEngine (and any param’s). Not on Gemini or AI Studio, and only on a site that declares the semantic keys the primitive reads.
+
+- formulaCopy (sinceEngine 1.3.0): Click an inline or block formula to copy its LaTeX; hover shows it is clickable. Reads KaTeX / MathJax markup on the page.
+- vimInput (sinceEngine 1.4.0): Vim-style modal editing and cursor navigation in the prompt composer. Reads: composer.
+  - composer (selector): Prompt input to attach Vim modal editing to; defaults to the site adapter's composer.
+- turnNavigator (sinceEngine 1.4.0): A compact conversation timeline with starred messages and search, built on the same code as the Claude timeline. Reads: userTurn.
+  - turn (selector): User-turn elements to index; defaults to the site adapter's userTurn.
+  - conversationIdAttribute (string, since 1.5.0): Attribute holding the conversation id that conversationIdPattern captures from the URL, on an ancestor of each turn or inside its turnItem. When set, it is the only thing that lets a turn be starred: the id must name the current conversation; a turn without one stays unstarrable.
+  - accountIdAttributes (string[], since 1.5.0): Ordered attributes on document.documentElement identifying the loaded account. Stars hash their values together; missing values leave the star untagged.
+  - turnItem (selector, since 1.5.0): Element wrapping one exchange (prompt and reply). conversationIdAttribute is looked up inside it when no ancestor of the turn carries it.
+  - conversationIdPattern (string): Path regular expression whose first group is the conversation id; defaults to the site adapter's conversationIdPattern.
+  - scrollContainer (selector): Element that scrolls the conversation; defaults to the site adapter's scrollContainer, else auto-detected.
+  - yieldWhen (selector): While this matches (an open side panel, an artifact frame), the onboarding guide stays closed.
+  - position (string): Rail side: "right" (default) or "left".
+- userLatex (sinceEngine 1.7.0): Renders $…$ and $$…$$ LaTeX the user typed in their own messages, keeping the source for export and copy; turning it off restores the text. Reads: userTurn.
+  - turn (selector): User-message elements to render LaTeX in; defaults to the site adapter's userTurn.
+- mermaid (sinceEngine 1.7.0): Renders Mermaid code blocks in replies as diagrams with a Diagram / Code toggle, using the renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the diagrams. Reads: assistantTurn, codeBlock.
+  - turn (selector): Reply elements whose code blocks are rendered; defaults to the site adapter's assistantTurn.
+  - codeBlock (selector): One code block inside a reply. The diagram goes right before it, and it is hidden while the diagram shows. Defaults to the site adapter's codeBlock, else pre.
+  - code (selector): Element inside the code block holding the source text; defaults to code, else the block itself.
+  - codeLine (selector): Line elements inside the source element, joined with newlines, for hosts that render one element per line without newline characters.
+  - language (selector): Element inside the code block whose text is the language label; defaults to a language-* class on the source element or the block.
+- echarts (sinceEngine 1.7.0): Renders ECharts option code blocks in replies as interactive charts with a Diagram / Code toggle, using the parser, sanitizer and renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the charts. Reads: assistantTurn, codeBlock.
+  - turn (selector): Reply elements whose code blocks are rendered; defaults to the site adapter's assistantTurn.
+  - codeBlock (selector): One code block inside a reply. The diagram goes right before it, and it is hidden while the diagram shows. Defaults to the site adapter's codeBlock, else pre.
+  - code (selector): Element inside the code block holding the source text; defaults to code, else the block itself.
+  - codeLine (selector): Line elements inside the source element, joined with newlines, for hosts that render one element per line without newline characters.
+  - language (selector): Element inside the code block whose text is the language label; defaults to a language-* class on the source element or the block.
+- wavedrom (sinceEngine 1.7.0): Renders WaveDrom (WaveJSON) code blocks in replies as timing diagrams with a Diagram / Code toggle, using the renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the diagrams. Reads: assistantTurn, codeBlock.
+  - turn (selector): Reply elements whose code blocks are rendered; defaults to the site adapter's assistantTurn.
+  - codeBlock (selector): One code block inside a reply. The diagram goes right before it, and it is hidden while the diagram shows. Defaults to the site adapter's codeBlock, else pre.
+  - code (selector): Element inside the code block holding the source text; defaults to code, else the block itself.
+  - codeLine (selector): Line elements inside the source element, joined with newlines, for hosts that render one element per line without newline characters.
+  - language (selector): Element inside the code block whose text is the language label; defaults to a language-* class on the source element or the block.
+
+## Finding selectors
+
+- Use a semantic anchor whenever one names the element. Otherwise ask the user to open the site, press F12 and inspect the element in the Elements panel.
+- Have them test a selector in the Console: document.querySelectorAll('<selector>').length should count what you expect (for example one per message); 0 means it is wrong.
+- Prefer data-testid, aria-*, role and stable element names. Avoid generated class names (hashes such as css-1x2y3z): they change with every site deploy.
+- Do not guess selectors you cannot verify: tell the user which ones to check.
+
+## What a plugin cannot do
+
+- It cannot run JavaScript or any code of its own: no event handlers, clicks, timers or keyboard shortcuts.
+- It cannot make network requests or load anything: remote images, fonts, stylesheets or scripts.
+- It cannot read, rewrite or translate what a message says, or store and sync data beyond its own settings.
+- It cannot add buttons or links that do something, open pages, download or copy (CSS ::before and ::after can add fixed text).
+- It cannot decide by message content: logic, conditions or counting beyond what CSS selectors such as :has() and :nth-child() express.
+- It cannot run on sites other than those listed, or change Voyager’s own settings.
+
+If the request needs any of this, do not invent fields or ops: the import refuses them. Start your reply with one line "NOT POSSIBLE: <what and why>", then build the closest version this contract allows and say what it leaves out.
+When nothing declarative helps, stop there and write no files.
+
+## Sites
+
+`--site` takes one of: gemini, aistudio, chatgpt, claude, deepseek.
+
+### Target site: Gemini
+
+"matches" must use these URL patterns (all of them, or a subset):
+- https://gemini.google.com/*
+- https://business.gemini.google/*
+
+Semantic anchors Gemini declares (use them as { "kind": "semantic", "key": … }):
+- userTurn: a user message container (today it matches `.user-query-bubble-with-background, .user-query-bubble-container, .user-query-container, user-query-content .user-query-bubble-with-background, user-query-content, user-query, div[aria-label="User message"], article[data-author="user"], ar…`)
+- assistantTurn: an assistant message container (today it matches `[aria-label="Gemini response"], [data-message-author-role="assistant"], [data-message-author-role="model"], article[data-author="assistant"], article[data-turn="assistant"], article[data-turn="model"], model-response, .model-response, resp…`)
+- composer: the prompt input the user types into (today it matches `input-area-v2, rich-textarea, .text-input-field`)
+- sidebar: the conversation list / navigation rail (today it matches `bard-sidenav, .gv-folder-container`)
+
+Gemini does not declare thinkingBlock, codeBlock, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
+
+No "theme" and no "native" op on Gemini: CSS and the four page changes only.
+
+- The `sidebar` anchor also matches Voyager’s own folder panel (`.gv-folder-container`). To change only Gemini’s navigation rail, target `bard-sidenav` with a CSS selector.
+- Voyager’s own features (timeline, formula copy, Vim input) already run on Gemini, so a plugin cannot call primitives here.
+
+### Target site: AI Studio
+
+"matches" must use these URL patterns (all of them, or a subset):
+- https://aistudio.google.com/*
+- https://aistudio.google.cn/*
+
+Semantic anchors AI Studio declares (use them as { "kind": "semantic", "key": … }):
+- userTurn: a user message container (today it matches `.user-prompt-container, [data-turn-role="User"]`)
+- assistantTurn: an assistant message container (today it matches `.model-prompt-container, [data-turn-role="Model"]`)
+- composer: the prompt input the user types into (today it matches `ms-chunk-input textarea, textarea[aria-label]`)
+- sidebar: the conversation list / navigation rail (today it matches `.gv-aistudio .gv-folder-container`)
+
+AI Studio does not declare thinkingBlock, codeBlock, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
+
+No "theme" and no "native" op on AI Studio: CSS and the four page changes only.
+
+- The `sidebar` anchor is Voyager’s own folder panel on AI Studio, not AI Studio’s navigation. Use a CSS selector for AI Studio’s own panels.
+- Voyager’s AI Studio switch governs plugins too: while Voyager is off on AI Studio, nothing mounts.
+
+### Target site: ChatGPT
+
+"matches" must use these URL patterns (all of them, or a subset):
+- https://chatgpt.com/*
+- https://chat.openai.com/*
+
+Semantic anchors ChatGPT declares (use them as { "kind": "semantic", "key": … }):
+- userTurn: a user message container (today it matches `[data-user-message-bubble], [data-message-author-role="user"]:not(:has([data-user-message-bubble]))`)
+- assistantTurn: an assistant message container (today it matches `[data-chatgpt-selection-message-id]`)
+- codeBlock: a rendered code block (today it matches `[data-markdown-copy="code-block"]`)
+- composer: the prompt input the user types into (today it matches `#prompt-textarea, div[contenteditable="true"]`)
+- sidebar: the conversation list / navigation rail (today it matches `nav[aria-label], #stage-slideover-sidebar`)
+
+ChatGPT does not declare thinkingBlock, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
+
+Primitives (native ops) and an optional "theme" accent are allowed on ChatGPT.
+
+### Target site: Claude
+
+"matches" must use these URL patterns (all of them, or a subset):
+- https://claude.ai/*
+- https://*.frame.claudeusercontent.com/*
+
+Semantic anchors Claude declares (use them as { "kind": "semantic", "key": … }):
+- userTurn: a user message container (today it matches `[data-testid="user-message"]`)
+- assistantTurn: an assistant message container (today it matches `.font-claude-message, [data-testid="assistant-message"]`)
+- composer: the prompt input the user types into (today it matches `div[contenteditable="true"].ProseMirror`)
+- sidebar: the conversation list / navigation rail (today it matches `nav[aria-label], [data-testid="menu-sidebar"]`)
+
+Claude does not declare thinkingBlock, codeBlock, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
+
+Primitives (native ops) and an optional "theme" accent are allowed on Claude.
+
+### Target site: DeepSeek
+
+"matches" must use these URL patterns (all of them, or a subset):
+- https://chat.deepseek.com/*
+
+Semantic anchors DeepSeek declares (use them as { "kind": "semantic", "key": … }):
+- userTurn: a user message container (today it matches `.ds-message:has(.ds-collapsible-text):not(:has(.ds-assistant-message-main-content, .ds-think-content))`)
+- assistantTurn: an assistant message container (today it matches `.ds-message:has(.ds-assistant-message-main-content, .ds-think-content)`)
+- thinkingBlock: the reasoning / "thinking" section inside an assistant turn (today it matches `.ds-think-content`)
+- composer: the prompt input the user types into (today it matches `textarea.ds-scroll-area`)
+
+DeepSeek does not declare codeBlock, sidebar, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
+
+Primitives (native ops) and an optional "theme" accent are allowed on DeepSeek.
+
+## Examples (for ChatGPT; on another site use its "matches" and anchors)
+
+### A class on an anchor, styled by CSS
+
+plugin.json:
+
+```json
+{
+  "id": "me.rounded-turns",
+  "name": "Rounded turns",
+  "version": "1.0.0",
+  "description": "Round the corners of each message",
+  "author": "me",
+  "category": "readability",
+  "license": "MIT",
+  "engine": ">=1.0.0",
+  "tier": "declarative",
+  "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+  "contributes": {
+    "styles": [{ "file": "style.css" }],
+    "domOps": [
+      {
+        "op": "addClass",
+        "target": { "kind": "semantic", "key": "userTurn" },
+        "className": "gv-plugin-rounded-turn"
+      }
+    ]
+  }
+}
+```
+
+style.css:
+
+```css
+.gv-plugin-rounded-turn { border-radius: 16px; }
+html[data-gv-scheme='dark'] .gv-plugin-rounded-turn { outline: 1px solid #ffffff22; }
+```
+
+### A setting the user adjusts in the popup
+
+plugin.json:
+
+```json
+{
+  "id": "me.turn-accent",
+  "name": "Turn accent",
+  "version": "1.0.0",
+  "description": "A left border on each message, with an adjustable width",
+  "author": "me",
+  "category": "readability",
+  "license": "MIT",
+  "engine": ">=1.0.0",
+  "tier": "declarative",
+  "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+  "contributes": {
+    "styles": [{ "file": "style.css" }],
+    "settings": {
+      "width": {
+        "type": "number",
+        "label": "Border width (px)",
+        "default": 3,
+        "min": 1,
+        "max": 8,
+        "minLabel": "Thin",
+        "maxLabel": "Bold"
+      }
+    },
+    "domOps": [
+      {
+        "op": "addClass",
+        "target": { "kind": "semantic", "key": "userTurn" },
+        "className": "gv-plugin-turn-accent"
+      },
+      {
+        "op": "setStyle",
+        "target": { "kind": "semantic", "key": "userTurn" },
+        "styles": { "--gv-plugin-turn-accent-w": "{{width}}px" }
+      }
+    ]
+  }
+}
+```
+
+style.css:
+
+```css
+.gv-plugin-turn-accent { border-left: var(--gv-plugin-turn-accent-w, 3px) solid #8888; }
+html[data-gv-scheme='dark'] .gv-plugin-turn-accent { border-left-color: #fff6; }
+```
+
+### A Voyager primitive (formula copy)
+
+```json
+{
+  "id": "me.formula-copy",
+  "name": "Formula copy",
+  "version": "1.0.0",
+  "description": "Click a formula to copy its LaTeX",
+  "author": "me",
+  "category": "readability",
+  "license": "MIT",
+  "engine": ">=1.3.0",
+  "tier": "declarative",
+  "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+  "contributes": { "domOps": [{ "op": "native", "handler": "formulaCopy", "params": {} }] }
+}
+```

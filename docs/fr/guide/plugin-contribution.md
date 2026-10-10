@@ -169,7 +169,7 @@ Le manifest choisit une primitive et la configure ; il ne fournit jamais de logi
 
 Deux règles s'appliquent à tout plugin qui en utilise une :
 
-- `requires.handlers` doit lister la primitive.
+- Chaque site visé par le plugin doit déclarer les clés sémantiques que lit la primitive (`mermaid`, par exemple, lit `assistantTurn` et `codeBlock`). `requires.handlers` est facultatif : l’opération `native` implique déjà sa primitive.
 - `engine` doit valoir au moins la version du moteur qui l'a livrée en premier. `formulaCopy` est arrivée dans le moteur 1.3.0, donc un plugin qui l'utilise déclare `">=1.3.0"`. Une plage inférieure fait échouer `bun run catalog:build`, car une ancienne version de Voyager signalerait alors un handler manquant au lieu de demander une mise à jour.
 
 Les primitives ne font que s'enrichir : un nouveau paramètre est toujours optionnel et un changement cassant est livré sous un nouveau nom.

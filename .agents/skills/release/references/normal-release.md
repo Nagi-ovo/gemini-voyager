@@ -68,11 +68,12 @@ For an explicit version:
 bun run bump {VERSION}
 ```
 
-`scripts/bump-version.js` now updates all four tracked version sources together:
+`scripts/bump-version.js` now updates all five tracked version sources together:
 
 - `package.json`
 - `manifest.json`
 - `manifest.dev.json`
+- `packages/create-voyager-plugin/package.json` (the plugin CLI follows the extension version)
 - `Voyager/Voyager.xcodeproj/project.pbxproj`
 
 Do not manually edit the Xcode project version during a normal release. Verify all values after the bump:
