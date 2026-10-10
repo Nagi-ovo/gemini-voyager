@@ -267,6 +267,57 @@ describe('useCustomWebsites', () => {
     },
   );
 
+  const removeSite = (action: 'remove' | 'quick', domain: string) =>
+    action === 'remove'
+      ? settings.handleRemoveWebsite(domain)
+      : settings.toggleQuickWebsite(domain, true);
+
+  it.each(['remove', 'quick'] as const)(
+    '%s keeps the parent-domain grant a subdomain-only plugin depends on',
+    async (action) => {
+      mocks.contains.mockResolvedValue(true);
+      await act(async () =>
+        settings.hydrateFromStorage({ [StorageKeys.PROMPT_CUSTOM_WEBSITES]: ['deepseek.com'] }),
+      );
+      render({ pluginManifests: [{ matches: ['https://chat.deepseek.com/*'] }] });
+      await act(async () => removeSite(action, 'deepseek.com'));
+      expect(settings.customWebsites).toEqual([]);
+      expect(mocks.remove).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['remove', 'quick'] as const)(
+    '%s still revokes when only a lookalike host has a plugin',
+    async (action) => {
+      mocks.contains.mockResolvedValue(true);
+      await act(async () =>
+        settings.hydrateFromStorage({ [StorageKeys.PROMPT_CUSTOM_WEBSITES]: ['deepseek.com'] }),
+      );
+      render({
+        pluginManifests: [
+          { matches: ['https://evildeepseek.com/*'] },
+          { matches: ['https://chat.evildeepseek.com/*'] },
+        ],
+      });
+      await act(async () => removeSite(action, 'deepseek.com'));
+      expect(mocks.remove).toHaveBeenCalledWith({
+        origins: ['https://*.deepseek.com/*', 'http://*.deepseek.com/*'],
+      });
+    },
+  );
+
+  it('removing a parent site keeps the grant a remaining subdomain site still uses', async () => {
+    mocks.contains.mockResolvedValue(true);
+    await act(async () =>
+      settings.hydrateFromStorage({
+        [StorageKeys.PROMPT_CUSTOM_WEBSITES]: ['example.com', 'app.example.com'],
+      }),
+    );
+    await act(async () => settings.handleRemoveWebsite('example.com'));
+    expect(settings.customWebsites).toEqual(['app.example.com']);
+    expect(mocks.remove).not.toHaveBeenCalled();
+  });
+
   it('removes an ordinary host grant only after persisting the reduced website list', async () => {
     mocks.contains.mockResolvedValue(true);
     await act(async () =>

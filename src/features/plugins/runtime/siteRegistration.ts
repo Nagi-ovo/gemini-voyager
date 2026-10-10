@@ -71,7 +71,9 @@ export function partitionPluginOriginPatterns(
  * the content script there and grants the host, so a local plugin that targets
  * them needs no grant, and a dynamic registration would inject Voyager twice.
  */
-export function pluginsToOriginPatterns(manifests: readonly PluginManifest[]): string[] {
+export function pluginsToOriginPatterns(
+  manifests: readonly Pick<PluginManifest, 'matches'>[],
+): string[] {
   const origins = new Set<string>();
   for (const manifest of manifests) {
     for (const pattern of manifest.matches) {
