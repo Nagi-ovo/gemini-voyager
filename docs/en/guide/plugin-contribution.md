@@ -4,6 +4,10 @@ Voyager's plugin system is designed around declarative plugins: describe plugin 
 
 This keeps plugins easier to review and maintain. If you want to contribute a plugin, start here first.
 
+## Just for yourself: local plugins
+
+A plugin you only need in your own browser does not go through this process. Make it as a local plugin and import it in the popup: no Issue, no PR, no repository checkout. [Write your own plugin](./write-a-plugin.md) covers the three ways to make one, including the `create-voyager-plugin` checker and the skill for coding agents.
+
 ## Recommended path
 
 1. Confirm that the idea fits a plugin: reading width, layout fixes, theme tweaks, hiding or marking page elements, and simple site adaptations are usually good candidates.
@@ -239,7 +243,7 @@ The manifest picks a primitive and configures it. It never supplies logic, and
 
 Two rules apply to any plugin that uses one:
 
-- `requires.handlers` must list the primitive.
+- Every site the plugin matches must declare the semantic keys the primitive reads (`mermaid`, for example, reads `assistantTurn` and `codeBlock`). `requires.handlers` is optional: the `native` op already implies its primitive.
 - `engine` must be at least the engine version that first shipped it.
   `formulaCopy` shipped in engine 1.3.0, so a plugin using it declares
   `">=1.3.0"`. A lower range fails `bun run catalog:build`, because an older
