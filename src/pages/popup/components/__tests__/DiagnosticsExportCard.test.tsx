@@ -71,6 +71,7 @@ describe('DiagnosticsExportCard', () => {
 
     expect(diagnosticsMocks.buildVoyagerDiagnostics).toHaveBeenCalledWith({
       activeUrl: 'https://claude.ai/new',
+      nativeHealth: [],
       plugins: [
         {
           id: 'voyager.test',

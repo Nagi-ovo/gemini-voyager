@@ -29,8 +29,10 @@ import {
   resolveSiteAdapterForUrl,
 } from '@/features/plugins/remote/siteOverride';
 import { matchesAnyPattern } from '@/features/plugins/sites/matchPattern';
+import { isNativeSurfaceUrl } from '@/features/plugins/sites/nativeSurfaces';
 import { SiteRegistry } from '@/features/plugins/sites/registry';
 import { listPluginManifests } from '@/features/plugins/sources/defaultSources';
+import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
 import { loadPluginState, subscribePluginState } from '@/features/plugins/storage/pluginState';
 import type { PluginManifest, SiteAdapter } from '@/features/plugins/types';
 
@@ -138,8 +140,11 @@ export function resolveBrandColor(
   // 1. Per-site user override wins over everything for this site.
   const custom = adapter?.id ? customColors[adapter.id] : undefined;
   if (typeof custom === 'string' && custom.trim()) return custom;
-  // 2. A URL-matching, caller-active plugin that declares theme.brand.
-  const fromPlugin = manifests.find((m) => m.theme?.brand && matchesAnyPattern(url, m.matches));
+  // 2. A URL-matching, caller-active plugin that declares theme.brand; never
+  //    on Gemini / AI Studio, whatever the plugin's patterns say.
+  const fromPlugin = isNativeSurfaceUrl(url)
+    ? undefined
+    : manifests.find((m) => m.theme?.brand && matchesAnyPattern(url, m.matches));
   if (fromPlugin?.theme?.brand) return fromPlugin.theme.brand;
   // 3. The adapter's built-in brand colour (claude / chatgpt / …).
   // 4. else null → Gemini / AI Studio keep the theme-aware sage CSS default.
@@ -231,7 +236,7 @@ export function startBrandTheme(url: string = location.href, doc: Document = doc
       loadSiteOverrideForHost(host),
     ]);
     if (cancelled) return;
-    const active = manifests.filter((m) => m.theme?.brand && state[m.id]?.enabled);
+    const active = manifests.filter((m) => m.theme?.brand && isPluginEnabled(state, m.id));
     // A published site override can change the brand colour without a release.
     const adapter = resolveSiteAdapterForUrl(url, registry, override);
     applyBrandTheme(url, active, doc, customColors, adapter);

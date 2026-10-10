@@ -102,9 +102,11 @@ describe('addConversationToFolderFromNative — sort-order preservation', () => 
     const sorted = sortConversationsByPriority(store.data.folderContents['folder-1']);
 
     expect(sorted[0]?.conversationId).toBe('auto-assigned');
-    expect(
-      sortConversationsByPriority(saved?.folderContents['folder-1'] ?? [])[0]?.conversationId,
-    ).toBe('auto-assigned');
+    await vi.waitFor(() =>
+      expect(
+        sortConversationsByPriority(saved?.folderContents['folder-1'] ?? [])[0]?.conversationId,
+      ).toBe('auto-assigned'),
+    );
   });
 
   it('does not create duplicate sortIndex values when an existing entry lacks sortIndex', async () => {
@@ -140,8 +142,10 @@ describe('addConversationToFolderFromNative — sort-order preservation', () => 
 
     const indices = store.data.folderContents['folder-1'].map((c) => c.sortIndex);
     expect(new Set(indices).size).toBe(indices.length);
-    expect(saved?.folderContents['folder-1'].map((conversation) => conversation.sortIndex)).toEqual(
-      indices,
+    await vi.waitFor(() =>
+      expect(
+        saved?.folderContents['folder-1'].map((conversation) => conversation.sortIndex),
+      ).toEqual(indices),
     );
   });
 });

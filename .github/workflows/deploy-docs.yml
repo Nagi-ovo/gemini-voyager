@@ -10,6 +10,7 @@ on:
       - '.github/workflows/deploy-docs.yml'
       - 'scripts/update-readme-badges.mjs'
       - 'scripts/build-plugin-catalog.ts'
+      - 'scripts/lib/catalogRevision.ts'
       - 'src/features/plugins/catalog/**'
       - 'src/features/plugins/sites/**'
       - 'package.json'
@@ -29,6 +30,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -67,6 +69,7 @@ jobs:
           path: docs/.vitepress/dist
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     name: Deploy

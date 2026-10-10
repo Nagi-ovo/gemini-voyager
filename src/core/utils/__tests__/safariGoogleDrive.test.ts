@@ -23,6 +23,13 @@ afterEach(() => {
 });
 
 describe('Safari Google Drive native transport', () => {
+  it('a successful null download is refused rather than treated as a missing backup', async () => {
+    sendNativeMessage.mockResolvedValue({ success: true, data: { found: true, json: 'null' } });
+    await expect(downloadSafariGoogleDriveFile('gemini-voyager-stars.json')).rejects.toThrow(
+      'invalid null data',
+    );
+  });
+
   it('gets native session state without receiving an access token', async () => {
     sendNativeMessage.mockResolvedValue({
       success: true,

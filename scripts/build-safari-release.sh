@@ -132,6 +132,7 @@ if [[ -z $APPEX_PATH ]]; then
   echo "Safari web extension bundle was not exported" >&2
   exit 1
 fi
+node "$ROOT_DIR/scripts/verify-safari-resources.mjs" "$APPEX_PATH/Contents/Resources"
 
 APP_BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Contents/Info.plist")
 EXTENSION_BUNDLE_ID=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APPEX_PATH/Contents/Info.plist")

@@ -11,7 +11,15 @@ Voyager Cloud Sync backs up your folders, prompt library, starred messages, and 
 | Starred messages     | Yes    | Timeline bookmarks from any conversation                                     |
 | Extension settings   | Yes    | Cross-device preferences such as sorting, colors, and input behavior         |
 | Plugin configuration | Yes    | Install/enable state and plugin settings; site permissions remain per-device |
-| Conversation content | No     | Chat content stays on Google's servers                                       |
+| Model answers        | No     | Star backups contain user prompts, not model answers                         |
+
+## Starred Data and Sync Limits
+
+Cloud uploads include the **full user prompts you star** (up to 16 KiB UTF-8 per prompt) in your own Google Drive or iCloud. Star backups do not store model answers. The legacy v1 backup keeps previews only; the new v2 backup includes prompt text and deletion records.
+
+Deletion records are retained for 180 days. Older Voyager versions ignore them and may display or upload deleted stars again; newer versions suppress stale copies with unchanged timestamps. An explicit newer re-star, or an expired deletion record, can restore a star. Long offline periods and device clock differences also affect deletion propagation.
+
+Sync merges and checks its writes, with at most three attempts, but is not an atomic transaction across devices: concurrent uploads can still overwrite another device's write. A later sync from a device retaining the missing data can repair this; recovery is not guaranteed if it never syncs again. Partial upload failures keep writes already accepted; sync again to finish the repair.
 
 ## Features
 

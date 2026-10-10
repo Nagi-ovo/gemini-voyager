@@ -145,6 +145,7 @@ describe('recordWatermarkPresence', () => {
 
 describe('startWatermarkNativeNotice', () => {
   let cleanup: (() => void) | null = null;
+  const legacyEnabled = { [StorageKeys.WATERMARK_REMOVER_ENABLED]: true };
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -167,7 +168,7 @@ describe('startWatermarkNativeNotice', () => {
 
   it('shows the dialog with steps once the delay elapses', async () => {
     mockLocalStorage({});
-    mockSyncStorage({});
+    mockSyncStorage(legacyEnabled);
 
     cleanup = startWatermarkNativeNotice(1000);
     await flush();
@@ -191,7 +192,7 @@ describe('startWatermarkNativeNotice', () => {
 
   it('only handles Escape while focus is inside the non-modal card', async () => {
     mockLocalStorage({});
-    mockSyncStorage({});
+    mockSyncStorage(legacyEnabled);
 
     cleanup = startWatermarkNativeNotice(0);
     await flush();
@@ -209,7 +210,7 @@ describe('startWatermarkNativeNotice', () => {
 
   it('adds the detected hint after a clean-image streak', async () => {
     mockLocalStorage({ [StorageKeys.WATERMARK_CLEAN_IMAGE_STREAK]: 3 });
-    mockSyncStorage({});
+    mockSyncStorage(legacyEnabled);
 
     cleanup = startWatermarkNativeNotice(0);
     await flush();
@@ -234,6 +235,17 @@ describe('startWatermarkNativeNotice', () => {
     expect(onSettled).toHaveBeenCalledOnce();
   });
 
+  it('stays away for a user with no watermark preference', async () => {
+    mockLocalStorage({});
+    mockSyncStorage({});
+
+    cleanup = startWatermarkNativeNotice(0);
+    await flush();
+    await vi.advanceTimersByTimeAsync(10);
+
+    expect(document.querySelector('.gv-wm-notice')).toBeNull();
+  });
+
   it('stays away after it has been shown once', async () => {
     mockLocalStorage({ [StorageKeys.WATERMARK_NATIVE_NOTICE_SHOWN]: true });
     mockSyncStorage({});
@@ -248,7 +260,7 @@ describe('startWatermarkNativeNotice', () => {
   it('shows on Safari when its watermark-removal setting is still active', async () => {
     vi.mocked(isSafari).mockReturnValue(true);
     mockLocalStorage({});
-    mockSyncStorage({});
+    mockSyncStorage(legacyEnabled);
 
     cleanup = startWatermarkNativeNotice(0);
     await flush();
@@ -259,7 +271,7 @@ describe('startWatermarkNativeNotice', () => {
 
   it('turns both removal paths off when the user confirms', async () => {
     const localState: StorageState = {};
-    const syncState: StorageState = {};
+    const syncState: StorageState = { ...legacyEnabled };
     mockLocalStorage(localState);
     mockSyncStorage(syncState);
 
@@ -275,14 +287,14 @@ describe('startWatermarkNativeNotice', () => {
     expect(syncState[StorageKeys.WATERMARK_DOWNLOAD_ENABLED]).toBe(false);
     expect(syncState[StorageKeys.WATERMARK_PREVIEW_ENABLED]).toBe(false);
     // The legacy key is deliberately left untouched.
-    expect(syncState[StorageKeys.WATERMARK_REMOVER_ENABLED]).toBeUndefined();
+    expect(syncState[StorageKeys.WATERMARK_REMOVER_ENABLED]).toBe(true);
     expect(localState[StorageKeys.WATERMARK_NATIVE_NOTICE_SHOWN]).toBe(true);
     expect(document.querySelector('.gv-wm-notice__done')).not.toBeNull();
   });
 
   it('keeps the notice open and retryable when disabling storage fails', async () => {
     const localState: StorageState = {};
-    const syncState: StorageState = {};
+    const syncState: StorageState = { ...legacyEnabled };
     const onSettled = vi.fn();
     mockLocalStorage(localState);
     mockSyncStorage(syncState);
@@ -308,7 +320,7 @@ describe('startWatermarkNativeNotice', () => {
 
   it('marks the notice seen when dismissed without changing settings', async () => {
     const localState: StorageState = {};
-    const syncState: StorageState = {};
+    const syncState: StorageState = { ...legacyEnabled };
     const onSettled = vi.fn();
     mockLocalStorage(localState);
     mockSyncStorage(syncState);

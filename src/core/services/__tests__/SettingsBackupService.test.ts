@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
+import { resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 
 import {
   BACKUPABLE_SYNC_SETTINGS_DEFAULTS,
@@ -39,6 +40,106 @@ describe('SettingsBackupService', () => {
       'separate-file',
     );
   });
+
+  it('keeps ChatGPT folder content in its local separate file and outside settings restore', async () => {
+    const folderData = { folders: [], folderContents: {} };
+    const settingsStorage = {
+      get: vi.fn().mockResolvedValue({
+        ...BACKUPABLE_SYNC_SETTINGS_DEFAULTS,
+        [StorageKeys.FOLDER_DATA_CHATGPT]: folderData,
+      }),
+      set: vi.fn().mockResolvedValue(undefined),
+    };
+    const exported = await exportBackupableSyncSettings(settingsStorage);
+    expect(exported.data).not.toHaveProperty(StorageKeys.FOLDER_DATA_CHATGPT);
+    expect(NON_SETTINGS_BACKUP_POLICIES[StorageKeys.FOLDER_DATA_CHATGPT]).toMatchObject({
+      storage: 'local',
+      disposition: 'separate-file',
+    });
+    await expect(
+      restoreBackupableSyncSettings(
+        {
+          [StorageKeys.FOLDER_DATA_CHATGPT]: folderData,
+        },
+        settingsStorage,
+      ),
+    ).resolves.toEqual({});
+    expect(settingsStorage.set).not.toHaveBeenCalled();
+  });
+
+  it.each(['merge', 'overwrite'] as const)(
+    'keeps both star projections local and outside %s settings export and restore',
+    async (mode) => {
+      const stars = { messages: { chat: [{ turnId: 'kept' }] } };
+      const area = {
+        get: vi.fn().mockResolvedValue({
+          ...BACKUPABLE_SYNC_SETTINGS_DEFAULTS,
+          [StorageKeys.SAVED_LIBRARY_STARS]: stars,
+          [StorageKeys.TIMELINE_STARRED_MESSAGES]: stars,
+        }),
+        set: vi.fn().mockResolvedValue(undefined),
+      };
+      const exported = await exportBackupableSyncSettings(area);
+      for (const key of [StorageKeys.SAVED_LIBRARY_STARS, StorageKeys.TIMELINE_STARRED_MESSAGES]) {
+        expect(exported.data).not.toHaveProperty(key);
+        expect(NON_SETTINGS_BACKUP_POLICIES[key]).toMatchObject({
+          storage: 'local',
+          disposition: 'separate-file',
+        });
+      }
+      await expect(
+        restoreBackupableSyncSettings(
+          {
+            [StorageKeys.SAVED_LIBRARY_STARS]: stars,
+            [StorageKeys.TIMELINE_STARRED_MESSAGES]: stars,
+          },
+          area,
+          mode,
+        ),
+      ).resolves.toEqual({});
+      expect(area.set).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['merge', 'overwrite'] as const)(
+    'settings %s restore cannot erase star deletion records',
+    async (mode) => {
+      const key = StorageKeys.SAVED_LIBRARY_STAR_TOMBSTONES;
+      const scopedKey = `${key}:acct:account`;
+      const tombstones = [
+        {
+          conversationId: 'chat',
+          turnId: 'removed',
+          conversationUrl: '/app/chat',
+          starredAt: 1,
+          deletedAt: 2,
+        },
+      ];
+      const state: Record<string, unknown> = { [key]: tombstones, [scopedKey]: tombstones };
+      const area = {
+        get: vi.fn().mockImplementation(async (defaults: Record<string, unknown>) => ({
+          ...defaults,
+          ...state,
+        })),
+        set: vi.fn(async (items: Record<string, unknown>) => {
+          Object.assign(state, items);
+        }),
+      };
+      const exported = await exportBackupableSyncSettings(area);
+      expect(exported.data).not.toHaveProperty(key);
+      expect(exported.data).not.toHaveProperty(scopedKey);
+
+      await restoreBackupableSyncSettings(
+        { [key]: [], [scopedKey]: [], [StorageKeys.CHAT_WIDTH]: 92 },
+        area,
+        mode,
+      );
+
+      expect(state[key]).toEqual(tombstones);
+      expect(state[scopedKey]).toEqual(tombstones);
+      expect(state[StorageKeys.CHAT_WIDTH]).toBe(92);
+    },
+  );
 
   it('keeps popup scroll position device-local and outside settings backup', () => {
     const popupScrollKey = 'gvPopupScrollTop';
@@ -88,6 +189,76 @@ describe('SettingsBackupService', () => {
       }),
     });
     expect(payload.data).not.toHaveProperty('unknownKey');
+  });
+
+  it('preserves a legacy enabled watermark preference in settings backups', async () => {
+    const storageArea = {
+      get: vi.fn().mockResolvedValue({
+        ...BACKUPABLE_SYNC_SETTINGS_DEFAULTS,
+        [StorageKeys.WATERMARK_REMOVER_ENABLED]: true,
+      }),
+      set: vi.fn(),
+    };
+
+    const payload = await exportBackupableSyncSettings(storageArea);
+
+    expect(resolveWatermarkSettings(payload.data)).toEqual({ download: true, preview: true });
+  });
+
+  it.each(['merge', 'overwrite'] as const)(
+    'keeps a saved watermark choice when %s-restoring a backup without one',
+    async (mode) => {
+      const unsetDevice = {
+        get: vi
+          .fn()
+          .mockImplementation(async (defaults: Record<string, unknown>) => ({ ...defaults })),
+        set: vi.fn(),
+      };
+      const payload = await exportBackupableSyncSettings(unsetDevice);
+      expect(payload.data[StorageKeys.WATERMARK_DOWNLOAD_ENABLED]).toBeNull();
+
+      const state: Record<string, unknown> = {
+        [StorageKeys.WATERMARK_DOWNLOAD_ENABLED]: true,
+        [StorageKeys.WATERMARK_PREVIEW_ENABLED]: true,
+      };
+      const savedDevice = {
+        get: vi.fn().mockImplementation(async (defaults: Record<string, unknown>) => ({
+          ...defaults,
+          ...state,
+        })),
+        set: vi.fn().mockImplementation(async (items: Record<string, unknown>) => {
+          Object.assign(state, items);
+        }),
+      };
+      await restoreBackupableSyncSettings(payload.data, savedDevice, mode);
+
+      expect(resolveWatermarkSettings(state)).toEqual({ download: true, preview: true });
+      expect(state[StorageKeys.CHAT_WIDTH]).toBe(70);
+    },
+  );
+
+  it('restores an explicit watermark choice from a backup', async () => {
+    const state: Record<string, unknown> = {
+      [StorageKeys.WATERMARK_DOWNLOAD_ENABLED]: true,
+      [StorageKeys.WATERMARK_PREVIEW_ENABLED]: true,
+    };
+    const storageArea = {
+      get: vi.fn(),
+      set: vi.fn().mockImplementation(async (items: Record<string, unknown>) => {
+        Object.assign(state, items);
+      }),
+    };
+
+    await restoreBackupableSyncSettings(
+      {
+        [StorageKeys.WATERMARK_REMOVER_ENABLED]: null,
+        [StorageKeys.WATERMARK_DOWNLOAD_ENABLED]: false,
+        [StorageKeys.WATERMARK_PREVIEW_ENABLED]: false,
+      },
+      storageArea,
+    );
+
+    expect(resolveWatermarkSettings(state)).toEqual({ download: false, preview: false });
   });
 
   it('restores only whitelisted settings keys', async () => {

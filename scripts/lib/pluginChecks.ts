@@ -16,17 +16,16 @@
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 
-import type { ManifestIssue } from '../../src/features/plugins/manifest/validate';
 import {
-  requiredHandlers,
-  requiredSemanticKeys,
-} from '../../src/features/plugins/runtime/pluginStatus';
-import { engineSatisfied, parseSemver } from '../../src/features/plugins/semver';
+  LOCAL_PLUGIN_ID_PREFIX,
+  isLocalPluginId,
+} from '../../src/features/plugins/local/localPluginId';
+import { primitiveShippabilityIssues } from '../../src/features/plugins/manifest/primitiveChecks';
+import type { ManifestIssue } from '../../src/features/plugins/manifest/validate';
+import { requiredSemanticKeys } from '../../src/features/plugins/runtime/pluginStatus';
 import { patternWithinAny } from '../../src/features/plugins/sites/matchPattern';
 import { validateSiteAdapterData } from '../../src/features/plugins/sites/siteAdapterData';
 import type { PluginManifest, SiteAdapter } from '../../src/features/plugins/types';
-import type { PrimitiveContract } from '../../src/features/plugins/verbs/contracts';
-import { getPrimitiveContract } from '../../src/features/plugins/verbs/contracts';
 
 /** A `sites/<dir>` entry: the directory name plus its validated adapter. */
 export interface CatalogSiteRef {
@@ -73,66 +72,36 @@ export function checkMatchesStayInSite(
   return issues;
 }
 
-/**
- * The lowest engine version a range admits, or null when it admits every
- * version (`*`, empty) or cannot be parsed. Ranges are `*`, an exact `x.y.z`,
- * or `>=x.y.z` — see `semver.ts`.
- */
-export function engineRangeMinimum(range: string): string | null {
-  const trimmed = range.trim();
-  if (trimmed === '' || trimmed === '*') return null;
-  const minimum = parseSemver(trimmed.startsWith('>=') ? trimmed.slice(2) : trimmed);
-  if (!minimum) return null;
-  return `${minimum.major}.${minimum.minor}.${minimum.patch}`;
-}
-
-/** The later of two versions; used to name the primitive that sets the floor. */
-function laterVersion(a: string, b: string): string {
-  return engineSatisfied(`>=${b}`, a) ? a : b;
-}
+export { engineRangeMinimum } from '../../src/features/plugins/manifest/primitiveChecks';
 
 /**
  * Plan §5 / §8: a plugin may only invoke primitives this build ships, and its
- * `engine` range must exclude every build that predates them. Getting the range
- * right is what makes an old Voyager report `needs-engine` ("update Voyager")
- * instead of `needs-handler`, which is meant to mean a configuration mistake.
+ * `engine` range must exclude every build that predates them. The rule lives
+ * in `src/features/plugins/manifest/primitiveChecks.ts` so the popup's local
+ * plugin importer applies the same one.
  */
 export function checkPrimitivesAreShippable(
   manifest: PluginManifest,
   manifestPath: string,
 ): readonly string[] {
-  const issues: string[] = [];
-  const contracts: PrimitiveContract[] = [];
-  for (const handler of requiredHandlers(manifest)) {
-    const contract = getPrimitiveContract(handler);
-    if (!contract) {
-      issues.push(
-        `${manifest.id} (${manifestPath}): unknown primitive handler "${handler}" — no contract in verbs/contracts.ts`,
-      );
-      continue;
-    }
-    contracts.push(contract);
-  }
-  if (issues.length > 0 || contracts.length === 0) return issues;
-
-  const floor = contracts.reduce(
-    (highest, contract) => laterVersion(highest, contract.sinceEngine),
-    contracts[0].sinceEngine,
+  return primitiveShippabilityIssues(manifest).map(
+    (issue) => `${manifest.id} (${manifestPath}): ${issue.message}`,
   );
-  const minimum = engineRangeMinimum(manifest.engine);
-  if (minimum === null) {
-    issues.push(
-      `${manifest.id} (${manifestPath}): engine "${manifest.engine}" admits any build, but the plugin uses primitives that need at least ${floor} — set engine to ">=${floor}"`,
-    );
-    return issues;
-  }
-  if (!engineSatisfied(`>=${floor}`, minimum)) {
-    const source = contracts.find((contract) => contract.sinceEngine === floor);
-    issues.push(
-      `${manifest.id} (${manifestPath}): engine "${manifest.engine}" admits builds older than ${floor}, the sinceEngine of primitive "${source?.name ?? floor}" — set engine to ">=${floor}"`,
-    );
-  }
-  return issues;
+}
+
+/**
+ * `local.*` is the namespace of user-imported plugins (`local/localPluginId.ts`).
+ * An official plugin under it would be dropped by every client's merge.
+ */
+export function checkNotLocalNamespace(
+  manifest: PluginManifest,
+  manifestPath: string,
+): readonly string[] {
+  return isLocalPluginId(manifest.id)
+    ? [
+        `${manifest.id} (${manifestPath}): ids starting with "${LOCAL_PLUGIN_ID_PREFIX}" are reserved for user-imported plugins`,
+      ]
+    : [];
 }
 
 /**
@@ -164,6 +133,7 @@ export function checkManifestAgainstSite(
   manifestPath: string,
 ): readonly string[] {
   return [
+    ...checkNotLocalNamespace(manifest, manifestPath),
     ...checkMatchesStayInSite(manifest, site, manifestPath),
     ...checkPrimitivesAreShippable(manifest, manifestPath),
     ...checkSemanticKeysExist(manifest, site, manifestPath),

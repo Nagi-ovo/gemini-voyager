@@ -10,7 +10,7 @@ import {
   type CoachmarkSequenceStep,
   showCoachmark,
 } from '../coachmark';
-import { PROMPT_TRIGGER_ID } from './index';
+import { PROMPT_TRIGGER_ELEMENT_ID } from './triggerClearance';
 
 export const PROMPT_REORDER_COACHMARK_ID = 'prompt-reorder-intro';
 export const PROMPT_REORDER_COACHMARK_DEBUG_EVENT = 'gv:debug:promptReorderCoachmark';
@@ -36,7 +36,7 @@ async function loadSavedPrompts(): Promise<PromptItem[]> {
 }
 
 function findTrigger(): HTMLElement | null {
-  return document.getElementById(PROMPT_TRIGGER_ID);
+  return document.getElementById(PROMPT_TRIGGER_ELEMENT_ID);
 }
 
 export async function isPromptReorderCoachmarkEligible(): Promise<boolean> {

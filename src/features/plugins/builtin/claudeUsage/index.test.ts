@@ -3,14 +3,16 @@ import { type Mock, afterEach, describe, expect, it, vi } from 'vitest';
 import {
   claudeUsageUrl,
   isClaudeUsageSettings,
-  planFromClaudeBootstrap,
-  scrapeClaudeUsageFromDocument,
   setClaudeUsageReloadForTest,
-  snapshotFromClaudeMessageLimit,
-  snapshotFromClaudeUsageApi,
   startClaudeUsage,
   stopClaudeUsage,
 } from '.';
+import {
+  planFromClaudeBootstrap,
+  scrapeClaudeUsageFromDocument,
+  snapshotFromClaudeMessageLimit,
+  snapshotFromClaudeUsageApi,
+} from './usageSnapshot';
 
 type StorageListener = (
   changes: Record<string, chrome.storage.StorageChange>,
@@ -798,6 +800,42 @@ describe('Claude usage bar', () => {
 
     expect(el.style.left).toBe('70px');
     expect(el.style.top).toBe('90px');
+  });
+
+  it('saves a dragged position and stops responding to pointer moves after teardown', async () => {
+    mockLocalStorageStore({ gvClaudeUsagePos: { x: 40, y: 50 } });
+    startClaudeUsage();
+    await flushPromises();
+
+    const el = document.getElementById('gv-claude-usage-pill') as HTMLElement;
+    vi.spyOn(el, 'getBoundingClientRect')
+      .mockReturnValueOnce(new DOMRect(40, 50, 200, 32))
+      .mockReturnValue(new DOMRect(115, 135, 200, 32));
+    el.dispatchEvent(
+      new MouseEvent('pointerdown', { button: 0, clientX: 45, clientY: 55, bubbles: true }),
+    );
+    expect(el.classList.contains('gv-usage-pill')).toBe(true);
+    expect(el.classList.contains('gv-usage-dragging')).toBe(true);
+
+    window.dispatchEvent(new MouseEvent('pointermove', { clientX: 120, clientY: 140 }));
+    expect(el.style.left).toBe('115px');
+    expect(el.style.top).toBe('135px');
+    window.dispatchEvent(new MouseEvent('pointerup'));
+    expect(el.classList.contains('gv-usage-dragging')).toBe(false);
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      gvClaudeUsagePos: { x: 115, y: 135 },
+    });
+
+    el.dispatchEvent(
+      new MouseEvent('pointerdown', { button: 0, clientX: 120, clientY: 140, bubbles: true }),
+    );
+    stopClaudeUsage();
+    window.dispatchEvent(new MouseEvent('pointermove', { clientX: 200, clientY: 220 }));
+    window.dispatchEvent(new MouseEvent('pointerup'));
+    expect(el.style.left).toBe('115px');
+    expect(el.style.top).toBe('135px');
+    expect(chrome.storage.local.set).toHaveBeenCalledTimes(1);
+    expect(document.getElementById('gv-claude-usage-pill')).toBeNull();
   });
 
   it('ignores stale storage updates after a newer snapshot is rendered', async () => {

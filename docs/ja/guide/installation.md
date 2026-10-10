@@ -32,7 +32,7 @@
 
 **Chrome / Edge / Brave / Opera：**
 
-1. [GitHub Releases](https://github.com/Nagi-ovo/voyager/releases) から最新の `voyager-chrome-vX.Y.Z.zip` をダウンロードします。
+1. [GitHub Releases](https://github.com/voyager-crew/voyager/releases) から最新の `voyager-chrome-vX.Y.Z.zip` をダウンロードします。
 2. 解凍します。
 3. 拡張機能ページ (`chrome://extensions`) を開きます。
 4. **デベロッパーモード**（右上）をオンにします。
@@ -40,7 +40,7 @@
 
 **Firefox：**
 
-1. [Releases](https://github.com/Nagi-ovo/voyager/releases) から最新の `voyager-firefox-vX.Y.Z.xpi` をダウンロードします。
+1. [Releases](https://github.com/voyager-crew/voyager/releases) から最新の `voyager-firefox-vX.Y.Z.xpi` をダウンロードします。
 2. アドオン管理ページ (`about:addons`) を開きます。
 3. ダウンロードした `.xpi` ファイルをドラッグ＆ドロップしてインストールします（または右上の歯車アイコン ⚙️ -> **ファイルからアドオンをインストール**）。
 
@@ -61,4 +61,4 @@ Safari が直接配布に対応しました！署名済みアプリをダウン�
 
 ---
 
-_コードに貢献したいですか？ 開発者の方は [貢献ガイド](https://github.com/Nagi-ovo/voyager/blob/main/.github/CONTRIBUTING.md) へどうぞ。_
+_コードに貢献したいですか？ 開発者の方は [貢献ガイド](https://github.com/voyager-crew/voyager/blob/main/.github/CONTRIBUTING.md) へどうぞ。_

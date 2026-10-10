@@ -23,6 +23,7 @@ export interface GeneralSettingsValues {
   usageStatusEnabled: boolean;
   inputHaloHidden: boolean;
   defaultModelAutoApplyEnabled: boolean;
+  researchPackEnabled: boolean;
 }
 
 export interface GeneralSettingsCardProps {
@@ -52,7 +53,7 @@ export function GeneralSettingsCard({
     key: keyof GeneralSettingsValues,
     label: TranslationKey,
     hint: TranslationKey,
-    options: { disabled?: boolean; extra?: React.ReactNode } = {},
+    options: { disabled?: boolean; extra?: React.ReactNode; experimental?: boolean } = {},
   ) => (
     <SettingToggleRow
       id={id}
@@ -61,6 +62,7 @@ export function GeneralSettingsCard({
       hint={hint}
       checked={values[key]}
       disabled={options.disabled}
+      experimental={options.experimental}
       extra={options.extra}
       onChange={(checked) => onChange({ [key]: checked })}
       isVisible={isVisible}
@@ -93,6 +95,14 @@ export function GeneralSettingsCard({
           'persistentExportToolbarEnabled',
           'persistentExportToolbar',
           'persistentExportToolbarHint',
+        )}
+        {row(
+          'research-pack-enabled',
+          'enableResearchPack',
+          'researchPackEnabled',
+          'researchPackEnable',
+          'researchPackEnableHint',
+          { experimental: true },
         )}
         {row(
           'mermaid-enabled',

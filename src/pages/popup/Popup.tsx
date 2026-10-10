@@ -10,7 +10,10 @@ import {
   isSafari,
   supportsExtensionNotifications,
 } from '@/core/utils/browser';
+import { getFolderPlatformForHost } from '@/features/folder/platforms';
 import type { FormulaCopyFormat } from '@/features/formulaCopy/FormulaCopyService';
+import { CHATGPT_EXPORT_PLUGIN_ID } from '@/features/plugins/builtin/chatgptExport/openMessage';
+import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
 
 import { CloudSyncSettings } from './components/CloudSyncSettings';
 import { ContextSyncSettings } from './components/ContextSyncSettings';
@@ -20,6 +23,8 @@ import { FormulaCopySettings } from './components/FormulaCopySettings';
 import { GeneralSettingsCard } from './components/GeneralSettingsCard';
 import { InputSettingsCard } from './components/InputSettingsCard';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
+import { NativeHealthNotice } from './components/NativeHealthNotice';
+import { NativeLocalPluginsSection } from './components/NativeLocalPluginsSection';
 import { PluginSiteSettings } from './components/PluginSiteSettings';
 import { PopupFooter } from './components/PopupFooter';
 import { PopupHeader } from './components/PopupHeader';
@@ -36,11 +41,13 @@ import { ToolbarPinHint } from './components/ToolbarPinHint';
 import { VisualEffectPicker } from './components/VisualEffectPicker';
 import { WatermarkSettingsCard } from './components/WatermarkSettingsCard';
 import { useActivePopupTab } from './hooks/useActivePopupTab';
+import { useCatalogTimelineSettings } from './hooks/useCatalogTimelineSettings';
 import { useFolderPopupSettings } from './hooks/useFolderPopupSettings';
 import { useFolderStructureCopy } from './hooks/useFolderStructureCopy';
 import { useFormulaCopyPopupSettings } from './hooks/useFormulaCopyPopupSettings';
 import { useGeneralPopupSettings } from './hooks/useGeneralPopupSettings';
 import { useInputPopupSettings } from './hooks/useInputPopupSettings';
+import { useNativeHealth } from './hooks/useNativeHealth';
 import { usePopupBrandTheme } from './hooks/usePopupBrandTheme';
 import { usePopupLayoutSettings } from './hooks/usePopupLayoutSettings';
 import { usePopupPlugins } from './hooks/usePopupPlugins';
@@ -72,6 +79,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const [aiStudioEnabled, setAiStudioEnabled] = useState(true);
   const tab = useActivePopupTab(sourceTabId);
   const plugins = usePopupPlugins(tab);
+  const nativeHealth = useNativeHealth(tab.activeTabId, tab.activeUrl);
   const isAIStudio = tab.activeAccountPlatform === 'aistudio';
   const isSafariBrowser = getVoyagerBuildTarget() === 'safari' || isSafari();
   const canUseSystemNotifications = supportsExtensionNotifications();
@@ -93,6 +101,19 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
 
   // These owners remain mounted while search hides cards or an auxiliary view opens.
   const timeline = useTimelinePopupSettings(writePopupSyncStorage);
+  // A catalog rail runs on its timeline plugin's settings and its own placement keys, so the
+  // timeline card edits those on such a site instead of Gemini's.
+  const catalogTimeline = useCatalogTimelineSettings({
+    activeUrl: tab.activeUrl,
+    siteOverride: plugins.pluginSiteOverride,
+    manifests: plugins.siteScopedManifests,
+    pluginState: plugins.pluginState,
+    writeSyncStorage: writePopupSyncStorage,
+    messageTimestamps: {
+      enabled: timeline.values.showMessageTimestamps,
+      set: (enabled) => timeline.onChange({ showMessageTimestamps: enabled }),
+    },
+  });
   const folder = useFolderPopupSettings({
     activeAccountPlatform: tab.activeAccountPlatform,
     writeSyncStorage: writePopupSyncStorage,
@@ -123,7 +144,9 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     pluginState: plugins.pluginState,
   });
   const sections = usePopupSections({
-    nativePopupPlatform: tab.activeAccountPlatform,
+    // Plugin sites hide native sections through `isPluginSite`; keep the full allowlist for the
+    // sections they still show (visual effects) instead of treating them as AI Studio.
+    nativePopupPlatform: tab.activeAccountPlatform ?? 'gemini',
     isPluginSite,
     visualEffectsAvailable,
     t,
@@ -196,6 +219,13 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             <p className="text-muted-foreground text-sm">{t('popupSettingsSearchNoResults')}</p>
           </Card>
         )}
+        <NativeHealthNotice
+          style={{ order: -2 }}
+          entries={nativeHealth.visibleEntries}
+          language={language}
+          onDismiss={nativeHealth.dismiss}
+          t={t}
+        />
         <PopupUpdateBanner release={release} isSafariBrowser={isSafariBrowser} t={t} />
         {!isPluginSite && (
           <div style={{ order: sections.getSectionProps('cloudSync').order + 1 }}>
@@ -234,7 +264,11 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           </Card>
         )}
         {/* Cloud Sync */}
-        {wrapSection('cloudSync', <CloudSyncSettings sourceTabId={sourceTabId} />)}
+        {wrapSection('cloudSync', <CloudSyncSettings sourceTabId={sourceTabId} />, {
+          allowPluginSite: getFolderPlatformForHost(activeSiteDomain) !== null,
+          // Same top-level slot as on Gemini, ahead of the site's prompt and plugin cards.
+          pluginSiteOrder: -2,
+        })}
         {isPluginSite && (
           <PluginSiteSettings
             siteDomain={activeSiteDomain}
@@ -258,6 +292,13 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
               catalogHost: plugins.pluginCatalogHost,
               statuses: plugins.pluginStatuses,
             }}
+            exportEntry={{
+              enabled: isPluginEnabled(plugins.pluginState, CHATGPT_EXPORT_PLUGIN_ID),
+              activeTabId: tab.activeTabId,
+              // The options page embeds this view in a tab of its own; only the
+              // toolbar popup should get out of the way of the opened dialog.
+              onOpened: sourceTabId === undefined ? () => window.close() : undefined,
+            }}
             t={t}
           />
         )}
@@ -267,13 +308,24 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         {wrapSection(
           'timeline',
           <TimelineSettingsCard
-            values={timeline.values}
-            onChange={timeline.onChange}
-            onResetPosition={timeline.resetPosition}
+            {...(isPluginSite && catalogTimeline
+              ? {
+                  values: catalogTimeline.values,
+                  onChange: catalogTimeline.onChange,
+                  onResetPosition: catalogTimeline.resetPosition,
+                  isVisible: catalogTimeline.offers,
+                }
+              : {
+                  values: timeline.values,
+                  onChange: timeline.onChange,
+                  onResetPosition: timeline.resetPosition,
+                  isVisible: (settingId: string) =>
+                    !isPluginSite && sections.shouldShowSetting('timeline', settingId),
+                })}
             onViewStarredHistory={() => setShowStarredHistory(true)}
-            isVisible={(settingId) => sections.shouldShowSetting('timeline', settingId)}
             t={t}
           />,
+          { allowPluginSite: catalogTimeline !== null },
         )}
         {/* Folder Options */}
         {wrapSection(
@@ -324,8 +376,10 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           />,
         )}
 
-        {/* Keyboard Shortcuts */}
-        {wrapSection('keyboardShortcuts', <KeyboardShortcutSettings />)}
+        {/* Keyboard Shortcuts: global, so catalog timeline rails listen to them too. */}
+        {wrapSection('keyboardShortcuts', <KeyboardShortcutSettings />, {
+          allowPluginSite: catalogTimeline !== null,
+        })}
 
         {wrapSection(
           'inputCollapse',
@@ -377,6 +431,21 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             t={t}
           />,
         )}
+
+        {/* Gemini / AI Studio have no plugin page; local plugins get one entry here. */}
+        {!isPluginSite && !sections.hasSettingsSearch && (
+          <NativeLocalPluginsSection
+            plugins={{
+              manifests: plugins.siteScopedManifests,
+              loading: plugins.pluginsLoading,
+              activeUrl: tab.activeUrl,
+              sourceIds: plugins.pluginSourceIds,
+              blockedUpdates: plugins.pluginBlockedUpdates,
+              statuses: plugins.pluginStatuses,
+            }}
+            t={t}
+          />
+        )}
       </div>
 
       <PopupFooter
@@ -388,6 +457,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         <DiagnosticsExportCard
           activeUrl={tab.activeUrl}
           loading={plugins.pluginsLoading || !plugins.pluginStateLoaded}
+          nativeHealth={nativeHealth.entries}
           plugins={plugins.diagnosticPlugins}
         />
       </PopupFooter>

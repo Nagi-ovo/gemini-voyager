@@ -1,0 +1,46 @@
+/**
+ * `gv.storageBudget.writeCopy`: a page asks the background to write one legacy
+ * backup copy (`DataBackupService`) inside the storage budget, which measures
+ * fresh and admits or skips it in the same step (addendum P3P4 R6.1, F1, F3).
+ */
+import browser from 'webextension-polyfill';
+
+import { parseDataBackupKey } from '@/core/services/dataBackupKeys';
+
+export const WRITE_COPY_MESSAGE = 'gv.storageBudget.writeCopy';
+
+export interface WriteCopyMessage {
+  type: typeof WRITE_COPY_MESSAGE;
+  key: string;
+  value: string;
+}
+
+export type WriteCopyReply = { status: 'saved' } | { status: 'skipped' };
+
+export function isWriteCopyMessage(message: unknown): message is WriteCopyMessage {
+  if (typeof message !== 'object' || message === null) return false;
+  const { type, key, value } = message as Record<string, unknown>;
+  return (
+    type === WRITE_COPY_MESSAGE &&
+    typeof key === 'string' &&
+    parseDataBackupKey(key) !== null &&
+    typeof value === 'string'
+  );
+}
+
+/**
+ * Sends the copy before any await, so an unloading page still dispatches it.
+ * Resolves `true` only once the background wrote it; an unreachable background
+ * (waking, or this page's extension context gone) skips the copy.
+ */
+export function requestBudgetCopy(key: string, value: string): Promise<boolean> {
+  const message: WriteCopyMessage = { type: WRITE_COPY_MESSAGE, key, value };
+  try {
+    return browser.runtime.sendMessage(message).then(
+      (reply: unknown) => (reply as WriteCopyReply | undefined)?.status === 'saved',
+      () => false,
+    );
+  } catch {
+    return Promise.resolve(false);
+  }
+}

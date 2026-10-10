@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { isGemsViewPathname, scrapeGemsFromDocument } from '../index';
+import { isGemsViewPathname, scrapeGemsFromDocument } from '../catalog';
 
 /**
  * Build a JSDOM fragment that mirrors Gemini's actual /gems/view structure.

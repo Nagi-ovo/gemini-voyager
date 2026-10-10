@@ -46,7 +46,7 @@ function mountTurn(lines: string[]): HTMLElement {
 }
 
 function start(prompts = [fable]): SentPromptChipsController {
-  controller = startSentPromptChips({ prompts });
+  controller = startSentPromptChips({ prompts, scheme: () => 'light' });
   return controller;
 }
 
@@ -60,7 +60,7 @@ afterEach(() => {
 });
 
 describe('SentPromptChips', () => {
-  it('stands in for the prompt with its name, collapsed', () => {
+  it('recognises the prompt despite icon-font controls and starts collapsed', () => {
     const turn = mountTurn(FABLE_LINES);
 
     start();

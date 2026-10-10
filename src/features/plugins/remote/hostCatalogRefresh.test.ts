@@ -165,6 +165,22 @@ describe('HostCatalogRefresher', () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
+  it('never fetches for Gemini or AI Studio, even on a forced check', async () => {
+    const { refresher, fetchImpl } = harness({ eligible: true });
+    for (const host of [
+      'gemini.google.com',
+      'business.gemini.google',
+      'aistudio.google.com',
+      'aistudio.google.cn',
+    ]) {
+      expect(await refresher.refresh(host, { force: true })).toEqual({
+        ok: true,
+        status: 'invalid-host',
+      });
+    }
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
   it('rejects hosts that cannot name a file and a build with the channel off', async () => {
     const { refresher, fetchImpl } = harness({});
     expect(await refresher.refresh('*.frame.claudeusercontent.com')).toEqual({

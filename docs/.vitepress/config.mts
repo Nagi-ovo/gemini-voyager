@@ -62,7 +62,7 @@ export default defineConfig({
       head.push(['meta', { property: 'og:description', content: description }]);
     }
 
-    const rawMdUrl = `https://raw.githubusercontent.com/Nagi-ovo/voyager/main/docs/${pageData.relativePath}`;
+    const rawMdUrl = `https://raw.githubusercontent.com/voyager-crew/voyager/main/docs/${pageData.relativePath}`;
     head.push(['link', { rel: 'alternate', type: 'text/markdown', href: rawMdUrl }]);
 
     // hreflang alternates for all locales
@@ -78,7 +78,7 @@ export default defineConfig({
     }
     head.push([
       'link',
-      { rel: 'alternate', hreflang: 'x-default', href: `${siteUrl}/${basePath}` },
+      { rel: 'alternate', hreflang: 'x-default', href: `${siteUrl}/en/${basePath}` },
     ]);
 
     return head;
@@ -157,7 +157,7 @@ export default defineConfig({
         ],
         footer: {
           message:
-            '本项目开源。欢迎在 <a href="https://github.com/Nagi-ovo/voyager" target="_blank">GitHub</a> 上给一颗 ⭐ 支持。',
+            '本项目开源。欢迎在 <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> 上给一颗 ⭐ 支持。',
           copyright:
             '基于 GPLv3 协议发布 | Copyright © 2026 Jesse Zhang | <a href="/privacy">隐私政策</a>',
         },
@@ -236,7 +236,7 @@ export default defineConfig({
         ],
         footer: {
           message:
-            '開源專案。如果您喜歡，請在 <a href="https://github.com/Nagi-ovo/voyager" target="_blank">GitHub</a> 上給我們一顆 ⭐。',
+            '開源專案。如果您喜歡，請在 <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> 上給我們一顆 ⭐。',
           copyright:
             'GPLv3 授權 | Copyright © 2026 Jesse Zhang | <a href="/zh_TW/privacy">隱私政策</a>',
         },
@@ -315,7 +315,7 @@ export default defineConfig({
         ],
         footer: {
           message:
-            'Open source project. Star us on <a href="https://github.com/Nagi-ovo/voyager" target="_blank">GitHub</a> if you like it ⭐.',
+            'Open source project. Star us on <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> if you like it ⭐.',
           copyright:
             'Released under the GPLv3 License | Copyright © 2026 Jesse Zhang | <a href="/en/privacy">Privacy Policy</a>',
         },
@@ -394,7 +394,7 @@ export default defineConfig({
         ],
         footer: {
           message:
-            'オープンソースプロジェクトです。<a href="https://github.com/Nagi-ovo/voyager" target="_blank">GitHub</a> でスター ⭐ をつけて応援してください。',
+            'オープンソースプロジェクトです。<a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> でスター ⭐ をつけて応援してください。',
           copyright:
             'GPLv3 ライセンス | Copyright © 2026 Jesse Zhang | <a href="/ja/privacy">プライバシーポリシー</a>',
         },
@@ -473,7 +473,7 @@ export default defineConfig({
         ],
         footer: {
           message:
-            '오픈 소스 프로젝트입니다. 마음에 드신다면 <a href="https://github.com/Nagi-ovo/voyager" target="_blank">GitHub</a>에서 ⭐를 눌러주세요.',
+            '오픈 소스 프로젝트입니다. 마음에 드신다면 <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a>에서 ⭐를 눌러주세요.',
           copyright:
             'GPLv3 라이선스 하에 배포됨 | Copyright © 2026 Jesse Zhang | <a href="/ko/privacy">개인정보 처리방침</a>',
         },
@@ -552,7 +552,7 @@ export default defineConfig({
         ],
         footer: {
           message:
-            'Projet Open Source. Mettez une ⭐ sur <a href="https://github.com/Nagi-ovo/voyager" target="_blank">GitHub</a> si vous aimez.',
+            'Projet Open Source. Mettez une ⭐ sur <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> si vous aimez.',
           copyright:
             'Licence GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/fr/privacy">Politique de Confidentialité</a>',
         },
@@ -637,7 +637,7 @@ export default defineConfig({
         ],
         footer: {
           message:
-            'Proyecto de Código Abierto. Danos una ⭐ en <a href="https://github.com/Nagi-ovo/voyager" target="_blank">GitHub</a> si te gusta.',
+            'Proyecto de Código Abierto. Danos una ⭐ en <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> si te gusta.',
           copyright:
             'Licencia GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/es/privacy">Política de Privacidad</a>',
         },
@@ -716,7 +716,7 @@ export default defineConfig({
         ],
         footer: {
           message:
-            'Projeto Open Source. Dê uma ⭐ no <a href="https://github.com/Nagi-ovo/voyager" target="_blank">GitHub</a> se você gostar.',
+            'Projeto Open Source. Dê uma ⭐ no <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> se você gostar.',
           copyright:
             'Licença GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/pt/privacy">Política de Privacidade</a>',
         },
@@ -796,7 +796,7 @@ export default defineConfig({
         ],
         footer: {
           message:
-            'مشروع مفتوح المصدر. امنحنا ⭐ على <a href="https://github.com/Nagi-ovo/voyager" target="_blank">GitHub</a> إذا أعجبك.',
+            'مشروع مفتوح المصدر. امنحنا ⭐ على <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> إذا أعجبك.',
           copyright:
             'رخصة GPLv3 | حقوق النشر © 2026 Jesse Zhang | <a href="/ar/privacy">سياسة الخصوصية</a>',
         },
@@ -881,7 +881,7 @@ export default defineConfig({
         ],
         footer: {
           message:
-            'Проект с открытым исходным кодом. Поставьте ⭐ на <a href="https://github.com/Nagi-ovo/voyager" target="_blank">GitHub</a>, если вам нравится.',
+            'Проект с открытым исходным кодом. Поставьте ⭐ на <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a>, если вам нравится.',
           copyright:
             'Лицензия GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/ru/privacy">Политика конфиденциальности</a>',
         },
@@ -893,7 +893,7 @@ export default defineConfig({
     logo: '/logo.png',
     outline: [2, 4],
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/Nagi-ovo/voyager' },
+      { icon: 'github', link: 'https://github.com/voyager-crew/voyager' },
       { icon: 'x', link: 'https://x.com/Nag1ovo' },
       { icon: 'discord', link: 'https://discord.gg/TEUFxdMbGb' },
       { icon: 'bilibili', link: 'https://space.bilibili.com/312249633' },
@@ -913,7 +913,7 @@ export default defineConfig({
     plugins: [
       // vite 7 ↔ vitepress-bundled vite 5 Plugin type mismatch
       GitChangelog({
-        repoURL: () => 'https://github.com/Nagi-ovo/voyager',
+        repoURL: () => 'https://github.com/voyager-crew/voyager',
         // Only track the Chinese source docs to avoid 281-file EAGAIN;
         // translated copies share the same git history via the source.
         include: ['docs/guide/**/*.md'],

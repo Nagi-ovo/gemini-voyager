@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 describe('compact timeline alignment', () => {
-  const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+  const css = readFileSync(resolve(process.cwd(), 'src/features/timeline/timeline.css'), 'utf8');
 
   it('shares the ruler inward-edge anchor on both viewport sides', () => {
     expect(css).toMatch(

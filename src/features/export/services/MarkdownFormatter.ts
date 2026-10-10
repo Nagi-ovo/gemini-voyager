@@ -9,7 +9,6 @@ import {
   DEFAULT_EXPORT_SPEAKER_LABELS,
   type MarkdownFormatOptions,
 } from '../types/export';
-import { DOMContentExtractor } from './DOMContentExtractor';
 
 /**
  * Markdown formatting service
@@ -158,13 +157,6 @@ export class MarkdownFormatter {
             lines.push('');
           }
           lines.push(turn.userContent.text || '_No content_');
-        } else if (turn.userElement) {
-          const extracted = DOMContentExtractor.extractUserContent(turn.userElement);
-          if (extracted.hasImages) {
-            lines.push('*[This turn includes uploaded images]*');
-            lines.push('');
-          }
-          lines.push(extracted.text || '_No content_');
         } else {
           lines.push(this.formatContent(turn.user) || '_No content_');
         }
@@ -178,9 +170,6 @@ export class MarkdownFormatter {
       const fallback = this.formatContent(turn.assistant);
       if (turn.assistantContent) {
         lines.push(turn.assistantContent.text || fallback || '_No content_');
-      } else if (turn.assistantElement) {
-        const extracted = DOMContentExtractor.extractAssistantContent(turn.assistantElement);
-        lines.push(extracted.text || fallback || '_No content_');
       } else {
         lines.push(this.formatContent(turn.assistant) || '_No content_');
       }
@@ -191,7 +180,7 @@ export class MarkdownFormatter {
     let hasAnySection = false;
 
     const userFallback = this.formatContent(turn.user);
-    const hasUser = !!turn.userContent || !!turn.userElement || !!userFallback;
+    const hasUser = !!turn.userContent || !!userFallback;
     if (hasUser && !omitUserSection) {
       lines.push(`### 👤 ${this.escapeMarkdownLabel(speakerLabels.user)}`);
       lines.push('');
@@ -202,13 +191,6 @@ export class MarkdownFormatter {
           lines.push('');
         }
         lines.push(turn.userContent.text || userFallback || '_No content_');
-      } else if (turn.userElement) {
-        const extracted = DOMContentExtractor.extractUserContent(turn.userElement);
-        if (extracted.hasImages) {
-          lines.push('*[This turn includes uploaded images]*');
-          lines.push('');
-        }
-        lines.push(extracted.text || userFallback || '_No content_');
       } else {
         lines.push(userFallback || '_No content_');
       }
@@ -218,16 +200,13 @@ export class MarkdownFormatter {
     }
 
     const assistantFallback = this.formatContent(turn.assistant);
-    const hasAssistant = !!turn.assistantContent || !!turn.assistantElement || !!assistantFallback;
+    const hasAssistant = !!turn.assistantContent || !!assistantFallback;
     if (hasAssistant) {
       lines.push(`### 🤖 ${this.escapeMarkdownLabel(speakerLabels.assistant)}`);
       lines.push('');
 
       if (turn.assistantContent) {
         lines.push(turn.assistantContent.text || assistantFallback || '_No content_');
-      } else if (turn.assistantElement) {
-        const extracted = DOMContentExtractor.extractAssistantContent(turn.assistantElement);
-        lines.push(extracted.text || assistantFallback || '_No content_');
       } else {
         lines.push(assistantFallback || '_No content_');
       }
@@ -244,9 +223,7 @@ export class MarkdownFormatter {
 
   private static formatPromptHeading(turn: ChatTurn): { hasMedia: boolean; text: string } {
     const fallback = this.formatContent(turn.user);
-    const extractedContent =
-      turn.userContent ??
-      (turn.userElement ? DOMContentExtractor.extractUserContent(turn.userElement) : null);
+    const extractedContent = turn.userContent;
     const extracted = extractedContent?.text || fallback;
 
     if (!extracted) return { hasMedia: false, text: '' };
@@ -286,7 +263,7 @@ export class MarkdownFormatter {
    */
   private static formatFooter(metadata: ConversationMetadata): string {
     return [
-      `*Exported from [Voyager](https://github.com/Nagi-ovo/voyager)*`,
+      `*Exported from [Voyager](https://github.com/voyager-crew/voyager)*`,
       `*Generated on ${this.formatDate(metadata.exportedAt)}*`,
     ].join('  \n'); // Two spaces for line break
   }

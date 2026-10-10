@@ -1,8 +1,10 @@
+import { createToaster } from '@/core/ui/toast/toaster';
+import type { Toaster } from '@/core/ui/toast/types';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import type { PresentedRemoteAnnouncement } from '@/features/announcements';
 
-const CONTAINER_ID = 'gv-remote-announcement';
-const SHOW_CLASS = 'gv-remote-announcement--show';
+const CHANNEL = 'remote-announcement';
+const TONE = { info: 'info', warning: 'warning', critical: 'error' } as const;
 const DEFAULT_TITLE_KEY = 'remoteAnnouncementDefaultTitle';
 const OPEN_KEY = 'remoteAnnouncementOpen';
 const DISMISS_KEY = 'remoteAnnouncementDismiss';
@@ -13,7 +15,7 @@ const DISMISS_FALLBACK = 'Dismiss';
 let messageListener:
   | ((message: unknown, sender: chrome.runtime.MessageSender, sendResponse: () => void) => void)
   | null = null;
-let currentAnnouncementId: string | null = null;
+let toaster: Toaster | null = null;
 
 function getI18nMessage(key: string, fallback: string): string {
   try {
@@ -39,14 +41,6 @@ function normalizeAnnouncements(value: unknown): PresentedRemoteAnnouncement[] {
   });
 }
 
-function removeAnnouncement(): void {
-  currentAnnouncementId = null;
-  const existing = document.getElementById(CONTAINER_ID);
-  if (!(existing instanceof HTMLElement)) return;
-  existing.classList.remove(SHOW_CLASS);
-  window.setTimeout(() => existing.remove(), 180);
-}
-
 async function acknowledge(id: string): Promise<void> {
   try {
     await chrome.runtime?.sendMessage?.({
@@ -60,73 +54,30 @@ async function acknowledge(id: string): Promise<void> {
   }
 }
 
-function createAnnouncementElement(announcement: PresentedRemoteAnnouncement): HTMLDivElement {
-  const container = document.createElement('div');
-  container.id = CONTAINER_ID;
-  container.className = `gv-remote-announcement gv-remote-announcement--${announcement.level}`;
-  container.setAttribute('role', 'status');
-  container.setAttribute('aria-live', announcement.level === 'critical' ? 'assertive' : 'polite');
-
-  const content = document.createElement('div');
-  content.className = 'gv-remote-announcement__content';
-
-  const title = document.createElement('div');
-  title.className = 'gv-remote-announcement__title';
-  title.textContent =
-    announcement.title || getI18nMessage(DEFAULT_TITLE_KEY, DEFAULT_TITLE_FALLBACK);
-
-  const body = document.createElement('div');
-  body.className = 'gv-remote-announcement__body';
-  body.textContent = announcement.body;
-
-  content.appendChild(title);
-  content.appendChild(body);
-
-  const actions = document.createElement('div');
-  actions.className = 'gv-remote-announcement__actions';
-
-  if (announcement.link) {
-    const link = document.createElement('button');
-    link.type = 'button';
-    link.className = 'gv-remote-announcement__link';
-    link.textContent = announcement.linkLabel || getI18nMessage(OPEN_KEY, OPEN_FALLBACK);
-    link.addEventListener('click', () => {
-      window.open(announcement.link, '_blank', 'noopener,noreferrer');
-      void acknowledge(announcement.id);
-      removeAnnouncement();
-    });
-    actions.appendChild(link);
-  }
-
-  if (!announcement.requiresAction) {
-    const dismiss = document.createElement('button');
-    dismiss.type = 'button';
-    dismiss.className = 'gv-remote-announcement__dismiss';
-    dismiss.textContent = getI18nMessage(DISMISS_KEY, DISMISS_FALLBACK);
-    dismiss.addEventListener('click', () => {
-      void acknowledge(announcement.id);
-      removeAnnouncement();
-    });
-    actions.appendChild(dismiss);
-  }
-
-  container.appendChild(content);
-  container.appendChild(actions);
-  return container;
-}
-
+/** One announcement at a time; it stays until the user acts on it or dismisses it. */
 function showAnnouncement(announcement: PresentedRemoteAnnouncement): void {
-  if (!document.body) {
-    window.setTimeout(() => showAnnouncement(announcement), 250);
-    return;
-  }
-
-  if (currentAnnouncementId === announcement.id && document.getElementById(CONTAINER_ID)) return;
-  document.getElementById(CONTAINER_ID)?.remove();
-  currentAnnouncementId = announcement.id;
-  const element = createAnnouncementElement(announcement);
-  document.body.appendChild(element);
-  window.requestAnimationFrame(() => element.classList.add(SHOW_CLASS));
+  const link = announcement.link;
+  toaster?.show({
+    channel: CHANNEL,
+    title: announcement.title || getI18nMessage(DEFAULT_TITLE_KEY, DEFAULT_TITLE_FALLBACK),
+    message: announcement.body,
+    tone: TONE[announcement.level],
+    durationMs: null,
+    action: link
+      ? {
+          label: announcement.linkLabel || getI18nMessage(OPEN_KEY, OPEN_FALLBACK),
+          run: (handle) => {
+            window.open(link, '_blank', 'noopener,noreferrer');
+            void acknowledge(announcement.id);
+            handle.dismiss();
+          },
+        }
+      : undefined,
+    dismissLabel: announcement.requiresAction
+      ? undefined
+      : getI18nMessage(DISMISS_KEY, DISMISS_FALLBACK),
+    onDismiss: () => void acknowledge(announcement.id),
+  });
 }
 
 function showFirstPending(announcements: readonly PresentedRemoteAnnouncement[]): void {
@@ -150,6 +101,7 @@ async function readPendingAnnouncements(): Promise<void> {
 export function startRemoteAnnouncements(): () => void {
   if (messageListener) return () => {};
 
+  toaster = createToaster();
   messageListener = (message: unknown) => {
     if (typeof message !== 'object' || message === null) return;
     const data = message as { type?: unknown; payload?: { announcements?: unknown } };
@@ -169,6 +121,7 @@ export function startRemoteAnnouncements(): () => void {
       }
       messageListener = null;
     }
-    removeAnnouncement();
+    toaster?.destroy();
+    toaster = null;
   };
 }

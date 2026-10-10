@@ -43,6 +43,10 @@
     "message": "隐藏外部容器",
     "description": "隐藏外部容器标签"
   },
+  "hideOuterContainerDotsOnly": {
+    "message": "仅适用于节点样式",
+    "description": "Why the hide outer container toggle is disabled: the ruler and compact timeline styles draw no container"
+  },
   "draggableTimeline": {
     "message": "可拖拽时间线",
     "description": "可拖拽时间线标签"
@@ -213,6 +217,22 @@
   "pm_deleted": {
     "message": "已删除",
     "description": "删除提示"
+  },
+  "pm_save_failed": {
+    "message": "无法保存更改，已撤销。",
+    "description": "Prompt Manager notice: a change could not be saved and was rolled back"
+  },
+  "pm_edit_target_deleted": {
+    "message": "该 prompt 已在别处删除。再次保存即可另存为新的 prompt。",
+    "description": "Prompt Manager hint: the prompt being edited was deleted in another tab; saving again adds the draft as a new prompt"
+  },
+  "pm_library_unavailable": {
+    "message": "Prompt 暂无响应，上一次更改仍在保存中，请稍后再试。",
+    "description": "Prompt Manager notice: an earlier change is still waiting for a reply, so new edits are refused until it arrives"
+  },
+  "pm_library_load_failed": {
+    "message": "无法加载 prompt，正在重试，请稍后再试。",
+    "description": "Prompt Manager notice: the prompt library could not be read yet, so an edit was refused and a new read started"
   },
   "pm_edit": {
     "message": "编辑",
@@ -662,6 +682,14 @@
     "message": "云同步",
     "description": "合并后的云按钮提示，点击弹出上传/同步选项"
   },
+  "folder_reload_required": {
+    "message": "Voyager 已更新。请刷新此标签页以继续编辑文件夹。",
+    "description": "Shown when a newer Voyager build owns folder writes and this tab must be reloaded"
+  },
+  "folder_cloud_merge_interrupted": {
+    "message": "Google 云端硬盘合并已中断，请重新运行。",
+    "description": "Shown when a Google Drive merge of folders was interrupted before it was applied"
+  },
   "folder_settings": {
     "message": "文件夹设置",
     "description": "齿轮图标提示，打开文件夹相关设置"
@@ -761,6 +789,26 @@
   "folder_import_error": {
     "message": "✗ 导入失败：{error}",
     "description": "导入错误消息"
+  },
+  "conversation_added_to_folder": {
+    "message": "已添加到“{folder}”",
+    "description": "Notification after a prompt is dropped into a folder"
+  },
+  "conversation_saved_to_root": {
+    "message": "已保存到未分类",
+    "description": "Notification after a prompt is dropped on Uncategorized"
+  },
+  "folder_default_name": {
+    "message": "我的文件夹",
+    "description": "Name of the folder created when a prompt is dropped and no folder exists"
+  },
+  "folder_import_in_progress": {
+    "message": "已有导入正在进行",
+    "description": "Notice when a folder import is started while another is running"
+  },
+  "folder_export_in_progress": {
+    "message": "已有导出正在进行",
+    "description": "Notice when a folder export is started while another is running"
   },
   "folder_save_error": {
     "message": "无法保存文件夹更改，请重试。",
@@ -914,22 +962,6 @@
     "message": "可在扩展弹窗 → 文件夹选项中关闭此功能。",
     "description": "Footnote explaining where to toggle the setting later"
   },
-  "floatingModeNudgeTitle": {
-    "message": "侧边栏不可用 — 在悬浮窗中打开文件夹？",
-    "description": "Title of the floating-mode fallback nudge"
-  },
-  "floatingModeNudgeBody": {
-    "message": "Voyager 未找到 Gemini 侧边栏，可能是页面布局发生了变化。你仍可以在悬浮窗中浏览文件夹。",
-    "description": "Body copy of the floating-mode fallback nudge"
-  },
-  "floatingModeNudgeEnable": {
-    "message": "打开悬浮窗",
-    "description": "Primary button that opens the floating folder panel"
-  },
-  "floatingModeNudgeDismiss": {
-    "message": "暂不",
-    "description": "Secondary button that dismisses the floating-mode nudge"
-  },
   "floatingPanelTitle": {
     "message": "文件夹",
     "description": "Title shown in the floating folder panel header"
@@ -969,6 +1001,18 @@
   "folderManager_dataLossWarning": {
     "message": "⚠️ 警告：无法加载文件夹数据。您的文件夹可能已损坏。请检查浏览器控制台以获取详细信息，并在可用时尝试从备份恢复。",
     "description": "文件夹数据加载失败时显示的警告"
+  },
+  "folderManager_dataRecovered": {
+    "message": "已从备份恢复文件夹数据。",
+    "description": "Notice when folder data was recovered from backup"
+  },
+  "folderManager_dataKept": {
+    "message": "无法加载文件夹数据，已保留当前文件夹。",
+    "description": "Notice when current folder data is kept after a failed load"
+  },
+  "folderManager_readFailure": {
+    "message": "无法加载文件夹数据，暂时只能查看，无法编辑。",
+    "description": "Notice when folder storage is unreadable and editing is disabled"
   },
   "backupOptions": {
     "message": "自动备份",
@@ -1190,6 +1234,10 @@
     "message": "取消星标",
     "description": "取消星标提示"
   },
+  "starredDeleteFailed": {
+    "message": "无法取消星标",
+    "description": "Error shown when a star cannot be removed"
+  },
   "justNow": {
     "message": "刚刚",
     "description": "刚刚时间标签"
@@ -1217,6 +1265,14 @@
   "export_collecting_desc": {
     "message": "请稍候…",
     "description": "ChatGPT 对话 DOM 收集期间横幅的描述"
+  },
+  "export_reading_conversation_title": {
+    "message": "正在读取对话…",
+    "description": "Progress title while ChatGPT export reads the whole conversation by scrolling it"
+  },
+  "export_reading_conversation_turns": {
+    "message": "已读取 {count} 轮",
+    "description": "Progress detail while ChatGPT export reads the conversation; {count} is the number of turns read so far"
   },
   "keyboardShortcuts": {
     "message": "键盘快捷键",
@@ -1285,6 +1341,18 @@
   "cloudSync": {
     "message": "云同步",
     "description": "云同步区域标题"
+  },
+  "platformChatGPT": {
+    "message": "ChatGPT",
+    "description": "ChatGPT platform label"
+  },
+  "cloudSyncFoldersDescription": {
+    "message": "将文件夹同步到 Google Drive",
+    "description": "ChatGPT folders-only Google Drive sync description"
+  },
+  "cloudSyncFoldersDescriptionICloud": {
+    "message": "通过你的私人 iCloud 存储同步文件夹",
+    "description": "ChatGPT folders-only iCloud sync description"
   },
   "cloudSyncDescription": {
     "message": "将文件夹和提示词同步到 Google Drive",
@@ -1361,6 +1429,22 @@
   "syncError": {
     "message": "✗ 同步失败：{error}",
     "description": "同步错误消息"
+  },
+  "syncRestorePartial": {
+    "message": "✗ 恢复未完成。已恢复：{restored}。未恢复：{failed}（{error}）",
+    "description": "Drive restore stopped partway: which parts were restored and which were not"
+  },
+  "syncRestoreForks": {
+    "message": "对话分叉",
+    "description": "Drive restore part: conversation fork links"
+  },
+  "syncRestoreCatalogTimeline": {
+    "message": "其他网站的时间线星标与层级",
+    "description": "Drive restore part: timeline stars and node levels saved on catalog sites such as ChatGPT and Claude"
+  },
+  "syncRestoreListSeparator": {
+    "message": "、",
+    "description": "Separator between restored or failed part names in the partial-restore message"
   },
   "syncInProgress": {
     "message": "同步中...",
@@ -1489,6 +1573,10 @@
     "message": "将 Thinking 内容导出为 Markdown 文件",
     "description": "Deep Research download button tooltip"
   },
+  "deepResearchNoThinkingContent": {
+    "message": "未找到可下载的 Thinking 内容。",
+    "description": "Warning when Deep Research has no thinking content to download"
+  },
   "folder_uncategorized": {
     "message": "未分类",
     "description": "根目录下未分类对话的标签"
@@ -1606,7 +1694,7 @@
     "description": "批量删除确认消息"
   },
   "folder_batch_remove_confirm": {
-    "message": "确定从此文件夹中移除 {count} 个已选对话吗？",
+    "message": "要从此文件夹移除所选对话（{count} 个）吗？",
     "description": "Confirmation before removing the selected conversations from a folder"
   },
   "folder_multi_select_count": {
@@ -1685,14 +1773,6 @@
     "message": "自动将代码块中的 WaveJSON 渲染为可交互的时序波形图",
     "description": "WaveDrom 渲染功能提示"
   },
-  "wavedromDiagramButton": {
-    "message": "〜 图示",
-    "description": "切换到已渲染图示的按钮标签"
-  },
-  "wavedromCodeButton": {
-    "message": "</> 代码",
-    "description": "切换到 WaveJSON 源码的按钮标签"
-  },
   "wavedromZoomIn": {
     "message": "放大",
     "description": "全屏工具栏：放大按钮标题"
@@ -1721,13 +1801,13 @@
     "message": "自动将 ECharts 配置代码块渲染为交互式图表",
     "description": "ECharts rendering feature hint"
   },
-  "echartsDiagramButton": {
-    "message": "📊 图表",
-    "description": "Toggle button label to show the rendered chart"
+  "diagramButton": {
+    "message": "图表",
+    "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"
   },
-  "echartsCodeButton": {
-    "message": "</> 代码",
-    "description": "Toggle button label to show the ECharts option source"
+  "diagramCodeButton": {
+    "message": "代码",
+    "description": "Diagram toolbar button that shows the diagram source code"
   },
   "echartsFullscreenButton": {
     "message": "全屏",
@@ -2098,8 +2178,28 @@
     "description": "图片导出遇到瞬时加载失败时的刷新重试提示"
   },
   "export_md_include_source_confirm": {
-    "message": "導出內容包含網路搜尋圖片。是否在 Markdown 中包含圖片來源連結？",
+    "message": "导出内容包含网络搜索图片。是否在 Markdown 中包含图片来源链接？",
     "description": "Confirm dialog when exporting markdown with web search images"
+  },
+  "export_md_include_source_include": {
+    "message": "包含链接",
+    "description": "Confirm choice that keeps the source links of web search images in the Markdown export"
+  },
+  "export_md_include_source_exclude": {
+    "message": "不包含",
+    "description": "Confirm choice that leaves the source links of web search images out of the Markdown export"
+  },
+  "export_error_too_many_attempts": {
+    "message": "尝试次数过多，已停止导出。",
+    "description": "Export error toast when the export restarted too many times while loading the full conversation"
+  },
+  "export_error_conversation_not_found": {
+    "message": "找不到所选对话。请先打开该对话，再导出。",
+    "description": "Export error toast when the sidebar menu's conversation cannot be located"
+  },
+  "export_error_conversation_open_failed": {
+    "message": "无法打开所选对话进行导出，请重试。",
+    "description": "Export error toast when the sidebar menu's conversation fails to open"
   },
   "deepResearch_exportedAt": {
     "message": "导出时间",
@@ -2248,10 +2348,6 @@
   "forkMarkdownBtn": {
     "message": "下载 MD",
     "description": "Fork confirmation button for downloading a Markdown file"
-  },
-  "forkCancel": {
-    "message": "取消",
-    "description": "分叉取消按钮"
   },
   "forkBranch": {
     "message": "分支",
@@ -2465,10 +2561,6 @@
     "message": "删除",
     "description": "Floating folder panel delete folder action"
   },
-  "floatingPanelDeleteConfirm": {
-    "message": "删除此文件夹及其所有内容？",
-    "description": "Floating folder panel delete folder confirmation"
-  },
   "floatingPanelCancel": {
     "message": "取消",
     "description": "Floating folder panel cancel action"
@@ -2524,6 +2616,42 @@
   "floatingPanelGestureHint": {
     "message": "双击重命名 · 右键可置顶/改色/删除。",
     "description": "Floating folder panel hint explaining folder gestures and context menu actions"
+  },
+  "floatingPanelAddCurrentHere": {
+    "message": "将当前对话添加到此处",
+    "description": "Floating folder panel folder menu item that files the open conversation into that folder"
+  },
+  "chatgptFoldersHint": {
+    "message": "归档对话：先打开对话，再点击书签按钮，或右键点击文件夹。",
+    "description": "ChatGPT folder panel hint explaining how to file a conversation"
+  },
+  "chatgptFoldersNoConversation": {
+    "message": "请先打开一个已保存的对话。临时对话无法归档。",
+    "description": "ChatGPT folder panel status when no saved conversation is open to add"
+  },
+  "chatgptFoldersAdded": {
+    "message": "已添加到文件夹。",
+    "description": "ChatGPT folder panel status after filing the open conversation"
+  },
+  "chatgptFoldersAlreadyFiled": {
+    "message": "已在此文件夹中。",
+    "description": "ChatGPT folder panel status when the open conversation is already in that folder"
+  },
+  "chatgptFoldersCoachmarkTitle": {
+    "message": "文件夹在侧边栏里",
+    "description": "Title of the one-time guide pointing at the folder section in the ChatGPT sidebar"
+  },
+  "chatgptFoldersCoachmarkBody": {
+    "message": "文件夹现在就在 ChatGPT 侧边栏的这里。点 + 新建文件夹，或在对话菜单里选择“移动到文件夹”进行归档。",
+    "description": "Body of the one-time guide pointing at the folder section in the ChatGPT sidebar; quotes the Move to folder menu label"
+  },
+  "folder_import_wrong_site": {
+    "message": "此文件包含其他网站的文件夹，因此未导入任何内容。",
+    "description": "ChatGPT folder import error when the file holds conversations from another site"
+  },
+  "chatgptFoldersUntitled": {
+    "message": "未命名对话",
+    "description": "Title used for a filed ChatGPT conversation whose title could not be read"
   },
   "responseCompleteNotification": {
     "message": "Gemini 思考完成通知",
@@ -2593,6 +2721,30 @@
     "message": "此浏览器不支持——无法授予该插件所需的网站权限。",
     "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
   },
+  "chatgptExportCardTitle": {
+    "message": "导出此对话",
+    "description": "Title of the popup card that exports the current ChatGPT conversation"
+  },
+  "chatgptExportCardOffHint": {
+    "message": "开启「对话导出」后，可将 ChatGPT 对话保存为 Markdown、JSON、PDF 或图片，每个对话顶部也会出现导出按钮。",
+    "description": "Popup hint shown while ChatGPT conversation export is turned off"
+  },
+  "chatgptExportTurnOn": {
+    "message": "开启",
+    "description": "Popup button that turns on ChatGPT conversation export"
+  },
+  "chatgptExportCardOnHint": {
+    "message": "可保存为 Markdown、JSON、PDF 或图片。每个对话顶部也有同一个导出按钮。",
+    "description": "Popup hint shown while ChatGPT conversation export is on"
+  },
+  "chatgptExportNoConversation": {
+    "message": "请先打开一个对话，当前页面没有可导出的内容。",
+    "description": "Shown when the ChatGPT tab has no conversation to export"
+  },
+  "chatgptExportReloadTab": {
+    "message": "请刷新此 ChatGPT 标签页后重试。",
+    "description": "Shown when the ChatGPT tab has not loaded Voyager yet"
+  },
   "pluginsLoading": {
     "message": "正在加载插件…",
     "description": "Shown while the plugin catalog is loading"
@@ -2616,6 +2768,310 @@
   "pluginSourceOnline": {
     "message": "在线目录",
     "description": "Source label for a plugin fetched from the online catalog for this site"
+  },
+  "pluginSourceLocal": {
+    "message": "本地",
+    "description": "Source label for a plugin the user imported locally"
+  },
+  "localPluginsTitle": {
+    "message": "本地插件",
+    "description": "Popup plugin page: title of the card for user-imported plugins"
+  },
+  "localPluginsDescription": {
+    "message": "导入你自己编写的声明式插件：内联了 CSS 的清单 JSON，或同时选中清单和它的 .css 文件。它与官方插件经过相同的检查，在你手动开启之前保持关闭。",
+    "description": "Popup plugin page: what importing a local plugin does"
+  },
+  "localPluginsNativeHint": {
+    "message": "在此网站上运行你自己编写的 CSS 和页面调整。导入的插件在你开启之前保持关闭。",
+    "description": "Native popup (Gemini / AI Studio): hint on the collapsed Local plugins entry"
+  },
+  "localPluginsImportFiles": {
+    "message": "导入文件",
+    "description": "Popup plugin page: button that opens the file picker for a local plugin"
+  },
+  "localPluginsPasteJson": {
+    "message": "粘贴 JSON",
+    "description": "Popup plugin page: button that opens a text box to paste a plugin manifest"
+  },
+  "localPluginsPasteLabel": {
+    "message": "插件清单 JSON",
+    "description": "Popup plugin page: accessible label of the paste text box"
+  },
+  "localPluginsCheckAndImport": {
+    "message": "检查并导入",
+    "description": "Popup plugin page: validate the pasted manifest and import it"
+  },
+  "localPluginsCancel": {
+    "message": "取消",
+    "description": "Popup plugin page: close the paste text box"
+  },
+  "localPluginsEmpty": {
+    "message": "还没有本地插件。",
+    "description": "Popup plugin page: no local plugin is installed"
+  },
+  "localPluginsImported": {
+    "message": "已导入 {name} {version}。它目前是关闭的：先在下方查看它会做什么，再到插件列表中开启。",
+    "description": "Popup plugin page: import succeeded; {name} and {version} are placeholders"
+  },
+  "localPluginsRejected": {
+    "message": "未导入。请修复以下问题后重试：",
+    "description": "Popup plugin page: import failed validation; the issues follow"
+  },
+  "localPluginsPreviousKept": {
+    "message": "已安装的 {version} 版本保持不变。",
+    "description": "Popup plugin page: a failed re-import kept the installed version; {version} is a placeholder"
+  },
+  "localPluginsInspect": {
+    "message": "查看",
+    "description": "Popup plugin page: show what a local plugin does"
+  },
+  "localPluginsHideDetails": {
+    "message": "收起",
+    "description": "Popup plugin page: hide the details of a local plugin"
+  },
+  "localPluginsRemove": {
+    "message": "移除",
+    "description": "Popup plugin page: delete a local plugin"
+  },
+  "localPluginsConfirmRemove": {
+    "message": "确认移除",
+    "description": "Popup plugin page: second click that confirms removing a local plugin"
+  },
+  "localPluginsStoredInvalid": {
+    "message": "当前版本的 Voyager 不再接受此插件，因此它不会运行：",
+    "description": "Popup plugin page: a stored local plugin fails this build's checks; issues follow"
+  },
+  "localPluginChangedBeforeEnable": {
+    "message": "开启过程中这个插件被重新导入了，所以它保持关闭。请先检查新版本，再重新开启。",
+    "description": "A local plugin was re-imported while the user was enabling it, so it was not enabled"
+  },
+  "localPluginDescribeOpen": {
+    "message": "用一句话改造界面",
+    "description": "Button that opens the one-sentence plugin flow"
+  },
+  "localPluginDescribeHint": {
+    "message": "用一句话说出你想怎么改网站。Voyager 会写好一段提示词，由你自己发给任意 AI，再检查你粘贴回来的回复。Voyager 自己不会发送任何内容。",
+    "description": "Explains the one-sentence plugin flow and that Voyager sends nothing"
+  },
+  "localPluginDescribeRequestLabel": {
+    "message": "想改什么？",
+    "description": "Label of the one-sentence request field"
+  },
+  "localPluginDescribeRequestPlaceholder": {
+    "message": "例如：让我的消息窄一点，并隐藏侧边栏",
+    "description": "Example request in the one-sentence field"
+  },
+  "localPluginDescribeSiteLabel": {
+    "message": "网站",
+    "description": "Label of the target-site picker"
+  },
+  "localPluginDescribeBuildPrompt": {
+    "message": "生成提示词",
+    "description": "Button that writes the AI prompt"
+  },
+  "localPluginDescribePromptLabel": {
+    "message": "发给 AI 的提示词",
+    "description": "Label of the generated prompt"
+  },
+  "localPluginDescribePromptHint": {
+    "message": "自己把它粘贴到任意 AI 对话里，再把完整回复粘贴到下面。",
+    "description": "Tells the user to send the prompt themselves and paste the reply"
+  },
+  "localPluginDescribeCopy": {
+    "message": "复制提示词",
+    "description": "Button that copies the prompt"
+  },
+  "localPluginDescribeCopied": {
+    "message": "已复制",
+    "description": "Shown after the prompt was copied"
+  },
+  "localPluginDescribeCopyFailed": {
+    "message": "复制失败。请选中提示词后手动复制。",
+    "description": "Shown when the clipboard refused the prompt"
+  },
+  "localPluginDescribeReplyLabel": {
+    "message": "AI 的回复",
+    "description": "Label of the field for the AI reply"
+  },
+  "localPluginDescribeReplyPlaceholder": {
+    "message": "粘贴完整回复，或只粘贴其中的 JSON",
+    "description": "Placeholder of the AI reply field"
+  },
+  "localPluginDescribeCheck": {
+    "message": "检查回复",
+    "description": "Button that checks the pasted reply"
+  },
+  "localPluginDescribeImport": {
+    "message": "导入",
+    "description": "Button that imports the previewed plugin"
+  },
+  "localPluginReplyEmpty": {
+    "message": "请先粘贴 AI 的回复。",
+    "description": "The reply field is empty"
+  },
+  "localPluginReplyTooLong": {
+    "message": "这段回复太长了，不像是一个插件。",
+    "description": "The pasted reply is too large"
+  },
+  "localPluginReplyNoJson": {
+    "message": "没有找到 JSON。请让 AI 只用一个 ```json 代码块回答。",
+    "description": "No JSON manifest found in the reply"
+  },
+  "localPluginReplyMultipleJson": {
+    "message": "回复里有不止一个 JSON 代码块。只保留插件那一个后重新粘贴。",
+    "description": "The reply holds more than one JSON block"
+  },
+  "localPluginPreviewTitle": {
+    "message": "导入前确认",
+    "description": "Heading of the preview shown before import"
+  },
+  "localPluginPreviewChanges": {
+    "message": "它会改什么",
+    "description": "Heading of the list of changes in the preview"
+  },
+  "localPluginPreviewWarnings": {
+    "message": "请先留意",
+    "description": "Heading of the warnings in the preview"
+  },
+  "localPluginPreviewLandsOff": {
+    "message": "导入后默认关闭。准备好后，到插件列表中开启。",
+    "description": "Explains that the import lands turned off"
+  },
+  "localPluginChangeCss": {
+    "message": "添加自己的样式（{chars} 个字符的 CSS）",
+    "description": "Preview line: the plugin adds CSS; {chars} is a character count"
+  },
+  "localPluginChangeAddClass": {
+    "message": "给{target}加上标记，让样式生效（{className}）",
+    "description": "Preview line: the plugin tags elements so its CSS applies"
+  },
+  "localPluginChangeHide": {
+    "message": "隐藏{target}",
+    "description": "Preview line: the plugin hides elements"
+  },
+  "localPluginChangeSetStyle": {
+    "message": "修改{target}的样式：{styles}",
+    "description": "Preview line: the plugin sets inline styles"
+  },
+  "localPluginChangeSetAttribute": {
+    "message": "在{target}上设置 {name}=\"{value}\"",
+    "description": "Preview line: the plugin sets an attribute"
+  },
+  "localPluginChangeNative": {
+    "message": "运行 Voyager 内置功能 {handler}",
+    "description": "Preview line: the plugin runs a Voyager built-in feature"
+  },
+  "localPluginChangeSetting": {
+    "message": "添加一个设置：{label}",
+    "description": "Preview line: the plugin adds a setting"
+  },
+  "localPluginChangeTheme": {
+    "message": "把 Voyager 的强调色改成 {color}",
+    "description": "Preview line: the plugin changes the accent color"
+  },
+  "localPluginTargetSelector": {
+    "message": "匹配 {selector} 的元素",
+    "description": "Preview target described by a raw CSS selector"
+  },
+  "localPluginTargetUserTurn": {
+    "message": "你的消息",
+    "description": "Preview target: the user's messages"
+  },
+  "localPluginTargetAssistantTurn": {
+    "message": "AI 的回复",
+    "description": "Preview target: the AI's replies"
+  },
+  "localPluginTargetThinkingBlock": {
+    "message": "思考过程",
+    "description": "Preview target: reasoning sections"
+  },
+  "localPluginTargetCodeBlock": {
+    "message": "代码块",
+    "description": "Preview target: code blocks"
+  },
+  "localPluginTargetComposer": {
+    "message": "输入框",
+    "description": "Preview target: the message input box"
+  },
+  "localPluginTargetSidebar": {
+    "message": "侧边栏",
+    "description": "Preview target: the sidebar"
+  },
+  "localPluginTargetSidePanel": {
+    "message": "侧面板",
+    "description": "Preview target: the secondary side panel"
+  },
+  "localPluginTargetHeaderActions": {
+    "message": "右上角的按钮",
+    "description": "Preview target: top-right action buttons"
+  },
+  "localPluginTargetScrollContainer": {
+    "message": "对话区域",
+    "description": "Preview target: the scrolling conversation area"
+  },
+  "localPluginChangedSinceReview": {
+    "message": "你查看期间，Voyager 里的这个插件发生了变化，所以没有覆盖任何内容。请看一下更新后的预览，再重新导入。",
+    "description": "Shown when the previewed plugin id was installed, changed or removed before Import; nothing was written"
+  },
+  "localPluginWarnCss": {
+    "message": "它的 CSS 可以改动页面上的任何东西，包括隐藏内容。Voyager 不会替你总结 CSS，请直接看下面的源码。",
+    "description": "Warning: the plugin has CSS, which the preview shows but does not summarize"
+  },
+  "localPluginWarnSelector": {
+    "message": "用 CSS 选择器定位元素，网站更新后可能失效。",
+    "description": "Warning: the plugin targets raw CSS selectors"
+  },
+  "localPluginWarnHides": {
+    "message": "可能会隐藏页面的一部分。关闭插件即可恢复。",
+    "description": "Warning: the plugin may hide part of the page (also shown when a hiding style cannot be read with confidence)"
+  },
+  "localPluginWarnNotOnSite": {
+    "message": "它不会在你选择的网站 {site} 上运行。",
+    "description": "Warning: the plugin does not run on the site the user picked"
+  },
+  "localPluginWarnTheme": {
+    "message": "会修改 Voyager 的强调色，而提示词要求 AI 不要这样做。",
+    "description": "Warning: the plugin changes the accent color although the prompt asked not to"
+  },
+  "localPluginWarnNative": {
+    "message": "会运行 Voyager 内置功能，而提示词要求 AI 不要这样做。",
+    "description": "Warning: the plugin runs a Voyager built-in although the prompt asked not to"
+  },
+  "localPluginWarnReplaces": {
+    "message": "会替换你已安装的 {version} 版本，并在你重新开启前保持关闭。",
+    "description": "Warning: importing replaces an installed version and turns it off"
+  },
+  "localPluginInspectSites": {
+    "message": "网站",
+    "description": "Inspect view: sites the plugin runs on"
+  },
+  "localPluginInspectCss": {
+    "message": "CSS",
+    "description": "Inspect view: injected stylesheet size label"
+  },
+  "localPluginInspectCssChars": {
+    "message": "{chars} 个字符",
+    "description": "Inspect view: injected CSS size; {chars} is a number"
+  },
+  "localPluginInspectDomOps": {
+    "message": "页面改动",
+    "description": "Inspect view: reversible DOM operations the plugin applies"
+  },
+  "localPluginInspectPrimitives": {
+    "message": "调用的 Voyager 内置功能",
+    "description": "Inspect view: first-party Voyager primitives the plugin invokes"
+  },
+  "localPluginInspectSettings": {
+    "message": "设置",
+    "description": "Inspect view: settings the plugin declares"
+  },
+  "localPluginInspectNone": {
+    "message": "无",
+    "description": "Inspect view: the plugin has nothing in this category"
+  },
+  "localPluginInspectNoCode": {
+    "message": "插件本身不运行任何代码：只有 CSS、可还原的页面改动和 Voyager 自带的内置功能。",
+    "description": "Inspect view: reassurance that a declarative plugin cannot run its own code"
   },
   "pluginUpdateNeedsNewerVoyager": {
     "message": "{version} 更新需要更高版本的 Voyager。",
@@ -2902,6 +3358,9 @@
   "highlightSaved": {
     "message": "高亮已保存"
   },
+  "highlightConfirmationPending": {
+    "message": "仍在等待确认。你可以关闭编辑器，草稿会保留。"
+  },
   "highlightSaveFailed": {
     "message": "无法保存高亮"
   },
@@ -3117,5 +3576,373 @@
   "popupPinHintDismiss": {
     "message": "关闭",
     "description": "Popup: dismiss the pin reminder"
+  },
+  "nativeHealthTimeline": {
+    "message": "时间线在此页面上找不到对话轮次。",
+    "description": "Popup: Gemini health notice when the timeline finds no conversation turns"
+  },
+  "nativeHealthChatWidth": {
+    "message": "对话区域宽度在此页面上找不到对话轮次。",
+    "description": "Popup: Gemini health notice when chat width finds no conversation turns"
+  },
+  "nativeHealthFolders": {
+    "message": "文件夹无法挂到 Gemini 侧边栏，已改为悬浮面板。",
+    "description": "Popup: Gemini health notice when folders fell back to the floating panel"
+  },
+  "nativeHealthExport": {
+    "message": "导出在此页面上找不到任何消息。",
+    "description": "Popup: Gemini health notice when export finds no messages"
+  },
+  "nativeHealthComposer": {
+    "message": "Voyager 找不到 Gemini 的输入框，无法插入提示词。",
+    "description": "Popup: Gemini health notice when Gemini's message box is missing"
+  },
+  "nativeHealthCause": {
+    "message": "Gemini 可能改动了页面结构。",
+    "description": "Popup: likely cause shown under a Gemini health notice"
+  },
+  "nativeHealthReport": {
+    "message": "反馈问题",
+    "description": "Popup: link that opens a prefilled GitHub bug report"
+  },
+  "nativeHealthDismiss": {
+    "message": "关闭",
+    "description": "Popup: dismiss the Gemini health notice"
+  },
+  "researchPackEnable": {
+    "message": "研究资料包",
+    "description": "Popup: research pack toggle label"
+  },
+  "researchPackEnableHint": {
+    "message": "在 Gemini 回答下添加资料包按钮。把多条回答及其来源汇总成一份 Markdown，再复制、下载或插入到另一个对话。",
+    "description": "Popup: research pack toggle hint"
+  },
+  "researchPackAdd": {
+    "message": "加入资料包（可先选中回答中的一段）",
+    "description": "Research pack: per-answer add button tooltip"
+  },
+  "researchPackAdded": {
+    "message": "已加入资料包",
+    "description": "Research pack: item added"
+  },
+  "researchPackDuplicate": {
+    "message": "资料包里已有这条内容",
+    "description": "Research pack: item already present"
+  },
+  "researchPackFull": {
+    "message": "资料包已满，请先移除一条。",
+    "description": "Research pack: item limit reached"
+  },
+  "researchPackCaptureFailed": {
+    "message": "无法读取这条回答",
+    "description": "Research pack: answer could not be read"
+  },
+  "researchPackSaveFailed": {
+    "message": "无法保存资料包",
+    "description": "Research pack: storage write failed"
+  },
+  "researchPackTitle": {
+    "message": "研究资料包",
+    "description": "Research pack: panel title"
+  },
+  "researchPackShortTitle": {
+    "message": "资料包",
+    "description": "Research pack: short launcher label"
+  },
+  "researchPackOpen": {
+    "message": "打开研究资料包",
+    "description": "Research pack: launcher tooltip"
+  },
+  "researchPackClose": {
+    "message": "关闭",
+    "description": "Research pack: close panel"
+  },
+  "researchPackEmpty": {
+    "message": "资料包是空的。点击回答下方的资料包按钮，或先选中回答中的一段。",
+    "description": "Research pack: empty state"
+  },
+  "researchPackItemCount": {
+    "message": "{count} 条",
+    "description": "Research pack: item count, {count} is a number"
+  },
+  "researchPackSourceCount": {
+    "message": "{count} 个来源",
+    "description": "Research pack: cited link count, {count} is a number"
+  },
+  "researchPackUntitledSource": {
+    "message": "未命名对话",
+    "description": "Research pack: fallback conversation title"
+  },
+  "researchPackExcerptBadge": {
+    "message": "节选",
+    "description": "Research pack: badge for a selected part of an answer"
+  },
+  "researchPackMoveUp": {
+    "message": "上移",
+    "description": "Research pack: move item up"
+  },
+  "researchPackMoveDown": {
+    "message": "下移",
+    "description": "Research pack: move item down"
+  },
+  "researchPackRemove": {
+    "message": "从资料包移除",
+    "description": "Research pack: remove item"
+  },
+  "researchPackInstructionLabel": {
+    "message": "给下一个模型的指令",
+    "description": "Research pack: instruction field label"
+  },
+  "researchPackInstructionPlaceholder": {
+    "message": "例如：比较这些回答，指出分歧，并逐条对照来源核实。",
+    "description": "Research pack: instruction placeholder"
+  },
+  "researchPackPreview": {
+    "message": "Markdown 预览",
+    "description": "Research pack: markdown preview toggle"
+  },
+  "researchPackInsert": {
+    "message": "插入输入框",
+    "description": "Research pack: insert into composer button"
+  },
+  "researchPackInsertHint": {
+    "message": "把资料包填入输入框，发送与否由你决定。",
+    "description": "Research pack: insert button tooltip"
+  },
+  "researchPackCopy": {
+    "message": "复制 Markdown",
+    "description": "Research pack: copy markdown button"
+  },
+  "researchPackDownload": {
+    "message": "下载 .md",
+    "description": "Research pack: download button"
+  },
+  "researchPackClear": {
+    "message": "清空",
+    "description": "Research pack: clear all items"
+  },
+  "researchPackClearConfirm": {
+    "message": "移除资料包中的全部内容？指令会保留。",
+    "description": "Research pack: clear confirmation"
+  },
+  "researchPackCopied": {
+    "message": "已复制 Markdown",
+    "description": "Research pack: copy succeeded"
+  },
+  "researchPackCopyFailed": {
+    "message": "复制失败，请改用下载。",
+    "description": "Research pack: copy failed"
+  },
+  "researchPackInserted": {
+    "message": "已插入资料包。检查后再自行发送。",
+    "description": "Research pack: inserted into composer"
+  },
+  "researchPackNoComposer": {
+    "message": "此页面没有找到输入框",
+    "description": "Research pack: no composer found"
+  },
+  "researchPackLoadFailed": {
+    "message": "无法加载资料包",
+    "description": "Research pack: the stored pack could not be read; shown with a retry button"
+  },
+  "researchPackRetry": {
+    "message": "重试",
+    "description": "Research pack: button that reads the pack again after a failure"
+  },
+  "researchPackContinueIn": {
+    "message": "在 {target} 中继续",
+    "description": "Research pack: button that opens a new chat on another model ({target} is ChatGPT or Claude)"
+  },
+  "researchPackContinueHint": {
+    "message": "打开新的 {target} 对话，并把资料包放进输入框。不会自动发送。",
+    "description": "Research pack: tooltip of the continue-in button"
+  },
+  "researchPackContinueOpening": {
+    "message": "正在打开 {target}，资料包会出现在输入框里，不会发送。",
+    "description": "Research pack: the new chat is opening and the pack will be filled in"
+  },
+  "researchPackContinueCopied": {
+    "message": "已复制资料包，粘贴到新的 {target} 对话即可。",
+    "description": "Research pack: Voyager cannot run on the target, so the pack was copied for pasting"
+  },
+  "researchPackContinueRetry": {
+    "message": "暂时无法在 {target} 中自动填入。再点一次即可复制资料包并打开 {target}。",
+    "description": "Research pack: the target stopped being available since the panel opened"
+  },
+  "researchPackContinueFailed": {
+    "message": "无法打开 {target}，请改用“复制 Markdown”。",
+    "description": "Research pack: the new chat could not be opened"
+  },
+  "researchPackHandoffReady": {
+    "message": "已填入来自 Gemini 的研究资料包。检查后再自行发送。",
+    "description": "Research pack: toast on ChatGPT/Claude after the pack was put in the message box"
+  },
+  "researchPackHandoffFailed": {
+    "message": "无法在这里填入研究资料包。请回到 Gemini 复制。",
+    "description": "Research pack: toast on ChatGPT/Claude when the pack could not be put in the message box"
+  },
+  "researchPackTemplates": {
+    "message": "模板",
+    "description": "Research pack: templates section toggle"
+  },
+  "researchPackTemplatesHint": {
+    "message": "模板是一条可复用的指令，存在提示词管理器里，带 research-pack 标签。导出时只包含名称和指令，不会带上你的资料包。",
+    "description": "Research pack: what a template is and what exporting shares"
+  },
+  "researchPackTemplatePick": {
+    "message": "选择模板",
+    "description": "Research pack: template picker placeholder and label"
+  },
+  "researchPackTemplateNone": {
+    "message": "还没有模板",
+    "description": "Research pack: template picker when no template is saved"
+  },
+  "researchPackTemplateUse": {
+    "message": "使用",
+    "description": "Research pack: put the chosen template into the instruction"
+  },
+  "researchPackTemplateUseConfirm": {
+    "message": "用这个模板替换当前指令？",
+    "description": "Research pack: confirm replacing a typed instruction with a template"
+  },
+  "researchPackTemplateReplace": {
+    "message": "替换",
+    "description": "Research pack: confirm button that replaces the instruction"
+  },
+  "researchPackTemplateExport": {
+    "message": "导出",
+    "description": "Research pack: download the chosen template as a file"
+  },
+  "researchPackTemplateName": {
+    "message": "模板名称",
+    "description": "Research pack: name field for a new template"
+  },
+  "researchPackTemplateSave": {
+    "message": "把指令存为模板",
+    "description": "Research pack: save the typed instruction as a template"
+  },
+  "researchPackTemplateSaved": {
+    "message": "模板已存到提示词管理器",
+    "description": "Research pack: a template was saved"
+  },
+  "researchPackTemplateNeedName": {
+    "message": "先给模板起个名字",
+    "description": "Research pack: saving a template without a name"
+  },
+  "researchPackTemplateNeedInstruction": {
+    "message": "先写好要保存的指令",
+    "description": "Research pack: saving a template with an empty instruction"
+  },
+  "researchPackTemplateInvalid": {
+    "message": "名称限一行、最多 100 个字符，指令最多 4000 个字符。",
+    "description": "Research pack: template name or instruction breaks a limit"
+  },
+  "researchPackTemplateDuplicate": {
+    "message": "提示词管理器里已经有这条指令",
+    "description": "Research pack: the library already has this instruction text"
+  },
+  "researchPackTemplateNameTaken": {
+    "message": "提示词管理器里已有同名提示词",
+    "description": "Research pack: the library already has a prompt with this name"
+  },
+  "researchPackTemplateImport": {
+    "message": "导入文件…",
+    "description": "Research pack: choose a template file to import"
+  },
+  "researchPackTemplateImportInvalid": {
+    "message": "这不是有效的资料包模板文件。",
+    "description": "Research pack: the chosen file is not a valid template file"
+  },
+  "researchPackTemplatePreviewTitle": {
+    "message": "文件里的模板，保存前请先检查。",
+    "description": "Research pack: heading of the import preview"
+  },
+  "researchPackTemplateStatusNew": {
+    "message": "新",
+    "description": "Research pack: import preview badge for a template that will be saved"
+  },
+  "researchPackTemplateStatusDuplicate": {
+    "message": "已保存过",
+    "description": "Research pack: import preview badge for an instruction that is already saved"
+  },
+  "researchPackTemplateStatusNameTaken": {
+    "message": "名称已占用，跳过",
+    "description": "Research pack: import preview badge for a template skipped because its name is in use"
+  },
+  "researchPackTemplateImportSave": {
+    "message": "保存新模板",
+    "description": "Research pack: save the new templates from the import preview"
+  },
+  "researchPackTemplateImported": {
+    "message": "已存到提示词管理器的模板：{count}",
+    "description": "Research pack: templates were imported; {count} is how many"
+  },
+  "researchPackTemplateImportNothing": {
+    "message": "没有可保存的新模板",
+    "description": "Research pack: an import had nothing new to save"
+  },
+  "researchPackTemplateFailed": {
+    "message": "模板更新失败，请重试。",
+    "description": "Research pack: reading or writing templates failed"
+  },
+  "savedLibraryOpenFull": {
+    "message": "打开完整收藏库"
+  },
+  "savedLibrarySite": {
+    "message": "网站"
+  },
+  "savedLibraryAllSites": {
+    "message": "所有网站"
+  },
+  "savedLibraryUnknownSite": {
+    "message": "未知网站"
+  },
+  "savedLibraryAccount": {
+    "message": "账号"
+  },
+  "savedLibraryAllAccounts": {
+    "message": "所有账号"
+  },
+  "savedLibraryAccountNumber": {
+    "message": "账号 {number}"
+  },
+  "savedLibraryUnassigned": {
+    "message": "未分配"
+  },
+  "savedLibraryRemoveStarConfirm": {
+    "message": "取消这条收藏？"
+  },
+  "savedLibraryDeleteHighlightConfirm": {
+    "message": "删除这条高亮及其备注？"
+  },
+  "savedLibraryOpenFailed": {
+    "message": "无法打开收藏库"
+  },
+  "savedLibraryExpandText": {
+    "message": "展开全文"
+  },
+  "savedLibraryCollapseText": {
+    "message": "收起全文"
+  },
+  "savedLibraryConversationOpenFailed": {
+    "message": "无法打开这段对话"
+  },
+  "savedLibraryChatGptSwitchAccount": {
+    "message": "这条星标保存在 {account}。请在 ChatGPT 中切换到该账号，然后重新打开。"
+  },
+  "savedLibraryChatGptSwitchHint": {
+    "message": "无法打开这段对话？请在 ChatGPT 中切换到保存时使用的账号，然后重新打开。"
+  },
+  "savedLibraryOpenAnyway": {
+    "message": "仍然打开"
+  },
+  "savedLibraryFilters": {
+    "message": "收藏库筛选"
+  },
+  "savedLibraryTypeFilter": {
+    "message": "收藏内容类型"
+  },
+  "savedLibraryRefresh": {
+    "message": "刷新"
   }
 }

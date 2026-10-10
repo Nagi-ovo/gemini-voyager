@@ -7,12 +7,13 @@
  *               causes a brief flash while the canvas pipeline runs)
  *
  * Migration from the legacy single key `geminiWatermarkRemoverEnabled`:
- *   - If either new key is set, the new keys win (and any unset new key falls
- *     back to its default — both default to true).
+ *   - If either new key is set, the new keys win. An unset sibling keeps its
+ *     old default of true for existing partially configured installations.
  *   - Otherwise, the legacy key controls both: legacy=true → both on (preserves
  *     pre-split behavior); legacy=false → both off.
- *   - First install (no legacy, no new): both on. Users who want the lighter
- *     download-only path opt in via the popup.
+ *   - No saved preference: both off. Users can opt in to either path from the
+ *     popup. Installs updated from a release with the old on default get both
+ *     split keys saved as true (see `watermarkDefaultMigration.ts`).
  */
 
 export interface WatermarkSettings {
@@ -26,7 +27,18 @@ export const WATERMARK_STORAGE_KEYS = [
   'geminiWatermarkRemoverEnabled',
 ] as const;
 
-export const WATERMARK_DEFAULT: WatermarkSettings = { download: true, preview: true };
+export const WATERMARK_DEFAULT: WatermarkSettings = { download: false, preview: false };
+
+/**
+ * Whether the record holds a saved watermark choice. Without one,
+ * `resolveWatermarkSettings` falls back to `WATERMARK_DEFAULT`.
+ */
+export function hasSavedWatermarkPreference(
+  record: Record<string, unknown> | null | undefined,
+): boolean {
+  if (!record) return false;
+  return WATERMARK_STORAGE_KEYS.some((key) => typeof record[key] === 'boolean');
+}
 
 export function resolveWatermarkSettings(
   record: Record<string, unknown> | null | undefined,
@@ -39,8 +51,8 @@ export function resolveWatermarkSettings(
 
   if (hasNew) {
     return {
-      download: typeof newDownload === 'boolean' ? newDownload : WATERMARK_DEFAULT.download,
-      preview: typeof newPreview === 'boolean' ? newPreview : WATERMARK_DEFAULT.preview,
+      download: typeof newDownload === 'boolean' ? newDownload : true,
+      preview: typeof newPreview === 'boolean' ? newPreview : true,
     };
   }
 

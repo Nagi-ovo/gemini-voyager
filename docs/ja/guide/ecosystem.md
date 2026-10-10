@@ -8,5 +8,5 @@
 - **[DeepSeek Enhancer](https://github.com/dlshuangchenyue1210/DeepSeek-Enhancer)** — Voyager に触発された DeepSeek ウェブ版向けの拡張機能。多階層フォルダー、チャット履歴のエクスポート、数式コピー、データバックアップなどの機能を提供します。
 
 ::: tip あなたのプロジェクトも Voyager にインスパイアされましたか？
-[Issue を作成](https://github.com/Nagi-ovo/voyager/issues/new)してお知らせいただければ、ここに追加します。
+[Issue を作成](https://github.com/voyager-crew/voyager/issues/new)してお知らせいただければ、ここに追加します。
 :::

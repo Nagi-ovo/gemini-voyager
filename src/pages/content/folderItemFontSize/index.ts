@@ -3,18 +3,18 @@
  * Gemini Voyager's folder panel. Default 13px matches Gemini's native sidebar
  * after the May 2026 redesign; users can pick anything in [12, 18].
  */
+import {
+  FOLDER_FONT_SIZE,
+  clampFolderDisplay,
+  folderDisplayProperties,
+  folderItemLineHeight,
+  watchSyncSetting,
+} from '../folder/folderDisplay';
 
 const STYLE_ID = 'gv-folder-item-font-size-style';
-const STORAGE_KEY = 'gvFolderItemFontSize';
-
-export const FOLDER_ITEM_FONT_SIZE_DEFAULT = 13;
-export const FOLDER_ITEM_FONT_SIZE_MIN = 12;
-export const FOLDER_ITEM_FONT_SIZE_MAX = 18;
 
 export function clampFolderItemFontSize(value: unknown): number {
-  const n = typeof value === 'number' ? value : Number(value);
-  if (!Number.isFinite(n)) return FOLDER_ITEM_FONT_SIZE_DEFAULT;
-  return Math.min(FOLDER_ITEM_FONT_SIZE_MAX, Math.max(FOLDER_ITEM_FONT_SIZE_MIN, Math.round(n)));
+  return clampFolderDisplay(FOLDER_FONT_SIZE, value);
 }
 
 function applyFontSize(px: number) {
@@ -24,10 +24,15 @@ function applyFontSize(px: number) {
     style.id = STYLE_ID;
     document.head.appendChild(style);
   }
-  // Line-height tracks font-size so taller fonts breathe. Roughly the same ratio
-  // (~1.3) Gemini uses for its native sidebar text.
-  const lineHeight = Math.round(px * 1.3);
+  const lineHeight = folderItemLineHeight(px);
+  const properties = Object.entries(folderDisplayProperties(FOLDER_FONT_SIZE, px))
+    .map(([name, value]) => `${name}: ${value};`)
+    .join('\n      ');
+  // The sidebar tree renders in a shadow root and reads the custom properties.
   style.textContent = `
+    .gv-folder-container:not(.gv-aistudio) {
+      ${properties}
+    }
     .gv-folder-container:not(.gv-aistudio) .gv-folder-name,
     .gv-folder-container:not(.gv-aistudio) .gv-conversation-title {
       font-size: ${px}px !important;
@@ -41,30 +46,15 @@ function removeStyles() {
 }
 
 export function startFolderItemFontSizeAdjuster() {
-  let current = FOLDER_ITEM_FONT_SIZE_DEFAULT;
-
-  chrome.storage?.sync?.get({ [STORAGE_KEY]: FOLDER_ITEM_FONT_SIZE_DEFAULT }, (res) => {
-    current = clampFolderItemFontSize(res?.[STORAGE_KEY]);
-    applyFontSize(current);
-  });
-
-  const handler = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
-    if (area !== 'sync' || !changes[STORAGE_KEY]) return;
-    current = clampFolderItemFontSize(changes[STORAGE_KEY].newValue);
-    applyFontSize(current);
-  };
-
-  chrome.storage?.onChanged?.addListener(handler);
+  const stop = watchSyncSetting(FOLDER_FONT_SIZE.storageKey, (value) =>
+    applyFontSize(clampFolderItemFontSize(value)),
+  );
 
   window.addEventListener(
     'beforeunload',
     () => {
       removeStyles();
-      try {
-        chrome.storage?.onChanged?.removeListener(handler);
-      } catch {
-        // ignore
-      }
+      stop();
     },
     { once: true },
   );

@@ -18,6 +18,7 @@
         "icon-32.png",
         "icon-128.png",
         "mascot-logo.png",
+        "katex-config.js",
         "fetchInterceptor.js",
         "claude-usage-observer.js",
         "response-complete-observer.js",
@@ -25,6 +26,8 @@
         "conversation-history-observer.js",
         "prevent-auto-scroll.js",
         "assets/*.js",
+        "assets/katex*.css",
+        "assets/KaTeX_*",
         "assets/*.png"
       ],
       "matches": ["<all_urls>"]
@@ -40,6 +43,16 @@
       ],
       "js": ["src/pages/content/index.tsx"],
       "css": ["contentStyle.css"]
+    },
+    {
+      "matches": [
+        "https://gemini.google.com/*",
+        "https://business.gemini.google/*",
+        "https://aistudio.google.com/*",
+        "https://aistudio.google.cn/*"
+      ],
+      "js": ["src/pages/content/shadowKeyGuardEntry.ts"],
+      "run_at": "document_start"
     },
     {
       "matches": ["https://gemini.google.com/*", "https://business.gemini.google/*"],

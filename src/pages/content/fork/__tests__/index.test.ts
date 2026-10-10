@@ -1,13 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import browser from 'webextension-polyfill';
 
-import { DOMContentExtractor } from '@/features/export/services/DOMContentExtractor';
-import { resolveExportAdapter } from '@/pages/content/export/adapter/platformAdapters';
+import { confirmDriver } from '@/tests/confirmDriver';
+import { toastDriver } from '@/tests/toastDriver';
 
 import type { ForkNode } from '../forkTypes';
 import { startFork } from '../index';
-
-DOMContentExtractor.setExportAdapter(resolveExportAdapter());
 
 vi.mock('webextension-polyfill', () => ({
   default: {
@@ -63,32 +61,37 @@ describe('startFork style injection', () => {
     sessionStorage.clear();
   });
 
-  it('uses non-layout-shifting visibility transitions for fork button reveal', () => {
+  it('keeps fork controls out of flow with a visibility-only focus reveal', () => {
+    window.history.replaceState({}, '', '/app/conv-source');
+    document.body.innerHTML = '<div class="user-query-container">A user message</div>';
     cleanup = startFork();
+    vi.advanceTimersByTime(1000);
 
-    const style = document.getElementById('gemini-voyager-fork-style');
-    expect(style).not.toBeNull();
+    const button = document.querySelector<HTMLButtonElement>('.gv-fork-btn')!;
+    const hidden = getComputedStyle(button);
+    expect(hidden.display).toBe('inline-flex');
+    expect(hidden.position).toBe('absolute');
+    expect(hidden.opacity).toBe('0');
+    expect(hidden.visibility).toBe('hidden');
+    expect(hidden.pointerEvents).toBe('none');
+    expect(hidden.right).toBe('calc(100% + 8px)');
 
-    const css = style?.textContent ?? '';
-
-    expect(css).toMatch(/\.gv-fork-btn\s*\{[\s\S]*display:\s*inline-flex;/);
-    expect(css).toMatch(/\.gv-fork-btn\s*\{[\s\S]*position:\s*absolute;/);
-    expect(css).toMatch(/\.gv-fork-btn\s*\{[\s\S]*opacity:\s*0;/);
-    expect(css).toMatch(/\.gv-fork-btn\s*\{[\s\S]*visibility:\s*hidden;/);
-    expect(css).toMatch(/\.gv-fork-btn\s*\{[\s\S]*pointer-events:\s*none;/);
-    expect(css).toMatch(/\.gv-fork-btn\s*\{[\s\S]*right:\s*calc\(100%\s*\+\s*8px\);/);
-    expect(css).not.toMatch(/\.gv-fork-btn\s*\{[\s\S]*display:\s*none;/);
-
-    const revealRule = css.match(
-      /\.user-query-bubble-with-background:hover \.gv-fork-btn,[\s\S]*?\.gv-fork-btn:focus-visible\s*\{([\s\S]*?)\}/,
+    // jsdom does not recompute pseudo-class styles on focus; inspect parsed rules.
+    const sheet = (document.getElementById('gemini-voyager-fork-style') as HTMLStyleElement).sheet!;
+    const reveal = Array.from(sheet.cssRules).find(
+      (rule): rule is CSSStyleRule =>
+        rule instanceof CSSStyleRule && rule.selectorText.includes('.gv-fork-btn:focus-visible'),
+    )!;
+    expect(reveal.selectorText.split(',').map((selector) => selector.trim())).toContain(
+      '.user-query-bubble-with-background:hover .gv-fork-btn',
     );
-    expect(revealRule).not.toBeNull();
-    const revealDeclarations = revealRule?.[1] ?? '';
-    expect(revealDeclarations).toContain('opacity: 1;');
-    expect(revealDeclarations).toContain('pointer-events: auto;');
-    expect(revealDeclarations).not.toContain('display:');
+    expect(reveal.style.getPropertyValue('display')).toBe('');
+    expect(reveal.style.getPropertyValue('opacity')).toBe('1');
+    expect(reveal.style.getPropertyValue('visibility')).toBe('visible');
+    expect(reveal.style.getPropertyValue('pointer-events')).toBe('auto');
 
-    expect(css).toMatch(/body\.gv-rtl \.gv-fork-btn[\s\S]*left:\s*calc\(100%\s*\+\s*8px\);/);
+    document.body.classList.add('gv-rtl');
+    expect(getComputedStyle(button).left).toBe('calc(100% + 8px)');
   });
 
   it('anchors fork button beside the native copy button when available', () => {
@@ -124,6 +127,45 @@ describe('startFork style injection', () => {
     const forkButton = document.querySelector<HTMLElement>('.gv-fork-btn');
     expect(forkButton).not.toBeNull();
     expect(forkButton?.parentElement?.id).toBe('copy-anchor');
+  });
+
+  it('a stopped run does not leave fork buttons behind', () => {
+    window.history.replaceState({}, '', '/app/conv-source');
+    document.body.innerHTML = '<div class="user-query-container">A user message</div>';
+
+    cleanup = startFork();
+    cleanup();
+    cleanup = null;
+    vi.advanceTimersByTime(1000);
+
+    expect(document.querySelector('.gv-fork-btn')).toBeNull();
+  });
+
+  it('dismisses controls from delayed setup after the feature restarts', async () => {
+    window.history.replaceState({}, '', '/app/conv-source');
+    document.body.innerHTML = '<div class="user-query-container">A user message</div>';
+    sendMessageMock.mockImplementation(
+      (_message: unknown, callback: (response: unknown) => void) => {
+        callback({ ok: true, nodes: [] });
+      },
+    );
+
+    cleanup = startFork();
+    cleanup();
+    cleanup = startFork();
+    vi.advanceTimersByTime(1000);
+    await flushMicrotasks();
+
+    document.querySelector<HTMLElement>('.gv-fork-btn')!.click();
+    expect(confirmDriver.isOpen()).toBe(true);
+    confirmDriver.pressOutside();
+    expect(confirmDriver.isOpen()).toBe(false);
+
+    document.querySelector<HTMLElement>('.gv-fork-btn')!.click();
+    cleanup();
+    cleanup = null;
+    expect(confirmDriver.isOpen()).toBe(false);
+    expect(document.querySelector('.gv-fork-btn')).toBeNull();
   });
 
   it.each([
@@ -188,14 +230,50 @@ describe('startFork style injection', () => {
       expect(forkButton).not.toBeNull();
       forkButton?.click();
 
-      const confirmButton = document.querySelector<HTMLElement>('.gv-fork-primary');
-      expect(confirmButton).not.toBeNull();
-      confirmButton?.click();
+      confirmDriver.answer('Fork');
+      await flushMicrotasks();
 
       expect(openSpy).toHaveBeenCalledWith(`${window.location.origin}${expectedPath}`, '_blank');
       openSpy.mockRestore();
     },
   );
+
+  it('does not fork when the conversation changes while the fork confirm is open', async () => {
+    window.history.replaceState({}, '', '/app/conv-source');
+    document.body.innerHTML = `
+      <main>
+        <div class="conversation-container" id="1111111111111111">
+          <div class="user-query-container">
+            <div class="user-query-bubble-with-background">user-1</div>
+          </div>
+          <div class="response-container">
+            <div class="markdown-main-panel">assistant-1</div>
+          </div>
+        </div>
+      </main>
+    `;
+    const userContainer = document.querySelector<HTMLElement>('.user-query-container')!;
+    const responseContainer = document.querySelector<HTMLElement>('.response-container')!;
+    Object.defineProperty(userContainer, 'offsetTop', { value: 0, configurable: true });
+    Object.defineProperty(responseContainer, 'offsetTop', { value: 100, configurable: true });
+    sendMessageMock.mockImplementation(
+      (_message: unknown, callback: (response: { ok: boolean; nodes?: [] }) => void) =>
+        callback({ ok: true, nodes: [] }),
+    );
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue({} as Window);
+    cleanup = startFork();
+    vi.advanceTimersByTime(1000);
+    await flushMicrotasks();
+
+    document.querySelector<HTMLElement>('.gv-fork-btn')!.click();
+    // A keyboard back navigation swaps the route without a press or a scroll.
+    window.history.replaceState({}, '', '/app/conv-other');
+    confirmDriver.answer('Fork');
+    await flushMicrotasks();
+
+    expect(openSpy).not.toHaveBeenCalled();
+    openSpy.mockRestore();
+  });
 
   it('downloads a Markdown fork and stores a manual upload pending fork', async () => {
     window.history.replaceState({}, '', '/u/1/app/conv-source');
@@ -257,7 +335,7 @@ describe('startFork style injection', () => {
     await flushMicrotasks();
 
     document.querySelector<HTMLElement>('.gv-fork-btn')?.click();
-    document.querySelector<HTMLElement>('.gv-fork-secondary')?.click();
+    confirmDriver.answer('Download MD');
     for (let i = 0; i < 4; i++) {
       await flushMicrotasks();
     }
@@ -311,7 +389,8 @@ describe('startFork style injection', () => {
     await flushMicrotasks();
 
     document.querySelector<HTMLElement>('.gv-fork-btn')?.click();
-    document.querySelector<HTMLElement>('.gv-fork-primary')?.click();
+    confirmDriver.answer('Fork');
+    await flushMicrotasks();
 
     expect(openSpy).not.toHaveBeenCalled();
     expect(vi.mocked(browser.storage.local.set)).not.toHaveBeenCalledWith(
@@ -376,8 +455,7 @@ describe('startFork style injection', () => {
     await flushMicrotasks();
 
     const input = document.querySelector<HTMLElement>('#chat-input');
-    const hint = document.querySelector<HTMLElement>('.gv-fork-manual-upload-hint');
-    const timer = document.querySelector<HTMLElement>('.gv-fork-manual-upload-timer');
+    const hint = () => toastDriver.all()[0];
     expect(input?.textContent).toContain('gemini-voyager-fork-source.md');
     expect(input?.textContent).toContain('context from the previous conversation');
     expect(input?.textContent).toContain('New request:');
@@ -385,12 +463,12 @@ describe('startFork style injection', () => {
     expect(input?.textContent).not.toContain('best practices');
     expect(input?.textContent).not.toContain('Anthropic');
     expect(input?.textContent).not.toContain('OpenAI');
-    expect(hint?.textContent).toContain('gemini-voyager-fork-source.md');
-    expect(timer?.textContent).toBe('01:30');
+    expect(hint().message).toContain('gemini-voyager-fork-source.md');
+    expect(hint().detail).toBe('01:30');
     expect(vi.mocked(browser.storage.local.remove)).toHaveBeenCalledWith('gvPendingFork');
 
     vi.advanceTimersByTime(1000);
-    expect(timer?.textContent).toBe('01:29');
+    expect(hint().detail).toBe('01:29');
 
     window.history.pushState({}, '', '/app/conv-new');
     vi.advanceTimersByTime(500);
@@ -408,7 +486,7 @@ describe('startFork style injection', () => {
     expect(addPayloads[0]?.turnId).toBe('u-2');
     expect(addPayloads[1]?.conversationId).toBe('conv-new');
     expect(addPayloads[1]?.turnId).toBe('u-0');
-    expect(document.querySelector('.gv-fork-manual-upload-hint')).toBeNull();
+    expect(toastDriver.all()).toEqual([]);
   });
 
   it('avoids duplicate branch indicator groups when concurrent refreshes happen', async () => {

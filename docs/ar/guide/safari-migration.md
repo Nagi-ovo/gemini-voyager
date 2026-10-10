@@ -24,4 +24,4 @@
 
 بعد هذا الاستبدال لمرة واحدة، ستحدّث إصدارات Safari المقبلة تطبيق «Voyager» الجديد عبر أداة التحديث التلقائي المدمجة (Sparkle) — دون أي استبدال يدوي بعد الآن.
 
-هل لديك سؤال؟ راسلنا عبر [GitHub Issues](https://github.com/Nagi-ovo/voyager/issues).
+هل لديك سؤال؟ راسلنا عبر [GitHub Issues](https://github.com/voyager-crew/voyager/issues).

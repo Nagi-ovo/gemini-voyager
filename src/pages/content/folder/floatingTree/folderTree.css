@@ -1,0 +1,124 @@
+/* The folder tree's own rules, added to whichever shadow root renders it
+ * (floating panel, AI Studio sidebar, ChatGPT section) beside floatingPanel.css.
+ * Rows are flat siblings, so a nested folder body no longer draws its tree
+ * guide; each row draws the guides of the folders it sits in instead. */
+
+.gv-floating-folder-panel__tree {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* A row holds its own margins, so measured heights include them. */
+.gv-floating-folder-panel__tree-row {
+  position: relative;
+  display: flow-root;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* One 1px line per enclosing folder, under that folder's caret: the same
+ * 14px + depth * step (12px unless a site sets --gv-tree-step), as the rows indent. */
+.gv-floating-folder-panel__tree-row[data-guides]::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 14px;
+  width: calc(var(--gv-tree-guides, 0) * var(--gv-tree-step, 12px));
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0.09) 0 1px,
+    transparent 1px var(--gv-tree-step, 12px)
+  );
+  pointer-events: none;
+}
+
+:host([data-gv-rtl]) .gv-floating-folder-panel__tree-row[data-guides]::before {
+  left: auto;
+  right: 14px;
+  background-image: repeating-linear-gradient(
+    to left,
+    rgba(255, 255, 255, 0.09) 0 1px,
+    transparent 1px var(--gv-tree-step, 12px)
+  );
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__tree-row[data-guides]::before {
+  background-image: repeating-linear-gradient(
+    to right,
+    rgba(15, 23, 42, 0.1) 0 1px,
+    transparent 1px var(--gv-tree-step, 12px)
+  );
+}
+
+:host([data-gv-scheme='light'][data-gv-rtl])
+  .gv-floating-folder-panel__tree-row[data-guides]::before {
+  background-image: repeating-linear-gradient(
+    to left,
+    rgba(15, 23, 42, 0.1) 0 1px,
+    transparent 1px var(--gv-tree-step, 12px)
+  );
+}
+
+.gv-floating-folder-panel__tree-spacer {
+  display: block;
+  pointer-events: none;
+}
+
+/* Arrow keys move focus between rows; show where it is. */
+.gv-floating-folder-panel__folder-header:focus-visible,
+.gv-floating-folder-panel__conv:focus-visible {
+  outline: 2px solid var(--gv-floating-folder-panel__accent, #8ab4f8);
+  outline-offset: -2px;
+}
+
+.gv-floating-folder-panel__folder-header:focus:not(:focus-visible),
+.gv-floating-folder-panel__conv:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ─── Line icons (TreeSiteOptions.lineIcons) ─────────────────────────────
+ * Only a lineIcons tree renders these SVGs and the folder icon; the text
+ * glyphs and colour dot of other trees match none of the rules below; the
+ * panel header's own SVG buttons sit outside the tree. */
+.gv-floating-folder-panel__tree .gv-floating-folder-panel__icon-button svg,
+.gv-floating-folder-panel__caret svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* The chevron points at the reading direction and turns down when open. */
+.gv-floating-folder-panel__caret svg {
+  transition: transform 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:host([data-gv-rtl]) .gv-floating-folder-panel__caret svg {
+  transform: scaleX(-1);
+}
+
+.gv-floating-folder-panel__caret--expanded svg,
+:host([data-gv-rtl]) .gv-floating-folder-panel__caret--expanded svg {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gv-floating-folder-panel__caret svg {
+    transition: none;
+  }
+}
+
+.gv-floating-folder-panel__folder-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+}
+
+.gv-floating-folder-panel__folder-icon svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}

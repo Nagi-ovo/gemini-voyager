@@ -8,9 +8,13 @@ Sincronize suas pastas, biblioteca de prompts e outros dados no Google Drive par
 - **Privacidade de dados**: Os dados são armazenados diretamente no seu próprio armazenamento do Google Drive, garantindo a privacidade sem servidores de terceiros.
 - **Sincronização flexível**: Suporte para upload manual e download/mesclagem de dados.
 
-::: info
-**Em breve**: A próxima versão suportará a sincronização de conversas marcadas com estrela.
-:::
+## Dados com estrela e limites de sincronização
+
+Os backups na nuvem incluem o **texto completo dos prompts de usuário que você marca com estrela** (até 16 KiB UTF-8 por prompt) no seu próprio Google Drive ou iCloud. Os backups de estrelas não armazenam respostas do modelo. O backup v1 mantém apenas prévias; o novo v2 inclui o texto e os registros de exclusão.
+
+Os registros de exclusão são mantidos por 180 dias. Versões antigas do Voyager os ignoram e podem exibir ou reenviar estrelas excluídas; as novas bloqueiam cópias antigas com o mesmo carimbo de data e hora. Marcar novamente com uma data posterior, ou a expiração do registro, pode restaurar uma estrela. Longos períodos offline e diferenças nos relógios dos dispositivos também afetam as exclusões.
+
+A sincronização mescla e verifica as gravações, com no máximo três tentativas, mas não é uma transação atômica entre dispositivos: uploads simultâneos ainda podem sobrescrever outras gravações. Uma sincronização posterior de um dispositivo que conserva os dados ausentes pode repará-los; sem ela, a recuperação não é garantida. Falhas parciais mantêm as gravações aceitas; sincronize novamente para concluir o reparo.
 
 ## Como usar
 

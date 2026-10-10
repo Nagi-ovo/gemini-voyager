@@ -10,6 +10,14 @@
  * - AI Studio: folder-item-header padding 6px 10px, more compact sidebar
  */
 
+import {
+  FOLDER_SPACING,
+  clampFolderDisplay,
+  folderDisplayProperties,
+  folderRowPadding,
+  watchSyncSetting,
+} from '../folder/folderDisplay';
+
 type FolderSpacingPlatform = 'gemini' | 'aistudio';
 
 const STYLE_ID = 'gv-folder-spacing-style';
@@ -17,21 +25,19 @@ const STORAGE_KEYS: Record<FolderSpacingPlatform, string> = {
   gemini: 'gvFolderSpacing',
   aistudio: 'gvAIStudioFolderSpacing',
 };
-const DEFAULT_SPACING = 2;
-const MIN_SPACING = 0;
-const MAX_SPACING = 16;
-
-function clamp(value: number): number {
-  if (!Number.isFinite(value)) return DEFAULT_SPACING;
-  return Math.min(MAX_SPACING, Math.max(MIN_SPACING, Math.round(value)));
-}
 
 function applyGeminiSpacing(clamped: number, style: HTMLStyleElement) {
   // Gemini defaults: header 8px, conversation 8px
-  //   At spacing 0 → 4px, spacing 2 → 5px, spacing 16 → 12px
-  const vPad = Math.max(4, Math.round(4 + clamped * 0.5));
+  const vPad = folderRowPadding(clamped);
+  const properties = Object.entries(folderDisplayProperties(FOLDER_SPACING, clamped))
+    .map(([name, value]) => `${name}: ${value};`)
+    .join('\n      ');
 
+  // The sidebar tree renders in a shadow root and reads the row padding and gap properties.
   style.textContent = `
+    .gv-folder-container {
+      ${properties}
+    }
     .gv-folder-list {
       gap: ${clamped}px !important;
     }
@@ -76,7 +82,7 @@ function applyAIStudioSpacing(clamped: number, style: HTMLStyleElement) {
 }
 
 function applySpacing(spacing: number, platform: FolderSpacingPlatform) {
-  const clamped = clamp(spacing);
+  const clamped = clampFolderDisplay(FOLDER_SPACING, spacing);
 
   let style = document.getElementById(STYLE_ID) as HTMLStyleElement;
   if (!style) {
@@ -102,44 +108,19 @@ function removeStyles() {
  * Each platform reads/writes its own storage key so settings are independent.
  */
 export function startFolderSpacingAdjuster(platform: FolderSpacingPlatform = 'gemini') {
-  const storageKey = STORAGE_KEYS[platform];
-  let currentSpacing = DEFAULT_SPACING;
-
-  // Load initial spacing from storage
-  chrome.storage?.sync?.get({ [storageKey]: DEFAULT_SPACING }, (res) => {
-    const stored = res?.[storageKey];
-    if (typeof stored === 'number') {
-      currentSpacing = clamp(stored);
-    }
+  let currentSpacing = FOLDER_SPACING.defaultValue;
+  // A value that is not a number keeps the one shown (the default at first).
+  const stop = watchSyncSetting(STORAGE_KEYS[platform], (value) => {
+    if (typeof value === 'number') currentSpacing = clampFolderDisplay(FOLDER_SPACING, value);
     applySpacing(currentSpacing, platform);
   });
-
-  // Listen for changes from popup or other sources
-  const storageChangeHandler = (
-    changes: Record<string, chrome.storage.StorageChange>,
-    area: string,
-  ) => {
-    if (area === 'sync' && changes[storageKey]) {
-      const newValue = changes[storageKey].newValue;
-      if (typeof newValue === 'number') {
-        currentSpacing = clamp(newValue);
-        applySpacing(currentSpacing, platform);
-      }
-    }
-  };
-
-  chrome.storage?.onChanged?.addListener(storageChangeHandler);
 
   // Cleanup on page unload
   window.addEventListener(
     'beforeunload',
     () => {
       removeStyles();
-      try {
-        chrome.storage?.onChanged?.removeListener(storageChangeHandler);
-      } catch {
-        // Ignore errors during cleanup
-      }
+      stop();
     },
     { once: true },
   );

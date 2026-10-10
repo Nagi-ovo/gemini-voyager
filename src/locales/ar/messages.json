@@ -43,6 +43,10 @@
     "message": "إخفاء الحاوية الخارجية",
     "description": "Hide outer container label"
   },
+  "hideOuterContainerDotsOnly": {
+    "message": "ينطبق على نمط العُقد فقط",
+    "description": "Why the hide outer container toggle is disabled: the ruler and compact timeline styles draw no container"
+  },
   "draggableTimeline": {
     "message": "جدول زمني قابل للسحب",
     "description": "Draggable Timeline label"
@@ -213,6 +217,22 @@
   "pm_deleted": {
     "message": "تم الحذف",
     "description": "Deleted notice"
+  },
+  "pm_save_failed": {
+    "message": "تعذّر حفظ التغيير، فتم التراجع عنه.",
+    "description": "Prompt Manager notice: a change could not be saved and was rolled back"
+  },
+  "pm_edit_target_deleted": {
+    "message": "حُذفت هذه المطالبة في مكان آخر. احفظ مرة أخرى للاحتفاظ بها كمطالبة جديدة.",
+    "description": "Prompt Manager hint: the prompt being edited was deleted in another tab; saving again adds the draft as a new prompt"
+  },
+  "pm_library_unavailable": {
+    "message": "المطالبات لا تستجيب. ما زال حفظ تغييرك الأخير جارياً؛ حاول مرة أخرى بعد قليل.",
+    "description": "Prompt Manager notice: an earlier change is still waiting for a reply, so new edits are refused until it arrives"
+  },
+  "pm_library_load_failed": {
+    "message": "تعذّر تحميل المطالبات. جارٍ إعادة المحاولة؛ حاول مرة أخرى بعد قليل.",
+    "description": "Prompt Manager notice: the prompt library could not be read yet, so an edit was refused and a new read started"
   },
   "pm_edit": {
     "message": "تعديل",
@@ -662,6 +682,14 @@
     "message": "المزامنة السحابية",
     "description": "Tooltip for the merged cloud button that opens an upload/sync popover"
   },
+  "folder_reload_required": {
+    "message": "تم تحديث Voyager. أعد تحميل علامة التبويب هذه لمتابعة تعديل المجلدات.",
+    "description": "Shown when a newer Voyager build owns folder writes and this tab must be reloaded"
+  },
+  "folder_cloud_merge_interrupted": {
+    "message": "تمت مقاطعة الدمج مع Google Drive. شغّله مرة أخرى.",
+    "description": "Shown when a Google Drive merge of folders was interrupted before it was applied"
+  },
   "folder_settings": {
     "message": "إعدادات المجلدات",
     "description": "Tooltip for the gear icon that opens folder-scoped settings"
@@ -761,6 +789,26 @@
   "folder_import_error": {
     "message": "✗ فشل الاستيراد: {error}",
     "description": "Import error message"
+  },
+  "conversation_added_to_folder": {
+    "message": "تمت الإضافة إلى \"{folder}\"",
+    "description": "Notification after a prompt is dropped into a folder"
+  },
+  "conversation_saved_to_root": {
+    "message": "تم الحفظ في \"غير مصنف\"",
+    "description": "Notification after a prompt is dropped on Uncategorized"
+  },
+  "folder_default_name": {
+    "message": "مجلدي",
+    "description": "Name of the folder created when a prompt is dropped and no folder exists"
+  },
+  "folder_import_in_progress": {
+    "message": "هناك عملية استيراد قيد التنفيذ بالفعل",
+    "description": "Notice when a folder import is started while another is running"
+  },
+  "folder_export_in_progress": {
+    "message": "هناك عملية تصدير قيد التنفيذ بالفعل",
+    "description": "Notice when a folder export is started while another is running"
   },
   "folder_save_error": {
     "message": "تعذّر حفظ تغييرات المجلدات. يُرجى المحاولة مرة أخرى.",
@@ -914,22 +962,6 @@
     "message": "يمكنك تغيير ذلك في أي وقت من نافذة الإضافة ← خيارات المجلدات.",
     "description": "Footnote explaining where to toggle the setting later"
   },
-  "floatingModeNudgeTitle": {
-    "message": "الشريط الجانبي غير متاح — هل تريد فتح المجلدات في نافذة عائمة؟",
-    "description": "Title of the floating-mode fallback nudge"
-  },
-  "floatingModeNudgeBody": {
-    "message": "تعذّر على Voyager العثور على الشريط الجانبي في Gemini، ربما بسبب تغيير في تخطيط الصفحة. لا يزال بإمكانك تصفح مجلداتك في نافذة عائمة.",
-    "description": "Body copy of the floating-mode fallback nudge"
-  },
-  "floatingModeNudgeEnable": {
-    "message": "فتح نافذة عائمة",
-    "description": "Primary button that opens the floating folder panel"
-  },
-  "floatingModeNudgeDismiss": {
-    "message": "ليس الآن",
-    "description": "Secondary button that dismisses the floating-mode nudge"
-  },
   "floatingPanelTitle": {
     "message": "المجلدات",
     "description": "Title shown in the floating folder panel header"
@@ -969,6 +1001,18 @@
   "folderManager_dataLossWarning": {
     "message": "⚠️ تحذير: فشل تحميل بيانات المجلد. ربما تكون مجلداتك تالفة. يرجى التحقق من وحدة تحكم المتصفح للحصول على التفاصيل ومحاولة الاستعادة من النسخة الاحتياطية إذا كانت متوفرة.",
     "description": "Warning shown when folder data fails to load"
+  },
+  "folderManager_dataRecovered": {
+    "message": "تمت استعادة بيانات المجلدات من نسخة احتياطية.",
+    "description": "Notice when folder data was recovered from backup"
+  },
+  "folderManager_dataKept": {
+    "message": "تعذّر تحميل بيانات المجلدات. تم الاحتفاظ بمجلداتك الحالية.",
+    "description": "Notice when current folder data is kept after a failed load"
+  },
+  "folderManager_readFailure": {
+    "message": "تعذّر تحميل بيانات المجلدات. المجلدات متاحة للقراءة فقط مؤقتًا.",
+    "description": "Notice when folder storage is unreadable and editing is disabled"
   },
   "backupOptions": {
     "message": "نسخ احتياطي تلقائي",
@@ -1190,6 +1234,10 @@
     "message": "إزالة من المفضلة",
     "description": "Remove from starred tooltip"
   },
+  "starredDeleteFailed": {
+    "message": "تعذر الإزالة من المفضلة",
+    "description": "Error shown when a star cannot be removed"
+  },
   "justNow": {
     "message": "الآن",
     "description": "Just now time label"
@@ -1217,6 +1265,14 @@
   "export_collecting_desc": {
     "message": "يرجى الانتظار…",
     "description": "وصف اللافتة أثناء جمع DOM محادثة ChatGPT"
+  },
+  "export_reading_conversation_title": {
+    "message": "جارٍ قراءة المحادثة…",
+    "description": "Progress title while ChatGPT export reads the whole conversation by scrolling it"
+  },
+  "export_reading_conversation_turns": {
+    "message": "الأدوار المقروءة: {count}",
+    "description": "Progress detail while ChatGPT export reads the conversation; {count} is the number of turns read so far"
   },
   "keyboardShortcuts": {
     "message": "اختصارات لوحة المفاتيح",
@@ -1294,6 +1350,18 @@
     "message": "مزامنة سحابية",
     "description": "Cloud sync section title"
   },
+  "platformChatGPT": {
+    "message": "ChatGPT",
+    "description": "ChatGPT platform label"
+  },
+  "cloudSyncFoldersDescription": {
+    "message": "مزامنة المجلدات مع Google Drive",
+    "description": "ChatGPT folders-only Google Drive sync description"
+  },
+  "cloudSyncFoldersDescriptionICloud": {
+    "message": "مزامنة المجلدات باستخدام مساحة تخزين iCloud الخاصة بك",
+    "description": "ChatGPT folders-only iCloud sync description"
+  },
   "cloudSyncDescription": {
     "message": "مزامنة المجلدات والمطالبات مع Google Drive",
     "description": "Cloud sync description"
@@ -1361,6 +1429,22 @@
   "syncError": {
     "message": "✗ فشلت المزامنة: {error}",
     "description": "Sync error message"
+  },
+  "syncRestorePartial": {
+    "message": "✗ لم تكتمل الاستعادة. تمت استعادة: {restored}. لم تتم استعادة: {failed} ({error})",
+    "description": "Drive restore stopped partway: which parts were restored and which were not"
+  },
+  "syncRestoreForks": {
+    "message": "تفريعات المحادثات",
+    "description": "Drive restore part: conversation fork links"
+  },
+  "syncRestoreCatalogTimeline": {
+    "message": "المفضلة ومستويات الجدول الزمني في المواقع الأخرى",
+    "description": "Drive restore part: timeline stars and node levels saved on catalog sites such as ChatGPT and Claude"
+  },
+  "syncRestoreListSeparator": {
+    "message": "، ",
+    "description": "Separator between restored or failed part names in the partial-restore message"
   },
   "syncInProgress": {
     "message": "جارٍ المزامنة...",
@@ -1489,6 +1573,10 @@
     "message": "تنزيل محتوى التفكير بتنسيق Markdown",
     "description": "Deep Research download button tooltip"
   },
+  "deepResearchNoThinkingContent": {
+    "message": "لم يتم العثور على محتوى تفكير لتنزيله.",
+    "description": "Warning when Deep Research has no thinking content to download"
+  },
   "folder_uncategorized": {
     "message": "غير مصنف",
     "description": "Label for root-level conversations not in any folder"
@@ -1606,7 +1694,7 @@
     "description": "Batch delete confirmation message"
   },
   "folder_batch_remove_confirm": {
-    "message": "هل تريد إزالة {count} محادثة محددة من هذا المجلد؟",
+    "message": "هل تريد إزالة المحادثات المحددة ({count}) من هذا المجلد؟",
     "description": "Confirmation before removing the selected conversations from a folder"
   },
   "folder_multi_select_count": {
@@ -1685,14 +1773,6 @@
     "message": "عرض تلقائي لكتل أكواد WaveJSON كمخططات توقيت تفاعلية",
     "description": "وصف ميزة WaveDrom"
   },
-  "wavedromDiagramButton": {
-    "message": "〜 المخطط",
-    "description": "تسمية زر التحويل إلى المخطط المعروض"
-  },
-  "wavedromCodeButton": {
-    "message": "</> الكود",
-    "description": "تسمية زر التحويل إلى كود WaveJSON المصدري"
-  },
   "wavedromZoomIn": {
     "message": "تكبير",
     "description": "شريط أدوات ملء الشاشة: عنوان زر التكبير"
@@ -1721,13 +1801,13 @@
     "message": "عرض أكواد خيارات ECharts تلقائيًا كرسوم بيانية تفاعلية",
     "description": "ECharts rendering feature hint"
   },
-  "echartsDiagramButton": {
-    "message": "📊 رسم بياني",
-    "description": "Toggle button label to show the rendered chart"
+  "diagramButton": {
+    "message": "مخطط",
+    "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"
   },
-  "echartsCodeButton": {
-    "message": "</> الكود",
-    "description": "Toggle button label to show the ECharts option source"
+  "diagramCodeButton": {
+    "message": "الكود",
+    "description": "Diagram toolbar button that shows the diagram source code"
   },
   "echartsFullscreenButton": {
     "message": "ملء الشاشة",
@@ -2101,6 +2181,26 @@
     "message": "يحتوي المحتوى المُصدَّر على صور من نتائج البحث. هل تريد تضمين روابط مصدر الصور في Markdown؟",
     "description": "Confirm dialog when exporting markdown with web search images"
   },
+  "export_md_include_source_include": {
+    "message": "تضمين الروابط",
+    "description": "Confirm choice that keeps the source links of web search images in the Markdown export"
+  },
+  "export_md_include_source_exclude": {
+    "message": "استبعادها",
+    "description": "Confirm choice that leaves the source links of web search images out of the Markdown export"
+  },
+  "export_error_too_many_attempts": {
+    "message": "توقّف التصدير: محاولات كثيرة جدًا.",
+    "description": "Export error toast when the export restarted too many times while loading the full conversation"
+  },
+  "export_error_conversation_not_found": {
+    "message": "تعذّر العثور على المحادثة المحددة. افتحها أولًا ثم صدّرها.",
+    "description": "Export error toast when the sidebar menu's conversation cannot be located"
+  },
+  "export_error_conversation_open_failed": {
+    "message": "تعذّر فتح المحادثة المحددة للتصدير. يُرجى المحاولة مرة أخرى.",
+    "description": "Export error toast when the sidebar menu's conversation fails to open"
+  },
   "deepResearch_exportedAt": {
     "message": "وقت التصدير",
     "description": "تسمية الطابع الزمني للتصدير في Deep Research"
@@ -2248,10 +2348,6 @@
   "forkMarkdownBtn": {
     "message": "تنزيل MD",
     "description": "Fork confirmation button for downloading a Markdown file"
-  },
-  "forkCancel": {
-    "message": "Cancel",
-    "description": "Fork cancel button"
   },
   "forkBranch": {
     "message": "Branch",
@@ -2461,10 +2557,6 @@
     "message": "حذف",
     "description": "Floating folder panel delete folder action"
   },
-  "floatingPanelDeleteConfirm": {
-    "message": "هل تريد حذف هذا المجلد وكل محتوياته؟",
-    "description": "Floating folder panel delete folder confirmation"
-  },
   "floatingPanelCancel": {
     "message": "إلغاء",
     "description": "Floating folder panel cancel action"
@@ -2520,6 +2612,42 @@
   "floatingPanelGestureHint": {
     "message": "نقر مزدوج لإعادة التسمية · زر الفأرة الأيمن للتثبيت واللون والحذف.",
     "description": "Floating folder panel hint explaining folder gestures and context menu actions"
+  },
+  "floatingPanelAddCurrentHere": {
+    "message": "أضف المحادثة الحالية هنا",
+    "description": "Floating folder panel folder menu item that files the open conversation into that folder"
+  },
+  "chatgptFoldersHint": {
+    "message": "لحفظ محادثة في مجلد: افتحها، ثم انقر زر الإشارة المرجعية أو انقر بزر الفأرة الأيمن على مجلد.",
+    "description": "ChatGPT folder panel hint explaining how to file a conversation"
+  },
+  "chatgptFoldersNoConversation": {
+    "message": "افتح محادثة محفوظة أولاً. لا يمكن حفظ المحادثات المؤقتة في مجلد.",
+    "description": "ChatGPT folder panel status when no saved conversation is open to add"
+  },
+  "chatgptFoldersAdded": {
+    "message": "تمت الإضافة إلى المجلد.",
+    "description": "ChatGPT folder panel status after filing the open conversation"
+  },
+  "chatgptFoldersAlreadyFiled": {
+    "message": "موجودة بالفعل في هذا المجلد.",
+    "description": "ChatGPT folder panel status when the open conversation is already in that folder"
+  },
+  "chatgptFoldersCoachmarkTitle": {
+    "message": "مجلداتك في الشريط الجانبي",
+    "description": "Title of the one-time guide pointing at the folder section in the ChatGPT sidebar"
+  },
+  "chatgptFoldersCoachmarkBody": {
+    "message": "أصبحت المجلدات هنا في الشريط الجانبي لـ ChatGPT. استخدم + لإنشاء مجلد، أو اختر «نقل إلى مجلد» من قائمة المحادثة لحفظها فيه.",
+    "description": "Body of the one-time guide pointing at the folder section in the ChatGPT sidebar; quotes the Move to folder menu label"
+  },
+  "folder_import_wrong_site": {
+    "message": "يحتوي هذا الملف على مجلدات من موقع آخر، لذلك لم يتم استيراد أي شيء.",
+    "description": "ChatGPT folder import error when the file holds conversations from another site"
+  },
+  "chatgptFoldersUntitled": {
+    "message": "محادثة بلا عنوان",
+    "description": "Title used for a filed ChatGPT conversation whose title could not be read"
   },
   "folder_new_chat_in_folder": {
     "message": "محادثة جديدة في هذا المجلد",
@@ -2593,6 +2721,30 @@
     "message": "غير مدعوم في هذا المتصفّح — لا يمكن منح إذن الموقع الذي تحتاجه الإضافة.",
     "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
   },
+  "chatgptExportCardTitle": {
+    "message": "تصدير هذه المحادثة",
+    "description": "Title of the popup card that exports the current ChatGPT conversation"
+  },
+  "chatgptExportCardOffHint": {
+    "message": "فعّل تصدير المحادثات لحفظ محادثات ChatGPT بصيغة Markdown أو JSON أو PDF أو كصورة. سيظهر بعدها زر التصدير أعلى كل محادثة.",
+    "description": "Popup hint shown while ChatGPT conversation export is turned off"
+  },
+  "chatgptExportTurnOn": {
+    "message": "تفعيل",
+    "description": "Popup button that turns on ChatGPT conversation export"
+  },
+  "chatgptExportCardOnHint": {
+    "message": "احفظ بصيغة Markdown أو JSON أو PDF أو كصورة. يوجد زر التصدير نفسه أعلى كل محادثة.",
+    "description": "Popup hint shown while ChatGPT conversation export is on"
+  },
+  "chatgptExportNoConversation": {
+    "message": "افتح محادثة أولًا، فلا يوجد في هذه الصفحة ما يمكن تصديره.",
+    "description": "Shown when the ChatGPT tab has no conversation to export"
+  },
+  "chatgptExportReloadTab": {
+    "message": "أعد تحميل علامة تبويب ChatGPT هذه، ثم حاول مرة أخرى.",
+    "description": "Shown when the ChatGPT tab has not loaded Voyager yet"
+  },
   "pluginsLoading": {
     "message": "جارٍ تحميل الإضافات…",
     "description": "Shown while the plugin catalog is loading"
@@ -2616,6 +2768,310 @@
   "pluginSourceOnline": {
     "message": "كتالوج عبر الإنترنت",
     "description": "Source label for a plugin fetched from the online catalog for this site"
+  },
+  "pluginSourceLocal": {
+    "message": "محلي",
+    "description": "Source label for a plugin the user imported locally"
+  },
+  "localPluginsTitle": {
+    "message": "الإضافات المحلية",
+    "description": "Popup plugin page: title of the card for user-imported plugins"
+  },
+  "localPluginsDescription": {
+    "message": "استورد إضافة تصريحية كتبتها بنفسك: ملف بيان JSON يتضمن CSS، أو ملف البيان مع ملفات ‎.css الخاصة به. تخضع لنفس فحوصات الإضافات الرسمية وتبقى معطّلة حتى تفعّلها.",
+    "description": "Popup plugin page: what importing a local plugin does"
+  },
+  "localPluginsNativeHint": {
+    "message": "شغّل CSS وتعديلات الصفحة الخاصة بك على هذا الموقع. تبقى الإضافات المستوردة معطّلة حتى تفعّلها.",
+    "description": "Native popup (Gemini / AI Studio): hint on the collapsed Local plugins entry"
+  },
+  "localPluginsImportFiles": {
+    "message": "استيراد ملفات",
+    "description": "Popup plugin page: button that opens the file picker for a local plugin"
+  },
+  "localPluginsPasteJson": {
+    "message": "لصق JSON",
+    "description": "Popup plugin page: button that opens a text box to paste a plugin manifest"
+  },
+  "localPluginsPasteLabel": {
+    "message": "ملف JSON لبيان الإضافة",
+    "description": "Popup plugin page: accessible label of the paste text box"
+  },
+  "localPluginsCheckAndImport": {
+    "message": "تحقق واستورد",
+    "description": "Popup plugin page: validate the pasted manifest and import it"
+  },
+  "localPluginsCancel": {
+    "message": "إلغاء",
+    "description": "Popup plugin page: close the paste text box"
+  },
+  "localPluginsEmpty": {
+    "message": "لا توجد إضافات محلية بعد.",
+    "description": "Popup plugin page: no local plugin is installed"
+  },
+  "localPluginsImported": {
+    "message": "تم استيراد {name} {version}. الإضافة معطّلة: راجع ما تفعله أدناه، ثم فعّلها من قائمة الإضافات.",
+    "description": "Popup plugin page: import succeeded; {name} and {version} are placeholders"
+  },
+  "localPluginsRejected": {
+    "message": "لم يتم الاستيراد. أصلح هذه المشكلات ثم حاول مجددًا:",
+    "description": "Popup plugin page: import failed validation; the issues follow"
+  },
+  "localPluginsPreviousKept": {
+    "message": "يبقى الإصدار المثبّت {version} دون تغيير.",
+    "description": "Popup plugin page: a failed re-import kept the installed version; {version} is a placeholder"
+  },
+  "localPluginsInspect": {
+    "message": "فحص",
+    "description": "Popup plugin page: show what a local plugin does"
+  },
+  "localPluginsHideDetails": {
+    "message": "إخفاء",
+    "description": "Popup plugin page: hide the details of a local plugin"
+  },
+  "localPluginsRemove": {
+    "message": "إزالة",
+    "description": "Popup plugin page: delete a local plugin"
+  },
+  "localPluginsConfirmRemove": {
+    "message": "تأكيد الإزالة",
+    "description": "Popup plugin page: second click that confirms removing a local plugin"
+  },
+  "localPluginsStoredInvalid": {
+    "message": "لم يعد هذا الإصدار من Voyager يقبل هذه الإضافة، لذا لن تعمل:",
+    "description": "Popup plugin page: a stored local plugin fails this build's checks; issues follow"
+  },
+  "localPluginChangedBeforeEnable": {
+    "message": "أُعيد استيراد هذه الإضافة أثناء تشغيلها، لذا بقيت متوقفة. راجع الإصدار الجديد ثم شغّلها مرة أخرى.",
+    "description": "A local plugin was re-imported while the user was enabling it, so it was not enabled"
+  },
+  "localPluginDescribeOpen": {
+    "message": "صِف تغييرًا",
+    "description": "Button that opens the one-sentence plugin flow"
+  },
+  "localPluginDescribeHint": {
+    "message": "صِف في جملة واحدة ما تريد تغييره في الموقع. يكتب Voyager موجّهًا ترسله بنفسك إلى أي ذكاء اصطناعي، ثم يفحص الرد الذي تلصقه هنا. لا يرسل Voyager أي شيء من تلقاء نفسه.",
+    "description": "Explains the one-sentence plugin flow and that Voyager sends nothing"
+  },
+  "localPluginDescribeRequestLabel": {
+    "message": "ما الذي تريد تغييره؟",
+    "description": "Label of the one-sentence request field"
+  },
+  "localPluginDescribeRequestPlaceholder": {
+    "message": "مثال: اجعل رسائلي أضيق وأخفِ الشريط الجانبي",
+    "description": "Example request in the one-sentence field"
+  },
+  "localPluginDescribeSiteLabel": {
+    "message": "الموقع",
+    "description": "Label of the target-site picker"
+  },
+  "localPluginDescribeBuildPrompt": {
+    "message": "اكتب الموجّه",
+    "description": "Button that writes the AI prompt"
+  },
+  "localPluginDescribePromptLabel": {
+    "message": "موجّه للذكاء الاصطناعي",
+    "description": "Label of the generated prompt"
+  },
+  "localPluginDescribePromptHint": {
+    "message": "الصقه بنفسك في محادثة أي ذكاء اصطناعي، ثم الصق الرد كاملًا في الأسفل.",
+    "description": "Tells the user to send the prompt themselves and paste the reply"
+  },
+  "localPluginDescribeCopy": {
+    "message": "انسخ الموجّه",
+    "description": "Button that copies the prompt"
+  },
+  "localPluginDescribeCopied": {
+    "message": "تم النسخ",
+    "description": "Shown after the prompt was copied"
+  },
+  "localPluginDescribeCopyFailed": {
+    "message": "تعذّر النسخ. حدّد الموجّه وانسخه بنفسك.",
+    "description": "Shown when the clipboard refused the prompt"
+  },
+  "localPluginDescribeReplyLabel": {
+    "message": "رد الذكاء الاصطناعي",
+    "description": "Label of the field for the AI reply"
+  },
+  "localPluginDescribeReplyPlaceholder": {
+    "message": "الصق الرد كاملًا أو جزء JSON فقط",
+    "description": "Placeholder of the AI reply field"
+  },
+  "localPluginDescribeCheck": {
+    "message": "افحص الرد",
+    "description": "Button that checks the pasted reply"
+  },
+  "localPluginDescribeImport": {
+    "message": "استيراد",
+    "description": "Button that imports the previewed plugin"
+  },
+  "localPluginReplyEmpty": {
+    "message": "الصق رد الذكاء الاصطناعي أولًا.",
+    "description": "The reply field is empty"
+  },
+  "localPluginReplyTooLong": {
+    "message": "هذا الرد أطول من أن يكون إضافة.",
+    "description": "The pasted reply is too large"
+  },
+  "localPluginReplyNoJson": {
+    "message": "لم يُعثر على JSON. اطلب من الذكاء الاصطناعي أن يجيب بكتلة ```json واحدة.",
+    "description": "No JSON manifest found in the reply"
+  },
+  "localPluginReplyMultipleJson": {
+    "message": "يحتوي الرد على أكثر من كتلة JSON. أبقِ كتلة الإضافة فقط ثم الصقه مجددًا.",
+    "description": "The reply holds more than one JSON block"
+  },
+  "localPluginPreviewTitle": {
+    "message": "قبل الاستيراد",
+    "description": "Heading of the preview shown before import"
+  },
+  "localPluginPreviewChanges": {
+    "message": "ما الذي يغيّره",
+    "description": "Heading of the list of changes in the preview"
+  },
+  "localPluginPreviewWarnings": {
+    "message": "تحقّق أولًا",
+    "description": "Heading of the warnings in the preview"
+  },
+  "localPluginPreviewLandsOff": {
+    "message": "يُستورد وهو متوقف. شغّله من قائمة الإضافات عندما تكون جاهزًا.",
+    "description": "Explains that the import lands turned off"
+  },
+  "localPluginChangeCss": {
+    "message": "يضيف أنماطه الخاصة ({chars} حرفًا من CSS)",
+    "description": "Preview line: the plugin adds CSS; {chars} is a character count"
+  },
+  "localPluginChangeAddClass": {
+    "message": "يميّز {target} لتطبيق أنماطه ({className})",
+    "description": "Preview line: the plugin tags elements so its CSS applies"
+  },
+  "localPluginChangeHide": {
+    "message": "يخفي {target}",
+    "description": "Preview line: the plugin hides elements"
+  },
+  "localPluginChangeSetStyle": {
+    "message": "يغيّر نمط {target}: {styles}",
+    "description": "Preview line: the plugin sets inline styles"
+  },
+  "localPluginChangeSetAttribute": {
+    "message": "يضبط {name}=\"{value}\" على {target}",
+    "description": "Preview line: the plugin sets an attribute"
+  },
+  "localPluginChangeNative": {
+    "message": "يشغّل ميزة Voyager المضمّنة {handler}",
+    "description": "Preview line: the plugin runs a Voyager built-in feature"
+  },
+  "localPluginChangeSetting": {
+    "message": "يضيف إعدادًا: {label}",
+    "description": "Preview line: the plugin adds a setting"
+  },
+  "localPluginChangeTheme": {
+    "message": "يغيّر لون التمييز في Voyager إلى {color}",
+    "description": "Preview line: the plugin changes the accent color"
+  },
+  "localPluginTargetSelector": {
+    "message": "العناصر المطابقة لـ {selector}",
+    "description": "Preview target described by a raw CSS selector"
+  },
+  "localPluginTargetUserTurn": {
+    "message": "رسائلك",
+    "description": "Preview target: the user's messages"
+  },
+  "localPluginTargetAssistantTurn": {
+    "message": "ردود الذكاء الاصطناعي",
+    "description": "Preview target: the AI's replies"
+  },
+  "localPluginTargetThinkingBlock": {
+    "message": "أقسام التفكير",
+    "description": "Preview target: reasoning sections"
+  },
+  "localPluginTargetCodeBlock": {
+    "message": "كتل الشيفرة",
+    "description": "Preview target: code blocks"
+  },
+  "localPluginTargetComposer": {
+    "message": "مربع الرسالة",
+    "description": "Preview target: the message input box"
+  },
+  "localPluginTargetSidebar": {
+    "message": "الشريط الجانبي",
+    "description": "Preview target: the sidebar"
+  },
+  "localPluginTargetSidePanel": {
+    "message": "اللوحة الجانبية",
+    "description": "Preview target: the secondary side panel"
+  },
+  "localPluginTargetHeaderActions": {
+    "message": "الأزرار أعلى اليمين",
+    "description": "Preview target: top-right action buttons"
+  },
+  "localPluginTargetScrollContainer": {
+    "message": "منطقة المحادثة",
+    "description": "Preview target: the scrolling conversation area"
+  },
+  "localPluginChangedSinceReview": {
+    "message": "تغيّرت هذه الإضافة في Voyager أثناء مراجعتك لها، لذا لم يُستبدل أي شيء. راجع المعاينة المحدَّثة ثم استوردها مجددًا.",
+    "description": "Shown when the previewed plugin id was installed, changed or removed before Import; nothing was written"
+  },
+  "localPluginWarnCss": {
+    "message": "يمكن لـ CSS الخاص به تغيير أي شيء في الصفحة، بما في ذلك إخفاء المحتوى. لا يلخّص Voyager الـ CSS، فاقرأه أدناه.",
+    "description": "Warning: the plugin has CSS, which the preview shows but does not summarize"
+  },
+  "localPluginWarnSelector": {
+    "message": "يحدد العناصر بمحدِّد CSS، وقد يتوقف عن العمل عند تحديث الموقع.",
+    "description": "Warning: the plugin targets raw CSS selectors"
+  },
+  "localPluginWarnHides": {
+    "message": "قد يخفي جزءًا من الصفحة. أوقف الإضافة لإعادته.",
+    "description": "Warning: the plugin may hide part of the page (also shown when a hiding style cannot be read with confidence)"
+  },
+  "localPluginWarnNotOnSite": {
+    "message": "لا يعمل على {site}، الموقع الذي اخترته.",
+    "description": "Warning: the plugin does not run on the site the user picked"
+  },
+  "localPluginWarnTheme": {
+    "message": "يغيّر لون التمييز في Voyager، مع أن الموجّه طلب من الذكاء الاصطناعي ألا يفعل ذلك.",
+    "description": "Warning: the plugin changes the accent color although the prompt asked not to"
+  },
+  "localPluginWarnNative": {
+    "message": "يشغّل ميزة مضمّنة في Voyager، مع أن الموجّه طلب من الذكاء الاصطناعي ألا يفعل ذلك.",
+    "description": "Warning: the plugin runs a Voyager built-in although the prompt asked not to"
+  },
+  "localPluginWarnReplaces": {
+    "message": "يستبدل الإصدار {version} المثبّت ويوقفه حتى تشغّله مجددًا.",
+    "description": "Warning: importing replaces an installed version and turns it off"
+  },
+  "localPluginInspectSites": {
+    "message": "المواقع",
+    "description": "Inspect view: sites the plugin runs on"
+  },
+  "localPluginInspectCss": {
+    "message": "CSS",
+    "description": "Inspect view: injected stylesheet size label"
+  },
+  "localPluginInspectCssChars": {
+    "message": "{chars} حرفًا",
+    "description": "Inspect view: injected CSS size; {chars} is a number"
+  },
+  "localPluginInspectDomOps": {
+    "message": "تغييرات الصفحة",
+    "description": "Inspect view: reversible DOM operations the plugin applies"
+  },
+  "localPluginInspectPrimitives": {
+    "message": "ميزات Voyager المدمجة التي تستدعيها",
+    "description": "Inspect view: first-party Voyager primitives the plugin invokes"
+  },
+  "localPluginInspectSettings": {
+    "message": "الإعدادات",
+    "description": "Inspect view: settings the plugin declares"
+  },
+  "localPluginInspectNone": {
+    "message": "لا شيء",
+    "description": "Inspect view: the plugin has nothing in this category"
+  },
+  "localPluginInspectNoCode": {
+    "message": "لا يُنفَّذ أي كود من الإضافة: فقط CSS وتغييرات قابلة للتراجع في الصفحة وميزات Voyager المدمجة.",
+    "description": "Inspect view: reassurance that a declarative plugin cannot run its own code"
   },
   "pluginUpdateNeedsNewerVoyager": {
     "message": "يتطلب التحديث {version} إصدارًا أحدث من Voyager.",
@@ -2902,6 +3358,9 @@
   "highlightSaved": {
     "message": "تم حفظ التمييز"
   },
+  "highlightConfirmationPending": {
+    "message": "ما زلنا ننتظر التأكيد. يمكنك إغلاق هذا المحرر؛ سنحتفظ بمسودتك."
+  },
   "highlightSaveFailed": {
     "message": "تعذر حفظ التمييز"
   },
@@ -3117,5 +3576,373 @@
   "popupPinHintDismiss": {
     "message": "إغلاق",
     "description": "Popup: dismiss the pin reminder"
+  },
+  "nativeHealthTimeline": {
+    "message": "لا يعثر الجدول الزمني على أدوار المحادثة في هذه الصفحة.",
+    "description": "Popup: Gemini health notice when the timeline finds no conversation turns"
+  },
+  "nativeHealthChatWidth": {
+    "message": "لا يعثر ضبط عرض الدردشة على أدوار المحادثة في هذه الصفحة.",
+    "description": "Popup: Gemini health notice when chat width finds no conversation turns"
+  },
+  "nativeHealthFolders": {
+    "message": "تعذّر وضع المجلدات في الشريط الجانبي لـ Gemini، لذا فُتحت في لوحة عائمة.",
+    "description": "Popup: Gemini health notice when folders fell back to the floating panel"
+  },
+  "nativeHealthExport": {
+    "message": "لا يعثر التصدير على أي رسائل في هذه الصفحة.",
+    "description": "Popup: Gemini health notice when export finds no messages"
+  },
+  "nativeHealthComposer": {
+    "message": "لا يعثر Voyager على مربع الرسائل في Gemini لإدراج المطالبات.",
+    "description": "Popup: Gemini health notice when Gemini's message box is missing"
+  },
+  "nativeHealthCause": {
+    "message": "ربما غيّر Gemini صفحته.",
+    "description": "Popup: likely cause shown under a Gemini health notice"
+  },
+  "nativeHealthReport": {
+    "message": "الإبلاغ عن المشكلة",
+    "description": "Popup: link that opens a prefilled GitHub bug report"
+  },
+  "nativeHealthDismiss": {
+    "message": "إغلاق",
+    "description": "Popup: dismiss the Gemini health notice"
+  },
+  "researchPackEnable": {
+    "message": "حزمة البحث",
+    "description": "Popup: research pack toggle label"
+  },
+  "researchPackEnableHint": {
+    "message": "يضيف زرًا إلى إجابات Gemini. اجمع الإجابات ومصادرها في ملف Markdown واحد لنسخه أو تنزيله أو إدراجه في محادثة أخرى.",
+    "description": "Popup: research pack toggle hint"
+  },
+  "researchPackAdd": {
+    "message": "إضافة إلى حزمة البحث (أو حدّد جزءًا من الإجابة أولًا)",
+    "description": "Research pack: per-answer add button tooltip"
+  },
+  "researchPackAdded": {
+    "message": "تمت الإضافة إلى الحزمة",
+    "description": "Research pack: item added"
+  },
+  "researchPackDuplicate": {
+    "message": "موجود بالفعل في الحزمة",
+    "description": "Research pack: item already present"
+  },
+  "researchPackFull": {
+    "message": "الحزمة ممتلئة. أزل عنصرًا أولًا.",
+    "description": "Research pack: item limit reached"
+  },
+  "researchPackCaptureFailed": {
+    "message": "تعذّرت قراءة هذه الإجابة",
+    "description": "Research pack: answer could not be read"
+  },
+  "researchPackSaveFailed": {
+    "message": "تعذّر حفظ الحزمة",
+    "description": "Research pack: storage write failed"
+  },
+  "researchPackTitle": {
+    "message": "حزمة البحث",
+    "description": "Research pack: panel title"
+  },
+  "researchPackShortTitle": {
+    "message": "الحزمة",
+    "description": "Research pack: short launcher label"
+  },
+  "researchPackOpen": {
+    "message": "فتح حزمة البحث",
+    "description": "Research pack: launcher tooltip"
+  },
+  "researchPackClose": {
+    "message": "إغلاق",
+    "description": "Research pack: close panel"
+  },
+  "researchPackEmpty": {
+    "message": "الحزمة فارغة. استخدم زر الحزمة أسفل إجابة، أو حدّد جزءًا من إجابة أولًا.",
+    "description": "Research pack: empty state"
+  },
+  "researchPackItemCount": {
+    "message": "العناصر: {count}",
+    "description": "Research pack: item count, {count} is a number"
+  },
+  "researchPackSourceCount": {
+    "message": "المصادر: {count}",
+    "description": "Research pack: cited link count, {count} is a number"
+  },
+  "researchPackUntitledSource": {
+    "message": "محادثة بلا عنوان",
+    "description": "Research pack: fallback conversation title"
+  },
+  "researchPackExcerptBadge": {
+    "message": "مقتطف",
+    "description": "Research pack: badge for a selected part of an answer"
+  },
+  "researchPackMoveUp": {
+    "message": "نقل لأعلى",
+    "description": "Research pack: move item up"
+  },
+  "researchPackMoveDown": {
+    "message": "نقل لأسفل",
+    "description": "Research pack: move item down"
+  },
+  "researchPackRemove": {
+    "message": "إزالة من الحزمة",
+    "description": "Research pack: remove item"
+  },
+  "researchPackInstructionLabel": {
+    "message": "تعليمات للنموذج التالي",
+    "description": "Research pack: instruction field label"
+  },
+  "researchPackInstructionPlaceholder": {
+    "message": "مثال: قارن هذه الإجابات، وبيّن مواضع الاختلاف، وتحقق من كل ادعاء في المصادر.",
+    "description": "Research pack: instruction placeholder"
+  },
+  "researchPackPreview": {
+    "message": "معاينة Markdown",
+    "description": "Research pack: markdown preview toggle"
+  },
+  "researchPackInsert": {
+    "message": "إدراج في المحادثة",
+    "description": "Research pack: insert into composer button"
+  },
+  "researchPackInsertHint": {
+    "message": "يضع الحزمة في مربع الرسالة. لا يُرسل شيء حتى ترسله بنفسك.",
+    "description": "Research pack: insert button tooltip"
+  },
+  "researchPackCopy": {
+    "message": "نسخ Markdown",
+    "description": "Research pack: copy markdown button"
+  },
+  "researchPackDownload": {
+    "message": "تنزيل ‎.md",
+    "description": "Research pack: download button"
+  },
+  "researchPackClear": {
+    "message": "مسح",
+    "description": "Research pack: clear all items"
+  },
+  "researchPackClearConfirm": {
+    "message": "إزالة كل العناصر من الحزمة؟ تبقى التعليمات كما هي.",
+    "description": "Research pack: clear confirmation"
+  },
+  "researchPackCopied": {
+    "message": "تم نسخ Markdown",
+    "description": "Research pack: copy succeeded"
+  },
+  "researchPackCopyFailed": {
+    "message": "تعذّر النسخ. استخدم التنزيل بدلًا من ذلك.",
+    "description": "Research pack: copy failed"
+  },
+  "researchPackInserted": {
+    "message": "تم إدراج الحزمة. راجعها ثم أرسلها بنفسك.",
+    "description": "Research pack: inserted into composer"
+  },
+  "researchPackNoComposer": {
+    "message": "لا يوجد مربع رسالة في هذه الصفحة",
+    "description": "Research pack: no composer found"
+  },
+  "researchPackLoadFailed": {
+    "message": "تعذّر تحميل الحزمة",
+    "description": "Research pack: the stored pack could not be read; shown with a retry button"
+  },
+  "researchPackRetry": {
+    "message": "إعادة المحاولة",
+    "description": "Research pack: button that reads the pack again after a failure"
+  },
+  "researchPackContinueIn": {
+    "message": "المتابعة في {target}",
+    "description": "Research pack: button that opens a new chat on another model ({target} is ChatGPT or Claude)"
+  },
+  "researchPackContinueHint": {
+    "message": "يفتح محادثة جديدة في {target} مع هذه الحزمة في مربع الرسالة. لا يُرسَل أي شيء.",
+    "description": "Research pack: tooltip of the continue-in button"
+  },
+  "researchPackContinueOpening": {
+    "message": "جارٍ فتح {target}. ستظهر الحزمة في مربع الرسالة دون إرسالها.",
+    "description": "Research pack: the new chat is opening and the pack will be filled in"
+  },
+  "researchPackContinueCopied": {
+    "message": "تم نسخ الحزمة. الصقها في محادثة {target} الجديدة.",
+    "description": "Research pack: Voyager cannot run on the target, so the pack was copied for pasting"
+  },
+  "researchPackContinueRetry": {
+    "message": "لا يستطيع Voyager تعبئة {target} الآن. انقر مرة أخرى لنسخ الحزمة وفتح {target}.",
+    "description": "Research pack: the target stopped being available since the panel opened"
+  },
+  "researchPackContinueFailed": {
+    "message": "تعذّر فتح {target}. استخدم نسخ Markdown بدلًا من ذلك.",
+    "description": "Research pack: the new chat could not be opened"
+  },
+  "researchPackHandoffReady": {
+    "message": "تمت إضافة حزمة البحث من Gemini. راجعها ثم أرسلها بنفسك.",
+    "description": "Research pack: toast on ChatGPT/Claude after the pack was put in the message box"
+  },
+  "researchPackHandoffFailed": {
+    "message": "تعذّرت إضافة حزمة البحث هنا. ارجع إلى Gemini وانسخها.",
+    "description": "Research pack: toast on ChatGPT/Claude when the pack could not be put in the message box"
+  },
+  "researchPackTemplates": {
+    "message": "القوالب",
+    "description": "Research pack: templates section toggle"
+  },
+  "researchPackTemplatesHint": {
+    "message": "القالب تعليمات قابلة لإعادة الاستخدام، محفوظة في مدير المطالبات بالوسم research-pack. عند تصديره لا يُشارَك إلا اسمه وتعليماته، وليس حزمتك أبدًا.",
+    "description": "Research pack: what a template is and what exporting shares"
+  },
+  "researchPackTemplatePick": {
+    "message": "اختر قالبًا",
+    "description": "Research pack: template picker placeholder and label"
+  },
+  "researchPackTemplateNone": {
+    "message": "لا توجد قوالب بعد",
+    "description": "Research pack: template picker when no template is saved"
+  },
+  "researchPackTemplateUse": {
+    "message": "استخدام",
+    "description": "Research pack: put the chosen template into the instruction"
+  },
+  "researchPackTemplateUseConfirm": {
+    "message": "هل تريد استبدال التعليمات الحالية بهذا القالب؟",
+    "description": "Research pack: confirm replacing a typed instruction with a template"
+  },
+  "researchPackTemplateReplace": {
+    "message": "استبدال",
+    "description": "Research pack: confirm button that replaces the instruction"
+  },
+  "researchPackTemplateExport": {
+    "message": "تصدير",
+    "description": "Research pack: download the chosen template as a file"
+  },
+  "researchPackTemplateName": {
+    "message": "اسم القالب",
+    "description": "Research pack: name field for a new template"
+  },
+  "researchPackTemplateSave": {
+    "message": "حفظ التعليمات كقالب",
+    "description": "Research pack: save the typed instruction as a template"
+  },
+  "researchPackTemplateSaved": {
+    "message": "حُفظ القالب في مدير المطالبات",
+    "description": "Research pack: a template was saved"
+  },
+  "researchPackTemplateNeedName": {
+    "message": "سمِّ القالب أولًا",
+    "description": "Research pack: saving a template without a name"
+  },
+  "researchPackTemplateNeedInstruction": {
+    "message": "اكتب تعليمات لحفظها",
+    "description": "Research pack: saving a template with an empty instruction"
+  },
+  "researchPackTemplateInvalid": {
+    "message": "استخدم اسمًا من سطر واحد لا يتجاوز 100 حرف، وتعليمات لا تتجاوز 4000 حرف.",
+    "description": "Research pack: template name or instruction breaks a limit"
+  },
+  "researchPackTemplateDuplicate": {
+    "message": "هذه التعليمات موجودة بالفعل في مدير المطالبات",
+    "description": "Research pack: the library already has this instruction text"
+  },
+  "researchPackTemplateNameTaken": {
+    "message": "يوجد في مدير المطالبات مطالبة بهذا الاسم بالفعل",
+    "description": "Research pack: the library already has a prompt with this name"
+  },
+  "researchPackTemplateImport": {
+    "message": "استيراد ملف…",
+    "description": "Research pack: choose a template file to import"
+  },
+  "researchPackTemplateImportInvalid": {
+    "message": "هذا الملف ليس ملف قوالب صالحًا لحزمة البحث.",
+    "description": "Research pack: the chosen file is not a valid template file"
+  },
+  "researchPackTemplatePreviewTitle": {
+    "message": "القوالب في هذا الملف. راجعها قبل الحفظ.",
+    "description": "Research pack: heading of the import preview"
+  },
+  "researchPackTemplateStatusNew": {
+    "message": "جديد",
+    "description": "Research pack: import preview badge for a template that will be saved"
+  },
+  "researchPackTemplateStatusDuplicate": {
+    "message": "محفوظ بالفعل",
+    "description": "Research pack: import preview badge for an instruction that is already saved"
+  },
+  "researchPackTemplateStatusNameTaken": {
+    "message": "الاسم مستخدم، سيُتخطّى",
+    "description": "Research pack: import preview badge for a template skipped because its name is in use"
+  },
+  "researchPackTemplateImportSave": {
+    "message": "حفظ القوالب الجديدة",
+    "description": "Research pack: save the new templates from the import preview"
+  },
+  "researchPackTemplateImported": {
+    "message": "القوالب المحفوظة في مدير المطالبات: {count}",
+    "description": "Research pack: templates were imported; {count} is how many"
+  },
+  "researchPackTemplateImportNothing": {
+    "message": "لا شيء جديد للحفظ",
+    "description": "Research pack: an import had nothing new to save"
+  },
+  "researchPackTemplateFailed": {
+    "message": "تعذّر تحديث القوالب. حاول مرة أخرى.",
+    "description": "Research pack: reading or writing templates failed"
+  },
+  "savedLibraryOpenFull": {
+    "message": "فتح المكتبة الكاملة"
+  },
+  "savedLibrarySite": {
+    "message": "الموقع"
+  },
+  "savedLibraryAllSites": {
+    "message": "كل المواقع"
+  },
+  "savedLibraryUnknownSite": {
+    "message": "موقع غير معروف"
+  },
+  "savedLibraryAccount": {
+    "message": "الحساب"
+  },
+  "savedLibraryAllAccounts": {
+    "message": "كل الحسابات"
+  },
+  "savedLibraryAccountNumber": {
+    "message": "الحساب {number}"
+  },
+  "savedLibraryUnassigned": {
+    "message": "غير معيّن"
+  },
+  "savedLibraryRemoveStarConfirm": {
+    "message": "إزالة هذه النجمة؟"
+  },
+  "savedLibraryDeleteHighlightConfirm": {
+    "message": "حذف هذا التمييز وملاحظته؟"
+  },
+  "savedLibraryOpenFailed": {
+    "message": "تعذّر فتح المكتبة"
+  },
+  "savedLibraryExpandText": {
+    "message": "عرض النص الكامل"
+  },
+  "savedLibraryCollapseText": {
+    "message": "طي النص"
+  },
+  "savedLibraryConversationOpenFailed": {
+    "message": "تعذّر فتح هذه المحادثة"
+  },
+  "savedLibraryChatGptSwitchAccount": {
+    "message": "حُفظت هذه النجمة في {account}. بدّل إلى ذلك الحساب في ChatGPT، ثم حاول فتحها مرة أخرى."
+  },
+  "savedLibraryChatGptSwitchHint": {
+    "message": "لا يمكنك فتح هذه المحادثة؟ بدّل إلى الحساب الذي استخدمته في ChatGPT، ثم حاول فتحها مرة أخرى."
+  },
+  "savedLibraryOpenAnyway": {
+    "message": "فتح على أي حال"
+  },
+  "savedLibraryFilters": {
+    "message": "مرشحات المكتبة"
+  },
+  "savedLibraryTypeFilter": {
+    "message": "نوع العنصر المحفوظ"
+  },
+  "savedLibraryRefresh": {
+    "message": "تحديث"
   }
 }

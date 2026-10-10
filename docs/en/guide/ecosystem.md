@@ -8,5 +8,5 @@ The following projects are inspired by or built on top of Voyager, bringing simi
 - **[DeepSeek Enhancer](https://github.com/dlshuangchenyue1210/DeepSeek-Enhancer)** — A Voyager-inspired enhancement extension for the DeepSeek web app, offering multi-level folders, chat export, formula copy, data backup, and more.
 
 ::: tip Is your project inspired by Voyager?
-[Open an issue](https://github.com/Nagi-ovo/voyager/issues/new) to let me know and I'll add it here.
+[Open an issue](https://github.com/voyager-crew/voyager/issues/new) to let me know and I'll add it here.
 :::

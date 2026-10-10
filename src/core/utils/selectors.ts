@@ -2,49 +2,21 @@
  * DOM selector utilities
  * Centralized selectors (was duplicated in multiple files)
  */
+import { getGeminiTurnSelectors } from '@/core/gemini/turnSelectors';
 
 /**
- * Get selectors for user query elements
+ * Gemini user-turn selectors, including the Angular host elements. Read at query time; the
+ * bundled lists live in `@/core/gemini/turnSelectors`.
  */
 export function getUserTurnSelectors(): string[] {
-  return [
-    // Angular-based Gemini UI user bubble (primary)
-    '.user-query-bubble-with-background',
-    // Angular containers (fallbacks)
-    '.user-query-bubble-container',
-    '.user-query-container',
-    'user-query-content .user-query-bubble-with-background',
-    'user-query-content',
-    'user-query',
-    // Attribute-based fallbacks
-    'div[aria-label="User message"]',
-    'article[data-author="user"]',
-    'article[data-turn="user"]',
-    '[data-message-author-role="user"]',
-    'div[role="listitem"][data-user="true"]',
-  ];
+  return getGeminiTurnSelectors('turn.userWithHosts');
 }
 
 /**
- * Get selectors for assistant/model response elements
+ * Gemini assistant-turn selectors, including bare response hosts and the list-item fallback.
  */
 export function getAssistantTurnSelectors(): string[] {
-  return [
-    // Attribute-based roles (most reliable)
-    '[aria-label="Gemini response"]',
-    '[data-message-author-role="assistant"]',
-    '[data-message-author-role="model"]',
-    'article[data-author="assistant"]',
-    'article[data-turn="assistant"]',
-    'article[data-turn="model"]',
-    // Common Gemini containers
-    'model-response',
-    '.model-response',
-    'response-container',
-    '.response-container',
-    '.presented-response-container',
-    'div[role="listitem"]:not([data-user="true"])',
-  ];
+  return getGeminiTurnSelectors('turn.assistantWithHosts');
 }
 
 /**

@@ -90,7 +90,7 @@
   "author": "voyager-official",
   "category": "readability",
   "license": "MIT",
-  "homepage": "https://github.com/Nagi-ovo/voyager/tree/main/src/features/plugins/catalog/sites/deepseek/plugins/wrap-code",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/deepseek/plugins/wrap-code",
   "engine": ">=1.4.0",
   "tier": "declarative",
   "matches": ["https://chat.deepseek.com/*"],

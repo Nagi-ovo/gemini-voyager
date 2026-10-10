@@ -24,4 +24,4 @@
 
 一度入れ替えれば、以降の Safari 版は内蔵の自動更新（Sparkle）で新しい「Voyager」に更新されます。手動での差し替えは不要です。
 
-ご不明な点は [GitHub Issues](https://github.com/Nagi-ovo/voyager/issues) までお知らせください。
+ご不明な点は [GitHub Issues](https://github.com/voyager-crew/voyager/issues) までお知らせください。

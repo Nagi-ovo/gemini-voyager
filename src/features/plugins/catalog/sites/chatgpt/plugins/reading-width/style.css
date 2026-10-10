@@ -1,7 +1,8 @@
 /* voyager.chatgpt-reading-width - one wider, centered reading column.
  * The width variable is declared on both real content columns and structural
  * wrappers. Only the content columns are centered; constraining
- * #thread-bottom-container itself pins the composer to the left. Propagate the
+ * #thread-bottom-container itself pins the composer to the left (that id is
+ * absent from the current DOM; the rule stays for the earlier one). Propagate the
  * variable everywhere, but keep that outer footer wrapper full-width. */
 .gv-plugin-chatgpt-readable [class*='--thread-content-max-width'] {
   --thread-content-max-width: var(--gv-plugin-reading-width, 768px) !important;
@@ -17,9 +18,17 @@
 }
 
 /* Optional centered-turn mode: keep the selected reading width and only change
- * user content alignment. ChatGPT nests user media and bubbles under two
- * end-aligned flex columns, so both levels need to be centered. Assistant prose
- * remains left-aligned for readability. */
+ * user content alignment. Assistant prose remains left-aligned for readability.
+ * Current thread: each prompt sits in an end-aligned block
+ * ([data-chatgpt-search-unit-key]) whose end-aligned column holds the bubble
+ * and its action row, so both levels need to be centered. The
+ * [data-message-author-role] selectors cover the earlier thread DOM. */
+.gv-plugin-chatgpt-readable[data-gv-center-conversation='true']
+  [data-turn-key]
+  [data-chatgpt-search-unit-key]:has([data-user-message-bubble]),
+.gv-plugin-chatgpt-readable[data-gv-center-conversation='true']
+  [data-turn-key]
+  :has(> [data-user-message-bubble]),
 .gv-plugin-chatgpt-readable[data-gv-center-conversation='true']
   section[data-testid^='conversation-turn-']
   [data-message-author-role='user'],

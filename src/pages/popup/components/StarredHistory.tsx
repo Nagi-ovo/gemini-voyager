@@ -1,29 +1,27 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Download, FileUp, Highlighter, Search, Star, Trash2, X } from 'lucide-react';
+import { Download, ExternalLink, FileUp, Highlighter, Search, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   accountIsolationService,
   detectAccountPlatformFromUrl,
   extractRouteUserIdFromUrl,
 } from '@/core/services/AccountIsolationService';
+import { type HighlightAccountScope } from '@/core/types/highlight';
+import { SavedLibraryItemCard } from '@/features/savedLibrary/SavedLibraryItemCard';
 import {
-  type HighlightAccountScope,
-  type HighlightRecordV1,
-  getHighlightColorHex,
-} from '@/core/types/highlight';
-import {
-  type SavedLibraryFilter,
   type SavedLibraryItem,
   buildSavedLibraryItemUrl,
-  filterSavedLibraryItems,
-  toSavedLibraryItems,
+  isSavedLibraryItemConversationUrl,
+  savedLibraryItemKey,
 } from '@/features/savedLibrary/model';
+import { openLibraryPage } from '@/features/savedLibrary/openLibraryPage';
+import { savedLibraryEmptyKey } from '@/features/savedLibrary/presentation';
+import { useSavedLibrary } from '@/features/savedLibrary/useSavedLibrary';
+import { ALL_FILTER } from '@/features/savedLibrary/viewModel';
 import { cn } from '@/lib/utils';
-import { StarredMessagesService } from '@/pages/content/timeline/StarredMessagesService';
 
 interface StarredHistoryProps {
   onClose: () => void;
@@ -32,30 +30,18 @@ interface StarredHistoryProps {
 
 export function shouldOpenStarredMessageInCurrentTab(
   currentUrl: string | undefined,
-  targetUrl: string,
+  item: SavedLibraryItem,
 ): boolean {
   if (!currentUrl) return false;
   try {
-    const currentHost = new URL(currentUrl).hostname;
-    const targetHost = new URL(targetUrl).hostname;
+    const target = new URL(item.conversationUrl);
     return (
-      currentHost === targetHost &&
-      (targetHost === 'gemini.google.com' ||
-        targetHost === 'aistudio.google.com' ||
-        targetHost === 'claude.ai')
+      new URL(currentUrl).origin === target.origin &&
+      isSavedLibraryItemConversationUrl(item, target)
     );
   } catch {
     return false;
   }
-}
-
-async function loadHighlights(scope: HighlightAccountScope): Promise<HighlightRecordV1[]> {
-  const response = (await chrome.runtime.sendMessage({
-    type: 'gv.highlight.list',
-    payload: { scope, includeDeleted: false },
-  })) as { ok?: boolean; records?: HighlightRecordV1[]; error?: string } | undefined;
-  if (!response?.ok) throw new Error(response?.error || 'Failed to load highlights');
-  return Array.isArray(response.records) ? response.records : [];
 }
 
 function downloadTextFile(data: string, filename: string, mimeType: string): void {
@@ -69,11 +55,6 @@ function downloadTextFile(data: string, filename: string, mimeType: string): voi
 
 export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
   const { language, t } = useLanguage();
-  const [items, setItems] = useState<SavedLibraryItem[]>([]);
-  const [filter, setFilter] = useState<SavedLibraryFilter>('all');
-  const [query, setQuery] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [transferring, setTransferring] = useState(false);
   const [transferNotice, setTransferNotice] = useState<{
     text: string;
@@ -81,65 +62,63 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
   } | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
 
-  const resolveSourceHighlightScope = useCallback(async (): Promise<HighlightAccountScope> => {
-    const tab =
-      typeof sourceTabId === 'number'
-        ? await chrome.tabs.get(sourceTabId).catch(() => undefined)
-        : (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
-    const pageUrl = tab?.url ?? '';
-    let routeUserId = extractRouteUserIdFromUrl(pageUrl);
-    let email: string | null = null;
-    if (tab?.id) {
-      try {
-        const response = (await chrome.tabs.sendMessage(tab.id, {
-          type: 'gv.account.getContext',
-        })) as
-          | { ok?: boolean; context?: { routeUserId?: string | null; email?: string | null } }
-          | undefined;
-        if (response?.ok && response.context) {
-          routeUserId = response.context.routeUserId ?? routeUserId;
-          email = response.context.email ?? null;
+  const resolveSourceHighlightScope =
+    useCallback(async (): Promise<HighlightAccountScope | null> => {
+      const tab =
+        typeof sourceTabId === 'number'
+          ? await chrome.tabs.get(sourceTabId).catch(() => undefined)
+          : (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
+      const pageUrl = tab?.url ?? '';
+      const platform = detectAccountPlatformFromUrl(pageUrl);
+      // Sites without their own highlight bucket must not open Gemini's for the same account.
+      if (!platform) return null;
+      let routeUserId = extractRouteUserIdFromUrl(pageUrl);
+      let email: string | null = null;
+      if (tab?.id) {
+        try {
+          const response = (await chrome.tabs.sendMessage(tab.id, {
+            type: 'gv.account.getContext',
+          })) as
+            | { ok?: boolean; context?: { routeUserId?: string | null; email?: string | null } }
+            | undefined;
+          if (response?.ok && response.context) {
+            routeUserId = response.context.routeUserId ?? routeUserId;
+            email = response.context.email ?? null;
+          }
+        } catch {
+          // A /u/<index> route remains a usable explicit scope without DOM context.
         }
-      } catch {
-        // A /u/<index> route remains a usable explicit scope without DOM context.
       }
-    }
-    if (!routeUserId && !email) throw new Error('Highlight account scope is unavailable');
-    const resolved = await accountIsolationService.resolveAccountScope({
-      pageUrl,
-      routeUserId,
-      email,
-    });
-    return {
-      platform: detectAccountPlatformFromUrl(pageUrl),
-      accountKey: resolved.accountKey,
-      accountId: resolved.accountId,
-      routeUserId: resolved.routeUserId,
-    };
-  }, [sourceTabId]);
+      if (!routeUserId && !email) throw new Error('Highlight account scope is unavailable');
+      const resolved = await accountIsolationService.resolveAccountScope({
+        pageUrl,
+        routeUserId,
+        email,
+      });
+      return {
+        platform,
+        accountKey: resolved.accountKey,
+        accountId: resolved.accountId,
+        routeUserId: resolved.routeUserId,
+      };
+    }, [sourceTabId]);
 
-  const loadSavedItems = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    const [starredResult, highlightResult] = await Promise.allSettled([
-      StarredMessagesService.getAllStarredMessagesSorted(),
-      resolveSourceHighlightScope().then(loadHighlights),
-    ]);
-    const starred = starredResult.status === 'fulfilled' ? starredResult.value : [];
-    const highlights = highlightResult.status === 'fulfilled' ? highlightResult.value : [];
-    setItems(toSavedLibraryItems(starred, highlights));
-    setError(starredResult.status === 'rejected' || highlightResult.status === 'rejected');
-    setLoading(false);
-  }, [resolveSourceHighlightScope]);
+  const {
+    items: visibleItems,
+    allItems: items,
+    selection,
+    setSelection,
+    loading,
+    error,
+    notice: libraryNotice,
+    reload: loadSavedItems,
+    remove: deleteItem,
+    confirmOpen,
+  } = useSavedLibrary({ highlightScope: resolveSourceHighlightScope, confirmRemoval: false });
+  const filter = selection.kind;
+  const query = selection.query;
+  const shownNotice = transferNotice ?? libraryNotice;
 
-  useEffect(() => {
-    void loadSavedItems();
-  }, [loadSavedItems]);
-
-  const visibleItems = useMemo(
-    () => filterSavedLibraryItems(items, filter, query),
-    [filter, items, query],
-  );
   const filterCounts = useMemo(
     () => ({
       all: items.length,
@@ -151,13 +130,14 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
 
   const openItem = async (item: SavedLibraryItem) => {
     try {
+      if (!(await confirmOpen(item))) return;
       const currentTab =
         typeof sourceTabId === 'number'
           ? await chrome.tabs.get(sourceTabId).catch(() => undefined)
           : (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
       const targetUrl = buildSavedLibraryItemUrl(item);
 
-      if (shouldOpenStarredMessageInCurrentTab(currentTab?.url, targetUrl) && currentTab?.id) {
+      if (shouldOpenStarredMessageInCurrentTab(currentTab?.url, item) && currentTab?.id) {
         await chrome.tabs.update(currentTab.id, { url: targetUrl });
         window.close();
         return;
@@ -165,7 +145,7 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
       await chrome.tabs.create({ url: targetUrl });
     } catch (openError) {
       console.error('[SavedLibrary] Blocked invalid saved item URL:', openError);
-      setTransferNotice({ text: t('pm_starred_load_error'), error: true });
+      setTransferNotice({ text: t('savedLibraryConversationOpenFailed'), error: true });
     }
   };
 
@@ -173,9 +153,11 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
     setTransferring(true);
     setTransferNotice(null);
     try {
+      const scope = await resolveSourceHighlightScope();
+      if (!scope) throw new Error('Highlight account scope is unavailable');
       const response = (await chrome.runtime.sendMessage({
         type: 'gv.highlight.export',
-        payload: { format, scope: await resolveSourceHighlightScope() },
+        payload: { format, scope },
       })) as { ok?: boolean; data?: string; filename?: string; error?: string } | undefined;
       if (!response?.ok || typeof response.data !== 'string') {
         throw new Error(response?.error || 'Highlight export failed');
@@ -197,9 +179,11 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
     setTransferring(true);
     setTransferNotice(null);
     try {
+      const scope = await resolveSourceHighlightScope();
+      if (!scope) throw new Error('Highlight account scope is unavailable');
       const response = (await chrome.runtime.sendMessage({
         type: 'gv.highlight.import',
-        payload: { data: await file.text(), scope: await resolveSourceHighlightScope() },
+        payload: { data: await file.text(), scope },
       })) as
         | {
             ok?: boolean;
@@ -227,49 +211,7 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
     }
   };
 
-  const deleteItem = async (item: SavedLibraryItem, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setTransferNotice(null);
-    try {
-      if (item.kind === 'starred') {
-        await StarredMessagesService.removeStarredMessage(item.conversationId, item.turnId);
-      } else {
-        const response = (await chrome.runtime.sendMessage({
-          type: 'gv.highlight.deleteStored',
-          payload: {
-            platform: item.platform,
-            accountHash: item.accountHash,
-            conversationId: item.conversationId,
-            id: item.id,
-          },
-        })) as { ok?: boolean; error?: string } | undefined;
-        if (!response?.ok) throw new Error(response?.error || 'Highlight delete failed');
-      }
-      setItems((current) => current.filter((candidate) => candidate.id !== item.id));
-    } catch (deleteError) {
-      console.error('[SavedLibrary] Failed to delete item:', deleteError);
-      setTransferNotice({
-        text: item.kind === 'highlight' ? t('highlightDeleteFailed') : t('pm_starred_load_error'),
-        error: true,
-      });
-    }
-  };
-
-  const formatDate = (timestamp: number): string =>
-    new Intl.DateTimeFormat(language.replace('_', '-'), {
-      dateStyle: 'medium',
-      timeStyle: 'short',
-    }).format(timestamp);
-
-  const emptyText = error
-    ? t('pm_starred_load_error')
-    : query.trim().length > 0
-      ? t('pm_starred_no_results')
-      : filter === 'highlights'
-        ? t('savedLibraryNoHighlights')
-        : filter === 'starred'
-          ? t('noStarredMessages')
-          : t('savedLibraryEmpty');
+  const emptyText = t(error ? 'pm_starred_load_error' : savedLibraryEmptyKey(filter, query));
 
   return (
     <div className="bg-background text-foreground flex h-[600px] w-[360px] flex-col">
@@ -278,6 +220,19 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
           <h1 className="truncate text-[15px] leading-none font-semibold tracking-[-0.01em]">
             {t('starredHistory')}
           </h1>
+          <button
+            type="button"
+            aria-label={t('savedLibraryOpenFull')}
+            title={t('savedLibraryOpenFull')}
+            className="text-muted-foreground hover:text-foreground focus-visible:ring-ring ms-auto rounded-md p-1.5 focus-visible:ring-2"
+            onClick={() =>
+              void openLibraryPage().catch(() =>
+                setTransferNotice({ text: t('savedLibraryOpenFailed'), error: true }),
+              )
+            }
+          >
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+          </button>
           <button
             type="button"
             onClick={onClose}
@@ -294,7 +249,7 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
           <input
             type="search"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => setSelection({ query: event.target.value })}
             placeholder={t('savedLibrarySearchPlaceholder')}
             aria-label={t('savedLibrarySearchPlaceholder')}
             className="placeholder:text-muted-foreground/80 h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
@@ -304,11 +259,11 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
         <div
           className="border-border/60 mt-1.5 grid grid-cols-3 border-b"
           role="group"
-          aria-label={t('starredHistory')}
+          aria-label={t('savedLibraryTypeFilter')}
         >
           {(
             [
-              ['all', t('savedLibraryAll')],
+              [ALL_FILTER, t('savedLibraryAll')],
               ['starred', t('savedLibraryStars')],
               ['highlights', t('savedLibraryHighlights')],
             ] as const
@@ -323,7 +278,7 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
                   : 'text-muted-foreground hover:text-foreground/80',
               )}
               aria-pressed={filter === value}
-              onClick={() => setFilter(value)}
+              onClick={() => setSelection({ kind: value })}
             >
               <span className="truncate">{label}</span>
               {!loading && (
@@ -394,16 +349,21 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
             }}
           />
         </div>
-        {transferNotice && (
+        {error && (
+          <p className="text-destructive mt-1 pb-2.5 text-xs" role="alert">
+            {t('pm_starred_load_error')}
+          </p>
+        )}
+        {shownNotice && (
           <p
             className={cn(
               'mt-1 pb-2.5 text-xs',
-              transferNotice.error ? 'text-destructive' : 'text-muted-foreground',
+              shownNotice.error ? 'text-destructive' : 'text-muted-foreground',
             )}
-            role={transferNotice.error ? 'alert' : 'status'}
+            role={shownNotice.error ? 'alert' : 'status'}
             aria-live="polite"
           >
-            {transferNotice.text}
+            {shownNotice.text}
           </p>
         )}
       </header>
@@ -424,69 +384,24 @@ export function StarredHistory({ onClose, sourceTabId }: StarredHistoryProps) {
             <p className="text-muted-foreground text-sm">{emptyText}</p>
             {error && (
               <Button variant="outline" size="sm" onClick={() => void loadSavedItems()}>
-                {t('usageStatusRefresh')}
+                {t('savedLibraryRefresh')}
               </Button>
             )}
           </div>
         ) : (
           <div className="space-y-1.5">
             {visibleItems.map((item) => (
-              <Card
-                key={`${item.kind}:${item.id}`}
-                className="group hover:border-border/80 hover:bg-card active:bg-muted/45 focus-visible:ring-primary/20 relative cursor-pointer border-transparent bg-transparent p-3 shadow-none transition-all duration-200 focus-visible:ring-2 focus-visible:outline-none active:translate-y-px"
-                role="button"
-                tabIndex={0}
-                onClick={() => void openItem(item)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    void openItem(item);
-                  }
+              <SavedLibraryItemCard
+                key={savedLibraryItemKey(item)}
+                item={item}
+                t={t}
+                language={language}
+                onOpen={(saved) => void openItem(saved)}
+                onDelete={(saved) => {
+                  setTransferNotice(null);
+                  void deleteItem(saved);
                 }}
-              >
-                <button
-                  type="button"
-                  onClick={(event) => void deleteItem(item, event)}
-                  className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive absolute top-2 right-2 rounded-md p-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100"
-                  title={item.kind === 'starred' ? t('removeFromStarred') : t('pm_delete')}
-                  aria-label={item.kind === 'starred' ? t('removeFromStarred') : t('pm_delete')}
-                >
-                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                </button>
-
-                <div className="flex items-start gap-2.5 pr-6">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center">
-                    {item.kind === 'starred' ? (
-                      <Star className="text-primary h-4 w-4 fill-current" aria-hidden="true" />
-                    ) : (
-                      <span
-                        className="h-3.5 w-3.5 rounded-sm"
-                        style={{ backgroundColor: getHighlightColorHex(item.color ?? 'yellow') }}
-                        aria-hidden="true"
-                      />
-                    )}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="line-clamp-2 text-sm leading-snug font-medium" dir="auto">
-                      {item.content}
-                    </p>
-                    {item.note && (
-                      <p className="text-muted-foreground mt-1 line-clamp-2 text-xs" dir="auto">
-                        {item.note}
-                      </p>
-                    )}
-                    <div className="text-muted-foreground mt-2 flex items-center gap-2 text-[11px]">
-                      <span className="truncate">
-                        {item.conversationTitle || t('pm_starred_untitled')}
-                      </span>
-                      <span aria-hidden="true">·</span>
-                      <time className="shrink-0" dateTime={new Date(item.savedAt).toISOString()}>
-                        {formatDate(item.savedAt)}
-                      </time>
-                    </div>
-                  </div>
-                </div>
-              </Card>
+              />
             ))}
           </div>
         )}

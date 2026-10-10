@@ -3,6 +3,8 @@
  * There is no image count cap: each image becomes a Blob part as soon as it
  * arrives, so only the fetches in flight sit in the JS heap. A single image is
  * still capped inside `fetchBoundedExportImage`.
+ * Page-origin temp files expose conversations to page scripts and other accounts;
+ * larger exports need extension-owned packaging with download completion tracking.
  */
 import { MarkdownFormatter } from './MarkdownFormatter';
 import {

@@ -1,0 +1,110 @@
+import { afterEach, expect, it, vi } from 'vitest';
+
+import { createStarStore } from '@/features/savedLibrary/starStore';
+
+import { GoogleDriveSyncService } from '../GoogleDriveSyncService';
+
+const native = vi.hoisted(() => vi.fn());
+vi.mock('webextension-polyfill', () => ({ default: { runtime: { sendNativeMessage: native } } }));
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
+  native.mockReset();
+});
+
+it('an upload started during a provider switch writes nothing to the new provider', async () => {
+  vi.stubEnv('VOYAGER_BUILD_TARGET', 'safari');
+  let clearStarted!: () => void;
+  const clearing = new Promise<void>((resolve) => {
+    clearStarted = resolve;
+  });
+  let releaseClear!: () => void;
+  const heldClear = new Promise<void>((resolve) => {
+    releaseClear = resolve;
+  });
+  let tokenStarted!: () => void;
+  const authenticating = new Promise<void>((resolve) => {
+    tokenStarted = resolve;
+  });
+  let releaseToken!: () => void;
+  const heldToken = new Promise<void>((resolve) => {
+    releaseToken = resolve;
+  });
+
+  const values: Record<string, unknown> = {};
+  const area = {
+    get: vi.fn(async () => structuredClone(values)),
+    set: vi.fn(async (items: Record<string, unknown>) => {
+      Object.assign(values, structuredClone(items));
+    }),
+    remove: vi.fn(async () => {
+      clearStarted();
+      await heldClear;
+    }),
+  };
+  vi.stubGlobal('chrome', { storage: { local: area } });
+  const remote = new Map<string, unknown>();
+  const writes: string[] = [];
+  native.mockImplementation(async (_app: string, message: Record<string, unknown>) => {
+    if (message.action === 'googleDriveGetSession') {
+      tokenStarted();
+      await heldToken;
+      return { success: true, data: { signedIn: true } };
+    }
+    const fileName = String(message.fileName);
+    if (message.action === 'iCloudReadFile') {
+      return {
+        success: true,
+        data: { found: remote.has(fileName), json: JSON.stringify(remote.get(fileName)) },
+      };
+    }
+    if (message.action === 'iCloudWriteFile') {
+      writes.push(fileName);
+      remote.set(fileName, JSON.parse(String(message.json)));
+      return { success: true, data: { saved: true } };
+    }
+    throw new Error(`Unexpected action ${message.action}`);
+  });
+
+  const service = new GoogleDriveSyncService();
+  await service.getState();
+  const store = createStarStore(area);
+  await store.add({
+    conversationId: 'gemini:conv:abc',
+    conversationUrl: 'https://gemini.google.com/app/abc',
+    turnId: 's-one',
+    content: 'preview',
+    text: 'Private full prompt',
+    starredAt: 50,
+  });
+  const change = service.setProvider('icloud');
+  await clearing;
+  const transfer = service.upload(
+    { folders: [], folderContents: {} },
+    [],
+    { messages: {} },
+    true,
+    'gemini',
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    store,
+  );
+  await authenticating;
+  releaseClear();
+  await change;
+  releaseToken();
+
+  expect(await transfer).toBe(false);
+  expect(writes).toEqual([]);
+  expect(remote.size).toBe(0);
+  expect(await service.getState()).toMatchObject({
+    provider: 'icloud',
+    error: 'Cloud session changed during transfer',
+  });
+  expect((await store.getAll()).messages['gemini:conv:abc'][0].text).toBe('Private full prompt');
+});

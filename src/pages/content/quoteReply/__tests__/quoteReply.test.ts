@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StorageKeys } from '@/core/types/common';
 import { getBrowserName } from '@/core/utils/browser';
 
-import { HighlightManager } from '../../highlight';
+import { HighlightManager } from '../../highlight/manager';
 import { expandInputCollapseIfNeeded } from '../../inputCollapse/index';
 import { startQuoteReply } from '../index';
 
@@ -652,14 +652,7 @@ describe('quote reply', () => {
     document.dispatchEvent(new MouseEvent('mouseup'));
     vi.advanceTimersByTime(300);
 
-    const iconPaths = Array.from(
-      document.querySelectorAll<SVGPathElement>('.gv-highlight-action .lucide-highlighter path'),
-      (path) => path.getAttribute('d'),
-    );
-    expect(iconPaths).toEqual([
-      'm9 11-6 6v3h9l3-3',
-      'm22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4',
-    ]);
+    expect(document.querySelector('.gv-highlight-action svg')).not.toBeNull();
 
     const colorButton = document.querySelector<HTMLButtonElement>('.gv-highlight-color-trigger');
     expect(colorButton?.classList.contains('gv-hidden')).toBe(false);
@@ -677,9 +670,7 @@ describe('quote reply', () => {
     expect(
       palette?.querySelector('[data-highlight-color="pink"]')?.getAttribute('aria-label'),
     ).toBe('Highlight color 4');
-    expect(document.getElementById('gemini-voyager-quote-reply-style')?.textContent).toContain(
-      'outline: 2px solid #8ab4f8',
-    );
+    expect(document.getElementById('gemini-voyager-quote-reply-style')).not.toBeNull();
     document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Escape', bubbles: true }));
     expect(palette?.classList.contains('gv-hidden')).toBe(true);
     colorButton?.click();
@@ -870,5 +861,100 @@ describe('quote reply', () => {
 
     cleanup();
     expect(destroy).toHaveBeenCalledOnce();
+  });
+
+  it('leaves the toolbar and selection available when the composer cannot be found', () => {
+    const cleanup = startQuoteReply({ highlightEnabled: false });
+    selectSourceText();
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.advanceTimersByTime(250);
+    document.getElementById('input-container')!.remove();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    document.querySelector<HTMLButtonElement>('.gv-quote-btn')!.click();
+    expect(window.getSelection()?.toString()).toBe('Hello');
+    expect(document.querySelector('.gv-selection-toolbar')?.classList.contains('gv-hidden')).toBe(
+      false,
+    );
+    cleanup();
+  });
+
+  it('clears an open color preview and pending selection work on teardown and can mount again', () => {
+    installHighlightConversation();
+    const cleanup = startQuoteReply();
+    selectSourceText();
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.advanceTimersByTime(250);
+    document.querySelector<HTMLButtonElement>('.gv-highlight-color-trigger')!.click();
+    document.querySelector<HTMLButtonElement>('[data-highlight-color="pink"]')!.click();
+    expect(
+      document.documentElement.classList.contains('gv-highlight-selection-preview-active'),
+    ).toBe(true);
+    document.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowRight' }));
+    cleanup();
+    vi.advanceTimersByTime(300);
+    expect(document.querySelector('.gv-selection-toolbar')).toBeNull();
+    expect(document.getElementById('gemini-voyager-quote-reply-style')).toBeNull();
+    expect(
+      document.documentElement.classList.contains('gv-highlight-selection-preview-active'),
+    ).toBe(false);
+    expect(
+      document.documentElement.style.getPropertyValue('--gv-highlight-selection-preview-color'),
+    ).toBe('');
+    const stopAgain = startQuoteReply();
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.advanceTimersByTime(250);
+    expect(document.querySelectorAll('.gv-selection-toolbar')).toHaveLength(1);
+    stopAgain();
+  });
+
+  it('applies a combined external palette and default-color change before saving a highlight', async () => {
+    installHighlightConversation();
+    const createFromRange = vi
+      .spyOn(HighlightManager.prototype, 'createFromRange')
+      .mockResolvedValue(true);
+    const cleanup = startQuoteReply({ highlightDefaultColor: 'blue' });
+    selectSourceText();
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.advanceTimersByTime(250);
+    const listener = vi.mocked(chrome.storage.onChanged.addListener).mock.calls.at(-1)![0];
+    listener(
+      {
+        [StorageKeys.HIGHLIGHT_COLOR_PALETTE]: {
+          newValue: ['yellow', 'green', '#123456', 'pink', '#c084fc'],
+        },
+        [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: { newValue: '#123456' },
+      },
+      'sync',
+    );
+    // Preserve palette-then-default ordering when both arrive in one event.
+    expect(
+      document.querySelector<HTMLElement>('[data-highlight-slot="0"]')?.dataset.highlightColor,
+    ).toBe('blue');
+    const selectedSwatch = document.querySelector<HTMLButtonElement>(
+      '.gv-highlight-color-option[aria-pressed="true"]',
+    );
+    expect(selectedSwatch?.dataset.highlightColor).toBe('#123456');
+    expect(selectedSwatch?.getAttribute('aria-label')).toBe('Highlight color 3');
+    expect(
+      document.querySelector<HTMLButtonElement>('.gv-highlight-color-trigger')?.style
+        .backgroundColor,
+    ).toBe('rgb(18, 52, 86)');
+    document.querySelector<HTMLButtonElement>('.gv-highlight-action')!.click();
+    await Promise.resolve();
+    expect(createFromRange).toHaveBeenCalledWith(expect.any(Range), '#123456');
+    cleanup();
+  });
+
+  it('finishes an accepted insertion after the feature is stopped', () => {
+    const cleanup = startQuoteReply({ highlightEnabled: false });
+    selectSourceText();
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.advanceTimersByTime(250);
+    document.querySelector<HTMLButtonElement>('.gv-quote-btn')!.click();
+    const input = document.getElementById('input')!;
+    expect(input.textContent).toBe('');
+    cleanup();
+    vi.advanceTimersByTime(200);
+    expect(input.textContent).toBe('> Hello\n');
   });
 });

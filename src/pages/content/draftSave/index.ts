@@ -21,6 +21,7 @@ import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContex
 import { stripInstructionBlock } from '../folderProject/instructionBlock';
 import { setInputText } from '../utils/inputHelper';
 import { watchRouteChanges } from '../utils/routeWatcher';
+import { DraftStore } from './draftStore';
 
 // ============================================================================
 // Constants
@@ -28,17 +29,8 @@ import { watchRouteChanges } from '../utils/routeWatcher';
 
 const LOG_PREFIX = '[DraftSave]';
 
-/** Storage key prefix for draft entries in chrome.storage.local */
-const DRAFT_STORAGE_PREFIX = 'gvDraft_';
-
-/** Maximum number of drafts to keep (oldest are pruned) */
-const MAX_DRAFTS = 5;
-
 /** Debounce delay for saving drafts (ms) */
 const SAVE_DEBOUNCE_MS = 1000;
-
-/** Only run pruneOldDrafts every N saves to avoid reading all storage too often */
-const PRUNE_EVERY_N_SAVES = 10;
 
 /** Delay before restoring a draft to ensure input is ready (ms) */
 const RESTORE_DELAY_MS = 500;
@@ -65,6 +57,7 @@ const INPUT_SELECTORS = [
   '.input-area textarea',
   'textarea[placeholder*="Ask"]',
 ] as const;
+const INPUT_SELECTOR_LIST = INPUT_SELECTORS.join(', ');
 
 // ============================================================================
 // State
@@ -72,12 +65,20 @@ const INPUT_SELECTORS = [
 
 let isEnabled = false;
 let observer: MutationObserver | null = null;
+let inputLookupFrame: number | null = null;
+let composerFocusListener: ((event: Event) => void) | null = null;
+/** Bumped on enable and disable so restores started earlier stop at their next step. */
+let restoreGeneration = 0;
+/** Bumped by every toggle event so a slower startup read cannot override it. */
+let settingsChangeCount = 0;
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 let sendCheckTimer: ReturnType<typeof setInterval> | null = null;
 let stopRouteWatcher: (() => void) | null = null;
 let currentPath = '';
 let lastSavedContent = '';
-let saveCount = 0;
+const drafts = new DraftStore((path, content) => {
+  if (path === currentPath) lastSavedContent = content;
+});
 let storageListener:
   | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
   | null = null;
@@ -100,13 +101,6 @@ let sendIntentListener: ((event: Event) => void) | null = null;
  */
 function getConversationPath(): string {
   return window.location.pathname;
-}
-
-/**
- * Get the storage key for a conversation path.
- */
-function getDraftStorageKey(path: string): string {
-  return `${DRAFT_STORAGE_PREFIX}${path}`;
 }
 
 /**
@@ -156,113 +150,6 @@ function isInputEffectivelyEmpty(input: HTMLElement): boolean {
 }
 
 // ============================================================================
-// Draft Storage Operations
-// ============================================================================
-
-/**
- * Save a draft for the current conversation.
- */
-function saveDraft(path: string, content: string): void {
-  const sanitizedContent = stripInstructionBlock(content).trim();
-
-  if (!sanitizedContent) {
-    // Remove draft if content is empty
-    removeDraft(path);
-    return;
-  }
-
-  const key = getDraftStorageKey(path);
-  const data = {
-    content: sanitizedContent,
-    timestamp: Date.now(),
-    path,
-  };
-
-  try {
-    chrome.storage?.local?.set({ [key]: data }, () => {
-      if (chrome.runtime.lastError) {
-        console.warn(LOG_PREFIX, 'Failed to save draft:', chrome.runtime.lastError.message);
-        return;
-      }
-      if (path === currentPath) lastSavedContent = sanitizedContent;
-      // Prune old drafts periodically (not every save)
-      saveCount++;
-      if (saveCount % PRUNE_EVERY_N_SAVES === 0) {
-        pruneOldDrafts();
-      }
-    });
-  } catch (error) {
-    if (isExtensionContextInvalidatedError(error)) return;
-    console.warn(LOG_PREFIX, 'Failed to save draft:', error);
-  }
-}
-
-/**
- * Remove a draft for a given path.
- */
-function removeDraft(path: string): void {
-  const key = getDraftStorageKey(path);
-  try {
-    chrome.storage?.local?.remove(key);
-    if (path === currentPath) lastSavedContent = '';
-  } catch (error) {
-    if (isExtensionContextInvalidatedError(error)) return;
-    console.warn(LOG_PREFIX, 'Failed to remove draft:', error);
-  }
-}
-
-/**
- * Load a draft for a given path.
- */
-async function loadDraft(path: string): Promise<string | null> {
-  const key = getDraftStorageKey(path);
-  return new Promise((resolve) => {
-    try {
-      chrome.storage?.local?.get(key, (result) => {
-        const data = result?.[key] as { content?: string } | undefined;
-        resolve(data?.content ?? null);
-      });
-    } catch (error) {
-      if (isExtensionContextInvalidatedError(error)) {
-        resolve(null);
-        return;
-      }
-      console.warn(LOG_PREFIX, 'Failed to load draft:', error);
-      resolve(null);
-    }
-  });
-}
-
-/**
- * Prune old drafts to keep storage usage bounded.
- */
-function pruneOldDrafts(): void {
-  try {
-    chrome.storage?.local?.get(null, (items) => {
-      if (chrome.runtime.lastError) return;
-
-      const draftEntries: { key: string; timestamp: number }[] = [];
-      for (const [key, value] of Object.entries(items)) {
-        if (key.startsWith(DRAFT_STORAGE_PREFIX) && value && typeof value === 'object') {
-          const entry = value as { timestamp?: number };
-          draftEntries.push({ key, timestamp: entry.timestamp ?? 0 });
-        }
-      }
-
-      if (draftEntries.length <= MAX_DRAFTS) return;
-
-      // Sort by timestamp ascending (oldest first)
-      draftEntries.sort((a, b) => a.timestamp - b.timestamp);
-
-      const toRemove = draftEntries.slice(0, draftEntries.length - MAX_DRAFTS).map((e) => e.key);
-      chrome.storage?.local?.remove(toRemove);
-    });
-  } catch (error) {
-    if (isExtensionContextInvalidatedError(error)) return;
-  }
-}
-
-// ============================================================================
 // Input Monitoring
 // ============================================================================
 
@@ -279,7 +166,7 @@ function flushPendingSave(): void {
 
   if (pending.path === currentPath && pending.content === lastSavedContent) return;
 
-  saveDraft(pending.path, pending.content);
+  drafts.save(pending.path, pending.content);
 }
 
 function discardPendingSave(path: string): void {
@@ -313,7 +200,7 @@ function handleInputChange(input: HTMLElement): void {
   if (!content && pendingSendPath) {
     const sentPath = pendingSendPath;
     discardPendingSave(sentPath);
-    removeDraft(sentPath);
+    drafts.remove(sentPath);
     clearSendIntent();
     return;
   }
@@ -378,13 +265,16 @@ function startSendDetection(): void {
 
     const input = findChatInput();
     if (!input) return;
+    // A connected input is not necessarily the active composer: Gemini can
+    // hide it and reveal another mounted one without adding nodes.
+    attachInputListener(input);
 
     const empty = isInputEffectivelyEmpty(input);
 
     if (wasNonEmpty && empty) {
       // Input went from non-empty to empty — message was likely sent
       discardPendingSave(observedPath);
-      removeDraft(observedPath);
+      drafts.remove(observedPath);
       clearSendIntent();
       wasNonEmpty = false;
     } else if (!empty) {
@@ -443,11 +333,16 @@ function stopSendDetection(): void {
 /**
  * Attempt to restore a draft for the current conversation.
  */
-async function restoreDraft(): Promise<void> {
+async function restoreDraft(generation = restoreGeneration): Promise<void> {
+  // Every continuation re-checks this: a restore that outlives disable or
+  // cleanup must not rebind the input or write a draft into it.
+  const isCurrent = () => isEnabled && generation === restoreGeneration;
+  if (!isCurrent()) return;
   const path = getConversationPath();
   if (hasRestoredForCurrentPath && path === currentPath) return;
 
-  const savedContent = await loadDraft(path);
+  const savedContent = await drafts.load(path);
+  if (!isCurrent()) return;
   if (path !== currentPath || path !== getConversationPath()) return;
 
   const content = savedContent ? stripInstructionBlock(savedContent).trim() : null;
@@ -458,9 +353,11 @@ async function restoreDraft(): Promise<void> {
 
   // Wait for the input to be available
   const tryRestore = (attempts: number) => {
+    if (!isCurrent()) return;
     if (path !== currentPath || path !== getConversationPath()) return;
 
     const input = findChatInput();
+    if (input) attachInputListener(input);
     if (input && isInputEffectivelyEmpty(input)) {
       setInputText(input, content);
       lastSavedContent = content;
@@ -502,7 +399,7 @@ function startUrlWatcher(): void {
         // Sending a first message navigates /app to /app/<id>. Do not flush the
         // still-debounced, already-sent text back into the old draft key.
         discardPendingSave(previousPath);
-        removeDraft(previousPath);
+        drafts.remove(previousPath);
         clearSendIntent();
       } else {
         // Sidebar navigation should preserve the source draft. The pending
@@ -515,7 +412,8 @@ function startUrlWatcher(): void {
       hasRestoredForCurrentPath = false;
 
       // Restore draft for the new page after a short delay
-      setTimeout(() => restoreDraft(), RESTORE_DELAY_MS);
+      const generation = restoreGeneration;
+      setTimeout(() => restoreDraft(generation), RESTORE_DELAY_MS);
     }
   });
 }
@@ -533,22 +431,59 @@ function stopUrlWatcher(): void {
 // ============================================================================
 
 /**
- * Setup observer to watch for dynamically added input elements.
+ * Whether a body mutation batch can change which chat input to listen to.
+ * Selector and identity checks only: finding the input reads layout, and
+ * Gemini mutates `body` for every streamed chunk and sidebar row (#1040).
  */
-function setupObserver(): void {
-  if (observer) return;
+function mutationsMayReplaceChatInput(mutations: readonly MutationRecord[]): boolean {
+  if (!attachedInput?.isConnected) return true;
+  for (const mutation of mutations) {
+    for (const node of Array.from(mutation.addedNodes)) {
+      if (!(node instanceof Element)) continue;
+      if (node.matches(INPUT_SELECTOR_LIST) || node.querySelector(INPUT_SELECTOR_LIST)) return true;
+    }
+  }
+  return false;
+}
 
-  observer = new MutationObserver(() => {
+function scheduleInputLookup(): void {
+  if (inputLookupFrame !== null) return;
+  inputLookupFrame = window.requestAnimationFrame(() => {
+    inputLookupFrame = null;
     const input = findChatInput();
     if (input) {
       attachInputListener(input);
     }
+  });
+}
+
+/**
+ * Setup observer to watch for dynamically added input elements, and a focus
+ * listener for a mounted composer becoming the active one.
+ */
+function setupObserver(): void {
+  if (observer) return;
+
+  observer = new MutationObserver((mutations) => {
+    if (inputLookupFrame !== null || !mutationsMayReplaceChatInput(mutations)) return;
+    scheduleInputLookup();
   });
 
   observer.observe(document.body, {
     childList: true,
     subtree: true,
   });
+
+  composerFocusListener = (event) => {
+    const target = event.target;
+    if (target === attachedInput || !(target instanceof Element)) return;
+    if (!target.matches(INPUT_SELECTOR_LIST)) return;
+    // Rebind before returning: Prompt Manager focuses the composer and
+    // dispatches `input` in the same tick, before any frame callback runs.
+    const input = findChatInput();
+    if (input) attachInputListener(input);
+  };
+  document.addEventListener('focusin', composerFocusListener, true);
 }
 
 /**
@@ -558,6 +493,14 @@ function disconnectObserver(): void {
   if (observer) {
     observer.disconnect();
     observer = null;
+  }
+  if (inputLookupFrame !== null) {
+    window.cancelAnimationFrame(inputLookupFrame);
+    inputLookupFrame = null;
+  }
+  if (composerFocusListener) {
+    document.removeEventListener('focusin', composerFocusListener, true);
+    composerFocusListener = null;
   }
 }
 
@@ -572,6 +515,7 @@ function enableFeature(): void {
   if (isEnabled) return;
 
   isEnabled = true;
+  restoreGeneration += 1;
   currentPath = getConversationPath();
   lastSavedContent = '';
   hasRestoredForCurrentPath = false;
@@ -598,6 +542,7 @@ function disableFeature(): void {
   if (!isEnabled) return;
 
   isEnabled = false;
+  restoreGeneration += 1;
 
   if (saveTimer) {
     clearTimeout(saveTimer);
@@ -651,6 +596,7 @@ function setupStorageListener(): void {
     if (areaName !== 'sync') return;
     if (!(StorageKeys.DRAFT_AUTO_SAVE in changes)) return;
 
+    settingsChangeCount += 1;
     const newValue = changes[StorageKeys.DRAFT_AUTO_SAVE].newValue === true;
 
     if (newValue && !isEnabled) {
@@ -695,8 +641,9 @@ function cleanup(): void {
 export async function startDraftSave(): Promise<() => void> {
   setupStorageListener();
 
+  const changesBeforeRead = settingsChangeCount;
   const initialEnabled = await loadSettings();
-  if (initialEnabled) {
+  if (initialEnabled && settingsChangeCount === changesBeforeRead) {
     enableFeature();
   }
 

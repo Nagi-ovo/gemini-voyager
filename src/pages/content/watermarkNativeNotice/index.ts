@@ -379,6 +379,7 @@ export interface WatermarkNativeNoticeOptions {
 
 /**
  * Start the one-time native-watermark notice. Returns a cleanup function.
+ * Safari supports watermark removal too; skipping it would hide the notice from eligible users.
  */
 export function startWatermarkNativeNotice(
   options: number | WatermarkNativeNoticeOptions = {},

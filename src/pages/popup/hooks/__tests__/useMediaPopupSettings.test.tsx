@@ -51,6 +51,14 @@ describe('media popup settings with their controls', () => {
 
   const input = (kind: string) => container.querySelector<HTMLInputElement>(`#watermark-${kind}`)!;
 
+  it('shows both watermark options off before and after loading an unset preference', () => {
+    expect(input('download').checked).toBe(false);
+    expect(input('preview').checked).toBe(false);
+    act(() => watermark.hydrateFromStorage({}));
+    expect(input('download').checked).toBe(false);
+    expect(input('preview').checked).toBe(false);
+  });
+
   it('hydrates legacy watermark preferences and gives either split key precedence', () => {
     act(() => watermark.hydrateFromStorage({ [StorageKeys.WATERMARK_REMOVER_ENABLED]: false }));
     expect(input('download').checked).toBe(false);
@@ -76,18 +84,20 @@ describe('media popup settings with their controls', () => {
     expect(write).not.toHaveBeenCalled();
   });
 
-  it('writes only the changed watermark flag and clears the legacy key for each toggle', () => {
+  it('writes both watermark flags when either is toggled, preserving the other choice', () => {
     act(() => input('download').click());
-    expect(watermark.values).toEqual({ download: false, preview: true });
+    expect(watermark.values).toEqual({ download: true, preview: false });
     expect(write).toHaveBeenLastCalledWith({
-      [StorageKeys.WATERMARK_DOWNLOAD_ENABLED]: false,
+      [StorageKeys.WATERMARK_DOWNLOAD_ENABLED]: true,
+      [StorageKeys.WATERMARK_PREVIEW_ENABLED]: false,
       [StorageKeys.WATERMARK_REMOVER_ENABLED]: null,
     });
 
     act(() => input('preview').click());
-    expect(watermark.values).toEqual({ download: false, preview: false });
+    expect(watermark.values).toEqual({ download: true, preview: true });
     expect(write).toHaveBeenLastCalledWith({
-      [StorageKeys.WATERMARK_PREVIEW_ENABLED]: false,
+      [StorageKeys.WATERMARK_DOWNLOAD_ENABLED]: true,
+      [StorageKeys.WATERMARK_PREVIEW_ENABLED]: true,
       [StorageKeys.WATERMARK_REMOVER_ENABLED]: null,
     });
     expect(write).toHaveBeenCalledTimes(2);

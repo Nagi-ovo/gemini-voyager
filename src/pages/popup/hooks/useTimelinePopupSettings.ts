@@ -56,7 +56,10 @@ export function useTimelinePopupSettings(
   }, []);
 
   const onChange = useCallback(
-    (patch: Partial<TimelineSettingsValues>) => {
+    (change: Partial<TimelineSettingsValues>) => {
+      // Levels have a shape only on the dots rail, so turning them on leaves compact or ruler.
+      const patch: Partial<TimelineSettingsValues> =
+        change.markerLevelEnabled === true ? { ...change, timelineStyle: 'dots' } : change;
       applySettingsPatch(setters, patch);
       const payload: Record<string, unknown> = {};
       if (patch.mode) payload.geminiTimelineScrollMode = patch.mode;

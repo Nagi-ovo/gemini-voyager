@@ -122,8 +122,7 @@ describe('promptTemplate', () => {
   it('is built without a RegExp lookbehind so Safari 15.4 can evaluate it', () => {
     // Safari gained lookbehind only in 16.4; vite.config.safari.ts declares a
     // 15.4 floor. A lookbehind in this module's top-level `new RegExp` throws
-    // at content-script evaluation and takes every Voyager feature down with
-    // it, and `verify-safari-resources.mjs` only scans the export module.
+    // at content-script evaluation and disables every Voyager feature.
     const source = readFileSync(
       resolve(process.cwd(), 'src/features/prompt/model/promptTemplate.ts'),
       'utf-8',

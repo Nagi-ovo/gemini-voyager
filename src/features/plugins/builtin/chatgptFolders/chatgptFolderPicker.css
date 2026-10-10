@@ -1,0 +1,150 @@
+/* The ChatGPT "Move to folder" picker, inside its own shadow root. Host rules
+ * are `!important` so no page rule on the host element can reach in. */
+:host {
+  --gv-picker-surface: #ffffff;
+  --gv-picker-text: #1f1f1f;
+  --gv-picker-muted: #5f6368;
+  --gv-picker-outline: rgba(60, 64, 67, 0.16);
+  --gv-picker-hover: rgba(60, 64, 67, 0.08);
+  --gv-picker-accent: #1a73e8;
+  all: initial !important;
+  position: fixed !important;
+  inset: 0 !important;
+  /* A modal one below shared feedback, so a late import result still shows over it. */
+  z-index: 2147483646 !important;
+  font-family: inherit !important;
+}
+
+:host([data-gv-scheme='dark']) {
+  --gv-picker-surface: #262626;
+  --gv-picker-text: #ececec;
+  --gv-picker-muted: #b4b4b4;
+  --gv-picker-outline: rgba(255, 255, 255, 0.14);
+  --gv-picker-hover: rgba(255, 255, 255, 0.08);
+  --gv-picker-accent: #8ab4f8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: 14px;
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(380px, calc(100vw - 32px));
+  max-height: min(80vh, 520px);
+  background: var(--gv-picker-surface);
+  color: var(--gv-picker-text);
+  border: 1px solid var(--gv-picker-outline);
+  border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.24);
+  overflow: hidden;
+}
+
+.title {
+  padding: 16px 18px 10px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.search {
+  margin: 0 12px 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--gv-picker-outline);
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+
+.search:focus {
+  border-color: var(--gv-picker-accent);
+}
+
+.list {
+  flex: 1;
+  min-height: 120px;
+  overflow-y: auto;
+  padding: 4px 8px;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding-block: 8px;
+  padding-inline-end: 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.item:hover,
+.item:focus-visible {
+  background: var(--gv-picker-hover);
+  outline: none;
+}
+
+.name,
+.path {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.path,
+.empty {
+  color: var(--gv-picker-muted);
+  font-size: 12px;
+}
+
+.empty {
+  padding: 12px;
+}
+
+.cancel {
+  margin: 6px 12px 12px;
+  align-self: flex-end;
+  padding: 8px 14px;
+  border: 1px solid var(--gv-picker-outline);
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.cancel:hover,
+.cancel:focus-visible {
+  background: var(--gv-picker-hover);
+  outline: none;
+}
+
+:host([data-gv-rtl]) .dialog {
+  direction: rtl;
+}

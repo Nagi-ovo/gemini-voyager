@@ -3,12 +3,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StorageKeys } from '@/core/types/common';
 import type { FolderData } from '@/core/types/folder';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
+import { confirmDriver } from '@/tests/confirmDriver';
+import { toastDriver } from '@/tests/toastDriver';
 import { getTranslationSyncUnsafe as t } from '@/utils/i18n';
 
 import { historyTimestampStore } from '../../timestamp/historyTimestamps';
 import { FolderManager } from '../manager';
 import * as storageAdapters from '../storage/FolderStorageAdapter';
 import { mountSidebar } from './sidebarRuntimeHarness';
+import { sidebarTree } from './sidebarTreeDriver';
+
+/** The sidebar's folder tree, as the user sees it. */
+const tree = () => sidebarTree(document.querySelector('.gv-folder-container'));
 
 vi.mock('webextension-polyfill', () => ({ default: chrome }));
 
@@ -66,7 +72,6 @@ describe('FolderManager import persistence through the sidebar UI', () => {
     );
     vi.mocked(chrome.storage.local.set).mockResolvedValue();
     vi.mocked(chrome.storage.sync.set).mockResolvedValue();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
     original = folderData('existing');
     persisted = structuredClone(original);
     adapter = {
@@ -83,9 +88,7 @@ describe('FolderManager import persistence through the sidebar UI', () => {
     manager = new FolderManager();
     await manager.init();
     expect(manager.getFolders()).toEqual(original.folders);
-    expect(document.querySelector('.gv-folder-list')?.textContent).toContain(
-      'existing conversation',
-    );
+    expect(tree().text()).toContain('existing conversation');
     expect(adapter.saveData).not.toHaveBeenCalled();
   });
 
@@ -116,6 +119,7 @@ describe('FolderManager import persistence through the sidebar UI', () => {
       .mockResolvedValueOnce(false); // The store retries a failed adapter write once.
 
     submit.click();
+    if (strategy === 'overwrite') confirmDriver.answer(t('folder_import_overwrite'));
     await vi.waitFor(() => expect(adapter.saveData).toHaveBeenCalledTimes(1));
     expect.soft(manager.getFolders()).toEqual(original.folders);
     expect(persisted).toEqual(original);
@@ -125,10 +129,9 @@ describe('FolderManager import persistence through the sidebar UI', () => {
     expect(adapter.saveData).toHaveBeenCalledTimes(2);
     expect(input.isConnected).toBe(true);
     expect(input.value).toBe(text);
-    expect(document.querySelector('.gv-notification-error')?.textContent).toBe(
-      t('folder_save_error'),
-    );
-    expect(document.querySelector('.gv-notification-success')).toBeNull();
+    expect(toastDriver.all().map(({ message, tone }) => ({ message, tone }))).toEqual([
+      { message: t('folder_save_error'), tone: 'error' },
+    ]);
     return { dialog, submit };
   }
 
@@ -140,9 +143,8 @@ describe('FolderManager import persistence through the sidebar UI', () => {
       expect(dialog.isConnected).toBe(false);
       expect.soft(manager.getFolders()).toEqual(original.folders);
       document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')!.click();
-      const input = document.querySelector<HTMLInputElement>('.gv-folder-name-input')!;
-      input.value = 'Created after cancellation';
-      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      tree().typeName('Created after cancellation');
+      tree().pressInInput('Enter');
       await vi.waitFor(() => expect(adapter.saveData).toHaveBeenCalledTimes(3));
 
       expect(persisted.folders.map((folder) => folder.name)).toEqual([
@@ -152,9 +154,7 @@ describe('FolderManager import persistence through the sidebar UI', () => {
       expect(persisted.folderContents.existing).toEqual(original.folderContents.existing);
       expect(persisted.folderContents.imported).toBeUndefined();
       expect(manager.getFolders()).toEqual(persisted.folders);
-      expect(document.querySelector('.gv-folder-list')?.textContent).toContain(
-        'existing conversation',
-      );
+      expect(tree().text()).toContain('existing conversation');
     },
   );
 
@@ -170,8 +170,14 @@ describe('FolderManager import persistence through the sidebar UI', () => {
       folderData('imported').folderContents.imported,
     );
     expect(manager.getFolders()).toEqual(persisted.folders);
-    expect(document.querySelector('.gv-notification-success')?.textContent).toBe(
-      t('folder_import_success').replace('{folders}', '1').replace('{conversations}', '1'),
-    );
+    // The result takes the failure notice's place.
+    expect(toastDriver.all().map(({ message, tone }) => ({ message, tone }))).toEqual([
+      {
+        message: t('folder_import_success')
+          .replace('{folders}', '1')
+          .replace('{conversations}', '1'),
+        tone: 'success',
+      },
+    ]);
   });
 });

@@ -25,6 +25,7 @@ function fixturePayload(): VoyagerDiagnosticsPayload {
       activeSite: 'claude',
     },
     pluginEngine: { version: PLUGIN_ENGINE_VERSION },
+    nativeHealth: [],
     plugins: { availableCount: 0, items: [], redactedCount: 0 },
     privacy: { redactedPluginSettingCount: 0, omittedData: [] },
   };
@@ -76,6 +77,7 @@ describe('DiagnosticsExportService', () => {
         activeSite: 'claude',
       },
       pluginEngine: { version: PLUGIN_ENGINE_VERSION },
+      nativeHealth: [],
       plugins: {
         availableCount: 2,
         items: [
@@ -112,6 +114,51 @@ describe('DiagnosticsExportService', () => {
     });
     expect(serializeVoyagerDiagnostics(payload)).not.toContain('must-not-export');
     expect(serializeVoyagerDiagnostics(payload)).not.toContain('private-conversation-id');
+  });
+
+  it('includes Gemini health entries as closed identifiers only', () => {
+    const payload = buildVoyagerDiagnostics({
+      activeUrl: 'https://gemini.google.com/u/1/app/private-conversation-id',
+      extensionVersion: '1.6.0',
+      nativeHealth: [
+        {
+          feature: 'timeline',
+          anchor: 'turn.user',
+          status: 'broken',
+          route: 'conversation',
+          firstSeenAt: Date.UTC(2026, 6, 29, 11, 59),
+          lastSeenAt: Date.UTC(2026, 6, 29, 12, 0),
+          extensionVersion: '1.6.0',
+        },
+        // Out-of-vocabulary values never reach the report.
+        {
+          feature: 'timeline',
+          anchor: 'https://gemini.google.com/app/private-conversation-id',
+          status: 'broken',
+          route: 'conversation',
+          firstSeenAt: 1,
+          lastSeenAt: 1,
+          extensionVersion: '1.6.0',
+        } as never,
+      ],
+    });
+
+    expect(payload.nativeHealth).toEqual([
+      {
+        feature: 'timeline',
+        anchor: 'turn.user',
+        status: 'broken',
+        route: 'conversation',
+        firstSeenAt: '2026-07-29T11:59:00.000Z',
+        lastSeenAt: '2026-07-29T12:00:00.000Z',
+        extensionVersion: '1.6.0',
+      },
+    ]);
+    // The Markdown users paste into the bug report carries the same entries.
+    const markdown = formatVoyagerDiagnosticsMarkdown(payload);
+    expect(markdown).toContain('"nativeHealth": [');
+    expect(markdown).toContain('"anchor": "turn.user"');
+    expect(markdown).not.toContain('private-conversation-id');
   });
 
   it('redacts sensitive declared values and unsafe plugin metadata', () => {

@@ -13,7 +13,7 @@ A simple guide for installing Voyager on Safari.
 
 ### 1. Download
 
-Get the latest `voyager-vX.Y.Z.dmg` from [GitHub Releases](https://github.com/Nagi-ovo/voyager/releases).
+Get the latest `voyager-vX.Y.Z.dmg` from [GitHub Releases](https://github.com/voyager-crew/voyager/releases).
 
 ### 2. Install
 
@@ -55,4 +55,4 @@ The active Swift files live inside `Voyager/`; no separate Swift setup is requir
 
 ---
 
-**Need help?** Open an issue on [GitHub](https://github.com/Nagi-ovo/voyager/issues)
+**Need help?** Open an issue on [GitHub](https://github.com/voyager-crew/voyager/issues)

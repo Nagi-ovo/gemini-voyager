@@ -107,3 +107,26 @@ describe('partitionPluginOriginPatterns', () => {
     });
   });
 });
+
+describe('native surfaces (Gemini, AI Studio)', () => {
+  const geminiAndClaude = mk([
+    'https://gemini.google.com/*',
+    'https://business.gemini.google/*',
+    'https://aistudio.google.com/*',
+    'https://claude.ai/*',
+  ]);
+
+  it('never registers or requests a native surface origin, which the manifest already injects', () => {
+    expect(pluginsToOriginPatterns([geminiAndClaude])).toEqual(['https://claude.ai/*']);
+    expect(pluginsToOriginPatterns([mk(['https://gemini.google.com/app/*'])])).toEqual([]);
+  });
+
+  it('needs no grant when enabled from a Gemini or AI Studio tab', () => {
+    expect(
+      pluginToOriginPatternsForActiveUrl(geminiAndClaude, 'https://gemini.google.com/app/1'),
+    ).toEqual([]);
+    expect(
+      pluginToOriginPatternsForActiveUrl(geminiAndClaude, 'https://aistudio.google.com/prompts'),
+    ).toEqual([]);
+  });
+});

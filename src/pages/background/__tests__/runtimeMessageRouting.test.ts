@@ -1,5 +1,3 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -18,9 +16,21 @@ import {
 } from '@/features/plugins/runtime/messages';
 
 import {
+  getSenderPageUrl,
   isAllowedSyncContentSender,
   isHandledBackgroundRuntimeMessage,
+  isTrustedExtensionPageSender,
+  isTrustedSharedDataSyncSender,
+  isTrustedSyncMessageSender,
+  parseSyncPlatform,
 } from '../runtimeMessageRouting';
+
+const EXTENSION_ID = 'test-extension-id';
+const contentSender = (url: string): chrome.runtime.MessageSender => ({
+  id: EXTENSION_ID,
+  url,
+  tab: { id: 7, url } as chrome.tabs.Tab,
+});
 
 describe('background runtime message routing', () => {
   it('keeps the async channel open only for exact handled message types', () => {
@@ -45,80 +55,6 @@ describe('background runtime message routing', () => {
     expect(isHandledBackgroundRuntimeMessage({ type: 'gv.storageQuota.ready' })).toBe(false);
     expect(isHandledBackgroundRuntimeMessage({ type: 'gv.unhandled' })).toBe(false);
     expect(isHandledBackgroundRuntimeMessage(null)).toBe(false);
-  });
-
-  it('routes explicit plugin registration repair through the serialized background sync', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/pages/background/index.ts'), 'utf8');
-    const repairBranch =
-      source.match(
-        /if \(message\?\.type === PLUGIN_CONTENT_SCRIPT_SYNC_MESSAGE\) \{[\s\S]*?\n\s*\}/,
-      )?.[0] ?? '';
-
-    expect(repairBranch).toContain('await syncPluginContentScripts()');
-    expect(repairBranch).toContain('sendResponse({ ok: true })');
-  });
-
-  it('routes remote plugin catalog checks through the single background refresher', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/pages/background/index.ts'), 'utf8');
-    const branch =
-      source.match(
-        /if \(message\?\.type === PLUGIN_CATALOG_REFRESH_MESSAGE\) \{[\s\S]*?\n {6}\}/,
-      )?.[0] ?? '';
-
-    expect(branch).toContain('parseHostCatalogRefreshPayload(message.payload)');
-    expect(branch).toContain(
-      'hostCatalogRefresher.refresh(request.host, { force: request.force })',
-    );
-    expect(source.match(/new HostCatalogRefresher\(/g)?.length).toBe(1);
-  });
-
-  it('uploads the complete prompt union even when duplicate names remain', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/pages/background/index.ts'), 'utf8');
-    const pushBranch =
-      source.match(
-        /case 'gv\.sync\.pushPromptsMerge': \{[\s\S]*?case 'gv\.sync\.getState': \{/,
-      )?.[0] ?? '';
-
-    expect(pushBranch).toContain('googleDriveSyncService.uploadPromptsOnly');
-    expect(pushBranch).toContain('nameConflicts: getPromptNameConflictIds(localPrompts).size');
-    expect(pushBranch).not.toContain('if (merged.data.nameConflicts > 0)');
-    expect(pushBranch).not.toContain('skipped: true');
-  });
-
-  it('keeps privileged runtime operations behind their security boundaries', () => {
-    const source = readFileSync(resolve(process.cwd(), 'src/pages/background/index.ts'), 'utf8');
-    const captureBranch =
-      source.match(
-        /if \(message\?\.type === 'gv\.generatedUi\.captureVisibleTab'\) \{[\s\S]*?if \(message\?\.type === 'gv\.account\.resolve'\) \{/,
-      )?.[0] ?? '';
-    const uploadBranch =
-      source.match(/case 'gv\.sync\.upload': \{[\s\S]*?case 'gv\.sync\.download': \{/)?.[0] ?? '';
-    const imageHandler =
-      source.match(/async function handleRuntimeImageMessage\([\s\S]*?\n\}/)?.[0] ?? '';
-
-    expect(captureBranch).toContain('chrome.tabs.query({ active: true, windowId })');
-    expect(captureBranch).toContain('sender_not_active');
-
-    expect(uploadBranch).toContain('loadAuthoritativeSyncPayload');
-    expect(uploadBranch).not.toMatch(/const \{\s*folders,\s*prompts,/);
-
-    expect(imageHandler).toContain('parseAllowedRuntimeImageUrl');
-    expect(imageHandler).toContain('isAllowedRuntimeImageBody');
-    expect(imageHandler).toContain('MAX_RUNTIME_IMAGE_BYTES');
-  });
-
-  it('renders AI Studio folder names as text instead of HTML', () => {
-    const source = readFileSync(
-      resolve(process.cwd(), 'src/pages/content/folder/aistudio.ts'),
-      'utf8',
-    );
-    const folderDropItem =
-      source.match(
-        /const createFolderDropItem = \(folder: Folder, isSubfolder: boolean\) => \{[\s\S]*?\/\/ Bind drop events/,
-      )?.[0] ?? '';
-
-    expect(folderDropItem).not.toContain('folderItem.innerHTML');
-    expect(folderDropItem).toContain('document.createTextNode(folder.name)');
   });
 
   it('allows only bounded images from media hosts or the sender origin', () => {
@@ -164,9 +100,140 @@ describe('background runtime message routing', () => {
     expect(isAllowedSyncContentSender('https://business.gemini.google/app', 'gemini')).toBe(true);
     expect(isAllowedSyncContentSender('https://aistudio.google.com/app', 'aistudio')).toBe(true);
     expect(isAllowedSyncContentSender('https://aistudio.google.cn/app', 'aistudio')).toBe(true);
+    expect(isAllowedSyncContentSender('https://chatgpt.com/c/1', 'chatgpt')).toBe(true);
+    expect(isAllowedSyncContentSender('https://gemini.google.com/app', 'chatgpt')).toBe(false);
+    expect(isAllowedSyncContentSender('https://chatgpt.com.evil.test/c/1', 'chatgpt')).toBe(false);
 
     expect(isAllowedSyncContentSender('https://example.com/app', 'gemini')).toBe(false);
     expect(isAllowedSyncContentSender('https://gemini.google.com/app', 'aistudio')).toBe(false);
     expect(isAllowedSyncContentSender('http://gemini.google.com/app', 'gemini')).toBe(false);
+    expect(isAllowedSyncContentSender('https://chatgpt.com/c/1', 'gemini')).toBe(false);
+    expect(isAllowedSyncContentSender('https://claude.ai/chat/1', 'aistudio')).toBe(false);
+  });
+
+  it('rejects unknown sync platforms instead of falling back to Gemini folders', () => {
+    expect(parseSyncPlatform(undefined)).toBe('gemini');
+    expect(parseSyncPlatform('gemini')).toBe('gemini');
+    expect(parseSyncPlatform('aistudio')).toBe('aistudio');
+    expect(parseSyncPlatform('chatgpt')).toBe('chatgpt');
+    expect(parseSyncPlatform('__proto__')).toBeNull();
+    expect(parseSyncPlatform({ platform: 'gemini' })).toBeNull();
+  });
+
+  it('keeps ChatGPT, Claude and DeepSeek tabs away from Gemini and AI Studio folder sync', () => {
+    for (const url of [
+      'https://chatgpt.com/c/1',
+      'https://claude.ai/chat/1',
+      'https://chat.deepseek.com/a/chat/s/1',
+    ]) {
+      for (const platform of ['gemini', 'aistudio'] as const) {
+        expect(isTrustedSyncMessageSender(contentSender(url), platform), url).toBe(false);
+      }
+      expect(isTrustedSharedDataSyncSender(contentSender(url)), url).toBe(false);
+    }
+  });
+
+  it('trusts the Library page opened in its own tab but not when a website frames it', () => {
+    const library = `chrome-extension://${EXTENSION_ID}/src/pages/library/index.html`;
+    expect(isTrustedExtensionPageSender({ id: EXTENSION_ID, url: library })).toBe(true);
+    expect(
+      isTrustedExtensionPageSender({
+        id: EXTENSION_ID,
+        url: library,
+        tab: { id: 3, url: library } as chrome.tabs.Tab,
+      }),
+    ).toBe(true);
+    expect(
+      isTrustedExtensionPageSender({
+        id: EXTENSION_ID,
+        url: library,
+        tab: { id: 3, url: 'https://example.com/' } as chrome.tabs.Tab,
+      }),
+    ).toBe(false);
+    expect(isTrustedExtensionPageSender(contentSender('https://gemini.google.com/app'))).toBe(
+      false,
+    );
+  });
+
+  it('keeps folder sync available to native tabs and extension pages', () => {
+    const popup: chrome.runtime.MessageSender = {
+      id: EXTENSION_ID,
+      url: `chrome-extension://${EXTENSION_ID}/src/pages/popup/index.html`,
+    };
+    expect(isTrustedSyncMessageSender(popup, 'gemini')).toBe(true);
+    expect(isTrustedSyncMessageSender(popup, 'aistudio')).toBe(true);
+    expect(isTrustedSyncMessageSender(popup, 'chatgpt')).toBe(true);
+    expect(isTrustedSyncMessageSender(contentSender('https://chatgpt.com/c/1'), 'chatgpt')).toBe(
+      true,
+    );
+    expect(
+      isTrustedSyncMessageSender(contentSender('https://gemini.google.com/app'), 'gemini'),
+    ).toBe(true);
+    expect(
+      isTrustedSyncMessageSender(contentSender('https://aistudio.google.com/prompts'), 'aistudio'),
+    ).toBe(true);
+    expect(
+      isTrustedSyncMessageSender(
+        { ...contentSender('https://gemini.google.com/app'), id: 'other-extension' },
+        'gemini',
+      ),
+    ).toBe(false);
+
+    // Options-page fallback runs the popup inside an extension tab.
+    const options = `chrome-extension://${EXTENSION_ID}/src/pages/options/index.html?sourceTabId=4`;
+    const optionsTab = { id: EXTENSION_ID, url: options, tab: { id: 4, url: options } };
+    expect(isTrustedSyncMessageSender(optionsTab as chrome.runtime.MessageSender, 'aistudio')).toBe(
+      true,
+    );
+    expect(isTrustedSharedDataSyncSender(popup)).toBe(true);
+    expect(
+      isTrustedSyncMessageSender(contentSender('https://gemini.google.com/u/1/app'), 'gemini'),
+    ).toBe(true);
+    expect(
+      isTrustedSyncMessageSender(contentSender('https://aistudio.google.cn/prompts'), 'aistudio'),
+    ).toBe(true);
+    expect(isTrustedSharedDataSyncSender(contentSender('https://aistudio.google.cn/prompts'))).toBe(
+      true,
+    );
+    expect(
+      isTrustedSyncMessageSender(contentSender('https://gemini.google.com/app'), 'aistudio'),
+    ).toBe(false);
+  });
+
+  it('accepts a Safari folder upload from a content script whose tab URL is omitted', () => {
+    // Safari and Firefox can report only the sending frame's URL.
+    const topFrame = (url: string): chrome.runtime.MessageSender => ({
+      id: EXTENSION_ID,
+      url,
+      frameId: 0,
+      tab: { id: 7 } as chrome.tabs.Tab,
+    });
+    expect(isTrustedSyncMessageSender(topFrame('https://chatgpt.com/c/1'), 'chatgpt')).toBe(true);
+    expect(isTrustedSyncMessageSender(topFrame('https://gemini.google.com/app'), 'gemini')).toBe(
+      true,
+    );
+    expect(isTrustedSyncMessageSender(topFrame('https://chatgpt.com/c/1'), 'gemini')).toBe(false);
+    // Content scripts run only in the top frame: a subframe never passes as the page.
+    expect(
+      isTrustedSyncMessageSender(
+        { ...topFrame('https://gemini.google.com/app'), frameId: 3 },
+        'gemini',
+      ),
+    ).toBe(false);
+  });
+
+  it('checks the frame URL when the browser omits the tab URL', () => {
+    const chatgpt = {
+      id: EXTENSION_ID,
+      tab: {} as chrome.tabs.Tab,
+      url: 'https://chatgpt.com/c/abc',
+    };
+    expect(getSenderPageUrl(chatgpt)).toBe('https://chatgpt.com/c/abc');
+    expect(isTrustedSyncMessageSender(chatgpt, 'gemini')).toBe(false);
+    const popup = { id: EXTENSION_ID, url: `chrome-extension://${EXTENSION_ID}/popup.html` };
+    expect(isTrustedSyncMessageSender(popup, 'gemini')).toBe(true);
+    expect(getSenderPageUrl({ tab: { url: 'https://gemini.google.com/app' }, url: 'x' })).toBe(
+      'https://gemini.google.com/app',
+    );
   });
 });

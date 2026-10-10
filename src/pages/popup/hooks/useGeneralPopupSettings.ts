@@ -24,6 +24,7 @@ export const GENERAL_SETTINGS_STORAGE_DEFAULTS = {
   [StorageKeys.USAGE_STATUS_ENABLED]: false,
   [StorageKeys.INPUT_HALO_HIDDEN]: false,
   [StorageKeys.DEFAULT_MODEL_AUTO_APPLY]: true,
+  [StorageKeys.RESEARCH_PACK_ENABLED]: false,
 };
 
 type PlainGeneralSettings = Omit<
@@ -44,6 +45,7 @@ const PLAIN_SETTING_STORAGE_KEYS = {
   usageStatusEnabled: StorageKeys.USAGE_STATUS_ENABLED,
   inputHaloHidden: StorageKeys.INPUT_HALO_HIDDEN,
   defaultModelAutoApplyEnabled: StorageKeys.DEFAULT_MODEL_AUTO_APPLY,
+  researchPackEnabled: StorageKeys.RESEARCH_PACK_ENABLED,
 } satisfies Record<keyof PlainGeneralSettings, string>;
 
 export interface GeneralPopupSettingsOptions {
@@ -76,6 +78,7 @@ export function useGeneralPopupSettings({
     usageStatusEnabled: false,
     inputHaloHidden: false,
     defaultModelAutoApplyEnabled: true,
+    researchPackEnabled: false,
   });
   const {
     enabled: wavedromEnabled,
@@ -133,6 +136,7 @@ export function useGeneralPopupSettings({
         usageStatusEnabled: raw[StorageKeys.USAGE_STATUS_ENABLED] === true,
         inputHaloHidden: raw[StorageKeys.INPUT_HALO_HIDDEN] === true,
         defaultModelAutoApplyEnabled: raw[StorageKeys.DEFAULT_MODEL_AUTO_APPLY] !== false,
+        researchPackEnabled: raw[StorageKeys.RESEARCH_PACK_ENABLED] === true,
       });
       hydrateWavedromEnabled(raw[StorageKeys.WAVEDROM_ENABLED]);
       hydrateEchartsEnabled(raw[StorageKeys.ECHARTS_ENABLED]);

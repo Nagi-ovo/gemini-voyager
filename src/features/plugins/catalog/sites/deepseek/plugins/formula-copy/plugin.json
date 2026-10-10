@@ -55,7 +55,7 @@
   "author": "voyager-official",
   "category": "productivity",
   "license": "GPL-3.0-or-later",
-  "homepage": "https://github.com/Nagi-ovo/voyager/tree/main/src/features/plugins/catalog/sites/deepseek/plugins/formula-copy",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/deepseek/plugins/formula-copy",
   "engine": ">=1.3.0",
   "tier": "declarative",
   "matches": ["https://chat.deepseek.com/*"],

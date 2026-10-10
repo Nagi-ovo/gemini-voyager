@@ -1,6 +1,6 @@
 import fs from 'fs';
-import { resolve } from 'path';
-import type { NormalizedInputOptions, NormalizedOutputOptions } from 'rollup';
+import { basename, resolve } from 'path';
+import type { NormalizedInputOptions, NormalizedOutputOptions, OutputChunk } from 'rollup';
 import type { PluginOption } from 'vite';
 
 // plugin to remove dev icons from prod build
@@ -97,6 +97,55 @@ export function crxI18n(options: {
           file.id = refId;
         });
       },
+    },
+  };
+}
+
+type ChunkFacts = Pick<OutputChunk, 'code' | 'imports' | 'dynamicImports' | 'exports'>;
+
+const DYNAMIC_IMPORT = /\bimport\s*\(/;
+const STATIC_IMPORT = /(?:^|[;}\n])\s*import\s*(?:[\w*{]|["'])/;
+
+/** Why an emitted content script would not run synchronously on evaluation. */
+export function selfContainedViolations(chunk: ChunkFacts): string[] {
+  const problems: string[] = [];
+  if (chunk.imports.length) problems.push(`imports ${chunk.imports.join(', ')}`);
+  if (chunk.dynamicImports.length || DYNAMIC_IMPORT.test(chunk.code)) {
+    problems.push('loads code with a dynamic import');
+  }
+  if (STATIC_IMPORT.test(chunk.code)) problems.push('contains an import statement');
+  if (chunk.exports.length) problems.push(`exports ${chunk.exports.join(', ')}`);
+  if (!chunk.code.includes('addEventListener(')) problems.push('registers no listener');
+  return problems;
+}
+
+// plugin to fail the build when a content entry that must install synchronously
+// at document_start would instead be emitted behind CRXJS's dynamic-import loader.
+// CRXJS inlines a content chunk as one classic script only when it has no
+// imports or exports, so a shared module silently brings the loader back.
+export function selfContainedContentScripts(entries: readonly string[]): PluginOption {
+  return {
+    name: 'self-contained-content-scripts',
+    apply: 'build',
+    enforce: 'post',
+    generateBundle(_options, bundle) {
+      for (const entry of entries) {
+        const chunk = Object.values(bundle).find(
+          (file): file is OutputChunk =>
+            file.type === 'chunk' && file.isEntry && !!file.facadeModuleId?.endsWith(entry),
+        );
+        if (!chunk) {
+          this.error(`${entry} was not emitted as a content script entry`);
+        }
+        const problems = selfContainedViolations(chunk);
+        const loaderName = `${basename(entry)}-loader`;
+        if (Object.keys(bundle).some((fileName) => fileName.includes(loaderName))) {
+          problems.push('was given a dynamic-import loader');
+        }
+        if (problems.length) {
+          this.error(`${entry} must emit as one self-contained script: ${problems.join('; ')}`);
+        }
+      }
     },
   };
 }

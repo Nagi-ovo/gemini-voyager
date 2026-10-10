@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { collectChatPairs } from '../index';
+import { resolveExportAdapter } from '../adapter/platformAdapters';
+import { createConversationCollector } from '../conversationCollector';
 
 describe('collectChatPairs', () => {
   it('pairs repeated prompts by DOM order when virtualized turns expose mixed offsets', () => {
@@ -24,7 +25,7 @@ describe('collectChatPairs', () => {
       Object.defineProperty(responseContainers[index], 'offsetTop', { value: offsetTop });
     });
 
-    const pairs = collectChatPairs();
+    const pairs = createConversationCollector(resolveExportAdapter()).collectChatPairs();
 
     expect(pairs.map(({ user, assistant }) => ({ user, assistant }))).toEqual([
       { user: 'repeat prompt', assistant: 'assistant-1' },

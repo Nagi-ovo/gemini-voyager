@@ -27,16 +27,16 @@ afterEach(() => {
   stopScheme();
   document.documentElement.removeAttribute(SCHEME_ATTR);
   document.documentElement.className = '';
+  document.documentElement.removeAttribute('data-theme');
   document.body.className = '';
   document.body.replaceChildren();
 });
 
 describe('resolveScheme', () => {
-  it('reads each shipped adapter its own way, DeepSeek included', () => {
+  it('reads each shipped class-dialect adapter its own way, DeepSeek included', () => {
     const registry = SiteRegistry.createDefault();
     const cases: Array<[string, string]> = [
       ['https://chat.deepseek.com/a/chat/s/1', 'dark'],
-      ['https://chatgpt.com/c/1', 'dark'],
       ['https://claude.ai/chat/1', 'dark'],
     ];
 
@@ -51,6 +51,14 @@ describe('resolveScheme', () => {
       expect(resolveScheme(theme, document), url).toBe(expected);
       target.className = '';
     }
+  });
+
+  it('reads ChatGPT from the data-theme attribute on <html>', () => {
+    const chatgpt = SiteRegistry.createDefault().resolveByUrl('https://chatgpt.com/c/1')?.theme;
+    document.documentElement.setAttribute('data-theme', 'dark');
+    expect(resolveScheme(chatgpt, document)).toBe('dark');
+    document.documentElement.setAttribute('data-theme', 'light');
+    expect(resolveScheme(chatgpt, document)).toBe('light');
   });
 
   it('lets an explicit light marker win over a lingering dark one', () => {
@@ -91,6 +99,19 @@ describe('startScheme', () => {
     document.body.className = 'light';
     await settle();
     expect(getScheme()).toBe('light');
+
+    bridge.stop();
+  });
+
+  it('follows a ChatGPT data-theme flip on <html>', async () => {
+    const chatgpt = SiteRegistry.createDefault().resolveByUrl('https://chatgpt.com/')?.theme;
+    document.documentElement.setAttribute('data-theme', 'light');
+    const bridge = startScheme(chatgpt ?? null, document);
+    expect(getScheme()).toBe('light');
+
+    document.documentElement.setAttribute('data-theme', 'dark');
+    await settle();
+    expect(getScheme()).toBe('dark');
 
     bridge.stop();
   });

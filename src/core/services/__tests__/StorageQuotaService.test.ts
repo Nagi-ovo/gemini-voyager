@@ -106,6 +106,39 @@ function category(snapshot: Awaited<ReturnType<StorageQuotaService['getSnapshot'
 }
 
 describe('StorageQuotaService', () => {
+  it('star projections and deletion records survive every quota cleanup category', async () => {
+    const stars = { messages: { chat: [{ turnId: 'kept' }] } };
+    const tombstones = [{ conversationId: 'chat', turnId: 'removed', starredAt: 1, deletedAt: 2 }];
+    const scopedTombstonesKey = `${StorageKeys.SAVED_LIBRARY_STAR_TOMBSTONES}:acct:account`;
+    const local = createArea({
+      [StorageKeys.SAVED_LIBRARY_STARS]: stars,
+      [StorageKeys.TIMELINE_STARRED_MESSAGES]: stars,
+      [StorageKeys.SAVED_LIBRARY_STAR_TOMBSTONES]: tombstones,
+      [scopedTombstonesKey]: tombstones,
+      [StorageKeys.GV_GEMS_LIST_CACHE]: {},
+      'gvDraft_/app/chat': 'draft',
+      'gvHighlight:records': [],
+    });
+    const { chromeApi } = createChromeMock(local, createArea({}));
+    const service = new StorageQuotaService({ chromeApi, buildTarget: () => 'chrome' });
+    const snapshot = await service.getSnapshot();
+    expect(category(snapshot, 'timeline')).toMatchObject({
+      clearable: false,
+      keys: [
+        StorageKeys.SAVED_LIBRARY_STARS,
+        StorageKeys.TIMELINE_STARRED_MESSAGES,
+        StorageKeys.SAVED_LIBRARY_STAR_TOMBSTONES,
+        scopedTombstonesKey,
+      ],
+      bytesInUse: 4,
+    });
+    for (const id of ['cache', 'drafts', 'highlights'] as const) await service.clearCategory(id);
+    expect(local.data[StorageKeys.SAVED_LIBRARY_STARS]).toEqual(stars);
+    expect(local.data[StorageKeys.TIMELINE_STARRED_MESSAGES]).toEqual(stars);
+    expect(local.data[StorageKeys.SAVED_LIBRARY_STAR_TOMBSTONES]).toEqual(tombstones);
+    expect(local.data[scopedTombstonesKey]).toEqual(tombstones);
+    await expect(service.clearCategory('timeline' as 'cache')).rejects.toThrow('not clearable');
+  });
   it('measures local and sync separately and classifies explicit keys and prefixes', async () => {
     const localValues = {
       [StorageKeys.PROMPT_ITEMS]: [{ id: 'prompt' }],
@@ -113,7 +146,10 @@ describe('StorageQuotaService', () => {
       [`${StorageKeys.PROMPT_HISTORY_ITEMS}:u:0:item-id`]: { id: 'item-id' },
       [StorageKeys.FOLDER_DATA]: { folders: [] },
       [`${StorageKeys.FOLDER_DATA}:acct:abc`]: { folders: [] },
+      [StorageKeys.FOLDER_DATA_CHATGPT]: { folders: [] },
+      'gvBackup_chatgpt-folders_primary': 'recovery copy',
       [`${StorageKeys.TIMELINE_HIERARCHY}:acct:def`]: { conversations: {} },
+      [`${StorageKeys.CATALOG_TIMELINE_HIERARCHY_PREFIX}chatgpt:acct:def`]: { conversations: {} },
       'gvHighlight:records': [{ id: 'highlight' }],
       'gvAnnotation:index': { count: 1 },
       'gvAnnotation:bucket:v1:acct:abc:conv:def': { records: {} },
@@ -162,9 +198,12 @@ describe('StorageQuotaService', () => {
     expect(category(snapshot, 'folders').keys).toEqual([
       StorageKeys.FOLDER_DATA,
       `${StorageKeys.FOLDER_DATA}:acct:abc`,
+      StorageKeys.FOLDER_DATA_CHATGPT,
+      'gvBackup_chatgpt-folders_primary',
     ]);
     expect(category(snapshot, 'timeline').keys).toEqual([
       `${StorageKeys.TIMELINE_HIERARCHY}:acct:def`,
+      `${StorageKeys.CATALOG_TIMELINE_HIERARCHY_PREFIX}chatgpt:acct:def`,
     ]);
     expect(category(snapshot, 'highlights').keys).toEqual([
       'gvHighlight:records',
@@ -302,23 +341,112 @@ describe('StorageQuotaService', () => {
     expect(chromium.contains).not.toHaveBeenCalled();
   });
 
-  it('requests unlimitedStorage before the first asynchronous permission status check', async () => {
-    const local = createArea({});
-    const sync = createArea({});
-    const permissions = createChromeMock(local, sync, { requestResult: true });
+  it('requests unlimitedStorage while the user gesture is still active', async () => {
+    let userGestureActive = true;
+    let granted = false;
     const service = new StorageQuotaService({
-      chromeApi: permissions.chromeApi,
+      chromeApi: {
+        runtime: { getManifest: () => ({ optional_permissions: ['unlimitedStorage'] }) },
+        permissions: {
+          contains: async () => granted,
+          request: async () => {
+            if (!userGestureActive) throw new Error('User gesture required');
+            granted = true;
+            return true;
+          },
+        },
+      },
       buildTarget: () => 'chrome',
     });
 
-    const result = await service.requestUnlimitedStoragePermission();
+    const pending = service.requestUnlimitedStoragePermission();
+    userGestureActive = false;
 
-    expect(permissions.request).toHaveBeenCalledTimes(1);
-    expect(result).toMatchObject({ requested: true, granted: true, reason: 'granted' });
-    expect(permissions.contains).toHaveBeenCalledTimes(1);
-    expect(permissions.request.mock.invocationCallOrder[0]).toBeLessThan(
-      permissions.contains.mock.invocationCallOrder[0],
-    );
+    await expect(pending).resolves.toMatchObject({
+      requested: true,
+      granted: true,
+      reason: 'granted',
+      status: { granted: true, requestable: false },
+    });
+  });
+
+  it.each(['callback', 'callback-and-promise'])(
+    'reads permissions and persists soft caps with %s browser APIs',
+    async (mode) => {
+      const data: Record<string, unknown> = { [STORAGE_QUOTA_SOFT_CAP_KEY]: 25 };
+      let granted = false;
+      const finish = (args: unknown[], value: unknown) => {
+        const callback = args.at(-1) as (value: unknown) => void;
+        callback(value);
+        return mode === 'callback-and-promise' ? Promise.resolve(value) : undefined;
+      };
+      const service = new StorageQuotaService({
+        chromeApi: {
+          runtime: { getManifest: () => ({ optional_permissions: ['unlimitedStorage'] }) },
+          storage: {
+            local: {
+              get: (...args) => finish(args, { ...data }),
+              set: (...args) => {
+                Object.assign(data, args[0]);
+                return finish(args, undefined);
+              },
+              getBytesInUse: (...args) => finish(args, 7),
+            },
+          },
+          permissions: {
+            contains: (...args) => finish(args, granted),
+            request: (...args) => {
+              granted = true;
+              return finish(args, true);
+            },
+          },
+        },
+        buildTarget: () => 'chrome',
+      });
+
+      await service.saveSoftCapMb(50);
+      await expect(service.requestUnlimitedStoragePermission()).resolves.toMatchObject({
+        requested: true,
+        granted: true,
+        status: { granted: true },
+      });
+      const snapshot = await service.getSnapshot();
+      expect(data).toEqual({ [STORAGE_QUOTA_SOFT_CAP_KEY]: 50 });
+      expect(snapshot).toMatchObject({
+        softCapMb: 50,
+        local: { bytesInUse: 7, estimated: false, quotaBytes: null },
+      });
+    },
+  );
+
+  it('reports callback permission errors without treating the grant as successful', async () => {
+    const runtime = {
+      lastError: null as { message: string } | null,
+      getManifest: () => ({ optional_permissions: ['unlimitedStorage'] }),
+    };
+    const service = new StorageQuotaService({
+      chromeApi: {
+        runtime,
+        permissions: {
+          contains: async () => false,
+          request: (...args) => {
+            runtime.lastError = { message: 'Permission prompt unavailable' };
+            const callback = args.at(-1) as (granted: boolean) => void;
+            callback(false);
+            runtime.lastError = null;
+          },
+        },
+      },
+      buildTarget: () => 'chrome',
+    });
+
+    await expect(service.requestUnlimitedStoragePermission()).resolves.toMatchObject({
+      requested: true,
+      granted: false,
+      reason: 'error',
+      error: 'Permission prompt unavailable',
+      status: { granted: false, requestable: true },
+    });
   });
 
   it.each([
@@ -345,7 +473,44 @@ describe('StorageQuotaService', () => {
     },
   );
 
-  it('marks an unknown Safari granted quota as estimated instead of assuming 10 MiB', async () => {
+  it.each([
+    // Chrome still reports QUOTA_BYTES = 10 MiB once unlimitedStorage lifts it.
+    {
+      label: 'the soft cap on unlimited Chromium',
+      target: 'chrome',
+      required: true,
+      expected: 50,
+      quota: null,
+    },
+    {
+      label: 'the 10 MiB quota on legacy Safari',
+      target: 'safari',
+      required: false,
+      expected: 10,
+      quota: 10 * MEBIBYTE,
+    },
+  ] as const)('limits local headroom to $label', async ({ target, required, expected, quota }) => {
+    const local = createArea(
+      { [STORAGE_QUOTA_SOFT_CAP_KEY]: 50, backup: 'x', other: 'y' },
+      { quotaBytes: 10 * MEBIBYTE, weights: { backup: 300, other: 700 } },
+    );
+    const { chromeApi } = createChromeMock(local, createArea({}), { required, granted: true });
+    const service = new StorageQuotaService({
+      chromeApi,
+      buildTarget: () => target,
+      safariMajorVersion: () => 15,
+      legacySafariStorageLimit: () => true,
+    });
+
+    await expect(service.getLocalHeadroom('backup')).resolves.toEqual({
+      bytesInUse: 1001,
+      keyBytes: 300,
+      limitBytes: expected * MEBIBYTE,
+      quotaBytes: quota,
+    });
+  });
+
+  it('marks an unknown Safari granted quota as estimated and takes the lower rule', async () => {
     const local = createArea({}, { quotaBytes: 99 * MEBIBYTE });
     const sync = createArea({});
     const { chromeApi } = createChromeMock(local, sync, { granted: true });
@@ -356,7 +521,8 @@ describe('StorageQuotaService', () => {
       legacySafariStorageLimit: () => false,
     }).getSnapshot();
 
-    expect(snapshot.local.quotaBytes).toBe(99 * MEBIBYTE);
+    // One resolver for every writer (addendum P3P4 §0): an estimate never exceeds 10 MiB here.
+    expect(snapshot.local.quotaBytes).toBe(10 * MEBIBYTE);
     expect(snapshot.local.quotaEstimated).toBe(true);
   });
 

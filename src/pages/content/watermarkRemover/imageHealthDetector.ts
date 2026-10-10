@@ -144,6 +144,7 @@ export function detectCorruptedGeminiDownload(
   const hasAbruptBlankTrailingBand =
     trailingBandUniformity < TRAILING_BAND_UNIFORMITY_THRESHOLD &&
     trailingBandBoundaryJump > TRAILING_BAND_BOUNDARY_JUMP_THRESHOLD;
+  // A flat region may be intentional; warn only when the download also differs from its preview.
   const hasPreviewMismatch =
     mismatchScore >= SEVERE_MISMATCH_THRESHOLD ||
     (mismatchScore >= BANDED_MISMATCH_THRESHOLD && hasAbruptBlankTrailingBand);

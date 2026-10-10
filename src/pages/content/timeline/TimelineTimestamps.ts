@@ -5,11 +5,11 @@ import {
   extractConversationIdFromUrl,
 } from '@/core/utils/conversationIdentity';
 import { hashString } from '@/core/utils/hash';
+import type { ExtGlobal, SyncSettingsListener, TimelineMarker } from '@/features/timeline/types';
 
 import { getLegacyTurnIndex } from '../fork/turnId';
 import { TimestampService } from '../timestamp/TimestampService';
 import { type HistoryTimestampStore, historyTimestampStore } from '../timestamp/historyTimestamps';
-import type { ExtGlobal, SyncSettingsListener, TimelineMarker } from './types';
 
 let timestampDraftTabId: string | null = null;
 

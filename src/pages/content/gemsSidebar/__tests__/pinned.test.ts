@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { type GemMruEntry, sanitizePinnedIds, selectVisibleGems } from '../index';
-import type { GemMetadata } from '../index';
+import { type GemMruEntry, sanitizePinnedIds, selectVisibleGems } from '../catalog';
+import type { GemMetadata } from '../catalog';
 
 const gem = (id: string, name = id): GemMetadata => ({ id, name, href: `/gem/${id}` });
 const mru = (id: string, lastUsedAt: number, name = id): GemMruEntry => ({

@@ -1,4 +1,4 @@
-import React, { act, useEffect } from 'react';
+import React, { type ChangeEvent, act, useEffect } from 'react';
 import { type Root, createRoot } from 'react-dom/client';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -6,6 +6,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StorageKeys } from '@/core/types/common';
 import { PromptImportExportService } from '@/features/backup/services/PromptImportExportService';
 import type { PromptItem } from '@/features/backup/types/backup';
+import {
+  createPromptLibraryClient,
+  handlePromptLibraryApplyMessage,
+  isPromptLibraryApplyMessage,
+} from '@/features/prompt/library/promptLibraryMessages';
+import {
+  type PromptLibraryArea,
+  createPromptLibraryOwner,
+} from '@/features/prompt/library/promptLibraryOwner';
+import {
+  RESEARCH_PACK_TEMPLATE_TAG,
+  createTemplateLibrary,
+} from '@/features/researchPack/services/templates';
 import type { TranslationKey } from '@/utils/translations';
 
 import { PromptDataTransfer } from '../../components/PromptDataTransfer';
@@ -40,6 +53,12 @@ describe('usePromptDataTransfer', () => {
   let transfer: PromptDataTransferController;
   let store: Record<string, unknown>;
   const sendMessage = vi.fn<(message: unknown) => Promise<unknown>>();
+  type Get = (keys: string[], callback: (items: Record<string, unknown>) => void) => void;
+  type Set = (items: Record<string, unknown>, callback: () => void) => void;
+  let localGet: ReturnType<typeof vi.fn<Get>>;
+  let localSet: ReturnType<typeof vi.fn<Set>>;
+  /** The background owner, writing through the same storage the popup reads. */
+  let owner: ReturnType<typeof createPromptLibraryOwner>;
 
   const render = (visible = true) => {
     act(() => {
@@ -52,22 +71,30 @@ describe('usePromptDataTransfer', () => {
   beforeEach(() => {
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
     store = {};
+    localGet = vi.fn<Get>((keys, callback) => {
+      callback(Object.fromEntries(keys.map((key) => [key, store[key]])));
+    });
+    localSet = vi.fn<Set>((items, callback) => {
+      Object.assign(store, items);
+      callback();
+    });
+    const area: PromptLibraryArea = {
+      get: (key) => new Promise((resolve) => localGet([key], resolve)),
+      set: (items) => new Promise((resolve) => localSet(items, resolve)),
+    };
+    owner = createPromptLibraryOwner({ area });
     sendMessage.mockReset();
+    sendMessage.mockImplementation(async (message) =>
+      isPromptLibraryApplyMessage(message)
+        ? handlePromptLibraryApplyMessage(structuredClone(message), owner)
+        : undefined,
+    );
     vi.stubGlobal('chrome', {
       ...chrome,
       runtime: { ...chrome.runtime, lastError: null, sendMessage },
       storage: {
         ...chrome.storage,
-        local: {
-          ...chrome.storage.local,
-          get: vi.fn((keys: string[], callback: (items: Record<string, unknown>) => void) => {
-            callback(Object.fromEntries(keys.map((key) => [key, store[key]])));
-          }),
-          set: vi.fn((items: Record<string, unknown>, callback: () => void) => {
-            Object.assign(store, items);
-            callback();
-          }),
-        },
+        local: { ...chrome.storage.local, get: localGet, set: localSet },
       },
     });
     vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -85,7 +112,7 @@ describe('usePromptDataTransfer', () => {
     vi.unstubAllGlobals();
   });
 
-  async function importFile(contents: string): Promise<HTMLInputElement> {
+  function chooseFile(contents: string): HTMLInputElement {
     const file = new File([contents], 'prompts.json', { type: 'application/json' });
     // jsdom does not implement File.text or a file-picker selection.
     Object.defineProperty(file, 'text', { value: async () => contents });
@@ -96,6 +123,11 @@ describe('usePromptDataTransfer', () => {
       writable: true,
       value: 'C:\\fakepath\\prompts.json',
     });
+    return input;
+  }
+
+  async function importFile(contents: string): Promise<HTMLInputElement> {
+    const input = chooseFile(contents);
     await act(async () => {
       input.dispatchEvent(new Event('change', { bubbles: true }));
     });
@@ -157,11 +189,59 @@ describe('usePromptDataTransfer', () => {
     );
 
     expect(transfer.status).toEqual({ kind: 'ok', text: 'Imported 2' });
+    // The new prompt follows `existing` in the file, so it lands right after it.
     expect(store[StorageKeys.PROMPT_ITEMS]).toEqual([
-      expect.objectContaining({ id: 'new', text: 'New body' }),
       expect.objectContaining({ id: 'existing', tags: ['local', 'imported'] }),
+      expect.objectContaining({ id: 'new', text: 'New body' }),
     ]);
-    expect(chrome.runtime.sendMessage).not.toHaveBeenCalled();
+    expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'gv.promptLibrary.apply',
+        op: expect.objectContaining({ kind: 'import' }),
+      }),
+    );
+  });
+
+  it('keeps a template saved on a Gemini tab while the popup import is writing', async () => {
+    store[StorageKeys.PROMPT_ITEMS] = [{ id: 'kept', text: 'Keep me', tags: [], createdAt: 1 }];
+    // Real storage answers later than a synchronous mock, so two writers can overlap.
+    localGet.mockImplementation((keys, callback) => {
+      setTimeout(
+        () => callback(structuredClone(Object.fromEntries(keys.map((key) => [key, store[key]])))),
+        0,
+      );
+    });
+    localSet.mockImplementation((items, callback) => {
+      setTimeout(() => {
+        Object.assign(store, structuredClone(items));
+        callback();
+      }, 5);
+    });
+    const template = createTemplateLibrary({
+      area: { get: (key) => new Promise((resolve) => localGet([key], resolve)) },
+      key: StorageKeys.PROMPT_ITEMS,
+      apply: createPromptLibraryClient((request) =>
+        handlePromptLibraryApplyMessage(structuredClone(request), owner),
+      ).apply,
+      makeId: () => 'template',
+    });
+
+    const input = chooseFile('[{"id":"imported","text":"Imported body"}]');
+    await act(async () => {
+      await Promise.all([
+        transfer.onImport({ target: input } as unknown as ChangeEvent<HTMLInputElement>),
+        template.save([{ name: 'Review', text: 'Compare the sources.' }]),
+      ]);
+    });
+
+    expect(transfer.status).toEqual({ kind: 'ok', text: 'Imported 1' });
+
+    const ids = (store[StorageKeys.PROMPT_ITEMS] as PromptItem[]).map((item) => item.id);
+    expect(ids.sort()).toEqual(['imported', 'kept', 'template']);
+    expect(
+      (store[StorageKeys.PROMPT_ITEMS] as PromptItem[]).find((item) => item.id === 'template')
+        ?.tags,
+    ).toEqual([RESEARCH_PACK_TEMPLATE_TAG]);
   });
 
   it('retains prompts with conflicting names and reports a warning after importing', async () => {

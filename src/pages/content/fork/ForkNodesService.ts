@@ -50,6 +50,15 @@ export class ForkNodesService {
     return response.data;
   }
 
+  /** Merge a downloaded Drive fork envelope into local forks; absent when there is none. */
+  static async mergeCloud(envelope: unknown): Promise<'absent' | 'merged'> {
+    const response = await sendMessage<{ ok: boolean; status: 'absent' | 'merged' }>(
+      'gv.fork.mergeCloud',
+      envelope,
+    );
+    return response.status;
+  }
+
   static async getForConversation(conversationId: string): Promise<ForkNode[]> {
     const response = await sendMessage<{ ok: boolean; nodes: ForkNode[] }>(
       'gv.fork.getForConversation',

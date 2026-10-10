@@ -3,8 +3,6 @@ import { StorageKeys } from '@/core/types/common';
 
 import { type ExportSpeakerLabelOverrides, normalizeSpeakerLabelOverrides } from '../types/export';
 
-export { normalizeSpeakerLabelOverrides, resolveExportSpeakerLabels } from '../types/export';
-
 const SPEAKER_LABEL_SAVE_DELAY_MS = 300;
 
 export async function getSavedSpeakerLabelOverrides(): Promise<ExportSpeakerLabelOverrides> {

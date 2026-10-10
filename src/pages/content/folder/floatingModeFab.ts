@@ -1,8 +1,12 @@
 import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
+import { clearOfPromptTrigger, watchPromptTrigger } from '../prompt/triggerClearance';
+
 export const FLOATING_FAB_CLASS = 'gv-floating-fab';
 
 const FAB_DIAMETER = 52;
+/** The drawn button (`.gv-floating-fab`); FAB_DIAMETER keeps extra room when clamping. */
+const FAB_SIZE = 44;
 const MIN_MARGIN = 8;
 const DRAG_MOVE_THRESHOLD = 4; // px — below this we treat pointerup as a click, not a drag
 
@@ -24,10 +28,12 @@ function clampPos(pos: FloatingFabPos): FloatingFabPos {
 }
 
 function defaultPos(): FloatingFabPos {
-  return {
+  return clearOfPromptTrigger({
     x: Math.max(MIN_MARGIN, window.innerWidth - FAB_DIAMETER - 24),
     y: Math.max(MIN_MARGIN, window.innerHeight - FAB_DIAMETER - 24),
-  };
+    w: FAB_SIZE,
+    h: FAB_SIZE,
+  });
 }
 
 /**
@@ -61,6 +67,8 @@ export function mountFloatingFab({
     </span>
   `;
 
+  // Until the user drags it, the button keeps to its default spot on resize.
+  let userPlaced = !!storedPos;
   const initialPos = clampPos(storedPos ?? defaultPos());
   btn.style.left = `${initialPos.x}px`;
   btn.style.top = `${initialPos.y}px`;
@@ -110,6 +118,7 @@ export function mountFloatingFab({
     } catch {}
     btn.classList.remove(`${FLOATING_FAB_CLASS}--dragging`);
     if (moved) {
+      userPlaced = true;
       onPosChange?.({ x: btn.offsetLeft, y: btn.offsetTop });
     } else {
       // Treat as a click.
@@ -135,14 +144,23 @@ export function mountFloatingFab({
   });
 
   const onResize = () => {
-    const clamped = clampPos({ x: btn.offsetLeft, y: btn.offsetTop });
+    const clamped = clampPos(userPlaced ? { x: btn.offsetLeft, y: btn.offsetTop } : defaultPos());
     btn.style.left = `${clamped.x}px`;
     btn.style.top = `${clamped.y}px`;
   };
   window.addEventListener('resize', onResize);
+  // The ball can mount or move after the button is placed (Gemini moves it
+  // next to the composer up to 350ms after load): a default spot follows it.
+  const stopTriggerWatch = watchPromptTrigger(() => {
+    if (userPlaced || dragState) return;
+    const next = clampPos(defaultPos());
+    btn.style.left = `${next.x}px`;
+    btn.style.top = `${next.y}px`;
+  });
   // Stash cleanup handle on the element so unmount can reliably remove it.
   (btn as HTMLElement & { __gvResizeCleanup?: () => void }).__gvResizeCleanup = () => {
     window.removeEventListener('resize', onResize);
+    stopTriggerWatch();
   };
 
   document.body.appendChild(btn);

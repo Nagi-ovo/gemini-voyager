@@ -8,9 +8,13 @@ Sincroniza tus carpetas, biblioteca de prompts y otros datos en Google Drive par
 - **Privacidad de datos**: Los datos se almacenan directamente en tu propio almacenamiento de Google Drive, lo que garantiza la privacidad sin servidores de terceros.
 - **Sincronización flexible**: Soporte para carga manual y descarga/fusión de datos.
 
-::: info
-**Próximamente**: La próxima versión admitirá la sincronización de conversaciones destacadas.
-:::
+## Datos destacados y límites de sincronización
+
+Las copias en la nube incluyen el **texto completo de los prompts de usuario que marcas con estrella** (hasta 16 KiB UTF-8 por prompt) en tu propio Google Drive o iCloud. Las copias de estrellas no almacenan respuestas del modelo. La copia v1 conserva solo vistas previas; la nueva v2 incluye el texto y los registros de eliminación.
+
+Los registros de eliminación se conservan 180 días. Las versiones antiguas de Voyager los ignoran y pueden mostrar o subir estrellas eliminadas; las nuevas bloquean copias antiguas con la misma marca de tiempo. Marcar de nuevo con una fecha posterior, o la caducidad del registro, puede restaurar una estrella. Los periodos largos sin conexión y las diferencias entre relojes también afectan a las eliminaciones.
+
+La sincronización combina y verifica los datos escritos, con un máximo de tres intentos, pero no es una transacción atómica entre dispositivos: las cargas simultáneas pueden sobrescribirse. Una sincronización posterior desde un dispositivo que conserva los datos faltantes puede repararlos; sin ella, la recuperación no está garantizada. Los fallos parciales conservan las escrituras aceptadas; vuelve a sincronizar para completar la reparación.
 
 ## Cómo usar
 

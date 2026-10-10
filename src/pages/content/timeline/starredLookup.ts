@@ -2,8 +2,7 @@ import {
   extractConversationIdFromUrl,
   isSameConversationRoute,
 } from '@/core/utils/conversationIdentity';
-
-import type { StarredMessage, StarredMessagesData } from './starredTypes';
+import type { StarredMessage, StarredMessagesData } from '@/features/savedLibrary/starTypes';
 
 function upsertMessage(messageMap: Map<string, StarredMessage>, message: StarredMessage): void {
   const existing = messageMap.get(message.turnId);

@@ -6,8 +6,8 @@
  *
  * The extension id comes from `state` ("<id>.<nonce>") and must be one of ours:
  * anything else stops here, so this page never becomes an open redirect. The
- * extension checks the nonce itself. Keep the list in step with the Chrome and
- * Edge redirect URIs registered for the OAuth client.
+ * extension checks the nonce itself. Add new Chrome or Edge listing ids here;
+ * Google Cloud keeps this relay as its single redirect URI.
  */
 (function (window) {
   var ALLOWED_EXTENSION_IDS = [

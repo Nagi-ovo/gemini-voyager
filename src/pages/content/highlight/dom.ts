@@ -1,3 +1,4 @@
+import { getGeminiTurnSelectors } from '@/core/gemini/turnSelectors';
 import {
   buildConversationIdFromUrl,
   extractConversationIdFromUrl,
@@ -9,31 +10,6 @@ import {
 } from '../export/conversationDom';
 import { getLegacyTurnIndex, makeTurnId, normalizeTurnId } from '../fork/turnId';
 import { historyTimestampStore } from '../timestamp/historyTimestamps';
-
-const USER_SELECTORS = [
-  '.user-query-bubble-with-background',
-  '.user-query-bubble-container',
-  '.user-query-container',
-  'user-query-content .user-query-bubble-with-background',
-  'div[aria-label="User message"]',
-  'article[data-author="user"]',
-  'article[data-turn="user"]',
-  '[data-message-author-role="user"]',
-  'div[role="listitem"][data-user="true"]',
-] as const;
-
-const ASSISTANT_SELECTORS = [
-  '[aria-label="Gemini response"]',
-  '[data-message-author-role="assistant"]',
-  '[data-message-author-role="model"]',
-  'article[data-author="assistant"]',
-  'article[data-turn="assistant"]',
-  'article[data-turn="model"]',
-  '.model-response',
-  'model-response',
-  '.response-container',
-  'div[role="listitem"]:not([data-user="true"])',
-] as const;
 
 const ASSISTANT_CONTENT_SELECTORS = [
   'message-content',
@@ -89,9 +65,10 @@ function getUserSelectors(): string[] {
       configured = '';
     }
   }
+  const defaults = getGeminiTurnSelectors('turn.user');
   return configured
-    ? [configured, ...USER_SELECTORS.filter((selector) => selector !== configured)]
-    : [...USER_SELECTORS];
+    ? [configured, ...defaults.filter((selector) => selector !== configured)]
+    : defaults;
 }
 
 function getTopLevelMatches(root: HTMLElement, selectors: readonly string[]): HTMLElement[] {
@@ -109,10 +86,10 @@ function getTopLevelMatches(root: HTMLElement, selectors: readonly string[]): HT
 }
 
 function getAssistantMatches(root: HTMLElement): HTMLElement[] {
-  const specific = getTopLevelMatches(root, ASSISTANT_SELECTORS.slice(0, -1));
+  const specific = getTopLevelMatches(root, getGeminiTurnSelectors('turn.assistant'));
   return specific.length > 0
     ? specific
-    : getTopLevelMatches(root, [ASSISTANT_SELECTORS[ASSISTANT_SELECTORS.length - 1]]);
+    : getTopLevelMatches(root, getGeminiTurnSelectors('turn.assistantFallback'));
 }
 
 function findAssistantRootForTarget(host: HTMLElement, target?: Node): HTMLElement {

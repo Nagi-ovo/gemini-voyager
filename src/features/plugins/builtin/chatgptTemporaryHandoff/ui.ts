@@ -180,19 +180,3 @@ export function showHandoffProgress(
   mountDialog(owned.scope, overlay, dialog, dismiss);
   return { close: owned.close };
 }
-
-export function showHandoffToast(
-  parent: PluginScope,
-  message: string,
-  kind: 'info' | 'error' = 'info',
-): void {
-  if (parent.isDisposed) return;
-  const owned = ownScope(parent, 'chatgpt-handoff-toast');
-  const toast = document.createElement('div');
-  toast.className = `gv-chatgpt-handoff-toast${kind === 'error' ? ' gv-chatgpt-handoff-toast--error' : ''}`;
-  toast.dataset.gvChatgptHandoffOwned = 'true';
-  toast.setAttribute('role', kind === 'error' ? 'alert' : 'status');
-  toast.textContent = message;
-  owned.scope.mount(toast, document.body);
-  owned.scope.timer(() => void owned.close(), 4_500);
-}

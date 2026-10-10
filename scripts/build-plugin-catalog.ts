@@ -49,6 +49,7 @@ import type { SiteAdapterData } from '../src/features/plugins/sites/siteAdapterD
 import { siteAdapterToData } from '../src/features/plugins/sites/siteAdapterData';
 import { resolveStyleFileContributions } from '../src/features/plugins/sources/styleFiles';
 import type { PluginManifest, SiteAdapter } from '../src/features/plugins/types';
+import { getCatalogRevision } from './lib/catalogRevision';
 import {
   checkManifestAgainstSite,
   compareStrings,
@@ -69,6 +70,7 @@ export interface HostCatalogFile {
 export interface BuildOptions {
   readonly catalogDir: string;
   readonly generatedAt: string;
+  readonly catalogRevision: number;
 }
 
 export interface WriteOptions extends BuildOptions {
@@ -211,7 +213,7 @@ export async function buildHostCatalogs(
       format: HOST_CATALOG_FORMAT,
       host,
       generatedAt: options.generatedAt,
-      site: siteAdapterToData(site.adapter),
+      site: siteAdapterToData({ ...site.adapter, catalogRevision: options.catalogRevision }),
       plugins,
     });
   }
@@ -308,6 +310,7 @@ async function main(): Promise<void> {
     catalogDir: DEFAULT_CATALOG_DIR,
     outDir: options.outDir,
     generatedAt: options.now,
+    catalogRevision: getCatalogRevision(repoRoot, 'production'),
   });
 
   for (const result of results) {

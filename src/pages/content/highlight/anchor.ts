@@ -1,4 +1,4 @@
-import { createHighlightSourceTextHash } from '@/core/services/HighlightAnnotationService';
+import { createHighlightSourceTextHash } from '@/core/services/highlightAnnotationData';
 import { HIGHLIGHT_LIMITS, type HighlightRecordV1 } from '@/core/types/highlight';
 
 export const HIGHLIGHT_CONTEXT_CHARS = HIGHLIGHT_LIMITS.contextCharacters;

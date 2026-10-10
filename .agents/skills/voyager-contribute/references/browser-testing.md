@@ -47,7 +47,6 @@ For each required browser:
 - Confirm existing settings and stored data remain intact.
 - For visual changes, check light and dark themes, alignment, spacing, narrow and wide layouts as applicable.
 - Preserve `/u/<index>/...` account scope when the feature is account-sensitive.
-- Run any matching check in `.github/docs/REGRESSION_NOTES.md`.
 
 ## Plugin checks
 

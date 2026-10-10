@@ -2,10 +2,12 @@ import { googleDriveSyncService } from '@/core/services/GoogleDriveSyncService';
 import {
   type HighlightAccountSnapshot,
   type HighlightImportMergeOptions,
-  type HighlightScope,
-  compareHighlightRecords,
   highlightAnnotationService,
 } from '@/core/services/HighlightAnnotationService';
+import {
+  type HighlightScope,
+  compareHighlightRecords,
+} from '@/core/services/highlightAnnotationData';
 import type {
   HighlightExportPayloadV1,
   HighlightImportStats,

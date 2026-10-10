@@ -61,6 +61,16 @@
       "css": ["contentStyle.css"]
     },
     {
+      "matches": [
+        "https://gemini.google.com/*",
+        "https://business.gemini.google/*",
+        "https://aistudio.google.com/*",
+        "https://aistudio.google.cn/*"
+      ],
+      "js": ["src/pages/content/shadowKeyGuardEntry.ts"],
+      "run_at": "document_start"
+    },
+    {
       "matches": ["https://gemini.google.com/*", "https://business.gemini.google/*"],
       "js": ["src/pages/content/usageObserverLoader.ts"],
       "run_at": "document_start"
@@ -83,6 +93,8 @@
         "conversation-history-observer.js",
         "prevent-auto-scroll.js",
         "assets/*.js",
+        "assets/katex*.css",
+        "assets/KaTeX_*",
         "assets/*.png"
       ],
       "matches": ["<all_urls>"]

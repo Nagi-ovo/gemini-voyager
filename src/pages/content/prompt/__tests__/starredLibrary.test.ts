@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { StarredMessage } from '../../timeline/starredTypes';
+import type { StarredMessage } from '@/features/savedLibrary/starTypes';
+
 import {
   buildStarredMessageUrl,
   filterStarredMessages,

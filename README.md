@@ -18,12 +18,12 @@
   </p>
 
   <p>
-    <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="Nagi-ovo%2Fvoyager | Trendshift" width="250" height="55"/></a>
-    <a href="https://www.star-history.com/nagi-ovo/voyager" target="_blank">
+    <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="voyager-crew%2Fvoyager | Trendshift" width="250" height="55"/></a>
+    <a href="https://www.star-history.com/voyager-crew/voyager" target="_blank">
      <picture>
-       <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank&theme=dark" />
-       <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank" />
-       <img alt="Star History Rank" src="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank" width="193" height="55" />
+       <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank&theme=dark" />
+       <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank" />
+       <img alt="Star History Rank" src="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank" width="193" height="55" />
      </picture>
     </a>
     <a href="https://www.producthunt.com/products/gemini-voyager?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Voyager - AI conversation tools for Gemini, Claude, and ChatGPT | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
@@ -78,7 +78,7 @@ That's why I built **Voyager**. It's a companion that helps you keep your AI con
 
 - **📂 [Folder Organization](https://voyager.nagi.fun/en/guide/folders)**: Organize chats into a two-level folder hierarchy with drag-and-drop support.
   - **Gemini**: Supports **Account Isolation Mode** and **Custom Folder Colors**.
-- **💡 [Prompt Vault](https://voyager.nagi.fun/en/guide/prompts)**: Save and reuse prompts across Gemini, AI Studio, and [custom websites](https://voyager.nagi.fun/en/guide/custom-websites).
+- **💡 [Prompt Vault](https://voyager.nagi.fun/en/guide/prompts)**: Save and reuse prompts across Gemini, AI Studio, and [custom websites](https://voyager.nagi.fun/en/guide/prompts#available-anywhere).
 - **☁️ [Cloud Sync](https://voyager.nagi.fun/en/guide/cloud-sync)**: Sync folders and prompts through Google Drive, or iCloud on Safari.
 - **🗑️ [Batch Delete](https://voyager.nagi.fun/en/guide/batch-delete)**: Bulk delete conversations.
 - **📐 Formula Copy**: One-click copy for LaTeX and MathML (Word) source codes.
@@ -142,7 +142,7 @@ Add any site in the extension popup and the Prompt Manager follows you there, lo
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
   &nbsp;&nbsp;
-  <a href="https://github.com/Nagi-ovo/voyager/releases/latest/" target="_blank">
+  <a href="https://github.com/voyager-crew/voyager/releases/latest/" target="_blank">
     <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari Download" height="36">
   </a>
 </div>
@@ -158,8 +158,8 @@ For **manual installation** or **development builds**, please refer to the [Inst
 ## ☕ Support This Project
 
 <div align="center">
-  <a href="https://github.com/Nagi-ovo/voyager">
-    <img src="https://raw.githubusercontent.com/Nagi-ovo/voyager/main/docs/public/assets/sponsors.svg" width="1000px" />
+  <a href="https://github.com/voyager-crew/voyager">
+    <img src="https://raw.githubusercontent.com/voyager-crew/voyager/main/docs/public/assets/sponsors.svg" width="1000px" />
   </a>
 </div>
 
@@ -187,9 +187,9 @@ If Voyager makes your life easier, consider buying me a coffee. It helps keep th
       <td align="center">
         <a href="https://afdian.com/a/nagi-ovo" target="_blank">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
-            <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" />
-            <img alt="Nagi-ovo's Profile" src="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" height="160" />
+            <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
+            <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo" />
+            <img alt="Nagi-ovo's Profile" src="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo" height="160" />
           </picture>
         </a><br>
         <sub><b>Afdian</b></sub>
@@ -200,9 +200,9 @@ If Voyager makes your life easier, consider buying me a coffee. It helps keep th
 
 ### 🎙️ Recommended Tool: Typeless
 
-I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/refer?code=MZRYZP1)**, an AI voice-to-text tool that I used extensively during the development of Voyager. Integrating it into my daily workflow has saved me a tremendous amount of time and significantly boosted my productivity.
+I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**, an AI voice-to-text tool that I used extensively during the development of Voyager. Integrating it into my daily workflow has saved me a tremendous amount of time and significantly boosted my productivity.
 
-> 🎁 **[Join via my referral link](https://www.typeless.com/refer?code=MZRYZP1)** (Code: _`MZRYZP1`_) to get **$5 free credits**. This also gives me credits to keep maintaining this project—a free way to support my work! ❤️
+> 🎁 **[Join via my referral link](https://www.typeless.com/?via=gemini-voyager)** (Code: _`gemini-voyager`_) to get **$5 free credits**. This also gives me credits to keep maintaining this project—a free way to support my work! ❤️
 
 ---
 
@@ -233,12 +233,12 @@ I highly recommend **[Typeless (typeless.com)](https://www.typeless.com/refer?co
 
 ## 🤝 Contributing & Development
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/voyager)
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/voyager-crew/voyager)
 
 We welcome contributions! Whether you want to report bugs, suggest features, improve documentation, or submit code:
 
-- **Issues**: Reproducible bugs only — use the [bug report](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml) template
-- **Discussions**: [Feature requests, ideas, and questions](https://github.com/Nagi-ovo/voyager/discussions) — not Issues
+- **Issues**: Reproducible bugs only — use the [bug report](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml) template
+- **Discussions**: [Feature requests, ideas, and questions](https://github.com/voyager-crew/voyager/discussions) — not Issues
 - **Pull Requests**: Check out [CONTRIBUTING.md](./.github/CONTRIBUTING.md) for guidelines
 
 <details>
@@ -271,8 +271,8 @@ Thank you for helping make Voyager better! ❤️
 
 Special thanks to all contributors for their contributions to Voyager ❤️
 
-<a href="https://github.com/Nagi-ovo/voyager/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Nagi-ovo/voyager&max=200&columns=14" />
+<a href="https://github.com/voyager-crew/voyager/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=voyager-crew/voyager&max=200&columns=14" />
 </a>
 
 ---
@@ -285,7 +285,7 @@ Special thanks to all contributors for their contributions to Voyager ❤️
 
 - **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - Image Refinement is adapted from these projects. Third-party MIT notices are retained in [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
 
-- **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - The default-model locking logic includes interaction ideas adapted from Gemini Helper, with source-level attribution retained.
+- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)** - The default-model locking logic includes interaction ideas adapted from Gemini Helper, with source-level attribution retained.
 
 - **[cordis](https://github.com/cordiverse/cordis)** - The plugin runtime's side-effect ledger (`PluginScope`) borrows its effect/disposal lifecycle design from cordis's fiber model.
 
@@ -315,11 +315,11 @@ Gemini is a trademark of Google LLC. Claude is a trademark of Anthropic, PBC. Ch
 ---
 
 <div align="center">
-  <a href="https://www.star-history.com/#Nagi-ovo/voyager&type=date&legend=top-left">
+  <a href="https://www.star-history.com/#voyager-crew/voyager&type=date&legend=top-left">
    <picture>
-     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&theme=dark&legend=top-left" />
-     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&legend=top-left" />
-     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&legend=top-left" />
+     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&theme=dark&legend=top-left" />
+     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&legend=top-left" />
+     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&legend=top-left" />
    </picture>
   </a>
   <p>Made with ❤️ by Jesse Zhang</p>

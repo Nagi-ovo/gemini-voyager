@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ConversationId, FolderId } from '@/core/types/common';
 import type { ConversationReference, Folder, FolderData } from '@/core/types/folder';
 import type { PromptItem } from '@/core/types/sync';
+import { normalizeFolderData } from '@/features/folder/model/folderData';
 
 import { mergeFolderData, mergePromptsWithStats } from './merge';
 
@@ -284,6 +285,41 @@ describe('mergeFolderData', () => {
       expect(result.folderContents.f1).toHaveLength(2);
       expect(result.folderContents.f1.map((c) => c.conversationId).sort()).toEqual(['c1', 'c2']);
     });
+  });
+});
+
+describe('mergeFolderData with a folder stored as __proto__', () => {
+  it('keeps its conversations through a Drive round trip', () => {
+    // Storage and Drive both hand data back through JSON: `__proto__` is an own key.
+    const stored = JSON.parse(
+      JSON.stringify({
+        folders: [{ ...createFolder('x', 'Proto', 1), id: 'PROTO' }],
+        folderContents: { PROTO: [createConvo('c1', 'One', 1)] },
+      }).replaceAll('PROTO', '__proto__'),
+    ) as FolderData;
+    const cloud = JSON.parse(JSON.stringify(stored)) as FolderData;
+
+    const merged = mergeFolderData(stored, cloud);
+    const synced = JSON.parse(JSON.stringify(merged)) as FolderData;
+
+    expect(Object.getPrototypeOf(merged.folderContents)).toBe(Object.prototype);
+    expect(Object.hasOwn(synced.folderContents, '__proto__')).toBe(true);
+    expect(synced.folderContents['__proto__'].map((c) => c.conversationId)).toEqual(['c1']);
+    expect(normalizeFolderData(synced).folderContents['__proto__']).toHaveLength(1);
+  });
+
+  it('keeps a __proto__ bucket that no folder lists', () => {
+    const orphan = JSON.parse(
+      JSON.stringify({
+        folders: [],
+        folderContents: { PROTO: [createConvo('c1', 'One', 1)] },
+      }).replace('PROTO', '__proto__'),
+    ) as FolderData;
+
+    const merged = mergeFolderData(orphan, { folders: [], folderContents: {} });
+
+    expect(Object.hasOwn(merged.folderContents, '__proto__')).toBe(true);
+    expect(merged.folderContents['__proto__'].map((c) => c.conversationId)).toEqual(['c1']);
   });
 });
 

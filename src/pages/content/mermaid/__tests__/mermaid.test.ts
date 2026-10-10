@@ -1,19 +1,10 @@
-/* oxlint-disable no-unsafe-optional-chaining -- `mermaid?.render` is undefined only when
-   loadMermaid() failed, and letting that throw is how these tests report it. */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  _initMermaidForTest,
-  _openFullscreenForTest,
-  _renderMermaidForTest,
-  _resetMermaidLoader,
-  isGenericLanguageLabel,
-  isMermaidCode,
-  loadMermaid,
-  normalizeMermaidCode,
-  normalizeWhitespace,
-  resolveMermaidTheme,
-} from '../index';
+import { isGenericLanguageLabel } from '../../codeBlock';
+import { renderMermaid } from '../codeBlock';
+import { openFullscreen } from '../fullscreen';
+import { MermaidRenderer, resolveMermaidTheme } from '../renderer';
+import { isMermaidCode, normalizeMermaidCode, normalizeWhitespace } from '../source';
 
 // Mock the dynamic import of 'mermaid'
 vi.mock('mermaid', () => ({
@@ -23,52 +14,35 @@ vi.mock('mermaid', () => ({
   },
 }));
 
-describe('Mermaid dynamic loading', () => {
+describe('Mermaid rendering', () => {
+  let renderer: MermaidRenderer;
+  const getLibrary = async () => (await import('mermaid')).default;
   beforeEach(() => {
-    _resetMermaidLoader();
+    renderer = new MermaidRenderer();
     vi.clearAllMocks();
     document.body.innerHTML = '';
     document.body.className = '';
   });
 
-  describe('loadMermaid', () => {
-    it('should load mermaid module successfully', async () => {
-      const mermaid = await loadMermaid();
-      expect(mermaid).not.toBeNull();
-      expect(mermaid).toHaveProperty('initialize');
-      expect(mermaid).toHaveProperty('render');
-    });
-
-    it('should cache the loaded instance on subsequent calls', async () => {
-      const first = await loadMermaid();
-      const second = await loadMermaid();
-      expect(first).toBe(second);
-    });
-
-    it('should return cached instance without re-importing', async () => {
-      // First call loads and caches
-      const first = await loadMermaid();
-      expect(first).not.toBeNull();
-
-      // Second call returns cached instance immediately (no new import)
-      const second = await loadMermaid();
-      expect(second).toBe(first);
+  describe('initialization', () => {
+    it('loads the library successfully', async () => {
+      await expect(renderer.initialize()).resolves.toBe(true);
     });
 
     it('initializes Mermaid in strict mode for untrusted model output', async () => {
-      await _initMermaidForTest();
+      await renderer.initialize();
 
-      const mermaid = await loadMermaid();
-      expect(mermaid?.initialize).toHaveBeenCalledWith(
+      const mermaid = await getLibrary();
+      expect(mermaid.initialize).toHaveBeenCalledWith(
         expect.objectContaining({ securityLevel: 'strict' }),
       );
     });
 
     it('uses SVG flowchart labels so sanitization preserves visible text', async () => {
-      await _initMermaidForTest();
+      await renderer.initialize();
 
-      const mermaid = await loadMermaid();
-      expect(mermaid?.initialize).toHaveBeenCalledWith(
+      const mermaid = await getLibrary();
+      expect(mermaid.initialize).toHaveBeenCalledWith(
         expect.objectContaining({ htmlLabels: false, flowchart: { htmlLabels: false } }),
       );
     });
@@ -123,23 +97,36 @@ describe('Mermaid dynamic loading', () => {
   });
 
   describe('fullscreen lifecycle', () => {
-    it('removes document listeners for every close path', () => {
-      vi.useFakeTimers();
-      const removeSpy = vi.spyOn(document, 'removeEventListener');
-
-      _openFullscreenForTest('<svg width="100" height="100"><path d="M0 0" /></svg>');
-      document
-        .querySelector<HTMLButtonElement>('.gv-mermaid-modal-toolbar button:last-child')!
-        .click();
-
-      expect(removeSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
-      expect(removeSpy).toHaveBeenCalledWith('mousemove', expect.any(Function));
-      expect(removeSpy).toHaveBeenCalledWith('mouseup', expect.any(Function));
-
-      vi.runAllTimers();
-      expect(document.querySelector('.gv-mermaid-modal')).toBeNull();
-      vi.useRealTimers();
-    });
+    it.each(['button', 'escape', 'backdrop'] as const)(
+      'closes after the fade and stops document dragging via %s',
+      (path) => {
+        vi.useFakeTimers();
+        try {
+          openFullscreen('<svg width="100" height="100"><path d="M0 0" /></svg>');
+          const modal = document.querySelector<HTMLElement>('.gv-mermaid-modal')!;
+          const content = modal.querySelector<HTMLElement>('.gv-mermaid-modal-content')!;
+          vi.advanceTimersToNextFrame();
+          content.dispatchEvent(new MouseEvent('mousedown', { clientX: 10, clientY: 20 }));
+          const close = {
+            button: () => modal.querySelector<HTMLButtonElement>('button:last-child')!.click(),
+            escape: () => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })),
+            backdrop: () => modal.click(),
+          }[path];
+          close();
+          const transform = content.style.transform;
+          document.dispatchEvent(new MouseEvent('mousemove', { clientX: 70, clientY: 80 }));
+          expect(content.style.transform).toBe(transform);
+          expect(content.classList.contains('dragging')).toBe(false);
+          expect(modal.classList.contains('visible')).toBe(false);
+          vi.advanceTimersByTime(300);
+          expect(modal.isConnected).toBe(false);
+        } finally {
+          document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+          vi.runAllTimers();
+          vi.useRealTimers();
+        }
+      },
+    );
   });
 
   describe('rendered diagram theme marker', () => {
@@ -149,10 +136,10 @@ describe('Mermaid dynamic loading', () => {
 
     const initializeTheme = async (theme: 'dark' | 'light') => {
       setPageTheme(theme);
-      await _initMermaidForTest();
+      await renderer.initialize();
 
-      const mermaid = await loadMermaid();
-      expect(mermaid?.initialize).toHaveBeenLastCalledWith(
+      const mermaid = await getLibrary();
+      expect(mermaid.initialize).toHaveBeenLastCalledWith(
         expect.objectContaining({ theme: theme === 'dark' ? 'dark' : 'default' }),
       );
     };
@@ -166,8 +153,8 @@ describe('Mermaid dynamic loading', () => {
       host.appendChild(code);
       document.body.appendChild(host);
 
-      const mermaid = await loadMermaid();
-      (mermaid?.render as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      const mermaid = await getLibrary();
+      (mermaid.render as unknown as ReturnType<typeof vi.fn>).mockImplementation(
         async (_id: string, source: string) => {
           if (source.endsWith('%%{init: {"theme":"default"}}%%')) {
             if (failLightExport) throw new Error('light export failed');
@@ -177,7 +164,7 @@ describe('Mermaid dynamic loading', () => {
         },
       );
 
-      await _renderMermaidForTest(code, source);
+      await renderMermaid(code, source, renderer);
       return host.parentElement;
     };
 
@@ -200,8 +187,8 @@ describe('Mermaid dynamic loading', () => {
           ?.content.querySelector('svg')
           ?.getAttribute('data-export-theme'),
       ).toBe('light');
-      const mermaid = await loadMermaid();
-      const renderMock = mermaid?.render as unknown as ReturnType<typeof vi.fn>;
+      const mermaid = await getLibrary();
+      const renderMock = mermaid.render as unknown as ReturnType<typeof vi.fn>;
       expect(renderMock).toHaveBeenCalledTimes(2);
       expect(renderMock.mock.calls[1][1]).toBe(
         'flowchart TD\nA --> B\nB --> C\n%%{init: {"theme":"default"}}%%',
@@ -210,8 +197,8 @@ describe('Mermaid dynamic loading', () => {
 
     it('keeps existing frontmatter before the cross-version light theme directive', async () => {
       await initializeTheme('dark');
-      const mermaid = await loadMermaid();
-      const renderMock = mermaid?.render as unknown as ReturnType<typeof vi.fn>;
+      const mermaid = await getLibrary();
+      const renderMock = mermaid.render as unknown as ReturnType<typeof vi.fn>;
       const source = `---
 title: Existing metadata
 config:
@@ -254,12 +241,12 @@ B --> C`;
       expect(wrapper?.dataset.gvMermaidTheme).toBe('light');
     });
 
-    it('does not retain a reset Mermaid theme after reinitialization', async () => {
+    it('does not share initialized themes between renderer instances', async () => {
       await initializeTheme('dark');
-      _resetMermaidLoader();
+      renderer = new MermaidRenderer();
 
-      const wrapperAfterReset = await renderDiagram();
-      expect(wrapperAfterReset?.dataset.gvMermaidTheme).toBeUndefined();
+      const uninitializedWrapper = await renderDiagram();
+      expect(uninitializedWrapper?.dataset.gvMermaidTheme).toBeUndefined();
 
       await initializeTheme('light');
       setPageTheme('dark');
@@ -292,12 +279,12 @@ B --> C`;
       host.appendChild(code);
       document.body.appendChild(host);
 
-      const mermaid = await loadMermaid();
-      (mermaid?.render as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      const mermaid = await getLibrary();
+      (mermaid.render as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
         new Error('No diagram type detected for text: <b id="gv-proof">proof</b>'),
       );
 
-      await _renderMermaidForTest(code, 'not a diagram');
+      await renderMermaid(code, 'not a diagram', renderer);
 
       const diagram = document.querySelector<HTMLElement>('.gv-mermaid-diagram');
       expect(diagram?.querySelector('#gv-proof')).toBeNull();
@@ -310,8 +297,8 @@ B --> C`;
       host.appendChild(code);
       document.body.appendChild(host);
 
-      const mermaid = await loadMermaid();
-      (mermaid?.render as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      const mermaid = await getLibrary();
+      (mermaid.render as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         svg: `<svg viewBox="0 0 100 50">
           <style>.node{position:fixed;inset:0;z-index:99}</style>
           <foreignObject><a href="https://example.invalid/phish">Verify</a><img src="https://example.invalid/pixel"></foreignObject>
@@ -319,7 +306,7 @@ B --> C`;
         </svg>`,
       });
 
-      await _renderMermaidForTest(code, 'flowchart TD\nA --> B\nB --> C');
+      await renderMermaid(code, 'flowchart TD\nA --> B\nB --> C', renderer);
 
       const diagram = document.querySelector<HTMLElement>('.gv-mermaid-diagram');
       expect(diagram?.querySelector('a, img, script, iframe, form, input')).toBeNull();
@@ -335,8 +322,8 @@ B --> C`;
       host.appendChild(code);
       document.body.appendChild(host);
 
-      const mermaid = await loadMermaid();
-      (mermaid?.render as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      const mermaid = await getLibrary();
+      (mermaid.render as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         svg: `<svg viewBox="0 0 100 50">
           <style>
             #chart .node rect { fill: #ececff; stroke: #9370db; }
@@ -349,7 +336,7 @@ B --> C`;
         </svg>`,
       });
 
-      await _renderMermaidForTest(code, 'flowchart TD\nA --> B\nB --> C');
+      await renderMermaid(code, 'flowchart TD\nA --> B\nB --> C', renderer);
 
       const style = document.querySelector<HTMLStyleElement>('.gv-mermaid-diagram style');
       expect(style?.textContent).toContain('fill: #ececff');

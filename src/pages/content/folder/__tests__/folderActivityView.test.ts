@@ -4,6 +4,7 @@ import browser from 'webextension-polyfill';
 import { accountIsolationService } from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
 
+import { historyTimestampStore } from '../../timestamp/historyTimestamps';
 import { ACTIVITY_PRIORITY_WINDOW_MS } from '../activityView';
 import type { FolderData } from '../types';
 import { createFolderViewHarness, resetFolderViewBrowserMocks } from './folderViewHarness';
@@ -20,6 +21,7 @@ vi.mock('webextension-polyfill', () => ({
 }));
 
 vi.mock('@/utils/i18n', () => ({
+  getCachedLocale: () => 'en',
   getTranslationSync: (key: string) => key,
   getTranslationSyncUnsafe: (key: string) => key,
   initI18n: () => Promise.resolve(),
@@ -269,7 +271,65 @@ describe('folder Activity view', () => {
     expect(savedCopies.every((conversation) => conversation.lastTurnAt === nextTurnAt)).toBe(true);
   });
 
-  it('marks the user filter button active after the Activity bell is inserted first', async () => {
+  it('an imported chat kept under a synthetic id gets its Gemini server activity time', async () => {
+    const data = activityData();
+    data.folderContents.copy.push({
+      conversationId: 'imported-7f3a',
+      title: 'Imported chat',
+      url: 'https://gemini.google.com/app/realroute',
+      addedAt: 1,
+      lastTurnAt: 5,
+    });
+    harness = await createFolderViewHarness(data);
+    const serverTurnAt = Date.now() - 30_000;
+    vi.spyOn(historyTimestampStore, 'getLatestTurnTimestamp').mockImplementation((id) =>
+      id === 'realroute' ? serverTurnAt : null,
+    );
+    const imported = () =>
+      harness.store.data.folderContents.copy.find((c) => c.conversationId === 'imported-7f3a');
+
+    // Gemini's history load reports the conversation by its route id.
+    harness.store.applyHistoryActivityTimestamps(['c_realroute']);
+    expect(imported()?.lastTurnAt).toBe(serverTurnAt);
+
+    // A reload of the stored folders reads it back from the server times too.
+    harness.store.data.folderContents.copy = harness.store.data.folderContents.copy.map((c) =>
+      c.conversationId === 'imported-7f3a' ? { ...c, lastTurnAt: 5 } : c,
+    );
+    harness.store.backfillKnownConversationActivity();
+    expect(imported()?.lastTurnAt).toBe(serverTurnAt);
+  });
+
+  it('the activity bell stays beside the create button while other header actions are hidden', async () => {
+    harness = await createFolderViewHarness(activityData());
+
+    const buttons = [
+      ...(harness.runtime.panel?.querySelectorAll<HTMLButtonElement>(
+        '.gv-folder-header-actions button',
+      ) ?? []),
+    ];
+    const roles = buttons.map(
+      (button) =>
+        [
+          'gv-folder-user-filter-toggle',
+          'gv-folder-import-export-btn',
+          'gv-folder-cloud-btn',
+          'gv-folder-settings-btn',
+          'gv-folder-activity-toggle',
+          'gv-folder-add-btn',
+        ].find((role) => button.classList.contains(role)) ?? button.className,
+    );
+    expect(roles).toEqual([
+      'gv-folder-user-filter-toggle',
+      'gv-folder-import-export-btn',
+      'gv-folder-cloud-btn',
+      'gv-folder-settings-btn',
+      'gv-folder-activity-toggle',
+      'gv-folder-add-btn',
+    ]);
+  });
+
+  it('marks the user filter button active, not the Activity bell', async () => {
     vi.mocked(browser.storage.local.get).mockResolvedValue({
       [StorageKeys.FOLDERS_VIEW_MODE]: 'folders',
     });

@@ -2,7 +2,7 @@ import { StorageKeys } from '@/core/types/common';
 import { getCurrentLanguage, getTranslation } from '@/utils/i18n';
 import { normalizeLanguage } from '@/utils/language';
 
-import { showExportToast } from '../../../features/export/ui/ExportToast';
+import { showExportNotice } from '../../../features/export/ui/exportToasts';
 import { convertCanvasDomToMarkdown } from './markdownConverter';
 import {
   CANVAS_MARKDOWN_BUTTON_CLASS,
@@ -21,26 +21,22 @@ let currentLabels = { label: 'Copy as Markdown', tooltip: 'Copy Canvas content a
 async function copyMarkdownFromCanvas(): Promise<void> {
   const root = findCanvasProseMirrorRoot();
   if (!root) {
-    const msg = await getTranslation('canvasExportEmpty');
-    showExportToast(msg);
+    showExportNotice(await getTranslation('canvasExportEmpty'), { tone: 'warning' });
     return;
   }
 
   const markdown = convertCanvasDomToMarkdown(root).trim();
   if (!markdown) {
-    const msg = await getTranslation('canvasExportEmpty');
-    showExportToast(msg);
+    showExportNotice(await getTranslation('canvasExportEmpty'), { tone: 'warning' });
     return;
   }
 
   try {
     await navigator.clipboard.writeText(markdown);
-    const msg = await getTranslation('canvasExportCopied');
-    showExportToast(msg);
+    showExportNotice(await getTranslation('canvasExportCopied'), { tone: 'success' });
   } catch (err) {
     console.error('[Gemini Voyager] Canvas markdown copy failed:', err);
-    const msg = await getTranslation('canvasExportFailed');
-    showExportToast(msg);
+    showExportNotice(await getTranslation('canvasExportFailed'), { tone: 'error' });
   }
 }
 

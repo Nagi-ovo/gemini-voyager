@@ -80,10 +80,11 @@ describe('HighlightEditor', () => {
       color: '#123456',
     });
     expect(
-      Array.from(ui.popover.querySelectorAll('button, textarea')).every(
-        (element) => (element as HTMLButtonElement | HTMLTextAreaElement).disabled,
-      ),
+      Array.from(ui.popover.querySelectorAll('button, textarea'))
+        .filter((element) => element !== ui.cancel)
+        .every((element) => (element as HTMLButtonElement | HTMLTextAreaElement).disabled),
     ).toBe(true);
+    expect(ui.cancel.disabled).toBe(false);
 
     finishSave();
     await vi.advanceTimersByTimeAsync(0);
@@ -125,6 +126,49 @@ describe('HighlightEditor', () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(ui.popover.isConnected).toBe(false);
     expect(actions.save).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps pending delete drafts separate across accounts and handles a late failure after reopening', async () => {
+    let failDelete!: (error: Error) => void;
+    actions.delete.mockImplementationOnce(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          failDelete = reject;
+        }),
+    );
+    editor.open(record, anchor, palette);
+    const first = controls();
+    first.note.value = 'Draft before delete';
+    first.delete.click();
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(first.popover.querySelector('.gv-highlight-save-status')?.textContent).toContain(
+      'Still waiting for confirmation',
+    );
+    first.cancel.click();
+
+    editor.open(
+      { ...record, accountHash: 'another-account', note: 'Other account note' },
+      anchor,
+      palette,
+    );
+    expect(controls().note.value).toBe('Other account note');
+    expect(controls().save.disabled).toBe(false);
+    editor.close();
+    editor.open({ ...record }, anchor, palette);
+    const reopened = controls();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(reopened.note.value).toBe('Draft before delete');
+    expect(reopened.delete.disabled).toBe(true);
+    expect(document.activeElement).toBe(reopened.cancel);
+
+    failDelete(new Error('Storage unavailable'));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(reopened.note.disabled).toBe(false);
+    expect(reopened.save.disabled).toBe(false);
+    expect(actions.announce).toHaveBeenCalledWith(expect.stringContaining('Storage unavailable'));
+    expect(reopened.popover.querySelector('.gv-highlight-save-status')?.textContent).toContain(
+      'Storage unavailable',
+    );
   });
 
   it('enforces the UTF-8 note limit and clears validation when the draft changes', async () => {

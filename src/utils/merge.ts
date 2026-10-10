@@ -1,11 +1,12 @@
 import type { PromptItem } from '@/core/types/sync';
 import { getPromptNameConflictIds } from '@/core/utils/promptName';
-import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
+import { isNewerPromptCopy } from '@/core/utils/promptRevision';
+import { setBucket } from '@/features/folder/model/folderData';
 import type {
   TimelineHierarchyConversationData,
   TimelineHierarchyData,
-} from '@/pages/content/timeline/hierarchyTypes';
-import type { StarredMessage, StarredMessagesData } from '@/pages/content/timeline/starredTypes';
+} from '@/features/timeline/hierarchyTypes';
+import type { ForkNode, ForkNodesData } from '@/pages/content/fork/forkTypes';
 
 type MergeableFolder = {
   readonly id: string;
@@ -127,14 +128,16 @@ export function mergeFolderData<
     addConversations(cloudToMergedId.get(folderId) ?? folderId, conversations, 'cloud');
   });
 
+  // Own-property writes: a folder stored as `__proto__` would otherwise set
+  // the result's prototype and lose its bucket.
   const folderContents: Record<string, TConversation[]> = {};
   folderOrder.forEach((folderId) => {
-    folderContents[folderId] = Array.from(mergedContents.get(folderId)?.values() ?? []);
+    setBucket(folderContents, folderId, Array.from(mergedContents.get(folderId)?.values() ?? []));
   });
 
   mergedContents.forEach((conversationMap, folderId) => {
-    if (!folderContents[folderId]) {
-      folderContents[folderId] = Array.from(conversationMap.values());
+    if (!Object.hasOwn(folderContents, folderId)) {
+      setBucket(folderContents, folderId, Array.from(conversationMap.values()));
     }
   });
 
@@ -178,18 +181,29 @@ function getUniquePathToId(paths: {
   return uniquePathToId;
 }
 
-function buildFolderPathIndex<TFolder extends MergeableFolder>(
+/**
+ * Each folder's name path from its root, joined by `\u001f`. A folder under a
+ * parent cycle, a missing parent or a blank name has none. The last record of a
+ * repeated id wins the id lookup.
+ */
+export function buildFolderPathIndex<TFolder extends MergeableFolder>(
   folders: TFolder[],
 ): {
   pathById: Map<string, string>;
   idsByPath: Map<string, string[]>;
 } {
   const foldersById = new Map(folders.map((folder) => [folder.id, folder]));
+  const resolveIndexedPath = createFolderPathResolver(foldersById);
   const pathById = new Map<string, string>();
   const idsByPath = new Map<string, string[]>();
 
   folders.forEach((folder) => {
-    const path = resolveFolderPath(folder, foldersById);
+    // An earlier record of a repeated id is not the one its children resolve
+    // to, so it walks its own parents.
+    const path =
+      foldersById.get(folder.id) === folder
+        ? resolveIndexedPath(folder.id)
+        : resolveFolderPath(folder, foldersById);
     if (!path) return;
 
     pathById.set(folder.id, path);
@@ -199,6 +213,49 @@ function buildFolderPathIndex<TFolder extends MergeableFolder>(
   });
 
   return { pathById, idsByPath };
+}
+
+/**
+ * `resolveFolderPath` for the records `foldersById` holds. It remembers every
+ * folder's path, so a deep legacy tree walks each parent link once instead of
+ * once per descendant. A path is the parent's path plus the folder's name, and
+ * none when the parent has none: an ancestor in a cycle, missing or blank.
+ */
+function createFolderPathResolver<TFolder extends MergeableFolder>(
+  foldersById: Map<string, TFolder>,
+): (id: string) => string | null {
+  const paths = new Map<string, string | null>();
+  return (id) => {
+    const chain: TFolder[] = [];
+    const onChain = new Set<string>();
+    let above: string | null = null;
+    let reachedRoot = false;
+    let current = foldersById.get(id);
+    while (current) {
+      if (paths.has(current.id)) {
+        above = paths.get(current.id) ?? null;
+        break;
+      }
+      if (onChain.has(current.id)) break; // a cycle: no folder that reaches it has a path
+      onChain.add(current.id);
+      chain.push(current);
+      if (!current.name.trim()) break;
+      if (!current.parentId) {
+        reachedRoot = true;
+        break;
+      }
+      current = foldersById.get(current.parentId);
+    }
+    for (let index = chain.length - 1; index >= 0; index--) {
+      const name = chain[index].name.trim();
+      let path: string | null = null;
+      if (name && reachedRoot && index === chain.length - 1) path = name;
+      else if (name && above !== null) path = `${above}\u001f${name}`;
+      paths.set(chain[index].id, path);
+      above = path;
+    }
+    return paths.get(id) ?? null;
+  };
 }
 
 function resolveFolderPath<TFolder extends MergeableFolder>(
@@ -241,8 +298,10 @@ export interface PromptMergeResult {
 }
 
 /**
- * Preserves every prompt even when names conflict. Newer same-ID content wins,
- * while a local name survives a legacy cloud record that omits the field.
+ * Preserves every prompt even when names conflict. Newer same-ID content wins
+ * (`isNewerPromptCopy`: the later edit, then a content tie-break every device
+ * agrees on), while a local name and pin survive a legacy cloud record that omits the field;
+ * an explicit `pinnedAt: null` unpins.
  * Duplicate-name groups are reported so callers can show a non-blocking
  * warning and slash completion can disable the ambiguous names.
  */
@@ -256,76 +315,17 @@ export function mergePromptsWithStats(local: PromptItem[], cloud: PromptItem[]):
       continue;
     }
 
-    const cloudTime = cloudItem.updatedAt || cloudItem.createdAt || 0;
-    const localTime = localItem.updatedAt || localItem.createdAt || 0;
-    if (cloudTime <= localTime) continue;
+    if (!isNewerPromptCopy(cloudItem, localItem)) continue;
 
-    itemMap.set(
-      cloudItem.id,
-      cloudItem.name === undefined ? { ...cloudItem, name: localItem.name } : cloudItem,
-    );
+    let winner = cloudItem.name === undefined ? { ...cloudItem, name: localItem.name } : cloudItem;
+    if (cloudItem.pinnedAt === undefined && localItem.pinnedAt !== undefined) {
+      winner = { ...winner, pinnedAt: localItem.pinnedAt };
+    }
+    itemMap.set(cloudItem.id, winner);
   }
 
   const items = Array.from(itemMap.values());
   return { items, nameConflicts: getPromptNameConflictIds(items).size };
-}
-
-/**
- * Merges local and cloud starred messages.
- * Uses turnId as the unique key within each conversation.
- * Prefers the message with the newer starredAt timestamp when duplicates exist.
- */
-export function mergeStarredMessages(
-  local: StarredMessagesData,
-  cloud: StarredMessagesData,
-): StarredMessagesData {
-  // Ensure we have valid input structures
-  const localMessages = local?.messages || {};
-  const cloudMessages = cloud?.messages || {};
-
-  // Get all conversation IDs from both sources
-  const allConversationIds = new Set([
-    ...Object.keys(localMessages),
-    ...Object.keys(cloudMessages),
-  ]);
-
-  const mergedMessages: Record<string, StarredMessage[]> = {};
-
-  allConversationIds.forEach((conversationId) => {
-    const localConvoMessages = localMessages[conversationId] || [];
-    const cloudConvoMessages = cloudMessages[conversationId] || [];
-
-    // Use Map with turnId as key for deduplication
-    const messageMap = new Map<string, StarredMessage>();
-
-    // Add cloud messages first (so local can overwrite if newer)
-    cloudConvoMessages.forEach((msg) => {
-      messageMap.set(msg.turnId, msg);
-    });
-
-    // Merge local messages - prefer newer starredAt
-    localConvoMessages.forEach((localMsg) => {
-      const existingMsg = messageMap.get(localMsg.turnId);
-      if (!existingMsg) {
-        // New message from local
-        messageMap.set(localMsg.turnId, localMsg);
-      } else {
-        // Conflict: compare starredAt timestamps
-        if (localMsg.starredAt >= existingMsg.starredAt) {
-          messageMap.set(localMsg.turnId, localMsg);
-        }
-        // If cloud is newer, keep cloud (already in map)
-      }
-    });
-
-    // Only add non-empty arrays
-    const mergedArray = Array.from(messageMap.values());
-    if (mergedArray.length > 0) {
-      mergedMessages[conversationId] = mergedArray;
-    }
-  });
-
-  return { messages: mergedMessages };
 }
 
 /**

@@ -138,7 +138,7 @@ Claude、ChatGPT 的现有 builtin 清单改写为使用原语的 JSON，随本�
 
 ## 7. Prompt Manager 路径统一
 
-插件平台路径复用 `createCustomSiteCoverageReconciler`；popup 站点名读适配器 `label`，删除 `Popup.tsx` 中的手写映射。
+插件平台路径复用 `createPromptManagerEngine().followCoverage`；popup 站点名读适配器 `label`，删除 `Popup.tsx` 中的手写映射。
 
 ## 8. 工具链与 skill
 
@@ -228,7 +228,6 @@ Claude、ChatGPT 的现有 builtin 清单改写为使用原语的 JSON，随本�
 - 所有新 popup 文案 10 语种齐全；清单 `changelog` 字段采用与 `name`/`description` 相同的 i18n 映射形状。
 - 打包清单的 `format` 字段可缺省为 1；host 文件必须带。
 - 触及后台、存储、插件运行时属高复杂度模块：整文件阅读、全量测试。
-- 每个可复现的坑写进 `.github/docs/regressions/providers-plugins.md`，跑 `bun run regressions:check`。
 - 不新增 `public/` 资源；目录产物进文档站，不进扩展包。
 
 ### 12.4 测试清单
@@ -274,7 +273,7 @@ Claude、ChatGPT 的现有 builtin 清单改写为使用原语的 JSON，随本�
 - Claude / ChatGPT / DeepSeek 适配器数据化为 `site.json`，TS 文件只剩薄壳；Gemini / AI Studio 是原生站点、选择器来自第一方代码，保持 TS（D14 本就不进目录）。
 - 语义键词汇表 `sites/semanticKeys.ts`；`site.json` 校验器 `sites/siteAdapterData.ts`（手写 guard，D17）拒绝词汇表之外的键；`conversationIdPattern` 作为适配器字段。
 - 远程覆盖：host 文件 `site` 段经校验并要求 `matches` 覆盖该 host 后写入缓存；`HostCatalogSource.siteOverride` 提供，`remote/siteOverride.ts` 统一优先级（覆盖 > 内置）；PluginHost 首次挂载即用覆盖，目录变化且适配器不同则重建引擎；品牌色（内容脚本与 popup）读同一来源。
-- Prompt Manager 路径统一（§7）：插件平台与自定义站点同走 `createCustomSiteCoverageReconciler`，只有 host 在自定义站点列表里才挂载，并跟随 popup 开关实时增删；popup 站点名改读适配器 `label`，手写映射删除。
+- Prompt Manager 路径统一（§7）：插件平台与自定义站点同走 `createPromptManagerEngine().followCoverage`，只有 host 在自定义站点列表里才挂载，并跟随 popup 开关实时增删；popup 站点名改读适配器 `label`，手写映射删除。
 - 通用参数化测试 `sources/bundledPluginsLifecycle.test.ts` 遍历所有目录插件：mount → updateSettings → unmount 还原宿主；`vitest.config.ts` 对目录 CSS 开启真实读取（此前 vitest 会把 CSS 导入替换成空字符串）。
 - `.github/CODEOWNERS` 按站点目录分配；构建脚本改读 `sites/*/site.json`（Bun 不支持 `import.meta.glob`，不能 import 注册表）并强制 D18 子集校验。
 

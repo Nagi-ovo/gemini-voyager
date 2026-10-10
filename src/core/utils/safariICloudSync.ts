@@ -79,7 +79,9 @@ export async function readSafariICloudFile<T>(fileName: string): Promise<T | nul
   if (typeof response.data.json !== 'string') {
     throw new Error('The iCloud sync file is invalid');
   }
-  return JSON.parse(response.data.json) as T;
+  const payload: unknown = JSON.parse(response.data.json);
+  if (payload === null) throw new Error('The cloud sync file contains invalid null data');
+  return payload as T;
 }
 
 export async function deleteSafariICloudBackup(): Promise<number> {

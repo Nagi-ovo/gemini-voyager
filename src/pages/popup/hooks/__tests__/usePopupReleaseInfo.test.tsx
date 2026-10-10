@@ -30,7 +30,7 @@ describe('usePopupReleaseInfo', () => {
   const cacheKey = 'gvLatestVersionCache';
   const now = Date.UTC(2026, 8, 8, 12);
   const minute = 60_000;
-  const dmgUrl = 'https://github.com/Nagi-ovo/voyager/releases/download/v1.9.1/Voyager.dmg';
+  const dmgUrl = 'https://github.com/voyager-crew/voyager/releases/download/v1.9.1/Voyager.dmg';
   let container: HTMLDivElement;
   let root: Root;
   let info: ReleaseInfo;
@@ -90,7 +90,7 @@ describe('usePopupReleaseInfo', () => {
     manifest = { ...manifest, update_url: 'https://clients2.google.com/service/update2/crx' };
     await render();
     expect(info.extVersion).toBe('1.8.3');
-    expect(info.releaseUrl).toBe('https://github.com/Nagi-ovo/voyager/releases/tag/v1.8.3');
+    expect(info.releaseUrl).toBe('https://github.com/voyager-crew/voyager/releases/tag/v1.8.3');
     expect(info.hasUpdate).toBe(false);
     expect(browser.storage.local.get).not.toHaveBeenCalled();
     expect(fetchRelease).not.toHaveBeenCalled();
@@ -102,7 +102,9 @@ describe('usePopupReleaseInfo', () => {
     });
     await render();
     expect(info.normalizedLatestVersion).toBe('1.9.0');
-    expect(info.latestReleaseUrl).toBe('https://github.com/Nagi-ovo/voyager/releases/tag/v1.9.0');
+    expect(info.latestReleaseUrl).toBe(
+      'https://github.com/voyager-crew/voyager/releases/tag/v1.9.0',
+    );
     expect(fetchRelease).not.toHaveBeenCalled();
     expect(browser.storage.local.set).not.toHaveBeenCalled();
   });
@@ -113,7 +115,7 @@ describe('usePopupReleaseInfo', () => {
     });
     await render();
     expect(fetchRelease).toHaveBeenCalledExactlyOnceWith(
-      'https://api.github.com/repos/Nagi-ovo/voyager/releases/latest',
+      'https://api.github.com/repos/voyager-crew/voyager/releases/latest',
       { headers: { Accept: 'application/vnd.github+json' } },
     );
     expect(info.normalizedLatestVersion).toBe('1.9.1');

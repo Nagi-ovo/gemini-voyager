@@ -331,6 +331,7 @@
 
       if (blocked) {
         const positions = collectVerticalScrollPositions(this);
+        // Gemini's native call has sidebar layout side effects; undo only its vertical chat scroll.
         try {
           return originalScrollIntoView.apply(this, args);
         } finally {

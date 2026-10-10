@@ -2,7 +2,7 @@
   "$schema": "https://voyager.nagi.fun/plugin.schema.json",
   "id": "voyager.chatgpt-reading-width",
   "name": "ChatGPT · Comfortable Reading Width",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Widen ChatGPT's conversation to one centered, adjustable column — drag the slider to fit your screen.",
   "i18n": {
     "zh": {
@@ -135,7 +135,7 @@
   "author": "voyager-official",
   "category": "readability",
   "license": "MIT",
-  "homepage": "https://github.com/Nagi-ovo/voyager/tree/main/src/features/plugins/catalog/sites/chatgpt/plugins/reading-width",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/chatgpt/plugins/reading-width",
   "engine": ">=1.2.0",
   "tier": "declarative",
   "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],

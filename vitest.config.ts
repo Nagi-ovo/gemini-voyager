@@ -1,15 +1,35 @@
 import path from 'path';
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
+
+import { getCatalogRevision } from './scripts/lib/catalogRevision';
 
 export default defineConfig({
+  define: {
+    'import.meta.env.VOYAGER_CATALOG_REVISION': JSON.stringify(
+      getCatalogRevision(__dirname, 'unstamped'),
+    ),
+  },
   test: {
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/tests/setup.ts'],
+    // Agent and local worktrees are full checkouts inside the repo; their
+    // copies of the suite belong to their own runs.
+    exclude: [...configDefaults.exclude, '.claude/worktrees/**', '.worktrees/**'],
     // Vitest stubs CSS imports to '' unless the file is listed here, which
     // also swallows `?raw` imports. The bundled plugin catalog is plain CSS
     // read as text, so let Vite serve it for real; app CSS stays stubbed.
     css: { include: [/src\/features\/plugins\/catalog\/.*\.css(?:\?raw)?$/] },
+    // `--changed` follows imports only. Tests read stylesheets and locale files
+    // from disk and app CSS is stubbed, so a change to either runs everything.
+    // Anchored at the root: a leading `**` never crosses `.claude/worktrees`.
+    forceRerunTriggers: [
+      'package.json',
+      '{vite,vitest}.config.*',
+      'src/**/*.css',
+      'public/**/*.css',
+      'src/locales/**',
+    ].map((pattern) => path.join(__dirname, pattern)),
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

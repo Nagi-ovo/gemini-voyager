@@ -46,7 +46,7 @@ También puedes encontrarme en estas plataformas:
 
 Si encuentras un error (Bug) reproducible, envía un Issue en GitHub. Las solicitudes de funciones, ideas y preguntas van en Discussions, no en Issues:
 
-- [Reportar un Bug](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml)
-- [Proponer una función o idea (Discussions)](https://github.com/Nagi-ovo/voyager/discussions)
+- [Reportar un Bug](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml)
+- [Proponer una función o idea (Discussions)](https://github.com/voyager-crew/voyager/discussions)
 
 ¡Gracias por tu apoyo a Voyager! ❤️

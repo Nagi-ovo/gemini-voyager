@@ -48,9 +48,11 @@ export function SettingToggleRow({
   const labelNode = (
     <Label
       htmlFor={id}
-      className={`group-hover:text-primary cursor-pointer text-sm font-medium transition-colors${
-        experimental ? ' flex items-center gap-1' : ''
-      }`}
+      className={`text-sm font-medium transition-colors${
+        disabled
+          ? ' text-muted-foreground cursor-not-allowed'
+          : ' group-hover:text-primary cursor-pointer'
+      }${experimental ? ' flex items-center gap-1' : ''}`}
     >
       {t(label)}
       {experimental && <ExperimentalBadge title={t('experimentalLabel')} />}

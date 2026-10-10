@@ -319,6 +319,12 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     'persistentExportToolbar',
     'persistentExportToolbarHint',
   ]),
+  popupSearchTarget(
+    'general',
+    'enableResearchPack',
+    ['researchPackEnable', 'researchPackEnableHint'],
+    ['research pack markdown sources citations carry chatgpt claude 研究 资料包 引用 来源'],
+  ),
   popupSearchTarget('general', 'enableMermaidRendering', [
     'enableMermaidRendering',
     'enableMermaidRenderingHint',

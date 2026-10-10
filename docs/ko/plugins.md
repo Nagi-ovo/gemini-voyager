@@ -1,5 +1,6 @@
 ---
 layout: page
+sidebar: false
 aside: false
 gitChangelog: false
 title: 플러그인 마켓플레이스

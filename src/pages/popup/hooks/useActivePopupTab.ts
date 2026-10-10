@@ -11,8 +11,12 @@ import {
 export function useActivePopupTab(sourceTabId?: number) {
   const [activeUrl, setActiveUrl] = useState('');
   const [activeTabId, setActiveTabId] = useState<number | null>(null);
-  const [activeAccountPlatform, setActiveAccountPlatform] = useState<AccountPlatform>('gemini');
+  // `null`: the tab is a web page without a folder bucket (ChatGPT, Claude, DeepSeek, …).
+  const [activeAccountPlatform, setActiveAccountPlatform] = useState<AccountPlatform | null>(
+    'gemini',
+  );
   const [activeTabContextLoaded, setActiveTabContextLoaded] = useState(false);
+  // Older reads must not replace the context after another read or source-tab change.
   const requestVersion = useRef(0);
 
   const refreshActiveTabContext = useCallback(async () => {

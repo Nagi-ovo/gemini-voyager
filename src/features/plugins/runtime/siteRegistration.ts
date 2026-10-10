@@ -24,6 +24,7 @@
 import { logger } from '@/core/services/LoggerService';
 
 import { matchesAnyPattern } from '../sites/matchPattern';
+import { isNativeSurfaceHost } from '../sites/nativeSurfaces';
 import type { PluginManifest } from '../types';
 
 const CLAUDE_ARTIFACT_FRAME_ORIGIN = 'https://*.frame.claudeusercontent.com/*';
@@ -65,16 +66,27 @@ export function partitionPluginOriginPatterns(
  * Derive the set of `https://host/*` origin permission patterns required to run a
  * set of plugins. Strips path/scheme wildcards down to an origin grant suitable
  * for `permissions.request({ origins })`.
+ *
+ * Native surfaces (Gemini, AI Studio) are left out: the manifest already injects
+ * the content script there and grants the host, so a local plugin that targets
+ * them needs no grant, and a dynamic registration would inject Voyager twice.
  */
-export function pluginsToOriginPatterns(manifests: readonly PluginManifest[]): string[] {
+export function pluginsToOriginPatterns(
+  manifests: readonly Pick<PluginManifest, 'matches'>[],
+): string[] {
   const origins = new Set<string>();
   for (const manifest of manifests) {
     for (const pattern of manifest.matches) {
       const origin = matchPatternToOrigin(pattern);
-      if (origin) origins.add(origin);
+      if (origin && !isNativeSurfaceOrigin(origin)) origins.add(origin);
     }
   }
   return [...origins].sort();
+}
+
+function isNativeSurfaceOrigin(origin: string): boolean {
+  const host = /^https?:\/\/([^/]+)\//.exec(origin)?.[1];
+  return host !== undefined && isNativeSurfaceHost(host);
 }
 
 /**
@@ -93,6 +105,7 @@ export function pluginToOriginPatternsForActiveUrl(
       const url = new URL(activeUrl);
       if (url.protocol === 'http:' || url.protocol === 'https:') {
         const declaredOrigins = new Set(pluginsToOriginPatterns([manifest]));
+        if (isNativeSurfaceHost(url.hostname)) return [];
         const selectedOrigins = new Set<string>([`${url.protocol}//${url.hostname}/*`]);
         for (const pattern of EMBEDDED_ORIGIN_PATTERNS_BY_PARENT_HOST[url.hostname] ?? []) {
           if (declaredOrigins.has(pattern)) selectedOrigins.add(pattern);

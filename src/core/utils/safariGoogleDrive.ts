@@ -136,5 +136,7 @@ export async function downloadSafariGoogleDriveFile<T>(fileID: string): Promise<
   if (typeof data.json !== 'string') {
     throw new Error('Safari Google Drive returned an invalid download');
   }
-  return JSON.parse(data.json) as T;
+  const payload: unknown = JSON.parse(data.json);
+  if (payload === null) throw new Error('The cloud sync file contains invalid null data');
+  return payload as T;
 }

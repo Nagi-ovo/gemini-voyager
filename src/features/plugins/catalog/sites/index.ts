@@ -21,6 +21,9 @@ import { logger } from '@/core/services/LoggerService';
 import { validateSiteAdapterData } from '../../sites/siteAdapterData';
 import type { SiteAdapter } from '../../types';
 
+// The publisher stamps its site data from the same source revision as every browser build.
+const catalogRevision = Number(import.meta.env.VOYAGER_CATALOG_REVISION);
+
 const siteModules = import.meta.glob('./*/site.json', {
   query: '?raw',
   import: 'default',
@@ -119,7 +122,7 @@ function loadBundledSiteAdapters(): readonly SiteAdapter[] {
         });
         continue;
       }
-      adapters.push(result.data);
+      adapters.push({ ...result.data, catalogRevision });
     } catch (error) {
       logger.error('Failed to parse bundled site.json', { path: entry.path, error: String(error) });
     }

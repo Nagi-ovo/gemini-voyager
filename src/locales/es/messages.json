@@ -43,6 +43,10 @@
     "message": "Ocultar contenedor exterior",
     "description": "Hide outer container label"
   },
+  "hideOuterContainerDotsOnly": {
+    "message": "Solo se aplica al estilo Nodos",
+    "description": "Why the hide outer container toggle is disabled: the ruler and compact timeline styles draw no container"
+  },
   "draggableTimeline": {
     "message": "Línea de tiempo arrastrable",
     "description": "Draggable Timeline label"
@@ -213,6 +217,22 @@
   "pm_deleted": {
     "message": "Eliminado",
     "description": "Deleted notice"
+  },
+  "pm_save_failed": {
+    "message": "No se pudo guardar el cambio, así que se ha deshecho.",
+    "description": "Prompt Manager notice: a change could not be saved and was rolled back"
+  },
+  "pm_edit_target_deleted": {
+    "message": "Este prompt se eliminó en otro lugar. Guarda de nuevo para conservarlo como un prompt nuevo.",
+    "description": "Prompt Manager hint: the prompt being edited was deleted in another tab; saving again adds the draft as a new prompt"
+  },
+  "pm_library_unavailable": {
+    "message": "Los prompts no responden. Tu último cambio aún se está guardando; inténtalo de nuevo en unos momentos.",
+    "description": "Prompt Manager notice: an earlier change is still waiting for a reply, so new edits are refused until it arrives"
+  },
+  "pm_library_load_failed": {
+    "message": "No se pudieron cargar tus prompts. Reintentando; vuelve a intentarlo en un momento.",
+    "description": "Prompt Manager notice: the prompt library could not be read yet, so an edit was refused and a new read started"
   },
   "pm_edit": {
     "message": "Editar",
@@ -662,6 +682,14 @@
     "message": "Sincronización en la nube",
     "description": "Tooltip for the merged cloud button that opens an upload/sync popover"
   },
+  "folder_reload_required": {
+    "message": "Voyager se ha actualizado. Recarga esta pestaña para seguir editando las carpetas.",
+    "description": "Shown when a newer Voyager build owns folder writes and this tab must be reloaded"
+  },
+  "folder_cloud_merge_interrupted": {
+    "message": "La combinación con Google Drive se interrumpió. Vuelve a ejecutarla.",
+    "description": "Shown when a Google Drive merge of folders was interrupted before it was applied"
+  },
   "folder_settings": {
     "message": "Ajustes de carpetas",
     "description": "Tooltip for the gear icon that opens folder-scoped settings"
@@ -761,6 +789,26 @@
   "folder_import_error": {
     "message": "✗ Error en la importación: {error}",
     "description": "Import error message"
+  },
+  "conversation_added_to_folder": {
+    "message": "Añadido a \"{folder}\"",
+    "description": "Notification after a prompt is dropped into a folder"
+  },
+  "conversation_saved_to_root": {
+    "message": "Guardado en Sin categorizar",
+    "description": "Notification after a prompt is dropped on Uncategorized"
+  },
+  "folder_default_name": {
+    "message": "Mi carpeta",
+    "description": "Name of the folder created when a prompt is dropped and no folder exists"
+  },
+  "folder_import_in_progress": {
+    "message": "Ya hay una importación en curso",
+    "description": "Notice when a folder import is started while another is running"
+  },
+  "folder_export_in_progress": {
+    "message": "Ya hay una exportación en curso",
+    "description": "Notice when a folder export is started while another is running"
   },
   "folder_save_error": {
     "message": "No se pudieron guardar los cambios en las carpetas. Inténtalo de nuevo.",
@@ -914,22 +962,6 @@
     "message": "Puedes cambiarlo en cualquier momento desde el popup de la extensión → Opciones de carpetas.",
     "description": "Footnote explaining where to toggle the setting later"
   },
-  "floatingModeNudgeTitle": {
-    "message": "Barra lateral no disponible: ¿abrir las carpetas en una ventana flotante?",
-    "description": "Title of the floating-mode fallback nudge"
-  },
-  "floatingModeNudgeBody": {
-    "message": "Voyager no pudo encontrar la barra lateral de Gemini, probablemente porque cambió el diseño de la página. Aún puedes explorar tus carpetas en una ventana flotante.",
-    "description": "Body copy of the floating-mode fallback nudge"
-  },
-  "floatingModeNudgeEnable": {
-    "message": "Abrir ventana flotante",
-    "description": "Primary button that opens the floating folder panel"
-  },
-  "floatingModeNudgeDismiss": {
-    "message": "Ahora no",
-    "description": "Secondary button that dismisses the floating-mode nudge"
-  },
   "floatingPanelTitle": {
     "message": "Carpetas",
     "description": "Title shown in the floating folder panel header"
@@ -969,6 +1001,18 @@
   "folderManager_dataLossWarning": {
     "message": "⚠️ Advertencia: Error al cargar datos de carpetas. Tus carpetas pueden estar corruptas. Por favor revisa la consola del navegador para más detalles e intenta restaurar desde una copia de seguridad si está disponible.",
     "description": "Warning shown when folder data fails to load"
+  },
+  "folderManager_dataRecovered": {
+    "message": "Se han recuperado los datos de las carpetas desde una copia de seguridad.",
+    "description": "Notice when folder data was recovered from backup"
+  },
+  "folderManager_dataKept": {
+    "message": "No se han podido cargar los datos de las carpetas. Se han conservado las carpetas actuales.",
+    "description": "Notice when current folder data is kept after a failed load"
+  },
+  "folderManager_readFailure": {
+    "message": "No se han podido cargar los datos de las carpetas. Por ahora, solo se pueden consultar.",
+    "description": "Notice when folder storage is unreadable and editing is disabled"
   },
   "backupOptions": {
     "message": "Respaldo Automático",
@@ -1190,6 +1234,10 @@
     "message": "Quitar de destacados",
     "description": "Remove from starred tooltip"
   },
+  "starredDeleteFailed": {
+    "message": "No se pudo quitar de destacados",
+    "description": "Error shown when a star cannot be removed"
+  },
   "justNow": {
     "message": "Justo ahora",
     "description": "Just now time label"
@@ -1217,6 +1265,14 @@
   "export_collecting_desc": {
     "message": "Espere, por favor…",
     "description": "Descripción del banner durante la recopilación del DOM de la conversación de ChatGPT"
+  },
+  "export_reading_conversation_title": {
+    "message": "Leyendo la conversación…",
+    "description": "Progress title while ChatGPT export reads the whole conversation by scrolling it"
+  },
+  "export_reading_conversation_turns": {
+    "message": "Turnos leídos: {count}",
+    "description": "Progress detail while ChatGPT export reads the conversation; {count} is the number of turns read so far"
   },
   "keyboardShortcuts": {
     "message": "Atajos de Teclado",
@@ -1294,6 +1350,18 @@
     "message": "Sincronización en Nube",
     "description": "Cloud sync section title"
   },
+  "platformChatGPT": {
+    "message": "ChatGPT",
+    "description": "ChatGPT platform label"
+  },
+  "cloudSyncFoldersDescription": {
+    "message": "Sincroniza carpetas con Google Drive",
+    "description": "ChatGPT folders-only Google Drive sync description"
+  },
+  "cloudSyncFoldersDescriptionICloud": {
+    "message": "Sincroniza carpetas con tu almacenamiento privado de iCloud",
+    "description": "ChatGPT folders-only iCloud sync description"
+  },
   "cloudSyncDescription": {
     "message": "Sincronizar carpetas y prompts con Google Drive",
     "description": "Cloud sync description"
@@ -1361,6 +1429,22 @@
   "syncError": {
     "message": "✗ Error de sincronización: {error}",
     "description": "Sync error message"
+  },
+  "syncRestorePartial": {
+    "message": "✗ Restauración incompleta. Restaurado: {restored}. Sin restaurar: {failed} ({error})",
+    "description": "Drive restore stopped partway: which parts were restored and which were not"
+  },
+  "syncRestoreForks": {
+    "message": "Bifurcaciones de conversación",
+    "description": "Drive restore part: conversation fork links"
+  },
+  "syncRestoreCatalogTimeline": {
+    "message": "Destacados y niveles de la línea de tiempo en otros sitios",
+    "description": "Drive restore part: timeline stars and node levels saved on catalog sites such as ChatGPT and Claude"
+  },
+  "syncRestoreListSeparator": {
+    "message": ", ",
+    "description": "Separator between restored or failed part names in the partial-restore message"
   },
   "syncInProgress": {
     "message": "Sincronizando...",
@@ -1489,6 +1573,10 @@
     "message": "Descargar contenido de pensamiento como Markdown",
     "description": "Deep Research download button tooltip"
   },
+  "deepResearchNoThinkingContent": {
+    "message": "No se encontró contenido de pensamiento para descargar.",
+    "description": "Warning when Deep Research has no thinking content to download"
+  },
   "folder_uncategorized": {
     "message": "Sin categorizar",
     "description": "Label for root-level conversations not in any folder"
@@ -1606,7 +1694,7 @@
     "description": "Batch delete confirmation message"
   },
   "folder_batch_remove_confirm": {
-    "message": "¿Eliminar {count} conversación(es) seleccionada(s) de esta carpeta?",
+    "message": "¿Eliminar de esta carpeta las conversaciones seleccionadas ({count})?",
     "description": "Confirmation before removing the selected conversations from a folder"
   },
   "folder_multi_select_count": {
@@ -1685,14 +1773,6 @@
     "message": "Renderiza automáticamente los bloques de código WaveJSON como diagramas de tiempos interactivos",
     "description": "Descripción de la función WaveDrom"
   },
-  "wavedromDiagramButton": {
-    "message": "〜 Diagrama",
-    "description": "Etiqueta del botón para mostrar el diagrama renderizado"
-  },
-  "wavedromCodeButton": {
-    "message": "</> Código",
-    "description": "Etiqueta del botón para mostrar el código fuente WaveJSON"
-  },
   "wavedromZoomIn": {
     "message": "Acercar",
     "description": "Barra de herramientas de pantalla completa: título del botón de acercar"
@@ -1721,13 +1801,13 @@
     "message": "Representar automáticamente los bloques de código de opciones de ECharts como gráficos interactivos",
     "description": "ECharts rendering feature hint"
   },
-  "echartsDiagramButton": {
-    "message": "📊 Gráfico",
-    "description": "Toggle button label to show the rendered chart"
+  "diagramButton": {
+    "message": "Diagrama",
+    "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"
   },
-  "echartsCodeButton": {
-    "message": "</> Código",
-    "description": "Toggle button label to show the ECharts option source"
+  "diagramCodeButton": {
+    "message": "Código",
+    "description": "Diagram toolbar button that shows the diagram source code"
   },
   "echartsFullscreenButton": {
     "message": "Pantalla completa",
@@ -2101,6 +2181,26 @@
     "message": "El contenido exportado contiene imágenes de búsqueda web. ¿Incluir enlaces de origen de las imágenes en el Markdown?",
     "description": "Confirm dialog when exporting markdown with web search images"
   },
+  "export_md_include_source_include": {
+    "message": "Incluir enlaces",
+    "description": "Confirm choice that keeps the source links of web search images in the Markdown export"
+  },
+  "export_md_include_source_exclude": {
+    "message": "Omitir",
+    "description": "Confirm choice that leaves the source links of web search images out of the Markdown export"
+  },
+  "export_error_too_many_attempts": {
+    "message": "Exportación detenida: demasiados intentos.",
+    "description": "Export error toast when the export restarted too many times while loading the full conversation"
+  },
+  "export_error_conversation_not_found": {
+    "message": "No se encontró la conversación seleccionada. Ábrela primero y luego expórtala.",
+    "description": "Export error toast when the sidebar menu's conversation cannot be located"
+  },
+  "export_error_conversation_open_failed": {
+    "message": "No se pudo abrir la conversación seleccionada para exportarla. Inténtalo de nuevo.",
+    "description": "Export error toast when the sidebar menu's conversation fails to open"
+  },
   "deepResearch_exportedAt": {
     "message": "Exportado el",
     "description": "Etiqueta de marca de tiempo de exportación de Deep Research"
@@ -2248,10 +2348,6 @@
   "forkMarkdownBtn": {
     "message": "Descargar MD",
     "description": "Fork confirmation button for downloading a Markdown file"
-  },
-  "forkCancel": {
-    "message": "Cancel",
-    "description": "Fork cancel button"
   },
   "forkBranch": {
     "message": "Branch",
@@ -2461,10 +2557,6 @@
     "message": "Eliminar",
     "description": "Floating folder panel delete folder action"
   },
-  "floatingPanelDeleteConfirm": {
-    "message": "¿Eliminar esta carpeta y todo su contenido?",
-    "description": "Floating folder panel delete folder confirmation"
-  },
   "floatingPanelCancel": {
     "message": "Cancelar",
     "description": "Floating folder panel cancel action"
@@ -2520,6 +2612,42 @@
   "floatingPanelGestureHint": {
     "message": "Doble clic para renombrar · Clic derecho para fijar/color/eliminar.",
     "description": "Floating folder panel hint explaining folder gestures and context menu actions"
+  },
+  "floatingPanelAddCurrentHere": {
+    "message": "Añadir la conversación actual aquí",
+    "description": "Floating folder panel folder menu item that files the open conversation into that folder"
+  },
+  "chatgptFoldersHint": {
+    "message": "Para archivar una conversación: ábrela y pulsa el botón de marcador o haz clic derecho en una carpeta.",
+    "description": "ChatGPT folder panel hint explaining how to file a conversation"
+  },
+  "chatgptFoldersNoConversation": {
+    "message": "Abre primero una conversación guardada. Los chats temporales no se pueden archivar.",
+    "description": "ChatGPT folder panel status when no saved conversation is open to add"
+  },
+  "chatgptFoldersAdded": {
+    "message": "Añadida a la carpeta.",
+    "description": "ChatGPT folder panel status after filing the open conversation"
+  },
+  "chatgptFoldersAlreadyFiled": {
+    "message": "Ya está en esta carpeta.",
+    "description": "ChatGPT folder panel status when the open conversation is already in that folder"
+  },
+  "chatgptFoldersCoachmarkTitle": {
+    "message": "Tus carpetas están en la barra lateral",
+    "description": "Title of the one-time guide pointing at the folder section in the ChatGPT sidebar"
+  },
+  "chatgptFoldersCoachmarkBody": {
+    "message": "Las carpetas ahora están aquí, en la barra lateral de ChatGPT. Usa + para crear una o elige «Mover a carpeta» en el menú de un chat para guardarlo.",
+    "description": "Body of the one-time guide pointing at the folder section in the ChatGPT sidebar; quotes the Move to folder menu label"
+  },
+  "folder_import_wrong_site": {
+    "message": "Este archivo contiene carpetas de otro sitio, así que no se importó nada.",
+    "description": "ChatGPT folder import error when the file holds conversations from another site"
+  },
+  "chatgptFoldersUntitled": {
+    "message": "Conversación sin título",
+    "description": "Title used for a filed ChatGPT conversation whose title could not be read"
   },
   "folder_new_chat_in_folder": {
     "message": "Nuevo chat en esta carpeta",
@@ -2593,6 +2721,30 @@
     "message": "No compatible con este navegador: no puede conceder el acceso al sitio que necesita el complemento.",
     "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
   },
+  "chatgptExportCardTitle": {
+    "message": "Exportar esta conversación",
+    "description": "Title of the popup card that exports the current ChatGPT conversation"
+  },
+  "chatgptExportCardOffHint": {
+    "message": "Activa la exportación de conversaciones para guardar tus chats de ChatGPT como Markdown, JSON, PDF o imagen. Después aparecerá un botón Exportar en la parte superior de cada conversación.",
+    "description": "Popup hint shown while ChatGPT conversation export is turned off"
+  },
+  "chatgptExportTurnOn": {
+    "message": "Activar",
+    "description": "Popup button that turns on ChatGPT conversation export"
+  },
+  "chatgptExportCardOnHint": {
+    "message": "Guarda como Markdown, JSON, PDF o imagen. El mismo botón Exportar está en la parte superior de cada conversación.",
+    "description": "Popup hint shown while ChatGPT conversation export is on"
+  },
+  "chatgptExportNoConversation": {
+    "message": "Primero abre una conversación: en esta página no hay nada que exportar.",
+    "description": "Shown when the ChatGPT tab has no conversation to export"
+  },
+  "chatgptExportReloadTab": {
+    "message": "Recarga esta pestaña de ChatGPT y vuelve a intentarlo.",
+    "description": "Shown when the ChatGPT tab has not loaded Voyager yet"
+  },
   "pluginsLoading": {
     "message": "Cargando complementos…",
     "description": "Shown while the plugin catalog is loading"
@@ -2616,6 +2768,310 @@
   "pluginSourceOnline": {
     "message": "Catálogo en línea",
     "description": "Source label for a plugin fetched from the online catalog for this site"
+  },
+  "pluginSourceLocal": {
+    "message": "Local",
+    "description": "Source label for a plugin the user imported locally"
+  },
+  "localPluginsTitle": {
+    "message": "Complementos locales",
+    "description": "Popup plugin page: title of the card for user-imported plugins"
+  },
+  "localPluginsDescription": {
+    "message": "Importa un complemento declarativo que hayas escrito: un manifiesto JSON con su CSS incluido, o el manifiesto seleccionado junto con sus archivos .css. Pasa las mismas comprobaciones que los complementos oficiales y queda desactivado hasta que lo actives.",
+    "description": "Popup plugin page: what importing a local plugin does"
+  },
+  "localPluginsNativeHint": {
+    "message": "Ejecuta tu propio CSS y ajustes de página en este sitio. Los complementos importados quedan desactivados hasta que los actives.",
+    "description": "Native popup (Gemini / AI Studio): hint on the collapsed Local plugins entry"
+  },
+  "localPluginsImportFiles": {
+    "message": "Importar archivos",
+    "description": "Popup plugin page: button that opens the file picker for a local plugin"
+  },
+  "localPluginsPasteJson": {
+    "message": "Pegar JSON",
+    "description": "Popup plugin page: button that opens a text box to paste a plugin manifest"
+  },
+  "localPluginsPasteLabel": {
+    "message": "JSON del manifiesto del complemento",
+    "description": "Popup plugin page: accessible label of the paste text box"
+  },
+  "localPluginsCheckAndImport": {
+    "message": "Comprobar e importar",
+    "description": "Popup plugin page: validate the pasted manifest and import it"
+  },
+  "localPluginsCancel": {
+    "message": "Cancelar",
+    "description": "Popup plugin page: close the paste text box"
+  },
+  "localPluginsEmpty": {
+    "message": "Aún no hay complementos locales.",
+    "description": "Popup plugin page: no local plugin is installed"
+  },
+  "localPluginsImported": {
+    "message": "{name} {version} importado. Está desactivado: revisa abajo lo que hace y luego actívalo en la lista de complementos.",
+    "description": "Popup plugin page: import succeeded; {name} and {version} are placeholders"
+  },
+  "localPluginsRejected": {
+    "message": "No se importó. Corrige estos problemas e inténtalo de nuevo:",
+    "description": "Popup plugin page: import failed validation; the issues follow"
+  },
+  "localPluginsPreviousKept": {
+    "message": "La versión instalada {version} no cambia.",
+    "description": "Popup plugin page: a failed re-import kept the installed version; {version} is a placeholder"
+  },
+  "localPluginsInspect": {
+    "message": "Inspeccionar",
+    "description": "Popup plugin page: show what a local plugin does"
+  },
+  "localPluginsHideDetails": {
+    "message": "Ocultar",
+    "description": "Popup plugin page: hide the details of a local plugin"
+  },
+  "localPluginsRemove": {
+    "message": "Quitar",
+    "description": "Popup plugin page: delete a local plugin"
+  },
+  "localPluginsConfirmRemove": {
+    "message": "Confirmar",
+    "description": "Popup plugin page: second click that confirms removing a local plugin"
+  },
+  "localPluginsStoredInvalid": {
+    "message": "Esta versión de Voyager ya no acepta este complemento, así que no se ejecutará:",
+    "description": "Popup plugin page: a stored local plugin fails this build's checks; issues follow"
+  },
+  "localPluginChangedBeforeEnable": {
+    "message": "Este plugin se volvió a importar mientras lo activabas, así que sigue desactivado. Revisa la nueva versión y vuelve a activarlo.",
+    "description": "A local plugin was re-imported while the user was enabling it, so it was not enabled"
+  },
+  "localPluginDescribeOpen": {
+    "message": "Describir un cambio",
+    "description": "Button that opens the one-sentence plugin flow"
+  },
+  "localPluginDescribeHint": {
+    "message": "Di en una frase qué quieres cambiar en un sitio. Voyager redacta un prompt que tú mismo envías a cualquier IA y luego revisa la respuesta que pegues aquí. Voyager no envía nada por su cuenta.",
+    "description": "Explains the one-sentence plugin flow and that Voyager sends nothing"
+  },
+  "localPluginDescribeRequestLabel": {
+    "message": "¿Qué quieres cambiar?",
+    "description": "Label of the one-sentence request field"
+  },
+  "localPluginDescribeRequestPlaceholder": {
+    "message": "p. ej.: haz mis mensajes más estrechos y oculta la barra lateral",
+    "description": "Example request in the one-sentence field"
+  },
+  "localPluginDescribeSiteLabel": {
+    "message": "Sitio",
+    "description": "Label of the target-site picker"
+  },
+  "localPluginDescribeBuildPrompt": {
+    "message": "Redactar el prompt",
+    "description": "Button that writes the AI prompt"
+  },
+  "localPluginDescribePromptLabel": {
+    "message": "Prompt para tu IA",
+    "description": "Label of the generated prompt"
+  },
+  "localPluginDescribePromptHint": {
+    "message": "Pégalo tú mismo en el chat de cualquier IA y luego pega aquí abajo la respuesta completa.",
+    "description": "Tells the user to send the prompt themselves and paste the reply"
+  },
+  "localPluginDescribeCopy": {
+    "message": "Copiar prompt",
+    "description": "Button that copies the prompt"
+  },
+  "localPluginDescribeCopied": {
+    "message": "Copiado",
+    "description": "Shown after the prompt was copied"
+  },
+  "localPluginDescribeCopyFailed": {
+    "message": "No se pudo copiar. Selecciona el prompt y cópialo tú mismo.",
+    "description": "Shown when the clipboard refused the prompt"
+  },
+  "localPluginDescribeReplyLabel": {
+    "message": "Respuesta de la IA",
+    "description": "Label of the field for the AI reply"
+  },
+  "localPluginDescribeReplyPlaceholder": {
+    "message": "Pega la respuesta completa o solo su JSON",
+    "description": "Placeholder of the AI reply field"
+  },
+  "localPluginDescribeCheck": {
+    "message": "Revisar respuesta",
+    "description": "Button that checks the pasted reply"
+  },
+  "localPluginDescribeImport": {
+    "message": "Importar",
+    "description": "Button that imports the previewed plugin"
+  },
+  "localPluginReplyEmpty": {
+    "message": "Primero pega la respuesta de la IA.",
+    "description": "The reply field is empty"
+  },
+  "localPluginReplyTooLong": {
+    "message": "Esta respuesta es demasiado larga para ser un plugin.",
+    "description": "The pasted reply is too large"
+  },
+  "localPluginReplyNoJson": {
+    "message": "No se encontró JSON. Pide a la IA que responda con un solo bloque ```json.",
+    "description": "No JSON manifest found in the reply"
+  },
+  "localPluginReplyMultipleJson": {
+    "message": "La respuesta tiene más de un bloque JSON. Deja solo el del plugin y vuelve a pegarla.",
+    "description": "The reply holds more than one JSON block"
+  },
+  "localPluginPreviewTitle": {
+    "message": "Antes de importar",
+    "description": "Heading of the preview shown before import"
+  },
+  "localPluginPreviewChanges": {
+    "message": "Qué cambia",
+    "description": "Heading of the list of changes in the preview"
+  },
+  "localPluginPreviewWarnings": {
+    "message": "Revisa antes",
+    "description": "Heading of the warnings in the preview"
+  },
+  "localPluginPreviewLandsOff": {
+    "message": "Se importa desactivado. Actívalo desde la lista de plugins cuando quieras.",
+    "description": "Explains that the import lands turned off"
+  },
+  "localPluginChangeCss": {
+    "message": "Añade sus propios estilos ({chars} caracteres de CSS)",
+    "description": "Preview line: the plugin adds CSS; {chars} is a character count"
+  },
+  "localPluginChangeAddClass": {
+    "message": "Marca {target} para aplicar sus estilos ({className})",
+    "description": "Preview line: the plugin tags elements so its CSS applies"
+  },
+  "localPluginChangeHide": {
+    "message": "Oculta {target}",
+    "description": "Preview line: the plugin hides elements"
+  },
+  "localPluginChangeSetStyle": {
+    "message": "Cambia el estilo de {target}: {styles}",
+    "description": "Preview line: the plugin sets inline styles"
+  },
+  "localPluginChangeSetAttribute": {
+    "message": "Pone {name}=\"{value}\" en {target}",
+    "description": "Preview line: the plugin sets an attribute"
+  },
+  "localPluginChangeNative": {
+    "message": "Ejecuta la función integrada {handler} de Voyager",
+    "description": "Preview line: the plugin runs a Voyager built-in feature"
+  },
+  "localPluginChangeSetting": {
+    "message": "Añade un ajuste: {label}",
+    "description": "Preview line: the plugin adds a setting"
+  },
+  "localPluginChangeTheme": {
+    "message": "Cambia el color de acento de Voyager a {color}",
+    "description": "Preview line: the plugin changes the accent color"
+  },
+  "localPluginTargetSelector": {
+    "message": "los elementos que coinciden con {selector}",
+    "description": "Preview target described by a raw CSS selector"
+  },
+  "localPluginTargetUserTurn": {
+    "message": "tus mensajes",
+    "description": "Preview target: the user's messages"
+  },
+  "localPluginTargetAssistantTurn": {
+    "message": "las respuestas de la IA",
+    "description": "Preview target: the AI's replies"
+  },
+  "localPluginTargetThinkingBlock": {
+    "message": "las secciones de razonamiento",
+    "description": "Preview target: reasoning sections"
+  },
+  "localPluginTargetCodeBlock": {
+    "message": "los bloques de código",
+    "description": "Preview target: code blocks"
+  },
+  "localPluginTargetComposer": {
+    "message": "el cuadro de mensaje",
+    "description": "Preview target: the message input box"
+  },
+  "localPluginTargetSidebar": {
+    "message": "la barra lateral",
+    "description": "Preview target: the sidebar"
+  },
+  "localPluginTargetSidePanel": {
+    "message": "el panel lateral",
+    "description": "Preview target: the secondary side panel"
+  },
+  "localPluginTargetHeaderActions": {
+    "message": "los botones de arriba a la derecha",
+    "description": "Preview target: top-right action buttons"
+  },
+  "localPluginTargetScrollContainer": {
+    "message": "el área de conversación",
+    "description": "Preview target: the scrolling conversation area"
+  },
+  "localPluginChangedSinceReview": {
+    "message": "Este plugin cambió en Voyager mientras lo revisabas, así que no se sobrescribió nada. Revisa la vista previa actualizada y vuelve a importarlo.",
+    "description": "Shown when the previewed plugin id was installed, changed or removed before Import; nothing was written"
+  },
+  "localPluginWarnCss": {
+    "message": "Su CSS puede cambiar cualquier cosa de la página, incluso ocultar contenido. Voyager no resume el CSS: léelo abajo.",
+    "description": "Warning: the plugin has CSS, which the preview shows but does not summarize"
+  },
+  "localPluginWarnSelector": {
+    "message": "Usa selectores CSS, que pueden dejar de funcionar cuando el sitio se actualice.",
+    "description": "Warning: the plugin targets raw CSS selectors"
+  },
+  "localPluginWarnHides": {
+    "message": "Puede ocultar parte de la página. Desactiva el plugin para recuperarla.",
+    "description": "Warning: the plugin may hide part of the page (also shown when a hiding style cannot be read with confidence)"
+  },
+  "localPluginWarnNotOnSite": {
+    "message": "No funciona en {site}, el sitio que elegiste.",
+    "description": "Warning: the plugin does not run on the site the user picked"
+  },
+  "localPluginWarnTheme": {
+    "message": "Cambia el color de acento de Voyager, algo que el prompt pedía a la IA no hacer.",
+    "description": "Warning: the plugin changes the accent color although the prompt asked not to"
+  },
+  "localPluginWarnNative": {
+    "message": "Ejecuta una función integrada de Voyager, algo que el prompt pedía a la IA no hacer.",
+    "description": "Warning: the plugin runs a Voyager built-in although the prompt asked not to"
+  },
+  "localPluginWarnReplaces": {
+    "message": "Reemplaza la versión {version} que ya tienes y la desactiva hasta que vuelvas a activarla.",
+    "description": "Warning: importing replaces an installed version and turns it off"
+  },
+  "localPluginInspectSites": {
+    "message": "Sitios",
+    "description": "Inspect view: sites the plugin runs on"
+  },
+  "localPluginInspectCss": {
+    "message": "CSS",
+    "description": "Inspect view: injected stylesheet size label"
+  },
+  "localPluginInspectCssChars": {
+    "message": "{chars} caracteres",
+    "description": "Inspect view: injected CSS size; {chars} is a number"
+  },
+  "localPluginInspectDomOps": {
+    "message": "Cambios en la página",
+    "description": "Inspect view: reversible DOM operations the plugin applies"
+  },
+  "localPluginInspectPrimitives": {
+    "message": "Funciones integradas de Voyager que usa",
+    "description": "Inspect view: first-party Voyager primitives the plugin invokes"
+  },
+  "localPluginInspectSettings": {
+    "message": "Ajustes",
+    "description": "Inspect view: settings the plugin declares"
+  },
+  "localPluginInspectNone": {
+    "message": "Ninguno",
+    "description": "Inspect view: the plugin has nothing in this category"
+  },
+  "localPluginInspectNoCode": {
+    "message": "No se ejecuta código del complemento: solo CSS, cambios reversibles en la página y funciones integradas de Voyager.",
+    "description": "Inspect view: reassurance that a declarative plugin cannot run its own code"
   },
   "pluginUpdateNeedsNewerVoyager": {
     "message": "La actualización {version} necesita una versión más reciente de Voyager.",
@@ -2902,6 +3358,9 @@
   "highlightSaved": {
     "message": "Texto resaltado guardado"
   },
+  "highlightConfirmationPending": {
+    "message": "Seguimos esperando la confirmación. Puedes cerrar este editor; conservaremos tu borrador."
+  },
   "highlightSaveFailed": {
     "message": "No se pudo guardar el texto resaltado"
   },
@@ -3117,5 +3576,373 @@
   "popupPinHintDismiss": {
     "message": "Cerrar",
     "description": "Popup: dismiss the pin reminder"
+  },
+  "nativeHealthTimeline": {
+    "message": "La línea de tiempo no encuentra los turnos de la conversación en esta página.",
+    "description": "Popup: Gemini health notice when the timeline finds no conversation turns"
+  },
+  "nativeHealthChatWidth": {
+    "message": "El ancho del chat no encuentra los turnos de la conversación en esta página.",
+    "description": "Popup: Gemini health notice when chat width finds no conversation turns"
+  },
+  "nativeHealthFolders": {
+    "message": "Las carpetas no pudieron colocarse en la barra lateral de Gemini y se abrieron en un panel flotante.",
+    "description": "Popup: Gemini health notice when folders fell back to the floating panel"
+  },
+  "nativeHealthExport": {
+    "message": "La exportación no encuentra ningún mensaje en esta página.",
+    "description": "Popup: Gemini health notice when export finds no messages"
+  },
+  "nativeHealthComposer": {
+    "message": "Voyager no encuentra el cuadro de mensaje de Gemini para insertar prompts.",
+    "description": "Popup: Gemini health notice when Gemini's message box is missing"
+  },
+  "nativeHealthCause": {
+    "message": "Es posible que Gemini haya cambiado su página.",
+    "description": "Popup: likely cause shown under a Gemini health notice"
+  },
+  "nativeHealthReport": {
+    "message": "Informar",
+    "description": "Popup: link that opens a prefilled GitHub bug report"
+  },
+  "nativeHealthDismiss": {
+    "message": "Cerrar",
+    "description": "Popup: dismiss the Gemini health notice"
+  },
+  "researchPackEnable": {
+    "message": "Paquete de investigación",
+    "description": "Popup: research pack toggle label"
+  },
+  "researchPackEnableHint": {
+    "message": "Añade un botón a las respuestas de Gemini. Reúne respuestas y fuentes en un solo Markdown para copiarlo, descargarlo o insertarlo en otro chat.",
+    "description": "Popup: research pack toggle hint"
+  },
+  "researchPackAdd": {
+    "message": "Añadir al paquete (o selecciona antes parte de la respuesta)",
+    "description": "Research pack: per-answer add button tooltip"
+  },
+  "researchPackAdded": {
+    "message": "Añadido al paquete",
+    "description": "Research pack: item added"
+  },
+  "researchPackDuplicate": {
+    "message": "Ya está en el paquete",
+    "description": "Research pack: item already present"
+  },
+  "researchPackFull": {
+    "message": "El paquete está lleno. Quita un elemento primero.",
+    "description": "Research pack: item limit reached"
+  },
+  "researchPackCaptureFailed": {
+    "message": "No se pudo leer esta respuesta",
+    "description": "Research pack: answer could not be read"
+  },
+  "researchPackSaveFailed": {
+    "message": "No se pudo guardar el paquete",
+    "description": "Research pack: storage write failed"
+  },
+  "researchPackTitle": {
+    "message": "Paquete de investigación",
+    "description": "Research pack: panel title"
+  },
+  "researchPackShortTitle": {
+    "message": "Paquete",
+    "description": "Research pack: short launcher label"
+  },
+  "researchPackOpen": {
+    "message": "Abrir el paquete de investigación",
+    "description": "Research pack: launcher tooltip"
+  },
+  "researchPackClose": {
+    "message": "Cerrar",
+    "description": "Research pack: close panel"
+  },
+  "researchPackEmpty": {
+    "message": "El paquete está vacío. Usa el botón bajo una respuesta o selecciona antes parte de ella.",
+    "description": "Research pack: empty state"
+  },
+  "researchPackItemCount": {
+    "message": "{count} elementos",
+    "description": "Research pack: item count, {count} is a number"
+  },
+  "researchPackSourceCount": {
+    "message": "{count} fuentes",
+    "description": "Research pack: cited link count, {count} is a number"
+  },
+  "researchPackUntitledSource": {
+    "message": "Conversación sin título",
+    "description": "Research pack: fallback conversation title"
+  },
+  "researchPackExcerptBadge": {
+    "message": "Extracto",
+    "description": "Research pack: badge for a selected part of an answer"
+  },
+  "researchPackMoveUp": {
+    "message": "Subir",
+    "description": "Research pack: move item up"
+  },
+  "researchPackMoveDown": {
+    "message": "Bajar",
+    "description": "Research pack: move item down"
+  },
+  "researchPackRemove": {
+    "message": "Quitar del paquete",
+    "description": "Research pack: remove item"
+  },
+  "researchPackInstructionLabel": {
+    "message": "Instrucción para el siguiente modelo",
+    "description": "Research pack: instruction field label"
+  },
+  "researchPackInstructionPlaceholder": {
+    "message": "Ej.: compara estas respuestas, señala los desacuerdos y verifica cada afirmación con las fuentes.",
+    "description": "Research pack: instruction placeholder"
+  },
+  "researchPackPreview": {
+    "message": "Vista previa de Markdown",
+    "description": "Research pack: markdown preview toggle"
+  },
+  "researchPackInsert": {
+    "message": "Insertar en el chat",
+    "description": "Research pack: insert into composer button"
+  },
+  "researchPackInsertHint": {
+    "message": "Coloca el paquete en el cuadro de mensaje. No se envía nada hasta que lo envíes tú.",
+    "description": "Research pack: insert button tooltip"
+  },
+  "researchPackCopy": {
+    "message": "Copiar Markdown",
+    "description": "Research pack: copy markdown button"
+  },
+  "researchPackDownload": {
+    "message": "Descargar .md",
+    "description": "Research pack: download button"
+  },
+  "researchPackClear": {
+    "message": "Vaciar",
+    "description": "Research pack: clear all items"
+  },
+  "researchPackClearConfirm": {
+    "message": "¿Quitar todos los elementos del paquete? La instrucción se conserva.",
+    "description": "Research pack: clear confirmation"
+  },
+  "researchPackCopied": {
+    "message": "Markdown copiado",
+    "description": "Research pack: copy succeeded"
+  },
+  "researchPackCopyFailed": {
+    "message": "No se pudo copiar. Usa Descargar.",
+    "description": "Research pack: copy failed"
+  },
+  "researchPackInserted": {
+    "message": "Paquete insertado. Revísalo y envíalo tú.",
+    "description": "Research pack: inserted into composer"
+  },
+  "researchPackNoComposer": {
+    "message": "No hay cuadro de mensaje en esta página",
+    "description": "Research pack: no composer found"
+  },
+  "researchPackLoadFailed": {
+    "message": "No se pudo cargar el paquete",
+    "description": "Research pack: the stored pack could not be read; shown with a retry button"
+  },
+  "researchPackRetry": {
+    "message": "Reintentar",
+    "description": "Research pack: button that reads the pack again after a failure"
+  },
+  "researchPackContinueIn": {
+    "message": "Continuar en {target}",
+    "description": "Research pack: button that opens a new chat on another model ({target} is ChatGPT or Claude)"
+  },
+  "researchPackContinueHint": {
+    "message": "Abre un chat nuevo de {target} con este paquete en el cuadro de mensaje. No se envía nada.",
+    "description": "Research pack: tooltip of the continue-in button"
+  },
+  "researchPackContinueOpening": {
+    "message": "Abriendo {target}. El paquete aparecerá en el cuadro de mensaje, sin enviar.",
+    "description": "Research pack: the new chat is opening and the pack will be filled in"
+  },
+  "researchPackContinueCopied": {
+    "message": "Paquete copiado. Pégalo en el chat nuevo de {target}.",
+    "description": "Research pack: Voyager cannot run on the target, so the pack was copied for pasting"
+  },
+  "researchPackContinueRetry": {
+    "message": "Voyager no puede rellenar {target} ahora. Haz clic de nuevo para copiar el paquete y abrir {target}.",
+    "description": "Research pack: the target stopped being available since the panel opened"
+  },
+  "researchPackContinueFailed": {
+    "message": "No se pudo abrir {target}. Usa Copiar Markdown.",
+    "description": "Research pack: the new chat could not be opened"
+  },
+  "researchPackHandoffReady": {
+    "message": "Paquete de investigación añadido desde Gemini. Revísalo y envíalo tú.",
+    "description": "Research pack: toast on ChatGPT/Claude after the pack was put in the message box"
+  },
+  "researchPackHandoffFailed": {
+    "message": "No se pudo añadir el paquete de investigación aquí. Vuelve a Gemini y cópialo.",
+    "description": "Research pack: toast on ChatGPT/Claude when the pack could not be put in the message box"
+  },
+  "researchPackTemplates": {
+    "message": "Plantillas",
+    "description": "Research pack: templates section toggle"
+  },
+  "researchPackTemplatesHint": {
+    "message": "Una plantilla es una instrucción reutilizable que se guarda en el Gestor de Prompts con la etiqueta research-pack. Al exportarla solo se comparten su nombre y su instrucción, nunca tu paquete.",
+    "description": "Research pack: what a template is and what exporting shares"
+  },
+  "researchPackTemplatePick": {
+    "message": "Elige una plantilla",
+    "description": "Research pack: template picker placeholder and label"
+  },
+  "researchPackTemplateNone": {
+    "message": "Aún no hay plantillas",
+    "description": "Research pack: template picker when no template is saved"
+  },
+  "researchPackTemplateUse": {
+    "message": "Usar",
+    "description": "Research pack: put the chosen template into the instruction"
+  },
+  "researchPackTemplateUseConfirm": {
+    "message": "¿Reemplazar la instrucción actual por esta plantilla?",
+    "description": "Research pack: confirm replacing a typed instruction with a template"
+  },
+  "researchPackTemplateReplace": {
+    "message": "Reemplazar",
+    "description": "Research pack: confirm button that replaces the instruction"
+  },
+  "researchPackTemplateExport": {
+    "message": "Exportar",
+    "description": "Research pack: download the chosen template as a file"
+  },
+  "researchPackTemplateName": {
+    "message": "Nombre de la plantilla",
+    "description": "Research pack: name field for a new template"
+  },
+  "researchPackTemplateSave": {
+    "message": "Guardar instrucción como plantilla",
+    "description": "Research pack: save the typed instruction as a template"
+  },
+  "researchPackTemplateSaved": {
+    "message": "Plantilla guardada en el Gestor de Prompts",
+    "description": "Research pack: a template was saved"
+  },
+  "researchPackTemplateNeedName": {
+    "message": "Primero ponle nombre a la plantilla",
+    "description": "Research pack: saving a template without a name"
+  },
+  "researchPackTemplateNeedInstruction": {
+    "message": "Escribe una instrucción para guardarla",
+    "description": "Research pack: saving a template with an empty instruction"
+  },
+  "researchPackTemplateInvalid": {
+    "message": "Usa un nombre de una sola línea de hasta 100 caracteres y una instrucción de hasta 4000.",
+    "description": "Research pack: template name or instruction breaks a limit"
+  },
+  "researchPackTemplateDuplicate": {
+    "message": "El Gestor de Prompts ya tiene esta instrucción",
+    "description": "Research pack: the library already has this instruction text"
+  },
+  "researchPackTemplateNameTaken": {
+    "message": "El Gestor de Prompts ya tiene un prompt con este nombre",
+    "description": "Research pack: the library already has a prompt with this name"
+  },
+  "researchPackTemplateImport": {
+    "message": "Importar archivo…",
+    "description": "Research pack: choose a template file to import"
+  },
+  "researchPackTemplateImportInvalid": {
+    "message": "Este archivo no es un archivo de plantillas de paquete de investigación válido.",
+    "description": "Research pack: the chosen file is not a valid template file"
+  },
+  "researchPackTemplatePreviewTitle": {
+    "message": "Plantillas de este archivo. Revísalas antes de guardar.",
+    "description": "Research pack: heading of the import preview"
+  },
+  "researchPackTemplateStatusNew": {
+    "message": "Nueva",
+    "description": "Research pack: import preview badge for a template that will be saved"
+  },
+  "researchPackTemplateStatusDuplicate": {
+    "message": "Ya guardada",
+    "description": "Research pack: import preview badge for an instruction that is already saved"
+  },
+  "researchPackTemplateStatusNameTaken": {
+    "message": "Nombre en uso, se omitirá",
+    "description": "Research pack: import preview badge for a template skipped because its name is in use"
+  },
+  "researchPackTemplateImportSave": {
+    "message": "Guardar plantillas nuevas",
+    "description": "Research pack: save the new templates from the import preview"
+  },
+  "researchPackTemplateImported": {
+    "message": "Plantillas guardadas en el Gestor de Prompts: {count}",
+    "description": "Research pack: templates were imported; {count} is how many"
+  },
+  "researchPackTemplateImportNothing": {
+    "message": "No hay nada nuevo que guardar",
+    "description": "Research pack: an import had nothing new to save"
+  },
+  "researchPackTemplateFailed": {
+    "message": "No se pudieron actualizar las plantillas. Inténtalo de nuevo.",
+    "description": "Research pack: reading or writing templates failed"
+  },
+  "savedLibraryOpenFull": {
+    "message": "Abrir biblioteca completa"
+  },
+  "savedLibrarySite": {
+    "message": "Sitio"
+  },
+  "savedLibraryAllSites": {
+    "message": "Todos los sitios"
+  },
+  "savedLibraryUnknownSite": {
+    "message": "Sitio desconocido"
+  },
+  "savedLibraryAccount": {
+    "message": "Cuenta"
+  },
+  "savedLibraryAllAccounts": {
+    "message": "Todas las cuentas"
+  },
+  "savedLibraryAccountNumber": {
+    "message": "Cuenta {number}"
+  },
+  "savedLibraryUnassigned": {
+    "message": "Sin asignar"
+  },
+  "savedLibraryRemoveStarConfirm": {
+    "message": "¿Quitar esta estrella?"
+  },
+  "savedLibraryDeleteHighlightConfirm": {
+    "message": "¿Eliminar este resaltado y su nota?"
+  },
+  "savedLibraryOpenFailed": {
+    "message": "No se pudo abrir la biblioteca"
+  },
+  "savedLibraryExpandText": {
+    "message": "Mostrar texto completo"
+  },
+  "savedLibraryCollapseText": {
+    "message": "Contraer texto"
+  },
+  "savedLibraryConversationOpenFailed": {
+    "message": "No se pudo abrir esta conversación"
+  },
+  "savedLibraryChatGptSwitchAccount": {
+    "message": "Esta estrella se guardó en {account}. Cambia a esa cuenta en ChatGPT y vuelve a abrirla."
+  },
+  "savedLibraryChatGptSwitchHint": {
+    "message": "¿No puedes abrir esta conversación? Cambia a la cuenta que usaste en ChatGPT y vuelve a abrirla."
+  },
+  "savedLibraryOpenAnyway": {
+    "message": "Abrir de todos modos"
+  },
+  "savedLibraryFilters": {
+    "message": "Filtros de la biblioteca"
+  },
+  "savedLibraryTypeFilter": {
+    "message": "Tipo de elemento guardado"
+  },
+  "savedLibraryRefresh": {
+    "message": "Actualizar"
   }
 }

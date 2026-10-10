@@ -15,6 +15,8 @@
  *    plugin run arbitrary top-level code.
  */
 
+import type { TranslationKey } from '@/utils/translations';
+
 // ---------------------------------------------------------------------------
 // Sites
 // ---------------------------------------------------------------------------
@@ -46,6 +48,8 @@ export interface SiteThemeDescriptor {
  * URL and hands it to the engine so `semantic` selector refs can be resolved.
  */
 export interface SiteAdapter {
+  /** Catalog source revision, stamped by the shared bundle/publishing pipeline. */
+  readonly catalogRevision?: number;
   readonly id: SiteId;
   readonly label: string;
   readonly matches: readonly string[];
@@ -69,6 +73,13 @@ export interface SiteAdapter {
    * navigation primitives; absent for sites without per-conversation routes.
    */
   readonly conversationIdPattern?: string;
+  /**
+   * Attributes that keep one user message's identity across re-renders and
+   * remounts, read from the `userTurn` element or its nearest ancestor carrying
+   * one (the first present wins). Send tracking needs them to tell the message
+   * a send produced from older ones mounting; omit them where the site has none.
+   */
+  readonly turnKeyAttributes?: readonly string[];
 }
 
 // ---------------------------------------------------------------------------
@@ -153,6 +164,19 @@ export interface SettingField {
   readonly options?: readonly { readonly value: string; readonly label: string }[];
   readonly min?: number;
   readonly max?: number;
+  /** Marks a setting still being trialled, as the native settings do. */
+  readonly experimental?: boolean;
+  /**
+   * First-party only: reuse the extension's own message keys so a builtin setting shares the
+   * native setting's wording. The manifest validator drops it from catalog and remote data.
+   */
+  readonly messageKeys?: { readonly label: TranslationKey; readonly hint?: TranslationKey };
+  /**
+   * First-party only: a boolean that works only with one choice of a select. While it is on, the
+   * select's other choices are disabled, and turning it on writes that choice in the same write.
+   * The manifest validator drops it from catalog and remote data.
+   */
+  readonly requiresChoice?: { readonly setting: string; readonly value: string };
 }
 export type SettingsSchema = Readonly<Record<string, SettingField>>;
 
@@ -211,6 +235,8 @@ export interface LocalizedSettingField {
   readonly label?: string;
   readonly minLabel?: string;
   readonly maxLabel?: string;
+  /** Select option value → localized label. */
+  readonly options?: Readonly<Record<string, string>>;
 }
 
 export interface PluginLocalization {
@@ -290,10 +316,12 @@ export interface InstalledPlugin {
 /**
  * Which tier a source belongs to. Drives the merge rules in
  * `listPluginManifestsWithSources`: `builtin` ids are never overridden by a
- * remote entry, `remote` entries win over `bundled` snapshots when compatible.
- * A source without a kind is merged like a bundled snapshot.
+ * remote entry, `remote` entries win over `bundled` snapshots when compatible,
+ * and `local` (user-imported) plugins are merged last under their own
+ * `local.*` ids, outside the kill switch. A source without a kind is merged
+ * like a bundled snapshot.
  */
-export type PluginSourceKind = 'builtin' | 'bundled' | 'remote';
+export type PluginSourceKind = 'builtin' | 'bundled' | 'remote' | 'local';
 
 /**
  * Where a listing happens. `host` selects the per-host remote catalog; `url`

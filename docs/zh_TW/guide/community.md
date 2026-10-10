@@ -46,7 +46,7 @@
 
 如果你發現了可重現的程式錯誤（Bug），請在 GitHub 上提交 Issue。功能需求、想法和提問請到 Discussions，不要開 Issue：
 
-- [提交 Bug 報告](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml)
-- [提出功能需求或想法（Discussions）](https://github.com/Nagi-ovo/voyager/discussions)
+- [提交 Bug 報告](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml)
+- [提出功能需求或想法（Discussions）](https://github.com/voyager-crew/voyager/discussions)
 
 感謝你對 Voyager 的支持！❤️

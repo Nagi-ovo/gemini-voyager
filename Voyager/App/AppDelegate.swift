@@ -318,6 +318,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     _ destination: VoyagerNotificationDestination,
     completion: @escaping () -> Void
   ) {
+    // Conversation URLs can reveal private details; keep them out of public diagnostics.
     os_log(
       .default,
       log: notifLog,

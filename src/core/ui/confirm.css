@@ -1,0 +1,110 @@
+/* The shared confirm card, inside its own shadow root (see tokens.css).
+ * Host-only rules are `!important`: a page rule that matches the host (`div {}`,
+ * a reset) beats a normal `:host` declaration whatever its specificity.
+ * left/top stay inline, written by the layer's placement. */
+:host {
+  position: fixed !important;
+  z-index: var(--gv-z-top, 2147483647) !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+:host([data-gv-rtl]) {
+  direction: rtl !important;
+}
+
+.gv-confirm {
+  box-sizing: border-box;
+  inline-size: max-content;
+  max-inline-size: min(300px, calc(100vw - 16px));
+  padding: 12px;
+  border: 1px solid var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7));
+  border-radius: 12px;
+  background: var(--gv-ui-surface, oklch(0.995 0.002 250));
+  color: var(--gv-ui-text, oklch(0.14 0.004 285));
+  box-shadow: var(--gv-ui-shadow, 0 6px 20px oklch(0 0 0 / 0.16));
+  font-family: var(
+    --gv-ui-font,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  font-size: 13px;
+  line-height: 1.4;
+  animation: gv-confirm-in var(--gv-ui-motion, 160ms) var(--gv-ui-ease, ease-out);
+}
+
+@keyframes gv-confirm-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+}
+
+.gv-confirm-message {
+  margin: 0 0 10px;
+  overflow-wrap: anywhere;
+}
+
+/* `dir=auto` resolves an English message to LTR; keep it on the RTL start edge. */
+:host([data-gv-rtl]) .gv-confirm-message {
+  text-align: right;
+}
+
+.gv-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.gv-confirm-button {
+  box-sizing: border-box;
+  min-block-size: 28px;
+  padding: 4px 12px;
+  border: 1px solid var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7));
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.gv-confirm-button:hover {
+  background: var(--gv-ui-surface-hover, oklch(0.97 0.003 250));
+}
+
+.gv-confirm-button:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring, oklch(0.601 0.1 140));
+  outline-offset: 2px;
+}
+
+.gv-confirm-button[data-emphasis='primary'] {
+  border-color: transparent;
+  background: var(--gv-ui-primary, oklch(0.601 0.1 140));
+  color: var(--gv-ui-primary-fg, #ffffff);
+}
+
+.gv-confirm[data-tone='danger'] .gv-confirm-button[data-emphasis='primary'] {
+  background: var(--gv-ui-danger, oklch(0.55 0.19 25));
+  color: var(--gv-ui-danger-fg, oklch(1 0 0));
+}
+
+.gv-confirm-button[data-emphasis='primary']:hover {
+  filter: brightness(1.06);
+}
+
+.gv-confirm-button[data-emphasis='secondary'] {
+  color: var(--gv-ui-primary, oklch(0.601 0.1 140));
+}

@@ -33,7 +33,7 @@ AI ツールは優れたアシスタントですが、「怠惰な」コピー�
 4. 動作変更には回帰テストを追加するか、自動化が有用でない理由を説明してください。
 5. 影響するブラウザで実際の成果物を読み込み、変更したフローを確認してください。未確認項目と担当者は PR に記載します。
 
-> 💡 AI エージェント（Claude Code、Codex など）で貢献する場合は、リポジトリに同梱の `voyager-contribute` skill（`.claude/skills/` と `.agents/skills/`）を使うよう指示してください。本ワークフローに加え、過去の PR で最もレビュー往復を要したリポジトリ固有の落とし穴を網羅しています。リポジトリ外のエージェント（Cursor など）では `npx skills add Nagi-ovo/voyager -s voyager-contribute` でインストールできます。
+> 💡 AI エージェント（Claude Code、Codex など）で貢献する場合は、リポジトリに同梱の `voyager-contribute` skill（`.claude/skills/` と `.agents/skills/`）を使うよう指示してください。本ワークフローに加え、過去の PR で最もレビュー往復を要したリポジトリ固有の落とし穴を網羅しています。リポジトリ外のエージェント（Cursor など）では `npx skills add voyager-crew/voyager -s voyager-contribute` でインストールできます。
 
 ## 目次
 
@@ -60,7 +60,7 @@ AI ツールは優れたアシスタントですが、「怠惰な」コピー�
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/Nagi-ovo/voyager.git
+git clone https://github.com/voyager-crew/voyager.git
 cd voyager
 
 # 依存関係をインストール
@@ -281,7 +281,7 @@ Voyager は、以下の機能で Gemini AI チャット体験を向上させま�
 - UI カスタマイズ
 
 > [!NOTE]
-> **Voyager の機能セットはすでに十分に充実していると考えています。** ニッチすぎる、あるいは過度に個人的な機能を追加しても、ソフトウェアの改善にはつながらず、メンテナンスの負担が増えるだけです。その機能が本当に必要不可欠で、大多数のユーザーにとって有益であると確信できない限り、Feature Request の送信を再検討してください。本当に必要な場合は、Issue ではなく [Discussions](https://github.com/Nagi-ovo/voyager/discussions) に投稿してください。
+> **Voyager の機能セットはすでに十分に充実していると考えています。** ニッチすぎる、あるいは過度に個人的な機能を追加しても、ソフトウェアの改善にはつながらず、メンテナンスの負担が増えるだけです。その機能が本当に必要不可欠で、大多数のユーザーにとって有益であると確信できない限り、Feature Request の送信を再検討してください。本当に必要な場合は、Issue ではなく [Discussions](https://github.com/voyager-crew/voyager/discussions) に投稿してください。
 
 **範囲外**: サイトのスクレイピング、ネットワーク傍受、アカウントの自動化。
 
@@ -289,8 +289,8 @@ Voyager は、以下の機能で Gemini AI チャット体験を向上させま�
 
 ## ヘルプを得る
 
-- 💬 [GitHub Discussions](https://github.com/Nagi-ovo/voyager/discussions) - 質問する
-- 🐛 [Issues](https://github.com/Nagi-ovo/voyager/issues) - バグを報告する
+- 💬 [GitHub Discussions](https://github.com/voyager-crew/voyager/discussions) - 質問する
+- 🐛 [Issues](https://github.com/voyager-crew/voyager/issues) - バグを報告する
 - 📖 [ドキュメント](https://voyager.nagi.fun/) - ドキュメントを読む
 
 ---

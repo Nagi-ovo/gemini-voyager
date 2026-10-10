@@ -129,6 +129,7 @@ export default mergeConfig(
         input: {
           sakuraRenderer: resolve(__dirname, 'src/pages/sakuraRenderer/index.html'),
           welcome: resolve(__dirname, 'src/pages/welcome/index.html'),
+          library: resolve(__dirname, 'src/pages/library/index.html'),
         },
       },
     },

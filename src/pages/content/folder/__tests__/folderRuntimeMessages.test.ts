@@ -67,6 +67,7 @@ describe('folder runtime message lifecycle', () => {
   beforeEach(() => {
     mockBrowser.runtime.onMessage.addListener.mockClear();
     mockBrowser.storage.onChanged.addListener.mockClear();
+    mockBrowser.storage.local.get.mockResolvedValue({});
     (chrome.runtime.onMessage.addListener as ReturnType<typeof vi.fn>).mockClear();
     (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockResolvedValue({});
     (chrome.storage.local.set as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
@@ -122,10 +123,13 @@ describe('folder runtime message lifecycle', () => {
       expect(sendResponse).toHaveBeenCalledWith({ ok: true });
     });
 
-    it('responds synchronously to gv.sync.requestData and keeps the channel open', () => {
+    it('responds synchronously to gv.sync.requestData and keeps the channel open', async () => {
       const { manager: m, internals } = makeManager();
       manager = m;
-      internals.store.data = makeFolderData();
+      (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockResolvedValue({
+        gvFolderData: makeFolderData(),
+      });
+      await internals.store.init();
 
       const sendResponse = vi.fn();
       const listener = getMessageListener(internals);
@@ -134,6 +138,23 @@ describe('folder runtime message lifecycle', () => {
       expect(result).toBe(true);
       expect(sendResponse).toHaveBeenCalledWith(
         expect.objectContaining({ ok: true, data: internals.store.data }),
+      );
+    });
+
+    it('does not publish an empty Gemini snapshot before folders have loaded', async () => {
+      const { manager: m, internals } = makeManager();
+      manager = m;
+      const listener = getMessageListener(internals);
+      const sendResponse = vi.fn();
+      listener({ type: 'gv.sync.requestData' }, {}, sendResponse);
+      expect(sendResponse).toHaveBeenLastCalledWith({ ok: false });
+      (chrome.storage.local.get as ReturnType<typeof vi.fn>).mockResolvedValue({
+        gvFolderData: { folders: [], folderContents: {} },
+      });
+      await internals.store.init();
+      listener({ type: 'gv.sync.requestData' }, {}, sendResponse);
+      expect(sendResponse).toHaveBeenLastCalledWith(
+        expect.objectContaining({ ok: true, data: { folders: [], folderContents: {} } }),
       );
     });
 

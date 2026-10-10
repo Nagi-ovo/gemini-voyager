@@ -1,0 +1,10 @@
+{
+  // Typechecks the bench harness, which the root tsconfig does not include:
+  //   bunx tsc -p bench/folders
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "noEmit": true
+  },
+  "include": ["./**/*.ts", "../../src/global.d.ts", "../../src/vite-env.d.ts"]
+}

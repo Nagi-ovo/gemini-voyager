@@ -4,36 +4,26 @@ import {
 } from '@/core/services/AccountIsolationService';
 import {
   DEFAULT_HIGHLIGHT_COLOR_PALETTE,
-  HIGHLIGHT_COLORS,
   type HighlightAccountScope,
   type HighlightColor,
   type HighlightCreateInput,
   type HighlightRecordV1,
   type HighlightUpdatePatch,
-  getHighlightColorHex,
-  isHighlightPresetColor,
   normalizeHighlightColorPalette,
 } from '@/core/types/highlight';
 import { buildConversationIdFromUrl } from '@/core/utils/conversationIdentity';
 
 import { HighlightEditor } from './HighlightEditor';
+import { HighlightMarks } from './HighlightMarks';
+import { HighlightNavigation, type HighlightNavigationResult } from './HighlightNavigation';
 import { HighlightTimelineMarkers } from './HighlightTimelineMarkers';
-import { HIGHLIGHT_EXACT_MAX_BYTES, buildHighlightAnchor, resolveHighlightAnchor } from './anchor';
+import { HIGHLIGHT_EXACT_MAX_BYTES, buildHighlightAnchor } from './anchor';
 import { HighlightClient, highlightClient } from './client';
-import {
-  collectHighlightTurns,
-  findHighlightTurn,
-  getHighlightSelectionContext,
-  isVisibleHighlightMark,
-  resolveMountedHighlightTurnId,
-  resolveStoredHighlightTurnId,
-} from './dom';
-import { getSaveFailureMessage, translate, translateWith } from './messages';
+import { getHighlightSelectionContext } from './dom';
+import { getSaveFailureMessage, translate } from './messages';
 
 const STYLE_ID = 'gv-highlight-style';
-const HIGHLIGHT_HASH_PREFIX = '#gv-highlight-';
 const RENDER_DEBOUNCE_MS = 120;
-type NavigationResult = 'highlight' | 'turn' | 'missing';
 
 function injectStyles(): void {
   if (document.getElementById(STYLE_ID)) return;
@@ -260,91 +250,14 @@ function injectStyles(): void {
   document.head.appendChild(style);
 }
 
-function unwrapMark(mark: HTMLElement): void {
-  const parent = mark.parentNode;
-  if (!parent) return;
-  mark.replaceWith(...Array.from(mark.childNodes));
-  parent.normalize();
-}
-
-function highlightColorBackground(color: HighlightColor, alpha = 0.3): string {
-  const hex = getHighlightColorHex(color);
-  const red = Number.parseInt(hex.slice(1, 3), 16);
-  const green = Number.parseInt(hex.slice(3, 5), 16);
-  const blue = Number.parseInt(hex.slice(5, 7), 16);
-  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-}
-
-function applyMarkColor(element: HTMLElement, color: HighlightColor): void {
-  HIGHLIGHT_COLORS.forEach((candidate) =>
-    element.classList.remove(`gv-highlight-mark-${candidate}`),
-  );
-  element.style.removeProperty('background-color');
-  if (isHighlightPresetColor(color)) {
-    element.classList.add(`gv-highlight-mark-${color}`);
-  } else {
-    element.style.backgroundColor = highlightColorBackground(color);
-  }
-}
-
-function getRangeTextNodes(range: Range): Text[] {
-  const root = range.commonAncestorContainer;
-  if (root instanceof Text) return [root];
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-  const nodes: Text[] = [];
-  let current = walker.nextNode();
-  while (current) {
-    if (current instanceof Text) {
-      try {
-        if (range.intersectsNode(current)) nodes.push(current);
-      } catch {}
-    }
-    current = walker.nextNode();
-  }
-  return nodes;
-}
-
-export function wrapHighlightRange(
-  range: Range,
-  id: string,
-  color: HighlightColor,
-  ariaLabel: string,
-): HTMLElement[] {
-  const textNodes = getRangeTextNodes(range);
-  const marks: HTMLElement[] = [];
-
-  for (const node of [...textNodes].reverse()) {
-    const start = node === range.startContainer ? range.startOffset : 0;
-    const end = node === range.endContainer ? range.endOffset : node.data.length;
-    if (end <= start) continue;
-
-    let selected = node;
-    if (end < selected.data.length) selected.splitText(end);
-    if (start > 0) selected = selected.splitText(start);
-
-    const mark = document.createElement('mark');
-    mark.className = 'gv-highlight-mark';
-    applyMarkColor(mark, color);
-    mark.dataset.gvHighlightId = id;
-    mark.setAttribute('role', 'button');
-    mark.setAttribute('aria-label', ariaLabel);
-    mark.tabIndex = -1;
-    selected.replaceWith(mark);
-    mark.appendChild(selected);
-    marks.unshift(mark);
-  }
-
-  if (marks[0]) marks[0].tabIndex = 0;
-  return marks;
-}
-
-function setRecordColor(elements: HTMLElement[], color: HighlightColor): void {
-  elements.forEach((element) => applyMarkColor(element, color));
-}
-
 export class HighlightManager {
   private readonly records = new Map<string, HighlightRecordV1>();
-  private readonly marks = new Map<string, HTMLElement[]>();
+  private readonly marks = new HighlightMarks();
+  private readonly navigation = new HighlightNavigation(
+    this.marks.elements,
+    this.records,
+    () => this.destroyed,
+  );
   private destroyed = false;
   private observer: MutationObserver | null = null;
   private renderTimer: number | null = null;
@@ -355,12 +268,7 @@ export class HighlightManager {
   private scopeGeneration = 0;
   private loadGeneration = 0;
   private liveRegion: HTMLElement | null = null;
-  private activeTimer: number | null = null;
   private announceTimer: number | null = null;
-  private hashRetryTimer: number | null = null;
-  private pendingHashId: string | null = null;
-  private pendingHashDeadline = 0;
-  private pendingTurnFallbackDone = false;
   private colorPalette = [...DEFAULT_HIGHLIGHT_COLOR_PALETTE];
   private readonly onDocumentClick = (event: MouseEvent): void => {
     const target = event.target instanceof Element ? event.target : null;
@@ -384,7 +292,7 @@ export class HighlightManager {
     if (record) this.editor.open(record, mark, this.colorPalette);
   };
   private readonly onHashChange = (): void => {
-    this.handleHashNavigation();
+    this.navigation.handleHash();
   };
   private readonly onRouteEvent = (): void => {
     this.checkRoute();
@@ -408,8 +316,10 @@ export class HighlightManager {
     delete: (record) => this.deleteHighlight(record),
     announce: (message) => this.announce(message),
   });
-  private readonly timelineMarkers = new HighlightTimelineMarkers(this.records, this.marks, (id) =>
-    this.navigateToHighlight(id),
+  private readonly timelineMarkers = new HighlightTimelineMarkers(
+    this.records,
+    this.marks.elements,
+    (id) => this.navigateToHighlight(id),
   );
 
   constructor(private readonly client: HighlightClient = highlightClient) {}
@@ -492,35 +402,8 @@ export class HighlightManager {
     id: string,
     behavior: ScrollBehavior = 'smooth',
     allowTurnFallback = true,
-  ): NavigationResult {
-    const mark = this.marks.get(id)?.find(isVisibleHighlightMark);
-    if (mark) {
-      mark.scrollIntoView?.({ behavior, block: 'center', inline: 'nearest' });
-      try {
-        mark.focus({ preventScroll: true });
-      } catch {
-        mark.focus();
-      }
-      document.querySelectorAll('.gv-highlight-active').forEach((element) => {
-        element.classList.remove('gv-highlight-active');
-      });
-      mark.classList.add('gv-highlight-active');
-      if (this.activeTimer !== null) window.clearTimeout(this.activeTimer);
-      this.activeTimer = window.setTimeout(() => {
-        mark.classList.remove('gv-highlight-active');
-        this.activeTimer = null;
-      }, 1600);
-      return 'highlight';
-    }
-
-    if (!allowTurnFallback) return 'missing';
-    const record = this.records.get(id);
-    const turn = record ? findHighlightTurn(record.turnId) : null;
-    if (turn) {
-      turn.userElement.scrollIntoView?.({ behavior, block: 'center', inline: 'nearest' });
-      return 'turn';
-    }
-    return 'missing';
+  ): HighlightNavigationResult {
+    return this.navigation.navigate(id, behavior, allowTurnFallback);
   }
 
   private getRouteKey(): string {
@@ -608,7 +491,7 @@ export class HighlightManager {
         .filter((record) => !record.deletedAt)
         .forEach((record) => this.records.set(record.id, record));
       this.renderAll();
-      this.handleHashNavigation();
+      this.navigation.handleHash();
     } catch {
       // A disabled/reloaded extension should leave Gemini untouched.
     }
@@ -643,44 +526,9 @@ export class HighlightManager {
     if (this.destroyed) return;
     this.observer?.disconnect();
     try {
-      const turns = new Map(
-        collectHighlightTurns().flatMap((turn) => {
-          const resolved = resolveMountedHighlightTurnId(turn.turnId);
-          return resolved ? [[resolved, turn] as const] : [];
-        }),
-      );
-      for (const [id, record] of this.records) {
-        const existing = (this.marks.get(id) ?? []).filter((mark) => mark.isConnected);
-        const existingText = existing.map((mark) => mark.textContent ?? '').join('');
-        if (existing.length > 0 && existingText === record.anchor.quote.exact) {
-          this.marks.set(id, existing);
-          setRecordColor(existing, record.color);
-          continue;
-        }
-
-        existing.reverse().forEach(unwrapMark);
-
-        this.marks.delete(id);
-        const normalizedTurnId = resolveStoredHighlightTurnId(record.turnId);
-        if (!normalizedTurnId) continue;
-        const turn = turns.get(normalizedTurnId);
-        if (!turn) continue;
-        const range = resolveHighlightAnchor(turn.assistantRoot, record.anchor);
-        if (!range) continue;
-        const label = translateWith('highlightAriaLabel', 'Highlight: {text}', {
-          text: record.anchor.quote.exact.slice(0, 120),
-        });
-        const rendered = wrapHighlightRange(range, id, record.color, label);
-        if (rendered.length > 0) this.marks.set(id, rendered);
-      }
-
-      for (const [id, elements] of this.marks) {
-        if (this.records.has(id)) continue;
-        elements.forEach(unwrapMark);
-        this.marks.delete(id);
-      }
+      this.marks.render(this.records);
       this.timelineMarkers.render();
-      if (this.pendingHashId) this.attemptPendingHashNavigation();
+      this.navigation.retryPending();
     } finally {
       this.observeDocument();
     }
@@ -689,11 +537,6 @@ export class HighlightManager {
   private clearRenderedMarks(): void {
     this.observer?.disconnect();
     try {
-      Array.from(this.marks.values())
-        .flat()
-        .filter((mark) => mark.isConnected)
-        .reverse()
-        .forEach(unwrapMark);
       this.marks.clear();
       this.timelineMarkers.clear();
     } finally {
@@ -713,7 +556,7 @@ export class HighlightManager {
     const updated = await this.client.update(scope, record.conversationId, record.id, patch);
     if (this.destroyed) return;
     this.records.set(updated.id, updated);
-    setRecordColor(this.marks.get(updated.id) ?? [], updated.color);
+    this.marks.updateColor(updated.id, updated.color);
     this.timelineMarkers.render();
   }
 
@@ -726,8 +569,7 @@ export class HighlightManager {
     await this.client.delete(scope, record.conversationId, record.id);
     if (this.destroyed) return;
     this.records.delete(record.id);
-    (this.marks.get(record.id) ?? []).reverse().forEach(unwrapMark);
-    this.marks.delete(record.id);
+    this.marks.remove(record.id);
     this.timelineMarkers.render();
   }
 
@@ -752,59 +594,6 @@ export class HighlightManager {
     }, 0);
   }
 
-  private handleHashNavigation(): void {
-    if (!location.hash.startsWith(HIGHLIGHT_HASH_PREFIX)) {
-      if (this.hashRetryTimer !== null) window.clearTimeout(this.hashRetryTimer);
-      this.hashRetryTimer = null;
-      this.pendingHashId = null;
-      this.pendingHashDeadline = 0;
-      this.pendingTurnFallbackDone = false;
-      return;
-    }
-    let id = '';
-    try {
-      id = decodeURIComponent(location.hash.slice(HIGHLIGHT_HASH_PREFIX.length));
-    } catch {
-      return;
-    }
-    if (!id) return;
-    if (this.pendingHashId !== id) {
-      this.pendingHashId = id;
-      this.pendingHashDeadline = Date.now() + 5000;
-      this.pendingTurnFallbackDone = false;
-    }
-    this.attemptPendingHashNavigation();
-  }
-
-  private attemptPendingHashNavigation(): void {
-    const id = this.pendingHashId;
-    if (!id || this.destroyed) return;
-    if (this.hashRetryTimer !== null) {
-      window.clearTimeout(this.hashRetryTimer);
-      this.hashRetryTimer = null;
-    }
-    const result = this.navigateToHighlight(id, 'smooth', !this.pendingTurnFallbackDone);
-    if (result === 'highlight') {
-      this.pendingHashId = null;
-      this.pendingHashDeadline = 0;
-      this.pendingTurnFallbackDone = false;
-      return;
-    }
-    if (result === 'turn') this.pendingTurnFallbackDone = true;
-    if (Date.now() >= this.pendingHashDeadline) {
-      this.pendingHashId = null;
-      this.pendingHashDeadline = 0;
-      this.pendingTurnFallbackDone = false;
-      return;
-    }
-    // The turn can exist before Gemini mounts its response. Keep a bounded
-    // precise-navigation retry even after the one-time turn fallback.
-    this.hashRetryTimer = window.setTimeout(() => {
-      this.hashRetryTimer = null;
-      this.attemptPendingHashNavigation();
-    }, 300);
-  }
-
   destroy(): void {
     if (this.destroyed) return;
     this.destroyed = true;
@@ -820,10 +609,8 @@ export class HighlightManager {
     chrome.runtime.onMessage.removeListener(this.onRuntimeMessage);
     if (this.renderTimer !== null) window.clearTimeout(this.renderTimer);
     if (this.reloadTimer !== null) window.clearTimeout(this.reloadTimer);
-    if (this.activeTimer !== null) window.clearTimeout(this.activeTimer);
+    this.navigation.destroy();
     if (this.announceTimer !== null) window.clearTimeout(this.announceTimer);
-    if (this.hashRetryTimer !== null) window.clearTimeout(this.hashRetryTimer);
-    this.pendingHashId = null;
     this.editor.close();
     this.clearRenderedMarks();
     this.liveRegion?.remove();

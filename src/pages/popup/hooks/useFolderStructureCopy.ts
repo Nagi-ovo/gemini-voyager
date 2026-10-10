@@ -9,6 +9,8 @@ import { formatFolderStructurePrompt } from '../utils/folderStructurePrompt';
 
 export function useFolderStructureCopy(language: string, sourceTabId?: number) {
   const [status, setStatus] = useState<AiStructureCopyStatus>('idle');
+  // A new copy or source-tab change invalidates old responses and feedback timers;
+  // otherwise they can copy the wrong tab's folders or clear a newer status.
   const resetTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const operation = useRef(0);
 

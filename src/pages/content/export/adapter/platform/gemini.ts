@@ -1,10 +1,13 @@
-import {
-  DOMContentExtractor,
-  type ExtractedContent,
-} from '@/features/export/services/DOMContentExtractor';
+import type { ExtractedContent } from '@/features/export/services/DOMContentExtractor';
+import { extractCodeBlock as readCodeBlock } from '@/features/export/services/exportCodeBlocks';
+import { normalizeText } from '@/features/export/services/exportDomPolicy';
 import type { SiteAdapter } from '@/features/plugins/types';
 
-import { resolveConversationRoot } from '../../conversationDom';
+import {
+  geminiAssistantTurnSelectors,
+  geminiUserTurnSelectors,
+  resolveConversationRoot,
+} from '../../conversationDom';
 import type { ExportPlatformAdapter } from './contract';
 import { collectGeminiAssistantImages, extractGeminiAssistantImage } from './geminiImages';
 
@@ -98,13 +101,6 @@ function extractConversationTitle(): string {
   return conversationId ? `Conversation ${conversationId.slice(0, 8)}` : 'Untitled Conversation';
 }
 
-const ROOT_CANDIDATES = [
-  '#chat-history',
-  'infinite-scroller.chat-history',
-  'chat-window-content',
-  'main',
-];
-
 function resolveRoot(userSelectors: string[], doc: Document = document): HTMLElement {
   return resolveConversationRoot({ userSelectors, doc });
 }
@@ -116,7 +112,7 @@ function extractUserImage(element: HTMLElement): NodeListOf<HTMLImageElement> {
 function extractUserText(textLines: NodeListOf<HTMLElement>, textParts: string[]): void {
   textLines.forEach((line) => {
     const raw = line.dataset?.userLatexOriginal ?? line.textContent ?? '';
-    const text = DOMContentExtractor.normalizeText(raw);
+    const text = normalizeText(raw);
     if (text) textParts.push(text);
   });
 }
@@ -166,7 +162,7 @@ function extractCodeBlock(
   // their parent here drops prose and sibling blocks around the first match.
   if (tagName !== 'code-block' && !child.classList.contains('code-block')) return;
 
-  const codeContent = DOMContentExtractor.extractCodeBlock(child as HTMLElement);
+  const codeContent = readCodeBlock(child as HTMLElement);
   if (codeContent.text) {
     flags.hasCode = true;
     htmlParts.push(codeContent.html);
@@ -194,48 +190,10 @@ function extractInlineFormula(
 export function buildGeminiAdapter(site: SiteAdapter): ExportPlatformAdapter {
   return {
     site,
-    getUserSelectors() {
-      const configured = (() => {
-        try {
-          return (
-            localStorage.getItem('geminiTimelineUserTurnSelector') ||
-            localStorage.getItem('geminiTimelineUserTurnSelectorAuto') ||
-            ''
-          );
-        } catch {
-          return '';
-        }
-      })();
-      const defaults = [
-        '.user-query-bubble-with-background',
-        '.user-query-bubble-container',
-        '.user-query-container',
-        'user-query-content .user-query-bubble-with-background',
-        'div[aria-label="User message"]',
-        'article[data-author="user"]',
-        'article[data-turn="user"]',
-        '[data-message-author-role="user"]',
-        'div[role="listitem"][data-user="true"]',
-      ];
-      return configured
-        ? [configured, ...defaults.filter((item) => item !== configured)]
-        : defaults;
-    },
-    getAssistantSelectors: () => [
-      '[aria-label="Gemini response"]',
-      '[data-message-author-role="assistant"]',
-      '[data-message-author-role="model"]',
-      'article[data-author="assistant"]',
-      'article[data-turn="assistant"]',
-      'article[data-turn="model"]',
-      '.model-response, model-response',
-      '.response-container',
-      'div[role="listitem"]:not([data-user="true"])',
-    ],
-    getConversationRootCandidates: () => ROOT_CANDIDATES,
+    getUserSelectors: geminiUserTurnSelectors,
+    getAssistantSelectors: geminiAssistantTurnSelectors,
     extractConversationTitle,
     extractConversationIdFromUrl: extractConversationId,
-    shouldPreloadHistory: () => true,
     resolveConversationRoot: resolveRoot,
     extractUserImage,
     extractUserText,

@@ -31,7 +31,8 @@ Both constraints point at the same answer → **declarative-first** plugins.
 PluginSource[]  ──►  manifests        SiteRegistry ──► SiteAdapter (current URL)
    (native builtin,
     bundled catalog,
-    remote host catalog)                   ▼
+    remote host catalog,
+    local imports)                         ▼
 pluginState (storage) ─► enabled?    DeclarativeEngine (interprets contributions)
 EntitlementProvider  ─► entitled?         │  styles + domOps, reversible, idempotent
         └──────────►  PluginHost.reconcile() ──► engine.mount/unmount
@@ -63,8 +64,11 @@ EntitlementProvider  ─► entitled?         │  styles + domOps, reversible, 
 - **`storage/pluginState.ts`** — per-plugin enable state in `chrome.storage.local`.
 - **`sources/` `entitlement/`** — the swap points for native first-party
   features, bundled official declarative plugins, the per-host remote catalog,
-  and a future paid (Stripe/account) store. `sources/defaultSources.ts` also
+  the user's locally imported plugins, and a future paid (Stripe/account) store. `sources/defaultSources.ts` also
   owns `mergePluginRecords`, the rules that pick which copy of a plugin id wins.
+- **`local/`** — user-imported declarative plugins: the `local.*` id namespace,
+  the import gate, storage, the read-only `LocalPluginSource` and the inspect
+  summary the popup shows. See "Write your own plugin locally" below.
 - **`remote/`** — the per-host remote catalog channel: a read-only source over a
   storage cache, plus a background-only fetcher. See below.
 - **`catalog/`** — the bundled official data: one directory per plugin platform,
@@ -91,7 +95,7 @@ because `import.meta.glob` does not exist under Bun.) Sites today are `chatgpt`,
 every site and plugin before publishing.
 
 `catalog/marketplace.json` is **not** that mapping table. It is only the index
-the docs plugin-store page fetches, and a test keeps it in sync with discovery,
+the docs plugin-store page reads at build time, and a test keeps it in sync with discovery,
 so a new plugin also needs an entry there whose `source` is the catalog-relative
 path (`sites/deepseek/plugins/reading-width/plugin.json`).
 
@@ -121,8 +125,12 @@ An official plugin is authored as files under its platform's directory:
 1. Pick the site it belongs to. If that site has no `catalog/sites/<site>/`
    directory yet, write its `site.json` first (`id` equal to the directory name,
    `label`, `matches`, `selectors` keyed by the semantic vocabulary, `theme`,
-   `brandColor`, `capabilities`, optional `conversationIdPattern`). Nothing
-   registers it: the registry picks it up from the file.
+   `brandColor`, `capabilities`, optional `conversationIdPattern` and
+   `turnKeyAttributes`). Nothing registers it: the registry picks it up from the
+   file. `turnKeyAttributes` names the attributes that keep a user message's
+   identity across remounts; send tracking (`sends/trackUserSends.ts`, behind
+   folder Activity and catalog timeline timestamps) runs only on a site that
+   names them, its `composer` and `userTurn`, and a `conversationIdPattern`.
 2. Create `catalog/sites/<site>/plugins/<id>/` with `plugin.json`, `style.css`
    and a short `README.md`.
 3. Keep the plugin's `matches` inside the site's `matches` (D18).
@@ -133,27 +141,211 @@ An official plugin is authored as files under its platform's directory:
 Manifests may keep tiny CSS inline with `{ "css": "..." }`, but the preferred
 authoring shape is `{ "file": "style.css" }` next to `plugin.json`. The bundled
 source and the published catalog file both resolve that CSS to inline text,
-reject remote-resource loads (`@import`, external `url()`), and normalize it
-before the runtime sees it. For
+reject anything that loads, from the page's own origin too (`@import`,
+`image-set()`, `image()`, `cross-fade()`, `src()`, a `url()` other than a
+raster-image `data:` URL or `#fragment`, or any string that starts with an
+external URL), and normalize
+it before the runtime sees it. A `data:` URL in `url()` must declare a raster
+type (`image/png`, `jpeg`, `gif`, `webp`, `avif`, `bmp` or an icon type);
+`data:image/svg+xml` is refused in every encoding, because an SVG used as a
+filter, mask or clip-path resource can load images of its own. For
 user settings, `{{settingKey}}` tokens can be used in CSS text or in
 `setAttribute` / `setStyle` DOM op values; a common pattern is for CSS files to
 use a normal custom property and for a `setStyle` op to set that variable from a
 setting.
+
+Select settings render their declared value/label options in the popup. Localize
+each option under `i18n.<locale>.settings.<key>.options.<value>` (engine 1.6.0+).
+A select needs at least one option, unique string values (`""` included) and a
+default among them; a stored choice the manifest no longer offers resolves to
+that default in both the popup and the host (`runtime/resolvePluginSettings.ts`).
 
 `target` is a CSS selector string, or `{ "kind": "semantic", "key": "userTurn" }`
 to use the site adapter's stable selector for one of the nine semantic keys in
 `sites/semanticKeys.ts`; a `site.json` may not invent a key outside that
 vocabulary. Supported ops: `addClass`,
 `setAttribute`, `setStyle`, `hide`, plus `native` (below). All are reversible.
-Classes must be `gv-` prefixed (content-script rule).
+Classes must be `gv-` prefixed (content-script rule). `setAttribute` names are an
+exact-match allowlist: `data-*`, `aria-*`, `title`, `role`, `lang`, `dir`,
+`hidden`, `tabindex`, `draggable`, `spellcheck`, `translate` and `style`; URL,
+`on*`, `class` and `id` attributes are refused because a selector can reach any
+page element. `setStyle` values and `style` attributes follow the CSS rule
+above, and attribute values may not contain an external URL. All of this is
+checked again after `{{setting}}` substitution (`manifest/sinkGuards.ts`).
+
+## Write your own plugin locally (`local/`)
+
+A user can run a declarative plugin they wrote without publishing it:
+
+1. Write `plugin.json` exactly as above, plus its `style.css` (or inline the CSS
+   as `{ "css": "..." }`). Any lowercase reverse-dotted `id` works; it is stored
+   as `local.<id>`.
+2. Open the popup and find **Local plugins**: on Claude, ChatGPT or DeepSeek it
+   sits on the plugin page; on Gemini and AI Studio it is the last entry of the
+   settings (collapsed until opened, or until a local plugin targets the page,
+   which then also shows its toggle and settings). Choose **Import files** (pick
+   the manifest together with its `.css` files) or **Paste JSON** (a manifest
+   with its CSS inlined).
+3. A rejected import lists every problem as `path: message` and leaves the
+   installed version untouched. An accepted one is stored **disabled** and its
+   inspect view shows the sites it matches, the CSS size, every page change,
+   each Voyager primitive it calls with its params, and its settings.
+4. Turn it on from the plugin list like any other plugin; it applies live. To
+   update it, edit the files and import again: a re-import also lands disabled,
+   so the user re-inspects the new version (it may add a `native` op) and turns
+   it back on. A plugin with a `native` op that was running when it was
+   re-imported keeps its mounted version until the page reloads, as official
+   ones do (D7). **Export** downloads the stored manifest with CSS inlined;
+   **Remove** deletes it with its enable state and settings.
+
+**Describe a change in one sentence.** The same panel can write the manifest
+with any AI the user already uses, while Voyager itself stays offline:
+
+- `local/pluginAuthoringPrompt.ts` turns the sentence and a chosen site (the
+  active tab's when supported) into a self-contained prompt: the request, the
+  site's `matches`, the contract derived from the gate's own exports (`OP_KINDS`,
+  `REQUIRED_STRINGS`, the attribute allowlist), the site's semantic anchors, a
+  minimal example, and "reply with exactly one ```json block". Its tests run the
+  embedded example and every op template through `validateLocalManifest` for
+  every site, so the prompt cannot drift from the gate.
+- The user copies the prompt and sends it themselves. Voyager never sends it,
+  opens or deep-links an AI page, reads one back, or makes a request.
+- `local/pluginReply.ts` takes the pasted reply (bounded, linear fence scan;
+  one ```json or unlabeled block, or bare JSON; zero or several blocks are
+  refused by name) through `readLocalPluginFiles` and the gate without
+  installing it. The popup closes while the user is in their AI tab, so this
+  step works on its own in a fresh popup.
+- `local/pluginPreview.ts` describes the result in plain terms (sites, each
+  change, warnings for hidden content via `hide`, `hidden` or a hiding inline
+  style, raw selectors, a replaced version, a
+  reply that misses the selected site (the active tab's, or the user's pick;
+  recomputed when the picker changes, no prompt needed), and a `theme` or `native`
+  op the prompt asked the AI to leave out). CSS is not summarized: its full
+  source is shown with a plain warning that it can change anything, hiding
+  included, since reading its effect would be a guess. It builds on `inspectPlugin`, and
+  the same inspect view opens under it on demand. **Import** hands the exact previewed
+  object to `importLocalPlugin`, so it lands disabled and follows the re-import
+  rules above, but only over the install the preview saw: if the same id was
+  installed, changed or removed meanwhile, nothing is written and the preview
+  is refreshed for a new review.
+
+The gate (`local/validateLocalManifest.ts`) is the remote catalog's gate plus
+local-only rules, never a weaker one: `validateManifest` with the CSS and
+rendered-sink guards, `tier: "declarative"` only, `native` ops only for primitives
+this build ships with params that match their contract and an `engine` floor
+at or above their `sinceEngine` (`manifest/primitiveChecks.ts`, shared with
+`plugin:check`), and `matches` inside a plugin platform's `matches` or a native
+surface's (`sites/nativeSurfaces.ts`: Gemini, AI Studio), so enabling a local
+plugin can only request host access an official plugin could, or none at all.
+A plugin for Gemini or AI Studio may not declare `theme` (those pages keep
+Voyager's own accent) or any `native` op (every shipped primitive, the
+timeline, formula copy and Vim, already runs there as a native Voyager
+feature, and a second copy would fight it): CSS and reversible DOM ops only.
+Stored records are re-validated on every read by
+`local/LocalPluginSource.ts`, and at runtime `PluginHost` and the brand theme
+refuse a theme or native op by the page's real host
+(`sites/nativeSurfaces.ts`), whatever the patterns say. By design, a local
+plugin's own CSS can still restyle anything on Gemini, Voyager's UI and its
+`--gv-*` variables included; only `theme` and native ops are refused.
+
+**Gemini and AI Studio.** Only local plugins can target them; the bundled and
+remote catalogs never do. They resolve semantic keys through the native
+`geminiAdapter` / `aistudioAdapter` (`userTurn`, `assistantTurn`, `composer`,
+`sidebar`; the Gemini `sidebar` key also covers Voyager's folder panel, so
+prefer a precise CSS selector there). The manifest already injects the content
+script and grants these hosts, so enabling one needs no permission prompt and
+`pluginsToOriginPatterns` leaves their origins out of dynamic registration
+(registering them would inject Voyager twice). `PluginHost` mounts them with
+the same reversible engine as elsewhere, and turning one off removes its
+classes and stylesheet. AI Studio's master switch (`GV_AISTUDIO_ENABLED`,
+`runtime/surfaceSwitch.ts`) governs plugins too: while Voyager is off on AI
+Studio nothing mounts, and flipping it unmounts or remounts them live. Gemini
+has no master switch. The zero-request promise
+holds: `isEligibleCatalogHost` refuses every native host, so a Gemini page has
+no catalog host, never asks for a check and never reads a catalog cache, and
+the background refuses a forced check for them too. A minimal Gemini plugin:
+
+```json
+{
+  "id": "me.gemini-compact-turns",
+  "name": "Compact Gemini turns",
+  "version": "1.0.0",
+  "description": "Tighter spacing between my messages",
+  "author": "me",
+  "category": "readability",
+  "license": "MIT",
+  "engine": ">=1.0.0",
+  "tier": "declarative",
+  "matches": ["https://gemini.google.com/*"],
+  "contributes": {
+    "styles": [{ "css": ".gv-plugin-compact-turn{margin-block:4px!important}" }],
+    "domOps": [
+      {
+        "op": "addClass",
+        "target": { "kind": "semantic", "key": "userTurn" },
+        "className": "gv-plugin-compact-turn"
+      }
+    ]
+  }
+}
+```
+
+Ownership and precedence:
+
+- **`local.*` is reserved.** Ids are forced into it on import; `plugin:check`
+  rejects an official plugin in it and `mergePluginRecords` drops any builtin,
+  bundled or remote record that claims one. A local plugin can therefore never
+  replace an official one, and its enable state and settings in
+  `storage/pluginState.ts` never share a key with one.
+- **Merged last, outside the kill switch.** The remote catalog says nothing about
+  a user's own plugin, and an enabled local plugin never makes a page eligible
+  for a catalog check (`remote/hostCatalogPolicy.ts`). A kindless or official
+  source cannot serve a `local.*` id either: only `kind: 'local'` does.
+- **Storage.** Manifests live in `chrome.storage.local` under
+  `StorageKeys.PLUGIN_LOCAL_MANIFESTS` (at most 50; per import at most
+  1,000,000 characters read, 32 style entries and 1,000,000 characters of CSS
+  after file expansion, checked before anything is expanded or scanned). An
+  import writes the manifest and its `enabled: false` in one `storage.set`, so
+  no page ever sees the new version enabled. Mutations reject on a failed read
+  (never write back a map rebuilt from nothing), keep entries this build cannot
+  read, and hold the `gv-local-plugins` Web Lock (`storage/pluginStorageLock.ts`),
+  which every plugin-state writer shares, so neither a second popup nor a late
+  setting toggle or Drive restore can write an old `enabled: true` back over a
+  new version. Content scripts cannot share that lock, so they send setting
+  changes to the background (`requestPluginSetting`). They stay on the device:
+  the enable state rides the plugin-state Drive backup, but the manifests
+  themselves do not, and a restore may switch a local plugin off but never on;
+  export them to keep a copy.
 
 ## Primitives (`verbs/`) and the `native` op
 
 Shipped primitives (`verbs/contracts.ts`): `formulaCopy` (since 1.3.0), `vimInput` (since 1.4.0,
 `composer` param, defaults to the adapter's `composer` selector) and `turnNavigator` (since 1.4.0,
 `turn` / `conversationIdPattern` / `scrollContainer` / `yieldWhen` / `position`, all optional and
-defaulting to the adapter). The formula-copy, Vim and Claude-timeline builtins are now manifests
-that invoke these primitives; the timeline engine lives in `verbs/turnNavigator/TurnNavigator.ts`.
+defaulting to the adapter, plus the optional `conversationIdAttribute` attribute and `turnItem`
+selector since 1.5.0) and `userLatex` (since 1.7.0, optional `turn` selector defaulting to the
+adapter's `userTurn`; renders the LaTeX a user typed with Gemini's renderer and restores the text on
+unmount) and the code-block diagram primitives `mermaid`, `echarts` and `wavedrom` (all since
+1.7.0, optional `turn` / `codeBlock` / `code` / `codeLine` / `language` selectors defaulting to
+the adapter's `assistantTurn` and `codeBlock`). Each is Gemini's renderer core plus the shared
+engine in `verbs/codeBlockDiagram.ts`, which draws a diagram in a shadow-root panel before the
+host's untouched code block; a label counts as a language only when it is shaped like an id, so a
+host's localized "plain text" label leaves the block to content detection. New diagram kinds follow
+the PATTERN note at the top of that file, and each site gets one `diagram-rendering` plugin listing
+its diagram ops: ChatGPT's lists `echarts` and `wavedrom`, since ChatGPT draws Mermaid itself, and
+`mermaid` waits for a site that needs it. The formula-copy,
+Vim, Claude-timeline and ChatGPT-timeline builtins are now manifests that invoke these primitives;
+the shared timeline engine lives in `../timeline/TimelineEngine.ts`. Its catalog adapter
+(`../timeline/adapters/catalog/`) accumulates markers across virtualized windows (`turnMerge.ts`)
+and keeps stars and hierarchy in per-site local keys, while stars remain available in Saved Library. Star ids come from the URL at
+each read or write (`conversationId.ts`); a manifest's `conversationIdPattern` wins over the site
+adapter's. A mounted timeline publishes that namespace (`activeStarNamespace.ts`) so ChatGPT
+export's starred filter reads the same ids. A site with a `conversationIdPattern` cannot star a
+route that does not match it. Without a site adapter the timeline stays inert: its stars, outline
+and placement are keyed by the site id. A star is written only for a turn proven to be the current conversation's:
+the host's own id for it where the site names one (`conversationIdAttribute` on an ancestor, as
+Claude's `data-conv-id`, or inside the turn's `turnItem`; a turn without it is unstarrable), else
+the URL when the turn entered the page (`turnOwnership.ts`).
 
 Some behaviour cannot be expressed as CSS or as the reversible DOM operations.
 A **primitive** is that behaviour, written once as first-party TypeScript inside
@@ -196,6 +388,12 @@ at least that version, and `bun run catalog:build` fails the build otherwise
 `needs-engine` ("update Voyager") instead of `needs-handler`, which is left
 meaning a genuine configuration mistake. `catalog:build` also rejects a handler
 with no contract, and a semantic key the plugin's own site does not define.
+
+A param added to a shipped primitive carries its own `sinceEngine` (D9: params
+are only ever added). An older engine rejects a param it does not know and skips
+the whole op, so a manifest that sets the param needs an `engine` floor at least
+that high; `plugin:check` and `catalog:build` enforce it alongside the primitive
+floor, and `builtin.test.ts` applies the same check to the builtins.
 
 `requires` states the same needs declaratively:
 
@@ -271,9 +469,18 @@ same data is published per site at `<base>/hosts/<host>.json` (default base
 `https://voyager.nagi.fun/catalog/hosts/chat.deepseek.com.json`). A selector fix
 can therefore reach users without a store release, while the engine that reads
 the data still ships in the package. The host file's optional `site` section is
-adapter data validated by the same `validateSiteAdapterData`, and it overrides
-the bundled adapter for that host, so a `site.json` fix travels the same way a
-plugin fix does.
+adapter data validated by the same `validateSiteAdapterData`. It replaces the bundled
+adapter only when its `catalogRevision` is strictly newer; ties and unstamped remote data
+prefer the bundle. `scripts/build-plugin-catalog.ts` and production browser builds use the same
+full-history first-parent Git source revision. Publishing the same commit ties its bundle,
+and rebuilding older source cannot make it newer. `generatedAt` remains a diagnostic
+publication timestamp. Production browser builds and catalog publication require full history;
+shallow checkouts fail clearly rather than stamping a truncated revision. Dev builds and Vitest
+stamp the bundle as 0, so any stamped remote adapter wins. Production Pages builds and deploys
+run only from main, publishing the docs and catalog together. Source ordering assumes the
+append-only main publication lineage; uncommitted production data carries HEAD’s revision. Cache reads do not rewrite or clear older entries, and plugin-list
+authority and kill-switch rules are unchanged. A newer `site.json` fix can still travel
+without an extension release.
 
 - **`remote/HostCatalogSource.ts`** — a read-only `PluginSource`
   (`kind: 'remote'`). `list({ host })` serves whatever the cache holds for that
@@ -287,9 +494,10 @@ plugin fix does.
   wildcards or ports); the user settings (online-updates switch, check interval
   counted from the last attempt, failure backoff, writer-version staleness); and
   page eligibility, meaning at least one **enabled** plugin targets the host.
-  Gemini and AI Studio have no plugins, so they never pass the last gate and
-  never produce a request. A manual check sends `force` and skips every gate
-  except the build flag.
+  Gemini and AI Studio are never catalog hosts (`isEligibleCatalogHost`), even
+  with a local plugin enabled there, so they never produce a request. A manual
+  check sends `force` and skips every gate except the build flag and the host
+  shape.
 - **`remote/hostCatalogPolicy.ts`** — the pure rules the background and the
   content script must agree on (which hosts may be looked up, when a check is
   due, the backoff curve, when a cached entry may be used at all), each one
@@ -337,7 +545,10 @@ plugin id:
   targets the page and is absent from the catalog is dropped: the kill switch;
 - a 404, a failed fetch, or an entry written by a different extension version
   contributes nothing, so the bundled snapshot stays in force until the next
-  successful fetch.
+  successful fetch;
+- `local.*` ids belong to the user: an official or remote record in that
+  namespace is dropped, and local plugins are added last, never replace an
+  official id, and are outside the kill switch.
 
 ## What is NOT done yet (next milestones)
 
@@ -346,8 +557,8 @@ plugin id:
   permissions plus content-script registration still ship in the package. Adding
   a site is still an extension release.
 - **Full setting UI coverage.** The schema accepts boolean/string/color/select;
-  the popup currently renders boolean switches and number/range controls, while
-  string, color and select controls remain future work.
+  the popup currently renders boolean switches, number/range controls and select
+  controls, while string and color controls remain future work.
 - **Scripted runtime** via gated `chrome.userScripts`.
 - **Account + Stripe entitlement**.
 

@@ -1,0 +1,114 @@
+const USER_CONTENT_SELECTOR = '[data-user-message-bubble], .query-text, .ds-collapsible-text';
+const EXCLUDED_SELECTOR =
+  'button, [role="button"], script, style, template, model-response, [data-message-author-role="assistant"], [data-conversation-role="assistant"]';
+const BLOCK_TAGS = new Set([
+  'ADDRESS',
+  'ARTICLE',
+  'BLOCKQUOTE',
+  'DIV',
+  'DL',
+  'DT',
+  'DD',
+  'FIGCAPTION',
+  'FIGURE',
+  'H1',
+  'H2',
+  'H3',
+  'H4',
+  'H5',
+  'H6',
+  'LI',
+  'OL',
+  'P',
+  'PRE',
+  'SECTION',
+  'TABLE',
+  'TR',
+  'UL',
+]);
+
+const HIGHLIGHT_MARK_SELECTOR = 'mark.gv-highlight-mark';
+const LATEX_ATTRIBUTE = 'data-user-latex-original';
+
+function injected(element: Element): boolean {
+  // Voyager highlight wrappers carry the user's authored text, not injected UI.
+  if (element.matches(HIGHLIGHT_MARK_SELECTOR)) return false;
+  return (
+    element.matches(EXCLUDED_SELECTOR) ||
+    Array.from(element.classList).some(
+      (name) =>
+        name.startsWith('gv-') ||
+        name.includes('visually-hidden') ||
+        name === 'sr-only' ||
+        name === 'screen-reader-only',
+    )
+  );
+}
+
+/**
+ * Full user prompt as plain text, read from the connected original so host CSS decides what is hidden.
+ * Reads computed styles for the whole turn: call it only when a star needs text, never per collect.
+ */
+export function userTurnText(element: HTMLElement): string {
+  const styles = new Map<Element, CSSStyleDeclaration>();
+  const style = (node: Element): CSSStyleDeclaration => {
+    let value = styles.get(node);
+    if (!value) {
+      value = getComputedStyle(node);
+      styles.set(node, value);
+    }
+    return value;
+  };
+  const excluded = (node: Element): boolean =>
+    injected(node) ||
+    node.hasAttribute('hidden') ||
+    node.getAttribute('aria-hidden') === 'true' ||
+    style(node).display === 'none';
+  const invisible = (node: Element): boolean => style(node).visibility === 'hidden';
+
+  if (excluded(element)) return '';
+  const reachable = (node: Element): boolean => {
+    for (let current: Element | null = node; current && current !== element;) {
+      if (excluded(current)) return false;
+      current = current.parentElement;
+    }
+    return true;
+  };
+  const content = element.matches(USER_CONTENT_SELECTOR)
+    ? element
+    : (Array.from(element.querySelectorAll(USER_CONTENT_SELECTOR)).find(reachable) ?? element);
+
+  let text = '';
+  let syntheticNewline = false;
+  const append = (value: string): void => {
+    text += value;
+    if (value) syntheticNewline = false;
+  };
+  const newline = () => {
+    if (text && !text.endsWith('\n')) {
+      text += '\n';
+      syntheticNewline = true;
+    }
+  };
+  const visit = (node: Node, root = false): void => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const parent = node.parentElement;
+      if (!parent || !invisible(parent)) append((node.nodeValue ?? '').replace(/\r\n?/g, '\n'));
+      return;
+    }
+    if (!(node instanceof Element) || (!root && excluded(node))) return;
+    if (node.tagName === 'BR') {
+      if (!invisible(node)) append('\n');
+      return;
+    }
+    const block = BLOCK_TAGS.has(node.tagName);
+    if (block) newline();
+    const latex = node.getAttribute(LATEX_ATTRIBUTE);
+    // The rendered formula's own visibility decides whether its source belongs to the prompt.
+    if (latex === null) node.childNodes.forEach((child) => visit(child));
+    else if (!invisible(node)) append(latex.replace(/\r\n?/g, '\n'));
+    if (block) newline();
+  };
+  visit(content, true);
+  return syntheticNewline ? text.slice(0, -1) : text;
+}

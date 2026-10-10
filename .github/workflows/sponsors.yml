@@ -10,7 +10,7 @@ on:
 
 jobs:
   update-sponsors:
-    if: github.repository == 'Nagi-ovo/voyager'
+    if: github.repository == 'voyager-crew/voyager'
     runs-on: ubuntu-latest
     permissions:
       contents: write

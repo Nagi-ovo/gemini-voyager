@@ -12,13 +12,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import browser from 'webextension-polyfill';
 
-import {
-  type GemMetadata,
-  catalogForAccount,
-  gemItemsEqual,
-  isSelfInflictedMutation,
-  saveCache,
-} from '../index';
+import { type GemMetadata, catalogForAccount, gemItemsEqual } from '../catalog';
+import { isSelfInflictedMutation } from '../scraper';
+import { createGemsState } from '../state';
 
 vi.mock('webextension-polyfill', () => ({
   default: {
@@ -78,7 +74,12 @@ describe('gemItemsEqual (M10)', () => {
 });
 
 describe('saveCache write skipping (M10)', () => {
+  let saveCache: ReturnType<typeof createGemsState>['saveCache'];
   beforeEach(() => {
+    saveCache = createGemsState(
+      () => {},
+      () => {},
+    ).saveCache;
     localSet().mockClear();
     window.history.pushState({}, '', '/gems/view');
   });

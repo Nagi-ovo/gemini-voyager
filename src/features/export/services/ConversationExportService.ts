@@ -3,8 +3,6 @@
  * Unified service for exporting conversations in multiple formats
  * Uses Strategy pattern for format-specific implementations
  */
-import type { ExportPlatformAdapter } from '@pages/content/export/adapter/platformAdapters';
-
 import { IMAGE_RENDER_EVENT_ERROR_CODE, isEventLikeImageRenderError } from '../types/errors';
 import { DEFAULT_EXPORT_SPEAKER_LABELS } from '../types/export';
 import type {
@@ -15,7 +13,6 @@ import type {
   ExportOptions,
   ExportResult,
 } from '../types/export';
-import { DOMContentExtractor } from './DOMContentExtractor';
 import { DeepResearchPDFPrintService } from './DeepResearchPDFPrintService';
 import { ImageExportService } from './ImageExportService';
 import { MarkdownFormatter } from './MarkdownFormatter';
@@ -34,14 +31,6 @@ export class ConversationExportService {
 
   private static assertNotAborted(signal?: AbortSignal): void {
     if (signal?.aborted) throw new DOMException('Export cancelled', 'AbortError');
-  }
-
-  /**
-   * Set the export adapter.
-   * @param adapter - The export adapter.
-   */
-  static setExportAdapter(adapter: ExportPlatformAdapter) {
-    DOMContentExtractor.setExportAdapter(adapter);
   }
 
   /**
@@ -138,46 +127,20 @@ export class ConversationExportService {
   }
 
   /**
-   * Export as JSON (existing format)
-   * Now extracts content with Markdown formatting using DOMContentExtractor
-   * to ensure consistency with Markdown export
+   * Export as JSON, with the same Markdown-formatted content as the Markdown export.
    */
   private static exportJSON(
     turns: ChatTurn[],
     metadata: ConversationMetadata,
     options: ExportOptions,
   ): ExportResult {
-    // Process turns to extract Markdown-formatted content from DOM elements
     const processedItems = turns.map((turn) => {
-      let userContent = turn.user;
-      let assistantContent = turn.assistant;
-      let attachments = turn.attachments ?? [];
-
-      // ChatGPT snapshots rich content while its virtual-list item is mounted.
-      // Prefer that stable snapshot over a later DOM read, which may be empty.
-      if (turn.userContent) {
-        userContent = turn.userContent.text || userContent;
-        attachments = turn.userContent.attachments;
-      } else if (turn.userElement) {
-        const extracted = DOMContentExtractor.extractUserContent(turn.userElement);
-        if (extracted.text) {
-          userContent = extracted.text;
-        }
-        attachments = extracted.attachments;
-      }
-
-      if (turn.assistantContent) {
-        assistantContent = turn.assistantContent.text || assistantContent;
-      } else if (turn.assistantElement) {
-        const extracted = DOMContentExtractor.extractAssistantContent(turn.assistantElement);
-        if (extracted.text) {
-          assistantContent = extracted.text;
-        }
-      }
-
+      const attachments = turn.userContent
+        ? turn.userContent.attachments
+        : (turn.attachments ?? []);
       return {
-        user: userContent,
-        assistant: assistantContent,
+        user: turn.userContent?.text || turn.user,
+        assistant: turn.assistantContent?.text || turn.assistant,
         starred: turn.starred,
         ...(attachments.length > 0 ? { attachments } : {}),
       };
@@ -390,23 +353,23 @@ export class ConversationExportService {
 
   private static extractDocumentContent(turns: ChatTurn[]): { markdown: string; html: string } {
     const turn =
-      turns.find((item) => item.assistantElement || item.assistant.trim()) ||
-      turns.find((item) => item.userElement || item.user.trim());
+      turns.find((item) => item.assistantContent || item.assistant.trim()) ||
+      turns.find((item) => item.userContent || item.user.trim());
 
     if (!turn) {
       return { markdown: '', html: '' };
     }
 
-    if (turn.assistantElement) {
-      const extracted = DOMContentExtractor.extractAssistantContent(turn.assistantElement);
+    if (turn.assistantContent) {
+      const extracted = turn.assistantContent;
       return {
         markdown: extracted.text || turn.assistant,
         html: extracted.html || this.formatPlainTextAsHtml(extracted.text || turn.assistant),
       };
     }
 
-    if (turn.userElement) {
-      const extracted = DOMContentExtractor.extractUserContent(turn.userElement);
+    if (turn.userContent) {
+      const extracted = turn.userContent;
       return {
         markdown: extracted.text || turn.user,
         html: extracted.html || this.formatPlainTextAsHtml(extracted.text || turn.user),

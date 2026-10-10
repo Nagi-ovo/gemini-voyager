@@ -139,7 +139,16 @@ describe('plugin-check', () => {
 
     const result = await checkPluginDir(pluginDir);
     expect(result.ok).toBe(false);
-    expect(result.issues.join('\n')).toMatch(/@import or external url\(\)/);
+    expect(result.issues.join('\n')).toMatch(/must not load anything/);
+  });
+
+  it('reports a style file that loads from the page origin', async () => {
+    const pluginDir = makeFixturePlugin();
+    writeFileSync(join(pluginDir, 'style.css'), "body{background:url('/probe')}\n");
+
+    const result = await checkPluginDir(pluginDir);
+    expect(result.ok).toBe(false);
+    expect(result.issues.join('\n')).toMatch(/must not load anything/);
   });
 
   it('reports a match pattern the site does not cover (D18)', async () => {
@@ -177,6 +186,12 @@ describe('plugin-check', () => {
     expect(result.issues[0]).toMatch(/sites\/<site>\/plugins\/<id>/);
   });
 
+  it('rejects an official plugin in the local.* namespace reserved for user imports', async () => {
+    const result = await checkPluginDir(makeFixturePlugin({ manifest: { id: 'local.widen' } }));
+    expect(result.ok).toBe(false);
+    expect(result.issues.join('\n')).toMatch(/reserved for user-imported plugins/);
+  });
+
   it('reports a primitive this build does not ship', async () => {
     const result = await checkPluginDir(
       makeFixturePlugin({
@@ -201,6 +216,36 @@ describe('plugin-check', () => {
     );
     expect(result.ok).toBe(false);
     expect(result.issues.join('\n')).toMatch(/admits builds older than 1\.3\.0.*"formulaCopy"/s);
+  });
+
+  it('reports an engine range that admits builds older than a primitive param it sets', async () => {
+    const usingTurnItem = (engine: string) =>
+      makeFixturePlugin({
+        selectors: { userTurn: '.turn' },
+        manifest: {
+          engine,
+          contributes: {
+            styles: [{ file: 'style.css' }],
+            domOps: [
+              {
+                op: 'native',
+                handler: 'turnNavigator',
+                params: { turnItem: '[data-turn-key]' },
+              },
+            ],
+          },
+        },
+      });
+
+    // A 1.4.0 engine skips a native op whose params it does not know.
+    const old = await checkPluginDir(usingTurnItem('>=1.4.0'));
+    expect(old.ok).toBe(false);
+    expect(old.issues.join('\n')).toMatch(
+      /admits builds older than 1\.5\.0.*"turnNavigator" param "turnItem"/s,
+    );
+
+    const current = await checkPluginDir(usingTurnItem('>=1.5.0'));
+    expect(current.issues).toEqual([]);
   });
 
   it('reports a semantic key the site does not define', async () => {

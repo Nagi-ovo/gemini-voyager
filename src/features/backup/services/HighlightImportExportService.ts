@@ -1,11 +1,13 @@
 import { AppError, ErrorCode } from '@/core/errors/AppError';
 import {
-  HighlightAnnotationError,
   HighlightAnnotationService,
-  type HighlightScope,
-  getHighlightAccountHash,
   highlightAnnotationService,
 } from '@/core/services/HighlightAnnotationService';
+import {
+  HighlightAnnotationError,
+  type HighlightScope,
+  getHighlightAccountHash,
+} from '@/core/services/highlightAnnotationData';
 import type { Result } from '@/core/types/common';
 import type {
   HighlightExportPayloadV1,

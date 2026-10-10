@@ -24,4 +24,4 @@ O Bundle ID do app não mudou. Suas pastas, biblioteca de prompts, sincronizaç�
 
 Feita essa única troca, as próximas versões do Safari atualizam o novo "Voyager" pelo atualizador automático embutido (Sparkle) — sem mais troca manual.
 
-Dúvidas? Fale com a gente no [GitHub Issues](https://github.com/Nagi-ovo/voyager/issues).
+Dúvidas? Fale com a gente no [GitHub Issues](https://github.com/voyager-crew/voyager/issues).

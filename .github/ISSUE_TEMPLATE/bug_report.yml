@@ -8,9 +8,9 @@ body:
       value: |
         ### 📌 Issue 的适用范围 | What Issues Are For
 
-        **Issue 只接受可复现的缺陷，以及维护者自建或转入的工作项。** 功能需求、想法、行为调整、提问、贡献提案、方向确认请走 [Discussions](https://github.com/Nagi-ovo/voyager/discussions)；开成 Issue 会被直接关闭。
+        **Issue 只接受可复现的缺陷，以及维护者自建或转入的工作项。** 功能需求、想法、行为调整、提问、贡献提案、方向确认请走 [Discussions](https://github.com/voyager-crew/voyager/discussions)；开成 Issue 会被直接关闭。
 
-        **Issues are only for reproducible bugs and maintainer-created or maintainer-converted work items.** Feature requests, ideas, behavior changes, questions, contribution proposals, and direction checks belong in [Discussions](https://github.com/Nagi-ovo/voyager/discussions) and may be closed if opened as issues.
+        **Issues are only for reproducible bugs and maintainer-created or maintainer-converted work items.** Feature requests, ideas, behavior changes, questions, contribution proposals, and direction checks belong in [Discussions](https://github.com/voyager-crew/voyager/discussions) and may be closed if opened as issues.
 
         - 开 Issue 不代表预留了这份工作，也不代表授权你提交 Pull Request。 | Filing an issue does not reserve the work or authorize a pull request.
         - 不在 `.github/APPROVED_CONTRIBUTORS` 名单内的贡献者，只能提交小范围的 `fix: ...` Pull Request；其余标题（含 `feat:`）或超出自动准入额度的改动会被自动关闭。 | Contributors not listed in `.github/APPROVED_CONTRIBUTORS` may only open focused `fix: ...` pull requests; other titles (including `feat:`) or patches beyond the automatic intake budget are closed automatically.
@@ -65,6 +65,7 @@ body:
     validations:
       required: true
   - type: input
+    id: browser-version
     attributes:
       label: '🌐 浏览器版本 | Browser Version'
       description: 'Use the exact version from the browser About page.'
@@ -97,6 +98,7 @@ body:
     validations:
       required: true
   - type: input
+    id: extension-version
     attributes:
       label: '📦 扩展版本 | Extension Version'
       description: 'Which version of Voyager are you using? Please check the extension popup.'
@@ -104,6 +106,7 @@ body:
     validations:
       required: true
   - type: textarea
+    id: description
     attributes:
       label: '🐛 问题描述 | Bug Description'
       description: 'A clear and concise description of the bug.'
@@ -135,7 +138,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        ![Open Issue diagnostics, preview the sanitized report, then copy the Markdown into the issue](https://raw.githubusercontent.com/Nagi-ovo/voyager/main/.github/assets/issue-diagnostics-guide.png)
+        ![Open Issue diagnostics, preview the sanitized report, then copy the Markdown into the issue](https://raw.githubusercontent.com/voyager-crew/voyager/main/.github/assets/issue-diagnostics-guide.png)
   - type: textarea
     attributes:
       label: '⚙️ 脱敏诊断信息 | Sanitized Diagnostics'

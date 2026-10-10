@@ -4,6 +4,7 @@ import { StorageKeys } from '@/core/types/common';
 
 import { insertTextIntoChatInput } from '../../chatInput/index';
 import { startPromptManager } from '../index';
+import { resolvePromptSiteAdapter } from '../resolvePromptSiteAdapter';
 
 vi.mock('webextension-polyfill', () => ({ default: globalThis.chrome }));
 vi.mock('../../chatInput/index', () => ({ insertTextIntoChatInput: vi.fn(() => true) }));
@@ -93,7 +94,7 @@ describe('template fill delivery follows its displayed action', () => {
     'keeps the opening mode when insert=$insertInitially and keepRaw=$keepRaw',
     async ({ insertInitially, keepRaw }) => {
       syncValues[StorageKeys.PROMPT_INSERT_ON_CLICK] = insertInitially;
-      manager = await startPromptManager();
+      manager = await startPromptManager(resolvePromptSiteAdapter(location.href));
       expect(console.error).not.toHaveBeenCalled();
       const trigger = document.querySelector<HTMLButtonElement>('#gv-pm-trigger');
       expect(trigger).not.toBeNull();

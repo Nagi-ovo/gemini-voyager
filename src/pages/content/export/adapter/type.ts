@@ -1,7 +1,9 @@
+import type { ContentExtractor } from '@/features/export/services/DOMContentExtractor';
+
 export type ChatGptTurnRole = 'user' | 'assistant' | 'unknown';
 
 export interface ChatGptTurnContainer {
-  /** ChatGPT 虚拟列表顶层容器的稳定 UUID。 */
+  /** 消息的稳定 id：当前 DOM 为 `<data-turn-key>:u|:a`，旧 DOM 为顶层容器的 UUID。 */
   id: string;
 
   /** 在完整顶层容器列表中的语义顺序，从 0 开始。 */
@@ -10,7 +12,10 @@ export interface ChatGptTurnContainer {
   /** 当前容器中已挂载内容推断出的角色。 */
   role: ChatGptTurnRole;
 
-  /** 顶层 [data-turn-id-container] 容器。 */
+  /**
+   * 放置选择框的元素：当前 DOM 为该消息的元素（可能已被虚拟列表卸载），
+   * 旧 DOM 为顶层 [data-turn-id-container] 容器。
+   */
   container: HTMLElement;
 
   /**
@@ -26,4 +31,9 @@ export interface ExportSelectionOptions {
 
   /** Route captured before collection; changing conversations invalidates the export. */
   readonly expectedUrl?: string;
+}
+
+/** A read of ChatGPT messages, extracted while each one is mounted. */
+export interface ChatGptReadOptions extends ExportSelectionOptions {
+  readonly extractor: ContentExtractor;
 }

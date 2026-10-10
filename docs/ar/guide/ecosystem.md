@@ -8,5 +8,5 @@
 - **[DeepSeek Enhancer](https://github.com/dlshuangchenyue1210/DeepSeek-Enhancer)** — إضافة مستوحاة من Voyager لنسخة الويب من DeepSeek، توفّر مجلدات متعددة المستويات وتصدير سجل المحادثات ونسخ الصيغ والنسخ الاحتياطي للبيانات والمزيد.
 
 ::: tip مشروعك مستوحى من Voyager؟
-[افتح issue](https://github.com/Nagi-ovo/voyager/issues/new) لإخباري وسأضيفه هنا.
+[افتح issue](https://github.com/voyager-crew/voyager/issues/new) لإخباري وسأضيفه هنا.
 :::
