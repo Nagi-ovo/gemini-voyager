@@ -14,6 +14,12 @@
  *     vocabulary, the primitive name pattern, the manifest format, the DOM-op
  *     and stylesheet ceilings — still match their constants.
  *
+ * For local plugins the check runs both ways against `validateLocalManifest`:
+ * every example the authoring material teaches satisfies the schema, and each
+ * rule the schema tightened (gv- classes, the attribute allowlist, the
+ * semantic and primitive vocabularies, select options) is refused by the
+ * import gate as well, so the schema never flags what the popup would import.
+ *
  * The structural checker below is deliberately tiny and local: the repository
  * ships no JSON Schema validator (D17: no schema library), and adding ajv to
  * assert this would be a runtime dependency bought for one test file. It covers
@@ -25,10 +31,15 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { MAX_DOM_OPS, MAX_STYLE_LENGTH, PLUGIN_MANIFEST_FORMAT } from '../constants';
+import { buildPluginContract } from '../local/authoring/pluginContract';
+import { buildPluginExample } from '../local/authoring/pluginExamples';
+import { validateLocalManifest } from '../local/validateLocalManifest';
+import { DEFAULT_ADAPTERS } from '../sites/registry';
 import { SEMANTIC_SELECTOR_KEYS } from '../sites/semanticKeys';
 import { siteAdapterToData, validateSiteAdapterData } from '../sites/siteAdapterData';
 import { resolveStyleFileContributions } from '../sources/styleFiles';
-import { PRIMITIVE_NAME_PATTERN } from '../verbs/contracts';
+import { PRIMITIVE_CONTRACTS, PRIMITIVE_NAME_PATTERN } from '../verbs/contracts';
+import { ALLOWED_ATTRIBUTE_NAMES, attributeNameIssue } from './sinkGuards';
 import { validateManifest } from './validate';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
@@ -182,6 +193,16 @@ function checkSchema(
       ) {
         errors.push(`${child}: not described by the schema`);
       }
+    }
+  }
+
+  if (schema.if !== undefined) {
+    const matches = checkSchema(value, schema.if as JsonSchema, root, {}, path).length === 0;
+    const branch = matches ? schema.then : schema.else;
+    // A conditional only adds constraints; the enclosing schema already
+    // describes (and strict-checks) every key, so the branch runs lenient.
+    if (branch !== undefined) {
+      errors.push(...checkSchema(value, branch as JsonSchema, root, {}, path));
     }
   }
 
@@ -363,6 +384,19 @@ describe('published JSON Schemas', () => {
     const handler = (nativeOp.properties as Record<string, JsonSchema>).handler;
     expect(handler.pattern).toBe(PRIMITIVE_NAME_PATTERN.source);
 
+    // A primitive or semantic key added in code must reach the schema's enums
+    // too, or editors flag a plugin the gates accept.
+    const primitiveNames = PRIMITIVE_CONTRACTS.map((contract) => contract.name);
+    const requires = (pluginSchema.properties as Record<string, JsonSchema>).requires
+      .properties as Record<string, JsonSchema>;
+    expect(handler.enum).toEqual(primitiveNames);
+    expect((requires.handlers.items as JsonSchema).enum).toEqual(primitiveNames);
+    const semanticRef = (defs.selectorRef.anyOf as JsonSchema[])[2];
+    expect((semanticRef.properties as Record<string, JsonSchema>).key.enum).toEqual([
+      ...SEMANTIC_SELECTOR_KEYS,
+    ]);
+    expect((requires.semantic.items as JsonSchema).enum).toEqual([...SEMANTIC_SELECTOR_KEYS]);
+
     const properties = pluginSchema.properties as Record<string, JsonSchema>;
     expect(properties.format.const).toBe(PLUGIN_MANIFEST_FORMAT);
     const contributes = defs.contributions.properties as Record<string, JsonSchema>;
@@ -463,6 +497,94 @@ describe('plugin.schema.json', () => {
     };
     expect(check(manifest, pluginSchema).join('\n')).toMatch(/domOps\[0\].*oneOf/s);
     expect(validateManifest(manifest).success).toBe(false);
+  });
+});
+
+describe('plugin.schema.json and the local plugin gate', () => {
+  const chatgpt = DEFAULT_ADAPTERS.find((site) => site.id === 'chatgpt')!;
+  const composer = { kind: 'semantic', key: 'composer' };
+  const withOps = (domOps: unknown[], extra: Record<string, unknown> = {}) => {
+    const manifest = buildPluginExample(chatgpt);
+    return { ...manifest, ...extra, contributes: { ...(manifest.contributes as object), domOps } };
+  };
+  const withSetting = (field: Record<string, unknown>) => {
+    const manifest = buildPluginExample(chatgpt);
+    const contributes = { ...(manifest.contributes as object), settings: { size: field } };
+    return { ...manifest, contributes };
+  };
+
+  it('accepts every example the authoring material teaches, on every site', () => {
+    for (const site of DEFAULT_ADAPTERS) {
+      for (const audience of ['chat', 'agent'] as const) {
+        for (const example of buildPluginContract(site, { audience }).examples) {
+          expect(check(example.manifest, pluginSchema)).toEqual([]);
+        }
+      }
+    }
+  });
+
+  it('allows exactly the attribute names the sink guard allows', () => {
+    const defs = pluginSchema.$defs as Record<string, JsonSchema>;
+    const setAttribute = (defs.domOperation.oneOf as JsonSchema[]).find(
+      (branch) => branch.title === 'setAttribute',
+    )!;
+    const pattern = new RegExp(
+      (setAttribute.properties as Record<string, JsonSchema>).name.pattern as string,
+    );
+    const allowed = ['data-gv-x', 'data-1', 'aria-label'];
+    const refused = ['href', 'src', 'onclick', 'class', 'id', 'DATA-X', 'data-', 'data-X'];
+    const edges = ['aria-', 'aria-x1', 'xlink:href', 'style2', ' title'];
+    const names = [...ALLOWED_ATTRIBUTE_NAMES, ...allowed, ...refused, ...edges];
+    for (const name of names) {
+      expect(pattern.test(name), name).toBe(attributeNameIssue(name) === null);
+    }
+  });
+
+  it.each([
+    [
+      'a class without the gv- prefix',
+      withOps([{ op: 'addClass', target: composer, className: 'big' }]),
+    ],
+    [
+      'two classes in one addClass',
+      withOps([{ op: 'addClass', target: composer, className: 'gv-a gv-b' }]),
+    ],
+    [
+      'an href attribute',
+      withOps([{ op: 'setAttribute', target: composer, name: 'href', value: '#x' }]),
+    ],
+    [
+      'a class attribute',
+      withOps([{ op: 'setAttribute', target: composer, name: 'class', value: 'x' }]),
+    ],
+    [
+      'an unknown semantic key',
+      withOps([{ op: 'hide', target: { kind: 'semantic', key: 'footer' } }]),
+    ],
+    [
+      'an unknown primitive',
+      withOps([{ op: 'native', handler: 'confetti', params: {} }], { engine: '>=1.7.0' }),
+    ],
+    ['an unknown required primitive', withOps([], { requires: { handlers: ['confetti'] } })],
+    ['an unknown required semantic key', withOps([], { requires: { semantic: ['footer'] } })],
+    ['a select without options', withSetting({ type: 'select', label: 'Size', default: 's' })],
+    [
+      'a select with no options',
+      withSetting({ type: 'select', label: 'Size', default: 's', options: [] }),
+    ],
+    [
+      'a select with a number default',
+      withSetting({
+        type: 'select',
+        label: 'Size',
+        default: 1,
+        options: [{ value: '1', label: 'One' }],
+      }),
+    ],
+  ])('flags %s, which the import also refuses', (_label, manifest) => {
+    expect(check(manifest, pluginSchema)).not.toEqual([]);
+    const result = validateLocalManifest(manifest);
+    expect(result.success).toBe(false);
   });
 });
 

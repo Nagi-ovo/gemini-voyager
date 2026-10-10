@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://voyager.nagi.fun/plugin.schema.json",
   "title": "Voyager plugin manifest",
-  "description": "A declarative Voyager plugin (plugin.json). Hand-written to mirror validateManifest in src/features/plugins/manifest/validate.ts, which is the authority: this schema is editor tooling, not the gate. Run `bun run plugin:check <dir>` for the checks a schema cannot express (the site a plugin ships under, the primitives this build carries, translation completeness). Unknown top-level keys are ignored rather than rejected, exactly as the validator ignores them.",
+  "description": "A declarative Voyager plugin (plugin.json). Hand-written to mirror the gates, which are the authority: this schema is editor tooling. A bundled plugin goes through `bun run plugin:check <dir>` (the site it ships under, the primitives this build carries, translation completeness). A local plugin goes through the popup import; `npx create-voyager-plugin check <dir>` runs the same checks offline, including the local-only rules no schema can express: `matches` must stay inside a site Voyager supports, every semantic key must be declared by every matched site, Gemini and AI Studio take no `theme` and no `native` op, and settings are boolean, number or select only. Unknown top-level keys are ignored rather than rejected, exactly as the validators ignore them.",
   "type": "object",
   "required": [
     "id",
@@ -25,9 +25,13 @@
     "id": {
       "type": "string",
       "minLength": 1,
-      "description": "Globally unique, reverse-dotted (e.g. `voyager.claude-reading-width`)."
+      "description": "Globally unique, reverse-dotted (e.g. `voyager.claude-reading-width`). A local plugin is stored as `local.<id>`; write the id without that prefix."
     },
-    "name": { "type": "string", "minLength": 1, "description": "English display name." },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Display name: English for a bundled plugin, any language for a local one."
+    },
     "version": {
       "type": "string",
       "minLength": 1,
@@ -36,7 +40,7 @@
     "description": {
       "type": "string",
       "minLength": 1,
-      "description": "English one-liner shown in the popup."
+      "description": "One-liner shown in the popup: English for a bundled plugin, any language for a local one."
     },
     "author": { "type": "string", "minLength": 1 },
     "category": {
@@ -74,7 +78,7 @@
       "type": "array",
       "minItems": 1,
       "items": { "type": "string", "minLength": 1 },
-      "description": "URL match patterns the plugin applies to. Every pattern must stay inside the matches of the site the plugin ships under (plan D18) — `plugin:check` enforces that; this schema cannot.",
+      "description": "URL match patterns the plugin applies to. A bundled plugin must stay inside the matches of the site it ships under (plan D18), a local plugin inside the matches of a site Voyager supports. The gates enforce that; this schema cannot.",
       "examples": [["https://claude.ai/*"]]
     },
     "contributes": { "$ref": "#/$defs/contributions" },
@@ -87,7 +91,7 @@
           "description": "Accent for Voyager's own UI on the matched site(s); overrides the site adapter's brandColor. Hex only — the value is concatenated into a CSS `color-mix(...)` expression."
         }
       },
-      "description": "Optional brand accent contributed for the matched site(s)."
+      "description": "Optional brand accent contributed for the matched site(s). Not allowed on Gemini or AI Studio."
     },
     "format": {
       "const": 1,
@@ -104,15 +108,39 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 100,
-            "pattern": "^[a-z][a-zA-Z0-9]{1,39}$"
+            "pattern": "^[a-z][a-zA-Z0-9]{1,39}$",
+            "enum": [
+              "formulaCopy",
+              "vimInput",
+              "turnNavigator",
+              "userLatex",
+              "mermaid",
+              "echarts",
+              "wavedrom"
+            ]
           },
-          "description": "Primitive names the plugin invokes. Declaring them is optional for handlers already named by a `native` op, and required for anything a primitive is expected to provide implicitly."
+          "description": "Primitive names the plugin invokes. Optional: a `native` op already implies its handler, so list one only to state the dependency explicitly."
         },
         "semantic": {
           "type": "array",
           "maxItems": 50,
-          "items": { "type": "string", "minLength": 1, "maxLength": 100 },
-          "description": "Semantic selector keys the plugin expects its site adapter to define. See site.schema.json for the vocabulary."
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "enum": [
+              "userTurn",
+              "assistantTurn",
+              "thinkingBlock",
+              "codeBlock",
+              "composer",
+              "sidebar",
+              "sidePanel",
+              "headerActions",
+              "scrollContainer"
+            ]
+          },
+          "description": "Semantic selector keys the plugin expects its site adapter to define (see site.schema.json). Every matched site must declare each one."
         }
       }
     },
@@ -124,7 +152,7 @@
     },
     "i18n": {
       "type": "object",
-      "description": "Localized metadata keyed by app language code. `en` is not needed — the top-level fields are the English copy, and every field falls back to them individually. `plugin:check` requires name and description (plus changelog and every setting label, when present) for ar, es, fr, ja, ko, pt, ru, zh and zh_TW.",
+      "description": "Localized metadata keyed by app language code. `en` is not needed — the top-level fields are the English copy, and every field falls back to them individually. `plugin:check` requires name and description (plus changelog and every setting label, when present) for ar, es, fr, ja, ko, pt, ru, zh and zh_TW in a bundled plugin; a local plugin may leave `i18n` out.",
       "additionalProperties": { "$ref": "#/$defs/localization" }
     }
   },
@@ -150,13 +178,13 @@
         },
         "settings": {
           "type": "object",
-          "description": "User-configurable settings, rendered by the popup. A `{{key}}` placeholder in a DOM operation's value is replaced with the resolved setting.",
+          "description": "User-configurable settings, rendered by the popup. A `{{key}}` token in CSS text, a setStyle value or a setAttribute value is replaced with the current value (the default until the user changes it). A local plugin may use boolean, number and select settings only: the popup has no control for string or color yet.",
           "additionalProperties": { "$ref": "#/$defs/settingField" }
         }
       }
     },
     "styleContribution": {
-      "description": "CSS injected as a <style> element. Authors write `{ \"file\": \"style.css\" }`; the build inlines it as `{ \"css\": \"…\" }`, which is the form published catalogs carry. Classes must be `gv-` prefixed, and CSS may not load anything: no `@import`, `image-set()`, `image()`, `cross-fade()` or `src()`, and `url()` only with a `#fragment` or a raster-image `data:` URI (png, jpeg, gif, webp, avif, bmp, ico; never SVG).",
+      "description": "CSS injected as a <style> element. Authors write `{ \"file\": \"style.css\" }`; the build (or the popup's Import files) inlines it as `{ \"css\": \"…\" }`, which is the form published catalogs carry. Scope rules under the plugin's own `gv-` classes; `{{key}}` setting tokens are substituted. CSS may not load anything: no `@import`, `image-set()`, `image()`, `cross-fade()` or `src()`, and `url()` only with a `#fragment` or a raster-image `data:` URI (png, jpeg, gif, webp, avif, bmp, ico; never SVG).",
       "anyOf": [
         {
           "type": "object",
@@ -199,7 +227,21 @@
           "required": ["kind", "key"],
           "properties": {
             "kind": { "const": "semantic" },
-            "key": { "type": "string", "minLength": 1 }
+            "key": {
+              "type": "string",
+              "enum": [
+                "userTurn",
+                "assistantTurn",
+                "thinkingBlock",
+                "codeBlock",
+                "composer",
+                "sidebar",
+                "sidePanel",
+                "headerActions",
+                "scrollContainer"
+              ],
+              "description": "A semantic key every matched site declares (see site.schema.json)."
+            }
           }
         }
       ]
@@ -214,7 +256,11 @@
           "properties": {
             "op": { "const": "addClass" },
             "target": { "$ref": "#/$defs/selectorRef" },
-            "className": { "type": "string", "minLength": 1 }
+            "className": {
+              "type": "string",
+              "pattern": "^gv-[A-Za-z0-9_-]+$",
+              "description": "Exactly one class name starting with `gv-`, conventionally `gv-plugin-<plugin>`. Style it in `contributes.styles`."
+            }
           }
         },
         {
@@ -226,13 +272,12 @@
             "target": { "$ref": "#/$defs/selectorRef" },
             "name": {
               "type": "string",
-              "minLength": 1,
-              "pattern": "^(?![oO][nN])",
-              "description": "Event-handler attributes (on*) are rejected: they inject executable code."
+              "pattern": "^(?:title|role|lang|dir|hidden|tabindex|draggable|spellcheck|translate|style|data-[a-z0-9][a-z0-9._-]*|aria-[a-z]+)$",
+              "description": "An inert attribute: data-*, aria-*, or one of title, role, lang, dir, hidden, tabindex, draggable, spellcheck, translate, style. Never href, src, on*, class or id."
             },
             "value": {
               "type": "string",
-              "description": "javascript:, data: and vbscript: values are rejected for href, src, action, formaction and xlink:href."
+              "description": "May not contain an external URL; a `style` value follows the setStyle rules. `{{key}}` setting tokens are substituted."
             }
           }
         },
@@ -245,7 +290,7 @@
             "target": { "$ref": "#/$defs/selectorRef" },
             "styles": {
               "type": "object",
-              "description": "CSS property → value. Anything that loads (a url() other than a raster-image data: URI or #fragment, image-set(), …) is rejected.",
+              "description": "CSS property → value, custom properties included. Anything that loads (a url() other than a raster-image data: URI or #fragment, image-set(), …) is rejected. `{{key}}` setting tokens are substituted.",
               "additionalProperties": { "type": "string" }
             }
           }
@@ -262,14 +307,23 @@
         {
           "type": "object",
           "title": "native",
-          "description": "Invoke a first-party primitive by name. `params` is configuration, never instructions; the primitive validates its own params. The engine floor must clear the primitive's sinceEngine — `plugin:check` enforces that.",
+          "description": "Invoke a first-party primitive by name. `params` is configuration, never instructions; the primitive validates its own params. The engine floor must clear the primitive's sinceEngine, and every matched site must declare the semantic keys it reads: the gates enforce both. A local plugin may not use it on Gemini or AI Studio.",
           "required": ["op", "handler"],
           "properties": {
             "op": { "const": "native" },
             "handler": {
               "type": "string",
               "pattern": "^[a-z][a-zA-Z0-9]{1,39}$",
-              "description": "A primitive name from src/features/plugins/verbs/contracts.ts."
+              "enum": [
+                "formulaCopy",
+                "vimInput",
+                "turnNavigator",
+                "userLatex",
+                "mermaid",
+                "echarts",
+                "wavedrom"
+              ],
+              "description": "A primitive this Voyager build ships (src/features/plugins/verbs/contracts.ts)."
             },
             "params": {
               "type": "object",
@@ -284,7 +338,11 @@
       "type": "object",
       "required": ["type", "label", "default"],
       "properties": {
-        "type": { "type": "string", "enum": ["boolean", "number", "string", "color", "select"] },
+        "type": {
+          "type": "string",
+          "enum": ["boolean", "number", "string", "color", "select"],
+          "description": "string and color are for bundled plugins only; a local plugin may use boolean, number or select."
+        },
         "label": {
           "type": "string",
           "minLength": 1,
@@ -307,7 +365,7 @@
         "max": { "type": "number" },
         "options": {
           "type": "array",
-          "description": "Choices for a `select` setting.",
+          "description": "Choices for a `select` setting: at least one, with unique values; `default` must be one of them.",
           "items": {
             "type": "object",
             "required": ["value", "label"],
@@ -316,6 +374,14 @@
               "label": { "type": "string" }
             }
           }
+        }
+      },
+      "if": { "properties": { "type": { "const": "select" } } },
+      "then": {
+        "required": ["options"],
+        "properties": {
+          "default": { "type": "string" },
+          "options": { "minItems": 1 }
         }
       }
     },
