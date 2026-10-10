@@ -7,7 +7,7 @@ description: "Write and check a local plugin for the Voyager browser extension (
 
 Voyager is a browser extension for AI chat sites. A local plugin is a declarative JSON manifest (plugin.json) plus CSS that restyles or rearranges a chat page through reversible page changes. It runs no code of its own: Voyager checks it strictly on import, applies it, and removes every change when the plugin is turned off.
 
-This skill is generated from Voyager’s plugin engine 1.7.0. The latest copy is at https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md.
+This skill is generated from Voyager’s plugin engine 1.8.0. The latest copy is at https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md.
 
 ## Workflow
 
@@ -23,7 +23,7 @@ This skill is generated from Voyager’s plugin engine 1.7.0. The latest copy is
 - Required non-empty string fields: id, name, version, description, author, category, license, engine. Also "tier": "declarative", "matches" (see the target site) and "contributes".
 - "id": a short lowercase reverse-dotted slug such as "me.short-name" (a-z, 0-9, ".", "_", "-"). Voyager stores it as "local.<id>"; you do not add that prefix.
 - "version": "1.0.0"; raise it when you change the plugin. "author": "me". "license": "MIT".
-- "engine": ">=1.0.0", or ">=" the sinceEngine of every primitive the plugin uses. This build's plugin engine is 1.7.0.
+- "engine": ">=1.0.0", or ">=" the sinceEngine of every primitive the plugin uses. This build's plugin engine is 1.8.0.
 - "category": one of render-fix, theme, layout, readability, productivity, integration, other.
 - Write "name" and "description" in the language of the user. "i18n" translations are optional for a local plugin.
 - Optional: "$schema": "https://voyager.nagi.fun/plugin.schema.json" lets an editor check the file as you type. The import gate is stricter than the schema; `check` is the authority.
@@ -100,6 +100,13 @@ A primitive is behavior Voyager ships as code; a plugin can only call it by name
   - code (selector): Element inside the code block holding the source text; defaults to code, else the block itself.
   - codeLine (selector): Line elements inside the source element, joined with newlines, for hosts that render one element per line without newline characters.
   - language (selector): Element inside the code block whose text is the language label; defaults to a language-* class on the source element or the block.
+- tableCopy (sinceEngine 1.8.0): A toolbar above each table in a reply copies it as Markdown (formulas kept as LaTeX, the same table conversation export writes) or as TSV for spreadsheets. The table stays untouched; turning the plugin off removes the toolbars. Reads: assistantTurn.
+  - turn (selector): Reply elements whose tables get a copy toolbar; defaults to the site adapter's assistantTurn.
+  - table (selector): Tables inside a reply; defaults to table. Tables nested in another table or inside the site adapter's thinkingBlock are skipped.
+- codeCollapse (sinceEngine 1.8.0): Collapses long code blocks in replies with Gemini's code block collapse: a toggle per block plus expand all / collapse all, with the code and the host's copy controls left intact. Long blocks start collapsed, the user's choice holds while a reply streams, and turning the plugin off restores every block. Reads: assistantTurn, codeBlock.
+  - codeBlock (selector): One code block inside a reply, the element that carries the collapsed state. Defaults to the site adapter's codeBlock.
+  - code (selector): Element inside the code block holding the code, measured for length and clipped while collapsed; defaults to pre, else the block itself.
+  - action (selector): A native control inside the code block, such as its copy button; the toggle joins that control's row. Without it the toggle goes at the end of the block.
 
 ## Finding selectors
 
@@ -204,9 +211,10 @@ Semantic anchors DeepSeek declares (use them as { "kind": "semantic", "key": …
 - userTurn: a user message container (today it matches `.ds-message:has(.ds-collapsible-text):not(:has(.ds-assistant-message-main-content, .ds-think-content))`)
 - assistantTurn: an assistant message container (today it matches `.ds-message:has(.ds-assistant-message-main-content, .ds-think-content)`)
 - thinkingBlock: the reasoning / "thinking" section inside an assistant turn (today it matches `.ds-think-content`)
+- codeBlock: a rendered code block (today it matches `.md-code-block`)
 - composer: the prompt input the user types into (today it matches `textarea.ds-scroll-area`)
 
-DeepSeek does not declare codeBlock, sidebar, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
+DeepSeek does not declare sidebar, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
 Primitives (native ops) and an optional "theme" accent are allowed on DeepSeek.
 

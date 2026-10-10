@@ -116,7 +116,9 @@
               "userLatex",
               "mermaid",
               "echarts",
-              "wavedrom"
+              "wavedrom",
+              "tableCopy",
+              "codeCollapse"
             ]
           },
           "description": "Primitive names the plugin invokes. Optional: a `native` op already implies its handler, so list one only to state the dependency explicitly."
@@ -321,7 +323,9 @@
                 "userLatex",
                 "mermaid",
                 "echarts",
-                "wavedrom"
+                "wavedrom",
+                "tableCopy",
+                "codeCollapse"
               ],
               "description": "A primitive this Voyager build ships (src/features/plugins/verbs/contracts.ts)."
             },
