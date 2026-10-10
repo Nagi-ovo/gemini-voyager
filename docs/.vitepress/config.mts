@@ -32,6 +32,8 @@ const localeHreflang: { prefix: string; hreflang: string }[] = [
 
 export default defineConfig({
   base: '/',
+  // public/ files are served verbatim; the agent skill there is raw Markdown, not a page.
+  srcExclude: ['public/**'],
   title: 'Voyager',
   description: '直观的导航。强大的组织。简洁优雅。',
   lang: 'zh-CN',
@@ -105,6 +107,7 @@ export default defineConfig({
               { text: '赞助', link: '/guide/sponsor' },
               { text: '交流与反馈', link: '/guide/community' },
               { text: '插件贡献说明', link: '/guide/plugin-contribution' },
+              { text: '编写自己的插件', link: '/guide/write-a-plugin' },
               { text: '受 Voyager 启发的项目', link: '/guide/ecosystem' },
             ],
           },
@@ -263,6 +266,7 @@ export default defineConfig({
               { text: 'Sponsor', link: '/en/guide/sponsor' },
               { text: 'Community', link: '/en/guide/community' },
               { text: 'Plugin Contribution', link: '/en/guide/plugin-contribution' },
+              { text: 'Write Your Own Plugin', link: '/en/guide/write-a-plugin' },
               { text: 'Ecosystem', link: '/en/guide/ecosystem' },
             ],
           },
