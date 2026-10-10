@@ -4,6 +4,9 @@ import { StorageKeys } from '@/core/types/common';
 
 import { buildInstructionBlock } from '../../folderProject/instructionBlock';
 
+/** Mirrors the module's send-detection poll interval. */
+const SEND_CHECK_INTERVAL_MS = 1000;
+
 type StorageChangeListener = (
   changes: Record<string, chrome.storage.StorageChange>,
   area: string,
@@ -365,6 +368,64 @@ describe('draftSave', () => {
     cleanup();
   });
 
+  describe('a restore still pending when the feature stops', () => {
+    const draftKey = 'gvDraft_/app/test-conversation-123';
+
+    function seedDraft(): void {
+      localStore[draftKey] = {
+        content: 'My saved draft',
+        timestamp: Date.now(),
+        path: '/app/test-conversation-123',
+      };
+    }
+
+    function expectInert(input: HTMLElement): void {
+      expect(document.execCommand).not.toHaveBeenCalled();
+      input.textContent = 'Typed after stopping';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      vi.advanceTimersByTime(2000);
+      expect((localStore[draftKey] as { content: string }).content).toBe('My saved draft');
+    }
+
+    it('does not rebind or restore when a retry fires after stopping', async () => {
+      setupMocks(true);
+      seedDraft();
+      document.execCommand = vi.fn().mockReturnValue(true);
+      const { startDraftSave } = await import('../index');
+      const stop = await startDraftSave();
+      await vi.advanceTimersByTimeAsync(0);
+
+      // The composer has not rendered yet, so restore is waiting on a retry.
+      stop();
+      const input = createContentEditable();
+      await vi.advanceTimersByTimeAsync(5 * 500);
+
+      expectInert(input);
+    });
+
+    it('does not rebind or restore when the draft load resolves after stopping', async () => {
+      setupMocks(true);
+      seedDraft();
+      document.execCommand = vi.fn().mockReturnValue(true);
+      const local = chrome.storage.local as unknown as { get: ReturnType<typeof vi.fn> };
+      const immediateGet = local.get.getMockImplementation() as (
+        key: unknown,
+        callback: (r: unknown) => void,
+      ) => void;
+      local.get.mockImplementation((key: unknown, callback: (r: unknown) => void) => {
+        setTimeout(() => immediateGet(key, callback), 50);
+      });
+      const input = createContentEditable();
+      const { startDraftSave } = await import('../index');
+      const stop = await startDraftSave();
+
+      stop();
+      await vi.advanceTimersByTimeAsync(5 * 500);
+
+      expectInert(input);
+    });
+  });
+
   it('strips folder project instructions from older polluted drafts during restore', async () => {
     vi.useRealTimers();
     setupMocks(true);
@@ -388,6 +449,34 @@ describe('draftSave', () => {
     cleanup();
   });
 
+  it('ignores a slow startup read once the user has changed the setting', async () => {
+    setupMocks(true);
+    let answerStartupRead: (() => void) | null = null;
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (defaults: Record<string, unknown>, callback: (value: Record<string, unknown>) => void) => {
+        answerStartupRead = () => callback({ ...defaults, [StorageKeys.DRAFT_AUTO_SAVE]: true });
+      },
+    );
+    const input = createContentEditable();
+    input.textContent = '';
+
+    const { startDraftSave } = await import('../index');
+    const starting = startDraftSave();
+    for (const listener of storageChangeListeners) {
+      listener({ [StorageKeys.DRAFT_AUTO_SAVE]: { oldValue: false, newValue: true } }, 'sync');
+      listener({ [StorageKeys.DRAFT_AUTO_SAVE]: { oldValue: true, newValue: false } }, 'sync');
+    }
+    answerStartupRead!();
+    const cleanup = await starting;
+
+    input.textContent = 'typed after turning auto-save off';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(3000);
+
+    expect(Object.keys(localStore).filter((key) => key.startsWith('gvDraft_'))).toEqual([]);
+    cleanup();
+  });
+
   it('cleans up listeners on cleanup call', async () => {
     setupMocks(true);
     createContentEditable();
@@ -402,5 +491,130 @@ describe('draftSave', () => {
 
     // Storage listener should be removed
     expect(chrome.storage.onChanged.removeListener).toHaveBeenCalled();
+  });
+
+  it('does not look up the input while unrelated content streams into the page', async () => {
+    setupMocks(true);
+    let rectReads = 0;
+    const input = document.createElement('div');
+    input.setAttribute('contenteditable', 'true');
+    input.setAttribute('role', 'textbox');
+    Object.defineProperty(input, 'getBoundingClientRect', {
+      value: () => {
+        rectReads += 1;
+        return { height: 100, width: 500, top: 0, left: 0, bottom: 100, right: 500 };
+      },
+    });
+    document.body.appendChild(input);
+    const { startDraftSave } = await import('../index');
+    const cleanup = await startDraftSave();
+    // Start right after a send-detection tick so the poller stays out of the window.
+    vi.advanceTimersByTime(SEND_CHECK_INTERVAL_MS);
+
+    rectReads = 0;
+    const querySpy = vi.spyOn(document, 'querySelectorAll');
+    const chat = document.createElement('div');
+    document.body.appendChild(chat);
+    for (let i = 0; i < 30; i++) {
+      const chunk = document.createElement('p');
+      chunk.textContent = `Streamed chunk ${i}`;
+      chat.appendChild(chunk);
+      await vi.advanceTimersByTimeAsync(16);
+    }
+
+    expect(rectReads).toBe(0);
+    expect(querySpy).not.toHaveBeenCalled();
+    cleanup();
+  });
+
+  it('follows Gemini when it replaces the chat input', async () => {
+    setupMocks(true);
+    const original = createContentEditable();
+    const { startDraftSave } = await import('../index');
+    const cleanup = await startDraftSave();
+
+    original.remove();
+    const replacement = createContentEditable();
+    await vi.advanceTimersByTimeAsync(16);
+
+    replacement.textContent = 'Typed into the new composer';
+    replacement.dispatchEvent(new Event('input', { bubbles: true }));
+    vi.advanceTimersByTime(1000);
+
+    const draft = localStore['gvDraft_/app/test-conversation-123'] as { content: string };
+    expect(draft.content).toBe('Typed into the new composer');
+    cleanup();
+  });
+
+  describe('when Gemini switches between two mounted composers', () => {
+    let stop: (() => void) | null = null;
+
+    afterEach(() => {
+      stop?.();
+      stop = null;
+    });
+
+    function createComposer(): { el: HTMLElement; setVisible: (visible: boolean) => void } {
+      let visible = true;
+      const el = document.createElement('div');
+      el.setAttribute('contenteditable', 'true');
+      el.setAttribute('role', 'textbox');
+      Object.defineProperty(el, 'getBoundingClientRect', {
+        value: () => ({ height: visible ? 100 : 0, width: visible ? 500 : 0, top: 0, left: 0 }),
+      });
+      document.body.appendChild(el);
+      return { el, setVisible: (next) => (visible = next) };
+    }
+
+    async function startWithSwitchedComposer(): Promise<HTMLElement> {
+      setupMocks(true);
+      const previous = createComposer();
+      const next = createComposer();
+      next.setVisible(false);
+      const { startDraftSave } = await import('../index');
+      stop = await startDraftSave();
+      // Gemini hides the bound composer and reveals the other one; both stay connected.
+      previous.setVisible(false);
+      next.setVisible(true);
+      return next.el;
+    }
+
+    function type(input: HTMLElement, text: string): void {
+      input.textContent = text;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      vi.advanceTimersByTime(1000);
+    }
+
+    it('saves typing in the composer the user focuses', async () => {
+      const next = await startWithSwitchedComposer();
+
+      next.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+      await vi.advanceTimersByTimeAsync(16);
+      type(next, 'Typed into the revealed composer');
+
+      const draft = localStore['gvDraft_/app/test-conversation-123'] as { content: string };
+      expect(draft?.content).toBe('Typed into the revealed composer');
+    });
+
+    it('saves input dispatched in the same tick as the focus that switched composers', async () => {
+      const next = await startWithSwitchedComposer();
+
+      // Prompt Manager focuses the composer and dispatches `input` synchronously.
+      next.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+      type(next, 'Inserted prompt');
+
+      const draft = localStore['gvDraft_/app/test-conversation-123'] as { content: string };
+      expect(draft?.content).toBe('Inserted prompt');
+    });
+
+    it('rebinds to the visible composer on the next send-detection check', async () => {
+      const next = await startWithSwitchedComposer();
+
+      vi.advanceTimersByTime(SEND_CHECK_INTERVAL_MS);
+      type(next, 'Typed without a focus event');
+
+      const draft = localStore['gvDraft_/app/test-conversation-123'] as { content: string };
+      expect(draft?.content).toBe('Typed without a focus event');
+    });
   });
 });

@@ -47,11 +47,12 @@ const ENGINE = '1.2.0';
 const SCOPE: PluginSourceContext = { url: 'https://example.com/chat', host: 'example.com' };
 
 describe('default plugin sources', () => {
-  it('serves native, then the bundled snapshot, then the per-host remote catalog', () => {
+  it('serves native, the bundled snapshot, the per-host remote catalog, then local plugins', () => {
     expect(createDefaultPluginSources().map((source) => `${source.id}:${source.kind}`)).toEqual([
       'builtin:builtin',
       'bundled-catalog:bundled',
       'host-catalog:remote',
+      'local:local',
     ]);
   });
 
@@ -247,5 +248,81 @@ describe('mergePluginRecords (plan D6 / D20)', () => {
       engineVersion: ENGINE,
     });
     expect(merged.map((r) => r.manifest.id)).toEqual(['voyager.a']);
+  });
+});
+
+describe('mergePluginRecords with local plugins', () => {
+  it('merges local plugins last, after every official tier', () => {
+    const merged = mergePluginRecords({
+      builtin: [record(manifest('voyager.native'), 'builtin')],
+      snapshot: [record(manifest('voyager.a'), 'bundled-catalog')],
+      remote: [record(manifest('voyager.remote'), 'host-catalog')],
+      local: [record(manifest('local.me.tweak'), 'local')],
+      remoteAuthoritative: false,
+      scopeUrl: SCOPE.url,
+      engineVersion: ENGINE,
+    });
+    expect(merged.map((r) => `${r.manifest.id}:${r.sourceId}`)).toEqual([
+      'voyager.native:builtin',
+      'voyager.a:bundled-catalog',
+      'voyager.remote:host-catalog',
+      'local.me.tweak:local',
+    ]);
+  });
+
+  it('never lets a local plugin override an official id', () => {
+    const merged = mergePluginRecords({
+      builtin: [record(manifest('voyager.native'), 'builtin')],
+      snapshot: [record(manifest('voyager.a'), 'bundled-catalog')],
+      remote: [],
+      local: [
+        record(manifest('voyager.native', 'hijack'), 'local'),
+        record(manifest('voyager.a', 'hijack'), 'local'),
+      ],
+      remoteAuthoritative: false,
+      engineVersion: ENGINE,
+    });
+    expect(merged.map((r) => `${r.manifest.id}:${r.manifest.name}:${r.sourceId}`)).toEqual([
+      'voyager.native:voyager.native:builtin',
+      'voyager.a:voyager.a:bundled-catalog',
+    ]);
+  });
+
+  it('drops an official record that claims a local.* id, so it cannot shadow a user plugin', () => {
+    const merged = mergePluginRecords({
+      builtin: [],
+      snapshot: [record(manifest('local.me.tweak', 'bundled squatter'), 'bundled-catalog')],
+      remote: [record(manifest('local.me.tweak', 'remote squatter'), 'host-catalog')],
+      local: [record(manifest('local.me.tweak', 'mine'), 'local')],
+      remoteAuthoritative: true,
+      scopeUrl: SCOPE.url,
+      engineVersion: ENGINE,
+    });
+    expect(merged.map((r) => `${r.manifest.name}:${r.sourceId}`)).toEqual(['mine:local']);
+  });
+
+  it('exempts local plugins from the remote kill switch', () => {
+    const merged = mergePluginRecords({
+      builtin: [],
+      snapshot: [record(manifest('voyager.retired'), 'bundled-catalog')],
+      remote: [],
+      local: [record(manifest('local.me.tweak'), 'local')],
+      remoteAuthoritative: true,
+      scopeUrl: SCOPE.url,
+      engineVersion: ENGINE,
+    });
+    expect(merged.map((r) => r.manifest.id)).toEqual(['local.me.tweak']);
+  });
+
+  it('routes a local-kind source through the local tier when listing', async () => {
+    const result = await listPluginManifestsWithSources(
+      [
+        new StaticSource('local', [manifest('local.me.tweak')], 'local'),
+        new StaticSource('bundled-catalog', [manifest('voyager.a')], 'bundled'),
+        new StaticSource('host-catalog', [], 'remote', true),
+      ],
+      SCOPE,
+    );
+    expect(result.map((r) => `${r.manifest.id}:${r.sourceId}`)).toEqual(['local.me.tweak:local']);
   });
 });

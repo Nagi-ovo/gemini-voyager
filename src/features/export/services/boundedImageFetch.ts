@@ -3,7 +3,10 @@ import {
   parseAllowedRuntimeImageUrl,
 } from '@/core/utils/runtimeImageFetch';
 
-/** PDF and PNG re-fetch at most this many images. Markdown archives do not use this cap. */
+/**
+ * Cap PDF/PNG refetches, never rendered content: later images keep their sources.
+ * Markdown archives do not use this cap.
+ */
 export const MAX_EXPORT_IMAGE_COUNT = 40;
 export const MAX_EXPORT_IMAGE_BYTES = 8 * 1024 * 1024;
 export const MAX_EXPORT_IMAGE_TOTAL_BYTES = 40 * 1024 * 1024;

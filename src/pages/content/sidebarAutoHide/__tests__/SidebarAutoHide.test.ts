@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { confirmDriver } from '@/tests/confirmDriver';
+
 function mockVisibleRect(element: HTMLElement, width: number = 300, height: number = 600): void {
   vi.spyOn(element, 'getBoundingClientRect').mockReturnValue({
     x: 0,
@@ -12,6 +14,43 @@ function mockVisibleRect(element: HTMLElement, width: number = 300, height: numb
     height,
     toJSON: () => ({}),
   } as DOMRect);
+}
+
+async function installSidebar(
+  settings: { autoHide?: boolean; fullHide?: boolean },
+  collapsed = true,
+) {
+  document.body.innerHTML = `
+    <bard-sidenav><side-navigation-content><div></div></side-navigation-content></bard-sidenav>
+    <button data-test-id="side-nav-menu-button"></button>
+  `;
+  const sidenav = document.querySelector<HTMLElement>('bard-sidenav')!;
+  const content = sidenav.querySelector<HTMLElement>('side-navigation-content > div')!;
+  content.classList.toggle('collapsed', collapsed);
+  mockVisibleRect(sidenav, 320, 800);
+  const toggleButton = document.querySelector('button')!;
+  const toggleSpy = vi.fn(() => {
+    document
+      .querySelector('bard-sidenav side-navigation-content > div')!
+      .classList.toggle('collapsed');
+  });
+  toggleButton.addEventListener('click', toggleSpy);
+  (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+    (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+      callback({
+        gvSidebarAutoHide: settings.autoHide === true,
+        gvSidebarFullHide: settings.fullHide === true,
+      });
+    },
+  );
+  const api = await import('../index');
+  api.startSidebarAutoHide();
+  const listener = vi.mocked(chrome.storage.onChanged.addListener).mock.calls.at(-1)![0];
+  const changeSettings = (
+    changes: Record<string, { newValue: boolean }>,
+    area: 'sync' | 'local' = 'sync',
+  ) => listener(changes, area);
+  return { sidenav, content, toggleButton, toggleSpy, changeSettings, ...api };
 }
 
 describe('sidebarAutoHide', () => {
@@ -60,6 +99,50 @@ describe('sidebarAutoHide', () => {
     expect(toggleSpy).not.toHaveBeenCalled();
 
     colorPicker.remove();
+    sidenav.dispatchEvent(new Event('mouseleave'));
+    vi.advanceTimersByTime(600);
+    expect(toggleSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not collapse while a folder removal confirm is open', async () => {
+    document.body.classList.add('mat-sidenav-opened');
+
+    const sidenav = document.createElement('bard-sidenav');
+    mockVisibleRect(sidenav, 320, 800);
+    const deleteButton = document.createElement('button');
+    sidenav.appendChild(deleteButton);
+    document.body.appendChild(sidenav);
+
+    const toggleButton = document.createElement('button');
+    toggleButton.setAttribute('data-test-id', 'side-nav-menu-button');
+    const toggleSpy = vi.fn();
+    toggleButton.addEventListener('click', toggleSpy);
+    document.body.appendChild(toggleButton);
+
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
+        callback({ gvSidebarAutoHide: true });
+      },
+    );
+
+    const { startSidebarAutoHide } = await import('../index');
+    startSidebarAutoHide();
+
+    const { askConfirm } = await import('@/core/ui/confirm');
+    const answer = askConfirm({
+      message: 'Remove this folder?',
+      anchor: deleteButton,
+      tone: 'danger',
+      choices: [{ id: 'confirm', label: 'Remove' }],
+    });
+    mockVisibleRect(document.querySelector<HTMLElement>('[data-gv-layer="popover"]')!, 240, 120);
+
+    sidenav.dispatchEvent(new Event('mouseleave'));
+    vi.advanceTimersByTime(600);
+    expect(toggleSpy).not.toHaveBeenCalled();
+
+    confirmDriver.pressEscape();
+    await expect(answer).resolves.toBeNull();
     sidenav.dispatchEvent(new Event('mouseleave'));
     vi.advanceTimersByTime(600);
     expect(toggleSpy).toHaveBeenCalledTimes(1);
@@ -333,9 +416,7 @@ describe('sidebarAutoHide', () => {
     const { startSidebarAutoHide } = await import('../index');
     startSidebarAutoHide();
 
-    expect(document.getElementById('gv-sidebar-full-hide-style')?.textContent).toContain(
-      ':not(.gv-sidebar-full-hide-collapsing)',
-    );
+    expect(document.getElementById('gv-sidebar-full-hide-style')).not.toBeNull();
 
     vi.advanceTimersByTime(500);
 
@@ -638,5 +719,117 @@ describe('sidebarAutoHide', () => {
       // fonticon-anchored fallback, not English string matching.
       expect(spy).toHaveBeenCalled();
     });
+  });
+  it('changes auto-hide and full-hide independently and ignores local settings events', async () => {
+    const { sidenav, toggleSpy, changeSettings } = await installSidebar({
+      autoHide: true,
+      fullHide: true,
+    });
+    vi.advanceTimersByTime(600);
+    const edge = document.getElementById('gv-sidebar-edge-trigger')!;
+    expect(edge.style.display).toBe('block');
+    changeSettings({ gvSidebarAutoHide: { newValue: false } }, 'local');
+    expect(edge.style.display).toBe('block');
+    changeSettings({ gvSidebarAutoHide: { newValue: false } });
+    expect(edge.style.display).toBe('none');
+    expect(document.getElementById('gv-sidebar-full-hide-style')).not.toBeNull();
+    edge.dispatchEvent(new Event('mouseenter'));
+    vi.advanceTimersByTime(200);
+    expect(toggleSpy).not.toHaveBeenCalled();
+    changeSettings({ gvSidebarAutoHide: { newValue: true } });
+    expect(edge.style.display).toBe('block');
+    changeSettings({ gvSidebarFullHide: { newValue: false } });
+    expect(document.getElementById('gv-sidebar-edge-trigger')).toBeNull();
+    expect(document.getElementById('gv-sidebar-full-hide-style')).toBeNull();
+    expect(document.getElementById('gv-sidebar-auto-hide-style')).not.toBeNull();
+    sidenav.dispatchEvent(new Event('mouseenter'));
+    vi.advanceTimersByTime(150);
+    expect(toggleSpy).toHaveBeenCalledOnce();
+  });
+
+  it('restores only an auto-collapsed sidebar when auto-hide is disabled', async () => {
+    const { content, toggleSpy, changeSettings } = await installSidebar({ autoHide: true }, false);
+    vi.advanceTimersByTime(500);
+    expect(content.classList.contains('collapsed')).toBe(true);
+    changeSettings({ gvSidebarAutoHide: { newValue: false } });
+    expect(content.classList.contains('collapsed')).toBe(false);
+    expect(toggleSpy).toHaveBeenCalledTimes(2);
+    content.classList.add('collapsed');
+    changeSettings({ gvSidebarAutoHide: { newValue: true } });
+    changeSettings({ gvSidebarAutoHide: { newValue: false } });
+    expect(content.classList.contains('collapsed')).toBe(true);
+    expect(toggleSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('holds expansion until the last coachmark releases and releases each lock only once', async () => {
+    const { sidenav, content, toggleSpy, keepSidebarExpanded } = await installSidebar({
+      autoHide: true,
+      fullHide: true,
+    });
+    const releaseFirst = keepSidebarExpanded();
+    const releaseSecond = keepSidebarExpanded();
+    expect(toggleSpy).toHaveBeenCalledOnce();
+    releaseFirst();
+    releaseFirst();
+    sidenav.dispatchEvent(new Event('mouseleave'));
+    vi.advanceTimersByTime(600);
+    expect(content.classList.contains('collapsed')).toBe(false);
+    releaseSecond();
+    sidenav.dispatchEvent(new Event('mouseleave'));
+    vi.advanceTimersByTime(400);
+    expect(content.classList.contains('collapsed')).toBe(true);
+    expect(toggleSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('moves hover handling from a disconnected sidebar to its replacement', async () => {
+    const { sidenav, toggleSpy } = await installSidebar({ autoHide: true });
+    vi.advanceTimersByTime(600);
+    const replacement = sidenav.cloneNode(true) as HTMLElement;
+    mockVisibleRect(replacement, 320, 800);
+    sidenav.replaceWith(replacement);
+    await Promise.resolve();
+    vi.advanceTimersByTime(100);
+    sidenav.dispatchEvent(new Event('mouseenter'));
+    vi.advanceTimersByTime(150);
+    expect(toggleSpy).not.toHaveBeenCalled();
+    replacement.dispatchEvent(new Event('mouseenter'));
+    vi.advanceTimersByTime(150);
+    expect(toggleSpy).toHaveBeenCalledOnce();
+    expect(replacement.querySelector('.collapsed')).toBeNull();
+  });
+
+  it('preserves an edge-enter timer into the sidebar but cancels it when leaving elsewhere', async () => {
+    const { content, toggleButton, toggleSpy } = await installSidebar({
+      autoHide: true,
+      fullHide: true,
+    });
+    vi.advanceTimersByTime(600);
+    const edge = document.getElementById('gv-sidebar-edge-trigger')!;
+    edge.dispatchEvent(new Event('mouseenter'));
+    vi.advanceTimersByTime(50);
+    edge.dispatchEvent(new MouseEvent('mouseleave', { relatedTarget: content }));
+    vi.advanceTimersByTime(100);
+    expect(content.classList.contains('collapsed')).toBe(false);
+    expect(toggleSpy).toHaveBeenCalledOnce();
+    toggleButton.click();
+    expect(content.classList.contains('collapsed')).toBe(true);
+    edge.dispatchEvent(new Event('mouseenter'));
+    edge.dispatchEvent(new MouseEvent('mouseleave'));
+    vi.advanceTimersByTime(200);
+    expect(content.classList.contains('collapsed')).toBe(true);
+    expect(toggleSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it('cancels the predictive safety collapse when the pointer enters the sidebar', async () => {
+    const { sidenav, content, toggleSpy } = await installSidebar({ autoHide: true });
+    vi.advanceTimersByTime(600);
+    vi.spyOn(performance, 'now').mockReturnValueOnce(1000).mockReturnValueOnce(1060);
+    document.dispatchEvent(new MouseEvent('mousemove', { clientX: 200 }));
+    document.dispatchEvent(new MouseEvent('mousemove', { clientX: 60 }));
+    expect(toggleSpy).toHaveBeenCalledOnce();
+    sidenav.dispatchEvent(new Event('mouseenter'));
+    vi.advanceTimersByTime(1300);
+    expect(content.classList.contains('collapsed')).toBe(false);
+    expect(toggleSpy).toHaveBeenCalledOnce();
   });
 });

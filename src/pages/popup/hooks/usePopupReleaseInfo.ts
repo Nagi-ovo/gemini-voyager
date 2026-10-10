@@ -103,7 +103,7 @@ export function usePopupReleaseInfo(isSafariBrowser: boolean) {
 
         if (!latest) {
           const resp = await fetch(
-            'https://api.github.com/repos/Nagi-ovo/voyager/releases/latest',
+            'https://api.github.com/repos/voyager-crew/voyager/releases/latest',
             {
               headers: { Accept: 'application/vnd.github+json' },
             },
@@ -166,12 +166,12 @@ export function usePopupReleaseInfo(isSafariBrowser: boolean) {
       : false;
   const latestReleaseTag = toReleaseTag(latestVersion ?? normalizedLatestVersion ?? undefined);
   const latestReleaseUrl = latestReleaseTag
-    ? `https://github.com/Nagi-ovo/voyager/releases/tag/${latestReleaseTag}`
-    : 'https://github.com/Nagi-ovo/voyager/releases/latest';
+    ? `https://github.com/voyager-crew/voyager/releases/tag/${latestReleaseTag}`
+    : 'https://github.com/voyager-crew/voyager/releases/latest';
   const currentReleaseTag = toReleaseTag(extVersion);
   const releaseUrl = extVersion
-    ? `https://github.com/Nagi-ovo/voyager/releases/tag/${currentReleaseTag ?? `v${extVersion}`}`
-    : 'https://github.com/Nagi-ovo/voyager/releases';
+    ? `https://github.com/voyager-crew/voyager/releases/tag/${currentReleaseTag ?? `v${extVersion}`}`
+    : 'https://github.com/voyager-crew/voyager/releases';
 
   return {
     extVersion,

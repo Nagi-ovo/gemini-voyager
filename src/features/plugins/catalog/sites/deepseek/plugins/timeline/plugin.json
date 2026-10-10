@@ -2,7 +2,7 @@
   "$schema": "https://voyager.nagi.fun/plugin.schema.json",
   "id": "voyager.deepseek-timeline",
   "name": "DeepSeek · Timeline",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Adds a compact conversation timeline to DeepSeek with starred messages and search.",
   "changelog": "Hides DeepSeek's own message navigator while the Voyager timeline is on, so there is one rail to see and to click.",
   "i18n": {
@@ -11,8 +11,13 @@
       "description": "为 DeepSeek 添加紧凑的对话时间线，支持星标消息和搜索。",
       "changelog": "开启 Voyager 时间线时隐藏 DeepSeek 自带的消息导航，只保留一条可看可点的轨道。",
       "settings": {
-        "compactView": {
-          "label": "使用紧凑索引"
+        "timelineStyle": {
+          "label": "时间线样式",
+          "options": {
+            "dots": "节点",
+            "compact": "紧凑索引",
+            "ruler": "刻度"
+          }
         }
       }
     },
@@ -21,8 +26,13 @@
       "description": "為 DeepSeek 加入緊湊的對話時間線，支援星標訊息與搜尋。",
       "changelog": "開啟 Voyager 時間線時隱藏 DeepSeek 內建的訊息導覽，只保留一條可看可點的軌道。",
       "settings": {
-        "compactView": {
-          "label": "使用精簡索引"
+        "timelineStyle": {
+          "label": "時間軸樣式",
+          "options": {
+            "dots": "節點",
+            "compact": "精簡索引",
+            "ruler": "刻度"
+          }
         }
       }
     },
@@ -31,8 +41,13 @@
       "description": "DeepSeek にコンパクトな会話タイムラインを追加し、スター付きメッセージと検索に対応します。",
       "changelog": "Voyager タイムラインが有効な間は DeepSeek 標準のメッセージナビゲーターを隠し、見えるレールと押せるレールを一本にします。",
       "settings": {
-        "compactView": {
-          "label": "コンパクト表示を使う"
+        "timelineStyle": {
+          "label": "タイムライン表示",
+          "options": {
+            "dots": "ノード",
+            "compact": "コンパクト",
+            "ruler": "目盛り"
+          }
         }
       }
     },
@@ -41,8 +56,13 @@
       "description": "DeepSeek에 별표 메시지와 검색을 지원하는 간단한 대화 타임라인을 추가합니다.",
       "changelog": "Voyager 타임라인이 켜져 있는 동안 DeepSeek 자체 메시지 내비게이터를 숨겨, 보이고 누를 수 있는 레일을 하나로 유지합니다.",
       "settings": {
-        "compactView": {
-          "label": "컴팩트 타임라인 사용"
+        "timelineStyle": {
+          "label": "타임라인 스타일",
+          "options": {
+            "dots": "노드",
+            "compact": "컴팩트",
+            "ruler": "눈금"
+          }
         }
       }
     },
@@ -51,8 +71,13 @@
       "description": "Ajoute une timeline compacte à DeepSeek avec messages favoris et recherche.",
       "changelog": "Masque le navigateur de messages intégré de DeepSeek tant que la timeline Voyager est active, pour n'avoir qu'un seul rail visible et cliquable.",
       "settings": {
-        "compactView": {
-          "label": "Utiliser la chronologie compacte"
+        "timelineStyle": {
+          "label": "Style de la chronologie",
+          "options": {
+            "dots": "Nœuds",
+            "compact": "Compact",
+            "ruler": "Graduations"
+          }
         }
       }
     },
@@ -61,8 +86,13 @@
       "description": "Añade a DeepSeek una línea de tiempo compacta con mensajes destacados y búsqueda.",
       "changelog": "Oculta el navegador de mensajes propio de DeepSeek mientras la línea de tiempo de Voyager está activa, para que haya un solo carril visible y pulsable.",
       "settings": {
-        "compactView": {
-          "label": "Usar cronología compacta"
+        "timelineStyle": {
+          "label": "Estilo de cronología",
+          "options": {
+            "dots": "Nodos",
+            "compact": "Compacto",
+            "ruler": "Escala"
+          }
         }
       }
     },
@@ -71,8 +101,13 @@
       "description": "Adiciona ao DeepSeek uma linha do tempo compacta com mensagens favoritas e busca.",
       "changelog": "Oculta o navegador de mensagens do próprio DeepSeek enquanto a linha do tempo do Voyager está ativa, deixando um único trilho visível e clicável.",
       "settings": {
-        "compactView": {
-          "label": "Usar linha do tempo compacta"
+        "timelineStyle": {
+          "label": "Estilo da linha do tempo",
+          "options": {
+            "dots": "Nós",
+            "compact": "Compacto",
+            "ruler": "Régua"
+          }
         }
       }
     },
@@ -81,8 +116,13 @@
       "description": "Добавляет в DeepSeek компактную шкалу диалога со звёздами и поиском.",
       "changelog": "Скрывает собственный навигатор сообщений DeepSeek, пока включена шкала Voyager, чтобы на экране была одна шкала: видимая и кликабельная.",
       "settings": {
-        "compactView": {
-          "label": "Использовать компактную шкалу"
+        "timelineStyle": {
+          "label": "Стиль временной шкалы",
+          "options": {
+            "dots": "Узлы",
+            "compact": "Компактный",
+            "ruler": "Шкала"
+          }
         }
       }
     },
@@ -91,8 +131,13 @@
       "description": "يضيف إلى DeepSeek مخططًا زمنيًا موجزًا مع الرسائل المميزة والبحث.",
       "changelog": "يخفي متصفّح الرسائل المدمج في DeepSeek أثناء تفعيل مخطط Voyager الزمني، فيبقى مسار واحد يمكن رؤيته والنقر عليه.",
       "settings": {
-        "compactView": {
-          "label": "استخدام المخطط الزمني المضغوط"
+        "timelineStyle": {
+          "label": "نمط الخط الزمني",
+          "options": {
+            "dots": "العُقد",
+            "compact": "مضغوط",
+            "ruler": "تدريج"
+          }
         }
       }
     }
@@ -100,8 +145,8 @@
   "author": "voyager-official",
   "category": "productivity",
   "license": "GPL-3.0-or-later",
-  "homepage": "https://github.com/Nagi-ovo/voyager/tree/main/src/features/plugins/catalog/sites/deepseek/plugins/timeline",
-  "engine": ">=1.4.0",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/deepseek/plugins/timeline",
+  "engine": ">=1.6.0",
   "tier": "declarative",
   "matches": ["https://chat.deepseek.com/*"],
   "requires": {
@@ -110,10 +155,24 @@
   },
   "contributes": {
     "settings": {
-      "compactView": {
-        "type": "boolean",
-        "label": "Use compact timeline",
-        "default": false
+      "timelineStyle": {
+        "type": "select",
+        "label": "Timeline style",
+        "default": "dots",
+        "options": [
+          {
+            "value": "dots",
+            "label": "Nodes"
+          },
+          {
+            "value": "compact",
+            "label": "Compact"
+          },
+          {
+            "value": "ruler",
+            "label": "Ruler"
+          }
+        ]
       }
     },
     "styles": [

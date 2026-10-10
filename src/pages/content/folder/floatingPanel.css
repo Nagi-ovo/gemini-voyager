@@ -1,0 +1,1213 @@
+/* Floating folder panel, rendered inside its shadow root.
+ * The host carries the panel geometry plus `data-gv-scheme` and `data-gv-rtl`,
+ * mirrored from the page, because page selectors cannot reach this tree.
+ * The host itself is in the page's tree, and any page rule that matches it
+ * (`* {}`, `div {}`, a reset) beats a normal `:host` declaration whatever its
+ * specificity. Host-only rules are therefore all `!important`, which reverses
+ * that order; custom properties stay normal because no page rule sets them.
+ * Keep left/top/width/height inline; important host geometry would block drag and resize. */
+/* ─── Floating folder panel ────────────────────────────────────────────── */
+:host {
+  position: fixed !important;
+  /* Below modal folder dialogs (…46) and shared feedback (…47): a panel mounted later never covers either. */
+  z-index: 2147483645 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #1f2025 !important;
+  color: #e8eaed !important;
+  border-radius: 14px !important;
+  border: 1px solid rgba(129, 140, 248, 0.35) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4) !important;
+  overflow: hidden !important;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif !important;
+  font-size: 13px !important;
+}
+
+.gv-floating-folder-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  cursor: grab;
+  user-select: none;
+  background: rgba(0, 0, 0, 0.24);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  touch-action: none;
+}
+
+.gv-floating-folder-panel__header--dragging {
+  cursor: grabbing;
+}
+
+.gv-floating-folder-panel__title {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.gv-floating-folder-panel__close {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.gv-floating-folder-panel__close:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.gv-floating-folder-panel__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.gv-floating-folder-panel__empty {
+  text-align: center;
+  padding: 24px 12px;
+  opacity: 0.6;
+  font-size: 12px;
+}
+
+.gv-floating-folder-panel__folder {
+  display: flex;
+  flex-direction: column;
+}
+
+.gv-floating-folder-panel__folder-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 6px 8px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-family: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.gv-floating-folder-panel__folder-header:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.gv-floating-folder-panel__caret {
+  font-size: 10px;
+  opacity: 0.6;
+  width: 12px;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.gv-floating-folder-panel__folder-name {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.gv-floating-folder-panel__count {
+  font-size: 11px;
+  opacity: 0.55;
+  padding: 1px 6px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.gv-floating-folder-panel__folder-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.gv-floating-folder-panel__conv {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 5px 10px 5px 24px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  border-radius: 4px;
+}
+
+.gv-floating-folder-panel__conv:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+:host([data-gv-scheme='light']) {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+  border-color: rgba(99, 102, 241, 0.28) !important;
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.22) !important;
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__header {
+  background: rgba(99, 102, 241, 0.06);
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__folder-header:hover {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__conv:hover {
+  background: rgba(15, 23, 42, 0.05);
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__count {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+/* ─── Floating folder panel parity controls ────────────────────────────── */
+.gv-floating-folder-panel__header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gv-floating-folder-panel__icon-button,
+.gv-floating-folder-panel__caret {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.gv-floating-folder-panel__icon-button {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  font-size: 15px;
+  opacity: 0.72;
+}
+
+.gv-floating-folder-panel__icon-button:hover,
+.gv-floating-folder-panel__icon-button:focus-visible,
+.gv-floating-folder-panel__caret:hover,
+.gv-floating-folder-panel__caret:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 1;
+  outline: none;
+}
+
+.gv-floating-folder-panel__icon-button--create {
+  font-size: 17px;
+}
+
+.gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__icon-button--remove {
+  opacity: 0;
+}
+
+.gv-floating-folder-panel__folder-header:hover .gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__folder-header:focus-within
+  .gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__conv:hover .gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__conv:focus-within .gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__conv:hover .gv-floating-folder-panel__icon-button--remove,
+.gv-floating-folder-panel__conv:focus-within .gv-floating-folder-panel__icon-button--remove,
+.gv-floating-folder-panel__icon-button--active {
+  opacity: 1;
+}
+
+.gv-floating-folder-panel__icon-button--active,
+.gv-floating-folder-panel__icon-button--star:hover {
+  color: #fdd663;
+}
+
+.gv-floating-folder-panel__icon-button--remove:hover {
+  color: #f87171;
+}
+
+.gv-floating-folder-panel__folder-header {
+  min-height: 32px;
+  position: relative;
+}
+
+.gv-floating-folder-panel__folder-header--dragging,
+.gv-floating-folder-panel__conv--dragging {
+  opacity: 0.58;
+}
+
+.gv-floating-folder-panel__folder-color {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex: 0 0 8px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.gv-floating-folder-panel__folder-name-wrap {
+  min-width: 0;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+.gv-floating-folder-panel__pin {
+  width: 10px;
+  color: #8ab4f8;
+  font-size: 8px;
+  line-height: 1;
+  text-align: center;
+}
+
+.gv-floating-folder-panel__inline-form {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  width: 100%;
+  padding: 4px 8px;
+}
+
+.gv-floating-folder-panel__inline-form--root {
+  padding-inline: 10px;
+}
+
+.gv-floating-folder-panel__inline-input {
+  min-width: 0;
+  flex: 1;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid rgba(138, 180, 248, 0.38);
+  background: rgba(255, 255, 255, 0.08);
+  color: inherit;
+  font: inherit;
+  padding: 0 8px;
+  outline: none;
+}
+
+.gv-floating-folder-panel__inline-input:focus {
+  border-color: #8ab4f8;
+  box-shadow: 0 0 0 2px rgba(138, 180, 248, 0.18);
+}
+
+.gv-floating-folder-panel__conv {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  padding-block: 3px;
+  padding-inline-end: 6px;
+}
+
+.gv-floating-folder-panel__conv-title {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  padding: 3px 0;
+}
+
+.gv-floating-folder-panel__context-menu {
+  position: fixed;
+  z-index: 2147483647;
+  min-width: 174px;
+  max-width: 240px;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #25262d;
+  color: #e8eaed;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.38);
+}
+
+.gv-floating-folder-panel__menu-item {
+  appearance: none;
+  border: 0;
+  width: 100%;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  font: inherit;
+  min-height: 30px;
+  padding: 6px 8px;
+  text-align: start;
+}
+
+.gv-floating-folder-panel__menu-item:hover,
+.gv-floating-folder-panel__menu-item:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+.gv-floating-folder-panel__menu-item--danger {
+  color: #f87171;
+}
+
+.gv-floating-folder-panel__color-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+  padding: 7px 8px;
+}
+
+.gv-floating-folder-panel__color-title {
+  font-size: 11px;
+  opacity: 0.72;
+  margin-bottom: 7px;
+}
+
+.gv-floating-folder-panel__color-swatches {
+  display: grid;
+  grid-template-columns: repeat(7, 20px);
+  gap: 6px;
+}
+
+.gv-floating-folder-panel__color-swatch {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.22);
+}
+
+.gv-floating-folder-panel__color-swatch:hover,
+.gv-floating-folder-panel__color-swatch:focus-visible,
+.gv-floating-folder-panel__color-swatch--active {
+  border-color: #e8eaed;
+  outline: none;
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__icon-button:hover,
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__icon-button:focus-visible,
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__caret:hover,
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__caret:focus-visible {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__drop-target {
+  background: rgba(59, 130, 246, 0.12) !important;
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__folder-color {
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.18);
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__inline-input {
+  background: #ffffff;
+  border-color: rgba(59, 130, 246, 0.34);
+  color: #1f2937;
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__context-menu {
+  background: #ffffff;
+  color: #1f2937;
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.2);
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__menu-item:hover,
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__menu-item:focus-visible {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__color-section {
+  border-color: rgba(15, 23, 42, 0.08);
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__color-swatch:hover,
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__color-swatch:focus-visible,
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__color-swatch--active {
+  border-color: #1f2937;
+}
+
+:host([data-gv-rtl]) .gv-floating-folder-panel__body,
+:host([data-gv-rtl]) .gv-floating-folder-panel__context-menu {
+  direction: rtl;
+}
+
+:host([data-gv-rtl]) .gv-floating-folder-panel__folder-header,
+:host([data-gv-rtl]) .gv-floating-folder-panel__conv-title,
+:host([data-gv-rtl]) .gv-floating-folder-panel__menu-item {
+  text-align: right;
+}
+
+/* ─── Floating folder panel Material polish ────────────────────────────── */
+:host,
+* {
+  box-sizing: border-box !important;
+}
+
+:host {
+  --gv-floating-folder-panel__surface: #ffffff;
+  --gv-floating-folder-panel__surface-container: #f8fafd;
+  --gv-floating-folder-panel__surface-hover: rgba(60, 64, 67, 0.08);
+  --gv-floating-folder-panel__surface-active: rgba(66, 133, 244, 0.12);
+  --gv-floating-folder-panel__outline: rgba(60, 64, 67, 0.16);
+  --gv-floating-folder-panel__outline-subtle: rgba(60, 64, 67, 0.1);
+  --gv-floating-folder-panel__text: #1f1f1f;
+  --gv-floating-folder-panel__text-muted: #5f6368;
+  --gv-floating-folder-panel__accent: #1a73e8;
+  --gv-floating-folder-panel__accent-soft: rgba(26, 115, 232, 0.14);
+  --gv-floating-folder-panel__danger: #b3261e;
+  --gv-floating-folder-panel__danger-soft: rgba(179, 38, 30, 0.1);
+  background: var(--gv-floating-folder-panel__surface) !important;
+  color: var(--gv-floating-folder-panel__text) !important;
+  border-color: var(--gv-floating-folder-panel__outline) !important;
+  border-radius: 12px !important;
+  box-shadow:
+    0 16px 48px rgba(60, 64, 67, 0.22),
+    0 4px 14px rgba(60, 64, 67, 0.12) !important;
+  font-family: 'Google Sans', Roboto, Arial, sans-serif !important;
+  font-size: 13px !important;
+  overflow: hidden !important;
+  overflow-x: hidden !important;
+  overscroll-behavior: contain !important;
+}
+
+.gv-floating-folder-panel__header {
+  min-height: 48px;
+  padding: 7px 8px 7px 14px;
+  background: var(--gv-floating-folder-panel__surface);
+  border-bottom-color: var(--gv-floating-folder-panel__outline-subtle);
+  cursor: grab;
+  gap: 8px;
+}
+
+.gv-floating-folder-panel__title {
+  min-width: 0;
+  flex: 1;
+  color: var(--gv-floating-folder-panel__text);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gv-floating-folder-panel__header-actions {
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.gv-floating-folder-panel__close,
+.gv-floating-folder-panel__icon-button,
+.gv-floating-folder-panel__caret {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 10px;
+  color: var(--gv-floating-folder-panel__text-muted);
+  transition:
+    background-color 0.16s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.16s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-floating-folder-panel__close {
+  font-size: 20px;
+  padding: 0;
+}
+
+.gv-floating-folder-panel__icon-button {
+  font-size: 18px;
+  opacity: 0.86;
+}
+
+.gv-floating-folder-panel__icon-button svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+  pointer-events: none;
+}
+
+.gv-floating-folder-panel__icon-button:hover,
+.gv-floating-folder-panel__icon-button:focus-visible,
+.gv-floating-folder-panel__close:hover,
+.gv-floating-folder-panel__close:focus-visible,
+.gv-floating-folder-panel__caret:hover,
+.gv-floating-folder-panel__caret:focus-visible {
+  background: var(--gv-floating-folder-panel__surface-hover);
+  color: var(--gv-floating-folder-panel__text);
+  opacity: 1;
+  outline: none;
+}
+
+.gv-floating-folder-panel__icon-button--cloud-upload,
+.gv-floating-folder-panel__icon-button--cloud-sync {
+  color: var(--gv-floating-folder-panel__text-muted);
+}
+
+.gv-floating-folder-panel__icon-button--create {
+  color: var(--gv-floating-folder-panel__accent);
+}
+
+.gv-floating-folder-panel__body {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
+  padding: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(95, 99, 104, 0.34) transparent;
+}
+
+.gv-floating-folder-panel__body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.gv-floating-folder-panel__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.gv-floating-folder-panel__body::-webkit-scrollbar-thumb {
+  background: rgba(95, 99, 104, 0.28);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+
+.gv-floating-folder-panel__body::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(95, 99, 104, 0.42);
+}
+
+.gv-floating-folder-panel__folder,
+.gv-floating-folder-panel__folder-body {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Tree guide: a faint vertical line running down the body of each expanded
+ * folder, positioned under the parent's caret so children visually connect
+ * back to the row that owns them. Uses the per-folder --gv-folder-depth
+ * custom property set in renderFolderNode, so each level's line sits at
+ * its own indent without needing an explicit selector for every depth.
+ *
+ * Math: header padding-inline-start = 8 + depth*12, caret is 12px wide and
+ * centered, so the caret's visual center is at 8 + depth*12 + 6 = 14 +
+ * depth*12 px from the folder's left edge. A 1px line at that offset looks
+ * aligned with the caret above.
+ */
+.gv-floating-folder-panel__folder-body::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: calc(14px + var(--gv-folder-depth, 0) * 12px);
+  width: 1px;
+  background: rgba(255, 255, 255, 0.09);
+  pointer-events: none;
+}
+
+:host([data-gv-rtl]) .gv-floating-folder-panel__folder-body::before {
+  left: auto;
+  right: calc(14px + var(--gv-folder-depth, 0) * 12px);
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__folder-body::before {
+  background: rgba(15, 23, 42, 0.1);
+}
+
+.gv-floating-folder-panel__folder-header,
+.gv-floating-folder-panel__conv,
+.gv-floating-folder-panel__inline-form {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  border-radius: 8px;
+  color: var(--gv-floating-folder-panel__text);
+}
+
+.gv-floating-folder-panel__folder-header {
+  min-height: 34px;
+  gap: 7px;
+  padding-block: 3px;
+  padding-inline-end: 4px;
+  transition:
+    background-color 0.16s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-floating-folder-panel__folder-header:hover {
+  background: var(--gv-floating-folder-panel__surface-hover);
+}
+
+.gv-floating-folder-panel__caret {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border-radius: 8px;
+  font-size: 11px;
+  opacity: 0.74;
+}
+
+.gv-floating-folder-panel__folder-color {
+  width: 9px;
+  height: 9px;
+  flex-basis: 9px;
+  box-shadow: none;
+}
+
+.gv-floating-folder-panel__folder-name-wrap,
+.gv-floating-folder-panel__folder-name,
+.gv-floating-folder-panel__conv-title {
+  min-width: 0;
+}
+
+.gv-floating-folder-panel__folder-name {
+  display: block;
+  flex: 1;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gv-floating-folder-panel__pin {
+  width: 8px;
+  color: var(--gv-floating-folder-panel__accent);
+  opacity: 0.82;
+}
+
+.gv-floating-folder-panel__count {
+  min-width: 18px;
+  border-radius: 999px;
+  background: rgba(95, 99, 104, 0.1);
+  color: var(--gv-floating-folder-panel__text-muted);
+  font-size: 11px;
+  line-height: 16px;
+  opacity: 1;
+  padding: 0 6px;
+  text-align: center;
+}
+
+.gv-floating-folder-panel__folder-header .gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__folder-header .gv-floating-folder-panel__icon-button--placeholder,
+.gv-floating-folder-panel__conv .gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__conv .gv-floating-folder-panel__icon-button--remove {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 8px;
+}
+
+.gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__icon-button--remove {
+  opacity: 0;
+}
+
+.gv-floating-folder-panel__folder-header:hover .gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__folder-header:focus-within
+  .gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__folder-header[data-gv-confirm-anchor]
+  .gv-floating-folder-panel__icon-button--add-child,
+.gv-floating-folder-panel__conv:hover .gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__conv:focus-within .gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__conv[data-gv-confirm-anchor]
+  .gv-floating-folder-panel__icon-button--star,
+.gv-floating-folder-panel__conv:hover .gv-floating-folder-panel__icon-button--remove,
+.gv-floating-folder-panel__conv:focus-within .gv-floating-folder-panel__icon-button--remove,
+.gv-floating-folder-panel__conv[data-gv-confirm-anchor]
+  .gv-floating-folder-panel__icon-button--remove,
+.gv-floating-folder-panel__icon-button--active {
+  opacity: 1;
+}
+
+/* Placeholder keeps the trailing slot's footprint so subfolder rows line up
+ * with root-level rows (where the "+ add subfolder" icon button sits). Never
+ * becomes visible, never reacts to hover/focus. */
+.gv-floating-folder-panel__icon-button--placeholder {
+  opacity: 0 !important;
+  pointer-events: none;
+  cursor: default;
+}
+
+.gv-floating-folder-panel__conv {
+  min-height: 32px;
+  gap: 4px;
+  padding-block: 3px;
+  padding-inline-end: 4px;
+  overflow: hidden;
+  transition: background-color 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gv-floating-folder-panel__conv:hover {
+  background: var(--gv-floating-folder-panel__surface-hover);
+}
+
+.gv-floating-folder-panel__conv-title {
+  color: inherit;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.gv-floating-folder-panel__icon-button--active,
+.gv-floating-folder-panel__icon-button--star:hover {
+  color: #fbbc04;
+}
+
+.gv-floating-folder-panel__icon-button--remove:hover {
+  color: var(--gv-floating-folder-panel__danger);
+  background: var(--gv-floating-folder-panel__danger-soft);
+}
+
+.gv-floating-folder-panel__inline-form {
+  min-height: 34px;
+  gap: 6px;
+  margin: 0;
+  padding-block: 3px;
+  padding-inline-end: 4px;
+  background: transparent;
+}
+
+.gv-floating-folder-panel__inline-form--root {
+  padding-inline-start: 8px;
+  padding-inline-end: 4px;
+}
+
+.gv-floating-folder-panel__inline-input {
+  height: 28px;
+  min-width: 0;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: var(--gv-floating-folder-panel__surface-container);
+  color: var(--gv-floating-folder-panel__text);
+  font-size: 13px;
+  line-height: 20px;
+  padding: 0 8px;
+}
+
+.gv-floating-folder-panel__inline-input:focus {
+  background: var(--gv-floating-folder-panel__surface);
+  border-color: var(--gv-floating-folder-panel__accent);
+  box-shadow: 0 0 0 2px var(--gv-floating-folder-panel__accent-soft);
+}
+
+.gv-floating-folder-panel__icon-button--save,
+.gv-floating-folder-panel__icon-button--cancel {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 8px;
+  opacity: 0.86;
+}
+
+.gv-floating-folder-panel__icon-button--save:hover {
+  color: #0f9d58;
+  background: rgba(15, 157, 88, 0.1);
+}
+
+.gv-floating-folder-panel__icon-button--cancel:hover {
+  color: var(--gv-floating-folder-panel__danger);
+  background: var(--gv-floating-folder-panel__danger-soft);
+}
+
+/* "Drop into": the whole row lit, with an even ring that follows its radius.
+   A one-sided inset bar bends round the rounded corners into a crescent. */
+.gv-floating-folder-panel__drop-target {
+  background: var(--gv-floating-folder-panel__surface-active) !important;
+  box-shadow: inset 0 0 0 1px rgba(66, 133, 244, 0.36);
+}
+
+.gv-floating-folder-panel__empty {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 18px;
+  color: var(--gv-floating-folder-panel__text-muted);
+  opacity: 1;
+  text-align: center;
+}
+
+.gv-floating-folder-panel__empty-icon {
+  width: 28px;
+  height: 28px;
+  fill: var(--gv-floating-folder-panel__accent);
+  opacity: 0.82;
+}
+
+.gv-floating-folder-panel__empty-label {
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.gv-floating-folder-panel__context-menu {
+  min-width: 188px;
+  max-width: min(260px, calc(100vw - 16px));
+  padding: 6px;
+  border-radius: 8px;
+  border-color: var(--gv-floating-folder-panel__outline);
+  background: var(--gv-floating-folder-panel__surface);
+  color: var(--gv-floating-folder-panel__text);
+  box-shadow:
+    0 12px 32px rgba(60, 64, 67, 0.2),
+    0 2px 8px rgba(60, 64, 67, 0.12);
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+}
+
+.gv-floating-folder-panel__menu-item {
+  min-height: 34px;
+  border-radius: 6px;
+  color: var(--gv-floating-folder-panel__text);
+  font-size: 13px;
+  font-weight: 400;
+  padding: 7px 10px;
+}
+
+.gv-floating-folder-panel__menu-item:hover,
+.gv-floating-folder-panel__menu-item:focus-visible {
+  background: var(--gv-floating-folder-panel__surface-hover);
+}
+
+.gv-floating-folder-panel__menu-divider {
+  height: 1px;
+  margin: 5px 4px;
+  background: var(--gv-floating-folder-panel__outline-subtle);
+}
+
+.gv-floating-folder-panel__menu-item--danger {
+  color: var(--gv-floating-folder-panel__danger);
+}
+
+.gv-floating-folder-panel__menu-item--danger:hover,
+.gv-floating-folder-panel__menu-item--danger:focus-visible {
+  background: var(--gv-floating-folder-panel__danger-soft);
+}
+
+.gv-floating-folder-panel__color-section {
+  margin: 4px 0;
+  padding: 7px 8px 8px;
+  border-top: 1px solid var(--gv-floating-folder-panel__outline-subtle);
+  border-bottom: 1px solid var(--gv-floating-folder-panel__outline-subtle);
+}
+
+.gv-floating-folder-panel__color-title {
+  margin-bottom: 7px;
+  color: var(--gv-floating-folder-panel__text-muted);
+  font-size: 11px;
+  line-height: 16px;
+  opacity: 1;
+}
+
+.gv-floating-folder-panel__color-swatches {
+  grid-template-columns: repeat(6, 18px);
+  gap: 7px;
+}
+
+.gv-floating-folder-panel__color-swatch {
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.16),
+    0 0 0 1px transparent;
+}
+
+.gv-floating-folder-panel__color-swatch:hover,
+.gv-floating-folder-panel__color-swatch:focus-visible,
+.gv-floating-folder-panel__color-swatch--active {
+  border-color: var(--gv-floating-folder-panel__surface);
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.16),
+    0 0 0 2px var(--gv-floating-folder-panel__accent);
+}
+
+:host([data-gv-scheme='dark']) {
+  --gv-floating-folder-panel__surface: #1f1f1f;
+  --gv-floating-folder-panel__surface-container: #282a2d;
+  --gv-floating-folder-panel__surface-hover: rgba(232, 234, 237, 0.08);
+  --gv-floating-folder-panel__surface-active: rgba(138, 180, 248, 0.16);
+  --gv-floating-folder-panel__outline: rgba(232, 234, 237, 0.14);
+  --gv-floating-folder-panel__outline-subtle: rgba(232, 234, 237, 0.1);
+  --gv-floating-folder-panel__text: #e8eaed;
+  --gv-floating-folder-panel__text-muted: #bdc1c6;
+  --gv-floating-folder-panel__accent: #8ab4f8;
+  --gv-floating-folder-panel__accent-soft: rgba(138, 180, 248, 0.18);
+  --gv-floating-folder-panel__danger: #f28b82;
+  --gv-floating-folder-panel__danger-soft: rgba(242, 139, 130, 0.13);
+  background: var(--gv-floating-folder-panel__surface) !important;
+  color: var(--gv-floating-folder-panel__text) !important;
+  border-color: var(--gv-floating-folder-panel__outline) !important;
+  box-shadow:
+    0 18px 52px rgba(0, 0, 0, 0.46),
+    0 4px 18px rgba(0, 0, 0, 0.32) !important;
+}
+
+:host([data-gv-scheme='dark']) .gv-floating-folder-panel__header {
+  background: var(--gv-floating-folder-panel__surface);
+  border-bottom-color: var(--gv-floating-folder-panel__outline-subtle);
+}
+
+:host([data-gv-scheme='dark']) .gv-floating-folder-panel__body {
+  scrollbar-color: rgba(189, 193, 198, 0.34) transparent;
+}
+
+:host([data-gv-scheme='dark']) .gv-floating-folder-panel__body::-webkit-scrollbar-thumb {
+  background-color: rgba(189, 193, 198, 0.28);
+}
+
+:host([data-gv-scheme='dark']) .gv-floating-folder-panel__context-menu {
+  background: var(--gv-floating-folder-panel__surface);
+  color: var(--gv-floating-folder-panel__text);
+  border-color: var(--gv-floating-folder-panel__outline);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.44),
+    0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+:host([data-gv-rtl]) .gv-floating-folder-panel__header {
+  padding: 7px 14px 7px 8px;
+}
+
+.gv-floating-folder-panel__move-hint {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--gv-floating-folder-panel__outline-subtle, rgba(60, 64, 67, 0.1));
+  color: var(--gv-floating-folder-panel__text-muted, #5f6368);
+  background: var(--gv-floating-folder-panel__surface, #ffffff);
+  font-family: 'Google Sans', Roboto, Arial, sans-serif;
+  font-size: 11.5px;
+  line-height: 16px;
+}
+
+.gv-floating-folder-panel__hint-stack {
+  padding: 4px 12px;
+  border-bottom: 1px solid var(--gv-floating-folder-panel__outline-subtle, rgba(60, 64, 67, 0.1));
+  background: var(--gv-floating-folder-panel__surface, #ffffff);
+}
+
+.gv-floating-folder-panel__hint-stack .gv-floating-folder-panel__move-hint {
+  min-height: 20px;
+  padding: 1px 0;
+  border-bottom: 0;
+  background: transparent;
+}
+
+:host {
+  min-width: 280px !important;
+  min-height: 320px !important;
+  max-width: min(640px, calc(100vw - 32px)) !important;
+  max-height: calc(100vh - 32px) !important;
+  resize: both !important;
+}
+
+.gv-floating-folder-panel__move-hint-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.78;
+}
+
+.gv-floating-folder-panel__move-hint-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 380px) {
+  .gv-floating-folder-panel__move-hint-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+  }
+}
+
+:host([data-gv-rtl]) .gv-floating-folder-panel__move-hint {
+  direction: rtl;
+}
+
+:host([data-gv-scheme='light']) {
+  background: var(--gv-floating-folder-panel__surface) !important;
+  color: var(--gv-floating-folder-panel__text) !important;
+  border-color: var(--gv-floating-folder-panel__outline) !important;
+  box-shadow:
+    0 16px 48px rgba(60, 64, 67, 0.22),
+    0 4px 14px rgba(60, 64, 67, 0.12) !important;
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__header {
+  background: var(--gv-floating-folder-panel__surface);
+  border-bottom-color: var(--gv-floating-folder-panel__outline-subtle);
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__folder-header:hover,
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__conv:hover {
+  background: var(--gv-floating-folder-panel__surface-hover);
+}
+
+/* The row an open removal confirm asks about (`data-gv-confirm-anchor`, set
+ * by askConfirm): lit as an active row, so it stays marked while the pointer
+ * hovers another row. Prefixed like the hover rules above so it outranks them. */
+:host([data-gv-scheme]) .gv-floating-folder-panel__folder-header[data-gv-confirm-anchor],
+:host([data-gv-scheme]) .gv-floating-folder-panel__conv[data-gv-confirm-anchor] {
+  background: var(--gv-floating-folder-panel__surface-active);
+}
+
+:host([data-gv-scheme='light']) .gv-floating-folder-panel__count {
+  background: rgba(95, 99, 104, 0.1);
+  color: var(--gv-floating-folder-panel__text-muted);
+}
+
+/* ─── Site options (TreeSiteOptions) ───────────────────────────────────── */
+/* The open conversation. Prefixed with the scheme host so it outranks the
+ * scheme-specific row hover above. */
+:host([data-gv-scheme]) .gv-floating-folder-panel__conv--active,
+:host([data-gv-scheme]) .gv-floating-folder-panel__conv--active:hover {
+  background: var(--gv-floating-folder-panel__surface-active);
+  color: var(--gv-floating-folder-panel__accent);
+}
+
+.gv-floating-folder-panel__conv--active .gv-floating-folder-panel__conv-title {
+  font-weight: 500;
+}
+
+.gv-floating-folder-panel__folder-header .gv-floating-folder-panel__icon-button--menu {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 8px;
+  font-size: 16px;
+  opacity: 0;
+}
+
+.gv-floating-folder-panel__folder-header:hover .gv-floating-folder-panel__icon-button--menu,
+.gv-floating-folder-panel__folder-header:focus-within .gv-floating-folder-panel__icon-button--menu,
+.gv-floating-folder-panel__folder-header[data-gv-confirm-anchor]
+  .gv-floating-folder-panel__icon-button--menu {
+  opacity: 1;
+}
+
+/* Drop here to file a conversation at the root; present even with no folders. */
+.gv-floating-folder-panel__root-drop {
+  min-height: 24px;
+  margin: 6px 6px 0;
+  border: 1px dashed var(--gv-floating-folder-panel__outline);
+  border-radius: 8px;
+}
+
+.gv-floating-folder-panel__root-drop.gv-floating-folder-panel__drop-target {
+  border-color: var(--gv-floating-folder-panel__accent);
+  box-shadow: none;
+}
+
+.gv-floating-folder-panel__root-section {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--gv-floating-folder-panel__outline-subtle);
+}
+
+.gv-floating-folder-panel__root-section-title {
+  padding: 4px 8px;
+  padding-inline-start: 12px;
+  border-radius: 8px;
+  color: var(--gv-floating-folder-panel__text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 18px;
+}
+
+/* Rows a site's selection mode holds (Gemini's long-press multi-select): an
+   even ring, as a one-sided bar bends round the rounded corners. */
+:host([data-gv-scheme]) .gv-floating-folder-panel__conv--selected,
+:host([data-gv-scheme]) .gv-floating-folder-panel__conv--selected:hover {
+  background: var(--gv-floating-folder-panel__surface-active);
+  box-shadow: inset 0 0 0 1px var(--gv-floating-folder-panel__accent);
+}
+
+/* Titles that are links (`conversationHref`) look like the button titles. */
+a.gv-floating-folder-panel__conv-title {
+  text-decoration: none;
+}
+
+.gv-floating-folder-panel__conv-icon {
+  flex: 0 0 auto;
+  margin-inline-end: 6px;
+  font-family: 'Google Symbols';
+  font-size: 18px;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  opacity: 0.8;
+}
+
+/* A drop beside a row (`reorder`): a straight line on the edge it lands at,
+   inset off the rounded corners. It sits inside the row, as rows clip. */
+.gv-floating-folder-panel__tree-row [data-drop-position] {
+  position: relative;
+}
+
+.gv-floating-folder-panel__tree-row [data-drop-position]::after {
+  content: '';
+  position: absolute;
+  inset-inline: 6px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--gv-floating-folder-panel__drop-line, var(--gv-floating-folder-panel__accent));
+  pointer-events: none;
+}
+
+.gv-floating-folder-panel__tree-row [data-drop-position='before']::after {
+  top: 0;
+}
+
+.gv-floating-folder-panel__tree-row [data-drop-position='after']::after {
+  bottom: 0;
+}

@@ -5,15 +5,8 @@ import { describe, expect, it } from 'vitest';
 import manifestChrome from '../../../../manifest.json';
 
 /**
- * CSS newer than the declared `strict_min_version` fails no build and no unit
- * test — Firefox invalidates the whole rule group, or resolves the custom
- * property to nothing, and the surface loses its styling with no console error.
- * That is the shape of the Safari 15.4 lookbehind trap in
- * `.github/docs/regressions/browser-release.md`, so the floor gets a static
- * contract rather than a comment.
- *
- * The contract: a feature newer than the floor may be used, but only inside an
- * `@supports` guard, so the degradation is deliberate and visible in the diff.
+ * Firefox silently drops unsupported CSS rules or custom properties, so features
+ * newer than the declared floor must stay inside an `@supports` guard.
  *
  * Scope is the CSS reaching Firefox through the STATIC content scripts. Plugin
  * catalog stylesheets are excluded on purpose: they only load on sites
@@ -22,7 +15,15 @@ import manifestChrome from '../../../../manifest.json';
  */
 const STATIC_CONTENT_STYLESHEETS = [
   'public/contentStyle.css',
+  'src/core/ui/tokens.css',
+  'src/core/ui/confirm.css',
+  'src/core/ui/toast/toast.css',
+  'src/features/timeline/timeline.css',
+  'src/features/timeline/timelinePreview.css',
   'src/pages/content/defaultModel/styles.css',
+  'src/pages/content/folder/floatingPanel.css',
+  'src/pages/content/folder/folderHeader/folderHeader.css',
+  'src/pages/content/folder/folderHeader/folderHeaderMenu.css',
 ] as const;
 
 /**

@@ -292,7 +292,48 @@ describe('AccountIsolationService', () => {
     expect(detectAccountPlatformFromUrl('https://aistudio.google.com/prompts')).toBe('aistudio');
     expect(detectAccountPlatformFromUrl('https://aistudio.google.cn/library')).toBe('aistudio');
     expect(detectAccountPlatformFromUrl('https://gemini.google.com/app')).toBe('gemini');
+    expect(detectAccountPlatformFromUrl('https://business.gemini.google/u/1/app')).toBe('gemini');
     expect(detectAccountPlatformFromUrl(null)).toBe('gemini');
+  });
+
+  it('keeps the Gemini default only when there is no web page to classify', () => {
+    expect(detectAccountPlatformFromUrl('')).toBe('gemini');
+    expect(detectAccountPlatformFromUrl('chrome://newtab/')).toBe('gemini');
+    expect(
+      detectAccountPlatformFromUrl('chrome-extension://abc/src/pages/options/index.html'),
+    ).toBe('gemini');
+  });
+
+  it('never resolves a non-Gemini site to a Gemini or AI Studio folder platform', () => {
+    for (const url of [
+      'https://chatgpt.com/c/123',
+      'https://chatgpt.com/g/g-p-abc/c/123',
+      'https://claude.ai/chat/123',
+      'https://chat.deepseek.com/a/chat/s/123',
+      'https://example.com/',
+      'http://localhost:3000/',
+    ]) {
+      expect(detectAccountPlatformFromUrl(url), url).toBeNull();
+    }
+  });
+
+  it('reports isolation off on sites without a folder bucket, even with the legacy switch on', async () => {
+    (globalThis as { chrome: MockedChrome }).chrome = createChromeMock({
+      [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: true,
+      [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: true,
+    });
+
+    const service = new AccountIsolationService();
+    await expect(
+      service.isIsolationEnabled({ pageUrl: 'https://chatgpt.com/c/123' }),
+    ).resolves.toBe(false);
+    await expect(
+      service.isIsolationEnabled({ platform: null, pageUrl: 'https://gemini.google.com/app' }),
+    ).resolves.toBe(false);
+    await expect(
+      service.isIsolationEnabled({ pageUrl: 'https://gemini.google.com/app' }),
+    ).resolves.toBe(true);
+    await expect(service.isIsolationEnabled()).resolves.toBe(true);
   });
 
   it('prefers platform-specific isolation switches over legacy switch', async () => {

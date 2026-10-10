@@ -14,7 +14,6 @@ import {
   DEFAULT_IMAGE_EXPORT_WIDTH,
   type ExportSpeakerLabels,
 } from '../types/export';
-import { DOMContentExtractor } from './DOMContentExtractor';
 import { renderElementToImageBlob } from './ImageRenderService';
 import {
   EXPORT_IMAGE_FETCH_CONCURRENCY,
@@ -146,18 +145,13 @@ export class ImageExportService {
       .map((turn, idx) => {
         const turnIndex = idx + 1;
         const starred = turn.starred ? ' ⭐' : '';
-        // Prefer content captured while a virtualized ChatGPT turn was mounted.
-        // Reading its element after later scrolls can otherwise yield an empty shell.
+        // A message read from the page that yielded no HTML renders as empty,
+        // not as its plain text; only turns without a page element use the text.
         const userHtml =
-          turn.userContent?.html ||
-          (turn.userElement
-            ? DOMContentExtractor.extractUserContent(turn.userElement).html
-            : this.formatPlainTextAsHtml(turn.user));
+          turn.userContent?.html || (turn.userElement ? '' : this.formatPlainTextAsHtml(turn.user));
         const assistantHtml =
           turn.assistantContent?.html ||
-          (turn.assistantElement
-            ? DOMContentExtractor.extractAssistantContent(turn.assistantElement).html
-            : this.formatPlainTextAsHtml(turn.assistant));
+          (turn.assistantElement ? '' : this.formatPlainTextAsHtml(turn.assistant));
 
         if (!turn.omitEmptySections) {
           return `
@@ -175,9 +169,8 @@ export class ImageExportService {
         `;
         }
 
-        const hasUser = !!turn.userContent || !!turn.userElement || !!turn.user.trim();
-        const hasAssistant =
-          !!turn.assistantContent || !!turn.assistantElement || !!turn.assistant.trim();
+        const hasUser = !!turn.userContent || !!turn.user.trim();
+        const hasAssistant = !!turn.assistantContent || !!turn.assistant.trim();
 
         return `
           <article class="gv-image-export-turn">

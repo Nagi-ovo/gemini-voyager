@@ -1,36 +1,51 @@
 /**
- * Glob-style URL match patterns — a pragmatic subset of Chrome extension match
- * patterns, used for both site adapters and plugin `matches`.
+ * URL match patterns — a pragmatic subset of Chrome extension match patterns,
+ * used for both site adapters and plugin `matches`.
  *
- * Supported forms (matched against the full URL string, case-insensitive):
+ * Supported forms:
  *   https://claude.ai/*
- *   *://claude.ai/*
- *   https://*.openai.com/*
- *   <all_urls>            (any http/https URL)
+ *   *://claude.ai/*           (`*` scheme: http or https)
+ *   https://*.openai.com/*    (any subdomain; the apex host is NOT included)
+ *   a lone `*` host           (any host)
+ *   <all_urls>                (any http/https URL)
  *
- * `*` matches any run of characters (including `.` and `/`). This is deliberately
- * simpler than the full Chrome spec — no special `*.` subdomain semantics — so it
- * is easy to reason about and test. Authors list explicit patterns for each host
- * they support (e.g. both `https://chatgpt.com/*` and `https://chat.openai.com/*`).
+ * Scheme, host and path are matched separately against the parsed URL, so a
+ * host wildcard can only ever match hostname labels: `https://*.example.com/*`
+ * never matches `https://other.test/?x=.example.com/`. The host is compared with
+ * `URL.host` (an explicit non-default port must be spelled out). In the path
+ * part, matched against path + query (never the fragment), `*` matches any run
+ * of characters. Host and path compare case-insensitively.
  */
 
-function patternToRegExp(pattern: string): RegExp {
-  if (pattern === '<all_urls>') return /^https?:\/\//i;
-  // A `*://` scheme means http or https, as in Chrome match patterns and in
-  // `parsePattern` below; it must not swallow ftp: or file: URLs.
-  const schemeWildcard = pattern.startsWith('*://');
-  const body = schemeWildcard ? pattern.slice('*://'.length) : pattern;
+function globToRegExp(glob: string): RegExp {
   // Escape regex metacharacters EXCEPT `*`, then turn `*` into `.*`.
-  const escaped = body.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
-  return new RegExp(`^${schemeWildcard ? 'https?://' : ''}${escaped}$`, 'i');
+  const escaped = glob.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+  return new RegExp(`^${escaped}$`, 'i');
+}
+
+function hostMatches(host: string, patternHost: string): boolean {
+  if (patternHost === '*') return true;
+  if (patternHost.startsWith('*.')) {
+    const suffix = patternHost.slice(1);
+    return !suffix.includes('*') && host.endsWith(suffix) && host.length > suffix.length;
+  }
+  return !patternHost.includes('*') && host === patternHost;
 }
 
 export function matchesUrl(url: string, pattern: string): boolean {
+  let parsed: URL;
   try {
-    return patternToRegExp(pattern).test(url);
+    parsed = new URL(url);
   } catch {
     return false;
   }
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false;
+  if (pattern.trim() === '<all_urls>') return true;
+  const target = parsePattern(pattern);
+  if (!target) return false;
+  if (target.scheme !== '*' && `${target.scheme}:` !== parsed.protocol) return false;
+  if (!hostMatches(parsed.host.toLowerCase(), target.host)) return false;
+  return globToRegExp(target.path).test(`${parsed.pathname}${parsed.search}`);
 }
 
 export function matchesAnyPattern(url: string, patterns: readonly string[]): boolean {

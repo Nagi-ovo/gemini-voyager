@@ -38,7 +38,7 @@ Show the user the possible blockers before changing the version.
 Check secret names only; never print, download, or commit their values:
 
 ```bash
-gh secret list -R Nagi-ovo/voyager --json name --jq '.[].name'
+gh secret list -R voyager-crew/voyager --json name --jq '.[].name'
 ```
 
 Confirm the workflow has names for:

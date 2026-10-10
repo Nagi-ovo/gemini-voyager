@@ -45,6 +45,7 @@
     }
 
     if (normalizedUrl.includes('streamgenerate')) return true;
+    // Copy RPC bodies can mention generation APIs; their text is not evidence of generation.
     if (normalizedUrl.includes('batchexecute')) return false;
 
     const haystack = `${absoluteUrl}\n${bodyText}`.toLowerCase();

@@ -27,6 +27,7 @@ const values: GeneralSettingsValues = {
   usageStatusEnabled: true,
   inputHaloHidden: false,
   defaultModelAutoApplyEnabled: false,
+  researchPackEnabled: false,
 };
 
 describe('GeneralSettingsCard', () => {
@@ -77,6 +78,16 @@ describe('GeneralSettingsCard', () => {
     act(() => input('changelog-notify-badge').click());
     expect(props.onChange).toHaveBeenLastCalledWith({ changelogBadgeMode: true });
     expect(props.onChange).toHaveBeenCalledTimes(2);
+  });
+
+  it('offers the research pack as an experimental opt-in', () => {
+    const props = render();
+    const toggle = input('research-pack-enabled');
+    expect(toggle.checked).toBe(false);
+    expect(container.textContent).toContain('researchPackEnableHint');
+
+    act(() => toggle.click());
+    expect(props.onChange).toHaveBeenLastCalledWith({ researchPackEnabled: true });
   });
 
   it('keeps the retired tab-title row disabled and gates timeline markers on highlights', () => {

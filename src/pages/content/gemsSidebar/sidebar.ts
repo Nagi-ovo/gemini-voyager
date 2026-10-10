@@ -1,0 +1,282 @@
+import { GEMS_NAV_ENTRY_SELECTOR, watchGemsAnchor } from './anchorGuard';
+import { resolveGemHref, type GemMetadata } from './catalog';
+
+const LIST_CLASS = 'gv-gems-inline-list';
+const TOGGLE_CLASS = 'gv-gems-expand-toggle';
+const HOST_CLASS = 'gv-gems-toggle-host';
+
+/** Owns sidebar DOM and the anchor watch, placement RAF and mounting retry lifetime. */
+export function createGemsSidebarView(
+  getCount: () => number,
+  getExpanded: () => boolean,
+  visibleGems: () => GemMetadata[],
+  toggleExpanded: () => Promise<void>,
+) {
+  let stopAnchorWatch: (() => void) | null = null;
+  let enforceRafId: number | null = null;
+  let positionRetryTimer: number | null = null;
+  let injectedList: HTMLElement | null = null;
+  let injectedToggle: HTMLElement | null = null;
+  let anchoredEntry: HTMLElement | null = null;
+
+  /**
+   * Locate the visible Gemini-native Gems nav entry inside the sidebar overflow
+   * container. There are typically two `gem-nav-list-item` elements with this
+   * test id (one in the always-on top nav, one in a hidden alternate layout);
+   * we want the one with non-zero geometry.
+   */
+  function findGemsNavEntry(): HTMLElement | null {
+    const overflow = document.querySelector('[data-test-id="overflow-container"]');
+    if (!overflow) return null;
+    const entries = Array.from(overflow.querySelectorAll(GEMS_NAV_ENTRY_SELECTOR));
+    for (const el of entries) {
+      if (!(el instanceof HTMLElement)) continue;
+      if (el.getBoundingClientRect().height > 0) return el;
+    }
+    return null;
+  }
+
+  /**
+   * Build the inline list element. Returns `null` when there's nothing to show
+   * (empty cache) — the caller treats null as "tear down any existing UI".
+   */
+  function buildGemsList(items: GemMetadata[]): HTMLElement | null {
+    if (items.length === 0) return null;
+
+    const list = document.createElement('div');
+    list.className = LIST_CLASS;
+    if (!getExpanded()) list.classList.add('gv-collapsed');
+    // role=list keeps assistive tech happy since we're not using <ul>; nav
+    // semantics already live on the parent mat-nav-list.
+    list.setAttribute('role', 'list');
+
+    items.forEach((gem) => list.appendChild(buildItem(gem)));
+    return list;
+  }
+
+  /**
+   * Build the chevron button that toggles the inline list open/closed. Lives
+   * inside the native `gem-nav-list-item` (absolutely positioned at its right
+   * edge) so it visually reads as part of Gemini's own entry. Click is
+   * stopPropagation'd so it doesn't trigger the entry's navigation to
+   * /gems/view — that's still triggered by clicking the entry's label.
+   */
+  function createExpandToggle(): HTMLElement {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = TOGGLE_CLASS;
+    btn.setAttribute('aria-expanded', getExpanded() ? 'true' : 'false');
+    // Inline SVG (no font dependency). Path matches Material Symbols
+    // `keyboard_arrow_right`; we rotate it to `down` when expanded via CSS.
+    btn.innerHTML = `<svg viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true">
+    <path d="M504-480 320-664l56-56 240 240-240 240-56-56 184-184Z"/>
+  </svg>`;
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      void toggleExpanded();
+    });
+    // Belt-and-suspenders — native gem-nav-list-item header is an `<a>`, and
+    // pointerdown/mousedown can ripple through to it on some Angular versions.
+    btn.addEventListener('pointerdown', (e) => e.stopPropagation());
+    btn.addEventListener('mousedown', (e) => e.stopPropagation());
+    if (getExpanded()) btn.classList.add('gv-expanded');
+    return btn;
+  }
+
+  function refreshExpandedState(): void {
+    if (injectedToggle) {
+      injectedToggle.classList.toggle('gv-expanded', getExpanded());
+      injectedToggle.setAttribute('aria-expanded', getExpanded() ? 'true' : 'false');
+    }
+    if (injectedList) {
+      injectedList.classList.toggle('gv-collapsed', !getExpanded());
+    }
+  }
+
+  /** Mount / re-mount the chevron on the current Gems nav entry. */
+  function ensureExpandToggle(entry: HTMLElement): void {
+    if (getCount() <= 0 || visibleGems().length === 0) {
+      removeExpandToggle();
+      return;
+    }
+
+    // Already attached to the *current* entry element? No-op.
+    if (injectedToggle && injectedToggle.parentElement === entry) {
+      refreshExpandedState();
+      return;
+    }
+
+    // Either no toggle yet, or it's pinned to a stale (re-rendered) entry.
+    if (injectedToggle && injectedToggle.isConnected) injectedToggle.remove();
+    const btn = createExpandToggle();
+    entry.classList.add(HOST_CLASS);
+    entry.appendChild(btn);
+    injectedToggle = btn;
+  }
+
+  function removeExpandToggle(): void {
+    if (injectedToggle) {
+      injectedToggle.remove();
+      injectedToggle = null;
+    }
+    document.querySelectorAll(`.${HOST_CLASS}`).forEach((el) => el.classList.remove(HOST_CLASS));
+  }
+
+  function buildItem(gem: GemMetadata): HTMLElement {
+    const item = document.createElement('a');
+    item.className = 'gv-gems-item';
+    item.setAttribute('role', 'listitem');
+    item.href = resolveGemHref(gem.href);
+    item.title = gem.description ? `${gem.name} — ${gem.description}` : gem.name;
+
+    const icon = document.createElement('span');
+    icon.className = 'gv-gems-item-icon';
+    icon.textContent = (gem.iconLetter || gem.name.trim().charAt(0) || '?').toUpperCase();
+    item.appendChild(icon);
+
+    const name = document.createElement('span');
+    name.className = 'gv-gems-item-name';
+    name.textContent = gem.name;
+    item.appendChild(name);
+
+    return item;
+  }
+
+  /** Insert / refresh / remove the list based on current state. */
+  function renderSection(gemsEntry: HTMLElement | null = findGemsNavEntry()): void {
+    if (getCount() <= 0) {
+      cleanupSection();
+      return;
+    }
+
+    if (!gemsEntry || !gemsEntry.parentElement) {
+      // No anchor yet — try again on the next mutation.
+      return;
+    }
+
+    const fresh = buildGemsList(visibleGems());
+    if (!fresh) {
+      cleanupSection();
+      return;
+    }
+
+    if (injectedList && injectedList.isConnected) {
+      injectedList.replaceWith(fresh);
+    } else {
+      // Insert immediately after the Gems nav entry so it reads as the entry's
+      // own expansion.
+      gemsEntry.insertAdjacentElement('afterend', fresh);
+    }
+    injectedList = fresh;
+    anchoredEntry = gemsEntry;
+    ensureExpandToggle(gemsEntry);
+  }
+
+  function cleanupSection(): void {
+    if (injectedList) {
+      injectedList.remove();
+      injectedList = null;
+    }
+    anchoredEntry = null;
+    removeExpandToggle();
+  }
+
+  function scheduleEnforce(): void {
+    if (enforceRafId !== null) return;
+    enforceRafId = window.requestAnimationFrame(() => {
+      enforceRafId = null;
+      enforcePosition();
+    });
+  }
+
+  /**
+   * Make sure our list sits immediately after the *current* Gems nav entry,
+   * and that the chevron is mounted on that entry. Reads layout to pick the
+   * visible entry, so the observer calls it only when the anchor may have moved.
+   */
+  function enforcePosition(): void {
+    if (getCount() <= 0) return;
+    const gemsEntry = findGemsNavEntry();
+    if (!gemsEntry || !gemsEntry.parentElement) return;
+
+    if (!injectedList || !injectedList.isConnected) {
+      renderSection(gemsEntry);
+      return;
+    }
+
+    const inRightParent = injectedList.parentElement === gemsEntry.parentElement;
+    const immediatelyAfter = gemsEntry.nextElementSibling === injectedList;
+    if (!inRightParent || !immediatelyAfter) {
+      gemsEntry.insertAdjacentElement('afterend', injectedList);
+    }
+    anchoredEntry = gemsEntry;
+
+    // Always re-check the chevron — entry might have been swapped under us.
+    ensureExpandToggle(gemsEntry);
+  }
+
+  function setupPositionEnforcer(): void {
+    if (getCount() <= 0) return;
+
+    const overflow = document.querySelector('[data-test-id="overflow-container"]');
+    if (!overflow) {
+      if (positionRetryTimer === null) {
+        positionRetryTimer = window.setTimeout(() => {
+          positionRetryTimer = null;
+          setupPositionEnforcer();
+        }, 500);
+      }
+      return;
+    }
+    if (positionRetryTimer !== null) {
+      clearTimeout(positionRetryTimer);
+      positionRetryTimer = null;
+    }
+    stopAnchorWatch?.();
+    // Gemini streams conversation rows into this subtree; only re-run the
+    // layout-reading lookup when the anchor may have moved or swapped (#1040).
+    stopAnchorWatch = watchGemsAnchor(
+      overflow,
+      () => ({ entry: anchoredEntry, list: injectedList, toggle: injectedToggle }),
+      () => {
+        if (!injectedList && visibleGems().length === 0) return;
+        scheduleEnforce();
+      },
+    );
+    scheduleEnforce();
+  }
+
+  function teardownPositionEnforcer(): void {
+    stopAnchorWatch?.();
+    stopAnchorWatch = null;
+    if (enforceRafId !== null) {
+      cancelAnimationFrame(enforceRafId);
+      enforceRafId = null;
+    }
+    if (positionRetryTimer !== null) {
+      clearTimeout(positionRetryTimer);
+      positionRetryTimer = null;
+    }
+  }
+
+  function refreshInjector(): void {
+    if (getCount() <= 0) {
+      cleanupSection();
+      teardownPositionEnforcer();
+      return;
+    }
+
+    setupPositionEnforcer();
+    renderSection();
+  }
+
+  return {
+    refresh: refreshInjector,
+    refreshExpanded: refreshExpandedState,
+    stop() {
+      teardownPositionEnforcer();
+      cleanupSection();
+    },
+  };
+}

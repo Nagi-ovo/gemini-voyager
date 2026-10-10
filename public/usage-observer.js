@@ -37,6 +37,7 @@
   function isGenRequest(url, body) {
     var urlText = String(url || '').toLowerCase();
     if (urlText.indexOf('streamgenerate') > -1) return true;
+    // Copy RPC bodies can mention generation APIs; their text is not evidence of generation.
     if (urlText.indexOf('batchexecute') > -1) return false;
 
     var hay = (urlText + '\n' + (typeof body === 'string' ? body : '')).toLowerCase();

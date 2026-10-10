@@ -1,12 +1,22 @@
-import {
-  DOMContentExtractor,
-  type ExtractedContent,
+import type {
+  ContentExtractor,
+  ExtractedContent,
 } from '@/features/export/services/DOMContentExtractor';
 import type { ChatTurn } from '@/features/export/types/export';
+import { chatGptTurnHash, loadChatGptStarHashes } from '@/features/savedLibrary/exportStars';
 
 import { computeConversationFingerprint } from '../topNodePreload';
-import type { ChatGptTurnContainer, ChatGptTurnRole, ExportSelectionOptions } from './type';
+import { assertActive, mergeExtractedContent, wait } from './chatgptShared';
+import { USER_BUBBLE_SELECTOR } from './chatgptThread';
+import type {
+  ChatGptReadOptions,
+  ChatGptTurnContainer,
+  ChatGptTurnRole,
+  ExportSelectionOptions,
+} from './type';
 
+// Export for ChatGPT's earlier thread DOM (`[data-turn-id-container]`). The
+// current `[data-turn-key]` thread goes through `chatgptThreadExport.ts`.
 const TURN_CONTAINER_SELECTOR = '[data-turn-id-container]';
 // ChatGPT stores virtual-list bookkeeping roots in the same attribute as turns:
 // `client-created-root` for a conversation started in this tab and
@@ -62,24 +72,10 @@ function resolveTurnFrameRole(container: HTMLElement): ChatGptTurnRole {
   return role === 'user' || role === 'assistant' ? role : 'unknown';
 }
 
-function mergeExtractedContent(
-  primary: ExtractedContent,
-  supplemental: ExtractedContent,
-): ExtractedContent {
-  return {
-    text: [primary.text, supplemental.text].filter(Boolean).join('\n\n'),
-    html: [primary.html, supplemental.html].filter(Boolean).join('\n'),
-    attachments: [...primary.attachments, ...supplemental.attachments],
-    hasImages: primary.hasImages || supplemental.hasImages,
-    hasFormulas: primary.hasFormulas || supplemental.hasFormulas,
-    hasTables: primary.hasTables || supplemental.hasTables,
-    hasCode: primary.hasCode || supplemental.hasCode,
-  };
-}
-
 function extractSiblingGeneratedImages(
   container: HTMLElement,
   assistantElement: HTMLElement,
+  extractor: ContentExtractor,
 ): ExtractedContent | null {
   const siblingImages = Array.from(
     container.querySelectorAll<HTMLImageElement>(`${IMAGEGEN_SELECTOR} img`),
@@ -91,7 +87,7 @@ function extractSiblingGeneratedImages(
   // controls such as Edit/Share cannot leak into the exported response.
   const imageRoot = document.createElement('div');
   siblingImages.forEach((image) => imageRoot.appendChild(image.cloneNode(true)));
-  return DOMContentExtractor.extractAssistantContent(imageRoot);
+  return extractor.extractAssistantContent(imageRoot);
 }
 
 /**
@@ -135,42 +131,6 @@ export function chatgptCollectTurnContainers(root: ParentNode = document): ChatG
 /*
   物化单条，确定角色
  */
-function normalizedConversationUrl(url = location.href): string {
-  const parsed = new URL(url, location.href);
-  return `${parsed.origin}${parsed.pathname}${parsed.search}`;
-}
-
-function abortError(): DOMException {
-  return new DOMException('ChatGPT export cancelled', 'AbortError');
-}
-
-function assertSelectionActive(options: ExportSelectionOptions): void {
-  if (options.signal?.aborted) throw abortError();
-  if (
-    options.expectedUrl &&
-    normalizedConversationUrl(options.expectedUrl) !== normalizedConversationUrl()
-  ) {
-    throw new Error('chatgpt_export_conversation_changed');
-  }
-}
-
-function wait(ms: number, signal?: AbortSignal): Promise<void> {
-  if (signal?.aborted) return Promise.reject(abortError());
-  return new Promise((resolve, reject) => {
-    const timer = window.setTimeout(done, ms);
-    function done(): void {
-      signal?.removeEventListener('abort', cancel);
-      resolve();
-    }
-    function cancel(): void {
-      window.clearTimeout(timer);
-      signal?.removeEventListener('abort', cancel);
-      reject(abortError());
-    }
-    signal?.addEventListener('abort', cancel, { once: true });
-  });
-}
-
 function findTurnContainer(id: string): ChatGptTurnContainer | null {
   return chatgptCollectTurnContainers().find((turn) => turn.id === id) ?? null;
 }
@@ -247,7 +207,7 @@ export async function materializeChatGptTurnContainer(
   turn: ChatGptTurnContainer,
   options: ExportSelectionOptions = {},
 ): Promise<ChatGptTurnContainer> {
-  assertSelectionActive(options);
+  assertActive(options);
   let current = findTurnContainer(turn.id) ?? turn;
   current = { ...current, role: resolveTurnRole(current.container) };
   if (current.role !== 'unknown' && hasMountedContent(current) && !isGeneratingTurn(current)) {
@@ -263,7 +223,7 @@ export async function materializeChatGptTurnContainer(
   let stableSince = 0;
 
   while (Date.now() - startedAt < MATERIALIZATION_TIMEOUT_MS) {
-    assertSelectionActive(options);
+    assertActive(options);
     const latest = findTurnContainer(turn.id);
     if (latest) current = { ...latest, role: resolveTurnRole(latest.container) };
 
@@ -308,8 +268,8 @@ export async function materializeChatGptTurnContainer(
 
 function resolveSelectedContainers(
   selectedContainerIds: ReadonlySet<string>,
+  allContainers: ChatGptTurnContainer[],
 ): ChatGptTurnContainer[] {
-  const allContainers = chatgptCollectTurnContainers();
   const knownIds = new Set(allContainers.map((turn) => turn.id));
   const missingIds = Array.from(selectedContainerIds).filter((id) => !knownIds.has(id));
   if (missingIds.length > 0) {
@@ -354,13 +314,16 @@ export async function resolveChatGptSelectionRoles(
   selectedContainerIds: ReadonlySet<string>,
   options: ExportSelectionOptions = {},
 ): Promise<ReadonlyMap<string, ChatGptTurnRole>> {
-  assertSelectionActive(options);
-  const selectedContainers = resolveSelectedContainers(selectedContainerIds);
+  assertActive(options);
+  const selectedContainers = resolveSelectedContainers(
+    selectedContainerIds,
+    chatgptCollectTurnContainers(),
+  );
   const scrollState = captureScrollState(selectedContainers[0]?.container);
   const roles = new Map<string, ChatGptTurnRole>();
   try {
     for (const turn of selectedContainers) {
-      assertSelectionActive(options);
+      assertActive(options);
       const resolved =
         turn.role === 'unknown' ? await materializeChatGptTurnContainer(turn, options) : turn;
       if (resolved.role === 'unknown') {
@@ -374,6 +337,53 @@ export async function resolveChatGptSelectionRoles(
   }
 }
 
+function promptBubble(container: Element): Element | null {
+  const user = container.querySelector(USER_MESSAGE_SELECTOR);
+  // The timeline prefers the inner bubble; surrounding action text is not its identity.
+  return user?.querySelector(USER_BUBBLE_SELECTOR) ?? user;
+}
+
+function promptHash(container: Element): string | undefined {
+  const bubble = promptBubble(container);
+  return bubble ? chatGptTurnHash(bubble) : undefined;
+}
+
+interface RetainedThreadVersion {
+  readonly ids: string;
+  readonly promptIds: ReadonlySet<string>;
+  readonly prompts: Map<string, string>;
+}
+
+function retainedThreadVersion(
+  registry: readonly ChatGptTurnContainer[],
+  promptIds: ReadonlySet<string>,
+): RetainedThreadVersion {
+  const prompts = new Map<string, string>();
+  for (const turn of registry) {
+    if (!promptIds.has(turn.id)) continue;
+    const bubble = promptBubble(turn.container);
+    // Empty prompt roots are mounting placeholders, not a changed exchange.
+    if (bubble?.textContent?.trim()) prompts.set(turn.id, chatGptTurnHash(bubble));
+  }
+  return { ids: JSON.stringify(registry.map((turn) => turn.id)), promptIds, prompts };
+}
+
+function assertRetainedThreadVersion(version: RetainedThreadVersion): void {
+  const current = retainedThreadVersion(chatgptCollectTurnContainers(), version.promptIds);
+  // Replies may finish streaming; only ids and prompts determine exchange star identity.
+  if (
+    current.ids !== version.ids ||
+    Array.from(version.prompts).some(
+      ([id, hash]) => current.prompts.has(id) && current.prompts.get(id) !== hash,
+    )
+  ) {
+    throw new Error('chatgpt_export_thread_changed');
+  }
+  for (const [id, hash] of current.prompts) {
+    if (!version.prompts.has(id)) version.prompts.set(id, hash);
+  }
+}
+
 /**
  * Builds export-ready ChatTurn records for selected ChatGPT message containers.
  *
@@ -384,7 +394,7 @@ export async function resolveChatGptSelectionRoles(
  *
  * 1. look it up in a fresh container registry, preserving the conversation order;
  * 2. scroll it into view and wait for ChatGPT to mount and settle its content;
- * 3. immediately use DOMContentExtractor to persist rich text/HTML before the
+ * 3. immediately extract the message to persist rich text/HTML before the
  *    next scroll can cause ChatGPT to unload this message again;
  * 4. merge adjacent selected user and assistant messages into the existing
  *    platform-neutral ChatTurn shape consumed by all export formats.
@@ -395,13 +405,24 @@ export async function resolveChatGptSelectionRoles(
  */
 export async function buildChatGptTurnsForSelection(
   selectedContainerIds: ReadonlySet<string>,
-  options: ExportSelectionOptions = {},
+  options: ChatGptReadOptions,
 ): Promise<ChatTurn[]> {
+  const { extractor } = options;
+  const captured = { ...options, expectedUrl: options.expectedUrl ?? location.href };
   // querySelectorAll returns ChatGPT's retained virtual-list order. Filtering
   // this registry, rather than sorting visual coordinates, prevents image cards
   // and independently positioned DOM wrappers from changing export order.
-  assertSelectionActive(options);
-  const selectedContainers = resolveSelectedContainers(selectedContainerIds);
+  assertActive(captured);
+  const registry = chatgptCollectTurnContainers();
+  const selectedContainers = resolveSelectedContainers(selectedContainerIds, registry);
+  const promptIds = new Set(
+    selectedContainers
+      .flatMap((turn) =>
+        turn.role === 'user' ? [turn.id] : [turn.id, registry[turn.sequence - 1]?.id],
+      )
+      .filter((id): id is string => id !== undefined),
+  );
+  const version = retainedThreadVersion(registry, promptIds);
   const scrollState = captureScrollState(selectedContainers[0]?.container);
 
   const turns: ChatTurn[] = [];
@@ -409,18 +430,58 @@ export async function buildChatGptTurnsForSelection(
   const handledIds = new Set<string>();
 
   try {
+    const hashes = await loadChatGptStarHashes(captured.expectedUrl);
+    // A branch can change during prompt/return scrolling too, not just the Library read.
+    const assertThread = () => {
+      assertActive(captured);
+      if (hashes.size > 0) assertRetainedThreadVersion(version);
+    };
+    assertThread();
+    const promptHashes = new Map<string, string | undefined>();
     for (const turn of selectedContainers) {
-      assertSelectionActive(options);
-      const materialized = await materializeChatGptTurnContainer(turn, options);
+      let materialized = await materializeChatGptTurnContainer(turn, captured);
+      assertThread();
       if (materialized.empty) {
         // Nothing to export for this turn, but not a failure: ChatGPT itself
         // shows it blank. Pairing stays sequence-based, so a prompt followed by
         // a blank response exports as a user-only turn.
+        promptHashes.set(turn.id, undefined);
         handledIds.add(turn.id);
         continue;
       }
+      let starHash: string | undefined;
+      if (hashes.size > 0) {
+        if (materialized.role === 'user') {
+          starHash = promptHash(materialized.container);
+          promptHashes.set(turn.id, starHash);
+        } else if (materialized.role === 'assistant') {
+          const prompt = registry[turn.sequence - 1];
+          if (prompt && prompt.role !== 'assistant') {
+            if (!promptHashes.has(prompt.id)) {
+              // Only assistant-only selections need an extra prompt materialization.
+              const mounted = await materializeChatGptTurnContainer(prompt, captured);
+              assertThread();
+              promptHashes.set(
+                prompt.id,
+                mounted.role === 'user' && !mounted.empty
+                  ? promptHash(mounted.container)
+                  : undefined,
+              );
+              // Reading the unselected prompt may have unloaded the selected reply.
+              materialized = await materializeChatGptTurnContainer(turn, captured);
+              assertThread();
+              if (materialized.empty) {
+                handledIds.add(turn.id);
+                continue;
+              }
+            }
+            starHash = promptHashes.get(prompt.id);
+          }
+        }
+      }
       const { container, role } = materialized;
       const sequence = turn.sequence;
+      const starred = starHash !== undefined && hashes.has(starHash);
 
       if (role === 'user') {
         // A second user message closes an earlier selected user-only turn.
@@ -429,7 +490,7 @@ export async function buildChatGptTurnsForSelection(
         const userElement = container.querySelector<HTMLElement>(USER_MESSAGE_SELECTOR);
         if (!userElement) throw new Error(`chatgpt_export_message_unavailable:${turn.id}`);
 
-        const userContent = DOMContentExtractor.extractUserContent(userElement);
+        const userContent = extractor.extractUserContent(userElement);
         if (!userContent.text && !userContent.html && userContent.attachments.length === 0) {
           throw new Error(`chatgpt_export_message_empty:${turn.id}`);
         }
@@ -438,7 +499,7 @@ export async function buildChatGptTurnsForSelection(
           turn: {
             user: userContent.text,
             assistant: '',
-            starred: false,
+            starred,
             attachments: userContent.attachments,
             omitEmptySections: true,
             userContent,
@@ -451,8 +512,12 @@ export async function buildChatGptTurnsForSelection(
       if (role === 'assistant') {
         const assistantElement =
           container.querySelector<HTMLElement>(ASSISTANT_MESSAGE_SELECTOR) ?? container;
-        let assistantContent = DOMContentExtractor.extractAssistantContent(assistantElement);
-        const siblingImageContent = extractSiblingGeneratedImages(container, assistantElement);
+        let assistantContent = extractor.extractAssistantContent(assistantElement);
+        const siblingImageContent = extractSiblingGeneratedImages(
+          container,
+          assistantElement,
+          extractor,
+        );
         if (siblingImageContent) {
           assistantContent = mergeExtractedContent(assistantContent, siblingImageContent);
         }
@@ -473,7 +538,7 @@ export async function buildChatGptTurnsForSelection(
           turns.push({
             user: '',
             assistant: assistantContent.text,
-            starred: false,
+            starred,
             omitEmptySections: true,
             assistantContent,
           });

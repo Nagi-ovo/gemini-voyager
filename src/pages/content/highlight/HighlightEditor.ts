@@ -10,6 +10,14 @@ import {
 import { getSaveFailureMessage, translate } from './messages';
 
 const NOTE_MAX_CHARS = 8 * 1024;
+const CONFIRMATION_WAIT_MS = 15_000;
+
+interface EditorDraft {
+  note: string;
+  color: HighlightColor;
+  pending: boolean;
+  message: string;
+}
 
 interface HighlightEditorActions {
   save(record: HighlightRecordV1, patch: HighlightUpdatePatch): Promise<void>;
@@ -19,6 +27,9 @@ interface HighlightEditorActions {
 
 export class HighlightEditor {
   private popover: HTMLElement | null = null;
+  private readonly drafts = new Map<string, EditorDraft>();
+  private currentDraft: EditorDraft | null = null;
+  private refreshDraft: (() => void) | null = null;
   private popoverReturnFocus: HTMLElement | null = null;
   private popoverFocusTimer: number | null = null;
   private readonly onOutsideClick = (event: MouseEvent): void => {
@@ -45,6 +56,19 @@ export class HighlightEditor {
     palette: readonly HighlightColor[],
   ): void {
     this.close();
+    const draftKey = JSON.stringify([
+      record.platform,
+      record.accountHash,
+      record.conversationId,
+      record.id,
+    ]);
+    const draft = this.drafts.get(draftKey) ?? {
+      note: record.note ?? '',
+      color: record.color,
+      pending: false,
+      message: '',
+    };
+    this.currentDraft = draft;
 
     const popover = document.createElement('section');
     popover.className = 'gv-highlight-popover';
@@ -64,7 +88,7 @@ export class HighlightEditor {
     note.className = 'gv-highlight-note';
     note.maxLength = NOTE_MAX_CHARS;
     note.placeholder = translate('highlightNotePlaceholder', 'Add a note');
-    note.value = record.note ?? '';
+    note.value = draft.note;
     note.setAttribute('aria-label', note.placeholder);
 
     const colorRow = document.createElement('div');
@@ -76,12 +100,11 @@ export class HighlightEditor {
     colorRow.setAttribute('aria-label', colorLabel.textContent);
     colorRow.appendChild(colorLabel);
 
-    let selectedColor: HighlightColor = record.color;
     const updateColorSelection = (): void => {
       swatches.forEach((item, itemIndex) => {
         item.setAttribute(
           'aria-pressed',
-          String(areHighlightColorsEqual(palette[itemIndex], selectedColor)),
+          String(areHighlightColorsEqual(palette[itemIndex], draft.color)),
         );
       });
     };
@@ -91,9 +114,9 @@ export class HighlightEditor {
       swatch.className = 'gv-highlight-swatch';
       swatch.style.backgroundColor = getHighlightColorHex(color);
       swatch.setAttribute('aria-label', `${colorLabel.textContent} ${index + 1}`);
-      swatch.setAttribute('aria-pressed', String(areHighlightColorsEqual(color, selectedColor)));
+      swatch.setAttribute('aria-pressed', String(areHighlightColorsEqual(color, draft.color)));
       swatch.addEventListener('click', () => {
-        selectedColor = color;
+        draft.color = color;
         updateColorSelection();
       });
       colorRow.appendChild(swatch);
@@ -112,7 +135,10 @@ export class HighlightEditor {
       'gv-highlight-popover-button-primary',
     );
     actions.append(deleteButton, cancelButton, saveButton);
-    popover.append(quote, note, colorRow, actions);
+    const status = document.createElement('p');
+    status.className = 'gv-highlight-save-status';
+    status.hidden = true;
+    popover.append(quote, note, colorRow, status, actions);
     document.body.appendChild(popover);
     this.popover = popover;
     this.popoverReturnFocus = anchorElement;
@@ -123,12 +149,54 @@ export class HighlightEditor {
 
     const setBusy = (busy: boolean): void => {
       deleteButton.disabled = busy;
-      cancelButton.disabled = busy;
+      cancelButton.textContent = busy
+        ? translate('floatingPanelClose', 'Close')
+        : translate('pm_cancel', 'Cancel');
       saveButton.disabled = busy;
       note.disabled = busy;
       swatches.forEach((swatch) => {
         swatch.disabled = busy;
       });
+    };
+    this.refreshDraft = () => {
+      setBusy(draft.pending);
+      status.textContent = draft.message;
+      status.hidden = !draft.message;
+    };
+    this.refreshDraft();
+
+    const mutate = async (write: () => Promise<void>, saving: boolean): Promise<void> => {
+      draft.note = note.value;
+      draft.pending = true;
+      draft.message = '';
+      this.drafts.set(draftKey, draft);
+      this.refreshDraft?.();
+      // An overdue reply cannot prove failure or cancel a dispatched write.
+      const watchdog = window.setTimeout(() => {
+        draft.message = translate(
+          'highlightConfirmationPending',
+          'Still waiting for confirmation. You can close this editor; your draft will be kept.',
+        );
+        if (this.currentDraft === draft) {
+          this.refreshDraft?.();
+          this.actions.announce(draft.message);
+        }
+      }, CONFIRMATION_WAIT_MS);
+      try {
+        await write();
+        this.drafts.delete(draftKey);
+        if (this.currentDraft !== draft) return;
+        this.close(saving);
+        if (saving) this.actions.announce(translate('highlightSaved', 'Highlight saved.'));
+      } catch (error) {
+        draft.message = getSaveFailureMessage(error);
+        if (this.currentDraft !== draft) return;
+        this.actions.announce(draft.message);
+      } finally {
+        window.clearTimeout(watchdog);
+        draft.pending = false;
+        if (this.currentDraft === draft) this.refreshDraft?.();
+      }
     };
     cancelButton.addEventListener('click', () => this.close(true));
     saveButton.addEventListener('click', async () => {
@@ -141,37 +209,19 @@ export class HighlightEditor {
         return;
       }
       note.setCustomValidity('');
-      setBusy(true);
-      const patch: HighlightUpdatePatch = { note: note.value, color: selectedColor };
-      try {
-        await this.actions.save(record, patch);
-        if (this.popover !== popover) return;
-        this.close(true);
-        this.actions.announce(translate('highlightSaved', 'Highlight saved.'));
-      } catch (error) {
-        if (this.popover !== popover) return;
-        setBusy(false);
-        this.actions.announce(getSaveFailureMessage(error));
-      }
+      const patch: HighlightUpdatePatch = { note: note.value, color: draft.color };
+      await mutate(() => this.actions.save(record, patch), true);
     });
-    note.addEventListener('input', () => note.setCustomValidity(''));
-    deleteButton.addEventListener('click', async () => {
-      setBusy(true);
-      try {
-        await this.actions.delete(record);
-        if (this.popover !== popover) return;
-        this.close();
-      } catch (error) {
-        if (this.popover !== popover) return;
-        setBusy(false);
-        this.actions.announce(getSaveFailureMessage(error));
-      }
+    note.addEventListener('input', () => {
+      draft.note = note.value;
+      note.setCustomValidity('');
     });
+    deleteButton.addEventListener('click', () => mutate(() => this.actions.delete(record), false));
 
     this.positionPopover(popover, anchorElement);
     this.popoverFocusTimer = window.setTimeout(() => {
       this.popoverFocusTimer = null;
-      if (note.isConnected) note.focus({ preventScroll: true });
+      if (note.isConnected) (note.disabled ? cancelButton : note).focus({ preventScroll: true });
     }, 0);
   }
 
@@ -209,6 +259,8 @@ export class HighlightEditor {
     }
     this.popover?.remove();
     this.popover = null;
+    this.currentDraft = null;
+    this.refreshDraft = null;
     this.popoverReturnFocus = null;
     if (!restoreFocus || !returnFocus?.isConnected) return;
     try {

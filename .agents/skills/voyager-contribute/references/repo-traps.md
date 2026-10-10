@@ -36,7 +36,6 @@ Grep for the existing primitive before writing parallel logic — reviewers trea
 - Theme the whole export artifact consistently — a dark diagram on a forced-white document is not dark-mode support (#847).
 - Gemini conversation IDs are namespaced (`gemini:conv:<id>`); shared code that handles raw IDs silently orphans existing starred/bookmark data (#865). Preserve `/u/<index>/...` account scope in every constructed route.
 - Prompt/folder data has multiple merge entry points (`utils/merge.ts` plus page-level Drive merges); route data-shape changes through one shared merge helper, and never drop or rename existing user records on conflict (#854).
-- Follow `.github/docs/REGRESSION_NOTES.md` for Trap/Rule/Guard entries. Add commit details only when the introduction point affects the explanation; any PR/commit cited must be real, not a placeholder (#859).
 
 ## Scope discipline
 

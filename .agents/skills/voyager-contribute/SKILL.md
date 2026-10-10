@@ -11,10 +11,9 @@ Use only the stages included in the user's request; a readiness review delivers 
 
 1. Inspect `git status --short --branch`, the current branch, and the diff. Preserve unrelated work.
 2. Read the linked Issue and its comments when one exists. A new feature needs explicit maintainer approval of the approach, either in the Issue or as a direct instruction in the current task; assignment or `/claim` only selects an owner.
-3. Read related entries in `.github/docs/REGRESSION_NOTES.md` before a non-trivial feature or fix.
-4. Work on one focused topic branch targeting `main`. Keep secrets and generated `dist_*` artifacts out of commits.
-5. Read [repo-traps.md](references/repo-traps.md) — the repository-specific pitfalls that have cost past contributors the most review rounds.
-6. Use `gh` as the source of truth for Issue/PR state. Before any GitHub write, confirm `gh auth status` shows the account you intend to contribute as. If GitHub CLI is unavailable, perform Issue/PR reads and writes through the GitHub web UI instead and note that in the PR.
+3. Work on one focused topic branch targeting `main`. Keep secrets and generated `dist_*` artifacts out of commits.
+4. Read [repo-traps.md](references/repo-traps.md) — the repository-specific pitfalls that have cost past contributors the most review rounds.
+5. Use `gh` as the source of truth for Issue/PR state. Before any GitHub write, confirm `gh auth status` shows the account you intend to contribute as. If GitHub CLI is unavailable, perform Issue/PR reads and writes through the GitHub web UI instead and note that in the PR.
 
 Preflight is complete when the Issue or rationale, approval state, intended scope, current branch, and clean ownership of every changed file are known.
 

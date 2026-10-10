@@ -18,12 +18,12 @@
   </p>
 
   <p>
-    <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="Nagi-ovo%2Fvoyager | Trendshift" width="250" height="55"/></a>
-    <a href="https://www.star-history.com/nagi-ovo/voyager" target="_blank">
+    <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="voyager-crew%2Fvoyager | Trendshift" width="250" height="55"/></a>
+    <a href="https://www.star-history.com/voyager-crew/voyager" target="_blank">
      <picture>
-       <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank&theme=dark" />
-       <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank" />
-       <img alt="Star History Rank" src="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank" width="193" height="55" />
+       <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank&theme=dark" />
+       <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank" />
+       <img alt="Star History Rank" src="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank" width="193" height="55" />
      </picture>
     </a>
     <a href="https://www.producthunt.com/products/gemini-voyager?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Voyager - AI conversation tools for Gemini, Claude, and ChatGPT | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
@@ -78,7 +78,7 @@
 
 - **📂 [폴더 관리](https://voyager.nagi.fun/ko/guide/folders)**: 드래그 앤 드롭을 지원하는 2 단계 폴더 계층 구조로 대화를 정리하세요.
   - **Gemini**: **계정 분리 모드** 및 **사용자 지정 폴더 색상**을 지원합니다.
-- **💡 [프롬프트 저장소](https://voyager.nagi.fun/ko/guide/prompts)**: Gemini, AI Studio 및 [사용자 지정 웹사이트](https://voyager.nagi.fun/ko/guide/custom-websites)에서 프롬프트를 저장하고 재사용하세요.
+- **💡 [프롬프트 저장소](https://voyager.nagi.fun/ko/guide/prompts)**: Gemini, AI Studio 및 [사용자 지정 웹사이트](https://voyager.nagi.fun/ko/guide/prompts#어디서나-사용-가능)에서 프롬프트를 저장하고 재사용하세요.
 - **☁️ [클라우드 동기화](https://voyager.nagi.fun/ko/guide/cloud-sync)**: 폴더와 프롬프트를 Google Drive 에 동기화하세요.
 - **📐 수식 복사**: LaTeX 및 MathML (Word) 소스 코드를 클릭 한 번으로 복사하세요.
 - **🌦️ 시각 효과**: 설정 패널에서 **눈**, **시네마틱 비**, **벚꽃잎** 효과를 전환하여 계절 분위기를 연출하세요.
@@ -140,7 +140,7 @@
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
   &nbsp;&nbsp;
-  <a href="https://github.com/Nagi-ovo/voyager/releases/latest/" target="_blank">
+  <a href="https://github.com/voyager-crew/voyager/releases/latest/" target="_blank">
     <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari 다운로드" height="36">
   </a>
 </div>
@@ -156,8 +156,8 @@
 ## ☕ 프로젝트 후원하기
 
 <div align="center">
-  <a href="https://github.com/Nagi-ovo/voyager">
-    <img src="https://raw.githubusercontent.com/Nagi-ovo/voyager/main/docs/public/assets/sponsors.svg" width="1000px" />
+  <a href="https://github.com/voyager-crew/voyager">
+    <img src="https://raw.githubusercontent.com/voyager-crew/voyager/main/docs/public/assets/sponsors.svg" width="1000px" />
   </a>
 </div>
 
@@ -185,9 +185,9 @@ Voyager 가 도움이 되었다면 커피 한 잔을 후원해 주세요. 지속
       <td align="center">
         <a href="https://afdian.com/a/nagi-ovo" target="_blank">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
-            <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" />
-            <img alt="Nagi-ovo's Profile" src="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" height="160" />
+            <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
+            <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo" />
+            <img alt="Nagi-ovo's Profile" src="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo" height="160" />
           </picture>
         </a><br>
         <sub><b>Afdian</b></sub>
@@ -231,12 +231,12 @@ Voyager 개발 중에 광범위하게 사용한 AI 음성 - 텍스트 변환 도
 
 ## 🤝 기여 및 개발
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/voyager)
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/voyager-crew/voyager)
 
 여러분의 기여를 환영합니다! 버그 보고, 기능 제안, 문서 개선 또는 코드 제출 등 무엇이든 환영합니다:
 
-- **이슈**: 재현 가능한 버그만 받습니다. [버그 보고](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml) 템플릿을 사용하세요.
-- **Discussions**: [기능 제안, 아이디어, 질문](https://github.com/Nagi-ovo/voyager/discussions)은 이슈가 아니라 Discussions에 올려주세요.
+- **이슈**: 재현 가능한 버그만 받습니다. [버그 보고](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml) 템플릿을 사용하세요.
+- **Discussions**: [기능 제안, 아이디어, 질문](https://github.com/voyager-crew/voyager/discussions)은 이슈가 아니라 Discussions에 올려주세요.
 - **풀 리퀘스트**: 가이드라인은 [CONTRIBUTING.md](../.github/CONTRIBUTING.md)를 확인하세요.
 
 <details>
@@ -269,8 +269,8 @@ Voyager 를 더 좋게 만들 수 있도록 도와주셔서 감사합니다! ❤
 
 Voyager에 기여해 주신 모든 기여자분들께 특별히 감사드립니다 ❤️
 
-<a href="https://github.com/Nagi-ovo/voyager/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Nagi-ovo/voyager&max=200&columns=14" />
+<a href="https://github.com/voyager-crew/voyager/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=voyager-crew/voyager&max=200&columns=14" />
 </a>
 
 ---
@@ -283,7 +283,7 @@ Voyager에 기여해 주신 모든 기여자분들께 특별히 감사드립니�
 
 - **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - Image Refinement 는 이 프로젝트들을 바탕으로 적용되었습니다. 관련 제3자 MIT 고지는 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)에 보존되어 있습니다.
 
-- **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - 기본 모델 고정 로직에는 Gemini Helper 에서 참고한 상호작용 아이디어가 포함되어 있으며, 소스 코드 수준의 attribution 을 유지하고 있습니다.
+- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)** - 기본 모델 고정 로직에는 Gemini Helper 에서 참고한 상호작용 아이디어가 포함되어 있으며, 소스 코드 수준의 attribution 을 유지하고 있습니다.
 
 - **[cordis](https://github.com/cordiverse/cordis)** - 플러그인 런타임의 사이드 이펙트 원장(`PluginScope`)은 cordis fiber 모델의 effect/해제 수명주기 설계를 참고했습니다.
 
@@ -311,11 +311,11 @@ Gemini은 Google LLC의 상표입니다. Claude는 Anthropic, PBC의 상표입�
 ---
 
 <div align="center">
-  <a href="https://www.star-history.com/#Nagi-ovo/voyager&type=date&legend=top-left">
+  <a href="https://www.star-history.com/#voyager-crew/voyager&type=date&legend=top-left">
    <picture>
-     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&theme=dark&legend=top-left" />
-     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&legend=top-left" />
-     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&legend=top-left" />
+     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&theme=dark&legend=top-left" />
+     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&legend=top-left" />
+     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&legend=top-left" />
    </picture>
   </a>
   <p>Made with ❤️ by Jesse Zhang</p>

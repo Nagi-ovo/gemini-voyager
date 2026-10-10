@@ -19,13 +19,13 @@ O método preferido. 100% do seu patrocínio vai para o programador (o GitHub n�
 
 Uma forma simples de oferecer um café como agradecimento.
 
-[<img src="https://img.shields.io/badge/Buy_Me_a_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" height="50"/>](https://buymeacoffee.com/nagiovo)
+[<img src="https://img.shields.io/badge/Buy_Me_a_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me a Coffee" height="50"/>](https://www.buymeacoffee.com/Nag1ovo)
 
 ### ⭐ Star no GitHub
 
 É grátis e ajuda imenso! Dê uma estrela ao nosso repositório para nos ajudar a alcançar mais pessoas.
 
-[<img src="/badges/github-stars.svg" alt="GitHub stars" height="30"/>](https://github.com/Nagi-ovo/voyager)
+[<img src="/badges/github-stars.svg" alt="GitHub stars" height="30"/>](https://github.com/voyager-crew/voyager)
 
 ## Para onde vai o dinheiro?
 

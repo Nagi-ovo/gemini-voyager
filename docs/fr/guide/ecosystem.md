@@ -8,5 +8,5 @@ Les projets suivants sont inspirés par Voyager ou construits sur sa base, appor
 - **[DeepSeek Enhancer](https://github.com/dlshuangchenyue1210/DeepSeek-Enhancer)** — Une extension inspirée de Voyager pour la version web de DeepSeek, offrant des dossiers multi-niveaux, l'export de l'historique des conversations, la copie de formules, la sauvegarde des données et plus encore.
 
 ::: tip Votre projet est inspiré par Voyager ?
-[Ouvrez une issue](https://github.com/Nagi-ovo/voyager/issues/new) pour me le faire savoir et je l'ajouterai ici.
+[Ouvrez une issue](https://github.com/voyager-crew/voyager/issues/new) pour me le faire savoir et je l'ajouterai ici.
 :::

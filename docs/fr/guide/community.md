@@ -46,7 +46,7 @@ Vous pouvez aussi me retrouver sur ces plateformes :
 
 Si vous avez trouvé un bug reproductible, veuillez ouvrir une issue sur GitHub. Les demandes de fonctionnalités, les idées et les questions vont dans les Discussions, pas dans les issues :
 
-- [Signaler un Bug](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml)
-- [Proposer une fonctionnalité ou une idée (Discussions)](https://github.com/Nagi-ovo/voyager/discussions)
+- [Signaler un Bug](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml)
+- [Proposer une fonctionnalité ou une idée (Discussions)](https://github.com/voyager-crew/voyager/discussions)
 
 Merci de soutenir Voyager ! ❤️

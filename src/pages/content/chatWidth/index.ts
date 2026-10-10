@@ -1,39 +1,17 @@
 /**
  * Adjusts the chat area width based on user settings (stored as viewport %)
  */
+import { classifyGeminiRoute } from '@/core/gemini/nativeHealth';
+import { getGeminiTurnSelectors } from '@/core/gemini/turnSelectors';
+
+import { nativeHealthReporter } from '../nativeHealth';
+import { hasRenderedConversationContent } from '../nativeHealth/pageEvidence';
 
 const STYLE_ID = 'gemini-voyager-chat-width';
 const DEFAULT_PERCENT = 70;
 const MIN_PERCENT = 30;
 const MAX_PERCENT = 100;
 const LEGACY_BASELINE_PX = 1200;
-
-// Selectors based on the export functionality that already works
-function getUserSelectors(): string[] {
-  return [
-    '.user-query-bubble-container',
-    '.user-query-container',
-    'user-query-content',
-    'user-query',
-    'div[aria-label="User message"]',
-    'article[data-author="user"]',
-    '[data-message-author-role="user"]',
-  ];
-}
-
-function getAssistantSelectors(): string[] {
-  return [
-    'model-response',
-    '.model-response',
-    'response-container',
-    '.response-container',
-    '.presented-response-container',
-    '[aria-label="Gemini response"]',
-    '[data-message-author-role="assistant"]',
-    '[data-message-author-role="model"]',
-    'article[data-author="assistant"]',
-  ];
-}
 
 function getTableSelectors(): string[] {
   return [
@@ -77,8 +55,8 @@ function applyWidth(widthPercent: number) {
     document.head.appendChild(style);
   }
 
-  const userSelectors = getUserSelectors();
-  const assistantSelectors = getAssistantSelectors();
+  const userSelectors = getGeminiTurnSelectors('chatWidth.userTurn');
+  const assistantSelectors = getGeminiTurnSelectors('chatWidth.assistantTurn');
   const tableSelectors = getTableSelectors();
 
   // Build comprehensive CSS rules
@@ -116,14 +94,8 @@ function applyWidth(widthPercent: number) {
       box-sizing: border-box !important;
     }
 
-    /* Gemini 3.8 / luminous layout pins the thread to
-       --bard-chat-window-content-width-default (708px). Native rules read
-       max-width: var(...), so the slider has to own the variables (#955).
-       Gemini declares them as
-       \`.enable-luminous-content-width-update[_nghost-ng-cXXXXXXXX]\`, and that
-       Angular host attribute outranks a bare class selector, so without
-       !important the host keeps 708px and every descendant that is not one of
-       the hosts re-listed here inherits the narrow default. */
+    /* Gemini's Angular host selector outranks ours: both width variables need !important.
+       Grid-scoped child rules hardcode narrow widths too, so variables alone cannot widen turns. */
     chat-window,
     chat-window-content,
     .enable-luminous-content-width-update,
@@ -277,11 +249,8 @@ function applyWidth(widthPercent: number) {
       margin-right: auto !important;
     }
 
-    /* Widen the file-drop overlay with the input area (#887). Gemini pins it to
-       var(--bard-chat-window-max-width-default, 760px), which only matches the
-       native input width. The input-container prefix keeps this rule more
-       specific than editInputWidth's overlay rule, mirroring how the two
-       modules' input-area-v2 rules already resolve when both are enabled. */
+    /* Gemini pins the overlay to its native input width. Match the composer;
+       editInputWidth's html body prefix wins when both sliders are enabled. */
     input-container file-drop-indicator .overlay-container[data-filedrop-id="chat-window-input-container"] {
       max-width: ${widthValue} !important;
       width: min(100%, ${widthValue}) !important;
@@ -306,9 +275,48 @@ function removeStyles() {
 
 const ENABLED_KEY = 'gvChatWidthEnabled';
 
+function hasWidenedUserTurn(): boolean {
+  return document.querySelector(getGeminiTurnSelectors('chatWidth.userTurn').join(',')) !== null;
+}
+
+/**
+ * Probe while the width rules are applied. A route settles once a user turn is found, or at once
+ * when it is not a conversation, so a healthy page stops querying after its first match. Until
+ * then each debounced check looks again, which lets a miss recover when turns render later on the
+ * same route.
+ */
+function createUserTurnProbe(): { check: () => void; reset: () => void } {
+  let settledPath: string | null = null;
+  return {
+    check() {
+      const path = location.pathname;
+      if (settledPath === path) return;
+      if (classifyGeminiRoute(path) !== 'conversation') {
+        settledPath = path;
+        return;
+      }
+      if (hasWidenedUserTurn()) {
+        settledPath = path;
+        nativeHealthReporter.reportFound('chat-width');
+        return;
+      }
+      nativeHealthReporter.reportMissing('chat-width', {
+        route: 'conversation',
+        recheck: hasWidenedUserTurn,
+        expected: () => hasRenderedConversationContent(),
+      });
+    },
+    reset() {
+      settledPath = null;
+      nativeHealthReporter.withdraw('chat-width');
+    },
+  };
+}
+
 export function startChatWidthAdjuster() {
   let currentWidthPercent = DEFAULT_PERCENT;
   let enabled = false;
+  const userTurnProbe = createUserTurnProbe();
 
   // Load initial state — request keys without defaults so we can distinguish
   // "key never existed" (upgrade) from "explicitly set to false"
@@ -336,6 +344,7 @@ export function startChatWidthAdjuster() {
 
     if (enabled) {
       applyWidth(currentWidthPercent);
+      userTurnProbe.check();
     }
 
     if (typeof storedWidth === 'number' && storedWidth !== normalized) {
@@ -358,8 +367,10 @@ export function startChatWidthAdjuster() {
       enabled = changes[ENABLED_KEY].newValue === true;
       if (enabled) {
         applyWidth(currentWidthPercent);
+        userTurnProbe.check();
       } else {
         removeStyles();
+        userTurnProbe.reset();
       }
     }
 
@@ -395,6 +406,7 @@ export function startChatWidthAdjuster() {
     debounceTimer = window.setTimeout(() => {
       if (enabled) {
         applyWidth(currentWidthPercent);
+        userTurnProbe.check();
       }
       debounceTimer = null;
     }, 200);
@@ -415,6 +427,7 @@ export function startChatWidthAdjuster() {
     () => {
       observer.disconnect();
       removeStyles();
+      userTurnProbe.reset();
       // Remove storage listener
       try {
         chrome.storage?.onChanged?.removeListener(storageChangeHandler);

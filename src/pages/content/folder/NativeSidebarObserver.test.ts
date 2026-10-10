@@ -92,7 +92,21 @@ describe('NativeSidebarObserver', () => {
 
     drainIdle();
 
-    expect(enhanceConversation).toHaveBeenCalledExactlyOnceWith(row);
+    expect(enhanceConversation).toHaveBeenCalledExactlyOnceWith(row, expect.any(Object));
+  });
+
+  it('gives every row of one drain the same pass and the next drain a new one', () => {
+    const rows = [conversation('aaaaaaaa'), conversation('bbbbbbbb'), conversation('cccccccc')];
+    sidebar.append(...rows);
+    observer.enqueueConversations(sidebar);
+    let remaining = 2;
+    drainIdle({ didTimeout: false, timeRemaining: () => (--remaining > 0 ? 1 : 0) });
+    expect(enhanceConversation).toHaveBeenCalledTimes(2);
+    drainIdle();
+
+    const passes = enhanceConversation.mock.calls.map(([, pass]) => pass);
+    expect(passes[0]).toBe(passes[1]);
+    expect(passes[2]).not.toBe(passes[0]);
   });
 
   it('skips a conversation removed while its enhancement was queued', () => {
@@ -122,7 +136,7 @@ describe('NativeSidebarObserver', () => {
     await flushObservedMutations();
     drainIdle();
 
-    expect(enhanceConversation).toHaveBeenCalledExactlyOnceWith(added);
+    expect(enhanceConversation).toHaveBeenCalledExactlyOnceWith(added, expect.any(Object));
   });
 
   it('yields when the idle budget expires and resumes the remaining rows', () => {
@@ -150,7 +164,7 @@ describe('NativeSidebarObserver', () => {
     observer.enqueueConversations(sidebar);
 
     drainIdle({ didTimeout: true, timeRemaining: () => 0 });
-    expect(enhanceConversation).toHaveBeenCalledExactlyOnceWith(rows[0]);
+    expect(enhanceConversation).toHaveBeenCalledExactlyOnceWith(rows[0], expect.any(Object));
     drainIdle();
 
     expect(enhanceConversation.mock.calls.map(([row]) => row)).toEqual(rows);
@@ -198,7 +212,7 @@ describe('NativeSidebarObserver', () => {
 
     drainIdle();
 
-    expect(enhanceConversation).toHaveBeenCalledExactlyOnceWith(queued);
+    expect(enhanceConversation).toHaveBeenCalledExactlyOnceWith(queued, expect.any(Object));
   });
 
   it.each(['before flush', 'after flush'] as const)(

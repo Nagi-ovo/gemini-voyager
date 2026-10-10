@@ -10,6 +10,7 @@ import { hashString } from '@/core/utils/hash';
 import { getTimelineHierarchyStorageKey } from '@/pages/content/timeline/hierarchyStorage';
 
 import { CloudSyncSettings } from '../CloudSyncSettings';
+import { createCloudSyncChromeMock as createChromeMock } from './cloudSyncChromeMock';
 
 const browserTarget = vi.hoisted(() => ({ value: 'chrome' }));
 const deleteSafariICloudBackup = vi.hoisted(() => vi.fn());
@@ -38,46 +39,6 @@ const baseState: SyncState = {
   mode: 'manual',
   isAuthenticated: false,
 };
-
-function createChromeMock(sendMessage: ReturnType<typeof vi.fn>): MockedChrome {
-  return {
-    runtime: {
-      sendMessage,
-      lastError: null,
-      id: 'test-extension-id',
-    },
-    tabs: {
-      get: vi.fn().mockResolvedValue({ id: 1, url: 'https://gemini.google.com/app' }),
-      query: vi.fn().mockResolvedValue([{ id: 1, url: 'https://gemini.google.com/app' }]),
-      sendMessage: vi.fn().mockResolvedValue({
-        ok: true,
-        data: { folders: [], folderContents: {} },
-      }),
-    },
-    storage: {
-      local: {
-        get: vi.fn().mockResolvedValue({
-          gvFolderData: { folders: [], folderContents: {} },
-          gvPromptItems: [],
-          geminiTimelineStarredMessages: { messages: {} },
-          [StorageKeys.TIMELINE_HIERARCHY]: { conversations: {} },
-        }),
-        set: vi.fn().mockResolvedValue(undefined),
-        remove: vi.fn().mockResolvedValue(undefined),
-      },
-      sync: {
-        get: vi.fn().mockResolvedValue({}),
-        set: vi.fn().mockResolvedValue(undefined),
-        remove: vi.fn().mockResolvedValue(undefined),
-        clear: vi.fn().mockResolvedValue(undefined),
-      },
-      onChanged: {
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-      },
-    },
-  } as unknown as MockedChrome;
-}
 
 async function flushMicrotasks(): Promise<void> {
   await act(async () => {

@@ -9,7 +9,8 @@
  *   4. reconcile: mount every plugin that (matches URL) AND (is enabled) AND
  *      (satisfies the engine version) AND (is not entitlement-locked); unmount the rest
  *   5. subscribe to state changes and re-reconcile (live enable/disable)
- *   6. subscribe to this host's remote catalog cache and reload on content change
+ *   6. subscribe to this host's remote catalog cache and to the user's local
+ *      plugins, and reload on content change
  *   7. in the top frame, when an ENABLED plugin targets this page, ask the
  *      background to check the remote catalog (it applies the user's interval,
  *      switch and backoff). Pages without an enabled plugin — every Gemini /
@@ -24,6 +25,7 @@ import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContex
 
 import { isScriptedTierSupported } from '../capabilities';
 import { LocalEntitlementProvider } from '../entitlement/LocalEntitlementProvider';
+import { subscribeLocalPlugins } from '../local/localPluginStore';
 import { subscribeHostCatalog } from '../remote/hostCatalogCache';
 import { catalogHostFromUrl, hasEnabledPluginForUrl } from '../remote/hostCatalogPolicy';
 import {
@@ -32,13 +34,14 @@ import {
   resolveSiteOverride,
 } from '../remote/siteOverride';
 import { matchesAnyPattern } from '../sites/matchPattern';
+import { conflictsWithNativeSurface, isNativeSurfaceUrl } from '../sites/nativeSurfaces';
 import { SiteRegistry } from '../sites/registry';
 import { createDefaultPluginSources, listPluginManifests } from '../sources/defaultSources';
+import { isPluginEnabled } from '../storage/pluginDefaults';
 import { type PluginStateMap, loadPluginState, subscribePluginState } from '../storage/pluginState';
 import {
   type EntitlementProvider,
   type PluginManifest,
-  type PluginSettingValue,
   type PluginSettings,
   type PluginSource,
   type PluginSourceContext,
@@ -49,6 +52,8 @@ import { hasPrimitive } from '../verbs/registry';
 import { DeclarativeEngine } from './declarativeEngine';
 import { PLUGIN_CATALOG_REFRESH_MESSAGE } from './messages';
 import { type PluginStatus, findIncompatibility } from './pluginStatus';
+import { resolvePluginSettings } from './resolvePluginSettings';
+import { type SurfaceSwitch, surfaceSwitchForUrl } from './surfaceSwitch';
 
 export interface PluginHostOptions {
   readonly url?: string;
@@ -60,6 +65,11 @@ export interface PluginHostOptions {
   readonly requestCatalogRefresh?: (host: string) => void;
   /** Injectable for tests; defaults to `window.top === window`. */
   readonly isTopFrame?: boolean;
+  /**
+   * The site's master switch (AI Studio's "Voyager on AI Studio"); while it is
+   * off nothing mounts. Defaults to `surfaceSwitchForUrl(url)`.
+   */
+  readonly surfaceSwitch?: SurfaceSwitch | null;
 }
 
 /** Fire-and-forget: the background decides whether a network request is due. */
@@ -106,6 +116,11 @@ export class PluginHost {
   private state: PluginStateMap = {};
   private unsubscribeState: (() => void) | null = null;
   private unsubscribeCatalog: (() => void) | null = null;
+  private unsubscribeLocal: (() => void) | null = null;
+  private unsubscribeSurface: (() => void) | null = null;
+  private readonly surfaceSwitch: SurfaceSwitch | null;
+  /** Whether the site's master switch lets plugins run (always true without one). */
+  private surfaceOn = true;
   private started = false;
   /**
    * Monotonic lifecycle generation. start() and stop() each bump it; every
@@ -129,6 +144,8 @@ export class PluginHost {
     this.context = { url: this.url, host: catalogHostFromUrl(this.url) };
     this.requestCatalogRefresh = options.requestCatalogRefresh ?? sendCatalogRefreshRequest;
     this.isTopFrame = options.isTopFrame ?? detectTopFrame();
+    this.surfaceSwitch =
+      options.surfaceSwitch === undefined ? surfaceSwitchForUrl(this.url) : options.surfaceSwitch;
   }
 
   get activeAdapter(): SiteAdapter | null {
@@ -153,17 +170,18 @@ export class PluginHost {
       // applies live without a page reload.
       let engineReady = false;
       let catalogChangedBeforeEngine = false;
+      const onSourceChange = (): void => {
+        if (this.generation !== gen) return;
+        if (!engineReady) {
+          catalogChangedBeforeEngine = true;
+          return;
+        }
+        void this.enqueue(() => this.reloadCatalog(gen));
+      };
       const host = this.context.host;
-      if (host) {
-        this.unsubscribeCatalog = subscribeHostCatalog(host, () => {
-          if (this.generation !== gen) return;
-          if (!engineReady) {
-            catalogChangedBeforeEngine = true;
-            return;
-          }
-          void this.enqueue(() => this.reloadCatalog(gen));
-        });
-      }
+      if (host) this.unsubscribeCatalog = subscribeHostCatalog(host, onSourceChange);
+      // An import, update or removal of a local plugin is a catalog change too.
+      this.unsubscribeLocal = subscribeLocalPlugins(onSourceChange);
       // A published site override (plan §3) beats the bundled adapter for
       // pages it covers; resolved before the engine exists so semantic
       // selectors use the newest site knowledge from the first mount.
@@ -183,12 +201,26 @@ export class PluginHost {
         this.state = next;
         void this.enqueue(() => this.reconcile(gen));
       });
+      // The site's master switch follows the same pattern: off unmounts every
+      // plugin on the page, on mounts the enabled ones again.
+      let surfaceFromListener: boolean | null = null;
+      const surfaceSwitch = this.surfaceSwitch;
+      if (surfaceSwitch) {
+        this.unsubscribeSurface = surfaceSwitch.subscribe((on) => {
+          if (this.generation !== gen) return;
+          surfaceFromListener = on;
+          this.surfaceOn = on;
+          void this.enqueue(() => this.reconcile(gen));
+        });
+      }
       // The initial read runs ON the chain, so a catalog reload the listener
       // queued meanwhile runs after it and its fresher listing wins.
       await this.enqueue(async () => {
         const manifests = await this.loadManifests();
         const state = await loadPluginState();
+        const surfaceOn = surfaceSwitch ? await surfaceSwitch.read() : true;
         if (this.generation !== gen) return;
+        this.surfaceOn = surfaceFromListener ?? surfaceOn;
         this.manifests = manifests;
         // A listener revision that arrived mid-read is newer than what we read.
         this.state = stateFromListener ?? state;
@@ -216,6 +248,10 @@ export class PluginHost {
     this.unsubscribeState = null;
     this.unsubscribeCatalog?.();
     this.unsubscribeCatalog = null;
+    this.unsubscribeLocal?.();
+    this.unsubscribeLocal = null;
+    this.unsubscribeSurface?.();
+    this.unsubscribeSurface = null;
     this.engine?.unmountAll();
     this.pushedSettings.clear();
     this.frozen.clear();
@@ -230,7 +266,7 @@ export class PluginHost {
     const engine = this.engine;
     const statuses: PluginStatus[] = [];
     for (const listed of this.manifests) {
-      if (!matchesAnyPattern(this.url, listed.matches)) continue;
+      if (!this.targetsThisPage(listed)) continue;
       const pinned = this.frozen.get(listed.id);
       const manifest = pinned?.mounted ?? listed;
       const incompatibility = findIncompatibility({
@@ -294,7 +330,10 @@ export class PluginHost {
    * Plan D7: a mounted plugin whose contributions run first-party code (a
    * `native` op) keeps the version it started with; its update is recorded
    * as pending and applies on the next full page load. Declarative plugins
-   * remount immediately.
+   * remount immediately when their version or contributions changed; a
+   * re-listed plugin that did not change keeps running untouched, so an
+   * unrelated import or catalog write never restarts it. A user-imported
+   * (`local.*`) plugin follows the same rules.
    */
   private async reloadCatalog(gen: number): Promise<void> {
     const engine = this.engine;
@@ -309,7 +348,7 @@ export class PluginHost {
       // An update that drops this page from its `matches` is a removal for
       // this page, never a pending version: unfreeze so the unmount below
       // sees it and reconcile() cannot revive it from the frozen manifest.
-      if (!matchesAnyPattern(this.url, next.matches)) {
+      if (!this.targetsThisPage(next)) {
         this.frozen.delete(next.id);
         continue;
       }
@@ -341,12 +380,15 @@ export class PluginHost {
           this.pushedSettings.delete(id);
         }
       }
+      // Remount only what changed: an unrelated import or a catalog write that
+      // re-lists the same plugin must not restart a running one (a primitive
+      // would lose its state, e.g. the turn navigator or Vim mode).
       for (const manifest of manifests) {
-        if (this.frozen.has(manifest.id)) continue;
-        if (engine.isActive(manifest.id)) {
-          engine.unmount(manifest.id);
-          this.pushedSettings.delete(manifest.id);
-        }
+        if (this.frozen.has(manifest.id) || !engine.isActive(manifest.id)) continue;
+        const mounted = previous.get(manifest.id);
+        if (mounted && isSameMountedPlugin(mounted, manifest)) continue;
+        engine.unmount(manifest.id);
+        this.pushedSettings.delete(manifest.id);
       }
     }
     await this.reconcile(gen);
@@ -393,19 +435,23 @@ export class PluginHost {
 
   /** Merge the plugin's declared setting defaults with the user's stored values. */
   private resolveSettings(manifest: PluginManifest, state: PluginStateMap): PluginSettings {
-    const schema = manifest.contributes.settings;
-    const stored = state[manifest.id]?.settings ?? {};
-    if (!schema) return stored;
-    const resolved: Record<string, PluginSettingValue> = {};
-    for (const [key, field] of Object.entries(schema)) {
-      resolved[key] = stored[key] ?? field.default;
-    }
-    return resolved;
+    return resolvePluginSettings(manifest, state[manifest.id]?.settings);
+  }
+
+  /**
+   * The plugin's `matches` cover this page, and it brings nothing a native
+   * surface refuses (theme, native ops), judged by the page's real host rather
+   * than by its patterns.
+   */
+  private targetsThisPage(manifest: PluginManifest): boolean {
+    if (!matchesAnyPattern(this.url, manifest.matches)) return false;
+    return !(isNativeSurfaceUrl(this.url) && conflictsWithNativeSurface(manifest));
   }
 
   private async shouldActivate(manifest: PluginManifest, state: PluginStateMap): Promise<boolean> {
-    if (!matchesAnyPattern(this.url, manifest.matches)) return false;
-    if (!state[manifest.id]?.enabled) return false;
+    if (!this.surfaceOn) return false;
+    if (!this.targetsThisPage(manifest)) return false;
+    if (!isPluginEnabled(state, manifest.id)) return false;
     const incompatibility = findIncompatibility({
       manifest,
       adapter: this.adapter,
@@ -450,4 +496,9 @@ export class PluginHost {
 
 function sameContributions(a: PluginManifest, b: PluginManifest): boolean {
   return JSON.stringify(a.contributes) === JSON.stringify(b.contributes);
+}
+
+/** A re-listed plugin the engine can keep running as mounted. */
+function isSameMountedPlugin(mounted: PluginManifest, next: PluginManifest): boolean {
+  return mounted.version === next.version && sameContributions(mounted, next);
 }

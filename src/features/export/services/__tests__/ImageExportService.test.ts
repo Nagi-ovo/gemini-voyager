@@ -4,14 +4,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { resolveExportAdapter } from '@/pages/content/export/adapter/platformAdapters';
 
 import type { ChatTurn, ConversationMetadata } from '../../types/export';
-import { DOMContentExtractor } from '../DOMContentExtractor';
+import { createContentExtractor, extractTurnContent } from '../DOMContentExtractor';
 import { ImageExportService } from '../ImageExportService';
+import { escapeHtmlAttribute } from '../exportDomPolicy';
 
 // Base the test adapter on the real Gemini adapter, overriding only the
 // image-extraction methods with a generic, platform-agnostic implementation
 // so these tests exercise ImageExportService's own logic (not Gemini's
 // production selectors for search/generated images).
-DOMContentExtractor.setExportAdapter({
+const extractor = createContentExtractor({
   ...resolveExportAdapter(),
   extractUserImage: (element) =>
     element.querySelectorAll<HTMLImageElement>('user-query-file-preview img, .preview-image'),
@@ -31,9 +32,7 @@ DOMContentExtractor.setExportAdapter({
     if (src && src !== 'about:blank' && !processedImageSrcs?.has(src)) {
       const alt = image.getAttribute('alt')?.trim() || 'Image';
       flags.hasImages = true;
-      htmlParts.push(
-        `<img src="${DOMContentExtractor.escapeHtmlAttribute(src)}" alt="${DOMContentExtractor.escapeHtmlAttribute(alt)}" />`,
-      );
+      htmlParts.push(`<img src="${escapeHtmlAttribute(src)}" alt="${escapeHtmlAttribute(alt)}" />`);
       textParts.push(`\n![${alt.replace(/\]/g, '\\]')}](${src})\n`);
     }
     return true;
@@ -41,6 +40,8 @@ DOMContentExtractor.setExportAdapter({
   extractFormula: () => undefined,
   extractCodeBlock: () => undefined,
 });
+const extracted = (turns: ChatTurn[]): ChatTurn[] =>
+  turns.map((turn) => extractTurnContent(turn, extractor));
 
 vi.mock('html-to-image', () => {
   return {
@@ -188,7 +189,7 @@ describe('ImageExportService', () => {
     );
 
     await ImageExportService.renderConversationBlob(
-      [{ user: '', assistant: 'Reviewed', starred: false, userElement }],
+      extracted([{ user: '', assistant: 'Reviewed', starred: false, userElement }]),
       mockMetadata,
       {},
     );
@@ -219,7 +220,9 @@ describe('ImageExportService', () => {
     );
 
     await ImageExportService.renderConversationBlob(
-      [{ user: '', assistant: '', assistantElement, starred: false, omitEmptySections: true }],
+      extracted([
+        { user: '', assistant: '', assistantElement, starred: false, omitEmptySections: true },
+      ]),
       mockMetadata,
       {},
     );
@@ -264,7 +267,7 @@ describe('ImageExportService', () => {
     );
 
     await ImageExportService.renderConversationBlob(
-      [{ user: 'Diagram', assistant: '', starred: false, assistantElement }],
+      extracted([{ user: 'Diagram', assistant: '', starred: false, assistantElement }]),
       mockMetadata,
       {},
     );
@@ -358,14 +361,14 @@ describe('ImageExportService', () => {
     assistantElement.innerHTML =
       '<p>Body</p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAgMBgA9N4FoAAAAASUVORK5CYII=" alt="img" />';
 
-    const turnsWithImage: ChatTurn[] = [
+    const turnsWithImage: ChatTurn[] = extracted([
       {
         user: '',
         assistant: 'fallback',
         starred: false,
         assistantElement,
       },
-    ];
+    ]);
 
     (toBlob as unknown as ReturnType<typeof vi.fn>).mockReset();
     (toBlob as unknown as ReturnType<typeof vi.fn>).mockImplementation(
@@ -474,9 +477,9 @@ describe('ImageExportService', () => {
     assistantElement.innerHTML =
       '<message-content><div class="markdown"><p>Look:</p><img src="blob:https://gemini.google.com/abc" alt="plain" /></div></message-content>';
 
-    const turns: ChatTurn[] = [
+    const turns: ChatTurn[] = extracted([
       { user: 'show me', assistant: 'here', starred: false, assistantElement },
-    ];
+    ]);
 
     const fetchedUrls: string[] = [];
     const originalFetch = global.fetch;
@@ -504,9 +507,9 @@ describe('ImageExportService', () => {
     assistantElement.innerHTML =
       '<message-content><div class="markdown"><img src="data:image/png;base64,UFJFMQ==" alt="inline" /></div></message-content>';
 
-    const turns: ChatTurn[] = [
+    const turns: ChatTurn[] = extracted([
       { user: 'inline', assistant: 'ok', starred: false, assistantElement },
-    ];
+    ]);
 
     const fetchSpy = vi.fn(async () => new Response(new Blob([]), { status: 200 }));
     const originalFetch = global.fetch;

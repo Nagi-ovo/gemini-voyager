@@ -5,6 +5,7 @@ import {
 } from '@/core/utils/selectors';
 
 import type { SiteAdapter, SiteCapability } from '../../types';
+import { GEMINI_MATCHES } from '../nativeSurfaces';
 
 /**
  * Gemini adapter. Reuses the centralized first-party selectors so the plugin
@@ -13,7 +14,7 @@ import type { SiteAdapter, SiteCapability } from '../../types';
 export const geminiAdapter: SiteAdapter = {
   id: 'gemini',
   label: 'Gemini',
-  matches: ['https://gemini.google.com/*', 'https://business.gemini.google/*'],
+  matches: GEMINI_MATCHES,
   selectors: {
     userTurn: combineSelectors(getUserTurnSelectors()),
     assistantTurn: combineSelectors(getAssistantTurnSelectors()),

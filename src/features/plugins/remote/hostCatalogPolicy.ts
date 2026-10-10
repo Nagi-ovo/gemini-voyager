@@ -9,7 +9,9 @@
  *   - when a cached catalog may be used at all (successful fetch by this
  *     extension version).
  */
+import { isLocalPluginId } from '../local/localPluginId';
 import { matchesAnyPattern } from '../sites/matchPattern';
+import { isNativeSurfaceHost } from '../sites/nativeSurfaces';
 import type { PluginStateMap } from '../storage/pluginState';
 import type { PluginManifest } from '../types';
 import type { HostCatalogCacheEntry } from './hostCatalogCache';
@@ -55,6 +57,11 @@ export function hostCatalogBackoffMs(failureCount: number): number {
  * frame origins (`*.frame.claudeusercontent.com`), ports, IPs in brackets and
  * anything with a path are rejected so the file name is a plain
  * `<host>.json` and per-artifact frame subdomains never cause a lookup each.
+ *
+ * Voyager's native surfaces (Gemini, AI Studio) are never catalog hosts, even
+ * when a user's local plugin runs there: Gemini pages make zero requests to
+ * the catalog, and this one rule covers the page, the popup and a forced
+ * background check alike.
  */
 export function isEligibleCatalogHost(host: string): boolean {
   if (typeof host !== 'string' || host.length === 0 || host.length > 253) return false;
@@ -62,7 +69,7 @@ export function isEligibleCatalogHost(host: string): boolean {
     !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(host)
   )
     return false;
-  return true;
+  return !isNativeSurfaceHost(host);
 }
 
 /** `location.host` of a page URL when it is a catalog-eligible https host. */
@@ -85,8 +92,12 @@ export function hostCatalogFileUrl(baseUrl: string, host: string): string {
 
 /**
  * D4 trigger: a page may ask for a catalog check only when at least one
- * ENABLED plugin targets it. Gemini / AI Studio have no plugins, so they never
- * qualify and never produce a request.
+ * ENABLED plugin targets it. Gemini / AI Studio are not catalog hosts at all
+ * (`isEligibleCatalogHost`), so they never produce a request. A user-imported (`local.*`) plugin
+ * never counts: the catalog cannot update it, so enabling one must not make
+ * Voyager contact the catalog host about that site. Only an explicit
+ * `enabled: true` counts, deliberately not `isPluginEnabled`: a builtin that is
+ * on by default must not, by itself, make Voyager contact the catalog host.
  */
 export function hasEnabledPluginForUrl(
   manifests: readonly PluginManifest[],
@@ -94,7 +105,10 @@ export function hasEnabledPluginForUrl(
   url: string,
 ): boolean {
   return manifests.some(
-    (manifest) => state[manifest.id]?.enabled === true && matchesAnyPattern(url, manifest.matches),
+    (manifest) =>
+      !isLocalPluginId(manifest.id) &&
+      state[manifest.id]?.enabled === true &&
+      matchesAnyPattern(url, manifest.matches),
   );
 }
 
@@ -122,7 +136,8 @@ export function patternTargetsHost(pattern: string, host: string): boolean {
  * Background side of the D4 trigger: the request only names a host, so a
  * plugin qualifies when any of its patterns can apply to that host — a
  * path-scoped match such as `https://chat.deepseek.com/chat/*` must count,
- * although it would never match the bare `https://host/`.
+ * although it would never match the bare `https://host/`. Local plugins never
+ * count, as in `hasEnabledPluginForUrl`.
  */
 export function hasEnabledPluginForHost(
   manifests: readonly PluginManifest[],
@@ -131,6 +146,7 @@ export function hasEnabledPluginForHost(
 ): boolean {
   return manifests.some(
     (manifest) =>
+      !isLocalPluginId(manifest.id) &&
       state[manifest.id]?.enabled === true &&
       manifest.matches.some((pattern) => patternTargetsHost(pattern, host)),
   );

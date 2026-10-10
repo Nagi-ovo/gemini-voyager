@@ -32,11 +32,11 @@ export interface ChatTurn {
   starred: boolean;
   attachments?: ExportAttachment[];
   omitEmptySections?: boolean;
-  // Optional DOM elements for rich content extraction
+  /** The page elements the content was read from, kept for page-level checks. */
   userElement?: HTMLElement;
   assistantElement?: HTMLElement;
 
-  // 预先固化的内容（针对激进的虚拟加载）
+  /** Rich content read from the page (see `extractTurnContent`); formats render only this. */
   userContent?: ExtractedContent;
   assistantContent?: ExtractedContent;
 }

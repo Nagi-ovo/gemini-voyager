@@ -132,6 +132,59 @@ describe('rendered Quote Reply blocks', () => {
     cleanup();
   });
 
+  it('restyles the composer when its lines are replaced without an input event', async () => {
+    const input = installComposer(['Draft']);
+    const cleanup = startRenderedQuoteStyling();
+    const quoted = document.createElement('p');
+    quoted.textContent = '> inserted context';
+
+    input.replaceChildren(quoted);
+    await Promise.resolve();
+    vi.advanceTimersByTime(80);
+
+    expect(quoted.classList).toContain('gv-composer-quote-line');
+    cleanup();
+  });
+
+  it('styles a composer mounted after startup', async () => {
+    const cleanup = startRenderedQuoteStyling();
+    const host = document.createElement('div');
+    const input = document.createElement('div');
+    input.setAttribute('contenteditable', 'true');
+    input.setAttribute('role', 'textbox');
+    const line = document.createElement('p');
+    line.textContent = '> quoted';
+    input.appendChild(line);
+    host.appendChild(input);
+
+    document.body.appendChild(host);
+    await Promise.resolve();
+    vi.advanceTimersByTime(80);
+
+    expect(line.classList).toContain('gv-composer-quote-line');
+    cleanup();
+  });
+
+  it('does not measure layout while unrelated rows stream into the page', async () => {
+    installComposer(['Draft']);
+    const cleanup = startRenderedQuoteStyling();
+    const measure = vi.spyOn(Element.prototype, 'getBoundingClientRect');
+    const list = document.createElement('div');
+    document.body.appendChild(list);
+
+    for (let i = 0; i < 20; i++) {
+      const row = document.createElement('a');
+      row.textContent = `Conversation ${i}`;
+      list.appendChild(row);
+    }
+    await Promise.resolve();
+    vi.advanceTimersByTime(80);
+
+    expect(measure).not.toHaveBeenCalled();
+    measure.mockRestore();
+    cleanup();
+  });
+
   it('restores a marker after another renderer repaints a quoted line', async () => {
     const container = installUserMessage(['> before $x$']);
     const cleanup = startRenderedQuoteStyling();

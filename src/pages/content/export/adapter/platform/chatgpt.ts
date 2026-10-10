@@ -1,14 +1,9 @@
-import {
-  DOMContentExtractor,
-  type ExtractedContent,
-} from '@/features/export/services/DOMContentExtractor';
+import { USER_LATEX_ORIGINAL_ATTRIBUTE, hasUserLatexRendering } from '@/core/utils/userLatexSource';
+import type { ExtractedContent } from '@/features/export/services/DOMContentExtractor';
+import { escapeHtml, escapeHtmlAttribute } from '@/features/export/services/exportDomPolicy';
 import type { SiteAdapter } from '@/features/plugins/types';
 
-import {
-  buildChatGptTurnsForSelection,
-  chatgptCollectTurnContainers,
-  resolveChatGptSelectionRoles,
-} from '../chatgpt';
+import { TURN_ITEM_SELECTOR, resolveVisibleConversationRoot } from '../chatgptThread';
 import type { ExportPlatformAdapter } from './contract';
 
 function extractTitle(): string {
@@ -29,13 +24,16 @@ function extractId(): string | null {
   return window.location.pathname.match(/\/c\/([^/?#]+)/)?.[1] ?? null;
 }
 
-const ROOT_CANDIDATES = ['main', '[role="main"]'];
-
 /** `/c/<id>` or `/g/<gpt>/c/<id>`, optionally under `/u/<index>/`. */
 const CONVERSATION_ROUTE = /^(?:\/u\/[^/]+)?(?:\/g\/[^/]+)?\/c\/[^/?#]+/;
 /** A turn ChatGPT has actually rendered, whatever the route says. */
-const MOUNTED_TURN_SELECTOR =
-  '[data-turn-id-container] [data-message-author-role], [data-turn-id-container][data-turn], section[data-turn]';
+const MOUNTED_TURN_SELECTOR = [
+  TURN_ITEM_SELECTOR,
+  // The earlier DOM, for accounts ChatGPT has not moved yet.
+  '[data-turn-id-container] [data-message-author-role]',
+  '[data-turn-id-container][data-turn]',
+  'section[data-turn]',
+].join(', ');
 
 /**
  * ChatGPT serves Codex, settings and other non-chat pages from the same
@@ -52,12 +50,9 @@ export function chatgptIsConversationPage(doc: Document, url: string): boolean {
   return CONVERSATION_ROUTE.test(pathname) || doc.querySelector(MOUNTED_TURN_SELECTOR) !== null;
 }
 
+/** The visible conversation's `main`: ChatGPT keeps earlier pages in hidden ones. */
 function resolveRoot(_userSelectors: string[], doc: Document = document): HTMLElement {
-  for (const selector of ROOT_CANDIDATES) {
-    const element = doc.querySelector<HTMLElement>(selector);
-    if (element) return element;
-  }
-  return doc.body as HTMLElement;
+  return resolveVisibleConversationRoot(doc);
 }
 
 function extractUserImage(element: HTMLElement): NodeListOf<HTMLImageElement> {
@@ -103,6 +98,13 @@ function readStructuredUserText(root: HTMLElement): string {
       return;
     }
     if (!(node instanceof Element)) return;
+    // Rendered user LaTeX exports as the source the user typed, as on Gemini;
+    // an edited message React repainted exports its new text instead.
+    const latex = node.getAttribute(USER_LATEX_ORIGINAL_ATTRIBUTE);
+    if (latex !== null && hasUserLatexRendering(node)) {
+      parts.push(latex.replace(/\r\n?/g, '\n').replace(/[^\S\n]+/g, ' '));
+      return;
+    }
     if (node.tagName === 'BR') {
       parts.push('\n');
       return;
@@ -151,9 +153,7 @@ function extractAssistantImage(
     processedImageSrcs?.add(src);
     flags.hasImages = true;
     const alt = image.getAttribute('alt')?.trim() || 'Image';
-    htmlParts.push(
-      `<img src="${DOMContentExtractor.escapeHtmlAttribute(src)}" alt="${DOMContentExtractor.escapeHtmlAttribute(alt)}" />`,
-    );
+    htmlParts.push(`<img src="${escapeHtmlAttribute(src)}" alt="${escapeHtmlAttribute(alt)}" />`);
     textParts.push(`\n![${alt.replace(/\]/g, '\\]')}](${src})\n`);
   }
   return true;
@@ -176,10 +176,28 @@ export function chatgptExtractFormula(
 
   flags.hasFormulas = true;
   htmlParts.push(
-    `<div class="math-block" data-math="${DOMContentExtractor.escapeHtmlAttribute(latex)}">${child.outerHTML}</div>`,
+    `<div class="math-block" data-math="${escapeHtmlAttribute(latex)}">${child.outerHTML}</div>`,
   );
   textParts.push(`\n$$\n${latex}\n$$\n`);
   return true;
+}
+
+/** ChatGPT's current code block: a `div`, not a `pre`, with its source in a `code`. */
+const CODE_BLOCK_SELECTOR = '[data-markdown-copy="code-block"]';
+/** Block chrome ChatGPT leaves out of its own copy: language label, wrap and copy buttons. */
+const COPY_EXCLUDED_SELECTOR = '[data-markdown-copy="exclude"]';
+const CODE_LANGUAGE_LABEL_SELECTOR = `${COPY_EXCLUDED_SELECTOR} .truncate`;
+/** ChatGPT's own Mermaid drawing; the finished chart keeps no source to export. */
+const MERMAID_PREVIEW_SELECTOR = '[data-chatgpt-mermaid-preview]';
+const LANGUAGE_ID = /^[a-z0-9_+#.-]{1,32}$/i;
+const PLAIN_TEXT_IDS = new Set(['plaintext', 'plain', 'text', 'txt']);
+
+/** The header label names the language, localized: 纯文本 or "Plain text" mean none. */
+function readCodeLanguageLabel(block: Element): string {
+  const label = block.querySelector(CODE_LANGUAGE_LABEL_SELECTOR)?.textContent?.trim() ?? '';
+  if (!LANGUAGE_ID.test(label)) return '';
+  const language = label.toLowerCase();
+  return PLAIN_TEXT_IDS.has(language) ? '' : language;
 }
 
 function extractCodeBlock(
@@ -189,16 +207,24 @@ function extractCodeBlock(
   flags: Pick<ExtractedContent, 'hasImages' | 'hasFormulas' | 'hasTables' | 'hasCode'>,
   tagName?: string,
 ): boolean | undefined {
-  if (tagName !== 'pre') return;
-  const codeElement = child.querySelector('code') || child;
+  if (child.matches(COPY_EXCLUDED_SELECTOR)) return true;
+  if (child.matches(MERMAID_PREVIEW_SELECTOR) && !child.querySelector('pre, code')) return true;
+  // ChatGPT dropped `pre` and `language-*` for this block; read it by its copy markers, or
+  // its header label and buttons export as prose.
+  if (tagName !== 'pre' && !child.matches(CODE_BLOCK_SELECTOR)) return;
+  const codeElement =
+    Array.from(child.querySelectorAll('code')).find(
+      (code) => !code.closest(COPY_EXCLUDED_SELECTOR),
+    ) ?? (tagName === 'pre' ? child : null);
+  if (!codeElement) return true;
   const code = codeElement.textContent || '';
   const className = (codeElement.getAttribute('class') || '').toLowerCase();
-  const language = className.match(/language-([a-z0-9]+)/i)?.[1] ?? '';
+  const language =
+    className.match(/language-([a-z0-9]+)/i)?.[1] ??
+    readCodeLanguageLabel(child.querySelector(CODE_BLOCK_SELECTOR) ?? child);
   if (code.trim()) {
     flags.hasCode = true;
-    htmlParts.push(
-      `<pre><code class="language-${language}">${DOMContentExtractor.escapeHtml(code)}</code></pre>`,
-    );
+    htmlParts.push(`<pre><code class="language-${language}">${escapeHtml(code)}</code></pre>`);
     textParts.push(`\n\`\`\`${language}\n${code}\n\`\`\`\n`);
     (child as Element & { processedByGV?: boolean }).processedByGV = true;
     if (codeElement !== child) {
@@ -225,7 +251,7 @@ export function chatgptExtractInlineFormula(
   const display =
     element.classList.contains('katex-display') || element.closest('.katex-display') != null;
   htmlParts.push(
-    `<span class="${display ? 'math-block' : 'math-inline'}" data-math="${DOMContentExtractor.escapeHtmlAttribute(latex)}">${element.outerHTML}</span>`,
+    `<span class="${display ? 'math-block' : 'math-inline'}" data-math="${escapeHtmlAttribute(latex)}">${element.outerHTML}</span>`,
   );
   textParts.push(display ? `\n$$\n${latex}\n$$\n` : `$${latex}$`);
   return true;
@@ -236,11 +262,8 @@ export function buildChatGptAdapter(site: SiteAdapter): ExportPlatformAdapter {
     site,
     getUserSelectors: () => [site.selectors.userTurn],
     getAssistantSelectors: () => [site.selectors.assistantTurn],
-    getConversationRootCandidates: () => ROOT_CANDIDATES,
     extractConversationTitle: extractTitle,
     extractConversationIdFromUrl: extractId,
-    shouldPreloadHistory: () => false,
-    isConversationPage: chatgptIsConversationPage,
     resolveConversationRoot: resolveRoot,
     extractUserImage,
     extractUserText: chatgptExtractUserText,
@@ -249,8 +272,5 @@ export function buildChatGptAdapter(site: SiteAdapter): ExportPlatformAdapter {
     extractFormula: chatgptExtractFormula,
     extractCodeBlock,
     extractInlineFormula: chatgptExtractInlineFormula,
-    collectTurnContainers: chatgptCollectTurnContainers,
-    buildTurnsForSelection: buildChatGptTurnsForSelection,
-    resolveSelectionRoles: resolveChatGptSelectionRoles,
   };
 }

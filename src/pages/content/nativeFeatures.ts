@@ -2,6 +2,7 @@ import { CleanupPositions } from '@/core/types/cleanupPositions';
 import { StorageKeys } from '@/core/types/common';
 
 import { startAccountContextBridge } from './accountContext';
+import { startChatGptJump } from './chatGptJump';
 import { startInputVimMode } from './chatInput/vimMode';
 import { startCodeBlockCollapse } from './codeBlockCollapse';
 import { startDraftSave } from './draftSave/index';
@@ -11,12 +12,16 @@ import { isForkFeatureEnabledValue } from './fork/featureFlag';
 import { startFork } from './fork/index';
 import { startGemsHider } from './gemsHider/index';
 import { startGemsSidebar } from './gemsSidebar/index';
+import { startNativeHealth } from './nativeHealth/index';
 import { startBrandTheme } from './platformTheme';
 import { startPromptHistory } from './promptHistory/index';
 import { startRemoteAnnouncements } from './remoteAnnouncements/index';
+import { isResearchPackEnabledValue, startResearchPack } from './researchPack/index';
+import { startResearchPackReceiver } from './researchPack/receiver';
 import { startResponseCompleteNotification } from './responseNotification/index';
 import { startSendBehavior } from './sendBehavior/index';
 import { startStorageQuotaWarningToast } from './storageQuotaWarning';
+import { startTimeline } from './timeline/index';
 import { startUsageStatus } from './usageStatus/index';
 
 /**
@@ -34,6 +39,13 @@ export const NATIVE_FEATURES = {
     id: 'account-context-bridge',
     position: CleanupPositions.CleanupAccountContextBridge,
     start: startAccountContextBridge,
+  },
+  chatGptJump: {
+    id: 'chatgpt-jump',
+    position: CleanupPositions.CleanupChatGptJump,
+    start: startChatGptJump,
+    inertReason:
+      'Only top-level ChatGPT pages answer account checks and show inaccessible-star hints.',
   },
   brandTheme: {
     id: 'brand-theme',
@@ -108,11 +120,33 @@ export const NATIVE_FEATURES = {
     position: CleanupPositions.CleanupGemsHider,
     start: startGemsHider,
   },
+  timeline: {
+    id: 'timeline',
+    position: CleanupPositions.CleanupTimeline,
+    start: startTimeline,
+  },
+  nativeHealth: {
+    id: 'native-health',
+    position: CleanupPositions.CleanupNativeHealth,
+    start: startNativeHealth,
+  },
   fork: {
     id: 'fork',
     position: CleanupPositions.CleanupFork,
     start: startFork,
     toggle: { key: StorageKeys.FORK_ENABLED, isEnabled: isForkFeatureEnabledValue },
+  },
+  researchPack: {
+    id: 'research-pack',
+    position: CleanupPositions.CleanupResearchPack,
+    start: () => startResearchPack(),
+    toggle: { key: StorageKeys.RESEARCH_PACK_ENABLED, isEnabled: isResearchPackEnabledValue },
+  },
+  researchPackReceiver: {
+    id: 'research-pack-receiver',
+    position: CleanupPositions.CleanupResearchPackReceiver,
+    start: () => startResearchPackReceiver(),
+    inertReason: 'Receives a research pack only on ChatGPT and Claude, never on Gemini.',
   },
 } as const satisfies Record<string, NativeFeature>;
 

@@ -199,6 +199,7 @@ describe('FolderStore editable account and save completion', () => {
       expect(store.createFolder('While saving')).toBeNull();
       await store.loadData();
       expect(store.data).toEqual(original);
+      await vi.advanceTimersByTimeAsync(0);
       expect(writes).toHaveLength(1);
 
       gates[0].resolve();
@@ -426,6 +427,18 @@ describe('FolderStore editable account and save completion', () => {
     expect(saved.get('gvFolderData')?.folders.map((folder) => folder.name)).toEqual([
       'After first load',
     ]);
+  });
+
+  it('ignores a rename to the name the folder already has', async () => {
+    const before = structuredClone(store.data);
+    const { name } = before.folders.find((folder) => folder.id === 'root')!;
+
+    store.renameFolder('root', name);
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(store.data).toEqual(before);
+    expect(adapter.saveData).not.toHaveBeenCalled();
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it('rejects stale data commands after destroy without changing existing data', async () => {

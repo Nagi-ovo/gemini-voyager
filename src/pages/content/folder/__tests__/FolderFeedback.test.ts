@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { toastDriver } from '@/tests/toastDriver';
+
 import { FolderFeedback } from '../FolderFeedback';
 
 vi.mock('@/utils/i18n', () => ({
@@ -48,37 +50,54 @@ describe('FolderFeedback', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it('keeps warning messages visible while shorter action toasts finish their animation', () => {
+  it('keeps a warning about the folder data longer than a passing notice', () => {
     feedback.showNotification('Saved', 'success');
     feedback.showNotificationByLevel('Storage warning', 'warning');
-    vi.advanceTimersByTime(10);
-    expect(document.querySelector('.gv-notification-success.show')?.textContent).toBe('Saved');
-    vi.advanceTimersByTime(2990);
-    expect(document.querySelector('.gv-notification-success.show')).toBeNull();
-    expect(document.body.textContent).toContain('Saved');
-    vi.advanceTimersByTime(300);
-    expect(document.body.textContent).not.toContain('Saved');
-    expect(document.body.textContent).toContain('Storage warning');
-    vi.advanceTimersByTime(3700);
-    expect(document.body.textContent).not.toContain('Storage warning');
+    expect(toastDriver.all().map(({ message, tone }) => ({ message, tone }))).toEqual([
+      { message: 'Saved', tone: 'success' },
+      { message: 'Storage warning', tone: 'warning' },
+    ]);
+    vi.advanceTimersByTime(3000);
+    expect(toastDriver.messages()).toEqual(['Storage warning']);
+    vi.advanceTimersByTime(4000);
+    expect(toastDriver.messages()).toEqual([]);
   });
 
-  it('replaces batch progress and disposes every pending feedback surface on destruction', () => {
+  it('replaces a notice on the same channel in place', () => {
+    feedback.showNotification('Uploading...', 'info', 'transfer');
+    feedback.showNotification('Unrelated', 'info');
+    feedback.showNotification('Uploaded', 'success', 'transfer');
+    expect(toastDriver.messages()).toEqual(['Uploaded', 'Unrelated']);
+  });
+
+  it('shows one pending batch progress, updated in place, until it is hidden', () => {
     feedback.showBatchDeleteProgress(1, 3);
     feedback.updateBatchDeleteProgress(2, 3);
-    expect(document.querySelector('.gv-batch-delete-progress')?.textContent).toBe('Deleting 2/3');
     feedback.showBatchDeleteProgress(1, 4);
-    expect(document.querySelectorAll('.gv-batch-delete-progress')).toHaveLength(1);
+    const progress = toastDriver.all();
+    expect(progress.map(({ message, pending }) => ({ message, pending }))).toEqual([
+      { message: 'Deleting 1/4', pending: true },
+    ]);
+    vi.advanceTimersByTime(60_000);
+    expect(toastDriver.messages()).toEqual(['Deleting 1/4']);
+
+    feedback.hideBatchDeleteProgress();
+    feedback.updateBatchDeleteProgress(3, 4);
+    expect(toastDriver.all()).toEqual([]);
+  });
+
+  it('disposes every pending feedback surface on destruction and shows nothing later', () => {
+    feedback.showBatchDeleteProgress(1, 4);
     feedback.showNotification('Pending');
-    feedback.showDataLossNotification();
+    feedback.showRecoveryNotification('lost');
     feedback.showTooltip(document.createElement('span'), 'Pending title', true);
 
     feedback.destroy();
-    expect(document.body.childElementCount).toBe(0);
-    expect(vi.getTimerCount()).toBe(0);
+    expect(toastDriver.all()).toEqual([]);
+    expect(document.querySelector('.gv-tooltip')).toBeNull();
     feedback.showNotification('Late completion');
     feedback.showBatchDeleteProgress(4, 4);
     vi.runAllTimers();
-    expect(document.body.childElementCount).toBe(0);
+    expect(toastDriver.all()).toEqual([]);
   });
 });

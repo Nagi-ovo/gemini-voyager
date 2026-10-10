@@ -40,7 +40,61 @@
         "position": {
           "type": "string",
           "required": false
+        },
+        "conversationIdAttribute": {
+          "type": "string",
+          "required": false,
+          "sinceEngine": "1.5.0"
+        },
+        "turnItem": {
+          "type": "selector",
+          "required": false,
+          "sinceEngine": "1.5.0"
+        },
+        "accountIdAttributes": {
+          "type": "string[]",
+          "required": false,
+          "sinceEngine": "1.5.0"
         }
+      }
+    },
+    "userLatex": {
+      "sinceEngine": "1.7.0",
+      "params": {
+        "turn": {
+          "type": "selector",
+          "required": false
+        }
+      }
+    },
+    "mermaid": {
+      "sinceEngine": "1.7.0",
+      "params": {
+        "turn": { "type": "selector", "required": false },
+        "codeBlock": { "type": "selector", "required": false },
+        "code": { "type": "selector", "required": false },
+        "codeLine": { "type": "selector", "required": false },
+        "language": { "type": "selector", "required": false }
+      }
+    },
+    "echarts": {
+      "sinceEngine": "1.7.0",
+      "params": {
+        "turn": { "type": "selector", "required": false },
+        "codeBlock": { "type": "selector", "required": false },
+        "code": { "type": "selector", "required": false },
+        "codeLine": { "type": "selector", "required": false },
+        "language": { "type": "selector", "required": false }
+      }
+    },
+    "wavedrom": {
+      "sinceEngine": "1.7.0",
+      "params": {
+        "turn": { "type": "selector", "required": false },
+        "codeBlock": { "type": "selector", "required": false },
+        "code": { "type": "selector", "required": false },
+        "codeLine": { "type": "selector", "required": false },
+        "language": { "type": "selector", "required": false }
       }
     }
   }

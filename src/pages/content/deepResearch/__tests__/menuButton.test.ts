@@ -1,17 +1,21 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { StorageKeys } from '@/core/types/common';
+import { ConversationExportService } from '@/features/export/services/ConversationExportService';
+import { toastDriver } from '@/tests/toastDriver';
 import type { AppLanguage } from '@/utils/language';
-import type { TranslationKey } from '@/utils/translations';
 
 import {
   applyDeepResearchDownloadButtonI18n,
   applyDeepResearchSaveReportButtonI18n,
   injectDownloadButton,
   isDeepResearchReportMenuPanel,
-  showDeepResearchExportProgressOverlay,
 } from '../menuButton';
+
+vi.mock('@/features/export/services/ImageExportPreferenceService', () => ({
+  getSavedImageExportWidth: async () => 800,
+  saveImageExportWidth: async () => {},
+}));
 
 function createNativeMenuButton({
   testId,
@@ -367,52 +371,129 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
     expect(panel.querySelector('.gv-deep-research-download')).toBeTruthy();
     expect(panel.querySelector('.gv-deep-research-save-report')).toBeTruthy();
   });
+});
 
-  it('renders and removes deep research export progress overlay', () => {
-    const dict: Record<AppLanguage, Record<string, string>> = {
-      en: { pm_export: 'Export', loading: 'Loading' },
-      zh: { pm_export: '导出', loading: '加载中' },
-      zh_TW: { pm_export: '匯出', loading: '載入中' },
-      ja: { pm_export: 'エクスポート', loading: '読み込み中' },
-      fr: { pm_export: 'Exporter', loading: 'Chargement' },
-      es: { pm_export: 'Exportar', loading: 'Cargando' },
-      pt: { pm_export: 'Exportar', loading: 'Carregando' },
-      ar: { pm_export: 'تصدير', loading: 'جارٍ التحميل' },
-      ru: { pm_export: 'Экспорт', loading: 'Загрузка' },
-      ko: { pm_export: '내보내기', loading: '로딩 중' },
-    };
-
-    const t = (key: TranslationKey): string => {
-      if (key === 'pm_export' || key === 'loading') {
-        return dict.en[key];
-      }
-      return '';
-    };
-    const hide = showDeepResearchExportProgressOverlay(t);
-
-    const overlay = document.querySelector('.gv-export-progress-overlay');
-    expect(overlay).toBeTruthy();
-    expect(overlay?.textContent).toContain('Export...');
-    expect(overlay?.textContent).toContain('Loading');
-
-    hide();
-
-    expect(document.querySelector('.gv-export-progress-overlay')).toBeNull();
+describe('downloading Deep Research thinking content', () => {
+  afterEach(() => {
+    document.body.replaceChildren();
+    vi.restoreAllMocks();
   });
 
-  it('wires Safari PDF report export success to runtime toast guidance', () => {
-    const code = readFileSync(
-      resolve(process.cwd(), 'src/pages/content/deepResearch/menuButton.ts'),
-      'utf8',
+  it.each([
+    { language: 'zh', message: '未找到可下载的 Thinking 内容。', close: '关闭' },
+    {
+      language: 'ja',
+      message: 'ダウンロードできる思考内容が見つかりませんでした。',
+      close: '閉じる',
+    },
+  ])(
+    'an empty thinking download shows a visible warning in $language',
+    async ({ language, message, close }) => {
+      let currentLanguage = 'en';
+      vi.spyOn(chrome.storage.sync, 'get').mockImplementation(
+        (_keys: unknown, callback?: (result: Record<string, unknown>) => void) => {
+          callback?.({ [StorageKeys.LANGUAGE]: currentLanguage });
+          return Promise.resolve({ [StorageKeys.LANGUAGE]: currentLanguage });
+        },
+      );
+      document.body.innerHTML = '<deep-research-immersive-panel></deep-research-immersive-panel>';
+      const panel = createDeepResearchReportMenuPanel();
+      await injectDownloadButton(panel);
+      // A menu can remain open while the language changes; the notice follows the click's language.
+      currentLanguage = language;
+      panel.querySelector<HTMLElement>('.gv-deep-research-download')!.click();
+
+      await vi.waitFor(() =>
+        expect(toastDriver.all()).toMatchObject([{ message, tone: 'warning' }]),
+      );
+      toastDriver.press(toastDriver.all()[0], close);
+      expect(toastDriver.all()).toEqual([]);
+    },
+  );
+});
+
+describe('saving a Deep Research report', () => {
+  const SAFARI_UA =
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15';
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document.body.innerHTML = '';
+  });
+
+  async function exportReportAs(format: string): Promise<void> {
+    (window as unknown as { chrome: unknown }).chrome = {
+      storage: { sync: { get: (_key: string, cb: (result: object) => void) => cb({}) } },
+    };
+    document.body.innerHTML = `
+      <deep-research-immersive-panel>
+        <div class="markdown"><h1>Solar report</h1><p>Findings</p></div>
+      </deep-research-immersive-panel>`;
+    const panel = createDeepResearchReportMenuPanel();
+    await injectDownloadButton(panel);
+    panel.querySelector<HTMLElement>('.gv-deep-research-save-report')!.click();
+
+    await vi.waitFor(() => expect(document.querySelector('.gv-export-dialog')).not.toBeNull());
+    const radio = document.querySelector<HTMLInputElement>(`input[value="${format}"]`)!;
+    radio.checked = true;
+    radio.dispatchEvent(new Event('change'));
+    document.querySelector<HTMLButtonElement>('.gv-export-dialog-btn-primary')!.click();
+  }
+
+  it('shows a pending progress toast until the report export settles', async () => {
+    let finish: (
+      result: Awaited<ReturnType<typeof ConversationExportService.export>>,
+    ) => void = () => {};
+    vi.spyOn(ConversationExportService, 'export').mockReturnValue(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
     );
 
-    expect(code).toContain('reportFinishedExport(result, format, t)');
-    const notice = readFileSync(
-      resolve(process.cwd(), 'src/features/export/ui/exportResultNotice.ts'),
-      'utf8',
+    await exportReportAs('json');
+
+    await vi.waitFor(() =>
+      expect(toastDriver.all()).toMatchObject([{ pending: true, role: 'status' }]),
     );
-    expect(notice).toContain("format === 'pdf'");
-    expect(notice).toContain('isSafari()');
-    expect(notice).toContain("t('export_toast_safari_pdf_ready')");
+    finish({ success: true, format: 'json' } as Awaited<
+      ReturnType<typeof ConversationExportService.export>
+    >);
+    await vi.waitFor(() => expect(toastDriver.all()).toEqual([]));
+  });
+
+  it('shows why the report export failed', async () => {
+    vi.spyOn(ConversationExportService, 'export').mockResolvedValue({
+      success: false,
+      format: 'json',
+      error: 'disk full',
+    } as Awaited<ReturnType<typeof ConversationExportService.export>>);
+
+    await exportReportAs('json');
+
+    await vi.waitFor(() =>
+      expect(toastDriver.all()).toMatchObject([
+        { message: expect.stringContaining('disk full'), tone: 'error' },
+      ]),
+    );
+  });
+
+  it('guides Safari through saving the finished report PDF', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(SAFARI_UA);
+    vi.spyOn(navigator, 'vendor', 'get').mockReturnValue('Apple Computer, Inc.');
+    vi.spyOn(ConversationExportService, 'export').mockResolvedValue({
+      success: true,
+      format: 'pdf',
+    } as Awaited<ReturnType<typeof ConversationExportService.export>>);
+
+    await exportReportAs('pdf');
+
+    await vi.waitFor(() =>
+      expect(toastDriver.messages()).toEqual(['You can now press Command + P to export PDF.']),
+    );
+    expect(ConversationExportService.export).toHaveBeenCalledWith(
+      expect.any(Array),
+      expect.objectContaining({ title: 'Solar report' }),
+      expect.objectContaining({ format: 'pdf', filename: 'Solar-report.pdf' }),
+    );
   });
 });

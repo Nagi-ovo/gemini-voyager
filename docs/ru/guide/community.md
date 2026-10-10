@@ -46,7 +46,7 @@
 
 Если вы нашли воспроизводимую ошибку, пожалуйста, откройте issue на GitHub. Запросы функций, идеи и вопросы публикуйте в Discussions, а не в issues:
 
-- [Сообщить об ошибке](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml)
-- [Предложить функцию или идею (Discussions)](https://github.com/Nagi-ovo/voyager/discussions)
+- [Сообщить об ошибке](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml)
+- [Предложить функцию или идею (Discussions)](https://github.com/voyager-crew/voyager/discussions)
 
 Спасибо за поддержку Voyager! ❤️

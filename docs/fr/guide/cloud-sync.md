@@ -8,9 +8,13 @@ Synchronisez vos dossiers, votre bibliothèque de prompts et d'autres données s
 - **Confidentialité des données** : Les données sont stockées directement dans votre propre espace Google Drive, garantissant la confidentialité sans serveurs tiers.
 - **Synchronisation flexible** : Prise en charge du téléchargement manuel et de la fusion des données.
 
-::: info
-**Bientôt disponible** : La prochaine version prendra en charge la synchronisation des conversations favorites.
-:::
+## Données favorites et limites de synchronisation
+
+Les sauvegardes cloud incluent le **texte complet des prompts utilisateur marqués d’une étoile** (jusqu’à 16 KiB UTF-8 par prompt) dans votre propre Google Drive ou iCloud. Les sauvegardes des favoris ne stockent pas les réponses du modèle. La sauvegarde v1 conserve seulement les aperçus ; la nouvelle v2 inclut le texte et les enregistrements de suppression.
+
+Les enregistrements de suppression sont conservés pendant 180 jours. Les anciennes versions de Voyager les ignorent et peuvent afficher ou renvoyer des favoris supprimés ; les nouvelles bloquent les anciennes copies dont l’horodatage est inchangé. Un nouvel ajout plus récent, ou l’expiration de l’enregistrement, peut restaurer un favori. Une longue période hors ligne et les écarts d’horloge peuvent aussi affecter les suppressions.
+
+La synchronisation fusionne et vérifie les écritures, avec trois tentatives au maximum, mais n’est pas une transaction atomique entre appareils : des envois simultanés peuvent s’écraser. Une synchronisation ultérieure depuis un appareil conservant les données manquantes peut les rétablir ; sinon, la récupération n’est pas garantie. Les échecs partiels conservent les écritures acceptées ; relancez la synchronisation pour terminer la réparation.
 
 ## Comment utiliser
 

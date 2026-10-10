@@ -7,12 +7,14 @@ import {
 } from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
+import { toastDriver } from '@/tests/toastDriver';
 
 import { FolderStore } from '../FolderStore';
 import { FolderManager } from '../manager';
 import * as storageAdapters from '../storage/FolderStorageAdapter';
 import type { FolderData } from '../types';
 import { mountSidebar } from './sidebarRuntimeHarness';
+import { sidebarTree, sidebarTreeRoot } from './sidebarTreeDriver';
 
 vi.mock('webextension-polyfill', () => ({ default: chrome }));
 vi.mock('@/utils/i18n', () => ({
@@ -22,6 +24,16 @@ vi.mock('@/utils/i18n', () => ({
 }));
 
 type Surface = 'sidebar' | 'floating' | 'fab';
+
+/** Everything the page shows, the trees in shadow roots included. */
+const pageText = () =>
+  [document.body, ...Array.from(document.querySelectorAll('*'), (element) => element.shadowRoot)]
+    .map((node) => node?.textContent ?? '')
+    .join('');
+
+/** The folders the sidebar's tree shows. */
+const sidebarFolders = () =>
+  sidebarTree(document.querySelector('.gv-folder-container')).folderNames();
 
 function accountData(account: string): FolderData {
   return {
@@ -136,24 +148,29 @@ describe('FolderManager account routes across mounted surfaces', () => {
       await vi.advanceTimersByTimeAsync(0);
 
       expect(instance.getFolders()).toEqual([]);
-      expect(document.body.textContent).not.toContain('Private a');
+      expect(pageText()).not.toContain('Private a');
       if (surface === 'fab') {
         const fab = document.querySelector<HTMLButtonElement>('.gv-floating-fab')!;
         expect(fab).not.toBeNull();
         fab.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
         await vi.advanceTimersByTimeAsync(0);
       }
-      const root = document.querySelector<HTMLElement>(
+      const host = document.querySelector<HTMLElement>(
         surface === 'sidebar' ? '.gv-folder-container' : '.gv-floating-folder-panel',
       )!;
+      // The floating panel renders inside its shadow root; the sidebar's tree in one in the panel.
+      const root: ParentNode & Node = host.shadowRoot ?? host;
       const create = root.querySelector<HTMLButtonElement>(
         surface === 'sidebar' ? '.gv-folder-add-btn' : '[aria-label="floatingPanelCreateFolder"]',
       )!;
-      const editorSelector =
-        surface === 'sidebar' ? '.gv-folder-name-input' : '.gv-floating-folder-panel__inline-input';
+      const tree = () => (surface === 'sidebar' ? sidebarTreeRoot(host) : root);
+      const editor = () =>
+        tree().querySelector<HTMLInputElement>(
+          `input[placeholder="floatingPanelFolderNamePlaceholder"]`,
+        );
       expect(create.disabled).toBe(true);
       create.click();
-      expect(root.querySelector(editorSelector)).toBeNull();
+      expect(editor()).toBeNull();
       expect(adapter.saveData).not.toHaveBeenCalled();
 
       resolution.resolve(accountScope('b', '2'));
@@ -164,10 +181,10 @@ describe('FolderManager account routes across mounted surfaces', () => {
       await vi.advanceTimersByTimeAsync(0);
 
       expect(create.disabled).toBe(false);
-      expect(root.textContent).toContain('Private b');
+      expect(tree().textContent).toContain('Private b');
       expect(instance.getFolders().map((folder) => folder.name)).toEqual(['Private b']);
       create.click();
-      const input = root.querySelector<HTMLInputElement>(editorSelector)!;
+      const input = editor()!;
       input.value = 'Created for B';
       input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
       await vi.advanceTimersByTimeAsync(0);
@@ -205,20 +222,20 @@ describe('FolderManager account routes across mounted surfaces', () => {
 
     history.pushState({}, '', '/u/2/app');
     await vi.advanceTimersByTimeAsync(0);
-    expect(document.querySelector('.gv-folder-list')?.textContent).toContain('Private b');
-    expect(document.querySelector('.gv-folder-list')?.textContent).not.toContain('Imported A');
+    expect(sidebarFolders()).toContain('Private b');
+    expect(sidebarFolders()).not.toContain('Imported A');
     expect(document.querySelector('.gv-folder-import-dialog')).toBeNull();
     history.pushState({}, '', '/u/1/app');
     await vi.advanceTimersByTimeAsync(0);
     expect(instance.getFolders().map((folder) => folder.name)).toEqual(['Private a']);
-    expect(document.querySelector('.gv-folder-list')?.textContent).toContain('Private a');
+    expect(sidebarFolders()).toContain('Private a');
 
     write.resolve(true);
     await vi.advanceTimersByTimeAsync(0);
     expect(instance.getFolders().map((folder) => folder.name)).toEqual(['Private a', 'Imported A']);
-    expect(document.querySelector('.gv-folder-list')?.textContent).toContain('Imported A');
-    expect(document.querySelector('.gv-folder-list')?.textContent).not.toContain('Private b');
-    expect(document.querySelector('.gv-notification-success')).toBeNull();
+    expect(sidebarFolders()).toContain('Imported A');
+    expect(sidebarFolders()).not.toContain('Private b');
+    expect(toastDriver.all().filter(({ tone }) => tone === 'success')).toEqual([]);
   });
 
   it.each(['floating', 'fab'] as const)(

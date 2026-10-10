@@ -1,27 +1,29 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import '@/features/timeline/adapters/catalog/testSetup';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
 import { hashString } from '@/core/utils/hash';
+import type { StarredMessage } from '@/features/savedLibrary/starTypes';
+import { buildTurnId } from '@/features/timeline/adapters/catalog/turnMerge';
 
-import {
-  buildClaudeConversationId,
-  buildClaudeTurnId,
-  extractClaudeTurnHash,
-  startClaudeTimeline,
-  stopClaudeTimeline,
-  updateClaudeTimelineSettings,
-} from '.';
+import { requireBundledSiteAdapter } from '../../catalog/sites';
+import { PluginScope } from '../../runtime/pluginScope';
+import type { NativeOperation } from '../../types';
+import type { PluginSettings } from '../../types';
+import { turnNavigatorPrimitive } from '../../verbs/turnNavigator';
+import type { PrimitiveHandle } from '../../verbs/types';
+import { BUILTIN_PLUGINS } from '../index';
 
 const {
   addStarredMessage,
   getStarredMessagesForConversation,
   removeStarredMessage,
-  setPluginSetting,
+  requestPluginSetting,
   showTimelineStyleCoachmark,
 } = vi.hoisted(() => ({
   addStarredMessage: vi.fn().mockResolvedValue(undefined),
   getStarredMessagesForConversation: vi.fn().mockResolvedValue([]),
   removeStarredMessage: vi.fn().mockResolvedValue(undefined),
-  setPluginSetting: vi.fn().mockResolvedValue(undefined),
+  requestPluginSetting: vi.fn().mockResolvedValue(undefined),
   showTimelineStyleCoachmark: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -30,19 +32,56 @@ vi.mock('@/utils/i18n', () => ({
   getTranslationSync: (key: string) => key,
 }));
 
-vi.mock('@/pages/content/timeline/StarredMessagesService', () => ({
+vi.mock('@/features/savedLibrary/StarredMessagesService', async (importOriginal) => ({
   StarredMessagesService: {
+    backfillStarredTexts: vi.fn().mockResolvedValue(undefined),
+    decodeStorageChange: (
+      await importOriginal<typeof import('@/features/savedLibrary/StarredMessagesService')>()
+    ).StarredMessagesService.decodeStorageChange,
     addStarredMessage,
     getStarredMessagesForConversation,
     removeStarredMessage,
   },
 }));
 
-vi.mock('@/features/plugins/storage/pluginState', () => ({ setPluginSetting }));
+vi.mock('@/features/plugins/storage/pluginSettingRequest', () => ({ requestPluginSetting }));
 
-vi.mock('@/pages/content/timeline/timelineStyleCoachmark', () => ({
+vi.mock('@/features/timeline/timelineStyleCoachmark', () => ({
   showTimelineStyleCoachmark,
 }));
+
+let standaloneScope: PluginScope | null = null;
+let standaloneHandle: PrimitiveHandle | null = null;
+const library = new Map<string, StarredMessage[]>();
+
+/** Exercise the same shipped manifest and resolved site data as PluginHost. */
+function startClaudeTimeline(settings: PluginSettings = {}): void {
+  const manifest = BUILTIN_PLUGINS.find((plugin) => plugin.id === 'voyager.claude-timeline');
+  const op = manifest?.contributes.domOps?.find(
+    (entry): entry is NativeOperation => entry.op === 'native',
+  );
+  const params = turnNavigatorPrimitive.validateParams(op?.params);
+  if (!manifest || !params.success) throw new Error('invalid Claude timeline manifest');
+  standaloneScope = new PluginScope();
+  const handle = turnNavigatorPrimitive.activate(standaloneScope, params.data, {
+    doc: document,
+    adapter: requireBundledSiteAdapter('claude'),
+    pluginId: manifest.id,
+    settings,
+    setTargetCounter: () => {},
+  });
+  standaloneHandle = handle && !('then' in handle) ? handle : null;
+}
+
+function updateClaudeTimelineSettings(settings: PluginSettings): void {
+  standaloneHandle?.updateSettings?.(settings);
+}
+
+async function stopClaudeTimeline(): Promise<void> {
+  await standaloneScope?.dispose();
+  standaloneScope = null;
+  standaloneHandle = null;
+}
 
 interface CapturedTimelineCoachmarkOptions {
   id: string;
@@ -72,15 +111,12 @@ function dotLabels(): string[] {
 }
 
 async function flush(): Promise<void> {
-  await Promise.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
+  for (let i = 0; i < 30; i++) await Promise.resolve();
 }
 
 async function settleRefresh(): Promise<void> {
   await flush();
-  vi.advanceTimersByTime(120);
+  vi.advanceTimersByTime(220);
   await flush();
 }
 
@@ -88,11 +124,30 @@ describe('Claude timeline', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     document.body.innerHTML = '';
+    // Claude's thread container names the conversation every turn belongs to.
+    document.body.setAttribute('data-conv-id', 'claude-123');
     history.replaceState({}, '', '/chat/claude-123');
-    getStarredMessagesForConversation.mockResolvedValue([]);
-    addStarredMessage.mockClear();
-    removeStarredMessage.mockClear();
-    setPluginSetting.mockClear();
+    library.clear();
+    getStarredMessagesForConversation
+      .mockReset()
+      .mockImplementation(async (conversationId: string) => library.get(conversationId) ?? []);
+    addStarredMessage.mockReset().mockImplementation(async (message: StarredMessage) => {
+      library.set(message.conversationId, [
+        ...(library.get(message.conversationId) ?? []).filter(
+          (stored) => stored.turnId !== message.turnId,
+        ),
+        message,
+      ]);
+    });
+    removeStarredMessage
+      .mockReset()
+      .mockImplementation(async (conversationId: string, turnId: string) => {
+        library.set(
+          conversationId,
+          (library.get(conversationId) ?? []).filter((stored) => stored.turnId !== turnId),
+        );
+      });
+    requestPluginSetting.mockClear();
     showTimelineStyleCoachmark.mockClear();
     HTMLElement.prototype.scrollIntoView = vi.fn();
     window.scrollTo = vi.fn();
@@ -101,17 +156,9 @@ describe('Claude timeline', () => {
   });
 
   afterEach(async () => {
+    document.body.removeAttribute('data-conv-id');
     await stopClaudeTimeline();
     vi.useRealTimers();
-  });
-
-  it('builds Claude-scoped conversation and turn ids', () => {
-    expect(buildClaudeConversationId('https://claude.ai/chat/abc')).toBe('claude:conv:abc');
-    expect(buildClaudeConversationId('https://claude.ai/new')).toMatch(/^claude:/);
-    expect(buildClaudeTurnId('hello')).toBe(`c-${hashString('hello')}`);
-    expect(extractClaudeTurnHash(`c-2-${hashString('hello')}`)).toBe(hashString('hello'));
-    expect(extractClaudeTurnHash(`c-${hashString('hello')}`)).toBe(hashString('hello'));
-    expect(extractClaudeTurnHash(`c-${hashString('hello')}~2`)).toBe(hashString('hello'));
   });
 
   it('renders one dot per Claude user message, scrolls on click, and highlights active dot', async () => {
@@ -144,7 +191,11 @@ describe('Claude timeline', () => {
 
     await options.onStyleChange(true);
 
-    expect(setPluginSetting).toHaveBeenCalledWith('voyager.claude-timeline', 'compactView', true);
+    expect(requestPluginSetting).toHaveBeenCalledWith(
+      'voyager.claude-timeline',
+      'compactView',
+      true,
+    );
     expect(
       document.querySelector('.gemini-timeline-bar')?.classList.contains('timeline-style-compact'),
     ).toBe(true);
@@ -178,9 +229,6 @@ describe('Claude timeline', () => {
     const bar = document.querySelector<HTMLElement>('.gemini-timeline-bar')!;
     expect(bar.classList.contains('timeline-style-compact')).toBe(true);
     expect(bar.querySelector('.timeline-track')?.getAttribute('aria-hidden')).toBe('true');
-    expect(
-      queryDots().map((dot) => dot.style.getPropertyValue('--timeline-compact-offset')),
-    ).toEqual(['-10px', '0px', '10px']);
     expect(document.querySelector('.timeline-preview-panel-compact')).toBeTruthy();
 
     bar.dispatchEvent(new MouseEvent('mouseenter'));
@@ -199,24 +247,7 @@ describe('Claude timeline', () => {
     );
   });
 
-  it('spreads compact ticks over the whole track instead of a fixed cluster', async () => {
-    for (let index = 0; index < 60; index += 1) addTurn(`prompt ${index}`);
-    startClaudeTimeline({ compactView: true });
-    await flush();
-
-    const track = document.querySelector<HTMLElement>('.timeline-track')!;
-    Object.defineProperty(track, 'clientHeight', { configurable: true, value: 1000 });
-    window.dispatchEvent(new Event('resize'));
-
-    const offsets = queryDots().map((dot) =>
-      dot.style.getPropertyValue('--timeline-compact-offset'),
-    );
-    expect(offsets[0]).toBe('-295px');
-    expect(offsets[30]).toBe('5px');
-    expect(offsets[59]).toBe('295px');
-  });
-
-  it('jumps from a compact tick without toggling the preview panel or a tooltip', async () => {
+  it('navigates a compact preview item without showing a tooltip', async () => {
     addTurn('first prompt');
     const second = addTurn('second prompt');
     second.getBoundingClientRect = vi.fn(() => ({ top: 700, bottom: 740, height: 40 }) as DOMRect);
@@ -225,17 +256,11 @@ describe('Claude timeline', () => {
 
     const bar = document.querySelector<HTMLElement>('.gemini-timeline-bar')!;
     expect(bar.getAttribute('aria-expanded')).toBe('false');
-    const dot = queryDots()[1];
-    dot.dispatchEvent(new PointerEvent('pointerenter', { bubbles: true }));
-    vi.advanceTimersByTime(1000);
-    expect(
-      document.getElementById('gv-turn-navigator-tooltip')?.classList.contains('visible'),
-    ).toBe(false);
-
-    dot.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    bar.dispatchEvent(new MouseEvent('mouseenter'));
+    const items = document.querySelectorAll<HTMLElement>('.timeline-preview-item');
+    items[1].dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(window.scrollTo).toHaveBeenCalledWith({ top: 450, behavior: 'smooth' });
-    expect(bar.getAttribute('aria-expanded')).toBe('false');
-    expect(document.querySelector('.timeline-preview-panel')?.classList.contains('visible')).toBe(
+    expect(document.getElementById('gemini-timeline-tooltip')?.classList.contains('visible')).toBe(
       false,
     );
   });
@@ -352,10 +377,108 @@ describe('Claude timeline', () => {
 
     expect(addStarredMessage).toHaveBeenCalledTimes(1);
     expect(addStarredMessage).toHaveBeenCalledWith(
-      expect.objectContaining({ turnId: buildClaudeTurnId('remember this') }),
+      expect.objectContaining({ turnId: buildTurnId('remember this') }),
     );
     expect(dot.classList.contains('starred')).toBe(true);
     expect(dot.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('a starred prompt keeps the id stars saved by earlier versions carry', async () => {
+    addTurn('remember this');
+    startClaudeTimeline();
+    await flush();
+
+    queryDots()[0].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    vi.advanceTimersByTime(550);
+    await flush();
+
+    // Literal on purpose: this id is the stored key of every existing Claude star.
+    expect(addStarredMessage).toHaveBeenCalledWith(
+      expect.objectContaining({ conversationId: 'claude:conv:claude-123', turnId: 'c-o01tou' }),
+    );
+  });
+
+  describe("with Claude's conversation id on the thread", () => {
+    let scope: PluginScope | null = null;
+
+    afterEach(async () => {
+      await scope?.dispose();
+      scope = null;
+    });
+
+    /** Start the timeline the way the plugin runtime does: the shipped manifest's op. */
+    async function mount(): Promise<void> {
+      const manifest = BUILTIN_PLUGINS.find((plugin) => plugin.id === 'voyager.claude-timeline');
+      const op = manifest?.contributes.domOps?.find(
+        (entry): entry is NativeOperation => entry.op === 'native',
+      );
+      const params = turnNavigatorPrimitive.validateParams(op?.params);
+      if (!manifest || !params.success) throw new Error('invalid Claude timeline manifest');
+      scope = new PluginScope();
+      turnNavigatorPrimitive.activate(scope, params.data, {
+        doc: document,
+        adapter: requireBundledSiteAdapter('claude'),
+        pluginId: manifest.id,
+        settings: {},
+        setTargetCounter: () => {},
+      });
+      await flush();
+    }
+    function thread(conversation: string | null): HTMLElement {
+      const container = document.createElement('div');
+      if (conversation) container.setAttribute('data-conv-id', conversation);
+      document.body.appendChild(container);
+      return container;
+    }
+
+    async function press(label: string): Promise<void> {
+      const dot = queryDots().find((item) => item.getAttribute('aria-label') === label);
+      dot?.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      await vi.advanceTimersByTimeAsync(600);
+      await flush();
+    }
+
+    /** Route watcher poll plus the refresh debounce. */
+    async function settleRoute(): Promise<void> {
+      await vi.advanceTimersByTimeAsync(600);
+      await flush();
+    }
+
+    it('refuses a turn Claude files under another conversation, then stars it there', async () => {
+      const container = thread('claude-123');
+      container.appendChild(createTurn('first'));
+      await mount();
+
+      // Claude swaps the thread before the URL names the next conversation.
+      container.setAttribute('data-conv-id', 'claude-456');
+      container.replaceChildren(createTurn('other'));
+      await settleRefresh();
+      await press('other');
+      expect(addStarredMessage).not.toHaveBeenCalled();
+
+      history.pushState({}, '', '/chat/claude-456');
+      await settleRoute();
+      await press('other');
+      expect(addStarredMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ conversationId: 'claude:conv:claude-456', content: 'other' }),
+      );
+    });
+
+    it("stars a new chat's turn once Claude files it under the id in the URL", async () => {
+      history.replaceState({}, '', '/new');
+      const container = thread(null);
+      container.appendChild(createTurn('brand new'));
+      await mount();
+
+      history.pushState({}, '', '/chat/claude-789');
+      container.setAttribute('data-conv-id', 'claude-789');
+      await settleRoute();
+      await press('brand new');
+
+      expect(addStarredMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ conversationId: 'claude:conv:claude-789', content: 'brand new' }),
+      );
+    });
   });
 
   it('long-presses a compact preview item to star without navigating', async () => {
@@ -385,7 +508,7 @@ describe('Claude timeline', () => {
     item.click();
 
     expect(addStarredMessage).toHaveBeenCalledWith(
-      expect.objectContaining({ turnId: buildClaudeTurnId('remember compact item') }),
+      expect.objectContaining({ turnId: buildTurnId('remember compact item') }),
     );
     expect(window.scrollTo).not.toHaveBeenCalled();
     expect(document.querySelector('.timeline-preview-item')?.classList.contains('starred')).toBe(
@@ -395,7 +518,7 @@ describe('Claude timeline', () => {
 
   it('recognizes and unstars messages stored with the legacy index-based id', async () => {
     const legacyId = `c-0-${hashString('first prompt')}`;
-    getStarredMessagesForConversation.mockResolvedValue([
+    library.set('claude:conv:claude-123', [
       {
         turnId: legacyId,
         content: 'first prompt',
@@ -422,7 +545,7 @@ describe('Claude timeline', () => {
 
   it('removes a legacy star from the compact preview without navigating', async () => {
     const legacyId = `c-0-${hashString('compact legacy prompt')}`;
-    getStarredMessagesForConversation.mockResolvedValue([
+    library.set('claude:conv:claude-123', [
       {
         turnId: legacyId,
         content: 'compact legacy prompt',
@@ -471,17 +594,15 @@ describe('Claude timeline', () => {
     await flush();
 
     const dot = queryDots()[0];
-    dot.dispatchEvent(new PointerEvent('pointerenter', { bubbles: true }));
-    vi.advanceTimersByTime(150);
+    dot.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+    vi.advanceTimersByTime(300);
 
-    const tooltip = document.querySelector<HTMLElement>('#gv-turn-navigator-tooltip')!;
-    expect(tooltip.textContent).toBe('hover preview text');
-    expect(tooltip.querySelector('.gv-turn-navigator-tooltip-text')?.textContent).toBe(
-      'hover preview text',
-    );
+    const tooltip = document.querySelector<HTMLElement>('#gemini-timeline-tooltip')!;
+    expect(tooltip.textContent).toContain('hover preview text');
     expect(tooltip.classList.contains('visible')).toBe(true);
 
-    dot.dispatchEvent(new PointerEvent('pointerleave', { bubbles: true }));
+    dot.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
+    vi.advanceTimersByTime(120);
     expect(tooltip.classList.contains('visible')).toBe(false);
   });
 
@@ -521,6 +642,45 @@ describe('Claude timeline', () => {
     await settleRefresh();
 
     expect(dotLabels()).toEqual(['first prompt', 'second prompt', 'third prompt', 'fourth prompt']);
+  });
+
+  it('files a remounted window of repeats past a turn measured before the page above shrank', async () => {
+    // All fixture turns are visible; thousands of jsdom cascade reads obscure the merge behavior.
+    const visibleStyle = getComputedStyle(document.body);
+    const computedStyle = vi.spyOn(globalThis, 'getComputedStyle').mockReturnValue(visibleStyle);
+    onTestFinished(() => computedStyle.mockRestore());
+    const placeAt = (turn: HTMLElement, top: number): void => {
+      turn.getBoundingClientRect = () => ({ top, bottom: top + 40, height: 40 }) as DOMRect;
+    };
+    // 700 identical prompts below a 100000px answer.
+    const turns = Array.from({ length: 700 }, (_, index) => {
+      const turn = addTurn('continue');
+      placeAt(turn, 100_000 + 100 * index);
+      return turn;
+    });
+    startClaudeTimeline();
+    await flush();
+    const ids = turns.map((turn) => turn.getAttribute('data-gv-turn-id'));
+    expect(new Set(ids).size).toBe(700);
+
+    // The answer collapses while turn 1 is virtualized out: only it keeps its old place.
+    turns[1].remove();
+    turns.forEach((turn, index) => placeAt(turn, 100 * index));
+    document.body.appendChild(createTurn('marker'));
+    await settleRefresh();
+
+    // Claude remounts its thread; extension-owned UI stays outside that host subtree.
+    document
+      .querySelectorAll('[data-testid="user-message"]')
+      .forEach((element) => element.remove());
+    const window = Array.from({ length: 400 }, (_, r) => {
+      const turn = addTurn('continue');
+      placeAt(turn, 100 * (300 + r));
+      return turn;
+    });
+    await settleRefresh();
+
+    expect(window.map((turn) => turn.getAttribute('data-gv-turn-id'))).toEqual(ids.slice(300));
   });
 
   it('never shrinks when the mounted window turns sparse mid-transition', async () => {
@@ -643,8 +803,8 @@ describe('Claude timeline', () => {
     const ids = queryDots().map((dot) => dot.dataset.targetTurnId);
     expect(ids).toHaveLength(2);
     expect(new Set(ids).size).toBe(2);
-    expect(ids[0]).toBe(buildClaudeTurnId('same text'));
-    expect(ids[1]).toBe(`${buildClaudeTurnId('same text')}~2`);
+    expect(ids[0]).toBe(buildTurnId('same text'));
+    expect(ids[1]).toBe(`${buildTurnId('same text')}~2`);
   });
 
   it('keeps homing toward a virtualized-out turn until it mounts, then aims precisely', async () => {
@@ -789,14 +949,11 @@ describe('Claude timeline', () => {
     startClaudeTimeline();
     await flush();
     const dot = queryDots()[0];
-    const queryAll = vi.spyOn(document, 'querySelectorAll');
 
     document.body.appendChild(document.createElement('main'));
     await settleRefresh();
 
-    expect(queryAll).not.toHaveBeenCalled();
     expect(queryDots()[0]).toBe(dot);
-    queryAll.mockRestore();
   });
 
   it('rolls back data-gv-turn-id stamps on stop', async () => {

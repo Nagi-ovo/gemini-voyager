@@ -1,15 +1,17 @@
 import { StorageKeys } from '@/core/types/common';
 import { getVoyagerBuildTarget } from '@/core/utils/browser';
 import { hashString } from '@/core/utils/hash';
+import {
+  FOLDER_PLATFORMS,
+  type AccountScopedFolderPlatform,
+  supportsAccountIsolation,
+  getFolderPlatformForHost,
+} from '@/features/folder/platforms';
 
 const EMAIL_PATTERN = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i;
 const PROFILE_MAP_VERSION = 1;
 const PROFILE_MAP_LOCK_NAME = 'gv-account-profile-map';
 const ACCOUNT_SCOPE_RESOLVE_MESSAGE = 'gv.account.resolve';
-const ACCOUNT_ISOLATION_KEY_BY_PLATFORM = {
-  gemini: StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI,
-  aistudio: StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO,
-} as const;
 
 interface AccountProfileRecord {
   id: number;
@@ -45,37 +47,53 @@ export interface AccountContext {
   email: string | null;
 }
 
-export type AccountPlatform = 'gemini' | 'aistudio';
+/** Platforms with their own folder bucket and account isolation switch. */
+export type AccountPlatform = AccountScopedFolderPlatform;
 
 interface AccountScopeResolveResponse {
   ok: true;
   scope: AccountScope;
 }
 
-function parseHostname(url: string): string | null {
+function parseUrl(url: string): URL | null {
   try {
-    return new URL(url).hostname.toLowerCase();
+    return new URL(url);
   } catch {
     return null;
   }
 }
 
+function parseHostname(url: string): string | null {
+  return parseUrl(url)?.hostname.toLowerCase() ?? null;
+}
+
 function isAIStudioHost(hostname: string | null): boolean {
-  return hostname === 'aistudio.google.com' || hostname === 'aistudio.google.cn';
+  return getFolderPlatformForHost(hostname) === 'aistudio';
 }
 
 function isGeminiHost(hostname: string | null): boolean {
-  return hostname === 'gemini.google.com' || hostname === 'business.gemini.google';
+  return getFolderPlatformForHost(hostname) === 'gemini';
 }
 
-export function detectAccountPlatformFromUrl(pageUrl: string | null | undefined): AccountPlatform {
-  const hostname = parseHostname(pageUrl || '');
-  if (isAIStudioHost(hostname)) return 'aistudio';
-  return 'gemini';
+/**
+ * Resolve the folder/account platform that owns a page.
+ *
+ * Returns `null` for any other web page (ChatGPT, Claude, DeepSeek, custom websites): those sites
+ * have no account-isolated bucket. ChatGPT folders remain unscoped until isolation is supported.
+ * Without a web page (missing URL, new tab, extension pages) the historical Gemini default stays,
+ * matching the popup's full Gemini settings surface on those tabs.
+ */
+export function detectAccountPlatformFromUrl(
+  pageUrl: string | null | undefined,
+): AccountPlatform | null {
+  const parsed = parseUrl(pageUrl || '');
+  if (!parsed || (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')) return 'gemini';
+  const platform = getFolderPlatformForHost(parsed.hostname);
+  return platform && supportsAccountIsolation(platform) ? platform : null;
 }
 
 export function getAccountIsolationStorageKey(platform: AccountPlatform): string {
-  return ACCOUNT_ISOLATION_KEY_BY_PLATFORM[platform];
+  return FOLDER_PLATFORMS[platform].accountIsolationStorageKey;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -296,11 +314,16 @@ export class AccountIsolationService {
   }
 
   async isIsolationEnabled(options?: {
-    platform?: AccountPlatform;
+    /** `null` means a site without a folder bucket; omit it to detect from `pageUrl`. */
+    platform?: AccountPlatform | null;
     pageUrl?: string | null;
   }): Promise<boolean> {
     try {
-      const platform = options?.platform ?? detectAccountPlatformFromUrl(options?.pageUrl ?? null);
+      const platform =
+        options?.platform === undefined
+          ? detectAccountPlatformFromUrl(options?.pageUrl ?? null)
+          : options.platform;
+      if (!platform) return false;
       const platformKey = getAccountIsolationStorageKey(platform);
       const result = await chrome.storage.sync.get([
         platformKey,

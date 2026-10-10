@@ -1,7 +1,8 @@
+import { getGeminiTurnSelectors } from '@/core/gemini/turnSelectors';
 import { hashString } from '@/core/utils/hash';
+import type { TimelineMarker } from '@/features/timeline/types';
 
 import { makeStableTurnId, readServerTurnId } from '../fork/turnId';
-import type { TimelineMarker } from './types';
 /** Accessibility prefixes injected by Gemini's DOM that should be stripped from previews effectively globally. */
 // Anchored to the start, so it only strips leading invisible characters and can
 // never split an emoji sequence in the label body.
@@ -9,18 +10,7 @@ const TURN_LABEL_PREFIXES =
   // oxlint-disable-next-line no-misleading-character-class
   /^[\u200B\u200C\u200D\u200E\u200F\uFEFF]*(?:you said|you wrote|user message|your prompt|you asked)[:\s]*/i;
 const VISUALLY_HIDDEN_CLASS_FRAGMENT = 'visually-hidden';
-const INJECTED_UI_SELECTOR = '.gv-fork-btn, .gv-fork-confirm, .gv-fork-indicator-group';
-const ASSISTANT_PREVIEW_SELECTOR = [
-  '[aria-label="Gemini response"]',
-  '[data-message-author-role="assistant"]',
-  '[data-message-author-role="model"]',
-  'article[data-author="assistant"]',
-  'article[data-turn="assistant"]',
-  'article[data-turn="model"]',
-  '.model-response',
-  'model-response',
-  '.response-container',
-].join(',');
+const INJECTED_UI_SELECTOR = '.gv-fork-btn, .gv-fork-indicator-group';
 const ASSISTANT_PREVIEW_CONTENT_SELECTOR =
   'message-content, .markdown, .markdown-main-panel, .presented-response-container, .response-content, response-element';
 const ASSISTANT_PREVIEW_EXCLUDED_SELECTOR =
@@ -161,7 +151,9 @@ export class TimelineTurns {
     if (!conversationContainer || userTurns.length === 0) return summaries;
 
     const assistantCandidates = Array.from(
-      conversationContainer.querySelectorAll<HTMLElement>(ASSISTANT_PREVIEW_SELECTOR),
+      conversationContainer.querySelectorAll<HTMLElement>(
+        getGeminiTurnSelectors('turn.assistant').join(','),
+      ),
     ).filter(
       (candidate) =>
         !candidate.closest('deep-research-immersive-panel') &&

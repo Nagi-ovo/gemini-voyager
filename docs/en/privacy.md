@@ -52,4 +52,4 @@ We may update this Privacy Policy as Voyager changes. The latest version and its
 
 ## Contact Us
 
-For privacy questions, contact us through the [Voyager GitHub repository](https://github.com/Nagi-ovo/voyager).
+For privacy questions, contact us through the [Voyager GitHub repository](https://github.com/voyager-crew/voyager).

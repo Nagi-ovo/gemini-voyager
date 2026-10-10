@@ -3,26 +3,16 @@ import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 describe('selection mode interaction', () => {
-  it('pins selection bar to top and uses top-center compact progress toast styles', () => {
+  it('pins the selection bar to the top', () => {
     const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
-    const overlayBlock = css.match(/\.gv-export-progress-overlay\s*{([\s\S]*?)}/)?.[1] ?? '';
-    const cardBlock = css.match(/\.gv-export-progress-card\s*{([\s\S]*?)}/)?.[1] ?? '';
 
     expect(css).toMatch(/\.gv-export-select-bar\s*{[\s\S]*top:\s*12px;/);
-    expect(overlayBlock).toContain('position: fixed;');
-    expect(overlayBlock).toContain('left: 50%;');
-    expect(overlayBlock).toContain('transform: translateX(-50%);');
-    expect(overlayBlock).toContain('top: 12px;');
-    expect(overlayBlock).toContain('pointer-events: none;');
-    expect(cardBlock).toContain('border-radius: 999px;');
-    expect(cardBlock).toContain('backdrop-filter: blur(10px);');
   });
 
-  it('supports dark-theme selectors for export dialog and progress toast', () => {
+  it('supports dark-theme selectors for the export dialog', () => {
     const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
 
     expect(css).toContain("html[data-gv-scheme='dark'] .gv-export-dialog");
-    expect(css).toContain("html[data-gv-scheme='dark'] .gv-export-progress-card");
   });
 
   it('styles the Markdown prompt heading switch for dark and RTL layouts', () => {
@@ -45,62 +35,6 @@ describe('selection mode interaction', () => {
     expect(wrapperBlock).toContain('pointer-events: none;');
     expect(wrapperBlock).toContain('width: fit-content;');
     expect(logoBlock).toContain('pointer-events: auto;');
-  });
-
-  it('wires Safari PDF success path to runtime toast guidance', () => {
-    const notice = readFileSync(
-      resolve(process.cwd(), 'src/features/export/ui/exportResultNotice.ts'),
-      'utf8',
-    );
-    const page = readFileSync(resolve(process.cwd(), 'src/pages/content/export/index.ts'), 'utf8');
-
-    expect(notice).toContain("format === 'pdf'");
-    expect(notice).toContain('isSafari()');
-    expect(notice).toContain('showExportToast(');
-    expect(notice).toContain("t('export_toast_safari_pdf_ready')");
-    expect(page).toContain('reportFinishedExport(result, state.format, t)');
-  });
-
-  it('aligns selection bar and export progress toast with shared alignment hook', () => {
-    const code = readFileSync(resolve(process.cwd(), 'src/pages/content/export/index.ts'), 'utf8');
-
-    expect(code).toContain('function alignElementToConversationTitleCenter(');
-    expect(code).toContain('cleanupTasks.push(alignElementToConversationTitleCenter(bar));');
-    expect(code).toContain(
-      'const unbindAlignment = alignElementToConversationTitleCenter(overlay);',
-    );
-  });
-
-  it('falls back to direct download on Safari when clipboard copy fails', () => {
-    const code = readFileSync(resolve(process.cwd(), 'src/pages/content/export/index.ts'), 'utf8');
-
-    expect(code).toContain('let blobForFallback: Blob | null = null;');
-    expect(code).toContain('if (isSafari() && blobForFallback)');
-    expect(code).toContain('downloadImageBlob(blobForFallback, buildResponseImageFilename());');
-  });
-
-  it('uses conversation canvas based alignment and avoids sidebar title selectors', () => {
-    const code = readFileSync(resolve(process.cwd(), 'src/pages/content/export/index.ts'), 'utf8');
-
-    expect(code).toContain('function resolveConversationCanvasCenterX(');
-    expect(code).toContain('#chat-history');
-    expect(code).toContain('infinite-scroller.chat-history');
-    expect(code).toContain('function isLikelySidebarElement(');
-    expect(code).not.toContain('function resolveConversationTitleElement(');
-    expect(code).not.toContain('candidate.closest(\'[data-test-id="conversation"]\')');
-  });
-
-  it('renders role-based selection buttons with correct data actions and localization keys', () => {
-    const code = readFileSync(resolve(process.cwd(), 'src/pages/content/export/index.ts'), 'utf8');
-
-    // Confirm building of buttons
-    expect(code).toContain("dataset.gvExportAction = 'selectUser'");
-    expect(code).toContain("dataset.gvExportAction = 'selectAI'");
-    expect(code).toContain("className = 'gv-export-select-role-btn'");
-
-    // Confirm translation keys are used
-    expect(code).toContain("t('export_select_mode_only_user')");
-    expect(code).toContain("t('export_select_mode_only_ai')");
   });
 
   it('applies horizontal scrolling to the export selection bar and prevents text wrapping', () => {

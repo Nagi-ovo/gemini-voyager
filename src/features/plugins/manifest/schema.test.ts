@@ -332,7 +332,10 @@ const EVERY_FIELD_MANIFEST: Record<string, unknown> = {
       name: '固件 · 全字段',
       description: '一个用到全部字段的清单。',
       changelog: '一次用到全部字段。',
-      settings: { width: { label: '阅读宽度', minLabel: '更窄', maxLabel: '更宽' } },
+      settings: {
+        width: { label: '阅读宽度', minLabel: '更窄', maxLabel: '更宽' },
+        density: { label: '密度', options: { cozy: '舒适', compact: '紧凑' } },
+      },
     },
   },
 };

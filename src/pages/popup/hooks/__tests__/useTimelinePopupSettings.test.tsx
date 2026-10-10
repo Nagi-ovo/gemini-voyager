@@ -109,6 +109,20 @@ describe('useTimelinePopupSettings', () => {
     });
   });
 
+  it('turning node levels on from compact or ruler switches to dots in the same write', () => {
+    for (const style of ['compact', 'ruler']) {
+      act(() => settings.hydrateFromStorage({ [StorageKeys.TIMELINE_STYLE]: style }));
+      writeSyncStorage.mockClear();
+      act(() => settings.onChange({ markerLevelEnabled: true }));
+      expect(settings.values.timelineStyle).toBe('dots');
+      expect(settings.values.markerLevelEnabled).toBe(true);
+      expect(writeSyncStorage).toHaveBeenCalledExactlyOnceWith({
+        geminiTimelineMarkerLevel: true,
+        [StorageKeys.TIMELINE_STYLE]: 'dots',
+      });
+    }
+  });
+
   it('resets only the saved position and preserves all timeline preferences', () => {
     act(() =>
       settings.hydrateFromStorage({

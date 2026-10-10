@@ -1,0 +1,66 @@
+html {
+  min-inline-size: 320px;
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+.gv-library {
+  margin-inline: auto;
+  max-inline-size: 80rem;
+  padding: clamp(1rem, 3vw, 2.5rem);
+}
+
+.gv-library-layout {
+  display: grid;
+  grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+  align-items: start;
+  gap: clamp(1.5rem, 4vw, 3rem);
+}
+
+.gv-library-filters {
+  position: sticky;
+  inset-block-start: 1.5rem;
+}
+
+.gv-library :is(input, select, button, h1, h2):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+.gv-library :is(input, select) {
+  min-block-size: 2.75rem;
+}
+
+.gv-library [data-library-item-id] {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.gv-library [data-library-item-id] button {
+  min-block-size: 2.5rem;
+  min-inline-size: 2.5rem;
+}
+
+@media (max-width: 48rem) {
+  .gv-library-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .gv-library-filters {
+    position: static;
+  }
+}
+
+@media (forced-colors: active) {
+  .gv-library :is(input, select, button, h1, h2):focus-visible {
+    outline-color: Highlight;
+  }
+}

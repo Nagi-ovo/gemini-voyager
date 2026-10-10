@@ -14,63 +14,25 @@
  * - Sends image data to this content script for watermark removal
  * - Returns processed image to complete the download
  */
+import { logger } from '@/core/services/LoggerService';
+import { createToaster } from '@/core/ui/toast/toaster';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { fetchImageViaExtensionRuntime } from '@/core/utils/runtimeImageFetch';
 import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
-import { getTranslationSync } from '@/utils/i18n';
-import type { TranslationKey } from '@/utils/translations';
 
 import { recordWatermarkPresence } from '../watermarkNativeNotice/cleanStreak';
-import { DOWNLOAD_ICON_SELECTOR, findNativeDownloadButton } from './downloadButton';
-import {
-  IMAGE_HEALTH_SAMPLE_SIZE,
-  type ImageHealthFingerprint,
-  createImageHealthFingerprint,
-  detectCorruptedGeminiDownload,
-} from './imageHealthDetector';
-import { type StatusToastManager, createStatusToastManager } from './statusToast';
+import { createDownloadFeedback } from './downloadFeedback';
+import { createImageHealthMonitor } from './imageHealth';
+import { createWatermarkPreviews } from './previewRuntime';
 import { WatermarkEngine } from './watermarkEngine';
 
 let engine: WatermarkEngine | null = null;
 let enginePromise: Promise<WatermarkEngine> | null = null;
-const processingQueue = new Set<HTMLImageElement>();
-const previewFingerprintsByImage = new WeakMap<
-  HTMLImageElement,
-  { sourceSrc: string; fingerprint: ImageHealthFingerprint }
->();
-const previewFingerprintsByIntent = new Map<string, Promise<ImageHealthFingerprint | null>>();
 let lifecycleGeneration = 0;
 let downloadRemovalEnabled = false;
 let previewRemovalEnabled = false;
 
-// Observers are kept at module scope so they can be disconnected on teardown
-// and so re-running startWatermarkRemover() can't stack duplicate observers.
-// Two of these watch document.body (subtree + attributes), so leaking them is
-// permanent page-wide overhead.
-let previewObserver: MutationObserver | null = null;
-let indicatorObserver: MutationObserver | null = null;
 let bridgeObserver: MutationObserver | null = null;
-let statusObserver: MutationObserver | null = null;
-const pendingDebounceTimeouts = new Set<ReturnType<typeof setTimeout>>();
-
-/**
- * Debounce function to limit execution frequency
- */
-const debounce = <T extends (...args: unknown[]) => void>(func: T, wait: number): T => {
-  let timeout: ReturnType<typeof setTimeout> | null = null;
-  return ((...args: unknown[]) => {
-    if (timeout) {
-      clearTimeout(timeout);
-      pendingDebounceTimeouts.delete(timeout);
-    }
-    timeout = setTimeout(() => {
-      if (timeout) pendingDebounceTimeouts.delete(timeout);
-      timeout = null;
-      func(...args);
-    }, wait);
-    pendingDebounceTimeouts.add(timeout);
-  }) as T;
-};
 
 /**
  * Fetch image via background script to bypass CORS
@@ -90,335 +52,24 @@ const fetchImageViaBackground = async (url: string): Promise<HTMLImageElement> =
   });
 };
 
-/**
- * Convert canvas to blob
- */
-const canvasToBlob = (canvas: HTMLCanvasElement, type = 'image/png'): Promise<Blob> =>
-  new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (blob) resolve(blob);
-      else reject(new Error('Failed to convert canvas to blob'));
-    }, type);
-  });
+const health = createImageHealthMonitor(fetchImageViaBackground);
+const feedback = createDownloadFeedback({
+  getBridge: getBridgeElement,
+  capturePreview: health.capturePreview,
+  toaster: createToaster(),
+  isRemovalEnabled: () => downloadRemovalEnabled,
+});
+const previews = createWatermarkPreviews({
+  getState: () => ({
+    engine,
+    generation: lifecycleGeneration,
+    previewEnabled: previewRemovalEnabled,
+    downloadEnabled: downloadRemovalEnabled,
+  }),
+  fetchImage: fetchImageViaBackground,
+  health,
+});
 
-/**
- * Convert canvas to base64 data URL
- */
-const canvasToDataURL = (canvas: HTMLCanvasElement, type = 'image/png'): string =>
-  canvas.toDataURL(type);
-
-/**
- * Check if an image element is a valid Gemini-generated image
- */
-const isValidGeminiImage = (img: HTMLImageElement): boolean =>
-  img.closest('generated-image,.generated-image-container') !== null;
-
-const captureImageFingerprint = (
-  image: CanvasImageSource & { naturalWidth?: number; naturalHeight?: number },
-): ImageHealthFingerprint | null => {
-  try {
-    const canvas = document.createElement('canvas');
-    canvas.width = IMAGE_HEALTH_SAMPLE_SIZE;
-    canvas.height = IMAGE_HEALTH_SAMPLE_SIZE;
-    const context = canvas.getContext('2d', { willReadFrequently: true });
-    if (!context) return null;
-
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    return createImageHealthFingerprint(
-      imageData.data,
-      canvas.width,
-      canvas.height,
-      image.naturalWidth || canvas.width,
-      image.naturalHeight || canvas.height,
-    );
-  } catch {
-    // A tainted cross-origin preview cannot be sampled safely. In that case we
-    // skip the warning instead of risking a false positive.
-    return null;
-  }
-};
-
-const findPreviewImageForDownloadButton = (button: HTMLButtonElement): HTMLImageElement | null => {
-  const generatedImage = button.closest('generated-image,.generated-image-container');
-  const inlineImage = generatedImage?.querySelector<HTMLImageElement>('img');
-  if (inlineImage) return inlineImage;
-
-  const dialog = button.closest('expansion-dialog,[role="dialog"],.cdk-overlay-pane');
-  return (
-    dialog?.querySelector<HTMLImageElement>(
-      'generated-image img, img[src^="blob:"], img[src*="googleusercontent.com"]',
-    ) ?? null
-  );
-};
-
-const capturePreviewFingerprint = async (
-  button: HTMLButtonElement,
-): Promise<ImageHealthFingerprint | null> => {
-  const image = findPreviewImageForDownloadButton(button);
-  if (!image) return null;
-  const cached = previewFingerprintsByImage.get(image);
-  const isCurrentSource = cached?.sourceSrc === image.src;
-  const isProcessedFromCachedSource =
-    image.dataset.watermarkProcessed === 'true' &&
-    image.dataset.processedUrl === image.src &&
-    cached?.sourceSrc === image.dataset.watermarkOriginalSrc;
-  if (cached && (isCurrentSource || isProcessedFromCachedSource)) return cached.fingerprint;
-
-  const fingerprint = captureImageFingerprint(image);
-  if (fingerprint) {
-    previewFingerprintsByImage.set(image, { sourceSrc: image.src, fingerprint });
-    return fingerprint;
-  }
-
-  // Gemini preview images normally come from googleusercontent.com without a
-  // crossorigin attribute. Drawing those DOM images taints the canvas, so
-  // pixel readback above fails even though the image is visibly loaded. Reuse
-  // the extension-runtime fetch path to obtain an origin-clean copy while the
-  // native download intent remains synchronous.
-  const sourceSrc = image.src;
-  if (!/^https?:/i.test(sourceSrc)) return null;
-  try {
-    const cleanImage = await fetchImageViaBackground(sourceSrc);
-    const fetchedFingerprint = captureImageFingerprint(cleanImage);
-    if (fetchedFingerprint && image.src === sourceSrc) {
-      previewFingerprintsByImage.set(image, {
-        sourceSrc,
-        fingerprint: fetchedFingerprint,
-      });
-    }
-    return fetchedFingerprint;
-  } catch (error) {
-    console.warn('[Gemini Voyager] Failed to capture preview fingerprint:', error);
-    return null;
-  }
-};
-
-/**
- * Find all Gemini-generated images on the page
- */
-const findGeminiImages = (): HTMLImageElement[] =>
-  [...document.querySelectorAll<HTMLImageElement>('img[src*="googleusercontent.com"]')].filter(
-    (img) => isValidGeminiImage(img) && img.dataset.watermarkProcessed !== 'true',
-  );
-
-/**
- * Clear preview bookkeeping without restoring the current image source.
- * Gemini can reuse an existing <img> for a later generated image, so stale
- * processed markers must not prevent the replacement source from being handled
- * after preview removal is re-enabled.
- */
-const clearPreviewImageState = (): void => {
-  document
-    .querySelectorAll<HTMLImageElement>(
-      'img[data-watermark-processed], img[data-watermark-original-src]',
-    )
-    .forEach((img) => {
-      delete img.dataset.watermarkProcessed;
-      delete img.dataset.watermarkOriginalSrc;
-      delete img.dataset.processedUrl;
-    });
-};
-
-/**
- * Replace image URL size parameter to get full resolution
- */
-const replaceWithNormalSize = (src: string): string => {
-  // Use normal size image to fit watermark
-  return src.replace(/=[swh]\d+(?:-[wh]\d+)*/, '=s0');
-};
-
-/**
- * Attach the 🍌 badge to a download button. The badge lives INSIDE the button
- * because Gemini wraps it in `<gem-icon-button>` which has `overflow: hidden`,
- * so any negative offset overhanging the wrapper would be clipped.
- */
-function attachIndicatorToButton(nativeButton: HTMLButtonElement): void {
-  // Idempotency: don't add a second indicator to the same button.
-  if (nativeButton.querySelector('.nanobanana-indicator')) return;
-
-  const indicator = document.createElement('span');
-  indicator.className = 'nanobanana-indicator';
-  indicator.textContent = '🍌';
-  indicator.title =
-    chrome.i18n.getMessage('nanobananaDownloadTooltip') ||
-    'Image Refinement: Downloads will be processed automatically';
-
-  Object.assign(indicator.style, {
-    position: 'absolute',
-    top: '2px',
-    right: '2px',
-    fontSize: '11px',
-    lineHeight: '1',
-    pointerEvents: 'none', // Let clicks pass through to the native button
-    zIndex: '10',
-    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.45))',
-  });
-
-  // mdc-icon-button is `position: relative` by default; guard against future
-  // Gemini changes that might flip it to static.
-  if (getComputedStyle(nativeButton).position === 'static') {
-    nativeButton.style.position = 'relative';
-  }
-  nativeButton.appendChild(indicator);
-}
-
-/**
- * Add a visual indicator (🍌) to the native download button via the
- * preview-image path. Looks up the button through the generated-image
- * container; for the lightbox/expansion-dialog path, see
- * decorateDownloadButtons() which walks every `<download-generated-image-button>`
- * host (toolbar AND lightbox).
- */
-function addDownloadIndicator(imgElement: HTMLImageElement): void {
-  const container = imgElement.closest('generated-image,.generated-image-container');
-  if (!container) return;
-
-  const nativeDownloadIcon = container.querySelector(DOWNLOAD_ICON_SELECTOR);
-  const nativeButton = nativeDownloadIcon?.closest('button');
-  if (!nativeButton) return;
-
-  attachIndicatorToButton(nativeButton as HTMLButtonElement);
-}
-
-/**
- * Process a single image to remove watermark (for preview images)
- */
-async function processImage(imgElement: HTMLImageElement): Promise<void> {
-  if (!engine || processingQueue.has(imgElement)) return;
-
-  const generation = lifecycleGeneration;
-  let stale = false;
-  const isStale = (): boolean => {
-    stale = generation !== lifecycleGeneration || !previewRemovalEnabled;
-    return stale;
-  };
-
-  processingQueue.add(imgElement);
-  imgElement.dataset.watermarkProcessed = 'processing';
-
-  const originalSrc = imgElement.src;
-  try {
-    const originalPreviewFingerprint = captureImageFingerprint(imgElement);
-    if (originalPreviewFingerprint) {
-      previewFingerprintsByImage.set(imgElement, {
-        sourceSrc: originalSrc,
-        fingerprint: originalPreviewFingerprint,
-      });
-    }
-
-    // Fetch full resolution image via background script (bypasses CORS)
-    const normalSizeSrc = replaceWithNormalSize(originalSrc);
-    const normalSizeImg = await fetchImageViaBackground(normalSizeSrc);
-    if (isStale()) return;
-
-    // Process image to remove watermark
-    const processedCanvas = await engine.removeWatermarkFromImage(
-      normalSizeImg,
-      (presence) => void recordWatermarkPresence(presence),
-    );
-    if (isStale()) return;
-    const processedBlob = await canvasToBlob(processedCanvas);
-    if (isStale()) return;
-
-    // Replace image source with processed blob URL
-    const processedUrl = URL.createObjectURL(processedBlob);
-    imgElement.dataset.watermarkOriginalSrc = originalSrc;
-    imgElement.src = processedUrl;
-    imgElement.dataset.watermarkProcessed = 'true';
-    imgElement.dataset.processedUrl = processedUrl; // Store for reference
-
-    console.log('[Gemini Voyager] Watermark removed from preview image');
-
-    if (downloadRemovalEnabled) {
-      addDownloadIndicator(imgElement);
-    }
-  } catch (error) {
-    if (isStale()) return;
-    console.warn('[Gemini Voyager] Failed to process image for watermark removal:', error);
-    imgElement.dataset.watermarkProcessed = 'failed';
-  } finally {
-    processingQueue.delete(imgElement);
-    if (stale) {
-      if (imgElement.dataset.watermarkProcessed === 'processing') {
-        delete imgElement.dataset.watermarkProcessed;
-      }
-      // A full restart can invalidate this task while leaving preview removal
-      // enabled (for example, when only the download toggle changed). Retry
-      // after releasing the queue slot so the latest lifecycle owns the write.
-      if (previewRemovalEnabled && imgElement.isConnected && isValidGeminiImage(imgElement)) {
-        void processImage(imgElement);
-      }
-    }
-  }
-}
-
-/**
- * Process all Gemini-generated images on the page (preview path)
- */
-const processAllImages = (): void => {
-  const images = findGeminiImages();
-  images.forEach(processImage);
-
-  if (downloadRemovalEnabled) {
-    // Re-run the indicator pass so blob-src previews and late-loading native
-    // buttons still pick up the 🍌 badge (idempotent).
-    decorateDownloadButtons();
-  }
-};
-
-/**
- * Add the 🍌 indicator to every Gemini-generated image's download button.
- *
- * Walks `<download-generated-image-button>` hosts directly instead of going
- * through the img element. This covers:
- *  1. The in-message toolbar (host lives inside `<generated-image>`)
- *  2. The lightbox / `<expansion-dialog>` rendered into `cdk-overlay-container`
- *     — same custom element, but NOT inside any `generated-image` container.
- *
- * Also independent of the img src (blob: vs googleusercontent.com).
- */
-export const decorateDownloadButtons = (): void => {
-  const hosts = document.querySelectorAll<HTMLElement>('download-generated-image-button');
-  hosts.forEach((host) => {
-    const button = host.querySelector<HTMLButtonElement>('button');
-    if (button) attachIndicatorToButton(button);
-  });
-};
-
-/**
- * Setup MutationObserver to watch for new images and run the preview pipeline.
- */
-const setupMutationObserver = (): void => {
-  if (previewObserver) return;
-  const debouncedProcess = debounce(processAllImages, 100);
-  previewObserver = new MutationObserver(debouncedProcess);
-  previewObserver.observe(document.body, {
-    childList: true,
-    subtree: true,
-    attributes: true, // Watch for attribute changes (like native buttons appearing)
-    attributeFilter: ['class', 'src'],
-  });
-  console.log('[Gemini Voyager] Watermark remover MutationObserver active');
-};
-
-/**
- * Lighter MutationObserver that skips the canvas pipeline and only decorates
- * download buttons. It also covers the engine-loading window before the full
- * preview observer can take over.
- */
-const setupIndicatorObserver = (): void => {
-  if (indicatorObserver) return;
-  const debouncedDecorate = debounce(decorateDownloadButtons, 100);
-  indicatorObserver = new MutationObserver(debouncedDecorate);
-  indicatorObserver.observe(document.body, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['class', 'src'],
-  });
-  console.log('[Gemini Voyager] Watermark download-indicator observer active');
-};
 /**
  * DOM-based communication bridge ID (must match fetchInterceptor.js)
  * CustomEvents don't cross world boundaries in Firefox, so we use a hidden DOM element
@@ -472,7 +123,7 @@ function setupFetchInterceptorBridge(): void {
   });
 
   bridgeObserver.observe(bridge, { attributes: true, attributeFilter: ['data-request'] });
-  console.log('[Gemini Voyager] Fetch interceptor bridge ready');
+  logger.debug('[Gemini Voyager] Fetch interceptor bridge ready');
 }
 
 const loadBridgeImage = async (base64: string): Promise<HTMLImageElement> => {
@@ -492,19 +143,15 @@ async function inspectImageRequest(
   bridge: HTMLElement,
 ): Promise<void> {
   if (!intentToken) return;
-  const previewFingerprintPromise = previewFingerprintsByIntent.get(intentToken);
-  previewFingerprintsByIntent.delete(intentToken);
+  const previewFingerprintPromise = feedback.takePreview(intentToken);
   if (!previewFingerprintPromise) return;
 
   try {
     const previewFingerprint = await previewFingerprintPromise;
     if (!previewFingerprint) return;
     const image = await loadBridgeImage(base64);
-    const downloadFingerprint = captureImageFingerprint(image);
-    if (!downloadFingerprint) return;
-
-    const result = detectCorruptedGeminiDownload(previewFingerprint, downloadFingerprint);
-    if (result.corrupted) {
+    const result = health.compare(previewFingerprint, image);
+    if (result?.corrupted) {
       bridge.dataset.status = JSON.stringify({
         type: 'GOOGLE_IMAGE_CORRUPTED',
         timestamp: Date.now(),
@@ -549,23 +196,16 @@ async function processImageRequest(
 
   try {
     const img = await loadBridgeImage(base64);
-    const previewFingerprintPromise = intentToken
-      ? previewFingerprintsByIntent.get(intentToken)
-      : undefined;
-    if (intentToken) previewFingerprintsByIntent.delete(intentToken);
+    const previewFingerprintPromise = intentToken ? feedback.takePreview(intentToken) : undefined;
     const previewFingerprint = previewFingerprintPromise ? await previewFingerprintPromise : null;
-    const downloadFingerprint = previewFingerprint ? captureImageFingerprint(img) : null;
-    const healthResult =
-      previewFingerprint && downloadFingerprint
-        ? detectCorruptedGeminiDownload(previewFingerprint, downloadFingerprint)
-        : null;
+    const healthResult = previewFingerprint ? health.compare(previewFingerprint, img) : null;
 
     // Process image to remove watermark
     const processedCanvas = await engine.removeWatermarkFromImage(
       img,
       (presence) => void recordWatermarkPresence(presence),
     );
-    const processedDataUrl = canvasToDataURL(processedCanvas);
+    const processedDataUrl = processedCanvas.toDataURL('image/png');
 
     // Send response via bridge element
     bridge.dataset.response = JSON.stringify({
@@ -610,16 +250,15 @@ async function configureWatermarkRemover(reconfigure: boolean): Promise<void> {
     // Download health inspection is independent of watermark removal. Keep
     // the click intent, bridge, and warning listener alive even when both
     // removal modes are off; Gemini's native response stays untouched.
-    setupStatusListener();
-    setupDownloadButtonTracking();
+    feedback.start();
     setupFetchInterceptorBridge();
 
     if (!downloadEnabled && !previewEnabled) {
-      console.log('[Gemini Voyager] Watermark remover is disabled');
+      logger.debug('[Gemini Voyager] Watermark remover is disabled');
       return;
     }
 
-    console.log(
+    logger.debug(
       `[Gemini Voyager] Initializing watermark remover (download=${downloadEnabled}, preview=${previewEnabled})`,
     );
 
@@ -627,8 +266,7 @@ async function configureWatermarkRemover(reconfigure: boolean): Promise<void> {
       // The indicator is only a readiness cue; downloads already queue through
       // the bridge while the engine assets load. Show it immediately and watch
       // for buttons Gemini mounts during that loading window.
-      decorateDownloadButtons();
-      setupIndicatorObserver();
+      previews.watchIndicators();
     }
 
     if (!enginePromise) {
@@ -639,18 +277,10 @@ async function configureWatermarkRemover(reconfigure: boolean): Promise<void> {
     engine = initializedEngine;
 
     if (previewEnabled) {
-      // The preview observer also decorates late-loading download buttons, so
-      // retire the temporary indicator-only observer before switching modes.
-      indicatorObserver?.disconnect();
-      indicatorObserver = null;
-
-      // Heavy path: replace each image's src with a watermark-stripped blob.
-      // The 🍌 indicator is attached as part of processImage().
-      processAllImages();
-      setupMutationObserver();
+      previews.start();
     }
 
-    console.log('[Gemini Voyager] Watermark remover ready');
+    logger.debug('[Gemini Voyager] Watermark remover ready');
   } catch (error) {
     if (!engine) enginePromise = null;
     if (generation !== lifecycleGeneration) return;
@@ -686,23 +316,14 @@ function teardownWatermarkRemover(preserveDownloadRuntime: boolean): void {
   const keepDownloadRuntime = preserveDownloadRuntime && downloadRemovalEnabled;
   previewRemovalEnabled = false;
 
-  for (const observer of [previewObserver, indicatorObserver]) {
-    observer?.disconnect();
-  }
-  previewObserver = null;
-  indicatorObserver = null;
-  for (const timeout of pendingDebounceTimeouts) clearTimeout(timeout);
-  pendingDebounceTimeouts.clear();
-  clearPreviewImageState();
+  previews.stop();
 
   if (keepDownloadRuntime) return;
 
   downloadRemovalEnabled = false;
   bridgeObserver?.disconnect();
-  statusObserver?.disconnect();
   bridgeObserver = null;
-  statusObserver = null;
-  clearActiveDownloadSequence();
+  feedback.stop();
 
   // Tell the MAIN-world fetch interceptor watermark mutation is off. It may
   // still clone a user-initiated native download for the read-only health check.
@@ -718,14 +339,6 @@ function teardownWatermarkRemover(preserveDownloadRuntime: boolean): void {
   document
     .querySelectorAll<HTMLElement>('.nanobanana-indicator')
     .forEach((indicator) => indicator.remove());
-
-  // Remove the global download-button tracking listeners.
-  if (downloadCaptureHandler) {
-    document.removeEventListener('pointerdown', downloadCaptureHandler, true);
-    document.removeEventListener('click', downloadCaptureHandler, true);
-    downloadCaptureHandler = null;
-  }
-  downloadTrackingReady = false;
 }
 
 /**
@@ -736,277 +349,4 @@ function teardownWatermarkRemover(preserveDownloadRuntime: boolean): void {
 export function stopWatermarkRemover(): void {
   lifecycleGeneration += 1;
   teardownWatermarkRemover(false);
-}
-
-let statusToastManager: StatusToastManager | null = null;
-let downloadTrackingReady = false;
-let downloadCaptureHandler: ((event: Event) => void) | null = null;
-let lastImmediateToastAt = 0;
-let sequenceCounter = 0;
-
-const LARGE_WARNING_AUTO_DISMISS_MS = 8000;
-const PROCESSING_FALLBACK_AUTO_DISMISS_MS = 35000;
-// Gemini can spend more than 10s walking the download chain on slow networks
-// before the final rd-gg/rd-gg-dl image request appears.
-const DOWNLOAD_INTENT_TTL_MS = 60000;
-
-type DownloadToastSequence = {
-  id: number;
-  token: string;
-  downloadToastId: string | null;
-  warningToastId: string | null;
-  processingToastId: string | null;
-  processingTimer: ReturnType<typeof setTimeout> | null;
-};
-
-let activeSequence: DownloadToastSequence | null = null;
-
-function clearActiveDownloadSequence(): void {
-  if (!activeSequence) return;
-
-  previewFingerprintsByIntent.delete(activeSequence.token);
-
-  if (activeSequence.processingTimer) {
-    clearTimeout(activeSequence.processingTimer);
-  }
-
-  if (statusToastManager) {
-    for (const toastId of [
-      activeSequence.downloadToastId,
-      activeSequence.warningToastId,
-      activeSequence.processingToastId,
-    ]) {
-      if (toastId) statusToastManager.removeToast(toastId);
-    }
-  }
-
-  activeSequence = null;
-}
-
-const getStatusToastManager = (): StatusToastManager => {
-  if (!statusToastManager) {
-    statusToastManager = createStatusToastManager({ maxToasts: 4, anchorTtlMs: 30000 });
-  }
-  return statusToastManager;
-};
-
-const t = (key: TranslationKey, fallback: string): string => {
-  const value = getTranslationSync(key);
-  return value === key ? fallback : value;
-};
-
-function markDownloadIntent(token: string): void {
-  const bridge = getBridgeElement();
-  bridge.dataset.downloadIntentExpiresAt = String(Date.now() + DOWNLOAD_INTENT_TTL_MS);
-  bridge.dataset.downloadIntentToken = token;
-}
-
-function beginDownloadSequence(button: HTMLButtonElement): void {
-  const now = Date.now();
-  if (now - lastImmediateToastAt < 300 && activeSequence) {
-    markDownloadIntent(activeSequence.token);
-    return;
-  }
-  lastImmediateToastAt = now;
-
-  if (activeSequence?.processingTimer) {
-    clearTimeout(activeSequence.processingTimer);
-  }
-  if (activeSequence) previewFingerprintsByIntent.delete(activeSequence.token);
-
-  const sequenceId = ++sequenceCounter;
-  const token = `gv_download_${now}_${sequenceId}`;
-  previewFingerprintsByIntent.set(token, capturePreviewFingerprint(button));
-  markDownloadIntent(token);
-  const manager = getStatusToastManager();
-  manager.setAnchorElement(button);
-  let downloadToastId: string | null = null;
-  let processingTimer: ReturnType<typeof setTimeout> | null = null;
-
-  if (downloadRemovalEnabled) {
-    const downloadMessage = t('downloadingOriginal', '正在下载原始图片');
-    const processingMessage = t('downloadProcessing', '正在处理水印中');
-    downloadToastId = manager.addToast(downloadMessage, 'info', {
-      pending: true,
-      autoDismissMs: 3000,
-    });
-
-    processingTimer = setTimeout(() => {
-      if (!activeSequence || activeSequence.id !== sequenceId) return;
-      if (activeSequence.downloadToastId) {
-        manager.removeToast(activeSequence.downloadToastId);
-        activeSequence.downloadToastId = null;
-      }
-      if (!activeSequence.processingToastId) {
-        activeSequence.processingToastId = manager.addToast(processingMessage, 'info', {
-          pending: true,
-          autoDismissMs: PROCESSING_FALLBACK_AUTO_DISMISS_MS,
-        });
-      }
-    }, 3000);
-  }
-
-  activeSequence = {
-    id: sequenceId,
-    token,
-    downloadToastId,
-    warningToastId: null,
-    processingToastId: null,
-    processingTimer,
-  };
-}
-
-function setupDownloadButtonTracking(): void {
-  if (downloadTrackingReady) return;
-  downloadTrackingReady = true;
-
-  downloadCaptureHandler = (event: Event): void => {
-    const button = findNativeDownloadButton(event.target);
-    if (!button) return;
-
-    beginDownloadSequence(button);
-  };
-
-  document.addEventListener('pointerdown', downloadCaptureHandler, true);
-  document.addEventListener('click', downloadCaptureHandler, true);
-}
-
-/**
- * Setup listener for status events from fetchInterceptor
- */
-function setupStatusListener(): void {
-  if (statusObserver) return;
-  const bridge = getBridgeElement();
-  const manager = getStatusToastManager();
-  const downloadMessage = t('downloadingOriginal', '正在下载原始图片');
-  const downloadLargeMessage = t('downloadingOriginalLarge', '正在下载原始图片（大文件）');
-  const warningMessage = t('downloadLargeWarning', '大文件警告');
-  const processingMessage = t('downloadProcessing', '正在处理水印中');
-  const successMessage = t('downloadSuccess', '正在下载');
-  const errorPrefix = t('downloadError', '失败');
-  const corruptedMessage = t(
-    'googleImageCorrupted',
-    'Google 返回的原图已损坏（并非 Voyager 导致）；下载结果可能模糊或内容缺失',
-  );
-
-  const finalizeSequence = (level: 'success' | 'warning' | 'error', message: string): void => {
-    const autoDismissMs = level === 'success' ? 2500 : level === 'warning' ? 10000 : 4000;
-    if (activeSequence?.processingTimer) {
-      clearTimeout(activeSequence.processingTimer);
-      activeSequence.processingTimer = null;
-    }
-    if (activeSequence?.warningToastId) {
-      manager.removeToast(activeSequence.warningToastId);
-      activeSequence.warningToastId = null;
-    }
-    if (activeSequence?.downloadToastId) {
-      manager.removeToast(activeSequence.downloadToastId);
-      activeSequence.downloadToastId = null;
-    }
-
-    if (
-      activeSequence?.processingToastId &&
-      manager.updateToast(activeSequence.processingToastId, message, level, {
-        autoDismissMs,
-        markFinal: true,
-      })
-    ) {
-      return;
-    }
-
-    if (
-      !manager.updateLatestPending(message, level, {
-        autoDismissMs,
-        markFinal: true,
-      })
-    ) {
-      manager.addToast(message, level, {
-        autoDismissMs,
-      });
-    }
-  };
-
-  const handleStatus = (statusData: string): void => {
-    console.log('[Gemini Voyager] Status data received:', statusData);
-    if (!statusData) return;
-
-    try {
-      const { type, message, intentToken } = JSON.parse(statusData);
-      bridge.removeAttribute('data-status');
-      if (!activeSequence || intentToken !== activeSequence.token) return;
-
-      switch (type) {
-        case 'DOWNLOADING':
-          // Step 1: Downloading original image
-          if (activeSequence) {
-            if (activeSequence.warningToastId) {
-              manager.removeToast(activeSequence.warningToastId);
-              activeSequence.warningToastId = null;
-            }
-            if (!activeSequence.downloadToastId) {
-              activeSequence.downloadToastId = manager.addToast(downloadMessage, 'info', {
-                pending: true,
-                autoDismissMs: 3000,
-              });
-            }
-          }
-          break;
-        case 'DOWNLOADING_LARGE':
-          // Step 1 with large file warning
-          if (activeSequence) {
-            if (!activeSequence.downloadToastId) {
-              activeSequence.downloadToastId = manager.addToast(downloadLargeMessage, 'info', {
-                pending: true,
-                autoDismissMs: 3000,
-              });
-            } else {
-              manager.updateToast(activeSequence.downloadToastId, downloadLargeMessage, 'info');
-            }
-            if (!activeSequence.warningToastId) {
-              activeSequence.warningToastId = manager.addToast(warningMessage, 'warning', {
-                autoDismissMs: LARGE_WARNING_AUTO_DISMISS_MS,
-              });
-            }
-          }
-          break;
-        case 'PROCESSING':
-          // Step 2: Processing watermark
-          if (activeSequence?.processingToastId) {
-            manager.updateToast(activeSequence.processingToastId, processingMessage, 'info');
-            break;
-          }
-          if (!activeSequence?.processingTimer) {
-            const processingToastId = manager.addToast(processingMessage, 'info', {
-              pending: true,
-              autoDismissMs: PROCESSING_FALLBACK_AUTO_DISMISS_MS,
-            });
-            if (activeSequence) activeSequence.processingToastId = processingToastId;
-          }
-          break;
-        case 'SUCCESS':
-          // Step 3: Done, auto-dismiss after 2s
-          finalizeSequence('success', successMessage);
-          break;
-        case 'ERROR':
-          finalizeSequence('error', `${errorPrefix}: ${message}`);
-          break;
-        case 'GOOGLE_IMAGE_CORRUPTED':
-          finalizeSequence('warning', corruptedMessage);
-          break;
-      }
-    } catch (e) {
-      console.error('[Gemini Voyager] Failed to parse status:', e);
-    }
-  };
-
-  statusObserver = new MutationObserver(() => {
-    const statusData = bridge.dataset.status;
-    if (!statusData) return;
-    handleStatus(statusData);
-  });
-
-  statusObserver.observe(bridge, { attributes: true, attributeFilter: ['data-status'] });
-  if (bridge.dataset.status) {
-    handleStatus(bridge.dataset.status);
-  }
 }

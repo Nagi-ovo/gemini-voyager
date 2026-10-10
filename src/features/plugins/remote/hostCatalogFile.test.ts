@@ -35,6 +35,28 @@ describe('validateHostCatalogFile', () => {
     expect(result?.generatedAt).toBe('2026-09-07T00:00:00.000Z');
   });
 
+  it('a plugin whose select offers an empty choice stays installed', () => {
+    const auto = {
+      ...VALID,
+      contributes: {
+        ...VALID.contributes,
+        settings: {
+          width: {
+            type: 'select',
+            label: 'Width',
+            default: '',
+            options: [
+              { value: '', label: 'Automatic' },
+              { value: 'wide', label: 'Wide' },
+            ],
+          },
+        },
+      },
+    };
+    const result = validateHostCatalogFile(file([auto]), 'chat.deepseek.com');
+    expect(result?.manifests.map((plugin) => plugin.id)).toEqual([VALID.id]);
+  });
+
   it('matches the host case-insensitively but rejects a different host', () => {
     expect(validateHostCatalogFile(file([VALID]), 'Chat.DeepSeek.com')).not.toBeNull();
     expect(validateHostCatalogFile(file([VALID]), 'claude.ai')).toBeNull();

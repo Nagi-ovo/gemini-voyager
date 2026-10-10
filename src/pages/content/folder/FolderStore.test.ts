@@ -267,6 +267,7 @@ describe('FolderStore ownership', () => {
     const first = store.saveData();
     store.data.folders[0].name = 'Newest queued edit';
     const queued = store.saveData();
+    await vi.advanceTimersByTimeAsync(0);
     expect(adapter.saveData).toHaveBeenCalledTimes(1);
     finish(true);
     await first;

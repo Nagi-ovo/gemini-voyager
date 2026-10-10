@@ -1,10 +1,73 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import '@/features/timeline/adapters/catalog/testSetup';
+import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { buildConversationId } from '@/features/timeline/adapters/catalog/conversationId';
+
+import { BUILTIN_PLUGINS } from '../builtin';
+import deepseekTimeline from '../catalog/sites/deepseek/plugins/timeline/plugin.json';
+import { validateManifest } from '../manifest/validate';
+import { PluginHost } from '../runtime/PluginHost';
 import { PluginScope } from '../runtime/pluginScope';
 import type { SiteAdapter } from '../types';
 import { turnNavigatorPrimitive } from './turnNavigator';
-import { buildConversationId } from './turnNavigator/TurnNavigator';
 import type { PrimitiveContext } from './types';
+
+const validated = validateManifest({
+  ...deepseekTimeline,
+  contributes: { ...deepseekTimeline.contributes, styles: [] },
+});
+if (!validated.success) throw new Error('invalid DeepSeek timeline');
+const timelines = [
+  ...BUILTIN_PLUGINS.filter((plugin) => plugin.id.endsWith('-timeline')),
+  validated.data,
+];
+
+describe.each(timelines)('$name saved style', (plugin) => {
+  it('keeps an existing compact setting and applies a new ruler choice without remounting', async () => {
+    document.body.innerHTML = `
+      <div data-user-message-bubble>ChatGPT question</div>
+      <div data-testid="user-message">Claude question</div>
+      <div class="ds-message"><div class="ds-collapsible-text">DeepSeek question</div></div>`;
+    (chrome.storage.local.get as unknown as Mock).mockResolvedValue({
+      gvPluginsState: {
+        [plugin.id]: { enabled: true, installedAt: 0, settings: { compactView: true } },
+      },
+    });
+    const host = new PluginHost({
+      url: plugin.matches[0].replace('*', 'c/first'),
+      sources: [{ id: 'test', list: async () => [plugin] }],
+      doc: document,
+      requestCatalogRefresh: () => {},
+    });
+    try {
+      await host.start();
+      await flush();
+      const bar = document.querySelector('[data-gv-turn-navigator]');
+      expect(bar).not.toBeNull();
+      expect(bar?.classList.contains('timeline-style-compact')).toBe(true);
+      expect(showTimelineStyleCoachmark).not.toHaveBeenCalled();
+
+      const state = {
+        [plugin.id]: {
+          enabled: true,
+          installedAt: 0,
+          settings: { compactView: true, timelineStyle: 'ruler' },
+        },
+      };
+      for (const [listener] of vi.mocked(chrome.storage.onChanged.addListener).mock.calls) {
+        listener({ gvPluginsState: { newValue: state } }, 'local');
+      }
+      await flush();
+      expect(document.querySelector('[data-gv-turn-navigator]')).toBe(bar);
+      expect(bar?.classList.contains('gv-timeline-style-ruler')).toBe(true);
+      expect(bar?.classList.contains('timeline-style-compact')).toBe(false);
+    } finally {
+      host.stop();
+      vi.mocked(chrome.storage.local.get).mockReset();
+      vi.mocked(chrome.storage.onChanged.addListener).mockClear();
+    }
+  });
+});
 
 const { getStarredMessagesForConversation, showTimelineStyleCoachmark } = vi.hoisted(() => ({
   getStarredMessagesForConversation: vi.fn().mockResolvedValue([]),
@@ -15,17 +78,21 @@ vi.mock('@/utils/i18n', () => ({
   initI18n: vi.fn().mockResolvedValue(undefined),
   getTranslationSync: (key: string) => key,
 }));
-vi.mock('@/pages/content/timeline/StarredMessagesService', () => ({
+vi.mock('@/features/savedLibrary/StarredMessagesService', async (importOriginal) => ({
   StarredMessagesService: {
+    backfillStarredTexts: vi.fn().mockResolvedValue(undefined),
+    decodeStorageChange: (
+      await importOriginal<typeof import('@/features/savedLibrary/StarredMessagesService')>()
+    ).StarredMessagesService.decodeStorageChange,
     addStarredMessage: vi.fn().mockResolvedValue(undefined),
     getStarredMessagesForConversation,
     removeStarredMessage: vi.fn().mockResolvedValue(undefined),
   },
 }));
-vi.mock('@/features/plugins/storage/pluginState', () => ({
-  setPluginSetting: vi.fn().mockResolvedValue(undefined),
+vi.mock('@/features/plugins/storage/pluginSettingRequest', () => ({
+  requestPluginSetting: vi.fn().mockResolvedValue(undefined),
 }));
-vi.mock('@/pages/content/timeline/timelineStyleCoachmark', () => ({
+vi.mock('@/features/timeline/timelineStyleCoachmark', () => ({
   showTimelineStyleCoachmark,
 }));
 
@@ -52,7 +119,7 @@ function context(adapter: SiteAdapter | null, settings = {}) {
 }
 
 async function flush(): Promise<void> {
-  for (let i = 0; i < 6; i += 1) await Promise.resolve();
+  for (let i = 0; i < 30; i += 1) await Promise.resolve();
 }
 
 beforeEach(() => {
@@ -77,10 +144,14 @@ describe('turnNavigator primitive', () => {
         scrollContainer: '.scroll',
         yieldWhen: '.panel',
         position: 'left',
+        conversationIdAttribute: 'data-conv-id',
+        turnItem: '[data-turn-key]',
       }),
     ).toEqual({
       success: true,
       data: {
+        conversationIdAttribute: 'data-conv-id',
+        turnItem: '[data-turn-key]',
         turn: '.t',
         conversationIdPattern: '^/c/(\\w+)',
         scrollContainer: '.scroll',
@@ -106,6 +177,15 @@ describe('turnNavigator primitive', () => {
       'params.conversationIdPattern',
     ]);
     expect(issues({ turn: '' })).toEqual(['params.turn']);
+    // conversationIdAttribute is interpolated into `[name]`: an attribute name, nothing more.
+    expect(issues({ conversationIdAttribute: 'data-x] , *' })).toEqual([
+      'params.conversationIdAttribute',
+    ]);
+    expect(issues({ conversationIdAttribute: 'Data-Upper' })).toEqual([
+      'params.conversationIdAttribute',
+    ]);
+    expect(issues({ conversationIdAttribute: 42 })).toEqual(['params.conversationIdAttribute']);
+    expect(issues({ turnKey: 'data-turn-id-container' })).toEqual(['params.turnKey']);
     expect(issues({ speed: 3 })).toEqual(['params.speed']);
   });
 
@@ -125,6 +205,20 @@ describe('turnNavigator primitive', () => {
     expect(buildConversationId({ siteId: 'deepseek' }, 'https://chat.deepseek.com/')).toMatch(
       /^deepseek:[0-9a-z]+$/i,
     );
+  });
+
+  it('accepts account attribute lists and refuses malformed names or values before activation', () => {
+    const attributes = ['data-user-id', 'data-workspace-id'];
+    expect(turnNavigatorPrimitive.validateParams({ accountIdAttributes: attributes })).toEqual({
+      success: true,
+      data: { accountIdAttributes: attributes },
+    });
+    for (const value of ['data-user-id', ['Data-Upper'], ['data-user-id', 42], [''], null]) {
+      const result = turnNavigatorPrimitive.validateParams({ accountIdAttributes: value });
+      expect(result.success).toBe(false);
+      if (!result.success)
+        expect(result.error.map((issue) => issue.path)).toEqual(['params.accountIdAttributes']);
+    }
   });
 
   it("mounts the rail for the adapter's turns, loads stars under the site prefix and updates in place", async () => {

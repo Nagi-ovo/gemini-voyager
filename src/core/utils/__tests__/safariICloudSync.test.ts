@@ -21,6 +21,13 @@ afterEach(() => {
 });
 
 describe('Safari iCloud sync bridge', () => {
+  it('a successful null download is refused rather than treated as a missing backup', async () => {
+    sendNativeMessage.mockResolvedValue({ success: true, data: { found: true, json: 'null' } });
+    await expect(readSafariICloudFile('gemini-voyager-stars.json')).rejects.toThrow(
+      'invalid null data',
+    );
+  });
+
   it('checks the native iCloud account', async () => {
     sendNativeMessage.mockResolvedValue({ success: true, data: { available: true } });
 

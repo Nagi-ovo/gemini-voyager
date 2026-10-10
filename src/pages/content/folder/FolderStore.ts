@@ -1,52 +1,59 @@
-import browser, { type Storage } from 'webextension-polyfill';
-
 import {
   type AccountScope,
-  accountIsolationService,
-  buildScopedFolderStorageKey,
-  detectAccountContextFromDocument,
   extractRouteUserIdFromPath,
 } from '@/core/services/AccountIsolationService';
-import { StorageKeys } from '@/core/types/common';
 import { buildConversationIdFromUrl } from '@/core/utils/conversationIdentity';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
+import { MAX_FOLDER_DEPTH } from '@/features/folder/constants';
+import { readConversationStars } from '@/features/folder/model/conversationStars';
 import {
   type ConversationSortMode,
+  cloneFolderData,
   getFolderDepth,
   moveFolder,
-  normalizeFolderData,
+  ownBucket,
   removeFolder,
   reorderConversations,
+  setBucket,
 } from '@/features/folder/model/folderData';
+import { placeConversations } from '@/features/folder/model/placeConversations';
+import { applyFolderOp } from '@/features/folder/owner/applyFolderOp';
+import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
 
 import { TimestampService } from '../timestamp/TimestampService';
 import { historyTimestampStore } from '../timestamp/historyTimestamps';
-import { FolderDataSession, cloneFolderData } from './FolderDataSession';
+import type { FolderDataSession } from './FolderDataSession';
+import {
+  FolderRepository,
+  type FolderStoreChange,
+  folderDebug,
+  folderDebugWarn,
+} from './FolderRepository';
+import { createConversationMembershipLookup } from './conversationMembership';
+import { applyNativeTitle, indexConversationsByRouteId } from './conversationTitleSync';
+import {
+  conversationKeys,
+  isSameConversation,
+  normalizeConversationId,
+  resolveConversationRouteId,
+} from './folderConversationIdentity';
 import {
   extractConversationIdFromElement,
   extractNativeConversationId,
-  extractNativeConversationTitle,
   getCurrentConversationId,
-  getNativeConversationElements,
-  normalizeConversationId,
-  resolveConversationRouteId,
+} from './nativeConversationIds';
+import {
+  extractNativeConversationTitle,
   syncConversationTitleFromNative,
-} from './nativeSidebarDom';
+} from './nativeConversationTitles';
+import { getNativeConversationElements } from './nativeSidebarDom';
+import { GEMINI_FOLDER_CONFIG } from './platformFolderConfig';
 import {
   type IFolderStorageAdapter,
   createFolderStorageAdapter,
 } from './storage/FolderStorageAdapter';
 import type { ConversationReference, DragData, Folder, FolderData } from './types';
 
-const STORAGE_KEY = 'gvFolderData';
-
-/** Growing gaps between account-scope retries, in ms. Length caps the attempts. */
-const ACCOUNT_SCOPE_RETRY_DELAYS = [400, 1200, 3000] as const;
-const ROOT_CONVERSATIONS_ID = '__root_conversations__';
-const MAX_FOLDER_DEPTH = 1;
-const IS_DEBUG = false;
-const SAVE_DEBOUNCE_MS = 300;
-const STORAGE_ECHO_SUPPRESS_WINDOW_MS = 2000;
 const ACTIVITY_SEND_BUTTON_SELECTOR = [
   'button[aria-label*="Send"]',
   'button[aria-label*="send"]',
@@ -62,20 +69,7 @@ const ACTIVITY_COMPOSER_INPUT_SELECTOR = [
   'textarea[placeholder*="Ask"]',
 ].join(', ');
 
-function validateFolderData(data: unknown): boolean {
-  if (typeof data !== 'object' || data === null) return false;
-  const value = data as Record<string, unknown>;
-  return Array.isArray(value.folders) && typeof value.folderContents === 'object';
-}
-
-export type FolderStoreChange =
-  | 'account'
-  | 'data'
-  | 'title'
-  | 'activity'
-  | 'loaded'
-  | 'saved'
-  | 'availability';
+export type { FolderStoreChange };
 
 export interface FolderStoreOptions {
   getContext: () => {
@@ -85,118 +79,97 @@ export interface FolderStoreOptions {
   };
   onChange: (reason: FolderStoreChange) => void;
   onArchive: () => void;
-  onRecovery: (result: 'recovered' | 'lost') => void;
+  onRecovery: (result: 'recovered' | 'lost' | 'unreadable') => void;
 }
 
-/** Owns Gemini folder data, account sessions, recovery, and serialized persistence. */
+/** Owns Gemini folder commands, title sync and activity; persistence lives in FolderRepository. */
 export class FolderStore {
-  private readonly storageInitializations = new Map<string, Promise<void>>();
-  private dataSession: FolderDataSession | null = new FolderDataSession(
-    STORAGE_KEY,
-    'gemini-folders',
-    null,
-    validateFolderData,
-  );
-  private readonly dataSessions = new Map<string, FolderDataSession>();
-  private unresolvedData: FolderData = { folders: [], folderContents: {} };
-  private accountScopeRequest = 0;
-  private accountScopeRetry: number | null = null;
-  private accountScopeRetryAttempt = 0;
-  private accountScopeRetrying = false;
-  accountIsolationEnabled = false;
-  accountScope: AccountScope | null = null;
-  private activeStorageKey = STORAGE_KEY;
-  private isDestroyed = false;
+  private readonly repository: FolderRepository;
+  private readonly conversationMembership = createConversationMembershipLookup();
   private nativeTitleSyncInProgress = false;
   private pendingTitleUpdates = new Map<string, string>();
-  private pendingStorageEchoes = 0;
-  private lastStorageEchoArmedAt = 0;
-  private saveDebounceTimer: number | null = null;
-  private beforeUnloadFlushHandler: (() => void) | null = null;
   private activityTimestampService: TimestampService | null = null;
   private activityTrackingPromise: Promise<void> | null = null;
   private activityTimestampUnsubscribe: (() => void) | null = null;
   private activitySendIntentHandler: ((event: Event) => void) | null = null;
-  private readonly storageChangeHandler = (
-    changes: Record<string, Storage.StorageChange>,
-    area: string,
-  ): void => {
-    if (this.isDestroyed) return;
-    if (area === 'local' && changes[this.activeStorageKey]) {
-      if (!this.consumeStorageEchoSuppression()) void this.reloadFoldersFromStorage();
-    }
-    if (
-      area === 'sync' &&
-      (changes[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] ||
-        changes[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI])
-    ) {
-      void accountIsolationService
-        .isIsolationEnabled({
-          platform: 'gemini',
-          pageUrl: window.location.href,
-        })
-        .then((enabled) => this.setAccountIsolationEnabled(enabled));
-    }
-  };
 
   constructor(
     private readonly options: FolderStoreOptions,
-    private readonly storage: IFolderStorageAdapter = createFolderStorageAdapter(),
-  ) {}
+    storage: IFolderStorageAdapter = createFolderStorageAdapter(),
+  ) {
+    this.repository = new FolderRepository(GEMINI_FOLDER_CONFIG, storage, {
+      onChange: (reason) => this.options.onChange(reason),
+      onRecovery: (result) => result !== 'kept' && this.options.onRecovery(result), // kept: silent
+      onExternalChange: () => void this.reloadFoldersFromStorage(),
+      onAccountReleased: () => this.pendingTitleUpdates.clear(),
+      isEnabled: () => this.options.getContext().enabled,
+    });
+  }
 
   get data(): FolderData {
-    return this.dataSession?.data ?? this.unresolvedData;
+    return this.repository.data;
   }
   set data(value: FolderData) {
-    if (this.dataSession) this.dataSession.data = value;
-    else this.unresolvedData = value;
+    this.repository.data = value;
   }
   get session(): FolderDataSession | null {
-    return this.dataSession;
+    return this.repository.session;
   }
   get canEdit(): boolean {
-    return !this.isDestroyed && this.dataSession?.ready === true && !this.dataSession.replacingData;
+    return this.repository.canEdit;
   }
   get activation(): number {
-    return this.accountScopeRequest;
+    return this.repository.activation;
   }
   get storageKey(): string {
-    return this.activeStorageKey;
+    return this.repository.storageKey;
+  }
+  get accountScope(): AccountScope | null {
+    return this.repository.accountScope;
+  }
+  get accountIsolationEnabled(): boolean {
+    return this.repository.accountIsolationEnabled;
+  }
+  private get isDestroyed(): boolean {
+    return this.repository.isDestroyed;
   }
 
-  async init(): Promise<void> {
-    await this.initializeStorage(STORAGE_KEY);
-    if (this.isDestroyed) return;
-    this.beforeUnloadFlushHandler = () => this.flushPendingSaveData();
-    window.addEventListener('beforeunload', this.beforeUnloadFlushHandler);
-    await this.loadAccountIsolationSetting();
-    if (this.isDestroyed) return;
-    await this.refreshAccountScope();
-    await this.loadData();
-    if (!this.isDestroyed) browser.storage.onChanged.addListener(this.storageChangeHandler);
+  init(): Promise<void> {
+    return this.repository.init();
   }
 
   destroy(): void {
-    // The flush must precede `isDestroyed`, which gates `saveData`; the retry
-    // timer is cancelled straight after so a pending resolution cannot rearm.
-    this.flushPendingSaveData();
-    this.isDestroyed = true;
-    this.clearAccountScopeRetry();
-    this.dataSession?.deactivate();
-    this.accountScopeRequest += 1;
+    this.repository.destroy();
     this.teardownConversationActivityTracking();
-    browser.storage.onChanged.removeListener(this.storageChangeHandler);
-    if (this.beforeUnloadFlushHandler)
-      window.removeEventListener('beforeunload', this.beforeUnloadFlushHandler);
-    this.beforeUnloadFlushHandler = null;
   }
 
-  async setAccountIsolationEnabled(enabled: boolean): Promise<void> {
-    if (this.isDestroyed || enabled === this.accountIsolationEnabled) return;
-    this.accountIsolationEnabled = enabled;
-    await this.refreshAccountScope();
-    await this.loadData();
-    if (this.options.getContext().enabled) this.options.onChange('data');
+  setAccountIsolationEnabled(enabled: boolean): Promise<void> {
+    return this.repository.setAccountIsolationEnabled(enabled);
+  }
+
+  loadData(): Promise<void> {
+    return this.repository.loadData();
+  }
+
+  saveData(): Promise<boolean> {
+    return this.repository.saveData();
+  }
+
+  /** Persist a draft without exposing it to edits, exports or recovery before success. */
+  replaceData(data: FolderData): Promise<boolean> {
+    return this.repository.replaceData(data);
+  }
+
+  scheduleSaveData(): void {
+    this.repository.scheduleSaveData();
+  }
+
+  flushPendingSaveData(): void {
+    this.repository.flushPendingSaveData();
+  }
+
+  refreshAccountScope(): Promise<void> {
+    return this.repository.refreshAccountScope();
   }
 
   createFolder(name: string, parentId: string | null = null): Folder | null {
@@ -215,7 +188,7 @@ export class FolderStore {
       updatedAt: Date.now(),
     };
     this.data.folders.push(folder);
-    this.data.folderContents[folder.id] = [];
+    setBucket(this.data.folderContents, folder.id, []);
     void this.saveData();
     this.options.onChange('data');
     return folder;
@@ -224,7 +197,7 @@ export class FolderStore {
   renameFolder(folderId: string, name: string): void {
     if (!this.canEdit) return;
     const folder = this.data.folders.find((item) => item.id === folderId);
-    if (!folder) return;
+    if (!folder || folder.name === name) return;
     folder.name = name;
     folder.updatedAt = Date.now();
     void this.saveData();
@@ -240,10 +213,12 @@ export class FolderStore {
 
   removeConversationsFromFolder(folderId: string, ids: ReadonlySet<string>): void {
     if (!this.canEdit) return;
-    const conversations = this.data.folderContents[folderId];
+    const conversations = ownBucket(this.data.folderContents, folderId);
     if (!conversations) return;
-    this.data.folderContents[folderId] = conversations.filter(
-      (item) => !ids.has(item.conversationId),
+    setBucket(
+      this.data.folderContents,
+      folderId,
+      conversations.filter((item) => !ids.has(item.conversationId)),
     );
     void this.saveData();
     this.options.onChange('data');
@@ -270,51 +245,20 @@ export class FolderStore {
 
   flushTitleUpdates(): void {
     if (this.pendingTitleUpdates.size === 0) return;
-    const session = this.dataSession;
-    const activation = this.accountScopeRequest;
+    const session = this.repository.session;
+    const activation = this.repository.activation;
     void this.saveData()
       .then((saved) => {
-        if (saved && this.dataSession === session && this.accountScopeRequest === activation)
+        if (
+          saved &&
+          this.repository.session === session &&
+          this.repository.activation === activation
+        )
           this.pendingTitleUpdates.clear();
       })
       .catch((error) =>
         console.error('[FolderStore] Failed to save pending title updates:', error),
       );
-  }
-
-  private debug(...args: unknown[]): void {
-    if (this.isDebugEnabled()) {
-      console.log('[FolderStore]', ...args);
-    }
-  }
-
-  private debugWarn(...args: unknown[]): void {
-    if (this.isDebugEnabled()) {
-      console.warn('[FolderStore]', ...args);
-    }
-  }
-
-  private isDebugEnabled(): boolean {
-    try {
-      // Enable by setting localStorage.gvFolderDebug = '1'
-      return IS_DEBUG || localStorage.getItem('gvFolderDebug') === '1';
-    } catch {
-      // Ignore - localStorage may not be available in some contexts (e.g. incognito mode)
-      return IS_DEBUG;
-    }
-  }
-
-  private initializeStorage(key: string): Promise<void> {
-    const existing = this.storageInitializations.get(key);
-    if (existing) return existing;
-    // init() performs a best-effort migration that can write to storage. Run it
-    // once per key so revisiting an account cannot race that account's save queue.
-    const initialization = this.storage.init(key).catch((error) => {
-      this.storageInitializations.delete(key);
-      throw error;
-    });
-    this.storageInitializations.set(key, initialization);
-    return initialization;
   }
 
   hasStoredConversations(): boolean {
@@ -359,58 +303,36 @@ export class FolderStore {
 
   ensureConversationsInFolder(folderId: string, dragData: DragData): void {
     if (!this.canEdit) return;
-    if (!this.data.folderContents[folderId]) {
-      this.data.folderContents[folderId] = [];
-    }
-
-    const convs = dragData.conversations ?? [];
-    const items: {
-      id: string;
-      title: string;
-      url?: string;
-      isGem?: boolean;
-      gemId?: string;
-    }[] =
-      convs.length > 0
-        ? convs.map((c) => ({
-            id: c.conversationId,
-            title: c.title,
-            url: c.url,
-            isGem: c.isGem,
-            gemId: c.gemId,
-          }))
-        : dragData.conversationId
-          ? [
-              {
-                id: dragData.conversationId,
-                title: dragData.title,
-                url: dragData.url,
-                isGem: dragData.isGem,
-                gemId: dragData.gemId,
-              },
-            ]
-          : [];
-
-    let maxSortIndex = this.data.folderContents[folderId].reduce(
-      (max, c) => Math.max(max, c.sortIndex ?? -1),
-      -1,
+    const items = dragData.conversations?.length
+      ? dragData.conversations
+      : dragData.conversationId
+        ? [{ ...dragData, conversationId: dragData.conversationId }]
+        : [];
+    const records = this.withConversationStars(
+      items.map((item) => this.buildDroppedConversation(item)),
     );
+    this.data = placeConversations(this.data, records, {
+      target: folderId,
+      placement: 'append',
+      keysOf: conversationKeys,
+    }).data;
+  }
 
-    for (const item of items) {
-      const exists = this.data.folderContents[folderId].some((c) => c.conversationId === item.id);
-      if (exists) continue;
-
-      this.data.folderContents[folderId].push({
-        conversationId: item.id,
-        title: this.resolveDraggedConversationTitleForStorage(item.id, item.title),
-        url: item.url ?? '',
-        addedAt: Date.now(),
-        lastTurnAt: this.getKnownConversationLastTurnAt(item.id, item.url),
-        isGem: item.isGem,
-        gemId: item.gemId,
-        sortIndex: ++maxSortIndex,
-      });
-    }
+  /** A conversation dropped from outside a folder, before placement assigns its sortIndex. */
+  private buildDroppedConversation(
+    item: Pick<ConversationReference, 'conversationId' | 'title' | 'isGem' | 'gemId'> & {
+      url?: string;
+    },
+  ): ConversationReference {
+    return {
+      conversationId: item.conversationId,
+      title: this.resolveDraggedConversationTitleForStorage(item.conversationId, item.title),
+      url: item.url ?? '',
+      addedAt: Date.now(),
+      lastTurnAt: this.getKnownConversationLastTurnAt(item.conversationId, item.url),
+      isGem: item.isGem,
+      gemId: item.gemId,
+    };
   }
 
   private resolveDraggedConversationTitleForStorage(conversationId: string, title: string): string {
@@ -418,6 +340,14 @@ export class FolderStore {
     if (normalizedTitle && normalizedTitle !== 'Untitled') return normalizedTitle;
 
     return syncConversationTitleFromNative(conversationId) || normalizedTitle || 'Untitled';
+  }
+
+  /** A star is the conversation's: a new record of a chat starred in another folder keeps it. */
+  private withConversationStars(records: ConversationReference[]): ConversationReference[] {
+    const starred = readConversationStars(this.data, FOLDER_SITE_POLICIES.gemini);
+    return records.map((record) =>
+      !record.starred && starred(record) ? { ...record, starred: true } : record,
+    );
   }
 
   reorderOrMoveConversations(
@@ -434,6 +364,8 @@ export class FolderStore {
       targetParentId,
       insertIndex,
       this.options.getContext().sortMode,
+      // The groups the tree drew: a row shows starred when any copy of its chat is.
+      readConversationStars(this.data, FOLDER_SITE_POLICIES.gemini),
     );
     if (nextData === this.data) return;
     this.data = nextData;
@@ -446,58 +378,30 @@ export class FolderStore {
     dragData: DragData & { sourceFolderId?: string },
   ): void {
     if (!this.canEdit) return;
-    this.debug('Adding conversation to folder:', {
-      folderId,
-      dragData,
-    });
-
-    if (!this.data.folderContents[folderId]) {
-      this.data.folderContents[folderId] = [];
-    }
-
-    // Check if conversation is already in this folder
-    const exists = this.data.folderContents[folderId].some(
-      (c) => c.conversationId === dragData.conversationId,
+    const conversationId = dragData.conversationId;
+    if (!conversationId) return;
+    const sourceFolderId =
+      dragData.sourceFolderId !== folderId ? dragData.sourceFolderId : undefined;
+    const { data, added } = placeConversations(
+      this.data,
+      this.withConversationStars([this.buildDroppedConversation({ ...dragData, conversationId })]),
+      {
+        target: folderId,
+        placement: 'append',
+        keysOf: conversationKeys,
+        removeFrom: sourceFolderId ? { bucket: sourceFolderId } : undefined,
+      },
     );
-
-    if (exists) {
-      this.debug('Conversation already in folder:', dragData.conversationId);
-      this.debug('Existing conversations:', this.data.folderContents[folderId]);
+    if (added.length === 0) {
+      folderDebug('Conversation already in folder:', conversationId);
       return;
     }
 
-    const maxSortIndex = this.data.folderContents[folderId].reduce(
-      (max, c) => Math.max(max, c.sortIndex ?? -1),
-      -1,
-    );
-    const conversationId = dragData.conversationId!;
-    const conv: ConversationReference = {
-      conversationId,
-      title: this.resolveDraggedConversationTitleForStorage(conversationId, dragData.title),
-      url: dragData.url!,
-      addedAt: Date.now(),
-      lastTurnAt: this.getKnownConversationLastTurnAt(conversationId, dragData.url),
-      isGem: dragData.isGem,
-      gemId: dragData.gemId,
-      sortIndex: maxSortIndex + 1,
-    };
-
-    this.data.folderContents[folderId].push(conv);
-    this.debug('Conversation added. Total in folder:', this.data.folderContents[folderId].length);
-
-    // If this was dragged from another folder, remove it from the source
-    if (dragData.sourceFolderId && dragData.sourceFolderId !== folderId) {
-      this.debug('Moving from folder:', dragData.sourceFolderId);
-      this.removeConversationFromFolder(dragData.sourceFolderId, dragData.conversationId!);
-      // Note: removeConversationFromFolder calls saveData() and refresh(), so we don't need to call them again
-      // Folder→folder move is not a "first archive"; skip the nudge.
-      return;
-    }
-
-    // Save immediately before refresh to persist data
+    this.data = data;
     this.saveData();
     this.options.onChange('data');
-    this.options.onArchive();
+    // Folder→folder move is not a "first archive"; skip the nudge.
+    if (!sourceFolderId) this.options.onArchive();
   }
 
   addConversationsToFolder(
@@ -506,75 +410,38 @@ export class FolderStore {
     sourceFolderId?: string,
   ): void {
     if (!this.canEdit) return;
-    this.debug('Adding multiple conversations to folder:', {
+    folderDebug('Adding multiple conversations to folder:', {
       folderId,
       count: conversations.length,
       sourceFolderId,
     });
 
-    if (!this.data.folderContents[folderId]) {
-      this.data.folderContents[folderId] = [];
-    }
-
-    let addedCount = 0;
-    const conversationsToRemove: string[] = [];
-    let maxSortIndex = this.data.folderContents[folderId].reduce(
-      (max, c) => Math.max(max, c.sortIndex ?? -1),
-      -1,
+    const records = this.withConversationStars(
+      conversations.map((conv) => ({
+        ...conv,
+        title: sourceFolderId
+          ? conv.title
+          : this.resolveDraggedConversationTitleForStorage(conv.conversationId, conv.title),
+        addedAt: Date.now(),
+        lastTurnAt:
+          conv.lastTurnAt ?? this.getKnownConversationLastTurnAt(conv.conversationId, conv.url),
+      })),
     );
-
-    conversations.forEach((conv) => {
-      // Check if conversation is already in this folder
-      const exists = this.data.folderContents[folderId].some(
-        (c) => c.conversationId === conv.conversationId,
-      );
-
-      if (!exists) {
-        maxSortIndex++;
-        // Create a copy with updated timestamp
-        const newConv: ConversationReference = {
-          ...conv,
-          title: sourceFolderId
-            ? conv.title
-            : this.resolveDraggedConversationTitleForStorage(conv.conversationId, conv.title),
-          addedAt: Date.now(),
-          lastTurnAt:
-            conv.lastTurnAt ?? this.getKnownConversationLastTurnAt(conv.conversationId, conv.url),
-          sortIndex: maxSortIndex,
-        };
-
-        this.data.folderContents[folderId].push(newConv);
-        addedCount++;
-
-        // Track conversations to remove from source folder
-        if (sourceFolderId && sourceFolderId !== folderId) {
-          conversationsToRemove.push(conv.conversationId);
-        }
-      }
+    const { data, added } = placeConversations(this.data, records, {
+      target: folderId,
+      placement: 'append',
+      keysOf: conversationKeys,
+      // Ids the target already held stay in the source.
+      removeFrom:
+        sourceFolderId && sourceFolderId !== folderId ? { bucket: sourceFolderId } : undefined,
     });
+    this.data = data;
+    folderDebug(`Added ${added.length} conversations to ${folderId}`);
 
-    this.debug(
-      `Added ${addedCount} conversations. Total in folder:`,
-      this.data.folderContents[folderId].length,
-    );
-
-    // Remove from source folder if moving
-    if (sourceFolderId && sourceFolderId !== folderId && conversationsToRemove.length > 0) {
-      this.debug('Removing conversations from source folder:', sourceFolderId);
-      conversationsToRemove.forEach((convId) => {
-        this.data.folderContents[sourceFolderId] = this.data.folderContents[sourceFolderId].filter(
-          (c) => c.conversationId !== convId,
-        );
-      });
-    }
-
-    // Save immediately before refresh to persist data
     this.saveData();
     this.options.onChange('data');
-    // Trigger nudge only if at least one conversation was actually added from
-    // outside. If the whole batch came from another folder (sourceFolderId set),
-    // it's a folder→folder move and not a "first archive" event.
-    if (addedCount > 0 && !sourceFolderId) {
+    // A batch from another folder is a folder→folder move, not a "first archive".
+    if (added.length > 0 && !sourceFolderId) {
       this.options.onArchive();
     }
   }
@@ -584,14 +451,14 @@ export class FolderStore {
     const draggedFolderId = dragData.folderId;
     if (!draggedFolderId) return;
 
-    this.debug('Moving folder to folder:', {
+    folderDebug('Moving folder to folder:', {
       draggedFolderId,
       targetFolderId,
     });
 
     const nextData = moveFolder(this.data, draggedFolderId, targetFolderId, Date.now());
     if (nextData === this.data) {
-      this.debug('Folder move rejected');
+      folderDebug('Folder move rejected');
       return;
     }
     this.data = nextData;
@@ -604,11 +471,11 @@ export class FolderStore {
     const draggedFolderId = dragData.folderId;
     if (!draggedFolderId) return;
 
-    this.debug('Moving folder to root level:', draggedFolderId);
+    folderDebug('Moving folder to root level:', draggedFolderId);
 
     const nextData = moveFolder(this.data, draggedFolderId, null, Date.now());
     if (nextData === this.data) {
-      this.debug('Folder move to root rejected');
+      folderDebug('Folder move to root rejected');
       return;
     }
     this.data = nextData;
@@ -633,7 +500,7 @@ export class FolderStore {
     // Refresh the folder UI to update the star icon and re-sort
     this.options.onChange('data');
 
-    this.debug('Toggled star for conversation:', conversationId, 'starred:', conv.starred);
+    folderDebug('Toggled star for conversation:', conversationId, 'starred:', conv.starred);
   }
 
   setConversationStarAcrossFolders(conversationId: string, starred: boolean): void {
@@ -641,7 +508,7 @@ export class FolderStore {
     let changed = false;
     Object.values(this.data.folderContents).forEach((conversations) => {
       conversations.forEach((conversation) => {
-        if (!this.isSameConversation(conversationId, conversation)) return;
+        if (!isSameConversation(conversationId, conversation)) return;
         if (conversation.starred === starred) return;
         conversation.starred = starred;
         changed = true;
@@ -655,10 +522,12 @@ export class FolderStore {
 
   removeConversationFromFolder(folderId: string, conversationId: string): void {
     if (!this.canEdit) return;
-    if (!this.data.folderContents[folderId]) return;
-
-    this.data.folderContents[folderId] = this.data.folderContents[folderId].filter(
-      (c) => c.conversationId !== conversationId,
+    const conversations = ownBucket(this.data.folderContents, folderId);
+    if (!conversations) return;
+    setBucket(
+      this.data.folderContents,
+      folderId,
+      conversations.filter((c) => c.conversationId !== conversationId),
     );
 
     this.saveData();
@@ -683,31 +552,15 @@ export class FolderStore {
     conv: ConversationReference,
   ): void {
     if (!this.canEdit) return;
-    // Remove from source folder
-    if (this.data.folderContents[sourceFolderId]) {
-      this.data.folderContents[sourceFolderId] = this.data.folderContents[sourceFolderId].filter(
-        (c) => c.conversationId !== conv.conversationId,
-      );
-    }
-
-    // Add to target folder
-    if (!this.data.folderContents[targetFolderId]) {
-      this.data.folderContents[targetFolderId] = [];
-    }
-
-    // Check if conversation already exists in target folder
-    const existingIndex = this.data.folderContents[targetFolderId].findIndex(
-      (c) => c.conversationId === conv.conversationId,
-    );
-
-    if (existingIndex === -1) {
-      // Add with updated timestamp
-      this.data.folderContents[targetFolderId].push({
-        ...conv,
-        addedAt: Date.now(),
-      });
-    }
-
+    // The record goes after the target's last row, like a drop, and leaves the
+    // source even when the target already holds it.
+    this.data = placeConversations(this.data, [{ ...conv, addedAt: Date.now() }], {
+      target: targetFolderId,
+      placement: 'append',
+      keysOf: conversationKeys,
+      removeFrom: { bucket: sourceFolderId },
+      removeWhenPresent: true,
+    }).data;
     this.saveData();
     this.options.onChange('data');
   }
@@ -727,49 +580,27 @@ export class FolderStore {
     const folderExists = this.data.folders.some((f) => f.id === folderId);
     if (!folderExists) return;
 
-    // Add to folder
-    if (!this.data.folderContents[folderId]) {
-      this.data.folderContents[folderId] = [];
-    }
-
-    // Check if conversation already exists in folder
-    const existingIndex = this.data.folderContents[folderId].findIndex(
-      (c) => c.conversationId === conversationId,
-    );
-
-    let addedNewConversation = false;
-    if (existingIndex === -1) {
-      // Insert at the top by claiming sortIndex 0 and shifting existing entries
-      // up by one. Time-based fallback alone is not enough — normalization
-      // (called from saveData) will assign sortIndex 0 to the newest entry by
-      // time and collide with any pre-existing sortIndex 0, after which JS's
-      // stable sort drops the new entry below the old one.
-      //
-      // Normalize first so any nullish sortIndex on existing
-      // entries gets a numeric value before the shift. Otherwise (sortIndex ?? 0)
-      // would map both null entries and the existing 0 entry to 1.
-      this.data = normalizeFolderData(this.data);
-      const now = Date.now();
-      for (const c of this.data.folderContents[folderId]) {
-        c.sortIndex = (c.sortIndex ?? 0) + 1;
-      }
-      this.data.folderContents[folderId].push({
-        conversationId,
-        title,
-        url,
-        addedAt: now,
-        lastOpenedAt: now,
-        lastTurnAt: lastTurnAt ?? this.getKnownConversationLastTurnAt(conversationId, url),
-        isGem,
-        gemId,
-        sortIndex: 0,
-      });
-      addedNewConversation = true;
-    }
+    const now = Date.now();
+    const record: ConversationReference = {
+      conversationId,
+      title,
+      url,
+      addedAt: now,
+      lastOpenedAt: now,
+      lastTurnAt: lastTurnAt ?? this.getKnownConversationLastTurnAt(conversationId, url),
+      isGem,
+      gemId,
+    };
+    const { data, added } = placeConversations(this.data, this.withConversationStars([record]), {
+      target: folderId,
+      placement: 'top',
+      keysOf: conversationKeys,
+    });
+    this.data = data;
 
     this.saveData();
     this.options.onChange('data');
-    if (addedNewConversation) {
+    if (added.length > 0) {
       this.options.onArchive();
     }
   }
@@ -782,46 +613,33 @@ export class FolderStore {
 
   private applyConversationTitleUpdate(conversationId: string, newTitle: string): boolean {
     if (!this.canEdit) return false;
-    const title = newTitle.trim();
-    if (!title) return false;
-
-    let updated = false;
-    const updatedAt = Date.now();
-
-    for (const folderId in this.data.folderContents) {
-      const conversations = this.data.folderContents[folderId];
-      for (const conv of conversations) {
-        if (conv.customTitle) continue;
-        if (!this.isSameConversation(conversationId, conv)) continue;
-        if (conv.title === title) continue;
-
-        conv.title = title;
-        conv.updatedAt = updatedAt;
-        updated = true;
-        this.debug(`Updated title for conversation ${conversationId} in folder ${folderId}`);
-      }
-    }
-
-    return updated;
+    const matches = Object.values(this.data.folderContents)
+      .flat()
+      .filter((conv) => isSameConversation(conversationId, conv));
+    return applyNativeTitle(matches, newTitle, Date.now());
   }
 
   async syncConversationTitlesFromNative(): Promise<void> {
     if (this.nativeTitleSyncInProgress) return;
-    if (!this.hasStoredConversations()) return;
+    if (!this.hasStoredConversations() || !this.canEdit) return;
 
     this.nativeTitleSyncInProgress = true;
     try {
       let updated = false;
+      // One index per pass: O(stored + rows + matches); see indexConversationsByRouteId.
+      const index = indexConversationsByRouteId(this.data.folderContents);
       const conversations = getNativeConversationElements(this.options.getContext().sidebar);
 
       for (const convEl of Array.from(conversations)) {
         const element = convEl as HTMLElement;
         const conversationId =
           extractNativeConversationId(element) || extractConversationIdFromElement(element);
+        const matches = index.get(normalizeConversationId(conversationId) ?? '');
+        if (!matches) continue;
         const title = extractNativeConversationTitle(element);
-        if (!conversationId || !title) continue;
+        if (!title) continue;
 
-        updated = this.applyConversationTitleUpdate(conversationId, title) || updated;
+        updated = applyNativeTitle(matches, title, Date.now()) || updated;
       }
 
       if (!updated) return;
@@ -849,7 +667,7 @@ export class FolderStore {
 
     for (const folderId in this.data.folderContents) {
       for (const conversation of this.data.folderContents[folderId]) {
-        if (!this.isSameConversation(conversationId, conversation)) continue;
+        if (!isSameConversation(conversationId, conversation)) continue;
 
         if (conversation.customTitle) {
           delete conversation.customTitle;
@@ -880,13 +698,15 @@ export class FolderStore {
       const initialLength = conversations.length;
 
       // Filter out the deleted conversation
-      this.data.folderContents[folderId] = conversations.filter(
-        (conv) => !this.isSameConversation(conversationId, conv),
+      setBucket(
+        this.data.folderContents,
+        folderId,
+        conversations.filter((conv) => !isSameConversation(conversationId, conv)),
       );
 
       if (this.data.folderContents[folderId].length < initialLength) {
         removed = true;
-        this.debug(`Removed deleted conversation ${conversationId} from folder ${folderId}`);
+        folderDebug(`Removed deleted conversation ${conversationId} from folder ${folderId}`);
       }
     }
 
@@ -895,500 +715,6 @@ export class FolderStore {
       // Re-render folders to reflect the removal
       this.options.onChange('title');
     }
-  }
-
-  async loadData(): Promise<void> {
-    const session = this.dataSession;
-    if (!session) return;
-    // A returning account may still own a queued edit that is newer than disk.
-    if ((session.saveInProgress || session.replacingData) && session.ready) return;
-    const version = ++session.loadVersion;
-    const isCurrent = () =>
-      this.dataSession === session && session.loadVersion === version && !this.isDestroyed;
-    try {
-      // On Safari, restore recovery backups from the durable mirror before any
-      // recoverFromBackup() can run (localStorage may have been ITP-evicted).
-      await session.backup.ensureHydrated();
-      if (!isCurrent()) return;
-
-      let loadedData = await this.storage.loadData(session.storageKey);
-      if (!isCurrent()) return;
-
-      if (!loadedData && session.accountScope) {
-        loadedData = await this.migrateLegacyFolderDataToScopedStorage(session, version);
-        if (!isCurrent()) return;
-      }
-
-      if (loadedData && validateFolderData(loadedData)) {
-        // Validate and repair data integrity
-        this.data = normalizeFolderData(loadedData);
-
-        // Clean up orphaned folderContents (folders that no longer exist)
-        const validFolderIds = new Set(this.data.folders.map((f) => f.id));
-        validFolderIds.add(ROOT_CONVERSATIONS_ID); // Keep root conversations
-        Object.keys(this.data.folderContents).forEach((folderId) => {
-          if (!validFolderIds.has(folderId)) {
-            this.debugWarn(`Removing orphaned folderContents for: ${folderId}`);
-            delete this.data.folderContents[folderId];
-          }
-        });
-
-        // Create primary backup on successful load
-        session.backup.createPrimaryBackup(this.data);
-        session.markReady();
-
-        this.debug('Data loaded and validated successfully');
-      } else if (loadedData) {
-        // Data exists but validation failed - this is a real corruption case
-        console.warn(
-          '[FolderStore] Storage returned invalid data structure, attempting recovery from backup',
-        );
-        await this.attemptDataRecovery({ reason: 'corrupted', originalData: loadedData }, session);
-      } else {
-        // No data found - likely a first-time user
-        console.log(
-          '[FolderStore] No folder data found, initializing empty state (likely first-time user)',
-        );
-        this.data = { folders: [], folderContents: {} };
-        session.markReady();
-        // No notification needed - this is expected for new users
-      }
-    } catch (error) {
-      if (!isCurrent()) return;
-      console.error('[FolderStore] Load data error:', error);
-
-      // CRITICAL: Do NOT clear data on error - this causes data loss!
-      // Instead, try to recover from backup or keep existing data
-      await this.attemptDataRecovery(error, session);
-    } finally {
-      if (isCurrent() && session.ready) {
-        this.options.onChange('loaded');
-      }
-    }
-  }
-
-  private filterLegacyFolderDataByCurrentAccount(
-    data: FolderData,
-    scope: AccountScope | null,
-  ): FolderData {
-    const routeUserId = scope?.routeUserId;
-    if (!routeUserId) {
-      return cloneFolderData(data);
-    }
-
-    const folderById = new Map(data.folders.map((folder) => [folder.id, folder]));
-    const visibleFolderIds = new Set<string>();
-    const nextContents: Record<string, ConversationReference[]> = {};
-
-    for (const [folderId, conversations] of Object.entries(data.folderContents || {})) {
-      const filtered = conversations.filter((conversation) => {
-        const conversationUserId = this.getUserIdFromUrl(conversation.url);
-        return conversationUserId === null || conversationUserId === routeUserId;
-      });
-      if (filtered.length === 0) continue;
-
-      nextContents[folderId] = filtered.map((conversation) => ({
-        ...conversation,
-      }));
-      if (folderId !== ROOT_CONVERSATIONS_ID) {
-        visibleFolderIds.add(folderId);
-      }
-    }
-
-    const stack = [...visibleFolderIds];
-    while (stack.length > 0) {
-      const currentId = stack.pop();
-      if (!currentId) continue;
-
-      const folder = folderById.get(currentId);
-      if (!folder?.parentId) continue;
-      if (visibleFolderIds.has(folder.parentId)) continue;
-      visibleFolderIds.add(folder.parentId);
-      stack.push(folder.parentId);
-    }
-
-    const folders = data.folders
-      .filter((folder) => visibleFolderIds.has(folder.id))
-      .map((folder) => ({ ...folder }));
-
-    for (const folder of folders) {
-      if (!nextContents[folder.id]) {
-        nextContents[folder.id] = [];
-      }
-    }
-
-    if (!nextContents[ROOT_CONVERSATIONS_ID]) {
-      nextContents[ROOT_CONVERSATIONS_ID] = [];
-    }
-
-    return {
-      folders,
-      folderContents: nextContents,
-    };
-  }
-
-  private async migrateLegacyFolderDataToScopedStorage(
-    session: FolderDataSession,
-    version: number,
-  ): Promise<FolderData | null> {
-    try {
-      const legacyData = await this.storage.loadData(STORAGE_KEY);
-      if (
-        this.dataSession !== session ||
-        session.loadVersion !== version ||
-        !legacyData ||
-        !validateFolderData(legacyData)
-      ) {
-        return null;
-      }
-
-      const migratedData = normalizeFolderData(
-        this.filterLegacyFolderDataByCurrentAccount(legacyData, session.accountScope),
-      );
-      session.data = migratedData;
-      session.markReady();
-      session.activeSave = this.persistDataSession(session, cloneFolderData(session.data));
-      const saved = await session.activeSave;
-      if (!saved) {
-        console.warn('[FolderStore] Failed to persist scoped migration data');
-      }
-      this.debug(
-        'Migrated legacy folder data to scoped storage:',
-        session.storageKey,
-        migratedData.folders.length,
-      );
-      return migratedData;
-    } catch (error) {
-      console.error('[FolderStore] Failed to migrate legacy folder data:', error);
-      return null;
-    }
-  }
-
-  private async attemptDataRecovery(error: unknown, session: FolderDataSession): Promise<void> {
-    if (this.dataSession !== session) return;
-    console.warn('[FolderStore] Attempting data recovery after load failure');
-
-    // Step 1: Try to restore from localStorage backups (primary, emergency, beforeUnload)
-    const recovered = session.backup.recoverFromBackup();
-    if (recovered && validateFolderData(recovered)) {
-      this.data = normalizeFolderData(recovered);
-      session.markReady();
-      console.warn('[FolderStore] Data recovered from localStorage backup');
-      this.options.onRecovery('recovered');
-      // Save recovered data to persistent storage
-      await this.saveData();
-      return; // Successfully recovered, no need to continue
-    }
-
-    // Step 2: If current this.data already has valid structure, keep it
-    if (validateFolderData(this.data) && this.data.folders.length > 0) {
-      console.warn('[FolderStore] Keeping existing in-memory data after load error');
-      this.data = normalizeFolderData(this.data);
-      session.markReady();
-      return;
-    }
-
-    // Step 3: Last resort - initialize empty data and log critical error
-    console.error('[FolderStore] CRITICAL: Unable to recover data, initializing empty state');
-    console.error('[FolderStore] Original error:', error);
-    this.data = { folders: [], folderContents: {} };
-    session.markReady();
-
-    // Show user notification about data loss
-    this.options.onRecovery('lost');
-  }
-
-  scheduleSaveData(): void {
-    if (!this.canEdit) return;
-    if (this.saveDebounceTimer !== null) {
-      window.clearTimeout(this.saveDebounceTimer);
-    }
-    this.saveDebounceTimer = window.setTimeout(() => {
-      this.saveDebounceTimer = null;
-      void this.saveData();
-    }, SAVE_DEBOUNCE_MS);
-  }
-
-  flushPendingSaveData(): void {
-    if (this.saveDebounceTimer === null) return;
-    window.clearTimeout(this.saveDebounceTimer);
-    this.saveDebounceTimer = null;
-    void this.saveData();
-  }
-
-  private armStorageEchoSuppression(): void {
-    this.pendingStorageEchoes += 1;
-    this.lastStorageEchoArmedAt = Date.now();
-  }
-
-  private consumeStorageEchoSuppression(): boolean {
-    if (this.pendingStorageEchoes <= 0) return false;
-    if (Date.now() - this.lastStorageEchoArmedAt > STORAGE_ECHO_SUPPRESS_WINDOW_MS) {
-      this.pendingStorageEchoes = 0;
-      return false;
-    }
-    this.pendingStorageEchoes -= 1;
-    return true;
-  }
-
-  /** Persist a draft without exposing it to edits, exports or recovery before success. */
-  async replaceData(data: FolderData): Promise<boolean> {
-    const session = this.dataSession;
-    const activation = this.accountScopeRequest;
-    if (!session || !this.canEdit) return false;
-    const snapshot = normalizeFolderData(cloneFolderData(data));
-
-    this.flushPendingSaveData();
-    session.replacingData = true;
-    session.loadVersion += 1;
-    this.options.onChange('availability');
-    let saved = false;
-    try {
-      // Finish accepted edits first. A draft must not replace their coalesced tail.
-      const pending = session.pendingSaveCompletion?.promise ?? session.activeSave;
-      if (pending) await pending;
-      if (
-        this.isDestroyed ||
-        this.dataSession !== session ||
-        this.accountScopeRequest !== activation
-      )
-        return false;
-
-      session.activeSave = this.persistDataSession(session, snapshot);
-      saved = await session.activeSave;
-      // An issued write still belongs to this session if the user has since left it.
-      if (saved) session.data = snapshot;
-      return saved;
-    } finally {
-      session.replacingData = false;
-      if (this.dataSession === session && !this.isDestroyed) {
-        this.options.onChange(saved ? 'data' : 'availability');
-      } else if (!session.saveInProgress) {
-        this.dataSessions.delete(session.storageKey);
-      }
-    }
-  }
-
-  async saveData(): Promise<boolean> {
-    const session = this.dataSession;
-    if (!session || !this.canEdit) return false;
-    try {
-      this.data = normalizeFolderData(this.data);
-      const snapshot = cloneFolderData(session.data);
-      // A mutation supersedes any storage read already in flight for this session.
-      session.loadVersion += 1;
-      session.markReady();
-      session.backup.createEmergencyBackup(snapshot);
-      if (session.saveInProgress) {
-        session.pendingSave = snapshot;
-        // Calls coalesced into this trailing snapshot share its storage result.
-        if (!session.pendingSaveCompletion) {
-          let resolve!: (saved: boolean) => void;
-          const promise = new Promise<boolean>((complete) => {
-            resolve = complete;
-          });
-          session.pendingSaveCompletion = { promise, resolve };
-        }
-        this.debug('Save already in progress, queueing one trailing save');
-        return session.pendingSaveCompletion.promise;
-      }
-
-      session.activeSave = this.persistDataSession(session, snapshot);
-      return session.activeSave;
-    } catch (error) {
-      console.error('[FolderStore] Save data error:', error);
-      return false;
-    }
-  }
-
-  private async persistDataSession(
-    session: FolderDataSession,
-    snapshot: FolderData,
-  ): Promise<boolean> {
-    this.dataSessions.set(session.storageKey, session);
-    session.saveInProgress = true;
-    let success = false;
-
-    try {
-      // Additional safety check: warn if saving empty data
-      if (snapshot.folders.length === 0 && Object.keys(snapshot.folderContents).length === 0) {
-        // Check if we're about to overwrite non-empty data
-        const existingData = await this.storage.loadData(session.storageKey);
-        if (
-          existingData &&
-          (existingData.folders.length > 0 || Object.keys(existingData.folderContents).length > 0)
-        ) {
-          console.warn(
-            '[FolderStore] WARNING: Attempting to save empty data over existing non-empty data',
-          );
-          console.warn('[FolderStore] This may indicate a bug.');
-          // Still proceed, but log it prominently
-        }
-      }
-
-      // Save via storage adapter (handles both Safari and non-Safari).
-      // Each write mirrors into chrome.storage.local and echoes back through
-      // storage.onChanged in this same context — arm suppression so the echo
-      // doesn't trigger a redundant full reload (see setupStorageListener).
-      if (this.dataSession === session) this.armStorageEchoSuppression();
-      success = await this.storage.saveData(session.storageKey, snapshot);
-
-      // Retry once if the first attempt fails (for transient errors)
-      if (!success) {
-        console.warn('[FolderStore] Save failed, retrying once...');
-        if (this.dataSession === session) this.armStorageEchoSuppression();
-        success = await this.storage.saveData(session.storageKey, snapshot);
-      }
-
-      if (success) {
-        // Create primary backup AFTER successful save
-        session.backup.createPrimaryBackup(snapshot);
-        this.debug('Data saved successfully');
-        // Centralised floating-panel sync. Any code path that persists folder
-        // data (sidebar actions, cloud download, native menu → "Move to
-        // folder", etc.) ends up here, so one hook keeps the floating view
-        // live without every call site having to remember.
-        if (this.dataSession === session && !this.isDestroyed) {
-          this.options.onChange('saved');
-        }
-      } else {
-        console.error('[FolderStore] Save failed after retry');
-      }
-    } catch (error) {
-      console.error('[FolderStore] Save data error:', error);
-      success = false;
-    } finally {
-      session.saveInProgress = false;
-      const pending = session.pendingSave;
-      const completion = session.pendingSaveCompletion;
-      session.pendingSave = null;
-      session.pendingSaveCompletion = null;
-      if (pending) {
-        session.activeSave = this.persistDataSession(session, pending);
-        void session.activeSave.then((saved) => completion?.resolve(saved));
-      } else {
-        session.activeSave = null;
-        if (this.dataSession !== session && !session.replacingData) {
-          this.dataSessions.delete(session.storageKey);
-        }
-      }
-    }
-
-    return success;
-  }
-
-  private async loadAccountIsolationSetting(): Promise<void> {
-    try {
-      this.accountIsolationEnabled = await accountIsolationService.isIsolationEnabled({
-        platform: 'gemini',
-        pageUrl: window.location.href,
-      });
-      this.debug('Loaded account isolation setting:', this.accountIsolationEnabled);
-    } catch (error) {
-      console.error('[FolderStore] Failed to load account isolation setting:', error);
-      this.accountIsolationEnabled = false;
-    }
-  }
-
-  async refreshAccountScope(): Promise<void> {
-    const request = ++this.accountScopeRequest;
-    this.clearAccountScopeRetry();
-    if (!this.accountScopeRetrying) this.accountScopeRetryAttempt = 0;
-    const previous = this.dataSession;
-    // Flush the old account's pending debounce before releasing its data owner.
-    this.flushPendingSaveData();
-    previous?.deactivate();
-    if (previous && !previous.saveInProgress && !previous.replacingData) {
-      this.dataSessions.delete(previous.storageKey);
-    }
-    this.dataSession = null;
-    this.unresolvedData = { folders: [], folderContents: {} };
-    this.accountScope = null;
-    this.activeStorageKey = '';
-    this.pendingStorageEchoes = 0;
-    this.pendingTitleUpdates.clear();
-    this.options.onChange('account');
-    try {
-      let resolvedScope: AccountScope | null = null;
-      if (this.accountIsolationEnabled) {
-        const context = detectAccountContextFromDocument(window.location.href, document);
-        resolvedScope = await accountIsolationService.resolveAccountScope({
-          pageUrl: window.location.href,
-          routeUserId: context.routeUserId,
-          email: context.email,
-        });
-      }
-      if (request !== this.accountScopeRequest || this.isDestroyed) return;
-      const storageKey = resolvedScope
-        ? buildScopedFolderStorageKey(resolvedScope.accountKey)
-        : STORAGE_KEY;
-      await this.initializeStorage(storageKey);
-      if (request !== this.accountScopeRequest || this.isDestroyed) return;
-      const session =
-        this.dataSessions.get(storageKey) ??
-        (previous?.storageKey === storageKey
-          ? previous
-          : new FolderDataSession(storageKey, 'gemini-folders', resolvedScope, validateFolderData));
-      this.dataSessions.set(storageKey, session);
-      session.accountScope = resolvedScope;
-      this.dataSession = session;
-      this.accountScope = resolvedScope;
-      this.activeStorageKey = storageKey;
-      session.activate();
-      this.accountScopeRetryAttempt = 0;
-      if (session.ready) {
-        this.options.onChange('title');
-        this.options.onChange('loaded');
-      }
-    } catch (error) {
-      console.error('[FolderStore] Failed to resolve account scope:', error);
-      // Keep persistence unbound on failure. A global fallback has no known owner.
-      this.scheduleAccountScopeRetry(request);
-    }
-  }
-
-  /**
-   * Re-attempt a failed scope resolution a few times, with growing gaps.
-   *
-   * Firefox is the only target that resolves the scope through the background
-   * page (`AccountIsolationService.shouldResolveScopeInBackground`), so a
-   * background that is not listening yet — right after an extension update, say
-   * — fails the whole round trip. An unbound store is not inert: the panel
-   * renders empty and `saveData` drops every edit while still repainting it, so
-   * a folder the user creates looks saved and is gone on reload. Binding to the
-   * global bucket instead is not an option, because an ownerless bucket can
-   * belong to another account (see `.github/docs/regressions/state-identity-sync.md`).
-   */
-  private scheduleAccountScopeRetry(request: number): void {
-    if (this.isDestroyed || request !== this.accountScopeRequest) return;
-    const delay = ACCOUNT_SCOPE_RETRY_DELAYS[this.accountScopeRetryAttempt];
-    if (delay === undefined) return;
-    this.accountScopeRetryAttempt += 1;
-    this.accountScopeRetry = window.setTimeout(() => {
-      this.accountScopeRetry = null;
-      if (this.isDestroyed || request !== this.accountScopeRequest) return;
-      void this.retryAccountScope();
-    }, delay);
-  }
-
-  private async retryAccountScope(): Promise<void> {
-    this.accountScopeRetrying = true;
-    try {
-      await this.refreshAccountScope();
-    } finally {
-      this.accountScopeRetrying = false;
-    }
-    if (this.isDestroyed || !this.dataSession) return;
-    await this.loadData();
-    if (this.isDestroyed) return;
-    this.options.onChange('title');
-    this.options.onChange('data');
-  }
-
-  private clearAccountScopeRetry(): void {
-    if (this.accountScopeRetry === null) return;
-    window.clearTimeout(this.accountScopeRetry);
-    this.accountScopeRetry = null;
   }
 
   initializeConversationActivityTracking(): Promise<void> {
@@ -1428,7 +754,7 @@ export class FolderStore {
         document.addEventListener('submit', this.activitySendIntentHandler, true);
       } catch (error) {
         if (!isExtensionContextInvalidatedError(error)) {
-          this.debugWarn('Failed to initialize conversation activity tracking:', error);
+          folderDebugWarn('Failed to initialize conversation activity tracking:', error);
         }
       }
     })().finally(() => {
@@ -1478,80 +804,65 @@ export class FolderStore {
     const nativeConversationId = normalizeConversationId(conversationId);
     if (!nativeConversationId) return undefined;
 
-    const serverTimestamp =
-      historyTimestampStore.getLatestTurnTimestamp(nativeConversationId) ?? undefined;
+    // An imported record may keep a synthetic id; Gemini's history reports its route id.
+    const routeId = resolveConversationRouteId(url, conversationId);
+    const serverTimestamp = Math.max(
+      ...[nativeConversationId, routeId].map((id) =>
+        id ? (historyTimestampStore.getLatestTurnTimestamp(id) ?? 0) : 0,
+      ),
+    );
     const stableConversationId = buildConversationIdFromUrl(
       url || `https://gemini.google.com/app/${nativeConversationId}`,
     );
     const storedTimestamp =
       this.activityTimestampService?.getLatestTimestampForConversation(stableConversationId) ??
       undefined;
-    const latest = Math.max(serverTimestamp ?? 0, storedTimestamp ?? 0);
+    const latest = Math.max(serverTimestamp, storedTimestamp ?? 0);
     return latest > 0 ? latest : undefined;
   }
 
   backfillKnownConversationActivity(): void {
-    if (!this.canEdit) return;
-    let changed = false;
-    Object.values(this.data.folderContents).forEach((conversations) => {
-      conversations.forEach((conversation) => {
-        const timestamp = this.getKnownConversationLastTurnAt(
-          conversation.conversationId,
-          conversation.url,
-        );
-        if (!timestamp || timestamp <= (conversation.lastTurnAt ?? 0)) return;
-        conversation.lastTurnAt = timestamp;
-        changed = true;
-      });
-    });
-
-    if (!changed) return;
-    this.scheduleSaveData();
-    this.options.onChange('activity');
+    this.applyConversationActivity(
+      Object.values(this.data.folderContents)
+        .flat()
+        .map(({ conversationId, url }) => ({
+          conversationId,
+          lastTurnAt: this.getKnownConversationLastTurnAt(conversationId, url) ?? 0,
+        })),
+    );
   }
 
   applyHistoryActivityTimestamps(cids: string[]): void {
-    if (!this.canEdit) return;
-    const latestByConversationId = new Map<string, number>();
-    cids.forEach((cid) => {
-      const nativeConversationId = normalizeConversationId(cid);
-      if (!nativeConversationId) return;
-      const latest = historyTimestampStore.getLatestTurnTimestamp(nativeConversationId);
-      if (latest) latestByConversationId.set(nativeConversationId, latest);
-    });
-    if (latestByConversationId.size === 0) return;
-
-    let changed = false;
-    Object.values(this.data.folderContents).forEach((conversations) => {
-      conversations.forEach((conversation) => {
-        const nativeConversationId = normalizeConversationId(conversation.conversationId);
-        const latest = nativeConversationId
-          ? latestByConversationId.get(nativeConversationId)
-          : undefined;
-        if (!latest || latest <= (conversation.lastTurnAt ?? 0)) return;
-        conversation.lastTurnAt = latest;
-        changed = true;
-      });
-    });
-
-    if (!changed) return;
-    this.scheduleSaveData();
-    this.options.onChange('activity');
+    this.applyConversationActivity(
+      cids.map((cid) => {
+        const conversationId = normalizeConversationId(cid) ?? '';
+        const lastTurnAt = conversationId
+          ? historyTimestampStore.getLatestTurnTimestamp(conversationId)
+          : null;
+        return { conversationId, lastTurnAt: lastTurnAt ?? 0 };
+      }),
+    );
   }
 
   markConversationLastTurnAt(conversationId: string, timestamp: number): void {
-    if (!this.canEdit) return;
-    let changed = false;
-    Object.values(this.data.folderContents).forEach((conversations) => {
-      conversations.forEach((conversation) => {
-        if (!this.isSameConversation(conversationId, conversation)) return;
-        if (timestamp <= (conversation.lastTurnAt ?? 0)) return;
-        conversation.lastTurnAt = timestamp;
-        changed = true;
-      });
-    });
+    this.applyConversationActivity([{ conversationId, lastTurnAt: timestamp }]);
+  }
 
-    if (!changed) return;
+  /** Raises `lastTurnAt` on every record each entry's id or saved route names, as the op does. */
+  private applyConversationActivity(
+    entries: Array<{ conversationId: string; lastTurnAt: number }>,
+  ): void {
+    if (!this.canEdit) return;
+    const known = entries.filter((entry) => entry.conversationId && entry.lastTurnAt > 0);
+    if (known.length === 0) return;
+    const { data, outcome } = applyFolderOp(
+      this.data,
+      { kind: 'setConversationActivity', entries: known },
+      FOLDER_SITE_POLICIES.gemini,
+      Date.now(),
+    );
+    if (outcome.kind !== 'saved') return;
+    this.data = data;
     this.scheduleSaveData();
     this.options.onChange('activity');
   }
@@ -1561,53 +872,19 @@ export class FolderStore {
       await this.loadData();
       this.backfillKnownConversationActivity();
       this.options.onChange('title');
-      this.debug('Folders reloaded from storage');
+      folderDebug('Folders reloaded from storage');
     } catch (error) {
       console.error('[FolderStore] Failed to reload folders:', error);
     }
   }
 
-  isConversationInFolders(conversationId: string): boolean {
-    // Check if conversation exists in any folder
-    for (const folderId in this.data.folderContents) {
-      const conversations = this.data.folderContents[folderId];
-      if (
-        conversations.some((c) => {
-          // Direct ID match
-          if (c.conversationId === conversationId) return true;
-
-          // Robustness fallback: check if one ID contains the other (e.g. c_ prefix mismatch)
-          // or if URL contains the ID (common if one is hex and other is full ID)
-          const cleanId = conversationId.replace(/^c_/, '');
-          const cleanStoredId = c.conversationId.replace(/^c_/, '');
-
-          if (cleanId && cleanId === cleanStoredId) return true;
-
-          // Check if URL contains the hex ID
-          if (cleanId && cleanId.length > 8 && c.url.includes(cleanId)) return true;
-
-          return false;
-        })
-      ) {
-        return true;
-      }
-    }
-    return false;
+  /** `revision`: one token per pass over native rows that runs no folder edit; see the lookup. */
+  isConversationInFolders(conversationId: string, revision?: object): boolean {
+    return this.conversationMembership(this.data.folderContents, revision).has(conversationId);
   }
 
   private generateId(): string {
     return `folder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  private isSameConversation(targetId: string, conversation: ConversationReference): boolean {
-    const normalizedTarget = normalizeConversationId(targetId);
-    if (!normalizedTarget) return false;
-
-    if (normalizeConversationId(conversation.conversationId) === normalizedTarget) return true;
-
-    return (
-      resolveConversationRouteId(conversation.url, conversation.conversationId) === normalizedTarget
-    );
   }
 
   markConversationAsRecentlyOpened(conversationId: string): void {
@@ -1618,7 +895,7 @@ export class FolderStore {
     for (const folderId in this.data.folderContents) {
       const conversations = this.data.folderContents[folderId];
       conversations.forEach((conversation) => {
-        if (!this.isSameConversation(conversationId, conversation)) return;
+        if (!isSameConversation(conversationId, conversation)) return;
 
         // De-duplicate near-simultaneous route/listener updates.
         if (conversation.lastOpenedAt && now - conversation.lastOpenedAt < 1000) return;
@@ -1653,10 +930,10 @@ export class FolderStore {
           // Update URL to use /gem/ instead of /app/
           conv.url = conv.url.replace(/\/app\/([^/?]+)/, `/gem/${gemId}/$1`);
           updated = true;
-          this.debug('Updated conversation:', conv.title);
-          this.debug('Old URL:', oldUrl);
-          this.debug('New URL:', conv.url);
-          this.debug('Gem ID:', gemId);
+          folderDebug('Updated conversation:', conv.title);
+          folderDebug('Old URL:', oldUrl);
+          folderDebug('New URL:', conv.url);
+          folderDebug('Gem ID:', gemId);
         }
       }
     }
@@ -1668,29 +945,19 @@ export class FolderStore {
     }
   }
 
-  private getUserIdFromUrl(url: string): string | null {
-    try {
-      const urlObj = new URL(url);
-      const match = urlObj.pathname.match(/^\/u\/(\d+)\//);
-      return match ? match[1] : null;
-    } catch {
-      return null;
-    }
-  }
-
   async reloadScopedDataOnAccountRouteChange(): Promise<void> {
     if (!this.accountIsolationEnabled) return;
 
     const routeUserId = extractRouteUserIdFromPath(window.location.pathname);
     if (routeUserId === this.accountScope?.routeUserId) return;
 
-    const previousStorageKey = this.activeStorageKey;
+    const previousStorageKey = this.storageKey;
     await this.refreshAccountScope();
-    if (this.activeStorageKey === previousStorageKey) return;
+    if (this.storageKey === previousStorageKey) return;
 
     await this.loadData();
     this.backfillKnownConversationActivity();
     this.options.onChange('title');
-    this.debug('Switched account-scoped folder storage:', this.activeStorageKey);
+    folderDebug('Switched account-scoped folder storage:', this.storageKey);
   }
 }

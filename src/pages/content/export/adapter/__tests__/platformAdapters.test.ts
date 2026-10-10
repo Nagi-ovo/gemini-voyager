@@ -1,22 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
-import { DOMContentExtractor } from '@/features/export/services/DOMContentExtractor';
+import {
+  type ContentExtractor,
+  createContentExtractor,
+} from '@/features/export/services/DOMContentExtractor';
 
 import {
-  type ExportPlatformAdapter,
   chatgptExtractFormula,
   chatgptExtractInlineFormula,
   chatgptExtractUserText,
-  resolveExportAdapter,
-} from '../platformAdapters';
+} from '../platform/chatgpt';
+import { type ExportPlatformAdapter, resolveExportAdapter } from '../platformAdapters';
+
+let extractor: ContentExtractor;
 
 describe('Gemini export adapter contract', () => {
   const extractWithProductionAdapter = (html: string) => {
-    DOMContentExtractor.setExportAdapter(resolveExportAdapter());
+    extractor = createContentExtractor(resolveExportAdapter());
     const assistant = document.createElement('div');
     assistant.className = 'markdown';
     assistant.innerHTML = html;
-    return DOMContentExtractor.extractAssistantContent(assistant);
+    return extractor.extractAssistantContent(assistant);
   };
 
   it('preserves standalone assistant images', () => {
@@ -142,7 +146,7 @@ describe('Gemini export adapter contract', () => {
   });
 
   it('picks up search images rendered beside the markdown container', () => {
-    DOMContentExtractor.setExportAdapter(resolveExportAdapter());
+    extractor = createContentExtractor(resolveExportAdapter());
     const assistant = document.createElement('message-content');
     assistant.innerHTML = `
       <div class="markdown">
@@ -155,7 +159,7 @@ describe('Gemini export adapter contract', () => {
       </div>
     `;
 
-    const extracted = DOMContentExtractor.extractAssistantContent(assistant);
+    const extracted = extractor.extractAssistantContent(assistant);
 
     expect(extracted.hasImages).toBe(true);
     expect(extracted.text).toContain('Intro');
@@ -193,7 +197,7 @@ describe('ChatGPT export adapter HTML safety', () => {
   });
 
   it('renders multiline user prompts with explicit HTML line breaks', () => {
-    DOMContentExtractor.setExportAdapter({
+    extractor = createContentExtractor({
       extractUserImage: (element: HTMLElement) => element.querySelectorAll('img'),
       extractUserText: chatgptExtractUserText,
       getUserAttachmentCandidates: () => [],
@@ -205,7 +209,7 @@ describe('ChatGPT export adapter HTML safety', () => {
     const message = document.createElement('div');
     message.innerHTML = '<div>First line<br>Second line</div><p>Third paragraph</p>';
 
-    const extracted = DOMContentExtractor.extractUserContent(message);
+    const extracted = extractor.extractUserContent(message);
 
     expect(extracted.text).toBe('First line\nSecond line\nThird paragraph');
     expect(extracted.html).toBe('<p>First line<br />Second line<br />Third paragraph</p>');

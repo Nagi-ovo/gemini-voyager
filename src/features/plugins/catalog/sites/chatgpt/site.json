@@ -4,17 +4,19 @@
   "label": "ChatGPT",
   "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
   "selectors": {
-    "userTurn": "[data-message-author-role=\"user\"]",
-    "assistantTurn": "[data-message-author-role=\"assistant\"], [class*=\"group/imagegen-image\"]",
+    "userTurn": "[data-user-message-bubble], [data-message-author-role=\"user\"]:not(:has([data-user-message-bubble]))",
+    "assistantTurn": "[data-chatgpt-selection-message-id]",
+    "codeBlock": "[data-markdown-copy=\"code-block\"]",
     "composer": "#prompt-textarea, div[contenteditable=\"true\"]",
     "sidebar": "nav[aria-label], #stage-slideover-sidebar"
   },
   "theme": {
     "hostSelector": "html",
-    "lightSelector": "html.light",
-    "darkSelector": "html.dark"
+    "lightSelector": "html[data-theme=\"light\"]",
+    "darkSelector": "html[data-theme=\"dark\"]"
   },
   "brandColor": "#0ea5e9",
   "capabilities": ["chat", "sidebar", "composer", "darkMode"],
-  "conversationIdPattern": "^/c/([^/?#]+)"
+  "conversationIdPattern": "^(?:/u/[^/]+)?(?:/g/[^/]+)?/c/([^/?#]+)",
+  "turnKeyAttributes": ["data-turn-key", "data-message-id"]
 }

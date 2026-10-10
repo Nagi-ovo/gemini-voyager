@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { ConversationReference, Folder, FolderData } from '@/core/types/folder';
 
 import {
+  cloneFolderData,
   getFolderAndDescendants,
   getFolderDepth,
   moveFolder,
@@ -10,6 +11,7 @@ import {
   removeFolder,
   reorderConversations,
   sortFolders,
+  validateFolderData,
 } from '../folderData';
 
 function folder(id: string, parentId: string | null = null, sortIndex = 0): Folder {
@@ -116,6 +118,7 @@ describe('folder data movement', () => {
     { id: 'pinned', parent: 'target' },
     { id: 'ancestor', parent: 'ancestor' },
     { id: 'ancestor', parent: 'child' },
+    { id: 'ancestor', parent: 'grandchild' },
     { id: 'missing', parent: 'target' },
     { id: 'ancestor', parent: null },
   ])('leaves input intact when moving $id to $parent is rejected', ({ id, parent }) => {
@@ -125,6 +128,7 @@ describe('folder data movement', () => {
         folder('target', null, 1),
         folder('ancestor', null, 2),
         folder('child', 'ancestor'),
+        folder('grandchild', 'child'),
       ],
       folderContents: { ancestor: [conversation('keep')] },
     });
@@ -164,6 +168,56 @@ describe('folder data traversal and removal', () => {
     expect(getFolderDepth(data, 'a')).toBe(2);
     expect(moveFolder(data, 'a', 'b', 123)).toBe(data);
     expect(data.folders.map((item) => item.parentId)).toEqual(['b', 'a', null]);
+  });
+
+  // Stored data can still hold parent cycles from Drive merges or older versions.
+  it('removes a folder on a parent cycle without the folder the tree shows above it', () => {
+    const data = freezeData({
+      folders: [folder('a', 'b'), folder('b', 'a'), folder('c')],
+      folderContents: {
+        a: [conversation('a-chat')],
+        b: [conversation('b-chat')],
+        c: [conversation('c-chat')],
+      },
+    });
+    const result = removeFolder(data, 'b');
+    expect(result.folders.map((item) => item.id)).toEqual(['a', 'c']);
+    expect(Object.keys(result.folderContents)).toEqual(['a', 'c']);
+    expect(result.folders[0]).toBe(data.folders[0]);
+  });
+
+  it('removes the folders a cycle hangs under the folder that stands in as its root', () => {
+    const data = freezeData({
+      folders: [
+        folder('r'),
+        folder('a', 'c'),
+        folder('b', 'a'),
+        folder('c', 'b'),
+        folder('d', 'b'),
+      ],
+      folderContents: {},
+    });
+    expect(getFolderAndDescendants(data, 'a')).toEqual(['a', 'b', 'c', 'd']);
+    expect(getFolderAndDescendants(data, 'b')).toEqual(['b', 'c', 'd']);
+    expect(getFolderAndDescendants(data, 'c')).toEqual(['c']);
+    expect(removeFolder(data, 'x')).toBe(data);
+  });
+
+  it('removes a folder that is its own parent with the folders under it, once', () => {
+    const data = freezeData({
+      folders: [folder('s', 's'), folder('t', 's')],
+      folderContents: { s: [conversation('s-chat')], t: [conversation('t-chat')] },
+    });
+    expect(getFolderAndDescendants(data, 's')).toEqual(['s', 't']);
+    expect(getFolderAndDescendants(data, 't')).toEqual(['t']);
+  });
+
+  it('follows the first record of a repeated id, as the tree does', () => {
+    const data = freezeData({
+      folders: [folder('p'), folder('x'), folder('x', 'p')],
+      folderContents: {},
+    });
+    expect(getFolderAndDescendants(data, 'p')).toEqual(['p']);
   });
 
   it('removes only exact subtree IDs while preserving root conversations and unrelated legacy buckets', () => {
@@ -313,6 +367,44 @@ describe('folder data conversation order', () => {
 });
 
 describe('folder data integrity', () => {
+  it('gives folders named after inherited object keys real buckets of their own', () => {
+    // Stored data comes back through JSON, which makes `__proto__` an own key.
+    const stored = JSON.parse(
+      '{"folders":[' +
+        '{"id":"__proto__","name":"P","parentId":null,"isExpanded":true,"createdAt":1,"updatedAt":1,"sortIndex":0},' +
+        '{"id":"constructor","name":"C","parentId":null,"isExpanded":true,"createdAt":1,"updatedAt":1,"sortIndex":1}],' +
+        '"folderContents":{}}',
+    ) as FolderData;
+
+    const result = normalizeFolderData(stored);
+
+    for (const id of ['__proto__', 'constructor']) {
+      expect(Object.hasOwn(result.folderContents, id)).toBe(true);
+      expect(result.folderContents[id]).toEqual([]);
+    }
+    expect(Object.getPrototypeOf(result.folderContents)).toBe(Object.prototype);
+    expect(JSON.parse(JSON.stringify(result.folderContents))).toEqual(
+      JSON.parse('{"__proto__":[],"constructor":[]}'),
+    );
+    expect(normalizeFolderData(JSON.parse(JSON.stringify(result)))).toEqual(
+      JSON.parse(JSON.stringify(result)),
+    );
+  });
+
+  it('refuses a malformed bucket a folder owns, so the load recovers a backup', () => {
+    for (const bucket of ['garbage', { c: 1 }]) {
+      const data = {
+        folders: [folder('f')],
+        folderContents: { f: bucket },
+      } as unknown as FolderData;
+      expect(() => normalizeFolderData(data)).toThrow(TypeError);
+      expect(cloneFolderData(data).folderContents.f).toBe(bucket);
+    }
+    // An empty value is a missing bucket, repaired as before.
+    const empty = { folders: [folder('f')], folderContents: { f: null } } as unknown as FolderData;
+    expect(normalizeFolderData(empty).folderContents).toEqual({ f: [] });
+  });
+
   it('fills missing containers and initializes empty folder buckets', () => {
     expect(normalizeFolderData({} as FolderData)).toEqual({ folders: [], folderContents: {} });
     const data = freezeData({ folders: [folder('empty')], folderContents: {} });
@@ -366,5 +458,24 @@ describe('folder data integrity', () => {
       sortIndex: 1,
     });
     expect(data.folders[0].sortIndex).toBeUndefined();
+  });
+});
+
+describe('stored folder structure', () => {
+  it.each([
+    { symptom: 'null folder', folders: [null] },
+    { symptom: 'array folder', folders: [[]] },
+    { symptom: 'missing folder id', folders: [{ name: 'Legacy' }] },
+    { symptom: 'numeric folder id', folders: [{ id: 1 }] },
+  ])('refuses a $symptom before it can replace recoverable memory', ({ folders }) => {
+    expect(validateFolderData({ folders, folderContents: {} })).toBe(false);
+  });
+
+  it('accepts string IDs and object references without imposing metadata requirements', () => {
+    const folderContents = Object.create(null) as Record<string, unknown[]>;
+    folderContents.legacy = [{ title: '' }, {}];
+    expect(validateFolderData({ folders: [{ id: '' }, { id: '__proto__' }], folderContents })).toBe(
+      true,
+    );
   });
 });

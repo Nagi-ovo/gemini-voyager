@@ -32,7 +32,7 @@ Safari removes temporary extensions after 24 hours or when Safari quits. Re-add 
 - Registration changes (`pluginkit -r`/`-a` or manual unregister/register) are targeted recovery only, with Safari closed, an exact stale/current path pair, and a recovery plan. Reuse explicit user authorization that covers this recovery; otherwise complete read-only diagnosis and prepare the plan before asking. A generic reload request does not authorize it.
 - Never bulk-reset LaunchServices or unregister/remove an app in `/Applications` without explicit permission. Avoid launching apps from Archives, backups, disk images, or old DerivedData; duplicate bundle identifiers can route Safari or custom URLs to the wrong copy.
 - Keep signing identities, provisioning-profile contents, Keychain data, Apple account details, notarization credentials, and CI secret values out of output and commits. Refer only to repository-documented environment-variable names. Keep generated apps, archives, DerivedData, and signed artifacts out of commits unless explicitly tracked.
-- If a feature disappears, stop the update attempt, preserve app and extension data, return to the previously working extension route, and verify the feature. Consult `.github/docs/REGRESSION_NOTES.md` when the failure matches a prior regression.
+- If a feature disappears, stop the update attempt, preserve app and extension data, return to the previously working extension route, and verify the feature.
 
 ## Evidence and completion
 

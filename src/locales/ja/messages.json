@@ -43,6 +43,10 @@
     "message": "外側のコンテナを隠す",
     "description": "Hide outer container label"
   },
+  "hideOuterContainerDotsOnly": {
+    "message": "ノード表示でのみ有効です",
+    "description": "Why the hide outer container toggle is disabled: the ruler and compact timeline styles draw no container"
+  },
   "draggableTimeline": {
     "message": "ドラッグ可能なタイムライン",
     "description": "Draggable Timeline label"
@@ -213,6 +217,22 @@
   "pm_deleted": {
     "message": "削除しました",
     "description": "Deleted notice"
+  },
+  "pm_save_failed": {
+    "message": "変更を保存できなかったため、元に戻しました。",
+    "description": "Prompt Manager notice: a change could not be saved and was rolled back"
+  },
+  "pm_edit_target_deleted": {
+    "message": "このプロンプトは別の場所で削除されました。もう一度保存すると、新しいプロンプトとして残せます。",
+    "description": "Prompt Manager hint: the prompt being edited was deleted in another tab; saving again adds the draft as a new prompt"
+  },
+  "pm_library_unavailable": {
+    "message": "プロンプトが応答していません。直前の変更をまだ保存中です。しばらくしてからもう一度お試しください。",
+    "description": "Prompt Manager notice: an earlier change is still waiting for a reply, so new edits are refused until it arrives"
+  },
+  "pm_library_load_failed": {
+    "message": "プロンプトを読み込めませんでした。再読み込みしています。少し待ってからもう一度お試しください。",
+    "description": "Prompt Manager notice: the prompt library could not be read yet, so an edit was refused and a new read started"
   },
   "pm_edit": {
     "message": "編集",
@@ -662,6 +682,14 @@
     "message": "クラウド同期",
     "description": "Tooltip for the merged cloud button that opens an upload/sync popover"
   },
+  "folder_reload_required": {
+    "message": "Voyager が更新されました。フォルダの編集を続けるには、このタブを再読み込みしてください。",
+    "description": "Shown when a newer Voyager build owns folder writes and this tab must be reloaded"
+  },
+  "folder_cloud_merge_interrupted": {
+    "message": "Google ドライブとの統合が中断されました。もう一度実行してください。",
+    "description": "Shown when a Google Drive merge of folders was interrupted before it was applied"
+  },
   "folder_settings": {
     "message": "フォルダ設定",
     "description": "Tooltip for the gear icon that opens folder-scoped settings"
@@ -761,6 +789,26 @@
   "folder_import_error": {
     "message": "✗ インポート失敗：{error}",
     "description": "Import error message"
+  },
+  "conversation_added_to_folder": {
+    "message": "「{folder}」に追加しました",
+    "description": "Notification after a prompt is dropped into a folder"
+  },
+  "conversation_saved_to_root": {
+    "message": "未分類に保存しました",
+    "description": "Notification after a prompt is dropped on Uncategorized"
+  },
+  "folder_default_name": {
+    "message": "マイフォルダ",
+    "description": "Name of the folder created when a prompt is dropped and no folder exists"
+  },
+  "folder_import_in_progress": {
+    "message": "インポートはすでに実行中です",
+    "description": "Notice when a folder import is started while another is running"
+  },
+  "folder_export_in_progress": {
+    "message": "エクスポートはすでに実行中です",
+    "description": "Notice when a folder export is started while another is running"
   },
   "folder_save_error": {
     "message": "フォルダの変更を保存できませんでした。もう一度お試しください。",
@@ -914,22 +962,6 @@
     "message": "拡張機能ポップアップ → フォルダ設定でいつでも切り替えできます。",
     "description": "Footnote explaining where to toggle the setting later"
   },
-  "floatingModeNudgeTitle": {
-    "message": "サイドバーが見つかりません — フォルダをフローティングウィンドウで開きますか？",
-    "description": "Title of the floating-mode fallback nudge"
-  },
-  "floatingModeNudgeBody": {
-    "message": "Voyager は Gemini のサイドバーを見つけられませんでした。レイアウトが変更された可能性があります。フローティングウィンドウでフォルダを引き続きご利用いただけます。",
-    "description": "Body copy of the floating-mode fallback nudge"
-  },
-  "floatingModeNudgeEnable": {
-    "message": "フローティングウィンドウを開く",
-    "description": "Primary button that opens the floating folder panel"
-  },
-  "floatingModeNudgeDismiss": {
-    "message": "あとで",
-    "description": "Secondary button that dismisses the floating-mode nudge"
-  },
   "floatingPanelTitle": {
     "message": "フォルダ",
     "description": "Title shown in the floating folder panel header"
@@ -969,6 +1001,18 @@
   "folderManager_dataLossWarning": {
     "message": "⚠️ 警告：フォルダデータの読み込みに失敗しました。データが破損している可能性があります。ブラウザのコンソールで詳細を確認し、可能であればバックアップから復元してください。",
     "description": "Warning shown when folder data fails to load"
+  },
+  "folderManager_dataRecovered": {
+    "message": "バックアップからフォルダのデータを復元しました。",
+    "description": "Notice when folder data was recovered from backup"
+  },
+  "folderManager_dataKept": {
+    "message": "フォルダのデータを読み込めませんでした。現在のフォルダは保持されています。",
+    "description": "Notice when current folder data is kept after a failed load"
+  },
+  "folderManager_readFailure": {
+    "message": "フォルダのデータを読み込めませんでした。現在、フォルダは読み取り専用です。",
+    "description": "Notice when folder storage is unreadable and editing is disabled"
   },
   "backupOptions": {
     "message": "自動バックアップ",
@@ -1190,6 +1234,10 @@
     "message": "スターを外す",
     "description": "Remove from starred tooltip"
   },
+  "starredDeleteFailed": {
+    "message": "スターを外せませんでした",
+    "description": "Error shown when a star cannot be removed"
+  },
   "justNow": {
     "message": "たった今",
     "description": "Just now time label"
@@ -1217,6 +1265,14 @@
   "export_collecting_desc": {
     "message": "しばらくお待ちください…",
     "description": "ChatGPT の会話 DOM 収集中のバナー説明"
+  },
+  "export_reading_conversation_title": {
+    "message": "会話を読み込んでいます…",
+    "description": "Progress title while ChatGPT export reads the whole conversation by scrolling it"
+  },
+  "export_reading_conversation_turns": {
+    "message": "読み込んだターン：{count}",
+    "description": "Progress detail while ChatGPT export reads the conversation; {count} is the number of turns read so far"
   },
   "keyboardShortcuts": {
     "message": "キーボードショートカット",
@@ -1294,6 +1350,18 @@
     "message": "クラウド同期",
     "description": "Cloud sync section title"
   },
+  "platformChatGPT": {
+    "message": "ChatGPT",
+    "description": "ChatGPT platform label"
+  },
+  "cloudSyncFoldersDescription": {
+    "message": "フォルダを Google Drive に同期",
+    "description": "ChatGPT folders-only Google Drive sync description"
+  },
+  "cloudSyncFoldersDescriptionICloud": {
+    "message": "プライベートな iCloud ストレージでフォルダを同期",
+    "description": "ChatGPT folders-only iCloud sync description"
+  },
   "cloudSyncDescription": {
     "message": "フォルダとプロンプトを Google ドライブに同期します",
     "description": "Cloud sync description"
@@ -1361,6 +1429,22 @@
   "syncError": {
     "message": "✗ 同期に失敗しました：{error}",
     "description": "Sync error message"
+  },
+  "syncRestorePartial": {
+    "message": "✗ 復元が完了しませんでした。復元済み：{restored}。未復元：{failed}（{error}）",
+    "description": "Drive restore stopped partway: which parts were restored and which were not"
+  },
+  "syncRestoreForks": {
+    "message": "会話の分岐",
+    "description": "Drive restore part: conversation fork links"
+  },
+  "syncRestoreCatalogTimeline": {
+    "message": "他のサイトのタイムラインのスターと階層",
+    "description": "Drive restore part: timeline stars and node levels saved on catalog sites such as ChatGPT and Claude"
+  },
+  "syncRestoreListSeparator": {
+    "message": "、",
+    "description": "Separator between restored or failed part names in the partial-restore message"
   },
   "syncInProgress": {
     "message": "同期中...",
@@ -1489,6 +1573,10 @@
     "message": "思考内容を Markdown 形式でダウンロード",
     "description": "Deep Research download button tooltip"
   },
+  "deepResearchNoThinkingContent": {
+    "message": "ダウンロードできる思考内容が見つかりませんでした。",
+    "description": "Warning when Deep Research has no thinking content to download"
+  },
   "folder_uncategorized": {
     "message": "未分類",
     "description": "Label for root-level conversations not in any folder"
@@ -1606,7 +1694,7 @@
     "description": "Batch delete confirmation message"
   },
   "folder_batch_remove_confirm": {
-    "message": "選択した {count} 件の会話をこのフォルダから削除しますか？",
+    "message": "選択した会話（{count} 件）をこのフォルダから外しますか？",
     "description": "Confirmation before removing the selected conversations from a folder"
   },
   "folder_multi_select_count": {
@@ -1685,14 +1773,6 @@
     "message": "コードブロック内の WaveJSON をインタラクティブなタイミング図として自動描画します",
     "description": "WaveDrom 機能の説明"
   },
-  "wavedromDiagramButton": {
-    "message": "〜 図",
-    "description": "描画された図に切り替えるボタンのラベル"
-  },
-  "wavedromCodeButton": {
-    "message": "</> コード",
-    "description": "WaveJSON ソースに切り替えるボタンのラベル"
-  },
   "wavedromZoomIn": {
     "message": "拡大",
     "description": "全画面ツールバー：拡大ボタンのタイトル"
@@ -1721,13 +1801,13 @@
     "message": "ECharts のオプションコードブロックをインタラクティブなチャートとして自動レンダリング",
     "description": "ECharts rendering feature hint"
   },
-  "echartsDiagramButton": {
-    "message": "📊 チャート",
-    "description": "Toggle button label to show the rendered chart"
+  "diagramButton": {
+    "message": "図",
+    "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"
   },
-  "echartsCodeButton": {
-    "message": "</> コード",
-    "description": "Toggle button label to show the ECharts option source"
+  "diagramCodeButton": {
+    "message": "コード",
+    "description": "Diagram toolbar button that shows the diagram source code"
   },
   "echartsFullscreenButton": {
     "message": "全画面",
@@ -2101,6 +2181,26 @@
     "message": "エクスポートするコンテンツにウェブ検索画像が含まれています。Markdown に画像のソースリンクを含めますか？",
     "description": "Confirm dialog when exporting markdown with web search images"
   },
+  "export_md_include_source_include": {
+    "message": "リンクを含める",
+    "description": "Confirm choice that keeps the source links of web search images in the Markdown export"
+  },
+  "export_md_include_source_exclude": {
+    "message": "含めない",
+    "description": "Confirm choice that leaves the source links of web search images out of the Markdown export"
+  },
+  "export_error_too_many_attempts": {
+    "message": "試行回数が多すぎるため、エクスポートを中止しました。",
+    "description": "Export error toast when the export restarted too many times while loading the full conversation"
+  },
+  "export_error_conversation_not_found": {
+    "message": "選択した会話が見つかりません。先に会話を開いてからエクスポートしてください。",
+    "description": "Export error toast when the sidebar menu's conversation cannot be located"
+  },
+  "export_error_conversation_open_failed": {
+    "message": "選択した会話を開けませんでした。もう一度お試しください。",
+    "description": "Export error toast when the sidebar menu's conversation fails to open"
+  },
   "deepResearch_exportedAt": {
     "message": "エクスポート日時",
     "description": "深層研究エクスポートタイムスタンプラベル"
@@ -2248,10 +2348,6 @@
   "forkMarkdownBtn": {
     "message": "MD をダウンロード",
     "description": "Fork confirmation button for downloading a Markdown file"
-  },
-  "forkCancel": {
-    "message": "Cancel",
-    "description": "Fork cancel button"
   },
   "forkBranch": {
     "message": "Branch",
@@ -2461,10 +2557,6 @@
     "message": "削除",
     "description": "Floating folder panel delete folder action"
   },
-  "floatingPanelDeleteConfirm": {
-    "message": "このフォルダとすべての内容を削除しますか？",
-    "description": "Floating folder panel delete folder confirmation"
-  },
   "floatingPanelCancel": {
     "message": "キャンセル",
     "description": "Floating folder panel cancel action"
@@ -2520,6 +2612,42 @@
   "floatingPanelGestureHint": {
     "message": "ダブルクリックで名前変更 · 右クリックで固定/色/削除。",
     "description": "Floating folder panel hint explaining folder gestures and context menu actions"
+  },
+  "floatingPanelAddCurrentHere": {
+    "message": "現在の会話をここに追加",
+    "description": "Floating folder panel folder menu item that files the open conversation into that folder"
+  },
+  "chatgptFoldersHint": {
+    "message": "会話を整理するには：会話を開き、ブックマークボタンを押すか、フォルダを右クリックします。",
+    "description": "ChatGPT folder panel hint explaining how to file a conversation"
+  },
+  "chatgptFoldersNoConversation": {
+    "message": "先に保存済みの会話を開いてください。一時チャットは追加できません。",
+    "description": "ChatGPT folder panel status when no saved conversation is open to add"
+  },
+  "chatgptFoldersAdded": {
+    "message": "フォルダに追加しました。",
+    "description": "ChatGPT folder panel status after filing the open conversation"
+  },
+  "chatgptFoldersAlreadyFiled": {
+    "message": "すでにこのフォルダにあります。",
+    "description": "ChatGPT folder panel status when the open conversation is already in that folder"
+  },
+  "chatgptFoldersCoachmarkTitle": {
+    "message": "フォルダはサイドバーにあります",
+    "description": "Title of the one-time guide pointing at the folder section in the ChatGPT sidebar"
+  },
+  "chatgptFoldersCoachmarkBody": {
+    "message": "フォルダは ChatGPT のサイドバーのここに表示されます。+ で作成でき、チャットのメニューの「フォルダへ移動」で整理できます。",
+    "description": "Body of the one-time guide pointing at the folder section in the ChatGPT sidebar; quotes the Move to folder menu label"
+  },
+  "folder_import_wrong_site": {
+    "message": "このファイルには別のサイトのフォルダが含まれているため、何もインポートされませんでした。",
+    "description": "ChatGPT folder import error when the file holds conversations from another site"
+  },
+  "chatgptFoldersUntitled": {
+    "message": "無題の会話",
+    "description": "Title used for a filed ChatGPT conversation whose title could not be read"
   },
   "folder_new_chat_in_folder": {
     "message": "このフォルダで新規チャット",
@@ -2593,6 +2721,30 @@
     "message": "このブラウザでは利用できません。プラグインに必要なサイト権限を付与できません。",
     "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
   },
+  "chatgptExportCardTitle": {
+    "message": "この会話をエクスポート",
+    "description": "Title of the popup card that exports the current ChatGPT conversation"
+  },
+  "chatgptExportCardOffHint": {
+    "message": "「会話エクスポート」をオンにすると、ChatGPT の会話を Markdown、JSON、PDF、画像として保存できます。各会話の上部にもエクスポートボタンが表示されます。",
+    "description": "Popup hint shown while ChatGPT conversation export is turned off"
+  },
+  "chatgptExportTurnOn": {
+    "message": "オンにする",
+    "description": "Popup button that turns on ChatGPT conversation export"
+  },
+  "chatgptExportCardOnHint": {
+    "message": "Markdown、JSON、PDF、画像として保存できます。各会話の上部にも同じエクスポートボタンがあります。",
+    "description": "Popup hint shown while ChatGPT conversation export is on"
+  },
+  "chatgptExportNoConversation": {
+    "message": "先に会話を開いてください。このページにはエクスポートできる内容がありません。",
+    "description": "Shown when the ChatGPT tab has no conversation to export"
+  },
+  "chatgptExportReloadTab": {
+    "message": "この ChatGPT タブを再読み込みしてから、もう一度お試しください。",
+    "description": "Shown when the ChatGPT tab has not loaded Voyager yet"
+  },
   "pluginsLoading": {
     "message": "プラグインを読み込み中…",
     "description": "Shown while the plugin catalog is loading"
@@ -2616,6 +2768,310 @@
   "pluginSourceOnline": {
     "message": "オンラインカタログ",
     "description": "Source label for a plugin fetched from the online catalog for this site"
+  },
+  "pluginSourceLocal": {
+    "message": "ローカル",
+    "description": "Source label for a plugin the user imported locally"
+  },
+  "localPluginsTitle": {
+    "message": "ローカルプラグイン",
+    "description": "Popup plugin page: title of the card for user-imported plugins"
+  },
+  "localPluginsDescription": {
+    "message": "自作の宣言型プラグインをインポートします。CSS を埋め込んだマニフェスト JSON か、マニフェストと .css ファイルをまとめて選択してください。公式プラグインと同じチェックを通り、オンにするまで無効のままです。",
+    "description": "Popup plugin page: what importing a local plugin does"
+  },
+  "localPluginsNativeHint": {
+    "message": "このサイトで自作の CSS やページ調整を実行します。インポートしたプラグインは、オンにするまで無効のままです。",
+    "description": "Native popup (Gemini / AI Studio): hint on the collapsed Local plugins entry"
+  },
+  "localPluginsImportFiles": {
+    "message": "ファイルをインポート",
+    "description": "Popup plugin page: button that opens the file picker for a local plugin"
+  },
+  "localPluginsPasteJson": {
+    "message": "JSON を貼り付け",
+    "description": "Popup plugin page: button that opens a text box to paste a plugin manifest"
+  },
+  "localPluginsPasteLabel": {
+    "message": "プラグインのマニフェスト JSON",
+    "description": "Popup plugin page: accessible label of the paste text box"
+  },
+  "localPluginsCheckAndImport": {
+    "message": "確認してインポート",
+    "description": "Popup plugin page: validate the pasted manifest and import it"
+  },
+  "localPluginsCancel": {
+    "message": "キャンセル",
+    "description": "Popup plugin page: close the paste text box"
+  },
+  "localPluginsEmpty": {
+    "message": "ローカルプラグインはまだありません。",
+    "description": "Popup plugin page: no local plugin is installed"
+  },
+  "localPluginsImported": {
+    "message": "{name} {version} をインポートしました。現在はオフです。下で動作を確認してから、プラグイン一覧でオンにしてください。",
+    "description": "Popup plugin page: import succeeded; {name} and {version} are placeholders"
+  },
+  "localPluginsRejected": {
+    "message": "インポートされませんでした。次の問題を修正してから再試行してください：",
+    "description": "Popup plugin page: import failed validation; the issues follow"
+  },
+  "localPluginsPreviousKept": {
+    "message": "インストール済みのバージョン {version} はそのままです。",
+    "description": "Popup plugin page: a failed re-import kept the installed version; {version} is a placeholder"
+  },
+  "localPluginsInspect": {
+    "message": "詳細",
+    "description": "Popup plugin page: show what a local plugin does"
+  },
+  "localPluginsHideDetails": {
+    "message": "閉じる",
+    "description": "Popup plugin page: hide the details of a local plugin"
+  },
+  "localPluginsRemove": {
+    "message": "削除",
+    "description": "Popup plugin page: delete a local plugin"
+  },
+  "localPluginsConfirmRemove": {
+    "message": "削除を確定",
+    "description": "Popup plugin page: second click that confirms removing a local plugin"
+  },
+  "localPluginsStoredInvalid": {
+    "message": "この Voyager のバージョンではこのプラグインを受け付けないため、実行されません：",
+    "description": "Popup plugin page: a stored local plugin fails this build's checks; issues follow"
+  },
+  "localPluginChangedBeforeEnable": {
+    "message": "オンにしている間にこのプラグインが再インポートされたため、オフのままです。新しいバージョンを確認してから、もう一度オンにしてください。",
+    "description": "A local plugin was re-imported while the user was enabling it, so it was not enabled"
+  },
+  "localPluginDescribeOpen": {
+    "message": "ひとことで画面を変える",
+    "description": "Button that opens the one-sentence plugin flow"
+  },
+  "localPluginDescribeHint": {
+    "message": "サイトをどう変えたいかを一文で書いてください。Voyager がプロンプトを作成するので、好きな AI にご自身で送り、返ってきた回答を貼り付けるとチェックします。Voyager が自分から何かを送信することはありません。",
+    "description": "Explains the one-sentence plugin flow and that Voyager sends nothing"
+  },
+  "localPluginDescribeRequestLabel": {
+    "message": "何を変えますか？",
+    "description": "Label of the one-sentence request field"
+  },
+  "localPluginDescribeRequestPlaceholder": {
+    "message": "例：自分のメッセージを細くして、サイドバーを隠す",
+    "description": "Example request in the one-sentence field"
+  },
+  "localPluginDescribeSiteLabel": {
+    "message": "サイト",
+    "description": "Label of the target-site picker"
+  },
+  "localPluginDescribeBuildPrompt": {
+    "message": "プロンプトを作成",
+    "description": "Button that writes the AI prompt"
+  },
+  "localPluginDescribePromptLabel": {
+    "message": "AI に送るプロンプト",
+    "description": "Label of the generated prompt"
+  },
+  "localPluginDescribePromptHint": {
+    "message": "ご自身で好きな AI のチャットに貼り付け、返ってきた回答全体を下に貼り付けてください。",
+    "description": "Tells the user to send the prompt themselves and paste the reply"
+  },
+  "localPluginDescribeCopy": {
+    "message": "プロンプトをコピー",
+    "description": "Button that copies the prompt"
+  },
+  "localPluginDescribeCopied": {
+    "message": "コピーしました",
+    "description": "Shown after the prompt was copied"
+  },
+  "localPluginDescribeCopyFailed": {
+    "message": "コピーできませんでした。プロンプトを選択して手動でコピーしてください。",
+    "description": "Shown when the clipboard refused the prompt"
+  },
+  "localPluginDescribeReplyLabel": {
+    "message": "AI の回答",
+    "description": "Label of the field for the AI reply"
+  },
+  "localPluginDescribeReplyPlaceholder": {
+    "message": "回答全体、または JSON 部分だけを貼り付け",
+    "description": "Placeholder of the AI reply field"
+  },
+  "localPluginDescribeCheck": {
+    "message": "回答をチェック",
+    "description": "Button that checks the pasted reply"
+  },
+  "localPluginDescribeImport": {
+    "message": "インポート",
+    "description": "Button that imports the previewed plugin"
+  },
+  "localPluginReplyEmpty": {
+    "message": "先に AI の回答を貼り付けてください。",
+    "description": "The reply field is empty"
+  },
+  "localPluginReplyTooLong": {
+    "message": "この回答はプラグインとしては長すぎます。",
+    "description": "The pasted reply is too large"
+  },
+  "localPluginReplyNoJson": {
+    "message": "JSON が見つかりません。```json のコードブロック 1 つで答えるよう AI に頼んでください。",
+    "description": "No JSON manifest found in the reply"
+  },
+  "localPluginReplyMultipleJson": {
+    "message": "回答に JSON ブロックが複数あります。プラグインのものだけを残して貼り直してください。",
+    "description": "The reply holds more than one JSON block"
+  },
+  "localPluginPreviewTitle": {
+    "message": "インポートする前に",
+    "description": "Heading of the preview shown before import"
+  },
+  "localPluginPreviewChanges": {
+    "message": "変更内容",
+    "description": "Heading of the list of changes in the preview"
+  },
+  "localPluginPreviewWarnings": {
+    "message": "確認しておくこと",
+    "description": "Heading of the warnings in the preview"
+  },
+  "localPluginPreviewLandsOff": {
+    "message": "インポート後はオフになっています。準備ができたらプラグイン一覧でオンにしてください。",
+    "description": "Explains that the import lands turned off"
+  },
+  "localPluginChangeCss": {
+    "message": "独自のスタイルを追加（CSS {chars} 文字）",
+    "description": "Preview line: the plugin adds CSS; {chars} is a character count"
+  },
+  "localPluginChangeAddClass": {
+    "message": "{target}に目印を付けてスタイルを適用（{className}）",
+    "description": "Preview line: the plugin tags elements so its CSS applies"
+  },
+  "localPluginChangeHide": {
+    "message": "{target}を非表示",
+    "description": "Preview line: the plugin hides elements"
+  },
+  "localPluginChangeSetStyle": {
+    "message": "{target}のスタイルを変更：{styles}",
+    "description": "Preview line: the plugin sets inline styles"
+  },
+  "localPluginChangeSetAttribute": {
+    "message": "{target}に {name}=\"{value}\" を設定",
+    "description": "Preview line: the plugin sets an attribute"
+  },
+  "localPluginChangeNative": {
+    "message": "Voyager の組み込み機能 {handler} を実行",
+    "description": "Preview line: the plugin runs a Voyager built-in feature"
+  },
+  "localPluginChangeSetting": {
+    "message": "設定を追加：{label}",
+    "description": "Preview line: the plugin adds a setting"
+  },
+  "localPluginChangeTheme": {
+    "message": "Voyager のアクセントカラーを {color} に変更",
+    "description": "Preview line: the plugin changes the accent color"
+  },
+  "localPluginTargetSelector": {
+    "message": "{selector} に一致する要素",
+    "description": "Preview target described by a raw CSS selector"
+  },
+  "localPluginTargetUserTurn": {
+    "message": "自分のメッセージ",
+    "description": "Preview target: the user's messages"
+  },
+  "localPluginTargetAssistantTurn": {
+    "message": "AI の回答",
+    "description": "Preview target: the AI's replies"
+  },
+  "localPluginTargetThinkingBlock": {
+    "message": "思考プロセス",
+    "description": "Preview target: reasoning sections"
+  },
+  "localPluginTargetCodeBlock": {
+    "message": "コードブロック",
+    "description": "Preview target: code blocks"
+  },
+  "localPluginTargetComposer": {
+    "message": "入力欄",
+    "description": "Preview target: the message input box"
+  },
+  "localPluginTargetSidebar": {
+    "message": "サイドバー",
+    "description": "Preview target: the sidebar"
+  },
+  "localPluginTargetSidePanel": {
+    "message": "サイドパネル",
+    "description": "Preview target: the secondary side panel"
+  },
+  "localPluginTargetHeaderActions": {
+    "message": "右上のボタン",
+    "description": "Preview target: top-right action buttons"
+  },
+  "localPluginTargetScrollContainer": {
+    "message": "会話エリア",
+    "description": "Preview target: the scrolling conversation area"
+  },
+  "localPluginChangedSinceReview": {
+    "message": "確認している間に Voyager 内のこのプラグインが変更されたため、何も上書きしていません。更新されたプレビューを確認してから、もう一度インポートしてください。",
+    "description": "Shown when the previewed plugin id was installed, changed or removed before Import; nothing was written"
+  },
+  "localPluginWarnCss": {
+    "message": "この CSS はページ上のあらゆるもの（非表示にすることも含む）を変更できます。Voyager は CSS を要約しないので、下のコードを直接確認してください。",
+    "description": "Warning: the plugin has CSS, which the preview shows but does not summarize"
+  },
+  "localPluginWarnSelector": {
+    "message": "CSS セレクターで要素を指定しているため、サイトの更新で効かなくなることがあります。",
+    "description": "Warning: the plugin targets raw CSS selectors"
+  },
+  "localPluginWarnHides": {
+    "message": "ページの一部を非表示にする可能性があります。プラグインをオフにすれば元に戻ります。",
+    "description": "Warning: the plugin may hide part of the page (also shown when a hiding style cannot be read with confidence)"
+  },
+  "localPluginWarnNotOnSite": {
+    "message": "選んだサイト {site} では動作しません。",
+    "description": "Warning: the plugin does not run on the site the user picked"
+  },
+  "localPluginWarnTheme": {
+    "message": "Voyager のアクセントカラーを変更します。プロンプトでは AI にそうしないよう指示していました。",
+    "description": "Warning: the plugin changes the accent color although the prompt asked not to"
+  },
+  "localPluginWarnNative": {
+    "message": "Voyager の組み込み機能を実行します。プロンプトでは AI にそうしないよう指示していました。",
+    "description": "Warning: the plugin runs a Voyager built-in although the prompt asked not to"
+  },
+  "localPluginWarnReplaces": {
+    "message": "インストール済みのバージョン {version} を置き換え、もう一度オンにするまでオフになります。",
+    "description": "Warning: importing replaces an installed version and turns it off"
+  },
+  "localPluginInspectSites": {
+    "message": "サイト",
+    "description": "Inspect view: sites the plugin runs on"
+  },
+  "localPluginInspectCss": {
+    "message": "CSS",
+    "description": "Inspect view: injected stylesheet size label"
+  },
+  "localPluginInspectCssChars": {
+    "message": "{chars} 文字",
+    "description": "Inspect view: injected CSS size; {chars} is a number"
+  },
+  "localPluginInspectDomOps": {
+    "message": "ページの変更",
+    "description": "Inspect view: reversible DOM operations the plugin applies"
+  },
+  "localPluginInspectPrimitives": {
+    "message": "呼び出す Voyager の組み込み機能",
+    "description": "Inspect view: first-party Voyager primitives the plugin invokes"
+  },
+  "localPluginInspectSettings": {
+    "message": "設定",
+    "description": "Inspect view: settings the plugin declares"
+  },
+  "localPluginInspectNone": {
+    "message": "なし",
+    "description": "Inspect view: the plugin has nothing in this category"
+  },
+  "localPluginInspectNoCode": {
+    "message": "プラグイン自身のコードは実行されません。CSS、元に戻せるページの変更、Voyager の組み込み機能だけです。",
+    "description": "Inspect view: reassurance that a declarative plugin cannot run its own code"
   },
   "pluginUpdateNeedsNewerVoyager": {
     "message": "更新版 {version} には新しい Voyager が必要です。",
@@ -2902,6 +3358,9 @@
   "highlightSaved": {
     "message": "ハイライトを保存しました"
   },
+  "highlightConfirmationPending": {
+    "message": "確認を待っています。エディターを閉じても下書きは保持されます。"
+  },
   "highlightSaveFailed": {
     "message": "ハイライトを保存できませんでした"
   },
@@ -3117,5 +3576,373 @@
   "popupPinHintDismiss": {
     "message": "閉じる",
     "description": "Popup: dismiss the pin reminder"
+  },
+  "nativeHealthTimeline": {
+    "message": "タイムラインがこのページで会話のターンを見つけられません。",
+    "description": "Popup: Gemini health notice when the timeline finds no conversation turns"
+  },
+  "nativeHealthChatWidth": {
+    "message": "チャットの幅の調整がこのページで会話のターンを見つけられません。",
+    "description": "Popup: Gemini health notice when chat width finds no conversation turns"
+  },
+  "nativeHealthFolders": {
+    "message": "フォルダを Gemini のサイドバーに配置できなかったため、フローティングパネルで開きました。",
+    "description": "Popup: Gemini health notice when folders fell back to the floating panel"
+  },
+  "nativeHealthExport": {
+    "message": "エクスポートがこのページでメッセージを見つけられません。",
+    "description": "Popup: Gemini health notice when export finds no messages"
+  },
+  "nativeHealthComposer": {
+    "message": "Voyager が Gemini の入力欄を見つけられないため、プロンプトを挿入できません。",
+    "description": "Popup: Gemini health notice when Gemini's message box is missing"
+  },
+  "nativeHealthCause": {
+    "message": "Gemini のページ構成が変わった可能性があります。",
+    "description": "Popup: likely cause shown under a Gemini health notice"
+  },
+  "nativeHealthReport": {
+    "message": "報告する",
+    "description": "Popup: link that opens a prefilled GitHub bug report"
+  },
+  "nativeHealthDismiss": {
+    "message": "閉じる",
+    "description": "Popup: dismiss the Gemini health notice"
+  },
+  "researchPackEnable": {
+    "message": "リサーチパック",
+    "description": "Popup: research pack toggle label"
+  },
+  "researchPackEnableHint": {
+    "message": "Gemini の回答にパックボタンを追加します。回答と出典を 1 つの Markdown にまとめ、コピー・ダウンロード・別のチャットへの挿入ができます。",
+    "description": "Popup: research pack toggle hint"
+  },
+  "researchPackAdd": {
+    "message": "リサーチパックに追加（先に回答の一部を選択することもできます）",
+    "description": "Research pack: per-answer add button tooltip"
+  },
+  "researchPackAdded": {
+    "message": "パックに追加しました",
+    "description": "Research pack: item added"
+  },
+  "researchPackDuplicate": {
+    "message": "すでにパックにあります",
+    "description": "Research pack: item already present"
+  },
+  "researchPackFull": {
+    "message": "パックがいっぱいです。先に項目を削除してください。",
+    "description": "Research pack: item limit reached"
+  },
+  "researchPackCaptureFailed": {
+    "message": "この回答を読み取れませんでした",
+    "description": "Research pack: answer could not be read"
+  },
+  "researchPackSaveFailed": {
+    "message": "パックを保存できませんでした",
+    "description": "Research pack: storage write failed"
+  },
+  "researchPackTitle": {
+    "message": "リサーチパック",
+    "description": "Research pack: panel title"
+  },
+  "researchPackShortTitle": {
+    "message": "パック",
+    "description": "Research pack: short launcher label"
+  },
+  "researchPackOpen": {
+    "message": "リサーチパックを開く",
+    "description": "Research pack: launcher tooltip"
+  },
+  "researchPackClose": {
+    "message": "閉じる",
+    "description": "Research pack: close panel"
+  },
+  "researchPackEmpty": {
+    "message": "パックは空です。回答の下にあるパックボタンを押すか、先に回答の一部を選択してください。",
+    "description": "Research pack: empty state"
+  },
+  "researchPackItemCount": {
+    "message": "{count} 件",
+    "description": "Research pack: item count, {count} is a number"
+  },
+  "researchPackSourceCount": {
+    "message": "出典 {count} 件",
+    "description": "Research pack: cited link count, {count} is a number"
+  },
+  "researchPackUntitledSource": {
+    "message": "無題の会話",
+    "description": "Research pack: fallback conversation title"
+  },
+  "researchPackExcerptBadge": {
+    "message": "抜粋",
+    "description": "Research pack: badge for a selected part of an answer"
+  },
+  "researchPackMoveUp": {
+    "message": "上へ移動",
+    "description": "Research pack: move item up"
+  },
+  "researchPackMoveDown": {
+    "message": "下へ移動",
+    "description": "Research pack: move item down"
+  },
+  "researchPackRemove": {
+    "message": "パックから削除",
+    "description": "Research pack: remove item"
+  },
+  "researchPackInstructionLabel": {
+    "message": "次のモデルへの指示",
+    "description": "Research pack: instruction field label"
+  },
+  "researchPackInstructionPlaceholder": {
+    "message": "例：これらの回答を比較し、食い違いを指摘し、各主張を出典と照合してください。",
+    "description": "Research pack: instruction placeholder"
+  },
+  "researchPackPreview": {
+    "message": "Markdown プレビュー",
+    "description": "Research pack: markdown preview toggle"
+  },
+  "researchPackInsert": {
+    "message": "入力欄に挿入",
+    "description": "Research pack: insert into composer button"
+  },
+  "researchPackInsertHint": {
+    "message": "パックを入力欄に入れます。送信するまで何も送られません。",
+    "description": "Research pack: insert button tooltip"
+  },
+  "researchPackCopy": {
+    "message": "Markdown をコピー",
+    "description": "Research pack: copy markdown button"
+  },
+  "researchPackDownload": {
+    "message": ".md をダウンロード",
+    "description": "Research pack: download button"
+  },
+  "researchPackClear": {
+    "message": "クリア",
+    "description": "Research pack: clear all items"
+  },
+  "researchPackClearConfirm": {
+    "message": "パックの項目をすべて削除しますか？指示は残ります。",
+    "description": "Research pack: clear confirmation"
+  },
+  "researchPackCopied": {
+    "message": "Markdown をコピーしました",
+    "description": "Research pack: copy succeeded"
+  },
+  "researchPackCopyFailed": {
+    "message": "コピーできませんでした。ダウンロードをお使いください。",
+    "description": "Research pack: copy failed"
+  },
+  "researchPackInserted": {
+    "message": "パックを挿入しました。確認してからご自身で送信してください。",
+    "description": "Research pack: inserted into composer"
+  },
+  "researchPackNoComposer": {
+    "message": "このページに入力欄が見つかりません",
+    "description": "Research pack: no composer found"
+  },
+  "researchPackLoadFailed": {
+    "message": "パックを読み込めませんでした",
+    "description": "Research pack: the stored pack could not be read; shown with a retry button"
+  },
+  "researchPackRetry": {
+    "message": "再試行",
+    "description": "Research pack: button that reads the pack again after a failure"
+  },
+  "researchPackContinueIn": {
+    "message": "{target} で続ける",
+    "description": "Research pack: button that opens a new chat on another model ({target} is ChatGPT or Claude)"
+  },
+  "researchPackContinueHint": {
+    "message": "新しい {target} チャットを開き、このパックを入力欄に入れます。送信はしません。",
+    "description": "Research pack: tooltip of the continue-in button"
+  },
+  "researchPackContinueOpening": {
+    "message": "{target} を開いています。パックは送信されずに入力欄に入ります。",
+    "description": "Research pack: the new chat is opening and the pack will be filled in"
+  },
+  "researchPackContinueCopied": {
+    "message": "パックをコピーしました。新しい {target} チャットに貼り付けてください。",
+    "description": "Research pack: Voyager cannot run on the target, so the pack was copied for pasting"
+  },
+  "researchPackContinueRetry": {
+    "message": "今は {target} に自動入力できません。もう一度クリックすると、パックをコピーして {target} を開きます。",
+    "description": "Research pack: the target stopped being available since the panel opened"
+  },
+  "researchPackContinueFailed": {
+    "message": "{target} を開けませんでした。代わりに「Markdown をコピー」を使ってください。",
+    "description": "Research pack: the new chat could not be opened"
+  },
+  "researchPackHandoffReady": {
+    "message": "Gemini からリサーチパックを入力しました。確認してからご自身で送信してください。",
+    "description": "Research pack: toast on ChatGPT/Claude after the pack was put in the message box"
+  },
+  "researchPackHandoffFailed": {
+    "message": "ここにリサーチパックを入力できませんでした。Gemini に戻ってコピーしてください。",
+    "description": "Research pack: toast on ChatGPT/Claude when the pack could not be put in the message box"
+  },
+  "researchPackTemplates": {
+    "message": "テンプレート",
+    "description": "Research pack: templates section toggle"
+  },
+  "researchPackTemplatesHint": {
+    "message": "テンプレートは再利用できる指示です。プロンプトマネージャーに research-pack タグ付きで保存されます。書き出しで共有されるのは名前と指示だけで、パックの中身は含まれません。",
+    "description": "Research pack: what a template is and what exporting shares"
+  },
+  "researchPackTemplatePick": {
+    "message": "テンプレートを選択",
+    "description": "Research pack: template picker placeholder and label"
+  },
+  "researchPackTemplateNone": {
+    "message": "テンプレートはまだありません",
+    "description": "Research pack: template picker when no template is saved"
+  },
+  "researchPackTemplateUse": {
+    "message": "使う",
+    "description": "Research pack: put the chosen template into the instruction"
+  },
+  "researchPackTemplateUseConfirm": {
+    "message": "現在の指示をこのテンプレートで置き換えますか？",
+    "description": "Research pack: confirm replacing a typed instruction with a template"
+  },
+  "researchPackTemplateReplace": {
+    "message": "置き換える",
+    "description": "Research pack: confirm button that replaces the instruction"
+  },
+  "researchPackTemplateExport": {
+    "message": "書き出す",
+    "description": "Research pack: download the chosen template as a file"
+  },
+  "researchPackTemplateName": {
+    "message": "テンプレート名",
+    "description": "Research pack: name field for a new template"
+  },
+  "researchPackTemplateSave": {
+    "message": "指示をテンプレートとして保存",
+    "description": "Research pack: save the typed instruction as a template"
+  },
+  "researchPackTemplateSaved": {
+    "message": "テンプレートをプロンプトマネージャーに保存しました",
+    "description": "Research pack: a template was saved"
+  },
+  "researchPackTemplateNeedName": {
+    "message": "先にテンプレート名を入力してください",
+    "description": "Research pack: saving a template without a name"
+  },
+  "researchPackTemplateNeedInstruction": {
+    "message": "保存する指示を入力してください",
+    "description": "Research pack: saving a template with an empty instruction"
+  },
+  "researchPackTemplateInvalid": {
+    "message": "名前は 1 行・100 文字以内、指示は 4,000 文字以内にしてください。",
+    "description": "Research pack: template name or instruction breaks a limit"
+  },
+  "researchPackTemplateDuplicate": {
+    "message": "この指示はすでにプロンプトマネージャーにあります",
+    "description": "Research pack: the library already has this instruction text"
+  },
+  "researchPackTemplateNameTaken": {
+    "message": "この名前のプロンプトはすでにプロンプトマネージャーにあります",
+    "description": "Research pack: the library already has a prompt with this name"
+  },
+  "researchPackTemplateImport": {
+    "message": "ファイルを読み込む…",
+    "description": "Research pack: choose a template file to import"
+  },
+  "researchPackTemplateImportInvalid": {
+    "message": "このファイルは有効なリサーチパックのテンプレートファイルではありません。",
+    "description": "Research pack: the chosen file is not a valid template file"
+  },
+  "researchPackTemplatePreviewTitle": {
+    "message": "このファイルのテンプレートです。保存する前に確認してください。",
+    "description": "Research pack: heading of the import preview"
+  },
+  "researchPackTemplateStatusNew": {
+    "message": "新規",
+    "description": "Research pack: import preview badge for a template that will be saved"
+  },
+  "researchPackTemplateStatusDuplicate": {
+    "message": "保存済み",
+    "description": "Research pack: import preview badge for an instruction that is already saved"
+  },
+  "researchPackTemplateStatusNameTaken": {
+    "message": "名前が重複するためスキップ",
+    "description": "Research pack: import preview badge for a template skipped because its name is in use"
+  },
+  "researchPackTemplateImportSave": {
+    "message": "新しいテンプレートを保存",
+    "description": "Research pack: save the new templates from the import preview"
+  },
+  "researchPackTemplateImported": {
+    "message": "プロンプトマネージャーに保存したテンプレート：{count}",
+    "description": "Research pack: templates were imported; {count} is how many"
+  },
+  "researchPackTemplateImportNothing": {
+    "message": "保存する新しいテンプレートはありません",
+    "description": "Research pack: an import had nothing new to save"
+  },
+  "researchPackTemplateFailed": {
+    "message": "テンプレートを更新できませんでした。もう一度お試しください。",
+    "description": "Research pack: reading or writing templates failed"
+  },
+  "savedLibraryOpenFull": {
+    "message": "ライブラリ全体を開く"
+  },
+  "savedLibrarySite": {
+    "message": "サイト"
+  },
+  "savedLibraryAllSites": {
+    "message": "すべてのサイト"
+  },
+  "savedLibraryUnknownSite": {
+    "message": "不明なサイト"
+  },
+  "savedLibraryAccount": {
+    "message": "アカウント"
+  },
+  "savedLibraryAllAccounts": {
+    "message": "すべてのアカウント"
+  },
+  "savedLibraryAccountNumber": {
+    "message": "アカウント {number}"
+  },
+  "savedLibraryUnassigned": {
+    "message": "未割り当て"
+  },
+  "savedLibraryRemoveStarConfirm": {
+    "message": "このスターを解除しますか？"
+  },
+  "savedLibraryDeleteHighlightConfirm": {
+    "message": "このハイライトとメモを削除しますか？"
+  },
+  "savedLibraryOpenFailed": {
+    "message": "ライブラリを開けませんでした"
+  },
+  "savedLibraryExpandText": {
+    "message": "全文を表示"
+  },
+  "savedLibraryCollapseText": {
+    "message": "全文を折りたたむ"
+  },
+  "savedLibraryConversationOpenFailed": {
+    "message": "この会話を開けませんでした"
+  },
+  "savedLibraryChatGptSwitchAccount": {
+    "message": "このスターは {account} で保存されました。ChatGPT でそのアカウントに切り替えてから、もう一度開いてください。"
+  },
+  "savedLibraryChatGptSwitchHint": {
+    "message": "この会話を開けませんか？ChatGPT で保存時に使っていたアカウントに切り替えてから、もう一度開いてください。"
+  },
+  "savedLibraryOpenAnyway": {
+    "message": "そのまま開く"
+  },
+  "savedLibraryFilters": {
+    "message": "ライブラリの絞り込み"
+  },
+  "savedLibraryTypeFilter": {
+    "message": "保存した項目の種類"
+  },
+  "savedLibraryRefresh": {
+    "message": "更新"
   }
 }

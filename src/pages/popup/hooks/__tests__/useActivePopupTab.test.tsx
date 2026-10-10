@@ -83,10 +83,11 @@ describe('useActivePopupTab', () => {
     const active = tab(99, 'https://chatgpt.com/c/active');
     vi.mocked(browser.tabs.query).mockResolvedValue([active]);
     await render(12);
+    // ChatGPT has no folder bucket; it must not be reported as Gemini.
     expect(context).toMatchObject({
       activeTabId: 99,
       activeUrl: active.url,
-      activeAccountPlatform: 'gemini',
+      activeAccountPlatform: null,
       activeTabContextLoaded: true,
     });
     expect(browser.tabs.query).toHaveBeenCalledWith({ active: true, currentWindow: true });

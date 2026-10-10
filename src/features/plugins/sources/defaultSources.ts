@@ -1,6 +1,8 @@
 import { logger } from '@/core/services/LoggerService';
 
 import { PLUGIN_ENGINE_VERSION } from '../constants';
+import { LocalPluginSource } from '../local/LocalPluginSource';
+import { isLocalPluginId } from '../local/localPluginId';
 import { HostCatalogSource } from '../remote/HostCatalogSource';
 import { engineSatisfied } from '../semver';
 import { matchesAnyPattern } from '../sites/matchPattern';
@@ -15,11 +17,17 @@ import { BundledCatalogPluginSource } from './BundledCatalogPluginSource';
 
 /**
  * Active sources, in tier order: first-party native plugins, the bundled
- * declarative snapshot, and the per-host remote catalog (read from the cache
- * the background refresher maintains; never fetched here).
+ * declarative snapshot, the per-host remote catalog (read from the cache the
+ * background refresher maintains; never fetched here), and the plugins the
+ * user imported locally.
  */
 export function createDefaultPluginSources(): readonly PluginSource[] {
-  return [new BuiltinPluginSource(), new BundledCatalogPluginSource(), new HostCatalogSource()];
+  return [
+    new BuiltinPluginSource(),
+    new BundledCatalogPluginSource(),
+    new HostCatalogSource(),
+    new LocalPluginSource(),
+  ];
 }
 
 /** A newer remote version exists but needs a newer engine than this build has. */
@@ -41,6 +49,8 @@ export interface MergePluginRecordsInput {
   /** Bundled snapshot plus any source without a declared kind, in source order. */
   readonly snapshot: readonly SourcedPluginManifest[];
   readonly remote: readonly SourcedPluginManifest[];
+  /** User-imported plugins; merged last, only under `local.*` ids. */
+  readonly local?: readonly SourcedPluginManifest[];
   /** True when the remote list is the truth for `scopeUrl`'s host (kill switch). */
   readonly remoteAuthoritative: boolean;
   /** Page the listing is for; scopes the kill switch to plugins that target it. */
@@ -59,27 +69,34 @@ export interface MergePluginRecordsInput {
  *   - both incompatible → remote (the status machine reports needs-engine);
  *   - remote authoritative for this host and a snapshot plugin targeting this
  *     page is absent from it → dropped (kill switch);
- *   - remote unavailable → snapshot as-is.
+ *   - remote unavailable → snapshot as-is;
+ *   - `local.*` ids belong to the user's imported plugins: an official or
+ *     remote record under one is dropped, and a local record is added last,
+ *     outside the kill switch, only when its id is still free.
  */
 export function mergePluginRecords(input: MergePluginRecordsInput): SourcedPluginManifest[] {
   const engineVersion = input.engineVersion ?? PLUGIN_ENGINE_VERSION;
   const seen = new Set<string>();
   const merged: SourcedPluginManifest[] = [];
+  const official = (record: SourcedPluginManifest): boolean => !isLocalPluginId(record.manifest.id);
+  const builtin = input.builtin.filter(official);
+  const snapshot = input.snapshot.filter(official);
+  const remoteRecords = input.remote.filter(official);
 
-  for (const record of input.builtin) {
+  for (const record of builtin) {
     if (seen.has(record.manifest.id)) continue;
     seen.add(record.manifest.id);
     merged.push(record);
   }
 
   const remoteById = new Map<string, SourcedPluginManifest>();
-  for (const record of input.remote) {
+  for (const record of remoteRecords) {
     const id = record.manifest.id;
     if (seen.has(id) || remoteById.has(id)) continue;
     remoteById.set(id, record);
   }
 
-  for (const record of input.snapshot) {
+  for (const record of snapshot) {
     const id = record.manifest.id;
     if (seen.has(id)) continue;
     seen.add(id);
@@ -107,6 +124,13 @@ export function mergePluginRecords(input: MergePluginRecordsInput): SourcedPlugi
   for (const record of remoteById.values()) {
     if (seen.has(record.manifest.id)) continue;
     seen.add(record.manifest.id);
+    merged.push(record);
+  }
+
+  for (const record of input.local ?? []) {
+    const id = record.manifest.id;
+    if (!isLocalPluginId(id) || seen.has(id)) continue;
+    seen.add(id);
     merged.push(record);
   }
 
@@ -144,6 +168,7 @@ export async function listPluginManifestsWithSources(
   const builtin: SourcedPluginManifest[] = [];
   const snapshot: SourcedPluginManifest[] = [];
   const remote: SourcedPluginManifest[] = [];
+  const local: SourcedPluginManifest[] = [];
   let remoteAuthoritative = false;
 
   for (const source of sources) {
@@ -161,6 +186,8 @@ export async function listPluginManifestsWithSources(
     }));
     if (source.kind === 'builtin') {
       builtin.push(...records);
+    } else if (source.kind === 'local') {
+      local.push(...records);
     } else if (source.kind === 'remote') {
       remote.push(...records);
       if (!remoteAuthoritative && source.isAuthoritative) {
@@ -179,7 +206,7 @@ export async function listPluginManifestsWithSources(
   }
 
   const scopeUrl = context?.url ?? (context?.host ? `https://${context.host}/` : undefined);
-  return mergePluginRecords({ builtin, snapshot, remote, remoteAuthoritative, scopeUrl });
+  return mergePluginRecords({ builtin, snapshot, remote, local, remoteAuthoritative, scopeUrl });
 }
 
 export async function listPluginManifests(

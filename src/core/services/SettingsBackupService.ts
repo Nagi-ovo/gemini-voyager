@@ -2,6 +2,7 @@ import { type StorageKey, StorageKeys } from '@/core/types/common';
 import { DEFAULT_HIGHLIGHT_COLOR_PALETTE } from '@/core/types/highlight';
 import type { SettingsExportPayload } from '@/core/types/sync';
 import { EXTENSION_VERSION } from '@/core/utils/version';
+import { WATERMARK_STORAGE_KEYS } from '@/core/utils/watermarkSettings';
 
 export type BackupableSyncSettings = Record<string, unknown>;
 export type SettingsRestoreMode = 'merge' | 'overwrite';
@@ -80,9 +81,9 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS = {
   [StorageKeys.LANGUAGE]: null,
   [StorageKeys.FORMULA_COPY_ENABLED]: true,
   [StorageKeys.FORMULA_COPY_FORMAT]: 'latex',
-  [StorageKeys.WATERMARK_REMOVER_ENABLED]: true,
-  [StorageKeys.WATERMARK_DOWNLOAD_ENABLED]: true,
-  [StorageKeys.WATERMARK_PREVIEW_ENABLED]: true,
+  [StorageKeys.WATERMARK_REMOVER_ENABLED]: null,
+  [StorageKeys.WATERMARK_DOWNLOAD_ENABLED]: null,
+  [StorageKeys.WATERMARK_PREVIEW_ENABLED]: null,
   [StorageKeys.HIDE_PROMPT_MANAGER]: false,
   [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: false,
   [StorageKeys.MERMAID_ENABLED]: true,
@@ -126,6 +127,7 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS = {
   [StorageKeys.GV_SNOW_EFFECT]: false,
   [StorageKeys.GV_VISUAL_EFFECT]: 'off',
   [StorageKeys.FORK_ENABLED]: false,
+  [StorageKeys.RESEARCH_PACK_ENABLED]: false,
   [StorageKeys.EXPORT_IMAGE_WIDTH]: 620,
   [StorageKeys.EXPORT_SPEAKER_LABELS]: {},
   [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED]: true,
@@ -174,6 +176,21 @@ export const NON_SETTINGS_BACKUP_POLICIES = {
     disposition: 'separate-file',
     reason: 'AI Studio folder content has its own Drive file.',
   },
+  [StorageKeys.FOLDER_DATA_CHATGPT]: {
+    storage: 'local',
+    disposition: 'separate-file',
+    reason: 'ChatGPT folder content has its own unscoped Drive file.',
+  },
+  [StorageKeys.CHATGPT_FOLDER_PANEL]: {
+    storage: 'local',
+    disposition: 'device-local',
+    reason: 'Viewport coordinates and panel state should not be restored across different screens.',
+  },
+  [StorageKeys.CHATGPT_FOLDER_SECTION]: {
+    storage: 'local',
+    disposition: 'device-local',
+    reason: 'ChatGPT folder section collapse and order are local UI state, as on Gemini.',
+  },
   [StorageKeys.FOLDER_FLOATING_NUDGE_SHOWN]: {
     storage: 'sync',
     disposition: 'deprecated',
@@ -199,10 +216,25 @@ export const NON_SETTINGS_BACKUP_POLICIES = {
     disposition: 'separate-file',
     reason: 'Starred messages have their own account-scoped Drive file.',
   },
+  [StorageKeys.SAVED_LIBRARY_STARS]: {
+    storage: 'local',
+    disposition: 'separate-file',
+    reason: 'Saved Library stars share the existing account-scoped starred messages Drive file.',
+  },
+  [StorageKeys.SAVED_LIBRARY_STAR_TOMBSTONES]: {
+    storage: 'local',
+    disposition: 'separate-file',
+    reason: 'Saved Library deletion records belong to star data, outside settings restore.',
+  },
   [StorageKeys.TIMELINE_HIERARCHY]: {
     storage: 'local',
     disposition: 'separate-file',
     reason: 'Timeline hierarchy has its own account-scoped Drive file.',
+  },
+  [StorageKeys.CATALOG_TIMELINE_HIERARCHY_PREFIX]: {
+    storage: 'local',
+    disposition: 'separate-file',
+    reason: 'Catalog-site timeline outlines have their own per-site Drive file.',
   },
   [StorageKeys.HIGHLIGHT_CLOUD_SYNC_ENABLED]: {
     storage: 'local',
@@ -334,6 +366,11 @@ export const NON_SETTINGS_BACKUP_POLICIES = {
     disposition: 'device-local',
     reason: 'The toolbar pin state is per browser profile.',
   },
+  [StorageKeys.NATIVE_HEALTH_DISMISSED]: {
+    storage: 'local',
+    disposition: 'operational',
+    reason: 'Health notice dismissals follow the installed extension version.',
+  },
   [StorageKeys.CHANGELOG_DISMISSED_VERSION]: {
     storage: 'local',
     disposition: 'operational',
@@ -374,11 +411,23 @@ export const NON_SETTINGS_BACKUP_POLICIES = {
     disposition: 'local-data',
     reason: 'Message timestamp history is local data, not a setting.',
   },
+  [StorageKeys.CATALOG_MESSAGE_TIMESTAMPS_PREFIX]: {
+    storage: 'local',
+    disposition: 'local-data',
+    reason:
+      'Catalog-site message send times (one key per conversation) are local data, like Gemini message timestamps.',
+  },
   [StorageKeys.GV_TURN_IDENTITY_CACHE]: {
     storage: 'local',
     disposition: 'cache',
     reason:
       'Gemini response-id aliases are bounded, device-local, and rebuilt from conversation history.',
+  },
+  [StorageKeys.RESEARCH_PACK]: {
+    storage: 'local',
+    disposition: 'device-local',
+    reason:
+      'The research pack is a short-lived working set the user carries between chats; it is not backed up.',
   },
   [StorageKeys.PROMPT_HISTORY_ITEMS]: {
     storage: 'local',
@@ -431,6 +480,12 @@ export const NON_SETTINGS_BACKUP_POLICIES = {
     storage: 'local',
     disposition: 'device-local',
     reason: 'Which plugin versions this device has already shown is popup badge state.',
+  },
+  [StorageKeys.PLUGIN_LOCAL_MANIFESTS]: {
+    storage: 'local',
+    disposition: 'local-data',
+    reason:
+      'User-authored plugin manifests stay on this device; the user exports them from the popup. Their enable state rides the plugin-state Drive file.',
   },
   [StorageKeys.WATERMARK_NATIVE_NOTICE_SHOWN]: {
     storage: 'local',
@@ -507,6 +562,12 @@ export async function restoreBackupableSyncSettings(
   mode: SettingsRestoreMode = 'overwrite',
 ): Promise<BackupableSyncSettings> {
   const filtered = filterBackupableSyncSettings(settings);
+  // A backup without a watermark choice exports null. Restoring it must not
+  // erase a saved choice, such as the one kept for installs that relied on the
+  // old enabled default.
+  for (const key of WATERMARK_STORAGE_KEYS) {
+    if (typeof filtered[key] !== 'boolean') delete filtered[key];
+  }
   if (Object.keys(filtered).length === 0) {
     return filtered;
   }

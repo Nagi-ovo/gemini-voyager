@@ -58,6 +58,9 @@ export function TimelineSettingsCard({
 }: TimelineSettingsCardProps) {
   const activeStyle = TIMELINE_STYLE_OPTIONS.find((o) => o.value === values.timelineStyle);
   const activeMode = SCROLL_MODE_OPTIONS.find((o) => o.value === values.mode);
+  // Ruler and compact paint no rail, so only dots has a container to hide. The
+  // stored value is kept and applies again when the user returns to dots.
+  const containerless = values.timelineStyle !== 'dots';
 
   return (
     <Card className="p-4 transition-all hover:shadow-md">
@@ -73,10 +76,12 @@ export function TimelineSettingsCard({
             {TIMELINE_STYLE_OPTIONS.map((option) => (
               <button
                 key={option.value}
-                className={`relative z-10 rounded-lg px-2 py-2 text-sm font-bold transition-all duration-200 ${
+                // Node levels have a shape only on the dots rail.
+                disabled={values.markerLevelEnabled && option.value !== 'dots'}
+                className={`relative z-10 rounded-lg px-2 py-2 text-sm font-bold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
                   values.timelineStyle === option.value
                     ? 'text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
+                    : 'text-muted-foreground enabled:hover:text-foreground'
                 }`}
                 onClick={() => onChange({ timelineStyle: option.value })}
               >
@@ -111,7 +116,9 @@ export function TimelineSettingsCard({
           id="hide-container"
           settingId="hideOuterContainer"
           label="hideOuterContainer"
+          hint={containerless ? 'hideOuterContainerDotsOnly' : undefined}
           checked={values.hideContainer}
+          disabled={containerless}
           onChange={(hideContainer) => onChange({ hideContainer })}
           isVisible={isVisible}
           t={t}

@@ -15,7 +15,7 @@
  */
 import { logger } from '@/core/services/LoggerService';
 
-import type { PluginSettings } from '../types';
+import type { PluginSettings, SiteAdapter } from '../types';
 import type { PluginScope } from './pluginScope';
 
 export interface NativeHandler {
@@ -24,9 +24,15 @@ export interface NativeHandler {
    * every side effect through the scope, and needs NO stop — the engine
    * disposes the scope on unmount, which aborts `scope.signal`, awaits any
    * in-flight startup, and pays every registered effect in reverse order.
-   * May be async. Mutually exclusive with `start`/`stop`.
+   * May be async. Mutually exclusive with `start`/`stop`. `adapter` is the
+   * site adapter the host resolved for this page, a published override
+   * included; a newer override remounts the plugin with it.
    */
-  readonly activate?: (scope: PluginScope, settings: PluginSettings) => void | Promise<void>;
+  readonly activate?: (
+    scope: PluginScope,
+    settings: PluginSettings,
+    adapter: SiteAdapter | null,
+  ) => void | Promise<void>;
   /** Legacy: run when the plugin mounts (URL matches + enabled). Idempotent. */
   readonly start?: (settings: PluginSettings) => void;
   /** Apply changed settings without tearing down the native feature. */

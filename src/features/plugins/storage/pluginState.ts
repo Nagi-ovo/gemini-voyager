@@ -7,13 +7,19 @@
  * (purchased/locked) is intentionally NOT stored here; that comes from the
  * `EntitlementProvider` so it can be server-driven later.
  *
- * Content scripts use `chrome.storage` directly per the content-script rules.
+ * Content scripts READ this directly per the content-script rules, but never
+ * write it: every writer here holds the plugin-storage lock, which a content
+ * script cannot share (see `pluginStorageLock.ts`), so a page sends a setting
+ * change to the background through `requestPluginSetting`.
  */
 import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
+import { isLocalPluginId } from '../local/localPluginId';
 import type { PluginSettingValue, PluginSettings } from '../types';
+import { isPluginEnabled } from './pluginDefaults';
+import { withPluginStorageLock } from './pluginStorageLock';
 
 export interface PluginStateEntry {
   readonly enabled: boolean;
@@ -84,12 +90,39 @@ export function sanitizePluginState(value: unknown): PluginStateMap {
   return state;
 }
 
+/**
+ * Read the state map, letting a failed read throw. Every read-modify-write
+ * uses this: falling back to `{}` there would write back a map holding only
+ * the entry being changed and wipe every other plugin's state.
+ */
+export async function readPluginStateStrict(
+  local: chrome.storage.LocalStorageArea,
+): Promise<PluginStateMap> {
+  const result = await local.get({ [KEY]: {} });
+  return sanitizePluginState(result?.[KEY]);
+}
+
+/** The state map with one plugin switched on or off, keeping its settings. */
+export function withPluginEnabled(
+  state: PluginStateMap,
+  id: string,
+  enabled: boolean,
+  now: number,
+): PluginStateMap {
+  const previous = state[id];
+  return { ...state, [id]: { ...previous, enabled, installedAt: previous?.installedAt ?? now } };
+}
+
+/** The state map with one plugin switched off, keeping its settings. */
+export function withPluginDisabled(state: PluginStateMap, id: string, now: number): PluginStateMap {
+  return withPluginEnabled(state, id, false, now);
+}
+
 export async function loadPluginState(): Promise<PluginStateMap> {
   const local = localArea();
   if (!local) return {};
   try {
-    const result = await local.get({ [KEY]: {} });
-    return sanitizePluginState(result?.[KEY]);
+    return await readPluginStateStrict(local);
   } catch (error) {
     if (!isExtensionContextInvalidatedError(error)) {
       logger.warn('loadPluginState failed', { error: String(error) });
@@ -98,7 +131,40 @@ export async function loadPluginState(): Promise<PluginStateMap> {
   }
 }
 
-/** Restore plugin state downloaded from Drive. Cloud entries win on merge. */
+/**
+ * A local plugin's enable state is a review decision on this device: the cloud
+ * copy may switch one off, never on. Otherwise restoring an older backup would
+ * enable a newer, unreviewed version imported since that upload.
+ */
+function clampLocalPluginsEnabled(
+  restored: PluginStateMap,
+  current: PluginStateMap,
+): PluginStateMap {
+  const next: Record<string, PluginStateEntry> = { ...restored };
+  for (const [id, entry] of Object.entries(restored)) {
+    if (!isLocalPluginId(id) || !entry.enabled || current[id]?.enabled === true) continue;
+    next[id] = { ...entry, enabled: false };
+  }
+  return next;
+}
+
+/**
+ * Restore plugin state downloaded from Drive. Cloud entries win on merge,
+ * except that a local plugin is never switched on (`clampLocalPluginsEnabled`).
+ * A merge reads local state strictly: if that read fails the restore rejects
+ * and writes nothing, rather than writing the cloud entries alone and dropping
+ * every local-only plugin's state. An overwrite whose read fails still runs,
+ * with every local plugin switched off.
+ */
+/**
+ * True when `restorePluginState` would write `value`: a state map that is empty
+ * or keeps at least one valid entry. Anything else leaves local state as is.
+ */
+export function isRestorablePluginState(value: unknown): value is Record<string, unknown> {
+  if (!isRecord(value)) return false;
+  return Object.keys(value).length === 0 || Object.keys(sanitizePluginState(value)).length > 0;
+}
+
 export async function restorePluginState(
   value: unknown,
   mode: PluginStateRestoreMode = 'merge',
@@ -106,67 +172,83 @@ export async function restorePluginState(
   const local = localArea();
   if (!local) return {};
 
-  if (!isRecord(value)) {
+  if (!isRestorablePluginState(value)) {
     return loadPluginState();
   }
   const cloudState = sanitizePluginState(value);
-  if (Object.keys(value).length > 0 && Object.keys(cloudState).length === 0) {
-    return loadPluginState();
+  return withPluginStorageLock(async () => {
+    const current =
+      mode === 'overwrite'
+        ? await readPluginStateStrict(local).catch((): PluginStateMap => ({}))
+        : await readPluginStateStrict(local);
+    const restored = mode === 'overwrite' ? cloudState : { ...current, ...cloudState };
+    const next = clampLocalPluginsEnabled(restored, current);
+    await local.set({ [KEY]: next });
+    return next;
+  });
+}
+
+/**
+ * Read-modify-write the state map under the plugin-storage lock. A failed read
+ * or write is logged, writes nothing and resolves false.
+ */
+async function updatePluginState(
+  label: string,
+  context: Record<string, unknown>,
+  update: (current: PluginStateMap) => PluginStateMap,
+): Promise<boolean> {
+  const local = localArea();
+  if (!local) return false;
+  try {
+    await withPluginStorageLock(async () => {
+      await local.set({ [KEY]: update(await readPluginStateStrict(local)) });
+    });
+    return true;
+  } catch (error) {
+    if (!isExtensionContextInvalidatedError(error)) {
+      logger.warn(`${label} failed`, { ...context, error: String(error) });
+    }
+    return false;
   }
-  const next =
-    mode === 'overwrite'
-      ? cloudState
-      : {
-          ...(await loadPluginState()),
-          ...cloudState,
-        };
-  await local.set({ [KEY]: next });
-  return next;
 }
 
 export async function setPluginEnabled(id: string, enabled: boolean): Promise<void> {
-  const local = localArea();
-  if (!local) return;
-  try {
-    const current = await loadPluginState();
-    const previous = current[id];
-    const next: PluginStateMap = {
-      ...current,
-      [id]: { ...previous, enabled, installedAt: previous?.installedAt ?? Date.now() },
-    };
-    await local.set({ [KEY]: next });
-  } catch (error) {
-    if (!isExtensionContextInvalidatedError(error)) {
-      logger.warn('setPluginEnabled failed', { id, error: String(error) });
-    }
-  }
+  await updatePluginState('setPluginEnabled', { id }, (current) =>
+    withPluginEnabled(current, id, enabled, Date.now()),
+  );
 }
 
-/** Persist a single setting value for a plugin (preserving enabled state + other settings). */
+/**
+ * Persist a single setting value for a plugin (preserving enabled state + other
+ * settings). A plugin with no entry keeps its default, so changing a setting of
+ * a default-on plugin never switches it off. Resolves false, after logging, when
+ * the value was not stored.
+ */
 export async function setPluginSetting(
   id: string,
   key: string,
   value: PluginSettingValue,
-): Promise<void> {
-  const local = localArea();
-  if (!local) return;
-  try {
-    const current = await loadPluginState();
+): Promise<boolean> {
+  return setPluginSettings(id, { [key]: value });
+}
+
+/** Persist several setting values for a plugin in one storage write, as `setPluginSetting`. */
+export async function setPluginSettings(
+  id: string,
+  values: Readonly<Record<string, PluginSettingValue>>,
+): Promise<boolean> {
+  const keys = Object.keys(values);
+  return updatePluginState('setPluginSettings', { id, keys }, (current) => {
     const previous = current[id];
-    const next: PluginStateMap = {
+    return {
       ...current,
       [id]: {
-        enabled: previous?.enabled ?? false,
+        enabled: isPluginEnabled(current, id),
         installedAt: previous?.installedAt ?? Date.now(),
-        settings: { ...previous?.settings, [key]: value },
+        settings: { ...previous?.settings, ...values },
       },
     };
-    await local.set({ [KEY]: next });
-  } catch (error) {
-    if (!isExtensionContextInvalidatedError(error)) {
-      logger.warn('setPluginSetting failed', { id, key, error: String(error) });
-    }
-  }
+  });
 }
 
 const COLLAPSED_KEY = StorageKeys.PLUGIN_UI_COLLAPSED;

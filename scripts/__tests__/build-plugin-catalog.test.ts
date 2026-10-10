@@ -11,11 +11,15 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { requireBundledSiteAdapter } from '@/features/plugins/catalog/sites';
 import { validateHostCatalogFile } from '@/features/plugins/remote/hostCatalogFile';
+import { resolveSiteAdapterForUrl } from '@/features/plugins/remote/siteOverride';
+import { SiteRegistry } from '@/features/plugins/sites/registry';
 
 import { DEFAULT_CATALOG_DIR, parseArgs, writeHostCatalogs } from '../build-plugin-catalog';
 
 const GENERATED_AT = '2026-01-02T03:04:05.000Z';
+const SOURCE_REVISION = 42;
 
 /** host -> adapter id the published `site` section must carry. */
 const EXPECTED_SITES: Readonly<Record<string, string>> = {
@@ -34,7 +38,12 @@ function makeTempDir(): string {
 }
 
 function build(outDir: string, catalogDir = DEFAULT_CATALOG_DIR) {
-  return writeHostCatalogs({ catalogDir, outDir, generatedAt: GENERATED_AT });
+  return writeHostCatalogs({
+    catalogDir,
+    outDir,
+    generatedAt: GENERATED_AT,
+    catalogRevision: SOURCE_REVISION,
+  });
 }
 
 function readHostFile(outDir: string, host: string): Record<string, unknown> {
@@ -140,6 +149,34 @@ describe('build-plugin-catalog', () => {
       expect(validation?.manifests.length).toBe((file.plugins as unknown[]).length);
       expect(validation?.site?.id).toBe(siteId);
     }
+  });
+
+  it('publishing the same commit cannot outrank its bundled selectors because of build timing', async () => {
+    const outDir = makeTempDir();
+    await build(outDir);
+    const registry = new SiteRegistry();
+    for (const [host, siteId] of Object.entries(EXPECTED_SITES)) {
+      const payload = readHostFile(outDir, host);
+      const remote = validateHostCatalogFile(payload, host)?.site;
+      const bundled = { ...requireBundledSiteAdapter(siteId), catalogRevision: SOURCE_REVISION };
+      registry.register(bundled);
+      expect(remote?.catalogRevision).toBe(SOURCE_REVISION);
+      expect(resolveSiteAdapterForUrl(`https://${host}/`, registry, remote ?? null)).toBe(bundled);
+    }
+    // Publication time is diagnostic: a later deploy of the same source still ties.
+    await writeHostCatalogs({
+      catalogDir: DEFAULT_CATALOG_DIR,
+      outDir,
+      generatedAt: '2099-01-01T00:00:00.000Z',
+      catalogRevision: SOURCE_REVISION,
+    });
+    const remote = validateHostCatalogFile(
+      readHostFile(outDir, 'chatgpt.com'),
+      'chatgpt.com',
+    )?.site;
+    expect(resolveSiteAdapterForUrl('https://chatgpt.com/', registry, remote ?? null)).toBe(
+      registry.resolveByUrl('https://chatgpt.com/'),
+    );
   });
 
   it('inlines every style file as css', async () => {

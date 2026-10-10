@@ -312,6 +312,22 @@ describe('FolderManager native sidebar integration', () => {
     ).toHaveLength(1);
   });
 
+  it('hides filed rows with one membership pass per drain, matching legacy c_ ids', async () => {
+    owners.hideArchivedConversations = true;
+    const membershipSpy = vi.spyOn(owners.store, 'isConversationInFolders');
+    const filed = createConversationEl(CONVERSATION_ID);
+    const other = createConversationEl(OTHER_ID);
+    const unfiled = createConversationEl('ffff0000ffff0000');
+    sidebar.append(filed, other, unfiled);
+    await vi.advanceTimersByTimeAsync(50);
+
+    expect(filed.classList.contains('gv-conversation-archived')).toBe(true);
+    expect(other.classList.contains('gv-conversation-archived')).toBe(true);
+    expect(unfiled.classList.contains('gv-conversation-archived')).toBe(false);
+    expect(membershipSpy).toHaveBeenCalledTimes(3);
+    expect(new Set(membershipSpy.mock.calls.map(([, pass]) => pass)).size).toBe(1);
+  });
+
   it('clears leftover archived state in the legacy sibling layout when archive hiding is off', async () => {
     owners.hideArchivedConversations = false;
     const row = createConversationEl(CONVERSATION_ID);

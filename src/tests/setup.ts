@@ -14,7 +14,10 @@ globalThis.chrome = {
       clear: vi.fn(),
     },
     local: {
-      get: vi.fn(),
+      get: vi.fn((_keys: unknown, callback?: (items: Record<string, unknown>) => void) => {
+        callback?.({});
+        return Promise.resolve({});
+      }),
       set: vi.fn(),
       remove: vi.fn(),
       clear: vi.fn(),
@@ -99,8 +102,29 @@ Object.defineProperty(window, 'localStorage', {
 // Also expose localStorage globally (not just on window)
 globalThis.localStorage = localStorageMock as unknown as Storage;
 
-// Expose document globally
-globalThis.document = window.document;
+// jsdom does not implement the browser's ResizeObserver API.
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class {
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  };
+}
+
+// jsdom does not implement viewport intersection observation.
+if (typeof globalThis.IntersectionObserver === 'undefined') {
+  globalThis.IntersectionObserver = class {
+    readonly root = null;
+    readonly rootMargin = '';
+    readonly thresholds = [];
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+    takeRecords(): IntersectionObserverEntry[] {
+      return [];
+    }
+  };
+}
 
 // Mock DOM API
 Object.defineProperty(window, 'matchMedia', {

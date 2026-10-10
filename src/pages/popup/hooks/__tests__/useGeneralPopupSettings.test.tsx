@@ -104,6 +104,7 @@ describe('useGeneralPopupSettings', () => {
       usageStatusEnabled: false,
       inputHaloHidden: false,
       defaultModelAutoApplyEnabled: true,
+      researchPackEnabled: false,
     });
     expect(chrome.storage.sync.get).not.toHaveBeenCalled();
     expect(writeSyncStorage).not.toHaveBeenCalled();
@@ -126,6 +127,7 @@ describe('useGeneralPopupSettings', () => {
         [StorageKeys.USAGE_STATUS_ENABLED]: true,
         [StorageKeys.INPUT_HALO_HIDDEN]: true,
         [StorageKeys.DEFAULT_MODEL_AUTO_APPLY]: false,
+        [StorageKeys.RESEARCH_PACK_ENABLED]: true,
       }),
     );
     expect(settings.values).toEqual({
@@ -142,6 +144,7 @@ describe('useGeneralPopupSettings', () => {
       usageStatusEnabled: true,
       inputHaloHidden: true,
       defaultModelAutoApplyEnabled: false,
+      researchPackEnabled: true,
     });
     act(() => settings.hydrateFromStorage({ [StorageKeys.HIGHLIGHT_ENABLED]: 'true' }));
     expect(settings.values.highlightEnabled).toBe(false);

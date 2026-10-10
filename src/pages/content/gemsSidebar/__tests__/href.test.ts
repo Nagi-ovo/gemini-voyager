@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveGemHref } from '../index';
+import { resolveGemHref } from '../catalog';
 
 /**
  * resolveGemHref pins a cached gem link to the account of the window that

@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "owner": {
     "name": "voyager-official",
-    "url": "https://github.com/Nagi-ovo/voyager"
+    "url": "https://github.com/voyager-crew/voyager"
   },
   "description": "Index of the bundled official plugins for the docs plugin store. The extension discovers sites/*/site.json and sites/*/plugins/*/plugin.json itself; keep this list in sync (a test enforces it).",
   "plugins": [
@@ -56,6 +56,16 @@
     {
       "name": "deepseek-wrap-code",
       "source": "sites/deepseek/plugins/wrap-code/plugin.json",
+      "official": true
+    },
+    {
+      "name": "chatgpt-user-latex",
+      "source": "sites/chatgpt/plugins/user-latex/plugin.json",
+      "official": true
+    },
+    {
+      "name": "chatgpt-diagram-rendering",
+      "source": "sites/chatgpt/plugins/diagram-rendering/plugin.json",
       "official": true
     }
   ]

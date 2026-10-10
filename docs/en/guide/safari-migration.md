@@ -24,4 +24,4 @@ The app's Bundle ID has not changed. Your folders, prompt library, cloud sync, a
 
 Once you've done this one swap, future Safari releases update the new "Voyager" through the built-in auto-updater (Sparkle) — no more manual swapping.
 
-Questions? Let us know on [GitHub Issues](https://github.com/Nagi-ovo/voyager/issues).
+Questions? Let us know on [GitHub Issues](https://github.com/voyager-crew/voyager/issues).

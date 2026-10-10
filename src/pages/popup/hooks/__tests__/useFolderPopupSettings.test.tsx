@@ -29,7 +29,7 @@ describe('useFolderPopupSettings', () => {
   let settings: FolderSettings;
   const writeSyncStorage = vi.fn(async (_payload: Record<string, unknown>) => {});
 
-  const render = (activeAccountPlatform: AccountPlatform = 'gemini') => {
+  const render = (activeAccountPlatform: AccountPlatform | null = 'gemini') => {
     act(() => {
       root.render(
         <Harness
@@ -113,6 +113,23 @@ describe('useFolderPopupSettings', () => {
       [{ [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO]: true }],
       [{ [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: false }],
     ]);
+  });
+
+  it('neither shows nor writes another platform isolation switch on a non-native tab', () => {
+    act(() =>
+      settings.hydrateFromStorage({
+        [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: true,
+        [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO]: true,
+      }),
+    );
+    render(null);
+    expect(settings.accountIsolationEnabled).toBe(false);
+    act(() => settings.onAccountIsolationChange(false));
+    expect(writeSyncStorage).not.toHaveBeenCalled();
+    render('gemini');
+    expect(settings.accountIsolationEnabled).toBe(true);
+    render('aistudio');
+    expect(settings.accountIsolationEnabled).toBe(true);
   });
 
   it('writes sparse false changes using the existing folder keys', () => {

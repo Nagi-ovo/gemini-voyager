@@ -27,8 +27,7 @@ A temporary element can test a new CSS rule when that rule distinguishes the bui
 
 ## Gemini shapes that make static reasoning wrong
 
-Each of these cost a wrong fix before it was measured. Full entries live in
-[folders-timeline-ui.md](../../../.github/docs/regressions/folders-timeline-ui.md).
+Each of these cost a wrong fix before it was measured.
 
 - A user turn's `textContent` is **not** the message. The bubble also carries a
   screen-reader "You said" prefix and the copy/edit/expand controls, which render
@@ -45,6 +44,4 @@ Each of these cost a wrong fix before it was measured. Full entries live in
 
 - State what you verified in the browser and what you only inferred. If the
   extension could not be reloaded, the check did not happen — say so.
-- For repeatable, non-obvious bugs, add a Trap/Rule/Guard entry as required by
-  `AGENTS.md`; run `bun run regressions:check` only when those notes change.
 - Close any tab this session created.

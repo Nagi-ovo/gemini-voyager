@@ -2,12 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 
-import type { ExportSpeakerLabels } from '../../types/export';
+import {
+  type ExportSpeakerLabels,
+  normalizeSpeakerLabelOverrides,
+  resolveExportSpeakerLabels,
+} from '../../types/export';
 import {
   SpeakerLabelPreferenceSaver,
   getSavedSpeakerLabelOverrides,
-  normalizeSpeakerLabelOverrides,
-  resolveExportSpeakerLabels,
   saveSpeakerLabelOverrides,
 } from '../SpeakerLabelPreferenceService';
 

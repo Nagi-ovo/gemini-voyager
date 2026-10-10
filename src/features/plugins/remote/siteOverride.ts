@@ -4,8 +4,8 @@
  * or brand-colour fix reaches users without a release.
  *
  * Precedence is decided here, once, for every consumer (PluginHost, the brand
- * theme, the popup): a cached, valid, same-version site whose `matches` cover
- * the page wins; otherwise the registry's bundled adapter.
+ * theme, the popup): a covering, valid, same-version remote site wins only
+ * when its catalog revision is strictly newer. Bundled data wins every tie.
  */
 import { logger } from '@/core/services/LoggerService';
 import { EXTENSION_VERSION } from '@/core/utils/version';
@@ -42,7 +42,11 @@ export function resolveSiteAdapterForUrl(
   registry: SiteRegistry,
   override: SiteAdapter | null,
 ): SiteAdapter | null {
-  if (override && matchesAnyPattern(url, override.matches)) return override;
+  if (override && matchesAnyPattern(url, override.matches)) {
+    const bundled = registry.all().find((adapter) => adapter.id === override.id);
+    // A later fetch of stale published data must not replace newer packaged selectors.
+    if ((override.catalogRevision ?? 0) > (bundled?.catalogRevision ?? 0)) return override;
+  }
   return registry.resolveByUrl(url);
 }
 
@@ -69,6 +73,8 @@ export function isSameSiteAdapter(a: SiteAdapter | null, b: SiteAdapter | null):
     a.conversationIdPattern === b.conversationIdPattern &&
     JSON.stringify(a.matches) === JSON.stringify(b.matches) &&
     JSON.stringify(a.selectors) === JSON.stringify(b.selectors) &&
+    // The send tracker reads turn keys through this list; a change must rebuild it.
+    JSON.stringify(a.turnKeyAttributes ?? []) === JSON.stringify(b.turnKeyAttributes ?? []) &&
     JSON.stringify(a.theme) === JSON.stringify(b.theme) &&
     JSON.stringify([...a.capabilities].sort()) === JSON.stringify([...b.capabilities].sort())
   );

@@ -10,6 +10,7 @@ import {
   readViteManifestAssetPaths,
   shouldPruneDevBuildAssets,
 } from './scripts/dev-build-assets';
+import { type DevBuildLock, acquireDevBuildLock } from './scripts/dev-build-lock';
 import baseConfig, { baseBuildOptions, baseManifest } from './vite.config.base';
 
 const isDev = process.env.__DEV__ === 'true';
@@ -20,19 +21,37 @@ const outDirName =
       ? 'dist_chrome_dev'
       : 'dist_chrome';
 const outDir = resolve(__dirname, outDirName);
+// Only the unpacked dist_chrome_dev build reloads itself when its build id
+// changes; see src/pages/background/devAutoReload.ts.
+const isChromeDevBuild = isDev && outDirName === 'dist_chrome_dev';
 
 function devBuildReadyPlugin(): Plugin | null {
-  if (!isDev || outDirName !== 'dist_chrome_dev') return null;
+  if (!isChromeDevBuild) return null;
 
   const viteManifestPath = resolve(outDir, '.vite', 'manifest.json');
   let previousAssets = new Set<string>();
   let canPruneAssets = false;
+  let buildLock: DevBuildLock | null = null;
+  const releaseBuildLock = async () => {
+    const lock = buildLock;
+    buildLock = null;
+    await lock?.release();
+  };
 
   return {
     name: 'voyager-dev-build-ready',
     apply: 'build',
     enforce: 'post',
-    buildStart() {
+    async buildStart() {
+      // Overlapping dev builds into this outDir (say, a one-off build while the
+      // nodemon watcher rebuilds) would let Chrome reload into a half-written
+      // dist, or prune the generation Chrome just loaded. Wait for the other
+      // build to commit, then read its manifest below.
+      buildLock = await acquireDevBuildLock(outDir, {
+        onWait: (pid) => console.warn(`[voyager] Waiting for dev build ${pid} to finish...`),
+        onForeignListener: (port) =>
+          console.warn(`[voyager] Port ${port} is held by another program; building unlocked.`),
+      });
       const hadPreviousManifest = existsSync(viteManifestPath);
       previousAssets = readViteManifestAssetPaths(viteManifestPath);
       // A missing manifest is normal for the first build. If one exists but
@@ -40,7 +59,7 @@ function devBuildReadyPlugin(): Plugin | null {
       // safe to remove.
       canPruneAssets = shouldPruneDevBuildAssets(hadPreviousManifest, previousAssets.size);
     },
-    writeBundle(_options, bundle) {
+    async writeBundle(_options, bundle) {
       if (canPruneAssets) {
         const currentAssets = collectBundleAssetPaths(Object.keys(bundle));
         const staticAssets = collectStaticAssetPaths(resolve(__dirname, 'public', 'assets'));
@@ -49,11 +68,14 @@ function devBuildReadyPlugin(): Plugin | null {
           new Set([...previousAssets, ...currentAssets, ...staticAssets]),
         );
       }
-      // This is the commit marker consumed by launch-chrome.cjs. It is written
+      // This is the commit marker consumed by launch-chrome.cjs and, as the
+      // build id, by the dev background's auto-reload. It is written
       // only after Rollup has finished writing every asset and stale generations
       // have been pruned, so Chrome never reloads against a half-written bundle.
       writeFileSync(resolve(outDir, '.voyager-build-ready'), `${Date.now()}\n`);
+      await releaseBuildLock();
     },
+    closeBundle: releaseBuildLock,
   };
 }
 const chromeSharedContentScripts = (
@@ -99,6 +121,9 @@ export const chromeManifest = {
 export default mergeConfig(
   baseConfig,
   defineConfig({
+    define: {
+      'import.meta.env.VOYAGER_DEV_AUTO_RELOAD': JSON.stringify(isChromeDevBuild),
+    },
     plugins: [
       crx({
         manifest: chromeManifest,
@@ -117,6 +142,7 @@ export default mergeConfig(
           // Opened by the background on first install; nothing in the manifest
           // references it, so it must be a build input of its own.
           welcome: resolve(__dirname, 'src/pages/welcome/index.html'),
+          library: resolve(__dirname, 'src/pages/library/index.html'),
         },
       },
     },

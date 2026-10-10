@@ -18,7 +18,6 @@ Read matching rules before editing; do not assume the client auto-loaded `.claud
 | `src/pages/content/**`, `public/contentStyle.css`                        | [.claude/rules/content-scripts.md](.claude/rules/content-scripts.md)                                                                        |
 | `src/locales/**`                                                         | [.claude/rules/i18n.md](.claude/rules/i18n.md)                                                                                              |
 | Storage, backup, account isolation, Drive sync, folder or export modules | [.claude/rules/high-complexity.md](.claude/rules/high-complexity.md), full-file reads and full-suite verification for behavior/data changes |
-| Non-trivial feature, fix or refactor                                     | Search [.github/docs/REGRESSION_NOTES.md](.github/docs/REGRESSION_NOTES.md), then read matching topics                                      |
 | Contribution or release                                                  | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md); matching workflows in [.agents/skills/](.agents/skills/)                                |
 | Content-script or injected-CSS behavior that tests cannot settle         | [.agents/skills/verify-in-browser/SKILL.md](.agents/skills/verify-in-browser/SKILL.md)                                                      |
 | `src/features/plugins/catalog/**`, `verbs/**` or `sites/**`              | [.agents/skills/create-voyager-plugin/SKILL.md](.agents/skills/create-voyager-plugin/SKILL.md)                                              |
@@ -58,25 +57,27 @@ Use `StorageService` where suitable; established direct `chrome.storage`/`browse
 - Before deletion, trace production entry points, callers and regression guards. Distinguish retired implementations from compatibility cleanup. Remove tests that exist solely for deleted, unreachable code.
 - Extract cohesive data operations or complete lifecycle responsibilities from large managers. Give helpers explicit inputs and one state owner; avoid passing the whole manager into extracted modules. Each step must work independently and preserve existing callers and data.
 - Keep listener, observer and timer cleanup beside setup. Sidebar remount, account change and full teardown have different lifetimes; preserve the appropriate state across each.
-- Reuse existing popover integration, such as `gv-pm-confirm`, including outside-click handling, teardown and theme overrides.
+- Ask confirmations through `askConfirm` (`src/core/ui/confirm.ts`) and show toasts through `createToaster` (`src/core/ui/toast/toaster.ts`); they own stacking, dismissal, theming and teardown. Outside-press handlers skip `isVoyagerLayerEvent`.
 - For visual changes, state the expected result and verify alignment, spacing and behavior in light/dark themes, including external resource dependencies.
-- Record repeatable, non-obvious bugs as Trap/Rule/Guard entries in the matching regression topic; run `bun run regressions:check` after editing notes.
+- After fixing a repeatable, non-obvious bug, put a one-line why-comment at the code that prevents it and name the guarding test after the symptom.
 - `bun run filesize:check` fails when a `src/**/*.ts(x)` file over 1000 lines is added or a baselined one grows: put new code in a new file. Run `bun run filesize:update` after shrinking one; raising an entry in `scripts/file-size-baseline.json` is a deliberate, explained change in the PR.
 
 ## Verification
 
-Choose checks by changed surface. Repeat passing checks only after relevant changes or new evidence. Code contributions require `bun run verify:pr` before PR handoff; it covers the automated checks below, so do not repeat them for unchanged inputs. Prose-only contributions use the applicable rows below. Native/live-browser checks remain separate; releases use the final-tree gates in the `release` skill.
+Choose checks by changed surface. Repeat passing checks only after relevant changes or new evidence. Code contributions run `bun run verify:pr` once, on the final tree, right before a PR is opened or updated or `main` is pushed; it covers the automated checks below. While review fixes are still pending the tree is not final, so the full suite waits. Prose-only contributions use the applicable rows below. Native/live-browser checks remain separate; releases use the final-tree gates in the `release` skill.
 
-| Changed surface                                        | Checks before completion                                                                                                            |
+While iterating, and when a subagent finishes its part of a larger change, run `bun run test:changed` (tests affected by changes since `main`; CSS, locale or config changes run the whole suite) plus `bun run typecheck` and `bun run lint:check`. Worktrees share one machine, so queue every full run behind one lock (`lockf -k /tmp/voyager-verify.lock bun run verify:pr` on macOS, `flock` on Linux). Overlapping suites starve each other into timeouts; a failure that passes when its file reruns alone is load, not a regression.
+
+| Changed surface                                        | Final-tree checks                                                                                                                   |
 | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
 | Prose, agent instructions, comments or formatting only | Review the diff for lost requirements, validate referenced paths/commands, format-check changed files                               |
 | Extension code, build logic or dependencies            | `bun run lint:check`, `bun run test`, `bun run build:chrome`; add `bun run typecheck` for any `.ts`/`.tsx` change                   |
 | Added, renamed or removed `public/` entries            | `bun run build:all` instead of Chrome only; register every top-level Safari resource in `Voyager/Voyager.xcodeproj/project.pbxproj` |
 | `docs/**/*.md` or `docs/.vitepress/**`                 | `bun run docs:build`; background `bun run docs:dev` when preview is needed before committing                                        |
 
-`bun run lint` (`oxlint --fix`) and `bun run format` apply corrections: inspect their diffs. Read-only reviews use `:check` variants.
+Run tooling through `bun run <script>` or `bunx`; the formatter is oxfmt and the linter is oxlint. `bun run lint` (`oxlint --fix`) and `bun run format` (`oxfmt`) apply corrections: inspect their diffs. Read-only reviews use `:check` variants; for specific files, `bunx oxfmt --check <files>`.
 
-Features and behavior fixes need meaningful tests. Assert observable behavior or data invariants; avoid repeating mocks, private wiring or source spelling. Static checks belong to static contracts such as resource registration or forbidden primitives. Migrate valuable regression assertions with extracted responsibilities. Prose, formatting and other reversible changes without a behavior change need no new tests.
+Features need meaningful tests. A bug fix adds a regression test only when behavior coverage has a genuine gap; otherwise extend or rely on the existing test. Assert observable behavior or data invariants. Tautological tests (restating the implementation or its mocks) and change-detector tests (pinning source spelling, private wiring or incidental structure) are considered harmful. Static checks belong to static contracts such as resource registration or forbidden primitives. Migrate valuable regression assertions with extracted responsibilities. Prose, formatting and other reversible changes without a behavior change need no new tests.
 
 For Chrome development, run `bun run dev:chrome` and load/reload `dist_chrome_dev`. Production checks use `build:chrome`/`dist_chrome`. `build:all` builds Chrome, Firefox and Safari; `build:browsers` includes Edge too.
 

@@ -32,7 +32,7 @@
 
 **Chrome / Edge / Brave / Opera의 경우:**
 
-1. [GitHub Releases](https://github.com/Nagi-ovo/voyager/releases)에서 최신 `voyager-chrome-vX.Y.Z.zip`을 다운로드합니다.
+1. [GitHub Releases](https://github.com/voyager-crew/voyager/releases)에서 최신 `voyager-chrome-vX.Y.Z.zip`을 다운로드합니다.
 2. 파일의 압축을 풉니다.
 3. 브라우저의 확장 프로그램 페이지(`chrome://extensions`)를 엽니다.
 4. 우측 상단의 **개발자 모드**를 활성화합니다.
@@ -40,7 +40,7 @@
 
 **Firefox의 경우:**
 
-1. [Releases](https://github.com/Nagi-ovo/voyager/releases)에서 최신 `voyager-firefox-vX.Y.Z.xpi`를 다운로드합니다.
+1. [Releases](https://github.com/voyager-crew/voyager/releases)에서 최신 `voyager-firefox-vX.Y.Z.xpi`를 다운로드합니다.
 2. 부가 기능 관리자(`about:addons`)를 엽니다.
 3. `.xpi` 파일을 드래그 앤 드롭하여 설치합니다 (또는 톱니바퀴 아이콘 ⚙️ -> **파일에서 부가 기능 설치** 클릭).
 
@@ -61,4 +61,4 @@ Safari가 이제 직접 배포를 지원합니다! 사전 서명된 앱을 다�
 
 ---
 
-_개발 설정이 궁금하신가요? 기여를 원하는 개발자라면 [기여 가이드](https://github.com/Nagi-ovo/voyager/blob/main/.github/CONTRIBUTING.md)를 확인해 보세요._
+_개발 설정이 궁금하신가요? 기여를 원하는 개발자라면 [기여 가이드](https://github.com/voyager-crew/voyager/blob/main/.github/CONTRIBUTING.md)를 확인해 보세요._

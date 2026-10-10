@@ -21,4 +21,12 @@ describe('prompt manager stacking order', () => {
     expect(trigger).toBeGreaterThan(usageBar);
     expect(panel).toBeGreaterThan(trigger);
   });
+
+  it('keeps a Prompt Manager opened over the Research Pack on top of it', () => {
+    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+
+    // Opening the Research Pack closes the Prompt Manager, so the newer panel
+    // is on top either way only while the Prompt Manager outranks it.
+    expect(zIndexFor(css, '.gv-pm-panel')).toBeGreaterThan(zIndexFor(css, '.gv-rp-panel'));
+  });
 });

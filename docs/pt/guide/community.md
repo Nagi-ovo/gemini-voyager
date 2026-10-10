@@ -46,7 +46,7 @@ Também pode encontrar-me nestas plataformas:
 
 Se encontrou um erro (Bug) reproduzível, submeta um Issue no GitHub. Pedidos de funcionalidades, ideias e perguntas pertencem às Discussions, não aos Issues:
 
-- [Submeter Relatório de Bug](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml)
-- [Propor uma funcionalidade ou ideia (Discussions)](https://github.com/Nagi-ovo/voyager/discussions)
+- [Submeter Relatório de Bug](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml)
+- [Propor uma funcionalidade ou ideia (Discussions)](https://github.com/voyager-crew/voyager/discussions)
 
 Obrigado pelo seu apoio ao Voyager! ❤️

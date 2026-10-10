@@ -54,7 +54,7 @@ const SEGMENT_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MAX_SEGMENT_LENGTH = 40;
 
 const GITHUB_TREE_BASE =
-  'https://github.com/Nagi-ovo/voyager/tree/main/src/features/plugins/catalog';
+  'https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog';
 
 /** `oxfmt`'s print width; the JSON renderer below breaks a value past it. */
 const PRINT_WIDTH = 100;

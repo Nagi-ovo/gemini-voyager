@@ -1,76 +1,56 @@
+// @vitest-environment-options { "url": "https://chatgpt.com/" }
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import browser from 'webextension-polyfill';
 
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import {
+  makeTurns,
+  mountThreadFixture,
+} from '@/pages/content/export/adapter/__tests__/chatgptThreadFixture';
+import { toastDriver } from '@/tests/toastDriver';
 
+import { markHandoffPageActive } from './handoff';
+import type { HandoffDelivery } from './handoffPlan';
 import { activateChatGptTemporaryHandoff, collectTemporaryChatTurns } from './index';
+import {
+  CHATGPT_HANDOFF_GET_TAB_ID_MESSAGE,
+  CHATGPT_HANDOFF_SCHEDULE_EXPIRY_MESSAGE,
+  PENDING_HANDOFF_KEY,
+  PENDING_HANDOFF_TAB_KEY,
+} from './storage';
 
-const mocks = vi.hoisted(() => ({
-  temporary: true,
-  unloading: false,
-  getCurrentLanguage: vi.fn(),
-  collectContainers: vi.fn(),
-  buildTurns: vi.fn(),
-  isGenerating: vi.fn(),
-  resolveAdapter: vi.fn(),
-  buildBackup: vi.fn(),
-  cancelPendingRecovery: vi.fn(),
-  downloadBackup: vi.fn(),
-  handoff: vi.fn(),
-  hasAttachments: vi.fn(),
-  isAttachmentRemovalControl: vi.fn(),
-  plan: vi.fn(),
-  resume: vi.fn(),
-  discardPending: vi.fn(),
-  markUnloading: vi.fn(),
-  markActive: vi.fn(),
-  pendingPreviewReady: vi.fn(),
-  readDraft: vi.fn(),
-}));
+const extensionStorage = vi.hoisted(() => new Map<string, unknown>());
 
-vi.mock('@/utils/i18n', () => ({
-  getCurrentLanguage: mocks.getCurrentLanguage,
-}));
-
-vi.mock('@/pages/content/export/adapter/chatgpt', () => ({
-  chatgptCollectTurnContainers: mocks.collectContainers,
-  buildChatGptTurnsForSelection: mocks.buildTurns,
-  isChatGptResponseGenerating: mocks.isGenerating,
-}));
-
-vi.mock('@/pages/content/export/adapter/platformAdapters', () => ({
-  resolveExportAdapter: mocks.resolveAdapter,
-}));
-
-vi.mock('./handoff', () => ({
-  CHATGPT_COMPOSER_SELECTOR: '#prompt-textarea',
-  CHATGPT_NEW_CHAT_SELECTOR:
-    'a[data-testid="create-new-chat-button"], a[href="/"], a[href^="/u/"][href$="/"]',
-  CHATGPT_SEND_CONTROL_SELECTOR: '[data-testid="send-button"]',
-  CHATGPT_TEMP_TOGGLE_SELECTOR: '[data-testid="temporary-chat-toggle"]',
-  buildHandoffBackup: mocks.buildBackup,
-  cancelPendingHandoffRecovery: mocks.cancelPendingRecovery,
-  discardPendingHandoff: mocks.discardPending,
-  downloadHandoffBackup: mocks.downloadBackup,
-  handoffTemporaryChat: mocks.handoff,
-  hasCurrentComposerAttachments: mocks.hasAttachments,
-  isCurrentComposerAttachmentRemovalControl: mocks.isAttachmentRemovalControl,
-  isHandoffPageUnloading: () => mocks.unloading,
-  isTemporaryChat: () => mocks.temporary,
-  markHandoffPageUnloading: () => {
-    mocks.unloading = true;
-    mocks.markUnloading();
+vi.mock('webextension-polyfill', () => ({
+  default: {
+    storage: {
+      local: {
+        get: vi.fn(async (keys?: null | string | string[]) => {
+          if (keys == null) return Object.fromEntries(extensionStorage);
+          const requested = Array.isArray(keys) ? keys : [keys];
+          return Object.fromEntries(requested.map((key) => [key, extensionStorage.get(key)]));
+        }),
+        remove: vi.fn(async (keys: string | string[]) => {
+          for (const key of Array.isArray(keys) ? keys : [keys]) extensionStorage.delete(key);
+        }),
+        set: vi.fn(async (items: Record<string, unknown>) => {
+          for (const [key, value] of Object.entries(items)) extensionStorage.set(key, value);
+        }),
+      },
+      sync: { get: vi.fn(async () => ({})) },
+    },
+    runtime: { sendMessage: vi.fn() },
+    i18n: { getUILanguage: () => 'en' },
   },
-  markHandoffPageActive: () => {
-    mocks.unloading = false;
-    mocks.markActive();
-  },
-  pendingAttachmentPreviewReady: mocks.pendingPreviewReady,
-  planHandoff: mocks.plan,
-  readCurrentComposerDraft: mocks.readDraft,
-  resumePendingHandoff: mocks.resume,
 }));
+
+const TAB_TOKEN = 'test-tab-token';
+const PENDING_STORAGE_KEY = `${PENDING_HANDOFF_KEY}:${TAB_TOKEN}`;
+const BUTTON = '[data-gv-chatgpt-handoff-button]';
+const READY_TOAST = 'Backup saved. Review the handoff, then send it when ready.';
 
 const scopes: PluginScope[] = [];
+let downloads: Array<{ filename: string; blob: Blob }>;
 
 function createScope(): PluginScope {
   const scope = new PluginScope();
@@ -78,108 +58,201 @@ function createScope(): PluginScope {
   return scope;
 }
 
-async function flush(): Promise<void> {
-  await Promise.resolve();
-  await Promise.resolve();
+function answerExtensionMessages(message: unknown): Promise<unknown> {
+  const type = (message as { type?: string }).type;
+  return Promise.resolve(
+    type === CHATGPT_HANDOFF_GET_TAB_ID_MESSAGE ? { ok: true, tabId: 42 } : { ok: true },
+  );
+}
+
+function seedPending(delivery: HandoffDelivery): void {
+  sessionStorage.setItem(PENDING_HANDOFF_TAB_KEY, TAB_TOKEN);
+  extensionStorage.set(PENDING_STORAGE_KEY, {
+    delivery,
+    storedAt: Date.now(),
+    accountScope: 'route:default',
+    tabId: 42,
+  });
+}
+
+function pendingStored(): boolean {
+  return extensionStorage.has(PENDING_STORAGE_KEY);
+}
+
+// Discarding detaches the tab token synchronously, before the storage removal settles.
+function pendingRetained(): boolean {
+  return sessionStorage.getItem(PENDING_HANDOFF_TAB_KEY) === TAB_TOKEN && pendingStored();
+}
+
+// Cancellation detaches the tab token synchronously, before the composer change it guards lands.
+function expectRecoveryDetachedNow(): void {
+  expect(sessionStorage.getItem(PENDING_HANDOFF_TAB_KEY)).toBeNull();
+}
+
+function readBlob(blob: Blob): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.readAsText(blob);
+  });
+}
+
+function createComposer(text = ''): HTMLElement {
+  const composer = document.createElement('div');
+  composer.id = 'prompt-textarea';
+  composer.contentEditable = 'true';
+  composer.setAttribute('role', 'textbox');
+  composer.textContent = text;
+  return composer;
+}
+
+function mountComposerForm(text = ''): { form: HTMLFormElement; composer: HTMLElement } {
+  const form = document.createElement('form');
+  const composer = createComposer(text);
+  form.appendChild(composer);
+  document.body.appendChild(form);
+  return { form, composer };
+}
+
+/** A temporary chat whose native toggle swaps in a normal-chat composer carrying the draft. */
+function mountTemporaryChat(draft = ''): { normalComposer: () => HTMLElement | null } {
+  history.replaceState({}, '', '/?temporary-chat=true');
+  mountThreadFixture({ turns: makeTurns(1, 200) });
+  const { form, composer } = mountComposerForm(draft);
+  let replacement: HTMLElement | null = null;
+  const toggle = document.createElement('button');
+  toggle.dataset.testid = 'temporary-chat-toggle';
+  toggle.setAttribute('aria-label', 'Close temporary chat');
+  toggle.addEventListener('click', () => {
+    history.replaceState({}, '', '/');
+    toggle.remove();
+    composer.remove();
+    replacement = createComposer(composer.textContent || '');
+    form.appendChild(replacement);
+  });
+  document.body.appendChild(toggle);
+  return { normalComposer: () => replacement };
+}
+
+async function confirmHandoff(): Promise<void> {
+  document.querySelector<HTMLButtonElement>(BUTTON)?.click();
+  await vi.waitFor(() =>
+    expect(document.querySelector('.gv-chatgpt-handoff-dialog-button--primary')).not.toBeNull(),
+  );
+  document.querySelector<HTMLButtonElement>('.gv-chatgpt-handoff-dialog-button--primary')?.click();
+}
+
+function toastTexts(): string[] {
+  return toastDriver.messages();
+}
+
+async function settle(): Promise<void> {
+  for (let i = 0; i < 5; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+function legacyTurn(id: string, role?: 'user' | 'assistant', text = ''): HTMLElement {
+  const container = document.createElement('div');
+  container.setAttribute('data-turn-id-container', id);
+  if (role) {
+    const message = document.createElement('div');
+    message.setAttribute('data-message-author-role', role);
+    message.textContent = text;
+    container.appendChild(message);
+  }
+  return container;
+}
+
+let createdBlob: Blob | null = null;
+
+// The browser download is the boundary: record it instead of letting jsdom navigate.
+function recordDownload(event: MouseEvent): void {
+  const anchor = event.target instanceof HTMLAnchorElement ? event.target : null;
+  if (!anchor?.download || !createdBlob) return;
+  event.preventDefault();
+  downloads.push({ filename: anchor.download, blob: createdBlob });
 }
 
 beforeEach(() => {
-  mocks.temporary = true;
-  mocks.unloading = false;
-  mocks.getCurrentLanguage.mockResolvedValue('en');
-  mocks.collectContainers.mockReturnValue([
-    { id: 'user-1', role: 'user', sequence: 0, container: document.createElement('div') },
-    {
-      id: 'assistant-1',
-      role: 'assistant',
-      sequence: 1,
-      container: document.createElement('div'),
-    },
-  ]);
-  mocks.buildTurns.mockResolvedValue([
-    { user: 'Question', assistant: 'Answer', starred: false, omitEmptySections: true },
-  ]);
-  mocks.resolveAdapter.mockReturnValue({ site: { label: 'ChatGPT' } });
-  mocks.plan.mockReturnValue({
-    transcript: '## User\n\nQuestion',
-    backupFilename: 'unique.md',
-    delivery: { mode: 'inline', text: 'Continue' },
-  });
-  mocks.handoff.mockResolvedValue('ready');
-  mocks.hasAttachments.mockReturnValue(false);
-  mocks.isAttachmentRemovalControl.mockReturnValue(false);
-  mocks.buildBackup.mockReturnValue('## User\n\nQuestion\n\n## Unsent draft\n\nUnsent follow-up');
-  mocks.readDraft.mockReturnValue('Unsent follow-up');
-  mocks.resume.mockResolvedValue(null);
-  mocks.discardPending.mockResolvedValue(undefined);
-  mocks.pendingPreviewReady.mockResolvedValue(false);
-  mocks.isGenerating.mockReturnValue(false);
+  vi.mocked(browser.runtime.sendMessage).mockImplementation(answerExtensionMessages);
+  downloads = [];
+  URL.createObjectURL = (blob: Blob) => {
+    createdBlob = blob;
+    return 'blob:https://chatgpt.com/handoff-backup';
+  };
+  URL.revokeObjectURL = () => {};
+  document.addEventListener('click', recordDownload, true);
 });
 
 afterEach(async () => {
   await Promise.all(scopes.splice(0).map((scope) => scope.dispose()));
+  document.removeEventListener('click', recordDownload, true);
+  createdBlob = null;
+  markHandoffPageActive();
   history.replaceState({}, '', '/');
   document.body.replaceChildren();
   document.head.querySelectorAll('style[data-gv-plugin-scope]').forEach((node) => node.remove());
+  sessionStorage.clear();
+  extensionStorage.clear();
+  Reflect.deleteProperty(URL, 'createObjectURL');
+  Reflect.deleteProperty(URL, 'revokeObjectURL');
   vi.useRealTimers();
+  vi.restoreAllMocks();
   vi.clearAllMocks();
 });
 
 describe('ChatGPT temporary handoff plugin', () => {
-  it('mounts only in temporary mode and removes every side effect on disposal', async () => {
+  it('mounts in temporary mode and on disable removes its UI and the pending handoff', async () => {
+    history.replaceState({}, '', '/?temporary-chat=true');
+    seedPending({ mode: 'inline', text: 'Continue' });
     const scope = createScope();
     await activateChatGptTemporaryHandoff(scope);
 
-    expect(document.querySelectorAll('[data-gv-chatgpt-handoff-button]')).toHaveLength(1);
+    expect(document.querySelectorAll(BUTTON)).toHaveLength(1);
     expect(document.head.querySelector('style[data-gv-plugin-scope]')?.textContent).toContain(
       '.gv-chatgpt-handoff-button',
     );
+    await settle();
+    expect(pendingRetained()).toBe(true);
 
     await scope.dispose();
-    expect(document.querySelector('[data-gv-chatgpt-handoff-button]')).toBeNull();
+    expect(document.querySelector(BUTTON)).toBeNull();
     expect(document.querySelector('[data-gv-chatgpt-handoff-owned]')).toBeNull();
-    expect(mocks.discardPending).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(pendingStored()).toBe(false));
+    expect(sessionStorage.getItem(PENDING_HANDOFF_TAB_KEY)).toBeNull();
   });
 
   it('retains a pending handoff when disposal is caused by page navigation', async () => {
+    history.replaceState({}, '', '/?temporary-chat=true');
+    seedPending({ mode: 'inline', text: 'Continue' });
     const scope = createScope();
     await activateChatGptTemporaryHandoff(scope);
 
     window.dispatchEvent(new Event('pagehide'));
     await scope.dispose();
+    await settle();
 
-    expect(mocks.markUnloading).toHaveBeenCalledOnce();
-    expect(mocks.discardPending).not.toHaveBeenCalled();
+    expect(pendingRetained()).toBe(true);
   });
 
-  it('marks hard navigation before the root beforeunload teardown disposes the plugin', async () => {
+  it('retains recovery through beforeunload teardown and clears it when the unload is cancelled', async () => {
     vi.useFakeTimers();
+    history.replaceState({}, '', '/?temporary-chat=true');
+    seedPending({ mode: 'inline', text: 'Continue' });
     const scope = createScope();
     await activateChatGptTemporaryHandoff(scope);
 
     window.dispatchEvent(new Event('beforeunload'));
     await scope.dispose();
-
-    expect(mocks.markUnloading).toHaveBeenCalledOnce();
-    expect(mocks.discardPending).not.toHaveBeenCalled();
-  });
-
-  it('clears retained recovery when beforeunload is cancelled', async () => {
-    vi.useFakeTimers();
-    const scope = createScope();
-    await activateChatGptTemporaryHandoff(scope);
-
-    window.dispatchEvent(new Event('beforeunload'));
-    await scope.dispose();
-    expect(mocks.discardPending).not.toHaveBeenCalled();
+    expect(pendingRetained()).toBe(true);
 
     await vi.runAllTimersAsync();
 
-    expect(mocks.markActive).toHaveBeenCalledOnce();
-    expect(mocks.discardPending).toHaveBeenCalledOnce();
+    expect(pendingStored()).toBe(false);
   });
 
-  it('clears the navigation marker when a cached page is restored', async () => {
+  it('discards the pending handoff on disable after a cached page is restored', async () => {
+    history.replaceState({}, '', '/?temporary-chat=true');
+    seedPending({ mode: 'inline', text: 'Continue' });
     const scope = createScope();
     await activateChatGptTemporaryHandoff(scope);
 
@@ -187,47 +260,45 @@ describe('ChatGPT temporary handoff plugin', () => {
     window.dispatchEvent(new Event('pageshow'));
     await scope.dispose();
 
-    expect(mocks.markUnloading).toHaveBeenCalledOnce();
-    expect(mocks.markActive).toHaveBeenCalledOnce();
-    expect(mocks.discardPending).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(pendingStored()).toBe(false));
   });
 
   it('does not mount after async language loading finishes for a disposed plugin', async () => {
-    let resolveLanguage!: (language: 'en') => void;
-    mocks.getCurrentLanguage.mockReturnValue(
-      new Promise<'en'>((resolve) => {
+    history.replaceState({}, '', '/?temporary-chat=true');
+    let resolveLanguage!: (stored: Record<string, unknown>) => void;
+    vi.mocked(browser.storage.sync.get).mockReturnValueOnce(
+      new Promise((resolve) => {
         resolveLanguage = resolve;
       }),
     );
     const scope = createScope();
     const activation = activateChatGptTemporaryHandoff(scope);
     const disposal = scope.dispose();
-    resolveLanguage('en');
+    resolveLanguage({});
 
     await Promise.all([activation, disposal]);
-    expect(document.querySelector('[data-gv-chatgpt-handoff-button]')).toBeNull();
+    expect(document.querySelector(BUTTON)).toBeNull();
   });
 
   it('removes the action when ChatGPT leaves temporary mode', async () => {
     vi.useFakeTimers();
-    history.replaceState(null, '', '/?temporary-chat=true');
+    history.replaceState({}, '', '/?temporary-chat=true');
     const scope = createScope();
     await activateChatGptTemporaryHandoff(scope);
-    expect(document.querySelector('[data-gv-chatgpt-handoff-button]')).not.toBeNull();
+    expect(document.querySelector(BUTTON)).not.toBeNull();
 
-    mocks.temporary = false;
     history.pushState(null, '', '/');
     await vi.advanceTimersByTimeAsync(500);
 
-    expect(document.querySelector('[data-gv-chatgpt-handoff-button]')).toBeNull();
+    expect(document.querySelector(BUTTON)).toBeNull();
   });
 
-  it('confirms, reuses the shared ChatGPT collector, saves a backup, and hands off once', async () => {
-    const scope = createScope();
-    await activateChatGptTemporaryHandoff(scope);
+  it('confirms, saves a backup, and hands the whole conversation and draft to a normal chat once', async () => {
+    const { normalComposer } = mountTemporaryChat('Unsent follow-up');
+    await activateChatGptTemporaryHandoff(createScope());
 
-    document.querySelector<HTMLButtonElement>('[data-gv-chatgpt-handoff-button]')?.click();
-    await flush();
+    document.querySelector<HTMLButtonElement>(BUTTON)?.click();
+    await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
     const attribution = document.querySelector<HTMLAnchorElement>(
       '.gv-chatgpt-handoff-dialog-attribution',
     );
@@ -236,204 +307,279 @@ describe('ChatGPT temporary handoff plugin', () => {
     expect(attribution?.target).toBe('_blank');
     expect(attribution?.rel).toContain('noopener');
     expect(document.activeElement?.textContent).toBe('Cancel');
-    expect(document.querySelector('.gv-chatgpt-handoff-dialog-body')?.textContent).toContain(
-      'uploaded as a draft attachment',
-    );
     const dialog = document.querySelector<HTMLElement>('[role="dialog"]');
     const description = document.querySelector<HTMLElement>('.gv-chatgpt-handoff-dialog-body');
+    expect(description?.textContent).toContain('uploaded as a draft attachment');
     expect(dialog?.getAttribute('aria-describedby')).toBe(description?.id);
-    document
-      .querySelector<HTMLButtonElement>('.gv-chatgpt-handoff-dialog-button--primary')
-      ?.click();
+    await confirmHandoff();
 
-    await vi.waitFor(() => expect(mocks.handoff).toHaveBeenCalledOnce());
-    expect(mocks.buildTurns).toHaveBeenCalledWith(new Set(['user-1', 'assistant-1']), {
-      signal: expect.any(AbortSignal),
-      expectedUrl: location.href,
+    await vi.waitFor(() => expect(toastTexts()).toContain(READY_TOAST), { timeout: 5_000 });
+    expect(downloads).toHaveLength(1);
+    expect(downloads[0].filename).toMatch(/^chatgpt-temporary-handoff-\d+-\w+\.md$/);
+    expect(await readBlob(downloads[0].blob)).toBe(
+      '## User\n\nQuestion 1\n\n## ChatGPT\n\nAnswer 1\n\n## Unsent draft\n\nUnsent follow-up',
+    );
+    const delivered = normalComposer()?.textContent ?? '';
+    expect(delivered.split('Question 1')).toHaveLength(2);
+    expect(delivered).toContain('Answer 1');
+    expect(delivered.endsWith('Unsent follow-up')).toBe(true);
+    const pendingKey = `${PENDING_HANDOFF_KEY}:${sessionStorage.getItem(PENDING_HANDOFF_TAB_KEY)}`;
+    expect(extensionStorage.get(pendingKey)).toMatchObject({
+      draft: 'Unsent follow-up',
+      deliveredRoute: '/',
     });
-    expect(mocks.buildBackup).toHaveBeenCalledWith('## User\n\nQuestion', 'Unsent follow-up', 'en');
-    expect(mocks.downloadBackup).toHaveBeenCalledWith(
-      '## User\n\nQuestion\n\n## Unsent draft\n\nUnsent follow-up',
-      'unique.md',
-    );
-    expect(mocks.handoff).toHaveBeenCalledWith(
-      expect.any(PluginScope),
-      expect.objectContaining({ mode: 'inline', text: 'Continue' }),
-      'Unsent follow-up',
-    );
-    expect(document.querySelectorAll('[data-gv-chatgpt-handoff-button]')).toHaveLength(1);
   });
 
   it('keeps the progress dialog mounted until departure bookkeeping finishes', async () => {
-    let finishHandoff!: (result: 'ready') => void;
-    mocks.handoff.mockReturnValueOnce(
-      new Promise<'ready'>((resolve) => {
-        finishHandoff = resolve;
-      }),
-    );
-    const scope = createScope();
-    await activateChatGptTemporaryHandoff(scope);
+    mountTemporaryChat();
+    let finishScheduling!: () => void;
+    vi.mocked(browser.runtime.sendMessage).mockImplementation((message: unknown) => {
+      if ((message as { type?: string }).type !== CHATGPT_HANDOFF_SCHEDULE_EXPIRY_MESSAGE) {
+        return answerExtensionMessages(message);
+      }
+      return new Promise((resolve) => {
+        finishScheduling = () => resolve({ ok: true });
+      });
+    });
+    await activateChatGptTemporaryHandoff(createScope());
 
-    document.querySelector<HTMLButtonElement>('[data-gv-chatgpt-handoff-button]')?.click();
-    await flush();
-    document
-      .querySelector<HTMLButtonElement>('.gv-chatgpt-handoff-dialog-button--primary')
-      ?.click();
+    await confirmHandoff();
 
-    await vi.waitFor(() => expect(mocks.handoff).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(finishScheduling).toBeTypeOf('function'), { timeout: 5_000 });
     expect(document.querySelector('.gv-chatgpt-handoff-spinner')).not.toBeNull();
 
-    finishHandoff('ready');
-    await vi.waitFor(() =>
-      expect(document.querySelector('.gv-chatgpt-handoff-spinner')).toBeNull(),
+    finishScheduling();
+    await vi.waitFor(
+      () => expect(document.querySelector('.gv-chatgpt-handoff-spinner')).toBeNull(),
+      { timeout: 5_000 },
     );
+    expect(toastTexts()).toContain(READY_TOAST);
   });
 
   it('keeps temporary mode open when the unsent draft still has an attachment', async () => {
-    mocks.hasAttachments.mockReturnValue(true);
+    mountTemporaryChat();
+    const attachment = document.createElement('div');
+    attachment.dataset.fileId = 'file-1';
+    document.querySelector('form')?.appendChild(attachment);
+    await activateChatGptTemporaryHandoff(createScope());
+
+    await confirmHandoff();
+
+    await vi.waitFor(() => expect(toastTexts().join('\n')).toContain('attached file or image'));
+    expect(location.search).toBe('?temporary-chat=true');
+    expect(downloads).toEqual([]);
+    expect(extensionStorage.size).toBe(0);
+  });
+
+  it('takes its open toast away when the plugin is disabled', async () => {
+    mountTemporaryChat();
+    const attachment = document.createElement('div');
+    attachment.dataset.fileId = 'file-1';
+    document.querySelector('form')?.appendChild(attachment);
     const scope = createScope();
     await activateChatGptTemporaryHandoff(scope);
+    await confirmHandoff();
+    await vi.waitFor(() => expect(toastTexts()).toHaveLength(1));
 
-    document.querySelector<HTMLButtonElement>('[data-gv-chatgpt-handoff-button]')?.click();
-    await flush();
-    document
-      .querySelector<HTMLButtonElement>('.gv-chatgpt-handoff-dialog-button--primary')
-      ?.click();
+    await scope.dispose();
 
-    await vi.waitFor(() =>
-      expect(document.querySelector('.gv-chatgpt-handoff-toast')?.textContent).toContain(
-        'attached file or image',
-      ),
-    );
-    expect(mocks.buildTurns).not.toHaveBeenCalled();
-    expect(mocks.handoff).not.toHaveBeenCalled();
+    expect(toastTexts()).toEqual([]);
   });
 
   it('refuses handoff when the latest user turn has no mounted assistant yet', async () => {
-    mocks.collectContainers.mockReturnValue([
-      { id: 'user-1', role: 'user', sequence: 0, container: document.createElement('div') },
-    ]);
+    document.body.append(legacyTurn('user-1', 'user', 'Question'));
 
     await expect(collectTemporaryChatTurns(new AbortController().signal)).rejects.toThrow(
       'chatgpt_export_response_still_generating',
     );
-
-    expect(mocks.buildTurns).not.toHaveBeenCalled();
   });
 
-  it('refuses handoff when response generation starts during collection', async () => {
-    mocks.isGenerating.mockReturnValueOnce(false).mockReturnValueOnce(true);
+  it('collects every prompt and reply of a legacy chat, materializing unmounted turns', async () => {
+    const shell = legacyTurn('user-2');
+    shell.scrollIntoView = () => {
+      if (shell.childElementCount === 0) {
+        shell.append(legacyTurn('mounted', 'user', 'Question 2').firstElementChild!);
+      }
+    };
+    document.body.append(
+      legacyTurn('user-1', 'user', 'Question 1'),
+      legacyTurn('assistant-1', 'assistant', 'Answer 1'),
+      shell,
+      legacyTurn('assistant-2', 'assistant', 'Answer 2'),
+    );
+
+    await expect(collectTemporaryChatTurns(new AbortController().signal)).resolves.toMatchObject([
+      { user: 'Question 1', assistant: 'Answer 1' },
+      { user: 'Question 2', assistant: 'Answer 2' },
+    ]);
+  });
+
+  it('stops crawling a legacy chat as soon as the handoff is cancelled', async () => {
+    const shell = legacyTurn('user-1');
+    const cancel = new AbortController();
+    let scrolls = 0;
+    shell.scrollIntoView = () => {
+      scrolls += 1;
+      cancel.abort();
+    };
+    document.body.append(shell, legacyTurn('assistant-1', 'assistant', 'Answer'));
+
+    const collection = collectTemporaryChatTurns(cancel.signal);
+
+    await expect(collection).rejects.toMatchObject({ name: 'AbortError' });
+    expect(scrolls).toBe(1);
+  });
+
+  it('refuses a legacy chat that navigates away while a turn materializes', async () => {
+    history.replaceState({}, '', '/?temporary-chat=true');
+    const shell = legacyTurn('user-1');
+    shell.scrollIntoView = () => {
+      if (shell.childElementCount > 0) return;
+      shell.append(legacyTurn('mounted', 'user', 'Question').firstElementChild!);
+      history.replaceState({}, '', '/c/another-chat');
+    };
+    document.body.append(shell, legacyTurn('assistant-1', 'assistant', 'Answer'));
 
     await expect(collectTemporaryChatTurns(new AbortController().signal)).rejects.toThrow(
       'chatgpt_export_conversation_changed',
     );
-
-    expect(mocks.buildTurns).toHaveBeenCalledOnce();
   });
 
-  it('retries a pending handoff when a late attachment preview mounts in the composer', async () => {
-    mocks.temporary = false;
-    const form = document.createElement('form');
-    form.dataset.type = 'unified-composer';
-    const composer = document.createElement('div');
-    composer.id = 'prompt-textarea';
-    composer.contentEditable = 'true';
-    composer.setAttribute('role', 'textbox');
-    form.appendChild(composer);
-    document.body.appendChild(form);
+  it('refuses a legacy chat that starts regenerating after every turn was read', async () => {
+    document.body.append(
+      legacyTurn('user-1', 'user', 'Question'),
+      legacyTurn('assistant-1', 'assistant', 'Answer'),
+    );
+    // Restoring the reader's scroll position is the last page call after the turns are read.
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {
+      const stop = document.createElement('button');
+      stop.dataset.testid = 'stop-button';
+      document.body.append(stop);
+    });
 
-    const scope = createScope();
-    await activateChatGptTemporaryHandoff(scope);
-    await vi.waitFor(() => expect(mocks.resume).toHaveBeenCalledOnce());
-    mocks.resume.mockClear();
+    await expect(collectTemporaryChatTurns(new AbortController().signal)).rejects.toThrow(
+      'chatgpt_export_conversation_changed',
+    );
+  });
+
+  it('refuses handoff when the conversation changes during collection', async () => {
+    const userShell = legacyTurn('user-1');
+    // Scrolling the unmounted prompt into view mounts it while the user sends a follow-up.
+    userShell.scrollIntoView = () => {
+      if (userShell.childElementCount > 0) return;
+      userShell.append(legacyTurn('mounted', 'user', 'Question').firstElementChild!);
+      document.body.append(legacyTurn('user-2', 'user', 'Follow-up'));
+    };
+    document.body.append(userShell, legacyTurn('assistant-1', 'assistant', 'Answer'));
+
+    await expect(collectTemporaryChatTurns(new AbortController().signal)).rejects.toThrow(
+      'chatgpt_export_conversation_changed',
+    );
+  });
+
+  it('retries a pending attachment handoff when its late preview mounts in the composer', async () => {
+    const { form, composer } = mountComposerForm();
+    seedPending({
+      mode: 'attachment',
+      directive: 'Read the saved handoff',
+      attachment: '# Transcript',
+      filename: 'late-transcript.md',
+    });
+    await activateChatGptTemporaryHandoff(createScope());
+    await vi.waitFor(() => expect(toastTexts()).toHaveLength(1));
+    expect(composer.textContent).not.toContain('Read the saved handoff');
 
     const placeholder = document.createElement('div');
     placeholder.dataset.testid = 'attachment-placeholder';
     form.appendChild(placeholder);
-    await vi.waitFor(() => expect(mocks.pendingPreviewReady).toHaveBeenCalled());
-    expect(mocks.resume).not.toHaveBeenCalled();
+    await settle();
+    expect(toastTexts()).toHaveLength(1);
 
-    mocks.pendingPreviewReady.mockResolvedValue(true);
     const preview = document.createElement('div');
     preview.dataset.testid = 'attachment-preview';
     preview.textContent = 'late-transcript.md';
     form.appendChild(preview);
 
-    await vi.waitFor(() => expect(mocks.resume).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(toastTexts()).toContain(READY_TOAST));
+    expect(composer.textContent).toContain('Read the saved handoff');
   });
 
-  it('rechecks pending delivery when the live composer content mutates', async () => {
-    mocks.temporary = false;
-    const form = document.createElement('form');
-    const composer = document.createElement('div');
-    composer.id = 'prompt-textarea';
-    composer.contentEditable = 'true';
-    composer.setAttribute('role', 'textbox');
-    form.appendChild(composer);
-    document.body.appendChild(form);
+  it('restores the delivered handoff when ChatGPT re-renders the composer empty', async () => {
+    const { composer } = mountComposerForm();
+    seedPending({ mode: 'inline', text: 'Continue this transcript' });
+    await activateChatGptTemporaryHandoff(createScope());
+    await vi.waitFor(() => expect(composer.textContent).toBe('Continue this transcript'));
 
-    const scope = createScope();
-    await activateChatGptTemporaryHandoff(scope);
-    await vi.waitFor(() => expect(mocks.resume).toHaveBeenCalledOnce());
-    mocks.resume.mockClear();
+    composer.replaceChildren();
 
-    composer.appendChild(document.createTextNode('delivery mutation'));
-    await vi.waitFor(() => expect(mocks.resume).toHaveBeenCalledOnce());
-    expect(mocks.resume).toHaveBeenCalledOnce();
+    await vi.waitFor(() => expect(composer.textContent).toBe('Continue this transcript'));
+  });
+
+  it('keeps a delivered composer the user cleared instead of restoring the handoff', async () => {
+    const { composer } = mountComposerForm();
+    seedPending({ mode: 'inline', text: 'Continue this transcript' });
+    await activateChatGptTemporaryHandoff(createScope());
+    await vi.waitFor(() =>
+      expect(extensionStorage.get(PENDING_STORAGE_KEY)).toMatchObject({ deliveredRoute: '/' }),
+    );
+
+    composer.dispatchEvent(new InputEvent('beforeinput', { bubbles: true }));
+    composer.replaceChildren();
+    await settle();
+
+    expect(composer.textContent).toBe('');
+    await vi.waitFor(() => expect(pendingStored()).toBe(false));
   });
 
   it('stops recovery before a user edit changes the delivered composer', async () => {
-    mocks.temporary = false;
-    const composer = document.createElement('div');
-    composer.id = 'prompt-textarea';
-    composer.contentEditable = 'true';
-    composer.setAttribute('role', 'textbox');
-    document.body.appendChild(composer);
-
+    const { composer } = mountComposerForm();
     await activateChatGptTemporaryHandoff(createScope());
-    composer.dispatchEvent(new InputEvent('beforeinput', { bubbles: true }));
+    seedPending({ mode: 'inline', text: 'Continue' });
 
-    expect(mocks.cancelPendingRecovery).toHaveBeenCalledOnce();
+    composer.dispatchEvent(new InputEvent('beforeinput', { bubbles: true }));
+    expectRecoveryDetachedNow();
+
+    await vi.waitFor(() => expect(pendingStored()).toBe(false));
   });
 
   it('stops recovery before sending clears the delivered composer', async () => {
-    mocks.temporary = false;
-    const form = document.createElement('form');
-    const composer = document.createElement('div');
-    composer.id = 'prompt-textarea';
+    const { form } = mountComposerForm();
     const send = document.createElement('button');
     send.type = 'button';
     send.dataset.testid = 'send-button';
-    form.append(composer, send);
-    document.body.appendChild(form);
-
+    form.appendChild(send);
     await activateChatGptTemporaryHandoff(createScope());
-    send.click();
-    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
 
-    expect(mocks.cancelPendingRecovery).toHaveBeenCalledTimes(2);
+    seedPending({ mode: 'inline', text: 'Continue' });
+    send.click();
+    expectRecoveryDetachedNow();
+    await vi.waitFor(() => expect(pendingStored()).toBe(false));
+
+    seedPending({ mode: 'inline', text: 'Continue' });
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    expectRecoveryDetachedNow();
+    await vi.waitFor(() => expect(pendingStored()).toBe(false));
   });
 
   it('stops recovery before the user removes a delivered attachment', async () => {
-    mocks.temporary = false;
-    const form = document.createElement('form');
-    const composer = document.createElement('div');
-    composer.id = 'prompt-textarea';
+    const { form } = mountComposerForm();
+    const preview = document.createElement('div');
+    preview.dataset.testid = 'file-upload-preview';
     const remove = document.createElement('button');
     remove.type = 'button';
-    remove.dataset.testid = 'remove-file-button';
-    form.append(composer, remove);
-    document.body.appendChild(form);
-    mocks.isAttachmentRemovalControl.mockImplementation((target: Element) => target === remove);
-
+    remove.setAttribute('aria-label', 'Remove file');
+    preview.appendChild(remove);
+    form.appendChild(preview);
     await activateChatGptTemporaryHandoff(createScope());
-    remove.click();
+    seedPending({ mode: 'inline', text: 'Continue' });
 
-    expect(mocks.cancelPendingRecovery).toHaveBeenCalledOnce();
+    remove.click();
+    expectRecoveryDetachedNow();
+
+    await vi.waitFor(() => expect(pendingStored()).toBe(false));
   });
 
   it('stops recovery before same-route New Chat actions', async () => {
-    mocks.temporary = false;
     await activateChatGptTemporaryHandoff(createScope());
 
     for (const [route, newChatHref] of [
@@ -441,14 +587,16 @@ describe('ChatGPT temporary handoff plugin', () => {
       ['/u/12/g/custom-gpt/', '/u/12/'],
     ]) {
       history.replaceState({}, '', route);
+      seedPending({ mode: 'inline', text: 'Continue' });
       const newChat = document.createElement('a');
       newChat.href = newChatHref;
       newChat.addEventListener('click', (event) => event.preventDefault());
       document.body.appendChild(newChat);
       newChat.click();
       newChat.remove();
-    }
+      expectRecoveryDetachedNow();
 
-    expect(mocks.cancelPendingRecovery).toHaveBeenCalledTimes(2);
+      await vi.waitFor(() => expect(pendingStored()).toBe(false));
+    }
   });
 });

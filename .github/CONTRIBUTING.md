@@ -40,7 +40,7 @@ AI 是很好的辅助工具，但缺少明确目标、聚焦范围和真实验�
 4. 行为变更添加回归测试，或说明自动化测试不适用的理由。
 5. 在受影响浏览器中加载实际扩展并验证改动流程；缺少环境时，在 PR 中注明未测试项和补测负责人。
 
-> 💡 使用 AI Agent（Claude Code、Codex 等）贡献时，请让它使用仓库自带的 `voyager-contribute` skill（位于 `.claude/skills/` 与 `.agents/skills/`）：它内置上述流程与历史 PR 中最耗评审轮次的仓库特有陷阱。仓库外的 agent（如 Cursor）可用 `npx skills add Nagi-ovo/voyager -s voyager-contribute` 安装。
+> 💡 使用 AI Agent（Claude Code、Codex 等）贡献时，请让它使用仓库自带的 `voyager-contribute` skill（位于 `.claude/skills/` 与 `.agents/skills/`）：它内置上述流程与历史 PR 中最耗评审轮次的仓库特有陷阱。仓库外的 agent（如 Cursor）可用 `npx skills add voyager-crew/voyager -s voyager-contribute` 安装。
 
 ## 目录
 
@@ -67,7 +67,7 @@ AI 是很好的辅助工具，但缺少明确目标、聚焦范围和真实验�
 
 ```bash
 # 克隆仓库
-git clone https://github.com/Nagi-ovo/voyager.git
+git clone https://github.com/voyager-crew/voyager.git
 cd voyager
 
 # 安装依赖
@@ -269,7 +269,7 @@ Voyager 通过以下功能增强 Gemini AI 聊天体验：
 - UI 自定义
 
 > [!NOTE]
-> **我们认为 Voyager 的功能已经足够充分且全面。** 引入过多个性化、小众的功能不会让软件更好用，反而会增加维护负担。除非你认为某个功能确实是急需的、大多数用户都会用到的，否则不建议提交 Feature Request。若确实必要，请先到 [Discussions](https://github.com/Nagi-ovo/voyager/discussions) 提出想法；维护者认可后再开 Issue 对齐具体方案，等待明确批准后才开始写代码。
+> **我们认为 Voyager 的功能已经足够充分且全面。** 引入过多个性化、小众的功能不会让软件更好用，反而会增加维护负担。除非你认为某个功能确实是急需的、大多数用户都会用到的，否则不建议提交 Feature Request。若确实必要，请先到 [Discussions](https://github.com/voyager-crew/voyager/discussions) 提出想法；维护者认可后再开 Issue 对齐具体方案，等待明确批准后才开始写代码。
 
 **不在范围内**：网站爬取、网络拦截、账户自动化。
 
@@ -277,8 +277,8 @@ Voyager 通过以下功能增强 Gemini AI 聊天体验：
 
 ## 获取帮助
 
-- 💬 [GitHub Discussions](https://github.com/Nagi-ovo/voyager/discussions) - 提问
-- 🐛 [Issues](https://github.com/Nagi-ovo/voyager/issues) - 报告错误
+- 💬 [GitHub Discussions](https://github.com/voyager-crew/voyager/discussions) - 提问
+- 🐛 [Issues](https://github.com/voyager-crew/voyager/issues) - 报告错误
 - 📖 [文档](https://voyager.nagi.fun/) - 阅读文档
 
 ---
@@ -327,7 +327,7 @@ AI tools can be helpful, but copy-paste PRs without clear intent, focused scope,
 4. Add regression tests for behavior changes, or explain why automation is not useful.
 5. Load the real extension artifact in affected browsers and exercise the changed workflow; identify missing coverage and its owner in the PR.
 
-> 💡 If you contribute with an AI agent (Claude Code, Codex, …), tell it to use the bundled `voyager-contribute` skill (under `.claude/skills/` and `.agents/skills/`): it encodes this workflow plus the repository-specific pitfalls that cost past PRs the most review rounds. Agents outside the repo checkout (e.g. Cursor) can install it via `npx skills add Nagi-ovo/voyager -s voyager-contribute`.
+> 💡 If you contribute with an AI agent (Claude Code, Codex, …), tell it to use the bundled `voyager-contribute` skill (under `.claude/skills/` and `.agents/skills/`): it encodes this workflow plus the repository-specific pitfalls that cost past PRs the most review rounds. Agents outside the repo checkout (e.g. Cursor) can install it via `npx skills add voyager-crew/voyager -s voyager-contribute`.
 
 ## Table of Contents
 
@@ -354,7 +354,7 @@ AI tools can be helpful, but copy-paste PRs without clear intent, focused scope,
 
 ```bash
 # Clone the repository
-git clone https://github.com/Nagi-ovo/voyager.git
+git clone https://github.com/voyager-crew/voyager.git
 cd voyager
 
 # Install dependencies
@@ -568,7 +568,7 @@ Voyager enhances the Gemini AI chat experience with:
 - UI customization
 
 > [!NOTE]
-> **We believe Voyager's feature set is already comprehensive and well-rounded.** Adding too many niche or overly personalized features does not make the software better — it only increases the maintenance burden. Unless you believe a feature is truly essential and would benefit the majority of users, please reconsider submitting a Feature Request. If it truly is essential, raise the idea in [Discussions](https://github.com/Nagi-ovo/voyager/discussions) first; once a maintainer signals interest, open an Issue to align on the approach and wait for explicit approval before writing any code.
+> **We believe Voyager's feature set is already comprehensive and well-rounded.** Adding too many niche or overly personalized features does not make the software better — it only increases the maintenance burden. Unless you believe a feature is truly essential and would benefit the majority of users, please reconsider submitting a Feature Request. If it truly is essential, raise the idea in [Discussions](https://github.com/voyager-crew/voyager/discussions) first; once a maintainer signals interest, open an Issue to align on the approach and wait for explicit approval before writing any code.
 
 **Out of scope**: Site scraping, network interception, account automation.
 
@@ -576,8 +576,8 @@ Voyager enhances the Gemini AI chat experience with:
 
 ## Getting Help
 
-- 💬 [GitHub Discussions](https://github.com/Nagi-ovo/voyager/discussions) - Ask questions
-- 🐛 [Issues](https://github.com/Nagi-ovo/voyager/issues) - Report bugs
+- 💬 [GitHub Discussions](https://github.com/voyager-crew/voyager/discussions) - Ask questions
+- 🐛 [Issues](https://github.com/voyager-crew/voyager/issues) - Report bugs
 - 📖 [Documentation](https://voyager.nagi.fun/) - Read the docs
 
 ---

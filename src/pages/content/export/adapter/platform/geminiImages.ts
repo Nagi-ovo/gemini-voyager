@@ -1,7 +1,15 @@
+// Consume only image hosts, or their wrapper's prose and captions disappear.
+// Lazy image URLs and figure captions must reach HTML for copy-as-image.
+// Sweep images beside markdown, skipping walked hosts so they stay in DOM order.
 import {
-  DOMContentExtractor,
   type ExtractedContent,
+  processYouTubeCovers,
 } from '@/features/export/services/DOMContentExtractor';
+import {
+  escapeHtml,
+  escapeHtmlAttribute,
+  normalizeText,
+} from '@/features/export/services/exportDomPolicy';
 
 type ImageFlags = Pick<ExtractedContent, 'hasImages' | 'hasFormulas' | 'hasTables' | 'hasCode'>;
 
@@ -106,10 +114,10 @@ function contentImages(host: Element): HTMLImageElement[] {
 
 function readAttribution(host: Element): ImageAttribution {
   const sourceAnchor = host.querySelector<HTMLAnchorElement>('a.source');
-  const caption = DOMContentExtractor.normalizeText(
+  const caption = normalizeText(
     host.querySelector('figcaption, .caption, .image-caption, .attribution')?.textContent || '',
   );
-  const sourceLabel = DOMContentExtractor.normalizeText(
+  const sourceLabel = normalizeText(
     host.querySelector('.source .label')?.textContent || sourceAnchor?.textContent || '',
   );
   const sourceUrl = sourceAnchor?.href || host.getAttribute('data-full-size-image-uri') || '';
@@ -135,13 +143,13 @@ function emitFigure(
   const imgHtml = images
     .map(
       (image) =>
-        `<img src="${DOMContentExtractor.escapeHtmlAttribute(image.src)}" alt="${DOMContentExtractor.escapeHtmlAttribute(image.alt)}" />`,
+        `<img src="${escapeHtmlAttribute(image.src)}" alt="${escapeHtmlAttribute(image.alt)}" />`,
     )
     .join('');
   const caption = attributionLine(attribution);
   if (caption) {
     htmlParts.push(
-      `<figure class="gv-export-figure">${imgHtml}<figcaption>${DOMContentExtractor.escapeHtml(caption)}</figcaption></figure>`,
+      `<figure class="gv-export-figure">${imgHtml}<figcaption>${escapeHtml(caption)}</figcaption></figure>`,
     );
   } else {
     htmlParts.push(imgHtml);
@@ -188,9 +196,7 @@ function emitStandaloneImage(
   processedImageSrcs?.add(src);
   flags.hasImages = true;
   const alt = image.alt || 'Image';
-  htmlParts.push(
-    `<img src="${DOMContentExtractor.escapeHtmlAttribute(src)}" alt="${DOMContentExtractor.escapeHtmlAttribute(alt)}" />`,
-  );
+  htmlParts.push(`<img src="${escapeHtmlAttribute(src)}" alt="${escapeHtmlAttribute(alt)}" />`);
   textParts.push(`\n![${alt.replace(/\]/g, '\\]')}](${src})\n`);
 }
 
@@ -227,7 +233,7 @@ export function extractGeminiAssistantImage(
     child.querySelector(
       '.attachment-container.youtube img.thumbnail, youtube-block img.thumbnail, single-video img.thumbnail',
     ) &&
-    DOMContentExtractor.processYouTubeCovers(child, htmlParts, textParts, flags)
+    processYouTubeCovers(child, htmlParts, textParts, flags)
   ) {
     return true;
   }

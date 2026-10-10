@@ -1,0 +1,224 @@
+/* The folder section header (title, collapse toggle, action buttons) shared by
+ * Gemini's sidebar, where it is a page stylesheet (`installFolderHeaderStyle`),
+ * and ChatGPT's sidebar section, where it is part of the section's shadow sheet.
+ *
+ * Values default to Gemini's, read from its `--folder-*` palette. A site
+ * re-points the `--gv-folder-header-*` tokens to its own colours and sizes. A
+ * scheme rule names `html[data-gv-scheme]`, which matches only in the page;
+ * inside a shadow root the site sets the tokens per scheme instead.
+ *
+ * Rule order matters: hover, then the shared pressed fill, then the role
+ * accents (Activity, current-user filter), which win over both. */
+
+.gv-folder-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gv-folder-header .title-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* ─── Collapse ─────────────────────────────────────────────────────────── */
+/* A chevron beside the title, shown while the header is hovered or focused,
+ * or while the section is collapsed. */
+.gv-folder-section-toggle {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--gv-folder-header-icon, var(--folder-icon-color));
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  flex: 0 0 auto;
+  transition:
+    opacity 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.gv-folder-section-toggle svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.gv-folder-header:hover .gv-folder-section-toggle,
+.gv-folder-section-toggle:focus-visible,
+.gv-folder-collapsed .gv-folder-section-toggle,
+.gv-folder-section-toggle[aria-expanded='false'] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gv-folder-section-toggle:hover {
+  background-color: var(--gv-folder-header-hover, var(--folder-hover-bg));
+  color: var(--gv-folder-header-icon-active, var(--folder-text));
+}
+
+/* The title itself collapses the section (ChatGPT's own section headings do);
+ * only its chevron reveals. */
+.gv-folder-section-toggle--title {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  gap: 4px;
+  margin: 0;
+  border-radius: 4px;
+  color: inherit;
+  font: inherit;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gv-folder-section-toggle--title:hover {
+  background: none;
+  color: inherit;
+}
+
+.gv-folder-section-toggle--title span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gv-folder-section-toggle--title svg {
+  flex: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.gv-folder-header:is(:hover, :focus-within) .gv-folder-section-toggle--title svg,
+.gv-folder-section-toggle--title[aria-expanded='false'] svg {
+  opacity: 1;
+}
+
+.gv-folder-section-toggle--title:focus-visible {
+  outline: 2px solid var(--gv-folder-header-focus-ring, currentColor);
+  outline-offset: 2px;
+}
+
+/* ─── Actions ──────────────────────────────────────────────────────────── */
+.gv-folder-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--gv-folder-header-gap, 0);
+}
+
+.gv-folder-action-btn {
+  width: var(--gv-folder-header-button-size, 32px);
+  height: var(--gv-folder-header-button-size, 32px);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  border-radius: var(--gv-folder-header-button-radius, 50%);
+  color: var(--gv-folder-header-icon, var(--folder-icon-color));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  opacity: var(--gv-folder-header-action-opacity, 0.9);
+  flex: 0 0 auto;
+}
+
+/* "Create folder": the header's primary button. */
+.gv-folder-add-btn {
+  width: var(--gv-folder-header-button-size, 32px);
+  height: var(--gv-folder-header-button-size, 32px);
+  border-radius: var(--gv-folder-header-button-radius, 50%);
+  border: none;
+  background: transparent;
+  color: var(--gv-folder-header-icon, var(--folder-icon-color));
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.gv-folder-action-btn svg,
+.gv-folder-add-btn svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.gv-folder-action-btn:hover {
+  background-color: var(--gv-folder-header-action-hover, rgba(0, 0, 0, 0.05));
+  color: var(
+    --gv-folder-header-action-hover-color,
+    var(--gv-folder-header-icon, var(--folder-icon-color))
+  );
+  opacity: 1;
+}
+
+html[data-gv-scheme='dark'] .gv-folder-action-btn:hover {
+  background-color: var(--gv-folder-header-action-hover, rgba(255, 255, 255, 0.08));
+}
+
+.gv-folder-add-btn:hover {
+  background-color: var(--gv-folder-header-hover, var(--folder-hover-bg));
+  color: var(--gv-folder-header-icon-active, var(--folder-text));
+}
+
+/* A toggle that is on. */
+.gv-folder-action-btn[aria-pressed='true'] {
+  background-color: var(--gv-folder-header-pressed-bg, transparent);
+  color: var(
+    --gv-folder-header-pressed-color,
+    var(--gv-folder-header-icon, var(--folder-icon-color))
+  );
+  opacity: 1;
+}
+
+/* Shown while the header is hovered or focused; a toggle that is on stays. */
+.gv-folder-header:not(:hover, :focus-within) .gv-folder-header-reveal:not([aria-pressed='true']) {
+  opacity: 0;
+}
+
+/* ─── Role accents ─────────────────────────────────────────────────────── */
+.gv-folder-activity-toggle.is-active {
+  color: #4f772d;
+  background: rgba(132, 169, 74, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(79, 119, 45, 0.1);
+  opacity: 1;
+}
+
+html[data-gv-scheme='light'] .gv-folder-activity-toggle.is-active {
+  color: #4f772d;
+  background: rgba(132, 169, 74, 0.16);
+}
+
+.gv-folder-activity-toggle:focus-visible {
+  outline: 2px solid var(--gm3-sys-color-primary, #0b57d0);
+  outline-offset: 1px;
+}
+
+html[data-gv-scheme='dark'] .gv-folder-activity-toggle.is-active {
+  color: #c4dc9b;
+  background: rgba(168, 199, 117, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(196, 220, 155, 0.12);
+}
+
+.gv-folder-action-btn.gv-filter-active {
+  background-color: rgba(66, 133, 244, 0.15);
+  opacity: 1;
+}
+
+html[data-gv-scheme='dark'] .gv-folder-action-btn.gv-filter-active {
+  background-color: rgba(138, 180, 248, 0.2);
+}

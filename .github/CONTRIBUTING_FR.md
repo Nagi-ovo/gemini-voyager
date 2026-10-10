@@ -33,7 +33,7 @@ Bien que les outils d'IA soient d'excellents assistants, les contributions "pare
 4. Ajoutez des tests de régression pour les changements de comportement ou expliquez pourquoi l'automatisation n'est pas utile.
 5. Chargez l'artefact réel dans les navigateurs concernés et testez le parcours modifié ; indiquez dans la PR la couverture restante et son responsable.
 
-> 💡 Si vous contribuez avec un agent IA (Claude Code, Codex, …), demandez-lui d'utiliser la skill `voyager-contribute` fournie dans le dépôt (dans `.claude/skills/` et `.agents/skills/`) : elle encode ce flux ainsi que les pièges spécifiques au dépôt qui ont coûté le plus de cycles de revue. Les agents hors du checkout du dépôt (p. ex. Cursor) peuvent l'installer via `npx skills add Nagi-ovo/voyager -s voyager-contribute`.
+> 💡 Si vous contribuez avec un agent IA (Claude Code, Codex, …), demandez-lui d'utiliser la skill `voyager-contribute` fournie dans le dépôt (dans `.claude/skills/` et `.agents/skills/`) : elle encode ce flux ainsi que les pièges spécifiques au dépôt qui ont coûté le plus de cycles de revue. Les agents hors du checkout du dépôt (p. ex. Cursor) peuvent l'installer via `npx skills add voyager-crew/voyager -s voyager-contribute`.
 
 ## Table des Matières
 
@@ -60,7 +60,7 @@ Bien que les outils d'IA soient d'excellents assistants, les contributions "pare
 
 ```bash
 # Cloner le dépôt
-git clone https://github.com/Nagi-ovo/voyager.git
+git clone https://github.com/voyager-crew/voyager.git
 cd voyager
 
 # Installer les dépendances
@@ -281,7 +281,7 @@ Voyager améliore l'expérience de chat Gemini AI avec :
 - Personnalisation de l'interface utilisateur
 
 > [!NOTE]
-> **Nous considérons que l'ensemble des fonctionnalités de Voyager est déjà complet et suffisant.** Ajouter trop de fonctionnalités de niche ou trop personnalisées n'améliore pas le logiciel — cela ne fait qu'alourdir la charge de maintenance. À moins que vous ne considériez qu'une fonctionnalité est véritablement essentielle et bénéficierait à la majorité des utilisateurs, veuillez reconsidérer votre Feature Request. Si c'est vraiment essentiel, proposez-le dans les [Discussions](https://github.com/Nagi-ovo/voyager/discussions), pas sous forme d'issue.
+> **Nous considérons que l'ensemble des fonctionnalités de Voyager est déjà complet et suffisant.** Ajouter trop de fonctionnalités de niche ou trop personnalisées n'améliore pas le logiciel — cela ne fait qu'alourdir la charge de maintenance. À moins que vous ne considériez qu'une fonctionnalité est véritablement essentielle et bénéficierait à la majorité des utilisateurs, veuillez reconsidérer votre Feature Request. Si c'est vraiment essentiel, proposez-le dans les [Discussions](https://github.com/voyager-crew/voyager/discussions), pas sous forme d'issue.
 
 **Hors de portée** : Scraping de site, interception réseau, automatisation de compte.
 
@@ -289,8 +289,8 @@ Voyager améliore l'expérience de chat Gemini AI avec :
 
 ## Obtenir de l'Aide
 
-- 💬 [GitHub Discussions](https://github.com/Nagi-ovo/voyager/discussions) - Poser des questions
-- 🐛 [Issues](https://github.com/Nagi-ovo/voyager/issues) - Signaler des bugs
+- 💬 [GitHub Discussions](https://github.com/voyager-crew/voyager/discussions) - Poser des questions
+- 🐛 [Issues](https://github.com/voyager-crew/voyager/issues) - Signaler des bugs
 - 📖 [Documentation](https://voyager.nagi.fun/) - Lire la documentation
 
 ---

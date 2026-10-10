@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { TimelineNavigation } from '../TimelineNavigation';
-import type { TimelineState } from '../TimelineState';
-import type { TimelineView } from '../TimelineView';
+import type { TimelineNavigation } from '@/features/timeline/TimelineNavigation';
+import type { TimelineState } from '@/features/timeline/TimelineState';
+import type { TimelineView } from '@/features/timeline/TimelineView';
+
 import { TimelineManager } from '../manager';
 
 type TimelineOwners = {
@@ -10,7 +11,7 @@ type TimelineOwners = {
   view: TimelineView;
   navigation: TimelineNavigation;
   conversationContainer: HTMLElement;
-  userTurnSelector: string;
+  findCriticalElements(): Promise<boolean>;
   mountUI(): void;
   recalculateAndRenderMarkers(): void;
 };
@@ -30,7 +31,7 @@ function addTurn(parent: HTMLElement, index: number, viewport: HTMLElement): HTM
   return turn;
 }
 
-function fixture() {
+async function fixture() {
   const main = document.createElement('main');
   const viewport = document.createElement('div');
   viewport.style.overflowY = 'auto';
@@ -44,8 +45,8 @@ function fixture() {
   const manager = new TimelineManager();
   managers.push(manager);
   const owners = manager as unknown as TimelineOwners;
-  owners.conversationContainer = turns;
-  owners.userTurnSelector = '.user';
+  localStorage.setItem('geminiTimelineUserTurnSelectorAuto', '.user');
+  await owners.findCriticalElements();
   owners.navigation.setViewport(viewport);
   owners.navigation.mode = 'jump';
   owners.mountUI();
@@ -81,7 +82,7 @@ afterEach(() => {
 
 describe('TimelineManager navigation refresh', () => {
   it('rescans turns outside the old container when navigating beyond its last marker', async () => {
-    const { viewport, state, navigation } = fixture();
+    const { viewport, state, navigation } = await fixture();
     expect(state.markers).toHaveLength(2);
     expect(navigation.activeTurnId).toBe(state.markers[1].id);
     const next = addTurn(viewport, 2, viewport);
@@ -94,7 +95,7 @@ describe('TimelineManager navigation refresh', () => {
   });
 
   it('does not start queued scrolling beyond either boundary when the document has no more turns', async () => {
-    const { viewport, view, navigation } = fixture();
+    const { viewport, view, navigation } = await fixture();
     await vi.advanceTimersByTimeAsync(900);
     navigation.mode = 'flow';
     const runner = vi.spyOn(view, 'startRunner');
@@ -113,7 +114,7 @@ describe('TimelineManager navigation refresh', () => {
   });
 
   it('rebinds a connected stale viewport before shortcut navigation', async () => {
-    const { viewport, targets, navigation } = fixture();
+    const { viewport, targets, navigation } = await fixture();
     const currentViewport = document.createElement('div');
     currentViewport.style.overflowY = 'scroll';
     currentViewport.append(...targets);

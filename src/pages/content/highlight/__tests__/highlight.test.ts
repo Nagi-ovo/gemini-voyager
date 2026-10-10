@@ -234,8 +234,17 @@ describe('highlight conversation DOM', () => {
 });
 
 describe('HighlightManager rendering and navigation', () => {
+  const scrollIntoViewDescriptor = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'scrollIntoView',
+  );
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    });
     vi.mocked(accountIsolationService.resolveAccountScope).mockReset();
     window.history.replaceState(null, '', '/app/test');
   });
@@ -243,6 +252,11 @@ describe('HighlightManager rendering and navigation', () => {
   afterEach(() => {
     document.body.innerHTML = '';
     document.getElementById('gv-highlight-style')?.remove();
+    if (scrollIntoViewDescriptor) {
+      Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', scrollIntoViewDescriptor);
+    } else {
+      Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView');
+    }
   });
 
   it('renders persisted marks and an exact timeline tick', async () => {
@@ -256,6 +270,14 @@ describe('HighlightManager rendering and navigation', () => {
     expect(document.querySelector('.gv-highlight-mark')?.textContent).toBe('target');
     expect(document.querySelector('.gv-highlight-timeline-tick')).toBeInstanceOf(HTMLButtonElement);
     expect(manager.navigateToHighlight('highlight-1', 'auto')).toBe('highlight');
+    const mark = document.querySelector<HTMLElement>('.gv-highlight-mark')!;
+    expect(document.activeElement).toBe(mark);
+    expect(mark.classList.contains('gv-highlight-active')).toBe(true);
+    expect(mark.scrollIntoView).toHaveBeenCalledWith({
+      behavior: 'auto',
+      block: 'center',
+      inline: 'nearest',
+    });
 
     manager.destroy();
   });

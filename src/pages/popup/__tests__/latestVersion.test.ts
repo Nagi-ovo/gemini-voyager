@@ -80,7 +80,8 @@ describe('Popup latest version helpers', () => {
     });
 
     it('returns the DMG download URL when present', () => {
-      const url = 'https://github.com/Nagi-ovo/voyager/releases/download/v1.3.3/voyager-v1.3.3.dmg';
+      const url =
+        'https://github.com/voyager-crew/voyager/releases/download/v1.3.3/voyager-v1.3.3.dmg';
       expect(
         extractDmgDownloadUrl({
           assets: [

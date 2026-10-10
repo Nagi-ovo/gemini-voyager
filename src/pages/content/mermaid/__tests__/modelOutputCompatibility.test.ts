@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { normalizeMermaidCode } from '../index';
+import { normalizeMermaidCode } from '../source';
 
 describe('model-output Mermaid compatibility', () => {
   it.each([

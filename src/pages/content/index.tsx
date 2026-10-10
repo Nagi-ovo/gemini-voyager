@@ -2,7 +2,6 @@ import { CleanupPositions } from '@/core/types/cleanupPositions';
 import { StorageKeys } from '@/core/types/common';
 import { isHighlightColor, normalizeHighlightColorPalette } from '@/core/types/highlight';
 import { CleanupManager } from '@/core/utils/cleanupManager';
-import { customWebsitesIncludeHost, sanitizeCustomWebsites } from '@/core/utils/customWebsites';
 import {
   hasValidExtensionContext,
   isExtensionContextInvalidatedError,
@@ -21,6 +20,7 @@ import { startChatLineHeightAdjuster } from './chatLineHeight/index';
 import { startChatParagraphSpacingAdjuster } from './chatParagraphSpacing/index';
 import { startChatWidthAdjuster } from './chatWidth/index';
 import { runCoachmarkSequence } from './coachmark';
+import { claimContentScript } from './contentScriptHandoff';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
 import DefaultModelManager from './defaultModel/modelLocker';
@@ -51,16 +51,13 @@ import { ensureScheme, stopScheme } from './platformTheme/scheme';
 import { registerBuiltinNativeHandlers } from './pluginNativeRegistration';
 import { createPostChangelogFlow } from './postChangelogFlow';
 import { startPreventAutoScroll } from './preventAutoScroll/index';
-import { createCustomSiteCoverageReconciler } from './prompt/customSiteCoverage';
-import { startPromptManager } from './prompt/index';
+import { createPromptManagerEngine, readPromptCoverage } from './prompt/promptManagerEngine';
 import { promptReorderCoachmarkStep } from './prompt/promptReorderCoachmark';
-import { startSentPromptChipsFeature } from './prompt/sentPromptChipsFeature';
+import { resolvePromptSiteAdapter } from './prompt/resolvePromptSiteAdapter';
 import { slashPromptCoachmarkStep } from './prompt/slashPromptCoachmark';
-import { startSlashPromptFeature } from './prompt/slashPromptFeature';
 import { startQuoteReply } from './quoteReply/index';
 import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
-import { startTimeline } from './timeline/index';
 import { rulerTimelineCoachmarkStep } from './timeline/rulerTimelineCoachmark';
 import { usageCoachmarkStep } from './usageStatus/usageCoachmark';
 import { startUserLatex } from './userLatex/index';
@@ -101,16 +98,32 @@ const BACKGROUND_TAB_MIN_DELAY = 3000; // Minimum delay for background tabs
 const BACKGROUND_TAB_MAX_DELAY = 8000; // Maximum delay for background tabs (3000 + 5000)
 
 const cleanupManager = new CleanupManager();
+const promptManager = createPromptManagerEngine(
+  resolvePromptSiteAdapter(location.href),
+  cleanupManager,
+);
 
 let initialized = false;
 let initializationTimer: number | null = null;
 let forkToggle: NativeFeatureToggleController | null = null;
+let researchPackToggle: NativeFeatureToggleController | null = null;
 let watermarkRemoverStarted = false;
 
 async function isForkFeatureEnabled(): Promise<boolean> {
   try {
     const result = await chrome.storage?.sync?.get({ [StorageKeys.FORK_ENABLED]: false });
     return NATIVE_FEATURES.fork.toggle.isEnabled(result?.[StorageKeys.FORK_ENABLED]);
+  } catch {
+    return false;
+  }
+}
+
+async function isResearchPackEnabled(): Promise<boolean> {
+  try {
+    const result = await chrome.storage?.sync?.get({ [StorageKeys.RESEARCH_PACK_ENABLED]: false });
+    return NATIVE_FEATURES.researchPack.toggle.isEnabled(
+      result?.[StorageKeys.RESEARCH_PACK_ENABLED],
+    );
   } catch {
     return false;
   }
@@ -146,37 +159,6 @@ function showOnboardingCoachmarksWhenChangelogIsIdle(): void {
 }
 
 /**
- * Check if current hostname matches any custom websites
- */
-async function isCustomWebsite(): Promise<boolean> {
-  try {
-    const result = await chrome.storage?.sync?.get({ gvPromptCustomWebsites: [] });
-    const customWebsites = sanitizeCustomWebsites(result?.gvPromptCustomWebsites);
-
-    // Port-pinned entries only match the exact origin, so compare against the
-    // host (which carries the port), not the bare hostname.
-    const currentHost = location.host.toLowerCase().replace(/^www\./, '');
-
-    console.log('[Gemini Voyager] Checking custom websites:', {
-      currentHost,
-      customWebsites,
-      hostname: location.hostname,
-    });
-
-    const isCustom = customWebsitesIncludeHost(customWebsites, currentHost);
-
-    console.log('[Gemini Voyager] Is custom website:', isCustom);
-    return isCustom;
-  } catch (e) {
-    if (isExtensionContextInvalidatedError(e)) {
-      return false;
-    }
-    console.error('[Gemini Voyager] Error checking custom websites:', e);
-    return false;
-  }
-}
-
-/**
  * Initialize all features sequentially to reduce simultaneous load
  */
 async function initializeFeatures(): Promise<void> {
@@ -188,19 +170,7 @@ async function initializeFeatures(): Promise<void> {
       return;
     }
 
-    const slashPrompt = await startSlashPromptFeature();
-    cleanupManager.registerCleanupFunction(
-      () => slashPrompt.destroy(),
-      CleanupPositions.DestroySlashPromptFeatureInstance,
-    );
-
-    // Collapses a sent prompt back to its token. Started beside slash
-    // completion because it restores what that feature's token looked like.
-    const sentPromptChips = await startSentPromptChipsFeature();
-    cleanupManager.registerCleanupFunction(
-      () => sentPromptChips.destroy(),
-      CleanupPositions.DestroySentPromptChips,
-    );
+    await promptManager.startComposerFeatures();
 
     // Yield between features instead of sleeping a fixed amount. On an idle main
     // thread (the common foreground case) requestIdleCallback fires on the next
@@ -218,35 +188,13 @@ async function initializeFeatures(): Promise<void> {
         }
       });
 
-    // Check if this is a custom website (only prompt manager should be enabled)
-    const isCustomSite = await isCustomWebsite();
-
-    if (isCustomSite) {
-      // Only start prompt manager for custom websites
-      console.log('[Gemini Voyager] Custom website detected, starting Prompt Manager only');
-
-      // Turning the site off only unregisters the content script for future
-      // navigations — this page keeps running — so mirror both directions here
-      // instead of making the user reload.
-      const coverage = createCustomSiteCoverageReconciler({
-        host: location.host.toLowerCase(),
-        start: startPromptManager,
-        initial: await startPromptManager(),
-      });
-
-      chrome.storage?.onChanged?.addListener(coverage.handleChange);
-      cleanupManager.registerCleanupFunction(
-        () => chrome.storage?.onChanged?.removeListener(coverage.handleChange),
-        CleanupPositions.RemoveStorageOnChangedListener,
-      );
-      cleanupManager.registerCleanupFunction(
-        () => coverage.destroy(),
-        CleanupPositions.DestroyPromptManagerInstance,
-      );
+    // A custom website gets the Prompt Manager only, and so does a native host
+    // that a custom entry covers (an entry such as `google.com` covers
+    // gemini.google.com): there it follows the entry instead of the host.
+    if (await readPromptCoverage(location.host)) {
+      await promptManager.followCoverage(location.host);
       return;
     }
-
-    console.log('[Gemini Voyager] Not a custom website, checking for Gemini/AI Studio');
 
     await mountNativeFeature(cleanupManager, NATIVE_FEATURES.edgeFinalVersionNotice);
 
@@ -261,18 +209,15 @@ async function initializeFeatures(): Promise<void> {
     );
 
     if (isEnterprise) {
-      console.log('[Gemini Voyager] Gemini Enterprise detected, starting Prompt Manager only');
-      const pm = await startPromptManager();
-      cleanupManager.registerCleanupFunction(
-        () => pm.destroy(),
-        CleanupPositions.DestroyPromptManagerInstance,
-      );
+      await promptManager.startPanel();
       return;
     }
 
     if (location.hostname === 'gemini.google.com') {
+      // Owners below report anchor health to it, so it listens before they start.
+      await mountNativeFeature(cleanupManager, NATIVE_FEATURES.nativeHealth);
       // Timeline is most resource-intensive, start it first
-      startTimeline();
+      await mountNativeFeature(cleanupManager, NATIVE_FEATURES.timeline);
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
       const folderManager = await startFolderManager();
@@ -392,6 +337,8 @@ async function initializeFeatures(): Promise<void> {
       // the startup read: a toggle that lands while the read is in flight wins.
       forkToggle = createNativeFeatureToggle(cleanupManager, NATIVE_FEATURES.fork);
       await forkToggle.applyInitial(await isForkFeatureEnabled());
+      researchPackToggle = createNativeFeatureToggle(cleanupManager, NATIVE_FEATURES.researchPack);
+      await researchPackToggle.applyInitial(await isResearchPackEnabled());
 
       // Release-time interruptions are intentionally sequential: changelog,
       // native-watermark notice, then any eligible feature coachmarks.
@@ -413,11 +360,7 @@ async function initializeFeatures(): Promise<void> {
       location.hostname === 'aistudio.google.com' ||
       location.hostname === 'aistudio.google.cn'
     ) {
-      const pm = await startPromptManager();
-      cleanupManager.registerCleanupFunction(
-        () => pm.destroy(),
-        CleanupPositions.DestroyPromptManagerInstance,
-      );
+      await promptManager.startPanel();
       await delay(HEAVY_FEATURE_INIT_DELAY);
     }
 
@@ -518,6 +461,23 @@ function handleVisibilityChange(): void {
   try {
     if (!hasValidExtensionContext()) return;
 
+    // Before anything mounts: an orphan left by an extension reload/update
+    // would otherwise keep its rail, panels and observers beside ours.
+    claimContentScript(
+      () => {
+        initialized = true;
+        if (initializationTimer !== null) clearTimeout(initializationTimer);
+        initializationTimer = null;
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        try {
+          cleanupManager.executeCleanups();
+        } catch {
+          // An orphan's chrome.* calls throw; every other cleanup has still run.
+        }
+      },
+      () => !hasValidExtensionContext(),
+    );
+
     // First, before every branch below and before any surface mounts. The host
     // dialects this replaced were the page's own classes, already there, so a
     // surface was styled the instant it appeared; the attribute only exists
@@ -551,6 +511,8 @@ function handleVisibilityChange(): void {
     if (!isPluginSubframe)
       void mountNativeFeature(cleanupManager, NATIVE_FEATURES.accountContextBridge);
 
+    if (!isPluginSubframe) void mountNativeFeature(cleanupManager, NATIVE_FEATURES.chatGptJump);
+
     // Plugin ecosystem host. Started up-front on EVERY page the content script is
     // injected into (Gemini / AI Studio, and any site a user enabled a plugin for,
     // e.g. claude.ai via dynamic registration). It self-detects the site adapter
@@ -559,7 +521,9 @@ function handleVisibilityChange(): void {
     // user turns a plugin on in the popup.
     // Bind builtin "native function plugins" before the host starts, so
     // PluginHost can run them when enabled on Claude/ChatGPT (default off).
-    // Gemini/AI Studio keep their existing core feature lifecycle.
+    // Gemini/AI Studio keep their existing core feature lifecycle. The host
+    // itself follows AI Studio's master switch (runtime/surfaceSwitch.ts), so
+    // "Voyager off on AI Studio" also keeps local plugins off there.
     registerBuiltinNativeHandlers();
     cleanupManager.registerCleanupFunction(startPluginHost(), CleanupPositions.CleanupPluginHost);
 
@@ -594,6 +558,7 @@ function handleVisibilityChange(): void {
       changes: Record<string, chrome.storage.StorageChange>,
       areaName: string,
     ) => {
+      // Storage changes must not start the runtime before Gemini's normal startup.
       if (
         watermarkRemoverStarted &&
         areaName === 'sync' &&
@@ -610,6 +575,7 @@ function handleVisibilityChange(): void {
       }
 
       forkToggle?.handleChange(changes, areaName);
+      researchPackToggle?.handleChange(changes, areaName);
     };
 
     // Quick check: only run on supported websites
@@ -650,32 +616,12 @@ function handleVisibilityChange(): void {
       if (pluginPlatformId) {
         initialized = true;
         if (isPluginSubframe) return;
-        // Same path as custom websites (plan §7): the Prompt Manager mounts
-        // only while this host is in the user's custom-website list, which is
-        // what the popup's "enable Prompt Manager on <site>" toggle edits, and
-        // it follows that toggle live instead of waiting for a reload.
-        console.log('[Gemini Voyager] Plugin platform: prompt manager follows site coverage');
-        // Listen first, then feed the startup read: a toggle that lands while
-        // the read (or the first mount) is in flight is queued behind it
-        // instead of being missed.
-        const coverage = createCustomSiteCoverageReconciler({
-          host: location.host.toLowerCase(),
-          start: startPromptManager,
-        });
-        chrome.storage?.onChanged?.addListener(coverage.handleChange);
-        cleanupManager.registerCleanupFunction(
-          () => chrome.storage?.onChanged?.removeListener(coverage.handleChange),
-          CleanupPositions.RemoveStorageOnChangedListener,
-        );
-        cleanupManager.registerCleanupFunction(
-          () => coverage.destroy(),
-          CleanupPositions.DestroyPromptManagerInstance,
-        );
-        void isCustomWebsite()
-          .then((covered) => coverage.applyInitial(covered))
-          .catch((error) => {
-            console.error('[Gemini Voyager] Prompt Manager init error on plugin platform:', error);
-          });
+        // A research pack sent from Gemini with "Continue in …" lands here.
+        void mountNativeFeature(cleanupManager, NATIVE_FEATURES.researchPackReceiver);
+        // Same path as custom websites: the Prompt Manager mounts only while
+        // this host is in the user's custom-website list, which is what the
+        // popup's "enable Prompt Manager on <site>" toggle edits.
+        void promptManager.followCoverage(location.host);
         // ChatGPT export is driven by PluginHost via the voyager.chatgpt-export
         // builtin plugin (opt-in), not started unconditionally here.
         // Formula copy here is driven by PluginHost via the voyager.formula-copy
@@ -683,18 +629,9 @@ function handleVisibilityChange(): void {
         return;
       }
 
-      // For unknown sites, check storage asynchronously
-      chrome.storage?.sync?.get({ gvPromptCustomWebsites: [] }, (result) => {
-        const currentHost = location.host.toLowerCase();
-        const isCustomSite = customWebsitesIncludeHost(result?.gvPromptCustomWebsites, currentHost);
-
-        if (isCustomSite) {
-          console.log('[Gemini Voyager] Custom website detected:', currentHost);
-          initializeFeatures();
-        } else {
-          // Not a supported site, exit early
-          console.log('[Gemini Voyager] Not a supported website, skipping initialization');
-        }
+      // Any other site runs only while a custom entry covers it.
+      void readPromptCoverage(location.host).then((covered) => {
+        if (covered) initializeFeatures();
       });
       return;
     }

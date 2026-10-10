@@ -1,0 +1,73 @@
+/* A folder header button's menu, in a body-level popover layer (see tokens.css).
+ * Host-only rules are `!important`: a page rule that matches the host beats a
+ * normal `:host` declaration whatever its specificity. left/top stay inline,
+ * written by the layer's placement. */
+:host {
+  position: fixed !important;
+  z-index: var(--gv-z-top, 2147483647) !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+:host([data-gv-rtl]) {
+  direction: rtl !important;
+}
+
+.gv-folder-header-menu {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 180px;
+  max-inline-size: min(280px, calc(100vw - 16px));
+  padding: 6px;
+  border: 1px solid var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7));
+  border-radius: 12px;
+  background: var(--gv-ui-surface, oklch(0.995 0.002 250));
+  color: var(--gv-ui-text, oklch(0.14 0.004 285));
+  box-shadow: var(--gv-ui-shadow, 0 6px 20px oklch(0 0 0 / 0.16));
+  font-family: var(
+    --gv-ui-font,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.gv-folder-header-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-block-size: 36px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.gv-folder-header-menu-item:hover,
+.gv-folder-header-menu-item:focus-visible {
+  background: var(--gv-ui-surface-hover, oklch(0.97 0.003 250));
+  outline: none;
+}
+
+.gv-folder-header-menu-item svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--gv-ui-text-muted, oklch(0.45 0.01 270));
+}

@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { TimelineMarker } from '@/features/timeline/types';
+
 import { TimelineTurns } from '../TimelineTurns';
-import type { TimelineMarker } from '../types';
 
 function setElementTop(el: HTMLElement, top: number): void {
   Object.defineProperty(el, 'offsetTop', { value: top, configurable: true });

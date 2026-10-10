@@ -10,7 +10,7 @@
  * chooses the group, dragging chooses the position inside it.
  */
 
-export type Pinnable = { id: string; pinnedAt?: number; updatedAt?: number };
+export type Pinnable = { id: string; pinnedAt?: number | null; updatedAt?: number };
 
 export function isPinned(item: Pinnable): boolean {
   return typeof item.pinnedAt === 'number' && Number.isFinite(item.pinnedAt);
@@ -39,10 +39,8 @@ export function togglePin<T extends Pinnable>(items: T[], id: string, now: numbe
   const next = items.map((item) => {
     if (item.id !== id) return item;
     changed = true;
-    const { pinnedAt: _pinnedAt, ...rest } = item;
-    return (
-      isPinned(item) ? { ...rest, updatedAt: now } : { ...item, pinnedAt: now, updatedAt: now }
-    ) as T;
+    // An unpin writes `null`: a merge reads an absent field as "no pin information".
+    return { ...item, pinnedAt: isPinned(item) ? null : now, updatedAt: now };
   });
   return changed ? next : items;
 }

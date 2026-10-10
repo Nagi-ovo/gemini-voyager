@@ -24,4 +24,4 @@
 
 한 번만 교체하면 이후 Safari 버전은 내장 자동 업데이트(Sparkle)를 통해 새 "Voyager"로 업데이트됩니다. 더 이상 수동 교체가 필요 없습니다.
 
-궁금한 점은 [GitHub Issues](https://github.com/Nagi-ovo/voyager/issues)로 알려주세요.
+궁금한 점은 [GitHub Issues](https://github.com/voyager-crew/voyager/issues)로 알려주세요.

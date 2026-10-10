@@ -7,10 +7,13 @@ import {
 } from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
 import type { PromptItem } from '@/core/types/sync';
+import { toastDriver } from '@/tests/toastDriver';
 import { getTranslationSync } from '@/utils/i18n';
 
 import { AIStudioFolderManager } from '../aistudio';
+import type { TreeActions } from '../floatingTree/shared';
 import type { FolderData } from '../types';
+import { ROOT, nameInput, tree, treeText } from './aistudioTreeDriver';
 
 const { mockBrowser } = vi.hoisted(() => ({
   mockBrowser: {
@@ -35,11 +38,11 @@ type Manager = {
   activeStorageKey: string;
   handleAccountIsolationToggle(enabled: boolean): Promise<void>;
   refreshScopedDataOnAccountContextChange(): Promise<void>;
-  handleCloudSync(): Promise<void>;
-  handleImport(): void;
+  transfer: { sync(): Promise<void>; importFile(): void };
   load(): Promise<void>;
   save(): Promise<boolean>;
   destroy(): void;
+  treeActions(): TreeActions;
 };
 
 const storageKey = StorageKeys.FOLDER_DATA_AISTUDIO;
@@ -99,13 +102,13 @@ async function mountManager(): Promise<Manager> {
   const manager = instance as unknown as Manager;
   managers.push(manager);
   await instance.init();
-  expect(document.querySelector('.gv-folder-list')?.textContent).toContain('Private a');
+  expect(treeText()).toContain('Private a');
   return manager;
 }
 
 function attemptCreateAndDrop(): void {
   document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')!.click();
-  const input = document.querySelector<HTMLInputElement>('.gv-folder-name-input');
+  const input = nameInput();
   if (input) {
     input.value = 'Created during load';
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
@@ -122,7 +125,7 @@ function attemptCreateAndDrop(): void {
         }),
     },
   });
-  document.querySelector('.gv-folder-root-drop')!.dispatchEvent(drop);
+  tree.dropTarget(ROOT).dispatchEvent(drop);
 }
 
 function holdFolderWrites(key: string) {
@@ -149,9 +152,26 @@ function holdFolderWrites(key: string) {
 }
 
 function notificationText(): string {
-  return Array.from(document.querySelectorAll('.gv-notification'), (node) => node.textContent).join(
-    '\n',
-  );
+  return toastDriver.messages().join('\n');
+}
+
+/** What an import reported, success or failure. */
+function importNotices(): string[] {
+  const starts = (
+    [
+      'folder_import_success',
+      'folder_import_error',
+      'folder_import_invalid_format',
+      'folder_import_wrong_site',
+    ] as const
+  ).map((key) => getTranslationSync(key).split('{')[0]);
+  return toastDriver
+    .messages()
+    .filter((message) => starts.some((start) => message.startsWith(start)));
+}
+
+function hasErrorNotice(): boolean {
+  return toastDriver.all().some((toast) => toast.tone === 'error');
 }
 
 function backupData(manager: Manager, slot: 'primary' | 'emergency' | 'beforeUnload'): FolderData {
@@ -161,19 +181,19 @@ function backupData(manager: Manager, slot: 'primary' | 'emergency' | 'beforeUnl
 
 function createFolder(name: string): void {
   document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')!.click();
-  const input = document.querySelector<HTMLInputElement>('.gv-folder-name-input')!;
+  const input = nameInput()!;
   expect(input).not.toBeNull();
   input.value = name;
   input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 }
 
-function chooseImport(manager: Manager, data: FolderData): void {
+function chooseImport(manager: Manager, data: FolderData, marks: object = {}): void {
   const click = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {});
-  manager.handleImport();
+  manager.transfer.importFile();
   const input = click.mock.contexts.at(-1) as HTMLInputElement;
   expect(input).toBeInstanceOf(HTMLInputElement);
   Object.defineProperty(input, 'files', {
-    value: [{ text: async () => JSON.stringify({ data }) }],
+    value: [{ text: async () => JSON.stringify({ ...marks, data }) }],
   });
   input.dispatchEvent(new Event('change'));
 }
@@ -209,7 +229,6 @@ beforeEach(() => {
   vi.spyOn(console, 'log').mockImplementation(() => {});
   vi.spyOn(console, 'warn').mockImplementation(() => {});
   vi.spyOn(console, 'error').mockImplementation(() => {});
-  vi.spyOn(window, 'alert').mockImplementation(() => {});
 });
 
 afterEach(() => {
@@ -251,6 +270,9 @@ describe('AI Studio folder persistence', () => {
           'true',
         );
         attemptCreateAndDrop();
+        // A form or menu opened just before the switch can still call back.
+        const actions = manager.treeActions();
+        actions.onCreateFolder?.('Created by a stale form', null);
         await vi.advanceTimersByTimeAsync(0);
         expect(local[key]).toEqual(original);
         expect(manager.data).toEqual({ folders: [], folderContents: {} });
@@ -260,9 +282,7 @@ describe('AI Studio folder persistence', () => {
       }
       expect(manager.data).toEqual(original);
       expect(document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')?.disabled).toBe(false);
-      expect(document.querySelector('.gv-folder-list')?.textContent).toContain(
-        kind === 'global' ? 'Global original' : 'Private b',
-      );
+      expect(treeText()).toContain(kind === 'global' ? 'Global original' : 'Private b');
     },
   );
 
@@ -363,13 +383,13 @@ describe('AI Studio folder persistence', () => {
     try {
       firstResult.resolve();
       expect(await first).toBe(false);
-      expect(document.querySelector('.gv-notification-error')).toBeNull();
+      expect(hasErrorNotice()).toBe(false);
       tailResult.resolve();
       expect(await queued).toBe(true);
       expect((local[manager.activeStorageKey] as FolderData).folders[0].name).toBe(
         'Latest ordinary edit',
       );
-      expect(document.querySelector('.gv-notification-error')).toBeNull();
+      expect(hasErrorNotice()).toBe(false);
     } finally {
       firstResult.resolve();
       tailResult.resolve();
@@ -396,7 +416,7 @@ describe('AI Studio folder persistence', () => {
       const writes = holdFolderWrites(manager.activeStorageKey);
       const first = manager.save();
       await writes.firstStarted.promise;
-      const syncing = manager.handleCloudSync();
+      const syncing = manager.transfer.sync();
       try {
         await vi.advanceTimersByTimeAsync(0);
         expect(local.gvPromptItems).toEqual([]);
@@ -404,7 +424,7 @@ describe('AI Studio folder persistence', () => {
         writes.first.resolve();
         await writes.tailStarted.promise;
         expect(manager.data).toEqual(folderData('Private a'));
-        expect(document.querySelector('.gv-folder-list')?.textContent).not.toContain('Cloud');
+        expect(treeText()).not.toContain('Cloud');
         expect(local.gvPromptItems).toEqual([]);
         writes.tail.resolve(saved);
         await syncing;
@@ -416,7 +436,7 @@ describe('AI Studio folder persistence', () => {
           ).toEqual(['Private a', 'Cloud']);
         } else {
           expect(notificationText()).not.toContain(getTranslationSync('downloadMergeSuccess'));
-          expect(document.querySelector('.gv-notification-error')).not.toBeNull();
+          expect(hasErrorNotice()).toBe(true);
           expect(
             (local[manager.activeStorageKey] as FolderData).folders.map((folder) => folder.name),
           ).toEqual(['Private a']);
@@ -444,17 +464,16 @@ describe('AI Studio folder persistence', () => {
         data: { folders: { data: folderData('Failed draft') }, prompts: { items: [] } },
       });
       if (kind === 'import') chooseImport(manager, folderData('Failed draft'));
-      else await manager.handleCloudSync();
-      await vi.waitFor(() =>
-        expect(document.querySelector('.gv-notification-error')).not.toBeNull(),
-      );
+      else await manager.transfer.sync();
+      await vi.waitFor(() => expect(hasErrorNotice()).toBe(true));
       await vi.advanceTimersByTimeAsync(0);
 
-      expect(window.alert).not.toHaveBeenCalled();
+      expect(importNotices()).toEqual([]);
       expect(notificationText()).not.toContain(getTranslationSync('downloadMergeSuccess'));
       expect(local[manager.activeStorageKey]).toEqual(original);
       expect.soft(manager.data).toEqual(original);
       window.dispatchEvent(new Event('beforeunload'));
+      await vi.waitFor(() => expect(backupData(manager, 'beforeUnload')).toEqual(original));
       for (const slot of ['primary', 'emergency', 'beforeUnload'] as const) {
         expect.soft(backupData(manager, slot)).toEqual(original);
       }
@@ -474,6 +493,12 @@ describe('AI Studio folder persistence', () => {
         .soft((local[manager.activeStorageKey] as FolderData).folders.map((folder) => folder.name))
         .toEqual(['Private a', 'After failed draft']);
       window.dispatchEvent(new Event('beforeunload'));
+      await vi.waitFor(() =>
+        expect(backupData(manager, 'beforeUnload').folders.map((folder) => folder.name)).toEqual([
+          'Private a',
+          'After failed draft',
+        ]),
+      );
       expect
         .soft(manager.data.folders.map((folder) => folder.name))
         .toEqual(['Private a', 'After failed draft']);
@@ -498,13 +523,141 @@ describe('AI Studio folder persistence', () => {
       Object.assign(local, structuredClone(values));
     });
 
-    await manager.handleCloudSync();
+    await manager.transfer.sync();
 
     expect(notificationText()).not.toContain(getTranslationSync('downloadMergeSuccess'));
-    expect(document.querySelector('.gv-notification-error')).not.toBeNull();
+    expect(hasErrorNotice()).toBe(true);
     expect(manager.data).toEqual(original);
     expect(local[manager.activeStorageKey]).toEqual(original);
     expect(local.gvPromptItems).toEqual([]);
+  });
+
+  it('loads stored folders named after inherited object keys', async () => {
+    local[await accountKey('a')] = JSON.parse(
+      '{"folders":[' +
+        '{"id":"__proto__","name":"Proto","parentId":null,"isExpanded":true,"createdAt":1,"updatedAt":1},' +
+        '{"id":"constructor","name":"Ctor","parentId":null,"isExpanded":true,"createdAt":1,"updatedAt":1}],' +
+        '"folderContents":{}}',
+    );
+    const instance = new AIStudioFolderManager();
+    managers.push(instance as unknown as Manager);
+
+    await instance.init();
+
+    const list = treeText();
+    expect(list).toContain('Proto');
+    expect(list).toContain('Ctor');
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it('refuses a folder whose id every object inherits', async () => {
+    const manager = await mountManager();
+    const key = manager.activeStorageKey;
+
+    chooseImport(manager, {
+      folders: [{ ...folderData('P').folders[0], id: '__proto__' }],
+      folderContents: {},
+    });
+    await vi.waitFor(() =>
+      expect(toastDriver.messages()).toContain(getTranslationSync('folder_import_invalid_format')),
+    );
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(manager.data).toEqual(folderData('Private a'));
+    expect(local[key]).toEqual(folderData('Private a'));
+  });
+
+  it('refuses a file that repeats a folder id', async () => {
+    const manager = await mountManager();
+    const key = manager.activeStorageKey;
+    const [first] = folderData('P').folders;
+
+    chooseImport(manager, {
+      folders: [first, { ...first, parentId: first.id }],
+      folderContents: {},
+    });
+    await vi.waitFor(() =>
+      expect(toastDriver.messages()).toContain(getTranslationSync('folder_import_invalid_format')),
+    );
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(manager.data).toEqual(folderData('Private a'));
+    expect(local[key]).toEqual(folderData('Private a'));
+  });
+
+  it.each([
+    ['its own parent', [['a', 'a']], 'a'],
+    [
+      'a pair of folders',
+      [
+        ['a', 'b'],
+        ['b', 'a'],
+      ],
+      'a',
+    ],
+  ] as const)(
+    'imports a file where a folder is inside itself through %s, with that folder at the root',
+    async (_kind, links, cutId) => {
+      const manager = await mountManager();
+      const key = manager.activeStorageKey;
+      const [template] = folderData('P').folders;
+      const file: FolderData = {
+        folders: links.map(([id, parentId]) => ({ ...template, id, name: id, parentId })),
+        folderContents: Object.fromEntries(
+          links.map(([id]) => [
+            id,
+            [{ conversationId: `p_${id}`, title: id, url: `https://x.test/${id}`, addedAt: 1 }],
+          ]),
+        ),
+      };
+
+      chooseImport(manager, file, { format: 'gemini-voyager.folders.v1' });
+      await vi.waitFor(() =>
+        expect((local[key] as FolderData).folders).toHaveLength(1 + links.length),
+      );
+
+      const saved = local[key] as FolderData;
+      expect(saved.folders.slice(1)).toEqual(
+        file.folders.map((folder) =>
+          folder.id === cutId ? { ...folder, parentId: null } : folder,
+        ),
+      );
+      for (const [id] of links) expect(saved.folderContents[id]).toEqual(file.folderContents[id]);
+      expect(manager.data).toEqual(saved);
+      expect(toastDriver.messages()).not.toContain(
+        getTranslationSync('folder_import_invalid_format'),
+      );
+    },
+  );
+
+  it('refuses a folder file ChatGPT exported', async () => {
+    const manager = await mountManager();
+    const key = manager.activeStorageKey;
+    const chatgpt: FolderData = {
+      folders: [
+        { id: 'f', name: 'Trips', parentId: null, isExpanded: true, createdAt: 1, updatedAt: 1 },
+      ],
+      folderContents: {
+        f: [
+          {
+            conversationId: 'chatgpt:conv:abc',
+            title: 'Trip plan',
+            url: 'https://chatgpt.com/c/abc',
+            addedAt: 1,
+          },
+        ],
+      },
+    };
+
+    chooseImport(manager, chatgpt, { platform: 'chatgpt' });
+    await vi.waitFor(() =>
+      expect(toastDriver.messages()).toContain(getTranslationSync('folder_import_wrong_site')),
+    );
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(manager.data).toEqual(folderData('Private a'));
+    expect(local[key]).toEqual(folderData('Private a'));
+    expect(treeText()).not.toContain('Trips');
   });
 
   it('finishes accepted ordinary writes but abandons an unissued import after A → B → A', async () => {
@@ -534,10 +687,8 @@ describe('AI Studio folder persistence', () => {
     ).toEqual([['First ordinary edit'], ['Latest ordinary edit']]);
     expect(manager.data.folders.map((folder) => folder.name)).toEqual(['Latest ordinary edit']);
     expect(local[key]).toEqual(manager.data);
-    expect(window.alert).not.toHaveBeenCalled();
-    expect(document.querySelector('.gv-folder-list')?.textContent).not.toContain(
-      'Abandoned import',
-    );
+    expect(importNotices()).toEqual([]);
+    expect(treeText()).not.toContain('Abandoned import');
     expect(document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')?.disabled).toBe(false);
   });
 
@@ -558,7 +709,7 @@ describe('AI Studio folder persistence', () => {
       ok: true,
       data: { folders: { data: folderData('Cloud') }, prompts: { items: [prompt] } },
     });
-    const syncing = manager.handleCloudSync();
+    const syncing = manager.transfer.sync();
     await writes.firstStarted.promise;
     try {
       expect(manager.data).toEqual(original);
@@ -569,14 +720,14 @@ describe('AI Studio folder persistence', () => {
       selectAccount('a');
       await manager.refreshScopedDataOnAccountContextChange();
       expect(manager.data).toEqual(original);
-      expect(document.querySelector('.gv-folder-list')?.textContent).not.toContain('Cloud');
+      expect(treeText()).not.toContain('Cloud');
       expect(document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')?.disabled).toBe(true);
       writes.first.resolve();
       await syncing;
       expect(manager.data.folders.map((folder) => folder.name)).toEqual(['Private a', 'Cloud']);
       expect(local[key]).toEqual(manager.data);
       expect(local.gvPromptItems).toEqual([prompt]);
-      expect(document.querySelector('.gv-folder-list')?.textContent).toContain('Cloud');
+      expect(treeText()).toContain('Cloud');
       expect(document.querySelector<HTMLButtonElement>('.gv-folder-add-btn')?.disabled).toBe(false);
       expect(notificationText()).not.toContain(getTranslationSync('downloadMergeSuccess'));
     } finally {
@@ -596,10 +747,10 @@ describe('AI Studio folder persistence', () => {
     await manager.refreshScopedDataOnAccountContextChange();
     writes.first.resolve();
     await vi.advanceTimersByTimeAsync(0);
-    expect(window.alert).not.toHaveBeenCalled();
+    expect(importNotices()).toEqual([]);
     expect(manager.data).toEqual(folderData('Private b'));
     expect(local[bKey]).toEqual(folderData('Private b'));
-    expect(document.querySelector('.gv-folder-list')?.textContent).toContain('Private b');
+    expect(treeText()).toContain('Private b');
     expect((local[aKey] as FolderData).folders.map((folder) => folder.name)).toEqual([
       'Private a',
       'Imported into a',
@@ -620,14 +771,14 @@ describe('AI Studio folder persistence', () => {
       await manager.refreshScopedDataOnAccountContextChange();
       selectAccount('a');
       await manager.refreshScopedDataOnAccountContextChange();
-      expect(document.querySelector('.gv-folder-list')?.textContent).toContain('Legacy');
+      expect(treeText()).toContain('Legacy');
 
       chooseImport(manager, folderData('Imported after migration'));
       // An incorrectly concurrent import can finish before the slow migration.
       writes.tail.resolve(true);
       await vi.advanceTimersByTimeAsync(0);
       expect.soft(writes.snapshots).toHaveLength(1);
-      expect.soft(window.alert).not.toHaveBeenCalled();
+      expect.soft(importNotices()).toEqual([]);
       writes.first.resolve();
       await migration;
       await vi.advanceTimersByTimeAsync(0);
@@ -638,9 +789,7 @@ describe('AI Studio folder persistence', () => {
       ]);
       expect(local[key]).toEqual(manager.data);
       expect(backupData(manager, 'primary')).toEqual(manager.data);
-      expect(document.querySelector('.gv-folder-list')?.textContent).toContain(
-        'Imported after migration',
-      );
+      expect(treeText()).toContain('Imported after migration');
       expect(local[storageKey]).toEqual(legacy);
     } finally {
       writes.first.resolve();

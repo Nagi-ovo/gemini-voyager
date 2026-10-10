@@ -1,0 +1,52 @@
+/* Shared tokens for Voyager's body-level layers (confirm, toast).
+ * Every layer renders in its own shadow root, and `attachShadowSurface` mirrors
+ * the page's `data-gv-scheme` and `body.gv-rtl` onto the host, so the tokens key
+ * off `:host(...)`: page selectors cannot reach a shadow tree. These layers float
+ * above every supported page, so their dark surface is lighter than the darkest
+ * site background.
+ * The font is pinned like the prompt panel's and the timeline tooltip's: the
+ * host's own font ('Google Sans' on Gemini) would make Voyager differ per site.
+ * The accent is inherited from `<html>` (`--gv-pm-brand`, set inline per site), and
+ * every token here names a literal fallback so a page without contentStyle.css
+ * still paints the layer. */
+:host {
+  --gv-ui-surface: oklch(0.995 0.002 250);
+  --gv-ui-surface-hover: oklch(0.97 0.003 250);
+  --gv-ui-text: oklch(0.14 0.004 285);
+  --gv-ui-text-muted: oklch(0.45 0.01 270);
+  --gv-ui-border: oklch(0.92 0.004 250 / 0.7);
+  --gv-ui-shadow: 0 6px 20px oklch(0 0 0 / 0.16);
+  --gv-ui-primary: var(--gv-pm-brand, var(--gv-pm-brand-default, oklch(0.601 0.1 140)));
+  --gv-ui-primary-fg: var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default, #ffffff));
+  --gv-ui-danger: oklch(0.55 0.19 25);
+  --gv-ui-danger-fg: oklch(1 0 0);
+  --gv-ui-warning: #f59e0b;
+  --gv-ui-info: #94a3b8;
+  --gv-ui-pending: #0ea5e9;
+  --gv-ui-focus-ring: var(--gv-pm-brand, var(--gv-pm-brand-default, oklch(0.601 0.1 140)));
+  --gv-ui-font:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --gv-ui-motion: 160ms;
+  --gv-ui-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* The one stacking value for every body-level layer. Layers share it, so the
+     host inserted later paints on top: a confirm opened over a toast covers it. */
+  --gv-z-top: 2147483647;
+}
+
+:host([data-gv-scheme='dark']:not([data-gv-ui-scheme='light'])),
+:host([data-gv-ui-scheme='dark']) {
+  --gv-ui-surface: oklch(0.29 0.006 285);
+  --gv-ui-surface-hover: oklch(0.33 0.006 285);
+  --gv-ui-text: oklch(0.92 0.004 250);
+  --gv-ui-text-muted: oklch(0.72 0.01 270);
+  --gv-ui-border: oklch(0.38 0.008 285 / 0.7);
+  --gv-ui-shadow: 0 6px 20px oklch(0 0 0 / 0.28);
+  --gv-ui-danger: oklch(0.72 0.15 25);
+  --gv-ui-danger-fg: oklch(0.2 0.008 285);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    --gv-ui-motion: 0ms;
+  }
+}

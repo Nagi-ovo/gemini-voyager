@@ -90,15 +90,44 @@ describe('cloud plugin-state restore', () => {
     });
   });
 
+  it('rejects a merge restore when local state cannot be read, keeping local-only entries', async () => {
+    (chrome.storage.local.get as unknown as Mock).mockRejectedValue(new Error('get failed'));
+
+    await expect(
+      restorePluginState({ cloud: { enabled: true, installedAt: 4 } }, 'merge'),
+    ).rejects.toThrow('get failed');
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+  });
+
   it('replaces local plugin state in overwrite mode', async () => {
+    (chrome.storage.local.get as unknown as Mock).mockResolvedValue({
+      gvPluginsState: { localOnly: { enabled: true, installedAt: 1 } },
+    });
     await restorePluginState(
       { cloud: { enabled: false, installedAt: 5, settings: { compact: true } } },
       'overwrite',
     );
 
-    expect(chrome.storage.local.get).not.toHaveBeenCalled();
     expect(chrome.storage.local.set).toHaveBeenCalledWith({
       gvPluginsState: {
+        cloud: { enabled: false, installedAt: 5, settings: { compact: true } },
+      },
+    });
+  });
+
+  it('still overwrites when local state cannot be read, with local plugins off', async () => {
+    (chrome.storage.local.get as unknown as Mock).mockRejectedValue(new Error('get failed'));
+    await restorePluginState(
+      {
+        'local.me.wide': { enabled: true, installedAt: 5 },
+        cloud: { enabled: false, installedAt: 5, settings: { compact: true } },
+      },
+      'overwrite',
+    );
+
+    expect(chrome.storage.local.set).toHaveBeenCalledWith({
+      gvPluginsState: {
+        'local.me.wide': { enabled: false, installedAt: 5 },
         cloud: { enabled: false, installedAt: 5, settings: { compact: true } },
       },
     });

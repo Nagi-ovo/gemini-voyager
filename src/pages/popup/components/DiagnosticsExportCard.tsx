@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Copy, Download, FileJson, X } from 'lucide-react';
 
+import type { NativeHealthEntry } from '@/core/gemini/nativeHealth';
 import {
   type DiagnosticPluginInput,
   type VoyagerDiagnosticsPayload,
@@ -17,6 +18,8 @@ import { useLanguage } from '../../../contexts/LanguageContext';
 export interface DiagnosticsExportCardProps {
   activeUrl: string;
   loading?: boolean;
+  /** Gemini anchors the active page could not find (empty when healthy). */
+  nativeHealth?: readonly NativeHealthEntry[];
   plugins: readonly DiagnosticPluginInput[];
 }
 
@@ -25,6 +28,7 @@ type CopyStatus = 'copying' | 'error' | 'idle' | 'success';
 export function DiagnosticsExportCard({
   activeUrl,
   loading = false,
+  nativeHealth = [],
   plugins,
 }: DiagnosticsExportCardProps) {
   const { t } = useLanguage();
@@ -45,7 +49,7 @@ export function DiagnosticsExportCard({
   }, [payload]);
 
   const handlePreview = (): void => {
-    setPayload(buildVoyagerDiagnostics({ activeUrl, plugins }));
+    setPayload(buildVoyagerDiagnostics({ activeUrl, nativeHealth, plugins }));
     setCopyStatus('idle');
   };
 

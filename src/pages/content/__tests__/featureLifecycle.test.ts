@@ -152,6 +152,63 @@ describe('createNativeFeatureToggle', () => {
     expect(toggle.isMounted()).toBe(true);
   });
 
+  it('follows only the storage areas its toggle names', async () => {
+    const start = vi.fn(() => () => {});
+    const syncOnly: NativeFeature = {
+      ...feature(start),
+      toggle: { key: 'gvProbe', isEnabled: (value) => value === true, areas: ['sync'] },
+    };
+    const toggle = createNativeFeatureToggle(new CleanupManager(), syncOnly);
+
+    toggle.handleChange({ gvProbe: { newValue: true } }, 'local');
+    await toggle.applyInitial(false);
+    expect(start).not.toHaveBeenCalled();
+
+    toggle.handleChange({ gvProbe: { newValue: true } }, 'sync');
+    await vi.waitFor(() => expect(start).toHaveBeenCalledOnce());
+  });
+
+  it('stops a start that finishes after destroy, and ignores later changes', async () => {
+    const pending = deferred<() => void>();
+    const stop = vi.fn();
+    const start = vi.fn(() => pending.promise);
+    const manager = new CleanupManager();
+    const toggle = createNativeFeatureToggle(manager, feature(start));
+
+    void toggle.applyInitial(true);
+    await vi.waitFor(() => expect(start).toHaveBeenCalledOnce());
+    toggle.destroy();
+    pending.resolve(stop);
+
+    await vi.waitFor(() => expect(stop).toHaveBeenCalledOnce());
+    expect(toggle.isMounted()).toBe(false);
+    expect(manager.list()).toEqual([]);
+
+    toggle.handleChange({ gvProbe: { newValue: true } }, 'sync');
+    await toggle.applyInitial(true);
+    expect(start).toHaveBeenCalledOnce();
+  });
+
+  it('stops a mounted feature once when page teardown also destroys its toggle', async () => {
+    const stop = vi.fn();
+    const manager = new CleanupManager();
+    const toggle = createNativeFeatureToggle(
+      manager,
+      feature(() => stop),
+    );
+    await toggle.applyInitial(true);
+    // The storage listener's disposal destroys the toggle during the same teardown.
+    manager.registerCleanupFunction(
+      () => toggle.destroy(),
+      CleanupPositions.RemoveStorageOnChangedListener,
+    );
+
+    manager.executeCleanups();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+
+    expect(stop).toHaveBeenCalledOnce();
+  });
+
   it('refuses a feature without a toggle', () => {
     expect(() =>
       createNativeFeatureToggle(new CleanupManager(), {

@@ -6,7 +6,7 @@ on:
 
 jobs:
   approve-contributor:
-    if: github.repository == 'Nagi-ovo/voyager' && startsWith(github.event.comment.body, '/approve')
+    if: github.repository == 'voyager-crew/voyager' && startsWith(github.event.comment.body, '/approve')
     runs-on: ubuntu-latest
     permissions:
       contents: read

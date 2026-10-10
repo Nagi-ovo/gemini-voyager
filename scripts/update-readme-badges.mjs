@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 
-const owner = 'Nagi-ovo';
+const owner = 'voyager-crew';
 const repo = 'voyager';
 const badgeColor = '#5f8f55';
 const outDirs = [new URL('../docs/public/badges/', import.meta.url)];

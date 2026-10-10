@@ -1,6 +1,7 @@
 export interface NativeSidebarObserverCallbacks {
   isDestroyed: () => boolean;
-  enhanceConversation: (row: HTMLElement) => void;
+  /** `pass` is one token per drain: every row of a drain shares it, and the drain edits no folder. */
+  enhanceConversation: (row: HTMLElement, pass: object) => void;
   hasStoredConversations: () => boolean;
   onTitlesChanged: () => void | Promise<void>;
 }
@@ -142,11 +143,12 @@ export class NativeSidebarObserver {
   private drainEnhancementQueue(deadline?: IdleDeadline): void {
     const fallbackDeadline = performance.now() + ENHANCEMENT_IDLE_BUDGET_MS;
     let processed = 0;
+    const pass = {};
 
     for (const convEl of this.enhancementQueue) {
       this.enhancementQueue.delete(convEl);
       if (!convEl.isConnected) continue; // removed while queued
-      this.callbacks.enhanceConversation(convEl);
+      this.callbacks.enhanceConversation(convEl, pass);
       processed += 1;
 
       const outOfIdleTime =

@@ -177,6 +177,35 @@ describe('KeyboardShortcutService', () => {
     editor.remove();
   });
 
+  it('ignores shortcuts typed into an input inside an open shadow root', async () => {
+    await keyboardShortcutService.saveConfig(createCustomSingleLetterConfig());
+
+    await keyboardShortcutService.init();
+
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    const input = document.createElement('input');
+    host.attachShadow({ mode: 'open' }).appendChild(input);
+    input.focus();
+
+    const listener = vi.fn();
+    const unsubscribe = keyboardShortcutService.on(listener);
+    const event = new KeyboardEvent('keydown', {
+      key: 'n',
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+    });
+
+    input.dispatchEvent(event);
+
+    expect(listener).not.toHaveBeenCalled();
+    expect(event.defaultPrevented).toBe(false);
+
+    unsubscribe();
+    host.remove();
+  });
+
   it('ignores shortcuts while a contenteditable chat input is focused', async () => {
     await keyboardShortcutService.saveConfig(createCustomSingleLetterConfig());
 
