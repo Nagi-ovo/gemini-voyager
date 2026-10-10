@@ -2,7 +2,7 @@
 name: create-voyager-plugin
 description: Create or change a Voyager declarative plugin, site adapter, or native primitive.
 metadata:
-  version: '1.3.0'
+  version: '1.4.0'
 ---
 
 # Create a Voyager plugin
