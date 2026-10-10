@@ -26,7 +26,9 @@ const PAGE =
   '<li id="loose"><p id="loose-p">Loose</p></li></ul>' +
   '<p id="block-math"><span class="katex-display"><span class="katex">y</span></span></p>' +
   '<pre><code id="code">code</code></pre>' +
-  '<table><tbody><tr><td><p id="cell">Cell</p></td></tr></tbody></table>' +
+  '<table><thead><tr><th id="head">Head</th></tr></thead><tbody><tr><td id="cell">' +
+  '<p id="cell-p">Cell</p><table><tbody><tr><td id="inner-cell">Inner</td></tr></tbody></table>' +
+  '</td></tr></tbody></table>' +
   '<p id="last">Last</p></div></div>';
 
 // jsdom leaves var() unresolved; the plugin sets its variables on <body>.
@@ -97,7 +99,20 @@ describe('DeepSeek reading typography', () => {
     }
   });
 
-  it('keeps code blocks, block formulas, tables, thinking and user messages native', async () => {
+  it('sizes table text with the answer without compounding nested tables', async () => {
+    const engine = await mountPage({ ...OFF, fontSizeEnabled: true, fontSize: 125 });
+    try {
+      expect(applied('head', 'font-size')).toBe('125%');
+      expect(applied('cell', 'font-size')).toBe('125%');
+      // Text inside a cell inherits the cell's size instead of scaling again.
+      expect(applied('cell-p', 'font-size')).toBe('');
+      expect(applied('inner-cell', 'font-size')).toBe('');
+    } finally {
+      engine.unmountAll();
+    }
+  });
+
+  it('keeps code blocks, block formulas, thinking and user messages native', async () => {
     const engine = await mountPage({
       ...OFF,
       fontSizeEnabled: true,
@@ -106,7 +121,7 @@ describe('DeepSeek reading typography', () => {
       lineHeight: 200,
     });
     try {
-      for (const id of ['block-math', 'code', 'cell', 'think', 'user']) {
+      for (const id of ['block-math', 'code', 'think', 'user']) {
         expect(applied(id, 'font-size'), id).toBe('');
         expect(applied(id, 'line-height'), id).toBe('');
       }

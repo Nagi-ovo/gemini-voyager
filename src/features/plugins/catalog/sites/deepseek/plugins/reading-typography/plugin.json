@@ -3,11 +3,11 @@
   "id": "voyager.deepseek-reading-typography",
   "name": "DeepSeek · Reading Typography",
   "version": "1.0.0",
-  "description": "Adjust answer text size, line height and paragraph spacing. Code blocks, block formulas, tables and the composer keep their native style.",
+  "description": "Adjust answer text size, line height and paragraph spacing. Table text follows the size; code blocks, block formulas and the composer keep their native style.",
   "i18n": {
     "zh": {
       "name": "DeepSeek · 阅读排版",
-      "description": "调整回答正文的字号、行高和段落间距；代码块、块级公式、表格和输入框保持原样。",
+      "description": "调整回答正文的字号、行高和段落间距；表格文字随字号缩放；代码块、块级公式和输入框保持原样。",
       "settings": {
         "fontSizeEnabled": {
           "label": "自定义正文字号"
@@ -34,7 +34,7 @@
     },
     "zh_TW": {
       "name": "DeepSeek · 閱讀排版",
-      "description": "調整回覆正文的字級、行高和段落間距；程式碼區塊、區塊公式、表格和輸入框保持原樣。",
+      "description": "調整回覆正文的字級、行高和段落間距；表格文字隨字級縮放；程式碼區塊、區塊公式和輸入框保持原樣。",
       "settings": {
         "fontSizeEnabled": {
           "label": "自訂正文字級"
@@ -61,7 +61,7 @@
     },
     "ja": {
       "name": "DeepSeek · 読書レイアウト",
-      "description": "回答本文の文字サイズ、行間、段落間隔を調整します。コードブロック、ブロック数式、表、入力欄はそのままです。",
+      "description": "回答本文の文字サイズ、行間、段落間隔を調整します。表の文字も文字サイズに合わせて変わり、コードブロック、ブロック数式、入力欄はそのままです。",
       "settings": {
         "fontSizeEnabled": {
           "label": "文字サイズを変更"
@@ -88,7 +88,7 @@
     },
     "ko": {
       "name": "DeepSeek · 읽기 서식",
-      "description": "답변 본문의 글자 크기, 줄 높이, 문단 간격을 조절합니다. 코드 블록, 블록 수식, 표, 입력창은 그대로 유지됩니다.",
+      "description": "답변 본문의 글자 크기, 줄 높이, 문단 간격을 조절합니다. 표 글자도 글자 크기를 따르며, 코드 블록, 블록 수식, 입력창은 그대로 유지됩니다.",
       "settings": {
         "fontSizeEnabled": {
           "label": "글자 크기 변경"
@@ -115,7 +115,7 @@
     },
     "fr": {
       "name": "DeepSeek · Mise en forme de lecture",
-      "description": "Ajuste la taille du texte, l'interligne et l'espacement des paragraphes des réponses. Les blocs de code, les formules en bloc, les tableaux et la zone de saisie restent intacts.",
+      "description": "Ajuste la taille du texte, l'interligne et l'espacement des paragraphes des réponses. Le texte des tableaux suit la taille ; les blocs de code, les formules en bloc et la zone de saisie restent intacts.",
       "settings": {
         "fontSizeEnabled": {
           "label": "Personnaliser la taille du texte"
@@ -142,7 +142,7 @@
     },
     "es": {
       "name": "DeepSeek · Formato de lectura",
-      "description": "Ajusta el tamaño del texto, el interlineado y el espacio entre párrafos de las respuestas. Los bloques de código, las fórmulas en bloque, las tablas y el cuadro de entrada no cambian.",
+      "description": "Ajusta el tamaño del texto, el interlineado y el espacio entre párrafos de las respuestas. El texto de las tablas sigue el tamaño; los bloques de código, las fórmulas en bloque y el cuadro de entrada no cambian.",
       "settings": {
         "fontSizeEnabled": {
           "label": "Personalizar tamaño del texto"
@@ -169,7 +169,7 @@
     },
     "pt": {
       "name": "DeepSeek · Formatação de leitura",
-      "description": "Ajusta o tamanho do texto, a altura da linha e o espaço entre parágrafos das respostas. Blocos de código, fórmulas em bloco, tabelas e a caixa de entrada não mudam.",
+      "description": "Ajusta o tamanho do texto, a altura da linha e o espaço entre parágrafos das respostas. O texto das tabelas acompanha o tamanho; blocos de código, fórmulas em bloco e a caixa de entrada não mudam.",
       "settings": {
         "fontSizeEnabled": {
           "label": "Personalizar tamanho do texto"
@@ -196,7 +196,7 @@
     },
     "ru": {
       "name": "DeepSeek · Оформление текста",
-      "description": "Настраивает размер текста, межстрочный интервал и отступы между абзацами в ответах. Блоки кода, блочные формулы, таблицы и поле ввода не меняются.",
+      "description": "Настраивает размер текста, межстрочный интервал и отступы между абзацами в ответах. Текст таблиц масштабируется вместе с ним; блоки кода, блочные формулы и поле ввода не меняются.",
       "settings": {
         "fontSizeEnabled": {
           "label": "Настроить размер текста"
@@ -223,7 +223,7 @@
     },
     "ar": {
       "name": "DeepSeek · تنسيق القراءة",
-      "description": "يضبط حجم نص الإجابات وارتفاع السطر والتباعد بين الفقرات، مع إبقاء كتل الشيفرة والمعادلات الكتلية والجداول ومربع الإدخال كما هي.",
+      "description": "يضبط حجم نص الإجابات وارتفاع السطر والتباعد بين الفقرات، ويتبع نص الجداول الحجم نفسه، مع إبقاء كتل الشيفرة والمعادلات الكتلية ومربع الإدخال كما هي.",
       "settings": {
         "fontSizeEnabled": {
           "label": "تخصيص حجم النص"

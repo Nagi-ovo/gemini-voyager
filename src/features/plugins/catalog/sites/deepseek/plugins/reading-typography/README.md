@@ -24,11 +24,11 @@ percent (80-150), and one spacing switch for line height (120-220 percent) and
 paragraph spacing (0-24 px). Both switches are off by default, and a switch that
 is off leaves its properties native.
 
-Only answer paragraphs and list items change. Nested items inherit the size, so
-a percentage never compounds. Inline code and inline math scale with the text
+Only answer paragraphs, list items and table cells change, as Gemini's text size
+does. Nested items and cells inherit the size, so a percentage never compounds. Inline code and inline math scale with the text
 around them. Code blocks keep their fixed size, and a paragraph that holds a
 block formula stays native because KaTeX sizes it relative to its parent.
-Headings, tables, thinking content, user messages and the composer are left
+Headings, thinking content, user messages and the composer are left
 alone. DeepSeek's native text is 16 px on a 28 px line; with only the size
 switch on, the line keeps that 1.75 ratio as the text grows.
 
