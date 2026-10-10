@@ -347,6 +347,11 @@ the host's own id for it where the site names one (`conversationIdAttribute` on 
 Claude's `data-conv-id`, or inside the turn's `turnItem`; a turn without it is unstarrable), else
 the URL when the turn entered the page (`turnOwnership.ts`).
 
+`tableCopy` (since 1.8.0, optional `turn` / `table` selectors defaulting to the adapter's
+`assistantTurn` and `table`) puts a shadow-root toolbar before each reply table that copies it as
+Markdown or TSV. The Markdown is conversation export's own `extractTable`, and TSV reads the same
+`collectTableRows`, so formulas stay LaTeX and copy never drifts from export.
+
 Some behaviour cannot be expressed as CSS or as the reversible DOM operations.
 A **primitive** is that behaviour, written once as first-party TypeScript inside
 the extension and given a name a manifest can call:

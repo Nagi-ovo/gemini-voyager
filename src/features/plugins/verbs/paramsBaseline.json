@@ -92,6 +92,13 @@
         "codeLine": { "type": "selector", "required": false },
         "language": { "type": "selector", "required": false }
       }
+    },
+    "tableCopy": {
+      "sinceEngine": "1.8.0",
+      "params": {
+        "turn": { "type": "selector", "required": false },
+        "table": { "type": "selector", "required": false }
+      }
     }
   }
 }

@@ -1769,6 +1769,22 @@
     "message": "程式碼",
     "description": "Diagram toolbar button that shows the diagram source code"
   },
+  "tableCopyMarkdownButton": {
+    "message": "將表格複製為 Markdown",
+    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as Markdown"
+  },
+  "tableCopyTsvButton": {
+    "message": "將表格複製為 TSV（用於試算表）",
+    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as tab-separated values for spreadsheets"
+  },
+  "tableCopyCopied": {
+    "message": "表格已複製",
+    "description": "Toast after a reply table was copied to the clipboard"
+  },
+  "tableCopyFailed": {
+    "message": "無法複製表格",
+    "description": "Toast when copying a reply table to the clipboard failed"
+  },
   "echartsFullscreenButton": {
     "message": "全螢幕",
     "description": "Button title to open an ECharts diagram in fullscreen"

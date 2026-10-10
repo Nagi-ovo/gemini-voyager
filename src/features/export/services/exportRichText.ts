@@ -22,6 +22,13 @@ interface SerializedTable {
   hasFormulas: boolean;
 }
 
+/**
+ * What inline text is written for: Markdown prose, a Markdown table cell (pipes
+ * inside formulas survive the cell syntax), or plain text such as a TSV cell,
+ * which keeps formulas as `$…$` but drops emphasis and code markers.
+ */
+export type InlineTextTarget = 'markdown' | 'markdownTable' | 'plain';
+
 export interface ProcessedInlineContent {
   html: string;
   text: string;
@@ -33,9 +40,10 @@ export interface ProcessedInlineContent {
 export function processInlineContent(
   element: HTMLElement,
   adapter: Pick<ExportContentDialect, 'extractInlineFormula'>,
-  forMarkdownTable = false,
+  target: InlineTextTarget = 'markdown',
 ): ProcessedInlineContent {
   let hasFormulas = false;
+  const forMarkdownTable = target === 'markdownTable';
   const htmlParts: string[] = [];
   const textParts: string[] = [];
 
@@ -57,7 +65,8 @@ export function processInlineContent(
     }
 
     if (processed.text) {
-      textParts.push(`${leadingSpace}${serializeMarkdown(processed.text)}${trailingSpace}`);
+      const text = target === 'plain' ? processed.text : serializeMarkdown(processed.text);
+      textParts.push(`${leadingSpace}${text}${trailingSpace}`);
     } else if (hasBoundaryWhitespace) {
       textParts.push(' ');
     }
@@ -99,16 +108,23 @@ export function processInlineContent(
         return;
       }
 
+      // A line break separates words; dropping it glued "a<br>b" into "ab".
+      if (el.tagName === 'BR') {
+        htmlParts.push('<br>');
+        textParts.push('\n');
+        return;
+      }
+
       // Emphasis
       if (el.tagName === 'I' || el.tagName === 'EM') {
-        const processed = processInlineContent(el as HTMLElement, adapter, forMarkdownTable);
+        const processed = processInlineContent(el as HTMLElement, adapter, target);
         appendFormattedContent(processed, 'em', (text) => `*${text}*`);
         return;
       }
 
       // Strong
       if (el.tagName === 'B' || el.tagName === 'STRONG') {
-        const processed = processInlineContent(el as HTMLElement, adapter, forMarkdownTable);
+        const processed = processInlineContent(el as HTMLElement, adapter, target);
         appendFormattedContent(processed, 'strong', (text) => `**${text}**`);
         return;
       }
@@ -132,7 +148,7 @@ export function processInlineContent(
             `<img src="${escapeHtmlAttribute(src)}" alt="${escapeHtmlAttribute(alt)}" />`,
           );
           const mdAlt = alt.replace(/\]/g, '\\]');
-          textParts.push(`![${mdAlt}](${src})`);
+          textParts.push(target === 'plain' ? alt : `![${mdAlt}](${src})`);
         }
         return;
       }
@@ -241,17 +257,7 @@ export function extractTable(
   stripExportArtifacts(cleanTable);
 
   // Convert to Markdown
-  const rowCells: Element[][] = [];
-  const headerCells = Array.from(table.querySelectorAll('thead tr td, thead tr th'));
-  if (headerCells.length > 0) {
-    rowCells.push(headerCells);
-  }
-
-  const bodyRows = table.querySelectorAll('tbody tr');
-  bodyRows.forEach((row) => {
-    rowCells.push(Array.from(row.querySelectorAll('td, th')));
-  });
-  const serializedTable = serializeTableRows(rowCells, adapter);
+  const serializedTable = serializeTableRows(collectTableRows(table), adapter);
 
   // Build Markdown table
   const markdownLines: string[] = [];
@@ -270,6 +276,23 @@ export function extractTable(
     text: markdownLines.join('\n'),
     hasFormulas: serializedTable.hasFormulas,
   };
+}
+
+/**
+ * The cells a table is exported from: every `thead` cell as one header row,
+ * then each `tbody` row. Markdown export and table copy read the same rows.
+ */
+export function collectTableRows(table: HTMLTableElement): Element[][] {
+  const rowCells: Element[][] = [];
+  const headerCells = Array.from(table.querySelectorAll('thead tr td, thead tr th'));
+  if (headerCells.length > 0) {
+    rowCells.push(headerCells);
+  }
+
+  table.querySelectorAll('tbody tr').forEach((row) => {
+    rowCells.push(Array.from(row.querySelectorAll('td, th')));
+  });
+  return rowCells;
 }
 
 function serializeTableRows(
@@ -292,7 +315,7 @@ function serializeTableCell(
   cell: HTMLElement,
   adapter: Pick<ExportContentDialect, 'extractInlineFormula'>,
 ): SerializedTableCell {
-  const processed = processInlineContent(cell, adapter, true);
+  const processed = processInlineContent(cell, adapter, 'markdownTable');
 
   return {
     text: escapeMarkdownTableCell(normalizeText(processed.text)),

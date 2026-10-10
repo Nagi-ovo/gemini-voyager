@@ -54,6 +54,11 @@
       "official": true
     },
     {
+      "name": "deepseek-table-copy",
+      "source": "sites/deepseek/plugins/table-copy/plugin.json",
+      "official": true
+    },
+    {
       "name": "chatgpt-user-latex",
       "source": "sites/chatgpt/plugins/user-latex/plugin.json",
       "official": true
