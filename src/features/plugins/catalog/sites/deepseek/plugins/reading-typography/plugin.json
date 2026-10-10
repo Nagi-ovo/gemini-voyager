@@ -2,207 +2,262 @@
   "$schema": "https://voyager.nagi.fun/plugin.schema.json",
   "id": "voyager.deepseek-reading-typography",
   "name": "DeepSeek · Reading Typography",
-  "description": "Adjust answer text size, line height and paragraph spacing without changing code, formulas or the composer.",
   "version": "1.0.0",
-  "author": "voyager-official",
-  "category": "readability",
-  "license": "MIT",
-  "engine": ">=1.4.0",
-  "tier": "declarative",
-  "matches": ["https://chat.deepseek.com/*"],
-  "requires": {
-    "semantic": ["assistantTurn"]
-  },
+  "description": "Adjust answer text size, line height and paragraph spacing. Code blocks, block formulas, tables and the composer keep their native style.",
   "i18n": {
     "zh": {
       "name": "DeepSeek · 阅读排版",
-      "description": "调整回答正文的字号、行高和段落间距，不改变代码、公式或输入框。",
+      "description": "调整回答正文的字号、行高和段落间距；代码块、块级公式、表格和输入框保持原样。",
       "settings": {
         "fontSizeEnabled": {
           "label": "自定义正文字号"
         },
         "fontSize": {
-          "label": "正文字号（px）"
+          "label": "正文字号（%）",
+          "minLabel": "小",
+          "maxLabel": "大"
         },
-        "lineHeightEnabled": {
-          "label": "自定义行高"
+        "spacingEnabled": {
+          "label": "自定义间距"
         },
         "lineHeight": {
-          "label": "行高（%）"
+          "label": "行高（%）",
+          "minLabel": "紧凑",
+          "maxLabel": "宽松"
         },
-        "paragraphSpace": {
-          "label": "段落间距（0 使用原样式）"
+        "paragraphSpacing": {
+          "label": "段落间距（px）",
+          "minLabel": "紧凑",
+          "maxLabel": "宽松"
         }
       }
     },
     "zh_TW": {
       "name": "DeepSeek · 閱讀排版",
-      "description": "調整回覆正文的字級、行高和段落間距，不改變程式碼、公式或輸入框。",
+      "description": "調整回覆正文的字級、行高和段落間距；程式碼區塊、區塊公式、表格和輸入框保持原樣。",
       "settings": {
         "fontSizeEnabled": {
           "label": "自訂正文字級"
         },
         "fontSize": {
-          "label": "正文字級（px）"
+          "label": "正文字級（%）",
+          "minLabel": "小",
+          "maxLabel": "大"
         },
-        "lineHeightEnabled": {
-          "label": "自訂行高"
+        "spacingEnabled": {
+          "label": "自訂間距"
         },
         "lineHeight": {
-          "label": "行高（%）"
+          "label": "行高（%）",
+          "minLabel": "緊湊",
+          "maxLabel": "寬鬆"
         },
-        "paragraphSpace": {
-          "label": "段落間距（0 使用原樣式）"
+        "paragraphSpacing": {
+          "label": "段落間距（px）",
+          "minLabel": "緊湊",
+          "maxLabel": "寬鬆"
         }
       }
     },
     "ja": {
       "name": "DeepSeek · 読書レイアウト",
-      "description": "コード、数式、入力欄を変更せず、回答本文の文字サイズ、行間、段落間隔を調整します。",
+      "description": "回答本文の文字サイズ、行間、段落間隔を調整します。コードブロック、ブロック数式、表、入力欄はそのままです。",
       "settings": {
         "fontSizeEnabled": {
           "label": "文字サイズを変更"
         },
         "fontSize": {
-          "label": "文字サイズ（px）"
+          "label": "文字サイズ（%）",
+          "minLabel": "小",
+          "maxLabel": "大"
         },
-        "lineHeightEnabled": {
-          "label": "行間を変更"
+        "spacingEnabled": {
+          "label": "間隔を変更"
         },
         "lineHeight": {
-          "label": "行間（%）"
+          "label": "行間（%）",
+          "minLabel": "狭め",
+          "maxLabel": "広め"
         },
-        "paragraphSpace": {
-          "label": "段落間隔（0 は元の表示）"
+        "paragraphSpacing": {
+          "label": "段落間隔（px）",
+          "minLabel": "狭め",
+          "maxLabel": "広め"
         }
       }
     },
     "ko": {
       "name": "DeepSeek · 읽기 서식",
-      "description": "코드, 수식, 입력창을 유지하면서 답변 본문의 글자 크기와 줄 및 문단 간격을 조절합니다.",
+      "description": "답변 본문의 글자 크기, 줄 높이, 문단 간격을 조절합니다. 코드 블록, 블록 수식, 표, 입력창은 그대로 유지됩니다.",
       "settings": {
         "fontSizeEnabled": {
           "label": "글자 크기 변경"
         },
         "fontSize": {
-          "label": "글자 크기 (px)"
+          "label": "글자 크기(%)",
+          "minLabel": "작게",
+          "maxLabel": "크게"
         },
-        "lineHeightEnabled": {
-          "label": "줄 높이 변경"
+        "spacingEnabled": {
+          "label": "간격 변경"
         },
         "lineHeight": {
-          "label": "줄 높이 (%)"
+          "label": "줄 높이(%)",
+          "minLabel": "좁게",
+          "maxLabel": "넓게"
         },
-        "paragraphSpace": {
-          "label": "문단 간격 (0: 원래 스타일)"
+        "paragraphSpacing": {
+          "label": "문단 간격(px)",
+          "minLabel": "좁게",
+          "maxLabel": "넓게"
         }
       }
     },
     "fr": {
       "name": "DeepSeek · Mise en forme de lecture",
-      "description": "Ajuste le texte des réponses sans modifier le code, les formules ou la saisie.",
+      "description": "Ajuste la taille du texte, l'interligne et l'espacement des paragraphes des réponses. Les blocs de code, les formules en bloc, les tableaux et la zone de saisie restent intacts.",
       "settings": {
         "fontSizeEnabled": {
           "label": "Personnaliser la taille du texte"
         },
         "fontSize": {
-          "label": "Taille du texte (px)"
+          "label": "Taille du texte (%)",
+          "minLabel": "Petit",
+          "maxLabel": "Grand"
         },
-        "lineHeightEnabled": {
-          "label": "Personnaliser l'interligne"
+        "spacingEnabled": {
+          "label": "Personnaliser l'espacement"
         },
         "lineHeight": {
-          "label": "Interligne (%)"
+          "label": "Interligne (%)",
+          "minLabel": "Serré",
+          "maxLabel": "Aéré"
         },
-        "paragraphSpace": {
-          "label": "Espacement des paragraphes (0 : original)"
+        "paragraphSpacing": {
+          "label": "Espacement des paragraphes (px)",
+          "minLabel": "Serré",
+          "maxLabel": "Aéré"
         }
       }
     },
     "es": {
       "name": "DeepSeek · Formato de lectura",
-      "description": "Ajusta el texto de las respuestas sin cambiar código, fórmulas ni el cuadro de entrada.",
+      "description": "Ajusta el tamaño del texto, el interlineado y el espacio entre párrafos de las respuestas. Los bloques de código, las fórmulas en bloque, las tablas y el cuadro de entrada no cambian.",
       "settings": {
         "fontSizeEnabled": {
           "label": "Personalizar tamaño del texto"
         },
         "fontSize": {
-          "label": "Tamaño del texto (px)"
+          "label": "Tamaño del texto (%)",
+          "minLabel": "Pequeño",
+          "maxLabel": "Grande"
         },
-        "lineHeightEnabled": {
-          "label": "Personalizar altura de línea"
+        "spacingEnabled": {
+          "label": "Personalizar espaciado"
         },
         "lineHeight": {
-          "label": "Altura de línea (%)"
+          "label": "Interlineado (%)",
+          "minLabel": "Ajustado",
+          "maxLabel": "Amplio"
         },
-        "paragraphSpace": {
-          "label": "Espacio entre párrafos (0: original)"
+        "paragraphSpacing": {
+          "label": "Espacio entre párrafos (px)",
+          "minLabel": "Ajustado",
+          "maxLabel": "Amplio"
         }
       }
     },
     "pt": {
       "name": "DeepSeek · Formatação de leitura",
-      "description": "Ajusta o texto das respostas sem alterar código, fórmulas ou a caixa de entrada.",
+      "description": "Ajusta o tamanho do texto, a altura da linha e o espaço entre parágrafos das respostas. Blocos de código, fórmulas em bloco, tabelas e a caixa de entrada não mudam.",
       "settings": {
         "fontSizeEnabled": {
           "label": "Personalizar tamanho do texto"
         },
         "fontSize": {
-          "label": "Tamanho do texto (px)"
+          "label": "Tamanho do texto (%)",
+          "minLabel": "Pequeno",
+          "maxLabel": "Grande"
         },
-        "lineHeightEnabled": {
-          "label": "Personalizar altura da linha"
+        "spacingEnabled": {
+          "label": "Personalizar espaçamento"
         },
         "lineHeight": {
-          "label": "Altura da linha (%)"
+          "label": "Altura da linha (%)",
+          "minLabel": "Compacto",
+          "maxLabel": "Espaçoso"
         },
-        "paragraphSpace": {
-          "label": "Espaço entre parágrafos (0: original)"
+        "paragraphSpacing": {
+          "label": "Espaço entre parágrafos (px)",
+          "minLabel": "Compacto",
+          "maxLabel": "Espaçoso"
         }
       }
     },
     "ru": {
       "name": "DeepSeek · Оформление текста",
-      "description": "Настройка текста ответов без изменения кода, формул и поля ввода.",
+      "description": "Настраивает размер текста, межстрочный интервал и отступы между абзацами в ответах. Блоки кода, блочные формулы, таблицы и поле ввода не меняются.",
       "settings": {
         "fontSizeEnabled": {
           "label": "Настроить размер текста"
         },
         "fontSize": {
-          "label": "Размер текста (пикс.)"
+          "label": "Размер текста (%)",
+          "minLabel": "Мелкий",
+          "maxLabel": "Крупный"
         },
-        "lineHeightEnabled": {
-          "label": "Настроить межстрочный интервал"
+        "spacingEnabled": {
+          "label": "Настроить интервалы"
         },
         "lineHeight": {
-          "label": "Межстрочный интервал (%)"
+          "label": "Межстрочный интервал (%)",
+          "minLabel": "Плотный",
+          "maxLabel": "Свободный"
         },
-        "paragraphSpace": {
-          "label": "Интервал абзацев (0: исходный)"
+        "paragraphSpacing": {
+          "label": "Интервал между абзацами (px)",
+          "minLabel": "Плотный",
+          "maxLabel": "Свободный"
         }
       }
     },
     "ar": {
       "name": "DeepSeek · تنسيق القراءة",
-      "description": "ضبط نص الردود دون تغيير الشيفرة أو المعادلات أو مربع الإدخال.",
+      "description": "يضبط حجم نص الإجابات وارتفاع السطر والتباعد بين الفقرات، مع إبقاء كتل الشيفرة والمعادلات الكتلية والجداول ومربع الإدخال كما هي.",
       "settings": {
         "fontSizeEnabled": {
           "label": "تخصيص حجم النص"
         },
         "fontSize": {
-          "label": "حجم النص (بكسل)"
+          "label": "حجم النص (%)",
+          "minLabel": "صغير",
+          "maxLabel": "كبير"
         },
-        "lineHeightEnabled": {
-          "label": "تخصيص ارتفاع السطر"
+        "spacingEnabled": {
+          "label": "تخصيص التباعد"
         },
         "lineHeight": {
-          "label": "ارتفاع السطر (%)"
+          "label": "ارتفاع السطر (%)",
+          "minLabel": "ضيق",
+          "maxLabel": "واسع"
         },
-        "paragraphSpace": {
-          "label": "تباعد الفقرات (0: الأصلي)"
+        "paragraphSpacing": {
+          "label": "تباعد الفقرات (px)",
+          "minLabel": "ضيق",
+          "maxLabel": "واسع"
         }
       }
     }
+  },
+  "author": "voyager-official",
+  "category": "readability",
+  "license": "MIT",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/deepseek/plugins/reading-typography",
+  "engine": ">=1.4.0",
+  "tier": "declarative",
+  "matches": ["https://chat.deepseek.com/*"],
+  "requires": {
+    "semantic": ["assistantTurn"]
   },
   "contributes": {
     "settings": {
@@ -213,34 +268,40 @@
       },
       "fontSize": {
         "type": "number",
-        "label": "Text size (px)",
-        "default": 16,
-        "min": 12,
-        "max": 28
+        "label": "Text size (%)",
+        "minLabel": "Small",
+        "maxLabel": "Large",
+        "default": 100,
+        "min": 80,
+        "max": 150
       },
-      "lineHeightEnabled": {
+      "spacingEnabled": {
         "type": "boolean",
-        "label": "Custom line height",
+        "label": "Custom spacing",
         "default": false
       },
       "lineHeight": {
         "type": "number",
         "label": "Line height (%)",
+        "minLabel": "Tight",
+        "maxLabel": "Loose",
         "default": 160,
         "min": 120,
         "max": 220
       },
-      "paragraphSpace": {
+      "paragraphSpacing": {
         "type": "number",
-        "label": "Paragraph spacing (0: original)",
-        "default": 0,
+        "label": "Paragraph spacing (px)",
+        "minLabel": "Tight",
+        "maxLabel": "Loose",
+        "default": 16,
         "min": 0,
-        "max": 32
+        "max": 24
       }
     },
     "styles": [
       {
-        "css": "/* Disabled settings match no rule. Math/code paragraphs stay native so\n * inherited font sizes cannot distort their rendering. */\n.gv-plugin-deepseek-typography[data-gv-fontsize-enabled='true']\n  .ds-assistant-message-main-content\n  :is(p, li):not(table *, pre *):not(\n    :has(code, .katex, math, .MathJax, mjx-container, [data-math], [data-math-source])\n  ) {\n  font-size: clamp(12px, {{fontSize}}px, 28px) !important;\n}\n.gv-plugin-deepseek-typography[data-gv-lineheight-enabled='true']\n  .ds-assistant-message-main-content\n  :is(p, li):not(table *, pre *):not(\n    :has(code, .katex, math, .MathJax, mjx-container, [data-math], [data-math-source])\n  ) {\n  line-height: {{lineHeight}}% !important;\n  line-height: clamp(120%, {{lineHeight}}%, 220%) !important;\n}\n.gv-plugin-deepseek-typography:not([data-gv-paragraphspace='0'])\n  .ds-assistant-message-main-content\n  p:not(table *, pre *):not(\n    :has(code, .katex, math, .MathJax, mjx-container, [data-math], [data-math-source])\n  ) {\n  margin-block-end: {{paragraphSpace}}px !important;\n}\n"
+        "file": "style.css"
       }
     ],
     "domOps": [
@@ -250,7 +311,7 @@
           "kind": "semantic",
           "key": "assistantTurn"
         },
-        "className": "gv-plugin-deepseek-typography"
+        "className": "gv-plugin-deepseek-reading-typography"
       },
       {
         "op": "setAttribute",
@@ -258,7 +319,7 @@
           "kind": "semantic",
           "key": "assistantTurn"
         },
-        "name": "data-gv-fontsize-enabled",
+        "name": "data-gv-font-size",
         "value": "{{fontSizeEnabled}}"
       },
       {
@@ -267,17 +328,17 @@
           "kind": "semantic",
           "key": "assistantTurn"
         },
-        "name": "data-gv-lineheight-enabled",
-        "value": "{{lineHeightEnabled}}"
+        "name": "data-gv-spacing",
+        "value": "{{spacingEnabled}}"
       },
       {
-        "op": "setAttribute",
-        "target": {
-          "kind": "semantic",
-          "key": "assistantTurn"
-        },
-        "name": "data-gv-paragraphspace",
-        "value": "{{paragraphSpace}}"
+        "op": "setStyle",
+        "target": "body",
+        "styles": {
+          "--gv-plugin-reading-text-size": "{{fontSize}}%",
+          "--gv-plugin-reading-line-height": "{{lineHeight}}",
+          "--gv-plugin-reading-paragraph-spacing": "{{paragraphSpacing}}px"
+        }
       }
     ]
   }
