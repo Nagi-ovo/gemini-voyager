@@ -44,6 +44,7 @@ const enableSafariUpdateCheck = process.env.ENABLE_SAFARI_UPDATE_CHECK !== 'fals
 
 const safariMainWorldScripts = [
   {
+    // A static page-world hook exposes originals; visible preview blobs are low-resolution.
     matches: ['https://gemini.google.com/*', 'https://business.gemini.google/*'],
     js: ['public/fetchInterceptor.js'],
   },
@@ -154,6 +155,7 @@ export default mergeConfig(
           // Opened by the background on first install; nothing in the manifest
           // references it, so it must be a build input of its own.
           welcome: resolve(__dirname, 'src/pages/welcome/index.html'),
+          library: resolve(__dirname, 'src/pages/library/index.html'),
         },
       },
       // Safari-specific build optimizations

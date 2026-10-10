@@ -24,4 +24,4 @@ El Bundle ID de la aplicación no ha cambiado. Tus carpetas, biblioteca de promp
 
 Una vez hecho este reemplazo, las futuras versiones de Safari actualizan el nuevo «Voyager» mediante el actualizador automático integrado (Sparkle); ya no hará falta reemplazar nada a mano.
 
-¿Dudas? Escríbenos en [GitHub Issues](https://github.com/Nagi-ovo/voyager/issues).
+¿Dudas? Escríbenos en [GitHub Issues](https://github.com/voyager-crew/voyager/issues).

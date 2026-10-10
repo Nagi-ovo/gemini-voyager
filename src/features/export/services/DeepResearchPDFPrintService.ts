@@ -1,9 +1,16 @@
 import { isSafari } from '@/core/utils/browser';
 
-import type { PrintableDocumentContent } from './PDFPrintService';
 import { buildKatexExportStyles } from './katexExportStyles';
 import { buildMermaidExportStyles } from './mermaidExportStyles';
 import { isolateMermaidSvgImages } from './mermaidSvgImage';
+
+export interface PrintableDocumentContent {
+  title: string;
+  url: string;
+  exportedAt: string;
+  markdown: string;
+  html: string;
+}
 
 /**
  * Dedicated PDF print path for Deep Research reports.
@@ -177,7 +184,7 @@ export class DeepResearchPDFPrintService {
           <div class="gv-dr-print-report">${bodyHtml}</div>
         </div>
         <div class="gv-dr-print-footer">
-          <p>Exported from <a href="https://github.com/Nagi-ovo/voyager">Voyager</a></p>
+          <p>Exported from <a href="https://github.com/voyager-crew/voyager">Voyager</a></p>
           <p>Generated on ${this.escapeHTML(date)}</p>
         </div>
       </div>

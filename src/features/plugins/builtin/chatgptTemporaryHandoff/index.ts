@@ -1,5 +1,6 @@
 import { logger } from '@/core/services/LoggerService';
-import { DOMContentExtractor } from '@/features/export/services/DOMContentExtractor';
+import { createToaster } from '@/core/ui/toast/toaster';
+import { createContentExtractor } from '@/features/export/services/DOMContentExtractor';
 import type { ChatTurn } from '@/features/export/types/export';
 import { type Dispose, PluginScope } from '@/features/plugins/runtime/pluginScope';
 import type { PluginSettings } from '@/features/plugins/types';
@@ -8,39 +9,46 @@ import {
   chatgptCollectTurnContainers,
   isChatGptResponseGenerating,
 } from '@/pages/content/export/adapter/chatgpt';
+import { hasRenderedThread } from '@/pages/content/export/adapter/chatgptThread';
+import { readChatGptThreadTurns } from '@/pages/content/export/adapter/chatgptThreadExport';
 import { resolveExportAdapter } from '@/pages/content/export/adapter/platformAdapters';
 import { watchRouteChanges } from '@/pages/content/utils/routeWatcher';
 import { getCurrentLanguage } from '@/utils/i18n';
 
 import {
-  CHATGPT_COMPOSER_SELECTOR,
-  CHATGPT_NEW_CHAT_SELECTOR,
-  CHATGPT_SEND_CONTROL_SELECTOR,
-  CHATGPT_TEMP_TOGGLE_SELECTOR,
-  buildHandoffBackup,
-  cancelPendingHandoffRecovery,
-  discardPendingHandoff,
-  downloadHandoffBackup,
-  handoffTemporaryChat,
   hasCurrentComposerAttachments,
   isCurrentComposerAttachmentRemovalControl,
+  readCurrentComposerDraft,
+} from './composerDelivery';
+import {
+  cancelPendingHandoffRecovery,
+  handoffTemporaryChat,
   isHandoffPageUnloading,
   isTemporaryChat,
   markHandoffPageActive,
   markHandoffPageUnloading,
   pendingAttachmentPreviewReady,
-  planHandoff,
-  readCurrentComposerDraft,
   resumePendingHandoff,
 } from './handoff';
+import { buildHandoffBackup, downloadHandoffBackup, planHandoff } from './handoffPlan';
 import { type TemporaryHandoffCopy, getTemporaryHandoffCopy } from './i18n';
+import { discardPendingHandoff } from './pendingHandoff';
+import {
+  CHATGPT_COMPOSER_SELECTOR,
+  CHATGPT_NEW_CHAT_SELECTOR,
+  CHATGPT_SEND_CONTROL_SELECTOR,
+  CHATGPT_TEMP_TOGGLE_SELECTOR,
+} from './selectors';
 import { CHATGPT_TEMPORARY_HANDOFF_CSS } from './styles';
-import { showHandoffConfirmation, showHandoffProgress, showHandoffToast } from './ui';
+import { showHandoffConfirmation, showHandoffProgress } from './ui';
 
 const BUTTON_MARKER = 'data-gv-chatgpt-handoff-button';
 const HEADER_SELECTOR = '#conversation-header-actions';
 const SHARE_SELECTOR = '[data-testid="share-chat-button"]';
 const REFRESH_DELAY_MS = 80;
+const TOAST_MS = 4_500;
+/** Each outcome replaces the previous one: they report the same handoff. */
+const TOAST_CHANNEL = 'handoff';
 
 interface ButtonMountTarget {
   readonly parent: HTMLElement;
@@ -82,7 +90,10 @@ export async function collectTemporaryChatTurns(
   signal: AbortSignal,
   expectedUrl = location.href,
 ): Promise<ChatTurn[]> {
-  DOMContentExtractor.setExportAdapter(resolveExportAdapter());
+  const extractor = createContentExtractor(resolveExportAdapter());
+  // The current thread is virtualized: read it whole with the export's crawl.
+  if (hasRenderedThread()) return readChatGptThreadTurns({ signal, expectedUrl, extractor });
+  // Refuse incomplete or changed turns rather than hand off a partial or mixed conversation.
   const snapshot = chatgptCollectTurnContainers();
   if (isChatGptResponseGenerating() || snapshot.at(-1)?.role === 'user') {
     throw new Error('chatgpt_export_response_still_generating');
@@ -90,7 +101,11 @@ export async function collectTemporaryChatTurns(
   const snapshotIds = snapshot.map(({ id }) => id);
   const selectedIds = new Set(snapshotIds);
   if (selectedIds.size === 0) return [];
-  const turns = await buildChatGptTurnsForSelection(selectedIds, { signal, expectedUrl });
+  const turns = await buildChatGptTurnsForSelection(selectedIds, {
+    signal,
+    expectedUrl,
+    extractor,
+  });
   const currentSnapshot = chatgptCollectTurnContainers();
   if (
     isChatGptResponseGenerating() ||
@@ -103,6 +118,8 @@ export async function collectTemporaryChatTurns(
   return turns;
 }
 
+// Mark hard departure before root teardown so recovery survives navigation, but not disable.
+// Keep progress mounted until departure bookkeeping finishes.
 class ChatGptTemporaryHandoffPlugin {
   private button: HTMLButtonElement | null = null;
   private stopButton: Dispose | null = null;
@@ -114,6 +131,7 @@ class ChatGptTemporaryHandoffPlugin {
   private attachmentPreviewCheckInFlight = false;
   private attachmentPreviewCheckRequested = false;
   private attachmentPreviewResumeTriggered = false;
+  private readonly toaster = createToaster();
 
   constructor(
     private readonly scope: PluginScope,
@@ -123,6 +141,7 @@ class ChatGptTemporaryHandoffPlugin {
 
   start(): void {
     this.scope.style(CHATGPT_TEMPORARY_HANDOFF_CSS);
+    this.scope.child(this.toaster, 'chatgpt-temporary-handoff-toasts');
     this.scope.on(
       window,
       'beforeunload',
@@ -365,6 +384,10 @@ class ChatGptTemporaryHandoffPlugin {
     void stop?.();
   }
 
+  private toast(message: string, tone: 'info' | 'error' = 'info'): void {
+    this.toaster.show({ channel: TOAST_CHANNEL, message, tone, durationMs: TOAST_MS });
+  }
+
   private runOperation(action: (scope: PluginScope) => Promise<void>): void {
     const request = ++this.operationRequest;
     void (async () => {
@@ -382,7 +405,7 @@ class ChatGptTemporaryHandoffPlugin {
       } catch (error: unknown) {
         if (error instanceof DOMException && error.name === 'AbortError') return;
         logger.error('ChatGPT temporary handoff failed', { error: String(error) });
-        showHandoffToast(this.scope, this.copy.failed, 'error');
+        this.toast(this.copy.failed, 'error');
       } finally {
         await stop();
         if (this.stopOperation === stop) this.stopOperation = null;
@@ -393,16 +416,16 @@ class ChatGptTemporaryHandoffPlugin {
   private startHandoff(): void {
     this.runOperation(async (operationScope) => {
       if (!isTemporaryChat()) {
-        showHandoffToast(this.scope, this.copy.notTemporary, 'error');
+        this.toast(this.copy.notTemporary, 'error');
         return;
       }
       if (!(await showHandoffConfirmation(operationScope, this.copy))) return;
       if (!isTemporaryChat()) {
-        showHandoffToast(this.scope, this.copy.notTemporary, 'error');
+        this.toast(this.copy.notTemporary, 'error');
         return;
       }
       if (hasCurrentComposerAttachments()) {
-        showHandoffToast(this.scope, this.copy.attachmentDraftUnsupported, 'error');
+        this.toast(this.copy.attachmentDraftUnsupported, 'error');
         return;
       }
 
@@ -413,7 +436,7 @@ class ChatGptTemporaryHandoffPlugin {
       try {
         const turns = await collectTemporaryChatTurns(operationScope.signal, expectedUrl);
         if (turns.length === 0) {
-          showHandoffToast(this.scope, this.copy.emptyConversation, 'error');
+          this.toast(this.copy.emptyConversation, 'error');
           return;
         }
 
@@ -424,16 +447,16 @@ class ChatGptTemporaryHandoffPlugin {
           plan.backupFilename,
         );
         const result = await handoffTemporaryChat(operationScope, plan.delivery, preservedDraft);
-        if (result === 'ready') showHandoffToast(this.scope, this.copy.ready);
+        if (result === 'ready') this.toast(this.copy.ready);
         else if (result === 'leave-failed') {
-          showHandoffToast(this.scope, this.copy.leaveFailed, 'error');
+          this.toast(this.copy.leaveFailed, 'error');
         } else if (result === 'composer-missing') {
-          showHandoffToast(this.scope, this.copy.composerMissing);
+          this.toast(this.copy.composerMissing);
         } else if (result === 'delivery-failed') {
-          showHandoffToast(this.scope, this.copy.deliveryFailed, 'error');
+          this.toast(this.copy.deliveryFailed, 'error');
         } else if (result === 'storage-failed') {
-          showHandoffToast(this.scope, this.copy.failed, 'error');
-        } else showHandoffToast(this.scope, this.copy.accountChanged, 'error');
+          this.toast(this.copy.failed, 'error');
+        } else this.toast(this.copy.accountChanged, 'error');
       } finally {
         await progress.close();
       }
@@ -450,11 +473,11 @@ class ChatGptTemporaryHandoffPlugin {
     this.resumeInFlight = resumePendingHandoff(this.scope)
       .then((result) => {
         if (this.scope.isDisposed) return;
-        if (result === 'ready') showHandoffToast(this.scope, this.copy.ready);
+        if (result === 'ready') this.toast(this.copy.ready);
         else if (result === 'delivery-failed') {
-          showHandoffToast(this.scope, this.copy.deliveryFailed, 'error');
+          this.toast(this.copy.deliveryFailed, 'error');
         } else if (result === 'account-mismatch') {
-          showHandoffToast(this.scope, this.copy.accountChanged, 'error');
+          this.toast(this.copy.accountChanged, 'error');
         }
       })
       .catch((error: unknown) => {

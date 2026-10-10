@@ -1,0 +1,343 @@
+/* ── Timeline Preview Panel ── */
+
+.timeline-preview-toggle {
+  position: fixed;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--timeline-bar-bg);
+  border: 1px solid var(--timeline-tooltip-border);
+  cursor: pointer;
+  padding: 0;
+  color: var(--timeline-dot-color);
+  border-radius: 6px;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease,
+    opacity 0.15s ease;
+  z-index: 2147483646;
+  opacity: 0;
+}
+
+.gemini-timeline-bar:hover ~ .timeline-preview-toggle,
+.timeline-preview-toggle:hover,
+.timeline-preview-toggle.active {
+  opacity: 1;
+}
+
+.timeline-preview-toggle.timeline-preview-toggle-compact,
+.timeline-preview-toggle[hidden],
+.gemini-timeline-bar.gv-timeline-empty ~ .timeline-preview-toggle {
+  display: none;
+}
+
+.timeline-preview-toggle:hover {
+  color: var(--timeline-dot-active-color);
+  background-color: var(--timeline-tooltip-bg);
+}
+
+.timeline-preview-toggle.active {
+  color: var(--timeline-dot-active-color);
+  background-color: var(--timeline-tooltip-bg);
+}
+
+.timeline-preview-panel {
+  position: fixed;
+  width: 320px;
+  direction: ltr;
+  /* Google Sans only exists on Gemini; elsewhere fall back to the tooltip's
+     pinned system stack so the list and the turn tooltip match. */
+  font-family:
+    'Google Sans',
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  background-color: var(--timeline-tooltip-bg);
+  border: 1px solid var(--timeline-tooltip-border);
+  border-radius: var(--timeline-tooltip-radius);
+  box-shadow: var(--timeline-tooltip-shadow);
+  z-index: 2147483645;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: scale(0.96) translateX(8px);
+  transition:
+    opacity var(--timeline-tooltip-anim-in),
+    transform var(--timeline-tooltip-anim-in);
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.timeline-preview-panel.visible {
+  opacity: 1;
+  transform: scale(1) translateX(0);
+  pointer-events: auto;
+}
+
+.gv-timeline-preview-hover-bridge {
+  position: fixed;
+  z-index: 2147483645;
+  pointer-events: none;
+  background: transparent;
+}
+
+.gv-timeline-preview-hover-bridge-visible {
+  pointer-events: auto;
+}
+
+.timeline-preview-panel.timeline-preview-panel-compact .timeline-preview-search {
+  display: none;
+}
+
+.timeline-preview-panel.timeline-preview-panel-compact .timeline-preview-list {
+  max-height: 100%;
+  padding: 6px;
+}
+
+.timeline-preview-panel.timeline-preview-panel-compact .timeline-preview-item {
+  gap: 0;
+  padding: 7px 9px;
+}
+
+.timeline-preview-panel.timeline-preview-panel-compact .timeline-preview-index {
+  display: none;
+}
+
+.timeline-preview-search {
+  position: relative;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--timeline-tooltip-border);
+  flex-shrink: 0;
+}
+
+/* Leading magnifier glyph (mask so it inherits the theme's muted color). */
+.timeline-preview-search::before {
+  content: '';
+  position: absolute;
+  left: 23px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  pointer-events: none;
+  opacity: 0.55;
+  background-color: var(--timeline-dot-color);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'%3E%3Cpath d='M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 -960 960 960'%3E%3Cpath d='M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+}
+
+.timeline-preview-search input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 7px 10px 7px 30px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  background: var(--timeline-search-bg, rgba(120, 130, 150, 0.12));
+  color: var(--timeline-tooltip-text);
+  text-align: start;
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.timeline-preview-search input::placeholder {
+  color: var(--timeline-dot-color);
+  opacity: 0.7;
+}
+
+.timeline-preview-search input:focus {
+  border-color: var(--timeline-dot-active-color);
+  background: var(--timeline-tooltip-bg);
+  box-shadow: 0 0 0 3px oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.15);
+}
+
+.timeline-preview-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  max-height: calc(100% - 50px);
+}
+
+.timeline-preview-item {
+  padding: 7px 10px;
+  cursor: pointer;
+  color: var(--timeline-tooltip-text);
+  font-size: 13px;
+  line-height: 1.4;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: pan-y;
+}
+
+.timeline-preview-item:hover {
+  background-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.08);
+}
+
+.timeline-preview-item.holding {
+  background-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.16);
+  box-shadow: inset 0 0 0 1px var(--timeline-dot-active-color);
+}
+
+.timeline-preview-item.active {
+  background-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.14);
+}
+
+.timeline-preview-item.active .timeline-preview-index {
+  color: var(--timeline-dot-active-color);
+  font-weight: 700;
+  opacity: 1;
+}
+
+/* Star marker as a trailing badge (pinned to the row's right edge) so it never
+ * crowds the fixed-width number gutter. */
+.timeline-preview-item.starred::after {
+  content: '\2605';
+  flex-shrink: 0;
+  margin-inline-start: 6px;
+  color: var(--timeline-star-color);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.timeline-preview-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--timeline-dot-color);
+  opacity: 0.65;
+  min-width: 16px;
+  text-align: center;
+}
+
+.timeline-preview-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: start;
+  unicode-bidi: plaintext;
+}
+
+.timeline-preview-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--timeline-dot-color);
+  font-size: 13px;
+}
+
+/* Search highlights — preview panel */
+.timeline-preview-highlight {
+  background-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.22);
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 1px;
+  pointer-events: none;
+}
+
+/* Search highlights — SPA conversation page */
+mark.timeline-search-highlight {
+  background-color: oklch(0.55 0.17 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 1px;
+}
+
+/* Dark theme adjustments for preview panel */
+/* The same neutrals the tooltip and the prompt panel use (a650a63a). This
+   surface was left on the Tailwind-era blue-black, so the panel and the tooltip
+   it opens beside read as two different products. */
+html[data-gv-scheme='dark'] .timeline-preview-panel {
+  background-color: var(--timeline-tooltip-bg);
+  border-color: var(--timeline-tooltip-border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  --timeline-search-bg: oklch(0.92 0.004 250 / 0.06);
+}
+
+html[data-gv-scheme='dark'] .timeline-preview-item:hover {
+  background-color: oklch(0.77 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.1);
+}
+
+html[data-gv-scheme='dark'] .timeline-preview-item.active {
+  background-color: oklch(0.77 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.16);
+}
+
+html[data-gv-scheme='dark'] .timeline-preview-search input:focus {
+  box-shadow: 0 0 0 3px oklch(0.77 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.18);
+}
+
+html[data-gv-scheme='dark'] .timeline-preview-highlight {
+  background-color: oklch(0.77 0.15 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.28);
+}
+
+html[data-gv-scheme='dark'] mark.timeline-search-highlight {
+  background-color: oklch(0.7729 0.1535 var(--gv-pm-brand-h, var(--gv-pm-brand-h-default)) / 0.3);
+}
+
+html[data-gv-scheme='light'] .timeline-preview-panel {
+  background-color: var(--timeline-tooltip-bg);
+  border-color: var(--timeline-tooltip-border);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  --timeline-search-bg: oklch(0.14 0.004 285 / 0.05);
+}
+
+/* Timeline bar: move from the right edge to the left edge */
+body.gv-rtl .gemini-timeline-bar {
+  right: auto;
+  left: 15px;
+}
+
+/* Preview panel: reverse the slide-in direction (from right instead of left) */
+body.gv-rtl .timeline-preview-panel {
+  transform: scale(0.96) translateX(-8px);
+  direction: rtl;
+}
+
+body.gv-rtl .timeline-preview-panel.visible {
+  transform: scale(1) translateX(0);
+}
+
+/* Preview list items: active border on the right side */
+body.gv-rtl .timeline-preview-item {
+  border-left: none;
+  border-right: 3px solid transparent;
+  padding: 6px 6px 6px 10px;
+}
+
+body.gv-rtl .timeline-preview-item.active {
+  border-right-color: var(--timeline-dot-active-color);
+}
+
+/* Preview index: right-align numbers in RTL */
+body.gv-rtl .timeline-preview-index {
+  text-align: right;
+  justify-content: flex-end;
+}

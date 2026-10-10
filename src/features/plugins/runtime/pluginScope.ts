@@ -7,8 +7,7 @@
  * Plugins never hand-write teardown pairs; the host owns the ledger.
  *
  * Design cribbed from cordis (`fiber.effect`) with three deliberate cuts:
- * no Context proxy, no service dependency graph, no event bus. See
- * .github/docs/CORDIS_CTX_RESEARCH.md for the full rationale.
+ * no Context proxy, no service dependency graph, no event bus.
  *
  * Ledger semantics (each entry is claim-once):
  *  - An effect occupies its ledger slot at REGISTRATION time, even when its

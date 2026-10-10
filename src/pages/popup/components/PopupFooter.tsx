@@ -116,7 +116,7 @@ export function PopupFooter({
         )}
 
         <a
-          href="https://github.com/Nagi-ovo/voyager"
+          href="https://github.com/voyager-crew/voyager"
           target="_blank"
           rel="noreferrer"
           className="bg-primary hover:bg-primary/90 text-primary-foreground hover:shadow-primary/25 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold tracking-wide transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.97]"

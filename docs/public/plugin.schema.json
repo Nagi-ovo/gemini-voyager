@@ -156,7 +156,7 @@
       }
     },
     "styleContribution": {
-      "description": "CSS injected as a <style> element. Authors write `{ \"file\": \"style.css\" }`; the build inlines it as `{ \"css\": \"…\" }`, which is the form published catalogs carry. Classes must be `gv-` prefixed, and neither `@import` nor an external `url()` is allowed (no remotely-hosted resources).",
+      "description": "CSS injected as a <style> element. Authors write `{ \"file\": \"style.css\" }`; the build inlines it as `{ \"css\": \"…\" }`, which is the form published catalogs carry. Classes must be `gv-` prefixed, and CSS may not load anything: no `@import`, `image-set()`, `image()`, `cross-fade()` or `src()`, and `url()` only with a `#fragment` or a raster-image `data:` URI (png, jpeg, gif, webp, avif, bmp, ico; never SVG).",
       "anyOf": [
         {
           "type": "object",
@@ -245,7 +245,7 @@
             "target": { "$ref": "#/$defs/selectorRef" },
             "styles": {
               "type": "object",
-              "description": "CSS property → value. An external url() is rejected.",
+              "description": "CSS property → value. Anything that loads (a url() other than a raster-image data: URI or #fragment, image-set(), …) is rejected.",
               "additionalProperties": { "type": "string" }
             }
           }
@@ -334,7 +334,12 @@
             "properties": {
               "label": { "type": "string", "minLength": 1, "maxLength": 500 },
               "minLabel": { "type": "string", "minLength": 1, "maxLength": 500 },
-              "maxLabel": { "type": "string", "minLength": 1, "maxLength": 500 }
+              "maxLabel": { "type": "string", "minLength": 1, "maxLength": 500 },
+              "options": {
+                "type": "object",
+                "description": "Select option value → localized label.",
+                "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 500 }
+              }
             }
           }
         }

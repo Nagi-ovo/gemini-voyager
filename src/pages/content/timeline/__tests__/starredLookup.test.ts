@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildConversationIdFromUrl } from '@/core/utils/conversationIdentity';
+import type { StarredMessagesData } from '@/features/savedLibrary/starTypes';
 
 import { findMatchingStarredMessages } from '../starredLookup';
-import type { StarredMessagesData } from '../starredTypes';
 
 describe('findMatchingStarredMessages', () => {
   it('finds legacy starred messages for the same route when query parameters change', () => {

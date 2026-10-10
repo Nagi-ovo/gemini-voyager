@@ -126,7 +126,7 @@ describe('sponsor generator safeguards', () => {
   it('keeps the write job scoped to the canonical repository and enables strict mode', async () => {
     const workflow = await readFile(resolve('.github/workflows/sponsors.yml'), 'utf8');
 
-    expect(workflow).toContain("if: github.repository == 'Nagi-ovo/voyager'");
+    expect(workflow).toContain("if: github.repository == 'voyager-crew/voyager'");
     expect(workflow).toContain("SPONSORS_STRICT: '1'");
   });
 });

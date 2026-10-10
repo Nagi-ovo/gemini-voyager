@@ -2,15 +2,19 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { resolveExportAdapter } from '@/pages/content/export/adapter/platformAdapters';
 
-import { DOMContentExtractor } from '../DOMContentExtractor';
+import type { ChatTurn } from '../../types/export';
+import { createContentExtractor, extractTurnContent } from '../DOMContentExtractor';
 import { renderElementToImageBlob } from '../ImageRenderService';
 import { PDFPrintService } from '../PDFPrintService';
+import { resolveNativeSidebarTitle } from '../pdfPrintTitles';
 
 vi.mock('../ImageRenderService', () => ({
   renderElementToImageBlob: vi.fn(async () => new Blob(['png'], { type: 'image/png' })),
 }));
 
-DOMContentExtractor.setExportAdapter(resolveExportAdapter());
+const extractor = createContentExtractor(resolveExportAdapter());
+const extracted = (turns: ChatTurn[]): ChatTurn[] =>
+  turns.map((turn) => extractTurnContent(turn, extractor));
 
 describe('PDFPrintService', () => {
   afterEach(() => {
@@ -127,7 +131,9 @@ describe('PDFPrintService', () => {
     `;
 
     await PDFPrintService.export(
-      [{ user: '', assistant: '', assistantElement, starred: false, omitEmptySections: true }],
+      extracted([
+        { user: '', assistant: '', assistantElement, starred: false, omitEmptySections: true },
+      ]),
       {
         url: 'https://chatgpt.com/c/x',
         exportedAt: new Date().toISOString(),
@@ -204,29 +210,6 @@ describe('PDFPrintService', () => {
     );
   });
 
-  it('reuses conversation print markup for document PDF content', async () => {
-    document.title = 'Original Title';
-    window.print = vi.fn();
-
-    await PDFPrintService.exportDocument({
-      title: 'Deep Research Report',
-      url: 'https://gemini.google.com/app/x',
-      exportedAt: new Date().toISOString(),
-      markdown: '# Markdown heading',
-      html: '<div class="markdown-main-panel"><h2>HTML heading</h2><p>HTML body</p></div>',
-    });
-
-    const turn = document.querySelector('.gv-print-turn');
-    const reportContainer = document.querySelector('.gv-print-report-content');
-    const coverTitle = document.querySelector('.gv-print-cover-title');
-    const turnText = document.querySelector('.gv-print-turn-text');
-    expect(turn).toBeTruthy();
-    expect(reportContainer).toBeNull();
-    expect(coverTitle?.textContent).toContain('Deep Research Report');
-    expect(turnText?.textContent).toContain('HTML heading');
-    expect(turnText?.textContent).not.toContain('Markdown heading');
-  });
-
   it('uses classed div containers instead of semantic print tags', async () => {
     window.print = vi.fn();
 
@@ -254,7 +237,7 @@ describe('PDFPrintService', () => {
     `;
 
     await PDFPrintService.export(
-      [{ user: '', assistant: 'Reviewed', starred: false, userElement }],
+      extracted([{ user: '', assistant: 'Reviewed', starred: false, userElement }]),
       {
         url: 'https://gemini.google.com/app/x',
         exportedAt: new Date().toISOString(),
@@ -299,7 +282,7 @@ describe('PDFPrintService', () => {
     `;
 
     await PDFPrintService.export(
-      [{ user: 'Diagram', assistant: '', starred: false, assistantElement }],
+      extracted([{ user: 'Diagram', assistant: '', starred: false, assistantElement }]),
       {
         url: 'https://gemini.google.com/app/x',
         exportedAt: new Date().toISOString(),
@@ -366,7 +349,7 @@ describe('PDFPrintService', () => {
     `;
 
     await PDFPrintService.export(
-      [{ user: 'Diagram', assistant: '', starred: false, assistantElement }],
+      extracted([{ user: 'Diagram', assistant: '', starred: false, assistantElement }]),
       {
         url: 'https://gemini.google.com/app/x',
         exportedAt: new Date().toISOString(),
@@ -595,6 +578,85 @@ describe('PDFPrintService', () => {
     expect(link?.getAttribute('href')).toContain('" onclick="');
   });
 
+  it('restores page state through the fallback timer when afterprint never fires', async () => {
+    vi.useFakeTimers();
+    document.title = 'Original title';
+    document.body.innerHTML = '<main id="host-content">Page content</main>';
+    window.print = vi.fn();
+    const cleanupEvent = vi.fn();
+    window.addEventListener('gv-print-cleanup', cleanupEvent);
+    const exportPromise = PDFPrintService.export([{ user: 'u', assistant: 'a', starred: false }], {
+      url: 'https://gemini.google.com/app/x',
+      exportedAt: '',
+      count: 1,
+      title: 'Print title',
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    await exportPromise;
+    cleanupEvent.mockClear();
+    await vi.advanceTimersByTimeAsync(59_999);
+    expect(document.getElementById('gv-pdf-print-container')).toBeTruthy();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(document.getElementById('gv-pdf-print-container')).toBeNull();
+    expect(document.body.classList.contains('gv-pdf-printing')).toBe(false);
+    expect(document.title).toBe('Original title');
+    expect(document.getElementById('host-content')?.textContent).toBe('Page content');
+    expect(document.getElementById('gv-pdf-print-styles')).toBeTruthy();
+    expect(cleanupEvent).toHaveBeenCalledOnce();
+    window.removeEventListener('gv-print-cleanup', cleanupEvent);
+  });
+
+  it.each(['before', 'during'])(
+    'cleans up and skips printing when cancelled %s preparation',
+    async (when) => {
+      vi.useFakeTimers();
+      document.title = 'Original title';
+      window.print = vi.fn();
+      const controller = new AbortController();
+      if (when === 'before') controller.abort();
+      const exportPromise = PDFPrintService.export(
+        [{ user: 'u', assistant: 'a', starred: false }],
+        {
+          url: 'https://gemini.google.com/app/x',
+          exportedAt: '',
+          count: 1,
+          title: 'Cancelled title',
+        },
+        { signal: controller.signal },
+      );
+      const rejected = expect(exportPromise).rejects.toMatchObject({ name: 'AbortError' });
+      if (when === 'during') {
+        await vi.advanceTimersByTimeAsync(99);
+        expect(document.getElementById('gv-pdf-print-container')).toBeTruthy();
+        controller.abort();
+      }
+      await vi.advanceTimersByTimeAsync(100);
+      await rejected;
+      expect(window.print).not.toHaveBeenCalled();
+      expect(document.getElementById('gv-pdf-print-container')).toBeNull();
+      expect(document.body.classList.contains('gv-pdf-printing')).toBe(false);
+      expect(document.title).toBe('Original title');
+    },
+  );
+
+  it('replaces the previous print document and applies the next export font size', async () => {
+    window.print = vi.fn();
+    const metadata = { url: 'https://gemini.google.com/app/x', exportedAt: '', count: 1 };
+    await PDFPrintService.export([{ user: 'First', assistant: 'a', starred: false }], metadata);
+    const first = document.getElementById('gv-pdf-print-container')!;
+    await PDFPrintService.export([{ user: 'Next', assistant: 'a', starred: false }], metadata, {
+      fontSize: 17,
+    });
+    expect(first.isConnected).toBe(false);
+    expect(document.querySelectorAll('#gv-pdf-print-container')).toHaveLength(1);
+    expect(document.querySelector('.gv-print-turn-user')?.textContent).toContain('Next');
+    const styles = document.getElementById('gv-pdf-print-styles')?.textContent;
+    expect(styles).toContain('font-size: 17pt;');
+    expect(styles).toContain('font-size: 15pt;');
+    window.dispatchEvent(new Event('afterprint'));
+    expect(document.title).toBe('Gemini');
+  });
+
   it('handles special CSS characters in conversation id selectors', () => {
     const conversationId = 'ab"]\\cd';
     const nativeConversation = document.createElement('div');
@@ -612,11 +674,7 @@ describe('PDFPrintService', () => {
 
     let title: string | null = null;
     expect(() => {
-      title = (
-        PDFPrintService as unknown as {
-          extractTitleFromNativeSidebarByConversationId: (id: unknown) => string | null;
-        }
-      ).extractTitleFromNativeSidebarByConversationId(conversationId);
+      title = resolveNativeSidebarTitle(conversationId);
     }).not.toThrow();
     expect(title).toBe('Escaped Selector Title');
   });

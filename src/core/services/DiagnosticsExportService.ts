@@ -1,3 +1,10 @@
+import {
+  type NativeHealthEntry,
+  type NativeHealthFeature,
+  type NativeHealthRoute,
+  type NativeHealthStatus,
+  parseNativeHealthEntries,
+} from '@/core/gemini/nativeHealth';
 import { type VoyagerBuildTarget, getVoyagerBuildTarget } from '@/core/utils/browser';
 import { PLUGIN_ENGINE_VERSION } from '@/features/plugins/constants';
 import type { PluginSettingValue, PluginSettings, SettingsSchema } from '@/features/plugins/types';
@@ -44,6 +51,17 @@ export interface DiagnosticPlugin {
   settings: Record<string, PluginSettingValue | '<redacted>'>;
 }
 
+/** One Gemini anchor the active page could not find; see `core/gemini/nativeHealth.ts`. */
+export interface DiagnosticNativeHealthEntry {
+  feature: NativeHealthFeature;
+  anchor: string;
+  status: NativeHealthStatus;
+  route: NativeHealthRoute;
+  firstSeenAt: string;
+  lastSeenAt: string;
+  extensionVersion: string;
+}
+
 export interface VoyagerDiagnosticsPayload {
   format: typeof VOYAGER_DIAGNOSTICS_FORMAT;
   generatedAt: string;
@@ -60,6 +78,8 @@ export interface VoyagerDiagnosticsPayload {
   pluginEngine: {
     version: string;
   };
+  /** Gemini anchors the active page could not find. Empty when healthy or not on Gemini. */
+  nativeHealth: DiagnosticNativeHealthEntry[];
   plugins: {
     availableCount: number;
     items: DiagnosticPlugin[];
@@ -75,6 +95,7 @@ export interface BuildVoyagerDiagnosticsOptions {
   activeUrl?: string;
   buildTarget?: VoyagerBuildTarget;
   extensionVersion?: string;
+  nativeHealth?: readonly NativeHealthEntry[];
   now?: Date;
   platform?: string;
   plugins?: readonly DiagnosticPluginInput[];
@@ -267,6 +288,14 @@ function resolveDiagnosticSite(activeUrl: string): DiagnosticSite {
   }
 }
 
+function summarizeNativeHealth(value: readonly NativeHealthEntry[] | undefined) {
+  return parseNativeHealthEntries(value ?? []).map((entry): DiagnosticNativeHealthEntry => ({
+    ...entry,
+    firstSeenAt: new Date(entry.firstSeenAt).toISOString(),
+    lastSeenAt: new Date(entry.lastSeenAt).toISOString(),
+  }));
+}
+
 function getExtensionVersion(): string {
   try {
     return chrome.runtime.getManifest().version;
@@ -297,6 +326,7 @@ export function buildVoyagerDiagnostics(
       activeSite: resolveDiagnosticSite(options.activeUrl ?? ''),
     },
     pluginEngine: { version: PLUGIN_ENGINE_VERSION },
+    nativeHealth: summarizeNativeHealth(options.nativeHealth),
     plugins,
     privacy,
   };

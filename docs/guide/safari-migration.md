@@ -24,4 +24,4 @@ App 的 Bundle ID 没有改变，文件夹、灵感库、云同步和所有设�
 
 换完这一次，以后 Safari 版本会通过内置的自动更新（Sparkle）升级新的「Voyager」，不用再手动换 App。
 
-有问题欢迎到 [GitHub Issues](https://github.com/Nagi-ovo/voyager/issues) 反馈。
+有问题欢迎到 [GitHub Issues](https://github.com/voyager-crew/voyager/issues) 反馈。

@@ -1,5 +1,6 @@
 ---
 layout: page
+sidebar: false
 aside: false
 gitChangelog: false
 title: 外掛市集

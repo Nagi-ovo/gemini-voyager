@@ -53,6 +53,13 @@ export function normalizeLanguage(lang: string | undefined | null): AppLanguage 
   return 'en';
 }
 
+/** Map a Voyager language to a BCP-47 tag for Intl date formatting. */
+export function localeFromLanguage(lang: AppLanguage): string {
+  if (lang === 'zh') return 'zh-CN';
+  if (lang === 'zh_TW') return 'zh-TW';
+  return lang;
+}
+
 export function getNextLanguage(current: AppLanguage): AppLanguage {
   const idx = APP_LANGUAGES.indexOf(current);
   if (idx < 0) return 'en';

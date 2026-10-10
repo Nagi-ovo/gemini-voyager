@@ -1,10 +1,22 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { decorateDownloadButtons } from '../index';
+import { createWatermarkPreviews } from '../previewRuntime';
 
-describe('decorateDownloadButtons', () => {
+let previews: ReturnType<typeof createWatermarkPreviews>;
+
+describe('watermark preview surface download indicators', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
+    previews = createWatermarkPreviews({
+      getState: () => ({
+        engine: null,
+        generation: 0,
+        previewEnabled: false,
+        downloadEnabled: true,
+      }),
+      fetchImage: vi.fn(),
+      health: { rememberPreview: vi.fn() },
+    });
     // chrome.i18n is referenced inside attachIndicatorToButton for the tooltip;
     // global setup only provides chrome.storage/runtime.
     (chrome as unknown as { i18n: { getMessage: (k: string) => string } }).i18n = {
@@ -12,7 +24,30 @@ describe('decorateDownloadButtons', () => {
     };
   });
 
+  afterEach(() => {
+    previews.stop();
+    vi.useRealTimers();
+  });
+
   const indicator = (root: ParentNode) => root.querySelector('.nanobanana-indicator');
+
+  it('cancels queued indicator decoration and stops observing on stop', async () => {
+    vi.useFakeTimers();
+    previews.watchIndicators();
+    const host = document.createElement('download-generated-image-button');
+    host.append(document.createElement('button'));
+    document.body.append(host);
+    await Promise.resolve();
+
+    previews.stop();
+    await vi.advanceTimersByTimeAsync(100);
+    expect(indicator(host)).toBeNull();
+
+    const laterHost = host.cloneNode(true) as HTMLElement;
+    document.body.append(laterHost);
+    await vi.advanceTimersByTimeAsync(100);
+    expect(indicator(laterHost)).toBeNull();
+  });
 
   it('adds the 🍌 indicator to the in-message toolbar button (blob-src preview)', () => {
     document.body.innerHTML = `
@@ -26,7 +61,7 @@ describe('decorateDownloadButtons', () => {
       </generated-image>
     `;
 
-    decorateDownloadButtons();
+    previews.watchIndicators();
 
     const button = document.querySelector('button')!;
     expect(indicator(button)?.textContent).toBe('🍌');
@@ -56,7 +91,7 @@ describe('decorateDownloadButtons', () => {
       </div>
     `;
 
-    decorateDownloadButtons();
+    previews.watchIndicators();
 
     const lightboxButton = document.querySelector(
       '.cdk-overlay-container button[aria-label="Download full size image"]',
@@ -84,7 +119,7 @@ describe('decorateDownloadButtons', () => {
       </div>
     `;
 
-    decorateDownloadButtons();
+    previews.watchIndicators();
 
     expect(indicator(document.querySelector('.toolbar-btn')!)).not.toBeNull();
     expect(indicator(document.querySelector('.lightbox-btn')!)).not.toBeNull();
@@ -100,7 +135,7 @@ describe('decorateDownloadButtons', () => {
       </div>
     `;
 
-    decorateDownloadButtons();
+    previews.watchIndicators();
 
     expect(document.querySelector('.nanobanana-indicator')).toBeNull();
   });
@@ -116,8 +151,8 @@ describe('decorateDownloadButtons', () => {
       </generated-image>
     `;
 
-    decorateDownloadButtons();
-    decorateDownloadButtons();
+    previews.watchIndicators();
+    previews.watchIndicators();
 
     expect(document.querySelectorAll('.nanobanana-indicator')).toHaveLength(1);
   });
@@ -135,7 +170,7 @@ describe('decorateDownloadButtons', () => {
       </generated-image>
     `;
 
-    decorateDownloadButtons();
+    previews.watchIndicators();
 
     const button = document.querySelector('.target')!;
     expect(indicator(button)).not.toBeNull();

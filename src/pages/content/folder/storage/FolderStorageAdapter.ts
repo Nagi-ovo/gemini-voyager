@@ -17,14 +17,30 @@
  */
 import { isSafari } from '@/core/utils/browser';
 import { safariStorage } from '@/core/utils/safariStorage';
+import { LegacyFolderWriteRefusedError } from '@/features/folder/owner/legacyFolderFence';
 
 import type { FolderData } from '../types';
+import { createFolderWriter, type FolderWriter } from './folderWriter';
+
+/**
+ * Parses a JSON string bucket. Unparseable text is returned as found, so the
+ * caller's validation treats it as corrupt data (backup recovery), not as absent.
+ */
+function parseStoredFolderData(stored: string): FolderData {
+  try {
+    return JSON.parse(stored) as FolderData;
+  } catch {
+    return stored as unknown as FolderData;
+  }
+}
 
 /**
  * Unified storage interface for folder data
  * All implementations must provide async methods
  */
 export interface IFolderStorageAdapter {
+  /** Repository-owned authorization at each physical write. */
+  setWriteGate?(writer: FolderWriter): void;
   /**
    * Initialize the storage adapter
    * Used for adapter-specific setup like data migration
@@ -33,8 +49,10 @@ export interface IFolderStorageAdapter {
   init(key: string): Promise<void>;
 
   /**
-   * Load folder data from storage
-   * @returns FolderData or null if no data exists
+   * Load folder data from storage, as stored: callers validate it.
+   * @returns the stored value, or null only when nothing is stored
+   * @throws when storage cannot be read. A failed read is not an absent bucket:
+   *   treating it as one lets recovery or the next save overwrite real data.
    */
   loadData(key: string): Promise<FolderData | null>;
 
@@ -42,9 +60,16 @@ export interface IFolderStorageAdapter {
    * Save folder data to storage
    * @param key Storage key
    * @param data Folder data to save
-   * @returns true if save succeeded
+   * @param companions Other keys to write in the same storage call. Only adapters
+   *   that write them atomically may be handed companions (see AIStudioFolderStorageAdapter).
+   * @returns `false` (or a rejection) if the write failed; any other resolution
+   *   means it succeeded, so an adapter may return the storage call's own promise.
    */
-  saveData(key: string, data: FolderData): Promise<boolean>;
+  saveData(
+    key: string,
+    data: FolderData,
+    companions?: Record<string, unknown>,
+  ): Promise<boolean | void>;
 
   /**
    * Remove folder data from storage
@@ -63,6 +88,12 @@ export interface IFolderStorageAdapter {
  * Synchronous localStorage API wrapped in async interface for consistency
  */
 export class LocalStorageFolderAdapter implements IFolderStorageAdapter {
+  private write = createFolderWriter();
+
+  setWriteGate(writer: FolderWriter): void {
+    this.write = writer;
+  }
+
   /**
    * Initialize and migrate existing data to chrome.storage.local
    * This enables popup/sync to access folder data
@@ -76,42 +107,43 @@ export class LocalStorageFolderAdapter implements IFolderStorageAdapter {
         if (!result[key]) {
           // Migrate localStorage data to chrome.storage.local
           const data = JSON.parse(localData) as FolderData;
-          await chrome.storage.local.set({ [key]: data });
+          await this.write(key, () => chrome.storage.local.set({ [key]: data }));
           console.log('[LocalStorageFolderAdapter] Migrated folder data to chrome.storage.local');
         }
       }
     } catch (error) {
+      if (error instanceof LegacyFolderWriteRefusedError) throw error;
       console.warn('[LocalStorageFolderAdapter] Migration check failed:', error);
     }
   }
 
   async loadData(key: string): Promise<FolderData | null> {
-    try {
-      // First check chrome.storage.local (for synced data from popup/download)
-      const chromeResult = await chrome.storage.local.get(key);
-      if (chromeResult[key]) {
-        console.log('[LocalStorageFolderAdapter] Loaded data from chrome.storage.local');
-        // Also sync to localStorage for consistency
-        localStorage.setItem(key, JSON.stringify(chromeResult[key]));
-        return chromeResult[key] as FolderData;
+    // First check chrome.storage.local (for synced data from popup/download)
+    const chromeResult = await chrome.storage.local.get(key);
+    if (chromeResult[key]) {
+      console.log('[LocalStorageFolderAdapter] Loaded data from chrome.storage.local');
+      // Also sync to localStorage for consistency. A full localStorage must not fail the read.
+      try {
+        await this.write(key, () => localStorage.setItem(key, JSON.stringify(chromeResult[key])));
+      } catch (error) {
+        if (error instanceof LegacyFolderWriteRefusedError) throw error;
+        console.warn('[LocalStorageFolderAdapter] Failed to mirror to localStorage:', error);
       }
+      return chromeResult[key] as FolderData;
+    }
 
-      // Fallback to localStorage
-      const stored = localStorage.getItem(key);
-      if (!stored) {
-        return null;
-      }
-      return JSON.parse(stored) as FolderData;
-    } catch (error) {
-      console.error('[LocalStorageFolderAdapter] Failed to load data:', error);
+    // Fallback to localStorage
+    const stored = localStorage.getItem(key);
+    if (!stored) {
       return null;
     }
+    return parseStoredFolderData(stored);
   }
 
   async saveData(key: string, data: FolderData): Promise<boolean> {
     try {
       const dataString = JSON.stringify(data);
-      localStorage.setItem(key, dataString);
+      await this.write(key, () => localStorage.setItem(key, dataString));
 
       // Verify the save was successful
       const verification = localStorage.getItem(key);
@@ -119,18 +151,13 @@ export class LocalStorageFolderAdapter implements IFolderStorageAdapter {
         throw new Error('Save verification failed - data mismatch');
       }
 
-      // Also mirror to chrome.storage.local for popup/sync access
-      try {
-        await chrome.storage.local.set({ [key]: data });
-      } catch (storageError) {
-        console.warn(
-          '[LocalStorageFolderAdapter] Failed to mirror to chrome.storage.local:',
-          storageError,
-        );
-      }
+      // Also write chrome.storage.local for popup/sync access. Loads read it first,
+      // so a save it missed would be rolled back on the next load: report it failed.
+      await this.write(key, () => chrome.storage.local.set({ [key]: data }));
 
       return true;
     } catch (error) {
+      if (error instanceof LegacyFolderWriteRefusedError) throw error;
       console.error('[LocalStorageFolderAdapter] Failed to save data:', error);
       return false;
     }
@@ -138,8 +165,9 @@ export class LocalStorageFolderAdapter implements IFolderStorageAdapter {
 
   async removeData(key: string): Promise<void> {
     try {
-      localStorage.removeItem(key);
+      await this.write(key, () => localStorage.removeItem(key));
     } catch (error) {
+      if (error instanceof LegacyFolderWriteRefusedError) throw error;
       console.error('[LocalStorageFolderAdapter] Failed to remove data:', error);
     }
   }
@@ -160,6 +188,15 @@ export class LocalStorageFolderAdapter implements IFolderStorageAdapter {
  * - browser.storage.local is more reliable (persistent; quota depends on Safari and permissions)
  */
 export class SafariFolderAdapter implements IFolderStorageAdapter {
+  private write = createFolderWriter();
+
+  setWriteGate(writer: FolderWriter): void {
+    this.write = writer;
+  }
+
+  /** Keys whose localStorage migration completed in this context. */
+  private readonly migrated = new Set<string>();
+
   /**
    * Initialize Safari adapter with data migration
    * Migrates data from localStorage to browser.storage.local (one-time)
@@ -169,25 +206,23 @@ export class SafariFolderAdapter implements IFolderStorageAdapter {
   }
 
   async loadData(key: string): Promise<FolderData | null> {
-    try {
-      const stored = await safariStorage.getItem(key);
-      if (!stored) {
-        return null;
-      }
-      // Older Safari builds stored JSON strings; cloud sync writes the same
-      // structured object shape used by the other browsers.
-      return typeof stored === 'string'
-        ? (JSON.parse(stored) as FolderData)
-        : (stored as FolderData);
-    } catch (error) {
-      console.error('[SafariFolderAdapter] Failed to load data:', error);
+    // Before migration completes, the only copy may still be in localStorage: an empty
+    // browser.storage answer would read as absent. Reject so the read is retried instead.
+    if (!this.migrated.has(key) && !(await this.migrateFromLocalStorage(key))) {
+      throw new Error('Folder data migration from localStorage did not complete');
+    }
+    const stored = await safariStorage.getItem(key);
+    if (!stored) {
       return null;
     }
+    // Older Safari builds stored JSON strings; cloud sync writes the same
+    // structured object shape used by the other browsers.
+    return typeof stored === 'string' ? parseStoredFolderData(stored) : (stored as FolderData);
   }
 
   async saveData(key: string, data: FolderData): Promise<boolean> {
     try {
-      await safariStorage.setItem(key, data);
+      await safariStorage.setItem(key, data, (operation) => this.write(key, operation));
 
       // Verify the save was successful for robustness
       const verification = await safariStorage.getItem(key);
@@ -199,6 +234,7 @@ export class SafariFolderAdapter implements IFolderStorageAdapter {
 
       return true;
     } catch (error) {
+      if (error instanceof LegacyFolderWriteRefusedError) throw error;
       console.error('[SafariFolderAdapter] Failed to save data:', error);
       return false;
     }
@@ -206,8 +242,9 @@ export class SafariFolderAdapter implements IFolderStorageAdapter {
 
   async removeData(key: string): Promise<void> {
     try {
-      await safariStorage.removeItem(key);
+      await safariStorage.removeItem(key, (operation) => this.write(key, operation));
     } catch (error) {
+      if (error instanceof LegacyFolderWriteRefusedError) throw error;
       console.error('[SafariFolderAdapter] Failed to remove data:', error);
     }
   }
@@ -222,8 +259,13 @@ export class SafariFolderAdapter implements IFolderStorageAdapter {
    */
   async migrateFromLocalStorage(key: string): Promise<boolean> {
     try {
-      return await safariStorage.migrateFromLocalStorage(key);
+      const migrated = await safariStorage.migrateFromLocalStorage(key, (operation) =>
+        this.write(key, operation),
+      );
+      if (migrated) this.migrated.add(key);
+      return migrated;
     } catch (error) {
+      if (error instanceof LegacyFolderWriteRefusedError) throw error;
       console.error('[SafariFolderAdapter] Migration failed:', error);
       return false;
     }

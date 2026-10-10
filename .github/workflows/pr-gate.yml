@@ -12,7 +12,7 @@ jobs:
   check-contributor:
     # Review bots edit the PR body; only policy-relevant edits need another check.
     if: >-
-      github.repository == 'Nagi-ovo/voyager' &&
+      github.repository == 'voyager-crew/voyager' &&
       (github.event.action != 'edited' ||
        github.event.changes.title != null ||
        github.event.changes.base != null)

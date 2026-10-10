@@ -22,6 +22,7 @@ import type {
   ShortcutMatch,
 } from '@/core/types/keyboardShortcut';
 import { isMac } from '@/core/utils/browser';
+import { composedEventTarget, deepActiveElement } from '@/core/utils/composedTarget';
 
 /**
  * Timeout for key sequence detection (e.g., gg, GG)
@@ -77,6 +78,9 @@ export class KeyboardShortcutService {
     | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
     | null = null;
 
+  /** Bumped by destroy() so an init() that was loading its config does not attach afterwards. */
+  private generation = 0;
+
   // Key sequence tracking (for gg → first, GG → last)
   private lastSequenceSignature: string | null = null;
   private lastSequenceTime: number = 0;
@@ -99,7 +103,11 @@ export class KeyboardShortcutService {
    * Initialize service: load config and attach listeners
    */
   async init(): Promise<void> {
+    const generation = this.generation;
     await this.loadConfig();
+    // destroy() ran while the config loaded (the page tore its timeline down): attaching now would
+    // leave a keydown handler swallowing shortcut keys with nothing left to remove it.
+    if (generation !== this.generation) return;
     this.attachKeyboardListener();
     this.attachStorageListener();
   }
@@ -282,7 +290,10 @@ export class KeyboardShortcutService {
    * Prevents shortcuts from interfering with text input
    */
   private isTypingInInputField(event: KeyboardEvent): boolean {
-    return this.isEditableElement(event.target) || this.isEditableElement(document.activeElement);
+    return (
+      this.isEditableElement(composedEventTarget(event)) ||
+      this.isEditableElement(deepActiveElement())
+    );
   }
 
   private isEditableElement(target: EventTarget | Element | null): boolean {
@@ -306,6 +317,9 @@ export class KeyboardShortcutService {
    * Attach storage change listener for cross-tab sync
    */
   private attachStorageListener(): void {
+    // Timeline remounts reuse this singleton; keep the one handler destroy() can remove.
+    if (this.storageChangeHandler) return;
+
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       this.storageChangeHandler = (changes, areaName) => {
         if (areaName !== 'sync') return;
@@ -528,6 +542,7 @@ export class KeyboardShortcutService {
    * Cleanup service
    */
   destroy(): void {
+    this.generation += 1;
     if (this.keydownHandler) {
       window.removeEventListener('keydown', this.keydownHandler, { capture: true });
       this.keydownHandler = null;

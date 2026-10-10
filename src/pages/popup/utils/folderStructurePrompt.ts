@@ -1,6 +1,5 @@
 import type { ConversationReference, Folder } from '@/core/types/folder';
-
-const ROOT_CONVERSATIONS_ID = '__root_conversations__';
+import { ROOT_CONVERSATIONS_ID } from '@/features/folder/constants';
 
 /**
  * Build a folder path string like "Parent / Child / Grandchild"

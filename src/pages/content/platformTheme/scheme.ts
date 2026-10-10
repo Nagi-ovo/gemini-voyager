@@ -3,12 +3,12 @@
  * per surface.
  *
  * Every host site announces dark mode in its own dialect — Gemini with
- * `.theme-host.dark-theme`, AI Studio with `body.dark-theme`, ChatGPT and
- * Claude with `html.dark`, DeepSeek with `body.dark`. Those selectors already
- * live in each `site.json` as `SiteThemeDescriptor`; nothing used to read them,
- * so `contentStyle.css` named the dialects it happened to know and DeepSeek —
- * added later — matched none of them, leaving every Voyager surface light on a
- * dark page.
+ * `.theme-host.dark-theme`, AI Studio with `body.dark-theme`, Claude with
+ * `html.dark`, ChatGPT with `html[data-theme="dark"]`, DeepSeek with
+ * `body.dark`. Those selectors already live in each `site.json` as
+ * `SiteThemeDescriptor`; nothing used to read them, so `contentStyle.css`
+ * named the dialects it happened to know and DeepSeek — added later — matched
+ * none of them, leaving every Voyager surface light on a dark page.
  *
  * This module is the single translator: it reads the descriptor and stamps
  * `data-gv-scheme="light" | "dark"` on the document root. CSS keys off that one
@@ -27,13 +27,12 @@ export const SCHEME_ATTR = 'data-gv-scheme';
 export type Scheme = 'light' | 'dark';
 
 /**
- * Attributes a host site flips when its theme changes. Every shipped adapter
- * signals through a class; `style` is here because a site can set a custom
- * property instead. `data-theme` and `data-color-scheme` are deliberately not
- * listed — the stylesheet carried rules for them for a long time and no host
- * has ever set either.
+ * Attributes a host site flips when its theme changes. Most adapters signal
+ * through a class; `style` is here because a site can set a custom property
+ * instead, and ChatGPT rewrites `data-theme` on `<html>`. `data-color-scheme`
+ * is deliberately not listed: no host sets it.
  */
-const WATCHED_ATTRIBUTES = ['class', 'style'];
+const WATCHED_ATTRIBUTES = ['class', 'style', 'data-theme'];
 
 const DARK_QUERY = '(prefers-color-scheme: dark)';
 

@@ -1,12 +1,22 @@
 import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
-import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
+import { nativeHealthReporter } from '../nativeHealth';
 import type { NativeConversationMenus } from './NativeConversationMenus';
 import type { NativeSidebarObserver } from './NativeSidebarObserver';
+import { NotebooksAnchorToggle } from './notebooksAnchorToggle';
+import {
+  type FolderAnchor,
+  findAnchor,
+  findNotebooks,
+  findSidebar,
+  isSidebarOpen,
+  removeStrayFolderPanels,
+} from './sidebarMountDom';
+import { SidebarRecoveryWatchers } from './sidebarRecoveryWatchers';
 
-export type FolderAnchor = 'above-recents' | 'above-notebooks';
+export type { FolderAnchor } from './sidebarMountDom';
 export type FolderMountMode = 'sidebar' | 'floating';
 
 export interface FolderSidebarRuntimeOptions {
@@ -41,10 +51,26 @@ export class FolderSidebarRuntime {
   private positionObserver: MutationObserver | null = null;
   private positionRaf: number | null = null;
   private visibilityObserver: MutationObserver | null = null;
-  private notebooksButton: HTMLElement | null = null;
-  private recoveryInterval: number | null = null;
-  private recoveryDebounce: number | null = null;
-  private recoveryHandler: (() => void) | null = null;
+  private readonly anchorToggle = new NotebooksAnchorToggle({
+    getPreference: () => this.anchorPreference,
+    onToggle: () => {
+      this.setAnchor(
+        this.anchorPreference === 'above-notebooks' ? 'above-recents' : 'above-notebooks',
+      );
+      void browser.storage.local
+        .set({ [StorageKeys.FOLDERS_ANCHOR]: this.anchorPreference })
+        .catch((error) =>
+          console.error('[FolderManager] Failed to persist folder anchor preference:', error),
+        );
+    },
+  });
+  private readonly recoveryWatchers = new SidebarRecoveryWatchers({
+    onLayoutSettled: () => {
+      if (!this.running || this.mode !== 'sidebar') return;
+      if (!this.isMountedInCurrentSidebar() && isSidebarOpen()) void this.remount();
+    },
+    onPoll: () => void this.recover(),
+  });
   private recoveryInFlight = false;
   private anchorMissingSince: number | null = null;
   private hiddenPanelSince: number | null = null;
@@ -96,6 +122,7 @@ export class FolderSidebarRuntime {
 
     if (mode === 'floating') {
       if (wasRunning && previousMode === mode) return;
+      nativeHealthReporter.withdraw('folders');
       this.invalidateMount();
       this.fallbackActive = false;
       this.anchorMissingSince = null;
@@ -116,7 +143,7 @@ export class FolderSidebarRuntime {
       this.fallbackActive = false;
       this.options.floating.close();
     }
-    this.ensureRecoveryWatchers();
+    this.recoveryWatchers.ensure();
     if (this.isMountedInCurrentSidebar()) {
       this.updateVisibility();
       return;
@@ -135,7 +162,7 @@ export class FolderSidebarRuntime {
     const generation = this.generation;
     this.remounting = remounting;
     this.unmountPanel('remount');
-    this.ensureRecoveryWatchers();
+    this.recoveryWatchers.ensure();
     this.startNativeMenus();
 
     const operation = this.waitForSidebar()
@@ -146,17 +173,7 @@ export class FolderSidebarRuntime {
         const parent = anchor?.parentElement;
         if (!anchor || !parent) return;
 
-        // Gemini can clone a panel unknown to us. Remove only direct Gemini folder siblings.
-        for (const sibling of Array.from(parent.children)) {
-          if (
-            sibling instanceof HTMLElement &&
-            sibling.classList.contains('gv-folder-container') &&
-            !sibling.classList.contains('gv-aistudio') &&
-            !sibling.classList.contains('gv-multi-select-floating-host')
-          ) {
-            sibling.remove();
-          }
-        }
+        removeStrayFolderPanels(parent);
         const panel = this.options.createPanel();
         this.panelElement = panel;
         parent.insertBefore(panel, anchor);
@@ -183,9 +200,10 @@ export class FolderSidebarRuntime {
   /** Disable/destroy ends every mounted-runtime timer, observer and pending sidebar wait. */
   stop(): void {
     this.running = false;
+    nativeHealthReporter.withdraw('folders');
     this.floatingOpenPanel = null;
     this.invalidateMount();
-    this.teardownRecoveryWatchers();
+    this.recoveryWatchers.teardown();
     this.unmountPanel('stop');
     this.options.nativeSidebar.stop();
     this.options.nativeMenus.stop();
@@ -229,7 +247,7 @@ export class FolderSidebarRuntime {
     this.positionRaf = null;
     this.visibilityObserver?.disconnect();
     this.visibilityObserver = null;
-    this.cleanupNotebooksButton();
+    this.anchorToggle.cleanup();
     this.panelElement?.remove();
     this.panelElement = null;
     this.sidebarElement = null;
@@ -251,7 +269,7 @@ export class FolderSidebarRuntime {
       };
       const cancel = () => finish(null);
       const check = () => {
-        const sidebar = this.findSidebar();
+        const sidebar = findSidebar();
         if (sidebar || Date.now() >= deadline || !this.running) {
           finish(sidebar);
         } else {
@@ -263,46 +281,11 @@ export class FolderSidebarRuntime {
     });
   }
 
-  private findSidebar(): HTMLElement | null {
-    const candidates = Array.from(
-      document.querySelectorAll<HTMLElement>('[data-test-id="overflow-container"]'),
-    );
-    return (
-      candidates.find((candidate) => {
-        const rect = candidate.getBoundingClientRect();
-        return rect.width > 0 && rect.height > 0;
-      }) ??
-      candidates[0] ??
-      null
-    );
-  }
-
-  private findNotebooks(sidebar = this.sidebarElement): HTMLElement | null {
-    return (
-      sidebar?.querySelector<HTMLElement>(
-        'expandable-section[data-test-id="notebooks-expandable-section"]',
-      ) ?? null
-    );
-  }
-
   private findAnchor(sidebar: HTMLElement): HTMLElement | null {
-    if (this.anchorPreference === 'above-notebooks') {
-      const notebooks = this.findNotebooks(sidebar);
-      if (notebooks) return notebooks;
-    }
-    const promote = (element: Element | null): Element | null =>
-      element ? (element.closest('expandable-section') ?? element) : null;
-    const firstConversation = sidebar.querySelector('[data-test-id="conversation"]');
-    const candidate =
-      sidebar.querySelector('expandable-section[data-test-id="chats-expandable-section"]') ??
-      promote(sidebar.querySelector('[data-test-id="all-conversations"]')) ??
-      promote(sidebar.querySelector('.chat-history')) ??
-      firstConversation?.closest('expandable-section') ??
-      firstConversation?.closest('.chat-history, [class*="conversation"]');
-    return candidate instanceof HTMLElement ? candidate : null;
+    return findAnchor(sidebar, this.anchorPreference);
   }
 
-  private isMountedInCurrentSidebar(sidebar = this.findSidebar()): boolean {
+  private isMountedInCurrentSidebar(sidebar = findSidebar()): boolean {
     return !!(
       this.panelElement &&
       document.body.contains(this.panelElement) &&
@@ -343,16 +326,10 @@ export class FolderSidebarRuntime {
     this.positionObserver.observe(target, { childList: true });
   }
 
-  private isSidebarOpen(): boolean {
-    if (document.querySelector('chat-app.side-nav-open, #app-root.side-nav-open')) return true;
-    const sidebar = document.querySelector('bard-sidenav, side-nav');
-    return sidebar instanceof HTMLElement && sidebar.offsetWidth > 120;
-  }
-
   private isPanelUsable(): boolean {
     const panel = this.panelElement;
     if (!panel?.isConnected) return false;
-    if (!this.isSidebarOpen() || panel.classList.contains('gv-sidebar-section-hidden')) return true;
+    if (!isSidebarOpen() || panel.classList.contains('gv-sidebar-section-hidden')) return true;
     return panel.offsetParent !== null && panel.getBoundingClientRect().height > 0;
   }
 
@@ -370,51 +347,20 @@ export class FolderSidebarRuntime {
   private updateVisibility(): void {
     if (!this.running || this.mode !== 'sidebar') return;
     if (!this.isMountedInCurrentSidebar()) {
-      if (this.isSidebarOpen()) void this.remount();
+      if (isSidebarOpen()) void this.remount();
       return;
     }
-    if (this.panelElement) this.panelElement.style.display = this.isSidebarOpen() ? '' : 'none';
-  }
-
-  private ensureRecoveryWatchers(): void {
-    if (!this.recoveryHandler) {
-      this.recoveryHandler = () => {
-        if (this.recoveryDebounce !== null) window.clearTimeout(this.recoveryDebounce);
-        this.recoveryDebounce = window.setTimeout(() => {
-          this.recoveryDebounce = null;
-          if (!this.running || this.mode !== 'sidebar') return;
-          if (!this.isMountedInCurrentSidebar() && this.isSidebarOpen()) void this.remount();
-        }, 800);
-      };
-      window.addEventListener('resize', this.recoveryHandler);
-      window.addEventListener('gv-print-cleanup', this.recoveryHandler);
-      window.addEventListener('afterprint', this.recoveryHandler);
-    }
-    if (this.recoveryInterval === null) {
-      this.recoveryInterval = window.setInterval(() => void this.recover(), 2000);
-    }
-  }
-
-  private teardownRecoveryWatchers(): void {
-    if (this.recoveryDebounce !== null) window.clearTimeout(this.recoveryDebounce);
-    this.recoveryDebounce = null;
-    if (this.recoveryHandler) {
-      window.removeEventListener('resize', this.recoveryHandler);
-      window.removeEventListener('gv-print-cleanup', this.recoveryHandler);
-      window.removeEventListener('afterprint', this.recoveryHandler);
-      this.recoveryHandler = null;
-    }
-    if (this.recoveryInterval !== null) window.clearInterval(this.recoveryInterval);
-    this.recoveryInterval = null;
+    if (this.panelElement) this.panelElement.style.display = isSidebarOpen() ? '' : 'none';
   }
 
   private async recover(): Promise<void> {
     if (!this.running || this.mode !== 'sidebar' || this.remounting || this.recoveryInFlight)
       return;
-    const sidebar = this.findSidebar();
+    const sidebar = findSidebar();
     const anchor = sidebar && this.findAnchor(sidebar);
     if (this.isMountedInCurrentSidebar(sidebar)) {
       this.anchorMissingSince = null;
+      nativeHealthReporter.reportFound('folders');
       if (sidebar && this.sidebarElement !== sidebar) {
         this.bindNativeSidebar(sidebar);
         this.observePosition();
@@ -438,13 +384,34 @@ export class FolderSidebarRuntime {
     this.hiddenPanelSince = null;
     if (anchor) {
       this.anchorMissingSince = null;
+      nativeHealthReporter.reportFound('folders');
       this.retireFallback();
       void this.remount();
       return;
     }
     const now = Date.now();
+    // Gemini can remove the whole sidebar while rebuilding it; absence needs the same grace.
     this.anchorMissingSince ??= now;
-    if (now - this.anchorMissingSince >= ANCHOR_MISSING_GRACE_MS) await this.openFallback();
+    if (now - this.anchorMissingSince < ANCHOR_MISSING_GRACE_MS) return;
+    this.reportMissingAnchor();
+    await this.openFallback();
+  }
+
+  /**
+   * Folders still work from the floating fallback, so a lost sidebar anchor is `degraded`. It
+   * counts only while the user keeps the sidebar open in sidebar mode; a collapsed sidebar or an
+   * explicit floating choice is not breakage.
+   */
+  private reportMissingAnchor(): void {
+    nativeHealthReporter.reportMissing('folders', {
+      route: 'any',
+      status: 'degraded',
+      recheck: () => {
+        const sidebar = findSidebar();
+        return !!sidebar && !!this.findAnchor(sidebar);
+      },
+      expected: () => this.running && this.mode === 'sidebar' && isSidebarOpen(),
+    });
   }
 
   private async openFallback(): Promise<void> {
@@ -505,64 +472,13 @@ export class FolderSidebarRuntime {
 
   private ensureNotebooksButton(): void {
     if (!this.running || this.mode !== 'sidebar') {
-      this.cleanupNotebooksButton();
+      this.anchorToggle.cleanup();
       return;
     }
-    const notebooks = this.findNotebooks();
-    if (!notebooks) {
-      if (this.notebooksButton && !this.notebooksButton.isConnected) this.notebooksButton = null;
-      return;
-    }
-    if (this.notebooksButton?.parentElement === notebooks) {
-      this.refreshLanguage();
-      return;
-    }
-    this.notebooksButton?.remove();
-    notebooks.classList.add('gv-folders-anchor-host');
-    const button = document.createElement('span');
-    button.className = 'gv-folders-anchor-toggle';
-    button.setAttribute('role', 'button');
-    button.setAttribute('tabindex', '0');
-    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true"><path d="M320-440v-287L217-624l-57-56 200-200 200 200-57 56-103-103v287h-80Zm320 280L440-360l57-56 103 103v-287h80v287l103-103 57 56-200 200Z"/></svg>`;
-    const toggle = (event: MouseEvent | KeyboardEvent) => {
-      if (event instanceof KeyboardEvent && event.key !== 'Enter' && event.key !== ' ') return;
-      event.stopPropagation();
-      event.preventDefault();
-      this.setAnchor(
-        this.anchorPreference === 'above-notebooks' ? 'above-recents' : 'above-notebooks',
-      );
-      void browser.storage.local
-        .set({ [StorageKeys.FOLDERS_ANCHOR]: this.anchorPreference })
-        .catch((error) =>
-          console.error('[FolderManager] Failed to persist folder anchor preference:', error),
-        );
-    };
-    button.addEventListener('click', toggle);
-    button.addEventListener('keydown', toggle);
-    button.addEventListener('pointerdown', (event) => event.stopPropagation());
-    button.addEventListener('mousedown', (event) => event.stopPropagation());
-    notebooks.appendChild(button);
-    this.notebooksButton = button;
-    this.refreshLanguage();
-  }
-
-  private cleanupNotebooksButton(): void {
-    this.notebooksButton?.remove();
-    this.notebooksButton = null;
-    document
-      .querySelectorAll('expandable-section.gv-folders-anchor-host')
-      .forEach((element) => element.classList.remove('gv-folders-anchor-host'));
+    this.anchorToggle.ensure(findNotebooks(this.sidebarElement));
   }
 
   refreshLanguage(): void {
-    const button = this.notebooksButton;
-    if (!button) return;
-    const aboveNotebooks = this.anchorPreference === 'above-notebooks';
-    const label = getTranslationSyncUnsafe(
-      aboveNotebooks ? 'folder_anchor_move_above_recents' : 'folder_anchor_move_above_notebooks',
-    );
-    button.title = label;
-    button.setAttribute('aria-label', label);
-    button.classList.toggle('gv-anchor-above-notebooks', aboveNotebooks);
+    this.anchorToggle.refreshLanguage();
   }
 }

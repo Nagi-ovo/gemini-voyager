@@ -113,6 +113,47 @@ describe('TimelineSettingsCard', () => {
     ).toBe(false);
   });
 
+  it.each(['ruler', 'compact'] as const)(
+    'the %s style shows hide outer container disabled, with its saved value and why',
+    (timelineStyle) => {
+      const props = render({ values: { ...values, timelineStyle, hideContainer: true } });
+      const toggle = container.querySelector<HTMLInputElement>('#hide-container')!;
+      const row = toggle.closest<HTMLElement>('div.group')!;
+      expect(row.hidden).toBe(false);
+      expect(toggle.disabled).toBe(true);
+      expect(toggle.checked).toBe(true);
+      expect(row.textContent).toContain('hideOuterContainerDotsOnly');
+      act(() => toggle.click());
+      expect(props.onChange).not.toHaveBeenCalled();
+    },
+  );
+
+  it('the dots style lets hide outer container be changed', () => {
+    const props = render({ values: { ...values, timelineStyle: 'dots' } });
+    const toggle = container.querySelector<HTMLInputElement>('#hide-container')!;
+    expect(toggle.disabled).toBe(false);
+    expect(toggle.closest('div.group')!.textContent).not.toContain('hideOuterContainerDotsOnly');
+    act(() => toggle.click());
+    expect(props.onChange).toHaveBeenLastCalledWith({ hideContainer: true });
+  });
+
+  it('with node levels on, only the dots style can be chosen', () => {
+    const styleButton = (label: string) =>
+      Array.from(container.querySelectorAll('button')).find((b) => b.textContent === label)!;
+    const props = render({
+      values: { ...values, timelineStyle: 'dots', markerLevelEnabled: true },
+    });
+    expect(styleButton('timelineStyleCompact').disabled).toBe(true);
+    expect(styleButton('timelineStyleRuler').disabled).toBe(true);
+    expect(styleButton('timelineStyleDots').disabled).toBe(false);
+    act(() => styleButton('timelineStyleRuler').click());
+    expect(props.onChange).not.toHaveBeenCalled();
+
+    render({ values: { ...values, markerLevelEnabled: false } });
+    expect(styleButton('timelineStyleCompact').disabled).toBe(false);
+    expect(styleButton('timelineStyleRuler').disabled).toBe(false);
+  });
+
   it('marks the experimental rows with the shared badge', () => {
     render();
     const badges = Array.from(container.querySelectorAll('[title="experimentalLabel"]'));

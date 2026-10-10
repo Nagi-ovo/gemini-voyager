@@ -18,12 +18,12 @@
   </p>
 
   <p>
-    <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="Nagi-ovo%2Fvoyager | Trendshift" width="250" height="55"/></a>
-    <a href="https://www.star-history.com/nagi-ovo/voyager" target="_blank">
+    <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="voyager-crew%2Fvoyager | Trendshift" width="250" height="55"/></a>
+    <a href="https://www.star-history.com/voyager-crew/voyager" target="_blank">
      <picture>
-       <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank&theme=dark" />
-       <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank" />
-       <img alt="Star History Rank" src="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank" width="193" height="55" />
+       <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank&theme=dark" />
+       <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank" />
+       <img alt="Star History Rank" src="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank" width="193" height="55" />
      </picture>
     </a>
     <a href="https://www.producthunt.com/products/gemini-voyager?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Voyager - AI conversation tools for Gemini, Claude, and ChatGPT | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
@@ -78,7 +78,7 @@ AI チャットボット — Gemini、Claude、ChatGPT — は強力ですが、
 
 - **📂 [フォルダ管理](https://voyager.nagi.fun/ja/guide/folders)**: **階層構造**、**ドラッグ＆ドロップによる並べ替え**、**Google ドライブ同期**をサポート。
   - **Gemini**: **マルチアカウント分離モード**と**カスタムフォルダカラー**をサポート。
-- **💡 [プロンプト管理](https://voyager.nagi.fun/ja/guide/prompts)**: プロンプトを保存して再利用。Gemini、AI Studio、[カスタムサイト](https://voyager.nagi.fun/ja/guide/custom-websites)で使用可能。
+- **💡 [プロンプト管理](https://voyager.nagi.fun/ja/guide/prompts)**: プロンプトを保存して再利用。Gemini、AI Studio、[カスタムサイト](https://voyager.nagi.fun/ja/guide/prompts#あらゆるサイトで利用可能)で使用可能。
 - **☁️ [クラウド同期](https://voyager.nagi.fun/ja/guide/cloud-sync)**: フォルダとプロンプトを Google ドライブに同期します。
 - **📐 数式コピー**: LaTeX および MathML (Word) のソースコードを一クリックでコピー。
 - **🌦️ ビジュアルエフェクト**: **雪**、**映画的な雨**、**桜の花びら**で季節の雰囲気を演出。設定パネルから切り替え可能。
@@ -140,7 +140,7 @@ AI チャットボット — Gemini、Claude、ChatGPT — は強力ですが、
     <img src="https://img.shields.io/badge/Firefox%20アドオン-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
   &nbsp;&nbsp;
-  <a href="https://github.com/Nagi-ovo/voyager/releases/latest/" target="_blank">
+  <a href="https://github.com/voyager-crew/voyager/releases/latest/" target="_blank">
     <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari ダウンロード" height="36">
   </a>
 </div>
@@ -156,8 +156,8 @@ AI チャットボット — Gemini、Claude、ChatGPT — は強力ですが、
 ## ☕ 支援のお願い
 
 <div align="center">
-  <a href="https://github.com/Nagi-ovo/voyager">
-    <img src="https://raw.githubusercontent.com/Nagi-ovo/voyager/main/docs/public/assets/sponsors.svg" width="1000px" />
+  <a href="https://github.com/voyager-crew/voyager">
+    <img src="https://raw.githubusercontent.com/voyager-crew/voyager/main/docs/public/assets/sponsors.svg" width="1000px" />
   </a>
 </div>
 
@@ -185,9 +185,9 @@ Voyager がお役に立ちましたら、コーヒー一杯分のご支援をい
       <td align="center">
         <a href="https://afdian.com/a/nagi-ovo" target="_blank">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
-            <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" />
-            <img alt="Nagi-ovo's Profile" src="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" height="160" />
+            <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
+            <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo" />
+            <img alt="Nagi-ovo's Profile" src="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo" height="160" />
           </picture>
         </a><br>
         <sub><b>Afdian</b></sub>
@@ -206,12 +206,12 @@ Voyager の開発中、私は AI 音声入力ツール **[Typeless (typeless.com
 
 ## 🤝 貢献と開発
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/voyager)
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/voyager-crew/voyager)
 
 バグ報告、機能提案、ドキュメントの改善など、あらゆる貢献を歓迎します！
 
-- **Issues**: 再現可能なバグのみ。[バグ報告](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml) テンプレートを使用してください。
-- **Discussions**: [機能リクエスト・アイデア・質問](https://github.com/Nagi-ovo/voyager/discussions)は Issue ではなく Discussions へ。
+- **Issues**: 再現可能なバグのみ。[バグ報告](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml) テンプレートを使用してください。
+- **Discussions**: [機能リクエスト・アイデア・質問](https://github.com/voyager-crew/voyager/discussions)は Issue ではなく Discussions へ。
 - **Pull Requests**: [CONTRIBUTING.md](./CONTRIBUTING.md) をご確認ください。
 
 <details>
@@ -241,8 +241,8 @@ Voyager をより良くするために協力してくださり、ありがとう
 
 Voyager に貢献してくださったすべてのコントリビューターに感謝します ❤️
 
-<a href="https://github.com/Nagi-ovo/voyager/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Nagi-ovo/voyager&max=200&columns=14" />
+<a href="https://github.com/voyager-crew/voyager/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=voyager-crew/voyager&max=200&columns=14" />
 </a>
 
 ---
@@ -255,7 +255,7 @@ Voyager に貢献してくださったすべてのコントリビューターに
 
 - **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - Image Refinement はこれらのプロジェクトをもとに適応されています。関連する第三者の MIT notice は [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) に記載しています。
 
-- **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - デフォルトモデル固定機能の一部のインタラクション設計は Gemini Helper を参考にしており、ソースコード上にも attribution を残しています。
+- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)** - デフォルトモデル固定機能の一部のインタラクション設計は Gemini Helper を参考にしており、ソースコード上にも attribution を残しています。
 
 - **[cordis](https://github.com/cordiverse/cordis)** - プラグインランタイムの副作用台帳（`PluginScope`）は、cordis の fiber モデルにおける effect／破棄ライフサイクル設計を参考にしています。
 
@@ -283,11 +283,11 @@ Gemini は Google LLC の商標です。Claude は Anthropic, PBC の商標で�
 ---
 
 <div align="center">
-  <a href="https://www.star-history.com/#Nagi-ovo/voyager&type=date&legend=top-left">
+  <a href="https://www.star-history.com/#voyager-crew/voyager&type=date&legend=top-left">
    <picture>
-     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&theme=dark&legend=top-left" />
-     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&legend=top-left" />
-     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&legend=top-left" />
+     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&theme=dark&legend=top-left" />
+     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&legend=top-left" />
+     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&legend=top-left" />
    </picture>
   </a>
   <p>Made with ❤️ by Jesse Zhang</p>

@@ -37,3 +37,16 @@ export type SemanticSelectorKey = (typeof SEMANTIC_SELECTOR_KEYS)[number];
 export function isSemanticSelectorKey(key: string): key is SemanticSelectorKey {
   return (SEMANTIC_SELECTOR_KEYS as readonly string[]).includes(key);
 }
+
+/** What each key names, in the words of the vocabulary above (machine-facing English). */
+export const SEMANTIC_KEY_DESCRIPTIONS: Readonly<Record<SemanticSelectorKey, string>> = {
+  userTurn: 'a user message container',
+  assistantTurn: 'an assistant message container',
+  thinkingBlock: 'the reasoning / "thinking" section inside an assistant turn',
+  codeBlock: 'a rendered code block',
+  composer: 'the prompt input the user types into',
+  sidebar: 'the conversation list / navigation rail',
+  sidePanel: 'a secondary panel (artifacts, canvas, previews)',
+  headerActions: 'the top-right action cluster of the conversation view',
+  scrollContainer: 'the element that scrolls the conversation',
+};

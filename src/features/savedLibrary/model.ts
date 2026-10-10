@@ -4,7 +4,8 @@ import {
   type HighlightRecordV1,
   isHighlightConversationUrl,
 } from '@/core/types/highlight';
-import type { StarredMessage } from '@/pages/content/timeline/starredTypes';
+import { NATIVE_SITE_IDS, SiteRegistry } from '@/features/plugins/sites/registry';
+import type { StarredMessage } from '@/features/savedLibrary/starTypes';
 
 export type SavedLibraryFilter = 'all' | 'starred' | 'highlights';
 
@@ -16,29 +17,37 @@ export interface SavedLibraryItem {
   conversationTitle?: string;
   turnId: string;
   content: string;
+  text?: string;
   note?: string;
   color?: HighlightColor;
+  account?: string;
   accountHash?: string;
   platform?: HighlightPlatform;
   savedAt: number;
+  firstSeenAt?: number;
+}
+
+export function savedLibraryItemKey(item: SavedLibraryItem): string {
+  return item.kind === 'starred'
+    ? JSON.stringify([item.kind, item.id])
+    : JSON.stringify([item.kind, item.platform, item.accountHash, item.conversationId, item.id]);
+}
+
+export function isSavedLibraryItemConversationUrl(item: SavedLibraryItem, url: URL): boolean {
+  if (item.kind === 'highlight') {
+    return item.platform !== undefined && isHighlightConversationUrl(url.href, item.platform);
+  }
+  if (url.protocol !== 'https:') return false;
+  const site = SiteRegistry.createDefault().resolveByUrl(url.href);
+  if (!site) return false;
+  // A star's site prefix must own its host; another supported site's URL is still unsafe.
+  const prefix = item.conversationId.includes(':') ? item.conversationId.split(':')[0] : null;
+  return prefix ? site.id === prefix : NATIVE_SITE_IDS.has(site.id);
 }
 
 export function buildSavedLibraryItemUrl(item: SavedLibraryItem): string {
   const url = new URL(item.conversationUrl);
-  const safeStarredHost =
-    url.protocol === 'https:' &&
-    [
-      'gemini.google.com',
-      'business.gemini.google',
-      'aistudio.google.com',
-      'aistudio.google.cn',
-      'claude.ai',
-    ].includes(url.hostname);
-  const safeHighlightHost =
-    item.kind === 'highlight' &&
-    item.platform !== undefined &&
-    isHighlightConversationUrl(url.href, item.platform);
-  if (item.kind === 'highlight' ? !safeHighlightHost : !safeStarredHost) {
+  if (!isSavedLibraryItemConversationUrl(item, url)) {
     throw new TypeError('Saved item URL is not an allowed conversation URL');
   }
   const hash = item.kind === 'highlight' ? `gv-highlight-${item.id}` : `gv-turn-${item.turnId}`;
@@ -62,7 +71,10 @@ export function toSavedLibraryItems(
     conversationTitle: message.conversationTitle,
     turnId: message.turnId,
     content: message.content,
+    text: message.text,
+    account: message.account,
     savedAt: message.starredAt,
+    firstSeenAt: message.starredAt,
   }));
   const highlightItems = highlights
     .filter(
@@ -83,6 +95,7 @@ export function toSavedLibraryItems(
       accountHash: record.accountHash,
       platform: record.platform,
       savedAt: record.updatedAt,
+      firstSeenAt: record.createdAt,
     }));
 
   return [...starredItems, ...highlightItems].sort(
@@ -102,7 +115,7 @@ export function filterSavedLibraryItems(
     if (!query) return true;
 
     const searchable = [
-      item.content,
+      item.text ?? item.content,
       item.note,
       item.conversationTitle,
       item.conversationUrl,

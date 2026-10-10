@@ -9,6 +9,8 @@ import { listPrimitiveNames, verifyPrimitiveRegistry } from './registry';
 interface BaselineParam {
   readonly type: string;
   readonly required: boolean;
+  /** Present when the param was added after its primitive first shipped. */
+  readonly sinceEngine?: string;
 }
 interface BaselinePrimitive {
   readonly sinceEngine: string;
@@ -53,6 +55,24 @@ describe('primitive contracts (plan D9: only ever add, only optional)', () => {
       expect(contract.name).toMatch(PRIMITIVE_NAME_PATTERN);
       expect(parseSemver(contract.sinceEngine)).not.toBeNull();
       expect(engineSatisfied(`>=${contract.sinceEngine}`, PLUGIN_ENGINE_VERSION)).toBe(true);
+      for (const [param, spec] of Object.entries(contract.params)) {
+        if (!spec.sinceEngine) continue;
+        expect(parseSemver(spec.sinceEngine), `${contract.name}.${param}`).not.toBeNull();
+        expect(engineSatisfied(`>=${spec.sinceEngine}`, PLUGIN_ENGINE_VERSION)).toBe(true);
+        expect(engineSatisfied(`>=${contract.sinceEngine}`, spec.sinceEngine)).toBe(true);
+      }
+    }
+  });
+
+  it('a param added after its primitive shipped names the engine that added it', () => {
+    for (const [name, entry] of Object.entries(published)) {
+      const contract = getPrimitiveContract(name)!;
+      for (const [param, spec] of Object.entries(contract.params)) {
+        const addedLater = !(param in entry.params) || entry.params[param].sinceEngine;
+        if (!addedLater) continue;
+        expect(spec.sinceEngine, `${name}.${param} needs a sinceEngine`).toBeDefined();
+        expect(spec.sinceEngine).not.toBe(contract.sinceEngine);
+      }
     }
   });
 

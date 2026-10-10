@@ -1,4 +1,4 @@
-import type { StarredMessage } from '../timeline/starredTypes';
+import type { StarredMessage } from '@/features/savedLibrary/starTypes';
 
 function padDatePart(value: number): string {
   return String(value).padStart(2, '0');

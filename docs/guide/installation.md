@@ -32,7 +32,7 @@
 
 **Chrome / Edge / Brave / Opera：**
 
-1. 去 [GitHub Releases](https://github.com/Nagi-ovo/voyager/releases) 下最新的 `voyager-chrome-vX.Y.Z.zip`。
+1. 去 [GitHub Releases](https://github.com/voyager-crew/voyager/releases) 下最新的 `voyager-chrome-vX.Y.Z.zip`。
 2. 解压。
 3. 打开扩展页 (`chrome://extensions`)。
 4. 开 **开发者模式** (右上角)。
@@ -40,7 +40,7 @@
 
 **Firefox：**
 
-1. 去 [Releases](https://github.com/Nagi-ovo/voyager/releases) 下最新的 `voyager-firefox-vX.Y.Z.xpi`。
+1. 去 [Releases](https://github.com/voyager-crew/voyager/releases) 下最新的 `voyager-firefox-vX.Y.Z.xpi`。
 2. 打开扩展管理页 (`about:addons`)。
 3. 把下载的 `.xpi` 文件拖进去安装（或者点右上角齿轮 ⚙️ -> **从文件安装附加组件**）。
 
@@ -74,4 +74,4 @@ Voyager 会继续沿用原有的 App 与扩展 bundle identifier，因此 macOS 
 
 ---
 
-_想贡献代码？开发者请移步 [贡献指南](https://github.com/Nagi-ovo/voyager/blob/main/.github/CONTRIBUTING.md)。_
+_想贡献代码？开发者请移步 [贡献指南](https://github.com/voyager-crew/voyager/blob/main/.github/CONTRIBUTING.md)。_

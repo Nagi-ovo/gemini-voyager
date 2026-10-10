@@ -13,6 +13,9 @@ interface VisualEffectsAvailabilityInput {
  * Native sites already ship with host access. Third-party sites become eligible
  * only after Prompt Manager or at least one matching plugin has been enabled,
  * which mirrors the two paths that dynamically inject Voyager's content script.
+ * Only an explicit enable counts, deliberately not `isPluginEnabled`: enabling
+ * a plugin requests the site's host access, but a builtin that is on by default
+ * may have none, and then no content script runs there to show the effects.
  */
 export function canUseVisualEffects({
   isPluginSite,

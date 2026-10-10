@@ -38,6 +38,47 @@ describe('matchPattern', () => {
     expect(matchesUrl('https://claudexai/x', 'https://claude.ai/*')).toBe(false);
   });
 
+  it('keeps a host wildcard inside the hostname', () => {
+    const frame = 'https://*.frame.claudeusercontent.com/*';
+    expect(matchesUrl('https://abc123.frame.claudeusercontent.com/x', frame)).toBe(true);
+    // The wildcard must not run across `/` or `?` into the path or the query.
+    expect(
+      matchesUrl('https://gemini.google.com/app/abc?x=.frame.claudeusercontent.com/', frame),
+    ).toBe(false);
+    expect(matchesUrl('https://gemini.google.com/.frame.claudeusercontent.com/', frame)).toBe(
+      false,
+    );
+    expect(matchesUrl('https://evil.example/?.openai.com/', 'https://*.openai.com/*')).toBe(false);
+    expect(matchesUrl('https://user@x.example.com@evil.test/', 'https://*.example.com/*')).toBe(
+      false,
+    );
+  });
+
+  it('matches the host exactly, never a host that merely starts with it', () => {
+    expect(matchesUrl('https://claude.ai.evil.test/x', 'https://claude.ai/*')).toBe(false);
+    expect(matchesUrl('https://claude.ai:8443/x', 'https://claude.ai/*')).toBe(false);
+  });
+
+  it('matches the path and query, but not the fragment', () => {
+    expect(matchesUrl('https://claude.ai/x?y=1', 'https://claude.ai/*')).toBe(true);
+    expect(
+      matchesUrl('https://chat.deepseek.com/a/chat/s/1', 'https://chat.deepseek.com/a/*'),
+    ).toBe(true);
+    expect(matchesUrl('https://chat.deepseek.com/b/a/', 'https://chat.deepseek.com/a/*')).toBe(
+      false,
+    );
+    expect(
+      matchesUrl('https://aistudio.google.com/prompts#x', 'https://aistudio.google.com/prompts'),
+    ).toBe(true);
+  });
+
+  it('accepts any host for a bare `*` host and rejects malformed input', () => {
+    expect(matchesUrl('https://anything.example/x', 'https://*/*')).toBe(true);
+    expect(matchesUrl('http://anything.example/x', 'https://*/*')).toBe(false);
+    expect(matchesUrl('not a url', 'https://*/*')).toBe(false);
+    expect(matchesUrl('https://claude.ai/', 'https://cla*de.ai/*')).toBe(false);
+  });
+
   it('matchesAnyPattern returns true if any pattern matches', () => {
     expect(
       matchesAnyPattern('https://chat.openai.com/c/1', [

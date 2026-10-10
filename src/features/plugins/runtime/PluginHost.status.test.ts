@@ -180,6 +180,43 @@ describe('PluginHost status machine (plan §4.2)', () => {
     host.stop();
   });
 
+  it('keeps a running primitive mounted when an unrelated local plugin is imported', async () => {
+    mockState({ 'x.formula': { enabled: true, installedAt: 1 } });
+    const running = manifest('x.formula', {
+      contributes: { domOps: [{ op: 'native', handler: 'formulaCopy', params: {} }] },
+    });
+    const listed = { current: [running] };
+    const imported = { current: [] as PluginManifest[] };
+    const host = new PluginHost({
+      url: URL,
+      sources: [
+        remoteSource(listed),
+        { id: 'local', kind: 'local', list: async () => imported.current },
+      ],
+      doc: document,
+      requestCatalogRefresh: () => {},
+      isTopFrame: true,
+    });
+    await host.start();
+    expect(activateFormulaCopy).toHaveBeenCalledTimes(1);
+
+    // The catalog re-lists an identical copy; the user imports a CSS-only plugin.
+    listed.current = [structuredClone(running)];
+    imported.current = [manifest('local.me.css-only')];
+    const listeners = (chrome.storage.onChanged.addListener as unknown as Mock).mock.calls;
+    for (const [listener] of listeners) {
+      listener({ gvPluginLocalManifests: { newValue: {} } }, 'local');
+    }
+    await flush();
+
+    expect(activateFormulaCopy).toHaveBeenCalledTimes(1);
+    expect(host.getStatuses().find((status) => status.id === 'x.formula')).toMatchObject({
+      kind: 'mounted',
+    });
+    expect(host.getStatuses().some((status) => status.id === 'local.me.css-only')).toBe(true);
+    host.stop();
+  });
+
   it('remounts a declarative plugin immediately on a catalog change', async () => {
     mockState({ 'x.css': { enabled: true, installedAt: 1 } });
     const v1 = manifest('x.css', {

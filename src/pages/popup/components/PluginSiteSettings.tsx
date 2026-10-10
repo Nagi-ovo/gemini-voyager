@@ -3,9 +3,12 @@ import type { ComponentProps } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { CHATGPT_EXPORT_PLUGIN_ID } from '@/features/plugins/builtin/chatgptExport/openMessage';
 import type { TranslationKey } from '@/utils/translations';
 
 import type { PromptDataTransferController } from '../hooks/usePromptDataTransfer';
+import { ChatGptExportCard } from './ChatGptExportCard';
+import { LocalPluginsPanel } from './LocalPluginsPanel';
 import { PluginManager } from './PluginManager';
 import { PromptDataTransfer } from './PromptDataTransfer';
 
@@ -16,6 +19,7 @@ export function PluginSiteSettings({
   onTogglePrompt,
   promptDataTransfer,
   plugins,
+  exportEntry,
   t,
 }: {
   siteDomain: string;
@@ -24,10 +28,28 @@ export function PluginSiteSettings({
   onTogglePrompt: () => void;
   promptDataTransfer: PromptDataTransferController;
   plugins: ComponentProps<typeof PluginManager>;
+  /** Enabled state and target tab for the ChatGPT export card. */
+  exportEntry?: {
+    enabled: boolean;
+    activeTabId: number | null;
+    onOpened?: () => void;
+  };
   t: (key: TranslationKey) => string;
 }) {
+  // Listed only where the exporter's `matches` cover the active tab (ChatGPT).
+  const exportPlugin = plugins.manifests.find((plugin) => plugin.id === CHATGPT_EXPORT_PLUGIN_ID);
   return (
     <>
+      {exportPlugin && exportEntry && (
+        <ChatGptExportCard
+          plugin={exportPlugin}
+          enabled={exportEntry.enabled}
+          activeTabId={exportEntry.activeTabId}
+          activeUrl={plugins.activeUrl}
+          onOpened={exportEntry.onOpened}
+          t={t}
+        />
+      )}
       {siteDomain && (
         <Card
           style={{ order: -2 }}
@@ -61,8 +83,9 @@ export function PluginSiteSettings({
           <PromptDataTransfer t={t} transfer={promptDataTransfer} />
         </CardContent>
       </Card>
-      <div style={{ order: -1 }}>
+      <div style={{ order: -1 }} className="flex flex-col gap-4">
         <PluginManager {...plugins} />
+        <LocalPluginsPanel t={t} activeUrl={plugins.activeUrl} />
       </div>
     </>
   );

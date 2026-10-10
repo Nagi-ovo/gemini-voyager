@@ -8,6 +8,7 @@ import {
 import { type Result, type StorageKey, StorageKeys } from '@/core/types/common';
 import { buildConversationIdFromUrl } from '@/core/utils/conversationIdentity';
 import { hashString } from '@/core/utils/hash';
+import type { TimelineMarker } from '@/features/timeline/types';
 
 import { TimestampService } from '../../timestamp/TimestampService';
 import {
@@ -16,7 +17,6 @@ import {
 } from '../../timestamp/historyTimestamps';
 import { TimelineTimestamps } from '../TimelineTimestamps';
 import { TimelineTurns } from '../TimelineTurns';
-import type { TimelineMarker } from '../types';
 
 const SERVER_TURN_ID = 's-1111111111111111';
 const SECOND_TURN_ID = 's-2222222222222222';

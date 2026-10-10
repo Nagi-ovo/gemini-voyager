@@ -1,9 +1,9 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 import { hashString } from '@/core/utils/hash';
+import { confirmDriver } from '@/tests/confirmDriver';
+import { toastDriver } from '@/tests/toastDriver';
 
 import { buildInstructionBlock } from '../../folderProject/instructionBlock';
 import { addPromptHistory, getPromptHistory } from '../storage';
@@ -323,7 +323,7 @@ describe('Prompt History capture and lifecycle', () => {
     button.click();
 
     await vi.waitFor(() => {
-      expect(document.querySelector('.gv-ph-global-notice')?.getAttribute('role')).toBe('alert');
+      expect(toastDriver.all()).toMatchObject([{ tone: 'error', role: 'alert' }]);
     });
   });
 
@@ -361,14 +361,10 @@ describe('Prompt History capture and lifecycle', () => {
     const clearButton = document.querySelector<HTMLButtonElement>('.gv-ph-header .gv-ph-action');
     clearButton?.click();
 
-    await vi.waitFor(() => expect(document.querySelector('.gv-ph-confirm')).not.toBeNull());
+    await vi.waitFor(() => expect(confirmDriver.isOpen()).toBe(true));
     expect(await getPromptHistory(PRIMARY_ACCOUNT_SCOPE)).toHaveLength(1);
-    const cancel = document.querySelector<HTMLButtonElement>('.gv-ph-confirm button:last-child');
-    expect(document.activeElement).toBe(cancel);
-    cancel?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
-    const confirm = document.querySelector<HTMLButtonElement>('.gv-pm-confirm-yes');
-    expect(document.activeElement).toBe(confirm);
-    confirm?.click();
+    expect(confirmDriver.focusedLabel()).toBe('Cancel');
+    confirmDriver.answer('Clear');
 
     await vi.waitFor(async () =>
       expect(await getPromptHistory(PRIMARY_ACCOUNT_SCOPE)).toHaveLength(0),
@@ -386,13 +382,5 @@ describe('Prompt History capture and lifecycle', () => {
     expect(trigger?.getAttribute('aria-expanded')).toBe('true');
     expect(panel?.getAttribute('aria-labelledby')).toBe('gv-ph-title');
     expect(document.activeElement).toBe(panel);
-  });
-
-  it('places the global error notice below the trigger on short viewports', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
-
-    expect(css).toMatch(
-      /@media \(max-height: 440px\)[\s\S]*?\.gv-ph-trigger\s*\{\s*top: 12px;\s*\}[\s\S]*?\.gv-ph-global-notice\s*\{\s*top: 66px;\s*\}/,
-    );
   });
 });

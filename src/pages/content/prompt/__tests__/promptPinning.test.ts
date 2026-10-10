@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { isPinned, pinGroupOf, pinnedCount, sortPinnedFirst, togglePin } from '../promptPinning';
 
-type Item = { id: string; pinnedAt?: number; updatedAt?: number };
+type Item = { id: string; pinnedAt?: number | null; updatedAt?: number };
 
 const ids = (items: Item[]) => items.map((item) => item.id);
 
@@ -50,13 +50,15 @@ describe('togglePin', () => {
     expect(isPinned(pinned)).toBe(true);
   });
 
-  it('unpins by dropping the field rather than zeroing it', () => {
+  it('unpins by writing null, which a merge reads as an intentional unpin', () => {
     const items: Item[] = [{ id: 'a', pinnedAt: 500, updatedAt: 500 }];
 
     const [unpinned] = togglePin(items, 'a', 900);
 
-    expect('pinnedAt' in unpinned).toBe(false);
+    expect(unpinned.pinnedAt).toBeNull();
+    expect(isPinned(unpinned)).toBe(false);
     expect(unpinned.updatedAt).toBe(900);
+    expect(isPinned(togglePin([unpinned], 'a', 950)[0])).toBe(true);
   });
 
   it('leaves the array alone when the id is gone', () => {

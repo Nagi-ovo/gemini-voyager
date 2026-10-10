@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
+import { toastDriver } from '@/tests/toastDriver';
 
+import { fakeTransfer } from '../floatingTree/__tests__/treeDriver';
 import type { ConversationReference, DragData, Folder, FolderData } from '../types';
 import { createFolderViewHarness, resetFolderViewBrowserMocks } from './folderViewHarness';
+import { sidebarTree } from './sidebarTreeDriver';
 
 vi.mock('webextension-polyfill', () => ({ default: chrome }));
 
@@ -12,14 +15,6 @@ vi.mock('@/utils/i18n', () => ({
   getTranslationSyncUnsafe: (key: string) => key,
   initI18n: () => Promise.resolve(),
 }));
-
-type RafQueue = {
-  flush: () => void;
-  restore: () => void;
-  requestAnimationFrameMock: ReturnType<typeof vi.fn>;
-};
-
-let rafQueue: RafQueue | null = null;
 
 function createFolder(
   id: string,
@@ -66,56 +61,23 @@ function createConversation(id: string, sortIndex: number): ConversationReferenc
   };
 }
 
-function createDataTransfer(payload: DragData): DataTransfer {
-  return {
-    types: ['application/json'],
-    effectAllowed: 'all',
-    dropEffect: 'none',
-    getData: vi.fn(() => JSON.stringify(payload)),
-    setData: vi.fn(),
-    setDragImage: vi.fn(),
-  } as unknown as DataTransfer;
-}
-
-function createDragEvent(type: string, clientY: number, payload: DragData): DragEvent {
-  const event = new Event(type, { bubbles: true, cancelable: true }) as DragEvent;
-  Object.defineProperty(event, 'clientY', { value: clientY, configurable: true });
-  Object.defineProperty(event, 'dataTransfer', {
-    value: createDataTransfer(payload),
+/** A drag carrying `payload`, over or onto `target` at `clientY` (the row spans 0–40px). */
+function dragAt(
+  target: HTMLElement,
+  type: 'dragover' | 'drop',
+  clientY: number,
+  payload: DragData,
+) {
+  Object.defineProperty(target, 'getBoundingClientRect', {
     configurable: true,
+    value: () => ({ top: 0, bottom: 40, height: 40, left: 0, right: 200, width: 200 }),
   });
+  const transfer = fakeTransfer({ 'application/json': JSON.stringify(payload) });
+  const event = new Event(type, { bubbles: true, cancelable: true, composed: true }) as DragEvent;
+  Object.defineProperty(event, 'clientY', { value: clientY });
+  Object.defineProperty(event, 'dataTransfer', { value: transfer });
+  target.dispatchEvent(event);
   return event;
-}
-
-function installRafQueue(): RafQueue {
-  const callbacks = new Map<number, FrameRequestCallback>();
-  let nextId = 1;
-
-  const requestAnimationFrameMock = vi
-    .spyOn(window, 'requestAnimationFrame')
-    .mockImplementation((callback: FrameRequestCallback) => {
-      const id = nextId++;
-      callbacks.set(id, callback);
-      return id;
-    });
-  const cancelAnimationFrameMock = vi
-    .spyOn(window, 'cancelAnimationFrame')
-    .mockImplementation((id: number) => {
-      callbacks.delete(id);
-    });
-
-  return {
-    requestAnimationFrameMock,
-    flush: () => {
-      const pending = Array.from(callbacks.entries());
-      callbacks.clear();
-      pending.forEach(([, callback]) => callback(0));
-    },
-    restore: () => {
-      requestAnimationFrameMock.mockRestore();
-      cancelAnimationFrameMock.mockRestore();
-    },
-  };
 }
 
 describe('folder movement', () => {
@@ -129,8 +91,6 @@ describe('folder movement', () => {
 
   afterEach(() => {
     harness?.destroy();
-    rafQueue?.restore();
-    rafQueue = null;
     document.body.innerHTML = '';
     localStorage.clear();
     vi.useRealTimers();
@@ -147,15 +107,9 @@ describe('folder movement', () => {
       folderContents: {},
     });
 
-    const panel = harness.runtime.panel!;
-    expect(
-      panel.querySelector<HTMLElement>('[data-folder-id="parent"] > .gv-folder-item-header')!
-        .draggable,
-    ).toBe(true);
-    expect(
-      panel.querySelector<HTMLElement>('[data-folder-id="pinned"] > .gv-folder-item-header')!
-        .draggable,
-    ).toBe(false);
+    const tree = sidebarTree(harness.runtime.panel);
+    expect(tree.folderRow('Parent').draggable).toBe(true);
+    expect(tree.folderRow('Pinned').draggable).toBe(false);
   });
 
   it('preserves sibling order when reordering a folder within the same parent', async () => {
@@ -175,11 +129,7 @@ describe('folder movement', () => {
     expect(getOrderedFolderIds(harness.saved, null)).toEqual(['b', 'a', 'c']);
     expect(harness.adapter.saveData).toHaveBeenCalledTimes(1);
     expect(harness.onRefresh).toHaveBeenCalledTimes(1);
-    expect(
-      Array.from(harness.runtime.panel!.querySelectorAll<HTMLElement>('.gv-folder-item')).map(
-        (row) => row.dataset.folderId,
-      ),
-    ).toEqual(['b', 'a', 'c']);
+    expect(sidebarTree(harness.runtime.panel).folderNames()).toEqual(['B', 'A', 'C']);
   });
 
   it.each(['pinned', 'descendant'])(
@@ -204,7 +154,7 @@ describe('folder movement', () => {
     },
   );
 
-  it('restores in-folder conversation reorder handles in manual mode', async () => {
+  it('reorders a conversation within its folder by dropping it above a sibling', async () => {
     harness = await createFolderViewHarness({
       folders: [createFolder('folder', 'Folder', null, 0)],
       folderContents: {
@@ -216,25 +166,15 @@ describe('folder movement', () => {
       },
     });
     await vi.advanceTimersByTimeAsync(0);
-    rafQueue = installRafQueue();
-    const rows = Array.from(
-      harness.runtime.panel!.querySelectorAll<HTMLElement>('.gv-folder-conversation'),
-    );
     const dragData: DragData = {
       type: 'conversation',
       title: 'Conversation a',
       conversations: [createConversation('a', 0)],
       sourceFolderId: 'folder',
     };
-    Object.defineProperty(rows[2], 'getBoundingClientRect', {
-      value: () => ({ top: 0, height: 40 }),
-    });
-    rows[2].dispatchEvent(createDragEvent('dragover', 5, dragData));
-
-    expect(rafQueue.requestAnimationFrameMock).toHaveBeenCalledTimes(1);
-    rafQueue.flush();
-    expect(rows[2].classList.contains('gv-reorder-above')).toBe(true);
-    rows[2].dispatchEvent(createDragEvent('drop', 5, dragData));
+    const target = sidebarTree(harness.runtime.panel).conversationRow('folder', 'Conversation c');
+    expect(dragAt(target, 'dragover', 5, dragData).defaultPrevented).toBe(true);
+    dragAt(target, 'drop', 5, dragData);
     await vi.advanceTimersByTimeAsync(0);
 
     expect(harness.adapter.saveData).toHaveBeenCalledTimes(1);
@@ -244,11 +184,12 @@ describe('folder movement', () => {
         .sort((a, b) => (a.sortIndex ?? 0) - (b.sortIndex ?? 0))
         .map((conversation) => conversation.conversationId),
     ).toEqual(['b', 'a', 'c']);
-    expect(
-      Array.from(
-        harness.runtime.panel!.querySelectorAll<HTMLElement>('.gv-folder-conversation'),
-      ).map((row) => row.dataset.conversationId),
-    ).toEqual(['b', 'a', 'c']);
+    expect(sidebarTree(harness.runtime.panel).outline()).toEqual([
+      'Folder',
+      '  · Conversation b',
+      '  · Conversation a',
+      '  · Conversation c',
+    ]);
   });
 
   it('keeps in-folder reorder disabled in recently-opened mode and explains why', async () => {
@@ -261,11 +202,6 @@ describe('folder movement', () => {
       'sync',
     );
     await vi.advanceTimersByTimeAsync(0);
-    rafQueue = installRafQueue();
-    const rows = Array.from(
-      harness.runtime.panel!.querySelectorAll<HTMLElement>('.gv-folder-conversation'),
-    );
-    const content = harness.runtime.panel!.querySelector<HTMLElement>('.gv-folder-content');
     const original = structuredClone(harness.store.data);
     const dragData: DragData = {
       type: 'conversation',
@@ -273,15 +209,13 @@ describe('folder movement', () => {
       conversations: [createConversation('a', 0)],
       sourceFolderId: 'folder',
     };
+    const target = sidebarTree(harness.runtime.panel).conversationRow('folder', 'Conversation b');
 
-    rows[1].dispatchEvent(createDragEvent('dragover', 5, dragData));
-    expect(rafQueue.requestAnimationFrameMock).not.toHaveBeenCalled();
-    expect(content?.classList.contains('gv-folder-dragover')).toBe(true);
-    rows[1].dispatchEvent(createDragEvent('drop', 5, dragData));
+    // The drag is still taken (it files into the folder), but never as a reorder.
+    expect(dragAt(target, 'dragover', 35, dragData).defaultPrevented).toBe(true);
+    dragAt(target, 'drop', 35, dragData);
 
-    expect(document.querySelector('.gv-notification')?.textContent).toBe(
-      'folder_sort_recent_drag_hint',
-    );
+    expect(toastDriver.messages()).toEqual(['folder_sort_recent_drag_hint']);
     expect(harness.store.data).toEqual(original);
     expect(harness.adapter.saveData).not.toHaveBeenCalled();
   });

@@ -5,6 +5,7 @@ import type { FolderStore } from '../FolderStore';
 import { FolderManager } from '../manager';
 import type { ConversationReference, FolderData } from '../types';
 import { mountSidebar } from './sidebarRuntimeHarness';
+import { sidebarTree, sidebarTreeRoot } from './sidebarTreeDriver';
 
 vi.mock('@/utils/i18n', () => ({
   getTranslationSync: (key: string) => key,
@@ -100,9 +101,19 @@ describe('Gemini native conversation title sync', () => {
     return data.folderContents.folderA[0];
   }
 
+  /** What the folder tree shows: the folder and its one conversation. */
+  function shown(panel: HTMLElement): string[] {
+    return sidebarTree(panel).outline();
+  }
+
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.mocked(chrome.storage.local.get).mockImplementation(async () => ({}));
+    vi.mocked(chrome.storage.local.get).mockImplementation(
+      (_keys: unknown, callback?: (items: Record<string, unknown>) => void) => {
+        callback?.({});
+        return Promise.resolve({});
+      },
+    );
     vi.mocked(chrome.storage.local.set).mockResolvedValue(undefined);
     localStorage.clear();
   });
@@ -126,7 +137,7 @@ describe('Gemini native conversation title sync', () => {
 
     expect(store.data.folderContents.folderA[0].title).toBe('Renamed title');
     expect(savedConversation().title).toBe('Renamed title');
-    expect(panel.querySelector('.gv-conversation-title')?.textContent).toBe('Renamed title');
+    expect(shown(panel)).toEqual(['Folder A', '  · Renamed title']);
   });
 
   it('does not overwrite manually renamed folder conversation titles', async () => {
@@ -140,7 +151,7 @@ describe('Gemini native conversation title sync', () => {
     await vi.advanceTimersByTimeAsync(350);
 
     expect(store.data.folderContents.folderA[0].title).toBe('Manual title');
-    expect(panel.querySelector('.gv-conversation-title')?.textContent).toBe('Manual title');
+    expect(shown(panel)).toEqual(['Folder A', '  · Manual title']);
     expect(localStorage.getItem('gvFolderData')).toBeNull();
   });
 
@@ -158,17 +169,20 @@ describe('Gemini native conversation title sync', () => {
         native.wrapper,
         true,
       );
-      const row = panel.querySelector<HTMLElement>('.gv-folder-conversation')!;
+      const tree = sidebarTree(panel);
 
       if (trigger === 'double-click') {
-        row
-          .querySelector('.gv-conversation-title')!
-          .dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
+        tree
+          .titleButton('folderA', 'Folder-only title')
+          .dispatchEvent(
+            new MouseEvent('dblclick', { bubbles: true, cancelable: true, composed: true }),
+          );
       } else {
-        row.dispatchEvent(
+        tree.conversationRow('folderA', 'Folder-only title').dispatchEvent(
           new MouseEvent('contextmenu', {
             bubbles: true,
             cancelable: true,
+            composed: true,
             clientX: 24,
             clientY: 32,
           }),
@@ -190,8 +204,9 @@ describe('Gemini native conversation title sync', () => {
       expect(store.data.folderContents.folderA[0].customTitle).toBeUndefined();
       expect(savedConversation().title).toBe('Native title');
       expect(savedConversation().customTitle).toBeUndefined();
-      expect(panel.querySelector('.gv-conversation-title')?.textContent).toBe('Native title');
-      expect(panel.querySelector('.gv-conversation-rename-input')).toBeNull();
+      expect(shown(panel)).toEqual(['Folder A', '  · Native title']);
+      // Gemini's own rename field opens; the folder tree opens none of its own.
+      expect(sidebarTreeRoot(panel).querySelector('input')).toBeNull();
     },
   );
 });

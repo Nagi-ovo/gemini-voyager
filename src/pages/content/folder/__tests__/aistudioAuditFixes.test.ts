@@ -1,9 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import browser from 'webextension-polyfill';
 
+import { StorageKeys } from '@/core/types/common';
 import type { PromptItem } from '@/core/types/sync';
 
+import { FolderRepository } from '../FolderRepository';
 import { AIStudioFolderManager } from '../aistudio';
+import { applyHideArchivedRows } from '../aistudioLibraryTable';
+import { AIStudioTransfer } from '../aistudioTransfer';
+import { AISTUDIO_FOLDER_CONFIG } from '../platformFolderConfig';
+import { AIStudioFolderStorageAdapter } from '../storage/AIStudioFolderStorageAdapter';
+import { createSyncMessageListener } from '../syncMessageListener';
+import type { FolderData } from '../types';
 
 vi.mock('webextension-polyfill', () => ({
   default: {
@@ -44,30 +52,16 @@ type ManagerInternals = {
     folderContents: Record<string, StoredConversation[]>;
   };
   container: HTMLElement | null;
-  cleanupFns: Array<() => void>;
   folderEnabled: boolean;
-  hideArchivedEnabled: boolean;
-  accountContextPoller: number | null;
-  stopRouteWatcher: (() => void) | null;
-  containerMountObserver: MutationObserver | null;
-  bodyPromptPopoverObserver: MutationObserver | null;
-  libraryTableObserver: MutationObserver | null;
-  libraryDropZoneInjected: boolean;
-  showNotification: (message: string, level?: 'info' | 'warning' | 'error') => void;
-  timestamp: () => string;
-  setupMessageListener: () => void;
-  setupAccountContextPoller: () => void;
-  installRouteChangeListener: () => void;
-  observeLibraryTable: () => void;
-  observeBodyPromptPopovers: () => void;
-  injectLibraryDropZone: () => void;
+  account: { polling: boolean };
+  library: { mountDropZone: () => void };
+  startAccountPolling: () => void;
   watchContainerMount: () => void;
+  injectUI: () => void;
   destroy: () => void;
   applyFolderEnabledSetting: () => void;
   initializeFolderUI: () => Promise<void>;
   syncConversationTitlesFromPromptList: () => Promise<void>;
-  applyHideArchivedToLibraryTable: () => void;
-  mergePromptsData: (local: PromptItem[], cloud: PromptItem[]) => PromptItem[];
   save: () => Promise<boolean>;
   render: () => void;
 };
@@ -127,6 +121,7 @@ function storedConversation(conversationId: string, title: string): StoredConver
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(browser.storage.local.get).mockResolvedValue({});
 });
 
 afterEach(() => {
@@ -142,39 +137,54 @@ afterEach(() => {
   window.history.pushState({}, '', '/');
 });
 
-describe('M12 — notification and export timestamp string integrity', () => {
-  it('renders notification className with gv- prefix and no stray spaces', () => {
-    vi.useFakeTimers();
-    const { internals } = createManager();
-
-    internals.showNotification('boom', 'warning');
-
-    const el = document.querySelector('.gv-notification') as HTMLElement | null;
-    expect(el).not.toBeNull();
-    expect(el?.className).toBe('gv-notification gv-notification-warning');
-    expect(el?.className).toMatch(/^gv-notification gv-notification-(info|warning|error)$/);
-    expect(el?.className).not.toMatch(/\s{2,}|^\s|\s$/);
-    expect(el?.textContent).toBe('[Gemini Voyager] boom');
-  });
-
-  it('produces an export timestamp without embedded spaces', () => {
-    const { internals } = createManager();
-    expect(internals.timestamp()).toMatch(/^\d{8}-\d{6}$/);
-  });
-});
-
 describe('H1 — runtime message listener response contract', () => {
-  function getRegisteredListener(internals: ManagerInternals): MessageListener {
-    internals.setupMessageListener();
-    const addListener = vi.mocked(browser.runtime.onMessage.addListener);
-    const lastCall = addListener.mock.calls.at(-1);
-    expect(lastCall).toBeDefined();
-    return lastCall?.[0] as unknown as MessageListener;
+  function syncListener(): MessageListener {
+    return createSyncMessageListener({
+      canEdit: () => true,
+      data: () => ({ folders: [], folderContents: {} }),
+      accountScope: () => null,
+      reload: async () => {},
+    }) as unknown as MessageListener;
   }
 
+  it('does not publish an empty AI Studio snapshot before folders have loaded', async () => {
+    const repository = new FolderRepository(
+      AISTUDIO_FOLDER_CONFIG,
+      new AIStudioFolderStorageAdapter(),
+      {
+        onChange: () => {},
+        onRecovery: () => {},
+        onExternalChange: () => {},
+        onAccountReleased: () => {},
+        isEnabled: () => true,
+      },
+    );
+    const listener = createSyncMessageListener({
+      canEdit: () => repository.canEdit,
+      data: () => repository.data,
+      accountScope: () => repository.accountScope,
+      reload: () => repository.loadData(),
+    }) as unknown as MessageListener;
+    const sendResponse = vi.fn();
+    try {
+      listener({ type: 'gv.sync.requestData' }, {}, sendResponse);
+      expect(sendResponse).toHaveBeenLastCalledWith({ ok: false });
+      vi.mocked(browser.storage.sync.get).mockResolvedValue({});
+      vi.spyOn(chrome.storage.local, 'get').mockImplementation(async () => ({
+        [StorageKeys.FOLDER_DATA_AISTUDIO]: { folders: [], folderContents: {} },
+      }));
+      await repository.init();
+      listener({ type: 'gv.sync.requestData' }, {}, sendResponse);
+      expect(sendResponse).toHaveBeenLastCalledWith(
+        expect.objectContaining({ ok: true, data: { folders: [], folderContents: {} } }),
+      );
+    } finally {
+      repository.destroy();
+    }
+  });
+
   it('returns undefined for unknown messages so the sender promise settles', () => {
-    const { internals } = createManager();
-    const listener = getRegisteredListener(internals);
+    const listener = syncListener();
     const sendResponse = vi.fn();
 
     const result = listener({ type: 'gv.some.unrelated.broadcast' }, {}, sendResponse);
@@ -184,8 +194,7 @@ describe('H1 — runtime message listener response contract', () => {
   });
 
   it('still answers gv.sync.requestData synchronously with return true', () => {
-    const { internals } = createManager();
-    const listener = getRegisteredListener(internals);
+    const listener = syncListener();
     const sendResponse = vi.fn();
 
     const result = listener({ type: 'gv.sync.requestData' }, {}, sendResponse);
@@ -196,8 +205,7 @@ describe('H1 — runtime message listener response contract', () => {
 });
 
 describe('Drive prompt merge', () => {
-  it('preserves the local name when a newer legacy cloud prompt omits it', () => {
-    const { internals } = createManager();
+  it('preserves the local name when a newer legacy cloud prompt omits it', async () => {
     const local: PromptItem = {
       id: 'prompt-1',
       name: 'Keep this name',
@@ -214,7 +222,27 @@ describe('Drive prompt merge', () => {
       updatedAt: 20,
     };
 
-    expect(internals.mergePromptsData([local], [cloud])).toEqual([
+    const data: FolderData = { folders: [], folderContents: {} };
+    const session = { data, accountScope: null };
+    vi.mocked(chrome.storage.local.get).mockResolvedValue({ gvPromptItems: [local] } as never);
+    vi.mocked(browser.runtime.sendMessage).mockResolvedValue({
+      ok: true,
+      data: { folders: { data }, prompts: { items: [cloud] } },
+    });
+    const replaceData = vi.fn().mockResolvedValue(true);
+    const transfer = new AIStudioTransfer({
+      t: (key) => key,
+      session: () => session as never,
+      activation: () => 1,
+      canEdit: () => true,
+      data: () => data,
+      replaceData,
+      notify: vi.fn(),
+    });
+
+    await transfer.sync();
+
+    expect(replaceData).toHaveBeenCalledWith(expect.anything(), [
       { ...cloud, name: 'Keep this name' },
     ]);
   });
@@ -286,64 +314,67 @@ describe('H7 — single-scan native title sync', () => {
 });
 
 describe('M11 — destroy() lifecycle teardown', () => {
-  it('clears pollers, observers, listeners and injected DOM, and is idempotent', () => {
+  function mountLibraryPage(): ManagerInternals {
+    window.history.pushState({}, '', '/library');
+    document.body.innerHTML =
+      '<div class="nav-content v3-left-nav"><nav><div class="empty-space"></div></nav></div>';
+    const empty = { folders: [], folderContents: {} };
+    vi.mocked(chrome.storage.local.get).mockResolvedValue({
+      [StorageKeys.FOLDER_DATA_AISTUDIO]: empty,
+    } as never);
+    vi.mocked(browser.storage.local.get).mockResolvedValue({});
+    vi.mocked(browser.storage.sync.get).mockResolvedValue({});
+    return createManager().internals;
+  }
+
+  async function settle(): Promise<void> {
+    for (let i = 0; i < 5; i++) await Promise.resolve();
+  }
+
+  it('clears timers and injected DOM, and is idempotent', async () => {
     vi.useFakeTimers();
-    const { internals } = createManager();
-
-    const container = document.createElement('div');
-    container.className = 'gv-folder-container gv-aistudio';
-    document.body.appendChild(container);
-    internals.container = container;
-    document.documentElement.classList.add('gv-aistudio-root');
-    internals.data = {
-      folders: [
-        {
-          id: 'f1',
-          name: 'Folder',
-          parentId: null,
-          isExpanded: true,
-          createdAt: 1,
-          updatedAt: 1,
-        },
-      ],
-      folderContents: { f1: [] },
-    };
-    internals.save = vi.fn().mockResolvedValue(true);
-
-    internals.setupAccountContextPoller();
-    internals.installRouteChangeListener();
-    internals.observeLibraryTable();
-    internals.observeBodyPromptPopovers();
-    internals.injectLibraryDropZone();
+    const internals = mountLibraryPage();
+    internals.startAccountPolling();
+    await internals.initializeFolderUI();
 
     expect(vi.getTimerCount()).toBeGreaterThan(0);
+    expect(document.querySelector('.gv-folder-container')).not.toBeNull();
     expect(document.querySelector('.gv-library-drop-zone')).not.toBeNull();
-    expect(internals.libraryTableObserver).not.toBeNull();
-    expect(internals.bodyPromptPopoverObserver).not.toBeNull();
+    expect(document.querySelector('.gv-sidebar-resize-handle')).not.toBeNull();
 
     internals.destroy();
 
     expect(vi.getTimerCount()).toBe(0);
-    expect(internals.accountContextPoller).toBeNull();
-    expect(internals.stopRouteWatcher).toBeNull();
-    expect(internals.libraryTableObserver).toBeNull();
-    expect(internals.bodyPromptPopoverObserver).toBeNull();
-    expect(internals.containerMountObserver).toBeNull();
-    expect(internals.cleanupFns).toHaveLength(0);
-    expect(internals.container).toBeNull();
-    expect(internals.libraryDropZoneInjected).toBe(false);
     expect(document.querySelector('.gv-folder-container')).toBeNull();
     expect(document.querySelector('.gv-library-drop-zone')).toBeNull();
+    expect(document.querySelector('.gv-sidebar-resize-handle')).toBeNull();
     expect(document.documentElement.classList.contains('gv-aistudio-root')).toBe(false);
-
     expect(() => internals.destroy()).not.toThrow();
-    expect(internals.cleanupFns).toHaveLength(0);
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('leaves no observer binding prompt links or library rows after destroy', async () => {
+    const internals = mountLibraryPage();
+    await internals.initializeFolderUI();
+    internals.destroy();
+
+    const row = createLibraryRow('late-row');
+    const overlay = document.createElement('div');
+    overlay.className = 'cdk-overlay-pane';
+    const link = document.createElement('a');
+    link.setAttribute('href', '/prompts/late-popover');
+    overlay.appendChild(link);
+    document.body.appendChild(overlay);
+    await settle();
+
+    expect(row.draggable).toBe(false);
+    expect(link.dataset.gvDragBound).toBeUndefined();
   });
 
   it('destroys on disable and re-initializes through initializeFolderUI on enable', async () => {
     vi.useFakeTimers();
     const { internals } = createManager();
+    internals.startAccountPolling();
 
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -354,7 +385,7 @@ describe('M11 — destroy() lifecycle teardown', () => {
 
     expect(internals.container).toBeNull();
     expect(document.body.contains(container)).toBe(false);
-    expect(internals.accountContextPoller).toBeNull();
+    expect(vi.getTimerCount()).toBe(0);
 
     const initSpy = vi.fn().mockResolvedValue(undefined);
     internals.initializeFolderUI = initSpy;
@@ -364,23 +395,26 @@ describe('M11 — destroy() lifecycle teardown', () => {
     // Re-enable resolves account ownership before initializing the folder UI.
     await vi.waitFor(() => expect(initSpy).toHaveBeenCalledTimes(1));
     // The account-scope poller stopped by destroy() is restarted on re-enable.
-    expect(internals.accountContextPoller).not.toBeNull();
+    expect(internals.account.polling).toBe(true);
   });
 
-  it('does not grow cleanupFns when watchContainerMount re-arms repeatedly', () => {
+  it('keeps one panel mount watch however often it is re-armed', async () => {
     const navContent = document.createElement('div');
     navContent.className = 'nav-content v3-left-nav';
     document.body.appendChild(navContent);
-
     const { internals } = createManager();
-    const before = internals.cleanupFns.length;
+    const injectUI = vi.fn();
+    internals.injectUI = injectUI;
 
     internals.watchContainerMount();
     internals.watchContainerMount();
     internals.watchContainerMount();
+    internals.destroy();
+    internals.container = document.createElement('div');
+    navContent.appendChild(document.createElement('span'));
+    await settle();
 
-    expect(internals.cleanupFns.length).toBe(before);
-    expect(internals.containerMountObserver).not.toBeNull();
+    expect(injectUI).not.toHaveBeenCalled();
   });
 });
 
@@ -409,7 +443,7 @@ describe('L12 — floating drop zone heartbeat and archived-row set', () => {
     internals.save = vi.fn().mockResolvedValue(true);
 
     const row = createLibraryRow('drag1');
-    internals.injectLibraryDropZone();
+    internals.library.mountDropZone();
     const zone = document.querySelector('.gv-library-drop-zone') as HTMLElement;
     expect(zone).not.toBeNull();
 
@@ -447,7 +481,7 @@ describe('L12 — floating drop zone heartbeat and archived-row set', () => {
     internals.save = vi.fn().mockResolvedValue(true);
 
     const row = createLibraryRow('drag2');
-    internals.injectLibraryDropZone();
+    internals.library.mountDropZone();
     const zone = document.querySelector('.gv-library-drop-zone') as HTMLElement;
 
     dispatchLibraryDragStart(row);
@@ -464,23 +498,22 @@ describe('L12 — floating drop zone heartbeat and archived-row set', () => {
     const archivedRow = createLibraryRow('archived1');
     const freeRow = createLibraryRow('free1');
 
-    const { internals } = createManager();
-    internals.hideArchivedEnabled = true;
-    internals.data = {
-      folders: [
-        {
-          id: 'f1',
-          name: 'Folder',
-          parentId: null,
-          isExpanded: true,
-          createdAt: 1,
-          updatedAt: 1,
-        },
-      ],
-      folderContents: { f1: [storedConversation('archived1', 'Archived')] },
-    };
-
-    internals.applyHideArchivedToLibraryTable();
+    applyHideArchivedRows(
+      {
+        folders: [
+          {
+            id: 'f1',
+            name: 'Folder',
+            parentId: null,
+            isExpanded: true,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        ],
+        folderContents: { f1: [storedConversation('archived1', 'Archived')] },
+      },
+      true,
+    );
 
     expect(archivedRow.classList.contains('gv-conversation-archived')).toBe(true);
     expect(freeRow.classList.contains('gv-conversation-archived')).toBe(false);

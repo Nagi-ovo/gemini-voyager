@@ -1,30 +1,39 @@
-import { getTranslationSync, getTranslationSyncUnsafe } from '@/utils/i18n';
+import { createToaster } from '@/core/ui/toast/toaster';
+import type { ToastHandle, ToastTone } from '@/core/ui/toast/types';
+import { getTranslationSyncUnsafe } from '@/utils/i18n';
 
-const NOTIFICATION_TIMEOUT_MS = 10000;
+import { getFolderRecoveryNotice } from './folderRecoveryNotice';
 
-/** Owns folder feedback DOM and its finite display timers. */
+const BATCH_DELETE_CHANNEL = 'batch-delete';
+const NOTICE_MS = 3000;
+/** Warnings and errors about the folder data stay longer than a passing notice. */
+const LEVEL_MS = { info: 3000, warning: 7000, error: 10000 } as const;
+
+const batchDeleteMessage = (current: number, total: number): string =>
+  getTranslationSyncUnsafe('batch_delete_in_progress')
+    .replace('{current}', String(current))
+    .replace('{total}', String(total));
+
+/** Owns the folder notices, the batch delete progress and the title tooltip. */
 export class FolderFeedback {
   private tooltipElement: HTMLElement | null = null;
   private tooltipTimeout: number | null = null;
-  private batchDeleteProgressElement: HTMLElement | null = null;
-  private readonly notifications = new Set<HTMLElement>();
+  private readonly toaster = createToaster();
+  private batchDeleteProgress: ToastHandle | null = null;
   private readonly timers = new Set<number>();
-  private destroyed = false;
 
   constructor() {
     this.createTooltip();
   }
 
   destroy(): void {
-    this.destroyed = true;
     this.hideTooltip();
     this.tooltipElement?.remove();
     this.tooltipElement = null;
-    this.hideBatchDeleteProgress();
+    this.toaster.destroy();
+    this.batchDeleteProgress = null;
     for (const timer of this.timers) window.clearTimeout(timer);
     this.timers.clear();
-    for (const notification of this.notifications) notification.remove();
-    this.notifications.clear();
   }
 
   private schedule(callback: () => void, delay: number): number {
@@ -37,161 +46,37 @@ export class FolderFeedback {
   }
 
   showBatchDeleteProgress(current: number, total: number): void {
-    if (this.destroyed) return;
-    // Remove existing progress element if any
-    this.hideBatchDeleteProgress();
-
-    const progress = document.createElement('div');
-    progress.className = 'gv-batch-delete-progress';
-    progress.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(32, 33, 36, 0.95);
-      color: #e8eaed;
-      padding: 16px 24px;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      z-index: 2147483647;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-family: 'Google Sans', Roboto, Arial, sans-serif;
-      font-size: 14px;
-    `;
-
-    const spinner = document.createElement('div');
-    spinner.style.cssText = `
-      width: 20px;
-      height: 20px;
-      border: 2px solid #8ab4f8;
-      border-top-color: transparent;
-      border-radius: 50%;
-      animation: gv-spin 1s linear infinite;
-    `;
-
-    // Add spinner animation if not already present
-    if (!document.querySelector('#gv-batch-delete-styles')) {
-      const style = document.createElement('style');
-      style.id = 'gv-batch-delete-styles';
-      style.textContent = `
-        @keyframes gv-spin {
-          to { transform: rotate(360deg); }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-
-    const text = document.createElement('span');
-    text.className = 'gv-batch-delete-progress-text';
-    text.textContent = getTranslationSyncUnsafe('batch_delete_in_progress')
-      .replace('{current}', String(current))
-      .replace('{total}', String(total));
-
-    progress.appendChild(spinner);
-    progress.appendChild(text);
-    document.body.appendChild(progress);
-
-    this.batchDeleteProgressElement = progress;
+    this.batchDeleteProgress = this.toaster.show({
+      message: batchDeleteMessage(current, total),
+      pending: true,
+      durationMs: null,
+      channel: BATCH_DELETE_CHANNEL,
+    });
   }
 
   updateBatchDeleteProgress(current: number, total: number): void {
-    if (this.batchDeleteProgressElement) {
-      const textEl = this.batchDeleteProgressElement.querySelector(
-        '.gv-batch-delete-progress-text',
-      );
-      if (textEl) {
-        textEl.textContent = getTranslationSyncUnsafe('batch_delete_in_progress')
-          .replace('{current}', String(current))
-          .replace('{total}', String(total));
-      }
+    if (this.batchDeleteProgress?.isOpen) {
+      this.batchDeleteProgress.update({ message: batchDeleteMessage(current, total) });
     }
   }
 
   hideBatchDeleteProgress(): void {
-    if (this.batchDeleteProgressElement) {
-      this.batchDeleteProgressElement.remove();
-      this.batchDeleteProgressElement = null;
-    }
+    this.batchDeleteProgress?.dismiss();
+    this.batchDeleteProgress = null;
   }
 
-  showDataLossNotification(): void {
-    this.showNotificationByLevel(
-      getTranslationSync('folderManager_dataLossWarning') ||
-        'Warning: Failed to load folder data. Please check your browser console for details.',
-      'error',
-    );
+  showRecoveryNotification(result: Parameters<typeof getFolderRecoveryNotice>[0]): void {
+    const { message, tone } = getFolderRecoveryNotice(result);
+    this.showNotificationByLevel(message, tone);
   }
 
   showNotificationByLevel(message: string, level: 'info' | 'warning' | 'error' = 'error'): void {
-    if (this.destroyed) return;
-    try {
-      // Color based on level
-      const colors = {
-        info: '#2196F3',
-        warning: '#FF9800',
-        error: '#f44336',
-      };
-
-      // Create a visible notification
-      const notification = document.createElement('div');
-      notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${colors[level]};
-        color: white;
-        padding: 16px 24px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-        z-index: 10000;
-        font-family: system-ui, -apple-system, sans-serif;
-        font-size: 14px;
-        max-width: 400px;
-        line-height: 1.4;
-      `;
-      notification.textContent = message;
-      document.body.appendChild(notification);
-      this.notifications.add(notification);
-
-      // Auto-remove after timeout (longer for errors/warnings)
-      const timeout =
-        level === 'info' ? 3000 : level === 'warning' ? 7000 : NOTIFICATION_TIMEOUT_MS;
-      this.schedule(() => {
-        try {
-          document.body.removeChild(notification);
-        } catch {
-          // Ignore - notification may have already been removed
-        }
-        this.notifications.delete(notification);
-      }, timeout);
-    } catch (notificationError) {
-      console.error('[FolderManager] Failed to show notification:', notificationError);
-    }
+    this.toaster.show({ message, tone: level, durationMs: LEVEL_MS[level] });
   }
 
-  showNotification(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
-    if (this.destroyed) return;
-    // Create notification element
-    const notification = document.createElement('div');
-    notification.className = `gv-notification gv-notification-${type}`;
-    notification.textContent = message;
-
-    // Add to body
-    document.body.appendChild(notification);
-    this.notifications.add(notification);
-
-    // Trigger animation
-    this.schedule(() => notification.classList.add('show'), 10);
-
-    // Remove after 3 seconds
-    this.schedule(() => {
-      notification.classList.remove('show');
-      this.schedule(() => {
-        notification.remove();
-        this.notifications.delete(notification);
-      }, 300);
-    }, 3000);
+  /** A notice on an open `channel` replaces it, so a transfer's result takes its progress's place. */
+  showNotification(message: string, tone: ToastTone = 'info', channel?: string): void {
+    this.toaster.show({ message, tone, durationMs: NOTICE_MS, channel });
   }
 
   private createTooltip(): void {

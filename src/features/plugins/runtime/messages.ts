@@ -10,6 +10,13 @@ export const PLUGIN_CONTENT_SCRIPT_SYNC_MESSAGE = 'gv.plugins.syncContentScripts
 export const PLUGIN_CATALOG_REFRESH_MESSAGE = 'gv.pluginCatalog.refresh';
 
 /**
+ * Content script → background: persist one plugin setting under the
+ * plugin-storage lock (`storage/pluginSettingRequest.ts`). Payload:
+ * `{ id: string; key: string; value: string | number | boolean }`.
+ */
+export const PLUGIN_SET_SETTING_MESSAGE = 'gv.plugins.setSetting';
+
+/**
  * Popup → content script of the active tab: report every plugin's status as
  * computed by that page's PluginHost (plan §4.2). Response:
  * `{ ok: true, statuses: PluginStatus[] }`.

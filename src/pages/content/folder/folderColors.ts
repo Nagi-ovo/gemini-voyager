@@ -1,3 +1,5 @@
+import { SCHEME_ATTR } from '@/pages/content/platformTheme/scheme';
+
 /**
  * Folder Color Configuration
  *
@@ -135,6 +137,10 @@ export function getFolderColorConfig(colorId: string): FolderColorConfig | undef
  * @returns true if dark mode is active
  */
 export function isDarkMode(): boolean {
+  // The page scheme Voyager resolved for this site wins over the fallbacks below.
+  const scheme = document.documentElement.getAttribute(SCHEME_ATTR);
+  if (scheme) return scheme === 'dark';
+
   // Check multiple sources for dark mode
   // 1. Document root class
   if (document.documentElement.classList.contains('dark-mode')) {

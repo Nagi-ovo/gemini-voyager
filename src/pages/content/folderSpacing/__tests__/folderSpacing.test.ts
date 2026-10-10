@@ -75,6 +75,8 @@ describe('folderSpacing', () => {
 
       const style = document.getElementById(STYLE_ID) as HTMLStyleElement;
       expect(style.textContent).toContain('gap: 10px');
+      // The sidebar tree's shadow root spaces its rows by this inherited property.
+      expect(style.textContent).toContain('--gv-folder-row-gap: 10px');
     });
 
     it('responds to gvFolderSpacing storage changes', async () => {

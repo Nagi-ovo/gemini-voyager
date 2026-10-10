@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { toastDriver } from '@/tests/toastDriver';
 
 const engineCreate = vi.hoisted(() => vi.fn());
 const fetchImageViaExtensionRuntime = vi.hoisted(() => vi.fn());
@@ -164,17 +164,17 @@ describe('watermarkRemover runtime toggle', () => {
       await runtime.startWatermarkRemover();
       button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
-      expect(document.querySelectorAll('.gv-status-toast')).toHaveLength(1);
+      expect(toastDriver.all()).toHaveLength(1);
 
       settings.gvWatermarkDownloadEnabled = false;
       await runtime.restartWatermarkRemover();
 
-      expect(document.querySelectorAll('.gv-status-toast')).toHaveLength(0);
+      expect(toastDriver.all()).toHaveLength(0);
       const bridge = document.getElementById('gv-watermark-bridge') as HTMLElement | null;
       expect(bridge?.dataset.downloadIntentExpiresAt).toBeUndefined();
       expect(bridge?.dataset.downloadIntentToken).toBeUndefined();
       await vi.advanceTimersByTimeAsync(35_000);
-      expect(document.querySelectorAll('.gv-status-toast')).toHaveLength(0);
+      expect(toastDriver.all()).toHaveLength(0);
     } finally {
       vi.useRealTimers();
     }
@@ -195,7 +195,7 @@ describe('watermarkRemover runtime toggle', () => {
     const intentToken = bridge.dataset.downloadIntentToken;
     expect(intentExpiresAt).toBeDefined();
     expect(intentToken).toBeDefined();
-    expect(document.querySelectorAll('.gv-status-toast')).toHaveLength(1);
+    expect(toastDriver.all()).toHaveLength(1);
 
     let resolveSettings: (value: Record<string, unknown>) => void = () => undefined;
     vi.mocked(chrome.storage.sync.get).mockImplementationOnce(
@@ -226,7 +226,7 @@ describe('watermarkRemover runtime toggle', () => {
     expect(bridge.dataset.enabled).toBe('true');
     expect(bridge.dataset.downloadIntentExpiresAt).toBe(intentExpiresAt);
     expect(bridge.dataset.downloadIntentToken).toBe(intentToken);
-    expect(document.querySelectorAll('.gv-status-toast')).toHaveLength(1);
+    expect(toastDriver.all()).toHaveLength(1);
   });
 
   it('prevents a stale async start from restoring an older enabled mode', async () => {
@@ -340,21 +340,6 @@ describe('watermarkRemover runtime toggle', () => {
     await vi.waitFor(() => expect(image.dataset.watermarkProcessed).toBe('true'));
     expect(image.dataset.watermarkOriginalSrc).toBe(
       'https://lh3.googleusercontent.com/replacement=s1024',
-    );
-  });
-
-  it('wires sync watermark setting changes to the current-page restart', () => {
-    const contentEntry = readFileSync(
-      resolve(process.cwd(), 'src/pages/content/index.tsx'),
-      'utf8',
-    );
-
-    expect(contentEntry).toContain('WATERMARK_STORAGE_KEYS.some');
-    expect(contentEntry).toMatch(
-      /watermarkRemoverStarted = true;\s+void startWatermarkRemover\(\);/,
-    );
-    expect(contentEntry).toMatch(
-      /watermarkRemoverStarted &&\s+areaName === 'sync'[\s\S]*?void restartWatermarkRemover\(\);/,
     );
   });
 });

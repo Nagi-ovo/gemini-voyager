@@ -13,7 +13,8 @@ import {
   type CoachmarkSequenceStep,
   showCoachmark,
 } from '../coachmark';
-import { hasSlashEligiblePrompts, isGeminiSlashPromptSurface } from './slashPrompt';
+import { resolvePromptSiteAdapter } from './resolvePromptSiteAdapter';
+import { hasSlashEligiblePrompts } from './slashMatch';
 
 export const SLASH_PROMPT_COACHMARK_ID = 'slash-prompt-insertion-intro';
 export const SLASH_PROMPT_COACHMARK_DEBUG_EVENT = 'gv:debug:slashPromptCoachmark';
@@ -54,8 +55,12 @@ async function setSlashPromptEnabled(enabled: boolean): Promise<void> {
   }
 }
 
+function siteHasSlash(): boolean {
+  return resolvePromptSiteAdapter(location.href).slash;
+}
+
 export async function isSlashPromptCoachmarkEligible(): Promise<boolean> {
-  if (!isGeminiSlashPromptSurface()) return false;
+  if (!siteHasSlash()) return false;
   const state = await loadSlashPromptCoachmarkState();
   return state.enabled && hasSlashEligiblePrompts(state.prompts);
 }
@@ -63,7 +68,7 @@ export async function isSlashPromptCoachmarkEligible(): Promise<boolean> {
 export async function maybeShowSlashPromptCoachmark(
   options: { force?: boolean; progress?: CoachmarkProgress } = {},
 ): Promise<CoachmarkResult> {
-  if (!isGeminiSlashPromptSurface()) return 'skipped';
+  if (!siteHasSlash()) return 'skipped';
 
   const state = await loadSlashPromptCoachmarkState();
   if (!options.force && (!state.enabled || !hasSlashEligiblePrompts(state.prompts))) {

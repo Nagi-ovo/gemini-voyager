@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 function readFormulaCopyCss(): string {
   const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
   const start = css.indexOf('/* ==================== Formula Copy Feature ==================== */');
-  const end = css.indexOf('Folder Import/Export Styles', start);
+  const end = css.indexOf('/* Notebooks corner swap toggle', start);
   expect(start).toBeGreaterThan(-1);
   expect(end).toBeGreaterThan(start);
   return css.slice(start, end);

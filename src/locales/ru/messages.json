@@ -43,6 +43,10 @@
     "message": "Скрыть внешний контейнер",
     "description": "Hide outer container label"
   },
+  "hideOuterContainerDotsOnly": {
+    "message": "Действует только для стиля «Узлы»",
+    "description": "Why the hide outer container toggle is disabled: the ruler and compact timeline styles draw no container"
+  },
   "draggableTimeline": {
     "message": "Перетаскиваемый таймлайн",
     "description": "Draggable Timeline label"
@@ -213,6 +217,22 @@
   "pm_deleted": {
     "message": "Удалено",
     "description": "Deleted notice"
+  },
+  "pm_save_failed": {
+    "message": "Не удалось сохранить изменение, поэтому оно отменено.",
+    "description": "Prompt Manager notice: a change could not be saved and was rolled back"
+  },
+  "pm_edit_target_deleted": {
+    "message": "Этот промпт удалён в другом месте. Сохраните ещё раз, чтобы оставить его как новый.",
+    "description": "Prompt Manager hint: the prompt being edited was deleted in another tab; saving again adds the draft as a new prompt"
+  },
+  "pm_library_unavailable": {
+    "message": "Промпты не отвечают. Последнее изменение ещё сохраняется — попробуйте ещё раз чуть позже.",
+    "description": "Prompt Manager notice: an earlier change is still waiting for a reply, so new edits are refused until it arrives"
+  },
+  "pm_library_load_failed": {
+    "message": "Не удалось загрузить промпты. Пробуем снова — повторите попытку чуть позже.",
+    "description": "Prompt Manager notice: the prompt library could not be read yet, so an edit was refused and a new read started"
   },
   "pm_edit": {
     "message": "Редактировать",
@@ -662,6 +682,14 @@
     "message": "Облачная синхронизация",
     "description": "Tooltip for the merged cloud button that opens an upload/sync popover"
   },
+  "folder_reload_required": {
+    "message": "Voyager обновлён. Перезагрузите эту вкладку, чтобы продолжить редактирование папок.",
+    "description": "Shown when a newer Voyager build owns folder writes and this tab must be reloaded"
+  },
+  "folder_cloud_merge_interrupted": {
+    "message": "Слияние с Google Диском прервано. Запустите его снова.",
+    "description": "Shown when a Google Drive merge of folders was interrupted before it was applied"
+  },
   "folder_settings": {
     "message": "Настройки папок",
     "description": "Tooltip for the gear icon that opens folder-scoped settings"
@@ -761,6 +789,26 @@
   "folder_import_error": {
     "message": "✗ Ошибка импорта: {error}",
     "description": "Import error message"
+  },
+  "conversation_added_to_folder": {
+    "message": "Добавлено в «{folder}»",
+    "description": "Notification after a prompt is dropped into a folder"
+  },
+  "conversation_saved_to_root": {
+    "message": "Сохранено в «Без категории»",
+    "description": "Notification after a prompt is dropped on Uncategorized"
+  },
+  "folder_default_name": {
+    "message": "Моя папка",
+    "description": "Name of the folder created when a prompt is dropped and no folder exists"
+  },
+  "folder_import_in_progress": {
+    "message": "Импорт уже выполняется",
+    "description": "Notice when a folder import is started while another is running"
+  },
+  "folder_export_in_progress": {
+    "message": "Экспорт уже выполняется",
+    "description": "Notice when a folder export is started while another is running"
   },
   "folder_save_error": {
     "message": "Не удалось сохранить изменения в папках. Повторите попытку.",
@@ -914,22 +962,6 @@
     "message": "Изменить можно в любое время во всплывающем окне расширения → Параметры папок.",
     "description": "Footnote explaining where to toggle the setting later"
   },
-  "floatingModeNudgeTitle": {
-    "message": "Боковая панель недоступна — открыть папки в плавающем окне?",
-    "description": "Title of the floating-mode fallback nudge"
-  },
-  "floatingModeNudgeBody": {
-    "message": "Voyager не смог найти боковую панель Gemini, возможно, из-за изменения макета страницы. Папки по-прежнему доступны в плавающем окне.",
-    "description": "Body copy of the floating-mode fallback nudge"
-  },
-  "floatingModeNudgeEnable": {
-    "message": "Открыть плавающее окно",
-    "description": "Primary button that opens the floating folder panel"
-  },
-  "floatingModeNudgeDismiss": {
-    "message": "Не сейчас",
-    "description": "Secondary button that dismisses the floating-mode nudge"
-  },
   "floatingPanelTitle": {
     "message": "Папки",
     "description": "Title shown in the floating folder panel header"
@@ -969,6 +1001,18 @@
   "folderManager_dataLossWarning": {
     "message": "⚠️ Внимание: не удалось загрузить данные папок. Ваши папки могут быть повреждены. Пожалуйста, проверьте консоль браузера для получения подробной информации и попробуйте восстановить из резервной копии, если она доступна.",
     "description": "Warning shown when folder data fails to load"
+  },
+  "folderManager_dataRecovered": {
+    "message": "Данные папок восстановлены из резервной копии.",
+    "description": "Notice when folder data was recovered from backup"
+  },
+  "folderManager_dataKept": {
+    "message": "Не удалось загрузить данные папок. Текущие папки сохранены.",
+    "description": "Notice when current folder data is kept after a failed load"
+  },
+  "folderManager_readFailure": {
+    "message": "Не удалось загрузить данные папок. Пока папки доступны только для чтения.",
+    "description": "Notice when folder storage is unreadable and editing is disabled"
   },
   "backupOptions": {
     "message": "Авто-резервное копирование",
@@ -1190,6 +1234,10 @@
     "message": "Убрать из избранного",
     "description": "Remove from starred tooltip"
   },
+  "starredDeleteFailed": {
+    "message": "Не удалось убрать из избранного",
+    "description": "Error shown when a star cannot be removed"
+  },
   "justNow": {
     "message": "Только что",
     "description": "Just now time label"
@@ -1217,6 +1265,14 @@
   "export_collecting_desc": {
     "message": "Пожалуйста, подождите…",
     "description": "Описание баннера во время сбора DOM диалога ChatGPT"
+  },
+  "export_reading_conversation_title": {
+    "message": "Чтение беседы…",
+    "description": "Progress title while ChatGPT export reads the whole conversation by scrolling it"
+  },
+  "export_reading_conversation_turns": {
+    "message": "Прочитано: {count}",
+    "description": "Progress detail while ChatGPT export reads the conversation; {count} is the number of turns read so far"
   },
   "keyboardShortcuts": {
     "message": "Горячие клавиши",
@@ -1294,6 +1350,18 @@
     "message": "Облачная синхронизация",
     "description": "Cloud sync section title"
   },
+  "platformChatGPT": {
+    "message": "ChatGPT",
+    "description": "ChatGPT platform label"
+  },
+  "cloudSyncFoldersDescription": {
+    "message": "Синхронизация папок с Google Drive",
+    "description": "ChatGPT folders-only Google Drive sync description"
+  },
+  "cloudSyncFoldersDescriptionICloud": {
+    "message": "Синхронизация папок через личное хранилище iCloud",
+    "description": "ChatGPT folders-only iCloud sync description"
+  },
   "cloudSyncDescription": {
     "message": "Синхронизация папок и промптов с Google Drive",
     "description": "Cloud sync description"
@@ -1361,6 +1429,22 @@
   "syncError": {
     "message": "✗ Ошибка синхронизации: {error}",
     "description": "Sync error message"
+  },
+  "syncRestorePartial": {
+    "message": "✗ Восстановление не завершено. Восстановлено: {restored}. Не восстановлено: {failed} ({error})",
+    "description": "Drive restore stopped partway: which parts were restored and which were not"
+  },
+  "syncRestoreForks": {
+    "message": "Ветки диалогов",
+    "description": "Drive restore part: conversation fork links"
+  },
+  "syncRestoreCatalogTimeline": {
+    "message": "Избранное и уровни таймлайна на других сайтах",
+    "description": "Drive restore part: timeline stars and node levels saved on catalog sites such as ChatGPT and Claude"
+  },
+  "syncRestoreListSeparator": {
+    "message": ", ",
+    "description": "Separator between restored or failed part names in the partial-restore message"
   },
   "syncInProgress": {
     "message": "Синхронизация...",
@@ -1489,6 +1573,10 @@
     "message": "Скачать содержимое мыслей как Markdown",
     "description": "Deep Research download button tooltip"
   },
+  "deepResearchNoThinkingContent": {
+    "message": "Не найдено размышлений для скачивания.",
+    "description": "Warning when Deep Research has no thinking content to download"
+  },
   "folder_uncategorized": {
     "message": "Без категории",
     "description": "Label for root-level conversations not in any folder"
@@ -1606,7 +1694,7 @@
     "description": "Batch delete confirmation message"
   },
   "folder_batch_remove_confirm": {
-    "message": "Удалить {count} выбранных диалог(ов) из этой папки?",
+    "message": "Убрать выбранные диалоги ({count}) из этой папки?",
     "description": "Confirmation before removing the selected conversations from a folder"
   },
   "folder_multi_select_count": {
@@ -1685,14 +1773,6 @@
     "message": "Автоматически отображает блоки кода WaveJSON в виде интерактивных временных диаграмм",
     "description": "Описание функции WaveDrom"
   },
-  "wavedromDiagramButton": {
-    "message": "〜 Диаграмма",
-    "description": "Подпись кнопки показа диаграммы"
-  },
-  "wavedromCodeButton": {
-    "message": "</> Код",
-    "description": "Подпись кнопки показа исходного кода WaveJSON"
-  },
   "wavedromZoomIn": {
     "message": "Приблизить",
     "description": "Панель полноэкранного режима: кнопка приближения"
@@ -1721,13 +1801,13 @@
     "message": "Автоматически отображать блоки кода с опциями ECharts в виде интерактивных графиков",
     "description": "ECharts rendering feature hint"
   },
-  "echartsDiagramButton": {
-    "message": "📊 График",
-    "description": "Toggle button label to show the rendered chart"
+  "diagramButton": {
+    "message": "Диаграмма",
+    "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"
   },
-  "echartsCodeButton": {
-    "message": "</> Код",
-    "description": "Toggle button label to show the ECharts option source"
+  "diagramCodeButton": {
+    "message": "Код",
+    "description": "Diagram toolbar button that shows the diagram source code"
   },
   "echartsFullscreenButton": {
     "message": "На весь экран",
@@ -2101,6 +2181,26 @@
     "message": "Экспортируемый контент содержит изображения из веб-поиска. Включить ссылки на источники изображений в Markdown?",
     "description": "Confirm dialog when exporting markdown with web search images"
   },
+  "export_md_include_source_include": {
+    "message": "Включить ссылки",
+    "description": "Confirm choice that keeps the source links of web search images in the Markdown export"
+  },
+  "export_md_include_source_exclude": {
+    "message": "Не включать",
+    "description": "Confirm choice that leaves the source links of web search images out of the Markdown export"
+  },
+  "export_error_too_many_attempts": {
+    "message": "Экспорт остановлен: слишком много попыток.",
+    "description": "Export error toast when the export restarted too many times while loading the full conversation"
+  },
+  "export_error_conversation_not_found": {
+    "message": "Не удалось найти выбранный чат. Сначала откройте его, затем экспортируйте.",
+    "description": "Export error toast when the sidebar menu's conversation cannot be located"
+  },
+  "export_error_conversation_open_failed": {
+    "message": "Не удалось открыть выбранный чат для экспорта. Попробуйте ещё раз.",
+    "description": "Export error toast when the sidebar menu's conversation fails to open"
+  },
   "deepResearch_exportedAt": {
     "message": "Экспортировано",
     "description": "Метка временной метки экспорта Deep Research"
@@ -2248,10 +2348,6 @@
   "forkMarkdownBtn": {
     "message": "Скачать MD",
     "description": "Fork confirmation button for downloading a Markdown file"
-  },
-  "forkCancel": {
-    "message": "Cancel",
-    "description": "Fork cancel button"
   },
   "forkBranch": {
     "message": "Branch",
@@ -2461,10 +2557,6 @@
     "message": "Удалить",
     "description": "Floating folder panel delete folder action"
   },
-  "floatingPanelDeleteConfirm": {
-    "message": "Удалить эту папку и все ее содержимое?",
-    "description": "Floating folder panel delete folder confirmation"
-  },
   "floatingPanelCancel": {
     "message": "Отмена",
     "description": "Floating folder panel cancel action"
@@ -2520,6 +2612,42 @@
   "floatingPanelGestureHint": {
     "message": "Двойной клик — переименовать · ПКМ — закрепить/цвет/удалить.",
     "description": "Floating folder panel hint explaining folder gestures and context menu actions"
+  },
+  "floatingPanelAddCurrentHere": {
+    "message": "Добавить текущий диалог сюда",
+    "description": "Floating folder panel folder menu item that files the open conversation into that folder"
+  },
+  "chatgptFoldersHint": {
+    "message": "Чтобы добавить диалог: откройте его и нажмите кнопку закладки или щёлкните папку правой кнопкой.",
+    "description": "ChatGPT folder panel hint explaining how to file a conversation"
+  },
+  "chatgptFoldersNoConversation": {
+    "message": "Сначала откройте сохранённый диалог. Временные чаты добавить нельзя.",
+    "description": "ChatGPT folder panel status when no saved conversation is open to add"
+  },
+  "chatgptFoldersAdded": {
+    "message": "Добавлено в папку.",
+    "description": "ChatGPT folder panel status after filing the open conversation"
+  },
+  "chatgptFoldersAlreadyFiled": {
+    "message": "Уже в этой папке.",
+    "description": "ChatGPT folder panel status when the open conversation is already in that folder"
+  },
+  "chatgptFoldersCoachmarkTitle": {
+    "message": "Папки теперь в боковой панели",
+    "description": "Title of the one-time guide pointing at the folder section in the ChatGPT sidebar"
+  },
+  "chatgptFoldersCoachmarkBody": {
+    "message": "Папки теперь здесь, в боковой панели ChatGPT. Нажмите +, чтобы создать папку, или выберите «Переместить в папку» в меню чата.",
+    "description": "Body of the one-time guide pointing at the folder section in the ChatGPT sidebar; quotes the Move to folder menu label"
+  },
+  "folder_import_wrong_site": {
+    "message": "В этом файле папки с другого сайта, поэтому ничего не импортировано.",
+    "description": "ChatGPT folder import error when the file holds conversations from another site"
+  },
+  "chatgptFoldersUntitled": {
+    "message": "Диалог без названия",
+    "description": "Title used for a filed ChatGPT conversation whose title could not be read"
   },
   "folder_new_chat_in_folder": {
     "message": "Новый чат в этой папке",
@@ -2593,6 +2721,30 @@
     "message": "Не поддерживается в этом браузере — невозможно предоставить доступ к сайту, нужный плагину.",
     "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
   },
+  "chatgptExportCardTitle": {
+    "message": "Экспортировать этот диалог",
+    "description": "Title of the popup card that exports the current ChatGPT conversation"
+  },
+  "chatgptExportCardOffHint": {
+    "message": "Включите экспорт диалогов, чтобы сохранять чаты ChatGPT в Markdown, JSON, PDF или как изображение. Кнопка «Экспорт» появится вверху каждого диалога.",
+    "description": "Popup hint shown while ChatGPT conversation export is turned off"
+  },
+  "chatgptExportTurnOn": {
+    "message": "Включить",
+    "description": "Popup button that turns on ChatGPT conversation export"
+  },
+  "chatgptExportCardOnHint": {
+    "message": "Сохраняйте в Markdown, JSON, PDF или как изображение. Та же кнопка «Экспорт» есть вверху каждого диалога.",
+    "description": "Popup hint shown while ChatGPT conversation export is on"
+  },
+  "chatgptExportNoConversation": {
+    "message": "Сначала откройте диалог: на этой странице нечего экспортировать.",
+    "description": "Shown when the ChatGPT tab has no conversation to export"
+  },
+  "chatgptExportReloadTab": {
+    "message": "Перезагрузите эту вкладку ChatGPT и попробуйте снова.",
+    "description": "Shown when the ChatGPT tab has not loaded Voyager yet"
+  },
   "pluginsLoading": {
     "message": "Загрузка плагинов…",
     "description": "Shown while the plugin catalog is loading"
@@ -2616,6 +2768,310 @@
   "pluginSourceOnline": {
     "message": "Онлайн-каталог",
     "description": "Source label for a plugin fetched from the online catalog for this site"
+  },
+  "pluginSourceLocal": {
+    "message": "Локальный",
+    "description": "Source label for a plugin the user imported locally"
+  },
+  "localPluginsTitle": {
+    "message": "Локальные плагины",
+    "description": "Popup plugin page: title of the card for user-imported plugins"
+  },
+  "localPluginsDescription": {
+    "message": "Импортируйте собственный декларативный плагин: JSON-манифест со встроенным CSS или манифест вместе с его файлами .css. Он проходит те же проверки, что и официальные плагины, и остаётся выключенным, пока вы его не включите.",
+    "description": "Popup plugin page: what importing a local plugin does"
+  },
+  "localPluginsNativeHint": {
+    "message": "Запускайте собственный CSS и настройки страницы на этом сайте. Импортированные плагины остаются выключенными, пока вы их не включите.",
+    "description": "Native popup (Gemini / AI Studio): hint on the collapsed Local plugins entry"
+  },
+  "localPluginsImportFiles": {
+    "message": "Импорт файлов",
+    "description": "Popup plugin page: button that opens the file picker for a local plugin"
+  },
+  "localPluginsPasteJson": {
+    "message": "Вставить JSON",
+    "description": "Popup plugin page: button that opens a text box to paste a plugin manifest"
+  },
+  "localPluginsPasteLabel": {
+    "message": "JSON-манифест плагина",
+    "description": "Popup plugin page: accessible label of the paste text box"
+  },
+  "localPluginsCheckAndImport": {
+    "message": "Проверить и импортировать",
+    "description": "Popup plugin page: validate the pasted manifest and import it"
+  },
+  "localPluginsCancel": {
+    "message": "Отмена",
+    "description": "Popup plugin page: close the paste text box"
+  },
+  "localPluginsEmpty": {
+    "message": "Локальных плагинов пока нет.",
+    "description": "Popup plugin page: no local plugin is installed"
+  },
+  "localPluginsImported": {
+    "message": "{name} {version} импортирован. Он выключен: посмотрите ниже, что он делает, затем включите его в списке плагинов.",
+    "description": "Popup plugin page: import succeeded; {name} and {version} are placeholders"
+  },
+  "localPluginsRejected": {
+    "message": "Не импортировано. Исправьте эти ошибки и повторите попытку:",
+    "description": "Popup plugin page: import failed validation; the issues follow"
+  },
+  "localPluginsPreviousKept": {
+    "message": "Установленная версия {version} не изменилась.",
+    "description": "Popup plugin page: a failed re-import kept the installed version; {version} is a placeholder"
+  },
+  "localPluginsInspect": {
+    "message": "Подробнее",
+    "description": "Popup plugin page: show what a local plugin does"
+  },
+  "localPluginsHideDetails": {
+    "message": "Скрыть",
+    "description": "Popup plugin page: hide the details of a local plugin"
+  },
+  "localPluginsRemove": {
+    "message": "Удалить",
+    "description": "Popup plugin page: delete a local plugin"
+  },
+  "localPluginsConfirmRemove": {
+    "message": "Подтвердить удаление",
+    "description": "Popup plugin page: second click that confirms removing a local plugin"
+  },
+  "localPluginsStoredInvalid": {
+    "message": "Эта версия Voyager больше не принимает этот плагин, поэтому он не будет работать:",
+    "description": "Popup plugin page: a stored local plugin fails this build's checks; issues follow"
+  },
+  "localPluginChangedBeforeEnable": {
+    "message": "Плагин был повторно импортирован, пока вы его включали, поэтому он остался выключенным. Проверьте новую версию и включите его снова.",
+    "description": "A local plugin was re-imported while the user was enabling it, so it was not enabled"
+  },
+  "localPluginDescribeOpen": {
+    "message": "Описать изменение",
+    "description": "Button that opens the one-sentence plugin flow"
+  },
+  "localPluginDescribeHint": {
+    "message": "Опишите одной фразой, что изменить на сайте. Voyager составит промпт, который вы сами отправите любому ИИ, а затем проверит ответ, вставленный сюда. Сам Voyager ничего не отправляет.",
+    "description": "Explains the one-sentence plugin flow and that Voyager sends nothing"
+  },
+  "localPluginDescribeRequestLabel": {
+    "message": "Что изменить?",
+    "description": "Label of the one-sentence request field"
+  },
+  "localPluginDescribeRequestPlaceholder": {
+    "message": "например: сделать мои сообщения уже и скрыть боковую панель",
+    "description": "Example request in the one-sentence field"
+  },
+  "localPluginDescribeSiteLabel": {
+    "message": "Сайт",
+    "description": "Label of the target-site picker"
+  },
+  "localPluginDescribeBuildPrompt": {
+    "message": "Составить промпт",
+    "description": "Button that writes the AI prompt"
+  },
+  "localPluginDescribePromptLabel": {
+    "message": "Промпт для ИИ",
+    "description": "Label of the generated prompt"
+  },
+  "localPluginDescribePromptHint": {
+    "message": "Вставьте его в чат любого ИИ сами, а затем вставьте сюда весь ответ.",
+    "description": "Tells the user to send the prompt themselves and paste the reply"
+  },
+  "localPluginDescribeCopy": {
+    "message": "Скопировать промпт",
+    "description": "Button that copies the prompt"
+  },
+  "localPluginDescribeCopied": {
+    "message": "Скопировано",
+    "description": "Shown after the prompt was copied"
+  },
+  "localPluginDescribeCopyFailed": {
+    "message": "Не удалось скопировать. Выделите промпт и скопируйте его вручную.",
+    "description": "Shown when the clipboard refused the prompt"
+  },
+  "localPluginDescribeReplyLabel": {
+    "message": "Ответ ИИ",
+    "description": "Label of the field for the AI reply"
+  },
+  "localPluginDescribeReplyPlaceholder": {
+    "message": "Вставьте весь ответ или только его JSON",
+    "description": "Placeholder of the AI reply field"
+  },
+  "localPluginDescribeCheck": {
+    "message": "Проверить ответ",
+    "description": "Button that checks the pasted reply"
+  },
+  "localPluginDescribeImport": {
+    "message": "Импортировать",
+    "description": "Button that imports the previewed plugin"
+  },
+  "localPluginReplyEmpty": {
+    "message": "Сначала вставьте ответ ИИ.",
+    "description": "The reply field is empty"
+  },
+  "localPluginReplyTooLong": {
+    "message": "Этот ответ слишком длинный для плагина.",
+    "description": "The pasted reply is too large"
+  },
+  "localPluginReplyNoJson": {
+    "message": "JSON не найден. Попросите ИИ ответить одним блоком ```json.",
+    "description": "No JSON manifest found in the reply"
+  },
+  "localPluginReplyMultipleJson": {
+    "message": "В ответе несколько блоков JSON. Оставьте только плагин и вставьте снова.",
+    "description": "The reply holds more than one JSON block"
+  },
+  "localPluginPreviewTitle": {
+    "message": "Перед импортом",
+    "description": "Heading of the preview shown before import"
+  },
+  "localPluginPreviewChanges": {
+    "message": "Что изменится",
+    "description": "Heading of the list of changes in the preview"
+  },
+  "localPluginPreviewWarnings": {
+    "message": "Обратите внимание",
+    "description": "Heading of the warnings in the preview"
+  },
+  "localPluginPreviewLandsOff": {
+    "message": "Он импортируется выключенным. Включите его в списке плагинов, когда будете готовы.",
+    "description": "Explains that the import lands turned off"
+  },
+  "localPluginChangeCss": {
+    "message": "Добавляет свои стили ({chars} символов CSS)",
+    "description": "Preview line: the plugin adds CSS; {chars} is a character count"
+  },
+  "localPluginChangeAddClass": {
+    "message": "Помечает {target}, чтобы применить стили ({className})",
+    "description": "Preview line: the plugin tags elements so its CSS applies"
+  },
+  "localPluginChangeHide": {
+    "message": "Скрывает {target}",
+    "description": "Preview line: the plugin hides elements"
+  },
+  "localPluginChangeSetStyle": {
+    "message": "Меняет стиль: {target} — {styles}",
+    "description": "Preview line: the plugin sets inline styles"
+  },
+  "localPluginChangeSetAttribute": {
+    "message": "Задаёт {name}=\"{value}\": {target}",
+    "description": "Preview line: the plugin sets an attribute"
+  },
+  "localPluginChangeNative": {
+    "message": "Запускает встроенную функцию Voyager {handler}",
+    "description": "Preview line: the plugin runs a Voyager built-in feature"
+  },
+  "localPluginChangeSetting": {
+    "message": "Добавляет настройку: {label}",
+    "description": "Preview line: the plugin adds a setting"
+  },
+  "localPluginChangeTheme": {
+    "message": "Меняет акцентный цвет Voyager на {color}",
+    "description": "Preview line: the plugin changes the accent color"
+  },
+  "localPluginTargetSelector": {
+    "message": "элементы, подходящие под {selector}",
+    "description": "Preview target described by a raw CSS selector"
+  },
+  "localPluginTargetUserTurn": {
+    "message": "ваши сообщения",
+    "description": "Preview target: the user's messages"
+  },
+  "localPluginTargetAssistantTurn": {
+    "message": "ответы ИИ",
+    "description": "Preview target: the AI's replies"
+  },
+  "localPluginTargetThinkingBlock": {
+    "message": "блоки рассуждений",
+    "description": "Preview target: reasoning sections"
+  },
+  "localPluginTargetCodeBlock": {
+    "message": "блоки кода",
+    "description": "Preview target: code blocks"
+  },
+  "localPluginTargetComposer": {
+    "message": "поле ввода",
+    "description": "Preview target: the message input box"
+  },
+  "localPluginTargetSidebar": {
+    "message": "боковая панель",
+    "description": "Preview target: the sidebar"
+  },
+  "localPluginTargetSidePanel": {
+    "message": "дополнительная панель",
+    "description": "Preview target: the secondary side panel"
+  },
+  "localPluginTargetHeaderActions": {
+    "message": "кнопки в правом верхнем углу",
+    "description": "Preview target: top-right action buttons"
+  },
+  "localPluginTargetScrollContainer": {
+    "message": "область диалога",
+    "description": "Preview target: the scrolling conversation area"
+  },
+  "localPluginChangedSinceReview": {
+    "message": "Пока вы его проверяли, этот плагин в Voyager изменился, поэтому ничего не перезаписано. Посмотрите обновлённый предпросмотр и импортируйте снова.",
+    "description": "Shown when the previewed plugin id was installed, changed or removed before Import; nothing was written"
+  },
+  "localPluginWarnCss": {
+    "message": "Его CSS может изменить на странице что угодно, в том числе скрыть содержимое. Voyager не пересказывает CSS — прочитайте его ниже.",
+    "description": "Warning: the plugin has CSS, which the preview shows but does not summarize"
+  },
+  "localPluginWarnSelector": {
+    "message": "Находит элементы по CSS-селектору — после обновления сайта он может перестать срабатывать.",
+    "description": "Warning: the plugin targets raw CSS selectors"
+  },
+  "localPluginWarnHides": {
+    "message": "Может скрыть часть страницы. Выключите плагин, чтобы вернуть её.",
+    "description": "Warning: the plugin may hide part of the page (also shown when a hiding style cannot be read with confidence)"
+  },
+  "localPluginWarnNotOnSite": {
+    "message": "Он не работает на выбранном сайте {site}.",
+    "description": "Warning: the plugin does not run on the site the user picked"
+  },
+  "localPluginWarnTheme": {
+    "message": "Меняет акцентный цвет Voyager, хотя промпт просил ИИ этого не делать.",
+    "description": "Warning: the plugin changes the accent color although the prompt asked not to"
+  },
+  "localPluginWarnNative": {
+    "message": "Запускает встроенную функцию Voyager, хотя промпт просил ИИ этого не делать.",
+    "description": "Warning: the plugin runs a Voyager built-in although the prompt asked not to"
+  },
+  "localPluginWarnReplaces": {
+    "message": "Заменяет установленную версию {version} и выключает её, пока вы не включите снова.",
+    "description": "Warning: importing replaces an installed version and turns it off"
+  },
+  "localPluginInspectSites": {
+    "message": "Сайты",
+    "description": "Inspect view: sites the plugin runs on"
+  },
+  "localPluginInspectCss": {
+    "message": "CSS",
+    "description": "Inspect view: injected stylesheet size label"
+  },
+  "localPluginInspectCssChars": {
+    "message": "Символов: {chars}",
+    "description": "Inspect view: injected CSS size; {chars} is a number"
+  },
+  "localPluginInspectDomOps": {
+    "message": "Изменения страницы",
+    "description": "Inspect view: reversible DOM operations the plugin applies"
+  },
+  "localPluginInspectPrimitives": {
+    "message": "Встроенные функции Voyager",
+    "description": "Inspect view: first-party Voyager primitives the plugin invokes"
+  },
+  "localPluginInspectSettings": {
+    "message": "Настройки",
+    "description": "Inspect view: settings the plugin declares"
+  },
+  "localPluginInspectNone": {
+    "message": "Нет",
+    "description": "Inspect view: the plugin has nothing in this category"
+  },
+  "localPluginInspectNoCode": {
+    "message": "Собственный код плагина не выполняется: только CSS, обратимые изменения страницы и встроенные функции Voyager.",
+    "description": "Inspect view: reassurance that a declarative plugin cannot run its own code"
   },
   "pluginUpdateNeedsNewerVoyager": {
     "message": "Для обновления {version} нужна более новая версия Voyager.",
@@ -2902,6 +3358,9 @@
   "highlightSaved": {
     "message": "Выделение сохранено"
   },
+  "highlightConfirmationPending": {
+    "message": "Всё ещё ждём подтверждения. Можно закрыть редактор — черновик сохранится."
+  },
   "highlightSaveFailed": {
     "message": "Не удалось сохранить выделение"
   },
@@ -3117,5 +3576,373 @@
   "popupPinHintDismiss": {
     "message": "Закрыть",
     "description": "Popup: dismiss the pin reminder"
+  },
+  "nativeHealthTimeline": {
+    "message": "Таймлайн не находит реплики диалога на этой странице.",
+    "description": "Popup: Gemini health notice when the timeline finds no conversation turns"
+  },
+  "nativeHealthChatWidth": {
+    "message": "Настройка ширины чата не находит реплики диалога на этой странице.",
+    "description": "Popup: Gemini health notice when chat width finds no conversation turns"
+  },
+  "nativeHealthFolders": {
+    "message": "Папки не удалось встроить в боковую панель Gemini, поэтому они открыты в плавающей панели.",
+    "description": "Popup: Gemini health notice when folders fell back to the floating panel"
+  },
+  "nativeHealthExport": {
+    "message": "Экспорт не находит ни одного сообщения на этой странице.",
+    "description": "Popup: Gemini health notice when export finds no messages"
+  },
+  "nativeHealthComposer": {
+    "message": "Voyager не находит поле ввода Gemini, чтобы вставить промпт.",
+    "description": "Popup: Gemini health notice when Gemini's message box is missing"
+  },
+  "nativeHealthCause": {
+    "message": "Возможно, Gemini изменил страницу.",
+    "description": "Popup: likely cause shown under a Gemini health notice"
+  },
+  "nativeHealthReport": {
+    "message": "Сообщить",
+    "description": "Popup: link that opens a prefilled GitHub bug report"
+  },
+  "nativeHealthDismiss": {
+    "message": "Закрыть",
+    "description": "Popup: dismiss the Gemini health notice"
+  },
+  "researchPackEnable": {
+    "message": "Исследовательский пакет",
+    "description": "Popup: research pack toggle label"
+  },
+  "researchPackEnableHint": {
+    "message": "Добавляет кнопку к ответам Gemini. Соберите ответы и их источники в один Markdown, чтобы скопировать, скачать или вставить его в другой чат.",
+    "description": "Popup: research pack toggle hint"
+  },
+  "researchPackAdd": {
+    "message": "Добавить в пакет (или сначала выделите часть ответа)",
+    "description": "Research pack: per-answer add button tooltip"
+  },
+  "researchPackAdded": {
+    "message": "Добавлено в пакет",
+    "description": "Research pack: item added"
+  },
+  "researchPackDuplicate": {
+    "message": "Уже в пакете",
+    "description": "Research pack: item already present"
+  },
+  "researchPackFull": {
+    "message": "Пакет заполнен. Сначала удалите элемент.",
+    "description": "Research pack: item limit reached"
+  },
+  "researchPackCaptureFailed": {
+    "message": "Не удалось прочитать этот ответ",
+    "description": "Research pack: answer could not be read"
+  },
+  "researchPackSaveFailed": {
+    "message": "Не удалось сохранить пакет",
+    "description": "Research pack: storage write failed"
+  },
+  "researchPackTitle": {
+    "message": "Исследовательский пакет",
+    "description": "Research pack: panel title"
+  },
+  "researchPackShortTitle": {
+    "message": "Пакет",
+    "description": "Research pack: short launcher label"
+  },
+  "researchPackOpen": {
+    "message": "Открыть исследовательский пакет",
+    "description": "Research pack: launcher tooltip"
+  },
+  "researchPackClose": {
+    "message": "Закрыть",
+    "description": "Research pack: close panel"
+  },
+  "researchPackEmpty": {
+    "message": "Пакет пуст. Нажмите кнопку под ответом или сначала выделите его часть.",
+    "description": "Research pack: empty state"
+  },
+  "researchPackItemCount": {
+    "message": "Элементов: {count}",
+    "description": "Research pack: item count, {count} is a number"
+  },
+  "researchPackSourceCount": {
+    "message": "Источников: {count}",
+    "description": "Research pack: cited link count, {count} is a number"
+  },
+  "researchPackUntitledSource": {
+    "message": "Разговор без названия",
+    "description": "Research pack: fallback conversation title"
+  },
+  "researchPackExcerptBadge": {
+    "message": "Фрагмент",
+    "description": "Research pack: badge for a selected part of an answer"
+  },
+  "researchPackMoveUp": {
+    "message": "Переместить выше",
+    "description": "Research pack: move item up"
+  },
+  "researchPackMoveDown": {
+    "message": "Переместить ниже",
+    "description": "Research pack: move item down"
+  },
+  "researchPackRemove": {
+    "message": "Удалить из пакета",
+    "description": "Research pack: remove item"
+  },
+  "researchPackInstructionLabel": {
+    "message": "Инструкция для следующей модели",
+    "description": "Research pack: instruction field label"
+  },
+  "researchPackInstructionPlaceholder": {
+    "message": "Например: сравни эти ответы, укажи расхождения и проверь каждое утверждение по источникам.",
+    "description": "Research pack: instruction placeholder"
+  },
+  "researchPackPreview": {
+    "message": "Предпросмотр Markdown",
+    "description": "Research pack: markdown preview toggle"
+  },
+  "researchPackInsert": {
+    "message": "Вставить в поле ввода",
+    "description": "Research pack: insert into composer button"
+  },
+  "researchPackInsertHint": {
+    "message": "Помещает пакет в поле ввода. Ничего не отправляется, пока вы не отправите сами.",
+    "description": "Research pack: insert button tooltip"
+  },
+  "researchPackCopy": {
+    "message": "Копировать Markdown",
+    "description": "Research pack: copy markdown button"
+  },
+  "researchPackDownload": {
+    "message": "Скачать .md",
+    "description": "Research pack: download button"
+  },
+  "researchPackClear": {
+    "message": "Очистить",
+    "description": "Research pack: clear all items"
+  },
+  "researchPackClearConfirm": {
+    "message": "Удалить все элементы из пакета? Инструкция сохранится.",
+    "description": "Research pack: clear confirmation"
+  },
+  "researchPackCopied": {
+    "message": "Markdown скопирован",
+    "description": "Research pack: copy succeeded"
+  },
+  "researchPackCopyFailed": {
+    "message": "Не удалось скопировать. Используйте скачивание.",
+    "description": "Research pack: copy failed"
+  },
+  "researchPackInserted": {
+    "message": "Пакет вставлен. Проверьте его и отправьте сами.",
+    "description": "Research pack: inserted into composer"
+  },
+  "researchPackNoComposer": {
+    "message": "На этой странице нет поля ввода",
+    "description": "Research pack: no composer found"
+  },
+  "researchPackLoadFailed": {
+    "message": "Не удалось загрузить пакет",
+    "description": "Research pack: the stored pack could not be read; shown with a retry button"
+  },
+  "researchPackRetry": {
+    "message": "Повторить",
+    "description": "Research pack: button that reads the pack again after a failure"
+  },
+  "researchPackContinueIn": {
+    "message": "Продолжить в {target}",
+    "description": "Research pack: button that opens a new chat on another model ({target} is ChatGPT or Claude)"
+  },
+  "researchPackContinueHint": {
+    "message": "Открывает новый чат {target} с этим пакетом в поле ввода. Ничего не отправляется.",
+    "description": "Research pack: tooltip of the continue-in button"
+  },
+  "researchPackContinueOpening": {
+    "message": "Открываем {target}. Пакет появится в поле ввода и не будет отправлен.",
+    "description": "Research pack: the new chat is opening and the pack will be filled in"
+  },
+  "researchPackContinueCopied": {
+    "message": "Пакет скопирован. Вставьте его в новый чат {target}.",
+    "description": "Research pack: Voyager cannot run on the target, so the pack was copied for pasting"
+  },
+  "researchPackContinueRetry": {
+    "message": "Сейчас Voyager не может вставить пакет в {target}. Нажмите ещё раз, чтобы скопировать пакет и открыть {target}.",
+    "description": "Research pack: the target stopped being available since the panel opened"
+  },
+  "researchPackContinueFailed": {
+    "message": "Не удалось открыть {target}. Используйте «Копировать Markdown».",
+    "description": "Research pack: the new chat could not be opened"
+  },
+  "researchPackHandoffReady": {
+    "message": "Исследовательский пакет из Gemini вставлен. Проверьте его и отправьте сами.",
+    "description": "Research pack: toast on ChatGPT/Claude after the pack was put in the message box"
+  },
+  "researchPackHandoffFailed": {
+    "message": "Не удалось вставить исследовательский пакет. Вернитесь в Gemini и скопируйте его.",
+    "description": "Research pack: toast on ChatGPT/Claude when the pack could not be put in the message box"
+  },
+  "researchPackTemplates": {
+    "message": "Шаблоны",
+    "description": "Research pack: templates section toggle"
+  },
+  "researchPackTemplatesHint": {
+    "message": "Шаблон — это инструкция для повторного использования. Он хранится в менеджере промптов с тегом research-pack. При экспорте передаются только название и инструкция, но не ваш пакет.",
+    "description": "Research pack: what a template is and what exporting shares"
+  },
+  "researchPackTemplatePick": {
+    "message": "Выберите шаблон",
+    "description": "Research pack: template picker placeholder and label"
+  },
+  "researchPackTemplateNone": {
+    "message": "Шаблонов пока нет",
+    "description": "Research pack: template picker when no template is saved"
+  },
+  "researchPackTemplateUse": {
+    "message": "Применить",
+    "description": "Research pack: put the chosen template into the instruction"
+  },
+  "researchPackTemplateUseConfirm": {
+    "message": "Заменить текущую инструкцию этим шаблоном?",
+    "description": "Research pack: confirm replacing a typed instruction with a template"
+  },
+  "researchPackTemplateReplace": {
+    "message": "Заменить",
+    "description": "Research pack: confirm button that replaces the instruction"
+  },
+  "researchPackTemplateExport": {
+    "message": "Экспорт",
+    "description": "Research pack: download the chosen template as a file"
+  },
+  "researchPackTemplateName": {
+    "message": "Название шаблона",
+    "description": "Research pack: name field for a new template"
+  },
+  "researchPackTemplateSave": {
+    "message": "Сохранить инструкцию как шаблон",
+    "description": "Research pack: save the typed instruction as a template"
+  },
+  "researchPackTemplateSaved": {
+    "message": "Шаблон сохранён в менеджере промптов",
+    "description": "Research pack: a template was saved"
+  },
+  "researchPackTemplateNeedName": {
+    "message": "Сначала задайте название шаблона",
+    "description": "Research pack: saving a template without a name"
+  },
+  "researchPackTemplateNeedInstruction": {
+    "message": "Напишите инструкцию, чтобы сохранить её",
+    "description": "Research pack: saving a template with an empty instruction"
+  },
+  "researchPackTemplateInvalid": {
+    "message": "Название — одна строка до 100 символов, инструкция — до 4000 символов.",
+    "description": "Research pack: template name or instruction breaks a limit"
+  },
+  "researchPackTemplateDuplicate": {
+    "message": "Такая инструкция уже есть в менеджере промптов",
+    "description": "Research pack: the library already has this instruction text"
+  },
+  "researchPackTemplateNameTaken": {
+    "message": "В менеджере промптов уже есть промпт с таким названием",
+    "description": "Research pack: the library already has a prompt with this name"
+  },
+  "researchPackTemplateImport": {
+    "message": "Импорт файла…",
+    "description": "Research pack: choose a template file to import"
+  },
+  "researchPackTemplateImportInvalid": {
+    "message": "Этот файл не является корректным файлом шаблонов исследовательского пакета.",
+    "description": "Research pack: the chosen file is not a valid template file"
+  },
+  "researchPackTemplatePreviewTitle": {
+    "message": "Шаблоны из этого файла. Проверьте их перед сохранением.",
+    "description": "Research pack: heading of the import preview"
+  },
+  "researchPackTemplateStatusNew": {
+    "message": "Новый",
+    "description": "Research pack: import preview badge for a template that will be saved"
+  },
+  "researchPackTemplateStatusDuplicate": {
+    "message": "Уже сохранён",
+    "description": "Research pack: import preview badge for an instruction that is already saved"
+  },
+  "researchPackTemplateStatusNameTaken": {
+    "message": "Название занято, пропущен",
+    "description": "Research pack: import preview badge for a template skipped because its name is in use"
+  },
+  "researchPackTemplateImportSave": {
+    "message": "Сохранить новые шаблоны",
+    "description": "Research pack: save the new templates from the import preview"
+  },
+  "researchPackTemplateImported": {
+    "message": "Шаблонов сохранено в менеджере промптов: {count}",
+    "description": "Research pack: templates were imported; {count} is how many"
+  },
+  "researchPackTemplateImportNothing": {
+    "message": "Нечего сохранять",
+    "description": "Research pack: an import had nothing new to save"
+  },
+  "researchPackTemplateFailed": {
+    "message": "Не удалось обновить шаблоны. Попробуйте ещё раз.",
+    "description": "Research pack: reading or writing templates failed"
+  },
+  "savedLibraryOpenFull": {
+    "message": "Открыть всю библиотеку"
+  },
+  "savedLibrarySite": {
+    "message": "Сайт"
+  },
+  "savedLibraryAllSites": {
+    "message": "Все сайты"
+  },
+  "savedLibraryUnknownSite": {
+    "message": "Неизвестный сайт"
+  },
+  "savedLibraryAccount": {
+    "message": "Аккаунт"
+  },
+  "savedLibraryAllAccounts": {
+    "message": "Все аккаунты"
+  },
+  "savedLibraryAccountNumber": {
+    "message": "Аккаунт {number}"
+  },
+  "savedLibraryUnassigned": {
+    "message": "Не назначен"
+  },
+  "savedLibraryRemoveStarConfirm": {
+    "message": "Убрать эту звезду?"
+  },
+  "savedLibraryDeleteHighlightConfirm": {
+    "message": "Удалить это выделение и заметку к нему?"
+  },
+  "savedLibraryOpenFailed": {
+    "message": "Не удалось открыть библиотеку"
+  },
+  "savedLibraryExpandText": {
+    "message": "Показать полный текст"
+  },
+  "savedLibraryCollapseText": {
+    "message": "Свернуть текст"
+  },
+  "savedLibraryConversationOpenFailed": {
+    "message": "Не удалось открыть этот разговор"
+  },
+  "savedLibraryChatGptSwitchAccount": {
+    "message": "Эта звезда сохранена в {account}. Переключитесь на этот аккаунт в ChatGPT и попробуйте открыть снова."
+  },
+  "savedLibraryChatGptSwitchHint": {
+    "message": "Не получается открыть этот разговор? Переключитесь на аккаунт, который вы использовали в ChatGPT, и попробуйте открыть снова."
+  },
+  "savedLibraryOpenAnyway": {
+    "message": "Всё равно открыть"
+  },
+  "savedLibraryFilters": {
+    "message": "Фильтры библиотеки"
+  },
+  "savedLibraryTypeFilter": {
+    "message": "Тип сохранённого элемента"
+  },
+  "savedLibraryRefresh": {
+    "message": "Обновить"
   }
 }

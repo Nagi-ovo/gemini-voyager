@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
+import { beforePaints, injectStylesheets } from '@/tests/pseudoElementPaint';
 
 const mocks = vi.hoisted(() => ({
   getTranslationSync: vi.fn((key: string) => key),
@@ -89,6 +90,25 @@ describe('ruler timeline coachmark', () => {
     expect(liveTimeline.classList.contains('gv-coach-timeline-hidden')).toBe(false);
   });
 
+  it('previews the ruler without a rail, as the live ruler draws, and dots with one', async () => {
+    const removeStyles = injectStylesheets('public/contentStyle.css');
+    mocks.storageGet.mockResolvedValue({ [StorageKeys.TIMELINE_STYLE]: 'dots' });
+    const { maybeShowRulerTimelineCoachmark } = await import('../rulerTimelineCoachmark');
+    const liveTimeline = document.createElement('div');
+    liveTimeline.className = 'gemini-timeline-bar';
+    document.body.appendChild(liveTimeline);
+    await maybeShowRulerTimelineCoachmark({ force: true });
+    const config = mocks.showCoachmark.mock.calls[0]![0] as CapturedCoachmarkConfig;
+
+    const preview = config.reveal.mount();
+    expect(beforePaints(preview)).toBe(false);
+    await config.toggle.onChange(false);
+    expect(beforePaints(preview)).toBe(true);
+
+    config.reveal.unmount(preview);
+    removeStyles();
+  });
+
   it('skips users who already use the ruler style', async () => {
     mocks.storageGet.mockResolvedValue({ [StorageKeys.TIMELINE_STYLE]: 'ruler' });
     const { maybeShowRulerTimelineCoachmark } = await import('../rulerTimelineCoachmark');
@@ -96,6 +116,20 @@ describe('ruler timeline coachmark', () => {
     await maybeShowRulerTimelineCoachmark();
 
     expect(mocks.showCoachmark).not.toHaveBeenCalled();
+  });
+
+  it('waits while node levels are on instead of switching their dots rail to ruler', async () => {
+    mocks.storageGet.mockImplementation(async (defaults?: Record<string, unknown>) => ({
+      ...defaults,
+      [StorageKeys.TIMELINE_MARKER_LEVEL]: true,
+    }));
+    const { maybeShowRulerTimelineCoachmark, rulerTimelineCoachmarkStep } =
+      await import('../rulerTimelineCoachmark');
+
+    expect(await rulerTimelineCoachmarkStep.isEligible!()).toBe(false);
+    expect(await maybeShowRulerTimelineCoachmark()).toBe('skipped');
+    expect(mocks.showCoachmark).not.toHaveBeenCalled();
+    expect(mocks.storageSet).not.toHaveBeenCalled();
   });
 
   it('can be forced from the page console through its debug event', async () => {

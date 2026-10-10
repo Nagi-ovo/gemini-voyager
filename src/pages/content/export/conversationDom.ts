@@ -1,9 +1,12 @@
+import { getGeminiTurnSelectors } from '@/core/gemini/turnSelectors';
+import { queryOutsideThoughts } from '@/features/export/services/exportDomPolicy';
+
 type ResolveConversationRootOptions = {
   userSelectors: string[];
   doc?: Document;
 };
 
-export const CONVERSATION_ROOT_CANDIDATES = [
+const CONVERSATION_ROOT_CANDIDATES = [
   '#chat-history',
   'infinite-scroller.chat-history',
   'chat-window-content',
@@ -14,6 +17,8 @@ export function filterOutDeepResearchImmersiveNodes<T extends HTMLElement>(eleme
   return elements.filter((element) => !element.closest('deep-research-immersive-panel'));
 }
 
+// Virtualized turns have incomparable offset parents; DOM order bounds replies by the next prompt.
+// Repeated prompt text still represents separate turns.
 export function findFirstElementBetweenTurns(
   currentTurn: HTMLElement,
   nextTurn: HTMLElement | undefined,
@@ -31,6 +36,74 @@ export function findFirstElementBetweenTurns(
   }
 
   return null;
+}
+
+/** How many siblings after a prompt are searched for its response when DOM order finds none. */
+const SIBLING_RESPONSE_WINDOW = 8;
+
+/**
+ * The response that belongs to `user`: the first assistant node before the next
+ * prompt, or else a response among the prompt's next few siblings.
+ */
+export function findAssistantForTurn(
+  user: HTMLElement,
+  nextUser: HTMLElement | undefined,
+  assistants: readonly HTMLElement[],
+  userSelector: string,
+  assistantSelector: string,
+): HTMLElement | null {
+  const between = findFirstElementBetweenTurns(user, nextUser, assistants);
+  if (between) return between;
+
+  let sibling: HTMLElement | null = user;
+  for (let step = 0; step < SIBLING_RESPONSE_WINDOW && sibling; step++) {
+    sibling = sibling.nextElementSibling as HTMLElement | null;
+    if (!sibling) break;
+    if (sibling.matches(userSelector)) break;
+    if (sibling.matches(assistantSelector)) return sibling;
+  }
+  return null;
+}
+
+/** The element inside a Gemini response host that holds the answer itself. */
+export function pickAssistantExportElement(assistantHost: HTMLElement): HTMLElement {
+  return (
+    queryOutsideThoughts<HTMLElement>(assistantHost, 'message-content') ||
+    queryOutsideThoughts<HTMLElement>(assistantHost, '.markdown, .markdown-main-panel') ||
+    (assistantHost.closest('.presented-response-container') as HTMLElement | null) ||
+    queryOutsideThoughts<HTMLElement>(
+      assistantHost,
+      '.presented-response-container, .response-content',
+    ) ||
+    queryOutsideThoughts<HTMLElement>(assistantHost, 'response-element') ||
+    assistantHost
+  );
+}
+
+/** Gemini prompt selectors, led by the one the timeline configured or detected. */
+export function geminiUserTurnSelectors(): string[] {
+  const configured = (() => {
+    try {
+      return (
+        localStorage.getItem('geminiTimelineUserTurnSelector') ||
+        localStorage.getItem('geminiTimelineUserTurnSelectorAuto') ||
+        ''
+      );
+    } catch {
+      return '';
+    }
+  })();
+  const defaults = getGeminiTurnSelectors('turn.user');
+  return configured
+    ? [configured, ...defaults.filter((selector) => selector !== configured)]
+    : defaults;
+}
+
+export function geminiAssistantTurnSelectors(): string[] {
+  return [
+    ...getGeminiTurnSelectors('turn.assistant'),
+    ...getGeminiTurnSelectors('turn.assistantFallback'),
+  ];
 }
 
 function hasVisibleUserTurns(root: HTMLElement, userSelectors: string[]): boolean {

@@ -43,6 +43,10 @@
     "message": "隱藏外部容器",
     "description": "隱藏外部容器標籤"
   },
+  "hideOuterContainerDotsOnly": {
+    "message": "僅適用於節點樣式",
+    "description": "Why the hide outer container toggle is disabled: the ruler and compact timeline styles draw no container"
+  },
   "draggableTimeline": {
     "message": "可拖曳時間軸",
     "description": "可拖曳時間軸標籤"
@@ -213,6 +217,22 @@
   "pm_deleted": {
     "message": "已刪除",
     "description": "刪除提示"
+  },
+  "pm_save_failed": {
+    "message": "無法儲存變更，已復原。",
+    "description": "Prompt Manager notice: a change could not be saved and was rolled back"
+  },
+  "pm_edit_target_deleted": {
+    "message": "該 prompt 已在其他地方刪除。再次儲存即可另存為新的 prompt。",
+    "description": "Prompt Manager hint: the prompt being edited was deleted in another tab; saving again adds the draft as a new prompt"
+  },
+  "pm_library_unavailable": {
+    "message": "Prompt 暫無回應，上一次變更仍在儲存中，請稍後再試。",
+    "description": "Prompt Manager notice: an earlier change is still waiting for a reply, so new edits are refused until it arrives"
+  },
+  "pm_library_load_failed": {
+    "message": "無法載入 prompt，正在重試，請稍後再試。",
+    "description": "Prompt Manager notice: the prompt library could not be read yet, so an edit was refused and a new read started"
   },
   "pm_edit": {
     "message": "編輯",
@@ -622,6 +642,14 @@
     "message": "雲端同步",
     "description": "合併後的雲端按鈕提示，點擊彈出上傳/同步選項"
   },
+  "folder_reload_required": {
+    "message": "Voyager 已更新。請重新整理此分頁以繼續編輯資料夾。",
+    "description": "Shown when a newer Voyager build owns folder writes and this tab must be reloaded"
+  },
+  "folder_cloud_merge_interrupted": {
+    "message": "Google 雲端硬碟合併已中斷，請重新執行。",
+    "description": "Shown when a Google Drive merge of folders was interrupted before it was applied"
+  },
   "folder_settings": {
     "message": "資料夾設定",
     "description": "齒輪圖示提示，開啟資料夾相關設定"
@@ -721,6 +749,26 @@
   "folder_import_error": {
     "message": "✗ 匯入失敗：{error}",
     "description": "匯入錯誤訊息"
+  },
+  "conversation_added_to_folder": {
+    "message": "已加入「{folder}」",
+    "description": "Notification after a prompt is dropped into a folder"
+  },
+  "conversation_saved_to_root": {
+    "message": "已儲存到未分類",
+    "description": "Notification after a prompt is dropped on Uncategorized"
+  },
+  "folder_default_name": {
+    "message": "我的資料夾",
+    "description": "Name of the folder created when a prompt is dropped and no folder exists"
+  },
+  "folder_import_in_progress": {
+    "message": "已有匯入正在進行",
+    "description": "Notice when a folder import is started while another is running"
+  },
+  "folder_export_in_progress": {
+    "message": "已有匯出正在進行",
+    "description": "Notice when a folder export is started while another is running"
   },
   "folder_save_error": {
     "message": "無法儲存資料夾變更，請再試一次。",
@@ -874,22 +922,6 @@
     "message": "可在擴充功能彈窗 → 資料夾選項中關閉此功能。",
     "description": "Footnote explaining where to toggle the setting later"
   },
-  "floatingModeNudgeTitle": {
-    "message": "側邊欄無法使用 — 在浮動視窗中開啟資料夾？",
-    "description": "Title of the floating-mode fallback nudge"
-  },
-  "floatingModeNudgeBody": {
-    "message": "Voyager 找不到 Gemini 側邊欄，可能是頁面版面已變更。你仍然可以在浮動視窗中瀏覽資料夾。",
-    "description": "Body copy of the floating-mode fallback nudge"
-  },
-  "floatingModeNudgeEnable": {
-    "message": "開啟浮動視窗",
-    "description": "Primary button that opens the floating folder panel"
-  },
-  "floatingModeNudgeDismiss": {
-    "message": "暫時不用",
-    "description": "Secondary button that dismisses the floating-mode nudge"
-  },
   "floatingPanelTitle": {
     "message": "資料夾",
     "description": "Title shown in the floating folder panel header"
@@ -929,6 +961,18 @@
   "folderManager_dataLossWarning": {
     "message": "⚠️ 警告：無法載入資料夾資料。您的資料夾可能已損壞。請檢查瀏覽器主控台以取得詳細資訊，並在可用時嘗試從備份還原。",
     "description": "資料夾資料載入失敗時顯示的警告"
+  },
+  "folderManager_dataRecovered": {
+    "message": "已從備份還原資料夾資料。",
+    "description": "Notice when folder data was recovered from backup"
+  },
+  "folderManager_dataKept": {
+    "message": "無法載入資料夾資料，已保留目前的資料夾。",
+    "description": "Notice when current folder data is kept after a failed load"
+  },
+  "folderManager_readFailure": {
+    "message": "無法載入資料夾資料，目前只能檢視，無法編輯。",
+    "description": "Notice when folder storage is unreadable and editing is disabled"
   },
   "backupOptions": {
     "message": "自動備份",
@@ -1150,6 +1194,10 @@
     "message": "取消星號標記",
     "description": "取消星號標記提示"
   },
+  "starredDeleteFailed": {
+    "message": "無法取消星號標記",
+    "description": "Error shown when a star cannot be removed"
+  },
   "justNow": {
     "message": "剛剛",
     "description": "剛剛時間標籤"
@@ -1177,6 +1225,14 @@
   "export_collecting_desc": {
     "message": "請稍候…",
     "description": "ChatGPT 對話 DOM 收集期間橫幅的描述"
+  },
+  "export_reading_conversation_title": {
+    "message": "正在讀取對話…",
+    "description": "Progress title while ChatGPT export reads the whole conversation by scrolling it"
+  },
+  "export_reading_conversation_turns": {
+    "message": "已讀取 {count} 輪",
+    "description": "Progress detail while ChatGPT export reads the conversation; {count} is the number of turns read so far"
   },
   "keyboardShortcuts": {
     "message": "鍵盤快速鍵",
@@ -1254,6 +1310,18 @@
     "message": "雲端同步",
     "description": "雲端同步區域標題"
   },
+  "platformChatGPT": {
+    "message": "ChatGPT",
+    "description": "ChatGPT platform label"
+  },
+  "cloudSyncFoldersDescription": {
+    "message": "將資料夾同步到 Google Drive",
+    "description": "ChatGPT folders-only Google Drive sync description"
+  },
+  "cloudSyncFoldersDescriptionICloud": {
+    "message": "透過你的私人 iCloud 儲存空間同步資料夾",
+    "description": "ChatGPT folders-only iCloud sync description"
+  },
   "cloudSyncDescription": {
     "message": "將資料夾和提示詞同步到 Google Drive",
     "description": "雲端同步描述"
@@ -1321,6 +1389,22 @@
   "syncError": {
     "message": "✗ 同步失敗：{error}",
     "description": "同步錯誤訊息"
+  },
+  "syncRestorePartial": {
+    "message": "✗ 還原未完成。已還原：{restored}。未還原：{failed}（{error}）",
+    "description": "Drive restore stopped partway: which parts were restored and which were not"
+  },
+  "syncRestoreForks": {
+    "message": "對話分叉",
+    "description": "Drive restore part: conversation fork links"
+  },
+  "syncRestoreCatalogTimeline": {
+    "message": "其他網站的時間軸星號與層級",
+    "description": "Drive restore part: timeline stars and node levels saved on catalog sites such as ChatGPT and Claude"
+  },
+  "syncRestoreListSeparator": {
+    "message": "、",
+    "description": "Separator between restored or failed part names in the partial-restore message"
   },
   "syncInProgress": {
     "message": "同步中...",
@@ -1449,6 +1533,10 @@
     "message": "將 Thinking 內容匯出為 Markdown 檔案",
     "description": "Deep Research download button tooltip"
   },
+  "deepResearchNoThinkingContent": {
+    "message": "找不到可下載的 Thinking 內容。",
+    "description": "Warning when Deep Research has no thinking content to download"
+  },
   "folder_uncategorized": {
     "message": "未分類",
     "description": "根目錄下未分類對話的標籤"
@@ -1566,7 +1654,7 @@
     "description": "批次刪除確認訊息"
   },
   "folder_batch_remove_confirm": {
-    "message": "確定要從此資料夾移除 {count} 個已選對話嗎？",
+    "message": "要從此資料夾移除所選對話（{count} 個）嗎？",
     "description": "Confirmation before removing the selected conversations from a folder"
   },
   "folder_multi_select_count": {
@@ -1645,14 +1733,6 @@
     "message": "自動將程式碼區塊中的 WaveJSON 渲染為可互動的時序波形圖",
     "description": "WaveDrom 渲染功能提示"
   },
-  "wavedromDiagramButton": {
-    "message": "〜 圖示",
-    "description": "切換到已渲染圖示的按鈕標籤"
-  },
-  "wavedromCodeButton": {
-    "message": "</> 程式碼",
-    "description": "切換到 WaveJSON 原始碼的按鈕標籤"
-  },
   "wavedromZoomIn": {
     "message": "放大",
     "description": "全螢幕工具列：放大按鈕標題"
@@ -1681,13 +1761,13 @@
     "message": "自動將 ECharts 設定程式碼區塊轉換為互動式圖表",
     "description": "ECharts rendering feature hint"
   },
-  "echartsDiagramButton": {
-    "message": "📊 圖表",
-    "description": "Toggle button label to show the rendered chart"
+  "diagramButton": {
+    "message": "圖表",
+    "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"
   },
-  "echartsCodeButton": {
-    "message": "</> 程式碼",
-    "description": "Toggle button label to show the ECharts option source"
+  "diagramCodeButton": {
+    "message": "程式碼",
+    "description": "Diagram toolbar button that shows the diagram source code"
   },
   "echartsFullscreenButton": {
     "message": "全螢幕",
@@ -2101,6 +2181,26 @@
     "message": "匯出內容包含網路搜尋圖片。是否在 Markdown 中包含圖片來源連結？",
     "description": "Confirm dialog when exporting markdown with web search images"
   },
+  "export_md_include_source_include": {
+    "message": "包含連結",
+    "description": "Confirm choice that keeps the source links of web search images in the Markdown export"
+  },
+  "export_md_include_source_exclude": {
+    "message": "不包含",
+    "description": "Confirm choice that leaves the source links of web search images out of the Markdown export"
+  },
+  "export_error_too_many_attempts": {
+    "message": "嘗試次數過多，已停止匯出。",
+    "description": "Export error toast when the export restarted too many times while loading the full conversation"
+  },
+  "export_error_conversation_not_found": {
+    "message": "找不到所選對話。請先開啟該對話，再匯出。",
+    "description": "Export error toast when the sidebar menu's conversation cannot be located"
+  },
+  "export_error_conversation_open_failed": {
+    "message": "無法開啟所選對話進行匯出，請再試一次。",
+    "description": "Export error toast when the sidebar menu's conversation fails to open"
+  },
   "deepResearch_exportedAt": {
     "message": "匯出時間",
     "description": "深度研究匯出時間戳標籤"
@@ -2248,10 +2348,6 @@
   "forkMarkdownBtn": {
     "message": "下載 MD",
     "description": "Fork confirmation button for downloading a Markdown file"
-  },
-  "forkCancel": {
-    "message": "Cancel",
-    "description": "Fork cancel button"
   },
   "forkBranch": {
     "message": "Branch",
@@ -2461,10 +2557,6 @@
     "message": "刪除",
     "description": "Floating folder panel delete folder action"
   },
-  "floatingPanelDeleteConfirm": {
-    "message": "要刪除此資料夾及其所有內容嗎？",
-    "description": "Floating folder panel delete folder confirmation"
-  },
   "floatingPanelCancel": {
     "message": "取消",
     "description": "Floating folder panel cancel action"
@@ -2520,6 +2612,42 @@
   "floatingPanelGestureHint": {
     "message": "雙擊重新命名 · 右鍵可置頂 / 改色 / 刪除。",
     "description": "Floating folder panel hint explaining folder gestures and context menu actions"
+  },
+  "floatingPanelAddCurrentHere": {
+    "message": "將目前對話加入此處",
+    "description": "Floating folder panel folder menu item that files the open conversation into that folder"
+  },
+  "chatgptFoldersHint": {
+    "message": "歸檔對話：先開啟對話，再點擊書籤按鈕，或在資料夾上按右鍵。",
+    "description": "ChatGPT folder panel hint explaining how to file a conversation"
+  },
+  "chatgptFoldersNoConversation": {
+    "message": "請先開啟一個已儲存的對話。暫時對話無法歸檔。",
+    "description": "ChatGPT folder panel status when no saved conversation is open to add"
+  },
+  "chatgptFoldersAdded": {
+    "message": "已加入資料夾。",
+    "description": "ChatGPT folder panel status after filing the open conversation"
+  },
+  "chatgptFoldersAlreadyFiled": {
+    "message": "已在此資料夾中。",
+    "description": "ChatGPT folder panel status when the open conversation is already in that folder"
+  },
+  "chatgptFoldersCoachmarkTitle": {
+    "message": "資料夾在側邊欄裡",
+    "description": "Title of the one-time guide pointing at the folder section in the ChatGPT sidebar"
+  },
+  "chatgptFoldersCoachmarkBody": {
+    "message": "資料夾現在就在 ChatGPT 側邊欄的這裡。點 + 建立資料夾，或在對話選單中選擇「移動到資料夾」進行歸檔。",
+    "description": "Body of the one-time guide pointing at the folder section in the ChatGPT sidebar; quotes the Move to folder menu label"
+  },
+  "folder_import_wrong_site": {
+    "message": "此檔案包含其他網站的資料夾，因此未匯入任何內容。",
+    "description": "ChatGPT folder import error when the file holds conversations from another site"
+  },
+  "chatgptFoldersUntitled": {
+    "message": "未命名對話",
+    "description": "Title used for a filed ChatGPT conversation whose title could not be read"
   },
   "folder_new_chat_in_folder": {
     "message": "在此資料夾新增對話",
@@ -2593,6 +2721,30 @@
     "message": "此瀏覽器不支援——無法授予此外掛所需的網站權限。",
     "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
   },
+  "chatgptExportCardTitle": {
+    "message": "匯出此對話",
+    "description": "Title of the popup card that exports the current ChatGPT conversation"
+  },
+  "chatgptExportCardOffHint": {
+    "message": "開啟「對話匯出」後，可將 ChatGPT 對話儲存為 Markdown、JSON、PDF 或圖片，每個對話頂端也會出現匯出按鈕。",
+    "description": "Popup hint shown while ChatGPT conversation export is turned off"
+  },
+  "chatgptExportTurnOn": {
+    "message": "開啟",
+    "description": "Popup button that turns on ChatGPT conversation export"
+  },
+  "chatgptExportCardOnHint": {
+    "message": "可儲存為 Markdown、JSON、PDF 或圖片。每個對話頂端也有同一個匯出按鈕。",
+    "description": "Popup hint shown while ChatGPT conversation export is on"
+  },
+  "chatgptExportNoConversation": {
+    "message": "請先開啟一個對話，目前頁面沒有可匯出的內容。",
+    "description": "Shown when the ChatGPT tab has no conversation to export"
+  },
+  "chatgptExportReloadTab": {
+    "message": "請重新整理此 ChatGPT 分頁後再試一次。",
+    "description": "Shown when the ChatGPT tab has not loaded Voyager yet"
+  },
   "pluginsLoading": {
     "message": "正在載入外掛…",
     "description": "Shown while the plugin catalog is loading"
@@ -2616,6 +2768,310 @@
   "pluginSourceOnline": {
     "message": "線上目錄",
     "description": "Source label for a plugin fetched from the online catalog for this site"
+  },
+  "pluginSourceLocal": {
+    "message": "本機",
+    "description": "Source label for a plugin the user imported locally"
+  },
+  "localPluginsTitle": {
+    "message": "本機外掛",
+    "description": "Popup plugin page: title of the card for user-imported plugins"
+  },
+  "localPluginsDescription": {
+    "message": "匯入你自己撰寫的宣告式外掛：內嵌 CSS 的清單 JSON，或同時選取清單與它的 .css 檔案。它與官方外掛經過相同的檢查，在你手動開啟之前保持關閉。",
+    "description": "Popup plugin page: what importing a local plugin does"
+  },
+  "localPluginsNativeHint": {
+    "message": "在此網站上執行你自己撰寫的 CSS 與頁面調整。匯入的外掛在你開啟之前保持關閉。",
+    "description": "Native popup (Gemini / AI Studio): hint on the collapsed Local plugins entry"
+  },
+  "localPluginsImportFiles": {
+    "message": "匯入檔案",
+    "description": "Popup plugin page: button that opens the file picker for a local plugin"
+  },
+  "localPluginsPasteJson": {
+    "message": "貼上 JSON",
+    "description": "Popup plugin page: button that opens a text box to paste a plugin manifest"
+  },
+  "localPluginsPasteLabel": {
+    "message": "外掛清單 JSON",
+    "description": "Popup plugin page: accessible label of the paste text box"
+  },
+  "localPluginsCheckAndImport": {
+    "message": "檢查並匯入",
+    "description": "Popup plugin page: validate the pasted manifest and import it"
+  },
+  "localPluginsCancel": {
+    "message": "取消",
+    "description": "Popup plugin page: close the paste text box"
+  },
+  "localPluginsEmpty": {
+    "message": "尚無本機外掛。",
+    "description": "Popup plugin page: no local plugin is installed"
+  },
+  "localPluginsImported": {
+    "message": "已匯入 {name} {version}。它目前是關閉的：先在下方查看它會做什麼，再到外掛清單中開啟。",
+    "description": "Popup plugin page: import succeeded; {name} and {version} are placeholders"
+  },
+  "localPluginsRejected": {
+    "message": "未匯入。請修正以下問題後再試一次：",
+    "description": "Popup plugin page: import failed validation; the issues follow"
+  },
+  "localPluginsPreviousKept": {
+    "message": "已安裝的 {version} 版本維持不變。",
+    "description": "Popup plugin page: a failed re-import kept the installed version; {version} is a placeholder"
+  },
+  "localPluginsInspect": {
+    "message": "檢視",
+    "description": "Popup plugin page: show what a local plugin does"
+  },
+  "localPluginsHideDetails": {
+    "message": "收合",
+    "description": "Popup plugin page: hide the details of a local plugin"
+  },
+  "localPluginsRemove": {
+    "message": "移除",
+    "description": "Popup plugin page: delete a local plugin"
+  },
+  "localPluginsConfirmRemove": {
+    "message": "確認移除",
+    "description": "Popup plugin page: second click that confirms removing a local plugin"
+  },
+  "localPluginsStoredInvalid": {
+    "message": "目前版本的 Voyager 不再接受此外掛，因此它不會執行：",
+    "description": "Popup plugin page: a stored local plugin fails this build's checks; issues follow"
+  },
+  "localPluginChangedBeforeEnable": {
+    "message": "開啟過程中這個外掛被重新匯入了，所以它維持關閉。請先檢查新版本，再重新開啟。",
+    "description": "A local plugin was re-imported while the user was enabling it, so it was not enabled"
+  },
+  "localPluginDescribeOpen": {
+    "message": "用一句話改造介面",
+    "description": "Button that opens the one-sentence plugin flow"
+  },
+  "localPluginDescribeHint": {
+    "message": "用一句話說出你想怎麼改網站。Voyager 會寫好一段提示詞，由你自己傳給任何 AI，再檢查你貼回來的回覆。Voyager 本身不會送出任何內容。",
+    "description": "Explains the one-sentence plugin flow and that Voyager sends nothing"
+  },
+  "localPluginDescribeRequestLabel": {
+    "message": "想改什麼？",
+    "description": "Label of the one-sentence request field"
+  },
+  "localPluginDescribeRequestPlaceholder": {
+    "message": "例如：讓我的訊息窄一點，並隱藏側邊欄",
+    "description": "Example request in the one-sentence field"
+  },
+  "localPluginDescribeSiteLabel": {
+    "message": "網站",
+    "description": "Label of the target-site picker"
+  },
+  "localPluginDescribeBuildPrompt": {
+    "message": "產生提示詞",
+    "description": "Button that writes the AI prompt"
+  },
+  "localPluginDescribePromptLabel": {
+    "message": "要傳給 AI 的提示詞",
+    "description": "Label of the generated prompt"
+  },
+  "localPluginDescribePromptHint": {
+    "message": "自己把它貼到任何 AI 對話中，再把完整回覆貼到下方。",
+    "description": "Tells the user to send the prompt themselves and paste the reply"
+  },
+  "localPluginDescribeCopy": {
+    "message": "複製提示詞",
+    "description": "Button that copies the prompt"
+  },
+  "localPluginDescribeCopied": {
+    "message": "已複製",
+    "description": "Shown after the prompt was copied"
+  },
+  "localPluginDescribeCopyFailed": {
+    "message": "複製失敗。請選取提示詞後自行複製。",
+    "description": "Shown when the clipboard refused the prompt"
+  },
+  "localPluginDescribeReplyLabel": {
+    "message": "AI 的回覆",
+    "description": "Label of the field for the AI reply"
+  },
+  "localPluginDescribeReplyPlaceholder": {
+    "message": "貼上完整回覆，或只貼上其中的 JSON",
+    "description": "Placeholder of the AI reply field"
+  },
+  "localPluginDescribeCheck": {
+    "message": "檢查回覆",
+    "description": "Button that checks the pasted reply"
+  },
+  "localPluginDescribeImport": {
+    "message": "匯入",
+    "description": "Button that imports the previewed plugin"
+  },
+  "localPluginReplyEmpty": {
+    "message": "請先貼上 AI 的回覆。",
+    "description": "The reply field is empty"
+  },
+  "localPluginReplyTooLong": {
+    "message": "這段回覆太長了，不像是一個外掛。",
+    "description": "The pasted reply is too large"
+  },
+  "localPluginReplyNoJson": {
+    "message": "找不到 JSON。請讓 AI 只用一個 ```json 程式碼區塊回答。",
+    "description": "No JSON manifest found in the reply"
+  },
+  "localPluginReplyMultipleJson": {
+    "message": "回覆裡有不只一個 JSON 程式碼區塊。只保留外掛那一個後重新貼上。",
+    "description": "The reply holds more than one JSON block"
+  },
+  "localPluginPreviewTitle": {
+    "message": "匯入前確認",
+    "description": "Heading of the preview shown before import"
+  },
+  "localPluginPreviewChanges": {
+    "message": "它會改什麼",
+    "description": "Heading of the list of changes in the preview"
+  },
+  "localPluginPreviewWarnings": {
+    "message": "請先留意",
+    "description": "Heading of the warnings in the preview"
+  },
+  "localPluginPreviewLandsOff": {
+    "message": "匯入後預設關閉。準備好後，到外掛列表中開啟。",
+    "description": "Explains that the import lands turned off"
+  },
+  "localPluginChangeCss": {
+    "message": "加入自己的樣式（{chars} 個字元的 CSS）",
+    "description": "Preview line: the plugin adds CSS; {chars} is a character count"
+  },
+  "localPluginChangeAddClass": {
+    "message": "幫{target}加上標記，讓樣式生效（{className}）",
+    "description": "Preview line: the plugin tags elements so its CSS applies"
+  },
+  "localPluginChangeHide": {
+    "message": "隱藏{target}",
+    "description": "Preview line: the plugin hides elements"
+  },
+  "localPluginChangeSetStyle": {
+    "message": "修改{target}的樣式：{styles}",
+    "description": "Preview line: the plugin sets inline styles"
+  },
+  "localPluginChangeSetAttribute": {
+    "message": "在{target}上設定 {name}=\"{value}\"",
+    "description": "Preview line: the plugin sets an attribute"
+  },
+  "localPluginChangeNative": {
+    "message": "執行 Voyager 內建功能 {handler}",
+    "description": "Preview line: the plugin runs a Voyager built-in feature"
+  },
+  "localPluginChangeSetting": {
+    "message": "加入一個設定：{label}",
+    "description": "Preview line: the plugin adds a setting"
+  },
+  "localPluginChangeTheme": {
+    "message": "把 Voyager 的強調色改成 {color}",
+    "description": "Preview line: the plugin changes the accent color"
+  },
+  "localPluginTargetSelector": {
+    "message": "符合 {selector} 的元素",
+    "description": "Preview target described by a raw CSS selector"
+  },
+  "localPluginTargetUserTurn": {
+    "message": "你的訊息",
+    "description": "Preview target: the user's messages"
+  },
+  "localPluginTargetAssistantTurn": {
+    "message": "AI 的回覆",
+    "description": "Preview target: the AI's replies"
+  },
+  "localPluginTargetThinkingBlock": {
+    "message": "思考過程",
+    "description": "Preview target: reasoning sections"
+  },
+  "localPluginTargetCodeBlock": {
+    "message": "程式碼區塊",
+    "description": "Preview target: code blocks"
+  },
+  "localPluginTargetComposer": {
+    "message": "輸入框",
+    "description": "Preview target: the message input box"
+  },
+  "localPluginTargetSidebar": {
+    "message": "側邊欄",
+    "description": "Preview target: the sidebar"
+  },
+  "localPluginTargetSidePanel": {
+    "message": "側面板",
+    "description": "Preview target: the secondary side panel"
+  },
+  "localPluginTargetHeaderActions": {
+    "message": "右上角的按鈕",
+    "description": "Preview target: top-right action buttons"
+  },
+  "localPluginTargetScrollContainer": {
+    "message": "對話區域",
+    "description": "Preview target: the scrolling conversation area"
+  },
+  "localPluginChangedSinceReview": {
+    "message": "你檢視期間，Voyager 裡的這個外掛有了變動，所以沒有覆寫任何內容。請看一下更新後的預覽，再重新匯入。",
+    "description": "Shown when the previewed plugin id was installed, changed or removed before Import; nothing was written"
+  },
+  "localPluginWarnCss": {
+    "message": "它的 CSS 可以改動頁面上的任何東西，包括隱藏內容。Voyager 不會替你摘要 CSS，請直接看下方的原始碼。",
+    "description": "Warning: the plugin has CSS, which the preview shows but does not summarize"
+  },
+  "localPluginWarnSelector": {
+    "message": "用 CSS 選擇器定位元素，網站更新後可能失效。",
+    "description": "Warning: the plugin targets raw CSS selectors"
+  },
+  "localPluginWarnHides": {
+    "message": "可能會隱藏頁面的一部分。關閉外掛即可恢復。",
+    "description": "Warning: the plugin may hide part of the page (also shown when a hiding style cannot be read with confidence)"
+  },
+  "localPluginWarnNotOnSite": {
+    "message": "它不會在你選擇的網站 {site} 上執行。",
+    "description": "Warning: the plugin does not run on the site the user picked"
+  },
+  "localPluginWarnTheme": {
+    "message": "會修改 Voyager 的強調色，而提示詞要求 AI 不要這樣做。",
+    "description": "Warning: the plugin changes the accent color although the prompt asked not to"
+  },
+  "localPluginWarnNative": {
+    "message": "會執行 Voyager 內建功能，而提示詞要求 AI 不要這樣做。",
+    "description": "Warning: the plugin runs a Voyager built-in although the prompt asked not to"
+  },
+  "localPluginWarnReplaces": {
+    "message": "會取代你已安裝的 {version} 版，並在你重新開啟前維持關閉。",
+    "description": "Warning: importing replaces an installed version and turns it off"
+  },
+  "localPluginInspectSites": {
+    "message": "網站",
+    "description": "Inspect view: sites the plugin runs on"
+  },
+  "localPluginInspectCss": {
+    "message": "CSS",
+    "description": "Inspect view: injected stylesheet size label"
+  },
+  "localPluginInspectCssChars": {
+    "message": "{chars} 個字元",
+    "description": "Inspect view: injected CSS size; {chars} is a number"
+  },
+  "localPluginInspectDomOps": {
+    "message": "頁面變更",
+    "description": "Inspect view: reversible DOM operations the plugin applies"
+  },
+  "localPluginInspectPrimitives": {
+    "message": "呼叫的 Voyager 內建功能",
+    "description": "Inspect view: first-party Voyager primitives the plugin invokes"
+  },
+  "localPluginInspectSettings": {
+    "message": "設定",
+    "description": "Inspect view: settings the plugin declares"
+  },
+  "localPluginInspectNone": {
+    "message": "無",
+    "description": "Inspect view: the plugin has nothing in this category"
+  },
+  "localPluginInspectNoCode": {
+    "message": "外掛本身不執行任何程式碼：只有 CSS、可還原的頁面變更與 Voyager 自帶的內建功能。",
+    "description": "Inspect view: reassurance that a declarative plugin cannot run its own code"
   },
   "pluginUpdateNeedsNewerVoyager": {
     "message": "{version} 更新需要較新版本的 Voyager。",
@@ -2902,6 +3358,9 @@
   "highlightSaved": {
     "message": "醒目標示已儲存"
   },
+  "highlightConfirmationPending": {
+    "message": "仍在等待確認。你可以關閉編輯器，草稿會保留。"
+  },
   "highlightSaveFailed": {
     "message": "無法儲存醒目標示"
   },
@@ -3117,5 +3576,373 @@
   "popupPinHintDismiss": {
     "message": "關閉",
     "description": "Popup: dismiss the pin reminder"
+  },
+  "nativeHealthTimeline": {
+    "message": "時間軸在此頁面上找不到對話輪次。",
+    "description": "Popup: Gemini health notice when the timeline finds no conversation turns"
+  },
+  "nativeHealthChatWidth": {
+    "message": "對話區域寬度在此頁面上找不到對話輪次。",
+    "description": "Popup: Gemini health notice when chat width finds no conversation turns"
+  },
+  "nativeHealthFolders": {
+    "message": "資料夾無法掛到 Gemini 側邊欄，已改為浮動面板。",
+    "description": "Popup: Gemini health notice when folders fell back to the floating panel"
+  },
+  "nativeHealthExport": {
+    "message": "匯出在此頁面上找不到任何訊息。",
+    "description": "Popup: Gemini health notice when export finds no messages"
+  },
+  "nativeHealthComposer": {
+    "message": "Voyager 找不到 Gemini 的輸入框，無法插入提示詞。",
+    "description": "Popup: Gemini health notice when Gemini's message box is missing"
+  },
+  "nativeHealthCause": {
+    "message": "Gemini 可能變更了頁面結構。",
+    "description": "Popup: likely cause shown under a Gemini health notice"
+  },
+  "nativeHealthReport": {
+    "message": "回報問題",
+    "description": "Popup: link that opens a prefilled GitHub bug report"
+  },
+  "nativeHealthDismiss": {
+    "message": "關閉",
+    "description": "Popup: dismiss the Gemini health notice"
+  },
+  "researchPackEnable": {
+    "message": "研究資料包",
+    "description": "Popup: research pack toggle label"
+  },
+  "researchPackEnableHint": {
+    "message": "在 Gemini 回答下新增資料包按鈕。把多則回答及其來源彙整成一份 Markdown，再複製、下載或插入到另一個對話。",
+    "description": "Popup: research pack toggle hint"
+  },
+  "researchPackAdd": {
+    "message": "加入資料包（可先選取回答中的一段）",
+    "description": "Research pack: per-answer add button tooltip"
+  },
+  "researchPackAdded": {
+    "message": "已加入資料包",
+    "description": "Research pack: item added"
+  },
+  "researchPackDuplicate": {
+    "message": "資料包裡已有這則內容",
+    "description": "Research pack: item already present"
+  },
+  "researchPackFull": {
+    "message": "資料包已滿，請先移除一則。",
+    "description": "Research pack: item limit reached"
+  },
+  "researchPackCaptureFailed": {
+    "message": "無法讀取這則回答",
+    "description": "Research pack: answer could not be read"
+  },
+  "researchPackSaveFailed": {
+    "message": "無法儲存資料包",
+    "description": "Research pack: storage write failed"
+  },
+  "researchPackTitle": {
+    "message": "研究資料包",
+    "description": "Research pack: panel title"
+  },
+  "researchPackShortTitle": {
+    "message": "資料包",
+    "description": "Research pack: short launcher label"
+  },
+  "researchPackOpen": {
+    "message": "開啟研究資料包",
+    "description": "Research pack: launcher tooltip"
+  },
+  "researchPackClose": {
+    "message": "關閉",
+    "description": "Research pack: close panel"
+  },
+  "researchPackEmpty": {
+    "message": "資料包是空的。點擊回答下方的資料包按鈕，或先選取回答中的一段。",
+    "description": "Research pack: empty state"
+  },
+  "researchPackItemCount": {
+    "message": "{count} 則",
+    "description": "Research pack: item count, {count} is a number"
+  },
+  "researchPackSourceCount": {
+    "message": "{count} 個來源",
+    "description": "Research pack: cited link count, {count} is a number"
+  },
+  "researchPackUntitledSource": {
+    "message": "未命名對話",
+    "description": "Research pack: fallback conversation title"
+  },
+  "researchPackExcerptBadge": {
+    "message": "節錄",
+    "description": "Research pack: badge for a selected part of an answer"
+  },
+  "researchPackMoveUp": {
+    "message": "上移",
+    "description": "Research pack: move item up"
+  },
+  "researchPackMoveDown": {
+    "message": "下移",
+    "description": "Research pack: move item down"
+  },
+  "researchPackRemove": {
+    "message": "從資料包移除",
+    "description": "Research pack: remove item"
+  },
+  "researchPackInstructionLabel": {
+    "message": "給下一個模型的指令",
+    "description": "Research pack: instruction field label"
+  },
+  "researchPackInstructionPlaceholder": {
+    "message": "例如：比較這些回答，指出分歧，並逐條對照來源核實。",
+    "description": "Research pack: instruction placeholder"
+  },
+  "researchPackPreview": {
+    "message": "Markdown 預覽",
+    "description": "Research pack: markdown preview toggle"
+  },
+  "researchPackInsert": {
+    "message": "插入輸入框",
+    "description": "Research pack: insert into composer button"
+  },
+  "researchPackInsertHint": {
+    "message": "把資料包填入輸入框，是否送出由你決定。",
+    "description": "Research pack: insert button tooltip"
+  },
+  "researchPackCopy": {
+    "message": "複製 Markdown",
+    "description": "Research pack: copy markdown button"
+  },
+  "researchPackDownload": {
+    "message": "下載 .md",
+    "description": "Research pack: download button"
+  },
+  "researchPackClear": {
+    "message": "清空",
+    "description": "Research pack: clear all items"
+  },
+  "researchPackClearConfirm": {
+    "message": "移除資料包中的全部內容？指令會保留。",
+    "description": "Research pack: clear confirmation"
+  },
+  "researchPackCopied": {
+    "message": "已複製 Markdown",
+    "description": "Research pack: copy succeeded"
+  },
+  "researchPackCopyFailed": {
+    "message": "複製失敗，請改用下載。",
+    "description": "Research pack: copy failed"
+  },
+  "researchPackInserted": {
+    "message": "已插入資料包。確認後再自行送出。",
+    "description": "Research pack: inserted into composer"
+  },
+  "researchPackNoComposer": {
+    "message": "此頁面找不到輸入框",
+    "description": "Research pack: no composer found"
+  },
+  "researchPackLoadFailed": {
+    "message": "無法載入資料包",
+    "description": "Research pack: the stored pack could not be read; shown with a retry button"
+  },
+  "researchPackRetry": {
+    "message": "重試",
+    "description": "Research pack: button that reads the pack again after a failure"
+  },
+  "researchPackContinueIn": {
+    "message": "在 {target} 中繼續",
+    "description": "Research pack: button that opens a new chat on another model ({target} is ChatGPT or Claude)"
+  },
+  "researchPackContinueHint": {
+    "message": "開啟新的 {target} 對話，並把資料包放進輸入框。不會自動送出。",
+    "description": "Research pack: tooltip of the continue-in button"
+  },
+  "researchPackContinueOpening": {
+    "message": "正在開啟 {target}，資料包會出現在輸入框中，不會送出。",
+    "description": "Research pack: the new chat is opening and the pack will be filled in"
+  },
+  "researchPackContinueCopied": {
+    "message": "已複製資料包，貼到新的 {target} 對話即可。",
+    "description": "Research pack: Voyager cannot run on the target, so the pack was copied for pasting"
+  },
+  "researchPackContinueRetry": {
+    "message": "暫時無法在 {target} 中自動填入。再點一次即可複製資料包並開啟 {target}。",
+    "description": "Research pack: the target stopped being available since the panel opened"
+  },
+  "researchPackContinueFailed": {
+    "message": "無法開啟 {target}，請改用「複製 Markdown」。",
+    "description": "Research pack: the new chat could not be opened"
+  },
+  "researchPackHandoffReady": {
+    "message": "已填入來自 Gemini 的研究資料包。確認後再自行送出。",
+    "description": "Research pack: toast on ChatGPT/Claude after the pack was put in the message box"
+  },
+  "researchPackHandoffFailed": {
+    "message": "無法在這裡填入研究資料包。請回到 Gemini 複製。",
+    "description": "Research pack: toast on ChatGPT/Claude when the pack could not be put in the message box"
+  },
+  "researchPackTemplates": {
+    "message": "範本",
+    "description": "Research pack: templates section toggle"
+  },
+  "researchPackTemplatesHint": {
+    "message": "範本是一則可重複使用的指令，存在提示詞管理器中，帶有 research-pack 標籤。匯出時只包含名稱和指令，不會帶上你的資料包。",
+    "description": "Research pack: what a template is and what exporting shares"
+  },
+  "researchPackTemplatePick": {
+    "message": "選擇範本",
+    "description": "Research pack: template picker placeholder and label"
+  },
+  "researchPackTemplateNone": {
+    "message": "還沒有範本",
+    "description": "Research pack: template picker when no template is saved"
+  },
+  "researchPackTemplateUse": {
+    "message": "使用",
+    "description": "Research pack: put the chosen template into the instruction"
+  },
+  "researchPackTemplateUseConfirm": {
+    "message": "要用這個範本取代目前的指令嗎？",
+    "description": "Research pack: confirm replacing a typed instruction with a template"
+  },
+  "researchPackTemplateReplace": {
+    "message": "取代",
+    "description": "Research pack: confirm button that replaces the instruction"
+  },
+  "researchPackTemplateExport": {
+    "message": "匯出",
+    "description": "Research pack: download the chosen template as a file"
+  },
+  "researchPackTemplateName": {
+    "message": "範本名稱",
+    "description": "Research pack: name field for a new template"
+  },
+  "researchPackTemplateSave": {
+    "message": "將指令存為範本",
+    "description": "Research pack: save the typed instruction as a template"
+  },
+  "researchPackTemplateSaved": {
+    "message": "範本已存到提示詞管理器",
+    "description": "Research pack: a template was saved"
+  },
+  "researchPackTemplateNeedName": {
+    "message": "請先為範本命名",
+    "description": "Research pack: saving a template without a name"
+  },
+  "researchPackTemplateNeedInstruction": {
+    "message": "請先寫好要儲存的指令",
+    "description": "Research pack: saving a template with an empty instruction"
+  },
+  "researchPackTemplateInvalid": {
+    "message": "名稱限一行、最多 100 個字元，指令最多 4000 個字元。",
+    "description": "Research pack: template name or instruction breaks a limit"
+  },
+  "researchPackTemplateDuplicate": {
+    "message": "提示詞管理器中已有這則指令",
+    "description": "Research pack: the library already has this instruction text"
+  },
+  "researchPackTemplateNameTaken": {
+    "message": "提示詞管理器中已有同名提示詞",
+    "description": "Research pack: the library already has a prompt with this name"
+  },
+  "researchPackTemplateImport": {
+    "message": "匯入檔案…",
+    "description": "Research pack: choose a template file to import"
+  },
+  "researchPackTemplateImportInvalid": {
+    "message": "這不是有效的資料包範本檔案。",
+    "description": "Research pack: the chosen file is not a valid template file"
+  },
+  "researchPackTemplatePreviewTitle": {
+    "message": "檔案中的範本，儲存前請先檢查。",
+    "description": "Research pack: heading of the import preview"
+  },
+  "researchPackTemplateStatusNew": {
+    "message": "新",
+    "description": "Research pack: import preview badge for a template that will be saved"
+  },
+  "researchPackTemplateStatusDuplicate": {
+    "message": "已儲存過",
+    "description": "Research pack: import preview badge for an instruction that is already saved"
+  },
+  "researchPackTemplateStatusNameTaken": {
+    "message": "名稱已被使用，略過",
+    "description": "Research pack: import preview badge for a template skipped because its name is in use"
+  },
+  "researchPackTemplateImportSave": {
+    "message": "儲存新範本",
+    "description": "Research pack: save the new templates from the import preview"
+  },
+  "researchPackTemplateImported": {
+    "message": "已存到提示詞管理器的範本：{count}",
+    "description": "Research pack: templates were imported; {count} is how many"
+  },
+  "researchPackTemplateImportNothing": {
+    "message": "沒有可儲存的新範本",
+    "description": "Research pack: an import had nothing new to save"
+  },
+  "researchPackTemplateFailed": {
+    "message": "範本更新失敗，請再試一次。",
+    "description": "Research pack: reading or writing templates failed"
+  },
+  "savedLibraryOpenFull": {
+    "message": "開啟完整收藏庫"
+  },
+  "savedLibrarySite": {
+    "message": "網站"
+  },
+  "savedLibraryAllSites": {
+    "message": "所有網站"
+  },
+  "savedLibraryUnknownSite": {
+    "message": "未知網站"
+  },
+  "savedLibraryAccount": {
+    "message": "帳號"
+  },
+  "savedLibraryAllAccounts": {
+    "message": "所有帳號"
+  },
+  "savedLibraryAccountNumber": {
+    "message": "帳號 {number}"
+  },
+  "savedLibraryUnassigned": {
+    "message": "未分配"
+  },
+  "savedLibraryRemoveStarConfirm": {
+    "message": "取消這則收藏？"
+  },
+  "savedLibraryDeleteHighlightConfirm": {
+    "message": "刪除這則螢光標記及其備註？"
+  },
+  "savedLibraryOpenFailed": {
+    "message": "無法開啟收藏庫"
+  },
+  "savedLibraryExpandText": {
+    "message": "展開全文"
+  },
+  "savedLibraryCollapseText": {
+    "message": "收合全文"
+  },
+  "savedLibraryConversationOpenFailed": {
+    "message": "無法開啟這段對話"
+  },
+  "savedLibraryChatGptSwitchAccount": {
+    "message": "這則星號儲存在 {account}。請在 ChatGPT 中切換至該帳號，然後重新開啟。"
+  },
+  "savedLibraryChatGptSwitchHint": {
+    "message": "無法開啟這段對話？請在 ChatGPT 中切換至儲存時使用的帳號，然後重新開啟。"
+  },
+  "savedLibraryOpenAnyway": {
+    "message": "仍要開啟"
+  },
+  "savedLibraryFilters": {
+    "message": "收藏庫篩選"
+  },
+  "savedLibraryTypeFilter": {
+    "message": "收藏內容類型"
+  },
+  "savedLibraryRefresh": {
+    "message": "重新整理"
   }
 }

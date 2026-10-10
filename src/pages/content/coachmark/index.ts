@@ -78,6 +78,11 @@ export interface CoachmarkConfig {
   progress?: CoachmarkProgress;
   /** Preferred side; auto-flips to stay on screen. Default 'top'. */
   placement?: 'top' | 'bottom';
+  /**
+   * Lay the bubble out right to left. Gemini marks RTL with `body.gv-rtl`; a
+   * plugin site has no such class, so its guide passes the direction here.
+   */
+  rtl?: boolean;
   /** Dim the page behind the coachmark. Default true. */
   scrim?: boolean;
   /** Move focus into the coachmark on open and restore it on close. Default true. */
@@ -274,6 +279,7 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
 
   const bubble = document.createElement('div');
   bubble.className = 'gv-coach';
+  if (cfg.rtl) bubble.classList.add('gv-coach--rtl');
   bubble.setAttribute('role', 'dialog');
   const accessibleId = `gv-coach-${cfg.id.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 

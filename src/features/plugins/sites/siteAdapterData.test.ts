@@ -44,6 +44,27 @@ describe('validateSiteAdapterData', () => {
     expect(validateSiteAdapterData(data)).toEqual(result);
   });
 
+  it('a freshness stamp survives publication and cache serialization without changing unstamped data', () => {
+    const stamped = { ...VALID, catalogRevision: 42 };
+    const result = validateSiteAdapterData(stamped);
+    if (!result.success) throw new Error('fixture must validate');
+    expect(result.data.catalogRevision).toBe(42);
+    expect(
+      validateSiteAdapterData(JSON.parse(JSON.stringify(siteAdapterToData(result.data)))),
+    ).toEqual(result);
+    for (const catalogRevision of [
+      -1,
+      0.5,
+      Number.POSITIVE_INFINITY,
+      Number.MAX_SAFE_INTEGER + 1,
+      '42',
+      null,
+    ]) {
+      expect(issuesOf({ ...VALID, catalogRevision })).toEqual(['catalogRevision']);
+    }
+    expect(issuesOf(VALID)).toEqual([]);
+  });
+
   it('rejects selector keys outside the semantic vocabulary', () => {
     expect(issuesOf({ ...VALID, selectors: { ...VALID.selectors, messageBubble: '.x' } })).toEqual([
       'selectors.messageBubble',
@@ -92,6 +113,16 @@ describe('validateSiteAdapterData', () => {
       expect(isValidSelectorSyntax("a[title='x]")).toBe(false);
     } finally {
       Object.defineProperty(globalThis, 'document', { configurable: true, value: doc });
+    }
+  });
+
+  it('a remote turn key that is not a plain attribute name cannot reach a selector', () => {
+    const keyed = { ...VALID, turnKeyAttributes: ['data-message-id'] };
+    const result = validateSiteAdapterData(keyed);
+    if (!result.success) throw new Error('fixture must validate');
+    expect(validateSiteAdapterData(siteAdapterToData(result.data))).toEqual(result);
+    for (const turnKeyAttributes of [[], ['x],*'], ['Data-Id'], 'data-id', [1]]) {
+      expect(issuesOf({ ...VALID, turnKeyAttributes })).toEqual(['turnKeyAttributes']);
     }
   });
 

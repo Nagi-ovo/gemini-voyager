@@ -31,6 +31,12 @@ import {
   PLUGIN_MARKER_ATTR,
   PLUGIN_STYLE_ID_PREFIX,
 } from '../constants';
+import {
+  attributeIssue,
+  renderSettingTemplate,
+  styleSheetIssue,
+  styleValueIssue,
+} from '../manifest/sinkGuards';
 import type {
   DomOperation,
   NativeOperation,
@@ -315,6 +321,7 @@ export class DeclarativeEngine {
     if (!entry) return;
     entry.settings = settings;
     if (entry.styleEl) entry.styleEl.textContent = this.renderCss(entry);
+    else this.injectStyles(entry);
     this.releasePlugin(id);
     this.applyDomOps(entry);
     const handler = entry.nativeHandler;
@@ -359,7 +366,7 @@ export class DeclarativeEngine {
     const scope = new PluginScope();
     entry.scope = scope;
     try {
-      const result = handler.activate(scope, settings);
+      const result = handler.activate(scope, settings, this.adapter);
       if (result instanceof Promise) {
         result.catch((error) => {
           logger.error('Plugin activation failed', {
@@ -480,23 +487,26 @@ export class DeclarativeEngine {
   /** Join the plugin's CSS and substitute `{{key}}` tokens with the current
    *  setting values (falling back to each setting's declared default). This is
    *  bounded parameter substitution over declared keys — NOT a remote
-   *  mini-language — so it stays within Chrome's "data, not code" allowance. */
+   *  mini-language — so it stays within Chrome's "data, not code" allowance.
+   *  Stored setting values never passed the manifest validator, so the rendered
+   *  text is checked again and withheld whole when it could fetch remotely. */
   private renderCss(entry: ActivePlugin): string {
     const styles = entry.manifest.contributes.styles;
     if (!styles || styles.length === 0) return '';
-    let css = styles.map((contribution) => contribution.css).join('\n');
-    return this.renderTemplate(entry, css);
+    const css = this.renderTemplate(
+      entry,
+      styles.map((contribution) => contribution.css).join('\n'),
+    );
+    const issue = styleSheetIssue(css);
+    if (issue) {
+      logger.warn('Rendered plugin CSS rejected', { id: entry.manifest.id, issue });
+      return '';
+    }
+    return css;
   }
 
   private renderTemplate(entry: ActivePlugin, value: string): string {
-    const schema = entry.manifest.contributes.settings;
-    if (!schema) return value;
-    let rendered = value;
-    for (const key of Object.keys(schema)) {
-      const settingValue = entry.settings[key] ?? schema[key].default;
-      rendered = rendered.split(`{{${key}}}`).join(String(settingValue));
-    }
-    return rendered;
+    return renderSettingTemplate(value, entry.manifest.contributes.settings, entry.settings);
   }
 
   private resolveSelector(ref: SelectorRef): string | null {
@@ -540,13 +550,26 @@ export class DeclarativeEngine {
         case 'hide':
           this.applyAddClass(id, el, PLUGIN_HIDDEN_CLASS);
           break;
-        case 'setAttribute':
-          this.applySetAttribute(id, el, op.name, this.renderTemplate(entry, op.value));
+        case 'setAttribute': {
+          const value = this.renderTemplate(entry, op.value);
+          const issue = attributeIssue(op.name, value);
+          if (issue) {
+            logger.warn('Rendered plugin attribute rejected', { id, name: op.name, issue });
+            return;
+          }
+          this.applySetAttribute(id, el, op.name, value);
           break;
+        }
         case 'setStyle':
           if (el instanceof HTMLElement) {
-            for (const [prop, value] of Object.entries(op.styles)) {
-              this.applySetStyle(id, el, prop, this.renderTemplate(entry, value));
+            for (const [prop, raw] of Object.entries(op.styles)) {
+              const value = this.renderTemplate(entry, raw);
+              const issue = styleValueIssue(value);
+              if (issue) {
+                logger.warn('Rendered plugin style rejected', { id, prop, issue });
+                continue;
+              }
+              this.applySetStyle(id, el, prop, value);
             }
           }
           break;

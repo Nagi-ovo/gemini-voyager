@@ -346,6 +346,8 @@ export function isImageResourceRenderError(error: unknown): boolean {
   );
 }
 
+// html-to-image clones math independently of PDF printing: inline layout and scoped fonts
+// keep radicals/fractions aligned without scanning inaccessible page stylesheets.
 async function renderTargetToBlob(target: HTMLElement, pixelRatio: number): Promise<Blob> {
   stripXmlIllegalChars(target);
   inlineKatexLayoutStyles(target);

@@ -2,22 +2,27 @@
 // logic in src/pages/background/index.ts). Kept here so the domain math and icon
 // path handling are unit-testable without the Chrome/declarativeContent glue.
 
+import { customWebsitesIncludeHost } from '@/core/utils/customWebsites';
+
 /**
  * Domains that should show the discovery nudge: plugin-capable sites the user
  * has not enabled the Prompt Manager on yet. Comparison is case-insensitive on
  * both sides and the result is de-duplicated, so a differently-cased stored
- * domain still suppresses the nudge.
+ * domain still suppresses the nudge. An enabled parent domain also covers its
+ * subdomains, matching what the Prompt Manager itself runs on.
  */
 export function computeNudgeDomains(
   pluginDomains: Iterable<string>,
   enabledSites: Iterable<string>,
 ): string[] {
-  const enabled = new Set(Array.from(enabledSites, (domain) => domain.toLowerCase()));
+  const enabled = Array.from(enabledSites);
   const seen = new Set<string>();
   const result: string[] = [];
   for (const domain of pluginDomains) {
     const normalized = domain.toLowerCase();
-    if (!normalized || enabled.has(normalized) || seen.has(normalized)) continue;
+    if (!normalized || seen.has(normalized) || customWebsitesIncludeHost(enabled, normalized)) {
+      continue;
+    }
     seen.add(normalized);
     result.push(normalized);
   }

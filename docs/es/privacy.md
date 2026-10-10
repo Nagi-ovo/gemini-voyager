@@ -45,4 +45,4 @@ Podemos actualizar nuestra política de privacidad de vez en cuando. Le notifica
 
 ## Contáctenos
 
-Si tiene alguna pregunta sobre esta política de privacidad, contáctenos a través de nuestro [repositorio de GitHub](https://github.com/Nagi-ovo/voyager).
+Si tiene alguna pregunta sobre esta política de privacidad, contáctenos a través de nuestro [repositorio de GitHub](https://github.com/voyager-crew/voyager).

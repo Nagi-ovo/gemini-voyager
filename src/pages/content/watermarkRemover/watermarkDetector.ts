@@ -235,6 +235,7 @@ export function hasAcceptableWatermarkRemovalEvidence(
  * after correct reconstruction, leaving spatial suppression just below the
  * default gate. Require corroborating gradient suppression and zero new
  * clipping so this cannot become a general threshold relaxation.
+ * Use correlation magnitudes because a clean reconstruction can cross zero.
  */
 export function hasSafeSupportedReliabilityTransition(
   assessment: WatermarkRemovalAssessment,
@@ -372,6 +373,7 @@ export function assessWatermarkRemovalCandidate(
   const evidenceSafe = hasAcceptableWatermarkRemovalEvidence(candidateSignal, suppressionGain);
   const exceedsLegacyDamageLimits =
     nearBlackIncrease > MAX_NEAR_BLACK_INCREASE || newlyClippedRatio > MAX_NEWLY_CLIPPED_RATIO;
+  // Correct dark-background restoration can clip; only severe raw undershoot proves damage.
   const damageSafe =
     !exceedsLegacyDamageLimits || severeUndershootRatio < MAX_SEVERE_UNDERSHOOT_RATIO;
 

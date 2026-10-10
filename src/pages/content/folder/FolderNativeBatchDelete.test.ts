@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { confirmDriver } from '@/tests/confirmDriver';
+import { toastDriver } from '@/tests/toastDriver';
+
 import {
   createFolderViewHarness,
   resetFolderViewBrowserMocks,
@@ -31,7 +34,6 @@ describe('native batch deletion lifetime', () => {
     history.replaceState({}, '', '/u/0/app');
     deleted = [];
     harness = await createFolderViewHarness({ folders: [], folderContents: {} });
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
   });
 
   afterEach(() => {
@@ -86,16 +88,46 @@ describe('native batch deletion lifetime', () => {
     return row;
   }
 
-  async function startBatch(): Promise<void> {
+  async function selectBoth(): Promise<void> {
     const first = nativeRow(FIRST_ID);
     const second = nativeRow(SECOND_ID);
     first.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
     await vi.advanceTimersByTimeAsync(500);
     first.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
     second.click();
-    expect(document.querySelector('[data-selection-count="true"]')?.textContent).toBe('2 selected');
+    expect(selectedCount()).toBe('2 selected');
     document.querySelector<HTMLButtonElement>('.gv-multi-select-delete-btn')!.click();
   }
+
+  const selectedCount = () =>
+    document.querySelector('[data-selection-count="true"]')?.textContent ?? null;
+
+  async function startBatch(): Promise<void> {
+    await selectBoth();
+    confirmDriver.answer('pm_delete');
+    await vi.advanceTimersByTimeAsync(0);
+  }
+
+  it('asks before deleting the selected chats, and Cancel keeps the selection', async () => {
+    await selectBoth();
+    expect(confirmDriver.message()).toBe('batch_delete_confirm');
+    expect(confirmDriver.labels()).toEqual(['pm_cancel', 'pm_delete']);
+    expect(confirmDriver.focusedLabel()).toBe('pm_cancel');
+
+    confirmDriver.answer('pm_cancel');
+    await vi.advanceTimersByTimeAsync(6000);
+    expect(deleted).toEqual([]);
+    expect(toastDriver.all()).toEqual([]);
+    expect(selectedCount()).toBe('2 selected');
+  });
+
+  it('deletes nothing when multi-select ends while it asks', async () => {
+    await selectBoth();
+    harness.selection.reset();
+    expect(confirmDriver.isOpen()).toBe(false);
+    await vi.advanceTimersByTimeAsync(6000);
+    expect(deleted).toEqual([]);
+  });
 
   it.each(['destroy', 'disable'] as const)(
     'stops the remaining batch and result UI after %s during the inter-item wait',
@@ -130,10 +162,12 @@ describe('native batch deletion lifetime', () => {
     vi.advanceTimersByTime(500);
     next.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
     document.querySelector<HTMLButtonElement>('.gv-multi-select-delete-btn')!.click();
-    const progress = document.querySelector('.gv-batch-delete-progress');
-    expect(progress).not.toBeNull();
+    confirmDriver.answer('pm_delete');
     await vi.advanceTimersByTimeAsync(0);
-    expect(document.querySelector('.gv-batch-delete-progress')).toBe(progress);
+    const [progress] = toastDriver.all();
+    expect(progress).toMatchObject({ message: 'batch_delete_in_progress', pending: true });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(toastDriver.all().map(({ element }) => element)).toEqual([progress.element]);
     await vi.advanceTimersByTimeAsync(1100);
     expect(deleted).toEqual([SECOND_ID]);
     expect(notify).toHaveBeenCalledExactlyOnceWith('batch_delete_success', 'success');

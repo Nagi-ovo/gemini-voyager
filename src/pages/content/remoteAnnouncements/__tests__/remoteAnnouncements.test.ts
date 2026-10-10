@@ -1,5 +1,7 @@
 import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { toastDriver } from '@/tests/toastDriver';
+
 import { startRemoteAnnouncements } from '../index';
 
 const ANNOUNCEMENT = {
@@ -53,18 +55,21 @@ describe('startRemoteAnnouncements', () => {
 
     cleanup = startRemoteAnnouncements();
 
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-remote-announcement--critical')).not.toBeNull();
+    await vi.waitFor(() => expect(toastDriver.all()).toHaveLength(1));
+    const [announcement] = toastDriver.all();
+    expect(announcement).toMatchObject({
+      title: 'Gemini settings changed',
+      message: 'Open Voyager docs for the workaround.',
+      tone: 'error',
+      role: 'alert',
     });
-    expect(document.querySelector('.gv-remote-announcement__title')?.textContent).toBe(
-      'Gemini settings changed',
-    );
     expect(chrome.runtime.sendMessage).not.toHaveBeenCalledWith({
       type: 'gv.remoteAnnouncement.ack',
       payload: { id: 'gemini-settings-change-2026-06' },
     });
 
-    document.querySelector<HTMLButtonElement>('.gv-remote-announcement__dismiss')?.click();
+    toastDriver.press(announcement, 'Dismiss');
+    expect(toastDriver.all()).toEqual([]);
     expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
       type: 'gv.remoteAnnouncement.ack',
       payload: { id: 'gemini-settings-change-2026-06' },
@@ -82,12 +87,10 @@ describe('startRemoteAnnouncements', () => {
       payload: { announcements: [ANNOUNCEMENT] },
     });
 
-    const link = document.querySelector<HTMLButtonElement>('.gv-remote-announcement__link');
-    const dismiss = document.querySelector<HTMLButtonElement>('.gv-remote-announcement__dismiss');
-    expect(link?.textContent).toBe('Read guide');
-    expect(dismiss?.textContent).toBe('Dismiss');
+    const [announcement] = toastDriver.all();
+    expect(toastDriver.labels(announcement)).toEqual(['Read guide', 'Dismiss']);
 
-    link?.click();
+    toastDriver.press(announcement, 'Read guide');
     expect(window.open).toHaveBeenCalledWith(
       'https://voyager.nagi.fun/guide/settings',
       '_blank',
@@ -97,6 +100,7 @@ describe('startRemoteAnnouncements', () => {
       type: 'gv.remoteAnnouncement.ack',
       payload: { id: 'gemini-settings-change-2026-06' },
     });
+    expect(toastDriver.all()).toEqual([]);
   });
 
   it('does not render a dismiss button for required-action announcements', async () => {
@@ -110,7 +114,6 @@ describe('startRemoteAnnouncements', () => {
       payload: { announcements: [{ ...ANNOUNCEMENT, requiresAction: true }] },
     });
 
-    expect(document.querySelector('.gv-remote-announcement__link')).not.toBeNull();
-    expect(document.querySelector('.gv-remote-announcement__dismiss')).toBeNull();
+    expect(toastDriver.labels(toastDriver.all()[0])).toEqual(['Read guide']);
   });
 });

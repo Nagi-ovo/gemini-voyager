@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { TimelineNavigation } from '../TimelineNavigation';
-import type { TimelineState } from '../TimelineState';
-import type { TimelineView } from '../TimelineView';
+import type { TimelineNavigation } from '@/features/timeline/TimelineNavigation';
+import type { TimelineState } from '@/features/timeline/TimelineState';
+import type { TimelineView } from '@/features/timeline/TimelineView';
+import type { SyncSettingsListener } from '@/features/timeline/types';
+
 import { TimelineManager } from '../manager';
-import type { SyncSettingsListener } from '../types';
 
 vi.mock('../../../../utils/i18n', () => ({
   initI18n: vi.fn().mockResolvedValue(undefined),
@@ -97,7 +98,7 @@ describe('TimelineManager lifecycle', () => {
       },
       'sync',
     );
-    expect(owners.view.savedTimelinePosition).toEqual(position);
+    expect(owners.view.placement.savedPosition).toEqual(position);
     expect(owners.navigation.mode).toBe('jump');
     listener(
       {
@@ -106,10 +107,10 @@ describe('TimelineManager lifecycle', () => {
       },
       'local',
     );
-    expect(owners.view.savedTimelinePosition).toEqual(position);
+    expect(owners.view.placement.savedPosition).toEqual(position);
     expect(owners.navigation.mode).toBe('jump');
     listener({ geminiTimelinePosition: { newValue: null } }, 'sync');
-    expect(owners.view.savedTimelinePosition).toBeNull();
+    expect(owners.view.placement.savedPosition).toBeNull();
   });
 
   it('does not initialize a destroyed instance', async () => {

@@ -79,6 +79,9 @@ jobs:
               - '!scripts/update-readme-badges.test.js'
               - '!sponsorkit/**'
               - '!**/*.md'
+              # Agent skills and rules: prose, links and skill metadata that no build or test reads.
+              - '!.agents/**'
+              - '!.claude/**'
               - '!LICENSE'
               - '!.gitignore'
               - '!.gitattributes'
@@ -105,7 +108,6 @@ jobs:
           bun run format > /dev/null
           git --no-pager diff --color
           exit 1
-      - run: bun run regressions:check
       - run: bun run filesize:check
 
   # ── Lint (oxlint) ────────────────────────────────────────────────────
@@ -149,6 +151,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
@@ -190,6 +193,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
@@ -219,6 +223,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
@@ -235,6 +240,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:

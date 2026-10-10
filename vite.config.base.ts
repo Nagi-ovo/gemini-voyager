@@ -5,10 +5,16 @@ import { resolve } from 'path';
 import { BuildOptions, defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-import { crxI18n, stripDevIcons, stripI18nDescriptions } from './custom-vite-plugins';
+import {
+  crxI18n,
+  selfContainedContentScripts,
+  stripDevIcons,
+  stripI18nDescriptions,
+} from './custom-vite-plugins';
 import devManifest from './manifest.dev.json';
 import manifest from './manifest.json';
 import pkg from './package.json';
+import { getCatalogRevision } from './scripts/lib/catalogRevision';
 
 const isDev = process.env.__DEV__ === 'true';
 const buildTarget = process.env.VOYAGER_BUILD_TARGET === 'edge' ? 'edge' : 'chrome';
@@ -44,7 +50,11 @@ export const baseBuildOptions: BuildOptions = {
 
 export default defineConfig({
   define: {
+    'import.meta.env.VOYAGER_CATALOG_REVISION': JSON.stringify(getCatalogRevision(__dirname)),
     'import.meta.env.VOYAGER_BUILD_TARGET': JSON.stringify(buildTarget),
+    // Chrome dev builds override this; every other build drops the dev
+    // auto-reload code (src/pages/background/devAutoReload.ts) at compile time.
+    'import.meta.env.VOYAGER_DEV_AUTO_RELOAD': 'false',
     // Remote plugin catalog channel (src/features/plugins/remote/config.ts).
     // Override the origin for a preview deployment, or set
     // VOYAGER_PLUGIN_CATALOG_REMOTE=off to ship a snapshot-only build.
@@ -67,10 +77,14 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     tsconfigPaths(),
-    react(),
+    // The floating folder tree is Preact (per-file @jsxImportSource); keep
+    // React Refresh from wrapping it.
+    react({ exclude: /src\/pages\/content\/folder\/floatingTree\/.*\.tsx$/ }),
     stripDevIcons(isDev),
     stripI18nDescriptions(isDev),
     crxI18n({ localize, src: './src/locales', stripDescriptions: !isDev }),
+    // Must install its window listener synchronously at document_start.
+    selfContainedContentScripts(['src/pages/content/shadowKeyGuardEntry.ts']),
   ],
   publicDir: resolve(__dirname, 'public'),
   esbuild: {

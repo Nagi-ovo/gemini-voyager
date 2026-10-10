@@ -1,4 +1,5 @@
 import type { SiteAdapter, SiteCapability } from '../../types';
+import { AISTUDIO_MATCHES } from '../nativeSurfaces';
 
 /**
  * Google AI Studio adapter. AI Studio toggles theme on <body> rather than the
@@ -7,7 +8,7 @@ import type { SiteAdapter, SiteCapability } from '../../types';
 export const aistudioAdapter: SiteAdapter = {
   id: 'aistudio',
   label: 'AI Studio',
-  matches: ['https://aistudio.google.com/*', 'https://aistudio.google.cn/*'],
+  matches: AISTUDIO_MATCHES,
   selectors: {
     userTurn: '.user-prompt-container, [data-turn-role="User"]',
     assistantTurn: '.model-prompt-container, [data-turn-role="Model"]',

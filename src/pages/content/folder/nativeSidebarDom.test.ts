@@ -1,13 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { buildConversationUrlFromId, extractConversationData } from './nativeConversationIds';
 import {
-  buildConversationUrlFromId,
   buildNativeConversationTitleMap,
-  collectAllSidebarConversations,
-  extractConversationData,
-  findNativeConversationElement,
   lookupNativeConversationTitle,
-} from './nativeSidebarDom';
+} from './nativeConversationTitles';
+import { collectAllSidebarConversations, findNativeConversationElement } from './nativeSidebarDom';
 
 function makeConversation(opts: { hexId?: string; title?: string | null }): HTMLElement {
   const item = document.createElement('gem-nav-list-item');

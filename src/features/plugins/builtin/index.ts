@@ -1,4 +1,8 @@
 import { type PluginManifest, hasNativeOps } from '../types';
+import { timelineManifest } from './timelineManifest';
+
+/** ChatGPT stamps the owning conversation id on each rendered reply. */
+export const CHATGPT_CONVERSATION_ID_ATTRIBUTE = 'data-chatgpt-selection-conversation-id';
 
 /**
  * Built-in (bundled-in-the-extension) plugins — first-party data, NOT from the
@@ -132,86 +136,35 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
     requires: { handlers: ['vimInput'], semantic: ['composer'] },
     contributes: { domOps: [{ op: 'native', handler: 'vimInput', params: {} }] },
   },
-  {
+  timelineManifest({
     id: 'voyager.claude-timeline',
-    name: 'Claude · Timeline',
-    version: '1.1.0',
-    description: 'Adds a compact conversation timeline to Claude with starred messages and search.',
-    i18n: {
-      zh: {
-        name: 'Claude · 时间线',
-        description: '为 Claude 添加紧凑的对话时间线，支持星标消息和搜索。',
-        settings: { compactView: { label: '使用紧凑索引' } },
-      },
-      zh_TW: {
-        name: 'Claude · 時間線',
-        description: '為 Claude 加入緊湊的對話時間線，支援星標訊息與搜尋。',
-        settings: { compactView: { label: '使用精簡索引' } },
-      },
-      ja: {
-        name: 'Claude · タイムライン',
-        description:
-          'Claude にコンパクトな会話タイムラインを追加し、スター付きメッセージと検索に対応します。',
-        settings: { compactView: { label: 'コンパクト表示を使う' } },
-      },
-      ko: {
-        name: 'Claude · 타임라인',
-        description: 'Claude에 별표 메시지와 검색을 지원하는 간단한 대화 타임라인을 추가합니다.',
-        settings: { compactView: { label: '컴팩트 타임라인 사용' } },
-      },
-      fr: {
-        name: 'Claude · Timeline',
-        description: 'Ajoute une timeline compacte à Claude avec messages favoris et recherche.',
-        settings: { compactView: { label: 'Utiliser la chronologie compacte' } },
-      },
-      es: {
-        name: 'Claude · Línea de tiempo',
-        description:
-          'Añade a Claude una línea de tiempo compacta con mensajes destacados y búsqueda.',
-        settings: { compactView: { label: 'Usar cronología compacta' } },
-      },
-      pt: {
-        name: 'Claude · Linha do tempo',
-        description:
-          'Adiciona ao Claude uma linha do tempo compacta com mensagens favoritas e busca.',
-        settings: { compactView: { label: 'Usar linha do tempo compacta' } },
-      },
-      ru: {
-        name: 'Claude · Таймлайн',
-        description: 'Добавляет в Claude компактную шкалу диалога со звёздами и поиском.',
-        settings: { compactView: { label: 'Использовать компактную шкалу' } },
-      },
-      ar: {
-        name: 'Claude · المخطط الزمني',
-        description: 'يضيف إلى Claude مخططًا زمنيًا موجزًا مع الرسائل المميزة والبحث.',
-        settings: { compactView: { label: 'استخدام المخطط الزمني المضغوط' } },
-      },
-    },
-    author: 'voyager-official',
-    category: 'productivity',
-    license: 'GPL-3.0-or-later',
-    engine: '>=1.4.0',
-    tier: 'declarative',
+    siteLabel: 'Claude',
+    version: '1.2.0',
     matches: ['https://claude.ai/*'],
-    requires: { handlers: ['turnNavigator'], semantic: ['userTurn'] },
-    contributes: {
-      settings: {
-        compactView: {
-          type: 'boolean',
-          label: 'Use compact timeline',
-          default: false,
-        },
-      },
-      domOps: [
-        {
-          op: 'native',
-          handler: 'turnNavigator',
-          // Never open the onboarding guide over an active artifact frame.
-          params: { yieldWhen: 'iframe[src*="claudeusercontent.com"]' },
-        },
-      ],
+    params: {
+      // Never open the onboarding guide over an active artifact frame.
+      yieldWhen: 'iframe[src*="claudeusercontent.com"]',
+      // Claude's thread container names its conversation and changes it
+      // in the render that swaps the turns: it decides star writes.
+      conversationIdAttribute: 'data-conv-id',
     },
-  },
+  }),
+  timelineManifest({
+    id: 'voyager.chatgpt-timeline',
+    siteLabel: 'ChatGPT',
+    version: '1.1.0',
+    matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*'],
+    // Selectors and the URL's conversation id come from the ChatGPT
+    // adapter, so fixes travel with site.json. ChatGPT unmounts whole
+    // exchange items off-screen, so the rail accumulates them. A star is
+    // written only for a turn whose reply, inside its item, names the
+    // conversation the URL is on.
+    params: {
+      turnItem: '[data-turn-key]',
+      conversationIdAttribute: CHATGPT_CONVERSATION_ID_ATTRIBUTE,
+      accountIdAttributes: ['data-theme-user-id', 'data-theme-account-id'],
+    },
+  }),
   {
     id: 'voyager.chatgpt-export',
     name: 'ChatGPT · Conversation Export',
@@ -317,6 +270,102 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
     tier: 'declarative',
     matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*'],
     contributes: {},
+  },
+  {
+    id: 'voyager.chatgpt-folders',
+    name: 'ChatGPT · Folders',
+    version: '1.0.0',
+    description:
+      'Organize ChatGPT conversations into folders in the sidebar or a floating panel, with import and export.',
+    i18n: {
+      zh: {
+        name: 'ChatGPT · 文件夹',
+        description: '在侧边栏或浮动面板中用文件夹整理 ChatGPT 对话，支持导入和导出。',
+        settings: { hideFiledChats: { label: '在侧边栏的聊天列表中隐藏已放入文件夹的对话' } },
+      },
+      zh_TW: {
+        name: 'ChatGPT · 資料夾',
+        description: '在側邊欄或浮動面板中用資料夾整理 ChatGPT 對話，支援匯入與匯出。',
+        settings: { hideFiledChats: { label: '在側邊欄的聊天列表中隱藏已放入資料夾的對話' } },
+      },
+      ja: {
+        name: 'ChatGPT · フォルダ',
+        description:
+          'サイドバーやフローティングパネルで ChatGPT の会話をフォルダに整理できます。インポートとエクスポートにも対応。',
+        settings: {
+          hideFiledChats: {
+            label: 'フォルダに入れたチャットをサイドバーのチャット一覧に表示しない',
+          },
+        },
+      },
+      ko: {
+        name: 'ChatGPT · 폴더',
+        description:
+          '사이드바나 플로팅 패널에서 ChatGPT 대화를 폴더로 정리합니다. 가져오기와 내보내기를 지원합니다.',
+        settings: { hideFiledChats: { label: '폴더에 넣은 채팅을 사이드바 채팅 목록에서 숨기기' } },
+      },
+      fr: {
+        name: 'ChatGPT · Dossiers',
+        description:
+          'Classez vos conversations ChatGPT dans des dossiers depuis la barre latérale ou un panneau flottant, avec import et export.',
+        settings: {
+          hideFiledChats: {
+            label: 'Masquer les chats classés dans un dossier de la liste latérale',
+          },
+        },
+      },
+      es: {
+        name: 'ChatGPT · Carpetas',
+        description:
+          'Organiza las conversaciones de ChatGPT en carpetas desde la barra lateral o un panel flotante, con importación y exportación.',
+        settings: {
+          hideFiledChats: {
+            label: 'Ocultar de la lista lateral los chats que ya están en carpetas',
+          },
+        },
+      },
+      pt: {
+        name: 'ChatGPT · Pastas',
+        description:
+          'Organize as conversas do ChatGPT em pastas na barra lateral ou num painel flutuante, com importação e exportação.',
+        settings: {
+          hideFiledChats: { label: 'Ocultar da lista lateral as conversas que já estão em pastas' },
+        },
+      },
+      ru: {
+        name: 'ChatGPT · Папки',
+        description:
+          'Раскладывайте диалоги ChatGPT по папкам в боковой панели или в плавающей панели, с импортом и экспортом.',
+        settings: {
+          hideFiledChats: {
+            label: 'Скрывать из списка в боковой панели чаты, уже разложенные по папкам',
+          },
+        },
+      },
+      ar: {
+        name: 'ChatGPT · المجلدات',
+        description:
+          'نظّم محادثات ChatGPT في مجلدات من الشريط الجانبي أو لوحة عائمة، مع الاستيراد والتصدير.',
+        settings: {
+          hideFiledChats: { label: 'إخفاء المحادثات الموجودة في مجلدات من قائمة الشريط الجانبي' },
+        },
+      },
+    },
+    author: 'voyager-official',
+    category: 'productivity',
+    license: 'GPL-3.0-or-later',
+    engine: '>=1.2.0',
+    tier: 'declarative',
+    matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*'],
+    contributes: {
+      settings: {
+        hideFiledChats: {
+          type: 'boolean',
+          label: 'Hide chats already in folders from the sidebar list',
+          default: false,
+        },
+      },
+    },
   },
 ];
 

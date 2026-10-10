@@ -22,6 +22,18 @@ describe('computeNudgeDomains', () => {
     ]);
   });
 
+  it('suppresses the nudge on a plugin subdomain covered by an enabled parent site', () => {
+    expect(computeNudgeDomains(['chat.deepseek.com', 'claude.ai'], ['deepseek.com'])).toEqual([
+      'claude.ai',
+    ]);
+  });
+
+  it('still nudges a lookalike host that the enabled site does not cover', () => {
+    expect(computeNudgeDomains(['chat.evildeepseek.com'], ['deepseek.com'])).toEqual([
+      'chat.evildeepseek.com',
+    ]);
+  });
+
   it('returns nothing when every plugin site is enabled', () => {
     expect(computeNudgeDomains(['chatgpt.com', 'claude.ai'], ['chatgpt.com', 'claude.ai'])).toEqual(
       [],

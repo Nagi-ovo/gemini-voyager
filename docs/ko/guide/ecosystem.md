@@ -8,5 +8,5 @@
 - **[DeepSeek Enhancer](https://github.com/dlshuangchenyue1210/DeepSeek-Enhancer)** — Voyager에서 영감을 받은 DeepSeek 웹 버전 강화 확장 프로그램으로, 다단계 폴더, 채팅 기록 내보내기, 수식 복사, 데이터 백업 등의 기능을 제공합니다.
 
 ::: tip Voyager에서 영감을 받은 프로젝트가 있나요?
-[Issue를 열어](https://github.com/Nagi-ovo/voyager/issues/new) 알려주시면 여기에 추가하겠습니다.
+[Issue를 열어](https://github.com/voyager-crew/voyager/issues/new) 알려주시면 여기에 추가하겠습니다.
 :::

@@ -1,0 +1,740 @@
+/* The rail's ground on sites that stamp a scheme: `--timeline-rail-film`
+   (public/contentStyle.css), shared with the style-guide replica. */
+html[data-gv-scheme] .gemini-timeline-bar:not(.timeline-no-container)::before {
+  background-color: var(--timeline-rail-film);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.gemini-timeline-bar {
+  position: fixed;
+  top: 60px;
+  right: 15px;
+  width: 24px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 128px);
+  height: auto;
+  z-index: 2147483646;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 12px;
+  overflow: visible;
+  contain: layout;
+  /* Hover hit-zone = this full reserved 24px column, NOT just the thin visible
+   * bar. When the bar is narrowed the visible `::before` can be ~4px, so making
+   * only it interactive forced users to land exactly on the thin line to wake
+   * the slider / reveal the preview toggle. Keeping the element interactive lets
+   * a hover anywhere in the reserved width (where the bar "used to be") trigger. */
+  pointer-events: auto;
+}
+
+/* No turns yet (Gemini's new-chat home): no rail or slider; timelinePreview.css hides the
+   toggle. Independent of `.timeline-no-container`, which only hides the rail film. */
+.gemini-timeline-bar.gv-timeline-empty,
+.timeline-left-slider.gv-timeline-empty {
+  display: none !important;
+}
+
+/* Visual background layer — width adjustable via edge drag, dots unaffected */
+.gemini-timeline-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: var(--timeline-bar-width, 4px);
+  border-radius: calc(var(--timeline-bar-width, 4px) / 2);
+  background-color: var(--timeline-bar-bg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 12px oklch(0 0 0 / 0.06);
+  transition:
+    background-color 0.3s ease,
+    width 0.2s ease,
+    border-radius 0.2s ease;
+  pointer-events: auto;
+}
+
+/* Disable transitions during active resize for immediate feedback */
+.gemini-timeline-bar.timeline-resizing::before {
+  transition: none !important;
+}
+
+/* Prevent text selection during resize drag */
+.gemini-timeline-bar.timeline-resizing {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.timeline-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: visible;
+  background: transparent;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+.timeline-track-content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: 50%;
+  top: calc(
+    var(--timeline-track-padding) + (100% - 2 * var(--timeline-track-padding)) * var(--n, 0)
+  );
+  transform: translate(-50%, -50%);
+  width: var(--timeline-hit-size);
+  height: var(--timeline-hit-size);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  pointer-events: auto;
+}
+
+.timeline-dot::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--timeline-dot-size);
+  height: var(--timeline-dot-size);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background-color: var(--timeline-dot-color);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.timeline-dot:hover::after {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+.timeline-dot:focus-visible::after {
+  box-shadow: 0 0 6px var(--timeline-dot-active-color);
+}
+
+.timeline-dot.active::after {
+  box-shadow:
+    0 0 0 var(--timeline-active-ring) var(--timeline-dot-active-color),
+    0 0 14px var(--timeline-dot-active-glow);
+}
+
+.timeline-dot.starred::after {
+  background-color: var(--timeline-star-color);
+}
+
+/* ===== Timeline Marker Levels (shape-based: circle, triangle, square) ===== */
+.timeline-dot[data-level='1']::after {
+  width: var(--timeline-dot-size);
+  height: var(--timeline-dot-size);
+  border-radius: 50%;
+  clip-path: none;
+}
+
+.timeline-dot[data-level='2']::after {
+  width: var(--timeline-dot-size);
+  height: var(--timeline-dot-size);
+  border-radius: 0;
+  clip-path: none;
+}
+
+.timeline-dot[data-level='3']::after {
+  width: var(--timeline-dot-size);
+  height: var(--timeline-dot-size);
+  border-radius: 0;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.timeline-dot[data-level='3']:hover::before {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+/* triangle fix due to conflict in the triangle clip-path and box-shadow */
+.timeline-dot[data-level='3'].active::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--timeline-dot-size) + 6px);
+  height: calc(var(--timeline-dot-size) + 6px);
+  transform: translate(-50%, -50%);
+  background: var(--timeline-dot-active-color);
+  /* use 90% to make the base of the triangular shadow less thick. */
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+/* triangle clip-path also clips box-shadow, so use drop-shadow for focus-visible glow */
+.timeline-dot[data-level='3']:focus-visible::after {
+  filter: drop-shadow(0 0 6px var(--timeline-dot-active-color));
+}
+
+/* Ruler and compact paint ticks only, never the rail film: their ticks extend
+ * sideways from the centre, so a rail reads as a scrollbar beside them. "Hide
+ * outer container" is a dots-only setting and the popup disables it here; do
+ * not drop this rule to give that toggle an effect in these styles. */
+.gemini-timeline-bar.gv-timeline-style-ruler::before,
+.gemini-timeline-bar.timeline-style-compact::before {
+  display: none;
+}
+
+/* Ruler timeline style: keep the classic full-height marker positions and
+ * interactions, but render each node as a quiet horizontal tick. */
+.gemini-timeline-bar.gv-timeline-style-ruler .timeline-track {
+  overflow: hidden;
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler .timeline-track-content {
+  height: 100% !important;
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler .timeline-dot {
+  top: calc(50% + var(--timeline-compact-offset, 0px));
+  height: 8px;
+  --gv-timeline-ruler-scale: 0.29;
+  --gv-timeline-ruler-opacity: 0.42;
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler .timeline-dot::after {
+  right: 50%;
+  left: auto;
+  width: 24px;
+  height: 2px;
+  border-radius: 9999px;
+  clip-path: none;
+  background-color: var(--timeline-dot-color);
+  box-shadow: none;
+  filter: none;
+  opacity: var(--gv-timeline-ruler-opacity);
+  transform: translateY(-50%) scaleX(var(--gv-timeline-ruler-scale));
+  transform-origin: right center;
+  transition:
+    transform 110ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 150ms ease,
+    box-shadow 150ms ease,
+    opacity 110ms ease-out;
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler .timeline-dot:hover::after {
+  opacity: 0.9;
+  transform: translateY(-50%) scaleX(1);
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler .timeline-dot:focus-visible::after {
+  box-shadow: 0 0 0 2px var(--timeline-dot-active-color);
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler .timeline-dot.active::after {
+  background-color: var(--timeline-dot-active-color);
+  box-shadow: none;
+  opacity: 1;
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler .timeline-dot.starred::after {
+  background-color: var(--timeline-star-color);
+  opacity: 0.9;
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler .timeline-dot.collapsed::before,
+.gemini-timeline-bar.gv-timeline-style-ruler .timeline-dot.holding::before {
+  display: block;
+  right: 50%;
+  left: auto;
+  width: 25px;
+  height: 7px;
+  border: 1px dashed var(--timeline-dot-active-color);
+  border-radius: 9999px;
+  background: transparent;
+  box-shadow: none;
+  clip-path: none;
+  opacity: 0.55;
+  transform: translateY(-50%);
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler .timeline-dot.holding::before {
+  border-style: solid;
+  animation: timeline-hold-fade var(--timeline-hold-ms) linear forwards;
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler.gv-timeline-ruler-inward-right .timeline-dot::after {
+  right: auto;
+  left: 50%;
+  transform: translateY(-50%) scaleX(var(--gv-timeline-ruler-scale));
+  transform-origin: left center;
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler.gv-timeline-ruler-inward-right
+  .timeline-dot:hover::after {
+  transform: translateY(-50%) scaleX(1);
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler.gv-timeline-ruler-inward-right
+  .timeline-dot.collapsed::before,
+.gemini-timeline-bar.gv-timeline-style-ruler.gv-timeline-ruler-inward-right
+  .timeline-dot.holding::before {
+  right: auto;
+  left: 50%;
+  transform: translateY(-50%);
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler .timeline-runner-ring {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gemini-timeline-bar.gv-timeline-style-ruler .timeline-dot::after {
+    transition: none;
+  }
+}
+
+/* Compact timeline style: the full-height bar stays one hover target and
+ * markers are rendered as quiet index ticks. Navigation happens from the
+ * preview panel. Like ruler, it paints no rail (see above). */
+.gemini-timeline-bar.timeline-style-compact {
+  cursor: pointer;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-track {
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-track-content {
+  height: 100% !important;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-dot {
+  top: calc(50% + var(--timeline-compact-offset, 0px));
+  width: 16px;
+  height: 8px;
+  pointer-events: none;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-dot::before {
+  display: none;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-dot::after {
+  right: 50%;
+  left: auto;
+  width: 12px;
+  height: 3px;
+  border-radius: 1px;
+  clip-path: none;
+  background-color: var(--timeline-dot-color);
+  box-shadow: none;
+  filter: none;
+  opacity: 0.72;
+  transform: translateY(-50%);
+}
+
+/* Share the ruler's inward edge anchor. On a left-side rail this moves the
+ * compact signal right; dragging the rail across the viewport mirrors it. */
+.gemini-timeline-bar.timeline-style-compact.gv-timeline-ruler-inward-right .timeline-dot::after {
+  right: auto;
+  left: 50%;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-dot.active::after {
+  width: 16px;
+  background-color: var(--timeline-dot-active-color);
+  opacity: 1;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-dot.starred::after {
+  background-color: var(--timeline-star-color);
+  opacity: 0.9;
+}
+
+.gemini-timeline-bar.timeline-style-compact .timeline-runner-ring,
+.timeline-left-slider.timeline-style-compact {
+  display: none;
+}
+
+/* ===== Timeline Context Menu ===== */
+.timeline-context-menu {
+  position: fixed;
+  background-color: var(--timeline-tooltip-bg);
+  border: 1px solid var(--timeline-tooltip-border);
+  border-radius: 8px;
+  box-shadow: var(--timeline-tooltip-shadow);
+  padding: 4px 0;
+  z-index: 2147483647;
+  min-width: 160px;
+  animation: timeline-menu-in 0.12s ease-out;
+}
+
+@keyframes timeline-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.timeline-context-menu-title {
+  padding: 8px 12px 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--timeline-tooltip-text);
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--timeline-tooltip-border);
+  margin-bottom: 4px;
+}
+
+.timeline-context-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  color: var(--timeline-tooltip-text);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.1s ease;
+}
+
+.timeline-context-menu-item:hover {
+  background-color: var(--timeline-dot-active-color);
+}
+
+.timeline-context-menu-item.active {
+  background-color: var(--timeline-dot-active-color);
+  font-weight: 500;
+}
+
+.timeline-context-menu-item .level-indicator {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeline-context-menu-item .level-dot {
+  width: 10px;
+  height: 10px;
+  background-color: var(--timeline-dot-color);
+}
+
+/* Level 1: Circle */
+.timeline-context-menu-item[data-level='1'] .level-dot {
+  border-radius: 50%;
+  clip-path: none;
+}
+
+/* Level 2: Square */
+.timeline-context-menu-item[data-level='2'] .level-dot {
+  border-radius: 0;
+  clip-path: none;
+}
+
+/* Level 3: Triangle */
+.timeline-context-menu-item[data-level='3'] .level-dot {
+  border-radius: 0;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.timeline-context-menu-item .check-icon {
+  margin-left: auto;
+  color: var(--timeline-dot-active-color);
+  font-size: 14px;
+}
+
+/* Context menu separator */
+.timeline-context-menu-separator {
+  height: 1px;
+  background-color: var(--timeline-tooltip-border);
+  margin: 4px 0;
+}
+
+/* Collapse menu item */
+.timeline-context-menu-item.collapse-item {
+  margin-top: 2px;
+}
+
+.timeline-context-menu-item .collapse-icon {
+  font-size: 12px;
+  color: var(--timeline-dot-color);
+  transition: transform 0.2s ease;
+}
+
+/* Collapsed dot style - visual indicator */
+.timeline-dot.collapsed::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--timeline-dot-size) + 10px);
+  height: calc(var(--timeline-dot-size) + 10px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px dashed var(--timeline-dot-active-color);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.timeline-dot.holding::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(var(--timeline-dot-size) + 8px);
+  height: calc(var(--timeline-dot-size) + 8px);
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--timeline-dot-active-color) inset;
+  opacity: 0.15;
+  animation: timeline-hold-fade var(--timeline-hold-ms) linear forwards;
+  pointer-events: none;
+}
+
+@keyframes timeline-hold-fade {
+  from {
+    opacity: 0.15;
+  }
+
+  to {
+    opacity: 0.85;
+  }
+}
+
+.timeline-tooltip {
+  position: fixed;
+  max-width: var(--timeline-tooltip-max);
+  background-color: var(--timeline-tooltip-bg);
+  color: var(--timeline-tooltip-text);
+  padding: var(--timeline-tooltip-pad-y) var(--timeline-tooltip-pad-x);
+  border-radius: var(--timeline-tooltip-radius);
+  border: var(--timeline-tooltip-border-w) solid var(--timeline-tooltip-border);
+  font-size: 13px;
+  /* Pinned, like the prompt preview: Gemini, Claude and ChatGPT each set a
+     different body font, and 'Google Sans' is one host's. Without this the
+     tooltip renders in the page's font while every other Voyager surface does
+     not. */
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    'Apple Color Emoji',
+    'Segoe UI Emoji';
+  line-height: var(--timeline-tooltip-lh);
+  max-height: calc(
+    3 * var(--timeline-tooltip-lh) + 2 * var(--timeline-tooltip-pad-y) + 2 *
+      var(--timeline-tooltip-border-w)
+  );
+  box-shadow: var(--timeline-tooltip-shadow);
+  pointer-events: none;
+  z-index: 2147483647;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+  white-space: pre-line;
+  text-align: start;
+  unicode-bidi: plaintext;
+  opacity: 0;
+  will-change: opacity, transform;
+  transition: opacity var(--timeline-tooltip-anim-in);
+}
+
+.timeline-tooltip.gv-timeline-ruler-tooltip {
+  --timeline-tooltip-max: 320px;
+  box-sizing: border-box;
+  display: block;
+  max-height: none;
+  padding: 11px 12px 12px;
+  white-space: normal;
+}
+
+.gv-timeline-ruler-time {
+  margin-bottom: 3px;
+  color: var(--timeline-tooltip-text);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  opacity: 0.55;
+}
+
+.gv-timeline-ruler-prompt {
+  overflow: hidden;
+  color: var(--timeline-tooltip-text);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  unicode-bidi: plaintext;
+}
+
+.gv-timeline-ruler-response {
+  display: -webkit-box;
+  margin-top: 5px;
+  overflow: hidden;
+  color: var(--timeline-tooltip-text);
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 19px;
+  opacity: 0.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  unicode-bidi: plaintext;
+}
+
+.timeline-tooltip.visible {
+  opacity: 1;
+  animation: timeline-tooltip-in var(--timeline-tooltip-anim-in);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timeline-tooltip,
+  .timeline-tooltip.visible {
+    transition: opacity 120ms linear;
+    transform: none !important;
+  }
+}
+
+.timeline-tooltip[data-placement='left'] {
+  transform-origin: right center;
+}
+
+.timeline-tooltip[data-placement='right'] {
+  transform-origin: left center;
+}
+
+@keyframes timeline-tooltip-in {
+  from {
+    transform: scale(0.96);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+.timeline-tooltip::after {
+  content: '';
+  position: absolute;
+  width: var(--timeline-tooltip-arrow-size);
+  height: var(--timeline-tooltip-arrow-size);
+  background: var(--timeline-tooltip-bg);
+  border: var(--timeline-tooltip-border-w) solid var(--timeline-tooltip-border);
+  transform: rotate(45deg);
+}
+
+.timeline-tooltip[data-placement='left']::after {
+  right: calc(-1 * var(--timeline-tooltip-arrow-outside));
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  border-left: none;
+  border-bottom: none;
+}
+
+.timeline-tooltip[data-placement='right']::after {
+  left: calc(-1 * var(--timeline-tooltip-arrow-outside));
+  top: 50%;
+  transform: translateY(-50%) rotate(45deg);
+  border-right: none;
+  border-top: none;
+}
+
+.timeline-track::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.timeline-track {
+  scrollbar-width: none;
+}
+
+.timeline-left-slider {
+  position: fixed;
+  top: 0;
+  width: 12px;
+  height: 160px;
+  opacity: 0;
+  transition: opacity 180ms ease;
+  z-index: 2147483646;
+  pointer-events: none;
+}
+
+.timeline-left-slider.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.timeline-left-slider::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 9999px;
+}
+
+html[data-gv-scheme='dark'] .timeline-left-slider::before {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.timeline-left-handle {
+  position: absolute;
+  left: 2px;
+  width: 8px;
+  height: 22px;
+  background: rgba(16, 163, 127, 0.28);
+  border-radius: 9999px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  pointer-events: auto;
+  cursor: grab;
+  transition: background-color 120ms ease;
+}
+
+.timeline-left-handle:hover {
+  background: rgba(16, 163, 127, 0.45);
+}
+
+.timeline-left-handle:active {
+  cursor: grabbing;
+}
+
+.timeline-runner-ring {
+  will-change: top, opacity;
+}
+
+.gemini-timeline-bar.timeline-no-container {
+  contain: none;
+}
+
+.gemini-timeline-bar.timeline-no-container::before {
+  opacity: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+}

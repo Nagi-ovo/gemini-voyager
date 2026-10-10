@@ -5,6 +5,11 @@ import {
   getAccountIsolationStorageKey,
 } from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
+import {
+  FOLDER_PLATFORMS,
+  FOLDER_PLATFORM_IDS,
+  supportsAccountIsolation,
+} from '@/features/folder/platforms';
 
 import type { FolderSettingsValues } from '../components/FolderSettingsCard';
 import { type SettingSetters, applySettingsPatch } from '../utils/settingsPatch';
@@ -26,7 +31,8 @@ export function useFolderPopupSettings({
   activeAccountPlatform,
   writeSyncStorage,
 }: {
-  activeAccountPlatform: AccountPlatform;
+  /** `null` on tabs without a folder bucket: isolation reads as off and is never written. */
+  activeAccountPlatform: AccountPlatform | null;
   writeSyncStorage: (payload: Record<string, unknown>) => Promise<void>;
 }) {
   const [folderEnabled, setFolderEnabled] = useState(true);
@@ -36,8 +42,9 @@ export function useFolderPopupSettings({
   const [folderSearchEnabled, setFolderSearchEnabled] = useState(true);
   const [forkEnabled, setForkEnabled] = useState(false);
   const [folderProjectEnabled, setFolderProjectEnabled] = useState(false);
-  const [accountIsolationEnabledGemini, setAccountIsolationEnabledGemini] = useState(false);
-  const [accountIsolationEnabledAIStudio, setAccountIsolationEnabledAIStudio] = useState(false);
+  const [accountIsolationByPlatform, setAccountIsolationByPlatform] = useState<
+    Record<AccountPlatform, boolean>
+  >({ gemini: false, aistudio: false });
 
   const setters = useMemo<SettingSetters<FolderSettingsValues>>(
     () => ({
@@ -62,13 +69,17 @@ export function useFolderPopupSettings({
     setFolderProjectEnabled(stored[StorageKeys.FOLDER_PROJECT_ENABLED] === true);
 
     const legacyIsolationEnabled = stored[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] === true;
-    const geminiIsolationRaw = stored[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI];
-    const aiStudioIsolationRaw = stored[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO];
-    setAccountIsolationEnabledGemini(
-      typeof geminiIsolationRaw === 'boolean' ? geminiIsolationRaw : legacyIsolationEnabled,
-    );
-    setAccountIsolationEnabledAIStudio(
-      typeof aiStudioIsolationRaw === 'boolean' ? aiStudioIsolationRaw : legacyIsolationEnabled,
+    const resolveIsolation = (platform: AccountPlatform): boolean => {
+      const raw = stored[FOLDER_PLATFORMS[platform].accountIsolationStorageKey];
+      return typeof raw === 'boolean' ? raw : legacyIsolationEnabled;
+    };
+    setAccountIsolationByPlatform(
+      Object.fromEntries(
+        FOLDER_PLATFORM_IDS.filter(supportsAccountIsolation).map((platform) => [
+          platform,
+          resolveIsolation(platform),
+        ]),
+      ) as Record<AccountPlatform, boolean>,
     );
   }, []);
 
@@ -97,11 +108,8 @@ export function useFolderPopupSettings({
 
   const onAccountIsolationChange = useCallback(
     (enabled: boolean) => {
-      if (activeAccountPlatform === 'aistudio') {
-        setAccountIsolationEnabledAIStudio(enabled);
-      } else {
-        setAccountIsolationEnabledGemini(enabled);
-      }
+      if (!activeAccountPlatform) return;
+      setAccountIsolationByPlatform((prev) => ({ ...prev, [activeAccountPlatform]: enabled }));
       void writeSyncStorage({ [getAccountIsolationStorageKey(activeAccountPlatform)]: enabled });
     },
     [activeAccountPlatform, writeSyncStorage],
@@ -117,10 +125,9 @@ export function useFolderPopupSettings({
       forkEnabled,
       folderProjectEnabled,
     },
-    accountIsolationEnabled:
-      activeAccountPlatform === 'aistudio'
-        ? accountIsolationEnabledAIStudio
-        : accountIsolationEnabledGemini,
+    accountIsolationEnabled: activeAccountPlatform
+      ? accountIsolationByPlatform[activeAccountPlatform]
+      : false,
     hydrateFromStorage,
     onChange,
     onAccountIsolationChange,

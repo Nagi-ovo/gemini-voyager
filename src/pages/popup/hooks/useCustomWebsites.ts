@@ -9,7 +9,8 @@ import {
   normalizeCustomWebsite,
   sanitizeCustomWebsites,
 } from '@/core/utils/customWebsites';
-import { matchesAnyPattern } from '@/features/plugins/sites/matchPattern';
+import { pluginsToOriginPatterns } from '@/features/plugins/runtime/siteRegistration';
+import { matchesAnyPattern, patternWithinAny } from '@/features/plugins/sites/matchPattern';
 import type { PluginManifest } from '@/features/plugins/types';
 import type { TranslationKey } from '@/utils/translations';
 
@@ -122,7 +123,7 @@ export function useCustomWebsites({
   );
 
   const revokeCustomWebsitePermission = useCallback(
-    async (domain: string): Promise<void> => {
+    async (domain: string, remainingWebsites: readonly string[]): Promise<void> => {
       const origins = originPatternsForDomain(domain);
       if (!origins || !browser.permissions?.remove) return;
       const normalized = domain
@@ -137,6 +138,12 @@ export function useCustomWebsites({
         )
       )
         return;
+      // A `*.deepseek.com` grant also serves `chat.deepseek.com` plugins and remaining subdomain sites.
+      const stillNeeded = [
+        ...pluginsToOriginPatterns(pluginManifests),
+        ...remainingWebsites.flatMap((website) => originPatternsForDomain(website) ?? []),
+      ];
+      if (stillNeeded.some((pattern) => patternWithinAny(pattern, origins))) return;
       try {
         await browser.permissions.remove({ origins });
       } catch (error) {
@@ -186,7 +193,7 @@ export function useCustomWebsites({
       const updated = customWebsites.filter((entry) => entry !== website);
       setCustomWebsites(updated);
       await writeSyncStorage({ [StorageKeys.PROMPT_CUSTOM_WEBSITES]: updated });
-      await revokeCustomWebsitePermission(website);
+      await revokeCustomWebsitePermission(website, updated);
     },
     [customWebsites, revokeCustomWebsitePermission, writeSyncStorage],
   );
@@ -197,7 +204,7 @@ export function useCustomWebsites({
         const updated = customWebsites.filter((entry) => entry !== domain);
         setCustomWebsites(updated);
         await writeSyncStorage({ [StorageKeys.PROMPT_CUSTOM_WEBSITES]: updated });
-        await revokeCustomWebsitePermission(domain);
+        await revokeCustomWebsitePermission(domain, updated);
         return;
       }
       if (isFirefox()) {

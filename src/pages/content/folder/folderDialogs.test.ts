@@ -1,9 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { CONFIRM_ANCHOR_ATTR } from '@/core/ui/confirm';
+import { confirmDriver } from '@/tests/confirmDriver';
+
 import { FOLDER_COLORS } from './folderColors';
 import { type FolderDialogs, createFolderDialogs } from './folderDialogs';
 
 vi.mock('@/utils/i18n', () => ({
+  getTranslationSync: (key: string) => key,
   getTranslationSyncUnsafe: (key: string) =>
     key === 'folder_remove_conversation_confirm' ? 'Remove {title}?' : key,
 }));
@@ -325,8 +329,8 @@ describe('folder dialogs', () => {
     dialogs.openColor('a', 'red', clickAt(), onColor);
     dialogs.confirmFolderRemoval(query('[data-folder-id="parent"]'), onConfirm);
     dialogs.openInstructions('Account A', onSave);
+    expect(confirmDriver.isOpen()).toBe(true);
     const create = query<HTMLInputElement>('.gv-folder-name-input');
-    const yes = query<HTMLButtonElement>('.gv-folder-confirm-yes');
     const color = query<HTMLButtonElement>('.gv-color-picker-item');
     const oldInput = query<HTMLTextAreaElement>('.gv-fi-textarea');
     const oldFocus = vi.spyOn(oldInput, 'focus');
@@ -336,14 +340,13 @@ describe('folder dialogs', () => {
     dialogs.closeAll();
     dialogs.closeAll();
     expect(
-      document.querySelector(
-        '.gv-fi-overlay, .gv-folder-confirm-dialog, .gv-color-picker-dialog, .gv-folder-inline-input',
-      ),
+      document.querySelector('.gv-fi-overlay, .gv-color-picker-dialog, .gv-folder-inline-input'),
     ).toBeNull();
+    expect(confirmDriver.isOpen()).toBe(false);
     create.value = 'Stale folder';
     create.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
-    yes.click();
     color.click();
+    await Promise.resolve();
     oldSave.click();
     expect(onCreate).not.toHaveBeenCalled();
     expect(onConfirm).not.toHaveBeenCalled();
@@ -359,45 +362,81 @@ describe('folder dialogs', () => {
     expect(query<HTMLTextAreaElement>('.gv-fi-textarea').value).toBe('Account B');
   });
 
-  it('anchors folder removal to its header and only confirms once', () => {
+  it('asks before deleting a folder, with Cancel focused, and deletes once on the answer', async () => {
     mountList();
-    const header = query('.gv-folder-item-header');
-    vi.spyOn(header, 'getBoundingClientRect').mockReturnValue(new DOMRect(12, 20, 100, 30));
     const onConfirm = vi.fn();
     dialogs.confirmFolderRemoval(query('[data-folder-id="parent"]'), onConfirm);
-    const dialog = query('.gv-folder-confirm-dialog');
-    expect([dialog.style.left, dialog.style.top, dialog.style.zIndex]).toEqual([
-      '36px',
-      '54px',
-      '10002',
-    ]);
-    const yes = query<HTMLButtonElement>('.gv-folder-confirm-yes');
-    expect(yes.textContent).toBe('folder_remove_conversation_action');
-    expect(onConfirm).not.toHaveBeenCalled();
-    yes.click();
-    yes.click();
+    expect(confirmDriver.message()).toBe('folder_delete_confirm');
+    // Deleting a folder deletes it, so the button says so.
+    expect(confirmDriver.labels()).toEqual(['pm_cancel', 'folder_delete']);
+    expect(confirmDriver.focusedLabel()).toBe('pm_cancel');
+
+    confirmDriver.answer('folder_delete');
+    await Promise.resolve();
     expect(onConfirm).toHaveBeenCalledTimes(1);
-    expect(document.querySelector('.gv-folder-confirm-dialog')).toBeNull();
+    expect(confirmDriver.isOpen()).toBe(false);
   });
 
-  it('renders a conversation title as text and bounds its confirmation within the viewport', () => {
+  it('renders a conversation title as text and labels its confirmation as a removal', async () => {
     const anchor = document.createElement('button');
     document.body.appendChild(anchor);
-    vi.spyOn(anchor, 'getBoundingClientRect').mockReturnValue(
-      new DOMRect(window.innerWidth - 10, 20, 5, 30),
-    );
     const onConfirm = vi.fn();
     const title = '<img src=x onerror="bad()">';
     dialogs.confirmConversationRemoval(title, anchor, onConfirm);
-    const dialog = query('.gv-folder-confirm-dialog');
-    expect(dialog.style.left).toBe(`${window.innerWidth - 280}px`);
-    expect(dialog.style.top).toBe('54px');
-    expect(query('.gv-folder-confirm-message').textContent).toBe(`Remove ${title}?`);
-    expect(dialog.querySelector('img')).toBeNull();
-    expect(query('.gv-folder-confirm-yes').textContent).toBe('pm_delete');
-    query<HTMLButtonElement>('.gv-folder-confirm-no').click();
+    expect(confirmDriver.message()).toBe(`Remove ${title}?`);
+    // The conversation stays; only its folder entry goes, so this is not "Delete".
+    expect(confirmDriver.labels()).toEqual(['pm_cancel', 'folder_remove_conversation_action']);
+    confirmDriver.answer('pm_cancel');
+    await Promise.resolve();
     expect(onConfirm).not.toHaveBeenCalled();
-    expect(document.querySelector('.gv-folder-confirm-dialog')).toBeNull();
+    expect(confirmDriver.isOpen()).toBe(false);
+  });
+
+  it('opens a removal question under its row, ending where the row ends, with the row marked', async () => {
+    Object.defineProperty(document.documentElement, 'clientWidth', {
+      value: 1000,
+      configurable: true,
+    });
+    Object.defineProperty(document.documentElement, 'clientHeight', {
+      value: 700,
+      configurable: true,
+    });
+    const row = document.createElement('div');
+    document.body.appendChild(row);
+    const rowRect = { left: 20, top: 100, right: 300, bottom: 132, width: 280, height: 32 };
+    const cardRect = { left: 0, top: 0, right: 220, bottom: 90, width: 220, height: 90 };
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      function (this: HTMLElement) {
+        return (this === row ? rowRect : cardRect) as DOMRect;
+      },
+    );
+
+    dialogs.confirmFolderRemoval(row, vi.fn());
+    const host = query('[data-gv-layer="popover"]');
+    expect({ left: host.style.left, top: host.style.top }).toEqual({ left: '80px', top: '140px' });
+    expect(row.hasAttribute(CONFIRM_ANCHOR_ATTR)).toBe(true);
+
+    dialogs.closeTransient();
+    await Promise.resolve();
+    expect(row.hasAttribute(CONFIRM_ANCHOR_ATTR)).toBe(false);
+  });
+
+  it('drops an open removal question on a panel remount, and asks again afterwards', async () => {
+    const anchor = document.createElement('button');
+    document.body.appendChild(anchor);
+    const stale = vi.fn();
+    dialogs.confirmConversationRemoval('Old', anchor, stale);
+    dialogs.closeTransient();
+    await Promise.resolve();
+    expect(confirmDriver.isOpen()).toBe(false);
+    expect(stale).not.toHaveBeenCalled();
+
+    const fresh = vi.fn();
+    dialogs.confirmConversationRemoval('New', anchor, fresh);
+    confirmDriver.answer('folder_remove_conversation_action');
+    await Promise.resolve();
+    expect(fresh).toHaveBeenCalledTimes(1);
+    expect(stale).not.toHaveBeenCalled();
   });
 
   it('keeps conversation actions single and closes the menu before running a native command', () => {

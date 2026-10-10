@@ -7,13 +7,15 @@ import { FolderFeedback } from '../FolderFeedback';
 import { FolderNavigation } from '../FolderNavigation';
 import { FolderSelection } from '../FolderSelection';
 import { FolderSidebarRuntime } from '../FolderSidebarRuntime';
+import { FolderSidebarView } from '../FolderSidebarView';
 import { FolderStore, type FolderStoreChange } from '../FolderStore';
 import { FolderTransferController } from '../FolderTransferController';
-import { FolderTreeView } from '../FolderTreeView';
 import { NativeConversationMenus } from '../NativeConversationMenus';
 import { NativeSidebarObserver } from '../NativeSidebarObserver';
 import { createFolderDialogs } from '../folderDialogs';
 import { createFolderHeaderMenus } from '../headerMenus';
+import { createLegacyFolderCommands } from '../legacyFolderCommands';
+import { ligatureIcon } from '../selectionToolbar';
 import type { IFolderStorageAdapter } from '../storage/FolderStorageAdapter';
 import type { FolderData } from '../types';
 import { mountSidebar, setLayout } from './sidebarRuntimeHarness';
@@ -35,7 +37,7 @@ export async function createFolderViewHarness(data: FolderData) {
     }),
     getBackendName: () => 'test-memory',
   };
-  let treeView: FolderTreeView;
+  let treeView: FolderSidebarView;
   let runtime: FolderSidebarRuntime;
   let selection: FolderSelection;
   const onRefresh = vi.fn(() => {
@@ -76,6 +78,7 @@ export async function createFolderViewHarness(data: FolderData) {
     },
     adapter,
   );
+  const commands = createLegacyFolderCommands(store);
   const dialogs = createFolderDialogs();
   const feedback = new FolderFeedback();
   const headerMenus = createFolderHeaderMenus();
@@ -90,6 +93,7 @@ export async function createFolderViewHarness(data: FolderData) {
     onOpened: (id) => store.markConversationAsRecentlyOpened(id),
     onTitleChange: (id, title) => store.updateConversationTitle(id, title),
     onGemDetected: (id, gemId) => store.updateConversationGem(id, gemId),
+    onActiveChange: () => treeView.refreshSite(),
   });
   const nativeMenus = new NativeConversationMenus({
     getContext: () => ({
@@ -138,12 +142,14 @@ export async function createFolderViewHarness(data: FolderData) {
   });
   selection = new FolderSelection({
     store,
+    commands,
     runtime,
     navigation,
     feedback,
-    nativeMenus,
+    toolbar: { host: () => runtime.panel, placement: 'floating', icon: ligatureIcon },
+    nativeDelete: { activation: () => store.activation, menus: nativeMenus, feedback },
+    onFolderSelectionChange: () => treeView.refreshSite(),
     getContext: () => ({
-      sortMode: treeView.sortMode,
       accountIsolationEnabled: store.accountIsolationEnabled,
       isDestroyed: destroyed,
     }),
@@ -159,8 +165,9 @@ export async function createFolderViewHarness(data: FolderData) {
     notify: (message, type) => feedback.showNotification(message, type),
   });
   const onRenameNative = vi.fn(async () => true);
-  treeView = new FolderTreeView({
+  treeView = new FolderSidebarView({
     store,
+    commands,
     runtime,
     selection,
     navigation,

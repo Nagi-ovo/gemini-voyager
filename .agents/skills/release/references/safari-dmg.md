@@ -77,7 +77,8 @@ The script then:
 
 1. Archives the `Voyager` scheme for `generic/platform=macOS` with manual Developer ID signing.
 2. Exports `Voyager.app` using the app and extension provisioning profiles.
-3. Verifies code signing and requires both `arm64` and `x86_64`.
+3. Verifies code signing, that every `dist_safari` file reached the exported
+   extension bundle, and requires both `arm64` and `x86_64`.
 4. Notarizes a zip containing the app, then staples and validates the app.
 5. Builds a branded DMG with `Voyager.app`, an `/Applications` drop target, the
    migration README, and `scripts/assets/safari-dmg-background.png`. The fixed
@@ -98,7 +99,6 @@ These checks do not publish anything:
 bun run build:safari
 bash -n scripts/build-safari-release.sh
 bash -n scripts/generate-sparkle-appcast.sh
-node scripts/verify-safari-resources.mjs
 ```
 
 Compile the native project without producing a release artifact:
@@ -159,6 +159,7 @@ gh release upload "$TAG" \
 | Failure                        | Check first                                                  | Correct response                                                                         |
 | ------------------------------ | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
 | Missing Safari secret          | `Check required Safari release secrets` log                  | Add/rotate the named repository secret, then rerun the failed workflow.                  |
+| Missing extension bundle files | `Missing Safari extension bundle files` in the build log     | Register the listed `public/` entries in `project.pbxproj`, then rerun.                  |
 | Certificate import fails       | P12 secret and password; certificate expiry                  | Replace the P12/password secrets. Do not alter bundle IDs.                               |
 | Provisioning profile fails     | Profile UUID, app ID, CloudKit entitlement, iCloud container | Regenerate the matching Developer ID profiles and replace the base64 secrets.            |
 | Archive cannot find scheme/app | Project path and `Voyager` scheme                            | Fix stale instructions or project wiring; do not fall back to `Gemini Voyager`.          |

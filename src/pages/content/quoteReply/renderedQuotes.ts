@@ -1,4 +1,6 @@
-import { findChatInput } from '../chatInput/index';
+// Keep sent quote markers for export, timeline and teardown; repaint after user-LaTeX rendering.
+// Composer classes alone preserve caret, IME and native submitted Markdown.
+import { CHAT_INPUT_SELECTOR, findChatInput } from '../chatInput/index';
 
 const USER_LINE_SELECTOR = 'p.query-text-line';
 const QUOTE_WRAPPER_CLASS = 'gv-rendered-quote';
@@ -179,32 +181,22 @@ export function renderQuotedUserMessages(): void {
   renderQuotedComposerLines();
 }
 
-function mutationTouchesComposer(mutation: MutationRecord): boolean {
-  const input = findChatInput({ requireVisible: false });
-  if (!input || input instanceof HTMLTextAreaElement) return false;
-  if (mutation.target === input || input.contains(mutation.target)) return true;
+// The body observer sees every record Gemini produces, including each row the
+// sidebar appends while paginating. Match by selector only: resolving the live
+// input measures layout, and doing that per record slows long histories (#1040).
+const QUOTE_RELEVANT_SELECTOR = `${USER_LINE_SELECTOR}, .${QUOTE_WRAPPER_CLASS}, ${CHAT_INPUT_SELECTOR}`;
 
-  return Array.from(mutation.addedNodes).some(
-    (node) => node === input || (node instanceof Element && node.contains(input)),
-  );
-}
-
-function mutationTouchesUserMessage(mutation: MutationRecord): boolean {
-  if (mutationTouchesComposer(mutation)) return true;
-
+function mutationMayAffectQuotes(mutation: MutationRecord): boolean {
   const targetElement =
     mutation.target instanceof Element ? mutation.target : mutation.target.parentElement;
-  if (targetElement?.closest(`${USER_LINE_SELECTOR}, .${QUOTE_WRAPPER_CLASS}`)) {
-    return true;
-  }
+  if (targetElement?.closest(QUOTE_RELEVANT_SELECTOR)) return true;
 
-  return Array.from(mutation.addedNodes).some((node) => {
-    if (!(node instanceof Element)) return false;
-    return (
-      node.matches(`${USER_LINE_SELECTOR}, .${QUOTE_WRAPPER_CLASS}`) ||
-      Boolean(node.querySelector(`${USER_LINE_SELECTOR}, .${QUOTE_WRAPPER_CLASS}`))
-    );
-  });
+  return Array.from(mutation.addedNodes).some(
+    (node) =>
+      node instanceof Element &&
+      (node.matches(QUOTE_RELEVANT_SELECTOR) ||
+        node.querySelector(QUOTE_RELEVANT_SELECTOR) !== null),
+  );
 }
 
 function restoreOriginalDom(): void {
@@ -235,7 +227,7 @@ export function startRenderedQuoteStyling(): () => void {
 
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   const observer = new MutationObserver((mutations) => {
-    if (!mutations.some(mutationTouchesUserMessage)) return;
+    if (!mutations.some(mutationMayAffectQuotes)) return;
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       debounceTimer = null;

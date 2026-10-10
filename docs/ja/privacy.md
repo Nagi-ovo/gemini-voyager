@@ -45,4 +45,4 @@ Google ドライブ同期を明示的に有効にした場合、Chrome・Edge・
 
 ## お問い合わせ
 
-本プライバシーポリシーについてご質問がある場合は、[GitHub リポジトリ](https://github.com/Nagi-ovo/voyager) を通じてお問い合わせください。
+本プライバシーポリシーについてご質問がある場合は、[GitHub リポジトリ](https://github.com/voyager-crew/voyager) を通じてお問い合わせください。

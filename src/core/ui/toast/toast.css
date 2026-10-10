@@ -1,0 +1,226 @@
+/* Voyager's toasts, inside one shadow root (see tokens.css).
+ * The host covers the viewport without taking presses, so the stack can sit at
+ * logical insets that flip with `data-gv-rtl`, and an anchored region can take
+ * viewport coordinates. Host-only rules are `!important`: a page rule that
+ * matches the host beats a normal `:host` declaration. */
+:host {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: var(--gv-z-top, 2147483647) !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  transform: none !important;
+  pointer-events: none !important;
+  contain: layout style !important;
+}
+
+:host([data-gv-rtl]) {
+  direction: rtl !important;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Above the prompt manager trigger (18px from the bottom, 46px tall) and the
+   research pack launcher (96px from the bottom), and inside the timeline rail,
+   which covers 15-39px from the inline end down to 128px from the bottom. */
+.gv-toast-stack {
+  position: absolute;
+  inset-block-end: 140px;
+  inset-inline-end: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  max-inline-size: min(360px, calc(100vw - 64px));
+}
+
+.gv-toast-stack > .gv-toast {
+  inline-size: min(360px, calc(100vw - 64px));
+}
+
+.gv-toast-stack .gv-toast-action {
+  grid-column: 2 / 4;
+}
+
+.gv-toast-anchored {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  max-inline-size: min(360px, calc(100vw - 24px));
+}
+
+.gv-toast {
+  --gv-toast-tone: var(--gv-ui-info, #94a3b8);
+  box-sizing: border-box;
+  /* The action gets its own row under the message, so a long label never
+     squeezes the message into a narrow column. */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 6px 10px;
+  max-inline-size: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--gv-ui-border, oklch(0.92 0.004 250 / 0.7));
+  border-radius: 12px;
+  background: var(--gv-ui-surface, oklch(0.995 0.002 250));
+  color: var(--gv-ui-text, oklch(0.14 0.004 285));
+  box-shadow: var(--gv-ui-shadow, 0 6px 20px oklch(0 0 0 / 0.16));
+  font-family: var(
+    --gv-ui-font,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  font-size: 13px;
+  line-height: 1.4;
+  pointer-events: auto;
+  animation: gv-toast-in var(--gv-ui-motion, 160ms) var(--gv-ui-ease, ease-out);
+}
+
+.gv-toast[data-tone='success'] {
+  --gv-toast-tone: var(--gv-ui-primary, oklch(0.601 0.1 140));
+}
+
+.gv-toast[data-tone='warning'] {
+  --gv-toast-tone: var(--gv-ui-warning, #f59e0b);
+}
+
+.gv-toast[data-tone='error'] {
+  --gv-toast-tone: var(--gv-ui-danger, oklch(0.55 0.19 25));
+}
+
+.gv-toast[data-pending] {
+  --gv-toast-tone: var(--gv-ui-pending, #0ea5e9);
+}
+
+@keyframes gv-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.gv-toast-dot {
+  grid-area: 1 / 1;
+  inline-size: 8px;
+  block-size: 8px;
+  margin-block-start: 6px;
+  border-radius: 50%;
+  background: var(--gv-toast-tone, #94a3b8);
+}
+
+.gv-toast[data-pending] .gv-toast-dot {
+  animation: gv-toast-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes gv-toast-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gv-toast[data-pending] .gv-toast-dot {
+    animation: none;
+  }
+}
+
+.gv-toast-body {
+  grid-area: 1 / 2;
+  min-inline-size: 0;
+}
+
+button.gv-toast-body {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.gv-toast-title {
+  margin: 0 0 2px;
+  font-weight: 600;
+}
+
+.gv-toast-message {
+  margin: 0;
+  overflow-wrap: anywhere;
+  /* Remote announcements separate paragraphs with line breaks. */
+  white-space: pre-line;
+}
+
+/* `dir=auto` makes an English line in an RTL page LTR, so `start` would push it
+   to the left edge, away from the dot; align it with the toast instead. */
+:host([data-gv-rtl]) .gv-toast-title,
+:host([data-gv-rtl]) .gv-toast-message {
+  text-align: right;
+}
+
+.gv-toast-detail {
+  margin-inline-start: 6px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.gv-toast-action,
+.gv-toast-dismiss {
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.gv-toast-action {
+  grid-area: 2 / 2;
+  justify-self: end;
+  margin-inline-end: -4px;
+  min-block-size: 24px;
+  padding: 2px 8px;
+  color: var(--gv-ui-primary, oklch(0.601 0.1 140));
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.gv-toast-dismiss {
+  grid-area: 1 / 3;
+  justify-self: end;
+  inline-size: 24px;
+  block-size: 24px;
+  margin-block: -2px;
+  margin-inline-end: -4px;
+  padding: 0;
+  color: var(--gv-ui-text-muted, oklch(0.45 0.01 270));
+  font-size: 16px;
+  line-height: 1;
+}
+
+.gv-toast-action:hover,
+.gv-toast-dismiss:hover {
+  background: var(--gv-ui-surface-hover, oklch(0.97 0.003 250));
+}
+
+.gv-toast-action:focus-visible,
+.gv-toast-dismiss:focus-visible,
+button.gv-toast-body:focus-visible {
+  outline: 2px solid var(--gv-ui-focus-ring, oklch(0.601 0.1 140));
+  outline-offset: 2px;
+}

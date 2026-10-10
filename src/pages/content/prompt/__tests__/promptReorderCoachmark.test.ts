@@ -20,10 +20,6 @@ vi.mock('../../coachmark', () => ({
   showCoachmark: mocks.showCoachmark,
 }));
 
-vi.mock('../index', () => ({
-  PROMPT_TRIGGER_ID: 'gv-pm-trigger',
-}));
-
 import {
   PROMPT_REORDER_COACHMARK_ID,
   isPromptReorderCoachmarkEligible,

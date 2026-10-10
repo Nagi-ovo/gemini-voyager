@@ -46,7 +46,7 @@ Discord サーバーに参加して、他の Voyager ユーザーと交流しま
 
 再現可能なバグを発見した場合は、GitHub で Issue を作成してください。機能リクエスト・アイデア・質問は Issue ではなく Discussions へお願いします：
 
-- [バグ報告を提出する](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml)
-- [機能リクエスト・アイデアを投稿する（Discussions）](https://github.com/Nagi-ovo/voyager/discussions)
+- [バグ報告を提出する](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml)
+- [機能リクエスト・アイデアを投稿する（Discussions）](https://github.com/voyager-crew/voyager/discussions)
 
 Voyager をサポートしていただき、ありがとうございます！❤️

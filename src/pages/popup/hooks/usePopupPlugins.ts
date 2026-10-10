@@ -6,6 +6,7 @@ import {
   type DiagnosticPluginInput,
   diagnosticPluginSourceFromId,
 } from '@/core/services/DiagnosticsExportService';
+import { subscribeLocalPlugins } from '@/features/plugins/local/localPluginStore';
 import { subscribeHostCatalog } from '@/features/plugins/remote/hostCatalogCache';
 import { catalogHostFromUrl } from '@/features/plugins/remote/hostCatalogPolicy';
 import { loadSiteOverrideForHost } from '@/features/plugins/remote/siteOverride';
@@ -21,6 +22,7 @@ import {
   listPluginManifestsWithSources,
   refreshPluginManifestsWithSources,
 } from '@/features/plugins/sources/defaultSources';
+import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
 import {
   type PluginStateMap,
   loadPluginState,
@@ -71,7 +73,7 @@ export function usePopupPlugins({
           id: plugin.id,
           version: plugin.version,
           source: diagnosticPluginSourceFromId(pluginSourceIds[plugin.id]),
-          enabled: state?.enabled ?? false,
+          enabled: isPluginEnabled(pluginState, plugin.id),
           settingsSchema: plugin.contributes.settings,
           settings: state?.settings,
         };
@@ -146,7 +148,7 @@ export function usePopupPlugins({
   }, [refreshPluginStatuses, pluginManifests, pluginState]);
 
   // Load plugin manifests: builtin + bundled snapshot + the cached remote
-  // catalog for the active tab's host. Waits for the tab context so the remote
+  // catalog for the active tab's host + the user's local plugins. Waits for the tab context so the remote
   // tier is read for the right host, and re-reads whenever the background
   // writes a CHANGED catalog for that host.
   useEffect(() => {
@@ -169,9 +171,12 @@ export function usePopupPlugins({
     const unsubscribe = pluginCatalogHost
       ? subscribeHostCatalog(pluginCatalogHost, load)
       : () => {};
+    // An imported, updated or removed local plugin changes the list too.
+    const unsubscribeLocal = subscribeLocalPlugins(load);
     return () => {
       active = false;
       unsubscribe();
+      unsubscribeLocal();
     };
   }, [activeTabContextLoaded, activeUrl, applyPluginRecords, pluginCatalogHost]);
 

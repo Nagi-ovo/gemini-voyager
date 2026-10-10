@@ -230,10 +230,11 @@ describe('PluginHost', () => {
     // The stale gen-1 start must NOT resume past its awaits and install a
     // second set of subscriptions over gen-3's (zombie listeners + clobbered
     // unsubscribe handles). Exactly one start's worth stays ACTIVE:
-    // state+catalog. (Gen 1 subscribed before it blocked; stop() removed those.)
+    // state+catalog+local plugins. (Gen 1 subscribed before it blocked; stop()
+    // removed those.)
     const added = (chrome.storage.onChanged.addListener as unknown as Mock).mock.calls.length;
     const removed = (chrome.storage.onChanged.removeListener as unknown as Mock).mock.calls.length;
-    expect(added - removed).toBe(2);
+    expect(added - removed).toBe(3);
     host.stop();
   });
 });
@@ -357,6 +358,61 @@ describe('PluginHost remote catalog', () => {
     host.stop();
   });
 
+  it('keeps a running plugin mounted when an unrelated local plugin is imported', async () => {
+    const running: PluginManifest = {
+      ...manifest(['https://claude.ai/*'], 'voyager.native-a'),
+      contributes: {
+        styles: [{ css: '.gv-native-a{color:red}' }],
+      },
+    };
+    const start = vi.fn();
+    const stop = vi.fn();
+    registerNativeHandler('voyager.native-a', { start, stop });
+    mockState({ 'voyager.native-a': { enabled: true, installedAt: 1 } });
+    const imported = manifest(['https://claude.ai/*'], 'local.me.css-only');
+    let listing: readonly PluginManifest[] = [running];
+    const list = vi.fn(async () => listing);
+    const host = new PluginHost({
+      url: 'https://claude.ai/chat/1',
+      sources: [{ id: 'spy', list }],
+      doc: document,
+    });
+    await host.start();
+    expect(start).toHaveBeenCalledTimes(1);
+
+    // A fresh but identical copy of the running plugin, plus a disabled import.
+    listing = [structuredClone(running), imported];
+    const listeners = (chrome.storage.onChanged.addListener as unknown as Mock).mock.calls;
+    for (const [listener] of listeners) {
+      listener({ gvPluginLocalManifests: { newValue: {} } }, 'local');
+    }
+    await flush();
+    expect(list).toHaveBeenCalledTimes(2);
+    expect(stop).not.toHaveBeenCalled();
+    expect(start).toHaveBeenCalledTimes(1);
+    host.stop();
+  });
+
+  it('reloads its sources when the user imports, updates or removes a local plugin', async () => {
+    mockState({ 'voyager.test': { enabled: true, installedAt: 1 } });
+    const list = vi.fn(async () => [manifest(['https://claude.ai/*'])]);
+    const host = new PluginHost({
+      url: 'https://claude.ai/chat/1',
+      sources: [{ id: 'spy', list }],
+      doc: document,
+    });
+    await host.start();
+    expect(list).toHaveBeenCalledTimes(1);
+
+    const listeners = (chrome.storage.onChanged.addListener as unknown as Mock).mock.calls;
+    for (const [listener] of listeners) {
+      listener({ gvPluginLocalManifests: { newValue: {} } }, 'local');
+    }
+    await flush();
+    expect(list).toHaveBeenCalledTimes(2);
+    host.stop();
+  });
+
   it('applies a catalog written while the initial listing is in flight, and keeps it current', async () => {
     mockState({
       'voyager.test': { enabled: true, installedAt: 1 },
@@ -431,6 +487,7 @@ describe('PluginHost site override (plan §3)', () => {
 
   function overrideAdapter(userTurn: string, brandColor = '#101010') {
     return {
+      catalogRevision: Number.MAX_SAFE_INTEGER,
       id: 'claude',
       label: 'Claude (remote)',
       matches: ['https://claude.ai/*'],
@@ -525,6 +582,50 @@ describe('PluginHost site override (plan §3)', () => {
     document.body.innerHTML = '';
   });
 
+  it('a catalog update that changes only the turn key rebuilds the send tracker', async () => {
+    mockState({ 'voyager.semantic': { enabled: true, installedAt: 1 } });
+    let turnKeyAttributes = ['data-turn-key'];
+    const source: PluginSource = {
+      id: 'host-catalog',
+      kind: 'remote',
+      async list() {
+        return [semanticPlugin];
+      },
+      async isAuthoritative() {
+        return true;
+      },
+      async siteOverride() {
+        return { ...overrideAdapter('.turn'), turnKeyAttributes };
+      },
+    };
+    const host = new PluginHost({
+      url: 'https://claude.ai/chat/1',
+      sources: [source],
+      doc: document,
+      requestCatalogRefresh: () => {},
+      isTopFrame: true,
+    });
+    await host.start();
+    expect(host.activeAdapter?.turnKeyAttributes).toEqual(['data-turn-key']);
+
+    turnKeyAttributes = ['data-message-id'];
+    for (const [listener] of (chrome.storage.onChanged.addListener as unknown as Mock).mock.calls) {
+      listener(
+        {
+          'gvPluginHostCatalog:claude.ai': {
+            oldValue: { status: 'ok', extensionVersion: 'x', manifests: [] },
+            newValue: { status: 'ok', extensionVersion: 'x', manifests: [], site: { id: 'v2' } },
+          },
+        },
+        'local',
+      );
+    }
+    await flush();
+    // Native plugins read the send tracker's turn key from the adapter the rebuilt engine hands them.
+    expect(host.activeAdapter?.turnKeyAttributes).toEqual(['data-message-id']);
+    host.stop();
+  });
+
   it('applies a site override written while the initial adapter read is in flight', async () => {
     document.body.innerHTML = '<div class="first-turn"></div><div class="second-turn"></div>';
     mockState({ 'voyager.semantic': { enabled: true, installedAt: 1 } });
@@ -579,6 +680,107 @@ describe('PluginHost site override (plan §3)', () => {
     expect(document.querySelector('.first-turn')?.classList.contains('gv-plugin-turn')).toBe(false);
     host.stop();
     document.body.innerHTML = '';
+  });
+});
+
+describe('PluginHost with a local plugin on Gemini', () => {
+  const geminiTweak: PluginManifest = {
+    ...manifest(['https://gemini.google.com/*'], 'local.me.gemini-tweak'),
+    contributes: {
+      styles: [{ css: '.gv-plugin-local-tweak{outline:1px solid red}' }],
+      domOps: [
+        {
+          op: 'addClass',
+          target: { kind: 'semantic', key: 'userTurn' },
+          className: 'gv-plugin-local-tweak',
+        },
+      ],
+    },
+  };
+
+  it('mounts on Gemini through the native adapter, tears down on disable, and never asks for a catalog', async () => {
+    document.body.innerHTML = '<user-query>hello</user-query>';
+    mockState({ 'local.me.gemini-tweak': { enabled: true, installedAt: 1 } });
+    const requestCatalogRefresh = vi.fn();
+    const host = new PluginHost({
+      url: 'https://gemini.google.com/app/abc',
+      sources: [{ id: 'local', kind: 'local', list: async () => [geminiTweak] }],
+      doc: document,
+      requestCatalogRefresh,
+      isTopFrame: true,
+    });
+
+    await host.start();
+    expect(host.activeAdapter?.id).toBe('gemini');
+    const turn = document.querySelector('user-query');
+    expect(turn?.classList.contains('gv-plugin-local-tweak')).toBe(true);
+    expect(document.documentElement.innerHTML).toContain('.gv-plugin-local-tweak{');
+    // Zero-request promise: no catalog check and no catalog cache subscription.
+    expect(requestCatalogRefresh).not.toHaveBeenCalled();
+
+    fireStateChange({ 'local.me.gemini-tweak': { enabled: false, installedAt: 1 } });
+    await flush();
+    expect(turn?.classList.contains('gv-plugin-local-tweak')).toBe(false);
+    expect(document.documentElement.innerHTML).not.toContain('.gv-plugin-local-tweak{');
+    host.stop();
+    document.body.innerHTML = '';
+  });
+
+  it('never mounts a plugin with a native op or a theme on a native surface, whatever its matches say', async () => {
+    const nativeOp: PluginManifest = {
+      ...manifest(['https://gemini.google.com/*'], 'voyager.native-on-gemini'),
+      contributes: {
+        domOps: [
+          {
+            op: 'addClass',
+            target: { kind: 'css', selector: 'body' },
+            className: 'gv-plugin-active',
+          },
+          { op: 'native', handler: 'formulaCopy', params: {} },
+        ],
+      },
+    };
+    const themed: PluginManifest = {
+      ...manifest(['https://gemini.google.com/*'], 'voyager.themed-on-gemini'),
+      theme: { brand: '#ff0000' },
+    };
+    // A legal Claude-artifact pattern whose wildcard must stay in the hostname.
+    const frameOnly: PluginManifest = {
+      ...manifest(['https://*.frame.claudeusercontent.com/*'], 'local.me.frame'),
+      contributes: { domOps: [{ op: 'native', handler: 'turnNavigator', params: {} }] },
+    };
+    const enabled = { enabled: true, installedAt: 1 };
+    mockState({
+      'voyager.native-on-gemini': enabled,
+      'voyager.themed-on-gemini': enabled,
+      'local.me.frame': enabled,
+    });
+    const host = new PluginHost({
+      url: 'https://gemini.google.com/app/abc?x=.frame.claudeusercontent.com/',
+      sources: [new StaticSource([nativeOp, themed, frameOnly])],
+      doc: document,
+      isTopFrame: true,
+    });
+    await host.start();
+    expect(document.body.classList.contains('gv-plugin-active')).toBe(false);
+    expect(host.getStatuses()).toEqual([]);
+    host.stop();
+  });
+
+  it('never asks for a catalog from AI Studio either, whatever is enabled there', async () => {
+    mockState({ 'voyager.test': { enabled: true, installedAt: 1 } });
+    const requestCatalogRefresh = vi.fn();
+    const host = new PluginHost({
+      url: 'https://aistudio.google.com/prompts/new_chat',
+      sources: [new StaticSource([manifest(['https://aistudio.google.com/*'])])],
+      doc: document,
+      requestCatalogRefresh,
+      isTopFrame: true,
+    });
+    await host.start();
+    expect(document.body.classList.contains('gv-plugin-active')).toBe(true);
+    expect(requestCatalogRefresh).not.toHaveBeenCalled();
+    host.stop();
   });
 });
 

@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { DOMContentExtractor } from '@/features/export/services/DOMContentExtractor';
+import {
+  type ContentExtractor,
+  createContentExtractor,
+} from '@/features/export/services/DOMContentExtractor';
+import type { ExportContentDialect } from '@/features/export/services/exportContentDialect';
+import { normalizeText } from '@/features/export/services/exportDomPolicy';
 
 import {
   buildChatGptTurnsForSelection,
@@ -9,12 +14,13 @@ import {
   resolveChatGptSelectionRoles,
 } from '../chatgpt';
 import { chatgptIsConversationPage } from '../platform/chatgpt';
-import type { ExportPlatformAdapter } from '../platformAdapters';
+
+let extractor: ContentExtractor;
 
 const originalScrollIntoView = HTMLElement.prototype.scrollIntoView;
 
 function setImageExportAdapter(): void {
-  DOMContentExtractor.setExportAdapter({
+  extractor = createContentExtractor({
     extractUserImage: (element: HTMLElement) => element.querySelectorAll('img'),
     extractUserText: () => undefined,
     getUserAttachmentCandidates: () => [],
@@ -25,11 +31,11 @@ function setImageExportAdapter(): void {
       htmlParts.push(`<img src="${image.src}" alt="${image.alt}" />`);
       textParts.push(`![${image.alt}](${image.src})`);
       return true;
-    }) as ExportPlatformAdapter['extractAssistantImage'],
+    }) as ExportContentDialect['extractAssistantImage'],
     extractFormula: () => undefined,
     extractCodeBlock: () => undefined,
     extractInlineFormula: () => undefined,
-  } as unknown as ExportPlatformAdapter);
+  } as unknown as ExportContentDialect);
 }
 
 beforeEach(() => {
@@ -39,14 +45,14 @@ beforeEach(() => {
     value: vi.fn(),
   });
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-  DOMContentExtractor.setExportAdapter({
+  extractor = createContentExtractor({
     extractUserImage: (element: HTMLElement) => element.querySelectorAll('img'),
     extractUserText: (
       _lines: NodeListOf<HTMLElement>,
       textParts: string[],
       element: HTMLElement,
     ) => {
-      const text = DOMContentExtractor.normalizeText(element.textContent || '');
+      const text = normalizeText(element.textContent || '');
       if (text) textParts.push(text);
     },
     getUserAttachmentCandidates: () => [],
@@ -54,7 +60,7 @@ beforeEach(() => {
     extractFormula: () => undefined,
     extractCodeBlock: () => undefined,
     extractInlineFormula: () => undefined,
-  } as unknown as ExportPlatformAdapter);
+  } as unknown as ExportContentDialect);
 });
 
 afterEach(() => {
@@ -214,7 +220,9 @@ describe('chatgptCollectTurnContainers', () => {
       </div>
     `;
 
-    const turns = await buildChatGptTurnsForSelection(new Set(['user-1', 'assistant-1']));
+    const turns = await buildChatGptTurnsForSelection(new Set(['user-1', 'assistant-1']), {
+      extractor,
+    });
 
     expect(turns).toHaveLength(1);
     expect(turns[0]).toMatchObject({ user: 'First prompt', assistant: 'First answer' });
@@ -237,7 +245,9 @@ describe('chatgptCollectTurnContainers', () => {
       </div>
     `;
 
-    const exportPromise = buildChatGptTurnsForSelection(new Set(['assistant-image-1']));
+    const exportPromise = buildChatGptTurnsForSelection(new Set(['assistant-image-1']), {
+      extractor,
+    });
     const assertion = expect(exportPromise).rejects.toThrow(
       'chatgpt_export_message_unavailable:assistant-image-1',
     );
@@ -261,7 +271,9 @@ describe('chatgptCollectTurnContainers', () => {
       </div>
     `;
 
-    const turns = await buildChatGptTurnsForSelection(new Set(['assistant-image-1']));
+    const turns = await buildChatGptTurnsForSelection(new Set(['assistant-image-1']), {
+      extractor,
+    });
 
     expect(turns[0]?.assistantContent).toMatchObject({ hasImages: true });
     expect(turns[0]?.assistant).toContain('https://example.com/generated.png');
@@ -283,7 +295,9 @@ describe('chatgptCollectTurnContainers', () => {
       </div>
     `;
 
-    const turns = await buildChatGptTurnsForSelection(new Set(['assistant-image-1']));
+    const turns = await buildChatGptTurnsForSelection(new Set(['assistant-image-1']), {
+      extractor,
+    });
 
     expect(turns[0]?.assistant).toContain('Here is the requested image.');
     expect(turns[0]?.assistant).toContain('https://example.com/generated.png');
@@ -299,7 +313,9 @@ describe('chatgptCollectTurnContainers', () => {
       </div>
     `;
 
-    const turns = await buildChatGptTurnsForSelection(new Set(['assistant-image-1']));
+    const turns = await buildChatGptTurnsForSelection(new Set(['assistant-image-1']), {
+      extractor,
+    });
 
     expect(turns).toMatchObject([{ assistant: 'The image request was rejected.' }]);
     expect(HTMLElement.prototype.scrollIntoView).not.toHaveBeenCalled();
@@ -313,7 +329,9 @@ describe('chatgptCollectTurnContainers', () => {
       <div data-turn-id-container="assistant-2"><div data-message-author-role="assistant">A2</div></div>
     `;
 
-    const turns = await buildChatGptTurnsForSelection(new Set(['user-1', 'assistant-2']));
+    const turns = await buildChatGptTurnsForSelection(new Set(['user-1', 'assistant-2']), {
+      extractor,
+    });
 
     expect(turns).toHaveLength(2);
     expect(turns[0]).toMatchObject({ user: 'U1', assistant: '' });
@@ -322,7 +340,7 @@ describe('chatgptCollectTurnContainers', () => {
 
   it('keeps initial adjacency when ChatGPT inserts a virtual item during extraction', async () => {
     let inserted = false;
-    DOMContentExtractor.setExportAdapter({
+    extractor = createContentExtractor({
       extractUserImage: () => [],
       extractUserText: (
         _lines: NodeListOf<HTMLElement>,
@@ -343,13 +361,15 @@ describe('chatgptCollectTurnContainers', () => {
       extractFormula: () => undefined,
       extractCodeBlock: () => undefined,
       extractInlineFormula: () => undefined,
-    } as unknown as ExportPlatformAdapter);
+    } as unknown as ExportContentDialect);
     document.body.innerHTML = `
       <div data-turn-id-container="user-1"><div data-message-author-role="user">U1</div></div>
       <div data-turn-id-container="assistant-1"><div data-message-author-role="assistant">A1</div></div>
     `;
 
-    const turns = await buildChatGptTurnsForSelection(new Set(['user-1', 'assistant-1']));
+    const turns = await buildChatGptTurnsForSelection(new Set(['user-1', 'assistant-1']), {
+      extractor,
+    });
 
     expect(turns).toMatchObject([{ user: 'U1', assistant: 'A1' }]);
   });
@@ -360,7 +380,7 @@ describe('chatgptCollectTurnContainers', () => {
     `;
 
     await expect(
-      buildChatGptTurnsForSelection(new Set(['user-1', 'missing-assistant'])),
+      buildChatGptTurnsForSelection(new Set(['user-1', 'missing-assistant']), { extractor }),
     ).rejects.toThrow('chatgpt_export_messages_missing:missing-assistant');
   });
 
@@ -368,7 +388,7 @@ describe('chatgptCollectTurnContainers', () => {
     vi.useFakeTimers();
     document.body.innerHTML = `<div data-turn-id-container="assistant-1"></div>`;
 
-    const exportPromise = buildChatGptTurnsForSelection(new Set(['assistant-1']));
+    const exportPromise = buildChatGptTurnsForSelection(new Set(['assistant-1']), { extractor });
     const assertion = expect(exportPromise).rejects.toThrow(
       'chatgpt_export_message_unavailable:assistant-1',
     );
@@ -394,6 +414,7 @@ describe('chatgptCollectTurnContainers', () => {
 
     const exportPromise = buildChatGptTurnsForSelection(
       new Set(['user-1', 'assistant-1', 'user-2', 'assistant-2']),
+      { extractor },
     );
     await vi.advanceTimersByTimeAsync(1000);
 
@@ -428,7 +449,7 @@ describe('chatgptCollectTurnContainers', () => {
       },
     );
 
-    const exportPromise = buildChatGptTurnsForSelection(new Set(['user-1']));
+    const exportPromise = buildChatGptTurnsForSelection(new Set(['user-1']), { extractor });
     await vi.advanceTimersByTimeAsync(1000);
 
     await expect(exportPromise).resolves.toMatchObject([{ user: 'Recovered prompt' }]);
@@ -443,7 +464,7 @@ describe('chatgptCollectTurnContainers', () => {
       </div>
     `;
 
-    const exportPromise = buildChatGptTurnsForSelection(new Set(['assistant-1']));
+    const exportPromise = buildChatGptTurnsForSelection(new Set(['assistant-1']), { extractor });
     const assertion = expect(exportPromise).rejects.toThrow(
       'chatgpt_export_response_still_generating',
     );
@@ -468,7 +489,7 @@ describe('chatgptCollectTurnContainers', () => {
     controller.abort();
 
     await expect(
-      buildChatGptTurnsForSelection(new Set(), { signal: controller.signal }),
+      buildChatGptTurnsForSelection(new Set(), { extractor, signal: controller.signal }),
     ).rejects.toMatchObject({ name: 'AbortError' });
   });
 });

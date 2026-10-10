@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { removeWatermark } from '../blendModes';
 import {
@@ -11,17 +11,34 @@ import {
   measureWatermarkSignal,
 } from '../watermarkDetector';
 import {
+  WatermarkEngine,
+  detectWatermarkConfig,
+  getWatermarkConfigOptions,
+} from '../watermarkEngine';
+import {
   type WatermarkAnchorOption,
   type WatermarkConfig,
-  WatermarkEngine,
   calculateWatermarkPosition,
   chooseDifficultWatermarkAnchorOption,
   chooseWatermarkAnchorOption,
-  detectWatermarkConfig,
-  getWatermarkConfigOptions,
   removeWatermarkFromAnchorOptions,
   removeWatermarkWithResidualCheck,
-} from '../watermarkEngine';
+} from '../watermarkPixels';
+
+beforeAll(() => {
+  vi.stubGlobal(
+    'ImageData',
+    class {
+      constructor(
+        readonly data: Uint8ClampedArray,
+        readonly width: number,
+        readonly height: number,
+      ) {}
+    },
+  );
+});
+
+afterAll(() => vi.unstubAllGlobals());
 
 const TEST_ALPHA_MAP = Float32Array.from([
   0.02, 0.15, 0.15, 0.02, 0.15, 0.8, 0.8, 0.15, 0.15, 0.8, 0.8, 0.15, 0.02, 0.15, 0.15, 0.02,
@@ -48,7 +65,7 @@ function createSolidImageData(value = 80): ImageData {
     data[index + 3] = 255;
   }
 
-  return { data, width, height } as ImageData;
+  return new ImageData(data, width, height);
 }
 
 function createImageDataWithWatermark(
@@ -404,11 +421,11 @@ describe('watermarkEngine config detection', () => {
       STRONG_DIFFICULT_ALPHA_MAP,
       STRONG_DIFFICULT_BASE_PATTERN,
     );
-    const expected = {
-      data: new Uint8ClampedArray(imageData.data),
-      width: imageData.width,
-      height: imageData.height,
-    } as ImageData;
+    const expected = new ImageData(
+      new Uint8ClampedArray(imageData.data),
+      imageData.width,
+      imageData.height,
+    );
     const position = calculateWatermarkPosition(imageData.width, imageData.height, config);
     removeWatermark(expected, STRONG_DIFFICULT_ALPHA_MAP, position);
 
@@ -579,7 +596,7 @@ describe('watermarkEngine config detection', () => {
         data[dataIndex + 3] = 255;
       });
 
-      return { data, width, height } as ImageData;
+      return new ImageData(data, width, height);
     });
     const context = {
       drawImage,

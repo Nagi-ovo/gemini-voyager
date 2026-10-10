@@ -3,9 +3,11 @@ import { describe, expect, it } from 'vitest';
 import {
   HighlightAnnotationService,
   type HighlightStorageAdapter,
+} from '@/core/services/HighlightAnnotationService';
+import {
   createHighlightSourceTextHash,
   getHighlightAccountHash,
-} from '@/core/services/HighlightAnnotationService';
+} from '@/core/services/highlightAnnotationData';
 import type { HighlightAccountScope, HighlightCreateInput } from '@/core/types/highlight';
 
 import { HighlightImportExportService } from '../HighlightImportExportService';

@@ -92,6 +92,18 @@ describe('resolveBrandColor', () => {
     expect(resolveBrandColor('https://claude.ai/x', plugins)).toBe('#ff0000');
   });
 
+  it('never takes a plugin theme on Gemini or AI Studio', () => {
+    const plugins = [
+      themedPlugin('#ff0000', ['https://gemini.google.com/*', 'https://aistudio.google.com/*']),
+    ];
+    expect(resolveBrandColor('https://gemini.google.com/app', plugins)).toBeNull();
+    expect(resolveBrandColor('https://aistudio.google.com/prompts', plugins)).toBeNull();
+    const frame = [themedPlugin('#ff0000', ['https://*.frame.claudeusercontent.com/*'])];
+    expect(
+      resolveBrandColor('https://gemini.google.com/app/abc?x=.frame.claudeusercontent.com/', frame),
+    ).toBeNull();
+  });
+
   it('ignores a plugin theme whose matches do not cover the url', () => {
     const plugins = [themedPlugin('#ff0000', ['https://chatgpt.com/*'])];
     // Falls back to Claude's adapter brandColor, not the ChatGPT-scoped plugin.
@@ -228,17 +240,6 @@ describe('applyBrandTheme', () => {
 });
 
 describe('platform theme CSS', () => {
-  it('themes the Prompt Manager copy notice on third-party platforms', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
-    const noticeBlock =
-      css.match(/:root\.gv-platform-themed \.gv-pm-notice\.ok\s*{([\s\S]*?)}/)?.[1] ?? '';
-
-    // Effective accent = inline override OR theme-aware default fallback.
-    expect(noticeBlock).toContain('var(--gv-pm-brand, var(--gv-pm-brand-default))');
-    expect(noticeBlock).toContain('var(--gv-pm-brand-fg, var(--gv-pm-brand-fg-default))');
-    expect(noticeBlock).toContain('var(--gv-pm-brand-soft)');
-  });
-
   it('paints the FAB with the brand and lets nothing repaint it afterwards', () => {
     const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
     const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(([, selector, body], order) => ({
@@ -291,7 +292,13 @@ describe('platform theme CSS', () => {
   });
 
   it('re-hues tinted accents via var(--gv-pm-brand-h), not the low-support oklch(from …) syntax', () => {
-    const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
+    const css = [
+      'public/contentStyle.css',
+      'src/features/timeline/timeline.css',
+      'src/features/timeline/timelinePreview.css',
+    ]
+      .map((path) => readFileSync(resolve(process.cwd(), path), 'utf8'))
+      .join('\n');
     // CSS relative-colour syntax is too new (Chrome 119+/Safari 16.4+/Firefox 128+);
     // tints must use the broadly-supported oklch(L C var(--gv-pm-brand-h)) form.
     // Matched as a regex, not a substring: the formatter wraps long values, and a

@@ -7,11 +7,11 @@ import {
 } from '../watermarkSettings';
 
 describe('resolveWatermarkSettings', () => {
-  it('returns the default (both on) for null/undefined/empty', () => {
+  it('returns the default (both off) for null/undefined/empty', () => {
     expect(resolveWatermarkSettings(null)).toEqual(WATERMARK_DEFAULT);
     expect(resolveWatermarkSettings(undefined)).toEqual(WATERMARK_DEFAULT);
     expect(resolveWatermarkSettings({})).toEqual(WATERMARK_DEFAULT);
-    expect(WATERMARK_DEFAULT).toEqual({ download: true, preview: true });
+    expect(WATERMARK_DEFAULT).toEqual({ download: false, preview: false });
   });
 
   it('migrates legacy=true to both flags on (preserve pre-split behavior)', () => {
@@ -52,9 +52,9 @@ describe('resolveWatermarkSettings', () => {
     ).toEqual({ download: true, preview: true });
   });
 
-  it('falls back to per-flag default when only one new key is set', () => {
-    // Only download flag set → preview falls back to default (true). Legacy
-    // is ignored once any new key is present.
+  it('preserves the old enabled fallback for existing single-flag preferences', () => {
+    // Only download flag set → preview keeps its old default (true). Legacy is
+    // ignored once any new key is present.
     expect(
       resolveWatermarkSettings({
         gvWatermarkDownloadEnabled: false,
@@ -62,7 +62,7 @@ describe('resolveWatermarkSettings', () => {
       }),
     ).toEqual({ download: false, preview: true });
 
-    // Only preview flag set → download falls back to default (true).
+    // Only preview flag set → download keeps its old default (true).
     expect(
       resolveWatermarkSettings({
         gvWatermarkPreviewEnabled: false,

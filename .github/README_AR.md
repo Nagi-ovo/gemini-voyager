@@ -18,12 +18,12 @@
   </p>
 
   <p>
-    <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="Nagi-ovo%2Fvoyager | Trendshift" width="250" height="55"/></a>
-    <a href="https://www.star-history.com/nagi-ovo/voyager" target="_blank">
+    <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="voyager-crew%2Fvoyager | Trendshift" width="250" height="55"/></a>
+    <a href="https://www.star-history.com/voyager-crew/voyager" target="_blank">
      <picture>
-       <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank&theme=dark" />
-       <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank" />
-       <img alt="Star History Rank" src="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank" width="193" height="55" />
+       <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank&theme=dark" />
+       <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank" />
+       <img alt="Star History Rank" src="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank" width="193" height="55" />
      </picture>
     </a>
     <a href="https://www.producthunt.com/products/gemini-voyager?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Voyager - AI conversation tools for Gemini, Claude, and ChatGPT | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
@@ -78,7 +78,7 @@
 
 - **📂 [تنظيم المجلدات](https://voyager.nagi.fun/ar/guide/folders)**: نظم دردشاتك في تسلسل هرمي للمجلدات مع دعم **السحب والإفلات** و **مزامنة Google Drive**.
   - **Gemini**: يدعم **وضع عزل الحساب** و **ألوان المجلدات المخصصة**.
-- **💡 [مستودع المطالبات](https://voyager.nagi.fun/ar/guide/prompts)**: احفظ وأعد استخدام أفضل مطالباتك في Gemini و AI Studio و[المواقع المخصصة](https://voyager.nagi.fun/ar/guide/custom-websites).
+- **💡 [مستودع المطالبات](https://voyager.nagi.fun/ar/guide/prompts)**: احفظ وأعد استخدام أفضل مطالباتك في Gemini و AI Studio و[المواقع المخصصة](https://voyager.nagi.fun/ar/guide/prompts#يعمل-على-أي-موقع).
 - **☁️ [المزامنة السحابية](https://voyager.nagi.fun/ar/guide/cloud-sync)**: قم بمزامنة المجلدات ومستودع المطالبات مع Google Drive.
 - **📐 نسخ الصيغ**: نسخ بنقرة واحدة لأكواد المصدر LaTeX و MathML (Word).
 - **🌦️ التأثيرات البصرية**: أضف أجواء موسمية مع **الثلج** أو **المطر السينمائي** أو **بتلات الساكورا المتساقطة** من لوحة الإعدادات.
@@ -140,7 +140,7 @@
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
   &nbsp;&nbsp;
-  <a href="https://github.com/Nagi-ovo/voyager/releases/latest/" target="_blank">
+  <a href="https://github.com/voyager-crew/voyager/releases/latest/" target="_blank">
     <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari تنزيل" height="36">
   </a>
 </div>
@@ -156,8 +156,8 @@
 ## ☕ دعم هذا المشروع
 
 <div align="center">
-  <a href="https://github.com/Nagi-ovo/voyager">
-    <img src="https://raw.githubusercontent.com/Nagi-ovo/voyager/main/docs/public/assets/sponsors.svg" width="1000px" />
+  <a href="https://github.com/voyager-crew/voyager">
+    <img src="https://raw.githubusercontent.com/voyager-crew/voyager/main/docs/public/assets/sponsors.svg" width="1000px" />
   </a>
 </div>
 
@@ -185,9 +185,9 @@
       <td align="center">
         <a href="https://afdian.com/a/nagi-ovo" target="_blank">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
-            <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" />
-            <img alt="Nagi-ovo's Profile" src="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" height="160" />
+            <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
+            <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo" />
+            <img alt="Nagi-ovo's Profile" src="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo" height="160" />
           </picture>
         </a><br>
         <sub><b>Afdian</b></sub>
@@ -206,12 +206,12 @@
 
 ## 🤝 المساهمة والتطوير
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/voyager)
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/voyager-crew/voyager)
 
 نرحب بالمساهمات!
 
-- **Issues**: الأخطاء القابلة لإعادة الإنتاج فقط — استخدم نموذج [تقرير الأخطاء](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml).
-- **Discussions**: [طلبات الميزات والأفكار والأسئلة](https://github.com/Nagi-ovo/voyager/discussions) مكانها هنا وليس في Issues.
+- **Issues**: الأخطاء القابلة لإعادة الإنتاج فقط — استخدم نموذج [تقرير الأخطاء](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml).
+- **Discussions**: [طلبات الميزات والأفكار والأسئلة](https://github.com/voyager-crew/voyager/discussions) مكانها هنا وليس في Issues.
 - **Pull Requests**: تحقق من [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 شكراً لمساعدتك في جعل Voyager أفضل! ❤️
@@ -220,8 +220,8 @@
 
 شكر خاص لجميع المساهمين على مساهماتهم في Voyager ❤️
 
-<a href="https://github.com/Nagi-ovo/voyager/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Nagi-ovo/voyager&max=200&columns=14" />
+<a href="https://github.com/voyager-crew/voyager/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=voyager-crew/voyager&max=200&columns=14" />
 </a>
 
 ---
@@ -234,7 +234,7 @@
 
 - **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - تم بناء Image Refinement بالاعتماد على هذين المشروعين. إشعارات MIT الخاصة بالأطراف الثالثة والمحفوظة موجودة في [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
-- **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - يتضمن منطق تثبيت النموذج الافتراضي أفكارًا تفاعلية مقتبسة من Gemini Helper، مع الاحتفاظ بالإسناد على مستوى المصدر.
+- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)** - يتضمن منطق تثبيت النموذج الافتراضي أفكارًا تفاعلية مقتبسة من Gemini Helper، مع الاحتفاظ بالإسناد على مستوى المصدر.
 
 - **[cordis](https://github.com/cordiverse/cordis)** - يستلهم سجل الآثار الجانبية في بيئة تشغيل الإضافات (`PluginScope`) تصميم دورة حياة الآثار والتحرير من نموذج fiber في cordis.
 
@@ -262,11 +262,11 @@ Gemini هي علامة تجارية لشركة Google LLC. Claude هي علام�
 ---
 
 <div align="center">
-  <a href="https://www.star-history.com/#Nagi-ovo/voyager&type=date&legend=top-left">
+  <a href="https://www.star-history.com/#voyager-crew/voyager&type=date&legend=top-left">
    <picture>
-     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&theme=dark&legend=top-left" />
-     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&legend=top-left" />
-     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&legend=top-left" />
+     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&theme=dark&legend=top-left" />
+     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&legend=top-left" />
+     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&legend=top-left" />
    </picture>
   </a>
   <p>صنع بكل ❤️ بواسطة Jesse Zhang</p>

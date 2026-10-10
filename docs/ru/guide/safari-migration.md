@@ -24,4 +24,4 @@ Bundle ID приложения не изменился. Ваши папки, б�
 
 После одной замены будущие версии Safari обновляют новый «Voyager» через встроенный автообновлятор (Sparkle) — вручную менять больше не придётся.
 
-Вопросы? Напишите нам в [GitHub Issues](https://github.com/Nagi-ovo/voyager/issues).
+Вопросы? Напишите нам в [GitHub Issues](https://github.com/voyager-crew/voyager/issues).

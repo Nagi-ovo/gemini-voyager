@@ -89,7 +89,7 @@ describe('PR intake job routing', () => {
     ['edited', { base: { ref: { from: 'main' } } }, true],
     ['edited', { body: { from: '' }, title: { from: 'old title' } }, true],
   ])('routes %s with %j to %s', (action, changes, expected) => {
-    expect(shouldRun({ repository: 'Nagi-ovo/voyager', event: { action, changes } })).toBe(
+    expect(shouldRun({ repository: 'voyager-crew/voyager', event: { action, changes } })).toBe(
       expected,
     );
   });

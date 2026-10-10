@@ -1,0 +1,717 @@
+import browser from 'webextension-polyfill';
+
+import { StorageKeys } from '@/core/types/common';
+import { GV_RTL_CLASS, detectRTL } from '@/core/utils/rtl';
+import { getTranslationSync } from '@/utils/i18n';
+
+import { TimelinePreviewPress } from './TimelinePreviewPress';
+import type { PreviewMarkerData } from './types';
+
+const SEARCH_DEBOUNCE_MS = 200;
+const RESIZE_DEBOUNCE_MS = 120;
+const COMPACT_CLOSE_DELAY_MS = 160;
+const PREVIEW_PANEL_WIDTH_PX = 320;
+const PREVIEW_PANEL_GAP_PX = 12;
+const PREVIEW_HOVER_BRIDGE_PADDING_PX = 8;
+const PREVIEW_HOVER_BRIDGE_CLASS = 'gv-timeline-preview-hover-bridge';
+const PREVIEW_HOVER_BRIDGE_VISIBLE_CLASS = 'gv-timeline-preview-hover-bridge-visible';
+
+const LIST_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`;
+
+export class TimelinePreviewPanel {
+  private panelEl: HTMLElement | null = null;
+  private hoverBridgeEl: HTMLElement | null = null;
+  private listEl: HTMLElement | null = null;
+  private searchInput: HTMLInputElement | null = null;
+  private toggleBtn: HTMLElement | null = null;
+  private _isOpen = false;
+  private _isPinned = false;
+  private _isCompactMode = false;
+  private floatingToggleSuppressed = false;
+  private markers: ReadonlyArray<PreviewMarkerData> = [];
+  private filteredMarkers: ReadonlyArray<PreviewMarkerData> = [];
+  private activeTurnId: string | null = null;
+  private searchQuery = '';
+  private searchDebounceTimer: number | null = null;
+  private resizeDebounceTimer: number | null = null;
+  private compactCloseTimer: number | null = null;
+  private onNavigate: ((turnId: string, index: number) => void) | null = null;
+  private onSearchChange: ((query: string) => void) | null = null;
+  private press: TimelinePreviewPress | null = null;
+  private onDocumentPointerDown: ((e: PointerEvent) => void) | null = null;
+  private onKeyDown: ((e: KeyboardEvent) => void) | null = null;
+  private onWindowResize: (() => void) | null = null;
+  private onAnchorMouseEnter: (() => void) | null = null;
+  private onAnchorMouseLeave: (() => void) | null = null;
+  private onPanelMouseEnter: (() => void) | null = null;
+  private onPanelMouseLeave: (() => void) | null = null;
+  private onHoverBridgeMouseEnter: (() => void) | null = null;
+  private onHoverBridgeMouseLeave: (() => void) | null = null;
+  private onAnchorFocusIn: (() => void) | null = null;
+  private onAnchorFocusOut: (() => void) | null = null;
+  private onAnchorKeyDown: ((event: KeyboardEvent) => void) | null = null;
+  private onAnchorPointerDown: (() => void) | null = null;
+  private onAnchorClick: ((event: MouseEvent) => void) | null = null;
+  private anchorWasOpenOnPointerDown: boolean | null = null;
+  private onStorageChanged:
+    | ((changes: Record<string, browser.Storage.StorageChange>, areaName: string) => void)
+    | null = null;
+
+  constructor(
+    private readonly anchorElement: HTMLElement,
+    private readonly mountAnchor: HTMLElement = document.body,
+    private readonly railPosition?: 'left' | 'right',
+  ) {}
+
+  get isOpen(): boolean {
+    return this._isOpen;
+  }
+
+  get isPinned(): boolean {
+    return this._isPinned;
+  }
+
+  init(
+    onNavigate: (turnId: string, index: number) => void,
+    onSearchChange?: (query: string) => void,
+    onToggleStar?: (turnId: string) => void | Promise<void>,
+  ): void {
+    this.onNavigate = onNavigate;
+    this.onSearchChange = onSearchChange ?? null;
+    this.createDOM();
+    this.applyDirection();
+    this.positionToggle();
+    this.setupEventListeners(onToggleStar ?? null);
+  }
+
+  updateMarkers(markers: ReadonlyArray<PreviewMarkerData>): void {
+    if (this.markersEqual(markers)) return;
+    this.markers = markers;
+    this.applyFilter();
+  }
+
+  updateActiveTurn(turnId: string | null): void {
+    if (this.activeTurnId === turnId) return;
+    this.activeTurnId = turnId;
+    if (!this._isOpen || !this.listEl) return;
+    this.updateActiveHighlight();
+    this.scrollActiveIntoView();
+  }
+
+  /** Reposition toggle and panel after layout changes (e.g. RTL switch, resize). */
+  reposition(): void {
+    this.applyDirection();
+    this.positionToggle();
+    if (this._isOpen) this.positionPanel();
+  }
+
+  setPinned(pinned: boolean): void {
+    if (this._isPinned === pinned) return;
+    this._isPinned = pinned;
+  }
+
+  setCompactMode(compact: boolean): void {
+    const changed = this._isCompactMode !== compact;
+    this._isCompactMode = compact;
+    this.cancelCompactClose();
+    this.toggleBtn?.classList.toggle('timeline-preview-toggle-compact', compact);
+    this.panelEl?.classList.toggle('timeline-preview-panel-compact', compact);
+    this.syncFloatingToggleVisibility();
+
+    if (!changed) return;
+
+    if (compact) {
+      this.anchorElement.tabIndex = 0;
+      this.anchorElement.setAttribute('role', 'button');
+      this.anchorElement.setAttribute(
+        'aria-label',
+        getTranslationSync('timelineCompactOpenPreview'),
+      );
+      this.anchorElement.setAttribute('aria-expanded', this._isOpen ? 'true' : 'false');
+    } else {
+      this.anchorElement.removeAttribute('tabindex');
+      this.anchorElement.removeAttribute('role');
+      this.anchorElement.removeAttribute('aria-label');
+      this.anchorElement.removeAttribute('aria-expanded');
+      this.hoverBridgeEl?.classList.remove(PREVIEW_HOVER_BRIDGE_VISIBLE_CLASS);
+      if (this._isOpen && !this._isPinned) this.close();
+    }
+  }
+
+  /** Hide the auxiliary list button when the timeline style is already a compact visual trigger. */
+  setFloatingToggleSuppressed(suppressed: boolean): void {
+    this.floatingToggleSuppressed = suppressed;
+    this.syncFloatingToggleVisibility();
+  }
+
+  toggle(): void {
+    if (this._isOpen) {
+      this.close();
+    } else {
+      this.open();
+    }
+  }
+
+  open(): void {
+    if (this._isOpen || !this.panelEl) return;
+    this._isOpen = true;
+    this.renderList();
+    this.positionPanel();
+    this.panelEl.classList.add('visible');
+    this.toggleBtn?.classList.add('active');
+    this.toggleBtn?.setAttribute('aria-pressed', 'true');
+    if (this._isCompactMode) this.anchorElement.setAttribute('aria-expanded', 'true');
+    this.scrollActiveIntoView();
+  }
+
+  close(): void {
+    if (!this._isOpen || !this.panelEl) return;
+    this.press?.reset();
+    this._isOpen = false;
+    this.panelEl.classList.remove('visible');
+    this.hoverBridgeEl?.classList.remove(PREVIEW_HOVER_BRIDGE_VISIBLE_CLASS);
+    this.toggleBtn?.classList.remove('active');
+    this.toggleBtn?.setAttribute('aria-pressed', 'false');
+    if (this._isCompactMode) this.anchorElement.setAttribute('aria-expanded', 'false');
+    if (this.searchInput) {
+      this.searchInput.value = '';
+      this.searchQuery = '';
+      this.filteredMarkers = this.markers;
+    }
+    this.onSearchChange?.('');
+  }
+
+  destroy(): void {
+    this.press?.destroy();
+    this.press = null;
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+      this.searchDebounceTimer = null;
+    }
+    if (this.resizeDebounceTimer !== null) {
+      clearTimeout(this.resizeDebounceTimer);
+      this.resizeDebounceTimer = null;
+    }
+    this.cancelCompactClose();
+    if (this.onDocumentPointerDown) {
+      document.removeEventListener('pointerdown', this.onDocumentPointerDown);
+      this.onDocumentPointerDown = null;
+    }
+    if (this.onKeyDown) {
+      document.removeEventListener('keydown', this.onKeyDown);
+      this.onKeyDown = null;
+    }
+    if (this.onWindowResize) {
+      window.removeEventListener('resize', this.onWindowResize);
+      this.onWindowResize = null;
+    }
+    if (this.onAnchorMouseEnter) {
+      this.anchorElement.removeEventListener('mouseenter', this.onAnchorMouseEnter);
+      this.onAnchorMouseEnter = null;
+    }
+    if (this.onAnchorMouseLeave) {
+      this.anchorElement.removeEventListener('mouseleave', this.onAnchorMouseLeave);
+      this.onAnchorMouseLeave = null;
+    }
+    if (this.onPanelMouseEnter && this.panelEl) {
+      this.panelEl.removeEventListener('mouseenter', this.onPanelMouseEnter);
+      this.onPanelMouseEnter = null;
+    }
+    if (this.onPanelMouseLeave && this.panelEl) {
+      this.panelEl.removeEventListener('mouseleave', this.onPanelMouseLeave);
+      this.onPanelMouseLeave = null;
+    }
+    if (this.onHoverBridgeMouseEnter && this.hoverBridgeEl) {
+      this.hoverBridgeEl.removeEventListener('mouseenter', this.onHoverBridgeMouseEnter);
+      this.onHoverBridgeMouseEnter = null;
+    }
+    if (this.onHoverBridgeMouseLeave && this.hoverBridgeEl) {
+      this.hoverBridgeEl.removeEventListener('mouseleave', this.onHoverBridgeMouseLeave);
+      this.onHoverBridgeMouseLeave = null;
+    }
+    if (this.onAnchorFocusIn) {
+      this.anchorElement.removeEventListener('focusin', this.onAnchorFocusIn);
+      this.onAnchorFocusIn = null;
+    }
+    if (this.onAnchorFocusOut) {
+      this.anchorElement.removeEventListener('focusout', this.onAnchorFocusOut);
+      this.onAnchorFocusOut = null;
+    }
+    if (this.onAnchorKeyDown) {
+      this.anchorElement.removeEventListener('keydown', this.onAnchorKeyDown);
+      this.onAnchorKeyDown = null;
+    }
+    if (this.onAnchorPointerDown) {
+      this.anchorElement.removeEventListener('pointerdown', this.onAnchorPointerDown);
+      this.onAnchorPointerDown = null;
+    }
+    if (this.onAnchorClick) {
+      this.anchorElement.removeEventListener('click', this.onAnchorClick);
+      this.onAnchorClick = null;
+    }
+    this.anchorWasOpenOnPointerDown = null;
+    if (this.onStorageChanged) {
+      browser.storage.onChanged.removeListener(this.onStorageChanged);
+      this.onStorageChanged = null;
+    }
+    this.toggleBtn?.remove();
+    this.panelEl?.remove();
+    this.hoverBridgeEl?.remove();
+    this.toggleBtn = null;
+    this.panelEl = null;
+    this.hoverBridgeEl = null;
+    this.listEl = null;
+    this.searchInput = null;
+    this.onSearchChange?.('');
+    this.onNavigate = null;
+    this.onSearchChange = null;
+    this.markers = [];
+    this.filteredMarkers = [];
+    this.anchorElement.removeAttribute('tabindex');
+    this.anchorElement.removeAttribute('role');
+    this.anchorElement.removeAttribute('aria-label');
+    this.anchorElement.removeAttribute('aria-expanded');
+  }
+
+  private createDOM(): void {
+    // Toggle button — fixed position to the left of the timeline bar
+    this.toggleBtn = document.createElement('button');
+    this.toggleBtn.className = 'timeline-preview-toggle';
+    this.toggleBtn.setAttribute('aria-label', 'Toggle preview panel');
+    this.toggleBtn.setAttribute('aria-pressed', 'false');
+    this.toggleBtn.innerHTML = LIST_ICON_SVG;
+    this.toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.toggle();
+    });
+    this.mountAnchor.appendChild(this.toggleBtn);
+    this.syncFloatingToggleVisibility();
+
+    // Panel
+    this.panelEl = document.createElement('div');
+    this.panelEl.className = 'timeline-preview-panel';
+    this.hoverBridgeEl = document.createElement('div');
+    this.hoverBridgeEl.className = PREVIEW_HOVER_BRIDGE_CLASS;
+    this.hoverBridgeEl.setAttribute('aria-hidden', 'true');
+
+    // Search section
+    const searchWrapper = document.createElement('div');
+    searchWrapper.className = 'timeline-preview-search';
+    this.searchInput = document.createElement('input');
+    this.searchInput.type = 'text';
+    this.searchInput.setAttribute('dir', 'auto');
+    this.searchInput.placeholder = getTranslationSync('timelinePreviewSearch');
+    this.searchInput.addEventListener('input', () => {
+      this.handleSearchInput();
+    });
+    searchWrapper.appendChild(this.searchInput);
+    this.panelEl.appendChild(searchWrapper);
+
+    // List
+    this.listEl = document.createElement('div');
+    this.listEl.className = 'timeline-preview-list';
+    this.setupScrollIsolation();
+    this.panelEl.appendChild(this.listEl);
+
+    this.mountAnchor.appendChild(this.panelEl);
+    this.mountAnchor.appendChild(this.hoverBridgeEl);
+  }
+
+  private syncFloatingToggleVisibility(): void {
+    if (!this.toggleBtn) return;
+    this.toggleBtn.hidden = this._isCompactMode || this.floatingToggleSuppressed;
+  }
+
+  private setupEventListeners(
+    onToggleStar: ((turnId: string) => void | Promise<void>) | null,
+  ): void {
+    // Click outside to close
+    this.onDocumentPointerDown = (e: PointerEvent) => {
+      if (!this._isOpen) return;
+      if (this._isPinned) return;
+      const target = e.target as Node;
+      if (
+        this.panelEl?.contains(target) ||
+        this.hoverBridgeEl?.contains(target) ||
+        this.toggleBtn?.contains(target) ||
+        this.anchorElement.contains(target)
+      )
+        return;
+      this.close();
+    };
+    document.addEventListener('pointerdown', this.onDocumentPointerDown);
+
+    // Escape to close
+    this.onKeyDown = (e: KeyboardEvent) => {
+      if (!this._isOpen) return;
+      if (this._isPinned) return;
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        this.close();
+      }
+    };
+    document.addEventListener('keydown', this.onKeyDown);
+
+    this.press = new TimelinePreviewPress(this.listEl!, onToggleStar);
+
+    // Reposition on resize (debounced: positionPanel reads offsetHeight after
+    // writing styles, which forces layout — avoid doing that per resize event)
+    this.onWindowResize = () => {
+      if (this.resizeDebounceTimer !== null) clearTimeout(this.resizeDebounceTimer);
+      this.resizeDebounceTimer = window.setTimeout(() => {
+        this.resizeDebounceTimer = null;
+        this.positionToggle();
+        if (this._isOpen) this.positionPanel();
+      }, RESIZE_DEBOUNCE_MS);
+    };
+    window.addEventListener('resize', this.onWindowResize);
+
+    this.onAnchorMouseEnter = () => {
+      if (!this._isCompactMode) return;
+      this.cancelCompactClose();
+      this.open();
+    };
+    this.onAnchorMouseLeave = () => this.scheduleCompactClose();
+    this.onPanelMouseEnter = () => {
+      if (!this._isCompactMode) return;
+      this.cancelCompactClose();
+    };
+    this.onPanelMouseLeave = () => this.scheduleCompactClose();
+    this.onHoverBridgeMouseEnter = () => {
+      if (!this._isCompactMode) return;
+      this.cancelCompactClose();
+    };
+    this.onHoverBridgeMouseLeave = () => this.scheduleCompactClose();
+    this.onAnchorFocusIn = () => {
+      if (!this._isCompactMode) return;
+      this.cancelCompactClose();
+      this.open();
+    };
+    this.onAnchorFocusOut = () => this.scheduleCompactClose();
+    this.onAnchorKeyDown = (event: KeyboardEvent) => {
+      if (!this._isCompactMode || (event.key !== 'Enter' && event.key !== ' ')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.toggle();
+    };
+    this.onAnchorPointerDown = () => {
+      if (!this._isCompactMode) return;
+      // Pointer focus can open the panel before the subsequent click fires.
+      // Preserve the pre-click state so a closed rail still opens on touch.
+      this.anchorWasOpenOnPointerDown = this._isOpen;
+    };
+    this.onAnchorClick = (event: MouseEvent) => {
+      if (!this._isCompactMode) return;
+      event.stopPropagation();
+      const wasOpen = this.anchorWasOpenOnPointerDown ?? this._isOpen;
+      this.anchorWasOpenOnPointerDown = null;
+      if (wasOpen) this.close();
+      else this.open();
+    };
+    this.anchorElement.addEventListener('mouseenter', this.onAnchorMouseEnter);
+    this.anchorElement.addEventListener('mouseleave', this.onAnchorMouseLeave);
+    this.panelEl?.addEventListener('mouseenter', this.onPanelMouseEnter);
+    this.panelEl?.addEventListener('mouseleave', this.onPanelMouseLeave);
+    this.hoverBridgeEl?.addEventListener('mouseenter', this.onHoverBridgeMouseEnter);
+    this.hoverBridgeEl?.addEventListener('mouseleave', this.onHoverBridgeMouseLeave);
+    this.anchorElement.addEventListener('focusin', this.onAnchorFocusIn);
+    this.anchorElement.addEventListener('focusout', this.onAnchorFocusOut);
+    this.anchorElement.addEventListener('keydown', this.onAnchorKeyDown);
+    this.anchorElement.addEventListener('pointerdown', this.onAnchorPointerDown);
+    this.anchorElement.addEventListener('click', this.onAnchorClick);
+
+    // Re-render translated text on language change
+    this.onStorageChanged = (changes, areaName) => {
+      if ((areaName === 'sync' || areaName === 'local') && changes[StorageKeys.LANGUAGE]) {
+        this.updateTranslatedText();
+      }
+    };
+    browser.storage.onChanged.addListener(this.onStorageChanged);
+  }
+
+  private updateTranslatedText(): void {
+    this.applyDirection();
+    if (this.searchInput) {
+      this.searchInput.placeholder = getTranslationSync('timelinePreviewSearch');
+    }
+    if (this._isCompactMode) {
+      this.anchorElement.setAttribute(
+        'aria-label',
+        getTranslationSync('timelineCompactOpenPreview'),
+      );
+    }
+    if (this._isOpen) {
+      this.renderList();
+    }
+  }
+
+  private scheduleCompactClose(): void {
+    if (!this._isCompactMode || this._isPinned) return;
+    this.cancelCompactClose();
+    this.compactCloseTimer = window.setTimeout(() => {
+      this.compactCloseTimer = null;
+      if (!this._isCompactMode || this._isPinned) return;
+      this.close();
+    }, COMPACT_CLOSE_DELAY_MS);
+  }
+
+  private cancelCompactClose(): void {
+    if (this.compactCloseTimer === null) return;
+    clearTimeout(this.compactCloseTimer);
+    this.compactCloseTimer = null;
+  }
+
+  private isRTLContext(): boolean {
+    return document.body.classList.contains(GV_RTL_CLASS) || detectRTL();
+  }
+
+  private applyDirection(): void {
+    const dir = this.isRTLContext() ? 'rtl' : 'ltr';
+    this.panelEl?.setAttribute('dir', dir);
+    this.listEl?.setAttribute('dir', dir);
+    this.toggleBtn?.setAttribute('dir', dir);
+  }
+
+  private setupScrollIsolation(): void {
+    if (!this.listEl) return;
+
+    this.listEl.addEventListener(
+      'wheel',
+      (e: WheelEvent) => {
+        e.stopPropagation();
+        const { scrollTop, scrollHeight, clientHeight } = this.listEl!;
+        const atTop = scrollTop <= 0 && e.deltaY < 0;
+        const atBottom = scrollTop + clientHeight >= scrollHeight - 1 && e.deltaY > 0;
+        if (atTop || atBottom) {
+          e.preventDefault();
+        }
+      },
+      { passive: false },
+    );
+  }
+
+  /** Position the toggle button beside the timeline bar, vertically centered.
+   *  Keep it on the bar's left side and clamp within viewport bounds. */
+  private positionToggle(): void {
+    if (!this.toggleBtn) return;
+    const barRect = this.anchorElement.getBoundingClientRect();
+    const btnSize = 24;
+    const gap = 4;
+    const minLeft = 8;
+    const maxLeft = Math.max(minLeft, window.innerWidth - btnSize - 8);
+    const leftPx = Math.max(minLeft, Math.min(Math.round(barRect.left - btnSize - gap), maxLeft));
+    this.toggleBtn.style.left = `${leftPx}px`;
+    this.toggleBtn.style.top = `${Math.round(barRect.top + barRect.height / 2 - btnSize / 2)}px`;
+  }
+
+  private positionPanel(): void {
+    if (!this.panelEl) return;
+    const barRect = this.anchorElement.getBoundingClientRect();
+    const panelWidth = PREVIEW_PANEL_WIDTH_PX;
+    const gap = PREVIEW_PANEL_GAP_PX;
+    const maxHeight = this._isCompactMode
+      ? Math.min(700, window.innerHeight * 0.82)
+      : Math.min(500, window.innerHeight * 0.7);
+    const barCenterY = barRect.top + barRect.height / 2;
+    // RTL moves the default catalog rail left, so its preview must follow that side too.
+    const isRTL = this.railPosition === 'left' || this.isRTLContext();
+
+    let left: number;
+    if (isRTL) {
+      // In RTL, bar is on the left — place panel to its right
+      left = barRect.right + gap;
+      if (left + panelWidth > window.innerWidth - 8) {
+        left = window.innerWidth - panelWidth - 8;
+      }
+    } else {
+      // In LTR, bar is on the right — place panel to its left
+      left = barRect.left - panelWidth - gap;
+      if (left < 8) left = 8;
+    }
+
+    this.panelEl.style.maxHeight = `${Math.round(maxHeight)}px`;
+    this.panelEl.style.left = `${Math.round(left)}px`;
+
+    // Measure actual rendered height to center properly (works for both few and many items)
+    const panelHeight = this.panelEl.offsetHeight || maxHeight;
+    let top = barCenterY - panelHeight / 2;
+    top = Math.max(8, Math.min(top, window.innerHeight - panelHeight - 8));
+
+    this.panelEl.style.top = `${Math.round(top)}px`;
+    this.positionHoverBridge(barRect, left, top, panelWidth, panelHeight);
+  }
+
+  // The visual gap must accept hover and clicks so slow crossings cannot close the panel.
+  private positionHoverBridge(
+    barRect: DOMRect,
+    panelLeft: number,
+    panelTop: number,
+    panelWidth: number,
+    panelHeight: number,
+  ): void {
+    if (!this.hoverBridgeEl) return;
+    const isRTL = this.railPosition === 'left' || this.isRTLContext();
+    const panelRight = panelLeft + panelWidth;
+    const bridgeLeft = isRTL ? barRect.right : panelRight;
+    const bridgeWidth = isRTL
+      ? Math.max(0, panelLeft - barRect.right)
+      : Math.max(0, barRect.left - panelRight);
+    const viewportTop = Math.max(
+      0,
+      Math.min(barRect.top, panelTop) - PREVIEW_HOVER_BRIDGE_PADDING_PX,
+    );
+    const viewportBottom = Math.min(
+      window.innerHeight,
+      Math.max(barRect.bottom, panelTop + panelHeight) + PREVIEW_HOVER_BRIDGE_PADDING_PX,
+    );
+
+    this.hoverBridgeEl.style.left = `${Math.round(bridgeLeft)}px`;
+    this.hoverBridgeEl.style.top = `${Math.round(viewportTop)}px`;
+    this.hoverBridgeEl.style.width = `${Math.round(bridgeWidth)}px`;
+    this.hoverBridgeEl.style.height = `${Math.round(Math.max(0, viewportBottom - viewportTop))}px`;
+    this.hoverBridgeEl.classList.toggle(
+      PREVIEW_HOVER_BRIDGE_VISIBLE_CLASS,
+      this._isOpen && this._isCompactMode && bridgeWidth > 0,
+    );
+  }
+
+  private applyFilter(): void {
+    if (!this.searchQuery) {
+      this.filteredMarkers = this.markers;
+    } else {
+      const q = this.searchQuery.toLowerCase();
+      this.filteredMarkers = this.markers.filter((m) => m.summary.toLowerCase().includes(q));
+    }
+    if (this._isOpen) {
+      this.renderList();
+      // Lazy-loaded history can grow the list after the panel has already been
+      // positioned. Re-measure it so the old top offset cannot push the newly
+      // taller panel below the viewport.
+      this.positionPanel();
+    }
+    this.onSearchChange?.(this.searchQuery);
+  }
+
+  private handleSearchInput(): void {
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+    }
+    this.searchDebounceTimer = window.setTimeout(() => {
+      this.searchDebounceTimer = null;
+      this.searchQuery = this.searchInput?.value.trim() ?? '';
+      this.applyFilter();
+    }, SEARCH_DEBOUNCE_MS);
+  }
+
+  private renderList(): void {
+    if (!this.listEl) return;
+    this.press?.cancelPending();
+    this.listEl.textContent = '';
+
+    if (this.filteredMarkers.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'timeline-preview-empty';
+      empty.textContent = this.searchQuery
+        ? getTranslationSync('timelinePreviewNoResults')
+        : getTranslationSync('timelinePreviewNoMessages');
+      this.listEl.appendChild(empty);
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    for (const marker of this.filteredMarkers) {
+      fragment.appendChild(this.createItem(marker));
+    }
+    this.listEl.appendChild(fragment);
+  }
+
+  private createItem(marker: PreviewMarkerData): HTMLElement {
+    const item = document.createElement('div');
+    item.className = 'timeline-preview-item';
+    item.dataset.turnId = marker.id;
+
+    if (marker.starred) {
+      item.classList.add('starred');
+    }
+    if (marker.id === this.activeTurnId) {
+      item.classList.add('active');
+    }
+
+    const indexLabel = document.createElement('span');
+    indexLabel.className = 'timeline-preview-index';
+    indexLabel.textContent = `${marker.index + 1}`;
+    item.appendChild(indexLabel);
+
+    const text = document.createElement('span');
+    text.className = 'timeline-preview-text';
+    text.setAttribute('dir', 'auto');
+    const displayText = this.truncateText(marker.summary, 80);
+    if (this.searchQuery) {
+      this.appendHighlighted(text, displayText, this.searchQuery);
+    } else {
+      text.textContent = displayText;
+    }
+    item.appendChild(text);
+
+    item.addEventListener('click', (event) => {
+      if (this.press?.consumeClick(marker.id, event)) return;
+      this.onNavigate?.(marker.id, marker.index);
+    });
+
+    return item;
+  }
+
+  /** Split text around case-insensitive query matches and wrap each match in <mark>. */
+  private appendHighlighted(container: HTMLElement, text: string, query: string): void {
+    const lowerText = text.toLowerCase();
+    const lowerQuery = query.toLowerCase();
+    let cursor = 0;
+    let idx = lowerText.indexOf(lowerQuery, cursor);
+    while (idx !== -1) {
+      if (idx > cursor) {
+        container.appendChild(document.createTextNode(text.slice(cursor, idx)));
+      }
+      const mark = document.createElement('mark');
+      mark.className = 'timeline-preview-highlight';
+      mark.textContent = text.slice(idx, idx + query.length);
+      container.appendChild(mark);
+      cursor = idx + query.length;
+      idx = lowerText.indexOf(lowerQuery, cursor);
+    }
+    if (cursor < text.length) {
+      container.appendChild(document.createTextNode(text.slice(cursor)));
+    }
+  }
+
+  private truncateText(text: string, maxLen: number): string {
+    if (text.length <= maxLen) return text;
+    return text.slice(0, maxLen - 1) + '\u2026';
+  }
+
+  private updateActiveHighlight(): void {
+    if (!this.listEl) return;
+    const items = this.listEl.querySelectorAll('.timeline-preview-item');
+    items.forEach((item) => {
+      const el = item as HTMLElement;
+      el.classList.toggle('active', el.dataset.turnId === this.activeTurnId);
+    });
+  }
+
+  private scrollActiveIntoView(): void {
+    if (!this.listEl || !this.activeTurnId) return;
+    const activeItem = this.listEl.querySelector(
+      '.timeline-preview-item.active',
+    ) as HTMLElement | null;
+    activeItem?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  private markersEqual(newMarkers: ReadonlyArray<PreviewMarkerData>): boolean {
+    if (newMarkers.length !== this.markers.length) return false;
+    for (let i = 0; i < newMarkers.length; i++) {
+      const a = this.markers[i];
+      const b = newMarkers[i];
+      if (a.id !== b.id || a.summary !== b.summary || a.starred !== b.starred) return false;
+    }
+    return true;
+  }
+}

@@ -1,18 +1,14 @@
-import { JSDOM } from 'jsdom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resolveExportAdapter } from '@/pages/content/export/adapter/platformAdapters';
 
 import type { ChatTurn, ConversationMetadata } from '../../types/export';
-import { DOMContentExtractor } from '../DOMContentExtractor';
+import { createContentExtractor, extractTurnContent } from '../DOMContentExtractor';
 import { PDFPrintService } from '../PDFPrintService';
 
-const dom = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>');
-globalThis.document = dom.window.document;
-globalThis.window = dom.window as unknown as Window & typeof globalThis;
-globalThis.navigator = dom.window.navigator;
-
-DOMContentExtractor.setExportAdapter(resolveExportAdapter());
+const extractor = createContentExtractor(resolveExportAdapter());
+const extracted = (turns: ChatTurn[]): ChatTurn[] =>
+  turns.map((turn) => extractTurnContent(turn, extractor));
 
 function mockSafariUserAgent(): void {
   Object.defineProperty(globalThis.navigator, 'userAgent', {
@@ -48,14 +44,14 @@ describe('PDFPrintService (Safari)', () => {
     const assistantElement = document.createElement('div');
     assistantElement.innerHTML = '<img src="https://example.com/img.png" alt="x" />';
 
-    const turns: ChatTurn[] = [
+    const turns: ChatTurn[] = extracted([
       {
         user: 'hello',
         assistant: 'world',
         starred: false,
         assistantElement,
       },
-    ];
+    ]);
 
     vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {})) as unknown as typeof fetch);
 

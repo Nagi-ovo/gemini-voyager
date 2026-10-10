@@ -6,10 +6,12 @@ import { describe, expect, it } from 'vitest';
 import { resolveExportAdapter } from '@/pages/content/export/adapter/platformAdapters';
 
 import type { ChatTurn, ConversationMetadata } from '../../types/export';
-import { DOMContentExtractor } from '../DOMContentExtractor';
+import { createContentExtractor, extractTurnContent } from '../DOMContentExtractor';
 import { MarkdownFormatter } from '../MarkdownFormatter';
 
-DOMContentExtractor.setExportAdapter(resolveExportAdapter());
+const extractor = createContentExtractor(resolveExportAdapter());
+const extracted = (turns: ChatTurn[]): ChatTurn[] =>
+  turns.map((turn) => extractTurnContent(turn, extractor));
 
 describe('MarkdownFormatter', () => {
   const mockMetadata: ConversationMetadata = {
@@ -134,7 +136,7 @@ describe('MarkdownFormatter', () => {
       `;
 
       const markdown = MarkdownFormatter.format(
-        [{ user: '', assistant: 'Done', starred: false, userElement }],
+        extracted([{ user: '', assistant: 'Done', starred: false, userElement }]),
         mockMetadata,
       );
 
@@ -154,7 +156,7 @@ describe('MarkdownFormatter', () => {
       `;
 
       const markdown = MarkdownFormatter.format(
-        [{ user: '', assistant: 'Done', starred: false, userElement }],
+        extracted([{ user: '', assistant: 'Done', starred: false, userElement }]),
         mockMetadata,
         { usePromptAsTurnHeading: true },
       );

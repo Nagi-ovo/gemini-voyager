@@ -10,14 +10,18 @@ import { StorageKeys } from '@/core/types/common';
 import { FolderImportExportService } from '@/features/folder/services/FolderImportExportService';
 
 import type { FolderSidebarRuntime } from '../FolderSidebarRuntime';
+import type { FolderSidebarView } from '../FolderSidebarView';
 import type { FolderStore } from '../FolderStore';
 import type { FolderTransferController } from '../FolderTransferController';
-import type { FolderTreeView } from '../FolderTreeView';
 import { AIStudioFolderManager } from '../aistudio';
+import { type AIStudioTree, mountAIStudioTree } from '../aistudioTree';
 import { type FloatingPanelHandle, mountFloatingPanel } from '../floatingPanel';
+import { menuItem } from '../floatingTree/__tests__/treeDriver';
 import { FolderManager } from '../manager';
 import * as storageAdapters from '../storage/FolderStorageAdapter';
 import type { FolderData } from '../types';
+import { GEMINI_PANEL } from './floatingPanelHarness';
+import { sidebarTree } from './sidebarTreeDriver';
 
 const { mockBrowser } = vi.hoisted(() => ({
   mockBrowser: {
@@ -46,18 +50,17 @@ type Platform = 'gemini' | 'aistudio';
 type Internals = {
   data: FolderData;
   container: HTMLElement | null;
-  floatingPanelHandle: FloatingPanelHandle | null;
+  tree: AIStudioTree | null;
   accountScope: AccountScope | null;
   activeStorageKey: string;
   initializeFolderUI(): Promise<void>;
-  refreshAccountScope(force?: boolean): Promise<unknown>;
+  account: { refresh(force?: boolean): Promise<unknown> };
   load(): Promise<void>;
   save(): Promise<void>;
-  handleCloudSync(): Promise<void>;
   transfer: FolderTransferController;
   store: FolderStore;
   sidebarRuntime: FolderSidebarRuntime;
-  treeView: FolderTreeView;
+  treeView: FolderSidebarView;
   refreshScopedDataOnAccountContextChange(): Promise<void>;
   destroy(): void;
 };
@@ -161,8 +164,7 @@ function backupData(namespace: string, slot = 'primary'): FolderData | undefined
 
 async function makeHarness(platform: Platform, account: 'a' | 'b'): Promise<Harness> {
   selectAccount(platform, account);
-  // Gemini still runs its real init/load lifecycle, with UI disabled. AI Studio's
-  // UI initializer calls its real load, avoiding waits for the native sidebar.
+  // Both use real loads with native UI waits disabled.
   extensionSync.geminiFolderEnabled = platform === 'aistudio';
   const adapter = platform === 'gemini' ? storageAdapters.createFolderStorageAdapter() : null;
   if (adapter) vi.spyOn(storageAdapters, 'createFolderStorageAdapter').mockReturnValueOnce(adapter);
@@ -193,11 +195,11 @@ async function makeHarness(platform: Platform, account: 'a' | 'b'): Promise<Harn
     },
     load: () => (store ? store.loadData() : manager.load()),
     save: () => (store ? store.saveData() : manager.save()),
-    sync: () => (platform === 'gemini' ? manager.transfer.sync() : manager.handleCloudSync()),
+    sync: () => manager.transfer.sync(),
     switchTo: async (next) => {
       selectAccount(platform, next);
       if (store) await store.refreshAccountScope();
-      else await manager.refreshAccountScope(true);
+      else await manager.account.refresh(true);
     },
   };
 }
@@ -221,6 +223,31 @@ async function mountGeminiPanel(harness: Harness): Promise<HTMLElement> {
   return harness.manager.sidebarRuntime.panel!;
 }
 
+/** Routes the platform's folder writes through `write`. */
+function mockWrites(
+  harness: Harness,
+  platform: Platform,
+  write: (key: string, data: FolderData) => Promise<boolean>,
+): void {
+  if (platform === 'gemini') vi.spyOn(harness.adapter!, 'saveData').mockImplementation(write);
+  else
+    mockBrowser.storage.local.set.mockImplementation(async (values) => {
+      const [key, data] = Object.entries(values)[0];
+      await write(key, data as FolderData);
+    });
+}
+
+/** Account a's legacy unscoped data, holding a conversation from its route. */
+function legacyData(platform: Platform): FolderData {
+  const legacy = privateData('a');
+  const url = {
+    gemini: 'https://gemini.google.com/u/1/app/abc',
+    aistudio: 'https://aistudio.google.com/prompts/abc',
+  }[platform];
+  legacy.folderContents.a.push({ conversationId: 'legacy-a', title: 'Legacy a', addedAt: 1, url });
+  return legacy;
+}
+
 function pauseFirstWrite(harness: Harness, platform: Platform, storageKey: string) {
   const pending = deferred<void>();
   const started = deferred<void>();
@@ -235,12 +262,7 @@ function pauseFirstWrite(harness: Harness, platform: Platform, storageKey: strin
     extensionLocal[key] = snapshot;
     return true;
   };
-  if (platform === 'gemini') vi.spyOn(harness.adapter!, 'saveData').mockImplementation(write);
-  else
-    mockBrowser.storage.local.set.mockImplementation(async (values) => {
-      const [key, data] = Object.entries(values)[0];
-      await write(key, data as FolderData);
-    });
+  mockWrites(harness, platform, write);
   return { started: started.promise, release: () => pending.resolve() };
 }
 
@@ -373,6 +395,7 @@ describe.each<Platform>(['gemini', 'aistudio'])('%s backup account ownership', (
     extensionLocal[aKeys.live] = privateData('a');
     const harness = await makeHarness(platform, 'a');
     window.dispatchEvent(new Event('beforeunload'));
+    await vi.waitFor(() => expect(backupData(aKeys.backup, 'beforeUnload')).toBeDefined());
     expect(backupData(aKeys.backup, 'beforeUnload')?.folders[0]?.name).toBe('Private a');
     await harness.switchTo('b');
     window.dispatchEvent(new Event('beforeunload'));
@@ -381,10 +404,10 @@ describe.each<Platform>(['gemini', 'aistudio'])('%s backup account ownership', (
     extensionLocal[bKeys.live] = privateData('b');
     await harness.load();
     window.dispatchEvent(new Event('beforeunload'));
+    await vi.waitFor(() => expect(backupData(bKeys.backup, 'beforeUnload')).toBeDefined());
     expect(backupData(bKeys.backup, 'beforeUnload')?.folders[0]?.name).toBe('Private b');
     expect(backupData(aKeys.backup, 'beforeUnload')?.folders[0]?.name).toBe('Private a');
   });
-
   it('discards an old account load that completes after the new account load', async () => {
     const aKeys = await accountKeys(platform, 'a');
     const bKeys = await accountKeys(platform, 'b');
@@ -393,8 +416,10 @@ describe.each<Platform>(['gemini', 'aistudio'])('%s backup account ownership', (
     const harness = await makeHarness(platform, 'a');
     const pending = deferred<Record<string, unknown>>();
     const started = deferred<void>();
-    mockBrowser.storage.local.get.mockImplementationOnce((key) => {
-      expect(key).toBe(aKeys.live);
+    let first = true;
+    mockBrowser.storage.local.get.mockImplementation(async (key: unknown) => {
+      if (key !== aKeys.live || !first) return pick(extensionLocal, key);
+      first = false;
       started.resolve();
       return pending.promise;
     });
@@ -424,12 +449,7 @@ describe.each<Platform>(['gemini', 'aistudio'])('%s backup account ownership', (
       Object.assign(extensionLocal, structuredClone({ [key]: data }));
       return true;
     };
-    if (platform === 'gemini') vi.spyOn(harness.adapter!, 'saveData').mockImplementation(write);
-    else
-      mockBrowser.storage.local.set.mockImplementation(async (values) => {
-        const [key, data] = Object.entries(values)[0];
-        await write(key, data as FolderData);
-      });
+    mockWrites(harness, platform, write);
     const oldSave = harness.save();
     await started.promise;
     harness.data.folders[0].name = 'Later edit in a';
@@ -480,12 +500,7 @@ describe.each<Platform>(['gemini', 'aistudio'])('%s backup account ownership', (
       extensionLocal[key] = structuredClone(data);
       return true;
     };
-    if (platform === 'gemini') vi.spyOn(harness.adapter!, 'saveData').mockImplementation(write);
-    else
-      mockBrowser.storage.local.set.mockImplementation(async (values) => {
-        const [key, data] = Object.entries(values)[0];
-        await write(key, data as FolderData);
-      });
+    mockWrites(harness, platform, write);
     const oldSave = harness.save();
     await started.promise;
     harness.data.folders[0].name = 'Queued a';
@@ -550,12 +565,7 @@ describe.each<Platform>(['gemini', 'aistudio'])('%s backup account ownership', (
       extensionLocal[key] = snapshot;
       return true;
     };
-    if (platform === 'gemini') vi.spyOn(harness.adapter!, 'saveData').mockImplementation(write);
-    else
-      mockBrowser.storage.local.set.mockImplementation(async (values) => {
-        const [key, data] = Object.entries(values)[0];
-        await write(key, data as FolderData);
-      });
+    mockWrites(harness, platform, write);
     const originalSave = harness.save();
     await started.promise;
     harness.data.folders[0].name = 'Older queued a';
@@ -630,16 +640,7 @@ describe.each<Platform>(['gemini', 'aistudio'])('%s backup account ownership', (
     const harness = await makeHarness(platform, 'a');
     delete extensionLocal[aKeys.live];
     localStorage.removeItem(aKeys.live);
-    const legacy = privateData('a');
-    legacy.folderContents.a.push({
-      conversationId: 'legacy-a',
-      title: 'Legacy a',
-      addedAt: 1,
-      url:
-        platform === 'gemini'
-          ? 'https://gemini.google.com/u/1/app/abc'
-          : 'https://aistudio.google.com/prompts/abc',
-    });
+    const legacy = legacyData(platform);
     extensionLocal[baseKey(platform)] = legacy;
     const writes = pauseFirstWrite(harness, platform, aKeys.live);
     const migration = harness.load();
@@ -659,6 +660,41 @@ describe.each<Platform>(['gemini', 'aistudio'])('%s backup account ownership', (
     );
     expect(backupData(aKeys.backup)?.folders[0]?.name).toBe('Edited after migration started');
     expect(extensionLocal[baseKey(platform)]).toEqual(legacy);
+  });
+
+  it('lets a newer backup outrank a legacy migration whose write failed', async () => {
+    const aKeys = await accountKeys(platform, 'a');
+    extensionLocal[aKeys.live] = privateData('a');
+    const harness = await makeHarness(platform, 'a');
+    delete extensionLocal[aKeys.live];
+    localStorage.removeItem(aKeys.live);
+    const legacy = legacyData(platform);
+    extensionLocal[baseKey(platform)] = legacy;
+    let failing = true;
+    const write = async (key: string, data: FolderData) => {
+      if (key === aKeys.live && failing) throw new Error('quota');
+      extensionLocal[key] = structuredClone(data);
+      return true;
+    };
+    mockWrites(harness, platform, write);
+    await harness.load();
+    expect(harness.data.folders[0]?.name).toBe('Private a');
+    expect(extensionLocal[aKeys.live]).toBeUndefined();
+    failing = false;
+
+    // A failed migration is no edit: a newer backup from another tab must win recovery.
+    const newer = privateData('a');
+    newer.folders[0].name = 'Newer from another tab';
+    new DataBackupService<FolderData>(aKeys.backup).createPrimaryBackup(newer);
+    extensionLocal[aKeys.live] = { folders: 'corrupted', folderContents: {} };
+    await harness.load();
+
+    expect(harness.data.folders[0]?.name).toBe('Newer from another tab');
+    const live = extensionLocal[aKeys.live] as FolderData;
+    expect([live, backupData(aKeys.backup)].map((d) => d?.folders[0]?.name)).toEqual([
+      'Newer from another tab',
+      'Newer from another tab',
+    ]);
   });
 
   it('ignores an earlier account resolution that finishes after a newer one', async () => {
@@ -712,11 +748,20 @@ describe.each<Platform>(['gemini', 'aistudio'])('%s backup account ownership', (
     const container =
       platform === 'gemini' ? await mountGeminiPanel(harness) : document.createElement('div');
     if (platform === 'aistudio') {
-      container.innerHTML = '<div class="gv-folder-list"><div>Private a</div></div>';
+      const tree = mountAIStudioTree({
+        data: harness.manager.data,
+        actions: {},
+        activeConversationId: null,
+      });
+      container.appendChild(tree.host);
       document.body.appendChild(container);
       harness.manager.container = container;
+      harness.manager.tree = tree;
     }
-    expect(container.textContent).toContain('Private a');
+    const host = () =>
+      container.querySelector(platform === 'gemini' ? '.gv-folder-tree-host' : '*');
+    const shown = () => `${container.textContent}${host()?.shadowRoot?.textContent ?? ''}`;
+    expect(shown()).toContain('Private a');
     const pending = deferred<void>();
     vi.spyOn(accountIsolationService, 'resolveAccountScope').mockImplementationOnce(async () => {
       await pending.promise;
@@ -727,10 +772,10 @@ describe.each<Platform>(['gemini', 'aistudio'])('%s backup account ownership', (
       platform === 'gemini'
         ? harness.store!.reloadScopedDataOnAccountRouteChange()
         : harness.manager.refreshScopedDataOnAccountContextChange();
-    expect(container.textContent).not.toContain('Private a');
+    expect(shown()).not.toContain('Private a');
     pending.resolve();
     await switching;
-    expect(container.textContent).not.toContain('Private a');
+    expect(shown()).not.toContain('Private a');
   });
 });
 
@@ -768,10 +813,9 @@ it('Gemini discards an import result that completes after switching accounts', a
     createBackup: false,
   });
   const pending = deferred<typeof result>();
-  vi.spyOn(FolderImportExportService, 'importFromPayload').mockImplementationOnce(
-    () => pending.promise,
-  );
-  const imported = harness.manager.transfer.import({ text: JSON.stringify(payload) }, 'merge');
+  vi.spyOn(FolderImportExportService, 'importFromPayload').mockReturnValueOnce(pending.promise);
+  const text = JSON.stringify(payload);
+  const imported = harness.manager.transfer.import({ text }, 'merge', document.body);
   await harness.switchTo('b');
   await harness.load();
   pending.resolve(result);
@@ -818,10 +862,9 @@ it('Gemini does not revive an import after returning to its still-saving account
     createBackup: false,
   });
   const pending = deferred<typeof result>();
-  vi.spyOn(FolderImportExportService, 'importFromPayload').mockImplementationOnce(
-    () => pending.promise,
-  );
-  const imported = harness.manager.transfer.import({ text: JSON.stringify(payload) }, 'merge');
+  vi.spyOn(FolderImportExportService, 'importFromPayload').mockReturnValueOnce(pending.promise);
+  const text = JSON.stringify(payload);
+  const imported = harness.manager.transfer.import({ text }, 'merge', document.body);
   await harness.switchTo('b');
   await harness.load();
   await harness.switchTo('a');
@@ -844,24 +887,28 @@ it('Gemini resets a focused floating draft on account switch and renders the loa
   extensionLocal[aKeys.live] = privateData('a');
   extensionLocal[bKeys.live] = privateData('b');
   const harness = await makeHarness('gemini', 'a');
-  const panel = mountFloatingPanel({ data: harness.data });
-  harness.manager.floatingPanelHandle = panel;
+  const panel = mountFloatingPanel({ ...GEMINI_PANEL, data: harness.data });
+  (
+    harness.manager as unknown as { floatingUI: { handle: FloatingPanelHandle | null } }
+  ).floatingUI.handle = panel;
   const geometry = panel.element.style.cssText;
   panel.element
-    .querySelector<HTMLButtonElement>('.gv-floating-folder-panel__icon-button--create')!
+    .shadowRoot!.querySelector<HTMLButtonElement>('.gv-floating-folder-panel__icon-button--create')!
     .click();
-  const input = panel.element.querySelector<HTMLInputElement>(
+  const input = panel.element.shadowRoot!.querySelector<HTMLInputElement>(
     '.gv-floating-folder-panel__inline-input',
   )!;
   input.value = 'Private draft a';
   input.focus();
   const switching = harness.switchTo('b');
-  expect(panel.element.textContent).not.toContain('Private a');
-  expect(panel.element.querySelector('.gv-floating-folder-panel__inline-input')).toBeNull();
+  expect(panel.element.shadowRoot!.textContent).not.toContain('Private a');
+  expect(
+    panel.element.shadowRoot!.querySelector('.gv-floating-folder-panel__inline-input'),
+  ).toBeNull();
   expect(panel.element.style.cssText).toBe(geometry);
   await switching;
   await harness.load();
-  expect(panel.element.textContent).toContain('Private b');
+  expect(panel.element.shadowRoot!.textContent).toContain('Private b');
 });
 
 it('Gemini closes the old instructions editor on account change and ignores its detached save button', async () => {
@@ -875,12 +922,9 @@ it('Gemini closes the old instructions editor on account change and ignores its 
     'sync',
   );
   const panel = await mountGeminiPanel(harness);
-  panel.querySelector<HTMLButtonElement>('.gv-folder-actions-btn')!.click();
-  const item = Array.from(document.querySelectorAll<HTMLElement>('.gv-folder-menu-item')).find(
-    (element) => element.textContent === 'folderAsProject_setInstructions',
-  );
-  expect(item).toBeDefined();
-  item!.click();
+  const tree = sidebarTree(panel);
+  tree.openMenuByButton('Private a');
+  menuItem('folderAsProject_setInstructions').click();
   const editor = document.querySelector<HTMLTextAreaElement>('.gv-fi-textarea')!;
   editor.value = 'Private instructions from A';
   const oldSave = document.querySelector<HTMLButtonElement>('.gv-fi-btn-save')!;

@@ -43,6 +43,10 @@
     "message": "외부 컨테이너 숨기기",
     "description": "Hide outer container label"
   },
+  "hideOuterContainerDotsOnly": {
+    "message": "노드 스타일에서만 적용됩니다",
+    "description": "Why the hide outer container toggle is disabled: the ruler and compact timeline styles draw no container"
+  },
   "draggableTimeline": {
     "message": "드래그 가능한 타임라인",
     "description": "Draggable Timeline label"
@@ -213,6 +217,22 @@
   "pm_deleted": {
     "message": "삭제됨",
     "description": "Deleted notice"
+  },
+  "pm_save_failed": {
+    "message": "변경 사항을 저장하지 못해 되돌렸습니다.",
+    "description": "Prompt Manager notice: a change could not be saved and was rolled back"
+  },
+  "pm_edit_target_deleted": {
+    "message": "이 프롬프트는 다른 곳에서 삭제되었습니다. 다시 저장하면 새 프롬프트로 남길 수 있습니다.",
+    "description": "Prompt Manager hint: the prompt being edited was deleted in another tab; saving again adds the draft as a new prompt"
+  },
+  "pm_library_unavailable": {
+    "message": "프롬프트가 응답하지 않습니다. 마지막 변경 사항을 아직 저장하는 중입니다. 잠시 후 다시 시도하세요.",
+    "description": "Prompt Manager notice: an earlier change is still waiting for a reply, so new edits are refused until it arrives"
+  },
+  "pm_library_load_failed": {
+    "message": "프롬프트를 불러오지 못했습니다. 다시 불러오는 중이니 잠시 후 다시 시도하세요.",
+    "description": "Prompt Manager notice: the prompt library could not be read yet, so an edit was refused and a new read started"
   },
   "pm_edit": {
     "message": "편집",
@@ -662,6 +682,14 @@
     "message": "클라우드 동기화",
     "description": "Tooltip for the merged cloud button that opens an upload/sync popover"
   },
+  "folder_reload_required": {
+    "message": "Voyager가 업데이트되었습니다. 폴더를 계속 편집하려면 이 탭을 새로고침하세요.",
+    "description": "Shown when a newer Voyager build owns folder writes and this tab must be reloaded"
+  },
+  "folder_cloud_merge_interrupted": {
+    "message": "Google Drive 병합이 중단되었습니다. 다시 실행하세요.",
+    "description": "Shown when a Google Drive merge of folders was interrupted before it was applied"
+  },
   "folder_settings": {
     "message": "폴더 설정",
     "description": "Tooltip for the gear icon that opens folder-scoped settings"
@@ -761,6 +789,26 @@
   "folder_import_error": {
     "message": "✗ 가져오기 실패: {error}",
     "description": "Import error message"
+  },
+  "conversation_added_to_folder": {
+    "message": "\"{folder}\"에 추가했습니다",
+    "description": "Notification after a prompt is dropped into a folder"
+  },
+  "conversation_saved_to_root": {
+    "message": "미분류에 저장했습니다",
+    "description": "Notification after a prompt is dropped on Uncategorized"
+  },
+  "folder_default_name": {
+    "message": "내 폴더",
+    "description": "Name of the folder created when a prompt is dropped and no folder exists"
+  },
+  "folder_import_in_progress": {
+    "message": "이미 가져오기가 진행 중입니다",
+    "description": "Notice when a folder import is started while another is running"
+  },
+  "folder_export_in_progress": {
+    "message": "이미 내보내기가 진행 중입니다",
+    "description": "Notice when a folder export is started while another is running"
   },
   "folder_save_error": {
     "message": "폴더 변경 사항을 저장하지 못했습니다. 다시 시도해 주세요.",
@@ -914,22 +962,6 @@
     "message": "확장 프로그램 팝업 → 폴더 옵션에서 언제든 변경할 수 있습니다.",
     "description": "Footnote explaining where to toggle the setting later"
   },
-  "floatingModeNudgeTitle": {
-    "message": "사이드바를 찾을 수 없음 — 폴더를 플로팅 창으로 열까요?",
-    "description": "Title of the floating-mode fallback nudge"
-  },
-  "floatingModeNudgeBody": {
-    "message": "Voyager가 Gemini 사이드바를 찾지 못했습니다. 페이지 레이아웃이 변경되었을 수 있습니다. 플로팅 창에서 폴더를 계속 탐색할 수 있습니다.",
-    "description": "Body copy of the floating-mode fallback nudge"
-  },
-  "floatingModeNudgeEnable": {
-    "message": "플로팅 창 열기",
-    "description": "Primary button that opens the floating folder panel"
-  },
-  "floatingModeNudgeDismiss": {
-    "message": "나중에",
-    "description": "Secondary button that dismisses the floating-mode nudge"
-  },
   "floatingPanelTitle": {
     "message": "폴더",
     "description": "Title shown in the floating folder panel header"
@@ -969,6 +1001,18 @@
   "folderManager_dataLossWarning": {
     "message": "⚠️ 경고: 폴더 데이터를 로드하지 못했습니다. 폴더가 손상되었을 수 있습니다. 브라우저 콘솔에서 자세한 내용을 확인하고 가능한 경우 백업에서 복원을 시도하십시오.",
     "description": "Warning shown when folder data fails to load"
+  },
+  "folderManager_dataRecovered": {
+    "message": "백업에서 폴더 데이터를 복원했습니다.",
+    "description": "Notice when folder data was recovered from backup"
+  },
+  "folderManager_dataKept": {
+    "message": "폴더 데이터를 불러오지 못했습니다. 현재 폴더는 유지됩니다.",
+    "description": "Notice when current folder data is kept after a failed load"
+  },
+  "folderManager_readFailure": {
+    "message": "폴더 데이터를 불러오지 못했습니다. 현재 폴더는 읽기 전용입니다.",
+    "description": "Notice when folder storage is unreadable and editing is disabled"
   },
   "backupOptions": {
     "message": "자동 백업",
@@ -1190,6 +1234,10 @@
     "message": "별표 제거",
     "description": "Remove from starred tooltip"
   },
+  "starredDeleteFailed": {
+    "message": "별표를 제거하지 못했습니다",
+    "description": "Error shown when a star cannot be removed"
+  },
   "justNow": {
     "message": "방금 전",
     "description": "Just now time label"
@@ -1217,6 +1265,14 @@
   "export_collecting_desc": {
     "message": "잠시만 기다려 주세요…",
     "description": "ChatGPT 대화 DOM 수집 중 배너 설명"
+  },
+  "export_reading_conversation_title": {
+    "message": "대화를 읽는 중…",
+    "description": "Progress title while ChatGPT export reads the whole conversation by scrolling it"
+  },
+  "export_reading_conversation_turns": {
+    "message": "읽은 턴: {count}",
+    "description": "Progress detail while ChatGPT export reads the conversation; {count} is the number of turns read so far"
   },
   "keyboardShortcuts": {
     "message": "키보드 단축키",
@@ -1294,6 +1350,18 @@
     "message": "클라우드 동기화",
     "description": "Cloud sync section title"
   },
+  "platformChatGPT": {
+    "message": "ChatGPT",
+    "description": "ChatGPT platform label"
+  },
+  "cloudSyncFoldersDescription": {
+    "message": "폴더를 Google Drive에 동기화",
+    "description": "ChatGPT folders-only Google Drive sync description"
+  },
+  "cloudSyncFoldersDescriptionICloud": {
+    "message": "개인 iCloud 저장 공간으로 폴더 동기화",
+    "description": "ChatGPT folders-only iCloud sync description"
+  },
   "cloudSyncDescription": {
     "message": "폴더와 프롬프트를 Google Drive 에 동기화합니다",
     "description": "Cloud sync description"
@@ -1361,6 +1429,22 @@
   "syncError": {
     "message": "✗ 동기화 실패: {error}",
     "description": "Sync error message"
+  },
+  "syncRestorePartial": {
+    "message": "✗ 복원이 완료되지 않았습니다. 복원됨: {restored}. 복원되지 않음: {failed} ({error})",
+    "description": "Drive restore stopped partway: which parts were restored and which were not"
+  },
+  "syncRestoreForks": {
+    "message": "대화 분기",
+    "description": "Drive restore part: conversation fork links"
+  },
+  "syncRestoreCatalogTimeline": {
+    "message": "다른 사이트의 타임라인 별표와 레벨",
+    "description": "Drive restore part: timeline stars and node levels saved on catalog sites such as ChatGPT and Claude"
+  },
+  "syncRestoreListSeparator": {
+    "message": ", ",
+    "description": "Separator between restored or failed part names in the partial-restore message"
   },
   "syncInProgress": {
     "message": "동기화 중...",
@@ -1489,6 +1573,10 @@
     "message": "생각 내용을 Markdown 으로 다운로드",
     "description": "Deep Research download button tooltip"
   },
+  "deepResearchNoThinkingContent": {
+    "message": "다운로드할 생각 내용이 없습니다.",
+    "description": "Warning when Deep Research has no thinking content to download"
+  },
   "folder_uncategorized": {
     "message": "미분류",
     "description": "Label for root-level conversations not in any folder"
@@ -1606,7 +1694,7 @@
     "description": "Batch delete confirmation message"
   },
   "folder_batch_remove_confirm": {
-    "message": "선택한 대화 {count}개를 이 폴더에서 삭제할까요?",
+    "message": "선택한 대화({count}개)를 이 폴더에서 제거할까요?",
     "description": "Confirmation before removing the selected conversations from a folder"
   },
   "folder_multi_select_count": {
@@ -1685,14 +1773,6 @@
     "message": "코드 블록의 WaveJSON을 대화형 타이밍 다이어그램으로 자동 렌더링합니다",
     "description": "WaveDrom 기능 설명"
   },
-  "wavedromDiagramButton": {
-    "message": "〜 다이어그램",
-    "description": "렌더링된 다이어그램으로 전환하는 버튼 라벨"
-  },
-  "wavedromCodeButton": {
-    "message": "</> 코드",
-    "description": "WaveJSON 소스로 전환하는 버튼 라벨"
-  },
   "wavedromZoomIn": {
     "message": "확대",
     "description": "전체화면 툴바: 확대 버튼 제목"
@@ -1721,13 +1801,13 @@
     "message": "ECharts 옵션 코드 블록을 대화형 차트로 자동 렌더링",
     "description": "ECharts rendering feature hint"
   },
-  "echartsDiagramButton": {
-    "message": "📊 차트",
-    "description": "Toggle button label to show the rendered chart"
+  "diagramButton": {
+    "message": "다이어그램",
+    "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"
   },
-  "echartsCodeButton": {
-    "message": "</> 코드",
-    "description": "Toggle button label to show the ECharts option source"
+  "diagramCodeButton": {
+    "message": "코드",
+    "description": "Diagram toolbar button that shows the diagram source code"
   },
   "echartsFullscreenButton": {
     "message": "전체 화면",
@@ -2101,6 +2181,26 @@
     "message": "내보내기 내용에 웹 검색 이미지가 포함되어 있습니다. Markdown 에 이미지 출처 링크를 포함하시겠습니까？",
     "description": "Confirm dialog when exporting markdown with web search images"
   },
+  "export_md_include_source_include": {
+    "message": "링크 포함",
+    "description": "Confirm choice that keeps the source links of web search images in the Markdown export"
+  },
+  "export_md_include_source_exclude": {
+    "message": "포함 안 함",
+    "description": "Confirm choice that leaves the source links of web search images out of the Markdown export"
+  },
+  "export_error_too_many_attempts": {
+    "message": "시도 횟수가 너무 많아 내보내기를 중단했습니다.",
+    "description": "Export error toast when the export restarted too many times while loading the full conversation"
+  },
+  "export_error_conversation_not_found": {
+    "message": "선택한 대화를 찾을 수 없습니다. 먼저 대화를 연 다음 내보내세요.",
+    "description": "Export error toast when the sidebar menu's conversation cannot be located"
+  },
+  "export_error_conversation_open_failed": {
+    "message": "선택한 대화를 열지 못해 내보낼 수 없습니다. 다시 시도해 주세요.",
+    "description": "Export error toast when the sidebar menu's conversation fails to open"
+  },
   "deepResearch_exportedAt": {
     "message": "내보내기 일시",
     "description": "Deep Research 내보내기 타임스탬프 레이블"
@@ -2248,10 +2348,6 @@
   "forkMarkdownBtn": {
     "message": "MD 다운로드",
     "description": "Fork confirmation button for downloading a Markdown file"
-  },
-  "forkCancel": {
-    "message": "Cancel",
-    "description": "Fork cancel button"
   },
   "forkBranch": {
     "message": "Branch",
@@ -2461,10 +2557,6 @@
     "message": "삭제",
     "description": "Floating folder panel delete folder action"
   },
-  "floatingPanelDeleteConfirm": {
-    "message": "이 폴더와 모든 내용을 삭제할까요?",
-    "description": "Floating folder panel delete folder confirmation"
-  },
   "floatingPanelCancel": {
     "message": "취소",
     "description": "Floating folder panel cancel action"
@@ -2520,6 +2612,42 @@
   "floatingPanelGestureHint": {
     "message": "더블 클릭으로 이름 변경 · 우클릭으로 고정/색상/삭제.",
     "description": "Floating folder panel hint explaining folder gestures and context menu actions"
+  },
+  "floatingPanelAddCurrentHere": {
+    "message": "현재 대화를 여기에 추가",
+    "description": "Floating folder panel folder menu item that files the open conversation into that folder"
+  },
+  "chatgptFoldersHint": {
+    "message": "대화를 정리하려면: 대화를 연 다음 북마크 버튼을 누르거나 폴더를 우클릭하세요.",
+    "description": "ChatGPT folder panel hint explaining how to file a conversation"
+  },
+  "chatgptFoldersNoConversation": {
+    "message": "먼저 저장된 대화를 여세요. 임시 채팅은 폴더에 넣을 수 없습니다.",
+    "description": "ChatGPT folder panel status when no saved conversation is open to add"
+  },
+  "chatgptFoldersAdded": {
+    "message": "폴더에 추가했습니다.",
+    "description": "ChatGPT folder panel status after filing the open conversation"
+  },
+  "chatgptFoldersAlreadyFiled": {
+    "message": "이미 이 폴더에 있습니다.",
+    "description": "ChatGPT folder panel status when the open conversation is already in that folder"
+  },
+  "chatgptFoldersCoachmarkTitle": {
+    "message": "폴더가 사이드바에 있습니다",
+    "description": "Title of the one-time guide pointing at the folder section in the ChatGPT sidebar"
+  },
+  "chatgptFoldersCoachmarkBody": {
+    "message": "이제 폴더는 ChatGPT 사이드바의 이곳에 있습니다. +로 폴더를 만들거나, 채팅 메뉴에서 ‘폴더로 이동’을 선택해 정리하세요.",
+    "description": "Body of the one-time guide pointing at the folder section in the ChatGPT sidebar; quotes the Move to folder menu label"
+  },
+  "folder_import_wrong_site": {
+    "message": "이 파일에는 다른 사이트의 폴더가 들어 있어 아무것도 가져오지 않았습니다.",
+    "description": "ChatGPT folder import error when the file holds conversations from another site"
+  },
+  "chatgptFoldersUntitled": {
+    "message": "제목 없는 대화",
+    "description": "Title used for a filed ChatGPT conversation whose title could not be read"
   },
   "folder_new_chat_in_folder": {
     "message": "이 폴더에서 새 채팅",
@@ -2593,6 +2721,30 @@
     "message": "이 브라우저에서는 지원되지 않습니다. 플러그인에 필요한 사이트 권한을 부여할 수 없습니다.",
     "description": "Shown when a plugin can't be enabled because the browser can't grant the site access it needs (e.g. Safari)"
   },
+  "chatgptExportCardTitle": {
+    "message": "이 대화 내보내기",
+    "description": "Title of the popup card that exports the current ChatGPT conversation"
+  },
+  "chatgptExportCardOffHint": {
+    "message": "대화 내보내기를 켜면 ChatGPT 대화를 Markdown, JSON, PDF 또는 이미지로 저장할 수 있습니다. 각 대화 상단에도 내보내기 버튼이 표시됩니다.",
+    "description": "Popup hint shown while ChatGPT conversation export is turned off"
+  },
+  "chatgptExportTurnOn": {
+    "message": "켜기",
+    "description": "Popup button that turns on ChatGPT conversation export"
+  },
+  "chatgptExportCardOnHint": {
+    "message": "Markdown, JSON, PDF 또는 이미지로 저장합니다. 각 대화 상단에도 같은 내보내기 버튼이 있습니다.",
+    "description": "Popup hint shown while ChatGPT conversation export is on"
+  },
+  "chatgptExportNoConversation": {
+    "message": "먼저 대화를 여세요. 이 페이지에는 내보낼 내용이 없습니다.",
+    "description": "Shown when the ChatGPT tab has no conversation to export"
+  },
+  "chatgptExportReloadTab": {
+    "message": "이 ChatGPT 탭을 새로고침한 뒤 다시 시도하세요.",
+    "description": "Shown when the ChatGPT tab has not loaded Voyager yet"
+  },
   "pluginsLoading": {
     "message": "플러그인 불러오는 중…",
     "description": "Shown while the plugin catalog is loading"
@@ -2616,6 +2768,310 @@
   "pluginSourceOnline": {
     "message": "온라인 카탈로그",
     "description": "Source label for a plugin fetched from the online catalog for this site"
+  },
+  "pluginSourceLocal": {
+    "message": "로컬",
+    "description": "Source label for a plugin the user imported locally"
+  },
+  "localPluginsTitle": {
+    "message": "로컬 플러그인",
+    "description": "Popup plugin page: title of the card for user-imported plugins"
+  },
+  "localPluginsDescription": {
+    "message": "직접 작성한 선언형 플러그인을 가져옵니다. CSS를 포함한 매니페스트 JSON을 고르거나, 매니페스트와 .css 파일을 함께 선택하세요. 공식 플러그인과 같은 검사를 거치며, 직접 켜기 전까지 꺼진 상태로 유지됩니다.",
+    "description": "Popup plugin page: what importing a local plugin does"
+  },
+  "localPluginsNativeHint": {
+    "message": "이 사이트에서 직접 만든 CSS와 페이지 조정을 실행합니다. 가져온 플러그인은 직접 켜기 전까지 꺼져 있습니다.",
+    "description": "Native popup (Gemini / AI Studio): hint on the collapsed Local plugins entry"
+  },
+  "localPluginsImportFiles": {
+    "message": "파일 가져오기",
+    "description": "Popup plugin page: button that opens the file picker for a local plugin"
+  },
+  "localPluginsPasteJson": {
+    "message": "JSON 붙여넣기",
+    "description": "Popup plugin page: button that opens a text box to paste a plugin manifest"
+  },
+  "localPluginsPasteLabel": {
+    "message": "플러그인 매니페스트 JSON",
+    "description": "Popup plugin page: accessible label of the paste text box"
+  },
+  "localPluginsCheckAndImport": {
+    "message": "검사 후 가져오기",
+    "description": "Popup plugin page: validate the pasted manifest and import it"
+  },
+  "localPluginsCancel": {
+    "message": "취소",
+    "description": "Popup plugin page: close the paste text box"
+  },
+  "localPluginsEmpty": {
+    "message": "아직 로컬 플러그인이 없습니다.",
+    "description": "Popup plugin page: no local plugin is installed"
+  },
+  "localPluginsImported": {
+    "message": "{name} {version}을(를) 가져왔습니다. 지금은 꺼져 있습니다. 아래에서 동작을 확인한 뒤 플러그인 목록에서 켜세요.",
+    "description": "Popup plugin page: import succeeded; {name} and {version} are placeholders"
+  },
+  "localPluginsRejected": {
+    "message": "가져오지 못했습니다. 다음 문제를 고친 뒤 다시 시도하세요:",
+    "description": "Popup plugin page: import failed validation; the issues follow"
+  },
+  "localPluginsPreviousKept": {
+    "message": "설치된 버전 {version}은(는) 그대로 유지됩니다.",
+    "description": "Popup plugin page: a failed re-import kept the installed version; {version} is a placeholder"
+  },
+  "localPluginsInspect": {
+    "message": "살펴보기",
+    "description": "Popup plugin page: show what a local plugin does"
+  },
+  "localPluginsHideDetails": {
+    "message": "숨기기",
+    "description": "Popup plugin page: hide the details of a local plugin"
+  },
+  "localPluginsRemove": {
+    "message": "제거",
+    "description": "Popup plugin page: delete a local plugin"
+  },
+  "localPluginsConfirmRemove": {
+    "message": "제거 확인",
+    "description": "Popup plugin page: second click that confirms removing a local plugin"
+  },
+  "localPluginsStoredInvalid": {
+    "message": "현재 버전의 Voyager는 이 플러그인을 더 이상 허용하지 않아 실행되지 않습니다:",
+    "description": "Popup plugin page: a stored local plugin fails this build's checks; issues follow"
+  },
+  "localPluginChangedBeforeEnable": {
+    "message": "켜는 도중 이 플러그인을 다시 가져와서 꺼진 상태로 유지됩니다. 새 버전을 확인한 뒤 다시 켜 주세요.",
+    "description": "A local plugin was re-imported while the user was enabling it, so it was not enabled"
+  },
+  "localPluginDescribeOpen": {
+    "message": "한 문장으로 화면 바꾸기",
+    "description": "Button that opens the one-sentence plugin flow"
+  },
+  "localPluginDescribeHint": {
+    "message": "사이트에서 바꾸고 싶은 점을 한 문장으로 적어 주세요. Voyager가 프롬프트를 만들어 드리면 원하는 AI에 직접 보내고, 받은 답변을 붙여 넣으면 Voyager가 검사합니다. Voyager가 스스로 보내는 것은 없습니다.",
+    "description": "Explains the one-sentence plugin flow and that Voyager sends nothing"
+  },
+  "localPluginDescribeRequestLabel": {
+    "message": "무엇을 바꿀까요?",
+    "description": "Label of the one-sentence request field"
+  },
+  "localPluginDescribeRequestPlaceholder": {
+    "message": "예: 내 메시지 폭을 줄이고 사이드바 숨기기",
+    "description": "Example request in the one-sentence field"
+  },
+  "localPluginDescribeSiteLabel": {
+    "message": "사이트",
+    "description": "Label of the target-site picker"
+  },
+  "localPluginDescribeBuildPrompt": {
+    "message": "프롬프트 만들기",
+    "description": "Button that writes the AI prompt"
+  },
+  "localPluginDescribePromptLabel": {
+    "message": "AI에게 보낼 프롬프트",
+    "description": "Label of the generated prompt"
+  },
+  "localPluginDescribePromptHint": {
+    "message": "원하는 AI 채팅에 직접 붙여 넣은 뒤, 받은 답변 전체를 아래에 붙여 넣으세요.",
+    "description": "Tells the user to send the prompt themselves and paste the reply"
+  },
+  "localPluginDescribeCopy": {
+    "message": "프롬프트 복사",
+    "description": "Button that copies the prompt"
+  },
+  "localPluginDescribeCopied": {
+    "message": "복사됨",
+    "description": "Shown after the prompt was copied"
+  },
+  "localPluginDescribeCopyFailed": {
+    "message": "복사하지 못했습니다. 프롬프트를 선택해 직접 복사하세요.",
+    "description": "Shown when the clipboard refused the prompt"
+  },
+  "localPluginDescribeReplyLabel": {
+    "message": "AI의 답변",
+    "description": "Label of the field for the AI reply"
+  },
+  "localPluginDescribeReplyPlaceholder": {
+    "message": "답변 전체 또는 JSON 부분만 붙여 넣기",
+    "description": "Placeholder of the AI reply field"
+  },
+  "localPluginDescribeCheck": {
+    "message": "답변 검사",
+    "description": "Button that checks the pasted reply"
+  },
+  "localPluginDescribeImport": {
+    "message": "가져오기",
+    "description": "Button that imports the previewed plugin"
+  },
+  "localPluginReplyEmpty": {
+    "message": "먼저 AI의 답변을 붙여 넣으세요.",
+    "description": "The reply field is empty"
+  },
+  "localPluginReplyTooLong": {
+    "message": "플러그인이라고 보기에는 답변이 너무 깁니다.",
+    "description": "The pasted reply is too large"
+  },
+  "localPluginReplyNoJson": {
+    "message": "JSON을 찾지 못했습니다. AI에게 ```json 코드 블록 하나로 답하라고 요청하세요.",
+    "description": "No JSON manifest found in the reply"
+  },
+  "localPluginReplyMultipleJson": {
+    "message": "답변에 JSON 블록이 여러 개 있습니다. 플러그인 하나만 남기고 다시 붙여 넣으세요.",
+    "description": "The reply holds more than one JSON block"
+  },
+  "localPluginPreviewTitle": {
+    "message": "가져오기 전에 확인",
+    "description": "Heading of the preview shown before import"
+  },
+  "localPluginPreviewChanges": {
+    "message": "바뀌는 내용",
+    "description": "Heading of the list of changes in the preview"
+  },
+  "localPluginPreviewWarnings": {
+    "message": "먼저 확인하세요",
+    "description": "Heading of the warnings in the preview"
+  },
+  "localPluginPreviewLandsOff": {
+    "message": "가져온 뒤에는 꺼진 상태입니다. 준비되면 플러그인 목록에서 켜세요.",
+    "description": "Explains that the import lands turned off"
+  },
+  "localPluginChangeCss": {
+    "message": "자체 스타일 추가 (CSS {chars}자)",
+    "description": "Preview line: the plugin adds CSS; {chars} is a character count"
+  },
+  "localPluginChangeAddClass": {
+    "message": "{target}에 표시를 달아 스타일 적용 ({className})",
+    "description": "Preview line: the plugin tags elements so its CSS applies"
+  },
+  "localPluginChangeHide": {
+    "message": "{target} 숨기기",
+    "description": "Preview line: the plugin hides elements"
+  },
+  "localPluginChangeSetStyle": {
+    "message": "{target} 스타일 변경: {styles}",
+    "description": "Preview line: the plugin sets inline styles"
+  },
+  "localPluginChangeSetAttribute": {
+    "message": "{target}에 {name}=\"{value}\" 설정",
+    "description": "Preview line: the plugin sets an attribute"
+  },
+  "localPluginChangeNative": {
+    "message": "Voyager 기본 제공 기능 {handler} 실행",
+    "description": "Preview line: the plugin runs a Voyager built-in feature"
+  },
+  "localPluginChangeSetting": {
+    "message": "설정 추가: {label}",
+    "description": "Preview line: the plugin adds a setting"
+  },
+  "localPluginChangeTheme": {
+    "message": "Voyager 강조 색상을 {color}(으)로 변경",
+    "description": "Preview line: the plugin changes the accent color"
+  },
+  "localPluginTargetSelector": {
+    "message": "{selector}에 해당하는 요소",
+    "description": "Preview target described by a raw CSS selector"
+  },
+  "localPluginTargetUserTurn": {
+    "message": "내 메시지",
+    "description": "Preview target: the user's messages"
+  },
+  "localPluginTargetAssistantTurn": {
+    "message": "AI 답변",
+    "description": "Preview target: the AI's replies"
+  },
+  "localPluginTargetThinkingBlock": {
+    "message": "추론 과정",
+    "description": "Preview target: reasoning sections"
+  },
+  "localPluginTargetCodeBlock": {
+    "message": "코드 블록",
+    "description": "Preview target: code blocks"
+  },
+  "localPluginTargetComposer": {
+    "message": "입력창",
+    "description": "Preview target: the message input box"
+  },
+  "localPluginTargetSidebar": {
+    "message": "사이드바",
+    "description": "Preview target: the sidebar"
+  },
+  "localPluginTargetSidePanel": {
+    "message": "사이드 패널",
+    "description": "Preview target: the secondary side panel"
+  },
+  "localPluginTargetHeaderActions": {
+    "message": "오른쪽 위 버튼",
+    "description": "Preview target: top-right action buttons"
+  },
+  "localPluginTargetScrollContainer": {
+    "message": "대화 영역",
+    "description": "Preview target: the scrolling conversation area"
+  },
+  "localPluginChangedSinceReview": {
+    "message": "검토하는 동안 Voyager의 이 플러그인이 바뀌어서 아무것도 덮어쓰지 않았습니다. 업데이트된 미리보기를 확인한 뒤 다시 가져오세요.",
+    "description": "Shown when the previewed plugin id was installed, changed or removed before Import; nothing was written"
+  },
+  "localPluginWarnCss": {
+    "message": "이 CSS는 숨기기를 포함해 페이지의 무엇이든 바꿀 수 있습니다. Voyager는 CSS를 요약하지 않으니 아래 코드를 직접 확인하세요.",
+    "description": "Warning: the plugin has CSS, which the preview shows but does not summarize"
+  },
+  "localPluginWarnSelector": {
+    "message": "CSS 선택자로 요소를 지정하므로 사이트가 바뀌면 동작하지 않을 수 있습니다.",
+    "description": "Warning: the plugin targets raw CSS selectors"
+  },
+  "localPluginWarnHides": {
+    "message": "페이지 일부를 숨길 수 있습니다. 플러그인을 끄면 다시 보입니다.",
+    "description": "Warning: the plugin may hide part of the page (also shown when a hiding style cannot be read with confidence)"
+  },
+  "localPluginWarnNotOnSite": {
+    "message": "선택한 사이트 {site}에서는 동작하지 않습니다.",
+    "description": "Warning: the plugin does not run on the site the user picked"
+  },
+  "localPluginWarnTheme": {
+    "message": "Voyager 강조 색상을 바꿉니다. 프롬프트는 AI에게 이렇게 하지 말라고 했습니다.",
+    "description": "Warning: the plugin changes the accent color although the prompt asked not to"
+  },
+  "localPluginWarnNative": {
+    "message": "Voyager 기본 제공 기능을 실행합니다. 프롬프트는 AI에게 이렇게 하지 말라고 했습니다.",
+    "description": "Warning: the plugin runs a Voyager built-in although the prompt asked not to"
+  },
+  "localPluginWarnReplaces": {
+    "message": "설치된 버전 {version}을(를) 대체하며, 다시 켤 때까지 꺼진 상태가 됩니다.",
+    "description": "Warning: importing replaces an installed version and turns it off"
+  },
+  "localPluginInspectSites": {
+    "message": "사이트",
+    "description": "Inspect view: sites the plugin runs on"
+  },
+  "localPluginInspectCss": {
+    "message": "CSS",
+    "description": "Inspect view: injected stylesheet size label"
+  },
+  "localPluginInspectCssChars": {
+    "message": "{chars}자",
+    "description": "Inspect view: injected CSS size; {chars} is a number"
+  },
+  "localPluginInspectDomOps": {
+    "message": "페이지 변경",
+    "description": "Inspect view: reversible DOM operations the plugin applies"
+  },
+  "localPluginInspectPrimitives": {
+    "message": "호출하는 Voyager 내장 기능",
+    "description": "Inspect view: first-party Voyager primitives the plugin invokes"
+  },
+  "localPluginInspectSettings": {
+    "message": "설정",
+    "description": "Inspect view: settings the plugin declares"
+  },
+  "localPluginInspectNone": {
+    "message": "없음",
+    "description": "Inspect view: the plugin has nothing in this category"
+  },
+  "localPluginInspectNoCode": {
+    "message": "플러그인 자체 코드는 실행되지 않습니다. CSS, 되돌릴 수 있는 페이지 변경, Voyager 내장 기능만 사용합니다.",
+    "description": "Inspect view: reassurance that a declarative plugin cannot run its own code"
   },
   "pluginUpdateNeedsNewerVoyager": {
     "message": "업데이트 {version}에는 더 새로운 Voyager가 필요합니다.",
@@ -2902,6 +3358,9 @@
   "highlightSaved": {
     "message": "하이라이트를 저장했습니다"
   },
+  "highlightConfirmationPending": {
+    "message": "아직 확인을 기다리고 있어요. 편집기를 닫아도 초안은 유지됩니다."
+  },
   "highlightSaveFailed": {
     "message": "하이라이트를 저장하지 못했습니다"
   },
@@ -3117,5 +3576,373 @@
   "popupPinHintDismiss": {
     "message": "닫기",
     "description": "Popup: dismiss the pin reminder"
+  },
+  "nativeHealthTimeline": {
+    "message": "타임라인이 이 페이지에서 대화 턴을 찾지 못했습니다.",
+    "description": "Popup: Gemini health notice when the timeline finds no conversation turns"
+  },
+  "nativeHealthChatWidth": {
+    "message": "대화 너비 조절이 이 페이지에서 대화 턴을 찾지 못했습니다.",
+    "description": "Popup: Gemini health notice when chat width finds no conversation turns"
+  },
+  "nativeHealthFolders": {
+    "message": "폴더를 Gemini 사이드바에 붙이지 못해 플로팅 패널로 열었습니다.",
+    "description": "Popup: Gemini health notice when folders fell back to the floating panel"
+  },
+  "nativeHealthExport": {
+    "message": "내보내기가 이 페이지에서 메시지를 찾지 못했습니다.",
+    "description": "Popup: Gemini health notice when export finds no messages"
+  },
+  "nativeHealthComposer": {
+    "message": "Voyager가 Gemini 입력창을 찾지 못해 프롬프트를 넣을 수 없습니다.",
+    "description": "Popup: Gemini health notice when Gemini's message box is missing"
+  },
+  "nativeHealthCause": {
+    "message": "Gemini 페이지 구조가 바뀌었을 수 있습니다.",
+    "description": "Popup: likely cause shown under a Gemini health notice"
+  },
+  "nativeHealthReport": {
+    "message": "문제 신고",
+    "description": "Popup: link that opens a prefilled GitHub bug report"
+  },
+  "nativeHealthDismiss": {
+    "message": "닫기",
+    "description": "Popup: dismiss the Gemini health notice"
+  },
+  "researchPackEnable": {
+    "message": "리서치 팩",
+    "description": "Popup: research pack toggle label"
+  },
+  "researchPackEnableHint": {
+    "message": "Gemini 답변에 팩 버튼을 추가합니다. 답변과 출처를 하나의 Markdown 팩으로 모아 복사, 다운로드하거나 다른 채팅에 삽입하세요.",
+    "description": "Popup: research pack toggle hint"
+  },
+  "researchPackAdd": {
+    "message": "리서치 팩에 추가 (먼저 답변 일부를 선택할 수도 있음)",
+    "description": "Research pack: per-answer add button tooltip"
+  },
+  "researchPackAdded": {
+    "message": "팩에 추가됨",
+    "description": "Research pack: item added"
+  },
+  "researchPackDuplicate": {
+    "message": "이미 팩에 있습니다",
+    "description": "Research pack: item already present"
+  },
+  "researchPackFull": {
+    "message": "팩이 가득 찼습니다. 먼저 항목을 삭제하세요.",
+    "description": "Research pack: item limit reached"
+  },
+  "researchPackCaptureFailed": {
+    "message": "이 답변을 읽을 수 없습니다",
+    "description": "Research pack: answer could not be read"
+  },
+  "researchPackSaveFailed": {
+    "message": "팩을 저장할 수 없습니다",
+    "description": "Research pack: storage write failed"
+  },
+  "researchPackTitle": {
+    "message": "리서치 팩",
+    "description": "Research pack: panel title"
+  },
+  "researchPackShortTitle": {
+    "message": "팩",
+    "description": "Research pack: short launcher label"
+  },
+  "researchPackOpen": {
+    "message": "리서치 팩 열기",
+    "description": "Research pack: launcher tooltip"
+  },
+  "researchPackClose": {
+    "message": "닫기",
+    "description": "Research pack: close panel"
+  },
+  "researchPackEmpty": {
+    "message": "팩이 비어 있습니다. 답변 아래의 팩 버튼을 누르거나 먼저 답변 일부를 선택하세요.",
+    "description": "Research pack: empty state"
+  },
+  "researchPackItemCount": {
+    "message": "{count}개",
+    "description": "Research pack: item count, {count} is a number"
+  },
+  "researchPackSourceCount": {
+    "message": "출처 {count}개",
+    "description": "Research pack: cited link count, {count} is a number"
+  },
+  "researchPackUntitledSource": {
+    "message": "제목 없는 대화",
+    "description": "Research pack: fallback conversation title"
+  },
+  "researchPackExcerptBadge": {
+    "message": "발췌",
+    "description": "Research pack: badge for a selected part of an answer"
+  },
+  "researchPackMoveUp": {
+    "message": "위로 이동",
+    "description": "Research pack: move item up"
+  },
+  "researchPackMoveDown": {
+    "message": "아래로 이동",
+    "description": "Research pack: move item down"
+  },
+  "researchPackRemove": {
+    "message": "팩에서 삭제",
+    "description": "Research pack: remove item"
+  },
+  "researchPackInstructionLabel": {
+    "message": "다음 모델에 줄 지시",
+    "description": "Research pack: instruction field label"
+  },
+  "researchPackInstructionPlaceholder": {
+    "message": "예: 이 답변들을 비교해 불일치를 짚고, 각 주장을 출처와 대조해 주세요.",
+    "description": "Research pack: instruction placeholder"
+  },
+  "researchPackPreview": {
+    "message": "Markdown 미리보기",
+    "description": "Research pack: markdown preview toggle"
+  },
+  "researchPackInsert": {
+    "message": "입력창에 삽입",
+    "description": "Research pack: insert into composer button"
+  },
+  "researchPackInsertHint": {
+    "message": "팩을 입력창에 넣습니다. 직접 보내기 전까지 전송되지 않습니다.",
+    "description": "Research pack: insert button tooltip"
+  },
+  "researchPackCopy": {
+    "message": "Markdown 복사",
+    "description": "Research pack: copy markdown button"
+  },
+  "researchPackDownload": {
+    "message": ".md 다운로드",
+    "description": "Research pack: download button"
+  },
+  "researchPackClear": {
+    "message": "비우기",
+    "description": "Research pack: clear all items"
+  },
+  "researchPackClearConfirm": {
+    "message": "팩의 모든 항목을 삭제할까요? 지시는 유지됩니다.",
+    "description": "Research pack: clear confirmation"
+  },
+  "researchPackCopied": {
+    "message": "Markdown을 복사했습니다",
+    "description": "Research pack: copy succeeded"
+  },
+  "researchPackCopyFailed": {
+    "message": "복사하지 못했습니다. 대신 다운로드하세요.",
+    "description": "Research pack: copy failed"
+  },
+  "researchPackInserted": {
+    "message": "팩을 삽입했습니다. 확인한 뒤 직접 보내세요.",
+    "description": "Research pack: inserted into composer"
+  },
+  "researchPackNoComposer": {
+    "message": "이 페이지에서 입력창을 찾을 수 없습니다",
+    "description": "Research pack: no composer found"
+  },
+  "researchPackLoadFailed": {
+    "message": "팩을 불러올 수 없습니다",
+    "description": "Research pack: the stored pack could not be read; shown with a retry button"
+  },
+  "researchPackRetry": {
+    "message": "다시 시도",
+    "description": "Research pack: button that reads the pack again after a failure"
+  },
+  "researchPackContinueIn": {
+    "message": "{target}에서 계속",
+    "description": "Research pack: button that opens a new chat on another model ({target} is ChatGPT or Claude)"
+  },
+  "researchPackContinueHint": {
+    "message": "새 {target} 채팅을 열고 이 팩을 입력창에 넣습니다. 전송하지 않습니다.",
+    "description": "Research pack: tooltip of the continue-in button"
+  },
+  "researchPackContinueOpening": {
+    "message": "{target}를 여는 중입니다. 팩은 전송되지 않은 채 입력창에 들어갑니다.",
+    "description": "Research pack: the new chat is opening and the pack will be filled in"
+  },
+  "researchPackContinueCopied": {
+    "message": "팩을 복사했습니다. 새 {target} 채팅에 붙여넣으세요.",
+    "description": "Research pack: Voyager cannot run on the target, so the pack was copied for pasting"
+  },
+  "researchPackContinueRetry": {
+    "message": "지금은 {target}에 자동으로 넣을 수 없습니다. 다시 클릭하면 팩을 복사하고 {target}를 엽니다.",
+    "description": "Research pack: the target stopped being available since the panel opened"
+  },
+  "researchPackContinueFailed": {
+    "message": "{target}를 열 수 없습니다. 대신 Markdown 복사를 사용하세요.",
+    "description": "Research pack: the new chat could not be opened"
+  },
+  "researchPackHandoffReady": {
+    "message": "Gemini의 리서치 팩을 넣었습니다. 확인한 뒤 직접 보내세요.",
+    "description": "Research pack: toast on ChatGPT/Claude after the pack was put in the message box"
+  },
+  "researchPackHandoffFailed": {
+    "message": "여기에 리서치 팩을 넣지 못했습니다. Gemini로 돌아가 복사하세요.",
+    "description": "Research pack: toast on ChatGPT/Claude when the pack could not be put in the message box"
+  },
+  "researchPackTemplates": {
+    "message": "템플릿",
+    "description": "Research pack: templates section toggle"
+  },
+  "researchPackTemplatesHint": {
+    "message": "템플릿은 다시 쓸 수 있는 지시문으로, 프롬프트 관리자에 research-pack 태그로 저장됩니다. 내보내면 이름과 지시문만 공유되며 팩 내용은 절대 포함되지 않습니다.",
+    "description": "Research pack: what a template is and what exporting shares"
+  },
+  "researchPackTemplatePick": {
+    "message": "템플릿 선택",
+    "description": "Research pack: template picker placeholder and label"
+  },
+  "researchPackTemplateNone": {
+    "message": "아직 템플릿이 없습니다",
+    "description": "Research pack: template picker when no template is saved"
+  },
+  "researchPackTemplateUse": {
+    "message": "사용",
+    "description": "Research pack: put the chosen template into the instruction"
+  },
+  "researchPackTemplateUseConfirm": {
+    "message": "현재 지시문을 이 템플릿으로 바꿀까요?",
+    "description": "Research pack: confirm replacing a typed instruction with a template"
+  },
+  "researchPackTemplateReplace": {
+    "message": "바꾸기",
+    "description": "Research pack: confirm button that replaces the instruction"
+  },
+  "researchPackTemplateExport": {
+    "message": "내보내기",
+    "description": "Research pack: download the chosen template as a file"
+  },
+  "researchPackTemplateName": {
+    "message": "템플릿 이름",
+    "description": "Research pack: name field for a new template"
+  },
+  "researchPackTemplateSave": {
+    "message": "지시문을 템플릿으로 저장",
+    "description": "Research pack: save the typed instruction as a template"
+  },
+  "researchPackTemplateSaved": {
+    "message": "템플릿을 프롬프트 관리자에 저장했습니다",
+    "description": "Research pack: a template was saved"
+  },
+  "researchPackTemplateNeedName": {
+    "message": "먼저 템플릿 이름을 입력하세요",
+    "description": "Research pack: saving a template without a name"
+  },
+  "researchPackTemplateNeedInstruction": {
+    "message": "저장할 지시문을 입력하세요",
+    "description": "Research pack: saving a template with an empty instruction"
+  },
+  "researchPackTemplateInvalid": {
+    "message": "이름은 한 줄 100자 이내, 지시문은 4,000자 이내로 입력하세요.",
+    "description": "Research pack: template name or instruction breaks a limit"
+  },
+  "researchPackTemplateDuplicate": {
+    "message": "프롬프트 관리자에 이미 같은 지시문이 있습니다",
+    "description": "Research pack: the library already has this instruction text"
+  },
+  "researchPackTemplateNameTaken": {
+    "message": "프롬프트 관리자에 같은 이름의 프롬프트가 이미 있습니다",
+    "description": "Research pack: the library already has a prompt with this name"
+  },
+  "researchPackTemplateImport": {
+    "message": "파일 가져오기…",
+    "description": "Research pack: choose a template file to import"
+  },
+  "researchPackTemplateImportInvalid": {
+    "message": "올바른 리서치 팩 템플릿 파일이 아닙니다.",
+    "description": "Research pack: the chosen file is not a valid template file"
+  },
+  "researchPackTemplatePreviewTitle": {
+    "message": "이 파일의 템플릿입니다. 저장하기 전에 확인하세요.",
+    "description": "Research pack: heading of the import preview"
+  },
+  "researchPackTemplateStatusNew": {
+    "message": "새 템플릿",
+    "description": "Research pack: import preview badge for a template that will be saved"
+  },
+  "researchPackTemplateStatusDuplicate": {
+    "message": "이미 저장됨",
+    "description": "Research pack: import preview badge for an instruction that is already saved"
+  },
+  "researchPackTemplateStatusNameTaken": {
+    "message": "이름이 이미 있어 건너뜀",
+    "description": "Research pack: import preview badge for a template skipped because its name is in use"
+  },
+  "researchPackTemplateImportSave": {
+    "message": "새 템플릿 저장",
+    "description": "Research pack: save the new templates from the import preview"
+  },
+  "researchPackTemplateImported": {
+    "message": "프롬프트 관리자에 저장한 템플릿: {count}",
+    "description": "Research pack: templates were imported; {count} is how many"
+  },
+  "researchPackTemplateImportNothing": {
+    "message": "저장할 새 템플릿이 없습니다",
+    "description": "Research pack: an import had nothing new to save"
+  },
+  "researchPackTemplateFailed": {
+    "message": "템플릿을 업데이트하지 못했습니다. 다시 시도하세요.",
+    "description": "Research pack: reading or writing templates failed"
+  },
+  "savedLibraryOpenFull": {
+    "message": "전체 라이브러리 열기"
+  },
+  "savedLibrarySite": {
+    "message": "사이트"
+  },
+  "savedLibraryAllSites": {
+    "message": "모든 사이트"
+  },
+  "savedLibraryUnknownSite": {
+    "message": "알 수 없는 사이트"
+  },
+  "savedLibraryAccount": {
+    "message": "계정"
+  },
+  "savedLibraryAllAccounts": {
+    "message": "모든 계정"
+  },
+  "savedLibraryAccountNumber": {
+    "message": "계정 {number}"
+  },
+  "savedLibraryUnassigned": {
+    "message": "미지정"
+  },
+  "savedLibraryRemoveStarConfirm": {
+    "message": "이 별표를 해제할까요?"
+  },
+  "savedLibraryDeleteHighlightConfirm": {
+    "message": "이 하이라이트와 메모를 삭제할까요?"
+  },
+  "savedLibraryOpenFailed": {
+    "message": "라이브러리를 열 수 없습니다"
+  },
+  "savedLibraryExpandText": {
+    "message": "전체 텍스트 보기"
+  },
+  "savedLibraryCollapseText": {
+    "message": "텍스트 접기"
+  },
+  "savedLibraryConversationOpenFailed": {
+    "message": "이 대화를 열 수 없습니다"
+  },
+  "savedLibraryChatGptSwitchAccount": {
+    "message": "이 별표는 {account}에 저장되었습니다. ChatGPT에서 해당 계정으로 전환한 뒤 다시 열어 주세요."
+  },
+  "savedLibraryChatGptSwitchHint": {
+    "message": "이 대화를 열 수 없나요? ChatGPT에서 저장할 때 사용한 계정으로 전환한 뒤 다시 열어 주세요."
+  },
+  "savedLibraryOpenAnyway": {
+    "message": "그래도 열기"
+  },
+  "savedLibraryFilters": {
+    "message": "라이브러리 필터"
+  },
+  "savedLibraryTypeFilter": {
+    "message": "저장한 항목 유형"
+  },
+  "savedLibraryRefresh": {
+    "message": "새로고침"
   }
 }

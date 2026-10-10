@@ -9,7 +9,7 @@
  */
 import type { Result } from '@/core/types/common';
 
-import { MAX_DOM_OPS, MAX_STYLE_LENGTH, PLUGIN_MANIFEST_FORMAT } from '../constants';
+import { MAX_DOM_OPS, PLUGIN_MANIFEST_FORMAT } from '../constants';
 import type {
   DomOperation,
   LocalizedSettingField,
@@ -25,6 +25,13 @@ import type {
   StyleContribution,
 } from '../types';
 import { PRIMITIVE_NAME_PATTERN } from '../verbs/contracts';
+import {
+  attributeIssue,
+  attributeNameIssue,
+  renderSettingTemplate,
+  styleSheetIssue,
+  styleValueIssue,
+} from './sinkGuards';
 
 const SETTING_TYPES = ['boolean', 'number', 'string', 'color', 'select'] as const;
 
@@ -34,14 +41,16 @@ export interface ManifestIssue {
 }
 
 const TIERS = ['declarative', 'scripted'] as const;
-const OP_KINDS = ['addClass', 'setAttribute', 'setStyle', 'hide', 'native'] as const;
+/** Every `domOps[].op` the validator accepts; the authoring prompt lists these. */
+export const OP_KINDS = ['addClass', 'setAttribute', 'setStyle', 'hide', 'native'] as const;
 /** Bounds on `native` op params (UNTRUSTED configuration, never instructions). */
 const MAX_PARAMS_DEPTH = 4;
 const MAX_PARAMS_KEYS = 50;
 const MAX_PARAM_STRING_LENGTH = 2_000;
 const MAX_REQUIRES_ENTRIES = 50;
 const MAX_CHANGELOG_LENGTH = 500;
-const REQUIRED_STRINGS = [
+/** Top-level fields that must be non-empty strings. */
+export const REQUIRED_STRINGS = [
   'id',
   'name',
   'version',
@@ -94,15 +103,63 @@ function readOptionalString(
   return undefined;
 }
 
+/**
+ * A select's options and default, which the popup and the host both resolve
+ * against: at least one option, unique string values ("" included), labelled,
+ * and a default that is one of them.
+ * Undefined, with issues, otherwise.
+ */
+function readSelectOptions(
+  rawField: Record<string, unknown>,
+  path: string,
+  issues: ManifestIssue[],
+): { value: string; label: string }[] | undefined {
+  const raw = rawField.options;
+  if (!Array.isArray(raw) || raw.length === 0) {
+    issues.push({ path: `${path}.options`, message: 'required non-empty array' });
+    return undefined;
+  }
+  const options: { value: string; label: string }[] = [];
+  for (const [index, option] of raw.entries()) {
+    if (!isRecord(option) || !isString(option.value) || !nonEmptyString(option.label)) {
+      issues.push({
+        path: `${path}.options[${index}]`,
+        message: 'required { value: string, label: non-empty string }',
+      });
+      return undefined;
+    }
+    if (options.some((seen) => seen.value === option.value)) {
+      issues.push({ path: `${path}.options[${index}].value`, message: 'duplicate option value' });
+      return undefined;
+    }
+    options.push({ value: option.value, label: option.label });
+  }
+  if (!options.some((option) => option.value === rawField.default)) {
+    issues.push({ path: `${path}.default`, message: 'must be one of the declared options' });
+    return undefined;
+  }
+  return options;
+}
+
 function normalizeLocalizedSetting(raw: unknown): LocalizedSettingField | undefined {
   if (!isRecord(raw)) return undefined;
   const label = readOptionalString(raw, 'label', 'label');
   const minLabel = readOptionalString(raw, 'minLabel', 'minLabel');
   const maxLabel = readOptionalString(raw, 'maxLabel', 'maxLabel');
+  const rawOptions = raw.options;
+  const options = isRecord(rawOptions)
+    ? Object.fromEntries(
+        Object.keys(rawOptions).flatMap((key) => {
+          const label = readOptionalString(rawOptions, key, key);
+          return label ? [[key, label]] : [];
+        }),
+      )
+    : undefined;
   const entry: LocalizedSettingField = {
     ...(label ? { label } : {}),
     ...(minLabel ? { minLabel } : {}),
     ...(maxLabel ? { maxLabel } : {}),
+    ...(options && Object.keys(options).length > 0 ? { options } : {}),
   };
   return Object.keys(entry).length > 0 ? entry : undefined;
 }
@@ -158,46 +215,9 @@ function normalizeI18n(raw: unknown): Readonly<Record<string, PluginLocalization
   return Object.keys(out).length > 0 ? out : undefined;
 }
 
-/**
- * Reject CSS that can fetch remote resources — `@import` and external `url()`
- * (http(s):// or protocol-relative //). A declarative plugin is meant to be
- * self-contained data; remote fetches enable tracking/exfiltration and defeat
- * the "no remotely-hosted code/resources" posture. `data:` URIs stay allowed.
- */
-function cssHasExternalUrl(css: string): boolean {
-  return /url\(\s*['"]?\s*(?:https?:)?\/\//i.test(css);
-}
-
-function cssHasRemoteResource(css: string): boolean {
-  return /@import\b/i.test(css) || cssHasExternalUrl(css);
-}
-
 export function validateStyleCss(css: string, path: string): ManifestIssue[] {
-  const issues: ManifestIssue[] = [];
-  if (css.length > MAX_STYLE_LENGTH) {
-    issues.push({ path, message: `exceeds ${MAX_STYLE_LENGTH} chars` });
-  }
-  if (cssHasRemoteResource(css)) {
-    issues.push({
-      path,
-      message: 'must not use @import or external url() (remote-resource fetch)',
-    });
-  }
-  return issues;
-}
-
-/** Event-handler attributes (`onclick`, `onload`, …) inject executable code. */
-function isEventHandlerAttribute(name: string): boolean {
-  return /^on/i.test(name);
-}
-
-const URL_ATTRIBUTES = new Set(['href', 'src', 'action', 'formaction', 'xlink:href']);
-
-function hasExecutableAttributeUrl(name: string, value: string): boolean {
-  return (
-    URL_ATTRIBUTES.has(name.trim().toLowerCase()) &&
-    /^(?:javascript|data|vbscript):/i.test(value.trim())
-  );
+  const issue = styleSheetIssue(css);
+  return issue ? [{ path, message: issue }] : [];
 }
 
 function normalizeSelector(
@@ -306,19 +326,17 @@ function normalizeOp(raw: unknown, path: string, issues: ManifestIssue[]): DomOp
         });
         return null;
       }
-      if (isEventHandlerAttribute(raw.name)) {
-        issues.push({
-          path: `${path}.name`,
-          message: 'event-handler attributes (on*) are not allowed',
-        });
-        return null;
-      }
-      if (hasExecutableAttributeUrl(raw.name, raw.value)) {
-        issues.push({
-          path: `${path}.value`,
-          message: 'executable or data URLs are not allowed for URL attributes',
-        });
-        return null;
+      {
+        const nameIssue = attributeNameIssue(raw.name);
+        if (nameIssue) {
+          issues.push({ path: `${path}.name`, message: nameIssue });
+          return null;
+        }
+        const valueIssue = attributeIssue(raw.name, raw.value);
+        if (valueIssue) {
+          issues.push({ path: `${path}.value`, message: valueIssue });
+          return null;
+        }
       }
       return { op: 'setAttribute', target, name: raw.name, value: raw.value };
     case 'setStyle': {
@@ -332,11 +350,9 @@ function normalizeOp(raw: unknown, path: string, issues: ManifestIssue[]): DomOp
           issues.push({ path: `${path}.styles.${prop}`, message: 'value must be a string' });
           return null;
         }
-        if (cssHasExternalUrl(value)) {
-          issues.push({
-            path: `${path}.styles.${prop}`,
-            message: 'must not use an external url() (remote-resource fetch)',
-          });
+        const valueIssue = styleValueIssue(value);
+        if (valueIssue) {
+          issues.push({ path: `${path}.styles.${prop}`, message: valueIssue });
           return null;
         }
         styles[prop] = value;
@@ -358,46 +374,6 @@ function normalizeContributions(raw: unknown, issues: ManifestIssue[]): PluginCo
     domOps?: DomOperation[];
     settings?: SettingsSchema;
   } = {};
-
-  if (raw.styles !== undefined) {
-    if (!Array.isArray(raw.styles)) {
-      issues.push({ path: 'contributes.styles', message: 'must be an array' });
-    } else {
-      const styles: StyleContribution[] = [];
-      raw.styles.forEach((entry, index) => {
-        if (!isRecord(entry) || !isString(entry.css)) {
-          issues.push({ path: `contributes.styles[${index}].css`, message: 'required string' });
-          return;
-        }
-        const cssIssues = validateStyleCss(entry.css, `contributes.styles[${index}].css`);
-        if (cssIssues.length > 0) {
-          issues.push(...cssIssues);
-          return;
-        }
-        styles.push({
-          css: entry.css,
-          ...(isString(entry.source) ? { source: entry.source } : {}),
-        });
-      });
-      result.styles = styles;
-    }
-  }
-
-  if (raw.domOps !== undefined) {
-    if (!Array.isArray(raw.domOps)) {
-      issues.push({ path: 'contributes.domOps', message: 'must be an array' });
-    } else {
-      if (raw.domOps.length > MAX_DOM_OPS) {
-        issues.push({ path: 'contributes.domOps', message: `exceeds max of ${MAX_DOM_OPS}` });
-      }
-      const ops: DomOperation[] = [];
-      raw.domOps.slice(0, MAX_DOM_OPS).forEach((rawOp, index) => {
-        const op = normalizeOp(rawOp, `contributes.domOps[${index}]`, issues);
-        if (op) ops.push(op);
-      });
-      result.domOps = ops;
-    }
-  }
 
   if (raw.settings !== undefined) {
     if (!isRecord(raw.settings)) {
@@ -430,6 +406,9 @@ function normalizeContributions(raw: unknown, issues: ManifestIssue[]): PluginCo
           issues.push({ path: `${path}.default`, message: 'required boolean | number | string' });
           continue;
         }
+        const selectOptions =
+          rawField.type === 'select' ? readSelectOptions(rawField, path, issues) : undefined;
+        if (rawField.type === 'select' && !selectOptions) continue;
         const minLabel = readOptionalString(rawField, 'minLabel', `${path}.minLabel`, issues);
         const maxLabel = readOptionalString(rawField, 'maxLabel', `${path}.maxLabel`, issues);
         settings[key] = {
@@ -440,21 +419,102 @@ function normalizeContributions(raw: unknown, issues: ManifestIssue[]): PluginCo
           ...(maxLabel ? { maxLabel } : {}),
           ...(typeof rawField.min === 'number' ? { min: rawField.min } : {}),
           ...(typeof rawField.max === 'number' ? { max: rawField.max } : {}),
-          ...(Array.isArray(rawField.options)
-            ? {
-                options: rawField.options.filter(
-                  (option): option is { value: string; label: string } =>
-                    isRecord(option) && isString(option.value) && isString(option.label),
-                ),
-              }
-            : {}),
+          ...(selectOptions
+            ? { options: selectOptions }
+            : Array.isArray(rawField.options)
+              ? {
+                  options: rawField.options.filter(
+                    (option): option is { value: string; label: string } =>
+                      isRecord(option) && isString(option.value) && isString(option.label),
+                  ),
+                }
+              : {}),
         };
       }
       result.settings = settings;
     }
   }
 
+  // `{{setting}}` defaults are substituted after the literal checks, so a
+  // default can smuggle in what the literal text may not contain. Each sink is
+  // also checked rendered with the defaults; the engine repeats this for stored
+  // values before every write.
+  const schema = result.settings;
+  const renderDefaults = (value: string): string => renderSettingTemplate(value, schema, {});
+
+  if (raw.styles !== undefined) {
+    if (!Array.isArray(raw.styles)) {
+      issues.push({ path: 'contributes.styles', message: 'must be an array' });
+    } else {
+      const styles: StyleContribution[] = [];
+      raw.styles.forEach((entry, index) => {
+        if (!isRecord(entry) || !isString(entry.css)) {
+          issues.push({ path: `contributes.styles[${index}].css`, message: 'required string' });
+          return;
+        }
+        const cssIssues = validateStyleCss(entry.css, `contributes.styles[${index}].css`);
+        if (cssIssues.length > 0) {
+          issues.push(...cssIssues);
+          return;
+        }
+        const renderedIssue = styleSheetIssue(renderDefaults(entry.css));
+        if (renderedIssue) {
+          issues.push({ path: `contributes.styles[${index}].css`, message: renderedIssue });
+          return;
+        }
+        styles.push({
+          css: entry.css,
+          ...(isString(entry.source) ? { source: entry.source } : {}),
+        });
+      });
+      result.styles = styles;
+    }
+  }
+
+  if (raw.domOps !== undefined) {
+    if (!Array.isArray(raw.domOps)) {
+      issues.push({ path: 'contributes.domOps', message: 'must be an array' });
+    } else {
+      if (raw.domOps.length > MAX_DOM_OPS) {
+        issues.push({ path: 'contributes.domOps', message: `exceeds max of ${MAX_DOM_OPS}` });
+      }
+      const ops: DomOperation[] = [];
+      raw.domOps.slice(0, MAX_DOM_OPS).forEach((rawOp, index) => {
+        const path = `contributes.domOps[${index}]`;
+        const op = normalizeOp(rawOp, path, issues);
+        if (op && renderedOpIsSafe(op, renderDefaults, path, issues)) ops.push(op);
+      });
+      result.domOps = ops;
+    }
+  }
+
   return result;
+}
+
+/** Check an op's templated values rendered with the setting defaults. */
+function renderedOpIsSafe(
+  op: DomOperation,
+  render: (value: string) => string,
+  path: string,
+  issues: ManifestIssue[],
+): boolean {
+  if (op.op === 'setAttribute') {
+    const issue = attributeIssue(op.name, render(op.value));
+    if (issue) issues.push({ path: `${path}.value`, message: issue });
+    return issue === null;
+  }
+  if (op.op === 'setStyle') {
+    let safe = true;
+    for (const [prop, value] of Object.entries(op.styles)) {
+      const issue = styleValueIssue(render(value));
+      if (issue) {
+        issues.push({ path: `${path}.styles.${prop}`, message: issue });
+        safe = false;
+      }
+    }
+    return safe;
+  }
+  return true;
 }
 
 function normalizeStringList(

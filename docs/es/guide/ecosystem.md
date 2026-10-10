@@ -8,5 +8,5 @@ Los siguientes proyectos están inspirados en Voyager o construidos sobre él, l
 - **[DeepSeek Enhancer](https://github.com/dlshuangchenyue1210/DeepSeek-Enhancer)** — Una extensión inspirada en Voyager para la versión web de DeepSeek, que ofrece carpetas multinivel, exportación del historial de chats, copia de fórmulas, copia de seguridad de datos y más.
 
 ::: tip ¿Tu proyecto está inspirado en Voyager?
-[Abre un issue](https://github.com/Nagi-ovo/voyager/issues/new) para contármelo y lo añadiré aquí.
+[Abre un issue](https://github.com/voyager-crew/voyager/issues/new) para contármelo y lo añadiré aquí.
 :::

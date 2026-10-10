@@ -1,23 +1,26 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { TimelineNavigation } from '../TimelineNavigation';
-import type { TimelineState } from '../TimelineState';
-import type { TimelineView } from '../TimelineView';
+import type { TimelineHierarchyGeometry } from '@/features/timeline/TimelineHierarchyGeometry';
+import type { TimelineNavigation } from '@/features/timeline/TimelineNavigation';
+import type { TimelineState } from '@/features/timeline/TimelineState';
+import type { TimelineView } from '@/features/timeline/TimelineView';
+
 import { TimelineManager } from '../manager';
 
 type TimelineOwners = {
   state: TimelineState;
+  geometry: TimelineHierarchyGeometry;
   view: TimelineView;
   navigation: TimelineNavigation;
   conversationContainer: HTMLElement;
-  userTurnSelector: string;
+  findCriticalElements(): Promise<boolean>;
   mountUI(): void;
   recalculateAndRenderMarkers(): void;
 };
 
 const managers: TimelineManager[] = [];
 
-function fixture(count = 2) {
+async function fixture(count = 2) {
   const main = document.createElement('main');
   const viewport = document.createElement('div');
   viewport.style.overflowY = 'auto';
@@ -40,8 +43,9 @@ function fixture(count = 2) {
   const manager = new TimelineManager();
   managers.push(manager);
   const owners = manager as unknown as TimelineOwners;
-  owners.conversationContainer = main;
-  owners.userTurnSelector = '.user';
+  localStorage.setItem('geminiTimelineUserTurnSelectorAuto', '.user');
+  await owners.findCriticalElements();
+  await owners.state.hierarchy.init();
   owners.navigation.setViewport(viewport);
   owners.mountUI();
   Object.defineProperty(owners.view.ui.timelineBar, 'clientHeight', { value: 400 });
@@ -52,6 +56,7 @@ function fixture(count = 2) {
   return {
     view: owners.view,
     state: owners.state,
+    geometry: owners.geometry,
     navigation: owners.navigation,
     viewport,
     targets,
@@ -83,21 +88,21 @@ afterEach(() => {
 });
 
 describe('TimelineManager navigation surfaces', () => {
-  it('preserves the manually scrolled rail when a marker level changes', () => {
-    const { view, state, viewport } = fixture(100);
-    state.markerLevelEnabled = true;
+  it('preserves the manually scrolled rail when a marker level changes', async () => {
+    const { view, state, geometry, viewport } = await fixture(100);
+    geometry.markerLevelEnabled = true;
     view.ui.track!.scrollTop = 320;
     view.updateVirtualRangeAndRender();
 
-    state.setMarkerLevel('s-50', 2);
+    state.hierarchy.setMarkerLevel('s-50', 2);
 
-    expect(state.getMarkerLevel('s-50')).toBe(2);
+    expect(state.hierarchy.getMarkerLevel('s-50')).toBe(2);
     expect(view.ui.track!.scrollTop).toBe(320);
     expect(viewport.scrollTop).toBe(0);
   });
 
-  it('clears the previous dot during flow, then commits the clicked dot when scrolling ends', () => {
-    const { view, navigation, targets, viewport } = fixture();
+  it('clears the previous dot during flow, then commits the clicked dot when scrolling ends', async () => {
+    const { view, navigation, targets, viewport } = await fixture();
     const first = view.ui.timelineBar!.querySelector<HTMLElement>('[data-target-turn-id="s-0"]')!;
     const second = view.ui.timelineBar!.querySelector<HTMLElement>('[data-target-turn-id="s-1"]')!;
     expect(first.classList.contains('active')).toBe(true);
@@ -133,8 +138,8 @@ describe('TimelineManager navigation surfaces', () => {
     expect(viewport.scrollTop).toBe(200);
   });
 
-  it('rescans detached turns and scrolls the replacement target on a real dot click', () => {
-    const { main, viewport, view, state, navigation } = fixture();
+  it('rescans detached turns and scrolls the replacement target on a real dot click', async () => {
+    const { main, viewport, view, state, navigation } = await fixture();
     navigation.mode = 'jump';
     const dot = view.ui.timelineBar!.querySelector<HTMLElement>('[data-target-turn-id="s-1"]')!;
     main.remove();
@@ -161,8 +166,8 @@ describe('TimelineManager navigation surfaces', () => {
     expect(viewport.scrollTop).toBe(0);
   });
 
-  it('skips document-wide scans after validating the connected target viewport', () => {
-    const { view, navigation, viewport } = fixture();
+  it('skips document-wide scans after validating the connected target viewport', async () => {
+    const { view, navigation, viewport } = await fixture();
     navigation.mode = 'jump';
     const dot = view.ui.timelineBar!.querySelector<HTMLElement>('[data-target-turn-id="s-1"]')!;
     const scan = vi.spyOn(document, 'querySelectorAll');
@@ -175,8 +180,8 @@ describe('TimelineManager navigation surfaces', () => {
 
   it.each(['dot', 'preview'])(
     'rebinds a connected nested viewport before %s navigation',
-    (source) => {
-      const { view, navigation, viewport, targets } = fixture();
+    async (source) => {
+      const { view, navigation, viewport, targets } = await fixture();
       navigation.mode = 'jump';
       const currentViewport = document.createElement('div');
       currentViewport.style.overflowY = 'scroll';

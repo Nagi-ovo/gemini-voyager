@@ -19,6 +19,7 @@
  */
 
 import { createPackageIcon } from '@/core/icons/promptManagerIcons';
+import type { PromptScheme } from '@/features/prompt/PromptSiteAdapter';
 import {
   type PromptIdentity,
   type SentPromptMatch,
@@ -62,6 +63,8 @@ const BUBBLE_SELECTORS = [
 export interface SentPromptChipsOptions {
   /** Saved prompts to recognise. Replaced wholesale by `setPrompts`. */
   prompts: PromptIdentity[];
+  /** The page's light/dark, read as each chip is drawn. */
+  scheme: () => PromptScheme;
   root?: ParentNode;
 }
 
@@ -70,18 +73,6 @@ export interface SentPromptChipsController {
   /** Re-scan now. Called by the observer; exposed for tests and navigation. */
   refresh: () => void;
   destroy: () => void;
-}
-
-function detectTheme(): 'light' | 'dark' {
-  if (
-    document.querySelector('.theme-host.dark-theme') ||
-    document.body.classList.contains('dark-theme') ||
-    document.documentElement.classList.contains('dark') ||
-    document.body.getAttribute('data-theme') === 'dark'
-  ) {
-    return 'dark';
-  }
-  return 'light';
 }
 
 /**
@@ -236,7 +227,7 @@ export function startSentPromptChips(options: SentPromptChipsOptions): SentPromp
     for (const line of lineEls) line.classList.add(LINE_CLASS);
     bubble.querySelector(GEMINI_TOGGLE_SELECTOR)?.classList.add(TOGGLE_HIDDEN_CLASS);
     bubble.setAttribute(MARKED_ATTR, match.name);
-    bubble.setAttribute('data-gv-theme', detectTheme());
+    bubble.setAttribute('data-gv-theme', options.scheme());
     anchor.after(container);
     setOpen(opened.has(key));
     mounted.set(bubble, container);

@@ -8,5 +8,5 @@
 - **[DeepSeek Enhancer](https://github.com/dlshuangchenyue1210/DeepSeek-Enhancer)** — Вдохновлённое Voyager расширение для веб-версии DeepSeek: многоуровневые папки, экспорт истории чатов, копирование формул, резервное копирование данных и другое.
 
 ::: tip Ваш проект вдохновлён Voyager?
-[Создайте issue](https://github.com/Nagi-ovo/voyager/issues/new), чтобы сообщить мне, и я добавлю его сюда.
+[Создайте issue](https://github.com/voyager-crew/voyager/issues/new), чтобы сообщить мне, и я добавлю его сюда.
 :::

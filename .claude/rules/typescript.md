@@ -8,7 +8,7 @@ globs: ["src/**/*.ts", "src/**/*.tsx"]
 - Prefer plain objects with interfaces/types for data structures
 - Use `map`, `filter`, `reduce` for immutability
 - Use `private`/`protected` in classes
-- Use `unknown` + narrowing (Zod or custom guards) for type safety
+- Use `unknown` + narrowing (custom type guards) for type safety
 - Use named exports: `export function X`
 - Functional React: hooks at top level, strictly functional components
 
@@ -18,9 +18,9 @@ globs: ["src/**/*.ts", "src/**/*.tsx"]
 - **Avoid ad hoc storage in UI components** (`src/components/`, `src/pages/popup/`). Prefer `StorageKeys` plus existing storage helpers/services; direct `chrome.storage` / `browser.storage` is acceptable when matching established popup settings patterns, bulk reads/writes, or storage listeners.
 - **No God Components.** Business logic belongs in `features/*/services/` or custom hooks, not UI files.
 - **No magic strings.** Use constants or enums (StorageKeys, CSS classes).
-- **No `console.log` in production.** Use `LoggerService` for critical info.
+- **No `console.log` in production.** Use `LoggerService` for critical info; oxlint only warns, so do not add new ones.
 
 ## Testing (Vitest + jsdom)
 - Chrome `chrome` object is globally mocked in `src/tests/setup.ts`
-- Mock specific storage: `(chrome.storage.sync.get as any).mockResolvedValue({ key: 'val' })`
+- Mock specific storage: `vi.mocked(chrome.storage.sync.get).mockResolvedValue({ key: 'val' })`
 - Run: `bun run test`, `bun run test <filename>`, `bun run test:coverage`

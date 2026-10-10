@@ -8,5 +8,5 @@
 - **[DeepSeek Enhancer](https://github.com/dlshuangchenyue1210/DeepSeek-Enhancer)** — 受 Voyager 啟發的 DeepSeek 網頁版增強擴充功能，提供多層資料夾、聊天記錄匯出、公式複製、資料備份等功能。
 
 ::: tip 你的項目也受到了 Voyager 的啟發？
-歡迎[提交 Issue](https://github.com/Nagi-ovo/voyager/issues/new) 告訴我，我會將你的項目添加到這裡。
+歡迎[提交 Issue](https://github.com/voyager-crew/voyager/issues/new) 告訴我，我會將你的項目添加到這裡。
 :::

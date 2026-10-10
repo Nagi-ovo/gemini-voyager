@@ -1,6 +1,7 @@
 import { type ChangeEvent, type RefObject, useCallback, useRef, useState } from 'react';
 
 import { PromptImportExportService } from '@/features/backup/services/PromptImportExportService';
+import { createRuntimePromptLibraryClient } from '@/features/prompt/library/promptLibraryMessages';
 import type { TranslationKey } from '@/utils/translations';
 
 export interface PromptDataTransferController {
@@ -71,19 +72,18 @@ export function usePromptDataTransfer(
           return;
         }
 
-        const importResult = await PromptImportExportService.importFromPayload(payloadResult.data);
-        if (!importResult.success) throw importResult.error;
-
-        const processed = importResult.data.imported + importResult.data.duplicates;
+        // The background owner merges it into the library as stored at that
+        // moment, so a prompt or template saved on a tab meanwhile is kept.
+        const { added, skipped, nameConflicts } = await createRuntimePromptLibraryClient().apply({
+          kind: 'import',
+          items: payloadResult.data.items,
+        });
         setStatus({
-          kind: importResult.data.nameConflicts > 0 ? 'warn' : 'ok',
+          kind: nameConflicts > 0 ? 'warn' : 'ok',
           text:
-            importResult.data.nameConflicts > 0
-              ? t('promptNameConflictsDetected').replace(
-                  '{count}',
-                  String(importResult.data.nameConflicts),
-                )
-              : t('pm_import_success').replace('{count}', String(processed)),
+            nameConflicts > 0
+              ? t('promptNameConflictsDetected').replace('{count}', String(nameConflicts))
+              : t('pm_import_success').replace('{count}', String(added + skipped)),
         });
       } catch (error) {
         console.error('[Gemini Voyager] Failed to import prompts:', error);

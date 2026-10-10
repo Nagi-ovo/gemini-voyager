@@ -24,4 +24,4 @@ L'identifiant Bundle de l'application n'a pas changé. Vos dossiers, votre bibli
 
 Une fois ce remplacement effectué, les futures versions Safari mettent à jour le nouveau « Voyager » via le système de mise à jour automatique intégré (Sparkle) — plus aucun remplacement manuel.
 
-Une question ? Écrivez-nous sur [GitHub Issues](https://github.com/Nagi-ovo/voyager/issues).
+Une question ? Écrivez-nous sur [GitHub Issues](https://github.com/voyager-crew/voyager/issues).

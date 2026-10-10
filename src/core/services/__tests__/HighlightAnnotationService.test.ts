@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { STORAGE_QUOTA_SOFT_CAP_KEY } from '@/core/services/StorageQuotaService';
 import type {
@@ -8,14 +8,17 @@ import type {
 } from '@/core/types/highlight';
 
 import {
-  HighlightAnnotationError,
   HighlightAnnotationService,
+  type HighlightImportMergeOptions,
   type HighlightStorageAdapter,
+} from '../HighlightAnnotationService';
+import {
+  HighlightAnnotationError,
   createHighlightSourceTextHash,
   getHighlightAccountHash,
   getHighlightBucketStorageKey,
   getHighlightIndexStorageKey,
-} from '../HighlightAnnotationService';
+} from '../highlightAnnotationData';
 
 function clone<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -490,5 +493,82 @@ describe('HighlightAnnotationService', () => {
     expect(await service.getAllAccounts()).toEqual([]);
     expect(Object.keys(storage.items).filter((key) => key.includes(':bucket:v1:'))).toEqual([]);
     expect(Object.keys(storage.items).filter((key) => key.includes(':index:v1:'))).toHaveLength(2);
+  });
+
+  it('refuses a mutation of a corrupt bucket without overwriting stored data', async () => {
+    const { service, storage } = createHarness();
+    const { record } = await service.add(SCOPE, input());
+    const bucketKey = getHighlightBucketStorageKey(SCOPE, record.conversationId);
+    storage.items[bucketKey] = { ...(storage.items[bucketKey] as object), records: { broken: {} } };
+    const before = JSON.stringify(storage.items);
+
+    await expect(
+      service.update(SCOPE, record.conversationId, record.id, { note: 'New note' }),
+    ).rejects.toMatchObject({ code: 'CORRUPT_DATA' });
+
+    expect(JSON.stringify(storage.items)).toBe(before);
+  });
+
+  it('preserves the last record if the empty-bucket write fails before removal', async () => {
+    const { service, storage } = createHarness();
+    const { record } = await service.add(SCOPE, input());
+    const before = JSON.stringify(storage.items);
+    vi.spyOn(storage, 'set').mockRejectedValueOnce(new Error('Storage write failed'));
+
+    await expect(service.remove(SCOPE, record.conversationId, record.id)).rejects.toThrow(
+      'Storage write failed',
+    );
+
+    expect(JSON.stringify(storage.items)).toBe(before);
+    expect(await service.getAll(SCOPE)).toEqual([record]);
+  });
+
+  it('keeps legacy source records when claiming them into the destination fails', async () => {
+    const { service, storage } = createHarness();
+    const legacyScope = { ...SCOPE, accountKey: 'default', accountId: 0, routeUserId: null };
+    const { record } = await service.add(legacyScope, input());
+    const before = JSON.stringify(storage.items);
+    vi.spyOn(storage, 'set').mockRejectedValueOnce(new Error('Destination write failed'));
+
+    await expect(service.claimLegacyDefaultHighlights(SCOPE)).rejects.toThrow(
+      'Destination write failed',
+    );
+
+    expect(JSON.stringify(storage.items)).toBe(before);
+    expect(await service.getAll(legacyScope)).toEqual([record]);
+    expect(await service.getAll(SCOPE)).toEqual([]);
+  });
+
+  it('retains the selected clear marker while an import waits for bucket storage', async () => {
+    const { service, storage } = createHarness();
+    const { record } = await service.add(SCOPE, input());
+    const { clearMarker } = await service.clearAll(SCOPE);
+    const { record: survivor } = await service.add(SCOPE, input());
+    const incoming = { ...record, clearGeneration: 'remote-generation' };
+    const options: HighlightImportMergeOptions = {};
+    const get = storage.get.bind(storage);
+    vi.spyOn(storage, 'get').mockImplementation(async (keys) => {
+      if (
+        Array.isArray(keys) &&
+        keys.includes(getHighlightBucketStorageKey(SCOPE, record.conversationId))
+      ) {
+        options.clearMarker = {
+          ...clearMarker,
+          generation: {
+            counter: (clearMarker.generation?.counter ?? 0) + 1,
+            id: 'remote-generation',
+          },
+        };
+      }
+      return get(keys);
+    });
+
+    await expect(service.importMerge(SCOPE, [incoming], options)).resolves.toMatchObject({
+      imported: 0,
+      skippedByClearMarker: 1,
+      total: 1,
+    });
+    expect(await service.getAll(SCOPE)).toEqual([survivor]);
+    expect((await service.getAccountSnapshot(SCOPE)).clearMarker).toEqual(clearMarker);
   });
 });

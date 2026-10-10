@@ -18,12 +18,12 @@
   </p>
 
   <p>
-    <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="Nagi-ovo%2Fvoyager | Trendshift" width="250" height="55"/></a>
-    <a href="https://www.star-history.com/nagi-ovo/voyager" target="_blank">
+    <a href="https://trendshift.io/repositories/16094" target="_blank"><img src="https://trendshift.io/api/badge/repositories/16094" alt="voyager-crew%2Fvoyager | Trendshift" width="250" height="55"/></a>
+    <a href="https://www.star-history.com/voyager-crew/voyager" target="_blank">
      <picture>
-       <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank&theme=dark" />
-       <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank" />
-       <img alt="Star History Rank" src="https://api.star-history.com/badge?repo=Nagi-ovo/voyager&type=rank" width="193" height="55" />
+       <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank&theme=dark" />
+       <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank" />
+       <img alt="Star History Rank" src="https://api.star-history.com/badge?repo=voyager-crew/voyager&type=rank" width="193" height="55" />
      </picture>
     </a>
     <a href="https://www.producthunt.com/products/gemini-voyager?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Voyager - AI conversation tools for Gemini, Claude, and ChatGPT | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
@@ -84,7 +84,7 @@
 
 - **📂 [資料夾管理](https://voyager.nagi.fun/zh_TW/guide/folders)**: 支持 **多級目錄**、**拖拽排序** 及 **Google Drive 同步**。
   - **Gemini**: 支持 **多帳號隔離模式** 及 **自定義資料夾顏色**。
-- **💡 [提示詞庫](https://voyager.nagi.fun/zh_TW/guide/prompts)**: 跨平台同步提示詞，支持 Gemini、AI Studio 及 [自定義網站](https://voyager.nagi.fun/zh_TW/guide/custom-websites)。
+- **💡 [提示詞庫](https://voyager.nagi.fun/zh_TW/guide/prompts)**: 跨平台同步提示詞，支持 Gemini、AI Studio 及 [自定義網站](https://voyager.nagi.fun/zh_TW/guide/prompts#任何網站皆可用)。
 - **☁️ [雲同步](https://voyager.nagi.fun/zh_TW/guide/cloud-sync)**: 支持將資料夾和提示詞庫同步到 Google Drive。
 - **📐 公式複製**: 一鍵複製 LaTeX 和 MathML (Word) 源碼。
 - **🌦️ 視覺特效**: 在設置面板中一鍵切換 **飄雪**、**電影感雨滴** 或 **櫻花飄落**，給頁面增添季節氛圍。
@@ -146,7 +146,7 @@
     <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
   </a>
   &nbsp;&nbsp;
-  <a href="https://github.com/Nagi-ovo/voyager/releases/latest/" target="_blank">
+  <a href="https://github.com/voyager-crew/voyager/releases/latest/" target="_blank">
     <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari 下載" height="36">
   </a>
 </div>
@@ -162,8 +162,8 @@
 ## ☕ 支持本項目
 
 <div align="center">
-  <a href="https://github.com/Nagi-ovo/voyager">
-    <img src="https://raw.githubusercontent.com/Nagi-ovo/voyager/main/docs/public/assets/sponsors.svg" width="1000px" />
+  <a href="https://github.com/voyager-crew/voyager">
+    <img src="https://raw.githubusercontent.com/voyager-crew/voyager/main/docs/public/assets/sponsors.svg" width="1000px" />
   </a>
 </div>
 
@@ -191,9 +191,9 @@
       <td align="center">
         <a href="https://afdian.com/a/nagi-ovo" target="_blank">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
-            <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" />
-            <img alt="Nagi-ovo's Profile" src="https://afdian-connect.deno.dev/profile.svg?slug=nagi-ovo" height="160" />
+            <source media="(prefers-color-scheme: dark)" srcset="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo&bg_color=%230d1117&text_color=%23dedbd7&border_color=%232e343d" />
+            <source media="(prefers-color-scheme: light)" srcset="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo" />
+            <img alt="Nagi-ovo's Profile" src="https://afdian-connect.vercel.app/profile.svg?slug=nagi-ovo" height="160" />
           </picture>
         </a><br>
         <sub><b>愛發電</b></sub>
@@ -237,12 +237,12 @@
 
 ## 🤝 參與貢獻與開發
 
-[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/Nagi-ovo/voyager)
+[<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/voyager-crew/voyager)
 
 歡迎參與貢獻！
 
-- **Issue**：僅接受可重現的缺陷，請使用 [Bug 報告](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml) 模板。
-- **Discussions**：[功能需求、想法和提問](https://github.com/Nagi-ovo/voyager/discussions)請發到討論區，不要開 Issue。
+- **Issue**：僅接受可重現的缺陷，請使用 [Bug 報告](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml) 模板。
+- **Discussions**：[功能需求、想法和提問](https://github.com/voyager-crew/voyager/discussions)請發到討論區，不要開 Issue。
 - **Pull Request**：請查看 [貢獻指南](./CONTRIBUTING.md)。
 
 <details>
@@ -275,8 +275,8 @@ bun run build:all      # Chrome + Firefox + Safari
 
 特別感謝所有為 Voyager 做出貢獻的貢獻者們 ❤️
 
-<a href="https://github.com/Nagi-ovo/voyager/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Nagi-ovo/voyager&max=200&columns=14" />
+<a href="https://github.com/voyager-crew/voyager/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=voyager-crew/voyager&max=200&columns=14" />
 </a>
 
 ---
@@ -289,7 +289,7 @@ bun run build:all      # Chrome + Firefox + Safari
 
 - **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - Image Refinement 基於這些專案適配而來，相關第三方 MIT 聲明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
 
-- **[Gemini Helper](https://github.com/urzeye/tampermonkey-scripts)** - 預設模型鎖定功能中的部分互動邏輯參考自 Gemini Helper，並已在原始碼中保留 attribution。
+- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)** - 預設模型鎖定功能中的部分互動邏輯參考自 Gemini Helper，並已在原始碼中保留 attribution。
 
 - **[cordis](https://github.com/cordiverse/cordis)** - 外掛執行階段的副作用帳本（`PluginScope`）借鑒了 cordis fiber 模型的 effect／卸載生命週期設計。
 
@@ -317,11 +317,11 @@ Gemini 是 Google LLC 的商標。Claude 是 Anthropic, PBC 的商標。ChatGPT 
 ---
 
 <div align="center">
-  <a href="https://www.star-history.com/#Nagi-ovo/voyager&type=date&legend=top-left">
+  <a href="https://www.star-history.com/#voyager-crew/voyager&type=date&legend=top-left">
    <picture>
-     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&theme=dark&legend=top-left" />
-     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&legend=top-left" />
-     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=Nagi-ovo/voyager&type=date&legend=top-left" />
+     <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&theme=dark&legend=top-left" />
+     <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&legend=top-left" />
+     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&legend=top-left" />
    </picture>
   </a>
   <p>Made with ❤️ by Jesse Zhang</p>

@@ -2,56 +2,65 @@
 // Kept in a separate .ts module so they can be unit-tested with Vitest
 // (the .vue component itself is not part of the typecheck/test surface).
 
-/** Bundled official catalog, mirrored from the extension's main repository. */
-export const MARKETPLACE_URL =
-  'https://raw.githubusercontent.com/Nagi-ovo/voyager/main/src/features/plugins/catalog/marketplace.json';
-
-export interface MarketplaceEntry {
-  name: string;
-  source: string;
-  official?: boolean;
-}
+import { PLATFORM_LOGOS } from '../../../../src/core/icons/platformLogos';
+import { BUILTIN_PLUGINS } from '../../../../src/features/plugins/builtin';
 
 export interface PluginManifest {
   id: string;
   name: string;
   version: string;
   description: string;
-  author: string;
   category: string;
-  license: string;
   homepage?: string;
-  engine: string;
-  tier: string;
-  matches: string[];
+  matches: readonly string[];
   theme?: { brand?: string };
   i18n?: Record<string, { name?: string; description?: string }>;
+}
+
+export interface PlatformMark {
+  viewBox: string;
+  paths: readonly string[];
 }
 
 export interface Platform {
   key: string;
   label: string;
   color: string;
+  mark: PlatformMark;
 }
 
-// Brand colors mirror the extension's own definitions
-// (src/features/plugins/sites/adapters/* and popup SITE_BADGES).
-const PLATFORMS: { key: string; label: string; color: string; hosts: string[] }[] = [
-  { key: 'claude', label: 'Claude', color: '#d97757', hosts: ['claude.ai'] },
-  { key: 'chatgpt', label: 'ChatGPT', color: '#0ea5e9', hosts: ['chatgpt.com', 'chat.openai.com'] },
-  { key: 'gemini', label: 'Gemini', color: '#4285f4', hosts: ['gemini.google.com'] },
-  { key: 'aistudio', label: 'AI Studio', color: '#1a73e8', hosts: ['aistudio.google.com'] },
-  { key: 'grok', label: 'Grok', color: '#111827', hosts: ['grok.com', 'x.com'] },
+// Grok is the one supported host the extension's shared logo set leaves out.
+const GROK: PlatformMark & { label: string; brand: string } = {
+  label: 'Grok',
+  brand: '#111827',
+  viewBox: '0 0 24 24',
+  paths: [
+    'M9.27 15.29l7.978-5.897c.391-.29.95-.177 1.137.272.98 2.369.542 5.215-1.41 7.169-1.951 1.954-4.667 2.382-7.149 1.406l-2.711 1.257c3.889 2.661 8.611 2.003 11.562-.953 2.341-2.344 3.066-5.539 2.388-8.42l.006.007c-.983-4.232.242-5.924 2.75-9.383.06-.082.12-.164.179-.248l-3.301 3.305v-.01L9.267 15.292M7.623 16.723c-2.792-2.67-2.31-6.801.071-9.184 1.761-1.763 4.647-2.483 7.166-1.425l2.705-1.25a7.808 7.808 0 00-1.829-1A8.975 8.975 0 005.984 5.83c-2.533 2.536-3.33 6.436-1.962 9.764 1.022 2.487-.653 4.246-2.34 6.022-.599.63-1.199 1.259-1.682 1.925l7.62-6.815',
+  ],
+};
+
+// Marks, labels and brand colours come from the extension's own
+// `src/core/icons/platformLogos.ts`, so the store and the popup draw the same logos.
+const PLATFORM_HOSTS: { key: keyof typeof PLATFORM_LOGOS | 'grok'; hosts: string[] }[] = [
+  { key: 'claude', hosts: ['claude.ai'] },
+  { key: 'chatgpt', hosts: ['chatgpt.com', 'chat.openai.com'] },
+  { key: 'deepseek', hosts: ['chat.deepseek.com'] },
+  { key: 'gemini', hosts: ['gemini.google.com'] },
+  { key: 'aistudio', hosts: ['aistudio.google.com'] },
+  { key: 'grok', hosts: ['grok.com', 'x.com'] },
 ];
 
-/**
- * Resolve a marketplace entry's `source` against the catalog URL.
- * Absolute URLs pass through; relative paths resolve against the catalog base.
- */
-export function resolveSourceUrl(marketplaceUrl: string, source: string): string {
-  if (/^https?:\/\//i.test(source)) return source;
-  return new URL(source, marketplaceUrl).toString();
+function platformFor(key: keyof typeof PLATFORM_LOGOS | 'grok'): Platform {
+  const logo = key === 'grok' ? GROK : PLATFORM_LOGOS[key];
+  return {
+    key,
+    label: logo.label,
+    color: ('brand' in logo && logo.brand) || 'currentColor',
+    mark: { viewBox: logo.viewBox, paths: logo.paths },
+  };
 }
+
+const PLATFORMS = PLATFORM_HOSTS.map(({ key, hosts }) => ({ ...platformFor(key), hosts }));
 
 function hostFromMatch(pattern: string): string {
   try {
@@ -71,18 +80,45 @@ export function platformsFromMatches(matches: readonly string[] | undefined): Pl
   const found = new Map<string, Platform>();
   for (const pattern of matches) {
     const host = hostFromMatch(pattern);
-    for (const p of PLATFORMS) {
-      if (!found.has(p.key) && p.hosts.some((h) => hostMatchesSuffix(host, h))) {
-        found.set(p.key, { key: p.key, label: p.label, color: p.color });
+    for (const { hosts, ...platform } of PLATFORMS) {
+      if (!found.has(platform.key) && hosts.some((h) => hostMatchesSuffix(host, h))) {
+        found.set(platform.key, platform);
       }
     }
   }
   return [...found.values()];
 }
 
-/** Strip a redundant "Claude · " / "ChatGPT · " platform prefix (the logo shows it). */
+const PLATFORM_PREFIX = new RegExp(
+  `^(${PLATFORMS.map((p) => p.label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*[·:|]\\s*`,
+  'i',
+);
+
+/** Strip a redundant "Claude · " / "DeepSeek · " platform prefix (the logo shows it). */
 export function displayName(name: string): string {
-  return name.replace(/^(Claude|ChatGPT|Grok|Gemini|AI Studio)\s*[·:|]\s*/i, '');
+  return name.replace(PLATFORM_PREFIX, '');
+}
+
+/**
+ * A merged card keeps its first member's description, which usually names that
+ * member's platform ("Adds a timeline to Claude"). Swap that name for the whole
+ * list in the page's language so the text matches the platforms on the card.
+ */
+export function describeForPlatforms(
+  description: string,
+  ownLabels: readonly string[],
+  allLabels: readonly string[],
+  lang: string,
+): string {
+  if (allLabels.length < 2) return description;
+  const own = ownLabels.find((label) => description.includes(label));
+  if (!own) return description;
+  const list = new Intl.ListFormat(lang, { style: 'long', type: 'conjunction' })
+    .format(allLabels)
+    // ICU joins "ChatGPT和DeepSeek" tightly; CJK copy on this site spaces Latin words.
+    .replace(/([A-Za-z0-9])([\u3400-\u9fff])/g, '$1 $2')
+    .replace(/([\u3400-\u9fff])([A-Za-z0-9])/g, '$1 $2');
+  return description.replace(own, list);
 }
 
 /**
@@ -137,130 +173,51 @@ export function localeKey(lang: string): string {
   return map[lang] ?? 'en';
 }
 
+export type StorePlugin = PluginManifest & { official: boolean };
+
 /**
- * Native (JS-backed) first-party plugins, mirrored from the extension's
- * `src/features/plugins/builtin/index.ts`. They are bundled inside the
- * extension rather than served from `marketplace.json`, so the public
- * marketplace page lists them here to keep parity. Brand colours and platform
- * mapping fall through the same `platformsFromMatches` path as catalog plugins.
+ * Keep only the fields the store renders. Manifests also carry CSS, settings
+ * and ops, which would otherwise ship in the page payload.
  */
-export const NATIVE_PLUGINS: (PluginManifest & { official: boolean })[] = [
-  {
-    id: 'voyager.formula-copy',
-    name: 'Formula Copy',
-    version: '1.0.0',
-    description: "Click an inline or block formula to copy its LaTeX; hover shows it's clickable.",
-    author: 'voyager-official',
-    category: 'productivity',
-    license: 'GPL-3.0-or-later',
-    engine: '>=1.1.0',
-    tier: 'declarative',
-    homepage: 'https://github.com/Nagi-ovo/voyager/tree/main/src/features/plugins/builtin',
-    matches: ['https://claude.ai/*', 'https://chatgpt.com/*', 'https://chat.openai.com/*'],
-    official: true,
-    i18n: {
-      zh: {
-        name: '公式复制',
-        description: '点击行内或块级公式即可复制 LaTeX；悬停时会提示可点击。',
-      },
-      zh_TW: {
-        name: '公式複製',
-        description: '點擊行內或區塊公式即可複製 LaTeX；滑鼠懸停時會提示可點擊。',
-      },
-      ja: {
-        name: '数式コピー',
-        description:
-          'インラインまたはブロック数式をクリックして LaTeX をコピーできます。ホバーするとクリック可能であることが分かります。',
-      },
-      ko: {
-        name: '수식 복사',
-        description:
-          '인라인 또는 블록 수식을 클릭해 LaTeX를 복사합니다. 마우스를 올리면 클릭 가능함을 표시합니다.',
-      },
-      fr: {
-        name: 'Copie de formules',
-        description:
-          "Cliquez sur une formule en ligne ou en bloc pour copier son LaTeX ; le survol indique qu'elle est cliquable.",
-      },
-      es: {
-        name: 'Copia de fórmulas',
-        description:
-          'Haz clic en una fórmula en línea o en bloque para copiar su LaTeX; al pasar el cursor se muestra que se puede hacer clic.',
-      },
-      pt: {
-        name: 'Cópia de fórmulas',
-        description:
-          'Clique em uma fórmula inline ou em bloco para copiar o LaTeX; ao passar o cursor, ela indica que pode ser clicada.',
-      },
-      ru: {
-        name: 'Копирование формул',
-        description:
-          'Нажмите на строчную или блочную формулу, чтобы скопировать её LaTeX; при наведении видно, что её можно нажать.',
-      },
-      ar: {
-        name: 'نسخ الصيغ',
-        description:
-          'انقر على صيغة مضمنة أو كتلية لنسخ LaTeX الخاص بها؛ ويظهر عند التحويم أنها قابلة للنقر.',
-      },
-    },
+export function toStorePlugin(
+  m: Omit<PluginManifest, 'i18n'> & {
+    i18n?: Readonly<Record<string, { name?: string; description?: string }>>;
   },
-  {
-    id: 'voyager.claude-timeline',
-    name: 'Claude · Timeline',
-    version: '1.0.0',
-    description: 'Adds a compact conversation timeline to Claude with starred messages and search.',
-    author: 'voyager-official',
-    category: 'productivity',
-    license: 'GPL-3.0-or-later',
-    engine: '>=1.1.0',
-    tier: 'declarative',
-    homepage:
-      'https://github.com/Nagi-ovo/voyager/tree/main/src/features/plugins/builtin/claudeTimeline',
-    matches: ['https://claude.ai/*'],
-    official: true,
-    i18n: {
-      zh: {
-        name: 'Claude · 时间线',
-        description: '为 Claude 添加紧凑的对话时间线，支持星标消息和搜索。',
-      },
-      zh_TW: {
-        name: 'Claude · 時間線',
-        description: '為 Claude 加入緊湊的對話時間線，支援星標訊息與搜尋。',
-      },
-      ja: {
-        name: 'Claude · タイムライン',
-        description:
-          'Claude にコンパクトな会話タイムラインを追加し、スター付きメッセージと検索に対応します。',
-      },
-      ko: {
-        name: 'Claude · 타임라인',
-        description: 'Claude에 별표 메시지와 검색을 지원하는 간단한 대화 타임라인을 추가합니다.',
-      },
-      fr: {
-        name: 'Claude · Timeline',
-        description: 'Ajoute une timeline compacte à Claude avec messages favoris et recherche.',
-      },
-      es: {
-        name: 'Claude · Línea de tiempo',
-        description:
-          'Añade a Claude una línea de tiempo compacta con mensajes destacados y búsqueda.',
-      },
-      pt: {
-        name: 'Claude · Linha do tempo',
-        description:
-          'Adiciona ao Claude uma linha do tempo compacta com mensagens favoritas e busca.',
-      },
-      ru: {
-        name: 'Claude · Таймлайн',
-        description: 'Добавляет в Claude компактную шкалу диалога со звёздами и поиском.',
-      },
-      ar: {
-        name: 'Claude · المخطط الزمني',
-        description: 'يضيف إلى Claude مخططًا زمنيًا موجزًا مع الرسائل المميزة والبحث.',
-      },
-    },
-  },
-];
+  official: boolean,
+  fallbackHomepage?: string,
+): StorePlugin {
+  return {
+    id: m.id,
+    name: m.name,
+    version: m.version,
+    description: m.description,
+    category: m.category,
+    homepage: m.homepage ?? fallbackHomepage,
+    matches: [...m.matches],
+    theme: m.theme?.brand ? { brand: m.theme.brand } : undefined,
+    i18n: m.i18n
+      ? Object.fromEntries(
+          Object.entries(m.i18n).map(([loc, v]) => [
+            loc,
+            { name: v.name, description: v.description },
+          ]),
+        )
+      : undefined,
+    official,
+  };
+}
+
+const BUILTIN_HOMEPAGE =
+  'https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/builtin';
+
+/**
+ * First-party plugins bundled inside the extension rather than served from
+ * `marketplace.json`. Imported from the extension's own list so the store
+ * cannot fall behind it.
+ */
+export const NATIVE_PLUGINS: StorePlugin[] = BUILTIN_PLUGINS.map((p) =>
+  toStorePlugin(p, true, BUILTIN_HOMEPAGE),
+);
 
 /**
  * Category labels not present in the page's built-in `categories` maps (and the

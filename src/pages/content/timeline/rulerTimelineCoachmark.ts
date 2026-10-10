@@ -2,6 +2,12 @@
 import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
+import { rulerWaveTick } from '@/features/timeline/denseMarkerLayout';
+import {
+  TIMELINE_STYLE_PREVIEW_ACTIVE_INDEX,
+  type TimelineStylePreview,
+  mountTimelineStylePreview,
+} from '@/features/timeline/timelineStylePreview';
 import { getTranslationSync, initI18n } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
@@ -14,7 +20,6 @@ import {
 
 export const RULER_TIMELINE_COACHMARK_ID = 'timeline-ruler-style-intro-v1';
 export const RULER_TIMELINE_COACHMARK_DEBUG_EVENT = 'gv:debug:rulerTimelineCoachmark';
-const PREVIEW_TICK_COUNT = 14;
 
 const RULER_ICON =
   '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 5h5M5 8.5h9M5 12h13M5 15.5h9M5 19h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
@@ -28,12 +33,16 @@ const t = (key: TranslationKey, fallback: string): string => {
   }
 };
 
-async function loadRulerTimelineEnabled(): Promise<boolean> {
+/** Ruler users need no intro, and node levels rule out the ruler the intro switches to. */
+async function loadRulerIntroUnneeded(): Promise<boolean> {
   try {
     const got = (await browser.storage.sync.get({
       [StorageKeys.TIMELINE_STYLE]: 'dots',
+      [StorageKeys.TIMELINE_MARKER_LEVEL]: false,
     })) as Record<string, unknown>;
-    return got[StorageKeys.TIMELINE_STYLE] === 'ruler';
+    return (
+      got[StorageKeys.TIMELINE_STYLE] === 'ruler' || got[StorageKeys.TIMELINE_MARKER_LEVEL] === true
+    );
   } catch {
     return false;
   }
@@ -49,23 +58,12 @@ async function setRulerTimelineEnabled(on: boolean): Promise<void> {
   }
 }
 
-function buildRulerPreview(ruler: boolean): HTMLElement {
-  const preview = document.createElement('div');
-  preview.className = `gv-timeline-style-preview ${ruler ? 'is-ruler' : 'is-dots'}`;
-  preview.setAttribute('aria-hidden', 'true');
-
-  const crestIndex = Math.floor(PREVIEW_TICK_COUNT / 2);
-  for (let index = 0; index < PREVIEW_TICK_COUNT; index += 1) {
-    const tick = document.createElement('span');
-    const distance = Math.abs(index - crestIndex);
-    const crest = Math.exp(-(distance * distance) / (2 * 1.25 * 1.25));
-    tick.style.setProperty('--gv-coach-ruler-scale', (0.28 + 0.72 * crest).toFixed(3));
-    if (index === crestIndex) tick.className = 'active';
-    preview.appendChild(tick);
-  }
-
-  document.body.appendChild(preview);
-  return preview;
+function buildRulerPreview(liveBar: HTMLElement | null): TimelineStylePreview {
+  return mountTimelineStylePreview('is-ruler', liveBar, (tick, index) => {
+    const { scale, opacity } = rulerWaveTick(Math.abs(index - TIMELINE_STYLE_PREVIEW_ACTIVE_INDEX));
+    tick.style.setProperty('--gv-coach-ruler-scale', scale.toFixed(3));
+    tick.style.setProperty('--gv-coach-ruler-opacity', opacity.toFixed(3));
+  });
 }
 
 function setPreviewStyle(preview: HTMLElement | null, ruler: boolean): void {
@@ -78,8 +76,7 @@ export async function maybeShowRulerTimelineCoachmark(
   opts: { force?: boolean; progress?: CoachmarkProgress } = {},
 ): Promise<CoachmarkResult> {
   if (location.hostname !== 'gemini.google.com') return 'skipped';
-  const enabled = await loadRulerTimelineEnabled();
-  if (enabled && !opts.force) return 'skipped';
+  if (!opts.force && (await loadRulerIntroUnneeded())) return 'skipped';
 
   try {
     await initI18n();
@@ -87,7 +84,7 @@ export async function maybeShowRulerTimelineCoachmark(
     /* fall back to literals */
   }
 
-  let preview: HTMLElement | null = null;
+  let preview: TimelineStylePreview | null = null;
   let hiddenTimelineElements: HTMLElement[] = [];
 
   return showCoachmark({
@@ -109,17 +106,20 @@ export async function maybeShowRulerTimelineCoachmark(
         hiddenTimelineElements.forEach((element) =>
           element.classList.add('gv-coach-timeline-hidden'),
         );
-        preview = buildRulerPreview(true);
+        preview = buildRulerPreview(document.querySelector<HTMLElement>('.gemini-timeline-bar'));
         void setRulerTimelineEnabled(true);
-        return preview;
+        return preview.element;
       },
       unmount: (element) => {
+        if (preview?.element === element) {
+          preview.destroy();
+          preview = null;
+        }
+        element?.remove();
         hiddenTimelineElements.forEach((timelineElement) =>
           timelineElement.classList.remove('gv-coach-timeline-hidden'),
         );
         hiddenTimelineElements = [];
-        if (preview === element) preview = null;
-        element?.remove();
       },
     },
     anchor: () => null,
@@ -127,7 +127,7 @@ export async function maybeShowRulerTimelineCoachmark(
       label: t('timelineRulerCoachmarkToggle', 'Use ruler timeline'),
       initial: true,
       onChange: (on) => {
-        setPreviewStyle(preview, on);
+        setPreviewStyle(preview?.element ?? null, on);
         return setRulerTimelineEnabled(on);
       },
     },
@@ -141,7 +141,7 @@ export async function maybeShowRulerTimelineCoachmark(
 export const rulerTimelineCoachmarkStep: CoachmarkSequenceStep = {
   id: RULER_TIMELINE_COACHMARK_ID,
   isEligible: async () =>
-    location.hostname === 'gemini.google.com' && !(await loadRulerTimelineEnabled()),
+    location.hostname === 'gemini.google.com' && !(await loadRulerIntroUnneeded()),
   show: (progress) => maybeShowRulerTimelineCoachmark({ progress }),
 };
 

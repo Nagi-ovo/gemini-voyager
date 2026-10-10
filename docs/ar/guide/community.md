@@ -46,7 +46,7 @@
 
 إذا وجدت خطأً قابلاً لإعادة الإنتاج، فقدّم مشكلة (Issue) على GitHub. أما طلبات الميزات والأفكار والأسئلة فمكانها Discussions وليس Issues:
 
-- [تقديم تقرير خطأ](https://github.com/Nagi-ovo/voyager/issues/new?template=bug_report.yml)
-- [اقتراح ميزة أو فكرة (Discussions)](https://github.com/Nagi-ovo/voyager/discussions)
+- [تقديم تقرير خطأ](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml)
+- [اقتراح ميزة أو فكرة (Discussions)](https://github.com/voyager-crew/voyager/discussions)
 
 شكراً لدعمك لـ Voyager! ❤️

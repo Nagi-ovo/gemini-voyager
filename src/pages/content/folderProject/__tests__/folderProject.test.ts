@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 
-import { extractConvId, isNewChatPath, waitForElement } from '../index';
+import { extractConvId, isNewChatPath } from '../index';
 
 // Mock getTranslationSyncUnsafe used inside the module
 vi.mock('@/utils/i18n', () => ({
@@ -108,43 +108,6 @@ describe('extractConvId', () => {
 });
 
 // ============================================================================
-// waitForElement
-// ============================================================================
-
-describe('waitForElement', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-    document.body.innerHTML = '';
-  });
-
-  it('resolves immediately when element already exists with nonzero height', async () => {
-    document.body.innerHTML = '<div id="target" style="height:10px">hello</div>';
-    const el = document.getElementById('target')!;
-    // jsdom getBoundingClientRect returns 0 by default; mock it
-    vi.spyOn(el, 'getBoundingClientRect').mockReturnValue({
-      height: 10,
-    } as DOMRect);
-
-    const promise = waitForElement('#target', 1000);
-    // resolve animation frame
-    await vi.runAllTimersAsync();
-    const result = await promise;
-    expect(result).toBe(el);
-  });
-
-  it('resolves null on timeout if element never appears', async () => {
-    const promise = waitForElement('#nonexistent', 100);
-    await vi.runAllTimersAsync();
-    const result = await promise;
-    expect(result).toBeNull();
-  });
-});
-
-// ============================================================================
 // startFolderProject — feature-off skip
 // ============================================================================
 
@@ -172,41 +135,6 @@ describe('startFolderProject — feature disabled', () => {
 
     // No picker should be injected
     expect(document.querySelector('.gv-fp-picker-container')).toBeNull();
-  });
-});
-
-// ============================================================================
-// waitForElement — model selector target
-// ============================================================================
-
-describe('waitForElement — model selector', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-    document.body.innerHTML = '';
-  });
-
-  it('resolves when .input-area-switch-label exists with nonzero height', async () => {
-    const btn = document.createElement('button');
-    btn.className = 'input-area-switch-label';
-    btn.textContent = 'Pro';
-    vi.spyOn(btn, 'getBoundingClientRect').mockReturnValue({ height: 20 } as DOMRect);
-    document.body.appendChild(btn);
-
-    const promise = waitForElement('.input-area-switch-label', 1000);
-    await vi.runAllTimersAsync();
-    const result = await promise;
-    expect(result).toBe(btn);
-  });
-
-  it('resolves null when model selector does not appear within timeout', async () => {
-    const promise = waitForElement('.input-area-switch-label', 100);
-    await vi.runAllTimersAsync();
-    const result = await promise;
-    expect(result).toBeNull();
   });
 });
 
@@ -340,107 +268,58 @@ describe('startFolderProject — runtime toggle', () => {
       window.history.pushState({}, '', '/');
     }
   });
-});
 
-// ============================================================================
-// applyPendingFolderSelection
-// ============================================================================
+  it('removes a late picker mount after toggling off and on while its anchor is loading', async () => {
+    vi.useFakeTimers();
+    window.history.pushState({}, '', '/app');
+    try {
+      (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+        (
+          _defaults: Record<string, unknown>,
+          callback: (result: Record<string, unknown>) => void,
+        ) => {
+          callback({ [StorageKeys.FOLDER_PROJECT_ENABLED]: true });
+        },
+      );
+      const { startFolderProject } = await import('../index');
+      const manager = {
+        getFolders: vi.fn().mockReturnValue([]),
+        ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+        addConversationToFolderFromNative: vi.fn(),
+      };
+      startFolderProject(manager as unknown as Parameters<typeof startFolderProject>[0]);
 
-describe('applyPendingFolderSelection', () => {
-  const mockFolders = [
-    { id: 'folder-1', name: 'Work', instructions: 'Be professional', parentId: null },
-    { id: 'folder-2', name: 'Personal', instructions: null, parentId: null },
-  ];
+      const toggle = (enabled: boolean) => {
+        for (const listener of storageListeners) {
+          listener({ [StorageKeys.FOLDER_PROJECT_ENABLED]: { newValue: enabled } }, 'sync');
+        }
+      };
+      toggle(false);
+      toggle(true);
 
-  let chip: HTMLButtonElement;
+      const anchor = document.createElement('div');
+      anchor.className = 'model-picker-container';
+      vi.spyOn(anchor, 'getBoundingClientRect').mockReturnValue({ height: 20 } as DOMRect);
+      document.body.appendChild(anchor);
+      await vi.advanceTimersByTimeAsync(50);
+      expect(document.querySelectorAll('.gv-fp-picker-container')).toHaveLength(1);
 
-  beforeEach(() => {
-    vi.resetModules();
-    document.body.innerHTML = '';
-    chip = document.createElement('button');
-    chip.className = 'gv-fp-chip';
-    chip.textContent = 'Select folder…';
-    // Clear call history on local storage mocks
-    (chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockClear();
-    (chrome.storage.local.remove as unknown as ReturnType<typeof vi.fn>).mockClear();
-  });
+      document.querySelector<HTMLButtonElement>('.gv-fp-chip')!.click();
+      await vi.advanceTimersByTimeAsync(0);
+      const dropdown = document.querySelector<HTMLElement>('.gv-fp-dropdown')!;
+      expect(dropdown.hidden).toBe(false);
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('auto-selects folder when pending ID exists in storage', async () => {
-    (chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
-      [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: 'folder-1',
-    });
-    (chrome.storage.local.remove as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-      undefined,
-    );
-
-    const { applyPendingFolderSelection } = await import('../index');
-    const mockManager = {
-      getFolders: vi.fn().mockReturnValue(mockFolders),
-      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
-      addConversationToFolderFromNative: vi.fn(),
-    };
-
-    await applyPendingFolderSelection(
-      mockManager as unknown as Parameters<typeof applyPendingFolderSelection>[0],
-      chip,
-    );
-
-    expect(chip.textContent).toBe('📁 Work');
-    expect(chip.dataset.selected).toBe('folder-1');
-    expect(chrome.storage.local.remove).toHaveBeenCalledWith([
-      StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID,
-    ]);
-  });
-
-  it('does nothing when no pending folder ID exists', async () => {
-    (chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({});
-
-    const { applyPendingFolderSelection } = await import('../index');
-    const mockManager = {
-      getFolders: vi.fn().mockReturnValue(mockFolders),
-      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
-      addConversationToFolderFromNative: vi.fn(),
-    };
-
-    await applyPendingFolderSelection(
-      mockManager as unknown as Parameters<typeof applyPendingFolderSelection>[0],
-      chip,
-    );
-
-    expect(chip.textContent).toBe('Select folder…');
-    expect(chrome.storage.local.remove).not.toHaveBeenCalled();
-  });
-
-  it('clears pending ID even when folder ID does not match any folder', async () => {
-    (chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
-      [StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID]: 'nonexistent',
-    });
-    (chrome.storage.local.remove as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
-      undefined,
-    );
-
-    const { applyPendingFolderSelection } = await import('../index');
-    const mockManager = {
-      getFolders: vi.fn().mockReturnValue(mockFolders),
-      ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
-      addConversationToFolderFromNative: vi.fn(),
-    };
-
-    await applyPendingFolderSelection(
-      mockManager as unknown as Parameters<typeof applyPendingFolderSelection>[0],
-      chip,
-    );
-
-    expect(chip.textContent).toBe('Select folder…');
-    expect(chrome.storage.local.remove).toHaveBeenCalledWith([
-      StorageKeys.FOLDER_PROJECT_PENDING_FOLDER_ID,
-    ]);
+      toggle(false);
+      expect(document.querySelector('.gv-fp-picker-container')).toBeNull();
+      document.body.click();
+      expect(dropdown.hidden).toBe(false);
+    } finally {
+      vi.useRealTimers();
+      window.history.pushState({}, '', '/');
+    }
   });
 });
+
 // ============================================================================
 // Regression: follow-up message should not re-inject instructions when the
 // pendingSend timer fires before the URL change is detected (slow responses).

@@ -122,22 +122,6 @@ export const CHATGPT_TEMPORARY_HANDOFF_CSS = `
   }
   @keyframes gv-chatgpt-handoff-spin { to { transform: rotate(360deg); } }
 
-  .gv-chatgpt-handoff-toast {
-    position: fixed;
-    left: 50%;
-    bottom: 28px;
-    z-index: 2147483004;
-    max-width: min(560px, calc(100vw - 28px));
-    padding: 11px 15px;
-    border-radius: 11px;
-    color: #fff;
-    background: #202020;
-    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.25);
-    font: 13px/1.45 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    transform: translateX(-50%);
-  }
-  .gv-chatgpt-handoff-toast--error { background: #991b1b; }
-
   html.dark .gv-chatgpt-handoff-dialog,
   html.dark-theme .gv-chatgpt-handoff-dialog,
   body.dark-theme .gv-chatgpt-handoff-dialog,
