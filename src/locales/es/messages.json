@@ -1809,6 +1809,22 @@
     "message": "Código",
     "description": "Diagram toolbar button that shows the diagram source code"
   },
+  "tableCopyMarkdownButton": {
+    "message": "Copiar la tabla como Markdown",
+    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as Markdown"
+  },
+  "tableCopyTsvButton": {
+    "message": "Copiar la tabla para hojas de cálculo (TSV)",
+    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as tab-separated values for spreadsheets"
+  },
+  "tableCopyCopied": {
+    "message": "Tabla copiada",
+    "description": "Toast after a reply table was copied to the clipboard"
+  },
+  "tableCopyFailed": {
+    "message": "No se pudo copiar la tabla",
+    "description": "Toast when copying a reply table to the clipboard failed"
+  },
   "echartsFullscreenButton": {
     "message": "Pantalla completa",
     "description": "Button title to open an ECharts diagram in fullscreen"

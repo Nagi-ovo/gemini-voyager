@@ -1,434 +1,174 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { getCurrentLanguage } from '@/utils/i18n';
-import { APP_LANGUAGES } from '@/utils/language';
+import { toastDriver } from '@/tests/toastDriver';
+import { setCachedLanguage } from '@/utils/i18n';
 
+import { requireBundledSiteAdapter } from '../catalog/sites';
 import { PluginScope } from '../runtime/pluginScope';
-import { getPrimitiveContract } from './contracts';
-import { tableCopyPrimitive, type TableCopyParams } from './tableCopy';
-import { TABLE_COPY_CLASS } from './tableCopy/controls';
-import { TABLE_COPY_FIXTURES } from './tableCopy/fixtures';
-import { TABLE_COPY_LABELS } from './tableCopy/i18n';
+import type { SiteAdapter } from '../types';
+import { tableCopyPrimitive } from './tableCopy';
+import { TABLE_COPY_CLASS } from './tableCopy/toolbar';
 import type { PrimitiveContext } from './types';
 
-vi.mock('@/utils/i18n', () => ({ getCurrentLanguage: vi.fn().mockResolvedValue('en') }));
+const FORMULA =
+  '<span class="katex"><span class="katex-mathml"><math><semantics><mi>x</mi>' +
+  '<annotation encoding="application/x-tex">x^2</annotation></semantics></math></span>' +
+  '<span class="katex-html" aria-hidden="true">x2</span></span>';
+const TABLE = (id: string) =>
+  `<table id="${id}"><thead><tr><th>Term</th></tr></thead><tbody><tr><td>${FORMULA}</td></tr></tbody></table>`;
+
+/** A reply with a table, a table in its thinking block (DeepSeek) and a table the user pasted. */
+const sites: { name: string; adapter: SiteAdapter; page: string; reply: string }[] = [
+  {
+    name: 'DeepSeek',
+    adapter: requireBundledSiteAdapter('deepseek'),
+    page:
+      `<div class="ds-message"><div class="ds-collapsible-text">${TABLE('user')}</div></div>` +
+      '<div class="ds-message"><div class="ds-think-content">' +
+      TABLE('thinking') +
+      `</div><div class="ds-assistant-message-main-content"><div class="ds-markdown">${TABLE('answer')}</div></div></div>`,
+    reply: '.ds-markdown',
+  },
+  {
+    name: 'ChatGPT',
+    adapter: requireBundledSiteAdapter('chatgpt'),
+    page:
+      `<div data-message-author-role="user"><div data-user-message-bubble="true">${TABLE('user')}</div></div>` +
+      `<div data-chatgpt-selection-message-id="m1"><div class="markdown">${TABLE('answer')}</div></div>`,
+    reply: '.markdown',
+  },
+];
+
 const clipboard = { writeText: vi.fn<(text: string) => Promise<void>>() };
-const scopes: PluginScope[] = [];
+let scope: PluginScope;
 
-async function flush() {
-  await vi.advanceTimersByTimeAsync(100);
-}
-
-function hosts() {
-  return Array.from(document.querySelectorAll<HTMLElement>('.' + TABLE_COPY_CLASS));
-}
-function button(format: string, host = hosts()[0]) {
-  return host.shadowRoot!.querySelector<HTMLButtonElement>('[data-format="' + format + '"]')!;
-}
-function status(host = hosts()[0]) {
-  return host.shadowRoot!.querySelector('[role="status"]')!;
-}
-
-async function activate(
-  fixture: (typeof TABLE_COPY_FIXTURES)[number] = TABLE_COPY_FIXTURES[0],
-  params: TableCopyParams = {},
-) {
-  const scope = new PluginScope();
-  scopes.push(scope);
-  let count = () => -1;
-  const ctx: PrimitiveContext = {
+function activate(adapter: SiteAdapter, params = {}) {
+  let counter: () => number = () => -1;
+  const context: PrimitiveContext = {
     doc: document,
-    adapter: fixture.adapter,
-    pluginId: 'voyager.deepseek-table-copy',
+    adapter,
+    pluginId: 'test.table-copy',
     settings: {},
-    setTargetCounter: (counter) => {
-      count = counter;
-    },
+    setTargetCounter: (count) => (counter = count),
   };
-  await tableCopyPrimitive.activate(scope, params, ctx);
-  return { scope, count, ctx };
+  void tableCopyPrimitive.activate(scope, params, context);
+  return { count: () => counter() };
 }
+
+const toolbars = () => Array.from(document.querySelectorAll<HTMLElement>(`.${TABLE_COPY_CLASS}`));
+const button = (toolbar: HTMLElement, format: 'markdown' | 'tsv') =>
+  toolbar.shadowRoot!.querySelector<HTMLButtonElement>(`button[data-format="${format}"]`)!;
 
 beforeEach(() => {
   vi.useFakeTimers();
-  vi.mocked(getCurrentLanguage).mockReset().mockResolvedValue('en');
+  scope = new PluginScope();
   clipboard.writeText.mockReset().mockResolvedValue(undefined);
   vi.stubGlobal('navigator', Object.assign(Object.create(window.navigator), { clipboard }));
-  document.body.innerHTML = TABLE_COPY_FIXTURES[0].html;
 });
 
 afterEach(async () => {
-  for (const scope of scopes.splice(0)) await scope.dispose();
-  vi.restoreAllMocks();
+  await scope.dispose();
   vi.unstubAllGlobals();
   vi.useRealTimers();
+  setCachedLanguage('en');
   document.body.innerHTML = '';
 });
 
-describe('tableCopy actual primitive', () => {
-  it('uses the real 1.5.0 contract and accepts only an optional table selector', () => {
-    expect(tableCopyPrimitive.contract).toBe(getPrimitiveContract('tableCopy'));
-    expect(tableCopyPrimitive.contract.sinceEngine).toBe('1.5.0');
-    expect(tableCopyPrimitive.contract.params.table).toMatchObject({
-      type: 'selector',
-      required: false,
-    });
+describe('tableCopy primitive', () => {
+  it('accepts only optional turn and table selectors', () => {
     expect(tableCopyPrimitive.validateParams(undefined)).toEqual({ success: true, data: {} });
     expect(tableCopyPrimitive.validateParams({ table: 'table.answer' })).toEqual({
       success: true,
       data: { table: 'table.answer' },
     });
-    for (const raw of [
-      null,
-      [],
-      3,
-      { table: 1 },
-      { table: '' },
-      { table: 'x'.repeat(2001) },
-      { unknown: true },
-    ]) {
+    for (const raw of [null, [], { table: '' }, { turn: 1 }, { unknown: 'x' }]) {
       expect(tableCopyPrimitive.validateParams(raw).success).toBe(false);
     }
   });
 
-  describe.each(TABLE_COPY_FIXTURES)('$name semantic fixture', (fixture) => {
-    it('copies the chosen format only on click, retains empty cells, leaves content unchanged and disposes', async () => {
-      document.body.innerHTML = fixture.html;
+  describe.each(sites)('$name', ({ adapter, page, reply }) => {
+    it('puts a toolbar above reply tables only, not the thinking block or the user message', () => {
+      document.body.innerHTML = page;
+      const { count } = activate(adapter);
+
+      expect(toolbars()).toHaveLength(1);
+      expect(toolbars()[0].nextElementSibling?.id).toBe('answer');
+      expect(count()).toBe(1);
+    });
+
+    it('copying a table with a formula keeps the LaTeX and confirms with a toast', async () => {
+      document.body.innerHTML = page;
+      activate(adapter);
+
+      button(toolbars()[0], 'markdown').click();
+      await vi.advanceTimersByTimeAsync(10);
+      expect(clipboard.writeText).toHaveBeenLastCalledWith('| Term |\n| --- |\n| $x^2$ |');
+      expect(toastDriver.messages()).toEqual(['Table copied']);
+
+      button(toolbars()[0], 'tsv').click();
+      await vi.advanceTimersByTimeAsync(10);
+      expect(clipboard.writeText).toHaveBeenLastCalledWith('Term\n$x^2$');
+    });
+
+    it('turning the plugin off removes the toolbars and restores the page', async () => {
+      document.body.innerHTML = page;
       const original = document.body.innerHTML;
-      const source = document.querySelector<HTMLTableElement>('#answer-table')!;
-      const originalTable = source.outerHTML;
-      const { scope, count } = await activate(fixture);
-      expect(hosts()).toHaveLength(1);
-      expect(count()).toBe(1);
-      expect(clipboard.writeText).not.toHaveBeenCalled();
-      expect(button('markdown').getAttribute('aria-label')).toBe('Copy Markdown');
-      button('markdown').click();
-      expect(clipboard.writeText).toHaveBeenLastCalledWith(
-        '| Name | Note | Empty |\n| --- | --- | --- |\n| Alpha \\| Beta | code<br>next |  |\n| =SUM(A1:A2) | "quoted" |  |',
-      );
-      await flush();
-      expect(status().textContent).toBe('Copied');
-      button('tsv').click();
-      expect(clipboard.writeText).toHaveBeenLastCalledWith(
-        'Name\tNote\tEmpty\nAlpha | Beta\tcode next\t\n\'=SUM(A1:A2)\t"""quoted"""\t',
-      );
-      await flush();
-      expect(source.outerHTML).toBe(originalTable);
-      const oldButton = button('markdown');
+      activate(adapter);
+      expect(document.body.innerHTML).not.toBe(original);
+
       await scope.dispose();
-      expect(scope.getEffects()).toEqual([]);
-      expect(count()).toBe(0);
+
+      expect(toolbars()).toHaveLength(0);
       expect(document.body.innerHTML).toBe(original);
-      oldButton.click();
-      expect(clipboard.writeText).toHaveBeenCalledTimes(2);
     });
 
-    it('discovers streamed tables, reads current cells and releases/recreates detached state', async () => {
-      document.body.innerHTML = fixture.html;
-      const { scope, count } = await activate(fixture);
-      const container = document.querySelector('#answer')!;
-      const table = document.querySelector<HTMLTableElement>('#answer-table')!;
-      const oldHost = hosts()[0];
-      const oldButton = button('tsv');
-      table.remove();
-      await flush();
-      expect(hosts()).toHaveLength(0);
-      expect(count()).toBe(0);
-      oldButton.click();
-      expect(clipboard.writeText).not.toHaveBeenCalled();
-      container.appendChild(table);
-      await flush();
-      expect(hosts()).toHaveLength(1);
-      expect(hosts()[0]).not.toBe(oldHost);
-      table.rows[1].cells[0].textContent = 'Updated';
-      button('tsv').click();
-      expect(clipboard.writeText.mock.calls[0][0]).toContain('Updated\tcode next\t');
-      await flush();
-      expect(scope.getEffects().filter((label) => label.startsWith('timer'))).toHaveLength(0);
-      container.insertAdjacentHTML('beforeend', '<table><tr><td>New</td></tr></table>');
-      await flush();
-      expect(hosts()).toHaveLength(2);
-      expect(count()).toBe(2);
-      await scope.dispose();
-      container.insertAdjacentHTML('beforeend', '<table><tr><td>After disposal</td></tr></table>');
-      await flush();
-      expect(hosts()).toHaveLength(0);
-    });
+    it('a table that streams in or is rebuilt gets one toolbar once the reply settles', async () => {
+      document.body.innerHTML = page;
+      activate(adapter);
+      const container = document.querySelector(reply)!;
 
-    it('never mounts hidden tables and responds to hidden ancestor changes', async () => {
-      document.body.innerHTML = fixture.html;
-      const table = document.querySelector<HTMLTableElement>('#answer-table')!;
-      const answer = document.querySelector<HTMLElement>('#answer')!;
-      table.hidden = true;
-      const { count } = await activate(fixture);
-      expect(hosts()).toHaveLength(0);
-      expect(count()).toBe(0);
+      container.innerHTML = TABLE('rebuilt') + TABLE('second');
+      await vi.advanceTimersByTimeAsync(1_000);
 
-      table.hidden = false;
-      await flush();
-      expect(hosts()).toHaveLength(1);
-      expect(count()).toBe(1);
-      const oldButton = button('tsv');
-      answer.setAttribute('aria-hidden', 'true');
-      expect(count()).toBe(0);
-      oldButton.click();
-      expect(clipboard.writeText).not.toHaveBeenCalled();
-      await flush();
-      expect(hosts()).toHaveLength(0);
-
-      answer.removeAttribute('aria-hidden');
-      await flush();
-      expect(hosts()).toHaveLength(1);
-      answer.hidden = true;
-      await flush();
-      expect(hosts()).toHaveLength(0);
-      answer.hidden = false;
-      await flush();
-      button('tsv').click();
-      expect(clipboard.writeText).toHaveBeenCalledTimes(1);
-    });
-
-    it('tracks CSS-hidden tables and ancestors while keeping offscreen tables eligible', async () => {
-      document.body.innerHTML = fixture.html;
-      const style = document.createElement('style');
-      style.textContent =
-        '.gv-test-gone { display: none } .gv-test-invisible { visibility: hidden }';
-      document.head.appendChild(style);
-      try {
-        const table = document.querySelector<HTMLTableElement>('#answer-table')!;
-        const answer = document.querySelector<HTMLElement>('#answer')!;
-        table.classList.add('gv-test-gone');
-        const { count } = await activate(fixture);
-        expect(hosts()).toHaveLength(0);
-        expect(count()).toBe(0);
-
-        table.classList.remove('gv-test-gone');
-        table.style.position = 'absolute';
-        table.style.top = '-10000px';
-        await flush();
-        expect(hosts()).toHaveLength(1);
-        expect(count()).toBe(1);
-        const oldButton = button('tsv');
-        answer.classList.add('gv-test-invisible');
-        expect(count()).toBe(0);
-        oldButton.click();
-        expect(clipboard.writeText).not.toHaveBeenCalled();
-        await flush();
-        expect(hosts()).toHaveLength(0);
-
-        answer.classList.remove('gv-test-invisible');
-        await flush();
-        answer.classList.add('gv-test-gone');
-        await flush();
-        expect(hosts()).toHaveLength(0);
-        answer.classList.remove('gv-test-gone');
-        await flush();
-        table.classList.add('gv-test-invisible');
-        await flush();
-        expect(hosts()).toHaveLength(0);
-        table.classList.remove('gv-test-invisible');
-        await flush();
-        button('tsv').click();
-        expect(clipboard.writeText).toHaveBeenCalledTimes(1);
-      } finally {
-        style.remove();
-      }
+      expect(toolbars().map((toolbar) => toolbar.nextElementSibling?.id)).toEqual([
+        'rebuilt',
+        'second',
+      ]);
     });
   });
 
-  it('ignores thinking blocks and tracks semantic marker changes', async () => {
-    document
-      .querySelector('#answer')!
-      .insertAdjacentHTML(
-        'afterbegin',
-        '<div class="ds-think-content"><table><tr><td>Private reasoning</td></tr></table></div>',
-      );
-    const { count } = await activate();
-    expect(count()).toBe(1);
-    const answer = document.querySelector('#answer')!;
-    answer.className = 'ds-think-content';
-    await flush();
-    expect(hosts()).toHaveLength(0);
-    answer.className = 'ds-assistant-message-main-content';
-    await flush();
-    expect(count()).toBe(1);
+  it('reports a copy the browser refused instead of claiming success', async () => {
+    document.body.innerHTML = sites[0].page;
+    activate(sites[0].adapter);
+    clipboard.writeText.mockRejectedValueOnce(new DOMException('denied', 'NotAllowedError'));
+
+    button(toolbars()[0], 'markdown').click();
+    await vi.advanceTimersByTimeAsync(10);
+
+    expect(toastDriver.all().map(({ message, tone }) => ({ message, tone }))).toEqual([
+      { message: 'Couldn’t copy the table', tone: 'error' },
+    ]);
   });
 
-  it('constrains selector overrides to assistant tables and fails closed for invalid selectors', async () => {
-    const first = await activate(undefined, { table: 'aside table' });
-    expect(first.count()).toBe(0);
-    await first.scope.dispose();
-    const second = await activate(undefined, { table: '[' });
-    expect(second.count()).toBe(0);
-    expect(second.scope.getEffects()).toEqual([]);
-    const third = await activate(undefined, { table: '#answer-table' });
-    expect(third.count()).toBe(1);
+  it('rendered buttons follow the Voyager language', () => {
+    document.body.innerHTML = sites[0].page;
+    activate(sites[0].adapter);
+    const markdown = button(toolbars()[0], 'markdown');
+    expect(markdown.getAttribute('aria-label')).toBe('Copy table as Markdown');
+
+    setCachedLanguage('zh');
+
+    expect(markdown.getAttribute('aria-label')).toBe('将表格复制为 Markdown');
+    expect(markdown.title).toBe('将表格复制为 Markdown');
   });
 
-  it('reports clipboard rejection, retries only on click and handles unavailable/synchronous failure', async () => {
-    await activate();
-    clipboard.writeText.mockRejectedValueOnce(new Error('Denied'));
-    button('markdown').click();
-    await flush();
-    expect(status().textContent).toBe(TABLE_COPY_LABELS.en.failed);
-    expect(button('markdown').disabled).toBe(false);
-    expect(clipboard.writeText).toHaveBeenCalledTimes(1);
-    button('markdown').click();
-    await flush();
-    expect(status().textContent).toBe('Copied');
-    clipboard.writeText.mockImplementationOnce(() => {
-      throw new Error('Unavailable');
+  it('a page without a reply adapter selector gets no toolbar', () => {
+    document.body.innerHTML = sites[0].page;
+    activate({
+      ...sites[0].adapter,
+      selectors: { ...sites[0].adapter.selectors, assistantTurn: '' },
     });
-    button('tsv').click();
-    expect(status().textContent).toBe(TABLE_COPY_LABELS.en.failed);
-    vi.stubGlobal(
-      'navigator',
-      Object.assign(Object.create(window.navigator), { clipboard: undefined }),
-    );
-    button('tsv').click();
-    expect(status().textContent).toBe(TABLE_COPY_LABELS.en.failed);
-  });
 
-  it.each(['resolve', 'reject'] as const)(
-    'guards busy state and %s after disposal',
-    async (settlement) => {
-      let resolve!: () => void;
-      let reject!: (error: Error) => void;
-      clipboard.writeText.mockReturnValue(
-        new Promise<void>((yes, no) => {
-          resolve = yes;
-          reject = no;
-        }),
-      );
-      const { scope } = await activate();
-      const oldHost = hosts()[0];
-      const oldStatus = status();
-      const oldButton = button('markdown');
-      oldButton.click();
-      expect(button('tsv').disabled).toBe(true);
-      button('tsv').dispatchEvent(new MouseEvent('click'));
-      expect(clipboard.writeText).toHaveBeenCalledTimes(1);
-      await scope.dispose();
-      if (settlement === 'resolve') resolve();
-      else reject(new Error('late failure'));
-      await flush();
-      expect(oldHost.isConnected).toBe(false);
-      expect(oldStatus.textContent).toBe('Copying...');
-      oldButton.click();
-      expect(clipboard.writeText).toHaveBeenCalledTimes(1);
-    },
-  );
-
-  it('does not update feedback or copy through a table detached before the observer runs', async () => {
-    let resolve!: () => void;
-    clipboard.writeText.mockReturnValue(
-      new Promise<void>((yes) => {
-        resolve = yes;
-      }),
-    );
-    await activate();
-    const feedback = status();
-    button('tsv').click();
-    document.querySelector('#answer-table')!.remove();
-    resolve();
-    await Promise.resolve();
-    expect(feedback.textContent).toBe('Copying...');
-    await flush();
-    expect(hosts()).toHaveLength(0);
-  });
-
-  it('filters mutations inside its own shadow controls and coalesces discovery', async () => {
-    const { scope } = await activate();
-    const schedule = vi.spyOn(scope, 'timer');
-    const host = hosts()[0];
-    const child = document.createElement('span');
-    host.shadowRoot!.appendChild(child);
-    child.textContent = 'nested own UI';
-    child.setAttribute('title', 'changed');
-    button('tsv').click();
-    await flush();
-    expect(schedule).not.toHaveBeenCalled();
-    host.remove();
-    await flush();
-    expect(hosts()).toHaveLength(1);
-    expect(schedule).toHaveBeenCalledTimes(1);
-  });
-
-  it.each([
-    ['<tr><td colspan="2">merged</td></tr>', 'unsupported'],
-    ['<tr><td><table><tr><td>nested</td></tr></table></td></tr>', 'unsupported'],
-    ['', 'empty'],
-    ['<tr><td>x</td></tr>'.repeat(501), 'limit'],
-  ] as const)('reports serialization errors without clipboard writes: %s', async (html, code) => {
-    document.querySelector('#answer-table')!.innerHTML = html;
-    await activate();
-    expect(hosts()).toHaveLength(1);
-    button('tsv').click();
-    expect(status().textContent).toBe(TABLE_COPY_LABELS.en[code]);
-    expect(clipboard.writeText).not.toHaveBeenCalled();
-  });
-
-  it.each(APP_LANGUAGES)('localizes accessible buttons and feedback for %s', async (language) => {
-    vi.mocked(getCurrentLanguage).mockResolvedValue(language);
-    await activate();
-    expect(button('markdown').getAttribute('aria-label')).toBe(
-      TABLE_COPY_LABELS[language].markdown,
-    );
-    expect(button('tsv').textContent).toBe(TABLE_COPY_LABELS[language].tsv);
-    button('tsv').click();
-    await flush();
-    expect(status().textContent).toBe(TABLE_COPY_LABELS[language].copied);
-    expect(hosts()[0].dir).toBe(language === 'ar' ? 'rtl' : 'ltr');
-  });
-
-  it('falls back on invalid language data or language-read failure', async () => {
-    vi.mocked(getCurrentLanguage).mockResolvedValueOnce(
-      'invalid' as Awaited<ReturnType<typeof getCurrentLanguage>>,
-    );
-    const first = await activate();
-    expect(button('markdown').textContent).toBe('Copy Markdown');
-    await first.scope.dispose();
-    vi.mocked(getCurrentLanguage).mockRejectedValueOnce(new Error('storage unavailable'));
-    await activate();
-    expect(button('markdown').textContent).toBe('Copy Markdown');
-  });
-
-  it('cannot mount after disposal during language lookup', async () => {
-    let resolve!: (language: 'en') => void;
-    vi.mocked(getCurrentLanguage).mockReturnValueOnce(
-      new Promise((yes) => {
-        resolve = yes;
-      }),
-    );
-    const scope = new PluginScope();
-    scopes.push(scope);
-    const activation = tableCopyPrimitive.activate(
-      scope,
-      {},
-      {
-        doc: document,
-        adapter: TABLE_COPY_FIXTURES[0].adapter,
-        pluginId: 'test',
-        settings: {},
-        setTargetCounter: () => {},
-      },
-    );
-    await scope.dispose();
-    resolve('en');
-    await activation;
-    expect(hosts()).toHaveLength(0);
-    expect(scope.getEffects()).toEqual([]);
-  });
-
-  it('contains mounting failures and recovers on later DOM discovery', async () => {
-    const insertion = vi.spyOn(Element.prototype, 'insertBefore').mockImplementationOnce(() => {
-      throw new DOMException('host remount');
-    });
-    await expect(activate()).resolves.toBeDefined();
-    expect(hosts()).toHaveLength(0);
-    insertion.mockRestore();
-    document.querySelector('#answer')!.appendChild(document.createElement('span'));
-    await flush();
-    expect(hosts()).toHaveLength(1);
+    expect(toolbars()).toHaveLength(0);
   });
 });

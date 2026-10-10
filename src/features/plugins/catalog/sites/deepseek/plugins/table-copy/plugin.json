@@ -1,56 +1,66 @@
 {
   "$schema": "https://voyager.nagi.fun/plugin.schema.json",
   "id": "voyager.deepseek-table-copy",
-  "name": "DeepSeek - Table Copy",
+  "name": "DeepSeek · Table Copy",
   "version": "1.0.0",
-  "description": "Copy assistant tables as Markdown or spreadsheet-safe TSV using explicit copy buttons.",
+  "description": "Copy any table in a reply as Markdown, with formulas kept as LaTeX, or as TSV to paste into a spreadsheet.",
+  "changelog": "First release: table copy for DeepSeek through the tableCopy primitive.",
   "i18n": {
     "zh": {
-      "name": "DeepSeek - 表格复制",
-      "description": "使用明确的复制按钮，将助手表格复制为 Markdown 或经过电子表格安全处理的 TSV。"
+      "name": "DeepSeek · 表格复制",
+      "description": "将回复中的表格复制为 Markdown（公式保留为 LaTeX），或复制为 TSV 粘贴到电子表格。",
+      "changelog": "首个版本：通过 tableCopy 原语为 DeepSeek 提供表格复制。"
     },
     "zh_TW": {
-      "name": "DeepSeek - 表格複製",
-      "description": "使用明確的複製按鈕，將助理表格複製為 Markdown 或經過試算表安全處理的 TSV。"
+      "name": "DeepSeek · 表格複製",
+      "description": "將回覆中的表格複製為 Markdown（公式保留為 LaTeX），或複製為 TSV 貼到試算表。",
+      "changelog": "首個版本：透過 tableCopy 原語為 DeepSeek 提供表格複製。"
     },
     "ja": {
-      "name": "DeepSeek - 表のコピー",
-      "description": "専用のコピーボタンで、アシスタントの表を Markdown または表計算ソフト向けの安全な TSV としてコピーします。"
+      "name": "DeepSeek · 表のコピー",
+      "description": "回答内の表を Markdown（数式は LaTeX のまま）または表計算ソフトに貼り付けられる TSV としてコピーします。",
+      "changelog": "初版：tableCopy プリミティブで DeepSeek の表のコピーを提供します。"
     },
     "ko": {
-      "name": "DeepSeek - 표 복사",
-      "description": "복사 버튼으로 어시스턴트의 표를 Markdown 또는 스프레드시트용으로 안전하게 처리된 TSV로 복사합니다."
+      "name": "DeepSeek · 표 복사",
+      "description": "답변의 표를 Markdown(수식은 LaTeX 그대로) 또는 스프레드시트에 붙여 넣을 TSV로 복사합니다.",
+      "changelog": "첫 릴리스: tableCopy 프리미티브로 DeepSeek 표 복사를 제공합니다."
     },
     "fr": {
-      "name": "DeepSeek - Copie de tableaux",
-      "description": "Copiez les tableaux de l’assistant en Markdown ou en TSV sécurisé pour les tableurs avec des boutons dédiés."
+      "name": "DeepSeek · Copie de tableaux",
+      "description": "Copiez un tableau d’une réponse en Markdown, formules conservées en LaTeX, ou en TSV à coller dans un tableur.",
+      "changelog": "Première version : copie de tableaux sur DeepSeek via la primitive tableCopy."
     },
     "es": {
-      "name": "DeepSeek - Copia de tablas",
-      "description": "Copia las tablas del asistente como Markdown o TSV seguro para hojas de cálculo mediante botones específicos."
+      "name": "DeepSeek · Copia de tablas",
+      "description": "Copia una tabla de la respuesta como Markdown, con las fórmulas en LaTeX, o como TSV para pegarla en una hoja de cálculo.",
+      "changelog": "Primera versión: copia de tablas en DeepSeek mediante la primitiva tableCopy."
     },
     "pt": {
-      "name": "DeepSeek - Cópia de tabelas",
-      "description": "Copie tabelas do assistente como Markdown ou TSV seguro para planilhas usando botões específicos."
+      "name": "DeepSeek · Cópia de tabelas",
+      "description": "Copie uma tabela da resposta como Markdown, com as fórmulas em LaTeX, ou como TSV para colar numa planilha.",
+      "changelog": "Primeira versão: cópia de tabelas no DeepSeek pela primitiva tableCopy."
     },
     "ru": {
-      "name": "DeepSeek - Копирование таблиц",
-      "description": "Копируйте таблицы ассистента в Markdown или безопасный для электронных таблиц TSV с помощью отдельных кнопок."
+      "name": "DeepSeek · Копирование таблиц",
+      "description": "Копируйте таблицу из ответа в Markdown с формулами в LaTeX или в TSV для вставки в электронную таблицу.",
+      "changelog": "Первая версия: копирование таблиц в DeepSeek через примитив tableCopy."
     },
     "ar": {
-      "name": "DeepSeek - نسخ الجداول",
-      "description": "انسخ جداول المساعد بتنسيق Markdown أو TSV آمن لجداول البيانات باستخدام أزرار نسخ مخصصة."
+      "name": "DeepSeek · نسخ الجداول",
+      "description": "انسخ أي جدول في الرد بتنسيق Markdown مع إبقاء الصيغ بصيغة LaTeX، أو بتنسيق TSV للصقه في جدول بيانات.",
+      "changelog": "الإصدار الأول: نسخ الجداول في DeepSeek عبر الأساسية tableCopy."
     }
   },
   "author": "voyager-official",
   "category": "productivity",
   "license": "GPL-3.0-or-later",
-  "engine": ">=1.5.0",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/deepseek/plugins/table-copy",
+  "engine": ">=1.8.0",
   "tier": "declarative",
   "matches": ["https://chat.deepseek.com/*"],
   "requires": {
-    "handlers": ["tableCopy"],
-    "semantic": ["assistantTurn"]
+    "handlers": ["tableCopy"]
   },
   "contributes": {
     "domOps": [
