@@ -18,7 +18,9 @@
  *     AI Studio keep Voyager's own accent; the popup's accent picker changes
  *     it) and no `native` op: every shipped primitive already runs there as a
  *     native Voyager feature (timeline, formula copy, Vim), and a second copy
- *     would fight it. CSS and reversible DOM ops only.
+ *     would fight it. CSS and reversible DOM ops only;
+ *   - the local-only rules in `localPluginRules.ts`: `gv-` classes, semantic
+ *     keys every targeted site declares, and settings the popup can render.
  */
 import type { Result } from '@/core/types/common';
 
@@ -29,6 +31,7 @@ import { NATIVE_SURFACE_MATCHES } from '../sites/nativeSurfaces';
 import { DEFAULT_ADAPTERS } from '../sites/registry';
 import type { PluginManifest, SiteAdapter } from '../types';
 import { toLocalPluginId } from './localPluginId';
+import { localPluginRuleIssues } from './localPluginRules';
 
 export interface ValidatedLocalPlugin {
   readonly manifest: PluginManifest;
@@ -94,6 +97,7 @@ export function validateLocalManifest(
       });
     });
   }
+  issues.push(...localPluginRuleIssues(manifest, sites));
 
   return issues.length > 0
     ? { success: false, error: issues }

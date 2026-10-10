@@ -241,6 +241,12 @@ A plugin for Gemini or AI Studio may not declare `theme` (those pages keep
 Voyager's own accent) or any `native` op (every shipped primitive, the
 timeline, formula copy and Vim, already runs there as a native Voyager
 feature, and a second copy would fight it): CSS and reversible DOM ops only.
+`local/localPluginRules.ts` adds three rules that turn a plugin which would
+import and then do nothing into an actionable error: `addClass` adds one
+`gv-` prefixed class; every semantic key the plugin relies on (op targets,
+`requires.semantic`, a primitive's keys) is declared by every site its
+`matches` target, or the popup would only show `needs-semantic`; and settings
+are `boolean`, `number` or `select`, the kinds the popup renders a control for.
 Stored records are re-validated on every read by
 `local/LocalPluginSource.ts`, and at runtime `PluginHost` and the brand theme
 refuse a theme or native op by the page's real host
