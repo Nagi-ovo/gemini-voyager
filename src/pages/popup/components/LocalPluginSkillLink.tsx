@@ -28,9 +28,9 @@ export function LocalPluginSkillLink({ t }: { t: (key: TranslationKey) => string
 
   return (
     <div className="space-y-1.5" data-testid="local-plugin-skill-link">
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-muted-foreground text-[11px]">{t('localPluginSkillHint')}</p>
-        <Button variant="outline" size="sm" className="shrink-0" onClick={() => void copyLink()}>
+      <p className="text-muted-foreground text-[11px]">{t('localPluginSkillHint')}</p>
+      <div>
+        <Button variant="outline" size="sm" onClick={() => void copyLink()}>
           <span className="inline-flex items-center gap-1.5">
             {copy === 'copied' ? (
               <Check className="h-3.5 w-3.5" aria-hidden="true" />
