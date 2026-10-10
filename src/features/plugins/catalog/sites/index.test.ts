@@ -41,7 +41,6 @@ describe('bundled catalog discovery', () => {
       'sites/claude/plugins/cjk-render-fix/plugin.json',
       'sites/claude/plugins/reading-width/plugin.json',
       'sites/deepseek/plugins/formula-copy/plugin.json',
-      'sites/deepseek/plugins/reading-typography/plugin.json',
       'sites/deepseek/plugins/reading-width/plugin.json',
       'sites/deepseek/plugins/table-copy/plugin.json',
       'sites/deepseek/plugins/timeline/plugin.json',
@@ -54,10 +53,7 @@ describe('bundled catalog discovery', () => {
         expect(file).toMatch(/\.css$/);
         expect(css.length).toBeGreaterThan(0);
       }
-      const declares =
-        JSON.parse(entry.manifestJson).contributes?.styles?.some((style: { file?: string }) =>
-          Boolean(style.file),
-        ) ?? false;
+      const declares = JSON.parse(entry.manifestJson).contributes?.styles?.length > 0;
       expect(Object.keys(entry.styles).length > 0).toBe(declares);
     }
   });
