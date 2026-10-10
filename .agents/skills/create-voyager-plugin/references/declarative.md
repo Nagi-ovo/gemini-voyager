@@ -23,9 +23,9 @@ lists the known sites when `--site` is unknown.
 
 Then replace every `TODO`: the English `name` and `description` first, then the
 nine other locales, then the real CSS and DOM ops. Add `contributes.settings`
-only for values a user should control; a `{{settingKey}}` token in CSS or in a
-`setStyle` value is how a setting reaches the page. Add a one-line `changelog`
-when a later version changes behavior.
+only for values a user should control; a `{{settingKey}}` token in CSS, a
+`setStyle` value or a `setAttribute` value is how a setting reaches the page.
+Add a one-line `changelog` when a later version changes behavior.
 
 ```bash
 bun run plugin:check src/features/plugins/catalog/sites/<site>/plugins/<id>

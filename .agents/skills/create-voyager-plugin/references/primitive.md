@@ -35,8 +35,13 @@ and usually lands in the same PR.
    fails when the two lists disagree.
 4. `verbs/paramsBaseline.json`: append the entry. Never edit an existing one.
 5. Tests: the parametric two-site test, plus the contract test staying green.
-6. The manifest that uses it: `requires.handlers: ["<name>"]` and an `engine`
-   range whose minimum is at least `sinceEngine`.
+6. The manifest that uses it: a `native` op naming it and an `engine` range
+   whose minimum is at least `sinceEngine`. `requires.handlers` is optional;
+   the `native` op already counts as a required handler.
+7. The authoring material: add the name to the primitive enums in
+   `docs/public/plugin.schema.json` (`schema.test.ts` pins them to the
+   contracts) and run `bun run skills:build` so the public
+   write-voyager-plugin skill documents it (a test fails while it is stale).
 
 ```bash
 bun run test src/features/plugins

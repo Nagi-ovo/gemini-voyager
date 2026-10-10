@@ -203,11 +203,8 @@ with any AI the user already uses, while Voyager itself stays offline:
 
 - `local/pluginAuthoringPrompt.ts` turns the sentence and a chosen site (the
   active tab's when supported) into a self-contained prompt: the request, the
-  site's `matches`, the contract derived from the gate's own exports (`OP_KINDS`,
-  `REQUIRED_STRINGS`, the attribute allowlist), the site's semantic anchors, a
-  minimal example, and "reply with exactly one ```json block". Its tests run the
-  embedded example and every op template through `validateLocalManifest` for
-  every site, so the prompt cannot drift from the gate.
+  plugin contract for that site (see "One contract, four outputs" below), and
+  "reply with exactly one ```json block".
 - The user copies the prompt and sends it themselves. Voyager never sends it,
   opens or deep-links an AI page, reads one back, or makes a request.
 - `local/pluginReply.ts` takes the pasted reply (bounded, linear fence scan;
@@ -228,6 +225,32 @@ with any AI the user already uses, while Voyager itself stays offline:
   rules above, but only over the install the preview saw: if the same id was
   installed, changed or removed meanwhile, nothing is written and the preview
   is refreshed for a new review.
+
+**One contract, four outputs.** `local/authoring/pluginContract.ts`
+(`buildPluginContract(site, { audience })`) is the single description of what a
+local plugin may contain: manifest fields, styles, page changes, settings, the
+local rules, the site's anchors and notes, the primitives (read only through
+`primitiveReference.ts`), what is not possible, and examples. Four outputs
+render it:
+
+- the popup prompt above (`audience: 'chat'`: inline CSS, no primitives);
+- the public agent skill `docs/public/skills/write-voyager-plugin/SKILL.md`
+  (`authoringDocs.ts`), committed and served at
+  `https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md`. Regenerate it
+  with `bun run skills:build`; `authoringDocs.test.ts` fails while it is stale,
+  so a new primitive, a changed `site.json` or a changed local rule shows up
+  there;
+- the `AGENTS.md` that `create-voyager-plugin init` writes next to a new plugin;
+- the examples, which `pluginContract.test.ts` runs through
+  `validateLocalManifest` (file examples through `readLocalPluginFiles`) for
+  every site and both audiences, so no output can teach what the gate refuses.
+
+`packages/create-voyager-plugin/` bundles the same gate and the bundled site
+adapters into one dependency-free Node file (`bun run cli:build`): `init` writes
+a passing `plugin.json`, `style.css` and `AGENTS.md`, and `check` runs
+`readLocalPluginFiles` plus `validateLocalManifest` offline, exit 0 or 1. Its
+tests hold it to parity with the in-process gate over a corpus. The package
+version follows the extension (`scripts/bump-version.js`).
 
 The gate (`local/validateLocalManifest.ts`) is the remote catalog's gate plus
 local-only rules, never a weaker one: `validateManifest` with the CSS and
