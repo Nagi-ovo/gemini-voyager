@@ -333,7 +333,11 @@ host's untouched code block; a label counts as a language only when it is shaped
 host's localized "plain text" label leaves the block to content detection. New diagram kinds follow
 the PATTERN note at the top of that file, and each site gets one `diagram-rendering` plugin listing
 its diagram ops: ChatGPT's lists `echarts` and `wavedrom`, since ChatGPT draws Mermaid itself, and
-`mermaid` waits for a site that needs it. The formula-copy,
+`mermaid` waits for a site that needs it. `codeCollapse` (since 1.8.0, optional `codeBlock` /
+`code` / `action` selectors, blocks defaulting to the adapter's `codeBlock` inside `assistantTurn`
+and outside `thinkingBlock`) is Gemini's long code block collapse on another site: one engine in
+`pages/content/codeBlockCollapse/engine.ts` drives both, Gemini with its blocks expanded until the
+user collapses them, the primitive with them collapsed plus expand all / collapse all. The formula-copy,
 Vim, Claude-timeline and ChatGPT-timeline builtins are now manifests that invoke these primitives;
 the shared timeline engine lives in `../timeline/TimelineEngine.ts`. Its catalog adapter
 (`../timeline/adapters/catalog/`) accumulates markers across virtualized windows (`turnMerge.ts`)

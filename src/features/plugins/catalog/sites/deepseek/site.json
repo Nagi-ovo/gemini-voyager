@@ -7,6 +7,7 @@
     "userTurn": ".ds-message:has(.ds-collapsible-text):not(:has(.ds-assistant-message-main-content, .ds-think-content))",
     "assistantTurn": ".ds-message:has(.ds-assistant-message-main-content, .ds-think-content)",
     "thinkingBlock": ".ds-think-content",
+    "codeBlock": ".md-code-block",
     "composer": "textarea.ds-scroll-area"
   },
   "theme": {

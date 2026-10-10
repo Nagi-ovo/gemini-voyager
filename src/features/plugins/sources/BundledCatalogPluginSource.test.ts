@@ -17,6 +17,7 @@ describe('BundledCatalogPluginSource', () => {
       'voyager.chatgpt-user-latex',
       'voyager.claude-cjk-render-fix',
       'voyager.claude-reading-width',
+      'voyager.deepseek-code-collapse',
       'voyager.deepseek-formula-copy',
       'voyager.deepseek-reading-typography',
       'voyager.deepseek-reading-width',

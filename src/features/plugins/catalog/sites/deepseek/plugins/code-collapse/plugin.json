@@ -1,0 +1,65 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.deepseek-code-collapse",
+  "name": "DeepSeek · Code Folding",
+  "version": "1.0.0",
+  "description": "Fold long code blocks in answers, with a toggle on each block and expand all / collapse all. The code and DeepSeek's copy button stay intact.",
+  "i18n": {
+    "zh": {
+      "name": "DeepSeek · 代码折叠",
+      "description": "折叠回答里较长的代码块，每块都有展开/收起按钮，也可一键全部展开或收起。代码和 DeepSeek 的复制按钮保持原样。"
+    },
+    "zh_TW": {
+      "name": "DeepSeek · 程式碼摺疊",
+      "description": "摺疊回答中較長的程式碼區塊，每塊都有展開/收合按鈕，也能一鍵全部展開或收合。程式碼與 DeepSeek 的複製按鈕維持原樣。"
+    },
+    "ja": {
+      "name": "DeepSeek · コードの折りたたみ",
+      "description": "回答内の長いコードブロックを折りたたみます。ブロックごとの切り替えと、すべて展開・すべて折りたたみに対応。コードと DeepSeek のコピーボタンはそのままです。"
+    },
+    "ko": {
+      "name": "DeepSeek · 코드 접기",
+      "description": "답변 속 긴 코드 블록을 접습니다. 블록마다 펼치기/접기 버튼이 있고 모두 펼치기·모두 접기도 됩니다. 코드와 DeepSeek 복사 버튼은 그대로 유지됩니다."
+    },
+    "fr": {
+      "name": "DeepSeek · Repli du code",
+      "description": "Replie les longs blocs de code des réponses, avec un bouton par bloc et tout déplier / tout replier. Le code et le bouton de copie de DeepSeek restent intacts."
+    },
+    "es": {
+      "name": "DeepSeek · Plegado de código",
+      "description": "Contrae los bloques de código largos de las respuestas, con un botón por bloque y expandir todo / contraer todo. El código y el botón de copiar de DeepSeek quedan intactos."
+    },
+    "pt": {
+      "name": "DeepSeek · Recolher código",
+      "description": "Recolhe os blocos de código longos das respostas, com um botão em cada bloco e expandir tudo / recolher tudo. O código e o botão de copiar do DeepSeek ficam intactos."
+    },
+    "ru": {
+      "name": "DeepSeek · Сворачивание кода",
+      "description": "Сворачивает длинные блоки кода в ответах: кнопка у каждого блока, а также «развернуть всё» и «свернуть всё». Код и кнопка копирования DeepSeek не меняются."
+    },
+    "ar": {
+      "name": "DeepSeek · طي الشيفرة",
+      "description": "يطوي كتل الشيفرة الطويلة في الإجابات، مع زر لكل كتلة وخيارَي توسيع الكل وطي الكل. تبقى الشيفرة وزر النسخ في DeepSeek كما هما."
+    }
+  },
+  "author": "voyager-official",
+  "category": "readability",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/deepseek/plugins/code-collapse",
+  "engine": ">=1.8.0",
+  "tier": "declarative",
+  "matches": ["https://chat.deepseek.com/*"],
+  "requires": {
+    "handlers": ["codeCollapse"],
+    "semantic": ["assistantTurn", "codeBlock"]
+  },
+  "contributes": {
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "codeCollapse",
+        "params": { "action": ".md-code-block-banner [role=\"button\"]" }
+      }
+    ]
+  }
+}

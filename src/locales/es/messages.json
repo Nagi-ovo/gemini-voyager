@@ -246,6 +246,14 @@
     "message": "Contraer",
     "description": "Collapse prompt text"
   },
+  "codeBlockExpandAll": {
+    "message": "Expandir todos los bloques de código",
+    "description": "Button that expands every collapsed long code block on the page"
+  },
+  "codeBlockCollapseAll": {
+    "message": "Contraer todos los bloques de código",
+    "description": "Button that collapses every long code block on the page"
+  },
   "pm_reorder": {
     "message": "Arrastra para reordenar (teclas ↑/↓)",
     "description": "Prompt list reorder handle"

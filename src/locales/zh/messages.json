@@ -246,6 +246,14 @@
     "message": "收起",
     "description": "收起提示词文本"
   },
+  "codeBlockExpandAll": {
+    "message": "展开全部代码块",
+    "description": "Button that expands every collapsed long code block on the page"
+  },
+  "codeBlockCollapseAll": {
+    "message": "收起全部代码块",
+    "description": "Button that collapses every long code block on the page"
+  },
   "pm_reorder": {
     "message": "拖动调整顺序（↑/↓ 键）",
     "description": "Prompt list reorder handle"

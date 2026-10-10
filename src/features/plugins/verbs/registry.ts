@@ -6,6 +6,7 @@
  * Every entry is first-party code bundled in the extension; a manifest can
  * only pick one by name and pass validated parameters.
  */
+import { codeCollapsePrimitive } from './codeCollapse';
 import { PRIMITIVE_CONTRACTS } from './contracts';
 import { echartsPrimitive } from './echarts';
 import { formulaCopyPrimitive } from './formulaCopy';
@@ -26,6 +27,7 @@ const PRIMITIVES: ReadonlyMap<string, Primitive<never>> = new Map<string, Primit
   [echartsPrimitive.contract.name, echartsPrimitive as Primitive<never>],
   [wavedromPrimitive.contract.name, wavedromPrimitive as Primitive<never>],
   [tableCopyPrimitive.contract.name, tableCopyPrimitive as Primitive<never>],
+  [codeCollapsePrimitive.contract.name, codeCollapsePrimitive as Primitive<never>],
 ]);
 
 export function getPrimitive(name: string): Primitive<never> | undefined {
