@@ -2889,6 +2889,18 @@
     "message": "복사하지 못했습니다. 프롬프트를 선택해 직접 복사하세요.",
     "description": "Shown when the clipboard refused the prompt"
   },
+  "localPluginSkillHint": {
+    "message": "코딩 에이전트를 쓰고 있나요? Voyager 플러그인 skill을 건네면 plugin.json과 style.css를 작성하고 오프라인으로 검사합니다. 그다음 「파일 가져오기」로 두 파일을 고르세요.",
+    "description": "Points coding-agent users at the public write-voyager-plugin skill"
+  },
+  "localPluginSkillCopy": {
+    "message": "skill 링크 복사",
+    "description": "Button that copies the skill link"
+  },
+  "localPluginSkillCopyFailed": {
+    "message": "복사하지 못했습니다. 이 링크를 직접 복사하세요:",
+    "description": "Shown with the link when the clipboard refused it"
+  },
   "localPluginDescribeReplyLabel": {
     "message": "AI의 답변",
     "description": "Label of the field for the AI reply"

@@ -2889,6 +2889,18 @@
     "message": "複製失敗。請選取提示詞後自行複製。",
     "description": "Shown when the clipboard refused the prompt"
   },
+  "localPluginSkillHint": {
+    "message": "在用程式開發 Agent？把 Voyager 的外掛 skill 交給它：它會寫好 plugin.json 和 style.css 並離線檢查，之後用「匯入檔案」選取這兩個檔案即可。",
+    "description": "Points coding-agent users at the public write-voyager-plugin skill"
+  },
+  "localPluginSkillCopy": {
+    "message": "複製 skill 連結",
+    "description": "Button that copies the skill link"
+  },
+  "localPluginSkillCopyFailed": {
+    "message": "複製失敗，請手動複製這個連結：",
+    "description": "Shown with the link when the clipboard refused it"
+  },
   "localPluginDescribeReplyLabel": {
     "message": "AI 的回覆",
     "description": "Label of the field for the AI reply"

@@ -17,6 +17,7 @@ import type { LocalPluginsController } from '../hooks/useLocalPlugins';
 import { LocalPluginCssSource } from './LocalPluginCssSource';
 import { LocalPluginInspection } from './LocalPluginInspection';
 import { LocalPluginIssueList } from './LocalPluginIssueList';
+import { LocalPluginSkillLink } from './LocalPluginSkillLink';
 import { REPLY_PROBLEM_KEYS, changeText, warningText } from './localPluginPreviewText';
 
 const FIELD_CLASS =
@@ -153,6 +154,7 @@ export function LocalPluginComposer({
       data-testid="local-plugin-composer"
     >
       <p className="text-muted-foreground text-[11px]">{t('localPluginDescribeHint')}</p>
+      <LocalPluginSkillLink t={t} />
 
       <label className="block space-y-1">
         <span className="text-xs font-medium">{t('localPluginDescribeRequestLabel')}</span>

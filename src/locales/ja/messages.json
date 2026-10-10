@@ -2889,6 +2889,18 @@
     "message": "コピーできませんでした。プロンプトを選択して手動でコピーしてください。",
     "description": "Shown when the clipboard refused the prompt"
   },
+  "localPluginSkillHint": {
+    "message": "コーディングエージェントを使っていますか？Voyager のプラグイン skill を渡せば、plugin.json と style.css を書いてオフラインでチェックします。あとは「ファイルをインポート」で両方を選ぶだけです。",
+    "description": "Points coding-agent users at the public write-voyager-plugin skill"
+  },
+  "localPluginSkillCopy": {
+    "message": "skill のリンクをコピー",
+    "description": "Button that copies the skill link"
+  },
+  "localPluginSkillCopyFailed": {
+    "message": "コピーできませんでした。このリンクを手動でコピーしてください：",
+    "description": "Shown with the link when the clipboard refused it"
+  },
   "localPluginDescribeReplyLabel": {
     "message": "AI の回答",
     "description": "Label of the field for the AI reply"
