@@ -5,12 +5,6 @@ export const contract: PrimitiveContract = {
   sinceEngine: 'next',
   semantic: ['assistantTurn', 'codeBlock'],
   params: {
-    codeBlock: {
-      type: 'selector',
-      required: false,
-      description:
-        "One code block inside a reply, the element that carries the collapsed state. Defaults to the site adapter's codeBlock.",
-    },
     code: {
       type: 'selector',
       required: false,

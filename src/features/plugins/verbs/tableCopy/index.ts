@@ -17,62 +17,34 @@ import type { Primitive } from '../types';
 import { type TableCopyFormat, serializeTable } from './serialize';
 import { type TableCopyToolbar, createTableCopyToolbar, tableCopyText } from './toolbar';
 
-export interface TableCopyParams {
-  readonly turn?: string;
-  readonly table?: string;
-}
+export type TableCopyParams = Readonly<Record<string, never>>;
 
-const PARAM_NAMES: readonly string[] = ['turn', 'table'];
-const MAX_SELECTOR_LENGTH = 2_000;
 /** Streaming replies rebuild their tables; toolbars follow once the reply settles. */
 const RESCAN_DELAY_MS = 300;
 const TOAST_MS = 2_000;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function querySafe(root: ParentNode, selector: string): Element[] {
-  try {
-    return Array.from(root.querySelectorAll(selector));
-  } catch {
-    return [];
-  }
-}
-
-function isTable(element: Element): element is HTMLTableElement {
-  return element.localName === 'table';
-}
 
 export const tableCopyPrimitive: Primitive<TableCopyParams> = {
   contract: getPrimitiveContract('tableCopy')!,
 
   validateParams(raw: unknown) {
-    if (raw !== undefined && !isRecord(raw)) {
-      return { success: false, error: [{ path: 'params', message: 'must be an object' }] };
-    }
     const issues: ManifestIssue[] = [];
-    const params: Record<string, string> = {};
-    for (const [key, value] of Object.entries(raw ?? {})) {
-      if (!PARAM_NAMES.includes(key)) {
+    if (raw !== undefined && (typeof raw !== 'object' || raw === null || Array.isArray(raw))) {
+      issues.push({ path: 'params', message: 'must be an object' });
+    } else if (raw) {
+      for (const key of Object.keys(raw)) {
         issues.push({ path: `params.${key}`, message: 'unknown parameter' });
-      } else if (typeof value !== 'string' || !value.trim() || value.length > MAX_SELECTOR_LENGTH) {
-        issues.push({ path: `params.${key}`, message: 'must be a non-empty selector' });
-      } else {
-        params[key] = value;
       }
     }
-    return issues.length > 0 ? { success: false, error: issues } : { success: true, data: params };
+    return issues.length > 0 ? { success: false, error: issues } : { success: true, data: {} };
   },
 
-  activate(scope, params, context) {
+  activate(scope, _params, context) {
     const { doc, adapter } = context;
-    const turn = params.turn ?? adapter?.selectors.assistantTurn;
+    const turn = adapter?.selectors.assistantTurn;
     if (!turn) return;
-    const tableSelector = params.table ?? 'table';
     const thinking = adapter?.selectors.thinkingBlock;
     // Replies, not tables: a conversation without a table is not a plugin with no effect.
-    context.setTargetCounter(() => querySafe(doc, turn).length);
+    context.setTargetCounter(() => doc.querySelectorAll(turn).length);
 
     const toolbars = new Map<HTMLTableElement, TableCopyToolbar>();
     const hosts = new WeakSet<Node>();
@@ -111,9 +83,9 @@ export const tableCopyPrimitive: Primitive<TableCopyParams> = {
       for (const [table, toolbar] of Array.from(toolbars)) {
         if (!table.isConnected || toolbar.host.nextElementSibling !== table) remove(table);
       }
-      for (const reply of querySafe(doc, turn)) {
-        for (const table of querySafe(reply, tableSelector)) {
-          if (!isTable(table) || toolbars.has(table) || !eligible(table)) continue;
+      for (const reply of doc.querySelectorAll(turn)) {
+        for (const table of reply.querySelectorAll<HTMLTableElement>('table')) {
+          if (toolbars.has(table) || !eligible(table)) continue;
           const toolbar = createTableCopyToolbar(doc, (format) => void copy(table, format));
           hosts.add(toolbar.host);
           table.before(toolbar.host);

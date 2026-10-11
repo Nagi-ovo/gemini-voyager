@@ -1,13 +1,4 @@
 {
   "sinceEngine": "next",
-  "params": {
-    "turn": {
-      "type": "selector",
-      "required": false
-    },
-    "table": {
-      "type": "selector",
-      "required": false
-    }
-  }
+  "params": {}
 }

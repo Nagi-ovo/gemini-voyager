@@ -42,7 +42,7 @@ const sites: { name: string; adapter: SiteAdapter; page: string; reply: string }
 const clipboard = { writeText: vi.fn<(text: string) => Promise<void>>() };
 let scope: PluginScope;
 
-function activate(adapter: SiteAdapter, params = {}) {
+function activate(adapter: SiteAdapter) {
   let counter: () => number = () => -1;
   const context: PrimitiveContext = {
     doc: document,
@@ -51,7 +51,7 @@ function activate(adapter: SiteAdapter, params = {}) {
     settings: {},
     setTargetCounter: (count) => (counter = count),
   };
-  void tableCopyPrimitive.activate(scope, params, context);
+  void tableCopyPrimitive.activate(scope, {}, context);
   return { count: () => counter() };
 }
 
@@ -75,14 +75,20 @@ afterEach(async () => {
 });
 
 describe('tableCopy primitive', () => {
-  it('accepts only optional turn and table selectors', () => {
+  it('accepts empty params and rejects selector overrides or any other keys', () => {
     expect(tableCopyPrimitive.validateParams(undefined)).toEqual({ success: true, data: {} });
-    expect(tableCopyPrimitive.validateParams({ table: 'table.answer' })).toEqual({
-      success: true,
-      data: { table: 'table.answer' },
-    });
-    for (const raw of [null, [], { table: '' }, { turn: 1 }, { unknown: 'x' }]) {
-      expect(tableCopyPrimitive.validateParams(raw).success).toBe(false);
+    expect(tableCopyPrimitive.validateParams({})).toEqual({ success: true, data: {} });
+    for (const key of ['turn', 'table', 'unknown']) {
+      expect(tableCopyPrimitive.validateParams({ [key]: 'table.answer' })).toEqual({
+        success: false,
+        error: [{ path: `params.${key}`, message: 'unknown parameter' }],
+      });
+    }
+    for (const raw of [null, [], 'table', 1, false]) {
+      expect(tableCopyPrimitive.validateParams(raw)).toEqual({
+        success: false,
+        error: [{ path: 'params', message: 'must be an object' }],
+      });
     }
   });
 

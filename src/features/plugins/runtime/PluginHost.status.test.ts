@@ -96,6 +96,27 @@ afterEach(() => {
 });
 
 describe('PluginHost status machine (plan §4.2)', () => {
+  it('blocks code folding when its adapter lacks the native contract semantic keys', async () => {
+    const plugins = await new BundledCatalogPluginSource().list();
+    const codeCollapse = plugins.find((plugin) => plugin.id === 'voyager.deepseek-code-collapse');
+    expect(codeCollapse).toBeDefined();
+    const adapter = requireBundledSiteAdapter('deepseek');
+    expect(findIncompatibility({ manifest: codeCollapse!, adapter, hasPrimitive })).toBeNull();
+    expect(
+      findIncompatibility({ manifest: codeCollapse!, adapter: deepseek, hasPrimitive }),
+    ).toMatchObject({
+      kind: 'needs-semantic',
+      missingSemantic: ['assistantTurn', 'codeBlock'],
+    });
+    expect(
+      findIncompatibility({
+        manifest: codeCollapse!,
+        adapter: { ...deepseek, selectors: { assistantTurn: '.reply' } },
+        hasPrimitive,
+      }),
+    ).toMatchObject({ kind: 'needs-semantic', missingSemantic: ['codeBlock'] });
+  });
+
   it('mounts an unreleased bundled plugin on main and blocks it on the released engine', async () => {
     const plugins = await new BundledCatalogPluginSource().list();
     const tableCopy = plugins.find((plugin) => plugin.id === 'voyager.deepseek-table-copy');

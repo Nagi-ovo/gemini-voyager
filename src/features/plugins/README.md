@@ -362,8 +362,8 @@ host's untouched code block; a label counts as a language only when it is shaped
 host's localized "plain text" label leaves the block to content detection. New diagram kinds follow
 the PATTERN note at the top of that file, and each site gets one `diagram-rendering` plugin listing
 its diagram ops: ChatGPT's lists `echarts` and `wavedrom`, since ChatGPT draws Mermaid itself, and
-`mermaid` waits for a site that needs it. `codeCollapse` (unreleased, `sinceEngine: 'next'`, optional `codeBlock` /
-`code` / `action` selectors, blocks defaulting to the adapter's `codeBlock` inside `assistantTurn`
+`mermaid` waits for a site that needs it. `codeCollapse` (unreleased, `sinceEngine: 'next'`, optional
+`code` / `action` selectors, blocks from the adapter's `codeBlock` inside `assistantTurn`
 and outside `thinkingBlock`) is Gemini's long code block collapse on another site: one engine in
 `pages/content/codeBlockCollapse/engine.ts` drives both, Gemini with its blocks expanded until the
 user collapses them, the primitive with them collapsed plus expand all / collapse all. The formula-copy,
@@ -380,8 +380,8 @@ the host's own id for it where the site names one (`conversationIdAttribute` on 
 Claude's `data-conv-id`, or inside the turn's `turnItem`; a turn without it is unstarrable), else
 the URL when the turn entered the page (`turnOwnership.ts`).
 
-`tableCopy` (unreleased, `sinceEngine: 'next'`, optional `turn` / `table` selectors defaulting to the adapter's
-`assistantTurn` and `table`) puts a shadow-root toolbar before each reply table that copies it as
+`tableCopy` (unreleased, `sinceEngine: 'next'`, no parameters) finds tables inside the adapter's
+`assistantTurn` and puts a shadow-root toolbar before each reply table that copies it as
 Markdown or TSV. The Markdown is conversation export's own `extractTable`, and TSV reads the same
 `collectTableRows`, so formulas stay LaTeX and copy never drifts from export.
 

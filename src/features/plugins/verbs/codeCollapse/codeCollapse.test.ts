@@ -126,11 +126,18 @@ afterEach(async () => {
 describe('codeCollapse primitive', () => {
   it('accepts only optional selectors', () => {
     expect(codeCollapsePrimitive.validateParams(undefined)).toEqual({ success: true, data: {} });
-    const params = { codeBlock: '.md-code-block', code: 'pre', action: '[role="button"]' };
+    const params = { code: 'pre', action: '[role="button"]' };
     expect(codeCollapsePrimitive.validateParams(params)).toEqual({ success: true, data: params });
     for (const raw of [null, [], { code: ' ' }, { action: 1 }, { thresholdLines: 20 }]) {
       expect(codeCollapsePrimitive.validateParams(raw).success).toBe(false);
     }
+  });
+
+  it('rejects a codeBlock override because the site adapter owns the block selector', () => {
+    expect(codeCollapsePrimitive.validateParams({ codeBlock: '.md-code-block' })).toEqual({
+      success: false,
+      error: [{ path: 'params.codeBlock', message: 'unknown parameter' }],
+    });
   });
 
   it.each(sites)('a long $name code block collapses and expands', (site) => {

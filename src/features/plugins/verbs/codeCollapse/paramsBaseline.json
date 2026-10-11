@@ -1,10 +1,6 @@
 {
   "sinceEngine": "next",
   "params": {
-    "codeBlock": {
-      "type": "selector",
-      "required": false
-    },
     "code": {
       "type": "selector",
       "required": false

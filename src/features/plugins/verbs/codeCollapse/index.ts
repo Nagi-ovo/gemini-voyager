@@ -2,7 +2,7 @@
  * `codeCollapse` primitive: Gemini's long code block collapse
  * (`pages/content/codeBlockCollapse`) on another site's code blocks, through
  * the same engine, thresholds, toggle and labels. Blocks come from the
- * `codeBlock` param or the site adapter's `codeBlock`, inside its
+ * site adapter's `codeBlock`, inside its
  * `assistantTurn` and outside its `thinkingBlock`.
  *
  * Unlike Gemini, a long block starts collapsed: the plugin is opt-in to fold
@@ -24,12 +24,11 @@ import type { Primitive } from '../types';
 import { COLLAPSE_ALL_CLASS, createCollapseAllBar } from './codeCollapseAll';
 
 export interface CodeCollapseParams {
-  readonly codeBlock?: string;
   readonly code?: string;
   readonly action?: string;
 }
 
-const PARAM_NAMES: readonly string[] = ['codeBlock', 'code', 'action'];
+const PARAM_NAMES: readonly string[] = ['code', 'action'];
 const MAX_SELECTOR_LENGTH = 2_000;
 const DEFAULT_CODE = 'pre';
 const STYLE_ID = 'gv-code-collapse-style';
@@ -130,7 +129,7 @@ export const codeCollapsePrimitive: Primitive<CodeCollapseParams> = {
   activate(scope, params, context) {
     const { doc, adapter } = context;
     const turn = adapter?.selectors.assistantTurn;
-    const hostSelector = params.codeBlock ?? adapter?.selectors.codeBlock;
+    const hostSelector = adapter?.selectors.codeBlock;
     if (!turn || !hostSelector) return;
     const thinking = adapter?.selectors.thinkingBlock;
     context.setTargetCounter(() => doc.querySelectorAll(turn).length);
