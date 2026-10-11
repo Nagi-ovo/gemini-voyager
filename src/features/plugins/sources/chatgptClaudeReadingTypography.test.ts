@@ -49,7 +49,8 @@ const hosts: Host[] = [
       '<div data-turn-key="t1">' +
       '<div data-user-message-bubble="true"><p id="user">User</p></div>' +
       '<div id="answer" data-chatgpt-selection-message-id="m1" data-gv-spacing="host">' +
-      '<div class="markdown">' +
+      // Live answers carry [data-markdown-text-style]; `.markdown` is the earlier DOM.
+      '<div class="MarkdownRoot-a1b2" data-markdown-text-style="regular">' +
       prose(
         '<div data-markdown-copy="code-block"><div data-markdown-copy="exclude">python</div>' +
           '<div><code id="code"><span>print(1)</span></code><p id="code-p">x</p></div></div>' +

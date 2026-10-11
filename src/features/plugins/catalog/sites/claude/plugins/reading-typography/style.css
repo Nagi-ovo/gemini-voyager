@@ -7,9 +7,9 @@
  * Exclusions stop at .standard-markdown, so a list or table the host wraps
  * around the whole thread cannot switch the plugin off. */
 .gv-plugin-claude-reading-typography {
-  /* Line height ÷ text size, kept when only the size switch is on so a fixed
-   * line box grows with the text. Not measured yet: see the README. */
-  --gv-plugin-reading-line-ratio: 1.65;
+  /* Native 22 px line on 15 px text (fixed rem tokens), kept when only the
+   * size switch is on so the line box grows with the text. */
+  --gv-plugin-reading-line-ratio: 1.466667; /* 22 / 15 */
 }
 
 .gv-plugin-claude-reading-typography[data-gv-font-size='true']

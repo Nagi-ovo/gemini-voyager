@@ -42,8 +42,8 @@ plugin removes the scoped class, both switch attributes and the stylesheet.
 ## Verification
 
 - Page: pending a live check on a real Claude conversation.
-- Native values: pending (answer text, line height, table cells, inline code
-  and code blocks; the line ratio in `style.css` is unmeasured).
+- Native values (2026-10-11): answer text 15 px on a 22 px line (rem tokens,
+  ratio 22/15), inline code 0.9em. Table cells and code blocks: no sample yet.
 - Light theme: pending.
 - Dark theme: pending.
 - `bun run plugin:check src/features/plugins/catalog/sites/claude/plugins/reading-typography`: passes.

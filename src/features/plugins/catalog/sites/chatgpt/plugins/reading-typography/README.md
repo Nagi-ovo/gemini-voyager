@@ -42,8 +42,10 @@ plugin removes the scoped class, both switch attributes and the stylesheet.
 ## Verification
 
 - Page: pending a live check on a real ChatGPT conversation.
-- Native values: pending (answer text, line height, table cells, inline code
-  and code blocks; the line ratio in `style.css` is unmeasured).
+- Native values (2026-10-11): answer text 16 px on a 26 px line (rem tokens,
+  ratio 1.625), table cells 14 px / 20 px, inline code 0.93em, code blocks
+  12 px. The live answer root is `[data-markdown-text-style]`; `.markdown` is
+  kept for the earlier DOM.
 - Light theme: pending.
 - Dark theme: pending.
 - `bun run plugin:check src/features/plugins/catalog/sites/chatgpt/plugins/reading-typography`: passes.
