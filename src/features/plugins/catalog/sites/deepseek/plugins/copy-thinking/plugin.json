@@ -1,0 +1,65 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.deepseek-copy-thinking",
+  "name": "DeepSeek · Copy Thinking",
+  "version": "1.0.0",
+  "description": "Adds a copy button above the thinking section of a reply that copies the reasoning as plain text.",
+  "i18n": {
+    "zh": {
+      "name": "DeepSeek · 复制思考过程",
+      "description": "在回复的思考过程上方添加复制按钮，将推理内容复制为纯文本。"
+    },
+    "zh_TW": {
+      "name": "DeepSeek · 複製思考過程",
+      "description": "在回覆的思考過程上方加入複製按鈕，將推理內容複製為純文字。"
+    },
+    "ja": {
+      "name": "DeepSeek · 思考過程のコピー",
+      "description": "回答の思考過程の上にコピーボタンを追加し、推論をプレーンテキストとしてコピーします。"
+    },
+    "ko": {
+      "name": "DeepSeek · 사고 과정 복사",
+      "description": "답변의 사고 과정 위에 복사 버튼을 추가해 추론 내용을 일반 텍스트로 복사합니다."
+    },
+    "fr": {
+      "name": "DeepSeek · Copie du raisonnement",
+      "description": "Ajoute au-dessus du raisonnement d’une réponse un bouton qui le copie en texte brut."
+    },
+    "es": {
+      "name": "DeepSeek · Copia del razonamiento",
+      "description": "Añade sobre el razonamiento de una respuesta un botón que lo copia como texto sin formato."
+    },
+    "pt": {
+      "name": "DeepSeek · Cópia do raciocínio",
+      "description": "Adiciona acima do raciocínio de uma resposta um botão que o copia como texto simples."
+    },
+    "ru": {
+      "name": "DeepSeek · Копирование рассуждений",
+      "description": "Добавляет над рассуждениями ответа кнопку, которая копирует их как обычный текст."
+    },
+    "ar": {
+      "name": "DeepSeek · نسخ التفكير",
+      "description": "يضيف زر نسخ فوق قسم التفكير في الرد لنسخ الاستدلال كنص عادي."
+    }
+  },
+  "author": "voyager-official",
+  "category": "productivity",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/deepseek/plugins/copy-thinking",
+  "engine": ">=next",
+  "tier": "declarative",
+  "matches": ["https://chat.deepseek.com/*"],
+  "requires": {
+    "handlers": ["copyButton"],
+    "semantic": ["thinkingBlock"]
+  },
+  "contributes": {
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "copyButton",
+        "params": { "target": "thinkingBlock", "format": "text" }
+      }
+    ]
+  }
+}

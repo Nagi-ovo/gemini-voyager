@@ -69,6 +69,11 @@
       "official": true
     },
     {
+      "name": "deepseek-copy-thinking",
+      "source": "sites/deepseek/plugins/copy-thinking/plugin.json",
+      "official": true
+    },
+    {
       "name": "deepseek-code-collapse",
       "source": "sites/deepseek/plugins/code-collapse/plugin.json",
       "official": true
