@@ -6,6 +6,23 @@ import { domExtractorTestAdapter } from './domExtractorTestAdapter';
 const extractor = createContentExtractor(domExtractorTestAdapter);
 
 describe('exportRichText.inline', () => {
+  it.each([
+    ['paragraph', '<p>First<br>Second</p>', 'First\nSecond'],
+    [
+      'table cell',
+      '<table><tbody><tr><td>First<br>Second</td></tr></tbody></table>',
+      '| First Second |\n| --- |',
+    ],
+  ])('does not join words across <br> in an exported reply %s', (_kind, content, expectedText) => {
+    const assistant = document.createElement('div');
+    assistant.innerHTML = `<message-content><div class="markdown">${content}</div></message-content>`;
+
+    const extracted = extractor.extractAssistantContent(assistant);
+
+    expect(extracted.text).toBe(expectedText);
+    expect(extracted.html).toBe(content);
+  });
+
   it('preserves direct text around nested inline elements', () => {
     const assistant = document.createElement('div');
     assistant.innerHTML = `
