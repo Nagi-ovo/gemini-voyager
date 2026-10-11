@@ -3,12 +3,13 @@
  * blocks inside replies and shows a diagram before each one that a
  * {@link CodeBlockDiagram} claims, with a Diagram / Code toggle.
  *
- * PATTERN for another diagram primitive (`mermaid.ts` is the reference):
+ * PATTERN for another diagram primitive (`mermaid/` is the reference):
  *   1. Keep Gemini's renderer in `pages/content/<kind>/` and give it a site-neutral
  *      entry point: the theme comes from the caller, the library stays a lazy import.
- *   2. `verbs/<kind>.ts` defines a `CodeBlockDiagram` (matches / prepare / render) and a
- *      primitive whose `activate` calls `activateCodeBlockDiagram`.
- *   3. Contract `params: CODE_BLOCK_DIAGRAM_PARAMS`, a baseline entry and the registry binding.
+ *   2. `verbs/<kind>/index.ts` defines a `CodeBlockDiagram` (matches / prepare / render)
+ *      and a primitive whose `activate` calls `activateCodeBlockDiagram`.
+ *   3. `verbs/<kind>/contract.ts` uses `params: CODE_BLOCK_DIAGRAM_PARAMS`, next to its
+ *      `paramsBaseline.json`; the folder is discovered, so nothing else is registered.
  *   4. Each site's `diagram-rendering` manifest gets one more `native` op and handler.
  *
  * Host safety: the host's code block is never moved or edited. The panel goes
