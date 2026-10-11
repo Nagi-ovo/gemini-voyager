@@ -18,4 +18,6 @@ Guide: [Write your own plugin](https://voyager.nagi.fun/en/guide/write-a-plugin)
 
 ## Development
 
+Repository contributors may use `"engine": ">=next"` for an unreleased primitive. The CLI resolves it to the released engine plus one minor before checking; local popup imports require a concrete `>=x.y.z` from the primitive reference. Catalog publishing and release stamping supply that concrete version.
+
 From the Voyager repository root: `bun run cli:build` builds `dist/cli.mjs`; `bun run skills:build` also regenerates `docs/public/skills/write-voyager-plugin/SKILL.md`. Tests live in `test/` and run with the main suite.

@@ -1,6 +1,6 @@
 import { logger } from '@/core/services/LoggerService';
 
-import { PLUGIN_ENGINE_VERSION } from '../constants';
+import { resolveEngineVersion } from '../engineVersion';
 import { LocalPluginSource } from '../local/LocalPluginSource';
 import { isLocalPluginId } from '../local/localPluginId';
 import { HostCatalogSource } from '../remote/HostCatalogSource';
@@ -12,6 +12,7 @@ import type {
   PluginSourceContext,
   PluginSourceListing,
 } from '../types';
+import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '../verbs/contracts';
 import { BuiltinPluginSource } from './BuiltinPluginSource';
 import { BundledCatalogPluginSource } from './BundledCatalogPluginSource';
 
@@ -75,7 +76,7 @@ export interface MergePluginRecordsInput {
  *     outside the kill switch, only when its id is still free.
  */
 export function mergePluginRecords(input: MergePluginRecordsInput): SourcedPluginManifest[] {
-  const engineVersion = input.engineVersion ?? PLUGIN_ENGINE_VERSION;
+  const engineVersion = input.engineVersion ?? EFFECTIVE_PLUGIN_ENGINE_VERSION;
   const seen = new Set<string>();
   const merged: SourcedPluginManifest[] = [];
   const official = (record: SourcedPluginManifest): boolean => !isLocalPluginId(record.manifest.id);
@@ -103,12 +104,15 @@ export function mergePluginRecords(input: MergePluginRecordsInput): SourcedPlugi
     const remote = remoteById.get(id);
     remoteById.delete(id);
     if (remote) {
-      if (engineSatisfied(remote.manifest.engine, engineVersion)) {
+      if (engineSatisfied(resolveEngineVersion(remote.manifest.engine), engineVersion)) {
         merged.push(remote);
-      } else if (engineSatisfied(record.manifest.engine, engineVersion)) {
+      } else if (engineSatisfied(resolveEngineVersion(record.manifest.engine), engineVersion)) {
         merged.push({
           ...record,
-          blockedUpdate: { version: remote.manifest.version, engine: remote.manifest.engine },
+          blockedUpdate: {
+            version: remote.manifest.version,
+            engine: resolveEngineVersion(remote.manifest.engine),
+          },
         });
       } else {
         merged.push(remote);

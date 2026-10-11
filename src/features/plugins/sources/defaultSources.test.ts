@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { PluginManifest, PluginSource, PluginSourceContext, PluginSourceKind } from '../types';
+import { BundledCatalogPluginSource } from './BundledCatalogPluginSource';
 import {
   createDefaultPluginSources,
   listPluginManifests,
@@ -138,6 +139,28 @@ describe('listPluginManifestsWithSources with an atomic remote listing', () => {
 });
 
 describe('mergePluginRecords (plan D6 / D20)', () => {
+  it('selects next-engine remote updates on main while a released engine keeps its compatible snapshot', async () => {
+    const bundled = await new BundledCatalogPluginSource().list();
+    const future = bundled.find((plugin) => plugin.id === 'voyager.deepseek-table-copy')!;
+    expect(future.engine).toBe('>=1.8.0');
+    const snapshot = record(manifest('voyager.a', 'snapshot'), 'bundled-catalog');
+    const remote = record(
+      manifest('voyager.a', 'next-engine update', { engine: future.engine }),
+      'host-catalog',
+    );
+    const input = {
+      builtin: [],
+      snapshot: [snapshot],
+      remote: [remote],
+      remoteAuthoritative: true,
+      scopeUrl: SCOPE.url,
+    };
+    expect(mergePluginRecords(input)).toEqual([remote]);
+    expect(mergePluginRecords({ ...input, engineVersion: '1.7.0' })).toEqual([
+      { ...snapshot, blockedUpdate: { version: remote.manifest.version, engine: '>=1.8.0' } },
+    ]);
+  });
+
   it('lets a compatible remote entry replace the bundled snapshot', () => {
     const merged = mergePluginRecords({
       builtin: [],

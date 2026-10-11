@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+import { applyPluginEngineRelease, preparePluginEngineRelease } from './lib/pluginEngineRelease.ts';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -68,6 +70,8 @@ async function main() {
     }
     console.log(`New version:     ${newVersion}`);
 
+    const engineRelease = preparePluginEngineRelease(path.resolve(__dirname, '..'));
+
     // Update package.json
     updateJsonVersion(packageJsonPath, newVersion);
     console.log('Updated package.json');
@@ -102,6 +106,13 @@ async function main() {
     );
     fs.writeFileSync(xcodeProjectPath, updatedXcodeProject);
     console.log('Updated Xcode app and extension versions');
+
+    applyPluginEngineRelease(engineRelease);
+    if (engineRelease.engineVersion) {
+      console.log(
+        `Stamped plugin engine ${engineRelease.engineVersion} in ${engineRelease.updates.length} files`,
+      );
+    }
 
     console.log('Version bump complete! 🚀');
 

@@ -59,7 +59,13 @@ For architecture or distribution changes, read `src/features/plugins/README.md` 
   against every URL, so the gate (`sites/safeRegex.ts`) refuses anything that
   can backtrack.
 - `engine`'s minimum is at least the `sinceEngine` of every primitive the
-  plugin invokes. That ordering is the point: an old build then says "update
+  plugin invokes. For an unreleased primitive or added optional param, use
+  `sinceEngine: 'next'` in its contract/baseline and `"engine": ">=next"` in
+  the catalog manifest. Never hand-bump `PLUGIN_ENGINE_VERSION`: it records
+  the released engine, and `bun run bump` stamps all `next` entries at release.
+  Contributor checks and catalog publishing resolve the shared next version
+  (released + one minor, patch zero); published snapshots contain only concrete
+  versions. That ordering is the point: an old build then says "update
   Voyager" (`needs-engine`) instead of `needs-handler`, which is left meaning a
   real configuration mistake. `requires.handlers` is optional, since every
   `native` op already counts as a required handler (`pluginStatus.ts`); list a

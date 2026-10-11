@@ -76,6 +76,14 @@ bun run bump {VERSION}
 - `packages/create-voyager-plugin/package.json` (the plugin CLI follows the extension version)
 - `Voyager/Voyager.xcodeproj/project.pbxproj`
 
+The bump also stamps raw `sinceEngine: 'next'` declarations in primitive
+contracts, their imported data modules, and baselines (including later-added parameters), and `engine:
+">=next"` in catalog plugin manifests. They become the next minor engine
+version, and `src/features/plugins/constants.ts` records that released engine.
+When no `next` declaration exists, the engine version stays unchanged regardless
+of the extension version. Never hand-bump the plugin engine or choose the
+engine version while authoring an unreleased primitive.
+
 Do not manually edit the Xcode project version during a normal release. Verify all values after the bump:
 
 ```bash
@@ -105,6 +113,8 @@ Finish the version bump, 10-locale changelog, and any release fixes before runni
 ```bash
 bun run lint
 
+bun run plugin:release:check
+
 bun run typecheck
 bun run test
 bun run build:all
@@ -112,6 +122,11 @@ bun run cli:build
 ```
 
 `cli:build` stamps the bumped version into `packages/create-voyager-plugin/dist/cli.mjs`; the npm publish in step 5 ships that file.
+
+`plugin:release:check` fails if any raw `next` engine declaration remains in a
+primitive contract, imported contract data module, baseline or catalog manifest. Run it before release builds
+or publication; main's development tree may still contain `next`, so this gate
+is separate from `verify:pr`.
 
 Use `bun run test`, not raw `bun test`. `build:all` writes production outputs to `dist_chrome`, `dist_firefox`, and `dist_safari`; `dist_chrome_dev` is only for routine local Chrome development. Complete any additional checks required by `AGENTS.md` for the changed surfaces.
 
@@ -129,6 +144,18 @@ git add \
   packages/create-voyager-plugin/package.json \
   Voyager/Voyager.xcodeproj/project.pbxproj \
   src/pages/content/changelog/notes/{VERSION}.md
+git diff --name-only -- src/features/plugins/constants.ts \
+  ':(glob)src/features/plugins/verbs/**/*.ts' \
+  ':(glob)src/features/plugins/verbs/*/paramsBaseline.json' \
+  ':(glob)src/features/plugins/catalog/**/plugin.json'
+```
+
+Review the engine files listed by `git diff --name-only`, then stage each stamped
+path explicitly before committing. They are part of the same release as the
+five version sources and must be committed before tagging. Include only the
+bump's replacements; preserve unrelated changes in those files.
+
+```bash
 git diff --cached --name-only
 git diff --cached --check
 git commit -m "chore(release): v{VERSION}" \

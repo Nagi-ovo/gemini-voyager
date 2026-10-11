@@ -57,6 +57,15 @@ describe('validateLocalManifest', () => {
     expect(official.success && official.data.manifest.id).toBe('local.voyager.formula-copy');
   });
 
+  it('explains that local imports need a concrete engine instead of contributor next notation', () => {
+    const result = validateLocalManifest(authored({ engine: '>=next' }));
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error).toEqual([
+      { path: 'engine', message: expect.stringContaining('concrete engine version') },
+    ]);
+  });
+
   it('rejects a scripted tier, since local plugins never carry code', () => {
     expect(paths(authored({ tier: 'scripted' }))).toContain('tier');
   });

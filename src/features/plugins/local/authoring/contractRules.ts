@@ -6,11 +6,12 @@
  * chat tab whose reply the user pastes (CSS inlined, no primitives), `agent` is
  * a coding agent with a file system that runs `create-voyager-plugin check`.
  */
-import { PLUGIN_ENGINE_VERSION } from '../../constants';
+
 import { ALLOWED_ATTRIBUTE_NAMES, ALLOWED_ATTRIBUTE_PREFIXES } from '../../manifest/sinkGuards';
 import { REQUIRED_STRINGS } from '../../manifest/validate';
 import type { SemanticSelectorKey } from '../../sites/semanticKeys';
 import { PLUGIN_CATEGORIES } from '../../types';
+import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '../../verbs/contracts';
 import { LOCAL_PLUGIN_ID_PREFIX } from '../localPluginId';
 import { LOCAL_SETTING_TYPES } from '../localPluginRules';
 import { inlineJson } from './jsonText';
@@ -39,7 +40,7 @@ export function manifestSection(audience: ContractAudience): ContractSection {
       `- Required non-empty string fields: ${REQUIRED_STRINGS.join(', ')}. Also "tier": "declarative", "matches" (see the target site) and "contributes".`,
       `- "id": a short lowercase reverse-dotted slug such as "me.short-name" (a-z, 0-9, ".", "_", "-"). Voyager stores it as "${LOCAL_PLUGIN_ID_PREFIX}<id>"; you do not add that prefix.`,
       '- "version": "1.0.0"; raise it when you change the plugin. "author": "me". "license": "MIT".',
-      `- "engine": ">=1.0.0", or ">=" the sinceEngine of every primitive the plugin uses. This build's plugin engine is ${PLUGIN_ENGINE_VERSION}.`,
+      `- "engine": ">=1.0.0", or ">=" the sinceEngine of every primitive the plugin uses. This build's plugin engine is ${EFFECTIVE_PLUGIN_ENGINE_VERSION}.`,
       `- "category": one of ${PLUGIN_CATEGORIES.join(', ')}.`,
       `- Write "name" and "description" in the language of the ${audience === 'chat' ? 'request' : 'user'}. "i18n" translations are optional for a local plugin.`,
       ...(audience === 'agent'

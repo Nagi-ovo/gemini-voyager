@@ -5,8 +5,9 @@
  * and the public SKILL.md are all rendered from it, and the examples are
  * tested against the import gate, so the four never disagree.
  */
-import { PLUGIN_ENGINE_VERSION } from '../../constants';
+
 import type { SiteAdapter } from '../../types';
+import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '../../verbs/contracts';
 import {
   type ContractAudience,
   type ContractSection,
@@ -55,7 +56,7 @@ export function buildPluginContract(
   const templateKey = siteAnchors(site)[0] ?? 'userTurn';
   return {
     site,
-    engineVersion: PLUGIN_ENGINE_VERSION,
+    engineVersion: EFFECTIVE_PLUGIN_ENGINE_VERSION,
     sections: [
       siteSection(site, audience),
       manifestSection(audience),

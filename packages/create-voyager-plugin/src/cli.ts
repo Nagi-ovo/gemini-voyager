@@ -1,15 +1,16 @@
 /**
  * create-voyager-plugin: scaffold and check a Voyager local plugin offline.
  * The checks are the extension's own modules bundled into this file, so
- * `check` accepts exactly what the popup's import accepts.
+ * `check` applies the popup's import rules after resolving contributor
+ * engine notation.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-import { PLUGIN_ENGINE_VERSION } from '../../../src/features/plugins/constants';
 import { renderWriteVoyagerPluginSkill } from '../../../src/features/plugins/local/authoring/authoringDocs';
 import { WRITE_PLUGIN_SKILL_URL } from '../../../src/features/plugins/local/authoring/skillLink';
 import { DEFAULT_ADAPTERS } from '../../../src/features/plugins/sites/registry';
+import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '../../../src/features/plugins/verbs/contracts';
 import { checkPluginDir, formatIssue } from './check';
 import { initPluginDir } from './init';
 
@@ -105,7 +106,7 @@ async function main(argv: readonly string[]): Promise<number> {
   const args = parseArgs(argv);
   if (args.flags.has('--version') || args.flags.has('-v')) {
     process.stdout.write(
-      `create-voyager-plugin ${__VOYAGER_VERSION__} (Voyager ${__VOYAGER_VERSION__}, plugin engine ${PLUGIN_ENGINE_VERSION})\n`,
+      `create-voyager-plugin ${__VOYAGER_VERSION__} (Voyager ${__VOYAGER_VERSION__}, plugin engine ${EFFECTIVE_PLUGIN_ENGINE_VERSION})\n`,
     );
     return 0;
   }

@@ -6,9 +6,15 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { PLUGIN_ENGINE_VERSION } from '../constants';
+import { resolveEngineVersion } from '../engineVersion';
 import { engineSatisfied, parseSemver } from '../semver';
-import { PRIMITIVE_CONTRACTS, PRIMITIVE_NAME_PATTERN, getPrimitiveContract } from './contracts';
+import {
+  EFFECTIVE_PLUGIN_ENGINE_VERSION,
+  PRIMITIVE_CONTRACTS,
+  PRIMITIVE_NAME_PATTERN,
+  SOURCE_PRIMITIVE_CONTRACTS,
+  getPrimitiveContract,
+} from './contracts';
 import { loadPrimitiveContracts } from './loadContracts';
 import { discoverPrimitives, listPrimitiveNames, verifyPrimitiveRegistry } from './registry';
 
@@ -24,13 +30,17 @@ interface BaselinePrimitive {
 }
 
 const BASELINE_PATH = /^\.\/([^/]+)\/paramsBaseline\.json$/;
-const published: Record<string, BaselinePrimitive> = Object.fromEntries(
+const baselines: Record<string, BaselinePrimitive> = Object.fromEntries(
   Object.entries(
     import.meta.glob<BaselinePrimitive>('./*/paramsBaseline.json', {
       eager: true,
       import: 'default',
     }),
   ).map(([path, entry]) => [BASELINE_PATH.exec(path)![1], entry]),
+);
+// A `next` baseline is a draft; stamping it makes these immutable D9 checks apply.
+const published = Object.fromEntries(
+  Object.entries(baselines).filter(([, entry]) => entry.sinceEngine !== 'next'),
 );
 
 describe('primitive contracts (plan D9: only ever add, only optional)', () => {
@@ -46,13 +56,17 @@ describe('primitive contracts (plan D9: only ever add, only optional)', () => {
     for (const [name, entry] of Object.entries(published)) {
       const contract = getPrimitiveContract(name)!;
       for (const [param, spec] of Object.entries(entry.params)) {
+        if (spec.sinceEngine === 'next') continue;
         const current = contract.params[param];
         expect(current, `${name}.${param} was published and must not disappear`).toBeDefined();
         expect(current.type).toBe(spec.type);
         if (!spec.required) expect(current.required).toBe(false);
+        expect(current.sinceEngine, `${name}.${param} keeps its published engine`).toBe(
+          spec.sinceEngine,
+        );
       }
       for (const [param, spec] of Object.entries(contract.params)) {
-        if (!(param in entry.params)) {
+        if (!(param in entry.params) || entry.params[param].sinceEngine === 'next') {
           expect(spec.required, `${name}.${param} is new and must be optional`).toBe(false);
         }
       }
@@ -62,9 +76,24 @@ describe('primitive contracts (plan D9: only ever add, only optional)', () => {
   it('every contract has a baseline (write verbs/<name>/paramsBaseline.json when it ships)', () => {
     for (const contract of PRIMITIVE_CONTRACTS) {
       expect(
-        published[contract.name],
+        baselines[contract.name],
         `add verbs/${contract.name}/paramsBaseline.json`,
       ).toBeDefined();
+    }
+  });
+
+  it('draft baselines name the same unreleased batch as their source contracts', () => {
+    for (const [name, baseline] of Object.entries(baselines)) {
+      const source = SOURCE_PRIMITIVE_CONTRACTS.find((contract) => contract.name === name);
+      expect(source, `baseline ${name} must have a contract`).toBeDefined();
+      expect(source?.sinceEngine).toBe(baseline.sinceEngine);
+      for (const [param, spec] of Object.entries(baseline.params)) {
+        if (spec.sinceEngine !== 'next') continue;
+        expect(source?.params[param]?.sinceEngine, `${name}.${param}`).toBe('next');
+      }
+      expect(getPrimitiveContract(name)?.sinceEngine).toBe(
+        resolveEngineVersion(baseline.sinceEngine),
+      );
     }
   });
 
@@ -72,11 +101,15 @@ describe('primitive contracts (plan D9: only ever add, only optional)', () => {
     for (const contract of PRIMITIVE_CONTRACTS) {
       expect(contract.name).toMatch(PRIMITIVE_NAME_PATTERN);
       expect(parseSemver(contract.sinceEngine)).not.toBeNull();
-      expect(engineSatisfied(`>=${contract.sinceEngine}`, PLUGIN_ENGINE_VERSION)).toBe(true);
+      expect(engineSatisfied(`>=${contract.sinceEngine}`, EFFECTIVE_PLUGIN_ENGINE_VERSION)).toBe(
+        true,
+      );
       for (const [param, spec] of Object.entries(contract.params)) {
         if (!spec.sinceEngine) continue;
         expect(parseSemver(spec.sinceEngine), `${contract.name}.${param}`).not.toBeNull();
-        expect(engineSatisfied(`>=${spec.sinceEngine}`, PLUGIN_ENGINE_VERSION)).toBe(true);
+        expect(engineSatisfied(`>=${spec.sinceEngine}`, EFFECTIVE_PLUGIN_ENGINE_VERSION)).toBe(
+          true,
+        );
         expect(engineSatisfied(`>=${contract.sinceEngine}`, spec.sinceEngine)).toBe(true);
       }
     }

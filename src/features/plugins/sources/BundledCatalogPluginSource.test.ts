@@ -3,11 +3,11 @@ import { dirname, resolve, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { BUNDLED_SITE_ADAPTERS } from '../catalog/sites';
-import { PLUGIN_ENGINE_VERSION } from '../constants';
 import { pluginsToOriginPatterns } from '../runtime/siteRegistration';
 import { engineSatisfied } from '../semver';
 import { patternWithinAny } from '../sites/matchPattern';
 import type { PluginManifest } from '../types';
+import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '../verbs/contracts';
 import { BundledCatalogPluginSource } from './BundledCatalogPluginSource';
 
 const sitesDir = resolve(process.cwd(), 'src/features/plugins/catalog/sites');
@@ -37,7 +37,7 @@ describe('BundledCatalogPluginSource', () => {
     expect(new Set(manifests.map((plugin) => plugin.id)).size).toBe(diskPlugins.length);
 
     for (const [index, manifest] of manifests.entries()) {
-      expect(engineSatisfied(manifest.engine, PLUGIN_ENGINE_VERSION)).toBe(true);
+      expect(engineSatisfied(manifest.engine, EFFECTIVE_PLUGIN_ENGINE_VERSION)).toBe(true);
       const declaredStyles = diskPlugins[index].manifest.contributes.styles ?? [];
       expect(manifest.contributes.styles ?? [], manifest.id).toHaveLength(declaredStyles.length);
       for (const [styleIndex, style] of (manifest.contributes.styles ?? []).entries()) {

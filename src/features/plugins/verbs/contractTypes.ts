@@ -17,13 +17,14 @@ export interface PrimitiveParamSpec {
    * Engine version that added the param, when later than its primitive's
    * `sinceEngine`. An older engine rejects an unknown param and skips the whole
    * op, so a manifest setting it needs an `engine` floor at least this high.
+   * Use `next` until release stamping assigns a concrete version.
    */
   readonly sinceEngine?: string;
 }
 
 export interface PrimitiveContract {
   readonly name: string;
-  /** Engine version that first shipped the primitive; `engine` of any manifest using it must be ≥ this. */
+  /** First shipped engine, or `next` while unpublished; callers receive the resolved version. */
   readonly sinceEngine: string;
   /** Semantic keys the primitive reads from the site adapter (unless a param overrides them). */
   readonly semantic: readonly SemanticSelectorKey[];

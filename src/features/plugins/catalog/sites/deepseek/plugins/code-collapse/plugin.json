@@ -46,7 +46,7 @@
   "category": "readability",
   "license": "GPL-3.0-or-later",
   "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/deepseek/plugins/code-collapse",
-  "engine": ">=1.8.0",
+  "engine": ">=next",
   "tier": "declarative",
   "matches": ["https://chat.deepseek.com/*"],
   "requires": {

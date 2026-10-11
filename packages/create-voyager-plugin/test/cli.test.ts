@@ -10,11 +10,11 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { PLUGIN_ENGINE_VERSION } from '@/features/plugins/constants';
 import { readLocalPluginFiles } from '@/features/plugins/local/localPluginFiles';
 import { validateLocalManifest } from '@/features/plugins/local/validateLocalManifest';
 import type { ManifestIssue } from '@/features/plugins/manifest/validate';
 import { DEFAULT_ADAPTERS } from '@/features/plugins/sites/registry';
+import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '@/features/plugins/verbs/contracts';
 
 import { CORPUS, type CorpusCase } from './corpus';
 
@@ -74,6 +74,16 @@ describe('create-voyager-plugin check', () => {
       expect(result.code).toBe(entry.imports ? 0 : 1);
     },
   );
+
+  it('checks the contributor next notation for the real DeepSeek table-copy plugin', () => {
+    const result = run(
+      'check',
+      join(ROOT, 'src/features/plugins/catalog/sites/deepseek/plugins/table-copy'),
+      '--json',
+    );
+    expect(result.code).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual([]);
+  });
 
   it('prints one path: message line per problem and exits 1', () => {
     const entry = CORPUS.find((candidate) => candidate.name === 'class-without-prefix')!;
@@ -141,7 +151,7 @@ describe('create-voyager-plugin bundle', () => {
     const result = run('--version');
     expect(result.code).toBe(0);
     expect(result.stdout).toContain(`Voyager ${root.version}`);
-    expect(result.stdout).toContain(`plugin engine ${PLUGIN_ENGINE_VERSION}`);
+    expect(result.stdout).toContain(`plugin engine ${EFFECTIVE_PLUGIN_ENGINE_VERSION}`);
   });
 
   it('needs no browser API and imports nothing but Node built-ins', () => {

@@ -1,6 +1,7 @@
 import { logger } from '@/core/services/LoggerService';
 
 import { listBundledPluginEntries } from '../catalog/sites';
+import { resolveManifestEngine } from '../engineVersion';
 import { validateManifest } from '../manifest/validate';
 import type { PluginManifest, PluginSource } from '../types';
 import { resolveStyleFileContributions } from './styleFiles';
@@ -20,7 +21,7 @@ export class BundledCatalogPluginSource implements PluginSource {
     const manifests: PluginManifest[] = [];
     for (const entry of listBundledPluginEntries()) {
       try {
-        const raw = JSON.parse(entry.manifestJson) as unknown;
+        const raw = resolveManifestEngine(JSON.parse(entry.manifestJson) as unknown);
         const resolved = await resolveStyleFileContributions(raw, entry.path, async (file) => {
           const css = entry.styles[file];
           if (css === undefined) throw new Error(`${entry.path}: missing bundled CSS ${file}`);

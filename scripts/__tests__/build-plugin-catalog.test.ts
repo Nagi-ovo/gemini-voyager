@@ -231,6 +231,28 @@ describe('build-plugin-catalog', () => {
     expect(existsSync(join(hostsDir, 'claude.ai.json'))).toBe(true);
   });
 
+  it('publishes an unreleased primitive plugin with a concrete engine range for old clients', async () => {
+    const outDir = makeTempDir();
+    const catalogDir = makeFixtureCatalog({
+      selectors: { assistantTurn: '.reply' },
+      manifest: {
+        engine: '>=next',
+        contributes: { domOps: [{ op: 'native', handler: 'tableCopy', params: {} }] },
+      },
+    });
+
+    await build(outDir, catalogDir);
+
+    const file = readHostFile(outDir, 'demo.example');
+    const plugins = file.plugins as readonly Record<string, unknown>[];
+    expect(plugins).toHaveLength(1);
+    expect(plugins[0].engine).toMatch(/^>=\d+\.\d+\.\d+$/);
+    expect(JSON.stringify(file)).not.toContain('next');
+    const validation = validateHostCatalogFile(file, 'demo.example');
+    expect(validation?.issues).toEqual([]);
+    expect(validation?.manifests).toHaveLength(1);
+  });
+
   it('publishes a fixture plugin that stays inside its site', async () => {
     const outDir = makeTempDir();
     const catalogDir = makeFixtureCatalog();

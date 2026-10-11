@@ -4,6 +4,7 @@
  * implementations, so the catalog scripts (Bun, no DOM) and the popup's local
  * plugin importer apply exactly the same rules.
  */
+import { resolveEngineVersion } from '../engineVersion';
 import { requiredHandlers } from '../runtime/pluginStatus';
 import { engineSatisfied, parseSemver } from '../semver';
 import type { PluginManifest } from '../types';
@@ -16,7 +17,7 @@ import type { ManifestIssue } from './validate';
  * or `>=x.y.z` — see `semver.ts`.
  */
 export function engineRangeMinimum(range: string): string | null {
-  const trimmed = range.trim();
+  const trimmed = resolveEngineVersion(range).trim();
   if (trimmed === '' || trimmed === '*') return null;
   const minimum = parseSemver(trimmed.startsWith('>=') ? trimmed.slice(2) : trimmed);
   if (!minimum) return null;

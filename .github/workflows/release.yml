@@ -100,6 +100,14 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
       - name: Calculate next version
         id: next_version
         env:
@@ -149,7 +157,8 @@ jobs:
         run: |
           echo "Bumping to version ${VERSION}"
 
-          node scripts/bump-version.js "${VERSION}" --no-format
+          bun scripts/bump-version.js "${VERSION}" --no-format
+          bun run plugin:release:check
 
           if [ ! -f "src/pages/content/changelog/notes/${VERSION}.md" ]; then
             echo "Missing 10-locale changelog: src/pages/content/changelog/notes/${VERSION}.md" >&2
@@ -159,7 +168,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add package.json manifest.json manifest.dev.json "Voyager/Voyager.xcodeproj/project.pbxproj"
+          git add package.json manifest.json manifest.dev.json \
+            packages/create-voyager-plugin/package.json \
+            "Voyager/Voyager.xcodeproj/project.pbxproj"
+          git diff --name-only -z -- src/features/plugins/constants.ts \
+            ':(glob)src/features/plugins/verbs/**/*.ts' \
+            ':(glob)src/features/plugins/verbs/*/paramsBaseline.json' \
+            ':(glob)src/features/plugins/catalog/**/plugin.json' | \
+            xargs -0 --no-run-if-empty git add --
           if git diff --cached --quiet; then
             echo "Version files already match v${VERSION}"
           else
@@ -279,7 +295,7 @@ jobs:
           python -c 'from importlib.metadata import version; print(version("dmgbuild"))'
 
       - name: Build Safari web extension
-        run: bun run build:safari
+        run: bun run plugin:release:check && bun run build:safari
 
       - name: Import Developer ID certificate
         uses: Apple-Actions/import-codesign-certs@5142e029c445c10ffc7149d172e540235a065466 # v7
@@ -476,6 +492,7 @@ jobs:
         env:
           VOYAGER_FIREFOX_OAUTH_CLIENT_SECRET: ${{ secrets.VOYAGER_FIREFOX_OAUTH_CLIENT_SECRET }}
         run: |
+          bun run plugin:release:check
           if [ -z "$VOYAGER_FIREFOX_OAUTH_CLIENT_SECRET" ]; then
             echo "::error::VOYAGER_FIREFOX_OAUTH_CLIENT_SECRET is not set; Firefox Google Drive sign-in needs it." >&2
             exit 1
@@ -712,6 +729,7 @@ jobs:
           VOYAGER_FIREFOX_VERSION: ${{ inputs.version }}
           VOYAGER_FIREFOX_OAUTH_CLIENT_SECRET: ${{ secrets.VOYAGER_FIREFOX_OAUTH_CLIENT_SECRET }}
         run: |
+          bun run plugin:release:check
           if [ -z "$VOYAGER_FIREFOX_OAUTH_CLIENT_SECRET" ]; then
             echo "::error::VOYAGER_FIREFOX_OAUTH_CLIENT_SECRET is not set; Firefox Google Drive sign-in needs it." >&2
             exit 1

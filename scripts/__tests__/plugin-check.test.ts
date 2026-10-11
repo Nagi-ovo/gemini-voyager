@@ -109,6 +109,19 @@ describe('plugin-check', () => {
     }
   });
 
+  it('accepts contributor notation for a plugin using an unreleased primitive', async () => {
+    const dir = makeFixturePlugin({
+      selectors: { assistantTurn: '.reply' },
+      manifest: {
+        engine: '>=next',
+        contributes: { domOps: [{ op: 'native', handler: 'tableCopy', params: {} }] },
+      },
+    });
+    const result = await checkPluginDir(dir);
+    expect(result.issues).toEqual([]);
+    expect(result.ok).toBe(true);
+  });
+
   it('accepts a complete fixture plugin', async () => {
     const result = await checkPluginDir(makeFixturePlugin());
     expect(result.issues).toEqual([]);

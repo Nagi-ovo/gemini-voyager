@@ -2,7 +2,7 @@ import type { PrimitiveContract } from '../contractTypes';
 
 export const contract: PrimitiveContract = {
   name: 'tableCopy',
-  sinceEngine: '1.8.0',
+  sinceEngine: 'next',
   semantic: ['assistantTurn'],
   params: {
     turn: {

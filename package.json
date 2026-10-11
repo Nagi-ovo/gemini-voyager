@@ -46,6 +46,7 @@
     "skills:build": "bun run cli:build && node packages/create-voyager-plugin/dist/cli.mjs skill --out docs/public/skills/write-voyager-plugin/SKILL.md",
     "plugin:new": "bun scripts/plugin-new.ts",
     "plugin:check": "bun scripts/plugin-check.ts",
+    "plugin:release:check": "bun scripts/plugin-release-check.ts",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",

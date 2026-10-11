@@ -16,10 +16,10 @@
  * which owns the permission flow; a content script that is running already
  * has its permission.
  */
-import { PLUGIN_ENGINE_VERSION } from '../constants';
+import { resolveEngineVersion } from '../engineVersion';
 import { engineSatisfied } from '../semver';
 import type { PluginManifest, SiteAdapter } from '../types';
-import { getPrimitiveContract } from '../verbs/contracts';
+import { EFFECTIVE_PLUGIN_ENGINE_VERSION, getPrimitiveContract } from '../verbs/contracts';
 
 export type PluginStatusKind =
   | 'needs-engine'
@@ -91,8 +91,9 @@ export interface CompatibilityInput {
 export function findIncompatibility(input: CompatibilityInput): PluginIncompatibility | null {
   const { manifest } = input;
   const base = { id: manifest.id, version: manifest.version };
-  if (!engineSatisfied(manifest.engine, input.engineVersion ?? PLUGIN_ENGINE_VERSION)) {
-    return { ...base, kind: 'needs-engine', requiredEngine: manifest.engine };
+  const requiredEngine = resolveEngineVersion(manifest.engine);
+  if (!engineSatisfied(requiredEngine, input.engineVersion ?? EFFECTIVE_PLUGIN_ENGINE_VERSION)) {
+    return { ...base, kind: 'needs-engine', requiredEngine };
   }
   const missingHandlers = requiredHandlers(manifest).filter((name) => !input.hasPrimitive(name));
   if (missingHandlers.length > 0) {

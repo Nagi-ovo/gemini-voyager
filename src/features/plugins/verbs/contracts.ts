@@ -15,6 +15,8 @@
  *
  * Adding a primitive is adding its folder; nothing here lists them.
  */
+import { PLUGIN_ENGINE_VERSION } from '../constants';
+import { resolveEngineVersion } from '../engineVersion';
 import { PRIMITIVE_CONTRACT_MODULES } from './contractModules';
 import type { PrimitiveContract } from './contractTypes';
 import { loadPrimitiveContracts } from './loadContracts';
@@ -22,8 +24,33 @@ import { loadPrimitiveContracts } from './loadContracts';
 export type { PrimitiveContract, PrimitiveParamSpec, PrimitiveParamType } from './contractTypes';
 export { PRIMITIVE_NAME_PATTERN } from './contractTypes';
 
-export const PRIMITIVE_CONTRACTS: readonly PrimitiveContract[] = loadPrimitiveContracts(
+/** Source declarations retain `next` so release tooling and D9 can distinguish drafts. */
+export const SOURCE_PRIMITIVE_CONTRACTS: readonly PrimitiveContract[] = loadPrimitiveContracts(
   PRIMITIVE_CONTRACT_MODULES,
+);
+
+/** A development tree runs the batch it contains; a stamped release runs its released engine. */
+export const EFFECTIVE_PLUGIN_ENGINE_VERSION = SOURCE_PRIMITIVE_CONTRACTS.some(
+  (contract) =>
+    contract.sinceEngine === 'next' ||
+    Object.values(contract.params).some((param) => param.sinceEngine === 'next'),
+)
+  ? resolveEngineVersion('next')
+  : PLUGIN_ENGINE_VERSION;
+
+export const PRIMITIVE_CONTRACTS: readonly PrimitiveContract[] = SOURCE_PRIMITIVE_CONTRACTS.map(
+  (contract) => ({
+    ...contract,
+    sinceEngine: resolveEngineVersion(contract.sinceEngine),
+    params: Object.fromEntries(
+      Object.entries(contract.params).map(([name, param]) => [
+        name,
+        param.sinceEngine
+          ? { ...param, sinceEngine: resolveEngineVersion(param.sinceEngine) }
+          : param,
+      ]),
+    ),
+  }),
 );
 
 export function getPrimitiveContract(name: string): PrimitiveContract | undefined {

@@ -2,7 +2,7 @@ import type { PrimitiveContract } from '../contractTypes';
 
 export const contract: PrimitiveContract = {
   name: 'codeCollapse',
-  sinceEngine: '1.8.0',
+  sinceEngine: 'next',
   semantic: ['assistantTurn', 'codeBlock'],
   params: {
     codeBlock: {

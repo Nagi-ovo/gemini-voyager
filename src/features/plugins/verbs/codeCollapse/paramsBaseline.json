@@ -1,5 +1,5 @@
 {
-  "sinceEngine": "1.8.0",
+  "sinceEngine": "next",
   "params": {
     "codeBlock": {
       "type": "selector",

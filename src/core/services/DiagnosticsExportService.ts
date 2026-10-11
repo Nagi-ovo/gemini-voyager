@@ -6,8 +6,8 @@ import {
   parseNativeHealthEntries,
 } from '@/core/gemini/nativeHealth';
 import { type VoyagerBuildTarget, getVoyagerBuildTarget } from '@/core/utils/browser';
-import { PLUGIN_ENGINE_VERSION } from '@/features/plugins/constants';
 import type { PluginSettingValue, PluginSettings, SettingsSchema } from '@/features/plugins/types';
+import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '@/features/plugins/verbs/contracts';
 
 export const VOYAGER_DIAGNOSTICS_FORMAT = 'gemini-voyager.plugin-diagnostics.v1' as const;
 export const VOYAGER_DIAGNOSTICS_FILENAME = 'voyager-diagnostics.json';
@@ -325,7 +325,7 @@ export function buildVoyagerDiagnostics(
       os: detectOperatingSystem(userAgent, platform),
       activeSite: resolveDiagnosticSite(options.activeUrl ?? ''),
     },
-    pluginEngine: { version: PLUGIN_ENGINE_VERSION },
+    pluginEngine: { version: EFFECTIVE_PLUGIN_ENGINE_VERSION },
     nativeHealth: summarizeNativeHealth(options.nativeHealth),
     plugins,
     privacy,

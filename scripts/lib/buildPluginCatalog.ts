@@ -38,6 +38,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { resolveManifestEngine } from '../../src/features/plugins/engineVersion';
 import { validateManifest } from '../../src/features/plugins/manifest/validate';
 import {
   HOST_CATALOG_FORMAT,
@@ -129,7 +130,8 @@ async function readSitePlugins(
     const resolved = await resolveStyleFileContributions(parsed, relPath, async (file) =>
       readFileSync(join(dir, file), 'utf8'),
     );
-    const result = validateManifest(resolved);
+    // Published floors must be concrete so released extensions can filter newer engines.
+    const result = validateManifest(resolveManifestEngine(resolved));
     if (!result.success) {
       throw new Error(`${relPath}: invalid plugin manifest\n${formatIssues(result.error)}`);
     }

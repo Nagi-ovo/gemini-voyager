@@ -362,7 +362,7 @@ host's untouched code block; a label counts as a language only when it is shaped
 host's localized "plain text" label leaves the block to content detection. New diagram kinds follow
 the PATTERN note at the top of that file, and each site gets one `diagram-rendering` plugin listing
 its diagram ops: ChatGPT's lists `echarts` and `wavedrom`, since ChatGPT draws Mermaid itself, and
-`mermaid` waits for a site that needs it. `codeCollapse` (since 1.8.0, optional `codeBlock` /
+`mermaid` waits for a site that needs it. `codeCollapse` (unreleased, `sinceEngine: 'next'`, optional `codeBlock` /
 `code` / `action` selectors, blocks defaulting to the adapter's `codeBlock` inside `assistantTurn`
 and outside `thinkingBlock`) is Gemini's long code block collapse on another site: one engine in
 `pages/content/codeBlockCollapse/engine.ts` drives both, Gemini with its blocks expanded until the
@@ -380,7 +380,7 @@ the host's own id for it where the site names one (`conversationIdAttribute` on 
 Claude's `data-conv-id`, or inside the turn's `turnItem`; a turn without it is unstarrable), else
 the URL when the turn entered the page (`turnOwnership.ts`).
 
-`tableCopy` (since 1.8.0, optional `turn` / `table` selectors defaulting to the adapter's
+`tableCopy` (unreleased, `sinceEngine: 'next'`, optional `turn` / `table` selectors defaulting to the adapter's
 `assistantTurn` and `table`) puts a shadow-root toolbar before each reply table that copies it as
 Markdown or TSV. The Markdown is conversation export's own `extractTable`, and TSV reads the same
 `collectTableRows`, so formulas stay LaTeX and copy never drifts from export.
@@ -429,12 +429,29 @@ any folder whose contract and implementation disagree. The primitive enums in
 `docs/public/plugin.schema.json` are generated: run `bun run skills:build`
 after adding a primitive (it also refreshes the public skill).
 
-`sinceEngine` is the `PLUGIN_ENGINE_VERSION` that first shipped the primitive.
+`PLUGIN_ENGINE_VERSION` records the released engine version and is never
+hand-bumped by a contributor. A new primitive or optional parameter declares
+`sinceEngine: 'next'`; its dependent catalog plugin uses `"engine": ">=next"`.
+The shared resolver maps `next` to the released engine plus one minor, patch
+zero (1.7.0 → 1.8.0). While any contract or param is `next`, this tree runs that
+effective engine version, so its bundled unreleased plugins are usable.
+
 A manifest that uses a primitive must set an `engine` range whose **minimum** is
-at least that version, and `bun run catalog:build` fails the build otherwise
-(plan §5, §8). This ordering is the point: an older Voyager then reports
-`needs-engine` ("update Voyager") instead of `needs-handler`, which is left
-meaning a genuine configuration mistake. `catalog:build` also rejects a handler
+at least its resolved `sinceEngine`, and `bun run catalog:build` fails the build
+otherwise (plan §5, §8). Contributor checks, CLI checks and bundled loading
+resolve the same notation. Catalog publishing writes only concrete versions,
+so a released extension filters an update requiring the next engine without
+mistaking it for a remote kill switch. Local imports require concrete versions;
+the public authoring skill and CLI scaffold document resolved primitive floors.
+
+`bun run bump` stamps all unpublished contracts, param baselines and dependent
+catalog manifest ranges, and advances the engine only when `next` exists. A
+release gate rejects any remaining `next`; extension-version bumps without
+unpublished engine additions leave the engine version unchanged.
+
+The primitive engine floor makes an older Voyager report `needs-engine`
+("update Voyager") instead of `needs-handler`, which means a configuration
+mistake. `catalog:build` also rejects a handler
 with no contract, and a semantic key the plugin's own site does not define.
 
 A param added to a shipped primitive carries its own `sinceEngine` (D9: params
@@ -485,9 +502,10 @@ a full page load switches versions.
 required. Parameters may only be **added**, and only as **optional**. Anything
 breaking ships under a new primitive name, so `handler` never needs a version
 suffix. Each primitive's committed `verbs/<name>/paramsBaseline.json` holds the
-contract tests to this: write it when the primitive ships, then only append
-params. It lives in the folder, so deleting a primitive's folder deletes its
-baseline too; no test stops that, and review must.
+contract tests to this: write unpublished entries with `sinceEngine: "next"`.
+The release bump stamps them to the concrete version, which makes them
+published and immutable; later only append optional params. It lives in the
+folder, so deleting a primitive's folder deletes its baseline too; no test stops that, and review must.
 
 `formulaCopy` is the first primitive, and
 `catalog/sites/deepseek/plugins/formula-copy/` is the first plugin built on one.

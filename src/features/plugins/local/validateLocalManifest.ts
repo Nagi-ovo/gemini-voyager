@@ -50,6 +50,19 @@ export function validateLocalManifest(
   if (!isRecord(input)) {
     return { success: false, error: [{ path: '', message: 'manifest must be a JSON object' }] };
   }
+  const engine = typeof input.engine === 'string' ? input.engine.trim() : input.engine;
+  if (engine === '>=next' || engine === 'next') {
+    return {
+      success: false,
+      error: [
+        {
+          path: 'engine',
+          message:
+            'local plugins need a concrete engine version; replace ">=next" with ">=x.y.z" from the primitive reference',
+        },
+      ],
+    };
+  }
   const issues: ManifestIssue[] = [];
   let raw: Record<string, unknown> = input;
   if (typeof input.id === 'string' && input.id.trim() !== '') {

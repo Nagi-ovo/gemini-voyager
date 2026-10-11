@@ -2,9 +2,13 @@ import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vite
 
 import { activateFormulaCopy } from '@/features/formulaCopy';
 
+import { requireBundledSiteAdapter } from '../catalog/sites';
+import { BundledCatalogPluginSource } from '../sources/BundledCatalogPluginSource';
 import type { PluginManifest, PluginSource, SiteAdapter } from '../types';
+import { hasPrimitive } from '../verbs/registry';
 import { PluginHost } from './PluginHost';
 import type { PluginScope } from './pluginScope';
+import { findIncompatibility } from './pluginStatus';
 
 vi.mock('@/features/formulaCopy', () => ({
   activateFormulaCopy: vi.fn((scope: PluginScope) => {
@@ -92,6 +96,43 @@ afterEach(() => {
 });
 
 describe('PluginHost status machine (plan §4.2)', () => {
+  it('mounts an unreleased bundled plugin on main and blocks it on the released engine', async () => {
+    const plugins = await new BundledCatalogPluginSource().list();
+    const tableCopy = plugins.find((plugin) => plugin.id === 'voyager.deepseek-table-copy');
+    expect(tableCopy).toBeDefined();
+    expect(tableCopy!.engine).toBe('>=1.8.0');
+    const adapter = requireBundledSiteAdapter('deepseek');
+    expect(
+      findIncompatibility({
+        manifest: tableCopy!,
+        adapter,
+        hasPrimitive,
+        engineVersion: '1.7.0',
+      }),
+    ).toMatchObject({
+      kind: 'needs-engine',
+      requiredEngine: '>=1.8.0',
+    });
+    mockState({ [tableCopy!.id]: { enabled: true, installedAt: 1 } });
+    document.body.innerHTML =
+      '<div class="ds-message"><div class="ds-assistant-message-main-content"><table><tbody><tr><td>Cell</td></tr></tbody></table></div></div>';
+    const host = new PluginHost({
+      url: URL,
+      sources: [{ ...remoteSource({ current: [tableCopy!] }), siteOverride: async () => adapter }],
+      doc: document,
+      requestCatalogRefresh: () => {},
+    });
+    try {
+      await host.start();
+      expect(host.getStatuses()).toContainEqual(
+        expect.objectContaining({ id: tableCopy!.id, kind: 'mounted' }),
+      );
+      expect(document.querySelector('.gv-table-copy')).not.toBeNull();
+    } finally {
+      host.stop();
+    }
+  });
+
   it('reports every reason instead of hiding incompatible plugins', async () => {
     mockState({
       'x.engine': { enabled: true, installedAt: 1 },

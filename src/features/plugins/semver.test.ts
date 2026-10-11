@@ -27,4 +27,11 @@ describe('semver', () => {
   it('fails closed on unparseable host version', () => {
     expect(engineSatisfied('>=1.0.0', 'garbage')).toBe(false);
   });
+
+  it('fails closed on unresolved contributor engine placeholders', () => {
+    expect(parseSemver('next')).toBeNull();
+    expect(engineSatisfied('>=next', '1.8.0')).toBe(false);
+    expect(engineSatisfied('next', '1.8.0')).toBe(false);
+    expect(engineSatisfied('>=1.7.0', 'next')).toBe(false);
+  });
 });

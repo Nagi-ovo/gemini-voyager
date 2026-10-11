@@ -8,12 +8,11 @@
  */
 
 /**
- * Semantic version of the plugin runtime contract. Plugins declare an `engine`
- * semver range (e.g. `>=1.0.0`); the host refuses to activate plugins whose
- * range this version does not satisfy. Bump the MAJOR when a change to the
- * manifest/contribution shape is backwards-incompatible.
+ * Last released plugin engine. Contributors use `next`; `bun run bump` stamps
+ * that batch and advances this constant independently of the extension version.
+ * Runtime checks use EFFECTIVE_PLUGIN_ENGINE_VERSION from verbs/contracts.ts.
  */
-export const PLUGIN_ENGINE_VERSION = '1.8.0';
+export const PLUGIN_ENGINE_VERSION = '1.7.0';
 
 /** Manifest format major this engine understands (plan §5). */
 export const PLUGIN_MANIFEST_FORMAT = 1;

@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { DEFAULT_ADAPTERS } from '../../sites/registry';
+import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '../../verbs/contracts';
 import { validateLocalManifest } from '../validateLocalManifest';
 import { renderScaffoldAgents, renderWriteVoyagerPluginSkill } from './authoringDocs';
 import { siteAnchors } from './siteFacts';
@@ -24,6 +25,15 @@ describe('write-voyager-plugin skill', () => {
     const frontmatter = /^---\nname: ([^\n]+)\ndescription: ("[^\n]+")\n---\n/.exec(skill);
     expect(frontmatter?.[1]).toBe(WRITE_PLUGIN_SKILL_NAME);
     expect(JSON.parse(frontmatter![2])).toContain('Voyager');
+  });
+
+  it('gives local authors concrete primitive versions and this tree’s effective engine', () => {
+    const skill = renderWriteVoyagerPluginSkill(DEFAULT_ADAPTERS);
+    expect(skill).toContain(`plugin engine ${EFFECTIVE_PLUGIN_ENGINE_VERSION}`);
+    expect(skill).not.toMatch(/sinceEngine next|>=next/);
+    const primitiveFloors = [...skill.matchAll(/^- \w+ \(sinceEngine ([^)]+)\):/gm)];
+    expect(primitiveFloors.length).toBeGreaterThan(0);
+    for (const match of primitiveFloors) expect(match[1]).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
   it('lists every site with its URL patterns and anchors', () => {

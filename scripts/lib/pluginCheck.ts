@@ -39,6 +39,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { resolveManifestEngine } from '../../src/features/plugins/engineVersion';
 import { validateManifest, validateStyleCss } from '../../src/features/plugins/manifest/validate';
 import { resolveStyleFileContributions } from '../../src/features/plugins/sources/styleFiles';
 import type { PluginManifest } from '../../src/features/plugins/types';
@@ -125,7 +126,7 @@ async function readManifest(
     return null;
   }
 
-  const result = validateManifest(resolved);
+  const result = validateManifest(resolveManifestEngine(resolved));
   if (!result.success) {
     issues.push(`invalid plugin manifest\n${formatIssues(result.error)}`);
     return null;
