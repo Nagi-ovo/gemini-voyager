@@ -1,0 +1,10 @@
+{
+  "quoteReplyAction": {
+    "message": "인용",
+    "description": "Button label and accessible name for quoting selected assistant reply text into the message composer"
+  },
+  "quoteReplyComposerMissing": {
+    "message": "메시지 입력란을 찾을 수 없습니다.",
+    "description": "Toast when the quote action cannot find an available message composer"
+  }
+}

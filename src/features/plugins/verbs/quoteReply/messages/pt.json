@@ -1,0 +1,10 @@
+{
+  "quoteReplyAction": {
+    "message": "Citar",
+    "description": "Button label and accessible name for quoting selected assistant reply text into the message composer"
+  },
+  "quoteReplyComposerMissing": {
+    "message": "Não foi possível encontrar o campo de mensagem.",
+    "description": "Toast when the quote action cannot find an available message composer"
+  }
+}

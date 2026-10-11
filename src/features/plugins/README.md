@@ -427,6 +427,16 @@ when that send moves the new-chat page to its conversation. ChatGPT temporary ch
 nothing. These sites have no account index in their routes, so drafts are per site and
 conversation, not per account. Unmount stops everything and keeps stored drafts.
 
+`quoteReply` (unreleased, `sinceEngine: 'next'`, no parameters; reads `assistantTurn` and
+`composer`) is Gemini's quote reply on a catalog site. Selecting text wholly inside one
+assistant turn shows a localized Quote button near the selection end; activating it appends the
+text to the composer as a Markdown quote (every line prefixed `> `, a blank line after an
+existing draft) and never sends. Selections touching a user turn or the adapter's
+`thinkingBlock` show nothing. Rendered KaTeX is quoted as its LaTeX source through
+`features/formulaCopy/formulaSource.ts`; line prefixing and Gemini math replacement are shared
+with Gemini's quote reply in `core/utils/quotedText.ts`. A missing composer shows a toast and
+keeps the selection. Unmount removes the button, its style and every listener synchronously.
+
 Some behaviour cannot be expressed as CSS or as the reversible DOM operations.
 A **primitive** is that behaviour, written once as first-party TypeScript inside
 the extension and given a name a manifest can call:

@@ -34,6 +34,11 @@
       "official": true
     },
     {
+      "name": "claude-quote-reply",
+      "source": "sites/claude/plugins/quote-reply/plugin.json",
+      "official": true
+    },
+    {
       "name": "chatgpt-reading-width",
       "source": "sites/chatgpt/plugins/reading-width/plugin.json",
       "official": true
@@ -51,6 +56,11 @@
     {
       "name": "chatgpt-ctrl-enter-send",
       "source": "sites/chatgpt/plugins/ctrl-enter-send/plugin.json",
+      "official": true
+    },
+    {
+      "name": "chatgpt-quote-reply",
+      "source": "sites/chatgpt/plugins/quote-reply/plugin.json",
       "official": true
     },
     {
@@ -106,6 +116,11 @@
     {
       "name": "deepseek-draft-save",
       "source": "sites/deepseek/plugins/draft-save/plugin.json",
+      "official": true
+    },
+    {
+      "name": "deepseek-quote-reply",
+      "source": "sites/deepseek/plugins/quote-reply/plugin.json",
       "official": true
     },
     {

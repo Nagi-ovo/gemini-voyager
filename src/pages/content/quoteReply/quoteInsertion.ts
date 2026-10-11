@@ -1,5 +1,6 @@
 import { insertIntoComposer, isQuillComposer, readComposer } from '@/core/services/composer';
 import { getBrowserName } from '@/core/utils/browser';
+import { formatQuotedText, replaceMathWithLatex } from '@/core/utils/quotedText';
 
 import { findChatInput } from '../chatInput/index';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
@@ -101,30 +102,6 @@ function focusChatInput(input: HTMLElement | HTMLTextAreaElement): void {
     input.focus({ preventScroll: true });
   } catch {
     input.focus();
-  }
-}
-
-/**
- * Replace math elements in a cloned DOM tree with LaTeX text nodes.
- * Gemini uses `.math-inline` / `.math-block` containers with `[data-math]` children.
- */
-function replaceMathWithLatex(root: DocumentFragment): void {
-  // 1. Replace .math-inline / .math-block containers
-  for (const container of Array.from(root.querySelectorAll('.math-inline, .math-block'))) {
-    const dataMathEl = container.querySelector('[data-math]');
-    const latex = dataMathEl?.getAttribute('data-math');
-    if (latex) {
-      const isBlock = container.classList.contains('math-block');
-      container.replaceWith(document.createTextNode(isBlock ? `$$${latex}$$` : `$${latex}$`));
-    }
-  }
-
-  // 2. Handle any remaining [data-math] elements not inside a container
-  for (const el of Array.from(root.querySelectorAll('[data-math]'))) {
-    const latex = el.getAttribute('data-math');
-    if (latex) {
-      el.replaceWith(document.createTextNode(`$${latex}$`));
-    }
   }
 }
 
@@ -273,10 +250,7 @@ export function insertQuotedSelection(range: Range): boolean {
 
     // Format: > selection
     // Prepare quote body (without leading/trailing newlines - those are added at insertion time)
-    const quoteBody = selectedText
-      .split('\n')
-      .map((line) => `> ${line}`)
-      .join('\n');
+    const quoteBody = formatQuotedText(selectedText);
 
     // Ensure the input is visible
     input.scrollIntoView({ behavior: 'smooth', block: 'center' });
