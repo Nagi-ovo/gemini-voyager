@@ -3053,10 +3053,6 @@
     "message": "يغيّر لون التمييز في Voyager، مع أن الموجّه طلب من الذكاء الاصطناعي ألا يفعل ذلك.",
     "description": "Warning: the plugin changes the accent color although the prompt asked not to"
   },
-  "localPluginWarnNative": {
-    "message": "يشغّل ميزة مضمّنة في Voyager، مع أن الموجّه طلب من الذكاء الاصطناعي ألا يفعل ذلك.",
-    "description": "Warning: the plugin runs a Voyager built-in although the prompt asked not to"
-  },
   "localPluginWarnReplaces": {
     "message": "يستبدل الإصدار {version} المثبّت ويوقفه حتى تشغّله مجددًا.",
     "description": "Warning: importing replaces an installed version and turns it off"

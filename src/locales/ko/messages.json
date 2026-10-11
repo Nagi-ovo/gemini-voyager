@@ -3053,10 +3053,6 @@
     "message": "Voyager 강조 색상을 바꿉니다. 프롬프트는 AI에게 이렇게 하지 말라고 했습니다.",
     "description": "Warning: the plugin changes the accent color although the prompt asked not to"
   },
-  "localPluginWarnNative": {
-    "message": "Voyager 기본 제공 기능을 실행합니다. 프롬프트는 AI에게 이렇게 하지 말라고 했습니다.",
-    "description": "Warning: the plugin runs a Voyager built-in although the prompt asked not to"
-  },
   "localPluginWarnReplaces": {
     "message": "설치된 버전 {version}을(를) 대체하며, 다시 켤 때까지 꺼진 상태가 됩니다.",
     "description": "Warning: importing replaces an installed version and turns it off"

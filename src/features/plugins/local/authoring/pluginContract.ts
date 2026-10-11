@@ -35,15 +35,22 @@ export interface PluginContract {
   readonly examples: readonly PluginExample[];
 }
 
-/** Whether a reader of this audience may use primitives on `site`. */
-export function offersPrimitives(site: SiteAdapter, audience: ContractAudience): boolean {
-  return audience === 'agent' && !isNativeSurfaceSite(site);
+/**
+ * Whether the contract teaches primitives on `site`: wherever the gate accepts
+ * a `native` op, for a chat AI as for a coding agent, since both imports run
+ * the same gate.
+ */
+export function offersPrimitives(site: SiteAdapter): boolean {
+  return !isNativeSurfaceSite(site);
 }
 
 export function siteSection(site: SiteAdapter, audience: ContractAudience): ContractSection {
   return {
     title: `Target site: ${site.label}`,
-    lines: siteFactLines(site, { primitives: offersPrimitives(site, audience) }),
+    lines: siteFactLines(site, {
+      primitives: offersPrimitives(site),
+      theme: audience === 'agent',
+    }),
   };
 }
 
@@ -52,7 +59,7 @@ export function buildPluginContract(
   options: PluginContractOptions,
 ): PluginContract {
   const { audience } = options;
-  const primitives = offersPrimitives(site, audience);
+  const primitives = offersPrimitives(site);
   const templateKey = siteAnchors(site)[0] ?? 'userTurn';
   return {
     site,
@@ -61,9 +68,9 @@ export function buildPluginContract(
       siteSection(site, audience),
       manifestSection(audience),
       stylesSection(audience),
-      pageChangesSection(audience, templateKey),
+      pageChangesSection(templateKey, { primitives }),
       settingsSection(),
-      localRulesSection(audience),
+      localRulesSection(audience, { primitives }),
       ...(primitives ? [primitivesSection()] : []),
       ...(audience === 'agent' ? [selectorsSection()] : []),
       impossibleSection(audience, { primitives }),

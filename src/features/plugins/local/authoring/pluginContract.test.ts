@@ -38,14 +38,25 @@ describe('plugin contract', () => {
     }
   });
 
-  it('offers a primitive example to a coding agent only where primitives run', () => {
+  it.each(audiences)('offers a primitive example to %s only where primitives run', (audience) => {
     for (const site of sites) {
-      const agentOps = buildPluginContract(site, { audience: 'agent' }).examples.flatMap(
+      const contract = buildPluginContract(site, { audience });
+      const ops = contract.examples.flatMap(
         (example) => (example.manifest.contributes as { domOps?: { op: string }[] }).domOps ?? [],
       );
-      expect(agentOps.some((op) => op.op === 'native')).toBe(!isNativeSurfaceSite(site));
-      const chat = renderSections(buildPluginContract(site, { audience: 'chat' }).sections);
-      expect(chat.join('\n')).not.toContain('"op": "native"');
+      expect(ops.some((op) => op.op === 'native')).toBe(!isNativeSurfaceSite(site));
+      const titles = contract.sections.map((section) => section.title);
+      expect(titles.includes('Primitives')).toBe(!isNativeSurfaceSite(site));
+    }
+  });
+
+  it('never offers a chat AI the theme accent the popup preview flags', () => {
+    for (const site of sites) {
+      const text = renderSections(buildPluginContract(site, { audience: 'chat' }).sections).join(
+        '\n',
+      );
+      expect(text).not.toMatch(/"theme"[^\n]*(?:accent are allowed|optionally recolors)/);
+      expect(text).toContain('Do not add "theme"');
     }
   });
 

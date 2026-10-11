@@ -3053,10 +3053,6 @@
     "message": "Change la couleur d’accent de Voyager, ce que le prompt demandait à l’IA d’éviter.",
     "description": "Warning: the plugin changes the accent color although the prompt asked not to"
   },
-  "localPluginWarnNative": {
-    "message": "Lance une fonction intégrée de Voyager, ce que le prompt demandait à l’IA d’éviter.",
-    "description": "Warning: the plugin runs a Voyager built-in although the prompt asked not to"
-  },
   "localPluginWarnReplaces": {
     "message": "Remplace la version {version} déjà installée et la désactive jusqu’à ce que vous la réactiviez.",
     "description": "Warning: importing replaces an installed version and turns it off"

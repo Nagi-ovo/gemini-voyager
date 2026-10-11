@@ -227,8 +227,9 @@ with any AI the user already uses, while Voyager itself stays offline:
   change, warnings for hidden content via `hide`, `hidden` or a hiding inline
   style, raw selectors, a replaced version, a
   reply that misses the selected site (the active tab's, or the user's pick;
-  recomputed when the picker changes, no prompt needed), and a `theme` or `native`
-  op the prompt asked the AI to leave out). CSS is not summarized: its full
+  recomputed when the picker changes, no prompt needed), and a `theme` the
+  prompt asked the AI to leave out; a primitive is listed as a change, not
+  flagged, because the prompt offers it where the gate accepts it). CSS is not summarized: its full
   source is shown with a plain warning that it can change anything, hiding
   included, since reading its effect would be a guess. It builds on `inspectPlugin`, and
   the same inspect view opens under it on demand. **Import** hands the exact previewed
@@ -244,7 +245,9 @@ local rules, the site's anchors and notes, the primitives (read only through
 `primitiveReference.ts`), what is not possible, and examples. Four outputs
 render it:
 
-- the popup prompt above (`audience: 'chat'`: inline CSS, no primitives);
+- the popup prompt above (`audience: 'chat'`: inline CSS, no `theme`, primitives
+  where the site allows them, plus a pointer to the public skill for an AI that
+  can browse; the pasted contract wins where the two differ);
 - the public agent skill `docs/public/skills/write-voyager-plugin/SKILL.md`
   (`authoringDocs.ts`), committed and served at
   `https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md`. Regenerate it

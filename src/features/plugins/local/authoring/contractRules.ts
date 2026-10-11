@@ -3,8 +3,10 @@
  * fields, op kinds, the attribute allowlist, setting kinds and primitives are
  * read from the gate's own exports, so this text cannot offer something the
  * import refuses. `audience` picks how the reader works: `chat` is an AI in a
- * chat tab whose reply the user pastes (CSS inlined, no primitives), `agent` is
- * a coding agent with a file system that runs `create-voyager-plugin check`.
+ * chat tab whose reply the user pastes (CSS inlined, no "theme"), `agent` is a
+ * coding agent with a file system that runs `create-voyager-plugin check`.
+ * Primitives depend on the site, not the audience: both get them wherever the
+ * gate accepts a `native` op.
  */
 
 import { NATIVE_PARAM_SETTINGS_SINCE_ENGINE } from '../../manifest/nativeParamSettings';
@@ -71,11 +73,11 @@ export function stylesSection(audience: ContractAudience): ContractSection {
 }
 
 export function pageChangesSection(
-  audience: ContractAudience,
   templateKey: SemanticSelectorKey,
+  { primitives }: { primitives: boolean },
 ): ContractSection {
   const target = { kind: 'semantic', key: templateKey } as const;
-  const native = audience === 'agent' ? ', and "native" where the site allows primitives' : '';
+  const native = primitives ? ', and "native" where the site allows primitives' : '';
   return {
     title: 'Page changes',
     lines: [
@@ -105,7 +107,10 @@ export function settingsSection(): ContractSection {
   };
 }
 
-export function localRulesSection(audience: ContractAudience): ContractSection {
+export function localRulesSection(
+  audience: ContractAudience,
+  { primitives }: { primitives: boolean },
+): ContractSection {
   return {
     title: 'Local plugin rules',
     lines: [
@@ -116,7 +121,11 @@ export function localRulesSection(audience: ContractAudience): ContractSection {
         ? [
             '- "theme": { "brand": "#rrggbb" } optionally recolors Voyager’s own UI on Claude, ChatGPT or DeepSeek. "requires" is optional: native ops already imply "requires.handlers".',
           ]
-        : ['- Do not add "theme", "requires", any "native" op, links or JavaScript.']),
+        : primitives
+          ? [
+              '- Do not add "theme", "requires", links or JavaScript. A "native" op may only call a primitive listed under Primitives.',
+            ]
+          : ['- Do not add "theme", "requires", any "native" op, links or JavaScript.']),
       '- An import lands switched off; the user reviews it and turns it on in the popup.',
     ],
   };

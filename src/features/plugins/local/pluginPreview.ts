@@ -38,7 +38,6 @@ export type PluginPreviewWarning =
   | { readonly kind: 'not-on-site'; readonly site: string }
   /** Allowed by the gate on plugin platforms, but outside what the prompt asked for. */
   | { readonly kind: 'theme' }
-  | { readonly kind: 'native' }
   /** An import replaces this installed version and turns the plugin off. */
   | { readonly kind: 'replaces'; readonly version: string };
 
@@ -242,7 +241,6 @@ export function previewPlugin(
   if (hides) warnings.push({ kind: 'hides' });
   if (rawSelector) warnings.push({ kind: 'raw-selector' });
   if (inspection.themeBrand) warnings.push({ kind: 'theme' });
-  if (inspection.primitives.length > 0) warnings.push({ kind: 'native' });
 
   return {
     name: manifest.name,

@@ -56,7 +56,10 @@ export function anchorLines(site: SiteAdapter): string[] {
 }
 
 /** The facts section body for one site. */
-export function siteFactLines(site: SiteAdapter, options: { primitives: boolean }): string[] {
+export function siteFactLines(
+  site: SiteAdapter,
+  options: { primitives: boolean; theme: boolean },
+): string[] {
   const missing = SEMANTIC_SELECTOR_KEYS.filter((key) => typeof site.selectors[key] !== 'string');
   const native = isNativeSurfaceSite(site);
   const notes = SITE_NOTES[site.id] ?? [];
@@ -77,7 +80,9 @@ export function siteFactLines(site: SiteAdapter, options: { primitives: boolean 
       : options.primitives
         ? [
             '',
-            `Primitives (native ops) and an optional "theme" accent are allowed on ${site.label}.`,
+            options.theme
+              ? `Primitives (native ops) and an optional "theme" accent are allowed on ${site.label}.`
+              : `Primitives (native ops) are allowed on ${site.label}.`,
           ]
         : []),
     ...(notes.length > 0 ? ['', ...notes.map((note) => `- ${note}`)] : []),

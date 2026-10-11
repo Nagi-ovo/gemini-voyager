@@ -3053,10 +3053,6 @@
     "message": "Changes Voyager’s accent color, which the prompt asked the AI not to do.",
     "description": "Warning: the plugin changes the accent color although the prompt asked not to"
   },
-  "localPluginWarnNative": {
-    "message": "Runs a Voyager built-in feature, which the prompt asked the AI not to do.",
-    "description": "Warning: the plugin runs a Voyager built-in although the prompt asked not to"
-  },
   "localPluginWarnReplaces": {
     "message": "Replaces version {version} you already have and turns it off until you turn it on again.",
     "description": "Warning: importing replaces an installed version and turns it off"

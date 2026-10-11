@@ -3053,10 +3053,6 @@
     "message": "会修改 Voyager 的强调色，而提示词要求 AI 不要这样做。",
     "description": "Warning: the plugin changes the accent color although the prompt asked not to"
   },
-  "localPluginWarnNative": {
-    "message": "会运行 Voyager 内置功能，而提示词要求 AI 不要这样做。",
-    "description": "Warning: the plugin runs a Voyager built-in although the prompt asked not to"
-  },
   "localPluginWarnReplaces": {
     "message": "会替换你已安装的 {version} 版本，并在你重新开启前保持关闭。",
     "description": "Warning: importing replaces an installed version and turns it off"

@@ -265,7 +265,7 @@ describe('plain-language plugin preview', () => {
     ]);
   });
 
-  it('flags a theme or native op the prompt asked the AI to leave out', () => {
+  it('flags a theme the prompt asked the AI to leave out, but not a primitive it offers', () => {
     const preview = previewPlugin(
       gated({
         ...base,
@@ -279,6 +279,6 @@ describe('plain-language plugin preview', () => {
       { kind: 'native', handler: 'formulaCopy' },
       { kind: 'theme', brand: '#112233' },
     ]);
-    expect(preview.warnings).toEqual([{ kind: 'theme' }, { kind: 'native' }]);
+    expect(preview.warnings).toEqual([{ kind: 'theme' }]);
   });
 });

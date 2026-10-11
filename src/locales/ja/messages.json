@@ -3053,10 +3053,6 @@
     "message": "Voyager のアクセントカラーを変更します。プロンプトでは AI にそうしないよう指示していました。",
     "description": "Warning: the plugin changes the accent color although the prompt asked not to"
   },
-  "localPluginWarnNative": {
-    "message": "Voyager の組み込み機能を実行します。プロンプトでは AI にそうしないよう指示していました。",
-    "description": "Warning: the plugin runs a Voyager built-in although the prompt asked not to"
-  },
   "localPluginWarnReplaces": {
     "message": "インストール済みのバージョン {version} を置き換え、もう一度オンにするまでオフになります。",
     "description": "Warning: importing replaces an installed version and turns it off"

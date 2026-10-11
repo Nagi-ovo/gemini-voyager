@@ -5,10 +5,11 @@
  *
  * The contract is `buildPluginContract(site, { audience: 'chat' })`, the same
  * one the scaffold's AGENTS.md and the public SKILL.md are rendered from: CSS
- * inlined (the reply is pasted), no primitives or theme (the preview flags
- * them), settings allowed. Its examples are asserted to pass
- * `validateLocalManifest` in tests, so the prompt cannot drift from what
- * imports.
+ * inlined (the reply is pasted), primitives wherever the site allows them, no
+ * theme (the preview flags it), settings allowed. Its examples are asserted to
+ * pass `validateLocalManifest` in tests, so the prompt cannot drift from what
+ * imports. An AI that can browse is pointed at the public skill too, but the
+ * prompt stays complete on its own and wins where the two differ.
  *
  * The text is machine-facing and stays in English; it asks for `name` and
  * `description` in the language of the user's request.
@@ -16,6 +17,7 @@
 import { SiteRegistry, DEFAULT_ADAPTERS } from '../sites/registry';
 import type { SiteAdapter } from '../types';
 import { buildPluginContract, renderExample, renderSections } from './authoring/pluginContract';
+import { WRITE_PLUGIN_SKILL_URL } from './authoring/skillLink';
 
 export {
   AUTHORING_OP_KINDS,
@@ -46,6 +48,12 @@ export function buildPluginAuthoringPrompt(request: string, site: SiteAdapter): 
     'Write a Voyager local plugin for the request below. Voyager is a browser extension that',
     'applies a declarative JSON manifest (CSS plus reversible page changes) to a web page. It runs',
     'the manifest through a strict validator, so follow this contract exactly.',
+    '',
+    // The online skill is the latest release's; the pasted contract is the user's installed build.
+    `If you can open web pages, the full reference behind this contract is ${WRITE_PLUGIN_SKILL_URL}.`,
+    'It is optional: this prompt is complete. That page is written for coding agents, so skip its',
+    'scaffold and check steps and its style.css files, and still reply as this prompt asks. It follows',
+    `the latest Voyager release, while this prompt matches the user's (plugin engine ${contract.engineVersion}): where the two differ, follow this prompt.`,
     '',
     'The request, verbatim between the markers:',
     '----- BEGIN REQUEST -----',

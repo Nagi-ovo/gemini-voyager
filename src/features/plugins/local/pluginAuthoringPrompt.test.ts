@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { attributeNameIssue } from '../manifest/sinkGuards';
 import { OP_KINDS, REQUIRED_STRINGS } from '../manifest/validate';
+import { WRITE_PLUGIN_SKILL_URL } from './authoring/skillLink';
 import {
   AUTHORING_OP_KINDS,
   AUTHORING_OP_TEMPLATES,
@@ -14,6 +15,7 @@ import {
 import { validateLocalManifest } from './validateLocalManifest';
 
 const sites = authoringSites();
+const byId = (id: string) => sites.find((site) => site.id === id)!;
 
 /** The fenced example the prompt embeds, parsed back. */
 function embeddedExample(prompt: string): unknown {
@@ -70,6 +72,34 @@ describe('plugin authoring prompt contract', () => {
     for (const kind of AUTHORING_OP_KINDS) expect(prompt).toContain(`  - ${kind}: `);
     expect(prompt).toContain('"local.<id>"');
     expect(prompt).toContain('exactly one ```json fenced code block');
+  });
+
+  it('tells a chat AI about copy buttons and counters on ChatGPT, but not on Gemini', () => {
+    const chatgpt = buildPluginAuthoringPrompt('Add a copy button to each reply', byId('chatgpt'));
+    expect(chatgpt).toContain('## Primitives');
+    expect(chatgpt).toMatch(/^- copyButton \(sinceEngine /m);
+    expect(chatgpt).toMatch(/^- counterBadge \(sinceEngine /m);
+    const examples = [...chatgpt.matchAll(/```json\n([\s\S]*?)\n```/g)].map((match) =>
+      JSON.parse(match[1]),
+    );
+    const native = examples.filter((manifest) =>
+      JSON.stringify(manifest.contributes).includes('"op":"native"'),
+    );
+    expect(native).toHaveLength(1);
+    const result = validateLocalManifest(native[0]);
+    expect(result.success ? [] : result.error).toEqual([]);
+
+    const gemini = buildPluginAuthoringPrompt('Add a copy button to each reply', byId('gemini'));
+    expect(gemini).not.toContain('## Primitives');
+    expect(gemini).not.toContain('"op": "native"');
+  });
+
+  it('points a browsing AI at the full reference, and keeps the pasted contract in charge', () => {
+    for (const site of sites) {
+      const prompt = buildPluginAuthoringPrompt('x', site);
+      expect(prompt).toContain(WRITE_PLUGIN_SKILL_URL);
+      expect(prompt).toContain('where the two differ, follow this prompt');
+    }
   });
 
   it('names only attributes the gate allows, and refuses href', () => {

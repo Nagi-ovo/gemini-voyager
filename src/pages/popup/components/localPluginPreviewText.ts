@@ -90,8 +90,6 @@ export function warningText(t: Translate, warning: PluginPreviewWarning): string
       return fill(t('localPluginWarnNotOnSite'), { site: warning.site });
     case 'theme':
       return t('localPluginWarnTheme');
-    case 'native':
-      return t('localPluginWarnNative');
     case 'replaces':
       return fill(t('localPluginWarnReplaces'), { version: warning.version });
   }
