@@ -411,10 +411,15 @@ function normalizeContributions(raw: unknown, issues: ManifestIssue[]): PluginCo
         if (rawField.type === 'select' && !selectOptions) continue;
         const minLabel = readOptionalString(rawField, 'minLabel', `${path}.minLabel`, issues);
         const maxLabel = readOptionalString(rawField, 'maxLabel', `${path}.maxLabel`, issues);
+        const enabledBy = rawField.enabledBy;
+        if (enabledBy !== undefined && !nonEmptyString(enabledBy)) {
+          issues.push({ path: `${path}.enabledBy`, message: 'must be a non-empty setting key' });
+        }
         settings[key] = {
           type: rawField.type as SettingField['type'],
           label: rawField.label,
           default: fallback,
+          ...(nonEmptyString(enabledBy) ? { enabledBy } : {}),
           ...(minLabel ? { minLabel } : {}),
           ...(maxLabel ? { maxLabel } : {}),
           ...(typeof rawField.min === 'number' ? { min: rawField.min } : {}),
@@ -430,6 +435,26 @@ function normalizeContributions(raw: unknown, issues: ManifestIssue[]): PluginCo
                 }
               : {}),
         };
+      }
+      // Resolve references after all fields are read so declaration order does not matter.
+      for (const [key, field] of Object.entries(settings)) {
+        if (field.enabledBy === undefined) continue;
+        const path = `contributes.settings.${key}.enabledBy`;
+        if (field.enabledBy === key) {
+          issues.push({ path, message: 'must refer to another setting, not itself' });
+        } else if (!Object.hasOwn(settings, field.enabledBy)) {
+          issues.push({ path, message: 'must refer to a setting in the same plugin' });
+        } else {
+          const target = settings[field.enabledBy];
+          if (target.type !== 'boolean') {
+            issues.push({ path, message: 'must refer to a boolean setting' });
+          } else if (target.enabledBy !== undefined) {
+            issues.push({
+              path,
+              message: 'must refer to a setting without enabledBy; only one level is supported',
+            });
+          }
+        }
       }
       result.settings = settings;
     }

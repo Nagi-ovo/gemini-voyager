@@ -41,6 +41,18 @@ it.
 
 Use these focused checks while developing; the final PR verification in `SKILL.md` covers unchanged checks already run.
 
+## Settings
+
+Set a field's `"enabledBy": "<booleanKey>"` when its control should be usable
+only while another boolean setting in the same plugin resolves to `true`.
+This works for number, select and boolean controls: the popup keeps the field
+and its value visible, disables the control while the switch is off, and
+retains the stored value. The key must be non-empty, name another boolean
+field, and point to a field without its own `enabledBy` (one level only).
+Page behavior still needs its existing boolean gate; `enabledBy` controls only
+the popup input. Engine 1.7.0 ignores this field and leaves the control enabled,
+so it needs no higher engine floor.
+
 ## Complete when
 
 The directory holds a manifest, CSS and README; `plugin:check`, focused tests and `catalog:build` pass; `marketplace.json` lists it; and all ten locales are real translations. Verify light and dark behavior plus a non-zero target match count on a real conversation, or visible before/after evidence for pure CSS without countable targets.

@@ -157,6 +157,8 @@ export interface SettingField {
   readonly type: 'boolean' | 'number' | 'string' | 'color' | 'select';
   readonly label: string;
   readonly default: boolean | number | string;
+  /** Disable this control unless another, independent boolean setting resolves to true. */
+  readonly enabledBy?: string;
   /** Optional label for the low end of a number/range control. */
   readonly minLabel?: string;
   /** Optional label for the high end of a number/range control. */

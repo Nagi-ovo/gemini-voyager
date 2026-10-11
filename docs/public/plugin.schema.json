@@ -353,6 +353,11 @@
           "description": "English label. Every locale needs a translation under `i18n.<locale>.settings.<key>.label`."
         },
         "default": { "type": ["boolean", "number", "string"] },
+        "enabledBy": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Key of another boolean setting in this plugin. The popup keeps this control visible with its value, but disables it unless that boolean's resolved value is true. The gate checks that the key is non-empty, names a boolean in the same schema and is not this field; the target must have no enabledBy of its own (one level only)."
+        },
         "minLabel": {
           "type": "string",
           "minLength": 1,

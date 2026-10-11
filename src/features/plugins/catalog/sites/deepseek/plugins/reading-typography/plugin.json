@@ -268,6 +268,7 @@
       },
       "fontSize": {
         "type": "number",
+        "enabledBy": "fontSizeEnabled",
         "label": "Text size (%)",
         "minLabel": "Small",
         "maxLabel": "Large",
@@ -282,6 +283,7 @@
       },
       "lineHeight": {
         "type": "number",
+        "enabledBy": "spacingEnabled",
         "label": "Line height (%)",
         "minLabel": "Tight",
         "maxLabel": "Loose",
@@ -291,6 +293,7 @@
       },
       "paragraphSpacing": {
         "type": "number",
+        "enabledBy": "spacingEnabled",
         "label": "Paragraph spacing (px)",
         "minLabel": "Tight",
         "maxLabel": "Loose",

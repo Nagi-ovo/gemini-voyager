@@ -25,6 +25,8 @@ For architecture or distribution changes, read `src/features/plugins/README.md` 
 
 ## Shared constraints
 
+- For settings controlled by another switch, use the `enabledBy` rule in
+  [Declarative plugin](references/declarative.md#settings).
 - Every injected class is `gv-` prefixed, and the local import gate rejects an
   `addClass` class that is not. Bundled plugins follow the `plugin:new`
   convention, `gv-plugin-<site>-<segment>`; local plugins use

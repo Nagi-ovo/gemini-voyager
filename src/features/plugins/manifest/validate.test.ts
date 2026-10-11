@@ -151,6 +151,99 @@ describe('validateManifest', () => {
     expect(result.data.contributes.settings?.width.max).toBe(120);
   });
 
+  describe('setting enabledBy references', () => {
+    const switchField = { type: 'boolean', label: 'Enabled', default: false };
+    const numberField = { type: 'number', label: 'Size', default: 16 };
+    const withSettings = (settings: Record<string, unknown>) =>
+      validateManifest({
+        ...valid,
+        contributes: { ...valid.contributes, settings },
+      });
+    const issuesFor = (settings: Record<string, unknown>) => {
+      const result = withSettings(settings);
+      expect(result.success).toBe(false);
+      return result.success ? [] : result.error;
+    };
+
+    it('preserves dependencies for number, select and boolean controls regardless of order', () => {
+      const settings = {
+        size: { ...numberField, enabledBy: 'enabled' },
+        mode: {
+          type: 'select',
+          label: 'Mode',
+          default: 'small',
+          options: [{ value: 'small', label: 'Small' }],
+          enabledBy: 'enabled',
+        },
+        detail: { ...switchField, enabledBy: 'enabled' },
+        enabled: switchField,
+      };
+      const result = withSettings(settings);
+      expect(result.success && result.data.contributes.settings).toEqual(settings);
+    });
+
+    it('rejects a dependency on an unknown or inherited key', () => {
+      for (const enabledBy of ['missing', 'toString']) {
+        expect(issuesFor({ size: { ...numberField, enabledBy } })).toContainEqual({
+          path: 'contributes.settings.size.enabledBy',
+          message: 'must refer to a setting in the same plugin',
+        });
+      }
+    });
+
+    it('rejects a dependency on a non-boolean setting', () => {
+      const targets = [
+        numberField,
+        { type: 'string', label: 'Text', default: 'value' },
+        { type: 'color', label: 'Color', default: '#fff' },
+        {
+          type: 'select',
+          label: 'Mode',
+          default: 'a',
+          options: [{ value: 'a', label: 'A' }],
+        },
+      ];
+      for (const target of targets) {
+        expect(issuesFor({ size: { ...numberField, enabledBy: 'target' }, target })).toContainEqual(
+          {
+            path: 'contributes.settings.size.enabledBy',
+            message: 'must refer to a boolean setting',
+          },
+        );
+      }
+    });
+
+    it('rejects a dependency on itself', () => {
+      expect(issuesFor({ enabled: { ...switchField, enabledBy: 'enabled' } })).toContainEqual({
+        path: 'contributes.settings.enabled.enabledBy',
+        message: 'must refer to another setting, not itself',
+      });
+    });
+
+    it('rejects chained dependencies with a one-level explanation', () => {
+      expect(
+        issuesFor({
+          size: { ...numberField, enabledBy: 'enabled' },
+          enabled: { ...switchField, enabledBy: 'master' },
+          master: switchField,
+        }),
+      ).toContainEqual({
+        path: 'contributes.settings.size.enabledBy',
+        message: 'must refer to a setting without enabledBy; only one level is supported',
+      });
+    });
+
+    it.each(['', '   ', null, 0, false, [], {}])(
+      'rejects a malformed enabledBy value: %j',
+      (enabledBy) => {
+        expect(issuesFor({ size: { ...numberField, enabledBy } })).toContainEqual({
+          path: 'contributes.settings.size.enabledBy',
+          message: 'must be a non-empty setting key',
+        });
+      },
+    );
+  });
+
   it('drops first-party-only setting rules from catalog data', () => {
     const result = validateManifest({
       ...valid,

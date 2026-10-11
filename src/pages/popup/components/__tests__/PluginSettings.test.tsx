@@ -3,6 +3,7 @@ import { act } from 'react';
 import { describe, expect, it } from 'vitest';
 
 import { BUILTIN_PLUGINS } from '@/features/plugins/builtin';
+import readingTypography from '@/features/plugins/catalog/sites/deepseek/plugins/reading-typography/plugin.json';
 import deepseekTimeline from '@/features/plugins/catalog/sites/deepseek/plugins/timeline/plugin.json';
 import { validateManifest } from '@/features/plugins/manifest/validate';
 import { resolvePluginSettings } from '@/features/plugins/runtime/resolvePluginSettings';
@@ -222,6 +223,131 @@ describe('PluginSettings select setting', () => {
 });
 
 describe('PluginSettings setting slider', () => {
+  it('a slider stays disabled while its switch is off and keeps its value when toggled', async () => {
+    const plugin: PluginManifest = {
+      ...widthPlugin,
+      contributes: {
+        settings: {
+          enabled: { type: 'boolean', label: 'Custom width', default: false },
+          width: { ...widthPlugin.contributes.settings!.width, enabledBy: 'enabled' },
+        },
+      },
+    };
+    pluginState.current = {
+      [plugin.id]: { enabled: true, installedAt: 0, settings: { width: 900 } },
+    };
+    await render(plugin);
+    const slider = container.querySelector<HTMLInputElement>('input[type="range"]')!;
+    const toggle = container.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
+    expect(slider.disabled).toBe(true);
+    expect(slider.value).toBe('900');
+    expect(container.textContent).toContain('900');
+    slider.focus();
+    expect(document.activeElement).not.toBe(slider);
+    expect(setPluginSettings).not.toHaveBeenCalled();
+
+    act(() => toggle.click());
+    expect(slider.disabled).toBe(false);
+    expect(slider.value).toBe('900');
+    expect(setPluginSettings).toHaveBeenLastCalledWith(plugin.id, { enabled: true });
+    act(() => toggle.click());
+    expect(slider.disabled).toBe(true);
+    expect(slider.value).toBe('900');
+    expect(container.textContent).toContain('900');
+    expect(setPluginSettings).toHaveBeenLastCalledWith(plugin.id, { enabled: false });
+  });
+
+  it.each([undefined, false, 'true', true])(
+    'enables dependent controls only when the resolved switch is true (stored %s)',
+    async (stored) => {
+      const plugin: PluginManifest = {
+        ...widthPlugin,
+        contributes: {
+          settings: {
+            enabled: { type: 'boolean', label: 'Enable controls', default: true },
+            width: { ...widthPlugin.contributes.settings!.width, enabledBy: 'enabled' },
+            checked: {
+              type: 'boolean',
+              label: 'Dependent switch',
+              default: true,
+              enabledBy: 'enabled',
+            },
+            placement: {
+              type: 'select',
+              label: 'Placement',
+              default: 'right',
+              enabledBy: 'enabled',
+              options: [{ value: 'right', label: 'Right' }],
+            },
+          },
+        },
+      };
+      if (stored !== undefined) {
+        pluginState.current = {
+          [plugin.id]: { enabled: true, installedAt: 0, settings: { enabled: stored } },
+        };
+      }
+      await render(plugin);
+      const checkbox = container.querySelector<HTMLInputElement>(
+        'input[aria-label="Dependent switch"]',
+      )!;
+      const select = container.querySelector('select')!;
+      const inputs = [
+        container.querySelector<HTMLInputElement>('input[type="range"]')!,
+        checkbox,
+        select,
+      ];
+      for (const input of inputs)
+        expect(input.disabled).toBe(stored === false || stored === 'true');
+      expect(checkbox.checked).toBe(true);
+      expect(select.value).toBe('right');
+      expect(setPluginSettings).not.toHaveBeenCalled();
+      const toggle = container.querySelector<HTMLInputElement>(
+        'input[aria-label="Enable controls"]',
+      )!;
+      const wasDisabled = inputs[0].disabled;
+      act(() => toggle.click());
+      for (const input of inputs) expect(input.disabled).toBe(!wasDisabled);
+      expect(checkbox.checked).toBe(true);
+      expect(select.value).toBe('right');
+    },
+  );
+
+  it('DeepSeek typography sliders follow their own switches without erasing saved values', async () => {
+    const parsed = validateManifest({
+      ...readingTypography,
+      contributes: { ...readingTypography.contributes, styles: [] },
+    });
+    if (!parsed.success) throw new Error('invalid reading typography');
+    const plugin = parsed.data;
+    pluginState.current = {
+      [plugin.id]: {
+        enabled: true,
+        installedAt: 0,
+        settings: { fontSize: 117, lineHeight: 165, paragraphSpacing: 17 },
+      },
+    };
+    await render(plugin);
+    const sliders = Array.from(container.querySelectorAll<HTMLInputElement>('input[type="range"]'));
+    expect(sliders.map((input) => input.disabled)).toEqual([true, true, true]);
+    expect(sliders.map((input) => input.value)).toEqual(['117', '165', '17']);
+    const switches = Array.from(
+      container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'),
+    );
+    act(() => switches[0].click());
+    expect(sliders.map((input) => input.disabled)).toEqual([false, true, true]);
+    act(() => switches[1].click());
+    expect(sliders.map((input) => input.disabled)).toEqual([false, false, false]);
+    act(() => switches[1].click());
+    expect(sliders.map((input) => input.disabled)).toEqual([false, true, true]);
+    expect(sliders.map((input) => input.value)).toEqual(['117', '165', '17']);
+    expect(setPluginSettings.mock.calls.map(([, values]) => values)).toEqual([
+      { fontSizeEnabled: true },
+      { spacingEnabled: true },
+      { spacingEnabled: false },
+    ]);
+  });
+
   it('renders localized range labels from the plugin i18n map', async () => {
     mockLanguage.current = 'zh';
     await render();

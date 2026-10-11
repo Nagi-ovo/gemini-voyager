@@ -97,6 +97,7 @@ export function settingsSection(): ContractSection {
       `- "contributes.settings": { "<key>": { "type", "label", "default", … } }. Types: ${LOCAL_SETTING_TYPES.join(', ')}. string and color settings are refused: the popup has no control for them yet.`,
       '- number: the popup shows a slider from "min" to "max" (0 and 100 when omitted), with optional "minLabel" and "maxLabel" at its ends.',
       '- select: "options": [{ "value": "…", "label": "…" }] with at least one option and unique values, and a "default" that is one of the values.',
+      '- Optional "enabledBy": "<booleanKey>" keeps a number, select or boolean control visible but disabled unless that boolean setting resolves to true; its value is retained. The key must be non-empty and name another boolean in the same plugin. Its target must have no enabledBy of its own (one level only). This changes only the popup control; gate page behavior separately with the boolean. Engine 1.7.0 ignores enabledBy and leaves the control enabled, so no higher engine floor is needed.',
       '- Use a setting through a {{key}} token in CSS text, a setStyle value or a setAttribute value; Voyager substitutes the current value (the default until the user changes it). A common pattern: setStyle sets a custom property from the setting, and the CSS reads var(...).',
       '- A boolean renders as "true" or "false": set data-gv-… to "{{key}}" with setAttribute and style [data-gv-…=\'true\'].',
     ],

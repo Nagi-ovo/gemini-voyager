@@ -160,6 +160,16 @@ A select needs at least one option, unique string values (`""` included) and a
 default among them; a stored choice the manifest no longer offers resolves to
 that default in both the popup and the host (`runtime/resolvePluginSettings.ts`).
 
+Setting fields may declare `enabledBy: "<booleanKey>"` to depend on another
+boolean setting in the same plugin. The popup keeps number, select and boolean
+controls visible with their values, but disables them unless the controlling
+setting's resolved value is `true`; stored values remain intact. The key must
+be non-empty and name another boolean field without its own `enabledBy`
+(one level only). This affects popup controls; page behavior keeps its own
+boolean gate.
+Engine 1.7.0 ignores `enabledBy` and leaves the control enabled, so this field
+requires no higher engine floor.
+
 `target` is a CSS selector string, or `{ "kind": "semantic", "key": "userTurn" }`
 to use the site adapter's stable selector for one of the nine semantic keys in
 `sites/semanticKeys.ts`; a `site.json` may not invent a key outside that

@@ -42,6 +42,8 @@ export function PluginSettings({
           ? { ...localized, label: t(field.messageKeys.label) }
           : localized;
         const hint = field.messageKeys?.hint ? t(field.messageKeys.hint) : undefined;
+        // CSS-gated controls must stay inert until their controlling switch is on.
+        const disabled = field.enabledBy !== undefined && resolved[field.enabledBy] !== true;
 
         if (field.type === 'boolean') {
           const checked = rawValue === true;
@@ -50,7 +52,7 @@ export function PluginSettings({
               key={key}
               className={`flex justify-between gap-3 ${hint ? 'items-start' : 'items-center'}`}
             >
-              <span className="min-w-0">
+              <span className={`min-w-0 ${disabled ? 'opacity-50' : ''}`}>
                 <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
                   {settingText.label}
                   {field.experimental && <ExperimentalBadge title={t('experimentalLabel')} />}
@@ -63,6 +65,7 @@ export function PluginSettings({
               </span>
               <Switch
                 checked={checked}
+                disabled={disabled}
                 aria-label={settingText.label}
                 onChange={(event) => writeNow(key, event.target.checked)}
               />
@@ -73,12 +76,16 @@ export function PluginSettings({
         if (field.type === 'select') {
           const unavailable = unavailableChoices(plugin, resolved, key);
           return (
-            <label key={key} className="flex items-center justify-between gap-3">
+            <label
+              key={key}
+              className={`flex items-center justify-between gap-3 ${disabled ? 'opacity-50' : ''}`}
+            >
               <span className="text-muted-foreground text-[11px]">{settingText.label}</span>
               <select
                 value={String(rawValue)}
+                disabled={disabled}
                 onChange={(event) => writeNow(key, event.target.value)}
-                className="bg-background border-border focus:ring-primary/50 min-w-0 rounded-md border px-2 py-1 text-[11px] transition-all focus:ring-2"
+                className="bg-background border-border focus:ring-primary/50 min-w-0 rounded-md border px-2 py-1 text-[11px] transition-all focus:ring-2 disabled:cursor-not-allowed"
               >
                 {settingText.options?.map((option) => (
                   <option
@@ -97,7 +104,11 @@ export function PluginSettings({
         if (field.type !== 'number') return null;
         const value = Number(rawValue);
         return (
-          <div key={key} title={`${settingText.label}: ${value}`}>
+          <div
+            key={key}
+            title={`${settingText.label}: ${value}`}
+            className={disabled ? 'opacity-50' : undefined}
+          >
             <div className="text-muted-foreground mb-1 flex items-center justify-between gap-2 text-[11px]">
               <span className="min-w-0 truncate">{settingText.label}</span>
               <span className="shrink-0 tabular-nums">{value}</span>
@@ -113,9 +124,10 @@ export function PluginSettings({
                 min={field.min ?? 0}
                 max={field.max ?? 100}
                 value={value}
+                disabled={disabled}
                 aria-label={settingText.label}
                 onChange={(e) => handleSetting(plugin.id, key, Number(e.target.value))}
-                className="accent-primary h-1.5 flex-1 cursor-pointer"
+                className="accent-primary h-1.5 flex-1 cursor-pointer disabled:cursor-not-allowed"
               />
               {settingText.maxLabel && (
                 <span className="text-muted-foreground shrink-0 text-[10px]">
