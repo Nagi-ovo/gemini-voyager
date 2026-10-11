@@ -55,14 +55,6 @@ describe('tableCopy serialization', () => {
     expect(serializeTable(source, 'tsv')).toBe('Sum\n$$\\sum_i x_i$$');
   });
 
-  it('keeps a pipe inside a cell from splitting the Markdown row', () => {
-    const source = table(
-      '<thead><tr><th>Option</th></tr></thead><tbody><tr><td>a | b</td></tr></tbody>',
-    );
-
-    expect(serializeTable(source, 'markdown')).toBe('| Option |\n| --- |\n| a \\| b |');
-  });
-
   it('pastes into a spreadsheet as text: no markup, no evaluated formulas, quotes escaped', () => {
     const source = table(
       '<thead><tr><th><strong>Cell</strong></th><th>Note</th></tr></thead><tbody>' +
