@@ -20,5 +20,13 @@ DeepSeek’s `.ds-collapsible-text`. For reply or thinking content, set
 `params.target` to `assistantTurn` or `thinkingBlock`; the site must declare that
 key.
 
-Live check: pending (long and short messages, light/dark themes, RTL, settings
-changes and disabling).
+## Live check
+
+Chrome, light theme, an existing conversation, nothing sent. At the default
+320 px a 176 px message keeps its native layout with no toggle. At 80 px it is
+cut to 80 px with a fade, and a chevron toggle below the bubble's right edge
+(`展开文本`, `aria-expanded="false"`) expands it to its full 176 px and
+collapses it again. With **Collapse long messages initially** off, the message
+stays expanded and keeps its toggle. Every settings change applied without a
+reload. Disabling the plugin left no `gv-collapse` class, toggle or stylesheet.
+The dark theme, RTL, and disabling while a reply streams were not checked live.
