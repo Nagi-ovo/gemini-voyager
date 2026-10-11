@@ -6,10 +6,11 @@ export const contract: PrimitiveContract = {
   semantic: [],
   params: {
     target: {
-      type: 'string',
-      required: false,
+      type: 'semanticKey',
+      required: true,
+      allowedKeys: ['userTurn', 'assistantTurn', 'thinkingBlock'],
       description:
-        'Semantic content key: userTurn (default), assistantTurn or thinkingBlock. Declare the selected key in requires.semantic; do not target content the host already collapses.',
+        'Semantic content key to collapse: userTurn, assistantTurn or thinkingBlock. Do not target content the host already collapses.',
     },
     maxPx: {
       type: 'number',

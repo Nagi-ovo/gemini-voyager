@@ -16,20 +16,9 @@ remain outside the clipped content. There is no expand-all control.
 Buttons support keyboard input, localized labels, light/dark themes and RTL layout.
 Disabling the plugin removes its controls and restores the original layout.
 Do not adapt this plugin to content that already has native collapse, including
-DeepSeek’s `.ds-collapsible-text`. For reply or thinking content, change both
-`params.target` and `requires.semantic` to the chosen adapter key.
+DeepSeek’s `.ds-collapsible-text`. For reply or thinking content, set
+`params.target` to `assistantTurn` or `thinkingBlock`; the site must declare that
+key.
 
-## Reviewer checks before catalog inclusion
-
-- Add the proposed directory at `catalog/sites/chatgpt/plugins/collapse-long-messages/`
-  and add its marketplace entry. No stylesheet or site-adapter change is needed.
-- In light and dark themes, verify a long pasted message receives a visible,
-  keyboard-operable toggle after the message, while a short message does not.
-- In RTL, verify toggle placement, label direction and the fade remain readable.
-- Let a target grow beyond the height threshold and verify its toggle appears.
-  Expand it, append more content and verify it stays expanded.
-- Set the height above the message’s natural height and verify the toggle disappears
-  and the message displays fully. Switch the initial-collapse setting and verify
-  settings reactivation uses the new value.
-- Disable the plugin and verify native message layout returns with no leftover
-  controls, clipping or fade.
+Live check: pending (long and short messages, light/dark themes, RTL, settings
+changes and disabling).

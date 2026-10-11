@@ -1,8 +1,17 @@
 {
   "sinceEngine": "next",
   "params": {
-    "target": { "type": "string", "required": false },
-    "maxPx": { "type": "number", "required": false },
-    "startCollapsed": { "type": "boolean", "required": false }
+    "target": {
+      "type": "semanticKey",
+      "required": true
+    },
+    "maxPx": {
+      "type": "number",
+      "required": false
+    },
+    "startCollapsed": {
+      "type": "boolean",
+      "required": false
+    }
   }
 }

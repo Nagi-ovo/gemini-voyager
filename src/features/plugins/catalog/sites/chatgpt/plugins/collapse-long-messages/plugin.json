@@ -138,9 +138,6 @@
   "engine": ">=next",
   "tier": "declarative",
   "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
-  "requires": {
-    "semantic": ["userTurn"]
-  },
   "contributes": {
     "settings": {
       "maxHeight": {
