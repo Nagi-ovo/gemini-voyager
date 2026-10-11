@@ -34,6 +34,11 @@
       "official": true
     },
     {
+      "name": "chatgpt-collapse-long-messages",
+      "source": "sites/chatgpt/plugins/collapse-long-messages/plugin.json",
+      "official": true
+    },
+    {
       "name": "deepseek-reading-width",
       "source": "sites/deepseek/plugins/reading-width/plugin.json",
       "official": true

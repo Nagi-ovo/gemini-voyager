@@ -1,0 +1,173 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.chatgpt-collapse-long-messages",
+  "name": "ChatGPT · Collapse long messages",
+  "version": "1.0.0",
+  "description": "Collapse your long messages to an adjustable height, with a button to expand each message.",
+  "i18n": {
+    "ar": {
+      "name": "ChatGPT · طي الرسائل الطويلة",
+      "description": "يطوي رسائلك الطويلة إلى ارتفاع قابل للتعديل، مع زر لتوسيع كل رسالة.",
+      "settings": {
+        "maxHeight": {
+          "label": "ارتفاع النص المطوي (px)",
+          "minLabel": "أقصر",
+          "maxLabel": "أطول"
+        },
+        "startCollapsed": {
+          "label": "طي الرسائل الطويلة عند ظهورها"
+        }
+      }
+    },
+    "es": {
+      "name": "ChatGPT · Contraer mensajes largos",
+      "description": "Contrae tus mensajes largos a una altura ajustable, con un botón para expandir cada mensaje.",
+      "settings": {
+        "maxHeight": {
+          "label": "Altura del texto contraído (px)",
+          "minLabel": "Menor",
+          "maxLabel": "Mayor"
+        },
+        "startCollapsed": {
+          "label": "Contraer mensajes largos al aparecer"
+        }
+      }
+    },
+    "fr": {
+      "name": "ChatGPT · Replier les longs messages",
+      "description": "Replie vos longs messages à une hauteur réglable, avec un bouton pour déplier chaque message.",
+      "settings": {
+        "maxHeight": {
+          "label": "Hauteur du texte replié (px)",
+          "minLabel": "Plus courte",
+          "maxLabel": "Plus haute"
+        },
+        "startCollapsed": {
+          "label": "Replier les longs messages à leur apparition"
+        }
+      }
+    },
+    "ja": {
+      "name": "ChatGPT · 長いメッセージを折りたたむ",
+      "description": "自分の長いメッセージを指定した高さに折りたたみ、各メッセージのボタンで展開できます。",
+      "settings": {
+        "maxHeight": {
+          "label": "折りたたみ時の高さ（px）",
+          "minLabel": "低く",
+          "maxLabel": "高く"
+        },
+        "startCollapsed": {
+          "label": "長いメッセージを最初から折りたたむ"
+        }
+      }
+    },
+    "ko": {
+      "name": "ChatGPT · 긴 메시지 접기",
+      "description": "내 긴 메시지를 설정한 높이로 접고, 각 메시지의 버튼으로 펼칠 수 있습니다.",
+      "settings": {
+        "maxHeight": {
+          "label": "접힌 텍스트 높이(px)",
+          "minLabel": "낮게",
+          "maxLabel": "높게"
+        },
+        "startCollapsed": {
+          "label": "긴 메시지를 처음부터 접기"
+        }
+      }
+    },
+    "pt": {
+      "name": "ChatGPT · Recolher mensagens longas",
+      "description": "Recolhe suas mensagens longas a uma altura ajustável, com um botão para expandir cada mensagem.",
+      "settings": {
+        "maxHeight": {
+          "label": "Altura do texto recolhido (px)",
+          "minLabel": "Menor",
+          "maxLabel": "Maior"
+        },
+        "startCollapsed": {
+          "label": "Recolher mensagens longas ao aparecerem"
+        }
+      }
+    },
+    "ru": {
+      "name": "ChatGPT · Сворачивать длинные сообщения",
+      "description": "Сворачивает ваши длинные сообщения до заданной высоты и добавляет кнопку для разворачивания каждого сообщения.",
+      "settings": {
+        "maxHeight": {
+          "label": "Высота свёрнутого текста (px)",
+          "minLabel": "Ниже",
+          "maxLabel": "Выше"
+        },
+        "startCollapsed": {
+          "label": "Сворачивать длинные сообщения при появлении"
+        }
+      }
+    },
+    "zh": {
+      "name": "ChatGPT · 折叠长消息",
+      "description": "将你发送的长消息折叠到可调节的高度，每条消息都有展开按钮。",
+      "settings": {
+        "maxHeight": {
+          "label": "折叠后的文本高度（px）",
+          "minLabel": "更低",
+          "maxLabel": "更高"
+        },
+        "startCollapsed": {
+          "label": "默认折叠长消息"
+        }
+      }
+    },
+    "zh_TW": {
+      "name": "ChatGPT · 摺疊長訊息",
+      "description": "將你傳送的長訊息摺疊至可調整的高度，每則訊息都有展開按鈕。",
+      "settings": {
+        "maxHeight": {
+          "label": "摺疊後的文字高度（px）",
+          "minLabel": "更低",
+          "maxLabel": "更高"
+        },
+        "startCollapsed": {
+          "label": "預設摺疊長訊息"
+        }
+      }
+    }
+  },
+  "author": "voyager-official",
+  "category": "readability",
+  "license": "MIT",
+  "engine": ">=next",
+  "tier": "declarative",
+  "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+  "requires": {
+    "semantic": ["userTurn"]
+  },
+  "contributes": {
+    "settings": {
+      "maxHeight": {
+        "type": "number",
+        "label": "Collapsed text height (px)",
+        "minLabel": "Shorter",
+        "maxLabel": "Taller",
+        "default": 320,
+        "min": 80,
+        "max": 2000
+      },
+      "startCollapsed": {
+        "type": "boolean",
+        "label": "Collapse long messages initially",
+        "default": true
+      }
+    },
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "collapse",
+        "params": {
+          "target": "userTurn",
+          "maxPx": "{{maxHeight}}",
+          "startCollapsed": "{{startCollapsed}}"
+        }
+      }
+    ]
+  }
+}
