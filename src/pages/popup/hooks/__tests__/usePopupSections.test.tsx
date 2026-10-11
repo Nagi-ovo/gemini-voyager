@@ -91,47 +91,56 @@ describe('usePopupSections', () => {
       }),
     );
 
+    const cloudSyncOrder = Number(section('cloudSync')?.style.order);
     expect(section('folder')?.style.order).toBe('0');
-    expect(section('cloudSync')?.style.order).toBe('2');
-    expect(section('contextSync')?.style.order).toBe('4');
+    expect(cloudSyncOrder).toBeGreaterThan(0);
+    expect(Number(section('contextSync')?.style.order)).toBe(cloudSyncOrder + 2);
     expect(section('plugins')).toBeUndefined();
     expect(writeSyncStorage).not.toHaveBeenCalled();
 
     await render({ nativePopupPlatform: 'aistudio' });
     expect(sections.hydrateFromStorage).toBe(hydrate);
     expect(section('contextSync')).toBeUndefined();
-    expect(sections.getSectionProps('contextSync').order).toBe(4);
+    expect(sections.getSectionProps('contextSync').order).toBe(cloudSyncOrder + 2);
     expect(browser.storage.local.get).toHaveBeenCalledTimes(1);
   });
 
   it('moves between visible sections while preserving hidden platform and plugin slots', async () => {
     await render({ nativePopupPlatform: 'aistudio' });
-    const initial = ['cloudSync', 'timeline', 'plugins', 'folder'];
+    const initial = NATIVE_POPUP_SECTION_IDS.filter((id) => id !== 'cloudSync' && id !== 'folder');
+    const saved = ['folder', ...initial.slice(0, 3), 'cloudSync', ...initial.slice(3)];
     await act(async () =>
-      sections.hydrateFromStorage({ [StorageKeys.GV_POPUP_SECTION_ORDER]: initial }),
+      sections.hydrateFromStorage({ [StorageKeys.GV_POPUP_SECTION_ORDER]: saved }),
     );
-    const moveDown = section('cloudSync')?.querySelector<HTMLButtonElement>(
-      `button[aria-label="${translate('moveSectionDown')}"]`,
+    // contextSync and timeline are hidden on AI Studio; localPlugins is the next visible slot.
+    expect(saved.slice(1, 5)).toEqual(['contextSync', 'localPlugins', 'timeline', 'cloudSync']);
+    const moveUp = section('cloudSync')?.querySelector<HTMLButtonElement>(
+      `button[aria-label="${translate('moveSectionUp')}"]`,
     );
-    expect(moveDown).toBeTruthy();
-    await act(async () => moveDown?.click());
+    expect(moveUp).toBeTruthy();
+    await act(async () => moveUp?.click());
 
+    const expected = [...saved];
+    [expected[2], expected[4]] = [expected[4], expected[2]];
     expect(writeSyncStorage).toHaveBeenLastCalledWith({
-      [StorageKeys.GV_POPUP_SECTION_ORDER]: [
-        'folder',
-        'timeline',
-        'plugins',
-        'cloudSync',
-        ...NATIVE_POPUP_SECTION_IDS.filter((id) => !initial.includes(id)),
-      ],
+      [StorageKeys.GV_POPUP_SECTION_ORDER]: expected,
     });
-    expect(section('cloudSync')?.style.order).toBe('6');
-    expect(section('folder')?.style.order).toBe('0');
-    expect(
-      section('folder')?.querySelector<HTMLButtonElement>(
-        `button[aria-label="${translate('moveSectionUp')}"]`,
-      )?.disabled,
-    ).toBe(true);
+    expect(section('cloudSync')?.style.order).toBe('4');
+    expect(section('localPlugins')?.style.order).toBe('8');
+    expect(section('contextSync')).toBeUndefined();
+    expect(sections.getSectionProps('contextSync').order).toBe(2);
+  });
+
+  it('puts a section added since the order was saved in its default slot, not at the bottom', async () => {
+    await render();
+    const saved = [...NATIVE_POPUP_SECTION_IDS].filter((id) => id !== 'localPlugins').reverse();
+    await act(async () =>
+      sections.hydrateFromStorage({ [StorageKeys.GV_POPUP_SECTION_ORDER]: saved }),
+    );
+
+    const after = (id: string) => Number(section(id)?.style.order);
+    expect(after('localPlugins')).toBe(after('contextSync') + 2);
+    expect(after('nanobanana')).toBe(0);
   });
 
   it('filters rows, expands matching section titles and restores reordering after clearing', async () => {

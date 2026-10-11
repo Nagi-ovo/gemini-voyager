@@ -39,6 +39,21 @@ const VALUE_BADGE_SECTION_IDS = new Set<PopupSectionId>([
   'sidebarWidth',
 ]);
 
+/**
+ * A saved order predates any section added since it was written. Each missing
+ * section goes back after its default predecessor, so a section placed high by
+ * default does not land at the bottom for everyone who once reordered.
+ */
+function withMissingSections(saved: readonly PopupSectionId[]): PopupSectionId[] {
+  const order = [...saved];
+  DEFAULT_SECTION_ORDER.forEach((id, index) => {
+    if (order.includes(id)) return;
+    const previous = DEFAULT_SECTION_ORDER[index - 1];
+    order.splice(previous === undefined ? 0 : order.indexOf(previous) + 1, 0, id);
+  });
+  return order;
+}
+
 export interface PopupSectionsOptions {
   nativePopupPlatform: NativePopupPlatform;
   isPluginSite: boolean;
@@ -98,9 +113,7 @@ export function usePopupSections({
     const filtered = storedOrder.filter(
       (id: unknown): id is PopupSectionId => typeof id === 'string' && validIds.has(id),
     );
-    const seen = new Set(filtered);
-    const missing = NATIVE_POPUP_SECTION_IDS.filter((id) => !seen.has(id));
-    setSectionOrder([...filtered, ...missing]);
+    setSectionOrder(withMissingSections(filtered));
   }, []);
 
   const isSectionVisible = useCallback(

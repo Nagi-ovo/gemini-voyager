@@ -11,7 +11,7 @@ import { PluginManager } from './PluginManager';
 
 /**
  * Local plugins on Voyager's native surfaces (Gemini, AI Studio). The native
- * popup has no plugin page, so this is one entry at the end of the settings.
+ * popup has no plugin page, so this is one reorderable section of the settings.
  * It stays a single collapsed row until the user opens it or a local plugin
  * targets this page; then it shows that plugin's toggle and settings (the
  * usual `PluginManager`, without the online catalog, which never serves a
@@ -30,7 +30,7 @@ export function NativeLocalPluginsSection({
 
   if (!opened && localHere.length === 0) {
     return (
-      <Card style={{ order: 1000 }} className="p-0 transition-all hover:shadow-md">
+      <Card className="p-0 transition-all hover:shadow-md">
         <button
           type="button"
           onClick={() => setOpened(true)}
@@ -50,7 +50,7 @@ export function NativeLocalPluginsSection({
   }
 
   return (
-    <div style={{ order: 1000 }} className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
       {localHere.length > 0 && <PluginManager {...plugins} manifests={localHere} />}
       <LocalPluginsPanel t={t} activeUrl={plugins.activeUrl} />
     </div>

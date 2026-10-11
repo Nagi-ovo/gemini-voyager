@@ -5,6 +5,7 @@ export const POPUP_SECTION_SEARCH_SETTING_ID = '__section';
 export const NATIVE_POPUP_SECTION_IDS = [
   'cloudSync',
   'contextSync',
+  'localPlugins',
   'timeline',
   'folder',
   'folderSpacing',
@@ -37,6 +38,7 @@ type SectionCapability = true | readonly string[];
  */
 const AI_STUDIO_CAPABILITIES = {
   cloudSync: true,
+  localPlugins: true,
   folder: ['enableFolderFeature', 'hideArchivedConversations', 'enableAccountIsolation'],
   folderSpacing: true,
   sidebarWidth: true,

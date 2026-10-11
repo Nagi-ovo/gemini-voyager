@@ -432,8 +432,9 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           />,
         )}
 
-        {/* Gemini / AI Studio have no plugin page; local plugins get one entry here. */}
-        {!isPluginSite && !sections.hasSettingsSearch && (
+        {/* Gemini / AI Studio have no plugin page; local plugins get one section here. */}
+        {wrapSection(
+          'localPlugins',
           <NativeLocalPluginsSection
             plugins={{
               manifests: plugins.siteScopedManifests,
@@ -444,7 +445,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
               statuses: plugins.pluginStatuses,
             }}
             t={t}
-          />
+          />,
         )}
       </div>
 
