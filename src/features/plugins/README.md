@@ -277,7 +277,8 @@ feature, and a second copy would fight it): CSS and reversible DOM ops only.
 `local/localPluginRules.ts` adds three rules that turn a plugin which would
 import and then do nothing into an actionable error: `addClass` adds one
 `gv-` prefixed class; every semantic key the plugin relies on (op targets,
-`requires.semantic`, a primitive's keys) is declared by every site its
+`requires.semantic`, a primitive's keys and the keys its `semanticKey` params
+name) is declared by every site its
 `matches` target, or the popup would only show `needs-semantic`; and settings
 are `boolean`, `number` or `select`, the kinds the popup renders a control for.
 Stored records are re-validated on every read by
@@ -459,7 +460,9 @@ the registration there is:
 
 - **`contract.ts`** — data only: `export const contract` with the primitive's
   `name` (the folder name), `sinceEngine`, the semantic keys it reads from the
-  adapter, and its parameter spec. It imports only types and data modules
+  adapter, and its parameter spec (`type`, `required`, `description`; a
+  param that names a semantic key the primitive reads is `type: 'semanticKey'`,
+  optionally narrowed by `allowedKeys`). It imports only types and data modules
   (`contractTypes.ts`, `codeBlockDiagramParams.ts`), so Bun scripts and the CLI
   can load it without DOM or implementations; `primitiveFolders.test.ts`
   enforces this.
@@ -514,7 +517,9 @@ floor, and `builtin.test.ts` applies the same check to the builtins.
 - `requires.handlers` lists the primitives the plugin invokes. Every `native` op
   is implied, so listing it is documentation, not duplication.
 - `requires.semantic` lists semantic keys the plugin depends on beyond the ones
-  its ops target. A primitive's own `semantic` keys come from its contract.
+  its ops target. A primitive's own `semantic` keys come from its contract, and
+  the key a `semanticKey` param names (every option, when the param is a select
+  setting's `{{key}}` token) comes from the op's params.
 
 `runtime/pluginStatus.ts` derives both sets (`requiredHandlers`,
 `requiredSemanticKeys`) and turns them into a status, which `PluginHost` reports

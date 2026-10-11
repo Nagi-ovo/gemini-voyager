@@ -16,7 +16,10 @@ import { requiredSemanticKeys } from '../runtime/pluginStatus';
 import { patternWithinAny } from '../sites/matchPattern';
 import { SEMANTIC_SELECTOR_KEYS, isSemanticSelectorKey } from '../sites/semanticKeys';
 import type { PluginManifest, SiteAdapter } from '../types';
-import { getPrimitiveSemanticKeys } from './authoring/primitiveReference';
+import {
+  getNativeOpParamSemanticKeys,
+  getPrimitiveSemanticKeys,
+} from './authoring/primitiveReference';
 
 /** Classes a local plugin adds: one class token that starts with `gv-`. */
 export const LOCAL_CLASS_NAME_PATTERN = /^gv-[A-Za-z0-9_-]+$/;
@@ -85,6 +88,12 @@ function semanticIssues(manifest: PluginManifest, sites: readonly SiteAdapter[])
     if (op.op === 'native') {
       for (const key of getPrimitiveSemanticKeys(op.handler)) {
         report(`contributes.domOps[${index}]`, key, `, which primitive "${op.handler}" reads`);
+      }
+      for (const { param, key } of getNativeOpParamSemanticKeys(
+        op,
+        manifest.contributes.settings,
+      )) {
+        report(`contributes.domOps[${index}].params.${param}`, key);
       }
     } else if (op.target.kind === 'semantic') {
       report(

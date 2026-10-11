@@ -17,6 +17,7 @@
  * has its permission.
  */
 import { resolveEngineVersion } from '../engineVersion';
+import { acceptedSemanticKeyParamValues } from '../manifest/semanticKeyParams';
 import { engineSatisfied } from '../semver';
 import type { PluginManifest, SiteAdapter } from '../types';
 import { EFFECTIVE_PLUGIN_ENGINE_VERSION, getPrimitiveContract } from '../verbs/contracts';
@@ -66,13 +67,20 @@ export function requiredHandlers(manifest: PluginManifest): readonly string[] {
 
 /**
  * Semantic keys the plugin relies on: declared `requires.semantic`, every
- * semantic selector target, and what its primitives read from the adapter.
+ * semantic selector target, what its primitives read from the adapter, and
+ * the keys its `semanticKey` params name (each option of a select setting the
+ * param reads, since the user may pick any of them).
  */
 export function requiredSemanticKeys(manifest: PluginManifest): readonly string[] {
   const keys = new Set<string>(manifest.requires?.semantic ?? []);
   for (const op of manifest.contributes.domOps ?? []) {
     if (op.op === 'native') {
-      for (const key of getPrimitiveContract(op.handler)?.semantic ?? []) keys.add(key);
+      const contract = getPrimitiveContract(op.handler);
+      for (const key of contract?.semantic ?? []) keys.add(key);
+      const settings = manifest.contributes.settings;
+      for (const { value } of acceptedSemanticKeyParamValues(op, contract, settings)) {
+        keys.add(value);
+      }
     } else if (op.target.kind === 'semantic') {
       keys.add(op.target.key);
     }

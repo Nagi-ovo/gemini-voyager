@@ -3,6 +3,8 @@
  * primitive contracts. Everything else in `local/` asks this module, so when
  * the contracts' source changes, only this import does.
  */
+import { acceptedSemanticKeyParamValues } from '../../manifest/semanticKeyParams';
+import type { NativeOperation, SettingsSchema } from '../../types';
 import { PRIMITIVE_CONTRACTS } from '../../verbs/contracts';
 
 export interface PrimitiveParamReference {
@@ -11,6 +13,8 @@ export interface PrimitiveParamReference {
   readonly required: boolean;
   /** Engine version that added the param, when later than its primitive. */
   readonly sinceEngine?: string;
+  /** For a `semanticKey` param: the keys it accepts; any vocabulary key when absent. */
+  readonly allowedKeys?: readonly string[];
   readonly description: string;
 }
 
@@ -35,6 +39,7 @@ export function listPrimitiveReferences(): readonly PrimitiveReference[] {
       type: spec.type,
       required: spec.required,
       ...(spec.sinceEngine ? { sinceEngine: spec.sinceEngine } : {}),
+      ...(spec.allowedKeys ? { allowedKeys: [...spec.allowedKeys] } : {}),
       description: spec.description,
     })),
   }));
@@ -43,4 +48,16 @@ export function listPrimitiveReferences(): readonly PrimitiveReference[] {
 /** Semantic keys a primitive reads; empty for an unknown name. */
 export function getPrimitiveSemanticKeys(name: string): readonly string[] {
   return PRIMITIVE_CONTRACTS.find((contract) => contract.name === name)?.semantic ?? [];
+}
+
+/** Accepted keys a `native` op names through its `semanticKey` params, with the param naming each. */
+export function getNativeOpParamSemanticKeys(
+  op: NativeOperation,
+  schema: SettingsSchema | undefined,
+): readonly { readonly param: string; readonly key: string }[] {
+  const contract = PRIMITIVE_CONTRACTS.find((candidate) => candidate.name === op.handler);
+  return acceptedSemanticKeyParamValues(op, contract, schema).map(({ param, value }) => ({
+    param,
+    key: value,
+  }));
 }

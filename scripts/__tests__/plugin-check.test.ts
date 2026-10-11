@@ -155,6 +155,38 @@ describe('plugin-check', () => {
     expect(result.ok).toBe(true);
   });
 
+  it('reports a native op missing a required param before it ships', async () => {
+    const dir = makeFixturePlugin({
+      selectors: { thinkingBlock: '.think' },
+      manifest: {
+        engine: '>=next',
+        contributes: { domOps: [{ op: 'native', handler: 'copyButton', params: {} }] },
+      },
+    });
+    const result = await checkPluginDir(dir);
+    expect(result.ok).toBe(false);
+    expect(result.issues.join('\n')).toContain(
+      'contributes.domOps[0].params.target: missing required parameter for primitive "copyButton"',
+    );
+  });
+
+  it('requires the semantic key a primitive param names, with no requires.semantic', async () => {
+    const domOps = [{ op: 'native', handler: 'copyButton', params: { target: 'thinkingBlock' } }];
+    const missing = await checkPluginDir(
+      makeFixturePlugin({ manifest: { engine: '>=next', contributes: { domOps } } }),
+    );
+    expect(missing.ok).toBe(false);
+    expect(missing.issues.join('\n')).toMatch(/"thinkingBlock" are not defined by site "demo"/);
+
+    const declared = await checkPluginDir(
+      makeFixturePlugin({
+        selectors: { thinkingBlock: '.think' },
+        manifest: { engine: '>=next', contributes: { domOps } },
+      }),
+    );
+    expect(declared.issues).toEqual([]);
+  });
+
   it('accepts a complete fixture plugin', async () => {
     const result = await checkPluginDir(makeFixturePlugin());
     expect(result.issues).toEqual([]);

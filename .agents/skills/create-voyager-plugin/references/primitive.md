@@ -26,7 +26,10 @@ and usually lands in the same PR.
 ## Implementation
 
 1. `verbs/<name>/contract.ts`: `export const contract` (`name` equal to the
-   folder name, `sinceEngine`, `semantic`, `params`, `description`). Import
+   folder name, `sinceEngine`, `semantic`, `params`, `description`). A param
+   that picks which adapter key the primitive reads is `type: 'semanticKey'`
+   (with `allowedKeys` when only some keys work), so the checks require that
+   key and the plugin needs no `requires.semantic` for it. Import
    only types and data modules (`../contractTypes`, `../codeBlockDiagramParams`);
    `primitiveFolders.test.ts` fails otherwise. Set `sinceEngine: 'next'` for a
    new primitive (and a new optional param added to a shipped primitive).

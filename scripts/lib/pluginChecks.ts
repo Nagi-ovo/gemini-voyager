@@ -21,7 +21,10 @@ import {
   LOCAL_PLUGIN_ID_PREFIX,
   isLocalPluginId,
 } from '../../src/features/plugins/local/localPluginId';
-import { primitiveShippabilityIssues } from '../../src/features/plugins/manifest/primitiveChecks';
+import {
+  primitiveParamIssues,
+  primitiveShippabilityIssues,
+} from '../../src/features/plugins/manifest/primitiveChecks';
 import type { ManifestIssue } from '../../src/features/plugins/manifest/validate';
 import { requiredSemanticKeys } from '../../src/features/plugins/runtime/pluginStatus';
 import { patternWithinAny } from '../../src/features/plugins/sites/matchPattern';
@@ -91,6 +94,22 @@ export function checkPrimitivesAreShippable(
 }
 
 /**
+ * `native` op params against each primitive's contract: known names, required
+ * ones present, declared types and allowed semantic keys. The extension's
+ * load-time gate checks only templated params (an older engine must report
+ * `needs-engine` for a newer param, not reject the plugin), so a static param
+ * the primitive would refuse at activation is caught here before publishing.
+ */
+export function checkPrimitiveParams(
+  manifest: PluginManifest,
+  manifestPath: string,
+): readonly string[] {
+  return primitiveParamIssues(manifest).map(
+    (issue) => `${manifest.id} (${manifestPath}): ${issue.path}: ${issue.message}`,
+  );
+}
+
+/**
  * `local.*` is the namespace of user-imported plugins (`local/localPluginId.ts`).
  * An official plugin under it would be dropped by every client's merge.
  */
@@ -137,6 +156,7 @@ export function checkManifestAgainstSite(
     ...checkNotLocalNamespace(manifest, manifestPath),
     ...checkMatchesStayInSite(manifest, site, manifestPath),
     ...checkPrimitivesAreShippable(manifest, manifestPath),
+    ...checkPrimitiveParams(manifest, manifestPath),
     ...checkSemanticKeysExist(manifest, site, manifestPath),
   ];
 }

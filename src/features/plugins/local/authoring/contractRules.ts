@@ -124,7 +124,7 @@ export function localRulesSection(audience: ContractAudience): ContractSection {
 
 export function primitivesSection(): ContractSection {
   const lines: string[] = [
-    'A primitive is behavior Voyager ships as code; a plugin can only call it by name and configure it: { "op": "native", "handler": "<name>", "params": { … } }. Every param is optional. Set "engine" to ">=" the primitive’s sinceEngine (and any param’s). Not on Gemini or AI Studio, and only on a site that declares the semantic keys the primitive reads.',
+    'A primitive is behavior Voyager ships as code; a plugin can only call it by name and configure it: { "op": "native", "handler": "<name>", "params": { … } }. A param marked required must be set; every other param is optional. A semanticKey param names a semantic key (only the listed ones when it says "one of"); every matched site must declare it, as with the keys a primitive reads, so it need not be repeated in "requires.semantic". Set "engine" to ">=" the primitive’s sinceEngine (and any param’s). Not on Gemini or AI Studio, and only on a site that declares the semantic keys the primitive reads.',
     `- To pass a setting into params, use "{{key}}" in a string value, recursively inside objects and arrays. Parameter names and object keys stay literal. A whole-value token preserves the setting's number, boolean or string type; embedded "a{{key}}b" produces a string. Expansion runs once: tokens inside setting values remain literal. Set "engine" to ">=${NATIVE_PARAM_SETTINGS_SINCE_ENGINE}" or any higher primitive/param floor; this capability's floor stays ${NATIVE_PARAM_SETTINGS_SINCE_ENGINE} in later releases.`,
     '- Every referenced key must exist in contributes.settings and its type must fit the primitive contract wherever statically knowable. Manifest loading checks substituted defaults. Each activation substitutes resolved stored values and runs the primitive’s validateParams; an invalid result skips the op with the same diagnostic as invalid static params. Setting changes dispose then reactivate templated primitive ops in order; static params keep the existing in-place update path.',
     '- Example: turnNavigator params { "position": "{{side}}" } with a select setting side whose options are left and right.',
@@ -137,7 +137,11 @@ export function primitivesSection(): ContractSection {
     );
     for (const param of primitive.params) {
       const since = param.sinceEngine ? `, since ${param.sinceEngine}` : '';
-      lines.push(`  - ${param.name} (${param.type}${since}): ${param.description}`);
+      const required = param.required ? ', required' : '';
+      const keys = param.allowedKeys ? `, one of ${param.allowedKeys.join(', ')}` : '';
+      lines.push(
+        `  - ${param.name} (${param.type}${required}${keys}${since}): ${param.description}`,
+      );
     }
   }
   return { title: 'Primitives', lines };

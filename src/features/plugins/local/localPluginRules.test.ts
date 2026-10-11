@@ -106,6 +106,19 @@ describe('local plugin semantic keys', () => {
       },
     ]);
   });
+
+  it('refuses a key a primitive param names at that param, without requires.semantic', () => {
+    const copy = { op: 'native', handler: 'copyButton', params: { target: 'thinkingBlock' } };
+    expect(issues(authored({ domOps: [copy] }, { engine: '>=1.8.0' }))).toEqual([
+      {
+        path: 'contributes.domOps[0].params.target',
+        message:
+          'Claude does not declare semantic key "thinkingBlock" (it declares userTurn, assistantTurn, composer, sidebar)',
+      },
+    ]);
+    const deepseek = { engine: '>=1.8.0', matches: ['https://chat.deepseek.com/*'] };
+    expect(issues(authored({ domOps: [copy] }, deepseek))).toEqual([]);
+  });
 });
 
 describe('local plugin settings', () => {

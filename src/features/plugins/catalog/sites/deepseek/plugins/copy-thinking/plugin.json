@@ -50,8 +50,7 @@
   "tier": "declarative",
   "matches": ["https://chat.deepseek.com/*"],
   "requires": {
-    "handlers": ["copyButton"],
-    "semantic": ["thinkingBlock"]
+    "handlers": ["copyButton"]
   },
   "contributes": {
     "domOps": [

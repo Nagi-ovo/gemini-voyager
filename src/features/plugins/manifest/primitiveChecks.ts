@@ -7,8 +7,13 @@
 import { resolveEngineVersion } from '../engineVersion';
 import { requiredHandlers } from '../runtime/pluginStatus';
 import { engineSatisfied, parseSemver } from '../semver';
+import { SEMANTIC_SELECTOR_KEYS } from '../sites/semanticKeys';
 import type { NativeOperation, PluginManifest, SettingsSchema } from '../types';
-import { type PrimitiveContract, getPrimitiveContract } from '../verbs/contracts';
+import {
+  type PrimitiveContract,
+  type PrimitiveParamSpec,
+  getPrimitiveContract,
+} from '../verbs/contracts';
 import {
   NATIVE_PARAM_SETTINGS_SINCE_ENGINE,
   collectNativeParamSettingReferences,
@@ -16,6 +21,7 @@ import {
   nativeParamSettingIssues,
   renderNativeParams,
 } from './nativeParamSettings';
+import { semanticKeyParamValues } from './semanticKeyParams';
 import type { ManifestIssue } from './validate';
 
 /**
@@ -107,10 +113,34 @@ export function primitiveShippabilityIssues(manifest: PluginManifest): ManifestI
 }
 
 /**
+ * A `semanticKey` param must name an allowed vocabulary key. A select-setting
+ * token is checked option by option, since the user may pick any of them;
+ * another token is left to the primitive's `validateParams` at activation.
+ */
+function semanticKeyParamIssues(
+  op: NativeOperation,
+  contract: PrimitiveContract,
+  param: string,
+  spec: PrimitiveParamSpec,
+  schema: SettingsSchema | undefined,
+  path: string,
+): ManifestIssue[] {
+  if (typeof op.params[param] !== 'string') return [{ path, message: 'must be a semanticKey' }];
+  const allowed: readonly string[] = spec.allowedKeys ?? SEMANTIC_SELECTOR_KEYS;
+  return semanticKeyParamValues(op, contract, schema)
+    .filter((candidate) => candidate.param === param && !allowed.includes(candidate.value))
+    .map(({ value, setting }) => ({
+      path,
+      message: `${setting ? `setting "${setting}" offers "${value}"; ` : ''}must be one of ${allowed.join(', ')}`,
+    }));
+}
+
+/**
  * `native` op params checked against the primitive's published parameter
- * spec: no unknown keys and the declared value type. The primitive's own
- * `validateParams` guard still runs in the engine before activation; this is
- * the data-only part a page without the implementations can check.
+ * spec: no unknown keys, every required param present and the declared value
+ * type. The primitive's own `validateParams` guard still runs in the engine
+ * before activation; this is the data-only part a page without the
+ * implementations can check.
  */
 function primitiveOpParamIssues(
   op: NativeOperation,
@@ -129,6 +159,10 @@ function primitiveOpParamIssues(
       issues.push({ path: paramPath, message: `unknown parameter for primitive "${op.handler}"` });
       continue;
     }
+    if (spec.type === 'semanticKey') {
+      issues.push(...semanticKeyParamIssues(op, contract, key, spec, schema, paramPath));
+      continue;
+    }
     const ok =
       spec.type === 'string[]'
         ? Array.isArray(value) &&
@@ -139,6 +173,15 @@ function primitiveOpParamIssues(
             ? typeof value === 'boolean'
             : typeof value === 'string' && value.trim().length > 0;
     if (!ok) issues.push({ path: paramPath, message: `must be a ${spec.type}` });
+  }
+  // A `{{key}}` token counts as present: it always renders to the setting's value.
+  for (const [key, spec] of Object.entries(contract.params)) {
+    if (spec.required && !Object.hasOwn(rendered.data, key)) {
+      issues.push({
+        path: `${path}.${key}`,
+        message: `missing required parameter for primitive "${op.handler}"`,
+      });
+    }
   }
   return issues;
 }
@@ -177,7 +220,9 @@ export function nativeParamTemplateIssues(manifest: PluginManifest): ManifestIss
       const refs = collectNativeParamSettingReferences({ [param]: value }, path);
       if (!spec) continue; // The ordinary contract check reports unknown params.
       const expected =
-        spec.type === 'selector' || (spec.type === 'string[]' && Array.isArray(value))
+        spec.type === 'selector' ||
+        spec.type === 'semanticKey' ||
+        (spec.type === 'string[]' && Array.isArray(value))
           ? 'string'
           : spec.type;
       for (const ref of refs) {

@@ -10,8 +10,8 @@ primitive through a `native` op with `target: "thinkingBlock"`.
   trimmed. Voyager's own controls inside it are left out.
 - The thinking section is never edited. A reply that streams or is re-rendered
   gets its button once it settles. Turning the plugin off removes every button.
-- `requires.semantic: ["thinkingBlock"]`: the primitive reads the key from its
-  `target` param, so the manifest names it for the compatibility check.
+- `target` is a `semanticKey` param, so the compatibility check requires the
+  site to declare `thinkingBlock` without a `requires.semantic` entry.
 - Requires the Voyager plugin engine that ships `copyButton` (`engine: ">=next"`
   until the release stamps it).
 - Ships disabled; enable it from the popup on DeepSeek.

@@ -3,14 +3,15 @@ import type { PrimitiveContract } from '../contractTypes';
 export const contract: PrimitiveContract = {
   name: 'copyButton',
   sinceEngine: 'next',
-  // The key comes from `params.target`, so the plugin lists it in `requires.semantic`.
+  // The key comes from `params.target`; its `semanticKey` type makes the checks require it.
   semantic: [],
   params: {
     target: {
-      type: 'string',
+      type: 'semanticKey',
       required: true,
+      allowedKeys: ['userTurn', 'assistantTurn', 'thinkingBlock', 'codeBlock'],
       description:
-        'Semantic key whose elements each get a copy button: userTurn, assistantTurn, thinkingBlock or codeBlock. List the same key in requires.semantic.',
+        'Semantic key whose elements each get a copy button. Every matched site must declare it.',
     },
     format: {
       type: 'string',

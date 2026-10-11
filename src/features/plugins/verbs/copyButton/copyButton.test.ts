@@ -5,6 +5,7 @@ import { setCachedLanguage } from '@/utils/i18n';
 
 import { requireBundledSiteAdapter } from '../../catalog/sites';
 import { PluginScope } from '../../runtime/pluginScope';
+import { SEMANTIC_SELECTOR_KEYS } from '../../sites/semanticKeys';
 import type { SiteAdapter } from '../../types';
 import type { PrimitiveContext } from '../types';
 import { COPY_BUTTON_CLASS, type CopyTarget } from './button';
@@ -89,6 +90,15 @@ afterEach(async () => {
 });
 
 describe('copyButton primitive', () => {
+  it('accepts exactly the targets its contract lets the static checks allow', () => {
+    const allowed: readonly string[] = copyButtonPrimitive.contract.params.target.allowedKeys ?? [];
+    for (const target of SEMANTIC_SELECTOR_KEYS) {
+      expect(copyButtonPrimitive.validateParams({ target }).success, target).toBe(
+        allowed.includes(target),
+      );
+    }
+  });
+
   it('accepts a known target with the text format, and nothing else', () => {
     for (const target of ['userTurn', 'assistantTurn', 'thinkingBlock', 'codeBlock']) {
       expect(copyButtonPrimitive.validateParams({ target })).toEqual({
