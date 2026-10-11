@@ -45,5 +45,9 @@ the account, conversation and test text before running these checks.
 3. With the send button disabled or absent, press Ctrl/⌘+Enter and confirm no send attempt or fallback key event occurs.
 4. While an approved test file is uploading, press Ctrl/⌘+Enter. Confirm no message is sent; after upload completion and once the send button is enabled, send only if the maintainer has approved that action.
 
-Live verification is pending; unit fixtures cannot prove that each host editor
-preserves newline transactions or that current upload indicators are detected.
+Live check (2026-10-11, no message sent): plain Enter in an empty composer, at
+a caret between words and over a selected word inserted a newline into React's
+draft with the caret after it; typed text kept it, native Shift+Enter still
+added one, and clearing the draft disabled the send button. Ctrl/⌘+Enter sends
+and upload indicators remain unverified until the maintainer approves a test
+send.
