@@ -615,7 +615,9 @@ P4 rewrites the Claude and ChatGPT builtins as primitive-backed JSON.
 Maintain bundled official plugins in this repository; the retired
 `../voyager-plugins` marketplace is no longer a source. `bun run catalog:build`
 generates the remote catalog published by the docs deploy. See the
-[distribution design](../../../.github/docs/PLUGIN_DISTRIBUTION_PLAN.md).
+[distribution design](../../../.github/docs/PLUGIN_DISTRIBUTION_PLAN.md). Making Gemini and AI
+Studio plugin platforms too is planned in the
+[Gemini plugin platform plan](../../../.github/docs/GEMINI_PLUGIN_PLATFORM_PLAN.md).
 
 ## Remote host catalog (`remote/`)
 
