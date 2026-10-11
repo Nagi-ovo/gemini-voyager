@@ -60,7 +60,7 @@ npx create-voyager-plugin@latest check my-plugin
 - 매칭되는 모든 사이트가 선언한 시맨틱 키만 사용할 것
 - `addClass` 하나에 클래스는 정확히 하나이며, `gv-`로 시작할 것
 - 설정은 boolean, number, select만 사용할 것(string과 color는 아직 popup에 대응하는 컨트롤이 없습니다)
-- Gemini와 AI Studio에서는 `theme`이나 프리미티브를 쓰지 않을 것
+- Gemini와 AI Studio에서는 `theme`을 쓰지 않고, 프리미티브는 각 사이트가 허용하는 것만 쓸 것: Gemini에서는 `formulaCopy`와 `vimInput`, AI Studio에서는 `formulaCopy`. 이들은 Voyager 자체의 수식 복사·입력창 Vim 모드 설정과 같은 코드를 실행하며, 한 페이지에서는 둘 중 하나만 실행됨. 페이지를 처음 불러올 때나 둘 다 실행 중이 아닐 때는 내장 설정이 우선하고, 그 뒤에는 이미 실행 중인 쪽이 계속 실행되며 다른 쪽은 일시 중지로 표시됨. 하나를 끄면 다른 쪽이 이어받음
 
 번역(`i18n`)은 선택 사항입니다.
 

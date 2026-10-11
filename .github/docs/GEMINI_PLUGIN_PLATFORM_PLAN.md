@@ -1,6 +1,6 @@
 # Gemini / AI Studio 插件化架构与迁移报告
 
-日期：2026-10-11。状态：实施中。阶段 1 已实现（分支 `feat/gemini-plugin-platform`），阶段 2 进行中；§5.3 暂按“推荐”列执行，实际取舍与偏差见 §7。
+日期：2026-10-11。状态：实施中。阶段 1–2 已实现并通过真实浏览器验收（分支 `feat/gemini-plugin-platform`，见 §7.5）；§5.3 暂按“推荐”列执行，实际取舍与偏差见 §7。
 
 **结论：值得做，但应迁移“功能的运行所有权”，不要同时重写实现、搬迁用户数据和重做全部设置界面。** Gemini、AI Studio 可以成为与 ChatGPT/Claude/DeepSeek 使用同一 PluginHost、同一原语契约的插件平台，同时继续采用静态注入、包内官方插件、零远端插件目录请求。文件夹、导出、云同步、账号与数据存储继续作为核心服务；需要统一开关时，再为其界面加第一方 builtin 外壳。
 
@@ -444,9 +444,39 @@ AGENTS.md 要求 native module 在 `nativeFeatures.ts` 注册并返回 stop。�
 
 ### 7.3 每功能迁移记录
 
-| 功能           | 站点      | 官方 ID                          | 旧 owner → 新 owner | 设置 binding                                                                             | 放开的 handler | 行为差异                                                    | 回退 |
-| -------------- | --------- | -------------------------------- | ------------------- | ---------------------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------- | ---- |
-| 公式复制       | Gemini    | `voyager.gemini-formula-copy`    | legacy（阶段 1）    | `gvFormulaCopyEnabled`（`!== false`），格式仍读 `gvFormulaCopyFormat`；与 AI Studio 共享 | 无（阶段 1）   | 无                                                          | —    |
-| 公式复制       | AI Studio | `voyager.aistudio-formula-copy`  | legacy（阶段 1）    | 同上（共享键）                                                                           | 无（阶段 1）   | 无                                                          | —    |
-| Vim 输入       | Gemini    | `voyager.gemini-vim-input`       | legacy（阶段 1）    | `gvInputVimMode`（`=== true`）                                                           | 无（阶段 1）   | 无                                                          | —    |
-| 隐藏输入框光晕 | Gemini    | `voyager.gemini-hide-input-halo` | legacy（阶段 1）    | `gvInputHaloHidden`（`=== true`）                                                        | 无（纯 CSS）   | 新增 teardown；先订阅后初读，修掉晚到初读覆盖实时变化的竞态 | —    |
+| 功能           | 站点      | 官方 ID                          | 旧 owner → 新 owner       | 设置 binding                                                                             | 放开的 handler                          | 行为差异                                                                                                                                                                                                                            | 回退                                                                                                                               |
+| -------------- | --------- | -------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| 公式复制       | Gemini    | `voyager.gemini-formula-copy`    | legacy → plugin（阶段 2） | `gvFormulaCopyEnabled`（`!== false`），格式仍读 `gvFormulaCopyFormat`；与 AI Studio 共享 | `formulaCopy`（Gemini，local 可用）     | 官方关闭时不回退 legacy，local `formulaCopy` 可接管；`<html>` 上新增 `data-gv-formula-copy-owner` 属性（跨 content-script 交接时只清自己的副作用）；ChatGPT / Claude / DeepSeek 上同 handler 的两个插件不再双实例，后来者报 blocked | `featureOwners.ts` 该条改回 `legacy`：旧启动路径恢复，Gemini 上 `formulaCopy` 重新关闭，已存 local 保留且报 `blocked: host-policy` |
+| 公式复制       | AI Studio | `voyager.aistudio-formula-copy`  | legacy → plugin（阶段 2） | 同上（共享键）                                                                           | `formulaCopy`（AI Studio，local 可用）  | 同上；另外总闸 off 时官方仍获 admission，之后总闸 off → on 实时挂载、on → off 实时卸载，无需刷新                                                                                                                                    | 同上（AI Studio 条目）                                                                                                             |
+| Vim 输入       | Gemini    | `voyager.gemini-vim-input`       | legacy → plugin（阶段 2） | `gvInputVimMode`（`=== true`）                                                           | `vimInput`（仅 Gemini；AI Studio 仍拒） | 官方关闭时 local `vimInput` 可接管；其他站点同 handler 双实例改为 blocked                                                                                                                                                           | 同上：旧启动路径恢复，Gemini 上 `vimInput` 关闭，已存 local 报 `blocked: host-policy`                                              |
+| 隐藏输入框光晕 | Gemini    | `voyager.gemini-hide-input-halo` | legacy → plugin（阶段 2） | `gvInputHaloHidden`（`=== true`）                                                        | 无（纯 CSS，无 handler）                | 由插件样式表承载，关闭即移除；新增 teardown，先订阅后初读，修掉晚到初读覆盖实时变化的竞态                                                                                                                                           | 改回 `legacy`：`inputHaloHider` 与 `contentStyle.css` 中的规则恢复生效                                                             |
+
+### 7.4 阶段 2 落地内容
+
+| 责任          | 文件                                                                                                                     | 说明                                                                                                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 资源仲裁      | `runtime/resourceClaims.ts`、`runtime/resourceArbiter.ts`、`runtime/reconcileArbitration.ts`                             | 只有 `formulaCopy`（`formula-copy-service`）与 `vimInput`（`vim-input-runtime`）独占，其余可组合；在位者保持，冷启动官方优先、同类按 ID 升序；复合插件整项预检                |
+| 释放账本      | `runtime/releaseLedger.ts`                                                                                               | PluginHost 持有，跨 engine 换代存活；释放未完成时报 `blocked: releasing`，不在操作链上等待，永不完成的 disposer 只挡自己的资源                                                |
+| blocked 状态  | `runtime/pluginStatus.ts`                                                                                                | reason：`host-policy`、`duplicate-claim`、`conflict`、`releasing`、`pending`；保留用户开关，原因消失后自动启动                                                                |
+| 官方 manifest | `catalog/sites/gemini/plugins/{formula-copy,vim-input,hide-input-halo}/`、`catalog/sites/aistudio/plugins/formula-copy/` | 包内发布，不进 `marketplace.json`、不产出 host 文件；Vim 不设 `params.composer`，读 adapter 的 composer 容器 selector，HUD 保持原生 composer 布局                             |
+| 远端保护      | `sources/defaultSources.ts`                                                                                              | 包内官方 ID 免疫远端替换、下架和冒充，与 owner 当前值无关                                                                                                                     |
+| 放开 handler  | `sites/featureOwners.ts`、`sites/hostPolicy.ts`、`local/validateLocalManifest.ts`                                        | 四条 owner 翻为 plugin；Gemini 放开 `formulaCopy`、`vimInput`，AI Studio 放开 `formulaCopy`；theme 仍拒。导入、粘贴、CLI 强制 host 政策，读取已存插件用 `hostPolicy: 'defer'` |
+| popup 提示    | `pages/popup/components/pluginBlockedNote.ts`、`OfficialFeatureStatus.tsx`、`officialFeatureSetting.ts`                  | 被官方占用时指向它真实的开关（公式复制卡片、输入设置里的 Vim 开关）；`releasing` / `pending` 有界重查；公式卡片注明设置同时作用于 Gemini 与 AI Studio                         |
+| authoring     | `local/authoring/*`、`docs/public/skills/write-voyager-plugin/SKILL.md`                                                  | 按站点只列允许的原语，G/A 获得 `formulaCopy` 示例                                                                                                                             |
+
+### 7.5 阶段 2 浏览器验收
+
+2026-10-12 在 Chrome 中以去掉 `key` 的开发构建（独立扩展 ID 与空存储）实测，新开的 Gemini、AI Studio 标签页，已登录账号：
+
+| 项目                  | 结果                                                                                                                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 公式复制（Gemini）    | 点击公式写入剪贴板并弹出提示；`gvFormulaCopyFormat` 改为 `no-dollar` 后复制结果随之变化                                                                                                     |
+| 公式复制（AI Studio） | `ms-katex` 公式点击后提示已复制（light 主题）；总闸 `gvAIStudioEnabled` off 时冷启动停在 `ready`，on 后实时挂载                                                                             |
+| Vim（Gemini）         | 旧开关实时启停；HUD 在 `.text-input-field` 的 composer gutter（`placement=composer`），与原生一致；输入、`Esc`、`0x`、`dd` 正常                                                             |
+| 隐藏光晕（Gemini）    | 插件样式表挂载后 `chat-window::before` 无背景，关闭即移除；不设旧 body class                                                                                                                |
+| 反复启停              | 三个旧键 5 轮快速 on/off 后停在 off：HUD、Vim 标记、光晕样式、公式 owner 属性全部清除；停在 on 时各只有一个实例                                                                             |
+| 已有对话页            | 侧栏 SPA 进入已有对话后，三项均为 `mounted`，HUD 仍只有一个                                                                                                                                 |
+| local 替代与冲突      | 粘贴导入 local `formulaCopy` 插件通过强制 host 政策；官方开时 local 报 `blocked: conflict`，官方关后 local 挂载并接管复制；local 运行中再开官方，官方报 conflict，停用 local 后官方立即挂载 |
+| 零请求                | 页面无目录请求，扩展存储中无任何 catalog 缓存键                                                                                                                                             |
+
+未覆盖：Gemini light 主题（测试账号把 Gemini 主题固定为 dark，未改账号设置）；真实回答中的公式（用合成的 `data-math` / `ms-katex` 节点代替）；Firefox、Safari。另见：Voyager 自己的 coachmark 打开时会拦下页面点击，属既有行为，与本次迁移无关。

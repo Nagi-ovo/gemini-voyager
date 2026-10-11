@@ -86,16 +86,18 @@ describe('packaged host policy', () => {
     }
   });
 
-  it('refuses every shipped primitive on Gemini and AI Studio while their features stay native', () => {
+  it('opens on Gemini and AI Studio only the primitives their official plugins now own', () => {
+    const geminiOpen = new Set(['formulaCopy', 'vimInput']);
+    const aistudioOpen = new Set(['formulaCopy']);
     const primitives = listPrimitiveNames();
-    expect(primitives.length).toBeGreaterThan(0);
+    expect(primitives).toEqual(expect.arrayContaining([...geminiOpen]));
     for (const handler of primitives) {
-      expect(allowsNativeHandler('gemini', handler)).toBe(false);
-      expect(allowsNativeHandler('aistudio', handler)).toBe(false);
+      expect(allowsNativeHandler('gemini', handler)).toBe(geminiOpen.has(handler));
+      expect(allowsNativeHandler('aistudio', handler)).toBe(aistudioOpen.has(handler));
       expect(allowsNativeHandler('chatgpt', handler)).toBe(true);
     }
-    expect(allowedPrimitivesForSite(geminiAdapter)).toEqual(new Set());
-    expect(allowedPrimitivesForSite(aistudioAdapter)).toEqual(new Set());
+    expect(allowedPrimitivesForSite(geminiAdapter)).toEqual(geminiOpen);
+    expect(allowedPrimitivesForSite(aistudioAdapter)).toEqual(aistudioOpen);
     expect(allowedPrimitivesForSite(chatgptAdapter)).toBe('all');
   });
 
@@ -134,16 +136,31 @@ describe('manifestHostPolicyIssues', () => {
     ]);
   });
 
+  it('passes an opened primitive on every packaged site that opened it', () => {
+    expect(
+      manifestHostPolicyIssues(
+        plugin(['https://gemini.google.com/*', 'https://aistudio.google.com/*'], {
+          domOps: [nativeOp('formulaCopy')],
+        }),
+      ),
+    ).toEqual([]);
+    expect(
+      manifestHostPolicyIssues(
+        plugin(['https://gemini.google.com/app/*'], { domOps: [nativeOp('vimInput')] }),
+      ),
+    ).toEqual([]);
+  });
+
   it('checks each target site on its own: one refusing site is enough', () => {
     const issues = manifestHostPolicyIssues(
-      plugin(['https://chatgpt.com/*', 'https://gemini.google.com/app/*'], {
-        domOps: [hideOp, nativeOp('formulaCopy')],
+      plugin(['https://chatgpt.com/*', 'https://aistudio.google.com/*'], {
+        domOps: [hideOp, nativeOp('vimInput')],
       }),
     );
     expect(issues).toEqual([
       {
         path: 'contributes.domOps[1]',
-        message: 'the `formulaCopy` primitive is not available on Gemini in this Voyager version',
+        message: 'the `vimInput` primitive is not available on AI Studio in this Voyager version',
       },
     ]);
   });
@@ -151,16 +168,23 @@ describe('manifestHostPolicyIssues', () => {
   it('reports a native op once for every packaged site that refuses it', () => {
     const issues = manifestHostPolicyIssues(
       plugin(['https://gemini.google.com/*', 'https://aistudio.google.cn/*'], {
-        domOps: [nativeOp('vimInput')],
+        domOps: [nativeOp('turnNavigator'), nativeOp('vimInput')],
       }),
     );
-    expect(issues.map((issue) => issue.path)).toEqual([
-      'contributes.domOps[0]',
-      'contributes.domOps[0]',
-    ]);
-    expect(issues.map((issue) => issue.message)).toEqual([
-      'the `vimInput` primitive is not available on Gemini in this Voyager version',
-      'the `vimInput` primitive is not available on AI Studio in this Voyager version',
+    expect(issues).toEqual([
+      {
+        path: 'contributes.domOps[0]',
+        message: 'the `turnNavigator` primitive is not available on Gemini in this Voyager version',
+      },
+      {
+        path: 'contributes.domOps[0]',
+        message:
+          'the `turnNavigator` primitive is not available on AI Studio in this Voyager version',
+      },
+      {
+        path: 'contributes.domOps[1]',
+        message: 'the `vimInput` primitive is not available on AI Studio in this Voyager version',
+      },
     ]);
   });
 });
@@ -174,10 +198,28 @@ describe('hostPolicyRefusal', () => {
       hostPolicyRefusal(
         'https://aistudio.google.com/prompts/1',
         plugin([], {
-          domOps: [nativeOp('formulaCopy'), hideOp, nativeOp('formulaCopy'), nativeOp('vimInput')],
+          domOps: [
+            nativeOp('turnNavigator'),
+            nativeOp('formulaCopy'),
+            hideOp,
+            nativeOp('vimInput'),
+            nativeOp('turnNavigator'),
+          ],
         }),
       ),
-    ).toEqual({ kind: 'native-op', handlers: ['formulaCopy', 'vimInput'] });
+    ).toEqual({ kind: 'native-op', handlers: ['turnNavigator', 'vimInput'] });
+  });
+
+  it('lets an opened primitive run on its own packaged page', () => {
+    const formula = plugin([], { domOps: [nativeOp('formulaCopy')] });
+    const vim = plugin([], { domOps: [nativeOp('vimInput')] });
+    expect(hostPolicyRefusal('https://gemini.google.com/app', formula)).toBeNull();
+    expect(hostPolicyRefusal('https://gemini.google.com/app', vim)).toBeNull();
+    expect(hostPolicyRefusal('https://aistudio.google.cn/', formula)).toBeNull();
+    expect(hostPolicyRefusal('https://aistudio.google.cn/', vim)).toEqual({
+      kind: 'native-op',
+      handlers: ['vimInput'],
+    });
   });
 
   it('refuses nothing for CSS-only plugins or on other sites', () => {

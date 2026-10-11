@@ -52,11 +52,17 @@ export interface OwnedFeature {
   readonly healthTracking: boolean;
 }
 
+/**
+ * Setting an entry back to 'legacy' is the rollback: its native start path
+ * runs again, its primitive closes on that site, and a stored local plugin
+ * calling it stays listed but reports `blocked: host-policy` (the local
+ * source defers the host policy on read).
+ */
 export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'formulaCopy',
-    owner: 'legacy',
+    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
     handlers: ['formulaCopy'],
     healthTracking: false,
@@ -64,7 +70,7 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'aistudio',
     feature: 'formulaCopy',
-    owner: 'legacy',
+    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy,
     handlers: ['formulaCopy'],
     healthTracking: false,
@@ -72,7 +78,7 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'vimInput',
-    owner: 'legacy',
+    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiVimInput,
     handlers: ['vimInput'],
     healthTracking: false,
@@ -80,7 +86,7 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'hideInputHalo',
-    owner: 'legacy',
+    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiHideInputHalo,
     handlers: [],
     healthTracking: false,

@@ -32,7 +32,7 @@ export function toLocalPluginEntries(
 ): LocalPluginEntry[] {
   return Object.entries(records)
     .map(([id, record]): LocalPluginEntry => {
-      const result = validateLocalManifest(record.manifest);
+      const result = validateLocalManifest(record.manifest, undefined, { hostPolicy: 'defer' });
       return result.success
         ? { id, record, manifest: result.data.manifest, issues: [] }
         : { id, record, manifest: null, issues: result.error };

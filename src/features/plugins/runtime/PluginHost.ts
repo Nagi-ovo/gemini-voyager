@@ -10,7 +10,10 @@
  *      off the op chain: those plugins join in the reconcile after that read
  *      lands, once the content script admits them (`officialAdmission.ts`)
  *   4. reconcile: mount every plugin that (matches URL) AND (is enabled) AND
- *      (satisfies the engine version) AND (is not entitlement-locked); unmount the rest
+ *      (satisfies the engine version) AND (is not entitlement-locked) AND
+ *      (wins the page-wide runtimes it needs, `resourceArbiter.ts`); unmount
+ *      the rest. A winner whose runtime is still shutting down elsewhere waits
+ *      for that release (`releaseLedger.ts`) off the op chain
  *   5. subscribe to state changes and re-reconcile (live enable/disable)
  *   6. subscribe to this host's remote catalog cache and to the user's local
  *      plugins, and reload on content change
@@ -36,14 +39,12 @@ import {
   resolveSiteAdapterForUrl,
   resolveSiteOverride,
 } from '../remote/siteOverride';
+import { ownedFeatureByPluginId, tracksPluginHealth } from '../sites/featureOwners';
 import { hostPolicyRefusal, packagedSiteForUrl } from '../sites/hostPolicy';
 import { matchesAnyPattern } from '../sites/matchPattern';
 import { SiteRegistry } from '../sites/registry';
 import { createDefaultPluginSources, listPluginManifests } from '../sources/defaultSources';
-import {
-  type LegacySettingSnapshot,
-  resolveEffectiveSettings,
-} from '../storage/legacySettingBindings';
+import { resolveEffectiveSettings } from '../storage/legacySettingBindings';
 import { type PluginStateMap, loadPluginState, subscribePluginState } from '../storage/pluginState';
 import {
   type EntitlementProvider,
@@ -60,12 +61,21 @@ import {
   DEFAULT_LEGACY_SETTINGS,
   type LegacySettingsSource,
   type LegacySnapshotFeed,
-  isPluginWanted,
   openLegacySnapshotFeed,
 } from './legacySnapshotFeed';
 import { PLUGIN_CATALOG_REFRESH_MESSAGE } from './messages';
 import { CLOSED_ADMISSION, type OfficialAdmission } from './officialAdmission';
 import { type PluginStatus, findIncompatibility } from './pluginStatus';
+import {
+  type PluginBlock,
+  type WishInput,
+  type WishVerdict,
+  blockedStatus,
+  wishVerdict,
+} from './reconcileArbitration';
+import { ReleaseLedger } from './releaseLedger';
+import { arbitrate } from './resourceArbiter';
+import { claimedResources, duplicateResourceClaims } from './resourceClaims';
 import { type SurfaceSwitch, surfaceSwitchForUrl } from './surfaceSwitch';
 
 export interface PluginHostOptions {
@@ -159,6 +169,16 @@ export class PluginHost {
   private opChain: Promise<void> = Promise.resolve();
   /** Last settings pushed per plugin id, for change detection. */
   private readonly pushedSettings = new Map<string, string>();
+  /**
+   * Unfinished releases of page-wide runtimes. Owned here rather than by an
+   * engine, and kept across stop()→start(), so a successor in a rebuilt
+   * engine never starts beside a runtime that is still shutting down.
+   */
+  private readonly releases = new ReleaseLedger();
+  /** Plugins holding their runtimes after the last pass; a holder is never displaced. */
+  private holders: ReadonlySet<string> = new Set();
+  /** Plugins the last pass kept off by a conflict or a pending release. */
+  private blocked: ReadonlyMap<string, PluginBlock> = new Map();
 
   constructor(options: PluginHostOptions = {}) {
     this.url = options.url ?? location.href;
@@ -295,36 +315,55 @@ export class PluginHost {
     this.engine?.unmountAll();
     this.pushedSettings.clear();
     this.frozen.clear();
+    // A restart arbitrates from scratch; unfinished releases stay in the ledger.
+    this.holders = new Set();
+    this.blocked = new Map();
   }
 
   /**
-   * Status of every plugin that targets this page (plan §4.2). Incompatible
-   * plugins are reported with their reason instead of being hidden; the
-   * popup renders these and adds its own permission check.
+   * Status of every plugin whose `matches` cover this page (plan §4.2).
+   * Incompatible and blocked plugins are reported with their reason instead
+   * of being hidden; the popup renders these and adds its own permission
+   * check. A packaged official plugin whose feature a native module still
+   * owns is left out, pure-CSS ones included: that module is what runs, and
+   * the plugin has nothing to report.
    */
   getStatuses(): readonly PluginStatus[] {
     const engine = this.engine;
     const statuses: PluginStatus[] = [];
     for (const listed of this.manifests) {
-      if (!this.targetsThisPage(listed)) continue;
+      if (!matchesAnyPattern(this.url, listed.matches)) continue;
       const pinned = this.frozen.get(listed.id);
       const manifest = pinned?.mounted ?? listed;
+      const pending = pinned ? { pendingVersion: pinned.pendingVersion } : {};
+      // A native module runs this feature; its plugin never starts, whatever it contributes.
+      if (ownedFeatureByPluginId(listed.id)?.owner === 'legacy') continue;
+      if (hostPolicyRefusal(this.url, listed) !== null) {
+        statuses.push(blockedStatus(manifest, { reason: 'host-policy' }, pending));
+        continue;
+      }
       const incompatibility = findIncompatibility({
         manifest,
         adapter: this.adapter,
         hasPrimitive,
       });
-      const pending = pinned ? { pendingVersion: pinned.pendingVersion } : {};
       if (incompatibility) {
         statuses.push({ ...incompatibility, ...pending });
         continue;
       }
+      if (duplicateResourceClaims(manifest).length > 0) {
+        statuses.push(blockedStatus(manifest, { reason: 'duplicate-claim' }, pending));
+        continue;
+      }
       const base = { id: manifest.id, version: manifest.version, ...pending };
+      const block = this.blocked.get(manifest.id);
       if (engine?.isActive(manifest.id)) {
         statuses.push({
           ...base,
           kind: engine.getHealth(manifest.id) === true ? 'no-effect' : 'mounted',
         });
+      } else if (block) {
+        statuses.push(blockedStatus(manifest, block, pending));
       } else {
         statuses.push({ ...base, kind: 'ready' });
       }
@@ -338,6 +377,12 @@ export class PluginHost {
       adapter,
       onHealthChange: (id, noEffect) => {
         logger.info('Plugin health changed', { id, noEffect });
+      },
+      shouldTrackHealth: (manifest) => tracksPluginHealth(manifest.id),
+      // The mounted manifest decides what is released, so a plugin frozen
+      // on its old version (D7) releases what that version claimed.
+      onRelease: (manifest, released) => {
+        this.releases.record(manifest.id, claimedResources(manifest), released);
       },
     });
   }
@@ -416,7 +461,7 @@ export class PluginHost {
       const listed = new Set(manifests.map((manifest) => manifest.id));
       for (const id of previous.keys()) {
         if (!listed.has(id) && engine.isActive(id)) {
-          engine.unmount(id);
+          void engine.unmount(id);
           this.pushedSettings.delete(id);
         }
       }
@@ -427,7 +472,7 @@ export class PluginHost {
         if (this.frozen.has(manifest.id) || !engine.isActive(manifest.id)) continue;
         const mounted = previous.get(manifest.id);
         if (mounted && isSameMountedPlugin(mounted, manifest)) continue;
-        engine.unmount(manifest.id);
+        void engine.unmount(manifest.id);
         this.pushedSettings.delete(manifest.id);
       }
     }
@@ -446,31 +491,84 @@ export class PluginHost {
     const engine = this.engine;
     const state = this.state;
     const legacy = this.legacy?.current() ?? null;
+    const legacyPhase = this.legacy?.phase() ?? 'none';
     const manifests = this.manifests.map((listed) => this.frozen.get(listed.id)?.mounted ?? listed);
     if (!engine) return;
+    const verdicts: Record<Exclude<WishVerdict, 'skip'>, PluginManifest[]> = {
+      run: [],
+      reserve: [],
+      await: [],
+    };
     for (const manifest of manifests) {
       if (this.generation !== gen) return;
-      const shouldRun = await this.shouldActivate(manifest, state, legacy);
-      if (this.generation !== gen) return;
-      const isActive = engine.isActive(manifest.id);
-      if (shouldRun && !isActive) {
-        const settings = this.resolveSettings(manifest, state);
-        engine.mount(manifest, settings);
-        this.pushedSettings.set(manifest.id, JSON.stringify(settings));
-      } else if (!shouldRun && isActive) {
-        engine.unmount(manifest.id);
-        this.pushedSettings.delete(manifest.id);
-      } else if (shouldRun && isActive) {
+      const verdict = await this.evaluate(manifest, { state, legacy, legacyPhase });
+      if (verdict !== 'skip') verdicts[verdict].push(manifest);
+    }
+    if (this.generation !== gen) return;
+    // From here on nothing awaits: the pass acts on one consistent verdict.
+    const wanted = verdicts.run;
+    // Release what is no longer wanted first, so arbitration below already
+    // sees a runtime handed over in this very pass as shutting down.
+    const wantedIds = new Set(wanted.map((manifest) => manifest.id));
+    this.unmountWhere(manifests, (id) => !wantedIds.has(id));
+    const { granted, blocked } = arbitrate(wanted, verdicts.reserve, this.holders, {
+      awaiting: verdicts.await,
+      releasingBy: (resource) => this.releases.releasing(resource)?.pluginId ?? null,
+    });
+    // A running plugin arbitration kept off anyway (a holder never is, so normally none).
+    this.unmountWhere(manifests, (id) => !granted.has(id));
+    for (const block of blocked.values()) {
+      if (block.reason === 'releasing') this.wakeWhenReleased(block.resources, gen);
+    }
+    for (const manifest of wanted) {
+      if (!granted.has(manifest.id)) continue;
+      const settings = this.resolveSettings(manifest, state);
+      if (engine.isActive(manifest.id)) {
         // Already active + still should run: push setting changes, but only to
         // the plugin whose settings actually changed — a state write for
         // plugin A must not re-render every other active plugin.
-        const settings = this.resolveSettings(manifest, state);
         const serialized = JSON.stringify(settings);
         if (this.pushedSettings.get(manifest.id) !== serialized) {
           engine.updateSettings(manifest.id, settings);
           this.pushedSettings.set(manifest.id, serialized);
         }
+        continue;
       }
+      engine.mount(manifest, settings);
+      this.pushedSettings.set(manifest.id, JSON.stringify(settings));
+    }
+    // A holder is a plugin that runs, or held before and waits on its own
+    // release (an engine rebuild); a plugin that has never run displaces nobody.
+    const previousHolders = this.holders;
+    const waiting = [...blocked].filter(([, block]) => block.reason === 'releasing');
+    this.holders = new Set(
+      [...granted, ...waiting.map(([id]) => id)].filter(
+        (id) => engine.isActive(id) || previousHolders.has(id),
+      ),
+    );
+    this.blocked = blocked;
+  }
+
+  private unmountWhere(manifests: readonly PluginManifest[], drop: (id: string) => boolean): void {
+    const engine = this.engine;
+    for (const manifest of manifests) {
+      if (!engine?.isActive(manifest.id) || !drop(manifest.id)) continue;
+      void engine.unmount(manifest.id);
+      this.pushedSettings.delete(manifest.id);
+    }
+  }
+
+  /**
+   * Queue a pass for when each busy resource is free again. The op chain
+   * itself never waits on a release, so a disposer that never settles blocks
+   * only the plugins that need its runtime.
+   */
+  private wakeWhenReleased(resources: readonly string[], gen: number): void {
+    for (const resource of resources) {
+      // Keyed by generation: one queued pass per generation and resource.
+      this.releases.whenFree(resource, String(gen), () => {
+        if (this.generation === gen) void this.enqueue(() => this.reconcile(gen));
+      });
     }
   }
 
@@ -489,14 +587,20 @@ export class PluginHost {
     return hostPolicyRefusal(this.url, manifest) === null;
   }
 
-  private async shouldActivate(
+  /**
+   * Whether the plugin runs (`run`), would run but awaits its admission
+   * (`reserve`) or its legacy switch (`await`, see `resourceArbiter.ts`), or
+   * stays off. Arbitration over page-wide runtimes comes after this.
+   */
+  private async evaluate(
     manifest: PluginManifest,
-    state: PluginStateMap,
-    legacy: LegacySettingSnapshot | null,
-  ): Promise<boolean> {
-    if (!this.surfaceOn) return false;
-    if (!this.targetsThisPage(manifest)) return false;
-    if (!isPluginWanted(state, legacy, this.admission, manifest.id)) return false;
+    wishInput: Omit<WishInput, 'admission'>,
+  ): Promise<WishVerdict> {
+    if (!this.surfaceOn) return 'skip';
+    if (!this.targetsThisPage(manifest)) return 'skip';
+    const wish = wishVerdict({ ...wishInput, admission: this.admission }, manifest.id);
+    if (wish === 'skip') return 'skip';
+    if (duplicateResourceClaims(manifest).length > 0) return 'skip';
     const incompatibility = findIncompatibility({
       manifest,
       adapter: this.adapter,
@@ -510,16 +614,16 @@ export class PluginHost {
         missingHandlers: incompatibility.missingHandlers,
         missingSemantic: incompatibility.missingSemantic,
       });
-      return false;
+      return 'skip';
     }
     if (manifest.tier === 'scripted' && !isScriptedTierSupported()) {
       logger.warn('Scripted plugin skipped: tier unsupported on this platform', {
         id: manifest.id,
       });
-      return false;
+      return 'skip';
     }
     const entitlement = await this.entitlement.getState(manifest.id);
-    return entitlement !== 'locked';
+    return entitlement === 'locked' ? 'skip' : wish;
   }
 
   private async loadManifests(): Promise<readonly PluginManifest[]> {

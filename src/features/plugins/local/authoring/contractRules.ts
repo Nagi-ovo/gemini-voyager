@@ -13,13 +13,14 @@ import { NATIVE_PARAM_SETTINGS_SINCE_ENGINE } from '../../manifest/nativeParamSe
 import { ALLOWED_ATTRIBUTE_NAMES, ALLOWED_ATTRIBUTE_PREFIXES } from '../../manifest/sinkGuards';
 import { REQUIRED_STRINGS } from '../../manifest/validate';
 import type { SemanticSelectorKey } from '../../sites/semanticKeys';
-import { PLUGIN_CATEGORIES } from '../../types';
+import { PLUGIN_CATEGORIES, type SiteAdapter } from '../../types';
 import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '../../verbs/contracts';
 import { LOCAL_PLUGIN_ID_PREFIX } from '../localPluginId';
 import { LOCAL_SETTING_TYPES } from '../localPluginRules';
 import { inlineJson } from './jsonText';
 import { AUTHORING_OP_KINDS, AUTHORING_OP_TEMPLATES } from './pluginExamples';
 import { listPrimitiveReferences } from './primitiveReference';
+import { allowsPrimitive } from './siteFacts';
 
 export type ContractAudience = 'chat' | 'agent';
 
@@ -116,7 +117,7 @@ export function localRulesSection(
     lines: [
       '- "matches" may only use patterns inside a site Voyager supports (listed per site).',
       '- Every semantic key the plugin relies on must be declared by every site its "matches" cover.',
-      '- On Gemini and AI Studio: no "theme" and no "native" op (Voyager already runs its own features there).',
+      '- On Gemini and AI Studio: no "theme", and a "native" op only for the primitives listed for that site (Voyager runs its other features there itself).',
       ...(audience === 'agent'
         ? [
             '- "theme": { "brand": "#rrggbb" } optionally recolors Voyager’s own UI on Claude, ChatGPT or DeepSeek. "requires" is optional: native ops already imply "requires.handlers".',
@@ -131,15 +132,24 @@ export function localRulesSection(
   };
 }
 
-export function primitivesSection(): ContractSection {
+/** The primitives a plugin on `site` may call, with their params. */
+export function primitivesSection(site: SiteAdapter): ContractSection {
+  const offered = listPrimitiveReferences().filter((primitive) =>
+    allowsPrimitive(site, primitive.name),
+  );
+  const offeredNames = new Set(offered.map((primitive) => primitive.name));
   const lines: string[] = [
-    'A primitive is behavior Voyager ships as code; a plugin can only call it by name and configure it: { "op": "native", "handler": "<name>", "params": { … } }. A param marked required must be set; every other param is optional. A semanticKey param names a semantic key (only the listed ones when it says "one of"); every matched site must declare it, as with the keys a primitive reads, so it need not be repeated in "requires.semantic". Set "engine" to ">=" the primitive’s sinceEngine (and any param’s). Not on Gemini or AI Studio, and only on a site that declares the semantic keys the primitive reads.',
+    `A primitive is behavior Voyager ships as code; a plugin can only call it by name and configure it: { "op": "native", "handler": "<name>", "params": { … } }. A param marked required must be set; every other param is optional. A semanticKey param names a semantic key (only the listed ones when it says "one of"); every matched site must declare it, as with the keys a primitive reads, so it need not be repeated in "requires.semantic". Set "engine" to ">=" the primitive’s sinceEngine (and any param’s). ${offered.length < listPrimitiveReferences().length ? `Only the primitives below run on ${site.label}` : 'On Gemini and AI Studio only the primitives listed for that site'}, and only on a site that declares the semantic keys the primitive reads.`,
     `- To pass a setting into params, use "{{key}}" in a string value, recursively inside objects and arrays. Parameter names and object keys stay literal. A whole-value token preserves the setting's number, boolean or string type; embedded "a{{key}}b" produces a string. Expansion runs once: tokens inside setting values remain literal. Set "engine" to ">=${NATIVE_PARAM_SETTINGS_SINCE_ENGINE}" or any higher primitive/param floor; this capability's floor stays ${NATIVE_PARAM_SETTINGS_SINCE_ENGINE} in later releases.`,
     '- Every referenced key must exist in contributes.settings and its type must fit the primitive contract wherever statically knowable. Manifest loading checks substituted defaults. Each activation substitutes resolved stored values and runs the primitive’s validateParams; an invalid result skips the op with the same diagnostic as invalid static params. Setting changes dispose then reactivate templated primitive ops in order; static params keep the existing in-place update path.',
-    '- Example: turnNavigator params { "position": "{{side}}" } with a select setting side whose options are left and right.',
+    ...(offeredNames.has('turnNavigator')
+      ? [
+          '- Example: turnNavigator params { "position": "{{side}}" } with a select setting side whose options are left and right.',
+        ]
+      : []),
     '',
   ];
-  for (const primitive of listPrimitiveReferences()) {
+  for (const primitive of offered) {
     const reads = primitive.semantic.length > 0 ? ` Reads: ${primitive.semantic.join(', ')}.` : '';
     lines.push(
       `- ${primitive.name} (sinceEngine ${primitive.sinceEngine}): ${primitive.description}${reads}`,

@@ -15,6 +15,7 @@ export function InputSettingsCard({
   isSafariBrowser,
   currentPlatformLabel,
   isVisible,
+  vimModeNote,
   t,
 }: {
   values: InputPopupSettingsValues;
@@ -23,6 +24,8 @@ export function InputSettingsCard({
   isSafariBrowser: boolean;
   currentPlatformLabel: string;
   isVisible: (settingId: string) => boolean;
+  /** Shown under the Vim mode hint, e.g. why it is paused on this page. */
+  vimModeNote?: ReactNode;
   t: (key: TranslationKey) => string;
 }) {
   const {
@@ -101,6 +104,7 @@ export function InputSettingsCard({
                 {t('inputVimMode')}
               </Label>
               <p className="text-muted-foreground mt-1 text-xs">{t('inputVimModeHint')}</p>
+              {vimModeNote}
             </div>
             <Switch
               id="input-vim-mode"

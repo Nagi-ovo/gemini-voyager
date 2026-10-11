@@ -1,0 +1,33 @@
+# Gemini · Hide Input Halo
+
+Hides the blue radial-gradient halo Gemini draws behind its chat input
+(`chat-window::before`) and the blurred colour blobs above the fold
+(`chat-loading-animation`, `.nl-canvas`). This is Voyager's built-in Gemini
+halo hider, packaged as an official plugin.
+
+## How it works
+
+CSS only: `style.css` holds the same rules as the native module's copy in
+`public/contentStyle.css`, without its `body.gv-hide-input-halo` gate. The
+plugin's stylesheet is the scope instead: the engine adds it only while the
+plugin runs and removes it on unmount. There are no DOM ops, so the plugin
+adds no class, observer or health tracking to the page. The rules do not depend
+on the light or dark theme.
+
+## Delivery and control
+
+- Ships inside the extension and updates only with a Voyager release. It is
+  never published to or replaced by the online plugin catalog, and Gemini pages
+  make no catalog request for it.
+- Controlled by the existing "Hide input box halo" switch in Voyager's Gemini
+  settings (`gvInputHaloHidden`, off by default). It has no switch or settings
+  of its own.
+- Needs no extra site access: Voyager's content script already runs on Gemini.
+- Covers `gemini.google.com` only, like the native module.
+
+## Status
+
+Whether this plugin or the native module runs the feature is decided per build
+by `src/features/plugins/sites/featureOwners.ts`. While that entry is `legacy`,
+the native module keeps running and this plugin is never admitted, so shipping
+the manifest changes nothing on the page.

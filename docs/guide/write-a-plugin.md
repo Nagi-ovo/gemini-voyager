@@ -60,7 +60,7 @@ npx create-voyager-plugin@latest check my-plugin
 - 只使用每个匹配网站都声明了的语义锚点；
 - 每个 `addClass` 只加一个类名，并以 `gv-` 开头；
 - 只使用 boolean、number 或 select 设置（string 和 color 目前在 popup 里还没有对应控件）；
-- 在 Gemini 和 AI Studio 上不使用 `theme` 和原语。
+- 在 Gemini 和 AI Studio 上不使用 `theme`；原语只能用该站点放开的：Gemini 上是 `formulaCopy` 和 `vimInput`，AI Studio 上是 `formulaCopy`。它们与 Voyager 自带的「公式复制」「输入框 Vim 模式」是同一套代码，同一页面上两者只运行一个：页面刚加载、或两者都没在运行时，自带开关优先；之后谁已经在运行就继续运行，另一方显示为暂停。关掉其中一个，功能就交给另一个。
 
 翻译（`i18n`）是可选的。
 

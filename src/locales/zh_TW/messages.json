@@ -610,6 +610,10 @@
     "message": "選擇點擊公式時複製的格式",
     "description": "公式複製格式提示"
   },
+  "formulaCopyScopeNote": {
+    "message": "此開關和複製格式同時套用於 Gemini 與 AI Studio。",
+    "description": "Formula copy card: says the switch and the format are shared by Gemini and AI Studio"
+  },
   "formulaCopyFormatNoDollar": {
     "message": "LaTeX (純文字，無 $ 符號)",
     "description": "LaTeX 格式選項，無美元符號"
@@ -3152,6 +3156,34 @@
   "pluginUpdateAfterReload": {
     "message": "更新 {version} 將在重新載入頁面後生效",
     "description": "Note that a newer plugin version takes effect on the next page load; {version} is the pending version"
+  },
+  "pluginBlockedByPlugin": {
+    "message": "已在此暫停：「{name}」已經在做同樣的事。關掉不需要的那個即可。",
+    "description": "Note on a plugin that is on but paused because another plugin already runs the same feature on this page; {name} is that plugin's name"
+  },
+  "pluginBlockedReleasing": {
+    "message": "正在等待上一次執行停止…",
+    "description": "Note on a plugin that is about to start once the previous run of the same feature has shut down"
+  },
+  "pluginBlockedUnavailableHere": {
+    "message": "此版本的 Voyager 不會在這個網站上執行它。你的設定會保留。",
+    "description": "Note on a plugin this version of Voyager does not run on the current site; the user's on/off choice is kept"
+  },
+  "pluginBlockedDuplicateClaim": {
+    "message": "它把同一個功能啟動了兩次，因此無法執行。刪除重複的那項即可使用。",
+    "description": "Note on a plugin that cannot run because it starts the same page-wide feature more than once"
+  },
+  "officialFeaturePausedByLocal": {
+    "message": "已在此頁面暫停：你的本機外掛「{name}」已經在做同樣的事。關掉不需要的那個即可。",
+    "description": "Note under a Gemini / AI Studio setting (formula copy, Vim mode) that is on but paused because a local plugin already runs the same feature; {name} is that plugin's name"
+  },
+  "pluginBlockedByOfficialSetting": {
+    "message": "已在此暫停：Voyager 內建的「{setting}」開關（位於「{card}」）已經在做同樣的事。在那裡關閉它即可使用此外掛。",
+    "description": "Note on a plugin paused because a Voyager setting (formula copy, Vim mode) on this page already runs the same feature; {setting} is that switch's label and {card} the settings card holding it"
+  },
+  "pluginBlockedPending": {
+    "message": "正在確認此頁面上的「{name}」是否開啟…確認後會自動更新。",
+    "description": "Note on a plugin that waits while Voyager reads whether its own matching setting is on for this page; it updates by itself. {name} is that setting's label"
   },
   "pluginChangelogLabel": {
     "message": "更新內容：",

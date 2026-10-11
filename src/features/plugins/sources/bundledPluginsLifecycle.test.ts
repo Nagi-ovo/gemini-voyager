@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DeclarativeEngine } from '../runtime/declarativeEngine';
 import { matchesAnyPattern } from '../sites/matchPattern';
@@ -13,7 +13,91 @@ import { BundledCatalogPluginSource } from './BundledCatalogPluginSource';
  * a settings change and unmount without leaving a trace on the host document.
  * The checks are generic on purpose so a new plugin is covered the moment its
  * files land under `catalog/sites/<site>/plugins/<id>/`.
+ *
+ * Primitives run for real. A page-wide runtime (formula copy, Vim input)
+ * starts asynchronously, so the test waits until it has attached its page
+ * listeners, then awaits the unmount's own teardown before checking that
+ * every page and storage listener it added is gone again.
  */
+
+/** Primitives whose runtime is one per page and starts asynchronously. */
+const PAGE_RUNTIME_HANDLERS: ReadonlySet<string> = new Set(['formulaCopy', 'vimInput']);
+
+interface ListenerRecord {
+  readonly target: EventTarget;
+  readonly type: string;
+  readonly listener: unknown;
+  readonly capture: boolean;
+}
+
+function captureOf(options: boolean | AddEventListenerOptions | undefined): boolean {
+  return typeof options === 'boolean' ? options : options?.capture === true;
+}
+
+/**
+ * Listeners added to the document or window since `track()`, minus those
+ * removed again (same target, type, listener and capture, as the DOM matches
+ * them), and `storage.onChanged` listeners likewise.
+ */
+function trackListeners() {
+  const page: ListenerRecord[] = [];
+  const storage: unknown[] = [];
+  const add = EventTarget.prototype.addEventListener;
+  const remove = EventTarget.prototype.removeEventListener;
+  const isPage = (target: EventTarget): boolean => target === document || target === window;
+  const sameAs = (record: ListenerRecord, other: ListenerRecord): boolean =>
+    record.target === other.target &&
+    record.type === other.type &&
+    record.listener === other.listener &&
+    record.capture === other.capture;
+  const drop = (record: ListenerRecord): void => {
+    const index = page.findIndex((entry) => sameAs(entry, record));
+    if (index >= 0) page.splice(index, 1);
+  };
+  const spies = [
+    vi
+      .spyOn(EventTarget.prototype, 'addEventListener')
+      .mockImplementation(function (this: EventTarget, type, listener, options) {
+        const record = { target: this, type, listener, capture: captureOf(options) };
+        if (isPage(this) && !page.some((entry) => sameAs(entry, record))) {
+          page.push(record);
+          // An aborted `signal` removes the listener as removeEventListener would.
+          const signal = typeof options === 'object' ? options.signal : undefined;
+          signal?.addEventListener('abort', () => drop(record), { once: true });
+        }
+        add.call(this, type, listener, options);
+      }),
+    vi
+      .spyOn(EventTarget.prototype, 'removeEventListener')
+      .mockImplementation(function (this: EventTarget, type, listener, options) {
+        drop({ target: this, type, listener, capture: captureOf(options) });
+        remove.call(this, type, listener, options);
+      }),
+  ];
+  const onChanged = chrome.storage.onChanged;
+  (onChanged.addListener as unknown as Mock).mockImplementation((listener: unknown) => {
+    storage.push(listener);
+  });
+  (onChanged.removeListener as unknown as Mock).mockImplementation((listener: unknown) => {
+    const index = storage.indexOf(listener);
+    if (index >= 0) storage.splice(index, 1);
+  });
+  return {
+    page: () => page.map((entry) => entry.type),
+    storage: () => storage.length,
+    stop: () => {
+      for (const spy of spies) spy.mockRestore();
+      (onChanged.addListener as unknown as Mock).mockReset();
+      (onChanged.removeListener as unknown as Mock).mockReset();
+    },
+  };
+}
+
+function startsPageRuntime(manifest: PluginManifest): boolean {
+  return (manifest.contributes.domOps ?? []).some(
+    (op) => op.op === 'native' && PAGE_RUNTIME_HANDLERS.has(op.handler),
+  );
+}
 
 function probeUrl(pattern: string): string {
   return pattern.replace(/^(\w+):\/\/\*\./, '$1://x.').replace(/\*$/, '');
@@ -49,6 +133,14 @@ function changedSettings(manifest: PluginManifest): Record<string, PluginSetting
   );
 }
 
+/** The root element's attributes; an emptied `class` counts as none. */
+function rootAttributes(): readonly string[] {
+  return [...document.documentElement.attributes]
+    .filter((attribute) => attribute.name !== 'class' || attribute.value.trim() !== '')
+    .map((attribute) => `${attribute.name}=${attribute.value}`)
+    .sort();
+}
+
 /** Head markup minus the engine's one-time base stylesheet, which persists by design. */
 function headWithoutBaseStyle(): string {
   const clone = document.head.cloneNode(true) as HTMLElement;
@@ -56,7 +148,23 @@ function headWithoutBaseStyle(): string {
   return clone.innerHTML;
 }
 
+let listeners: ReturnType<typeof trackListeners> | null = null;
+
+beforeEach(() => {
+  // The formula service reads its copy format through webextension-polyfill,
+  // which waits for chrome's callback: answer it, as storage would.
+  (chrome.storage.sync.get as unknown as Mock).mockImplementation(
+    (_keys: unknown, callback?: (items: Record<string, unknown>) => void) => {
+      callback?.({});
+      return Promise.resolve({});
+    },
+  );
+});
+
 afterEach(() => {
+  listeners?.stop();
+  listeners = null;
+  (chrome.storage.sync.get as unknown as Mock).mockReset();
   document.head.innerHTML = '';
   document.body.innerHTML = '';
   document.body.removeAttribute('style');
@@ -86,7 +194,7 @@ describe('bundled plugin lifecycle (parametric)', async () => {
       return matches[0];
     }
 
-    it(`${id}: mount → updateSettings → unmount restores the host`, () => {
+    it(`${id}: mount → updateSettings → unmount restores the host`, async () => {
       const manifest = loadedManifest();
       document.body.className = 'host-class';
       document.body.setAttribute('style', '--host-var: 1px;');
@@ -105,12 +213,18 @@ describe('bundled plugin lifecycle (parametric)', async () => {
       const before = {
         head: headWithoutBaseStyle(),
         body: document.body.outerHTML,
-        root: document.documentElement.getAttribute('class'),
+        root: rootAttributes(),
       };
       const engine = new DeclarativeEngine({ doc: document, adapter: adapterFor(manifest) });
+      const tracked = trackListeners();
+      listeners = tracked;
 
       engine.mount(manifest, defaultSettings(manifest));
       expect(engine.isActive(manifest.id)).toBe(true);
+      if (startsPageRuntime(manifest)) {
+        // The runtime has really started: its page listeners are attached.
+        await vi.waitFor(() => expect(tracked.page()).toContain('click'));
+      }
       const styles = manifest.contributes.styles ?? [];
       const styleEl = document.getElementById(`gv-plugin-style-${manifest.id}`);
       if (styles.length > 0) {
@@ -126,11 +240,15 @@ describe('bundled plugin lifecycle (parametric)', async () => {
       engine.updateSettings(manifest.id, changedSettings(manifest));
       expect(engine.isActive(manifest.id)).toBe(true);
 
-      engine.unmount(manifest.id);
+      await engine.unmount(manifest.id);
       expect(engine.isActive(manifest.id)).toBe(false);
+      expect(tracked.page()).toEqual([]);
+      // Only checked for page runtimes: other primitives may start i18n, whose
+      // language listener is process-wide by design.
+      if (startsPageRuntime(manifest)) expect(tracked.storage()).toBe(0);
       expect(headWithoutBaseStyle()).toBe(before.head);
       expect(document.body.outerHTML).toBe(before.body);
-      expect(document.documentElement.getAttribute('class')).toBe(before.root);
+      expect(rootAttributes()).toEqual(before.root);
     });
 
     it(`${id}: every semantic target resolves on its site adapter`, () => {

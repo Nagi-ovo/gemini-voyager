@@ -113,7 +113,7 @@ describe('validateLocalManifest', () => {
     expect(paths(authored({ theme }))).toEqual([]);
   });
 
-  it('rejects native ops on Gemini and AI Studio, which already run every primitive natively', () => {
+  it('rejects a native op on Gemini and AI Studio for a primitive no official plugin there owns', () => {
     const native = (matches: string[]) =>
       authored({
         engine: '>=1.4.0',
@@ -129,6 +129,95 @@ describe('validateLocalManifest', () => {
     expect(paths(native(['https://gemini.google.com/*']))).toEqual(['contributes.domOps[1]']);
     expect(paths(native(['https://aistudio.google.com/*']))).toEqual(['contributes.domOps[1]']);
     expect(paths(native(['https://claude.ai/*']))).toEqual([]);
+  });
+
+  describe('primitives handed to official plugins on Gemini and AI Studio', () => {
+    const withNative = (matches: string[], handler: string, overrides = {}) =>
+      authored({
+        engine: '>=1.4.0',
+        matches,
+        contributes: { domOps: [{ op: 'native', handler, params: {} }] },
+        ...overrides,
+      });
+    const gemini = ['https://gemini.google.com/*'];
+    const aistudio = ['https://aistudio.google.com/*'];
+
+    it('accepts formulaCopy on Gemini and AI Studio, and vimInput on Gemini', () => {
+      expect(paths(withNative(gemini, 'formulaCopy'))).toEqual([]);
+      expect(paths(withNative(aistudio, 'formulaCopy'))).toEqual([]);
+      expect(paths(withNative([...gemini, ...aistudio], 'formulaCopy'))).toEqual([]);
+      expect(paths(withNative(gemini, 'vimInput'))).toEqual([]);
+    });
+
+    it('rejects vimInput on AI Studio, whose Vim mode is not a plugin', () => {
+      expect(paths(withNative(aistudio, 'vimInput'))).toEqual(['contributes.domOps[0]']);
+    });
+
+    it('requires every target site to allow the primitive', () => {
+      expect(paths(withNative(['https://chatgpt.com/*', ...aistudio], 'vimInput'))).toEqual([
+        'contributes.domOps[0]',
+      ]);
+      expect(paths(withNative(['https://chatgpt.com/*', ...gemini], 'vimInput'))).toEqual([]);
+    });
+
+    it('still rejects a theme beside an allowed primitive', () => {
+      expect(paths(withNative(gemini, 'formulaCopy', { theme: { brand: '#ff0000' } }))).toEqual([
+        'theme',
+      ]);
+    });
+  });
+
+  describe("hostPolicy: 'defer' (reading plugins already stored)", () => {
+    const defer = { hostPolicy: 'defer' } as const;
+    const deferredPaths = (input: unknown): string[] => {
+      const result = validateLocalManifest(input, undefined, defer);
+      return result.success ? [] : result.error.map((issue) => issue.path);
+    };
+    const refusedHere = authored({
+      engine: '>=1.4.0',
+      matches: ['https://aistudio.google.com/*'],
+      theme: { brand: '#ff0000' },
+      contributes: {
+        domOps: [{ op: 'native', handler: 'vimInput', params: {} }],
+      },
+    });
+
+    it('keeps a record only the site policy refuses, namespaced as on import', () => {
+      expect(paths(refusedHere)).toEqual(['theme', 'contributes.domOps[0]']);
+      const result = validateLocalManifest(refusedHere, undefined, defer);
+      expect(result.success && result.data.manifest.id).toBe('local.me.wide-chat');
+    });
+
+    it('defers nothing else: CSS, DOM, params, namespace and site coverage are still checked', () => {
+      const rejected = [
+        authored({
+          matches: ['https://gemini.google.com/*'],
+          contributes: { styles: [{ css: 'body{background:url(https://t.example/p.gif)}' }] },
+        }),
+        authored({
+          matches: ['https://gemini.google.com/*'],
+          contributes: { domOps: [{ op: 'addClass', target: 'body', className: 'no-prefix' }] },
+        }),
+        authored({
+          matches: ['https://gemini.google.com/*'],
+          contributes: {
+            domOps: [{ op: 'setAttribute', target: 'body', name: 'onclick', value: 'x' }],
+          },
+        }),
+        authored({
+          engine: '>=1.4.0',
+          matches: ['https://gemini.google.com/*'],
+          contributes: { domOps: [{ op: 'native', handler: 'vimInput', params: { evil: 1 } }] },
+        }),
+        authored({ id: 'Bad Id', matches: ['https://gemini.google.com/*'] }),
+        authored({ tier: 'scripted' }),
+        authored({ matches: ['https://example.com/*'] }),
+      ];
+      for (const input of rejected) {
+        expect(deferredPaths(input)).toEqual(paths(input));
+        expect(deferredPaths(input).length).toBeGreaterThan(0);
+      }
+    });
   });
 
   it('allows a native op only for a shipped primitive with params that fit its contract', () => {

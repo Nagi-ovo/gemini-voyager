@@ -5,6 +5,7 @@ import { LocalPluginSource } from '../local/LocalPluginSource';
 import { isLocalPluginId } from '../local/localPluginId';
 import { HostCatalogSource } from '../remote/HostCatalogSource';
 import { engineSatisfied } from '../semver';
+import { isPackagedOfficialPluginId } from '../sites/featureOwners';
 import { matchesAnyPattern } from '../sites/matchPattern';
 import type {
   PluginManifest,
@@ -73,7 +74,11 @@ export interface MergePluginRecordsInput {
  *   - remote unavailable → snapshot as-is;
  *   - `local.*` ids belong to the user's imported plugins: an official or
  *     remote record under one is dropped, and a local record is added last,
- *     outside the kill switch, only when its id is still free.
+ *     outside the kill switch, only when its id is still free;
+ *   - packaged official ids (`PACKAGED_OFFICIAL_PLUGIN_IDS`, the Gemini and
+ *     AI Studio features) come only from this build: a remote record under one
+ *     is dropped, so it can neither replace the bundled record nor stand in for
+ *     a missing one, and the kill switch never delists the bundled record.
  */
 export function mergePluginRecords(input: MergePluginRecordsInput): SourcedPluginManifest[] {
   const engineVersion = input.engineVersion ?? EFFECTIVE_PLUGIN_ENGINE_VERSION;
@@ -82,7 +87,12 @@ export function mergePluginRecords(input: MergePluginRecordsInput): SourcedPlugi
   const official = (record: SourcedPluginManifest): boolean => !isLocalPluginId(record.manifest.id);
   const builtin = input.builtin.filter(official);
   const snapshot = input.snapshot.filter(official);
-  const remoteRecords = input.remote.filter(official);
+  // Decided by the build's stable id table, never by the owner entry or the
+  // remote manifest itself, so it holds while a feature is still 'legacy' and
+  // stays when stage 7 retires the legacy wrappers.
+  const remoteRecords = input.remote.filter(
+    (record) => official(record) && !isPackagedOfficialPluginId(record.manifest.id),
+  );
 
   for (const record of builtin) {
     if (seen.has(record.manifest.id)) continue;
@@ -121,7 +131,7 @@ export function mergePluginRecords(input: MergePluginRecordsInput): SourcedPlugi
     }
     const targetsScope =
       !!input.scopeUrl && matchesAnyPattern(input.scopeUrl, record.manifest.matches);
-    if (input.remoteAuthoritative && targetsScope) continue;
+    if (input.remoteAuthoritative && targetsScope && !isPackagedOfficialPluginId(id)) continue;
     merged.push(record);
   }
 

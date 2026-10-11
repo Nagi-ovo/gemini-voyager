@@ -15,6 +15,7 @@ import {
   usePluginSite,
 } from './PluginIdentity';
 import { PluginSettings } from './PluginSettings';
+import { BLOCKED_NOTE_TONE_CLASS, blockedPluginNote } from './pluginBlockedNote';
 import { usePluginAccess } from './usePluginAccess';
 import { usePluginPreferences } from './usePluginPreferences';
 import { usePluginUpdates } from './usePluginUpdates';
@@ -44,9 +45,16 @@ export interface PluginManagerProps {
    * Per-plugin status reported by the active tab's PluginHost (plan §4.2):
    * needs-engine / needs-handler / needs-semantic disable the toggle with a
    * reason, no-effect shows the health warning, pendingVersion says the update
-   * applies after a page reload. Empty when the tab reported nothing.
+   * applies after a page reload, blocked keeps the toggle and says why the
+   * plugin waits. Empty when the tab reported nothing.
    */
   readonly statuses?: readonly PluginStatus[];
+  /**
+   * Manifests to name a blocking plugin from, when it may be missing from
+   * `manifests` (the native popup lists only local plugins, yet a packaged
+   * official one can hold the runtime). Defaults to `manifests`.
+   */
+  readonly nameSources?: readonly PluginManifest[];
 }
 
 /**
@@ -63,6 +71,7 @@ export function PluginManager({
   blockedUpdates,
   catalogHost,
   statuses,
+  nameSources,
 }: PluginManagerProps) {
   const { t, language } = useLanguage();
   const { currentSiteId, currentSiteLabel } = usePluginSite(activeUrl);
@@ -152,8 +161,9 @@ export function PluginManager({
           const isUpdated = updatedIds.has(plugin.id);
           const status = statusById.get(plugin.id);
           // Only the three incompatibility kinds block the toggle; `no-effect`
-          // stays enabled because the plugin did run, it just found no targets.
-          const blockedReason = ((): string | null => {
+          // stays enabled because the plugin did run, it just found no targets,
+          // and `blocked` keeps the user's choice for when the reason clears.
+          const incompatibleNote = ((): string | null => {
             switch (status?.kind) {
               case 'needs-engine':
                 return t('pluginNeedsNewerVoyager').replace(
@@ -171,6 +181,12 @@ export function PluginManager({
                 return null;
             }
           })();
+          const blockedNote = blockedPluginNote({
+            status,
+            manifests: nameSources ?? manifests,
+            language,
+            t,
+          });
           return (
             <div key={plugin.id} className="border-border/60 rounded-lg border p-3">
               <div className="flex items-start justify-between gap-3">
@@ -187,9 +203,20 @@ export function PluginManager({
                   />
 
                   {/* Status notes stay visible while the card is collapsed —
-                      they explain a toggle the user cannot move. */}
-                  {blockedReason && (
-                    <p className="mt-1 text-[11px] leading-snug text-red-500/80">{blockedReason}</p>
+                      they explain a toggle the user cannot move, or why an
+                      enabled plugin is not running on this page. */}
+                  {incompatibleNote && (
+                    <p className="mt-1 text-[11px] leading-snug text-red-500/80">
+                      {incompatibleNote}
+                    </p>
+                  )}
+
+                  {blockedNote && (
+                    <p
+                      className={`mt-1 text-[11px] leading-snug ${BLOCKED_NOTE_TONE_CLASS[blockedNote.tone]}`}
+                    >
+                      {blockedNote.text}
+                    </p>
                   )}
 
                   {status?.kind === 'no-effect' && (
@@ -243,7 +270,7 @@ export function PluginManager({
                 </div>
                 <Switch
                   checked={enabled}
-                  disabled={!enabled && blockedReason !== null}
+                  disabled={!enabled && incompatibleNote !== null}
                   onChange={(e) => {
                     void handleToggle(plugin, e.target.checked);
                   }}

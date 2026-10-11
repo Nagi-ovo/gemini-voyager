@@ -58,8 +58,16 @@ export const vimInputPrimitive: Primitive<VimInputParams> = {
     });
     // The async startup registers as a single scope effect: if the plugin is
     // disabled before it resolves, the scope pays the late cleanup itself.
+    // The signal retires a running Vim as soon as disposal begins: the scope
+    // tears down in reverse order, and a later op still starting (formulaCopy
+    // awaiting its settings) must not keep Vim alive through a handoff.
     scope.effect(
-      () => startInputVimMode({ forceEnabled: true, composerSelector: composer }),
+      () =>
+        startInputVimMode({
+          forceEnabled: true,
+          composerSelector: composer,
+          signal: scope.signal,
+        }),
       'input-vim',
     );
   },

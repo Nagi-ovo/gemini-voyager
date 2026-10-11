@@ -27,6 +27,7 @@ import { InputSettingsCard } from './components/InputSettingsCard';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
 import { NativeHealthNotice } from './components/NativeHealthNotice';
 import { NativeLocalPluginsSection } from './components/NativeLocalPluginsSection';
+import { OfficialFeatureStatus } from './components/OfficialFeatureStatus';
 import { PluginSiteSettings } from './components/PluginSiteSettings';
 import { PopupFooter } from './components/PopupFooter';
 import { PopupHeader } from './components/PopupHeader';
@@ -183,6 +184,16 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     formulaCopy.setEnabledFromUser(enabled);
     void writePopupSyncStorage(legacyEnableWrite(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, enabled));
   };
+  // Why the official plugin behind a native setting is paused on this page, if it is.
+  const officialStatus = (pluginId: string) => (
+    <OfficialFeatureStatus
+      pluginId={pluginId}
+      statuses={plugins.pluginStatuses}
+      manifests={plugins.siteScopedManifests}
+      language={language}
+      t={t}
+    />
+  );
   const handleFormulaCopyFormatChange = (format: FormulaCopyFormat) => {
     formulaCopy.setFormatFromUser(format);
     void writePopupSyncStorage({ [StorageKeys.FORMULA_COPY_FORMAT]: format });
@@ -374,6 +385,11 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             onFormatChange={handleFormulaCopyFormatChange}
             showEnabled={sections.shouldShowSetting('formulaCopy', 'formulaCopyEnabled')}
             showFormat={sections.shouldShowSetting('formulaCopy', 'formulaCopyFormat')}
+            enabledNote={officialStatus(
+              isAIStudio
+                ? OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy
+                : OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
+            )}
             t={t}
           />,
         )}
@@ -392,6 +408,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             isSafariBrowser={isSafariBrowser}
             currentPlatformLabel={currentPlatformLabel}
             isVisible={(id) => sections.shouldShowSetting('inputCollapse', id)}
+            vimModeNote={officialStatus(OFFICIAL_PLUGIN_IDS.geminiVimInput)}
             t={t}
           />,
         )}

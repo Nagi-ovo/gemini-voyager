@@ -1,10 +1,12 @@
 # Code owners for the bundled plugin catalog (plan D1 / §3).
 #
-# One line per plugin platform: whoever owns a site reviews its adapter
+# One line per catalog site: whoever owns a site reviews its adapter
 # (site.json) and every plugin under it. GitHub only accepts owners with write
 # access, so external contributors are credited in the plugin README instead
 # and added here once they have that access.
 
+/src/features/plugins/catalog/sites/aistudio/ @Nagi-ovo
 /src/features/plugins/catalog/sites/chatgpt/  @Nagi-ovo
 /src/features/plugins/catalog/sites/claude/   @Nagi-ovo
 /src/features/plugins/catalog/sites/deepseek/ @Nagi-ovo
+/src/features/plugins/catalog/sites/gemini/   @Nagi-ovo

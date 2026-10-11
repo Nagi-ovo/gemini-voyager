@@ -650,6 +650,10 @@
     "message": "Choisissez le format lors de la copie des formules par clic",
     "description": "Formula copy format hint"
   },
+  "formulaCopyScopeNote": {
+    "message": "Cet interrupteur et le format de copie s’appliquent à la fois à Gemini et à AI Studio.",
+    "description": "Formula copy card: says the switch and the format are shared by Gemini and AI Studio"
+  },
   "formulaCopyFormatNoDollar": {
     "message": "LaTeX (Sans dollars)",
     "description": "LaTeX format option without dollar signs"
@@ -3152,6 +3156,34 @@
   "pluginUpdateAfterReload": {
     "message": "La mise à jour {version} sera appliquée après le rechargement de la page",
     "description": "Note that a newer plugin version takes effect on the next page load; {version} is the pending version"
+  },
+  "pluginBlockedByPlugin": {
+    "message": "En pause ici : « {name} » fait déjà la même chose. Désactivez celui dont vous n’avez pas besoin.",
+    "description": "Note on a plugin that is on but paused because another plugin already runs the same feature on this page; {name} is that plugin's name"
+  },
+  "pluginBlockedReleasing": {
+    "message": "En attente de l’arrêt de l’exécution précédente…",
+    "description": "Note on a plugin that is about to start once the previous run of the same feature has shut down"
+  },
+  "pluginBlockedUnavailableHere": {
+    "message": "Cette version de Voyager ne l’exécute pas sur ce site. Votre réglage est conservé.",
+    "description": "Note on a plugin this version of Voyager does not run on the current site; the user's on/off choice is kept"
+  },
+  "pluginBlockedDuplicateClaim": {
+    "message": "Elle lance deux fois la même fonction et ne peut donc pas s’exécuter. Supprimez le doublon pour l’utiliser.",
+    "description": "Note on a plugin that cannot run because it starts the same page-wide feature more than once"
+  },
+  "officialFeaturePausedByLocal": {
+    "message": "En pause sur cette page : votre extension locale « {name} » fait déjà la même chose. Désactivez celle dont vous n’avez pas besoin.",
+    "description": "Note under a Gemini / AI Studio setting (formula copy, Vim mode) that is on but paused because a local plugin already runs the same feature; {name} is that plugin's name"
+  },
+  "pluginBlockedByOfficialSetting": {
+    "message": "En pause ici : l’interrupteur « {setting} » de Voyager (dans « {card} ») fait déjà la même chose. Désactivez-le là-bas pour utiliser cette extension.",
+    "description": "Note on a plugin paused because a Voyager setting (formula copy, Vim mode) on this page already runs the same feature; {setting} is that switch's label and {card} the settings card holding it"
+  },
+  "pluginBlockedPending": {
+    "message": "Vérification de l’état de « {name} » sur cette page… L’affichage se met à jour tout seul.",
+    "description": "Note on a plugin that waits while Voyager reads whether its own matching setting is on for this page; it updates by itself. {name} is that setting's label"
   },
   "pluginChangelogLabel": {
     "message": "Nouveautés :",

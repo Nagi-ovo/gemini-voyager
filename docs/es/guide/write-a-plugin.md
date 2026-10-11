@@ -60,7 +60,7 @@ Además de las comprobaciones comunes del manifest (consulta [Contribuir plugins
 - usar solo claves semánticas que declaren todos los sitios con los que coincide;
 - añadir exactamente una clase por `addClass`, empezando por `gv-`;
 - usar ajustes boolean, number o select (string y color aún no tienen control en el popup);
-- no usar `theme` ni primitivas en Gemini ni en AI Studio.
+- no usar `theme` en Gemini ni en AI Studio, y usar solo las primitivas que cada sitio permite: `formulaCopy` y `vimInput` en Gemini, `formulaCopy` en AI Studio. Ejecutan el mismo código que los ajustes propios de Voyager (copiar fórmulas y modo Vim del campo de entrada); en una página solo se ejecuta uno de los dos. Al cargar la página, o mientras ninguno se esté ejecutando, el ajuste integrado va primero; después, el que ya está en marcha sigue funcionando y el otro aparece en pausa. Desactiva uno para que el otro tome el relevo.
 
 Las traducciones (`i18n`) son opcionales.
 

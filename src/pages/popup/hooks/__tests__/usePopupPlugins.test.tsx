@@ -274,6 +274,109 @@ describe('usePopupPlugins', () => {
     expect(storageListeners.size).toBe(0);
   });
 
+  it('re-asks every second while a plugin waits for a release, and stops once it starts', async () => {
+    const waiting = {
+      id: 'local.me.formula',
+      version: '1.0.0',
+      kind: 'blocked',
+      blockedReason: 'releasing',
+      blockedBy: 'voyager.gemini-formula-copy',
+    };
+    const mounted = { id: 'local.me.formula', version: '1.0.0', kind: 'mounted' };
+    vi.mocked(browser.tabs.sendMessage).mockResolvedValue({ ok: true, statuses: [waiting] });
+    await render();
+    const asked = () => vi.mocked(browser.tabs.sendMessage).mock.calls.length;
+    const first = asked();
+
+    await act(async () => vi.advanceTimersByTimeAsync(1000));
+    expect(asked()).toBe(first + 1);
+
+    vi.mocked(browser.tabs.sendMessage).mockResolvedValue({ ok: true, statuses: [mounted] });
+    await act(async () => vi.advanceTimersByTimeAsync(1000));
+    expect(plugins.pluginStatuses).toEqual([mounted]);
+    const settled = asked();
+    // Only the one delayed health check remains.
+    await act(async () => vi.advanceTimersByTimeAsync(10_000));
+    expect(asked()).toBe(settled + 1);
+  });
+
+  it('re-asks while a plugin waits for the official switch to be read, and stops once it is', async () => {
+    const pending = {
+      id: 'local.me.formula',
+      version: '1.0.0',
+      kind: 'blocked',
+      blockedReason: 'pending',
+      blockedBy: 'voyager.gemini-formula-copy',
+    };
+    const conflict = { ...pending, blockedReason: 'conflict' };
+    vi.mocked(browser.tabs.sendMessage).mockResolvedValue({ ok: true, statuses: [pending] });
+    await render();
+    const asked = () => vi.mocked(browser.tabs.sendMessage).mock.calls.length;
+    const first = asked();
+
+    await act(async () => vi.advanceTimersByTimeAsync(1000));
+    expect(asked()).toBe(first + 1);
+
+    // The read landed with the switch on: a conflict only the user resolves.
+    vi.mocked(browser.tabs.sendMessage).mockResolvedValue({ ok: true, statuses: [conflict] });
+    await act(async () => vi.advanceTimersByTimeAsync(1000));
+    expect(plugins.pluginStatuses).toEqual([conflict]);
+    const settled = asked();
+    await act(async () => vi.advanceTimersByTimeAsync(10_000));
+    expect(asked()).toBe(settled + 1);
+  });
+
+  it('gives up on a release that never finishes after a bounded number of re-asks', async () => {
+    const waiting = {
+      id: 'voyager.gemini-vim-input',
+      version: '1.0.0',
+      kind: 'blocked',
+      blockedReason: 'conflict',
+      // Waiting on its own previous run reads as a release too.
+      blockedBy: 'voyager.gemini-vim-input',
+    };
+    vi.mocked(browser.tabs.sendMessage).mockResolvedValue({ ok: true, statuses: [waiting] });
+    await render();
+    const opened = vi.mocked(browser.tabs.sendMessage).mock.calls.length;
+
+    await act(async () => vi.advanceTimersByTimeAsync(60_000));
+    const settled = vi.mocked(browser.tabs.sendMessage).mock.calls.length;
+    // The delayed health check and at most ten release re-asks.
+    expect(settled - opened).toBeGreaterThan(1);
+    expect(settled - opened).toBeLessThanOrEqual(11);
+    await act(async () => vi.advanceTimersByTimeAsync(60_000));
+    expect(browser.tabs.sendMessage).toHaveBeenCalledTimes(settled);
+
+    // A change the user makes starts a fresh, equally bounded round.
+    await act(async () => {
+      for (const listener of stateListeners) listener({});
+    });
+    await act(async () => vi.advanceTimersByTimeAsync(60_000));
+    const again = vi.mocked(browser.tabs.sendMessage).mock.calls.length;
+    expect(again - settled).toBeGreaterThan(2);
+    expect(again - settled).toBeLessThanOrEqual(12);
+  });
+
+  it('does not re-ask for a conflict, which only a user change resolves', async () => {
+    vi.mocked(browser.tabs.sendMessage).mockResolvedValue({
+      ok: true,
+      statuses: [
+        {
+          id: 'local.me.formula',
+          version: '1.0.0',
+          kind: 'blocked',
+          blockedReason: 'conflict',
+          blockedBy: 'voyager.gemini-formula-copy',
+        },
+      ],
+    });
+    await render();
+    const opened = vi.mocked(browser.tabs.sendMessage).mock.calls.length;
+    await act(async () => vi.advanceTimersByTimeAsync(60_000));
+    // Only the delayed health check.
+    expect(browser.tabs.sendMessage).toHaveBeenCalledTimes(opened + 1);
+  });
+
   it('re-reads the cached catalog after a manual background refresh fails', async () => {
     const refreshed = deferred<readonly SourcedPluginManifest[]>();
     const latest = record('cached-tools');

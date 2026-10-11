@@ -11,6 +11,8 @@
  *   ready            compatible, not enabled (or enabled and not yet mounted)
  *   mounted          enabled and running on this page
  *   no-effect        mounted, but the health signal found no targets (D12)
+ *   blocked          compatible, but something else keeps it off this page;
+ *                    `blockedReason` says what (see `PluginBlockedReason`)
  *
  * `needs-permission` (a new origin not yet granted) is decided by the popup,
  * which owns the permission flow; a content script that is running already
@@ -28,7 +30,34 @@ export type PluginStatusKind =
   | 'needs-semantic'
   | 'ready'
   | 'mounted'
-  | 'no-effect';
+  | 'no-effect'
+  | 'blocked';
+
+/**
+ * Why a compatible plugin does not run here. The user's on/off is untouched:
+ * a blocked plugin starts by itself once the reason goes away.
+ *
+ *   host-policy      this build does not let its theme or a `native` op run on
+ *                    this site (Gemini / AI Studio); reported enabled or not
+ *   duplicate-claim  the manifest starts one page-wide runtime twice (two
+ *                    `vimInput` ops, say); reported enabled or not
+ *   conflict         enabled, but `blockedBy` holds (or, as a packaged official
+ *                    plugin awaiting start-up, reserves) a runtime it needs
+ *   releasing        enabled and next in line, waiting for `blockedBy` to finish
+ *                    shutting that runtime down
+ *   pending          enabled, but `blockedBy` (a packaged official plugin that
+ *                    needs the same runtime) is still reading the legacy switch
+ *                    that decides whether it runs. Transient: it ends by itself
+ *                    once that read lands (the official plugin then holds,
+ *                    reserves or lets go of the runtime) or fails (it lets go);
+ *                    not the user's off
+ */
+export type PluginBlockedReason =
+  | 'host-policy'
+  | 'duplicate-claim'
+  | 'conflict'
+  | 'releasing'
+  | 'pending';
 
 export interface PluginStatus {
   readonly id: string;
@@ -45,6 +74,10 @@ export interface PluginStatus {
    * D7: primitive-backed plugins switch on the next full page load).
    */
   readonly pendingVersion?: string;
+  /** For blocked: why. */
+  readonly blockedReason?: PluginBlockedReason;
+  /** For blocked by conflict, releasing or pending: the other plugin's id. */
+  readonly blockedBy?: string;
 }
 
 export interface PluginIncompatibility {

@@ -3,7 +3,10 @@
  *
  * Reads `localPluginStore` and passes every record through the same
  * `validateLocalManifest` gate the importer used, so stored data is never
- * trusted: a record a newer build would reject is skipped and logged. Merged
+ * trusted: a record a newer build would reject is skipped and logged. The one
+ * check deferred is the packaged host policy: a record that only this build's
+ * site policy refuses stays listed, and `PluginHost` reports it as
+ * `blocked: host-policy` instead of the user's plugin silently vanishing. Merged
  * last by `mergePluginRecords`, under the `local.*` ids no other source may use,
  * and exempt from the remote kill switch.
  */
@@ -31,7 +34,7 @@ export class LocalPluginSource implements PluginSource {
   async list(): Promise<readonly PluginManifest[]> {
     const manifests: PluginManifest[] = [];
     for (const [id, record] of Object.entries(await this.loadRecords())) {
-      const result = validateLocalManifest(record.manifest);
+      const result = validateLocalManifest(record.manifest, undefined, { hostPolicy: 'defer' });
       if (result.success && result.data.manifest.id === id) {
         manifests.push(result.data.manifest);
       } else {

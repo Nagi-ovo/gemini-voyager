@@ -47,6 +47,22 @@ describe('LocalPluginSource', () => {
     expect(listed.map((plugin) => plugin.id)).toEqual(['local.me.ok']);
   });
 
+  it('keeps a stored plugin this build only refuses by site policy, for the host to report blocked', async () => {
+    const records: LocalPluginRecordMap = {
+      'local.me.studio-vim': stored('local.me.studio-vim', {
+        engine: '>=1.4.0',
+        matches: ['https://aistudio.google.com/*'],
+        contributes: { domOps: [{ op: 'native', handler: 'vimInput', params: {} }] },
+      }),
+      'local.me.studio-tracker': stored('local.me.studio-tracker', {
+        matches: ['https://aistudio.google.com/*'],
+        contributes: { styles: [{ css: 'body{background:url(https://t.example/p.gif)}' }] },
+      }),
+    };
+    const listed = await new LocalPluginSource({ loadRecords: async () => records }).list();
+    expect(listed.map((plugin) => plugin.id)).toEqual(['local.me.studio-vim']);
+  });
+
   it('a plugin whose select offers an empty choice stays installed', async () => {
     const records: LocalPluginRecordMap = {
       'local.me.auto': stored('local.me.auto', {

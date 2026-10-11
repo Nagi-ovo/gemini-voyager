@@ -74,7 +74,7 @@ describe('plugin authoring prompt contract', () => {
     expect(prompt).toContain('exactly one ```json fenced code block');
   });
 
-  it('tells a chat AI about copy buttons and counters on ChatGPT, but not on Gemini', () => {
+  it('tells a chat AI about copy buttons and counters on ChatGPT, but only the opened primitives on Gemini', () => {
     const chatgpt = buildPluginAuthoringPrompt('Add a copy button to each reply', byId('chatgpt'));
     expect(chatgpt).toContain('## Primitives');
     expect(chatgpt).toMatch(/^- copyButton \(sinceEngine /m);
@@ -90,8 +90,10 @@ describe('plugin authoring prompt contract', () => {
     expect(result.success ? [] : result.error).toEqual([]);
 
     const gemini = buildPluginAuthoringPrompt('Add a copy button to each reply', byId('gemini'));
-    expect(gemini).not.toContain('## Primitives');
-    expect(gemini).not.toContain('"op": "native"');
+    const listed = (prompt: string) =>
+      [...prompt.matchAll(/^- (\w+) \(sinceEngine /gm)].map((match) => match[1]).sort();
+    expect(listed(gemini)).toEqual(['formulaCopy', 'vimInput']);
+    expect(listed(buildPluginAuthoringPrompt('x', byId('aistudio')))).toEqual(['formulaCopy']);
   });
 
   it('points a browsing AI at the full reference, and keeps the pasted contract in charge', () => {

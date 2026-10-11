@@ -60,7 +60,7 @@ Beyond the shared manifest checks (see [Plugin Contribution](./plugin-contributi
 - use only semantic anchors that every matched site declares;
 - add exactly one class per `addClass`, starting with `gv-`;
 - use boolean, number or select settings (string and color have no popup control yet);
-- not use a `theme` or a primitive on Gemini or AI Studio.
+- not use a `theme` on Gemini or AI Studio, and use only the primitives each allows: `formulaCopy` and `vimInput` on Gemini, `formulaCopy` on AI Studio. They run the same code as Voyager's own Formula copy and Input Vim mode settings; only one of the two runs on a page. When the page loads, or while neither is running, the built-in setting goes first; after that, whichever is already running keeps running and the other shows as paused. Turn one off to hand the feature to the other.
 
 Translations (`i18n`) are optional.
 

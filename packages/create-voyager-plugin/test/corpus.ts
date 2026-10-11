@@ -174,8 +174,17 @@ const PROBE: CorpusCase[] = [
   ),
   folder('b3-matches-outside', false, base({ matches: ['https://example.com/*'] })),
   folder(
-    'b4-native-on-gemini',
+    'b4-closed-native-on-aistudio',
     false,
+    base({
+      engine: '>=1.4.0',
+      matches: ['https://aistudio.google.com/*'],
+      contributes: { domOps: [{ op: 'native', handler: 'vimInput', params: {} }] },
+    }),
+  ),
+  folder(
+    'opened-native-on-gemini',
+    true,
     base({
       engine: '>=1.3.0',
       matches: ['https://gemini.google.com/*'],

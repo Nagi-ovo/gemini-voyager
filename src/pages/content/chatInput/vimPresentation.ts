@@ -164,7 +164,14 @@ export function createVimPresentation(
   }
 
   function clearHudMountClasses(mount: HTMLElement | null): void {
-    mount?.classList.remove(HUD_MOUNT_CLASS, HUD_COMPOSER_MOUNT_CLASS);
+    if (!mount) return;
+    // A successor content script (its own copy of this module) may share the
+    // mount; while its HUD is there, the mount classes are its too.
+    const hostsAnotherHud = Array.from(mount.children).some(
+      (child) => child !== hudElement && child.classList.contains(HUD_CLASS),
+    );
+    if (hostsAnotherHud) return;
+    mount.classList.remove(HUD_MOUNT_CLASS, HUD_COMPOSER_MOUNT_CLASS);
   }
 
   function updateHudMountClass(mount: HTMLElement, placement: HudMountTarget['placement']): void {

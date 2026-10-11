@@ -1,0 +1,65 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.gemini-hide-input-halo",
+  "name": "Gemini · Hide Input Halo",
+  "version": "1.0.0",
+  "description": "Hide the blue radial-gradient halo behind Gemini's chat input area.",
+  "changelog": "First release: Gemini's built-in input halo hider, packaged as an official CSS-only plugin.",
+  "i18n": {
+    "zh": {
+      "name": "Gemini · 隐藏输入框光晕",
+      "description": "隐藏 Gemini 输入框背后的蓝色径向渐变光晕。",
+      "changelog": "首个版本：将 Gemini 内置的输入框光晕隐藏打包为纯 CSS 官方插件。"
+    },
+    "zh_TW": {
+      "name": "Gemini · 隱藏輸入框光暈",
+      "description": "隱藏 Gemini 輸入框背後的藍色徑向漸層光暈。",
+      "changelog": "首個版本：將 Gemini 內建的輸入框光暈隱藏打包為純 CSS 官方外掛。"
+    },
+    "ja": {
+      "name": "Gemini · 入力欄の光暈を非表示",
+      "description": "Gemini のチャット入力欄の背後にある青いラジアルグラデーションの光暈を非表示にします。",
+      "changelog": "初版：Gemini 内蔵の入力欄の光暈非表示を、CSS のみの公式プラグインとして同梱しました。"
+    },
+    "ko": {
+      "name": "Gemini · 입력창 광채 숨기기",
+      "description": "Gemini 채팅 입력창 뒤의 파란색 방사형 그라데이션 광채를 숨깁니다.",
+      "changelog": "첫 릴리스: Gemini 내장 입력창 광채 숨기기를 CSS 전용 공식 플러그인으로 포함했습니다."
+    },
+    "fr": {
+      "name": "Gemini · Masquer le halo du champ de saisie",
+      "description": "Masque le halo bleu en dégradé radial derrière le champ de saisie du chat Gemini.",
+      "changelog": "Première version : le masquage du halo intégré à Gemini, livré comme plugin officiel uniquement en CSS."
+    },
+    "es": {
+      "name": "Gemini · Ocultar halo del cuadro de entrada",
+      "description": "Oculta el halo azul de degradado radial detrás del cuadro de entrada del chat de Gemini.",
+      "changelog": "Primera versión: la ocultación del halo integrada de Gemini, incluida como plugin oficial solo de CSS."
+    },
+    "pt": {
+      "name": "Gemini · Ocultar halo do campo de entrada",
+      "description": "Oculta o halo azul de gradiente radial atrás do campo de entrada do chat do Gemini.",
+      "changelog": "Primeira versão: a ocultação do halo integrada do Gemini, incluída como plugin oficial somente em CSS."
+    },
+    "ru": {
+      "name": "Gemini · Скрыть ореол поля ввода",
+      "description": "Скрывает синий радиально-градиентный ореол за полем ввода чата Gemini.",
+      "changelog": "Первая версия: встроенное скрытие ореола в Gemini, поставляемое как официальный плагин только на CSS."
+    },
+    "ar": {
+      "name": "Gemini · إخفاء هالة مربع الإدخال",
+      "description": "إخفاء الهالة الزرقاء المتدرجة شعاعياً خلف مربع إدخال محادثة Gemini.",
+      "changelog": "الإصدار الأول: إخفاء الهالة المدمج في Gemini، مضمّنًا كإضافة رسمية تعتمد على CSS فقط."
+    }
+  },
+  "author": "voyager-official",
+  "category": "readability",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/gemini/plugins/hide-input-halo",
+  "engine": ">=1.8.0",
+  "tier": "declarative",
+  "matches": ["https://gemini.google.com/*"],
+  "contributes": {
+    "styles": [{ "file": "style.css" }]
+  }
+}

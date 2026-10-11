@@ -18,8 +18,8 @@ export const CHATGPT_CONVERSATION_ID_ATTRIBUTE = 'data-chatgpt-selection-convers
  * the plugin list and scoped by `matches`, while the code stays first-party.
  * Builtin ids are never overridden by the remote catalog (plan D20).
  *
- * Like every plugin, builtin plugins ship DISABLED by default — the user turns
- * them on in the popup.
+ * Builtin plugins ship disabled unless `storage/pluginDefaults.ts` lists them
+ * as on by default; the user turns the rest on in the popup.
  */
 export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   {

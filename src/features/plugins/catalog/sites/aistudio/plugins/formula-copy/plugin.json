@@ -1,0 +1,74 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.aistudio-formula-copy",
+  "name": "AI Studio · Formula Copy",
+  "version": "1.0.0",
+  "description": "Click an inline or block formula to copy it in the format chosen in Voyager's settings; hover shows it's clickable.",
+  "changelog": "First release: AI Studio's built-in formula copy, packaged as an official plugin that calls the formulaCopy primitive.",
+  "i18n": {
+    "zh": {
+      "name": "AI Studio · 公式复制",
+      "description": "点击行内或块级公式，按 Voyager 设置中选定的格式复制；悬停时会提示可点击。",
+      "changelog": "首个版本：将 AI Studio 内置的公式复制打包为调用 formulaCopy 原语的官方插件。"
+    },
+    "zh_TW": {
+      "name": "AI Studio · 公式複製",
+      "description": "點擊行內或區塊公式，依 Voyager 設定中選定的格式複製；滑鼠懸停時會提示可點擊。",
+      "changelog": "首個版本：將 AI Studio 內建的公式複製打包為呼叫 formulaCopy 原語的官方外掛。"
+    },
+    "ja": {
+      "name": "AI Studio · 数式コピー",
+      "description": "インラインまたはブロック数式をクリックすると、Voyager の設定で選んだ形式でコピーします。ホバーするとクリック可能であることが分かります。",
+      "changelog": "初版：AI Studio 内蔵の数式コピーを、formulaCopy プリミティブを呼び出す公式プラグインとして同梱しました。"
+    },
+    "ko": {
+      "name": "AI Studio · 수식 복사",
+      "description": "인라인 또는 블록 수식을 클릭하면 Voyager 설정에서 고른 형식으로 복사합니다. 마우스를 올리면 클릭 가능함을 표시합니다.",
+      "changelog": "첫 릴리스: AI Studio 내장 수식 복사를 formulaCopy 프리미티브를 호출하는 공식 플러그인으로 포함했습니다."
+    },
+    "fr": {
+      "name": "AI Studio · Copie de formules",
+      "description": "Cliquez sur une formule en ligne ou en bloc pour la copier dans le format choisi dans les réglages de Voyager ; le survol indique qu'elle est cliquable.",
+      "changelog": "Première version : la copie de formules intégrée à AI Studio, livrée comme plugin officiel qui appelle la primitive formulaCopy."
+    },
+    "es": {
+      "name": "AI Studio · Copia de fórmulas",
+      "description": "Haz clic en una fórmula en línea o en bloque para copiarla en el formato elegido en los ajustes de Voyager; al pasar el cursor se muestra que se puede hacer clic.",
+      "changelog": "Primera versión: la copia de fórmulas integrada de AI Studio, incluida como plugin oficial que llama a la primitiva formulaCopy."
+    },
+    "pt": {
+      "name": "AI Studio · Cópia de fórmulas",
+      "description": "Clique em uma fórmula inline ou em bloco para copiá-la no formato escolhido nas configurações do Voyager; ao passar o cursor, ela indica que pode ser clicada.",
+      "changelog": "Primeira versão: a cópia de fórmulas integrada do AI Studio, incluída como plugin oficial que chama a primitiva formulaCopy."
+    },
+    "ru": {
+      "name": "AI Studio · Копирование формул",
+      "description": "Нажмите на строчную или блочную формулу, чтобы скопировать её в формате, выбранном в настройках Voyager; при наведении видно, что её можно нажать.",
+      "changelog": "Первая версия: встроенное копирование формул AI Studio, поставляемое как официальный плагин, который вызывает примитив formulaCopy."
+    },
+    "ar": {
+      "name": "AI Studio · نسخ الصيغ",
+      "description": "انقر على صيغة مضمنة أو كتلية لنسخها بالتنسيق المختار في إعدادات Voyager؛ ويظهر عند التحويم أنها قابلة للنقر.",
+      "changelog": "الإصدار الأول: نسخ الصيغ المدمج في AI Studio، مضمّنًا كإضافة رسمية تستدعي الأساسية formulaCopy."
+    }
+  },
+  "author": "voyager-official",
+  "category": "productivity",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/aistudio/plugins/formula-copy",
+  "engine": ">=1.3.0",
+  "tier": "declarative",
+  "matches": ["https://aistudio.google.com/*", "https://aistudio.google.cn/*"],
+  "requires": {
+    "handlers": ["formulaCopy"]
+  },
+  "contributes": {
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "formulaCopy",
+        "params": {}
+      }
+    ]
+  }
+}

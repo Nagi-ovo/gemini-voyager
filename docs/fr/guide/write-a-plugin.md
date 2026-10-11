@@ -60,7 +60,7 @@ En plus des vérifications communes du manifest (voir [Contribution Plugins](./p
 - n'utiliser que des clés sémantiques déclarées par tous les sites ciblés ;
 - ajouter exactement une classe par `addClass`, commençant par `gv-` ;
 - n'utiliser que des réglages boolean, number ou select (string et color n'ont pas encore de contrôle dans le popup) ;
-- ne pas utiliser de `theme` ni de primitive sur Gemini ou AI Studio.
+- ne pas utiliser de `theme` sur Gemini ou AI Studio, et n'utiliser que les primitives que chaque site autorise : `formulaCopy` et `vimInput` sur Gemini, `formulaCopy` sur AI Studio. Elles exécutent le même code que les réglages propres à Voyager (copie des formules et mode Vim de la zone de saisie) ; un seul des deux tourne sur une page. Au chargement de la page, ou tant qu'aucun des deux ne tourne, le réglage intégré passe en premier ; ensuite, celui qui tourne déjà continue et l'autre apparaît en pause. Désactivez l'un pour que l'autre prenne le relais.
 
 Les traductions (`i18n`) sont facultatives.
 

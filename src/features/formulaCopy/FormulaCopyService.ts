@@ -43,6 +43,13 @@ export interface FormulaCopyConfig {
 export class FormulaCopyService {
   private static instance: FormulaCopyService | null = null;
   private static readonly ACTIVE_ROOT_CLASS = 'gv-formula-copy-enabled';
+  /**
+   * Which service instance set the root class. After an extension update the
+   * retiring content script and its successor each have their own singleton,
+   * and the page DOM is all they share.
+   */
+  private static readonly ROOT_OWNER_ATTRIBUTE = 'data-gv-formula-copy-owner';
+  private readonly rootOwnerToken = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
   private readonly logger: ILogger;
   private readonly config: Required<Omit<FormulaCopyConfig, 'format'>>;
   private readonly interaction: FormulaInteraction;
@@ -199,6 +206,10 @@ export class FormulaCopyService {
     document.addEventListener('mouseover', this.handleMouseOver, true);
     this.isInitialized = true;
     this.lifecycleGeneration += 1;
+    document.documentElement.setAttribute(
+      FormulaCopyService.ROOT_OWNER_ATTRIBUTE,
+      this.rootOwnerToken,
+    );
     document.documentElement.classList.add(FormulaCopyService.ACTIVE_ROOT_CLASS);
     this.startActiveRootObserver();
     this.logger.info('Formula copy service initialized');
@@ -208,16 +219,18 @@ export class FormulaCopyService {
    * Clean up the service (for extension unloading)
    */
   public destroy(): void {
-    if (!this.isInitialized) {
-      document.documentElement.classList.remove(FormulaCopyService.ACTIVE_ROOT_CLASS);
-      return;
-    }
+    // Never initialized: the root class, if present, belongs to someone else
+    // (a successor content script whose late predecessor is cleaning up).
+    if (!this.isInitialized) return;
 
+    // Decided before releaseRootClass() drops the owner mark it reads.
+    const ownsPage = this.ownsRootClass();
     this.stopActiveRootObserver();
-    document.documentElement.classList.remove(FormulaCopyService.ACTIVE_ROOT_CLASS);
+    this.releaseRootClass();
     document.removeEventListener('click', this.handleClick, true);
     document.removeEventListener('mouseover', this.handleMouseOver, true);
-    this.interaction.stop();
+    // A successor that took the page over owns the shared arrow markers now.
+    this.interaction.stop({ clearMarkers: ownsPage });
     this.toaster.clear();
     this.isInitialized = false;
     this.lifecycleGeneration += 1;
@@ -285,6 +298,20 @@ export class FormulaCopyService {
 
     this.interaction.mark(mathElement, latexSource);
   };
+
+  /** False once a later instance has marked the page as its own. */
+  private ownsRootClass(): boolean {
+    const owner = document.documentElement.getAttribute(FormulaCopyService.ROOT_OWNER_ATTRIBUTE);
+    return owner === null || owner === this.rootOwnerToken;
+  }
+
+  /** Remove the root class unless a later instance has taken it over. */
+  private releaseRootClass(): void {
+    if (!this.ownsRootClass()) return;
+    const root = document.documentElement;
+    root.removeAttribute(FormulaCopyService.ROOT_OWNER_ATTRIBUTE);
+    root.classList.remove(FormulaCopyService.ACTIVE_ROOT_CLASS);
+  }
 
   private startActiveRootObserver(): void {
     if (this.activeRootObserver) return;

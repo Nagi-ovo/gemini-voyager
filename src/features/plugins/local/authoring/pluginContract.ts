@@ -71,7 +71,7 @@ export function buildPluginContract(
       pageChangesSection(templateKey, { primitives }),
       settingsSection(),
       localRulesSection(audience, { primitives }),
-      ...(primitives ? [primitivesSection()] : []),
+      ...(primitives ? [primitivesSection(site)] : []),
       ...(audience === 'agent' ? [selectorsSection()] : []),
       impossibleSection(audience, { primitives }),
     ],

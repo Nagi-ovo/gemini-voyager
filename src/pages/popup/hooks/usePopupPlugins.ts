@@ -36,6 +36,15 @@ import {
 } from '@/features/plugins/storage/pluginState';
 import type { PluginManifest, SiteAdapter } from '@/features/plugins/types';
 
+import { isSelfClearingBlock } from '../utils/releasingStatus';
+
+// A plugin waiting for a runtime to shut down, or for the official plugin's
+// legacy switch to be read (`pending`), starts without any storage change the
+// popup could observe, so it re-asks while one is waiting, up to a bound: a
+// disposer that never settles keeps its plugin waiting for good.
+const RELEASE_POLL_INTERVAL_MS = 1000;
+const RELEASE_POLL_LIMIT = 10;
+
 export interface PopupPluginsContext {
   activeUrl: string;
   activeTabId: number | null;
@@ -134,28 +143,47 @@ export function usePopupPlugins({
   }, [activeUrl, applyPluginRecords, pluginCatalogHost]);
 
   // Ask the active tab's PluginHost for plugin statuses (needs-engine,
-  // needs-handler, mounted, no-effect, pending version …). The health verdict
-  // arrives once the page has been quiet for a while, so poll once more
-  // shortly after opening. A tab without a content script simply answers
+  // needs-handler, mounted, no-effect, blocked, pending version …). The health
+  // verdict arrives once the page has been quiet for a while, so poll once
+  // more shortly after opening. A tab without a content script simply answers
   // nothing and the card falls back to local inference.
-  const refreshPluginStatuses = useCallback(async () => {
-    if (activeTabId === null) return;
+  const refreshPluginStatuses = useCallback(async (): Promise<readonly PluginStatus[] | null> => {
+    if (activeTabId === null) return null;
     try {
       const response = (await browser.tabs.sendMessage(activeTabId, {
         type: PLUGIN_STATUS_MESSAGE,
       })) as { ok?: boolean; statuses?: readonly PluginStatus[] } | undefined;
       if (response?.ok && Array.isArray(response.statuses)) {
         setPluginStatuses(response.statuses);
+        return response.statuses;
       }
     } catch {
       // No content script in this tab (not a plugin site, or not injected yet).
     }
+    return null;
   }, [activeTabId]);
 
   useEffect(() => {
-    void refreshPluginStatuses();
-    const later = setTimeout(() => void refreshPluginStatuses(), 2500);
-    return () => clearTimeout(later);
+    let active = true;
+    let releasePolls = 0;
+    let releaseTimer: ReturnType<typeof setTimeout> | undefined;
+    const ask = async (): Promise<void> => {
+      const statuses = await refreshPluginStatuses();
+      if (!active || !statuses?.some(isSelfClearingBlock)) return;
+      if (releaseTimer !== undefined || releasePolls >= RELEASE_POLL_LIMIT) return;
+      releaseTimer = setTimeout(() => {
+        releaseTimer = undefined;
+        releasePolls += 1;
+        void ask();
+      }, RELEASE_POLL_INTERVAL_MS);
+    };
+    void ask();
+    const later = setTimeout(() => void ask(), 2500);
+    return () => {
+      active = false;
+      clearTimeout(later);
+      clearTimeout(releaseTimer);
+    };
   }, [refreshPluginStatuses, pluginManifests, pluginState, legacySettings, surfaceRevision]);
 
   useEffect(() => {

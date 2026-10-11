@@ -109,6 +109,17 @@ export interface DeclarativeEngineOptions {
   /** Test hook: DOM silence before a health verdict. */
   readonly healthQuietMs?: number;
   readonly healthMaxWaitMs?: number;
+  /**
+   * Whether the health monitor watches a plugin that addresses the page
+   * (default: every one). Packaged official plugins on by default opt out.
+   */
+  readonly shouldTrackHealth?: (manifest: PluginManifest) => boolean;
+  /**
+   * Every unmount, with the manifest that was mounted and a promise that
+   * settles once its scopes have finished tearing down (a pending async
+   * startup included). Never rejects.
+   */
+  readonly onRelease?: (manifest: PluginManifest, released: Promise<void>) => void;
 }
 
 export class DeclarativeEngine {
@@ -116,6 +127,8 @@ export class DeclarativeEngine {
   private readonly adapter: SiteAdapter | null;
   private readonly active = new Map<string, ActivePlugin>();
   private readonly health: HealthMonitor;
+  private readonly shouldTrackHealth: (manifest: PluginManifest) => boolean;
+  private readonly onRelease?: (manifest: PluginManifest, released: Promise<void>) => void;
 
   // Engine-level, ref-counted ledgers shared across plugins (see class doc).
   /** element → className → set of plugin ids that requested the class. */
@@ -131,6 +144,8 @@ export class DeclarativeEngine {
   constructor(options: DeclarativeEngineOptions = {}) {
     this.doc = options.doc ?? document;
     this.adapter = options.adapter ?? null;
+    this.shouldTrackHealth = options.shouldTrackHealth ?? (() => true);
+    this.onRelease = options.onRelease;
     this.health = new HealthMonitor({
       countUserTurns: () => this.countUserTurns(),
       onChange: options.onHealthChange,
@@ -290,7 +305,7 @@ export class DeclarativeEngine {
   /** Plugins that address the page (DOM ops or primitives) get a health verdict. */
   private trackHealth(entry: ActivePlugin): void {
     const ops = entry.manifest.contributes.domOps ?? [];
-    if (ops.length === 0) return;
+    if (ops.length === 0 || !this.shouldTrackHealth(entry.manifest)) return;
     this.health.track(entry.manifest.id, () => this.countTargets(entry));
   }
 
@@ -404,16 +419,22 @@ export class DeclarativeEngine {
     void previous?.dispose();
   }
 
-  unmount(id: string): void {
+  /**
+   * Remove the plugin now; the returned promise settles once its scopes have
+   * finished tearing down (never rejects). Runtimes that are one per page wait
+   * for it before a successor starts (`releaseLedger.ts`).
+   */
+  unmount(id: string): Promise<void> {
     const entry = this.active.get(id);
-    if (!entry) return;
+    if (!entry) return Promise.resolve();
 
     // Scope disposal is async (it awaits in-flight startup and async
     // disposers) but claim-once: firing it here and moving on is safe — no
     // effect can double-run or leak, and a remount gets a fresh scope.
-    if (entry.scope) void entry.scope.dispose();
+    const teardown: Array<Promise<void> | undefined> = [entry.scopeRestart, entry.primitiveRestart];
+    if (entry.scope) teardown.push(entry.scope.dispose());
     else entry.nativeHandler?.stop?.();
-    if (entry.primitiveScope) void entry.primitiveScope.dispose();
+    if (entry.primitiveScope) teardown.push(entry.primitiveScope.dispose());
     entry.primitiveScope = undefined;
     entry.styleEl?.remove();
     this.releasePlugin(id);
@@ -422,11 +443,14 @@ export class DeclarativeEngine {
     this.active.delete(id);
     this.syncObserver();
     logger.info('Plugin unmounted', { id });
+    const released = Promise.allSettled(teardown).then(() => undefined);
+    this.onRelease?.(entry.manifest, released);
+    return released;
   }
 
   unmountAll(): void {
     // oxlint-disable-next-line unicorn/no-useless-spread -- snapshot: the loop body mutates the collection
-    for (const id of [...this.active.keys()]) this.unmount(id);
+    for (const id of [...this.active.keys()]) void this.unmount(id);
     this.doc.getElementById(PLUGIN_BASE_STYLE_ID)?.remove();
     this.health.dispose();
   }

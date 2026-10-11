@@ -650,6 +650,10 @@
     "message": "Choose the format when copying formulas by clicking",
     "description": "Formula copy format hint"
   },
+  "formulaCopyScopeNote": {
+    "message": "This switch and the copy format apply to both Gemini and AI Studio.",
+    "description": "Formula copy card: says the switch and the format are shared by Gemini and AI Studio"
+  },
   "formulaCopyFormatNoDollar": {
     "message": "LaTeX (No Dollar Sign)",
     "description": "LaTeX format option without dollar signs"
@@ -3152,6 +3156,34 @@
   "pluginUpdateAfterReload": {
     "message": "Update {version} applies after you reload the page",
     "description": "Note that a newer plugin version takes effect on the next page load; {version} is the pending version"
+  },
+  "pluginBlockedByPlugin": {
+    "message": "Paused here: “{name}” already does this. Turn off the one you don’t need.",
+    "description": "Note on a plugin that is on but paused because another plugin already runs the same feature on this page; {name} is that plugin's name"
+  },
+  "pluginBlockedReleasing": {
+    "message": "Waiting for the previous run to stop…",
+    "description": "Note on a plugin that is about to start once the previous run of the same feature has shut down"
+  },
+  "pluginBlockedUnavailableHere": {
+    "message": "This version of Voyager doesn’t run it on this site. Your setting is kept.",
+    "description": "Note on a plugin this version of Voyager does not run on the current site; the user's on/off choice is kept"
+  },
+  "pluginBlockedDuplicateClaim": {
+    "message": "It starts the same feature twice, so it can’t run. Remove the duplicate to use it.",
+    "description": "Note on a plugin that cannot run because it starts the same page-wide feature more than once"
+  },
+  "officialFeaturePausedByLocal": {
+    "message": "Paused on this page: your local plugin “{name}” already does this. Turn off the one you don’t need.",
+    "description": "Note under a Gemini / AI Studio setting (formula copy, Vim mode) that is on but paused because a local plugin already runs the same feature; {name} is that plugin's name"
+  },
+  "pluginBlockedByOfficialSetting": {
+    "message": "Paused here: Voyager’s own “{setting}” switch (in “{card}”) already does this. Turn it off there to use this plugin.",
+    "description": "Note on a plugin paused because a Voyager setting (formula copy, Vim mode) on this page already runs the same feature; {setting} is that switch's label and {card} the settings card holding it"
+  },
+  "pluginBlockedPending": {
+    "message": "Checking whether “{name}” is on for this page… This updates by itself.",
+    "description": "Note on a plugin that waits while Voyager reads whether its own matching setting is on for this page; it updates by itself. {name} is that setting's label"
   },
   "pluginChangelogLabel": {
     "message": "What's new:",

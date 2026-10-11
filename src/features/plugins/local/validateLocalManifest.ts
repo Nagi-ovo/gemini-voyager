@@ -17,9 +17,15 @@
  *   - the packaged host policy (`manifestHostPolicyIssues`), checked for each
  *     native surface the patterns reach: no `theme` there (Gemini and AI Studio
  *     keep Voyager's own accent; the popup's accent picker changes it), and a
- *     `native` op only for a primitive that site has handed to plugins. Today
- *     that is none: a native Voyager feature still runs each one there, and a
- *     second copy would fight it;
+ *     `native` op only for a primitive that site has handed to plugins
+ *     (`featureOwners.ts`: formula copy on both, Vim input on Gemini). A
+ *     primitive a native Voyager feature still runs there stays refused: a
+ *     second copy would fight it. Import, paste and the CLI enforce this; a
+ *     read of already stored plugins passes `hostPolicy: 'defer'` instead, so
+ *     a build that closes a primitive again (an owner rolled back to 'legacy')
+ *     keeps the user's plugin listed and `PluginHost` reports it as
+ *     `blocked: host-policy` by the page's real host. Defer skips only this
+ *     site policy, never the CSS, DOM, params, namespace or other checks;
  *   - the local-only rules in `localPluginRules.ts`: `gv-` classes, semantic
  *     keys every targeted site declares, and settings the popup can render.
  */
@@ -44,9 +50,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
+export interface ValidateLocalManifestOptions {
+  /**
+   * `enforce` (default) refuses what the packaged host policy refuses: the
+   * import, paste and CLI paths. `defer` leaves that verdict to the runtime,
+   * for re-reading plugins the user already stored.
+   */
+  readonly hostPolicy?: 'enforce' | 'defer';
+}
+
 export function validateLocalManifest(
   input: unknown,
   sites: readonly SiteAdapter[] = DEFAULT_ADAPTERS,
+  options: ValidateLocalManifestOptions = {},
 ): Result<ValidatedLocalPlugin, ManifestIssue[]> {
   if (!isRecord(input)) {
     return { success: false, error: [{ path: '', message: 'manifest must be a JSON object' }] };
@@ -94,7 +110,7 @@ export function validateLocalManifest(
       message: `"${pattern}" is outside the sites plugins can target (${supported.join(', ')})`,
     });
   });
-  issues.push(...manifestHostPolicyIssues(manifest));
+  if (options.hostPolicy !== 'defer') issues.push(...manifestHostPolicyIssues(manifest));
   issues.push(...localPluginRuleIssues(manifest, sites));
 
   return issues.length > 0

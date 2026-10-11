@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { type ReactNode } from 'react';
 
 import type { FormulaCopyFormat } from '@/features/formulaCopy/FormulaCopyService';
 import type { TranslationKey } from '@/utils/translations';
@@ -14,6 +14,8 @@ export interface FormulaCopySettingsProps {
   onFormatChange: (format: FormulaCopyFormat) => void;
   showEnabled?: boolean;
   showFormat?: boolean;
+  /** Shown under the switch's hint, e.g. why the feature is paused on this page. */
+  enabledNote?: ReactNode;
   t: (key: TranslationKey) => string;
 }
 
@@ -31,6 +33,7 @@ export function FormulaCopySettings({
   onFormatChange,
   showEnabled = true,
   showFormat = true,
+  enabledNote,
   t,
 }: FormulaCopySettingsProps) {
   const formatsDisabled = !enabled;
@@ -39,6 +42,7 @@ export function FormulaCopySettings({
     <Card className="p-4 transition-all hover:shadow-md">
       <CardTitle className="mb-4">{t('formulaCopyFormat')}</CardTitle>
       <CardContent className="space-y-4 p-0">
+        <p className="text-muted-foreground text-xs">{t('formulaCopyScopeNote')}</p>
         {showEnabled && (
           <div className="group flex items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
@@ -51,6 +55,7 @@ export function FormulaCopySettings({
               <p id="formula-copy-enabled-hint" className="text-muted-foreground mt-1 text-xs">
                 {t('enableFormulaCopyHint')}
               </p>
+              {enabledNote}
             </div>
             <Switch
               id="formula-copy-enabled"

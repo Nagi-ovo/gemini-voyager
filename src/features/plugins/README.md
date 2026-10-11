@@ -285,9 +285,18 @@ at or above their `sinceEngine` (`manifest/primitiveChecks.ts`, shared with
 surface's (`sites/nativeSurfaces.ts`: Gemini, AI Studio), so enabling a local
 plugin can only request host access an official plugin could, or none at all.
 A plugin for Gemini or AI Studio may not declare `theme` (those pages keep
-Voyager's own accent) or any `native` op (every shipped primitive, the
-timeline, formula copy and Vim, already runs there as a native Voyager
-feature, and a second copy would fight it): CSS and reversible DOM ops only.
+Voyager's own accent). Its `native` ops follow a capability policy per (site,
+handler) in `sites/hostPolicy.ts`, derived from the owner table
+`sites/featureOwners.ts`: a primitive opens on a site once the packaged
+official plugin there owns its feature (`formulaCopy` on Gemini and AI Studio,
+`vimInput` on Gemini), and every other primitive stays refused because a native
+Voyager module still runs it there and a second copy would fight it. A
+multi-site manifest must be legal on each site its patterns reach. Import,
+paste and the CLI enforce this policy; re-reading stored plugins
+(`LocalPluginSource`, the popup list, review-and-enable) passes
+`hostPolicy: 'defer'`, which skips only this site policy, so a build that
+closes a primitive again keeps the user's plugin and reports it
+`blocked: host-policy`.
 `local/localPluginRules.ts` adds three rules that turn a plugin which would
 import and then do nothing into an actionable error: `addClass` adds one
 `gv-` prefixed class; every semantic key the plugin relies on (op targets,
@@ -298,12 +307,18 @@ are `boolean`, `number` or `select`, the kinds the popup renders a control for.
 Stored records are re-validated on every read by
 `local/LocalPluginSource.ts`, and at runtime `PluginHost` and the brand theme
 refuse a theme or native op by the page's real host
-(`sites/nativeSurfaces.ts`), whatever the patterns say. By design, a local
+(`sites/hostPolicy.ts`), whatever the patterns say. By design, a local
 plugin's own CSS can still restyle anything on Gemini, Voyager's UI and its
-`--gv-*` variables included; only `theme` and native ops are refused.
+`--gv-*` variables included; only `theme` and the closed native ops are refused.
 
-**Gemini and AI Studio.** Only local plugins can target them; the bundled and
-remote catalogs never do. They resolve semantic keys through the native
+**Gemini and AI Studio.** The packaged official plugins
+(`catalog/sites/{gemini,aistudio}/`) and local plugins target them; neither
+goes through the remote catalog, which never serves these hosts and never
+publishes their manifests. The official ones replace native modules feature by
+feature: the owner table decides who runs each feature, the content script
+admits an official plugin where its native module used to start, and the
+plugin follows the native setting it replaces (`storage/legacySettingBindings.ts`),
+not a plugin-list toggle. They resolve semantic keys through the native
 `geminiAdapter` / `aistudioAdapter` (`userTurn`, `assistantTurn`, `composer`,
 `sidebar`; the Gemini `sidebar` key also covers Voyager's folder panel, so
 prefer a precise CSS selector there). The manifest already injects the content
@@ -569,14 +584,33 @@ floor, and `builtin.test.ts` applies the same check to the builtins.
 `requiredSemanticKeys`) and turns them into a status, which `PluginHost` reports
 for every plugin that targets the page instead of quietly filtering it:
 
-| Kind             | Meaning                               | Popup                                  |
-| ---------------- | ------------------------------------- | -------------------------------------- |
-| `needs-engine`   | `engine` range above this build       | toggle disabled, "needs Voyager ≥ x.y" |
-| `needs-handler`  | a primitive this build does not ship  | toggle disabled, "update Voyager"      |
-| `needs-semantic` | the site adapter lacks a key it needs | toggle disabled, names the site        |
-| `ready`          | compatible, not mounted yet           | normal toggle                          |
-| `mounted`        | enabled and running on this page      | normal toggle                          |
-| `no-effect`      | mounted but found nothing (D12)       | toggle stays on, yellow warning        |
+| Kind             | Meaning                                 | Popup                                         |
+| ---------------- | --------------------------------------- | --------------------------------------------- |
+| `needs-engine`   | `engine` range above this build         | toggle disabled, "needs Voyager ≥ x.y"        |
+| `needs-handler`  | a primitive this build does not ship    | toggle disabled, "update Voyager"             |
+| `needs-semantic` | the site adapter lacks a key it needs   | toggle disabled, names the site               |
+| `ready`          | compatible, not mounted yet             | normal toggle                                 |
+| `mounted`        | enabled and running on this page        | normal toggle                                 |
+| `no-effect`      | mounted but found nothing (D12)         | toggle stays on, yellow warning               |
+| `blocked`        | compatible, kept off by `blockedReason` | toggle keeps the user's choice, note says why |
+
+`blockedReason` (with `blockedBy` naming the other plugin where there is one):
+
+| Reason            | Meaning                                                                                       | Clears                              |
+| ----------------- | --------------------------------------------------------------------------------------------- | ----------------------------------- |
+| `host-policy`     | this build refuses its `theme` or a `native` op on this site                                  | in a build that allows it           |
+| `duplicate-claim` | the manifest starts one page-wide runtime twice                                               | when the manifest is fixed          |
+| `conflict`        | `blockedBy` holds or reserves a page-wide runtime it needs                                    | when the user turns one of them off |
+| `releasing`       | next in line, waiting for `blockedBy` to finish shutting the runtime down                     | by itself                           |
+| `pending`         | `blockedBy`, an official plugin needing the same runtime, is still reading its native setting | by itself, once the read lands      |
+
+The popup names a packaged official plugin in `blockedBy` by its native
+setting (Formula copy card, the Vim switch in input settings), since no plugin
+list shows it, and re-asks for statuses while a `releasing` or `pending` block
+lasts.
+
+A packaged official plugin whose feature the owner table still gives to the
+native module is left out of the statuses: the module is what runs.
 
 `needs-permission` is not in this list: the popup owns the permission flow, and
 a content script that is running already has its permission.
@@ -607,8 +641,8 @@ folder, so deleting a primitive's folder deletes its baseline too; no test stops
 
 `formulaCopy` is the first primitive, and
 `catalog/sites/deepseek/plugins/formula-copy/` is the first plugin built on one.
-The native builtin `voyager.formula-copy` is unaffected and stays as it is until
-P4 rewrites the Claude and ChatGPT builtins as primitive-backed JSON.
+The builtin `voyager.formula-copy` (Claude, ChatGPT) and the packaged Gemini and
+AI Studio official plugins are native-op manifests over the same primitive.
 
 ## Boundaries
 

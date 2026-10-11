@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { BUNDLED_SITE_ADAPTERS } from '../catalog/sites';
 import { pluginsToOriginPatterns } from '../runtime/siteRegistration';
 import { engineSatisfied } from '../semver';
+import { usesCatalogDataStores } from '../sites/hostPolicy';
 import { patternWithinAny } from '../sites/matchPattern';
 import type { PluginManifest } from '../types';
 import { EFFECTIVE_PLUGIN_ENGINE_VERSION } from '../verbs/contracts';
@@ -178,8 +179,11 @@ describe('BundledCatalogPluginSource', () => {
 
     const origins = pluginsToOriginPatterns(manifests);
     expect(origins.length).toBeGreaterThan(0);
-    // Bundled plugins never widen host access beyond the sites Voyager already supports.
-    const siteMatches = BUNDLED_SITE_ADAPTERS.flatMap((site) => site.matches);
+    // Bundled plugins never widen host access beyond the plugin platforms Voyager supports;
+    // Gemini and AI Studio are injected statically, so their plugins request no origin at all.
+    const siteMatches = BUNDLED_SITE_ADAPTERS.filter((site) =>
+      usesCatalogDataStores(site.id),
+    ).flatMap((site) => site.matches);
     for (const origin of origins) {
       expect(patternWithinAny(origin, siteMatches), origin).toBe(true);
     }

@@ -27,9 +27,12 @@ export function stopFormulaCopy(): void {
 }
 
 /**
- * Native lifecycle for the voyager.formula-copy builtin plugin
- * (Claude/ChatGPT). Gemini keeps the direct start/stop path above — the two
- * never overlap because the plugin's `matches` exclude Gemini hosts.
+ * Scope lifecycle behind the `formulaCopy` primitive: the builtin
+ * voyager.formula-copy (Claude/ChatGPT), the DeepSeek catalog plugin, the
+ * packaged Gemini / AI Studio official plugins and local plugins. The native
+ * Gemini / AI Studio start path (`nativeFeature.ts`) runs only while the owner
+ * table keeps the feature 'legacy'; the host lets one plugin hold the service
+ * at a time (`runtime/resourceClaims.ts`).
  */
 export function activateFormulaCopy(scope: PluginScope): void {
   const activationGeneration = ++pluginActivationGeneration;

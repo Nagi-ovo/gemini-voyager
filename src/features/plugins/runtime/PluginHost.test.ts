@@ -736,7 +736,8 @@ describe('PluginHost with a local plugin on Gemini', () => {
             target: { kind: 'css', selector: 'body' },
             className: 'gv-plugin-active',
           },
-          { op: 'native', handler: 'formulaCopy', params: {} },
+          // A primitive Gemini keeps closed (formula copy and Vim input are open there now).
+          { op: 'native', handler: 'turnNavigator', params: {} },
         ],
       },
     };
@@ -763,7 +764,21 @@ describe('PluginHost with a local plugin on Gemini', () => {
     });
     await host.start();
     expect(document.body.classList.contains('gv-plugin-active')).toBe(false);
-    expect(host.getStatuses()).toEqual([]);
+    // Refused plugins stay listed as blocked; the frame-only one never covered this page.
+    expect(host.getStatuses()).toEqual([
+      {
+        id: 'voyager.native-on-gemini',
+        version: '1.0.0',
+        kind: 'blocked',
+        blockedReason: 'host-policy',
+      },
+      {
+        id: 'voyager.themed-on-gemini',
+        version: '1.0.0',
+        kind: 'blocked',
+        blockedReason: 'host-policy',
+      },
+    ]);
     host.stop();
   });
 

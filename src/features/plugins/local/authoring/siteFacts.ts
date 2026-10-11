@@ -3,7 +3,12 @@
  * the URL patterns `matches` may use, the semantic anchors it declares with
  * today's selectors, and what a local plugin may and may not bring there.
  */
-import { allowedPrimitivesForSite, allowsPluginThemeForSite } from '../../sites/hostPolicy';
+import { FEATURE_OWNERS, type OwnedFeatureId } from '../../sites/featureOwners';
+import {
+  allowedPrimitivesForSite,
+  allowsPluginThemeForSite,
+  packagedSitesForPatterns,
+} from '../../sites/hostPolicy';
 import {
   SEMANTIC_KEY_DESCRIPTIONS,
   SEMANTIC_SELECTOR_KEYS,
@@ -20,13 +25,40 @@ const SELECTOR_PREVIEW_CHARS = 240;
 const SITE_NOTES: Readonly<Record<string, readonly string[]>> = {
   gemini: [
     'The `sidebar` anchor also matches Voyager’s own folder panel (`.gv-folder-container`). To change only Gemini’s navigation rail, target `bard-sidenav` with a CSS selector.',
-    'Voyager’s own features (timeline, formula copy, Vim input) already run on Gemini, so a plugin cannot call primitives here.',
   ],
   aistudio: [
     'The `sidebar` anchor is Voyager’s own folder panel on AI Studio, not AI Studio’s navigation. Use a CSS selector for AI Studio’s own panels.',
     'Voyager’s AI Studio switch governs plugins too: while Voyager is off on AI Studio, nothing mounts.',
   ],
 };
+
+/** The popup setting behind each feature a packaged official plugin runs. */
+const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
+  formulaCopy: 'Formula copy',
+  vimInput: 'Input Vim mode',
+  hideInputHalo: 'Hide input box halo',
+};
+
+/**
+ * On a site where only some primitives are open, one line per open primitive
+ * that also runs one of Voyager's own settings. Only one of them runs at a time:
+ * the setting goes first on a fresh page or a free runtime, and a running one
+ * keeps it (`runtime/resourceArbiter.ts`).
+ */
+function sharedRuntimeLines(site: SiteAdapter, open: ReadonlySet<string>): string[] {
+  const packaged = new Set<string>(packagedSitesForPatterns(site.matches));
+  const settings = new Map<string, string>();
+  for (const owned of FEATURE_OWNERS) {
+    if (owned.owner !== 'plugin' || !packaged.has(owned.site)) continue;
+    for (const handler of owned.handlers) {
+      if (open.has(handler)) settings.set(handler, OWNED_FEATURE_SETTINGS[owned.feature]);
+    }
+  }
+  return [...settings].map(
+    ([handler, setting]) =>
+      `- \`${handler}\` runs the same code as Voyager’s own ${setting} setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling \`${handler}\` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.`,
+  );
+}
 
 /** Semantic keys the site declares, in vocabulary order. */
 export function siteAnchors(site: SiteAdapter): readonly SemanticSelectorKey[] {
@@ -78,6 +110,7 @@ export function siteFactLines(
 ): string[] {
   const missing = SEMANTIC_SELECTOR_KEYS.filter((key) => typeof site.selectors[key] !== 'string');
   const restricted = forbidsTheme(site) && !allowsAnyPrimitive(site);
+  const allowed = allowedPrimitivesForSite(site);
   const notes = SITE_NOTES[site.id] ?? [];
   return [
     '"matches" must use these URL patterns (all of them, or a subset):',
@@ -93,14 +126,20 @@ export function siteFactLines(
       : []),
     ...(restricted
       ? ['', `No "theme" and no "native" op on ${site.label}: CSS and the four page changes only.`]
-      : options.primitives
+      : options.primitives && allowed !== 'all'
         ? [
             '',
-            options.theme
-              ? `Primitives (native ops) and an optional "theme" accent are allowed on ${site.label}.`
-              : `Primitives (native ops) are allowed on ${site.label}.`,
+            `${site.label} allows only these primitives (native ops): ${[...allowed].sort().join(', ')}.${forbidsTheme(site) ? ' No "theme".' : ''}`,
+            ...sharedRuntimeLines(site, allowed),
           ]
-        : []),
+        : options.primitives
+          ? [
+              '',
+              options.theme
+                ? `Primitives (native ops) and an optional "theme" accent are allowed on ${site.label}.`
+                : `Primitives (native ops) are allowed on ${site.label}.`,
+            ]
+          : []),
     ...(notes.length > 0 ? ['', ...notes.map((note) => `- ${note}`)] : []),
   ];
 }

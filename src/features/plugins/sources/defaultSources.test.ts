@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import type { PluginManifest, PluginSource, PluginSourceContext, PluginSourceKind } from '../types';
 import { BundledCatalogPluginSource } from './BundledCatalogPluginSource';
 import {
@@ -271,6 +272,76 @@ describe('mergePluginRecords (plan D6 / D20)', () => {
       engineVersion: ENGINE,
     });
     expect(merged.map((r) => r.manifest.id)).toEqual(['voyager.a']);
+  });
+});
+
+describe('mergePluginRecords with packaged official ids', () => {
+  const GEMINI_URL = 'https://gemini.google.com/app/abc';
+  const bundledFormula = record(
+    manifest(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, 'Gemini · Formula Copy', {
+      matches: ['https://gemini.google.com/*'],
+    }),
+    'bundled-catalog',
+  );
+
+  it('keeps the bundled record when a remote catalog ships the same id, compatible or not', () => {
+    for (const engine of ['>=1.0.0', '>=9.0.0']) {
+      const merged = mergePluginRecords({
+        builtin: [],
+        snapshot: [bundledFormula],
+        remote: [
+          record(
+            manifest(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, 'hijack', {
+              version: '9.0.0',
+              engine,
+              matches: ['https://business.gemini.google/*', 'https://*/*'],
+            }),
+            'host-catalog',
+          ),
+        ],
+        remoteAuthoritative: true,
+        scopeUrl: GEMINI_URL,
+        engineVersion: ENGINE,
+      });
+      // No blockedUpdate either: the popup must not offer a remote version of it.
+      expect(merged, engine).toEqual([bundledFormula]);
+    }
+  });
+
+  it('survives an authoritative remote listing that omits it, while the kill switch still delists others', () => {
+    const regular = record(
+      manifest('voyager.gemini-other', 'other', { matches: ['https://gemini.google.com/*'] }),
+      'bundled-catalog',
+    );
+    const merged = mergePluginRecords({
+      builtin: [],
+      snapshot: [bundledFormula, regular],
+      remote: [],
+      remoteAuthoritative: true,
+      scopeUrl: GEMINI_URL,
+      engineVersion: ENGINE,
+    });
+    expect(merged).toEqual([bundledFormula]);
+  });
+
+  it('drops a remote-only record that claims a packaged official id this build does not bundle', () => {
+    const merged = mergePluginRecords({
+      builtin: [],
+      snapshot: [],
+      remote: [
+        record(
+          manifest(OFFICIAL_PLUGIN_IDS.geminiVimInput, 'impostor', {
+            matches: ['https://gemini.google.com/*'],
+          }),
+          'host-catalog',
+        ),
+        record(manifest('voyager.new'), 'host-catalog'),
+      ],
+      remoteAuthoritative: true,
+      scopeUrl: SCOPE.url,
+      engineVersion: ENGINE,
+    });
+    expect(merged.map((r) => r.manifest.id)).toEqual(['voyager.new']);
   });
 });
 

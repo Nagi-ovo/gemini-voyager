@@ -43,13 +43,13 @@ describe('feature owners', () => {
     expect(ownedFeatureByPluginId('voyager.formula-copy')).toBeNull();
   });
 
-  it('keeps every feature native in this phase, so no primitive opens on Gemini or AI Studio', () => {
-    expect(featureOwner('gemini', 'formulaCopy')).toBe('legacy');
-    expect(featureOwner('aistudio', 'formulaCopy')).toBe('legacy');
-    expect(featureOwner('gemini', 'vimInput')).toBe('legacy');
-    expect(featureOwner('gemini', 'hideInputHalo')).toBe('legacy');
-    expect(pluginOwnedHandlers('gemini').size).toBe(0);
-    expect(pluginOwnedHandlers('aistudio').size).toBe(0);
+  it('hands formula copy, Vim input and the halo to their official plugins, opening only their primitives', () => {
+    expect(featureOwner('gemini', 'formulaCopy')).toBe('plugin');
+    expect(featureOwner('aistudio', 'formulaCopy')).toBe('plugin');
+    expect(featureOwner('gemini', 'vimInput')).toBe('plugin');
+    expect(featureOwner('gemini', 'hideInputHalo')).toBe('plugin');
+    expect(pluginOwnedHandlers('gemini')).toEqual(new Set(['formulaCopy', 'vimInput']));
+    expect(pluginOwnedHandlers('aistudio')).toEqual(new Set(['formulaCopy']));
   });
 
   it('treats a feature missing from the table as native', () => {

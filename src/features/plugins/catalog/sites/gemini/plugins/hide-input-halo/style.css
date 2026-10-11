@@ -1,0 +1,18 @@
+/* voyager.gemini-hide-input-halo - hide Gemini's blue halo behind the input.
+ *   - chat-window::before: radial-gradient(... rgb(20, 32, 79) 50%)
+ *   - chat-loading-animation and .nl-canvas: heavily blurred colour blobs that
+ *     leak above the fold
+ * The plugin's own stylesheet is the scope: the engine adds it only while the
+ * plugin runs and removes it on unmount, so these rules carry no body class and
+ * the plugin needs no DOM op. Theme-independent, as the halo is in both themes.
+ * The native module's copy of these rules stays in public/contentStyle.css,
+ * gated on body.gv-hide-input-halo, for the legacy path. */
+chat-window::before {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+chat-loading-animation,
+.nl-canvas {
+  display: none !important;
+}

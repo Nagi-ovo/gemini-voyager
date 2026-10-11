@@ -212,7 +212,10 @@ export async function enableLocalPluginIfUnchanged(
   try {
     return await withPluginStorageLock(async () => {
       const record = sanitizeLocalPluginRecords(await readStoredMapStrict(local))[seen.id];
-      const current = record ? validateLocalManifest(record.manifest) : null;
+      // Read the way `LocalPluginSource` listed `seen`, host policy deferred.
+      const current = record
+        ? validateLocalManifest(record.manifest, undefined, { hostPolicy: 'defer' })
+        : null;
       if (!current?.success || JSON.stringify(current.data.manifest) !== JSON.stringify(seen)) {
         logger.warn('Local plugin changed since it was reviewed; not enabling', { id: seen.id });
         return 'changed';

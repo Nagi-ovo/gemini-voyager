@@ -15,8 +15,10 @@ import { PluginManager } from './PluginManager';
  * It stays a single collapsed row until the user opens it or a local plugin
  * targets this page; then it shows that plugin's toggle and settings (the
  * usual `PluginManager`, without the online catalog, which never serves a
- * native surface) and the import card. Only local plugins can target a native
- * surface, so nothing official appears here.
+ * native surface) and the import card. The packaged official plugins that also
+ * target this page are driven by their own settings cards, so only local ones
+ * appear here; the full list still names whichever plugin holds a runtime a
+ * local one waits for.
  */
 export function NativeLocalPluginsSection({
   plugins,
@@ -51,7 +53,9 @@ export function NativeLocalPluginsSection({
 
   return (
     <div className="flex flex-col gap-4">
-      {localHere.length > 0 && <PluginManager {...plugins} manifests={localHere} />}
+      {localHere.length > 0 && (
+        <PluginManager {...plugins} manifests={localHere} nameSources={plugins.manifests} />
+      )}
       <LocalPluginsPanel t={t} activeUrl={plugins.activeUrl} />
     </div>
   );

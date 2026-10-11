@@ -4,8 +4,13 @@
  *
  *   { "op": "native", "handler": "formulaCopy", "params": {} }
  *
- * The builtin `voyager.formula-copy` plugin keeps its own binding until P4
- * rewrites it as JSON; both paths call the same activation.
+ * Every plugin that copies formulas calls it this way: the builtin
+ * `voyager.formula-copy` (Claude, ChatGPT), the DeepSeek catalog plugin, the
+ * packaged Gemini / AI Studio official plugins and any local one. On Gemini
+ * and AI Studio the native start path (`features/formulaCopy/nativeFeature.ts`)
+ * runs instead only while the owner table keeps the feature 'legacy'. One
+ * page-wide service backs them all, so the host lets one plugin hold it at a
+ * time (`runtime/resourceClaims.ts`).
  */
 import { activateFormulaCopy } from '@/features/formulaCopy';
 

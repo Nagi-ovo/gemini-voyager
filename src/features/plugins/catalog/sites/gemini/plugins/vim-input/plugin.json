@@ -1,0 +1,75 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.gemini-vim-input",
+  "name": "Gemini · Vim Input",
+  "version": "1.0.0",
+  "description": "Use Vim-style modal editing and cursor navigation in the Gemini prompt input.",
+  "changelog": "First release: Gemini's built-in Vim input mode, packaged as an official plugin that calls the vimInput primitive.",
+  "i18n": {
+    "zh": {
+      "name": "Gemini · Vim 输入",
+      "description": "在 Gemini 提问输入框中使用 Vim 风格的模式编辑和光标导航。",
+      "changelog": "首个版本：将 Gemini 内置的 Vim 输入模式打包为调用 vimInput 原语的官方插件。"
+    },
+    "zh_TW": {
+      "name": "Gemini · Vim 輸入",
+      "description": "在 Gemini 提問輸入框中使用 Vim 風格的模式編輯與游標導覽。",
+      "changelog": "首個版本：將 Gemini 內建的 Vim 輸入模式打包為呼叫 vimInput 原語的官方外掛。"
+    },
+    "ja": {
+      "name": "Gemini · Vim 入力",
+      "description": "Gemini の質問入力欄で Vim スタイルのモード編集とカーソル移動を使えます。",
+      "changelog": "初版：Gemini 内蔵の Vim 入力モードを、vimInput プリミティブを呼び出す公式プラグインとして同梱しました。"
+    },
+    "ko": {
+      "name": "Gemini · Vim 입력",
+      "description": "Gemini 질문 입력창에서 Vim 스타일의 모드 편집과 커서 이동을 사용합니다.",
+      "changelog": "첫 릴리스: Gemini 내장 Vim 입력 모드를 vimInput 프리미티브를 호출하는 공식 플러그인으로 포함했습니다."
+    },
+    "fr": {
+      "name": "Gemini · Saisie Vim",
+      "description": "Utilisez l'édition modale et la navigation du curseur de style Vim dans le champ de saisie de Gemini.",
+      "changelog": "Première version : le mode de saisie Vim intégré à Gemini, livré comme plugin officiel qui appelle la primitive vimInput."
+    },
+    "es": {
+      "name": "Gemini · Entrada Vim",
+      "description": "Usa la edición modal y la navegación del cursor al estilo Vim en el campo de entrada de Gemini.",
+      "changelog": "Primera versión: el modo de entrada Vim integrado de Gemini, incluido como plugin oficial que llama a la primitiva vimInput."
+    },
+    "pt": {
+      "name": "Gemini · Entrada Vim",
+      "description": "Use a edição modal e a navegação do cursor no estilo Vim no campo de entrada do Gemini.",
+      "changelog": "Primeira versão: o modo de entrada Vim integrado do Gemini, incluído como plugin oficial que chama a primitiva vimInput."
+    },
+    "ru": {
+      "name": "Gemini · Ввод Vim",
+      "description": "Используйте модальное редактирование и перемещение курсора в стиле Vim в поле ввода Gemini.",
+      "changelog": "Первая версия: встроенный режим ввода Vim в Gemini, поставляемый как официальный плагин, который вызывает примитив vimInput."
+    },
+    "ar": {
+      "name": "Gemini · إدخال Vim",
+      "description": "استخدم التحرير بالأوضاع والتنقل بالمؤشر بأسلوب Vim في حقل إدخال الأسئلة في Gemini.",
+      "changelog": "الإصدار الأول: وضع إدخال Vim المدمج في Gemini، مضمّنًا كإضافة رسمية تستدعي الأساسية vimInput."
+    }
+  },
+  "author": "voyager-official",
+  "category": "productivity",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/gemini/plugins/vim-input",
+  "engine": ">=1.4.0",
+  "tier": "declarative",
+  "matches": ["https://gemini.google.com/*"],
+  "requires": {
+    "handlers": ["vimInput"],
+    "semantic": ["composer"]
+  },
+  "contributes": {
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "vimInput",
+        "params": {}
+      }
+    ]
+  }
+}

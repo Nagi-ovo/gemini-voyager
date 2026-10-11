@@ -129,9 +129,16 @@ export class FormulaInteraction {
     );
   }
 
-  public stop(): void {
+  /**
+   * Stop observing. The arrow markers live in the page DOM, which a retiring
+   * content script shares with its successor: pass `clearMarkers: false` when
+   * a later instance has taken the page over, so a late stop never strips the
+   * markers that instance placed (they would regain formula padding/cursor).
+   */
+  public stop({ clearMarkers = true }: { clearMarkers?: boolean } = {}): void {
     this.observer?.disconnect();
     this.observer = null;
+    if (!clearMarkers) return;
     for (const element of document.querySelectorAll(`.${IGNORED_INTERACTION_CLASS}`)) {
       element.classList.remove(IGNORED_INTERACTION_CLASS);
     }

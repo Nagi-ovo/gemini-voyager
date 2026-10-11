@@ -10,7 +10,13 @@
  * reversible DOM tweaks) never wait for it. Until it lands the snapshot is
  * `null`, and a bound plugin does not run: its default must not be guessed
  * from an empty snapshot, nor from a read that failed because the extension
- * context is gone (the snapshot then stays `null`).
+ * context is gone.
+ *
+ * `phase()` tells "still reading" from "will never know". A failed read (in
+ * production only an invalidated extension context rejects; any other storage
+ * error already reads as "all keys missing") leaves the snapshot `null` for
+ * good: bound plugins stay off, and the feed reports `failed` so nothing keeps
+ * waiting on them.
  */
 import { logger } from '@/core/services/LoggerService';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
@@ -35,16 +41,25 @@ export const DEFAULT_LEGACY_SETTINGS: LegacySettingsSource = {
   subscribe: subscribeLegacySettings,
 };
 
+/**
+ * loading  the initial read is in flight
+ * loaded   the snapshot is known and follows every later change
+ * failed   the read rejected; the snapshot stays null for this feed's life
+ * none     no feed (a page off Gemini / AI Studio): no snapshot to wait for
+ */
+export type LegacyReadPhase = 'loading' | 'loaded' | 'failed' | 'none';
+
 export interface LegacySnapshotFeed {
-  /** The merged snapshot, or null until the initial read has landed. */
+  /** The merged snapshot, or null until the initial read has landed (for good after a failure). */
   current(): LegacySettingSnapshot | null;
+  phase(): LegacyReadPhase;
   stop(): void;
 }
 
 /**
  * Subscribe, then start the initial read without waiting for it. `onChange`
- * runs once when that read lands and after every change merged into the
- * snapshot; nothing runs after `stop()`.
+ * runs once when that read lands or fails, and after every change merged into
+ * the snapshot; nothing runs after `stop()`.
  */
 export function openLegacySnapshotFeed(
   source: LegacySettingsSource,
@@ -53,6 +68,7 @@ export function openLegacySnapshotFeed(
   let stopped = false;
   let touched: Record<string, unknown> = {};
   let snapshot: LegacySettingSnapshot | null = null;
+  let phase: LegacyReadPhase = 'loading';
   const unsubscribe = source.subscribe((changed) => {
     if (stopped) return;
     touched = { ...touched, ...changed };
@@ -63,16 +79,23 @@ export function openLegacySnapshotFeed(
     (loaded) => {
       if (stopped) return;
       snapshot = { ...loaded, ...touched };
+      phase = 'loaded';
       onChange();
     },
     (error: unknown) => {
-      // A failed read is no missing key: the snapshot stays null, bound plugins stay off.
-      if (stopped || isExtensionContextInvalidatedError(error)) return;
-      logger.warn('Legacy plugin switches could not be read', { error: String(error) });
+      if (stopped) return;
+      // A failed read is no missing key: the snapshot stays null, bound plugins
+      // stay off, and whoever waited for it is released by this change.
+      phase = 'failed';
+      if (!isExtensionContextInvalidatedError(error)) {
+        logger.warn('Legacy plugin switches could not be read', { error: String(error) });
+      }
+      onChange();
     },
   );
   return {
     current: () => snapshot,
+    phase: () => phase,
     stop() {
       stopped = true;
       unsubscribe();

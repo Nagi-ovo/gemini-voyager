@@ -68,14 +68,25 @@ describe('openLegacySnapshotFeed', () => {
     expect(s.unsubscribe).toHaveBeenCalledTimes(1);
   });
 
-  it('stays unread, without an unhandled rejection, when the extension context is gone', async () => {
+  it('stays unread for good, without an unhandled rejection, when the extension context is gone', async () => {
     const s = source(Promise.reject(new Error('Extension context invalidated.')));
     const onChange = vi.fn();
     const feed = openLegacySnapshotFeed(s.source, onChange);
+    expect(feed.phase()).toBe('loading');
     await settle();
+    // The failure is announced once, so whoever waited for the read stops waiting.
+    expect(feed.phase()).toBe('failed');
+    expect(onChange).toHaveBeenCalledTimes(1);
     s.fire({ [FORMULA_KEY]: true });
     expect(feed.current()).toBeNull();
-    expect(onChange).toHaveBeenCalledTimes(1); // only the change, never a landed read
+    expect(feed.phase()).toBe('failed');
+  });
+
+  it('reports the read as loaded once it lands', async () => {
+    const feed = openLegacySnapshotFeed(source(Promise.resolve({})).source, () => {});
+    expect(feed.phase()).toBe('loading');
+    await settle();
+    expect(feed.phase()).toBe('loaded');
   });
 
   it('ignores a read that lands after stop()', async () => {

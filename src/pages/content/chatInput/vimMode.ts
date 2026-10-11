@@ -20,11 +20,24 @@ interface StartInputVimModeOptions {
    * for still gets Vim on the right element.
    */
   composerSelector?: string;
+  /**
+   * Stops Vim the moment it aborts, before the returned cleanup is called. A
+   * plugin scope tears down in reverse order and may still be waiting on a
+   * later effect when a content-script handoff starts the successor.
+   */
+  signal?: AbortSignal;
 }
 
 let configuredComposerSelector: string | null = null;
 
 const MODE_CLASS_PREFIX = 'gv-input-vim-mode-';
+/**
+ * Which copy of this module set the mode markers on the input. After an
+ * extension update the retiring content script and its successor each load
+ * this module, and the page DOM is all they share.
+ */
+const INPUT_OWNER_ATTRIBUTE = 'data-gv-vim-owner';
+const ownerToken = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 const SEND_RECONCILE_DELAY_MS = 80;
 const SEND_RECONCILE_ATTEMPTS = 8;
 
@@ -69,14 +82,7 @@ const commands = createVimCommands(editor, () => activeInput, {
 function setActiveInput(input: HTMLElement | null): void {
   if (activeInput === input) return;
 
-  if (activeInput) {
-    activeInput.classList.remove(
-      `${MODE_CLASS_PREFIX}insert`,
-      `${MODE_CLASS_PREFIX}normal`,
-      `${MODE_CLASS_PREFIX}visual`,
-    );
-    delete activeInput.dataset.gvVimMode;
-  }
+  if (activeInput) clearInputModeMarkers(activeInput);
 
   activeInput = input;
   commands.resetCommandState();
@@ -183,9 +189,23 @@ function focusVimInput(mode: VimMode = 'insert'): boolean {
   return true;
 }
 
+/** Remove the mode markers unless a later copy of this module has taken the input over. */
+function clearInputModeMarkers(input: HTMLElement): void {
+  const owner = input.getAttribute(INPUT_OWNER_ATTRIBUTE);
+  if (owner !== null && owner !== ownerToken) return;
+  input.classList.remove(
+    `${MODE_CLASS_PREFIX}insert`,
+    `${MODE_CLASS_PREFIX}normal`,
+    `${MODE_CLASS_PREFIX}visual`,
+  );
+  delete input.dataset.gvVimMode;
+  input.removeAttribute(INPUT_OWNER_ATTRIBUTE);
+}
+
 function updateInputModeClasses(): void {
   if (!activeInput) return;
 
+  activeInput.setAttribute(INPUT_OWNER_ATTRIBUTE, ownerToken);
   activeInput.classList.toggle(`${MODE_CLASS_PREFIX}insert`, commands.mode === 'insert');
   activeInput.classList.toggle(`${MODE_CLASS_PREFIX}normal`, commands.mode === 'normal');
   activeInput.classList.toggle(`${MODE_CLASS_PREFIX}visual`, commands.mode === 'visual');
@@ -375,14 +395,28 @@ function cleanup(): void {
 export async function startInputVimMode(
   options: StartInputVimModeOptions = {},
 ): Promise<() => void> {
+  const { signal } = options;
+  if (signal?.aborted) return () => {};
+
+  let stopped = false;
+  // Idempotent: an abort retires Vim at once, and the scope's later call is a no-op.
+  const stop = (): void => {
+    if (stopped) return;
+    stopped = true;
+    signal?.removeEventListener('abort', stop);
+    cleanup();
+  };
+  signal?.addEventListener('abort', stop, { once: true });
+
   configuredComposerSelector = options.composerSelector?.trim() || null;
   if (options.forceEnabled) {
     isEnabled = true;
   } else {
     setupStorageListener();
     await loadSettings();
+    if (stopped) return stop;
   }
   reconcileListener();
 
-  return cleanup;
+  return stop;
 }

@@ -68,6 +68,7 @@ describe('vimInput primitive', () => {
     expect(mocks.startInputVimMode).toHaveBeenCalledWith({
       forceEnabled: true,
       composerSelector: 'textarea.ds-scroll-area',
+      signal: scope.signal,
     });
     expect(counters[0]()).toBe(1);
     await scope.dispose();
@@ -81,6 +82,7 @@ describe('vimInput primitive', () => {
     expect(mocks.startInputVimMode).toHaveBeenLastCalledWith({
       forceEnabled: true,
       composerSelector: '#custom',
+      signal: expect.any(AbortSignal),
     });
 
     mocks.findChatInput.mockReturnValue(document.createElement('textarea'));
@@ -89,6 +91,7 @@ describe('vimInput primitive', () => {
     expect(mocks.startInputVimMode).toHaveBeenLastCalledWith({
       forceEnabled: true,
       composerSelector: undefined,
+      signal: expect.any(AbortSignal),
     });
     expect(generic.counters[0]()).toBe(1);
   });

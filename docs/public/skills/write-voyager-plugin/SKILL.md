@@ -61,13 +61,13 @@ This skill is generated from Voyager’s plugin engine 1.8.0. The latest copy is
 
 - "matches" may only use patterns inside a site Voyager supports (listed per site).
 - Every semantic key the plugin relies on must be declared by every site its "matches" cover.
-- On Gemini and AI Studio: no "theme" and no "native" op (Voyager already runs its own features there).
+- On Gemini and AI Studio: no "theme", and a "native" op only for the primitives listed for that site (Voyager runs its other features there itself).
 - "theme": { "brand": "#rrggbb" } optionally recolors Voyager’s own UI on Claude, ChatGPT or DeepSeek. "requires" is optional: native ops already imply "requires.handlers".
 - An import lands switched off; the user reviews it and turns it on in the popup.
 
 ## Primitives
 
-A primitive is behavior Voyager ships as code; a plugin can only call it by name and configure it: { "op": "native", "handler": "<name>", "params": { … } }. A param marked required must be set; every other param is optional. A semanticKey param names a semantic key (only the listed ones when it says "one of"); every matched site must declare it, as with the keys a primitive reads, so it need not be repeated in "requires.semantic". Set "engine" to ">=" the primitive’s sinceEngine (and any param’s). Not on Gemini or AI Studio, and only on a site that declares the semantic keys the primitive reads.
+A primitive is behavior Voyager ships as code; a plugin can only call it by name and configure it: { "op": "native", "handler": "<name>", "params": { … } }. A param marked required must be set; every other param is optional. A semanticKey param names a semantic key (only the listed ones when it says "one of"); every matched site must declare it, as with the keys a primitive reads, so it need not be repeated in "requires.semantic". Set "engine" to ">=" the primitive’s sinceEngine (and any param’s). On Gemini and AI Studio only the primitives listed for that site, and only on a site that declares the semantic keys the primitive reads.
 - To pass a setting into params, use "{{key}}" in a string value, recursively inside objects and arrays. Parameter names and object keys stay literal. A whole-value token preserves the setting's number, boolean or string type; embedded "a{{key}}b" produces a string. Expansion runs once: tokens inside setting values remain literal. Set "engine" to ">=1.8.0" or any higher primitive/param floor; this capability's floor stays 1.8.0 in later releases.
 - Every referenced key must exist in contributes.settings and its type must fit the primitive contract wherever statically knowable. Manifest loading checks substituted defaults. Each activation substitutes resolved stored values and runs the primitive’s validateParams; an invalid result skips the op with the same diagnostic as invalid static params. Setting changes dispose then reactivate templated primitive ops in order; static params keep the existing in-place update path.
 - Example: turnNavigator params { "position": "{{side}}" } with a select setting side whose options are left and right.
@@ -160,10 +160,11 @@ Semantic anchors Gemini declares (use them as { "kind": "semantic", "key": … }
 
 Gemini does not declare thinkingBlock, codeBlock, sidePanel, headerActions, scrollContainer, composerRoot, sendButton: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
-No "theme" and no "native" op on Gemini: CSS and the four page changes only.
+Gemini allows only these primitives (native ops): formulaCopy, vimInput. No "theme".
+- `formulaCopy` runs the same code as Voyager’s own Formula copy setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `formulaCopy` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
+- `vimInput` runs the same code as Voyager’s own Input Vim mode setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `vimInput` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
 
 - The `sidebar` anchor also matches Voyager’s own folder panel (`.gv-folder-container`). To change only Gemini’s navigation rail, target `bard-sidenav` with a CSS selector.
-- Voyager’s own features (timeline, formula copy, Vim input) already run on Gemini, so a plugin cannot call primitives here.
 
 ### Target site: AI Studio
 
@@ -179,7 +180,8 @@ Semantic anchors AI Studio declares (use them as { "kind": "semantic", "key": �
 
 AI Studio does not declare thinkingBlock, codeBlock, sidePanel, headerActions, scrollContainer, composerRoot, sendButton: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
-No "theme" and no "native" op on AI Studio: CSS and the four page changes only.
+AI Studio allows only these primitives (native ops): formulaCopy. No "theme".
+- `formulaCopy` runs the same code as Voyager’s own Formula copy setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `formulaCopy` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
 
 - The `sidebar` anchor is Voyager’s own folder panel on AI Studio, not AI Studio’s navigation. Use a CSS selector for AI Studio’s own panels.
 - Voyager’s AI Studio switch governs plugins too: while Voyager is off on AI Studio, nothing mounts.

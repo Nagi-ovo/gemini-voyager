@@ -5,7 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { StorageKeys } from '@/core/types/common';
-import { PLUGIN_CATALOG_REFRESH_MESSAGE } from '@/features/plugins/runtime/messages';
+import {
+  PLUGIN_CATALOG_REFRESH_MESSAGE,
+  PLUGIN_STATUS_MESSAGE,
+} from '@/features/plugins/runtime/messages';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { TRANSLATIONS } from '@/utils/translations';
 
 import Popup from '../Popup';
@@ -248,6 +252,71 @@ describe('Popup settings integration', () => {
       ([message]) => (message as { type?: string } | undefined)?.type ?? '',
     );
     expect(messageTypes).not.toContain(PLUGIN_CATALOG_REFRESH_MESSAGE);
+  });
+
+  it('says under formula copy and Vim which local plugin keeps them paused, without listing the official plugins', async () => {
+    local[StorageKeys.PLUGIN_LOCAL_MANIFESTS] = {
+      'local.me.formula': {
+        manifest: {
+          id: 'local.me.formula',
+          name: 'My formula copy',
+          version: '1.0.0',
+          description: 'd',
+          author: 'me',
+          category: 'other',
+          license: 'MIT',
+          engine: '>=1.0.0',
+          tier: 'declarative',
+          matches: ['https://gemini.google.com/*'],
+          contributes: { styles: [{ css: '.gv-x{color:red}' }] },
+        },
+        importedAt: 1,
+        updatedAt: 1,
+      },
+    };
+    extensionApi.tabs.sendMessage.mockImplementation(async (_tabId: number, message: unknown) =>
+      (message as { type?: string }).type === PLUGIN_STATUS_MESSAGE
+        ? {
+            ok: true,
+            statuses: [
+              {
+                id: OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
+                version: '1.0.0',
+                kind: 'blocked',
+                blockedReason: 'conflict',
+                blockedBy: 'local.me.formula',
+              },
+              {
+                id: OFFICIAL_PLUGIN_IDS.geminiVimInput,
+                version: '1.0.0',
+                kind: 'blocked',
+                blockedReason: 'releasing',
+                blockedBy: OFFICIAL_PLUGIN_IDS.geminiVimInput,
+              },
+            ],
+          }
+        : undefined,
+    );
+    sync[StorageKeys.INPUT_VIM_MODE] = true;
+    await mount();
+
+    const formulaRow = container.querySelector('#formula-copy-enabled')!.closest('.group')!;
+    expect(formulaRow.textContent).toContain(
+      TRANSLATIONS.en.officialFeaturePausedByLocal.replace('{name}', 'My formula copy'),
+    );
+    expect(container.textContent).toContain(TRANSLATIONS.en.formulaCopyScopeNote);
+    const vimRow = container.querySelector('#input-vim-mode')!.closest('.group')!;
+    expect(vimRow.textContent).toContain(TRANSLATIONS.en.pluginBlockedReleasing);
+    expect(container.querySelector<HTMLInputElement>('#input-vim-mode')!.disabled).toBe(false);
+    // The official plugins are driven by these cards, not listed as plugins.
+    expect(container.querySelector('input[aria-label="My formula copy"]')).not.toBeNull();
+    for (const name of [
+      'Gemini · Formula Copy',
+      'Gemini · Vim Input',
+      'Gemini · Hide Input Halo',
+    ]) {
+      expect(container.querySelector(`input[aria-label="${name}"]`), name).toBeNull();
+    }
   });
 
   it('keeps the native local plugins entry off plugin sites, which have their own plugin page', async () => {

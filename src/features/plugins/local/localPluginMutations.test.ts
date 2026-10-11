@@ -8,8 +8,10 @@ import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vite
 import { StorageKeys } from '@/core/types/common';
 
 import { setPluginEnabled } from '../storage/pluginState';
+import { LocalPluginSource } from './LocalPluginSource';
 import { importLocalPlugin } from './localPluginImport';
 import {
+  enableLocalPluginIfUnchanged,
   loadLocalPluginRecords,
   localPluginRecordSnapshot,
   removeLocalPluginRecord,
@@ -399,6 +401,40 @@ describe('importing a reviewed manifest over the install it was reviewed against
     });
     expect(result).toMatchObject({ ok: true, previousVersion: '1.0.0' });
     expect(versionIn(memory)).toBe('2.0.0');
+    expect(enabledIn(memory)).toBe(false);
+  });
+});
+
+describe('switching on a reviewed plugin this build refuses only by site policy', () => {
+  const studioVim = (description: string) => ({
+    manifest: {
+      ...authored({
+        engine: '>=1.4.0',
+        description,
+        matches: ['https://aistudio.google.com/*'],
+        contributes: { domOps: [{ op: 'native', handler: 'vimInput', params: {} }] },
+      }),
+      id: ID,
+    },
+    importedAt: 1,
+    updatedAt: 1,
+  });
+
+  it('keeps the user’s choice, so the plugin runs once the site allows it again', async () => {
+    memory[RECORDS] = { [ID]: studioVim('Vim on AI Studio') };
+    const [seen] = await new LocalPluginSource().list();
+    expect(seen?.id).toBe(ID);
+
+    expect(await enableLocalPluginIfUnchanged(seen!)).toBe('enabled');
+    expect(enabledIn(memory)).toBe(true);
+  });
+
+  it('still refuses when the stored content changed since the review', async () => {
+    memory[RECORDS] = { [ID]: studioVim('Vim on AI Studio') };
+    const [seen] = await new LocalPluginSource().list();
+    memory[RECORDS] = { [ID]: studioVim('edited elsewhere') };
+
+    expect(await enableLocalPluginIfUnchanged(seen!)).toBe('changed');
     expect(enabledIn(memory)).toBe(false);
   });
 });
