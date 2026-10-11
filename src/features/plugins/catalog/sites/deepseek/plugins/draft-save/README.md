@@ -17,6 +17,11 @@ The plugin uses the `draftSave` primitive with the adapter's `composer` and
 `sendButton` semantic selectors and its `conversationIdPattern`. Turning it off
 stops saving and restoring and keeps the drafts already saved.
 
-Live check: pending (refresh restore, multi-line text, send clears, first
-message from the new-chat page, switching conversations, editing an earlier
-message does not save into the main draft).
+Live check (Chrome, DeepSeek has no draft persistence of its own): multi-line
+text with a blank line is stored and restored identically across three
+reloads; clearing the composer removes the draft; switching conversations in
+the sidebar saves A, leaves B empty and restores A on return; the new-chat
+page draft restores after a reload; a background tab restores too. The edit
+box of an earlier message (`textarea.ds-textarea__textarea`) does not match
+the composer selector, so editing never writes a draft. Sending was not
+checked live; unit tests cover it.

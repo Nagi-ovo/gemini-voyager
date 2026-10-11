@@ -54,11 +54,6 @@
       "official": true
     },
     {
-      "name": "chatgpt-draft-save",
-      "source": "sites/chatgpt/plugins/draft-save/plugin.json",
-      "official": true
-    },
-    {
       "name": "deepseek-reading-width",
       "source": "sites/deepseek/plugins/reading-width/plugin.json",
       "official": true

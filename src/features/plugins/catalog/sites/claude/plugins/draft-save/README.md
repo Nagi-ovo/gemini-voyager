@@ -18,4 +18,6 @@ The plugin uses the `draftSave` primitive with the adapter's `composer` and
 stops saving and restoring and keeps the drafts already saved.
 
 Live check: pending (refresh restore, multi-paragraph text, send clears, first
-message from `/new`, switching conversations).
+message from `/new`, switching conversations). Check first whether Claude
+restores its own composer text after a reload, as ChatGPT does: ChatGPT keeps
+its own drafts, so Voyager ships no draft-save plugin there.
