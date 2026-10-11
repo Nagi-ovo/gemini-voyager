@@ -46,7 +46,7 @@
   "category": "productivity",
   "license": "GPL-3.0-or-later",
   "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/deepseek/plugins/table-copy",
-  "engine": ">=next",
+  "engine": ">=1.8.0",
   "tier": "declarative",
   "matches": ["https://chat.deepseek.com/*"],
   "requires": {

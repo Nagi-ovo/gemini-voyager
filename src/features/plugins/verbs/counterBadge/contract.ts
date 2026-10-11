@@ -2,7 +2,7 @@ import type { PrimitiveContract } from '../contractTypes';
 
 export const contract: PrimitiveContract = {
   name: 'counterBadge',
-  sinceEngine: 'next',
+  sinceEngine: '1.8.0',
   // The key comes from `params.target`; a composer badge also uses composerRoot when the site has one.
   semantic: [],
   params: {

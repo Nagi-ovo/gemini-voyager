@@ -2,7 +2,7 @@ import type { PrimitiveContract } from '../contractTypes';
 
 export const contract: PrimitiveContract = {
   name: 'draftSave',
-  sinceEngine: 'next',
+  sinceEngine: '1.8.0',
   semantic: ['composer', 'sendButton'],
   params: {},
   description:

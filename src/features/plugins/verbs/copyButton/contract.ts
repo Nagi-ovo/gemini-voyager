@@ -2,7 +2,7 @@ import type { PrimitiveContract } from '../contractTypes';
 
 export const contract: PrimitiveContract = {
   name: 'copyButton',
-  sinceEngine: 'next',
+  sinceEngine: '1.8.0',
   // The key comes from `params.target`; its `semanticKey` type makes the checks require it.
   semantic: [],
   params: {

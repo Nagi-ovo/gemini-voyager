@@ -2,7 +2,7 @@ import type { PrimitiveContract } from '../contractTypes';
 
 export const contract: PrimitiveContract = {
   name: 'sendShortcut',
-  sinceEngine: 'next',
+  sinceEngine: '1.8.0',
   semantic: ['composer', 'composerRoot', 'sendButton'],
   params: {},
   description:

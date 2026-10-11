@@ -135,7 +135,7 @@
   "author": "voyager-official",
   "category": "readability",
   "license": "MIT",
-  "engine": ">=next",
+  "engine": ">=1.8.0",
   "tier": "declarative",
   "matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
   "contributes": {

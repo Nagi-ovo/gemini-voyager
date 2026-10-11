@@ -1,5 +1,5 @@
 {
-  "sinceEngine": "next",
+  "sinceEngine": "1.8.0",
   "params": {
     "target": {
       "type": "semanticKey",
