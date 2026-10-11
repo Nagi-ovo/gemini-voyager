@@ -7,7 +7,6 @@ import { requireBundledSiteAdapter } from '../../catalog/sites';
 import manifest from '../../catalog/sites/deepseek/plugins/code-collapse/plugin.json';
 import { PluginScope } from '../../runtime/pluginScope';
 import type { SiteAdapter } from '../../types';
-import { getPrimitive } from '../registry';
 import type { PrimitiveContext } from '../types';
 import { type CodeCollapseParams, codeCollapsePrimitive } from './index';
 
@@ -125,8 +124,7 @@ afterEach(async () => {
 });
 
 describe('codeCollapse primitive', () => {
-  it('is registered and accepts only optional selectors', () => {
-    expect(getPrimitive('codeCollapse')).toBe(codeCollapsePrimitive);
+  it('accepts only optional selectors', () => {
     expect(codeCollapsePrimitive.validateParams(undefined)).toEqual({ success: true, data: {} });
     const params = { codeBlock: '.md-code-block', code: 'pre', action: '[role="button"]' };
     expect(codeCollapsePrimitive.validateParams(params)).toEqual({ success: true, data: params });

@@ -23,11 +23,11 @@ export const TABLE_COPY_CLASS = 'gv-table-copy';
 const ICON_SIZE = 14;
 
 const TEXT = {
-  markdown: ['tableCopyMarkdownButton', 'Copy table as Markdown'],
-  tsv: ['tableCopyTsvButton', 'Copy table for spreadsheets (TSV)'],
-  copied: ['tableCopyCopied', 'Table copied'],
-  failed: ['tableCopyFailed', 'Couldn’t copy the table'],
-} as const satisfies Record<string, readonly [TranslationKey, string]>;
+  markdown: 'tableCopyMarkdownButton',
+  tsv: 'tableCopyTsvButton',
+  copied: 'tableCopyCopied',
+  failed: 'tableCopyFailed',
+} as const satisfies Record<string, TranslationKey>;
 
 const ICONS: Record<TableCopyFormat, (size: number) => SVGSVGElement> = {
   markdown: createCopyIcon,
@@ -52,11 +52,9 @@ button {
 button:hover { opacity: 1; background: color-mix(in srgb, currentColor 8%, transparent); }
 button:focus-visible { opacity: 1; outline: 2px solid var(--gv-pm-brand, #1a73e8); outline-offset: 2px; }`;
 
-/** A toolbar string in the Voyager language, English when the key is missing. */
+/** A toolbar string in the Voyager language. */
 export function tableCopyText(name: keyof typeof TEXT): string {
-  const [key, fallback] = TEXT[name];
-  const text = getTranslationSync(key);
-  return text && text !== key ? text : fallback;
+  return getTranslationSync(TEXT[name]);
 }
 
 export interface TableCopyToolbar {

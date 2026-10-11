@@ -3,11 +3,11 @@
  * small bar right before the first collapsible block in document order, shown
  * once a page has two or more, acting on every block through the shared engine.
  */
-import { createCollapseAllIcon, createExpandAllIcon } from '@/core/icons/codeCollapseIcons';
 import type { CodeBlockCollapse } from '@/pages/content/codeBlockCollapse/engine';
 import { isCollapsed } from '@/pages/content/codeBlockCollapse/toggle';
 import { getTranslationSync } from '@/utils/i18n';
 
+import { createCollapseAllIcon, createExpandAllIcon } from './icons';
 import type messages from './messages/en.json';
 
 declare module '@/utils/translations' {
