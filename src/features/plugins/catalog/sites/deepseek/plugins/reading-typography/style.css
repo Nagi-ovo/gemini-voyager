@@ -8,16 +8,24 @@
   .ds-assistant-message-main-content
   :is(p, li):not(li *, table *, pre *):not(:has(.katex-display)) {
   font-size: var(--gv-plugin-reading-text-size, 100%) !important;
-  /* DeepSeek's 28px line box is fixed; keep its 1.75 ratio as the text grows. */
-  line-height: 1.75 !important;
+  /* DeepSeek's 28px line box is fixed; keep its 1.75 ratio as the text grows,
+   * in em so inline code inherits the pixel line box as it does natively. */
+  line-height: calc(1.75 * 1em) !important;
 }
 
-/* Table cells follow the text size as on Gemini; text inside a cell inherits,
- * and a nested table's cells are skipped so the size never compounds. */
+/* Table cells scale DeepSeek's own cell tokens (15px on a 25px line), so 100%
+ * stays native; text inside a cell inherits, and a nested table's cells are
+ * skipped so the size never compounds. */
 .gv-plugin-deepseek-reading-typography[data-gv-font-size='true']
   .ds-assistant-message-main-content
   :is(td, th):not(:is(td, th) *) {
-  font-size: var(--gv-plugin-reading-text-size, 100%) !important;
+  font-size: calc(
+    var(--dsw-font-markdown-table-font-size, 15px) * var(--gv-plugin-reading-text-scale, 100) / 100
+  ) !important;
+  line-height: calc(
+    var(--dsw-font-markdown-table-line-height, 25px) * var(--gv-plugin-reading-text-scale, 100) /
+      100
+  ) !important;
 }
 
 /* After the size rule, so a custom line height wins over the kept ratio. */

@@ -78,8 +78,9 @@ describe('DeepSeek reading typography', () => {
     try {
       for (const id of ['first', 'inline', 'item', 'last']) {
         expect(applied(id, 'font-size'), id).toBe('125%');
-        // The line keeps DeepSeek's 28/16 ratio instead of its fixed 28px.
-        expect(applied(id, 'line-height'), id).toBe('1.75');
+        // The line keeps DeepSeek's 28/16 ratio instead of its fixed 28px, in em so
+        // inline code inherits the paragraph's pixel line box.
+        expect(applied(id, 'line-height'), id).toBe('calc(1.75em)');
       }
       // Inline code keeps its own em size, so it follows the paragraph.
       expect(applied('inline-code', 'font-size')).toBe('');
@@ -99,11 +100,16 @@ describe('DeepSeek reading typography', () => {
     }
   });
 
-  it('sizes table text with the answer without compounding nested tables', async () => {
+  it('scales table cells from their native 15px instead of the 16px answer text', async () => {
     const engine = await mountPage({ ...OFF, fontSizeEnabled: true, fontSize: 125 });
     try {
-      expect(applied('head', 'font-size')).toBe('125%');
-      expect(applied('cell', 'font-size')).toBe('125%');
+      // jsdom resolves DeepSeek's unset cell tokens to the native 15px/25px fallbacks.
+      const flat = (value: string) =>
+        value.replace(/\s+/g, ' ').replace(/\( | \)/g, (m) => m.trim());
+      for (const id of ['head', 'cell']) {
+        expect(flat(applied(id, 'font-size')), id).toBe('calc(15px * 125 / 100)');
+        expect(flat(applied(id, 'line-height')), id).toBe('calc(25px * 125 / 100)');
+      }
       // Text inside a cell inherits the cell's size instead of scaling again.
       expect(applied('cell-p', 'font-size')).toBe('');
       expect(applied('inner-cell', 'font-size')).toBe('');

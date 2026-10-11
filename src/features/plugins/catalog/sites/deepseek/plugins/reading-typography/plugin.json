@@ -339,6 +339,7 @@
         "target": "body",
         "styles": {
           "--gv-plugin-reading-text-size": "{{fontSize}}%",
+          "--gv-plugin-reading-text-scale": "{{fontSize}}",
           "--gv-plugin-reading-line-height": "{{lineHeight}}",
           "--gv-plugin-reading-paragraph-spacing": "{{paragraphSpacing}}px"
         }
