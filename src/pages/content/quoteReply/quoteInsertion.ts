@@ -1,3 +1,4 @@
+import { insertIntoComposer, isQuillComposer, readComposer } from '@/core/services/composer';
 import { getBrowserName } from '@/core/utils/browser';
 
 import { findChatInput } from '../chatInput/index';
@@ -248,16 +249,16 @@ function appendContenteditableQuote(
 
 function appendQuote(input: HTMLElement, quoteBody: string): void {
   // Resolve emptiness after the expansion delay; the user may have typed meanwhile.
+  if (!isQuillComposer(input)) {
+    const prefix = readComposer(input).trim().length === 0 ? '' : '\n\n';
+    insertIntoComposer(input, `${prefix}${quoteBody}\n`, 'append');
+    return;
+  }
   focusChatInput(input);
   const isInputEmpty = isChatInputEmpty(input);
   const quote = `${quoteBody}\n`;
-  if (input instanceof HTMLTextAreaElement) {
-    const prefix = isInputEmpty ? '' : '\n\n';
-    input.value += `${prefix}${quote}`;
-    input.selectionStart = input.selectionEnd = input.value.length;
-  } else {
-    appendContenteditableQuote(input, quote, isInputEmpty);
-  }
+  // Quill's browser-specific separator repair must not become generic paragraph insertion.
+  appendContenteditableQuote(input, quote, isInputEmpty);
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 

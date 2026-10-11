@@ -27,6 +27,23 @@ describe('setInputText', () => {
     expect(listener).toHaveBeenCalledOnce();
   });
 
+  it('does not steal focus or reset an unchanged textarea caret during draft replacement', () => {
+    const textarea = document.createElement('textarea');
+    const other = document.createElement('button');
+    document.body.append(textarea, other);
+    textarea.value = 'same draft';
+    textarea.setSelectionRange(2, 4);
+    other.focus();
+    const listener = vi.fn();
+    textarea.addEventListener('input', listener);
+
+    setInputText(textarea, 'same draft');
+    expect(document.activeElement).toBe(other);
+    expect(textarea.selectionStart).toBe(2);
+    expect(textarea.selectionEnd).toBe(4);
+    expect(listener).toHaveBeenCalledOnce();
+  });
+
   it('removes ql-blank class on a Quill contenteditable element', () => {
     const div = document.createElement('div');
     div.contentEditable = 'true';

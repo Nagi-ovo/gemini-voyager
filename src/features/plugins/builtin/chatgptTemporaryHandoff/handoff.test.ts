@@ -2,10 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import browser from 'webextension-polyfill';
 
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { applyNativeEditingCommand, installNativeEditingMock } from '@/tests/nativeEditing';
 
 import {
   hasCurrentComposerAttachments,
   isCurrentComposerAttachmentRemovalControl,
+  readComposerText,
 } from './composerDelivery';
 import {
   cancelPendingHandoffRecovery,
@@ -57,8 +59,10 @@ vi.mock('webextension-polyfill', () => ({
 }));
 
 const scopes: PluginScope[] = [];
+let restoreNativeEditing: () => void;
 
 beforeEach(() => {
+  restoreNativeEditing = installNativeEditingMock();
   vi.mocked(browser.runtime.sendMessage).mockImplementation(async (message: unknown) =>
     (message as { type?: string }).type === CHATGPT_HANDOFF_GET_TAB_ID_MESSAGE
       ? { ok: true, tabId: 42 }
@@ -141,10 +145,10 @@ afterEach(async () => {
   sessionStorage.clear();
   storageState.clear();
   vi.useRealTimers();
+  restoreNativeEditing();
   vi.clearAllMocks();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
-  Reflect.deleteProperty(document, 'execCommand');
 });
 
 describe('temporary chat handoff', () => {
@@ -240,13 +244,13 @@ describe('temporary chat handoff', () => {
     scope.on(document, 'beforeinput', cancelPendingHandoffRecovery, { capture: true });
     Object.defineProperty(document, 'execCommand', {
       configurable: true,
-      value: vi.fn(() => {
+      value: vi.fn((command: string, showUI?: boolean, text?: string) => {
         document
           .querySelector<HTMLElement>('#prompt-textarea')
           ?.dispatchEvent(
             new InputEvent('beforeinput', { bubbles: true, inputType: 'insertText' }),
           );
-        return false;
+        return applyNativeEditingCommand(command, showUI, text);
       }),
     });
 
@@ -631,7 +635,7 @@ describe('temporary chat handoff', () => {
 
     expect(composer.textContent).toContain('data');
     expect(composer.textContent).toContain('Recovered handoff');
-    expect(composer.lastChild?.textContent).toBe('a');
+    expect(readComposerText(composer).trimEnd().split(/\n+/).at(-1)).toBe('a');
   });
 
   it('restores a draft separately when the transcript already contains the exact draft line', async () => {
@@ -646,7 +650,7 @@ describe('temporary chat handoff', () => {
     await expect(resumePendingHandoff(createScope())).resolves.toBe('ready');
 
     expect(composer.textContent?.match(/Follow up/g)).toHaveLength(2);
-    expect(composer.lastChild?.textContent).toBe('Follow up');
+    expect(readComposerText(composer).trimEnd().split(/\n+/).at(-1)).toBe('Follow up');
   });
 
   it('discards delivered recovery state instead of replaying it on another chat route', async () => {
@@ -739,7 +743,7 @@ describe('temporary chat handoff', () => {
     const liveComposer = document.querySelector<HTMLElement>('#prompt-textarea');
     expect(oldComposer.isConnected).toBe(false);
     expect(liveComposer?.textContent).toContain('Read the saved handoff');
-    expect(liveComposer?.lastChild?.textContent).toBe('Unsent follow-up');
+    expect(readComposerText(liveComposer!).trimEnd().split(/\n+/).at(-1)).toBe('Unsent follow-up');
   });
 
   it('does not restore an attachment after the user cancels while its preview is mounting', async () => {

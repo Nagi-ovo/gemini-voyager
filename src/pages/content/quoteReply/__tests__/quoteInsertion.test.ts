@@ -36,3 +36,33 @@ it('delays insertion, reads the updated composer and preserves the textarea care
   expect(document.activeElement).toBe(input);
   expect(onInput).toHaveBeenCalledOnce();
 });
+
+it('does not drop quoted text from a React-controlled textarea', () => {
+  vi.useFakeTimers();
+  document.body.innerHTML = '<p>Hello</p><textarea>Draft</textarea>';
+  const range = document.createRange();
+  range.selectNodeContents(document.querySelector('p')!);
+  const input = document.querySelector('textarea')!;
+  vi.spyOn(input, 'getBoundingClientRect').mockReturnValue({ height: 20 } as DOMRect);
+  input.scrollIntoView = vi.fn();
+  const nativeValue = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value')!;
+  let tracked = input.value;
+  let hostDraft = input.value;
+  Object.defineProperty(input, 'value', {
+    get: () => nativeValue.get!.call(input),
+    set: (next: string) => {
+      tracked = next;
+      nativeValue.set!.call(input, next);
+    },
+  });
+  input.addEventListener('input', () => {
+    if (tracked === input.value) return;
+    hostDraft = tracked = input.value;
+  });
+
+  expect(insertQuotedSelection(range)).toBe(true);
+  vi.advanceTimersByTime(200);
+  expect(hostDraft).toBe('Draft\n\n> Hello\n');
+  expect(input.selectionStart).toBe(input.value.length);
+  expect(input.selectionEnd).toBe(input.value.length);
+});

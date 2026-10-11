@@ -10,8 +10,9 @@
  * on the new-chat page; anything else inserts nothing. Nothing is sent: the
  * user reviews the pack and presses send.
  *
- * The text goes in through the shared `insertTextIntoChatInput`.
+ * The text goes in through the shared composer writer, without sending.
  */
+import { findComposer, insertIntoComposer } from '@/core/services/composer';
 import { createToaster } from '@/core/ui/toast/toaster';
 import {
   HANDOFF_MESSAGES,
@@ -22,7 +23,6 @@ import {
 import { getTranslationSync } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
-import { insertTextIntoChatInput } from '../chatInput';
 import type { StopNativeFeature } from '../featureLifecycle';
 import { navigationApi } from './navigationApi';
 
@@ -63,21 +63,14 @@ function watchHandoffRoute(navigation: EventTarget, onChange: (href?: string) =>
   };
 }
 
-function isUsable(candidate: HTMLElement): boolean {
-  return (
-    candidate.isConnected &&
-    !candidate.matches('[aria-disabled="true"]') &&
-    !candidate.closest('[hidden], [inert], [aria-hidden="true"]')
-  );
-}
-
 /**
  * Each site's main composer, never the adapter's generic `contenteditable`
  * fallback, which also matches canvases and edit-message boxes. The same
  * selectors identify these composers for Vim input and slash prompts.
  */
 export const HANDOFF_COMPOSER_SELECTORS: Readonly<Record<HandoffTarget, string>> = {
-  chatgpt: '#prompt-textarea[contenteditable="true"]',
+  chatgpt:
+    '#prompt-textarea[contenteditable="true"], [data-composer-markdown][contenteditable="true"]',
   claude: '[data-testid="chat-input"][contenteditable="true"]',
 };
 
@@ -86,10 +79,7 @@ export function findHandoffComposer(
   target: HandoffTarget,
   doc: Document = document,
 ): HTMLElement | null {
-  const candidates = Array.from(
-    doc.querySelectorAll<HTMLElement>(HANDOFF_COMPOSER_SELECTORS[target]),
-  ).filter(isUsable);
-  return candidates.length === 1 ? candidates[0] : null;
+  return findComposer(HANDOFF_COMPOSER_SELECTORS[target], { doc, requireUnique: true });
 }
 
 /** Whitespace, including the zero-width characters editors use to hold a caret. */
@@ -185,7 +175,8 @@ export function startResearchPackReceiver(deps: ResearchPackReceiverDeps = {}): 
 
   const send = deps.send ?? ((message: HandoffMessage) => chrome.runtime.sendMessage(message));
   const insert =
-    deps.insert ?? ((text: string, input: HTMLElement) => insertTextIntoChatInput(text, input));
+    deps.insert ??
+    ((text: string, input: HTMLElement) => insertIntoComposer(input, text, 'append'));
   const t = deps.t ?? getTranslationSync;
 
   // Teardown is synchronous: every timer, the composer wait and the toast go at once.

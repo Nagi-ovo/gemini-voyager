@@ -1,6 +1,7 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { installNativeEditingMock } from '@/tests/nativeEditing';
 
 import { readCurrentComposerDraft } from './composerDelivery';
 import { handoffTemporaryChat, markHandoffPageActive } from './handoff';
@@ -36,6 +37,11 @@ vi.mock('webextension-polyfill', () => ({
 }));
 
 const scopes: PluginScope[] = [];
+let restoreNativeEditing: () => void;
+
+beforeEach(() => {
+  restoreNativeEditing = installNativeEditingMock();
+});
 
 /**
  * The composer as measured live (October 2026): a ProseMirror textbox in
@@ -72,6 +78,7 @@ afterEach(async () => {
   markHandoffPageActive();
   sessionStorage.clear();
   storageState.clear();
+  restoreNativeEditing();
   vi.clearAllMocks();
 });
 

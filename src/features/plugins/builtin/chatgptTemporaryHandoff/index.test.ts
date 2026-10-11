@@ -7,6 +7,7 @@ import {
   makeTurns,
   mountThreadFixture,
 } from '@/pages/content/export/adapter/__tests__/chatgptThreadFixture';
+import { installNativeEditingMock } from '@/tests/nativeEditing';
 import { toastDriver } from '@/tests/toastDriver';
 
 import { markHandoffPageActive } from './handoff';
@@ -163,6 +164,7 @@ function legacyTurn(id: string, role?: 'user' | 'assistant', text = ''): HTMLEle
 }
 
 let createdBlob: Blob | null = null;
+let restoreNativeEditing: () => void;
 
 // The browser download is the boundary: record it instead of letting jsdom navigate.
 function recordDownload(event: MouseEvent): void {
@@ -173,6 +175,7 @@ function recordDownload(event: MouseEvent): void {
 }
 
 beforeEach(() => {
+  restoreNativeEditing = installNativeEditingMock();
   vi.mocked(browser.runtime.sendMessage).mockImplementation(answerExtensionMessages);
   downloads = [];
   URL.createObjectURL = (blob: Blob) => {
@@ -196,6 +199,7 @@ afterEach(async () => {
   Reflect.deleteProperty(URL, 'createObjectURL');
   Reflect.deleteProperty(URL, 'revokeObjectURL');
   vi.useRealTimers();
+  restoreNativeEditing();
   vi.restoreAllMocks();
   vi.clearAllMocks();
 });

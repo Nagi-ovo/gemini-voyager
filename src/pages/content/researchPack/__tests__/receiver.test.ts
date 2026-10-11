@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HANDOFF_MESSAGES, type HandoffMessage } from '@/features/researchPack/services/handoff';
+import { installNativeEditingMock } from '@/tests/nativeEditing';
 import { toastDriver } from '@/tests/toastDriver';
 
 import { insertTextIntoChatInput } from '../../chatInput';
@@ -13,6 +14,7 @@ import {
 
 const PACK = '# Research pack\n\n## 1. Why is the sky blue?\n\nRayleigh scattering.';
 const SETTLE_MS = RECEIVER_POLL_MS * (RECEIVER_STABLE_POLLS + 1);
+let restoreEditing = () => {};
 
 function chatgptComposer(): {
   composer: HTMLElement;
@@ -86,6 +88,15 @@ describe('research pack receiver on ChatGPT and Claude', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     document.body.innerHTML = '';
+    // jsdom has neither layout nor native editing transactions.
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(
+      function (this: HTMLElement) {
+        return this.matches('[contenteditable="true"]')
+          ? new DOMRect(0, 0, 200, 30)
+          : new DOMRect();
+      },
+    );
+    restoreEditing = installNativeEditingMock();
     pending = true;
     insert = vi.fn((text: string, input: HTMLElement) => insertTextIntoChatInput(text, input));
     navigation = new EventTarget();
@@ -112,6 +123,8 @@ describe('research pack receiver on ChatGPT and Claude', () => {
     stop?.();
     stop = null;
     vi.useRealTimers();
+    vi.restoreAllMocks();
+    restoreEditing();
     document.body.innerHTML = '';
   });
 
@@ -144,6 +157,39 @@ describe('research pack receiver on ChatGPT and Claude', () => {
 
     expect(document.querySelector('.ProseMirror')!.textContent).toContain('Rayleigh scattering.');
     expect(sent()).toEqual([HANDOFF_MESSAGES.peek, HANDOFF_MESSAGES.claim]);
+  });
+
+  it('fills the current ChatGPT markdown composer through the default shared writer without sending', async () => {
+    const { composer, submitted, sendClicked, enterPressed } = chatgptComposer();
+    composer.removeAttribute('id');
+    composer.setAttribute('data-composer-markdown', '');
+    stop = startResearchPackReceiver({
+      send,
+      navigation,
+      pageUrl: () => 'https://chatgpt.com/',
+      isTopFrame: () => true,
+    });
+    await vi.advanceTimersByTimeAsync(SETTLE_MS);
+
+    expect(composer.textContent).toBe(PACK);
+    expect(sent()).toEqual([HANDOFF_MESSAGES.peek, HANDOFF_MESSAGES.claim]);
+    expect(submitted).not.toHaveBeenCalled();
+    expect(sendClicked).not.toHaveBeenCalled();
+    expect(enterPressed).not.toHaveBeenCalled();
+  });
+
+  it('leaves the pack unclaimed when two main composers are visible', async () => {
+    chatgptComposer();
+    const second = document.createElement('div');
+    second.setAttribute('contenteditable', 'true');
+    second.setAttribute('data-composer-markdown', '');
+    document.body.append(second);
+    start();
+    await vi.advanceTimersByTimeAsync(RECEIVER_COMPOSER_TIMEOUT_MS + SETTLE_MS);
+
+    expect(sent()).toEqual([HANDOFF_MESSAGES.peek]);
+    expect(insert).not.toHaveBeenCalled();
+    expect(second.textContent).toBe('');
   });
 
   it('waits for a composer that mounts late, and claims only once it holds still', async () => {
