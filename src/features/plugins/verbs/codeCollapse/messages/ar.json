@@ -1,0 +1,10 @@
+{
+  "codeBlockExpandAll": {
+    "message": "توسيع كل كتل الشيفرة",
+    "description": "Button that expands every collapsed long code block on the page"
+  },
+  "codeBlockCollapseAll": {
+    "message": "طي كل كتل الشيفرة",
+    "description": "Button that collapses every long code block on the page"
+  }
+}

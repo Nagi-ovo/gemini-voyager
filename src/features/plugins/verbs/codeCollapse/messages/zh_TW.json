@@ -1,0 +1,10 @@
+{
+  "codeBlockExpandAll": {
+    "message": "展開全部程式碼區塊",
+    "description": "Button that expands every collapsed long code block on the page"
+  },
+  "codeBlockCollapseAll": {
+    "message": "收合全部程式碼區塊",
+    "description": "Button that collapses every long code block on the page"
+  }
+}

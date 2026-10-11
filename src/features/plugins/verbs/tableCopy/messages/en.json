@@ -1,0 +1,18 @@
+{
+  "tableCopyMarkdownButton": {
+    "message": "Copy table as Markdown",
+    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as Markdown"
+  },
+  "tableCopyTsvButton": {
+    "message": "Copy table for spreadsheets (TSV)",
+    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as tab-separated values for spreadsheets"
+  },
+  "tableCopyCopied": {
+    "message": "Table copied",
+    "description": "Toast after a reply table was copied to the clipboard"
+  },
+  "tableCopyFailed": {
+    "message": "Couldn’t copy the table",
+    "description": "Toast when copying a reply table to the clipboard failed"
+  }
+}

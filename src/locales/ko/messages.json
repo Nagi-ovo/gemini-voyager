@@ -246,14 +246,6 @@
     "message": "접기",
     "description": "Collapse prompt text"
   },
-  "codeBlockExpandAll": {
-    "message": "코드 블록 모두 펼치기",
-    "description": "Button that expands every collapsed long code block on the page"
-  },
-  "codeBlockCollapseAll": {
-    "message": "코드 블록 모두 접기",
-    "description": "Button that collapses every long code block on the page"
-  },
   "pm_reorder": {
     "message": "드래그하여 순서 변경 (↑/↓ 키)",
     "description": "Prompt list reorder handle"
@@ -1816,22 +1808,6 @@
   "diagramCodeButton": {
     "message": "코드",
     "description": "Diagram toolbar button that shows the diagram source code"
-  },
-  "tableCopyMarkdownButton": {
-    "message": "표를 Markdown으로 복사",
-    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as Markdown"
-  },
-  "tableCopyTsvButton": {
-    "message": "스프레드시트용으로 표 복사(TSV)",
-    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as tab-separated values for spreadsheets"
-  },
-  "tableCopyCopied": {
-    "message": "표를 복사했습니다",
-    "description": "Toast after a reply table was copied to the clipboard"
-  },
-  "tableCopyFailed": {
-    "message": "표를 복사하지 못했습니다",
-    "description": "Toast when copying a reply table to the clipboard failed"
   },
   "echartsFullscreenButton": {
     "message": "전체 화면",

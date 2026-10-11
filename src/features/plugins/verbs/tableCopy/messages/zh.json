@@ -1,0 +1,18 @@
+{
+  "tableCopyMarkdownButton": {
+    "message": "将表格复制为 Markdown",
+    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as Markdown"
+  },
+  "tableCopyTsvButton": {
+    "message": "将表格复制为 TSV（用于电子表格）",
+    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as tab-separated values for spreadsheets"
+  },
+  "tableCopyCopied": {
+    "message": "表格已复制",
+    "description": "Toast after a reply table was copied to the clipboard"
+  },
+  "tableCopyFailed": {
+    "message": "无法复制表格",
+    "description": "Toast when copying a reply table to the clipboard failed"
+  }
+}

@@ -8,6 +8,14 @@ import type { CodeBlockCollapse } from '@/pages/content/codeBlockCollapse/engine
 import { isCollapsed } from '@/pages/content/codeBlockCollapse/toggle';
 import { getTranslationSync } from '@/utils/i18n';
 
+import type messages from './messages/en.json';
+
+declare module '@/utils/translations' {
+  interface PrimitiveMessages {
+    codeCollapse: typeof messages;
+  }
+}
+
 export const COLLAPSE_ALL_CLASS = 'gv-code-collapse-all';
 
 export interface CollapseAllBar {

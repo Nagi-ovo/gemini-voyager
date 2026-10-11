@@ -1,0 +1,10 @@
+{
+  "codeBlockExpandAll": {
+    "message": "Развернуть все блоки кода",
+    "description": "Button that expands every collapsed long code block on the page"
+  },
+  "codeBlockCollapseAll": {
+    "message": "Свернуть все блоки кода",
+    "description": "Button that collapses every long code block on the page"
+  }
+}

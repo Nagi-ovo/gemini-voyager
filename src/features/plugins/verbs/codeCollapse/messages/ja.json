@@ -1,0 +1,10 @@
+{
+  "codeBlockExpandAll": {
+    "message": "すべてのコードブロックを展開",
+    "description": "Button that expands every collapsed long code block on the page"
+  },
+  "codeBlockCollapseAll": {
+    "message": "すべてのコードブロックを折りたたむ",
+    "description": "Button that collapses every long code block on the page"
+  }
+}

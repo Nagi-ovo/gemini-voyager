@@ -246,14 +246,6 @@
     "message": "折りたたむ",
     "description": "Collapse prompt text"
   },
-  "codeBlockExpandAll": {
-    "message": "すべてのコードブロックを展開",
-    "description": "Button that expands every collapsed long code block on the page"
-  },
-  "codeBlockCollapseAll": {
-    "message": "すべてのコードブロックを折りたたむ",
-    "description": "Button that collapses every long code block on the page"
-  },
   "pm_reorder": {
     "message": "ドラッグして並べ替え（↑/↓ キー）",
     "description": "Prompt list reorder handle"
@@ -1816,22 +1808,6 @@
   "diagramCodeButton": {
     "message": "コード",
     "description": "Diagram toolbar button that shows the diagram source code"
-  },
-  "tableCopyMarkdownButton": {
-    "message": "表を Markdown としてコピー",
-    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as Markdown"
-  },
-  "tableCopyTsvButton": {
-    "message": "表をスプレッドシート用にコピー（TSV）",
-    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as tab-separated values for spreadsheets"
-  },
-  "tableCopyCopied": {
-    "message": "表をコピーしました",
-    "description": "Toast after a reply table was copied to the clipboard"
-  },
-  "tableCopyFailed": {
-    "message": "表をコピーできませんでした",
-    "description": "Toast when copying a reply table to the clipboard failed"
   },
   "echartsFullscreenButton": {
     "message": "全画面",

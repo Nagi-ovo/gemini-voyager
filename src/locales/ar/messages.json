@@ -246,14 +246,6 @@
     "message": "طي",
     "description": "Collapse prompt text"
   },
-  "codeBlockExpandAll": {
-    "message": "توسيع كل كتل الشيفرة",
-    "description": "Button that expands every collapsed long code block on the page"
-  },
-  "codeBlockCollapseAll": {
-    "message": "طي كل كتل الشيفرة",
-    "description": "Button that collapses every long code block on the page"
-  },
   "pm_reorder": {
     "message": "اسحب لإعادة الترتيب (مفتاحا ↑/↓)",
     "description": "Prompt list reorder handle"
@@ -1816,22 +1808,6 @@
   "diagramCodeButton": {
     "message": "الكود",
     "description": "Diagram toolbar button that shows the diagram source code"
-  },
-  "tableCopyMarkdownButton": {
-    "message": "نسخ الجدول بتنسيق Markdown",
-    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as Markdown"
-  },
-  "tableCopyTsvButton": {
-    "message": "نسخ الجدول لجداول البيانات (TSV)",
-    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as tab-separated values for spreadsheets"
-  },
-  "tableCopyCopied": {
-    "message": "تم نسخ الجدول",
-    "description": "Toast after a reply table was copied to the clipboard"
-  },
-  "tableCopyFailed": {
-    "message": "تعذّر نسخ الجدول",
-    "description": "Toast when copying a reply table to the clipboard failed"
   },
   "echartsFullscreenButton": {
     "message": "ملء الشاشة",

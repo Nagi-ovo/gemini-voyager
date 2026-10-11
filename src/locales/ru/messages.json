@@ -246,14 +246,6 @@
     "message": "Свернуть",
     "description": "Collapse prompt text"
   },
-  "codeBlockExpandAll": {
-    "message": "Развернуть все блоки кода",
-    "description": "Button that expands every collapsed long code block on the page"
-  },
-  "codeBlockCollapseAll": {
-    "message": "Свернуть все блоки кода",
-    "description": "Button that collapses every long code block on the page"
-  },
   "pm_reorder": {
     "message": "Перетащите, чтобы изменить порядок (клавиши ↑/↓)",
     "description": "Prompt list reorder handle"
@@ -1816,22 +1808,6 @@
   "diagramCodeButton": {
     "message": "Код",
     "description": "Diagram toolbar button that shows the diagram source code"
-  },
-  "tableCopyMarkdownButton": {
-    "message": "Копировать таблицу в Markdown",
-    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as Markdown"
-  },
-  "tableCopyTsvButton": {
-    "message": "Копировать таблицу для электронных таблиц (TSV)",
-    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as tab-separated values for spreadsheets"
-  },
-  "tableCopyCopied": {
-    "message": "Таблица скопирована",
-    "description": "Toast after a reply table was copied to the clipboard"
-  },
-  "tableCopyFailed": {
-    "message": "Не удалось скопировать таблицу",
-    "description": "Toast when copying a reply table to the clipboard failed"
   },
   "echartsFullscreenButton": {
     "message": "На весь экран",

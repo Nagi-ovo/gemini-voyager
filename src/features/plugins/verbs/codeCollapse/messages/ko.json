@@ -1,0 +1,10 @@
+{
+  "codeBlockExpandAll": {
+    "message": "코드 블록 모두 펼치기",
+    "description": "Button that expands every collapsed long code block on the page"
+  },
+  "codeBlockCollapseAll": {
+    "message": "코드 블록 모두 접기",
+    "description": "Button that collapses every long code block on the page"
+  }
+}

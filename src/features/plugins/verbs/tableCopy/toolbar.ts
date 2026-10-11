@@ -9,7 +9,14 @@ import { createCopyIcon, createSheetIcon } from '@/core/icons/tableCopyIcons';
 import { getTranslationSync } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
+import type messages from './messages/en.json';
 import type { TableCopyFormat } from './serialize';
+
+declare module '@/utils/translations' {
+  interface PrimitiveMessages {
+    tableCopy: typeof messages;
+  }
+}
 
 export const TABLE_COPY_CLASS = 'gv-table-copy';
 

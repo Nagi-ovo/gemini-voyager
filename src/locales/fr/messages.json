@@ -246,14 +246,6 @@
     "message": "Réduire",
     "description": "Collapse prompt text"
   },
-  "codeBlockExpandAll": {
-    "message": "Déplier tous les blocs de code",
-    "description": "Button that expands every collapsed long code block on the page"
-  },
-  "codeBlockCollapseAll": {
-    "message": "Replier tous les blocs de code",
-    "description": "Button that collapses every long code block on the page"
-  },
   "pm_reorder": {
     "message": "Glisser pour réordonner (touches ↑/↓)",
     "description": "Prompt list reorder handle"
@@ -1816,22 +1808,6 @@
   "diagramCodeButton": {
     "message": "Code",
     "description": "Diagram toolbar button that shows the diagram source code"
-  },
-  "tableCopyMarkdownButton": {
-    "message": "Copier le tableau en Markdown",
-    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as Markdown"
-  },
-  "tableCopyTsvButton": {
-    "message": "Copier le tableau pour un tableur (TSV)",
-    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as tab-separated values for spreadsheets"
-  },
-  "tableCopyCopied": {
-    "message": "Tableau copié",
-    "description": "Toast after a reply table was copied to the clipboard"
-  },
-  "tableCopyFailed": {
-    "message": "Impossible de copier le tableau",
-    "description": "Toast when copying a reply table to the clipboard failed"
   },
   "echartsFullscreenButton": {
     "message": "Plein écran",

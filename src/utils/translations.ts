@@ -12,6 +12,7 @@ import zhTWMessages from '@locales/zh_TW/messages.json';
 import type { AppLanguage } from './language';
 
 type RawLocaleMessages = typeof enMessages;
+type MessageFile = Record<string, { message: string }>;
 
 // Compile-time guarantee: every supported language must provide at least the same keys as English.
 const rawMessagesByLanguage = {
@@ -27,32 +28,64 @@ const rawMessagesByLanguage = {
   ko: koMessages,
 } satisfies Record<AppLanguage, RawLocaleMessages>;
 
-export type TranslationKey = keyof RawLocaleMessages;
+/**
+ * A primitive's own strings live in `features/plugins/verbs/<name>/messages/<lang>.json`.
+ * Its folder types their keys by merging its English fragment into this interface:
+ *
+ *   import type messages from './messages/en.json';
+ *   declare module '@/utils/translations' {
+ *     interface PrimitiveMessages { tableCopy: typeof messages }
+ *   }
+ */
+export interface PrimitiveMessages {}
+
+type PrimitiveMessageKey = {
+  [Name in keyof PrimitiveMessages]: keyof PrimitiveMessages[Name] & string;
+}[keyof PrimitiveMessages];
+
+export type TranslationKey = keyof RawLocaleMessages | PrimitiveMessageKey;
 export type Translation = Record<TranslationKey, string>;
 
-function extractTranslations<M extends Record<string, { message: string }>>(
-  raw: M,
-): Record<keyof M, string> {
-  const out = {} as Record<keyof M, string>;
-  for (const key of Object.keys(raw) as Array<keyof M>) {
+// Vite-only, like the catalog's site discovery: adding a primitive's strings is adding its files.
+const primitiveMessageFiles = import.meta.glob<MessageFile>(
+  '../features/plugins/verbs/*/messages/*.json',
+  { eager: true, import: 'default' },
+);
+
+const PRIMITIVE_MESSAGE_LANGUAGE = /\/messages\/([^/]+)\.json$/;
+
+function extractTranslations(raw: MessageFile): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const key of Object.keys(raw)) {
     out[key] = raw[key].message;
   }
   return out;
 }
 
+function buildTranslations(language: AppLanguage): Translation {
+  const merged = extractTranslations(rawMessagesByLanguage[language]);
+  for (const [path, messages] of Object.entries(primitiveMessageFiles)) {
+    if (PRIMITIVE_MESSAGE_LANGUAGE.exec(path)?.[1] === language) {
+      Object.assign(merged, extractTranslations(messages));
+    }
+  }
+  // `bun run i18n:check` guarantees each fragment has every locale with exactly its en keys.
+  return merged as Translation;
+}
+
 export const TRANSLATIONS: Record<AppLanguage, Translation> = {
-  en: extractTranslations(rawMessagesByLanguage.en),
-  zh: extractTranslations(rawMessagesByLanguage.zh),
-  zh_TW: extractTranslations(rawMessagesByLanguage.zh_TW),
-  ja: extractTranslations(rawMessagesByLanguage.ja),
-  fr: extractTranslations(rawMessagesByLanguage.fr),
-  es: extractTranslations(rawMessagesByLanguage.es),
-  pt: extractTranslations(rawMessagesByLanguage.pt),
-  ar: extractTranslations(rawMessagesByLanguage.ar),
-  ru: extractTranslations(rawMessagesByLanguage.ru),
-  ko: extractTranslations(rawMessagesByLanguage.ko),
+  en: buildTranslations('en'),
+  zh: buildTranslations('zh'),
+  zh_TW: buildTranslations('zh_TW'),
+  ja: buildTranslations('ja'),
+  fr: buildTranslations('fr'),
+  es: buildTranslations('es'),
+  pt: buildTranslations('pt'),
+  ar: buildTranslations('ar'),
+  ru: buildTranslations('ru'),
+  ko: buildTranslations('ko'),
 };
 
 export function isTranslationKey(value: string): value is TranslationKey {
-  return value in rawMessagesByLanguage.en;
+  return value in TRANSLATIONS.en;
 }

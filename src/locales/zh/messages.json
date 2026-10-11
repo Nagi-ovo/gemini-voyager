@@ -246,14 +246,6 @@
     "message": "收起",
     "description": "收起提示词文本"
   },
-  "codeBlockExpandAll": {
-    "message": "展开全部代码块",
-    "description": "Button that expands every collapsed long code block on the page"
-  },
-  "codeBlockCollapseAll": {
-    "message": "收起全部代码块",
-    "description": "Button that collapses every long code block on the page"
-  },
   "pm_reorder": {
     "message": "拖动调整顺序（↑/↓ 键）",
     "description": "Prompt list reorder handle"
@@ -1816,22 +1808,6 @@
   "diagramCodeButton": {
     "message": "代码",
     "description": "Diagram toolbar button that shows the diagram source code"
-  },
-  "tableCopyMarkdownButton": {
-    "message": "将表格复制为 Markdown",
-    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as Markdown"
-  },
-  "tableCopyTsvButton": {
-    "message": "将表格复制为 TSV（用于电子表格）",
-    "description": "Table copy toolbar button (icon-only, this is its tooltip) that copies a reply table as tab-separated values for spreadsheets"
-  },
-  "tableCopyCopied": {
-    "message": "表格已复制",
-    "description": "Toast after a reply table was copied to the clipboard"
-  },
-  "tableCopyFailed": {
-    "message": "无法复制表格",
-    "description": "Toast when copying a reply table to the clipboard failed"
   },
   "echartsFullscreenButton": {
     "message": "全屏",
