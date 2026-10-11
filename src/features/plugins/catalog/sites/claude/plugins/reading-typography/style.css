@@ -8,7 +8,8 @@
  * around the whole thread cannot switch the plugin off. */
 .gv-plugin-claude-reading-typography {
   /* Native 22 px line on 15 px text (fixed rem tokens), kept when only the
-   * size switch is on so the line box grows with the text. */
+   * size switch is on so the line box grows with the text. Applied in em, so
+   * inline code inherits the pixel line box as it does natively. */
   --gv-plugin-reading-line-ratio: 1.466667; /* 22 / 15 */
 }
 
@@ -16,7 +17,7 @@
   .standard-markdown
   :is(p, li):not(.standard-markdown :is(li, table, pre) *):not(:has(.katex-display)) {
   font-size: var(--gv-plugin-reading-text-size, 100%) !important;
-  line-height: var(--gv-plugin-reading-line-ratio) !important;
+  line-height: calc(var(--gv-plugin-reading-line-ratio) * 1em) !important;
 }
 
 /* Table cells follow the text size as on Gemini; text inside a cell inherits,

@@ -35,6 +35,10 @@ interface Host {
   /** The answer element's own class, restored after unmount. */
   answerClass: string;
   page: string;
+  /** Native line ÷ text size, applied in em so inline code inherits the line box. */
+  lineRatio: string;
+  /** Table cell size at 125%: ChatGPT scales its rem cell token so 100% stays native. */
+  cellSize125: string;
 }
 
 const hosts: Host[] = [
@@ -44,6 +48,8 @@ const hosts: Host[] = [
     className: 'gv-plugin-chatgpt-reading-typography',
     adapter: chatgptAdapter,
     answerClass: '',
+    lineRatio: '1.625',
+    cellSize125: 'calc(0.875rem * 125 / 100)',
     page:
       '<div contenteditable="true" data-composer-markdown><p id="composer">Draft</p></div>' +
       '<div data-turn-key="t1">' +
@@ -64,6 +70,8 @@ const hosts: Host[] = [
     className: 'gv-plugin-claude-reading-typography',
     adapter: claudeAdapter,
     answerClass: 'font-claude-message',
+    lineRatio: '1.466667',
+    cellSize125: '125%',
     page:
       '<div contenteditable="true" data-testid="chat-input" class="ProseMirror">' +
       '<p id="composer">Draft</p></div>' +
@@ -131,8 +139,8 @@ describe.each(hosts)('$name reading typography', (host) => {
     try {
       for (const id of ['first', 'inline', 'item', 'last']) {
         expect(applied(id, 'font-size'), id).toBe('125%');
-        // A unitless ratio, so a fixed native line box grows with the text.
-        expect(Number(applied(id, 'line-height')), id).toBeGreaterThan(1);
+        // The native ratio, so a fixed native line box grows with the text.
+        expect(applied(id, 'line-height'), id).toBe(`calc(${host.lineRatio} * 1em)`);
       }
       expect(applied('inline-code', 'font-size')).toBe('');
     } finally {
@@ -154,8 +162,8 @@ describe.each(hosts)('$name reading typography', (host) => {
   it('sizes table text with the answer without compounding nested tables', async () => {
     const engine = await mountPage(host, { ...OFF, fontSizeEnabled: true, fontSize: 125 });
     try {
-      expect(applied('head', 'font-size')).toBe('125%');
-      expect(applied('cell', 'font-size')).toBe('125%');
+      expect(applied('head', 'font-size')).toBe(host.cellSize125);
+      expect(applied('cell', 'font-size')).toBe(host.cellSize125);
       expect(applied('cell-p', 'font-size')).toBe('');
       expect(applied('inner-cell', 'font-size')).toBe('');
     } finally {
@@ -191,7 +199,7 @@ describe.each(hosts)('$name reading typography', (host) => {
     );
     try {
       expect(applied('first', 'font-size')).toBe('125%');
-      expect(applied('head', 'font-size')).toBe('125%');
+      expect(applied('head', 'font-size')).toBe(host.cellSize125);
       expect(applied('inline', 'margin-block-end')).toBe('8px');
       expect(applied('nested', 'font-size')).toBe('');
     } finally {

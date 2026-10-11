@@ -9,7 +9,8 @@
  * around the whole thread cannot switch the plugin off. */
 .gv-plugin-chatgpt-reading-typography {
   /* Native 26 px line on 16 px text (fixed rem tokens), kept when only the
-   * size switch is on so the line box grows with the text. */
+   * size switch is on so the line box grows with the text. Applied in em, so
+   * inline code inherits the pixel line box as it does natively. */
   --gv-plugin-reading-line-ratio: 1.625;
 }
 
@@ -21,15 +22,17 @@
       *
   ):not(:has(.katex-display)) {
   font-size: var(--gv-plugin-reading-text-size, 100%) !important;
-  line-height: var(--gv-plugin-reading-line-ratio) !important;
+  line-height: calc(var(--gv-plugin-reading-line-ratio) * 1em) !important;
 }
 
-/* Table cells follow the text size as on Gemini; text inside a cell inherits,
- * and a nested table's cells are skipped so the size never compounds. */
+/* Table cells scale ChatGPT's own cell tokens (0.875rem on a 1.25rem line), so
+ * 100% stays native; text inside a cell inherits, and a nested table's cells
+ * are skipped so the size never compounds. */
 .gv-plugin-chatgpt-reading-typography[data-gv-font-size='true']
   :is([data-markdown-text-style], .markdown)
   :is(td, th):not(:is([data-markdown-text-style], .markdown) :is(td, th) *) {
-  font-size: var(--gv-plugin-reading-text-size, 100%) !important;
+  font-size: calc(0.875rem * var(--gv-plugin-reading-text-scale, 100) / 100) !important;
+  line-height: calc(1.25rem * var(--gv-plugin-reading-text-scale, 100) / 100) !important;
 }
 
 /* After the size rule, so a custom line height wins over the kept ratio. */
