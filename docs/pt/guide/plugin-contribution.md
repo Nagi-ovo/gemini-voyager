@@ -46,6 +46,8 @@ Os `matches` de um plugin têm de ficar dentro dos `matches` do seu site. Um plu
 - `sidePanel`: um painel secundário, como artifacts ou canvas.
 - `headerActions`: o grupo de ações no canto superior direito da conversa.
 - `scrollContainer`: o elemento que faz scroll da conversa.
+- `composerRoot`: o contentor que agrupa o campo do prompt e os seus botões de ação.
+- `sendButton`: o botão que envia o prompt; alguns sites só o mostram quando o campo tem texto.
 
 Um site declara apenas as chaves que consegue mesmo fornecer. Os plugins referenciam uma chave em vez de um seletor, escrevendo `{ "kind": "semantic", "key": "userTurn" }` como `target` de uma operação DOM, por isso uma remodelação do site resolve-se num único `site.json`.
 

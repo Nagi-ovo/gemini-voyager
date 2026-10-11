@@ -3021,6 +3021,14 @@
     "message": "对话区域",
     "description": "Preview target: the scrolling conversation area"
   },
+  "localPluginTargetComposerRoot": {
+    "message": "输入框及其按钮",
+    "description": "Preview target: the message box together with its action buttons"
+  },
+  "localPluginTargetSendButton": {
+    "message": "发送按钮",
+    "description": "Preview target: the button that sends the message"
+  },
   "localPluginChangedSinceReview": {
     "message": "你查看期间，Voyager 里的这个插件发生了变化，所以没有覆盖任何内容。请看一下更新后的预览，再重新导入。",
     "description": "Shown when the previewed plugin id was installed, changed or removed before Import; nothing was written"

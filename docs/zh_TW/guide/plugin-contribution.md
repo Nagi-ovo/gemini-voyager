@@ -46,6 +46,8 @@ src/features/plugins/catalog/
 - `sidePanel`：次要面板，例如 artifacts 或 canvas。
 - `headerActions`：對話頁右上角的操作區。
 - `scrollContainer`：負責捲動對話的元素。
+- `composerRoot`：輸入框及其操作按鈕所在的容器。
+- `sendButton`：傳送按鈕；有些網站只在輸入框有內容時才顯示它。
 
 網站只需要宣告它真正能提供的鍵。外掛以 `{ "kind": "semantic", "key": "userTurn" }` 當作 DOM 操作的 `target` 來引用語義鍵，而不是寫死選擇器，這樣網站改版時只要改 `site.json` 一個檔案。
 

@@ -78,7 +78,7 @@ beforeEach(() => {
   _resetUserLatexKatexLoader();
   renderToString.mockClear();
   document.body.innerHTML =
-    '<main></main><form><div id="prompt-textarea" contenteditable="true"></div></form>';
+    '<main></main><form><div data-composer-markdown contenteditable="true"></div></form>';
   scope = new PluginScope();
 });
 
@@ -133,7 +133,7 @@ describe('userLatex primitive', () => {
   });
 
   it('the ChatGPT composer is never rendered', async () => {
-    const composer = document.querySelector<HTMLElement>('#prompt-textarea')!;
+    const composer = document.querySelector<HTMLElement>('[data-composer-markdown]')!;
     composer.innerHTML = '<p>draft $x^2$</p>';
     // Even a composer that sits inside a user turn, as an inline edit does.
     const bubble = chatgptMessage('');
@@ -235,7 +235,7 @@ describe('userLatex primitive', () => {
     document.querySelector('main')!.append(editor);
     const sent = claudeMessage('sent $w$');
     sent.classList.add('mine');
-    // Claude's composer selector names only its ProseMirror editor, not this field.
+    // Claude's composer selector names only its chat-input editor, not this field.
     activate(sites[1].adapter, { turn: '.mine' });
 
     await vi.waitFor(() => expect(rendered(sent)).toHaveLength(1));

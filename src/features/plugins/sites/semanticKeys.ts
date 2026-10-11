@@ -16,6 +16,8 @@
  *   sidePanel        a secondary panel (artifacts, canvas, previews)
  *   headerActions    the top-right action cluster of the conversation view
  *   scrollContainer  the element that scrolls the conversation
+ *   composerRoot     the container around the prompt input and its action buttons
+ *   sendButton       the button that sends the prompt (may exist only while the prompt is non-empty)
  *
  * `conversationIdPattern` is NOT a selector: it is a path regular expression
  * carried on the adapter itself (see `SiteAdapter`).
@@ -30,6 +32,8 @@ export const SEMANTIC_SELECTOR_KEYS = [
   'sidePanel',
   'headerActions',
   'scrollContainer',
+  'composerRoot',
+  'sendButton',
 ] as const;
 
 export type SemanticSelectorKey = (typeof SEMANTIC_SELECTOR_KEYS)[number];
@@ -49,4 +53,6 @@ export const SEMANTIC_KEY_DESCRIPTIONS: Readonly<Record<SemanticSelectorKey, str
   sidePanel: 'a secondary panel (artifacts, canvas, previews)',
   headerActions: 'the top-right action cluster of the conversation view',
   scrollContainer: 'the element that scrolls the conversation',
+  composerRoot: 'the container around the prompt input and its action buttons',
+  sendButton: 'the button that sends the prompt (may exist only while the prompt is non-empty)',
 };

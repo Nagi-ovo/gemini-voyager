@@ -46,6 +46,8 @@ src/features/plugins/catalog/
 - `sidePanel`: artifacts나 canvas 같은 보조 패널.
 - `headerActions`: 대화 화면 오른쪽 위의 동작 영역.
 - `scrollContainer`: 대화를 스크롤하는 요소.
+- `composerRoot`: 프롬프트 입력창과 그 동작 버튼을 감싸는 컨테이너.
+- `sendButton`: 프롬프트를 보내는 버튼. 입력창에 내용이 있을 때만 나타나는 사이트도 있습니다.
 
 사이트는 실제로 제공할 수 있는 키만 선언합니다. 플러그인은 선택자를 직접 쓰지 않고 DOM 작업의 `target`에 `{ "kind": "semantic", "key": "userTurn" }`을 적어 키를 참조하므로, 사이트가 개편되어도 `site.json` 한 파일만 고치면 됩니다.
 

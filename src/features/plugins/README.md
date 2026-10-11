@@ -45,7 +45,8 @@ EntitlementProvider  ─► entitled?         │  styles + domOps, reversible, 
   current URL. Site-specific selectors live **only** in an adapter, behind the
   fixed semantic vocabulary in `sites/semanticKeys.ts` (`userTurn`,
   `assistantTurn`, `thinkingBlock`, `codeBlock`, `composer`, `sidebar`,
-  `sidePanel`, `headerActions`, `scrollContainer`), so a site redesign is a
+  `sidePanel`, `headerActions`, `scrollContainer`, `composerRoot`,
+  `sendButton`), so a site redesign is a
   one-file fix. Gemini and AI Studio are native surfaces and stay TypeScript
   adapters; every plugin platform is data, so `adapters/claude.ts`,
   `adapters/chatgpt.ts` and `adapters/deepseek.ts` are one-line shells over their

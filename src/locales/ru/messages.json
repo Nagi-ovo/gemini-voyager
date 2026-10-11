@@ -3021,6 +3021,14 @@
     "message": "область диалога",
     "description": "Preview target: the scrolling conversation area"
   },
+  "localPluginTargetComposerRoot": {
+    "message": "поле ввода с кнопками",
+    "description": "Preview target: the message box together with its action buttons"
+  },
+  "localPluginTargetSendButton": {
+    "message": "кнопка отправки",
+    "description": "Preview target: the button that sends the message"
+  },
   "localPluginChangedSinceReview": {
     "message": "Пока вы его проверяли, этот плагин в Voyager изменился, поэтому ничего не перезаписано. Посмотрите обновлённый предпросмотр и импортируйте снова.",
     "description": "Shown when the previewed plugin id was installed, changed or removed before Import; nothing was written"

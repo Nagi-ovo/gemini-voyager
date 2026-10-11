@@ -3021,6 +3021,14 @@
     "message": "el área de conversación",
     "description": "Preview target: the scrolling conversation area"
   },
+  "localPluginTargetComposerRoot": {
+    "message": "el cuadro de mensaje y sus botones",
+    "description": "Preview target: the message box together with its action buttons"
+  },
+  "localPluginTargetSendButton": {
+    "message": "el botón de enviar",
+    "description": "Preview target: the button that sends the message"
+  },
   "localPluginChangedSinceReview": {
     "message": "Este plugin cambió en Voyager mientras lo revisabas, así que no se sobrescribió nada. Revisa la vista previa actualizada y vuelve a importarlo.",
     "description": "Shown when the previewed plugin id was installed, changed or removed before Import; nothing was written"

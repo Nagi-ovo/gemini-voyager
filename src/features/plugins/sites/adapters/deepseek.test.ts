@@ -38,6 +38,27 @@ describe('DeepSeek content markers', () => {
     expect(document.querySelector(deepseekAdapter.selectors.composer)?.id).toBe('composer');
   });
 
+  it('finds the composer card, send button and conversation list without mixing their scroll areas', () => {
+    // Live markup (2026-10): every scrolling region, the prompt included, is a `.ds-scroll-area`.
+    document.body.innerHTML =
+      '<div id="app">' +
+      '<div id="sidebar"><div class="ds-scroll-area" id="sidebar-scroll">' +
+      '<a href="/a/chat/s/one">One</a><a href="/a/chat/s/two">Two</a></div></div>' +
+      '<div><div class="ds-virtual-list ds-scroll-area" id="thread">' +
+      '<div class="ds-message"><div class="ds-collapsible-text">Hi</div></div></div></div>' +
+      '<div class="ds-button ds-button--primary ds-button--circle" role="button" id="to-bottom"></div>' +
+      '<div id="card"><div><textarea class="ds-scroll-area" id="composer"></textarea></div>' +
+      '<div><div class="ds-button ds-button--primary ds-button--circle ds-button--disabled" role="button" id="send"></div></div>' +
+      '</div></div>';
+    const ids = (selector: string | undefined) =>
+      Array.from(document.querySelectorAll(selector ?? ':not(*)'), (el) => el.id);
+    const { composerRoot, sendButton, sidebar, scrollContainer } = deepseekAdapter.selectors;
+    expect(ids(composerRoot)).toEqual(['card']);
+    expect(ids(sendButton)).toEqual(['send']);
+    expect(ids(sidebar)).toEqual(['sidebar']);
+    expect(ids(scrollContainer)).toEqual(['thread']);
+  });
+
   it.each(['light', 'dark'])('recognizes the body %s theme', (theme) => {
     document.body.className = 'zh_CN ' + theme;
     expect(document.querySelector(deepseekAdapter.theme.hostSelector)).toBe(document.body);

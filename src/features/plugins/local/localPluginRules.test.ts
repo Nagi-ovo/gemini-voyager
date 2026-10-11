@@ -72,7 +72,7 @@ describe('local plugin semantic keys', () => {
       {
         path: 'contributes.domOps[0].target.key',
         message:
-          'Claude does not declare semantic key "thinkingBlock" (it declares userTurn, assistantTurn, composer, sidebar): target a CSS selector instead',
+          'Claude does not declare semantic key "thinkingBlock" (it declares userTurn, assistantTurn, composer, sidebar, scrollContainer, composerRoot, sendButton): target a CSS selector instead',
       },
     ]);
     // DeepSeek declares it, so the same op imports there.
@@ -82,10 +82,10 @@ describe('local plugin semantic keys', () => {
   });
 
   it('refuses a key that only some of the targeted sites declare', () => {
-    const op = { op: 'hide', target: { kind: 'semantic', key: 'sidebar' } };
-    const both = { matches: ['https://claude.ai/*', 'https://chat.deepseek.com/*'] };
+    const op = { op: 'hide', target: { kind: 'semantic', key: 'thinkingBlock' } };
+    const both = { matches: ['https://chat.deepseek.com/*', 'https://claude.ai/*'] };
     expect(issues(authored({ domOps: [op] }, both))[0].message).toMatch(
-      /^DeepSeek does not declare semantic key "sidebar"/,
+      /^Claude does not declare semantic key "thinkingBlock"/,
     );
   });
 
@@ -94,7 +94,7 @@ describe('local plugin semantic keys', () => {
       {
         path: 'requires.semantic',
         message:
-          'Claude does not declare semantic key "codeBlock" (it declares userTurn, assistantTurn, composer, sidebar)',
+          'Claude does not declare semantic key "codeBlock" (it declares userTurn, assistantTurn, composer, sidebar, scrollContainer, composerRoot, sendButton)',
       },
     ]);
     const mermaid = { op: 'native', handler: 'mermaid', params: {} };
@@ -102,7 +102,7 @@ describe('local plugin semantic keys', () => {
       {
         path: 'contributes.domOps[0]',
         message:
-          'Claude does not declare semantic key "codeBlock" (it declares userTurn, assistantTurn, composer, sidebar), which primitive "mermaid" reads',
+          'Claude does not declare semantic key "codeBlock" (it declares userTurn, assistantTurn, composer, sidebar, scrollContainer, composerRoot, sendButton), which primitive "mermaid" reads',
       },
     ]);
   });
@@ -113,7 +113,7 @@ describe('local plugin semantic keys', () => {
       {
         path: 'contributes.domOps[0].params.target',
         message:
-          'Claude does not declare semantic key "thinkingBlock" (it declares userTurn, assistantTurn, composer, sidebar)',
+          'Claude does not declare semantic key "thinkingBlock" (it declares userTurn, assistantTurn, composer, sidebar, scrollContainer, composerRoot, sendButton)',
       },
     ]);
     const deepseek = { engine: '>=1.8.0', matches: ['https://chat.deepseek.com/*'] };

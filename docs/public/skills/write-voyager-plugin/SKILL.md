@@ -151,7 +151,7 @@ Semantic anchors Gemini declares (use them as { "kind": "semantic", "key": … }
 - composer: the prompt input the user types into (today it matches `input-area-v2, rich-textarea, .text-input-field`)
 - sidebar: the conversation list / navigation rail (today it matches `bard-sidenav, .gv-folder-container`)
 
-Gemini does not declare thinkingBlock, codeBlock, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
+Gemini does not declare thinkingBlock, codeBlock, sidePanel, headerActions, scrollContainer, composerRoot, sendButton: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
 No "theme" and no "native" op on Gemini: CSS and the four page changes only.
 
@@ -170,7 +170,7 @@ Semantic anchors AI Studio declares (use them as { "kind": "semantic", "key": �
 - composer: the prompt input the user types into (today it matches `ms-chunk-input textarea, textarea[aria-label]`)
 - sidebar: the conversation list / navigation rail (today it matches `.gv-aistudio .gv-folder-container`)
 
-AI Studio does not declare thinkingBlock, codeBlock, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
+AI Studio does not declare thinkingBlock, codeBlock, sidePanel, headerActions, scrollContainer, composerRoot, sendButton: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
 No "theme" and no "native" op on AI Studio: CSS and the four page changes only.
 
@@ -187,10 +187,13 @@ Semantic anchors ChatGPT declares (use them as { "kind": "semantic", "key": … 
 - userTurn: a user message container (today it matches `[data-user-message-bubble], [data-message-author-role="user"]:not(:has([data-user-message-bubble]))`)
 - assistantTurn: an assistant message container (today it matches `[data-chatgpt-selection-message-id]`)
 - codeBlock: a rendered code block (today it matches `[data-markdown-copy="code-block"]`)
-- composer: the prompt input the user types into (today it matches `#prompt-textarea, div[contenteditable="true"]`)
+- composer: the prompt input the user types into (today it matches `#prompt-textarea, [data-composer-markdown][contenteditable="true"]`)
 - sidebar: the conversation list / navigation rail (today it matches `nav[aria-label], #stage-slideover-sidebar`)
+- scrollContainer: the element that scrolls the conversation (today it matches `[data-app-action-timeline-scroll]`)
+- composerRoot: the container around the prompt input and its action buttons (today it matches `form:has(#prompt-textarea, [data-composer-markdown])`)
+- sendButton: the button that sends the prompt (may exist only while the prompt is non-empty) (today it matches `form:has(#prompt-textarea, [data-composer-markdown]) button[type="submit"]`)
 
-ChatGPT does not declare thinkingBlock, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
+ChatGPT does not declare thinkingBlock, sidePanel, headerActions: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
 Primitives (native ops) and an optional "theme" accent are allowed on ChatGPT.
 
@@ -203,10 +206,13 @@ Primitives (native ops) and an optional "theme" accent are allowed on ChatGPT.
 Semantic anchors Claude declares (use them as { "kind": "semantic", "key": … }):
 - userTurn: a user message container (today it matches `[data-testid="user-message"]`)
 - assistantTurn: an assistant message container (today it matches `.font-claude-message, [data-testid="assistant-message"]`)
-- composer: the prompt input the user types into (today it matches `div[contenteditable="true"].ProseMirror`)
+- composer: the prompt input the user types into (today it matches `[data-testid="chat-input"][contenteditable="true"]`)
 - sidebar: the conversation list / navigation rail (today it matches `nav[aria-label], [data-testid="menu-sidebar"]`)
+- scrollContainer: the element that scrolls the conversation (today it matches `[data-autoscroll-container="true"]`)
+- composerRoot: the container around the prompt input and its action buttons (today it matches `[data-composer-card-holder] > div`)
+- sendButton: the button that sends the prompt (may exist only while the prompt is non-empty) (today it matches `[data-testid="chat-input-send"]`)
 
-Claude does not declare thinkingBlock, codeBlock, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
+Claude does not declare thinkingBlock, codeBlock, sidePanel, headerActions: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
 Primitives (native ops) and an optional "theme" accent are allowed on Claude.
 
@@ -221,8 +227,12 @@ Semantic anchors DeepSeek declares (use them as { "kind": "semantic", "key": …
 - thinkingBlock: the reasoning / "thinking" section inside an assistant turn (today it matches `.ds-think-content`)
 - codeBlock: a rendered code block (today it matches `.md-code-block`)
 - composer: the prompt input the user types into (today it matches `textarea.ds-scroll-area`)
+- sidebar: the conversation list / navigation rail (today it matches `div:not(.ds-scroll-area):has(> .ds-scroll-area a[href^="/a/chat/s/"])`)
+- scrollContainer: the element that scrolls the conversation (today it matches `.ds-virtual-list.ds-scroll-area`)
+- composerRoot: the container around the prompt input and its action buttons (today it matches `div:has(> div > textarea.ds-scroll-area)`)
+- sendButton: the button that sends the prompt (may exist only while the prompt is non-empty) (today it matches `div:has(> div > textarea.ds-scroll-area) div.ds-button--primary.ds-button--circle[role="button"]`)
 
-DeepSeek does not declare sidebar, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
+DeepSeek does not declare sidePanel, headerActions: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
 Primitives (native ops) and an optional "theme" accent are allowed on DeepSeek.
 

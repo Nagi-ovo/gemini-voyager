@@ -50,6 +50,8 @@ src/features/plugins/catalog/
 - `sidePanel`：次级面板，例如 artifacts 或 canvas。
 - `headerActions`：会话页右上角的操作区。
 - `scrollContainer`：负责滚动会话的元素。
+- `composerRoot`：输入框及其操作按钮所在的容器。
+- `sendButton`：发送按钮；有的站点只在输入框有内容时才显示它。
 
 站点只需要声明它真正能提供的键。插件用 `{ "kind": "semantic", "key": "userTurn" }` 作为 DOM 操作的 `target` 来引用语义键，而不是写死选择器，这样站点改版时只要改 `site.json` 一个文件。
 

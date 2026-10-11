@@ -8,7 +8,11 @@
     "assistantTurn": ".ds-message:has(.ds-assistant-message-main-content, .ds-think-content)",
     "thinkingBlock": ".ds-think-content",
     "codeBlock": ".md-code-block",
-    "composer": "textarea.ds-scroll-area"
+    "composer": "textarea.ds-scroll-area",
+    "sidebar": "div:not(.ds-scroll-area):has(> .ds-scroll-area a[href^=\"/a/chat/s/\"])",
+    "scrollContainer": ".ds-virtual-list.ds-scroll-area",
+    "composerRoot": "div:has(> div > textarea.ds-scroll-area)",
+    "sendButton": "div:has(> div > textarea.ds-scroll-area) div.ds-button--primary.ds-button--circle[role=\"button\"]"
   },
   "theme": {
     "hostSelector": "body",

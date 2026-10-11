@@ -22,6 +22,8 @@ const TARGET_KEYS: Readonly<Record<SemanticSelectorKey, TranslationKey>> = {
   sidePanel: 'localPluginTargetSidePanel',
   headerActions: 'localPluginTargetHeaderActions',
   scrollContainer: 'localPluginTargetScrollContainer',
+  composerRoot: 'localPluginTargetComposerRoot',
+  sendButton: 'localPluginTargetSendButton',
 };
 
 export const REPLY_PROBLEM_KEYS: Readonly<Record<PluginReplyProblem, TranslationKey>> = {

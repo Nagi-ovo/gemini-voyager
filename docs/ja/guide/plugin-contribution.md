@@ -46,6 +46,8 @@ src/features/plugins/catalog/
 - `sidePanel`: artifacts や canvas などの副次パネル。
 - `headerActions`: 会話画面右上の操作エリア。
 - `scrollContainer`: 会話をスクロールさせる要素。
+- `composerRoot`: プロンプト欄とその操作ボタンをまとめたコンテナ。
+- `sendButton`: プロンプトを送信するボタン。入力があるときだけ表示されるサイトもあります。
 
 サイトは実際に提供できるキーだけを宣言します。プラグインはセレクタを直接書かず、DOM 操作の `target` に `{ "kind": "semantic", "key": "userTurn" }` と書いてキーを参照するので、サイトの改修は `site.json` 1 ファイルの修正で済みます。
 

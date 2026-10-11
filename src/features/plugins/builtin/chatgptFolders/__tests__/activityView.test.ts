@@ -98,7 +98,7 @@ beforeEach(() => {
   thread = document.createElement('main');
   const form = document.createElement('form');
   composer = document.createElement('div');
-  composer.id = 'prompt-textarea';
+  composer.setAttribute('data-composer-markdown', '');
   composer.setAttribute('contenteditable', 'true');
   const sendButton = document.createElement('button');
   sendButton.type = 'button';

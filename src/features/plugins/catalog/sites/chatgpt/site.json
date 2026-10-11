@@ -7,8 +7,11 @@
     "userTurn": "[data-user-message-bubble], [data-message-author-role=\"user\"]:not(:has([data-user-message-bubble]))",
     "assistantTurn": "[data-chatgpt-selection-message-id]",
     "codeBlock": "[data-markdown-copy=\"code-block\"]",
-    "composer": "#prompt-textarea, div[contenteditable=\"true\"]",
-    "sidebar": "nav[aria-label], #stage-slideover-sidebar"
+    "composer": "#prompt-textarea, [data-composer-markdown][contenteditable=\"true\"]",
+    "sidebar": "nav[aria-label], #stage-slideover-sidebar",
+    "scrollContainer": "[data-app-action-timeline-scroll]",
+    "composerRoot": "form:has(#prompt-textarea, [data-composer-markdown])",
+    "sendButton": "form:has(#prompt-textarea, [data-composer-markdown]) button[type=\"submit\"]"
   },
   "theme": {
     "hostSelector": "html",

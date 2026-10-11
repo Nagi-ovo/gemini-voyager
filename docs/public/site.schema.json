@@ -54,7 +54,9 @@
           "sidebar",
           "sidePanel",
           "headerActions",
-          "scrollContainer"
+          "scrollContainer",
+          "composerRoot",
+          "sendButton"
         ]
       },
       "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 2000 }

@@ -45,7 +45,7 @@ const hosts: Host[] = [
     adapter: chatgptAdapter,
     answerClass: '',
     page:
-      '<div contenteditable="true" id="prompt-textarea"><p id="composer">Draft</p></div>' +
+      '<div contenteditable="true" data-composer-markdown><p id="composer">Draft</p></div>' +
       '<div data-turn-key="t1">' +
       '<div data-user-message-bubble="true"><p id="user">User</p></div>' +
       '<div id="answer" data-chatgpt-selection-message-id="m1" data-gv-spacing="host">' +
@@ -65,7 +65,8 @@ const hosts: Host[] = [
     adapter: claudeAdapter,
     answerClass: 'font-claude-message',
     page:
-      '<div contenteditable="true" class="ProseMirror"><p id="composer">Draft</p></div>' +
+      '<div contenteditable="true" data-testid="chat-input" class="ProseMirror">' +
+      '<p id="composer">Draft</p></div>' +
       '<div data-testid="user-message"><p id="user">User</p></div>' +
       '<div id="answer" class="font-claude-message" data-gv-spacing="host">' +
       '<div class="standard-markdown">' +

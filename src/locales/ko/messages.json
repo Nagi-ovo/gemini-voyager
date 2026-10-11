@@ -3021,6 +3021,14 @@
     "message": "대화 영역",
     "description": "Preview target: the scrolling conversation area"
   },
+  "localPluginTargetComposerRoot": {
+    "message": "입력창과 버튼",
+    "description": "Preview target: the message box together with its action buttons"
+  },
+  "localPluginTargetSendButton": {
+    "message": "보내기 버튼",
+    "description": "Preview target: the button that sends the message"
+  },
   "localPluginChangedSinceReview": {
     "message": "검토하는 동안 Voyager의 이 플러그인이 바뀌어서 아무것도 덮어쓰지 않았습니다. 업데이트된 미리보기를 확인한 뒤 다시 가져오세요.",
     "description": "Shown when the previewed plugin id was installed, changed or removed before Import; nothing was written"

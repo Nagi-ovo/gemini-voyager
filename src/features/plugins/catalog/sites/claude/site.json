@@ -6,8 +6,11 @@
   "selectors": {
     "userTurn": "[data-testid=\"user-message\"]",
     "assistantTurn": ".font-claude-message, [data-testid=\"assistant-message\"]",
-    "composer": "div[contenteditable=\"true\"].ProseMirror",
-    "sidebar": "nav[aria-label], [data-testid=\"menu-sidebar\"]"
+    "composer": "[data-testid=\"chat-input\"][contenteditable=\"true\"]",
+    "sidebar": "nav[aria-label], [data-testid=\"menu-sidebar\"]",
+    "scrollContainer": "[data-autoscroll-container=\"true\"]",
+    "composerRoot": "[data-composer-card-holder] > div",
+    "sendButton": "[data-testid=\"chat-input-send\"]"
   },
   "theme": {
     "hostSelector": ":root",

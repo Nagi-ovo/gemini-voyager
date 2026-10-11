@@ -141,7 +141,9 @@
               "sidebar",
               "sidePanel",
               "headerActions",
-              "scrollContainer"
+              "scrollContainer",
+              "composerRoot",
+              "sendButton"
             ]
           },
           "description": "Semantic selector keys the plugin expects its site adapter to define (see site.schema.json). Every matched site must declare each one."
@@ -242,7 +244,9 @@
                 "sidebar",
                 "sidePanel",
                 "headerActions",
-                "scrollContainer"
+                "scrollContainer",
+                "composerRoot",
+                "sendButton"
               ],
               "description": "A semantic key every matched site declares (see site.schema.json)."
             }

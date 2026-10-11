@@ -164,9 +164,9 @@ beforeEach(async () => {
   vi.setSystemTime(SENT_AT);
   history.replaceState({}, '', '/c/one');
   document.body.innerHTML =
-    '<main></main><form><div id="prompt-textarea" contenteditable="true"></div></form>';
+    '<main></main><form><div data-composer-markdown contenteditable="true"></div></form>';
   thread = document.querySelector('main')!;
-  composer = document.querySelector('#prompt-textarea')!;
+  composer = document.querySelector('[data-composer-markdown]')!;
   thread.append(exchange('turn-1', 'Earlier question'));
   storage = createMemoryStorage();
   storage.values.sync.set(StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS, true);

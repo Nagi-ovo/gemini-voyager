@@ -58,6 +58,8 @@ from this list, and an unknown key is rejected.
 - `sidePanel`: a secondary panel, such as artifacts or canvas.
 - `headerActions`: the top-right action cluster of the conversation view.
 - `scrollContainer`: the element that scrolls the conversation.
+- `composerRoot`: the container around the prompt input and its action buttons.
+- `sendButton`: the button that sends the prompt; some sites show it only once the prompt is non-empty.
 
 A site only declares the keys it can actually provide. Plugins reference a key
 instead of a raw selector by using `{ "kind": "semantic", "key": "userTurn" }` as

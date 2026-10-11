@@ -46,6 +46,8 @@ Les `matches` d'un plugin doivent rester à l'intérieur des `matches` de son si
 - `sidePanel` : un panneau secondaire, par exemple artifacts ou canvas.
 - `headerActions` : le groupe d'actions en haut à droite de la conversation.
 - `scrollContainer` : l'élément qui fait défiler la conversation.
+- `composerRoot` : le conteneur qui regroupe le champ de saisie du prompt et ses boutons d'action.
+- `sendButton` : le bouton qui envoie le prompt ; certains sites ne l'affichent que lorsque le champ n'est pas vide.
 
 Un site ne déclare que les clés qu'il peut réellement fournir. Les plugins référencent une clé plutôt qu'un sélecteur brut en écrivant `{ "kind": "semantic", "key": "userTurn" }` comme `target` d'une opération DOM ; une refonte du site se corrige alors dans le seul `site.json`.
 
