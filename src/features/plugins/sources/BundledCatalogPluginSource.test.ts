@@ -1,36 +1,56 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { dirname, resolve, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import { BUNDLED_SITE_ADAPTERS } from '../catalog/sites';
 import { PLUGIN_ENGINE_VERSION } from '../constants';
 import { pluginsToOriginPatterns } from '../runtime/siteRegistration';
 import { engineSatisfied } from '../semver';
+import { patternWithinAny } from '../sites/matchPattern';
+import type { PluginManifest } from '../types';
 import { BundledCatalogPluginSource } from './BundledCatalogPluginSource';
+
+const sitesDir = resolve(process.cwd(), 'src/features/plugins/catalog/sites');
+const diskPlugins = readdirSync(sitesDir, { recursive: true, encoding: 'utf8' })
+  .map((path) => path.split(sep).join('/'))
+  .filter((path) => /^[^/]+\/plugins\/[^/]+\/plugin\.json$/.test(path))
+  .sort()
+  .map((path) => ({
+    path,
+    manifest: JSON.parse(readFileSync(resolve(sitesDir, path), 'utf8')) as Omit<
+      PluginManifest,
+      'contributes'
+    > & {
+      contributes: { styles?: { file?: string; css?: string }[] };
+    },
+  }));
 
 describe('BundledCatalogPluginSource', () => {
   it('loads the bundled official declarative plugins with resolved CSS', async () => {
     const manifests = await new BundledCatalogPluginSource().list();
 
     // Discovery order: site directory, then plugin directory.
-    expect(manifests.map((plugin) => plugin.id)).toEqual([
-      'voyager.chatgpt-diagram-rendering',
-      'voyager.chatgpt-reading-width',
-      'voyager.chatgpt-user-latex',
-      'voyager.claude-cjk-render-fix',
-      'voyager.claude-reading-width',
-      'voyager.deepseek-code-collapse',
-      'voyager.deepseek-formula-copy',
-      'voyager.deepseek-reading-typography',
-      'voyager.deepseek-reading-width',
-      'voyager.deepseek-table-copy',
-      'voyager.deepseek-timeline',
-      'voyager.deepseek-vim-input',
-      'voyager.deepseek-wrap-code',
-    ]);
+    expect(diskPlugins.length).toBeGreaterThan(0);
+    expect(manifests.map((plugin) => plugin.id)).toEqual(
+      diskPlugins.map(({ manifest }) => manifest.id),
+    );
+    expect(new Set(manifests.map((plugin) => plugin.id)).size).toBe(diskPlugins.length);
 
-    for (const manifest of manifests) {
+    for (const [index, manifest] of manifests.entries()) {
       expect(engineSatisfied(manifest.engine, PLUGIN_ENGINE_VERSION)).toBe(true);
-      for (const style of manifest.contributes.styles ?? []) {
-        expect(style.source).toBe('style.css');
+      const declaredStyles = diskPlugins[index].manifest.contributes.styles ?? [];
+      expect(manifest.contributes.styles ?? [], manifest.id).toHaveLength(declaredStyles.length);
+      for (const [styleIndex, style] of (manifest.contributes.styles ?? []).entries()) {
+        const declared = declaredStyles[styleIndex];
+        if (declared.file) {
+          const file = declared.file.trim().replace(/^\.\//, '');
+          expect(style.source).toBe(file);
+          expect(style.css).toBe(
+            readFileSync(resolve(sitesDir, dirname(diskPlugins[index].path), file), 'utf8'),
+          );
+        } else {
+          expect(style.css).toBe(declared.css);
+        }
         expect(typeof style.css).toBe('string');
         expect('file' in (style as unknown as Record<string, unknown>)).toBe(false);
       }
@@ -38,13 +58,14 @@ describe('BundledCatalogPluginSource', () => {
   });
 
   it('keeps the bundled CSS source files non-empty', () => {
-    for (const file of [
-      '../catalog/sites/claude/plugins/cjk-render-fix/style.css',
-      '../catalog/sites/claude/plugins/reading-width/style.css',
-      '../catalog/sites/chatgpt/plugins/reading-width/style.css',
-      '../catalog/sites/deepseek/plugins/reading-width/style.css',
-    ]) {
-      expect(readFileSync(new URL(file, import.meta.url), 'utf8').length).toBeGreaterThan(0);
+    for (const { path } of diskPlugins) {
+      const pluginDir = dirname(resolve(sitesDir, path));
+      for (const file of readdirSync(pluginDir).filter((file) => file.endsWith('.css'))) {
+        expect(
+          readFileSync(resolve(pluginDir, file), 'utf8').length,
+          `${path}: ${file}`,
+        ).toBeGreaterThan(0);
+      }
     }
   });
 
@@ -155,12 +176,12 @@ describe('BundledCatalogPluginSource', () => {
   it('exposes the origins needed by the bundled official plugins', async () => {
     const manifests = await new BundledCatalogPluginSource().list();
 
-    expect(pluginsToOriginPatterns(manifests)).toEqual([
-      'https://*.frame.claudeusercontent.com/*',
-      'https://chat.deepseek.com/*',
-      'https://chat.openai.com/*',
-      'https://chatgpt.com/*',
-      'https://claude.ai/*',
-    ]);
+    const origins = pluginsToOriginPatterns(manifests);
+    expect(origins.length).toBeGreaterThan(0);
+    // Bundled plugins never widen host access beyond the sites Voyager already supports.
+    const siteMatches = BUNDLED_SITE_ADAPTERS.flatMap((site) => site.matches);
+    for (const origin of origins) {
+      expect(patternWithinAny(origin, siteMatches), origin).toBe(true);
+    }
   });
 });

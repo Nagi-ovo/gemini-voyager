@@ -1,3 +1,5 @@
+import { readFileSync, readdirSync } from 'node:fs';
+import { resolve, sep } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { DeclarativeEngine } from '../runtime/declarativeEngine';
@@ -65,10 +67,27 @@ afterEach(() => {
 
 describe('bundled plugin lifecycle (parametric)', async () => {
   const manifests = await new BundledCatalogPluginSource().list();
-  expect(manifests.length).toBeGreaterThan(0);
+  const sitesDir = resolve(process.cwd(), 'src/features/plugins/catalog/sites');
+  // Generate cases from disk: a skipped invalid plugin must still get a failing lifecycle test.
+  const diskPlugins = readdirSync(sitesDir, { recursive: true, encoding: 'utf8' })
+    .map((path) => path.split(sep).join('/'))
+    .filter((path) => /^[^/]+\/plugins\/[^/]+\/plugin\.json$/.test(path))
+    .sort()
+    .map((path) => ({
+      path,
+      id: (JSON.parse(readFileSync(resolve(sitesDir, path), 'utf8')) as { id: string }).id,
+    }));
+  expect(diskPlugins.length).toBeGreaterThan(0);
 
-  for (const manifest of manifests) {
-    it(`${manifest.id}: mount → updateSettings → unmount restores the host`, () => {
+  for (const { path, id } of diskPlugins) {
+    function loadedManifest(): PluginManifest {
+      const matches = manifests.filter((manifest) => manifest.id === id);
+      expect(matches, `${path}: expected exactly one loaded plugin`).toHaveLength(1);
+      return matches[0];
+    }
+
+    it(`${id}: mount → updateSettings → unmount restores the host`, () => {
+      const manifest = loadedManifest();
       document.body.className = 'host-class';
       document.body.setAttribute('style', '--host-var: 1px;');
       // Semantic answer operations need real target markup, not an empty body;
@@ -108,7 +127,8 @@ describe('bundled plugin lifecycle (parametric)', async () => {
       expect(document.documentElement.getAttribute('class')).toBe(before.root);
     });
 
-    it(`${manifest.id}: every semantic target resolves on its site adapter`, () => {
+    it(`${id}: every semantic target resolves on its site adapter`, () => {
+      const manifest = loadedManifest();
       const adapter = adapterFor(manifest);
       for (const op of manifest.contributes.domOps ?? []) {
         if (op.op === 'native') continue;

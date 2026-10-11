@@ -1,16 +1,29 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { readFileSync, readdirSync } from 'node:fs';
+import { dirname, resolve, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { patternWithinAny } from '../../sites/matchPattern';
 import { SEMANTIC_SELECTOR_KEYS } from '../../sites/semanticKeys';
 import { BundledCatalogPluginSource } from '../../sources/BundledCatalogPluginSource';
+import type { PluginManifest } from '../../types';
 import {
   BUNDLED_SITE_ADAPTERS,
   listBundledPluginEntries,
   listBundledSiteEntries,
   requireBundledSiteAdapter,
 } from './index';
+
+const catalogDir = resolve(process.cwd(), 'src/features/plugins/catalog');
+// Read disk independently so a discovery omission cannot remove its own expectation.
+const pluginPaths = readdirSync(resolve(catalogDir, 'sites'), { recursive: true, encoding: 'utf8' })
+  .map((path) => path.split(sep).join('/'))
+  .filter((path) => /^[^/]+\/plugins\/[^/]+\/plugin\.json$/.test(path))
+  .sort()
+  .map((path) => `sites/${path}`);
+
+function readManifest(path: string): PluginManifest {
+  return JSON.parse(readFileSync(resolve(catalogDir, path), 'utf8')) as PluginManifest;
+}
 
 describe('bundled catalog discovery', () => {
   it('finds one site.json per plugin platform, with ids equal to their directories', () => {
@@ -34,51 +47,62 @@ describe('bundled catalog discovery', () => {
 
   it('finds every plugin under its site and pairs it with its CSS files', () => {
     const entries = listBundledPluginEntries();
-    expect(entries.map((entry) => entry.path)).toEqual([
-      'sites/chatgpt/plugins/diagram-rendering/plugin.json',
-      'sites/chatgpt/plugins/reading-width/plugin.json',
-      'sites/chatgpt/plugins/user-latex/plugin.json',
-      'sites/claude/plugins/cjk-render-fix/plugin.json',
-      'sites/claude/plugins/reading-width/plugin.json',
-      'sites/deepseek/plugins/code-collapse/plugin.json',
-      'sites/deepseek/plugins/formula-copy/plugin.json',
-      'sites/deepseek/plugins/reading-typography/plugin.json',
-      'sites/deepseek/plugins/reading-width/plugin.json',
-      'sites/deepseek/plugins/table-copy/plugin.json',
-      'sites/deepseek/plugins/timeline/plugin.json',
-      'sites/deepseek/plugins/vim-input/plugin.json',
-      'sites/deepseek/plugins/wrap-code/plugin.json',
-    ]);
+    expect(pluginPaths.length).toBeGreaterThan(0);
+    expect(entries.map((entry) => entry.path)).toEqual(pluginPaths);
+    const ids = pluginPaths.map((path) => readManifest(path).id);
+    expect(new Set(ids).size, 'bundled plugin ids must be unique').toBe(ids.length);
     for (const entry of entries) {
+      const manifest = readManifest(entry.path);
+      expect(JSON.parse(entry.manifestJson), entry.path).toEqual(manifest);
+      expect(entry.path).toBe(`sites/${entry.siteDir}/plugins/${entry.pluginDir}/plugin.json`);
+      expect(manifest.id, entry.path).toBe(`voyager.${entry.siteDir}-${entry.pluginDir}`);
+      const pluginDir = dirname(resolve(catalogDir, entry.path));
+      const diskStyles = Object.fromEntries(
+        readdirSync(pluginDir)
+          .filter((file) => file.endsWith('.css'))
+          .map((file) => [file, readFileSync(resolve(pluginDir, file), 'utf8')]),
+      );
+      expect(entry.styles, entry.path).toEqual(diskStyles);
       // A primitive-only plugin ships no CSS; every CSS file found is real content.
       for (const [file, css] of Object.entries(entry.styles)) {
         expect(file).toMatch(/\.css$/);
         expect(css.length).toBeGreaterThan(0);
       }
-      const declares = JSON.parse(entry.manifestJson).contributes?.styles?.length > 0;
-      expect(Object.keys(entry.styles).length > 0).toBe(declares);
+      // A CSS file the manifest never declares would ship but never apply.
+      const declares = (manifest.contributes?.styles?.length ?? 0) > 0;
+      expect(Object.keys(entry.styles).length > 0, entry.path).toBe(declares);
     }
   });
 
   it('keeps every plugin inside the match scope of its site (plan D18)', async () => {
     const manifests = await new BundledCatalogPluginSource().list();
-    const entries = listBundledPluginEntries();
-    expect(manifests).toHaveLength(entries.length);
-    for (const entry of entries) {
-      const manifest = manifests.find((m) => JSON.parse(entry.manifestJson).id === m.id);
-      const site = requireBundledSiteAdapter(entry.siteDir);
-      expect(manifest, entry.path).toBeDefined();
+    expect(manifests).toHaveLength(pluginPaths.length);
+    for (const path of pluginPaths) {
+      const manifest = manifests.find((m) => readManifest(path).id === m.id);
+      const site = requireBundledSiteAdapter(path.split('/')[1]);
+      expect(manifest, `${path}: plugin was not loaded`).toBeDefined();
       for (const pattern of manifest!.matches) {
-        expect(patternWithinAny(pattern, site.matches), `${entry.path}: ${pattern}`).toBe(true);
+        expect(patternWithinAny(pattern, site.matches), `${path}: ${pattern}`).toBe(true);
       }
     }
   });
 
   it('keeps marketplace.json (the docs plugin-store index) in sync with discovery', () => {
-    const index = JSON.parse(
-      readFileSync(resolve(process.cwd(), 'src/features/plugins/catalog/marketplace.json'), 'utf8'),
-    ) as { plugins: { name: string; source: string }[] };
-    const discovered = listBundledPluginEntries().map((entry) => entry.path);
-    expect(index.plugins.map((plugin) => plugin.source).sort()).toEqual([...discovered].sort());
+    const index = JSON.parse(readFileSync(resolve(catalogDir, 'marketplace.json'), 'utf8')) as {
+      plugins: { name: string; source: string }[];
+    };
+    const listed = index.plugins.map((plugin) => plugin.source);
+    for (const path of pluginPaths) {
+      const name = readManifest(path).id.replace(/^voyager\./, '');
+      expect(
+        listed,
+        `Add ${JSON.stringify({ name, source: path, official: true })} to src/features/plugins/catalog/marketplace.json so the docs plugin store lists it.`,
+      ).toContain(path);
+    }
+    expect(new Set(index.plugins.map((plugin) => plugin.name)).size).toBe(index.plugins.length);
+    expect(
+      [...listed].sort(),
+      'marketplace entries must be unique and point to existing plugins',
+    ).toEqual(pluginPaths);
   });
 });
