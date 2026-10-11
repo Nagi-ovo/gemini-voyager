@@ -1,0 +1,10 @@
+{
+  "collapseExpand": {
+    "message": "Развернуть текст",
+    "description": "Button that expands collapsed long content"
+  },
+  "collapseCollapse": {
+    "message": "Свернуть текст",
+    "description": "Button that collapses expanded long content"
+  }
+}

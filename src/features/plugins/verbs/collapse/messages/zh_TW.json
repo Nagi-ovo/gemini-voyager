@@ -1,0 +1,10 @@
+{
+  "collapseExpand": {
+    "message": "展開文字",
+    "description": "Button that expands collapsed long content"
+  },
+  "collapseCollapse": {
+    "message": "收合文字",
+    "description": "Button that collapses expanded long content"
+  }
+}

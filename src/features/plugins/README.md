@@ -395,6 +395,24 @@ the URL when the turn entered the page (`turnOwnership.ts`).
 Markdown or TSV. The Markdown is conversation export's own `extractTable`, and TSV reads the same
 `collectTableRows`, so formulas stay LaTeX and copy never drifts from export.
 
+`collapse` (unreleased, `sinceEngine: 'next'`) limits the visible height of long content and
+places one expand/collapse button after each target. Its optional `target` is a semantic key:
+`userTurn` (default), `assistantTurn` or `thinkingBlock`; raw selectors are not accepted.
+`maxPx` defaults to 320 and accepts finite numbers from 80 to 2000; `startCollapsed` defaults
+to `true`. Content at or below `maxPx + 16` pixels gets no toggle. Streaming content gains a
+toggle when it grows past that threshold, and an expanded element stays expanded while the
+same host element survives. Labels are localized, buttons work with the keyboard, and styling
+supports Voyager's light/dark scheme and RTL layout. Unmount restores the host layout.
+
+Because `target` is configurable, the contract has no fixed semantic requirements. Authors
+must declare the chosen key in `requires.semantic`, including `userTurn` when omitting
+`target`; a missing adapter selector leaves the primitive inactive. Targeting `assistantTurn`
+clips the complete reply, including any thinking content inside it. Choose `thinkingBlock`
+separately when only that content should collapse. The primitive has no host-specific checks:
+avoid content that already has native collapse, such as DeepSeek's `.ds-collapsible-text`.
+There is no expand-all control. A plugin can expose `maxPx` and `startCollapsed` as settings
+using `"params": { "target": "userTurn", "maxPx": "{{maxHeight}}", "startCollapsed": "{{startCollapsed}}" }`.
+
 Some behaviour cannot be expressed as CSS or as the reversible DOM operations.
 A **primitive** is that behaviour, written once as first-party TypeScript inside
 the extension and given a name a manifest can call:

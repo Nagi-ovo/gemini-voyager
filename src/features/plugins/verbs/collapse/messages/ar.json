@@ -1,0 +1,10 @@
+{
+  "collapseExpand": {
+    "message": "توسيع النص",
+    "description": "Button that expands collapsed long content"
+  },
+  "collapseCollapse": {
+    "message": "طي النص",
+    "description": "Button that collapses expanded long content"
+  }
+}

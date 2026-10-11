@@ -75,6 +75,10 @@ A primitive is behavior Voyager ships as code; a plugin can only call it by name
 - codeCollapse (sinceEngine 1.8.0): Collapses long code blocks in replies with Gemini's code block collapse: a toggle per block plus expand all / collapse all, with the code and the host's copy controls left intact. Long blocks start collapsed, the user's choice holds while a reply streams, and turning the plugin off restores every block. Reads: assistantTurn, codeBlock.
   - code (selector): Element inside the code block holding the code, measured for length and clipped while collapsed; defaults to pre, else the block itself.
   - action (selector): A native control inside the code block, such as its copy button; the toggle joins that control's row. Without it the toggle goes at the end of the block.
+- collapse (sinceEngine 1.8.0): Caps the visible height of long semantic content with an expand/collapse toggle outside the clipped element. Streaming content is measured incrementally, and an expanded element stays expanded while it survives host re-renders. Turning the plugin off restores its native layout.
+  - target (string): Semantic content key: userTurn (default), assistantTurn or thinkingBlock. Declare the selected key in requires.semantic; do not target content the host already collapses.
+  - maxPx (number): Collapsed height in pixels, from 80 to 2000; defaults to 320. Content must exceed this height by more than 16 pixels to get a toggle.
+  - startCollapsed (boolean): Whether long content starts collapsed; defaults to true.
 - copyButton (sinceEngine 1.8.0): A small copy button above each element the site adapter names by `target` (a thinking block, a message, a reply, a code block) copies that element's visible text, without Voyager's own controls inside it, and confirms with a toast. The element stays untouched; turning the plugin off removes the buttons.
   - target (string): Semantic key whose elements each get a copy button: userTurn, assistantTurn, thinkingBlock or codeBlock. List the same key in requires.semantic.
   - format (string): What the button copies: "text" (default), the element's visible plain text.

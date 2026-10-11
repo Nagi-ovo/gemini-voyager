@@ -1,0 +1,10 @@
+{
+  "collapseExpand": {
+    "message": "Déplier le texte",
+    "description": "Button that expands collapsed long content"
+  },
+  "collapseCollapse": {
+    "message": "Replier le texte",
+    "description": "Button that collapses expanded long content"
+  }
+}

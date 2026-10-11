@@ -1,0 +1,10 @@
+{
+  "collapseExpand": {
+    "message": "テキストを展開",
+    "description": "Button that expands collapsed long content"
+  },
+  "collapseCollapse": {
+    "message": "テキストを折りたたむ",
+    "description": "Button that collapses expanded long content"
+  }
+}

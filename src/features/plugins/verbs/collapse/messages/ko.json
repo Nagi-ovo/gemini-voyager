@@ -1,0 +1,10 @@
+{
+  "collapseExpand": {
+    "message": "텍스트 펼치기",
+    "description": "Button that expands collapsed long content"
+  },
+  "collapseCollapse": {
+    "message": "텍스트 접기",
+    "description": "Button that collapses expanded long content"
+  }
+}
