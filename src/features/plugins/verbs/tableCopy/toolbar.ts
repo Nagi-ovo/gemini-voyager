@@ -1,3 +1,6 @@
+import { getTranslationSync } from '@/utils/i18n';
+import type { TranslationKey } from '@/utils/translations';
+
 /**
  * The copy toolbar shown above a reply's table: icon-only Markdown and TSV
  * buttons, as on the diagram toolbar, with tooltips and accessible names in
@@ -5,10 +8,7 @@
  * timeline summaries and export never read it, and its colours follow the
  * reply's own text colour in either theme.
  */
-import { createCopyIcon, createSheetIcon } from '@/core/icons/tableCopyIcons';
-import { getTranslationSync } from '@/utils/i18n';
-import type { TranslationKey } from '@/utils/translations';
-
+import { createCopyIcon, createSheetIcon } from './icons';
 import type messages from './messages/en.json';
 import type { TableCopyFormat } from './serialize';
 

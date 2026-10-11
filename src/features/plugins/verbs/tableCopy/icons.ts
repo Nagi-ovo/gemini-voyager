@@ -1,6 +1,6 @@
 import type { IconNode } from 'lucide-react';
 
-import { createLucideIcon } from './lucideIcon';
+import { createLucideIcon } from '@/core/icons/lucideIcon';
 
 /** Lucide table-copy toolbar geometry from lucide-react v0.553.0. */
 const COPY_ICON_NODE = [
