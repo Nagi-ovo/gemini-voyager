@@ -12,7 +12,8 @@
  * verb registries — those pull in `import.meta.glob` and content-script code,
  * neither of which exists under Bun. The primitive list is read from
  * `verbs/contracts.ts` (data only) so a newly added primitive is picked up
- * without touching this file.
+ * without touching this file; under Bun that module only loads once
+ * `installPrimitiveContractsSeam()` has run (`primitiveContractsSeam.ts`).
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 

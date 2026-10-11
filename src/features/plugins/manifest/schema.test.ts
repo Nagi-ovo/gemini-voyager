@@ -385,12 +385,14 @@ describe('published JSON Schemas', () => {
     expect(handler.pattern).toBe(PRIMITIVE_NAME_PATTERN.source);
 
     // A primitive or semantic key added in code must reach the schema's enums
-    // too, or editors flag a plugin the gates accept.
+    // too, or editors flag a plugin the gates accept. The primitive enums are
+    // generated (sorted, like PRIMITIVE_CONTRACTS) by the CLI build.
     const primitiveNames = PRIMITIVE_CONTRACTS.map((contract) => contract.name);
     const requires = (pluginSchema.properties as Record<string, JsonSchema>).requires
       .properties as Record<string, JsonSchema>;
-    expect(handler.enum).toEqual(primitiveNames);
-    expect((requires.handlers.items as JsonSchema).enum).toEqual(primitiveNames);
+    const stale = 'plugin.schema.json primitive enums are stale: run `bun run skills:build`';
+    expect(handler.enum, stale).toEqual(primitiveNames);
+    expect((requires.handlers.items as JsonSchema).enum, stale).toEqual(primitiveNames);
     const semanticRef = (defs.selectorRef.anyOf as JsonSchema[])[2];
     expect((semanticRef.properties as Record<string, JsonSchema>).key.enum).toEqual([
       ...SEMANTIC_SELECTOR_KEYS,

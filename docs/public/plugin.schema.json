@@ -110,15 +110,15 @@
             "maxLength": 100,
             "pattern": "^[a-z][a-zA-Z0-9]{1,39}$",
             "enum": [
+              "codeCollapse",
+              "echarts",
               "formulaCopy",
-              "vimInput",
+              "mermaid",
+              "tableCopy",
               "turnNavigator",
               "userLatex",
-              "mermaid",
-              "echarts",
-              "wavedrom",
-              "tableCopy",
-              "codeCollapse"
+              "vimInput",
+              "wavedrom"
             ]
           },
           "description": "Primitive names the plugin invokes. Optional: a `native` op already implies its handler, so list one only to state the dependency explicitly."
@@ -317,15 +317,15 @@
               "type": "string",
               "pattern": "^[a-z][a-zA-Z0-9]{1,39}$",
               "enum": [
+                "codeCollapse",
+                "echarts",
                 "formulaCopy",
-                "vimInput",
+                "mermaid",
+                "tableCopy",
                 "turnNavigator",
                 "userLatex",
-                "mermaid",
-                "echarts",
-                "wavedrom",
-                "tableCopy",
-                "codeCollapse"
+                "vimInput",
+                "wavedrom"
               ],
               "description": "A primitive this Voyager build ships (src/features/plugins/verbs/contracts.ts)."
             },

@@ -1,0 +1,9 @@
+{
+  "sinceEngine": "1.4.0",
+  "params": {
+    "composer": {
+      "type": "selector",
+      "required": false
+    }
+  }
+}

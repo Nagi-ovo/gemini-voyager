@@ -1,0 +1,40 @@
+{
+  "sinceEngine": "1.4.0",
+  "params": {
+    "turn": {
+      "type": "selector",
+      "required": false
+    },
+    "conversationIdPattern": {
+      "type": "string",
+      "required": false
+    },
+    "scrollContainer": {
+      "type": "selector",
+      "required": false
+    },
+    "yieldWhen": {
+      "type": "selector",
+      "required": false
+    },
+    "position": {
+      "type": "string",
+      "required": false
+    },
+    "conversationIdAttribute": {
+      "type": "string",
+      "required": false,
+      "sinceEngine": "1.5.0"
+    },
+    "turnItem": {
+      "type": "selector",
+      "required": false,
+      "sinceEngine": "1.5.0"
+    },
+    "accountIdAttributes": {
+      "type": "string[]",
+      "required": false,
+      "sinceEngine": "1.5.0"
+    }
+  }
+}

@@ -1,7 +1,7 @@
 /**
  * The one place the local-plugin gate and the authoring material read
  * primitive contracts. Everything else in `local/` asks this module, so when
- * the contracts move (one folder per primitive), only this import changes.
+ * the contracts' source changes, only this import does.
  */
 import { PRIMITIVE_CONTRACTS } from '../../verbs/contracts';
 
@@ -23,7 +23,7 @@ export interface PrimitiveReference {
   readonly params: readonly PrimitiveParamReference[];
 }
 
-/** Every primitive this build ships, in contract order. */
+/** Every primitive this build ships, sorted by name. */
 export function listPrimitiveReferences(): readonly PrimitiveReference[] {
   return PRIMITIVE_CONTRACTS.map((contract) => ({
     name: contract.name,

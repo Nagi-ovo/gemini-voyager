@@ -348,7 +348,7 @@ Ownership and precedence:
 
 ## Primitives (`verbs/`) and the `native` op
 
-Shipped primitives (`verbs/contracts.ts`): `formulaCopy` (since 1.3.0), `vimInput` (since 1.4.0,
+Shipped primitives (`verbs/<name>/contract.ts`): `formulaCopy` (since 1.3.0), `vimInput` (since 1.4.0,
 `composer` param, defaults to the adapter's `composer` selector) and `turnNavigator` (since 1.4.0,
 `turn` / `conversationIdPattern` / `scrollContainer` / `yieldWhen` / `position`, all optional and
 defaulting to the adapter, plus the optional `conversationIdAttribute` attribute and `turnItem`
@@ -405,19 +405,29 @@ primitive's own hand-written guard before the primitive sees it (plan C1, D17).
 That is what keeps a remote manifest data rather than remotely-hosted code, and
 it is why `native` is safe on the same channel as CSS.
 
-Three files divide the work:
+Each primitive is one folder, `verbs/<name>/`, and adding the folder is all
+the registration there is:
 
-- **`verbs/contracts.ts`** — data only: every primitive's `name`, `sinceEngine`,
-  the semantic keys it reads from the adapter, and its parameter spec. It
-  imports no DOM and no implementation, so `scripts/build-plugin-catalog.ts`
-  can read it under Bun.
-- **`verbs/registry.ts`** — the implementations, keyed by name.
-  `verifyPrimitiveRegistry()` asserts the two lists match, so a contract can
-  never describe a primitive that does not exist and vice versa.
-- **`verbs/<name>.ts`** — one primitive: its `contract`, a `validateParams`
-  guard, and `activate(scope, params, context)`. Every side effect is registered
-  on the `PluginScope`, so unmount pays them all back, and the primitive reports
-  how many elements it acts on through `context.setTargetCounter`.
+- **`contract.ts`** — data only: `export const contract` with the primitive's
+  `name` (the folder name), `sinceEngine`, the semantic keys it reads from the
+  adapter, and its parameter spec. It imports only types and data modules
+  (`contractTypes.ts`, `codeBlockDiagramParams.ts`), so Bun scripts and the CLI
+  can load it without DOM or implementations; `primitiveFolders.test.ts`
+  enforces this.
+- **`index.ts`** — the implementation: a primitive object carrying that
+  contract, a `validateParams` guard, and `activate(scope, params, context)`.
+  Every side effect is registered on the `PluginScope`, so unmount pays them
+  all back, and the primitive reports how many elements it acts on through
+  `context.setTargetCounter`.
+- **`paramsBaseline.json`** — the published params (D9, below).
+
+`verbs/contracts.ts` collects the contracts, sorted by name, through
+`import.meta.glob`; Bun has no glob, so Bun scripts and the CLI build feed the
+same files from disk (`scripts/lib/primitiveContractsSeam.ts`). `verbs/registry.ts`
+finds the implementations the same way, and `verifyPrimitiveRegistry()` names
+any folder whose contract and implementation disagree. The primitive enums in
+`docs/public/plugin.schema.json` are generated: run `bun run skills:build`
+after adding a primitive (it also refreshes the public skill).
 
 `sinceEngine` is the `PLUGIN_ENGINE_VERSION` that first shipped the primitive.
 A manifest that uses a primitive must set an `engine` range whose **minimum** is
@@ -474,8 +484,10 @@ a full page load switches versions.
 **Evolution (D9).** A published parameter never changes type and never becomes
 required. Parameters may only be **added**, and only as **optional**. Anything
 breaking ships under a new primitive name, so `handler` never needs a version
-suffix. A committed baseline in `verbs/paramsBaseline.json` holds the contract
-tests to this.
+suffix. Each primitive's committed `verbs/<name>/paramsBaseline.json` holds the
+contract tests to this: write it when the primitive ships, then only append
+params. It lives in the folder, so deleting a primitive's folder deletes its
+baseline too; no test stops that, and review must.
 
 `formulaCopy` is the first primitive, and
 `catalog/sites/deepseek/plugins/formula-copy/` is the first plugin built on one.

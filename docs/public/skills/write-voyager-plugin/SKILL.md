@@ -68,9 +68,26 @@ This skill is generated from Voyager’s plugin engine 1.8.0. The latest copy is
 
 A primitive is behavior Voyager ships as code; a plugin can only call it by name and configure it: { "op": "native", "handler": "<name>", "params": { … } }. Every param is optional. Set "engine" to ">=" the primitive’s sinceEngine (and any param’s). Not on Gemini or AI Studio, and only on a site that declares the semantic keys the primitive reads.
 
+- codeCollapse (sinceEngine 1.8.0): Collapses long code blocks in replies with Gemini's code block collapse: a toggle per block plus expand all / collapse all, with the code and the host's copy controls left intact. Long blocks start collapsed, the user's choice holds while a reply streams, and turning the plugin off restores every block. Reads: assistantTurn, codeBlock.
+  - codeBlock (selector): One code block inside a reply, the element that carries the collapsed state. Defaults to the site adapter's codeBlock.
+  - code (selector): Element inside the code block holding the code, measured for length and clipped while collapsed; defaults to pre, else the block itself.
+  - action (selector): A native control inside the code block, such as its copy button; the toggle joins that control's row. Without it the toggle goes at the end of the block.
+- echarts (sinceEngine 1.7.0): Renders ECharts option code blocks in replies as interactive charts with a Diagram / Code toggle, using the parser, sanitizer and renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the charts. Reads: assistantTurn, codeBlock.
+  - turn (selector): Reply elements whose code blocks are rendered; defaults to the site adapter's assistantTurn.
+  - codeBlock (selector): One code block inside a reply. The diagram goes right before it, and it is hidden while the diagram shows. Defaults to the site adapter's codeBlock, else pre.
+  - code (selector): Element inside the code block holding the source text; defaults to code, else the block itself.
+  - codeLine (selector): Line elements inside the source element, joined with newlines, for hosts that render one element per line without newline characters.
+  - language (selector): Element inside the code block whose text is the language label; defaults to a language-* class on the source element or the block.
 - formulaCopy (sinceEngine 1.3.0): Click an inline or block formula to copy its LaTeX; hover shows it is clickable. Reads KaTeX / MathJax markup on the page.
-- vimInput (sinceEngine 1.4.0): Vim-style modal editing and cursor navigation in the prompt composer. Reads: composer.
-  - composer (selector): Prompt input to attach Vim modal editing to; defaults to the site adapter's composer.
+- mermaid (sinceEngine 1.7.0): Renders Mermaid code blocks in replies as diagrams with a Diagram / Code toggle, using the renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the diagrams. Reads: assistantTurn, codeBlock.
+  - turn (selector): Reply elements whose code blocks are rendered; defaults to the site adapter's assistantTurn.
+  - codeBlock (selector): One code block inside a reply. The diagram goes right before it, and it is hidden while the diagram shows. Defaults to the site adapter's codeBlock, else pre.
+  - code (selector): Element inside the code block holding the source text; defaults to code, else the block itself.
+  - codeLine (selector): Line elements inside the source element, joined with newlines, for hosts that render one element per line without newline characters.
+  - language (selector): Element inside the code block whose text is the language label; defaults to a language-* class on the source element or the block.
+- tableCopy (sinceEngine 1.8.0): A toolbar above each table in a reply copies it as Markdown (formulas kept as LaTeX, the same table conversation export writes) or as TSV for spreadsheets. The table stays untouched; turning the plugin off removes the toolbars. Reads: assistantTurn.
+  - turn (selector): Reply elements whose tables get a copy toolbar; defaults to the site adapter's assistantTurn.
+  - table (selector): Tables inside a reply; defaults to table. Tables nested in another table or inside the site adapter's thinkingBlock are skipped.
 - turnNavigator (sinceEngine 1.4.0): A compact conversation timeline with starred messages and search, built on the same code as the Claude timeline. Reads: userTurn.
   - turn (selector): User-turn elements to index; defaults to the site adapter's userTurn.
   - conversationIdAttribute (string, since 1.5.0): Attribute holding the conversation id that conversationIdPattern captures from the URL, on an ancestor of each turn or inside its turnItem. When set, it is the only thing that lets a turn be starred: the id must name the current conversation; a turn without one stays unstarrable.
@@ -82,31 +99,14 @@ A primitive is behavior Voyager ships as code; a plugin can only call it by name
   - position (string): Rail side: "right" (default) or "left".
 - userLatex (sinceEngine 1.7.0): Renders $…$ and $$…$$ LaTeX the user typed in their own messages, keeping the source for export and copy; turning it off restores the text. Reads: userTurn.
   - turn (selector): User-message elements to render LaTeX in; defaults to the site adapter's userTurn.
-- mermaid (sinceEngine 1.7.0): Renders Mermaid code blocks in replies as diagrams with a Diagram / Code toggle, using the renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the diagrams. Reads: assistantTurn, codeBlock.
-  - turn (selector): Reply elements whose code blocks are rendered; defaults to the site adapter's assistantTurn.
-  - codeBlock (selector): One code block inside a reply. The diagram goes right before it, and it is hidden while the diagram shows. Defaults to the site adapter's codeBlock, else pre.
-  - code (selector): Element inside the code block holding the source text; defaults to code, else the block itself.
-  - codeLine (selector): Line elements inside the source element, joined with newlines, for hosts that render one element per line without newline characters.
-  - language (selector): Element inside the code block whose text is the language label; defaults to a language-* class on the source element or the block.
-- echarts (sinceEngine 1.7.0): Renders ECharts option code blocks in replies as interactive charts with a Diagram / Code toggle, using the parser, sanitizer and renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the charts. Reads: assistantTurn, codeBlock.
-  - turn (selector): Reply elements whose code blocks are rendered; defaults to the site adapter's assistantTurn.
-  - codeBlock (selector): One code block inside a reply. The diagram goes right before it, and it is hidden while the diagram shows. Defaults to the site adapter's codeBlock, else pre.
-  - code (selector): Element inside the code block holding the source text; defaults to code, else the block itself.
-  - codeLine (selector): Line elements inside the source element, joined with newlines, for hosts that render one element per line without newline characters.
-  - language (selector): Element inside the code block whose text is the language label; defaults to a language-* class on the source element or the block.
+- vimInput (sinceEngine 1.4.0): Vim-style modal editing and cursor navigation in the prompt composer. Reads: composer.
+  - composer (selector): Prompt input to attach Vim modal editing to; defaults to the site adapter's composer.
 - wavedrom (sinceEngine 1.7.0): Renders WaveDrom (WaveJSON) code blocks in replies as timing diagrams with a Diagram / Code toggle, using the renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the diagrams. Reads: assistantTurn, codeBlock.
   - turn (selector): Reply elements whose code blocks are rendered; defaults to the site adapter's assistantTurn.
   - codeBlock (selector): One code block inside a reply. The diagram goes right before it, and it is hidden while the diagram shows. Defaults to the site adapter's codeBlock, else pre.
   - code (selector): Element inside the code block holding the source text; defaults to code, else the block itself.
   - codeLine (selector): Line elements inside the source element, joined with newlines, for hosts that render one element per line without newline characters.
   - language (selector): Element inside the code block whose text is the language label; defaults to a language-* class on the source element or the block.
-- tableCopy (sinceEngine 1.8.0): A toolbar above each table in a reply copies it as Markdown (formulas kept as LaTeX, the same table conversation export writes) or as TSV for spreadsheets. The table stays untouched; turning the plugin off removes the toolbars. Reads: assistantTurn.
-  - turn (selector): Reply elements whose tables get a copy toolbar; defaults to the site adapter's assistantTurn.
-  - table (selector): Tables inside a reply; defaults to table. Tables nested in another table or inside the site adapter's thinkingBlock are skipped.
-- codeCollapse (sinceEngine 1.8.0): Collapses long code blocks in replies with Gemini's code block collapse: a toggle per block plus expand all / collapse all, with the code and the host's copy controls left intact. Long blocks start collapsed, the user's choice holds while a reply streams, and turning the plugin off restores every block. Reads: assistantTurn, codeBlock.
-  - codeBlock (selector): One code block inside a reply, the element that carries the collapsed state. Defaults to the site adapter's codeBlock.
-  - code (selector): Element inside the code block holding the code, measured for length and clipped while collapsed; defaults to pre, else the block itself.
-  - action (selector): A native control inside the code block, such as its copy button; the toggle joins that control's row. Without it the toggle goes at the end of the block.
 
 ## Finding selectors
 

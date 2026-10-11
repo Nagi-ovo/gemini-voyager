@@ -1,5 +1,5 @@
 /**
- * Primitive runtime contract. See `contracts.ts` for the data half.
+ * Primitive runtime contract. See `contractTypes.ts` for the data half.
  *
  * A primitive is invoked once per `native` op of a mounted plugin with a
  * PluginScope that pays back every side effect on unmount, the validated
@@ -12,7 +12,7 @@ import type { Result } from '@/core/types/common';
 import type { ManifestIssue } from '../manifest/validate';
 import type { PluginScope } from '../runtime/pluginScope';
 import type { PluginSettings, SiteAdapter } from '../types';
-import type { PrimitiveContract } from './contracts';
+import type { PrimitiveContract } from './contractTypes';
 
 export interface PrimitiveContext {
   readonly doc: Document;
