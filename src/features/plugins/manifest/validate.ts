@@ -25,6 +25,7 @@ import type {
   StyleContribution,
 } from '../types';
 import { PRIMITIVE_NAME_PATTERN } from '../verbs/contracts';
+import { nativeParamTemplateIssues } from './primitiveChecks';
 import {
   attributeIssue,
   attributeNameIssue,
@@ -648,5 +649,7 @@ export function validateManifest(input: unknown): Result<PluginManifest, Manifes
     ...(changelog ? { changelog } : {}),
     ...(i18n ? { i18n } : {}),
   };
+  const templateIssues = nativeParamTemplateIssues(manifest);
+  if (templateIssues.length > 0) return { success: false, error: templateIssues };
   return { success: true, data: manifest };
 }

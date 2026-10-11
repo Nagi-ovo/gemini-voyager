@@ -31,6 +31,7 @@ import {
   PLUGIN_MARKER_ATTR,
   PLUGIN_STYLE_ID_PREFIX,
 } from '../constants';
+import { hasNativeParamTemplates, renderNativeParams } from '../manifest/nativeParamSettings';
 import {
   attributeIssue,
   renderSettingTemplate,
@@ -54,7 +55,7 @@ import { PluginScope } from './pluginScope';
 interface ActivePlugin {
   readonly manifest: PluginManifest;
   styleEl: HTMLStyleElement | null;
-  /** Current resolved setting values, substituted into the CSS via `{{key}}`. */
+  /** Current resolved setting values for CSS, DOM operations and native params. */
   settings: PluginSettings;
   /** First-party start/stop bound to a builtin plugin id (see nativeHandlers). */
   nativeHandler?: NativeHandler;
@@ -229,7 +230,8 @@ export class DeclarativeEngine {
         logger.warn('Unknown primitive', { id: entry.manifest.id, handler: op.handler });
         continue;
       }
-      const params = primitive.validateParams(op.params);
+      const rendered = renderNativeParams(op.params, entry.manifest.contributes.settings, settings);
+      const params = rendered.success ? primitive.validateParams(rendered.data) : rendered;
       if (!params.success) {
         logger.warn('Invalid primitive params', {
           id: entry.manifest.id,
@@ -315,7 +317,7 @@ export class DeclarativeEngine {
     }
   }
 
-  /** Live-update a mounted plugin's setting values (re-renders CSS + templated DOM ops). */
+  /** Live-update settings, re-rendering templates and updating or restarting native features. */
   updateSettings(id: string, settings: PluginSettings): void {
     const entry = this.active.get(id);
     if (!entry) return;
@@ -349,6 +351,8 @@ export class DeclarativeEngine {
     }
     const handles = entry.primitiveHandles;
     const allInPlace =
+      // An updater receives settings, not new params; templates need fresh activation.
+      !nativeOps(entry.manifest).some((op) => hasNativeParamTemplates(op.params)) &&
       handles.length === entry.primitiveActivations &&
       handles.every((handle) => typeof handle.updateSettings === 'function');
     if (allInPlace && handles.length > 0) {

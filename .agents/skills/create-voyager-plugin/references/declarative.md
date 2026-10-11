@@ -24,7 +24,8 @@ lists the known sites when `--site` is unknown.
 Then replace every `TODO`: the English `name` and `description` first, then the
 nine other locales, then the real CSS and DOM ops. Add `contributes.settings`
 only for values a user should control; a `{{settingKey}}` token in CSS, a
-`setStyle` value or a `setAttribute` value is how a setting reaches the page.
+`setStyle` value, a `setAttribute` value or a native op's `params` string is
+how a setting reaches the page.
 Add a one-line `changelog` when a later version changes behavior.
 
 ```bash
@@ -52,6 +53,28 @@ field, and point to a field without its own `enabledBy` (one level only).
 Page behavior still needs its existing boolean gate; `enabledBy` controls only
 the popup input. Engine 1.7.0 ignores this field and leaves the control enabled,
 so it needs no higher engine floor.
+
+### Settings in native params
+
+Use `"params": { "position": "{{side}}" }` on `turnNavigator` with a select
+setting `side` whose options are `left` and `right`. Tokens are expanded in
+string values recursively through params objects and arrays; parameter names
+and object keys stay literal. A whole-value `"{{key}}"` preserves the setting's
+number, boolean or string type. Embedded `"a{{key}}b"` produces a string.
+Expansion runs once: tokens inside a setting's value remain literal.
+
+Every referenced key must exist in `contributes.settings`, and its type must
+fit the primitive's parameter contract wherever that can be checked. Manifest
+loading checks the substituted defaults; each activation checks the resolved
+stored values with the primitive's `validateParams`. An invalid result skips
+the op through the same diagnostic path as invalid static params. Changing a
+setting disposes then reactivates templated primitive ops in order; static
+params keep the existing in-place settings update path.
+
+Catalog manifests using params tokens require `"engine": ">=next"` while this
+capability is unreleased. Publishing resolves that to engine 1.8.0; local
+plugins use `">=1.8.0"` directly. This capability's floor stays 1.8.0 after
+release, alongside any higher floor required by the primitive or its params.
 
 ## Complete when
 

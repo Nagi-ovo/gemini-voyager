@@ -98,6 +98,39 @@ afterEach(() => {
 });
 
 describe('plugin-check', () => {
+  it.each(['>=next', '>=1.8.0', '>=1.7.0'])(
+    'gates setting-driven native params at the capability engine (%s)',
+    async (engine) => {
+      const dir = makeFixturePlugin({
+        manifest: {
+          engine,
+          i18n: fullI18n({ settings: { composer: { label: 'Composer' } } }),
+          contributes: {
+            settings: {
+              composer: {
+                type: 'select',
+                label: 'Composer',
+                default: 'textarea',
+                options: [{ value: 'textarea', label: 'Text input' }],
+              },
+            },
+            domOps: [{ op: 'native', handler: 'vimInput', params: { composer: '{{composer}}' } }],
+          },
+        },
+      });
+      const result = await checkPluginDir(dir);
+      if (engine === '>=1.7.0') {
+        expect(result.ok).toBe(false);
+        expect(result.issues.join('\n')).toContain(
+          'native parameter setting references need engine ">=1.8.0"',
+        );
+      } else {
+        expect(result.issues).toEqual([]);
+        expect(result.ok).toBe(true);
+      }
+    },
+  );
+
   it('passes every plugin in the bundled catalog', async () => {
     const dirs = findPluginDirs(DEFAULT_CATALOG_SITES_DIR);
     expect(dirs.length).toBeGreaterThan(0);

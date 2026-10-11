@@ -66,7 +66,7 @@
     "engine": {
       "type": "string",
       "minLength": 1,
-      "description": "Semver range the plugin needs of the host engine: `*`, an exact `x.y.z`, or `>=x.y.z`. Repository contributors may use `>=next` for an unreleased primitive; catalog publishing resolves it to a concrete version. Local imports require a concrete version. A plugin that invokes a primitive must set a floor at or above that primitive's `sinceEngine`, so an older Voyager says \"update Voyager\" instead of reporting a missing handler.",
+      "description": "Semver range the plugin needs of the host engine: `*`, an exact `x.y.z`, or `>=x.y.z`. Repository contributors may use `>=next` for an unreleased primitive or capability; catalog publishing resolves it to a concrete version. Local imports require a concrete version. A plugin that invokes a primitive must set a floor at or above that primitive's `sinceEngine`; settings tokens in native params also require engine 1.8.0 or later. These floors make an older Voyager say \"update Voyager\" instead of silently misinterpreting params or reporting a missing handler.",
       "examples": [">=1.2.0", ">=1.3.0"]
     },
     "tier": {
@@ -180,7 +180,7 @@
         },
         "settings": {
           "type": "object",
-          "description": "User-configurable settings, rendered by the popup. A `{{key}}` token in CSS text, a setStyle value or a setAttribute value is replaced with the current value (the default until the user changes it). A local plugin may use boolean, number and select settings only: the popup has no control for string or color yet.",
+          "description": "User-configurable settings, rendered by the popup. A `{{key}}` token in CSS text, a setStyle value, a setAttribute value or a native params string is replaced with the current value (the default until the user changes it). Native params tokens require engine 1.8.0 or later. A local plugin may use boolean, number and select settings only: the popup has no control for string or color yet.",
           "additionalProperties": { "$ref": "#/$defs/settingField" }
         }
       }
@@ -331,7 +331,7 @@
             },
             "params": {
               "type": "object",
-              "description": "Plain JSON configuration: primitives, arrays and objects of those, at most 4 levels deep, 50 keys or entries per level and 2000 chars per string.",
+              "description": "Plain JSON configuration: primitives, arrays and objects of those, at most 4 levels deep, 50 keys or entries per level and 2000 chars per string. String values recursively support {{settingKey}} tokens; parameter names and object keys stay literal. A whole-value token preserves the setting's number, boolean or string type; embedded tokens produce a string. Expansion runs once, so tokens inside setting values remain literal. Every referenced key must exist in contributes.settings and its type must fit the primitive contract wherever statically knowable. Loading checks substituted defaults; each activation substitutes resolved stored values and runs the primitive's validateParams, skipping an invalid op through the same diagnostic path as invalid static params. Settings changes serialize disposal and reactivation for templated ops; static params keep in-place updates. Requires engine 1.8.0 or later, plus any higher primitive/param floor; catalog authors use >=next while the capability is unreleased, local imports use concrete versions.",
               "additionalProperties": true
             }
           }

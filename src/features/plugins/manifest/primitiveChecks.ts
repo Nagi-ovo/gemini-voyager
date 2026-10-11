@@ -7,8 +7,15 @@
 import { resolveEngineVersion } from '../engineVersion';
 import { requiredHandlers } from '../runtime/pluginStatus';
 import { engineSatisfied, parseSemver } from '../semver';
-import type { PluginManifest } from '../types';
+import type { NativeOperation, PluginManifest, SettingsSchema } from '../types';
 import { type PrimitiveContract, getPrimitiveContract } from '../verbs/contracts';
+import {
+  NATIVE_PARAM_SETTINGS_SINCE_ENGINE,
+  collectNativeParamSettingReferences,
+  hasNativeParamTemplates,
+  nativeParamSettingIssues,
+  renderNativeParams,
+} from './nativeParamSettings';
 import type { ManifestIssue } from './validate';
 
 /**
@@ -58,6 +65,16 @@ export function primitiveShippabilityIssues(manifest: PluginManifest): ManifestI
     version: contract.sinceEngine,
     source: `primitive "${contract.name}"`,
   }));
+  if (
+    manifest.contributes.domOps?.some(
+      (op) => op.op === 'native' && hasNativeParamTemplates(op.params),
+    )
+  ) {
+    needs.push({
+      version: NATIVE_PARAM_SETTINGS_SINCE_ENGINE,
+      source: 'native parameter setting references',
+    });
+  }
   for (const op of manifest.contributes.domOps ?? []) {
     if (op.op !== 'native') continue;
     const contract = getPrimitiveContract(op.handler);
@@ -95,30 +112,100 @@ export function primitiveShippabilityIssues(manifest: PluginManifest): ManifestI
  * `validateParams` guard still runs in the engine before activation; this is
  * the data-only part a page without the implementations can check.
  */
-export function primitiveParamIssues(manifest: PluginManifest): ManifestIssue[] {
+function primitiveOpParamIssues(
+  op: NativeOperation,
+  schema: SettingsSchema | undefined,
+  path: string,
+): ManifestIssue[] {
+  const contract = getPrimitiveContract(op.handler);
+  if (!contract) return [];
+  const rendered = renderNativeParams(op.params, schema, {}, path);
+  if (!rendered.success) return rendered.error;
   const issues: ManifestIssue[] = [];
+  for (const [key, value] of Object.entries(rendered.data)) {
+    const paramPath = `${path}.${key}`;
+    const spec = contract.params[key];
+    if (!spec) {
+      issues.push({ path: paramPath, message: `unknown parameter for primitive "${op.handler}"` });
+      continue;
+    }
+    const ok =
+      spec.type === 'string[]'
+        ? Array.isArray(value) &&
+          value.every((item) => typeof item === 'string' && item.trim().length > 0)
+        : spec.type === 'number'
+          ? typeof value === 'number' && Number.isFinite(value)
+          : spec.type === 'boolean'
+            ? typeof value === 'boolean'
+            : typeof value === 'string' && value.trim().length > 0;
+    if (!ok) issues.push({ path: paramPath, message: `must be a ${spec.type}` });
+  }
+  return issues;
+}
+
+export function primitiveParamIssues(manifest: PluginManifest): ManifestIssue[] {
+  return (manifest.contributes.domOps ?? []).flatMap((op, index) =>
+    op.op === 'native'
+      ? primitiveOpParamIssues(
+          op,
+          manifest.contributes.settings,
+          `contributes.domOps[${index}].params`,
+        )
+      : [],
+  );
+}
+
+/** Template references are load-time configuration errors, even without a primitive implementation. */
+export function nativeParamTemplateIssues(manifest: PluginManifest): ManifestIssue[] {
+  const issues: ManifestIssue[] = [];
+  let templated = false;
   (manifest.contributes.domOps ?? []).forEach((op, index) => {
-    if (op.op !== 'native') return;
+    if (op.op !== 'native' || !hasNativeParamTemplates(op.params)) return;
+    templated = true;
+    const path = `contributes.domOps[${index}].params`;
+    const schema = manifest.contributes.settings;
+    const referenceIssues = nativeParamSettingIssues(op.params, schema, path);
+    if (referenceIssues.length > 0) {
+      issues.push(...referenceIssues);
+      return;
+    }
+    const beforeTypes = issues.length;
     const contract = getPrimitiveContract(op.handler);
     if (!contract) return;
-    for (const [key, value] of Object.entries(op.params)) {
-      const path = `contributes.domOps[${index}].params.${key}`;
-      const spec = contract.params[key];
-      if (!spec) {
-        issues.push({ path, message: `unknown parameter for primitive "${op.handler}"` });
-        continue;
+    for (const [param, value] of Object.entries(op.params)) {
+      const spec = contract.params[param];
+      const refs = collectNativeParamSettingReferences({ [param]: value }, path);
+      if (!spec) continue; // The ordinary contract check reports unknown params.
+      const expected =
+        spec.type === 'selector' || (spec.type === 'string[]' && Array.isArray(value))
+          ? 'string'
+          : spec.type;
+      for (const ref of refs) {
+        if (!schema || !Object.hasOwn(schema, ref.key)) continue;
+        const field = schema[ref.key];
+        const provided =
+          ref.wholeValue && (field.type === 'number' || field.type === 'boolean')
+            ? field.type
+            : 'string';
+        if (provided !== expected) {
+          issues.push({
+            path: ref.path,
+            message: `setting "${ref.key}" supplies ${provided}, but primitive "${op.handler}" requires ${expected}`,
+          });
+        }
       }
-      const ok =
-        spec.type === 'string[]'
-          ? Array.isArray(value) &&
-            value.every((item) => typeof item === 'string' && item.trim().length > 0)
-          : spec.type === 'number'
-            ? typeof value === 'number' && Number.isFinite(value)
-            : spec.type === 'boolean'
-              ? typeof value === 'boolean'
-              : typeof value === 'string' && value.trim().length > 0;
-      if (!ok) issues.push({ path, message: `must be a ${spec.type}` });
     }
+    // Defaults must satisfy the same data-only contract checks as static values.
+    if (issues.length === beforeTypes) issues.push(...primitiveOpParamIssues(op, schema, path));
   });
+  if (templated) {
+    const minimum = engineRangeMinimum(manifest.engine);
+    if (minimum === null || !engineSatisfied(`>=${NATIVE_PARAM_SETTINGS_SINCE_ENGINE}`, minimum)) {
+      issues.push({
+        path: 'engine',
+        message: `native parameter setting references need engine ">=${NATIVE_PARAM_SETTINGS_SINCE_ENGINE}" (catalog contributors may use ">=next")`,
+      });
+    }
+  }
   return issues;
 }

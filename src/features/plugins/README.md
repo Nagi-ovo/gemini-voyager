@@ -415,6 +415,27 @@ primitive's own hand-written guard before the primitive sees it (plan C1, D17).
 That is what keeps a remote manifest data rather than remotely-hosted code, and
 it is why `native` is safe on the same channel as CSS.
 
+Native params may use `{{settingKey}}` in string values, recursively inside
+objects and arrays. Parameter names and object keys stay literal. A whole-value
+token preserves the setting's number, boolean or string type; embedded tokens
+produce a string. For example, `turnNavigator` can receive
+`"params": { "position": "{{side}}" }` from a select setting with `left` and
+`right` options. Expansion runs once, so tokens inside setting values remain
+literal. Every referenced key must exist in `contributes.settings`, and the
+setting type must fit the primitive contract wherever statically knowable.
+Manifest loading checks substituted defaults. Each activation substitutes
+resolved stored values and runs the primitive's `validateParams`; an invalid
+result skips the op through the same diagnostic path as invalid static params.
+Settings changes serialize disposal and reactivation for templated primitive
+ops; static params keep the existing in-place update path.
+
+Params substitution requires engine 1.8.0, alongside any higher primitive or
+parameter floor. Catalog authors use `"engine": ">=next"` while this capability
+is unreleased; local imports and published catalogs use concrete `">=1.8.0"`.
+The capability floor remains 1.8.0 in later releases. Engine 1.7.0 passes tokens
+literally to primitive guards, so a selector token can be accepted yet match
+nothing; enforcing the floor makes an older build report `needs-engine`.
+
 Each primitive is one folder, `verbs/<name>/`, and adding the folder is all
 the registration there is:
 
