@@ -362,6 +362,49 @@ describe('collapse primitive', () => {
     },
   );
 
+  it('does not leave a collapse stylesheet or controls behind when unmounted before a queued settings restart', async () => {
+    const { host } = fixture(chatgpt);
+    const engine = new DeclarativeEngine({ doc: document, adapter: chatgpt.adapter });
+    engines.push(engine);
+    const manifest: PluginManifest = {
+      id: 'test.collapse-unmount',
+      name: 'Collapse',
+      version: '1.0.0',
+      description: 'Cap long messages',
+      author: 'Test',
+      category: 'readability',
+      license: 'MIT',
+      engine: '>=next',
+      tier: 'declarative',
+      matches: ['https://chatgpt.com/*'],
+      contributes: {
+        settings: { maxHeight: { type: 'number', label: 'Height', default: 320 } },
+        domOps: [{ op: 'native', handler: 'collapse', params: { maxPx: '{{maxHeight}}' } }],
+      },
+    };
+    const headWithoutBase = () =>
+      Array.from(document.head.children)
+        .filter((element) => element.id !== 'gv-plugin-base-style')
+        .map((element) => element.outerHTML)
+        .join('');
+    const before = { head: headWithoutBase(), body: document.body.outerHTML };
+    engine.mount(manifest);
+    expect(document.head.querySelector('style[id^="gv-collapse-"]')).not.toBeNull();
+    expect(toggleOf(host)).not.toBeNull();
+    expect(cap(host)).toBe('320px');
+
+    engine.updateSettings(manifest.id, { maxHeight: 200 });
+    engine.unmount(manifest.id);
+    expect(headWithoutBase()).toBe(before.head);
+    expect(document.body.outerHTML).toBe(before.body);
+
+    await vi.runAllTimersAsync();
+    expect(headWithoutBase()).toBe(before.head);
+    expect(document.body.outerHTML).toBe(before.body);
+    expect(TestResizeObserver.instances).toHaveLength(1);
+    expect(TestResizeObserver.instances[0].disconnect).toHaveBeenCalledOnce();
+  });
+
   it('restarts a real templated native op with the new threshold and initial state', async () => {
     const { host } = fixture(chatgpt);
     const manifest: PluginManifest = {

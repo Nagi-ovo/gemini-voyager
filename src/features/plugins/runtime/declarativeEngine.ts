@@ -283,6 +283,8 @@ export class DeclarativeEngine {
       if (entry.settings !== settings) return;
       this.activatePrimitives(entry, settings);
     });
+    // Begin teardown now: an immediate unmount cannot reach the scope held by this queue.
+    void previous?.dispose();
   }
 
   /** Plugins that address the page (DOM ops or primitives) get a health verdict. */
@@ -398,6 +400,8 @@ export class DeclarativeEngine {
       if (entry.settings !== settings) return;
       this.activateScope(entry, settings);
     });
+    // Begin teardown now: an immediate unmount cannot reach the scope held by this queue.
+    void previous?.dispose();
   }
 
   unmount(id: string): void {

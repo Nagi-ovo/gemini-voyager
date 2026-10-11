@@ -169,6 +169,26 @@ describe('DeclarativeEngine', () => {
     expect(activate).toHaveBeenCalledOnce();
   });
 
+  it('does not leave scoped handler DOM behind when unmounted before a queued settings restart', async () => {
+    const activate = vi.fn((scope: PluginScope) => {
+      scope.mount(document.createElement('output'), document.body);
+    });
+    registerNativeHandler('test.scoped-immediate-unmount', { activate });
+    const engine = new DeclarativeEngine({ doc: document });
+    const before = document.body.outerHTML;
+    const manifest = makeManifest({}, 'test.scoped-immediate-unmount');
+    engine.mount(manifest);
+    expect(document.querySelector('output')).not.toBeNull();
+
+    engine.updateSettings(manifest.id, { changed: true });
+    engine.unmount(manifest.id);
+    expect(document.body.outerHTML).toBe(before);
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(document.body.outerHTML).toBe(before);
+    expect(activate).toHaveBeenCalledOnce();
+  });
+
   it('getScopeLedgers reports live effect labels per scope-based plugin', () => {
     registerNativeHandler('test.scoped-ledger', {
       activate: (scope: PluginScope) => {
