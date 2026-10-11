@@ -95,6 +95,7 @@ A primitive is behavior Voyager ships as code; a plugin can only call it by name
   - code (selector): Element inside the code block holding the source text; defaults to code, else the block itself.
   - codeLine (selector): Line elements inside the source element, joined with newlines, for hosts that render one element per line without newline characters.
   - language (selector): Element inside the code block whose text is the language label; defaults to a language-* class on the source element or the block.
+- sendShortcut (sinceEngine 1.8.0): Enter inserts a newline in the composer; Ctrl/Cmd+Enter clicks its enabled send button when no attachment is uploading. Shift+Enter and IME composition keep the host behavior. Reads: composer, composerRoot, sendButton.
 - tableCopy (sinceEngine 1.8.0): A toolbar above each table in a reply copies it as Markdown (formulas kept as LaTeX, the same table conversation export writes) or as TSV for spreadsheets. The table stays untouched; turning the plugin off removes the toolbars. Reads: assistantTurn.
 - turnNavigator (sinceEngine 1.4.0): A compact conversation timeline with starred messages and search, built on the same code as the Claude timeline. Reads: userTurn.
   - turn (selector): User-turn elements to index; defaults to the site adapter's userTurn.
