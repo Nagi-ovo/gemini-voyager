@@ -37,6 +37,7 @@ permissions, native handler, remote resources or new storage keys. Disabling the
 plugin removes the scoped class, both switch attributes and the stylesheet.
 
 Live check (2026-10-11, size switch on at 125%): answer text 16 → 20 px, table
-cells 15 → 20 px, inline code 17.5 px, code blocks unchanged at 13 px.
+cells 15 → 20 px, inline code 17.5 px, code blocks unchanged at 13 px. In the
+popup each slider stays greyed out until its switch is on.
 
 Related issue: #1016.
