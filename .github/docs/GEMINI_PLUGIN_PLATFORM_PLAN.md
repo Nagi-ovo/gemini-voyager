@@ -1,6 +1,6 @@
 # Gemini / AI Studio 插件化架构与迁移报告
 
-日期：2026-10-11。状态：分析稿（Codex 只读分析），未开工；§5.3 的决定待 Jesse 拍板，倾向 2.0.0 发布后先做阶段 1–2。
+日期：2026-10-11。状态：实施中。阶段 1 已实现（分支 `feat/gemini-plugin-platform`），阶段 2 进行中；§5.3 暂按“推荐”列执行，实际取舍与偏差见 §7。
 
 **结论：值得做，但应迁移“功能的运行所有权”，不要同时重写实现、搬迁用户数据和重做全部设置界面。** Gemini、AI Studio 可以成为与 ChatGPT/Claude/DeepSeek 使用同一 PluginHost、同一原语契约的插件平台，同时继续采用静态注入、包内官方插件、零远端插件目录请求。文件夹、导出、云同步、账号与数据存储继续作为核心服务；需要统一开关时，再为其界面加第一方 builtin 外壳。
 
@@ -413,3 +413,40 @@ AGENTS.md 要求 native module 在 `nativeFeatures.ts` 注册并返回 stop。�
 - 单独记录 catalog 网络零请求证据、默认功能启动耗时和观察器数量；Safari MAIN-world/native 路径与 Firefox 兼容路径不能由 jsdom 测试替代。
 
 发布前提供每功能的“旧 owner → 新 owner、设置 binding、允许 handler、行为差异已消除/显式接受、回退版本”记录。先发布小批并保留 wrapper 观察窗口，再删除旧入口；不删除业务 legacy key 或数据服务。这样即使后续阶段停止，已迁部分也仍然是一套能使用、能解释、能回退的插件平台。
+
+## 7. 实施记录
+
+本节随实施更新，记录实际落地的边界、与上文设计的差异和回退方式。
+
+### 7.1 采用的决定
+
+§5.3 全部按“推荐”列执行。实施中另定：
+
+- **冲突语义**：在位者保持资源，新冲突者 blocked；冷启动按“官方优先、同类按 ID 升序”。不做 live 抢占，与 §2.4 一致。
+- **全站互斥范围**：只覆盖已证实的 singleton（`formulaCopy`、`vimInput`），其余 handler 维持可组合的现状；不引入“未列出即独占”。
+- **legacy 启动路径**：阶段 2 不删除，只经同一个 owner gate 决定是否执行，阶段 7 再收口。§5.4“已迁移者退出 native 表”指收口结果，迁移期以 §3 的回退要求为准。
+- **marketplace**：Gemini / AI Studio 官方插件暂不列入 `catalog/marketplace.json` 和文档商店。是否公开展示留给 Jesse 决定；公开前要先为这两站写对的启用说明。
+- **AI Studio 总闸**：总闸关闭时官方公式仍获 admission，由 `surfaceSwitch` 决定是否运行，因此之后 off → on 能实时挂载。这是有意的小改进，不算“完全无行为变化”。
+
+### 7.2 阶段 1 落地内容
+
+| 责任           | 文件                                                                                            | 说明                                                                                                                                                                                                               |
+| -------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 包内 host 政策 | `src/features/plugins/sites/hostPolicy.ts`                                                      | 静态注入、远端目录（四个 Google host 永远拒绝）、theme、按 (site, handler) 的 native op 放行、catalog 数据协议；validator、runtime、siteRegistration、远端策略、主题、authoring 共用。`nativeSurfaces.ts` 只做转发 |
+| owner 表       | `src/features/plugins/sites/featureOwners.ts`                                                   | 每个 `(site, feature)` 的 owner（`legacy` 或 `plugin`）、官方 ID、handlers、health 策略；native op 放行由该表推导。包内官方 ID 集合固定，不随 owner 变化                                                           |
+| 旧设置 binding | `src/features/plugins/storage/legacySettingBindings.ts`                                         | 官方 ID 的 enabled 只读旧 sync 键，忽略 `gvPluginsState[id]`；effective settings 恒为 `{}`                                                                                                                         |
+| 启动许可       | `src/features/plugins/runtime/officialAdmission.ts`、`src/pages/content/featureOwnerStartup.ts` | 官方功能只在原 legacy starter 的位置获准，因此继承 Enterprise、custom coverage、后台标签延迟和 idle 让步；初始化结束后关闭，未获准者为 denied                                                                      |
+| 站点数据       | `catalog/sites/{gemini,aistudio}/site.json`                                                     | 与原 TS adapter 逐字对等（有对等测试）；`adapters/*.ts` 是薄导出；timeline 等继续读 `core/gemini/turnSelectors.ts` 的有序列表                                                                                      |
+| 零请求         | `scripts/lib/buildPluginCatalog.ts`、后台 `sendTimeMessages.ts` / `catalogOutlineMessages.ts`   | 发布侧完整校验后跳过 Google host；Gemini 页不能写 catalog 数据协议                                                                                                                                                 |
+| 生命周期       | `src/pages/content/inputHaloHider/index.ts`                                                     | 补齐 stop、disposed/revision guard，登记进 `nativeFeatures.ts`                                                                                                                                                     |
+
+阶段 1 中四个条目的 owner 均为 `legacy`，运行行为与改动前一致。
+
+### 7.3 每功能迁移记录
+
+| 功能           | 站点      | 官方 ID                          | 旧 owner → 新 owner | 设置 binding                                                                             | 放开的 handler | 行为差异                                                    | 回退 |
+| -------------- | --------- | -------------------------------- | ------------------- | ---------------------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------- | ---- |
+| 公式复制       | Gemini    | `voyager.gemini-formula-copy`    | legacy（阶段 1）    | `gvFormulaCopyEnabled`（`!== false`），格式仍读 `gvFormulaCopyFormat`；与 AI Studio 共享 | 无（阶段 1）   | 无                                                          | —    |
+| 公式复制       | AI Studio | `voyager.aistudio-formula-copy`  | legacy（阶段 1）    | 同上（共享键）                                                                           | 无（阶段 1）   | 无                                                          | —    |
+| Vim 输入       | Gemini    | `voyager.gemini-vim-input`       | legacy（阶段 1）    | `gvInputVimMode`（`=== true`）                                                           | 无（阶段 1）   | 无                                                          | —    |
+| 隐藏输入框光晕 | Gemini    | `voyager.gemini-hide-input-halo` | legacy（阶段 1）    | `gvInputHaloHidden`（`=== true`）                                                        | 无（纯 CSS）   | 新增 teardown；先订阅后初读，修掉晚到初读覆盖实时变化的竞态 | —    |

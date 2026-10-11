@@ -1,6 +1,11 @@
 import { useCallback, useRef, useState } from 'react';
 
 import type { FormulaCopyFormat } from '@/features/formulaCopy/FormulaCopyService';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
+import { LEGACY_ENABLE_BINDINGS } from '@/features/plugins/storage/legacySettingBindings';
+
+// One switch for Gemini and AI Studio; both official ids share this binding.
+const FORMULA_COPY_SWITCH = LEGACY_ENABLE_BINDINGS[OFFICIAL_PLUGIN_IDS.geminiFormulaCopy];
 
 export interface FormulaCopyPopupSettings {
   enabled: boolean;
@@ -33,7 +38,7 @@ export function useFormulaCopyPopupSettings(): FormulaCopyPopupSettings {
   }, []);
 
   const hydrateFromStorage = useCallback((storedEnabled: unknown, storedFormat: unknown): void => {
-    if (!enabledTouchedRef.current) setEnabled(storedEnabled !== false);
+    if (!enabledTouchedRef.current) setEnabled(FORMULA_COPY_SWITCH.read(storedEnabled));
     if (!formatTouchedRef.current && isFormulaCopyFormat(storedFormat)) {
       setFormat(storedFormat);
     }

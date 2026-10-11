@@ -23,8 +23,8 @@
  */
 import { logger } from '@/core/services/LoggerService';
 
+import { isStaticallyInjectedHost } from '../sites/hostPolicy';
 import { matchesAnyPattern } from '../sites/matchPattern';
-import { isNativeSurfaceHost } from '../sites/nativeSurfaces';
 import type { PluginManifest } from '../types';
 
 const CLAUDE_ARTIFACT_FRAME_ORIGIN = 'https://*.frame.claudeusercontent.com/*';
@@ -78,15 +78,15 @@ export function pluginsToOriginPatterns(
   for (const manifest of manifests) {
     for (const pattern of manifest.matches) {
       const origin = matchPatternToOrigin(pattern);
-      if (origin && !isNativeSurfaceOrigin(origin)) origins.add(origin);
+      if (origin && !isStaticallyInjectedOrigin(origin)) origins.add(origin);
     }
   }
   return [...origins].sort();
 }
 
-function isNativeSurfaceOrigin(origin: string): boolean {
+function isStaticallyInjectedOrigin(origin: string): boolean {
   const host = /^https?:\/\/([^/]+)\//.exec(origin)?.[1];
-  return host !== undefined && isNativeSurfaceHost(host);
+  return host !== undefined && isStaticallyInjectedHost(host);
 }
 
 /**
@@ -105,7 +105,7 @@ export function pluginToOriginPatternsForActiveUrl(
       const url = new URL(activeUrl);
       if (url.protocol === 'http:' || url.protocol === 'https:') {
         const declaredOrigins = new Set(pluginsToOriginPatterns([manifest]));
-        if (isNativeSurfaceHost(url.hostname)) return [];
+        if (isStaticallyInjectedHost(url.hostname)) return [];
         const selectedOrigins = new Set<string>([`${url.protocol}//${url.hostname}/*`]);
         for (const pattern of EMBEDDED_ORIGIN_PATTERNS_BY_PARENT_HOST[url.hostname] ?? []) {
           if (declaredOrigins.has(pattern)) selectedOrigins.add(pattern);

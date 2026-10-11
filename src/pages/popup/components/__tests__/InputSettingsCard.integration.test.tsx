@@ -107,6 +107,26 @@ describe('InputSettingsCard with popup settings', () => {
     expect(settings.values.inputVimModeEnabled).toBe(true);
   });
 
+  it.each([
+    ['missing', undefined, false],
+    ['false', false, false],
+    ['true', true, true],
+    ['the string "true"', 'true', false],
+    ['1', 1, false],
+    ['null', null, false],
+  ])('reads a %s Vim setting the way the page does', (_label, stored, expected) => {
+    act(() => settings.hydrateFromStorage({ [StorageKeys.INPUT_VIM_MODE]: stored }));
+    expect(input('input-vim-mode').checked).toBe(expected);
+  });
+
+  it('stores the Vim switch under its existing key', () => {
+    act(() => settings.hydrateFromStorage(INPUT_SETTINGS_STORAGE_DEFAULTS));
+    act(() => input('input-vim-mode').click());
+    expect(write).toHaveBeenLastCalledWith({ [StorageKeys.INPUT_VIM_MODE]: true });
+    act(() => input('input-vim-mode').click());
+    expect(write).toHaveBeenLastCalledWith({ [StorageKeys.INPUT_VIM_MODE]: false });
+  });
+
   it('shows the Safari fix only on Safari and when the setting is visible', () => {
     expect(input('safari-enter-fix')).toBeNull();
     render({ isSafariBrowser: true });

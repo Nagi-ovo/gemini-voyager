@@ -2,9 +2,11 @@
  * Bundled Gemini turn selectors: the one source every turn-finding owner reads.
  *
  * Content owners call `getGeminiTurnSelectors` when they query, so a later phase can prepend
- * remotely updated selectors here without touching them. The plugin site adapter
- * (`features/plugins/sites/adapters/gemini.ts`) still snapshots them at module load; route it
- * through here before relying on runtime updates there.
+ * remotely updated selectors here without touching them. The plugin site adapter is data,
+ * `features/plugins/catalog/sites/gemini/site.json`, the one source for the generic adapter: its
+ * `userTurn`/`assistantTurn` are the joined `turn.userWithHosts`/`turn.assistantWithHosts` lists,
+ * and `sites/adapters/gemini.parity.test.ts` binds the two. The ordered profiles stay here; never
+ * hand an owner that depends on order the adapter's joined string instead.
  *
  * The keys differ on purpose. Each one keeps the entries and order its owners used before the
  * lists were merged, because order is behavior in two places:
@@ -82,8 +84,8 @@ const BUNDLED_GEMINI_TURN_SELECTORS = {
    */
   'turn.user': [...USER_QUERY_BUBBLES, ...USER_TURN_ATTRIBUTES],
   /**
-   * `turn.user` plus the Angular hosts, for owners that only test membership: the Gemini plugin
-   * adapter and Quote Reply, through `getUserTurnSelectors()`.
+   * `turn.user` plus the Angular hosts, for owners that only test membership: Quote Reply,
+   * through `getUserTurnSelectors()`, and the Gemini plugin adapter, as a copy in its site.json.
    */
   'turn.userWithHosts': [...USER_QUERY_BUBBLES, ...USER_QUERY_HOSTS, ...USER_TURN_ATTRIBUTES],
   /**
@@ -99,8 +101,9 @@ const BUNDLED_GEMINI_TURN_SELECTORS = {
   ],
   'turn.assistantFallback': [ASSISTANT_LISTITEM_FALLBACK],
   /**
-   * Every assistant container, for owners that only test membership: the Gemini plugin adapter,
-   * Quote Reply and response notifications, through `getAssistantTurnSelectors()`.
+   * Every assistant container, for owners that only test membership: Quote Reply and response
+   * notifications, through `getAssistantTurnSelectors()`, and the Gemini plugin adapter, as a copy
+   * in its site.json.
    */
   'turn.assistantWithHosts': [
     ...ASSISTANT_TURN_ATTRIBUTES,

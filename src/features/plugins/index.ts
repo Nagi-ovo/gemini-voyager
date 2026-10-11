@@ -4,13 +4,16 @@
  * `startPluginHost()` is the single integration call for the content script. It
  * is safe to call on any injected site: it self-detects the site adapter and
  * only mounts plugins that match the current URL, are enabled, and are entitled.
- * It is INERT by default because all builtin plugins ship disabled.
+ * Most builtin plugins ship disabled (see `pluginDefaults.ts` for the ones on by
+ * default). A packaged official plugin also waits for the content script's
+ * `admission`; without one it never starts.
  */
 import { logger } from '@/core/services/LoggerService';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
 import { PluginHost } from './runtime/PluginHost';
 import { PLUGIN_STATUS_MESSAGE } from './runtime/messages';
+import type { OfficialAdmission } from './runtime/officialAdmission';
 
 export { PluginHost } from './runtime/PluginHost';
 export type { PluginHostOptions } from './runtime/PluginHost';
@@ -77,10 +80,10 @@ const onStatusRequest = (
   sendResponse({ ok: true, statuses: host?.getStatuses() ?? [] });
 };
 
-export function startPluginHost(): () => void {
+export function startPluginHost(options: { admission?: OfficialAdmission } = {}): () => void {
   if (host) return () => {};
   try {
-    host = new PluginHost();
+    host = new PluginHost({ admission: options.admission });
     void host.start();
     document.addEventListener(PLUGIN_SCOPES_DEBUG_EVENT, dumpScopeLedgers);
     chrome.runtime?.onMessage?.addListener(onStatusRequest);

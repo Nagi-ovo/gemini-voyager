@@ -1,30 +1,14 @@
-import {
-  combineSelectors,
-  getAssistantTurnSelectors,
-  getUserTurnSelectors,
-} from '@/core/utils/selectors';
-
-import type { SiteAdapter, SiteCapability } from '../../types';
-import { GEMINI_MATCHES } from '../nativeSurfaces';
+import { requireBundledSiteAdapter } from '../../catalog/sites';
+import type { SiteAdapter } from '../../types';
 
 /**
- * Gemini adapter. Reuses the centralized first-party selectors so the plugin
- * system and Voyager's own features share one source of truth.
+ * Thin shell over `catalog/sites/gemini/site.json`. Gemini ships with the
+ * extension, so this data is packaged only: no remote catalog ever replaces it
+ * (`hostPolicy.allowsRemoteCatalog`). Edit the JSON, not this file.
+ *
+ * `userTurn` and `assistantTurn` are the membership lists
+ * `getUserTurnSelectors()` / `getAssistantTurnSelectors()` join; a parity test
+ * binds them. Timeline, export and highlight keep reading the ordered lists in
+ * `@/core/gemini/turnSelectors`, never these joined strings.
  */
-export const geminiAdapter: SiteAdapter = {
-  id: 'gemini',
-  label: 'Gemini',
-  matches: GEMINI_MATCHES,
-  selectors: {
-    userTurn: combineSelectors(getUserTurnSelectors()),
-    assistantTurn: combineSelectors(getAssistantTurnSelectors()),
-    composer: 'input-area-v2, rich-textarea, .text-input-field',
-    sidebar: 'bard-sidenav, .gv-folder-container',
-  },
-  theme: {
-    hostSelector: '.theme-host',
-    lightSelector: '.theme-host.light-theme',
-    darkSelector: '.theme-host.dark-theme',
-  },
-  capabilities: new Set<SiteCapability>(['chat', 'sidebar', 'composer', 'darkMode']),
-};
+export const geminiAdapter: SiteAdapter = requireBundledSiteAdapter('gemini');

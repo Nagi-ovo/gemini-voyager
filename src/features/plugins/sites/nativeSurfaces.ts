@@ -1,55 +1,48 @@
 /**
- * Voyager's native surfaces, Gemini and AI Studio, as data.
- *
- * Their content script is declared statically in the extension manifest, with
- * matching `host_permissions`, so they never need a dynamic registration or an
- * optional host grant. They are also outside the remote plugin catalog: no
- * catalog file is ever looked up for them (the zero-request promise for Gemini).
- * Only user-imported local plugins may target them.
- *
- * Keep these in step with `manifest.json`'s first `content_scripts` entry.
+ * Compatibility names for Voyager's native surfaces, Gemini and AI Studio.
+ * The policy itself lives in `hostPolicy.ts`, which splits the questions these
+ * names bundled together (static injection, remote catalog, theme, primitives);
+ * new code asks it directly.
  */
 import type { PluginManifest } from '../types';
+import {
+  AISTUDIO_MATCHES,
+  GEMINI_MATCHES,
+  PACKAGED_HOST_POLICIES,
+  allowsNativeHandler,
+  allowsPluginThemeForSite,
+  isStaticallyInjectedHost,
+  packagedSiteForUrl,
+} from './hostPolicy';
 
-export const GEMINI_MATCHES: readonly string[] = [
-  'https://gemini.google.com/*',
-  'https://business.gemini.google/*',
-];
-
-export const AISTUDIO_MATCHES: readonly string[] = [
-  'https://aistudio.google.com/*',
-  'https://aistudio.google.cn/*',
-];
+export { AISTUDIO_MATCHES, GEMINI_MATCHES };
 
 export const NATIVE_SURFACE_MATCHES: readonly string[] = [...GEMINI_MATCHES, ...AISTUDIO_MATCHES];
 
-const NATIVE_SURFACE_HOSTS: ReadonlySet<string> = new Set(
-  NATIVE_SURFACE_MATCHES.map((pattern) => pattern.replace(/^https:\/\//, '').replace(/\/.*$/, '')),
-);
-
 /** True for gemini.google.com, business.gemini.google, aistudio.google.com/.cn. */
 export function isNativeSurfaceHost(host: string): boolean {
-  return NATIVE_SURFACE_HOSTS.has(host.trim().toLowerCase());
+  return isStaticallyInjectedHost(host);
 }
 
 /** True when `url` is on a native surface, judged by its actual hostname. */
 export function isNativeSurfaceUrl(url: string): boolean {
-  try {
-    return isNativeSurfaceHost(new URL(url).hostname);
-  } catch {
-    return false;
-  }
+  return packagedSiteForUrl(url) !== null;
 }
 
 /**
- * What no plugin may bring to a native surface: a `theme` (Gemini and AI Studio
- * keep Voyager's own accent) or a `native` op (every shipped primitive already
- * runs there as a native Voyager feature). `validateLocalManifest` rejects these
- * at import by pattern; the runtime refuses them again by the page's real host.
+ * True when any native surface would refuse this manifest: its `theme`, or a
+ * `native` op whose primitive a surface keeps for its own feature. Use
+ * `hostPolicyRefusal` to judge one page.
  */
 export function conflictsWithNativeSurface(
   manifest: Pick<PluginManifest, 'theme' | 'contributes'>,
 ): boolean {
-  if (manifest.theme) return true;
-  return (manifest.contributes.domOps ?? []).some((op) => op.op === 'native');
+  if (manifest.theme && !allowsPluginThemeForSite({ matches: NATIVE_SURFACE_MATCHES })) {
+    return true;
+  }
+  return (manifest.contributes.domOps ?? []).some(
+    (op) =>
+      op.op === 'native' &&
+      PACKAGED_HOST_POLICIES.some(({ siteId }) => !allowsNativeHandler(siteId, op.handler)),
+  );
 }

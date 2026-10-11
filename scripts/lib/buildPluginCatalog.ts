@@ -29,6 +29,11 @@
  * snapshot we ship is expected to be clean, and a broken host file would be
  * silently discarded by every client.
  *
+ * Gemini and AI Studio (`sites/gemini`, `sites/aistudio`) are read and checked
+ * like every site, so a broken manifest there still fails the build, but no
+ * host file is written for their hosts: `hostPolicy.allowsRemoteCatalog` keeps
+ * them packaged only (D14), and the stale-file sweep removes any left behind.
+ *
  * Output is deterministic — sites, hosts and plugin ids are sorted — so a re-run
  * with the same `generatedAt` produces byte-identical files.
  *
@@ -44,6 +49,7 @@ import {
   HOST_CATALOG_FORMAT,
   validateHostCatalogFile,
 } from '../../src/features/plugins/remote/hostCatalogFile';
+import { allowsRemoteCatalog } from '../../src/features/plugins/sites/hostPolicy';
 import { matchesAnyPattern } from '../../src/features/plugins/sites/matchPattern';
 import type { SiteAdapterData } from '../../src/features/plugins/sites/siteAdapterData';
 import { siteAdapterToData } from '../../src/features/plugins/sites/siteAdapterData';
@@ -191,6 +197,8 @@ export async function buildHostCatalogs(
   for (const site of sites) {
     for (const manifest of site.plugins) {
       for (const host of concreteHosts(manifest.matches)) {
+        // Gemini and AI Studio data is packaged only (D14): validated above, never published.
+        if (!allowsRemoteCatalog(host)) continue;
         const bucket = byHost.get(host);
         if (bucket) bucket.push(manifest);
         else byHost.set(host, [manifest]);

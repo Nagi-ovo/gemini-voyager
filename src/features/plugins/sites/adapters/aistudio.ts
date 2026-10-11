@@ -1,24 +1,10 @@
-import type { SiteAdapter, SiteCapability } from '../../types';
-import { AISTUDIO_MATCHES } from '../nativeSurfaces';
+import { requireBundledSiteAdapter } from '../../catalog/sites';
+import type { SiteAdapter } from '../../types';
 
 /**
- * Google AI Studio adapter. AI Studio toggles theme on <body> rather than the
- * `.theme-host` element Gemini uses.
+ * Thin shell over `catalog/sites/aistudio/site.json`. AI Studio ships with the
+ * extension, so this data is packaged only: no remote catalog ever replaces it
+ * (`hostPolicy.allowsRemoteCatalog`). AI Studio toggles theme on <body> rather
+ * than the `.theme-host` element Gemini uses. Edit the JSON, not this file.
  */
-export const aistudioAdapter: SiteAdapter = {
-  id: 'aistudio',
-  label: 'AI Studio',
-  matches: AISTUDIO_MATCHES,
-  selectors: {
-    userTurn: '.user-prompt-container, [data-turn-role="User"]',
-    assistantTurn: '.model-prompt-container, [data-turn-role="Model"]',
-    composer: 'ms-chunk-input textarea, textarea[aria-label]',
-    sidebar: '.gv-aistudio .gv-folder-container',
-  },
-  theme: {
-    hostSelector: 'body',
-    lightSelector: 'body.light-theme',
-    darkSelector: 'body.dark-theme',
-  },
-  capabilities: new Set<SiteCapability>(['chat', 'sidebar', 'composer', 'darkMode']),
-};
+export const aistudioAdapter: SiteAdapter = requireBundledSiteAdapter('aistudio');

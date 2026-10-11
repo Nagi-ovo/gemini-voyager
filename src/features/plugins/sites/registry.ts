@@ -1,7 +1,7 @@
 /**
  * SiteRegistry — resolves the current URL to a `SiteAdapter`.
  *
- * The default registry ships Voyager's first-party adapters. The registry is
+ * The default registry ships Voyager's bundled adapters. The registry is
  * mutable so future work (or tests) can register additional sites without
  * touching the runtime.
  */
@@ -11,22 +11,27 @@ import { aistudioAdapter } from './adapters/aistudio';
 import { geminiAdapter } from './adapters/gemini';
 import { matchesAnyPattern } from './matchPattern';
 
+const PACKAGED_ADAPTERS: readonly SiteAdapter[] = [geminiAdapter, aistudioAdapter];
+
 /**
- * Gemini and AI Studio are native surfaces whose selectors come from Voyager's
- * own first-party code; every plugin platform (Claude, ChatGPT, DeepSeek, …) is
- * data in `catalog/sites/<site>/site.json`, discovered at build time.
+ * Every site is data in `catalog/sites/<site>/site.json`, discovered at build
+ * time. Gemini and AI Studio, the native surfaces, come first and once each:
+ * the CLI help, the authoring docs and the public SKILL.md list sites in this
+ * order.
  */
 export const DEFAULT_ADAPTERS: readonly SiteAdapter[] = [
-  geminiAdapter,
-  aistudioAdapter,
-  ...BUNDLED_SITE_ADAPTERS,
+  ...PACKAGED_ADAPTERS,
+  ...BUNDLED_SITE_ADAPTERS.filter(
+    (adapter) => !PACKAGED_ADAPTERS.some((packaged) => packaged.id === adapter.id),
+  ),
 ];
 
 /**
  * Site ids Voyager treats as first-party "native" surfaces — these get the full
  * Gemini Voyager feature set (Timeline, Folders, Prompt Manager, …). Every other
  * adapter (Claude / ChatGPT / DeepSeek) is a *plugin platform*: declarative plugins
- * + platform theming only, never core Gemini features.
+ * + platform theming only, never core Gemini features. Having a `site.json` does
+ * not make a site a plugin platform: this set decides it.
  */
 export const NATIVE_SITE_IDS: ReadonlySet<SiteId> = new Set<SiteId>(['gemini', 'aistudio']);
 

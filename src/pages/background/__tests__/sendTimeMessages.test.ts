@@ -174,6 +174,15 @@ describe('catalog send times in the background', () => {
     expect(fromClaude).toMatchObject({ ok: true });
   });
 
+  it('a Gemini page cannot write catalog send times, though Gemini has a site.json', async () => {
+    const request = { site: 'gemini', conversationId: 'abc', turnKey: 'turn-a' };
+
+    const response = await sendFrom(tabOn('https://gemini.google.com/app/abc'), request);
+
+    expect(response).toEqual({ ok: false, error: 'untrusted_sender' });
+    expect(storage.values.local.has(conversationTimesKey('gemini:conv:abc'))).toBe(false);
+  });
+
   it('a site whose ids contain a slash still records send times', async () => {
     // A site override may capture the route's prefix along with the id.
     const url = 'https://chatgpt.com/c/abc123';

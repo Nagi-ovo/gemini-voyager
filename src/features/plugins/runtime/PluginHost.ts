@@ -5,7 +5,10 @@
  *   1. resolve the SiteAdapter for the current URL (may be null on unknown sites)
  *   2. load manifests from all configured sources (builtin, bundled catalog,
  *      cached per-host remote catalog)
- *   3. load per-plugin enable state from storage
+ *   3. load per-plugin enable state from storage. On Gemini / AI Studio the
+ *      legacy switches packaged official plugins follow are read beside this,
+ *      off the op chain: those plugins join in the reconcile after that read
+ *      lands, once the content script admits them (`officialAdmission.ts`)
  *   4. reconcile: mount every plugin that (matches URL) AND (is enabled) AND
  *      (satisfies the engine version) AND (is not entitlement-locked); unmount the rest
  *   5. subscribe to state changes and re-reconcile (live enable/disable)
@@ -13,8 +16,8 @@
  *      plugins, and reload on content change
  *   7. in the top frame, when an ENABLED plugin targets this page, ask the
  *      background to check the remote catalog (it applies the user's interval,
- *      switch and backoff). Pages without an enabled plugin — every Gemini /
- *      AI Studio page — never send the request.
+ *      switch and backoff). Pages without an enabled plugin, and every Gemini /
+ *      AI Studio page (no catalog host), never send the request.
  *
  * All providers (registry, sources, entitlement) are injected so the host is
  * fully unit-testable and the monetization/marketplace seams can be swapped
@@ -33,11 +36,14 @@ import {
   resolveSiteAdapterForUrl,
   resolveSiteOverride,
 } from '../remote/siteOverride';
+import { hostPolicyRefusal, packagedSiteForUrl } from '../sites/hostPolicy';
 import { matchesAnyPattern } from '../sites/matchPattern';
-import { conflictsWithNativeSurface, isNativeSurfaceUrl } from '../sites/nativeSurfaces';
 import { SiteRegistry } from '../sites/registry';
 import { createDefaultPluginSources, listPluginManifests } from '../sources/defaultSources';
-import { isPluginEnabled } from '../storage/pluginDefaults';
+import {
+  type LegacySettingSnapshot,
+  resolveEffectiveSettings,
+} from '../storage/legacySettingBindings';
 import { type PluginStateMap, loadPluginState, subscribePluginState } from '../storage/pluginState';
 import {
   type EntitlementProvider,
@@ -50,9 +56,16 @@ import {
 } from '../types';
 import { hasPrimitive } from '../verbs/registry';
 import { DeclarativeEngine } from './declarativeEngine';
+import {
+  DEFAULT_LEGACY_SETTINGS,
+  type LegacySettingsSource,
+  type LegacySnapshotFeed,
+  isPluginWanted,
+  openLegacySnapshotFeed,
+} from './legacySnapshotFeed';
 import { PLUGIN_CATALOG_REFRESH_MESSAGE } from './messages';
+import { CLOSED_ADMISSION, type OfficialAdmission } from './officialAdmission';
 import { type PluginStatus, findIncompatibility } from './pluginStatus';
-import { resolvePluginSettings } from './resolvePluginSettings';
 import { type SurfaceSwitch, surfaceSwitchForUrl } from './surfaceSwitch';
 
 export interface PluginHostOptions {
@@ -70,6 +83,13 @@ export interface PluginHostOptions {
    * off nothing mounts. Defaults to `surfaceSwitchForUrl(url)`.
    */
   readonly surfaceSwitch?: SurfaceSwitch | null;
+  /**
+   * When the content script lets each packaged official plugin start
+   * (`officialAdmission.ts`). Defaults to `CLOSED_ADMISSION`: none ever does.
+   */
+  readonly admission?: OfficialAdmission;
+  /** Injectable for tests; the legacy keys official plugins follow, read on Gemini / AI Studio only. */
+  readonly legacySettings?: LegacySettingsSource;
 }
 
 /** Fire-and-forget: the background decides whether a network request is due. */
@@ -119,6 +139,11 @@ export class PluginHost {
   private unsubscribeLocal: (() => void) | null = null;
   private unsubscribeSurface: (() => void) | null = null;
   private readonly surfaceSwitch: SurfaceSwitch | null;
+  private readonly admission: OfficialAdmission;
+  private readonly legacySettings: LegacySettingsSource;
+  private unsubscribeAdmission: (() => void) | null = null;
+  /** Legacy switches of bound official plugins; null off Gemini / AI Studio. */
+  private legacy: LegacySnapshotFeed | null = null;
   /** Whether the site's master switch lets plugins run (always true without one). */
   private surfaceOn = true;
   private started = false;
@@ -146,6 +171,8 @@ export class PluginHost {
     this.isTopFrame = options.isTopFrame ?? detectTopFrame();
     this.surfaceSwitch =
       options.surfaceSwitch === undefined ? surfaceSwitchForUrl(this.url) : options.surfaceSwitch;
+    this.admission = options.admission ?? CLOSED_ADMISSION;
+    this.legacySettings = options.legacySettings ?? DEFAULT_LEGACY_SETTINGS;
   }
 
   get activeAdapter(): SiteAdapter | null {
@@ -195,6 +222,15 @@ export class PluginHost {
       // enqueues on the serialized chain, so nothing runs ahead of the
       // initial reconcile below.
       let stateFromListener: PluginStateMap | null = null;
+      const requeue = (): void => {
+        if (this.generation === gen) void this.enqueue(() => this.reconcile(gen));
+      };
+      // Only the packaged sites run official plugins bound to legacy switches;
+      // unbound plugins never wait on that read, whose landing requeues.
+      this.legacy = packagedSiteForUrl(this.url)
+        ? openLegacySnapshotFeed(this.legacySettings, requeue)
+        : null;
+      this.unsubscribeAdmission = this.admission.subscribe(requeue);
       this.unsubscribeState = subscribePluginState((next) => {
         if (this.generation !== gen) return;
         stateFromListener = next;
@@ -252,6 +288,10 @@ export class PluginHost {
     this.unsubscribeLocal = null;
     this.unsubscribeSurface?.();
     this.unsubscribeSurface = null;
+    this.unsubscribeAdmission?.();
+    this.unsubscribeAdmission = null;
+    this.legacy?.stop();
+    this.legacy = null;
     this.engine?.unmountAll();
     this.pushedSettings.clear();
     this.frozen.clear();
@@ -405,11 +445,12 @@ export class PluginHost {
     // chain). A revision that lands mid-pass gets its own queued pass.
     const engine = this.engine;
     const state = this.state;
+    const legacy = this.legacy?.current() ?? null;
     const manifests = this.manifests.map((listed) => this.frozen.get(listed.id)?.mounted ?? listed);
     if (!engine) return;
     for (const manifest of manifests) {
       if (this.generation !== gen) return;
-      const shouldRun = await this.shouldActivate(manifest, state);
+      const shouldRun = await this.shouldActivate(manifest, state, legacy);
       if (this.generation !== gen) return;
       const isActive = engine.isActive(manifest.id);
       if (shouldRun && !isActive) {
@@ -433,25 +474,29 @@ export class PluginHost {
     }
   }
 
-  /** Merge the plugin's declared setting defaults with the user's stored values. */
+  /** Declared defaults merged with stored values; `{}` for an official plugin bound to a legacy switch. */
   private resolveSettings(manifest: PluginManifest, state: PluginStateMap): PluginSettings {
-    return resolvePluginSettings(manifest, state[manifest.id]?.settings);
+    return resolveEffectiveSettings(manifest, state);
   }
 
   /**
-   * The plugin's `matches` cover this page, and it brings nothing a native
-   * surface refuses (theme, native ops), judged by the page's real host rather
-   * than by its patterns.
+   * The plugin's `matches` cover this page, and the page's host policy
+   * refuses nothing it brings (theme, native ops), judged by the page's real
+   * host rather than by its patterns.
    */
   private targetsThisPage(manifest: PluginManifest): boolean {
     if (!matchesAnyPattern(this.url, manifest.matches)) return false;
-    return !(isNativeSurfaceUrl(this.url) && conflictsWithNativeSurface(manifest));
+    return hostPolicyRefusal(this.url, manifest) === null;
   }
 
-  private async shouldActivate(manifest: PluginManifest, state: PluginStateMap): Promise<boolean> {
+  private async shouldActivate(
+    manifest: PluginManifest,
+    state: PluginStateMap,
+    legacy: LegacySettingSnapshot | null,
+  ): Promise<boolean> {
     if (!this.surfaceOn) return false;
     if (!this.targetsThisPage(manifest)) return false;
-    if (!isPluginEnabled(state, manifest.id)) return false;
+    if (!isPluginWanted(state, legacy, this.admission, manifest.id)) return false;
     const incompatibility = findIncompatibility({
       manifest,
       adapter: this.adapter,

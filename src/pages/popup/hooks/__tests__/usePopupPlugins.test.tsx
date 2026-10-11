@@ -4,9 +4,11 @@ import { type Root, createRoot } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import browser from 'webextension-polyfill';
 
+import { StorageKeys } from '@/core/types/common';
 import { subscribeHostCatalog } from '@/features/plugins/remote/hostCatalogCache';
 import { loadSiteOverrideForHost } from '@/features/plugins/remote/siteOverride';
 import { PLUGIN_CATALOG_REFRESH_MESSAGE } from '@/features/plugins/runtime/messages';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import {
   type SourcedPluginManifest,
   listPluginManifestsWithSources,
@@ -231,6 +233,45 @@ describe('usePopupPlugins', () => {
     expect(stateListeners.size).toBe(0);
     await act(async () => vi.advanceTimersByTimeAsync(2500));
     expect(browser.tabs.sendMessage).toHaveBeenCalledTimes(calls);
+  });
+
+  it('reports an official plugin bound to a legacy switch by that switch, on any site, and re-asks the tab when it flips', async () => {
+    type StorageListener = (changes: Record<string, { newValue?: unknown }>, area: string) => void;
+    const storageListeners = new Set<StorageListener>();
+    vi.mocked(chrome.storage.onChanged.addListener).mockImplementation((listener) => {
+      storageListeners.add(listener as unknown as StorageListener);
+    });
+    vi.mocked(chrome.storage.onChanged.removeListener).mockImplementation((listener) => {
+      storageListeners.delete(listener as unknown as StorageListener);
+    });
+    vi.mocked(chrome.storage.sync.get).mockResolvedValue({
+      [StorageKeys.FORMULA_COPY_ENABLED]: false,
+    } as never);
+    const formulaId = OFFICIAL_PLUGIN_IDS.geminiFormulaCopy;
+    vi.mocked(listPluginManifestsWithSources).mockResolvedValue([
+      record(formulaId, 'gemini.google.com'),
+    ]);
+    // The map's entry is ignored for a bound plugin.
+    vi.mocked(loadPluginState).mockResolvedValue({
+      [formulaId]: { enabled: true, installedAt: 1 },
+    });
+
+    await render(); // the active tab is on Claude
+    expect(plugins.diagnosticPlugins).toEqual([
+      expect.objectContaining({ id: formulaId, enabled: false }),
+    ]);
+
+    const asked = vi.mocked(browser.tabs.sendMessage).mock.calls.length;
+    await act(async () => {
+      for (const listener of storageListeners) {
+        listener({ [StorageKeys.FORMULA_COPY_ENABLED]: { newValue: true } }, 'sync');
+      }
+    });
+    expect(plugins.diagnosticPlugins[0].enabled).toBe(true);
+    expect(vi.mocked(browser.tabs.sendMessage).mock.calls.length).toBeGreaterThan(asked);
+
+    unmount();
+    expect(storageListeners.size).toBe(0);
   });
 
   it('re-reads the cached catalog after a manual background refresh fails', async () => {

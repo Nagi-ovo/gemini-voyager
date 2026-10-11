@@ -87,11 +87,11 @@ A `site.json` carries `id` (equal to its directory name), `label`, `matches`,
 `bun run catalog:build` validates every site and plugin before publishing.
 
 Every plugin platform is data. Sites today are ChatGPT, Claude, and DeepSeek.
-Gemini and AI Studio are native Voyager surfaces and stay TypeScript adapters
-(`src/features/plugins/sites/adapters/gemini.ts` and `aistudio.ts`). The
-TypeScript files for the plugin platforms, `adapters/claude.ts`, `chatgpt.ts`
-and `deepseek.ts`, are now one-line shells over their `site.json`: edit the JSON,
-not the TypeScript.
+Gemini and AI Studio are native Voyager surfaces with their own `site.json`
+(`catalog/sites/gemini/` and `catalog/sites/aistudio/`), but it ships inside the
+package and is never published to the remote catalog. All five adapters,
+`adapters/gemini.ts`, `aistudio.ts`, `claude.ts`, `chatgpt.ts` and `deepseek.ts`,
+are one-line shells over their `site.json`: edit the JSON, not the TypeScript.
 
 The published per-host catalog carries the site data too, so a selector fix in
 `site.json` can reach users without an extension release. A brand new site still

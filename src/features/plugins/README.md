@@ -47,10 +47,15 @@ EntitlementProvider  ─► entitled?         │  styles + domOps, reversible, 
   `assistantTurn`, `thinkingBlock`, `codeBlock`, `composer`, `sidebar`,
   `sidePanel`, `headerActions`, `scrollContainer`, `composerRoot`,
   `sendButton`), so a site redesign is a
-  one-file fix. Gemini and AI Studio are native surfaces and stay TypeScript
-  adapters; every plugin platform is data, so `adapters/claude.ts`,
-  `adapters/chatgpt.ts` and `adapters/deepseek.ts` are one-line shells over their
-  `site.json`: edit the JSON, not the TS. `sites/siteAdapterData.ts` holds
+  one-file fix. Every adapter is data: `adapters/gemini.ts`, `adapters/aistudio.ts`,
+  `adapters/claude.ts`, `adapters/chatgpt.ts` and `adapters/deepseek.ts` are
+  one-line shells over their `site.json`: edit the JSON, not the TS. Gemini and
+  AI Studio stay native surfaces (`NATIVE_SITE_IDS`, `sites/hostPolicy.ts`); their
+  `site.json` is packaged with the extension and never published remotely.
+  Gemini's `userTurn`/`assistantTurn` are the joined membership lists from
+  `core/gemini/turnSelectors.ts`, bound by `adapters/gemini.parity.test.ts`;
+  timeline, export and highlight keep reading the ordered lists there.
+  `sites/siteAdapterData.ts` holds
   `validateSiteAdapterData`, the one validator for the bundled `site.json`, the
   remote override and `catalog:build`.
 - **`runtime/declarativeEngine.ts`** — applies a manifest's `styles` + `domOps`.
@@ -72,8 +77,8 @@ EntitlementProvider  ─► entitled?         │  styles + domOps, reversible, 
   summary the popup shows. See "Write your own plugin locally" below.
 - **`remote/`** — the per-host remote catalog channel: a read-only source over a
   storage cache, plus a background-only fetcher. See below.
-- **`catalog/`** — the bundled official data: one directory per plugin platform,
-  each holding that platform's `site.json` and its declarative plugins. This
+- **`catalog/`** — the bundled official data: one directory per site, each
+  holding that site's `site.json` and its declarative plugins. This
   keeps official CSS/JSON changes in the same PR, CI run, and release as engine
   or popup changes.
 
@@ -90,15 +95,20 @@ catalog/
 `catalog/sites/index.ts` finds every `site.json` and `plugin.json` with
 `import.meta.glob`, so adding a site or a plugin is adding files: there is no
 mapping table. (`scripts/build-plugin-catalog.ts` reads the same tree from disk,
-because `import.meta.glob` does not exist under Bun.) Sites today are `chatgpt`,
-`claude` and `deepseek`. A plugin's `matches` must stay inside its site's
-`matches` (plan D18) or the build fails, and `bun run catalog:build` validates
-every site and plugin before publishing.
+because `import.meta.glob` does not exist under Bun.) Sites today are
+`aistudio`, `chatgpt`, `claude`, `deepseek` and `gemini`. A plugin's `matches`
+must stay inside its site's `matches` (plan D18) or the build fails, and
+`bun run catalog:build` validates every site and plugin before publishing.
+Gemini and AI Studio are validated like the rest but never published: the host
+policy (`allowsRemoteCatalog`) keeps their four hosts out of the per-host
+catalog, and their plugins stay out of `marketplace.json`.
 
 `catalog/marketplace.json` is **not** that mapping table. It is only the index
 the docs plugin-store page reads at build time, and a test keeps it in sync with discovery,
 so a new plugin also needs an entry there whose `source` is the catalog-relative
-path (`sites/deepseek/plugins/reading-width/plugin.json`).
+path (`sites/deepseek/plugins/reading-width/plugin.json`). Plugins under
+`sites/gemini/` and `sites/aistudio/` are the exception: they ship inside
+Voyager and are not listed.
 
 ## Authoring a declarative plugin
 

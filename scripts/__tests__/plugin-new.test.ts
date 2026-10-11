@@ -109,6 +109,18 @@ describe('plugin:new scaffold', () => {
     expect(added).not.toContain('"owner"');
   });
 
+  it('leaves the marketplace alone for a packaged native site', () => {
+    const catalogDir = makeCatalogCopy();
+    const before = readFileSync(join(catalogDir, 'marketplace.json'), 'utf8');
+
+    const result = scaffoldPlugin({ catalogDir, site: 'gemini', segment: 'reading-guide' });
+
+    expect(result.id).toBe('voyager.gemini-reading-guide');
+    expect(result.marketplaceListed).toBe(false);
+    expect(result.marketplaceUpdated).toBe(false);
+    expect(readFileSync(join(catalogDir, 'marketplace.json'), 'utf8')).toBe(before);
+  });
+
   it('writes the README with the plugin:check command for the new directory', () => {
     const catalogDir = makeCatalogCopy();
     const result = scaffoldPlugin({ catalogDir, site: 'deepseek', segment: 'reading-guide' });
@@ -140,8 +152,8 @@ describe('plugin:new scaffold', () => {
 
   it('rejects an unknown site and lists the ones that exist', () => {
     const catalogDir = makeCatalogCopy();
-    expect(() => scaffoldPlugin({ catalogDir, site: 'gemini', segment: 'reading-guide' })).toThrow(
-      /Unknown site "gemini".*chatgpt, claude, deepseek/s,
+    expect(() => scaffoldPlugin({ catalogDir, site: 'grok', segment: 'reading-guide' })).toThrow(
+      /Unknown site "grok".*aistudio, chatgpt, claude, deepseek, gemini/s,
     );
   });
 

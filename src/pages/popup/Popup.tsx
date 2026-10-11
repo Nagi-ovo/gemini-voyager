@@ -13,6 +13,8 @@ import {
 import { getFolderPlatformForHost } from '@/features/folder/platforms';
 import type { FormulaCopyFormat } from '@/features/formulaCopy/FormulaCopyService';
 import { CHATGPT_EXPORT_PLUGIN_ID } from '@/features/plugins/builtin/chatgptExport/openMessage';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
+import { legacyEnableWrite } from '@/features/plugins/storage/legacySettingBindings';
 import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
 
 import { CloudSyncSettings } from './components/CloudSyncSettings';
@@ -179,7 +181,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   );
   const handleFormulaCopyEnabledChange = (enabled: boolean) => {
     formulaCopy.setEnabledFromUser(enabled);
-    void writePopupSyncStorage({ [StorageKeys.FORMULA_COPY_ENABLED]: enabled });
+    void writePopupSyncStorage(legacyEnableWrite(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, enabled));
   };
   const handleFormulaCopyFormatChange = (format: FormulaCopyFormat) => {
     formulaCopy.setFormatFromUser(format);

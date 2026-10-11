@@ -31,7 +31,7 @@ src/features/plugins/catalog/
 
 ومع ذلك يوجد اختبار يبقي `marketplace.json` متوافقًا مع نتيجة الاكتشاف، لذا تحتاج كل إضافة جديدة إلى مدخل فيه، وتكون قيمة `source` مسارًا نسبيًا من catalog، مثل `sites/deepseek/plugins/reading-width/plugin.json`.
 
-المنصات الحالية هي ChatGPT وClaude وDeepSeek. أما Gemini وAI Studio فهما واجهتان أصليتان في Voyager ويبقى محولاهما بلغة TypeScript، بينما أصبحت الملفات `sites/adapters/claude.ts` و`chatgpt.ts` و`deepseek.ts` أغلفة من سطر واحد فوق `site.json`، لذا عدّل ملف JSON لا ملف TypeScript. كما يحمل الفهرس المنشور لكل مضيف بيانات الموقع أيضًا، لذلك يصل إصلاح المحددات إلى المستخدمين دون إصدار جديد للإضافة.
+المنصات الحالية هي ChatGPT وClaude وDeepSeek. أما Gemini وAI Studio فهما واجهتان أصليتان في Voyager ولكل منهما `site.json` خاص به (`catalog/sites/gemini/` و`catalog/sites/aistudio/`)، لكنه يُشحن داخل الحزمة ولا يُنشر أبدًا في الفهرس البعيد؛ وأصبحت الملفات `sites/adapters/gemini.ts` و`aistudio.ts` و`claude.ts` و`chatgpt.ts` و`deepseek.ts` أغلفة من سطر واحد فوق `site.json`، لذا عدّل ملف JSON لا ملف TypeScript. كما يحمل الفهرس المنشور لكل مضيف بيانات الموقع أيضًا، لذلك يصل إصلاح المحددات إلى المستخدمين دون إصدار جديد للإضافة.
 
 يجب أن تبقى `matches` الخاصة بالإضافة داخل `matches` موقعها، والإضافة التي تتجاوز ذلك تُفشل عملية البناء.
 

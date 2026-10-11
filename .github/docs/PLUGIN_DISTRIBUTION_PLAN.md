@@ -23,7 +23,7 @@
 | D11 | 可见性       | popup 显示插件版本；目录变化后角标；清单 `changelog` 字段展示一行说明                                                                                                                                                                                                            |
 | D12 | 健康信号     | 适配器 `userTurn` 已匹配到内容、且插件自身目标为零、且 DOM 已静默一段时间后才标黄「本页无效果」；目标出现即清除。纯 CSS 插件（无 domOps、无原语）豁免                                                                                                                            |
 | D13 | 隐私         | 重开远程通道的同一 PR 内更新 release-privacy 契约、站内隐私文案、商店描述草稿；启用插件时的授权文案说明会向 voyager.nagi.fun 检查更新。文案限定为「插件目录」，公告服务及其开关维持现状，不承诺「不连接任何服务器」                                                              |
-| D14 | Gemini       | 不进目录，Gemini/AI Studio 用户零目录请求                                                                                                                                                                                                                                        |
+| D14 | Gemini       | 不进目录，Gemini/AI Studio 用户零目录请求。由 `sites/hostPolicy.ts` 的 `allowsRemoteCatalog` 在页面、popup 和后台检查上守住，发布侧 `catalog:build` 也不为这四个 host 产出文件；包内 `site.json` 与官方插件不改变这一点                                                          |
 | D16 | 新站点       | 远程只更新打包快照里已有的站点；新站点随本体发版。触发链「清单 matches → 用户授权 → 注入内容脚本 → PluginHost 拉取」决定远程无法引入新 host                                                                                                                                      |
 | D17 | 校验实现     | 不引入 zod。原语 params 用 `validate.ts` 同款手写 guard；JSON schema 手写发布，测试用示例清单同时过 schema 与 guard 保证一致                                                                                                                                                     |
 | D18 | matches 归属 | `plugin.json` 保留 `matches`，`site.json` 也有；`plugin:check` 校验插件 matches 是站点 matches 的子集；现有五处读者不改                                                                                                                                                          |
@@ -271,6 +271,7 @@ Claude、ChatGPT 的现有 builtin 清单改写为使用原语的 JSON，随本�
 
 - 目录重排为 `catalog/sites/<site>/{site.json, plugins/<id>/}`；`catalog/sites/index.ts` 用 `import.meta.glob` 自动发现站点与插件，手工映射表删除。`marketplace.json` 保留为文档站插件商店的索引，测试保证它与发现结果一致（后续可改为读取已发布目录的索引）。
 - Claude / ChatGPT / DeepSeek 适配器数据化为 `site.json`，TS 文件只剩薄壳；Gemini / AI Studio 是原生站点、选择器来自第一方代码，保持 TS（D14 本就不进目录）。
+  - 后记（插件平台阶段 1，2026-10）：Gemini / AI Studio 适配器也已数据化为包内 `catalog/sites/{gemini,aistudio}/site.json`，TS 文件同样只剩薄壳；值与原 TS 逐字对等，Gemini 的 `userTurn`/`assistantTurn` 由对等测试绑定到 `core/gemini/turnSelectors.ts`，timeline 等有序消费者仍读那里。「包内数据化」不等于远端分发：这两个站点不发布 host 文件、不列入 `marketplace.json`、不接受远端覆盖，后台也不因有了 `site.json` 就允许它们写 catalog outline / send time。D14 不变。
 - 语义键词汇表 `sites/semanticKeys.ts`；`site.json` 校验器 `sites/siteAdapterData.ts`（手写 guard，D17）拒绝词汇表之外的键；`conversationIdPattern` 作为适配器字段。
 - 远程覆盖：host 文件 `site` 段经校验并要求 `matches` 覆盖该 host 后写入缓存；`HostCatalogSource.siteOverride` 提供，`remote/siteOverride.ts` 统一优先级（覆盖 > 内置）；PluginHost 首次挂载即用覆盖，目录变化且适配器不同则重建引擎；品牌色（内容脚本与 popup）读同一来源。
 - Prompt Manager 路径统一（§7）：插件平台与自定义站点同走 `createPromptManagerEngine().followCoverage`，只有 host 在自定义站点列表里才挂载，并跟随 popup 开关实时增删；popup 站点名改读适配器 `label`，手写映射删除。

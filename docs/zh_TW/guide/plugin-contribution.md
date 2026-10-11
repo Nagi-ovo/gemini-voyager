@@ -29,7 +29,7 @@ src/features/plugins/catalog/
 
 `marketplace.json` 不是那張對照表，它只是文件站外掛市集讀取的索引；有測試確保它和自動尋找的結果一致，所以新外掛也要在裡面加一筆，`source` 寫 catalog 相對路徑，例如 `sites/deepseek/plugins/reading-width/plugin.json`。
 
-`site.json` 就是網站適配器本身，只是寫成了資料。目前的外掛平台是 ChatGPT、Claude 和 DeepSeek。Gemini 和 AI Studio 是 Voyager 的原生介面，仍然使用 TypeScript 適配器；而 `sites/adapters/claude.ts`、`chatgpt.ts`、`deepseek.ts` 現在只是 `site.json` 的一行外殼，要改就改 JSON，不要改 TypeScript。發布的分網站目錄也帶上了網站資料，所以選擇器修正不必發新版本就能送到使用者手上。
+`site.json` 就是網站適配器本身，只是寫成了資料。目前的外掛平台是 ChatGPT、Claude 和 DeepSeek。Gemini 和 AI Studio 是 Voyager 的原生介面，同樣有各自的 `site.json`（`catalog/sites/gemini/`、`catalog/sites/aistudio/`），但它隨擴充功能打包，不會發布到遠端目錄；`sites/adapters/` 下的 `gemini.ts`、`aistudio.ts`、`claude.ts`、`chatgpt.ts`、`deepseek.ts` 現在都只是 `site.json` 的一行外殼，要改就改 JSON，不要改 TypeScript。發布的分網站目錄也帶上了網站資料，所以選擇器修正不必發新版本就能送到使用者手上。
 
 外掛的 `matches` 必須落在所屬網站的 `matches` 範圍內；越界的外掛會讓建置失敗。
 

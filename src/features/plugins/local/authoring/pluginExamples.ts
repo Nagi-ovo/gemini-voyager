@@ -8,7 +8,7 @@
 import { OP_KINDS } from '../../manifest/validate';
 import type { SemanticSelectorKey } from '../../sites/semanticKeys';
 import type { SiteAdapter } from '../../types';
-import { isNativeSurfaceSite, siteAnchors } from './siteFacts';
+import { allowsPrimitive, siteAnchors } from './siteFacts';
 
 /** The `domOps[].op` kinds every site accepts: every validator op except `native`. */
 export type AuthoringOpKind = Exclude<(typeof OP_KINDS)[number], 'native'>;
@@ -138,9 +138,9 @@ export function buildSettingsExample(site: SiteAdapter, styles: ExampleStyles): 
   return withStyles('A setting the user adjusts in the popup', shell, contributes, css, styles);
 }
 
-/** A primitive invoked by name, on a site that allows one; null on Gemini and AI Studio. */
+/** A primitive invoked by name, on a site that allows it; null where formula copy is refused. */
 export function buildPrimitiveExample(site: SiteAdapter): PluginExample | null {
-  if (isNativeSurfaceSite(site)) return null;
+  if (!allowsPrimitive(site, 'formulaCopy')) return null;
   return {
     title: 'A Voyager primitive (formula copy)',
     manifest: {

@@ -11,7 +11,7 @@ import type { SiteAdapter } from '../../types';
 import { authoringWorkflowSection } from './authoringWorkflow';
 import type { ContractSection } from './contractRules';
 import { buildPluginContract, renderExample, renderSections, siteSection } from './pluginContract';
-import { isNativeSurfaceSite } from './siteFacts';
+import { isUnrestrictedSite } from './siteFacts';
 import { WRITE_PLUGIN_SKILL_NAME, WRITE_PLUGIN_SKILL_URL } from './skillLink';
 
 const INTRO = [
@@ -20,7 +20,7 @@ const INTRO = [
 
 /** Where the plugin may run: the site the reference sections were written for. */
 function referenceSite(sites: readonly SiteAdapter[]): SiteAdapter {
-  const site = sites.find((candidate) => !isNativeSurfaceSite(candidate)) ?? sites[0];
+  const site = sites.find(isUnrestrictedSite) ?? sites[0];
   if (!site) throw new Error('no site adapters to render the plugin contract from');
   return site;
 }

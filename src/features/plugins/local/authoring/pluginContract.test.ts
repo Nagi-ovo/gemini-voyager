@@ -8,7 +8,7 @@ import type { ContractAudience } from './contractRules';
 import { formatJson } from './jsonText';
 import { buildPluginContract, renderExample, renderSections } from './pluginContract';
 import type { PluginExample } from './pluginExamples';
-import { isNativeSurfaceSite } from './siteFacts';
+import { allowsAnyPrimitive, allowsPrimitive } from './siteFacts';
 
 const sites = authoringSites();
 const audiences: readonly ContractAudience[] = ['chat', 'agent'];
@@ -44,9 +44,9 @@ describe('plugin contract', () => {
       const ops = contract.examples.flatMap(
         (example) => (example.manifest.contributes as { domOps?: { op: string }[] }).domOps ?? [],
       );
-      expect(ops.some((op) => op.op === 'native')).toBe(!isNativeSurfaceSite(site));
+      expect(ops.some((op) => op.op === 'native')).toBe(allowsPrimitive(site, 'formulaCopy'));
       const titles = contract.sections.map((section) => section.title);
-      expect(titles.includes('Primitives')).toBe(!isNativeSurfaceSite(site));
+      expect(titles.includes('Primitives')).toBe(allowsAnyPrimitive(site));
     }
   });
 

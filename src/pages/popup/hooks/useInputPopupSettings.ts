@@ -1,6 +1,13 @@
 import { useCallback, useState } from 'react';
 
 import { StorageKeys } from '@/core/types/common';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
+import {
+  LEGACY_ENABLE_BINDINGS,
+  legacyEnableWrite,
+} from '@/features/plugins/storage/legacySettingBindings';
+
+const VIM_ID = OFFICIAL_PLUGIN_IDS.geminiVimInput;
 
 export interface InputPopupSettingsValues {
   inputCollapseEnabled: boolean;
@@ -43,7 +50,7 @@ export function useInputPopupSettings(
     setValues({
       inputCollapseEnabled: raw.gvInputCollapseEnabled !== false,
       inputCollapseWhenNotEmpty: raw.gvInputCollapseWhenNotEmpty === true,
-      inputVimModeEnabled: raw[StorageKeys.INPUT_VIM_MODE] === true,
+      inputVimModeEnabled: LEGACY_ENABLE_BINDINGS[VIM_ID].read(raw[StorageKeys.INPUT_VIM_MODE]),
       ctrlEnterSendEnabled: raw.gvCtrlEnterSend === true,
       aiStudioEnterSendEnabled: raw[StorageKeys.AISTUDIO_ENTER_SEND] === true,
       safariEnterFixEnabled: raw[StorageKeys.SAFARI_ENTER_FIX] === true,
@@ -59,7 +66,8 @@ export function useInputPopupSettings(
         const value = patch[key];
         if (typeof value !== 'boolean') continue;
         updates[key] = value;
-        payload[STORAGE_KEYS[key]] = value;
+        if (key === 'inputVimModeEnabled') Object.assign(payload, legacyEnableWrite(VIM_ID, value));
+        else payload[STORAGE_KEYS[key]] = value;
       }
       setValues((current) => ({ ...current, ...updates }));
       void writeSyncStorage(payload);

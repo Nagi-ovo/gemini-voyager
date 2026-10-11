@@ -68,6 +68,18 @@ describe('useFormulaCopyPopupSettings', () => {
     expect(settings.format).toBe('no-dollar');
   });
 
+  it.each([
+    ['missing', undefined, true],
+    ['false', false, false],
+    ['true', true, true],
+    ['the string "false"', 'false', true],
+    ['0', 0, true],
+    ['null', null, true],
+  ])('reads a %s enabled value the way the page does', (_label, stored, expected) => {
+    act(() => settings.hydrateFromStorage(stored, undefined));
+    expect(settings.enabled).toBe(expected);
+  });
+
   it('ignores an invalid stored format', () => {
     act(() => settings.hydrateFromStorage(false, 'invalid'));
 

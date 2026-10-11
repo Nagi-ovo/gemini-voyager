@@ -2,6 +2,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { dirname, resolve, sep } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import { usesCatalogDataStores } from '../../sites/hostPolicy';
 import { patternWithinAny } from '../../sites/matchPattern';
 import { SEMANTIC_SELECTOR_KEYS } from '../../sites/semanticKeys';
 import { BundledCatalogPluginSource } from '../../sources/BundledCatalogPluginSource';
@@ -15,6 +16,10 @@ import {
 
 const catalogDir = resolve(process.cwd(), 'src/features/plugins/catalog');
 // Read disk independently so a discovery omission cannot remove its own expectation.
+const siteDirs = readdirSync(resolve(catalogDir, 'sites'), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
+  .sort();
 const pluginPaths = readdirSync(resolve(catalogDir, 'sites'), { recursive: true, encoding: 'utf8' })
   .map((path) => path.split(sep).join('/'))
   .filter((path) => /^[^/]+\/plugins\/[^/]+\/plugin\.json$/.test(path))
@@ -26,23 +31,32 @@ function readManifest(path: string): PluginManifest {
 }
 
 describe('bundled catalog discovery', () => {
-  it('finds one site.json per plugin platform, with ids equal to their directories', () => {
+  it('finds one valid site.json per site directory, with ids equal to their directories', () => {
+    expect(siteDirs).toEqual(expect.arrayContaining(['aistudio', 'chatgpt', 'claude', 'gemini']));
     const entries = listBundledSiteEntries();
-    expect(entries.map((entry) => entry.siteDir)).toEqual(['chatgpt', 'claude', 'deepseek']);
-    expect(BUNDLED_SITE_ADAPTERS.map((adapter) => adapter.id)).toEqual([
-      'chatgpt',
-      'claude',
-      'deepseek',
-    ]);
+    expect(entries.map((entry) => entry.siteDir)).toEqual(siteDirs);
+    // An invalid site.json is skipped here, so this also catches one that fails validation.
+    expect(BUNDLED_SITE_ADAPTERS.map((adapter) => adapter.id)).toEqual(siteDirs);
     for (const adapter of BUNDLED_SITE_ADAPTERS) {
       expect(requireBundledSiteAdapter(adapter.id)).toBe(adapter);
       expect(adapter.capabilities).toBeInstanceOf(Set);
-      expect(adapter.brandColor).toMatch(/^#[0-9a-f]{6}$/i);
+      // Gemini and AI Studio keep Voyager's own accent; plugin platforms bring their brand.
+      if (usesCatalogDataStores(adapter.id)) {
+        expect(adapter.brandColor, adapter.id).toMatch(/^#[0-9a-f]{6}$/i);
+      }
       for (const key of Object.keys(adapter.selectors)) {
         expect(SEMANTIC_SELECTOR_KEYS).toContain(key);
       }
     }
     expect(() => requireBundledSiteAdapter('nope')).toThrow(/missing or invalid/);
+  });
+
+  it('loads the Gemini and AI Studio adapters the content script needs at module load', () => {
+    // `sites/adapters/{gemini,aistudio}.ts` call `requireBundledSiteAdapter` while the content
+    // script loads: a site.json that fails validation would throw there and take every Voyager
+    // feature on Gemini and AI Studio down with it. This test is the guard against that.
+    expect(() => requireBundledSiteAdapter('gemini')).not.toThrow();
+    expect(() => requireBundledSiteAdapter('aistudio')).not.toThrow();
   });
 
   it('finds every plugin under its site and pairs it with its CSS files', () => {
@@ -92,7 +106,9 @@ describe('bundled catalog discovery', () => {
       plugins: { name: string; source: string }[];
     };
     const listed = index.plugins.map((plugin) => plugin.source);
-    for (const path of pluginPaths) {
+    // Gemini and AI Studio official plugins ship inside Voyager and are not offered in the store.
+    const storePaths = pluginPaths.filter((path) => usesCatalogDataStores(path.split('/')[1]));
+    for (const path of storePaths) {
       const name = readManifest(path).id.replace(/^voyager\./, '');
       expect(
         listed,
@@ -102,7 +118,7 @@ describe('bundled catalog discovery', () => {
     expect(new Set(index.plugins.map((plugin) => plugin.name)).size).toBe(index.plugins.length);
     expect(
       [...listed].sort(),
-      'marketplace entries must be unique and point to existing plugins',
-    ).toEqual(pluginPaths);
+      'marketplace entries must be unique and point to existing store plugins',
+    ).toEqual(storePaths);
   });
 });

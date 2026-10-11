@@ -10,11 +10,9 @@
 import { StorageKeys } from '@/core/types/common';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
-const BODY_CLASS = 'gv-hide-input-halo';
+import type { StopNativeFeature } from '../featureLifecycle';
 
-function applyState(hidden: boolean): void {
-  document.body?.classList.toggle(BODY_CLASS, hidden);
-}
+const BODY_CLASS = 'gv-hide-input-halo';
 
 async function readInitialState(): Promise<boolean> {
   try {
@@ -25,28 +23,71 @@ async function readInitialState(): Promise<boolean> {
   }
 }
 
-export function startInputHaloHider(): void {
-  if (location.hostname !== 'gemini.google.com') return;
+export function startInputHaloHider(): StopNativeFeature {
+  if (location.hostname !== 'gemini.google.com') return () => {};
 
-  const apply = (hidden: boolean) => {
-    if (document.body) {
-      applyState(hidden);
-    } else {
-      document.addEventListener('DOMContentLoaded', () => applyState(hidden), { once: true });
-    }
+  let disposed = false;
+  // Bumped by every live change, so a startup read that resolves after one
+  // never overwrites it.
+  let revision = 0;
+  let onDomReady: (() => void) | null = null;
+
+  const cancelDomReady = (): void => {
+    if (!onDomReady) return;
+    document.removeEventListener('DOMContentLoaded', onDomReady);
+    onDomReady = null;
   };
 
-  void readInitialState().then(apply);
+  const apply = (hidden: boolean): void => {
+    cancelDomReady();
+    if (document.body) {
+      document.body.classList.toggle(BODY_CLASS, hidden);
+      return;
+    }
+    const ready = (): void => {
+      onDomReady = null;
+      document.body?.classList.toggle(BODY_CLASS, hidden);
+    };
+    onDomReady = ready;
+    document.addEventListener('DOMContentLoaded', ready, { once: true });
+  };
 
+  const onStorageChanged = (
+    changes: Record<string, chrome.storage.StorageChange>,
+    area: string,
+  ): void => {
+    if (disposed || area !== 'sync') return;
+    const change = changes[StorageKeys.INPUT_HALO_HIDDEN];
+    if (!change) return;
+    revision += 1;
+    apply(change.newValue === true);
+  };
+
+  const stop: StopNativeFeature = () => {
+    if (disposed) return;
+    disposed = true;
+    try {
+      chrome.storage?.onChanged?.removeListener(onStorageChanged);
+    } catch {
+      // Context may be gone; nothing left to remove.
+    }
+    cancelDomReady();
+    document.body?.classList.remove(BODY_CLASS);
+  };
+
+  // Listen before reading: a toggle that lands while the read is in flight wins.
   try {
-    chrome.storage?.onChanged?.addListener((changes, area) => {
-      if (area !== 'sync') return;
-      const change = changes[StorageKeys.INPUT_HALO_HIDDEN];
-      if (!change) return;
-      apply(change.newValue === true);
-    });
+    chrome.storage?.onChanged?.addListener(onStorageChanged);
   } catch (error) {
-    if (isExtensionContextInvalidatedError(error)) return;
+    if (isExtensionContextInvalidatedError(error)) return stop;
     throw error;
   }
+
+  const readRevision = revision;
+  void readInitialState().then((hidden) => {
+    if (disposed || revision !== readRevision) return;
+    apply(hidden);
+  });
+
+  return stop;
 }

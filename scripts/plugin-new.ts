@@ -28,6 +28,7 @@ import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { PLUGIN_ENGINE_VERSION } from '../src/features/plugins/constants';
+import { usesCatalogDataStores } from '../src/features/plugins/sites/hostPolicy';
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -91,7 +92,12 @@ export interface ScaffoldResult {
   readonly files: readonly ScaffoldedFile[];
   readonly marketplacePath: string;
   readonly marketplaceEntry: MarketplaceEntry;
-  /** False when an entry with the same name was already there. */
+  /**
+   * False for a packaged native site (Gemini / AI Studio): its official
+   * plugins ship with the extension and the plugin store does not list them.
+   */
+  readonly marketplaceListed: boolean;
+  /** False when an entry with the same name was already there, or when not listed. */
   readonly marketplaceUpdated: boolean;
   readonly codeownersLine: string;
   /** False for a dry run. */
@@ -403,6 +409,7 @@ export function scaffoldPlugin(options: ScaffoldOptions): ScaffoldResult {
     official: true,
   };
   const marketplaceSource = readFileSync(marketplacePath, 'utf8');
+  const marketplaceListed = usesCatalogDataStores(site.dir);
   const alreadyListed = listedNames(marketplaceSource).includes(marketplaceEntry.name);
 
   const result: ScaffoldResult = {
@@ -413,7 +420,8 @@ export function scaffoldPlugin(options: ScaffoldOptions): ScaffoldResult {
     files,
     marketplacePath,
     marketplaceEntry,
-    marketplaceUpdated: !alreadyListed,
+    marketplaceListed,
+    marketplaceUpdated: marketplaceListed && !alreadyListed,
     codeownersLine: `/src/features/plugins/catalog/sites/${site.dir}/ @Nagi-ovo`,
     written: options.dryRun !== true,
   };
@@ -423,7 +431,7 @@ export function scaffoldPlugin(options: ScaffoldOptions): ScaffoldResult {
   mkdirSync(pluginDir, { recursive: true });
   for (const file of files) writeFileSync(file.path, file.contents, 'utf8');
 
-  if (!alreadyListed) {
+  if (result.marketplaceUpdated) {
     writeFileSync(
       marketplacePath,
       appendMarketplaceEntry(marketplaceSource, marketplaceEntry),
@@ -491,7 +499,11 @@ function report(result: ScaffoldResult, dryRun: boolean): void {
   }
 
   const entry = inlineJson(result.marketplaceEntry);
-  if (!result.marketplaceUpdated) {
+  if (!result.marketplaceListed) {
+    console.log(
+      `  ${displayPath(result.marketplacePath)} left alone: ${result.site} plugins ship unlisted`,
+    );
+  } else if (!result.marketplaceUpdated) {
     console.log(`  ${displayPath(result.marketplacePath)} already lists this plugin`);
   } else {
     const marketplaceVerb = dryRun ? 'Would append' : 'Appended';

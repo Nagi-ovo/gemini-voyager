@@ -10,8 +10,8 @@
  *     extension version).
  */
 import { isLocalPluginId } from '../local/localPluginId';
+import { allowsRemoteCatalog } from '../sites/hostPolicy';
 import { matchesAnyPattern } from '../sites/matchPattern';
-import { isNativeSurfaceHost } from '../sites/nativeSurfaces';
 import type { PluginStateMap } from '../storage/pluginState';
 import type { PluginManifest } from '../types';
 import type { HostCatalogCacheEntry } from './hostCatalogCache';
@@ -59,7 +59,8 @@ export function hostCatalogBackoffMs(failureCount: number): number {
  * `<host>.json` and per-artifact frame subdomains never cause a lookup each.
  *
  * Voyager's native surfaces (Gemini, AI Studio) are never catalog hosts, even
- * when a user's local plugin runs there: Gemini pages make zero requests to
+ * when a user's local plugin or a packaged official plugin runs there
+ * (`hostPolicy.allowsRemoteCatalog`, D14): Gemini pages make zero requests to
  * the catalog, and this one rule covers the page, the popup and a forced
  * background check alike.
  */
@@ -69,7 +70,7 @@ export function isEligibleCatalogHost(host: string): boolean {
     !/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(host)
   )
     return false;
-  return !isNativeSurfaceHost(host);
+  return allowsRemoteCatalog(host);
 }
 
 /** `location.host` of a page URL when it is a catalog-eligible https host. */

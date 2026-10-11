@@ -9,6 +9,7 @@ import {
 import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { WATERMARK_STORAGE_KEYS } from '@/core/utils/watermarkSettings';
 import { startPluginHost } from '@/features/plugins';
+import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
 import { resolvePluginPlatformId } from '@/features/plugins/sites/registry';
 import { SiteRegistry } from '@/features/plugins/sites/registry';
 import { initI18n } from '@/utils/i18n';
@@ -32,6 +33,7 @@ import {
   mountNativeFeature,
   type NativeFeatureToggleController,
 } from './featureLifecycle';
+import { admitPluginOwnedFeature, startOwnedFeature } from './featureOwnerStartup';
 import { folderActivityCoachmarkStep } from './folder/activityCoachmark';
 import { startAIStudioFolderManager } from './folder/aistudio';
 import { conversationSortCoachmarkStep } from './folder/conversationSortCoachmark';
@@ -42,7 +44,6 @@ import { startFolderProject } from './folderProject/index';
 import { startFolderSpacingAdjuster } from './folderSpacing/index';
 import { startNativeFormulaCopyForContent } from './formulaCopyStartup';
 import { startInputCollapse } from './inputCollapse/index';
-import { startInputHaloHider } from './inputHaloHider/index';
 import { initKaTeXConfig } from './katexConfig';
 import { startMarkdownPatcher } from './markdownPatcher/index';
 import { startMermaid } from './mermaid/index';
@@ -98,6 +99,9 @@ const BACKGROUND_TAB_MIN_DELAY = 3000; // Minimum delay for background tabs
 const BACKGROUND_TAB_MAX_DELAY = 8000; // Maximum delay for background tabs (3000 + 5000)
 
 const cleanupManager = new CleanupManager();
+// One per content-script instance: initializeFeatures admits packaged official
+// plugins where their native modules used to start, then closes it.
+const officialAdmission = createOfficialAdmission();
 const promptManager = createPromptManagerEngine(
   resolvePromptSiteAdapter(location.href),
   cleanupManager,
@@ -165,6 +169,9 @@ async function initializeFeatures(): Promise<void> {
   if (initialized) return;
   initialized = true;
 
+  // Only the call that took initialization closes admission: every early
+  // return (custom coverage, Enterprise, AI Studio off) or failure below
+  // leaves the official plugins it did not admit denied.
   try {
     if (!hasValidExtensionContext()) {
       return;
@@ -245,17 +252,23 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       startInputCollapse();
-      startInputHaloHider();
-      await mountNativeFeature(cleanupManager, NATIVE_FEATURES.inputVimMode);
+      await startOwnedFeature(officialAdmission, 'gemini', 'hideInputHalo', async () => {
+        await mountNativeFeature(cleanupManager, NATIVE_FEATURES.inputHaloHider);
+      });
+      await startOwnedFeature(officialAdmission, 'gemini', 'vimInput', async () => {
+        await mountNativeFeature(cleanupManager, NATIVE_FEATURES.inputVimMode);
+      });
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Send behavior must be ready before prevent-auto-scroll reads its bridge state.
       await mountNativeFeature(cleanupManager, NATIVE_FEATURES.sendBehaviorGemini);
       startPreventAutoScroll();
-      await startNativeFormulaCopyForContent({
-        registerCleanup: (cleanup) =>
-          cleanupManager.registerCleanupFunction(cleanup, CleanupPositions.CleanupFormulaCopy),
-      });
+      await startOwnedFeature(officialAdmission, 'gemini', 'formulaCopy', () =>
+        startNativeFormulaCopyForContent({
+          registerCleanup: (cleanup) =>
+            cleanupManager.registerCleanupFunction(cleanup, CleanupPositions.CleanupFormulaCopy),
+        }),
+      );
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Quote Reply - conditionally start based on storage setting
@@ -390,6 +403,10 @@ async function initializeFeatures(): Promise<void> {
 
       if (!aiStudioEnabled) {
         console.log('[Gemini Voyager] AI Studio features disabled by user');
+        // A plugin-owned Formula Copy is admitted anyway: PluginHost follows
+        // the master switch live, so turning Voyager back on here mounts it.
+        // While the native module owns it, nothing starts, as before.
+        admitPluginOwnedFeature(officialAdmission, 'aistudio', 'formulaCopy');
         return;
       }
 
@@ -400,10 +417,12 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Formula copy support for AI Studio
-      await startNativeFormulaCopyForContent({
-        registerCleanup: (cleanup) =>
-          cleanupManager.registerCleanupFunction(cleanup, CleanupPositions.CleanupFormulaCopy),
-      });
+      await startOwnedFeature(officialAdmission, 'aistudio', 'formulaCopy', () =>
+        startNativeFormulaCopyForContent({
+          registerCleanup: (cleanup) =>
+            cleanupManager.registerCleanupFunction(cleanup, CleanupPositions.CleanupFormulaCopy),
+        }),
+      );
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Send behavior (Enter to send)
@@ -415,6 +434,8 @@ async function initializeFeatures(): Promise<void> {
       return;
     }
     console.error('[Gemini Voyager] Initialization error:', e);
+  } finally {
+    officialAdmission.close();
   }
 }
 
@@ -466,6 +487,9 @@ function handleVisibilityChange(): void {
     claimContentScript(
       () => {
         initialized = true;
+        // An initialization still running in this orphan admits nothing more;
+        // the plugin host itself stops with the cleanups below.
+        officialAdmission.close();
         if (initializationTimer !== null) clearTimeout(initializationTimer);
         initializationTimer = null;
         document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -516,16 +540,21 @@ function handleVisibilityChange(): void {
     // Plugin ecosystem host. Started up-front on EVERY page the content script is
     // injected into (Gemini / AI Studio, and any site a user enabled a plugin for,
     // e.g. claude.ai via dynamic registration). It self-detects the site adapter
-    // and only mounts plugins that match the current URL AND are enabled — inert by
-    // default since all builtin plugins ship disabled, so it has no effect unless a
-    // user turns a plugin on in the popup.
+    // and only mounts plugins that match the current URL AND are enabled. Most
+    // builtin plugins ship disabled; the few on by default (pluginDefaults.ts)
+    // target their own plugin platform.
     // Bind builtin "native function plugins" before the host starts, so
-    // PluginHost can run them when enabled on Claude/ChatGPT (default off).
-    // Gemini/AI Studio keep their existing core feature lifecycle. The host
+    // PluginHost can run them when enabled on Claude/ChatGPT.
+    // On Gemini/AI Studio a feature stays with its native module until the
+    // owner table (featureOwners.ts) hands it to a packaged official plugin;
+    // that plugin then mounts only once initializeFeatures admits it. The host
     // itself follows AI Studio's master switch (runtime/surfaceSwitch.ts), so
     // "Voyager off on AI Studio" also keeps local plugins off there.
     registerBuiltinNativeHandlers();
-    cleanupManager.registerCleanupFunction(startPluginHost(), CleanupPositions.CleanupPluginHost);
+    cleanupManager.registerCleanupFunction(
+      startPluginHost({ admission: officialAdmission }),
+      CleanupPositions.CleanupPluginHost,
+    );
 
     // Cosmetic: on Claude / ChatGPT, re-skin Voyager's accent to the host
     // platform's brand colour (injects --gv-pm-brand + a gv-platform-themed body
@@ -615,6 +644,8 @@ function handleVisibilityChange(): void {
       // initializeFeatures() (which is Gemini/AI-Studio/custom-site shaped).
       if (pluginPlatformId) {
         initialized = true;
+        // No Gemini / AI Studio starter runs here, so no official feature is admitted.
+        officialAdmission.close();
         if (isPluginSubframe) return;
         // A research pack sent from Gemini with "Continue in …" lands here.
         void mountNativeFeature(cleanupManager, NATIVE_FEATURES.researchPackReceiver);

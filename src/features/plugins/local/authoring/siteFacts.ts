@@ -3,8 +3,7 @@
  * the URL patterns `matches` may use, the semantic anchors it declares with
  * today's selectors, and what a local plugin may and may not bring there.
  */
-import { patternWithinAny } from '../../sites/matchPattern';
-import { NATIVE_SURFACE_MATCHES } from '../../sites/nativeSurfaces';
+import { allowedPrimitivesForSite, allowsPluginThemeForSite } from '../../sites/hostPolicy';
 import {
   SEMANTIC_KEY_DESCRIPTIONS,
   SEMANTIC_SELECTOR_KEYS,
@@ -34,9 +33,26 @@ export function siteAnchors(site: SiteAdapter): readonly SemanticSelectorKey[] {
   return SEMANTIC_SELECTOR_KEYS.filter((key) => typeof site.selectors[key] === 'string');
 }
 
-/** Gemini and AI Studio: no `theme` and no `native` op there. */
-export function isNativeSurfaceSite(site: SiteAdapter): boolean {
-  return site.matches.some((pattern) => patternWithinAny(pattern, NATIVE_SURFACE_MATCHES));
+/** Gemini and AI Studio keep Voyager’s own accent: a plugin brings no `theme` there. */
+export function forbidsTheme(site: SiteAdapter): boolean {
+  return !allowsPluginThemeForSite(site);
+}
+
+/** Whether a plugin on `site` may call any primitive at all (a `native` op). */
+export function allowsAnyPrimitive(site: SiteAdapter): boolean {
+  const allowed = allowedPrimitivesForSite(site);
+  return allowed === 'all' || allowed.size > 0;
+}
+
+/** Whether a plugin on `site` may call the `handler` primitive. */
+export function allowsPrimitive(site: SiteAdapter, handler: string): boolean {
+  const allowed = allowedPrimitivesForSite(site);
+  return allowed === 'all' || allowed.has(handler);
+}
+
+/** A site with no restriction from the packaged host policy: any primitive, and a theme. */
+export function isUnrestrictedSite(site: SiteAdapter): boolean {
+  return !forbidsTheme(site) && allowedPrimitivesForSite(site) === 'all';
 }
 
 function clip(selector: string): string {
@@ -61,7 +77,7 @@ export function siteFactLines(
   options: { primitives: boolean; theme: boolean },
 ): string[] {
   const missing = SEMANTIC_SELECTOR_KEYS.filter((key) => typeof site.selectors[key] !== 'string');
-  const native = isNativeSurfaceSite(site);
+  const restricted = forbidsTheme(site) && !allowsAnyPrimitive(site);
   const notes = SITE_NOTES[site.id] ?? [];
   return [
     '"matches" must use these URL patterns (all of them, or a subset):',
@@ -75,7 +91,7 @@ export function siteFactLines(
           `${site.label} does not declare ${missing.join(', ')}: a plugin that relies on one of these is refused. Use a CSS selector instead.`,
         ]
       : []),
-    ...(native
+    ...(restricted
       ? ['', `No "theme" and no "native" op on ${site.label}: CSS and the four page changes only.`]
       : options.primitives
         ? [

@@ -15,6 +15,7 @@ import {
   PLUGIN_STATUS_MESSAGE,
 } from '@/features/plugins/runtime/messages';
 import type { PluginStatus } from '@/features/plugins/runtime/pluginStatus';
+import { surfaceSwitchForUrl } from '@/features/plugins/runtime/surfaceSwitch';
 import { matchesAnyPattern } from '@/features/plugins/sites/matchPattern';
 import {
   type BlockedPluginUpdate,
@@ -22,7 +23,12 @@ import {
   listPluginManifestsWithSources,
   refreshPluginManifestsWithSources,
 } from '@/features/plugins/sources/defaultSources';
-import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
+import {
+  type LegacySettingSnapshot,
+  loadLegacySettingSnapshot,
+  resolveEffectiveEnabled,
+  subscribeLegacySettings,
+} from '@/features/plugins/storage/legacySettingBindings';
 import {
   type PluginStateMap,
   loadPluginState,
@@ -57,6 +63,11 @@ export function usePopupPlugins({
   const [pluginStateLoaded, setPluginStateLoaded] = useState(false);
   const [pluginsLoading, setPluginsLoading] = useState<boolean>(true);
   const [pluginsRefreshing, setPluginsRefreshing] = useState<boolean>(false);
+  // The legacy switches packaged official plugins follow instead of their
+  // plugin-state entry, and a counter bumped when AI Studio's master switch
+  // flips: either change can mount or unmount plugins in the active tab.
+  const [legacySettings, setLegacySettings] = useState<LegacySettingSnapshot>({});
+  const [surfaceRevision, setSurfaceRevision] = useState(0);
 
   // Plugins whose match patterns cover the active tab's URL. A plugin only ever
   // shows on — and only affects — the site it targets, so Claude plugins appear
@@ -73,12 +84,12 @@ export function usePopupPlugins({
           id: plugin.id,
           version: plugin.version,
           source: diagnosticPluginSourceFromId(pluginSourceIds[plugin.id]),
-          enabled: isPluginEnabled(pluginState, plugin.id),
+          enabled: resolveEffectiveEnabled(pluginState, legacySettings, plugin.id),
           settingsSchema: plugin.contributes.settings,
           settings: state?.settings,
         };
       }),
-    [pluginManifests, pluginSourceIds, pluginState],
+    [legacySettings, pluginManifests, pluginSourceIds, pluginState],
   );
   // Host of the active tab for the per-host remote plugin catalog; undefined
   // until the tab is known and for hosts that can never have a catalog file.
@@ -145,7 +156,35 @@ export function usePopupPlugins({
     void refreshPluginStatuses();
     const later = setTimeout(() => void refreshPluginStatuses(), 2500);
     return () => clearTimeout(later);
-  }, [refreshPluginStatuses, pluginManifests, pluginState]);
+  }, [refreshPluginStatuses, pluginManifests, pluginState, legacySettings, surfaceRevision]);
+
+  useEffect(() => {
+    let active = true;
+    // Subscribe first: a change that lands during the read wins over it.
+    let touched: LegacySettingSnapshot = {};
+    const unsubscribe = subscribeLegacySettings((changed) => {
+      if (!active) return;
+      touched = { ...touched, ...changed };
+      setLegacySettings((current) => ({ ...current, ...changed }));
+    });
+    loadLegacySettingSnapshot().then(
+      (loaded) => {
+        if (active) setLegacySettings({ ...loaded, ...touched });
+      },
+      () => {
+        // Extension context gone: the popup is closing anyway.
+      },
+    );
+    return () => {
+      active = false;
+      unsubscribe();
+    };
+  }, []);
+
+  useEffect(
+    () => surfaceSwitchForUrl(activeUrl)?.subscribe(() => setSurfaceRevision((n) => n + 1)),
+    [activeUrl],
+  );
 
   // Load plugin manifests: builtin + bundled snapshot + the cached remote
   // catalog for the active tab's host + the user's local plugins. Waits for the tab context so the remote

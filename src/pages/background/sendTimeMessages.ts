@@ -7,6 +7,7 @@
  * never a wrong one.
  */
 import { BUNDLED_SITE_ADAPTERS } from '@/features/plugins/catalog/sites';
+import { usesCatalogDataStores } from '@/features/plugins/sites/hostPolicy';
 import { matchesAnyPattern } from '@/features/plugins/sites/matchPattern';
 import {
   SEND_TIME_RECORD_MESSAGE,
@@ -25,7 +26,11 @@ import { getSenderPageUrl } from './runtimeMessageRouting';
 function isSiteSender(sender: chrome.runtime.MessageSender, siteId: string): boolean {
   if (sender.id !== chrome.runtime.id || !sender.tab) return false;
   if (sender.frameId !== undefined && sender.frameId !== 0) return false;
-  const site = BUNDLED_SITE_ADAPTERS.find((adapter) => adapter.id === siteId);
+  // A bundled site.json alone is no licence: Gemini and AI Studio are described by one too,
+  // but their timeline data stays with the native features.
+  const site = BUNDLED_SITE_ADAPTERS.find(
+    (adapter) => adapter.id === siteId && usesCatalogDataStores(adapter.id),
+  );
   const pageUrl = getSenderPageUrl(sender);
   return !!site && !!pageUrl && matchesAnyPattern(pageUrl, site.matches);
 }

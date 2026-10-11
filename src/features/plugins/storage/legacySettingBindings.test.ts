@@ -1,0 +1,219 @@
+import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { StorageKeys } from '@/core/types/common';
+
+import { FEATURE_OWNERS, OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
+import type { PluginManifest } from '../types';
+import {
+  legacyBindingFor,
+  legacyBindingKeys,
+  legacyEnableWrite,
+  loadLegacySettingSnapshot,
+  resolveEffectiveEnabled,
+  resolveEffectiveSettings,
+  subscribeLegacySettings,
+} from './legacySettingBindings';
+
+const FORMULA_G = OFFICIAL_PLUGIN_IDS.geminiFormulaCopy;
+const FORMULA_A = OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy;
+const VIM = OFFICIAL_PLUGIN_IDS.geminiVimInput;
+const HALO = OFFICIAL_PLUGIN_IDS.geminiHideInputHalo;
+
+const syncGet = () => chrome.storage.sync.get as unknown as Mock;
+const addListener = () => chrome.storage.onChanged.addListener as unknown as Mock;
+const removeListener = () => chrome.storage.onChanged.removeListener as unknown as Mock;
+
+type Listener = (changes: Record<string, chrome.storage.StorageChange>, area: string) => void;
+
+function manifest(
+  id: string,
+  settings?: PluginManifest['contributes']['settings'],
+): PluginManifest {
+  return {
+    id,
+    name: id,
+    version: '1.0.0',
+    description: '',
+    author: 'test',
+    category: 'utility',
+    license: 'MIT',
+    engine: '>=1.0.0',
+    tier: 'declarative',
+    matches: ['https://gemini.google.com/*'],
+    contributes: settings ? { settings } : {},
+  };
+}
+
+beforeEach(() => {
+  syncGet().mockReset();
+  addListener().mockReset();
+  removeListener().mockReset();
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+describe('legacy enable bindings', () => {
+  it('bind every official feature to a legacy key', () => {
+    for (const owned of FEATURE_OWNERS) {
+      expect(legacyBindingFor(owned.officialPluginId)?.area).toBe('sync');
+    }
+    expect(legacyBindingFor('voyager.chatgpt-folders')).toBeNull();
+    expect(legacyBindingFor('toString')).toBeNull();
+    expect(legacyBindingFor('__proto__')).toBeNull();
+  });
+
+  it('list each storage key once, with both formula ids sharing one switch', () => {
+    expect([...legacyBindingKeys()].sort()).toEqual(
+      [
+        StorageKeys.FORMULA_COPY_ENABLED,
+        StorageKeys.INPUT_VIM_MODE,
+        StorageKeys.INPUT_HALO_HIDDEN,
+      ].sort(),
+    );
+    expect(legacyBindingFor(FORMULA_G)?.key).toBe(legacyBindingFor(FORMULA_A)?.key);
+  });
+
+  // Production readings: formula copy `!== false`; Vim and halo `=== true`.
+  it.each([
+    ['missing', undefined, true, false, false],
+    ['false', false, false, false, false],
+    ['true', true, true, true, true],
+    ['"false"', 'false', true, false, false],
+    ['"true"', 'true', true, false, false],
+    ['0', 0, true, false, false],
+    ['1', 1, true, false, false],
+    ['null', null, true, false, false],
+  ])('read a stored %s as production does', (_label, stored, formula, vim, halo) => {
+    expect(legacyBindingFor(FORMULA_G)?.read(stored)).toBe(formula);
+    expect(legacyBindingFor(FORMULA_A)?.read(stored)).toBe(formula);
+    expect(legacyBindingFor(VIM)?.read(stored)).toBe(vim);
+    expect(legacyBindingFor(HALO)?.read(stored)).toBe(halo);
+  });
+
+  it('write the legacy key the popup writes', () => {
+    expect(legacyEnableWrite(FORMULA_A, false)).toEqual({
+      [StorageKeys.FORMULA_COPY_ENABLED]: false,
+    });
+    expect(legacyEnableWrite(VIM, true)).toEqual({ [StorageKeys.INPUT_VIM_MODE]: true });
+    expect(legacyEnableWrite(HALO, true)).toEqual({ [StorageKeys.INPUT_HALO_HIDDEN]: true });
+    expect(() => legacyEnableWrite('voyager.chatgpt-folders', true)).toThrow();
+  });
+});
+
+describe('resolveEffectiveEnabled', () => {
+  const formulaOff = { [StorageKeys.FORMULA_COPY_ENABLED]: false };
+
+  it('follows the legacy key for a bound id and ignores its plugin-state entry', () => {
+    const mapOn = { [FORMULA_G]: { enabled: true } };
+    expect(resolveEffectiveEnabled(mapOn, formulaOff, FORMULA_G)).toBe(false);
+    const mapOff = { [VIM]: { enabled: false } };
+    expect(resolveEffectiveEnabled(mapOff, { [StorageKeys.INPUT_VIM_MODE]: true }, VIM)).toBe(true);
+    expect(resolveEffectiveEnabled({ [HALO]: { enabled: true } }, {}, HALO)).toBe(false);
+  });
+
+  it('uses the production default when the key is missing or was removed', () => {
+    expect(resolveEffectiveEnabled({}, {}, FORMULA_G)).toBe(true);
+    expect(
+      resolveEffectiveEnabled({}, { [StorageKeys.FORMULA_COPY_ENABLED]: undefined }, FORMULA_A),
+    ).toBe(true);
+    expect(resolveEffectiveEnabled({}, {}, VIM)).toBe(false);
+  });
+
+  it('leaves unbound ids to the plugin-state map, whatever the legacy keys say', () => {
+    expect(resolveEffectiveEnabled({}, formulaOff, 'voyager.chatgpt-folders')).toBe(true);
+    expect(resolveEffectiveEnabled({}, {}, 'voyager.chatgpt-export')).toBe(false);
+    const local = { 'local.formula': { enabled: true } };
+    expect(resolveEffectiveEnabled(local, formulaOff, 'local.formula')).toBe(true);
+  });
+});
+
+describe('resolveEffectiveSettings', () => {
+  it('gives a bound official plugin no settings, whatever the map stores', () => {
+    const state = { [FORMULA_G]: { enabled: true, settings: { format: 'mathml', junk: 1 } } };
+    expect(resolveEffectiveSettings(manifest(FORMULA_G), state)).toEqual({});
+  });
+
+  it('resolves other plugins from their stored settings and schema defaults', () => {
+    const schema = {
+      size: { type: 'number' as const, label: 'Size', default: 3 },
+      mode: { type: 'string' as const, label: 'Mode', default: 'a' },
+    };
+    const state = { 'local.sizer': { enabled: true, settings: { size: 5 } } };
+    expect(resolveEffectiveSettings(manifest('local.sizer', schema), state)).toEqual({
+      size: 5,
+      mode: 'a',
+    });
+  });
+});
+
+describe('loadLegacySettingSnapshot', () => {
+  it('reads only the binding keys and keeps missing keys missing', async () => {
+    syncGet().mockResolvedValue({
+      [StorageKeys.INPUT_VIM_MODE]: true,
+      [StorageKeys.FORMULA_COPY_FORMAT]: 'mathml',
+    });
+    const snapshot = await loadLegacySettingSnapshot();
+    expect(snapshot).toEqual({ [StorageKeys.INPUT_VIM_MODE]: true });
+    expect(Object.prototype.hasOwnProperty.call(snapshot, StorageKeys.FORMULA_COPY_ENABLED)).toBe(
+      false,
+    );
+    expect([...syncGet().mock.calls[0][0]].sort()).toEqual([...legacyBindingKeys()].sort());
+  });
+
+  it('rejects when the extension context is gone instead of guessing defaults', async () => {
+    syncGet().mockRejectedValue(new Error('Extension context invalidated.'));
+    await expect(loadLegacySettingSnapshot()).rejects.toThrow(/context invalidated/i);
+  });
+
+  it('falls back to the native defaults on any other read failure', async () => {
+    syncGet().mockRejectedValue(new Error('QUOTA_BYTES quota exceeded'));
+    const snapshot = await loadLegacySettingSnapshot();
+    expect(snapshot).toEqual({});
+    expect(resolveEffectiveEnabled({}, snapshot, FORMULA_G)).toBe(true);
+    expect(resolveEffectiveEnabled({}, snapshot, VIM)).toBe(false);
+  });
+});
+
+describe('subscribeLegacySettings', () => {
+  function subscribe(): { callback: Mock; listener: Listener; stop: () => void } {
+    const callback = vi.fn();
+    const stop = subscribeLegacySettings(callback);
+    const [[listener]] = addListener().mock.calls as [[Listener]];
+    return { callback, listener, stop };
+  }
+
+  it('reports binding-key changes in the sync area only', () => {
+    const { callback, listener } = subscribe();
+    listener({ [StorageKeys.INPUT_VIM_MODE]: { newValue: true } }, 'local');
+    listener({ [StorageKeys.FORMULA_COPY_FORMAT]: { newValue: 'mathml' } }, 'sync');
+    expect(callback).not.toHaveBeenCalled();
+
+    listener(
+      {
+        [StorageKeys.INPUT_VIM_MODE]: { newValue: true, oldValue: false },
+        [StorageKeys.FORMULA_COPY_FORMAT]: { newValue: 'mathml' },
+      },
+      'sync',
+    );
+    expect(callback).toHaveBeenCalledWith({ [StorageKeys.INPUT_VIM_MODE]: true });
+  });
+
+  it('reports a removed key so merging it restores the default', () => {
+    const { callback, listener } = subscribe();
+    listener({ [StorageKeys.FORMULA_COPY_ENABLED]: { oldValue: false } }, 'sync');
+    const [[changed]] = callback.mock.calls;
+    expect(Object.prototype.hasOwnProperty.call(changed, StorageKeys.FORMULA_COPY_ENABLED)).toBe(
+      true,
+    );
+    const merged = { [StorageKeys.FORMULA_COPY_ENABLED]: false, ...changed };
+    expect(resolveEffectiveEnabled({}, merged, FORMULA_G)).toBe(true);
+  });
+
+  it('removes its listener on stop', () => {
+    const { listener, stop } = subscribe();
+    stop();
+    expect(removeListener()).toHaveBeenCalledWith(listener);
+  });
+});

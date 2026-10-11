@@ -153,6 +153,20 @@ describe('useGeneralPopupSettings', () => {
     expect(ensureNotificationsPermission).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['missing', undefined, false],
+    ['false', false, false],
+    ['true', true, true],
+    ['the string "true"', 'true', false],
+    ['1', 1, false],
+    ['null', null, false],
+  ])('reads a %s halo setting the way the page does', async (_label, stored, expected) => {
+    await render();
+    act(() => settings.onChange({ inputHaloHidden: !expected }));
+    act(() => settings.hydrateFromStorage({ [StorageKeys.INPUT_HALO_HIDDEN]: stored }));
+    expect(settings.values.inputHaloHidden).toBe(expected);
+  });
+
   it('persists only the changed plain settings and retains other values', async () => {
     await render();
     const before = settings.values;

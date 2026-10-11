@@ -1,7 +1,7 @@
 /**
  * Bundled catalog discovery (plan §3).
  *
- * Layout, one directory per plugin platform:
+ * Layout, one directory per site:
  *
  *   catalog/sites/<site>/site.json                 the adapter as data
  *   catalog/sites/<site>/plugins/<id>/plugin.json  a declarative plugin
@@ -11,6 +11,11 @@
  * or a plugin is adding files — there is no hand-maintained mapping table.
  * `marketplace.json` next to this folder is an index kept only for the docs
  * plugin store; a test keeps it in sync with what this module discovers.
+ *
+ * Gemini and AI Studio live here as data too, but they are not plugin
+ * platforms: `NATIVE_SITE_IDS` and `hostPolicy` decide what runs there, and
+ * their directories are packaged only, never published to the remote catalog
+ * nor listed in the store.
  *
  * Vite-only: `import.meta.glob` is not available under Bun or Node, so this
  * module stays a thin shell over `loadBundledSites.ts`.
@@ -102,7 +107,7 @@ export function listBundledPluginEntries(): readonly BundledPluginEntry[] {
     });
 }
 
-/** Validated adapters of every bundled plugin platform, in directory order. */
+/** Validated adapters of every bundled site, in directory order. */
 export const BUNDLED_SITE_ADAPTERS: readonly SiteAdapter[] = loadBundledSiteAdapters(
   listBundledSiteEntries(),
   { catalogRevision, onInvalid: (message, details) => logger.error(message, details) },
@@ -111,7 +116,9 @@ export const BUNDLED_SITE_ADAPTERS: readonly SiteAdapter[] = loadBundledSiteAdap
 /**
  * The thin-shell adapters in `sites/adapters/` export these by id. A missing or
  * invalid site.json is a packaging error that must fail the test suite rather
- * than hand the runtime a silently different site.
+ * than hand the runtime a silently different site. The throw happens at module
+ * load, so for Gemini and AI Studio it would stop the whole content script:
+ * `index.test.ts` is the guard.
  */
 export function requireBundledSiteAdapter(id: string): SiteAdapter {
   const adapter = BUNDLED_SITE_ADAPTERS.find((entry) => entry.id === id);

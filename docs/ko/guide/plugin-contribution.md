@@ -29,7 +29,7 @@ src/features/plugins/catalog/
 
 `marketplace.json`은 그 매핑 표가 아니라 문서 플러그인 스토어가 읽는 색인입니다. 테스트가 탐색 결과와의 동기화를 강제하므로 새 플러그인은 여기에도 항목을 추가해야 합니다. `source`는 catalog 기준 상대 경로이며, 예를 들어 `sites/deepseek/plugins/reading-width/plugin.json`입니다.
 
-`site.json`은 사이트 어댑터 자체를 데이터로 적은 것입니다. 현재 플러그인 플랫폼은 ChatGPT, Claude, DeepSeek입니다. Gemini와 AI Studio는 Voyager의 네이티브 화면이라 TypeScript 어댑터로 남아 있고, `sites/adapters/claude.ts`, `chatgpt.ts`, `deepseek.ts`는 `site.json`을 감싼 한 줄짜리 껍데기입니다. TypeScript가 아니라 JSON을 수정하세요. 게시되는 호스트별 카탈로그가 사이트 데이터도 함께 싣기 때문에, 선택자 수정은 확장 프로그램을 새로 배포하지 않아도 사용자에게 전달됩니다.
+`site.json`은 사이트 어댑터 자체를 데이터로 적은 것입니다. 현재 플러그인 플랫폼은 ChatGPT, Claude, DeepSeek입니다. Gemini와 AI Studio는 Voyager의 네이티브 화면이며 각자 `site.json`(`catalog/sites/gemini/`, `catalog/sites/aistudio/`)을 갖지만, 이 파일은 확장 프로그램에 포함되어 배포될 뿐 원격 카탈로그에는 게시되지 않습니다. `sites/adapters/gemini.ts`, `aistudio.ts`, `claude.ts`, `chatgpt.ts`, `deepseek.ts`는 모두 `site.json`을 감싼 한 줄짜리 껍데기입니다. TypeScript가 아니라 JSON을 수정하세요. 게시되는 호스트별 카탈로그가 사이트 데이터도 함께 싣기 때문에, 선택자 수정은 확장 프로그램을 새로 배포하지 않아도 사용자에게 전달됩니다.
 
 플러그인의 `matches`는 그 플러그인이 속한 사이트의 `matches` 안에 있어야 합니다. 범위를 벗어나면 빌드가 실패합니다.
 

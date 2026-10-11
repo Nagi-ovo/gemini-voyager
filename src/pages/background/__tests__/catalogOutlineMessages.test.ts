@@ -153,3 +153,19 @@ it('a ChatGPT page cannot write Claude’s outline', async () => {
   expect(storage.values.local.get(CLAUDE)).toEqual(claude);
   expect(storage.values.local.has(CHATGPT)).toBe(false);
 });
+
+it('a Gemini page cannot write a catalog outline, though Gemini has a site.json', async () => {
+  const GEMINI = 'gvCatalogTimelineHierarchy:gemini';
+  const geminiTab = page('https://gemini.google.com/app/a');
+
+  await expect(send(geminiTab, setLevel(GEMINI, 'gemini:conv:a', 3))).resolves.toEqual({
+    ok: false,
+    error: 'untrusted_sender',
+  });
+  const cloud = { conversations: { 'gemini:conv:b': outline(3, 10) } };
+  await expect(send(geminiTab, { kind: 'restore', buckets: { [GEMINI]: cloud } })).resolves.toEqual(
+    { ok: false, error: 'untrusted_sender' },
+  );
+
+  expect(storage.values.local.has(GEMINI)).toBe(false);
+});

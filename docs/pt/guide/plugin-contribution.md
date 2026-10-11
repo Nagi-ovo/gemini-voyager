@@ -29,7 +29,7 @@ A descoberta é automática: `catalog/sites/index.ts` encontra cada `site.json` 
 
 `marketplace.json` não é essa tabela: é apenas o índice lido pela loja de plugins da documentação. Um teste mantém-no sincronizado com a descoberta, portanto um plugin novo também precisa de uma entrada aí. O `source` é o caminho relativo ao catalog, por exemplo `sites/deepseek/plugins/reading-width/plugin.json`.
 
-`site.json` é o próprio adaptador de site escrito como dados. Hoje as plataformas são ChatGPT, Claude e DeepSeek. O Gemini e o AI Studio são superfícies nativas do Voyager e continuam adaptadores TypeScript, enquanto `sites/adapters/claude.ts`, `chatgpt.ts` e `deepseek.ts` são invólucros de uma linha sobre o respetivo `site.json`: edite o JSON, não o TypeScript. O catálogo publicado por host transporta também os dados do site, por isso uma correção de seletores chega aos utilizadores sem uma nova versão da extensão.
+`site.json` é o próprio adaptador de site escrito como dados. Hoje as plataformas são ChatGPT, Claude e DeepSeek. O Gemini e o AI Studio são superfícies nativas do Voyager com o seu próprio `site.json` (`catalog/sites/gemini/` e `catalog/sites/aistudio/`), mas este vai dentro do pacote e nunca é publicado no catálogo remoto; `sites/adapters/gemini.ts`, `aistudio.ts`, `claude.ts`, `chatgpt.ts` e `deepseek.ts` são invólucros de uma linha sobre o respetivo `site.json`: edite o JSON, não o TypeScript. O catálogo publicado por host transporta também os dados do site, por isso uma correção de seletores chega aos utilizadores sem uma nova versão da extensão.
 
 Os `matches` de um plugin têm de ficar dentro dos `matches` do seu site. Um plugin que saia desse âmbito faz a build falhar.
 

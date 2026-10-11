@@ -12,6 +12,7 @@ import { isForkFeatureEnabledValue } from './fork/featureFlag';
 import { startFork } from './fork/index';
 import { startGemsHider } from './gemsHider/index';
 import { startGemsSidebar } from './gemsSidebar/index';
+import { startInputHaloHider } from './inputHaloHider/index';
 import { startNativeHealth } from './nativeHealth/index';
 import { startBrandTheme } from './platformTheme';
 import { startPromptHistory } from './promptHistory/index';
@@ -74,6 +75,11 @@ export const NATIVE_FEATURES = {
     id: 'input-vim-mode',
     position: CleanupPositions.CleanupInputVimMode,
     start: () => startInputVimMode(),
+  },
+  inputHaloHider: {
+    id: 'input-halo-hider',
+    position: CleanupPositions.CleanupInputHaloHider,
+    start: startInputHaloHider,
   },
   sendBehaviorGemini: {
     id: 'send-behavior:gemini',

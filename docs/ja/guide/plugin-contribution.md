@@ -29,7 +29,7 @@ src/features/plugins/catalog/
 
 `marketplace.json` はその対応表ではなく、ドキュメントのプラグインストアが読む索引です。テストが検出結果との一致を保証しているので、新しいプラグインはここにも 1 件追加します。`source` は catalog からの相対パスで、たとえば `sites/deepseek/plugins/reading-width/plugin.json` です。
 
-`site.json` はサイトアダプタそのものをデータとして書いたものです。現在のプラグイン対応サイトは ChatGPT、Claude、DeepSeek です。Gemini と AI Studio は Voyager のネイティブ画面なので TypeScript アダプタのままですが、`sites/adapters/claude.ts`、`chatgpt.ts`、`deepseek.ts` は `site.json` を読むだけの 1 行のシェルです。TypeScript ではなく JSON を編集してください。公開されるホスト別カタログはサイトデータも運ぶため、セレクタ修正は拡張機能をリリースしなくてもユーザーに届きます。
+`site.json` はサイトアダプタそのものをデータとして書いたものです。現在のプラグイン対応サイトは ChatGPT、Claude、DeepSeek です。Gemini と AI Studio は Voyager のネイティブ画面で、こちらも専用の `site.json`（`catalog/sites/gemini/`、`catalog/sites/aistudio/`）を持ちますが、拡張機能に同梱され、リモートカタログには公開されません。`sites/adapters/gemini.ts`、`aistudio.ts`、`claude.ts`、`chatgpt.ts`、`deepseek.ts` はいずれも `site.json` を読むだけの 1 行のシェルです。TypeScript ではなく JSON を編集してください。公開されるホスト別カタログはサイトデータも運ぶため、セレクタ修正は拡張機能をリリースしなくてもユーザーに届きます。
 
 プラグインの `matches` は、それが置かれているサイトの `matches` の内側に収まっていなければなりません。はみ出したプラグインはビルドを失敗させます。
 

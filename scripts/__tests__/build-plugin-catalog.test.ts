@@ -104,6 +104,61 @@ function makeFixtureCatalog(overrides: FixtureOverrides = {}): string {
   return catalogDir;
 }
 
+/** Hosts Voyager ships with; no catalog file may ever be published for them (D14). */
+const PACKAGED_HOSTS = [
+  'gemini.google.com',
+  'business.gemini.google',
+  'aistudio.google.com',
+  'aistudio.google.cn',
+] as const;
+
+const PACKAGED_SITES = [
+  {
+    id: 'gemini',
+    label: 'Gemini',
+    matches: ['https://gemini.google.com/*', 'https://business.gemini.google/*'],
+  },
+  {
+    id: 'aistudio',
+    label: 'AI Studio',
+    matches: ['https://aistudio.google.com/*', 'https://aistudio.google.cn/*'],
+  },
+] as const;
+
+/**
+ * The demo fixture plus Gemini and AI Studio sites, each with one CSS-only
+ * plugin that would be valid anywhere. `gemini` is merged into the Gemini one.
+ */
+function makePackagedFixtureCatalog(gemini: Record<string, unknown> = {}): string {
+  const catalogDir = makeFixtureCatalog();
+  for (const site of PACKAGED_SITES) {
+    const siteDir = join(catalogDir, 'sites', site.id);
+    const pluginDir = join(siteDir, 'plugins', 'compact');
+    writeJson(join(siteDir, 'site.json'), {
+      ...site,
+      selectors: { composer: 'textarea' },
+      theme: { hostSelector: 'body', lightSelector: 'body.light', darkSelector: 'body.dark' },
+      capabilities: ['chat'],
+    });
+    writeJson(join(pluginDir, 'plugin.json'), {
+      id: `voyager.${site.id}-compact`,
+      name: `${site.label} · Compact`,
+      version: '1.0.0',
+      description: 'A fixture plugin.',
+      author: 'voyager-official',
+      category: 'readability',
+      license: 'MIT',
+      engine: '>=1.2.0',
+      tier: 'declarative',
+      matches: site.matches,
+      contributes: { styles: [{ file: 'style.css' }] },
+      ...(site.id === 'gemini' ? gemini : {}),
+    });
+    writeFileSync(join(pluginDir, 'style.css'), 'body { color: red; }\n', 'utf8');
+  }
+  return catalogDir;
+}
+
 afterEach(() => {
   for (const root of tempRoots.splice(0)) rmSync(root, { force: true, recursive: true });
 });
@@ -122,6 +177,43 @@ describe('build-plugin-catalog', () => {
     // Wildcard patterns (https://*.frame.claudeusercontent.com/*) have no host
     // a client could derive from location.host, so they publish nothing.
     expect(names.some((name) => name.includes('*'))).toBe(false);
+    for (const host of PACKAGED_HOSTS) expect(names).not.toContain(`${host}.json`);
+  });
+
+  it('checks Gemini and AI Studio plugins but publishes nothing for their hosts', async () => {
+    const outDir = makeTempDir();
+    const catalogDir = makePackagedFixtureCatalog();
+
+    const written = await build(outDir, catalogDir);
+
+    expect(written.map((entry) => entry.host)).toEqual(['demo.example']);
+    expect(readdirSync(join(outDir, 'hosts'))).toEqual(['demo.example.json']);
+  });
+
+  it('fails the build on an invalid Gemini plugin, though it is never published', async () => {
+    const outDir = makeTempDir();
+    const catalogDir = makePackagedFixtureCatalog({
+      engine: '>=1.3.0',
+      requires: { handlers: ['teleport'] },
+    });
+
+    await expect(build(outDir, catalogDir)).rejects.toThrow(
+      /voyager\.gemini-compact.*unknown primitive handler "teleport"/s,
+    );
+    expect(existsSync(join(outDir, 'hosts', 'demo.example.json'))).toBe(false);
+  });
+
+  it('removes a host file left behind for Gemini or AI Studio', async () => {
+    const outDir = makeTempDir();
+    const hostsDir = join(outDir, 'hosts');
+    mkdirSync(hostsDir, { recursive: true });
+    for (const host of PACKAGED_HOSTS) {
+      writeFileSync(join(hostsDir, `${host}.json`), `{"format":1,"host":"${host}","plugins":[]}\n`);
+    }
+
+    await build(outDir, makePackagedFixtureCatalog());
+
+    expect(readdirSync(hostsDir)).toEqual(['demo.example.json']);
   });
 
   it('writes files the runtime validator accepts, with the site adapter attached', async () => {

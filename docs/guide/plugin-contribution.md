@@ -33,7 +33,7 @@ src/features/plugins/catalog/
 
 `marketplace.json` 不是那张映射表，它只是文档站插件市场读取的索引；有测试保证它和自动发现的结果一致，所以新插件还要在里面加一条，`source` 写 catalog 相对路径，例如 `sites/deepseek/plugins/reading-width/plugin.json`。
 
-`site.json` 就是站点适配器本身，只是写成了数据。目前的插件平台是 ChatGPT、Claude 和 DeepSeek。Gemini 和 AI Studio 是 Voyager 的原生界面，仍然使用 TypeScript 适配器；而 `sites/adapters/claude.ts`、`chatgpt.ts`、`deepseek.ts` 现在只是 `site.json` 的一行壳，要改就改 JSON，不要改 TypeScript。发布的分站点目录里也带上了站点数据，所以选择器修复不发新版本也能到达用户。
+`site.json` 就是站点适配器本身，只是写成了数据。目前的插件平台是 ChatGPT、Claude 和 DeepSeek。Gemini 和 AI Studio 是 Voyager 的原生界面，同样有各自的 `site.json`（`catalog/sites/gemini/`、`catalog/sites/aistudio/`），但它随扩展打包，不会发布到远端目录；`sites/adapters/` 下的 `gemini.ts`、`aistudio.ts`、`claude.ts`、`chatgpt.ts`、`deepseek.ts` 现在都只是 `site.json` 的一行壳，要改就改 JSON，不要改 TypeScript。发布的分站点目录里也带上了站点数据，所以选择器修复不发新版本也能到达用户。
 
 插件的 `matches` 必须落在所属站点的 `matches` 范围内；越界的插件会让构建失败。
 

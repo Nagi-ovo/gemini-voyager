@@ -14,11 +14,12 @@
  *     plugin platform (the D18 rule official plugins follow) or a native
  *     surface (Gemini, AI Studio), so enabling a local plugin can only ask for
  *     host access Voyager already has or an official plugin could ask for;
- *   - a plugin that targets a native surface declares no `theme` (Gemini and
- *     AI Studio keep Voyager's own accent; the popup's accent picker changes
- *     it) and no `native` op: every shipped primitive already runs there as a
- *     native Voyager feature (timeline, formula copy, Vim), and a second copy
- *     would fight it. CSS and reversible DOM ops only;
+ *   - the packaged host policy (`manifestHostPolicyIssues`), checked for each
+ *     native surface the patterns reach: no `theme` there (Gemini and AI Studio
+ *     keep Voyager's own accent; the popup's accent picker changes it), and a
+ *     `native` op only for a primitive that site has handed to plugins. Today
+ *     that is none: a native Voyager feature still runs each one there, and a
+ *     second copy would fight it;
  *   - the local-only rules in `localPluginRules.ts`: `gv-` classes, semantic
  *     keys every targeted site declares, and settings the popup can render.
  */
@@ -26,8 +27,8 @@ import type { Result } from '@/core/types/common';
 
 import { primitiveParamIssues, primitiveShippabilityIssues } from '../manifest/primitiveChecks';
 import { type ManifestIssue, validateManifest } from '../manifest/validate';
+import { manifestHostPolicyIssues } from '../sites/hostPolicy';
 import { patternWithinAny } from '../sites/matchPattern';
-import { NATIVE_SURFACE_MATCHES } from '../sites/nativeSurfaces';
 import { DEFAULT_ADAPTERS } from '../sites/registry';
 import type { PluginManifest, SiteAdapter } from '../types';
 import { toLocalPluginId } from './localPluginId';
@@ -93,23 +94,7 @@ export function validateLocalManifest(
       message: `"${pattern}" is outside the sites plugins can target (${supported.join(', ')})`,
     });
   });
-  if (manifest.matches.some((p) => patternWithinAny(p, NATIVE_SURFACE_MATCHES))) {
-    if (manifest.theme) {
-      issues.push({
-        path: 'theme',
-        message: 'Gemini and AI Studio keep Voyager’s own accent: remove theme for these sites',
-      });
-    }
-    // Every shipped primitive (timeline, formula copy, Vim) already runs on
-    // these pages as a native Voyager feature; a second copy would fight it.
-    (manifest.contributes.domOps ?? []).forEach((op, index) => {
-      if (op.op !== 'native') return;
-      issues.push({
-        path: `contributes.domOps[${index}]`,
-        message: 'Gemini and AI Studio already run Voyager’s own version: no native ops there',
-      });
-    });
-  }
+  issues.push(...manifestHostPolicyIssues(manifest));
   issues.push(...localPluginRuleIssues(manifest, sites));
 
   return issues.length > 0

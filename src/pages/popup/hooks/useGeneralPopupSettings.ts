@@ -6,10 +6,17 @@ import {
   hasNotificationsPermission,
 } from '@/core/utils/notificationsPermission';
 import { requestSafariNativeNotificationPermission } from '@/core/utils/safariNativeNotifications';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
+import {
+  LEGACY_ENABLE_BINDINGS,
+  legacyEnableWrite,
+} from '@/features/plugins/storage/legacySettingBindings';
 
 import type { GeneralSettingsValues } from '../components/GeneralSettingsCard';
 import { useEchartsPopupSettings } from './useEchartsPopupSettings';
 import { useWaveDromPopupSettings } from './useWaveDromPopupSettings';
+
+const HALO_ID = OFFICIAL_PLUGIN_IDS.geminiHideInputHalo;
 
 export const GENERAL_SETTINGS_STORAGE_DEFAULTS = {
   [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED]: true,
@@ -134,7 +141,7 @@ export function useGeneralPopupSettings({
           raw[StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED] !== false,
         remoteAnnouncementEnabled: raw[StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED] !== false,
         usageStatusEnabled: raw[StorageKeys.USAGE_STATUS_ENABLED] === true,
-        inputHaloHidden: raw[StorageKeys.INPUT_HALO_HIDDEN] === true,
+        inputHaloHidden: LEGACY_ENABLE_BINDINGS[HALO_ID].read(raw[StorageKeys.INPUT_HALO_HIDDEN]),
         defaultModelAutoApplyEnabled: raw[StorageKeys.DEFAULT_MODEL_AUTO_APPLY] !== false,
         researchPackEnabled: raw[StorageKeys.RESEARCH_PACK_ENABLED] === true,
       });
@@ -214,7 +221,8 @@ export function useGeneralPopupSettings({
         const value = rest[key];
         if (typeof value !== 'boolean') continue;
         nextSettings[key] = value;
-        payload[PLAIN_SETTING_STORAGE_KEYS[key]] = value;
+        if (key === 'inputHaloHidden') Object.assign(payload, legacyEnableWrite(HALO_ID, value));
+        else payload[PLAIN_SETTING_STORAGE_KEYS[key]] = value;
       }
       setPlainSettings((current) => ({ ...current, ...nextSettings }));
       void writeSyncStorage(payload);

@@ -22,7 +22,7 @@ import {
 } from './contractRules';
 import { formatJson } from './jsonText';
 import { type PluginExample, buildPluginExamples } from './pluginExamples';
-import { isNativeSurfaceSite, siteAnchors, siteFactLines } from './siteFacts';
+import { allowsAnyPrimitive, siteAnchors, siteFactLines } from './siteFacts';
 
 export interface PluginContractOptions {
   readonly audience: ContractAudience;
@@ -41,7 +41,7 @@ export interface PluginContract {
  * the same gate.
  */
 export function offersPrimitives(site: SiteAdapter): boolean {
-  return !isNativeSurfaceSite(site);
+  return allowsAnyPrimitive(site);
 }
 
 export function siteSection(site: SiteAdapter, audience: ContractAudience): ContractSection {
