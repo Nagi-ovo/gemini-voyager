@@ -70,6 +70,17 @@ describe('plugin contract', () => {
     }
   });
 
+  it('does not rule out a count badge or copy button that a primitive provides', () => {
+    for (const [, audience, site] of cases) {
+      const sections = buildPluginContract(site, { audience }).sections;
+      const offersPrimitives = sections.some((section) => section.title === 'Primitives');
+      const limits = sections.find((section) => section.title === 'What a plugin cannot do');
+      const text = limits!.lines.join('\n');
+      if (offersPrimitives) expect(text).toMatch(/primitive[^\n]*before answering NOT POSSIBLE/);
+      else expect(text).not.toMatch(/primitive/i);
+    }
+  });
+
   it('warns that a site lacks the anchors other sites declare', () => {
     const claude = sites.find((site) => site.id === 'claude')!;
     const text = renderSections(buildPluginContract(claude, { audience: 'chat' }).sections).join(

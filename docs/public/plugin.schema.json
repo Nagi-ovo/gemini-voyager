@@ -78,7 +78,7 @@
       "type": "array",
       "minItems": 1,
       "items": { "type": "string", "minLength": 1 },
-      "description": "URL match patterns the plugin applies to. A bundled plugin must stay inside the matches of the site it ships under (plan D18), a local plugin inside the matches of a site Voyager supports. The gates enforce that; this schema cannot.",
+      "description": "URL match patterns the plugin applies to. A bundled plugin must stay inside the matches of the site it ships under, a local plugin inside the matches of a site Voyager supports. The gates enforce that; this schema cannot.",
       "examples": [["https://claude.ai/*"]]
     },
     "contributes": { "$ref": "#/$defs/contributions" },
@@ -343,7 +343,7 @@
                 "vimInput",
                 "wavedrom"
               ],
-              "description": "A primitive this Voyager build ships (src/features/plugins/verbs/contracts.ts)."
+              "description": "A primitive this Voyager build ships; the write-voyager-plugin skill lists each one with its params."
             },
             "params": {
               "type": "object",

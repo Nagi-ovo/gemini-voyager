@@ -66,7 +66,7 @@ export function buildPluginContract(
       localRulesSection(audience),
       ...(primitives ? [primitivesSection()] : []),
       ...(audience === 'agent' ? [selectorsSection()] : []),
-      impossibleSection(audience),
+      impossibleSection(audience, { primitives }),
     ],
     examples: buildPluginExamples(site, {
       styles: audience === 'agent' ? 'file' : 'inline',

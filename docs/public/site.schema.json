@@ -38,7 +38,7 @@
         "pattern": "^(?:https?|\\*)://(?:\\*\\.)?[A-Za-z0-9.-]+/.*$",
         "description": "A match pattern with a concrete or `*.` host. The validator matches the scheme case-insensitively; write it lowercase."
       },
-      "description": "Every URL this site covers. A plugin filed under this site may not target anything outside these patterns (plan D18).",
+      "description": "Every URL this site covers. A plugin filed under this site may not target anything outside these patterns.",
       "examples": [["https://claude.ai/*", "https://*.frame.claudeusercontent.com/*"]]
     },
     "selectors": {

@@ -138,6 +138,7 @@ A primitive is behavior Voyager ships as code; a plugin can only call it by name
 - It cannot decide by message content: logic, conditions or counting beyond what CSS selectors such as :has() and :nth-child() express.
 - It cannot run on sites other than those listed, or change Voyager’s own settings.
 
+These limits are on the plugin’s own fields and CSS. A primitive in the list above runs Voyager’s code and may provide one of them (a copy button, a count, a saved draft, a quote into the composer…): read that list before answering NOT POSSIBLE, and use the primitive when the target site declares the keys it reads.
 If the request needs any of this, do not invent fields or ops: the import refuses them. Start your reply with one line "NOT POSSIBLE: <what and why>", then build the closest version this contract allows and say what it leaves out.
 When nothing declarative helps, stop there and write no files.
 
