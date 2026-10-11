@@ -1,0 +1,18 @@
+{
+  "counterBadgeChars": {
+    "message": "Caracteres: {count}",
+    "description": "Small read-only badge above the prompt box or under a reply. {count} is the formatted number of characters (line breaks excluded); keep {count} exactly as written"
+  },
+  "counterBadgeWords": {
+    "message": "Palabras: {count}",
+    "description": "Small read-only badge above the prompt box or under a reply. {count} is the formatted number of words (each Chinese, Japanese or Korean character counts as one word); keep {count} exactly as written"
+  },
+  "counterBadgeCjkChars": {
+    "message": "Caracteres CJK: {count}",
+    "description": "Small read-only badge above the prompt box or under a reply. {count} is the formatted number of Chinese, Japanese and Korean characters only; keep {count} exactly as written"
+  },
+  "counterBadgeLines": {
+    "message": "Líneas: {count}",
+    "description": "Small read-only badge above the prompt box or under a reply. {count} is the formatted number of lines; keep {count} exactly as written"
+  }
+}

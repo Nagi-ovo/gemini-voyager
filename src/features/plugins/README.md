@@ -437,6 +437,14 @@ existing draft) and never sends. Selections touching a user turn or the adapter'
 with Gemini's quote reply in `core/utils/quotedText.ts`. A missing composer shows a toast and
 keeps the selection. Unmount removes the button, its style and every listener synchronously.
 
+`counterBadge` (unreleased, `sinceEngine: 'next'`; `target` is `composer` or `assistantTurn`,
+`metric` is `chars` (default), `words`, `cjkChars` or `lines`) shows a small read-only count.
+For `composer` it sits above the adapter's `composerRoot` (or the composer's parent), reads the
+draft with `readComposer` and hides while the draft is empty; for `assistantTurn` each reply
+gets a badge at its end, recounted from `copyableText` once streaming settles. The label is CSS
+generated content, so copying, export and the counts themselves never include it. Shipped
+plugins use only the composer target.
+
 Some behaviour cannot be expressed as CSS or as the reversible DOM operations.
 A **primitive** is that behaviour, written once as first-party TypeScript inside
 the extension and given a name a manifest can call:

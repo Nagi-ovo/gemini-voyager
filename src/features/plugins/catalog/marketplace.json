@@ -39,6 +39,11 @@
       "official": true
     },
     {
+      "name": "claude-composer-counter",
+      "source": "sites/claude/plugins/composer-counter/plugin.json",
+      "official": true
+    },
+    {
       "name": "chatgpt-reading-width",
       "source": "sites/chatgpt/plugins/reading-width/plugin.json",
       "official": true
@@ -61,6 +66,11 @@
     {
       "name": "chatgpt-quote-reply",
       "source": "sites/chatgpt/plugins/quote-reply/plugin.json",
+      "official": true
+    },
+    {
+      "name": "chatgpt-composer-counter",
+      "source": "sites/chatgpt/plugins/composer-counter/plugin.json",
       "official": true
     },
     {
@@ -121,6 +131,11 @@
     {
       "name": "deepseek-quote-reply",
       "source": "sites/deepseek/plugins/quote-reply/plugin.json",
+      "official": true
+    },
+    {
+      "name": "deepseek-composer-counter",
+      "source": "sites/deepseek/plugins/composer-counter/plugin.json",
       "official": true
     },
     {

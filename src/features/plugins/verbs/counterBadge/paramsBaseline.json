@@ -1,0 +1,13 @@
+{
+  "sinceEngine": "next",
+  "params": {
+    "target": {
+      "type": "semanticKey",
+      "required": true
+    },
+    "metric": {
+      "type": "string",
+      "required": false
+    }
+  }
+}
