@@ -90,12 +90,18 @@ describe('bundled plugin lifecycle (parametric)', async () => {
       const manifest = loadedManifest();
       document.body.className = 'host-class';
       document.body.setAttribute('style', '--host-var: 1px;');
-      // Semantic answer operations need real target markup, not an empty body;
-      // the DeepSeek code block is long enough for code folding to collapse it.
+      // Semantic answer operations need real target markup, not an empty body:
+      // the DeepSeek code block is long enough for code folding to collapse it,
+      // and the table gets a copy toolbar, so their teardown is checked too.
       document.body.innerHTML =
+        '<div class="ds-message"><div class="ds-collapsible-text"><p>Question</p></div></div>' +
         '<div class="ds-message"><div class="ds-assistant-message-main-content"><pre><code>sample</code></pre>' +
         '<div class="md-code-block"><div class="md-code-block-banner"><div><div role="button">Copy</div></div></div>' +
-        `<pre>${'line\n'.repeat(40)}</pre></div></div></div>`;
+        `<pre>${'line\n'.repeat(40)}</pre></div>` +
+        '<p>Formula <span class="katex">x</span></p>' +
+        '<table><thead><tr><th>Head</th></tr></thead><tbody><tr><td>Cell</td></tr></tbody></table>' +
+        '</div></div>' +
+        '<textarea class="ds-scroll-area">composer</textarea>';
       const before = {
         head: headWithoutBaseStyle(),
         body: document.body.outerHTML,

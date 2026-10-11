@@ -12,7 +12,6 @@ import { createToaster } from '@/core/ui/toast/toaster';
 import { onCachedLanguageChange } from '@/utils/i18n';
 
 import type { ManifestIssue } from '../../manifest/validate';
-import type { Dispose } from '../../runtime/pluginScope';
 import { getPrimitiveContract } from '../contracts';
 import type { Primitive } from '../types';
 import { type TableCopyFormat, serializeTable } from './serialize';
@@ -123,31 +122,39 @@ export const tableCopyPrimitive: Primitive<TableCopyParams> = {
       }
     };
 
-    // Registered first so it runs last: observers and timers are gone before toolbars go.
-    scope.effect(
-      () => () => {
-        Array.from(toolbars.keys()).forEach(remove);
-        toaster.destroy();
-      },
-      'tableCopy:remove-toolbars',
-    );
-    scope.effect(() => {
-      const stop = onCachedLanguageChange(() => toolbars.forEach((toolbar) => toolbar.relabel()));
-      return () => void stop();
-    }, 'tableCopy:language');
-
     const ownNodes = (nodes: NodeList): boolean =>
       Array.from(nodes).every((node) => hosts.has(node));
-    let rescan: Dispose | null = null;
-    scope.observe(doc.body, { childList: true, subtree: true }, (records) => {
-      if (scope.isDisposed) return;
-      // Adding or removing a toolbar is a mutation too; only the host's own changes need a scan.
-      if (records.every((record) => ownNodes(record.addedNodes) && ownNodes(record.removedNodes))) {
-        return;
-      }
-      void rescan?.();
-      rescan = scope.timer(scan, RESCAN_DELAY_MS);
-    });
-    scan();
+
+    // One effect owns the whole lifetime: PluginScope awaits between ledger entries,
+    // so a separate toolbar entry would leave toolbars on the page after unmount returns.
+    scope.effect(() => {
+      let rescan: ReturnType<typeof setTimeout> | undefined;
+      const observer = new MutationObserver((records) => {
+        if (scope.isDisposed) return;
+        // Adding or removing a toolbar is a mutation too; only the host's own changes need a scan.
+        if (
+          records.every((record) => ownNodes(record.addedNodes) && ownNodes(record.removedNodes))
+        ) {
+          return;
+        }
+        clearTimeout(rescan);
+        rescan = setTimeout(scan, RESCAN_DELAY_MS);
+      });
+      observer.observe(doc.body, { childList: true, subtree: true });
+      const stopFollowingLanguage = onCachedLanguageChange(() =>
+        toolbars.forEach((toolbar) => toolbar.relabel()),
+      );
+      scan();
+      // Observer and timer go before the toolbars, so no scan can bring one back.
+      return () => {
+        clearTimeout(rescan);
+        observer.disconnect();
+        stopFollowingLanguage();
+        Array.from(toolbars.keys()).forEach(remove);
+        toaster.destroy();
+      };
+    }, 'table-copy');
+    // No settings: a settings change must not restart it; a restart's deferred dispose would outlive unmount.
+    return { updateSettings() {} };
   },
 };
