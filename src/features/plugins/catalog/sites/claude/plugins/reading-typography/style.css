@@ -1,0 +1,49 @@
+/* Answer prose only: user messages and the composer sit outside the reply's
+ * .standard-markdown. Only top-level paragraphs and list items are sized (table
+ * cells below); nested ones inherit, so a percentage never compounds. Inline
+ * code and inline math follow the text; code blocks (pre) are skipped. A
+ * paragraph or item holding block math stays native, because KaTeX sizes it
+ * in em.
+ * Exclusions stop at .standard-markdown, so a list or table the host wraps
+ * around the whole thread cannot switch the plugin off. */
+.gv-plugin-claude-reading-typography {
+  /* Line height ÷ text size, kept when only the size switch is on so a fixed
+   * line box grows with the text. Not measured yet: see the README. */
+  --gv-plugin-reading-line-ratio: 1.65;
+}
+
+.gv-plugin-claude-reading-typography[data-gv-font-size='true']
+  .standard-markdown
+  :is(p, li):not(.standard-markdown :is(li, table, pre) *):not(:has(.katex-display)) {
+  font-size: var(--gv-plugin-reading-text-size, 100%) !important;
+  line-height: var(--gv-plugin-reading-line-ratio) !important;
+}
+
+/* Table cells follow the text size as on Gemini; text inside a cell inherits,
+ * and a nested table's cells are skipped so the size never compounds. */
+.gv-plugin-claude-reading-typography[data-gv-font-size='true']
+  .standard-markdown
+  :is(td, th):not(.standard-markdown :is(td, th) *) {
+  font-size: var(--gv-plugin-reading-text-size, 100%) !important;
+}
+
+/* After the size rule, so a custom line height wins over the kept ratio. */
+.gv-plugin-claude-reading-typography[data-gv-spacing='true']
+  .standard-markdown
+  :is(p, li):not(.standard-markdown :is(li, table, pre) *):not(:has(.katex-display)) {
+  line-height: calc(var(--gv-plugin-reading-line-height, 160) / 100) !important;
+}
+
+/* Both sides change because collapsed margins keep the larger one; the answer's
+ * outer edges stay native. */
+.gv-plugin-claude-reading-typography[data-gv-spacing='true']
+  .standard-markdown
+  p:not(.standard-markdown :is(li, table, pre) *):not(:first-child) {
+  margin-block-start: var(--gv-plugin-reading-paragraph-spacing, 16px) !important;
+}
+
+.gv-plugin-claude-reading-typography[data-gv-spacing='true']
+  .standard-markdown
+  p:not(.standard-markdown :is(li, table, pre) *):not(:last-child) {
+  margin-block-end: var(--gv-plugin-reading-paragraph-spacing, 16px) !important;
+}

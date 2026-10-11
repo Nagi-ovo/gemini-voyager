@@ -19,8 +19,18 @@
       "official": true
     },
     {
+      "name": "claude-reading-typography",
+      "source": "sites/claude/plugins/reading-typography/plugin.json",
+      "official": true
+    },
+    {
       "name": "chatgpt-reading-width",
       "source": "sites/chatgpt/plugins/reading-width/plugin.json",
+      "official": true
+    },
+    {
+      "name": "chatgpt-reading-typography",
+      "source": "sites/chatgpt/plugins/reading-typography/plugin.json",
       "official": true
     },
     {
