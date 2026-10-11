@@ -54,7 +54,7 @@ Missing Safari release secrets are blocking: the GitHub Release job now waits fo
 
 ### Version bump
 
-Read the four current version sources first. If they already match the intended release version after an interrupted attempt, do not bump again; continue with verification and the changelog.
+Read the five current version sources first. If they already match the intended release version after an interrupted attempt, do not bump again; continue with verification and the changelog.
 
 For the next patch version:
 
@@ -79,7 +79,8 @@ bun run bump {VERSION}
 Do not manually edit the Xcode project version during a normal release. Verify all values after the bump:
 
 ```bash
-rg '"version"' package.json manifest.json manifest.dev.json
+rg '"version"' package.json manifest.json manifest.dev.json \
+  packages/create-voyager-plugin/package.json
 rg 'MARKETING_VERSION|CURRENT_PROJECT_VERSION' \
   Voyager/Voyager.xcodeproj/project.pbxproj | sort -u
 ```
@@ -107,7 +108,10 @@ bun run lint
 bun run typecheck
 bun run test
 bun run build:all
+bun run cli:build
 ```
+
+`cli:build` stamps the bumped version into `packages/create-voyager-plugin/dist/cli.mjs`; the npm publish in step 5 ships that file.
 
 Use `bun run test`, not raw `bun test`. `build:all` writes production outputs to `dist_chrome`, `dist_firefox`, and `dist_safari`; `dist_chrome_dev` is only for routine local Chrome development. Complete any additional checks required by `AGENTS.md` for the changed surfaces.
 
@@ -122,6 +126,7 @@ Recheck status and HEAD, then stage only the release files:
 ```bash
 git add \
   package.json manifest.json manifest.dev.json \
+  packages/create-voyager-plugin/package.json \
   Voyager/Voyager.xcodeproj/project.pbxproj \
   src/pages/content/changelog/notes/{VERSION}.md
 git diff --cached --name-only
@@ -147,12 +152,28 @@ git tag "v{VERSION}"
 
 Check the concrete tag and commit against the authorization boundaries in [SKILL.md](../SKILL.md). Reuse existing approval; if publication has not been authorized, show the prepared version, verification results, and tag-push effects before asking.
 
-For a release from `main`:
+Publish in this order; each step depends on the one before it:
 
-```bash
-git push origin main
-git push origin "v{VERSION}"
-```
+1. **npm.** Pushing `main` deploys the docs and the public `write-voyager-plugin` skill, which tell users to run `npx create-voyager-plugin@latest`, so `create-voyager-plugin@{VERSION}` must already be on npm. Publishing is the user's action: give them the command and wait for its output.
+
+   ```bash
+   cd packages/create-voyager-plugin && npm publish --access public
+   ```
+
+   An `E403 … with these credentials` means the local token cannot publish; the user runs `npm login` and publishes again. Confirm with `npm view create-voyager-plugin version` before continuing.
+
+2. **main.** The push deploys the docs and the remote plugin catalog (`deploy-docs.yml`). Wait for that run to succeed before the tag: a new-version extension that fetches the catalog before the deploy caches the old one as authoritative for that version and hides bundled plugins missing from it until its next refresh.
+
+   ```bash
+   git push origin main
+   gh run list --workflow deploy-docs.yml --limit 1
+   ```
+
+3. **Tag.** The tag starts the store release.
+
+   ```bash
+   git push origin "v{VERSION}"
+   ```
 
 If the user chose a different release branch, verify the tag points to that intended branch and push only the authorized branch and tag.
 
