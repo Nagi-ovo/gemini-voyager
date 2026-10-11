@@ -156,12 +156,10 @@ export function startSiteDraftSave(scope: PluginScope, adapter: SiteAdapter, doc
         restored = true;
         return;
       }
-      lastSavedContent = content;
       if (writeDraft(field, content)) {
         restored = true;
         return;
       }
-      lastSavedContent = '';
     }
     if (attempts > 0) {
       scope.timer(() => tryRestore(generation, key, content, attempts - 1), DRAFT_RESTORE_DELAY_MS);
@@ -174,6 +172,9 @@ export function startSiteDraftSave(scope: PluginScope, adapter: SiteAdapter, doc
     const saved = await store.load(key);
     if (scope.isDisposed || generation !== navigation) return;
     const content = saved?.trim();
+    // Track what storage holds even when the restore is skipped: a host that refills its own
+    // draft first would otherwise make clearing the composer look unchanged and keep this one.
+    lastSavedContent = content ?? '';
     if (!content) {
       restored = true;
       return;
@@ -243,6 +244,8 @@ export function startSiteDraftSave(scope: PluginScope, adapter: SiteAdapter, doc
     },
     { capture: true },
   );
+  // A reload or full navigation inside the pause would keep the previous draft, even a cleared one.
+  scope.on(doc.defaultView ?? window, 'pagehide', flushPendingSave);
   scope.effect(() => watchRouteChanges(onRoute), 'draft-save:route');
   // Disabling drops the unsaved tail like Gemini's toggle does; stored drafts stay.
   scope.effect(

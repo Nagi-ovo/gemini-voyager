@@ -246,6 +246,22 @@ describe.each(sites)('draftSave on $name', (site) => {
     expect(stored(adapter, 'conv:abc')).toBe('Old draft');
   });
 
+  it('drops a stored draft the user clears after the host restored its own copy first', async () => {
+    records[draftKey(adapter, 'conv:abc')] = { content: 'Old draft' };
+    mount(site.conversationPath('abc'));
+    // ChatGPT keeps its own composer drafts and fills the field before the plugin restores.
+    const field = prompt();
+    if (field instanceof HTMLTextAreaElement) field.value = 'Old draft';
+    else field.innerHTML = '<p>Old draft</p>';
+
+    activate(adapter);
+    await vi.advanceTimersByTimeAsync(DRAFT_RESTORE_DELAY_MS);
+    type('');
+    await vi.advanceTimersByTimeAsync(DRAFT_SAVE_DEBOUNCE_MS);
+
+    expect(stored(adapter, 'conv:abc')).toBeUndefined();
+  });
+
   it('drops the draft once Enter sends it and the host empties the composer', async () => {
     mount(site.conversationPath('abc'));
     activate(adapter);
@@ -335,6 +351,19 @@ describe.each(sites)('draftSave on $name', (site) => {
 
     expect(records).not.toHaveProperty(draftKey(adapter, 'new'));
     expect(records).not.toHaveProperty(draftKey(adapter, 'conv:fresh'));
+  });
+
+  it('keeps a clear made just before a reload, so the old draft does not come back', async () => {
+    records[draftKey(adapter, 'conv:abc')] = { content: 'Old draft' };
+    mount(site.conversationPath('abc'));
+    activate(adapter);
+    await vi.advanceTimersByTimeAsync(DRAFT_RESTORE_DELAY_MS);
+    expect(text()).toBe('Old draft');
+
+    type('');
+    window.dispatchEvent(new Event('pagehide'));
+
+    expect(stored(adapter, 'conv:abc')).toBeUndefined();
   });
 
   it('switches drafts with in-app navigation, saving the one left behind', async () => {
