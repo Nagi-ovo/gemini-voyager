@@ -53,5 +53,8 @@ Ships disabled; enable it from the popup on DeepSeek.
   theme): long blocks clip to the preview, the toggle sits in the copy /
   download / run row, and the bar sits above the first block. The styles use
   only `currentcolor` and a neutral translucent hover, so they follow either theme.
-- With the extension loaded on a live page (streaming, toggling, light theme): pending.
+- With the extension loaded on a live page (2026-10-11, two 30-line blocks):
+  long blocks start collapsed (380px), the toggle expands one to its full
+  732px and back, expand-all / collapse-all act on both, and the controls
+  show in light and dark themes. Still unchecked live: a reply while it streams.
 - `bun run plugin:check src/features/plugins/catalog/sites/deepseek/plugins/code-collapse`: passes.

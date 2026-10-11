@@ -15,5 +15,7 @@ This plugin contains no code of its own: it invokes Voyager's first-party
   in another table get no toolbar. Turning the plugin off removes every toolbar.
 - Requires Voyager plugin engine 1.8.0 or newer (`requires.handlers: ["tableCopy"]`).
 - Ships disabled; enable it from the popup on DeepSeek.
-- Status: needs a live check on DeepSeek's current table and KaTeX markup,
-  including whether streaming rebuilds the `<table>` (see PR #1035).
+- Live check (2026-10-11, finished reply with one table): the toolbar shows in
+  light and dark themes; Markdown copies the table with inline code kept,
+  TSV copies tab-separated plain text, and the "copied" toast appears. Still
+  unchecked live: a table with KaTeX formulas, and a table while it streams.
