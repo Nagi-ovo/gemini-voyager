@@ -60,6 +60,7 @@ describe('draft storage', () => {
   it('prunes the oldest drafts after ten successful saves and preserves unrelated storage', () => {
     const store = new DraftStore(vi.fn());
     records.otherSetting = 'preserved';
+    records['gvDraft:chatgpt:conv:old'] = { content: 'Catalog-site draft', timestamp: 0 };
     records['gvDraft_/app/legacy'] = { content: 'Legacy draft' };
     for (let index = 1; index <= 9; index += 1) {
       vi.mocked(Date.now).mockReturnValue(index);
@@ -78,6 +79,10 @@ describe('draft storage', () => {
       'gvDraft_/app/10',
     ]);
     expect(records.otherSetting).toBe('preserved');
+    expect(records['gvDraft:chatgpt:conv:old']).toEqual({
+      content: 'Catalog-site draft',
+      timestamp: 0,
+    });
   });
 
   it('reports a save only after storage acknowledges success', () => {

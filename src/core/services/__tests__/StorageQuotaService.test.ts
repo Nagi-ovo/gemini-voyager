@@ -565,12 +565,13 @@ describe('StorageQuotaService', () => {
   });
 
   it.each([
-    ['drafts' as const, ['gvDraft_/app/one', 'gvDraft_/app/two']],
+    ['drafts' as const, ['gvDraft_/app/one', 'gvDraft_/app/two', 'gvDraft:claude:conv:c1']],
     ['highlights' as const, ['gvHighlight:records', 'gvAnnotation:bucket:v1:acct:a:conv:b']],
   ])('clears the narrowly matched %s category', async (categoryId, expectedKeys) => {
     const local = createArea({
       'gvDraft_/app/one': { text: 'one' },
       'gvDraft_/app/two': { text: 'two' },
+      'gvDraft:claude:conv:c1': { content: 'site draft' },
       'gvHighlight:records': [1],
       'gvAnnotation:index': [2],
       'gvAnnotation:bucket:v1:acct:a:conv:b': [3],

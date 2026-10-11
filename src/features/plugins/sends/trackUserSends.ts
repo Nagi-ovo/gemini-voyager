@@ -45,6 +45,11 @@ export interface UserSend {
 /** Chats a site keeps nowhere, by site id; a send there is never reported. */
 const EPHEMERAL_CHECKS: Readonly<Record<string, () => boolean>> = { chatgpt: isTemporaryChat };
 
+/** Whether the chat open on `siteId` is one the host keeps nowhere (ChatGPT's temporary chats). */
+export function isEphemeralChat(siteId: string): boolean {
+  return EPHEMERAL_CHECKS[siteId]?.() === true;
+}
+
 /** `adapter`'s send inputs, or `null` when it lacks any (see `sendInputsOf`). */
 export function sendSiteOf(adapter: SiteAdapter | null): SendSite | null {
   const inputs = sendInputsOf(adapter);

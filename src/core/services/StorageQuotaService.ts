@@ -210,7 +210,7 @@ const CATEGORY_DEFINITIONS: readonly CategoryDefinition[] = [
     prefixes: ['gvHighlight:', 'gvAnnotation:bucket:'],
     clearable: true,
   },
-  { id: 'drafts', prefixes: ['gvDraft_'], clearable: true },
+  { id: 'drafts', prefixes: ['gvDraft_', StorageKeys.SITE_DRAFT_PREFIX], clearable: true },
   {
     id: 'cache',
     exactKeys: REGENERABLE_CACHE_KEYS,

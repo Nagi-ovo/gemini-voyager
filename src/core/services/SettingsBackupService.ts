@@ -435,6 +435,12 @@ export const NON_SETTINGS_BACKUP_POLICIES = {
     reason:
       'Prompt history is a device-local record of sent/edited prompts and is intentionally not backed up.',
   },
+  [StorageKeys.SITE_DRAFT_PREFIX]: {
+    storage: 'local',
+    disposition: 'device-local',
+    reason:
+      "Unsent composer drafts on catalog sites stay on this device, like Gemini's gvDraft_ entries.",
+  },
   [StorageKeys.GV_POPUP_SCROLL_TOP]: {
     storage: 'local',
     disposition: 'device-local',

@@ -29,6 +29,11 @@
       "official": true
     },
     {
+      "name": "claude-draft-save",
+      "source": "sites/claude/plugins/draft-save/plugin.json",
+      "official": true
+    },
+    {
       "name": "chatgpt-reading-width",
       "source": "sites/chatgpt/plugins/reading-width/plugin.json",
       "official": true
@@ -46,6 +51,11 @@
     {
       "name": "chatgpt-ctrl-enter-send",
       "source": "sites/chatgpt/plugins/ctrl-enter-send/plugin.json",
+      "official": true
+    },
+    {
+      "name": "chatgpt-draft-save",
+      "source": "sites/chatgpt/plugins/draft-save/plugin.json",
       "official": true
     },
     {
@@ -96,6 +106,11 @@
     {
       "name": "deepseek-ctrl-enter-send",
       "source": "sites/deepseek/plugins/ctrl-enter-send/plugin.json",
+      "official": true
+    },
+    {
+      "name": "deepseek-draft-save",
+      "source": "sites/deepseek/plugins/draft-save/plugin.json",
       "official": true
     },
     {

@@ -4,7 +4,7 @@ import { stripInstructionBlock } from '../folderProject/instructionBlock';
 
 const LOG_PREFIX = '[DraftSave]';
 
-/** Storage key prefix for draft entries in chrome.storage.local */
+/** Storage key prefix for Gemini draft entries in chrome.storage.local */
 const DRAFT_STORAGE_PREFIX = 'gvDraft_';
 
 /** Maximum number of drafts to keep (oldest are pruned) */
@@ -13,23 +13,38 @@ const MAX_DRAFTS = 5;
 /** Only run pruneOldDrafts every N saves to avoid reading all storage too often */
 const PRUNE_EVERY_N_SAVES = 10;
 
-/**
- * Get the storage key for a conversation path.
- */
-function getDraftStorageKey(path: string): string {
-  return `${DRAFT_STORAGE_PREFIX}${path}`;
+export interface DraftStoreOptions {
+  /** Every key is `<prefix><path>`; pruning only ever counts and removes keys under it. */
+  readonly prefix: string;
+  /** Text cleanup before the trim; Gemini strips Voyager's folder project instructions. */
+  readonly sanitize: (content: string) => string;
 }
+
+const GEMINI_DRAFTS: DraftStoreOptions = {
+  prefix: DRAFT_STORAGE_PREFIX,
+  sanitize: stripInstructionBlock,
+};
 
 export class DraftStore {
   private saveCount = 0;
 
-  constructor(private readonly onSaved: (path: string, content: string) => void) {}
+  constructor(
+    private readonly onSaved: (path: string, content: string) => void,
+    private readonly options: DraftStoreOptions = GEMINI_DRAFTS,
+  ) {}
+
+  /**
+   * Get the storage key for a conversation path.
+   */
+  private storageKey(path: string): string {
+    return `${this.options.prefix}${path}`;
+  }
 
   /**
    * Save a draft for the current conversation.
    */
   save(path: string, content: string): void {
-    const sanitizedContent = stripInstructionBlock(content).trim();
+    const sanitizedContent = this.options.sanitize(content).trim();
 
     if (!sanitizedContent) {
       // Remove draft if content is empty
@@ -37,7 +52,7 @@ export class DraftStore {
       return;
     }
 
-    const key = getDraftStorageKey(path);
+    const key = this.storageKey(path);
     const data = {
       content: sanitizedContent,
       timestamp: Date.now(),
@@ -67,7 +82,7 @@ export class DraftStore {
    * Remove a draft for a given path.
    */
   remove(path: string): void {
-    const key = getDraftStorageKey(path);
+    const key = this.storageKey(path);
     try {
       chrome.storage?.local?.remove(key);
       this.onSaved(path, '');
@@ -81,7 +96,7 @@ export class DraftStore {
    * Load a draft for a given path.
    */
   async load(path: string): Promise<string | null> {
-    const key = getDraftStorageKey(path);
+    const key = this.storageKey(path);
     return new Promise((resolve) => {
       try {
         chrome.storage?.local?.get(key, (result) => {
@@ -109,7 +124,7 @@ export class DraftStore {
 
         const draftEntries: { key: string; timestamp: number }[] = [];
         for (const [key, value] of Object.entries(items)) {
-          if (key.startsWith(DRAFT_STORAGE_PREFIX) && value && typeof value === 'object') {
+          if (key.startsWith(this.options.prefix) && value && typeof value === 'object') {
             const entry = value as { timestamp?: number };
             draftEntries.push({ key, timestamp: entry.timestamp ?? 0 });
           }

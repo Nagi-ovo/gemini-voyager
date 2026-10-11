@@ -415,6 +415,18 @@ avoid content that already has native collapse, such as DeepSeek's `.ds-collapsi
 There is no expand-all control. A plugin can expose `maxPx` and `startCollapsed` as settings
 using `"params": { "target": "userTurn", "maxPx": "{{maxHeight}}", "startCollapsed": "{{startCollapsed}}" }`.
 
+`draftSave` (unreleased, `sinceEngine: 'next'`, no parameters; reads `composer` and
+`sendButton`, and stays inert without `conversationIdPattern`) is Gemini's draft auto-save on a
+catalog site. It shares `pages/content/draftSave/draftStore.ts` (debounce, empty means remove,
+five newest per prefix) and the composer reader/writer in `core/services/composer/`. Drafts are
+stored in `chrome.storage.local` as `gvDraft:<siteId>:conv:<id>`, or `gvDraft:<siteId>:new` for
+every page without a conversation id, so they never meet Gemini's `gvDraft_<path>` entries.
+A draft is restored once per conversation entry and only into an empty composer; it is dropped
+when the composer empties within two seconds of Enter, the send button or a form submit, or
+when that send moves the new-chat page to its conversation. ChatGPT temporary chats save
+nothing. These sites have no account index in their routes, so drafts are per site and
+conversation, not per account. Unmount stops everything and keeps stored drafts.
+
 Some behaviour cannot be expressed as CSS or as the reversible DOM operations.
 A **primitive** is that behaviour, written once as first-party TypeScript inside
 the extension and given a name a manifest can call:

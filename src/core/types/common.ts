@@ -155,6 +155,9 @@ export const StorageKeys = {
   INPUT_COLLAPSE_WHEN_NOT_EMPTY: 'gvInputCollapseWhenNotEmpty',
   INPUT_VIM_MODE: 'gvInputVimMode',
   DRAFT_AUTO_SAVE: 'gvDraftAutoSave',
+  // chrome.storage.local key PREFIX for the draftSave primitive's drafts on catalog sites:
+  // `gvDraft:<siteId>:conv:<id>` or `gvDraft:<siteId>:new`. Gemini keeps its own `gvDraft_<path>`.
+  SITE_DRAFT_PREFIX: 'gvDraft:',
   PREVENT_AUTO_SCROLL_ENABLED: 'gvPreventAutoScrollEnabled',
   // Prompt history (#923). chrome.storage.local only — a per-device, per-account
   // record of sent/edited prompts so users can recover prompts that Gemini
