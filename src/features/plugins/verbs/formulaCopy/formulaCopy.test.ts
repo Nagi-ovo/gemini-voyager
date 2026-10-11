@@ -2,9 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { activateFormulaCopy } from '@/features/formulaCopy';
 
-import { PluginScope } from '../runtime/pluginScope';
-import { formulaCopyPrimitive } from './formulaCopy';
-import type { PrimitiveContext } from './types';
+import { PluginScope } from '../../runtime/pluginScope';
+import type { PrimitiveContext } from '../types';
+import { formulaCopyPrimitive } from './index';
 
 vi.mock('@/features/formulaCopy', () => ({
   activateFormulaCopy: vi.fn((scope: PluginScope) => {

@@ -11,11 +11,11 @@ import {
 } from '@/features/timeline/adapters/catalog/config';
 import { siteConversationConfig } from '@/features/timeline/adapters/catalog/conversationId';
 
-import type { ManifestIssue } from '../manifest/validate';
-import { sendSiteOf } from '../sends/trackUserSends';
-import { isSafeRegexSource } from '../sites/safeRegex';
-import { getPrimitiveContract } from './contracts';
-import type { Primitive } from './types';
+import type { ManifestIssue } from '../../manifest/validate';
+import { sendSiteOf } from '../../sends/trackUserSends';
+import { isSafeRegexSource } from '../../sites/safeRegex';
+import { getPrimitiveContract } from '../contracts';
+import type { Primitive } from '../types';
 
 export interface TurnNavigatorParams {
   readonly turn?: string;

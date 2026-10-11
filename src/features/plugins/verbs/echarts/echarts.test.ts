@@ -6,11 +6,11 @@ import { PANEL_BG } from '@/pages/content/echarts/renderer';
 import { buildChatGptAdapter } from '@/pages/content/export/adapter/platform/chatgpt';
 import { setCachedLanguage } from '@/utils/i18n';
 
-import { requireBundledSiteAdapter } from '../catalog/sites';
-import manifest from '../catalog/sites/chatgpt/plugins/diagram-rendering/plugin.json';
-import { PluginScope } from '../runtime/pluginScope';
-import { echartsPrimitive } from './echarts';
-import type { PrimitiveContext } from './types';
+import { requireBundledSiteAdapter } from '../../catalog/sites';
+import manifest from '../../catalog/sites/chatgpt/plugins/diagram-rendering/plugin.json';
+import { PluginScope } from '../../runtime/pluginScope';
+import type { PrimitiveContext } from '../types';
+import { echartsPrimitive } from './index';
 
 const library = vi.hoisted(() => {
   const instances: Array<Record<'setOption' | 'resize' | 'dispose', ReturnType<typeof vi.fn>>> = [];

@@ -1,7 +1,7 @@
 /**
  * Site-agnostic engine behind long code block collapse: Gemini's native
  * feature (`index.ts`) and the `codeCollapse` plugin primitive
- * (`features/plugins/verbs/codeCollapse.ts`) both drive it with a
+ * (`features/plugins/verbs/codeCollapse/`) both drive it with a
  * {@link CodeBlockCollapseSite} that says where a site keeps its blocks.
  *
  * A block is long at {@link LONG_CODE_BLOCK_MIN_LINES} lines or

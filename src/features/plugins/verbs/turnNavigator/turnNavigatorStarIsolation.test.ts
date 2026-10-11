@@ -5,10 +5,10 @@ import { StorageKeys } from '@/core/types/common';
 import type { StarredMessage } from '@/features/savedLibrary/starTypes';
 import { buildTurnId } from '@/features/timeline/adapters/catalog/turnMerge';
 
-import { PluginScope } from '../runtime/pluginScope';
-import type { SiteAdapter } from '../types';
-import { turnNavigatorPrimitive } from './turnNavigator';
-import type { PrimitiveContext } from './types';
+import { PluginScope } from '../../runtime/pluginScope';
+import type { SiteAdapter } from '../../types';
+import type { PrimitiveContext } from '../types';
+import { turnNavigatorPrimitive } from './index';
 
 const { addStarredMessage, getStarredMessagesForConversation, showTimelineStyleCoachmark } =
   vi.hoisted(() => ({

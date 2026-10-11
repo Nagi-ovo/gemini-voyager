@@ -7,9 +7,9 @@
 import { findChatInput } from '@/pages/content/chatInput';
 import { startInputVimMode } from '@/pages/content/chatInput/vimMode';
 
-import type { ManifestIssue } from '../manifest/validate';
-import { getPrimitiveContract } from './contracts';
-import type { Primitive } from './types';
+import type { ManifestIssue } from '../../manifest/validate';
+import { getPrimitiveContract } from '../contracts';
+import type { Primitive } from '../types';
 
 export interface VimInputParams {
   readonly composer?: string;

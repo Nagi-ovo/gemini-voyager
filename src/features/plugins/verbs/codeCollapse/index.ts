@@ -18,10 +18,10 @@ import {
 } from '@/pages/content/codeBlockCollapse/engine';
 import { onCachedLanguageChange } from '@/utils/i18n';
 
-import type { ManifestIssue } from '../manifest/validate';
+import type { ManifestIssue } from '../../manifest/validate';
+import { getPrimitiveContract } from '../contracts';
+import type { Primitive } from '../types';
 import { COLLAPSE_ALL_CLASS, createCollapseAllBar } from './codeCollapseAll';
-import { getPrimitiveContract } from './contracts';
-import type { Primitive } from './types';
 
 export interface CodeCollapseParams {
   readonly codeBlock?: string;

@@ -3,14 +3,14 @@ import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vite
 
 import { buildConversationId } from '@/features/timeline/adapters/catalog/conversationId';
 
-import { BUILTIN_PLUGINS } from '../builtin';
-import deepseekTimeline from '../catalog/sites/deepseek/plugins/timeline/plugin.json';
-import { validateManifest } from '../manifest/validate';
-import { PluginHost } from '../runtime/PluginHost';
-import { PluginScope } from '../runtime/pluginScope';
-import type { SiteAdapter } from '../types';
-import { turnNavigatorPrimitive } from './turnNavigator';
-import type { PrimitiveContext } from './types';
+import { BUILTIN_PLUGINS } from '../../builtin';
+import deepseekTimeline from '../../catalog/sites/deepseek/plugins/timeline/plugin.json';
+import { validateManifest } from '../../manifest/validate';
+import { PluginHost } from '../../runtime/PluginHost';
+import { PluginScope } from '../../runtime/pluginScope';
+import type { SiteAdapter } from '../../types';
+import type { PrimitiveContext } from '../types';
+import { turnNavigatorPrimitive } from './index';
 
 const validated = validateManifest({
   ...deepseekTimeline,

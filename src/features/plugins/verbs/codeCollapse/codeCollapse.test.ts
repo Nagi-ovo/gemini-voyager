@@ -3,13 +3,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { LONG_CODE_BLOCK_MIN_LINES } from '@/pages/content/codeBlockCollapse/engine';
 import { setCachedLanguage } from '@/utils/i18n';
 
-import { requireBundledSiteAdapter } from '../catalog/sites';
-import manifest from '../catalog/sites/deepseek/plugins/code-collapse/plugin.json';
-import { PluginScope } from '../runtime/pluginScope';
-import type { SiteAdapter } from '../types';
-import { type CodeCollapseParams, codeCollapsePrimitive } from './codeCollapse';
-import { getPrimitive } from './registry';
-import type { PrimitiveContext } from './types';
+import { requireBundledSiteAdapter } from '../../catalog/sites';
+import manifest from '../../catalog/sites/deepseek/plugins/code-collapse/plugin.json';
+import { PluginScope } from '../../runtime/pluginScope';
+import type { SiteAdapter } from '../../types';
+import { getPrimitive } from '../registry';
+import type { PrimitiveContext } from '../types';
+import { type CodeCollapseParams, codeCollapsePrimitive } from './index';
 
 const lines = (count: number, prefix = 'line') =>
   Array.from({ length: count }, (_, index) => `${prefix} ${index + 1}`).join('\n');

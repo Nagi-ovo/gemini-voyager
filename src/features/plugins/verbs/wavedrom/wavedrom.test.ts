@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { requireBundledSiteAdapter } from '../catalog/sites';
-import manifest from '../catalog/sites/chatgpt/plugins/diagram-rendering/plugin.json';
-import { PluginScope } from '../runtime/pluginScope';
-import type { PrimitiveContext } from './types';
-import { wavedromPrimitive } from './wavedrom';
+import { requireBundledSiteAdapter } from '../../catalog/sites';
+import manifest from '../../catalog/sites/chatgpt/plugins/diagram-rendering/plugin.json';
+import { PluginScope } from '../../runtime/pluginScope';
+import type { PrimitiveContext } from '../types';
+import { wavedromPrimitive } from './index';
 
 const WAVEJSON =
   '{ signal: [\n  { name: "clk", wave: "p...." },\n  { name: "data", wave: "x.34.x" }\n] }';

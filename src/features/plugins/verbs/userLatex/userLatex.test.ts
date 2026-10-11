@@ -8,11 +8,11 @@ import {
   _setUserLatexKatexLoaderForTest,
 } from '@/pages/content/userLatex';
 
-import { requireBundledSiteAdapter } from '../catalog/sites';
-import { PluginScope } from '../runtime/pluginScope';
-import type { SiteAdapter } from '../types';
-import type { PrimitiveContext } from './types';
-import { userLatexPrimitive } from './userLatex';
+import { requireBundledSiteAdapter } from '../../catalog/sites';
+import { PluginScope } from '../../runtime/pluginScope';
+import type { SiteAdapter } from '../../types';
+import type { PrimitiveContext } from '../types';
+import { userLatexPrimitive } from './index';
 
 const renderToString = vi.fn(
   (tex: string) => `<span class="katex"><span class="katex-html">${tex}</span></span>`,

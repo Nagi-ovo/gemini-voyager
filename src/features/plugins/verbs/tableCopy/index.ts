@@ -11,12 +11,12 @@
 import { createToaster } from '@/core/ui/toast/toaster';
 import { onCachedLanguageChange } from '@/utils/i18n';
 
-import type { ManifestIssue } from '../manifest/validate';
-import type { Dispose } from '../runtime/pluginScope';
-import { getPrimitiveContract } from './contracts';
-import { type TableCopyFormat, serializeTable } from './tableCopy/serialize';
-import { type TableCopyToolbar, createTableCopyToolbar, tableCopyText } from './tableCopy/toolbar';
-import type { Primitive } from './types';
+import type { ManifestIssue } from '../../manifest/validate';
+import type { Dispose } from '../../runtime/pluginScope';
+import { getPrimitiveContract } from '../contracts';
+import type { Primitive } from '../types';
+import { type TableCopyFormat, serializeTable } from './serialize';
+import { type TableCopyToolbar, createTableCopyToolbar, tableCopyText } from './toolbar';
 
 export interface TableCopyParams {
   readonly turn?: string;

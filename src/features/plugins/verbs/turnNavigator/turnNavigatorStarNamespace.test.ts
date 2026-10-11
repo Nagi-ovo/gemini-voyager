@@ -6,11 +6,11 @@ import type { StarredMessage } from '@/features/savedLibrary/starTypes';
 import { extractTurnHash } from '@/features/timeline/adapters/catalog/turnHash';
 import { buildTurnId } from '@/features/timeline/adapters/catalog/turnMerge';
 
-import { requireBundledSiteAdapter } from '../catalog/sites';
-import { PluginScope } from '../runtime/pluginScope';
-import type { SiteAdapter } from '../types';
-import { turnNavigatorPrimitive } from './turnNavigator';
-import type { PrimitiveContext } from './types';
+import { requireBundledSiteAdapter } from '../../catalog/sites';
+import { PluginScope } from '../../runtime/pluginScope';
+import type { SiteAdapter } from '../../types';
+import type { PrimitiveContext } from '../types';
+import { turnNavigatorPrimitive } from './index';
 
 const { library, addStarredMessage, getStarredMessagesForConversation } = vi.hoisted(() => {
   const library = new Map<string, StarredMessage[]>();

@@ -4,13 +4,13 @@ import { createContentExtractor } from '@/features/export/services/DOMContentExt
 import { turnSummary } from '@/features/timeline/adapters/catalog/turnHash';
 import { buildChatGptAdapter } from '@/pages/content/export/adapter/platform/chatgpt';
 
-import { requireBundledSiteAdapter } from '../catalog/sites';
-import manifest from '../catalog/sites/chatgpt/plugins/diagram-rendering/plugin.json';
-import { PluginScope } from '../runtime/pluginScope';
-import type { SiteAdapter } from '../types';
-import { mermaidPrimitive } from './mermaid';
-import { getPrimitive } from './registry';
-import type { PrimitiveContext } from './types';
+import { requireBundledSiteAdapter } from '../../catalog/sites';
+import manifest from '../../catalog/sites/chatgpt/plugins/diagram-rendering/plugin.json';
+import { PluginScope } from '../../runtime/pluginScope';
+import type { SiteAdapter } from '../../types';
+import { getPrimitive } from '../registry';
+import type { PrimitiveContext } from '../types';
+import { mermaidPrimitive } from './index';
 
 const library = vi.hoisted(() => ({ initialize: vi.fn(), render: vi.fn() }));
 vi.mock('mermaid', () => ({ default: library }));

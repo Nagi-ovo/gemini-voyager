@@ -17,9 +17,9 @@ import {
   type CodeBlockDiagramParams,
   activateCodeBlockDiagram,
   validateCodeBlockDiagramParams,
-} from './codeBlockDiagram';
-import { getPrimitiveContract } from './contracts';
-import type { Primitive } from './types';
+} from '../codeBlockDiagram';
+import { getPrimitiveContract } from '../contracts';
+import type { Primitive } from '../types';
 
 /** Holds the fullscreen viewer's styles; Gemini installs the same element. */
 const MERMAID_STYLES_ID = 'gv-mermaid-styles';

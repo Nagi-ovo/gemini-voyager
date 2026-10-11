@@ -9,9 +9,9 @@
  */
 import { activateFormulaCopy } from '@/features/formulaCopy';
 
-import type { ManifestIssue } from '../manifest/validate';
-import { getPrimitiveContract } from './contracts';
-import type { Primitive } from './types';
+import type { ManifestIssue } from '../../manifest/validate';
+import { getPrimitiveContract } from '../contracts';
+import type { Primitive } from '../types';
 
 export type FormulaCopyParams = Readonly<Record<string, never>>;
 

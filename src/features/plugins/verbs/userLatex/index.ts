@@ -11,10 +11,10 @@
  */
 import { dropStaleUserLatex, renderUserLatex, restoreUserLatex } from '@/pages/content/userLatex';
 
-import type { ManifestIssue } from '../manifest/validate';
-import type { Dispose } from '../runtime/pluginScope';
-import { getPrimitiveContract } from './contracts';
-import type { Primitive } from './types';
+import type { ManifestIssue } from '../../manifest/validate';
+import type { Dispose } from '../../runtime/pluginScope';
+import { getPrimitiveContract } from '../contracts';
+import type { Primitive } from '../types';
 
 export interface UserLatexParams {
   readonly turn?: string;

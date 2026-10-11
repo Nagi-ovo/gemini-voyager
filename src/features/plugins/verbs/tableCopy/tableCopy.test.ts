@@ -3,12 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { toastDriver } from '@/tests/toastDriver';
 import { setCachedLanguage } from '@/utils/i18n';
 
-import { requireBundledSiteAdapter } from '../catalog/sites';
-import { PluginScope } from '../runtime/pluginScope';
-import type { SiteAdapter } from '../types';
-import { tableCopyPrimitive } from './tableCopy';
-import { TABLE_COPY_CLASS } from './tableCopy/toolbar';
-import type { PrimitiveContext } from './types';
+import { requireBundledSiteAdapter } from '../../catalog/sites';
+import { PluginScope } from '../../runtime/pluginScope';
+import type { SiteAdapter } from '../../types';
+import type { PrimitiveContext } from '../types';
+import { tableCopyPrimitive } from './index';
+import { TABLE_COPY_CLASS } from './toolbar';
 
 const FORMULA =
   '<span class="katex"><span class="katex-mathml"><math><semantics><mi>x</mi>' +

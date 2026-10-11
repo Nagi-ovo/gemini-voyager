@@ -1,9 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { PluginScope } from '../runtime/pluginScope';
-import type { SiteAdapter } from '../types';
-import type { PrimitiveContext } from './types';
-import { vimInputPrimitive } from './vimInput';
+import { PluginScope } from '../../runtime/pluginScope';
+import type { SiteAdapter } from '../../types';
+import type { PrimitiveContext } from '../types';
+import { vimInputPrimitive } from './index';
 
 const mocks = vi.hoisted(() => ({
   startInputVimMode: vi.fn(),
