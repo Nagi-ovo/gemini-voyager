@@ -99,7 +99,10 @@ function domText(node: Node): string {
 /** Plain text only; attachment/mention emptiness remains the receiver's stricter check. */
 export function readComposer(field: HTMLElement): string {
   if (isTextField(field)) return field.value;
-  const text = (field.innerText ?? domText(field)).replace(/\r\n?/g, '\n').replace(/\u00a0/g, ' ');
+  // innerText separates paragraphs with a blank line, so a read-back draft would grow on every restore.
+  const text = domText(field)
+    .replace(/\r\n?/g, '\n')
+    .replace(/\u00a0/g, ' ');
   // An empty ProseMirror paragraph contributes a layout newline, not draft text.
   if (
     text.trim().length === 0 &&

@@ -137,11 +137,20 @@ describe('readComposer', () => {
     field.value = 'first\nsecond';
     expect(readComposer(field)).toBe('first\nsecond');
     const rich = editable();
-    Object.defineProperty(rich, 'innerText', {
-      configurable: true,
-      value: 'first\r\nsecond\u00a0word',
-    });
+    rich.innerHTML = '<p>first\r\nsecond\u00a0word</p>';
     expect(readComposer(rich)).toBe('first\nsecond word');
+  });
+
+  it('does not double paragraph breaks the way innerText does, so a restored draft keeps its blank lines', () => {
+    const field = editable();
+    field.innerHTML =
+      '<p>First</p><p data-empty-paragraph="true"><br class="ProseMirror-trailingBreak"></p><p>Third</p>';
+    // A browser's innerText reports "First\n\n\n\n\nThird" for this ProseMirror document.
+    Object.defineProperty(field, 'innerText', {
+      configurable: true,
+      value: 'First\n\n\n\n\nThird',
+    });
+    expect(readComposer(field)).toBe('First\n\nThird');
   });
 
   it('reads an empty ProseMirror paragraph as an empty draft and preserves paragraph/br breaks', () => {
