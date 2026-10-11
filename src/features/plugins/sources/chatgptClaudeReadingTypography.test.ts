@@ -39,6 +39,8 @@ interface Host {
   lineRatio: string;
   /** Table cell size at 125%: ChatGPT scales its rem cell token so 100% stays native. */
   cellSize125: string;
+  /** Paragraph bottom margin at 8px spacing: ChatGPT's flex answer root spaces paragraphs with top margins only. */
+  spacingEnd8: string;
 }
 
 const hosts: Host[] = [
@@ -50,6 +52,7 @@ const hosts: Host[] = [
     answerClass: '',
     lineRatio: '1.625',
     cellSize125: 'calc(0.875rem * 125 / 100)',
+    spacingEnd8: '',
     page:
       '<div contenteditable="true" data-composer-markdown><p id="composer">Draft</p></div>' +
       '<div data-turn-key="t1">' +
@@ -72,6 +75,7 @@ const hosts: Host[] = [
     answerClass: 'font-claude-message',
     lineRatio: '1.466667',
     cellSize125: '125%',
+    spacingEnd8: '8px',
     page:
       '<div contenteditable="true" data-testid="chat-input" class="ProseMirror">' +
       '<p id="composer">Draft</p></div>' +
@@ -200,7 +204,7 @@ describe.each(hosts)('$name reading typography', (host) => {
     try {
       expect(applied('first', 'font-size')).toBe('125%');
       expect(applied('head', 'font-size')).toBe(host.cellSize125);
-      expect(applied('inline', 'margin-block-end')).toBe('8px');
+      expect(applied('inline', 'margin-block-start')).toBe('8px');
       expect(applied('nested', 'font-size')).toBe('');
     } finally {
       engine.unmountAll();
@@ -218,7 +222,8 @@ describe.each(hosts)('$name reading typography', (host) => {
       expect(applied('inline', 'line-height')).toBe('calc(180 / 100)');
       expect(applied('inline', 'font-size')).toBe('');
       expect(applied('inline', 'margin-block-start')).toBe('8px');
-      expect(applied('inline', 'margin-block-end')).toBe('8px');
+      // Flex children do not collapse margins, so ChatGPT would otherwise double the gap.
+      expect(applied('inline', 'margin-block-end')).toBe(host.spacingEnd8);
       expect(applied('first', 'margin-block-start')).toBe('');
       expect(applied('last', 'margin-block-end')).toBe('');
       expect(applied('loose-p', 'margin-block-end')).toBe('');

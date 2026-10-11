@@ -46,8 +46,9 @@
   line-height: calc(var(--gv-plugin-reading-line-height, 160) / 100) !important;
 }
 
-/* Both sides change because collapsed margins keep the larger one; the answer's
- * outer edges stay native. */
+/* ChatGPT's answer root is a flex column, so margins add instead of collapsing:
+ * like the native styles, only the top margin spaces paragraphs, and the
+ * answer's outer edges stay native. */
 .gv-plugin-chatgpt-reading-typography[data-gv-spacing='true']
   :is([data-markdown-text-style], .markdown)
   p:not(
@@ -56,14 +57,4 @@
       *
   ):not(:first-child) {
   margin-block-start: var(--gv-plugin-reading-paragraph-spacing, 16px) !important;
-}
-
-.gv-plugin-chatgpt-reading-typography[data-gv-spacing='true']
-  :is([data-markdown-text-style], .markdown)
-  p:not(
-    :is([data-markdown-text-style], .markdown)
-      :is(li, table, pre, [data-markdown-copy='code-block'])
-      *
-  ):not(:last-child) {
-  margin-block-end: var(--gv-plugin-reading-paragraph-spacing, 16px) !important;
 }
