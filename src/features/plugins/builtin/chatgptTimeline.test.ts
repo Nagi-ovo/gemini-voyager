@@ -370,7 +370,8 @@ describe('ChatGPT timeline', () => {
     await mount();
 
     expect(document.querySelectorAll('[data-gv-turn-navigator="chatgpt"]')).toHaveLength(1);
-    expect(labels()).toEqual(['First question', 'Second question']);
+    // Account hashing uses real WebCrypto work, which advancing fake timers does not await.
+    await vi.waitFor(() => expect(labels()).toEqual(['First question', 'Second question']));
     expect(targetCount()).toBe(2);
     expect(getStarredMessagesForConversation).toHaveBeenLastCalledWith('chatgpt:conv:first');
 
