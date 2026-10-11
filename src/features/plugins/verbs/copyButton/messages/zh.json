@@ -1,0 +1,26 @@
+{
+  "copyButtonUserTurn": {
+    "message": "复制消息",
+    "description": "Copy button (icon-only, this is its tooltip) above one of the user’s own messages; copies its text"
+  },
+  "copyButtonAssistantTurn": {
+    "message": "复制回复",
+    "description": "Copy button (icon-only, this is its tooltip) above an assistant reply; copies its text"
+  },
+  "copyButtonThinkingBlock": {
+    "message": "复制思考过程",
+    "description": "Copy button (icon-only, this is its tooltip) above the model’s reasoning / thinking section; copies its text"
+  },
+  "copyButtonCodeBlock": {
+    "message": "复制代码",
+    "description": "Copy button (icon-only, this is its tooltip) above a code block; copies its text"
+  },
+  "copyButtonCopied": {
+    "message": "已复制到剪贴板",
+    "description": "Toast after the copy button put the text on the clipboard"
+  },
+  "copyButtonFailed": {
+    "message": "无法复制文本",
+    "description": "Toast when the copy button could not write the text to the clipboard"
+  }
+}

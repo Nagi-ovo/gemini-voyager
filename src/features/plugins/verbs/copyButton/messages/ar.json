@@ -1,0 +1,26 @@
+{
+  "copyButtonUserTurn": {
+    "message": "نسخ الرسالة",
+    "description": "Copy button (icon-only, this is its tooltip) above one of the user’s own messages; copies its text"
+  },
+  "copyButtonAssistantTurn": {
+    "message": "نسخ الرد",
+    "description": "Copy button (icon-only, this is its tooltip) above an assistant reply; copies its text"
+  },
+  "copyButtonThinkingBlock": {
+    "message": "نسخ التفكير",
+    "description": "Copy button (icon-only, this is its tooltip) above the model’s reasoning / thinking section; copies its text"
+  },
+  "copyButtonCodeBlock": {
+    "message": "نسخ الشيفرة",
+    "description": "Copy button (icon-only, this is its tooltip) above a code block; copies its text"
+  },
+  "copyButtonCopied": {
+    "message": "تم النسخ إلى الحافظة",
+    "description": "Toast after the copy button put the text on the clipboard"
+  },
+  "copyButtonFailed": {
+    "message": "تعذّر نسخ النص",
+    "description": "Toast when the copy button could not write the text to the clipboard"
+  }
+}

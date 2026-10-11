@@ -1,0 +1,26 @@
+{
+  "copyButtonUserTurn": {
+    "message": "Copiar mensaje",
+    "description": "Copy button (icon-only, this is its tooltip) above one of the user’s own messages; copies its text"
+  },
+  "copyButtonAssistantTurn": {
+    "message": "Copiar respuesta",
+    "description": "Copy button (icon-only, this is its tooltip) above an assistant reply; copies its text"
+  },
+  "copyButtonThinkingBlock": {
+    "message": "Copiar razonamiento",
+    "description": "Copy button (icon-only, this is its tooltip) above the model’s reasoning / thinking section; copies its text"
+  },
+  "copyButtonCodeBlock": {
+    "message": "Copiar código",
+    "description": "Copy button (icon-only, this is its tooltip) above a code block; copies its text"
+  },
+  "copyButtonCopied": {
+    "message": "Copiado al portapapeles",
+    "description": "Toast after the copy button put the text on the clipboard"
+  },
+  "copyButtonFailed": {
+    "message": "No se pudo copiar el texto",
+    "description": "Toast when the copy button could not write the text to the clipboard"
+  }
+}

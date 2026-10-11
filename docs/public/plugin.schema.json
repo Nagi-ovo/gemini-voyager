@@ -111,6 +111,7 @@
             "pattern": "^[a-z][a-zA-Z0-9]{1,39}$",
             "enum": [
               "codeCollapse",
+              "copyButton",
               "echarts",
               "formulaCopy",
               "mermaid",
@@ -318,6 +319,7 @@
               "pattern": "^[a-z][a-zA-Z0-9]{1,39}$",
               "enum": [
                 "codeCollapse",
+                "copyButton",
                 "echarts",
                 "formulaCopy",
                 "mermaid",

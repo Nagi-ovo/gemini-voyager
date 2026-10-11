@@ -1,0 +1,26 @@
+{
+  "copyButtonUserTurn": {
+    "message": "메시지 복사",
+    "description": "Copy button (icon-only, this is its tooltip) above one of the user’s own messages; copies its text"
+  },
+  "copyButtonAssistantTurn": {
+    "message": "답변 복사",
+    "description": "Copy button (icon-only, this is its tooltip) above an assistant reply; copies its text"
+  },
+  "copyButtonThinkingBlock": {
+    "message": "사고 과정 복사",
+    "description": "Copy button (icon-only, this is its tooltip) above the model’s reasoning / thinking section; copies its text"
+  },
+  "copyButtonCodeBlock": {
+    "message": "코드 복사",
+    "description": "Copy button (icon-only, this is its tooltip) above a code block; copies its text"
+  },
+  "copyButtonCopied": {
+    "message": "클립보드에 복사했습니다",
+    "description": "Toast after the copy button put the text on the clipboard"
+  },
+  "copyButtonFailed": {
+    "message": "텍스트를 복사하지 못했습니다",
+    "description": "Toast when the copy button could not write the text to the clipboard"
+  }
+}
