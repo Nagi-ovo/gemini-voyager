@@ -7,7 +7,7 @@ description: "Write and check a local plugin for the Voyager browser extension (
 
 Voyager is a browser extension for AI chat sites. A local plugin is a declarative JSON manifest (plugin.json) plus CSS that restyles or rearranges a chat page through reversible page changes. It runs no code of its own: Voyager checks it strictly on import, applies it, and removes every change when the plugin is turned off.
 
-This skill is generated from Voyager’s plugin engine 1.8.0. The latest copy is at https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md.
+This skill is generated from Voyager’s plugin engine 1.9.0. The latest copy is at https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md.
 
 ## Workflow
 
@@ -23,7 +23,7 @@ This skill is generated from Voyager’s plugin engine 1.8.0. The latest copy is
 - Required non-empty string fields: id, name, version, description, author, category, license, engine. Also "tier": "declarative", "matches" (see the target site) and "contributes".
 - "id": a short lowercase reverse-dotted slug such as "me.short-name" (a-z, 0-9, ".", "_", "-"). Voyager stores it as "local.<id>"; you do not add that prefix.
 - "version": "1.0.0"; raise it when you change the plugin. "author": "me". "license": "MIT".
-- "engine": ">=1.0.0", or ">=" the sinceEngine of every primitive the plugin uses. This build's plugin engine is 1.8.0.
+- "engine": ">=1.0.0", or ">=" the sinceEngine of every primitive the plugin uses. This build's plugin engine is 1.9.0.
 - "category": one of render-fix, theme, layout, readability, productivity, integration, other.
 - Write "name" and "description" in the language of the user. "i18n" translations are optional for a local plugin.
 - Optional: "$schema": "https://voyager.nagi.fun/plugin.schema.json" lets an editor check the file as you type. The import gate is stricter than the schema; `check` is the authority.
@@ -72,7 +72,7 @@ A primitive is behavior Voyager ships as code; a plugin can only call it by name
 - Every referenced key must exist in contributes.settings and its type must fit the primitive contract wherever statically knowable. Manifest loading checks substituted defaults. Each activation substitutes resolved stored values and runs the primitive’s validateParams; an invalid result skips the op with the same diagnostic as invalid static params. Setting changes dispose then reactivate templated primitive ops in order; static params keep the existing in-place update path.
 - Example: turnNavigator params { "position": "{{side}}" } with a select setting side whose options are left and right.
 
-- codeCollapse (sinceEngine 1.8.0): Collapses long code blocks in replies with Gemini's code block collapse: a toggle per block plus expand all / collapse all, with the code and the host's copy controls left intact. Long blocks start collapsed, the user's choice holds while a reply streams, and turning the plugin off restores every block. Reads: assistantTurn, codeBlock.
+- codeCollapse (sinceEngine 1.8.0): Collapses long code blocks in replies with Gemini's code block collapse: a toggle per block plus expand all / collapse all, with the code and the host's copy controls left intact. Long blocks start collapsed, the user's choice holds while a reply streams, and turning the plugin off restores every block. A block another code collapse already holds is left to it. On Gemini it is Gemini's own collapse and ignores params: every code block on the page, long ones expanded until the user folds them, no expand all bar, diagram blocks skipped. Reads: assistantTurn, codeBlock.
   - code (selector): Element inside the code block holding the code, measured for length and clipped while collapsed; defaults to pre, else the block itself.
   - action (selector): A native control inside the code block, such as its copy button; the toggle joins that control's row. Without it the toggle goes at the end of the block.
 - collapse (sinceEngine 1.8.0): Caps the visible height of long semantic content with an expand/collapse toggle outside the clipped element. Streaming content is measured incrementally, and an expanded element stays expanded while it survives host re-renders. Turning the plugin off restores its native layout.
@@ -92,6 +92,8 @@ A primitive is behavior Voyager ships as code; a plugin can only call it by name
   - code (selector): Element inside the code block holding the source text; defaults to code, else the block itself.
   - codeLine (selector): Line elements inside the source element, joined with newlines, for hosts that render one element per line without newline characters.
   - language (selector): Element inside the code block whose text is the language label; defaults to a language-* class on the source element or the block.
+  - copyButton (boolean, since 1.9.0): Adds a Copy button to the diagram's toolbar that copies the block's source, for a host whose own copy button is inside the code block the diagram view hides. Default false.
+  - exportImage (boolean, since 1.9.0): Lets Voyager's PNG and PDF export show the drawn diagram (Mermaid in its light theme) instead of the block's source; Markdown keeps the source, and a block still drawing or shown as code exports its source. Default false.
 - formulaCopy (sinceEngine 1.3.0): Click an inline or block formula to copy its LaTeX; hover shows it is clickable. Reads KaTeX / MathJax markup on the page.
 - mermaid (sinceEngine 1.7.0): Renders Mermaid code blocks in replies as diagrams with a Diagram / Code toggle, using the renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the diagrams. Reads: assistantTurn, codeBlock.
   - turn (selector): Reply elements whose code blocks are rendered; defaults to the site adapter's assistantTurn.
@@ -99,6 +101,8 @@ A primitive is behavior Voyager ships as code; a plugin can only call it by name
   - code (selector): Element inside the code block holding the source text; defaults to code, else the block itself.
   - codeLine (selector): Line elements inside the source element, joined with newlines, for hosts that render one element per line without newline characters.
   - language (selector): Element inside the code block whose text is the language label; defaults to a language-* class on the source element or the block.
+  - copyButton (boolean, since 1.9.0): Adds a Copy button to the diagram's toolbar that copies the block's source, for a host whose own copy button is inside the code block the diagram view hides. Default false.
+  - exportImage (boolean, since 1.9.0): Lets Voyager's PNG and PDF export show the drawn diagram (Mermaid in its light theme) instead of the block's source; Markdown keeps the source, and a block still drawing or shown as code exports its source. Default false.
 - quoteReply (sinceEngine 1.8.0): Quote selected text wholly inside one assistant reply into the composer, preserving LaTeX and existing drafts. Excludes user turns and adapter thinking blocks; never sends. Reads: assistantTurn, composer.
 - sendShortcut (sinceEngine 1.8.0): Enter inserts a newline in the composer; Ctrl/Cmd+Enter clicks its enabled send button when no attachment is uploading. Shift+Enter and IME composition keep the host behavior. Reads: composer, composerRoot, sendButton.
 - tableCopy (sinceEngine 1.8.0): A toolbar above each table in a reply copies it as Markdown (formulas kept as LaTeX, the same table conversation export writes) or as TSV for spreadsheets. The table stays untouched; turning the plugin off removes the toolbars. Reads: assistantTurn.
@@ -111,8 +115,9 @@ A primitive is behavior Voyager ships as code; a plugin can only call it by name
   - scrollContainer (selector): Element that scrolls the conversation; defaults to the site adapter's scrollContainer, else auto-detected.
   - yieldWhen (selector): While this matches (an open side panel, an artifact frame), the onboarding guide stays closed.
   - position (string): Rail side: "right" (default) or "left".
-- userLatex (sinceEngine 1.7.0): Renders $…$ and $$…$$ LaTeX the user typed in their own messages, keeping the source for export and copy; turning it off restores the text. Reads: userTurn.
+- userLatex (sinceEngine 1.7.0): Renders $…$ and $$…$$ LaTeX the user typed in their own messages, keeping the source for export and copy; turning it off restores the text it rendered and nothing another renderer drew. Reads: userTurn.
   - turn (selector): User-message elements to render LaTeX in; defaults to the site adapter's userTurn.
+  - unit (string, since 1.9.0): What is rendered as one piece: 'leaf' (default) renders each text-only element inside a turn; 'turn' renders each matched turn element whole, child elements and Voyager's own markers included, for a turn selector that names one line of text.
 - vimInput (sinceEngine 1.4.0): Vim-style modal editing and cursor navigation in the prompt composer. Reads: composer.
   - composer (selector): Prompt input to attach Vim modal editing to; defaults to the site adapter's composer.
 - wavedrom (sinceEngine 1.7.0): Renders WaveDrom (WaveJSON) code blocks in replies as timing diagrams with a Diagram / Code toggle, using the renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the diagrams. Reads: assistantTurn, codeBlock.
@@ -121,6 +126,8 @@ A primitive is behavior Voyager ships as code; a plugin can only call it by name
   - code (selector): Element inside the code block holding the source text; defaults to code, else the block itself.
   - codeLine (selector): Line elements inside the source element, joined with newlines, for hosts that render one element per line without newline characters.
   - language (selector): Element inside the code block whose text is the language label; defaults to a language-* class on the source element or the block.
+  - copyButton (boolean, since 1.9.0): Adds a Copy button to the diagram's toolbar that copies the block's source, for a host whose own copy button is inside the code block the diagram view hides. Default false.
+  - exportImage (boolean, since 1.9.0): Lets Voyager's PNG and PDF export show the drawn diagram (Mermaid in its light theme) instead of the block's source; Markdown keeps the source, and a block still drawing or shown as code exports its source. Default false.
 
 ## Finding selectors
 
@@ -155,10 +162,11 @@ When nothing declarative helps, stop there and write no files.
 Semantic anchors Gemini declares (use them as { "kind": "semantic", "key": … }):
 - userTurn: a user message container (today it matches `.user-query-bubble-with-background, .user-query-bubble-container, .user-query-container, user-query-content .user-query-bubble-with-background, user-query-content, user-query, div[aria-label="User message"], article[data-author="user"], ar…`)
 - assistantTurn: an assistant message container (today it matches `[aria-label="Gemini response"], [data-message-author-role="assistant"], [data-message-author-role="model"], article[data-author="assistant"], article[data-turn="assistant"], article[data-turn="model"], model-response, .model-response, resp…`)
+- codeBlock: a rendered code block (today it matches `code-block`)
 - composer: the prompt input the user types into (today it matches `input-area-v2, rich-textarea, .text-input-field`)
 - sidebar: the conversation list / navigation rail (today it matches `bard-sidenav, .gv-folder-container`)
 
-Gemini does not declare thinkingBlock, codeBlock, sidePanel, headerActions, scrollContainer, composerRoot, sendButton: a plugin that relies on one of these is refused. Use a CSS selector instead.
+Gemini does not declare thinkingBlock, sidePanel, headerActions, scrollContainer, composerRoot, sendButton: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
 Gemini allows only these primitives (native ops): formulaCopy, vimInput. No "theme".
 - `formulaCopy` runs the same code as Voyager’s own Formula copy setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `formulaCopy` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.

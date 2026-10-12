@@ -4,15 +4,20 @@ import { textWithLatexSource } from '@/core/utils/userLatexSource';
 import { turnSummary } from '@/features/timeline/adapters/catalog/turnHash';
 import { chatgptExtractUserText } from '@/pages/content/export/adapter/platform/chatgpt';
 import {
+  renderQuotedUserMessages,
+  startRenderedQuoteStyling,
+} from '@/pages/content/quoteReply/renderedQuotes';
+import {
   _resetUserLatexKatexLoader,
   _setUserLatexKatexLoaderForTest,
 } from '@/pages/content/userLatex';
 
 import { requireBundledSiteAdapter } from '../../catalog/sites';
+import geminiManifest from '../../catalog/sites/gemini/plugins/user-latex/plugin.json';
 import { PluginScope } from '../../runtime/pluginScope';
 import type { SiteAdapter } from '../../types';
 import type { PrimitiveContext } from '../types';
-import { userLatexPrimitive } from './index';
+import { type UserLatexParams, userLatexPrimitive } from './index';
 
 const renderToString = vi.fn(
   (tex: string) => `<span class="katex"><span class="katex-html">${tex}</span></span>`,
@@ -49,7 +54,7 @@ const sites = [
 
 let scope: PluginScope;
 
-function activate(adapter: SiteAdapter, params = {}) {
+function activate(adapter: SiteAdapter, params: UserLatexParams = {}, into: PluginScope = scope) {
   let counter: () => number = () => -1;
   const context: PrimitiveContext = {
     doc: document,
@@ -58,7 +63,7 @@ function activate(adapter: SiteAdapter, params = {}) {
     settings: {},
     setTargetCounter: (count) => (counter = count),
   };
-  void userLatexPrimitive.activate(scope, params, context);
+  void userLatexPrimitive.activate(into, params, context);
   return { count: () => counter() };
 }
 
@@ -98,6 +103,50 @@ describe('userLatex primitive', () => {
     expect(userLatexPrimitive.validateParams({ turn: ' ' }).success).toBe(false);
     expect(userLatexPrimitive.validateParams({ selector: '.mine' }).success).toBe(false);
     expect(userLatexPrimitive.validateParams([]).success).toBe(false);
+  });
+
+  it('accepts a leaf or turn unit and rejects any other', () => {
+    for (const unit of ['leaf', 'turn']) {
+      expect(userLatexPrimitive.validateParams({ unit })).toEqual({
+        success: true,
+        data: { unit },
+      });
+    }
+    for (const unit of ['line', '', 1, null]) {
+      expect(userLatexPrimitive.validateParams({ unit })).toEqual({
+        success: false,
+        error: [{ path: 'params.unit', message: 'must be "leaf" or "turn"' }],
+      });
+    }
+  });
+
+  it('restores only its own rendered lines when one of two user LaTeX plugins turns off', async () => {
+    const first = claudeMessage('first $a$');
+    first.classList.add('one');
+    const second = claudeMessage('second $b$');
+    second.classList.add('two');
+    const both = claudeMessage('both $c$');
+    both.classList.add('one', 'two');
+    const other = new PluginScope();
+    activate(sites[1].adapter, { turn: '.one' });
+    await vi.waitFor(() => expect(rendered(first)).toHaveLength(1));
+    await vi.waitFor(() => expect(rendered(both)).toHaveLength(1));
+    activate(sites[1].adapter, { turn: '.two' }, other);
+    await vi.waitFor(() => expect(rendered(second)).toHaveLength(1));
+    // A line both match stays with the plugin that took it first.
+    const holder = (message: Element) =>
+      message.querySelector('p')!.getAttribute('data-user-latex-owner');
+    expect(holder(both)).toBe(holder(first));
+    expect(holder(second)).not.toBe(holder(first));
+
+    await other.dispose();
+
+    expect(second.textContent).toBe('second $b$');
+    expect(rendered(first)).toHaveLength(1);
+    expect(rendered(both)).toHaveLength(1);
+    await scope.dispose();
+    expect(first.textContent).toBe('first $a$');
+    expect(both.textContent).toBe('both $c$');
   });
 
   it('a ChatGPT user message shows $I_3$ as rendered math', async () => {
@@ -241,5 +290,105 @@ describe('userLatex primitive', () => {
     await vi.waitFor(() => expect(rendered(sent)).toHaveLength(1));
     expect(editor.innerHTML).toBe('<div class="mine"><span>draft $x$</span></div>');
     expect(renderToString).toHaveBeenCalledTimes(1);
+  });
+});
+
+/** Gemini's sent message, one `p.query-text-line` per line (see `pages/content/userLatex`). */
+function geminiMessage(...lines: string[]): HTMLElement {
+  const query = document.createElement('user-query');
+  query.innerHTML =
+    '<span class="user-query-bubble-with-background"><span class="horizontal-container">' +
+    '<div class="query-text gds-body-l"><span class="cdk-visually-hidden">You said</span></div>' +
+    '</span></span>';
+  const text = query.querySelector('.query-text')!;
+  for (const line of lines) {
+    const p = document.createElement('p');
+    p.className = 'query-text-line';
+    p.textContent = line;
+    text.append(p);
+  }
+  document.querySelector('main')!.append(query);
+  return query;
+}
+
+describe('userLatex on Gemini', () => {
+  const gemini = requireBundledSiteAdapter('gemini');
+  const params = geminiManifest.contributes.domOps[0].params as UserLatexParams;
+  const linesOf = (message: Element) =>
+    Array.from(message.querySelectorAll<HTMLElement>('p.query-text-line'));
+  const markers = (element: Element) => element.querySelectorAll('.gv-rendered-quote-marker');
+
+  it('renders each line whole and keeps its source for export and the timeline', async () => {
+    const message = geminiMessage('Euler: $e^{i\\pi}+1=0$', 'plain line', 'costs $5');
+    const [math, plain, price] = linesOf(message);
+    activate(gemini, params);
+
+    await vi.waitFor(() => expect(rendered(math)).toHaveLength(1));
+    // Export reads each line's own source attribute, the timeline the turn's text.
+    expect(math.dataset.userLatexOriginal).toBe('Euler: $e^{i\\pi}+1=0$');
+    expect(textWithLatexSource(message)).toBe('You saidEuler: $e^{i\\pi}+1=0$plain linecosts $5');
+    expect(rendered(plain)).toHaveLength(0);
+    expect(price.textContent).toBe('costs $5');
+
+    await scope.dispose();
+    expect(math.textContent).toBe('Euler: $e^{i\\pi}+1=0$');
+    expect(linesOf(message).every((line) => line.attributes.length === 1)).toBe(true);
+  });
+
+  it('renders the edited text after Gemini repaints a line', async () => {
+    const [line] = linesOf(geminiMessage('original $x$'));
+    activate(gemini, params);
+    await vi.waitFor(() => expect(rendered(line)).toHaveLength(1));
+
+    line.textContent = 'edited $y$';
+
+    await vi.waitFor(() => expect(line.dataset.userLatexOriginal).toBe('edited $y$'));
+    expect(rendered(line)).toHaveLength(1);
+    expect(renderToString).toHaveBeenLastCalledWith('y', expect.anything());
+  });
+
+  it('renders a quoted user line and keeps its quote marker', async () => {
+    const message = geminiMessage('> quoted $x$', 'reply $y$');
+    renderQuotedUserMessages();
+    const [quoted, reply] = linesOf(message);
+    expect(quoted.classList.contains('gv-rendered-quote-line')).toBe(true);
+    expect(markers(quoted)).toHaveLength(1);
+    activate(gemini, params);
+
+    await vi.waitFor(() => expect(rendered(quoted)).toHaveLength(1));
+    await vi.waitFor(() => expect(rendered(reply)).toHaveLength(1));
+    expect(quoted.dataset.userLatexOriginal).toBe('> quoted $x$');
+    // Quote styling puts its marker back over the rendered line.
+    renderQuotedUserMessages();
+    expect(markers(quoted)).toHaveLength(1);
+    expect(rendered(quoted)).toHaveLength(1);
+    expect(textWithLatexSource(quoted)).toBe('> quoted $x$');
+  });
+
+  it.each([
+    ['user LaTeX', 'quote styling'],
+    ['quote styling', 'user LaTeX'],
+  ])('puts a quoted line back whole when %s turns off before %s', async (firstOff) => {
+    const message = geminiMessage('> quoted $x$');
+    const stopQuotes = startRenderedQuoteStyling();
+    const [quoted] = linesOf(message);
+    activate(gemini, params);
+    await vi.waitFor(() => expect(rendered(quoted)).toHaveLength(1));
+    renderQuotedUserMessages();
+    expect(markers(quoted)).toHaveLength(1);
+
+    if (firstOff === 'user LaTeX') {
+      await scope.dispose();
+      stopQuotes();
+    } else {
+      stopQuotes();
+      await scope.dispose();
+    }
+
+    expect(quoted.textContent).toBe('> quoted $x$');
+    expect(quoted.children).toHaveLength(0);
+    expect(quoted.className).toBe('query-text-line');
+    expect(quoted.attributes).toHaveLength(1);
+    expect(message.querySelector('[class^="gv-"], [class*=" gv-"]')).toBeNull();
   });
 });

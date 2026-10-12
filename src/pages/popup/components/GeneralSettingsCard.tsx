@@ -14,6 +14,8 @@ export interface GeneralSettingsValues {
   mermaidEnabled: boolean;
   wavedromEnabled: boolean;
   echartsEnabled: boolean;
+  codeBlockCollapseEnabled: boolean;
+  userLatexEnabled: boolean;
   quoteReplyEnabled: boolean;
   highlightEnabled: boolean;
   highlightTimelineMarkersEnabled: boolean;
@@ -124,6 +126,20 @@ export function GeneralSettingsCard({
           'echartsEnabled',
           'enableEchartsRendering',
           'enableEchartsRenderingHint',
+        )}
+        {row(
+          'code-block-collapse-enabled',
+          'enableCodeBlockCollapse',
+          'codeBlockCollapseEnabled',
+          'enableCodeBlockCollapse',
+          'enableCodeBlockCollapseHint',
+        )}
+        {row(
+          'user-latex-enabled',
+          'enableUserLatexRendering',
+          'userLatexEnabled',
+          'enableUserLatexRendering',
+          'enableUserLatexRenderingHint',
         )}
         {row(
           'quote-reply-enabled',

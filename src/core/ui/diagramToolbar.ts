@@ -1,12 +1,14 @@
 /**
- * Diagram / Code / fullscreen toolbar buttons shared by Gemini's diagram
+ * Diagram / Code / fullscreen / copy toolbar buttons shared by Gemini's diagram
  * renderers (Mermaid, ECharts, WaveDrom) and the plugin diagram primitives,
  * so every site shows the same icons and translated labels.
  */
 import {
   createAudioWaveformIcon,
   createChartColumnIcon,
+  createCheckIcon,
   createCodeXmlIcon,
+  createCopyIcon,
   createMaximize2Icon,
   createWorkflowIcon,
 } from '@/core/icons/diagramToolbarIcons';
@@ -15,7 +17,8 @@ import { getTranslationSyncUnsafe, onCachedLanguageChange } from '@/utils/i18n';
 /** Which diagram a Diagram button shows; each kind has its own icon. */
 export type DiagramKind = 'mermaid' | 'echarts' | 'wavedrom';
 
-export type DiagramToolbarIcon = DiagramKind | 'code' | 'fullscreen';
+/** `copied` is the copy button's state right after it copied. */
+export type DiagramToolbarIcon = DiagramKind | 'code' | 'fullscreen' | 'copy' | 'copied';
 
 const ICON_SIZE = 14;
 
@@ -29,22 +32,31 @@ const ICONS: Record<DiagramToolbarIcon, (size: number) => SVGSVGElement> = {
   wavedrom: createAudioWaveformIcon,
   code: createCodeXmlIcon,
   fullscreen: createMaximize2Icon,
+  copy: createCopyIcon,
+  copied: createCheckIcon,
 };
 
-const LABELS: Record<'diagram' | 'code' | 'fullscreen', readonly [key: string, fallback: string]> =
-  {
-    diagram: ['diagramButton', 'Diagram'],
-    code: ['diagramCodeButton', 'Code'],
-    fullscreen: ['echartsFullscreenButton', 'Fullscreen'],
-  };
+const DIAGRAM_LABEL = ['diagramButton', 'Diagram'] as const;
+
+const LABELS: Record<DiagramToolbarIcon, readonly [key: string, fallback: string]> = {
+  mermaid: DIAGRAM_LABEL,
+  echarts: DIAGRAM_LABEL,
+  wavedrom: DIAGRAM_LABEL,
+  code: ['diagramCodeButton', 'Code'],
+  fullscreen: ['echartsFullscreenButton', 'Fullscreen'],
+  copy: ['pm_copy', 'Copy'],
+  copied: ['pm_copied', 'Copied'],
+};
 
 const labelOf = (icon: DiagramToolbarIcon): string => {
-  const [key, fallback] = LABELS[icon === 'code' || icon === 'fullscreen' ? icon : 'diagram'];
+  const [key, fallback] = LABELS[icon];
   const text = getTranslationSyncUnsafe(key);
   return text && text !== key ? text : fallback;
 };
 
 const labelled = new Map<WeakRef<HTMLButtonElement>, DiagramToolbarIcon>();
+/** One ref per button, so giving a button another icon replaces its entry instead of adding one. */
+const refs = new WeakMap<HTMLButtonElement, WeakRef<HTMLButtonElement>>();
 let stopFollowingLanguage: (() => void) | null = null;
 
 function applyButton(button: HTMLButtonElement, icon: DiagramToolbarIcon): void {
@@ -74,6 +86,11 @@ function relabelAll(): void {
  */
 export function setDiagramToolbarButton(button: HTMLButtonElement, icon: DiagramToolbarIcon): void {
   applyButton(button, icon);
-  labelled.set(new WeakRef(button), icon);
+  let ref = refs.get(button);
+  if (!ref) {
+    ref = new WeakRef(button);
+    refs.set(button, ref);
+  }
+  labelled.set(ref, icon);
   stopFollowingLanguage ??= onCachedLanguageChange(relabelAll);
 }

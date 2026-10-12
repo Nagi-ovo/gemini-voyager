@@ -4,6 +4,11 @@
     "turn": {
       "type": "selector",
       "required": false
+    },
+    "unit": {
+      "type": "string",
+      "required": false,
+      "sinceEngine": "next"
     }
   }
 }

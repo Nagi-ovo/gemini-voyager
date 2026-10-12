@@ -17,6 +17,8 @@ import {
   verifyNativeHandlerBindings,
 } from '@/features/plugins/runtime/nativeHandlers';
 
+import { activateGeminiChatWidth, updateGeminiChatWidthSettings } from './chatWidth/pluginHandler';
+
 export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = {
   // formula-copy, input-vim and claude-timeline invoke primitives through a
   // `native` op in their manifests (see verbs/); they need no binding here.
@@ -29,6 +31,11 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   },
   'voyager.chatgpt-folders': {
     activate: activateChatGptFolders,
+  },
+  // Owned by `sites/featureOwners.ts`: mounted only once the plugin owns Gemini's chat width.
+  'voyager.gemini-chat-width': {
+    activate: activateGeminiChatWidth,
+    updateSettings: updateGeminiChatWidthSettings,
   },
 };
 

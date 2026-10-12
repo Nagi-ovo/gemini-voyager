@@ -1805,6 +1805,22 @@
     "message": "Afficher automatiquement les blocs de code d'options ECharts en graphiques interactifs",
     "description": "ECharts rendering feature hint"
   },
+  "enableCodeBlockCollapse": {
+    "message": "Replier les longs blocs de code",
+    "description": "Code block collapse toggle label"
+  },
+  "enableCodeBlockCollapseHint": {
+    "message": "Ajoute un bouton de repli à côté du bouton de copie des longs blocs de code ; ils restent dépliés jusqu'à ce que vous les repliiez",
+    "description": "Code block collapse feature hint"
+  },
+  "enableUserLatexRendering": {
+    "message": "Afficher le LaTeX de mes messages",
+    "description": "User message LaTeX rendering toggle label"
+  },
+  "enableUserLatexRenderingHint": {
+    "message": "Affiche en notation mathématique les formules LaTeX que vous tapez ; l'export et la copie gardent le texte d'origine",
+    "description": "User message LaTeX rendering feature hint"
+  },
   "diagramButton": {
     "message": "Diagramme",
     "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"

@@ -14,18 +14,14 @@ import { resolvePluginPlatformId } from '@/features/plugins/sites/registry';
 import { SiteRegistry } from '@/features/plugins/sites/registry';
 import { initI18n } from '@/utils/i18n';
 
+import { startGeminiChatAppearance } from './appearanceStartup';
 import { startCanvasExport } from './canvasExport/index';
 import { startChangelog } from './changelog/index';
-import { startChatFontSizeAdjuster } from './chatFontSize/index';
-import { startChatLineHeightAdjuster } from './chatLineHeight/index';
-import { startChatParagraphSpacingAdjuster } from './chatParagraphSpacing/index';
-import { startChatWidthAdjuster } from './chatWidth/index';
 import { runCoachmarkSequence } from './coachmark';
 import { claimContentScript } from './contentScriptHandoff';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
 import DefaultModelManager from './defaultModel/modelLocker';
-import { startEcharts } from './echarts/index';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import {
@@ -46,7 +42,6 @@ import { startNativeFormulaCopyForContent } from './formulaCopyStartup';
 import { startInputCollapse } from './inputCollapse/index';
 import { initKaTeXConfig } from './katexConfig';
 import { startMarkdownPatcher } from './markdownPatcher/index';
-import { startMermaid } from './mermaid/index';
 import { NATIVE_FEATURES } from './nativeFeatures';
 import { ensureScheme, stopScheme } from './platformTheme/scheme';
 import { registerBuiltinNativeHandlers } from './pluginNativeRegistration';
@@ -57,11 +52,11 @@ import { promptReorderCoachmarkStep } from './prompt/promptReorderCoachmark';
 import { resolvePromptSiteAdapter } from './prompt/resolvePromptSiteAdapter';
 import { slashPromptCoachmarkStep } from './prompt/slashPromptCoachmark';
 import { startQuoteReply } from './quoteReply/index';
+import { createGeminiRendererStartup } from './rendererStartup';
 import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { rulerTimelineCoachmarkStep } from './timeline/rulerTimelineCoachmark';
 import { usageCoachmarkStep } from './usageStatus/usageCoachmark';
-import { startUserLatex } from './userLatex/index';
 import { startVisualEffects } from './visualEffects';
 import { startWatermarkNativeNotice } from './watermarkNativeNotice';
 import {
@@ -69,7 +64,6 @@ import {
   startWatermarkRemover,
   stopWatermarkRemover,
 } from './watermarkRemover/index';
-import { startWaveDrom } from './wavedrom/index';
 
 // Suppress Vite's CSS preload errors in the Chrome extension content script context.
 // Dynamic imports (e.g., mermaid) trigger Vite's __vitePreload helper which tries to
@@ -106,6 +100,7 @@ const promptManager = createPromptManagerEngine(
   resolvePromptSiteAdapter(location.href),
   cleanupManager,
 );
+const geminiRenderers = createGeminiRendererStartup(officialAdmission, cleanupManager);
 
 let initialized = false;
 let initializationTimer: number | null = null;
@@ -242,10 +237,7 @@ async function initializeFeatures(): Promise<void> {
       // per setting.
       startFolderSpacingAdjuster('gemini');
       startFolderItemFontSizeAdjuster();
-      startChatWidthAdjuster();
-      startChatFontSizeAdjuster();
-      startChatLineHeightAdjuster();
-      startChatParagraphSpacingAdjuster();
+      await startGeminiChatAppearance(officialAdmission);
       startEditInputWidthAdjuster();
       startSidebarWidthAdjuster();
       startSidebarAutoHide();
@@ -340,7 +332,7 @@ async function initializeFeatures(): Promise<void> {
       // DOM enhancements install observers/listeners but do not need separate
       // idle waits between each initializer.
       startMarkdownPatcher();
-      await mountNativeFeature(cleanupManager, NATIVE_FEATURES.codeBlockCollapse);
+      await geminiRenderers.startCodeBlockCollapse();
       DefaultModelManager.getInstance().init();
       startExportButton();
       void startCanvasExport();
@@ -377,15 +369,11 @@ async function initializeFeatures(): Promise<void> {
       await delay(HEAVY_FEATURE_INIT_DELAY);
     }
 
+    // Not on Gemini Enterprise (returned above): the native diagram renderers
+    // never ran there, and the official manifests do not match it.
     if (location.hostname === 'gemini.google.com') {
-      // Initialize Mermaid rendering (lightweight)
-      startMermaid();
-      // Initialize WaveDrom rendering (lazy-loaded timing diagrams)
-      startWaveDrom();
-      // Initialize ECharts rendering (lazy-loaded charts)
-      startEcharts();
-      // Initialize user message LaTeX rendering
-      startUserLatex();
+      // Mermaid, WaveDrom and ECharts (lazy-loaded), then user message LaTeX.
+      await geminiRenderers.startRenderers();
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 
@@ -605,6 +593,7 @@ function handleVisibilityChange(): void {
 
       forkToggle?.handleChange(changes, areaName);
       researchPackToggle?.handleChange(changes, areaName);
+      geminiRenderers.handleStorageChange(changes, areaName);
     };
 
     // Quick check: only run on supported websites

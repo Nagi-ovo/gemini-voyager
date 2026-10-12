@@ -1,4 +1,8 @@
 import {
+  DIAGRAM_OWNER_ATTR,
+  readDiagramExport,
+} from '@/features/plugins/verbs/diagramExportRegistry';
+import {
   requestEChartsDataUrl,
   resolveEChartsExportContainer,
 } from '@/pages/content/echarts/exportBridge';
@@ -18,6 +22,66 @@ const ECHARTS_RENDERED_DIAGRAM_SELECTOR = '.gv-echarts-diagram';
 const ECHARTS_RENDERED_CANVAS_SELECTOR = '.gv-echarts-diagram canvas';
 const ECHARTS_EXPORT_CLASS = 'gv-export-echarts';
 
+/*
+ * Export markup of a drawn diagram. The image and print pipelines style and
+ * rasterize these containers (`mermaidSvgImage.ts`, `mermaidExportStyles.ts`),
+ * so Gemini's native renderers and the diagram primitives
+ * (`verbs/diagramExportRegistry.ts`) both build them here.
+ */
+
+/** A Mermaid diagram drawn in the light theme. */
+export function mermaidExportHtml(lightSvg: Element): string {
+  const exportContainer = document.createElement('div');
+  exportContainer.className = MERMAID_EXPORT_CLASS;
+  exportContainer.setAttribute(MERMAID_THEME_ATTRIBUTE, 'light');
+  exportContainer.appendChild(lightSvg.cloneNode(true));
+  return exportContainer.outerHTML;
+}
+
+export function waveDromExportHtml(svg: Element): string {
+  const exportContainer = document.createElement('div');
+  exportContainer.className = WAVEDROM_EXPORT_CLASS;
+  exportContainer.appendChild(svg.cloneNode(true));
+  return exportContainer.outerHTML;
+}
+
+/**
+ * A PNG of the ECharts chart in `diagram` (its `.gv-echarts-diagram` container),
+ * or null when it has no drawn canvas or the pixels cannot be read.
+ */
+export function echartsExportHtml(diagram: HTMLElement): string | null {
+  const canvas = diagram.querySelector<HTMLCanvasElement>(ECHARTS_RENDERED_CANVAS_SELECTOR);
+  if (!canvas || canvas.width <= 0 || canvas.height <= 0) return null;
+  try {
+    const liveExport = requestEChartsDataUrl(diagram);
+    const dataUrl = liveExport.handled ? liveExport.dataUrl : canvas.toDataURL('image/png');
+    if (!dataUrl) return null;
+    const exportContainer = document.createElement('div');
+    exportContainer.className = ECHARTS_EXPORT_CLASS;
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    const chartDescription =
+      diagram.getAttribute('aria-label')?.trim() ||
+      canvas.getAttribute('aria-label')?.trim() ||
+      diagram.querySelector<HTMLElement>('[aria-label]')?.getAttribute('aria-label')?.trim();
+    img.alt = chartDescription || 'Chart';
+    const inlineWidth = canvas.style.width.endsWith('px')
+      ? Number.parseFloat(canvas.style.width)
+      : 0;
+    const displayWidth = canvas.getBoundingClientRect().width || canvas.clientWidth || inlineWidth;
+    if (displayWidth > 0) {
+      img.width = Math.round(displayWidth);
+      img.style.maxWidth = '100%';
+      img.style.height = 'auto';
+    }
+    exportContainer.appendChild(img);
+    return exportContainer.outerHTML;
+  } catch {
+    // Tainted/read-only canvas: the caller falls back to the option source.
+    return null;
+  }
+}
+
 function extractMermaidContent(wrapper: HTMLElement): { html: string; text: string } | null {
   const renderedSvg = wrapper.querySelector<SVGSVGElement>(MERMAID_RENDERED_SVG_SELECTOR);
   const lightExportSvg = wrapper
@@ -29,13 +93,7 @@ function extractMermaidContent(wrapper: HTMLElement): { html: string; text: stri
   const svg =
     renderedTheme === 'light' ? renderedSvg : renderedTheme === 'dark' ? lightExportSvg : null;
 
-  if (svg) {
-    const exportContainer = document.createElement('div');
-    exportContainer.className = MERMAID_EXPORT_CLASS;
-    exportContainer.setAttribute(MERMAID_THEME_ATTRIBUTE, 'light');
-    exportContainer.appendChild(svg.cloneNode(true));
-    return { html: exportContainer.outerHTML, text: codeContent.text };
-  }
+  if (svg) return { html: mermaidExportHtml(svg), text: codeContent.text };
 
   return codeContent.text ? codeContent : null;
 }
@@ -45,12 +103,7 @@ function extractWavedromContent(wrapper: HTMLElement): { html: string; text: str
   const codeBlock = wrapper.querySelector<HTMLElement>('code-block, .code-block');
   const codeContent = codeBlock ? extractCodeBlock(codeBlock, 'wavedrom') : { html: '', text: '' };
 
-  if (renderedSvg) {
-    const exportContainer = document.createElement('div');
-    exportContainer.className = WAVEDROM_EXPORT_CLASS;
-    exportContainer.appendChild(renderedSvg.cloneNode(true));
-    return { html: exportContainer.outerHTML, text: codeContent.text };
-  }
+  if (renderedSvg) return { html: waveDromExportHtml(renderedSvg), text: codeContent.text };
 
   return codeContent.text ? codeContent : null;
 }
@@ -62,43 +115,11 @@ function extractEchartsContent(
   const diagram =
     resolveEChartsExportContainer(renderedWrapper) ??
     renderedWrapper.querySelector<HTMLElement>(ECHARTS_RENDERED_DIAGRAM_SELECTOR);
-  const canvas = diagram?.querySelector<HTMLCanvasElement>(ECHARTS_RENDERED_CANVAS_SELECTOR);
   const codeBlock = wrapper.querySelector<HTMLElement>('code-block, .code-block');
   const codeContent = codeBlock ? extractCodeBlock(codeBlock, 'echarts') : { html: '', text: '' };
 
-  if (canvas && canvas.width > 0 && canvas.height > 0) {
-    try {
-      const liveExport = diagram
-        ? requestEChartsDataUrl(diagram)
-        : { handled: false, dataUrl: null };
-      const dataUrl = liveExport.handled ? liveExport.dataUrl : canvas.toDataURL('image/png');
-      if (!dataUrl) throw new Error('ECharts composited export unavailable');
-      const exportContainer = document.createElement('div');
-      exportContainer.className = ECHARTS_EXPORT_CLASS;
-      const img = document.createElement('img');
-      img.src = dataUrl;
-      const chartDescription =
-        diagram?.getAttribute('aria-label')?.trim() ||
-        canvas.getAttribute('aria-label')?.trim() ||
-        diagram?.querySelector<HTMLElement>('[aria-label]')?.getAttribute('aria-label')?.trim();
-      img.alt = chartDescription || 'Chart';
-      const inlineWidth = canvas.style.width.endsWith('px')
-        ? Number.parseFloat(canvas.style.width)
-        : 0;
-      const displayWidth =
-        canvas.getBoundingClientRect().width || canvas.clientWidth || inlineWidth;
-      if (displayWidth > 0) {
-        img.width = Math.round(displayWidth);
-        img.style.maxWidth = '100%';
-        img.style.height = 'auto';
-      }
-      exportContainer.appendChild(img);
-      return { html: exportContainer.outerHTML, text: codeContent.text };
-    } catch {
-      // Tainted/read-only canvas: fall back to the option source below.
-    }
-  }
-
+  const html = diagram ? echartsExportHtml(diagram) : null;
+  if (html) return { html, text: codeContent.text };
   return codeContent.text ? codeContent : null;
 }
 
@@ -181,7 +202,16 @@ export function extractExportCodeBlock(
   if (element.matches(MERMAID_WRAPPER_SELECTOR)) return extractMermaidContent(element);
   if (element.matches(WAVEDROM_WRAPPER_SELECTOR)) return extractWavedromContent(element);
   if (element.matches(ECHARTS_WRAPPER_SELECTOR)) return extractEchartsContent(element);
-  return extractCodeBlock(element);
+  // A diagram plugin's block: its drawing when it can be read now, else the source below.
+  const drawn = element.hasAttribute(DIAGRAM_OWNER_ATTR) ? readDiagramExport(element) : null;
+  return drawn ?? extractCodeBlock(element);
+}
+
+/** Puts `html`'s first element in place of `element`, if it has one. */
+function replaceWithHtml(element: Element, html: string): void {
+  const replacement = document.createElement('div');
+  replacement.innerHTML = html;
+  if (replacement.firstElementChild) element.replaceWith(replacement.firstElementChild);
 }
 
 /**
@@ -196,8 +226,20 @@ export function serializeListHtml(
   const liveEchartsWrappers = Array.from(
     element.querySelectorAll<HTMLElement>(ECHARTS_WRAPPER_SELECTOR),
   );
+  // Diagram plugins register their drawings on live blocks; pair each clone with
+  // its live block by document order before stripping changes the clone.
+  const ownedSelector = `[${DIAGRAM_OWNER_ATTR}]`;
+  const liveDiagramBlocks = Array.from(element.querySelectorAll<HTMLElement>(ownedSelector));
   const cleanList = element.cloneNode(true) as HTMLElement;
+  const clonedDiagramBlocks = Array.from(cleanList.querySelectorAll<HTMLElement>(ownedSelector));
   stripExportArtifacts(cleanList);
+  // After stripping, which would drop the <style> inside a drawn SVG; before the
+  // code-block pass below, which would put the source in the drawing's place.
+  clonedDiagramBlocks.forEach((clone, index) => {
+    const live = liveDiagramBlocks[index];
+    const drawn = live ? readDiagramExport(live) : null;
+    if (drawn && cleanList.contains(clone)) replaceWithHtml(clone, drawn.html);
+  });
   cleanList.querySelectorAll<HTMLElement>(MERMAID_WRAPPER_SELECTOR).forEach((wrapper) => {
     const content = extractMermaidContent(wrapper);
     if (!content) return;

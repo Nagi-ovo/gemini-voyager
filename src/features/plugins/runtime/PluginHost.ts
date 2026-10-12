@@ -44,7 +44,10 @@ import { hostPolicyRefusal, packagedSiteForUrl } from '../sites/hostPolicy';
 import { matchesAnyPattern } from '../sites/matchPattern';
 import { SiteRegistry } from '../sites/registry';
 import { createDefaultPluginSources, listPluginManifests } from '../sources/defaultSources';
-import { resolveEffectiveSettings } from '../storage/legacySettingBindings';
+import {
+  type LegacySettingSnapshot,
+  resolveEffectiveSettings,
+} from '../storage/legacySettingBindings';
 import { type PluginStateMap, loadPluginState, subscribePluginState } from '../storage/pluginState';
 import {
   type EntitlementProvider,
@@ -61,6 +64,7 @@ import {
   DEFAULT_LEGACY_SETTINGS,
   type LegacySettingsSource,
   type LegacySnapshotFeed,
+  legacyBoundSettings,
   openLegacySnapshotFeed,
 } from './legacySnapshotFeed';
 import { PLUGIN_CATALOG_REFRESH_MESSAGE } from './messages';
@@ -492,6 +496,8 @@ export class PluginHost {
     const state = this.state;
     const legacy = this.legacy?.current() ?? null;
     const legacyPhase = this.legacy?.phase() ?? 'none';
+    const feed = this.legacy;
+    const wasChangedLive = (key: string): boolean => feed?.wasChangedLive(key) ?? false;
     const manifests = this.manifests.map((listed) => this.frozen.get(listed.id)?.mounted ?? listed);
     if (!engine) return;
     const verdicts: Record<Exclude<WishVerdict, 'skip'>, PluginManifest[]> = {
@@ -501,7 +507,7 @@ export class PluginHost {
     };
     for (const manifest of manifests) {
       if (this.generation !== gen) return;
-      const verdict = await this.evaluate(manifest, { state, legacy, legacyPhase });
+      const verdict = await this.evaluate(manifest, { state, legacy, legacyPhase, wasChangedLive });
       if (verdict !== 'skip') verdicts[verdict].push(manifest);
     }
     if (this.generation !== gen) return;
@@ -522,7 +528,7 @@ export class PluginHost {
     }
     for (const manifest of wanted) {
       if (!granted.has(manifest.id)) continue;
-      const settings = this.resolveSettings(manifest, state);
+      const settings = this.resolveSettings(manifest, state, legacy);
       if (engine.isActive(manifest.id)) {
         // Already active + still should run: push setting changes, but only to
         // the plugin whose settings actually changed — a state write for
@@ -572,9 +578,19 @@ export class PluginHost {
     }
   }
 
-  /** Declared defaults merged with stored values; `{}` for an official plugin bound to a legacy switch. */
-  private resolveSettings(manifest: PluginManifest, state: PluginStateMap): PluginSettings {
-    return resolveEffectiveSettings(manifest, state);
+  /**
+   * Declared defaults merged with stored values; an official plugin bound to a
+   * legacy switch reads only its legacy value keys (`{}` without any). A bound
+   * plugin only reaches this once the snapshot has landed.
+   */
+  private resolveSettings(
+    manifest: PluginManifest,
+    state: PluginStateMap,
+    legacy: LegacySettingSnapshot | null,
+  ): PluginSettings {
+    return (
+      legacyBoundSettings(manifest.id, legacy ?? {}) ?? resolveEffectiveSettings(manifest, state)
+    );
   }
 
   /**

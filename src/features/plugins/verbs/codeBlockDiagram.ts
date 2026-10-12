@@ -18,6 +18,11 @@
  * `data-gv-diagram-hidden`. One activation owns a block (`data-gv-diagram-owner`),
  * so two diagram plugins never stack panels on it. Unmount removes every panel
  * and both attributes.
+ *
+ * Two opt-in params serve a host whose own controls the diagram view hides:
+ * `copyButton` adds a toolbar button that copies the block's source, and
+ * `exportImage` lets export read the drawn diagram (`diagramExportRegistry.ts`)
+ * instead of the block's source in PNG and PDF.
  */
 import type { Result } from '@/core/types/common';
 import {
@@ -30,6 +35,11 @@ import { SCHEME_ATTR, type Scheme, getScheme } from '@/pages/content/platformThe
 
 import type { ManifestIssue } from '../manifest/validate';
 import type { Dispose, PluginScope } from '../runtime/pluginScope';
+import {
+  DIAGRAM_OWNER_ATTR,
+  type DiagramExport,
+  provideDiagramExport,
+} from './diagramExportRegistry';
 import type { PrimitiveContext } from './types';
 
 export interface CodeBlockDiagramParams {
@@ -38,6 +48,10 @@ export interface CodeBlockDiagramParams {
   readonly code?: string;
   readonly codeLine?: string;
   readonly language?: string;
+  /** Adds a toolbar button that copies the block's source. */
+  readonly copyButton?: boolean;
+  /** Lets PNG and PDF export read the drawn diagram instead of the block's source. */
+  readonly exportImage?: boolean;
 }
 
 export interface CodeBlockDiagram {
@@ -62,16 +76,24 @@ export interface CodeBlockDiagram {
   readonly fullscreenButton?: boolean;
   /** Page-level setup, such as fullscreen styles, for the activation's lifetime. */
   install?(doc: Document): () => void;
+  /**
+   * Export markup of what `target` shows, read synchronously; null leaves the
+   * block's source. Asked only when the plugin sets `exportImage`.
+   */
+  exportHtml?(target: HTMLElement): string | null;
 }
 
-const PARAM_NAMES: readonly string[] = ['turn', 'codeBlock', 'code', 'codeLine', 'language'];
+const SELECTOR_PARAMS: readonly string[] = ['turn', 'codeBlock', 'code', 'codeLine', 'language'];
+const BOOLEAN_PARAMS: readonly string[] = ['copyButton', 'exportImage'];
 const MAX_SELECTOR_LENGTH = 2_000;
 /** Gemini's pacing: streaming replies settle before a diagram is drawn. */
 const RESCAN_DELAY_MS = 1_000;
 const DEFAULT_CODE_BLOCK = 'pre';
 const HIDDEN_ATTR = 'data-gv-diagram-hidden';
 /** The activation that draws a block, `<kind>:<id>`; any other activation leaves it alone. */
-const OWNER_ATTR = 'data-gv-diagram-owner';
+const OWNER_ATTR = DIAGRAM_OWNER_ATTR;
+/** How long the copy button shows that it copied. */
+const COPIED_MS = 1_500;
 const PANEL_CLASS = 'gv-diagram-panel';
 const LANGUAGE_CLASS = /(?:^|\s)lang(?:uage)?-(\S+)/i;
 /**
@@ -141,6 +163,8 @@ interface Panel {
   /** Source of the last draw; null asks the next scan to draw again. */
   source: string | null;
   cleanup: void | (() => void);
+  /** Withdraws the export of the current drawing; null while there is none. */
+  withdraw: (() => void) | null;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -172,9 +196,12 @@ export function validateCodeBlockDiagramParams(
     return { success: false, error: [{ path: 'params', message: 'must be an object' }] };
   }
   const issues: ManifestIssue[] = [];
-  const params: Record<string, string> = {};
+  const params: Record<string, string | boolean> = {};
   for (const [key, value] of Object.entries(raw ?? {})) {
-    if (!PARAM_NAMES.includes(key)) {
+    if (BOOLEAN_PARAMS.includes(key)) {
+      if (typeof value === 'boolean') params[key] = value;
+      else issues.push({ path: `params.${key}`, message: 'must be true or false' });
+    } else if (!SELECTOR_PARAMS.includes(key)) {
       issues.push({ path: `params.${key}`, message: 'unknown parameter' });
     } else if (typeof value !== 'string' || !value.trim() || value.length > MAX_SELECTOR_LENGTH) {
       issues.push({ path: `params.${key}`, message: 'must be a non-empty selector' });
@@ -235,6 +262,7 @@ export function activateCodeBlockDiagram(
     const panel = panels.get(block);
     if (!panel) return;
     panels.delete(block);
+    panel.withdraw?.();
     panel.cleanup?.();
     panel.host.remove();
     block.removeAttribute(HIDDEN_ATTR);
@@ -251,6 +279,34 @@ export function activateCodeBlockDiagram(
       const setup = diagram.install;
       scope.effect(() => setup(doc), `${diagram.name}:install`);
     }
+  };
+
+  /** The drawn diagram while it still shows `block`'s current source; null exports the source. */
+  const exportOf = (block: HTMLElement, panel: Panel): DiagramExport | null => {
+    if (panels.get(block) !== panel || panel.host.dataset.view === 'code') return null;
+    const { source } = readCodeBlock(block, params);
+    // A source that moved on since the draw (streaming) has no drawing yet.
+    if (source !== panel.source) return null;
+    const html = diagram.exportHtml?.(panel.target) ?? null;
+    return html ? { html, text: `\`\`\`${diagram.name}\n${source}\n\`\`\`` } : null;
+  };
+
+  const copySource = (block: HTMLElement, button: HTMLButtonElement): void => {
+    let revert: Dispose | null = null;
+    button.addEventListener('click', () => {
+      // Read on click, with no await before writeText, so the click still allows the write.
+      const { source } = readCodeBlock(block, params);
+      void navigator.clipboard
+        ?.writeText(source)
+        .then(() => {
+          if (scope.isDisposed) return;
+          setDiagramToolbarButton(button, 'copied');
+          void revert?.();
+          revert = scope.timer(() => setDiagramToolbarButton(button, 'copy'), COPIED_MS);
+        })
+        // Clipboard permission denied: the button stays as it was.
+        .catch(() => {});
+    });
   };
 
   const createPanel = (block: HTMLElement): Panel => {
@@ -271,6 +327,8 @@ export function activateCodeBlockDiagram(
       toolbar.append(element);
       return element;
     };
+    // First, where Gemini's diagram views put the block's own copy button.
+    if (params.copyButton === true) copySource(block, button('copy'));
     const diagramButton = button(diagram.kind);
     const codeButton = button('code');
     const fullscreenButton = diagram.fullscreenButton ? button('fullscreen') : null;
@@ -291,7 +349,7 @@ export function activateCodeBlockDiagram(
 
     block.before(host);
     show('diagram');
-    const panel: Panel = { host, target, source: null, cleanup: undefined };
+    const panel: Panel = { host, target, source: null, cleanup: undefined, withdraw: null };
     panels.set(block, panel);
     return panel;
   };
@@ -300,17 +358,32 @@ export function activateCodeBlockDiagram(
     drawing.add(block);
     block.setAttribute(OWNER_ATTR, owner);
     try {
-      if (!(await prepare()) || scope.isDisposed || !block.isConnected) {
+      // The library loaded for one scheme; a scheme change replaces `ready`.
+      const prepared = prepare();
+      if (!(await prepared) || scope.isDisposed || !block.isConnected) {
         if (!panels.has(block)) release(block);
         return;
       }
       const panel = panels.get(block) ?? createPanel(block);
+      panel.withdraw?.();
+      panel.withdraw = null;
       panel.cleanup?.();
       panel.cleanup = undefined;
       panel.source = source;
       const cleanup = await diagram.render(panel.target, source);
-      if (panels.get(block) === panel) panel.cleanup = cleanup;
-      else cleanup?.();
+      if (panels.get(block) === panel) {
+        panel.cleanup = cleanup;
+        // The scheme changed while this loaded or drew, and that scan skipped the
+        // block: draw it again in the new scheme, and export none of this one.
+        if (ready !== prepared) {
+          panel.source = null;
+          scheduleScan();
+        } else if (params.exportImage === true) {
+          panel.withdraw = provideDiagramExport(block, () => exportOf(block, panel));
+        }
+      } else {
+        cleanup?.();
+      }
     } catch {
       // As on Gemini, an unexpected failure shows the code again.
       failed.set(block, source);

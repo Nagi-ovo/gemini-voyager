@@ -11,14 +11,27 @@
  * primitive's stylesheet clips the code element with a fade, so the host's
  * code and copy controls stay as they were. Turning the plugin off removes the
  * toggles, the bar, the classes and the stylesheet.
+ *
+ * On Gemini (the packaged adapter, chosen by its id) the primitive is Gemini's
+ * own collapse instead: every `codeBlock` on the page, thinking included,
+ * long blocks expanded until the user folds them, no expand-all bar, the
+ * toggle in the block's button row, diagram blocks skipped, and the clip and
+ * fade left to Voyager's content stylesheet. Params do not apply there.
+ *
+ * A block is claimed before it is touched (`data-gv-code-collapse-owner`):
+ * a second code collapse on the same page, another plugin or the native
+ * module, leaves a block the first holds alone until it lets go.
  */
 import {
   type CodeBlockCollapse,
+  type CodeBlockCollapseSite,
   createCodeBlockCollapse,
 } from '@/pages/content/codeBlockCollapse/engine';
+import { createGeminiCodeBlockSite } from '@/pages/content/codeBlockCollapse/geminiSite';
 import { onCachedLanguageChange } from '@/utils/i18n';
 
 import type { ManifestIssue } from '../../manifest/validate';
+import type { PluginScope } from '../../runtime/pluginScope';
 import { getPrimitiveContract } from '../contracts';
 import type { Primitive } from '../types';
 import { COLLAPSE_ALL_CLASS, createCollapseAllBar } from './codeCollapseAll';
@@ -85,6 +98,22 @@ const PAGE_CSS = `
   cursor: default;
 }`;
 
+/** The packaged Gemini adapter, whose code blocks follow Gemini's own collapse. */
+const GEMINI_SITE_ID = 'gemini';
+
+/** Gemini's collapse: no default fold, no bar, no stylesheet of its own. */
+function activateGemini(scope: PluginScope, site: CodeBlockCollapseSite): void {
+  const running = createCodeBlockCollapse(site);
+  scope.effect(() => {
+    running.start();
+    const stopFollowingLanguage = onCachedLanguageChange(() => running.relabel());
+    return () => {
+      stopFollowingLanguage();
+      running.stop();
+    };
+  }, 'code-collapse');
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -133,6 +162,11 @@ export const codeCollapsePrimitive: Primitive<CodeCollapseParams> = {
     if (!turn || !hostSelector) return;
     const thinking = adapter?.selectors.thinkingBlock;
     context.setTargetCounter(() => doc.querySelectorAll(turn).length);
+
+    if (adapter?.id === GEMINI_SITE_ID) {
+      activateGemini(scope, createGeminiCodeBlockSite(doc, hostSelector));
+      return { updateSettings() {} };
+    }
 
     let engine: CodeBlockCollapse | null = null;
     const bar = createCollapseAllBar(doc, () => engine!);

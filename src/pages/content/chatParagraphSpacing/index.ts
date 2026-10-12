@@ -2,19 +2,16 @@
  * Adjusts vertical spacing between chat markdown blocks.
  */
 import { StorageKeys } from '@/core/types/common';
+import {
+  CHAT_PARAGRAPH_SPACING_PX,
+  normalizeParagraphSpacingPx,
+} from '@/core/utils/chatAppearanceValues';
 
 const STYLE_ID = 'gv-chat-paragraph-spacing-style';
-const DEFAULT_PX = 12;
-const MIN_PX = 0;
-const MAX_PX = 24;
-
-const clampPx = (value: number) => {
-  if (!Number.isFinite(value)) return DEFAULT_PX;
-  return Math.min(MAX_PX, Math.max(MIN_PX, Math.round(value)));
-};
+const DEFAULT_PX = CHAT_PARAGRAPH_SPACING_PX.default;
 
 function applyParagraphSpacing(px: number) {
-  const spacing = clampPx(px);
+  const spacing = normalizeParagraphSpacingPx(px);
 
   let style = document.getElementById(STYLE_ID) as HTMLStyleElement;
   if (!style) {
@@ -50,7 +47,7 @@ export function startChatParagraphSpacingAdjuster() {
     [StorageKeys.CHAT_PARAGRAPH_SPACING, StorageKeys.CHAT_LINE_HEIGHT_ENABLED],
     (res) => {
       const storedValue = res?.[StorageKeys.CHAT_PARAGRAPH_SPACING];
-      currentPx = typeof storedValue === 'number' ? clampPx(storedValue) : DEFAULT_PX;
+      currentPx = normalizeParagraphSpacingPx(storedValue);
       enabled = res?.[StorageKeys.CHAT_LINE_HEIGHT_ENABLED] === true;
 
       if (enabled) {
@@ -83,7 +80,7 @@ export function startChatParagraphSpacingAdjuster() {
     if (changes[StorageKeys.CHAT_PARAGRAPH_SPACING]) {
       const newValue = changes[StorageKeys.CHAT_PARAGRAPH_SPACING].newValue;
       if (typeof newValue === 'number') {
-        currentPx = clampPx(newValue);
+        currentPx = normalizeParagraphSpacingPx(newValue);
         if (enabled) {
           applyParagraphSpacing(currentPx);
         }

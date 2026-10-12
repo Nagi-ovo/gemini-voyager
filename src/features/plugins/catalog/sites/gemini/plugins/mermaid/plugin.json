@@ -1,0 +1,76 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.gemini-mermaid",
+  "name": "Gemini · Mermaid diagrams",
+  "version": "1.0.0",
+  "description": "Show Mermaid code blocks in Gemini's replies as diagrams. Switch any block back to its code, copy the source from the diagram view, and keep the diagram in PNG and PDF exports.",
+  "changelog": "First release: Gemini's built-in Mermaid rendering, packaged as an official plugin that calls the mermaid primitive.",
+  "i18n": {
+    "zh": {
+      "name": "Gemini · Mermaid 图表",
+      "description": "把 Gemini 回复里的 Mermaid 代码块显示成图表。每个代码块都能切回源码，看图时也能一键复制源码；导出 PNG 和 PDF 时保留图表。",
+      "changelog": "首个版本：将 Gemini 内置的 Mermaid 渲染打包为调用 mermaid 原语的官方插件。"
+    },
+    "zh_TW": {
+      "name": "Gemini · Mermaid 圖表",
+      "description": "把 Gemini 回覆裡的 Mermaid 程式碼區塊顯示成圖表。每個區塊都能切回原始碼，看圖時也能一鍵複製原始碼；匯出 PNG 和 PDF 時保留圖表。",
+      "changelog": "首個版本：將 Gemini 內建的 Mermaid 渲染打包為呼叫 mermaid 原語的官方外掛。"
+    },
+    "ja": {
+      "name": "Gemini · Mermaid 図",
+      "description": "Gemini の返答に含まれる Mermaid のコードブロックを図として表示します。ブロックごとにコード表示へ戻せ、図の表示中もワンクリックでソースをコピーできます。PNG と PDF のエクスポートにも図が残ります。",
+      "changelog": "初版：Gemini 内蔵の Mermaid レンダリングを、mermaid プリミティブを呼び出す公式プラグインとして同梱しました。"
+    },
+    "ko": {
+      "name": "Gemini · Mermaid 다이어그램",
+      "description": "Gemini 답변의 Mermaid 코드 블록을 다이어그램으로 보여 줍니다. 블록마다 코드 보기로 되돌릴 수 있고, 다이어그램을 보는 중에도 한 번에 소스를 복사할 수 있으며, PNG와 PDF로 내보낼 때도 다이어그램이 남습니다.",
+      "changelog": "첫 릴리스: Gemini 내장 Mermaid 렌더링을 mermaid 프리미티브를 호출하는 공식 플러그인으로 포함했습니다."
+    },
+    "fr": {
+      "name": "Gemini · Diagrammes Mermaid",
+      "description": "Affiche les blocs de code Mermaid des réponses de Gemini sous forme de diagrammes. Chaque bloc peut revenir à son code, la source se copie en un clic depuis le diagramme, et les exports PNG et PDF gardent le diagramme.",
+      "changelog": "Première version : le rendu Mermaid intégré à Gemini, livré comme plugin officiel qui appelle la primitive mermaid."
+    },
+    "es": {
+      "name": "Gemini · Diagramas Mermaid",
+      "description": "Muestra los bloques de código Mermaid de las respuestas de Gemini como diagramas. Cada bloque puede volver a su código, el código fuente se copia con un clic desde el diagrama y las exportaciones en PNG y PDF conservan el diagrama.",
+      "changelog": "Primera versión: el renderizado de Mermaid integrado de Gemini, incluido como plugin oficial que llama a la primitiva mermaid."
+    },
+    "pt": {
+      "name": "Gemini · Diagramas Mermaid",
+      "description": "Mostra os blocos de código Mermaid das respostas do Gemini como diagramas. Cada bloco pode voltar ao código, a fonte é copiada com um clique a partir do diagrama, e as exportações em PNG e PDF mantêm o diagrama.",
+      "changelog": "Primeira versão: a renderização de Mermaid integrada do Gemini, incluída como plugin oficial que chama a primitiva mermaid."
+    },
+    "ru": {
+      "name": "Gemini · Диаграммы Mermaid",
+      "description": "Показывает блоки кода Mermaid в ответах Gemini как диаграммы. Любой блок можно переключить обратно на код, исходник копируется в один клик прямо из диаграммы, а экспорт в PNG и PDF сохраняет диаграмму.",
+      "changelog": "Первая версия: встроенная отрисовка Mermaid в Gemini, поставляемая как официальный плагин, который вызывает примитив mermaid."
+    },
+    "ar": {
+      "name": "Gemini · مخططات Mermaid",
+      "description": "يعرض كتل شيفرة Mermaid في ردود Gemini كمخططات. يمكن إرجاع أي كتلة إلى شيفرتها، ونسخ المصدر بنقرة واحدة أثناء عرض المخطط، ويحتفظ التصدير بصيغتي PNG وPDF بالمخطط.",
+      "changelog": "الإصدار الأول: عرض Mermaid المدمج في Gemini، مضمّنًا كإضافة رسمية تستدعي الأساسية mermaid."
+    }
+  },
+  "author": "voyager-official",
+  "category": "readability",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/gemini/plugins/mermaid",
+  "engine": ">=next",
+  "tier": "declarative",
+  "matches": ["https://gemini.google.com/*"],
+  "contributes": {
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "mermaid",
+        "params": {
+          "language": ".code-block-decoration > span",
+          "code": "code[data-test-id=\"code-content\"]",
+          "copyButton": true,
+          "exportImage": true
+        }
+      }
+    ]
+  }
+}

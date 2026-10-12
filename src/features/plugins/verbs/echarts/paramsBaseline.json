@@ -20,6 +20,16 @@
     "language": {
       "type": "selector",
       "required": false
+    },
+    "copyButton": {
+      "type": "boolean",
+      "required": false,
+      "sinceEngine": "next"
+    },
+    "exportImage": {
+      "type": "boolean",
+      "required": false,
+      "sinceEngine": "next"
     }
   }
 }

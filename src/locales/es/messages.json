@@ -1805,6 +1805,22 @@
     "message": "Representar automáticamente los bloques de código de opciones de ECharts como gráficos interactivos",
     "description": "ECharts rendering feature hint"
   },
+  "enableCodeBlockCollapse": {
+    "message": "Contraer bloques de código largos",
+    "description": "Code block collapse toggle label"
+  },
+  "enableCodeBlockCollapseHint": {
+    "message": "Añade un botón para contraer junto al botón de copiar en los bloques de código largos; siguen expandidos hasta que los contraes",
+    "description": "Code block collapse feature hint"
+  },
+  "enableUserLatexRendering": {
+    "message": "Renderizar LaTeX en mis mensajes",
+    "description": "User message LaTeX rendering toggle label"
+  },
+  "enableUserLatexRenderingHint": {
+    "message": "Muestra como fórmulas matemáticas el LaTeX que escribes; al exportar y copiar se conserva el texto original",
+    "description": "User message LaTeX rendering feature hint"
+  },
   "diagramButton": {
     "message": "Diagrama",
     "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"

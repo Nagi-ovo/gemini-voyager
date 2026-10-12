@@ -23,6 +23,8 @@ export const GENERAL_SETTINGS_STORAGE_DEFAULTS = {
   [StorageKeys.MERMAID_ENABLED]: true,
   [StorageKeys.WAVEDROM_ENABLED]: true,
   [StorageKeys.ECHARTS_ENABLED]: true,
+  [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: true,
+  [StorageKeys.USER_LATEX_ENABLED]: true,
   [StorageKeys.QUOTE_REPLY_ENABLED]: true,
   [StorageKeys.HIGHLIGHT_ENABLED]: false,
   [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: true,
@@ -45,6 +47,8 @@ type PlainGeneralSettings = Omit<
 const PLAIN_SETTING_STORAGE_KEYS = {
   persistentExportToolbarEnabled: StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED,
   mermaidEnabled: StorageKeys.MERMAID_ENABLED,
+  codeBlockCollapseEnabled: StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED,
+  userLatexEnabled: StorageKeys.USER_LATEX_ENABLED,
   quoteReplyEnabled: StorageKeys.QUOTE_REPLY_ENABLED,
   highlightEnabled: StorageKeys.HIGHLIGHT_ENABLED,
   highlightTimelineMarkersEnabled: StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED,
@@ -77,6 +81,8 @@ export function useGeneralPopupSettings({
   const [plainSettings, setPlainSettings] = useState<PlainGeneralSettings>({
     persistentExportToolbarEnabled: true,
     mermaidEnabled: true,
+    codeBlockCollapseEnabled: true,
+    userLatexEnabled: true,
     quoteReplyEnabled: true,
     // Preserve the initial render; the bulk storage read defaults highlights off.
     highlightEnabled: true,
@@ -135,6 +141,8 @@ export function useGeneralPopupSettings({
         persistentExportToolbarEnabled:
           raw[StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED] !== false,
         mermaidEnabled: raw[StorageKeys.MERMAID_ENABLED] !== false,
+        codeBlockCollapseEnabled: raw[StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED] !== false,
+        userLatexEnabled: raw[StorageKeys.USER_LATEX_ENABLED] !== false,
         quoteReplyEnabled: raw[StorageKeys.QUOTE_REPLY_ENABLED] !== false,
         highlightEnabled: raw[StorageKeys.HIGHLIGHT_ENABLED] === true,
         highlightTimelineMarkersEnabled:

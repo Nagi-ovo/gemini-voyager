@@ -1,25 +1,19 @@
 /**
  * Adjusts the chat message font size based on user settings (stored as percentage)
  */
+import {
+  CHAT_FONT_SIZE_PERCENT,
+  normalizeChatFontSizePercent,
+} from '@/core/utils/chatAppearanceValues';
 
 const STYLE_ID = 'gemini-voyager-chat-font-size';
-const DEFAULT_PERCENT = 100;
-const MIN_PERCENT = 80;
-const MAX_PERCENT = 150;
+const DEFAULT_PERCENT = CHAT_FONT_SIZE_PERCENT.default;
 
 const ENABLED_KEY = 'gvChatFontSizeEnabled';
 const VALUE_KEY = 'gvChatFontSize';
 
-const clampPercent = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, Math.round(value)));
-
-const normalizePercent = (value: number, fallback: number) => {
-  if (!Number.isFinite(value)) return fallback;
-  return clampPercent(value, MIN_PERCENT, MAX_PERCENT);
-};
-
 function applyFontSize(percent: number) {
-  const normalized = normalizePercent(percent, DEFAULT_PERCENT);
+  const normalized = normalizeChatFontSizePercent(percent);
   const sizeValue = `${normalized}%`;
 
   let style = document.getElementById(STYLE_ID) as HTMLStyleElement;
@@ -108,8 +102,7 @@ export function startChatFontSizeAdjuster() {
   // Load initial state
   chrome.storage?.sync?.get([VALUE_KEY, ENABLED_KEY], (res) => {
     const storedValue = res?.[VALUE_KEY];
-    const numericValue = typeof storedValue === 'number' ? storedValue : DEFAULT_PERCENT;
-    const normalized = normalizePercent(numericValue, DEFAULT_PERCENT);
+    const normalized = normalizeChatFontSizePercent(storedValue);
     currentPercent = normalized;
 
     enabled = res?.[ENABLED_KEY] === true;
@@ -144,7 +137,7 @@ export function startChatFontSizeAdjuster() {
     if (changes[VALUE_KEY]) {
       const newValue = changes[VALUE_KEY].newValue;
       if (typeof newValue === 'number') {
-        const normalized = normalizePercent(newValue, DEFAULT_PERCENT);
+        const normalized = normalizeChatFontSizePercent(newValue);
         currentPercent = normalized;
         if (enabled) {
           applyFontSize(currentPercent);

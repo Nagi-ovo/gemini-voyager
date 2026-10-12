@@ -95,6 +95,8 @@ describe('useGeneralPopupSettings', () => {
       mermaidEnabled: true,
       wavedromEnabled: true,
       echartsEnabled: true,
+      codeBlockCollapseEnabled: true,
+      userLatexEnabled: true,
       quoteReplyEnabled: true,
       highlightEnabled: false,
       highlightTimelineMarkersEnabled: true,
@@ -119,6 +121,8 @@ describe('useGeneralPopupSettings', () => {
         [StorageKeys.MERMAID_ENABLED]: false,
         [StorageKeys.WAVEDROM_ENABLED]: false,
         [StorageKeys.ECHARTS_ENABLED]: false,
+        [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: false,
+        [StorageKeys.USER_LATEX_ENABLED]: false,
         [StorageKeys.QUOTE_REPLY_ENABLED]: false,
         [StorageKeys.HIGHLIGHT_ENABLED]: true,
         [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: false,
@@ -135,6 +139,8 @@ describe('useGeneralPopupSettings', () => {
       mermaidEnabled: false,
       wavedromEnabled: false,
       echartsEnabled: false,
+      codeBlockCollapseEnabled: false,
+      userLatexEnabled: false,
       quoteReplyEnabled: false,
       highlightEnabled: true,
       highlightTimelineMarkersEnabled: false,
@@ -165,6 +171,61 @@ describe('useGeneralPopupSettings', () => {
     act(() => settings.onChange({ inputHaloHidden: !expected }));
     act(() => settings.hydrateFromStorage({ [StorageKeys.INPUT_HALO_HIDDEN]: stored }));
     expect(settings.values.inputHaloHidden).toBe(expected);
+  });
+
+  it.each([
+    ['missing', undefined, true],
+    ['false', false, false],
+    ['true', true, true],
+    ['the string "false"', 'false', true],
+    ['null', null, true],
+  ])(
+    'reads a %s code collapse or user LaTeX switch the way the page does',
+    async (_label, stored, expected) => {
+      await render();
+      act(() =>
+        settings.onChange({ codeBlockCollapseEnabled: !expected, userLatexEnabled: !expected }),
+      );
+      act(() =>
+        settings.hydrateFromStorage({
+          [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: stored,
+          [StorageKeys.USER_LATEX_ENABLED]: stored,
+        }),
+      );
+      expect(settings.values.codeBlockCollapseEnabled).toBe(expected);
+      expect(settings.values.userLatexEnabled).toBe(expected);
+    },
+  );
+
+  it('shows a stored off for code collapse and user LaTeX after the bulk read', async () => {
+    const stored = {
+      [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: false,
+      [StorageKeys.USER_LATEX_ENABLED]: false,
+    };
+    // chrome.storage `get(defaults)` answers only the keys it was asked for.
+    const read = Object.fromEntries(
+      Object.entries(GENERAL_SETTINGS_STORAGE_DEFAULTS).map(([key, fallback]) => [
+        key,
+        key in stored ? stored[key as keyof typeof stored] : fallback,
+      ]),
+    );
+    await render();
+    act(() => settings.hydrateFromStorage(read));
+    expect(settings.values.codeBlockCollapseEnabled).toBe(false);
+    expect(settings.values.userLatexEnabled).toBe(false);
+  });
+
+  it('writes the code collapse and user LaTeX switches to their sync keys', async () => {
+    await render();
+    act(() => settings.onChange({ codeBlockCollapseEnabled: false }));
+    expect(writeSyncStorage).toHaveBeenLastCalledWith({
+      [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: false,
+    });
+    act(() => settings.onChange({ userLatexEnabled: false }));
+    expect(writeSyncStorage).toHaveBeenLastCalledWith({ [StorageKeys.USER_LATEX_ENABLED]: false });
+    expect(settings.values.codeBlockCollapseEnabled).toBe(false);
+    expect(settings.values.userLatexEnabled).toBe(false);
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
   });
 
   it('persists only the changed plain settings and retains other values', async () => {

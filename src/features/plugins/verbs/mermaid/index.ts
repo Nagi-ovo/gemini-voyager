@@ -1,11 +1,12 @@
 /**
  * `mermaid` primitive: Gemini's Mermaid renderer (`pages/content/mermaid`) on
- * another site's code blocks, through the shared engine in `codeBlockDiagram.ts`
- * (its reference implementation). No bundled plugin uses it yet: ChatGPT draws
- * Mermaid itself, so its plugin lists only ECharts and WaveDrom. The same
+ * a site's code blocks, through the shared engine in `codeBlockDiagram.ts`
+ * (its reference implementation). Gemini's official plugin uses it; ChatGPT
+ * draws Mermaid itself, so its plugin lists only ECharts and WaveDrom. The same
  * `shouldRenderMermaid` decides which blocks are Mermaid on every site, the
  * library stays a lazy import, and the theme follows `html[data-gv-scheme]`.
  */
+import { mermaidExportHtml } from '@/features/export/services/exportCodeBlocks';
 import { createMermaidErrorCard, createStyles } from '@/pages/content/mermaid/codeBlock';
 import { createMermaidFullscreen } from '@/pages/content/mermaid/fullscreen';
 import { MermaidRenderer, sanitizeMermaidSvg } from '@/pages/content/mermaid/renderer';
@@ -19,15 +20,26 @@ import {
   validateCodeBlockDiagramParams,
 } from '../codeBlockDiagram';
 import { getPrimitiveContract } from '../contracts';
+import { leaseDiagramStyle } from '../diagramStyleLease';
 import type { Primitive } from '../types';
 
 /** Holds the fullscreen viewer's styles; Gemini installs the same element. */
 const MERMAID_STYLES_ID = 'gv-mermaid-styles';
 
-function mermaidDiagram(): CodeBlockDiagram {
+/** The SVG element `markup` holds, or null. */
+function parseSvg(markup: string): SVGSVGElement | null {
+  const template = document.createElement('template');
+  template.innerHTML = markup;
+  return template.content.querySelector('svg');
+}
+
+/** `exportImage` draws a light copy in a dark theme, so export always carries the light diagram. */
+function mermaidDiagram(exportImage: boolean): CodeBlockDiagram {
   let scheme: Scheme = 'light';
   const renderer = new MermaidRenderer(() => scheme);
   const fullscreen = createMermaidFullscreen();
+  /** Each drawn panel's light SVG, sanitized; absent for an error card or a missing light copy. */
+  const lightSvgs = new WeakMap<HTMLElement, string>();
   return {
     name: 'mermaid',
     kind: 'mermaid',
@@ -39,25 +51,37 @@ function mermaidDiagram(): CodeBlockDiagram {
       return renderer.initialize();
     },
     async render(target, source) {
-      // No light export copy: plugin sites export the code block, not the diagram.
-      const diagram = await renderer.render(normalizeMermaidCode(source), { lightExport: false });
+      lightSvgs.delete(target);
+      // Without exportImage, export reads the code block, so no second light-theme render.
+      const diagram = await renderer.render(normalizeMermaidCode(source), {
+        lightExport: exportImage,
+      });
       if (!diagram) throw new Error('Mermaid is unavailable');
       if (diagram.errorMessage !== null) {
         target.replaceChildren(createMermaidErrorCard(diagram.errorMessage));
-      } else {
-        target.innerHTML = await sanitizeMermaidSvg(diagram.svg);
+        return;
       }
+      target.innerHTML = await sanitizeMermaidSvg(diagram.svg);
+      if (!exportImage) return;
+      const light =
+        diagram.theme === 'dark'
+          ? diagram.lightExportSvg && (await sanitizeMermaidSvg(diagram.lightExportSvg))
+          : target.innerHTML;
+      if (light) lightSvgs.set(target, light);
+    },
+    exportHtml(target) {
+      const svg = parseSvg(lightSvgs.get(target) ?? '');
+      return svg ? mermaidExportHtml(svg) : null;
     },
     openFullscreen(target) {
       if (target.querySelector('svg')) fullscreen.open(target.innerHTML);
     },
     install(doc) {
+      const release = leaseDiagramStyle(doc, MERMAID_STYLES_ID, createStyles);
       // An open viewer belongs to this activation: turning the plugin off closes it and its listeners.
-      if (doc.getElementById(MERMAID_STYLES_ID)) return fullscreen.close;
-      createStyles();
       return () => {
         fullscreen.close();
-        doc.getElementById(MERMAID_STYLES_ID)?.remove();
+        release();
       };
     },
   };
@@ -67,6 +91,6 @@ export const mermaidPrimitive: Primitive<CodeBlockDiagramParams> = {
   contract: getPrimitiveContract('mermaid')!,
   validateParams: validateCodeBlockDiagramParams,
   activate(scope, params, context) {
-    activateCodeBlockDiagram(scope, params, context, mermaidDiagram());
+    activateCodeBlockDiagram(scope, params, context, mermaidDiagram(params.exportImage === true));
   },
 };

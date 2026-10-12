@@ -19,5 +19,5 @@ export const contract: PrimitiveContract = {
     },
   },
   description:
-    "Collapses long code blocks in replies with Gemini's code block collapse: a toggle per block plus expand all / collapse all, with the code and the host's copy controls left intact. Long blocks start collapsed, the user's choice holds while a reply streams, and turning the plugin off restores every block.",
+    "Collapses long code blocks in replies with Gemini's code block collapse: a toggle per block plus expand all / collapse all, with the code and the host's copy controls left intact. Long blocks start collapsed, the user's choice holds while a reply streams, and turning the plugin off restores every block. A block another code collapse already holds is left to it. On Gemini it is Gemini's own collapse and ignores params: every code block on the page, long ones expanded until the user folds them, no expand all bar, diagram blocks skipped.",
 };

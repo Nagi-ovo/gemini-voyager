@@ -341,6 +341,18 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ['enableEchartsRendering', 'enableEchartsRenderingHint'],
     ['echarts chart diagram'],
   ),
+  popupSearchTarget(
+    'general',
+    'enableCodeBlockCollapse',
+    ['enableCodeBlockCollapse', 'enableCodeBlockCollapseHint'],
+    ['code block collapse fold expand 代码块 折叠 展开'],
+  ),
+  popupSearchTarget(
+    'general',
+    'enableUserLatexRendering',
+    ['enableUserLatexRendering', 'enableUserLatexRenderingHint'],
+    ['latex math formula katex 公式 数学'],
+  ),
   popupSearchTarget('general', 'enableQuoteReply', ['enableQuoteReply', 'enableQuoteReplyHint']),
   popupSearchTarget('general', 'enableHighlights', ['enableHighlights', 'enableHighlightsHint']),
   popupSearchTarget('general', 'showHighlightTimelineMarkers', [

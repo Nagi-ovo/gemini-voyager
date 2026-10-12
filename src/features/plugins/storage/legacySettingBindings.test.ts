@@ -1,7 +1,10 @@
 import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
+import { isCodeBlockCollapseEnabledValue } from '@/pages/content/codeBlockCollapse';
+import { isUserLatexEnabledValue } from '@/pages/content/userLatex/index';
 
+import { legacyBoundSettings } from '../runtime/legacySnapshotFeed';
 import { FEATURE_OWNERS, OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import type { PluginManifest } from '../types';
 import {
@@ -18,6 +21,16 @@ const FORMULA_G = OFFICIAL_PLUGIN_IDS.geminiFormulaCopy;
 const FORMULA_A = OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy;
 const VIM = OFFICIAL_PLUGIN_IDS.geminiVimInput;
 const HALO = OFFICIAL_PLUGIN_IDS.geminiHideInputHalo;
+const FONT = OFFICIAL_PLUGIN_IDS.geminiChatFontSize;
+const SPACING = OFFICIAL_PLUGIN_IDS.geminiChatLineHeight;
+const WIDTH = OFFICIAL_PLUGIN_IDS.geminiChatWidth;
+const LATEX = OFFICIAL_PLUGIN_IDS.geminiUserLatex;
+const COLLAPSE = OFFICIAL_PLUGIN_IDS.geminiCodeCollapse;
+const DIAGRAMS = [
+  OFFICIAL_PLUGIN_IDS.geminiWaveDrom,
+  OFFICIAL_PLUGIN_IDS.geminiECharts,
+  OFFICIAL_PLUGIN_IDS.geminiMermaid,
+];
 
 const syncGet = () => chrome.storage.sync.get as unknown as Mock;
 const addListener = () => chrome.storage.onChanged.addListener as unknown as Mock;
@@ -64,15 +77,54 @@ describe('legacy enable bindings', () => {
     expect(legacyBindingFor('__proto__')).toBeNull();
   });
 
-  it('list each storage key once, with both formula ids sharing one switch', () => {
+  it('list each storage key once, switches and slider values, with both formula ids sharing one switch', () => {
     expect([...legacyBindingKeys()].sort()).toEqual(
       [
         StorageKeys.FORMULA_COPY_ENABLED,
         StorageKeys.INPUT_VIM_MODE,
         StorageKeys.INPUT_HALO_HIDDEN,
+        StorageKeys.CHAT_FONT_SIZE_ENABLED,
+        StorageKeys.CHAT_LINE_HEIGHT_ENABLED,
+        StorageKeys.CHAT_WIDTH_ENABLED,
+        StorageKeys.USER_LATEX_ENABLED,
+        StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED,
+        StorageKeys.WAVEDROM_ENABLED,
+        StorageKeys.ECHARTS_ENABLED,
+        StorageKeys.MERMAID_ENABLED,
+        StorageKeys.CHAT_FONT_SIZE,
+        StorageKeys.CHAT_LINE_HEIGHT,
+        StorageKeys.CHAT_PARAGRAPH_SPACING,
+        StorageKeys.CHAT_WIDTH,
       ].sort(),
     );
     expect(legacyBindingFor(FORMULA_G)?.key).toBe(legacyBindingFor(FORMULA_A)?.key);
+  });
+
+  // Production readings: the appearance switches `=== true`; collapse, LaTeX and diagrams `!== false`.
+  it.each([
+    ['missing', undefined, false, true],
+    ['false', false, false, false],
+    ['true', true, true, true],
+    ['"false"', 'false', false, true],
+    ['0', 0, false, true],
+    ['null', null, false, true],
+  ])(
+    'read a stored %s for the stage 3 switches as production does',
+    (_l, stored, appearance, on) => {
+      for (const id of [FONT, SPACING, WIDTH])
+        expect(legacyBindingFor(id)?.read(stored)).toBe(appearance);
+      for (const id of [LATEX, COLLAPSE, ...DIAGRAMS])
+        expect(legacyBindingFor(id)?.read(stored)).toBe(on);
+    },
+  );
+
+  it('read the code collapse and user LaTeX switches as their native toggles do', () => {
+    for (const stored of [undefined, null, true, false, 'false', 0]) {
+      expect(legacyBindingFor(COLLAPSE)?.read(stored)).toBe(
+        isCodeBlockCollapseEnabledValue(stored),
+      );
+      expect(legacyBindingFor(LATEX)?.read(stored)).toBe(isUserLatexEnabledValue(stored));
+    }
   });
 
   // Production readings: formula copy `!== false`; Vim and halo `=== true`.
@@ -119,6 +171,38 @@ describe('resolveEffectiveEnabled', () => {
       resolveEffectiveEnabled({}, { [StorageKeys.FORMULA_COPY_ENABLED]: undefined }, FORMULA_A),
     ).toBe(true);
     expect(resolveEffectiveEnabled({}, {}, VIM)).toBe(false);
+  });
+
+  it('derives the chat width switch from a customized width only until the page sees a live change', () => {
+    const customized = { [StorageKeys.CHAT_WIDTH]: 85 };
+    const changed =
+      (...keys: string[]) =>
+      (key: string) =>
+        keys.includes(key);
+    expect(resolveEffectiveEnabled({}, customized, WIDTH)).toBe(true);
+    expect(resolveEffectiveEnabled({}, { [StorageKeys.CHAT_WIDTH]: 70 }, WIDTH)).toBe(false);
+    expect(resolveEffectiveEnabled({}, customized, WIDTH, changed(StorageKeys.CHAT_WIDTH))).toBe(
+      false,
+    );
+    expect(
+      resolveEffectiveEnabled({}, customized, WIDTH, changed(StorageKeys.CHAT_WIDTH_ENABLED)),
+    ).toBe(false);
+    const switchedOff = { ...customized, [StorageKeys.CHAT_WIDTH_ENABLED]: false };
+    expect(resolveEffectiveEnabled({ [WIDTH]: { enabled: true } }, switchedOff, WIDTH)).toBe(false);
+    // The popup's own reading stays the single stored switch.
+    expect(legacyBindingFor(WIDTH)?.read(undefined)).toBe(false);
+  });
+
+  it('ignores stored plugin-state settings and enabled flags for the two official ids', () => {
+    const state = {
+      [LATEX]: { enabled: false, settings: { unit: 'leaf' } },
+      [COLLAPSE]: { enabled: false, settings: { defaultCollapsed: true } },
+    };
+    for (const id of [LATEX, COLLAPSE]) {
+      expect(resolveEffectiveEnabled(state, {}, id)).toBe(true);
+      expect(resolveEffectiveSettings(manifest(id), state)).toEqual({});
+      expect(legacyBoundSettings(id, {})).toEqual({});
+    }
   });
 
   it('leaves unbound ids to the plugin-state map, whatever the legacy keys say', () => {

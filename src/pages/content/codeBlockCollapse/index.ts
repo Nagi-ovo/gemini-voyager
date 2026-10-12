@@ -5,35 +5,22 @@
  */
 import { StorageKeys } from '@/core/types/common';
 
-import {
-  type CodeBlockCollapse,
-  type CodeBlockCollapseSite,
-  createCodeBlockCollapse,
-} from './engine';
+import type { NativeFeatureToggle } from '../featureLifecycle';
+import { type CodeBlockCollapse, createCodeBlockCollapse } from './engine';
+import { createGeminiCodeBlockSite } from './geminiSite';
 
 export { LONG_CODE_BLOCK_MIN_HEIGHT, LONG_CODE_BLOCK_MIN_LINES, isLongCodeBlock } from './engine';
 
-const CODE_SELECTOR = 'code[data-test-id="code-content"], code.code-container, pre > code';
-
-function isMermaidBlock(host: HTMLElement): boolean {
-  if (host.closest('.gv-mermaid-wrapper')) return true;
-
-  const language = host
-    .querySelector('.code-block-decoration > span')
-    ?.textContent?.trim()
-    .toLowerCase();
-  return language === 'mermaid';
+/** Gemini's switch: on unless the user turned it off. */
+export function isCodeBlockCollapseEnabledValue(value: unknown): boolean {
+  return value !== false;
 }
 
-const GEMINI_SITE: CodeBlockCollapseSite = {
-  root: () => document.body,
-  hostSelector: 'code-block',
-  accepts: (host) => !isMermaidBlock(host),
-  code: (host) => host.querySelector<HTMLElement>(CODE_SELECTOR),
-  actions(host) {
-    const decoration = host.querySelector<HTMLElement>('.code-block-decoration');
-    return decoration?.querySelector<HTMLElement>('.buttons') ?? decoration;
-  },
+/** The popup switch that starts and stops {@link startCodeBlockCollapse} while the page lives. */
+export const CODE_BLOCK_COLLAPSE_TOGGLE: NativeFeatureToggle = {
+  key: StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED,
+  isEnabled: isCodeBlockCollapseEnabledValue,
+  areas: ['sync'],
 };
 
 let engine: CodeBlockCollapse | null = null;
@@ -42,7 +29,7 @@ let languageChangeListener:
   | null = null;
 
 function geminiEngine(): CodeBlockCollapse {
-  engine ??= createCodeBlockCollapse(GEMINI_SITE);
+  engine ??= createCodeBlockCollapse(createGeminiCodeBlockSite(document, 'code-block'));
   return engine;
 }
 

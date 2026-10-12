@@ -1,52 +1,24 @@
 /**
  * Adjusts the chat area width based on user settings (stored as viewport %)
  */
-import { classifyGeminiRoute } from '@/core/gemini/nativeHealth';
-import { getGeminiTurnSelectors } from '@/core/gemini/turnSelectors';
+import {
+  CHAT_WIDTH_PERCENT,
+  isCustomizedChatWidth,
+  normalizeChatWidthPercent,
+} from '@/core/utils/chatAppearanceValues';
 
-import { nativeHealthReporter } from '../nativeHealth';
-import { hasRenderedConversationContent } from '../nativeHealth/pageEvidence';
+import { buildChatWidthCss, chatWidthPx } from './chatWidthCss';
+import { createUserTurnProbe } from './userTurnProbe';
 
 const STYLE_ID = 'gemini-voyager-chat-width';
-const DEFAULT_PERCENT = 70;
-const MIN_PERCENT = 30;
-const MAX_PERCENT = 100;
-const LEGACY_BASELINE_PX = 1200;
-
-function getTableSelectors(): string[] {
-  return [
-    'table-block',
-    '.table-block',
-    'table-block .table-block',
-    'table-block .table-content',
-    '.table-block.new-table-style',
-    '.table-block.has-scrollbar',
-    '.table-block .table-content',
-    '.table-block-component',
-    '.horizontal-scroll-wrapper',
-  ];
-}
-
-const clampPercent = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, Math.round(value)));
-
-const normalizePercent = (value: number, fallback: number) => {
-  if (!Number.isFinite(value)) return fallback;
-  if (value > MAX_PERCENT) {
-    const approx = (value / LEGACY_BASELINE_PX) * 100;
-    return clampPercent(approx, MIN_PERCENT, MAX_PERCENT);
-  }
-  return clampPercent(value, MIN_PERCENT, MAX_PERCENT);
-};
+const DEFAULT_PERCENT = CHAT_WIDTH_PERCENT.default;
 
 function applyWidth(widthPercent: number) {
-  const normalizedPercent = normalizePercent(widthPercent, DEFAULT_PERCENT);
   // Use screen width as reference to compute pixel-based max-width.
   // This provides adaptive behavior for split-screen / narrow windows:
   // - Fullscreen: width ≈ percent% of screen (as intended by the slider)
   // - Split-screen: content fills available space since pixel max-width > viewport
-  const screenWidth = screen.availWidth || screen.width || 1920;
-  const widthValue = `${Math.round((normalizedPercent / 100) * screenWidth)}px`;
+  const widthPx = chatWidthPx(widthPercent);
 
   let style = document.getElementById(STYLE_ID) as HTMLStyleElement;
   if (!style) {
@@ -55,215 +27,7 @@ function applyWidth(widthPercent: number) {
     document.head.appendChild(style);
   }
 
-  const userSelectors = getGeminiTurnSelectors('chatWidth.userTurn');
-  const assistantSelectors = getGeminiTurnSelectors('chatWidth.assistantTurn');
-  const tableSelectors = getTableSelectors();
-
-  // Build comprehensive CSS rules
-  const userRules = userSelectors.map((sel) => `${sel}`).join(',\n    ');
-  const assistantRules = assistantSelectors.map((sel) => `${sel}`).join(',\n    ');
-  const tableRules = tableSelectors.map((sel) => `${sel}`).join(',\n    ');
-
-  // A small gap to account for scrollbars
-  const GAP_PX = 10;
-
-  style.textContent = `
-    /* Remove width constraints from outer containers that contain conversations */
-    .content-wrapper:has(chat-window),
-    .main-content:has(chat-window),
-    .content-container:has(chat-window),
-    .content-container:has(.conversation-container) {
-      max-width: none !important;
-    }
-
-    /* Remove width constraints from main and conversation containers, but not buttons */
-    [role="main"]:has(chat-window),
-    [role="main"]:has(.conversation-container) {
-      max-width: none !important;
-    }
-
-    /* Target chat window and related containers; A small gap to account for scrollbars */
-    chat-window,
-    .chat-container,
-    chat-window-content,
-    .chat-history-scroll-container,
-    .chat-history,
-    .conversation-container {
-      max-width: none !important;
-      padding-right: ${GAP_PX}px !important;
-      box-sizing: border-box !important;
-    }
-
-    /* Gemini's Angular host selector outranks ours: both width variables need !important.
-       Grid-scoped child rules hardcode narrow widths too, so variables alone cannot widen turns. */
-    chat-window,
-    chat-window-content,
-    .enable-luminous-content-width-update,
-    .chat-container,
-    .chat-history-scroll-container,
-    infinite-scroller.chat-history {
-      --bard-chat-window-content-width-default: ${widthValue} !important;
-      --bard-chat-window-max-width-default: ${widthValue} !important;
-    }
-
-    .conversation-container {
-      max-width: ${widthValue} !important;
-      width: min(100%, ${widthValue}) !important;
-    }
-
-    .enable-extended-and-xl-grid .conversation-container user-query,
-    .enable-extended-and-xl-grid .conversation-container model-response,
-    .enable-extended-and-xl-grid .conversation-container model-response-disclaimers,
-    .enable-extended-and-xl-grid .conversation-container .response-container-header,
-    .enable-extended-and-xl-grid .conversation-container .response-container-footer,
-    .enable-extended-and-xl-grid .conversation-container .response-footer,
-    .enable-extended-and-xl-grid .conversation-container message-actions,
-    .enable-extended-and-xl-grid .conversation-container thinking-overlay,
-    .enable-extended-and-xl-grid .conversation-container .thoughts-container,
-    .enable-extended-and-xl-grid .conversation-container .image-gen-shimmer-placeholder,
-    .enable-extended-and-xl-grid .conversation-container election-info-disclaimer,
-    .enable-extended-and-xl-grid .conversation-container finance-info-disclaimer,
-    .enable-extended-and-xl-grid .conversation-container personal-intelligence-banner,
-    .enable-extended-and-xl-grid .conversation-container remy-goal-status-footer,
-    .enable-extended-and-xl-grid .conversation-container remy-processing-state,
-    .enable-extended-and-xl-grid .conversation-container schedule-annotation,
-    .enable-extended-and-xl-grid .conversation-container schedule-annotation-v2,
-    .enable-extended-and-xl-grid .conversation-container .remy-scheduled-task-confirmation-card-container,
-    .enable-extended-and-xl-grid .conversation-container .md-content > :not(#_),
-    .enable-extended-and-xl-grid .conversation-container .md-content > * {
-      max-width: ${widthValue} !important;
-      width: min(100%, ${widthValue}) !important;
-    }
-
-    .enable-extended-and-xl-grid .conversation-container message-actions {
-      margin-inline: auto !important;
-    }
-
-    main > div:has(user-query),
-    main > div:has(model-response),
-    main > div:has(.conversation-container) {
-      max-width: none !important;
-      width: 100% !important;
-    }
-
-    /* Fallback for browsers without :has() support */
-    @supports not selector(:has(*)) {
-      .content-wrapper,
-      .main-content,
-      .content-container {
-        max-width: none !important;
-      }
-
-      main > div:not(:has(button)):not(.main-menu-button) {
-        max-width: none !important;
-        width: 100% !important;
-      }
-    }
-
-    /* User query containers */
-    ${userRules} {
-      max-width: ${widthValue} !important;
-      width: min(100%, ${widthValue}) !important;
-      margin-left: auto !important;
-      margin-right: auto !important;
-    }
-
-    /* Model response containers */
-    ${assistantRules} {
-      max-width: ${widthValue} !important;
-      width: min(100%, ${widthValue}) !important;
-      margin-left: auto !important;
-      margin-right: auto !important;
-    }
-
-    /* Gemini table containers */
-    ${tableRules} {
-      max-width: ${widthValue} !important;
-      width: min(100%, ${widthValue}) !important;
-      margin-left: auto !important;
-      margin-right: auto !important;
-      box-sizing: border-box !important;
-    }
-
-    table-block .table-block,
-    .table-block.has-scrollbar,
-    .table-block.new-table-style {
-      overflow-x: hidden !important;
-    }
-
-    table-block .table-content,
-    .table-block .table-content {
-      width: 100% !important;
-      overflow-x: auto !important;
-    }
-
-    /* Exclude the header logo pill wrapper: it also contains a sparkle img, and
-       widening it stretches chat-app-side-nav-menu-button into a transparent
-       hit box that blocks the header buttons (#875) */
-    model-response:has(> .deferred-response-indicator),
-    .response-container:has(img[src*="sparkle"]),
-    main > div:has(img[src*="sparkle"]):not(:has(chat-app-side-nav-menu-button)) {
-      max-width: ${widthValue} !important;
-      width: min(100%, ${widthValue}) !important;
-      margin-left: auto !important;
-      margin-right: auto !important;
-    }
-
-    /* Additional deep targeting for nested elements */
-    user-query,
-    user-query > *,
-    user-query > * > *,
-    model-response,
-    model-response > *,
-    model-response > * > *,
-    response-container,
-    response-container > *,
-    response-container > * > *,
-    /* Keep the markdown children bound to a turn. The custom elements above are
-       Gemini's own and exist only inside the thread, but .md-content is a plain
-       class Gemini also renders outside it (canvas and side panels), and an
-       unscoped rule would hand those the slider's width - clamping them
-       whenever the slider sits narrower than they are. */
-    .conversation-container .md-content > :not(#_),
-    .conversation-container .md-content > * {
-      max-width: ${widthValue} !important;
-    }
-
-    /* Target specific internal containers that might have fixed widths */
-    .presented-response-container,
-    [data-message-author-role] {
-      max-width: ${widthValue} !important;
-    }
-
-    /* Extend input-container gradient to match chat width */
-    input-container {
-      max-width: none !important;
-      width: 100% !important;
-    }
-
-    input-container .input-area-container,
-    input-container input-area-v2 {
-      max-width: ${widthValue} !important;
-      width: min(100%, ${widthValue}) !important;
-      margin-left: auto !important;
-      margin-right: auto !important;
-    }
-
-    /* Gemini pins the overlay to its native input width. Match the composer;
-       editInputWidth's html body prefix wins when both sliders are enabled. */
-    input-container file-drop-indicator .overlay-container[data-filedrop-id="chat-window-input-container"] {
-      max-width: ${widthValue} !important;
-      width: min(100%, ${widthValue}) !important;
-      margin-left: auto !important;
-      margin-right: auto !important;
-    }
-
-    /* Specific fix for user bubble background to fit content but respect max-width */
-    .user-query-bubble-with-background {
-      max-width: ${widthValue} !important;
-      width: fit-content !important;
-    }
-  `;
+  style.textContent = buildChatWidthCss(widthPx);
 }
 
 function removeStyles() {
@@ -275,44 +39,6 @@ function removeStyles() {
 
 const ENABLED_KEY = 'gvChatWidthEnabled';
 
-function hasWidenedUserTurn(): boolean {
-  return document.querySelector(getGeminiTurnSelectors('chatWidth.userTurn').join(',')) !== null;
-}
-
-/**
- * Probe while the width rules are applied. A route settles once a user turn is found, or at once
- * when it is not a conversation, so a healthy page stops querying after its first match. Until
- * then each debounced check looks again, which lets a miss recover when turns render later on the
- * same route.
- */
-function createUserTurnProbe(): { check: () => void; reset: () => void } {
-  let settledPath: string | null = null;
-  return {
-    check() {
-      const path = location.pathname;
-      if (settledPath === path) return;
-      if (classifyGeminiRoute(path) !== 'conversation') {
-        settledPath = path;
-        return;
-      }
-      if (hasWidenedUserTurn()) {
-        settledPath = path;
-        nativeHealthReporter.reportFound('chat-width');
-        return;
-      }
-      nativeHealthReporter.reportMissing('chat-width', {
-        route: 'conversation',
-        recheck: hasWidenedUserTurn,
-        expected: () => hasRenderedConversationContent(),
-      });
-    },
-    reset() {
-      settledPath = null;
-      nativeHealthReporter.withdraw('chat-width');
-    },
-  };
-}
-
 export function startChatWidthAdjuster() {
   let currentWidthPercent = DEFAULT_PERCENT;
   let enabled = false;
@@ -322,17 +48,14 @@ export function startChatWidthAdjuster() {
   // "key never existed" (upgrade) from "explicitly set to false"
   chrome.storage?.sync?.get(['geminiChatWidth', ENABLED_KEY], (res) => {
     const storedWidth = res?.geminiChatWidth;
-    const numericStoredWidth = typeof storedWidth === 'number' ? storedWidth : DEFAULT_PERCENT;
-    const normalized = normalizePercent(numericStoredWidth, DEFAULT_PERCENT);
+    const normalized = normalizeChatWidthPercent(storedWidth);
     currentWidthPercent = normalized;
 
     const enabledRaw = res?.[ENABLED_KEY];
     if (enabledRaw === undefined) {
       // Upgrade path: enabled key was never set.
       // Auto-enable if user had previously customized the width.
-      enabled =
-        typeof storedWidth === 'number' &&
-        normalizePercent(storedWidth, DEFAULT_PERCENT) !== DEFAULT_PERCENT;
+      enabled = isCustomizedChatWidth(storedWidth);
       if (enabled) {
         try {
           chrome.storage?.sync?.set({ [ENABLED_KEY]: true });
@@ -377,7 +100,7 @@ export function startChatWidthAdjuster() {
     if (changes.geminiChatWidth) {
       const newWidth = changes.geminiChatWidth.newValue;
       if (typeof newWidth === 'number') {
-        const normalized = normalizePercent(newWidth, DEFAULT_PERCENT);
+        const normalized = normalizeChatWidthPercent(newWidth);
         currentWidthPercent = normalized;
         if (enabled) {
           applyWidth(currentWidthPercent);

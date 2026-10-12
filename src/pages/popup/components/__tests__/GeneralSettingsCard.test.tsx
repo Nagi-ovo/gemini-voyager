@@ -18,6 +18,8 @@ const values: GeneralSettingsValues = {
   mermaidEnabled: true,
   wavedromEnabled: false,
   echartsEnabled: false,
+  codeBlockCollapseEnabled: true,
+  userLatexEnabled: false,
   quoteReplyEnabled: true,
   highlightEnabled: false,
   highlightTimelineMarkersEnabled: true,
@@ -78,6 +80,19 @@ describe('GeneralSettingsCard', () => {
     act(() => input('changelog-notify-badge').click());
     expect(props.onChange).toHaveBeenLastCalledWith({ changelogBadgeMode: true });
     expect(props.onChange).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows the code collapse and user LaTeX switches and reports their own keys', () => {
+    const props = render();
+    expect(input('code-block-collapse-enabled').checked).toBe(true);
+    expect(input('user-latex-enabled').checked).toBe(false);
+    expect(container.textContent).toContain('enableCodeBlockCollapseHint');
+    expect(container.textContent).toContain('enableUserLatexRenderingHint');
+
+    act(() => input('code-block-collapse-enabled').click());
+    expect(props.onChange).toHaveBeenLastCalledWith({ codeBlockCollapseEnabled: false });
+    act(() => input('user-latex-enabled').click());
+    expect(props.onChange).toHaveBeenLastCalledWith({ userLatexEnabled: true });
   });
 
   it('offers the research pack as an experimental opt-in', () => {

@@ -1,0 +1,74 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.gemini-user-latex",
+  "name": "Gemini · LaTeX in Your Messages",
+  "version": "1.0.0",
+  "description": "Render the $…$ and $$…$$ LaTeX you type in your own Gemini messages, keeping the source for export, the timeline and copy.",
+  "changelog": "First release: Gemini's built-in rendering of LaTeX in user messages, packaged as an official plugin that calls the userLatex primitive.",
+  "i18n": {
+    "zh": {
+      "name": "Gemini · 渲染我消息中的 LaTeX",
+      "description": "渲染你在 Gemini 消息里输入的 $…$ 和 $$…$$ LaTeX，并为导出、时间线和复制保留原文。",
+      "changelog": "首个版本：将 Gemini 内置的用户消息 LaTeX 渲染打包为调用 userLatex 原语的官方插件。"
+    },
+    "zh_TW": {
+      "name": "Gemini · 渲染我訊息中的 LaTeX",
+      "description": "渲染你在 Gemini 訊息裡輸入的 $…$ 和 $$…$$ LaTeX，並為匯出、時間軸和複製保留原文。",
+      "changelog": "首個版本：將 Gemini 內建的使用者訊息 LaTeX 渲染打包為呼叫 userLatex 原語的官方外掛。"
+    },
+    "ja": {
+      "name": "Gemini · 自分のメッセージの LaTeX",
+      "description": "Gemini で自分が入力したメッセージ内の $…$ と $$…$$ の LaTeX を描画し、エクスポート、タイムライン、コピー用に元のテキストを保持します。",
+      "changelog": "初版：Gemini 内蔵のユーザーメッセージ LaTeX 描画を、userLatex プリミティブを呼び出す公式プラグインとして同梱しました。"
+    },
+    "ko": {
+      "name": "Gemini · 내 메시지의 LaTeX",
+      "description": "Gemini에서 직접 입력한 메시지의 $…$ 및 $$…$$ LaTeX를 렌더링하고, 내보내기·타임라인·복사를 위해 원문을 보존합니다.",
+      "changelog": "첫 릴리스: Gemini 내장 사용자 메시지 LaTeX 렌더링을 userLatex 프리미티브를 호출하는 공식 플러그인으로 포함했습니다."
+    },
+    "fr": {
+      "name": "Gemini · LaTeX dans vos messages",
+      "description": "Affiche le LaTeX $…$ et $$…$$ que vous tapez dans vos propres messages Gemini, en gardant le texte source pour l'export, la chronologie et la copie.",
+      "changelog": "Première version : le rendu LaTeX intégré à Gemini pour les messages de l'utilisateur, livré comme plugin officiel qui appelle la primitive userLatex."
+    },
+    "es": {
+      "name": "Gemini · LaTeX en tus mensajes",
+      "description": "Muestra renderizado el LaTeX $…$ y $$…$$ que escribes en tus propios mensajes de Gemini, conservando el texto original para exportar, la línea de tiempo y copiar.",
+      "changelog": "Primera versión: el renderizado de LaTeX integrado de Gemini en los mensajes del usuario, incluido como plugin oficial que llama a la primitiva userLatex."
+    },
+    "pt": {
+      "name": "Gemini · LaTeX nas suas mensagens",
+      "description": "Renderiza o LaTeX $…$ e $$…$$ que você digita nas suas próprias mensagens do Gemini, mantendo o texto original para exportação, linha do tempo e cópia.",
+      "changelog": "Primeira versão: a renderização de LaTeX integrada do Gemini nas mensagens do usuário, incluída como plugin oficial que chama a primitiva userLatex."
+    },
+    "ru": {
+      "name": "Gemini · LaTeX в ваших сообщениях",
+      "description": "Отображает LaTeX $…$ и $$…$$, который вы вводите в своих сообщениях Gemini, сохраняя исходный текст для экспорта, временной шкалы и копирования.",
+      "changelog": "Первая версия: встроенный в Gemini рендеринг LaTeX в сообщениях пользователя, поставляемый как официальный плагин, который вызывает примитив userLatex."
+    },
+    "ar": {
+      "name": "Gemini · LaTeX في رسائلك",
+      "description": "يعرض صيغ LaTeX بصيغتي $…$ و$$…$$ التي تكتبها في رسائلك على Gemini، مع الاحتفاظ بالنص الأصلي للتصدير والخط الزمني والنسخ.",
+      "changelog": "الإصدار الأول: عرض LaTeX المدمج في Gemini لرسائل المستخدم، مضمّنًا كإضافة رسمية تستدعي الأساسية userLatex."
+    }
+  },
+  "author": "voyager-official",
+  "category": "readability",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/gemini/plugins/user-latex",
+  "engine": ">=next",
+  "tier": "declarative",
+  "matches": ["https://gemini.google.com/*"],
+  "requires": {
+    "handlers": ["userLatex"]
+  },
+  "contributes": {
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "userLatex",
+        "params": { "turn": "p.query-text-line", "unit": "turn" }
+      }
+    ]
+  }
+}

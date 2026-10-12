@@ -1,4 +1,5 @@
 import { type PluginManifest, hasNativeOps } from '../types';
+import { GEMINI_CHAT_WIDTH_MANIFEST } from './geminiChatWidthManifest';
 import { timelineManifest } from './timelineManifest';
 
 /** ChatGPT stamps the owning conversation id on each rendered reply. */
@@ -367,6 +368,7 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
       },
     },
   },
+  GEMINI_CHAT_WIDTH_MANIFEST,
 ];
 
 /**

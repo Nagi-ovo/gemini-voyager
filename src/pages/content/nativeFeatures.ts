@@ -4,7 +4,7 @@ import { StorageKeys } from '@/core/types/common';
 import { startAccountContextBridge } from './accountContext';
 import { startChatGptJump } from './chatGptJump';
 import { startInputVimMode } from './chatInput/vimMode';
-import { startCodeBlockCollapse } from './codeBlockCollapse';
+import { CODE_BLOCK_COLLAPSE_TOGGLE, startCodeBlockCollapse } from './codeBlockCollapse';
 import { startDraftSave } from './draftSave/index';
 import { startEdgeFinalVersionNotice } from './edgeFinalVersionNotice';
 import type { NativeFeature } from './featureLifecycle';
@@ -24,6 +24,7 @@ import { startSendBehavior } from './sendBehavior/index';
 import { startStorageQuotaWarningToast } from './storageQuotaWarning';
 import { startTimeline } from './timeline/index';
 import { startUsageStatus } from './usageStatus/index';
+import { USER_LATEX_TOGGLE, startUserLatex } from './userLatex/index';
 
 /**
  * Native content modules that follow the lifecycle contract in
@@ -120,6 +121,13 @@ export const NATIVE_FEATURES = {
     id: 'code-block-collapse',
     position: CleanupPositions.CleanupCodeBlockCollapse,
     start: startCodeBlockCollapse,
+    toggle: CODE_BLOCK_COLLAPSE_TOGGLE,
+  },
+  userLatex: {
+    id: 'user-latex',
+    position: CleanupPositions.CleanupUserLatex,
+    start: startUserLatex,
+    toggle: USER_LATEX_TOGGLE,
   },
   gemsHider: {
     id: 'gems-hider',

@@ -4,11 +4,12 @@ import { StorageKeys } from '@/core/types/common';
 
 import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import type { LegacySettingSnapshot } from '../storage/legacySettingBindings';
-import { isPluginWanted, openLegacySnapshotFeed } from './legacySnapshotFeed';
+import { isPluginWanted, legacyBoundSettings, openLegacySnapshotFeed } from './legacySnapshotFeed';
 import { CLOSED_ADMISSION, type OfficialAdmission } from './officialAdmission';
 
 const FORMULA_ID = OFFICIAL_PLUGIN_IDS.geminiFormulaCopy;
 const FORMULA_KEY = StorageKeys.FORMULA_COPY_ENABLED;
+const SIZE_KEY = StorageKeys.CHAT_FONT_SIZE;
 const OPEN: OfficialAdmission = { stateOf: () => 'admitted', subscribe: () => () => {} };
 
 describe('isPluginWanted', () => {
@@ -99,5 +100,58 @@ describe('openLegacySnapshotFeed', () => {
     await settle();
     expect(feed.current()).toBeNull();
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('keeps the last numeric value when a legacy value key is removed or turns non-numeric while the page lives', async () => {
+    const s = source(Promise.resolve({ [SIZE_KEY]: 120, [FORMULA_KEY]: true }));
+    const onChange = vi.fn();
+    const feed = openLegacySnapshotFeed(s.source, onChange);
+    await settle();
+    onChange.mockClear();
+
+    s.fire({ [SIZE_KEY]: 130 });
+    expect(feed.current()?.[SIZE_KEY]).toBe(130);
+    for (const rejected of [undefined, null, '140', true]) {
+      s.fire({ [SIZE_KEY]: rejected });
+      expect(feed.current()?.[SIZE_KEY]).toBe(130);
+    }
+    // Only the accepted change woke the host.
+    expect(onChange).toHaveBeenCalledTimes(1);
+
+    // One change can carry a rejected value key beside an accepted switch.
+    s.fire({ [SIZE_KEY]: undefined, [FORMULA_KEY]: false });
+    expect(feed.current()).toEqual({ [SIZE_KEY]: 130, [FORMULA_KEY]: false });
+    expect(onChange).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps a rejected live value from replacing the stored one when the read lands later', async () => {
+    let resolve: (snapshot: LegacySettingSnapshot) => void = () => {};
+    const s = source(new Promise((r) => (resolve = r)));
+    const feed = openLegacySnapshotFeed(s.source, () => {});
+    s.fire({ [SIZE_KEY]: 'large' });
+    resolve({ [SIZE_KEY]: 125 });
+    await settle();
+    expect(feed.current()).toEqual({ [SIZE_KEY]: 125 });
+    expect(feed.wasChangedLive(SIZE_KEY)).toBe(false);
+  });
+
+  it('tells a key changed live on this page from one only read', async () => {
+    let resolve: (snapshot: LegacySettingSnapshot) => void = () => {};
+    const s = source(new Promise((r) => (resolve = r)));
+    const feed = openLegacySnapshotFeed(s.source, () => {});
+    s.fire({ [FORMULA_KEY]: undefined });
+    resolve({ [FORMULA_KEY]: true, [StorageKeys.CHAT_WIDTH]: 80 });
+    await settle();
+    expect(feed.wasChangedLive(FORMULA_KEY)).toBe(true);
+    expect(feed.wasChangedLive(StorageKeys.CHAT_WIDTH)).toBe(false);
+    s.fire({ [StorageKeys.CHAT_WIDTH]: 90 });
+    expect(feed.wasChangedLive(StorageKeys.CHAT_WIDTH)).toBe(true);
+  });
+});
+
+describe('legacyBoundSettings', () => {
+  it('gives a bound official plugin no settings beyond its legacy values, and an unbound one none of its own', () => {
+    expect(legacyBoundSettings(FORMULA_ID, { [SIZE_KEY]: 120 })).toEqual({});
+    expect(legacyBoundSettings('local.me.tweak', { [SIZE_KEY]: 120 })).toBeNull();
   });
 });

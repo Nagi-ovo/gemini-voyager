@@ -1805,6 +1805,22 @@
     "message": "Automatically render ECharts option code blocks as interactive charts",
     "description": "ECharts rendering feature hint"
   },
+  "enableCodeBlockCollapse": {
+    "message": "Collapse long code blocks",
+    "description": "Code block collapse toggle label"
+  },
+  "enableCodeBlockCollapseHint": {
+    "message": "Add a collapse button next to the copy button on long code blocks; they stay expanded until you fold them",
+    "description": "Code block collapse feature hint"
+  },
+  "enableUserLatexRendering": {
+    "message": "Render LaTeX in my messages",
+    "description": "User message LaTeX rendering toggle label"
+  },
+  "enableUserLatexRenderingHint": {
+    "message": "Show the LaTeX formulas you type as math; export and copy keep the original text",
+    "description": "User message LaTeX rendering feature hint"
+  },
   "diagramButton": {
     "message": "Diagram",
     "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"

@@ -1805,6 +1805,22 @@
     "message": "Автоматически отображать блоки кода с опциями ECharts в виде интерактивных графиков",
     "description": "ECharts rendering feature hint"
   },
+  "enableCodeBlockCollapse": {
+    "message": "Сворачивать длинные блоки кода",
+    "description": "Code block collapse toggle label"
+  },
+  "enableCodeBlockCollapseHint": {
+    "message": "Добавляет кнопку сворачивания рядом с кнопкой копирования у длинных блоков кода; они остаются развёрнутыми, пока вы их не свернёте",
+    "description": "Code block collapse feature hint"
+  },
+  "enableUserLatexRendering": {
+    "message": "Отображать LaTeX в моих сообщениях",
+    "description": "User message LaTeX rendering toggle label"
+  },
+  "enableUserLatexRenderingHint": {
+    "message": "Показывает введённые вами формулы LaTeX как математические; при экспорте и копировании сохраняется исходный текст",
+    "description": "User message LaTeX rendering feature hint"
+  },
   "diagramButton": {
     "message": "Диаграмма",
     "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"

@@ -1805,6 +1805,22 @@
     "message": "ECharts のオプションコードブロックをインタラクティブなチャートとして自動レンダリング",
     "description": "ECharts rendering feature hint"
   },
+  "enableCodeBlockCollapse": {
+    "message": "長いコードブロックを折りたたむ",
+    "description": "Code block collapse toggle label"
+  },
+  "enableCodeBlockCollapseHint": {
+    "message": "長いコードブロックのコピーボタンの横に折りたたみボタンを追加します。折りたたむまでは展開されたままです",
+    "description": "Code block collapse feature hint"
+  },
+  "enableUserLatexRendering": {
+    "message": "自分のメッセージの LaTeX を表示",
+    "description": "User message LaTeX rendering toggle label"
+  },
+  "enableUserLatexRenderingHint": {
+    "message": "入力した LaTeX の数式を数式として表示します。エクスポートとコピーでは元のテキストを保持します",
+    "description": "User message LaTeX rendering feature hint"
+  },
   "diagramButton": {
     "message": "図",
     "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"

@@ -17,18 +17,25 @@
  * error already reads as "all keys missing") leaves the snapshot `null` for
  * good: bound plugins stay off, and the feed reports `failed` so nothing keeps
  * waiting on them.
+ *
+ * A live change to a value key that its binding does not accept (a slider
+ * value turned non-numeric, or removed) never reaches the snapshot: the
+ * plugin keeps the last value, as the native module's listener did.
  */
 import { logger } from '@/core/services/LoggerService';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
 import {
   type LegacySettingSnapshot,
+  type WasChangedLive,
   legacyBindingFor,
   loadLegacySettingSnapshot,
   resolveEffectiveEnabled,
   subscribeLegacySettings,
 } from '../storage/legacySettingBindings';
+import { acceptsLegacyLiveChange, deriveLegacyValueSettings } from '../storage/legacyValueBindings';
 import type { PluginStateMap } from '../storage/pluginState';
+import type { PluginSettings } from '../types';
 import type { OfficialAdmission } from './officialAdmission';
 
 export interface LegacySettingsSource {
@@ -53,7 +60,26 @@ export interface LegacySnapshotFeed {
   /** The merged snapshot, or null until the initial read has landed (for good after a failure). */
   current(): LegacySettingSnapshot | null;
   phase(): LegacyReadPhase;
+  /** Whether `key` took a live change during this feed's life (the initial read is no change). */
+  wasChangedLive(key: string): boolean;
   stop(): void;
+}
+
+/** Whether a live change of `key` to `value` reaches the snapshot. */
+export type LegacyLiveChangeFilter = (key: string, value: unknown) => boolean;
+
+function acceptedChanges(
+  changed: LegacySettingSnapshot,
+  accepts: LegacyLiveChangeFilter,
+): LegacySettingSnapshot | null {
+  const accepted: Record<string, unknown> = {};
+  let any = false;
+  for (const key of Object.keys(changed)) {
+    if (!accepts(key, changed[key])) continue;
+    accepted[key] = changed[key];
+    any = true;
+  }
+  return any ? accepted : null;
 }
 
 /**
@@ -64,13 +90,18 @@ export interface LegacySnapshotFeed {
 export function openLegacySnapshotFeed(
   source: LegacySettingsSource,
   onChange: () => void,
+  acceptsLiveChange: LegacyLiveChangeFilter = acceptsLegacyLiveChange,
 ): LegacySnapshotFeed {
   let stopped = false;
   let touched: Record<string, unknown> = {};
   let snapshot: LegacySettingSnapshot | null = null;
   let phase: LegacyReadPhase = 'loading';
-  const unsubscribe = source.subscribe((changed) => {
+  const unsubscribe = source.subscribe((incoming) => {
     if (stopped) return;
+    // A rejected change is kept out of `touched` too: laid over a later
+    // initial read, it would replace the stored value with the rejected one.
+    const changed = acceptedChanges(incoming, acceptsLiveChange);
+    if (!changed) return;
     touched = { ...touched, ...changed };
     if (snapshot) snapshot = { ...snapshot, ...changed };
     onChange();
@@ -96,6 +127,7 @@ export function openLegacySnapshotFeed(
   return {
     current: () => snapshot,
     phase: () => phase,
+    wasChangedLive: (key) => Object.prototype.hasOwnProperty.call(touched, key),
     stop() {
       stopped = true;
       unsubscribe();
@@ -114,8 +146,22 @@ export function isPluginWanted(
   legacy: LegacySettingSnapshot | null,
   admission: OfficialAdmission,
   id: string,
+  wasChangedLive?: WasChangedLive,
 ): boolean {
   if (admission.stateOf(id) !== 'admitted') return false;
   if (legacyBindingFor(id) && legacy === null) return false;
-  return resolveEffectiveEnabled(state, legacy ?? {}, id);
+  return resolveEffectiveEnabled(state, legacy ?? {}, id, wasChangedLive);
+}
+
+/**
+ * The settings bound official plugin `id` runs with: only what its legacy
+ * value keys say (`{}` without any), never its plugin-state entry. Null for an
+ * id without an enable binding, whose settings come from plugin state.
+ */
+export function legacyBoundSettings(
+  id: string,
+  legacy: LegacySettingSnapshot,
+): PluginSettings | null {
+  if (!legacyBindingFor(id)) return null;
+  return deriveLegacyValueSettings(id, legacy);
 }

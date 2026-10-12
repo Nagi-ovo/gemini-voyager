@@ -159,6 +159,26 @@ describe('BUILTIN_PLUGINS', () => {
     }
   });
 
+  it('scopes the Gemini chat width builtin to gemini.google.com and binds it to its handler', () => {
+    const width = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.gemini-chat-width');
+    // Not Gemini Enterprise or a custom host: the native module never ran there.
+    expect(width?.matches).toEqual(['https://gemini.google.com/*']);
+    expect(width?.contributes.domOps).toBeUndefined();
+    expect(width?.contributes.settings?.widthPercent).toMatchObject({
+      type: 'number',
+      default: 70,
+      min: 30,
+      max: 100,
+    });
+    for (const locale of ['zh', 'zh_TW', 'ja', 'ko', 'fr', 'es', 'pt', 'ru', 'ar'] as const) {
+      expect(width?.i18n?.[locale]?.settings?.widthPercent?.label, locale).toBeTruthy();
+    }
+    expect(NATIVE_BUILTIN_PLUGIN_IDS).toContain('voyager.gemini-chat-width');
+    expect(NATIVE_HANDLER_BINDINGS['voyager.gemini-chat-width']?.updateSettings).toBeTypeOf(
+      'function',
+    );
+  });
+
   it('does not expose the retired Claude usage plugin', () => {
     const usage = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.claude-usage');
     expect(usage).toBeUndefined();

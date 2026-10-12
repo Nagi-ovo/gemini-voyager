@@ -62,4 +62,30 @@ describe('code block diagram engine', () => {
     await expect.poll(drawn, { timeout: 3000 }).toBe('drawn:a --> b');
     expect(panels()).toHaveLength(1);
   });
+
+  it('draws in the new scheme when the page scheme flips while the library still loads', async () => {
+    document.documentElement.setAttribute('data-gv-scheme', 'light');
+    let loadLight!: (loaded: boolean) => void;
+    let scheme = 'none';
+    const diagram: CodeBlockDiagram = {
+      ...fakeDiagram(Promise.resolve(true)),
+      prepare: (next) => {
+        scheme = next;
+        return next === 'light'
+          ? new Promise<boolean>((resolve) => (loadLight = resolve))
+          : Promise.resolve(true);
+      },
+      async render(target) {
+        target.textContent = `drawn:${scheme}`;
+      },
+    };
+    activateCodeBlockDiagram(newScope(), { turn: '.reply' }, context, diagram);
+
+    document.documentElement.setAttribute('data-gv-scheme', 'dark');
+    await Promise.resolve();
+    loadLight(true);
+
+    await expect.poll(drawn, { timeout: 3000 }).toBe('drawn:dark');
+    document.documentElement.removeAttribute('data-gv-scheme');
+  });
 });

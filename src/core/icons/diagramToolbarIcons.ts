@@ -32,6 +32,13 @@ const CODE_XML_ICON_NODE = [
   ['path', { d: 'm14.5 4-5 16', key: 'e7oirm' }],
 ] satisfies IconNode;
 
+const COPY_ICON_NODE = [
+  ['rect', { width: '14', height: '14', x: '8', y: '8', rx: '2', ry: '2', key: '17jyea' }],
+  ['path', { d: 'M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2', key: 'zix9uf' }],
+] satisfies IconNode;
+
+const CHECK_ICON_NODE = [['path', { d: 'M20 6 9 17l-5-5', key: '1gmf2c' }]] satisfies IconNode;
+
 const MAXIMIZE_2_ICON_NODE = [
   ['path', { d: 'M15 3h6v6', key: '1q9fwt' }],
   ['path', { d: 'm21 3-7 7', key: '1l2asr' }],
@@ -57,4 +64,12 @@ export function createCodeXmlIcon(size = 16): SVGSVGElement {
 
 export function createMaximize2Icon(size = 16): SVGSVGElement {
   return createLucideIcon('maximize-2', MAXIMIZE_2_ICON_NODE, size);
+}
+
+export function createCopyIcon(size = 16): SVGSVGElement {
+  return createLucideIcon('copy', COPY_ICON_NODE, size);
+}
+
+export function createCheckIcon(size = 16): SVGSVGElement {
+  return createLucideIcon('check', CHECK_ICON_NODE, size);
 }

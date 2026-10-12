@@ -1,0 +1,75 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.gemini-code-collapse",
+  "name": "Gemini · Code Block Collapse",
+  "version": "1.0.0",
+  "description": "Add a collapse button to long Gemini code blocks, next to the copy button; blocks stay expanded until you fold them.",
+  "changelog": "First release: Gemini's built-in long code block collapse, packaged as an official plugin that calls the codeCollapse primitive.",
+  "i18n": {
+    "zh": {
+      "name": "Gemini · 代码块折叠",
+      "description": "在 Gemini 长代码块的复制按钮旁加一个折叠按钮；代码块默认展开，由你决定何时折叠。",
+      "changelog": "首个版本：将 Gemini 内置的长代码块折叠打包为调用 codeCollapse 原语的官方插件。"
+    },
+    "zh_TW": {
+      "name": "Gemini · 程式碼區塊摺疊",
+      "description": "在 Gemini 長程式碼區塊的複製按鈕旁加一個摺疊按鈕；區塊預設展開，由你決定何時摺疊。",
+      "changelog": "首個版本：將 Gemini 內建的長程式碼區塊摺疊打包為呼叫 codeCollapse 原語的官方外掛。"
+    },
+    "ja": {
+      "name": "Gemini · コードブロックの折りたたみ",
+      "description": "Gemini の長いコードブロックのコピーボタンの横に折りたたみボタンを追加します。ブロックは折りたたむまで展開されたままです。",
+      "changelog": "初版：Gemini 内蔵の長いコードブロックの折りたたみを、codeCollapse プリミティブを呼び出す公式プラグインとして同梱しました。"
+    },
+    "ko": {
+      "name": "Gemini · 코드 블록 접기",
+      "description": "Gemini의 긴 코드 블록 복사 버튼 옆에 접기 버튼을 추가합니다. 블록은 직접 접기 전까지 펼쳐진 상태로 유지됩니다.",
+      "changelog": "첫 릴리스: Gemini 내장 긴 코드 블록 접기를 codeCollapse 프리미티브를 호출하는 공식 플러그인으로 포함했습니다."
+    },
+    "fr": {
+      "name": "Gemini · Repli des blocs de code",
+      "description": "Ajoute un bouton de repli aux longs blocs de code de Gemini, à côté du bouton de copie ; les blocs restent dépliés jusqu'à ce que vous les repliiez.",
+      "changelog": "Première version : le repli des longs blocs de code intégré à Gemini, livré comme plugin officiel qui appelle la primitive codeCollapse."
+    },
+    "es": {
+      "name": "Gemini · Contraer bloques de código",
+      "description": "Añade un botón para contraer los bloques de código largos de Gemini, junto al botón de copiar; los bloques siguen expandidos hasta que los contraes.",
+      "changelog": "Primera versión: la contracción de bloques de código largos integrada de Gemini, incluida como plugin oficial que llama a la primitiva codeCollapse."
+    },
+    "pt": {
+      "name": "Gemini · Recolher blocos de código",
+      "description": "Adiciona um botão de recolher aos blocos de código longos do Gemini, ao lado do botão de copiar; os blocos ficam expandidos até você recolhê-los.",
+      "changelog": "Primeira versão: o recolhimento de blocos de código longos integrado do Gemini, incluído como plugin oficial que chama a primitiva codeCollapse."
+    },
+    "ru": {
+      "name": "Gemini · Сворачивание блоков кода",
+      "description": "Добавляет кнопку сворачивания рядом с кнопкой копирования у длинных блоков кода Gemini; блоки остаются развёрнутыми, пока вы их не свернёте.",
+      "changelog": "Первая версия: встроенное в Gemini сворачивание длинных блоков кода, поставляемое как официальный плагин, который вызывает примитив codeCollapse."
+    },
+    "ar": {
+      "name": "Gemini · طي كتل التعليمات البرمجية",
+      "description": "يضيف زر طي بجانب زر النسخ في كتل التعليمات البرمجية الطويلة في Gemini؛ تبقى الكتل مفتوحة حتى تطويها بنفسك.",
+      "changelog": "الإصدار الأول: طي كتل التعليمات البرمجية الطويلة المدمج في Gemini، مضمّنًا كإضافة رسمية تستدعي الأساسية codeCollapse."
+    }
+  },
+  "author": "voyager-official",
+  "category": "readability",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/gemini/plugins/code-collapse",
+  "engine": ">=next",
+  "tier": "declarative",
+  "matches": ["https://gemini.google.com/*"],
+  "requires": {
+    "handlers": ["codeCollapse"],
+    "semantic": ["assistantTurn", "codeBlock"]
+  },
+  "contributes": {
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "codeCollapse",
+        "params": {}
+      }
+    ]
+  }
+}

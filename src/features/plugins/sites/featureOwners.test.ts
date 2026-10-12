@@ -52,6 +52,31 @@ describe('feature owners', () => {
     expect(pluginOwnedHandlers('aistudio')).toEqual(new Set(['formulaCopy']));
   });
 
+  it('keeps the stage 3 features with their native modules and their primitives closed on Gemini', () => {
+    const stage3 = [
+      'chatFontSize',
+      'chatLineHeight',
+      'chatWidth',
+      'userLatex',
+      'codeCollapse',
+      'waveDrom',
+      'echarts',
+      'mermaid',
+    ] as const;
+    for (const feature of stage3) expect(featureOwner('gemini', feature)).toBe('legacy');
+    expect(legacyOwnedHandlers('gemini')).toEqual(
+      new Set(['userLatex', 'codeCollapse', 'wavedrom', 'echarts', 'mermaid']),
+    );
+    for (const id of [
+      'voyager.gemini-chat-font-size',
+      'voyager.gemini-chat-line-height',
+      'voyager.gemini-chat-width',
+    ]) {
+      expect(ownedFeatureByPluginId(id)?.handlers).toEqual([]);
+      expect(tracksPluginHealth(id)).toBe(false);
+    }
+  });
+
   it('treats a feature missing from the table as native', () => {
     expect(featureOwner('aistudio', 'vimInput')).toBe('legacy');
   });

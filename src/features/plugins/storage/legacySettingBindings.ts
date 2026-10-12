@@ -2,10 +2,12 @@
  * The packaged official plugins whose on/off switch is an existing Voyager
  * setting, and how to read and write it.
  *
- * For a bound id the legacy sync key is the only authority: its entry in
+ * For a bound id the legacy sync keys are the only authority: its entry in
  * `gvPluginsState` is ignored, enabled flag and settings alike, so restoring a
  * plugins backup and a settings backup in either order cannot disagree about
- * whether the feature runs. Every other id keeps `isPluginEnabled`.
+ * whether or how the feature runs. Its settings come only from its value
+ * bindings (`legacyValueBindings.ts`), `{}` without any. Every other id keeps
+ * `isPluginEnabled`.
  *
  * Each `read` is today's production reading of that key, invalid values
  * included, and `read(undefined)` is the production default. Not part of the
@@ -13,11 +15,13 @@
  */
 import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
+import { isChatWidthSwitchOn } from '@/core/utils/chatAppearanceValues';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
 import { resolvePluginSettings } from '../runtime/resolvePluginSettings';
 import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import type { PluginManifest, PluginSettings } from '../types';
+import { legacyValueKeys } from './legacyValueBindings';
 import { isPluginEnabled } from './pluginDefaults';
 
 export interface LegacyEnableBinding {
@@ -28,10 +32,21 @@ export interface LegacyEnableBinding {
   readonly read: (stored: unknown) => boolean;
   /** The value the existing settings UI stores for this switch. */
   readonly write: (enabled: boolean) => unknown;
+  /**
+   * When the native module decides from more than `key` (or decides once per
+   * page), the page's decision; `read` stays the single-key reading the popup
+   * shows and writes. Every key it reads must be in `legacyBindingKeys()`.
+   */
+  readonly derive?: (snapshot: LegacySettingSnapshot, wasChangedLive: WasChangedLive) => boolean;
 }
 
 /** Stored values by storage key. An own key holding `undefined` means "removed". */
 export type LegacySettingSnapshot = Readonly<Record<string, unknown>>;
+
+/** Whether `key` took a live change while this page lived (the first read is no change). */
+export type WasChangedLive = (key: string) => boolean;
+
+const neverChangedLive: WasChangedLive = () => false;
 
 type StateEntries = Readonly<
   Record<string, { readonly enabled?: unknown; readonly settings?: PluginSettings } | undefined>
@@ -72,6 +87,53 @@ export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding
     StorageKeys.INPUT_HALO_HIDDEN,
     onOnlyIfTrue,
   ),
+  [OFFICIAL_PLUGIN_IDS.geminiChatFontSize]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiChatFontSize,
+    StorageKeys.CHAT_FONT_SIZE_ENABLED,
+    onOnlyIfTrue,
+  ),
+  // Also the paragraph spacing switch: the native modules share it.
+  [OFFICIAL_PLUGIN_IDS.geminiChatLineHeight]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiChatLineHeight,
+    StorageKeys.CHAT_LINE_HEIGHT_ENABLED,
+    onOnlyIfTrue,
+  ),
+  // A switch never stored follows the width the page first read (see `isChatWidthSwitchOn`).
+  [OFFICIAL_PLUGIN_IDS.geminiChatWidth]: {
+    ...binding(OFFICIAL_PLUGIN_IDS.geminiChatWidth, StorageKeys.CHAT_WIDTH_ENABLED, onOnlyIfTrue),
+    derive: (snapshot, wasChangedLive) =>
+      isChatWidthSwitchOn({
+        storedSwitch: snapshotValue(snapshot, StorageKeys.CHAT_WIDTH_ENABLED),
+        storedWidth: snapshotValue(snapshot, StorageKeys.CHAT_WIDTH),
+        switchChangedLive: wasChangedLive(StorageKeys.CHAT_WIDTH_ENABLED),
+        widthChangedLive: wasChangedLive(StorageKeys.CHAT_WIDTH),
+      }),
+  },
+  [OFFICIAL_PLUGIN_IDS.geminiUserLatex]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiUserLatex,
+    StorageKeys.USER_LATEX_ENABLED,
+    onUnlessFalse,
+  ),
+  [OFFICIAL_PLUGIN_IDS.geminiCodeCollapse]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiCodeCollapse,
+    StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED,
+    onUnlessFalse,
+  ),
+  [OFFICIAL_PLUGIN_IDS.geminiWaveDrom]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiWaveDrom,
+    StorageKeys.WAVEDROM_ENABLED,
+    onUnlessFalse,
+  ),
+  [OFFICIAL_PLUGIN_IDS.geminiECharts]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiECharts,
+    StorageKeys.ECHARTS_ENABLED,
+    onUnlessFalse,
+  ),
+  [OFFICIAL_PLUGIN_IDS.geminiMermaid]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiMermaid,
+    StorageKeys.MERMAID_ENABLED,
+    onUnlessFalse,
+  ),
 };
 
 export function legacyBindingFor(id: string): LegacyEnableBinding | null {
@@ -80,30 +142,45 @@ export function legacyBindingFor(id: string): LegacyEnableBinding | null {
     : null;
 }
 
-/** The storage keys behind every binding, each once. */
+/** The storage keys behind every enable and value binding, each once. */
 export function legacyBindingKeys(): readonly string[] {
-  return [...new Set(Object.values(LEGACY_ENABLE_BINDINGS).map((entry) => entry.key))];
+  return [
+    ...new Set([
+      ...Object.values(LEGACY_ENABLE_BINDINGS).map((entry) => entry.key),
+      ...legacyValueKeys(),
+    ]),
+  ];
 }
 
 function snapshotValue(legacy: LegacySettingSnapshot, key: string): unknown {
   return Object.prototype.hasOwnProperty.call(legacy, key) ? legacy[key] : undefined;
 }
 
-/** Whether plugin `id` should run: its legacy key when bound, otherwise its plugin-state entry. */
+/**
+ * Whether plugin `id` should run: its legacy keys when bound, otherwise its
+ * plugin-state entry. `wasChangedLive` only matters to a binding that
+ * derives its switch; a caller without a page lifetime (the popup) omits it.
+ */
 export function resolveEffectiveEnabled(
   state: StateEntries,
   legacy: LegacySettingSnapshot,
   id: string,
+  wasChangedLive: WasChangedLive = neverChangedLive,
 ): boolean {
   const bound = legacyBindingFor(id);
-  if (bound) return bound.read(snapshotValue(legacy, bound.key));
+  if (bound) {
+    return bound.derive
+      ? bound.derive(legacy, wasChangedLive)
+      : bound.read(snapshotValue(legacy, bound.key));
+  }
   return isPluginEnabled(state, id);
 }
 
 /**
- * The settings a plugin runs with. A bound official plugin always gets `{}`:
- * its manifest declares no settings, its runtime reads its own legacy keys,
- * and stray map values must not restart it.
+ * The settings an unbound plugin runs with: declared defaults merged with its
+ * plugin-state entry. A bound official plugin gets `{}` here and never its map
+ * values (stray ones must not restart it); the host and popup diagnostics
+ * give it its legacy values instead (`legacyBoundSettings`).
  */
 export function resolveEffectiveSettings(
   manifest: PluginManifest,

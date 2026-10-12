@@ -37,6 +37,14 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   formulaCopy: 'Formula copy',
   vimInput: 'Input Vim mode',
   hideInputHalo: 'Hide input box halo',
+  chatFontSize: 'Chat font size',
+  chatLineHeight: 'Chat spacing',
+  chatWidth: 'Chat width',
+  userLatex: 'Render LaTeX in my messages',
+  codeCollapse: 'Collapse long code blocks',
+  waveDrom: 'WaveDrom timing diagram rendering',
+  echarts: 'ECharts rendering',
+  mermaid: 'Mermaid diagram rendering',
 };
 
 /**

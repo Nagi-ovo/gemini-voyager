@@ -25,7 +25,19 @@
  */
 
 export type PackagedSiteId = 'gemini' | 'aistudio';
-export type OwnedFeatureId = 'formulaCopy' | 'vimInput' | 'hideInputHalo';
+export type OwnedFeatureId =
+  | 'formulaCopy'
+  | 'vimInput'
+  | 'hideInputHalo'
+  | 'chatFontSize'
+  /** Line height and paragraph spacing: one switch, one plugin. */
+  | 'chatLineHeight'
+  | 'chatWidth'
+  | 'userLatex'
+  | 'codeCollapse'
+  | 'waveDrom'
+  | 'echarts'
+  | 'mermaid';
 export type FeatureOwner = 'legacy' | 'plugin';
 
 /** The packaged official plugin ids, by feature. */
@@ -34,6 +46,14 @@ export const OFFICIAL_PLUGIN_IDS = {
   aistudioFormulaCopy: 'voyager.aistudio-formula-copy',
   geminiVimInput: 'voyager.gemini-vim-input',
   geminiHideInputHalo: 'voyager.gemini-hide-input-halo',
+  geminiChatFontSize: 'voyager.gemini-chat-font-size',
+  geminiChatLineHeight: 'voyager.gemini-chat-line-height',
+  geminiChatWidth: 'voyager.gemini-chat-width',
+  geminiUserLatex: 'voyager.gemini-user-latex',
+  geminiCodeCollapse: 'voyager.gemini-code-collapse',
+  geminiWaveDrom: 'voyager.gemini-wavedrom',
+  geminiECharts: 'voyager.gemini-echarts',
+  geminiMermaid: 'voyager.gemini-mermaid',
 } as const;
 
 export interface OwnedFeature {
@@ -89,6 +109,73 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiHideInputHalo,
     handlers: [],
+    healthTracking: false,
+  },
+  // Stage 3: packaged and wired, still run by their native modules until each
+  // is flipped. Appearance opens no primitive (pure CSS, or a fixed-id builtin
+  // handler), so rolling it back never blocks a local CSS plugin.
+  {
+    site: 'gemini',
+    feature: 'chatFontSize',
+    owner: 'legacy',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiChatFontSize,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'chatLineHeight',
+    owner: 'legacy',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiChatLineHeight,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'chatWidth',
+    owner: 'legacy',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiChatWidth,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'userLatex',
+    owner: 'legacy',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiUserLatex,
+    handlers: ['userLatex'],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'codeCollapse',
+    owner: 'legacy',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiCodeCollapse,
+    handlers: ['codeCollapse'],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'waveDrom',
+    owner: 'legacy',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiWaveDrom,
+    handlers: ['wavedrom'],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'echarts',
+    owner: 'legacy',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiECharts,
+    handlers: ['echarts'],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'mermaid',
+    owner: 'legacy',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiMermaid,
+    handlers: ['mermaid'],
     healthTracking: false,
   },
 ];

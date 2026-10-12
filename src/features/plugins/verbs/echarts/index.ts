@@ -5,6 +5,8 @@
  * the options are parsed and sanitized as on Gemini (never evaluated), the
  * library stays a lazy import, and the theme follows `html[data-gv-scheme]`.
  */
+import { echartsExportHtml } from '@/features/export/services/exportCodeBlocks';
+import { provideEChartsDataUrl } from '@/pages/content/echarts/exportBridge';
 import { createEChartsFullscreen } from '@/pages/content/echarts/fullscreen';
 import { CHART_HEIGHT, PANEL_BG, createEChartsRenderer } from '@/pages/content/echarts/renderer';
 import { parseEChartsOption, shouldRenderECharts } from '@/pages/content/echarts/source';
@@ -18,6 +20,7 @@ import {
   validateCodeBlockDiagramParams,
 } from '../codeBlockDiagram';
 import { getPrimitiveContract } from '../contracts';
+import { leaseDiagramStyle } from '../diagramStyleLease';
 import type { Primitive } from '../types';
 
 /** Holds the fullscreen viewer's styles; Gemini installs the same element. */
@@ -56,12 +59,20 @@ function echartsDiagram(): CodeBlockDiagram {
       target.replaceChildren(chart);
       renderer.render(chart, option, scheme);
       renderer.observe(chart);
+      // Export reads the composited PNG from the live chart, as on Gemini.
+      const withdrawDataUrl = provideEChartsDataUrl(chart, () => renderer.getDataUrl(chart));
       return () => {
+        withdrawDataUrl();
         // Fullscreen moved the live chart out of the panel; put it back first.
         if (!target.contains(chart)) fullscreen.close();
         renderer.dispose(chart);
         chart.remove();
       };
+    },
+    exportHtml(target) {
+      // A chart moved into fullscreen is not in the panel: export its source meanwhile.
+      const chart = target.querySelector<HTMLElement>(`.${CHART_CLASS}`);
+      return chart ? echartsExportHtml(chart) : null;
     },
     openFullscreen(target) {
       const chart = target.querySelector<HTMLElement>(`.${CHART_CLASS}`);
@@ -69,13 +80,14 @@ function echartsDiagram(): CodeBlockDiagram {
     },
     install(doc) {
       renderer.startResizeObserver();
-      const ownsStyles = !doc.getElementById(ECHARTS_STYLES_ID);
       // The view only lends its stylesheet; its wrappers are Gemini's.
-      if (ownsStyles) createEChartsView(renderer, fullscreen).createStyles();
+      const release = leaseDiagramStyle(doc, ECHARTS_STYLES_ID, () =>
+        createEChartsView(renderer, fullscreen).createStyles(),
+      );
       return () => {
         fullscreen.close();
         renderer.stopResizeObserver();
-        if (ownsStyles) doc.getElementById(ECHARTS_STYLES_ID)?.remove();
+        release();
       };
     },
   };

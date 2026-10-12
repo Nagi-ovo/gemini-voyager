@@ -1,0 +1,75 @@
+/* voyager.gemini-chat-font-size - Gemini's chat font size, as a plugin.
+ * The same rules as the native module (src/pages/content/chatFontSize), with
+ * its computed size replaced by the {{fontSize}} setting, which the plugin
+ * host fills from gvChatFontSize. The setting enters through one custom
+ * property, so the stylesheet stays parseable CSS before substitution. A
+ * custom property inherits as the token `120%`, and each matched element
+ * resolves it against its parent, so nested matches (message-content, then its
+ * p) compound exactly as the native module's literal percentages do.
+ * The plugin's own stylesheet is the scope: the engine adds it only while the
+ * plugin runs. Theme-independent. */
+:root {
+  --gv-chat-font-size: {{fontSize}}%;
+}
+
+/* User message inner text elements (Gemini sets font-size on these directly) */
+.query-text,
+.query-text-line,
+user-query-content .gds-body-l,
+user-query .gds-body-l,
+.user-query-bubble-with-background .gds-body-l,
+div[aria-label='User message'] .gds-body-l,
+[data-message-author-role='user'] .gds-body-l {
+  font-size: var(--gv-chat-font-size) !important;
+  line-height: 1.6 !important;
+}
+
+/* Model response inner text elements */
+message-content,
+.response-content,
+model-response .markdown,
+model-response .markdown-main-panel,
+.model-response .markdown,
+.model-response .markdown-main-panel,
+response-container .markdown,
+response-container .markdown-main-panel,
+.response-container .markdown,
+.response-container .markdown-main-panel,
+.presented-response-container .markdown,
+.presented-response-container .markdown-main-panel,
+[data-message-author-role='assistant'] .markdown,
+[data-message-author-role='model'] .markdown {
+  font-size: var(--gv-chat-font-size) !important;
+  line-height: 1.6 !important;
+}
+
+/* Markdown block elements that may have their own font-size */
+model-response p,
+model-response li,
+model-response td,
+model-response th,
+.model-response p,
+.model-response li,
+.model-response td,
+.model-response th,
+message-content p,
+message-content li,
+message-content td,
+message-content th {
+  font-size: var(--gv-chat-font-size) !important;
+  line-height: 1.6 !important;
+}
+
+/* Code blocks: slightly smaller than body text */
+model-response code,
+model-response pre,
+.model-response code,
+.model-response pre,
+message-content code,
+message-content pre,
+.code-container,
+.formatted-code-block-internal-container pre,
+.formatted-code-block-internal-container code {
+  font-size: calc(var(--gv-chat-font-size) * 0.875) !important;
+  line-height: 1.5 !important;
+}

@@ -1,5 +1,5 @@
 import type { ExtractedContent } from '@/features/export/services/DOMContentExtractor';
-import { extractCodeBlock as readCodeBlock } from '@/features/export/services/exportCodeBlocks';
+import { extractExportCodeBlock } from '@/features/export/services/exportCodeBlocks';
 import { normalizeText } from '@/features/export/services/exportDomPolicy';
 import type { SiteAdapter } from '@/features/plugins/types';
 
@@ -162,8 +162,9 @@ function extractCodeBlock(
   // their parent here drops prose and sibling blocks around the first match.
   if (tagName !== 'code-block' && !child.classList.contains('code-block')) return;
 
-  const codeContent = readCodeBlock(child as HTMLElement);
-  if (codeContent.text) {
+  // A diagram plugin's block exports its drawing while it can be read; otherwise its source.
+  const codeContent = extractExportCodeBlock(child as HTMLElement);
+  if (codeContent?.text) {
     flags.hasCode = true;
     htmlParts.push(codeContent.html);
     textParts.push(`\n${codeContent.text}\n`);

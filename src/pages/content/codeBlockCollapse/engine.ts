@@ -16,7 +16,25 @@ import {
 export const LONG_CODE_BLOCK_MIN_LINES = 24;
 export const LONG_CODE_BLOCK_MIN_HEIGHT = 520;
 
-export interface CodeBlockCollapseSite extends Omit<CollapseSite, 'content' | 'isLong'> {
+/**
+ * The code-collapse engine holding a block. Every code block collapse (the
+ * native module and each plugin activation) claims a block here before
+ * touching it, so two of them never stack toggles on one block or clear each
+ * other's classes. The generic `collapse` primitive does not take part.
+ */
+export const CODE_COLLAPSE_OWNER_ATTRIBUTE = 'data-gv-code-collapse-owner';
+
+let ownerSerial = 0;
+
+function createOwnerToken(): string {
+  ownerSerial += 1;
+  return `${ownerSerial}:${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export interface CodeBlockCollapseSite extends Omit<
+  CollapseSite,
+  'content' | 'isLong' | 'claim' | 'release'
+> {
   /** The element holding the code text, measured for length. */
   code(host: HTMLElement): HTMLElement | null;
 }
@@ -41,11 +59,23 @@ export function isLongCodeBlock(code: HTMLElement): boolean {
 }
 
 export function createCodeBlockCollapse(site: CodeBlockCollapseSite): CodeBlockCollapse {
+  const owner = createOwnerToken();
   return createCollapseEngine(
     {
       ...site,
       content: (host) => site.code(host),
       isLong: isLongCodeBlock,
+      claim(host) {
+        const holder = host.getAttribute(CODE_COLLAPSE_OWNER_ATTRIBUTE);
+        if (holder !== null) return holder === owner;
+        host.setAttribute(CODE_COLLAPSE_OWNER_ATTRIBUTE, owner);
+        return true;
+      },
+      release(host) {
+        if (host.getAttribute(CODE_COLLAPSE_OWNER_ATTRIBUTE) === owner) {
+          host.removeAttribute(CODE_COLLAPSE_OWNER_ATTRIBUTE);
+        }
+      },
     },
     {
       collapsibleClass: CODE_BLOCK_COLLAPSIBLE_CLASS,

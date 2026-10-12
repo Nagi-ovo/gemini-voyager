@@ -25,6 +25,13 @@ export interface CollapseSite {
   readonly collapseByDefault?: boolean;
   /** Runs after a pass or a toggle may have changed which blocks are collapsible or collapsed. */
   onChange?(): void;
+  /**
+   * Take `host` before the first change to it; false when another engine holds
+   * it. A site with this hook leaves a block it does not hold entirely alone,
+   * and `release` frees a block it stops managing so another engine can take it.
+   */
+  claim?(host: HTMLElement): boolean;
+  release?(host: HTMLElement): void;
 }
 
 export interface CollapseEngine {
@@ -90,6 +97,7 @@ export function createCollapseEngine(
     if (block?.clip) removeClasses(block.clip, presentation.clipClass);
     managed.delete(host);
     removeClasses(host, presentation.collapsibleClass, presentation.collapsedClass);
+    site.release?.(host);
   };
 
   const observeBlock = (host: HTMLElement): void => {
@@ -112,12 +120,14 @@ export function createCollapseEngine(
 
   const apply = ({ host, content, actions, shouldEnhance }: Measurement): void => {
     if (!shouldEnhance || !actions || !content) {
-      removeEnhancement(host);
+      // With ownership, the shared classes on a block this engine never took are another engine's.
+      if (!site.claim || managed.has(host)) removeEnhancement(host);
       return;
     }
 
     let block = managed.get(host);
     if (!block) {
+      if (site.claim && !site.claim(host)) return;
       block = { button: null, clip: null };
       managed.set(host, block);
       if (decisions.get(host) ?? defaultCollapsed) addClass(host, presentation.collapsedClass);

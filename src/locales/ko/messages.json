@@ -1805,6 +1805,22 @@
     "message": "ECharts 옵션 코드 블록을 대화형 차트로 자동 렌더링",
     "description": "ECharts rendering feature hint"
   },
+  "enableCodeBlockCollapse": {
+    "message": "긴 코드 블록 접기",
+    "description": "Code block collapse toggle label"
+  },
+  "enableCodeBlockCollapseHint": {
+    "message": "긴 코드 블록의 복사 버튼 옆에 접기 버튼을 추가합니다. 직접 접기 전까지는 펼쳐진 상태로 유지됩니다",
+    "description": "Code block collapse feature hint"
+  },
+  "enableUserLatexRendering": {
+    "message": "내 메시지의 LaTeX 렌더링",
+    "description": "User message LaTeX rendering toggle label"
+  },
+  "enableUserLatexRenderingHint": {
+    "message": "입력한 LaTeX 수식을 수학 기호로 표시합니다. 내보내기와 복사에는 원문이 유지됩니다",
+    "description": "User message LaTeX rendering feature hint"
+  },
   "diagramButton": {
     "message": "다이어그램",
     "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"

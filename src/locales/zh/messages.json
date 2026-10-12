@@ -1805,6 +1805,22 @@
     "message": "自动将 ECharts 配置代码块渲染为交互式图表",
     "description": "ECharts rendering feature hint"
   },
+  "enableCodeBlockCollapse": {
+    "message": "折叠长代码块",
+    "description": "Code block collapse toggle label"
+  },
+  "enableCodeBlockCollapseHint": {
+    "message": "在长代码块的复制按钮旁加一个折叠按钮；代码块默认展开，由你决定何时折叠",
+    "description": "Code block collapse feature hint"
+  },
+  "enableUserLatexRendering": {
+    "message": "渲染我消息中的 LaTeX",
+    "description": "User message LaTeX rendering toggle label"
+  },
+  "enableUserLatexRenderingHint": {
+    "message": "把你输入的 LaTeX 公式显示为数学公式；导出和复制仍保留原文",
+    "description": "User message LaTeX rendering feature hint"
+  },
   "diagramButton": {
     "message": "图表",
     "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"

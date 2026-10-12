@@ -5,6 +5,7 @@
  * are WaveJSON on every site, the library stays a lazy import, and the render
  * theme follows Gemini's policy (`WAVEDROM_THEME_MODE`) on `html[data-gv-scheme]`.
  */
+import { waveDromExportHtml } from '@/features/export/services/exportCodeBlocks';
 import { createWaveDromFullscreen } from '@/pages/content/wavedrom/fullscreen';
 import {
   createWaveDromRenderer,
@@ -22,6 +23,7 @@ import {
   validateCodeBlockDiagramParams,
 } from '../codeBlockDiagram';
 import { getPrimitiveContract } from '../contracts';
+import { leaseDiagramStyle } from '../diagramStyleLease';
 import type { Primitive } from '../types';
 
 /** Holds the fullscreen viewer's styles; Gemini installs the same element. */
@@ -51,12 +53,17 @@ function waveDromDiagram(): CodeBlockDiagram {
       if (target.querySelector('svg')) fullscreen.open(target.innerHTML, PANEL_BG[theme]);
     },
     install(doc) {
-      if (doc.getElementById(WAVEDROM_STYLES_ID)) return fullscreen.close;
-      createWaveDromView(fullscreen).createStyles(PANEL_BG[theme]);
+      const release = leaseDiagramStyle(doc, WAVEDROM_STYLES_ID, () =>
+        createWaveDromView(fullscreen).createStyles(PANEL_BG[theme]),
+      );
       return () => {
         fullscreen.close();
-        doc.getElementById(WAVEDROM_STYLES_ID)?.remove();
+        release();
       };
+    },
+    exportHtml(target) {
+      const svg = target.querySelector('svg');
+      return svg ? waveDromExportHtml(svg) : null;
     },
   };
 }

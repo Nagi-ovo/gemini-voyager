@@ -308,6 +308,42 @@ describe('SettingsBackupService', () => {
     });
   });
 
+  it('restores the code collapse and user LaTeX switches as on from a backup that predates them', async () => {
+    // A sync area that answers `get(defaults)` the way chrome.storage does.
+    const stored: Record<string, unknown> = {};
+    const storageArea = {
+      get: vi.fn(async (defaults: Record<string, unknown>) => ({ ...defaults, ...stored })),
+      set: vi.fn(async (items: Record<string, unknown>) => {
+        Object.assign(stored, items);
+      }),
+    };
+    const { [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: _collapse, ...olderDefaults } =
+      BACKUPABLE_SYNC_SETTINGS_DEFAULTS;
+    const { [StorageKeys.USER_LATEX_ENABLED]: _latex, ...olderBackup } = olderDefaults;
+
+    await restoreBackupableSyncSettings(
+      { ...olderBackup, [StorageKeys.MERMAID_ENABLED]: false },
+      storageArea as never,
+    );
+
+    expect(stored).not.toHaveProperty(StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED);
+    expect(stored).not.toHaveProperty(StorageKeys.USER_LATEX_ENABLED);
+    const { data } = await exportBackupableSyncSettings(storageArea as never);
+    expect(data[StorageKeys.MERMAID_ENABLED]).toBe(false);
+    expect(data[StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]).toBe(true);
+    expect(data[StorageKeys.USER_LATEX_ENABLED]).toBe(true);
+
+    // A backup that turned them off brings that choice back.
+    await restoreBackupableSyncSettings(
+      { [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: false, [StorageKeys.USER_LATEX_ENABLED]: false },
+      storageArea as never,
+    );
+    expect(stored).toMatchObject({
+      [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: false,
+      [StorageKeys.USER_LATEX_ENABLED]: false,
+    });
+  });
+
   it('does not restore retired tab title sync as enabled', async () => {
     const storageArea = {
       get: vi.fn(),

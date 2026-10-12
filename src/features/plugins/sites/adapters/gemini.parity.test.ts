@@ -35,11 +35,12 @@ describe('Gemini site.json parity', () => {
     expect(geminiAdapter.matches).toEqual(GEMINI_MATCHES);
   });
 
-  it('declares no anchor or field the TypeScript adapter lacked', () => {
+  it('declares no anchor or field the TypeScript adapter lacked, besides the code block', () => {
     // A new anchor widens what local plugins may target and changes the public SKILL.md;
-    // new anchors wait for a live-page check.
+    // new anchors wait for a live-page check. `codeBlock` is the tag the native long code
+    // block collapse and `contentStyle.css` have always targeted on Gemini.
     expect(Object.keys(geminiAdapter.selectors).sort()).toEqual(
-      ['assistantTurn', 'composer', 'sidebar', 'userTurn'].sort(),
+      ['assistantTurn', 'codeBlock', 'composer', 'sidebar', 'userTurn'].sort(),
     );
     expect([...geminiAdapter.capabilities].sort()).toEqual(
       ['chat', 'composer', 'darkMode', 'sidebar'].sort(),
@@ -50,6 +51,16 @@ describe('Gemini site.json parity', () => {
 
   it('keeps Voyager’s own accent: no brand colour', () => {
     expect(geminiAdapter.brandColor).toBeUndefined();
+  });
+
+  it('finds every code block, thinking ones included, as the native collapse did', () => {
+    document.body.innerHTML =
+      '<model-response><code-block id="answer"><div class="code-block-decoration">' +
+      '<span>Python</span><div class="buttons"></div></div>' +
+      '<code data-test-id="code-content">print(1)</code></code-block></model-response>' +
+      '<div class="thoughts"><code-block id="thought"></code-block></div>' +
+      '<pre id="plain"><code>x</code></pre>';
+    expect(ids(geminiAdapter.selectors.codeBlock)).toEqual(['answer', 'thought']);
   });
 
   it('finds the composer, the sidebar and the theme host on a Gemini page', () => {

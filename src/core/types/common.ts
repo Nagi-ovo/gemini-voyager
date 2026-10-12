@@ -139,6 +139,11 @@ export const StorageKeys = {
   MERMAID_ENABLED: 'gvMermaidEnabled',
   WAVEDROM_ENABLED: 'gvWaveDromEnabled',
   ECHARTS_ENABLED: 'gvEchartsEnabled',
+  // Default on (`!== false`): Gemini's long code block collapse and the LaTeX
+  // rendering in user messages. Read by the native modules and by their
+  // packaged official plugins alike.
+  CODE_BLOCK_COLLAPSE_ENABLED: 'gvCodeBlockCollapseEnabled',
+  USER_LATEX_ENABLED: 'gvUserLatexEnabled',
   QUOTE_REPLY_ENABLED: 'gvQuoteReplyEnabled',
   RESPONSE_COMPLETE_NOTIFICATION_ENABLED: 'gvResponseCompleteNotificationEnabled',
   REMOTE_ANNOUNCEMENTS_ENABLED: 'gvRemoteAnnouncementsEnabled',

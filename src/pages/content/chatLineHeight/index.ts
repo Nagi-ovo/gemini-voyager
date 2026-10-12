@@ -1,24 +1,18 @@
 /**
  * Adjusts chat message line height based on user settings (stored as percentage).
  */
+import {
+  CHAT_LINE_HEIGHT_PERCENT,
+  normalizeChatLineHeightPercent,
+} from '@/core/utils/chatAppearanceValues';
 
 const STYLE_ID = 'gemini-voyager-chat-line-height';
-const DEFAULT_PERCENT = 160;
-const MIN_PERCENT = 120;
-const MAX_PERCENT = 220;
+const DEFAULT_PERCENT = CHAT_LINE_HEIGHT_PERCENT.default;
 
 const ENABLED_KEY = 'gvChatLineHeightEnabled';
 const VALUE_KEY = 'gvChatLineHeight';
 
-const clampPercent = (value: number, min: number, max: number) =>
-  Math.min(max, Math.max(min, Math.round(value)));
-
-const normalizePercent = (value: number, fallback: number) => {
-  if (!Number.isFinite(value)) return fallback;
-  return clampPercent(value, MIN_PERCENT, MAX_PERCENT);
-};
-
-const formatLineHeight = (percent: number) => `${normalizePercent(percent, DEFAULT_PERCENT) / 100}`;
+const formatLineHeight = (percent: number) => `${normalizeChatLineHeightPercent(percent) / 100}`;
 
 function applyLineHeight(percent: number) {
   const lineHeightValue = formatLineHeight(percent);
@@ -104,8 +98,7 @@ export function startChatLineHeightAdjuster() {
 
   chrome.storage?.sync?.get([VALUE_KEY, ENABLED_KEY], (res) => {
     const storedValue = res?.[VALUE_KEY];
-    const numericValue = typeof storedValue === 'number' ? storedValue : DEFAULT_PERCENT;
-    const normalized = normalizePercent(numericValue, DEFAULT_PERCENT);
+    const normalized = normalizeChatLineHeightPercent(storedValue);
     currentPercent = normalized;
 
     enabled = res?.[ENABLED_KEY] === true;
@@ -139,7 +132,7 @@ export function startChatLineHeightAdjuster() {
     if (changes[VALUE_KEY]) {
       const newValue = changes[VALUE_KEY].newValue;
       if (typeof newValue === 'number') {
-        const normalized = normalizePercent(newValue, DEFAULT_PERCENT);
+        const normalized = normalizeChatLineHeightPercent(newValue);
         currentPercent = normalized;
         if (enabled) {
           applyLineHeight(currentPercent);

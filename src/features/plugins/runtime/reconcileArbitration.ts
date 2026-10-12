@@ -4,7 +4,11 @@
  * and the admission go, and the status of a plugin the page keeps off.
  */
 import { type FeatureOwner, ownedFeatureByPluginId } from '../sites/featureOwners';
-import { type LegacySettingSnapshot, legacyBindingFor } from '../storage/legacySettingBindings';
+import {
+  type LegacySettingSnapshot,
+  type WasChangedLive,
+  legacyBindingFor,
+} from '../storage/legacySettingBindings';
 import type { PluginStateMap } from '../storage/pluginState';
 import type { PluginManifest } from '../types';
 import { type LegacyReadPhase, isPluginWanted } from './legacySnapshotFeed';
@@ -35,6 +39,8 @@ export interface WishInput {
   readonly legacyPhase: LegacyReadPhase;
   readonly admission: OfficialAdmission;
   readonly ownerOf?: (id: string) => FeatureOwner | null;
+  /** Which legacy keys changed live on this page, for a binding that derives its switch. */
+  readonly wasChangedLive?: WasChangedLive;
 }
 
 const ownerFromTable = (pluginId: string): FeatureOwner | null =>
@@ -65,10 +71,10 @@ export function wishVerdict(input: WishInput, id: string): WishVerdict {
     return ownedByPlugin && input.legacyPhase === 'loading' ? 'await' : 'skip';
   }
   if (admissionState === 'admitted') {
-    return isPluginWanted(state, legacy, admission, id) ? 'run' : 'skip';
+    return isPluginWanted(state, legacy, admission, id, input.wasChangedLive) ? 'run' : 'skip';
   }
   if (!ownedByPlugin) return 'skip';
-  return isPluginWanted(state, legacy, ADMITTED, id) ? 'reserve' : 'skip';
+  return isPluginWanted(state, legacy, ADMITTED, id, input.wasChangedLive) ? 'reserve' : 'skip';
 }
 
 export interface PluginBlock {

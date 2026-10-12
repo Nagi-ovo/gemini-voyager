@@ -14,7 +14,7 @@ import {
   featureOwner,
 } from '@/features/plugins/sites/featureOwners';
 
-type OwnerOf = (site: PackagedSiteId, feature: OwnedFeatureId) => FeatureOwner;
+export type OwnerOf = (site: PackagedSiteId, feature: OwnedFeatureId) => FeatureOwner;
 
 /**
  * Start the native module when it still owns the feature; otherwise admit the

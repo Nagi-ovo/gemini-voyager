@@ -1,6 +1,32 @@
 /** Set by the user-LaTeX renderer on an element it rendered; holds the text it replaced. */
 export const USER_LATEX_ORIGINAL_ATTRIBUTE = 'data-user-latex-original';
 
+/**
+ * Which renderer holds an element: the native module and each plugin
+ * activation stamp their own token before touching it, and only that token's
+ * holder may render, restore or release it.
+ */
+export const USER_LATEX_OWNER_ATTRIBUTE = 'data-user-latex-owner';
+
+let ownerSerial = 0;
+
+/** A token no other renderer on this page holds, `label` kept for debugging. */
+export function createUserLatexOwner(label: string): string {
+  ownerSerial += 1;
+  return `${label}:${ownerSerial}:${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/** Elements under `root` (itself included) that `owner` holds. */
+export function userLatexElementsOwnedBy(root: ParentNode, owner: string): HTMLElement[] {
+  const candidates = Array.from(
+    root.querySelectorAll<HTMLElement>(`[${USER_LATEX_OWNER_ATTRIBUTE}]`),
+  );
+  if (root instanceof HTMLElement && root.hasAttribute(USER_LATEX_OWNER_ATTRIBUTE)) {
+    candidates.unshift(root);
+  }
+  return candidates.filter((element) => element.getAttribute(USER_LATEX_OWNER_ATTRIBUTE) === owner);
+}
+
 /** The renderer's own output, a direct child of the element it rendered. */
 const RENDERED_LATEX_SELECTOR = ':scope > [class^="gv-user-latex-"]';
 

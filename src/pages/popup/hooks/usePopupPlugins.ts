@@ -10,6 +10,7 @@ import { subscribeLocalPlugins } from '@/features/plugins/local/localPluginStore
 import { subscribeHostCatalog } from '@/features/plugins/remote/hostCatalogCache';
 import { catalogHostFromUrl } from '@/features/plugins/remote/hostCatalogPolicy';
 import { loadSiteOverrideForHost } from '@/features/plugins/remote/siteOverride';
+import { legacyBoundSettings } from '@/features/plugins/runtime/legacySnapshotFeed';
 import {
   PLUGIN_CATALOG_REFRESH_MESSAGE,
   PLUGIN_STATUS_MESSAGE,
@@ -95,7 +96,8 @@ export function usePopupPlugins({
           source: diagnosticPluginSourceFromId(pluginSourceIds[plugin.id]),
           enabled: resolveEffectiveEnabled(pluginState, legacySettings, plugin.id),
           settingsSchema: plugin.contributes.settings,
-          settings: state?.settings,
+          // A bound official plugin runs on its legacy values, not on its plugin-state entry.
+          settings: legacyBoundSettings(plugin.id, legacySettings) ?? state?.settings,
         };
       }),
     [legacySettings, pluginManifests, pluginSourceIds, pluginState],

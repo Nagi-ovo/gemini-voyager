@@ -1805,6 +1805,22 @@
     "message": "عرض أكواد خيارات ECharts تلقائيًا كرسوم بيانية تفاعلية",
     "description": "ECharts rendering feature hint"
   },
+  "enableCodeBlockCollapse": {
+    "message": "طي كتل التعليمات البرمجية الطويلة",
+    "description": "Code block collapse toggle label"
+  },
+  "enableCodeBlockCollapseHint": {
+    "message": "يضيف زر طي بجانب زر النسخ في كتل التعليمات البرمجية الطويلة؛ تبقى مفتوحة حتى تطويها بنفسك",
+    "description": "Code block collapse feature hint"
+  },
+  "enableUserLatexRendering": {
+    "message": "عرض LaTeX في رسائلي",
+    "description": "User message LaTeX rendering toggle label"
+  },
+  "enableUserLatexRenderingHint": {
+    "message": "يعرض صيغ LaTeX التي تكتبها كرموز رياضية؛ ويحتفظ التصدير والنسخ بالنص الأصلي",
+    "description": "User message LaTeX rendering feature hint"
+  },
   "diagramButton": {
     "message": "مخطط",
     "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"

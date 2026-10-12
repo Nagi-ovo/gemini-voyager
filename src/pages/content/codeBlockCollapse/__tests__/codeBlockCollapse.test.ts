@@ -2,7 +2,13 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { CleanupPositions } from '@/core/types/cleanupPositions';
+import { StorageKeys } from '@/core/types/common';
+import { CleanupManager } from '@/core/utils/cleanupManager';
+
+import { type NativeFeature, createNativeFeatureToggle } from '../../featureLifecycle';
 import {
+  CODE_BLOCK_COLLAPSE_TOGGLE,
   LONG_CODE_BLOCK_MIN_HEIGHT,
   LONG_CODE_BLOCK_MIN_LINES,
   enhanceCodeBlock,
@@ -219,6 +225,82 @@ describe('codeBlockCollapse', () => {
     expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
     expect(host.classList.contains('gv-code-block-collapsible')).toBe(false);
     expect(host.classList.contains('gv-code-block-collapsed')).toBe(false);
+  });
+
+  describe('popup switch', () => {
+    const feature: NativeFeature = {
+      id: 'code-block-collapse',
+      position: CleanupPositions.CleanupCodeBlockCollapse,
+      start: startCodeBlockCollapse,
+      toggle: CODE_BLOCK_COLLAPSE_TOGGLE,
+    };
+    const flip = (newValue: unknown) => ({
+      [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: { newValue },
+    });
+
+    it('reads a missing or non-false switch as on, like the plugin binding', () => {
+      expect([undefined, null, true, 'false', 0].map(CODE_BLOCK_COLLAPSE_TOGGLE.isEnabled)).toEqual(
+        [true, true, true, true, true],
+      );
+      expect(CODE_BLOCK_COLLAPSE_TOGGLE.isEnabled(false)).toBe(false);
+      expect(CODE_BLOCK_COLLAPSE_TOGGLE.areas).toEqual(['sync']);
+    });
+
+    it('turns code block collapse off and on live from the popup switch while the native module owns it', async () => {
+      const { host } = createCodeBlock({ lines: LONG_CODE_BLOCK_MIN_LINES });
+      const manager = new CleanupManager();
+      const toggle = createNativeFeatureToggle(manager, feature);
+      await toggle.applyInitial(true);
+      expect(host.querySelector('.gv-code-block-toggle')).not.toBeNull();
+
+      toggle.handleChange(flip(false), 'sync');
+      await vi.runAllTimersAsync();
+      expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
+      expect(host.hasAttribute('class')).toBe(false);
+      expect(host.hasAttribute('data-gv-code-collapse-owner')).toBe(false);
+      // Nothing follows the page while it is off.
+      host.querySelector('code')!.append('\nmore');
+      await vi.runAllTimersAsync();
+      expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
+
+      // A local-area write is not the popup's switch.
+      toggle.handleChange(flip(true), 'local');
+      await vi.runAllTimersAsync();
+      expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
+
+      toggle.handleChange(flip(undefined), 'sync');
+      await vi.runAllTimersAsync();
+      expect(host.querySelectorAll('.gv-code-block-toggle')).toHaveLength(1);
+      expect(manager.list()).toHaveLength(1);
+    });
+
+    it('keeps the switch flipped during the startup read instead of the late initial value', async () => {
+      const { host } = createCodeBlock({ lines: LONG_CODE_BLOCK_MIN_LINES });
+      const toggle = createNativeFeatureToggle(new CleanupManager(), feature);
+
+      toggle.handleChange(flip(false), 'sync');
+      await toggle.applyInitial(true);
+      await vi.runAllTimersAsync();
+
+      expect(toggle.isMounted()).toBe(false);
+      expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
+    });
+  });
+
+  it('leaves a block another code collapse holds alone and takes it once released', async () => {
+    const { host } = createCodeBlock({ lines: LONG_CODE_BLOCK_MIN_LINES });
+    host.setAttribute('data-gv-code-collapse-owner', 'plugin');
+    host.classList.add('gv-code-block-collapsible', 'gv-code-block-collapsed');
+    startCodeBlockCollapse();
+
+    expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
+    expect(host.classList.contains('gv-code-block-collapsed')).toBe(true);
+
+    host.removeAttribute('data-gv-code-collapse-owner');
+    host.className = '';
+    host.querySelector('.buttons')!.append(document.createElement('span'));
+    await vi.runAllTimersAsync();
+    expect(host.querySelectorAll('.gv-code-block-toggle')).toHaveLength(1);
   });
 
   it('keeps the header out of the sticky layer for collapsible blocks', () => {

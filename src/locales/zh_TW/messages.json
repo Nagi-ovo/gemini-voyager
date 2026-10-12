@@ -1765,6 +1765,22 @@
     "message": "自動將 ECharts 設定程式碼區塊轉換為互動式圖表",
     "description": "ECharts rendering feature hint"
   },
+  "enableCodeBlockCollapse": {
+    "message": "摺疊長程式碼區塊",
+    "description": "Code block collapse toggle label"
+  },
+  "enableCodeBlockCollapseHint": {
+    "message": "在長程式碼區塊的複製按鈕旁加一個摺疊按鈕；區塊預設展開，由你決定何時摺疊",
+    "description": "Code block collapse feature hint"
+  },
+  "enableUserLatexRendering": {
+    "message": "渲染我訊息中的 LaTeX",
+    "description": "User message LaTeX rendering toggle label"
+  },
+  "enableUserLatexRenderingHint": {
+    "message": "把你輸入的 LaTeX 公式顯示為數學公式；匯出和複製仍保留原文",
+    "description": "User message LaTeX rendering feature hint"
+  },
   "diagramButton": {
     "message": "圖表",
     "description": "Diagram toolbar button that shows the rendered diagram (Mermaid, ECharts or WaveDrom)"

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.gemini-echarts",
+  "name": "Gemini · ECharts charts",
+  "version": "1.0.0",
+  "description": "Show ECharts option code blocks in Gemini's replies as interactive charts. Switch any block back to its code, copy the source from the chart view, and keep the chart in PNG and PDF exports.",
+  "changelog": "First release: Gemini's built-in ECharts rendering, packaged as an official plugin that calls the echarts primitive.",
+  "i18n": {
+    "zh": {
+      "name": "Gemini · ECharts 图表",
+      "description": "把 Gemini 回复里的 ECharts 配置代码块显示成可交互的图表。每个代码块都能切回源码，看图时也能一键复制源码；导出 PNG 和 PDF 时保留图表。",
+      "changelog": "首个版本：将 Gemini 内置的 ECharts 渲染打包为调用 echarts 原语的官方插件。"
+    },
+    "zh_TW": {
+      "name": "Gemini · ECharts 圖表",
+      "description": "把 Gemini 回覆裡的 ECharts 設定程式碼區塊顯示成可互動的圖表。每個區塊都能切回原始碼，看圖時也能一鍵複製原始碼；匯出 PNG 和 PDF 時保留圖表。",
+      "changelog": "首個版本：將 Gemini 內建的 ECharts 渲染打包為呼叫 echarts 原語的官方外掛。"
+    },
+    "ja": {
+      "name": "Gemini · ECharts グラフ",
+      "description": "Gemini の返答に含まれる ECharts のオプションのコードブロックを、操作できるグラフとして表示します。ブロックごとにコード表示へ戻せ、グラフの表示中もワンクリックでソースをコピーできます。PNG と PDF のエクスポートにもグラフが残ります。",
+      "changelog": "初版：Gemini 内蔵の ECharts レンダリングを、echarts プリミティブを呼び出す公式プラグインとして同梱しました。"
+    },
+    "ko": {
+      "name": "Gemini · ECharts 차트",
+      "description": "Gemini 답변의 ECharts 옵션 코드 블록을 상호작용 가능한 차트로 보여 줍니다. 블록마다 코드 보기로 되돌릴 수 있고, 차트를 보는 중에도 한 번에 소스를 복사할 수 있으며, PNG와 PDF로 내보낼 때도 차트가 남습니다.",
+      "changelog": "첫 릴리스: Gemini 내장 ECharts 렌더링을 echarts 프리미티브를 호출하는 공식 플러그인으로 포함했습니다."
+    },
+    "fr": {
+      "name": "Gemini · Graphiques ECharts",
+      "description": "Affiche les blocs de code d'options ECharts des réponses de Gemini sous forme de graphiques interactifs. Chaque bloc peut revenir à son code, la source se copie en un clic depuis le graphique, et les exports PNG et PDF gardent le graphique.",
+      "changelog": "Première version : le rendu ECharts intégré à Gemini, livré comme plugin officiel qui appelle la primitive echarts."
+    },
+    "es": {
+      "name": "Gemini · Gráficos ECharts",
+      "description": "Muestra los bloques de código con opciones de ECharts de las respuestas de Gemini como gráficos interactivos. Cada bloque puede volver a su código, el código fuente se copia con un clic desde el gráfico y las exportaciones en PNG y PDF conservan el gráfico.",
+      "changelog": "Primera versión: el renderizado de ECharts integrado de Gemini, incluido como plugin oficial que llama a la primitiva echarts."
+    },
+    "pt": {
+      "name": "Gemini · Gráficos ECharts",
+      "description": "Mostra os blocos de código com opções do ECharts das respostas do Gemini como gráficos interativos. Cada bloco pode voltar ao código, a fonte é copiada com um clique a partir do gráfico, e as exportações em PNG e PDF mantêm o gráfico.",
+      "changelog": "Primeira versão: a renderização de ECharts integrada do Gemini, incluída como plugin oficial que chama a primitiva echarts."
+    },
+    "ru": {
+      "name": "Gemini · Графики ECharts",
+      "description": "Показывает блоки кода с опциями ECharts в ответах Gemini как интерактивные графики. Любой блок можно переключить обратно на код, исходник копируется в один клик прямо из графика, а экспорт в PNG и PDF сохраняет график.",
+      "changelog": "Первая версия: встроенная отрисовка ECharts в Gemini, поставляемая как официальный плагин, который вызывает примитив echarts."
+    },
+    "ar": {
+      "name": "Gemini · رسوم ECharts البيانية",
+      "description": "يعرض كتل شيفرة خيارات ECharts في ردود Gemini كرسوم بيانية تفاعلية. يمكن إرجاع أي كتلة إلى شيفرتها، ونسخ المصدر بنقرة واحدة أثناء عرض الرسم، ويحتفظ التصدير بصيغتي PNG وPDF بالرسم.",
+      "changelog": "الإصدار الأول: عرض ECharts المدمج في Gemini، مضمّنًا كإضافة رسمية تستدعي الأساسية echarts."
+    }
+  },
+  "author": "voyager-official",
+  "category": "readability",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/gemini/plugins/echarts",
+  "engine": ">=next",
+  "tier": "declarative",
+  "matches": ["https://gemini.google.com/*"],
+  "contributes": {
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "echarts",
+        "params": {
+          "language": ".code-block-decoration > span",
+          "code": "code[data-test-id=\"code-content\"]",
+          "copyButton": true,
+          "exportImage": true
+        }
+      }
+    ]
+  }
+}

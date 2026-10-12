@@ -3,28 +3,43 @@
  * own messages, with the renderer Gemini uses (`pages/content/userLatex`).
  * User turns come from the `turn` param or the site adapter's `userTurn`.
  *
- * Inside each turn only text-only elements are rendered (no element children),
- * so host-owned element nodes are never replaced, and nothing editable or in
- * the composer is touched. Each rendered element keeps its source in
- * `data-user-latex-original` for export, the timeline and send tracking, and
- * unmount puts the host's original text nodes back.
+ * With `unit: 'leaf'` (the default) only text-only elements inside each turn
+ * are rendered (no element children), so host-owned element nodes are never
+ * replaced. With `unit: 'turn'` each matched turn is rendered whole, as
+ * Gemini's native renderer does with a user line, Voyager's own markers in it
+ * included. Nothing editable or in the composer is touched either way. Each
+ * rendered element keeps its source in `data-user-latex-original` for export,
+ * the timeline and send tracking.
+ *
+ * Every activation claims what it renders under its own owner token, so two
+ * activations (an official and a local plugin, or a plugin and the native
+ * module) never render or restore each other's lines: unmount puts back only
+ * what this activation rendered.
  */
-import { dropStaleUserLatex, renderUserLatex, restoreUserLatex } from '@/pages/content/userLatex';
+import { createUserLatexOwner } from '@/core/utils/userLatexSource';
+import {
+  dropStaleUserLatex,
+  renderUserLatex,
+  restoreUserLatexOwnedBy,
+} from '@/pages/content/userLatex';
 
 import type { ManifestIssue } from '../../manifest/validate';
 import type { Dispose } from '../../runtime/pluginScope';
 import { getPrimitiveContract } from '../contracts';
 import type { Primitive } from '../types';
 
+export type UserLatexUnit = 'leaf' | 'turn';
+
 export interface UserLatexParams {
   readonly turn?: string;
+  readonly unit?: UserLatexUnit;
 }
 
 const MAX_SELECTOR_LENGTH = 2_000;
 /** Same pacing as Gemini's renderer: one pass once the page settles. */
 const RESCAN_DELAY_MS = 300;
-const PROCESSED_SELECTOR = '[data-user-latex-processed]';
-/** Never rendered: editable, hidden, code, controls, or already-rendered math and Voyager UI. */
+const UNITS: readonly UserLatexUnit[] = ['leaf', 'turn'];
+/** Never rendered: editable, hidden, code, controls, or already-rendered math. */
 const SKIP_SELECTOR = [
   'textarea',
   'input',
@@ -37,9 +52,9 @@ const SKIP_SELECTOR = [
   '[aria-hidden="true"]',
   '[data-user-latex-original]',
   '.katex',
-  '[class^="gv-"]',
-  '[class*=" gv-"]',
 ].join(', ');
+/** Voyager's own UI, skipped too, except on a whole turn rendered as one unit. */
+const VOYAGER_SELECTOR = '[class^="gv-"], [class*=" gv-"]';
 /** Checked on every ancestor, page included: nothing inside an editor is ever rendered. */
 const EDITABLE_SELECTOR = 'textarea, input, [contenteditable]:not([contenteditable="false"])';
 
@@ -63,9 +78,12 @@ export const userLatexPrimitive: Primitive<UserLatexParams> = {
       return { success: false, error: [{ path: 'params', message: 'must be an object' }] };
     }
     const issues: ManifestIssue[] = [];
-    const params: { turn?: string } = {};
+    const params: { turn?: string; unit?: UserLatexUnit } = {};
     for (const [key, value] of Object.entries(raw ?? {})) {
-      if (key !== 'turn') {
+      if (key === 'unit') {
+        if (UNITS.includes(value as UserLatexUnit)) params.unit = value as UserLatexUnit;
+        else issues.push({ path: 'params.unit', message: 'must be "leaf" or "turn"' });
+      } else if (key !== 'turn') {
         issues.push({ path: `params.${key}`, message: 'unknown parameter' });
       } else if (typeof value !== 'string' || !value.trim() || value.length > MAX_SELECTOR_LENGTH) {
         issues.push({ path: 'params.turn', message: 'must be a non-empty selector' });
@@ -81,44 +99,52 @@ export const userLatexPrimitive: Primitive<UserLatexParams> = {
     const composer = context.adapter?.selectors.composer;
     if (!turn) return;
     const { doc } = context;
+    const wholeTurn = params.unit === 'turn';
+    const owner = createUserLatexOwner(context.pluginId);
     context.setTargetCounter(() => querySafe(doc, turn).length);
 
     const skipped = (element: HTMLElement, message: Element): boolean => {
       // Only up to the message: Voyager stamps gv- classes on the page (body.gv-rtl) around every message.
       for (let node: Element | null = element; node; node = node.parentElement) {
         if (node.matches(SKIP_SELECTOR)) return true;
+        // A whole turn is rendered with Voyager's own markers on it (a quote line's class).
+        if (!(wholeTurn && node === message) && node.matches(VOYAGER_SELECTOR)) return true;
         if (node === message) break;
       }
       // A custom turn selector can match inside an editor, so editability looks past the message.
       if (element.isContentEditable || element.closest(EDITABLE_SELECTOR)) return true;
+      // Rendering a whole turn replaces everything in it: never with an editor inside.
+      if (wholeTurn && element.querySelector(EDITABLE_SELECTOR)) return true;
       return (
         composer !== undefined && querySafe(doc, composer).some((field) => field.contains(element))
       );
     };
+    // A leaf has no element children; a whole turn is rendered whatever it holds.
+    const renderable = (element: HTMLElement, message: Element): boolean =>
+      (wholeTurn ? element === message : element.childElementCount === 0) &&
+      !skipped(element, message);
+    const render = (element: HTMLElement, message: Element): void => {
+      dropStaleUserLatex(element);
+      if (!element.textContent?.includes('$') || !renderable(element, message)) return;
+      // Eligibility again once KaTeX has loaded: the element may have become an editor meanwhile.
+      const stillEligible = (): boolean =>
+        message.contains(element) && element.isConnected && renderable(element, message);
+      void renderUserLatex(element, { owner, signal: scope.signal, canReplace: stillEligible });
+    };
     const renderAll = (): void => {
       for (const message of querySafe(doc, turn)) {
+        if (wholeTurn) {
+          if (message instanceof HTMLElement) render(message, message);
+          continue;
+        }
         for (const element of [message, ...message.querySelectorAll('*')]) {
-          if (!(element instanceof HTMLElement)) continue;
-          dropStaleUserLatex(element);
-          if (element.childElementCount > 0) continue;
-          if (!element.textContent?.includes('$') || skipped(element, message)) continue;
-          // Eligibility again once KaTeX has loaded: the element may have become an editor meanwhile.
-          const stillEligible = (): boolean =>
-            message.contains(element) &&
-            element.isConnected &&
-            element.childElementCount === 0 &&
-            !skipped(element, message);
-          void renderUserLatex(element, scope.signal, stillEligible);
+          if (element instanceof HTMLElement) render(element, message);
         }
       }
     };
 
     // Registered first so it runs last: the observer is gone before text goes back.
-    scope.effect(
-      () => () =>
-        querySafe(doc, PROCESSED_SELECTOR).forEach((el) => restoreUserLatex(el as HTMLElement)),
-      'user-latex:restore',
-    );
+    scope.effect(() => () => restoreUserLatexOwnedBy(doc, owner), 'user-latex:restore');
     let rescan: Dispose | null = null;
     scope.observe(doc.body, { childList: true, subtree: true }, () => {
       if (scope.isDisposed) return;

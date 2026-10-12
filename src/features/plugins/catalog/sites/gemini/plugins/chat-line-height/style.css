@@ -1,0 +1,181 @@
+/* voyager.gemini-chat-line-height - Gemini's chat spacing (line height and
+ * paragraph spacing, one switch), as a plugin. The same rules as the native
+ * modules (src/pages/content/chatLineHeight, chatParagraphSpacing), with their
+ * computed values replaced by the {{lineHeight}} (percent) and
+ * {{paragraphSpacing}} (px) settings, which the plugin host fills from
+ * gvChatLineHeight and gvChatParagraphSpacing. The settings enter through
+ * custom properties, so the stylesheet stays parseable CSS before
+ * substitution.
+ * Every selector keeps its `body` prefix: it outranks the font size plugin's
+ * 1.6 / 1.5 line heights whichever stylesheet is injected first.
+ * Theme-independent. */
+:root {
+  --gv-chat-line-height: {{lineHeight}};
+  --gv-chat-paragraph-spacing: {{paragraphSpacing}}px;
+}
+
+/* User message inner text elements (Gemini sets line-height on these directly) */
+body .query-text,
+body .query-text-line,
+body user-query-content .gds-body-l,
+body user-query .gds-body-l,
+body .user-query-bubble-with-background .gds-body-l,
+body div[aria-label='User message'] .gds-body-l,
+body [data-message-author-role='user'] .gds-body-l {
+  line-height: calc(var(--gv-chat-line-height) / 100) !important;
+}
+
+/* Model response inner text elements */
+body message-content,
+body .response-content,
+body model-response .markdown,
+body model-response .markdown-main-panel,
+body .model-response .markdown,
+body .model-response .markdown-main-panel,
+body response-container .markdown,
+body response-container .markdown-main-panel,
+body .response-container .markdown,
+body .response-container .markdown-main-panel,
+body .presented-response-container .markdown,
+body .presented-response-container .markdown-main-panel,
+body [data-message-author-role='assistant'] .markdown,
+body [data-message-author-role='model'] .markdown {
+  line-height: calc(var(--gv-chat-line-height) / 100) !important;
+}
+
+/* Markdown block elements that may have their own line-height */
+body model-response p,
+body model-response li,
+body model-response td,
+body model-response th,
+body .model-response p,
+body .model-response li,
+body .model-response td,
+body .model-response th,
+body message-content p,
+body message-content li,
+body message-content td,
+body message-content th {
+  line-height: calc(var(--gv-chat-line-height) / 100) !important;
+}
+
+/* Code blocks */
+body model-response code,
+body model-response pre,
+body .model-response code,
+body .model-response pre,
+body message-content code,
+body message-content pre,
+body .code-container,
+body .formatted-code-block-internal-container pre,
+body .formatted-code-block-internal-container code {
+  line-height: calc(var(--gv-chat-line-height) / 100) !important;
+}
+
+body
+  model-response
+  :is(
+    p,
+    ul,
+    ol,
+    pre,
+    table,
+    blockquote,
+    .code-container,
+    .formatted-code-block,
+    .formatted-code-block-internal-container
+  ),
+body
+  .model-response
+  :is(
+    p,
+    ul,
+    ol,
+    pre,
+    table,
+    blockquote,
+    .code-container,
+    .formatted-code-block,
+    .formatted-code-block-internal-container
+  ),
+body
+  message-content
+  :is(
+    p,
+    ul,
+    ol,
+    pre,
+    table,
+    blockquote,
+    .code-container,
+    .formatted-code-block,
+    .formatted-code-block-internal-container
+  ),
+body
+  response-container
+  :is(
+    p,
+    ul,
+    ol,
+    pre,
+    table,
+    blockquote,
+    .code-container,
+    .formatted-code-block,
+    .formatted-code-block-internal-container
+  ),
+body
+  .response-container
+  :is(
+    p,
+    ul,
+    ol,
+    pre,
+    table,
+    blockquote,
+    .code-container,
+    .formatted-code-block,
+    .formatted-code-block-internal-container
+  ),
+body
+  .presented-response-container
+  :is(
+    p,
+    ul,
+    ol,
+    pre,
+    table,
+    blockquote,
+    .code-container,
+    .formatted-code-block,
+    .formatted-code-block-internal-container
+  ),
+body
+  [data-message-author-role='assistant']
+  :is(
+    p,
+    ul,
+    ol,
+    pre,
+    table,
+    blockquote,
+    .code-container,
+    .formatted-code-block,
+    .formatted-code-block-internal-container
+  ),
+body
+  [data-message-author-role='model']
+  :is(
+    p,
+    ul,
+    ol,
+    pre,
+    table,
+    blockquote,
+    .code-container,
+    .formatted-code-block,
+    .formatted-code-block-internal-container
+  ) {
+  margin-top: var(--gv-chat-paragraph-spacing) !important;
+  margin-bottom: var(--gv-chat-paragraph-spacing) !important;
+}

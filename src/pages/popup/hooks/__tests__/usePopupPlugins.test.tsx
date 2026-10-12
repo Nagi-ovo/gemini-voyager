@@ -274,6 +274,28 @@ describe('usePopupPlugins', () => {
     expect(storageListeners.size).toBe(0);
   });
 
+  it('reports effective settings for bound official plugins in popup diagnostics', async () => {
+    const formulaId = OFFICIAL_PLUGIN_IDS.geminiFormulaCopy;
+    const localId = 'local.me.tweak';
+    vi.mocked(chrome.storage.sync.get).mockResolvedValue({} as never);
+    vi.mocked(listPluginManifestsWithSources).mockResolvedValue([
+      record(formulaId, 'gemini.google.com'),
+      record(localId, 'gemini.google.com'),
+    ]);
+    vi.mocked(loadPluginState).mockResolvedValue({
+      // Stray settings a bound plugin never runs with.
+      [formulaId]: { enabled: true, installedAt: 1, settings: { format: 'stray' } },
+      [localId]: { enabled: true, installedAt: 1, settings: { width: 3 } },
+    });
+
+    await render();
+    expect(plugins.diagnosticPlugins).toEqual([
+      expect.objectContaining({ id: formulaId, settings: {} }),
+      expect.objectContaining({ id: localId, settings: { width: 3 } }),
+    ]);
+    unmount();
+  });
+
   it('re-asks every second while a plugin waits for a release, and stops once it starts', async () => {
     const waiting = {
       id: 'local.me.formula',

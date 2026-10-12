@@ -1,0 +1,143 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.gemini-chat-font-size",
+  "name": "Gemini · Chat Font Size",
+  "version": "1.0.0",
+  "description": "Set the text size of Gemini's chat messages, code blocks included.",
+  "changelog": "First release: Gemini's built-in chat font size setting, packaged as an official CSS-only plugin.",
+  "i18n": {
+    "zh": {
+      "name": "Gemini · 对话字体大小",
+      "description": "调整 Gemini 对话消息的文字大小，代码块也随之缩放。",
+      "changelog": "首个版本：将 Gemini 内置的对话字体大小设置打包为纯 CSS 官方插件。",
+      "settings": {
+        "fontSize": {
+          "label": "对话字体大小（%）",
+          "minLabel": "小",
+          "maxLabel": "大"
+        }
+      }
+    },
+    "zh_TW": {
+      "name": "Gemini · 對話字體大小",
+      "description": "調整 Gemini 對話訊息的文字大小，程式碼區塊也隨之縮放。",
+      "changelog": "首個版本：將 Gemini 內建的對話字體大小設定打包為純 CSS 官方外掛。",
+      "settings": {
+        "fontSize": {
+          "label": "對話字體大小（%）",
+          "minLabel": "小",
+          "maxLabel": "大"
+        }
+      }
+    },
+    "ja": {
+      "name": "Gemini · チャットのフォントサイズ",
+      "description": "Gemini のチャットメッセージの文字サイズを調整します。コードブロックも合わせて変わります。",
+      "changelog": "初版：Gemini 内蔵のチャットのフォントサイズ設定を、CSS のみの公式プラグインとして同梱しました。",
+      "settings": {
+        "fontSize": {
+          "label": "チャットのフォントサイズ（%）",
+          "minLabel": "小",
+          "maxLabel": "大"
+        }
+      }
+    },
+    "ko": {
+      "name": "Gemini · 대화 글꼴 크기",
+      "description": "Gemini 대화 메시지의 글자 크기를 조절합니다. 코드 블록도 함께 바뀝니다.",
+      "changelog": "첫 릴리스: Gemini 내장 대화 글꼴 크기 설정을 CSS 전용 공식 플러그인으로 포함했습니다.",
+      "settings": {
+        "fontSize": {
+          "label": "대화 글꼴 크기(%)",
+          "minLabel": "작게",
+          "maxLabel": "크게"
+        }
+      }
+    },
+    "fr": {
+      "name": "Gemini · Taille de police du chat",
+      "description": "Règle la taille du texte des messages du chat Gemini, blocs de code compris.",
+      "changelog": "Première version : le réglage de taille de police intégré à Gemini, livré comme plugin officiel uniquement en CSS.",
+      "settings": {
+        "fontSize": {
+          "label": "Taille de police du chat (%)",
+          "minLabel": "Petit",
+          "maxLabel": "Grand"
+        }
+      }
+    },
+    "es": {
+      "name": "Gemini · Tamaño de fuente del chat",
+      "description": "Ajusta el tamaño del texto de los mensajes del chat de Gemini, incluidos los bloques de código.",
+      "changelog": "Primera versión: el ajuste de tamaño de fuente integrado de Gemini, incluido como plugin oficial solo de CSS.",
+      "settings": {
+        "fontSize": {
+          "label": "Tamaño de fuente del chat (%)",
+          "minLabel": "Pequeño",
+          "maxLabel": "Grande"
+        }
+      }
+    },
+    "pt": {
+      "name": "Gemini · Tamanho da fonte do chat",
+      "description": "Ajusta o tamanho do texto das mensagens do chat do Gemini, incluindo os blocos de código.",
+      "changelog": "Primeira versão: o ajuste de tamanho da fonte integrado do Gemini, incluído como plugin oficial somente em CSS.",
+      "settings": {
+        "fontSize": {
+          "label": "Tamanho da fonte do chat (%)",
+          "minLabel": "Pequeno",
+          "maxLabel": "Grande"
+        }
+      }
+    },
+    "ru": {
+      "name": "Gemini · Размер шрифта чата",
+      "description": "Задаёт размер текста сообщений чата Gemini, включая блоки кода.",
+      "changelog": "Первая версия: встроенная в Gemini настройка размера шрифта чата, поставляемая как официальный плагин только на CSS.",
+      "settings": {
+        "fontSize": {
+          "label": "Размер шрифта чата (%)",
+          "minLabel": "Мелкий",
+          "maxLabel": "Крупный"
+        }
+      }
+    },
+    "ar": {
+      "name": "Gemini · حجم خط الدردشة",
+      "description": "يضبط حجم نص رسائل دردشة Gemini، بما في ذلك كتل التعليمات البرمجية.",
+      "changelog": "الإصدار الأول: إعداد حجم خط الدردشة المدمج في Gemini، مضمّنًا كإضافة رسمية تعتمد على CSS فقط.",
+      "settings": {
+        "fontSize": {
+          "label": "حجم خط الدردشة (%)",
+          "minLabel": "صغير",
+          "maxLabel": "كبير"
+        }
+      }
+    }
+  },
+  "author": "voyager-official",
+  "category": "readability",
+  "license": "GPL-3.0-or-later",
+  "homepage": "https://github.com/voyager-crew/voyager/tree/main/src/features/plugins/catalog/sites/gemini/plugins/chat-font-size",
+  "engine": ">=1.8.0",
+  "tier": "declarative",
+  "matches": ["https://gemini.google.com/*"],
+  "contributes": {
+    "settings": {
+      "fontSize": {
+        "type": "number",
+        "label": "Chat font size (%)",
+        "minLabel": "Small",
+        "maxLabel": "Large",
+        "default": 100,
+        "min": 80,
+        "max": 150
+      }
+    },
+    "styles": [
+      {
+        "file": "style.css"
+      }
+    ]
+  }
+}

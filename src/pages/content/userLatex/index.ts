@@ -12,8 +12,16 @@
  *               ├─ span.cdk-visually-hidden  ("你说" / "You said")
  *               └─ p.query-text-line.ng-star-inserted  ← processed here
  */
+import { StorageKeys } from '@/core/types/common';
 import { ensureKatexStyles } from '@/core/utils/katexStyles';
-import { hasUserLatexRendering } from '@/core/utils/userLatexSource';
+import {
+  USER_LATEX_OWNER_ATTRIBUTE,
+  createUserLatexOwner,
+  hasUserLatexRendering,
+  userLatexElementsOwnedBy,
+} from '@/core/utils/userLatexSource';
+
+import type { NativeFeatureToggle } from '../featureLifecycle';
 
 /** Selector for user message text paragraph elements. */
 const USER_MSG_SELECTOR = 'p.query-text-line';
@@ -190,67 +198,113 @@ export function parseSegments(text: string): Segment[] {
 /** The nodes a render replaced, put back by {@link restoreUserLatex}. */
 const replacedNodes = new WeakMap<HTMLElement, Node[]>();
 
-/**
- * Forget a rendering the host has since painted over, so its source no longer
- * describes the element and the next render reads the host's new text.
- */
-export function dropStaleUserLatex(el: HTMLElement): void {
-  if (el.dataset.userLatexOriginal !== undefined && !hasUserLatexRendering(el)) {
-    restoreUserLatex(el);
-  }
+/** Lets go of `el` when `owner` holds it, so another renderer may take it. */
+function releaseUserLatex(el: HTMLElement, owner: string): void {
+  if (el.getAttribute(USER_LATEX_OWNER_ATTRIBUTE) !== owner) return;
+  el.removeAttribute(USER_LATEX_OWNER_ATTRIBUTE);
+  delete el.dataset.userLatexProcessed;
+}
+
+/** The first Voyager (`gv-`) class of a node, or null for the host's own nodes. */
+function voyagerClass(node: Node): string | null {
+  if (!(node instanceof Element)) return null;
+  return Array.from(node.classList).find((name) => name.startsWith('gv-')) ?? null;
 }
 
 /**
- * Render LaTeX in a single user message paragraph element. Once `signal` has
- * aborted, or `canReplace` (asked after KaTeX loads) says no, a render still
- * waiting for KaTeX leaves the element untouched.
+ * The nodes to put back over a rendering. A Voyager decoration that was in the
+ * line before the render (a quote marker) comes back only while its feature
+ * still decorates the line: if that feature was torn down meanwhile, it already
+ * turned its live copy back into text, so the saved one returns as text too.
+ */
+function nodesToRestore(el: HTMLElement, saved: readonly Node[]): Node[] {
+  return saved.map((node) => {
+    const decoration = voyagerClass(node);
+    if (!decoration || el.getElementsByClassName(decoration).length > 0) return node;
+    return el.ownerDocument.createTextNode(node.textContent ?? '');
+  });
+}
+
+/** Undo a rendering whoever made it: the element's text and markers go back. */
+function clearUserLatex(el: HTMLElement): void {
+  const original = el.dataset.userLatexOriginal;
+  // Only over our own rendering: after a host repaint the element already holds the host's text.
+  if (original !== undefined && hasUserLatexRendering(el)) {
+    const saved = replacedNodes.get(el);
+    el.replaceChildren(
+      ...(saved ? nodesToRestore(el, saved) : [el.ownerDocument.createTextNode(original)]),
+    );
+  }
+  replacedNodes.delete(el);
+  delete el.dataset.userLatexOriginal;
+  delete el.dataset.userLatexProcessed;
+  el.removeAttribute(USER_LATEX_OWNER_ATTRIBUTE);
+}
+
+/**
+ * Forget a rendering the host has since painted over, so its source no longer
+ * describes the element and the next render reads the host's new text.
+ * Whoever rendered it: nobody's rendering is on the element any more.
+ */
+export function dropStaleUserLatex(el: HTMLElement): void {
+  if (el.dataset.userLatexOriginal !== undefined && !hasUserLatexRendering(el)) {
+    clearUserLatex(el);
+  }
+}
+
+export interface UserLatexRenderOptions {
+  /** The renderer's token (`createUserLatexOwner`); an element another token holds is left alone. */
+  readonly owner: string;
+  /** Once aborted, a render still waiting for KaTeX lets the element go untouched. */
+  readonly signal?: AbortSignal;
+  /** Asked after KaTeX loads; false lets the element go untouched. */
+  readonly canReplace?: () => boolean;
+}
+
+/**
+ * Render LaTeX in a single user message paragraph element. The element is
+ * claimed for `owner` before anything else changes and stays claimed while
+ * KaTeX loads; a failed load, an abort, a repaint or `canReplace` saying no
+ * releases it without touching its text.
  */
 export async function renderUserLatex(
   el: HTMLElement,
-  signal?: AbortSignal,
-  canReplace?: () => boolean,
+  { owner, signal, canReplace }: UserLatexRenderOptions,
 ): Promise<void> {
   // An edited message repainted over the same element would otherwise keep its old source forever.
   dropStaleUserLatex(el);
+  // Processed and owner are set and cleared together: a processed element is someone's.
   if (el.dataset.userLatexProcessed) return;
 
   const raw = el.textContent ?? '';
 
-  // Quick exit: no $ means no LaTeX
-  if (!raw.includes('$')) {
-    el.dataset.userLatexProcessed = '1';
-    return;
-  }
-
-  const segments = parseSegments(raw);
-  const hasMath = segments.some((s) => s.kind === 'math');
-
-  if (!hasMath) {
-    el.dataset.userLatexProcessed = '1';
-    return;
-  }
-
-  // Mark processed up-front so the debounced observer can't re-enter this
-  // element while KaTeX is loading asynchronously.
+  // Claimed up-front, lines without math included, so the debounced observer
+  // can't re-enter this element while KaTeX is loading and no other renderer
+  // takes a line this one will put back.
+  el.setAttribute(USER_LATEX_OWNER_ATTRIBUTE, owner);
   el.dataset.userLatexProcessed = '1';
 
+  // Quick exit: no $ means no LaTeX
+  if (!raw.includes('$')) return;
+
+  const segments = parseSegments(raw);
+  if (!segments.some((s) => s.kind === 'math')) return;
+
   const katex = await loadKatex();
-  if (!katex) return; // load failed — leave the original "$...$" text in place
-  if (signal?.aborted) {
-    delete el.dataset.userLatexProcessed;
+  // Load failed: leave the original "$...$" text, and the element free for another try.
+  if (!katex || signal?.aborted) {
+    releaseUserLatex(el, owner);
     return;
   }
+  // Restored (or taken over after a repaint) while KaTeX loaded: no longer ours to render.
+  if (el.getAttribute(USER_LATEX_OWNER_ATTRIBUTE) !== owner) return;
 
   // If Gemini repainted this node while KaTeX was loading, the captured `raw`
   // (and its segments) are stale. Bail and let a later observer pass reprocess
   // the fresh content instead of clobbering it with the old rendering.
-  if (el.textContent !== raw) {
-    delete el.dataset.userLatexProcessed;
-    return;
-  }
   // Same text can still be a different element now (an inline editor took its place).
-  if (canReplace && !canReplace()) {
-    delete el.dataset.userLatexProcessed;
+  if (el.textContent !== raw || (canReplace && !canReplace())) {
+    releaseUserLatex(el, owner);
     return;
   }
 
@@ -284,45 +338,72 @@ export async function renderUserLatex(
   el.appendChild(frag);
 }
 
-/** Undo {@link renderUserLatex}, putting the host's own text nodes back. */
-export function restoreUserLatex(el: HTMLElement): void {
-  const original = el.dataset.userLatexOriginal;
-  // Only over our own rendering: after a host repaint the element already holds the host's text.
-  if (original !== undefined && hasUserLatexRendering(el)) {
-    el.replaceChildren(...(replacedNodes.get(el) ?? [document.createTextNode(original)]));
-  }
-  replacedNodes.delete(el);
-  delete el.dataset.userLatexOriginal;
-  delete el.dataset.userLatexProcessed;
+/** Undo {@link renderUserLatex} on an element `owner` holds, putting the host's own text nodes back. */
+export function restoreUserLatex(el: HTMLElement, owner: string): void {
+  if (el.getAttribute(USER_LATEX_OWNER_ATTRIBUTE) !== owner) return;
+  clearUserLatex(el);
 }
 
-/** Scan all currently visible user message lines. */
-function processAll(): void {
-  document.querySelectorAll<HTMLElement>(USER_MSG_SELECTOR).forEach((el) => {
-    void renderUserLatex(el);
-  });
+/** Undo every rendering `owner` holds under `root`, and nobody else's. */
+export function restoreUserLatexOwnedBy(root: ParentNode, owner: string): void {
+  userLatexElementsOwnedBy(root, owner).forEach((el) => restoreUserLatex(el, owner));
 }
 
-let observer: MutationObserver | null = null;
+/** Gemini's switch: on unless the user turned it off. */
+export function isUserLatexEnabledValue(value: unknown): boolean {
+  return value !== false;
+}
+
+/** The popup switch that starts and stops {@link startUserLatex} while the page lives. */
+export const USER_LATEX_TOGGLE: NativeFeatureToggle = {
+  key: StorageKeys.USER_LATEX_ENABLED,
+  isEnabled: isUserLatexEnabledValue,
+  areas: ['sync'],
+};
+
+let stopRunning: (() => void) | null = null;
+
+/** Stop Gemini's renderer if it runs; see {@link startUserLatex}. */
+export function stopUserLatex(): void {
+  stopRunning?.();
+}
 
 /**
- * Start rendering LaTeX in user messages.
- * Processes existing messages immediately and watches for new ones.
+ * Start rendering LaTeX in Gemini's user messages: messages already on the
+ * page now, later ones once the page settles. The returned stop (idempotent)
+ * disconnects the observer, cancels renders still waiting for KaTeX and puts
+ * back only the lines this run rendered.
  */
-export function startUserLatex(): void {
-  // Process messages already on the page
+export function startUserLatex(): () => void {
+  stopUserLatex();
+  const owner = createUserLatexOwner('native');
+  const processAll = (): void => {
+    document.querySelectorAll<HTMLElement>(USER_MSG_SELECTOR).forEach((el) => {
+      void renderUserLatex(el, { owner });
+    });
+  };
+
   processAll();
 
-  if (observer) return;
-
-  let debounceTimer: ReturnType<typeof setTimeout>;
-  observer = new MutationObserver(() => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(processAll, 300);
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  const observer = new MutationObserver(() => {
+    if (debounceTimer !== null) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      debounceTimer = null;
+      processAll();
+    }, 300);
   });
+  observer.observe(document.body, { childList: true, subtree: true });
 
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
+  const stop = (): void => {
+    if (stopRunning !== stop) return;
+    stopRunning = null;
+    observer.disconnect();
+    if (debounceTimer !== null) clearTimeout(debounceTimer);
+    debounceTimer = null;
+    // A render still waiting for KaTeX finds its claim gone and leaves the line alone.
+    restoreUserLatexOwnedBy(document, owner);
+  };
+  stopRunning = stop;
+  return stop;
 }

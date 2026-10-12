@@ -4,6 +4,7 @@
 
 import { PLATFORM_LOGOS } from '../../../../src/core/icons/platformLogos';
 import { BUILTIN_PLUGINS } from '../../../../src/features/plugins/builtin';
+import { isPackagedOfficialPluginId } from '../../../../src/features/plugins/sites/featureOwners';
 
 export interface PluginManifest {
   id: string;
@@ -213,11 +214,13 @@ const BUILTIN_HOMEPAGE =
 /**
  * First-party plugins bundled inside the extension rather than served from
  * `marketplace.json`. Imported from the extension's own list so the store
- * cannot fall behind it.
+ * cannot fall behind it. A packaged Gemini / AI Studio official plugin (the
+ * chat width builtin) is left out: those are not listed until their enable
+ * story is written for the store.
  */
-export const NATIVE_PLUGINS: StorePlugin[] = BUILTIN_PLUGINS.map((p) =>
-  toStorePlugin(p, true, BUILTIN_HOMEPAGE),
-);
+export const NATIVE_PLUGINS: StorePlugin[] = BUILTIN_PLUGINS.filter(
+  (p) => !isPackagedOfficialPluginId(p.id),
+).map((p) => toStorePlugin(p, true, BUILTIN_HOMEPAGE));
 
 /**
  * Category labels not present in the page's built-in `categories` maps (and the
