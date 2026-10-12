@@ -50,6 +50,12 @@ vi.mock('../fork/index', () => ({ startFork: () => counter('fork')() }));
 vi.mock('../defaultModel/modelLocker', () => ({
   startDefaultModelNative: () => counter('defaultModel')(),
 }));
+vi.mock('../responseNotification/index', () => ({
+  createResponseNotificationRun: () => ({
+    stop: counter('responseNotification')(),
+    ready: Promise.resolve(),
+  }),
+}));
 vi.mock('../researchPack/index', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../researchPack/index')>()),
   startResearchPack: () => counter('researchPack')(),
@@ -397,6 +403,36 @@ describe('the default model at the Gemini builtin start point', () => {
 
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).toBe('admitted');
     expect(native.starts.defaultModel ?? 0).toBe(0);
+  });
+});
+
+describe('the response notification at the Gemini builtin start point', () => {
+  function startup() {
+    const current = page();
+    const { admission, ownerOf } = ownedBy('legacy', []);
+    const builtins = createGeminiBuiltinStartup(
+      admission,
+      current.cleanupManager,
+      current.lifetime.signal,
+      ownerOf,
+    );
+    return { ...current, builtins };
+  }
+
+  it('starts one notification run while the native module owns it, and stops it on teardown', async () => {
+    const { builtins, unload } = startup();
+    await builtins.startResponseNotification();
+
+    expect(native.live.responseNotification).toBe(1);
+    unload();
+    expect(native.live.responseNotification).toBe(0);
+  });
+
+  it('starts no notification run once page teardown began', async () => {
+    const { builtins, unload } = startup();
+    unload();
+    await builtins.startResponseNotification();
+    expect(native.starts.responseNotification ?? 0).toBe(0);
   });
 });
 

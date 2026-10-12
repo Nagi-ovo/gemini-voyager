@@ -11,6 +11,7 @@ import { hashString } from '@/core/utils/hash';
 import type { TimelineMarker } from '@/features/timeline/types';
 
 import { TimestampService } from '../../timestamp/TimestampService';
+import { startHistoryTimestampPageService } from '../../timestamp/historyTimestampPageService';
 import {
   type HistoryTurnTimestamp,
   historyTimestampStore,
@@ -46,6 +47,21 @@ describe('TimelineTimestamps', () => {
   const owners = new Set<TimelineTimestamps>();
   const subscribers = new Set<Subscriber>();
   const settingsListeners = new Set<StorageChangeListener>();
+  let stopHistoryService: () => void = () => {};
+
+  /** Restart the page service with a store whose identity-cache read waits for the caller. */
+  function startPendingHistoryService(): () => void {
+    stopHistoryService();
+    let finish = () => {};
+    vi.mocked(historyTimestampStore.start).mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    stopHistoryService = startHistoryTimestampPageService();
+    return () => finish();
+  }
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -85,7 +101,9 @@ describe('TimelineTimestamps', () => {
     vi.spyOn(historyTimestampStore, 'getTurns').mockImplementation(() =>
       historyTurns.length > 0 ? historyTurns : null,
     );
-    vi.spyOn(historyTimestampStore, 'stop');
+    vi.spyOn(historyTimestampStore, 'stop').mockImplementation(() => {});
+    stopHistoryService = startHistoryTimestampPageService();
+    vi.mocked(historyTimestampStore.start).mockClear();
     vi.spyOn(chrome.storage.onChanged, 'addListener').mockImplementation((listener) => {
       settingsListeners.add(listener);
     });
@@ -97,6 +115,7 @@ describe('TimelineTimestamps', () => {
   afterEach(async () => {
     owners.forEach((owner) => owner.destroy());
     owners.clear();
+    stopHistoryService();
     subscribers.clear();
     settingsListeners.clear();
     await vi.runOnlyPendingTimersAsync();
@@ -448,16 +467,10 @@ describe('TimelineTimestamps', () => {
     async (area) => {
       stored[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS] = false;
       captureHistory();
-      let finishStart = () => {};
-      vi.mocked(historyTimestampStore.start).mockImplementationOnce(
-        () =>
-          new Promise<void>((resolve) => {
-            finishStart = resolve;
-          }),
-      );
+      const finishStart = startPendingHistoryService();
       const initializing = createOwner();
       await vi.advanceTimersByTimeAsync(0);
-      expect(historyTimestampStore.start).toHaveBeenCalledOnce();
+      expect(historyTimestampStore.subscribe).not.toHaveBeenCalled();
 
       changeTimestampSetting(true, area);
       finishStart();
@@ -536,13 +549,8 @@ describe('TimelineTimestamps', () => {
   });
 
   it('does not subscribe after destruction while shared history initialization is pending', async () => {
-    let finishStart = () => {};
-    vi.mocked(historyTimestampStore.start).mockImplementationOnce(
-      () =>
-        new Promise<void>((resolve) => {
-          finishStart = resolve;
-        }),
-    );
+    const finishStart = startPendingHistoryService();
+    vi.mocked(historyTimestampStore.stop).mockClear();
     const owner = new TimelineTimestamps({
       getMarkers: () => [],
       getTurnText: () => '',
@@ -552,7 +560,6 @@ describe('TimelineTimestamps', () => {
     owners.add(owner);
     const initializing = owner.init();
     await vi.advanceTimersByTimeAsync(0);
-    expect(historyTimestampStore.start).toHaveBeenCalledOnce();
     expect(settingsListeners.size).toBe(1);
     owner.destroy();
     expect(settingsListeners.size).toBe(0);

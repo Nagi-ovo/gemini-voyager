@@ -21,6 +21,7 @@ import { applyFolderOp } from '@/features/folder/owner/applyFolderOp';
 import { FOLDER_SITE_POLICIES } from '@/features/folder/owner/folderOwnerPolicy';
 
 import { TimestampService } from '../timestamp/TimestampService';
+import { whenHistoryTimestampsReady } from '../timestamp/historyTimestampPageService';
 import { historyTimestampStore } from '../timestamp/historyTimestamps';
 import type { FolderDataSession } from './FolderDataSession';
 import {
@@ -729,8 +730,9 @@ export class FolderStore {
           this.activityTimestampService = new TimestampService();
           await this.activityTimestampService.initialize();
         }
-        await historyTimestampStore.start();
-        if (this.isDestroyed || !this.options.getContext().enabled) return;
+        // Waits for the page service; starting the store here could revive it after page teardown.
+        const ready = await whenHistoryTimestampsReady();
+        if (!ready || this.isDestroyed || !this.options.getContext().enabled) return;
 
         this.backfillKnownConversationActivity();
         this.activityTimestampUnsubscribe = historyTimestampStore.subscribe((cids) => {
@@ -836,10 +838,8 @@ export class FolderStore {
     this.applyConversationActivity(
       cids.map((cid) => {
         const conversationId = normalizeConversationId(cid) ?? '';
-        const lastTurnAt = conversationId
-          ? historyTimestampStore.getLatestTurnTimestamp(conversationId)
-          : null;
-        return { conversationId, lastTurnAt: lastTurnAt ?? 0 };
+        const lastTurnAt = historyTimestampStore.getLatestTurnTimestamp(conversationId) ?? 0;
+        return { conversationId, lastTurnAt };
       }),
     );
   }

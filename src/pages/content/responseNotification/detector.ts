@@ -1,5 +1,7 @@
 export interface ResponseCompletionSnapshot {
   conversationKey: string;
+  /** The run's session epoch; it changes whenever the page leaves the conversation. */
+  sessionEpoch: number;
   hasCompletedResponse: boolean;
   isGenerating: boolean;
   responseFingerprint: string | null;
@@ -17,7 +19,8 @@ export type ResponseCompletionDecision =
 const DEFAULT_STABLE_WINDOW_MS = 1500;
 
 export class ResponseCompletionDetector {
-  private sawGeneration = false;
+  /** Session epoch the observed generation belongs to; null until one is seen. */
+  private generationEpoch: number | null = null;
   private candidateFingerprint: string | null = null;
   private candidateSince = 0;
   private readonly notifiedKeys = new Set<string>();
@@ -25,33 +28,28 @@ export class ResponseCompletionDetector {
   constructor(private readonly stableWindowMs: number = DEFAULT_STABLE_WINDOW_MS) {}
 
   reset(): void {
-    this.sawGeneration = false;
+    this.generationEpoch = null;
     this.candidateFingerprint = null;
     this.candidateSince = 0;
   }
 
-  notifyImmediately(snapshot: ResponseCompletionSnapshot): ResponseCompletionDecision {
-    if (
-      !this.sawGeneration ||
-      snapshot.isGenerating ||
-      !snapshot.hasCompletedResponse ||
-      !snapshot.responseFingerprint
-    ) {
-      return { type: 'none' };
-    }
-
-    return this.notifyOnce(snapshot);
+  getPendingEvaluationDelay(now: number): number | null {
+    if (this.candidateFingerprint === null) return null;
+    const remaining = this.stableWindowMs - (now - this.candidateSince);
+    return remaining > 0 ? remaining : null;
   }
 
   update(snapshot: ResponseCompletionSnapshot): ResponseCompletionDecision {
     if (snapshot.isGenerating) {
-      this.sawGeneration = true;
+      this.generationEpoch = snapshot.sessionEpoch;
       this.candidateFingerprint = null;
       this.candidateSince = 0;
       return { type: 'none' };
     }
 
-    if (!this.sawGeneration) {
+    if (!this.ownsGeneration(snapshot)) {
+      // A generation seen in another session must not finish in this one.
+      this.reset();
       return { type: 'none' };
     }
 
@@ -72,6 +70,10 @@ export class ResponseCompletionDetector {
     }
 
     return this.notifyOnce(snapshot);
+  }
+
+  private ownsGeneration(snapshot: ResponseCompletionSnapshot): boolean {
+    return this.generationEpoch !== null && this.generationEpoch === snapshot.sessionEpoch;
   }
 
   private notifyOnce(snapshot: ResponseCompletionSnapshot): ResponseCompletionDecision {

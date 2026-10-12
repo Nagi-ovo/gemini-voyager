@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 
@@ -392,6 +392,74 @@ describe('HistoryTimestampStore', () => {
       }
     )?.conversations;
     expect(Object.keys(conversations ?? {}).sort()).toEqual([CID, 'c_aaaaaaaaaaaaaaaa'].sort());
+  });
+
+  describe('sessions', () => {
+    const cachedIdentity = (cid: string) => ({
+      [StorageKeys.GV_TURN_IDENTITY_CACHE]: {
+        version: 1,
+        conversations: { [cid]: { turnIds: ['s-aaaaaaaaaaaaaaaa'], updatedAt: 100 } },
+      },
+    });
+    let pendingReads: Array<(value: Record<string, unknown>) => void>;
+    const flushMicrotasks = async () => {
+      for (let i = 0; i < 10; i++) await Promise.resolve();
+    };
+
+    beforeEach(() => {
+      pendingReads = [];
+      localGetMock.mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            pendingReads.push(resolve);
+          }),
+      );
+      localSetMock.mockResolvedValue(undefined);
+    });
+
+    it('a cache read that resolves after stop does not refill the store', async () => {
+      store = new HistoryTimestampStore();
+      const ready = store.start();
+      store.stop();
+
+      pendingReads[0](cachedIdentity(CID));
+      await ready;
+
+      expect(store.hasTurnIdentityMap(NATIVE_ID)).toBe(false);
+      expect(store.resolveCanonicalTurnId(NATIVE_ID, 'u-0')).toBeNull();
+    });
+
+    it('persisting after stop does not write an emptied snapshot', async () => {
+      store = new HistoryTimestampStore();
+      void store.start();
+      postCapture(makeEnvelope([makeTurn('captured before stop', 1_783_370_737)]), 'before-stop');
+      store.stop();
+
+      pendingReads[0](cachedIdentity('c_aaaaaaaaaaaaaaaa'));
+      await flushMicrotasks();
+
+      expect(localSetMock).not.toHaveBeenCalled();
+    });
+
+    it('a flush scheduled by an old session does not notify the new session', async () => {
+      const postMessage = vi.spyOn(window, 'postMessage').mockImplementation(() => {});
+      const flushes = () =>
+        postMessage.mock.calls.filter(
+          ([message]) => (message as { type?: string } | null)?.type === 'flush',
+        ).length;
+      store = new HistoryTimestampStore();
+      void store.start();
+      store.stop();
+      void store.start();
+
+      pendingReads[0]({});
+      await flushMicrotasks();
+      expect(flushes()).toBe(0);
+
+      pendingReads[1]({});
+      await flushMicrotasks();
+      expect(flushes()).toBe(1);
+    });
   });
 
   it('bounds parsed conversation history with an LRU', () => {

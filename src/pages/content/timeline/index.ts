@@ -1,8 +1,6 @@
-import { keyboardShortcutService } from '@/core/services/KeyboardShortcutService';
 import { runRouteTimeline } from '@/features/timeline/runRouteTimeline';
 
 import type { StopNativeFeature } from '../featureLifecycle';
-import { historyTimestampStore } from '../timestamp/historyTimestamps';
 import { TimelineManager } from './manager';
 
 /** Gemini renders a conversation after its router settles; rebuilding sooner reads the old DOM. */
@@ -40,9 +38,7 @@ export function startTimeline(): StopNativeFeature {
   return () => {
     bodyObserver?.disconnect();
     bodyObserver = null;
+    // History timestamps belong to the page service and shortcuts to each engine's lease.
     lifetime.abort();
-    // These page-lifetime services outlive SPA engine replacement; only page teardown releases them.
-    historyTimestampStore.stop();
-    keyboardShortcutService.destroy();
   };
 }

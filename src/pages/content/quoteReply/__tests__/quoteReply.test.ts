@@ -5,7 +5,7 @@ import { getBrowserName } from '@/core/utils/browser';
 
 import { HighlightManager } from '../../highlight/manager';
 import { expandInputCollapseIfNeeded } from '../../inputCollapse/index';
-import { startQuoteReply } from '../index';
+import { startQuoteReply } from './startQuoteReply';
 
 vi.mock('../../inputCollapse/index', () => ({
   expandInputCollapseIfNeeded: vi.fn(),
@@ -64,6 +64,17 @@ function installHighlightConversation(): void {
       <model-response><message-content><p id="source">Hello world</p></message-content></model-response>
     </div>
   `;
+}
+
+/** Deliver one change to every storage listener still registered, as the browser does. */
+function emitStorageChange(changes: Record<string, { newValue?: unknown }>, areaName: string) {
+  const removed = new Set(
+    vi.mocked(chrome.storage.onChanged.removeListener).mock.calls.map(([listener]) => listener),
+  );
+  vi.mocked(chrome.storage.onChanged.addListener)
+    .mock.calls.map(([listener]) => listener)
+    .filter((listener) => !removed.has(listener))
+    .forEach((listener) => listener(changes as never, areaName as never));
 }
 
 function triggerQuoteReply() {
@@ -635,7 +646,7 @@ describe('quote reply', () => {
     const quoteButton = toolbar?.querySelector('.gv-quote-btn');
     const highlightButton = toolbar?.querySelector('.gv-highlight-action');
     expect(document.querySelectorAll('.gv-selection-toolbar')).toHaveLength(1);
-    expect(quoteButton?.classList.contains('gv-hidden')).toBe(true);
+    expect(quoteButton).toBeNull();
     expect(highlightButton?.classList.contains('gv-hidden')).toBe(false);
 
     cleanup();
@@ -831,12 +842,8 @@ describe('quote reply', () => {
     document.dispatchEvent(new MouseEvent('mouseup'));
     vi.advanceTimersByTime(300);
 
-    expect(document.querySelector('.gv-highlight-action')?.classList.contains('gv-hidden')).toBe(
-      true,
-    );
-    expect(
-      document.querySelector('.gv-highlight-color-trigger')?.classList.contains('gv-hidden'),
-    ).toBe(true);
+    expect(document.querySelector('.gv-highlight-action')).toBeNull();
+    expect(document.querySelector('.gv-highlight-color-trigger')).toBeNull();
     expect(document.querySelector('.gv-quote-btn')?.classList.contains('gv-hidden')).toBe(false);
     cleanup();
   });
@@ -916,8 +923,7 @@ describe('quote reply', () => {
     selectSourceText();
     document.dispatchEvent(new MouseEvent('mouseup'));
     vi.advanceTimersByTime(250);
-    const listener = vi.mocked(chrome.storage.onChanged.addListener).mock.calls.at(-1)![0];
-    listener(
+    emitStorageChange(
       {
         [StorageKeys.HIGHLIGHT_COLOR_PALETTE]: {
           newValue: ['yellow', 'green', '#123456', 'pink', '#c084fc'],
@@ -926,10 +932,10 @@ describe('quote reply', () => {
       },
       'sync',
     );
-    // Preserve palette-then-default ordering when both arrive in one event.
+    // The old selected blue must not overwrite the incoming palette before the new default applies.
     expect(
       document.querySelector<HTMLElement>('[data-highlight-slot="0"]')?.dataset.highlightColor,
-    ).toBe('blue');
+    ).toBe('yellow');
     const selectedSwatch = document.querySelector<HTMLButtonElement>(
       '.gv-highlight-color-option[aria-pressed="true"]',
     );

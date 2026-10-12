@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { renderQuotedUserMessages, startRenderedQuoteStyling } from '../renderedQuotes';
+import { startQuoteReply } from './startQuoteReply';
 
 function installUserMessage(lines: string[]): HTMLElement {
   const container = document.createElement('div');
@@ -211,6 +212,47 @@ describe('rendered Quote Reply blocks', () => {
     expect(container.querySelector('.gv-rendered-quote-marker')).toBeNull();
     expect(container.querySelector('.gv-rendered-quote-line')).toBeNull();
     expect(container.innerHTML).toBe(raw);
+  });
+
+  it('keeps rendered quotes styled with quote and highlight both off', () => {
+    const container = installUserMessage(['> quoted context', 'question']);
+    // In a conversation turn, so the toolbar would offer Quote if it were on.
+    const turn = document.createElement('div');
+    turn.className = 'conversation-container';
+    container.replaceWith(turn);
+    turn.appendChild(container);
+    const stop = startQuoteReply({ quoteEnabled: false, highlightEnabled: false });
+    const line = container.querySelector('.query-text-line')!;
+    const range = document.createRange();
+    range.selectNodeContents(line);
+    window.getSelection()?.removeAllRanges();
+    window.getSelection()?.addRange(range);
+    document.dispatchEvent(new MouseEvent('mouseup'));
+    vi.advanceTimersByTime(250);
+
+    expect(container.querySelector('blockquote.gv-rendered-quote')).not.toBeNull();
+    expect(document.querySelector('.gv-selection-toolbar')).toBeNull();
+    stop();
+    expect(container.querySelector('.gv-rendered-quote')).toBeNull();
+  });
+
+  it('restores a quote line that was detached and re-rendered before stop', async () => {
+    const original = installUserMessage(['> quoted context', 'question']);
+    const raw = original.innerHTML;
+    const cleanup = startRenderedQuoteStyling();
+    expect(original.querySelector('.gv-rendered-quote-marker')).not.toBeNull();
+
+    // Gemini swaps the message for a freshly rendered copy and keeps the old node around.
+    original.remove();
+    const replacement = installUserMessage(['> quoted context', 'question']);
+    await Promise.resolve();
+    vi.advanceTimersByTime(80);
+    expect(replacement.querySelector('.gv-rendered-quote-marker')).not.toBeNull();
+    cleanup();
+
+    document.body.appendChild(original);
+    expect(original.innerHTML).toBe(raw);
+    expect(replacement.querySelector('[class*="gv-"]')).toBeNull();
   });
 
   it('uses Voyager theme variables and logical properties in every browser', () => {

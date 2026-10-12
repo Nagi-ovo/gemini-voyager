@@ -8,6 +8,7 @@ describe('ResponseCompletionDetector', () => {
 
     const decision = detector.update({
       conversationKey: '/app/history',
+      sessionEpoch: 1,
       hasCompletedResponse: true,
       isGenerating: false,
       responseFingerprint: '42:answer',
@@ -22,6 +23,7 @@ describe('ResponseCompletionDetector', () => {
 
     detector.update({
       conversationKey: '/app/current',
+      sessionEpoch: 1,
       hasCompletedResponse: false,
       isGenerating: true,
       responseFingerprint: null,
@@ -31,6 +33,7 @@ describe('ResponseCompletionDetector', () => {
     expect(
       detector.update({
         conversationKey: '/app/current',
+        sessionEpoch: 1,
         hasCompletedResponse: true,
         isGenerating: false,
         responseFingerprint: '100:final answer',
@@ -40,6 +43,7 @@ describe('ResponseCompletionDetector', () => {
 
     const decision = detector.update({
       conversationKey: '/app/current',
+      sessionEpoch: 1,
       hasCompletedResponse: true,
       isGenerating: false,
       responseFingerprint: '100:final answer',
@@ -55,6 +59,7 @@ describe('ResponseCompletionDetector', () => {
     expect(
       detector.update({
         conversationKey: '/app/current',
+        sessionEpoch: 1,
         hasCompletedResponse: true,
         isGenerating: false,
         responseFingerprint: '100:final answer',
@@ -68,6 +73,7 @@ describe('ResponseCompletionDetector', () => {
 
     detector.update({
       conversationKey: '/app/current',
+      sessionEpoch: 1,
       hasCompletedResponse: false,
       isGenerating: true,
       responseFingerprint: null,
@@ -75,6 +81,7 @@ describe('ResponseCompletionDetector', () => {
     });
     detector.update({
       conversationKey: '/app/current',
+      sessionEpoch: 1,
       hasCompletedResponse: true,
       isGenerating: false,
       responseFingerprint: '100:partial',
@@ -84,6 +91,7 @@ describe('ResponseCompletionDetector', () => {
     expect(
       detector.update({
         conversationKey: '/app/current',
+        sessionEpoch: 1,
         hasCompletedResponse: true,
         isGenerating: false,
         responseFingerprint: '120:final',
@@ -94,6 +102,7 @@ describe('ResponseCompletionDetector', () => {
     expect(
       detector.update({
         conversationKey: '/app/current',
+        sessionEpoch: 1,
         hasCompletedResponse: true,
         isGenerating: false,
         responseFingerprint: '120:final',
@@ -102,43 +111,26 @@ describe('ResponseCompletionDetector', () => {
     ).toBe('notify');
   });
 
-  it('immediate notification path still deduplicates by response fingerprint', () => {
+  it('does not finish a generation that was seen in another session', () => {
     const detector = new ResponseCompletionDetector(1000);
 
     detector.update({
-      conversationKey: '/app/background',
+      conversationKey: '/app/a',
+      sessionEpoch: 1,
       hasCompletedResponse: false,
       isGenerating: true,
       responseFingerprint: null,
       now: 1000,
     });
 
-    expect(
-      detector.notifyImmediately({
-        conversationKey: '/app/background',
-        hasCompletedResponse: true,
-        isGenerating: false,
-        responseFingerprint: '100:final answer',
-        now: 1200,
-      }).type,
-    ).toBe('notify');
-
-    detector.update({
-      conversationKey: '/app/background',
-      hasCompletedResponse: false,
-      isGenerating: true,
-      responseFingerprint: null,
-      now: 2000,
-    });
-
-    expect(
-      detector.notifyImmediately({
-        conversationKey: '/app/background',
-        hasCompletedResponse: true,
-        isGenerating: false,
-        responseFingerprint: '100:final answer',
-        now: 2200,
-      }).type,
-    ).toBe('none');
+    const chatB = {
+      conversationKey: '/app/b',
+      sessionEpoch: 2,
+      hasCompletedResponse: true,
+      isGenerating: false,
+      responseFingerprint: '100:chat b answer',
+    };
+    expect(detector.update({ ...chatB, now: 1500 }).type).toBe('none');
+    expect(detector.update({ ...chatB, now: 3000 }).type).toBe('none');
   });
 });

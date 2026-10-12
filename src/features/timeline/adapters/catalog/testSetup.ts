@@ -2,7 +2,7 @@ import { beforeEach, vi } from 'vitest';
 
 vi.mock('@/core/services/KeyboardShortcutService', () => ({
   keyboardShortcutService: {
-    init: vi.fn().mockResolvedValue(undefined),
+    acquire: vi.fn(() => ({ ready: Promise.resolve(), release: () => {} })),
     on: vi.fn(() => () => {}),
   },
 }));

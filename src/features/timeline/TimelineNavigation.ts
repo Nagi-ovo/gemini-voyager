@@ -82,8 +82,8 @@ export class TimelineNavigation {
   private navigationQueue: Direction[] = [];
   private isNavigating = false;
   private navigationWaits = new Map<number, () => void>();
-  private shortcutUnsubscribe: (() => void) | null = null;
-  private shortcutInit: Promise<void> | null = null;
+  private releaseShortcuts: (() => void) | null = null;
+  private shortcutsReady: Promise<void> = Promise.resolve();
   private starredNavigationTimer: number | null = null;
   private readonly onViewportScroll = () => this.scheduleScrollSync();
 
@@ -263,26 +263,29 @@ export class TimelineNavigation {
     this.commitActiveMarkerAfterNavigation(target.marker.id, duration);
   }
 
+  /** Holds the shortcut lease for this conversation; destroy() hands the keys back. */
   initKeyboardShortcuts(): Promise<void> {
-    if (this.destroyed || this.shortcutUnsubscribe) return Promise.resolve();
-    if (this.shortcutInit) return this.shortcutInit;
-    this.shortcutInit = (async () => {
-      try {
-        await keyboardShortcutService.init();
-        if (this.destroyed) return;
-        this.shortcutUnsubscribe = keyboardShortcutService.on((action, event) => {
-          if (action === 'timeline:previous') this.enqueueNavigation('previous', event.repeat);
-          else if (action === 'timeline:next') this.enqueueNavigation('next', event.repeat);
-          else if (action === 'timeline:first') void this.navigateToFirstNode();
-          else if (action === 'timeline:last') void this.navigateToLastNode();
-        });
-      } catch (error) {
+    if (this.destroyed || this.releaseShortcuts) return this.shortcutsReady;
+    try {
+      // Taken synchronously so a destroy() before the config read finishes still releases it.
+      const lease = keyboardShortcutService.acquire();
+      const unsubscribe = keyboardShortcutService.on((action, event) => {
+        if (action === 'timeline:previous') this.enqueueNavigation('previous', event.repeat);
+        else if (action === 'timeline:next') this.enqueueNavigation('next', event.repeat);
+        else if (action === 'timeline:first') void this.navigateToFirstNode();
+        else if (action === 'timeline:last') void this.navigateToLastNode();
+      });
+      this.releaseShortcuts = () => {
+        unsubscribe();
+        lease.release();
+      };
+      this.shortcutsReady = lease.ready.catch((error: unknown) => {
         console.warn('[Timeline] Failed to initialize keyboard shortcuts:', error);
-      }
-    })().finally(() => {
-      this.shortcutInit = null;
-    });
-    return this.shortcutInit;
+      });
+    } catch (error) {
+      console.warn('[Timeline] Failed to initialize keyboard shortcuts:', error);
+    }
+    return this.shortcutsReady;
   }
 
   enqueueNavigation(direction: Direction, isRepeat = false): void {
@@ -384,8 +387,8 @@ export class TimelineNavigation {
     this.setViewport(null);
     this.virtualized?.destroy();
     this.destroyed = true;
-    this.shortcutUnsubscribe?.();
-    this.shortcutUnsubscribe = null;
+    this.releaseShortcuts?.();
+    this.releaseShortcuts = null;
     this.navigationQueue.length = 0;
     for (const [timer, resolve] of this.navigationWaits) {
       window.clearTimeout(timer);

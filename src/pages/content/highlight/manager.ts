@@ -13,6 +13,13 @@ import {
 } from '@/core/types/highlight';
 import { buildConversationIdFromUrl } from '@/core/utils/conversationIdentity';
 
+import {
+  type AccountHints,
+  type PageIdentity,
+  capturePageIdentity,
+  isDifferentAccount,
+  routeKeyOf,
+} from '../selectionToolbar/pageIdentity';
 import { HighlightEditor } from './HighlightEditor';
 import { HighlightMarks } from './HighlightMarks';
 import { HighlightNavigation, type HighlightNavigationResult } from './HighlightNavigation';
@@ -21,6 +28,8 @@ import { HIGHLIGHT_EXACT_MAX_BYTES, buildHighlightAnchor } from './anchor';
 import { HighlightClient, highlightClient } from './client';
 import { getHighlightSelectionContext } from './dom';
 import { getSaveFailureMessage, translate } from './messages';
+import { type MutationIdentity, isAccountSwitch, isSameMutationPage } from './mutationIdentity';
+import { followPageAccount, readPageAccountHints } from './pageAccount';
 
 const STYLE_ID = 'gv-highlight-style';
 const RENDER_DEBOUNCE_MS = 120;
@@ -265,8 +274,11 @@ export class HighlightManager {
   private currentRoute = '';
   private currentConversationId = '';
   private accountScope: HighlightAccountScope | null = null;
+  /** The account the shown records belong to; an email that fills in later updates it. */
+  private accountHints: AccountHints | null = null;
   private scopeGeneration = 0;
   private loadGeneration = 0;
+  private routeEpoch = 0;
   private liveRegion: HTMLElement | null = null;
   private announceTimer: number | null = null;
   private colorPalette = [...DEFAULT_HIGHLIGHT_COLOR_PALETTE];
@@ -356,6 +368,7 @@ export class HighlightManager {
   }
 
   async createFromRange(range: Range, color: HighlightColor = 'yellow'): Promise<boolean> {
+    if (this.destroyed) return false;
     const context = getHighlightSelectionContext(range);
     if (!context) return false;
     const anchor = buildHighlightAnchor(context.assistantRoot, range);
@@ -378,22 +391,22 @@ export class HighlightManager {
       color,
     };
 
+    const identity = this.captureMutation();
     try {
       const selectedUrl = new URL(context.conversationUrl);
-      const selectedRoute = selectedUrl.pathname + selectedUrl.search;
-      if (selectedRoute !== this.getRouteKey() || !(await this.refreshAccountScopeForMutation())) {
+      if (routeKeyOf(selectedUrl.pathname, selectedUrl.search) !== identity.page.routeKey) {
         throw new Error('The conversation changed before the highlight could be saved');
       }
-      const scope = this.accountScope;
-      if (!scope) throw new Error('Highlight account scope is unavailable');
+      const scope = await this.resolveMutationScope(identity);
       const record = await this.client.create(scope, input);
-      if (this.destroyed) return false;
+      // The write was accepted for the source chat; only that chat's page may show it.
+      if (!this.isCurrentMutation(identity)) return false;
       this.records.set(record.id, record);
       this.renderAll();
       this.announce(translate('highlightSaved', 'Highlight saved.'));
       return true;
     } catch (error) {
-      this.announce(getSaveFailureMessage(error));
+      if (this.isCurrentMutation(identity)) this.announce(getSaveFailureMessage(error));
       return false;
     }
   }
@@ -406,30 +419,66 @@ export class HighlightManager {
     return this.navigation.navigate(id, behavior, allowTurnFallback);
   }
 
+  /** A rewrite of `/app/x` into `/u/0/app/x` stays the same route: nothing reloads or goes stale. */
   private getRouteKey(): string {
-    return `${location.pathname}${location.search}`;
+    return routeKeyOf(location.pathname, location.search);
   }
 
   private checkRoute(): void {
     if (this.destroyed) return;
     const nextRoute = this.getRouteKey();
-    if (nextRoute === this.currentRoute) return;
-    this.currentRoute = nextRoute;
+    if (nextRoute === this.currentRoute) {
+      this.checkAccount();
+      return;
+    }
+    this.enterRoute(nextRoute);
+    this.leavePage();
+  }
+
+  /** Same path, another signed-in account: drop A's records and load B's. True when it switched. */
+  private checkAccount(): boolean {
+    if (this.destroyed || !this.accountHints) return false;
+    const followed = followPageAccount(this.accountHints);
+    if (followed !== 'switched') {
+      this.accountHints = followed;
+      return false;
+    }
+    this.routeEpoch++;
+    this.loadGeneration++;
+    this.leavePage();
+    return true;
+  }
+
+  /** Forget everything shown for the previous chat or account and load the current one. */
+  private leavePage(): void {
     this.currentConversationId = buildConversationIdFromUrl(location.href);
     this.accountScope = null;
+    this.accountHints = null;
     this.editor.close();
     this.clearRenderedMarks();
     this.records.clear();
     void this.refreshScopeAndReload();
   }
 
-  private async resolveAccountScope(): Promise<HighlightAccountScope | null> {
+  /**
+   * Move to another route. Loads and mutations started on the previous one go stale at once, even
+   * before the new scope resolves: a late list or save from chat A must never land in chat B.
+   */
+  private enterRoute(route: string): void {
+    if (this.currentRoute && route !== this.currentRoute) {
+      this.routeEpoch++;
+      this.loadGeneration++;
+    }
+    this.currentRoute = route;
+  }
+
+  private async resolveAccountScope(page?: PageIdentity): Promise<HighlightAccountScope | null> {
     try {
-      const context = detectAccountContextFromDocument(location.href, document);
+      const hints = page ?? detectAccountContextFromDocument(location.href, document);
       const resolved = await accountIsolationService.resolveAccountScope({
-        pageUrl: location.href,
-        routeUserId: context.routeUserId,
-        email: context.email,
+        pageUrl: page?.href ?? location.href,
+        routeUserId: hints.routeUserId,
+        email: hints.email,
       });
       return {
         platform: 'gemini',
@@ -450,41 +499,71 @@ export class HighlightManager {
     while (!this.destroyed) {
       const generation = ++this.scopeGeneration;
       const route = this.getRouteKey();
+      const hints = readPageAccountHints();
       const scope = await this.resolveAccountScope();
       if (this.destroyed || generation !== this.scopeGeneration) return false;
-      if (route !== this.getRouteKey()) continue;
-      this.currentRoute = route;
+      // A scope resolved for account A must not list highlights onto B's page.
+      if (route !== this.getRouteKey() || isDifferentAccount(hints, readPageAccountHints())) {
+        continue;
+      }
+      this.enterRoute(route);
       this.currentConversationId = buildConversationIdFromUrl(location.href);
       this.accountScope = scope;
+      this.accountHints = hints;
       return scope !== null;
     }
     return false;
   }
 
-  private async refreshAccountScopeForMutation(): Promise<boolean> {
-    const previous = this.accountScope;
-    if (!(await this.refreshScopeForCurrentRoute())) return false;
-    const next = this.accountScope;
-    if (
-      previous &&
-      next &&
-      (previous.accountKey !== next.accountKey || previous.platform !== next.platform)
-    ) {
-      // Listing the newly resolved account also performs the one-time migration
-      // from a legacy `default` bucket before an edit/create continues.
-      await this.reload();
+  private captureMutation(): MutationIdentity {
+    return { page: capturePageIdentity(), epoch: this.routeEpoch, scope: this.accountScope };
+  }
+
+  /** Whether a mutation's result may still change this page's records, marks or messages. */
+  private isCurrentMutation(identity: MutationIdentity): boolean {
+    return !this.destroyed && identity.epoch === this.routeEpoch && isSameMutationPage(identity);
+  }
+
+  /**
+   * The scope a mutation writes to, resolved from the hints taken when the user acted rather than
+   * from whatever the page shows once the lookup returns.
+   */
+  private async resolveMutationScope(identity: MutationIdentity): Promise<HighlightAccountScope> {
+    const scope = await this.resolveAccountScope(identity.page);
+    if (!scope) throw new Error('Highlight account scope is unavailable');
+    // Never write an action into the account the user switched to while it waited.
+    if (isAccountSwitch(identity, scope)) {
+      throw new Error('The account changed before the highlight could be saved');
     }
-    return true;
+    const captured = identity.scope;
+    if (captured && captured.accountKey !== scope.accountKey && this.isCurrentMutation(identity)) {
+      // A startup placeholder completed to the real account. Listing it also claims the legacy
+      // `default` bucket before the write continues.
+      this.accountScope = scope;
+      await this.reload();
+      if (isAccountSwitch(identity, scope)) {
+        throw new Error('The account changed before the highlight could be saved');
+      }
+    }
+    return scope;
   }
 
   private async reload(): Promise<void> {
     const generation = ++this.loadGeneration;
+    const route = this.currentRoute;
     const conversationId = this.currentConversationId;
     const scope = this.accountScope;
     if (!conversationId || !scope) return;
     try {
       const records = await this.client.list(scope, conversationId);
       if (this.destroyed || generation !== this.loadGeneration) return;
+      // A pushState without popstate, or an account switch on the same path, with no DOM change
+      // yet: this list belongs to the old chat or account.
+      if (this.getRouteKey() !== route) {
+        this.checkRoute();
+        return;
+      }
+      if (this.checkAccount()) return;
       this.clearRenderedMarks();
       this.records.clear();
       records
@@ -513,6 +592,7 @@ export class HighlightManager {
         this.checkRoute();
         return;
       }
+      if (this.checkAccount()) return;
       this.renderAll();
     }, RENDER_DEBOUNCE_MS);
   }
@@ -548,33 +628,27 @@ export class HighlightManager {
     record: HighlightRecordV1,
     patch: HighlightUpdatePatch,
   ): Promise<void> {
-    if (!(await this.refreshAccountScopeForMutation())) {
-      throw new Error('Highlight account scope is unavailable');
-    }
-    const scope = this.accountScope;
-    if (!scope) throw new Error('Highlight account scope is unavailable');
+    const identity = this.captureMutation();
+    const scope = await this.resolveMutationScope(identity);
     const updated = await this.client.update(scope, record.conversationId, record.id, patch);
-    if (this.destroyed) return;
+    if (!this.isCurrentMutation(identity)) return;
     this.records.set(updated.id, updated);
     this.marks.updateColor(updated.id, updated.color);
     this.timelineMarkers.render();
   }
 
   private async deleteHighlight(record: HighlightRecordV1): Promise<void> {
-    if (!(await this.refreshAccountScopeForMutation())) {
-      throw new Error('Highlight account scope is unavailable');
-    }
-    const scope = this.accountScope;
-    if (!scope) throw new Error('Highlight account scope is unavailable');
+    const identity = this.captureMutation();
+    const scope = await this.resolveMutationScope(identity);
     await this.client.delete(scope, record.conversationId, record.id);
-    if (this.destroyed) return;
+    if (!this.isCurrentMutation(identity)) return;
     this.records.delete(record.id);
     this.marks.remove(record.id);
     this.timelineMarkers.render();
   }
 
   private ensureLiveRegion(): void {
-    if (this.liveRegion?.isConnected) return;
+    if (this.destroyed || this.liveRegion?.isConnected) return;
     const live = document.createElement('div');
     live.className = 'gv-highlight-live';
     live.setAttribute('role', 'status');
@@ -584,6 +658,8 @@ export class HighlightManager {
   }
 
   private announce(message: string): void {
+    // A late result after stop must not put a live region back on the page.
+    if (this.destroyed) return;
     this.ensureLiveRegion();
     if (!this.liveRegion) return;
     this.liveRegion.textContent = '';

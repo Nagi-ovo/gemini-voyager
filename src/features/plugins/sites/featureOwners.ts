@@ -41,7 +41,15 @@ export type OwnedFeatureId =
   | 'promptHistory'
   | 'inputCollapse'
   | 'researchPack'
-  | 'defaultModel';
+  | 'defaultModel'
+  /**
+   * Stage 6: native until their own flips, which add the official id, the
+   * owner entry and the binding together. Missing from the table reads 'legacy'.
+   */
+  | 'quoteReply'
+  | 'highlight'
+  | 'preventAutoScroll'
+  | 'responseNotification';
 export type FeatureOwner = 'legacy' | 'plugin';
 
 /** The packaged official plugin ids, by feature. */

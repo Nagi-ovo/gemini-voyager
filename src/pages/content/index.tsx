@@ -1,6 +1,5 @@
 import { CleanupPositions } from '@/core/types/cleanupPositions';
 import { StorageKeys } from '@/core/types/common';
-import { isHighlightColor, normalizeHighlightColorPalette } from '@/core/types/highlight';
 import { CleanupManager } from '@/core/utils/cleanupManager';
 import {
   hasValidExtensionContext,
@@ -42,23 +41,18 @@ import { PageRetiredError, createPageSteps } from './pageInitSteps';
 import { ensureScheme, stopScheme } from './platformTheme/scheme';
 import { registerBuiltinNativeHandlers } from './pluginNativeRegistration';
 import { createPostChangelogFlow } from './postChangelogFlow';
-import { startPreventAutoScroll } from './preventAutoScroll/index';
 import { createPromptManagerEngine, readPromptCoverage } from './prompt/promptManagerEngine';
 import { promptReorderCoachmarkStep } from './prompt/promptReorderCoachmark';
 import { resolvePromptSiteAdapter } from './prompt/resolvePromptSiteAdapter';
 import { slashPromptCoachmarkStep } from './prompt/slashPromptCoachmark';
-import { startQuoteReply } from './quoteReply/index';
 import { createGeminiRendererStartup } from './rendererStartup';
+import { createSelectionStartup } from './selectionStartup';
 import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { rulerTimelineCoachmarkStep } from './timeline/rulerTimelineCoachmark';
 import { usageCoachmarkStep } from './usageStatus/usageCoachmark';
 import { startWatermarkNativeNotice } from './watermarkNativeNotice';
-import {
-  restartWatermarkRemover,
-  startWatermarkRemover,
-  stopWatermarkRemover,
-} from './watermarkRemover/index';
+import { restartWatermarkRemoverFeature } from './watermarkRemover/feature';
 
 // Suppress Vite's CSS preload errors in the Chrome extension content script context.
 // Dynamic imports (e.g., mermaid) trigger Vite's __vitePreload helper which tries to
@@ -106,6 +100,11 @@ const geminiBuiltins = createGeminiBuiltinStartup(
   cleanupManager,
   pageLifetime.signal,
 );
+const selectionStartup = createSelectionStartup(
+  officialAdmission,
+  cleanupManager,
+  pageLifetime.signal,
+);
 
 // Every await in initializeFeatures goes through these, so a starter it calls
 // directly (Quote Reply, folders, export buttons, …) never runs after retirement.
@@ -118,7 +117,6 @@ function mountForPage(feature: NativeFeature): Promise<StopNativeFeature> {
 
 let initialized = false;
 let initializationTimer: number | null = null;
-let watermarkRemoverStarted = false;
 
 let onboardingCoachmarkShownThisPage = false;
 let onboardingCoachmarkSequenceRunning = false;
@@ -196,6 +194,8 @@ async function initializeFeatures(): Promise<void> {
     if (location.hostname === 'gemini.google.com') {
       // Owners below report anchor health to it, so it listens before they start.
       await settle(mountForPage(NATIVE_FEATURES.nativeHealth));
+      // Before the timeline and folders: they read server identities from it.
+      await settle(mountForPage(NATIVE_FEATURES.historyTimestampPageService));
       // Timeline is most resource-intensive, start it first
       await settle(mountForPage(NATIVE_FEATURES.timeline));
       await delay(HEAVY_FEATURE_INIT_DELAY);
@@ -230,9 +230,8 @@ async function initializeFeatures(): Promise<void> {
       });
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
-      // Send behavior must be ready before prevent-auto-scroll reads its bridge state.
       await settle(mountForPage(NATIVE_FEATURES.sendBehaviorGemini));
-      startPreventAutoScroll();
+      await settle(geminiBuiltins.startPreventAutoScroll());
       await startOwnedFeature(officialAdmission, 'gemini', 'formulaCopy', () =>
         startNativeFormulaCopyForContent({
           registerCleanup: (cleanup) =>
@@ -241,52 +240,12 @@ async function initializeFeatures(): Promise<void> {
       );
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
-      // Quote Reply - conditionally start based on storage setting
-      const quoteReplyResult = await settle(
-        new Promise<Record<string, unknown>>((resolve) => {
-          const defaults = {
-            [StorageKeys.QUOTE_REPLY_ENABLED]: true,
-            [StorageKeys.HIGHLIGHT_ENABLED]: false,
-            [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: 'yellow',
-            [StorageKeys.HIGHLIGHT_COLOR_PALETTE]: null,
-            [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: true,
-          };
-          try {
-            chrome.storage?.sync?.get(defaults, resolve);
-          } catch {
-            resolve(defaults);
-          }
-        }),
-      );
-      const storedHighlightColor = quoteReplyResult[StorageKeys.HIGHLIGHT_DEFAULT_COLOR];
-      // Highlight shares Quote Reply's single selection toolbar/listener. Keep
-      // the toolbar manager alive when Quote Reply is disabled; only its Quote
-      // action is hidden in that case.
-      cleanupManager.registerCleanupFunction(
-        startQuoteReply({
-          quoteEnabled: quoteReplyResult[StorageKeys.QUOTE_REPLY_ENABLED] !== false,
-          highlightEnabled: quoteReplyResult[StorageKeys.HIGHLIGHT_ENABLED] === true,
-          highlightDefaultColor: isHighlightColor(storedHighlightColor)
-            ? storedHighlightColor
-            : 'yellow',
-          highlightColorPalette: normalizeHighlightColorPalette(
-            quoteReplyResult[StorageKeys.HIGHLIGHT_COLOR_PALETTE],
-            storedHighlightColor,
-          ),
-          highlightTimelineMarkersEnabled:
-            quoteReplyResult[StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED] !== false,
-        }),
-        CleanupPositions.CleanupQuoteReply,
-      );
+      // The selection toolbar, sent-quote styling, then Quote and Highlight.
+      await settle(selectionStartup.start());
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Independent content helpers can initialize in the same idle slice.
-      watermarkRemoverStarted = true;
-      void startWatermarkRemover();
-      cleanupManager.registerCleanupFunction(
-        () => stopWatermarkRemover(),
-        CleanupPositions.StopWatermarkRemover,
-      );
+      await settle(mountForPage(NATIVE_FEATURES.watermarkRemover));
       startDeepResearchExport();
       startContextSync();
       await settle(mountForPage(NATIVE_FEATURES.gemsHider));
@@ -295,8 +254,8 @@ async function initializeFeatures(): Promise<void> {
       // These modules only share the extension storage API and can hydrate in
       // parallel without changing their runtime ordering.
       const parallelResults = await Promise.allSettled([
+        geminiBuiltins.startResponseNotification(),
         ...[
-          NATIVE_FEATURES.responseCompleteNotification,
           NATIVE_FEATURES.draftSave,
           NATIVE_FEATURES.gemsSidebar,
           NATIVE_FEATURES.usageStatus,
@@ -559,13 +518,12 @@ function handleVisibilityChange(): void {
       changes: Record<string, chrome.storage.StorageChange>,
       areaName: string,
     ) => {
-      // Storage changes must not start the runtime before Gemini's normal startup.
+      // Only a running watermark feature restarts: not before Gemini's startup, not after its stop.
       if (
-        watermarkRemoverStarted &&
         areaName === 'sync' &&
         WATERMARK_STORAGE_KEYS.some((key) => Object.prototype.hasOwnProperty.call(changes, key))
       ) {
-        void restartWatermarkRemover();
+        void restartWatermarkRemoverFeature();
       }
 
       if (
@@ -576,6 +534,7 @@ function handleVisibilityChange(): void {
       }
 
       geminiBuiltins.handleStorageChange(changes, areaName);
+      selectionStartup.handleStorageChange(changes, areaName);
       geminiRenderers.handleStorageChange(changes, areaName);
       geminiInputs.handleStorageChange(changes, areaName);
     };

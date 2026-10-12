@@ -34,17 +34,19 @@ describe('Timeline bootstrap', () => {
     expect(initSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('stops the shared history bridge only on page unload', async () => {
+  it('stopping the timeline leaves the page-lifetime history and shortcut services running', async () => {
     const managerModule = await import('../manager');
     vi.spyOn(managerModule.TimelineManager.prototype, 'init').mockResolvedValue(undefined);
     const historyModule = await import('../../timestamp/historyTimestamps');
-    const stopSpy = vi.spyOn(historyModule.historyTimestampStore, 'stop');
+    const shortcutModule = await import('@/core/services/KeyboardShortcutService');
+    const stopHistory = vi.spyOn(historyModule.historyTimestampStore, 'stop');
+    const destroyShortcuts = vi.spyOn(shortcutModule.keyboardShortcutService, 'destroy');
     const { startTimeline } = await import('../index');
 
     stop = startTimeline();
-    expect(stopSpy).not.toHaveBeenCalled();
-
     stop();
-    expect(stopSpy).toHaveBeenCalledOnce();
+
+    expect(stopHistory).not.toHaveBeenCalled();
+    expect(destroyShortcuts).not.toHaveBeenCalled();
   });
 });

@@ -13,22 +13,33 @@ import { isForkFeatureEnabledValue } from './fork/featureFlag';
 import { startFork } from './fork/index';
 import { startGemsHider } from './gemsHider/index';
 import { startGemsSidebar } from './gemsSidebar/index';
+import { HIGHLIGHT_TOGGLE, startHighlightAction } from './highlight/highlightAction';
 import { INPUT_COLLAPSE_TOGGLE, startInputCollapse } from './inputCollapse/index';
 import { startInputHaloHider } from './inputHaloHider/index';
 import { startMarkdownPatcher } from './markdownPatcher/index';
 import { startNativeHealth } from './nativeHealth/index';
 import { startBrandTheme } from './platformTheme';
+import {
+  PREVENT_AUTO_SCROLL_TOGGLE,
+  claimPreventAutoScroll,
+  startPreventAutoScrollBridge,
+} from './preventAutoScroll/index';
 import { startPromptHistory } from './promptHistory/index';
+import { QUOTE_REPLY_TOGGLE, startQuoteAction } from './quoteReply/quoteAction';
+import { startRenderedQuoteStyling } from './quoteReply/renderedQuotes';
 import { startRemoteAnnouncements } from './remoteAnnouncements/index';
 import { isResearchPackEnabledValue, startResearchPack } from './researchPack/index';
 import { startResearchPackReceiver } from './researchPack/receiver';
-import { startResponseCompleteNotification } from './responseNotification/index';
+import { createResponseNotificationRun } from './responseNotification/index';
+import { startSelectionToolbarHost } from './selectionToolbar/host';
 import { startSendBehavior } from './sendBehavior/index';
 import { startStorageQuotaWarningToast } from './storageQuotaWarning';
 import { startTimeline } from './timeline/index';
+import { startHistoryTimestampPageService } from './timestamp/historyTimestampPageService';
 import { startUsageStatus } from './usageStatus/index';
 import { USER_LATEX_TOGGLE, startUserLatex } from './userLatex/index';
 import { startVisualEffects } from './visualEffects';
+import { startWatermarkRemoverFeature } from './watermarkRemover/feature';
 
 /**
  * Native content modules that follow the lifecycle contract in
@@ -97,6 +108,44 @@ export const NATIVE_FEATURES = {
     position: CleanupPositions.CleanupSendBehavior,
     start: () => startSendBehavior('gemini'),
   },
+  /** Page-resident: the MAIN script cannot be uninstalled, so the claim below only flips its flag. */
+  preventAutoScrollBridge: {
+    id: 'prevent-auto-scroll-bridge',
+    position: CleanupPositions.CleanupPreventAutoScrollBridge,
+    start: startPreventAutoScrollBridge,
+  },
+  preventAutoScroll: {
+    id: 'prevent-auto-scroll',
+    position: CleanupPositions.CleanupPreventAutoScroll,
+    start: claimPreventAutoScroll,
+    toggle: PREVENT_AUTO_SCROLL_TOGGLE,
+    inertReason: 'Only flips the flag on the bridge element its page service owns.',
+  },
+  /** The one selection toolbar Quote and Highlight register with; it stops after them. */
+  selectionToolbarHost: {
+    id: 'selection-toolbar-host',
+    position: CleanupPositions.CleanupSelectionToolbarHost,
+    start: startSelectionToolbarHost,
+  },
+  /** Styles quotes already sent, whether or not Quote or Highlight runs. */
+  renderedQuoteStyling: {
+    id: 'rendered-quote-styling',
+    position: CleanupPositions.CleanupRenderedQuoteStyling,
+    start: startRenderedQuoteStyling,
+  },
+  quoteReply: {
+    id: 'quote-reply',
+    position: CleanupPositions.CleanupQuoteReply,
+    start: startQuoteAction,
+    toggle: QUOTE_REPLY_TOGGLE,
+    inertReason: 'Registers an action with the selection toolbar host, which owns the DOM.',
+  },
+  highlight: {
+    id: 'highlight',
+    position: CleanupPositions.CleanupHighlight,
+    start: () => startHighlightAction(),
+    toggle: HIGHLIGHT_TOGGLE,
+  },
   sendBehaviorAiStudio: {
     id: 'send-behavior:aistudio',
     position: CleanupPositions.CleanupSendBehavior,
@@ -105,7 +154,8 @@ export const NATIVE_FEATURES = {
   responseCompleteNotification: {
     id: 'response-complete-notification',
     position: CleanupPositions.CleanupResponseCompleteNotification,
-    start: startResponseCompleteNotification,
+    // Follows its own switch live; the initial read continues after the stop exists.
+    start: () => createResponseNotificationRun().stop,
   },
   draftSave: {
     id: 'draft-save',
@@ -159,6 +209,15 @@ export const NATIVE_FEATURES = {
     position: CleanupPositions.CleanupVisualEffects,
     start: startVisualEffects,
   },
+  /**
+   * No `toggle`: three keys decide the mode, and a settings change must keep an
+   * in-flight download, so `index.tsx` routes those changes to a restart.
+   */
+  watermarkRemover: {
+    id: 'watermark-remover',
+    position: CleanupPositions.StopWatermarkRemover,
+    start: startWatermarkRemoverFeature,
+  },
   gemsHider: {
     id: 'gems-hider',
     position: CleanupPositions.CleanupGemsHider,
@@ -173,6 +232,12 @@ export const NATIVE_FEATURES = {
     id: 'native-health',
     position: CleanupPositions.CleanupNativeHealth,
     start: startNativeHealth,
+  },
+  /** The only page owner of the history timestamp store; timeline, folders and highlights read it. */
+  historyTimestampPageService: {
+    id: 'history-timestamp-page-service',
+    position: CleanupPositions.CleanupHistoryTimestampPageService,
+    start: startHistoryTimestampPageService,
   },
   fork: {
     id: 'fork',

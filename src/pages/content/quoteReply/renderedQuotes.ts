@@ -18,6 +18,18 @@ const COMPOSER_QUOTE_CLASSES = [
 const QUOTE_PREFIX_PATTERN = /^\s*>(?:[ \t]+|$)/u;
 const OBSERVER_DEBOUNCE_MS = 80;
 
+/**
+ * Every node this content script decorated. Teardown restores these, not whatever a selector
+ * finds in the document: a host re-render can detach a decorated message that comes back later,
+ * and another content script's decorations are not ours to undo.
+ */
+const owned = {
+  wrappers: new Set<HTMLElement>(),
+  markers: new Set<HTMLElement>(),
+  lines: new Set<HTMLElement>(),
+  composerLines: new Set<HTMLElement>(),
+};
+
 function getLineSource(line: HTMLElement): string {
   return line.textContent ?? '';
 }
@@ -44,6 +56,7 @@ function addHiddenQuoteMarker(line: HTMLElement): void {
       marker.className = QUOTE_MARKER_CLASS;
       marker.setAttribute('aria-hidden', 'true');
       marker.textContent = match[0];
+      owned.markers.add(marker);
 
       textNode.parentNode?.insertBefore(marker, textNode);
       textNode.textContent = value.slice(match[0].length);
@@ -56,12 +69,14 @@ function addHiddenQuoteMarker(line: HTMLElement): void {
 }
 
 function decorateQuoteLine(line: HTMLElement): void {
+  owned.lines.add(line);
   line.classList.add(QUOTE_LINE_CLASS);
   line.classList.toggle(QUOTE_EMPTY_LINE_CLASS, isEmptyQuoteLine(line));
   addHiddenQuoteMarker(line);
 }
 
 function unwrapQuote(wrapper: HTMLElement): void {
+  owned.wrappers.delete(wrapper);
   const parent = wrapper.parentNode;
   if (!parent) return;
 
@@ -89,6 +104,7 @@ function rebuildContainer(container: HTMLElement): void {
 
     const wrapper = document.createElement('blockquote');
     wrapper.className = QUOTE_WRAPPER_CLASS;
+    owned.wrappers.add(wrapper);
     container.insertBefore(wrapper, current);
 
     while (
@@ -163,6 +179,7 @@ function renderQuotedComposerLines(): void {
 
     const previousIsQuote = index > 0 && isQuoteLine(lines[index - 1]);
     const nextIsQuote = index < lines.length - 1 && isQuoteLine(lines[index + 1]);
+    owned.composerLines.add(line);
     line.classList.add(COMPOSER_QUOTE_LINE_CLASS);
     line.classList.toggle(COMPOSER_QUOTE_START_CLASS, !previousIsQuote);
     line.classList.toggle(COMPOSER_QUOTE_END_CLASS, !nextIsQuote);
@@ -170,6 +187,7 @@ function renderQuotedComposerLines(): void {
 }
 
 export function renderQuotedUserMessages(): void {
+  restoreOwnedNodes((node) => !node.isConnected);
   collectUserLineContainers().forEach((container) => {
     if (containerNeedsRebuild(container)) rebuildContainer(container);
 
@@ -199,20 +217,31 @@ function mutationMayAffectQuotes(mutation: MutationRecord): boolean {
   );
 }
 
-function restoreOriginalDom(): void {
-  document.querySelectorAll<HTMLElement>(`.${QUOTE_WRAPPER_CLASS}`).forEach(unwrapQuote);
-
-  document.querySelectorAll<HTMLElement>(`.${QUOTE_MARKER_CLASS}`).forEach((marker) => {
+/**
+ * Undo the decorations on the owned nodes `select` picks and forget them. Each render drops the
+ * detached ones this way, so a message that returns after stop carries nothing of ours.
+ */
+function restoreOwnedNodes(select: (node: HTMLElement) => boolean): void {
+  const restoreMarker = (marker: HTMLElement): void => {
+    owned.markers.delete(marker);
     marker.replaceWith(document.createTextNode(marker.textContent ?? ''));
-  });
-
-  document.querySelectorAll<HTMLElement>(`.${QUOTE_LINE_CLASS}`).forEach((line) => {
-    line.classList.remove(QUOTE_LINE_CLASS, QUOTE_EMPTY_LINE_CLASS);
-  });
-
-  document.querySelectorAll<HTMLElement>(`.${COMPOSER_QUOTE_LINE_CLASS}`).forEach((line) => {
-    line.classList.remove(...COMPOSER_QUOTE_CLASSES);
-  });
+  };
+  Array.from(owned.wrappers).filter(select).forEach(unwrapQuote);
+  Array.from(owned.markers).filter(select).forEach(restoreMarker);
+  Array.from(owned.lines)
+    .filter(select)
+    .forEach((line) => {
+      owned.lines.delete(line);
+      line.classList.remove(QUOTE_LINE_CLASS, QUOTE_EMPTY_LINE_CLASS);
+      // A marker another renderer saved while it was detached can come back into the line.
+      line.querySelectorAll<HTMLElement>(`.${QUOTE_MARKER_CLASS}`).forEach(restoreMarker);
+    });
+  Array.from(owned.composerLines)
+    .filter(select)
+    .forEach((line) => {
+      owned.composerLines.delete(line);
+      line.classList.remove(...COMPOSER_QUOTE_CLASSES);
+    });
 }
 
 export function startRenderedQuoteStyling(): () => void {
@@ -244,6 +273,6 @@ export function startRenderedQuoteStyling(): () => void {
     observer.disconnect();
     document.removeEventListener('input', handleInput, true);
     if (debounceTimer) clearTimeout(debounceTimer);
-    restoreOriginalDom();
+    restoreOwnedNodes(() => true);
   };
 }

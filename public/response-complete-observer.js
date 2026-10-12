@@ -3,8 +3,25 @@
   window.__gvResponseCompleteObserverInstalled = true;
 
   const SOURCE = 'gemini-voyager-response-complete-observer';
-  const MIN_REQUEST_DURATION_MS = 800;
+  const STOP_RESPONSE_SELECTOR = [
+    'button[data-test-id="stop-button"]',
+    'button[aria-label="Stop response"]',
+    'button[aria-label="停止回答"]',
+    'button[aria-label="停止回复"]',
+  ].join(', ');
+  const activeRequests = new Map();
   let nextRequestId = 1;
+
+  document.addEventListener(
+    'click',
+    function (event) {
+      if (!(event.target instanceof Element) || !event.target.closest(STOP_RESPONSE_SELECTOR))
+        return;
+      // Gemini can acknowledge Stop by ending a 200 stream instead of aborting the transport.
+      for (const requestId of activeRequests.keys()) activeRequests.set(requestId, true);
+    },
+    true,
+  );
 
   function toAbsoluteUrl(url) {
     try {
@@ -62,13 +79,56 @@
     } catch {}
   }
 
-  function postComplete(requestId, url, startedAt) {
+  // 仅作否决，未经实测，失效时退回 DOM。Never search prompt/answer text for ids.
+  function requestIdentity(bodyText) {
+    try {
+      const outer = JSON.parse(new URLSearchParams(bodyText).get('f.req'));
+      const inner = JSON.parse(outer[1]);
+      const prompt = inner[0][0];
+      return typeof prompt === 'string' ? { prompt } : {};
+    } catch {
+      return {};
+    }
+  }
+
+  function responseConversationId(text) {
+    let found = null;
+    for (const line of String(text || '').split('\n')) {
+      if (!line.trimStart().startsWith('[[')) continue;
+      try {
+        const rows = JSON.parse(line);
+        for (const row of rows) {
+          if (row[0] !== 'wrb.fr' || typeof row[2] !== 'string') continue;
+          const payload = JSON.parse(row[2]);
+          const id = payload?.[1]?.[0];
+          if (typeof id !== 'string' || !/^c_[a-f0-9]{16}$/.test(id)) continue;
+          if (found && found !== id.slice(2)) return null;
+          found = id.slice(2);
+        }
+      } catch {
+        /* Unknown frames provide no veto; DOM remains authoritative. */
+      }
+    }
+    return found;
+  }
+
+  function errorOutcome(error) {
+    return error?.name === 'AbortError' ? 'cancelled' : 'failed';
+  }
+
+  function postComplete(requestId, url, startedAt, outcome, responseText) {
+    if (!activeRequests.has(requestId)) return;
+    if (activeRequests.get(requestId)) outcome = 'cancelled';
+    activeRequests.delete(requestId);
     const duration = Date.now() - startedAt;
     post('request-complete', {
       requestId,
       url,
       duration,
-      shouldNotify: duration >= MIN_REQUEST_DURATION_MS,
+      outcome,
+      // A fast successful generation is still a completed answer; elapsed time is not evidence.
+      shouldNotify: outcome === 'success',
+      conversationId: responseConversationId(responseText),
     });
   }
 
@@ -82,38 +142,51 @@
       const startedAt = Date.now();
 
       if (isCandidate) {
-        post('request-start', { requestId, url });
+        activeRequests.set(requestId, false);
+        post('request-start', {
+          requestId,
+          url,
+          pageUrl: location.href,
+          ...requestIdentity(bodyText),
+        });
       }
 
-      return originalFetch.apply(this, arguments).then(
+      let result;
+      try {
+        result = originalFetch.apply(this, arguments);
+      } catch (error) {
+        if (isCandidate) postComplete(requestId, url, startedAt, errorOutcome(error));
+        throw error;
+      }
+      return result.then(
         function (response) {
           if (!isCandidate) return response;
-          if (!response || !response.body || typeof response.clone !== 'function') {
-            postComplete(requestId, url, startedAt);
+          if (!response?.ok || !response.body || typeof response.clone !== 'function') {
+            postComplete(requestId, url, startedAt, 'failed');
             return response;
           }
 
           try {
             response
               .clone()
-              .arrayBuffer()
+              .text()
               .then(
-                function () {
-                  postComplete(requestId, url, startedAt);
+                function (text) {
+                  postComplete(requestId, url, startedAt, 'success', text);
                 },
-                function () {
-                  postComplete(requestId, url, startedAt);
+                function (error) {
+                  postComplete(requestId, url, startedAt, errorOutcome(error));
                 },
               );
-          } catch {
-            postComplete(requestId, url, startedAt);
+          } catch (error) {
+            postComplete(requestId, url, startedAt, errorOutcome(error));
           }
 
           return response;
         },
         function (error) {
           if (isCandidate) {
-            postComplete(requestId, url, startedAt);
+            postComplete(requestId, url, startedAt, errorOutcome(error));
           }
           throw error;
         },
@@ -127,9 +200,6 @@
     window.XMLHttpRequest = function gvXMLHttpRequest() {
       const xhr = new OriginalXMLHttpRequest();
       let requestUrl = '';
-      let isCandidate = false;
-      let requestId = 0;
-      let startedAt = 0;
 
       const originalOpen = xhr.open;
       xhr.open = function gvXhrOpen(_method, url) {
@@ -140,22 +210,58 @@
       const originalSend = xhr.send;
       xhr.send = function gvXhrSend(body) {
         const bodyText = typeof body === 'string' ? body : '';
-        isCandidate = isGeminiGenerationRequest(requestUrl, bodyText);
-        requestId = nextRequestId++;
-        startedAt = Date.now();
+        const isCandidate = isGeminiGenerationRequest(requestUrl, bodyText);
+        const requestId = nextRequestId++;
+        const startedAt = Date.now();
+        const url = requestUrl;
+        let cancelled = false;
+        let finished = false;
+        const onAbort = function () {
+          cancelled = true;
+        };
+        const finish = function (forcedOutcome) {
+          if (finished) return;
+          finished = true;
+          xhr.removeEventListener('abort', onAbort);
+          xhr.removeEventListener('loadend', onLoadEnd);
+          const outcome =
+            forcedOutcome ||
+            (cancelled
+              ? 'cancelled'
+              : xhr.status >= 200 && xhr.status < 300
+                ? 'success'
+                : 'failed');
+          let text = '';
+          try {
+            text = xhr.responseText;
+          } catch {
+            // Non-text responseTypes throw here; the identity hint is optional, the outcome is not.
+          }
+          postComplete(requestId, url, startedAt, outcome, text);
+        };
+        const onLoadEnd = function () {
+          finish();
+        };
 
         if (isCandidate) {
-          post('request-start', { requestId, url: requestUrl });
-          xhr.addEventListener(
-            'loadend',
-            function () {
-              postComplete(requestId, requestUrl, startedAt);
-            },
-            { once: true },
-          );
+          activeRequests.set(requestId, false);
+          post('request-start', {
+            requestId,
+            url,
+            pageUrl: location.href,
+            ...requestIdentity(bodyText),
+          });
+          xhr.addEventListener('abort', onAbort, { once: true });
+          // loadend also follows abort/error/timeout: only a successful HTTP status may notify.
+          xhr.addEventListener('loadend', onLoadEnd, { once: true });
         }
 
-        return originalSend.apply(xhr, arguments);
+        try {
+          return originalSend.apply(xhr, arguments);
+        } catch (error) {
+          if (isCandidate) finish(errorOutcome(error));
+          throw error;
+        }
       };
 
       return xhr;

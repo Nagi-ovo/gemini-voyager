@@ -287,13 +287,17 @@ describe('TimelineNavigation', () => {
     const { navigation } = fixture(5);
     let listener: ShortcutCallback | undefined;
     const unsubscribe = vi.fn();
-    vi.spyOn(keyboardShortcutService, 'init').mockResolvedValue(undefined);
+    const release = vi.fn();
+    const acquire = vi
+      .spyOn(keyboardShortcutService, 'acquire')
+      .mockReturnValue({ ready: Promise.resolve(), release });
     const subscribe = vi.spyOn(keyboardShortcutService, 'on').mockImplementation((callback) => {
       listener = callback;
       return unsubscribe;
     });
     await Promise.all([navigation.initKeyboardShortcuts(), navigation.initKeyboardShortcuts()]);
     expect(subscribe).toHaveBeenCalledTimes(1);
+    expect(acquire).toHaveBeenCalledTimes(1);
     navigation.mode = 'jump';
     for (const [action, expected] of [
       ['timeline:previous', 's-1'],
@@ -308,22 +312,31 @@ describe('TimelineNavigation', () => {
     }
     navigation.destroy();
     expect(unsubscribe).toHaveBeenCalledOnce();
+    expect(release).toHaveBeenCalledOnce();
   });
 
-  it('does not subscribe when shortcut initialization finishes after destroy', async () => {
+  it('returns its shortcut lease when destroyed before the shortcut config finishes loading', async () => {
     const { navigation } = fixture();
     let finish!: () => void;
-    vi.spyOn(keyboardShortcutService, 'init').mockReturnValue(
-      new Promise<void>((resolve) => {
+    const release = vi.fn();
+    vi.spyOn(keyboardShortcutService, 'acquire').mockReturnValue({
+      ready: new Promise<void>((resolve) => {
         finish = resolve;
       }),
-    );
-    const subscribe = vi.spyOn(keyboardShortcutService, 'on');
+      release,
+    });
+    const listener = vi.fn();
+    const subscribe = vi.spyOn(keyboardShortcutService, 'on').mockImplementation((callback) => {
+      listener(callback);
+      return () => listener(null);
+    });
     const pending = navigation.initKeyboardShortcuts();
     navigation.destroy();
     finish();
     await pending;
-    expect(subscribe).not.toHaveBeenCalled();
+    expect(subscribe).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenLastCalledWith(null);
+    expect(release).toHaveBeenCalledOnce();
   });
 
   it('cancels superseded animation frames and all pending work on destroy', async () => {

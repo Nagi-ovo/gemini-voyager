@@ -1,12 +1,17 @@
 export enum CleanupPositions {
   RemoveUnhandledRejectionEventListener,
   RemoveErrorEventListener,
+  /** The watermark feature shell (`watermarkRemover/feature.ts`); its stop exists before the engine loads. */
   StopWatermarkRemover,
   DestroyFolderManagerInstance,
   DestroyPromptManagerInstance,
   DestroySlashPromptFeatureInstance,
   DestroySentPromptChips,
+  /** Before the Quote and Highlight actions it starts: no late startup read may mount once teardown began. */
+  CleanupSelectionStartup,
   CleanupQuoteReply,
+  /** Apart from Quote: a toggle withdraws its stop by position. */
+  CleanupHighlight,
   /** Before the input collapse it starts: no late start may mount once teardown began. */
   CleanupInputStartup,
   CleanupInputCollapse,
@@ -17,12 +22,18 @@ export enum CleanupPositions {
   CleanupPromptHistory,
   /** Before the features it starts: no late startup read may mount once teardown began. */
   CleanupGeminiBuiltinStartup,
+  /** The prevent-auto-scroll claim; its bridge stays until `CleanupPreventAutoScrollBridge`. */
+  CleanupPreventAutoScroll,
   CleanupFork,
   CleanupGemsSidebar,
   CleanupResponseCompleteNotification,
   CleanupEdgeFinalVersionNotice,
   CleanupFormulaCopy,
   CleanupPluginHost,
+  /** Page services the actions and claims above register with; they stop after them. */
+  CleanupRenderedQuoteStyling,
+  CleanupSelectionToolbarHost,
+  CleanupPreventAutoScrollBridge,
   /** After every send-key registrant (the native send behavior, the plugins): they dispose first. */
   CleanupSendKeyCoordinator,
   CleanupBrandTheme,
@@ -41,6 +52,7 @@ export enum CleanupPositions {
   CleanupGemsHider,
   CleanupTimeline,
   CleanupNativeHealth,
+  CleanupHistoryTimestampPageService,
   CleanupResearchPack,
   CleanupResearchPackReceiver,
   RemoveStorageOnChangedListener,

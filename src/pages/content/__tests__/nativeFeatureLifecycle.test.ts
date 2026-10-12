@@ -2,8 +2,10 @@
 // @vitest-environment-options { "url": "https://gemini.google.com/app/0123456789abcdef" }
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { CleanupManager } from '@/core/utils/cleanupManager';
 import { initI18n } from '@/utils/i18n';
 
+import { mountNativeFeature } from '../featureLifecycle';
 import { NATIVE_FEATURE_LIST } from '../nativeFeatures';
 import { installLifecycleHarness, type LifecycleHarness } from './lifecycleHarness';
 
@@ -16,6 +18,12 @@ import { installLifecycleHarness, type LifecycleHarness } from './lifecycleHarne
  * Only the page-teardown and popup-toggle lifetimes are asserted here.
  * Sidebar remounts and account changes stay with each module's own tests.
  */
+
+const GEMINI_PAGE =
+  '<div class="host"><bard-sidenav><div class="sidenav-content"></div></bard-sidenav>' +
+  '<main><div id="chat-history"><user-query><div class="query-text-line">hi</div></user-query>' +
+  '<model-response><message-content><p>hello</p></message-content></model-response></div>' +
+  '<input-area-v2><rich-textarea><div contenteditable="true"></div></rich-textarea></input-area-v2></main></div>';
 
 function snapshotDocument(): { head: string; body: string; html: string } {
   return {
@@ -63,11 +71,7 @@ describe('native feature lifecycle (parametric)', () => {
       ],
     });
     document.head.innerHTML = '';
-    document.body.innerHTML =
-      '<div class="host"><bard-sidenav><div class="sidenav-content"></div></bard-sidenav>' +
-      '<main><div id="chat-history"><user-query><div class="query-text-line">hi</div></user-query>' +
-      '<model-response><message-content><p>hello</p></message-content></model-response></div>' +
-      '<input-area-v2><rich-textarea><div contenteditable="true"></div></rich-textarea></input-area-v2></main></div>';
+    document.body.innerHTML = GEMINI_PAGE;
     harness = installLifecycleHarness();
   });
 
@@ -129,6 +133,47 @@ describe('native feature lifecycle (parametric)', () => {
         expect(vi.getTimerCount(), `timers after round ${round}`).toBe(0);
         expect(snapshotDocument(), `document after round ${round}`).toEqual(before);
       }
+    });
+
+    it(`${feature.id}: stopping while start is still pending leaves nothing behind`, async () => {
+      const before = snapshotDocument();
+      const manager = new CleanupManager();
+      const lifetime = new AbortController();
+
+      // The page retires before the start settles, as a handoff can land mid-start.
+      const mounted = mountNativeFeature(manager, feature, lifetime.signal);
+      lifetime.abort();
+      manager.executeCleanups();
+      await mounted;
+      await flush();
+
+      expect(manager.list()).toEqual([]);
+      expect(harness.ledger.openListeners(), 'listeners').toEqual([]);
+      expect(harness.ledger.openObservers(), 'observers').toEqual([]);
+      expect(harness.ledger.openStorageListeners(), 'storage listeners').toBe(0);
+      expect(harness.ledger.openRuntimeListeners(), 'runtime listeners').toBe(0);
+      expect(vi.getTimerCount(), 'timers').toBe(0);
+      expect(snapshotDocument(), 'document').toEqual(before);
+    });
+
+    it(`${feature.id}: a feature remounted on a replaced host leaves no listeners on the old host`, async () => {
+      const oldHostNodes = new Set<EventTarget>(document.querySelectorAll('*'));
+      const stop = await feature.start();
+      await flush();
+
+      // Gemini re-renders the page: every host node the feature saw is detached.
+      document.body.innerHTML = GEMINI_PAGE;
+      await flush();
+      stop();
+      await flush();
+
+      expect(
+        harness.ledger.openListeners({ detachedHosts: oldHostNodes }),
+        'listeners on the old or the new host',
+      ).toEqual([]);
+      expect(harness.ledger.openObservers(), 'observers').toEqual([]);
+      expect(harness.ledger.openStorageListeners(), 'storage listeners').toBe(0);
+      expect(vi.getTimerCount(), 'timers').toBe(0);
     });
   }
 });

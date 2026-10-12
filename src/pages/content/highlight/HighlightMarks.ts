@@ -21,6 +21,11 @@ function unwrapMark(mark: HTMLElement): void {
   parent.normalize();
 }
 
+/** Unwrap in reverse so split text nodes merge back in document order. */
+function unwrapAll(marks: readonly HTMLElement[]): void {
+  [...marks].reverse().forEach(unwrapMark);
+}
+
 function highlightColorBackground(color: HighlightColor, alpha = 0.3): string {
   const hex = getHighlightColorHex(color);
   const red = Number.parseInt(hex.slice(1, 3), 16);
@@ -112,7 +117,11 @@ export class HighlightMarks {
       }),
     );
     for (const [id, record] of records) {
-      const existing = (this.marks.get(id) ?? []).filter((mark) => mark.isConnected);
+      const tracked = this.marks.get(id) ?? [];
+      // Unwrap marks the host detached before forgetting them: the turn may come back later,
+      // and nothing would remove its marks then.
+      unwrapAll(tracked.filter((mark) => !mark.isConnected));
+      const existing = tracked.filter((mark) => mark.isConnected);
       const existingText = existing.map((mark) => mark.textContent ?? '').join('');
       if (existing.length > 0 && existingText === record.anchor.quote.exact) {
         this.marks.set(id, existing);
@@ -153,11 +162,7 @@ export class HighlightMarks {
   }
 
   clear(): void {
-    Array.from(this.marks.values())
-      .flat()
-      .filter((mark) => mark.isConnected)
-      .reverse()
-      .forEach(unwrapMark);
+    unwrapAll(Array.from(this.marks.values()).flat());
     this.marks.clear();
   }
 }

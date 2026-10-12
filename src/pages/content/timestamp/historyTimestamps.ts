@@ -201,16 +201,20 @@ export class HistoryTimestampStore {
   private subscribers = new Set<HistoryTimestampSubscriber>();
   private handler: ((ev: MessageEvent) => void) | null = null;
   private identityCacheReady: Promise<void> | null = null;
+  /** Bumped by start() and stop(); async work from an older session must not touch this one. */
+  private session = 0;
 
   /**
    * Start the page-lifetime bridge and hydrate the durable identity cache.
    * Identity capture is always enabled; the timestamp setting only controls UI.
+   * Only the page service (`historyTimestampPageService`) calls this.
    */
   start(_legacyTimestampSetting?: boolean): Promise<void> {
     if (this.handler) {
       return this.ensureIdentityCacheLoaded();
     }
 
+    const session = ++this.session;
     this.handler = (ev: MessageEvent) => {
       if (ev.source !== window || ev.origin !== window.location.origin) return;
       const data = ev.data as { source?: string; type?: string; payload?: unknown } | null;
@@ -220,7 +224,10 @@ export class HistoryTimestampStore {
     window.addEventListener('message', this.handler);
     this.configureObserver(true);
     const ready = this.ensureIdentityCacheLoaded();
-    void ready.finally(() => this.flushObserver());
+    void ready.finally(() => {
+      // An older session's flush would replay captures into whichever session runs now.
+      if (session === this.session) this.flushObserver();
+    });
     return ready;
   }
 
@@ -235,13 +242,17 @@ export class HistoryTimestampStore {
     };
   }
 
-  /** Stop the page-lifetime bridge (page unload and isolated unit tests only). */
+  /**
+   * Stop the page-lifetime bridge (page unload and isolated unit tests only).
+   * The MAIN-world observer stays configured: it is shared with the content
+   * script that replaces this one, so switching it off here would blind that one.
+   */
   stop(): void {
+    this.session += 1;
     if (this.handler) {
       window.removeEventListener('message', this.handler);
       this.handler = null;
     }
-    this.configureObserver(false);
     this.byCid.clear();
     this.turnIdsByCid.clear();
     this.turnIdentityUpdatedAt.clear();
@@ -371,11 +382,14 @@ export class HistoryTimestampStore {
 
   private ensureIdentityCacheLoaded(): Promise<void> {
     if (this.identityCacheReady) return this.identityCacheReady;
+    const session = this.session;
     this.identityCacheReady = (async () => {
       try {
         const result = await chrome.storage.local.get({
           [StorageKeys.GV_TURN_IDENTITY_CACHE]: null,
         });
+        // A read that outlived stop() must not refill the emptied store.
+        if (session !== this.session) return;
         const raw = result?.[StorageKeys.GV_TURN_IDENTITY_CACHE] as
           | { version?: unknown; conversations?: unknown }
           | null
@@ -413,7 +427,10 @@ export class HistoryTimestampStore {
     // A live SPA capture can arrive while the initial storage read is still in
     // flight. Merge that cache first so writing one conversation never drops
     // aliases already saved for other conversations.
+    const session = this.session;
     await this.ensureIdentityCacheLoaded();
+    // stop() emptied the maps meanwhile: writing them now would erase every saved alias.
+    if (session !== this.session) return;
     this.pruneIdentityCache();
     const conversations: Record<string, PersistedTurnIdentityConversation> = {};
     this.turnIdsByCid.forEach((turnIds, cid) => {

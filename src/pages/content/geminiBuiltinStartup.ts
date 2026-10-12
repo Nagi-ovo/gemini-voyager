@@ -1,14 +1,17 @@
 /**
  * Start points of the Gemini-only builtins that are moving to packaged
- * official plugins: default model, fork and the research pack. Each asks the
- * owner table whether its native module starts here or its packaged official
- * plugin is admitted instead. Usage status joins once its owner is decided.
+ * official plugins: default model, fork, the research pack, prevent
+ * auto-scroll and the response notification. Each asks the owner table
+ * whether its native module starts here or its packaged official plugin is
+ * admitted instead. Usage status joins once its owner is decided.
  *
  * Fork and the research pack follow their popup switches live while their
  * native modules own them: each controller exists before its startup read, so
  * a flip that lands during the read wins. Once the plugin owns one, PluginHost
  * follows the same key instead and nothing here listens. The native default
- * model follows its own switch, so it is mounted once and stops on teardown.
+ * model and the response notification follow their own switches, so each is
+ * mounted once and stops on teardown. Prevent auto-scroll's bridge is a page
+ * service that runs whoever owns the switch; only its claim follows the switch.
  *
  * Page teardown stops this start point before the features it starts,
  * destroys every controller and creates no more, so a startup read that
@@ -40,6 +43,16 @@ async function isForkFeatureEnabled(): Promise<boolean> {
   }
 }
 
+async function isPreventAutoScrollEnabled(): Promise<boolean> {
+  const { key, isEnabled } = NATIVE_FEATURES.preventAutoScroll.toggle;
+  try {
+    const result = await chrome.storage?.sync?.get({ [key]: false });
+    return isEnabled(result?.[key]);
+  } catch {
+    return false;
+  }
+}
+
 async function isResearchPackEnabled(): Promise<boolean> {
   try {
     const result = await chrome.storage?.sync?.get({ [StorageKeys.RESEARCH_PACK_ENABLED]: false });
@@ -54,6 +67,10 @@ async function isResearchPackEnabled(): Promise<boolean> {
 export interface GeminiBuiltinStartup {
   /** Default model, among the DOM enhancements; resolves without waiting for its startup read. */
   startDefaultModel(): Promise<void>;
+  /** The prevent-auto-scroll bridge, then the claim that follows the switch. */
+  startPreventAutoScroll(): Promise<void>;
+  /** The response notification run; resolves without waiting for its startup read. */
+  startResponseNotification(): Promise<void>;
   /** Fork, then the research pack, after the DOM enhancements. */
   startForkAndResearchPack(): Promise<void>;
   /** Route `chrome.storage.onChanged` to the switches the native modules follow. */
@@ -80,7 +97,10 @@ export function createGeminiBuiltinStartup(
   }, CleanupPositions.CleanupGeminiBuiltinStartup);
 
   const follow = (
-    feature: typeof NATIVE_FEATURES.fork | typeof NATIVE_FEATURES.researchPack,
+    feature:
+      | typeof NATIVE_FEATURES.fork
+      | typeof NATIVE_FEATURES.researchPack
+      | typeof NATIVE_FEATURES.preventAutoScroll,
   ): NativeFeatureToggleController => {
     const toggle = createNativeFeatureToggle(cleanupManager, feature, lifetime);
     toggles.push(toggle);
@@ -96,6 +116,38 @@ export function createGeminiBuiltinStartup(
         async () => {
           if (stopped) return;
           await mountNativeFeature(cleanupManager, NATIVE_FEATURES.defaultModel, lifetime);
+        },
+        ownerOf,
+      ),
+    async startPreventAutoScroll() {
+      if (stopped) return;
+      await mountNativeFeature(cleanupManager, NATIVE_FEATURES.preventAutoScrollBridge, lifetime);
+      await startOwnedFeature(
+        admission,
+        'gemini',
+        'preventAutoScroll',
+        async () => {
+          if (stopped) return;
+          const claim = follow(NATIVE_FEATURES.preventAutoScroll);
+          const enabled = await isPreventAutoScrollEnabled();
+          if (stopped) return;
+          await claim.applyInitial(enabled);
+        },
+        ownerOf,
+      );
+    },
+    startResponseNotification: () =>
+      startOwnedFeature(
+        admission,
+        'gemini',
+        'responseNotification',
+        async () => {
+          if (stopped) return;
+          await mountNativeFeature(
+            cleanupManager,
+            NATIVE_FEATURES.responseCompleteNotification,
+            lifetime,
+          );
         },
         ownerOf,
       ),

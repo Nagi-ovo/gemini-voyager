@@ -34,7 +34,9 @@ update state and notify the manager.
 
 A native viewport rebind preserves conversation state. Conversation teardown cancels each owner's
 listeners, observers, timers and animation frames. The shared `historyTimestampStore` has page
-lifetime: the timestamp owner unsubscribes from it but must not stop it. State and timestamp owners
+lifetime and one owner, [`historyTimestampPageService`](../timestamp/historyTimestampPageService.ts):
+the timestamp owner waits for it and subscribes, but never starts or stops it. Each navigation owner
+holds a keyboard shortcut lease and releases it on teardown. State and timestamp owners
 capture the conversation URL so delayed work retains the correct account and conversation scope.
 
 Keep these less obvious boundaries intact:

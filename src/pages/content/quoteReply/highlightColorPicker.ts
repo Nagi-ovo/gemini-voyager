@@ -198,7 +198,16 @@ export function createHighlightColorPicker(
     updateHighlightColorUi();
   }
 
-  function mount(parent: HTMLElement): void {
+  function unmount(): void {
+    highlightColorBtn?.remove();
+    highlightColorPalette?.remove();
+    highlightColorBtn = null;
+    highlightColorPalette = null;
+    highlightCustomColorInput = null;
+  }
+
+  function mount(parent: ParentNode): void {
+    unmount();
     highlightColorBtn = document.createElement('button');
     highlightColorBtn.type = 'button';
     highlightColorBtn.className = `${CSS_CLASSES.HIGHLIGHT_COLOR_BUTTON} ${CSS_CLASSES.HIDDEN}`;
@@ -255,16 +264,18 @@ export function createHighlightColorPicker(
 
   function applyStorageChanges(changes: Record<string, browser.Storage.StorageChange>): void {
     const paletteChange = changes[StorageKeys.HIGHLIGHT_COLOR_PALETTE];
-    if (paletteChange) {
-      highlightColors = normalizeHighlightColorPalette(
-        paletteChange.newValue,
-        selectedHighlightColor,
-      );
-      callbacks.onPaletteChange(highlightColors);
-      selectHighlightColor(selectedHighlightColor);
-    }
     const nextColor = changes[StorageKeys.HIGHLIGHT_DEFAULT_COLOR]?.newValue;
-    if (isHighlightColor(nextColor)) selectHighlightColor(nextColor);
+    const finalColor = isHighlightColor(nextColor) ? nextColor : selectedHighlightColor;
+    if (paletteChange) {
+      // Merge both settings before selecting: startup's temporary yellow must not rewrite a slot.
+      highlightColors = normalizeHighlightColorPalette(paletteChange.newValue, finalColor);
+      callbacks.onPaletteChange(highlightColors);
+      const slot = highlightColors.findIndex((color) => areHighlightColorsEqual(color, finalColor));
+      selectedHighlightSlot = Math.max(0, slot);
+      selectedHighlightColor = highlightColors[selectedHighlightSlot];
+      if (isHighlightColor(nextColor)) selectHighlightColor(nextColor);
+      else updateHighlightColorUi();
+    } else if (isHighlightColor(nextColor)) selectHighlightColor(nextColor);
   }
 
   function handleDismissal(event: MouseEvent | KeyboardEvent): boolean {
@@ -294,6 +305,7 @@ export function createHighlightColorPicker(
       return highlightColors;
     },
     mount,
+    unmount,
     applyStorageChanges,
     handleDismissal,
     updateText() {

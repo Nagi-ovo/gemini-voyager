@@ -4,6 +4,7 @@ import { formatQuotedText, replaceMathWithLatex } from '@/core/utils/quotedText'
 
 import { findChatInput } from '../chatInput/index';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
+import { capturePageIdentity, isSamePageSession } from '../selectionToolbar/pageIdentity';
 
 const INSERTION_DELAY_MS = 200;
 
@@ -239,13 +240,17 @@ function appendQuote(input: HTMLElement, quoteBody: string): void {
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-/** Schedule a quote in the live composer; false leaves the selection untouched. */
+/**
+ * Schedule a quote in the live composer; false leaves the selection untouched. An accepted quote
+ * still lands after the feature stops, but only in the chat, account and composer it was taken in.
+ */
 export function insertQuotedSelection(range: Range): boolean {
   const selectedText = extractTextWithLatex(range).trim();
   if (!selectedText) return false;
 
   const input = findChatInput();
   if (input) {
+    const accepted = capturePageIdentity();
     expandInputCollapseIfNeeded();
 
     // Format: > selection
@@ -256,7 +261,12 @@ export function insertQuotedSelection(range: Range): boolean {
     input.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
     // Wait for expansion while leaving focus/selection alone until insertion.
-    setTimeout(() => appendQuote(input, quoteBody), INSERTION_DELAY_MS);
+    setTimeout(() => {
+      // Gemini reuses one composer across chats and accounts: a quote taken in chat A must not
+      // land in B, and a replaced composer is no longer the one the user quoted into.
+      if (!input.isConnected || !isSamePageSession(accepted, capturePageIdentity())) return;
+      appendQuote(input, quoteBody);
+    }, INSERTION_DELAY_MS);
 
     return true;
   } else {

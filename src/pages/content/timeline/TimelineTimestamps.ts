@@ -9,6 +9,10 @@ import type { ExtGlobal, SyncSettingsListener, TimelineMarker } from '@/features
 
 import { getLegacyTurnIndex } from '../fork/turnId';
 import { TimestampService } from '../timestamp/TimestampService';
+import {
+  subscribeHistoryTimestamps,
+  whenHistoryTimestampsReady,
+} from '../timestamp/historyTimestampPageService';
 import { type HistoryTimestampStore, historyTimestampStore } from '../timestamp/historyTimestamps';
 
 let timestampDraftTabId: string | null = null;
@@ -69,6 +73,7 @@ export class TimelineTimestamps {
   private removeSettingsListener: (() => void) | null = null;
   private enabledValue = false;
   private destroyed = false;
+  private readonly lifetime = new AbortController();
   private readonly initialTimestampSnapshotDelay = 800;
   private readonly draftTimestampAdoptionWindowMs = 5 * 60 * 1000;
   private timestampTrackingReady = false;
@@ -113,9 +118,10 @@ export class TimelineTimestamps {
     // A live change can arrive while either initial storage read is pending.
     if (!settingChanged) this.enabledValue = setting.success && setting.data === true;
     this.historyTimestampStore = historyTimestampStore;
-    await this.historyTimestampStore.start();
-    if (this.destroyed) return;
-    this.historyTimestampUnsubscribe = this.historyTimestampStore.subscribe((updatedCids) => {
+    // The page service owns the store's lifetime; this conversation only waits and subscribes.
+    const ready = await whenHistoryTimestampsReady(this.lifetime.signal);
+    if (!ready || this.destroyed) return;
+    this.historyTimestampUnsubscribe = subscribeHistoryTimestamps((updatedCids) => {
       if (
         this.destroyed ||
         this.conversationId !== buildConversationIdFromUrl(window.location.href)
@@ -455,6 +461,7 @@ export class TimelineTimestamps {
 
   destroy(): void {
     this.destroyed = true;
+    this.lifetime.abort();
     try {
       this.removeSettingsListener?.();
     } catch {}

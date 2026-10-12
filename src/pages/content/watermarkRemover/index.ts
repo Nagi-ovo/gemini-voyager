@@ -227,6 +227,7 @@ async function processImageRequest(
  */
 async function configureWatermarkRemover(reconfigure: boolean): Promise<void> {
   const generation = ++lifecycleGeneration;
+  let awaitedEngine: Promise<WatermarkEngine> | null = null;
 
   try {
     // Initialize bridge element first (so it exists when fetch interceptor loads)
@@ -272,9 +273,11 @@ async function configureWatermarkRemover(reconfigure: boolean): Promise<void> {
     if (!enginePromise) {
       enginePromise = WatermarkEngine.create();
     }
-    const initializedEngine = engine ?? (await enginePromise);
+    awaitedEngine = enginePromise;
+    // The loaded engine does not depend on the mode, so even a superseded run
+    // keeps it: a download queued on the load resumes before the newer run does.
+    engine = engine ?? (await awaitedEngine);
     if (generation !== lifecycleGeneration) return;
-    engine = initializedEngine;
 
     if (previewEnabled) {
       previews.start();
@@ -282,7 +285,11 @@ async function configureWatermarkRemover(reconfigure: boolean): Promise<void> {
 
     logger.debug('[Gemini Voyager] Watermark remover ready');
   } catch (error) {
-    if (!engine) enginePromise = null;
+    // Forget only the load this run awaited; clearing a newer run's pending
+    // load would answer the downloads queued on it with "not initialized".
+    if (!engine && awaitedEngine !== null && enginePromise === awaitedEngine) {
+      enginePromise = null;
+    }
     if (generation !== lifecycleGeneration) return;
     if (isExtensionContextInvalidatedError(error)) {
       return;

@@ -63,6 +63,19 @@ const DEFAULT_SHORTCUTS: KeyboardShortcutConfig = {
  */
 export type ShortcutCallback = (action: ShortcutAction, event: KeyboardEvent) => void;
 
+/** One holder's claim on the page's shortcut session; see `KeyboardShortcutService.acquire`. */
+export interface ShortcutLease {
+  /** Settles once this session's saved config is applied, or when the read is discarded. */
+  readonly ready: Promise<void>;
+  /** Idempotent; only the last outstanding lease ends the session. */
+  release(): void;
+}
+
+interface LoadedShortcutConfig {
+  config: KeyboardShortcutConfig;
+  enabled: boolean;
+}
+
 /**
  * KeyboardShortcutService class
  * Singleton service for managing keyboard shortcuts
@@ -78,8 +91,14 @@ export class KeyboardShortcutService {
     | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
     | null = null;
 
-  /** Bumped by destroy() so an init() that was loading its config does not attach afterwards. */
-  private generation = 0;
+  /** A new session starts when the first lease is taken and ends with the last release. */
+  private sessionEpoch = 0;
+  /** Bumped by every live config change, so an initial read that began earlier cannot win. */
+  private liveRevision = 0;
+  private readonly leases = new Set<symbol>();
+  private sessionReady: Promise<void> = Promise.resolve();
+  /** The lease `init()` holds for callers that predate leases (the popup); destroy() ends it. */
+  private initLease: ShortcutLease | null = null;
 
   // Key sequence tracking (for gg → first, GG → last)
   private lastSequenceSignature: string | null = null;
@@ -100,49 +119,84 @@ export class KeyboardShortcutService {
   }
 
   /**
-   * Initialize service: load config and attach listeners
+   * Initialize service: load config and attach listeners until destroy(). Content pages take a
+   * lease with `acquire()` instead, so the last one to leave hands the keys back to the page.
    */
   async init(): Promise<void> {
-    const generation = this.generation;
-    await this.loadConfig();
-    // destroy() ran while the config loaded (the page tore its timeline down): attaching now would
-    // leave a keydown handler swallowing shortcut keys with nothing left to remove it.
-    if (generation !== this.generation) return;
-    this.attachKeyboardListener();
-    this.attachStorageListener();
+    if (!this.initLease) this.initLease = this.acquire();
+    await this.initLease.ready;
   }
 
   /**
-   * Load configuration from chrome storage
+   * Hold the shortcut session open. The first lease opens a session and reads the saved config;
+   * the last release closes it. Keys are only claimed while a listener is registered (`on`).
    */
-  private async loadConfig(): Promise<void> {
+  acquire(): ShortcutLease {
+    const token = Symbol('shortcut-lease');
+    this.leases.add(token);
+    if (this.leases.size === 1) this.openSession();
+    return { ready: this.sessionReady, release: () => this.release(token) };
+  }
+
+  private release(token: symbol): void {
+    if (!this.leases.delete(token) || this.leases.size > 0) return;
+    this.closeSession();
+  }
+
+  private openSession(): void {
+    const epoch = ++this.sessionEpoch;
+    const revision = this.liveRevision;
+    // Listen before reading: a change that lands during the read must be seen to outrank it.
+    this.attachStorageListener();
+    this.sessionReady = this.loadConfig().then((loaded) => {
+      // A read from a closed session must not overwrite the config of the session after it.
+      if (epoch !== this.sessionEpoch) return;
+      if (loaded && revision === this.liveRevision) this.applyConfig(loaded);
+      this.attachKeyboardListener();
+    });
+  }
+
+  private closeSession(): void {
+    this.sessionEpoch += 1;
+    this.detachListeners();
+    this.resetSequence();
+  }
+
+  private applyConfig({ config, enabled }: LoadedShortcutConfig): void {
+    this.config = config;
+    this.enabled = enabled;
+  }
+
+  /**
+   * Read the saved configuration; the caller decides whether it may still be applied.
+   * Resolves null when nothing is saved.
+   */
+  private async loadConfig(): Promise<LoadedShortcutConfig | null> {
     try {
+      let stored: KeyboardShortcutStorage | undefined;
       if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
         const result = (await chrome.storage.sync.get(StorageKeys.TIMELINE_SHORTCUTS)) ?? {};
-        const stored = result[StorageKeys.TIMELINE_SHORTCUTS] as
-          | KeyboardShortcutStorage
-          | undefined;
-
-        if (stored?.shortcuts) {
-          const normalized = this.normalizeConfig(stored.shortcuts);
-          this.config = this.validateConfig(normalized) ? normalized : DEFAULT_SHORTCUTS;
-          this.enabled = stored.enabled ?? true;
-        }
+        stored = result[StorageKeys.TIMELINE_SHORTCUTS] as KeyboardShortcutStorage | undefined;
+        if (!stored?.shortcuts) return null;
       } else {
         // Fallback to localStorage
-        const stored = localStorage.getItem(StorageKeys.TIMELINE_SHORTCUTS);
-        if (stored) {
-          const parsed = JSON.parse(stored) as KeyboardShortcutStorage;
-          const normalized = this.normalizeConfig(parsed.shortcuts);
-          this.config = this.validateConfig(normalized) ? normalized : DEFAULT_SHORTCUTS;
-          this.enabled = parsed.enabled ?? true;
-        }
+        const raw = localStorage.getItem(StorageKeys.TIMELINE_SHORTCUTS);
+        if (!raw) return null;
+        stored = JSON.parse(raw) as KeyboardShortcutStorage;
       }
+      return this.readStoredConfig(stored);
     } catch (error) {
       console.warn('[KeyboardShortcut] Failed to load config, using defaults:', error);
-      this.config = DEFAULT_SHORTCUTS;
-      this.enabled = true;
+      return { config: DEFAULT_SHORTCUTS, enabled: true };
     }
+  }
+
+  private readStoredConfig(stored: KeyboardShortcutStorage): LoadedShortcutConfig {
+    const normalized = this.normalizeConfig(stored.shortcuts);
+    return {
+      config: this.validateConfig(normalized) ? normalized : DEFAULT_SHORTCUTS,
+      enabled: stored.enabled ?? true,
+    };
   }
 
   /**
@@ -155,8 +209,8 @@ export class KeyboardShortcutService {
       throw new Error('Invalid shortcut configuration');
     }
 
-    this.config = normalized;
-    this.enabled = enabled;
+    this.liveRevision += 1;
+    this.applyConfig({ config: normalized, enabled });
 
     const storage: KeyboardShortcutStorage = {
       shortcuts: normalized,
@@ -251,7 +305,8 @@ export class KeyboardShortcutService {
     if (this.keydownHandler) return;
 
     this.keydownHandler = (event: KeyboardEvent) => {
-      if (!this.enabled) return;
+      // Nobody would act on a match, so the key belongs to the page.
+      if (!this.enabled || this.listeners.size === 0) return;
 
       if (this.isImeComposing(event)) {
         this.resetSequence();
@@ -317,22 +372,17 @@ export class KeyboardShortcutService {
    * Attach storage change listener for cross-tab sync
    */
   private attachStorageListener(): void {
-    // Timeline remounts reuse this singleton; keep the one handler destroy() can remove.
+    // Timeline remounts reuse this singleton; keep the one handler closeSession() can remove.
     if (this.storageChangeHandler) return;
 
     if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
       this.storageChangeHandler = (changes, areaName) => {
         if (areaName !== 'sync') return;
-        if (changes[StorageKeys.TIMELINE_SHORTCUTS]) {
-          const newValue = changes[StorageKeys.TIMELINE_SHORTCUTS].newValue as
-            | KeyboardShortcutStorage
-            | undefined;
-          if (newValue?.shortcuts) {
-            const normalized = this.normalizeConfig(newValue.shortcuts);
-            this.config = this.validateConfig(normalized) ? normalized : DEFAULT_SHORTCUTS;
-            this.enabled = newValue.enabled ?? true;
-          }
-        }
+        const change = changes[StorageKeys.TIMELINE_SHORTCUTS];
+        if (!change) return;
+        this.liveRevision += 1;
+        const newValue = change.newValue as KeyboardShortcutStorage | undefined;
+        if (newValue?.shortcuts) this.applyConfig(this.readStoredConfig(newValue));
       };
 
       chrome.storage.onChanged.addListener(this.storageChangeHandler);
@@ -539,10 +589,16 @@ export class KeyboardShortcutService {
   }
 
   /**
-   * Cleanup service
+   * Page fallback: end the session whoever still holds a lease, and drop every listener.
    */
   destroy(): void {
-    this.generation += 1;
+    this.leases.clear();
+    this.initLease = null;
+    this.closeSession();
+    this.listeners.clear();
+  }
+
+  private detachListeners(): void {
     if (this.keydownHandler) {
       window.removeEventListener('keydown', this.keydownHandler, { capture: true });
       this.keydownHandler = null;
@@ -552,8 +608,6 @@ export class KeyboardShortcutService {
       chrome.storage.onChanged.removeListener(this.storageChangeHandler);
       this.storageChangeHandler = null;
     }
-
-    this.listeners.clear();
   }
 }
 
