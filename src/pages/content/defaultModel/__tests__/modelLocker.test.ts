@@ -4,7 +4,7 @@ import { toastDriver } from '@/tests/toastDriver';
 
 import { setupModelLockerTests } from './modelLockerHarness';
 
-describe('DefaultModelManager lifecycle', () => {
+describe('native default model lifecycle', () => {
   const { startManager, mockSyncGet, changeAutoApply, mountPicker, reachFailureToast } =
     setupModelLockerTests();
 

@@ -45,6 +45,14 @@ export class DefaultModelPreferences {
 
   public async load(): Promise<void> {
     await this.reloadDefaults();
+    await this.loadAutoApplySwitch();
+  }
+
+  /**
+   * Only the native module reads its switch; the official plugin is mounted
+   * while the switch is on, so its preferences stay enabled.
+   */
+  public async loadAutoApplySwitch(): Promise<void> {
     const result = await storageService.get<unknown>(StorageKeys.DEFAULT_MODEL_AUTO_APPLY);
     // Missing key remains enabled for existing users.
     this.autoApplyEnabled = !result.success || result.data !== false;

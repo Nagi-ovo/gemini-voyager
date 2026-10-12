@@ -115,6 +115,12 @@ export function createForkIndicators({
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), CONVERSATION_VERIFY_TIMEOUT_MS);
+    // Stopping fork cancels the request and its timeout instead of letting them run out.
+    const abortWithLifetime = () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+    lifetime.signal.addEventListener('abort', abortWithLifetime, { once: true });
     try {
       const response = await fetch(node.conversationUrl, {
         method: 'GET',
@@ -133,6 +139,7 @@ export function createForkIndicators({
       return true;
     } finally {
       clearTimeout(timer);
+      lifetime.signal.removeEventListener('abort', abortWithLifetime);
     }
   }
 

@@ -38,7 +38,10 @@ export function removeSidebarCollapseNudge(): void {
   document.querySelectorAll(`.${NUDGE_CLASS}`).forEach((element) => element.remove());
 }
 
-function mountSidebarCollapseNudge(anchor: HTMLElement): void {
+/** Removes this card, its listener and its pending reveal, wherever the host moved it. */
+export type RemoveSidebarCollapseNudge = () => void;
+
+function mountSidebarCollapseNudge(anchor: HTMLElement): RemoveSidebarCollapseNudge {
   const parent = anchor.parentElement ?? document.body;
   removeSidebarCollapseNudge();
 
@@ -71,22 +74,43 @@ function mountSidebarCollapseNudge(anchor: HTMLElement): void {
   card.appendChild(body);
   card.appendChild(actions);
 
-  dismissBtn.addEventListener('click', (event) => {
-    event.stopPropagation();
-    removeSidebarCollapseNudge();
-  });
+  const listeners = new AbortController();
+  dismissBtn.addEventListener(
+    'click',
+    (event) => {
+      event.stopPropagation();
+      removeSidebarCollapseNudge();
+    },
+    { signal: listeners.signal },
+  );
 
   parent.insertBefore(card, anchor.nextSibling);
-  requestAnimationFrame(() => card.classList.add(SHOW_CLASS));
+  const reveal = requestAnimationFrame(() => card.classList.add(SHOW_CLASS));
+  return () => {
+    cancelAnimationFrame(reveal);
+    listeners.abort();
+    card.remove();
+  };
 }
 
-export async function showSidebarCollapseNudgeOnce(anchor: HTMLElement): Promise<void> {
+/**
+ * `isCurrent` lets the caller cancel across the two storage round-trips: once it
+ * returns false the nudge neither records itself as shown nor mounts. A flag
+ * already written stays written. Resolves to the card's remover when it
+ * mounted, so a caller can take it down even after the host detached it.
+ */
+export async function showSidebarCollapseNudgeOnce(
+  anchor: HTMLElement,
+  isCurrent: () => boolean = () => true,
+): Promise<RemoveSidebarCollapseNudge | null> {
   const hasSeenNudge = await getBooleanStorageValue(
     StorageKeys.SIDEBAR_COLLAPSE_NUDGE_SHOWN,
     false,
   );
-  if (hasSeenNudge) return;
+  if (hasSeenNudge || !isCurrent()) return null;
 
   await setBooleanStorageValue(StorageKeys.SIDEBAR_COLLAPSE_NUDGE_SHOWN, true);
-  mountSidebarCollapseNudge(anchor);
+  // A stopped caller already removed the anchor; mounting now would fall back to <body>.
+  if (!isCurrent()) return null;
+  return mountSidebarCollapseNudge(anchor);
 }

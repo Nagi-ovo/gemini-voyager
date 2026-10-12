@@ -42,6 +42,7 @@ export interface ContinueInController {
 type Notify = (message: string, tone?: 'ok' | 'error') => void;
 
 const NOT_READY: HandoffStatus = { chatgpt: false, claude: false };
+const NOT_ASKED = Symbol('not asked');
 
 export function formatTarget(template: string, target: HandoffTarget): string {
   return template.split('{target}').join(HANDOFF_TARGETS[target].label);
@@ -72,12 +73,20 @@ export function createContinueInController(
   };
 
   const refresh = (): void => {
+    // A late `unavailable` from a handoff accepted before the stop lands here too.
+    if (stopped) return;
     const asked = ++request;
     void Promise.resolve()
-      .then(() => deps.send({ type: HANDOFF_MESSAGES.status }))
+      .then(() => {
+        // Stopped between the call and this microtask: ask the background nothing.
+        if (stopped) return NOT_ASKED;
+        return deps.send({ type: HANDOFF_MESSAGES.status });
+      })
       .then(
         (value) => {
-          if (!stopped && asked === request) status = parseHandoffStatus(value);
+          if (value !== NOT_ASKED && !stopped && asked === request) {
+            status = parseHandoffStatus(value);
+          }
         },
         () => {
           if (!stopped && asked === request) status = NOT_READY;

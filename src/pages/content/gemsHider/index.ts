@@ -10,7 +10,11 @@ import browser from 'webextension-polyfill';
 import { type StorageKey, StorageKeys } from '@/core/types/common';
 
 import { getTranslationSync } from '../../../utils/i18n';
-import { removeSidebarCollapseNudge, showSidebarCollapseNudgeOnce } from '../sidebarCollapseNudge';
+import {
+  type RemoveSidebarCollapseNudge,
+  removeSidebarCollapseNudge,
+  showSidebarCollapseNudgeOnce,
+} from '../sidebarCollapseNudge';
 
 const STYLE_ID = 'gv-sidebar-section-hider-style';
 const HIDDEN_CLASS = 'gv-sidebar-section-hidden';
@@ -78,6 +82,22 @@ const observerPendingNodes = new Set<HTMLElement>();
 let languageChangeListener:
   | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
   | null = null;
+// Bumped by every stop: storage continuations from an earlier run must not touch the page.
+let hiderRun = 0;
+let pendingInitTimer: number | null = null;
+let pendingDomReadyInit: (() => void) | null = null;
+
+/** What one section setup added to the host's DOM, so a stop reaches it even while detached. */
+interface MountedSection {
+  readonly sectionEl: HTMLElement;
+  readonly sectionId: SectionId;
+  readonly toggleBtn: HTMLElement;
+  readonly peekBar: HTMLDivElement;
+  readonly listeners: AbortController;
+}
+const mountedSections = new Set<MountedSection>();
+/** Nudge cards this hider mounted; the host may detach one along with the sidebar. */
+const mountedNudges = new Set<RemoveSidebarCollapseNudge>();
 
 function injectStyles(): void {
   if (document.getElementById(STYLE_ID)) return;
@@ -465,6 +485,8 @@ async function setupSectionHider(
   if (sectionEl.getAttribute(PROCESSED_ATTR) === section.id) {
     return;
   }
+  const run = hiderRun;
+  const isCurrentRun = () => run === hiderRun;
 
   const placement = section.placement ?? 'inline';
   const parent = sectionEl.parentElement;
@@ -488,6 +510,10 @@ async function setupSectionHider(
 
   sectionEl.classList.add(TARGET_CLASS);
   sectionEl.setAttribute(PROCESSED_ATTR, section.id);
+  // The host may detach the sidebar before a stop, out of reach of a document sweep.
+  const listeners = new AbortController();
+  const { signal } = listeners;
+  mountedSections.add({ sectionEl, sectionId: section.id, toggleBtn, peekBar, listeners });
 
   if (placement === 'absolute') {
     // The button is `position: absolute` per CSS; mount it on the section
@@ -502,16 +528,26 @@ async function setupSectionHider(
 
   const handleHideRequest = async () => {
     hasUserInteraction = true;
+    // The click's hidden state is an accepted write; after a stop it only stops touching the page.
     await setHiddenState(section, true);
+    if (!isCurrentRun()) return;
     applyState(sectionEl, peekBar, true);
-    void showSidebarCollapseNudgeOnce(peekBar);
+    void showSidebarCollapseNudgeOnce(peekBar, isCurrentRun).then((removeNudge) => {
+      if (!removeNudge) return;
+      if (isCurrentRun()) mountedNudges.add(removeNudge);
+      else removeNudge();
+    });
   };
 
-  toggleBtn.addEventListener('click', async (event) => {
-    event.stopPropagation();
-    event.preventDefault();
-    await handleHideRequest();
-  });
+  toggleBtn.addEventListener(
+    'click',
+    async (event) => {
+      event.stopPropagation();
+      event.preventDefault();
+      await handleHideRequest();
+    },
+    { signal },
+  );
 
   // Span-as-button (absolute mode) needs explicit keyboard handling — native
   // <button> Enter/Space activation isn't synthesized for span[role=button].
@@ -519,54 +555,52 @@ async function setupSectionHider(
   // (which is itself a <button>) doesn't toggle expand/collapse on a stray
   // drag-click that lands on the toggle.
   if (placement === 'absolute') {
-    toggleBtn.addEventListener('keydown', async (event) => {
-      const ke = event as KeyboardEvent;
-      if (ke.key !== 'Enter' && ke.key !== ' ') return;
-      event.stopPropagation();
-      event.preventDefault();
-      await handleHideRequest();
-    });
-    toggleBtn.addEventListener('pointerdown', (e) => e.stopPropagation());
-    toggleBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+    toggleBtn.addEventListener(
+      'keydown',
+      async (event) => {
+        const ke = event as KeyboardEvent;
+        if (ke.key !== 'Enter' && ke.key !== ' ') return;
+        event.stopPropagation();
+        event.preventDefault();
+        await handleHideRequest();
+      },
+      { signal },
+    );
+    toggleBtn.addEventListener('pointerdown', (e) => e.stopPropagation(), { signal });
+    toggleBtn.addEventListener('mousedown', (e) => e.stopPropagation(), { signal });
   }
 
-  peekBar.addEventListener('click', async () => {
+  const handleShowRequest = async () => {
     hasUserInteraction = true;
     hideTooltip();
     removeSidebarCollapseNudge();
+    // Like a hide click: the write is accepted, but a stopped run leaves the page alone.
     await setHiddenState(section, false);
+    if (!isCurrentRun()) return;
     applyState(sectionEl, peekBar, false);
-  });
+  };
 
-  peekBar.addEventListener('keydown', async (event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      hasUserInteraction = true;
-      hideTooltip();
-      removeSidebarCollapseNudge();
-      await setHiddenState(section, false);
-      applyState(sectionEl, peekBar, false);
-    }
-  });
+  peekBar.addEventListener('click', () => void handleShowRequest(), { signal });
 
-  peekBar.addEventListener('mouseenter', () => {
-    showTooltip(peekBar);
-  });
+  peekBar.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        void handleShowRequest();
+      }
+    },
+    { signal },
+  );
 
-  peekBar.addEventListener('mouseleave', () => {
-    hideTooltip();
-  });
-
-  peekBar.addEventListener('focus', () => {
-    showTooltip(peekBar);
-  });
-
-  peekBar.addEventListener('blur', () => {
-    hideTooltip();
-  });
+  peekBar.addEventListener('mouseenter', () => showTooltip(peekBar), { signal });
+  peekBar.addEventListener('mouseleave', () => hideTooltip(), { signal });
+  peekBar.addEventListener('focus', () => showTooltip(peekBar), { signal });
+  peekBar.addEventListener('blur', () => hideTooltip(), { signal });
 
   const isHidden = await getHiddenState(section);
-  if (!hasUserInteraction) {
+  // A stop can miss a section the host had detached; the run check keeps it from re-hiding later.
+  if (isCurrentRun() && !hasUserInteraction) {
     applyState(sectionEl, peekBar, isHidden);
   }
 }
@@ -651,6 +685,19 @@ function cleanup(): void {
     languageChangeListener = null;
   }
 
+  for (const mounted of mountedSections) {
+    mounted.listeners.abort();
+    mounted.toggleBtn.remove();
+    mounted.peekBar.remove();
+    mounted.sectionEl.classList.remove(HIDDEN_CLASS, TARGET_CLASS);
+    if (mounted.sectionEl.getAttribute(PROCESSED_ATTR) === mounted.sectionId) {
+      mounted.sectionEl.removeAttribute(PROCESSED_ATTR);
+    }
+  }
+  mountedSections.clear();
+  for (const removeNudge of mountedNudges) removeNudge();
+  mountedNudges.clear();
+
   document.getElementById(STYLE_ID)?.remove();
   document.querySelectorAll(`.${TOGGLE_BTN_CLASS}`).forEach((element) => element.remove());
   document.querySelectorAll(`.${PEEK_BAR_CLASS}`).forEach((element) => element.remove());
@@ -665,6 +712,18 @@ function cleanup(): void {
   });
 
   initialized = false;
+  hiderRun += 1;
+}
+
+function cancelPendingInit(): void {
+  if (pendingInitTimer !== null) {
+    window.clearTimeout(pendingInitTimer);
+    pendingInitTimer = null;
+  }
+  if (pendingDomReadyInit) {
+    document.removeEventListener('DOMContentLoaded', pendingDomReadyInit);
+    pendingDomReadyInit = null;
+  }
 }
 
 export function startGemsHider(): () => void {
@@ -672,11 +731,25 @@ export function startGemsHider(): () => void {
     return () => {};
   }
 
+  cancelPendingInit();
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initGemsHider);
+    pendingDomReadyInit = () => {
+      pendingDomReadyInit = null;
+      initGemsHider();
+    };
+    document.addEventListener('DOMContentLoaded', pendingDomReadyInit);
   } else {
-    setTimeout(initGemsHider, 500);
+    pendingInitTimer = window.setTimeout(() => {
+      pendingInitTimer = null;
+      initGemsHider();
+    }, 500);
   }
 
-  return cleanup;
+  const run = hiderRun;
+  return () => {
+    // An earlier run's stop, called again, must not tear down a newer run.
+    if (run !== hiderRun) return;
+    cancelPendingInit();
+    cleanup();
+  };
 }

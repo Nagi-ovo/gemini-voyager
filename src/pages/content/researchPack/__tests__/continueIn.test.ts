@@ -186,6 +186,68 @@ describe('research pack: continue in ChatGPT / Claude', () => {
     expect(document.querySelector('.gv-rp-root')).toBeNull();
   });
 
+  it.each([
+    ['handing off', true],
+    ['copying', false],
+  ])(
+    'still opens the Continue-in tab that was clicked before the research pack turned off (%s)',
+    async (_label, ready) => {
+      status = { chatgpt: ready, claude: ready };
+      let finishCopy!: () => void;
+      writeClipboard.mockImplementationOnce(
+        () =>
+          new Promise<void>((resolve) => {
+            finishCopy = resolve;
+          }),
+      );
+      await startWithOneItem();
+
+      continueButton('chatgpt').click();
+      stop!();
+      stop = null;
+      if (!ready) finishCopy();
+      await flush();
+
+      // The click was accepted: the new chat opens, and this page says nothing more.
+      expect(opens()).toEqual([expect.objectContaining({ target: 'chatgpt' })]);
+      expect(toastDriver.all().filter(({ message }) => message.includes('ChatGPT'))).toEqual([]);
+    },
+  );
+
+  it('asks for no target status after a handoff accepted before the stop comes back unavailable', async () => {
+    status = { chatgpt: true, claude: true };
+    await startWithOneItem();
+    const statusChecks = () =>
+      send.mock.calls.filter(([message]) => message.type === HANDOFF_MESSAGES.status).length;
+    let reply!: (value: unknown) => void;
+    send.mockImplementationOnce(() => new Promise((resolve) => (reply = resolve)));
+
+    continueButton('chatgpt').click();
+    await vi.waitFor(() => expect(opens()).toHaveLength(1));
+    const before = statusChecks();
+    stop!();
+    stop = null;
+    reply({ ok: false, reason: 'unavailable' });
+    await flush();
+
+    expect(statusChecks()).toBe(before);
+  });
+
+  it('asks for no target status when it stops in the same task it started', async () => {
+    stop = startResearchPack({
+      store: sharedStorage().store,
+      resolveKey: async () => KEY,
+      continueIn: { send, writeClipboard, hasNavigationApi: () => hasNavigationApi },
+    });
+    stop();
+    stop = null;
+    await flush();
+
+    expect(send.mock.calls.filter(([message]) => message.type === HANDOFF_MESSAGES.status)).toEqual(
+      [],
+    );
+  });
+
   it('copies instead of handing off in a browser without the Navigation API', async () => {
     status = { chatgpt: true, claude: true };
     hasNavigationApi = false;

@@ -97,6 +97,7 @@ describe('native feature lifecycle (parametric)', () => {
 
       for (let round = 1; round <= rounds; round += 1) {
         harness.ledger.resetActivity();
+        const hostNodes = new Set<EventTarget>(document.querySelectorAll('*'));
         const stop = await feature.start();
         await flush();
 
@@ -111,7 +112,11 @@ describe('native feature lifecycle (parametric)', () => {
         stop();
         await flush();
 
-        expect(harness.ledger.openListeners(), `listeners after round ${round}`).toEqual([]);
+        // Host nodes count even when detached: the host may attach one again later.
+        expect(
+          harness.ledger.openListeners({ detachedHosts: hostNodes }),
+          `listeners after round ${round}`,
+        ).toEqual([]);
         expect(harness.ledger.openObservers(), `observers after round ${round}`).toEqual([]);
         expect(
           harness.ledger.openStorageListeners(),

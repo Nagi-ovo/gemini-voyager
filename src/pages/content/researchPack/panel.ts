@@ -208,6 +208,7 @@ export function createResearchPackPanel(
   let instructionTimer: ReturnType<typeof setTimeout> | null = null;
   let savesInFlight = 0;
   let statusTimer: ReturnType<typeof setTimeout> | null = null;
+  let destroyed = false;
 
   const saveInstruction = (): void => {
     const pending = actions.onInstructionChange(instruction.value);
@@ -405,6 +406,8 @@ export function createResearchPackPanel(
   };
 
   const notify = (message: string, tone: 'ok' | 'error' = 'ok'): void => {
+    // A result that lands after destroy would otherwise start a status timer or a new toast.
+    if (destroyed) return;
     status.textContent = '';
     toaster.dismiss(STATUS_CHANNEL);
     if (statusTimer !== null) clearTimeout(statusTimer);
@@ -489,7 +492,9 @@ export function createResearchPackPanel(
     relabel,
     refreshTemplates: templates.refresh,
     destroy: () => {
+      // Typed but not yet saved: an edit the user already made, so it is kept.
       flushInstruction();
+      destroyed = true;
       if (statusTimer !== null) clearTimeout(statusTimer);
       statusTimer = null;
       toaster.destroy();

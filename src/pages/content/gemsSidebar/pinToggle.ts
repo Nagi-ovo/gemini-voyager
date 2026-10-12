@@ -18,6 +18,8 @@ const PIN_STYLE_ID = 'gv-gem-pin-style';
 
 let styledInjected = false;
 let currentPinned: string[] = [];
+// Bumped by removePinButtons so an injection still reading pinned ids stays out.
+let pinRun = 0;
 
 /**
  * Inject a small style sheet that sizes and colours the pin toggle
@@ -141,8 +143,12 @@ function createPinButton(id: string, isPinned: boolean): HTMLElement {
  * repeatedly (e.g. after a DOM mutation).
  */
 export async function injectPinButtons(): Promise<void> {
+  const run = pinRun;
+  const pinned = await loadPinned();
+  // The sidebar stopped during the read: the style would stay behind with nothing to clean it.
+  if (run !== pinRun) return;
   injectStyle();
-  currentPinned = await loadPinned();
+  currentPinned = pinned;
   const pinnedSet = new Set(currentPinned);
 
   const list = document.querySelector('[data-test-id="your-gems-list"]');
@@ -168,6 +174,14 @@ export async function injectPinButtons(): Promise<void> {
       row.insertBefore(btn, row.firstChild);
     }
   }
+}
+
+/** Remove every pin toggle and its style; a pending injection is dropped. */
+export function removePinButtons(): void {
+  pinRun += 1;
+  document.querySelectorAll(`.${PIN_BTN_CLASS}`).forEach((btn) => btn.remove());
+  document.getElementById(PIN_STYLE_ID)?.remove();
+  styledInjected = false;
 }
 
 type PinnedChangesListener = (

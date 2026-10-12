@@ -1,57 +1,68 @@
-import { createToaster } from '@/core/ui/toast/toaster';
-
-import { AUTO_APPLY_FAILURE_CHANNEL, DefaultModelAutoApply } from './autoApply';
-import { DefaultStars } from './defaultStars';
-import { ModelPicker } from './modelPicker';
+import { startStaleStarSweeper } from './defaultStars';
 import { DefaultModelPreferences } from './preferences';
-import './styles.css';
+import { DefaultModelSession } from './runtime';
 
-class DefaultModelManager {
-  private static instance: DefaultModelManager;
-  private readonly preferences = new DefaultModelPreferences();
-  private readonly picker = new ModelPicker(this.preferences);
-  private readonly toaster = createToaster();
-  private readonly stars = new DefaultStars(this.preferences, this.picker, this.toaster);
-  private readonly autoApply = new DefaultModelAutoApply(
-    this.preferences,
-    this.picker,
-    this.toaster,
-  );
-  private stopPreferenceWatch: (() => void) | null = null;
-  private started = false;
-
-  private constructor() {}
-
-  public static getInstance(): DefaultModelManager {
-    if (!DefaultModelManager.instance) {
-      DefaultModelManager.instance = new DefaultModelManager();
-    }
-    return DefaultModelManager.instance;
-  }
-
-  public async init(): Promise<void> {
-    if (this.started) return;
-    this.started = true;
-    await this.preferences.load();
-    this.stopPreferenceWatch = this.preferences.watchAutoApply((enabled) => {
-      this.autoApply.setEnabled(enabled);
-      if (enabled) return;
-      this.stars.sweep();
-      this.toaster.dismiss(AUTO_APPLY_FAILURE_CHANNEL);
-    });
-    this.stars.start();
-    this.autoApply.start();
-  }
-
-  public destroy(): void {
-    if (!this.started) return;
-    this.started = false;
-    this.stars.stop();
-    this.autoApply.stop();
-    this.toaster.clear();
-    this.stopPreferenceWatch?.();
-    this.stopPreferenceWatch = null;
-  }
+export interface NativeDefaultModel {
+  /** Ends the module for this page: the running session, the sweeper and the switch listener. */
+  readonly stop: () => void;
+  /** Settles once the startup read is done and the session, if any, has started. */
+  readonly ready: Promise<void>;
 }
 
-export default DefaultModelManager;
+/**
+ * The native default-model module. It follows `gvDefaultModelAutoApply` in
+ * both storage areas, a missing key counting as on, and runs one
+ * `DefaultModelSession` while the switch is on. While it is off, only a sweeper
+ * watches for stars that Gemini brings back in a reattached menu pane.
+ */
+export function mountDefaultModelNative(): NativeDefaultModel {
+  const preferences = new DefaultModelPreferences();
+  let stopped = false;
+  let session: DefaultModelSession | null = null;
+  let sessionStart: Promise<void> = Promise.resolve();
+  let stopSweeper: (() => void) | null = null;
+  let stopSwitchWatch: (() => void) | null = null;
+
+  const apply = (enabled: boolean): void => {
+    if (enabled) {
+      stopSweeper?.();
+      stopSweeper = null;
+      if (session) return;
+      session = new DefaultModelSession(preferences);
+      sessionStart = session.start();
+      return;
+    }
+    session?.stop();
+    session = null;
+    stopSweeper ??= startStaleStarSweeper();
+  };
+
+  const ready = preferences.loadAutoApplySwitch().then(() => {
+    if (stopped) return;
+    stopSwitchWatch = preferences.watchAutoApply(apply);
+    apply(preferences.enabled);
+    return sessionStart;
+  });
+
+  const stop = (): void => {
+    if (stopped) return;
+    stopped = true;
+    stopSwitchWatch?.();
+    stopSwitchWatch = null;
+    session?.stop();
+    session = null;
+    stopSweeper?.();
+    stopSweeper = null;
+  };
+
+  return { stop, ready };
+}
+
+/** Starts the native module; the returned stop is valid at once, the startup read continues behind it. */
+export function startDefaultModelNative(): () => void {
+  const { stop, ready } = mountDefaultModelNative();
+  ready.catch((error: unknown) => {
+    console.error('[Gemini Voyager] Default model failed to start', error);
+  });
+  return stop;
+}

@@ -2,9 +2,15 @@ import { vi } from 'vitest';
 
 /**
  * Test-only ledger of everything a content module can leave behind on the
- * page: listeners on the long-lived targets (window, document, html, body),
- * DOM observers, `chrome.storage.onChanged` and `chrome.runtime.onMessage`
+ * page: listeners on window, the document and every element still in it, DOM
+ * observers, `chrome.storage.onChanged` and `chrome.runtime.onMessage`
  * subscriptions. Timers are the caller's business through `vi.useFakeTimers`.
+ *
+ * A listener counts as removed the way the DOM removes it: by
+ * `removeEventListener`, by its `signal` aborting, or by a `once` listener
+ * firing. One left on an element that has since left the document is not
+ * reported by default; pass `includeDetached` to see those too, for a host
+ * that keeps a detached node and attaches it again later.
  *
  * `chrome.storage` is replaced by an in-memory implementation that answers
  * both callback and promise styles, so modules that read settings at start
@@ -21,8 +27,16 @@ interface ObserverLike {
 }
 
 export interface LifecycleLedger {
-  /** Listener registrations on window/document/html/body not yet removed. */
-  openListeners(): string[];
+  /**
+   * Listener registrations on window, the document or a connected element not
+   * yet removed; with `includeDetached`, on every detached element as well, or
+   * with `detachedHosts`, on those inside one of these host nodes, including
+   * descendants added after the set was taken.
+   */
+  openListeners(options?: {
+    includeDetached?: boolean;
+    detachedHosts?: ReadonlySet<EventTarget>;
+  }): string[];
   /** Observers that called `observe` and never `disconnect`. */
   openObservers(): string[];
   openStorageListeners(): number;
@@ -44,7 +58,26 @@ function pickTarget(target: EventTarget): string | null {
   if (target === document) return 'document';
   if (target === document.documentElement) return 'html';
   if (target === document.body) return 'body';
+  if (target instanceof Element) {
+    const id = target.id ? `#${target.id}` : '';
+    const classes = Array.from(target.classList, (name) => `.${name}`).join('');
+    return `${target.tagName.toLowerCase()}${id}${classes}`;
+  }
   return null;
+}
+
+/** Whether `target` is one of `hosts` or inside one, attached or not. */
+function insideHost(target: EventTarget, hosts: ReadonlySet<EventTarget> | undefined): boolean {
+  if (!hosts || !(target instanceof Node)) return false;
+  for (const host of hosts) {
+    if (host instanceof Node && host.contains(target)) return true;
+  }
+  return false;
+}
+
+/** Still reachable: window, the document, or an element in it. */
+function isLive(target: EventTarget): boolean {
+  return !(target instanceof Node) || target === document || target.isConnected;
 }
 
 function captureFlag(options: boolean | AddEventListenerOptions | undefined): string {
@@ -72,34 +105,130 @@ function readKeys(keys: unknown, store: Map<string, unknown>): Record<string, un
 }
 
 export function installLifecycleHarness(): LifecycleHarness {
-  const listenerCounts = new Map<string, number>();
-  const listenerIds = new WeakMap<object, number>();
-  let nextListenerId = 1;
+  // One entry per registration the DOM would keep: the same target, type,
+  // listener and capture flag added twice is still one listener.
+  interface OpenListener {
+    readonly target: EventTarget;
+    readonly label: string;
+    /** Drops the entry when the listener's `once` firing or `signal` removes it. */
+    readonly release: () => void;
+  }
+  const open = new Map<string, OpenListener>();
+  const ids = new WeakMap<object, number>();
+  let nextId = 1;
   let activity = 0;
 
-  const idFor = (listener: object): number => {
-    let id = listenerIds.get(listener);
+  const idFor = (value: object): number => {
+    let id = ids.get(value);
     if (id === undefined) {
-      id = nextListenerId++;
-      listenerIds.set(listener, id);
+      id = nextId++;
+      ids.set(value, id);
     }
     return id;
   };
+  const keyFor = (
+    target: EventTarget,
+    type: string,
+    listener: object,
+    options: boolean | EventListenerOptions | undefined,
+  ): string => `${idFor(target)}:${type}:${captureFlag(options)}:#${idFor(listener)}`;
 
   const originalAdd = EventTarget.prototype.addEventListener;
   const originalRemove = EventTarget.prototype.removeEventListener;
+  // vitest wraps `window`'s own add/remove (to count error listeners) around a
+  // jsdom window that the global object is not an instance of, so window
+  // listeners never reach the prototype: they are recorded by wrapping those.
+  const windowAddDescriptor = Object.getOwnPropertyDescriptor(window, 'addEventListener');
+  const windowRemoveDescriptor = Object.getOwnPropertyDescriptor(window, 'removeEventListener');
+  const ownWindow =
+    windowAddDescriptor && windowRemoveDescriptor
+      ? {
+          add: window.addEventListener as EventTarget['addEventListener'],
+          remove: window.removeEventListener as EventTarget['removeEventListener'],
+        }
+      : null;
+  // Set while a wrapped window call delegates, so the prototype patch below
+  // does not record that call a second time.
+  let delegating = false;
+  const delegate = <T>(call: () => T): T => {
+    delegating = true;
+    try {
+      return call();
+    } finally {
+      delegating = false;
+    }
+  };
+  /** Add or remove without recording, on whichever implementation the target accepts. */
+  const raw = (
+    action: 'add' | 'remove',
+    target: EventTarget,
+    type: string,
+    listener: EventListener,
+    options: AddEventListenerOptions,
+  ): void => {
+    if (target === window && ownWindow) {
+      delegate(() => ownWindow[action].call(window, type, listener, options));
+      return;
+    }
+    (action === 'add' ? originalAdd : originalRemove).call(target, type, listener, options);
+  };
+
+  const track = (
+    target: EventTarget,
+    type: string,
+    listener: EventListenerOrEventListenerObject | null,
+    options: boolean | AddEventListenerOptions | undefined,
+  ): void => {
+    const name = pickTarget(target);
+    if (!name || !listener) return;
+    const signal = typeof options === 'object' ? options.signal : undefined;
+    if (signal?.aborted) return;
+    activity += 1;
+    const key = keyFor(target, type, listener, options);
+    if (open.has(key)) return;
+    const capture = captureFlag(options) === 'capture';
+    const drop = (): void => {
+      const entry = open.get(key);
+      if (!entry) return;
+      open.delete(key);
+      entry.release();
+    };
+    const onAbort = (): void => drop();
+    // Registered after the listener, so it runs right after a `once` firing.
+    const afterOnce = (): void => drop();
+    const once = typeof options === 'object' && options.once === true;
+    if (once) raw('add', target, type, afterOnce, { capture, once: true });
+    signal?.addEventListener('abort', onAbort, { once: true });
+    open.set(key, {
+      target,
+      label: `${name}:${type}:${captureFlag(options)}:#${idFor(listener)}`,
+      release: () => {
+        if (once) raw('remove', target, type, afterOnce, { capture });
+        signal?.removeEventListener('abort', onAbort);
+      },
+    });
+  };
+  const untrack = (
+    target: EventTarget,
+    type: string,
+    listener: EventListenerOrEventListenerObject | null,
+    options: boolean | EventListenerOptions | undefined,
+  ): void => {
+    if (!listener) return;
+    const key = keyFor(target, type, listener, options);
+    const entry = open.get(key);
+    if (!entry) return;
+    open.delete(key);
+    entry.release();
+  };
+
   EventTarget.prototype.addEventListener = function (
     this: EventTarget,
     type: string,
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | AddEventListenerOptions,
   ) {
-    const name = pickTarget(this);
-    if (name && listener) {
-      activity += 1;
-      const key = `${name}:${type}:${captureFlag(options)}:#${idFor(listener)}`;
-      listenerCounts.set(key, (listenerCounts.get(key) ?? 0) + 1);
-    }
+    if (!delegating) track(this, type, listener, options);
     return originalAdd.call(this, type, listener, options);
   };
   EventTarget.prototype.removeEventListener = function (
@@ -108,15 +237,40 @@ export function installLifecycleHarness(): LifecycleHarness {
     listener: EventListenerOrEventListenerObject | null,
     options?: boolean | EventListenerOptions,
   ) {
-    const name = pickTarget(this);
-    if (name && listener) {
-      const key = `${name}:${type}:${captureFlag(options)}:#${idFor(listener)}`;
-      const count = listenerCounts.get(key) ?? 0;
-      if (count <= 1) listenerCounts.delete(key);
-      else listenerCounts.set(key, count - 1);
-    }
+    if (!delegating) untrack(this, type, listener, options);
     return originalRemove.call(this, type, listener, options);
   };
+
+  if (ownWindow) {
+    const ownAdd = ownWindow.add;
+    const ownRemove = ownWindow.remove;
+    Object.defineProperty(window, 'addEventListener', {
+      configurable: true,
+      writable: true,
+      value(
+        this: Window,
+        type: string,
+        listener: EventListenerOrEventListenerObject | null,
+        options?: boolean | AddEventListenerOptions,
+      ) {
+        track(window, type, listener, options);
+        return delegate(() => ownAdd.call(this, type, listener, options));
+      },
+    });
+    Object.defineProperty(window, 'removeEventListener', {
+      configurable: true,
+      writable: true,
+      value(
+        this: Window,
+        type: string,
+        listener: EventListenerOrEventListenerObject | null,
+        options?: boolean | EventListenerOptions,
+      ) {
+        untrack(window, type, listener, options);
+        return delegate(() => ownRemove.call(this, type, listener, options));
+      },
+    });
+  }
 
   // Observers: wrap the real MutationObserver; stub the layout observers jsdom lacks.
   const openObservers = new Map<object, string>();
@@ -223,7 +377,16 @@ export function installLifecycleHarness(): LifecycleHarness {
   );
 
   const ledger: LifecycleLedger = {
-    openListeners: () => [...listenerCounts.keys()].sort(),
+    openListeners: (options) =>
+      [...open.values()]
+        .filter(
+          (entry) =>
+            options?.includeDetached === true ||
+            insideHost(entry.target, options?.detachedHosts) ||
+            isLive(entry.target),
+        )
+        .map((entry) => entry.label)
+        .sort(),
     openObservers: () => [...openObservers.values()].sort(),
     openStorageListeners: () => storageListeners.size,
     openRuntimeListeners: () => runtimeListeners.size,
@@ -242,8 +405,15 @@ export function installLifecycleHarness(): LifecycleHarness {
       }
     },
     restore() {
+      // Take back the `once` companions and `abort` hooks of listeners still open.
+      for (const entry of open.values()) entry.release();
+      open.clear();
       EventTarget.prototype.addEventListener = originalAdd;
       EventTarget.prototype.removeEventListener = originalRemove;
+      if (windowAddDescriptor && windowRemoveDescriptor) {
+        Object.defineProperty(window, 'addEventListener', windowAddDescriptor);
+        Object.defineProperty(window, 'removeEventListener', windowRemoveDescriptor);
+      }
       globalThis.MutationObserver = OriginalMutationObserver;
       globalThis.ResizeObserver = originalResize;
       globalThis.IntersectionObserver = originalIntersection;

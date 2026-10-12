@@ -17,11 +17,6 @@ function formatTranslation(template: string, values: Record<string, string>): st
   }, template);
 }
 
-// Pending reads can finish after a restart, so the upload hint has one owner for
-// the page: whichever instance is running can clear a hint an older one showed.
-const uploadHints = createToaster();
-let manualUploadCountdownTimer: ReturnType<typeof setInterval> | null = null;
-
 export function startPendingFork({
   getConversationId,
   getConversationTitle,
@@ -31,6 +26,15 @@ export function startPendingFork({
   getConversationTitle: () => string;
   onLinked: () => Promise<void>;
 }): () => void {
+  // Each run owns its hint, countdown and waits: an older run cleaning up late must
+  // never close the upload hint a newer run is showing.
+  let stopped = false;
+  const uploadHints = createToaster();
+  let manualUploadCountdownTimer: ReturnType<typeof setInterval> | null = null;
+  let retryTimer: ReturnType<typeof setTimeout> | null = null;
+  let resolveRetry: (() => void) | null = null;
+  const pendingWaits = new Set<() => void>();
+
   function stopCountdown(): void {
     if (manualUploadCountdownTimer) {
       clearInterval(manualUploadCountdownTimer);
@@ -75,6 +79,8 @@ export function startPendingFork({
   async function readPendingFork(): Promise<PendingForkData | null> {
     try {
       const result = await browser.storage.local.get(PENDING_FORK_KEY);
+      // Stopped before taking it: leave the handoff stored for the next read and its TTL.
+      if (stopped) return null;
       const parsed = result[PENDING_FORK_KEY] as Partial<PendingForkData> | undefined;
       if (!parsed) return null;
       const mode: PendingForkMode = parsed.mode === 'fileUpload' ? 'fileUpload' : 'paste';
@@ -134,11 +140,17 @@ export function startPendingFork({
     // The opener tab writes to storage.local after async work, which may take a moment.
     // Try immediately, then retry once after a short delay.
     let pendingFork = await readPendingFork();
-    if (!pendingFork) {
-      await new Promise((r) => setTimeout(r, 2000));
+    if (!pendingFork && !stopped) {
+      await new Promise<void>((resolve) => {
+        resolveRetry = resolve;
+        retryTimer = setTimeout(resolve, 2000);
+      });
+      retryTimer = null;
+      resolveRetry = null;
+      if (stopped) return;
       pendingFork = await readPendingFork();
     }
-    if (!pendingFork) return;
+    if (!pendingFork || stopped) return;
 
     // Clear immediately so other tabs don't pick it up
     try {
@@ -146,6 +158,10 @@ export function startPendingFork({
     } catch {
       // Ignore
     }
+
+    // Taken but not handed off yet: a stopped run drops it rather than paste into a page
+    // whose fork feature is off.
+    if (stopped) return;
 
     // Re-check: still on a new conversation page?
     if (getConversationId()) return;
@@ -162,6 +178,7 @@ export function startPendingFork({
 
     // Wait for the input field to be available
     const input = await waitForElement('rich-textarea [contenteditable="true"]', 10000);
+    if (stopped) return;
     if (!input) {
       console.warn('[Fork] Input field not found');
       return;
@@ -175,7 +192,7 @@ export function startPendingFork({
 
   async function prefillManualUploadPrompt(pendingFork: PendingForkData): Promise<void> {
     const input = await waitForElement('rich-textarea [contenteditable="true"]', 10000);
-    if (!input || getInputText(input).trim()) return;
+    if (stopped || !input || getInputText(input).trim()) return;
     setInputText(input, buildManualUploadPrompt(pendingFork));
   }
 
@@ -206,26 +223,39 @@ export function startPendingFork({
 
   function waitForElement(selector: string, timeoutMs: number): Promise<HTMLElement | null> {
     return new Promise((resolve) => {
+      if (stopped) {
+        resolve(null);
+        return;
+      }
       const existing = document.querySelector<HTMLElement>(selector);
       if (existing && existing.getBoundingClientRect().height > 0) {
         resolve(existing);
         return;
       }
 
+      let frame = 0;
+      const finish = (element: HTMLElement | null) => {
+        cancelAnimationFrame(frame);
+        pendingWaits.delete(cancel);
+        resolve(element);
+      };
+      const cancel = () => finish(null);
+      pendingWaits.add(cancel);
+
       const deadline = Date.now() + timeoutMs;
       const check = () => {
         const el = document.querySelector<HTMLElement>(selector);
         if (el && el.getBoundingClientRect().height > 0) {
-          resolve(el);
+          finish(el);
           return;
         }
         if (Date.now() > deadline) {
-          resolve(null);
+          finish(null);
           return;
         }
-        requestAnimationFrame(check);
+        frame = requestAnimationFrame(check);
       };
-      requestAnimationFrame(check);
+      frame = requestAnimationFrame(check);
     });
   }
 
@@ -312,5 +342,17 @@ export function startPendingFork({
   }
 
   checkAndHandlePendingFork();
-  return clearManualUploadHint;
+  // A handed-off fork's URL watcher is left running, as before; its first-send rules
+  // and switch-off handling belong to the link finisher work.
+  return () => {
+    if (stopped) return;
+    stopped = true;
+    if (retryTimer) clearTimeout(retryTimer);
+    retryTimer = null;
+    resolveRetry?.();
+    resolveRetry = null;
+    for (const cancel of Array.from(pendingWaits)) cancel();
+    stopCountdown();
+    uploadHints.destroy();
+  };
 }

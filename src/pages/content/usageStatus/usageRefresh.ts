@@ -45,6 +45,10 @@ interface UsageRecipe {
 // Verified usage RPC; DOM captures recalibrate it if Google rotates the id.
 const DEFAULT_RECIPE: UsageRecipe = { rpcid: 'jSf9Qc', args: '[]' };
 
+// Page-wide, not per instance: the MAIN world answers by `id` alone, so a reply
+// to a stopped instance's request must never match a request of the next one.
+let replaySeq = 0;
+
 /** Owns silent replay, recipe calibration and automatic-decrease confirmation. */
 export function createUsageRefresh(
   readState: () => RefreshState,
@@ -55,7 +59,6 @@ export function createUsageRefresh(
   let observerReady = false;
   let recipe: UsageRecipe | null = null;
   let replayTimer: number | null = null;
-  let replaySeq = 0;
   const replayRequests = new Map<
     number,
     {

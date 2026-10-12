@@ -33,6 +33,10 @@ vi.mock('@/utils/i18n', () => ({
 describe('gemsHider', () => {
   let cleanup: (() => void) | null = null;
   let localState: Record<string, boolean>;
+  // Keys whose storage callbacks are held until the test releases them.
+  let heldGets: Set<string>;
+  let heldSets: Set<string>;
+  let pendingCallbacks: Array<() => void>;
 
   beforeEach(() => {
     vi.resetModules();
@@ -55,6 +59,9 @@ describe('gemsHider', () => {
     });
 
     localState = {};
+    heldGets = new Set();
+    heldSets = new Set();
+    pendingCallbacks = [];
     (
       chrome.storage as unknown as {
         local: {
@@ -71,16 +78,21 @@ describe('gemsHider', () => {
             callback: (result: Record<string, boolean>) => void,
           ) => {
             const key = Object.keys(defaults)[0];
-            callback({
-              [key]: Object.prototype.hasOwnProperty.call(localState, key)
-                ? localState[key]
-                : defaults[key],
-            });
+            const answer = () =>
+              callback({
+                [key]: Object.prototype.hasOwnProperty.call(localState, key)
+                  ? localState[key]
+                  : defaults[key],
+              });
+            if (heldGets.has(key)) pendingCallbacks.push(answer);
+            else answer();
           },
         ),
       set: vi.fn().mockImplementation((update: Record<string, boolean>, callback?: () => void) => {
         Object.assign(localState, update);
-        callback?.();
+        const key = Object.keys(update)[0];
+        if (heldSets.has(key)) pendingCallbacks.push(() => callback?.());
+        else callback?.();
       }),
     };
   });
@@ -230,5 +242,212 @@ describe('gemsHider', () => {
 
     expect(localStorage.getItem(StorageKeys.GEMS_HIDDEN)).toBe('true');
     warn.mockRestore();
+  });
+
+  async function releaseHeldStorage(): Promise<void> {
+    heldGets.clear();
+    heldSets.clear();
+    const callbacks = pendingCallbacks;
+    pendingCallbacks = [];
+    callbacks.forEach((callback) => callback());
+    await flushAsyncWork();
+  }
+
+  function stopFeature(): void {
+    cleanup?.();
+    cleanup = null;
+  }
+
+  function clickHide(section: HTMLElement): void {
+    section
+      .querySelector<HTMLButtonElement>('.gv-sidebar-section-toggle-btn')
+      ?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+  }
+
+  it('starts no gems hider observer when stopped before its delayed init', async () => {
+    const gems = createLegacyGemsSection();
+    const { startGemsHider } = await import('../index');
+    startGemsHider()();
+
+    await vi.advanceTimersByTimeAsync(500);
+    const lateGems = createLegacyGemsSection();
+    await vi.advanceTimersByTimeAsync(200);
+
+    expect(gems.querySelector('.gv-sidebar-section-toggle-btn')).toBeNull();
+    expect(lateGems.querySelector('.gv-sidebar-section-toggle-btn')).toBeNull();
+    expect(document.getElementById('gv-sidebar-section-hider-style')).toBeNull();
+  });
+
+  it('starts no gems hider when stopped before the page finished loading', async () => {
+    const gems = createLegacyGemsSection();
+    const { startGemsHider } = await import('../index');
+    Object.defineProperty(document, 'readyState', { value: 'loading', configurable: true });
+    try {
+      startGemsHider()();
+    } finally {
+      Reflect.deleteProperty(document, 'readyState');
+    }
+
+    document.dispatchEvent(new Event('DOMContentLoaded'));
+    await vi.advanceTimersByTimeAsync(200);
+
+    expect(gems.querySelector('.gv-sidebar-section-toggle-btn')).toBeNull();
+    expect(document.getElementById('gv-sidebar-section-hider-style')).toBeNull();
+  });
+
+  it('keeps a restarted gems hider running when an earlier stop is called again', async () => {
+    const gems = createLegacyGemsSection();
+    const { startGemsHider } = await import('../index');
+    const firstStop = startGemsHider();
+    await vi.advanceTimersByTimeAsync(500);
+    firstStop();
+
+    cleanup = startGemsHider();
+    await vi.advanceTimersByTimeAsync(500);
+    firstStop();
+
+    expect(gems.querySelector('.gv-sidebar-section-toggle-btn')).not.toBeNull();
+  });
+
+  it('does not apply the stored hidden state after the gems hider stopped', async () => {
+    localState[StorageKeys.GEMS_HIDDEN] = true;
+    heldGets.add(StorageKeys.GEMS_HIDDEN);
+    const gems = createLegacyGemsSection();
+    await startFeature();
+    const host = gems.parentElement!;
+
+    // The host detaches the sidebar while the read is in flight, so the stop cannot reach it.
+    host.remove();
+    stopFeature();
+    document.body.appendChild(host);
+    await releaseHeldStorage();
+
+    expect(gems.classList.contains('gv-sidebar-section-hidden')).toBe(false);
+  });
+
+  it('keeps a hide click stored but leaves the sidebar alone when the gems hider stops meanwhile', async () => {
+    const gems = createLegacyGemsSection();
+    await startFeature();
+    heldSets.add(StorageKeys.GEMS_HIDDEN);
+
+    clickHide(gems);
+    await flushAsyncWork();
+    // Detached while the write is in flight, so the stop's DOM sweep cannot reach it.
+    const host = gems.parentElement!;
+    host.remove();
+    stopFeature();
+    document.body.appendChild(host);
+    await releaseHeldStorage();
+
+    expect(localState[StorageKeys.GEMS_HIDDEN]).toBe(true);
+    expect(gems.classList.contains('gv-sidebar-section-hidden')).toBe(false);
+    expect(document.querySelector('.gv-sidebar-collapse-nudge')).toBeNull();
+    expect(localState).not.toHaveProperty(StorageKeys.SIDEBAR_COLLAPSE_NUDGE_SHOWN);
+  });
+
+  it('clears its controls, markers and listeners from a sidebar the host detached before the stop', async () => {
+    const gems = createLegacyGemsSection();
+    await startFeature();
+    const host = gems.parentElement!;
+    const toggle = gems.querySelector<HTMLElement>('.gv-sidebar-section-toggle-btn')!;
+    const peekBar = host.querySelector<HTMLElement>('.gv-sidebar-section-peek-bar')!;
+
+    host.remove();
+    stopFeature();
+    document.body.appendChild(host);
+
+    expect(host.querySelector('.gv-sidebar-section-toggle-btn')).toBeNull();
+    expect(host.querySelector('.gv-sidebar-section-peek-bar')).toBeNull();
+    expect(gems.hasAttribute('data-gv-sidebar-section-hider')).toBe(false);
+    expect(gems.classList.contains('gv-sidebar-section-hider-target')).toBe(false);
+
+    // A page script still holding the old controls gets no tooltip and no write.
+    peekBar.dispatchEvent(new MouseEvent('mouseenter'));
+    peekBar.dispatchEvent(new FocusEvent('focus'));
+    toggle.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    await flushAsyncWork();
+    expect(document.getElementById('gv-sidebar-section-tooltip')).toBeNull();
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+
+    // Turned on again, it sets the reattached section up once.
+    await startFeature();
+    expect(gems.querySelectorAll('.gv-sidebar-section-toggle-btn')).toHaveLength(1);
+    expect(host.querySelectorAll('.gv-sidebar-section-peek-bar')).toHaveLength(1);
+  });
+
+  it('keeps a show click stored but leaves the sidebar alone when the gems hider stops meanwhile', async () => {
+    localState[StorageKeys.GEMS_HIDDEN] = true;
+    const gems = createLegacyGemsSection();
+    await startFeature();
+    const host = gems.parentElement!;
+    expect(gems.classList.contains('gv-sidebar-section-hidden')).toBe(true);
+    heldSets.add(StorageKeys.GEMS_HIDDEN);
+
+    host
+      .querySelector<HTMLElement>('.gv-sidebar-section-peek-bar')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await flushAsyncWork();
+    // Detached while the write is in flight, so the stop's DOM sweep cannot reach it.
+    host.remove();
+    stopFeature();
+    document.body.appendChild(host);
+    await releaseHeldStorage();
+
+    expect(localState[StorageKeys.GEMS_HIDDEN]).toBe(false);
+    expect(gems.classList.contains('gv-sidebar-section-hidden')).toBe(false);
+    expect(host.querySelector('.gv-sidebar-section-peek-bar')).toBeNull();
+  });
+
+  it('takes down a shown collapse nudge and its listener when the host detached the sidebar before the stop', async () => {
+    const gems = createLegacyGemsSection();
+    await startFeature();
+    const host = gems.parentElement!;
+
+    clickHide(gems);
+    await flushAsyncWork();
+    const card = host.querySelector<HTMLElement>('.gv-sidebar-collapse-nudge');
+    expect(card).not.toBeNull();
+    const dismiss = card!.querySelector<HTMLButtonElement>('button')!;
+    // The stop comes from a later task, after the hider has taken the card's remover.
+    await flushAsyncWork();
+
+    host.remove();
+    stopFeature();
+    document.body.appendChild(host);
+
+    expect(host.querySelector('.gv-sidebar-collapse-nudge')).toBeNull();
+    // The dismiss listener stops propagation; with it gone the click reaches the card.
+    const reached = vi.fn();
+    card!.addEventListener('click', reached);
+    dismiss.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(reached).toHaveBeenCalledOnce();
+  });
+
+  it('mounts no collapse nudge after the gems hider stopped during its storage reads', async () => {
+    const gems = createLegacyGemsSection();
+    await startFeature();
+    heldGets.add(StorageKeys.SIDEBAR_COLLAPSE_NUDGE_SHOWN);
+
+    clickHide(gems);
+    await flushAsyncWork();
+    stopFeature();
+    await releaseHeldStorage();
+
+    expect(document.querySelector('.gv-sidebar-collapse-nudge')).toBeNull();
+    expect(localState).not.toHaveProperty(StorageKeys.SIDEBAR_COLLAPSE_NUDGE_SHOWN);
+
+    // Stopped while the shown flag is being written: the flag stays, the nudge never mounts.
+    const nextGems = createLegacyGemsSection();
+    await startFeature();
+    delete localState[StorageKeys.SIDEBAR_COLLAPSE_NUDGE_SHOWN];
+    heldSets.add(StorageKeys.SIDEBAR_COLLAPSE_NUDGE_SHOWN);
+
+    clickHide(nextGems);
+    await flushAsyncWork();
+    stopFeature();
+    await releaseHeldStorage();
+
+    expect(localState[StorageKeys.SIDEBAR_COLLAPSE_NUDGE_SHOWN]).toBe(true);
+    expect(document.querySelector('.gv-sidebar-collapse-nudge')).toBeNull();
   });
 });

@@ -18,11 +18,13 @@ import {
 } from '@/features/plugins/runtime/nativeHandlers';
 
 import { activateGeminiChatWidth, updateGeminiChatWidthSettings } from './chatWidth/pluginHandler';
+import { activateGeminiDefaultModel } from './defaultModel/pluginHandler';
 import {
   activateGeminiInputCollapse,
   updateGeminiInputCollapseSettings,
 } from './inputCollapse/pluginHandler';
 import { activateGeminiPromptHistory } from './promptHistory/pluginHandler';
+import { activateGeminiResearchPack } from './researchPack/pluginHandler';
 
 export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = {
   // formula-copy, input-vim and claude-timeline invoke primitives through a
@@ -50,6 +52,14 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   'voyager.gemini-input-collapse': {
     activate: activateGeminiInputCollapse,
     updateSettings: updateGeminiInputCollapseSettings,
+  },
+  // Owned by `sites/featureOwners.ts`: mounted only once the plugin owns Gemini's research pack.
+  'voyager.gemini-research-pack': {
+    activate: activateGeminiResearchPack,
+  },
+  // Owned by `sites/featureOwners.ts`: mounted only once the plugin owns Gemini's default model.
+  'voyager.gemini-default-model': {
+    activate: activateGeminiDefaultModel,
   },
 };
 

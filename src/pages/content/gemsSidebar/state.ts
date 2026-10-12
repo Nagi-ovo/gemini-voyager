@@ -37,6 +37,8 @@ export function createGemsState(refreshInjector: () => void, refreshExpandedStat
   let expanded = true;
   let mruRetryTimer: number | null = null;
   let mruCaptureAttempts = 0;
+  // Bumped by stop so a write that finishes afterwards leaves the sidebar alone.
+  let run = 0;
   let storageListener:
     | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
     | null = null;
@@ -61,6 +63,7 @@ export function createGemsState(refreshInjector: () => void, refreshExpandedStat
     const deletedIds = canPruneCatalogDeletes(currentCache.accountSegment, accountSegment)
       ? deletedCatalogGemIds(currentCache.items, items)
       : new Set();
+    const startedIn = run;
     try {
       await browser.storage.local.set({ [StorageKeys.GV_GEMS_LIST_CACHE]: envelope });
       currentCache = envelope;
@@ -76,7 +79,8 @@ export function createGemsState(refreshInjector: () => void, refreshExpandedStat
           currentPinned = nextPinned;
           await browser.storage.sync.set({ [StorageKeys.GV_GEMS_PINNED]: currentPinned });
         }
-        refreshInjector();
+        // The pruning completes the accepted cache write; only the UI refresh belongs to the run.
+        if (startedIn === run) refreshInjector();
       }
     } catch (error) {
       console.warn('[GemsSidebar] Failed to persist gems cache:', error);
@@ -275,6 +279,7 @@ export function createGemsState(refreshInjector: () => void, refreshExpandedStat
       return expanded;
     },
     stop() {
+      run += 1;
       clearMruRetry();
       if (storageListener) {
         browser.storage.onChanged.removeListener(storageListener);

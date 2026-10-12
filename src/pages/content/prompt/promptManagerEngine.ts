@@ -99,10 +99,16 @@ function warnUnlessInvalidated(message: string, error: unknown): void {
   if (!isExtensionContextInvalidatedError(error)) engineLogger.warn(message, { error });
 }
 
+/**
+ * `lifetime` is the content script's page lifetime: once a newer copy retired
+ * this one, a start still in flight mounts nothing and registers nothing.
+ */
 export function createPromptManagerEngine(
   adapter: PromptSiteAdapter,
   cleanup: CleanupManager,
+  lifetime?: AbortSignal,
 ): PromptManagerEngine {
+  const retired = (): boolean => lifetime?.aborted === true;
   const slash: NativeFeature = {
     id: 'slashPrompt',
     position: CleanupPositions.DestroySlashPromptFeatureInstance,
@@ -165,15 +171,15 @@ export function createPromptManagerEngine(
       // Chips restore what a sent slash token looked like. They follow the
       // site, never the slash setting: turning slash off must not re-expand
       // turns that were already sent.
-      chips = startSentPromptChips({
-        prompts: await readPromptIdentities(),
-        scheme: () => adapter.scheme(),
-      });
+      const prompts = await readPromptIdentities();
+      // Retired during the reads: teardown already ran and would never stop them.
+      if (retired()) return;
+      chips = startSentPromptChips({ prompts, scheme: () => adapter.scheme() });
       cleanup.registerCleanupFunction(chips.destroy, CleanupPositions.DestroySentPromptChips);
     },
 
     async startPanel() {
-      await mountNativeFeature(cleanup, panel);
+      await mountNativeFeature(cleanup, panel, lifetime);
     },
 
     async followCoverage(host) {

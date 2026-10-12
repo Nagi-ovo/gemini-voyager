@@ -4,6 +4,7 @@ import browser from 'webextension-polyfill';
 import { confirmDriver } from '@/tests/confirmDriver';
 import { toastDriver } from '@/tests/toastDriver';
 
+import { historyTimestampStore } from '../../timestamp/historyTimestamps';
 import type { ForkNode } from '../forkTypes';
 import { startFork } from '../index';
 
@@ -587,5 +588,215 @@ describe('startFork style injection', () => {
 
     expect(host.querySelectorAll('.gv-fork-indicator-group')).toHaveLength(1);
     expect(host.querySelectorAll('.gv-fork-indicator')).toHaveLength(2);
+  });
+
+  const mountSourceConversation = (path: string): void => {
+    window.history.replaceState({}, '', path);
+    document.body.innerHTML = `
+      <main>
+        <div class="conversation-container" id="1111111111111111">
+          <div class="user-query-container">
+            <div class="user-query-bubble-with-background">user-1</div>
+          </div>
+          <div class="response-container">
+            <div class="markdown-main-panel">assistant-1</div>
+          </div>
+        </div>
+      </main>
+    `;
+    const userContainer = document.querySelector<HTMLElement>('.user-query-container')!;
+    const responseContainer = document.querySelector<HTMLElement>('.response-container')!;
+    Object.defineProperty(userContainer, 'offsetTop', { value: 0, configurable: true });
+    Object.defineProperty(responseContainer, 'offsetTop', { value: 100, configurable: true });
+    sendMessageMock.mockImplementation(
+      (_message: unknown, callback: (response: { ok: boolean; nodes?: [] }) => void) =>
+        callback({ ok: true, nodes: [] }),
+    );
+  };
+
+  const holdLanguageRead = (): (() => void) => {
+    let release!: () => void;
+    vi.mocked(browser.storage.sync.get).mockReturnValueOnce(
+      new Promise((resolve) => {
+        release = () => resolve({});
+      }),
+    );
+    return release;
+  };
+
+  const storedPendingFork = (): Record<string, unknown> | undefined =>
+    (
+      vi.mocked(browser.storage.local.set).mock.calls[0]?.[0] as
+        | { gvPendingFork?: Record<string, unknown> }
+        | undefined
+    )?.gvPendingFork;
+
+  it('records the source url and title captured when the fork button was clicked', async () => {
+    mountSourceConversation('/u/1/app/conv-source');
+    document.title = 'Source title';
+    Object.defineProperty(URL, 'createObjectURL', {
+      value: vi.fn().mockReturnValue('blob:fork-md'),
+      configurable: true,
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', { value: vi.fn(), configurable: true });
+    const anchorClickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue({} as Window);
+    const releaseLanguage = holdLanguageRead();
+    cleanup = startFork();
+    vi.advanceTimersByTime(1000);
+    await flushMicrotasks();
+
+    document.querySelector<HTMLElement>('.gv-fork-btn')!.click();
+    confirmDriver.answer('Download MD');
+    await flushMicrotasks();
+    expect(openSpy).toHaveBeenCalledWith(`${window.location.origin}/u/1/app`, '_blank');
+    // The source tab moves on while the launch is still resolving its language and group.
+    window.history.pushState({}, '', '/u/1/app/conv-other');
+    document.title = 'Other title';
+    releaseLanguage();
+    for (let i = 0; i < 4; i++) await flushMicrotasks();
+
+    const pendingFork = storedPendingFork();
+    expect(pendingFork?.sourceConversationId).toBe('conv-source');
+    expect(pendingFork?.sourceUrl).toBe(`${window.location.origin}/u/1/app/conv-source`);
+    expect(pendingFork?.sourceTitle).toBe('Source title');
+    expect(pendingFork?.filename).toMatch(/^gemini-voyager-fork-Source title-\d+\.md$/);
+    expect(pendingFork?.markdown).toContain('Source title');
+    expect(pendingFork?.markdown).not.toContain('Other title');
+    openSpy.mockRestore();
+    anchorClickSpy.mockRestore();
+  });
+
+  it('joins the fork group of the clicked conversation when the tab moves on before the group lookup', async () => {
+    mountSourceConversation('/app/conv-source');
+    // Each conversation maps the legacy `u-0` to its own first turn.
+    const turnMaps: Record<string, string[]> = {
+      'conv-source': ['s-1111111111111111'],
+      'conv-other': ['s-2222222222222222'],
+    };
+    vi.spyOn(historyTimestampStore, 'resolveCanonicalTurnId').mockImplementation(
+      (conversationId, turnId) =>
+        turnId.startsWith('u-')
+          ? (turnMaps[conversationId]?.[Number(turnId.slice(2))] ?? null)
+          : turnId,
+    );
+    // The source was forked before under its legacy id.
+    const legacyNode: ForkNode = {
+      turnId: 'u-0',
+      conversationId: 'conv-source',
+      conversationUrl: 'https://gemini.google.com/app/conv-source',
+      conversationTitle: 'Source',
+      forkGroupId: 'group-source',
+      forkIndex: 0,
+      createdAt: 1,
+    };
+    const branchNode: ForkNode = {
+      ...legacyNode,
+      turnId: 's-9999999999999999',
+      conversationId: 'conv-branch',
+      conversationUrl: 'https://gemini.google.com/app/conv-branch',
+      forkIndex: 1,
+    };
+    sendMessageMock.mockImplementation(
+      (rawMessage: unknown, callback: (response: { ok: boolean; nodes: ForkNode[] }) => void) => {
+        const message = rawMessage as { type?: string };
+        if (message.type === 'gv.fork.getForConversation') {
+          callback({ ok: true, nodes: [legacyNode] });
+          return;
+        }
+        callback({ ok: true, nodes: [legacyNode, branchNode] });
+      },
+    );
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue({} as Window);
+    const releaseLanguage = holdLanguageRead();
+    cleanup = startFork();
+    vi.advanceTimersByTime(1000);
+    await flushMicrotasks();
+
+    document.querySelector<HTMLElement>('.gv-fork-btn')!.click();
+    confirmDriver.answer('Fork');
+    await flushMicrotasks();
+    window.history.pushState({}, '', '/app/conv-other');
+    releaseLanguage();
+    for (let i = 0; i < 6; i++) await flushMicrotasks();
+
+    const pendingFork = storedPendingFork();
+    expect(pendingFork?.sourceConversationId).toBe('conv-source');
+    expect(pendingFork?.forkGroupId).toBe('group-source');
+    expect(pendingFork?.nextForkIndex).toBe(2);
+    openSpy.mockRestore();
+  });
+
+  it('finishes writing the pending fork after launch even if fork turns off meanwhile', async () => {
+    mountSourceConversation('/app/conv-source');
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue({} as Window);
+    const releaseLanguage = holdLanguageRead();
+    cleanup = startFork();
+    vi.advanceTimersByTime(1000);
+    await flushMicrotasks();
+
+    document.querySelector<HTMLElement>('.gv-fork-btn')!.click();
+    confirmDriver.answer('Fork');
+    await flushMicrotasks();
+    expect(openSpy).toHaveBeenCalledOnce();
+    cleanup();
+    cleanup = null;
+    releaseLanguage();
+    for (let i = 0; i < 4; i++) await flushMicrotasks();
+
+    const pendingFork = storedPendingFork();
+    expect(pendingFork?.sourceConversationId).toBe('conv-source');
+    expect(pendingFork?.mode).toBe('paste');
+    expect(pendingFork?.markdown).toContain('user-1');
+    openSpy.mockRestore();
+  });
+
+  it('keeps the new fork runtime observing when the previous one stops late', async () => {
+    mountSourceConversation('/app/conv-source');
+    const stopPrevious = startFork();
+    cleanup = startFork();
+    vi.advanceTimersByTime(1000);
+    await flushMicrotasks();
+    stopPrevious();
+    expect(document.querySelector('.gv-fork-btn')).toBeNull();
+
+    // New messages stream in; only the live run may answer them.
+    document.querySelector('main')!.appendChild(document.createElement('div'));
+    await flushMicrotasks();
+    vi.advanceTimersByTime(500);
+    await flushMicrotasks();
+
+    document.querySelector<HTMLElement>('.gv-fork-btn')!.click();
+    expect(confirmDriver.isOpen()).toBe(true);
+    confirmDriver.pressOutside();
+  });
+
+  it('keeps the newer fork run its stylesheet and buttons when an older run stops late', async () => {
+    mountSourceConversation('/app/conv-source');
+    const stopPrevious = startFork();
+    cleanup = startFork();
+    vi.advanceTimersByTime(1000);
+    await flushMicrotasks();
+    stopPrevious();
+    expect(document.getElementById('gemini-voyager-fork-style')).not.toBeNull();
+
+    // The live run puts its own buttons back once the page settles.
+    document.querySelector('main')!.appendChild(document.createElement('div'));
+    await flushMicrotasks();
+    vi.advanceTimersByTime(500);
+    await flushMicrotasks();
+    expect(document.querySelector('.gv-fork-btn')).not.toBeNull();
+
+    // Teardown may reach the older run's stop a second time.
+    stopPrevious();
+    expect(document.querySelector('.gv-fork-btn')).not.toBeNull();
+    expect(document.getElementById('gemini-voyager-fork-style')).not.toBeNull();
+
+    cleanup();
+    cleanup = null;
+    expect(document.querySelector('.gv-fork-btn')).toBeNull();
+    expect(document.getElementById('gemini-voyager-fork-style')).toBeNull();
   });
 });

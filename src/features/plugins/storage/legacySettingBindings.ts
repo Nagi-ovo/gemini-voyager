@@ -147,6 +147,17 @@ export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding
     StorageKeys.INPUT_COLLAPSE_ENABLED,
     onUnlessMissingOrFalse,
   ),
+  [OFFICIAL_PLUGIN_IDS.geminiResearchPack]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiResearchPack,
+    StorageKeys.RESEARCH_PACK_ENABLED,
+    onOnlyIfTrue,
+  ),
+  // A never-set switch is on, in the popup and the content script alike.
+  [OFFICIAL_PLUGIN_IDS.geminiDefaultModel]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
+    StorageKeys.DEFAULT_MODEL_AUTO_APPLY,
+    onUnlessFalse,
+  ),
 };
 
 export function legacyBindingFor(id: string): LegacyEnableBinding | null {

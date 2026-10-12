@@ -32,6 +32,10 @@ function resolveCurrentConversationTurnId(turnId: string): string | null {
   return historyTimestampStore.resolveCanonicalTurnId(conversationId, turnId);
 }
 
+function resolveConversationTurnId(conversationId: string, turnId: string): string | null {
+  return historyTimestampStore.resolveCanonicalTurnId(conversationId, turnId);
+}
+
 function getNewConversationUrlForCurrentAccount(): string {
   const accountPrefix = window.location.pathname.match(/^\/u\/\d+(?=\/)/)?.[0] || '';
   return `${window.location.origin}${accountPrefix}/app`;
@@ -66,9 +70,6 @@ function resolveUserMessageHost(userEl: HTMLElement): HTMLElement {
   return preferred || userEl;
 }
 
-let observer: MutationObserver | null = null;
-let observerDebounceTimer: ReturnType<typeof setTimeout> | null = null;
-
 export function startFork(): () => void {
   const indicators = createForkIndicators({
     getConversationId: extractConversationIdFromUrl,
@@ -81,7 +82,7 @@ export function startFork(): () => void {
     getConversationTitle,
     getNewConversationUrl: getNewConversationUrlForCurrentAccount,
     ensureTurnId,
-    resolveTurnId: resolveCurrentConversationTurnId,
+    resolveTurnId: resolveConversationTurnId,
   });
   const controls = createForkControls({
     ensureTurnId,
@@ -107,8 +108,10 @@ export function startFork(): () => void {
   // run's setup would otherwise inject buttons wired to its dead controls.
   const setupTimer = setTimeout(setup, 1000);
 
-  // MutationObserver for dynamically loaded messages
-  observer = new MutationObserver(() => {
+  // MutationObserver for dynamically loaded messages. Owned by this run: a run that
+  // stops late must not disconnect the observer of the run that replaced it.
+  let observerDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+  const observer = new MutationObserver(() => {
     if (observerDebounceTimer) clearTimeout(observerDebounceTimer);
     observerDebounceTimer = setTimeout(() => {
       controls.inject();
@@ -139,10 +142,7 @@ export function startFork(): () => void {
   // Cleanup function
   return () => {
     clearTimeout(setupTimer);
-    if (observer) {
-      observer.disconnect();
-      observer = null;
-    }
+    observer.disconnect();
     if (observerDebounceTimer) {
       clearTimeout(observerDebounceTimer);
       observerDebounceTimer = null;

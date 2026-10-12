@@ -97,6 +97,8 @@ describe('legacy enable bindings', () => {
         StorageKeys.PROMPT_HISTORY_ENABLED,
         StorageKeys.INPUT_COLLAPSE_ENABLED,
         StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY,
+        StorageKeys.RESEARCH_PACK_ENABLED,
+        StorageKeys.DEFAULT_MODEL_AUTO_APPLY,
         StorageKeys.CHAT_FONT_SIZE,
         StorageKeys.CHAT_LINE_HEIGHT,
         StorageKeys.CHAT_PARAGRAPH_SPACING,
@@ -105,6 +107,21 @@ describe('legacy enable bindings', () => {
     );
     expect(legacyBindingFor(FORMULA_G)?.key).toBe(legacyBindingFor(FORMULA_A)?.key);
   });
+
+  // Production readings: the research pack `=== true`; default model `!== false`, a never-set key on.
+  it.each([
+    ['missing', undefined, false, true],
+    ['false', false, false, false],
+    ['true', true, true, true],
+    ['"false"', 'false', false, true],
+    ['0', 0, false, true],
+  ])(
+    'read a stored %s for the research pack and default model switches as production does',
+    (_l, stored, researchPack, defaultModel) => {
+      expect(legacyBindingFor('voyager.gemini-research-pack')?.read(stored)).toBe(researchPack);
+      expect(legacyBindingFor('voyager.gemini-default-model')?.read(stored)).toBe(defaultModel);
+    },
+  );
 
   // Production readings: the appearance switches `=== true`; collapse, LaTeX and diagrams `!== false`.
   it.each([

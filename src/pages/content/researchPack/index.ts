@@ -312,10 +312,15 @@ export function startResearchPack(options: StartResearchPackOptions = {}): StopN
     onRetry: retry,
     // Exports hand over the pack on screen; the buttons are disabled while it loads.
     onCopy: () => {
+      // The copy itself completes; a stopped run just says nothing about it.
       void navigator.clipboard
         .writeText(exportMarkdown())
-        .then(() => panel.notify(t('researchPackCopied')))
-        .catch(() => panel.notify(t('researchPackCopyFailed'), 'error'));
+        .then(() => {
+          if (!stopped) panel.notify(t('researchPackCopied'));
+        })
+        .catch(() => {
+          if (!stopped) panel.notify(t('researchPackCopyFailed'), 'error');
+        });
     },
     onDownload: () =>
       downloadFile(

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StorageKeys } from '@/core/types/common';
 import { CleanupManager } from '@/core/utils/cleanupManager';
 
+import { PageRetiredError, createPageSteps } from '../../pageInitSteps';
 import { createPromptManagerEngine } from '../promptManagerEngine';
 import { resolvePromptSiteAdapter } from '../resolvePromptSiteAdapter';
 
@@ -107,4 +108,55 @@ describe('sent prompt chips startup', () => {
       expect(chrome.storage.onChanged.addListener).not.toHaveBeenCalled();
     },
   );
+});
+
+describe('sent prompt chips after the content script retired', () => {
+  it('labels no sent prompt and leaves no cleanup behind when it retires during the saved-prompt read', async () => {
+    const bubble = mountSentTurn(review.text.split('\n'));
+    // Slash completion reads the library first; the chips' own read, the second, waits.
+    const parked: Array<() => void> = [];
+    let reads = 0;
+    let holding = true;
+    vi.mocked(chrome.storage.local.get).mockImplementation(
+      ((_keys: unknown, callback?: (items: Record<string, unknown>) => void) =>
+        new Promise<Record<string, unknown>>((resolve) => {
+          const answer = () => {
+            const items = { [StorageKeys.PROMPT_ITEMS]: stored };
+            callback?.(items);
+            resolve(items);
+          };
+          reads += 1;
+          if (holding && reads >= 2) parked.push(answer);
+          else answer();
+        })) as typeof chrome.storage.local.get,
+    );
+    const releaseReads = (): void => {
+      holding = false;
+      for (const answer of parked.splice(0)) answer();
+    };
+    const url = 'https://gemini.google.com/app';
+    vi.stubGlobal('location', new URL(url));
+    cleanup = new CleanupManager();
+    const pageCleanup = cleanup;
+    // The content entry's own chain: page lifetime, steps, engine.
+    const lifetime = new AbortController();
+    const { settle } = createPageSteps(lifetime.signal);
+    const engine = createPromptManagerEngine(
+      resolvePromptSiteAdapter(url),
+      pageCleanup,
+      lifetime.signal,
+    );
+
+    const started = settle(engine.startComposerFeatures());
+    await vi.waitFor(() => expect(parked).toHaveLength(1));
+    // A newer copy claims the page: abort, then teardown.
+    lifetime.abort();
+    pageCleanup.executeCleanups();
+    releaseReads();
+
+    await expect(started).rejects.toBeInstanceOf(PageRetiredError);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(chipOf(bubble)).toBeNull();
+    expect(pageCleanup.list()).toEqual([]);
+  });
 });

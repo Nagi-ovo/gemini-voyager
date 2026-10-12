@@ -20,6 +20,8 @@
  *   atmosphere of Shinjuku Gyoen in the rain.
  */
 
+import type { StopNativeFeature } from '../featureLifecycle';
+
 const CANVAS_ID = 'gv-rain-effect-canvas';
 const STORAGE_KEY = 'gvVisualEffect';
 const LEGACY_KEY = 'gvSnowEffect';
@@ -335,32 +337,65 @@ function resolveEffect(res: Record<string, unknown>): string {
   return 'off';
 }
 
-export function startRainEffect(): void {
+/** Stop of the newest `startRainEffect` run, which owns the canvas. */
+let stopActiveRun: StopNativeFeature | null = null;
+
+/**
+ * Follow the `gvVisualEffect` setting until the returned stop runs. Turning
+ * the setting off drains the effect; stop removes the canvas and every
+ * listener at once.
+ */
+export function startRainEffect(): StopNativeFeature {
+  // A second start replaces the first instead of stacking listeners on one canvas.
+  stopActiveRun?.();
+  let stopped = false;
+
+  const handleStorageChange = (
+    changes: Record<string, chrome.storage.StorageChange>,
+    area: string,
+  ): void => {
+    if (area !== 'sync' || !changes[STORAGE_KEY]) return;
+    if (changes[STORAGE_KEY].newValue === EFFECT_VALUE) {
+      enable();
+    } else {
+      disable();
+    }
+  };
+  const handleBeforeUnload = (): void => {
+    forceDisable();
+  };
+
   try {
     chrome.storage?.sync?.get({ [STORAGE_KEY]: null, [LEGACY_KEY]: false }, (res) => {
-      if (resolveEffect(res) === EFFECT_VALUE) {
-        enable();
-      }
+      // The read can land after stop; enabling then would leave a canvas no stop removes.
+      if (stopped) return;
+      if (resolveEffect(res) === EFFECT_VALUE) enable();
     });
-  } catch (e) {
-    console.error('[Gemini Voyager] Failed to get rain effect setting:', e);
+  } catch (error) {
+    console.error('[Gemini Voyager] Failed to get rain effect setting:', error);
   }
 
   try {
-    chrome.storage?.onChanged?.addListener((changes, area) => {
-      if (area === 'sync' && changes[STORAGE_KEY]) {
-        if (changes[STORAGE_KEY].newValue === EFFECT_VALUE) {
-          enable();
-        } else {
-          disable();
-        }
-      }
-    });
-  } catch (e) {
-    console.error('[Gemini Voyager] Failed to add storage listener for rain effect:', e);
+    chrome.storage?.onChanged?.addListener(handleStorageChange);
+  } catch (error) {
+    console.error('[Gemini Voyager] Failed to add storage listener for rain effect:', error);
   }
 
-  window.addEventListener('beforeunload', () => {
+  window.addEventListener('beforeunload', handleBeforeUnload);
+
+  const stop = (): void => {
+    // Already stopped, or replaced: a late stop must not remove the newer run's canvas.
+    if (stopActiveRun !== stop) return;
+    stopActiveRun = null;
+    stopped = true;
     forceDisable();
-  });
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    try {
+      chrome.storage?.onChanged?.removeListener(handleStorageChange);
+    } catch {
+      // An orphaned content script's chrome.* throws; its listener is already dead.
+    }
+  };
+  stopActiveRun = stop;
+  return stop;
 }

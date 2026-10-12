@@ -5,6 +5,7 @@ import { startAccountContextBridge } from './accountContext';
 import { startChatGptJump } from './chatGptJump';
 import { startInputVimMode } from './chatInput/vimMode';
 import { CODE_BLOCK_COLLAPSE_TOGGLE, startCodeBlockCollapse } from './codeBlockCollapse';
+import { startDefaultModelNative } from './defaultModel/modelLocker';
 import { startDraftSave } from './draftSave/index';
 import { startEdgeFinalVersionNotice } from './edgeFinalVersionNotice';
 import type { NativeFeature } from './featureLifecycle';
@@ -14,6 +15,7 @@ import { startGemsHider } from './gemsHider/index';
 import { startGemsSidebar } from './gemsSidebar/index';
 import { INPUT_COLLAPSE_TOGGLE, startInputCollapse } from './inputCollapse/index';
 import { startInputHaloHider } from './inputHaloHider/index';
+import { startMarkdownPatcher } from './markdownPatcher/index';
 import { startNativeHealth } from './nativeHealth/index';
 import { startBrandTheme } from './platformTheme';
 import { startPromptHistory } from './promptHistory/index';
@@ -26,6 +28,7 @@ import { startStorageQuotaWarningToast } from './storageQuotaWarning';
 import { startTimeline } from './timeline/index';
 import { startUsageStatus } from './usageStatus/index';
 import { USER_LATEX_TOGGLE, startUserLatex } from './userLatex/index';
+import { startVisualEffects } from './visualEffects';
 
 /**
  * Native content modules that follow the lifecycle contract in
@@ -135,6 +138,26 @@ export const NATIVE_FEATURES = {
     position: CleanupPositions.CleanupUserLatex,
     start: startUserLatex,
     toggle: USER_LATEX_TOGGLE,
+  },
+  markdownPatcher: {
+    id: 'markdown-patcher',
+    position: CleanupPositions.CleanupMarkdownPatcher,
+    start: startMarkdownPatcher,
+  },
+  /** Follows its own switch: off removes the stars at once but keeps a sweeper for reattached panes. */
+  defaultModel: {
+    id: 'default-model',
+    position: CleanupPositions.CleanupDefaultModel,
+    start: startDefaultModelNative,
+  },
+  /**
+   * No `toggle`: turning an effect off in the popup lets it drain on screen,
+   * which only the module does; a toggle stop would remove it at once.
+   */
+  visualEffects: {
+    id: 'visual-effects',
+    position: CleanupPositions.CleanupVisualEffects,
+    start: startVisualEffects,
   },
   gemsHider: {
     id: 'gems-hider',

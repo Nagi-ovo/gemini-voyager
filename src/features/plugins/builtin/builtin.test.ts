@@ -217,6 +217,26 @@ describe('BUILTIN_PLUGINS', () => {
     expect(handler?.updateSettings).toBeTypeOf('function');
   });
 
+  it.each([
+    ['research pack', 'voyager.gemini-research-pack'],
+    ['default model', 'voyager.gemini-default-model'],
+  ])('gives the %s manifest a name and description in all ten locales', (_label, id) => {
+    const manifest = BUILTIN_PLUGINS.find((m) => m.id === id);
+    // Not Gemini Enterprise or a custom host: the native module never ran there.
+    expect(manifest?.matches).toEqual(['https://gemini.google.com/*']);
+    // Its switch is the native one; the manifest offers nothing to set.
+    expect(manifest?.contributes).toEqual({});
+    expect(manifest?.name).toBeTruthy();
+    expect(manifest?.description).toBeTruthy();
+    for (const locale of ['zh', 'zh_TW', 'ja', 'ko', 'fr', 'es', 'pt', 'ru', 'ar'] as const) {
+      expect(manifest?.i18n?.[locale]?.name, locale).toBeTruthy();
+      expect(manifest?.i18n?.[locale]?.description, locale).toBeTruthy();
+      expect(manifest?.i18n?.[locale]?.description, locale).not.toBe(manifest?.description);
+    }
+    expect(NATIVE_BUILTIN_PLUGIN_IDS).toContain(id);
+    expect(NATIVE_HANDLER_BINDINGS[id]?.activate).toBeTypeOf('function');
+  });
+
   it('does not expose the retired Claude usage plugin', () => {
     const usage = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.claude-usage');
     expect(usage).toBeUndefined();

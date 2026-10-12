@@ -167,4 +167,65 @@ describe('fork indicator lifetime', () => {
     expect(stored).toEqual([source]);
     expect(confirmDriver.isOpen()).toBe(false);
   });
+
+  it('aborts the conversation existence check when fork stops', async () => {
+    const source: ForkNode = {
+      conversationId: 'source-existence',
+      conversationUrl: 'https://gemini.google.com/app/source-existence',
+      turnId: 's-1111111111111111',
+      forkGroupId: 'group-existence',
+      forkIndex: 0,
+      createdAt: 1,
+    };
+    const branch: ForkNode = {
+      ...source,
+      conversationId: 'branch-existence',
+      conversationUrl: 'https://gemini.google.com/app/branch-existence',
+      forkIndex: 1,
+    };
+    document.body.innerHTML = `
+        <main><div class="conversation-container" id="1111111111111111">
+          <div class="user-query-container"><div class="user-query-bubble-with-background">A prompt</div></div>
+          <div class="response-container"><div class="markdown-main-panel">An answer</div></div>
+        </div></main>`;
+    vi.mocked(chrome.runtime.sendMessage).mockImplementation(((
+      message: { type: string },
+      callback: (response: unknown) => void,
+    ) => {
+      callback({
+        ok: true,
+        nodes: message.type === 'gv.fork.getGroup' ? [source, branch] : [source],
+      });
+    }) as typeof chrome.runtime.sendMessage);
+    let requestSignal: AbortSignal | undefined;
+    vi.spyOn(globalThis, 'fetch').mockImplementation(
+      (_input, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          requestSignal = init?.signal ?? undefined;
+          requestSignal?.addEventListener('abort', () =>
+            reject(new DOMException('', 'AbortError')),
+          );
+        }),
+    );
+    const owner = createForkIndicators({
+      getConversationId: () => source.conversationId,
+      resolveTurnId: normalizeTurnId,
+      ensureTurnId: makeTurnId,
+      resolveUserMessageHost: (element) =>
+        element.querySelector<HTMLElement>('.user-query-bubble-with-background') ?? element,
+    });
+    owners.push(owner);
+
+    void owner.inject();
+    for (let index = 0; index < 20; index++) await Promise.resolve();
+    expect(requestSignal?.aborted).toBe(false);
+    expect(vi.getTimerCount()).toBe(1);
+
+    owner.stop();
+    for (let index = 0; index < 20; index++) await Promise.resolve();
+
+    expect(requestSignal?.aborted).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
+    expect(document.querySelector('.gv-fork-indicator-group')).toBeNull();
+  });
 });

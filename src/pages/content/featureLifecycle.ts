@@ -47,12 +47,39 @@ export interface NativeFeature {
   readonly toggle?: NativeFeatureToggle;
 }
 
-/** Start the feature and register its stop at the feature's cleanup position. */
+const stopRetired: StopNativeFeature = () => {};
+
+/** Stop a feature whose page already retired; an orphan's chrome.* calls throw. */
+function stopAfterRetirement(feature: NativeFeature, stop: StopNativeFeature): void {
+  try {
+    stop();
+  } catch (error) {
+    if (isExtensionContextInvalidatedError(error)) return;
+    console.error(`[Gemini Voyager] ${feature.id}: stop after retirement failed`, error);
+  }
+}
+
+/**
+ * Start the feature and register its stop at the feature's cleanup position.
+ *
+ * `lifetime` is the content script's page lifetime, aborted only when a newer
+ * copy retires this one. A start that is asked for, or finishes, after that
+ * is stopped at once and not registered: the retirement teardown already ran
+ * and would never reach it. Returns a no-op stop in that case. A cleanup run
+ * that does not abort it (`beforeunload`, which the user may cancel) leaves
+ * later mounts registering as before.
+ */
 export async function mountNativeFeature(
   manager: CleanupManager,
   feature: NativeFeature,
+  lifetime?: AbortSignal,
 ): Promise<StopNativeFeature> {
+  if (lifetime?.aborted) return stopRetired;
   const stop = await feature.start();
+  if (lifetime?.aborted) {
+    stopAfterRetirement(feature, stop);
+    return stopRetired;
+  }
   manager.registerCleanupFunction(stop, feature.position);
   return stop;
 }
@@ -81,11 +108,13 @@ export interface NativeFeatureToggleController {
  * Mount/stop a toggleable feature as its storage key flips. Requests are
  * applied strictly in order: a toggle that lands while an asynchronous start
  * is still running waits for it instead of racing it, and only the latest
- * requested state is applied after the queue drains.
+ * requested state is applied after the queue drains. Once `lifetime` aborts
+ * it behaves as destroyed, and its mounts follow `mountNativeFeature`.
  */
 export function createNativeFeatureToggle(
   manager: CleanupManager,
   feature: NativeFeature,
+  lifetime?: AbortSignal,
 ): NativeFeatureToggleController {
   const toggle = feature.toggle;
   if (!toggle) throw new Error(`${feature.id}: createNativeFeatureToggle needs a toggle`);
@@ -95,6 +124,7 @@ export function createNativeFeatureToggle(
   let queue: Promise<void> = Promise.resolve();
   let sawChange = false;
   let destroyed = false;
+  const isDestroyed = (): boolean => destroyed || lifetime?.aborted === true;
   const areas = toggle.areas ?? ['sync', 'local'];
 
   const stopMounted = (): void => {
@@ -112,11 +142,14 @@ export function createNativeFeatureToggle(
   };
 
   const settle = async (): Promise<void> => {
-    if (desired === null || destroyed) return;
+    if (desired === null || isDestroyed()) return;
     const enabled = desired;
     desired = null;
     if (enabled && !stop) {
-      stop = await mountNativeFeature(manager, feature);
+      const mounted = await mountNativeFeature(manager, feature, lifetime);
+      // The page retired while it started: the mount already stopped it.
+      if (lifetime?.aborted) return;
+      stop = mounted;
       // Registered after page teardown ran, so nothing else will call it.
       if (destroyed) stopMounted();
     } else if (!enabled) {
@@ -141,14 +174,14 @@ export function createNativeFeatureToggle(
 
   return {
     handleChange(changes, areaName) {
-      if (destroyed || !areas.some((area) => area === areaName)) return;
+      if (isDestroyed() || !areas.some((area) => area === areaName)) return;
       const change = changes[toggle.key];
       if (!change) return;
       sawChange = true;
       requestFromEvent(toggle.isEnabled(change.newValue));
     },
     applyInitial(enabled) {
-      if (destroyed || sawChange) return queue;
+      if (isDestroyed() || sawChange) return queue;
       return request(enabled);
     },
     isMounted() {

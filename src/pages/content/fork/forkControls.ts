@@ -7,6 +7,12 @@ const STYLE_ID = 'gemini-voyager-fork-style';
 const FORK_BTN_CLASS = 'gv-fork-btn';
 const FORK_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><path d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9"/><path d="M12 12v3"/></svg>`;
 
+/**
+ * Fork runs on this page that rely on the shared stylesheet. A run that stops
+ * late, after its replacement started, must leave the sheet to the newer run.
+ */
+let styleUsers = 0;
+
 function injectStyles(): void {
   if (document.getElementById(STYLE_ID)) return;
   const style = document.createElement('style');
@@ -207,7 +213,10 @@ export function createForkControls({
   }
 
   injectStyles();
+  styleUsers += 1;
   const lifetime = new AbortController();
+  /** Buttons this run created: its stop removes these, never a newer run's. */
+  const ownButtons = new Set<HTMLElement>();
 
   function injectForkButtons(): void {
     const pairs = collectForkChatPairs();
@@ -240,6 +249,7 @@ export function createForkControls({
       // Add at the end of the user message container
       hostEl.style.position = hostEl.style.position || 'relative';
       hostEl.appendChild(btn);
+      ownButtons.add(btn);
     });
   }
 
@@ -277,9 +287,12 @@ export function createForkControls({
     inject: injectForkButtons,
     updateLanguage: updateForkButtonTexts,
     stop() {
+      if (lifetime.signal.aborted) return;
       lifetime.abort();
-      document.querySelectorAll(`.${FORK_BTN_CLASS}`).forEach((element) => element.remove());
-      document.getElementById(STYLE_ID)?.remove();
+      for (const button of ownButtons) button.remove();
+      ownButtons.clear();
+      styleUsers -= 1;
+      if (styleUsers === 0) document.getElementById(STYLE_ID)?.remove();
     },
   };
 }

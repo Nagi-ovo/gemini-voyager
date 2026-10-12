@@ -84,6 +84,7 @@ export function setupModelLockerTests() {
   async function selectModel() {
     const { preferences, picker } = await dependencies();
     return picker.selectModel(preferences.model!, {
+      isCurrent: () => true,
       shouldYield: () => false,
       stop: vi.fn(),
       failed: vi.fn(),
@@ -93,10 +94,11 @@ export function setupModelLockerTests() {
   }
 
   async function startManager() {
-    const { default: DefaultModelManager } = await import('../modelLocker');
-    const manager = DefaultModelManager.getInstance();
-    await manager.init();
-    stopOwner = () => manager.destroy();
+    const { mountDefaultModelNative } = await import('../modelLocker');
+    const native = mountDefaultModelNative();
+    stopOwner = native.stop;
+    await native.ready;
+    return native;
   }
 
   function buildThinkingSubmenu(submenuId: string) {

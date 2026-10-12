@@ -15,6 +15,8 @@ export enum CleanupPositions {
   CleanupSendBehavior,
   CleanupDraftSave,
   CleanupPromptHistory,
+  /** Before the features it starts: no late startup read may mount once teardown began. */
+  CleanupGeminiBuiltinStartup,
   CleanupFork,
   CleanupGemsSidebar,
   CleanupResponseCompleteNotification,
@@ -32,6 +34,8 @@ export enum CleanupPositions {
   CleanupRendererStartup,
   CleanupCodeBlockCollapse,
   CleanupUserLatex,
+  CleanupMarkdownPatcher,
+  CleanupDefaultModel,
   CleanupUsageStatus,
   CleanupWatermarkNativeNotice,
   CleanupGemsHider,
@@ -40,6 +44,7 @@ export enum CleanupPositions {
   CleanupResearchPack,
   CleanupResearchPackReceiver,
   RemoveStorageOnChangedListener,
+  CleanupVisualEffects,
   /** Last: every surface it styles is gone by now. */
   CleanupSchemeBridge,
 }

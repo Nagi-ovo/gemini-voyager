@@ -9,6 +9,7 @@
  */
 import { isFirefox } from '@/core/utils/browser';
 
+import type { StopNativeFeature } from '../featureLifecycle';
 import { SAKURA_BASE_FRAME_MS, SAKURA_MAX_DPR, SakuraScene } from './sakuraScene';
 import {
   SAKURA_RENDERER_CONNECT_MESSAGE,
@@ -430,9 +431,38 @@ function resolveEffect(result: Record<string, unknown>): string {
   return 'off';
 }
 
-export function startSakuraEffect(): void {
+/** Stop of the newest `startSakuraEffect` run, which owns the canvas or renderer frame. */
+let stopActiveRun: StopNativeFeature | null = null;
+
+/**
+ * Follow the `gvVisualEffect` setting until the returned stop runs. Turning
+ * the setting off drains the effect; stop removes the canvas or renderer frame and every
+ * listener at once.
+ */
+export function startSakuraEffect(): StopNativeFeature {
+  // A second start replaces the first instead of stacking listeners on one canvas or renderer frame.
+  stopActiveRun?.();
+  let stopped = false;
+
+  const handleStorageChange = (
+    changes: Record<string, chrome.storage.StorageChange>,
+    area: string,
+  ): void => {
+    if (area !== 'sync' || !changes[STORAGE_KEY]) return;
+    if (changes[STORAGE_KEY].newValue === EFFECT_VALUE) {
+      enable();
+    } else {
+      disable();
+    }
+  };
+  const handleBeforeUnload = (): void => {
+    forceDisable();
+  };
+
   try {
     chrome.storage?.sync?.get({ [STORAGE_KEY]: null, [LEGACY_KEY]: false }, (result) => {
+      // The read can land after stop; enabling then would leave a canvas or renderer frame no stop removes.
+      if (stopped) return;
       if (resolveEffect(result) === EFFECT_VALUE) enable();
     });
   } catch (error) {
@@ -440,18 +470,26 @@ export function startSakuraEffect(): void {
   }
 
   try {
-    chrome.storage?.onChanged?.addListener((changes, area) => {
-      if (area !== 'sync' || !changes[STORAGE_KEY]) return;
-
-      if (changes[STORAGE_KEY].newValue === EFFECT_VALUE) {
-        enable();
-      } else {
-        disable();
-      }
-    });
+    chrome.storage?.onChanged?.addListener(handleStorageChange);
   } catch (error) {
     console.error('[Gemini Voyager] Failed to add storage listener for sakura effect:', error);
   }
 
-  window.addEventListener('beforeunload', forceDisable);
+  window.addEventListener('beforeunload', handleBeforeUnload);
+
+  const stop = (): void => {
+    // Already stopped, or replaced: a late stop must not remove the newer run's canvas or renderer frame.
+    if (stopActiveRun !== stop) return;
+    stopActiveRun = null;
+    stopped = true;
+    forceDisable();
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    try {
+      chrome.storage?.onChanged?.removeListener(handleStorageChange);
+    } catch {
+      // An orphaned content script's chrome.* throws; its listener is already dead.
+    }
+  };
+  stopActiveRun = stop;
+  return stop;
 }

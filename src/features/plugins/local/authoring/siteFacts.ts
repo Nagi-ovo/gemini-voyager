@@ -48,6 +48,8 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   mermaid: 'Mermaid diagram rendering',
   promptHistory: 'Prompt history',
   inputCollapse: 'Input collapse',
+  researchPack: 'Research Pack',
+  defaultModel: 'Auto-apply default model on new chats',
 };
 
 /**

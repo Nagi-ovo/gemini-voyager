@@ -2,7 +2,13 @@ import { DefaultModelPreferences } from './preferences';
 import type { DefaultModelSetting, DefaultThinkingLevel } from './preferences';
 
 // Retry policy and composer focus belong to the automatic-application session.
-type PickerInteraction = {
+export type PickerInteraction = {
+  /**
+   * False once the session that started this pick has stopped or navigated
+   * away. Checked after every wait, so a stopped session never clicks, writes,
+   * focuses the composer or closes a menu (the pick then returns 'cancelled').
+   */
+  isCurrent: () => boolean;
   shouldYield: () => boolean;
   stop: () => void;
   failed: () => void;
@@ -37,6 +43,14 @@ const MODE_SWITCH_OBSERVER_ROOT_SELECTOR = [
 // jslog payload also contains the current model id, so treating the last hex id
 // as a model id makes this row impersonate Pro (#808).
 const EXTENDED_THINKING_TOGGLE_JSLOG_ID = '323336';
+const MENU_POLL_INTERVAL_MS = 50;
+
+/** 'unchanged': nothing was clicked, either because the level is already set or the pick failed. */
+export type ThinkingPickResult = 'switched' | 'unchanged' | 'cancelled';
+
+function pause(ms: number): Promise<void> {
+  return new Promise<void>((resolve) => window.setTimeout(resolve, ms));
+}
 
 export class ModelPicker {
   private isLocked = false;
@@ -84,7 +98,8 @@ export class ModelPicker {
   public async selectModel(
     targetModel: DefaultModelSetting,
     interaction: PickerInteraction,
-  ): Promise<'switched' | 'already-selected' | 'failed'> {
+  ): Promise<'switched' | 'already-selected' | 'failed' | 'cancelled'> {
+    if (!interaction.isCurrent()) return 'cancelled';
     // Share trigger discovery and pill matching with the loop's fast path.
     const selectorBtn = this.findSelectorButton();
     if (!selectorBtn) return 'failed';
@@ -107,7 +122,10 @@ export class ModelPicker {
     try {
       selectorBtn.click();
 
-      const menuPanel = await this.waitForModeSwitchMenuPanel(1500);
+      const menuPanel = await this.waitForModeSwitchMenuPanel(1500, interaction.isCurrent);
+      // The session stopped while the menu opened: it may no longer click or
+      // write anything, not even to close the menu it opened.
+      if (!interaction.isCurrent()) return 'cancelled';
       if (!menuPanel) {
         // Menu UI may have been restructured (e.g. Gemini redesign). Close any opened
         // menu and count this as a failure so we don't loop forever toggling the trigger.
@@ -134,6 +152,8 @@ export class ModelPicker {
         id: this.getModelIdFromItem(item),
         pill: this.readTriggerPillLines()[0],
       });
+      // The write may outlast this loop: its result must not reach a newer one.
+      if (!interaction.isCurrent()) return 'cancelled';
       return 'already-selected';
     } catch (e) {
       console.error('Auto lock failed', e);
@@ -146,27 +166,30 @@ export class ModelPicker {
   public async selectThinking(
     target: DefaultThinkingLevel,
     interaction: PickerInteraction,
-  ): Promise<boolean> {
+  ): Promise<ThinkingPickResult> {
+    if (!interaction.isCurrent()) return 'cancelled';
     if (interaction.shouldYield()) {
       interaction.stop();
-      return false;
+      return 'unchanged';
     }
 
-    if (this.isLocked) return false;
+    if (this.isLocked) return 'unchanged';
     this.isLocked = true;
 
     try {
       const trigger = this.findSelectorButton();
-      if (!trigger) return false;
+      if (!trigger) return 'unchanged';
 
       // Open the model menu first.
       trigger.click();
 
-      const modelPane = await this.waitForModeSwitchMenuPanel(1500);
+      const modelPane = await this.waitForModeSwitchMenuPanel(1500, interaction.isCurrent);
+      // Stopped while the menu opened: see `selectModel`.
+      if (!interaction.isCurrent()) return 'cancelled';
       if (!modelPane) {
         document.body.click();
         interaction.failed();
-        return false;
+        return 'unchanged';
       }
 
       // A single inline row is the opt-in Extended thinking toggle (#808);
@@ -192,7 +215,7 @@ export class ModelPicker {
         if (!targetItem) {
           document.body.click();
           interaction.failed();
-          return false;
+          return 'unchanged';
         }
         return this.applyThinkingItem(
           targetItem,
@@ -206,23 +229,24 @@ export class ModelPicker {
         // This model doesn't expose a Thinking level. Nothing to lock — stop trying.
         document.body.click();
         interaction.stop();
-        return false;
+        return 'unchanged';
       }
 
       this.openThinkingLevelSubmenu(thinkingRow);
 
       // Wait briefly for the submenu to mount.
-      const submenu = await this.waitForThinkingLevelSubmenu(1500);
+      const submenu = await this.waitForThinkingLevelSubmenu(1500, interaction.isCurrent);
+      if (!interaction.isCurrent()) return 'cancelled';
       if (!submenu) {
         document.body.click();
         interaction.failed();
-        return false;
+        return 'unchanged';
       }
 
       const items = this.getThinkingLevelItems();
       if (!items.length) {
         document.body.click();
-        return false;
+        return 'unchanged';
       }
 
       const targetItem =
@@ -236,7 +260,7 @@ export class ModelPicker {
       if (!targetItem) {
         document.body.click();
         interaction.failed();
-        return false;
+        return 'unchanged';
       }
 
       return this.applyThinkingItem(
@@ -246,7 +270,7 @@ export class ModelPicker {
       );
     } catch (e) {
       console.error('Auto thinking-level lock failed', e);
-      return false;
+      return 'unchanged';
     } finally {
       this.isLocked = false;
     }
@@ -273,19 +297,19 @@ export class ModelPicker {
     item: HTMLElement,
     selected: boolean,
     interaction: PickerInteraction,
-  ): boolean {
+  ): 'switched' | 'unchanged' {
     if (!selected) {
       item.click();
       // Close both overlays so the user's next open starts clean.
       document.body.click();
       interaction.focusInput();
       interaction.resetFailures();
-      return true;
+      return 'switched';
     }
     document.body.click();
     interaction.resetFailures();
     interaction.stop();
-    return false;
+    return 'unchanged';
   }
 
   private mayContainModeSwitchContainer(root: HTMLElement): boolean {
@@ -361,13 +385,16 @@ export class ModelPicker {
     return document.querySelector<HTMLElement>(NON_MODEL_MENU_EXCLUSION_FALLBACK);
   }
 
-  private async waitForModeSwitchMenuPanel(timeoutMs: number): Promise<HTMLElement | null> {
+  /** Polls until the menu shows, the timeout passes or `isCurrent` turns false. */
+  private async waitForModeSwitchMenuPanel(
+    timeoutMs: number,
+    isCurrent: () => boolean,
+  ): Promise<HTMLElement | null> {
     const startedAt = Date.now();
-    const pollIntervalMs = 50;
-    while (Date.now() - startedAt < timeoutMs) {
+    while (isCurrent() && Date.now() - startedAt < timeoutMs) {
       const panel = this.getModeSwitchMenuPanel();
       if (panel?.isConnected) return panel;
-      await new Promise<void>((resolve) => window.setTimeout(resolve, pollIntervalMs));
+      await pause(MENU_POLL_INTERVAL_MS);
     }
     return null;
   }
@@ -474,12 +501,15 @@ export class ModelPicker {
     thinkingRow.click();
   }
 
-  private async waitForThinkingLevelSubmenu(timeoutMs: number): Promise<HTMLElement | null> {
+  private async waitForThinkingLevelSubmenu(
+    timeoutMs: number,
+    isCurrent: () => boolean,
+  ): Promise<HTMLElement | null> {
     const startedAt = Date.now();
-    while (Date.now() - startedAt < timeoutMs) {
+    while (isCurrent() && Date.now() - startedAt < timeoutMs) {
       const pane = this.findThinkingLevelSubmenuPane();
       if (pane?.isConnected && this.getThinkingLevelItems().length > 0) return pane;
-      await new Promise<void>((resolve) => window.setTimeout(resolve, 50));
+      await pause(MENU_POLL_INTERVAL_MS);
     }
     return null;
   }

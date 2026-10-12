@@ -252,6 +252,75 @@ describe('research pack on Gemini', () => {
     expect(document.querySelector(`.${ADD_BUTTON_CLASS}`)).toBeNull();
   });
 
+  describe('after the research pack turned off', () => {
+    async function startWithOneItem() {
+      const host = turn('<p>Answer text.</p>');
+      const memory = memoryStore();
+      stop = startResearchPack({ store: memory.store, resolveKey: async () => KEY });
+      clickAdd(host);
+      await flush();
+      return memory;
+    }
+
+    const settleMicrotasks = async (): Promise<void> => {
+      for (let i = 0; i < 6; i += 1) await Promise.resolve();
+    };
+
+    it.each([
+      ['closed', false],
+      ['open', true],
+    ])(
+      'does not show a copy status after the research pack stopped (panel %s)',
+      async (_label, open) => {
+        let finishCopy!: () => void;
+        const writeText = vi.fn(
+          () =>
+            new Promise<void>((resolve) => {
+              finishCopy = resolve;
+            }),
+        );
+        Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+        await startWithOneItem();
+        if (open) document.querySelector<HTMLButtonElement>('.gv-rp-launcher')!.click();
+        // Footer order: Insert, Copy, Download, Clear.
+        document.querySelectorAll<HTMLButtonElement>('.gv-rp-actions button')[1].click();
+        expect(writeText).toHaveBeenCalledOnce();
+
+        stop!();
+        stop = null;
+        const timers = vi.spyOn(globalThis, 'setTimeout');
+        finishCopy();
+        await settleMicrotasks();
+
+        expect(timers).not.toHaveBeenCalled();
+        timers.mockRestore();
+        const copyMessages = [
+          getTranslationSync('researchPackCopied'),
+          getTranslationSync('researchPackCopyFailed'),
+        ];
+        expect(toastDriver.all().filter(({ message }) => copyMessages.includes(message))).toEqual(
+          [],
+        );
+        expect(document.querySelector('.gv-rp-status')).toBeNull();
+      },
+    );
+
+    it('keeps an instruction typed just before the research pack turned off', async () => {
+      const { stored } = await startWithOneItem();
+      const textarea = document.querySelector<HTMLTextAreaElement>('#gv-rp-instruction')!;
+      textarea.value = 'Contrast the two surveys.';
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+
+      // Off inside the save delay: the typing is an edit already made.
+      stop!();
+      stop = null;
+      await flush();
+
+      expect(stored()!.instruction).toBe('Contrast the two surveys.');
+      expect(stored()!.items).toHaveLength(1);
+    });
+  });
+
   it('adds buttons to answers that stream in later', async () => {
     const { store } = memoryStore();
     stop = startResearchPack({ store, resolveKey: async () => KEY });

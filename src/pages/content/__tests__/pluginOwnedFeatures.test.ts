@@ -32,6 +32,8 @@ import {
 } from '../codeBlockCollapse/engine';
 import { CODE_BLOCK_TOGGLE_CLASS } from '../codeBlockCollapse/toggle';
 import { admitPluginOwnedFeature, startOwnedFeature } from '../featureOwnerStartup';
+import { createGeminiBuiltinStartup } from '../geminiBuiltinStartup';
+import { type InitializationEntry, enterInitialization } from '../initializationEntry';
 import { createGeminiInputStartup } from '../inputStartup';
 import { registerBuiltinNativeHandlers } from '../pluginNativeRegistration';
 import { createGeminiRendererStartup } from '../rendererStartup';
@@ -616,6 +618,280 @@ describe('Gemini prompt history and input collapse owned by their official plugi
     expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiInputCollapse)).toBe('ready');
     expect(collapseStyle()).toBe(false);
     pluginHost.stop();
+    cleanupManager.executeCleanups();
+  });
+});
+
+describe('Gemini research pack and default model owned by their official plugins', () => {
+  const RESEARCH_PACK_KEY = StorageKeys.RESEARCH_PACK_ENABLED;
+  const AUTO_APPLY_KEY = StorageKeys.DEFAULT_MODEL_AUTO_APPLY;
+  const packPanel = () => document.querySelector('.gv-rp-root') !== null;
+  const stars = () => document.querySelectorAll('.gv-default-star-btn').length;
+
+  beforeEach(() => {
+    enable();
+    document.body.replaceChildren();
+    document.head.replaceChildren();
+    // Every startup and preference read answers "never stored".
+    (chrome.storage.sync.get as unknown as Mock).mockImplementation(
+      (_keys: unknown, callback?: (result: Record<string, unknown>) => void) => {
+        callback?.({});
+        return Promise.resolve({});
+      },
+    );
+  });
+
+  afterEach(() => {
+    (chrome.storage.sync.set as unknown as Mock).mockClear();
+    (chrome.storage.sync.remove as unknown as Mock).mockClear();
+  });
+
+  function geminiHost(
+    admission: OfficialAdmissionController,
+    legacySettings: LegacySettingsSource,
+    url = GEMINI_URL,
+  ) {
+    return new PluginHost({
+      url,
+      sources: [new BundledCatalogPluginSource(), new BuiltinPluginSource()],
+      doc: document,
+      admission,
+      legacySettings,
+      requestCatalogRefresh: () => {},
+      isTopFrame: true,
+    });
+  }
+
+  /** Gemini's model menu, one row per model, as the stars find it. */
+  function modelMenu(): HTMLElement {
+    const panel = document.createElement('div');
+    panel.className = 'mat-mdc-menu-panel gds-mode-switch-menu';
+    panel.setAttribute('role', 'menu');
+    for (const [name, id] of [
+      ['Pro', 'pro-id'],
+      ['Flash', 'flash-id'],
+    ]) {
+      const item = document.createElement('button');
+      item.setAttribute('role', 'menuitemradio');
+      item.setAttribute('data-mode-id', id);
+      item.innerHTML = `<div class="title-and-description"><div class="mode-title">${name}</div></div>`;
+      panel.appendChild(item);
+    }
+    document.body.appendChild(panel);
+    return panel;
+  }
+
+  async function admitAtStartPoints(admission: OfficialAdmissionController) {
+    const cleanupManager = new CleanupManager();
+    const builtins = createGeminiBuiltinStartup(admission, cleanupManager);
+    await builtins.startDefaultModel();
+    await builtins.startForkAndResearchPack();
+    admission.close();
+    return { cleanupManager, builtins };
+  }
+
+  it('admits the research pack plugin and starts no native research pack', async () => {
+    expect(featureOwner('gemini', 'researchPack')).toBe('plugin');
+    const admission = createOfficialAdmission();
+    const { cleanupManager, builtins } = await admitAtStartPoints(admission);
+
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiResearchPack)).toBe('admitted');
+    // The content script's router no longer turns the native module on: the plugin owns its switch.
+    builtins.handleStorageChange({ [RESEARCH_PACK_KEY]: { newValue: true } }, 'sync');
+    await flush();
+    expect(packPanel()).toBe(false);
+    cleanupManager.executeCleanups();
+  });
+
+  it('keeps the official research pack plugin off when its switch is off and mounts it live when turned on', async () => {
+    const admission = createOfficialAdmission();
+    const { cleanupManager } = await admitAtStartPoints(admission);
+    const legacy = liveLegacy({ [RESEARCH_PACK_KEY]: false });
+    const pluginHost = geminiHost(admission, legacy.legacySettings);
+    await pluginHost.start();
+    await flush();
+    expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiResearchPack)).toBe('ready');
+    expect(packPanel()).toBe(false);
+
+    legacy.fire({ [RESEARCH_PACK_KEY]: true });
+    await flush();
+    expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiResearchPack)).toBe('mounted');
+    expect(packPanel()).toBe(true);
+
+    legacy.fire({ [RESEARCH_PACK_KEY]: false });
+    await flush();
+    expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiResearchPack)).toBe('ready');
+    expect(packPanel()).toBe(false);
+    pluginHost.stop();
+    cleanupManager.executeCleanups();
+  });
+
+  it('admits the default model plugin and starts no native default model', async () => {
+    expect(featureOwner('gemini', 'defaultModel')).toBe('plugin');
+    const admission = createOfficialAdmission();
+    const { cleanupManager } = await admitAtStartPoints(admission);
+
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).toBe('admitted');
+    modelMenu();
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(stars()).toBe(0);
+    cleanupManager.executeCleanups();
+  });
+
+  it('runs the default model plugin when auto-apply was never set', async () => {
+    const admission = createOfficialAdmission();
+    const { cleanupManager } = await admitAtStartPoints(admission);
+    const pluginHost = geminiHost(admission, liveLegacy({}).legacySettings);
+    await pluginHost.start();
+    await flush();
+
+    expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).toBe('mounted');
+    modelMenu();
+    await vi.waitFor(() => expect(stars()).toBe(2));
+    pluginHost.stop();
+    cleanupManager.executeCleanups();
+  });
+
+  it('turns the default model plugin off and leaves no star in an open or reattached model menu', async () => {
+    const admission = createOfficialAdmission();
+    const { cleanupManager } = await admitAtStartPoints(admission);
+    const legacy = liveLegacy({ [AUTO_APPLY_KEY]: true });
+    const pluginHost = geminiHost(admission, legacy.legacySettings);
+    await pluginHost.start();
+    await flush();
+    const open = modelMenu();
+    const detached = modelMenu();
+    await vi.waitFor(() => expect(stars()).toBe(4));
+
+    detached.remove();
+    legacy.fire({ [AUTO_APPLY_KEY]: false });
+    await flush();
+    expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).toBe('ready');
+    expect(open.querySelector('.gv-default-star-btn')).toBeNull();
+
+    document.body.appendChild(detached);
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    expect(stars()).toBe(0);
+    // Turning it off keeps the starred model and thinking level stored.
+    expect(chrome.storage.sync.remove).not.toHaveBeenCalled();
+    expect(chrome.storage.sync.set).not.toHaveBeenCalled();
+
+    legacy.fire({ [AUTO_APPLY_KEY]: true });
+    await flush();
+    expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).toBe('mounted');
+    pluginHost.stop();
+    cleanupManager.executeCleanups();
+  });
+
+  /** One page as initializeFeatures meets it, run through its real entry gates. */
+  interface EntryCase {
+    readonly label: string;
+    readonly url: string;
+    readonly enterpriseDom?: boolean;
+    readonly customWebsites?: string[];
+    readonly expected: InitializationEntry;
+  }
+  const ENTRY_CASES: readonly EntryCase[] = [
+    {
+      label: 'business.gemini.google',
+      url: 'https://business.gemini.google/u/1/',
+      expected: 'enterprise',
+    },
+    {
+      label: 'an Enterprise URL hint',
+      url: 'https://gemini.google.com/app?workspace=true',
+      expected: 'enterprise',
+    },
+    {
+      label: 'Enterprise DOM hints',
+      url: GEMINI_URL,
+      enterpriseDom: true,
+      expected: 'enterprise',
+    },
+    {
+      label: 'a custom website entry that covers gemini.google.com',
+      url: GEMINI_URL,
+      customWebsites: ['google.com'],
+      expected: 'custom-coverage',
+    },
+  ];
+
+  async function initializeAt(entryCase: Omit<EntryCase, 'label' | 'expected'>) {
+    const url = new URL(entryCase.url);
+    (chrome.storage.sync.get as unknown as Mock).mockImplementation(
+      (_keys: unknown, callback?: (result: Record<string, unknown>) => void) => {
+        const stored = entryCase.customWebsites
+          ? { [StorageKeys.PROMPT_CUSTOM_WEBSITES]: entryCase.customWebsites }
+          : {};
+        callback?.(stored);
+        return Promise.resolve(stored);
+      },
+    );
+    if (entryCase.enterpriseDom) document.documentElement.classList.add('gv-enterprise-shell');
+    const admission = createOfficialAdmission();
+    const cleanupManager = new CleanupManager();
+    const ran: string[] = [];
+    try {
+      const entry = await enterInitialization(url, document, {
+        settle: (work) => work,
+        followCoverage: async () => {
+          ran.push('prompt-coverage');
+        },
+        mountEdgeNotice: async () => undefined,
+        startEnterprisePanel: async () => {
+          ran.push('prompt-panel');
+        },
+      });
+      if (entry === 'start-points') {
+        const builtins = createGeminiBuiltinStartup(admission, cleanupManager);
+        await builtins.startDefaultModel();
+        await builtins.startForkAndResearchPack();
+      }
+      admission.close();
+      return { entry, admission, cleanupManager, ran };
+    } finally {
+      document.documentElement.classList.remove('gv-enterprise-shell');
+    }
+  }
+
+  it.each(ENTRY_CASES)(
+    'ends initialization at $label and admits neither the research pack nor the default model plugin',
+    async ({ url, enterpriseDom, customWebsites, expected }) => {
+      const { entry, admission, cleanupManager, ran } = await initializeAt({
+        url,
+        enterpriseDom,
+        customWebsites,
+      });
+
+      expect(entry).toBe(expected);
+      expect(ran).toEqual([expected === 'enterprise' ? 'prompt-panel' : 'prompt-coverage']);
+      for (const id of [
+        OFFICIAL_PLUGIN_IDS.geminiResearchPack,
+        OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
+      ]) {
+        expect(admission.stateOf(id)).toBe('denied');
+      }
+      const pluginHost = geminiHost(
+        admission,
+        liveLegacy({ [RESEARCH_PACK_KEY]: true, [AUTO_APPLY_KEY]: true }).legacySettings,
+        url,
+      );
+      await pluginHost.start();
+      await flush();
+      expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiResearchPack)).not.toBe('mounted');
+      expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).not.toBe('mounted');
+      expect(packPanel()).toBe(false);
+      pluginHost.stop();
+      cleanupManager.executeCleanups();
+    },
+  );
+
+  it('reaches the Gemini start points on gemini.google.com and admits both plugins there', async () => {
+    const { entry, admission, cleanupManager } = await initializeAt({ url: GEMINI_URL });
+
+    expect(entry).toBe('start-points');
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiResearchPack)).toBe('admitted');
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).toBe('admitted');
     cleanupManager.executeCleanups();
   });
 });

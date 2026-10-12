@@ -5,7 +5,8 @@
  * what that build would ship: the native start path runs once, the official
  * plugins never mount, and a local plugin the user stored while the primitive
  * was open stays listed and enabled, reported as `blocked: host-policy`. The
- * stage 3 native modules, native prompt history and input collapse are counters.
+ * stage 3 native modules, native prompt history, input collapse, the research
+ * pack, default model and fork are counters.
  */
 import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -29,6 +30,7 @@ import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCa
 
 import { startGeminiChatAppearance } from '../appearanceStartup';
 import { startOwnedFeature } from '../featureOwnerStartup';
+import { createGeminiBuiltinStartup } from '../geminiBuiltinStartup';
 import { createGeminiInputStartup } from '../inputStartup';
 import { registerBuiltinNativeHandlers } from '../pluginNativeRegistration';
 import { createGeminiRendererStartup } from '../rendererStartup';
@@ -94,6 +96,26 @@ vi.mock('../inputCollapse/index', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../inputCollapse/index')>()),
   startInputCollapse: () => {
     native.started.push('inputCollapse');
+    return () => {};
+  },
+}));
+
+vi.mock('../researchPack/index', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../researchPack/index')>()),
+  startResearchPack: () => {
+    native.started.push('researchPack');
+    return () => {};
+  },
+}));
+vi.mock('../defaultModel/modelLocker', () => ({
+  startDefaultModelNative: () => {
+    native.started.push('defaultModel');
+    return () => {};
+  },
+}));
+vi.mock('../fork/index', () => ({
+  startFork: () => {
+    native.started.push('fork');
     return () => {};
   },
 }));
@@ -250,6 +272,32 @@ describe('rolling every owned feature back to its native module', () => {
     cleanupManager.executeCleanups();
     (chrome.storage.sync.get as unknown as Mock).mockReset();
   });
+
+  it.each([
+    ['research pack', 'researchPack', OFFICIAL_PLUGIN_IDS.geminiResearchPack],
+    ['default model', 'defaultModel', OFFICIAL_PLUGIN_IDS.geminiDefaultModel],
+  ])(
+    'starts native %s once at its Gemini start point and admits no official plugin when rolled back',
+    async (_label, feature, id) => {
+      // Both switches on: the native modules run them, the official plugins stay out.
+      (chrome.storage.sync.get as unknown as Mock).mockResolvedValue({
+        [StorageKeys.RESEARCH_PACK_ENABLED]: true,
+        [StorageKeys.DEFAULT_MODEL_AUTO_APPLY]: true,
+      });
+      const admission = createOfficialAdmission();
+      const cleanupManager = new CleanupManager();
+      const builtins = createGeminiBuiltinStartup(admission, cleanupManager);
+
+      await builtins.startDefaultModel();
+      await builtins.startForkAndResearchPack();
+      admission.close();
+
+      expect(native.started.filter((name) => name === feature)).toEqual([feature]);
+      expect(admission.stateOf(id)).toBe('denied');
+      cleanupManager.executeCleanups();
+      (chrome.storage.sync.get as unknown as Mock).mockReset();
+    },
+  );
 
   it('starts each native module exactly once and admits no official plugin', async () => {
     const admission = createOfficialAdmission();

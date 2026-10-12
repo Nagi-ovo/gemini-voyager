@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StorageKeys } from '@/core/types/common';
 import { CleanupManager } from '@/core/utils/cleanupManager';
 
+import { PageRetiredError, createPageSteps } from '../../pageInitSteps';
 import { type PromptManagerEngine, createPromptManagerEngine } from '../promptManagerEngine';
 import { resolvePromptSiteAdapter } from '../resolvePromptSiteAdapter';
 
@@ -280,5 +281,54 @@ describe('panel coverage', () => {
     await settle();
     expect(triggers()).toHaveLength(0);
     expect(chrome.storage.onChanged.removeListener).toHaveBeenCalled();
+  });
+});
+
+describe('a content script that retired during startup', () => {
+  const GEMINI = 'https://gemini.google.com/app';
+
+  function retiringPage(url: string) {
+    vi.stubGlobal('location', new URL(url));
+    const lifetime = new AbortController();
+    const { settle: step } = createPageSteps(lifetime.signal);
+    const engine = createPromptManagerEngine(
+      resolvePromptSiteAdapter(url),
+      cleanup,
+      lifetime.signal,
+    );
+    const retire = (): void => {
+      lifetime.abort();
+      cleanup.executeCleanups();
+    };
+    return { engine, step, retire };
+  }
+
+  it('starts no slash completion or sent-prompt chips and leaves no cleanup behind when it retires during the slash setting read', async () => {
+    const release = holdSyncRead(StorageKeys.SLASH_PROMPT_ENABLED);
+    const { engine, step, retire } = retiringPage(GEMINI);
+
+    const started = step(engine.startComposerFeatures());
+    retire();
+    release(true);
+
+    await expect(started).rejects.toBeInstanceOf(PageRetiredError);
+    await settle();
+    expect(slashRoot()).toBeNull();
+    expect(cleanup.list()).toEqual([]);
+  });
+
+  it('stops a panel whose mount finishes after it retired, leaving no cleanup behind', async () => {
+    const { engine, step, retire } = retiringPage(GEMINI);
+
+    const started = step(engine.startPanel());
+    await vi.waitFor(() =>
+      expect(chrome.storage.sync.get).toHaveBeenCalledWith({ gvHidePromptManager: false }),
+    );
+    retire();
+
+    await expect(started).rejects.toBeInstanceOf(PageRetiredError);
+    await settle();
+    expect(triggers()).toHaveLength(0);
+    expect(cleanup.list()).toEqual([]);
   });
 });

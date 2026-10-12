@@ -58,6 +58,7 @@ describe('pending fork handoff', () => {
     vi.clearAllTimers();
     vi.useRealTimers();
     vi.restoreAllMocks();
+    Reflect.deleteProperty(document, 'execCommand');
     document.body.innerHTML = '';
   });
 
@@ -121,23 +122,101 @@ describe('pending fork handoff', () => {
     expect(toastDriver.all()).toEqual([]);
   });
 
-  it('lets a restarted feature clear upload feedback created by an older pending read', async () => {
-    let resolveRead!: (value: Record<string, unknown>) => void;
-    vi.mocked(browser.storage.local.get).mockReturnValueOnce(
-      new Promise((resolve) => {
+  it.each(['the first read', 'the retry wait', 'the retry read'])(
+    'leaves the pending fork in storage when fork stops before reading it (%s)',
+    async (boundary) => {
+      let resolveRead!: (value: Record<string, unknown>) => void;
+      const lateRead = new Promise<Record<string, unknown>>((resolve) => {
         resolveRead = resolve;
-      }),
-    );
+      });
+      const stale = { gvPendingFork: { ...pending, createdAt: Date.now() - 600000 } };
+      if (boundary === 'the first read') {
+        vi.mocked(browser.storage.local.get).mockReturnValueOnce(lateRead);
+      } else if (boundary === 'the retry read') {
+        vi.mocked(browser.storage.local.get)
+          .mockResolvedValueOnce({})
+          .mockReturnValueOnce(lateRead);
+      }
+      stop = start();
+      await flush();
+      if (boundary === 'the retry read') await vi.advanceTimersByTimeAsync(2000);
+      stop();
+      resolveRead(stale);
+      await vi.advanceTimersByTimeAsync(3000);
+
+      expect(browser.storage.local.get).toHaveBeenCalledTimes(
+        boundary === 'the retry read' ? 2 : 1,
+      );
+      expect(browser.storage.local.remove).not.toHaveBeenCalled();
+      expect(toastDriver.all()).toEqual([]);
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
+
+  it.each([
+    ['paste', 'the storage removal'],
+    ['paste', 'the composer wait'],
+    ['fileUpload', 'the storage removal'],
+  ])(
+    'pastes nothing and shows no hint when fork stops after taking the pending fork (%s, %s)',
+    async (mode, boundary) => {
+      const input = document.querySelector<HTMLElement>('[contenteditable]')!;
+      input.textContent = '';
+      // jsdom has no execCommand; the paste then takes its DOM fallback.
+      Object.defineProperty(document, 'execCommand', {
+        value: vi.fn().mockReturnValue(false),
+        configurable: true,
+      });
+      let releaseRemoval!: () => void;
+      if (boundary === 'the storage removal') {
+        vi.mocked(browser.storage.local.remove).mockReturnValueOnce(
+          new Promise<void>((resolve) => {
+            releaseRemoval = resolve;
+          }),
+        );
+      } else {
+        vi.mocked(input.getBoundingClientRect).mockReturnValue({ height: 0 } as DOMRect);
+      }
+      vi.mocked(browser.storage.local.get).mockResolvedValue({
+        gvPendingFork: { ...pending, mode, createdAt: Date.now() },
+      });
+      stop = start();
+      await flush();
+      expect(browser.storage.local.remove).toHaveBeenCalledWith('gvPendingFork');
+
+      stop();
+      if (boundary === 'the storage removal') releaseRemoval();
+      vi.mocked(input.getBoundingClientRect).mockReturnValue({ height: 24 } as DOMRect);
+      await vi.advanceTimersByTimeAsync(2000);
+
+      expect(input.textContent).toBe('');
+      expect(toastDriver.all()).toEqual([]);
+      // No URL watcher was started either: it would hold a poll interval.
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
+
+  it('keeps the new upload hint when an older fork handoff cleans up', async () => {
+    vi.mocked(browser.storage.local.get).mockResolvedValueOnce({
+      gvPendingFork: { ...pending, createdAt: Date.now() - 110000 },
+    });
     const stopOld = start();
-    stopOld();
-    stop = start();
-    resolveRead({ gvPendingFork: { ...pending, createdAt: Date.now() } });
     await flush();
+    expect(toastDriver.all()[0].detail).toBe('00:10');
+    stopOld();
 
-    expect(toastDriver.all()[0].detail).toBe('02:00');
-    stop();
+    vi.mocked(browser.storage.local.get).mockResolvedValueOnce({
+      gvPendingFork: { ...pending, filename: 'newer.md', createdAt: Date.now() },
+    });
+    stop = start();
+    await flush();
+    // The older handoff's watcher reaches its own deadline and cleans up after itself.
+    await vi.advanceTimersByTimeAsync(11000);
+
+    const [hint] = toastDriver.all();
+    expect(hint.message).toContain('newer.md');
+    expect(hint.detail).toBe('01:49');
     await vi.advanceTimersByTimeAsync(1000);
-
-    expect(toastDriver.all()).toEqual([]);
+    expect(toastDriver.all()[0].detail).toBe('01:48');
   });
 });

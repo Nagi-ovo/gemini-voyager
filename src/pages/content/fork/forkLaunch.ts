@@ -90,11 +90,16 @@ export function createForkLauncher({
   getConversationTitle: () => string;
   getNewConversationUrl: () => string;
   ensureTurnId: (element: HTMLElement, index: number) => string;
-  resolveTurnId: (turnId: string) => string | null;
+  /** Canonical id of `turnId` within `conversationId`. */
+  resolveTurnId: (conversationId: string, turnId: string) => string | null;
 }) {
-  function isSameCurrentConversationTurn(left: string, right: string): boolean {
-    const resolvedLeft = resolveTurnId(left);
-    return resolvedLeft !== null && resolvedLeft === resolveTurnId(right);
+  function isSameTurn(
+    resolve: (turnId: string) => string | null,
+    left: string,
+    right: string,
+  ): boolean {
+    const resolvedLeft = resolve(left);
+    return resolvedLeft !== null && resolvedLeft === resolve(right);
   }
 
   /**
@@ -103,13 +108,16 @@ export function createForkLauncher({
    * Step 1: Extract turns 0..N with both user and assistant content when available.
    * Step 2: Remove the last assistant response to let users continue from the last user turn.
    */
-  function extractConversationUpToTurn(userTurnIndex: number, sourceTurnId: string): string {
+  function extractConversationUpToTurn(
+    userTurnIndex: number,
+    sourceTurnId: string,
+    title: string,
+    resolve: (turnId: string) => string | null,
+  ): string {
     const pairs = collectForkChatPairs();
     if (pairs.length === 0) return '';
 
-    const sourceIndex = pairs.findIndex((pair) =>
-      isSameCurrentConversationTurn(pair.turnId, sourceTurnId),
-    );
+    const sourceIndex = pairs.findIndex((pair) => isSameTurn(resolve, pair.turnId, sourceTurnId));
     const targetIndex = sourceIndex >= 0 ? sourceIndex : userTurnIndex;
     const turns: ForkExtractedTurn[] = [];
     for (let i = 0; i <= targetIndex && i < pairs.length; i++) {
@@ -119,7 +127,7 @@ export function createForkLauncher({
       });
     }
 
-    return buildForkMarkdown(getConversationTitle(), turns, true);
+    return buildForkMarkdown(title, turns, true);
   }
 
   async function executeFork(
@@ -133,12 +141,28 @@ export function createForkLauncher({
       return;
     }
 
+    // Legacy `u-*` ids resolve through the clicked conversation's map, never the
+    // one the tab has moved on to while the launch awaits.
+    const resolveSourceTurnId = (id: string): string | null => resolveTurnId(conversationId, id);
     const turnId = ensureTurnId(userEl, turnIndex);
     if (getLegacyTurnIndex(turnId) !== null) {
       console.warn('[Fork] Stable turn identity is not available yet');
       return;
     }
-    const markdown = extractConversationUpToTurn(turnIndex, turnId);
+    // Capture the source as it was at the click: the awaits below may outlast a route
+    // change, and the handoff must never pair this Markdown with another page.
+    const sourceUrl = window.location.href;
+    const sourceTitle = getConversationTitle();
+    const newConversationUrl = getNewConversationUrl();
+    const markdownFilename =
+      mode === 'fileUpload' ? buildForkMarkdownFilename(sourceTitle) : undefined;
+
+    const markdown = extractConversationUpToTurn(
+      turnIndex,
+      turnId,
+      sourceTitle,
+      resolveSourceTurnId,
+    );
     if (!markdown.trim()) {
       console.warn('[Fork] No content extracted');
       return;
@@ -146,7 +170,7 @@ export function createForkLauncher({
 
     // Open new window IMMEDIATELY to preserve user gesture context.
     // Firefox and Safari block window.open() that follows async operations.
-    const newWindow = window.open(getNewConversationUrl(), '_blank');
+    const newWindow = window.open(newConversationUrl, '_blank');
     if (!newWindow) {
       console.warn('[Fork] Failed to open new window (popup blocked?)');
       return;
@@ -155,8 +179,6 @@ export function createForkLauncher({
     // Async work: resolve language and fork group (safe now, window already opened)
     const preferredLanguage = await getPreferredLanguage();
     const markdownWithContext = composeForkInputWithContext(markdown, preferredLanguage);
-    const markdownFilename =
-      mode === 'fileUpload' ? buildForkMarkdownFilename(getConversationTitle()) : undefined;
 
     let forkGroupId = generateUniqueId('fork');
     let sourceForkIndex = 0;
@@ -167,7 +189,7 @@ export function createForkLauncher({
       const candidateGroupIds = Array.from(
         new Set(
           conversationNodes
-            .filter((node) => isSameCurrentConversationTurn(node.turnId, turnId))
+            .filter((node) => isSameTurn(resolveSourceTurnId, node.turnId, turnId))
             .map((node) => node.forkGroupId),
         ),
       );
@@ -183,7 +205,7 @@ export function createForkLauncher({
         conversationNodes,
         groups,
         () => generateUniqueId('fork'),
-        resolveTurnId,
+        resolveSourceTurnId,
       );
 
       forkGroupId = plan.forkGroupId;
@@ -197,11 +219,12 @@ export function createForkLauncher({
 
     // Store pending fork data in extension storage (cross-tab accessible).
     // sessionStorage is per-tab and its copy semantics with window.open() vary by browser.
+    // The tab is already open, so this write completes even if fork turns off meanwhile.
     const pendingFork: PendingForkData = {
       sourceConversationId: conversationId,
       sourceTurnId: turnId,
-      sourceUrl: window.location.href,
-      sourceTitle: getConversationTitle(),
+      sourceUrl,
+      sourceTitle,
       forkGroupId,
       sourceForkIndex,
       nextForkIndex,

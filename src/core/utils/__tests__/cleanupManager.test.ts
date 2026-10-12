@@ -142,6 +142,7 @@ describe('willCleanUp tests module', () => {
       'CleanupSendBehavior',
       'CleanupDraftSave',
       'CleanupPromptHistory',
+      'CleanupGeminiBuiltinStartup',
       'CleanupFork',
       'CleanupGemsSidebar',
       'CleanupResponseCompleteNotification',
@@ -157,6 +158,8 @@ describe('willCleanUp tests module', () => {
       'CleanupRendererStartup',
       'CleanupCodeBlockCollapse',
       'CleanupUserLatex',
+      'CleanupMarkdownPatcher',
+      'CleanupDefaultModel',
       'CleanupUsageStatus',
       'CleanupWatermarkNativeNotice',
       'CleanupGemsHider',
@@ -165,6 +168,7 @@ describe('willCleanUp tests module', () => {
       'CleanupResearchPack',
       'CleanupResearchPackReceiver',
       'RemoveStorageOnChangedListener',
+      'CleanupVisualEffects',
       'CleanupSchemeBridge',
     ]);
   });

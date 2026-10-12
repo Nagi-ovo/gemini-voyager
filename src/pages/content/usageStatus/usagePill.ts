@@ -286,14 +286,20 @@ export function createUsagePill(onRefresh: () => void) {
     pill.style.transform = 'none';
   }
 
-  function onPillPointerUp(): void {
-    if (!dragging) return;
+  /** End a drag: drop its window listeners and the dragging look. */
+  function endDrag(): void {
     dragging = false;
     if (pillMoveHandler) {
       window.removeEventListener('pointermove', pillMoveHandler);
       pillMoveHandler = null;
     }
+    window.removeEventListener('pointerup', onPillPointerUp);
     pill?.classList.remove('gv-usage-dragging');
+  }
+
+  function onPillPointerUp(): void {
+    if (!dragging) return;
+    endDrag();
     if (dragMoved && pill) {
       const rect = pill.getBoundingClientRect();
       dragPos = { x: Math.round(rect.left), y: Math.round(rect.top) };
@@ -327,11 +333,8 @@ export function createUsagePill(onRefresh: () => void) {
   }
 
   function remove(): void {
-    if (pillMoveHandler) {
-      window.removeEventListener('pointermove', pillMoveHandler);
-      pillMoveHandler = null;
-    }
-    dragging = false;
+    // A stop in the middle of a drag must not leave the drag's window listeners behind.
+    endDrag();
     if (pill) {
       pill.remove();
       pill = null;

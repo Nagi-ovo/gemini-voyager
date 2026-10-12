@@ -39,7 +39,9 @@ export type OwnedFeatureId =
   | 'echarts'
   | 'mermaid'
   | 'promptHistory'
-  | 'inputCollapse';
+  | 'inputCollapse'
+  | 'researchPack'
+  | 'defaultModel';
 export type FeatureOwner = 'legacy' | 'plugin';
 
 /** The packaged official plugin ids, by feature. */
@@ -58,6 +60,8 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiMermaid: 'voyager.gemini-mermaid',
   geminiPromptHistory: 'voyager.gemini-prompt-history',
   geminiInputCollapse: 'voyager.gemini-input-collapse',
+  geminiResearchPack: 'voyager.gemini-research-pack',
+  geminiDefaultModel: 'voyager.gemini-default-model',
 } as const;
 
 export interface OwnedFeature {
@@ -200,6 +204,24 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     feature: 'inputCollapse',
     owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiInputCollapse,
+    handlers: [],
+    healthTracking: false,
+  },
+  // Stage 5. Gemini-only fixed-id builtins that open no primitive. The
+  // research pack's receiver on ChatGPT and Claude stays in core either way.
+  {
+    site: 'gemini',
+    feature: 'researchPack',
+    owner: 'plugin',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiResearchPack,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'defaultModel',
+    owner: 'plugin',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
     handlers: [],
     healthTracking: false,
   },

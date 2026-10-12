@@ -6,13 +6,83 @@ import type { DefaultModelSetting, DefaultThinkingLevel, ThinkingMode } from './
 
 const MODE_ITEM_SELECTOR = '[role="menuitemradio"], [role="menuitem"]';
 const DEFAULT_MODEL_UI_SELECTOR = '.gv-default-star-btn';
+const TITLE_WRAPPER_CLASS = 'gv-title-wrapper';
 const CONFIRMATION_TOAST_MS = 3000;
+const MENU_RENDER_DELAY_MS = 50;
+
+/** Remove every star button inside `root`. */
+function sweepStars(root: ParentNode = document): void {
+  root.querySelectorAll(DEFAULT_MODEL_UI_SELECTOR).forEach((el) => el.remove());
+}
+
+function mayContainDefaultModelUi(root: HTMLElement): boolean {
+  return root.matches(DEFAULT_MODEL_UI_SELECTOR) || !!root.querySelector(DEFAULT_MODEL_UI_SELECTOR);
+}
+
+/**
+ * Off-state guard of the native module: sweeps the stars already on the page,
+ * then keeps walking added subtrees so a CDK overlay pane that was detached
+ * when the switch went off cannot bring stars back when Gemini reattaches it.
+ */
+export function startStaleStarSweeper(): () => void {
+  sweepStars();
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      for (const node of Array.from(mutation.addedNodes)) {
+        if (node instanceof HTMLElement && mayContainDefaultModelUi(node)) sweepStars(node);
+      }
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  return () => observer.disconnect();
+}
+
+/**
+ * Nodes this module put into Gemini's menus, kept so stop can take them out
+ * even when the host detached their pane meanwhile. Weak references: a pane
+ * the host dropped for good is not kept alive, and cannot come back either.
+ */
+class InjectedNodes<T extends Node> {
+  private refs = new Set<WeakRef<T>>();
+  private known = new WeakSet<T>();
+
+  public add(node: T): void {
+    if (this.known.has(node)) return;
+    this.known.add(node);
+    for (const ref of this.refs) if (!ref.deref()) this.refs.delete(ref);
+    this.refs.add(new WeakRef(node));
+  }
+
+  public drain(): T[] {
+    const nodes: T[] = [];
+    for (const ref of this.refs) {
+      const node = ref.deref();
+      if (node) nodes.push(node);
+    }
+    this.refs = new Set();
+    this.known = new WeakSet();
+    return nodes;
+  }
+}
+
+/** Put the title back where the wrapper stood and drop the wrapper. */
+function unwrapTitle(wrapper: HTMLElement): void {
+  const parent = wrapper.parentNode;
+  if (!parent) return;
+  while (wrapper.firstChild) parent.insertBefore(wrapper.firstChild, wrapper);
+  wrapper.remove();
+}
 
 export class DefaultStars {
   private observer: MutationObserver | null = null;
   private pendingMenuPanelInjections = new WeakSet<HTMLElement>();
   private menuPanelInjectAttempts = new WeakMap<HTMLElement, number>();
   private started = false;
+  private readonly stars = new InjectedNodes<HTMLElement>();
+  private readonly titleWrappers = new InjectedNodes<HTMLElement>();
+  private readonly timers = new Set<number>();
+  /** Aborting it removes every listener this run added to Gemini's own menu items. */
+  private hostListeners: AbortController | null = null;
 
   public constructor(
     private readonly preferences: DefaultModelPreferences,
@@ -22,15 +92,27 @@ export class DefaultStars {
 
   // Preferences must be loaded before observation starts.
   public start(): void {
+    if (this.started) return;
     this.started = true;
-    if (!this.preferences.enabled) this.sweep();
+    this.hostListeners = new AbortController();
     this.initObserver();
   }
 
+  /**
+   * Takes out everything this run injected: star buttons and title wrappers,
+   * including those in a pane Gemini detached and may reattach later, the
+   * listeners on Gemini's menu items, and pending injection retries.
+   */
   public stop(): void {
     this.started = false;
     this.observer?.disconnect();
     this.observer = null;
+    for (const id of this.timers) window.clearTimeout(id);
+    this.timers.clear();
+    this.hostListeners?.abort();
+    this.hostListeners = null;
+    for (const star of this.stars.drain()) star.remove();
+    for (const wrapper of this.titleWrappers.drain()) unwrapTitle(wrapper);
     this.pendingMenuPanelInjections = new WeakSet<HTMLElement>();
     this.menuPanelInjectAttempts = new WeakMap<HTMLElement, number>();
   }
@@ -39,22 +121,6 @@ export class DefaultStars {
     // Observe only for the mode switch panel/bottom-sheet being added; Gemini UI triggers many mutations and
     // querying the entire document on every mutation can cause severe jank/crashes.
     this.observer = new MutationObserver((mutations) => {
-      // When the kill switch is off, still walk added subtrees so we can
-      // sweep stale star buttons that were sitting inside a detached CDK
-      // overlay pane at toggle-off time and get reattached now. Without
-      // this, the storage-onChanged sweep misses them and the user sees
-      // stars come back the moment they reopen the menu.
-      if (!this.preferences.enabled) {
-        for (const mutation of mutations) {
-          for (const node of Array.from(mutation.addedNodes)) {
-            if (!(node instanceof HTMLElement)) continue;
-            if (!this.mayContainDefaultModelUi(node)) continue;
-            this.sweep(node);
-          }
-        }
-        return;
-      }
-
       for (const mutation of mutations) {
         for (const node of Array.from(mutation.addedNodes)) {
           if (!(node instanceof HTMLElement)) continue;
@@ -70,20 +136,6 @@ export class DefaultStars {
     this.observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  // Single chokepoint for "remove all extension-injected UI inside this
-  // subtree". Used at init time, on flip-off via storage onChanged, and on
-  // the observer's off-state path so that detached → reattached CDK panes
-  // get cleaned up too.
-  public sweep(root: ParentNode = document) {
-    root.querySelectorAll('.gv-default-star-btn').forEach((el) => el.remove());
-  }
-
-  private mayContainDefaultModelUi(root: HTMLElement): boolean {
-    return (
-      root.matches(DEFAULT_MODEL_UI_SELECTOR) || !!root.querySelector(DEFAULT_MODEL_UI_SELECTOR)
-    );
-  }
-
   private scheduleMenuPanelInjection(menuPanel: HTMLElement) {
     // Second-line defence: even if a caller bypassed the observer-level
     // gate, never queue retry attempts when the kill switch is off.
@@ -91,13 +143,16 @@ export class DefaultStars {
     if (this.pendingMenuPanelInjections.has(menuPanel)) return;
     this.pendingMenuPanelInjections.add(menuPanel);
 
-    const delayMs = 50; // allow menu content to render
-    window.setTimeout(() => {
+    // Allow menu content to render.
+    const timer = window.setTimeout(() => {
+      this.timers.delete(timer);
       if (!this.started) return;
 
       this.pendingMenuPanelInjections.delete(menuPanel);
 
       void this.injectStarButtons(menuPanel).then((didInject) => {
+        // Stopped while the stars were going in: queue no retry.
+        if (!this.started) return;
         if (didInject) {
           this.menuPanelInjectAttempts.delete(menuPanel);
           return;
@@ -113,7 +168,8 @@ export class DefaultStars {
           this.scheduleMenuPanelInjection(menuPanel);
         }
       });
-    }, delayMs);
+    }, MENU_RENDER_DELAY_MS);
+    this.timers.add(timer);
   }
 
   private async injectStarButtons(menuPanel: HTMLElement): Promise<boolean> {
@@ -123,8 +179,8 @@ export class DefaultStars {
     // produced an inconsistent multi-is-default state because the cleanup
     // re-injection short-circuited too. See issue follow-up to the
     // default-model toggle.
-    if (!this.preferences.enabled) {
-      this.sweep(menuPanel);
+    if (!this.preferences.enabled || !this.started) {
+      sweepStars(menuPanel);
       return false;
     }
 
@@ -152,9 +208,10 @@ export class DefaultStars {
     items.forEach((item) => this.injectModelStar(item, currentDefault));
 
     await this.injectInlineExtendedThinkingStar(menuPanel);
+    if (!this.started) return false;
     await this.injectNestedThinkingLevelStars(menuPanel);
 
-    return true;
+    return this.started;
   }
 
   private injectModelStar(item: HTMLElement, currentDefault: DefaultModelSetting | null): void {
@@ -214,7 +271,7 @@ export class DefaultStars {
     const inlineItems = this.picker.describeMenu(menuPanel).inlineThinking;
     if (!inlineItems.length) return false;
 
-    if (!this.preferences.enabled) {
+    if (!this.preferences.enabled || !this.started) {
       inlineItems.forEach((item) =>
         item.querySelectorAll('.gv-default-star-btn').forEach((star) => star.remove()),
       );
@@ -264,8 +321,8 @@ export class DefaultStars {
 
   private async injectThinkingLevelStars(submenuPane: HTMLElement): Promise<boolean> {
     // Master kill switch — see comment on `injectStarButtons`.
-    if (!this.preferences.enabled) {
-      this.sweep(submenuPane);
+    if (!this.preferences.enabled || !this.started) {
+      sweepStars(submenuPane);
       return false;
     }
 
@@ -357,8 +414,9 @@ export class DefaultStars {
     // toggles the kill switch off, but a star inside a detached overlay
     // pane (or attached to a closure from a previous on-session) can
     // outlive the sweep. Without this guard such a click would silently
-    // mutate storage even though the user has paused the feature.
-    if (!this.preferences.enabled) {
+    // mutate storage even though the user has paused the feature. A star
+    // left over from a stopped run gets the same treatment.
+    if (!this.preferences.enabled || !this.started) {
       btn
         .closest('[role="menuitemradio"], [role="menuitem"], gem-menu-item')
         ?.querySelectorAll('.gv-default-star-btn')
@@ -418,6 +476,7 @@ export class DefaultStars {
     const btn = document.createElement('button');
     btn.className = 'gv-default-star-btn';
     btn.dataset.gvDefaultKind = kind;
+    this.stars.add(btn);
     btn.innerHTML = this.getStarIcon(false);
     btn.title = chrome.i18n.getMessage(
       kind === 'model' ? 'setAsDefaultModel' : 'setAsDefaultThinkingLevel',
@@ -444,38 +503,60 @@ export class DefaultStars {
       return;
     }
     const parent = title.parentElement;
-    let wrapper = container.querySelector<HTMLElement>('.gv-title-wrapper');
-    if (!wrapper && parent?.classList.contains('gv-title-wrapper')) wrapper = parent;
+    let wrapper = container.querySelector<HTMLElement>(`.${TITLE_WRAPPER_CLASS}`);
+    if (!wrapper && parent?.classList.contains(TITLE_WRAPPER_CLASS)) wrapper = parent;
     if (!wrapper) {
       wrapper = document.createElement('div');
-      wrapper.className = 'gv-title-wrapper';
+      wrapper.className = TITLE_WRAPPER_CLASS;
       wrapper.style.cssText = 'display: flex; align-items: center; width: 100%;';
       if (parent) parent.insertBefore(wrapper, title);
       else container.appendChild(wrapper);
       wrapper.appendChild(title);
     }
+    // A wrapper found in place is unwrapped on stop too: it can only be ours.
+    this.titleWrappers.add(wrapper);
     wrapper.appendChild(btn);
   }
 
   private bindStarOwnerHover(item: HTMLElement, btn: HTMLElement) {
     if (btn.hasAttribute('data-hover-bound')) return;
+    // These listeners sit on Gemini's own item, which outlives the star:
+    // removing the star alone would leave them behind.
+    const signal = this.hostListeners?.signal;
+    if (!signal) return;
     btn.setAttribute('data-hover-bound', 'true');
 
-    item.addEventListener('mouseenter', () => {
-      btn.classList.add('is-owner-hovered');
-    });
-    item.addEventListener('mouseleave', () => {
-      btn.classList.remove('is-owner-hovered');
-    });
-    item.addEventListener('focusin', () => {
-      btn.classList.add('is-owner-hovered');
-    });
-    item.addEventListener('focusout', (event) => {
-      const nextTarget = event.relatedTarget;
-      if (!(nextTarget instanceof Node) || !item.contains(nextTarget)) {
+    item.addEventListener(
+      'mouseenter',
+      () => {
+        btn.classList.add('is-owner-hovered');
+      },
+      { signal },
+    );
+    item.addEventListener(
+      'mouseleave',
+      () => {
         btn.classList.remove('is-owner-hovered');
-      }
-    });
+      },
+      { signal },
+    );
+    item.addEventListener(
+      'focusin',
+      () => {
+        btn.classList.add('is-owner-hovered');
+      },
+      { signal },
+    );
+    item.addEventListener(
+      'focusout',
+      (event) => {
+        const nextTarget = event.relatedTarget;
+        if (!(nextTarget instanceof Node) || !item.contains(nextTarget)) {
+          btn.classList.remove('is-owner-hovered');
+        }
+      },
+      { signal },
+    );
   }
 
   private getStarIcon(filled: boolean): string {
@@ -492,7 +573,7 @@ export class DefaultStars {
     const modelId = modelItem ? this.picker.describeItem(modelItem).id : null;
 
     // Stale-click guard — see comment on `handleThinkingLevelStarClick`.
-    if (!this.preferences.enabled) {
+    if (!this.preferences.enabled || !this.started) {
       if (modelItem) {
         modelItem.querySelectorAll('.gv-default-star-btn').forEach((el) => el.remove());
       } else {

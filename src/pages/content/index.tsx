@@ -6,7 +6,6 @@ import {
   hasValidExtensionContext,
   isExtensionContextInvalidatedError,
 } from '@/core/utils/extensionContext';
-import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { WATERMARK_STORAGE_KEYS } from '@/core/utils/watermarkSettings';
 import { startPluginHost } from '@/features/plugins';
 import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
@@ -21,14 +20,9 @@ import { runCoachmarkSequence } from './coachmark';
 import { claimContentScript } from './contentScriptHandoff';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
-import DefaultModelManager from './defaultModel/modelLocker';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
-import {
-  createNativeFeatureToggle,
-  mountNativeFeature,
-  type NativeFeatureToggleController,
-} from './featureLifecycle';
+import { type NativeFeature, type StopNativeFeature, mountNativeFeature } from './featureLifecycle';
 import { admitPluginOwnedFeature, startOwnedFeature } from './featureOwnerStartup';
 import { folderActivityCoachmarkStep } from './folder/activityCoachmark';
 import { startAIStudioFolderManager } from './folder/aistudio';
@@ -39,10 +33,12 @@ import { startFolderItemFontSizeAdjuster } from './folderItemFontSize/index';
 import { startFolderProject } from './folderProject/index';
 import { startFolderSpacingAdjuster } from './folderSpacing/index';
 import { startNativeFormulaCopyForContent } from './formulaCopyStartup';
+import { createGeminiBuiltinStartup } from './geminiBuiltinStartup';
+import { enterInitialization } from './initializationEntry';
 import { createGeminiInputStartup, startPageSendKeys } from './inputStartup';
 import { initKaTeXConfig } from './katexConfig';
-import { startMarkdownPatcher } from './markdownPatcher/index';
 import { NATIVE_FEATURES } from './nativeFeatures';
+import { PageRetiredError, createPageSteps } from './pageInitSteps';
 import { ensureScheme, stopScheme } from './platformTheme/scheme';
 import { registerBuiltinNativeHandlers } from './pluginNativeRegistration';
 import { createPostChangelogFlow } from './postChangelogFlow';
@@ -57,7 +53,6 @@ import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
 import { rulerTimelineCoachmarkStep } from './timeline/rulerTimelineCoachmark';
 import { usageCoachmarkStep } from './usageStatus/usageCoachmark';
-import { startVisualEffects } from './visualEffects';
 import { startWatermarkNativeNotice } from './watermarkNativeNotice';
 import {
   restartWatermarkRemover,
@@ -93,41 +88,37 @@ const BACKGROUND_TAB_MIN_DELAY = 3000; // Minimum delay for background tabs
 const BACKGROUND_TAB_MAX_DELAY = 8000; // Maximum delay for background tabs (3000 + 5000)
 
 const cleanupManager = new CleanupManager();
+// Aborted only when a newer copy retires this one, never on `beforeunload`
+// (the user may cancel it): a start still in flight then stops itself at once.
+const pageLifetime = new AbortController();
 // One per content-script instance: initializeFeatures admits packaged official
 // plugins where their native modules used to start, then closes it.
 const officialAdmission = createOfficialAdmission();
 const promptManager = createPromptManagerEngine(
   resolvePromptSiteAdapter(location.href),
   cleanupManager,
+  pageLifetime.signal,
 );
 const geminiRenderers = createGeminiRendererStartup(officialAdmission, cleanupManager);
 const geminiInputs = createGeminiInputStartup(officialAdmission, cleanupManager);
+const geminiBuiltins = createGeminiBuiltinStartup(
+  officialAdmission,
+  cleanupManager,
+  pageLifetime.signal,
+);
+
+// Every await in initializeFeatures goes through these, so a starter it calls
+// directly (Quote Reply, folders, export buttons, …) never runs after retirement.
+const { settle, adopt } = createPageSteps(pageLifetime.signal);
+
+/** Mount a native feature for this page: one that settles after retirement stops at once. */
+function mountForPage(feature: NativeFeature): Promise<StopNativeFeature> {
+  return mountNativeFeature(cleanupManager, feature, pageLifetime.signal);
+}
 
 let initialized = false;
 let initializationTimer: number | null = null;
-let forkToggle: NativeFeatureToggleController | null = null;
-let researchPackToggle: NativeFeatureToggleController | null = null;
 let watermarkRemoverStarted = false;
-
-async function isForkFeatureEnabled(): Promise<boolean> {
-  try {
-    const result = await chrome.storage?.sync?.get({ [StorageKeys.FORK_ENABLED]: false });
-    return NATIVE_FEATURES.fork.toggle.isEnabled(result?.[StorageKeys.FORK_ENABLED]);
-  } catch {
-    return false;
-  }
-}
-
-async function isResearchPackEnabled(): Promise<boolean> {
-  try {
-    const result = await chrome.storage?.sync?.get({ [StorageKeys.RESEARCH_PACK_ENABLED]: false });
-    return NATIVE_FEATURES.researchPack.toggle.isEnabled(
-      result?.[StorageKeys.RESEARCH_PACK_ENABLED],
-    );
-  } catch {
-    return false;
-  }
-}
 
 let onboardingCoachmarkShownThisPage = false;
 let onboardingCoachmarkSequenceRunning = false;
@@ -173,7 +164,7 @@ async function initializeFeatures(): Promise<void> {
       return;
     }
 
-    await promptManager.startComposerFeatures();
+    await settle(promptManager.startComposerFeatures());
 
     // Yield between features instead of sleeping a fixed amount. On an idle main
     // thread (the common foreground case) requestIdleCallback fires on the next
@@ -183,47 +174,33 @@ async function initializeFeatures(): Promise<void> {
     // exactly like the old fixed delay, preserving the anti-thundering-herd intent.
     // Falls back to setTimeout where requestIdleCallback is unavailable (older WebKit).
     const delay = (ms: number) =>
-      new Promise<void>((resolve) => {
-        if (typeof window.requestIdleCallback === 'function') {
-          window.requestIdleCallback(() => resolve(), { timeout: ms });
-        } else {
-          setTimeout(resolve, ms);
-        }
-      });
+      settle(
+        new Promise<void>((resolve) => {
+          if (typeof window.requestIdleCallback === 'function') {
+            window.requestIdleCallback(() => resolve(), { timeout: ms });
+          } else {
+            setTimeout(resolve, ms);
+          }
+        }),
+      );
 
-    // A custom website gets the Prompt Manager only, and so does a native host
-    // that a custom entry covers (an entry such as `google.com` covers
-    // gemini.google.com): there it follows the entry instead of the host.
-    if (await readPromptCoverage(location.host)) {
-      await promptManager.followCoverage(location.host);
-      return;
-    }
-
-    await mountNativeFeature(cleanupManager, NATIVE_FEATURES.edgeFinalVersionNotice);
-
-    const isEnterprise = isGeminiEnterpriseEnvironment(
-      {
-        hostname: location.hostname,
-        pathname: location.pathname,
-        search: location.search,
-        hash: location.hash,
-      },
-      document,
-    );
-
-    if (isEnterprise) {
-      await promptManager.startPanel();
-      return;
-    }
+    // Custom-website coverage and Gemini Enterprise end initialization here.
+    const entry = await enterInitialization(location, document, {
+      settle,
+      followCoverage: (host) => promptManager.followCoverage(host),
+      mountEdgeNotice: () => mountForPage(NATIVE_FEATURES.edgeFinalVersionNotice),
+      startEnterprisePanel: () => promptManager.startPanel(),
+    });
+    if (entry !== 'start-points') return;
 
     if (location.hostname === 'gemini.google.com') {
       // Owners below report anchor health to it, so it listens before they start.
-      await mountNativeFeature(cleanupManager, NATIVE_FEATURES.nativeHealth);
+      await settle(mountForPage(NATIVE_FEATURES.nativeHealth));
       // Timeline is most resource-intensive, start it first
-      await mountNativeFeature(cleanupManager, NATIVE_FEATURES.timeline);
+      await settle(mountForPage(NATIVE_FEATURES.timeline));
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
-      const folderManager = await startFolderManager();
+      const folderManager = await adopt(startFolderManager(), (manager) => manager?.destroy());
       if (folderManager) {
         cleanupManager.registerCleanupFunction(
           () => folderManager.destroy(),
@@ -238,23 +215,23 @@ async function initializeFeatures(): Promise<void> {
       // per setting.
       startFolderSpacingAdjuster('gemini');
       startFolderItemFontSizeAdjuster();
-      await startGeminiChatAppearance(officialAdmission);
+      await settle(startGeminiChatAppearance(officialAdmission));
       startEditInputWidthAdjuster();
       startSidebarWidthAdjuster();
       startSidebarAutoHide();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
-      await geminiInputs.startInputCollapse();
+      await settle(geminiInputs.startInputCollapse());
       await startOwnedFeature(officialAdmission, 'gemini', 'hideInputHalo', async () => {
-        await mountNativeFeature(cleanupManager, NATIVE_FEATURES.inputHaloHider);
+        await settle(mountForPage(NATIVE_FEATURES.inputHaloHider));
       });
       await startOwnedFeature(officialAdmission, 'gemini', 'vimInput', async () => {
-        await mountNativeFeature(cleanupManager, NATIVE_FEATURES.inputVimMode);
+        await settle(mountForPage(NATIVE_FEATURES.inputVimMode));
       });
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Send behavior must be ready before prevent-auto-scroll reads its bridge state.
-      await mountNativeFeature(cleanupManager, NATIVE_FEATURES.sendBehaviorGemini);
+      await settle(mountForPage(NATIVE_FEATURES.sendBehaviorGemini));
       startPreventAutoScroll();
       await startOwnedFeature(officialAdmission, 'gemini', 'formulaCopy', () =>
         startNativeFormulaCopyForContent({
@@ -265,20 +242,22 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Quote Reply - conditionally start based on storage setting
-      const quoteReplyResult = await new Promise<Record<string, unknown>>((resolve) => {
-        const defaults = {
-          [StorageKeys.QUOTE_REPLY_ENABLED]: true,
-          [StorageKeys.HIGHLIGHT_ENABLED]: false,
-          [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: 'yellow',
-          [StorageKeys.HIGHLIGHT_COLOR_PALETTE]: null,
-          [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: true,
-        };
-        try {
-          chrome.storage?.sync?.get(defaults, resolve);
-        } catch {
-          resolve(defaults);
-        }
-      });
+      const quoteReplyResult = await settle(
+        new Promise<Record<string, unknown>>((resolve) => {
+          const defaults = {
+            [StorageKeys.QUOTE_REPLY_ENABLED]: true,
+            [StorageKeys.HIGHLIGHT_ENABLED]: false,
+            [StorageKeys.HIGHLIGHT_DEFAULT_COLOR]: 'yellow',
+            [StorageKeys.HIGHLIGHT_COLOR_PALETTE]: null,
+            [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: true,
+          };
+          try {
+            chrome.storage?.sync?.get(defaults, resolve);
+          } catch {
+            resolve(defaults);
+          }
+        }),
+      );
       const storedHighlightColor = quoteReplyResult[StorageKeys.HIGHLIGHT_DEFAULT_COLOR];
       // Highlight shares Quote Reply's single selection toolbar/listener. Keep
       // the toolbar manager alive when Quote Reply is disabled; only its Quote
@@ -310,7 +289,7 @@ async function initializeFeatures(): Promise<void> {
       );
       startDeepResearchExport();
       startContextSync();
-      await mountNativeFeature(cleanupManager, NATIVE_FEATURES.gemsHider);
+      await settle(mountForPage(NATIVE_FEATURES.gemsHider));
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // These modules only share the extension storage API and can hydrate in
@@ -321,7 +300,7 @@ async function initializeFeatures(): Promise<void> {
           NATIVE_FEATURES.draftSave,
           NATIVE_FEATURES.gemsSidebar,
           NATIVE_FEATURES.usageStatus,
-        ].map((feature) => mountNativeFeature(cleanupManager, feature)),
+        ].map(mountForPage),
         geminiInputs.startPromptHistory(),
       ]);
       const failedInitializer = parallelResults.find(
@@ -332,19 +311,14 @@ async function initializeFeatures(): Promise<void> {
 
       // DOM enhancements install observers/listeners but do not need separate
       // idle waits between each initializer.
-      startMarkdownPatcher();
-      await geminiRenderers.startCodeBlockCollapse();
-      DefaultModelManager.getInstance().init();
+      await settle(mountForPage(NATIVE_FEATURES.markdownPatcher));
+      await settle(geminiRenderers.startCodeBlockCollapse());
+      await settle(geminiBuiltins.startDefaultModel());
       startExportButton();
       void startCanvasExport();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
-      // Listen first (the storage listener is already installed), then feed
-      // the startup read: a toggle that lands while the read is in flight wins.
-      forkToggle = createNativeFeatureToggle(cleanupManager, NATIVE_FEATURES.fork);
-      await forkToggle.applyInitial(await isForkFeatureEnabled());
-      researchPackToggle = createNativeFeatureToggle(cleanupManager, NATIVE_FEATURES.researchPack);
-      await researchPackToggle.applyInitial(await isResearchPackEnabled());
+      await settle(geminiBuiltins.startForkAndResearchPack());
 
       // Release-time interruptions are intentionally sequential: changelog,
       // native-watermark notice, then any eligible feature coachmarks.
@@ -366,7 +340,7 @@ async function initializeFeatures(): Promise<void> {
       location.hostname === 'aistudio.google.com' ||
       location.hostname === 'aistudio.google.cn'
     ) {
-      await promptManager.startPanel();
+      await settle(promptManager.startPanel());
       await delay(HEAVY_FEATURE_INIT_DELAY);
     }
 
@@ -374,21 +348,23 @@ async function initializeFeatures(): Promise<void> {
     // never ran there, and the official manifests do not match it.
     if (location.hostname === 'gemini.google.com') {
       // Mermaid, WaveDrom and ECharts (lazy-loaded), then user message LaTeX.
-      await geminiRenderers.startRenderers();
+      await settle(geminiRenderers.startRenderers());
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
 
     if (location.hostname === 'aistudio.google.com' || location.hostname === 'aistudio.google.cn') {
       // Check if user has disabled Voyager on AI Studio
-      const aiStudioEnabled = await new Promise<boolean>((resolve) => {
-        try {
-          chrome.storage?.sync?.get({ [StorageKeys.GV_AISTUDIO_ENABLED]: true }, (res) =>
-            resolve(res?.[StorageKeys.GV_AISTUDIO_ENABLED] !== false),
-          );
-        } catch {
-          resolve(true);
-        }
-      });
+      const aiStudioEnabled = await settle(
+        new Promise<boolean>((resolve) => {
+          try {
+            chrome.storage?.sync?.get({ [StorageKeys.GV_AISTUDIO_ENABLED]: true }, (res) =>
+              resolve(res?.[StorageKeys.GV_AISTUDIO_ENABLED] !== false),
+            );
+          } catch {
+            resolve(true);
+          }
+        }),
+      );
 
       if (!aiStudioEnabled) {
         console.log('[Gemini Voyager] AI Studio features disabled by user');
@@ -415,10 +391,12 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Send behavior (Enter to send)
-      await mountNativeFeature(cleanupManager, NATIVE_FEATURES.sendBehaviorAiStudio);
+      await settle(mountForPage(NATIVE_FEATURES.sendBehaviorAiStudio));
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
   } catch (e) {
+    // Retired at an async boundary: the cleanups already ran, nothing more starts.
+    if (e instanceof PageRetiredError) return;
     if (isExtensionContextInvalidatedError(e)) {
       return;
     }
@@ -476,9 +454,11 @@ function handleVisibilityChange(): void {
     claimContentScript(
       () => {
         initialized = true;
-        // An initialization still running in this orphan admits nothing more;
-        // the plugin host itself stops with the cleanups below.
+        // An initialization still running in this orphan admits nothing more
+        // and mounts nothing more; the plugin host itself stops with the
+        // cleanups below.
         officialAdmission.close();
+        pageLifetime.abort();
         if (initializationTimer !== null) clearTimeout(initializationTimer);
         initializationTimer = null;
         document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -508,7 +488,7 @@ function handleVisibilityChange(): void {
     // dependency. Keep them out of embedded plugin frames: those frames only
     // need the declarative plugin host and would otherwise render a duplicate
     // effect above their parent page.
-    if (!isPluginSubframe) startVisualEffects();
+    if (!isPluginSubframe) void mountForPage(NATIVE_FEATURES.visualEffects);
 
     // Answer the background's ping so injectPluginScriptIntoOpenTabs can tell
     // a live content script from a missing/orphaned one and skip re-injecting
@@ -521,10 +501,9 @@ function handleVisibilityChange(): void {
 
     // Saved Library and cloud sync need the same account identity as highlights.
     // This bridge must exist even when optional Folder Manager code never starts.
-    if (!isPluginSubframe)
-      void mountNativeFeature(cleanupManager, NATIVE_FEATURES.accountContextBridge);
+    if (!isPluginSubframe) void mountForPage(NATIVE_FEATURES.accountContextBridge);
 
-    if (!isPluginSubframe) void mountNativeFeature(cleanupManager, NATIVE_FEATURES.chatGptJump);
+    if (!isPluginSubframe) void mountForPage(NATIVE_FEATURES.chatGptJump);
 
     // Gemini and AI Studio send keys: one page coordinator that the native send
     // behavior and send plugins register on, so it exists before the host.
@@ -554,7 +533,7 @@ function handleVisibilityChange(): void {
     // class; CSS derives the rest). Applies the adapter's built-in colour at
     // once, then lets an enabled plugin's declared theme override it live. No-op
     // on Gemini / AI Studio.
-    if (!isPluginSubframe) void mountNativeFeature(cleanupManager, NATIVE_FEATURES.brandTheme);
+    if (!isPluginSubframe) void mountForPage(NATIVE_FEATURES.brandTheme);
 
     const onUnhandledRejection = (event: PromiseRejectionEvent) => {
       if (isExtensionContextInvalidatedError(event.reason)) {
@@ -596,8 +575,7 @@ function handleVisibilityChange(): void {
         return;
       }
 
-      forkToggle?.handleChange(changes, areaName);
-      researchPackToggle?.handleChange(changes, areaName);
+      geminiBuiltins.handleStorageChange(changes, areaName);
       geminiRenderers.handleStorageChange(changes, areaName);
       geminiInputs.handleStorageChange(changes, areaName);
     };
@@ -610,7 +588,7 @@ function handleVisibilityChange(): void {
       hostname.includes('aistudio.google.com') ||
       hostname.includes('aistudio.google.cn');
     if (!isPluginSubframe && (isSupportedSite || pluginPlatformId)) {
-      void mountNativeFeature(cleanupManager, NATIVE_FEATURES.remoteAnnouncements);
+      void mountForPage(NATIVE_FEATURES.remoteAnnouncements);
     }
 
     // Initialize KaTeX configuration early to suppress Unicode warnings
@@ -619,7 +597,7 @@ function handleVisibilityChange(): void {
       initKaTeXConfig();
       // Initialize i18n early to ensure translations are available
       initI18n().catch((e) => console.error('[Gemini Voyager] i18n init error:', e));
-      void mountNativeFeature(cleanupManager, NATIVE_FEATURES.storageQuotaWarning);
+      void mountForPage(NATIVE_FEATURES.storageQuotaWarning);
     }
 
     // Initialize i18n for plugin platforms (Claude/ChatGPT) so export translations load
@@ -643,7 +621,7 @@ function handleVisibilityChange(): void {
         officialAdmission.close();
         if (isPluginSubframe) return;
         // A research pack sent from Gemini with "Continue in …" lands here.
-        void mountNativeFeature(cleanupManager, NATIVE_FEATURES.researchPackReceiver);
+        void mountForPage(NATIVE_FEATURES.researchPackReceiver);
         // Same path as custom websites: the Prompt Manager mounts only while
         // this host is in the user's custom-website list, which is what the
         // popup's "enable Prompt Manager on <site>" toggle edits.

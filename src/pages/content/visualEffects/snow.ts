@@ -17,6 +17,8 @@
  * - ~160 particles total — negligible GPU/CPU overhead
  */
 
+import type { StopNativeFeature } from '../featureLifecycle';
+
 const CANVAS_ID = 'gv-snow-effect-canvas';
 const STORAGE_KEY = 'gvVisualEffect';
 const LEGACY_KEY = 'gvSnowEffect';
@@ -255,13 +257,40 @@ function resolveEffect(res: Record<string, unknown>): string {
   return 'off';
 }
 
+/** Stop of the newest `startSnowEffect` run, which owns the canvas. */
+let stopActiveRun: StopNativeFeature | null = null;
+
 /**
- * Initialize and start the snow effect feature
+ * Follow the `gvVisualEffect` setting until the returned stop runs. Turning
+ * the setting off drains the flakes; stop removes the canvas and every
+ * listener at once.
  */
-export function startSnowEffect(): void {
+export function startSnowEffect(): StopNativeFeature {
+  // A second start replaces the first instead of stacking listeners on one canvas.
+  stopActiveRun?.();
+  let stopped = false;
+
+  const handleStorageChange = (
+    changes: Record<string, chrome.storage.StorageChange>,
+    area: string,
+  ): void => {
+    if (area !== 'sync' || !changes[STORAGE_KEY]) return;
+    if (changes[STORAGE_KEY].newValue === EFFECT_VALUE) {
+      enable();
+    } else {
+      disable();
+    }
+  };
+  // Immediate cleanup on page unload (no need to drain)
+  const handleBeforeUnload = (): void => {
+    forceDisable();
+  };
+
   // 1) Read initial setting
   try {
     chrome.storage?.sync?.get({ [STORAGE_KEY]: null, [LEGACY_KEY]: false }, (res) => {
+      // The read can land after stop; enabling then would leave a canvas no stop removes.
+      if (stopped) return;
       if (resolveEffect(res) === EFFECT_VALUE) {
         enable();
       }
@@ -272,21 +301,26 @@ export function startSnowEffect(): void {
 
   // 2) Respond to storage changes
   try {
-    chrome.storage?.onChanged?.addListener((changes, area) => {
-      if (area === 'sync' && changes[STORAGE_KEY]) {
-        if (changes[STORAGE_KEY].newValue === EFFECT_VALUE) {
-          enable();
-        } else {
-          disable();
-        }
-      }
-    });
+    chrome.storage?.onChanged?.addListener(handleStorageChange);
   } catch (e) {
     console.error('[Gemini Voyager] Failed to add storage listener for snow effect:', e);
   }
 
-  // 3) Immediate cleanup on page unload (no need to drain)
-  window.addEventListener('beforeunload', () => {
+  window.addEventListener('beforeunload', handleBeforeUnload);
+
+  const stop = (): void => {
+    // Already stopped, or replaced: a late stop must not remove the newer run's canvas.
+    if (stopActiveRun !== stop) return;
+    stopActiveRun = null;
+    stopped = true;
     forceDisable();
-  });
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    try {
+      chrome.storage?.onChanged?.removeListener(handleStorageChange);
+    } catch {
+      // An orphaned content script's chrome.* throws; its listener is already dead.
+    }
+  };
+  stopActiveRun = stop;
+  return stop;
 }

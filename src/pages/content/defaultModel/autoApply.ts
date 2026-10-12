@@ -2,6 +2,7 @@ import type { Toaster } from '@/core/ui/toast/types';
 
 import { watchRouteChanges } from '../utils/routeWatcher';
 import { ModelPicker } from './modelPicker';
+import type { PickerInteraction } from './modelPicker';
 import { DefaultModelPreferences } from './preferences';
 import type { DefaultModelSetting, DefaultThinkingLevel } from './preferences';
 
@@ -17,12 +18,19 @@ const CHAT_INPUT_SELECTORS = [
 ] as const;
 
 const RECENT_COMPOSER_ACTIVITY_MS = 8000;
+const NAVIGATION_SETTLE_MS = 150;
+const REFOCUS_DELAY_MS = 120;
 /** Long enough to read and act on, short enough not to camp on the page. */
 const FAILURE_TOAST_MS = 12000;
 export const AUTO_APPLY_FAILURE_CHANNEL = 'default-model-failure';
 
 export class DefaultModelAutoApply {
   private checkTimer: number | null = null;
+  /** Bumped on start and stop: work queued by an earlier run sees a different value and drops out. */
+  private generation = 0;
+  private running = false;
+  /** One-shot timers of the current run (navigation settle, refocus); cleared on stop. */
+  private readonly timers = new Set<number>();
   private lastCheckedPath: string | null = null;
   private stopRouteWatcher: (() => void) | null = null;
   private sameRouteNewChatClickHandler: ((event: Event) => void) | null = null;
@@ -47,19 +55,6 @@ export class DefaultModelAutoApply {
   private composerActivityHandler: ((event: Event) => void) | null = null;
   private lastComposerActivityPath: string | null = null;
   private lastComposerActivityAt = 0;
-  private readonly interaction = {
-    shouldYield: () => this.shouldYieldToUserComposerActivity(),
-    stop: () => this.stopLockTimer(),
-    failed: () => {
-      this.consecutiveFailures++;
-      this.maybeNotifyAutoApplyFailure();
-      if (this.consecutiveFailures >= this.maxConsecutiveFailures) this.stopLockTimer();
-    },
-    resetFailures: () => {
-      this.consecutiveFailures = 0;
-    },
-    focusInput: () => this.focusChatInputAfterAutoSwitch(),
-  };
 
   public constructor(
     private readonly preferences: DefaultModelPreferences,
@@ -68,6 +63,8 @@ export class DefaultModelAutoApply {
   ) {}
 
   public start(): void {
+    this.running = true;
+    this.generation++;
     this.subscribeToComposerActivity();
     void this.checkAndLockModel();
     // One shared watcher covers browser history events and page-world SPA
@@ -76,7 +73,7 @@ export class DefaultModelAutoApply {
       const currentPath = window.location.pathname;
       if (currentPath !== this.lastCheckedPath && this.isNewConversation()) {
         this.lastCheckedPath = currentPath;
-        void this.checkAndLockModelWithDelay();
+        this.checkAndLockModelWithDelay();
       }
     });
 
@@ -90,7 +87,7 @@ export class DefaultModelAutoApply {
       try {
         const destination = new URL(link.href, window.location.href);
         if (destination.href === window.location.href && this.isNewConversation()) {
-          void this.checkAndLockModelWithDelay();
+          this.checkAndLockModelWithDelay();
         }
       } catch {
         // Ignore malformed host links.
@@ -100,10 +97,15 @@ export class DefaultModelAutoApply {
   }
 
   public stop(): void {
+    this.running = false;
+    this.generation++;
+    this.autoSelectSessionId = null;
     if (this.checkTimer) {
       clearInterval(this.checkTimer);
       this.checkTimer = null;
     }
+    for (const id of this.timers) window.clearTimeout(id);
+    this.timers.clear();
 
     this.stopRouteWatcher?.();
     this.stopRouteWatcher = null;
@@ -119,19 +121,40 @@ export class DefaultModelAutoApply {
     this.lastComposerActivityAt = 0;
   }
 
-  public setEnabled(enabled: boolean): void {
-    if (!enabled) {
-      this.stopLockTimer();
-      this.autoSelectSessionId = null;
-    } else {
-      // Re-enable allows a fresh warning and clears prior rejected switches.
-      this.failureToastShown = false;
-      this.pendingModelSwitchKey = null;
-      this.consecutiveRejectedModelSwitches = 0;
-      this.pendingThinkingSwitchKey = null;
-      this.consecutiveRejectedThinkingSwitches = 0;
-      void this.checkAndLockModel();
-    }
+  /** Runs `callback` after `delayMs` unless this run stops first. */
+  private schedule(callback: () => void, delayMs: number): void {
+    const generation = this.generation;
+    const id = window.setTimeout(() => {
+      this.timers.delete(id);
+      if (generation === this.generation) callback();
+    }, delayMs);
+    this.timers.add(id);
+  }
+
+  /**
+   * What the picker may do on behalf of one lock loop. `isCurrent` turns false
+   * when this run stops, a newer loop replaces this one, or the route changes.
+   */
+  private interactionFor(sessionId: string, lockPath: string): PickerInteraction {
+    const generation = this.generation;
+    const isCurrent = (): boolean =>
+      generation === this.generation &&
+      this.autoSelectSessionId === sessionId &&
+      window.location.pathname === lockPath;
+    return {
+      isCurrent,
+      shouldYield: () => this.shouldYieldToUserComposerActivity(),
+      stop: () => this.stopLockTimer(),
+      failed: () => {
+        this.consecutiveFailures++;
+        this.maybeNotifyAutoApplyFailure();
+        if (this.consecutiveFailures >= this.maxConsecutiveFailures) this.stopLockTimer();
+      },
+      resetFailures: () => {
+        this.consecutiveFailures = 0;
+      },
+      focusInput: () => this.focusChatInputAfterAutoSwitch(isCurrent),
+    };
   }
 
   private maybeNotifyAutoApplyFailure() {
@@ -186,13 +209,12 @@ export class DefaultModelAutoApply {
    * Delayed version of checkAndLockModel for SPA navigation.
    * Adds a small delay to ensure the URL has actually changed.
    */
-  private async checkAndLockModelWithDelay() {
-    // Wait for SPA navigation to complete
-    await new Promise<void>((resolve) => window.setTimeout(resolve, 150));
-    void this.checkAndLockModel();
+  private checkAndLockModelWithDelay(): void {
+    this.schedule(() => void this.checkAndLockModel(), NAVIGATION_SETTLE_MS);
   }
 
   private async checkAndLockModel() {
+    if (!this.running) return;
     // Defaults remain visible in the cache while enforcement is paused.
     if (!this.preferences.enabled) return;
     // Only lock on new conversation pages
@@ -201,8 +223,11 @@ export class DefaultModelAutoApply {
     // Update last checked path
     this.lastCheckedPath = window.location.pathname;
 
+    const generation = this.generation;
     const { model: targetModel, thinking: targetThinking } =
       await this.preferences.reloadDefaults();
+    // Stopped while the defaults loaded: no lock loop may start.
+    if (generation !== this.generation) return;
     // Keep the raw value for the in-menu star display, but never *enforce*
     // Standard: it is Gemini's built-in default thinking level, so locking to it
     // is always a no-op that can only make the picker flash open on an
@@ -235,8 +260,10 @@ export class DefaultModelAutoApply {
     }
 
     // Generate a unique session ID to prevent duplicate selections in the same navigation
-    const sessionId = `${window.location.pathname}-${Date.now()}`;
+    const lockPath = window.location.pathname;
+    const sessionId = `${lockPath}-${Date.now()}`;
     this.autoSelectSessionId = sessionId;
+    const interaction = this.interactionFor(sessionId, lockPath);
     // Reset failure counter for new session
     this.consecutiveFailures = 0;
     this.pendingModelSwitchKey = null;
@@ -263,7 +290,7 @@ export class DefaultModelAutoApply {
         return;
       }
 
-      await this.tickLock(targetModel, enforcedThinking);
+      await this.tickLock(targetModel, enforcedThinking, interaction);
     }, 1000);
   }
 
@@ -274,6 +301,7 @@ export class DefaultModelAutoApply {
   private async tickLock(
     targetModel: DefaultModelSetting | null,
     targetThinking: DefaultThinkingLevel | null,
+    interaction: PickerInteraction,
   ) {
     if (this.shouldYieldToUserComposerActivity()) {
       this.stopLockTimer();
@@ -312,14 +340,16 @@ export class DefaultModelAutoApply {
         }
       }
 
-      const result = await this.picker.selectModel(targetModel, this.interaction);
+      const result = await this.picker.selectModel(targetModel, interaction);
+      // A newer loop may own the lock timer by now; acting on this result would stop it.
+      if (result === 'cancelled' || !interaction.isCurrent()) return;
       if (result === 'switched') {
         this.pendingModelSwitchKey = switchKey;
       } else if (result === 'already-selected') {
         this.pendingModelSwitchKey = null;
         this.consecutiveRejectedModelSwitches = 0;
         if (!thinkingOk && targetThinking) {
-          await this.picker.selectThinking(targetThinking, this.interaction);
+          await this.picker.selectThinking(targetThinking, interaction);
         } else {
           this.stopLockTimer();
         }
@@ -342,8 +372,9 @@ export class DefaultModelAutoApply {
         }
       }
 
-      const clicked = await this.picker.selectThinking(targetThinking, this.interaction);
-      if (clicked) {
+      const result = await this.picker.selectThinking(targetThinking, interaction);
+      if (result === 'cancelled' || !interaction.isCurrent()) return;
+      if (result === 'switched') {
         this.pendingThinkingSwitchKey = switchKey;
       } else {
         this.pendingThinkingSwitchKey = null;
@@ -373,9 +404,10 @@ export class DefaultModelAutoApply {
     this.checkTimer = null;
   }
 
-  private focusChatInputAfterAutoSwitch(): void {
-    const focusDelayMs = 120;
-    window.setTimeout(() => {
+  /** `isCurrent` is the lock loop's: a route change inside the delay must not focus the next page. */
+  private focusChatInputAfterAutoSwitch(isCurrent: () => boolean): void {
+    this.schedule(() => {
+      if (!isCurrent()) return;
       const input = this.findChatInputElement();
       if (!input) return;
 
@@ -384,7 +416,7 @@ export class DefaultModelAutoApply {
       } catch {
         input.focus();
       }
-    }, focusDelayMs);
+    }, REFOCUS_DELAY_MS);
   }
 
   private findChatInputElement(): HTMLElement | null {
