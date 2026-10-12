@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { logger } from '@/core/services/LoggerService';
 import { confirmDriver } from '@/tests/confirmDriver';
 
 import { ForkNodesService } from '../ForkNodesService';
@@ -16,6 +17,20 @@ vi.mock('../ForkNodesService', () => ({
 }));
 vi.mock('../chatPairs', () => ({ collectForkChatPairs: vi.fn() }));
 
+function appendNativeLink(href: string): HTMLAnchorElement {
+  const sidebar = document.createElement('conversations-list');
+  sidebar.setAttribute('data-test-id', 'all-conversations');
+  const row = document.createElement('gem-nav-list-item');
+  row.setAttribute('data-test-id', 'conversation');
+  const link = document.createElement('a');
+  link.className = 'gem-nav-list-item';
+  link.href = href;
+  row.appendChild(link);
+  sidebar.appendChild(row);
+  document.body.appendChild(sidebar);
+  return link;
+}
+
 describe('fork indicators', () => {
   let indicators: ReturnType<typeof createForkIndicators>;
   let source: ForkNode;
@@ -25,10 +40,21 @@ describe('fork indicators', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
+    // jsdom rejects Vitest's window proxy in view; omit only that realm field.
+    const NativeMouseEvent = MouseEvent;
+    vi.stubGlobal(
+      'MouseEvent',
+      class extends NativeMouseEvent {
+        constructor(type: string, options?: MouseEventInit) {
+          super(type, { ...options, view: null });
+        }
+      },
+    );
     sequence += 1;
+    window.history.replaceState({}, '', `/app/source-${sequence}`);
     source = {
       conversationId: `source-${sequence}`,
-      conversationUrl: `https://gemini.google.com/app/source-${sequence}`,
+      conversationUrl: `${window.location.origin}/app/source-${sequence}`,
       conversationTitle: 'Source',
       turnId: 's-1111111111111111',
       forkGroupId: `group-${sequence}`,
@@ -38,7 +64,7 @@ describe('fork indicators', () => {
     branch = {
       ...source,
       conversationId: `branch-${sequence}`,
-      conversationUrl: `https://gemini.google.com/app/branch-${sequence}`,
+      conversationUrl: `${window.location.origin}/app/branch-${sequence}`,
       forkIndex: 1,
     };
     document.body.innerHTML = '<div id="user">A turn</div>';
@@ -108,28 +134,127 @@ describe('fork indicators', () => {
     await indicators.inject();
     expect(fetch).toHaveBeenCalledOnce();
 
-    // jsdom rejects Vitest's window proxy in view; omit only that realm field.
-    const NativeMouseEvent = MouseEvent;
-    vi.stubGlobal(
-      'MouseEvent',
-      class extends NativeMouseEvent {
-        constructor(type: string, options?: MouseEventInit) {
-          super(type, { ...options, view: null });
-        }
-      },
-    );
-    const link = document.createElement('a');
-    link.href = branch.conversationUrl;
-    document.body.appendChild(link);
+    const link = appendNativeLink(branch.conversationUrl);
     const events: string[] = [];
     for (const type of ['pointerdown', 'mousedown', 'mouseup', 'click']) {
       link.addEventListener(type, (event) => {
         events.push(type);
         event.preventDefault();
+        if (type === 'click') window.history.pushState({}, '', link.pathname);
       });
     }
     document.querySelectorAll<HTMLButtonElement>('.gv-fork-indicator')[1].click();
     expect(events).toEqual(['pointerdown', 'mousedown', 'mouseup', 'click']);
+    expect(window.location.pathname).toBe(`/app/${branch.conversationId}`);
+  });
+
+  it('opens a fork through the router without reloading when its native sidebar row is absent', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
+    await indicators.inject();
+    const user = document.querySelector('#user')!;
+    const routed: string[] = [];
+    const onRoute = () => {
+      routed.push(window.location.pathname);
+      user.setAttribute('data-rendered-conversation', window.location.pathname);
+    };
+    window.addEventListener('popstate', onRoute, { once: true });
+
+    document.querySelectorAll<HTMLButtonElement>('.gv-fork-indicator')[1].click();
+
+    expect(routed).toEqual([`/app/${branch.conversationId}`]);
+    expect(document.querySelector('#user')).toBe(user);
+    expect(user.getAttribute('data-rendered-conversation')).toBe(`/app/${branch.conversationId}`);
+  });
+
+  it.each([
+    ['missing URL', ''],
+    ['external URL', 'https://other.example/u/2/gem/external-gem/{id}'],
+    ['malformed URL', 'http://['],
+    ['different conversation URL', '/u/2/app/other-conversation'],
+  ])('keeps the current account when a fork has a %s', async (_label, savedUrl) => {
+    window.history.replaceState({}, '', `/u/1/app/${source.conversationId}`);
+    branch.conversationUrl = savedUrl.replace('{id}', branch.conversationId);
+    const link = appendNativeLink(`/u/1/app/${branch.conversationId}`);
+    await indicators.inject();
+    // The host virtualizes the previously visible native row before navigation.
+    link.closest('conversations-list')!.remove();
+    document.querySelectorAll<HTMLButtonElement>('.gv-fork-indicator')[1].click();
+    expect(window.location.pathname).toBe(`/u/1/app/${branch.conversationId}`);
+    expect(window.location.origin).toBe(new URL(source.conversationUrl).origin);
+  });
+
+  it('keeps a saved Gem route in the current account instead of returning to its old account', async () => {
+    window.history.replaceState({}, '', `/u/1/app/${source.conversationId}`);
+    branch.conversationUrl = `${window.location.origin}/u/2/gem/my-gem/${branch.conversationId}?hl=en#turn`;
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
+    await indicators.inject();
+    document.querySelectorAll<HTMLButtonElement>('.gv-fork-indicator')[1].click();
+    expect(`${window.location.pathname}${window.location.search}${window.location.hash}`).toBe(
+      `/u/1/gem/my-gem/${branch.conversationId}?hl=en#turn`,
+    );
+  });
+
+  it.each([
+    'outside sidebar',
+    'other origin',
+    'other account',
+    'wrong conversation',
+    'malformed URL',
+    'wrong Gem',
+  ])('ignores a fork link with %s instead of misrouting the native click', async (mismatch) => {
+    window.history.replaceState({}, '', `/u/1/app/${source.conversationId}`);
+    branch.conversationUrl = `${window.location.origin}/u/1/gem/right-gem/${branch.conversationId}`;
+    const href =
+      mismatch === 'other origin'
+        ? `https://other.example/u/1/gem/right-gem/${branch.conversationId}`
+        : mismatch === 'other account'
+          ? `/u/2/gem/right-gem/${branch.conversationId}`
+          : mismatch === 'wrong conversation'
+            ? '/u/1/gem/right-gem/other-conversation'
+            : mismatch === 'malformed URL'
+              ? 'http://['
+              : mismatch === 'wrong Gem'
+                ? `/u/1/gem/other-gem/${branch.conversationId}`
+                : `/u/1/gem/right-gem/${branch.conversationId}`;
+    const link = appendNativeLink(href);
+    if (mismatch === 'outside sidebar') document.body.appendChild(link.parentElement!);
+    const clicked = vi.fn((event: Event) => event.preventDefault());
+    link.addEventListener('click', clicked);
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
+    await indicators.inject();
+    document.querySelectorAll<HTMLButtonElement>('.gv-fork-indicator')[1].click();
+    expect(clicked).not.toHaveBeenCalled();
+    expect(window.location.pathname).toBe(`/u/1/gem/right-gem/${branch.conversationId}`);
+  });
+
+  it('keeps the page and its fork buttons when the router rejects navigation', async () => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('offline'));
+    await indicators.inject();
+    const user = document.querySelector('#user');
+    const warning = vi.spyOn(logger, 'warn').mockImplementation(() => {});
+    const pageLocation = window.location;
+    const hardNavigation = vi.fn();
+    vi.stubGlobal('window', {
+      history: window.history,
+      location: {
+        origin: pageLocation.origin,
+        pathname: pageLocation.pathname,
+        assign: hardNavigation,
+        reload: hardNavigation,
+        set href(value: string) {
+          hardNavigation(value);
+        },
+      },
+    });
+    vi.spyOn(window.history, 'pushState').mockImplementation(() => {
+      throw new DOMException('Navigation rejected', 'SecurityError');
+    });
+    document.querySelectorAll<HTMLButtonElement>('.gv-fork-indicator')[1].click();
+    expect(window.location.pathname).toBe(`/app/${source.conversationId}`);
+    expect(document.querySelector('#user')).toBe(user);
+    expect(document.querySelectorAll('.gv-fork-indicator')).toHaveLength(2);
+    expect(warning).toHaveBeenCalledOnce();
+    expect(hardNavigation).not.toHaveBeenCalled();
   });
 
   it('removes a branch link only after the user confirms', async () => {

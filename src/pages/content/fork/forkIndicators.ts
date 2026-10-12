@@ -5,6 +5,7 @@ import { getTranslationSync } from '../../../utils/i18n';
 import { ForkNodesService } from './ForkNodesService';
 import { buildBranchDisplayNodes } from './branching';
 import { collectForkChatPairs } from './chatPairs';
+import { navigateToForkConversation } from './forkNavigation';
 import type { ForkNode } from './forkTypes';
 import { getLegacyTurnIndex } from './turnId';
 
@@ -41,41 +42,6 @@ export function createForkIndicators({
     } catch {
       return null;
     }
-  }
-
-  function findSidebarConversationLinkById(conversationId: string): HTMLAnchorElement | null {
-    const links = Array.from(
-      document.querySelectorAll<HTMLAnchorElement>('a[href*="/app/"], a[href*="/gem/"]'),
-    );
-    for (const link of links) {
-      if (extractConversationIdFromHref(link.href) === conversationId) return link;
-    }
-    return null;
-  }
-
-  function triggerNativeClick(target: HTMLElement): void {
-    const options = { bubbles: true, cancelable: true, view: window };
-    target.dispatchEvent(new MouseEvent('pointerdown', options));
-    target.dispatchEvent(new MouseEvent('mousedown', options));
-    target.dispatchEvent(new MouseEvent('mouseup', options));
-    target.dispatchEvent(new MouseEvent('click', options));
-  }
-
-  function navigateToForkConversation(node: ForkNode): void {
-    if (!node.conversationId) return;
-    const currentConversationId = getConversationId();
-    if (currentConversationId === node.conversationId) return;
-
-    const sidebarLink = findSidebarConversationLinkById(node.conversationId);
-    if (sidebarLink) {
-      triggerNativeClick(sidebarLink);
-      return;
-    }
-
-    const fallbackUrl =
-      node.conversationUrl ||
-      `${window.location.origin}/app/${encodeURIComponent(node.conversationId)}`;
-    window.location.assign(fallbackUrl);
   }
 
   function collectSidebarConversationIds(): Set<string> {
