@@ -35,18 +35,16 @@ describe('Gemini site.json parity', () => {
     expect(geminiAdapter.matches).toEqual(GEMINI_MATCHES);
   });
 
-  it('declares no anchor or field the TypeScript adapter lacked, besides the code block', () => {
-    // A new anchor widens what local plugins may target and changes the public SKILL.md;
-    // new anchors wait for a live-page check. `codeBlock` is the tag the native long code
-    // block collapse and `contentStyle.css` have always targeted on Gemini.
-    expect(Object.keys(geminiAdapter.selectors).sort()).toEqual(
-      ['assistantTurn', 'codeBlock', 'composer', 'sidebar', 'userTurn'].sort(),
-    );
-    expect([...geminiAdapter.capabilities].sort()).toEqual(
-      ['chat', 'composer', 'darkMode', 'sidebar'].sort(),
-    );
-    expect(geminiAdapter.conversationIdPattern).toBeUndefined();
-    expect(geminiAdapter.turnKeyAttributes).toBeUndefined();
+  it('finds separate main and edit send controls and excludes the generated Stop wrapper', () => {
+    document.body.innerHTML =
+      '<div class="text-input-field" id="main"><rich-textarea><div class="ql-editor" contenteditable="true"></div></rich-textarea>' +
+      '<gem-icon-button class="send-button submit"><button id="send"></button></gem-icon-button></div>' +
+      '<div class="user-query-container edit-mode" id="edit"><div class="edit-container"><rich-textarea><div contenteditable="true"></div></rich-textarea></div>' +
+      '<gem-button class="update-button"><button id="update"></button></gem-button></div>';
+    expect(ids(geminiAdapter.selectors.composerRoot)).toEqual(['main', 'edit']);
+    expect(ids(geminiAdapter.selectors.sendButton)).toEqual(['send', 'update']);
+    document.querySelector('.send-button')!.className = 'send-button stop';
+    expect(ids(geminiAdapter.selectors.sendButton)).toEqual(['update']);
   });
 
   it('keeps Voyager’s own accent: no brand colour', () => {

@@ -4,7 +4,11 @@
  * verbatim from the legacy send behavior module; not pure.
  */
 import { hasPendingComposerUpload } from '@/core/services/composer/sendGuards';
-import { SEND_BUTTON_SELECTORS, isSendActionButton } from '@/pages/content/sendBehavior/sendButton';
+import {
+  SEND_BUTTON_SELECTORS,
+  isSendActionButton,
+  isUnavailableSendControl,
+} from '@/pages/content/sendBehavior/sendButton';
 import { getTextOffset, setCaretPosition } from '@/pages/content/sendBehavior/utils';
 
 export type EditableKind = 'contenteditable' | 'textarea';
@@ -53,12 +57,17 @@ export function findSendButton(
       try {
         const element = container.querySelector(selector);
         if (element instanceof HTMLElement) {
-          const closestButton = element.closest('button');
+          // Gemini's gem-button wrapper does not forward click() to its inner button.
+          const closestButton = element.closest('button') ?? element.querySelector('button');
           // Ensure the found button is still within our safe container boundary
           const button =
             closestButton && container.contains(closestButton) ? closestButton : element;
 
-          if (button instanceof HTMLElement && button.offsetParent !== null) {
+          if (
+            button instanceof HTMLElement &&
+            button.offsetParent !== null &&
+            !isUnavailableSendControl(button)
+          ) {
             return button;
           }
         }

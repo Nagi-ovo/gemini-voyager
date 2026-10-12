@@ -41,6 +41,7 @@ const UPDATE_BUTTON_LABEL_PATTERN =
 const SEND_COMPOSER_SELECTORS = [
   'form',
   '.text-input-field',
+  '.user-query-container.edit-mode',
   '.input-area',
   'ms-prompt-input-wrapper',
   'ms-prompt-input',
@@ -65,8 +66,23 @@ function hasSendActionIcon(button: HTMLButtonElement): boolean {
   return iconName === 'send' || iconName === 'play_arrow';
 }
 
+/** Gemini uses the same send-button wrapper for Stop during generation. */
+export function isUnavailableSendControl(control: HTMLElement): boolean {
+  if (control.closest('.stop, .gem-button-disabled, .ds-button--disabled, [aria-disabled="true"]'))
+    return true;
+  const button = control instanceof HTMLButtonElement ? control : control.querySelector('button');
+  if (!button) return control.matches(':disabled');
+  return (
+    button.disabled ||
+    button.matches('[aria-disabled="true"]') ||
+    !!button.querySelector('mat-icon[fonticon="stop"], mat-icon[fonticon="stop_circle"]') ||
+    /\b(stop|cancel)\b|停止|取消|중지|отмен|останов|إيقاف/i.test(getButtonLabel(button))
+  );
+}
+
 /** Recognizes selector-based, localized-label, and icon-only send/action buttons. */
 export function isSendActionButton(button: HTMLButtonElement): boolean {
+  if (isUnavailableSendControl(button)) return false;
   const matchesKnownSelector = SEND_BUTTON_SELECTORS.some((selector) => {
     try {
       return button.matches(selector) || Boolean(button.querySelector(selector));

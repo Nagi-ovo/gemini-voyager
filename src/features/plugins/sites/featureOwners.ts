@@ -42,6 +42,8 @@ export type OwnedFeatureId =
   | 'inputCollapse'
   | 'researchPack'
   | 'defaultModel'
+  | 'ctrlEnterSend'
+  | 'safariEnterFix'
   /**
    * Stage 6: native until their own flips, which add the official id, the
    * owner entry and the binding together. Missing from the table reads 'legacy'.
@@ -70,6 +72,8 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiInputCollapse: 'voyager.gemini-input-collapse',
   geminiResearchPack: 'voyager.gemini-research-pack',
   geminiDefaultModel: 'voyager.gemini-default-model',
+  geminiCtrlEnterSend: 'voyager.gemini-ctrl-enter-send',
+  geminiSafariEnterFix: 'voyager.gemini-safari-enter-fix',
 } as const;
 
 export interface OwnedFeature {
@@ -95,6 +99,22 @@ export interface OwnedFeature {
  * source defers the host policy on read).
  */
 export const FEATURE_OWNERS: readonly OwnedFeature[] = [
+  {
+    site: 'gemini',
+    feature: 'ctrlEnterSend',
+    owner: 'plugin',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend,
+    handlers: ['sendShortcut'],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'safariEnterFix',
+    owner: 'plugin',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix,
+    handlers: [],
+    healthTracking: false,
+  },
   {
     site: 'gemini',
     feature: 'formulaCopy',

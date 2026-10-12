@@ -72,6 +72,7 @@ describe('feature owners', () => {
         'wavedrom',
         'echarts',
         'mermaid',
+        'sendShortcut',
       ]),
     );
     expect(pluginOwnedHandlers('aistudio')).toEqual(new Set(['formulaCopy']));

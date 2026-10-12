@@ -16,6 +16,7 @@ export function InputSettingsCard({
   currentPlatformLabel,
   isVisible,
   vimModeNote,
+  sendModeNote,
   t,
 }: {
   values: InputPopupSettingsValues;
@@ -26,6 +27,7 @@ export function InputSettingsCard({
   isVisible: (settingId: string) => boolean;
   /** Shown under the Vim mode hint, e.g. why it is paused on this page. */
   vimModeNote?: ReactNode;
+  sendModeNote?: ReactNode;
   t: (key: TranslationKey) => string;
 }) {
   const {
@@ -133,6 +135,7 @@ export function InputSettingsCard({
                   getModifierKey(),
                 )}
               </p>
+              {sendModeNote}
               <div className="mt-1 flex items-center gap-2 text-xs">
                 <span className="text-muted-foreground">{t('currentPlatform')}:</span>
                 <span className="bg-secondary text-foreground rounded px-1.5 py-0.5 font-medium">

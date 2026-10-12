@@ -162,3 +162,20 @@ export function createGeminiInputStartup(
     },
   };
 }
+
+/** Both Gemini send features share one legacy registration and must flip together. */
+export async function startGeminiSendKeys(
+  admission: OfficialAdmissionController,
+  startLegacy: () => Promise<unknown>,
+  ownerOf: OwnerOf = featureOwner,
+): Promise<void> {
+  const owner = ownerOf('gemini', 'ctrlEnterSend');
+  if (owner !== ownerOf('gemini', 'safariEnterFix')) {
+    throw new Error('Gemini send features must share one owner');
+  }
+  if (owner === 'legacy') await startLegacy();
+  else {
+    admission.admit('gemini', 'ctrlEnterSend');
+    admission.admit('gemini', 'safariEnterFix');
+  }
+}

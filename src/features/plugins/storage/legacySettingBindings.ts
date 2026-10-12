@@ -15,6 +15,7 @@
  */
 import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
+import { isSafari } from '@/core/utils/browser';
 import { isChatWidthSwitchOn } from '@/core/utils/chatAppearanceValues';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
@@ -68,6 +69,20 @@ function binding(
 }
 
 export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding>> = {
+  [OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend,
+    StorageKeys.CTRL_ENTER_SEND,
+    onOnlyIfTrue,
+  ),
+  [OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix]: {
+    ...binding(
+      OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix,
+      StorageKeys.SAFARI_ENTER_FIX,
+      onOnlyIfTrue,
+    ),
+    derive: (snapshot) =>
+      isSafari() && snapshotValue(snapshot, StorageKeys.SAFARI_ENTER_FIX) === true,
+  },
   // One switch for both sites, as the popup has always presented it.
   [OFFICIAL_PLUGIN_IDS.geminiFormulaCopy]: binding(
     OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,

@@ -1,0 +1,60 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.gemini-ctrl-enter-send",
+  "name": "Gemini · Ctrl/Cmd+Enter to send",
+  "version": "1.0.0",
+  "description": "Press Ctrl/Cmd+Enter to send messages, Enter to add a new line",
+  "i18n": {
+    "zh": {
+      "name": "Gemini · Ctrl/Cmd+Enter 发送",
+      "description": "按 Ctrl/Cmd+Enter 发送消息，Enter 键仅换行"
+    },
+    "zh_TW": {
+      "name": "Gemini · Ctrl/Cmd+Enter 傳送",
+      "description": "按 Ctrl/Cmd+Enter 傳送訊息，Enter 鍵僅換行"
+    },
+    "ja": {
+      "name": "Gemini · Ctrl/Cmd+Enter で送信",
+      "description": "Ctrl/Cmd+Enter でメッセージを送信、Enter で改行"
+    },
+    "ko": {
+      "name": "Gemini · Ctrl/Cmd+Enter 로 전송",
+      "description": "Ctrl/Cmd+Enter 를 눌러 메시지를 전송하고, Enter 로 줄바꿈을 합니다"
+    },
+    "fr": {
+      "name": "Gemini · Ctrl/Cmd+Entrée pour envoyer",
+      "description": "Appuyez sur Ctrl/Cmd+Entrée pour envoyer, Entrée pour un saut de ligne"
+    },
+    "es": {
+      "name": "Gemini · Ctrl/Cmd+Enter para enviar",
+      "description": "Presiona Ctrl/Cmd+Enter para enviar mensajes, Enter para agregar una nueva línea"
+    },
+    "pt": {
+      "name": "Gemini · Ctrl/Cmd+Enter para enviar",
+      "description": "Pressione Ctrl/Cmd+Enter para enviar mensagens, Enter para nova linha"
+    },
+    "ru": {
+      "name": "Gemini · Ctrl/Cmd+Enter для отправки",
+      "description": "Нажмите Ctrl/Cmd+Enter для отправки сообщений, Enter для новой строки"
+    },
+    "ar": {
+      "name": "Gemini · Ctrl/Cmd+Enter للإرسال",
+      "description": "اضغط Ctrl/Cmd+Enter لإرسال الرسائل، Enter لإضافة سطر جديد"
+    }
+  },
+  "author": "voyager-official",
+  "category": "productivity",
+  "license": "GPL-3.0-or-later",
+  "engine": ">=1.8.0",
+  "tier": "declarative",
+  "matches": ["https://gemini.google.com/*"],
+  "contributes": {
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "sendShortcut",
+        "params": {}
+      }
+    ]
+  }
+}

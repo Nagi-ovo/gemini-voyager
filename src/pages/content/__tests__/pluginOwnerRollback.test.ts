@@ -31,7 +31,7 @@ import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCa
 import { startGeminiChatAppearance } from '../appearanceStartup';
 import { startOwnedFeature } from '../featureOwnerStartup';
 import { createGeminiBuiltinStartup } from '../geminiBuiltinStartup';
-import { createGeminiInputStartup } from '../inputStartup';
+import { createGeminiInputStartup, startGeminiSendKeys } from '../inputStartup';
 import { registerBuiltinNativeHandlers } from '../pluginNativeRegistration';
 import { createGeminiRendererStartup } from '../rendererStartup';
 
@@ -132,8 +132,26 @@ vi.mock('@/features/formulaCopy', () => ({
 const GEMINI_URL = 'https://gemini.google.com/app/abc';
 const LOCAL_FORMULA = 'local.me.gemini-formula';
 const LOCAL_COLLAPSE = 'local.me.gemini-collapse';
+const LOCAL_SEND = 'local.me.gemini-send';
 
 const storedLocalPlugins: LocalPluginRecordMap = {
+  [LOCAL_SEND]: {
+    manifest: {
+      id: LOCAL_SEND,
+      name: 'My send shortcut',
+      version: '1.0.0',
+      description: 'Use Ctrl+Enter to send',
+      author: 'me',
+      category: 'productivity',
+      license: 'MIT',
+      engine: '>=1.8.0',
+      tier: 'declarative',
+      matches: ['https://gemini.google.com/*'],
+      contributes: { domOps: [{ op: 'native', handler: 'sendShortcut', params: {} }] },
+    },
+    importedAt: 1,
+    updatedAt: 1,
+  },
   [LOCAL_COLLAPSE]: {
     manifest: {
       id: LOCAL_COLLAPSE,
@@ -188,6 +206,7 @@ beforeEach(() => {
   const state = {
     [LOCAL_FORMULA]: { enabled: true, installedAt: 1 },
     [LOCAL_COLLAPSE]: { enabled: true, installedAt: 1 },
+    [LOCAL_SEND]: { enabled: true, installedAt: 1 },
     // A stale "on" in plugin state for an official plugin is ignored as well.
     [OFFICIAL_PLUGIN_IDS.geminiHideInputHalo]: { enabled: true, installedAt: 1 },
   };
@@ -208,6 +227,7 @@ describe('rolling every owned feature back to its native module', () => {
       'wavedrom',
       'echarts',
       'mermaid',
+      'sendShortcut',
     ]) {
       expect(allowsNativeHandler('gemini', handler)).toBe(false);
     }
@@ -273,6 +293,16 @@ describe('rolling every owned feature back to its native module', () => {
     (chrome.storage.sync.get as unknown as Mock).mockReset();
   });
 
+  it('rolls both Gemini send entries back to one native send behavior and admits neither official plugin', async () => {
+    const admission = createOfficialAdmission();
+    const startLegacy = vi.fn(async () => {});
+    await startGeminiSendKeys(admission, startLegacy);
+    admission.close();
+    expect(startLegacy).toHaveBeenCalledTimes(1);
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend)).toBe('denied');
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix)).toBe('denied');
+  });
+
   it.each([
     ['research pack', 'researchPack', OFFICIAL_PLUGIN_IDS.geminiResearchPack],
     ['default model', 'defaultModel', OFFICIAL_PLUGIN_IDS.geminiDefaultModel],
@@ -325,6 +355,7 @@ describe('rolling every owned feature back to its native module', () => {
     // Import would refuse them now; reading what the user already stored does not.
     expect(validateLocalManifest(storedLocalPlugins[LOCAL_FORMULA].manifest).success).toBe(false);
     expect(validateLocalManifest(storedLocalPlugins[LOCAL_COLLAPSE].manifest).success).toBe(false);
+    expect(validateLocalManifest(storedLocalPlugins[LOCAL_SEND].manifest).success).toBe(false);
     registerBuiltinNativeHandlers();
 
     // The content start points run (natively) and close the admission, with
@@ -367,6 +398,7 @@ describe('rolling every owned feature back to its native module', () => {
     expect(formula.starts).toBe(0);
     // The official plugins are the native modules' business: none is listed.
     expect(pluginHost.getStatuses()).toEqual([
+      { id: LOCAL_SEND, version: '1.0.0', kind: 'blocked', blockedReason: 'host-policy' },
       { id: LOCAL_COLLAPSE, version: '1.0.0', kind: 'blocked', blockedReason: 'host-policy' },
       { id: LOCAL_FORMULA, version: '1.0.0', kind: 'blocked', blockedReason: 'host-policy' },
     ]);

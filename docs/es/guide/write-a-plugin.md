@@ -60,7 +60,7 @@ Además de las comprobaciones comunes del manifest (consulta [Contribuir plugins
 - usar solo claves semánticas que declaren todos los sitios con los que coincide;
 - añadir exactamente una clase por `addClass`, empezando por `gv-`;
 - usar ajustes boolean, number o select (string y color aún no tienen control en el popup);
-- no usar `theme` en Gemini ni en AI Studio, y usar solo las primitivas que cada sitio permite: `formulaCopy`, `vimInput`, `userLatex`, `codeCollapse`, `mermaid`, `wavedrom` y `echarts` en Gemini, `formulaCopy` en AI Studio. Ejecutan el mismo código que los ajustes propios de Voyager. `formulaCopy` y `vimInput` (copiar fórmulas y modo Vim del campo de entrada) se ejecutan una sola vez por página, el ajuste integrado o un plugin, no ambos. Al cargar la página, o mientras ninguno se esté ejecutando, el ajuste integrado va primero; después, el que ya está en marcha sigue funcionando y el otro aparece en pausa. Desactiva uno para que el otro tome el relevo. Las demás reclaman la página elemento a elemento y funcionan junto al ajuste integrado: una línea o un bloque de código que el otro ya tiene se le deja a él.
+- no usar `theme` en Gemini ni en AI Studio, y usar solo las primitivas que cada sitio permite: `formulaCopy`, `vimInput`, `userLatex`, `codeCollapse`, `mermaid`, `wavedrom` y `echarts`, `sendShortcut` en Gemini, `formulaCopy` en AI Studio. Ejecutan el mismo código que los ajustes propios de Voyager. `formulaCopy` y `vimInput` (copiar fórmulas y modo Vim del campo de entrada) se ejecutan una sola vez por página, el ajuste integrado o un plugin, no ambos. Al cargar la página, o mientras ninguno se esté ejecutando, el ajuste integrado va primero; después, el que ya está en marcha sigue funcionando y el otro aparece en pausa. Desactiva uno para que el otro tome el relevo. Las demás reclaman la página elemento a elemento y funcionan junto al ajuste integrado: una línea o un bloque de código que el otro ya tiene se le deja a él.
 
 Las traducciones (`i18n`) son opcionales.
 
@@ -69,3 +69,5 @@ Las traducciones (`i18n`) son opcionales.
 Un plugin local se queda en tu navegador; exporta su JSON desde la lista de plugins para llevarlo a otro lugar. Si puede ser útil para todos, proponlo para el catálogo oficial: [Contribuir plugins](./plugin-contribution.md) describe ese camino.
 
 Solo puede ejecutarse un plugin de atajo de envío por página; el siguiente muestra un conflicto. El parámetro opcional `mode` (sinceEngine `next`) es `ctrlEnterSends` (predeterminado) o `enterSends`. Confirmar el IME no envía el mensaje. Gemini/AI Studio habilitan esta primitiva tras migrar la función.
+
+En Gemini, `sendShortcut` puede sustituir el envío oficial Ctrl/Cmd+Enter: desactiva su ajuste y activa el plugin local. Solo admite `ctrlEnterSends`; no se ejecuta en Enterprise. `composerRoot` incluye la entrada principal y la de edición; `sendButton` excluye Detener.

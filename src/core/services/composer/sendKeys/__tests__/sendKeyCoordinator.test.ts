@@ -107,6 +107,62 @@ describe('send key coordinator', () => {
     coordinator.stop();
   });
 
+  it.each(['stop', 'disabled', 'upload'])(
+    'does not click Gemini’s shared send wrapper while %s',
+    (state) => {
+      const { input, button } = mountGeminiComposer();
+      const wrapper = document.createElement('gem-icon-button');
+      wrapper.className = 'send-button';
+      button.before(wrapper);
+      wrapper.append(button);
+      Object.defineProperty(wrapper, 'offsetParent', { configurable: true, value: document.body });
+      if (state === 'stop') {
+        wrapper.classList.add('stop');
+        button.setAttribute('aria-label', 'Stop response');
+        button.innerHTML = '<mat-icon fonticon="stop"></mat-icon>';
+      } else if (state === 'disabled') button.disabled = true;
+      else wrapper.parentElement!.append(document.createElement('progress'));
+      const click = vi.fn((event: Event) => event.preventDefault());
+      wrapper.addEventListener('click', click);
+      const coordinator = createSendKeyCoordinator('gemini');
+      coordinator.registerMainMode({ source: 'test', mode: 'ctrlEnterSends' });
+      pressEnter(input, { ctrlKey: true });
+      expect(click).not.toHaveBeenCalled();
+      wrapper.classList.remove('stop');
+      button.disabled = false;
+      button.setAttribute('aria-label', 'Send message');
+      button.innerHTML = '';
+      wrapper.parentElement!.querySelector('progress')?.remove();
+      pressEnter(input, { ctrlKey: true });
+      expect(click).toHaveBeenCalledOnce();
+      coordinator.stop();
+    },
+  );
+
+  it('sends the edit Update without borrowing the main composer button', () => {
+    const main = mountGeminiComposer();
+    const container = document.createElement('div');
+    container.className = 'user-query-container edit-mode';
+    container.innerHTML =
+      '<div class="edit-container"><div class="edit-form"><div class="edit-container"><rich-textarea><div contenteditable="true"></div></rich-textarea></div></div><div class="edit-button-area"><gem-button class="update-button"><button>Update</button></gem-button></div></div>';
+    document.body.append(container);
+    const input = container.querySelector<HTMLElement>('[contenteditable]')!;
+    const button = container.querySelector<HTMLElement>('.update-button button')!;
+    Object.defineProperty(container.querySelector('.update-button'), 'offsetParent', {
+      configurable: true,
+      value: document.body,
+    });
+    Object.defineProperty(button, 'offsetParent', { configurable: true, value: document.body });
+    const click = vi.spyOn(button, 'click');
+    const mainClick = vi.spyOn(main.button, 'click');
+    const coordinator = createSendKeyCoordinator('gemini');
+    coordinator.registerMainMode({ source: 'test', mode: 'ctrlEnterSends' });
+    pressEnter(input, { ctrlKey: true });
+    expect(click).toHaveBeenCalledOnce();
+    expect(mainClick).not.toHaveBeenCalled();
+    coordinator.stop();
+  });
+
   it('attaches no listener or observer while no send mode is registered', async () => {
     vi.useFakeTimers();
     const { input } = mountGeminiComposer();

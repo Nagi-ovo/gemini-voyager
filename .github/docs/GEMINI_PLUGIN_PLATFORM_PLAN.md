@@ -596,3 +596,11 @@ Jesse 在 Chrome 中用验收副本实测：dark 主题，只用已有对话，�
 以 `.build/codex-handoff/TODO.md` 的决定替代 §7.1 中的待答状态：发送与草稿向 local 开放；发送键冲突提示适用于所有站点；阶段 4 五个小毛病都修；用量关闭时不采集；fork 原生链接优先、History API 兜底且保留账号，关闭后仍完成实际首发的链接；消息时间独立于时间线；星标/层级公共数据能力完成后再开放 local 时间线。所有批次仅在 main 本地提交，不 push。
 
 **4A-2 + 4B（IME 必须同批）**：`sendShortcut` 增加可选 `mode`（sinceEngine next），Gemini/AI Studio 使用现有协调器及站点策略，Gemini 拒绝反向模式和 Enterprise；所有站点统一认领 `composer-send-key-mode`，在位者保留资源，新冲突者显示冲突，官方在 admission 前保留资源。协调器跳过已阻止的键；发送端和 history、Folder Project、slash、防自动滚动桥及 MAIN hook 同时识别 composition/Process/229。旁路读者在设置读取完成后跟随 Gemini 的有效发送键，并保留各自原有修饰键规则；AI Studio slash 旧读法留到单独 Q2-e 批次。尚未翻转发送与草稿 owner。变异确认：移除 IME、defaultPrevented、claim、mode 改动，各自行为测试失败。浏览器发送验收在 owner 翻转后进行。
+
+**4C-1 Gemini 发送翻转**：Ctrl/Cmd+Enter catalog 插件与 Safari fallback builtin 同步交给 PluginHost，旧键仍是唯一开关。`startGeminiSendKeys` 在旧位置同时 admit 两项；Safari derive 仅在 Safari 启用。公开经 Chrome 验证的 composerRoot/sendButton；保持原 composer anchor。Chrome 真机确认停止按钮同样含 `.send-button`，查找器新增停止/禁用守卫，并补 `.edit-container`（编辑 Update 的真实容器）；这是批准的发送修复，不声称与旧缺陷对等。local 默认 sendShortcut 在官方关闭后接管，在位者与冷启动优先规则不变。回退只改两项 owner：同一个 legacy starter 启动一次，已存 local 仍保留但 host-policy 阻止。4A-2/4B 完整验证已通过（10259 tests，三浏览器构建、CLI、docs），提交 `135115ec`。
+
+4C-1 追加真机修复：编辑按钮的 `gem-button` 外壳有可见布局，但 `click()` 不会触发内部原生按钮；查找器现在优先返回内部 button，避免快捷键被消费却不提交。测试模拟外壳和内部按钮均可见，撤掉内部按钮选择后症状测试失败。
+
+4C-1 编辑边界实测：Gemini 的输入框先匹配到无按钮的内层 `.edit-container`，Update 在同名外层的兄弟区域；发送和旁路点击读取改用共同的 `.user-query-container.edit-mode`，catalog 同步公开。现有编辑回归采用真实嵌套结构，避免借用主输入框按钮。
+
+4C-1 验证：mutation 去掉 Stop 守卫、编辑共同边界、内部 button 选择、owner 翻转，各自症状测试失败；rollback 集成通过。Chrome 主框 Enter 保留换行、Ctrl+Enter 发一次，编辑 Ctrl+Enter 更新自身测试问题并退出编辑。完整 verify:pr 通过（10271 tests / 840 files，Chrome/Firefox/Safari、CLI、docs）。`.build/codex-handoff/s4c-edit-proof.png` 保存编辑提交证据；Safari 实机组合键留在最终跨浏览器验收。

@@ -95,6 +95,7 @@ describe('packaged host policy', () => {
       'wavedrom',
       'echarts',
       'mermaid',
+      'sendShortcut',
     ]);
     const aistudioOpen = new Set(['formulaCopy']);
     const primitives = listPrimitiveNames();

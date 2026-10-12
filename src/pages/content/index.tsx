@@ -34,7 +34,7 @@ import { startFolderSpacingAdjuster } from './folderSpacing/index';
 import { startNativeFormulaCopyForContent } from './formulaCopyStartup';
 import { createGeminiBuiltinStartup } from './geminiBuiltinStartup';
 import { enterInitialization } from './initializationEntry';
-import { createGeminiInputStartup, startPageSendKeys } from './inputStartup';
+import { createGeminiInputStartup, startGeminiSendKeys, startPageSendKeys } from './inputStartup';
 import { initKaTeXConfig } from './katexConfig';
 import { NATIVE_FEATURES } from './nativeFeatures';
 import { PageRetiredError, createPageSteps } from './pageInitSteps';
@@ -230,7 +230,11 @@ async function initializeFeatures(): Promise<void> {
       });
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
-      await settle(mountForPage(NATIVE_FEATURES.sendBehaviorGemini));
+      await settle(
+        startGeminiSendKeys(officialAdmission, () =>
+          mountForPage(NATIVE_FEATURES.sendBehaviorGemini),
+        ),
+      );
       await settle(geminiBuiltins.startPreventAutoScroll());
       await startOwnedFeature(officialAdmission, 'gemini', 'formulaCopy', () =>
         startNativeFormulaCopyForContent({

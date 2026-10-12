@@ -166,10 +166,13 @@ Semantic anchors Gemini declares (use them as { "kind": "semantic", "key": … }
 - codeBlock: a rendered code block (today it matches `code-block`)
 - composer: the prompt input the user types into (today it matches `input-area-v2, rich-textarea, .text-input-field`)
 - sidebar: the conversation list / navigation rail (today it matches `bard-sidenav, .gv-folder-container`)
+- composerRoot: the container around the prompt input and its action buttons (today it matches `.text-input-field, .user-query-container.edit-mode, [role="dialog"]`)
+- sendButton: the button that sends the prompt (may exist only while the prompt is non-empty) (today it matches `.send-button.submit button, .update-button button`)
 
-Gemini does not declare thinkingBlock, sidePanel, headerActions, scrollContainer, composerRoot, sendButton: a plugin that relies on one of these is refused. Use a CSS selector instead.
+Gemini does not declare thinkingBlock, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
-Gemini allows only these primitives (native ops): codeCollapse, echarts, formulaCopy, mermaid, userLatex, vimInput, wavedrom. No "theme".
+Gemini allows only these primitives (native ops): codeCollapse, echarts, formulaCopy, mermaid, sendShortcut, userLatex, vimInput, wavedrom. No "theme".
+- `sendShortcut` runs the same code as Voyager’s own Ctrl/Cmd+Enter send setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `sendShortcut` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
 - `formulaCopy` runs the same code as Voyager’s own Formula copy setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `formulaCopy` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
 - `vimInput` runs the same code as Voyager’s own Input Vim mode setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `vimInput` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
 - `userLatex` runs the same code as Voyager’s own Render LaTeX in my messages setting. Both can run on one page: each claims the elements it works on, and an element the other already holds is left to it.

@@ -99,6 +99,8 @@ describe('legacy enable bindings', () => {
         StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY,
         StorageKeys.RESEARCH_PACK_ENABLED,
         StorageKeys.DEFAULT_MODEL_AUTO_APPLY,
+        StorageKeys.CTRL_ENTER_SEND,
+        StorageKeys.SAFARI_ENTER_FIX,
         StorageKeys.CHAT_FONT_SIZE,
         StorageKeys.CHAT_LINE_HEIGHT,
         StorageKeys.CHAT_PARAGRAPH_SPACING,

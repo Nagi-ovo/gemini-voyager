@@ -35,6 +35,8 @@ const SITE_NOTES: Readonly<Record<string, readonly string[]>> = {
 
 /** The popup setting behind each feature a packaged official plugin runs. */
 const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
+  ctrlEnterSend: 'Ctrl/Cmd+Enter send',
+  safariEnterFix: 'Safari Enter fix',
   formulaCopy: 'Formula copy',
   vimInput: 'Input Vim mode',
   hideInputHalo: 'Hide input box halo',

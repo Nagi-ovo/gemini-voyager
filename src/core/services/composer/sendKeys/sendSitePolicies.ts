@@ -35,6 +35,9 @@ const LEGACY_SEND_CONTAINER_SELECTORS = [
   '.prompt-input-wrapper',
   '.prompt-input-container',
   // Active conversation edit container
+  // Gemini nests input-only edit-container inside the form that owns Update.
+  '.user-query-container.edit-mode',
+  '.edit-container',
   'chat-message',
   'form',
   // Modals/Dialogs
