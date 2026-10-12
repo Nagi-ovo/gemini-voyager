@@ -1,3 +1,4 @@
+import { findComposer } from '@/core/services/composer';
 /**
  * `draftSave` primitive: Gemini's draft auto-save on catalog sites. Unsent
  * text in the adapter's `composer` survives a refresh or a return to the same
@@ -6,7 +7,7 @@
  * These sites carry no account index in their routes, so drafts are scoped to
  * the site and conversation, not to the signed-in account.
  */
-import { findComposer } from '@/core/services/composer';
+import { geminiDraftPolicy } from '@/pages/content/draftSave/geminiDraftPolicy';
 
 import type { ManifestIssue } from '../../manifest/validate';
 import { getPrimitiveContract } from '../contracts';
@@ -40,7 +41,14 @@ export const draftSavePrimitive: Primitive<DraftSaveParams> = {
       findComposer(adapter, { doc: context.doc, requireVisible: false }) ? 1 : 0,
     );
     // Without a conversation route every chat would share one draft; save nothing instead.
-    if (!adapter?.selectors.composer || !adapter.conversationIdPattern) return;
-    startSiteDraftSave(scope, catalogDraftPolicy(adapter), context.doc);
+    if (!adapter?.selectors.composer) return;
+    const isGemini =
+      adapter.id === 'gemini' && context.doc.location.hostname === 'gemini.google.com';
+    if (!isGemini && !adapter.conversationIdPattern) return;
+    startSiteDraftSave(
+      scope,
+      isGemini ? geminiDraftPolicy() : catalogDraftPolicy(adapter),
+      context.doc,
+    );
   },
 };

@@ -101,6 +101,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.DEFAULT_MODEL_AUTO_APPLY,
         StorageKeys.CTRL_ENTER_SEND,
         StorageKeys.AISTUDIO_ENTER_SEND,
+        StorageKeys.DRAFT_AUTO_SAVE,
         StorageKeys.SAFARI_ENTER_FIX,
         StorageKeys.CHAT_FONT_SIZE,
         StorageKeys.CHAT_LINE_HEIGHT,

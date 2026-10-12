@@ -10,6 +10,8 @@
  */
 import type { Dispose, PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { DraftStore, draftStoreOptions } from '@/pages/content/draftSave/draftStore';
+import { registerDraftFlush } from '@/pages/content/draftSave/draftUnloadFlush';
+import { startGeminiDraftSendDetection } from '@/pages/content/draftSave/geminiDraftSendDetection';
 import { watchRouteChanges } from '@/pages/content/utils/routeWatcher';
 
 import { type DraftPolicy, sanitizeDraftAt } from './draftPolicy';
@@ -31,16 +33,15 @@ interface SendIntent {
 
 export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc: Document): void {
   const detection = policy.sendDetection;
-  if (detection.kind !== 'catalog') {
-    // Gemini's click, submit and polling detection still lives in the native module.
-    throw new Error(`draftSave session cannot detect sends as ${detection.kind}`);
-  }
-  const sendButton = detection.sendButton;
+  const sendButton = detection.kind === 'catalog' ? detection.sendButton : undefined;
   const keyHere = (): string | null =>
     policy.eligible(location, doc) ? policy.keyFor(location) : null;
   const composer = (): HTMLElement | null => policy.findInput(doc);
 
   let currentKey = keyHere();
+  let currentIdentity = policy.restoreIdentity(doc);
+  let inputRevision = 0;
+  let geminiSend: ReturnType<typeof startGeminiDraftSendDetection> | null = null;
   /** Bumped whenever the key changes, so a timer started for one conversation stops in another. */
   let navigation = 0;
   let restored = false;
@@ -62,6 +63,10 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
   };
 
   const flushPendingSave = (): void => {
+    if (scope.isDisposed) {
+      pendingSave = null;
+      return;
+    }
     void cancelSaveTimer?.();
     cancelSaveTimer = null;
     const pending = pendingSave;
@@ -87,6 +92,7 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
   const dropSentDraft = (key: string): void => {
     discardPendingSave(key);
     store.remove(key);
+    inputRevision += 1;
     clearSendIntent();
   };
 
@@ -98,10 +104,12 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
 
   const markSendIntent = (field: HTMLElement): void => {
     // An empty composer sends nothing; armed, it would drop the draft typed next.
-    if (scope.isDisposed || currentKey === null || policy.isEmpty(field)) return;
+    const key = keyHere();
+    if (scope.isDisposed || key === null || policy.isEmpty(field)) return;
+    inputRevision += 1;
     clearSendIntent();
     sendIntent = {
-      key: currentKey,
+      key,
       disposers: [
         scope.timer(clearSendIntent, SEND_INTENT_TIMEOUT_MS),
         scope.timer(checkSent, SEND_CHECK_INTERVAL_MS, { repeat: true }),
@@ -110,12 +118,16 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
   };
 
   const onInput = (event: Event): void => {
+    if (scope.isDisposed) return;
     const field = ownComposer(event.target);
     if (!field) return;
+    inputRevision += 1;
+    geminiSend?.checkSent();
     // The route watcher polls; the live route at the input event names the draft's conversation.
     const key = keyHere();
     if (key === null) return;
     const content = sanitizeDraftAt(policy, 'input', policy.readText(field)).trim();
+    if (!content && detection.kind === 'gemini' && key !== currentKey) return;
     if (!content && sendIntent) {
       dropSentDraft(sendIntent.key);
       return;
@@ -125,8 +137,23 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
     cancelSaveTimer = scope.timer(flushPendingSave, DRAFT_SAVE_DEBOUNCE_MS);
   };
 
-  const tryRestore = (generation: number, key: string, content: string, attempts: number) => {
-    if (scope.isDisposed || restored || generation !== navigation || keyHere() !== key) return;
+  const tryRestore = (
+    generation: number,
+    key: string,
+    content: string,
+    attempts: number,
+    identity: string,
+    revision: number,
+  ) => {
+    if (
+      scope.isDisposed ||
+      restored ||
+      generation !== navigation ||
+      keyHere() !== key ||
+      policy.restoreIdentity(doc) !== identity ||
+      inputRevision !== revision
+    )
+      return;
     const field = composer();
     if (field) {
       // Whatever is already in the composer is the user's: never write over it.
@@ -140,15 +167,28 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
       }
     }
     if (attempts > 0) {
-      scope.timer(() => tryRestore(generation, key, content, attempts - 1), DRAFT_RESTORE_DELAY_MS);
+      scope.timer(
+        () => tryRestore(generation, key, content, attempts - 1, identity, revision),
+        DRAFT_RESTORE_DELAY_MS,
+      );
     }
   };
 
   const restore = async (generation: number): Promise<void> => {
     const key = currentKey;
     if (key === null || restored || generation !== navigation) return;
+    const identity = policy.restoreIdentity(doc);
+    const revision = inputRevision;
     const saved = await store.load(key);
-    if (scope.isDisposed || generation !== navigation) return;
+    // A late load must not refill an input that was typed into and then sent or cleared.
+    if (
+      scope.isDisposed ||
+      generation !== navigation ||
+      keyHere() !== key ||
+      identity !== policy.restoreIdentity(doc) ||
+      revision !== inputRevision
+    )
+      return;
     const content = saved === null ? undefined : sanitizeDraftAt(policy, 'restore', saved).trim();
     // Track what storage holds even when the restore is skipped: a host that refills its own
     // draft first would otherwise make clearing the composer look unchanged and keep this one.
@@ -157,14 +197,16 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
       restored = true;
       return;
     }
-    tryRestore(generation, key, content, RESTORE_ATTEMPTS);
+    tryRestore(generation, key, content, RESTORE_ATTEMPTS, identity, revision);
   };
 
   const onRoute = (): void => {
     const next = keyHere();
-    if (next === currentKey) return;
+    const nextIdentity = policy.restoreIdentity(doc);
+    if (next === currentKey && nextIdentity === currentIdentity) return;
+    geminiSend?.checkSent();
     const previous = currentKey;
-    if (previous !== null && sendIntent?.key === previous) {
+    if (previous !== null && sendIntent?.key === previous && currentIdentity === nextIdentity) {
       // A first send moves the new-chat page to the conversation's route: the
       // still-debounced text was just sent and must not be saved back.
       dropSentDraft(previous);
@@ -174,6 +216,7 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
     }
     clearSendIntent();
     currentKey = next;
+    currentIdentity = nextIdentity;
     navigation += 1;
     lastSavedContent = '';
     restored = false;
@@ -181,47 +224,64 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
     scope.timer(() => void restore(generation), DRAFT_RESTORE_DELAY_MS);
   };
 
+  if (detection.kind === 'gemini') {
+    scope.effect(() => {
+      geminiSend = startGeminiDraftSendDetection({
+        doc,
+        policy,
+        signal: scope.signal,
+        onSent: dropSentDraft,
+        onIntent: () => {
+          inputRevision += 1;
+        },
+      });
+      return geminiSend.stop;
+    }, 'draft-save:gemini-send');
+  }
   scope.on(doc, 'input', onInput, { capture: true });
-  scope.on(
-    doc,
-    'keydown',
-    (event) => {
-      // IME confirmation also reports Enter; it only commits text.
-      if (event.key !== 'Enter' || event.shiftKey || event.isComposing || event.keyCode === 229)
-        return;
-      const field = ownComposer(event.target);
-      if (field) markSendIntent(field);
-    },
-    { capture: true },
-  );
-  scope.on(
-    doc,
-    'click',
-    (event) => {
-      if (!sendButton || !(event.target instanceof Element)) return;
-      let button: Element | null = null;
-      try {
-        button = event.target.closest(sendButton);
-      } catch {
-        return;
-      }
-      if (!button || button.matches(':disabled, [aria-disabled="true"]')) return;
-      const field = composer();
-      if (field) markSendIntent(field);
-    },
-    { capture: true },
-  );
-  scope.on(
-    doc,
-    'submit',
-    (event) => {
-      const field = composer();
-      if (field && event.target instanceof Node && event.target.contains(field)) {
-        markSendIntent(field);
-      }
-    },
-    { capture: true },
-  );
+  if (detection.kind === 'catalog') {
+    scope.on(
+      doc,
+      'keydown',
+      (event) => {
+        // IME confirmation also reports Enter; it only commits text.
+        if (event.key !== 'Enter' || event.shiftKey || event.isComposing || event.keyCode === 229)
+          return;
+        const field = ownComposer(event.target);
+        if (field) markSendIntent(field);
+      },
+      { capture: true },
+    );
+    scope.on(
+      doc,
+      'click',
+      (event) => {
+        if (!sendButton || !(event.target instanceof Element)) return;
+        let button: Element | null = null;
+        try {
+          button = event.target.closest(sendButton);
+        } catch {
+          return;
+        }
+        if (!button || button.matches(':disabled, [aria-disabled="true"]')) return;
+        const field = composer();
+        if (field) markSendIntent(field);
+      },
+      { capture: true },
+    );
+    scope.on(
+      doc,
+      'submit',
+      (event) => {
+        const field = composer();
+        if (field && event.target instanceof Node && event.target.contains(field)) {
+          markSendIntent(field);
+        }
+      },
+      { capture: true },
+    );
+  }
+  scope.effect(() => registerDraftFlush(flushPendingSave), 'draft-save:unload-flush');
   if (policy.flushOnPageHide) {
     // A reload or full navigation inside the pause would keep the previous draft, even a cleared one.
     scope.on(doc.defaultView ?? window, 'pagehide', flushPendingSave);

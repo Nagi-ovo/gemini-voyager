@@ -85,7 +85,7 @@ A primitive is behavior Voyager ships as code; a plugin can only call it by name
 - counterBadge (sinceEngine 1.8.0): A small read-only badge with a live count of the composer draft or of each assistant reply. The badge is pointer-transparent and outside the text, so copying and export never include it; turning the plugin off removes every badge.
   - target (semanticKey, required, one of composer, assistantTurn): What is counted: "composer" (the draft, one badge above the composer) or "assistantTurn" (one badge at the end of each reply).
   - metric (string): What the badge counts: "chars" (default; Unicode code points without line breaks), "words" (whitespace-separated words, each CJK character one word), "cjkChars" (Han, kana and Hangul characters only) or "lines".
-- draftSave (sinceEngine 1.8.0): Saves unsent text in the main composer to this device and puts it back when the same conversation (or the new-chat page) opens again, only into an empty composer. Drafts are keyed by the site and the conversation id from the adapter's conversationIdPattern, and a draft is dropped once its message is sent. Turning the plugin off keeps saved drafts. Reads: composer, sendButton.
+- draftSave (sinceEngine 1.8.0): Saves unsent text in the main composer to this device and puts it back when the same conversation (or the new-chat page) opens again, only into an empty composer. Drafts are keyed by the site and the conversation id from the adapter's conversationIdPattern, and a draft is dropped once its message is sent. Turning the plugin off keeps saved drafts. On Gemini it shares the native gvDraft_ full-path records, preserving account-slot and Gem routes. Reads: composer, sendButton.
 - echarts (sinceEngine 1.7.0): Renders ECharts option code blocks in replies as interactive charts with a Diagram / Code toggle, using the parser, sanitizer and renderer Gemini uses. The code block stays in the page for copy and export; turning the plugin off removes the charts. Reads: assistantTurn, codeBlock.
   - turn (selector): Reply elements whose code blocks are rendered; defaults to the site adapter's assistantTurn.
   - codeBlock (selector): One code block inside a reply. The diagram goes right before it, and it is hidden while the diagram shows. Defaults to the site adapter's codeBlock, else pre.
@@ -171,7 +171,8 @@ Semantic anchors Gemini declares (use them as { "kind": "semantic", "key": … }
 
 Gemini does not declare thinkingBlock, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
-Gemini allows only these primitives (native ops): codeCollapse, echarts, formulaCopy, mermaid, sendShortcut, userLatex, vimInput, wavedrom. No "theme".
+Gemini allows only these primitives (native ops): codeCollapse, draftSave, echarts, formulaCopy, mermaid, sendShortcut, userLatex, vimInput, wavedrom. No "theme".
+- `draftSave` runs the same code as Voyager’s own Draft auto-save setting. Official and local draft plugins may run together and share the same `gvDraft_` full-path data. Their writes and pruning are coordinated on this page. Turning either plugin off keeps stored drafts.
 - `sendShortcut` runs the same code as Voyager’s own Ctrl/Cmd+Enter send setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `sendShortcut` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
 - `formulaCopy` runs the same code as Voyager’s own Formula copy setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `formulaCopy` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
 - `vimInput` runs the same code as Voyager’s own Input Vim mode setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `vimInput` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
@@ -182,6 +183,7 @@ Gemini allows only these primitives (native ops): codeCollapse, echarts, formula
 - `mermaid` runs the same code as Voyager’s own Mermaid diagram rendering setting. Both can run on one page: each claims the elements it works on, and an element the other already holds is left to it.
 
 - The `sidebar` anchor also matches Voyager’s own folder panel (`.gv-folder-container`). To change only Gemini’s navigation rail, target `bard-sidenav` with a CSS selector.
+- On Gemini, `draftSave` shares the native drafts: keys are `gvDraft_` plus the full pathname, including `/u/<index>/` and Gem routes. Different account slots have different keys; changing email within the same slot still shares stored drafts.
 
 ### Target site: AI Studio
 

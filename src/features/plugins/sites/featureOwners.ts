@@ -45,6 +45,7 @@ export type OwnedFeatureId =
   | 'ctrlEnterSend'
   | 'safariEnterFix'
   | 'enterSend'
+  | 'draftSave'
   /**
    * Stage 6: native until their own flips, which add the official id, the
    * owner entry and the binding together. Missing from the table reads 'legacy'.
@@ -76,6 +77,7 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiCtrlEnterSend: 'voyager.gemini-ctrl-enter-send',
   geminiSafariEnterFix: 'voyager.gemini-safari-enter-fix',
   aistudioEnterSend: 'voyager.aistudio-enter-send',
+  geminiDraftSave: 'voyager.gemini-draft-save',
 } as const;
 
 export interface OwnedFeature {
@@ -101,6 +103,14 @@ export interface OwnedFeature {
  * source defers the host policy on read).
  */
 export const FEATURE_OWNERS: readonly OwnedFeature[] = [
+  {
+    site: 'gemini',
+    feature: 'draftSave',
+    owner: 'plugin',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiDraftSave,
+    handlers: ['draftSave'],
+    healthTracking: false,
+  },
   {
     site: 'aistudio',
     feature: 'enterSend',

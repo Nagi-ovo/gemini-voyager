@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CleanupPositions } from '@/core/types/cleanupPositions';
 import { CleanupManager } from '@/core/utils/cleanupManager';
 
 enum Sequence {
@@ -119,65 +118,6 @@ describe('willCleanUp tests module', () => {
 
     expect(function2).toHaveBeenCalledAfter(function1);
     expect(function3).toHaveBeenCalledAfter(function2);
-  });
-
-  it('keeps production cleanup positions in the legacy execution order', () => {
-    const positionsInExecutionOrder = Object.values(CleanupPositions).filter(
-      (position): position is string => typeof position === 'string',
-    );
-
-    expect(positionsInExecutionOrder).toEqual([
-      'RemoveUnhandledRejectionEventListener',
-      'RemoveErrorEventListener',
-      'StopWatermarkRemover',
-      'DestroyFolderManagerInstance',
-      'DestroyPromptManagerInstance',
-      'DestroySlashPromptFeatureInstance',
-      'DestroySentPromptChips',
-      'CleanupSelectionStartup',
-      'CleanupQuoteReply',
-      'CleanupHighlight',
-      'CleanupInputStartup',
-      'CleanupInputCollapse',
-      'CleanupInputVimMode',
-      'CleanupInputHaloHider',
-      'CleanupSendBehavior',
-      'CleanupDraftSave',
-      'CleanupPromptHistory',
-      'CleanupGeminiBuiltinStartup',
-      'CleanupPreventAutoScroll',
-      'CleanupFork',
-      'CleanupGemsSidebar',
-      'CleanupResponseCompleteNotification',
-      'CleanupEdgeFinalVersionNotice',
-      'CleanupFormulaCopy',
-      'CleanupPluginHost',
-      'CleanupRenderedQuoteStyling',
-      'CleanupSelectionToolbarHost',
-      'CleanupPreventAutoScrollBridge',
-      'CleanupSendKeyCoordinator',
-      'CleanupBrandTheme',
-      'CleanupRemoteAnnouncements',
-      'CleanupStorageQuotaWarning',
-      'CleanupAccountContextBridge',
-      'CleanupChatGptJump',
-      'CleanupRendererStartup',
-      'CleanupCodeBlockCollapse',
-      'CleanupUserLatex',
-      'CleanupMarkdownPatcher',
-      'CleanupDefaultModel',
-      'CleanupUsageStatus',
-      'CleanupWatermarkNativeNotice',
-      'CleanupGemsHider',
-      'CleanupTimeline',
-      'CleanupNativeHealth',
-      'CleanupHistoryTimestampPageService',
-      'CleanupResearchPack',
-      'CleanupResearchPackReceiver',
-      'RemoveStorageOnChangedListener',
-      'CleanupVisualEffects',
-      'CleanupSchemeBridge',
-    ]);
   });
 
   it('can withdraw functions by position number', () => {

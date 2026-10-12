@@ -97,6 +97,32 @@ function createContentEditable(): HTMLElement {
   return el;
 }
 
+function createMainComposer(): {
+  input: HTMLElement;
+  button: HTMLButtonElement;
+  root: HTMLElement;
+} {
+  const input = createContentEditable();
+  const root = document.createElement('div');
+  root.className = 'text-input-field';
+  const button = document.createElement('button');
+  button.className = 'send-button';
+  button.setAttribute('aria-label', 'Send message');
+  Object.defineProperty(button, 'offsetParent', { configurable: true, value: root });
+  root.append(input, button);
+  document.body.append(root);
+  return { input, button, root };
+}
+
+function addSentUserTurn(text: string): void {
+  const turn = document.createElement('user-query');
+  const bubble = document.createElement('div');
+  bubble.className = 'user-query-bubble-with-background';
+  bubble.textContent = text;
+  turn.append(bubble);
+  document.body.append(turn);
+}
+
 describe('draftSave', () => {
   beforeEach(() => {
     vi.resetModules();
@@ -109,6 +135,11 @@ describe('draftSave', () => {
       value: {
         pathname: '/app/test-conversation-123',
         hostname: 'gemini.google.com',
+        origin: 'https://gemini.google.com',
+        search: '',
+        get href() {
+          return `https://gemini.google.com${this.pathname}${this.search}`;
+        },
       },
       writable: true,
       configurable: true,
@@ -255,10 +286,8 @@ describe('draftSave', () => {
 
   it('does not re-save sent text when the first message creates a conversation route', async () => {
     setupMocks(true);
-    const input = createContentEditable();
-    const sendButton = document.createElement('button');
-    sendButton.setAttribute('aria-label', 'Send message');
-    document.body.appendChild(sendButton);
+    window.location.pathname = '/app';
+    const { input } = createMainComposer();
 
     const { startDraftSave } = await import('../index');
     const cleanup = await startDraftSave();
@@ -266,19 +295,182 @@ describe('draftSave', () => {
     input.textContent = 'Message that is about to be sent';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     vi.advanceTimersByTime(1000);
-    expect(localStore['gvDraft_/app/test-conversation-123']).toBeDefined();
+    expect(localStore['gvDraft_/app']).toBeDefined();
 
     input.textContent = 'Updated message that is sent';
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    sendButton.click();
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+    );
     window.location.pathname = '/app/new-conversation-id';
+    addSentUserTurn('Updated message that is sent');
     input.textContent = '';
     vi.advanceTimersByTime(400);
 
-    expect(localStore['gvDraft_/app/test-conversation-123']).toBeUndefined();
+    expect(localStore['gvDraft_/app']).toBeUndefined();
     expect(localStore['gvDraft_/app/new-conversation-id']).toBeUndefined();
 
     cleanup();
+  });
+
+  it('keeps the draft when an upload blocks the send and the user leaves within two seconds', async () => {
+    setupMocks(true);
+    document.execCommand = vi.fn().mockReturnValue(false);
+    window.location.pathname = '/app';
+    localStore['gvDraft_/app/existing'] = {
+      content: 'Destination draft',
+      timestamp: 1,
+      path: '/app/existing',
+    };
+    const { input, root } = createMainComposer();
+    root.append(document.createElement('progress'));
+    const { startDraftSave } = await import('../index');
+    const stop = await startDraftSave();
+    onTestFinished(stop);
+
+    input.textContent = 'An unsent message with an uploading attachment';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    const link = document.createElement('a');
+    link.href = '/app/existing';
+    document.body.append(link);
+    link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    window.location.pathname = '/app/existing';
+    input.textContent = '';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(1400);
+
+    expect(localStore['gvDraft_/app']).toMatchObject({
+      content: 'An unsent message with an uploading attachment',
+    });
+    expect(localStore['gvDraft_/app/existing']).toMatchObject({ content: 'Destination draft' });
+    stop();
+  });
+
+  it('does not delete a stored draft when the host clears the composer without sending', async () => {
+    setupMocks(true);
+    const { input } = createMainComposer();
+    const { startDraftSave } = await import('../index');
+    const stop = await startDraftSave();
+    input.textContent = 'Keep the unsent draft';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(1000);
+
+    input.textContent = '';
+    await vi.advanceTimersByTimeAsync(2500);
+    expect(localStore['gvDraft_/app/test-conversation-123']).toMatchObject({
+      content: 'Keep the unsent draft',
+    });
+    stop();
+  });
+
+  it.each(['load', 'retry'])(
+    'drops a late restore when the same pathname now belongs to another email during %s',
+    async (stage) => {
+      setupMocks(true);
+      const key = 'gvDraft_/app/test-conversation-123';
+      localStore[key] = {
+        content: 'Previous account draft',
+        timestamp: 1,
+        path: window.location.pathname,
+      };
+      const account = document.createElement('div');
+      account.dataset.email = 'previous@example.com';
+      document.body.append(account);
+      document.execCommand = vi.fn().mockReturnValue(true);
+      let answer = () => {};
+      if (stage === 'load') {
+        (chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(
+          (_key: string, callback: (result: Record<string, unknown>) => void) => {
+            answer = () => callback({ [key]: localStore[key] });
+          },
+        );
+        createContentEditable();
+      }
+      const { startDraftSave } = await import('../index');
+      const stop = await startDraftSave();
+      await vi.advanceTimersByTimeAsync(0);
+      account.dataset.email = 'next@example.com';
+      answer();
+      if (stage === 'retry') createContentEditable();
+      await vi.advanceTimersByTimeAsync(2500);
+
+      expect(document.execCommand).not.toHaveBeenCalled();
+      expect(localStore[key]).toMatchObject({ content: 'Previous account draft' });
+      stop();
+    },
+  );
+
+  it('does not restore an old draft after typing and sending while its load is pending', async () => {
+    setupMocks(true);
+    const key = 'gvDraft_/app/test-conversation-123';
+    localStore[key] = { content: 'Old draft', timestamp: 1, path: window.location.pathname };
+    let answer = () => {};
+    (chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      (_key: string, callback: (result: Record<string, unknown>) => void) => {
+        const snapshot = { [key]: localStore[key] };
+        answer = () => callback(snapshot);
+      },
+    );
+    document.execCommand = vi.fn().mockReturnValue(true);
+    const { input, button } = createMainComposer();
+    const { startDraftSave } = await import('../index');
+    const stop = await startDraftSave();
+    input.textContent = 'New message';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    button.click();
+    input.textContent = '';
+    await vi.advanceTimersByTimeAsync(300);
+    answer();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    expect(document.execCommand).not.toHaveBeenCalled();
+    expect(localStore[key]).toBeUndefined();
+    stop();
+  });
+
+  it('flushes the last keystrokes on unload before the legacy feature stops', async () => {
+    setupMocks(true);
+    const input = createContentEditable();
+    const { startDraftSave } = await import('../index');
+    const { flushDraftsBeforeUnload } = await import('../draftUnloadFlush');
+    const stop = await startDraftSave();
+    input.textContent = 'Final keystrokes';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    const beforeUnload = () => {
+      flushDraftsBeforeUnload();
+      stop();
+    };
+    window.addEventListener('beforeunload', beforeUnload);
+    try {
+      window.dispatchEvent(new Event('beforeunload'));
+      window.dispatchEvent(new Event('pagehide'));
+      expect(localStore['gvDraft_/app/test-conversation-123']).toMatchObject({
+        content: 'Final keystrokes',
+      });
+    } finally {
+      window.removeEventListener('beforeunload', beforeUnload);
+      stop();
+    }
+  });
+
+  it('does not flush the unsaved tail when the legacy draft switch turns off', async () => {
+    setupMocks(true);
+    const key = 'gvDraft_/app/test-conversation-123';
+    localStore[key] = { content: 'Stored draft', timestamp: 1, path: window.location.pathname };
+    const input = createContentEditable();
+    const { startDraftSave } = await import('../index');
+    const { flushDraftsBeforeUnload } = await import('../draftUnloadFlush');
+    const stop = await startDraftSave();
+    input.textContent = 'Unsaved tail';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    for (const listener of storageChangeListeners) {
+      listener({ [StorageKeys.DRAFT_AUTO_SAVE]: { newValue: false } }, 'sync');
+    }
+    flushDraftsBeforeUnload();
+    await vi.advanceTimersByTimeAsync(2500);
+    expect(localStore[key]).toMatchObject({ content: 'Stored draft' });
+    stop();
   });
 
   it('does not delete the destination draft when navigation empties the input', async () => {
@@ -509,7 +701,7 @@ describe('draftSave', () => {
     const { startDraftSave } = await import('../index');
     const cleanup = await startDraftSave();
     // Start right after a send-detection tick so the poller stays out of the window.
-    vi.advanceTimersByTime(SEND_CHECK_INTERVAL_MS);
+    await vi.advanceTimersByTimeAsync(SEND_CHECK_INTERVAL_MS);
 
     rectReads = 0;
     const querySpy = vi.spyOn(document, 'querySelectorAll');

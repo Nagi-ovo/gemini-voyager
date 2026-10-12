@@ -608,3 +608,9 @@ Jesse 在 Chrome 中用验收副本实测：dark 主题，只用已有对话，�
 **4C-2 AI Studio Enter 发送翻转**：独立 `enterSend` catalog owner 只绑定 `gvAIStudioEnterSend`，不复用 Gemini 开关；master 初始关闭也 admit，PluginHost live 开关控制实际挂载。保留 Ctrl/Cmd 换行、Shift/Alt 交还宿主。`.com` 真机确认 `ms-prompt-box` 包含输入和 Run，补入共同查找器并同步公开 selector、authoring 和十语种文档；`.cn` 当前 DNS `ERR_NAME_NOT_RESOLVED`，保留同构自动测试覆盖，实机验收待该域名可访问。
 
 4C-2 验证：五条 host 行为测试覆盖两域名、总闸开关、Ctrl 换行、与 Gemini 开关隔离及 legacy 回退；移除 master-off admission、共同 Run 边界或绑定自身开关，各自症状测试失败。Chrome `.com` 实机从 ready→mounted→ready，Ctrl+Enter 换行且无请求，Enter 一次返回 AI_SEND_OK；截图 `s4c2-send-proof.png` 已保存。测试开关已恢复原始缺省，原模型已恢复。完整 verify:pr 通过；`.cn` 实机 DNS 限制仍未解除。
+
+**4D-2 草稿翻转（Q2-c、Q2-d）**：官方与 local 使用可信 Gemini policy，保留 `gvDraft_<完整 pathname>`、三阶段指令清理和 content/timestamp/path 数据格式。主输入 finder 排除旧问题编辑框。共享发送检测只在源输入实际清空或首次建对话出现匹配新 user turn 后删除源草稿；普通导航、上传阻断与 IME/换行保留。恢复复核账号身份和输入/发送 revision，防迟到读取重新插入旧草稿。页面 flush 位先于 DraftSave/PluginHost，只尽力发起异步存储，普通 off 不 flush。T6 保留同页多个 owner：数据写入与修剪按前缀排队，读期间有新写入则重读，防旧快照误删新草稿；没有跨标签锁，没有键/格式迁移。
+
+4D-2 将 cleanup enum 全量名字快照（纯接线变更探测）移除；cleanup 顺序算法原行为覆盖保留，新增真实 input→页面 flush→PluginHost teardown→pagehide 数据断言，直接守住卸载前的最后输入。草稿关闭立即 abort 手工发送监听，避免异步 scope 清理间隙误删已存草稿。
+
+4D-2 验证：T6 和账号/首发/迟到恢复/卸载/off 行为覆盖通过；去掉 revision、身份、发送证据、IME/换行、上传 guard、编辑排除、卸载登记或即时 abort，对应回归均失败。legacy 34 条与新 shared Gemini 24 条通过；跨账号导航 flush 捕获的源 key，导航后 empty input 保留源 tail 和目标草稿。完整 verify:pr 通过（10314 tests / 842 files，三浏览器构建、CLI、docs）。Chrome 实机：草稿刷新恢复、首发 DRAFT_FIRST_OK 创建 `/app/<id>` 后返回 `/app` 不再恢复已发草稿；另一登录账号 `/u/1/app` 卸载前最后输入恢复，主账号新对话仍空。截图 `s4d2-first-send-proof.png`、`s4d2-slot1-draft-proof.png` 保存；测试 key、开关、页面已恢复。

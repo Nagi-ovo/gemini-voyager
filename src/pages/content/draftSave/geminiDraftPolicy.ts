@@ -39,7 +39,11 @@ function findChatInput(doc: Document): HTMLElement | null {
   for (const selector of INPUT_SELECTORS) {
     const els = doc.querySelectorAll(selector);
     for (const el of Array.from(els)) {
-      if (el.getBoundingClientRect().height > 0) {
+      // Editing a sent turn must never replace the unsent main-composer draft.
+      if (
+        !el.closest('.edit-container, .user-query-container.edit-mode') &&
+        el.getBoundingClientRect().height > 0
+      ) {
         return el as HTMLElement;
       }
     }
@@ -94,8 +98,8 @@ export function geminiDraftPolicy(): DraftPolicy {
       return true;
     },
     sanitize: { fn: stripInstructionBlock, stages: SANITIZE_STAGES },
-    sendDetection: { kind: 'legacy-gemini' },
-    flushOnPageHide: false,
+    sendDetection: { kind: 'gemini' },
+    flushOnPageHide: true,
     restoreIdentity(doc) {
       const href = doc.defaultView?.location.href ?? location.href;
       const { routeUserId, email } = detectAccountContextFromDocument(href, doc);

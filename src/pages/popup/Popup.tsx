@@ -409,6 +409,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             currentPlatformLabel={currentPlatformLabel}
             isVisible={(id) => sections.shouldShowSetting('inputCollapse', id)}
             vimModeNote={officialStatus(OFFICIAL_PLUGIN_IDS.geminiVimInput)}
+            draftNote={isAIStudio ? undefined : officialStatus(OFFICIAL_PLUGIN_IDS.geminiDraftSave)}
             sendModeNote={officialStatus(
               isAIStudio
                 ? OFFICIAL_PLUGIN_IDS.aistudioEnterSend

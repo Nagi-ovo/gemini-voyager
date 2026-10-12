@@ -60,7 +60,7 @@ npx create-voyager-plugin@latest check my-plugin
 - 只使用每个匹配网站都声明了的语义锚点；
 - 每个 `addClass` 只加一个类名，并以 `gv-` 开头；
 - 只使用 boolean、number 或 select 设置（string 和 color 目前在 popup 里还没有对应控件）；
-- 在 Gemini 和 AI Studio 上不使用 `theme`；原语只能用该站点放开的：Gemini 上是 `formulaCopy`、`vimInput`、`userLatex`、`codeCollapse`、`mermaid`、`wavedrom` 和 `echarts`, `sendShortcut`，AI Studio 上是 `formulaCopy`、`sendShortcut`。它们与 Voyager 自带的对应设置是同一套代码。`formulaCopy` 和 `vimInput`（「公式复制」「输入框 Vim 模式」）在同一页面上，自带设置和插件只运行其中一个：页面刚加载、或两者都没在运行时，自带开关优先；之后谁已经在运行就继续运行，另一方显示为暂停。关掉其中一个，功能就交给另一个。其余几个按元素逐个认领，可以和自带设置同时运行：对方已经处理的行或代码块留给对方。
+- 在 Gemini 和 AI Studio 上不使用 `theme`；原语只能用该站点放开的：Gemini 上是 `formulaCopy`、`vimInput`、`userLatex`、`codeCollapse`、`mermaid`、`wavedrom` 和 `echarts`, `sendShortcut`, `draftSave`，AI Studio 上是 `formulaCopy`、`sendShortcut`。它们与 Voyager 自带的对应设置是同一套代码。`formulaCopy` 和 `vimInput`（「公式复制」「输入框 Vim 模式」）在同一页面上，自带设置和插件只运行其中一个：页面刚加载、或两者都没在运行时，自带开关优先；之后谁已经在运行就继续运行，另一方显示为暂停。关掉其中一个，功能就交给另一个。其余几个按元素逐个认领，可以和自带设置同时运行：对方已经处理的行或代码块留给对方。
 
 翻译（`i18n`）是可选的。
 
@@ -73,3 +73,5 @@ npx create-voyager-plugin@latest check my-plugin
 Gemini 现在允许 `sendShortcut` 替代官方 Ctrl+Enter 发送；关闭官方开关后启用本地插件。只支持 `ctrlEnterSends`，Enterprise 不运行。公开的 `composerRoot` 区分主框和编辑框，`sendButton` 不包含停止按钮。
 
 AI Studio 上使用 `sendShortcut` 时必须设置 `params.mode: "enterSends"`。关闭官方 Enter 发送开关后，本地插件可以接管；Ctrl/Cmd+Enter 换行，Shift/Alt+Enter 由宿主处理。
+
+Gemini 的 `draftSave` 与官方草稿保存共用 `gvDraft_<完整 pathname>`，保留 `/u/N` 和 Gem 路径。关闭插件会保留已保存的草稿；同页多个插件可以共同使用这些记录。卸载前会尽力保存最后输入，浏览器关闭时不能保证异步存储完成。

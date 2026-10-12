@@ -17,6 +17,7 @@ export function InputSettingsCard({
   isVisible,
   vimModeNote,
   sendModeNote,
+  draftNote,
   t,
 }: {
   values: InputPopupSettingsValues;
@@ -28,6 +29,7 @@ export function InputSettingsCard({
   /** Shown under the Vim mode hint, e.g. why it is paused on this page. */
   vimModeNote?: ReactNode;
   sendModeNote?: ReactNode;
+  draftNote?: ReactNode;
   t: (key: TranslationKey) => string;
 }) {
   const {
@@ -191,6 +193,7 @@ export function InputSettingsCard({
                 {t('draftAutoSave')}
               </Label>
               <p className="text-muted-foreground mt-1 text-xs">{t('draftAutoSaveHint')}</p>
+              {draftNote}
             </div>
             <Switch
               id="draft-auto-save"

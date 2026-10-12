@@ -29,6 +29,11 @@ export function draftStoreOptions(policy: DraftPolicy, doc: Document): DraftStor
 }
 
 export class DraftStore {
+  /** All owners of one prefix share write/prune ordering within this page. */
+  private static readonly operations = new Map<
+    string,
+    { write: boolean; run: (done: () => void) => void }[]
+  >();
   private saveCount = 0;
 
   constructor(
@@ -41,6 +46,32 @@ export class DraftStore {
    */
   private storageKey(path: string): string {
     return `${this.options.prefix}${path}`;
+  }
+
+  private enqueue(write: boolean, run: (done: () => void) => void): void {
+    const prefix = this.options.prefix;
+    const waiting = DraftStore.operations.get(prefix);
+    if (waiting) {
+      waiting.push({ write, run });
+      return;
+    }
+    const queue = [{ write, run }];
+    DraftStore.operations.set(prefix, queue);
+    const next = (): void => {
+      const operation = queue.shift();
+      if (!operation) {
+        DraftStore.operations.delete(prefix);
+        return;
+      }
+      let finished = false;
+      operation.run(() => {
+        if (finished) return;
+        finished = true;
+        next();
+      });
+    };
+    // An idle save starts its storage call now, including the unload flush.
+    next();
   }
 
   /**
@@ -63,23 +94,31 @@ export class DraftStore {
       path,
     };
 
-    try {
-      chrome.storage?.local?.set({ [key]: data }, () => {
-        if (chrome.runtime.lastError) {
-          console.warn(LOG_PREFIX, 'Failed to save draft:', chrome.runtime.lastError.message);
-          return;
-        }
-        this.onSaved(path, sanitizedContent);
-        // Prune old drafts periodically (not every save)
-        this.saveCount++;
-        if (this.saveCount % PRUNE_EVERY_N_SAVES === 0) {
-          this.pruneOldDrafts();
-        }
-      });
-    } catch (error) {
-      if (isExtensionContextInvalidatedError(error)) return;
-      console.warn(LOG_PREFIX, 'Failed to save draft:', error);
-    }
+    this.enqueue(true, (done) => {
+      if (!this.options.writable() || !chrome.storage?.local?.set) {
+        done();
+        return;
+      }
+      try {
+        chrome.storage.local.set({ [key]: data }, () => {
+          try {
+            if (chrome.runtime.lastError) {
+              console.warn(LOG_PREFIX, 'Failed to save draft:', chrome.runtime.lastError.message);
+              return;
+            }
+            this.onSaved(path, sanitizedContent);
+            this.saveCount++;
+            if (this.saveCount % PRUNE_EVERY_N_SAVES === 0) this.pruneOldDrafts();
+          } finally {
+            done();
+          }
+        });
+      } catch (error) {
+        done();
+        if (isExtensionContextInvalidatedError(error)) return;
+        console.warn(LOG_PREFIX, 'Failed to save draft:', error);
+      }
+    });
   }
 
   /**
@@ -88,13 +127,21 @@ export class DraftStore {
   remove(path: string): void {
     if (!this.options.writable()) return;
     const key = this.storageKey(path);
-    try {
-      chrome.storage?.local?.remove(key);
-      this.onSaved(path, '');
-    } catch (error) {
-      if (isExtensionContextInvalidatedError(error)) return;
-      console.warn(LOG_PREFIX, 'Failed to remove draft:', error);
-    }
+    this.enqueue(true, (done) => {
+      if (!this.options.writable()) {
+        done();
+        return;
+      }
+      try {
+        const removal = chrome.storage?.local?.remove(key);
+        this.onSaved(path, '');
+        void Promise.resolve(removal).then(done, done);
+      } catch (error) {
+        done();
+        if (isExtensionContextInvalidatedError(error)) return;
+        console.warn(LOG_PREFIX, 'Failed to remove draft:', error);
+      }
+    });
   }
 
   /**
@@ -124,30 +171,55 @@ export class DraftStore {
    */
   private pruneOldDrafts(): void {
     if (!this.options.writable()) return;
-    try {
-      chrome.storage?.local?.get(null, (items) => {
-        if (chrome.runtime.lastError) return;
-        // Enterprise can surface while the read is out: it removes nothing either.
-        if (!this.options.writable()) return;
-
-        const draftEntries: { key: string; timestamp: number }[] = [];
-        for (const [key, value] of Object.entries(items)) {
-          if (key.startsWith(this.options.prefix) && value && typeof value === 'object') {
-            const entry = value as { timestamp?: number };
-            draftEntries.push({ key, timestamp: entry.timestamp ?? 0 });
+    this.enqueue(false, (done) => {
+      if (!this.options.writable() || !chrome.storage?.local?.get) {
+        done();
+        return;
+      }
+      try {
+        chrome.storage.local.get(null, (items) => {
+          if (chrome.runtime.lastError || !this.options.writable()) {
+            done();
+            return;
           }
-        }
+          // A queued rewrite can turn an old prune candidate into the newest draft.
+          if (
+            DraftStore.operations.get(this.options.prefix)?.some((operation) => operation.write)
+          ) {
+            this.pruneOldDrafts();
+            done();
+            return;
+          }
 
-        if (draftEntries.length <= MAX_DRAFTS) return;
+          const draftEntries: { key: string; timestamp: number }[] = [];
+          for (const [key, value] of Object.entries(items)) {
+            if (key.startsWith(this.options.prefix) && value && typeof value === 'object') {
+              const entry = value as { timestamp?: number };
+              draftEntries.push({ key, timestamp: entry.timestamp ?? 0 });
+            }
+          }
 
-        // Sort by timestamp ascending (oldest first)
-        draftEntries.sort((a, b) => a.timestamp - b.timestamp);
+          if (draftEntries.length <= MAX_DRAFTS) {
+            done();
+            return;
+          }
 
-        const toRemove = draftEntries.slice(0, draftEntries.length - MAX_DRAFTS).map((e) => e.key);
-        chrome.storage?.local?.remove(toRemove);
-      });
-    } catch (error) {
-      if (isExtensionContextInvalidatedError(error)) return;
-    }
+          // Sort by timestamp ascending (oldest first)
+          draftEntries.sort((a, b) => a.timestamp - b.timestamp);
+
+          const toRemove = draftEntries
+            .slice(0, draftEntries.length - MAX_DRAFTS)
+            .map((e) => e.key);
+          try {
+            const removal = chrome.storage.local.remove(toRemove);
+            void Promise.resolve(removal).then(done, done);
+          } catch {
+            done();
+          }
+        });
+      } catch {
+        done();
+      }
+    });
   }
 }

@@ -18,6 +18,8 @@ export enum CleanupPositions {
   CleanupInputVimMode,
   CleanupInputHaloHider,
   CleanupSendBehavior,
+  /** Save the unsent tail before native or plugin draft owners discard it. */
+  FlushDraftsBeforeUnload,
   CleanupDraftSave,
   CleanupPromptHistory,
   /** Before the features it starts: no late startup read may mount once teardown began. */

@@ -15,6 +15,7 @@ export interface OfficialSettingLocation {
 // The halo holds no page-wide runtime, so it never keeps another plugin waiting.
 const LOCATIONS: Readonly<Partial<Record<OwnedFeatureId, OfficialSettingLocation>>> = {
   enterSend: { setting: 'aistudioEnterSend', card: 'inputCollapseOptions' },
+  draftSave: { setting: 'draftAutoSave', card: 'inputCollapseOptions' },
   ctrlEnterSend: { setting: 'ctrlEnterSend', card: 'inputCollapseOptions' },
   safariEnterFix: { setting: 'safariEnterFix', card: 'inputCollapseOptions' },
   formulaCopy: { setting: 'enableFormulaCopy', card: 'formulaCopyFormat' },

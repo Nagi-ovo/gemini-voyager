@@ -89,6 +89,70 @@ describe('draft storage', () => {
     });
   });
 
+  it('pruning with two owners keeps the newest five when an old candidate is rewritten during the read', async () => {
+    const first = new DraftStore(vi.fn(), GEMINI_STORE);
+    const second = new DraftStore(vi.fn(), GEMINI_STORE);
+    records.otherSetting = 'preserved';
+    records['gvDraft:chatgpt:conv:old'] = { content: 'Other namespace', timestamp: 0 };
+    for (let index = 1; index <= 9; index++) {
+      const path = `/app/${index}`;
+      records[`gvDraft_${path}`] = { content: `Draft ${index}`, timestamp: index, path };
+    }
+    // Get both owners to their prune boundary without replacing the older candidates.
+    for (let index = 0; index < 9; index++) {
+      vi.mocked(Date.now).mockReturnValue(9);
+      first.save('/app/9', 'Draft 9');
+      vi.mocked(Date.now).mockReturnValue(8);
+      second.save('/app/8', 'Draft 8');
+    }
+    const pendingReads: Array<() => void> = [];
+    const get = vi.mocked(chrome.storage.local.get) as unknown as ReturnType<typeof vi.fn>;
+    get.mockImplementation(
+      (_keys: unknown, callback: (snapshot: Record<string, unknown>) => void) => {
+        const snapshot = { ...records };
+        pendingReads.push(() => callback(snapshot));
+      },
+    );
+    vi.mocked(Date.now).mockReturnValue(10);
+    first.save('/app/10', 'Draft 10');
+    expect(pendingReads.length).toBeGreaterThan(0);
+    vi.mocked(Date.now).mockReturnValue(11);
+    second.save('/app/11', 'Draft 11');
+    pendingReads.shift()?.();
+    await Promise.resolve();
+    await Promise.resolve();
+    vi.mocked(Date.now).mockReturnValue(20);
+    second.save('/app/1', 'Newest rewrite');
+
+    // Each delayed read sees the snapshot captured before its callback, as storage can do.
+    for (let turn = 0; turn < 10; turn++) {
+      pendingReads.shift()?.();
+      await Promise.resolve();
+      await Promise.resolve();
+    }
+    expect(
+      Object.keys(records)
+        .filter((key) => key.startsWith('gvDraft_'))
+        .sort(),
+    ).toEqual([
+      'gvDraft_/app/1',
+      'gvDraft_/app/10',
+      'gvDraft_/app/11',
+      'gvDraft_/app/8',
+      'gvDraft_/app/9',
+    ]);
+    expect(records['gvDraft_/app/1']).toEqual({
+      content: 'Newest rewrite',
+      timestamp: 20,
+      path: '/app/1',
+    });
+    expect(records.otherSetting).toBe('preserved');
+    expect(records['gvDraft:chatgpt:conv:old']).toEqual({
+      content: 'Other namespace',
+      timestamp: 0,
+    });
+  });
+
   it.each([
     ['the tenth save is acknowledged', 'set'],
     ['the prune read returns', 'get'],

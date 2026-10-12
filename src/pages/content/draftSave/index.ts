@@ -21,7 +21,9 @@ import { sanitizeDraftAt } from '@/features/plugins/verbs/draftSave/draftPolicy'
 
 import { watchRouteChanges } from '../utils/routeWatcher';
 import { DraftStore, draftStoreOptions } from './draftStore';
+import { registerDraftFlush } from './draftUnloadFlush';
 import { GEMINI_DRAFT_INPUT_SELECTOR_LIST, geminiDraftPolicy } from './geminiDraftPolicy';
+import { startGeminiDraftSendDetection } from './geminiDraftSendDetection';
 
 // ============================================================================
 // Constants
@@ -37,18 +39,6 @@ const RESTORE_DELAY_MS = 500;
 
 /** Interval to check if a message was sent and clear draft (ms) */
 const SEND_CHECK_INTERVAL_MS = 1000;
-
-/** Keep a send intent only long enough to cover SPA navigation. */
-const SEND_INTENT_TIMEOUT_MS = 2000;
-
-const SEND_BUTTON_SELECTOR = [
-  'button[aria-label*="Send"]',
-  'button[aria-label*="send"]',
-  'button[data-tooltip*="Send"]',
-  'button[data-tooltip*="send"]',
-  '[data-send-button]',
-  '.send-button',
-].join(', ');
 
 const INPUT_SELECTOR_LIST = GEMINI_DRAFT_INPUT_SELECTOR_LIST;
 
@@ -84,9 +74,11 @@ let inputListener: ((event: Event) => void) | null = null;
 let attachedInput: HTMLElement | null = null;
 let hasRestoredForCurrentPath = false;
 let pendingSave: { content: string; path: string } | null = null;
-let pendingSendPath: string | null = null;
-let sendIntentTimer: number | null = null;
-let sendIntentListener: ((event: Event) => void) | null = null;
+let sendDetection: ReturnType<typeof startGeminiDraftSendDetection> | null = null;
+let unregisterUnloadFlush: (() => void) | null = null;
+/** Typing or sending makes a pending old restore obsolete even when the composer empties again. */
+let inputRevision = 0;
+let sentRevision = 0;
 
 // ============================================================================
 // Helpers
@@ -144,33 +136,19 @@ function discardPendingSave(path: string): void {
   pendingSave = null;
 }
 
-function clearSendIntent(): void {
-  pendingSendPath = null;
-  if (sendIntentTimer !== null) {
-    window.clearTimeout(sendIntentTimer);
-    sendIntentTimer = null;
-  }
-}
-
-function markSendIntent(): void {
-  pendingSendPath = getConversationPath();
-  if (sendIntentTimer !== null) window.clearTimeout(sendIntentTimer);
-  sendIntentTimer = window.setTimeout(clearSendIntent, SEND_INTENT_TIMEOUT_MS);
-}
-
 function handleInputChange(input: HTMLElement): void {
+  inputRevision += 1;
+  const content = sanitizeDraftAt(policy, 'input', policy.readText(input)).trim();
+  if (!content) {
+    const previousSentRevision = sentRevision;
+    sendDetection?.checkSent();
+    if (sentRevision !== previousSentRevision) return;
+    // Gemini may clear the old composer after routing, before the route watcher flushes its draft.
+    if (getConversationPath() !== currentPath) return;
+  }
   if (saveTimer) {
     clearTimeout(saveTimer);
     saveTimer = null;
-  }
-
-  const content = sanitizeDraftAt(policy, 'input', policy.readText(input)).trim();
-  if (!content && pendingSendPath) {
-    const sentPath = pendingSendPath;
-    discardPendingSave(sentPath);
-    drafts.remove(sentPath);
-    clearSendIntent();
-    return;
   }
 
   pendingSave = {
@@ -214,74 +192,41 @@ function detachInputListener(): void {
 // ============================================================================
 
 /**
- * Start polling to detect when a message is sent.
- * When the input becomes empty after having content, the draft is cleared.
+ * Rebind when Gemini reveals another mounted composer without adding nodes.
+ * Send confirmation belongs to the shared detector, never to an empty field alone.
  */
 function startSendDetection(): void {
   if (sendCheckTimer) return;
 
-  let wasNonEmpty = false;
-  let observedPath = currentPath || getConversationPath();
-
   sendCheckTimer = setInterval(() => {
-    const path = getConversationPath();
-    if (path !== observedPath) {
-      observedPath = path;
-      wasNonEmpty = false;
-      return;
-    }
-
     const input = findChatInput();
     if (!input) return;
     // A connected input is not necessarily the active composer: Gemini can
     // hide it and reveal another mounted one without adding nodes.
     attachInputListener(input);
-
-    const empty = isInputEffectivelyEmpty(input);
-
-    if (wasNonEmpty && empty) {
-      // Input went from non-empty to empty — message was likely sent
-      discardPendingSave(observedPath);
-      drafts.remove(observedPath);
-      clearSendIntent();
-      wasNonEmpty = false;
-    } else if (!empty) {
-      wasNonEmpty = true;
-    }
   }, SEND_CHECK_INTERVAL_MS);
 }
 
 function startSendIntentDetection(): void {
-  if (sendIntentListener) return;
-
-  sendIntentListener = (event) => {
-    if (event.type === 'submit') {
-      const form = event.target;
-      if (form instanceof HTMLFormElement && attachedInput && form.contains(attachedInput)) {
-        markSendIntent();
-      }
-      return;
-    }
-
-    const target = event.target instanceof Element ? event.target : null;
-    const button = target?.closest(SEND_BUTTON_SELECTOR);
-    if (!button || !attachedInput) return;
-
-    const composer = button.closest('form, .text-input-field, ms-prompt-input-wrapper');
-    if (!composer || composer.contains(attachedInput)) markSendIntent();
-  };
-
-  document.addEventListener('click', sendIntentListener, true);
-  document.addEventListener('submit', sendIntentListener, true);
+  if (sendDetection) return;
+  sendDetection = startGeminiDraftSendDetection({
+    doc: document,
+    policy,
+    onIntent: () => {
+      inputRevision += 1;
+    },
+    onSent: (path) => {
+      inputRevision += 1;
+      sentRevision += 1;
+      discardPendingSave(path);
+      drafts.remove(path);
+    },
+  });
 }
 
 function stopSendIntentDetection(): void {
-  if (sendIntentListener) {
-    document.removeEventListener('click', sendIntentListener, true);
-    document.removeEventListener('submit', sendIntentListener, true);
-    sendIntentListener = null;
-  }
-  clearSendIntent();
+  sendDetection?.stop();
+  sendDetection = null;
 }
 
 /**
@@ -302,11 +247,18 @@ function stopSendDetection(): void {
  * Attempt to restore a draft for the current conversation.
  */
 async function restoreDraft(generation = restoreGeneration): Promise<void> {
+  const identity = policy.restoreIdentity(document);
+  const revision = inputRevision;
   // Every continuation re-checks this: a restore that outlives disable or
   // cleanup must not rebind the input or write a draft into it, and one whose
   // page turned out to be Enterprise while it waited must not fill its
   // composer (the store refuses writes there for the same reason).
-  const isCurrent = () => isEnabled && generation === restoreGeneration && isEligiblePage();
+  const isCurrent = () =>
+    isEnabled &&
+    generation === restoreGeneration &&
+    revision === inputRevision &&
+    identity === policy.restoreIdentity(document) &&
+    isEligiblePage();
   if (!isCurrent()) return;
   const path = getConversationPath();
   if (hasRestoredForCurrentPath && path === currentPath) return;
@@ -364,20 +316,12 @@ function startUrlWatcher(): void {
   stopRouteWatcher = watchRouteChanges(() => {
     const newPath = getConversationPath();
     if (newPath !== currentPath) {
-      const previousPath = currentPath;
-      if (pendingSendPath === previousPath) {
-        // Sending a first message navigates /app to /app/<id>. Do not flush the
-        // still-debounced, already-sent text back into the old draft key.
-        discardPendingSave(previousPath);
-        drafts.remove(previousPath);
-        clearSendIntent();
-      } else {
-        // Sidebar navigation should preserve the source draft. The pending
-        // entry carries the route captured at the actual input event.
-        flushPendingSave();
-      }
+      // A send intent alone cannot distinguish first-send navigation from a sidebar click.
+      sendDetection?.checkSent();
+      flushPendingSave();
 
       currentPath = newPath;
+      restoreGeneration += 1;
       lastSavedContent = '';
       hasRestoredForCurrentPath = false;
 
@@ -500,6 +444,7 @@ function enableFeature(): void {
   startSendDetection();
   startSendIntentDetection();
   startUrlWatcher();
+  unregisterUnloadFlush = registerDraftFlush(flushPendingSave);
 
   // Restore draft for the current page
   restoreDraft();
@@ -519,6 +464,8 @@ function disableFeature(): void {
     saveTimer = null;
   }
   pendingSave = null;
+  unregisterUnloadFlush?.();
+  unregisterUnloadFlush = null;
 
   detachInputListener();
   disconnectObserver();

@@ -17,8 +17,8 @@ export type DraftSanitizeStage = 'input' | 'store' | 'restore';
 export type DraftSendDetection =
   /** Enter, the adapter's send button or the form, then the composer emptying. */
   | { readonly kind: 'catalog'; readonly sendButton: string | undefined }
-  /** Gemini's send button click or form submit, plus a once-a-second empty check. */
-  | { readonly kind: 'legacy-gemini' };
+  /** Verified native Gemini main-composer sends, shared with the rollback module. */
+  | { readonly kind: 'gemini' };
 
 export interface DraftPolicy {
   /** Trusted check, repeated before every key and every storage write. */

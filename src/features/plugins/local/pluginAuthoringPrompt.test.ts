@@ -94,6 +94,7 @@ describe('plugin authoring prompt contract', () => {
       [...prompt.matchAll(/^- (\w+) \(sinceEngine /gm)].map((match) => match[1]).sort();
     expect(listed(gemini)).toEqual([
       'codeCollapse',
+      'draftSave',
       'echarts',
       'formulaCopy',
       'mermaid',

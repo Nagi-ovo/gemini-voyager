@@ -1,0 +1,60 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.gemini-draft-save",
+  "name": "Gemini · Draft auto-save",
+  "description": "Automatically save and restore unsent input when you refresh or reopen a conversation",
+  "version": "1.0.0",
+  "i18n": {
+    "zh": {
+      "name": "Gemini · 草稿自动保存",
+      "description": "刷新页面或重新打开对话时，自动保存和恢复未发送的输入内容"
+    },
+    "zh_TW": {
+      "name": "Gemini · 草稿自動儲存",
+      "description": "重新整理頁面或重新開啟對話時，自動儲存和恢復未送出的輸入內容"
+    },
+    "ja": {
+      "name": "Gemini · 下書きの自動保存",
+      "description": "ページの更新や会話の再表示時に、未送信の入力内容を自動的に保存・復元します"
+    },
+    "ko": {
+      "name": "Gemini · 임시 저장 자동 저장",
+      "description": "페이지를 새로고침하거나 대화를 다시 열 때 전송되지 않은 입력 내용을 자동으로 저장하고 복원합니다"
+    },
+    "fr": {
+      "name": "Gemini · Sauvegarde automatique du brouillon",
+      "description": "Sauvegarder et restaurer automatiquement le texte non envoyé lors de l'actualisation ou la réouverture d'une conversation"
+    },
+    "es": {
+      "name": "Gemini · Guardado automático de borrador",
+      "description": "Guardar y restaurar automáticamente el texto no enviado al actualizar o reabrir una conversación"
+    },
+    "pt": {
+      "name": "Gemini · Salvamento automático de rascunho",
+      "description": "Salvar e restaurar automaticamente o texto não enviado ao atualizar ou reabrir uma conversa"
+    },
+    "ru": {
+      "name": "Gemini · Автосохранение черновика",
+      "description": "Автоматически сохранять и восстанавливать неотправленный текст при обновлении страницы или повторном открытии беседы"
+    },
+    "ar": {
+      "name": "Gemini · حفظ المسودة تلقائيًا",
+      "description": "حفظ واستعادة النص غير المرسل تلقائيًا عند تحديث الصفحة أو إعادة فتح المحادثة"
+    }
+  },
+  "author": "voyager-official",
+  "category": "productivity",
+  "license": "GPL-3.0-or-later",
+  "engine": ">=1.8.0",
+  "tier": "declarative",
+  "matches": ["https://gemini.google.com/*"],
+  "contributes": {
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "draftSave",
+        "params": {}
+      }
+    ]
+  }
+}

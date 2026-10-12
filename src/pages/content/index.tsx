@@ -19,6 +19,7 @@ import { runCoachmarkSequence } from './coachmark';
 import { claimContentScript } from './contentScriptHandoff';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
+import { flushDraftsBeforeUnload } from './draftSave/draftUnloadFlush';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { type NativeFeature, type StopNativeFeature, mountNativeFeature } from './featureLifecycle';
@@ -264,11 +265,8 @@ async function initializeFeatures(): Promise<void> {
       // parallel without changing their runtime ordering.
       const parallelResults = await Promise.allSettled([
         geminiBuiltins.startResponseNotification(),
-        ...[
-          NATIVE_FEATURES.draftSave,
-          NATIVE_FEATURES.gemsSidebar,
-          NATIVE_FEATURES.usageStatus,
-        ].map(mountForPage),
+        ...[NATIVE_FEATURES.gemsSidebar, NATIVE_FEATURES.usageStatus].map(mountForPage),
+        geminiInputs.startDraftSave(),
         geminiInputs.startPromptHistory(),
       ]);
       const failedInitializer = parallelResults.find(
@@ -483,6 +481,10 @@ function handleVisibilityChange(): void {
     // Gemini and AI Studio send keys: one page coordinator that the native send
     // behavior and send plugins register on, so it exists before the host.
     startPageSendKeys(location.hostname, cleanupManager);
+    cleanupManager.registerCleanupFunction(
+      flushDraftsBeforeUnload,
+      CleanupPositions.FlushDraftsBeforeUnload,
+    );
 
     // Plugin ecosystem host. Started up-front on EVERY page the content script is
     // injected into (Gemini / AI Studio, and any site a user enabled a plugin for,

@@ -94,6 +94,8 @@ export interface GeminiInputStartup {
   startInputCollapse(): Promise<void>;
   /** Prompt history, in the parallel storage-hydration group. */
   startPromptHistory(): Promise<void>;
+  /** Drafts hydrate in the same parallel slice as the native module did. */
+  startDraftSave(): Promise<void>;
   /** Route `chrome.storage.onChanged` to input collapse: its sub-switch always, its switch while native. */
   handleStorageChange(changes: StorageChanges, areaName: string): void;
 }
@@ -140,6 +142,16 @@ export function createGeminiInputStartup(
         applyStoredWhenNotEmpty(await readInputCollapseSettings());
       }
     },
+    startDraftSave: () =>
+      startOwnedFeature(
+        admission,
+        'gemini',
+        'draftSave',
+        async () => {
+          await mountNativeFeature(cleanupManager, NATIVE_FEATURES.draftSave);
+        },
+        ownerOf,
+      ),
     startPromptHistory: () =>
       startOwnedFeature(
         admission,

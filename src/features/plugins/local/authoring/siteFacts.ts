@@ -26,6 +26,7 @@ const SELECTOR_PREVIEW_CHARS = 240;
 const SITE_NOTES: Readonly<Record<string, readonly string[]>> = {
   gemini: [
     'The `sidebar` anchor also matches Voyager’s own folder panel (`.gv-folder-container`). To change only Gemini’s navigation rail, target `bard-sidenav` with a CSS selector.',
+    'On Gemini, `draftSave` shares the native drafts: keys are `gvDraft_` plus the full pathname, including `/u/<index>/` and Gem routes. Different account slots have different keys; changing email within the same slot still shares stored drafts.',
   ],
   aistudio: [
     'The `sidebar` anchor is Voyager’s own folder panel on AI Studio, not AI Studio’s navigation. Use a CSS selector for AI Studio’s own panels.',
@@ -39,6 +40,7 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   ctrlEnterSend: 'Ctrl/Cmd+Enter send',
   safariEnterFix: 'Safari Enter fix',
   enterSend: 'AI Studio Enter send',
+  draftSave: 'Draft auto-save',
   formulaCopy: 'Formula copy',
   vimInput: 'Input Vim mode',
   hideInputHalo: 'Hide input box halo',
@@ -78,9 +80,11 @@ function sharedRuntimeLines(site: SiteAdapter, open: ReadonlySet<string>): strin
     }
   }
   return [...settings].map(([handler, setting]) =>
-    handlerResources(handler).length > 0
-      ? `- \`${handler}\` runs the same code as Voyager’s own ${setting} setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling \`${handler}\` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.`
-      : `- \`${handler}\` runs the same code as Voyager’s own ${setting} setting. Both can run on one page: each claims the elements it works on, and an element the other already holds is left to it.`,
+    handler === 'draftSave' && site.id === 'gemini'
+      ? `- \`draftSave\` runs the same code as Voyager’s own ${setting} setting. Official and local draft plugins may run together and share the same \`gvDraft_\` full-path data. Their writes and pruning are coordinated on this page. Turning either plugin off keeps stored drafts.`
+      : handlerResources(handler).length > 0
+        ? `- \`${handler}\` runs the same code as Voyager’s own ${setting} setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling \`${handler}\` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.`
+        : `- \`${handler}\` runs the same code as Voyager’s own ${setting} setting. Both can run on one page: each claims the elements it works on, and an element the other already holds is left to it.`,
   );
 }
 
