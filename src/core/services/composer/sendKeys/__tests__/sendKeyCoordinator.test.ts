@@ -79,6 +79,34 @@ afterEach(() => {
 });
 
 describe('send key coordinator', () => {
+  it.each([{ isComposing: true }, { keyCode: 229 }, { key: 'Process' }])(
+    'does not send or insert a newline when confirming an IME candidate: %j',
+    (modifiers) => {
+      const { input, button } = mountGeminiComposer();
+      const click = vi.spyOn(button, 'click');
+      const coordinator = createSendKeyCoordinator('gemini');
+      coordinator.registerMainMode({ source: 'test', mode: 'ctrlEnterSends' });
+      expect(pressEnter(input, modifiers).defaultPrevented).toBe(false);
+      expect(pressEnter(input, { ...modifiers, ctrlKey: true }).defaultPrevented).toBe(false);
+      expect(click).not.toHaveBeenCalled();
+      expect(document.execCommand).not.toHaveBeenCalled();
+      coordinator.stop();
+    },
+  );
+
+  it('skips a keydown that an earlier preparation listener already prevented', () => {
+    const { input, button } = mountGeminiComposer();
+    const click = vi.spyOn(button, 'click');
+    const coordinator = createSendKeyCoordinator('gemini');
+    coordinator.registerMainMode({ source: 'test', mode: 'ctrlEnterSends' });
+    const prevent = (event: Event) => event.preventDefault();
+    document.addEventListener('keydown', prevent, { capture: true });
+    pressEnter(input, { ctrlKey: true });
+    document.removeEventListener('keydown', prevent, { capture: true });
+    expect(click).not.toHaveBeenCalled();
+    coordinator.stop();
+  });
+
   it('attaches no listener or observer while no send mode is registered', async () => {
     vi.useFakeTimers();
     const { input } = mountGeminiComposer();

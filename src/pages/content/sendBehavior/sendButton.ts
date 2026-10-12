@@ -1,3 +1,6 @@
+import type { EffectiveSendKey } from '@/core/services/composer/sendKeys/sendKeyCoordinator';
+import { isImeKeyEvent } from '@/core/services/composer/sendKeys/sendKeyIntent';
+
 /** Selectors and semantic fallbacks shared by send-related content features. */
 export const SEND_BUTTON_SELECTORS = [
   '.update-button',
@@ -113,9 +116,9 @@ export function findInputForSendActionButton(button: HTMLButtonElement): HTMLEle
 }
 
 /** Mirrors Gemini send-key semantics, including Voyager's Ctrl+Enter mode. */
-export function isSendKeyboardEvent(event: KeyboardEvent, ctrlEnterSendEnabled: boolean): boolean {
-  if (event.key !== 'Enter' || event.isComposing) return false;
+export function isSendKeyboardEvent(event: KeyboardEvent, sendKey: EffectiveSendKey): boolean {
+  if (event.key !== 'Enter' || isImeKeyEvent(event)) return false;
   const hasCtrlModifier = event.ctrlKey || event.metaKey;
-  if (ctrlEnterSendEnabled) return hasCtrlModifier;
+  if (sendKey === 'ctrlEnter') return hasCtrlModifier;
   return !event.shiftKey || hasCtrlModifier;
 }

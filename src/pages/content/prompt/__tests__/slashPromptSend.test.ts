@@ -1,5 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
+import { type Mock, describe, expect, it, vi } from 'vitest';
 
+import {
+  createSendKeyCoordinator,
+  getSendKeyCoordinator,
+} from '@/core/services/composer/sendKeys/sendKeyCoordinator';
 import { StorageKeys } from '@/core/types/common';
 import type { PromptItem } from '@/core/types/sync';
 
@@ -13,6 +17,13 @@ import {
   createTextarea,
   useSlashTestHarness,
 } from './slashPromptTestHarness';
+
+vi.mock('@/core/services/composer/sendKeys/sendKeyCoordinator', async (importOriginal) => ({
+  ...(await importOriginal<
+    typeof import('@/core/services/composer/sendKeys/sendKeyCoordinator')
+  >()),
+  getSendKeyCoordinator: vi.fn(() => null),
+}));
 
 describe('slashPromptSend', () => {
   let destroy: (() => void) | null = null;
@@ -188,6 +199,51 @@ describe('slashPromptSend', () => {
     expect(sendEvent.defaultPrevented).toBe(true);
     expect(input.querySelector('.gv-pm-slash-token')).toBeNull();
     expect(input.textContent).toContain('Review this code and report correctness issues.');
+  });
+
+  it('follows a local Ctrl+Enter send shortcut while the Gemini switch is off', async () => {
+    const input = createContentEditable('/review');
+    (chrome.storage.sync.get as unknown as Mock).mockImplementation(
+      (_keys: unknown, callback?: (result: Record<string, unknown>) => void) => {
+        callback?.({ [StorageKeys.CTRL_ENTER_SEND]: false });
+        return Promise.resolve({ [StorageKeys.CTRL_ENTER_SEND]: false });
+      },
+    );
+    const coordinator = createSendKeyCoordinator('gemini', {
+      doc: document.implementation.createHTMLDocument(),
+    });
+    vi.mocked(getSendKeyCoordinator).mockReturnValue(coordinator);
+    try {
+      destroy = startPromptSlashCommand({ scheme: () => 'light', initialItems: prompts }).destroy;
+      typeInto(input);
+      press(input, 'Tab');
+      await coordinator.whenReady();
+      coordinator.registerMainMode({ source: 'local.send', mode: 'ctrlEnterSends' });
+      expect(press(input, 'Enter').defaultPrevented).toBe(false);
+      expect(input.querySelector('.gv-pm-slash-token')).not.toBeNull();
+      expect(press(input, 'Enter', { ctrlKey: true }).defaultPrevented).toBe(true);
+      expect(input.textContent).toContain('Review this code and report correctness issues.');
+    } finally {
+      coordinator.stop();
+      vi.mocked(getSendKeyCoordinator).mockReturnValue(null);
+    }
+  });
+
+  it('lets an IME confirm Enter through slash prompt without re-dispatching it', async () => {
+    const input = createContentEditable('/review');
+    destroy = startPromptSlashCommand({ scheme: () => 'light', initialItems: prompts }).destroy;
+    typeInto(input);
+    const choosing = press(input, 'Enter', { keyCode: 229 });
+    expect(choosing.defaultPrevented).toBe(false);
+    expect(input.textContent).toBe('/review');
+    press(input, 'Enter');
+    const hostKeydown = vi.fn();
+    input.addEventListener('keydown', hostKeydown);
+    const confirming = press(input, 'Enter', { keyCode: 229 });
+    await new Promise((resolve) => window.setTimeout(resolve, 10));
+    expect(confirming.defaultPrevented).toBe(false);
+    expect(input.querySelector('.gv-pm-slash-token')).not.toBeNull();
+    expect(hostKeydown).toHaveBeenCalledTimes(1);
   });
 
   it('updates the Ctrl/Cmd+Enter send mode when the sync setting changes', () => {

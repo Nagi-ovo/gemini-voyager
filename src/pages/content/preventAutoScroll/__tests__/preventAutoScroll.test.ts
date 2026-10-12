@@ -195,4 +195,36 @@ describe('prevent auto scroll', () => {
     expect(getBridge().dataset.enabled).toBe('false');
     stop();
   });
+
+  it('follows a local Ctrl+Enter send shortcut while the Gemini switch is off', async () => {
+    vi.resetModules();
+    storageGetMock().mockImplementation(
+      (defaults: Record<string, unknown>, callback?: (value: Record<string, unknown>) => void) => {
+        callback?.(defaults);
+        return Promise.resolve(defaults);
+      },
+    );
+    const { startSendKeyCoordinator } =
+      await import('@/core/services/composer/sendKeys/sendKeyCoordinator');
+    const coordinator = startSendKeyCoordinator('gemini');
+    const { startPreventAutoScrollBridge: startBridge } = await import('../bridge');
+    const stop = startBridge();
+    try {
+      await coordinator.whenReady();
+      await settle();
+      expect(getBridge().dataset.ctrlEnterSend).toBe('false');
+      const release = coordinator.registerMainMode({
+        source: 'local.send',
+        mode: 'ctrlEnterSends',
+      });
+      expect(getBridge().dataset.ctrlEnterSend).toBe('true');
+      emitSyncChange({ [StorageKeys.CTRL_ENTER_SEND]: { newValue: false } });
+      expect(getBridge().dataset.ctrlEnterSend).toBe('true');
+      release();
+      expect(getBridge().dataset.ctrlEnterSend).toBe('false');
+    } finally {
+      stop();
+      coordinator.stop();
+    }
+  });
 });

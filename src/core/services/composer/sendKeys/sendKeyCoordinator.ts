@@ -96,7 +96,7 @@ export function createSendKeyCoordinator(
 
   function handleKeyDown(event: KeyboardEvent): void {
     const rule = activeRule();
-    if (!rule) return;
+    if (!rule || event.defaultPrevented) return;
     const intent = classifySendKey(event, rule);
     if (intent === 'host') return;
 

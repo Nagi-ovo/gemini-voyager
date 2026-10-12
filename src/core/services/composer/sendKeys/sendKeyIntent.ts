@@ -24,11 +24,18 @@ export interface SendKeyRule {
 export type SendKeyEventLike = Pick<
   KeyboardEvent,
   'key' | 'isComposing' | 'ctrlKey' | 'metaKey' | 'shiftKey' | 'altKey'
->;
+> & { readonly keyCode?: number };
+
+export function isImeKeyEvent(
+  event: Pick<KeyboardEvent, 'key' | 'isComposing'> & { readonly keyCode?: number },
+): boolean {
+  // Safari may end composition before the candidate-confirming Enter arrives.
+  return event.isComposing || event.key === 'Process' || event.keyCode === 229;
+}
 
 export function classifySendKey(event: SendKeyEventLike, rule: SendKeyRule): SendKeyIntent {
   // Issue 260: an Enter that confirms an IME candidate belongs to the IME.
-  if (event.isComposing || event.key !== 'Enter') return 'host';
+  if (isImeKeyEvent(event) || event.key !== 'Enter') return 'host';
   if (event.ctrlKey || event.metaKey) return rule.ctrlEnter;
   if (event.shiftKey) return rule.shiftEnter;
   if (event.altKey) return rule.altEnter;

@@ -67,3 +67,5 @@ Les traductions (`i18n`) sont facultatives.
 ## Le partager
 
 Un plugin local reste dans votre navigateur ; exportez son JSON depuis la liste des plugins pour l'emporter ailleurs. S'il peut servir à tout le monde, proposez-le pour le catalogue officiel : [Contribution Plugins](./plugin-contribution.md) décrit la marche à suivre.
+
+Un seul plugin de raccourci d’envoi fonctionne par page ; le suivant signale un conflit. Le paramètre facultatif `mode` (sinceEngine `next`) vaut `ctrlEnterSends` (par défaut) ou `enterSends`. La validation IME n’envoie rien. Gemini/AI Studio ouvrent cette primitive après la migration du propriétaire de la fonction.

@@ -3,6 +3,7 @@ import { getVoyagerBuildTarget } from '@/core/utils/browser';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
 import type { StopNativeFeature } from '../featureLifecycle';
+import { followGeminiSendKey } from '../sendBehavior/followSendKey';
 
 /** Must match `public/prevent-auto-scroll.js`, which reads it on every check. */
 const GV_BRIDGE_ID = 'gv-prevent-auto-scroll-bridge';
@@ -61,6 +62,9 @@ export function startPreventAutoScrollBridge(): StopNativeFeature {
   let stopped = false;
   let liveRevision = 0;
   let script: HTMLScriptElement | null = null;
+  const effectiveSendKey = followGeminiSendKey((key) => {
+    writeCtrlEnterSend(key === 'ctrlEnter');
+  });
 
   try {
     getBridgeElement();
@@ -76,7 +80,7 @@ export function startPreventAutoScrollBridge(): StopNativeFeature {
     const change = changes[StorageKeys.CTRL_ENTER_SEND];
     if (!change) return;
     liveRevision += 1;
-    writeCtrlEnterSend(change.newValue === true);
+    if (!effectiveSendKey.isFollowing()) writeCtrlEnterSend(change.newValue === true);
   };
 
   try {
@@ -92,7 +96,7 @@ export function startPreventAutoScrollBridge(): StopNativeFeature {
     try {
       const result = await chrome.storage?.sync?.get({ [StorageKeys.CTRL_ENTER_SEND]: false });
       // A change that landed during the read is newer than the read.
-      if (stopped || liveRevision !== readRevision) return;
+      if (stopped || liveRevision !== readRevision || effectiveSendKey.isFollowing()) return;
       writeCtrlEnterSend(result?.[StorageKeys.CTRL_ENTER_SEND] === true);
     } catch (error) {
       if (isExtensionContextInvalidatedError(error)) return;
@@ -103,6 +107,7 @@ export function startPreventAutoScrollBridge(): StopNativeFeature {
   return () => {
     if (stopped) return;
     stopped = true;
+    effectiveSendKey.stop();
     try {
       chrome.storage?.onChanged?.removeListener(listener);
     } catch {

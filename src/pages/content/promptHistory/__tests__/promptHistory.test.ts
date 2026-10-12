@@ -240,6 +240,49 @@ describe('Prompt History capture and lifecycle', () => {
     });
   });
 
+  it('follows a local Ctrl+Enter send shortcut while the Gemini switch is off', async () => {
+    setupStorage(true, false);
+    const { startSendKeyCoordinator } =
+      await import('@/core/services/composer/sendKeys/sendKeyCoordinator');
+    const coordinator = startSendKeyCoordinator('gemini');
+    try {
+      const module = await import('../index');
+      cleanup = await module.startPromptHistory();
+      await coordinator.whenReady();
+      coordinator.registerMainMode({ source: 'local.send', mode: 'ctrlEnterSends' });
+      const { input } = createMainComposer();
+      input.textContent = 'newline while local owns send';
+      input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      input.textContent = 'local send';
+      input.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true }),
+      );
+      await vi.waitFor(async () => {
+        expect((await getPromptHistory(PRIMARY_ACCOUNT_SCOPE)).map((item) => item.content)).toEqual(
+          ['local send'],
+        );
+      });
+    } finally {
+      coordinator.stop();
+    }
+  });
+
+  it('does not record the Enter that confirms an IME candidate after composition ends', async () => {
+    await start();
+    const { input } = createMainComposer();
+    input.textContent = 'candidate confirmation';
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', keyCode: 229, bubbles: true }),
+    );
+    input.textContent = 'actual send';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await vi.waitFor(async () => {
+      expect((await getPromptHistory(PRIMARY_ACCOUNT_SCOPE)).map((item) => item.content)).toEqual([
+        'actual send',
+      ]);
+    });
+  });
+
   it('records only the current edit input when Update is submitted', async () => {
     await start();
     const message = document.createElement('chat-message');

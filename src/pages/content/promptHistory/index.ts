@@ -20,6 +20,7 @@ import { getTranslationSync } from '@/utils/i18n';
 import { findChatInput, insertTextIntoChatInput } from '../chatInput/index';
 import { stripInstructionBlockPreservingWhitespace } from '../folderProject/instructionBlock';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
+import { followGeminiSendKey } from '../sendBehavior/followSendKey';
 import {
   findClosestSendActionButton,
   findInputForSendActionButton,
@@ -238,7 +239,7 @@ function startCaptureListeners(): void {
   };
 
   keydownListener = (event) => {
-    if (!isSendKeyboardEvent(event, ctrlEnterSendEnabled)) return;
+    if (!isSendKeyboardEvent(event, ctrlEnterSendEnabled ? 'ctrlEnter' : 'host')) return;
     const input = inputFromTarget(event.target);
     if (input) capturePrompt(input);
   };
@@ -591,8 +592,8 @@ function removeStorageListener(listener: StorageListener | null): void {
   } catch {}
 }
 
-// The send key the keydown capture classifies with: `gvCtrlEnterSend`, read
-// and followed while anyone holds it. The native module holds it for the
+// The effective key, with `gvCtrlEnterSend` as the pre-coordinator fallback.
+// It is followed while anyone holds it. The native module holds it for the
 // page, so turning its switch back on captures with a known key at once; the
 // plugin holds it while mounted.
 let sendKeyHolds = 0;
@@ -600,13 +601,19 @@ let sendKeyGeneration = 0;
 let sendKeyListener: StorageListener | null = null;
 let sendKeyLoad: Promise<void> | null = null;
 let sendKeyLoaded = false;
+let effectiveSendKey: ReturnType<typeof followGeminiSendKey> | null = null;
 
 function holdSendKey(): () => void {
   if (sendKeyHolds++ === 0) {
+    effectiveSendKey = followGeminiSendKey((key) => {
+      ctrlEnterSendEnabled = key === 'ctrlEnter';
+    });
     sendKeyListener = (changes, areaName) => {
       if (areaName !== 'sync' || !(StorageKeys.CTRL_ENTER_SEND in changes)) return;
       ctrlEnterSettingRevision++;
-      ctrlEnterSendEnabled = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;
+      if (!effectiveSendKey?.isFollowing()) {
+        ctrlEnterSendEnabled = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;
+      }
     };
     addStorageListener(sendKeyListener);
     const generation = ++sendKeyGeneration;
@@ -614,7 +621,9 @@ function holdSendKey(): () => void {
     sendKeyLoad = loadSyncSwitch(StorageKeys.CTRL_ENTER_SEND).then((stored) => {
       // A read that lands after the last holder let go must not seed the next one.
       if (generation !== sendKeyGeneration) return;
-      if (revisionBeforeLoad === ctrlEnterSettingRevision) ctrlEnterSendEnabled = stored;
+      if (revisionBeforeLoad === ctrlEnterSettingRevision && !effectiveSendKey?.isFollowing()) {
+        ctrlEnterSendEnabled = stored;
+      }
       sendKeyLoaded = true;
     });
   }
@@ -625,6 +634,8 @@ function holdSendKey(): () => void {
     if (--sendKeyHolds > 0) return;
     removeStorageListener(sendKeyListener);
     sendKeyListener = null;
+    effectiveSendKey?.stop();
+    effectiveSendKey = null;
     sendKeyGeneration++;
     sendKeyLoad = null;
     sendKeyLoaded = false;

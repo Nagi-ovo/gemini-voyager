@@ -105,6 +105,7 @@ A primitive is behavior Voyager ships as code; a plugin can only call it by name
   - exportImage (boolean, since 1.9.0): Lets Voyager's PNG and PDF export show the drawn diagram (Mermaid in its light theme) instead of the block's source; Markdown keeps the source, and a block still drawing or shown as code exports its source. Default false.
 - quoteReply (sinceEngine 1.8.0): Quote selected text wholly inside one assistant reply into the composer, preserving LaTeX and existing drafts. Excludes user turns and adapter thinking blocks; never sends. Reads: assistantTurn, composer.
 - sendShortcut (sinceEngine 1.8.0): Enter inserts a newline in the composer; Ctrl/Cmd+Enter clicks its enabled send button when no attachment is uploading. Shift+Enter and IME composition keep the host behavior. Reads: composer, composerRoot, sendButton.
+  - mode (string, since 1.9.0): Which Enter chord sends (default ctrlEnterSends). Gemini accepts only ctrlEnterSends; AI Studio accepts only enterSends.
 - tableCopy (sinceEngine 1.8.0): A toolbar above each table in a reply copies it as Markdown (formulas kept as LaTeX, the same table conversation export writes) or as TSV for spreadsheets. The table stays untouched; turning the plugin off removes the toolbars. Reads: assistantTurn.
 - turnNavigator (sinceEngine 1.4.0): A compact conversation timeline with starred messages and search, built on the same code as the Claude timeline. Reads: userTurn.
   - turn (selector): User-turn elements to index; defaults to the site adapter's userTurn.

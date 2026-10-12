@@ -590,3 +590,9 @@ Jesse 在 Chrome 中用验收副本实测：dark 主题，只用已有对话，�
 - **Quote live 关闭**：只移除 Quote 按钮，`aria-label` 变为 "Highlight"。
 - **已有行为，与本阶段无关**："ruler timeline" coachmark 打开时会吞掉页面点击。
 - **未覆盖**：时间线关闭后的 j/k（6A 还没有总开关）、完成通知、跨账号、去水印下载、Safari、light 主题。
+
+### 7.11 主分支后续批次（2026-10-12）
+
+以 `.build/codex-handoff/TODO.md` 的决定替代 §7.1 中的待答状态：发送与草稿向 local 开放；发送键冲突提示适用于所有站点；阶段 4 五个小毛病都修；用量关闭时不采集；fork 原生链接优先、History API 兜底且保留账号，关闭后仍完成实际首发的链接；消息时间独立于时间线；星标/层级公共数据能力完成后再开放 local 时间线。所有批次仅在 main 本地提交，不 push。
+
+**4A-2 + 4B（IME 必须同批）**：`sendShortcut` 增加可选 `mode`（sinceEngine next），Gemini/AI Studio 使用现有协调器及站点策略，Gemini 拒绝反向模式和 Enterprise；所有站点统一认领 `composer-send-key-mode`，在位者保留资源，新冲突者显示冲突，官方在 admission 前保留资源。协调器跳过已阻止的键；发送端和 history、Folder Project、slash、防自动滚动桥及 MAIN hook 同时识别 composition/Process/229。旁路读者在设置读取完成后跟随 Gemini 的有效发送键，并保留各自原有修饰键规则；AI Studio slash 旧读法留到单独 Q2-e 批次。尚未翻转发送与草稿 owner。变异确认：移除 IME、defaultPrevented、claim、mode 改动，各自行为测试失败。浏览器发送验收在 owner 翻转后进行。

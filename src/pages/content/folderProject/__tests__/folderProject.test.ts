@@ -384,6 +384,62 @@ describe('follow-up injection regression', () => {
     document.body.innerHTML = '';
   });
 
+  it.each([
+    ['keeps folder project treating Ctrl+Enter as no send in the default mode', false, 0, false],
+    ['follows a local Ctrl+Enter send shortcut while the Gemini switch is off', true, 0, true],
+    ['does not assign a folder for an IME confirm Enter after composition ends', false, 229, false],
+  ])('%s', async (_name, localSend, keyCode, expectsSend) => {
+    const { startSendKeyCoordinator } =
+      await import('@/core/services/composer/sendKeys/sendKeyCoordinator');
+    const coordinator = startSendKeyCoordinator('gemini');
+    try {
+      if (localSend) coordinator.registerMainMode({ source: 'local.send', mode: 'ctrlEnterSends' });
+      document.body.innerHTML =
+        '<div id="test-chat-input" contenteditable="true" role="textbox">question</div>' +
+        '<div class="model-picker-container"><button></button></div>';
+      const anchor = document.querySelector<HTMLElement>('.model-picker-container')!;
+      vi.spyOn(anchor, 'getBoundingClientRect').mockReturnValue({ height: 40 } as DOMRect);
+      const manager = {
+        getFolders: vi.fn().mockReturnValue([
+          {
+            id: 'f1',
+            name: 'TestFolder',
+            parentId: null,
+            isExpanded: false,
+            createdAt: 0,
+            updatedAt: 0,
+            instructions: 'Be concise.',
+          },
+        ]),
+        ensureDataLoaded: vi.fn().mockResolvedValue(undefined),
+        addConversationToFolderFromNative: vi.fn(),
+      };
+      const { startFolderProject } = await import('../index');
+      startFolderProject(manager as unknown as Parameters<typeof startFolderProject>[0]);
+      await vi.advanceTimersByTimeAsync(50);
+      document.querySelector<HTMLButtonElement>('.gv-fp-chip')!.click();
+      await vi.advanceTimersByTimeAsync(50);
+      Array.from(document.querySelectorAll<HTMLElement>('.gv-fp-item'))
+        .find((item) => item.textContent?.includes('TestFolder'))!
+        .click();
+      const input = document.getElementById('test-chat-input')!;
+      input.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'Enter',
+          ctrlKey: keyCode !== 229,
+          keyCode,
+          bubbles: true,
+        }),
+      );
+      expect(input.textContent?.includes('[System Instructions]')).toBe(expectsSend);
+      window.history.pushState({}, '', '/app/first-send');
+      await vi.advanceTimersByTimeAsync(700);
+      expect(manager.addConversationToFolderFromNative).toHaveBeenCalledTimes(expectsSend ? 1 : 0);
+    } finally {
+      coordinator.stop();
+    }
+  });
+
   it('does not re-inject instructions on follow-up when URL change is delayed past the 60s pendingSend timeout', async () => {
     // Chat input that findChatInput() can locate
     const chatInput = document.createElement('div');

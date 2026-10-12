@@ -67,3 +67,5 @@ npx create-voyager-plugin@latest check my-plugin
 ## 分享
 
 本機外掛只存在你的瀏覽器裡；想搬到別的地方用，就在外掛清單裡匯出它的 JSON。如果它對大家都有幫助，可以提議收進官方外掛目錄，流程請見[外掛貢獻說明](./plugin-contribution.md)。
+
+每頁只能執行一個傳送快捷鍵外掛；後啟用的會顯示衝突。可選 `mode`（sinceEngine `next`）為 `ctrlEnterSends`（預設）或 `enterSends`。輸入法確認鍵不會觸發傳送。Gemini/AI Studio 在對應功能遷移後才開放。

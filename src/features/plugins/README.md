@@ -443,6 +443,13 @@ avoid content that already has native collapse, such as DeepSeek's `.ds-collapsi
 There is no expand-all control. A plugin can expose `maxPx` and `startCollapsed` as settings
 using `"params": { "target": "userTurn", "maxPx": "{{maxHeight}}", "startCollapsed": "{{startCollapsed}}" }`.
 
+`sendShortcut` claims one composer send mode per page on every site: a second plugin
+reports a conflict while the current holder keeps running. The optional `mode`
+(sinceEngine `next`) is `ctrlEnterSends` (default) or `enterSends`. Gemini only accepts
+the default, AI Studio only the latter, via the packaged page coordinator; Gemini
+Enterprise accepts neither. Composition, Process and keyCode 229 are left to the IME.
+Gemini/AI Studio remain closed to local send plugins until their owner flips.
+
 `draftSave` (unreleased, `sinceEngine: 'next'`, no parameters; reads `composer` and
 `sendButton`, and stays inert without `conversationIdPattern`) is Gemini's draft auto-save on a
 catalog site. It shares `pages/content/draftSave/draftStore.ts` (debounce, empty means remove,

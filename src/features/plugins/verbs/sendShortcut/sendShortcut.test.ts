@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { readComposer } from '@/core/services/composer';
+import * as sendKeys from '@/core/services/composer/sendKeys/sendKeyCoordinator';
 
 import { requireBundledSiteAdapter } from '../../catalog/sites';
 import { PluginScope } from '../../runtime/pluginScope';
 import type { SiteAdapter } from '../../types';
-import { sendShortcutPrimitive } from './index';
+import { sendShortcutPrimitive, type SendShortcutParams } from './index';
 
 const sites = [
   {
@@ -58,21 +59,31 @@ function show(field: HTMLElement): void {
   });
 }
 
-function activate(adapter: SiteAdapter): PluginScope {
+function activate(
+  adapter: SiteAdapter,
+  params: SendShortcutParams = {},
+  doc: Document = document,
+): PluginScope {
   const scope = new PluginScope();
   scopes.push(scope);
-  void sendShortcutPrimitive.activate(
-    scope,
-    {},
-    {
-      doc: document,
-      adapter,
-      pluginId: 'test.send-shortcut',
-      settings: {},
-      setTargetCounter: () => {},
-    },
-  );
+  void sendShortcutPrimitive.activate(scope, params, {
+    doc,
+    adapter,
+    pluginId: 'test.send-shortcut',
+    settings: {},
+    setTargetCounter: () => {},
+  });
   return scope;
+}
+
+function documentAt(url: string): Document {
+  return new Proxy(document, {
+    get(target, key) {
+      if (key === 'location') return new URL(url);
+      const value: unknown = Reflect.get(target, key, target);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
 }
 
 function enter(target: HTMLElement, modifiers: KeyboardEventInit = {}): KeyboardEvent {
@@ -108,6 +119,70 @@ describe('sendShortcut', () => {
   it.each([null, [], 'invalid', { mode: 'send' }])('rejects invalid configuration %j', (params) => {
     expect(sendShortcutPrimitive.validateParams(params).success).toBe(false);
   });
+
+  it.each(sites)('supports the optional Enter-sends mode on $name', (site) => {
+    const { field, clicks } = fixture(site);
+    activate(site.adapter, { mode: 'enterSends' });
+    expect(enter(field).defaultPrevented).toBe(true);
+    expect(clicks).toHaveBeenCalledOnce();
+    enter(field, { ctrlKey: true });
+    expect(clicks).toHaveBeenCalledOnce();
+  });
+
+  it('turns Enter into send and Ctrl+Enter into a newline in AI Studio enterSends mode', async () => {
+    const doc = documentAt('https://aistudio.google.com/prompts/new_chat');
+    Object.defineProperty(document, 'execCommand', {
+      configurable: true,
+      value: vi.fn(() => false),
+    });
+    document.body.innerHTML =
+      '<form><textarea>draft</textarea><button aria-label="Run">Run</button></form>';
+    const field = document.querySelector('textarea')!;
+    const button = document.querySelector('button')!;
+    Object.defineProperty(button, 'offsetParent', { configurable: true, value: document.body });
+    const clicks = vi.fn((event: Event) => event.preventDefault());
+    button.addEventListener('click', clicks);
+    const coordinator = sendKeys.createSendKeyCoordinator('aistudio', { doc });
+    vi.spyOn(sendKeys, 'getSendKeyCoordinator').mockReturnValue(coordinator);
+    const scope = activate(requireBundledSiteAdapter('aistudio'), { mode: 'enterSends' }, doc);
+    enter(field);
+    expect(clicks).toHaveBeenCalledOnce();
+    field.setSelectionRange(5, 5);
+    enter(field, { ctrlKey: true });
+    expect(field.value).toBe('draft\n');
+    expect(clicks).toHaveBeenCalledOnce();
+    await scope.dispose();
+    expect(enter(field).defaultPrevented).toBe(false);
+    coordinator.stop();
+  });
+
+  it('refuses enterSends for a local sendShortcut on Gemini without intercepting keys', () => {
+    const doc = documentAt('https://gemini.google.com/app');
+    const coordinator = sendKeys.createSendKeyCoordinator('gemini');
+    vi.spyOn(sendKeys, 'getSendKeyCoordinator').mockReturnValue(coordinator);
+    expect(() =>
+      activate(requireBundledSiteAdapter('gemini'), { mode: 'enterSends' }, doc),
+    ).toThrow('has no enterSends');
+    coordinator.stop();
+  });
+
+  it.each(['host', 'url', 'dom'])(
+    'attaches nothing for a local sendShortcut on Gemini Enterprise by %s hint',
+    (hint) => {
+      const url =
+        hint === 'host'
+          ? 'https://business.gemini.google/app'
+          : hint === 'url'
+            ? 'https://gemini.google.com/app?enterprise=1'
+            : 'https://gemini.google.com/app';
+      const doc = documentAt(url);
+      if (hint === 'dom') document.body.dataset.workspace = 'business';
+      expect(() => activate(requireBundledSiteAdapter('gemini'), {}, doc)).toThrow(
+        'Gemini Enterprise',
+      );
+      delete document.body.dataset.workspace;
+    },
+  );
 
   it('inserts a textarea newline through the React native setter and keeps the caret after it', () => {
     const site = sites[2];

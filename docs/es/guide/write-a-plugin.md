@@ -67,3 +67,5 @@ Las traducciones (`i18n`) son opcionales.
 ## Compartirlo
 
 Un plugin local se queda en tu navegador; exporta su JSON desde la lista de plugins para llevarlo a otro lugar. Si puede ser útil para todos, proponlo para el catálogo oficial: [Contribuir plugins](./plugin-contribution.md) describe ese camino.
+
+Solo puede ejecutarse un plugin de atajo de envío por página; el siguiente muestra un conflicto. El parámetro opcional `mode` (sinceEngine `next`) es `ctrlEnterSends` (predeterminado) o `enterSends`. Confirmar el IME no envía el mensaje. Gemini/AI Studio habilitan esta primitiva tras migrar la función.

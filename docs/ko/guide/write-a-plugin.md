@@ -67,3 +67,5 @@ npx create-voyager-plugin@latest check my-plugin
 ## 공유하기
 
 로컬 플러그인은 내 브라우저에만 있습니다. 다른 곳으로 옮기려면 플러그인 목록에서 JSON을 내보내세요. 모두에게 도움이 될 만하다면 공식 카탈로그에 넣자고 제안할 수 있으며, 그 과정은 [플러그인 기여 가이드](./plugin-contribution.md)에서 설명합니다.
+
+페이지마다 전송 단축키 플러그인은 하나만 실행됩니다. 나중에 활성화한 플러그인은 충돌로 표시됩니다. 선택 사항인 `mode`(sinceEngine `next`)는 `ctrlEnterSends`(기본값) 또는 `enterSends`입니다. IME 확인 키로는 전송하지 않습니다. Gemini/AI Studio에서는 기능 이전 후 사용할 수 있습니다.

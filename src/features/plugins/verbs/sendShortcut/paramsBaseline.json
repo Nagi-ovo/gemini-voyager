@@ -1,4 +1,10 @@
 {
   "sinceEngine": "1.8.0",
-  "params": {}
+  "params": {
+    "mode": {
+      "type": "string",
+      "required": false,
+      "sinceEngine": "next"
+    }
+  }
 }

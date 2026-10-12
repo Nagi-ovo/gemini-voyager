@@ -78,6 +78,24 @@ describe('arbitrate', () => {
   const localB = plugin('local.bob.formula', ['formulaCopy']);
   const unrelated = plugin('local.me.tweak');
 
+  it('reports the second send shortcut as a conflict while preserving a running holder on every site', () => {
+    const first = plugin('local.first.send', ['sendShortcut']);
+    const second = plugin('local.second.send', ['sendShortcut']);
+    const official = plugin('voyager.gemini-ctrl-enter-send', ['sendShortcut']);
+    expect(claimedResources(first)).toEqual(['composer-send-key-mode']);
+    expect(
+      duplicateResourceClaims(plugin('local.twice', ['sendShortcut', 'sendShortcut'])),
+    ).toEqual(['composer-send-key-mode']);
+    const live = arbitrate([first, second], [], new Set([first.id]));
+    expect([...live.granted]).toEqual([first.id]);
+    expect(live.blocked.get(second.id)).toEqual({
+      reason: 'conflict',
+      by: first.id,
+      resources: ['composer-send-key-mode'],
+    });
+    expect(arbitrate([first], [official], NONE).blocked.get(first.id)?.by).toBe(official.id);
+  });
+
   it('gives a free resource to the official plugin, then to the lowest local id, in any input order', () => {
     for (const order of permutations([localB, official, unrelated, localA])) {
       const result = arbitrate(order, [], NONE);

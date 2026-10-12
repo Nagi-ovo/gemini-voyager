@@ -67,3 +67,5 @@ npx create-voyager-plugin@latest check my-plugin
 ## 分享
 
 本地插件只存在于你的浏览器里；需要换到别处时，在插件列表里导出它的 JSON。如果它对大家都有用，可以提议收进官方插件目录，流程见[插件贡献说明](./plugin-contribution.md)。
+
+发送快捷键插件每页只能运行一个；后启用的会显示冲突。可选 `mode`（sinceEngine `next`）为 `ctrlEnterSends`（默认）或 `enterSends`。输入法确认键不会触发发送。Gemini/AI Studio 要等对应功能迁移后才开放。

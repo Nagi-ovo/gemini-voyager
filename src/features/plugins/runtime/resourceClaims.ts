@@ -4,8 +4,8 @@
  *
  * Only runtimes proven to be one per page are listed: the formula-copy service
  * is a singleton with its own generation counter, and Vim input keeps its state
- * in module scope. Every other primitive keeps an independent scope per
- * activation and claims nothing, so plugins built on it compose as before.
+ * in module scope. Send shortcuts also claim the composer mode on every site, so conflicting
+ * modes are visible instead of leaving the later listener silently inactive.
  */
 import type { PluginManifest } from '../types';
 
@@ -14,6 +14,7 @@ export type ResourceId = string;
 const HANDLER_RESOURCES: Readonly<Record<string, readonly ResourceId[]>> = {
   formulaCopy: ['formula-copy-service'],
   vimInput: ['vim-input-runtime'],
+  sendShortcut: ['composer-send-key-mode'],
 };
 
 /** One resource claimed by one `native` op, kept per op so repeats stay visible. */

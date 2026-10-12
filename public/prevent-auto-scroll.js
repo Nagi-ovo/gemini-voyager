@@ -151,7 +151,16 @@
   document.addEventListener(
     'keydown',
     (event) => {
-      if (event.key !== 'Enter' || event.shiftKey || event.altKey || event.isComposing) return;
+      // Safari may clear isComposing before the candidate-confirming Enter.
+      if (
+        event.key !== 'Enter' ||
+        event.shiftKey ||
+        event.altKey ||
+        event.isComposing ||
+        event.key === 'Process' ||
+        event.keyCode === 229
+      )
+        return;
       if (isCtrlEnterSendEnabled() && !event.ctrlKey && !event.metaKey) return;
       if (isEditableTarget(event.target)) markSubmitIntent();
     },

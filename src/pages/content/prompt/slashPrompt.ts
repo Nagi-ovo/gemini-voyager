@@ -10,6 +10,7 @@
 import browser from 'webextension-polyfill';
 
 import { promptStorageService } from '@/core/services/StorageService';
+import { isImeKeyEvent } from '@/core/services/composer/sendKeys/sendKeyIntent';
 import { StorageKeys } from '@/core/types/common';
 import { type PromptItem } from '@/core/types/sync';
 import type { PromptScheme } from '@/features/prompt/PromptSiteAdapter';
@@ -17,6 +18,7 @@ import { isPromptTemplate } from '@/features/prompt/model/promptTemplate';
 import { getTranslationSync } from '@/utils/i18n';
 
 import { CHAT_INPUT_SELECTOR, findChatInput } from '../chatInput/index';
+import { followGeminiSendKey } from '../sendBehavior/followSendKey';
 import { findClosestSendActionButton, isSendKeyboardEvent } from '../sendBehavior/sendButton';
 import { type TemplateFillHandle, openTemplateFill } from './PromptTemplateFill';
 import {
@@ -128,6 +130,9 @@ export function startPromptSlashCommand(options: SlashPromptOptions): SlashPromp
   let selectedIndex = 0;
   let results: PromptItem[] = [];
   let ctrlEnterSendEnabled = options.initialCtrlEnterSend === true;
+  const effectiveSendKey = followGeminiSendKey((key) => {
+    ctrlEnterSendEnabled = key === 'ctrlEnter';
+  });
   const { scheme } = options;
   const slashRefreshSuppressedInputs = new WeakSet<HTMLElement>();
 
@@ -360,7 +365,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions): SlashPromp
   function onKeydown(event: KeyboardEvent): void {
     const input = inputFromTarget(event.target);
     if (!input) return;
-    if (event.isComposing) return;
+    if (isImeKeyEvent(event)) return;
 
     if (event.key === 'Home' && !event.shiftKey && !event.altKey && placements.has(input)) {
       // A selected prompt starts with an atomic contenteditable=false token.
@@ -439,7 +444,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions): SlashPromp
       return;
     }
 
-    if (isSendKeyboardEvent(event, ctrlEnterSendEnabled)) {
+    if (isSendKeyboardEvent(event, ctrlEnterSendEnabled ? 'ctrlEnter' : 'host')) {
       if (!placements.has(input)) return;
       event.preventDefault();
       event.stopPropagation();
@@ -524,7 +529,10 @@ export function startPromptSlashCommand(options: SlashPromptOptions): SlashPromp
     area: string,
   ): void {
     if (area === 'sync' && changes[StorageKeys.CTRL_ENTER_SEND]) {
-      ctrlEnterSendEnabled = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;
+      // AI Studio retains its old Gemini-switch fallback until its separate migration.
+      if (!effectiveSendKey.isFollowing()) {
+        ctrlEnterSendEnabled = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;
+      }
       return;
     }
     if (area !== 'local') return;
@@ -550,6 +558,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions): SlashPromp
 
   return {
     destroy: () => {
+      effectiveSendKey.stop();
       templateFill?.close();
       templateFill = null;
       document.removeEventListener('input', onInput, true);

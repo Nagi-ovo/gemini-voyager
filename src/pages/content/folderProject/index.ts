@@ -5,10 +5,12 @@
  * pages. On the first send, it prepends any folder instructions just-in-time
  * and automatically assigns the new conversation to the selected folder.
  */
+import { isImeKeyEvent } from '@/core/services/composer/sendKeys/sendKeyIntent';
 import { StorageKeys } from '@/core/types/common';
 
 import { findChatInput } from '../chatInput/index';
 import type { FolderManager } from '../folder/manager';
+import { followGeminiSendKey } from '../sendBehavior/followSendKey';
 import { setInputText } from '../utils/inputHelper';
 import { watchRouteChanges } from '../utils/routeWatcher';
 import {
@@ -35,6 +37,7 @@ let pendingSendResetTimer: ReturnType<typeof setTimeout> | null = null;
 let sendClickListener: ((e: Event) => void) | null = null;
 let sendKeydownListener: ((e: KeyboardEvent) => void) | null = null;
 let sidebarNavClickListener: ((e: Event) => void) | null = null;
+let effectiveSendKey: ReturnType<typeof followGeminiSendKey> | null = null;
 
 const SEND_BUTTON_SELECTOR =
   'button[aria-label*="Send"], button[aria-label*="send"], ' +
@@ -164,7 +167,7 @@ function handleEmptyInputEnter(input: HTMLElement | null): boolean {
 }
 
 function isKeyboardSend(event: KeyboardEvent): boolean {
-  if (event.key !== 'Enter' || event.isComposing || event.shiftKey) return false;
+  if (event.key !== 'Enter' || isImeKeyEvent(event) || event.shiftKey) return false;
 
   if (ctrlEnterSendEnabled) {
     return event.ctrlKey || event.metaKey;
@@ -321,6 +324,8 @@ function handleNavigation(manager: FolderManager, prevPath: string, newPath: str
 // ============================================================================
 
 function stopURLWatcher(): void {
+  effectiveSendKey?.stop();
+  effectiveSendKey = null;
   stopRouteWatcher?.();
   stopRouteWatcher = null;
   teardownSendDetection();
@@ -329,6 +334,9 @@ function stopURLWatcher(): void {
 function startURLWatcher(manager: FolderManager): void {
   // Clean up any existing watcher (idempotent for toggle cycles)
   stopURLWatcher();
+  effectiveSendKey = followGeminiSendKey((key) => {
+    ctrlEnterSendEnabled = key === 'ctrlEnter';
+  });
   // A pending mount may finish after an off/on cycle; keep its cleanup owner.
   picker ??= createFolderProjectPicker({
     loadFolders: async () => {
@@ -386,7 +394,9 @@ export function startFolderProject(manager: FolderManager): void {
       [StorageKeys.CTRL_ENTER_SEND]: false,
     },
     (res) => {
-      ctrlEnterSendEnabled = res?.[StorageKeys.CTRL_ENTER_SEND] === true;
+      if (!effectiveSendKey?.isFollowing()) {
+        ctrlEnterSendEnabled = res?.[StorageKeys.CTRL_ENTER_SEND] === true;
+      }
       if (res?.[StorageKeys.FOLDER_PROJECT_ENABLED] !== true) return;
       if (featureInitialized) return;
       featureInitialized = true;
@@ -397,7 +407,7 @@ export function startFolderProject(manager: FolderManager): void {
   // React to toggle changes without a page reload
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'sync') return;
-    if (StorageKeys.CTRL_ENTER_SEND in changes) {
+    if (StorageKeys.CTRL_ENTER_SEND in changes && !effectiveSendKey?.isFollowing()) {
       ctrlEnterSendEnabled = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;
     }
 

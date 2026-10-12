@@ -265,6 +265,19 @@ describe('prevent-auto-scroll page script', () => {
     expect(getScrollTop()).toBe(0);
   });
 
+  it('does not pause scroll for an IME confirm Enter after composition ends', () => {
+    installScript();
+    const input = document.createElement('textarea');
+    document.body.appendChild(input);
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', keyCode: 229, bubbles: true }),
+    );
+    const { el, getScrollTop } = createScrollableElement();
+    el.scrollTo({ top: 1800 });
+    expect(elementScrollToSpy).toHaveBeenCalledTimes(1);
+    expect(getScrollTop()).toBe(1800);
+  });
+
   it('blocks downward auto-scroll after the user clicks the send button', () => {
     installScript();
 

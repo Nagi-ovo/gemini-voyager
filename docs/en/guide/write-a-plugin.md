@@ -67,3 +67,5 @@ Translations (`i18n`) are optional.
 ## Sharing it
 
 A local plugin stays in your browser; export its JSON from the plugin list to move it elsewhere. If it would help everyone, propose it for the official catalog: [Plugin Contribution](./plugin-contribution.md) describes that path.
+
+Only one send shortcut plugin can run per page; a later plugin reports a conflict. Optional `mode` (sinceEngine `next`) is `ctrlEnterSends` (default) or `enterSends`. IME confirmation does not send. Gemini/AI Studio open this primitive only when their feature owner migrates.
