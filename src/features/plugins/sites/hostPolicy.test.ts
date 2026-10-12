@@ -97,7 +97,7 @@ describe('packaged host policy', () => {
       'mermaid',
       'sendShortcut',
     ]);
-    const aistudioOpen = new Set(['formulaCopy']);
+    const aistudioOpen = new Set(['formulaCopy', 'sendShortcut']);
     const primitives = listPrimitiveNames();
     expect(primitives).toEqual(expect.arrayContaining([...geminiOpen]));
     for (const handler of primitives) {

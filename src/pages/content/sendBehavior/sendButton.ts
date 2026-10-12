@@ -43,6 +43,7 @@ const SEND_COMPOSER_SELECTORS = [
   '.text-input-field',
   '.user-query-container.edit-mode',
   '.input-area',
+  'ms-prompt-box',
   'ms-prompt-input-wrapper',
   'ms-prompt-input',
   'ms-chat-turn-input',

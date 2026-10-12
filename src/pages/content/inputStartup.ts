@@ -29,7 +29,7 @@ import {
   createNativeFeatureToggle,
   mountNativeFeature,
 } from './featureLifecycle';
-import { type OwnerOf, startOwnedFeature } from './featureOwnerStartup';
+import { type OwnerOf, admitPluginOwnedFeature, startOwnedFeature } from './featureOwnerStartup';
 import { setCollapseWhenNotEmpty } from './inputCollapse/runtime';
 import { NATIVE_FEATURES } from './nativeFeatures';
 
@@ -178,4 +178,26 @@ export async function startGeminiSendKeys(
     admission.admit('gemini', 'ctrlEnterSend');
     admission.admit('gemini', 'safariEnterFix');
   }
+}
+
+/** Admit while the master is off so switching it back on can mount without a reload. */
+export async function startAIStudioSendKeys(
+  admission: OfficialAdmissionController,
+  startLegacy: () => Promise<unknown>,
+  masterEnabled: boolean,
+  ownerOf: OwnerOf = featureOwner,
+): Promise<void> {
+  if (!masterEnabled) {
+    admitPluginOwnedFeature(admission, 'aistudio', 'enterSend', ownerOf);
+    return;
+  }
+  await startOwnedFeature(
+    admission,
+    'aistudio',
+    'enterSend',
+    async () => {
+      await startLegacy();
+    },
+    ownerOf,
+  );
 }

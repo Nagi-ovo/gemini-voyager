@@ -28,6 +28,7 @@ const LEGACY_SEND_CONTAINER_SELECTORS = [
   // Global/main chat input wrapper
   '.text-input-field',
   // AI Studio prompt input wrappers
+  'ms-prompt-box',
   'ms-prompt-input-wrapper',
   'ms-prompt-input',
   'ms-chat-turn-input',

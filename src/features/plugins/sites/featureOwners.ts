@@ -44,6 +44,7 @@ export type OwnedFeatureId =
   | 'defaultModel'
   | 'ctrlEnterSend'
   | 'safariEnterFix'
+  | 'enterSend'
   /**
    * Stage 6: native until their own flips, which add the official id, the
    * owner entry and the binding together. Missing from the table reads 'legacy'.
@@ -74,6 +75,7 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiDefaultModel: 'voyager.gemini-default-model',
   geminiCtrlEnterSend: 'voyager.gemini-ctrl-enter-send',
   geminiSafariEnterFix: 'voyager.gemini-safari-enter-fix',
+  aistudioEnterSend: 'voyager.aistudio-enter-send',
 } as const;
 
 export interface OwnedFeature {
@@ -99,6 +101,14 @@ export interface OwnedFeature {
  * source defers the host policy on read).
  */
 export const FEATURE_OWNERS: readonly OwnedFeature[] = [
+  {
+    site: 'aistudio',
+    feature: 'enterSend',
+    owner: 'plugin',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.aistudioEnterSend,
+    handlers: ['sendShortcut'],
+    healthTracking: false,
+  },
   {
     site: 'gemini',
     feature: 'ctrlEnterSend',

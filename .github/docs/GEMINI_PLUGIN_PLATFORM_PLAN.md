@@ -604,3 +604,7 @@ Jesse 在 Chrome 中用验收副本实测：dark 主题，只用已有对话，�
 4C-1 编辑边界实测：Gemini 的输入框先匹配到无按钮的内层 `.edit-container`，Update 在同名外层的兄弟区域；发送和旁路点击读取改用共同的 `.user-query-container.edit-mode`，catalog 同步公开。现有编辑回归采用真实嵌套结构，避免借用主输入框按钮。
 
 4C-1 验证：mutation 去掉 Stop 守卫、编辑共同边界、内部 button 选择、owner 翻转，各自症状测试失败；rollback 集成通过。Chrome 主框 Enter 保留换行、Ctrl+Enter 发一次，编辑 Ctrl+Enter 更新自身测试问题并退出编辑。完整 verify:pr 通过（10271 tests / 840 files，Chrome/Firefox/Safari、CLI、docs）。`.build/codex-handoff/s4c-edit-proof.png` 保存编辑提交证据；Safari 实机组合键留在最终跨浏览器验收。
+
+**4C-2 AI Studio Enter 发送翻转**：独立 `enterSend` catalog owner 只绑定 `gvAIStudioEnterSend`，不复用 Gemini 开关；master 初始关闭也 admit，PluginHost live 开关控制实际挂载。保留 Ctrl/Cmd 换行、Shift/Alt 交还宿主。`.com` 真机确认 `ms-prompt-box` 包含输入和 Run，补入共同查找器并同步公开 selector、authoring 和十语种文档；`.cn` 当前 DNS `ERR_NAME_NOT_RESOLVED`，保留同构自动测试覆盖，实机验收待该域名可访问。
+
+4C-2 验证：五条 host 行为测试覆盖两域名、总闸开关、Ctrl 换行、与 Gemini 开关隔离及 legacy 回退；移除 master-off admission、共同 Run 边界或绑定自身开关，各自症状测试失败。Chrome `.com` 实机从 ready→mounted→ready，Ctrl+Enter 换行且无请求，Enter 一次返回 AI_SEND_OK；截图 `s4c2-send-proof.png` 已保存。测试开关已恢复原始缺省，原模型已恢复。完整 verify:pr 通过；`.cn` 实机 DNS 限制仍未解除。

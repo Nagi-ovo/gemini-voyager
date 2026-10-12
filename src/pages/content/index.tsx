@@ -34,7 +34,12 @@ import { startFolderSpacingAdjuster } from './folderSpacing/index';
 import { startNativeFormulaCopyForContent } from './formulaCopyStartup';
 import { createGeminiBuiltinStartup } from './geminiBuiltinStartup';
 import { enterInitialization } from './initializationEntry';
-import { createGeminiInputStartup, startGeminiSendKeys, startPageSendKeys } from './inputStartup';
+import {
+  createGeminiInputStartup,
+  startAIStudioSendKeys,
+  startGeminiSendKeys,
+  startPageSendKeys,
+} from './inputStartup';
 import { initKaTeXConfig } from './katexConfig';
 import { NATIVE_FEATURES } from './nativeFeatures';
 import { PageRetiredError, createPageSteps } from './pageInitSteps';
@@ -335,6 +340,7 @@ async function initializeFeatures(): Promise<void> {
         // the master switch live, so turning Voyager back on here mounts it.
         // While the native module owns it, nothing starts, as before.
         admitPluginOwnedFeature(officialAdmission, 'aistudio', 'formulaCopy');
+        await settle(startAIStudioSendKeys(officialAdmission, async () => {}, false));
         return;
       }
 
@@ -354,7 +360,13 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Send behavior (Enter to send)
-      await settle(mountForPage(NATIVE_FEATURES.sendBehaviorAiStudio));
+      await settle(
+        startAIStudioSendKeys(
+          officialAdmission,
+          () => mountForPage(NATIVE_FEATURES.sendBehaviorAiStudio),
+          true,
+        ),
+      );
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
   } catch (e) {

@@ -60,7 +60,7 @@ Beyond the shared manifest checks (see [Plugin Contribution](./plugin-contributi
 - use only semantic anchors that every matched site declares;
 - add exactly one class per `addClass`, starting with `gv-`;
 - use boolean, number or select settings (string and color have no popup control yet);
-- not use a `theme` on Gemini or AI Studio, and use only the primitives each allows: `formulaCopy`, `vimInput`, `userLatex`, `codeCollapse`, `mermaid`, `wavedrom` and `echarts`, `sendShortcut` on Gemini, `formulaCopy` on AI Studio. They run the same code as Voyager's own settings. `formulaCopy` and `vimInput` (Formula copy and Input Vim mode) each run once per page, the built-in setting or a plugin, not both. When the page loads, or while neither is running, the built-in setting goes first; after that, whichever is already running keeps running and the other shows as paused. Turn one off to hand the feature to the other. The others claim the page element by element and run alongside the built-in setting: a line or code block the other already holds is left to it.
+- not use a `theme` on Gemini or AI Studio, and use only the primitives each allows: `formulaCopy`, `vimInput`, `userLatex`, `codeCollapse`, `mermaid`, `wavedrom` and `echarts`, `sendShortcut` on Gemini, `formulaCopy` and `sendShortcut` on AI Studio. They run the same code as Voyager's own settings. `formulaCopy` and `vimInput` (Formula copy and Input Vim mode) each run once per page, the built-in setting or a plugin, not both. When the page loads, or while neither is running, the built-in setting goes first; after that, whichever is already running keeps running and the other shows as paused. Turn one off to hand the feature to the other. The others claim the page element by element and run alongside the built-in setting: a line or code block the other already holds is left to it.
 
 Translations (`i18n`) are optional.
 
@@ -71,3 +71,5 @@ A local plugin stays in your browser; export its JSON from the plugin list to mo
 Only one send shortcut plugin can run per page; a later plugin reports a conflict. Optional `mode` (sinceEngine `next`) is `ctrlEnterSends` (default) or `enterSends`. IME confirmation does not send. Gemini/AI Studio open this primitive only when their feature owner migrates.
 
 Gemini now allows `sendShortcut` to replace the official Ctrl/Cmd+Enter feature: turn the official switch off, then enable the local plugin. Only `ctrlEnterSends` is supported; Enterprise stays inactive. `composerRoot` covers the main and edit inputs; `sendButton` excludes Stop.
+
+On AI Studio, `sendShortcut` requires `params.mode: "enterSends"`. Turn off the official Enter send switch to let a local plugin take over. Ctrl/Cmd+Enter adds a newline; Shift/Alt+Enter follows the host.

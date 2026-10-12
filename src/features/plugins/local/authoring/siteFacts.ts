@@ -30,6 +30,7 @@ const SITE_NOTES: Readonly<Record<string, readonly string[]>> = {
   aistudio: [
     'The `sidebar` anchor is Voyager’s own folder panel on AI Studio, not AI Studio’s navigation. Use a CSS selector for AI Studio’s own panels.',
     'Voyager’s AI Studio switch governs plugins too: while Voyager is off on AI Studio, nothing mounts.',
+    'On AI Studio, `sendShortcut` requires `params: { "mode": "enterSends" }`: Enter sends, Ctrl/Cmd+Enter inserts a newline, and Shift/Alt+Enter keep the host behavior.',
   ],
 };
 
@@ -37,6 +38,7 @@ const SITE_NOTES: Readonly<Record<string, readonly string[]>> = {
 const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   ctrlEnterSend: 'Ctrl/Cmd+Enter send',
   safariEnterFix: 'Safari Enter fix',
+  enterSend: 'AI Studio Enter send',
   formulaCopy: 'Formula copy',
   vimInput: 'Input Vim mode',
   hideInputHalo: 'Hide input box halo',

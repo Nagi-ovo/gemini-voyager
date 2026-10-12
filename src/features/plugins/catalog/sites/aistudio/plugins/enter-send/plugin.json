@@ -1,0 +1,62 @@
+{
+  "$schema": "https://voyager.nagi.fun/plugin.schema.json",
+  "id": "voyager.aistudio-enter-send",
+  "name": "Enter to send on AI Studio",
+  "version": "1.0.0",
+  "description": "Press Enter to send messages, Ctrl/Cmd+Enter to add a new line",
+  "i18n": {
+    "zh": {
+      "name": "AI Studio Enter 发送",
+      "description": "在 AI Studio 中按 Enter 发送消息，Ctrl/Cmd+Enter 换行"
+    },
+    "zh_TW": {
+      "name": "AI Studio Enter 傳送",
+      "description": "在 AI Studio 中按 Enter 傳送訊息，Ctrl/Cmd+Enter 換行"
+    },
+    "ja": {
+      "name": "AI Studio で Enter 送信",
+      "description": "AI Studio では Enter で送信、Ctrl/Cmd+Enter で改行"
+    },
+    "ko": {
+      "name": "AI Studio에서 Enter로 전송",
+      "description": "AI Studio에서 Enter로 메시지를 전송하고, Ctrl/Cmd+Enter로 줄바꿈을 합니다"
+    },
+    "fr": {
+      "name": "Entrée pour envoyer dans AI Studio",
+      "description": "Appuyez sur Entrée pour envoyer, Ctrl/Cmd+Entrée pour un saut de ligne"
+    },
+    "es": {
+      "name": "Enter para enviar en AI Studio",
+      "description": "Presiona Enter para enviar mensajes, Ctrl/Cmd+Enter para agregar una nueva línea"
+    },
+    "pt": {
+      "name": "Enter para enviar no AI Studio",
+      "description": "Pressione Enter para enviar mensagens, Ctrl/Cmd+Enter para nova linha"
+    },
+    "ru": {
+      "name": "Enter для отправки в AI Studio",
+      "description": "Нажмите Enter для отправки сообщений, Ctrl/Cmd+Enter для новой строки"
+    },
+    "ar": {
+      "name": "Enter للإرسال في AI Studio",
+      "description": "اضغط Enter لإرسال الرسائل، Ctrl/Cmd+Enter لإضافة سطر جديد"
+    }
+  },
+  "author": "voyager-official",
+  "category": "productivity",
+  "license": "GPL-3.0-or-later",
+  "engine": ">=next",
+  "tier": "declarative",
+  "matches": ["https://aistudio.google.com/*", "https://aistudio.google.cn/*"],
+  "contributes": {
+    "domOps": [
+      {
+        "op": "native",
+        "handler": "sendShortcut",
+        "params": {
+          "mode": "enterSends"
+        }
+      }
+    ]
+  }
+}

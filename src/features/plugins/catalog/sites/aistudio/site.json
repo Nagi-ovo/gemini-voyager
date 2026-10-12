@@ -6,8 +6,10 @@
   "selectors": {
     "userTurn": ".user-prompt-container, [data-turn-role=\"User\"]",
     "assistantTurn": ".model-prompt-container, [data-turn-role=\"Model\"]",
-    "composer": "ms-chunk-input textarea, textarea[aria-label]",
-    "sidebar": ".gv-aistudio .gv-folder-container"
+    "composer": "ms-prompt-box textarea[formcontrolname=promptText], ms-chunk-input textarea, textarea[aria-label]",
+    "sidebar": ".gv-aistudio .gv-folder-container",
+    "composerRoot": "ms-prompt-box",
+    "sendButton": "ms-run-button > button"
   },
   "theme": {
     "hostSelector": "body",

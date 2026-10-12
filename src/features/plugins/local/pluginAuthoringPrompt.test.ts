@@ -102,7 +102,10 @@ describe('plugin authoring prompt contract', () => {
       'vimInput',
       'wavedrom',
     ]);
-    expect(listed(buildPluginAuthoringPrompt('x', byId('aistudio')))).toEqual(['formulaCopy']);
+    expect(listed(buildPluginAuthoringPrompt('x', byId('aistudio')))).toEqual([
+      'formulaCopy',
+      'sendShortcut',
+    ]);
   });
 
   it('points a browsing AI at the full reference, and keeps the pasted contract in charge', () => {

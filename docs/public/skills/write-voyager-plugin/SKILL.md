@@ -192,16 +192,20 @@ Gemini allows only these primitives (native ops): codeCollapse, echarts, formula
 Semantic anchors AI Studio declares (use them as { "kind": "semantic", "key": … }):
 - userTurn: a user message container (today it matches `.user-prompt-container, [data-turn-role="User"]`)
 - assistantTurn: an assistant message container (today it matches `.model-prompt-container, [data-turn-role="Model"]`)
-- composer: the prompt input the user types into (today it matches `ms-chunk-input textarea, textarea[aria-label]`)
+- composer: the prompt input the user types into (today it matches `ms-prompt-box textarea[formcontrolname=promptText], ms-chunk-input textarea, textarea[aria-label]`)
 - sidebar: the conversation list / navigation rail (today it matches `.gv-aistudio .gv-folder-container`)
+- composerRoot: the container around the prompt input and its action buttons (today it matches `ms-prompt-box`)
+- sendButton: the button that sends the prompt (may exist only while the prompt is non-empty) (today it matches `ms-run-button > button`)
 
-AI Studio does not declare thinkingBlock, codeBlock, sidePanel, headerActions, scrollContainer, composerRoot, sendButton: a plugin that relies on one of these is refused. Use a CSS selector instead.
+AI Studio does not declare thinkingBlock, codeBlock, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
-AI Studio allows only these primitives (native ops): formulaCopy. No "theme".
+AI Studio allows only these primitives (native ops): formulaCopy, sendShortcut. No "theme".
+- `sendShortcut` runs the same code as Voyager’s own AI Studio Enter send setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `sendShortcut` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
 - `formulaCopy` runs the same code as Voyager’s own Formula copy setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `formulaCopy` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
 
 - The `sidebar` anchor is Voyager’s own folder panel on AI Studio, not AI Studio’s navigation. Use a CSS selector for AI Studio’s own panels.
 - Voyager’s AI Studio switch governs plugins too: while Voyager is off on AI Studio, nothing mounts.
+- On AI Studio, `sendShortcut` requires `params: { "mode": "enterSends" }`: Enter sends, Ctrl/Cmd+Enter inserts a newline, and Shift/Alt+Enter keep the host behavior.
 
 ### Target site: ChatGPT
 

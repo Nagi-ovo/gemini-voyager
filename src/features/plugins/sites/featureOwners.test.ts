@@ -75,7 +75,7 @@ describe('feature owners', () => {
         'sendShortcut',
       ]),
     );
-    expect(pluginOwnedHandlers('aistudio')).toEqual(new Set(['formulaCopy']));
+    expect(pluginOwnedHandlers('aistudio')).toEqual(new Set(['formulaCopy', 'sendShortcut']));
     // Appearance is pure CSS or a fixed-id builtin: it opens no primitive.
     for (const id of [
       'voyager.gemini-chat-font-size',

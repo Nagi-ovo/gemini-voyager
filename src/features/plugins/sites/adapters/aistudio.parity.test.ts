@@ -23,11 +23,9 @@ describe('AI Studio site.json parity', () => {
     expect(aistudioAdapter.matches).toEqual(AISTUDIO_MATCHES);
   });
 
-  it('declares no anchor or field the TypeScript adapter lacked', () => {
-    // A new anchor widens what local plugins may target and changes the public SKILL.md;
-    // new anchors wait for a live-page check.
+  it('declares the published anchors, including the live-verified send controls', () => {
     expect(Object.keys(aistudioAdapter.selectors).sort()).toEqual(
-      ['assistantTurn', 'composer', 'sidebar', 'userTurn'].sort(),
+      ['assistantTurn', 'composer', 'composerRoot', 'sendButton', 'sidebar', 'userTurn'].sort(),
     );
     expect([...aistudioAdapter.capabilities].sort()).toEqual(
       ['chat', 'composer', 'darkMode', 'sidebar'].sort(),
@@ -41,20 +39,28 @@ describe('AI Studio site.json parity', () => {
   });
 
   it('finds turns, the composer, Voyager’s folder panel and the body theme', () => {
-    // Live markup (2026-10) has no `ms-chunk-input`; the prompt box is reached through the
-    // `textarea[aria-label]` fallback.
+    // Chrome .com markup verified 2026-10: localized labels are unnecessary for these anchors.
     document.body.className = 'light-theme gv-aistudio';
     document.body.innerHTML =
       '<div class="user-prompt-container" id="user"></div>' +
       '<div data-turn-role="Model" id="model"></div>' +
       '<div class="gv-folder-container" id="folders"></div>' +
-      '<ms-prompt-box><textarea aria-label="Enter a prompt" id="prompt"></textarea></ms-prompt-box>';
-    const { userTurn, assistantTurn, composer, sidebar } = aistudioAdapter.selectors;
+      '<ms-prompt-box id="composer-root"><textarea formcontrolname="promptText" id="prompt"></textarea>' +
+      '<div class="prompt-box-container"><div class="buttons-row"><div class="button-wrapper">' +
+      '<ms-run-button><button id="run">运行</button></ms-run-button>' +
+      '</div></div></div></ms-prompt-box>';
+    const { userTurn, assistantTurn, composer, composerRoot, sendButton, sidebar } =
+      aistudioAdapter.selectors;
     const { hostSelector, lightSelector, darkSelector } = aistudioAdapter.theme;
 
     expect(ids(userTurn)).toEqual(['user']);
     expect(ids(assistantTurn)).toEqual(['model']);
     expect(ids(composer)).toEqual(['prompt']);
+    expect(ids(composerRoot)).toEqual(['composer-root']);
+    expect(ids(sendButton)).toEqual(['run']);
+    expect(document.getElementById('composer-root')?.contains(document.getElementById('run'))).toBe(
+      true,
+    );
     expect(ids(sidebar)).toEqual(['folders']);
     expect(document.querySelector(hostSelector)).toBe(document.body);
     expect(document.querySelector(lightSelector)).toBe(document.body);

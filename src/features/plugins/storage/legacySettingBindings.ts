@@ -69,6 +69,11 @@ function binding(
 }
 
 export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding>> = {
+  [OFFICIAL_PLUGIN_IDS.aistudioEnterSend]: binding(
+    OFFICIAL_PLUGIN_IDS.aistudioEnterSend,
+    StorageKeys.AISTUDIO_ENTER_SEND,
+    onOnlyIfTrue,
+  ),
   [OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend]: binding(
     OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend,
     StorageKeys.CTRL_ENTER_SEND,
