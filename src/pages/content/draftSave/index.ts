@@ -17,11 +17,11 @@
  */
 import { StorageKeys } from '@/core/types/common';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
+import { sanitizeDraftAt } from '@/features/plugins/verbs/draftSave/draftPolicy';
 
-import { stripInstructionBlock } from '../folderProject/instructionBlock';
-import { setInputText } from '../utils/inputHelper';
 import { watchRouteChanges } from '../utils/routeWatcher';
-import { DraftStore } from './draftStore';
+import { DraftStore, draftStoreOptions } from './draftStore';
+import { GEMINI_DRAFT_INPUT_SELECTOR_LIST, geminiDraftPolicy } from './geminiDraftPolicy';
 
 // ============================================================================
 // Constants
@@ -50,14 +50,9 @@ const SEND_BUTTON_SELECTOR = [
   '.send-button',
 ].join(', ');
 
-/** Selectors for finding the chat input */
-const INPUT_SELECTORS = [
-  'rich-textarea [contenteditable="true"]',
-  'div[contenteditable="true"][role="textbox"]',
-  '.input-area textarea',
-  'textarea[placeholder*="Ask"]',
-] as const;
-const INPUT_SELECTOR_LIST = INPUT_SELECTORS.join(', ');
+const INPUT_SELECTOR_LIST = GEMINI_DRAFT_INPUT_SELECTOR_LIST;
+
+const policy = geminiDraftPolicy();
 
 // ============================================================================
 // State
@@ -76,9 +71,12 @@ let sendCheckTimer: ReturnType<typeof setInterval> | null = null;
 let stopRouteWatcher: (() => void) | null = null;
 let currentPath = '';
 let lastSavedContent = '';
-const drafts = new DraftStore((path, content) => {
-  if (path === currentPath) lastSavedContent = content;
-});
+const drafts = new DraftStore(
+  (path, content) => {
+    if (path === currentPath) lastSavedContent = content;
+  },
+  draftStoreOptions(policy, document),
+);
 let storageListener:
   | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
   | null = null;
@@ -100,53 +98,23 @@ let sendIntentListener: ((event: Event) => void) | null = null;
  * e.g. "/app/abc123" or "/u/0/app/abc123"
  */
 function getConversationPath(): string {
-  return window.location.pathname;
+  // Gemini's policy keys every page by its pathname; only catalog temporary chats get `null`.
+  return policy.keyFor(window.location) ?? window.location.pathname;
+}
+
+function isEligiblePage(): boolean {
+  return policy.eligible(window.location, document);
 }
 
 /**
  * Find the visible main chat input element.
  */
 function findChatInput(): HTMLElement | null {
-  for (const selector of INPUT_SELECTORS) {
-    const els = document.querySelectorAll(selector);
-    for (const el of Array.from(els)) {
-      if (el.getBoundingClientRect().height > 0) {
-        return el as HTMLElement;
-      }
-    }
-  }
-  return null;
+  return policy.findInput(document);
 }
 
-/**
- * Get the text content of the chat input.
- */
-function getInputText(input: HTMLElement): string {
-  if (input instanceof HTMLTextAreaElement) {
-    return input.value;
-  }
-  return input.innerText ?? input.textContent ?? '';
-}
-
-/**
- * Check if input content is effectively empty.
- */
 function isInputEffectivelyEmpty(input: HTMLElement): boolean {
-  const text = getInputText(input).trim();
-  if (text.length === 0) return true;
-
-  // Check if the text is just placeholder text
-  const richTextarea = input.closest('rich-textarea');
-  const placeholders = [
-    input.getAttribute('data-placeholder'),
-    input.getAttribute('aria-placeholder'),
-    input.getAttribute('placeholder'),
-    richTextarea?.getAttribute('data-placeholder'),
-    richTextarea?.getAttribute('aria-placeholder'),
-    richTextarea?.getAttribute('placeholder'),
-  ].filter((v): v is string => Boolean(v));
-
-  return placeholders.some((p) => p.trim() === text);
+  return policy.isEmpty(input);
 }
 
 // ============================================================================
@@ -196,7 +164,7 @@ function handleInputChange(input: HTMLElement): void {
     saveTimer = null;
   }
 
-  const content = stripInstructionBlock(getInputText(input)).trim();
+  const content = sanitizeDraftAt(policy, 'input', policy.readText(input)).trim();
   if (!content && pendingSendPath) {
     const sentPath = pendingSendPath;
     discardPendingSave(sentPath);
@@ -335,8 +303,10 @@ function stopSendDetection(): void {
  */
 async function restoreDraft(generation = restoreGeneration): Promise<void> {
   // Every continuation re-checks this: a restore that outlives disable or
-  // cleanup must not rebind the input or write a draft into it.
-  const isCurrent = () => isEnabled && generation === restoreGeneration;
+  // cleanup must not rebind the input or write a draft into it, and one whose
+  // page turned out to be Enterprise while it waited must not fill its
+  // composer (the store refuses writes there for the same reason).
+  const isCurrent = () => isEnabled && generation === restoreGeneration && isEligiblePage();
   if (!isCurrent()) return;
   const path = getConversationPath();
   if (hasRestoredForCurrentPath && path === currentPath) return;
@@ -345,7 +315,7 @@ async function restoreDraft(generation = restoreGeneration): Promise<void> {
   if (!isCurrent()) return;
   if (path !== currentPath || path !== getConversationPath()) return;
 
-  const content = savedContent ? stripInstructionBlock(savedContent).trim() : null;
+  const content = savedContent ? sanitizeDraftAt(policy, 'restore', savedContent).trim() : null;
   if (!content) {
     hasRestoredForCurrentPath = true;
     return;
@@ -359,7 +329,7 @@ async function restoreDraft(generation = restoreGeneration): Promise<void> {
     const input = findChatInput();
     if (input) attachInputListener(input);
     if (input && isInputEffectivelyEmpty(input)) {
-      setInputText(input, content);
+      policy.write(input, content);
       lastSavedContent = content;
       hasRestoredForCurrentPath = true;
       return;

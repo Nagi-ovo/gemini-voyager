@@ -1,9 +1,10 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 /**
  * Tests for inputCollapse feature
  */
-import { Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import browser from 'webextension-polyfill';
 
-import { StorageKeys } from '@/core/types/common';
+import { type LifecycleHarness, installLifecycleHarness } from '../../__tests__/lifecycleHarness';
 
 // Mock webextension-polyfill BEFORE importing the module
 vi.mock('webextension-polyfill', () => ({
@@ -13,19 +14,6 @@ vi.mock('webextension-polyfill', () => ({
     },
   },
 }));
-
-// Mock chrome APIs
-global.chrome = {
-  storage: {
-    sync: {
-      get: vi.fn(),
-      set: vi.fn(),
-    },
-    onChanged: {
-      addListener: vi.fn(),
-    },
-  },
-} as unknown as typeof chrome;
 
 // Mock i18n
 vi.mock('@/utils/i18n', () => ({
@@ -37,32 +25,47 @@ vi.mock('@/utils/i18n', () => ({
   },
 }));
 
+const COLLAPSED = 'gv-input-collapsed';
+const STYLE_ID = 'gemini-voyager-input-collapse';
+
+function blur(container: HTMLElement): void {
+  const focusOutEvent = new Event('focusout', { bubbles: true });
+  Object.defineProperty(focusOutEvent, 'relatedTarget', { value: null, writable: false });
+  container.dispatchEvent(focusOutEvent);
+}
+
+let stops: Array<() => void> = [];
+
+/** The native feature as its popup switch turns it on (`inputStartup.ts` follows the switch). */
+async function start(whenNotEmpty = false): Promise<() => void> {
+  const { setCollapseWhenNotEmpty } = await import('../runtime');
+  const { startInputCollapse } = await import('../index');
+  setCollapseWhenNotEmpty(whenNotEmpty);
+  const stop = startInputCollapse();
+  stops.push(stop);
+  return stop;
+}
+
 describe('inputCollapse', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.useFakeTimers();
     vi.clearAllMocks();
     document.body.innerHTML = '';
-
-    // Default mock for storage.get
-    (chrome.storage.sync.get as unknown as Mock).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({
-          [StorageKeys.INPUT_COLLAPSE_ENABLED]: false,
-          [StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]: false,
-        });
-      },
-    );
+    window.history.replaceState(null, '', '/app/abc123def456');
   });
 
-  afterEach(async () => {
-    // Use dynamic import to match how we import in beforeEach
-    const { cleanup } = await import('../index');
-    cleanup?.();
+  afterEach(() => {
+    for (const stop of stops) stop();
+    stops = [];
     vi.useRealTimers();
+    window.history.replaceState(null, '', '/');
   });
 
-  async function createMockContainer(content: string = ''): Promise<HTMLElement> {
+  async function createMockContainer(
+    content: string = '',
+    extra: (container: HTMLElement, textarea: HTMLElement) => void = () => {},
+  ): Promise<HTMLElement> {
     const container = document.createElement('div');
     // Don't pre-mark as processed - let MutationObserver handle it
     container.className = 'element-to-collapse';
@@ -77,6 +80,7 @@ describe('inputCollapse', () => {
     const placeholder = document.createElement('div');
     placeholder.className = 'gv-collapse-placeholder';
     container.appendChild(placeholder);
+    extra(container, textarea);
 
     document.body.appendChild(container);
 
@@ -87,54 +91,18 @@ describe('inputCollapse', () => {
     return container;
   }
 
-  describe('Feature disabled', () => {
-    it('does not initialize when feature is disabled', async () => {
-      (chrome.storage.sync.get as unknown as Mock).mockImplementation(
-        (
-          _defaults: Record<string, unknown>,
-          callback: (result: Record<string, unknown>) => void,
-        ) => {
-          callback({ [StorageKeys.INPUT_COLLAPSE_ENABLED]: false });
-        },
-      );
-
-      const { startInputCollapse } = await import('../index');
-      startInputCollapse();
-
-      // Check that styles are not injected
-      expect(document.getElementById('gemini-voyager-input-collapse')).toBeNull();
-    });
-  });
-
   describe('Default behavior (collapse only when empty)', () => {
     beforeEach(async () => {
-      (chrome.storage.sync.get as unknown as Mock).mockImplementation(
-        (
-          _defaults: Record<string, unknown>,
-          callback: (result: Record<string, unknown>) => void,
-        ) => {
-          callback({
-            [StorageKeys.INPUT_COLLAPSE_ENABLED]: true,
-            [StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]: false,
-          });
-        },
-      );
-
-      const { startInputCollapse } = await import('../index');
-      startInputCollapse();
+      await start();
     });
 
     it('collapses when input is empty and loses focus', async () => {
       const container = await createMockContainer('');
 
-      // Simulate focusout event
-      const focusOutEvent = new Event('focusout', { bubbles: true });
-      Object.defineProperty(focusOutEvent, 'relatedTarget', { value: null, writable: false });
-      container.dispatchEvent(focusOutEvent);
-
+      blur(container);
       vi.advanceTimersByTime(200);
 
-      expect(container.classList.contains('gv-input-collapsed')).toBe(true);
+      expect(container.classList.contains(COLLAPSED)).toBe(true);
     });
 
     it('debounces input discovery across mutation bursts', async () => {
@@ -147,92 +115,97 @@ describe('inputCollapse', () => {
       await Promise.resolve();
 
       await vi.advanceTimersByTimeAsync(99);
-      expect(container.classList.contains('gv-processed')).toBe(false);
+      expect(container.querySelector('.gv-collapse-placeholder')).toBeNull();
 
       await vi.advanceTimersByTimeAsync(1);
-      expect(container.classList.contains('gv-processed')).toBe(true);
       expect(container.querySelector('.gv-collapse-placeholder')).not.toBeNull();
     });
 
     it('does not collapse when input has content and loses focus', async () => {
       const container = await createMockContainer('test content');
 
-      const focusOutEvent = new Event('focusout', { bubbles: true });
-      Object.defineProperty(focusOutEvent, 'relatedTarget', { value: null, writable: false });
-      container.dispatchEvent(focusOutEvent);
-
+      blur(container);
       vi.advanceTimersByTime(200);
 
-      expect(container.classList.contains('gv-input-collapsed')).toBe(false);
+      expect(container.classList.contains(COLLAPSED)).toBe(false);
     });
 
     it('expands on click when collapsed', async () => {
       const container = await createMockContainer('');
 
       // First collapse it
-      const focusOutEvent = new Event('focusout', { bubbles: true });
-      Object.defineProperty(focusOutEvent, 'relatedTarget', { value: null, writable: false });
-      container.dispatchEvent(focusOutEvent);
+      blur(container);
       vi.advanceTimersByTime(200);
-      expect(container.classList.contains('gv-input-collapsed')).toBe(true);
+      expect(container.classList.contains(COLLAPSED)).toBe(true);
 
       // Then click to expand
       container.dispatchEvent(new Event('click', { bubbles: true }));
-      expect(container.classList.contains('gv-input-collapsed')).toBe(false);
+      expect(container.classList.contains(COLLAPSED)).toBe(false);
+    });
+
+    it('never auto-collapses on the new chat page or the gems editor', async () => {
+      const container = await createMockContainer('');
+
+      for (const path of ['/app', '/u/1/app', '/gems/create', '/u/0/gems/edit/abc']) {
+        window.history.replaceState(null, '', path);
+        blur(container);
+        vi.advanceTimersByTime(300);
+        expect(container.classList.contains(COLLAPSED), path).toBe(false);
+      }
+
+      window.history.replaceState(null, '', '/u/1/app/abc123def456');
+      blur(container);
+      vi.advanceTimersByTime(300);
+      expect(container.classList.contains(COLLAPSED)).toBe(true);
+    });
+
+    it('keeps an input with an attachment expanded unless collapse-when-not-empty is on', async () => {
+      const container = await createMockContainer('', (root) => {
+        root.appendChild(document.createElement('uploader-file-preview'));
+      });
+
+      blur(container);
+      vi.advanceTimersByTime(300);
+      expect(container.classList.contains(COLLAPSED)).toBe(false);
+
+      const { setCollapseWhenNotEmpty } = await import('../runtime');
+      setCollapseWhenNotEmpty(true);
+      blur(container);
+      vi.advanceTimersByTime(300);
+      expect(container.classList.contains(COLLAPSED)).toBe(true);
     });
   });
 
   describe('Allow collapse when not empty (new feature)', () => {
     beforeEach(async () => {
-      (chrome.storage.sync.get as unknown as Mock).mockImplementation(
-        (
-          _defaults: Record<string, unknown>,
-          callback: (result: Record<string, unknown>) => void,
-        ) => {
-          callback({
-            [StorageKeys.INPUT_COLLAPSE_ENABLED]: true,
-            [StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]: true,
-          });
-        },
-      );
-
-      const { startInputCollapse } = await import('../index');
-      startInputCollapse();
+      await start(true);
     });
 
     it('collapses when input is empty and loses focus', async () => {
       const container = await createMockContainer('');
 
-      const focusOutEvent = new Event('focusout', { bubbles: true });
-      Object.defineProperty(focusOutEvent, 'relatedTarget', { value: null, writable: false });
-      container.dispatchEvent(focusOutEvent);
-
+      blur(container);
       vi.advanceTimersByTime(200);
 
-      expect(container.classList.contains('gv-input-collapsed')).toBe(true);
+      expect(container.classList.contains(COLLAPSED)).toBe(true);
     });
 
     it('collapses even when input has content and loses focus', async () => {
       const container = await createMockContainer('test content');
 
-      const focusOutEvent = new Event('focusout', { bubbles: true });
-      Object.defineProperty(focusOutEvent, 'relatedTarget', { value: null, writable: false });
-      container.dispatchEvent(focusOutEvent);
-
+      blur(container);
       vi.advanceTimersByTime(200);
 
-      expect(container.classList.contains('gv-input-collapsed')).toBe(true);
+      expect(container.classList.contains(COLLAPSED)).toBe(true);
     });
 
     it('expands on click when collapsed with content', async () => {
       const container = await createMockContainer('test content');
 
       // Collapse it first
-      const focusOutEvent = new Event('focusout', { bubbles: true });
-      Object.defineProperty(focusOutEvent, 'relatedTarget', { value: null, writable: false });
-      container.dispatchEvent(focusOutEvent);
+      blur(container);
       vi.advanceTimersByTime(200);
-      expect(container.classList.contains('gv-input-collapsed')).toBe(true);
+      expect(container.classList.contains(COLLAPSED)).toBe(true);
 
       // Verify content is preserved
       const textarea = container.querySelector('rich-textarea');
@@ -240,47 +213,156 @@ describe('inputCollapse', () => {
 
       // Click to expand
       container.dispatchEvent(new Event('click', { bubbles: true }));
-      expect(container.classList.contains('gv-input-collapsed')).toBe(false);
+      expect(container.classList.contains(COLLAPSED)).toBe(false);
     });
   });
 
-  describe('Setting changes', () => {
-    it('responds to enable/disable changes dynamically', async () => {
-      // Start with feature enabled
-      (chrome.storage.sync.get as unknown as Mock).mockImplementation(
-        (
-          _defaults: Record<string, unknown>,
-          callback: (result: Record<string, unknown>) => void,
-        ) => {
-          callback({
-            [StorageKeys.INPUT_COLLAPSE_ENABLED]: true,
-            [StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]: false,
-          });
-        },
-      );
+  describe('Lifecycle', () => {
+    const startEnabled = (): Promise<() => void> => start();
 
-      const { startInputCollapse } = await import('../index');
-      startInputCollapse();
-
+    it('does not collapse after the feature stops while a collapse is queued', async () => {
+      const stop = await startEnabled();
       const container = await createMockContainer('');
-      const focusOutEvent = new Event('focusout', { bubbles: true });
-      Object.defineProperty(focusOutEvent, 'relatedTarget', { value: null, writable: false });
-      container.dispatchEvent(focusOutEvent);
-      vi.advanceTimersByTime(250);
-      expect(container.classList.contains('gv-input-collapsed')).toBe(true);
 
-      // Simulate setting change to disabled
-      const mockCallbacks = (chrome.storage.onChanged.addListener as unknown as Mock).mock.calls;
-      if (mockCallbacks && mockCallbacks.length > 0) {
-        const onChangeCallback = mockCallbacks[0][0];
-        onChangeCallback({ [StorageKeys.INPUT_COLLAPSE_ENABLED]: { newValue: false } }, 'sync');
+      blur(container);
+      vi.advanceTimersByTime(100); // focusout delay done; the 150ms collapse is queued
+      stop();
+      vi.advanceTimersByTime(500);
 
-        container.classList.remove('gv-input-collapsed');
-        container.dispatchEvent(focusOutEvent);
-        vi.advanceTimersByTime(250);
-        // Should not collapse when disabled
-        expect(container.classList.contains('gv-input-collapsed')).toBe(false);
-      }
+      expect(container.classList.contains(COLLAPSED)).toBe(false);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('does not steal focus after stop when an expand is pending', async () => {
+      const stop = await startEnabled();
+      let editor!: HTMLElement;
+      const container = await createMockContainer('', (_root, textarea) => {
+        editor = document.createElement('div');
+        editor.className = 'ql-editor';
+        textarea.appendChild(editor);
+      });
+      const focus = vi.fn();
+      editor.focus = focus;
+
+      blur(container);
+      vi.advanceTimersByTime(300);
+      container.dispatchEvent(new Event('click', { bubbles: true }));
+      vi.advanceTimersByTime(1);
+      expect(focus).toHaveBeenCalledTimes(1);
+
+      blur(container);
+      vi.advanceTimersByTime(300);
+      expect(container.classList.contains(COLLAPSED)).toBe(true);
+      container.dispatchEvent(new Event('click', { bubbles: true }));
+      stop();
+      vi.advanceTimersByTime(10);
+
+      expect(focus).toHaveBeenCalledTimes(1);
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('leaves the new instance alone when an old stop runs late', async () => {
+      const stopOld = await startEnabled();
+      stopOld();
+      await start();
+      const container = await createMockContainer('');
+
+      stopOld();
+      blur(container);
+      vi.advanceTimersByTime(300);
+      expect(container.classList.contains(COLLAPSED)).toBe(true);
+      expect(document.getElementById(STYLE_ID)).not.toBeNull();
+    });
+
+    it('lets a second start take over and ignores the retired stop', async () => {
+      const stopOld = await startEnabled();
+      await start();
+      const container = await createMockContainer('');
+
+      stopOld();
+      blur(container);
+      vi.advanceTimersByTime(300);
+      expect(container.classList.contains(COLLAPSED)).toBe(true);
+      // The retired session stopped following the language; only the new one listens.
+      const added = vi.mocked(browser.storage.onChanged.addListener).mock.calls;
+      const removed = vi.mocked(browser.storage.onChanged.removeListener).mock.calls;
+      expect(removed.map(([listener]) => listener)).toEqual([added[0][0]]);
+    });
+
+    it("leaves other features' processed markers alone on stop", async () => {
+      const stop = await startEnabled();
+      const other = document.createElement('div');
+      other.className = 'gv-processed';
+      document.body.appendChild(other);
+      const container = await createMockContainer('');
+      expect(container.querySelector('.gv-collapse-placeholder')).not.toBeNull();
+
+      stop();
+
+      expect(other.classList.contains('gv-processed')).toBe(true);
+      expect(container.className).toBe('');
+      expect(container.querySelector('.gv-collapse-placeholder')).toBeNull();
+    });
+
+    it('keeps Esc for Vim when Vim mode is on and collapses only without it', async () => {
+      await startEnabled();
+      const container = await createMockContainer('', (_root, textarea) => {
+        const input = document.createElement('textarea');
+        input.id = 'question-input';
+        input.getBoundingClientRect = () =>
+          ({ width: 300, height: 40, top: 0, left: 0 }) as DOMRect;
+        textarea.appendChild(input);
+      });
+      const input = container.querySelector<HTMLTextAreaElement>('#question-input')!;
+      const pressEscape = (): void => {
+        input.dispatchEvent(
+          new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+        );
+      };
+
+      const { startInputVimMode } = await import('../../chatInput/vimMode');
+      const stopVim = await startInputVimMode({
+        forceEnabled: true,
+        composerSelector: '#question-input',
+      });
+      input.focus();
+      expect(document.activeElement).toBe(input);
+      input.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+      pressEscape();
+      expect(container.classList.contains(COLLAPSED)).toBe(false);
+
+      stopVim();
+      input.focus();
+      pressEscape();
+      expect(container.classList.contains(COLLAPSED)).toBe(true);
+    });
+  });
+
+  describe('Lifecycle ledger', () => {
+    let harness: LifecycleHarness;
+
+    beforeEach(() => {
+      harness = installLifecycleHarness();
+    });
+
+    afterEach(() => {
+      for (const stop of stops) stop();
+      stops = [];
+      harness.restore();
+    });
+
+    it('keeps one collapse runtime when started twice without a stop', async () => {
+      await start();
+      const stopLatest = await start();
+      expect(document.getElementById(STYLE_ID)).not.toBeNull();
+
+      stopLatest();
+
+      expect(document.getElementById(STYLE_ID)).toBeNull();
+      expect(harness.ledger.openStorageListeners()).toBe(0);
+      expect(harness.ledger.openListeners()).toEqual([]);
+      expect(harness.ledger.openObservers()).toEqual([]);
+      expect(vi.getTimerCount()).toBe(0);
     });
   });
 });

@@ -54,6 +54,9 @@ type StateEntries = Readonly<
 
 const onUnlessFalse = (stored: unknown): boolean => stored !== false;
 const onOnlyIfTrue = (stored: unknown): boolean => stored === true;
+/** Off when never stored (the native read defaults to `false`); any stored value but `false` is on. */
+const onUnlessMissingOrFalse = (stored: unknown): boolean =>
+  stored !== undefined && stored !== false;
 const storeBoolean = (enabled: boolean): boolean => enabled;
 
 function binding(
@@ -133,6 +136,16 @@ export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding
     OFFICIAL_PLUGIN_IDS.geminiMermaid,
     StorageKeys.MERMAID_ENABLED,
     onUnlessFalse,
+  ),
+  [OFFICIAL_PLUGIN_IDS.geminiPromptHistory]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiPromptHistory,
+    StorageKeys.PROMPT_HISTORY_ENABLED,
+    onOnlyIfTrue,
+  ),
+  [OFFICIAL_PLUGIN_IDS.geminiInputCollapse]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiInputCollapse,
+    StorageKeys.INPUT_COLLAPSE_ENABLED,
+    onUnlessMissingOrFalse,
   ),
 };
 

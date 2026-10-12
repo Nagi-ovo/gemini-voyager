@@ -37,7 +37,9 @@ export type OwnedFeatureId =
   | 'codeCollapse'
   | 'waveDrom'
   | 'echarts'
-  | 'mermaid';
+  | 'mermaid'
+  | 'promptHistory'
+  | 'inputCollapse';
 export type FeatureOwner = 'legacy' | 'plugin';
 
 /** The packaged official plugin ids, by feature. */
@@ -54,6 +56,8 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiWaveDrom: 'voyager.gemini-wavedrom',
   geminiECharts: 'voyager.gemini-echarts',
   geminiMermaid: 'voyager.gemini-mermaid',
+  geminiPromptHistory: 'voyager.gemini-prompt-history',
+  geminiInputCollapse: 'voyager.gemini-input-collapse',
 } as const;
 
 export interface OwnedFeature {
@@ -177,6 +181,26 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiMermaid,
     handlers: ['mermaid'],
+    healthTracking: false,
+  },
+  // Stage 4. Fixed-id builtins that open no primitive: prompt history keeps
+  // its records per account, a policy no manifest can carry, and Vim, quote
+  // reply, prompt history and the Prompt Manager expand the composer through
+  // input collapse's module API whether or not the feature runs.
+  {
+    site: 'gemini',
+    feature: 'promptHistory',
+    owner: 'plugin',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiPromptHistory,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'inputCollapse',
+    owner: 'plugin',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiInputCollapse,
+    handlers: [],
     healthTracking: false,
   },
 ];

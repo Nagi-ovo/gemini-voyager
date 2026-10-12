@@ -86,6 +86,19 @@ describe('feature owners', () => {
     }
   });
 
+  it('hands prompt history and input collapse to fixed-id builtins that open no primitive', () => {
+    for (const [feature, id] of [
+      ['promptHistory', 'voyager.gemini-prompt-history'],
+      ['inputCollapse', 'voyager.gemini-input-collapse'],
+    ] as const) {
+      expect(featureOwner('gemini', feature)).toBe('plugin');
+      expect(isPackagedOfficialPluginId(id)).toBe(true);
+      expect(ownedFeatureByPluginId(id)).toMatchObject({ site: 'gemini', feature, handlers: [] });
+      expect(tracksPluginHealth(id)).toBe(false);
+      expect(featureOwner('aistudio', feature)).toBe('legacy');
+    }
+  });
+
   it('treats a feature missing from the table as native', () => {
     expect(featureOwner('aistudio', 'vimInput')).toBe('legacy');
   });

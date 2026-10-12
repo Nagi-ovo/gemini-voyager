@@ -48,14 +48,20 @@ const MAIN_COMPOSER_SELECTOR =
   '.text-input-field, .input-area, ms-prompt-input-wrapper, ms-prompt-input, ms-chat-turn-input';
 const VOYAGER_UI_SELECTOR = '.gv-ph-panel, .gv-pm-panel, [role="dialog"]';
 
+type StorageListener = (
+  changes: Record<string, chrome.storage.StorageChange>,
+  areaName: string,
+) => void;
+
 let isEnabled = false;
 let ctrlEnterSendEnabled = false;
 let enabledSettingRevision = 0;
 let ctrlEnterSettingRevision = 0;
 let stopRouteWatcher: (() => void) | null = null;
-let storageListener:
-  | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
-  | null = null;
+/** The native module's own switch listener (`startPromptHistory` only). */
+let enabledListener: StorageListener | null = null;
+/** Refreshes the open panel when this account's history changes in another tab. */
+let historyListener: StorageListener | null = null;
 let clickListener: ((event: MouseEvent) => void) | null = null;
 let submitListener: ((event: SubmitEvent) => void) | null = null;
 let keydownListener: ((event: KeyboardEvent) => void) | null = null;
@@ -526,11 +532,6 @@ function disableFeature(): void {
   renderRevision++;
 }
 
-function reconcileEnabled(enabled: boolean): void {
-  if (enabled) enableFeature();
-  else disableFeature();
-}
-
 function startUrlWatcher(): void {
   if (stopRouteWatcher) return;
   let currentPath = getConversationPath();
@@ -543,56 +544,98 @@ function startUrlWatcher(): void {
   });
 }
 
-function loadSettings(): Promise<{ enabled: boolean; ctrlEnterSendEnabled: boolean }> {
+/** Reads one boolean sync setting as `=== true`; a failed read counts as off. */
+function loadSyncSwitch(key: string): Promise<boolean> {
   return new Promise((resolve) => {
     try {
       if (!chrome.storage?.sync?.get) {
-        resolve({ enabled: false, ctrlEnterSendEnabled: false });
+        resolve(false);
         return;
       }
-      chrome.storage.sync.get(
-        {
-          [StorageKeys.PROMPT_HISTORY_ENABLED]: false,
-          [StorageKeys.CTRL_ENTER_SEND]: false,
-        },
-        (result) => {
-          const error = chrome.runtime?.lastError;
-          if (error) {
-            logger.warn('Failed to load prompt history settings', { message: error.message });
-            resolve({ enabled: false, ctrlEnterSendEnabled: false });
-            return;
-          }
-          resolve({
-            enabled: result?.[StorageKeys.PROMPT_HISTORY_ENABLED] === true,
-            ctrlEnterSendEnabled: result?.[StorageKeys.CTRL_ENTER_SEND] === true,
-          });
-        },
-      );
+      chrome.storage.sync.get({ [key]: false }, (result) => {
+        const error = chrome.runtime?.lastError;
+        if (error) {
+          logger.warn('Failed to load prompt history settings', { message: error.message });
+          resolve(false);
+          return;
+        }
+        resolve(result?.[key] === true);
+      });
     } catch (error) {
       if (!isExtensionContextInvalidatedError(error)) {
         logger.warn('Failed to load prompt history settings', {
           message: error instanceof Error ? error.message : String(error),
         });
       }
-      resolve({ enabled: false, ctrlEnterSendEnabled: false });
+      resolve(false);
     }
   });
 }
 
-function setupStorageListener(): void {
-  if (storageListener) return;
-  storageListener = (changes, areaName) => {
-    if (areaName === 'sync') {
-      if (StorageKeys.CTRL_ENTER_SEND in changes) {
-        ctrlEnterSettingRevision++;
-        ctrlEnterSendEnabled = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;
-      }
-      if (StorageKeys.PROMPT_HISTORY_ENABLED in changes) {
-        enabledSettingRevision++;
-        reconcileEnabled(changes[StorageKeys.PROMPT_HISTORY_ENABLED].newValue === true);
-      }
-      return;
+function addStorageListener(listener: StorageListener): void {
+  try {
+    chrome.storage?.onChanged?.addListener(listener);
+  } catch (error) {
+    if (!isExtensionContextInvalidatedError(error)) {
+      logger.warn('Failed to listen for prompt history settings', {
+        message: error instanceof Error ? error.message : String(error),
+      });
     }
+  }
+}
+
+function removeStorageListener(listener: StorageListener | null): void {
+  if (!listener) return;
+  try {
+    chrome.storage?.onChanged?.removeListener(listener);
+  } catch {}
+}
+
+// The send key the keydown capture classifies with: `gvCtrlEnterSend`, read
+// and followed while anyone holds it. The native module holds it for the
+// page, so turning its switch back on captures with a known key at once; the
+// plugin holds it while mounted.
+let sendKeyHolds = 0;
+let sendKeyGeneration = 0;
+let sendKeyListener: StorageListener | null = null;
+let sendKeyLoad: Promise<void> | null = null;
+let sendKeyLoaded = false;
+
+function holdSendKey(): () => void {
+  if (sendKeyHolds++ === 0) {
+    sendKeyListener = (changes, areaName) => {
+      if (areaName !== 'sync' || !(StorageKeys.CTRL_ENTER_SEND in changes)) return;
+      ctrlEnterSettingRevision++;
+      ctrlEnterSendEnabled = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;
+    };
+    addStorageListener(sendKeyListener);
+    const generation = ++sendKeyGeneration;
+    const revisionBeforeLoad = ctrlEnterSettingRevision;
+    sendKeyLoad = loadSyncSwitch(StorageKeys.CTRL_ENTER_SEND).then((stored) => {
+      // A read that lands after the last holder let go must not seed the next one.
+      if (generation !== sendKeyGeneration) return;
+      if (revisionBeforeLoad === ctrlEnterSettingRevision) ctrlEnterSendEnabled = stored;
+      sendKeyLoaded = true;
+    });
+  }
+  let released = false;
+  return () => {
+    if (released) return;
+    released = true;
+    if (--sendKeyHolds > 0) return;
+    removeStorageListener(sendKeyListener);
+    sendKeyListener = null;
+    sendKeyGeneration++;
+    sendKeyLoad = null;
+    sendKeyLoaded = false;
+    ctrlEnterSendEnabled = false;
+    ctrlEnterSettingRevision = 0;
+  };
+}
+
+function setupHistoryListener(): void {
+  if (historyListener) return;
+  historyListener = (changes, areaName) => {
     if (areaName !== 'local' || !panelOpen) return;
     void resolveCurrentAccountScope()
       .then(({ accountScope, identity }) => {
@@ -605,44 +648,113 @@ function setupStorageListener(): void {
       })
       .catch(reportStorageError);
   };
-  try {
-    chrome.storage?.onChanged?.addListener(storageListener);
-  } catch (error) {
-    if (!isExtensionContextInvalidatedError(error)) {
-      logger.warn('Failed to listen for prompt history settings', {
-        message: error instanceof Error ? error.message : String(error),
-      });
-    }
+  addStorageListener(historyListener);
+}
+
+function teardownHistoryListener(): void {
+  removeStorageListener(historyListener);
+  historyListener = null;
+}
+
+/** The one running runtime; the owner table keeps the native module and the plugin apart. */
+let activeRuntime: object | null = null;
+
+/**
+ * Prompt history without its switch: capture, panel and route watching run
+ * until `signal` aborts. The native module starts it while
+ * `gvPromptHistoryEnabled` is on; the official plugin starts it while mounted.
+ * Capture starts once the send key is known, as the native module only ever
+ * enabled after reading it. Stopping removes listeners and UI and never
+ * touches stored history.
+ */
+export function startPromptHistoryRuntime({ signal }: { signal: AbortSignal }): Promise<void> {
+  if (signal.aborted) return Promise.resolve();
+  if (activeRuntime) {
+    logger.error('Prompt history runtime is already running; the second start is ignored');
+    return Promise.resolve();
   }
+  const run = {};
+  activeRuntime = run;
+  const releaseSendKey = holdSendKey();
+  let started = false;
+
+  signal.addEventListener(
+    'abort',
+    () => {
+      if (activeRuntime !== run) return;
+      activeRuntime = null;
+      if (started) {
+        disableFeature();
+        stopRouteWatcher?.();
+        stopRouteWatcher = null;
+        teardownHistoryListener();
+      }
+      notices.clear();
+      releaseSendKey();
+    },
+    { once: true },
+  );
+
+  const begin = (): void => {
+    // Stopped while the send key was still loading: nothing may attach.
+    if (activeRuntime !== run) return;
+    started = true;
+    setupHistoryListener();
+    startUrlWatcher();
+    enableFeature();
+  };
+  if (sendKeyLoaded) {
+    begin();
+    return Promise.resolve();
+  }
+  return (sendKeyLoad ?? Promise.resolve()).then(begin);
+}
+
+// The native module: `gvPromptHistoryEnabled` starts and stops the runtime.
+let nativeRuntime: AbortController | null = null;
+let releaseNativeSendKey: (() => void) | null = null;
+
+function reconcileEnabled(enabled: boolean): void {
+  if (enabled) {
+    if (nativeRuntime) return;
+    nativeRuntime = new AbortController();
+    void startPromptHistoryRuntime({ signal: nativeRuntime.signal });
+    return;
+  }
+  nativeRuntime?.abort();
+  nativeRuntime = null;
+}
+
+function setupEnabledListener(): void {
+  if (enabledListener) return;
+  enabledListener = (changes, areaName) => {
+    if (areaName !== 'sync' || !(StorageKeys.PROMPT_HISTORY_ENABLED in changes)) return;
+    enabledSettingRevision++;
+    reconcileEnabled(changes[StorageKeys.PROMPT_HISTORY_ENABLED].newValue === true);
+  };
+  addStorageListener(enabledListener);
 }
 
 function cleanup(): void {
-  disableFeature();
-  stopRouteWatcher?.();
-  stopRouteWatcher = null;
-  if (storageListener) {
-    try {
-      chrome.storage?.onChanged?.removeListener(storageListener);
-    } catch {}
-    storageListener = null;
-  }
+  reconcileEnabled(false);
+  removeStorageListener(enabledListener);
+  enabledListener = null;
+  releaseNativeSendKey?.();
+  releaseNativeSendKey = null;
   notices.clear();
-  ctrlEnterSendEnabled = false;
   enabledSettingRevision = 0;
-  ctrlEnterSettingRevision = 0;
 }
 
 export async function startPromptHistory(): Promise<() => void> {
-  setupStorageListener();
-  startUrlWatcher();
+  setupEnabledListener();
+  releaseNativeSendKey ??= holdSendKey();
   const enabledRevisionBeforeLoad = enabledSettingRevision;
-  const ctrlEnterRevisionBeforeLoad = ctrlEnterSettingRevision;
-  const settings = await loadSettings();
-  if (ctrlEnterRevisionBeforeLoad === ctrlEnterSettingRevision) {
-    ctrlEnterSendEnabled = settings.ctrlEnterSendEnabled;
-  }
+  const [enabled] = await Promise.all([
+    loadSyncSwitch(StorageKeys.PROMPT_HISTORY_ENABLED),
+    sendKeyLoad,
+  ]);
   if (enabledRevisionBeforeLoad === enabledSettingRevision) {
-    reconcileEnabled(settings.enabled);
+    reconcileEnabled(enabled);
   }
   return cleanup;
 }

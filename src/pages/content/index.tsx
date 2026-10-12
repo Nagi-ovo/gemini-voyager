@@ -39,7 +39,7 @@ import { startFolderItemFontSizeAdjuster } from './folderItemFontSize/index';
 import { startFolderProject } from './folderProject/index';
 import { startFolderSpacingAdjuster } from './folderSpacing/index';
 import { startNativeFormulaCopyForContent } from './formulaCopyStartup';
-import { startInputCollapse } from './inputCollapse/index';
+import { createGeminiInputStartup, startPageSendKeys } from './inputStartup';
 import { initKaTeXConfig } from './katexConfig';
 import { startMarkdownPatcher } from './markdownPatcher/index';
 import { NATIVE_FEATURES } from './nativeFeatures';
@@ -101,6 +101,7 @@ const promptManager = createPromptManagerEngine(
   cleanupManager,
 );
 const geminiRenderers = createGeminiRendererStartup(officialAdmission, cleanupManager);
+const geminiInputs = createGeminiInputStartup(officialAdmission, cleanupManager);
 
 let initialized = false;
 let initializationTimer: number | null = null;
@@ -243,7 +244,7 @@ async function initializeFeatures(): Promise<void> {
       startSidebarAutoHide();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
-      startInputCollapse();
+      await geminiInputs.startInputCollapse();
       await startOwnedFeature(officialAdmission, 'gemini', 'hideInputHalo', async () => {
         await mountNativeFeature(cleanupManager, NATIVE_FEATURES.inputHaloHider);
       });
@@ -314,15 +315,15 @@ async function initializeFeatures(): Promise<void> {
 
       // These modules only share the extension storage API and can hydrate in
       // parallel without changing their runtime ordering.
-      const parallelResults = await Promise.allSettled(
-        [
+      const parallelResults = await Promise.allSettled([
+        ...[
           NATIVE_FEATURES.responseCompleteNotification,
           NATIVE_FEATURES.draftSave,
           NATIVE_FEATURES.gemsSidebar,
           NATIVE_FEATURES.usageStatus,
-          NATIVE_FEATURES.promptHistory,
         ].map((feature) => mountNativeFeature(cleanupManager, feature)),
-      );
+        geminiInputs.startPromptHistory(),
+      ]);
       const failedInitializer = parallelResults.find(
         (result): result is PromiseRejectedResult => result.status === 'rejected',
       );
@@ -525,6 +526,10 @@ function handleVisibilityChange(): void {
 
     if (!isPluginSubframe) void mountNativeFeature(cleanupManager, NATIVE_FEATURES.chatGptJump);
 
+    // Gemini and AI Studio send keys: one page coordinator that the native send
+    // behavior and send plugins register on, so it exists before the host.
+    startPageSendKeys(location.hostname, cleanupManager);
+
     // Plugin ecosystem host. Started up-front on EVERY page the content script is
     // injected into (Gemini / AI Studio, and any site a user enabled a plugin for,
     // e.g. claude.ai via dynamic registration). It self-detects the site adapter
@@ -594,6 +599,7 @@ function handleVisibilityChange(): void {
       forkToggle?.handleChange(changes, areaName);
       researchPackToggle?.handleChange(changes, areaName);
       geminiRenderers.handleStorageChange(changes, areaName);
+      geminiInputs.handleStorageChange(changes, areaName);
     };
 
     // Quick check: only run on supported websites

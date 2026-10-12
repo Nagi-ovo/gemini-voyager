@@ -78,8 +78,24 @@ describe('legacy value bindings', () => {
         StorageKeys.CHAT_LINE_HEIGHT,
         StorageKeys.CHAT_PARAGRAPH_SPACING,
         StorageKeys.CHAT_WIDTH,
+        StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY,
       ].sort(),
     );
+  });
+
+  it('reads the collapse-with-content switch as true only when stored true, and takes every live change of it', () => {
+    const id = 'voyager.gemini-input-collapse';
+    const key = StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY;
+    for (const stored of [undefined, null, false, 'true', 1]) {
+      expect(deriveLegacyValueSettings(id, { [key]: stored })).toEqual({
+        collapseWhenNotEmpty: false,
+      });
+    }
+    expect(deriveLegacyValueSettings(id, { [key]: true })).toEqual({ collapseWhenNotEmpty: true });
+    // The native listener read any live value but true, removal included, as off.
+    for (const value of [undefined, null, false, true, 'yes']) {
+      expect(acceptsLegacyLiveChange(key, value)).toBe(true);
+    }
   });
 
   it('fills only settings the packaged typography manifests declare, within their ranges', async () => {

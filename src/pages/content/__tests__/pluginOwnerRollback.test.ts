@@ -5,7 +5,7 @@
  * what that build would ship: the native start path runs once, the official
  * plugins never mount, and a local plugin the user stored while the primitive
  * was open stays listed and enabled, reported as `blocked: host-policy`. The
- * stage 3 native modules are counters.
+ * stage 3 native modules, native prompt history and input collapse are counters.
  */
 import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -29,6 +29,7 @@ import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCa
 
 import { startGeminiChatAppearance } from '../appearanceStartup';
 import { startOwnedFeature } from '../featureOwnerStartup';
+import { createGeminiInputStartup } from '../inputStartup';
 import { registerBuiltinNativeHandlers } from '../pluginNativeRegistration';
 import { createGeminiRendererStartup } from '../rendererStartup';
 
@@ -82,6 +83,20 @@ vi.mock('../userLatex/index', async (importOriginal) => ({
 vi.mock('../mermaid/index', () => ({ startMermaid: () => native.started.push('mermaid') }));
 vi.mock('../wavedrom/index', () => ({ startWaveDrom: () => native.started.push('waveDrom') }));
 vi.mock('../echarts/index', () => ({ startEcharts: () => native.started.push('echarts') }));
+vi.mock('../promptHistory/index', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../promptHistory/index')>()),
+  startPromptHistory: async () => {
+    native.started.push('promptHistory');
+    return () => {};
+  },
+}));
+vi.mock('../inputCollapse/index', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../inputCollapse/index')>()),
+  startInputCollapse: () => {
+    native.started.push('inputCollapse');
+    return () => {};
+  },
+}));
 
 vi.mock('@/features/formulaCopy', () => ({
   activateFormulaCopy: (scope: { effect: (run: () => () => void, label: string) => void }) => {
@@ -215,6 +230,27 @@ describe('rolling every owned feature back to its native module', () => {
     (chrome.storage.sync.get as unknown as Mock).mockReset();
   });
 
+  it('starts native prompt history and input collapse once at their Gemini start points and admits neither official plugin', async () => {
+    // Both switches on: the native modules run them, the official plugins stay out.
+    (chrome.storage.sync.get as unknown as Mock).mockResolvedValue({
+      [StorageKeys.INPUT_COLLAPSE_ENABLED]: true,
+      [StorageKeys.PROMPT_HISTORY_ENABLED]: true,
+    });
+    const admission = createOfficialAdmission();
+    const cleanupManager = new CleanupManager();
+    const inputs = createGeminiInputStartup(admission, cleanupManager);
+
+    await inputs.startInputCollapse();
+    await inputs.startPromptHistory();
+    admission.close();
+
+    expect(native.started).toEqual(['inputCollapse', 'promptHistory']);
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiInputCollapse)).toBe('denied');
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiPromptHistory)).toBe('denied');
+    cleanupManager.executeCleanups();
+    (chrome.storage.sync.get as unknown as Mock).mockReset();
+  });
+
   it('starts each native module exactly once and admits no official plugin', async () => {
     const admission = createOfficialAdmission();
     const started: string[] = [];
@@ -269,6 +305,8 @@ describe('rolling every owned feature back to its native module', () => {
           [StorageKeys.CHAT_FONT_SIZE_ENABLED]: true,
           [StorageKeys.CHAT_LINE_HEIGHT_ENABLED]: true,
           [StorageKeys.CHAT_WIDTH_ENABLED]: true,
+          [StorageKeys.PROMPT_HISTORY_ENABLED]: true,
+          [StorageKeys.INPUT_COLLAPSE_ENABLED]: true,
         }),
         subscribe: () => () => {},
       },
@@ -287,6 +325,8 @@ describe('rolling every owned feature back to its native module', () => {
     expect(document.documentElement.innerHTML).not.toContain('chat-loading-animation');
     expect(document.querySelector('style[data-gv-plugin]')).toBeNull();
     expect(document.getElementById('gv-plugin-chat-width')).toBeNull();
+    expect(document.querySelector('.gv-ph-trigger')).toBeNull();
+    expect(document.getElementById('gemini-voyager-input-collapse')).toBeNull();
     expect(chrome.storage.local.set).not.toHaveBeenCalled();
     pluginHost.stop();
   });

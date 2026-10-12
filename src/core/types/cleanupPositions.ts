@@ -7,6 +7,9 @@ export enum CleanupPositions {
   DestroySlashPromptFeatureInstance,
   DestroySentPromptChips,
   CleanupQuoteReply,
+  /** Before the input collapse it starts: no late start may mount once teardown began. */
+  CleanupInputStartup,
+  CleanupInputCollapse,
   CleanupInputVimMode,
   CleanupInputHaloHider,
   CleanupSendBehavior,
@@ -18,6 +21,8 @@ export enum CleanupPositions {
   CleanupEdgeFinalVersionNotice,
   CleanupFormulaCopy,
   CleanupPluginHost,
+  /** After every send-key registrant (the native send behavior, the plugins): they dispose first. */
+  CleanupSendKeyCoordinator,
   CleanupBrandTheme,
   CleanupRemoteAnnouncements,
   CleanupStorageQuotaWarning,

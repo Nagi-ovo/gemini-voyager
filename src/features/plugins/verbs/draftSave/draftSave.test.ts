@@ -445,7 +445,7 @@ describe('draftSave storage', () => {
     expect(records['gvDraft:claude:conv:x']).toEqual({ content: 'Claude', timestamp: 0 });
   });
 
-  it('writes nothing for a ChatGPT temporary chat', async () => {
+  it('does not persist a draft in a temporary chat on catalog sites', async () => {
     window.history.replaceState({}, '', '/?temporary-chat=true');
     document.body.innerHTML = chatgpt.markup;
     activate(chatgpt.adapter);

@@ -4,6 +4,7 @@ import { NATIVE_HANDLER_BINDINGS } from '@/pages/content/pluginNativeRegistratio
 
 import { checkPrimitivesAreShippable } from '../../../../scripts/lib/pluginChecks';
 import { validateManifest } from '../manifest/validate';
+import { legacyValueBindingsFor } from '../storage/legacyValueBindings';
 import { activateChatGptFolders } from './chatgptFolders';
 import { HIDE_FILED_SETTING } from './chatgptFolders/chatgptHideFiled';
 import { BUILTIN_PLUGINS, NATIVE_BUILTIN_PLUGIN_IDS } from './index';
@@ -177,6 +178,43 @@ describe('BUILTIN_PLUGINS', () => {
     expect(NATIVE_HANDLER_BINDINGS['voyager.gemini-chat-width']?.updateSettings).toBeTypeOf(
       'function',
     );
+  });
+
+  it('scopes the Gemini prompt history builtin to gemini.google.com with no settings of its own', () => {
+    const history = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.gemini-prompt-history');
+    // Not Gemini Enterprise or a custom host: the native module never ran there.
+    expect(history?.matches).toEqual(['https://gemini.google.com/*']);
+    // Its switch is gvPromptHistoryEnabled; the manifest offers nothing to set.
+    expect(history?.contributes).toEqual({});
+    for (const locale of ['zh', 'zh_TW', 'ja', 'ko', 'fr', 'es', 'pt', 'ru', 'ar'] as const) {
+      expect(history?.i18n?.[locale]?.name, locale).toBeTruthy();
+      expect(history?.i18n?.[locale]?.description, locale).toBeTruthy();
+    }
+    expect(NATIVE_HANDLER_BINDINGS['voyager.gemini-prompt-history']?.activate).toBeTypeOf(
+      'function',
+    );
+  });
+
+  it('scopes the Gemini input collapse builtin to gemini.google.com with the native sub-switch as its one setting', () => {
+    const collapse = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.gemini-input-collapse');
+    expect(collapse?.matches).toEqual(['https://gemini.google.com/*']);
+    expect(collapse?.contributes.settings?.collapseWhenNotEmpty).toMatchObject({
+      type: 'boolean',
+      default: false,
+      messageKeys: { label: 'allowCollapseWhenNotEmpty', hint: 'allowCollapseWhenNotEmptyHint' },
+    });
+    // The host fills exactly the declared setting from gvInputCollapseWhenNotEmpty, default included.
+    const bindings = legacyValueBindingsFor('voyager.gemini-input-collapse');
+    expect(bindings.map((entry) => entry.settingKey)).toEqual(['collapseWhenNotEmpty']);
+    expect(bindings[0].read(undefined)).toBe(false);
+    for (const locale of ['zh', 'zh_TW', 'ja', 'ko', 'fr', 'es', 'pt', 'ru', 'ar'] as const) {
+      expect(collapse?.i18n?.[locale]?.name, locale).toBeTruthy();
+      expect(collapse?.i18n?.[locale]?.description, locale).toBeTruthy();
+      expect(collapse?.i18n?.[locale]?.settings?.collapseWhenNotEmpty?.label, locale).toBeTruthy();
+    }
+    const handler = NATIVE_HANDLER_BINDINGS['voyager.gemini-input-collapse'];
+    expect(handler?.activate).toBeTypeOf('function');
+    expect(handler?.updateSettings).toBeTypeOf('function');
   });
 
   it('does not expose the retired Claude usage plugin', () => {

@@ -16,6 +16,8 @@ export interface OfficialSettingLocation {
 const LOCATIONS: Readonly<Partial<Record<OwnedFeatureId, OfficialSettingLocation>>> = {
   formulaCopy: { setting: 'enableFormulaCopy', card: 'formulaCopyFormat' },
   vimInput: { setting: 'inputVimMode', card: 'inputCollapseOptions' },
+  promptHistory: { setting: 'promptHistoryTitle', card: 'promptManagerOptions' },
+  inputCollapse: { setting: 'enableInputCollapse', card: 'inputCollapseOptions' },
 };
 
 /** The native setting behind a packaged official plugin id, or null for any other plugin. */

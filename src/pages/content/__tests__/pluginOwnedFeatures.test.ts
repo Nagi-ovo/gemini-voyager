@@ -4,7 +4,8 @@
  * start points admit the official plugin instead of starting the native
  * module, and the real bundled catalog, builtin plugins, local source and host
  * decide what runs. The formula runtime is a counter; the stage 3 plugins run
- * their real primitives, stylesheets and the chat width handler.
+ * their real primitives, stylesheets and the chat width handler; prompt
+ * history and input collapse run their real builtin handlers.
  */
 import { type Mock, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -31,6 +32,7 @@ import {
 } from '../codeBlockCollapse/engine';
 import { CODE_BLOCK_TOGGLE_CLASS } from '../codeBlockCollapse/toggle';
 import { admitPluginOwnedFeature, startOwnedFeature } from '../featureOwnerStartup';
+import { createGeminiInputStartup } from '../inputStartup';
 import { registerBuiltinNativeHandlers } from '../pluginNativeRegistration';
 import { createGeminiRendererStartup } from '../rendererStartup';
 
@@ -114,6 +116,11 @@ function kindOf(pluginHost: PluginHost, id: string): string | undefined {
 async function flush(): Promise<void> {
   for (let i = 0; i < 8; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
 }
+
+beforeAll(() => {
+  // As the content script does before the host starts: the builtin handlers.
+  registerBuiltinNativeHandlers();
+});
 
 beforeEach(() => {
   formula.starts = 0;
@@ -309,11 +316,6 @@ const ALL_STAGE3_OFF: LegacySettingSnapshot = Object.fromEntries(
 );
 
 describe('Gemini stage 3 features owned by their official plugins', () => {
-  beforeAll(() => {
-    // As the content script does before the host starts: the chat width builtin's handler.
-    registerBuiltinNativeHandlers();
-  });
-
   beforeEach(() => {
     enable();
     document.body.replaceChildren();
@@ -498,4 +500,122 @@ describe('Gemini stage 3 features owned by their official plugins', () => {
       if (drawn) await vi.waitFor(() => expect(drawn()).toBe(false));
     },
   );
+});
+
+describe('Gemini prompt history and input collapse owned by their official plugins', () => {
+  const HISTORY_KEY = StorageKeys.PROMPT_HISTORY_ENABLED;
+  const COLLAPSE_KEY = StorageKeys.INPUT_COLLAPSE_ENABLED;
+  const WHEN_NOT_EMPTY_KEY = StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY;
+  const COLLAPSE_STYLE_ID = 'gemini-voyager-input-collapse';
+  const historyTrigger = () => document.querySelector('.gv-ph-trigger') !== null;
+  const collapseStyle = () => document.getElementById(COLLAPSE_STYLE_ID) !== null;
+
+  beforeEach(() => {
+    enable();
+    document.body.replaceChildren();
+    document.head.replaceChildren();
+    // Prompt history reads the send key before it captures; every read answers "never stored".
+    (chrome.storage.sync.get as unknown as Mock).mockImplementation(
+      (_keys: unknown, callback?: (result: Record<string, unknown>) => void) => {
+        callback?.({});
+        return Promise.resolve({});
+      },
+    );
+  });
+
+  afterEach(() => {
+    (chrome.storage.local.remove as unknown as Mock).mockClear();
+  });
+
+  function geminiHost(
+    admission: OfficialAdmissionController,
+    legacySettings: LegacySettingsSource,
+  ) {
+    return new PluginHost({
+      url: GEMINI_URL,
+      sources: [new BundledCatalogPluginSource(), new BuiltinPluginSource()],
+      doc: document,
+      admission,
+      legacySettings,
+      requestCatalogRefresh: () => {},
+      isTopFrame: true,
+    });
+  }
+
+  it('admits the history plugin and starts no native history', async () => {
+    expect(featureOwner('gemini', 'promptHistory')).toBe('plugin');
+    const admission = createOfficialAdmission();
+    const cleanupManager = new CleanupManager();
+    await createGeminiInputStartup(admission, cleanupManager).startPromptHistory();
+    admission.close();
+
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiPromptHistory)).toBe('admitted');
+    await flush();
+    expect(historyTrigger()).toBe(false);
+    // The native module never subscribed to its switch, so turning it on starts nothing here.
+    expect(chrome.storage.onChanged.addListener).not.toHaveBeenCalled();
+
+    const legacy = liveLegacy({ [HISTORY_KEY]: false });
+    const pluginHost = geminiHost(admission, legacy.legacySettings);
+    await pluginHost.start();
+    await flush();
+    expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiPromptHistory)).toBe('ready');
+    expect(historyTrigger()).toBe(false);
+
+    legacy.fire({ [HISTORY_KEY]: true });
+    await flush();
+    expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiPromptHistory)).toBe('mounted');
+    expect(historyTrigger()).toBe(true);
+
+    legacy.fire({ [HISTORY_KEY]: false });
+    await flush();
+    expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiPromptHistory)).toBe('ready');
+    expect(historyTrigger()).toBe(false);
+    // Turning it off removes no stored history.
+    expect(chrome.storage.local.remove).not.toHaveBeenCalled();
+    pluginHost.stop();
+    cleanupManager.executeCleanups();
+  });
+
+  it('admits the collapse plugin and starts no native collapse', async () => {
+    expect(featureOwner('gemini', 'inputCollapse')).toBe('plugin');
+    const admission = createOfficialAdmission();
+    const cleanupManager = new CleanupManager();
+    const startup = createGeminiInputStartup(admission, cleanupManager);
+    await startup.startInputCollapse();
+    admission.close();
+
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiInputCollapse)).toBe('admitted');
+    // No session: the native module is not running. The one read keeps the
+    // collapse-with-content value the public collapse API uses.
+    expect(collapseStyle()).toBe(false);
+    // The content script's router no longer turns collapse on: the plugin owns its switch.
+    startup.handleStorageChange({ [COLLAPSE_KEY]: { newValue: true } }, 'sync');
+    await flush();
+    expect(collapseStyle()).toBe(false);
+
+    const legacy = liveLegacy({ [COLLAPSE_KEY]: false });
+    const pluginHost = geminiHost(admission, legacy.legacySettings);
+    await pluginHost.start();
+    await flush();
+    expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiInputCollapse)).toBe('ready');
+
+    legacy.fire({ [COLLAPSE_KEY]: true });
+    await flush();
+    expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiInputCollapse)).toBe('mounted');
+    expect(collapseStyle()).toBe(true);
+    const style = document.getElementById(COLLAPSE_STYLE_ID);
+
+    // The sub-switch lands in place: the running session is not restarted.
+    legacy.fire({ [WHEN_NOT_EMPTY_KEY]: true });
+    await flush();
+    expect(document.getElementById(COLLAPSE_STYLE_ID)).toBe(style);
+
+    legacy.fire({ [COLLAPSE_KEY]: false });
+    await flush();
+    expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiInputCollapse)).toBe('ready');
+    expect(collapseStyle()).toBe(false);
+    pluginHost.stop();
+    cleanupManager.executeCleanups();
+  });
 });

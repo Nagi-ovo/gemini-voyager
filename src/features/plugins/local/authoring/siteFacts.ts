@@ -46,6 +46,8 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   waveDrom: 'WaveDrom timing diagram rendering',
   echarts: 'ECharts rendering',
   mermaid: 'Mermaid diagram rendering',
+  promptHistory: 'Prompt history',
+  inputCollapse: 'Input collapse',
 };
 
 /**

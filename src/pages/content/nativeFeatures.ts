@@ -12,6 +12,7 @@ import { isForkFeatureEnabledValue } from './fork/featureFlag';
 import { startFork } from './fork/index';
 import { startGemsHider } from './gemsHider/index';
 import { startGemsSidebar } from './gemsSidebar/index';
+import { INPUT_COLLAPSE_TOGGLE, startInputCollapse } from './inputCollapse/index';
 import { startInputHaloHider } from './inputHaloHider/index';
 import { startNativeHealth } from './nativeHealth/index';
 import { startBrandTheme } from './platformTheme';
@@ -71,6 +72,12 @@ export const NATIVE_FEATURES = {
     id: 'storage-quota-warning',
     position: CleanupPositions.CleanupStorageQuotaWarning,
     start: startStorageQuotaWarningToast,
+  },
+  inputCollapse: {
+    id: 'input-collapse',
+    position: CleanupPositions.CleanupInputCollapse,
+    start: startInputCollapse,
+    toggle: INPUT_COLLAPSE_TOGGLE,
   },
   inputVimMode: {
     id: 'input-vim-mode',

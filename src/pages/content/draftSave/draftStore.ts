@@ -1,11 +1,7 @@
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
-
-import { stripInstructionBlock } from '../folderProject/instructionBlock';
+import { type DraftPolicy, sanitizeDraftAt } from '@/features/plugins/verbs/draftSave/draftPolicy';
 
 const LOG_PREFIX = '[DraftSave]';
-
-/** Storage key prefix for Gemini draft entries in chrome.storage.local */
-const DRAFT_STORAGE_PREFIX = 'gvDraft_';
 
 /** Maximum number of drafts to keep (oldest are pruned) */
 const MAX_DRAFTS = 5;
@@ -18,19 +14,26 @@ export interface DraftStoreOptions {
   readonly prefix: string;
   /** Text cleanup before the trim; Gemini strips Voyager's folder project instructions. */
   readonly sanitize: (content: string) => string;
+  /** Checked before every save or removal; a page that may not hold drafts writes nothing. */
+  readonly writable: () => boolean;
 }
 
-const GEMINI_DRAFTS: DraftStoreOptions = {
-  prefix: DRAFT_STORAGE_PREFIX,
-  sanitize: stripInstructionBlock,
-};
+/** The store a draft policy describes: its prefix, its store-stage sanitizer and its eligibility. */
+export function draftStoreOptions(policy: DraftPolicy, doc: Document): DraftStoreOptions {
+  return {
+    prefix: policy.store.prefix,
+    sanitize: (content) => sanitizeDraftAt(policy, 'store', content),
+    // Re-checked per write: Enterprise can surface after startup through a URL or DOM hint.
+    writable: () => policy.eligible(location, doc),
+  };
+}
 
 export class DraftStore {
   private saveCount = 0;
 
   constructor(
     private readonly onSaved: (path: string, content: string) => void,
-    private readonly options: DraftStoreOptions = GEMINI_DRAFTS,
+    private readonly options: DraftStoreOptions,
   ) {}
 
   /**
@@ -44,6 +47,7 @@ export class DraftStore {
    * Save a draft for the current conversation.
    */
   save(path: string, content: string): void {
+    if (!this.options.writable()) return;
     const sanitizedContent = this.options.sanitize(content).trim();
 
     if (!sanitizedContent) {
@@ -82,6 +86,7 @@ export class DraftStore {
    * Remove a draft for a given path.
    */
   remove(path: string): void {
+    if (!this.options.writable()) return;
     const key = this.storageKey(path);
     try {
       chrome.storage?.local?.remove(key);
@@ -118,9 +123,12 @@ export class DraftStore {
    * Prune old drafts to keep storage usage bounded.
    */
   private pruneOldDrafts(): void {
+    if (!this.options.writable()) return;
     try {
       chrome.storage?.local?.get(null, (items) => {
         if (chrome.runtime.lastError) return;
+        // Enterprise can surface while the read is out: it removes nothing either.
+        if (!this.options.writable()) return;
 
         const draftEntries: { key: string; timestamp: number }[] = [];
         for (const [key, value] of Object.entries(items)) {

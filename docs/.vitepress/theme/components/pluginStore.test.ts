@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { BUILTIN_PLUGINS } from '../../../../src/features/plugins/builtin';
+import { isPackagedOfficialPluginId } from '../../../../src/features/plugins/sites/featureOwners';
 import {
   CATEGORY_FALLBACKS,
   CONTRIBUTE,
@@ -81,9 +82,16 @@ describe('localeKey', () => {
 describe('NATIVE_PLUGINS', () => {
   it('lists every plugin bundled with the extension except the packaged Gemini official ones', () => {
     expect(NATIVE_PLUGINS.map((p) => p.id)).toEqual(
-      BUILTIN_PLUGINS.map((p) => p.id).filter((id) => id !== 'voyager.gemini-chat-width'),
+      BUILTIN_PLUGINS.map((p) => p.id).filter((id) => !isPackagedOfficialPluginId(id)),
     );
-    expect(BUILTIN_PLUGINS.some((p) => p.id === 'voyager.gemini-chat-width')).toBe(true);
+    for (const id of [
+      'voyager.gemini-chat-width',
+      'voyager.gemini-prompt-history',
+      'voyager.gemini-input-collapse',
+    ]) {
+      expect(BUILTIN_PLUGINS.some((p) => p.id === id)).toBe(true);
+      expect(NATIVE_PLUGINS.some((p) => p.id === id)).toBe(false);
+    }
   });
 
   it('marks every native plugin official, productivity, with a source link', () => {

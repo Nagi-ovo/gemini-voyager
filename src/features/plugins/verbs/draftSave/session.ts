@@ -8,14 +8,11 @@
  * Every listener and timer is registered on the plugin's scope; disposing it
  * stops the session and leaves stored drafts in place.
  */
-import { findComposer, insertIntoComposer, readComposer } from '@/core/services/composer';
-import { setTextFieldValue } from '@/core/services/composer/textField';
 import type { Dispose, PluginScope } from '@/features/plugins/runtime/pluginScope';
-import type { SiteAdapter } from '@/features/plugins/types';
-import { DraftStore } from '@/pages/content/draftSave/draftStore';
+import { DraftStore, draftStoreOptions } from '@/pages/content/draftSave/draftStore';
 import { watchRouteChanges } from '@/pages/content/utils/routeWatcher';
 
-import { draftKeyFor, siteDraftPrefix } from './draftKey';
+import { type DraftPolicy, sanitizeDraftAt } from './draftPolicy';
 
 /** Same pause as Gemini's before typing is written to storage. */
 export const DRAFT_SAVE_DEBOUNCE_MS = 1000;
@@ -32,19 +29,16 @@ interface SendIntent {
   readonly disposers: readonly Dispose[];
 }
 
-function isTextField(field: HTMLElement): field is HTMLTextAreaElement | HTMLInputElement {
-  return field instanceof HTMLTextAreaElement || field instanceof HTMLInputElement;
-}
-
-/** The trimmed text a draft records. */
-function draftText(field: HTMLElement): string {
-  return readComposer(field).trim();
-}
-
-export function startSiteDraftSave(scope: PluginScope, adapter: SiteAdapter, doc: Document): void {
-  const sendButton = adapter.selectors.sendButton;
-  const keyHere = (): string | null => draftKeyFor(adapter, location.href);
-  const composer = (): HTMLElement | null => findComposer(adapter, { doc });
+export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc: Document): void {
+  const detection = policy.sendDetection;
+  if (detection.kind !== 'catalog') {
+    // Gemini's click, submit and polling detection still lives in the native module.
+    throw new Error(`draftSave session cannot detect sends as ${detection.kind}`);
+  }
+  const sendButton = detection.sendButton;
+  const keyHere = (): string | null =>
+    policy.eligible(location, doc) ? policy.keyFor(location) : null;
+  const composer = (): HTMLElement | null => policy.findInput(doc);
 
   let currentKey = keyHere();
   /** Bumped whenever the key changes, so a timer started for one conversation stops in another. */
@@ -59,7 +53,7 @@ export function startSiteDraftSave(scope: PluginScope, adapter: SiteAdapter, doc
     (key, content) => {
       if (key === currentKey) lastSavedContent = content;
     },
-    { prefix: siteDraftPrefix(adapter.id), sanitize: (content) => content },
+    draftStoreOptions(policy, doc),
   );
 
   const ownComposer = (target: EventTarget | null): HTMLElement | null => {
@@ -99,12 +93,12 @@ export function startSiteDraftSave(scope: PluginScope, adapter: SiteAdapter, doc
   const checkSent = (): void => {
     if (!sendIntent || sendIntent.key !== currentKey) return;
     const field = composer();
-    if (field && draftText(field) === '') dropSentDraft(sendIntent.key);
+    if (field && policy.isEmpty(field)) dropSentDraft(sendIntent.key);
   };
 
   const markSendIntent = (field: HTMLElement): void => {
     // An empty composer sends nothing; armed, it would drop the draft typed next.
-    if (scope.isDisposed || currentKey === null || draftText(field) === '') return;
+    if (scope.isDisposed || currentKey === null || policy.isEmpty(field)) return;
     clearSendIntent();
     sendIntent = {
       key: currentKey,
@@ -121,7 +115,7 @@ export function startSiteDraftSave(scope: PluginScope, adapter: SiteAdapter, doc
     // The route watcher polls; the live route at the input event names the draft's conversation.
     const key = keyHere();
     if (key === null) return;
-    const content = draftText(field);
+    const content = sanitizeDraftAt(policy, 'input', policy.readText(field)).trim();
     if (!content && sendIntent) {
       dropSentDraft(sendIntent.key);
       return;
@@ -131,32 +125,16 @@ export function startSiteDraftSave(scope: PluginScope, adapter: SiteAdapter, doc
     cancelSaveTimer = scope.timer(flushPendingSave, DRAFT_SAVE_DEBOUNCE_MS);
   };
 
-  /** Writes a stored draft into an empty composer, leaving focus where the user had it. */
-  const writeDraft = (field: HTMLElement, content: string): boolean => {
-    if (isTextField(field)) {
-      // A plain field takes the value without focus, as Gemini's draft restore does.
-      setTextFieldValue(field, content);
-      return draftText(field) !== '';
-    }
-    const previous = doc.activeElement;
-    // Rich editors need the selection inside them for a native editing command.
-    const written = insertIntoComposer(field, content, 'replace');
-    if (previous instanceof HTMLElement && previous !== doc.body && !field.contains(previous)) {
-      previous.focus();
-    }
-    return written;
-  };
-
   const tryRestore = (generation: number, key: string, content: string, attempts: number) => {
     if (scope.isDisposed || restored || generation !== navigation || keyHere() !== key) return;
     const field = composer();
     if (field) {
       // Whatever is already in the composer is the user's: never write over it.
-      if (draftText(field) !== '') {
+      if (!policy.isEmpty(field)) {
         restored = true;
         return;
       }
-      if (writeDraft(field, content)) {
+      if (policy.write(field, content)) {
         restored = true;
         return;
       }
@@ -171,7 +149,7 @@ export function startSiteDraftSave(scope: PluginScope, adapter: SiteAdapter, doc
     if (key === null || restored || generation !== navigation) return;
     const saved = await store.load(key);
     if (scope.isDisposed || generation !== navigation) return;
-    const content = saved?.trim();
+    const content = saved === null ? undefined : sanitizeDraftAt(policy, 'restore', saved).trim();
     // Track what storage holds even when the restore is skipped: a host that refills its own
     // draft first would otherwise make clearing the composer look unchanged and keep this one.
     lastSavedContent = content ?? '';
@@ -244,8 +222,10 @@ export function startSiteDraftSave(scope: PluginScope, adapter: SiteAdapter, doc
     },
     { capture: true },
   );
-  // A reload or full navigation inside the pause would keep the previous draft, even a cleared one.
-  scope.on(doc.defaultView ?? window, 'pagehide', flushPendingSave);
+  if (policy.flushOnPageHide) {
+    // A reload or full navigation inside the pause would keep the previous draft, even a cleared one.
+    scope.on(doc.defaultView ?? window, 'pagehide', flushPendingSave);
+  }
   scope.effect(() => watchRouteChanges(onRoute), 'draft-save:route');
   // Disabling drops the unsaved tail like Gemini's toggle does; stored drafts stay.
   scope.effect(

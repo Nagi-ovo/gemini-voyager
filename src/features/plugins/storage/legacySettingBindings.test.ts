@@ -2,6 +2,7 @@ import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vite
 
 import { StorageKeys } from '@/core/types/common';
 import { isCodeBlockCollapseEnabledValue } from '@/pages/content/codeBlockCollapse';
+import { isInputCollapseEnabledValue } from '@/pages/content/inputCollapse/index';
 import { isUserLatexEnabledValue } from '@/pages/content/userLatex/index';
 
 import { legacyBoundSettings } from '../runtime/legacySnapshotFeed';
@@ -26,6 +27,8 @@ const SPACING = OFFICIAL_PLUGIN_IDS.geminiChatLineHeight;
 const WIDTH = OFFICIAL_PLUGIN_IDS.geminiChatWidth;
 const LATEX = OFFICIAL_PLUGIN_IDS.geminiUserLatex;
 const COLLAPSE = OFFICIAL_PLUGIN_IDS.geminiCodeCollapse;
+const HISTORY = OFFICIAL_PLUGIN_IDS.geminiPromptHistory;
+const INPUT_COLLAPSE = OFFICIAL_PLUGIN_IDS.geminiInputCollapse;
 const DIAGRAMS = [
   OFFICIAL_PLUGIN_IDS.geminiWaveDrom,
   OFFICIAL_PLUGIN_IDS.geminiECharts,
@@ -91,6 +94,9 @@ describe('legacy enable bindings', () => {
         StorageKeys.WAVEDROM_ENABLED,
         StorageKeys.ECHARTS_ENABLED,
         StorageKeys.MERMAID_ENABLED,
+        StorageKeys.PROMPT_HISTORY_ENABLED,
+        StorageKeys.INPUT_COLLAPSE_ENABLED,
+        StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY,
         StorageKeys.CHAT_FONT_SIZE,
         StorageKeys.CHAT_LINE_HEIGHT,
         StorageKeys.CHAT_PARAGRAPH_SPACING,
@@ -126,6 +132,23 @@ describe('legacy enable bindings', () => {
       expect(legacyBindingFor(LATEX)?.read(stored)).toBe(isUserLatexEnabledValue(stored));
     }
   });
+
+  // Prompt history reads `=== true`; input collapse starts unless the key is missing or false.
+  it.each([
+    ['missing', undefined, false, false],
+    ['false', false, false, false],
+    ['true', true, true, true],
+    ['"false"', 'false', false, true],
+    ['0', 0, false, true],
+    ['null', null, false, true],
+  ])(
+    'read a stored %s for prompt history and input collapse as their native startup reads do',
+    (_l, stored, history, collapse) => {
+      expect(legacyBindingFor(HISTORY)?.read(stored)).toBe(history);
+      expect(legacyBindingFor(INPUT_COLLAPSE)?.read(stored)).toBe(collapse);
+      expect(isInputCollapseEnabledValue(stored)).toBe(collapse);
+    },
+  );
 
   // Production readings: formula copy `!== false`; Vim and halo `=== true`.
   it.each([

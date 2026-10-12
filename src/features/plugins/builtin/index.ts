@@ -1,5 +1,7 @@
 import { type PluginManifest, hasNativeOps } from '../types';
 import { GEMINI_CHAT_WIDTH_MANIFEST } from './geminiChatWidthManifest';
+import { GEMINI_INPUT_COLLAPSE_MANIFEST } from './geminiInputCollapseManifest';
+import { GEMINI_PROMPT_HISTORY_MANIFEST } from './geminiPromptHistoryManifest';
 import { timelineManifest } from './timelineManifest';
 
 /** ChatGPT stamps the owning conversation id on each rendered reply. */
@@ -369,6 +371,8 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
     },
   },
   GEMINI_CHAT_WIDTH_MANIFEST,
+  GEMINI_PROMPT_HISTORY_MANIFEST,
+  GEMINI_INPUT_COLLAPSE_MANIFEST,
 ];
 
 /**

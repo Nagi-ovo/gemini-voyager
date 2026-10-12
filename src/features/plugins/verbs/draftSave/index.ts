@@ -11,6 +11,7 @@ import { findComposer } from '@/core/services/composer';
 import type { ManifestIssue } from '../../manifest/validate';
 import { getPrimitiveContract } from '../contracts';
 import type { Primitive } from '../types';
+import { catalogDraftPolicy } from './draftPolicy';
 import { startSiteDraftSave } from './session';
 
 export type DraftSaveParams = Readonly<Record<string, never>>;
@@ -40,6 +41,6 @@ export const draftSavePrimitive: Primitive<DraftSaveParams> = {
     );
     // Without a conversation route every chat would share one draft; save nothing instead.
     if (!adapter?.selectors.composer || !adapter.conversationIdPattern) return;
-    startSiteDraftSave(scope, adapter, context.doc);
+    startSiteDraftSave(scope, catalogDraftPolicy(adapter), context.doc);
   },
 };
