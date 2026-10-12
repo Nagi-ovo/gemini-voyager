@@ -91,6 +91,18 @@ describe('inputCollapse', () => {
     return container;
   }
 
+  it('follows the page theme instead of the system theme for the collapsed pill', async () => {
+    await start();
+    const container = await createMockContainer();
+    blur(container);
+    await vi.advanceTimersByTimeAsync(300);
+    document.documentElement.dataset.gvScheme = 'dark';
+    expect(window.getComputedStyle(container).boxShadow).toBe('0 4px 12px rgba(0, 0, 0, 0.3)');
+    document.documentElement.dataset.gvScheme = 'light';
+    expect(window.getComputedStyle(container).boxShadow).toBe('0 2px 8px rgba(0, 0, 0, 0.08)');
+    delete document.documentElement.dataset.gvScheme;
+  });
+
   describe('Default behavior (collapse only when empty)', () => {
     beforeEach(async () => {
       await start();

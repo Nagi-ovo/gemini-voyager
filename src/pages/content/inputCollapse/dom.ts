@@ -142,24 +142,13 @@ export function injectStyles() {
       pointer-events: none;
     }
 
-    /* Dark mode adjustments */
-    @media (prefers-color-scheme: dark) {
-      .${COLLAPSED_CLASS} {
-        background-color: var(--gm3-sys-color-surface-container-high, #2b2b2b) !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-      }
-      .${COLLAPSED_CLASS} > .${PLACEHOLDER_CLASS} {
-        color: var(--gm3-sys-color-on-surface, #e8eaed);
-      }
+    /* Gemini's page scheme can differ from the system preference. */
+    html[data-gv-scheme="dark"] .${COLLAPSED_CLASS} {
+      background-color: var(--gm3-sys-color-surface-container-high, #2b2b2b) !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
     }
-
-    body[data-theme="dark"] .${COLLAPSED_CLASS},
-    body.dark-theme .${COLLAPSED_CLASS} {
-        background-color: #2b2b2b !important;
-    }
-    body[data-theme="dark"] .${COLLAPSED_CLASS} > .${PLACEHOLDER_CLASS},
-    body.dark-theme .${COLLAPSED_CLASS} > .${PLACEHOLDER_CLASS} {
-        color: #e8eaed;
+    html[data-gv-scheme="dark"] .${COLLAPSED_CLASS} > .${PLACEHOLDER_CLASS} {
+      color: var(--gm3-sys-color-on-surface, #e8eaed);
     }
   `;
   document.head.appendChild(style);

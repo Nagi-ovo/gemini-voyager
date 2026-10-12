@@ -614,3 +614,7 @@ Jesse 在 Chrome 中用验收副本实测：dark 主题，只用已有对话，�
 4D-2 将 cleanup enum 全量名字快照（纯接线变更探测）移除；cleanup 顺序算法原行为覆盖保留，新增真实 input→页面 flush→PluginHost teardown→pagehide 数据断言，直接守住卸载前的最后输入。草稿关闭立即 abort 手工发送监听，避免异步 scope 清理间隙误删已存草稿。
 
 4D-2 验证：T6 和账号/首发/迟到恢复/卸载/off 行为覆盖通过；去掉 revision、身份、发送证据、IME/换行、上传 guard、编辑排除、卸载登记或即时 abort，对应回归均失败。legacy 34 条与新 shared Gemini 24 条通过；跨账号导航 flush 捕获的源 key，导航后 empty input 保留源 tail 和目标草稿。完整 verify:pr 通过（10314 tests / 842 files，三浏览器构建、CLI、docs）。Chrome 实机：草稿刷新恢复、首发 DRAFT_FIRST_OK 创建 `/app/<id>` 后返回 `/app` 不再恢复已发草稿；另一登录账号 `/u/1/app` 卸载前最后输入恢复，主账号新对话仍空。截图 `s4d2-first-send-proof.png`、`s4d2-slot1-draft-proof.png` 保存；测试 key、开关、页面已恢复。
+
+**4F-3 折叠胶囊主题**：暗色样式改跟随 `html[data-gv-scheme]`，移除系统 media query 和独立 body 主题旁路。页面主题可与 macOS 系统不同，切换页面主题后同一胶囊直接更新，无需重启插件；保留原尺寸与配色。
+
+4F-3 验证：同一已折叠节点切换页面 dark/light 的计算样式回归通过，恢复旧 CSS 后该回归失败；完整 verify:pr 通过（10315 tests / 842 files）。Chrome 实测延至最终验收：用户正在使用窗口，扩展 reload 被切换打断；直接打开扩展设置页被工具的 URL 策略拒绝，未绕过该限制。
