@@ -41,7 +41,7 @@ const LIST_ID = 'gv-pm-slash-list';
 const GHOST_ID = 'gv-pm-slash-ghost';
 
 const SEND_COMPOSER_SELECTOR =
-  'form, .text-input-field, .input-area, ms-prompt-input-wrapper, chat-message';
+  'form, .text-input-field, .input-area, ms-prompt-box, ms-prompt-input-wrapper, chat-message';
 
 export interface SlashPromptController {
   destroy: () => void;
@@ -52,6 +52,12 @@ interface SlashPromptOptions {
   scheme: () => PromptScheme;
   initialItems?: PromptItem[];
   initialCtrlEnterSend?: boolean;
+  initialAIStudioEnterSend?: boolean;
+  initialAIStudioEnabled?: boolean;
+}
+
+function isAIStudioHost(): boolean {
+  return location.hostname === 'aistudio.google.com' || location.hostname === 'aistudio.google.cn';
 }
 
 function ghostElement(): HTMLElement {
@@ -130,9 +136,14 @@ export function startPromptSlashCommand(options: SlashPromptOptions): SlashPromp
   let selectedIndex = 0;
   let results: PromptItem[] = [];
   let ctrlEnterSendEnabled = options.initialCtrlEnterSend === true;
-  const effectiveSendKey = followGeminiSendKey((key) => {
-    ctrlEnterSendEnabled = key === 'ctrlEnter';
-  });
+  const aiStudio = isAIStudioHost();
+  let aiStudioEnterSendEnabled = options.initialAIStudioEnterSend === true;
+  let aiStudioEnabled = options.initialAIStudioEnabled !== false;
+  const effectiveSendKey = aiStudio
+    ? null
+    : followGeminiSendKey((key) => {
+        ctrlEnterSendEnabled = key === 'ctrlEnter';
+      });
   const { scheme } = options;
   const slashRefreshSuppressedInputs = new WeakSet<HTMLElement>();
 
@@ -444,7 +455,16 @@ export function startPromptSlashCommand(options: SlashPromptOptions): SlashPromp
       return;
     }
 
-    if (isSendKeyboardEvent(event, ctrlEnterSendEnabled ? 'ctrlEnter' : 'host')) {
+    // AI Studio's Enter-send switch reverses its native Ctrl/Cmd+Enter chord.
+    const sends = aiStudio
+      ? event.key === 'Enter' &&
+        !event.shiftKey &&
+        !event.altKey &&
+        (aiStudioEnabled && aiStudioEnterSendEnabled
+          ? !event.ctrlKey && !event.metaKey
+          : event.ctrlKey || event.metaKey)
+      : isSendKeyboardEvent(event, ctrlEnterSendEnabled ? 'ctrlEnter' : 'host');
+    if (sends) {
       if (!placements.has(input)) return;
       event.preventDefault();
       event.stopPropagation();
@@ -528,9 +548,15 @@ export function startPromptSlashCommand(options: SlashPromptOptions): SlashPromp
     changes: Record<string, chrome.storage.StorageChange>,
     area: string,
   ): void {
-    if (area === 'sync' && changes[StorageKeys.CTRL_ENTER_SEND]) {
-      // AI Studio retains its old Gemini-switch fallback until its separate migration.
-      if (!effectiveSendKey.isFollowing()) {
+    if (area === 'sync') {
+      if (aiStudio) {
+        if (changes[StorageKeys.AISTUDIO_ENTER_SEND]) {
+          aiStudioEnterSendEnabled = changes[StorageKeys.AISTUDIO_ENTER_SEND].newValue === true;
+        }
+        if (changes[StorageKeys.GV_AISTUDIO_ENABLED]) {
+          aiStudioEnabled = changes[StorageKeys.GV_AISTUDIO_ENABLED].newValue !== false;
+        }
+      } else if (changes[StorageKeys.CTRL_ENTER_SEND] && !effectiveSendKey?.isFollowing()) {
         ctrlEnterSendEnabled = changes[StorageKeys.CTRL_ENTER_SEND].newValue === true;
       }
       return;
@@ -558,7 +584,7 @@ export function startPromptSlashCommand(options: SlashPromptOptions): SlashPromp
 
   return {
     destroy: () => {
-      effectiveSendKey.stop();
+      effectiveSendKey?.stop();
       templateFill?.close();
       templateFill = null;
       document.removeEventListener('input', onInput, true);
@@ -585,15 +611,40 @@ export function startPromptSlashCommand(options: SlashPromptOptions): SlashPromp
 export async function startStoredPromptSlashCommand(
   scheme: () => PromptScheme,
 ): Promise<SlashPromptController> {
-  const [stored, sendMode] = await Promise.all([
-    promptStorageService.get<PromptItem[]>(StorageKeys.PROMPT_ITEMS),
-    browser.storage.sync
-      .get({ [StorageKeys.CTRL_ENTER_SEND]: false })
-      .catch(() => ({ [StorageKeys.CTRL_ENTER_SEND]: false })),
-  ]);
-  return startPromptSlashCommand({
-    scheme,
-    initialItems: stored.success && Array.isArray(stored.data) ? stored.data : [],
-    initialCtrlEnterSend: sendMode[StorageKeys.CTRL_ENTER_SEND] === true,
-  });
+  const defaults: Record<string, unknown> = isAIStudioHost()
+    ? { [StorageKeys.AISTUDIO_ENTER_SEND]: false, [StorageKeys.GV_AISTUDIO_ENABLED]: true }
+    : { [StorageKeys.CTRL_ENTER_SEND]: false };
+  const sendMode = { ...defaults };
+  const changed = new Set<string>();
+  const onModeChange = (
+    changes: Record<string, chrome.storage.StorageChange>,
+    area: string,
+  ): void => {
+    if (area !== 'sync') return;
+    for (const key of Object.keys(defaults)) {
+      if (!(key in changes)) continue;
+      changed.add(key);
+      sendMode[key] = changes[key].newValue;
+    }
+  };
+  // A popup toggle during startup is newer than the initial storage snapshot.
+  browser.storage.onChanged.addListener(onModeChange);
+  try {
+    const [stored, initialMode] = await Promise.all([
+      promptStorageService.get<PromptItem[]>(StorageKeys.PROMPT_ITEMS),
+      browser.storage.sync.get(defaults).catch(() => defaults),
+    ]);
+    for (const key of Object.keys(defaults)) {
+      if (!changed.has(key)) sendMode[key] = initialMode[key];
+    }
+    return startPromptSlashCommand({
+      scheme,
+      initialItems: stored.success && Array.isArray(stored.data) ? stored.data : [],
+      initialCtrlEnterSend: sendMode[StorageKeys.CTRL_ENTER_SEND] === true,
+      initialAIStudioEnterSend: sendMode[StorageKeys.AISTUDIO_ENTER_SEND] === true,
+      initialAIStudioEnabled: sendMode[StorageKeys.GV_AISTUDIO_ENABLED] !== false,
+    });
+  } finally {
+    browser.storage.onChanged.removeListener(onModeChange);
+  }
 }

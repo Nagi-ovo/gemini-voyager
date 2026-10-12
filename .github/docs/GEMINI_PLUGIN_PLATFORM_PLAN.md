@@ -618,3 +618,9 @@ Jesse 在 Chrome 中用验收副本实测：dark 主题，只用已有对话，�
 **4F-3 折叠胶囊主题**：暗色样式改跟随 `html[data-gv-scheme]`，移除系统 media query 和独立 body 主题旁路。页面主题可与 macOS 系统不同，切换页面主题后同一胶囊直接更新，无需重启插件；保留原尺寸与配色。
 
 4F-3 验证：同一已折叠节点切换页面 dark/light 的计算样式回归通过，恢复旧 CSS 后该回归失败；完整 verify:pr 通过（10315 tests / 842 files）。Chrome 实测延至最终验收：用户正在使用窗口，扩展 reload 被切换打断；直接打开扩展设置页被工具的 URL 策略拒绝，未绕过该限制。
+
+**Q2-e AI Studio slash 发送模式**：仅在实际 `.com` / `.cn` host 读取 `gvAIStudioEnterSend` 和 `gvAIStudioEnabled`，不再读取 Gemini 的开关；本功能关闭或总闸关闭时遵循原生 Ctrl/Cmd+Enter，开启时 Enter 发送、Ctrl/Cmd+Enter 换行。保留 Shift/Alt/IME 行为。初读期间先监听两键，实时值不被晚到快照覆盖；Run 点击经真实 `ms-prompt-box` 根关联输入框。Gemini 继续跟随协调器与 legacy fallback。
+
+Q2-e 范围说明：当前 `resolvePromptSiteAdapter` 对 AI Studio 设置 `slash: false`，生产入口不启动 slash，本批保持该产品范围；回归直接验证 slash runtime，不能声称 AI Studio 现在有 slash UI。7 条新增行为覆盖 `.com/.cn`、反向 Gemini 开关、实时总闸/功能开关、晚到初读、实际 Run；分别撤掉 own-key、master、live precedence、composer root 修复时对应测试失败。Prompt Manager 相关 411 tests / 47 files 通过。
+
+Q2-e 最终 verify:pr 通过（10322 tests / 843 files，三浏览器构建、CLI、docs）；独立于折叠主题批次提交。
