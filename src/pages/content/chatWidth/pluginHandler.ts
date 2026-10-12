@@ -15,9 +15,11 @@
  *     host derived "on" from that width; storing it keeps the popup in step);
  *   - an old px width, or one out of range, is stored as its percent.
  * Each write re-reads storage first and writes only what still needs it, so a
- * choice the popup stored meanwhile wins. Nothing is written once the plugin
- * is torn down or the extension context is gone, and the host never waits on
- * these writes.
+ * choice the popup stored meanwhile wins. A read that a newer width or switch
+ * change overtook (a host update, or this page's own storage listener) is
+ * dropped: its answer may predate that change, and only the latest read may
+ * write. Nothing is written once the plugin is torn down or the extension
+ * context is gone, and the host never waits on these writes.
  */
 import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
@@ -49,34 +51,31 @@ function widthPercentOf(settings: PluginSettings): number {
   return normalizeChatWidthPercent(settings.widthPercent);
 }
 
-function syncStorage(): chrome.storage.SyncStorageArea | undefined {
-  const g = globalThis as { chrome?: typeof chrome };
-  return g.chrome?.storage?.sync;
+function chromeStorage(): typeof chrome.storage | undefined {
+  return (globalThis as { chrome?: typeof chrome }).chrome?.storage;
 }
 
-async function normalizeStoredChatWidth(scope: PluginScope): Promise<void> {
-  const sync = syncStorage();
-  if (!sync || scope.isDisposed || !hasValidExtensionContext()) return;
-  try {
-    const stored = await sync.get<Record<string, unknown>>([
-      StorageKeys.CHAT_WIDTH,
-      StorageKeys.CHAT_WIDTH_ENABLED,
-    ]);
-    if (scope.isDisposed || !hasValidExtensionContext()) return;
-    const width = stored?.[StorageKeys.CHAT_WIDTH];
-    const writes: Record<string, unknown> = {};
-    if (stored?.[StorageKeys.CHAT_WIDTH_ENABLED] === undefined && isCustomizedChatWidth(width)) {
-      writes[StorageKeys.CHAT_WIDTH_ENABLED] = true;
-    }
-    if (typeof width === 'number' && normalizeChatWidthPercent(width) !== width) {
-      writes[StorageKeys.CHAT_WIDTH] = normalizeChatWidthPercent(width);
-    }
-    if (Object.keys(writes).length > 0) await sync.set(writes);
-  } catch (error) {
-    if (isExtensionContextInvalidatedError(error)) return;
-    logger.warn('Chat width settings could not be normalized', { error: String(error) });
+/**
+ * Rewrites what `stored` says only where it still needs normalizing; null
+ * when it needs nothing.
+ */
+function normalizationWrites(
+  stored: Record<string, unknown> | undefined,
+): Record<string, unknown> | null {
+  const width = stored?.[StorageKeys.CHAT_WIDTH];
+  const writes: Record<string, unknown> = {};
+  if (stored?.[StorageKeys.CHAT_WIDTH_ENABLED] === undefined && isCustomizedChatWidth(width)) {
+    writes[StorageKeys.CHAT_WIDTH_ENABLED] = true;
   }
+  if (typeof width === 'number' && normalizeChatWidthPercent(width) !== width) {
+    writes[StorageKeys.CHAT_WIDTH] = normalizeChatWidthPercent(width);
+  }
+  return Object.keys(writes).length > 0 ? writes : null;
 }
+
+const NORMALIZED_KEYS: readonly string[] = [StorageKeys.CHAT_WIDTH, StorageKeys.CHAT_WIDTH_ENABLED];
+
+type StorageChanges = Record<string, chrome.storage.StorageChange>;
 
 export function activateGeminiChatWidth(scope: PluginScope, settings: PluginSettings): void {
   let widthPercent = widthPercentOf(settings);
@@ -111,12 +110,39 @@ export function activateGeminiChatWidth(scope: PluginScope, settings: PluginSett
     });
   }
 
+  // Every width or switch change starts a fresh read and voids the ones still
+  // out: an old px width read before the user picked 90 % must not write 80 %.
+  let revision = 0;
+  const normalize = async (): Promise<void> => {
+    const mine = ++revision;
+    const sync = chromeStorage()?.sync;
+    if (!sync || scope.isDisposed || !hasValidExtensionContext()) return;
+    try {
+      const stored = await sync.get<Record<string, unknown>>([...NORMALIZED_KEYS]);
+      if (mine !== revision || scope.isDisposed || !hasValidExtensionContext()) return;
+      const writes = normalizationWrites(stored);
+      if (writes) await sync.set(writes);
+    } catch (error) {
+      if (isExtensionContextInvalidatedError(error)) return;
+      logger.warn('Chat width settings could not be normalized', { error: String(error) });
+    }
+  };
+
+  const onChanged = chromeStorage()?.onChanged;
+  if (onChanged) {
+    // Faster than the host's update and covers the switch, which never reaches `update`.
+    scope.onChromeEvent(onChanged, (changes: StorageChanges, areaName: string) => {
+      if (scope.isDisposed || areaName !== 'sync') return;
+      if (NORMALIZED_KEYS.some((key) => key in changes)) void normalize();
+    });
+  }
+
   const run: ChatWidthRun = {
     update(next) {
       if (scope.isDisposed) return;
       widthPercent = widthPercentOf(next);
       apply();
-      void normalizeStoredChatWidth(scope);
+      void normalize();
     },
   };
   scope.effect(() => {
@@ -126,7 +152,7 @@ export function activateGeminiChatWidth(scope: PluginScope, settings: PluginSett
     };
   }, 'chat-width:settings');
 
-  void normalizeStoredChatWidth(scope);
+  void normalize();
 }
 
 export function updateGeminiChatWidthSettings(settings: PluginSettings): void {

@@ -18,7 +18,6 @@ import {
   USER_LATEX_OWNER_ATTRIBUTE,
   createUserLatexOwner,
   hasUserLatexRendering,
-  userLatexElementsOwnedBy,
 } from '@/core/utils/userLatexSource';
 
 import type { NativeFeatureToggle } from '../featureLifecycle';
@@ -252,6 +251,44 @@ export function dropStaleUserLatex(el: HTMLElement): void {
   }
 }
 
+/**
+ * Every element one renderer has claimed, kept so its stop can put back and
+ * release even those the host detached meanwhile: a scan of the document
+ * misses them, and a detached line the host re-inserts later would otherwise
+ * keep the stopped renderer's claim and its rendering for good. Held weakly,
+ * so a line the host dropped for good is not kept alive by this list.
+ */
+export interface UserLatexClaims {
+  /** Called by {@link renderUserLatex} the moment it claims `el`. */
+  add(el: HTMLElement): void;
+  /** Forget elements that are gone or no longer held by this owner. */
+  prune(): void;
+  /** Put back and release every element this owner still holds, attached or not. */
+  restoreAll(): void;
+}
+
+export function createUserLatexClaims(owner: string): UserLatexClaims {
+  const claimed = new Set<WeakRef<HTMLElement>>();
+  return {
+    add(el) {
+      claimed.add(new WeakRef(el));
+    },
+    prune() {
+      for (const ref of claimed) {
+        const el = ref.deref();
+        if (!el || el.getAttribute(USER_LATEX_OWNER_ATTRIBUTE) !== owner) claimed.delete(ref);
+      }
+    },
+    restoreAll() {
+      for (const ref of claimed) {
+        const el = ref.deref();
+        if (el) restoreUserLatex(el, owner);
+      }
+      claimed.clear();
+    },
+  };
+}
+
 export interface UserLatexRenderOptions {
   /** The renderer's token (`createUserLatexOwner`); an element another token holds is left alone. */
   readonly owner: string;
@@ -259,6 +296,8 @@ export interface UserLatexRenderOptions {
   readonly signal?: AbortSignal;
   /** Asked after KaTeX loads; false lets the element go untouched. */
   readonly canReplace?: () => boolean;
+  /** Told of the claim, so the renderer's stop reaches the element even once it is detached. */
+  readonly claims?: UserLatexClaims;
 }
 
 /**
@@ -269,7 +308,7 @@ export interface UserLatexRenderOptions {
  */
 export async function renderUserLatex(
   el: HTMLElement,
-  { owner, signal, canReplace }: UserLatexRenderOptions,
+  { owner, signal, canReplace, claims }: UserLatexRenderOptions,
 ): Promise<void> {
   // An edited message repainted over the same element would otherwise keep its old source forever.
   dropStaleUserLatex(el);
@@ -283,6 +322,7 @@ export async function renderUserLatex(
   // takes a line this one will put back.
   el.setAttribute(USER_LATEX_OWNER_ATTRIBUTE, owner);
   el.dataset.userLatexProcessed = '1';
+  claims?.add(el);
 
   // Quick exit: no $ means no LaTeX
   if (!raw.includes('$')) return;
@@ -344,11 +384,6 @@ export function restoreUserLatex(el: HTMLElement, owner: string): void {
   clearUserLatex(el);
 }
 
-/** Undo every rendering `owner` holds under `root`, and nobody else's. */
-export function restoreUserLatexOwnedBy(root: ParentNode, owner: string): void {
-  userLatexElementsOwnedBy(root, owner).forEach((el) => restoreUserLatex(el, owner));
-}
-
 /** Gemini's switch: on unless the user turned it off. */
 export function isUserLatexEnabledValue(value: unknown): boolean {
   return value !== false;
@@ -372,14 +407,17 @@ export function stopUserLatex(): void {
  * Start rendering LaTeX in Gemini's user messages: messages already on the
  * page now, later ones once the page settles. The returned stop (idempotent)
  * disconnects the observer, cancels renders still waiting for KaTeX and puts
- * back only the lines this run rendered.
+ * back only the lines this run claimed, detached ones included.
  */
 export function startUserLatex(): () => void {
   stopUserLatex();
   const owner = createUserLatexOwner('native');
+  const loading = new AbortController();
+  const claims = createUserLatexClaims(owner);
   const processAll = (): void => {
+    claims.prune();
     document.querySelectorAll<HTMLElement>(USER_MSG_SELECTOR).forEach((el) => {
-      void renderUserLatex(el, { owner });
+      void renderUserLatex(el, { owner, signal: loading.signal, claims });
     });
   };
 
@@ -401,8 +439,10 @@ export function startUserLatex(): () => void {
     observer.disconnect();
     if (debounceTimer !== null) clearTimeout(debounceTimer);
     debounceTimer = null;
-    // A render still waiting for KaTeX finds its claim gone and leaves the line alone.
-    restoreUserLatexOwnedBy(document, owner);
+    // Renders still waiting for KaTeX give up first, then every claimed line goes
+    // back: a document scan would miss a line the host detached while it was ours.
+    loading.abort();
+    claims.restoreAll();
   };
   stopRunning = stop;
   return stop;

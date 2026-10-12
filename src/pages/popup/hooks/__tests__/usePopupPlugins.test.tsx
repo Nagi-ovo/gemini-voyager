@@ -274,7 +274,7 @@ describe('usePopupPlugins', () => {
     expect(storageListeners.size).toBe(0);
   });
 
-  it('reports effective settings for bound official plugins in popup diagnostics', async () => {
+  it('reports bound official plugins in popup diagnostics with their legacy values, labelled storage-derived', async () => {
     const formulaId = OFFICIAL_PLUGIN_IDS.geminiFormulaCopy;
     const localId = 'local.me.tweak';
     vi.mocked(chrome.storage.sync.get).mockResolvedValue({} as never);
@@ -290,9 +290,11 @@ describe('usePopupPlugins', () => {
 
     await render();
     expect(plugins.diagnosticPlugins).toEqual([
-      expect.objectContaining({ id: formulaId, settings: {} }),
+      expect.objectContaining({ id: formulaId, settings: {}, basis: 'storage-derived' }),
       expect.objectContaining({ id: localId, settings: { width: 3 } }),
     ]);
+    // A plugin's own state is what its page runs: nothing derived to label.
+    expect(plugins.diagnosticPlugins[1]).not.toHaveProperty('basis');
     unmount();
   });
 

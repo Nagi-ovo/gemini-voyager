@@ -23,6 +23,8 @@ import { createGeminiRendererStartup, readNativeToggle } from '../rendererStartu
 const native = vi.hoisted(() => ({
   starts: {} as Record<string, number>,
   live: {} as Record<string, number>,
+  /** When set, code block collapse starts only once it resolves. */
+  heldStart: null as Promise<void> | null,
 }));
 
 function counter(name: string): () => () => void {
@@ -40,7 +42,10 @@ function counter(name: string): () => () => void {
 
 vi.mock('../codeBlockCollapse', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../codeBlockCollapse')>()),
-  startCodeBlockCollapse: () => counter('codeCollapse')(),
+  startCodeBlockCollapse: () =>
+    native.heldStart
+      ? native.heldStart.then(() => counter('codeCollapse')())
+      : counter('codeCollapse')(),
 }));
 vi.mock('../userLatex/index', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../userLatex/index')>()),
@@ -86,6 +91,7 @@ async function flush(): Promise<void> {
 beforeEach(() => {
   native.starts = {};
   native.live = {};
+  native.heldStart = null;
   storedSwitches({});
 });
 
@@ -175,6 +181,53 @@ describe('Gemini renderer start points while the native modules own them', () =>
     await flush();
 
     expect(native.starts.codeCollapse).toBeUndefined();
+  });
+
+  it('mounts nothing after page teardown when the startup read was still out, and starts no later switch', async () => {
+    let answerRead: (stored: Record<string, unknown>) => void = () => {};
+    syncGet().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          answerRead = resolve;
+        }),
+    );
+    const cleanups = new CleanupManager();
+    const startup = createGeminiRendererStartup(createOfficialAdmission(), cleanups);
+    const starting = startup.startCodeBlockCollapse();
+    await flush();
+
+    cleanups.executeCleanups();
+    answerRead({ [COLLAPSE_KEY]: true });
+    await starting;
+    await flush();
+    expect(native.starts.codeCollapse).toBeUndefined();
+
+    // The rest of initialization runs on after teardown: user LaTeX stays off too.
+    storedSwitches({});
+    await startup.startRenderers();
+    startup.handleStorageChange({ [COLLAPSE_KEY]: { newValue: true } }, 'sync');
+    await flush();
+    expect(native.starts.userLatex).toBeUndefined();
+    expect(native.starts.codeCollapse).toBeUndefined();
+    expect(cleanups.list()).toEqual([]);
+  });
+
+  it('stops a native start that was still running when the page tore down', async () => {
+    let finishStart: () => void = () => {};
+    native.heldStart = new Promise((resolve) => (finishStart = resolve));
+    const cleanups = new CleanupManager();
+    const startup = createGeminiRendererStartup(createOfficialAdmission(), cleanups);
+    const starting = startup.startCodeBlockCollapse();
+    await flush();
+
+    cleanups.executeCleanups();
+    finishStart();
+    await starting;
+    await flush();
+
+    expect(native.starts.codeCollapse).toBe(1);
+    expect(native.live.codeCollapse).toBe(0);
+    expect(cleanups.list()).toEqual([]);
   });
 
   it('mounts nothing when the extension context died during the startup read', async () => {

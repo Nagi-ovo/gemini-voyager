@@ -14,13 +14,13 @@
  * Every activation claims what it renders under its own owner token, so two
  * activations (an official and a local plugin, or a plugin and the native
  * module) never render or restore each other's lines: unmount puts back only
- * what this activation rendered.
+ * what this activation claimed, including lines the host detached meanwhile.
  */
 import { createUserLatexOwner } from '@/core/utils/userLatexSource';
 import {
+  createUserLatexClaims,
   dropStaleUserLatex,
   renderUserLatex,
-  restoreUserLatexOwnedBy,
 } from '@/pages/content/userLatex';
 
 import type { ManifestIssue } from '../../manifest/validate';
@@ -101,6 +101,7 @@ export const userLatexPrimitive: Primitive<UserLatexParams> = {
     const { doc } = context;
     const wholeTurn = params.unit === 'turn';
     const owner = createUserLatexOwner(context.pluginId);
+    const claims = createUserLatexClaims(owner);
     context.setTargetCounter(() => querySafe(doc, turn).length);
 
     const skipped = (element: HTMLElement, message: Element): boolean => {
@@ -129,9 +130,15 @@ export const userLatexPrimitive: Primitive<UserLatexParams> = {
       // Eligibility again once KaTeX has loaded: the element may have become an editor meanwhile.
       const stillEligible = (): boolean =>
         message.contains(element) && element.isConnected && renderable(element, message);
-      void renderUserLatex(element, { owner, signal: scope.signal, canReplace: stillEligible });
+      void renderUserLatex(element, {
+        owner,
+        signal: scope.signal,
+        canReplace: stillEligible,
+        claims,
+      });
     };
     const renderAll = (): void => {
+      claims.prune();
       for (const message of querySafe(doc, turn)) {
         if (wholeTurn) {
           if (message instanceof HTMLElement) render(message, message);
@@ -143,8 +150,9 @@ export const userLatexPrimitive: Primitive<UserLatexParams> = {
       }
     };
 
-    // Registered first so it runs last: the observer is gone before text goes back.
-    scope.effect(() => () => restoreUserLatexOwnedBy(doc, owner), 'user-latex:restore');
+    // Registered first so it runs last: the observer is gone and scope.signal has
+    // cancelled pending renders before text goes back, detached lines included.
+    scope.effect(() => () => claims.restoreAll(), 'user-latex:restore');
     let rescan: Dispose | null = null;
     scope.observe(doc.body, { childList: true, subtree: true }, () => {
       if (scope.isDisposed) return;

@@ -170,4 +170,40 @@ describe('Gemini user LaTeX lifecycle', () => {
     expect(line.getAttribute(OWNER)).toBe(other);
     expect(renderToString).toHaveBeenCalledTimes(1);
   });
+
+  it('renders nothing into a line Gemini detached while KaTeX loaded once user LaTeX stopped', async () => {
+    const line = userLine('detached $x$');
+    const loading = holdKatex();
+    const stop = startUserLatex();
+    expect(line.hasAttribute(OWNER)).toBe(true);
+
+    line.remove();
+    stop();
+    loading.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(rendered(line)).toBe(false);
+    expect(line.textContent).toBe('detached $x$');
+    expect(line.hasAttribute(OWNER)).toBe(false);
+    expect(line.dataset.userLatexProcessed).toBeUndefined();
+  });
+
+  it('lets the next user LaTeX run render a line Gemini detached and re-inserted around a stop', async () => {
+    const line = userLine('moved $y$');
+    const stopFirst = startUserLatex();
+    await vi.waitFor(() => expect(rendered(line)).toBe(true));
+    const first = line.getAttribute(OWNER);
+
+    line.remove();
+    stopFirst();
+    // Put back as text while detached, so it is plain when Gemini re-inserts it.
+    expect(line.textContent).toBe('moved $y$');
+    expect(line.hasAttribute(OWNER)).toBe(false);
+    document.body.append(line);
+
+    startUserLatex();
+    await vi.waitFor(() => expect(rendered(line)).toBe(true));
+    expect(line.getAttribute(OWNER)).not.toBe(first);
+    expect(line.querySelectorAll('.katex')).toHaveLength(1);
+  });
 });

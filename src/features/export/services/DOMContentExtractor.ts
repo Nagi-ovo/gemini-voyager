@@ -10,6 +10,7 @@ import {
   findExportCodeBlocks,
   extractExportCodeBlock,
   extractCodeFromCodeElement,
+  readDrawnDiagramBlock,
 } from './exportCodeBlocks';
 import type { ExportContentDialect, ExtractedContentFlags } from './exportContentDialect';
 import {
@@ -300,6 +301,22 @@ export function createContentExtractor(dialect: ExportContentDialect): ContentEx
         if (content?.text) {
           flags.hasCode = true;
           textParts.push(`\n${content.text}\n`);
+        }
+        continue;
+      }
+
+      // A diagram plugin's drawn block (ChatGPT's `pre`, say): the host adapter below
+      // only reads its source, so the drawing comes first; without one, the source.
+      const drawn = readDrawnDiagramBlock(child);
+      if (drawn) {
+        htmlParts.push(drawn.html);
+        if (drawn.text) {
+          flags.hasCode = true;
+          textParts.push(`\n${drawn.text}\n`);
+        }
+        // Or the raw-code pass after the walk would add the source a second time.
+        for (const code of Array.from(child.querySelectorAll('code'))) {
+          (code as Element & { processedByGV?: boolean }).processedByGV = true;
         }
         continue;
       }

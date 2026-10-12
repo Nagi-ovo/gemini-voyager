@@ -34,6 +34,15 @@ export type DiagnosticSite =
   | 'qwen'
   | 'unknown';
 
+/**
+ * `enabled` and `settings` were derived in the popup from stored values, not
+ * read from the page. Set on official plugins bound to legacy keys: the page
+ * may run otherwise (it keeps the last number when a value is removed, and its
+ * chat-width switch follows that page's own history of live changes), and the
+ * page reports no effective state the popup could read instead.
+ */
+export const STORAGE_DERIVED_BASIS = 'storage-derived';
+
 export interface DiagnosticPluginInput {
   enabled: boolean;
   id: string;
@@ -41,6 +50,8 @@ export interface DiagnosticPluginInput {
   version: string;
   settings?: PluginSettings;
   settingsSchema?: SettingsSchema;
+  /** See {@link STORAGE_DERIVED_BASIS}; absent when the values are the plugin's own state. */
+  basis?: typeof STORAGE_DERIVED_BASIS;
 }
 
 export interface DiagnosticPlugin {
@@ -49,6 +60,7 @@ export interface DiagnosticPlugin {
   source: DiagnosticPluginSource;
   version: string;
   settings: Record<string, PluginSettingValue | '<redacted>'>;
+  basis?: typeof STORAGE_DERIVED_BASIS;
 }
 
 /** One Gemini anchor the active page could not find; see `core/gemini/nativeHealth.ts`. */
@@ -200,6 +212,7 @@ function summarizePlugins(
         source: diagnosticPluginSourceFromId(plugin.source),
         enabled: plugin.enabled,
         settings,
+        ...(plugin.basis === STORAGE_DERIVED_BASIS ? { basis: STORAGE_DERIVED_BASIS } : {}),
       },
     ];
   });

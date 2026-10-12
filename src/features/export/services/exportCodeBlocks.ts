@@ -196,15 +196,22 @@ export function extractCodeFromCodeElement(codeEl: HTMLElement): { html: string;
   };
 }
 
+/**
+ * The drawing a diagram plugin registered for a live code block, on any host,
+ * or null when `element` is no such block or its drawing cannot be read now
+ * (then the block exports its source).
+ */
+export function readDrawnDiagramBlock(element: Element): { html: string; text: string } | null {
+  return element.hasAttribute(DIAGRAM_OWNER_ATTR) ? readDiagramExport(element) : null;
+}
+
 export function extractExportCodeBlock(
   element: HTMLElement,
 ): { html: string; text: string } | null {
   if (element.matches(MERMAID_WRAPPER_SELECTOR)) return extractMermaidContent(element);
   if (element.matches(WAVEDROM_WRAPPER_SELECTOR)) return extractWavedromContent(element);
   if (element.matches(ECHARTS_WRAPPER_SELECTOR)) return extractEchartsContent(element);
-  // A diagram plugin's block: its drawing when it can be read now, else the source below.
-  const drawn = element.hasAttribute(DIAGRAM_OWNER_ATTR) ? readDiagramExport(element) : null;
-  return drawn ?? extractCodeBlock(element);
+  return readDrawnDiagramBlock(element) ?? extractCodeBlock(element);
 }
 
 /** Puts `html`'s first element in place of `element`, if it has one. */

@@ -4,6 +4,7 @@ import browser from 'webextension-polyfill';
 
 import {
   type DiagnosticPluginInput,
+  STORAGE_DERIVED_BASIS,
   diagnosticPluginSourceFromId,
 } from '@/core/services/DiagnosticsExportService';
 import { subscribeLocalPlugins } from '@/features/plugins/local/localPluginStore';
@@ -88,16 +89,22 @@ export function usePopupPlugins({
   );
   const diagnosticPlugins = useMemo<readonly DiagnosticPluginInput[]>(
     () =>
-      pluginManifests.map((plugin) => {
+      pluginManifests.map((plugin): DiagnosticPluginInput => {
         const state = pluginState[plugin.id];
+        // A bound official plugin runs on its legacy values, not on its plugin-state entry.
+        // The popup derives them from storage alone: the page's own history (a value
+        // removed live keeps its last number there, a live chat-width change stops the
+        // switch derivation) is not visible here, and the page reports no effective
+        // values, so these are labelled storage-derived rather than passed off as the page's.
+        const bound = legacyBoundSettings(plugin.id, legacySettings);
         return {
           id: plugin.id,
           version: plugin.version,
           source: diagnosticPluginSourceFromId(pluginSourceIds[plugin.id]),
           enabled: resolveEffectiveEnabled(pluginState, legacySettings, plugin.id),
           settingsSchema: plugin.contributes.settings,
-          // A bound official plugin runs on its legacy values, not on its plugin-state entry.
-          settings: legacyBoundSettings(plugin.id, legacySettings) ?? state?.settings,
+          settings: bound ?? state?.settings,
+          ...(bound ? { basis: STORAGE_DERIVED_BASIS } : {}),
         };
       }),
     [legacySettings, pluginManifests, pluginSourceIds, pluginState],

@@ -7,10 +7,13 @@
  * module owns them it follows that switch live: the controller listens before
  * the startup read, so a flip that lands during the read wins. Once the plugin
  * owns them, PluginHost follows the same key instead and nothing here listens.
+ * Page teardown destroys every controller and creates no more, so a startup
+ * read or start that settles after teardown mounts nothing.
  *
  * The diagram renderers have no stop yet; their switches are read by the
  * modules themselves, as before.
  */
+import { CleanupPositions } from '@/core/types/cleanupPositions';
 import type { CleanupManager } from '@/core/utils/cleanupManager';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import type { OfficialAdmissionController } from '@/features/plugins/runtime/officialAdmission';
@@ -64,6 +67,13 @@ export function createGeminiRendererStartup(
   ownerOf: OwnerOf = featureOwner,
 ): GeminiRendererStartup {
   const toggles: NativeFeatureToggleController[] = [];
+  let stopped = false;
+  // A mounted feature's own stop sits at its cleanup position; this only keeps a
+  // late startup read or start from mounting after teardown ran.
+  cleanupManager.registerCleanupFunction(() => {
+    stopped = true;
+    for (const toggle of toggles.splice(0)) toggle.destroy();
+  }, CleanupPositions.CleanupRendererStartup);
 
   const startToggled = (feature: OwnedFeatureId, native: ToggledNativeFeature): Promise<void> =>
     startOwnedFeature(
@@ -71,6 +81,7 @@ export function createGeminiRendererStartup(
       'gemini',
       feature,
       async () => {
+        if (stopped) return;
         const toggle = createNativeFeatureToggle(cleanupManager, native);
         toggles.push(toggle);
         await toggle.applyInitial(await readNativeToggle(native.toggle));

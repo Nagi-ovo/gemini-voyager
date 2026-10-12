@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { elementValue } from '@/tests/pseudoElementPaint';
 
 import { nativeHealthReporter } from '../../nativeHealth';
 import { activateGeminiChatWidth, updateGeminiChatWidthSettings } from '../pluginHandler';
@@ -28,6 +29,28 @@ function fakeSync(initial: Record<string, unknown>) {
     Object.assign(stored, items);
   }) as never);
   return stored;
+}
+
+/** Sync reads that wait until the test answers them, in any order. */
+function heldSyncReads() {
+  const answers: Array<(value: Record<string, unknown>) => void> = [];
+  vi.mocked(chrome.storage.sync.get).mockImplementation(
+    (() => new Promise((resolve) => answers.push(resolve))) as never,
+  );
+  return {
+    pending: () => answers.length,
+    async answer(index: number, value: Record<string, unknown>): Promise<void> {
+      answers[index](value);
+      await settle();
+    },
+  };
+}
+
+/** A `chrome.storage.onChanged` event, delivered to whatever the page registered. */
+function storageChange(changes: Record<string, { newValue?: unknown }>, area: string): void {
+  for (const [listener] of vi.mocked(chrome.storage.onChanged.addListener).mock.calls) {
+    (listener as (changes: unknown, area: string) => void)(changes, area);
+  }
 }
 
 async function settle(): Promise<void> {
@@ -60,6 +83,7 @@ afterEach(async () => {
   await scope.dispose();
   vi.mocked(chrome.storage.sync.get).mockReset();
   vi.mocked(chrome.storage.sync.set).mockReset();
+  vi.mocked(chrome.storage.onChanged.addListener).mockClear();
   vi.restoreAllMocks();
   vi.useRealTimers();
   history.replaceState(null, '', '/');
@@ -128,22 +152,32 @@ describe('Gemini chat width plugin handler', () => {
     ).toEqual(['chat-window-input-container']);
   });
 
-  it('keeps the edit-input width rule winning over the chat width overlay rule', async () => {
-    activateGeminiChatWidth(scope, { widthPercent: 85 });
-    const overlay = styleText()
-      .match(/(input-container file-drop-indicator[^{]+)\{/)?.[1]
-      ?.trim();
+  it('keeps the edit-input width winning on the file-drop overlay whichever stylesheet comes last', async () => {
+    document.body.innerHTML = `
+      <main><input-container><file-drop-indicator>
+        <div class="overlay-container" data-filedrop-id="chat-window-input-container"></div>
+      </file-drop-indicator></input-container></main>`;
+    const overlay = document.querySelector('.overlay-container')!;
     vi.mocked(chrome.storage.sync.get).mockImplementation(((
       _keys: unknown,
       callback: (value: Record<string, unknown>) => void,
     ) => callback({ geminiEditInputWidth: 80, gvEditInputWidthEnabled: true })) as never);
     const { startEditInputWidthAdjuster } = await import('../../editInputWidth');
     startEditInputWidthAdjuster();
-    const editInput = document.getElementById('gemini-voyager-edit-input-width')?.textContent;
+    const editInput = document.getElementById('gemini-voyager-edit-input-width')!;
+    const editInputWidth = elementValue(overlay, 'max-width');
+    expect(editInputWidth).not.toBeNull();
+
+    // The chat width sheet after the edit-input one: source order alone would let it win.
+    activateGeminiChatWidth(scope, { widthPercent: 85 });
+    const chatWidth = document.getElementById(STYLE_ID)!;
+    expect(chatWidth.compareDocumentPosition(editInput)).toBe(Node.DOCUMENT_POSITION_PRECEDING);
+    expect(elementValue(overlay, 'max-width')).toBe(editInputWidth);
+
+    // Alone, the chat width rule does size the overlay.
+    editInput.remove();
+    expect(elementValue(overlay, 'max-width')).toBe(`${px(85)}px`);
     window.dispatchEvent(new Event('beforeunload'));
-    // Both are !important: the `html body` prefix is what makes the edit-input rule win.
-    expect(overlay).toBeDefined();
-    expect(editInput).toContain(`html body ${overlay} {`);
   });
 
   it('re-applies after Gemini re-renders and keeps nothing alive after teardown', async () => {
@@ -176,15 +210,36 @@ describe('Gemini chat width plugin handler', () => {
     updateGeminiChatWidthSettings({ widthPercent: 80 });
     await settle();
     expect(chrome.storage.sync.set).toHaveBeenCalledTimes(1);
-    await scope.dispose();
+  });
 
-    // The popup turned the switch off before this page's write: it stays off.
-    scope = new PluginScope();
-    vi.mocked(chrome.storage.sync.set).mockClear();
-    const chosen = fakeSync({ [WIDTH]: 85, [SWITCH]: false });
+  it('drops a normalization read that the slider overtook instead of writing the old width over the new one', async () => {
+    const reads = heldSyncReads();
+    activateGeminiChatWidth(scope, { widthPercent: 80 });
+    // The page's first read is out when the user drags the slider to 90 %.
+    expect(reads.pending()).toBe(1);
+    updateGeminiChatWidthSettings({ widthPercent: 90 });
+    expect(reads.pending()).toBe(2);
+
+    // The first read answers from before the slider moved: an old 960 px width, no switch.
+    await reads.answer(0, { [WIDTH]: 960 });
+    expect(chrome.storage.sync.set).not.toHaveBeenCalled();
+
+    await reads.answer(1, { [WIDTH]: 90, [SWITCH]: true });
+    expect(chrome.storage.sync.set).not.toHaveBeenCalled();
+  });
+
+  it('drops a normalization read that a switch change overtook instead of turning the switch back on', async () => {
+    const reads = heldSyncReads();
     activateGeminiChatWidth(scope, { widthPercent: 85 });
-    await settle();
-    expect(chosen[SWITCH]).toBe(false);
+    expect(reads.pending()).toBe(1);
+
+    // The popup stores the switch off while the read is out; the plugin is still running.
+    storageChange({ [SWITCH]: { newValue: false } }, 'sync');
+
+    // The first read answers from before the switch was stored.
+    await reads.answer(0, { [WIDTH]: 85 });
+    expect(chrome.storage.sync.set).not.toHaveBeenCalled();
+    if (reads.pending() > 1) await reads.answer(1, { [WIDTH]: 85, [SWITCH]: false });
     expect(chrome.storage.sync.set).not.toHaveBeenCalled();
   });
 

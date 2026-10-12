@@ -378,8 +378,13 @@ export function activateCodeBlockDiagram(
         if (ready !== prepared) {
           panel.source = null;
           scheduleScan();
-        } else if (params.exportImage === true) {
-          panel.withdraw = provideDiagramExport(block, () => exportOf(block, panel));
+        } else {
+          if (params.exportImage === true) {
+            panel.withdraw = provideDiagramExport(block, () => exportOf(block, panel));
+          }
+          // The reply streamed on while this drew, and the scans its edits asked for
+          // skipped the block mid-draw: one more scan draws the current source.
+          if (readCodeBlock(block, params).source !== source) scheduleScan();
         }
       } else {
         cleanup?.();

@@ -116,6 +116,40 @@ describe('DiagnosticsExportService', () => {
     expect(serializeVoyagerDiagnostics(payload)).not.toContain('private-conversation-id');
   });
 
+  it('labels plugin values the popup derived from storage, and only those', () => {
+    const payload = buildVoyagerDiagnostics({
+      activeUrl: 'https://gemini.google.com/app',
+      extensionVersion: '1.6.0',
+      plugins: [
+        {
+          id: 'voyager.gemini-chat-font-size',
+          version: '1.0.0',
+          source: 'bundled-catalog',
+          enabled: true,
+          settingsSchema: { fontSize: { type: 'number', label: 'Size', default: 100 } },
+          settings: { fontSize: 120 },
+          basis: 'storage-derived',
+        },
+        { id: 'local.me.tweak', version: '1.0.0', source: 'local', enabled: true },
+        // Anything else a caller passes is no label the payload carries.
+        {
+          id: 'local.me.other',
+          version: '1.0.0',
+          source: 'local',
+          enabled: true,
+          basis: 'page' as never,
+        },
+      ],
+    });
+
+    expect(payload.plugins.items.map((plugin) => [plugin.id, plugin.basis])).toEqual([
+      ['local.me.other', undefined],
+      ['local.me.tweak', undefined],
+      ['voyager.gemini-chat-font-size', 'storage-derived'],
+    ]);
+    expect(serializeVoyagerDiagnostics(payload)).toContain('"basis": "storage-derived"');
+  });
+
   it('includes Gemini health entries as closed identifiers only', () => {
     const payload = buildVoyagerDiagnostics({
       activeUrl: 'https://gemini.google.com/u/1/app/private-conversation-id',

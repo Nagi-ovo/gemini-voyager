@@ -335,6 +335,42 @@ describe('userLatex on Gemini', () => {
     expect(linesOf(message).every((line) => line.attributes.length === 1)).toBe(true);
   });
 
+  it('renders nothing into a line Gemini detached while KaTeX loaded once the plugin turned off', async () => {
+    const [line] = linesOf(geminiMessage('detached $x$'));
+    const release = holdKatex();
+    activate(gemini, params);
+    expect(line.hasAttribute('data-user-latex-owner')).toBe(true);
+
+    line.remove();
+    await scope.dispose();
+    release();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(rendered(line)).toHaveLength(0);
+    expect(line.textContent).toBe('detached $x$');
+    expect(line.attributes).toHaveLength(1);
+  });
+
+  it('lets the next activation render a line Gemini detached and re-inserted around a turn-off', async () => {
+    const message = geminiMessage('moved $y$');
+    const [line] = linesOf(message);
+    const text = line.parentElement!;
+    activate(gemini, params);
+    await vi.waitFor(() => expect(rendered(line)).toHaveLength(1));
+    const first = line.getAttribute('data-user-latex-owner');
+
+    line.remove();
+    await scope.dispose();
+    expect(line.textContent).toBe('moved $y$');
+    expect(line.attributes).toHaveLength(1);
+    text.append(line);
+
+    scope = new PluginScope();
+    activate(gemini, params);
+    await vi.waitFor(() => expect(rendered(line)).toHaveLength(1));
+    expect(line.getAttribute('data-user-latex-owner')).not.toBe(first);
+  });
+
   it('renders the edited text after Gemini repaints a line', async () => {
     const [line] = linesOf(geminiMessage('original $x$'));
     activate(gemini, params);

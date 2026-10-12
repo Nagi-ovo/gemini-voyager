@@ -16,17 +16,6 @@ export function createUserLatexOwner(label: string): string {
   return `${label}:${ownerSerial}:${Math.random().toString(36).slice(2, 8)}`;
 }
 
-/** Elements under `root` (itself included) that `owner` holds. */
-export function userLatexElementsOwnedBy(root: ParentNode, owner: string): HTMLElement[] {
-  const candidates = Array.from(
-    root.querySelectorAll<HTMLElement>(`[${USER_LATEX_OWNER_ATTRIBUTE}]`),
-  );
-  if (root instanceof HTMLElement && root.hasAttribute(USER_LATEX_OWNER_ATTRIBUTE)) {
-    candidates.unshift(root);
-  }
-  return candidates.filter((element) => element.getAttribute(USER_LATEX_OWNER_ATTRIBUTE) === owner);
-}
-
 /** The renderer's own output, a direct child of the element it rendered. */
 const RENDERED_LATEX_SELECTOR = ':scope > [class^="gv-user-latex-"]';
 

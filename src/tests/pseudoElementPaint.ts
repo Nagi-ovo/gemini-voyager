@@ -1,8 +1,8 @@
 /**
- * Resolves whether an element's `::before` paints under the real stylesheets.
- * jsdom implements neither `getComputedStyle(el, '::before')` nor selector
- * specificity, so this applies the cascade (importance, specificity, source
- * order) to the `::before` rules whose element part matches.
+ * Resolves whether an element's `::before` paints under the real stylesheets,
+ * and what an element's own property cascades to. jsdom implements neither
+ * `getComputedStyle(el, '::before')` nor selector specificity, so this applies
+ * the cascade (importance, specificity, source order) to the matching rules.
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -64,8 +64,17 @@ export function injectStylesheets(...paths: string[]): () => void {
   return () => style.remove();
 }
 
-/** Cascaded value of `property` on `element::before`; `@media` blocks are ignored. */
-export function beforeValue(element: Element, property: string): string | null {
+/** Whether `selector` matches `element`; jsdom rejects some selectors (`:has()` in places). */
+function matchesSafe(element: Element, selector: string): boolean {
+  try {
+    return element.matches(selector);
+  } catch {
+    return false;
+  }
+}
+
+/** Cascaded value of `property` on `element`, or its `pseudo` part; `@media` blocks are ignored. */
+function cascadedValue(element: Element, property: string, pseudo: '' | '::before'): string | null {
   let winner: Candidate | null = null;
   let order = 0;
   for (const sheet of Array.from(document.styleSheets)) {
@@ -75,9 +84,9 @@ export function beforeValue(element: Element, property: string): string | null {
       order += 1;
       if (!value) continue;
       for (const selector of splitSelectorList(rule.selectorText)) {
-        if (!selector.endsWith('::before')) continue;
-        const host = selector.slice(0, -'::before'.length);
-        if (!element.matches(host)) continue;
+        if (pseudo ? !selector.endsWith(pseudo) : selector.includes('::')) continue;
+        const host = pseudo ? selector.slice(0, -pseudo.length) : selector;
+        if (!matchesSafe(element, host)) continue;
         const candidate: Candidate = {
           value: value.trim(),
           important: rule.style.getPropertyPriority(property) === 'important',
@@ -89,6 +98,16 @@ export function beforeValue(element: Element, property: string): string | null {
     }
   }
   return winner?.value ?? null;
+}
+
+/** Cascaded value of `property` on `element::before`; `@media` blocks are ignored. */
+export function beforeValue(element: Element, property: string): string | null {
+  return cascadedValue(element, property, '::before');
+}
+
+/** Cascaded value of `property` on `element` itself; `@media` blocks are ignored. */
+export function elementValue(element: Element, property: string): string | null {
+  return cascadedValue(element, property, '');
 }
 
 /** A `::before` paints when a rule gives it content and nothing hides it. */

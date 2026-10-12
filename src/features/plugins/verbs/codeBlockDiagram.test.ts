@@ -1,7 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PluginScope } from '../runtime/pluginScope';
 import { type CodeBlockDiagram, activateCodeBlockDiagram } from './codeBlockDiagram';
+import { readDiagramExport } from './diagramExportRegistry';
 import type { PrimitiveContext } from './types';
 
 const context: PrimitiveContext = {
@@ -45,6 +46,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
+  vi.useRealTimers();
   await Promise.all(scopes.splice(0).map((scope) => scope.dispose()));
   document.head.replaceChildren();
   document.body.replaceChildren();
@@ -61,6 +63,39 @@ describe('code block diagram engine', () => {
 
     await expect.poll(drawn, { timeout: 3000 }).toBe('drawn:a --> b');
     expect(panels()).toHaveLength(1);
+  });
+
+  it('draws the source a reply streamed on to while the previous source was still drawing', async () => {
+    vi.useFakeTimers();
+    const finishes: Array<() => void> = [];
+    const diagram: CodeBlockDiagram = {
+      ...fakeDiagram(Promise.resolve(true)),
+      // Each draw shows its source only once the test lets it finish.
+      render: (target, source) =>
+        new Promise<void>((resolve) =>
+          finishes.push(() => {
+            target.textContent = `drawn:${source}`;
+            resolve();
+          }),
+        ),
+      exportHtml: (target) => `<div class="export">${target.textContent}</div>`,
+    };
+    activateCodeBlockDiagram(newScope(), { turn: '.reply', exportImage: true }, context, diagram);
+    await vi.waitFor(() => expect(finishes).toHaveLength(1));
+
+    // The reply streams on mid-draw; the scan that edit asks for finds the block still drawing.
+    document.querySelector('code')!.textContent = 'a --> c';
+    await vi.advanceTimersByTimeAsync(1_500);
+    expect(finishes).toHaveLength(1);
+
+    finishes[0]();
+    await vi.advanceTimersByTimeAsync(1_500);
+    expect(finishes).toHaveLength(2);
+    finishes[1]();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(drawn()).toBe('drawn:a --> c');
+    expect(readDiagramExport(document.querySelector('pre')!)?.html).toContain('drawn:a --> c');
   });
 
   it('draws in the new scheme when the page scheme flips while the library still loads', async () => {

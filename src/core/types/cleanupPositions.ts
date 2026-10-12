@@ -23,6 +23,8 @@ export enum CleanupPositions {
   CleanupStorageQuotaWarning,
   CleanupAccountContextBridge,
   CleanupChatGptJump,
+  /** Before the renderers it starts: no late start may mount once teardown began. */
+  CleanupRendererStartup,
   CleanupCodeBlockCollapse,
   CleanupUserLatex,
   CleanupUsageStatus,
