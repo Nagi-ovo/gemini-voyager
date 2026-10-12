@@ -184,6 +184,7 @@ Gemini allows only these primitives (native ops): codeCollapse, draftSave, echar
 
 - The `sidebar` anchor also matches Voyager’s own folder panel (`.gv-folder-container`). To change only Gemini’s navigation rail, target `bard-sidenav` with a CSS selector.
 - On Gemini, `draftSave` shares the native drafts: keys are `gvDraft_` plus the full pathname, including `/u/<index>/` and Gem routes. Different account slots have different keys; changing email within the same slot still shares stored drafts.
+- A confirmed first send clears the source new-chat draft. Leaving without sending keeps it. Restore waits check the current route, account and input edits; page unload only makes a best-effort final save.
 
 ### Target site: AI Studio
 
@@ -228,6 +229,7 @@ Semantic anchors ChatGPT declares (use them as { "kind": "semantic", "key": … 
 ChatGPT does not declare thinkingBlock, sidePanel, headerActions: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
 Primitives (native ops) and an optional "theme" accent are allowed on ChatGPT.
+- `sendShortcut` claims one composer send mode for this entire page. While one plugin holds it, another reports a conflict and stays paused; turn the holder off to hand the mode over.
 
 ### Target site: Claude
 
@@ -247,6 +249,7 @@ Semantic anchors Claude declares (use them as { "kind": "semantic", "key": … }
 Claude does not declare thinkingBlock, codeBlock, sidePanel, headerActions: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
 Primitives (native ops) and an optional "theme" accent are allowed on Claude.
+- `sendShortcut` claims one composer send mode for this entire page. While one plugin holds it, another reports a conflict and stays paused; turn the holder off to hand the mode over.
 
 ### Target site: DeepSeek
 
@@ -267,6 +270,7 @@ Semantic anchors DeepSeek declares (use them as { "kind": "semantic", "key": …
 DeepSeek does not declare sidePanel, headerActions: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
 Primitives (native ops) and an optional "theme" accent are allowed on DeepSeek.
+- `sendShortcut` claims one composer send mode for this entire page. While one plugin holds it, another reports a conflict and stays paused; turn the holder off to hand the mode over.
 
 ## Examples (for ChatGPT; on another site use its "matches" and anchors)
 

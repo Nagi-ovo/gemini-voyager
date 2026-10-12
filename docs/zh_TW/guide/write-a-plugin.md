@@ -60,7 +60,7 @@ npx create-voyager-plugin@latest check my-plugin
 - 只使用每個匹配網站都有宣告的語義鍵；
 - 每個 `addClass` 只加一個 class，而且以 `gv-` 開頭；
 - 只使用 boolean、number 或 select 設定（string 和 color 目前在 popup 裡還沒有對應的控制項）；
-- 在 Gemini 和 AI Studio 上不使用 `theme`；原語只能用該網站開放的：Gemini 上是 `formulaCopy`、`vimInput`、`userLatex`、`codeCollapse`、`mermaid`、`wavedrom` 和 `echarts`, `sendShortcut`, `draftSave`，AI Studio 上是 `formulaCopy`、`sendShortcut`。它們與 Voyager 內建的對應設定是同一套程式碼。`formulaCopy` 和 `vimInput`（「公式複製」「輸入框 Vim 模式」）在同一頁面上，內建設定和外掛只會執行其中一個：頁面剛載入、或兩者都沒在執行時，內建開關優先；之後誰已經在執行就繼續執行，另一方顯示為暫停。關掉其中一個，功能就交給另一個。其餘幾個按元素逐一認領，可以和內建設定同時執行：對方已經處理的行或程式碼區塊留給對方。
+- 在 Gemini 和 AI Studio 上不使用 `theme`；原語只能用該網站開放的：Gemini 上是 `formulaCopy`、`vimInput`、`userLatex`、`codeCollapse`、`mermaid`、`wavedrom` 和 `echarts`, `sendShortcut`, `draftSave`，AI Studio 上是 `formulaCopy`、`sendShortcut`。它們與 Voyager 內建的對應設定是同一套程式碼。`formulaCopy` 和 `vimInput`（「公式複製」「輸入框 Vim 模式」）在同一頁面上，內建設定和外掛只會執行其中一個：頁面剛載入、或兩者都沒在執行時，內建開關優先；之後誰已經在執行就繼續執行，另一方顯示為暫停。關掉其中一個，功能就交給另一個。`userLatex`、`codeCollapse`、`mermaid`、`wavedrom` 和 `echarts` 按元素逐一認領，可以和內建設定同時執行：對方已經處理的行或程式碼區塊留給對方。
 
 翻譯（`i18n`）是選填的。
 
@@ -68,10 +68,10 @@ npx create-voyager-plugin@latest check my-plugin
 
 本機外掛只存在你的瀏覽器裡；想搬到別的地方用，就在外掛清單裡匯出它的 JSON。如果它對大家都有幫助，可以提議收進官方外掛目錄，流程請見[外掛貢獻說明](./plugin-contribution.md)。
 
-每頁只能執行一個傳送快捷鍵外掛；後啟用的會顯示衝突。可選 `mode`（sinceEngine `next`）為 `ctrlEnterSends`（預設）或 `enterSends`。輸入法確認鍵不會觸發傳送。Gemini/AI Studio 在對應功能遷移後才開放。
+所有網站每頁只能執行一個傳送快捷鍵外掛；已有外掛占用傳送模式時，另一個顯示衝突並暫停。可選 `mode`（sinceEngine `next`）為 `ctrlEnterSends`（預設）或 `enterSends`。輸入法確認鍵不會觸發傳送。Gemini 和 AI Studio 現已開放，支援模式見下文。
 
 Gemini 現在允許 `sendShortcut` 替代官方 Ctrl+Enter 傳送；關閉官方開關後啟用本地外掛。只支援 `ctrlEnterSends`，Enterprise 不執行。`composerRoot` 涵蓋主框和編輯框，`sendButton` 不含停止按鈕。
 
 AI Studio 上的 `sendShortcut` 必須設定 `params.mode: "enterSends"`。關閉官方 Enter 傳送開關後，本地外掛可以接管；Ctrl/Cmd+Enter 換行，Shift/Alt+Enter 交由宿主處理。
 
-Gemini 的 `draftSave` 與官方草稿共用 `gvDraft_<完整 pathname>`，保留 `/u/N` 和 Gem 路徑。停用會保留已存草稿，同頁多個外掛可以共用記錄。卸載前會盡力儲存最後輸入，瀏覽器關閉時無法保證非同步儲存完成。
+Gemini 的 `draftSave` 與官方草稿共用 `gvDraft_<完整 pathname>`，保留 `/u/N` 和 Gem 路徑。停用會保留已存草稿，同頁多個外掛可以共用記錄。卸載前會盡力儲存最後輸入，瀏覽器關閉時無法保證非同步儲存完成。 寫入與修剪僅在同頁協調；同一個 `/u/N` 槽位更換電子郵件仍共用已存草稿。

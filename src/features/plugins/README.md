@@ -448,7 +448,9 @@ reports a conflict while the current holder keeps running. The optional `mode`
 (sinceEngine `next`) is `ctrlEnterSends` (default) or `enterSends`. Gemini only accepts
 the default, AI Studio only the latter, via the packaged page coordinator; Gemini
 Enterprise accepts neither. Composition, Process and keyCode 229 are left to the IME.
-Gemini/AI Studio remain closed to local send plugins until their owner flips.
+Local send plugins are open on Gemini and AI Studio. Disable the corresponding
+official send switch to hand the page's mode to a local plugin; the Safari fix
+remains paired with Gemini's packaged send owner.
 
 `draftSave` (unreleased, `sinceEngine: 'next'`, no parameters; reads `composer` and
 `sendButton`, and stays inert without `conversationIdPattern`) is Gemini's draft auto-save on a
@@ -461,6 +463,17 @@ when the composer empties within two seconds of Enter, the send button or a form
 when that send moves the new-chat page to its conversation. ChatGPT temporary chats save
 nothing. These sites have no account index in their routes, so drafts are per site and
 conversation, not per account. Unmount stops everything and keeps stored drafts.
+
+On Gemini, the same primitive selects the trusted Gemini policy and shares native
+`gvDraft_<full pathname>` records, including `/u/N` and Gem routes. Official and
+local draft plugins can run together; writes and five-record pruning are queued
+on this page. A confirmed first send clears its source new-chat draft, while
+navigation without a send keeps it. Restore checks route, account and input edits
+after asynchronous waits, and never restores into an old-question edit input.
+Unload makes a best-effort final save; asynchronous storage cannot be guaranteed
+after browser closure. Changing email within one account slot still shares stored
+drafts. Gemini Enterprise stays inactive. Rolling the owner back closes local
+`draftSave` on Gemini while preserving these data and lifecycle fixes.
 
 `quoteReply` (unreleased, `sinceEngine: 'next'`, no parameters; reads `assistantTurn` and
 `composer`) is Gemini's quote reply on a catalog site. Selecting text wholly inside one

@@ -60,7 +60,7 @@ npx create-voyager-plugin@latest check my-plugin
 - 매칭되는 모든 사이트가 선언한 시맨틱 키만 사용할 것
 - `addClass` 하나에 클래스는 정확히 하나이며, `gv-`로 시작할 것
 - 설정은 boolean, number, select만 사용할 것(string과 color는 아직 popup에 대응하는 컨트롤이 없습니다)
-- Gemini와 AI Studio에서는 `theme`을 쓰지 않고, 프리미티브는 각 사이트가 허용하는 것만 쓸 것: Gemini에서는 `formulaCopy`, `vimInput`, `userLatex`, `codeCollapse`, `mermaid`, `wavedrom`, `echarts`, `sendShortcut`, `draftSave`, AI Studio에서는 `formulaCopy`, `sendShortcut`. 모두 Voyager 자체의 해당 설정과 같은 코드를 실행함. `formulaCopy`와 `vimInput`(수식 복사·입력창 Vim 모드)은 한 페이지에서 내장 설정과 플러그인 중 하나만 실행됨. 페이지를 처음 불러올 때나 둘 다 실행 중이 아닐 때는 내장 설정이 우선하고, 그 뒤에는 이미 실행 중인 쪽이 계속 실행되며 다른 쪽은 일시 중지로 표시됨. 하나를 끄면 다른 쪽이 이어받음. 나머지는 요소 단위로 맡을 대상을 정하므로 내장 설정과 함께 실행할 수 있음: 상대가 이미 처리 중인 줄이나 코드 블록은 상대에게 맡김
+- Gemini와 AI Studio에서는 `theme`을 쓰지 않고, 프리미티브는 각 사이트가 허용하는 것만 쓸 것: Gemini에서는 `formulaCopy`, `vimInput`, `userLatex`, `codeCollapse`, `mermaid`, `wavedrom`, `echarts`, `sendShortcut`, `draftSave`, AI Studio에서는 `formulaCopy`, `sendShortcut`. 모두 Voyager 자체의 해당 설정과 같은 코드를 실행함. `formulaCopy`와 `vimInput`(수식 복사·입력창 Vim 모드)은 한 페이지에서 내장 설정과 플러그인 중 하나만 실행됨. 페이지를 처음 불러올 때나 둘 다 실행 중이 아닐 때는 내장 설정이 우선하고, 그 뒤에는 이미 실행 중인 쪽이 계속 실행되며 다른 쪽은 일시 중지로 표시됨. 하나를 끄면 다른 쪽이 이어받음. `userLatex`, `codeCollapse`, `mermaid`, `wavedrom`, `echarts`는 요소 단위로 맡을 대상을 정하므로 내장 설정과 함께 실행할 수 있음: 상대가 이미 처리 중인 줄이나 코드 블록은 상대에게 맡김
 
 번역(`i18n`)은 선택 사항입니다.
 
@@ -68,10 +68,10 @@ npx create-voyager-plugin@latest check my-plugin
 
 로컬 플러그인은 내 브라우저에만 있습니다. 다른 곳으로 옮기려면 플러그인 목록에서 JSON을 내보내세요. 모두에게 도움이 될 만하다면 공식 카탈로그에 넣자고 제안할 수 있으며, 그 과정은 [플러그인 기여 가이드](./plugin-contribution.md)에서 설명합니다.
 
-페이지마다 전송 단축키 플러그인은 하나만 실행됩니다. 나중에 활성화한 플러그인은 충돌로 표시됩니다. 선택 사항인 `mode`(sinceEngine `next`)는 `ctrlEnterSends`(기본값) 또는 `enterSends`입니다. IME 확인 키로는 전송하지 않습니다. Gemini/AI Studio에서는 기능 이전 후 사용할 수 있습니다.
+모든 사이트에서 페이지마다 전송 단축키 플러그인은 하나만 실행됩니다. 전송 모드를 사용 중인 플러그인이 있으면 다른 플러그인은 충돌로 표시되고 일시 중지됩니다. 선택 사항인 `mode`(sinceEngine `next`)는 `ctrlEnterSends`(기본값) 또는 `enterSends`입니다. IME 확인으로는 전송하지 않습니다. Gemini와 AI Studio에서도 사용할 수 있으며, 지원 모드는 아래와 같습니다.
 
 Gemini에서는 공식 Ctrl/Cmd+Enter 전송을 `sendShortcut`으로 바꿀 수 있습니다. 공식 설정을 끈 뒤 로컬 플러그인을 켜세요. `ctrlEnterSends`만 지원하며 Enterprise에서는 동작하지 않습니다. `composerRoot`는 기본 및 편집 입력창을 포함하고 `sendButton`은 중지 버튼을 제외합니다.
 
 AI Studio의 `sendShortcut`에는 `params.mode: "enterSends"`가 필요합니다. 공식 Enter 전송을 끄면 로컬 플러그인이 대신 실행됩니다. Ctrl/Cmd+Enter는 줄을 바꾸고 Shift/Alt+Enter는 호스트가 처리합니다.
 
-Gemini의 `draftSave`는 공식 기능과 `gvDraft_<전체 pathname>` 기록을 공유하며 `/u/N`과 Gem 경로를 유지합니다. 꺼도 저장된 초안은 남고 같은 페이지의 여러 플러그인이 함께 사용할 수 있습니다. 종료 전에 마지막 입력을 저장하려고 하지만 브라우저가 닫힐 때 비동기 저장 완료를 보장할 수는 없습니다.
+Gemini의 `draftSave`는 공식 기능과 `gvDraft_<전체 pathname>` 기록을 공유하며 `/u/N`과 Gem 경로를 유지합니다. 꺼도 저장된 초안은 남고 같은 페이지의 여러 플러그인이 함께 사용할 수 있습니다. 종료 전에 마지막 입력을 저장하려고 하지만 브라우저가 닫힐 때 비동기 저장 완료를 보장할 수는 없습니다. 쓰기와 정리는 같은 페이지 안에서만 조정됩니다. 같은 `/u/N` 슬롯에서 이메일을 바꿔도 저장된 초안을 공유합니다.

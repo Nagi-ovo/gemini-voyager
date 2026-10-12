@@ -27,6 +27,7 @@ const SITE_NOTES: Readonly<Record<string, readonly string[]>> = {
   gemini: [
     'The `sidebar` anchor also matches Voyager’s own folder panel (`.gv-folder-container`). To change only Gemini’s navigation rail, target `bard-sidenav` with a CSS selector.',
     'On Gemini, `draftSave` shares the native drafts: keys are `gvDraft_` plus the full pathname, including `/u/<index>/` and Gem routes. Different account slots have different keys; changing email within the same slot still shares stored drafts.',
+    'A confirmed first send clears the source new-chat draft. Leaving without sending keeps it. Restore waits check the current route, account and input edits; page unload only makes a best-effort final save.',
   ],
   aistudio: [
     'The `sidebar` anchor is Voyager’s own folder panel on AI Studio, not AI Studio’s navigation. Use a CSS selector for AI Studio’s own panels.',
@@ -67,8 +68,8 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
  * that also runs one of Voyager's own settings. A primitive with an exclusive
  * runtime (`runtime/resourceClaims.ts`) runs once per page: the setting goes
  * first on a fresh page or a free runtime, and a running one keeps it
- * (`runtime/resourceArbiter.ts`). The others claim element by element, so the
- * setting and a plugin run side by side.
+ * (`runtime/resourceArbiter.ts`). Drafts instead share page-coordinated data;
+ * element primitives claim each element, so the setting and a plugin run side by side.
  */
 function sharedRuntimeLines(site: SiteAdapter, open: ReadonlySet<string>): string[] {
   const packaged = new Set<string>(packagedSitesForPatterns(site.matches));
@@ -166,6 +167,7 @@ export function siteFactLines(
               options.theme
                 ? `Primitives (native ops) and an optional "theme" accent are allowed on ${site.label}.`
                 : `Primitives (native ops) are allowed on ${site.label}.`,
+              '- `sendShortcut` claims one composer send mode for this entire page. While one plugin holds it, another reports a conflict and stays paused; turn the holder off to hand the mode over.',
             ]
           : []),
     ...(notes.length > 0 ? ['', ...notes.map((note) => `- ${note}`)] : []),

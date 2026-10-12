@@ -60,7 +60,7 @@ JavaScript の実行、クリックやキー入力への反応、ネットワー
 - マッチするすべてのサイトが宣言しているセマンティックキーだけを使うこと
 - `addClass` 1 つにつきクラスは 1 つだけで、`gv-` で始まること
 - 設定は boolean、number、select のいずれかであること（string と color にはまだ popup の UI がありません）
-- Gemini と AI Studio では `theme` を使わず、プリミティブは各サイトが許可するものだけを使うこと: Gemini では `formulaCopy`、`vimInput`、`userLatex`、`codeCollapse`、`mermaid`、`wavedrom`、`echarts`, `sendShortcut`, `draftSave`、AI Studio では `formulaCopy`、`sendShortcut`。いずれも Voyager 標準の対応する設定と同じコードを実行する。`formulaCopy` と `vimInput`(数式コピー・入力欄 Vim モード)は、同じページで標準設定とプラグインのどちらか一方だけが動く。ページの読み込み時や、どちらも動いていないときは標準設定が優先され、その後はすでに動いている側がそのまま動き続け、もう一方は一時停止と表示される。どちらかをオフにすると、もう一方が引き継ぐ。それ以外は要素ごとに担当を取り合うため、標準設定と同時に動かせる: 相手がすでに処理している行やコードブロックには手を出さない
+- Gemini と AI Studio では `theme` を使わず、プリミティブは各サイトが許可するものだけを使うこと: Gemini では `formulaCopy`、`vimInput`、`userLatex`、`codeCollapse`、`mermaid`、`wavedrom`、`echarts`, `sendShortcut`, `draftSave`、AI Studio では `formulaCopy`、`sendShortcut`。いずれも Voyager 標準の対応する設定と同じコードを実行する。`formulaCopy` と `vimInput`(数式コピー・入力欄 Vim モード)は、同じページで標準設定とプラグインのどちらか一方だけが動く。ページの読み込み時や、どちらも動いていないときは標準設定が優先され、その後はすでに動いている側がそのまま動き続け、もう一方は一時停止と表示される。どちらかをオフにすると、もう一方が引き継ぐ。`userLatex`、`codeCollapse`、`mermaid`、`wavedrom`、`echarts` は要素ごとに担当を取り合うため、標準設定と同時に動かせる: 相手がすでに処理している行やコードブロックには手を出さない
 
 翻訳（`i18n`）は任意です。
 
@@ -68,10 +68,10 @@ JavaScript の実行、クリックやキー入力への反応、ネットワー
 
 ローカルプラグインは自分のブラウザの中にしかありません。別の環境へ移すときは、プラグイン一覧から JSON をエクスポートしてください。みんなの役に立ちそうなら、公式カタログへの収録を提案することもできます。その流れは[プラグイン貢献ガイド](./plugin-contribution.md)で説明しています。
 
-送信ショートカットのプラグインはページごとに1つだけ実行できます。後から有効にしたものには競合が表示されます。任意の `mode`（sinceEngine `next`）は `ctrlEnterSends`（既定）または `enterSends` です。IME の確定キーでは送信しません。Gemini/AI Studio では機能の移行後に利用できます。
+すべてのサイトで、送信ショートカットのプラグインはページごとに1つだけ動作します。送信モードを使用中のプラグインがある場合、もう一方は競合として一時停止します。任意の `mode`（sinceEngine `next`）は `ctrlEnterSends`（既定）または `enterSends` です。IME の確定では送信しません。Gemini と AI Studio でも利用できます。対応モードは以下のとおりです。
 
 Gemini では公式の Ctrl/Cmd+Enter 送信を `sendShortcut` で置き換えられます。公式設定をオフにしてからローカルプラグインを有効にしてください。`ctrlEnterSends` のみ対応し、Enterprise では動作しません。`composerRoot` は通常・編集入力欄を含み、`sendButton` は停止ボタンを除きます。
 
 AI Studio の `sendShortcut` には `params.mode: "enterSends"` が必要です。公式の Enter 送信をオフにするとローカルプラグインに切り替えられます。Ctrl/Cmd+Enter は改行し、Shift/Alt+Enter はホストに任せます。
 
-Gemini の `draftSave` は公式と同じ `gvDraft_<完全な pathname>` を使い、`/u/N` と Gem の経路を保持します。無効にしても保存済みの下書きは残り、同じページの複数プラグインで共有できます。終了前に最後の入力の保存を試みますが、ブラウザー終了時の非同期保存は保証できません。
+Gemini の `draftSave` は公式と同じ `gvDraft_<完全な pathname>` を使い、`/u/N` と Gem の経路を保持します。無効にしても保存済みの下書きは残り、同じページの複数プラグインで共有できます。終了前に最後の入力の保存を試みますが、ブラウザー終了時の非同期保存は保証できません。 書き込みと整理の調整は同じページ内に限られます。同じ `/u/N` スロットでメールアドレスを変更しても、保存済みの下書きを共有します。
