@@ -60,7 +60,7 @@ Além das verificações comuns do manifest (veja [Contribuir plugins](./plugin-
 - usar apenas chaves semânticas declaradas por todos os sites a que corresponde;
 - adicionar exatamente uma classe por `addClass`, começada por `gv-`;
 - usar definições boolean, number ou select (string e color ainda não têm controlo no popup);
-- não usar `theme` no Gemini nem no AI Studio, e usar apenas as primitivas que cada site permite: `formulaCopy` e `vimInput` no Gemini, `formulaCopy` no AI Studio. Elas executam o mesmo código das configurações próprias do Voyager (copiar fórmulas e modo Vim da caixa de entrada); só um dos dois roda em uma página. Ao carregar a página, ou enquanto nenhum dos dois estiver rodando, a configuração integrada vem primeiro; depois disso, o que já está rodando continua e o outro aparece em pausa. Desative um para que o outro assuma.
+- não usar `theme` no Gemini nem no AI Studio, e usar apenas as primitivas que cada site permite: `formulaCopy`, `vimInput`, `userLatex`, `codeCollapse`, `mermaid`, `wavedrom` e `echarts` no Gemini, `formulaCopy` no AI Studio. Elas executam o mesmo código das configurações próprias do Voyager. `formulaCopy` e `vimInput` (copiar fórmulas e modo Vim da caixa de entrada) rodam uma só vez por página: a configuração integrada ou um plugin, não os dois. Ao carregar a página, ou enquanto nenhum dos dois estiver rodando, a configuração integrada vem primeiro; depois disso, o que já está rodando continua e o outro aparece em pausa. Desative um para que o outro assuma. As demais assumem a página elemento por elemento e rodam junto com a configuração integrada: uma linha ou bloco de código que o outro já tem fica com ele.
 
 As traduções (`i18n`) são opcionais.
 

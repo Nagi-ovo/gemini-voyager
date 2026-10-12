@@ -47,6 +47,9 @@ export function createGeminiCodeBlockSite(
     root: () => doc.body,
     hostSelector,
     accepts: (host) => !isGeminiDiagramBlock(host),
+    // A diagram plugin claims a block in place, often after this took it as long
+    // code: only the attribute tells, so its toggle would otherwise stay.
+    acceptsAttributes: [DIAGRAM_OWNER_ATTR],
     code: (host) => host.querySelector<HTMLElement>(CODE_SELECTOR),
     actions: geminiCodeBlockActions,
   };

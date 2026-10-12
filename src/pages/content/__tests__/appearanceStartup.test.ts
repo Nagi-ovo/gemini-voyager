@@ -1,7 +1,7 @@
 /**
  * Gemini's chat appearance start points under either owner. The native
- * adjusters are counters; the owner table is given to the start points, so the
- * plugin-owned case runs before any entry is flipped in the shipped table.
+ * adjusters are counters. The plugin-owned case runs on the shipped owner
+ * table; the native case is given a table with appearance rolled back.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -56,9 +56,10 @@ beforeEach(() => {
 
 describe('Gemini chat appearance start points', () => {
   it('starts each native adjuster once, paragraph spacing with line height, and admits no official plugin', async () => {
-    const admission = createOfficialAdmission();
+    const owners = withAppearanceOwnedBy('legacy');
+    const admission = createOfficialAdmission(owners);
 
-    await startGeminiChatAppearance(admission);
+    await startGeminiChatAppearance(admission, ownerOf(owners));
     admission.close();
 
     expect(started.list).toEqual(['width', 'fontSize', 'lineHeight', 'paragraphSpacing']);
@@ -66,10 +67,9 @@ describe('Gemini chat appearance start points', () => {
   });
 
   it('admits the typography and width plugins at the native start point and starts no native adjuster', async () => {
-    const owners = withAppearanceOwnedBy('plugin');
-    const admission = createOfficialAdmission(owners);
+    const admission = createOfficialAdmission();
 
-    await startGeminiChatAppearance(admission, ownerOf(owners));
+    await startGeminiChatAppearance(admission);
     admission.close();
 
     // Paragraph spacing included: it would otherwise set margins beside the plugin.

@@ -1,8 +1,8 @@
 /**
  * Gemini's renderer start points under either owner. The native modules are
- * counters behind the real toggle controller and cleanup manager; the owner
- * table is given to the start points, so the plugin-owned case runs before any
- * entry is flipped in the shipped table.
+ * counters behind the real toggle controller and cleanup manager. The
+ * plugin-owned case runs on the shipped owner table; the native cases are given
+ * a table with the renderers rolled back.
  */
 import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -18,7 +18,11 @@ import {
   type PackagedSiteId,
 } from '@/features/plugins/sites/featureOwners';
 
-import { createGeminiRendererStartup, readNativeToggle } from '../rendererStartup';
+import {
+  type GeminiRendererStartup,
+  createGeminiRendererStartup,
+  readNativeToggle,
+} from '../rendererStartup';
 
 const native = vi.hoisted(() => ({
   starts: {} as Record<string, number>,
@@ -78,6 +82,16 @@ function ownerOf(owners: readonly OwnedFeature[]) {
     owners.find((entry) => entry.site === site && entry.feature === feature)?.owner ?? 'legacy';
 }
 
+/** A build that rolled the renderers back to their native modules. */
+const NATIVE_OWNERS = withRenderersOwnedBy('legacy');
+
+function nativeStartup(
+  cleanups: CleanupManager,
+  admission = createOfficialAdmission(NATIVE_OWNERS),
+): GeminiRendererStartup {
+  return createGeminiRendererStartup(admission, cleanups, ownerOf(NATIVE_OWNERS));
+}
+
 function storedSwitches(values: Record<string, unknown>): void {
   syncGet().mockImplementation(async (keys: string[]) =>
     Object.fromEntries(keys.filter((key) => key in values).map((key) => [key, values[key]])),
@@ -101,8 +115,8 @@ afterEach(() => {
 
 describe('Gemini renderer start points while the native modules own them', () => {
   it('starts every native renderer once, collapse and LaTeX on by default, and admits no official plugin', async () => {
-    const admission = createOfficialAdmission();
-    const startup = createGeminiRendererStartup(admission, new CleanupManager());
+    const admission = createOfficialAdmission(NATIVE_OWNERS);
+    const startup = nativeStartup(new CleanupManager(), admission);
 
     await startup.startCodeBlockCollapse();
     await startup.startRenderers();
@@ -122,7 +136,7 @@ describe('Gemini renderer start points while the native modules own them', () =>
 
   it('turns code block collapse off and on live from the popup switch while the native module owns it', async () => {
     const cleanups = new CleanupManager();
-    const startup = createGeminiRendererStartup(createOfficialAdmission(), cleanups);
+    const startup = nativeStartup(cleanups);
     await startup.startCodeBlockCollapse();
     expect(native.live.codeCollapse).toBe(1);
 
@@ -147,7 +161,7 @@ describe('Gemini renderer start points while the native modules own them', () =>
   it('turns user LaTeX off and on live from the popup switch while the native module owns it', async () => {
     storedSwitches({ [LATEX_KEY]: false });
     const cleanups = new CleanupManager();
-    const startup = createGeminiRendererStartup(createOfficialAdmission(), cleanups);
+    const startup = nativeStartup(cleanups);
     await startup.startRenderers();
     expect(native.starts.userLatex).toBeUndefined();
 
@@ -171,7 +185,7 @@ describe('Gemini renderer start points while the native modules own them', () =>
           answerRead = resolve;
         }),
     );
-    const startup = createGeminiRendererStartup(createOfficialAdmission(), new CleanupManager());
+    const startup = nativeStartup(new CleanupManager());
     const starting = startup.startCodeBlockCollapse();
     await flush();
 
@@ -192,7 +206,7 @@ describe('Gemini renderer start points while the native modules own them', () =>
         }),
     );
     const cleanups = new CleanupManager();
-    const startup = createGeminiRendererStartup(createOfficialAdmission(), cleanups);
+    const startup = nativeStartup(cleanups);
     const starting = startup.startCodeBlockCollapse();
     await flush();
 
@@ -216,7 +230,7 @@ describe('Gemini renderer start points while the native modules own them', () =>
     let finishStart: () => void = () => {};
     native.heldStart = new Promise((resolve) => (finishStart = resolve));
     const cleanups = new CleanupManager();
-    const startup = createGeminiRendererStartup(createOfficialAdmission(), cleanups);
+    const startup = nativeStartup(cleanups);
     const starting = startup.startCodeBlockCollapse();
     await flush();
 
@@ -232,7 +246,7 @@ describe('Gemini renderer start points while the native modules own them', () =>
 
   it('mounts nothing when the extension context died during the startup read', async () => {
     syncGet().mockRejectedValue(new Error('Extension context invalidated.'));
-    const startup = createGeminiRendererStartup(createOfficialAdmission(), new CleanupManager());
+    const startup = nativeStartup(new CleanupManager());
 
     await startup.startCodeBlockCollapse();
 
@@ -256,9 +270,8 @@ describe('readNativeToggle', () => {
 
 describe('Gemini renderer start points once the official plugins own them', () => {
   it('admits the official renderer plugins at the native start points and starts no native renderer', async () => {
-    const owners = withRenderersOwnedBy('plugin');
-    const admission = createOfficialAdmission(owners);
-    const startup = createGeminiRendererStartup(admission, new CleanupManager(), ownerOf(owners));
+    const admission = createOfficialAdmission();
+    const startup = createGeminiRendererStartup(admission, new CleanupManager());
 
     await startup.startCodeBlockCollapse();
     await startup.startRenderers();

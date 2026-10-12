@@ -3,6 +3,7 @@
  * the URL patterns `matches` may use, the semantic anchors it declares with
  * today's selectors, and what a local plugin may and may not bring there.
  */
+import { handlerResources } from '../../runtime/resourceClaims';
 import { FEATURE_OWNERS, type OwnedFeatureId } from '../../sites/featureOwners';
 import {
   allowedPrimitivesForSite,
@@ -49,9 +50,11 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
 
 /**
  * On a site where only some primitives are open, one line per open primitive
- * that also runs one of Voyager's own settings. Only one of them runs at a time:
- * the setting goes first on a fresh page or a free runtime, and a running one
- * keeps it (`runtime/resourceArbiter.ts`).
+ * that also runs one of Voyager's own settings. A primitive with an exclusive
+ * runtime (`runtime/resourceClaims.ts`) runs once per page: the setting goes
+ * first on a fresh page or a free runtime, and a running one keeps it
+ * (`runtime/resourceArbiter.ts`). The others claim element by element, so the
+ * setting and a plugin run side by side.
  */
 function sharedRuntimeLines(site: SiteAdapter, open: ReadonlySet<string>): string[] {
   const packaged = new Set<string>(packagedSitesForPatterns(site.matches));
@@ -62,9 +65,10 @@ function sharedRuntimeLines(site: SiteAdapter, open: ReadonlySet<string>): strin
       if (open.has(handler)) settings.set(handler, OWNED_FEATURE_SETTINGS[owned.feature]);
     }
   }
-  return [...settings].map(
-    ([handler, setting]) =>
-      `- \`${handler}\` runs the same code as Voyager’s own ${setting} setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling \`${handler}\` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.`,
+  return [...settings].map(([handler, setting]) =>
+    handlerResources(handler).length > 0
+      ? `- \`${handler}\` runs the same code as Voyager’s own ${setting} setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling \`${handler}\` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.`
+      : `- \`${handler}\` runs the same code as Voyager’s own ${setting} setting. Both can run on one page: each claims the elements it works on, and an element the other already holds is left to it.`,
   );
 }
 

@@ -427,4 +427,107 @@ describe('userLatex on Gemini', () => {
     expect(quoted.attributes).toHaveLength(1);
     expect(message.querySelector('[class^="gv-"], [class*=" gv-"]')).toBeNull();
   });
+
+  describe('with a leaf plugin and a whole-line plugin on one line', () => {
+    type Unit = 'leaf' | 'turn';
+    const SOURCE = 'bare $y$ $x$';
+    // A local plugin renders leaves (its default unit); the official one renders whole lines.
+    const paramsFor: Record<Unit, UserLatexParams> = { leaf: {}, turn: params };
+    /** Formulas a unit draws on the line: the leaf only reaches the one in the link. */
+    const drawnBy: Record<Unit, number> = { leaf: 1, turn: 2 };
+    const OWNER = 'data-user-latex-owner';
+    const others: PluginScope[] = [];
+
+    afterEach(async () => {
+      await Promise.all(others.splice(0).map((other) => other.dispose()));
+    });
+
+    /** Gemini's line with a formula inside a link, so only its link is a leaf. */
+    function mixedLine(): { line: HTMLElement; link: HTMLElement } {
+      const [line] = linesOf(geminiMessage(''));
+      line.innerHTML = 'bare $y$ <a href="#x">$x$</a>';
+      return { line, link: line.querySelector('a')! };
+    }
+
+    function start(unit: Unit): PluginScope {
+      const into = new PluginScope();
+      others.push(into);
+      activate(gemini, paramsFor[unit], into);
+      return into;
+    }
+
+    /** Past the observer's rescan, so a plugin that held back has had its second look. */
+    const afterRescan = () => new Promise((resolve) => setTimeout(resolve, 400));
+
+    it.each<[Unit, Unit, Unit]>([
+      ['leaf', 'turn', 'leaf'],
+      ['leaf', 'turn', 'turn'],
+      ['turn', 'leaf', 'turn'],
+      ['turn', 'leaf', 'leaf'],
+    ])(
+      'keeps the line source whole when the %s plugin starts before the %s one and the %s one stops first',
+      async (first, second, stopsFirst) => {
+        const { line, link } = mixedLine();
+        const scopes = { [first]: start(first) } as Record<Unit, PluginScope>;
+        await vi.waitFor(() => expect(rendered(line)).toHaveLength(drawnBy[first]));
+        scopes[second] = start(second);
+        await afterRescan();
+
+        // The second plugin takes nothing over or under the first one's claim.
+        expect(textWithLatexSource(line)).toBe(SOURCE);
+        expect(rendered(line)).toHaveLength(drawnBy[first]);
+        expect(
+          new Set(
+            Array.from(line.parentElement!.querySelectorAll(`[${OWNER}]`), (el) =>
+              el.getAttribute(OWNER),
+            ),
+          ).size,
+        ).toBe(1);
+
+        const remaining: Unit = stopsFirst === first ? second : first;
+        await scopes[stopsFirst].dispose();
+        // Once the first lets go, the other renders the line its own way.
+        await vi.waitFor(() => expect(rendered(line)).toHaveLength(drawnBy[remaining]));
+        expect(textWithLatexSource(line)).toBe(SOURCE);
+        if (remaining === 'turn') expect(line.dataset.userLatexOriginal).toBe(SOURCE);
+
+        await scopes[remaining].dispose();
+        expect(line.textContent).toBe(SOURCE);
+        expect(line.querySelector('a')).toBe(link);
+        expect(line.parentElement!.querySelector(`[${OWNER}]`)).toBeNull();
+      },
+    );
+
+    it.each<[Unit, Unit]>([
+      ['leaf', 'turn'],
+      ['turn', 'leaf'],
+    ])(
+      'leaves the line alone while the %s plugin waits for KaTeX and the %s one starts',
+      async (first, second) => {
+        const release = holdKatex();
+        const { line, link } = mixedLine();
+        const [held, spared] = first === 'leaf' ? [link, line] : [line, link];
+        const firstScope = start(first);
+        expect(held.hasAttribute(OWNER)).toBe(true);
+
+        const secondScope = start(second);
+        // A claim still waiting for KaTeX counts: the other plugin keeps out.
+        expect(spared.hasAttribute(OWNER)).toBe(false);
+        release();
+        await vi.waitFor(() => expect(rendered(line)).toHaveLength(drawnBy[first]));
+        await afterRescan();
+        expect(spared.hasAttribute(OWNER)).toBe(false);
+        expect(textWithLatexSource(line)).toBe(SOURCE);
+
+        await firstScope.dispose();
+        await vi.waitFor(() => expect(rendered(line)).toHaveLength(drawnBy[second]));
+        expect(textWithLatexSource(line)).toBe(SOURCE);
+        if (second === 'turn') expect(line.dataset.userLatexOriginal).toBe(SOURCE);
+
+        await secondScope.dispose();
+        expect(line.textContent).toBe(SOURCE);
+        expect(line.querySelector('a')).toBe(link);
+      },
+    );
+  });
 });

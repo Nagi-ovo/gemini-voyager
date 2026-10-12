@@ -43,16 +43,14 @@ describe('feature owners', () => {
     expect(ownedFeatureByPluginId('voyager.formula-copy')).toBeNull();
   });
 
-  it('hands formula copy, Vim input and the halo to their official plugins, opening only their primitives', () => {
+  it('hands formula copy, Vim input and the halo to their official plugins', () => {
     expect(featureOwner('gemini', 'formulaCopy')).toBe('plugin');
     expect(featureOwner('aistudio', 'formulaCopy')).toBe('plugin');
     expect(featureOwner('gemini', 'vimInput')).toBe('plugin');
     expect(featureOwner('gemini', 'hideInputHalo')).toBe('plugin');
-    expect(pluginOwnedHandlers('gemini')).toEqual(new Set(['formulaCopy', 'vimInput']));
-    expect(pluginOwnedHandlers('aistudio')).toEqual(new Set(['formulaCopy']));
   });
 
-  it('keeps the stage 3 features with their native modules and their primitives closed on Gemini', () => {
+  it('hands the stage 3 features to their official plugins, opening the renderer primitives on Gemini', () => {
     const stage3 = [
       'chatFontSize',
       'chatLineHeight',
@@ -63,10 +61,21 @@ describe('feature owners', () => {
       'echarts',
       'mermaid',
     ] as const;
-    for (const feature of stage3) expect(featureOwner('gemini', feature)).toBe('legacy');
-    expect(legacyOwnedHandlers('gemini')).toEqual(
-      new Set(['userLatex', 'codeCollapse', 'wavedrom', 'echarts', 'mermaid']),
+    for (const feature of stage3) expect(featureOwner('gemini', feature)).toBe('plugin');
+    expect(legacyOwnedHandlers('gemini')).toEqual(new Set());
+    expect(pluginOwnedHandlers('gemini')).toEqual(
+      new Set([
+        'formulaCopy',
+        'vimInput',
+        'userLatex',
+        'codeCollapse',
+        'wavedrom',
+        'echarts',
+        'mermaid',
+      ]),
     );
+    expect(pluginOwnedHandlers('aistudio')).toEqual(new Set(['formulaCopy']));
+    // Appearance is pure CSS or a fixed-id builtin: it opens no primitive.
     for (const id of [
       'voyager.gemini-chat-font-size',
       'voyager.gemini-chat-line-height',

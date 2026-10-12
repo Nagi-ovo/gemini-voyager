@@ -168,9 +168,14 @@ Semantic anchors Gemini declares (use them as { "kind": "semantic", "key": … }
 
 Gemini does not declare thinkingBlock, sidePanel, headerActions, scrollContainer, composerRoot, sendButton: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
-Gemini allows only these primitives (native ops): formulaCopy, vimInput. No "theme".
+Gemini allows only these primitives (native ops): codeCollapse, echarts, formulaCopy, mermaid, userLatex, vimInput, wavedrom. No "theme".
 - `formulaCopy` runs the same code as Voyager’s own Formula copy setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `formulaCopy` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
 - `vimInput` runs the same code as Voyager’s own Input Vim mode setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `vimInput` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
+- `userLatex` runs the same code as Voyager’s own Render LaTeX in my messages setting. Both can run on one page: each claims the elements it works on, and an element the other already holds is left to it.
+- `codeCollapse` runs the same code as Voyager’s own Collapse long code blocks setting. Both can run on one page: each claims the elements it works on, and an element the other already holds is left to it.
+- `wavedrom` runs the same code as Voyager’s own WaveDrom timing diagram rendering setting. Both can run on one page: each claims the elements it works on, and an element the other already holds is left to it.
+- `echarts` runs the same code as Voyager’s own ECharts rendering setting. Both can run on one page: each claims the elements it works on, and an element the other already holds is left to it.
+- `mermaid` runs the same code as Voyager’s own Mermaid diagram rendering setting. Both can run on one page: each claims the elements it works on, and an element the other already holds is left to it.
 
 - The `sidebar` anchor also matches Voyager’s own folder panel (`.gv-folder-container`). To change only Gemini’s navigation rail, target `bard-sidenav` with a CSS selector.
 

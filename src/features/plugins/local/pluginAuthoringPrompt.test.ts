@@ -92,7 +92,15 @@ describe('plugin authoring prompt contract', () => {
     const gemini = buildPluginAuthoringPrompt('Add a copy button to each reply', byId('gemini'));
     const listed = (prompt: string) =>
       [...prompt.matchAll(/^- (\w+) \(sinceEngine /gm)].map((match) => match[1]).sort();
-    expect(listed(gemini)).toEqual(['formulaCopy', 'vimInput']);
+    expect(listed(gemini)).toEqual([
+      'codeCollapse',
+      'echarts',
+      'formulaCopy',
+      'mermaid',
+      'userLatex',
+      'vimInput',
+      'wavedrom',
+    ]);
     expect(listed(buildPluginAuthoringPrompt('x', byId('aistudio')))).toEqual(['formulaCopy']);
   });
 

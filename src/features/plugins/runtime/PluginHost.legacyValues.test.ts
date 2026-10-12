@@ -2,14 +2,9 @@
  * Official plugins whose settings are existing Voyager values (the Gemini
  * typography sliders): the host renders them from the legacy keys alone,
  * pushes a changed value into the running plugin, keeps the last number when
- * a value turns invalid, and never writes a normalized value back.
- *
- * The typography features are still legacy-owned in the shipped owner table.
- * The last case runs them under their own ids with only that table flipped to
- * the plugin: their real switch and value bindings, admission and manifests.
- * The others run the packaged typography manifests under two ids that are
- * already plugin-owned (halo for the font size, Vim for the spacing), with the
- * value table extended to them. Everything else is the production code path.
+ * a value turns invalid, and never writes a normalized value back. The
+ * packaged manifests run under their own ids, switches and value bindings on
+ * the shipped owner table; only the plugin source is given.
  */
 import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -24,52 +19,16 @@ import { DeclarativeEngine } from './declarativeEngine';
 import type { LegacySettingsSource } from './legacySnapshotFeed';
 import { createOfficialAdmission } from './officialAdmission';
 
-vi.mock('../sites/featureOwners', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../sites/featureOwners')>();
-  const flipped = new Set<string>(['chatFontSize', 'chatLineHeight']);
-  const owners = actual.FEATURE_OWNERS.map((entry) =>
-    entry.site === 'gemini' && flipped.has(entry.feature)
-      ? { ...entry, owner: 'plugin' as const }
-      : entry,
-  );
-  return {
-    ...actual,
-    FEATURE_OWNERS: owners,
-    featureOwner: (site: string, feature: string) =>
-      owners.find((entry) => entry.site === site && entry.feature === feature)?.owner ?? 'legacy',
-    ownedFeatureByPluginId: (id: string) =>
-      owners.find((entry) => entry.officialPluginId === id) ?? null,
-  };
-});
-vi.mock('../storage/legacyValueBindings', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../storage/legacyValueBindings')>();
-  const table = {
-    ...actual.LEGACY_VALUE_BINDINGS,
-    'voyager.gemini-hide-input-halo': actual.LEGACY_VALUE_BINDINGS['voyager.gemini-chat-font-size'],
-    'voyager.gemini-vim-input': actual.LEGACY_VALUE_BINDINGS['voyager.gemini-chat-line-height'],
-  };
-  return {
-    ...actual,
-    LEGACY_VALUE_BINDINGS: table,
-    legacyValueBindingsFor: (id: string) => actual.legacyValueBindingsFor(id, table),
-    legacyValueKeys: () => actual.legacyValueKeys(table),
-    deriveLegacyValueSettings: (id: string, legacy: LegacySettingSnapshot) =>
-      actual.deriveLegacyValueSettings(id, legacy, table),
-    acceptsLegacyLiveChange: (key: string, value: unknown) =>
-      actual.acceptsLegacyLiveChange(key, value, table),
-  };
-});
-
-const FONT_SWITCH = StorageKeys.INPUT_HALO_HIDDEN; // stands in for gvChatFontSizeEnabled
-const SPACING_SWITCH = StorageKeys.INPUT_VIM_MODE; // stands in for gvChatLineHeightEnabled
-const FONT_ID = OFFICIAL_PLUGIN_IDS.geminiHideInputHalo;
-const SPACING_ID = OFFICIAL_PLUGIN_IDS.geminiVimInput;
+const FONT_SWITCH = StorageKeys.CHAT_FONT_SIZE_ENABLED;
+const SPACING_SWITCH = StorageKeys.CHAT_LINE_HEIGHT_ENABLED;
+const FONT_ID = OFFICIAL_PLUGIN_IDS.geminiChatFontSize;
+const SPACING_ID = OFFICIAL_PLUGIN_IDS.geminiChatLineHeight;
 const GEMINI_URL = 'https://gemini.google.com/app/abc';
 
-async function packaged(id: string, as: string): Promise<PluginManifest> {
+async function packaged(id: string): Promise<PluginManifest> {
   const manifest = (await new BundledCatalogPluginSource().list()).find((m) => m.id === id);
   if (!manifest) throw new Error(`${id} is not packaged`);
-  return { ...manifest, id: as };
+  return manifest;
 }
 
 function liveLegacy(initial: LegacySettingSnapshot) {
@@ -99,8 +58,6 @@ async function startHost(
   legacySettings: LegacySettingsSource,
 ): Promise<PluginHost> {
   const admission = createOfficialAdmission();
-  admission.admit('gemini', 'hideInputHalo');
-  admission.admit('gemini', 'vimInput');
   admission.admit('gemini', 'chatFontSize');
   admission.admit('gemini', 'chatLineHeight');
   const source: PluginSource = { id: 'bundled', list: async () => plugins };
@@ -122,8 +79,8 @@ let fontSize: PluginManifest;
 let spacing: PluginManifest;
 
 beforeEach(async () => {
-  fontSize = await packaged('voyager.gemini-chat-font-size', FONT_ID);
-  spacing = await packaged('voyager.gemini-chat-line-height', SPACING_ID);
+  fontSize = await packaged(FONT_ID);
+  spacing = await packaged(SPACING_ID);
   (chrome.storage.local.get as unknown as Mock).mockResolvedValue({ gvPluginsState: {} });
   for (const node of document.querySelectorAll('[data-gv-plugin]')) node.remove();
 });
@@ -139,12 +96,16 @@ describe('PluginHost: official plugin settings from legacy values', () => {
     (chrome.storage.local.get as unknown as Mock).mockResolvedValue({
       gvPluginsState: {
         [FONT_ID]: { enabled: false, installedAt: 1, settings: { fontSize: 140 } },
+        [SPACING_ID]: { enabled: true, installedAt: 1, settings: { lineHeight: 300 } },
       },
     });
     const legacy = liveLegacy({ [FONT_SWITCH]: true, [StorageKeys.CHAT_FONT_SIZE]: 120 });
-    const host = await startHost([fontSize], legacy.legacySettings);
+    const host = await startHost([fontSize, spacing], legacy.legacySettings);
 
+    // The spacing switch was never stored: off, whatever plugin state says.
     const [style] = pluginStyles();
+    expect(pluginStyles()).toHaveLength(1);
+    expect(style?.getAttribute('data-gv-plugin')).toBe(FONT_ID);
     expect(style?.textContent).toContain('--gv-chat-font-size: 120%;');
     expect(style?.textContent).not.toContain('140%');
     host.stop();
@@ -224,56 +185,6 @@ describe('PluginHost: official plugin settings from legacy values', () => {
     expect(document.getElementById('gemini-voyager-chat-font-size')).toBeNull();
     expect(document.getElementById('gemini-voyager-chat-line-height')).toBeNull();
     expect(document.getElementById('gv-chat-paragraph-spacing-style')).toBeNull();
-    host.stop();
-  });
-
-  it('runs the typography plugins under their own ids from their own legacy switches and values', async () => {
-    const [realFontSize, realSpacing] = await Promise.all([
-      packaged(OFFICIAL_PLUGIN_IDS.geminiChatFontSize, OFFICIAL_PLUGIN_IDS.geminiChatFontSize),
-      packaged(OFFICIAL_PLUGIN_IDS.geminiChatLineHeight, OFFICIAL_PLUGIN_IDS.geminiChatLineHeight),
-    ]);
-    // Stored plugin-state entries the bound plugins must ignore.
-    (chrome.storage.local.get as unknown as Mock).mockResolvedValue({
-      gvPluginsState: {
-        [OFFICIAL_PLUGIN_IDS.geminiChatFontSize]: { enabled: false, installedAt: 1 },
-        [OFFICIAL_PLUGIN_IDS.geminiChatLineHeight]: {
-          enabled: true,
-          installedAt: 1,
-          settings: { lineHeight: 300 },
-        },
-      },
-    });
-    const legacy = liveLegacy({
-      [StorageKeys.CHAT_FONT_SIZE_ENABLED]: true,
-      [StorageKeys.CHAT_FONT_SIZE]: 120,
-    });
-    const host = await startHost([realFontSize, realSpacing], legacy.legacySettings);
-    const style = (id: string) =>
-      pluginStyles().find((node) => node.getAttribute('data-gv-plugin') === id) ?? null;
-
-    expect(style(OFFICIAL_PLUGIN_IDS.geminiChatFontSize)?.textContent).toContain(
-      '--gv-chat-font-size: 120%;',
-    );
-    // Its switch was never stored: off, whatever plugin state says.
-    expect(style(OFFICIAL_PLUGIN_IDS.geminiChatLineHeight)).toBeNull();
-
-    legacy.fire({
-      [StorageKeys.CHAT_LINE_HEIGHT_ENABLED]: true,
-      [StorageKeys.CHAT_LINE_HEIGHT]: 190,
-      [StorageKeys.CHAT_FONT_SIZE]: 135,
-    });
-    await flush();
-    expect(style(OFFICIAL_PLUGIN_IDS.geminiChatLineHeight)?.textContent).toContain(
-      '--gv-chat-line-height: 190;',
-    );
-    expect(style(OFFICIAL_PLUGIN_IDS.geminiChatFontSize)?.textContent).toContain(
-      '--gv-chat-font-size: 135%;',
-    );
-
-    legacy.fire({ [StorageKeys.CHAT_FONT_SIZE_ENABLED]: false });
-    await flush();
-    expect(style(OFFICIAL_PLUGIN_IDS.geminiChatFontSize)).toBeNull();
-    expect(style(OFFICIAL_PLUGIN_IDS.geminiChatLineHeight)).not.toBeNull();
     host.stop();
   });
 });

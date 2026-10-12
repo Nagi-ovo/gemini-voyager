@@ -18,7 +18,8 @@
  *     native surface the patterns reach: no `theme` there (Gemini and AI Studio
  *     keep Voyager's own accent; the popup's accent picker changes it), and a
  *     `native` op only for a primitive that site has handed to plugins
- *     (`featureOwners.ts`: formula copy on both, Vim input on Gemini). A
+ *     (`featureOwners.ts`: formula copy on both; Vim input, user LaTeX, code
+ *     collapse and the three diagram renderers on Gemini). A
  *     primitive a native Voyager feature still runs there stays refused: a
  *     second copy would fight it. Import, paste and the CLI enforce this; a
  *     read of already stored plugins passes `hostPolicy: 'defer'` instead, so

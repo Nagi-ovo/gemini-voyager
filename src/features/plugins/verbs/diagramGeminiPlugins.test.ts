@@ -6,13 +6,18 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { LONG_CODE_BLOCK_MIN_LINES } from '@/pages/content/codeBlockCollapse/engine';
+import { CODE_BLOCK_TOGGLE_CLASS } from '@/pages/content/codeBlockCollapse/toggle';
+
 import { requireBundledSiteAdapter } from '../catalog/sites';
+import codeCollapseManifest from '../catalog/sites/gemini/plugins/code-collapse/plugin.json';
 import echartsManifest from '../catalog/sites/gemini/plugins/echarts/plugin.json';
 import mermaidManifest from '../catalog/sites/gemini/plugins/mermaid/plugin.json';
 import waveDromManifest from '../catalog/sites/gemini/plugins/wavedrom/plugin.json';
 import { PluginScope } from '../runtime/pluginScope';
 import type { SiteAdapter } from '../types';
 import type { CodeBlockDiagramParams } from './codeBlockDiagram';
+import { type CodeCollapseParams, codeCollapsePrimitive } from './codeCollapse/index';
 import { echartsPrimitive } from './echarts/index';
 import { mermaidPrimitive } from './mermaid/index';
 import type { Primitive, PrimitiveContext } from './types';
@@ -312,5 +317,51 @@ describe('Gemini diagram plugins while a reply streams', () => {
     );
 
     expect(echartsLibrary.instances[1].resize).toHaveBeenCalled();
+  });
+});
+
+describe('Gemini Mermaid plugin beside the code block collapse plugin', () => {
+  /** A Mermaid flowchart long enough to collapse, under a label that names no language. */
+  const LONG_FLOWCHART = [
+    'flowchart TD',
+    ...Array.from({ length: LONG_CODE_BLOCK_MIN_LINES }, (_, i) => `  N${i} --> N${i + 1}`),
+  ].join('\n');
+  const mermaid = KINDS[2];
+
+  function activateCollapse(): PluginScope {
+    const scope = new PluginScope();
+    scopes.push(scope);
+    void codeCollapsePrimitive.activate(
+      scope,
+      codeCollapseManifest.contributes.domOps[0].params as CodeCollapseParams,
+      {
+        doc: document,
+        adapter: gemini,
+        pluginId: 'voyager.gemini-code-collapse',
+        settings: {},
+        setTargetCounter: () => {},
+      },
+    );
+    return scope;
+  }
+
+  const toggleIn = (reply: Element) => reply.querySelector(`.${CODE_BLOCK_TOGGLE_CLASS}`);
+  const drawn = (reply: Element) => targetOf(reply)?.querySelector('svg') != null;
+
+  it('never collapses a Mermaid block drawn by the plugin', async () => {
+    // Collapse first: it took the long block before Mermaid recognised it by its content.
+    const first = geminiReply(LONG_FLOWCHART, 'Plain Text');
+    activateCollapse();
+    activate(mermaid);
+    await vi.waitFor(() => expect(drawn(first)).toBe(true), { timeout: 5000 });
+    await vi.waitFor(() => expect(toggleIn(first)).toBeNull(), { timeout: 2000 });
+
+    // Mermaid first: the collapse never takes a block the diagram already holds.
+    const second = geminiReply(LONG_FLOWCHART, 'Plain Text');
+    await vi.waitFor(() => expect(drawn(second)).toBe(true), { timeout: 5000 });
+    activateCollapse();
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(toggleIn(first)).toBeNull();
+    expect(toggleIn(second)).toBeNull();
   });
 });

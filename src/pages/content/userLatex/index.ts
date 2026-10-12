@@ -289,6 +289,22 @@ export function createUserLatexClaims(owner: string): UserLatexClaims {
   };
 }
 
+/**
+ * Whether a renderer other than `owner` holds an element around or inside
+ * `el`, its claim still waiting for KaTeX included: the owner attribute goes on
+ * before KaTeX loads, the rendering only after.
+ */
+function heldAroundByOther(el: HTMLElement, owner: string): boolean {
+  for (let node = el.parentElement; node; node = node.parentElement) {
+    const holder = node.getAttribute(USER_LATEX_OWNER_ATTRIBUTE);
+    if (holder !== null && holder !== owner) return true;
+  }
+  for (const node of el.querySelectorAll(`[${USER_LATEX_OWNER_ATTRIBUTE}]`)) {
+    if (node.getAttribute(USER_LATEX_OWNER_ATTRIBUTE) !== owner) return true;
+  }
+  return false;
+}
+
 export interface UserLatexRenderOptions {
   /** The renderer's token (`createUserLatexOwner`); an element another token holds is left alone. */
   readonly owner: string;
@@ -304,7 +320,9 @@ export interface UserLatexRenderOptions {
  * Render LaTeX in a single user message paragraph element. The element is
  * claimed for `owner` before anything else changes and stays claimed while
  * KaTeX loads; a failed load, an abort, a repaint or `canReplace` saying no
- * releases it without touching its text.
+ * releases it without touching its text. An element inside or around one
+ * another renderer holds is left alone, so a whole line and a leaf in it are
+ * never both claimed.
  */
 export async function renderUserLatex(
   el: HTMLElement,
@@ -314,6 +332,8 @@ export async function renderUserLatex(
   dropStaleUserLatex(el);
   // Processed and owner are set and cleared together: a processed element is someone's.
   if (el.dataset.userLatexProcessed) return;
+  // A whole line over another renderer's formula would save that formula's KaTeX text as its source.
+  if (heldAroundByOther(el, owner)) return;
 
   const raw = el.textContent ?? '';
 

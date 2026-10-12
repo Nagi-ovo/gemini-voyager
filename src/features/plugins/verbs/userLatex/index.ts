@@ -15,6 +15,9 @@
  * activations (an official and a local plugin, or a plugin and the native
  * module) never render or restore each other's lines: unmount puts back only
  * what this activation claimed, including lines the host detached meanwhile.
+ * Nor does one claim inside or around a line the other holds, its claim still
+ * waiting for KaTeX included: a whole turn over another's rendered leaf would
+ * save that leaf's KaTeX text as its source.
  */
 import { createUserLatexOwner } from '@/core/utils/userLatexSource';
 import {

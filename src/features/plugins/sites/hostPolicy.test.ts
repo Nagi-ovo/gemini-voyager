@@ -87,7 +87,15 @@ describe('packaged host policy', () => {
   });
 
   it('opens on Gemini and AI Studio only the primitives their official plugins now own', () => {
-    const geminiOpen = new Set(['formulaCopy', 'vimInput']);
+    const geminiOpen = new Set([
+      'formulaCopy',
+      'vimInput',
+      'userLatex',
+      'codeCollapse',
+      'wavedrom',
+      'echarts',
+      'mermaid',
+    ]);
     const aistudioOpen = new Set(['formulaCopy']);
     const primitives = listPrimitiveNames();
     expect(primitives).toEqual(expect.arrayContaining([...geminiOpen]));

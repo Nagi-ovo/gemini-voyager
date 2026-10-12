@@ -206,4 +206,50 @@ describe('Gemini user LaTeX lifecycle', () => {
     expect(line.getAttribute(OWNER)).not.toBe(first);
     expect(line.querySelectorAll('.katex')).toHaveLength(1);
   });
+
+  /** A line whose formula sits in a link, so a plugin rendering leaves can hold the link alone. */
+  function lineWithLink(): { line: HTMLElement; link: HTMLElement } {
+    const line = userLine('');
+    line.innerHTML = 'bare $y$ <a href="#x">$x$</a>';
+    return { line, link: line.querySelector('a')! };
+  }
+
+  it('leaves a line alone while a plugin holds a formula inside it, then renders its whole source', async () => {
+    const { line, link } = lineWithLink();
+    const other = createUserLatexOwner('plugin');
+    await renderUserLatex(link, { owner: other });
+    const stop = startUserLatex();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(line.hasAttribute(OWNER)).toBe(false);
+    expect(line.dataset.userLatexOriginal).toBeUndefined();
+    expect(rendered(link)).toBe(true);
+
+    restoreUserLatex(link, other);
+    await vi.waitFor(() => expect(line.dataset.userLatexOriginal).toBe('bare $y$ $x$'));
+    expect(line.querySelectorAll('.katex')).toHaveLength(2);
+    stop();
+    expect(line.textContent).toBe('bare $y$ $x$');
+    expect(line.querySelector('a')).toBe(link);
+  });
+
+  it('keeps a plugin off a formula inside a line it holds while KaTeX loads', async () => {
+    const { line, link } = lineWithLink();
+    const loading = holdKatex();
+    const stop = startUserLatex();
+    expect(line.hasAttribute(OWNER)).toBe(true);
+
+    const other = createUserLatexOwner('plugin');
+    const attempt = renderUserLatex(link, { owner: other });
+    expect(link.hasAttribute(OWNER)).toBe(false);
+    loading.resolve();
+    await attempt;
+
+    await vi.waitFor(() => expect(line.dataset.userLatexOriginal).toBe('bare $y$ $x$'));
+    expect(line.querySelectorAll('.katex')).toHaveLength(2);
+    stop();
+    expect(line.textContent).toBe('bare $y$ $x$');
+    expect(line.querySelector('a')).toBe(link);
+    expect(link.hasAttribute(OWNER)).toBe(false);
+  });
 });

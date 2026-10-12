@@ -13,6 +13,12 @@ export interface CollapseSite {
   readonly hostSelector: string;
   /** Whether a matched block is one this site collapses (scope, diagrams, …). */
   accepts(host: HTMLElement): boolean;
+  /**
+   * Attributes whose change on a block, or inside it, can flip `accepts`. The
+   * engine rescans that block when one changes; other attribute changes are
+   * not watched.
+   */
+  readonly acceptsAttributes?: readonly string[];
   /** The content measured for length. */
   content(host: HTMLElement): HTMLElement | null;
   /** Whether the measured content exceeds this caller's collapse threshold. */
@@ -253,7 +259,15 @@ export function createCollapseEngine(
         if (currentGeneration !== generation) return;
         onMutations(records);
       });
-      observer.observe(root, { childList: true, subtree: true, characterData: true });
+      const attributeFilter = site.acceptsAttributes ?? [];
+      observer.observe(root, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+        ...(attributeFilter.length > 0
+          ? { attributes: true, attributeFilter: [...attributeFilter] }
+          : {}),
+      });
     },
     enhance,
     process,

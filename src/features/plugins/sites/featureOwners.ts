@@ -111,13 +111,14 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     handlers: [],
     healthTracking: false,
   },
-  // Stage 3: packaged and wired, still run by their native modules until each
-  // is flipped. Appearance opens no primitive (pure CSS, or a fixed-id builtin
-  // handler), so rolling it back never blocks a local CSS plugin.
+  // Stage 3. Appearance opens no primitive (pure CSS, or a fixed-id builtin
+  // handler), so rolling it back never blocks a local CSS plugin. Rolled back,
+  // the Mermaid, WaveDrom and ECharts native modules still have no stop: they
+  // start once per page and leave only on unload.
   {
     site: 'gemini',
     feature: 'chatFontSize',
-    owner: 'legacy',
+    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiChatFontSize,
     handlers: [],
     healthTracking: false,
@@ -125,7 +126,7 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'chatLineHeight',
-    owner: 'legacy',
+    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiChatLineHeight,
     handlers: [],
     healthTracking: false,
@@ -133,7 +134,7 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'chatWidth',
-    owner: 'legacy',
+    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiChatWidth,
     handlers: [],
     healthTracking: false,
@@ -141,7 +142,7 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'userLatex',
-    owner: 'legacy',
+    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiUserLatex,
     handlers: ['userLatex'],
     healthTracking: false,
@@ -149,7 +150,7 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'codeCollapse',
-    owner: 'legacy',
+    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiCodeCollapse,
     handlers: ['codeCollapse'],
     healthTracking: false,
@@ -157,7 +158,7 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'waveDrom',
-    owner: 'legacy',
+    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiWaveDrom,
     handlers: ['wavedrom'],
     healthTracking: false,
@@ -165,7 +166,7 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'echarts',
-    owner: 'legacy',
+    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiECharts,
     handlers: ['echarts'],
     healthTracking: false,
@@ -173,7 +174,7 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'mermaid',
-    owner: 'legacy',
+    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiMermaid,
     handlers: ['mermaid'],
     healthTracking: false,
