@@ -5,6 +5,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 import {
+  type NotificationEnablementResult,
+  requestNotificationEnablement,
+} from '@/core/utils/notificationEnablement';
+import {
   ensureNotificationsPermission,
   hasNotificationsPermission,
 } from '@/core/utils/notificationsPermission';
@@ -20,6 +24,9 @@ import {
 vi.mock('@/core/utils/notificationsPermission', () => ({
   ensureNotificationsPermission: vi.fn(),
   hasNotificationsPermission: vi.fn(),
+}));
+vi.mock('@/core/utils/notificationEnablement', () => ({
+  requestNotificationEnablement: vi.fn(),
 }));
 vi.mock('@/core/utils/safariNativeNotifications', () => ({
   requestSafariNativeNotificationPermission: vi.fn(),
@@ -55,6 +62,14 @@ describe('useGeneralPopupSettings', () => {
     vi.clearAllMocks();
     vi.mocked(hasNotificationsPermission).mockResolvedValue(false);
     vi.mocked(ensureNotificationsPermission).mockResolvedValue(false);
+    vi.mocked(requestNotificationEnablement).mockImplementation(async (payload) =>
+      payload.action === 'finish'
+        ? { ok: true, enabled: payload.granted }
+        : payload.action === 'disable'
+          ? { ok: true, enabled: false }
+          : // A normal reconcile reports the stored switch without claiming recovery.
+            { ok: true, enabled: false },
+    );
     vi.mocked(requestSafariNativeNotificationPermission).mockResolvedValue(false);
     vi.mocked(chrome.storage.local.get).mockImplementation((...args: unknown[]) => {
       const callback = args[1];
@@ -114,6 +129,7 @@ describe('useGeneralPopupSettings', () => {
   });
 
   it('hydrates stored values using the existing opt-in and opt-out rules', async () => {
+    vi.mocked(requestNotificationEnablement).mockResolvedValue({ ok: true, enabled: true });
     await render();
     act(() =>
       settings.hydrateFromStorage({
@@ -294,7 +310,7 @@ describe('useGeneralPopupSettings', () => {
     expect(requestSafariNativeNotificationPermission).not.toHaveBeenCalled();
   });
 
-  it('persists completion notifications only after permission is granted', async () => {
+  it('shows granted completion notifications without a popup-owned settings write', async () => {
     const permission = deferred<boolean>();
     vi.mocked(ensureNotificationsPermission).mockReturnValue(permission.promise);
     await render();
@@ -304,9 +320,48 @@ describe('useGeneralPopupSettings', () => {
     await act(async () => permission.resolve(true));
     expect(settings.values.responseCompleteNotificationEnabled).toBe(true);
     expect(settings.remoteAnnouncementPermissionGranted).toBe(true);
-    expect(writeSyncStorage).toHaveBeenCalledExactlyOnceWith({
-      [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: true,
+    expect(writeSyncStorage).not.toHaveBeenCalled();
+  });
+
+  it('requests permission in the gesture without waiting for the begin message', async () => {
+    const begin = deferred<NotificationEnablementResult>();
+    const permission = deferred<boolean>();
+    vi.mocked(requestNotificationEnablement).mockImplementation(async (payload) => {
+      if (payload.action === 'begin') return begin.promise;
+      return payload.action === 'finish' ? { ok: true, enabled: payload.granted } : { ok: true };
     });
+    vi.mocked(ensureNotificationsPermission).mockReturnValue(permission.promise);
+    await render();
+    act(() => settings.onChange({ responseCompleteNotificationEnabled: true }));
+    // Even an unresolved message must not move Firefox's permissions.request out of this gesture.
+    expect(ensureNotificationsPermission).toHaveBeenCalledOnce();
+    await act(async () => permission.resolve(true));
+    expect(settings.values.responseCompleteNotificationEnabled).toBe(true);
+    expect(writeSyncStorage).not.toHaveBeenCalled();
+  });
+
+  it('keeps a later off when an earlier permission prompt is granted', async () => {
+    const permission = deferred<boolean>();
+    vi.mocked(ensureNotificationsPermission).mockReturnValue(permission.promise);
+    await render();
+    act(() => settings.onChange({ responseCompleteNotificationEnabled: true }));
+    act(() => settings.onChange({ responseCompleteNotificationEnabled: false }));
+    await act(async () => permission.resolve(true));
+    act(() => settings.hydrateFromStorage(GENERAL_SETTINGS_STORAGE_DEFAULTS));
+    expect(settings.values.responseCompleteNotificationEnabled).toBe(false);
+    expect(writeSyncStorage).not.toHaveBeenCalled();
+  });
+
+  it('keeps a new click when a previous popup reconciliation finishes late', async () => {
+    const reconcile = deferred<NotificationEnablementResult>();
+    vi.mocked(requestNotificationEnablement).mockImplementation(async (payload) =>
+      payload.action === 'reconcile' ? reconcile.promise : { ok: true },
+    );
+    await render();
+    act(() => settings.onChange({ responseCompleteNotificationEnabled: false }));
+    await act(async () => reconcile.resolve({ ok: true, enabled: true, recovered: true }));
+    expect(settings.values.responseCompleteNotificationEnabled).toBe(false);
+    expect(writeSyncStorage).not.toHaveBeenCalled();
   });
 
   it.each([false, true])(
@@ -335,9 +390,11 @@ describe('useGeneralPopupSettings', () => {
       );
       await act(async () => settings.onChange({ responseCompleteNotificationEnabled: false }));
       expect(settings.values.responseCompleteNotificationEnabled).toBe(false);
-      expect(writeSyncStorage).toHaveBeenCalledExactlyOnceWith({
-        [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
-      });
+      if (isSafariBrowser) {
+        expect(writeSyncStorage).toHaveBeenCalledExactlyOnceWith({
+          [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
+        });
+      } else expect(writeSyncStorage).not.toHaveBeenCalled();
       expect(ensureNotificationsPermission).not.toHaveBeenCalled();
       expect(requestSafariNativeNotificationPermission).not.toHaveBeenCalled();
     },

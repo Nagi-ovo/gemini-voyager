@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { NOTIFICATION_ENABLEMENT_MESSAGE } from '@/core/utils/notificationEnablement';
 import {
   MAX_RUNTIME_IMAGE_BYTES,
   isAllowedRuntimeImageBody,
@@ -35,6 +36,7 @@ const contentSender = (url: string): chrome.runtime.MessageSender => ({
 describe('background runtime message routing', () => {
   it('keeps the async channel open only for exact handled message types', () => {
     expect(isHandledBackgroundRuntimeMessage({ type: 'gv.account.resolve' })).toBe(true);
+    expect(isHandledBackgroundRuntimeMessage({ type: NOTIFICATION_ENABLEMENT_MESSAGE })).toBe(true);
     expect(isHandledBackgroundRuntimeMessage({ type: 'gv.highlight.list' })).toBe(true);
     expect(isHandledBackgroundRuntimeMessage({ type: 'gv.sync.upload' })).toBe(true);
     expect(isHandledBackgroundRuntimeMessage({ type: PLUGIN_CONTENT_SCRIPT_SYNC_MESSAGE })).toBe(

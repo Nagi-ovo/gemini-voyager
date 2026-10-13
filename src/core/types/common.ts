@@ -148,6 +148,8 @@ export const StorageKeys = {
   USER_LATEX_ENABLED: 'gvUserLatexEnabled',
   QUOTE_REPLY_ENABLED: 'gvQuoteReplyEnabled',
   RESPONSE_COMPLETE_NOTIFICATION_ENABLED: 'gvResponseCompleteNotificationEnabled',
+  /** Local, expiring permission intent; never part of settings sync or backups. */
+  RESPONSE_NOTIFICATION_ENABLE_PENDING: 'gvResponseNotificationEnablePending',
   REMOTE_ANNOUNCEMENTS_ENABLED: 'gvRemoteAnnouncementsEnabled',
   REMOTE_ANNOUNCEMENTS_STATE: 'gvRemoteAnnouncementsState',
   REMOTE_ANNOUNCEMENTS_PENDING: 'gvRemoteAnnouncementsPending',

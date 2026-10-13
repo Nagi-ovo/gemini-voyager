@@ -169,6 +169,11 @@ type NonSettingsStorageKey = Exclude<StorageKey, BackupableSettingsKey>;
  * make a new key fail fast until its sync/backup behavior is an explicit choice.
  */
 export const NON_SETTINGS_BACKUP_POLICIES = {
+  [StorageKeys.RESPONSE_NOTIFICATION_ENABLE_PENDING]: {
+    storage: 'local',
+    disposition: 'transient',
+    reason: 'A pending notification permission choice belongs to this installation and expires.',
+  },
   [StorageKeys.FOLDER_DATA]: {
     storage: 'local',
     disposition: 'separate-file',

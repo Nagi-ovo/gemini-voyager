@@ -1,15 +1,187 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { StorageKeys } from '@/core/types/common';
+import {
+  NOTIFICATION_ENABLEMENT_MESSAGE,
+  type NotificationEnablementPayload,
+} from '@/core/utils/notificationEnablement';
+
 // Keep the real startup owners; only browser I/O is replaced.
-vi.mock('webextension-polyfill', () => ({ default: chrome }));
+vi.mock('webextension-polyfill', () => ({
+  get default() {
+    return chrome;
+  },
+}));
 
 afterEach(() => {
+  if (vi.isFakeTimers()) {
+    vi.clearAllTimers();
+    vi.useRealTimers();
+  }
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   vi.resetModules();
 });
 
+/** Real browser events and storage, including the change events that writes emit. */
+async function startNotificationBackground() {
+  vi.resetModules();
+  vi.stubEnv('VOYAGER_BUILD_TARGET', 'chrome');
+  vi.stubEnv('VOYAGER_DEV_AUTO_RELOAD', '');
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+  const event = <Args extends unknown[]>() => {
+    const addListener = vi.fn<(listener: (...args: Args) => unknown) => void>();
+    return {
+      addListener,
+      removeListener: vi.fn(),
+      emit: (...args: Args) => addListener.mock.calls.map(([listener]) => listener(...args)),
+    };
+  };
+  const messages = event<[unknown, chrome.runtime.MessageSender, (response: unknown) => void]>();
+  const permissionsAdded = event<[chrome.permissions.Permissions]>();
+  const storageChanged = event<[Record<string, chrome.storage.StorageChange>, string]>();
+  const sync: Record<string, unknown> = {
+    [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
+    [StorageKeys.HIGHLIGHT_ENABLED]: false,
+  };
+  const local: Record<string, unknown> = {};
+  const area = (values: Record<string, unknown>, name: string) => ({
+    get: vi.fn(async (keys?: unknown) => {
+      if (keys == null) return { ...values };
+      const defaults =
+        typeof keys === 'object' && !Array.isArray(keys) ? (keys as Record<string, unknown>) : {};
+      const names =
+        typeof keys === 'string' ? [keys] : Array.isArray(keys) ? keys : Object.keys(defaults);
+      return Object.fromEntries(names.map((key: string) => [key, values[key] ?? defaults[key]]));
+    }),
+    set: vi.fn(async (updates: Record<string, unknown>) => {
+      const changes: Record<string, chrome.storage.StorageChange> = {};
+      for (const [key, value] of Object.entries(updates)) {
+        if (Object.is(values[key], value)) continue;
+        changes[key] = { oldValue: values[key], newValue: value };
+        values[key] = value;
+      }
+      if (Object.keys(changes).length > 0) storageChanged.emit(changes, name);
+    }),
+    remove: vi.fn(async (keys: string | string[]) => {
+      const changes: Record<string, chrome.storage.StorageChange> = {};
+      for (const key of typeof keys === 'string' ? [keys] : keys) {
+        if (!Object.hasOwn(values, key)) continue;
+        changes[key] = { oldValue: values[key] };
+        delete values[key];
+      }
+      if (Object.keys(changes).length > 0) storageChanged.emit(changes, name);
+    }),
+  });
+  let granted = false;
+  vi.stubGlobal('chrome', {
+    ...chrome,
+    runtime: {
+      ...chrome.runtime,
+      getManifest: () => ({ permissions: [], host_permissions: [], content_scripts: [] }),
+      onMessage: messages,
+      onInstalled: event(),
+      onStartup: event(),
+    },
+    storage: {
+      sync: area(sync, 'sync'),
+      local: area(local, 'local'),
+      session: area({}, 'session'),
+      onChanged: storageChanged,
+    },
+    permissions: {
+      contains: vi.fn(
+        async (request: chrome.permissions.Permissions) =>
+          request.permissions?.includes('notifications') === true && granted,
+      ),
+      getAll: vi.fn(async () => ({ origins: [] })),
+      onAdded: permissionsAdded,
+      onRemoved: event(),
+    },
+    notifications: { ...chrome.notifications, onClicked: event() },
+    alarms: { ...chrome.alarms, create: vi.fn(async () => {}), onAlarm: event() },
+    tabs: { ...chrome.tabs, onRemoved: event(), query: vi.fn(async () => []) },
+  });
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () => new Response('', { status: 404 })),
+  );
+  await import('../index');
+  const popup = { id: chrome.runtime.id, url: chrome.runtime.getURL('src/pages/popup/index.html') };
+  const content = {
+    id: chrome.runtime.id,
+    url: 'https://gemini.google.com/app/chat',
+    tab: { id: 7, url: 'https://gemini.google.com/app/chat' },
+  } as chrome.runtime.MessageSender;
+  const send = async (
+    payload: NotificationEnablementPayload,
+    sender: chrome.runtime.MessageSender = popup,
+  ) => {
+    const response = vi.fn();
+    messages.emit({ type: NOTIFICATION_ENABLEMENT_MESSAGE, payload }, sender, response);
+    await vi.waitFor(() => expect(response).toHaveBeenCalledOnce());
+    return response.mock.calls[0][0];
+  };
+  return {
+    sync,
+    local,
+    content,
+    send,
+    grant: () => {
+      granted = true;
+      permissionsAdded.emit({ permissions: ['notifications'] });
+    },
+  };
+}
+
 describe('MV3 background startup', () => {
+  it('enables notifications on the first permission grant after the requesting popup has closed', async () => {
+    const background = await startNotificationBackground();
+    expect(await background.send({ action: 'begin', requestId: 'popup-first-click' })).toEqual({
+      ok: true,
+      enabled: false,
+    });
+    expect(background.sync[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]).toBe(false);
+    expect(background.local[StorageKeys.RESPONSE_NOTIFICATION_ENABLE_PENDING]).toEqual({
+      id: 'popup-first-click',
+      requestedAt: expect.any(Number),
+    });
+
+    // No popup finish message: its window closed while Chrome showed the permission prompt.
+    background.grant();
+    await vi.waitFor(() => {
+      expect(background.sync[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]).toBe(true);
+      expect(background.local[StorageKeys.RESPONSE_NOTIFICATION_ENABLE_PENDING]).toBeUndefined();
+    });
+  });
+
+  it('does not enable a denied request or let a content tab change the notification setting', async () => {
+    const background = await startNotificationBackground();
+    await background.send({ action: 'begin', requestId: 'denied-click' });
+    expect(
+      await background.send({ action: 'finish', requestId: 'denied-click', granted: false }),
+    ).toEqual({ ok: true, enabled: false });
+    expect(background.local[StorageKeys.RESPONSE_NOTIFICATION_ENABLE_PENDING]).toBeUndefined();
+    for (const payload of [
+      { action: 'begin', requestId: 'content-click' },
+      { action: 'finish', requestId: 'content-click', granted: true },
+      { action: 'reconcile', source: 'popup' },
+    ] satisfies NotificationEnablementPayload[]) {
+      expect(await background.send(payload, background.content)).toEqual({ ok: false });
+    }
+    background.grant();
+    // A trusted reconciliation also drains the permission listener's queued continuation.
+    expect(await background.send({ action: 'reconcile', source: 'popup' })).toEqual({
+      ok: true,
+      enabled: false,
+    });
+    expect(background.sync[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]).toBe(false);
+    expect(background.local[StorageKeys.RESPONSE_NOTIFICATION_ENABLE_PENDING]).toBeUndefined();
+    await chrome.storage.sync.set({ [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: true });
+    expect(await background.send({ action: 'disable' }, background.content)).toEqual({ ok: false });
+    expect(background.sync[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]).toBe(true);
+  });
+
   it.each([false, true])(
     'registers every browser event before pending startup I/O completes (dev auto-reload: %s)',
     async (devAutoReload) => {

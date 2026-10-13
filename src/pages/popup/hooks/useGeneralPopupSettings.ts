@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { StorageKeys } from '@/core/types/common';
+import { requestNotificationEnablement } from '@/core/utils/notificationEnablement';
 import {
   ensureNotificationsPermission,
   hasNotificationsPermission,
@@ -108,6 +109,52 @@ export function useGeneralPopupSettings({
     useState(false);
   const [remoteAnnouncementPermissionGranted, setRemoteAnnouncementPermissionGranted] =
     useState(false);
+  const notificationUi = useRef({
+    active: true,
+    revision: 0,
+    requestRevision: 0,
+    supersedesHydration: false,
+  });
+
+  useEffect(() => {
+    if (isSafariBrowser) return;
+    const state = notificationUi.current;
+    state.active = true;
+    const revision = state.revision;
+    const onChanged = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
+      const key = StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED;
+      if (!state.active || area !== 'sync' || !Object.hasOwn(changes, key)) return;
+      const enabled = changes[key].newValue === true;
+      state.revision++;
+      // An on is also the worker's acknowledgement; only off cancels a permission request.
+      if (!enabled) state.requestRevision++;
+      state.supersedesHydration = true;
+      setResponseCompleteNotificationEnabled(enabled);
+    };
+    try {
+      chrome.storage.onChanged.addListener(onChanged);
+    } catch {
+      // A closing popup may already have lost its extension context.
+    }
+    void requestNotificationEnablement({ action: 'reconcile', source: 'popup' }).then((result) => {
+      if (!state.active || state.revision !== revision || !result.ok) return;
+      if (typeof result.enabled === 'boolean') {
+        // A grant can consume its intent before this read; the older bulk snapshot is never authority.
+        state.supersedesHydration = true;
+        setResponseCompleteNotificationEnabled(result.enabled);
+      }
+    });
+    return () => {
+      state.active = false;
+      state.revision++;
+      state.requestRevision++;
+      try {
+        chrome.storage.onChanged.removeListener(onChanged);
+      } catch {
+        // Ignore cleanup after extension context invalidation.
+      }
+    };
+  }, [isSafariBrowser]);
 
   useEffect(() => {
     try {
@@ -155,11 +202,13 @@ export function useGeneralPopupSettings({
       });
       hydrateWavedromEnabled(raw[StorageKeys.WAVEDROM_ENABLED]);
       hydrateEchartsEnabled(raw[StorageKeys.ECHARTS_ENABLED]);
-      setResponseCompleteNotificationEnabled(
-        raw[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] === true,
-      );
+      if (isSafariBrowser || !notificationUi.current.supersedesHydration) {
+        setResponseCompleteNotificationEnabled(
+          raw[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] === true,
+        );
+      }
     },
-    [hydrateEchartsEnabled, hydrateWavedromEnabled],
+    [hydrateEchartsEnabled, hydrateWavedromEnabled, isSafariBrowser],
   );
 
   const handleChangelogBadgeModeChange = useCallback((checked: boolean): void => {
@@ -184,16 +233,38 @@ export function useGeneralPopupSettings({
         setResponseCompleteNotificationEnabled(granted);
         return;
       }
-      if (next) {
-        const granted = await ensureNotificationsPermission();
-        if (!granted) {
-          setResponseCompleteNotificationEnabled(false);
-          return;
-        }
+      if (isSafariBrowser) {
+        setResponseCompleteNotificationEnabled(false);
+        void writeSyncStorage({ [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false });
+        return;
       }
-      if (next) setRemoteAnnouncementPermissionGranted(true);
+      const state = notificationUi.current;
+      state.revision++;
+      const revision = ++state.requestRevision;
+      state.supersedesHydration = true;
       setResponseCompleteNotificationEnabled(next);
-      void writeSyncStorage({ [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: next });
+      if (next) {
+        const requestId = crypto.randomUUID();
+        // Chrome can close the popup for its prompt; hand off intent before the first await.
+        void requestNotificationEnablement({ action: 'begin', requestId });
+        // Firefox requires the permission request to be the first await in this gesture.
+        const granted = await ensureNotificationsPermission();
+        if (!state.active || state.requestRevision !== revision) return;
+        if (granted) setRemoteAnnouncementPermissionGranted(true);
+        const viewRevision = state.revision;
+        const result = await requestNotificationEnablement({
+          action: 'finish',
+          requestId,
+          granted,
+        });
+        if (!state.active || state.requestRevision !== revision) return;
+        // Another settings writer can update the view while this reply is in transit.
+        if (state.revision !== viewRevision) return;
+        setResponseCompleteNotificationEnabled(result.ok && result.enabled === true);
+      } else {
+        // Off cancels a pending grant even when the persisted switch is already false.
+        void requestNotificationEnablement({ action: 'disable' });
+      }
     },
     [isSafariBrowser, writeSyncStorage],
   );

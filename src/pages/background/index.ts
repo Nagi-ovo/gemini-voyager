@@ -16,6 +16,7 @@ import { startDevAutoReload } from './devAutoReload';
 import { createForkMessagesOwner } from './forkMessages';
 import { createGeneratedUiCapture } from './generatedUiCapture';
 import { createMainWorldRegistration } from './mainWorldRegistration';
+import { createNotificationEnablement } from './notificationEnablement';
 import { handlePluginRuntimeMessage } from './pluginRuntimeMessages';
 import { startQueueOwners } from './queueOwners';
 import { registerBackgroundSettingListeners } from './registrationSettings';
@@ -27,6 +28,13 @@ import { createStarredMessagesHandler } from './starredMessages';
 import { registerWatermarkDefaultMigrationOnInstall } from './watermarkDefaultMigration';
 
 const responseNotifications = createResponseNotifications();
+const notificationEnablement =
+  getVoyagerBuildTarget() === 'safari' ? null : createNotificationEnablement();
+// Permission prompts can close the popup; the background owns its accepted enable intent.
+notificationEnablement?.registerListeners();
+void notificationEnablement?.reconcile().catch(() => {
+  // A later permission/storage event retries a transient startup read failure.
+});
 const remoteAnnouncementService = startRemoteAnnouncementBackgroundService();
 registerWelcomePageOnInstall();
 registerWatermarkDefaultMigrationOnInstall();
@@ -82,7 +90,9 @@ registerBackgroundRuntimeMessages({
       refreshCatalog: (host, force) => hostCatalogRefresher.refresh(host, { force }),
     }),
   handleGeneratedUiMessage: generatedUiCapture.handle,
-  handleNotificationMessage: responseNotifications.handle,
+  handleNotificationMessage: (message, sender) =>
+    notificationEnablement?.handle(message, sender) ??
+    responseNotifications.handle(message, sender),
   handleStarredMessage,
   handleForkMessage: forkMessages.handle,
   handleCloudSyncMessage,
