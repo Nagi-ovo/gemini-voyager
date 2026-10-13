@@ -318,8 +318,9 @@ serves these hosts and never publishes their manifests. The official ones replac
 feature. Stage 7 retires migrated native startup callbacks and registrations; the content script
 admits each official plugin where its native module used to start, and the
 plugin follows the native setting it replaces (`storage/legacySettingBindings.ts`),
-not a plugin-list toggle. An owner-table rollback now requires restoring the stage 7
-startup-retirement commit first. Permanent page services remain in `nativeFeatures.ts`; their
+not a plugin-list toggle. An owner-table rollback now requires reverting both stage 7
+retirement commits (startup wiring 9c2161df and native wrappers 0ae260c1) first; flipping an
+owner to `legacy` alone silently disables the feature. Permanent page services remain in `nativeFeatures.ts`; their
 account bridge, send coordinator, history/message caches, selection host, sent-quote styling,
 prevent-auto-scroll bridge, fork first-send finisher and default-model stale-menu cleanup stay
 independent of optional plugin switches. The last service only removes old menu UI while the sync
@@ -490,8 +491,8 @@ navigation without a send keeps it. Restore checks route, account and input edit
 after asynchronous waits, and never restores into an old-question edit input.
 Unload makes a best-effort final save; asynchronous storage cannot be guaranteed
 after browser closure. Changing email within one account slot still shares stored
-drafts. Gemini Enterprise stays inactive. Rolling the owner back closes local
-`draftSave` on Gemini while preserving these data and lifecycle fixes.
+drafts. Gemini Enterprise stays inactive. Drafts and their key format survive
+any rollback of the plugin owner.
 
 `quoteReply` (unreleased, `sinceEngine: 'next'`, no parameters; reads `assistantTurn` and
 `composer`) is Gemini's quote reply on a catalog site. Selecting text wholly inside one

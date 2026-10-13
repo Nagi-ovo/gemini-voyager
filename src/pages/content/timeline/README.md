@@ -4,8 +4,8 @@ Start with the owner of the behavior being changed. The fixed builtin `voyager.g
 starts `index.ts` through `pluginHandler.ts` at the original heavy-feature start point, after the
 history and message timestamp page services. `index.ts` owns the native master setting, while
 `startGeminiTimelineRail.ts` owns the shared route/DOM lifetime and synchronous stop. Scope abort
-stops the rail before the plugin cleanup ledger drains. The migrated native registry entry is retired in stage 7. Restore the stage 7 startup-retirement
-commit before using an owner-table rollback. The official handler continues to use this module. Local `turnNavigator` with literal `dataBackend: "shared"`
+stops the rail before the plugin cleanup ledger drains. The migrated native registry entry is retired in stage 7. Revert both stage 7 retirement commits
+(9c2161df, 0ae260c1) before using an owner-table rollback. The official handler continues to use this module. Local `turnNavigator` with literal `dataBackend: "shared"`
 uses this rail and native data policy after both page caches are ready. It inherits the official
 admission but follows its own plugin switch. Both rails claim the same exclusive resource;
 turn off the current holder to hand over. Shared identity overrides, Business, Enterprise and

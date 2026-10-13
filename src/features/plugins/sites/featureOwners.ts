@@ -1,12 +1,8 @@
 /**
- * Who runs each Gemini / AI Studio feature that is moving from a native
- * Voyager module to a packaged official plugin: the native module ('legacy')
- * or the plugin ('plugin'). This table is the one source of that answer.
- *
- * The content script reads it at its legacy start points, and `hostPolicy`
- * derives which `native` primitives a plugin may call on these sites from it,
- * so flipping one entry moves a feature and opens (or closes) its primitive in
- * the same build.
+ * Which Gemini / AI Studio features moved from a native Voyager module to a
+ * packaged official plugin. The content script admits each official plugin at
+ * the feature's original start point, and `hostPolicy` derives from this table
+ * which `native` primitives a plugin may call on these sites.
  *
  * Invariants the derived allowlist relies on (keep them when editing):
  *   1. An owner is fixed for a page's whole content-script instance; it is
@@ -107,10 +103,9 @@ export interface OwnedFeature {
 }
 
 /**
- * Setting an entry back to 'legacy' is the rollback: its native start path
- * runs again, its primitive closes on that site, and a stored local plugin
- * calling it stays listed but reports `blocked: host-policy` (the local
- * source defers the host policy on read).
+ * Stage 7 deleted the native start paths, so setting an entry back to 'legacy'
+ * alone silently turns the feature off. Rolling a feature back means reverting
+ * the stage 7 retirement commits (9c2161df and 0ae260c1) first.
  */
 export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
