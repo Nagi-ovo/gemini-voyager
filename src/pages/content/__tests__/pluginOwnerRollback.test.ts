@@ -127,6 +127,13 @@ vi.mock('../quoteReply/quoteAction', async (importOriginal) => ({
     return () => {};
   },
 }));
+vi.mock('../highlight/highlightAction', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../highlight/highlightAction')>()),
+  startHighlightAction: () => {
+    native.started.push('highlight');
+    return () => {};
+  },
+}));
 
 vi.mock('@/features/formulaCopy', () => ({
   activateFormulaCopy: (scope: { effect: (run: () => () => void, label: string) => void }) => {
@@ -315,6 +322,7 @@ describe('rolling every owned feature back to its native module', () => {
     ['research pack', 'researchPack', OFFICIAL_PLUGIN_IDS.geminiResearchPack],
     ['default model', 'defaultModel', OFFICIAL_PLUGIN_IDS.geminiDefaultModel],
     ['quote reply', 'quoteReply', OFFICIAL_PLUGIN_IDS.geminiQuoteReply],
+    ['highlight', 'highlight', OFFICIAL_PLUGIN_IDS.geminiHighlight],
   ])(
     'starts native %s once at its Gemini start point and admits no official plugin when rolled back',
     async (_label, feature, id) => {
@@ -322,12 +330,14 @@ describe('rolling every owned feature back to its native module', () => {
       (chrome.storage.sync.get as unknown as Mock).mockResolvedValue({
         [StorageKeys.RESEARCH_PACK_ENABLED]: true,
         [StorageKeys.DEFAULT_MODEL_AUTO_APPLY]: true,
+        [StorageKeys.HIGHLIGHT_ENABLED]: true,
       });
       const admission = createOfficialAdmission();
       const cleanupManager = new CleanupManager();
       const builtins = createGeminiBuiltinStartup(admission, cleanupManager);
 
-      if (feature === 'quoteReply') await createSelectionStartup(admission, cleanupManager).start();
+      if (feature === 'quoteReply' || feature === 'highlight')
+        await createSelectionStartup(admission, cleanupManager).start();
       else {
         await builtins.startDefaultModel();
         await builtins.startForkAndResearchPack();

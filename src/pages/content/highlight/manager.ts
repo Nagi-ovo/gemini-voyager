@@ -628,6 +628,8 @@ export class HighlightManager {
     record: HighlightRecordV1,
     patch: HighlightUpdatePatch,
   ): Promise<void> {
+    // Detached editor buttons can retain callbacks after stop; only actions already accepted may finish.
+    if (this.destroyed) return;
     const identity = this.captureMutation();
     const scope = await this.resolveMutationScope(identity);
     const updated = await this.client.update(scope, record.conversationId, record.id, patch);
@@ -638,6 +640,8 @@ export class HighlightManager {
   }
 
   private async deleteHighlight(record: HighlightRecordV1): Promise<void> {
+    // A stopped editor must not accept a new deletion from a retained button.
+    if (this.destroyed) return;
     const identity = this.captureMutation();
     const scope = await this.resolveMutationScope(identity);
     await this.client.delete(scope, record.conversationId, record.id);

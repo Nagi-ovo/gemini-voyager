@@ -20,6 +20,7 @@ import {
 import { activateGeminiChatWidth, updateGeminiChatWidthSettings } from './chatWidth/pluginHandler';
 import { activateGeminiDefaultModel } from './defaultModel/pluginHandler';
 import { activateGeminiFork } from './fork/pluginHandler';
+import { activateGeminiHighlight } from './highlight/pluginHandler';
 import {
   activateGeminiInputCollapse,
   updateGeminiInputCollapseSettings,
@@ -74,6 +75,9 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   },
   'voyager.gemini-quote-reply': {
     activate: activateGeminiQuoteReply,
+  },
+  'voyager.gemini-highlight': {
+    activate: activateGeminiHighlight,
   },
 };
 

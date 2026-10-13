@@ -93,14 +93,18 @@ interface Page {
   unload(): void;
 }
 
-function page(quoteOwner: FeatureOwner = 'legacy'): Page {
+function page(quoteOwner: FeatureOwner = 'legacy', highlightOwner: FeatureOwner = 'legacy'): Page {
   const cleanupManager = new CleanupManager();
   const owners = FEATURE_OWNERS.map((entry) =>
-    entry.feature === 'quoteReply' ? { ...entry, owner: quoteOwner } : entry,
+    entry.feature === 'quoteReply'
+      ? { ...entry, owner: quoteOwner }
+      : entry.feature === 'highlight'
+        ? { ...entry, owner: highlightOwner }
+        : entry,
   );
   const admission = createOfficialAdmission(owners);
   const startup = createSelectionStartup(admission, cleanupManager, undefined, (_site, feature) =>
-    feature === 'quoteReply' ? quoteOwner : 'legacy',
+    feature === 'quoteReply' ? quoteOwner : highlightOwner,
   );
   teardowns.push(() => cleanupManager.executeCleanups());
   return {
@@ -217,14 +221,14 @@ describe('the Gemini selection start point', () => {
     expect(cleanupManager.list()).toEqual([]);
   });
 
-  it('admits no quote plugin when teardown lands during sent-quote styling startup', async () => {
+  it('admits neither selection plugin when teardown lands during sent-quote styling startup', async () => {
     let finish!: (stop: () => void) => void;
     const pending = new Promise<() => void>((resolve) => {
       finish = resolve;
     });
     const styling: NativeFeature = NATIVE_FEATURES.renderedQuoteStyling;
     vi.spyOn(styling, 'start').mockReturnValue(pending);
-    const { startup, admission, unload } = page('plugin');
+    const { startup, admission, unload } = page('plugin', 'plugin');
     const starting = startup.start();
     await flushPromises();
     unload();
@@ -232,6 +236,7 @@ describe('the Gemini selection start point', () => {
     await starting;
     admission.close();
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiQuoteReply)).toBe('denied');
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiHighlight)).toBe('denied');
     expect(document.querySelector('.gv-selection-toolbar')).toBeNull();
   });
 });
