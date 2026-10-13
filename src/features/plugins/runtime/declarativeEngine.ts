@@ -49,6 +49,7 @@ import type {
 import { getPrimitive } from '../verbs/registry';
 import type { PrimitiveHandle } from '../verbs/types';
 import { HealthMonitor } from './healthMonitor';
+import { InlineStyleParser } from './inlineStyleDeclarations';
 import { type NativeHandler, getNativeHandler } from './nativeHandlers';
 import { PluginScope } from './pluginScope';
 
@@ -144,10 +145,10 @@ export class DeclarativeEngine {
   private readonly classOwners = new Map<Element, Map<string, Set<string>>>();
   /** element → attribute name → layer. */
   private readonly attrLayers = new Map<Element, Map<string, OverrideLayer>>();
-  /** element → inline-style property → layer (both `setStyle` and a `style` attribute). */
+  /** element → inline-style longhand → layer (both `setStyle` and a `style` attribute). */
   private readonly styleLayers = new Map<HTMLElement, StyleLedger>();
-  /** Parses a whole `style` attribute value into declarations. */
-  private styleParser: HTMLElement | null = null;
+  /** Expands `style` attribute values and `setStyle` entries into longhands. */
+  private styleParser: InlineStyleParser | null = null;
 
   private observer: MutationObserver | null = null;
   private reapplyScheduled = false;
@@ -601,7 +602,7 @@ export class DeclarativeEngine {
           // A whole `style` write joins the per-property layers: kept in a ledger of
           // its own, restoring it would wipe another live plugin's setStyle values.
           if (op.name === 'style' && el instanceof HTMLElement) {
-            for (const [prop, declared, priority] of this.parseStyleDeclarations(value)) {
+            for (const [prop, declared, priority] of this.styles().parse(value)) {
               this.applySetStyle(id, el, prop, declared, priority);
             }
           } else {
@@ -618,7 +619,11 @@ export class DeclarativeEngine {
                 logger.warn('Rendered plugin style rejected', { id, prop, issue });
                 continue;
               }
-              this.applySetStyle(id, el, prop, value);
+              // Layers are per longhand: keyed by `margin`, restoring it would clobber
+              // another plugin's `margin-top`.
+              for (const [longhand, declared, priority] of this.styles().property(prop, value)) {
+                this.applySetStyle(id, el, longhand, declared, priority);
+              }
             }
           }
           break;
@@ -661,17 +666,9 @@ export class DeclarativeEngine {
     writeStyleTop(el, prop, layer);
   }
 
-  /** Declarations of a `style` attribute value, as the browser parses them. */
-  private parseStyleDeclarations(text: string): Array<[string, string, string]> {
-    this.styleParser ??= this.doc.createElement('span');
-    const style = this.styleParser.style;
-    style.cssText = text;
-    const declarations: Array<[string, string, string]> = [];
-    for (let i = 0; i < style.length; i += 1) {
-      const prop = style.item(i);
-      declarations.push([prop, style.getPropertyValue(prop), style.getPropertyPriority(prop)]);
-    }
-    return declarations;
+  private styles(): InlineStyleParser {
+    this.styleParser ??= new InlineStyleParser(this.doc);
+    return this.styleParser;
   }
 
   /** Remove every contribution of `id` from the shared ledgers, restoring the

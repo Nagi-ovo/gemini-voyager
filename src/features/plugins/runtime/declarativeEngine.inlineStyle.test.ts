@@ -135,3 +135,109 @@ describe('DeclarativeEngine inline style shared by a style attribute and setStyl
     expect(box.hasAttribute('style')).toBe(false);
   });
 });
+
+/** Every inline declaration as sorted `prop: value !priority`, independent of write order. */
+function declarations(el: HTMLElement): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < el.style.length; i += 1) {
+    const prop = el.style.item(i);
+    const priority = el.style.getPropertyPriority(prop);
+    out.push(`${prop}: ${el.style.getPropertyValue(prop)}${priority ? ' !' + priority : ''}`);
+  }
+  return out.sort();
+}
+
+const SIDES = ['top', 'right', 'bottom', 'left'] as const;
+const borderWidths = (el: HTMLElement): string[] =>
+  SIDES.map((side) => el.style.getPropertyValue(`border-${side}-width`));
+
+// jsdom leaves a stale `margin`/`padding`/`flex` shorthand behind when its longhands are
+// removed, so these cases use `border-width`, which jsdom expands and collapses correctly.
+// jsdom also drops a longhand's own `!important` under a shorthand, so host priorities
+// sit on a property without longhands.
+const SHORTHAND_WRITERS: Array<[string, (css: string) => DomOperation]> = [
+  ['setStyle', (css) => setStyle({ 'border-width': css })],
+  ['style attribute', (css) => wholeStyle(`border-width: ${css}`)],
+];
+const SHORTHAND_CASES = SHORTHAND_WRITERS.flatMap(([kind, write]) =>
+  ['shorthand first', 'longhand first'].map((order) => ({ kind, write, order })),
+);
+
+/** Mount A (shorthand) and B (`border-top-width` longhand) in the given order. */
+function mountShorthandPair(engine: DeclarativeEngine, order: string, a: DomOperation): void {
+  const plugins = [
+    manifest('plugin.a', a),
+    manifest('plugin.b', setStyle({ 'border-top-width': '5px' })),
+  ];
+  if (order === 'longhand first') plugins.reverse();
+  for (const plugin of plugins) engine.mount(plugin);
+}
+
+describe('DeclarativeEngine inline style shared by a shorthand and its longhand', () => {
+  it.each(SHORTHAND_CASES)(
+    "disabling a $kind shorthand plugin keeps another plugin's longhand ($order)",
+    ({ write, order }) => {
+      const { engine, box } = mountBox('border-width: 1px 3px; color: blue !important;');
+      const host = declarations(box);
+      mountShorthandPair(engine, order, write('2px'));
+
+      const top = order === 'shorthand first' ? '5px' : '2px';
+      expect(borderWidths(box)).toEqual([top, '2px', '2px', '2px']);
+
+      void engine.unmount('plugin.a');
+      expect(borderWidths(box)).toEqual(['5px', '3px', '1px', '3px']);
+      expect(box.style.getPropertyPriority('color')).toBe('important');
+
+      void engine.unmount('plugin.b');
+      expect(declarations(box)).toEqual(host);
+    },
+  );
+
+  it.each(SHORTHAND_CASES)(
+    "disabling a longhand plugin keeps another plugin's $kind shorthand ($order)",
+    ({ write, order }) => {
+      const { engine, box } = mountBox(
+        'border-width: 1px 3px; border-left-width: 6px; color: blue !important;',
+      );
+      const host = declarations(box);
+      mountShorthandPair(engine, order, write('2px'));
+
+      void engine.unmount('plugin.b');
+      expect(borderWidths(box)).toEqual(['2px', '2px', '2px', '2px']);
+
+      void engine.unmount('plugin.a');
+      expect(borderWidths(box)).toEqual(['1px', '3px', '1px', '6px']);
+      expect(declarations(box)).toEqual(host);
+    },
+  );
+
+  it.each(SHORTHAND_WRITERS)(
+    'full teardown of a %s shorthand and a longhand leaves no style attribute on an element that had none',
+    (_kind, write) => {
+      const { engine, box } = mountBox(null);
+      mountShorthandPair(engine, 'shorthand first', write('2px'));
+
+      void engine.unmount('plugin.a');
+      void engine.unmount('plugin.b');
+      expect(box.hasAttribute('style')).toBe(false);
+    },
+  );
+});
+
+describe('DeclarativeEngine setStyle priority', () => {
+  it('applies a setStyle value ending in !important with important priority, then restores the host', () => {
+    const { engine, box } = mountBox('color: blue;');
+    const host = declarations(box);
+    engine.mount(
+      manifest('plugin.a', setStyle({ color: 'red !important', 'border-width': '2px !important' })),
+    );
+
+    expect(box.style.color).toBe('red');
+    expect(box.style.getPropertyPriority('color')).toBe('important');
+    expect(borderWidths(box)).toEqual(['2px', '2px', '2px', '2px']);
+    expect(box.style.getPropertyPriority('border-top-width')).toBe('important');
+
+    void engine.unmount('plugin.a');
+    expect(declarations(box)).toEqual(host);
+  });
+});
