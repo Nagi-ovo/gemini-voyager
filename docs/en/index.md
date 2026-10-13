@@ -24,7 +24,7 @@ safariLaunch:
 
 teaser:
   title: 'It just works.'
-  description: ‘We didn’t want to build another extension. We wanted to build a better way to think.<br>When you use Voyager, you stop fighting the interface and start flowing with it.’
+  description: 'We didn’t want to build another extension. We wanted to build a better way to think.<br>When you use Voyager, you stop fighting the interface and start flowing with it.'
   image: '/assets/teaser.png'
   features:
     - title: 'Timeline'
