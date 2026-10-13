@@ -63,8 +63,13 @@ export function createSelectionStartup(
     for (const toggle of toggles.splice(0)) toggle.destroy();
   }, CleanupPositions.CleanupSelectionStartup);
 
-  const startAction = (id: 'quoteReply' | 'highlight', feature: SelectionAction): Promise<void> =>
-    startOwnedFeature(
+  const startAction = async (
+    id: 'quoteReply' | 'highlight',
+    feature: SelectionAction,
+  ): Promise<void> => {
+    // Teardown can land while a core service mounts, before a plugin would be admitted.
+    if (stopped) return;
+    await startOwnedFeature(
       admission,
       'gemini',
       id,
@@ -78,6 +83,7 @@ export function createSelectionStartup(
       },
       ownerOf,
     );
+  };
 
   return {
     async start() {

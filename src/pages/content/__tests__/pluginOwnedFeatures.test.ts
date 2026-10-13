@@ -37,6 +37,7 @@ import { type InitializationEntry, enterInitialization } from '../initialization
 import { createGeminiInputStartup } from '../inputStartup';
 import { registerBuiltinNativeHandlers } from '../pluginNativeRegistration';
 import { createGeminiRendererStartup } from '../rendererStartup';
+import { createSelectionStartup } from '../selectionStartup';
 
 const formula = vi.hoisted(() => ({ starts: 0, live: 0 }));
 
@@ -824,6 +825,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
         const stored = {
           [FORK_KEY]: true,
           [StorageKeys.USAGE_STATUS_ENABLED]: true,
+          [StorageKeys.QUOTE_REPLY_ENABLED]: true,
           ...(entryCase.customWebsites
             ? { [StorageKeys.PROMPT_CUSTOM_WEBSITES]: entryCase.customWebsites }
             : {}),
@@ -848,6 +850,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
         },
       });
       if (entry === 'start-points') {
+        await createSelectionStartup(admission, cleanupManager).start();
         const builtins = createGeminiBuiltinStartup(admission, cleanupManager);
         await builtins.startUsageStatus();
         await builtins.startDefaultModel();
@@ -861,7 +864,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
   }
 
   it.each(ENTRY_CASES)(
-    'ends initialization at $label and admits no stage 5 plugin even when its switch is on',
+    'ends initialization at $label and admits no Gemini feature plugin even when its switch is on',
     async ({ url, enterpriseDom, customWebsites, expected }) => {
       const { entry, admission, cleanupManager, ran } = await initializeAt({
         url,
@@ -876,6 +879,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
         OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
         OFFICIAL_PLUGIN_IDS.geminiFork,
         OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
+        OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
       ]) {
         expect(admission.stateOf(id)).toBe('denied');
       }
@@ -886,6 +890,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
           [AUTO_APPLY_KEY]: true,
           [FORK_KEY]: true,
           [StorageKeys.USAGE_STATUS_ENABLED]: true,
+          [StorageKeys.QUOTE_REPLY_ENABLED]: true,
         }).legacySettings,
         url,
       );
@@ -895,13 +900,14 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).not.toBe('mounted');
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiFork)).not.toBe('mounted');
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiUsageStatus)).not.toBe('mounted');
+      expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiQuoteReply)).not.toBe('mounted');
       expect(packPanel()).toBe(false);
       pluginHost.stop();
       cleanupManager.executeCleanups();
     },
   );
 
-  it('reaches the Gemini start points on gemini.google.com and admits all stage 5 plugins there', async () => {
+  it('reaches the Gemini start points on gemini.google.com and admits its feature plugins there', async () => {
     const { entry, admission, cleanupManager } = await initializeAt({ url: GEMINI_URL });
 
     expect(entry).toBe('start-points');
@@ -909,6 +915,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).toBe('admitted');
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiFork)).toBe('admitted');
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiUsageStatus)).toBe('admitted');
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiQuoteReply)).toBe('admitted');
     cleanupManager.executeCleanups();
   });
 });

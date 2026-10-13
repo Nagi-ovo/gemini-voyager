@@ -3,6 +3,7 @@ import { getBrowserName } from '@/core/utils/browser';
 import { formatQuotedText, replaceMathWithLatex } from '@/core/utils/quotedText';
 
 import { findChatInput } from '../chatInput/index';
+import { COLLAPSED_CLASS } from '../inputCollapse/dom';
 import { expandInputCollapseIfNeeded } from '../inputCollapse/index';
 import { capturePageIdentity, isSamePageSession } from '../selectionToolbar/pageIdentity';
 
@@ -248,8 +249,14 @@ export function insertQuotedSelection(range: Range): boolean {
   const selectedText = extractTextWithLatex(range).trim();
   if (!selectedText) return false;
 
-  const input = findChatInput();
+  let input = findChatInput();
+  if (!input) {
+    // Input collapse hides the editor before Quote can expand it; other hidden editors stay untouched.
+    const folded = findChatInput({ requireVisible: false });
+    if (folded?.closest(`.${COLLAPSED_CLASS}`)) input = folded;
+  }
   if (input) {
+    const composer = input;
     const accepted = capturePageIdentity();
     expandInputCollapseIfNeeded();
 
@@ -258,14 +265,14 @@ export function insertQuotedSelection(range: Range): boolean {
     const quoteBody = formatQuotedText(selectedText);
 
     // Ensure the input is visible
-    input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    composer.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
     // Wait for expansion while leaving focus/selection alone until insertion.
     setTimeout(() => {
       // Gemini reuses one composer across chats and accounts: a quote taken in chat A must not
       // land in B, and a replaced composer is no longer the one the user quoted into.
-      if (!input.isConnected || !isSamePageSession(accepted, capturePageIdentity())) return;
-      appendQuote(input, quoteBody);
+      if (!composer.isConnected || !isSamePageSession(accepted, capturePageIdentity())) return;
+      appendQuote(composer, quoteBody);
     }, INSERTION_DELAY_MS);
 
     return true;

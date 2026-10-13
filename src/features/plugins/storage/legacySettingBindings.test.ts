@@ -101,6 +101,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.DEFAULT_MODEL_AUTO_APPLY,
         StorageKeys.FORK_ENABLED,
         StorageKeys.USAGE_STATUS_ENABLED,
+        StorageKeys.QUOTE_REPLY_ENABLED,
         StorageKeys.CTRL_ENTER_SEND,
         StorageKeys.AISTUDIO_ENTER_SEND,
         StorageKeys.DRAFT_AUTO_SAVE,
@@ -114,7 +115,7 @@ describe('legacy enable bindings', () => {
     expect(legacyBindingFor(FORMULA_G)?.key).toBe(legacyBindingFor(FORMULA_A)?.key);
   });
 
-  // Production readings: the research pack `=== true`; default model `!== false`, a never-set key on.
+  // Production readings: research pack opts in; default model and Quote stay on unless false.
   it.each([
     ['missing', undefined, false, true],
     ['false', false, false, false],
@@ -122,10 +123,13 @@ describe('legacy enable bindings', () => {
     ['"false"', 'false', false, true],
     ['0', 0, false, true],
   ])(
-    'read a stored %s for the research pack and default model switches as production does',
+    'read a stored %s for research pack, default model and Quote switches as production does',
     (_l, stored, researchPack, defaultModel) => {
       expect(legacyBindingFor('voyager.gemini-research-pack')?.read(stored)).toBe(researchPack);
       expect(legacyBindingFor('voyager.gemini-default-model')?.read(stored)).toBe(defaultModel);
+      expect(legacyBindingFor(OFFICIAL_PLUGIN_IDS.geminiQuoteReply)?.read(stored)).toBe(
+        defaultModel,
+      );
     },
   );
 

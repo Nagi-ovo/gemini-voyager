@@ -39,6 +39,24 @@ it('delays insertion, reads the updated composer and preserves the textarea care
   expect(onInput).toHaveBeenCalledOnce();
 });
 
+it('leaves a hidden editor outside input collapse untouched when quoting', () => {
+  vi.useFakeTimers();
+  document.body.innerHTML = '<p>Hello</p><textarea style="visibility:hidden">Draft</textarea>';
+  const range = document.createRange();
+  range.selectNodeContents(document.querySelector('p')!);
+  const input = document.querySelector('textarea')!;
+  vi.spyOn(input, 'getBoundingClientRect').mockReturnValue({ height: 20 } as DOMRect);
+  input.scrollIntoView = vi.fn();
+  const selection = window.getSelection()!;
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  expect(insertQuotedSelection(range)).toBe(false);
+  vi.advanceTimersByTime(200);
+  expect(input.value).toBe('Draft');
+  expect(selection.toString()).toBe('Hello');
+});
+
 it('does not drop quoted text from a React-controlled textarea', () => {
   vi.useFakeTimers();
   document.body.innerHTML = '<p>Hello</p><textarea>Draft</textarea>';

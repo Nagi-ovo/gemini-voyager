@@ -248,7 +248,14 @@ function createHost(): SelectionToolbarHost {
   }
 
   function runAction(registration: Registration): void {
-    if (stopped || !range || token === null) return;
+    // Unregistered buttons can survive in a detached subtree; they must not begin a new action.
+    if (
+      stopped ||
+      registry.get(registration.action.id) !== registration ||
+      !range ||
+      token === null
+    )
+      return;
     const accepted = token;
     const acceptedRange = range;
     const result = registration.action.run(range.cloneRange(), accepted);

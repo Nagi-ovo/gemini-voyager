@@ -10,8 +10,15 @@ import { CleanupPositions } from '@/core/types/cleanupPositions';
 import { StorageKeys } from '@/core/types/common';
 import { CleanupManager } from '@/core/utils/cleanupManager';
 import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
+import {
+  FEATURE_OWNERS,
+  type FeatureOwner,
+  OFFICIAL_PLUGIN_IDS,
+} from '@/features/plugins/sites/featureOwners';
 
+import type { NativeFeature } from '../featureLifecycle';
 import { HighlightManager } from '../highlight/manager';
+import { NATIVE_FEATURES } from '../nativeFeatures';
 import { type SelectionStartup, createSelectionStartup } from '../selectionStartup';
 
 vi.mock('../inputCollapse/index', async (importOriginal) => ({
@@ -81,17 +88,25 @@ async function flushPromises(): Promise<void> {
 interface Page {
   readonly cleanupManager: CleanupManager;
   readonly startup: SelectionStartup;
+  readonly admission: ReturnType<typeof createOfficialAdmission>;
   flip(key: string, value: unknown): void;
   unload(): void;
 }
 
-function page(): Page {
+function page(quoteOwner: FeatureOwner = 'legacy'): Page {
   const cleanupManager = new CleanupManager();
-  const startup = createSelectionStartup(createOfficialAdmission(), cleanupManager);
+  const owners = FEATURE_OWNERS.map((entry) =>
+    entry.feature === 'quoteReply' ? { ...entry, owner: quoteOwner } : entry,
+  );
+  const admission = createOfficialAdmission(owners);
+  const startup = createSelectionStartup(admission, cleanupManager, undefined, (_site, feature) =>
+    feature === 'quoteReply' ? quoteOwner : 'legacy',
+  );
   teardowns.push(() => cleanupManager.executeCleanups());
   return {
     cleanupManager,
     startup,
+    admission,
     flip: (key, value) => {
       stored[key] = value;
       startup.handleStorageChange({ [key]: { newValue: value } }, 'sync');
@@ -200,5 +215,23 @@ describe('the Gemini selection start point', () => {
     expect(toolbarShown()).toBe(false);
     expect(document.querySelector('.gv-quote-btn')).toBeNull();
     expect(cleanupManager.list()).toEqual([]);
+  });
+
+  it('admits no quote plugin when teardown lands during sent-quote styling startup', async () => {
+    let finish!: (stop: () => void) => void;
+    const pending = new Promise<() => void>((resolve) => {
+      finish = resolve;
+    });
+    const styling: NativeFeature = NATIVE_FEATURES.renderedQuoteStyling;
+    vi.spyOn(styling, 'start').mockReturnValue(pending);
+    const { startup, admission, unload } = page('plugin');
+    const starting = startup.start();
+    await flushPromises();
+    unload();
+    finish(() => {});
+    await starting;
+    admission.close();
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiQuoteReply)).toBe('denied');
+    expect(document.querySelector('.gv-selection-toolbar')).toBeNull();
   });
 });

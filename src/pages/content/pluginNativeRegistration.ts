@@ -25,6 +25,7 @@ import {
   updateGeminiInputCollapseSettings,
 } from './inputCollapse/pluginHandler';
 import { activateGeminiPromptHistory } from './promptHistory/pluginHandler';
+import { activateGeminiQuoteReply } from './quoteReply/pluginHandler';
 import { activateGeminiResearchPack } from './researchPack/pluginHandler';
 import { activateGeminiSafariEnterFix } from './sendBehavior/pluginHandler';
 import { activateGeminiUsageStatus } from './usageStatus/pluginHandler';
@@ -70,6 +71,9 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   },
   'voyager.gemini-usage-status': {
     activate: activateGeminiUsageStatus,
+  },
+  'voyager.gemini-quote-reply': {
+    activate: activateGeminiQuoteReply,
   },
 };
 

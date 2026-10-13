@@ -34,6 +34,7 @@ import { createGeminiBuiltinStartup } from '../geminiBuiltinStartup';
 import { createGeminiInputStartup, startGeminiSendKeys } from '../inputStartup';
 import { registerBuiltinNativeHandlers } from '../pluginNativeRegistration';
 import { createGeminiRendererStartup } from '../rendererStartup';
+import { createSelectionStartup } from '../selectionStartup';
 
 vi.mock('@/features/plugins/sites/featureOwners', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/features/plugins/sites/featureOwners')>();
@@ -116,6 +117,13 @@ vi.mock('../defaultModel/modelLocker', () => ({
 vi.mock('../fork/index', () => ({
   startFork: () => {
     native.started.push('fork');
+    return () => {};
+  },
+}));
+vi.mock('../quoteReply/quoteAction', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../quoteReply/quoteAction')>()),
+  startQuoteAction: () => {
+    native.started.push('quoteReply');
     return () => {};
   },
 }));
@@ -306,6 +314,7 @@ describe('rolling every owned feature back to its native module', () => {
   it.each([
     ['research pack', 'researchPack', OFFICIAL_PLUGIN_IDS.geminiResearchPack],
     ['default model', 'defaultModel', OFFICIAL_PLUGIN_IDS.geminiDefaultModel],
+    ['quote reply', 'quoteReply', OFFICIAL_PLUGIN_IDS.geminiQuoteReply],
   ])(
     'starts native %s once at its Gemini start point and admits no official plugin when rolled back',
     async (_label, feature, id) => {
@@ -318,8 +327,11 @@ describe('rolling every owned feature back to its native module', () => {
       const cleanupManager = new CleanupManager();
       const builtins = createGeminiBuiltinStartup(admission, cleanupManager);
 
-      await builtins.startDefaultModel();
-      await builtins.startForkAndResearchPack();
+      if (feature === 'quoteReply') await createSelectionStartup(admission, cleanupManager).start();
+      else {
+        await builtins.startDefaultModel();
+        await builtins.startForkAndResearchPack();
+      }
       admission.close();
 
       expect(native.started.filter((name) => name === feature)).toEqual([feature]);

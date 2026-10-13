@@ -152,9 +152,11 @@ describe('selection toolbar host', () => {
     expect(isShown(document.querySelector('.gv-highlight-color-trigger'))).toBe(true);
   });
 
-  it('an old quote unregister does not remove a newer quote action', () => {
+  it('an old quote unregister and detached button leave the newer quote action working', () => {
     start(startSelectionToolbarHost());
     const stopOldQuote = startQuoteAction();
+    select('assistant');
+    const oldButton = quoteButton()!;
     start(startQuoteAction());
 
     stopOldQuote();
@@ -162,6 +164,12 @@ describe('selection toolbar host', () => {
     select('assistant');
 
     expect(isShown(quoteButton())).toBe(true);
+    oldButton.click();
+    vi.advanceTimersByTime(200);
+    expect(document.querySelector('textarea')!.value).toBe('');
+    quoteButton()!.click();
+    vi.advanceTimersByTime(200);
+    expect(document.querySelector('textarea')!.value).toContain('> Answer');
   });
 
   it('a finished highlight does not clear a selection made after it', async () => {
