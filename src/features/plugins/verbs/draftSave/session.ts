@@ -14,6 +14,8 @@ import { registerDraftFlush } from '@/pages/content/draftSave/draftUnloadFlush';
 import { startGeminiDraftSendDetection } from '@/pages/content/draftSave/geminiDraftSendDetection';
 import { watchRouteChanges } from '@/pages/content/utils/routeWatcher';
 
+import { composerEnterIsOwned } from '../composerEnterOwner';
+import { NEW_CHAT_DRAFT } from './draftKey';
 import { type DraftPolicy, sanitizeDraftAt } from './draftPolicy';
 
 /** Same pause as Gemini's before typing is written to storage. */
@@ -209,7 +211,14 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
     if (next === currentKey && nextIdentity === currentIdentity) return;
     geminiSend?.checkSent();
     const previous = currentKey;
-    if (previous !== null && sendIntent?.key === previous && currentIdentity === nextIdentity) {
+    // Only a first send changes the route; leaving a conversation within the send window
+    // (the host ignored that Enter) must keep its draft. Send intents are catalog-only.
+    const firstSend =
+      detection.kind === 'catalog' &&
+      previous === NEW_CHAT_DRAFT &&
+      next !== null &&
+      next !== NEW_CHAT_DRAFT;
+    if (firstSend && sendIntent?.key === previous && currentIdentity === nextIdentity) {
       // A first send moves the new-chat page to the conversation's route: the
       // still-debounced text was just sent and must not be saved back.
       dropSentDraft(previous);
@@ -250,6 +259,8 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
         // IME confirmation also reports Enter; it only commits text.
         if (event.key !== 'Enter' || event.shiftKey || event.isComposing || event.keyCode === 229)
           return;
+        // A send shortcut may see this Enter after us and make it a newline; its sends are button clicks.
+        if (composerEnterIsOwned(doc)) return;
         const field = ownComposer(event.target);
         if (field) markSendIntent(field);
       },

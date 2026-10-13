@@ -136,6 +136,40 @@ function activate(adapter: SiteAdapter): PluginScope {
   return scope;
 }
 
+function activateSendShortcut(adapter: SiteAdapter): void {
+  const scope = new PluginScope();
+  scopes.push(scope);
+  void sendShortcutPrimitive.activate(
+    scope,
+    {},
+    {
+      doc: document,
+      adapter,
+      pluginId: 'test.send-shortcut',
+      settings: {},
+      setTargetCounter: () => {},
+    },
+  );
+}
+
+/** Enabling one plugin after the other at runtime mounts them in either order. */
+const mountOrders = [
+  {
+    order: 'sendShortcut first',
+    mountBoth: (adapter: SiteAdapter) => {
+      activateSendShortcut(adapter);
+      activate(adapter);
+    },
+  },
+  {
+    order: 'draftSave first',
+    mountBoth: (adapter: SiteAdapter) => {
+      activate(adapter);
+      activateSendShortcut(adapter);
+    },
+  },
+];
+
 const draftKey = (adapter: SiteAdapter, key: string) => `gvDraft:${adapter.id}:${key}`;
 const stored = (adapter: SiteAdapter, key: string) =>
   (records[draftKey(adapter, key)] as { content?: string } | undefined)?.content;
@@ -309,32 +343,65 @@ describe.each(sites)('draftSave on $name', (site) => {
     expect(records).not.toHaveProperty(draftKey(adapter, 'conv:abc'));
   });
 
-  it('drops the draft when the sendShortcut plugin swallows Enter and sends on Ctrl+Enter', async () => {
-    mount(site.conversationPath('abc'));
-    // Registered first, its capture listener stops the keydown before draftSave sees it.
-    void sendShortcutPrimitive.activate(
-      scopes[scopes.push(new PluginScope()) - 1],
-      {},
-      {
-        doc: document,
-        adapter,
-        pluginId: 'test.send-shortcut',
-        settings: {},
-        setTargetCounter: () => {},
-      },
-    );
-    activate(adapter);
-    await vi.advanceTimersByTimeAsync(0);
-    type('Send with the shortcut');
-    await vi.advanceTimersByTimeAsync(DRAFT_SAVE_DEBOUNCE_MS);
+  it.each(mountOrders)(
+    'drops the draft when sendShortcut sends it on Ctrl+Enter ($order)',
+    async ({ mountBoth }) => {
+      mount(site.conversationPath('abc'));
+      mountBoth(adapter);
+      await vi.advanceTimersByTimeAsync(0);
+      type('Send with the shortcut');
+      await vi.advanceTimersByTimeAsync(DRAFT_SAVE_DEBOUNCE_MS);
 
-    document.addEventListener('click', (event) => event.preventDefault(), { once: true });
-    pressEnter({ ctrlKey: true });
-    hostClears();
-    await vi.advanceTimersByTimeAsync(SEND_INTENT_TIMEOUT_MS);
+      document.addEventListener('click', (event) => event.preventDefault(), { once: true });
+      pressEnter({ ctrlKey: true });
+      hostClears();
+      await vi.advanceTimersByTimeAsync(SEND_INTENT_TIMEOUT_MS);
 
-    expect(records).not.toHaveProperty(draftKey(adapter, 'conv:abc'));
-  });
+      expect(records).not.toHaveProperty(draftKey(adapter, 'conv:abc'));
+    },
+  );
+
+  it.each(mountOrders)(
+    'keeps the draft when sendShortcut turns Enter into a newline and the user opens a chat ($order)',
+    async ({ mountBoth }) => {
+      // From the new-chat page, the one route change that could pass for a first send.
+      mount(site.newChatPath);
+      mountBoth(adapter);
+      await vi.advanceTimersByTimeAsync(0);
+      type('Keep me');
+      await vi.advanceTimersByTimeAsync(DRAFT_SAVE_DEBOUNCE_MS);
+      expect(stored(adapter, 'new')).toBe('Keep me');
+
+      pressEnter();
+      // Within the send window: the host gives the opened chat an empty composer.
+      await navigate(site.conversationPath('other'));
+      hostClears();
+      await vi.advanceTimersByTimeAsync(SEND_INTENT_TIMEOUT_MS + DRAFT_SAVE_DEBOUNCE_MS);
+
+      expect(stored(adapter, 'new')).toBe('Keep me');
+    },
+  );
+
+  it.each(mountOrders)(
+    'does not save a first message sent with sendShortcut back to the new-chat draft ($order)',
+    async ({ mountBoth }) => {
+      mount(site.newChatPath);
+      mountBoth(adapter);
+      await vi.advanceTimersByTimeAsync(0);
+      type('An older new-chat draft');
+      await vi.advanceTimersByTimeAsync(DRAFT_SAVE_DEBOUNCE_MS);
+      type('First message');
+
+      document.addEventListener('click', (event) => event.preventDefault(), { once: true });
+      pressEnter({ ctrlKey: true });
+      await navigate(site.conversationPath('fresh'));
+      hostClears();
+      await vi.advanceTimersByTimeAsync(SEND_INTENT_TIMEOUT_MS + DRAFT_SAVE_DEBOUNCE_MS);
+
+      expect(records).not.toHaveProperty(draftKey(adapter, 'new'));
+      expect(records).not.toHaveProperty(draftKey(adapter, 'conv:fresh'));
+    },
+  );
 
   it('keeps the draft when the composer empties without a send, or Enter only confirms IME text', async () => {
     mount(site.conversationPath('abc'));
@@ -367,6 +434,23 @@ describe.each(sites)('draftSave on $name', (site) => {
 
     expect(records).not.toHaveProperty(draftKey(adapter, 'new'));
     expect(records).not.toHaveProperty(draftKey(adapter, 'conv:fresh'));
+  });
+
+  it('keeps the draft when the host ignores Enter and the user switches chats within the send window', async () => {
+    mount(site.conversationPath('abc'));
+    activate(adapter);
+    await vi.advanceTimersByTimeAsync(0);
+    type('Keep me');
+    await vi.advanceTimersByTimeAsync(DRAFT_SAVE_DEBOUNCE_MS);
+    type('Keep me, edited');
+
+    // The host is still answering, so Enter sends nothing; the other chat opens empty.
+    pressEnter();
+    await navigate(site.conversationPath('other'));
+    hostClears();
+    await vi.advanceTimersByTimeAsync(SEND_INTENT_TIMEOUT_MS + DRAFT_SAVE_DEBOUNCE_MS);
+
+    expect(stored(adapter, 'conv:abc')).toBe('Keep me, edited');
   });
 
   it('keeps a clear made just before a reload, so the old draft does not come back', async () => {

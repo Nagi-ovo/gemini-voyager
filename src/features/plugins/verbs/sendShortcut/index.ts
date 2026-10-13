@@ -4,6 +4,7 @@ import { getSendKeyCoordinator } from '@/core/services/composer/sendKeys/sendKey
 import { isImeKeyEvent, type SendKeyMode } from '@/core/services/composer/sendKeys/sendKeyIntent';
 import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 
+import { claimComposerEnter } from '../composerEnterOwner';
 import { getPrimitiveContract } from '../contracts';
 import type { Primitive } from '../types';
 
@@ -113,6 +114,8 @@ export const sendShortcutPrimitive: Primitive<SendShortcutParams> = {
     const sendButton = adapter?.selectors.sendButton;
     if (!composer || !composerRoot || !sendButton) return;
     context.setTargetCounter(() => doc.querySelectorAll(composer).length);
+    // Claimed before the listener so the claim outlives it: teardown runs in reverse.
+    scope.effect(() => claimComposerEnter(doc), 'send-shortcut:enter-owner');
 
     scope.on(
       doc,
