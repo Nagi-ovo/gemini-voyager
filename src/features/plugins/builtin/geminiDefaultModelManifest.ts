@@ -8,8 +8,7 @@ import type { PluginManifest } from '../types';
  * no settings: the plugin host turns it on and off from
  * `gvDefaultModelAutoApply`, on unless that key is `false`.
  *
- * Whether it or the native module runs the feature is decided per build by
- * `sites/featureOwners.ts`; while that entry is `legacy`, it is never admitted.
+ * `sites/featureOwners.ts` lists it, so this plugin is the feature's only runtime.
  */
 export const GEMINI_DEFAULT_MODEL_MANIFEST: PluginManifest = {
   id: 'voyager.gemini-default-model',

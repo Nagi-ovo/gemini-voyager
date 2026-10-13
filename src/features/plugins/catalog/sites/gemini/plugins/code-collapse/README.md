@@ -35,11 +35,9 @@ module in a rollback build) is left to it until it lets go.
 
 ## Status
 
-Whether this plugin or the native module runs the feature is decided per build
-by `src/features/plugins/sites/featureOwners.ts`. While that entry is `legacy`,
-the native module keeps running and the plugin host refuses this plugin's
-`codeCollapse` op on Gemini, so shipping the manifest changes nothing on the
-page.
+This plugin is the feature's only runtime: `src/features/plugins/sites/featureOwners.ts`
+assigns the feature to it, and the plugin host admits it where the retired
+native module used to start.
 
 Requires the plugin engine that adds the Gemini policy (`>=next` until
 release), the `codeCollapse` handler and the site's `assistantTurn` and

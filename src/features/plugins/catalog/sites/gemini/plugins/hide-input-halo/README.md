@@ -27,7 +27,6 @@ on the light or dark theme.
 
 ## Status
 
-Whether this plugin or the native module runs the feature is decided per build
-by `src/features/plugins/sites/featureOwners.ts`. While that entry is `legacy`,
-the native module keeps running and this plugin is never admitted, so shipping
-the manifest changes nothing on the page.
+This plugin is the feature's only runtime: `src/features/plugins/sites/featureOwners.ts`
+assigns the feature to it, and the plugin host admits it where the retired
+native module used to start.

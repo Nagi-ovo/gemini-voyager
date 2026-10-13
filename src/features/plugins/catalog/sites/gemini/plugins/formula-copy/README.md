@@ -22,10 +22,8 @@ native module runs.
 
 ## Status
 
-Whether this plugin or the native module runs the feature is decided per build
-by `src/features/plugins/sites/featureOwners.ts`. While that entry is `legacy`,
-the native module keeps running and the plugin host refuses this plugin's
-`formulaCopy` op on Gemini, so shipping the manifest changes nothing on the
-page.
+This plugin is the feature's only runtime: `src/features/plugins/sites/featureOwners.ts`
+assigns the feature to it, and the plugin host admits it where the retired
+native module used to start.
 
 Requires plugin engine 1.3.0 or newer (the `formulaCopy` primitive's floor).

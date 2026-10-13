@@ -38,11 +38,9 @@ plugin off removes every panel and shows the code again.
 
 ## Status
 
-Whether this plugin or the native module runs the feature is decided per build
-by `src/features/plugins/sites/featureOwners.ts`. While that entry is `legacy`
-(or absent), the native module keeps running and the plugin host refuses this
-plugin's `mermaid` op on Gemini, so shipping the manifest changes nothing on
-the page.
+This plugin is the feature's only runtime: `src/features/plugins/sites/featureOwners.ts`
+assigns the feature to it, and the plugin host admits it where the retired
+native module used to start.
 
 Requires the next plugin engine (the `copyButton` and `exportImage` params) and
 the Gemini site adapter's `codeBlock` anchor.
