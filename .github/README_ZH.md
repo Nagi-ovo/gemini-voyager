@@ -52,7 +52,7 @@
   </p> -->
 
 > [!NOTE]
-> 如果 Voyager 帮到了你，欢迎分享到 X、即刻、小红书、Linux.do、V2EX 等等，也欢迎推荐给海外 KOL。每一次分享都能让更多人看到这个项目。谢谢。
+> 如果 Voyager 帮到了你，欢迎分享到 X、Reddit、YouTube、Threads 等平台。每一次分享都能让更多人发现这个项目。谢谢。
 
 ---
 
@@ -76,41 +76,41 @@
 
 ### 🌌 通用核心 (Gemini & AI Studio)
 
-- **📂 [文件夹管理](https://voyager.nagi.fun/guide/folders)**: 支持 **多级目录**、**拖拽排序** 及 **Google Drive 同步**。
-  - **Gemini**: 支持 **多账号隔离模式** 及 **自定义文件夹颜色**。
-- **💡 [提示词库](https://voyager.nagi.fun/guide/prompts)**: 跨平台同步提示词，支持 Gemini、AI Studio 及 [自定义网站](https://voyager.nagi.fun/guide/prompts#任何网站皆可用)。
-- **☁️ [云同步](https://voyager.nagi.fun/guide/cloud-sync)**: 支持将文件夹和提示词库同步到 Google Drive。
-- **📐 公式复制**: 一键复制 LaTeX 和 MathML (Word) 源码。
-- **🌦️ 视觉特效**: 在设置面板里一键切换 **飘雪**、**电影感雨滴** 或 **樱花飘落**，给页面增加季节氛围。
+- **📂 [文件夹管理](https://voyager.nagi.fun/guide/folders)**: 支持 **两级文件夹层级**，并可拖拽整理对话。
+  - **Gemini**: 支持 **账号隔离模式** 及 **自定义文件夹颜色**。
+- **💡 [提示词库](https://voyager.nagi.fun/guide/prompts)**: 跨平台保存和复用提示词，支持 Gemini、AI Studio 及 [自定义网站](https://voyager.nagi.fun/guide/prompts#任何网站都能用)。
+- **☁️ [云同步](https://voyager.nagi.fun/guide/cloud-sync)**: 通过 Google Drive 同步文件夹和提示词，Safari 上还可使用 iCloud。
+- **🗑️ [批量删除](https://voyager.nagi.fun/guide/batch-delete)**: 批量删除对话。
+- **📐 [公式复制](https://voyager.nagi.fun/guide/formula-copy)**: 点击公式即可复制为 LaTeX、MathML（Word）或适用于 Notion 的公式。
+- **🌦️ 视觉特效**: 在设置面板中为页面加入 **飘雪**、**电影感雨幕** 或 **飘落的樱花**，营造季节氛围。
 
 ### ✨ Gemini 专属增强
 
 - **📍 [时间线导航](https://voyager.nagi.fun/guide/timeline)**: 可视化节点，瞬间跳转消息，星标重点，管理对话分支。
-- **💾 [对话导出](https://voyager.nagi.fun/guide/export)**: 支持导出为 JSON、Markdown 或 PDF（含图片）。
+- **💾 [对话导出](https://voyager.nagi.fun/guide/export)**: 支持导出为 JSON、Markdown、PDF 或图片，并包含图片内容。
 - **🧜‍♀️ [Mermaid 渲染](https://voyager.nagi.fun/guide/mermaid)**: 自动渲染流程图、时序图等 Mermaid 图表。
 - **📝 [Markdown 渲染修复](https://voyager.nagi.fun/guide/markdown-fix)**: 自动修复 Gemini 注入 HTML 导致的 Markdown 加粗失效问题。
 - **🍌 [Image Refinement](https://voyager.nagi.fun/guide/nanobanana)**: 自动去除 Gemini 生成图片的无损水印。
 - **🔬 [Deep Research](https://voyager.nagi.fun/guide/deep-research)**: 一键提取 Deep Research 对话的思考过程和研究链接。
 - **🛠️ 效率工具**:
-  - **[批量删除](https://voyager.nagi.fun/guide/batch-delete)**: 批量清理对话记录。
   - **[引用回复](https://voyager.nagi.fun/guide/quote-reply)**: 选中对话文本即可一键引用回复。
   - **[防自动跳转](https://voyager.nagi.fun/guide/prevent-auto-scroll)**: 拦截每次发送新问题后页面强制滚动到底部的内置行为，找回丝滑体验。
   - **[输入框折叠](https://voyager.nagi.fun/guide/input-collapse)**: 输入框自动收纳，释放阅读空间。
   - **[默认模型](https://voyager.nagi.fun/guide/default-model)**: 为新对话设置默认选中的模型。
-  - **[隐藏最近项目](https://voyager.nagi.fun/guide/recents-hider)**: 隐藏侧边栏的“最近”列表，减少干扰。
-  - **隐藏升级提醒**: 自动隐藏 Gemini 侧边栏和模型切换菜单中的“升级到 Google AI Ultra”按钮（默认开启）。
 
 ### 🔌 Claude, ChatGPT & DeepSeek
 
-通过 [Voyager 插件引擎](https://voyager.nagi.fun/plugins)，这些功能让你的体验延伸到 Gemini 之外：
+通过 [Voyager 插件引擎](https://voyager.nagi.fun/plugins)，这些功能让你的体验延伸到 Gemini 之外。在扩展弹窗中开启它们，并分别授权每个网站：
 
-- **📍 时间线**: 对话侧边栏，支持星标消息和搜索——同样的导航体验，现在也能在 Claude 和 DeepSeek 上使用。
-- **📊 Claude 用量条**: 直接在 Claude 界面中追踪会话和每周用量。
-- **📐 公式复制**: 一键复制 LaTeX 和 MathML 源码（与 Gemini 共享，DeepSeek 上同样可用）。
-- **📖 舒适阅读宽度**: 调整 Claude、ChatGPT 和 DeepSeek 的对话宽度，获得更好的阅读体验。
+- **📍 时间线**: 在 Claude 和 ChatGPT 上提供同样的时间线，支持星标消息和搜索；DeepSeek 上则是可选插件。
+- **📂 ChatGPT 文件夹**: 将 ChatGPT 对话整理到文件夹中。默认开启。
+- **💾 ChatGPT 导出**: 将 ChatGPT 对话导出为 Markdown、JSON、PDF 或图片。
+- **📐 公式复制**: 在 Claude、ChatGPT 和 DeepSeek 上点击公式即可复制其 LaTeX。
+- **⌨️ Vim 输入**: 在 Claude、ChatGPT 和 DeepSeek 的输入框中使用 Vim 风格的模态编辑和光标移动。
+- **📖 舒适阅读宽度**: 在 Claude、ChatGPT 和 DeepSeek 上调整对话宽度，获得更好的阅读体验。
+- **💬 日常小工具**: 在 Claude、ChatGPT 和 DeepSeek 上提供引用回复、Ctrl/⌘+Enter 发送和草稿字数统计；在 Claude 和 DeepSeek 上还提供草稿自动保存。
 - **🈶 CJK 渲染修复**: 修复 Claude 上的中日韩字符渲染问题。
-- **⌨️ Vim 输入**: 在 DeepSeek 的输入框里用 Vim 模式编辑和移动光标。
-- **📜 代码不换行**: DeepSeek 上的长代码行改为横向滚动，缩进不会被折断。
+- **📜 代码换行**: 在 DeepSeek 上，长代码行改为横向滚动而不是换行，缩进得以保留。
 
 ### 🧩 任意站点，包括本地
 
@@ -122,7 +122,7 @@
 
 ### 🎨 个性化体验
 
-- 点击插件图标，在设置中的 **视觉特效** 里可切换 `关闭`、`飘雪`、`樱花`、`雨`。
+- 打开扩展弹窗，在 **视觉特效** 中可切换 `Off`、`Snow`、`Sakura` 和 `Rain`。
 - 特效以轻量全屏覆盖层呈现，不会阻挡页面交互。
 - 切换特效或关闭时，粒子会自然退场，不会突兀消失。
 
@@ -236,33 +236,33 @@
 
 [<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/voyager-crew/voyager)
 
-欢迎参与贡献！
+欢迎参与贡献！无论你想报告 Bug、提出功能建议、改进文档，还是提交代码：
 
-- **Issue**：仅接受可复现的缺陷，请使用 [Bug 报告](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml) 模板。
-- **Discussions**：[功能需求、想法和提问](https://github.com/voyager-crew/voyager/discussions)请发到讨论区，不要开 Issue。
-- **Pull Request**：请查看 [贡献指南](./CONTRIBUTING.md)。
+- **Issues**：仅接受可复现的缺陷，请使用 [Bug 报告](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml) 模板。
+- **Discussions**：[功能需求、想法和提问](https://github.com/voyager-crew/voyager/discussions)，请发到讨论区，而不是 Issues。
+- **Pull Requests**：请查看 [贡献指南](./CONTRIBUTING.md)。
 
 <details>
 <summary>开发环境配置</summary>
 
 ```bash
-# 安装依赖 (推荐 Bun)
+# 安装依赖（脚本在 Bun 上运行；CI 使用 Bun 1.3.12）
 bun i
 
-# 开发模式
-bun run dev:chrome
-bun run dev:firefox
-bun run dev:safari
+# 开发模式（带自动重载）
+bun run dev:chrome   # Chrome 及 Chromium 系浏览器
+bun run dev:firefox  # Firefox
+bun run dev:safari   # Safari（需要 macOS）
 
 # 生产构建
-bun run build:chrome
+bun run build:chrome   # Chrome
 bun run build:edge     # Edge 独立打包
-bun run build:firefox
-bun run build:safari
+bun run build:firefox  # Firefox
+bun run build:safari   # Safari
 bun run build:all      # Chrome + Firefox + Safari
 ```
 
-**Safari 开发**：运行 `bun run build:safari`，然后打开 `Voyager/` 中已纳入版本控制的 Xcode 工程。
+**Safari 开发**：运行 `bun run build:safari`，然后打开 tracked 的 `Voyager/` Xcode 工程。
 
 </details>
 
@@ -294,13 +294,15 @@ bun run build:all      # Chrome + Firefox + Safari
 
 受 Voyager 启发的项目：
 
-如果你的项目受到 Voyager 启发、直接 fork 自 Voyager，或基于 Voyager 改造而来，欢迎提交 PR 加入这里。
+如果你的项目受到 Voyager 启发、直接 fork 自 Voyager，或基于 Voyager 改造而来，欢迎到 [Discussions](https://github.com/voyager-crew/voyager/discussions) 分享，我们会将其添加到这里。
 
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - 为 DeepSeek 适配的 Fork 版本。
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - 为 DeepSeek 适配的 Voyager Fork 版本，为 DeepSeek 用户带来时间线导航和对话管理功能！
 
 - **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - 受 Voyager 启发的 Claude.ai 增强扩展，提供时间线导航、文件夹管理、提示词库等功能，并与 Voyager 的提示词导入/导出完全兼容！
 
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - 为豆包提供增强导航、组织管理和生产力功能的浏览器扩展。
+
+- **[DeepSeek Enhancer](https://github.com/dlshuangchenyue1210/DeepSeek-Enhancer)** - 受 Voyager 启发的 DeepSeek 网页版增强扩展，提供多级文件夹、聊天记录导出、公式复制、数据备份等功能。
 
 ---
 

@@ -52,22 +52,22 @@
   </p> -->
 
 > [!NOTE]
-> Voyager 가 도움이 되었다면 X, YouTube, Reddit 등에서 공유해 주세요. 공유가 늘수록 더 많은 사용자가 프로젝트를 발견하고 AI 챗봇 사용 경험도 함께 좋아집니다. 감사합니다.
+> Voyager가 도움이 되었다면 X, Reddit, YouTube, Threads 등에서 공유해 주세요. 공유가 늘수록 더 많은 사용자가 프로젝트를 발견합니다. 감사합니다.
 
 ---
 
-## 👋 왜 Voyager 인가요?
+## 👋 왜 Voyager인가요?
 
-우리는 Gemini, Claude, ChatGPT 같은 AI 챗봇을 사랑하지만, 때로는 조금 더 구조화된 정리가 필요하다고 느꼈습니다.
+우리는 Gemini, Claude, ChatGPT 같은 AI 챗봇을 사랑하지만, 때로는 조금 더 구조화된 정리가 있었으면 하고 바랄 때가 있습니다.
 
-그래서 우리는 **Voyager**를 만들었습니다. 이것은 단순한 도구가 아니라, AI 대화를 정리하고 액세스 가능하며 생산적으로 유지하도록 돕는 동반자입니다. 수십 개의 스레드를 관리하는 연구자이든, 코드 스니펫을 저장하는 개발자이든, 단순히 정리를 좋아하는 사람이든 Voyager 는 당신을 위해 설계되었습니다.
+그래서 **Voyager**를 만들었습니다. Voyager는 AI 대화를 정리하고, 다시 찾기 쉽게 하고, 생산적으로 유지하도록 돕는 동반자입니다. Gemini, Claude, ChatGPT, DeepSeek 어디에서 쓰든 마찬가지입니다. 수십 개의 스레드를 오가는 연구자든, 코드 조각을 저장하는 개발자든, 단순히 정돈된 것을 좋아하는 사람이든 Voyager는 여러분을 위해 설계되었습니다.
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
     <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="500">
   </a>
   <br>
-  <i>2 월 18 일 Google Gemini 앱으로 인해 일부 사용자의 과거 대화에 접근할 수 없는 문제가 발생했을 때, Voyager 사용자는 여전히 폴더에 저장된 대화를 볼 수 있었습니다.</i>
+  <i>2월 18일 Google Gemini 앱에서 일부 사용자의 과거 대화에 접근할 수 없게 된 문제가 발생했을 때에도, Voyager 사용자는 폴더에 저장해 둔 대화를 여전히 볼 수 있었습니다.</i>
 </p>
 
 ---
@@ -76,58 +76,61 @@
 
 ### 🌌 공통 (Gemini & AI Studio)
 
-- **📂 [폴더 관리](https://voyager.nagi.fun/ko/guide/folders)**: 드래그 앤 드롭을 지원하는 2 단계 폴더 계층 구조로 대화를 정리하세요.
-  - **Gemini**: **계정 분리 모드** 및 **사용자 지정 폴더 색상**을 지원합니다.
-- **💡 [프롬프트 저장소](https://voyager.nagi.fun/ko/guide/prompts)**: Gemini, AI Studio 및 [사용자 지정 웹사이트](https://voyager.nagi.fun/ko/guide/prompts#어디서나-사용-가능)에서 프롬프트를 저장하고 재사용하세요.
-- **☁️ [클라우드 동기화](https://voyager.nagi.fun/ko/guide/cloud-sync)**: 폴더와 프롬프트를 Google Drive 에 동기화하세요.
-- **📐 수식 복사**: LaTeX 및 MathML (Word) 소스 코드를 클릭 한 번으로 복사하세요.
-- **🌦️ 시각 효과**: 설정 패널에서 **눈**, **시네마틱 비**, **벚꽃잎** 효과를 전환하여 계절 분위기를 연출하세요.
+- **📂 [폴더 관리](https://voyager.nagi.fun/ko/guide/folders)**: 드래그 앤 드롭을 지원하는 2단계 폴더 계층으로 대화를 정리하세요.
+  - **Gemini**: **계정 분리 모드**와 **사용자 지정 폴더 색상**을 지원합니다.
+- **💡 [프롬프트 저장소](https://voyager.nagi.fun/ko/guide/prompts)**: Gemini, AI Studio, 그리고 [사용자 지정 웹사이트](https://voyager.nagi.fun/ko/guide/prompts#어디에서나-사용하기)에서 프롬프트를 저장하고 재사용하세요.
+- **☁️ [클라우드 동기화](https://voyager.nagi.fun/ko/guide/cloud-sync)**: Google Drive를 통해 폴더와 프롬프트를 동기화하거나, Safari에서는 iCloud를 사용하세요.
+- **🗑️ [일괄 삭제](https://voyager.nagi.fun/ko/guide/batch-delete)**: 여러 대화를 한꺼번에 삭제합니다.
+- **📐 [수식 복사](https://voyager.nagi.fun/ko/guide/formula-copy)**: 수식을 클릭해 LaTeX, MathML(Word), 또는 Notion용 수식으로 복사하세요.
+- **🌦️ 시각 효과**: 설정 패널에서 **눈**, **시네마틱 비**, **벚꽃 잎**을 더해 계절의 분위기를 연출하세요.
 
 ### ✨ Gemini 전용 기능
 
-- **📍 [타임라인 탐색](https://voyager.nagi.fun/ko/guide/timeline)**: 시각적 노드를 통해 메시지 간 이동, 주요 순간 별표 표시, 대화 브랜치 관리를 수행하세요.
-- **💾 [대화 내보내기](https://voyager.nagi.fun/ko/guide/export)**: 이미지를 포함하여 JSON, Markdown 또는 PDF 로 대화를 내보내세요.
-- **🧜‍♀️ [Mermaid 렌더링](https://voyager.nagi.fun/ko/guide/mermaid)**: 플로우차트, 시퀀스 다이어그램 및 기타 Mermaid 차트를 자동으로 렌더링합니다.
-- **📝 [Markdown 렌더링 수정](https://voyager.nagi.fun/ko/guide/markdown-fix)**: Gemini 가 삽입한 HTML 요소로 인해 깨진 굵게 표시 (bold) 구문을 자동으로 수정합니다.
-- **🍌 [Image Refinement](https://voyager.nagi.fun/ko/guide/nanobanana)**: Gemini 에서 생성된 이미지의 워터마크를 무손실로 제거합니다.
-- **🔬 [Deep Research](https://voyager.nagi.fun/ko/guide/deep-research)**: Deep Research 세션에서 생각 과정과 연구 링크를 추출합니다.
+- **📍 [타임라인 탐색](https://voyager.nagi.fun/ko/guide/timeline)**: 시각적 노드로 메시지 사이를 오가고, 중요한 순간에 별표를 붙이고, 대화 분기를 관리하세요.
+- **💾 [대화 내보내기](https://voyager.nagi.fun/ko/guide/export)**: 이미지를 포함해 대화를 JSON, Markdown, PDF 또는 이미지로 내보내세요.
+- **🧜‍♀️ [Mermaid 렌더링](https://voyager.nagi.fun/ko/guide/mermaid)**: 플로우차트, 시퀀스 다이어그램 등 Mermaid 차트를 자동으로 렌더링합니다.
+- **📝 [Markdown 렌더링 수정](https://voyager.nagi.fun/ko/guide/markdown-fix)**: Gemini가 삽입한 HTML 요소 때문에 깨진 굵은 글씨(bold) 구문을 자동으로 고칩니다.
+- **🍌 [Image Refinement](https://voyager.nagi.fun/ko/guide/nanobanana)**: Gemini가 생성한 이미지의 워터마크를 손실 없이 제거합니다.
+- **🔬 [Deep Research](https://voyager.nagi.fun/ko/guide/deep-research)**: Deep Research 세션에서 생각 과정과 리서치 링크를 추출합니다.
 - **🛠️ 파워 툴**:
-  - **[일괄 삭제](https://voyager.nagi.fun/ko/guide/batch-delete)**: 여러 대화를 한꺼번에 삭제합니다.
-  - **[인용 답장](https://voyager.nagi.fun/ko/guide/quote-reply)**: 텍스트를 선택하여 문맥과 함께 답장합니다.
-  - **[자동 스크롤 방지](https://voyager.nagi.fun/ko/guide/prevent-auto-scroll)**: 새로운 프롬프트를 전송할 때 발생하는 원치 않는 점프 동작을 차단합니다.
-  - **[입력창 접기](https://voyager.nagi.fun/ko/guide/input-collapse)**: 더 많은 읽기 공간을 위해 자동으로 확장되는 입력 영역을 제공합니다.
+  - **[인용 답장](https://voyager.nagi.fun/ko/guide/quote-reply)**: 텍스트를 선택해 문맥과 함께 답장합니다.
+  - **[자동 스크롤 방지](https://voyager.nagi.fun/ko/guide/prevent-auto-scroll)**: 새 프롬프트를 전송할 때 원치 않게 화면이 튀는 것을 막습니다.
+  - **[입력창 접기](https://voyager.nagi.fun/ko/guide/input-collapse)**: 더 넓은 읽기 공간을 위해 필요할 때만 펼쳐지는 입력 영역을 제공합니다.
   - **[기본 모델](https://voyager.nagi.fun/ko/guide/default-model)**: 좋아하는 모델을 기본값으로 설정하세요.
-  - **[최근 항목 숨기기](https://voyager.nagi.fun/ko/guide/recents-hider)**: 사이드바에서 "최근" 목록을 숨겨 산만함을 줄입니다.
 
 ### 🔌 Claude, ChatGPT & DeepSeek
 
-- **📍 타임라인**: 대화 사이드바에서 별표 메시지와 검색 지원 — Gemini와 동일한 탐색 경험을 Claude와 DeepSeek에서도.
-- **📊 Claude 사용량 바**: Claude 인터페이스에서 세션 및 주간 사용량을 직접 추적.
-- **📐 수식 복사**: LaTeX 및 MathML 소스 코드를 원클릭 복사 (Gemini와 공유, DeepSeek에서도 사용 가능).
-- **📏 편안한 읽기 너비**: Claude, ChatGPT, DeepSeek의 대화 너비를 조절하여 더 나은 읽기 경험 제공.
-- **🔧 CJK 렌더링 수정**: Claude에서의 한중일 문자 렌더링 문제 수정.
-- **⌨️ Vim 입력**: DeepSeek 입력창에서 Vim 방식의 모달 편집과 커서 이동.
-- **📜 코드 줄바꿈 해제**: DeepSeek에서 긴 코드 줄을 줄바꿈하지 않고 가로 스크롤하여 들여쓰기를 유지.
+[Voyager 플러그인 엔진](https://voyager.nagi.fun/ko/plugins)을 기반으로, 이 기능들은 Gemini를 넘어 사용 경험을 확장합니다. 확장 프로그램 팝업에서 켜고, 각 사이트에 대한 접근을 허용하세요.
 
-### 🧩 모든 사이트 — localhost 까지
+- **📍 타임라인**: Claude와 ChatGPT에서 별표 메시지와 검색을 갖춘 같은 타임라인을 제공합니다. DeepSeek에서는 선택 사항인 플러그인으로 제공됩니다.
+- **📂 ChatGPT 폴더**: ChatGPT 대화를 폴더로 정리합니다. 기본으로 켜져 있습니다.
+- **💾 ChatGPT 내보내기**: ChatGPT 대화를 Markdown, JSON, PDF 또는 이미지로 내보냅니다.
+- **📐 수식 복사**: Claude, ChatGPT, DeepSeek에서 수식을 클릭해 LaTeX를 복사합니다.
+- **⌨️ Vim 입력**: Claude, ChatGPT, DeepSeek 입력창에서 Vim 방식의 모달 편집과 커서 이동을 지원합니다.
+- **📖 편안한 읽기 너비**: Claude, ChatGPT, DeepSeek에서 대화 너비를 조절해 더 나은 읽기 경험을 만듭니다.
+- **💬 일상 도우미**: Claude, ChatGPT, DeepSeek에서 인용 답장, Ctrl/⌘+Enter 전송, 초안 글자 수 표시를 제공합니다. Claude와 DeepSeek에서는 초안 자동 저장도 지원합니다.
+- **🈶 CJK 렌더링 수정**: Claude에서 한중일 문자가 깨지는 문제를 고칩니다.
+- **📜 코드 줄바꿈 해제**: DeepSeek에서 긴 코드 줄이 줄바꿈되지 않고 가로로 스크롤되어, 들여쓰기가 그대로 유지됩니다.
 
-팝업에서 원하는 사이트를 추가하면 Prompt Manager가 그곳까지 따라갑니다. 로컬 앱도 마찬가지입니다. 아래는 `localhost:3080`에서 실행 중인 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 안의 모습입니다:
+### 🧩 모든 사이트 — localhost까지
+
+확장 프로그램 팝업에서 원하는 사이트를 추가하면 프롬프트 관리자가 그곳까지 따라갑니다. 로컬 앱도 마찬가지입니다. 아래는 `localhost:3080`에서 실행 중인 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 안의 모습입니다.
 
 <p align="center">
-  <img src="../docs/public/assets/prompt-manager-deepseek-harness.png" alt="DeepSeek Harness 안에서 실행 중인 Prompt Manager" width="720">
+  <img src="../docs/public/assets/prompt-manager-deepseek-harness.png" alt="DeepSeek Harness 안에서 실행 중인 프롬프트 관리자" width="720">
 </p>
 
 ### 🎨 개인화
 
-- 확장 프로그램 팝업을 열고 **시각 효과**에서 `끄기`, `눈`, `벚꽃`, `비`를 전환할 수 있습니다.
-- 효과는 가벼운 전체 화면 오버레이로 렌더링되며, 페이지 상호작용을 차단하지 않습니다.
-- 효과를 전환하거나 끄면 파티클이 갑자기 사라지는 대신 자연스럽게 사라집니다.
+- 확장 프로그램 팝업을 열고 **시각 효과**에서 `끄기`, `눈`, `벚꽃`, `비` 중 하나로 전환할 수 있습니다.
+- 효과는 가벼운 전체 화면 오버레이로 렌더링되며, 페이지 상호작용을 막지 않습니다.
+- 효과를 바꾸거나 끄면 기존 파티클이 갑자기 사라지지 않고 자연스럽게 흩어집니다.
 
 ---
 
 ## 📥 설치
 
-> ⚠️ 참고: 프롬프트 관리자는 Gemini Enterprise 를 지원하는 유일한 기능입니다.
+> ⚠️ 참고: 프롬프트 관리자는 Gemini for Enterprise를 지원하는 유일한 기능입니다.
 
 <div align="center">
   <a href="https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=readme&utm_campaign=organic_growth&utm_content=ko" target="_blank">
@@ -141,15 +144,15 @@
   </a>
   &nbsp;&nbsp;
   <a href="https://github.com/voyager-crew/voyager/releases/latest/" target="_blank">
-    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari 다운로드" height="36">
+    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari 다운로드 (macOS)" height="36">
   </a>
 </div>
 
 <p align="center">
-  <sub><b>Edge 사용자:</b> 모바일이나 태블릿에서 Edge가 필요한 사용자를 위해 Voyager는 Edge Add-ons 버전을 계속 유지하고 배포합니다. 심사가 지연되면 Chrome Web Store 버전이나 GitHub 수동 패키지를 사용할 수 있습니다.</sub>
+  <sub><b>Edge 사용자:</b> 모바일이나 태블릿에서 Edge가 필요한 사용자를 위해 Voyager는 Edge Add-ons 버전을 계속 유지합니다. 심사가 지연되면 Chrome Web Store 버전이나 GitHub 수동 패키지를 사용할 수 있습니다.</sub>
 </p>
 
-**수동 설치** 또는 **개발 빌드**에 대해서는 [설치 가이드](https://voyager.nagi.fun/ko/guide/installation)를 참조하세요.
+**수동 설치**나 **개발 빌드**는 [설치 가이드](https://voyager.nagi.fun/ko/guide/installation)를 참고하세요.
 
 ---
 
@@ -161,7 +164,7 @@
   </a>
 </div>
 
-Voyager 가 도움이 되었다면 커피 한 잔을 후원해 주세요. 지속적인 업데이트에 큰 도움이 됩니다! 후원자분들은 특별 감사 섹션에 기재됩니다. ❤️
+Voyager가 도움이 되었다면 커피 한 잔으로 후원해 주세요. 업데이트를 이어 가는 데 큰 힘이 됩니다! 후원자분들은 특별 감사 섹션에 실립니다. ❤️
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
@@ -171,7 +174,7 @@ Voyager 가 도움이 되었다면 커피 한 잔을 후원해 주세요. 지속
     <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" height="36">
   </a>
 
-  <p><b>또는 WeChat / Alipay / Afdian 을 통해 후원하기:</b></p>
+  <p><b>또는 WeChat / Alipay / Afdian으로 후원하기:</b></p>
   <table align="center" border="0" cellpadding="0" cellspacing="0">
     <tr>
       <td align="center">
@@ -198,9 +201,9 @@ Voyager 가 도움이 되었다면 커피 한 잔을 후원해 주세요. 지속
 
 ### 🎙️ 추천 도구: Typeless
 
-Voyager 개발 중에 광범위하게 사용한 AI 음성 - 텍스트 변환 도구인 **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**를 강력히 추천합니다. 이를 매일의 워크플로우에 통합함으로써 엄청난 시간을 절약하고 생산성을 크게 높일 수 있었습니다.
+Voyager를 개발하는 동안 많이 사용한 AI 음성-텍스트 변환 도구 **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**를 강력히 추천합니다. 매일의 작업 흐름에 넣은 뒤로 시간을 많이 아끼고 생산성도 크게 높아졌습니다.
 
-> 🎁 **[제 추천 링크를 통해 가입](https://www.typeless.com/?via=gemini-voyager)** (코드: _`gemini-voyager`_) 하시면 **$5 무료 크레딧**을 받으실 수 있습니다. 이는 제가 이 프로젝트를 계속 유지 관리할 수 있는 크레딧을 제공하며, 저의 작업을 지원하는 무료 방법입니다! ❤️
+> 🎁 **[추천 링크로 가입하기](https://www.typeless.com/?via=gemini-voyager)** (코드: _`gemini-voyager`_)하면 **$5 무료 크레딧**을 받을 수 있습니다. 이 크레딧은 제가 이 프로젝트를 계속 유지하는 데에도 쓰이니, 저를 응원하는 무료 방법이기도 합니다! ❤️
 
 ---
 
@@ -214,15 +217,15 @@ Voyager 개발 중에 광범위하게 사용한 AI 음성 - 텍스트 변환 도
       </a>
       <br><br>
       <b>업데이트 팔로우</b><br>
-      <sub>최신 소식을 받아보세요.</sub>
+      <sub>최신 소식을 받아 보세요.</sub>
     </td>
     <td align="center" width="50%" valign="top">
       <a href="https://discord.gg/TEUFxdMbGb" target="_blank">
         <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=Join%20Discord" alt="Discord" height="36">
       </a>
       <br><br>
-      <b>커뮤니티 가입</b><br>
-      <sub>다른 사용자들과 대화하고, 프롬프트를 공유하고, 도움을 받으세요.</sub>
+      <b>커뮤니티 참여</b><br>
+      <sub>다른 사용자와 대화하고, 프롬프트를 공유하고, 도움을 받으세요.</sub>
     </td>
   </tr>
 </table>
@@ -233,17 +236,17 @@ Voyager 개발 중에 광범위하게 사용한 AI 음성 - 텍스트 변환 도
 
 [<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/voyager-crew/voyager)
 
-여러분의 기여를 환영합니다! 버그 보고, 기능 제안, 문서 개선 또는 코드 제출 등 무엇이든 환영합니다:
+기여를 환영합니다! 버그 보고, 기능 제안, 문서 개선, 코드 제출 어느 것이든 좋습니다.
 
-- **이슈**: 재현 가능한 버그만 받습니다. [버그 보고](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml) 템플릿을 사용하세요.
-- **Discussions**: [기능 제안, 아이디어, 질문](https://github.com/voyager-crew/voyager/discussions)은 이슈가 아니라 Discussions에 올려주세요.
-- **풀 리퀘스트**: 가이드라인은 [CONTRIBUTING.md](../.github/CONTRIBUTING.md)를 확인하세요.
+- **Issues**: 재현 가능한 버그만 받습니다. [버그 보고](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml) 템플릿을 사용하세요.
+- **Discussions**: [기능 제안, 아이디어, 질문](https://github.com/voyager-crew/voyager/discussions)은 Issue가 아니라 Discussions에 올려 주세요.
+- **Pull Requests**: 가이드라인은 [CONTRIBUTING.md](../.github/CONTRIBUTING.md)를 확인하세요.
 
 <details>
-<summary>개발 설정</summary>
+<summary>개발 환경 설정</summary>
 
 ```bash
-# 의존성 설치 (Bun 권장)
+# 의존성 설치 (스크립트는 Bun으로 실행되며, CI는 Bun 1.3.12를 사용합니다)
 bun i
 
 # 개발 모드 (자동 새로고침 지원)
@@ -253,21 +256,21 @@ bun run dev:safari   # Safari (macOS 필요)
 
 # 프로덕션 빌드
 bun run build:chrome   # Chrome
-bun run build:edge     # Edge 독립 패키징
+bun run build:edge     # Edge 패키지 (별도)
 bun run build:firefox  # Firefox
 bun run build:safari   # Safari
 bun run build:all      # Chrome + Firefox + Safari
 ```
 
-**Safari 개발**: `bun run build:safari`를 실행한 뒤 `Voyager/`의 Xcode 프로젝트를 여세요.
+**Safari 개발**: `bun run build:safari`를 실행한 뒤 `Voyager/` 아래의 Xcode 프로젝트를 여세요.
 
 </details>
 
-Voyager 를 더 좋게 만들 수 있도록 도와주셔서 감사합니다! ❤️
+Voyager를 더 좋게 만들어 주셔서 감사합니다! ❤️
 
 ### ❤️ 특별 감사
 
-Voyager에 기여해 주신 모든 기여자분들께 특별히 감사드립니다 ❤️
+Voyager에 기여해 주신 모든 분께 진심으로 감사드립니다 ❤️
 
 <a href="https://github.com/voyager-crew/voyager/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=voyager-crew/voyager&max=200&columns=14" />
@@ -277,36 +280,38 @@ Voyager에 기여해 주신 모든 기여자분들께 특별히 감사드립니�
 
 ## 🌟 크레딧
 
-> Voyager는 작은 사이드 프로젝트입니다. 다른 확장 프로그램의 사용자를 옮겨 오기 위한 마이그레이션 경로를 만드는 것보다, 사람들에게 도움이 되는 것을 만드는 데 시간을 쓰고 싶습니다.
+> Voyager는 작은 사이드 프로젝트입니다. 다른 확장 프로그램의 사용자를 끌어오기 위한 마이그레이션 경로를 만드는 데 시간을 쓰기보다, 사람들에게 도움이 되는 것을 만드는 데 시간을 쓰고 싶습니다.
 
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 이 프로젝트에 영감을 준 확장 프로그램입니다.
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 이 프로젝트에 영감을 준 ChatGPT용 타임라인 탐색 확장 프로그램입니다.
 
-- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - Image Refinement 는 이 프로젝트들을 바탕으로 적용되었습니다. 관련 제3자 MIT 고지는 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)에 보존되어 있습니다.
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - Image Refinement는 이 프로젝트들을 바탕으로 만들어졌습니다. 제3자 MIT 고지는 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)에 보관되어 있습니다.
 
-- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)** - 기본 모델 고정 로직에는 Gemini Helper 에서 참고한 상호작용 아이디어가 포함되어 있으며, 소스 코드 수준의 attribution 을 유지하고 있습니다.
+- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)** - 기본 모델 고정 로직에는 Gemini Helper에서 가져온 상호작용 아이디어가 포함되어 있으며, 소스 코드에 출처를 남겨 두었습니다.
 
-- **[cordis](https://github.com/cordiverse/cordis)** - 플러그인 런타임의 사이드 이펙트 원장(`PluginScope`)은 cordis fiber 모델의 effect/해제 수명주기 설계를 참고했습니다.
+- **[cordis](https://github.com/cordiverse/cordis)** - 플러그인 런타임의 사이드 이펙트 원장(`PluginScope`)은 cordis의 fiber 모델에 있는 effect 및 해제 수명 주기 설계를 참고했습니다.
 
 ## 🌍 에코시스템
 
 Voyager에서 영감을 받은 프로젝트:
 
-프로젝트가 Voyager에서 영감을 받았거나, Voyager를 직접 fork했거나, Voyager를 기반으로 만들어졌다면 PR을 열어 여기에 추가해 주세요.
+프로젝트가 Voyager에서 영감을 받았거나, Voyager를 포크했거나, Voyager를 기반으로 만들어졌다면 [Discussions](https://github.com/voyager-crew/voyager/discussions)에 공유해 주시면 여기에 추가하겠습니다.
 
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Voyager 를 DeepSeek 에 맞게 조정한 포크 프로젝트로, DeepSeek 사용자에게 타임라인 탐색 및 채팅 관리 기능을 제공합니다!
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - Voyager를 DeepSeek에 맞게 조정한 포크로, DeepSeek 사용자에게 타임라인 탐색과 채팅 관리 기능을 제공합니다!
 
-- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - Voyager에서 영감을 받은 Claude.ai 향상 확장 프로그램으로, 타임라인 탐색, 폴더 관리, 프롬프트 라이브러리 등 다양한 기능을 제공하며 Voyager 프롬프트 가져오기/내보내기와 완전 호환됩니다!
+- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - Voyager에서 영감을 받은 Claude.ai 향상 확장 프로그램으로, 타임라인 탐색, 폴더 관리, 프롬프트 라이브러리 등을 제공하며 Voyager 프롬프트 가져오기/내보내기와 완전히 호환됩니다!
 
-- **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - 향상된 탐색, 정리 및 생산성 기능으로 Doubao를 강화하는 브라우저 확장 프로그램입니다.
+- **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - 향상된 탐색, 정리, 생산성 기능으로 Doubao를 강화하는 브라우저 확장 프로그램입니다.
+
+- **[DeepSeek Enhancer](https://github.com/dlshuangchenyue1210/DeepSeek-Enhancer)** - Voyager에서 영감을 받은 DeepSeek 웹 앱 강화 확장 프로그램으로, 다단계 폴더, 채팅 내보내기, 수식 복사, 데이터 백업 등을 제공합니다.
 
 ---
 
 ## 📄 라이선스
 
-Voyager 는 **GPL-3.0** 라이선스로 배포됩니다.
-Image Refinement 관련 코드와 에셋에 대한 제3자 MIT 고지는 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)에 보존되어 있습니다.
+Voyager는 **GPL-3.0** 라이선스로 배포됩니다.
+Image Refinement 관련 코드와 에셋의 제3자 MIT 고지는 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)에 보관되어 있습니다.
 
-Gemini은 Google LLC의 상표입니다. Claude는 Anthropic, PBC의 상표입니다. ChatGPT는 OpenAI, Inc.의 상표입니다. Voyager는 독립 프로젝트이며, 위 회사들과 제휴, 보증 또는 후원 관계가 없습니다.
+Gemini는 Google LLC의 상표입니다. Claude는 Anthropic, PBC의 상표입니다. ChatGPT는 OpenAI, Inc.의 상표입니다. Voyager는 독립 프로젝트이며, 위 회사들과 제휴, 보증 또는 후원 관계가 없습니다.
 
 ---
 

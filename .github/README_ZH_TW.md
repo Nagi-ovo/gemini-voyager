@@ -1,20 +1,20 @@
 <div align="center">
   <img src="../docs/public/logo.png" alt="Voyager logo" width="120" height="120">
-  <h3>打造屬於你的 AI 體驗 ✨</h3>
+  <h3>打造真正屬於你的 AI 體驗 ✨</h3>
   <p>
-    <b>Gemini · Claude · ChatGPT · DeepSeek，終於完整了。</b>
+    <b>Gemini · Claude · ChatGPT · DeepSeek——終於完整。</b>
   </p>
 
   <p>
-    <img src="https://voyager.nagi.fun/badges/github-stars.svg" alt="GitHub Star">
-    <img src="https://voyager.nagi.fun/badges/github-forks.svg" alt="GitHub Fork">
+    <img src="https://voyager.nagi.fun/badges/github-stars.svg" alt="GitHub stars">
+    <img src="https://voyager.nagi.fun/badges/github-forks.svg" alt="GitHub forks">
     <img src="https://voyager.nagi.fun/badges/github-release.svg" alt="最新版本">
     <img src="https://voyager.nagi.fun/badges/github-downloads.svg" alt="GitHub 下載量">
-    <a href="https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=readme&utm_campaign=organic_growth&utm_content=zh_tw" target="_blank"><img src="https://img.shields.io/chrome-web-store/users/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome 商店用戶數"></a>
-    <a href="https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=readme&utm_campaign=organic_growth&utm_content=zh_tw" target="_blank"><img src="https://img.shields.io/chrome-web-store/rating/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome 商店評分"></a>
-    <a href="https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne" target="_blank"><img src="https://img.shields.io/badge/edge%20users-50k%2B-0078D7?style=flat-square&logo=microsoftedge&logoColor=white" alt="Edge 商店用戶數"></a>
-    <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank"><img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 商店用戶數"></a>
-    <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank"><img src="https://img.shields.io/amo/rating/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 商店評分"></a>
+    <a href="https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=readme&utm_campaign=organic_growth&utm_content=zh_tw" target="_blank"><img src="https://img.shields.io/chrome-web-store/users/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome 線上應用程式商店使用者數"></a>
+    <a href="https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=readme&utm_campaign=organic_growth&utm_content=zh_tw" target="_blank"><img src="https://img.shields.io/chrome-web-store/rating/iifacdnjakkhjjiengaffnegbndgingi?style=flat-square&logo=google-chrome" alt="Chrome 線上應用程式商店評分"></a>
+    <a href="https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne" target="_blank"><img src="https://img.shields.io/badge/edge%20users-50k%2B-0078D7?style=flat-square&logo=microsoftedge&logoColor=white" alt="Edge 增益集使用者數"></a>
+    <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank"><img src="https://img.shields.io/amo/users/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 附加元件使用者數"></a>
+    <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank"><img src="https://img.shields.io/amo/rating/gemini-voyager?style=flat-square&logo=firefox" alt="Firefox 附加元件評分"></a>
   </p>
 
   <p>
@@ -31,7 +31,7 @@
 </div>
 
 <p align="center">
-  <a href="https://voyager.nagi.fun/zh_TW">📖 文檔</a> • 
+  <a href="https://voyager.nagi.fun/zh_TW">📖 文件</a> •
   <a href="../README.md">English</a> • 
   <a href="./README_ZH.md">简体中文</a> •
   <a href="./README_JA.md">日本語</a> •
@@ -44,7 +44,7 @@
 </p>
 
 <p align="center">
-  <img src="../docs/public/assets/promotion/voyager-social-preview.png" alt="Voyager —— 你的提示詞，全部保存在本機。適用於任意網頁介面，包括 DeepSeek Harness" width="820">
+  <img src="../docs/public/assets/promotion/voyager-social-preview.png" alt="Voyager——你的提示詞，全部保存在本機。適用於任何網頁介面，包括 DeepSeek Harness" width="820">
 </p>
 
 <!-- <p align="center">
@@ -52,114 +52,117 @@
   </p> -->
 
 > [!NOTE]
-> 如果 Voyager 有幫助，歡迎分享到 X、Facebook、YouTube、Threads、Dcard 等等。每一次分享都能讓更多人看見這個專案。謝謝。
+> 如果 Voyager 對你有幫助，歡迎分享到 X、Reddit、YouTube、Threads 等平台。每一次分享都能讓更多人發現這個專案。謝謝。
 
 ---
 
-## 👋 為什麼開發 Voyager？
+## 👋 為什麼要做 Voyager？
 
-我們熱愛 AI 聊天助手——Gemini、Claude、ChatGPT——但有時候總覺得它們少了一點"秩序感"。
+我們熱愛 AI 聊天機器人，但有時也希望它們能再多一點結構。
 
-這就是我們開發 **Voyager** 的初衷。它不僅僅是一個工具，更是一個能幫你把 AI 對話變得井井有條、觸手可及的得力助手。無論你是需要處理大量對話的研究人員，還是喜歡收藏代碼片段的開發者，亦或是單純的整理控，Voyager 都是為你準備的。
+這就是我開發 **Voyager** 的原因。它是一個夥伴，幫助你讓 AI 對話保持有序、隨手可得，並更有效率——無論你使用的是 Gemini、Claude、ChatGPT 還是 DeepSeek。如果你是同時處理幾十條對話線索的研究者、會收藏程式碼片段的開發者，或只是喜歡井然有序的人，Voyager 都是為你準備的。
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
     <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="500">
   </a>
   <br>
-  <i>在 2 月 18 號 Google Gemini App 導致部分用戶歷史對話無法訪問的問題中，Voyager 的用戶仍然能夠在其資料夾中看到被保存下來的對話。</i>
+  <i>在 2 月 18 日 Google Gemini App 導致部分使用者的歷史對話無法存取的事件中，Voyager 的使用者仍然能在資料夾中看到已儲存的對話。</i>
 </p>
 
 ---
 
-## ✨ 功能特性
+## ✨ 功能特色
 
 <div align="center">
   <img src="../docs/public/assets/teaser.png" alt="teaser"/>
 </div>
 
-查看完整功能，請訪問我們的 [官方文檔](https://voyager.nagi.fun/zh_TW)。
+如需完整功能介紹，請造訪我們的[官方文件](https://voyager.nagi.fun/zh_TW)。
 
-### 🌌 通用核心 (Gemini & AI Studio)
+### 🌌 核心功能（Gemini 與 AI Studio）
 
-- **📂 [資料夾管理](https://voyager.nagi.fun/zh_TW/guide/folders)**: 支持 **多級目錄**、**拖拽排序** 及 **Google Drive 同步**。
-  - **Gemini**: 支持 **多帳號隔離模式** 及 **自定義資料夾顏色**。
-- **💡 [提示詞庫](https://voyager.nagi.fun/zh_TW/guide/prompts)**: 跨平台同步提示詞，支持 Gemini、AI Studio 及 [自定義網站](https://voyager.nagi.fun/zh_TW/guide/prompts#任何網站皆可用)。
-- **☁️ [雲同步](https://voyager.nagi.fun/zh_TW/guide/cloud-sync)**: 支持將資料夾和提示詞庫同步到 Google Drive。
-- **📐 公式複製**: 一鍵複製 LaTeX 和 MathML (Word) 源碼。
-- **🌦️ 視覺特效**: 在設置面板中一鍵切換 **飄雪**、**電影感雨滴** 或 **櫻花飄落**，給頁面增添季節氛圍。
+- **📂 [資料夾整理](https://voyager.nagi.fun/zh_TW/guide/folders)**：將對話整理到兩層的資料夾階層中，支援拖放操作。
+  - **Gemini**：支援 **帳號隔離模式** 與 **自訂資料夾顏色**。
+- **💡 [提示詞寶庫](https://voyager.nagi.fun/zh_TW/guide/prompts)**：在 Gemini、AI Studio 以及[自訂網站](https://voyager.nagi.fun/zh_TW/guide/prompts#任何網站皆可使用)中儲存並重複使用提示詞。
+- **☁️ [雲端同步](https://voyager.nagi.fun/zh_TW/guide/cloud-sync)**：透過 Google 雲端硬碟同步資料夾與提示詞，Safari 上則可使用 iCloud。
+- **🗑️ [批次刪除](https://voyager.nagi.fun/zh_TW/guide/batch-delete)**：一次批次刪除多則對話。
+- **📐 [公式複製](https://voyager.nagi.fun/zh_TW/guide/formula-copy)**：點擊公式即可將它複製為 LaTeX、MathML（Word）或適用於 Notion 的數學格式。
+- **🌦️ 視覺特效**：在設定面板中加入 **飄雪**、**電影感雨幕** 或 **飄落櫻花花瓣**，為頁面增添季節氛圍。
 
-### ✨ Gemini 專屬增強
+### ✨ Gemini 專屬功能
 
-- **📍 [時間線導航](https://voyager.nagi.fun/zh_TW/guide/timeline)**: 可視化節點，瞬間跳轉訊息，星標重點，管理對話分支。
-- **💾 [對話導出](https://voyager.nagi.fun/zh_TW/guide/export)**: 支持導出為 JSON、Markdown 或 PDF（含圖片）。
-- **🧜‍♀️ [Mermaid 圖表渲染](https://voyager.nagi.fun/zh_TW/guide/mermaid)**: 自動渲染流程圖、時序圖等 Mermaid 圖表。
-- **📝 [Markdown 渲染修復](https://voyager.nagi.fun/zh_TW/guide/markdown-fix)**: 自動修復 Gemini 注入 HTML 導致的 Markdown 加粗失效問題。
-- **🍌 [Image Refinement](https://voyager.nagi.fun/zh_TW/guide/nanobanana)**: 自動去除 Gemini 生成圖片的無損浮水印。
-- **🔬 [Deep Research](https://voyager.nagi.fun/zh_TW/guide/deep-research)**: 一鍵提取 Deep Research 對話的思考過程和研究鏈接。
-- **🛠️ 效率工具**:
-  - **[批量刪除](https://voyager.nagi.fun/zh_TW/guide/batch-delete)**: 批量清理對話記錄。
-  - **[引用回覆](https://voyager.nagi.fun/zh_TW/guide/quote-reply)**: 選中對話文本即可一鍵引用回覆。
-  - **[防自動跳轉](https://voyager.nagi.fun/zh_TW/guide/prevent-auto-scroll)**: 攔截每次發送新問題後頁面強制滾動到最底部的內建行為，找回絲滑體驗。
-  - **[輸入框摺疊](https://voyager.nagi.fun/zh_TW/guide/input-collapse)**: 輸入框自動收納，釋放閱讀空間。
-  - **[預設模型](https://voyager.nagi.fun/zh_TW/guide/default-model)**: 為新對話設置預設選中的模型。
-  - **[隱藏最近項目和 Gem](https://voyager.nagi.fun/zh_TW/guide/recents-hider)**: 隱藏側邊欄的”最近”列表，減少干擾。
+- **📍 [時間軸導覽](https://voyager.nagi.fun/zh_TW/guide/timeline)**：以視覺化節點在訊息間跳轉、為重要時刻加上星號，並管理對話分叉。
+- **💾 [對話匯出](https://voyager.nagi.fun/zh_TW/guide/export)**：將對話匯出為 JSON、Markdown、PDF 或圖片，且包含圖片內容。
+- **🧜‍♀️ [Mermaid 圖表渲染](https://voyager.nagi.fun/zh_TW/guide/mermaid)**：自動渲染流程圖、時序圖與其他 Mermaid 圖表。
+- **📝 [Markdown 渲染修復](https://voyager.nagi.fun/zh_TW/guide/markdown-fix)**：自動修復因 Gemini 插入的 HTML 元素而損壞的粗體語法。
+- **🍌 [Image Refinement](https://voyager.nagi.fun/zh_TW/guide/nanobanana)**：為 Gemini 生成的圖片進行無損去除浮水印。
+- **🔬 [Deep Research](https://voyager.nagi.fun/zh_TW/guide/deep-research)**：從 Deep Research 對話中擷取思考過程與研究連結。
+- **🛠️ 效率工具**：
+  - **[引用回覆](https://voyager.nagi.fun/zh_TW/guide/quote-reply)**：選取文字即可帶著上下文回覆。
+  - **[防止自動捲動](https://voyager.nagi.fun/zh_TW/guide/prevent-auto-scroll)**：攔截你送出新提示詞時，頁面強制跳到最底部的行為。
+  - **[輸入框摺疊](https://voyager.nagi.fun/zh_TW/guide/input-collapse)**：輸入框可自動展開與摺疊，釋放閱讀空間。
+  - **[預設模型](https://voyager.nagi.fun/zh_TW/guide/default-model)**：將你偏好的模型設為預設。
 
-### 🔌 Claude, ChatGPT & DeepSeek
+### 🔌 Claude、ChatGPT 與 DeepSeek
 
-- **📍 時間線**: 對話側邊欄，支持星標訊息和搜尋——同樣的導航體驗，現在也能在 Claude 和 DeepSeek 上使用。
-- **📊 Claude 用量條**: 直接在 Claude 介面中追蹤會話和每週用量。
-- **📐 公式複製**: 一鍵複製 LaTeX 和 MathML 源碼（與 Gemini 共享，DeepSeek 上同樣可用）。
-- **📏 舒適閱讀寬度**: 調整 Claude、ChatGPT 和 DeepSeek 的對話寬度，獲得更好的閱讀體驗。
-- **🔤 CJK 渲染修復**: 修復 Claude 上的中日韓字元渲染問題。
-- **⌨️ Vim 輸入**: 在 DeepSeek 的輸入框裡用 Vim 模式編輯和移動游標。
-- **📜 程式碼不換行**: DeepSeek 上的長程式碼行改為橫向捲動，縮排不會被折斷。
+這些功能由 [Voyager 外掛引擎](https://voyager.nagi.fun/zh_TW/plugins) 驅動，讓你的體驗延伸到 Gemini 之外。請在擴充功能彈出視窗中開啟，並授權存取各網站：
 
-### 🧩 任意站台，包括本機
+- **📍 時間軸**：在 Claude 與 ChatGPT 上提供相同的時間軸，支援星號訊息與搜尋；DeepSeek 則以選用外掛的形式提供。
+- **📂 ChatGPT 資料夾**：將 ChatGPT 對話整理到資料夾中。預設開啟。
+- **💾 ChatGPT 匯出**：將 ChatGPT 對話匯出為 Markdown、JSON、PDF 或圖片。
+- **📐 公式複製**：在 Claude、ChatGPT 與 DeepSeek 上點擊公式，即可複製其 LaTeX。
+- **⌨️ Vim 輸入**：在 Claude、ChatGPT 與 DeepSeek 的輸入框中使用 Vim 風格的模式編輯與游標移動。
+- **📖 舒適閱讀寬度**：在 Claude、ChatGPT 與 DeepSeek 上調整對話寬度，獲得更好的閱讀體驗。
+- **💬 日常小工具**：在 Claude、ChatGPT 與 DeepSeek 上提供引用回覆、Ctrl/⌘+Enter 傳送與草稿字數計算；Claude 與 DeepSeek 另支援草稿自動儲存。
+- **🈶 CJK 渲染修復**：修復 Claude 上中日韓文字的渲染問題。
+- **📜 程式碼換行**：在 DeepSeek 上，過長的程式碼行會改為橫向捲動，而不是換行，因此縮排得以保留。
 
-在擴充功能彈出視窗中新增任意網站，Prompt Manager 就會跟著過去，本機應用也一樣。下圖是它執行在 `localhost:3080` 的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 裡：
+### 🧩 任何網站，包括本機
+
+在擴充功能彈出視窗中新增任何網站，提示詞管理器就會跟著過去，本機應用程式也不例外。以下是它在 `localhost:3080` 上執行的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 中的樣子：
 
 <p align="center">
-  <img src="../docs/public/assets/prompt-manager-deepseek-harness.png" alt="在 DeepSeek Harness 中執行的 Prompt Manager" width="720">
+  <img src="../docs/public/assets/prompt-manager-deepseek-harness.png" alt="在 DeepSeek Harness 中執行的提示詞管理器" width="720">
 </p>
 
-### 🎨 個性化體驗
+### 🎨 個人化設定
 
-- 點擊插件圖標，在設定中的 **視覺特效** 裡可切換 `關閉`、`飄雪`、`櫻花`、`雨`。
-- 特效以輕量全螢幕覆蓋層呈現，不會阻擋頁面互動。
-- 切換特效或關閉時，粒子會自然退場，不會突兀消失。
+- 開啟擴充功能彈出視窗，找到 **視覺特效**，即可在 `關閉`、`飄雪`、`櫻花` 與 `雨` 之間切換。
+- 特效會以輕量的全螢幕覆蓋層呈現，不會阻擋頁面互動。
+- 切換或關閉特效時，既有的粒子會自然淡出，而不會突然消失。
 
 ---
 
 ## 📥 安裝方式
 
-> ⚠️ 注意：提示詞管理器是唯一支持 Gemini 企業版的功能。
+> ⚠️ 注意：提示詞管理器是唯一支援 Gemini 企業版的功能。
 
 <div align="center">
   <a href="https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=readme&utm_campaign=organic_growth&utm_content=zh_tw" target="_blank">
-    <img src="https://img.shields.io/badge/Chrome%20應用商店-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome 應用商店" height="36">
+    <img src="https://img.shields.io/badge/Chrome%20線上應用程式商店-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Chrome 線上應用程式商店" height="36">
   </a>
   &nbsp;&nbsp;
-  <a href="https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne" target="_blank"><img src="https://img.shields.io/badge/Edge%20Add--ons-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="Edge Add-ons" height="36"></a>
+  <a href="https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne" target="_blank"><img src="https://img.shields.io/badge/Edge%20Add--ons-0078D7?style=for-the-badge&logo=microsoftedge&logoColor=white" alt="Edge 增益集" height="36"></a>
   &nbsp;&nbsp;
   <a href="https://addons.mozilla.org/firefox/addon/gemini-voyager/" target="_blank">
-    <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox Add-ons" height="36">
+    <img src="https://img.shields.io/badge/Firefox%20Add--ons-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Firefox 附加元件" height="36">
   </a>
   &nbsp;&nbsp;
   <a href="https://github.com/voyager-crew/voyager/releases/latest/" target="_blank">
-    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari 下載" height="36">
+    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari 下載（macOS）" height="36">
   </a>
 </div>
 
 <p align="center">
-  <sub><b>Edge 使用者：</b>考量到行動端和平板使用者需求，Voyager 會繼續維護並發布 Edge Add-ons 版本。若商店審核延遲，仍可暫時使用 Chrome 商店版或 GitHub 手動包。</sub>
+  <sub><b>Edge 使用者：</b>考量到行動裝置與平板使用者的需求，Voyager 仍會在 Edge 增益集上持續維護。若審核延遲，Chrome 線上應用程式商店版與 GitHub 手動安裝套件仍可使用。</sub>
 </p>
 
-關於 **手動安裝** 或 **開發構建**，請參閱 [安裝指南](https://voyager.nagi.fun/zh_TW/guide/installation)。
+如需 **手動安裝** 或 **開發版本建置**，請參閱[安裝指南](https://voyager.nagi.fun/zh_TW/guide/installation)。
 
 ---
 
-## ☕ 支持本項目
+## ☕ 支持本專案
 
 <div align="center">
   <a href="https://github.com/voyager-crew/voyager">
@@ -167,7 +170,7 @@
   </a>
 </div>
 
-如果 Voyager 提升了你的體驗，歡迎請我喝杯咖啡。贊助者將被列入致謝名單。❤️
+如果 Voyager 讓你的生活更輕鬆，歡迎請我喝杯咖啡，這能幫助更新持續進行。贊助者會列在我們的特別感謝名單中。❤️
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
@@ -177,7 +180,7 @@
     <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" height="36">
   </a>
 
-  <p><b>或通過微信 / 支付寶 / 愛發電支持：</b></p>
+  <p><b>或透過微信支付／支付寶／愛發電支持：</b></p>
   <table align="center" border="0" cellpadding="0" cellspacing="0">
     <tr>
       <td align="center">
@@ -202,11 +205,11 @@
   </table>
 </div>
 
-### 🎙️ 特別推薦: Typeless
+### 🎙️ 特別推薦：Typeless
 
-我非常推薦 **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**，一款 AI 語音轉文字工具。我在開發過程中一直在使用它，極大地提升了我的工作效率。
+我非常推薦 **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**，這是一款 AI 語音轉文字工具。我在開發 Voyager 的過程中大量使用它。把它整合進日常工作流程後，為我節省了大量時間，也明顯提升了生產力。
 
-> 🎁 **[點擊我的邀請鏈接](https://www.typeless.com/?via=gemini-voyager)**（邀請碼 _`gemini-voyager`_）可獲得 **5 美元免費額度**。這也是支持本項目的一種免費方式！❤️
+> 🎁 **[透過我的推薦連結註冊](https://www.typeless.com/?via=gemini-voyager)**（邀請碼：_`gemini-voyager`_），即可獲得 **5 美元免費額度**。這也會讓我獲得額度，繼續維護這個專案，是一種免費的支持方式！❤️
 
 ---
 
@@ -220,15 +223,15 @@
       </a>
       <br><br>
       <b>關注動態</b><br>
-      <sub>獲取最新動態。</sub>
+      <sub>取得最新更新。</sub>
     </td>
     <td align="center" width="50%" valign="top">
       <a href="https://discord.gg/TEUFxdMbGb" target="_blank">
         <img src="https://img.shields.io/discord/1463273957120675973?style=for-the-badge&logo=discord&logoColor=white&label=加入%20Discord" alt="Discord" height="36">
       </a>
       <br><br>
-      <b>加入社區</b><br>
-      <sub>與其他用戶交流、分享提示詞、獲取幫助。</sub>
+      <b>加入社群</b><br>
+      <sub>與其他使用者交流、分享提示詞、取得協助。</sub>
     </td>
   </tr>
 </table>
@@ -239,33 +242,33 @@
 
 [<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/voyager-crew/voyager)
 
-歡迎參與貢獻！
+歡迎參與貢獻！無論你想回報錯誤、提出功能建議、改善文件，或提交程式碼：
 
-- **Issue**：僅接受可重現的缺陷，請使用 [Bug 報告](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml) 模板。
-- **Discussions**：[功能需求、想法和提問](https://github.com/voyager-crew/voyager/discussions)請發到討論區，不要開 Issue。
-- **Pull Request**：請查看 [貢獻指南](./CONTRIBUTING.md)。
+- **Issues**：僅接受可重現的錯誤，請使用 [錯誤回報](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml) 範本。
+- **Discussions**：[功能需求、想法與提問](https://github.com/voyager-crew/voyager/discussions)請發在這裡，而不是 Issues。
+- **Pull Requests**：請參閱 [貢獻指南](./CONTRIBUTING.md)。
 
 <details>
-<summary>開發環境配置</summary>
+<summary>開發環境設定</summary>
 
 ```bash
-# 安裝依賴 (推薦 Bun)
+# 安裝相依套件（腳本以 Bun 執行；CI 使用 Bun 1.3.12）
 bun i
 
-# 開發模式
-bun run dev:chrome
-bun run dev:firefox
-bun run dev:safari
+# 開發模式（含自動重新載入）
+bun run dev:chrome   # Chrome 與 Chromium 系瀏覽器
+bun run dev:firefox  # Firefox
+bun run dev:safari   # Safari（需要 macOS）
 
-# 生產構建
-bun run build:chrome
-bun run build:edge     # Edge 獨立打包
-bun run build:firefox
-bun run build:safari
+# 正式建置
+bun run build:chrome   # Chrome
+bun run build:edge     # Edge 套件（獨立打包）
+bun run build:firefox  # Firefox
+bun run build:safari   # Safari
 bun run build:all      # Chrome + Firefox + Safari
 ```
 
-**Safari 開發**：執行 `bun run build:safari`，然後開啟 `Voyager/` 中已納入版本控制的 Xcode 專案。
+**Safari 開發**：執行 `bun run build:safari`，然後開啟 `Voyager/` 下已納入版本控制的 Xcode 專案。
 
 </details>
 
@@ -273,7 +276,7 @@ bun run build:all      # Chrome + Firefox + Safari
 
 ### ❤️ 特別感謝
 
-特別感謝所有為 Voyager 做出貢獻的貢獻者們 ❤️
+特別感謝所有為 Voyager 做出貢獻的人 ❤️
 
 <a href="https://github.com/voyager-crew/voyager/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=voyager-crew/voyager&max=200&columns=14" />
@@ -283,36 +286,38 @@ bun run build:all      # Chrome + Firefox + Safari
 
 ## 🌟 致謝
 
-> Voyager 只是一個小小的 side project。比起做那些把其他擴充功能使用者遷移過來的入口，我更想把時間花在真正幫到人的事情上。
+> Voyager 只是一個小型的業餘專案。比起打造那些用來把其他擴充功能的使用者拉過來的遷移路徑，我更願意把時間花在真正能幫助人的事情上。
 
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - 本項目的靈感來源。
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)**：啟發本專案的原始 ChatGPT 對話時間軸擴充功能。
 
-- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - Image Refinement 基於這些專案適配而來，相關第三方 MIT 聲明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)**：Image Refinement 改編自這些專案。相關第三方 MIT 聲明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
 
-- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)** - 預設模型鎖定功能中的部分互動邏輯參考自 Gemini Helper，並已在原始碼中保留 attribution。
+- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)**：預設模型的鎖定邏輯中，部分互動概念參考自 Gemini Helper，並已在其原始碼中註明出處。
 
-- **[cordis](https://github.com/cordiverse/cordis)** - 外掛執行階段的副作用帳本（`PluginScope`）借鑒了 cordis fiber 模型的 effect／卸載生命週期設計。
+- **[cordis](https://github.com/cordiverse/cordis)**：外掛執行階段的副作用帳本（`PluginScope`）借鑒了 cordis 的 fiber 模型，採用其效果與釋放的生命週期設計。
 
-## 🌍 生態
+## 🌍 生態系
 
-受 Voyager 啟發的項目：
+受 Voyager 啟發的專案：
 
-如果你的項目受到 Voyager 啟發、直接 fork 自 Voyager，或基於 Voyager 改造而來，歡迎提交 PR 加入這裡。
+如果你的專案受到 Voyager 啟發、直接從 Voyager fork，或是以 Voyager 為基礎開發，歡迎到 [Discussions](https://github.com/voyager-crew/voyager/discussions) 分享，我們會將它加入這裡。
 
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - 為 DeepSeek 適配的 Fork 版本。
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)**：為 DeepSeek 改編的 Voyager 分支版本，為 DeepSeek 使用者帶來時間軸導覽與對話管理功能！
 
-- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - 受 Voyager 啟發的 Claude.ai 增強擴充套件，提供時間軸導覽、資料夾管理、提示詞庫等功能，並與 Voyager 的提示詞匯入/匯出完全相容！
+- **[claude-nexus](https://github.com/Qiuner/claude-nexus)**：受 Voyager 啟發的 Claude.ai 增強擴充功能，提供時間軸導覽、資料夾管理、提示詞庫等功能，並與 Voyager 的提示詞匯入／匯出完全相容！
 
-- **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - 為豆包提供增強導航、組織管理和生產力功能的瀏覽器擴充功能。
+- **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)**：進階的瀏覽器擴充功能，為豆包提供增強的導覽、整理與生產力功能。
+
+- **[DeepSeek Enhancer](https://github.com/dlshuangchenyue1210/DeepSeek-Enhancer)**：受 Voyager 啟發、為 DeepSeek 網頁應用程式提供的增強擴充功能，提供多層資料夾、對話匯出、公式複製、資料備份等功能。
 
 ---
 
 ## 📄 授權
 
-Voyager 基於 **GPL-3.0** 授權發布。
+Voyager 採用 **GPL-3.0** 授權。
 Image Refinement 相關程式碼與資源的第三方 MIT 聲明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
 
-Gemini 是 Google LLC 的商標。Claude 是 Anthropic, PBC 的商標。ChatGPT 是 OpenAI, Inc. 的商標。Voyager 是獨立專案，與上述公司無隸屬、背書或贊助關係。
+Gemini 是 Google LLC 的商標。Claude 是 Anthropic, PBC 的商標。ChatGPT 是 OpenAI, Inc. 的商標。Voyager 是獨立專案，與上述公司沒有隸屬、背書或贊助關係。
 
 ---
 
