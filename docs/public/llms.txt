@@ -18,35 +18,40 @@ Voyager is an open-source (GPLv3) browser extension that transforms the Google G
 
 ### Core Features
 
-- **Timeline Navigation**: Visual conversation navigator with clickable nodes, Vim-style keyboard shortcuts (j/k/gg/GG), starred bookmarks, and collapsible message levels
-- **Folder Organization**: Drag-and-drop folder system for organizing Gemini conversations with nested folders, search, and bulk operations
-- **Prompt Vault**: Save, organize, and reuse prompts with folder management and one-click insertion into any conversation
-- **Chat Export**: Export conversations to Markdown, PDF, or JSON -- full data ownership with no lock-in
-- **Cloud Sync**: Back up folders, prompts, and starred messages to Google Drive across devices
-- **Formula Copy**: One-click copy for LaTeX and MathML (Word-compatible) source codes
+- **Timeline Navigation**: Visual conversation navigator with clickable nodes, Nodes/Ruler/Compact styles, a pinnable preview panel with search, Vim-style keyboard shortcuts (j/k/gg/GG), starred bookmarks, and collapsible message levels
+- **Folder Organization**: Drag-and-drop folders for Gemini and AI Studio conversations with nesting, custom colors, account isolation, and multi-select moves
+- **Activity View**: Sort folder conversations by real chat activity so threads that are still moving come first
+- **Prompt Vault**: Save, tag, and reuse prompts with one-click insertion into the composer
+- **Chat Export**: Export Gemini conversations to Markdown, PDF, JSON, or an image -- full data ownership with no lock-in
+- **Cloud Sync**: Back up folders, prompts, starred messages, settings, and plugin configuration to Google Drive, or to iCloud on Safari
+- **Formula Copy**: Click a formula to copy it as LaTeX, MathML (Word), or Notion-ready math
 - **Deep Research Export**: Extract research processes, thinking steps, and source links from Gemini Deep Research sessions
 - **Mermaid Diagrams**: Render flowcharts, sequence diagrams, Gantt charts, and more inline in conversations
 - **Image Refinement**: Lossless watermark removal from Gemini-generated images
 - **Quote Reply**: Select any text in a conversation to quote and reply with context
 - **Batch Delete**: Select multiple conversations and delete them all at once
 - **Default Model**: Auto-switch to your preferred Gemini model on every new chat
+- **Usage Status Bar**: Gemini's daily and weekly usage limits in a small draggable bar inside the chat
+- **Recent Gems in Sidebar**: Expand Gemini's Gems entry into a list of pinned and recently used gems
 - **Message Timestamps**: Auto-record when each message was sent
 - **Sidebar Auto-hide**: Sidebar collapses when your mouse leaves for distraction-free conversations
 - **Conversation Fork**: Branch any conversation at any message node to explore different directions
-- **Send Behavior**: Choose between Enter-to-send or Ctrl+Enter-to-send
+- **Send Behavior**: Choose between Enter-to-send or Ctrl/⌘+Enter-to-send
 - **Font Size Control**: Adjust chat font size for comfortable reading
 
 ### Plugin Platform Features
 
 Beyond Gemini, these run on the Voyager Plugin Engine:
 
-- **Timeline** (Claude, DeepSeek): Conversation sidebar with starred messages and search
-- **Claude Usage Bar** (Claude): Session and weekly usage shown in the Claude interface
+- **Timeline** (Claude, ChatGPT; optional plugin on DeepSeek): The same timeline, with starred messages and search
+- **Folders** (ChatGPT): Organize ChatGPT conversations into folders; on by default
+- **Chat Export** (ChatGPT): Export a conversation as Markdown, JSON, PDF, or an image
+- **Formula Copy** (Claude, ChatGPT, DeepSeek): Click a formula to copy its LaTeX
+- **Vim Input** (Claude, ChatGPT, DeepSeek): Vim-style modal editing and cursor navigation in the composer
 - **Comfortable Reading Width** (Claude, ChatGPT, DeepSeek): Adjustable centered reading column
-- **Formula Copy** (DeepSeek, shared with Gemini): One-click LaTeX copy from rendered formulas
+- **Everyday helpers** (Claude, ChatGPT, DeepSeek): Quote replies, Ctrl/⌘+Enter to send, and a draft counter; draft auto-save on Claude and DeepSeek
 - **CJK Render Fix** (Claude): Fixes CJK character rendering
-- **Vim Input** (DeepSeek): Vim-style modal editing and cursor navigation in the composer
-- **Code Wrapping** (DeepSeek): Long code lines scroll sideways instead of wrapping
+- **Code Wrapping** (DeepSeek): Long code lines scroll sideways instead of wrapping, so indentation survives
 - **Prompt Manager** (any site you add, localhost included): The prompt vault follows you off Gemini
 
 ### Write your own plugin
@@ -65,7 +70,7 @@ Voyager is designed as a comprehensive workspace layer for AI chat, not just a s
 ### Supported Platforms
 
 - Google Gemini (gemini.google.com) -- full feature set
-- Google AI Studio (aistudio.google.com) -- folders, prompts, sidebar, formula copy
+- Google AI Studio (aistudio.google.com) -- folders, prompts, sidebar width, formula copy, send behavior
 - Gemini for Enterprise (business.gemini.google) -- Prompt Manager only
 - Claude (claude.ai) -- plugin platform
 - ChatGPT (chatgpt.com, chat.openai.com) -- plugin platform

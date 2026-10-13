@@ -38,18 +38,18 @@ Edge users can keep using the Edge Add-ons build, which remains maintained for m
 | Platform | Support Level |
 |----------|--------------|
 | Google Gemini (gemini.google.com) | Full -- all features |
-| Google AI Studio (aistudio.google.com) | Partial -- folders, prompts, sidebar, formula copy |
+| Google AI Studio (aistudio.google.com) | Partial -- folders, prompts, sidebar width, formula copy, send behavior |
 | Gemini for Enterprise (business.gemini.google) | Prompt Manager only |
-| Claude (claude.ai) | Plugin platform -- timeline, usage bar, reading width, CJK render fix |
-| ChatGPT (chatgpt.com, chat.openai.com) | Plugin platform -- reading width |
-| DeepSeek (chat.deepseek.com) | Plugin platform -- timeline, formula copy, reading width, Vim input, code wrapping |
+| Claude (claude.ai) | Plugin platform -- timeline, formula copy, Vim input, reading width, everyday helpers, CJK render fix |
+| ChatGPT (chatgpt.com, chat.openai.com) | Plugin platform -- timeline, folders, export, formula copy, Vim input, reading width, everyday helpers |
+| DeepSeek (chat.deepseek.com) | Plugin platform -- optional timeline, formula copy, Vim input, reading width, everyday helpers, code wrapping |
 | Any site added in the popup (localhost included) | Prompt Manager |
 
 ## Core Features
 
 ### Timeline Navigation
 
-Voyager Timeline is a visual conversation navigation system for Google Gemini. It maps every message in a chat to an interactive node on the right side of the screen, turning long AI conversations into a navigable map.
+Voyager Timeline is a visual conversation navigation system for Gemini, Claude, and ChatGPT. It maps every message in a chat to an interactive node on the right side of the screen, turning long AI conversations into a navigable map.
 
 **Capabilities**:
 - Click any node to jump instantly to that message
@@ -57,13 +57,16 @@ Voyager Timeline is a visual conversation navigation system for Google Gemini. I
 - Long-press a node to star (bookmark) it for later reference
 - Right-click a node to set levels (1-3) or collapse children
 - Drag the inner edge to resize the timeline width
+- Choose a Nodes, Ruler, or Compact timeline style
+- Pin the preview panel beside the timeline; its search box filters messages as you type
+- Drag the timeline anywhere on the page, and reset its position from the popup
 - Vim-style keyboard shortcuts: `j`/`k` to navigate, `gg`/`GG` to jump to first/last turn
 - All keyboard shortcuts are fully customizable
-- Starred messages sync across devices via Cloud Sync
+- Starred messages sync across devices via Cloud Sync and collect in the Saved Library
 
 **When to use**: Conversations longer than 10 messages, research sessions, code debugging, brainstorming reviews, team handoffs.
 
-**Availability**: Gemini only (not AI Studio). All browsers.
+**Availability**: Gemini, plus Claude and ChatGPT as built-in plugins; DeepSeek has an optional timeline plugin. Not available on AI Studio. All browsers.
 
 ### Folder Organization
 
@@ -74,23 +77,26 @@ A drag-and-drop folder system for organizing Gemini conversations with nested hi
 - Create nested folders (folders inside folders)
 - Customize folder colors (7 defaults + custom color picker)
 - Multi-select: long-press to enter multi-select mode, move multiple conversations at once
-- Hide archived conversations from the sidebar (inbox-zero for AI chats)
-- Account isolation: filter conversations by Google account
+- Hide filed conversations from the sidebar (inbox-zero for AI chats); on AI Studio they are hidden from the Library table
+- Activity view: click the bell beside Folders to list folder conversations by real chat activity, with the last three hours under Priority
+- Account isolation: show chats from the current Google account only, or turn on Hard Isolation to keep folder and cloud-sync data separate per account
 - AI Auto-Organize: one-click copies your conversation structure, paste into Gemini to generate a folder plan, then import the JSON result
-- Folder as Project: set folder-level instructions that prepend to the first message in new chats (inspired by Claude Projects)
+- Folder as Project: set folder-level instructions that prepend to the first message in new chats, and file those chats automatically (inspired by Claude Projects)
 - Adjustable folder spacing (compact to spacious)
 - Search conversations within folders
 
 **AI Studio specific**: Sidebar width adjustment, Library integration (drag from Library into folders).
 
-**Availability**: Both Gemini and AI Studio. All browsers.
+**ChatGPT**: Folders also come to ChatGPT as a built-in plugin, with a folder section in ChatGPT's sidebar.
+
+**Availability**: Gemini and AI Studio; ChatGPT through the plugin engine. All browsers.
 
 ### Prompt Vault (Prompt Library)
 
 A personal repository for saving, organizing, and reusing prompts across any AI platform.
 
 **Capabilities**:
-- Save any prompt with one click from the floating Prompt Manager icon
+- Save any prompt from the floating Prompt Manager ball, which sits next to the input area and can be dragged anywhere
 - Organize prompts with tags (#coding, #email, #research)
 - Search by keyword or tag
 - One-click insertion into the conversation input
@@ -98,48 +104,50 @@ A personal repository for saving, organizing, and reusing prompts across any AI 
 - Compact list view (10+ prompts visible) and comfortable card view
 - Fast hover preview (250ms) in compact mode
 - Folder organization for prompts
-- Works on custom websites: ChatGPT, Claude, Copilot, Poe, and any URL you configure
+- Claude, ChatGPT, and DeepSeek: turn on the site's switch in the popup and grant access
+- Any other site you add in the popup, localhost included (for example DeepSeek Harness on `localhost:3080`); only the Prompt Manager loads there
 
-**Availability**: Both Gemini and AI Studio. Custom website support on all browsers.
+**Availability**: Gemini and AI Studio, Claude, ChatGPT, DeepSeek, and any site you add. All browsers.
 
 ### Chat Export
 
-Export any Gemini conversation to Markdown, PDF, or JSON format.
+Export any Gemini or ChatGPT conversation to Markdown, PDF, JSON, or an image.
 
 **Format comparison**:
 - **Markdown**: Best for note apps (Obsidian, Notion). Smallest file size. Preserves code blocks with syntax. Images embedded.
 - **PDF**: Best for sharing and printing. Largest file size. All images included. Beautifully formatted.
-- **JSON**: Best for developers and data analysis. Raw data preserved. Re-importable. Programmatic access to conversation structure.
+- **JSON**: Best for developers and data analysis. Raw data preserved. Programmatic access to conversation structure.
+- **Image**: Best for sharing on mobile. Rendered as it appears on the page.
 
-**How to export**: Hover the Gemini logo -> click the Export icon -> choose format.
+**How to export**: Click the **Export** button at the top right of the page, then choose a format. On Gemini you can also choose **Export conversation history** from a conversation's or response's menu.
 
 **Deep Research export**: Voyager extracts the full research process including thinking steps, source links, and the final report from Gemini Deep Research sessions.
 
 **Safari support**: Markdown and JSON image extraction are supported. PDF export uses a manual Command+P step after clicking export.
 
-**Availability**: Both Gemini and AI Studio. All browsers.
+**Availability**: Gemini, plus ChatGPT as a built-in plugin. All browsers.
 
 ### Cloud Sync
 
-Back up folders, prompt library, and starred messages to Google Drive.
+Back up folders, prompt library, starred messages, and supported settings to Google Drive, or to iCloud on Safari.
 
-**What syncs**: Folder structure (nesting, colors, assignments), prompt library (prompts, tags, folders), starred messages. Settings and conversation content are not synced.
+**What syncs**: Folder structure (nesting, colors, assignments), prompt library (prompts, tags, folders), starred prompts, forks, timeline hierarchy, cross-device settings, and plugin configuration (site permissions stay per device). Model answers, device identifiers, tokens, and caches are not synced.
 
 **How it works**:
-1. Sign in with Google and grant `drive.file` permission (most restrictive scope -- Voyager can only access files it created).
-2. Click "Upload to Cloud" to sync local data to Google Drive.
+1. Choose a provider. Google Drive asks for the `drive.file` permission (most restrictive scope -- Voyager can only access files it created). iCloud on Safari uses the Mac's signed-in iCloud account and a private CloudKit database.
+2. Click "Upload" to sync local data to the cloud.
 3. Click "Download & Merge" on another device to intelligently merge cloud data with local data.
 4. Sync is manual and on-demand -- no background sync.
 
-**Privacy**: Data flows directly between your browser and Google Drive. No third-party servers. `drive.file` scope means Voyager cannot read any other file in your Drive.
+**Privacy**: Data flows directly between your browser and your own Google Drive or iCloud. No Voyager sync server. `drive.file` scope means Voyager cannot read any other file in your Drive.
 
-**Availability**: Chrome, Edge, Firefox. Not available on Safari due to OAuth2 limitations.
+**Availability**: Google Drive on Chrome, Edge, Firefox, and Safari. iCloud only in the directly distributed Safari app.
 
 ### Formula Copy
 
-One-click copy for mathematical formulas in LaTeX and MathML (Word-compatible) source codes. When Gemini renders a formula, Voyager adds copy buttons for both formats.
+Click a rendered formula to copy it. Choose the format ahead of time in the popup: LaTeX, LaTeX without dollar signs, MathML for Microsoft Word, or Notion's `$$` format.
 
-**Availability**: Gemini and AI Studio, plus DeepSeek via the plugin engine. All browsers.
+**Availability**: Gemini and AI Studio, plus Claude, ChatGPT, and DeepSeek via the plugin engine. All browsers.
 
 ## Gemini Exclusive Features
 
@@ -155,7 +163,7 @@ Select multiple conversations from the sidebar and delete them all at once. Ente
 
 ### Deep Research Export
 
-Extract research processes, thinking steps, and source links from Gemini Deep Research sessions. Export as Markdown or PDF with full metadata preserved.
+Extract research processes, thinking steps, and source links from Gemini Deep Research sessions.
 
 ### Mermaid Diagram Rendering
 
@@ -163,39 +171,43 @@ Render Mermaid diagram code blocks inline in conversations. Supports flowcharts,
 
 ### Markdown Rendering Fix
 
-Fix Gemini's occasional Markdown rendering issues where code blocks, lists, or formatting break mid-conversation.
+Gemini sometimes inserts HTML elements such as citations inside text, which breaks Markdown bold syntax (`**text**`). Voyager repairs these broken bold tags automatically.
 
 ### Image Refinement (Watermark Removal)
 
-Lossless watermark removal from Gemini-generated images. Removes the "Made with Google" watermark while preserving full image quality.
+Lossless watermark removal from Gemini-generated images, preserving full image quality.
 
 ### Sidebar Auto-hide
 
-The sidebar automatically collapses when your mouse leaves, giving you full-width focus on the conversation. Re-appears when you hover the left edge.
+The sidebar automatically collapses when your mouse leaves it and expands when you move back. Turn on **Fully hide sidebar** to hide the collapsed rail as well.
 
 ### Prevent Auto Scroll
 
-Stop Gemini from automatically scrolling to the bottom when new content appears. Useful when you're reading earlier parts of a long response.
+When you have scrolled up to read history, sending a new prompt no longer forces the page down to the new response. Off by default.
 
 ### Input Collapse
 
-Collapse the input box when not in use to maximize the visible conversation area.
+When the input area is empty and loses focus, it collapses into a compact pill; click it or press Ctrl/⌘+I to expand. Off by default.
 
-### Hide Recent Items and Gems
+### Recent Gems in Sidebar
 
-Hide the "Recent" section and Gem cards from the sidebar for a cleaner interface.
+Expand Gemini's native Gems entry into a list of your gems: pinned gems first, then the ones you used most recently. Set the count from 1 to 10, or 0 to hide it.
+
+### Usage Status Bar
+
+Show Gemini's daily and weekly usage limits in a small draggable bar inside the chat. It refreshes quietly after responses, stores its numbers locally, and is off by default.
 
 ### Default Model
 
-Auto-switch to your preferred Gemini model (e.g., Gemini 2.5 Pro) on every new chat. Stop manually selecting your model each time.
+Star a model in Gemini's model menu and every new chat starts with it. Starring the Extended thinking option carries that over too.
 
 ### Conversation Fork (Experimental)
 
-Branch any conversation at any message node to explore different directions. Creates a divergent copy of the conversation from that point forward.
+Branch a conversation from any of your prompts. Voyager carries the context up to that point into a new chat, either filled into the input or as a downloaded Markdown file, and records the branch without changing the original.
 
 ### Context Sync to IDE (Experimental)
 
-Sync conversation context to your IDE for reference while coding.
+Send conversation context to VS Code or a compatible editor through the CoBridge extension, so your IDE agent picks up where the web discussion left off.
 
 ### User Message LaTeX Rendering
 
@@ -207,11 +219,11 @@ Auto-record when each message was sent. Trace your conversation timeline with pr
 
 ### Send Behavior
 
-Choose between Enter-to-send (default Gemini behavior) or Ctrl+Enter-to-send (Enter creates a newline). Take control of your input flow.
+Choose between Enter-to-send (default Gemini behavior) or Ctrl/⌘+Enter-to-send (Enter creates a newline). AI Studio has the reverse option, and Claude, ChatGPT, and DeepSeek get it as a plugin.
 
 ### Font Size Control
 
-Adjust the chat font size for comfortable reading. Increase or decrease text size without affecting the rest of the Gemini interface.
+Adjust the chat font size between 80% and 150% for comfortable reading, without affecting the rest of the Gemini interface.
 
 ### Visual Effects
 
@@ -223,15 +235,21 @@ Beyond the first-party Gemini and AI Studio integration, Voyager extends other c
 
 ### Timeline
 
-Conversation sidebar with starred messages and search -- the same navigation flow as the Gemini timeline.
+The same timeline as on Gemini, with starred messages and search.
 
-**Availability**: Claude, DeepSeek.
+**Availability**: Claude and ChatGPT (built in); DeepSeek (optional plugin, ships disabled).
 
-### Claude Usage Bar
+### ChatGPT Folders and Export
 
-Track your session and weekly usage directly in the Claude interface.
+Organize ChatGPT conversations into folders (on by default), and export a conversation as Markdown, JSON, PDF, or an image.
 
-**Availability**: Claude.
+**Availability**: ChatGPT.
+
+### Formula Copy
+
+Click a formula to copy its LaTeX.
+
+**Availability**: Claude, ChatGPT, DeepSeek.
 
 ### Comfortable Reading Width
 
@@ -249,7 +267,13 @@ Fixes rendering issues with Chinese, Japanese, and Korean characters.
 
 Vim-style modal editing and cursor navigation in the prompt composer.
 
-**Availability**: DeepSeek.
+**Availability**: Claude, ChatGPT, DeepSeek.
+
+### Everyday Helpers
+
+Quote replies, Ctrl/⌘+Enter to send, and a draft counter; draft auto-save on Claude and DeepSeek.
+
+**Availability**: Claude, ChatGPT, DeepSeek.
 
 ### Code Wrapping
 
@@ -281,9 +305,10 @@ Voyager is designed with privacy as a core principle:
 
 - **No data collection**: Voyager does not collect, transmit, or store any user data on external servers.
 - **Local storage only**: All extension data (folders, prompts, settings) is stored in `chrome.storage.local` within your browser.
-- **Optional cloud sync**: Google Drive sync uses OAuth2 with `drive.file` scope (can only access files Voyager created). Data goes directly to your Drive -- no intermediary servers.
+- **Optional cloud sync**: Google Drive sync uses OAuth2 with `drive.file` scope (can only access files Voyager created); iCloud sync on Safari uses your private CloudKit database. Data goes directly to your own account -- no intermediary servers.
+- **Plugin catalog updates**: on a site where you have enabled a plugin, Voyager may fetch that site's catalog file from voyager.nagi.fun: a plain GET with no cookies, identifiers, or page content, which you can switch off in the popup. Gemini and AI Studio never trigger it.
 - **No tracking**: No analytics, no telemetry, no usage tracking of any kind.
-- **Minimal permissions**: The extension requests only the permissions needed to function on Gemini and AI Studio domains.
+- **Minimal permissions**: Host access is granted at install only for Gemini, Gemini Enterprise, AI Studio, and the Google domains needed for Drive and image operations. Claude, ChatGPT, DeepSeek, and custom sites are reached only after you enable them and approve the browser prompt; notifications are requested only if you turn on response-completion notifications.
 - **Open source**: Full source code is available on GitHub under GPLv3 for audit.
 - **Privacy policy**: https://voyager.nagi.fun/en/privacy
 
@@ -306,7 +331,7 @@ Voyager is designed with privacy as a core principle:
 - **Build tool**: Vite with Bun package manager
 - **Testing**: Vitest with jsdom
 - **Storage**: chrome.storage.local (primary), chrome.storage.sync (settings), chrome.storage.session (temporary)
-- **Cloud sync**: Google Drive API with OAuth2 (drive.file scope)
+- **Cloud sync**: Google Drive API with OAuth2 (drive.file scope); CloudKit for iCloud on Safari
 - **Supported sites**: gemini.google.com, business.gemini.google, aistudio.google.com, aistudio.google.cn (first-party); claude.ai, chatgpt.com, chat.openai.com, chat.deepseek.com (plugin platforms); any user-added site for the Prompt Manager
 - **Plugin engine**: declarative JSON plugins per site, see https://voyager.nagi.fun/en/plugins
 
