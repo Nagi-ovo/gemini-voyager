@@ -96,7 +96,16 @@ function nativeOps(manifest: PluginManifest): NativeOperation[] {
  */
 interface OverrideLayer {
   readonly original: string | null;
-  readonly stack: Array<{ id: string; value: string }>;
+  /** Inline-style layers only: the original `!important` priority. */
+  readonly originalPriority?: string;
+  readonly stack: Array<{ id: string; value: string; priority?: string }>;
+}
+
+/** An element's inline-style layers, keyed by property. */
+interface StyleLedger {
+  /** The element had no `style` attribute before any plugin wrote one. */
+  readonly noHostAttribute: boolean;
+  readonly props: Map<string, OverrideLayer>;
 }
 
 export interface DeclarativeEngineOptions {
@@ -135,8 +144,10 @@ export class DeclarativeEngine {
   private readonly classOwners = new Map<Element, Map<string, Set<string>>>();
   /** element → attribute name → layer. */
   private readonly attrLayers = new Map<Element, Map<string, OverrideLayer>>();
-  /** element → inline-style property → layer. */
-  private readonly styleLayers = new Map<HTMLElement, Map<string, OverrideLayer>>();
+  /** element → inline-style property → layer (both `setStyle` and a `style` attribute). */
+  private readonly styleLayers = new Map<HTMLElement, StyleLedger>();
+  /** Parses a whole `style` attribute value into declarations. */
+  private styleParser: HTMLElement | null = null;
 
   private observer: MutationObserver | null = null;
   private reapplyScheduled = false;
@@ -481,12 +492,10 @@ export class DeclarativeEngine {
       this.attrLayers.delete(el);
     }
 
-    for (const [el, perEl] of this.styleLayers) {
+    for (const [el, ledger] of this.styleLayers) {
       if (this.doc.contains(el)) continue;
-      for (const [prop, layer] of perEl) {
-        if (!layer.original) el.style.removeProperty(prop);
-        else el.style.setProperty(prop, layer.original);
-      }
+      for (const [prop, layer] of ledger.props) restoreStyleOriginal(el, prop, layer);
+      dropEmptyStyleAttribute(el, ledger);
       this.styleLayers.delete(el);
     }
   }
@@ -589,7 +598,15 @@ export class DeclarativeEngine {
             logger.warn('Rendered plugin attribute rejected', { id, name: op.name, issue });
             return;
           }
-          this.applySetAttribute(id, el, op.name, value);
+          // A whole `style` write joins the per-property layers: kept in a ledger of
+          // its own, restoring it would wipe another live plugin's setStyle values.
+          if (op.name === 'style' && el instanceof HTMLElement) {
+            for (const [prop, declared, priority] of this.parseStyleDeclarations(value)) {
+              this.applySetStyle(id, el, prop, declared, priority);
+            }
+          } else {
+            this.applySetAttribute(id, el, op.name, value);
+          }
           break;
         }
         case 'setStyle':
@@ -624,14 +641,37 @@ export class DeclarativeEngine {
     el.setAttribute(name, topValue(layer));
   }
 
-  private applySetStyle(id: string, el: HTMLElement, prop: string, value: string): void {
-    const perEl = mapGet(this.styleLayers, el, () => new Map<string, OverrideLayer>());
-    const layer = mapGet(perEl, prop, () => ({
+  private applySetStyle(
+    id: string,
+    el: HTMLElement,
+    prop: string,
+    value: string,
+    priority = '',
+  ): void {
+    const ledger = mapGet(this.styleLayers, el, () => ({
+      noHostAttribute: !el.hasAttribute('style'),
+      props: new Map<string, OverrideLayer>(),
+    }));
+    const layer = mapGet(ledger.props, prop, () => ({
       original: el.style.getPropertyValue(prop),
+      originalPriority: el.style.getPropertyPriority(prop),
       stack: [],
     }));
-    pushLayerValue(layer, id, value);
-    el.style.setProperty(prop, topValue(layer));
+    pushLayerValue(layer, id, value, priority);
+    writeStyleTop(el, prop, layer);
+  }
+
+  /** Declarations of a `style` attribute value, as the browser parses them. */
+  private parseStyleDeclarations(text: string): Array<[string, string, string]> {
+    this.styleParser ??= this.doc.createElement('span');
+    const style = this.styleParser.style;
+    style.cssText = text;
+    const declarations: Array<[string, string, string]> = [];
+    for (let i = 0; i < style.length; i += 1) {
+      const prop = style.item(i);
+      declarations.push([prop, style.getPropertyValue(prop), style.getPropertyPriority(prop)]);
+    }
+    return declarations;
   }
 
   /** Remove every contribution of `id` from the shared ledgers, restoring the
@@ -661,19 +701,20 @@ export class DeclarativeEngine {
       if (perEl.size === 0) this.attrLayers.delete(el);
     }
 
-    for (const [el, perEl] of this.styleLayers) {
-      for (const [prop, layer] of perEl) {
+    for (const [el, ledger] of this.styleLayers) {
+      for (const [prop, layer] of ledger.props) {
         if (!removeLayerValue(layer, id)) continue;
         if (layer.stack.length === 0) {
-          // '' (or null) means the property was unset before any plugin.
-          if (!layer.original) el.style.removeProperty(prop);
-          else el.style.setProperty(prop, layer.original);
-          perEl.delete(prop);
+          restoreStyleOriginal(el, prop, layer);
+          ledger.props.delete(prop);
         } else {
-          el.style.setProperty(prop, topValue(layer));
+          writeStyleTop(el, prop, layer);
         }
       }
-      if (perEl.size === 0) this.styleLayers.delete(el);
+      if (ledger.props.size === 0) {
+        dropEmptyStyleAttribute(el, ledger);
+        this.styleLayers.delete(el);
+      }
     }
   }
 
@@ -731,9 +772,9 @@ function mapGet<K, V>(map: Map<K, V>, key: K, create: () => V): V {
 }
 
 /** Update-or-insert a plugin's desired value, moving it to the top of the stack. */
-function pushLayerValue(layer: OverrideLayer, id: string, value: string): void {
+function pushLayerValue(layer: OverrideLayer, id: string, value: string, priority?: string): void {
   removeLayerValue(layer, id);
-  layer.stack.push({ id, value });
+  layer.stack.push(priority === undefined ? { id, value } : { id, value, priority });
 }
 
 /** Remove a plugin's entry from the stack. Returns true if one was present. */
@@ -746,4 +787,20 @@ function removeLayerValue(layer: OverrideLayer, id: string): boolean {
 
 function topValue(layer: OverrideLayer): string {
   return layer.stack[layer.stack.length - 1].value;
+}
+
+function writeStyleTop(el: HTMLElement, prop: string, layer: OverrideLayer): void {
+  const top = layer.stack[layer.stack.length - 1];
+  el.style.setProperty(prop, top.value, top.priority ?? '');
+}
+
+function restoreStyleOriginal(el: HTMLElement, prop: string, layer: OverrideLayer): void {
+  // '' (or null) means the property was unset before any plugin.
+  if (!layer.original) el.style.removeProperty(prop);
+  else el.style.setProperty(prop, layer.original, layer.originalPriority ?? '');
+}
+
+/** Removing the last property leaves `style=""`; drop it when the host had none. */
+function dropEmptyStyleAttribute(el: HTMLElement, ledger: StyleLedger): void {
+  if (ledger.noHostAttribute && el.getAttribute('style') === '') el.removeAttribute('style');
 }
