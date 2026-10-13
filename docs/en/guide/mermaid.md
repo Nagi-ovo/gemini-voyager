@@ -37,7 +37,7 @@ Mermaid rendering is on by default on Gemini. To turn it off, open the Voyager p
 
 ::: warning Note
 
-- **Firefox Limitation**: Due to environment restrictions, Firefox uses version 9.2.2 and does not support new features like **Timeline** or **Sankey**.
+- **Firefox Limitation**: Due to environment restrictions, Firefox ships Mermaid 9.2.2, which does not support new features like **Timeline** or **Sankey**.
 - **Syntax Errors**: Rendering failures are often due to syntax errors in Gemini's output. We are collecting "bad cases" to implement automatic patches for common generation errors in future updates.
   :::
 
