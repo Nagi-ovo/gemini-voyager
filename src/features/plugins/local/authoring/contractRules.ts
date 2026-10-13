@@ -89,7 +89,7 @@ export function pageChangesSection(
       '- "target": prefer { "kind": "semantic", "key": <anchor> } with an anchor the target site declares. Use a plain CSS selector string only for something no anchor names; it breaks on a redesign.',
       '- addClass "className": exactly one class that starts with "gv-"; use "gv-plugin-<plugin-name>". Then style that class in "contributes.styles".',
       `- setAttribute "name" must be one of: ${allowedAttributeText()}. Never href, src, on*, class or id. Values may not contain an external URL.`,
-      '- setStyle "styles": CSS property -> value, custom properties (--gv-…) included; values may not load anything either.',
+      '- setStyle "styles": CSS property -> value, custom properties (--gv-…) included; values may not load anything either. A value may end in !important; engines before 1.9.0 drop such a value, so require engine ">=1.9.0" when the plugin relies on it. Shorthands such as margin are owned per longhand, so turning one plugin off never clears another plugin\'s margin-top.',
     ],
   };
 }

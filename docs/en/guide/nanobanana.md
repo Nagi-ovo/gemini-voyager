@@ -1,4 +1,4 @@
-# Image Refinement Option
+# Image Refinement (Watermark Removal)
 
 ::: tip Safari Support
 Since v1.6.0, **Image Refinement** works directly in Safari, including full-size watermark-free downloads. Chrome, Edge, Firefox, and Safari now share the same built-in workflow.
@@ -18,11 +18,14 @@ Image Refinement uses a **Reverse Alpha Blending** algorithm.
 
 ## How to Use
 
-1. **Enable it**: Find "Image Refinement Option" at the end of the Voyager settings panel and toggle it on.
-2. **Auto-process**: Every image you generate will now be automatically processed in the background.
-3. **Download directly**:
-   - Hover over a processed image and you'll see a 🍌 button.
-   - **The 🍌 button completely replaces** the native download button to ensure you always get the 100% unwatermarked image directly.
+Open the Voyager popup and find **Image Refinement Options**. Both switches are off until you turn them on:
+
+- **Remove watermark on download** (Recommended): When you click Gemini's download button, the saved file has the watermark removed. A small 🍌 badge on the download button shows it's active; the button itself is still Gemini's own.
+- **Remove watermark in preview** (Unstable): Also cleans the images shown on screen. It's slower, and an image may briefly flash while it's processed.
+
+## Gemini's Built-in Option
+
+Gemini is rolling out its own visible-watermark switch: **Settings → Media watermark → Off**. If your account has it, use it and turn off Voyager's watermark removal; Gemini's option is more reliable. Voyager shows a one-time notice about it, and tells you when your recent images already come without the watermark. If you can't find the switch yet, keep using Voyager. SynthID and C2PA metadata remain either way.
 
 <div style="text-align: center; margin-top: 30px;">
   <img src="/assets/nanobanana.png" alt="Image Refinement Demo" style="border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); max-width: 100%;"/>

@@ -1,6 +1,6 @@
 # Time Travel
 
-Voyager Timeline is a visual conversation navigation system for Google Gemini. It maps every message in a chat to an interactive node on the right side of the screen, turning long AI conversations into a navigable map you can jump through instantly.
+Voyager Timeline is a visual conversation navigation system for Gemini, Claude, and ChatGPT. It maps every message in a chat to an interactive node on the right side of the screen, turning long AI conversations into a navigable map you can jump through instantly.
 
 Long conversations are messy. You scroll up, you scroll down, you lose your place.
 Voyager turns your conversation into a timeline.
@@ -31,13 +31,21 @@ Long conversations bury gold. Star the moments that matter.
 
 - Long-press again to unstar.
 - Starred nodes stay highlighted so you can spot them at a glance.
-- View all your starred messages from the **Starred History** panel (click the star icon in the timeline header).
+- See all your starred messages in the **Saved Library**: click **View Saved Library** in the Voyager popup, or open it from the Prompt Manager panel.
 
 Think of it as planting a flag in the conversation — the moment you had a breakthrough, got the perfect answer, or want to pick up later.
 
 ::: tip Pro Tip
-Stars sync across devices if you have [Cloud Sync](/guide/cloud-sync) enabled.
+Stars sync across devices if you have [Cloud Sync](/en/guide/cloud-sync) enabled.
 :::
+
+## Make It Look Right
+
+Under **Timeline Options** in the Voyager popup:
+
+- **Timeline style**: `Nodes`, `Ruler`, or `Compact`.
+- **Pin preview panel**: Keep the preview panel open beside the timeline. Its search box filters messages as you type.
+- **Draggable Timeline**: Move the timeline anywhere on the page. **Reset Timeline Position** puts it back.
 
 ## Even Faster with Keys
 
@@ -68,7 +76,6 @@ Timeline is most valuable in conversations longer than 10 messages, where scroll
 - **Code debugging**: A long debugging conversation where the solution appeared at turn 47. Star it, find it later in one click.
 - **Learning and tutoring**: Working through a complex topic step by step. Use levels to collapse sections you've mastered.
 - **Brainstorming review**: Reviewing a creative session to extract the best ideas. Stars mark the moments worth keeping.
-- **Team handoffs**: Share a starred conversation so a colleague can jump straight to the relevant turns.
 
 ## Timeline vs. Manual Scrolling
 

@@ -12,8 +12,8 @@ We provide a **Sidebar Auto-hide** feature. When enabled, the sidebar automatica
 
 ### How to Enable
 
-1. Open the Voyager settings panel.
-2. Find the **Auto-hide sidebar** toggle in **General Settings**.
-3. Toggle it on to activate.
+1. Open the Voyager popup.
+2. Turn on **Auto-hide sidebar**. It sits right below the **Sidebar width** slider.
+3. To hide the collapsed rail as well, turn on **Fully hide sidebar** (it works on its own, too).
 
 _Note: This feature currently only supports Google Gemini._

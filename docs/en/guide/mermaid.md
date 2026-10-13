@@ -13,6 +13,10 @@ When Gemini™ outputs Mermaid code blocks (flowcharts, sequence diagrams, Gantt
 - **Fullscreen mode**: Click the diagram to enter fullscreen with zoom and pan support
 - **Dark mode**: Automatically adapts to page theme
 
+## Turn It On or Off
+
+Mermaid rendering is on by default on Gemini. To turn it off, open the Voyager popup and switch off **Enable Mermaid diagram rendering** under **General Options**. It isn't available on AI Studio.
+
 ## How to Use
 
 1. Ask Gemini to generate any Mermaid diagram code

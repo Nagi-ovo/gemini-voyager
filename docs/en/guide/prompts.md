@@ -10,12 +10,12 @@ This is your personal repository of genius.
 
 ### 1. Capture
 
-When you write something great, click the **Prompt Manager** icon (floating near the input box).
+When you write something great, click the floating Voyager ball (it sits next to the input area by default, and you can drag it anywhere) to open the **Prompt Manager**.
 It’s now part of your vault.
 
 ### 2. Categorize
 
-Add tags like `#coding`, `#email`, or `#research`.
+Add tags like `coding`, `email`, or `research` (separate them with commas).
 Keep your tools sharpened and sorted.
 
 ### 3. Deploy
@@ -57,6 +57,10 @@ The Prompt Manager can now be used on any website you choose, not just Gemini™
 
 ### How to Enable
 
+On Claude, ChatGPT, and DeepSeek, open the Voyager popup while you're on the site and turn on the site's switch (for example, **Enable Prompt Manager on Claude**). You'll be asked to grant access.
+
+For any other site:
+
 1. Click the Voyager icon in your browser's extension toolbar.
 2. Scroll to the **Prompt Manager** section.
 3. Enter the website URL (e.g., `chatgpt.com` or `claude.ai`).
@@ -72,10 +76,10 @@ The Prompt Manager can now be used on any website you choose, not just Gemini™
 
 ### Local Apps
 
-Local addresses work too — enter `localhost:3080` or `127.0.0.1:3080` the same way. For example, [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) runs on `localhost:3080`, and the Prompt Manager attaches to it just like any hosted site.
+Local addresses work too — enter `localhost:3080` or `127.0.0.1:3080` the same way. For example, [DeepSeek Harness](/en/guide/deepseek-harness) runs on `localhost:3080`, and the Prompt Manager attaches to it just like any hosted site.
 
 ![Prompt Manager running inside DeepSeek Harness](/assets/prompt-manager-deepseek-harness.png)
 
 ::: tip
-On custom websites, **only** the Prompt Manager feature is activated. Other features like Timeline and Folders are designed specifically for Gemini and will not load.
+On websites you add yourself, **only** the Prompt Manager is activated. Features like Timeline and Folders don't load there. Claude, ChatGPT, and DeepSeek are different: they get their own official plugins, which you can browse in the [Marketplace](/en/plugins).
 :::

@@ -8,16 +8,15 @@ Customize every pixel.
 Why view the future through a tiny keyhole?
 Voyager lets you expand the chat width.
 
-- **Wide**: 1400px for coding and complex tables.
-- **Focused**: 800px for reading.
-- **You decide**: Use the slider to find your sweet spot.
+- **Chat width**: A slider from 30% to 100% of the window (70% by default). Go wide for code and complex tables, narrow for reading.
+- **Edit input width**: Widens the box you get when editing a sent message.
 
 ## Control
 
 Click the extension icon to access the control center.
 
-- **Scroll Mode**: Natural or classic.
-- **Timeline Position**: Put it where it feels right.
+- **Scroll mode**: `Flow` scrolls smoothly to the message; `Jump` goes there instantly.
+- **Timeline position**: Turn on **Draggable Timeline** and move it where it feels right. **Reset Timeline Position** puts it back.
 - **Visual Effects**: Pick `Snow`, `Sakura`, or `Rain` for a seasonal atmosphere.
 
 ## Custom Order

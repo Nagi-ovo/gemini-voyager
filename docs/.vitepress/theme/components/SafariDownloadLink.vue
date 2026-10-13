@@ -8,9 +8,12 @@ const error = ref(false);
 const CACHE_KEY = 'gemini-voyager-latest-version';
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
 
-const downloadUrl = computed(() => {
-  return `https://github.com/voyager-crew/voyager/releases/v${latestVersion.value}`;
-});
+// A failed lookup would otherwise point at the stale fallback version's release.
+const downloadUrl = computed(() =>
+  error.value
+    ? 'https://github.com/voyager-crew/voyager/releases/latest'
+    : `https://github.com/voyager-crew/voyager/releases/tag/v${latestVersion.value}`,
+);
 
 onMounted(async () => {
   try {

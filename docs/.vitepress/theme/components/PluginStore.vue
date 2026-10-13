@@ -22,7 +22,6 @@ const { lang } = useData();
 interface I18nData {
   title: string;
   subtitle: string;
-  requires: string;
   official: string;
   source: string;
   hint: string;
@@ -39,7 +38,6 @@ const i18n: Record<string, I18nData> = {
     title: '插件市场',
     subtitle:
       '由 Voyager 官方维护的声明式插件，把顺手体验带到更多 AI 网站。全部免费，随扩展自动更新。',
-    requires: '需要 Voyager 1.4.8 及以上版本',
     official: 'Voyager 官方',
     source: '查看源码',
     hint: '安装 Voyager 后，在 Claude、ChatGPT 或 DeepSeek 页面点开 Voyager 弹窗，开启插件并允许访问该网站即可使用，更新自动送达。',
@@ -61,7 +59,6 @@ const i18n: Record<string, I18nData> = {
     title: '外掛市集',
     subtitle:
       '由 Voyager 官方維護的宣告式外掛，把順手體驗帶到更多 AI 網站。全部免費，隨擴充功能自動更新。',
-    requires: '需要 Voyager 1.4.8 或更新版本',
     official: 'Voyager 官方',
     source: '檢視原始碼',
     hint: '安裝 Voyager 後，在 Claude、ChatGPT 或 DeepSeek 頁面點開 Voyager 彈窗，開啟外掛並允許存取該網站即可使用，更新自動送達。',
@@ -83,7 +80,6 @@ const i18n: Record<string, I18nData> = {
     title: 'Plugin Marketplace',
     subtitle:
       "Declarative plugins maintained by the Voyager team that bring Voyager's polish to more AI sites. All free, and they auto-update with the extension.",
-    requires: 'Requires Voyager 1.4.8 or later',
     official: 'by Voyager',
     source: 'View source',
     hint: 'After installing Voyager, open its popup on a Claude, ChatGPT or DeepSeek page, enable the plugin and allow access to the site — that’s it. Updates arrive automatically.',
@@ -106,7 +102,6 @@ const i18n: Record<string, I18nData> = {
     title: 'プラグインマーケット',
     subtitle:
       'Voyager 公式チームが維持する宣言型プラグイン。Voyager の使い心地をより多くの AI サイトへ。すべて無料で、拡張機能とともに自動更新されます。',
-    requires: 'Voyager 1.4.8 以降が必要です',
     official: 'Voyager 公式',
     source: 'ソースを見る',
     hint: 'Voyager をインストールしたら、Claude、ChatGPT、DeepSeek のページで Voyager のポップアップを開き、プラグインを有効化してサイトへのアクセスを許可するだけ。更新は自動で届きます。',
@@ -129,7 +124,6 @@ const i18n: Record<string, I18nData> = {
     title: '플러그인 마켓플레이스',
     subtitle:
       'Voyager 팀이 직접 관리하는 선언형 플러그인. Voyager의 편안한 경험을 더 많은 AI 사이트로. 모두 무료이며 확장 프로그램과 함께 자동 업데이트됩니다.',
-    requires: 'Voyager 1.4.8 이상이 필요합니다',
     official: 'Voyager 공식',
     source: '소스 보기',
     hint: 'Voyager를 설치한 뒤 Claude, ChatGPT 또는 DeepSeek 페이지에서 Voyager 팝업을 열고 플러그인을 켠 다음 사이트 접근을 허용하면 됩니다. 업데이트는 자동으로 제공됩니다.',
@@ -152,7 +146,6 @@ const i18n: Record<string, I18nData> = {
     title: 'Marketplace des plugins',
     subtitle:
       "Des plugins déclaratifs maintenus par l'équipe Voyager qui apportent la finesse de Voyager à davantage de sites d'IA. Tous gratuits et mis à jour automatiquement avec l'extension.",
-    requires: 'Nécessite Voyager 1.4.8 ou version ultérieure',
     official: 'par Voyager',
     source: 'Voir le code',
     hint: 'Après avoir installé Voyager, ouvrez sa fenêtre sur une page Claude, ChatGPT ou DeepSeek, activez le plugin et autorisez l’accès au site — c’est tout. Les mises à jour arrivent automatiquement.',
@@ -175,7 +168,6 @@ const i18n: Record<string, I18nData> = {
     title: 'Mercado de plugins',
     subtitle:
       'Plugins declarativos mantenidos por el equipo de Voyager que llevan la comodidad de Voyager a más sitios de IA. Todos gratis y se actualizan automáticamente con la extensión.',
-    requires: 'Requiere Voyager 1.4.8 o posterior',
     official: 'de Voyager',
     source: 'Ver código',
     hint: 'Tras instalar Voyager, abre su ventana en una página de Claude, ChatGPT o DeepSeek, activa el plugin y permite el acceso al sitio. Las actualizaciones llegan automáticamente.',
@@ -198,7 +190,6 @@ const i18n: Record<string, I18nData> = {
     title: 'Mercado de plugins',
     subtitle:
       'Plugins declarativos mantidos pela equipa do Voyager que levam a fluidez do Voyager a mais sites de IA. Todos gratuitos e atualizados automaticamente com a extensão.',
-    requires: 'Requer o Voyager 1.4.8 ou posterior',
     official: 'da Voyager',
     source: 'Ver código',
     hint: 'Depois de instalar o Voyager, abra a sua janela numa página do Claude, ChatGPT ou DeepSeek, ative o plugin e permita o acesso ao site. As atualizações chegam automaticamente.',
@@ -221,7 +212,6 @@ const i18n: Record<string, I18nData> = {
     title: 'سوق الإضافات',
     subtitle:
       'إضافات تعريفية يحافظ عليها فريق Voyager، تنقل سلاسة Voyager إلى مزيد من مواقع الذكاء الاصطناعي. جميعها مجانية وتُحدَّث تلقائيًا مع الامتداد.',
-    requires: 'يتطلب الإصدار 1.4.8 من Voyager أو أحدث',
     official: 'من Voyager',
     source: 'عرض الكود',
     hint: 'بعد تثبيت Voyager، افتح نافذته على صفحة Claude أو ChatGPT أو DeepSeek، ثم فعّل الإضافة واسمح بالوصول إلى الموقع. تصل التحديثات تلقائيًا.',
@@ -244,7 +234,6 @@ const i18n: Record<string, I18nData> = {
     title: 'Маркетплейс плагинов',
     subtitle:
       'Декларативные плагины, поддерживаемые командой Voyager, приносят удобство Voyager на другие сайты ИИ. Все бесплатны и обновляются автоматически вместе с расширением.',
-    requires: 'Требуется Voyager 1.4.8 или новее',
     official: 'от Voyager',
     source: 'Исходный код',
     hint: 'После установки Voyager откройте его всплывающее окно на странице Claude, ChatGPT или DeepSeek, включите плагин и разрешите доступ к сайту. Обновления приходят автоматически.',
@@ -396,18 +385,6 @@ function categoryLabel(category: string): string {
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>
           </a>
-          <span class="gv-req">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" aria-hidden="true">
-              <path
-                d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12l1-8.5Z"
-                fill="currentColor"
-                stroke="currentColor"
-                stroke-width="1.2"
-                stroke-linejoin="round"
-              />
-            </svg>
-            {{ t.requires }}
-          </span>
         </div>
         <p class="gv-hero__hint">
           {{ t.hint }}
@@ -667,19 +644,6 @@ function categoryLabel(category: string): string {
 .gv-cta--ghost:hover {
   background: var(--vp-c-bg-soft);
   border-color: color-mix(in srgb, var(--vp-c-brand-1) 50%, var(--vp-c-divider));
-}
-
-.gv-req {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--vp-c-text-3);
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
 }
 
 .gv-hero__hint {

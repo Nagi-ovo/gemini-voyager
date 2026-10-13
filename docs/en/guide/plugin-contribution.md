@@ -37,7 +37,9 @@ adding files. There is no mapping table to edit.
 `marketplace.json` is not that mapping table. It is only the index the
 documentation plugin store reads, and a test keeps it in sync with discovery, so
 a new plugin also needs an entry there. Its `source` is the catalog-relative
-path, for example `sites/deepseek/plugins/reading-width/plugin.json`.
+path, for example `sites/deepseek/plugins/reading-width/plugin.json`. Plugins
+under `sites/gemini/` and `sites/aistudio/` are the exception: they ship inside
+Voyager and stay out of `marketplace.json`.
 
 A plugin's `matches` must stay inside the `matches` of the site it lives under.
 A plugin that reaches outside its own site fails the build.
@@ -81,7 +83,11 @@ Adding a new chat website has two separate layers:
    fix.
 
 A `site.json` carries `id` (equal to its directory name), `label`, `matches`,
-`selectors`, `theme`, `brandColor`, `capabilities`, and an optional
+`selectors`, `theme`, `brandColor`, `capabilities`, and optional
+`conversationIdPattern` and `turnKeyAttributes`. `turnKeyAttributes` names the
+attributes that keep a user message's identity when the page re-renders it;
+send tracking (used by folder Activity and timeline timestamps) only runs on a
+site that sets it, along with `composer`, `userTurn`, and a
 `conversationIdPattern`. `validateSiteAdapterData` in
 `src/features/plugins/sites/siteAdapterData.ts` validates it, and
 `bun run catalog:build` validates every site and plugin before publishing.
@@ -217,7 +223,7 @@ Declarative plugins currently support:
 
 - `addClass`: add a class to target elements.
 - `setAttribute`: set an attribute.
-- `setStyle`: set inline styles or CSS variables.
+- `setStyle`: set inline styles or CSS variables. End a value with `!important` to apply it with that priority; older Voyager versions drop such a value, so set `engine` to `>=next` if your plugin relies on it. Shorthands such as `margin` are tracked per longhand, so turning one plugin off never clears another plugin's `margin-top`.
 - `hide`: hide target elements.
 
 Targets can be CSS selectors or the semantic keys listed above, written as `{ "kind": "semantic", "key": "userTurn" }`. Semantic keys are usually more stable, but they require the current site adapter to declare that key.
@@ -275,7 +281,7 @@ Run `bun run plugin:check <plugin dir>` and paste its output in the PR. It repor
 - `matches` does not cover unrelated sites.
 - There are no remote resources.
 - The plugin directory includes `plugin.json`, required CSS files, and a short README.
-- For an official plugin, the directory sits under `catalog/sites/<site>/plugins/<id>/`, its `matches` stay inside the site's `matches`, and `catalog/marketplace.json` lists it.
+- For an official plugin, the directory sits under `catalog/sites/<site>/plugins/<id>/`, its `matches` stay inside the site's `matches`, and `catalog/marketplace.json` lists it (except Gemini and AI Studio plugins, which ship with Voyager).
 - The PR describes test pages, screenshots or recordings, and affected page areas.
 
 Keep it simple, focused, and reversible. A plugin that solves one clear problem is much easier to merge and maintain.

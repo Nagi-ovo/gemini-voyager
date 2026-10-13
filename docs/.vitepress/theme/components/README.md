@@ -1,6 +1,6 @@
 # SafariDownloadLink Component
 
-This Vue component automatically fetches the latest release version from GitHub and generates the correct Safari download URL.
+This Vue component fetches the latest release version from GitHub and links to that release's page, where the Safari `.dmg` is attached.
 
 ## Usage
 
@@ -12,10 +12,10 @@ Download the <SafariDownloadLink>latest Safari version</SafariDownloadLink>.
 
 ## How It Works
 
-1. On component mount, it fetches the latest release from GitHub API
+1. On mount, it reads a cached version from `localStorage` (kept for 10 minutes) or fetches the latest release from the GitHub API
 2. Extracts the version number from the tag name
-3. Generates the download URL: `https://github.com/voyager-crew/voyager/releases/download/v{version}/gemini-voyager-v{version}.dmg`
-4. If the API call fails, it falls back to version `1.2.3`
+3. Links to `https://github.com/voyager-crew/voyager/releases/tag/v{version}`, or to `releases/latest` when the lookup fails
+4. If the API call fails, it falls back to version `1.2.4`
 
 ## Features
 
