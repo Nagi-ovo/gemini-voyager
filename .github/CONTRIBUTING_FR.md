@@ -3,7 +3,7 @@
 > [!CAUTION]
 > **Ce projet n'accepte actuellement PAS les PRs pour de nouvelles fonctionnalités.** Si vous souhaitez vraiment développer une fonctionnalité, veuillez suivre ce processus :
 >
-> 1. **Ouvrez d'abord un Issue** pour discuter de votre idée et de votre approche avec le mainteneur
+> 1. **Ouvrez d'abord une [Discussion](https://github.com/voyager-crew/voyager/discussions/new?category=ideas)** pour discuter de votre idée et de votre approche avec le mainteneur
 > 2. **Attendez l'approbation et un plan d'implémentation solide** avant d'écrire du code ou de soumettre une PR
 >
 > Les PRs de nouvelles fonctionnalités soumises sans discussion préalable seront fermées sans examen. Merci de votre compréhension.
@@ -11,9 +11,12 @@
 > [!IMPORTANT]
 > **Statut du projet : Maintenance réduite.** Attendez-vous à des délais de réponse. Les PR avec tests sont prioritaires.
 
+> [!WARNING]
+> **Admission automatique des PR ([`pr-gate.yml`](workflows/pr-gate.yml)) :** les mainteneurs ([`MAINTAINERS`](MAINTAINERS)), les personnes listées dans [`APPROVED_CONTRIBUTORS`](APPROVED_CONTRIBUTORS), les PR portant le label `maintainer-approved` posé par un mainteneur et les bots de CI comme dependabot ne sont pas limités. La PR de toute autre personne doit avoir un titre `fix: ...` ou `fix(scope): ...` et ne pas modifier plus de 20 fichiers ni plus de 1 000 lignes ajoutées et supprimées au total. Tout le reste est fermé automatiquement avec un commentaire, **y compris les PR de documentation, de traduction, de refactorisation et de nouvelles fonctionnalités (titres `docs:`, `feat:`, etc.)** : alignez-vous d'abord avec un mainteneur dans les Discussions. Si une PR a été fermée par erreur, mentionnez un mainteneur dessus ; seul un mainteneur vérifié peut la rouvrir, et une réouverture par quelqu'un d'autre est refermée.
+
 Merci d'envisager de contribuer à Voyager ! 🚀
 
-Ce document fournit des directives et des instructions pour contribuer. Nous accueillons les corrections de bugs, les améliorations de la documentation et les traductions. Pour les nouvelles fonctionnalités, veuillez d'abord en discuter via un Issue.
+Ce document fournit des directives et des instructions pour contribuer. Nous accueillons les corrections de bugs, les améliorations de la documentation et les traductions (les PR sans titre `fix:` sont soumises à l'admission automatique ci-dessus). Pour les nouvelles fonctionnalités, veuillez d'abord en discuter dans les Discussions.
 
 ## 🚫 Politique IA
 
@@ -27,7 +30,7 @@ Bien que les outils d'IA soient d'excellents assistants, les contributions "pare
 
 ## Processus Obligatoire
 
-1. Pour une nouvelle fonctionnalité, ouvrez un Issue et attendez l'accord explicite sur l'approche ; `/claim` ou une assignation désigne seulement la personne responsable.
+1. Pour une nouvelle fonctionnalité, proposez-la dans les Discussions et attendez l'accord explicite sur l'approche ; `/claim` ou une assignation désigne seulement la personne responsable.
 2. Soumettez chaque changement dans une PR ciblée depuis une branche thématique ; ne poussez pas directement sur `main`.
 3. Exécutez `bun run format`, `bun run lint` et `bun run verify:pr`, dans cet ordre, et indiquez toute omission. Pour les changements de documentation uniquement (docs/README), `bun run format:check` plus `bun run docs:build` peuvent remplacer le `verify:pr` complet.
 4. Ajoutez des tests de régression pour les changements de comportement ou expliquez pourquoi l'automatisation n'est pas utile.
@@ -148,7 +151,7 @@ bun install
    git checkout -b fix/votre-correction-de-bug
    ```
 
-2. **Lier les Issues** - Lors de l'implémentation d'une nouvelle fonctionnalité, vous devez **d'abord ouvrir un Issue pour discussion**. Les PR pour de nouvelles fonctionnalités soumises sans discussion préalable seront fermées. Lors de la soumission d'une PR, veuillez lier cet Issue.
+2. **Lier les Discussions / Issues** - Lors de l'implémentation d'une nouvelle fonctionnalité, vous devez **d'abord ouvrir une Discussion**. Les PR pour de nouvelles fonctionnalités soumises sans discussion préalable seront fermées. Lors de la soumission d'une PR, liez cette Discussion ; pour un correctif, liez l'Issue.
 
 3. **Gardez les modifications ciblées** - une fonctionnalité ou correction par PR
 

@@ -3,7 +3,7 @@
 > [!CAUTION]
 > **Este proyecto actualmente NO acepta PRs para nuevas funcionalidades.** Si tienes una funcionalidad que realmente te gustaría desarrollar, sigue este proceso:
 >
-> 1. **Abre un Issue primero** para discutir tu idea y enfoque con el mantenedor
+> 1. **Abre primero una [Discusión](https://github.com/voyager-crew/voyager/discussions/new?category=ideas)** para hablar de tu idea y enfoque con el mantenedor
 > 2. **Espera la aprobación y un plan de implementación sólido** antes de escribir código o enviar un PR
 >
 > Los PRs de nuevas funcionalidades enviados sin discusión previa serán cerrados sin revisión. Gracias por tu comprensión.
@@ -11,9 +11,12 @@
 > [!IMPORTANT]
 > **Estado del proyecto: Mantenimiento bajo.** Espere retrasos en las respuestas. Se priorizan los PR con pruebas.
 
+> [!WARNING]
+> **Admisión automática de PR ([`pr-gate.yml`](workflows/pr-gate.yml)):** no tienen límites los mantenedores ([`MAINTAINERS`](MAINTAINERS)), quienes figuran en [`APPROVED_CONTRIBUTORS`](APPROVED_CONTRIBUTORS), los PR con la etiqueta `maintainer-approved` de un mantenedor y bots de CI como dependabot. El PR de cualquier otra persona debe tener un título `fix: ...` o `fix(scope): ...` y no cambiar más de 20 archivos ni más de 1000 líneas añadidas y eliminadas en total. Todo lo demás se cierra automáticamente con un comentario, **incluidos los PR de documentación, traducción, refactorización y nuevas funcionalidades (títulos `docs:`, `feat:`, etc.)**, así que acuerda primero con un mantenedor en Discussions. Si un PR se cerró por error, menciona a un mantenedor en él; solo un mantenedor verificado puede reabrirlo, y si lo reabre otra persona se vuelve a cerrar.
+
 ¡Gracias por considerar contribuir a Voyager! 🚀
 
-Este documento proporciona pautas e instrucciones para contribuir. Damos la bienvenida a correcciones de errores, mejoras en la documentación y traducciones. Para nuevas funcionalidades, por favor discútelo primero mediante un Issue.
+Este documento proporciona pautas e instrucciones para contribuir. Damos la bienvenida a correcciones de errores, mejoras en la documentación y traducciones (los PR sin título `fix:` quedan sujetos a la admisión automática descrita arriba). Para nuevas funcionalidades, por favor discútelo primero en Discussions.
 
 ## 🚫 Política de IA
 
@@ -27,7 +30,7 @@ Aunque las herramientas de IA son grandes asistentes, las contribuciones de "cop
 
 ## Flujo Obligatorio
 
-1. Para una nueva funcionalidad, abre un Issue y espera la aprobación explícita del enfoque; `/claim` o una asignación solo selecciona a la persona responsable.
+1. Para una nueva funcionalidad, propónla en Discussions y espera la aprobación explícita del enfoque; `/claim` o una asignación solo selecciona a la persona responsable.
 2. Envía cada cambio mediante una PR enfocada desde una rama temática; no envíes directamente a `main`.
 3. Ejecuta `bun run format`, `bun run lint` y `bun run verify:pr`, en ese orden, e indica cualquier omisión. Para cambios solo de documentación (docs/README), `bun run format:check` más `bun run docs:build` pueden sustituir al `verify:pr` completo.
 4. Añade pruebas de regresión para cambios de comportamiento o explica por qué la automatización no es útil.
@@ -148,7 +151,7 @@ bun install
    git checkout -b fix/tu-correccion-de-error
    ```
 
-2. **Vincular Issues** - Al implementar una nueva funcionalidad, **primero debes abrir un Issue de discusión**. Los PR de nuevas funcionalidades enviados sin discusión previa serán cerrados. Al enviar un PR, por favor enlaza ese Issue.
+2. **Vincular Discussions / Issues** - Al implementar una nueva funcionalidad, **primero debes abrir una Discusión**. Los PR de nuevas funcionalidades enviados sin discusión previa serán cerrados. Al enviar un PR, enlaza esa Discusión; para una corrección, enlaza el Issue.
 3. **Mantén los cambios enfocados** - una funcionalidad o corrección por PR
 
 ### Lista de Verificación Pre-Commit

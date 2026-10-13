@@ -7,7 +7,7 @@
 > [!CAUTION]
 > **本项目暂时不接受任何新功能的 PR。** 如果你有一个很想做的功能，请按以下流程操作：
 >
-> 1. **先开一个 Issue 与维护者讨论**你的想法和方案
+> 1. **先在 [Discussions](https://github.com/voyager-crew/voyager/discussions/new?category=ideas) 发起讨论**，与维护者讨论你的想法和方案
 > 2. **等待维护者同意，并确定了一个好的实现方案后**，再开始编码并提交 PR
 >
 > 未经讨论直接提交的新功能 PR 将被直接关闭，不予审核。感谢理解。
@@ -15,9 +15,12 @@
 > [!IMPORTANT]
 > **项目状态：低频维护。** 回复较慢。优先处理带测试的 PR。
 
+> [!WARNING]
+> **PR 自动准入（[`pr-gate.yml`](workflows/pr-gate.yml)）：** 维护者（[`MAINTAINERS`](MAINTAINERS)）、列在 [`APPROVED_CONTRIBUTORS`](APPROVED_CONTRIBUTORS) 的贡献者、被维护者加上 `maintainer-approved` 标签的 PR，以及 dependabot 等 CI 机器人不受限制。其他人的 PR 必须同时满足：标题为 `fix: ...` 或 `fix(scope): ...`；改动不超过 20 个文件、增删合计不超过 1000 行。不满足的 PR 会被自动关闭并留言，**文档、翻译、重构和新功能（`docs:`、`feat:` 等标题）同样如此**，所以这类改动请先在 Discussions 与维护者对齐。如果被误关，在 PR 里 @ 维护者；只有经验证的维护者重新打开才有效，其他人重开会再次被关闭。
+
 感谢你考虑为 Voyager 做出贡献！🚀
 
-本文档提供贡献的指南和说明。我们欢迎错误修复、文档改进和翻译等贡献。关于新功能，请务必先通过 Issue 进行讨论。
+本文档提供贡献的指南和说明。我们欢迎错误修复、文档改进和翻译等贡献（非 `fix:` 的 PR 受上方自动准入限制）。关于新功能，请务必先在 Discussions 讨论。
 
 ## AI 辅助 PR 政策
 
@@ -34,7 +37,7 @@ AI 是很好的辅助工具，但缺少明确目标、聚焦范围和真实验�
 
 ## 必须流程
 
-1. 新功能先开 Issue，并等待维护者明确同意方案；`/claim` 或被分配只代表负责人。
+1. 新功能先在 Discussions 提案，并等待维护者明确同意方案；`/claim` 或被分配只代表负责人。
 2. 每次仓库改动都通过一个聚焦的主题分支提交 PR，不直接推送到 `main`。
 3. 按 [AGENTS.md 验证矩阵](../AGENTS.md#verification) 检查最终改动：代码 PR 运行 `bun run verify:pr`；纯文档、说明或格式改动使用对应检查。仅在需要时对改动文件应用格式化或 lint 修复，并说明未完成项。
 4. 行为变更添加回归测试，或说明自动化测试不适用的理由。
@@ -155,7 +158,7 @@ bun install
    git checkout -b fix/your-bug-fix
    ```
 
-2. **关联 Issue** - 在实现一个新功能时，请**务必先开启一个 Issue 进行讨论**。未经讨论直接提交的新功能 PR 将被关闭。在提交 PR 时，请链接该 Issue。
+2. **关联 Discussion / Issue** - 在实现一个新功能时，请**务必先在 Discussions 发起讨论**。未经讨论直接提交的新功能 PR 将被关闭。提交 PR 时，请链接该 Discussion；修复类 PR 链接对应的 Issue。
 
 ### 提交前检查清单
 
@@ -269,7 +272,7 @@ Voyager 通过以下功能增强 Gemini AI 聊天体验：
 - UI 自定义
 
 > [!NOTE]
-> **我们认为 Voyager 的功能已经足够充分且全面。** 引入过多个性化、小众的功能不会让软件更好用，反而会增加维护负担。除非你认为某个功能确实是急需的、大多数用户都会用到的，否则不建议提交 Feature Request。若确实必要，请先到 [Discussions](https://github.com/voyager-crew/voyager/discussions) 提出想法；维护者认可后再开 Issue 对齐具体方案，等待明确批准后才开始写代码。
+> **我们认为 Voyager 的功能已经足够充分且全面。** 引入过多个性化、小众的功能不会让软件更好用，反而会增加维护负担。除非你认为某个功能确实是急需的、大多数用户都会用到的，否则不建议提交 Feature Request。若确实必要，请先到 [Discussions](https://github.com/voyager-crew/voyager/discussions) 提出想法；在维护者认可并明确批准具体方案后才开始写代码。
 
 **不在范围内**：网站爬取、网络拦截、账户自动化。
 
@@ -294,7 +297,7 @@ Voyager 通过以下功能增强 Gemini AI 聊天体验：
 > [!CAUTION]
 > **This project is currently NOT accepting PRs for new features.** If you have a feature you'd really like to build, please follow this process:
 >
-> 1. **Open an Issue first** to discuss your idea and approach with the maintainer
+> 1. **Start a [Discussion](https://github.com/voyager-crew/voyager/discussions/new?category=ideas) first** to discuss your idea and approach with the maintainer
 > 2. **Wait for approval and a solid implementation plan** before writing any code or submitting a PR
 >
 > New feature PRs submitted without prior discussion will be closed without review. Thank you for understanding.
@@ -302,9 +305,12 @@ Voyager 通过以下功能增强 Gemini AI 聊天体验：
 > [!IMPORTANT]
 > **Project Status: Low Maintenance.** Expect delays in response. PRs with tests are prioritized.
 
+> [!WARNING]
+> **Automatic PR intake ([`pr-gate.yml`](workflows/pr-gate.yml)):** maintainers ([`MAINTAINERS`](MAINTAINERS)), contributors listed in [`APPROVED_CONTRIBUTORS`](APPROVED_CONTRIBUTORS), PRs a maintainer labeled `maintainer-approved`, and CI bots such as dependabot are not limited. Everyone else's PR must have a `fix: ...` or `fix(scope): ...` title and change no more than 20 files and 1,000 added plus deleted lines. Anything else is closed automatically with a comment, **including docs, translation, refactor and feature PRs (`docs:`, `feat:` and similar titles)**, so align with a maintainer in Discussions first. If a PR was closed by mistake, tag a maintainer on it; only a verified maintainer can reopen it, and reopening by anyone else is closed again.
+
 Thank you for considering contributing to Voyager! 🚀
 
-This document provides guidelines and instructions for contributing. We welcome bug fixes, documentation improvements, and translations. For new features, please discuss via an Issue first.
+This document provides guidelines and instructions for contributing. We welcome bug fixes, documentation improvements, and translations (PRs without a `fix:` title are subject to the automatic intake above). For new features, please discuss in Discussions first.
 
 ## AI-Assisted PR Policy
 
@@ -321,7 +327,7 @@ AI tools can be helpful, but copy-paste PRs without clear intent, focused scope,
 
 ## Required Workflow
 
-1. Open an Issue for a new feature and wait for explicit maintainer approval of the approach; assignment or `/claim` only selects an owner.
+1. Propose a new feature in Discussions and wait for explicit maintainer approval of the approach; assignment or `/claim` only selects an owner.
 2. Submit every repository change through one focused topic-branch PR; do not push directly to `main`.
 3. Check the final change using the [AGENTS.md verification matrix](../AGENTS.md#verification): code PRs require `bun run verify:pr`; prose, comments, or formatting-only changes use the applicable checks. Apply formatting or lint fixes only to intended files when needed, and disclose incomplete checks.
 4. Add regression tests for behavior changes, or explain why automation is not useful.
@@ -442,7 +448,7 @@ bun install
    git checkout -b fix/your-bug-fix
    ```
 
-2. **Link Issues** - When implementing a new feature, you **must first open an Issue for discussion**. PRs for new features submitted without prior discussion will be closed. When submitting a PR, please link that Issue.
+2. **Link Discussions / Issues** - When implementing a new feature, you **must first start a Discussion**. PRs for new features submitted without prior discussion will be closed. When submitting a PR, please link that Discussion; for a fix, link the Issue.
 
 ### Pre-Commit Checklist
 
@@ -568,7 +574,7 @@ Voyager enhances the Gemini AI chat experience with:
 - UI customization
 
 > [!NOTE]
-> **We believe Voyager's feature set is already comprehensive and well-rounded.** Adding too many niche or overly personalized features does not make the software better — it only increases the maintenance burden. Unless you believe a feature is truly essential and would benefit the majority of users, please reconsider submitting a Feature Request. If it truly is essential, raise the idea in [Discussions](https://github.com/voyager-crew/voyager/discussions) first; once a maintainer signals interest, open an Issue to align on the approach and wait for explicit approval before writing any code.
+> **We believe Voyager's feature set is already comprehensive and well-rounded.** Adding too many niche or overly personalized features does not make the software better — it only increases the maintenance burden. Unless you believe a feature is truly essential and would benefit the majority of users, please reconsider submitting a Feature Request. If it truly is essential, raise the idea in [Discussions](https://github.com/voyager-crew/voyager/discussions) first; wait for a maintainer to explicitly approve the approach before writing any code.
 
 **Out of scope**: Site scraping, network interception, account automation.
 
