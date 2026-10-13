@@ -15,7 +15,7 @@ Voyager te ayuda a bajar tus datos de la nube a tu palma.
 
 ### Cómo Exportar
 
-1. Pase el ratón sobre el logo de Gemini para ver el **icono de exportación**.
+1. Haz clic en el botón **Exportar** de la esquina superior derecha de la página (ChatGPT y los diseños actuales de Gemini). En Gemini también puedes elegir **Exportar historial de conversación** en el menú ⋮ de una conversación o de una respuesta; en los diseños antiguos de Gemini, pasa el ratón sobre el logo de Gemini para ver el **icono de exportación**.
 2. Elige el formato.
 3. Llévatelo.
 

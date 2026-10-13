@@ -57,13 +57,13 @@ src/features/plugins/catalog/
 
 外掛應該以「使用者想解決的問題」為邊界，而不是機械地按平台拆分。
 
-如果同一個功能在多個平台上的體驗與設定大致一致，建議做成一個跨平台外掛。例如「閱讀寬度」「翻頁體驗」「程式碼區塊排版」這類功能，可以在同一個外掛裡透過多個 `matches` 覆蓋 Claude、ChatGPT 等平台。
+catalog 裡的外掛屬於單一網站資料夾，它的每個 `matches` 都必須落在該資料夾 `site.json` 的範圍內（否則 `bun run plugin:check` 會失敗），所以同一個外掛不能同時覆蓋 Claude 和 ChatGPT。如果同一個功能適用多個平台，例如「閱讀寬度」「翻頁體驗」「程式碼區塊排版」，就在每個網站資料夾各做一個外掛（例如 `sites/claude/plugins/reading-width` 和 `sites/chatgpt/plugins/reading-width`），並讓名稱、設定和說明保持一致。
 
 但如果不同平台需要完全不同的設定、DOM 邏輯或使用者文案，拆成多個外掛會更清楚。不要為了「一個外掛管所有事」把無關功能硬塞在一起；一個外掛最好只解決一個明確問題。
 
 簡單判斷：
 
-- 同一個使用者目標、同一組設定、只是網站選擇器不同：優先合併成一個外掛。
+- 同一個使用者目標、同一組設定、只是網站選擇器不同：每個網站資料夾各做一個外掛，名稱與設定保持一致。
 - 同一個主題但每個平台體驗差異很大：可以拆開，但名稱和說明保持關聯。
 - 功能目標不同：不要合併。
 
@@ -124,7 +124,7 @@ src/features/plugins/catalog/
 
 - `id` 使用反向網域或作者前綴，例如 `your-name.reading-width`，避免和其他外掛衝突。
 - `matches` 盡量收窄，只匹配外掛真正需要生效的網站。
-- 同一外掛可以包含多個 `matches`，前提是這些平台共享同一個明確功能目標。
+- `matches` 只有在所屬網站的 `site.json` 全部涵蓋時，才能列出多個主機（例如 chatgpt.com 和 chat.openai.com）；要支援其他網站，請在該網站的資料夾新增外掛。
 - `category` 建議使用 `render-fix`、`theme`、`layout`、`readability`、`productivity`、`integration` 或 `other`。
 - `engine` 寫清楚需要的外掛引擎版本。官方外掛可參考目前目錄中的範例。
 - `i18n` 推薦補齊中文、英文和其他常用語言的名稱、描述、設定項文案。

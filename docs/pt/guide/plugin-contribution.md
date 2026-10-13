@@ -57,13 +57,13 @@ Um site declara apenas as chaves que consegue mesmo fornecer. Os plugins referen
 
 O âmbito deve seguir o problema do utilizador, não uma divisão mecânica por plataforma.
 
-Se a mesma funcionalidade tiver experiência e definições quase iguais em várias plataformas, prefira um plugin multiplataforma. Por exemplo, largura de leitura, navegação entre páginas ou layout de blocos de código podem cobrir Claude, ChatGPT e outros sites através de vários `matches`.
+Um plugin do catálogo vive na pasta de um único site e todos os seus `matches` têm de estar cobertos pelo `site.json` dessa pasta (caso contrário, `bun run plugin:check` falha), por isso um mesmo plugin não pode cobrir Claude e ChatGPT. Quando uma funcionalidade serve várias plataformas, como largura de leitura, navegação entre páginas ou layout de blocos de código, publique um plugin por pasta de site (por exemplo `sites/claude/plugins/reading-width` e `sites/chatgpt/plugins/reading-width`) e mantenha nomes, definições e descrições consistentes.
 
 Se cada plataforma exigir definições, lógica DOM ou textos muito diferentes, plugins separados serão mais claros. Não force funções sem relação num único plugin só para "cobrir tudo"; um plugin deve resolver um problema claro.
 
 Regra rápida:
 
-- Mesmo objetivo do utilizador, mesmas definições, só mudam os seletores: prefira um plugin.
+- Mesmo objetivo do utilizador, mesmas definições, só mudam os seletores: um plugin por pasta de site, com nomes e definições consistentes.
 - Mesmo tema, mas experiência muito diferente por plataforma: pode separar, mantendo nomes e descrições relacionados.
 - Objetivos diferentes: não junte.
 
@@ -124,7 +124,7 @@ A linha `$schema` é opcional e serve apenas ao seu editor: aponta para o JSON S
 
 - Use um prefixo de autor ou estilo de domínio inverso para `id`, como `your-name.reading-width`, para evitar conflitos.
 - Mantenha `matches` restrito aos sites onde o plugin realmente precisa de funcionar.
-- Um plugin pode incluir vários `matches` se essas plataformas partilharem um objetivo funcional claro.
+- Um plugin só pode listar vários hosts em `matches` se o `site.json` do seu site os cobrir todos (por exemplo chatgpt.com e chat.openai.com); para cobrir outro site, adicione um plugin na pasta desse site.
 - Valores recomendados para `category`: `render-fix`, `theme`, `layout`, `readability`, `productivity`, `integration` ou `other`.
 - Indique em `engine` a versão do motor de plugins necessária. Os plugins oficiais podem servir de exemplo.
 - Adicione `i18n` para chinês, inglês e outras línguas comuns quando possível.

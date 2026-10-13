@@ -27,7 +27,7 @@ Voyager lets you pull your data out of the cloud and into your hands.
 
 ### How to Export
 
-1. Hover your mouse over the Gemini logo to see the **Export Icon**.
+1. Click the **Export** button at the top right of the page (ChatGPT and current Gemini layouts). On Gemini you can also choose **Export conversation history** from a conversation's or response's ⋮ menu; on older Gemini layouts, hover the Gemini logo to see the **Export Icon**.
 2. Choose your format.
 3. Done.
 
@@ -76,4 +76,4 @@ This is useful for academic research, competitive analysis, and technical docume
 
 ## Supported Platforms
 
-Export works on both Gemini and AI Studio across Chrome, Edge, Firefox, Safari, Opera, and Brave. On Safari, PDF export uses a manual print step (Command+P after clicking export); Markdown and JSON image extraction are supported.
+Export works on Gemini and ChatGPT across Chrome, Edge, Firefox, Safari, Opera, and Brave. On Safari, PDF export uses a manual print step (Command+P after clicking export); Markdown and JSON image extraction are supported.

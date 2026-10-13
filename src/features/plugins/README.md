@@ -421,7 +421,7 @@ host's untouched code block; a label counts as a language only when it is shaped
 host's localized "plain text" label leaves the block to content detection. New diagram kinds follow
 the PATTERN note at the top of that file, and each site gets one `diagram-rendering` plugin listing
 its diagram ops: ChatGPT's lists `echarts` and `wavedrom`, since ChatGPT draws Mermaid itself, and
-`mermaid` waits for a site that needs it. `codeCollapse` (unreleased, `sinceEngine: 'next'`, optional
+`mermaid` waits for a site that needs it. `codeCollapse` (since 1.8.0, optional
 `code` / `action` selectors, blocks from the adapter's `codeBlock` inside `assistantTurn`
 and outside `thinkingBlock`) is Gemini's long code block collapse on another site: one engine in
 `pages/content/codeBlockCollapse/engine.ts` drives both, Gemini with its blocks expanded until the
@@ -439,12 +439,12 @@ the host's own id for it where the site names one (`conversationIdAttribute` on 
 Claude's `data-conv-id`, or inside the turn's `turnItem`; a turn without it is unstarrable), else
 the URL when the turn entered the page (`turnOwnership.ts`).
 
-`tableCopy` (unreleased, `sinceEngine: 'next'`, no parameters) finds tables inside the adapter's
+`tableCopy` (since 1.8.0, no parameters) finds tables inside the adapter's
 `assistantTurn` and puts a shadow-root toolbar before each reply table that copies it as
 Markdown or TSV. The Markdown is conversation export's own `extractTable`, and TSV reads the same
 `collectTableRows`, so formulas stay LaTeX and copy never drifts from export.
 
-`collapse` (unreleased, `sinceEngine: 'next'`) limits the visible height of long content and
+`collapse` (since 1.8.0) limits the visible height of long content and
 places one expand/collapse button after each target. Its optional `target` is a semantic key:
 `userTurn` (default), `assistantTurn` or `thinkingBlock`; raw selectors are not accepted.
 `maxPx` defaults to 320 and accepts finite numbers from 80 to 2000; `startCollapsed` defaults
@@ -464,7 +464,7 @@ using `"params": { "target": "userTurn", "maxPx": "{{maxHeight}}", "startCollaps
 
 `sendShortcut` claims one composer send mode per page on every site: a second plugin
 reports a conflict while the current holder keeps running. The optional `mode`
-(sinceEngine `next`) is `ctrlEnterSends` (default) or `enterSends`. Gemini only accepts
+(since the next engine, 1.9.0 for local imports) is `ctrlEnterSends` (default) or `enterSends`. Gemini only accepts
 the default, AI Studio only the latter, via the packaged page coordinator; Gemini
 Enterprise accepts neither. Composition, Process and keyCode 229 are left to the IME.
 Local send plugins are open on Gemini and AI Studio. Disable the corresponding
@@ -474,7 +474,7 @@ remains paired with Gemini's packaged send owner.
 `turnNavigator` likewise claims `timeline-rail` on every site, by design: a second rail on
 ChatGPT, Claude or DeepSeek is paused as a conflict while the mounted one keeps running.
 
-`draftSave` (unreleased, `sinceEngine: 'next'`, no parameters; reads `composer` and
+`draftSave` (since 1.8.0, no parameters; reads `composer` and
 `sendButton`, and stays inert without `conversationIdPattern`) is Gemini's draft auto-save on a
 catalog site. It shares `pages/content/draftSave/draftStore.ts` (debounce, empty means remove,
 five newest per prefix) and the composer reader/writer in `core/services/composer/`. Drafts are
@@ -497,7 +497,7 @@ after browser closure. Changing email within one account slot still shares store
 drafts. Gemini Enterprise stays inactive. Drafts and their key format survive
 any rollback of the plugin owner.
 
-`quoteReply` (unreleased, `sinceEngine: 'next'`, no parameters; reads `assistantTurn` and
+`quoteReply` (since 1.8.0, no parameters; reads `assistantTurn` and
 `composer`) is Gemini's quote reply on a catalog site. Selecting text wholly inside one
 assistant turn shows a localized Quote button near the selection end; activating it appends the
 text to the composer as a Markdown quote (every line prefixed `> `, a blank line after an
@@ -507,7 +507,7 @@ existing draft) and never sends. Selections touching a user turn or the adapter'
 with Gemini's quote reply in `core/utils/quotedText.ts`. A missing composer shows a toast and
 keeps the selection. Unmount removes the button, its style and every listener synchronously.
 
-`counterBadge` (unreleased, `sinceEngine: 'next'`; `target` is `composer` or `assistantTurn`,
+`counterBadge` (since 1.8.0; `target` is `composer` or `assistantTurn`,
 `metric` is `chars` (default), `words`, `cjkChars` or `lines`) shows a small read-only count.
 For `composer` it sits above the adapter's `composerRoot` (or the composer's parent), reads the
 draft with `readComposer` and hides while the draft is empty; for `assistantTurn` each reply
@@ -550,8 +550,8 @@ Settings changes serialize disposal and reactivation for templated primitive
 ops; static params keep the existing in-place update path.
 
 Params substitution requires engine 1.8.0, alongside any higher primitive or
-parameter floor. Catalog authors use `"engine": ">=next"` while this capability
-is unreleased; local imports and published catalogs use concrete `">=1.8.0"`.
+parameter floor. It has shipped, so plugins that rely only on it declare a concrete
+`">=1.8.0"`; `">=next"` is for a primitive or parameter that is still unreleased.
 The capability floor remains 1.8.0 in later releases. Engine 1.7.0 passes tokens
 literally to primitive guards, so a selector token can be accepted yet match
 nothing; enforcing the floor makes an older build report `needs-engine`.
@@ -586,7 +586,7 @@ after adding a primitive (it also refreshes the public skill).
 hand-bumped by a contributor. A new primitive or optional parameter declares
 `sinceEngine: 'next'`; its dependent catalog plugin uses `"engine": ">=next"`.
 The shared resolver maps `next` to the released engine plus one minor, patch
-zero (1.7.0 → 1.8.0). While any contract or param is `next`, this tree runs that
+zero (1.8.0 → 1.9.0). While any contract or param is `next`, this tree runs that
 effective engine version, so its bundled unreleased plugins are usable.
 
 A manifest that uses a primitive must set an `engine` range whose **minimum** is

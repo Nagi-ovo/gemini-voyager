@@ -61,13 +61,13 @@ src/features/plugins/catalog/
 
 插件应该以“用户要解决的问题”为边界，而不是机械地按平台拆开。
 
-如果同一个功能在多个平台上的体验和设置基本一致，建议做成一个跨平台插件。例如“阅读宽度”“翻页体验”“代码块排版”这类功能，可以在同一个插件里通过多个 `matches` 覆盖 Claude、ChatGPT 等平台。
+catalog 里的插件属于单个站点文件夹，它的每个 `matches` 都必须落在该文件夹 `site.json` 的范围内（否则 `bun run plugin:check` 会失败），所以同一个插件不能同时覆盖 Claude 和 ChatGPT。如果同一个功能适用于多个平台，例如“阅读宽度”“翻页体验”“代码块排版”，就在每个站点文件夹各做一个插件（例如 `sites/claude/plugins/reading-width` 和 `sites/chatgpt/plugins/reading-width`），并让名称、设置和说明保持一致。
 
 但如果不同平台需要完全不同的设置、DOM 逻辑或用户文案，拆成多个插件会更清晰。不要为了“一个插件管所有事”把无关功能硬塞在一起；一个插件最好只解决一个明确问题。
 
 简单判断：
 
-- 同一个用户目标、同一组设置、只是站点选择器不同：优先合并成一个插件。
+- 同一个用户目标、同一组设置、只是站点选择器不同：每个站点文件夹各做一个插件，名称与设置保持一致。
 - 同一个主题但每个平台体验差异很大：可以拆开，但名称和说明里保持关联。
 - 功能目标不同：不要合并。
 
@@ -128,7 +128,7 @@ src/features/plugins/catalog/
 
 - `id` 使用反向域名或作者前缀，例如 `your-name.reading-width`，避免和其他插件冲突。
 - `matches` 尽量收窄，只匹配插件真正需要生效的网站。
-- 同一插件可以包含多个 `matches`，前提是这些平台共享同一个明确功能目标。
+- `matches` 只有在所属站点的 `site.json` 全部覆盖时，才能列出多个主机（例如 chatgpt.com 和 chat.openai.com）；要支持其他站点，请在该站点的文件夹里新增插件。
 - `category` 建议使用 `render-fix`、`theme`、`layout`、`readability`、`productivity`、`integration` 或 `other`。
 - `engine` 写清楚需要的插件引擎版本。官方插件可参考当前目录中的示例。
 - `i18n` 推荐补齐中文、英文和其他常用语言的名称、描述、设置项文案。

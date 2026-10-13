@@ -128,13 +128,13 @@ maintainer approval.
 
 Plugins should be scoped by the user problem they solve, not mechanically split by platform.
 
-If the same feature has nearly the same experience and settings across several platforms, prefer one cross-platform plugin. For example, reading width, page navigation, or code block layout can often cover Claude, ChatGPT, and other sites through multiple `matches`.
+A catalog plugin lives in one site folder, and every one of its `matches` must be covered by that folder's `site.json` (`bun run plugin:check` fails otherwise), so one plugin cannot cover both Claude and ChatGPT. When the same feature fits several platforms, such as reading width, page navigation, or code block layout, ship one plugin per site folder (for example `sites/claude/plugins/reading-width` and `sites/chatgpt/plugins/reading-width`) and keep their names, settings, and descriptions consistent.
 
 If each platform needs very different settings, DOM logic, or user-facing copy, separate plugins are clearer. Do not force unrelated behavior into one plugin just to make it "cover everything"; one plugin should solve one clear problem.
 
 Quick rule:
 
-- Same user goal, same settings, only different selectors: prefer one plugin.
+- Same user goal, same settings, only different selectors: make one plugin per site folder, with consistent names and settings.
 - Same theme, but platform behavior differs a lot: split it, while keeping names and descriptions related.
 - Different goals: do not merge them.
 
@@ -195,7 +195,7 @@ The `$schema` line is optional and only for your editor: it points at the manife
 
 - Use a reverse-domain style or author prefix for `id`, such as `your-name.reading-width`, to avoid collisions.
 - Keep `matches` narrow. Match only the websites where the plugin really needs to run.
-- One plugin may include multiple `matches` when those platforms share one clear feature goal.
+- A plugin's `matches` may list several hosts only when its site's `site.json` covers all of them (for example chatgpt.com and chat.openai.com); to cover another site, add a plugin in that site's folder.
 - Recommended `category` values: `render-fix`, `theme`, `layout`, `readability`, `productivity`, `integration`, or `other`.
 - Set `engine` to the plugin engine version you require. Official plugins can be used as examples.
 - Add `i18n` for Chinese, English, and other common languages when possible.

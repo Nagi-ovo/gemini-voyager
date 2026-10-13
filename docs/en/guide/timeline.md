@@ -83,6 +83,6 @@ Timeline is most valuable in conversations longer than 10 messages, where scroll
 
 ## Supported Browsers
 
-Timeline works on Google Gemini across Chrome, Edge, Firefox, Safari, Opera, and Brave. Keyboard shortcuts, starring, and levels work identically on all platforms. Starred messages sync across devices when [Cloud Sync](/en/guide/cloud-sync) is enabled.
+Timeline works on Google Gemini, and on Claude and ChatGPT as built-in plugins, across Chrome, Edge, Firefox, Safari, Opera, and Brave. Keyboard shortcuts, starring, and levels work identically on all platforms. Starred messages sync across devices when [Cloud Sync](/en/guide/cloud-sync) is enabled.
 
-Timeline is a Gemini-exclusive feature and is not available on AI Studio, where conversations tend to be shorter.
+Timeline is not available on AI Studio. DeepSeek has an optional timeline plugin in the plugin catalog (it ships disabled).

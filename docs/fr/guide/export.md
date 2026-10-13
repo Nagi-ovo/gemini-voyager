@@ -15,7 +15,7 @@ Voyager vous permet de retirer vos données du cloud pour les mettre entre vos m
 
 ### Comment Exporter
 
-1. Survolez le logo Gemini pour voir l'**Icône d'Export**.
+1. Cliquez sur le bouton **Exporter** en haut à droite de la page (ChatGPT et les mises en page actuelles de Gemini). Sur Gemini, vous pouvez aussi choisir **Exporter l'historique de la conversation** dans le menu ⋮ d'une conversation ou d'une réponse ; sur les anciennes mises en page de Gemini, survolez le logo Gemini pour voir l'**Icône d'Export**.
 2. Choisissez votre format.
 3. C'est fait.
 
