@@ -10,7 +10,8 @@ import { TimelineManager } from './manager';
 const ROUTE_SETTLE_MS = 500;
 
 /** Native lifecycle module: one rail per Gemini conversation route, torn down by the returned stop. */
-export function startTimeline(): StopNativeFeature {
+export function startTimeline(signal?: AbortSignal): StopNativeFeature {
+  if (signal?.aborted) return () => {};
   let stopped = false;
   let enabled = false;
   let liveRevision = 0;
@@ -70,9 +71,10 @@ export function startTimeline(): StopNativeFeature {
     enabled = stored[key] !== false;
     reconcile();
   })();
-  return () => {
+  const stop = (): void => {
     if (stopped) return;
     stopped = true;
+    signal?.removeEventListener('abort', stop);
     try {
       onChanged?.removeListener(onChange);
     } finally {
@@ -80,4 +82,7 @@ export function startTimeline(): StopNativeFeature {
       stopRail();
     }
   };
+  // Abort closes the rail before the plugin's async cleanup ledger can release it.
+  signal?.addEventListener('abort', stop, { once: true });
+  return stop;
 }

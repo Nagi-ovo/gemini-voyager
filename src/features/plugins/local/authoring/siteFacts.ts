@@ -63,6 +63,7 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   highlight: 'Highlight',
   preventAutoScroll: 'Prevent auto-scroll to bottom',
   responseNotification: 'Response completion notifications',
+  timeline: 'Show Timeline',
 };
 
 /**

@@ -854,6 +854,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
       if (entry === 'start-points') {
         await createSelectionStartup(admission, cleanupManager).start();
         const builtins = createGeminiBuiltinStartup(admission, cleanupManager);
+        await builtins.startTimeline();
         await builtins.startUsageStatus();
         await builtins.startPreventAutoScroll();
         await builtins.startResponseNotification();
@@ -887,6 +888,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
         OFFICIAL_PLUGIN_IDS.geminiHighlight,
         OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll,
         OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
+        OFFICIAL_PLUGIN_IDS.geminiTimeline,
       ]) {
         expect(admission.stateOf(id)).toBe('denied');
       }
@@ -916,6 +918,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiResponseNotification)).not.toBe(
         'mounted',
       );
+      expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiTimeline)).not.toBe('mounted');
       expect(packPanel()).toBe(false);
       pluginHost.stop();
       cleanupManager.executeCleanups();
@@ -934,6 +937,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiHighlight)).toBe('admitted');
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll)).toBe('admitted');
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiResponseNotification)).toBe('admitted');
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiTimeline)).toBe('admitted');
     cleanupManager.executeCleanups();
   });
 });

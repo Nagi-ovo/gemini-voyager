@@ -105,6 +105,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.HIGHLIGHT_ENABLED,
         StorageKeys.PREVENT_AUTO_SCROLL_ENABLED,
         StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED,
+        StorageKeys.GV_TIMELINE_ENABLED,
         StorageKeys.CTRL_ENTER_SEND,
         StorageKeys.AISTUDIO_ENTER_SEND,
         StorageKeys.DRAFT_AUTO_SAVE,
@@ -139,6 +140,7 @@ describe('legacy enable bindings', () => {
         researchPack,
       );
       expect(legacyBindingFor('voyager.gemini-default-model')?.read(stored)).toBe(defaultModel);
+      expect(legacyBindingFor(OFFICIAL_PLUGIN_IDS.geminiTimeline)?.read(stored)).toBe(defaultModel);
       expect(legacyBindingFor(OFFICIAL_PLUGIN_IDS.geminiQuoteReply)?.read(stored)).toBe(
         defaultModel,
       );

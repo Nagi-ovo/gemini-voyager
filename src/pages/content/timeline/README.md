@@ -1,8 +1,12 @@
 # Timeline ownership
 
-Start with the owner of the behavior being changed. `index.ts` is the `timeline` native feature: it
-runs the shared route lifecycle (`runRouteTimeline`) and returns the stop the content script calls on
-teardown. `manager.ts` creates a Gemini adapter for the
+Start with the owner of the behavior being changed. The fixed builtin `voyager.gemini-timeline`
+starts `index.ts` through `pluginHandler.ts` at the original heavy-feature start point, after the
+history and message timestamp page services. `index.ts` runs the shared route lifecycle
+(`runRouteTimeline`) and returns a synchronous stop; scope abort stops the rail before the plugin
+cleanup ledger drains. Rolling the owner back uses the same module through the native registry.
+The builtin opens no public primitive; local `turnNavigator` remains closed until shared data is
+exposed. `manager.ts` creates a Gemini adapter for the
 [shared timeline engine and view](../../../features/timeline/README.md). `GeminiTimelineAdapter.ts`
 supplies native storage, the time reader and scroll viewport discovery. `GeminiTimelineTurnSource.ts`
 owns selector discovery and turn collection; only the rail's source reports native health.

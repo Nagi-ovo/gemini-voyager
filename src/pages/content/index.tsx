@@ -217,7 +217,7 @@ async function initializeFeatures(): Promise<void> {
       // Message time display has its own switch and remains available with the rail closed.
       await settle(mountForPage(NATIVE_FEATURES.messageTimestampPageService));
       // Timeline is most resource-intensive, start it first
-      await settle(mountForPage(NATIVE_FEATURES.timeline));
+      await settle(geminiBuiltins.startTimeline());
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
       const folderManager = await adopt(startFolderManager(), (manager) => manager?.destroy());

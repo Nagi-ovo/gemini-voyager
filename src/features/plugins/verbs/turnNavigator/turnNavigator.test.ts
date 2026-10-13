@@ -18,7 +18,9 @@ const validated = validateManifest({
 });
 if (!validated.success) throw new Error('invalid DeepSeek timeline');
 const timelines = [
-  ...BUILTIN_PLUGINS.filter((plugin) => plugin.id.endsWith('-timeline')),
+  ...BUILTIN_PLUGINS.filter((plugin) =>
+    plugin.contributes.domOps?.some((op) => op.op === 'native' && op.handler === 'turnNavigator'),
+  ),
   validated.data,
 ];
 

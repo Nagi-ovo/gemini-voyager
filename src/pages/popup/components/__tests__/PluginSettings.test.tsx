@@ -26,7 +26,9 @@ const deepseek = validateManifest({
 });
 if (!deepseek.success) throw new Error('invalid DeepSeek timeline');
 const timelines = [
-  ...BUILTIN_PLUGINS.filter((plugin) => plugin.id.endsWith('-timeline')),
+  ...BUILTIN_PLUGINS.filter((plugin) =>
+    plugin.contributes.domOps?.some((op) => op.op === 'native' && op.handler === 'turnNavigator'),
+  ),
   deepseek.data,
 ];
 
@@ -111,59 +113,60 @@ describe.each(timelines)('$name style no longer offered', (plugin) => {
   });
 });
 
-describe.each(BUILTIN_PLUGINS.filter((plugin) => plugin.id.endsWith('-timeline')))(
-  '$name node levels',
-  (plugin) => {
-    it('offers node levels as an experimental switch that starts off, in Gemini wording', async () => {
-      await render(plugin);
-      // Translations resolve to their key here: the switch reuses Gemini's own messages.
-      const input = container.querySelector(
-        'input[aria-label="enableMarkerLevel"]',
-      ) as HTMLInputElement;
-      expect(input.checked).toBe(false);
-      const row = input.closest('div')!;
-      expect(row.querySelector('[title="experimentalLabel"]')).not.toBeNull();
-      expect(row.textContent).toContain('enableMarkerLevelHint');
+describe.each(
+  BUILTIN_PLUGINS.filter((plugin) =>
+    plugin.contributes.domOps?.some((op) => op.op === 'native' && op.handler === 'turnNavigator'),
+  ),
+)('$name node levels', (plugin) => {
+  it('offers node levels as an experimental switch that starts off, in Gemini wording', async () => {
+    await render(plugin);
+    // Translations resolve to their key here: the switch reuses Gemini's own messages.
+    const input = container.querySelector(
+      'input[aria-label="enableMarkerLevel"]',
+    ) as HTMLInputElement;
+    expect(input.checked).toBe(false);
+    const row = input.closest('div')!;
+    expect(row.querySelector('[title="experimentalLabel"]')).not.toBeNull();
+    expect(row.textContent).toContain('enableMarkerLevelHint');
 
+    act(() => input.click());
+    expect(setPluginSettings).toHaveBeenCalledWith(plugin.id, {
+      markerLevel: true,
+      timelineStyle: 'dots',
+      compactView: false,
+    });
+  });
+
+  it('with node levels on, only the nodes style can be chosen', async () => {
+    pluginState.current = {
+      [plugin.id]: { enabled: true, installedAt: 0, settings: { markerLevel: true } },
+    };
+    await render(plugin);
+    const select = container.querySelector('select')!;
+    const disabled = Array.from(select.options, (option) => [option.value, option.disabled]);
+    expect(Object.fromEntries(disabled)).toEqual({ dots: false, compact: true, ruler: true });
+  });
+
+  it.each(['compact', 'ruler'])(
+    'turning node levels on from %s switches to nodes in the same write',
+    async (timelineStyle) => {
+      pluginState.current = {
+        [plugin.id]: { enabled: true, installedAt: 0, settings: { timelineStyle } },
+      };
+      await render(plugin);
+      const input = container.querySelector<HTMLInputElement>(
+        'input[aria-label="enableMarkerLevel"]',
+      )!;
       act(() => input.click());
-      expect(setPluginSettings).toHaveBeenCalledWith(plugin.id, {
+      expect(setPluginSettings).toHaveBeenCalledExactlyOnceWith(plugin.id, {
         markerLevel: true,
         timelineStyle: 'dots',
         compactView: false,
       });
-    });
-
-    it('with node levels on, only the nodes style can be chosen', async () => {
-      pluginState.current = {
-        [plugin.id]: { enabled: true, installedAt: 0, settings: { markerLevel: true } },
-      };
-      await render(plugin);
-      const select = container.querySelector('select')!;
-      const disabled = Array.from(select.options, (option) => [option.value, option.disabled]);
-      expect(Object.fromEntries(disabled)).toEqual({ dots: false, compact: true, ruler: true });
-    });
-
-    it.each(['compact', 'ruler'])(
-      'turning node levels on from %s switches to nodes in the same write',
-      async (timelineStyle) => {
-        pluginState.current = {
-          [plugin.id]: { enabled: true, installedAt: 0, settings: { timelineStyle } },
-        };
-        await render(plugin);
-        const input = container.querySelector<HTMLInputElement>(
-          'input[aria-label="enableMarkerLevel"]',
-        )!;
-        act(() => input.click());
-        expect(setPluginSettings).toHaveBeenCalledExactlyOnceWith(plugin.id, {
-          markerLevel: true,
-          timelineStyle: 'dots',
-          compactView: false,
-        });
-        expect(container.querySelector('select')!.value).toBe('dots');
-      },
-    );
-  },
-);
+      expect(container.querySelector('select')!.value).toBe('dots');
+    },
+  );
+});
 
 describe('PluginSettings select setting', () => {
   it('keeps English option labels when a translation is missing', async () => {

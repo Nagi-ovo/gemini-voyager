@@ -65,6 +65,8 @@ async function isResearchPackEnabled(): Promise<boolean> {
 }
 
 export interface GeminiBuiltinStartup {
+  /** The rail at its original heavy-feature start point, after the independent page services. */
+  startTimeline(): Promise<void>;
   /** Default model, among the DOM enhancements; resolves without waiting for its startup read. */
   startDefaultModel(): Promise<void>;
   /** The prevent-auto-scroll bridge, then the claim that follows the switch. */
@@ -110,6 +112,19 @@ export function createGeminiBuiltinStartup(
   };
 
   return {
+    async startTimeline() {
+      if (stopped) return;
+      await startOwnedFeature(
+        admission,
+        'gemini',
+        'timeline',
+        async () => {
+          if (stopped) return;
+          await mountNativeFeature(cleanupManager, NATIVE_FEATURES.timeline, lifetime);
+        },
+        ownerOf,
+      );
+    },
     async startUsageStatus() {
       if (stopped) return;
       await startOwnedFeature(

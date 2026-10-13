@@ -141,6 +141,12 @@ vi.mock('../preventAutoScroll/bridge', async (importOriginal) => ({
     return () => {};
   },
 }));
+vi.mock('../timeline/index', () => ({
+  startTimeline: () => {
+    native.started.push('timeline');
+    return () => {};
+  },
+}));
 vi.mock('../responseNotification/index', () => ({
   createResponseNotificationRun: () => {
     native.started.push('responseNotification');
@@ -336,6 +342,7 @@ describe('rolling every owned feature back to its native module', () => {
     ['default model', 'defaultModel', OFFICIAL_PLUGIN_IDS.geminiDefaultModel],
     ['quote reply', 'quoteReply', OFFICIAL_PLUGIN_IDS.geminiQuoteReply],
     ['highlight', 'highlight', OFFICIAL_PLUGIN_IDS.geminiHighlight],
+    ['timeline', 'timeline', OFFICIAL_PLUGIN_IDS.geminiTimeline],
     ['prevent auto-scroll', 'preventAutoScroll', OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll],
     [
       'response notification',
@@ -361,6 +368,7 @@ describe('rolling every owned feature back to its native module', () => {
         await createSelectionStartup(admission, cleanupManager).start();
       else if (feature === 'preventAutoScroll') await builtins.startPreventAutoScroll();
       else if (feature === 'responseNotification') await builtins.startResponseNotification();
+      else if (feature === 'timeline') await builtins.startTimeline();
       else {
         await builtins.startDefaultModel();
         await builtins.startForkAndResearchPack();

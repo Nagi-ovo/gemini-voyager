@@ -10,6 +10,7 @@ import { GEMINI_QUOTE_REPLY_MANIFEST } from './geminiQuoteReplyManifest';
 import { GEMINI_RESEARCH_PACK_MANIFEST } from './geminiResearchPackManifest';
 import { GEMINI_RESPONSE_NOTIFICATION_MANIFEST } from './geminiResponseNotificationManifest';
 import { GEMINI_SAFARI_ENTER_FIX_MANIFEST } from './geminiSafariEnterFixManifest';
+import { GEMINI_TIMELINE_MANIFEST } from './geminiTimelineManifest';
 import { GEMINI_USAGE_STATUS_MANIFEST } from './geminiUsageStatusManifest';
 import { timelineManifest } from './timelineManifest';
 
@@ -391,6 +392,7 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   GEMINI_HIGHLIGHT_MANIFEST,
   GEMINI_PREVENT_AUTO_SCROLL_MANIFEST,
   GEMINI_RESPONSE_NOTIFICATION_MANIFEST,
+  GEMINI_TIMELINE_MANIFEST,
 ];
 
 /**

@@ -55,7 +55,8 @@ export type OwnedFeatureId =
   | 'quoteReply'
   | 'highlight'
   | 'preventAutoScroll'
-  | 'responseNotification';
+  | 'responseNotification'
+  | 'timeline';
 export type FeatureOwner = 'legacy' | 'plugin';
 
 /** The packaged official plugin ids, by feature. */
@@ -82,6 +83,7 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiHighlight: 'voyager.gemini-highlight',
   geminiPreventAutoScroll: 'voyager.gemini-prevent-auto-scroll',
   geminiResponseNotification: 'voyager.gemini-response-notification',
+  geminiTimeline: 'voyager.gemini-timeline',
   geminiCtrlEnterSend: 'voyager.gemini-ctrl-enter-send',
   geminiSafariEnterFix: 'voyager.gemini-safari-enter-fix',
   aistudioEnterSend: 'voyager.aistudio-enter-send',
@@ -111,6 +113,15 @@ export interface OwnedFeature {
  * source defers the host policy on read).
  */
 export const FEATURE_OWNERS: readonly OwnedFeature[] = [
+  {
+    site: 'gemini',
+    feature: 'timeline',
+    owner: 'plugin',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiTimeline,
+    // Shared stars and hierarchy are not yet a public local-plugin capability.
+    handlers: [],
+    healthTracking: false,
+  },
   {
     site: 'gemini',
     feature: 'draftSave',

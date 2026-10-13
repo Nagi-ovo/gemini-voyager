@@ -54,6 +54,7 @@ vi.mock('../usageStatus/index', () => ({ startUsageStatus: () => counter('usageS
 vi.mock('../defaultModel/modelLocker', () => ({
   startDefaultModelNative: () => counter('defaultModel')(),
 }));
+vi.mock('../timeline/index', () => ({ startTimeline: () => counter('timeline')() }));
 vi.mock('../responseNotification/index', () => ({
   createResponseNotificationRun: () => ({
     stop: counter('responseNotification')(),
@@ -507,6 +508,48 @@ describe('the prevent-auto-scroll bridge at its Gemini start point', () => {
       start.mockRestore();
     }
   });
+});
+
+describe('the timeline at the Gemini builtin start point', () => {
+  it.each(['plugin', 'legacy'] as const)(
+    'admits or starts the rail only at its original start point and never after teardown (%s)',
+    async (owner) => {
+      const current = page();
+      const { admission, ownerOf } = ownedBy(owner, ['timeline']);
+      const builtins = createGeminiBuiltinStartup(
+        admission,
+        current.cleanupManager,
+        current.lifetime.signal,
+        ownerOf,
+      );
+      expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiTimeline)).toBe('pending');
+      expect(native.starts.timeline ?? 0).toBe(0);
+      await builtins.startTimeline();
+      expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiTimeline)).toBe(
+        owner === 'plugin' ? 'admitted' : 'pending',
+      );
+      expect(native.live.timeline ?? 0).toBe(owner === 'legacy' ? 1 : 0);
+      current.unload();
+      expect(native.live.timeline ?? 0).toBe(0);
+      const starts = native.starts.timeline ?? 0;
+      await builtins.startTimeline();
+      expect(native.starts.timeline ?? 0).toBe(starts);
+
+      const retired = page();
+      const late = ownedBy(owner, ['timeline']);
+      const lateBuiltins = createGeminiBuiltinStartup(
+        late.admission,
+        retired.cleanupManager,
+        retired.lifetime.signal,
+        late.ownerOf,
+      );
+      retired.unload();
+      await lateBuiltins.startTimeline();
+      late.admission.close();
+      expect(late.admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiTimeline)).toBe('denied');
+      expect(native.starts.timeline ?? 0).toBe(starts);
+    },
+  );
 });
 
 describe('the response notification at the Gemini builtin start point', () => {
