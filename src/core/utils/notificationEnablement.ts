@@ -26,7 +26,6 @@ export async function requestNotificationEnablement(
     return {
       ok: response.ok === true,
       ...(typeof response.enabled === 'boolean' ? { enabled: response.enabled } : {}),
-      ...(response.recovered === true ? { recovered: true } : {}),
     };
   } catch {
     return { ok: false };

@@ -359,7 +359,7 @@ describe('useGeneralPopupSettings', () => {
     );
     await render();
     act(() => settings.onChange({ responseCompleteNotificationEnabled: false }));
-    await act(async () => reconcile.resolve({ ok: true, enabled: true, recovered: true }));
+    await act(async () => reconcile.resolve({ ok: true, enabled: true }));
     expect(settings.values.responseCompleteNotificationEnabled).toBe(false);
     expect(writeSyncStorage).not.toHaveBeenCalled();
   });
@@ -399,6 +399,18 @@ describe('useGeneralPopupSettings', () => {
       expect(requestSafariNativeNotificationPermission).not.toHaveBeenCalled();
     },
   );
+
+  it('stores completion notifications off when the background cannot take the disable', async () => {
+    vi.mocked(requestNotificationEnablement).mockResolvedValue({ ok: false });
+    await render();
+    act(() =>
+      settings.hydrateFromStorage({ [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: true }),
+    );
+    await act(async () => settings.onChange({ responseCompleteNotificationEnabled: false }));
+    expect(writeSyncStorage).toHaveBeenCalledExactlyOnceWith({
+      [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
+    });
+  });
 
   it('checks announcement permission only when supported and ignores an obsolete read', async () => {
     const permission = deferred<boolean>();

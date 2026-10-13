@@ -263,7 +263,11 @@ export function useGeneralPopupSettings({
         setResponseCompleteNotificationEnabled(result.ok && result.enabled === true);
       } else {
         // Off cancels a pending grant even when the persisted switch is already false.
-        void requestNotificationEnablement({ action: 'disable' });
+        void requestNotificationEnablement({ action: 'disable' }).then((result) => {
+          // An unreachable background must not leave the switch shown off but stored on.
+          if (!result.ok)
+            void writeSyncStorage({ [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false });
+        });
       }
     },
     [isSafariBrowser, writeSyncStorage],

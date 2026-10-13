@@ -10,5 +10,4 @@ export type NotificationEnablementPayload =
 export interface NotificationEnablementResult {
   ok: boolean;
   enabled?: boolean;
-  recovered?: boolean;
 }

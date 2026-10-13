@@ -215,40 +215,14 @@ describe('notification enablement retained by the background', () => {
     expect(sync[enabledKey]).toBe(false);
   });
 
-  it('a local intent change during an outstanding permission read wins over its obsolete grant', async () => {
-    const pendingPermission = deferred<boolean>();
-    vi.spyOn(chrome.permissions, 'contains').mockImplementationOnce(
-      () => pendingPermission.promise,
-    );
-    const starting = send({ action: 'begin', requestId: 'old' });
-    await flush();
-    await chrome.storage.local.set({
-      [pendingKey]: { id: 'replacement', requestedAt: Date.now() },
-    });
-    pendingPermission.resolve(true);
-    await starting;
-    await flush();
-    expect(sync[enabledKey]).toBe(false);
-    expect(local[pendingKey]).toMatchObject({ id: 'replacement' });
-  });
-
-  it('removing the intent cancels an enable whose storage write finishes late', async () => {
-    await send({ action: 'begin', requestId: 'waiting' });
+  it('a denied request is not revived when another feature is granted notifications later', async () => {
+    await send({ action: 'begin', requestId: 'denied-in-closed-popup' });
+    await owner.reconcile();
+    vi.advanceTimersByTime(3 * 60 * 1000);
     permission = true;
-    const writing = deferred<void>();
-    const normalSet = chrome.storage.sync.set.bind(chrome.storage.sync);
-    vi.spyOn(chrome.storage.sync, 'set').mockImplementationOnce(async (items) => {
-      await writing.promise;
-      await normalSet(items);
-    });
     additions.emit({ permissions: ['notifications'] });
     await flush();
-    expect(chrome.storage.sync.set).toHaveBeenCalledWith({ [enabledKey]: true });
-    await chrome.storage.local.remove(pendingKey);
-    writing.resolve();
-    await flush();
     expect(sync[enabledKey]).toBe(false);
-    expect(local[pendingKey]).toBeUndefined();
   });
 
   it('a recovered response does not repaint the popup on after an off during intent cleanup', async () => {

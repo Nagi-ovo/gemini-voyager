@@ -16,8 +16,9 @@ interface PendingIntent {
   requestedAt: number;
 }
 
-// A permission interaction may outlive the popup/worker, but must not become a permanent intent.
-export const NOTIFICATION_ENABLEMENT_TTL_MS = 15 * 60 * 1000;
+// A permission prompt may outlive the popup/worker, but a denied prompt leaves its intent behind:
+// a later notifications grant for another feature must not revive it.
+export const NOTIFICATION_ENABLEMENT_TTL_MS = 2 * 60 * 1000;
 
 function parseIntent(value: unknown): PendingIntent | null {
   if (!value || typeof value !== 'object') return null;
@@ -60,7 +61,6 @@ export function createNotificationEnablement() {
   let latestId: string | null | undefined;
   let queue: Promise<unknown> = Promise.resolve();
   let registered = false;
-  const localEchoes = new Set<string>();
   let writingDisabled = false;
 
   const enqueue = <T>(run: () => Promise<T>): Promise<T> => {
@@ -69,28 +69,14 @@ export function createNotificationEnablement() {
     return result;
   };
   const current = (captured: number): boolean => captured === revision;
-  const signature = (value: unknown): string => {
-    const intent = parseIntent(value);
-    return intent ? `${intent.id}:${intent.requestedAt}` : 'removed';
-  };
   const readIntent = async (): Promise<PendingIntent | null> => {
     const stored = await browser.storage.local.get(pendingKey);
     return parseIntent(stored[pendingKey]);
   };
   const writeIntent = async (intent: PendingIntent | null, captured: number): Promise<void> => {
-    const echo = signature(intent);
-    const stored = await browser.storage.local.get(pendingKey);
     if (!current(captured)) return;
-    const previous = stored[pendingKey];
-    // Idempotent writes emit no change event and must not leave a future removal mistaken for ours.
-    if (intent ? signature(previous) !== echo : previous !== undefined) localEchoes.add(echo);
-    try {
-      if (intent) await browser.storage.local.set({ [pendingKey]: intent });
-      else await browser.storage.local.remove(pendingKey);
-    } catch (error) {
-      localEchoes.delete(echo);
-      throw error;
-    }
+    if (intent) await browser.storage.local.set({ [pendingKey]: intent });
+    else await browser.storage.local.remove(pendingKey);
   };
   const writeDisabled = async (): Promise<void> => {
     writingDisabled = true;
@@ -139,7 +125,7 @@ export function createNotificationEnablement() {
     latestId = null;
     await writeIntent(null, captured);
     if (!current(captured)) return { ok: true };
-    return { ok: true, enabled: true, recovered: true };
+    return { ok: true, enabled: true };
   };
 
   const reconcile = (): Promise<void> => {
@@ -202,17 +188,6 @@ export function createNotificationEnablement() {
         void enqueue(() => reconcilePending(captured, 'grant')).catch(() => {});
       });
       browser.storage.onChanged.addListener((changes, area) => {
-        if (area === 'local' && Object.hasOwn(changes, pendingKey)) {
-          const value = changes[pendingKey].newValue;
-          if (localEchoes.delete(signature(value))) return;
-          if (!parseIntent(value)) {
-            void run({ action: 'disable' }).catch(() => {});
-            return;
-          }
-          revision++;
-          latestId = parseIntent(value)?.id;
-          void reconcile().catch(() => {});
-        }
         if (area === 'sync' && changes[enabledKey]?.newValue === false && !writingDisabled) {
           // An off from another settings writer cancels even an in-flight permission check.
           void run({ action: 'disable' }).catch(() => {});
