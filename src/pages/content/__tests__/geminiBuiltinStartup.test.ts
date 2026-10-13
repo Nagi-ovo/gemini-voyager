@@ -1,22 +1,10 @@
-/**
- * The content script's page lifetime and the Gemini builtin start point, wired
- * as `index.tsx` wires them: a cleanup manager that page teardown runs, a page
- * lifetime that only retirement by a newer copy aborts, and a storage router
- * feeding the start point. Fork and the research pack are counters behind the
- * real toggle controllers; the markdown patcher is the real module.
- */
-import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+/** Page-owned services and the original admission points after legacy startup retirement. */
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CleanupPositions } from '@/core/types/cleanupPositions';
-import { StorageKeys } from '@/core/types/common';
 import { CleanupManager } from '@/core/utils/cleanupManager';
 import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
-import {
-  FEATURE_OWNERS,
-  type FeatureOwner,
-  OFFICIAL_PLUGIN_IDS,
-  type OwnedFeatureId,
-} from '@/features/plugins/sites/featureOwners';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 
 import { claimContentScript } from '../contentScriptHandoff';
 import {
@@ -27,77 +15,14 @@ import {
 import { ForkNodesService } from '../fork/ForkNodesService';
 import { handoffPendingForkLink } from '../fork/linkFinisher';
 import { captureForkReceiver } from '../fork/receiverIdentity';
-import { type GeminiBuiltinStartup, createGeminiBuiltinStartup } from '../geminiBuiltinStartup';
+import { createGeminiBuiltinStartup } from '../geminiBuiltinStartup';
 import { NATIVE_FEATURES } from '../nativeFeatures';
 import { type LifecycleHarness, installLifecycleHarness } from './lifecycleHarness';
-
-const native = vi.hoisted(() => ({
-  starts: {} as Record<string, number>,
-  live: {} as Record<string, number>,
-}));
-
-function counter(name: string): () => () => void {
-  return () => {
-    native.starts[name] = (native.starts[name] ?? 0) + 1;
-    native.live[name] = (native.live[name] ?? 0) + 1;
-    let stopped = false;
-    return () => {
-      if (stopped) return;
-      stopped = true;
-      native.live[name] -= 1;
-    };
-  };
-}
-
-vi.mock('../fork/index', () => ({ startFork: () => counter('fork')() }));
-vi.mock('../usageStatus/index', () => ({ startUsageStatus: () => counter('usageStatus')() }));
-vi.mock('../defaultModel/modelLocker', () => ({
-  startDefaultModelNative: () => counter('defaultModel')(),
-}));
-vi.mock('../timeline/index', () => ({ startTimeline: () => counter('timeline')() }));
-vi.mock('../responseNotification/index', () => ({
-  createResponseNotificationRun: () => ({
-    stop: counter('responseNotification')(),
-    ready: Promise.resolve(),
-  }),
-}));
-vi.mock('../researchPack/index', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('../researchPack/index')>()),
-  startResearchPack: () => counter('researchPack')(),
-}));
-
-/** The shipped owner table with the given Gemini features moved to `owner`, and its reader. */
-function ownedBy(
-  owner: FeatureOwner,
-  features: readonly OwnedFeatureId[],
-  nativeFeatures: readonly OwnedFeatureId[] = [],
-) {
-  const owners = FEATURE_OWNERS.map((entry) =>
-    entry.site === 'gemini' && nativeFeatures.includes(entry.feature)
-      ? { ...entry, owner: 'legacy' as const }
-      : entry.site === 'gemini' && features.includes(entry.feature)
-        ? { ...entry, owner }
-        : entry,
-  );
-  return {
-    admission: createOfficialAdmission(owners),
-    ownerOf: (_site: string, feature: OwnedFeatureId): FeatureOwner =>
-      owners.find((entry) => entry.site === 'gemini' && entry.feature === feature)?.owner ??
-      'legacy',
-  };
-}
-
-const FORK = StorageKeys.FORK_ENABLED;
-const RESEARCH_PACK = StorageKeys.RESEARCH_PACK_ENABLED;
-
-type Changes = Record<string, { newValue?: unknown }>;
 
 interface Page {
   readonly cleanupManager: CleanupManager;
   readonly lifetime: AbortController;
-  /** What `beforeunload` runs: the cleanups, without retiring the page. */
   unload(): void;
-  /** A re-injected copy claims the page and retires this one, as `index.tsx` retires. */
   retire(): void;
 }
 
@@ -137,33 +62,11 @@ function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
   return { promise, resolve };
 }
 
-/** Hold the next `chrome.storage.sync.get` until `answer` is called with the stored values. */
-function holdNextSyncRead(): { answer: () => void } {
-  const syncGet = vi.mocked(chrome.storage.sync.get);
-  const read = syncGet.getMockImplementation() as (...args: unknown[]) => unknown;
-  let answer: () => void = () => {};
-  syncGet.mockImplementationOnce(
-    ((...args: unknown[]) =>
-      new Promise((resolve) => {
-        answer = () => resolve(read(...args));
-      })) as never,
-  );
-  return { answer: () => answer() };
-}
-
-function readKeysAskedFor(): string[] {
-  return (chrome.storage.sync.get as unknown as Mock).mock.calls.flatMap(([keys]) =>
-    keys && typeof keys === 'object' && !Array.isArray(keys) ? Object.keys(keys) : [],
-  );
-}
-
 async function flush(): Promise<void> {
   for (let i = 0; i < 6; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 beforeEach(() => {
-  native.starts = {};
-  native.live = {};
   document.body.innerHTML = '';
   harness = installLifecycleHarness();
 });
@@ -171,6 +74,7 @@ beforeEach(() => {
 afterEach(() => {
   for (const teardown of teardowns.splice(0)) teardown();
   harness.restore();
+  vi.restoreAllMocks();
   vi.useRealTimers();
   document.body.innerHTML = '';
 });
@@ -253,52 +157,173 @@ describe('the page lifetime of native features', () => {
   });
 });
 
-describe('fork and research pack at the Gemini builtin start point', () => {
-  function startNative(stored: Record<string, unknown>): {
-    page: Page;
-    startup: GeminiBuiltinStartup;
-    flip: (changes: Changes, areaName?: string) => void;
-  } {
-    for (const [key, value] of Object.entries(stored)) harness.storage.sync.set(key, value);
+describe('official plugins at their Gemini start points', () => {
+  it.each([
+    ['startTimeline', OFFICIAL_PLUGIN_IDS.geminiTimeline],
+    ['startDefaultModel', OFFICIAL_PLUGIN_IDS.geminiDefaultModel],
+    ['startResponseNotification', OFFICIAL_PLUGIN_IDS.geminiResponseNotification],
+    ['startUsageStatus', OFFICIAL_PLUGIN_IDS.geminiUsageStatus],
+  ] as const)(
+    'admits %s only at its original start point and never after teardown',
+    async (method, id) => {
+      const current = page();
+      const admission = createOfficialAdmission();
+      const startup = createGeminiBuiltinStartup(
+        admission,
+        current.cleanupManager,
+        current.lifetime.signal,
+      );
+      expect(admission.stateOf(id)).toBe('pending');
+      await startup[method]();
+      expect(admission.stateOf(id)).toBe('admitted');
+
+      const late = page();
+      const lateAdmission = createOfficialAdmission();
+      const lateStartup = createGeminiBuiltinStartup(
+        lateAdmission,
+        late.cleanupManager,
+        late.lifetime.signal,
+      );
+      late.unload();
+      await lateStartup[method]();
+      lateAdmission.close();
+      expect(lateAdmission.stateOf(id)).toBe('denied');
+    },
+  );
+
+  it('admits no builtin after the lifetime aborts even before cleanup runs', async () => {
     const current = page();
-    const { admission, ownerOf } = ownedBy('legacy', ['fork', 'researchPack']);
+    const admission = createOfficialAdmission();
     const startup = createGeminiBuiltinStartup(
       admission,
       current.cleanupManager,
       current.lifetime.signal,
-      ownerOf,
     );
-    return {
-      page: current,
-      startup,
-      flip: (changes, areaName = 'sync') => startup.handleStorageChange(changes, areaName),
-    };
-  }
-
-  it('turns fork off and on live from the popup switch while the native module owns it', async () => {
-    const { page, startup, flip } = startNative({ [FORK]: true });
+    current.lifetime.abort();
+    await startup.startTimeline();
+    await startup.startDefaultModel();
+    await startup.startResponseNotification();
+    await startup.startUsageStatus();
+    await startup.startPreventAutoScroll();
     await startup.startForkAndResearchPack();
-    expect(native.live.fork).toBe(1);
+    admission.close();
+    for (const id of [
+      OFFICIAL_PLUGIN_IDS.geminiTimeline,
+      OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
+      OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
+      OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
+      OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll,
+      OFFICIAL_PLUGIN_IDS.geminiFork,
+      OFFICIAL_PLUGIN_IDS.geminiResearchPack,
+    ])
+      expect(admission.stateOf(id)).toBe('denied');
+    expect(document.getElementById('gv-prevent-auto-scroll-bridge')).toBeNull();
+  });
+});
 
-    flip({ [FORK]: { newValue: false } });
-    await flush();
-    expect(native.live.fork).toBe(0);
-
-    // The legacy switch also follows the local area.
-    flip({ [FORK]: { newValue: true } }, 'local');
-    await flush();
-    expect(native.live.fork).toBe(1);
-    expect(native.starts.fork).toBe(2);
-    expect(native.starts.researchPack ?? 0).toBe(0);
-
-    page.unload();
-    expect(native.live.fork).toBe(0);
+describe('permanent services before their plugin consumers', () => {
+  it.each([
+    [
+      'preventAutoScrollBridge',
+      'startPreventAutoScroll',
+      [OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll],
+    ],
+    [
+      'forkLinkFinisher',
+      'startForkAndResearchPack',
+      [OFFICIAL_PLUGIN_IDS.geminiFork, OFFICIAL_PLUGIN_IDS.geminiResearchPack],
+    ],
+  ] as const)('%s finishes before its plugins are admitted', async (service, method, ids) => {
+    const current = page();
+    const admission = createOfficialAdmission();
+    const startup = createGeminiBuiltinStartup(
+      admission,
+      current.cleanupManager,
+      current.lifetime.signal,
+    );
+    const pending = deferred<() => void>();
+    const stop = vi.fn();
+    const feature: NativeFeature = NATIVE_FEATURES[service];
+    vi.spyOn(feature, 'start').mockReturnValue(pending.promise);
+    const admitted: string[] = [];
+    admission.subscribe(() => {
+      const latest = ids.find(
+        (id) => admission.stateOf(id) === 'admitted' && !admitted.includes(id),
+      );
+      if (latest) admitted.push(latest);
+    });
+    const started = startup[method]();
+    expect(ids.map((id) => admission.stateOf(id))).toEqual(ids.map(() => 'pending'));
+    pending.resolve(stop);
+    await started;
+    expect(admitted).toEqual([...ids]);
+    current.unload();
+    expect(stop).toHaveBeenCalledOnce();
   });
 
-  it('links a handed-off first message after the popup turns fork off, until page teardown', async () => {
+  it.each([
+    [
+      'preventAutoScrollBridge',
+      'startPreventAutoScroll',
+      [OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll],
+    ],
+    [
+      'forkLinkFinisher',
+      'startForkAndResearchPack',
+      [OFFICIAL_PLUGIN_IDS.geminiFork, OFFICIAL_PLUGIN_IDS.geminiResearchPack],
+    ],
+  ] as const)(
+    'admits no plugin when %s startup finishes after retirement',
+    async (service, method, ids) => {
+      const current = page();
+      const admission = createOfficialAdmission();
+      const startup = createGeminiBuiltinStartup(
+        admission,
+        current.cleanupManager,
+        current.lifetime.signal,
+      );
+      const pending = deferred<() => void>();
+      const stop = vi.fn();
+      const feature: NativeFeature = NATIVE_FEATURES[service];
+      vi.spyOn(feature, 'start').mockReturnValue(pending.promise);
+      const started = startup[method]();
+      current.retire();
+      pending.resolve(stop);
+      await started;
+      admission.close();
+      expect(ids.map((id) => admission.stateOf(id))).toEqual(ids.map(() => 'denied'));
+      expect(stop).toHaveBeenCalledOnce();
+      expect(current.cleanupManager.list()).toEqual([]);
+    },
+  );
+
+  it('admits no research pack if teardown lands when Fork becomes admitted', async () => {
+    const current = page();
+    const admission = createOfficialAdmission();
+    const startup = createGeminiBuiltinStartup(
+      admission,
+      current.cleanupManager,
+      current.lifetime.signal,
+    );
+    admission.subscribe(() => {
+      if (admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiFork) === 'admitted') current.unload();
+    });
+    await startup.startForkAndResearchPack();
+    admission.close();
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiFork)).toBe('admitted');
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiResearchPack)).toBe('denied');
+  });
+
+  it('links a handed-off first message without a Fork UI owner, until page teardown', async () => {
     const originalUrl = location.href;
     history.replaceState({}, '', '/app');
-    const { page, startup, flip } = startNative({ [FORK]: true });
+    const current = page();
+    const admission = createOfficialAdmission();
+    const startup = createGeminiBuiltinStartup(
+      admission,
+      current.cleanupManager,
+      current.lifetime.signal,
+    );
     const addNode = vi.spyOn(ForkNodesService, 'addForkNode').mockResolvedValue(true);
     try {
       await startup.startForkAndResearchPack();
@@ -323,10 +348,7 @@ describe('fork and research pack at the Gemini builtin start point', () => {
       };
       const receipt = handoffPendingForkLink(options);
       expect(receipt).not.toBeNull();
-      flip({ [FORK]: { newValue: false } });
-      await flush();
       receipt!.hideUi();
-      expect(native.live.fork).toBe(0);
 
       document.body.innerHTML =
         '<div class="text-input-field"><rich-textarea><div contenteditable="true">A first message</div></rich-textarea><button aria-label="Send message">Send</button></div>';
@@ -349,321 +371,12 @@ describe('fork and research pack at the Gemini builtin start point', () => {
       ]);
       expect(options.onLinked).not.toHaveBeenCalled();
       history.replaceState({}, '', '/app');
-      page.unload();
+      current.unload();
       expect(handoffPendingForkLink(options)).toBeNull();
     } finally {
       addNode.mockRestore();
       history.replaceState({}, '', originalUrl);
     }
-  });
-
-  it('turns the research pack off and on live from the popup switch while the native module owns it', async () => {
-    const { page, startup, flip } = startNative({ [RESEARCH_PACK]: true });
-    await startup.startForkAndResearchPack();
-    expect(native.live.researchPack).toBe(1);
-
-    flip({ [RESEARCH_PACK]: { newValue: false } });
-    await flush();
-    expect(native.live.researchPack).toBe(0);
-
-    flip({ [RESEARCH_PACK]: { newValue: true } });
-    await flush();
-    expect(native.live.researchPack).toBe(1);
-    expect(native.starts.researchPack).toBe(2);
-    expect(native.starts.fork ?? 0).toBe(0);
-
-    page.unload();
-    expect(native.live.researchPack).toBe(0);
-  });
-
-  it.each([
-    ['never stored', {}],
-    ['stored off', { [FORK]: false, [RESEARCH_PACK]: false }],
-    ['stored as anything but true', { [FORK]: 'true', [RESEARCH_PACK]: 1 }],
-  ])('starts neither while both switches are %s', async (_label, stored) => {
-    const { startup } = startNative(stored);
-    await startup.startForkAndResearchPack();
-    expect(native.starts).toEqual({});
-  });
-
-  it('keeps the switch flipped during the startup read instead of the late initial value', async () => {
-    const { startup, flip } = startNative({ [FORK]: false });
-    const forkRead = holdNextSyncRead();
-
-    const started = startup.startForkAndResearchPack();
-    await flush();
-    flip({ [FORK]: { newValue: true } });
-    forkRead.answer();
-    await started;
-    await flush();
-
-    expect(native.live.fork).toBe(1);
-  });
-
-  it('creates no research pack toggle when teardown lands during the fork startup read', async () => {
-    const { page, startup, flip } = startNative({ [FORK]: true, [RESEARCH_PACK]: true });
-    const forkRead = holdNextSyncRead();
-
-    const started = startup.startForkAndResearchPack();
-    await flush();
-    page.unload();
-    forkRead.answer();
-    await started;
-    await flush();
-
-    expect(native.starts).toEqual({});
-    expect(readKeysAskedFor()).toEqual([FORK]);
-    flip({ [RESEARCH_PACK]: { newValue: true } });
-    flip({ [FORK]: { newValue: true } });
-    await flush();
-    expect(native.starts).toEqual({});
-  });
-
-  it('stops fork and the research pack before page teardown reaches them, once each', async () => {
-    const { page, startup } = startNative({ [FORK]: true, [RESEARCH_PACK]: true });
-    await startup.startForkAndResearchPack();
-    expect(native.live).toEqual({ fork: 1, researchPack: 1 });
-
-    page.retire();
-    await flush();
-    expect(native.live).toEqual({ fork: 0, researchPack: 0 });
-    expect(page.cleanupManager.list()).toEqual([]);
-  });
-});
-
-describe('the default model at the Gemini builtin start point', () => {
-  function startup(owner: FeatureOwner) {
-    const current = page();
-    const { admission, ownerOf } = ownedBy(owner, ['defaultModel']);
-    const builtins = createGeminiBuiltinStartup(
-      admission,
-      current.cleanupManager,
-      current.lifetime.signal,
-      ownerOf,
-    );
-    return { ...current, admission, builtins };
-  }
-
-  it('starts the native default model once while the native module owns it, and stops it on teardown', async () => {
-    const { admission, builtins, unload } = startup('legacy');
-    await builtins.startDefaultModel();
-    admission.close();
-
-    expect(native.live.defaultModel).toBe(1);
-    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).toBe('denied');
-    unload();
-    expect(native.live.defaultModel).toBe(0);
-  });
-
-  it('starts no native default model once page teardown began', async () => {
-    const { builtins, unload } = startup('legacy');
-    unload();
-    await builtins.startDefaultModel();
-    expect(native.starts.defaultModel ?? 0).toBe(0);
-  });
-
-  it('stops the native default model when the content script retired during its start', async () => {
-    const { builtins, retire, cleanupManager } = startup('legacy');
-    const started = builtins.startDefaultModel();
-    retire();
-    await started;
-    expect(native.live.defaultModel ?? 0).toBe(0);
-    expect(cleanupManager.list()).toEqual([]);
-  });
-
-  it('admits the default model plugin and starts no native default model', async () => {
-    const { admission, builtins } = startup('plugin');
-    await builtins.startDefaultModel();
-    admission.close();
-
-    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).toBe('admitted');
-    expect(native.starts.defaultModel ?? 0).toBe(0);
-  });
-});
-
-describe('the prevent-auto-scroll bridge at its Gemini start point', () => {
-  it('admits no plugin when the bridge startup finishes after page retirement', async () => {
-    const current = page();
-    const pending = deferred<() => void>();
-    const stop = vi.fn();
-    const bridge: NativeFeature = NATIVE_FEATURES.preventAutoScrollBridge;
-    const start = vi.spyOn(bridge, 'start').mockReturnValue(pending.promise);
-    try {
-      const { admission, ownerOf } = ownedBy('plugin', ['preventAutoScroll']);
-      const builtins = createGeminiBuiltinStartup(
-        admission,
-        current.cleanupManager,
-        current.lifetime.signal,
-        ownerOf,
-      );
-      const started = builtins.startPreventAutoScroll();
-      current.retire();
-      pending.resolve(stop);
-      await started;
-      admission.close();
-      expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll)).toBe('denied');
-      expect(stop).toHaveBeenCalledOnce();
-      expect(current.cleanupManager.list()).toEqual([]);
-    } finally {
-      start.mockRestore();
-    }
-  });
-});
-
-describe('the timeline at the Gemini builtin start point', () => {
-  it.each(['plugin', 'legacy'] as const)(
-    'admits or starts the rail only at its original start point and never after teardown (%s)',
-    async (owner) => {
-      const current = page();
-      const { admission, ownerOf } = ownedBy(owner, ['timeline']);
-      const builtins = createGeminiBuiltinStartup(
-        admission,
-        current.cleanupManager,
-        current.lifetime.signal,
-        ownerOf,
-      );
-      expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiTimeline)).toBe('pending');
-      expect(native.starts.timeline ?? 0).toBe(0);
-      await builtins.startTimeline();
-      expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiTimeline)).toBe(
-        owner === 'plugin' ? 'admitted' : 'pending',
-      );
-      expect(native.live.timeline ?? 0).toBe(owner === 'legacy' ? 1 : 0);
-      current.unload();
-      expect(native.live.timeline ?? 0).toBe(0);
-      const starts = native.starts.timeline ?? 0;
-      await builtins.startTimeline();
-      expect(native.starts.timeline ?? 0).toBe(starts);
-
-      const retired = page();
-      const late = ownedBy(owner, ['timeline']);
-      const lateBuiltins = createGeminiBuiltinStartup(
-        late.admission,
-        retired.cleanupManager,
-        retired.lifetime.signal,
-        late.ownerOf,
-      );
-      retired.unload();
-      await lateBuiltins.startTimeline();
-      late.admission.close();
-      expect(late.admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiTimeline)).toBe('denied');
-      expect(native.starts.timeline ?? 0).toBe(starts);
-    },
-  );
-});
-
-describe('the response notification at the Gemini builtin start point', () => {
-  function startup(owner: FeatureOwner = 'legacy') {
-    const current = page();
-    const { admission, ownerOf } = ownedBy(owner, ['responseNotification']);
-    const builtins = createGeminiBuiltinStartup(
-      admission,
-      current.cleanupManager,
-      current.lifetime.signal,
-      ownerOf,
-    );
-    return { ...current, admission, builtins };
-  }
-
-  it('starts one notification run while the native module owns it, and stops it on teardown', async () => {
-    const { builtins, unload } = startup();
-    await builtins.startResponseNotification();
-
-    expect(native.live.responseNotification).toBe(1);
-    unload();
-    expect(native.live.responseNotification).toBe(0);
-  });
-
-  it.each(['plugin', 'legacy'] as const)(
-    'starts or admits no notification owner once page teardown began (%s)',
-    async (owner) => {
-      const { admission, builtins, unload } = startup(owner);
-      unload();
-      await builtins.startResponseNotification();
-      admission.close();
-      expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiResponseNotification)).toBe('denied');
-      expect(native.starts.responseNotification ?? 0).toBe(0);
-    },
-  );
-});
-
-describe('features at their Gemini owner start points', () => {
-  it.each([
-    ['fork', 'plugin'],
-    ['fork', 'legacy'],
-    ['usageStatus', 'plugin'],
-    ['usageStatus', 'legacy'],
-  ] as const)(
-    'starts only the %s %s owner and stops the native runtime on teardown',
-    async (feature, owner) => {
-      harness.storage.sync.set(FORK, true);
-      const { cleanupManager, lifetime, unload } = page();
-      const { admission, ownerOf } = ownedBy(owner, [feature]);
-      const builtins = createGeminiBuiltinStartup(
-        admission,
-        cleanupManager,
-        lifetime.signal,
-        ownerOf,
-      );
-      if (feature === 'fork') await builtins.startForkAndResearchPack();
-      else await builtins.startUsageStatus();
-      admission.close();
-
-      const id =
-        feature === 'fork' ? OFFICIAL_PLUGIN_IDS.geminiFork : OFFICIAL_PLUGIN_IDS.geminiUsageStatus;
-      expect(admission.stateOf(id)).toBe(owner === 'plugin' ? 'admitted' : 'denied');
-      expect(native.starts[feature] ?? 0).toBe(owner === 'legacy' ? 1 : 0);
-      expect(native.live[feature] ?? 0).toBe(owner === 'legacy' ? 1 : 0);
-      unload();
-      expect(native.live[feature] ?? 0).toBe(0);
-    },
-  );
-});
-
-describe('the research pack owned by its official plugin', () => {
-  it('admits the research pack plugin and starts no native research pack, while fork stays native', async () => {
-    harness.storage.sync.set(FORK, true);
-    harness.storage.sync.set(RESEARCH_PACK, true);
-    const { cleanupManager, lifetime } = page();
-    const { admission, ownerOf } = ownedBy('plugin', ['researchPack'], ['fork']);
-    const builtins = createGeminiBuiltinStartup(
-      admission,
-      cleanupManager,
-      lifetime.signal,
-      ownerOf,
-    );
-
-    await builtins.startForkAndResearchPack();
-    admission.close();
-
-    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiResearchPack)).toBe('admitted');
-    expect(native.live).toEqual({ fork: 1 });
-    // The content script's router no longer turns the native module on: the plugin owns its switch.
-    builtins.handleStorageChange({ [RESEARCH_PACK]: { newValue: true } }, 'sync');
-    await flush();
-    expect(native.starts.researchPack ?? 0).toBe(0);
-    expect(readKeysAskedFor()).toEqual([FORK]);
-  });
-
-  it('admits no research pack plugin when teardown lands during the fork startup read', async () => {
-    const { cleanupManager, lifetime, unload } = page();
-    const { admission, ownerOf } = ownedBy('plugin', ['researchPack'], ['fork']);
-    const builtins = createGeminiBuiltinStartup(
-      admission,
-      cleanupManager,
-      lifetime.signal,
-      ownerOf,
-    );
-    const forkRead = holdNextSyncRead();
-
-    const started = builtins.startForkAndResearchPack();
-    await flush();
-    unload();
-    forkRead.answer();
-    await started;
-    admission.close();
-
-    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiResearchPack)).toBe('denied');
   });
 });
 

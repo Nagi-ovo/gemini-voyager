@@ -315,10 +315,14 @@ plugin's own CSS can still restyle anything on Gemini, Voyager's UI and its
 (`catalog/sites/{gemini,aistudio}/` and fixed-id entries in `builtin/`) and local
 plugins target them; neither goes through the remote catalog, which never
 serves these hosts and never publishes their manifests. The official ones replace native modules feature by
-feature: the owner table decides who runs each feature, the content script
-admits an official plugin where its native module used to start, and the
+feature. Stage 7 retires migrated native startup callbacks and registrations; the content script
+admits each official plugin where its native module used to start, and the
 plugin follows the native setting it replaces (`storage/legacySettingBindings.ts`),
-not a plugin-list toggle. They resolve semantic keys through the native
+not a plugin-list toggle. An owner-table rollback now requires restoring the stage 7
+startup-retirement commit first. Permanent page services remain in `nativeFeatures.ts`; their
+account bridge, send coordinator, history/message caches, selection host, sent-quote styling,
+prevent-auto-scroll bridge and fork first-send finisher stay independent of optional plugin switches.
+They resolve semantic keys through the native
 `geminiAdapter` / `aistudioAdapter` (`userTurn`, `assistantTurn`, `composer`,
 `sidebar`; the Gemini `sidebar` key also covers Voyager's folder panel, so
 prefer a precise CSS selector there). The manifest already injects the content

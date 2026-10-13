@@ -68,8 +68,7 @@ it.each(['com', 'cn'])(
     const url = `https://aistudio.google.${domain}/prompts/new_chat`;
     const { doc, input, clicks } = fixture(url);
     const admission = createOfficialAdmission();
-    const legacy = vi.fn(async () => {});
-    await startAIStudioSendKeys(admission, legacy, false);
+    await startAIStudioSendKeys(admission);
     admission.close();
     let flip: (on: boolean) => void = () => {};
     host = new PluginHost({
@@ -95,7 +94,6 @@ it.each(['com', 'cn'])(
       isTopFrame: true,
     });
     await host.start();
-    expect(legacy).not.toHaveBeenCalled();
     press(input);
     expect(clicks).not.toHaveBeenCalled();
     flip(true);
@@ -123,7 +121,7 @@ it('does not reuse the Gemini Ctrl+Enter switch on AI Studio', async () => {
   const url = 'https://aistudio.google.com/prompts/new_chat';
   const { doc, input, clicks } = fixture(url);
   const admission = createOfficialAdmission();
-  await startAIStudioSendKeys(admission, async () => {}, true);
+  await startAIStudioSendKeys(admission);
   admission.close();
   host = new PluginHost({
     url,
@@ -145,14 +143,3 @@ it('does not reuse the Gemini Ctrl+Enter switch on AI Studio', async () => {
   expect(press(input).defaultPrevented).toBe(false);
   expect(clicks).not.toHaveBeenCalled();
 });
-
-it.each([true, false])(
-  'keeps the AI Studio legacy rollback with master %s at its original start point',
-  async (masterEnabled) => {
-    const admission = createOfficialAdmission();
-    const legacy = vi.fn(async () => {});
-    await startAIStudioSendKeys(admission, legacy, masterEnabled, () => 'legacy');
-    expect(legacy).toHaveBeenCalledTimes(masterEnabled ? 1 : 0);
-    expect(admission.stateOf(official)).not.toBe('admitted');
-  },
-);

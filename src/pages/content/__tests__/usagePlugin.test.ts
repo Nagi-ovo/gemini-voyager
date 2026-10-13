@@ -5,12 +5,7 @@ import { StorageKeys } from '@/core/types/common';
 import { CleanupManager } from '@/core/utils/cleanupManager';
 import { PluginHost } from '@/features/plugins/runtime/PluginHost';
 import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
-import {
-  FEATURE_OWNERS,
-  type FeatureOwner,
-  OFFICIAL_PLUGIN_IDS,
-  featureOwner,
-} from '@/features/plugins/sites/featureOwners';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
 
 import { createGeminiBuiltinStartup } from '../geminiBuiltinStartup';
@@ -57,15 +52,10 @@ function flip(enabled: boolean): void {
   );
 }
 
-async function start(enabled: boolean, owner: FeatureOwner = 'plugin'): Promise<void> {
+async function start(enabled: boolean): Promise<void> {
   harness.storage.sync.set(StorageKeys.USAGE_STATUS_ENABLED, enabled);
-  const owners = FEATURE_OWNERS.map((entry) =>
-    entry.feature === 'usageStatus' ? { ...entry, owner } : entry,
-  );
-  const admission = createOfficialAdmission(owners);
-  const startup = createGeminiBuiltinStartup(admission, cleanup, undefined, (site, feature) =>
-    feature === 'usageStatus' ? owner : featureOwner(site, feature),
-  );
+  const admission = createOfficialAdmission();
+  const startup = createGeminiBuiltinStartup(admission, cleanup);
   await startup.startUsageStatus();
   admission.close();
   host = new PluginHost({
@@ -170,46 +160,43 @@ describe('usage through its registered official plugin', () => {
     await guide;
   });
 
-  it.each(['plugin', 'legacy'] as const)(
-    'with the %s owner, stops recording and refreshing while off, preserves cache and shows it again on enable',
-    async (owner) => {
-      history.replaceState({}, '', '/u/0/usage');
-      const stored = cache(31, 'u/0');
-      harness.storage.local.set(usageCacheKeyForAccount('u/0'), stored);
-      harness.storage.local.set(StorageKeys.GV_USAGE_RECIPE, { rpcid: 'jSf9Qc', args: '[]' });
-      await start(true, owner);
-      expect(percent()).toMatch(/^31%/);
-      const oldRefresh = pill()!.querySelector<HTMLButtonElement>('.gv-usage-refresh')!;
-      flip(false);
-      await flush();
-      expect(pill()).toBeNull();
-      vi.mocked(chrome.storage.local.set).mockClear();
-      vi.mocked(window.postMessage).mockClear();
-      document.body.insertAdjacentHTML(
-        'beforeend',
-        '<usage-metrics-window><div class="gxu-currently">90% used</div></usage-metrics-window>',
-      );
-      observer('capture', {
-        accountKey: 'u/0',
-        sourcePath: '/u/0/usage',
-        sourceStartedAt: now,
-        body: response(90),
-        rpcid: 'jSf9Qc',
-        args: '[]',
-      });
-      observer('generation-complete');
-      oldRefresh.click();
-      await vi.advanceTimersByTimeAsync(5000);
-      expect(chrome.storage.local.set).not.toHaveBeenCalled();
-      expect(replayIds()).toEqual([]);
-      expect(harness.storage.local.get(usageCacheKeyForAccount('u/0'))).toEqual(stored);
-      document.querySelector('usage-metrics-window')!.remove();
-      flip(true);
-      await flush();
-      expect(percent()).toMatch(/^31%/);
-      expect(replayIds()).toEqual([]);
-    },
-  );
+  it('stops recording and refreshing while off, preserves cache and shows it again on enable', async () => {
+    history.replaceState({}, '', '/u/0/usage');
+    const stored = cache(31, 'u/0');
+    harness.storage.local.set(usageCacheKeyForAccount('u/0'), stored);
+    harness.storage.local.set(StorageKeys.GV_USAGE_RECIPE, { rpcid: 'jSf9Qc', args: '[]' });
+    await start(true);
+    expect(percent()).toMatch(/^31%/);
+    const oldRefresh = pill()!.querySelector<HTMLButtonElement>('.gv-usage-refresh')!;
+    flip(false);
+    await flush();
+    expect(pill()).toBeNull();
+    vi.mocked(chrome.storage.local.set).mockClear();
+    vi.mocked(window.postMessage).mockClear();
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<usage-metrics-window><div class="gxu-currently">90% used</div></usage-metrics-window>',
+    );
+    observer('capture', {
+      accountKey: 'u/0',
+      sourcePath: '/u/0/usage',
+      sourceStartedAt: now,
+      body: response(90),
+      rpcid: 'jSf9Qc',
+      args: '[]',
+    });
+    observer('generation-complete');
+    oldRefresh.click();
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+    expect(replayIds()).toEqual([]);
+    expect(harness.storage.local.get(usageCacheKeyForAccount('u/0'))).toEqual(stored);
+    document.querySelector('usage-metrics-window')!.remove();
+    flip(true);
+    await flush();
+    expect(percent()).toMatch(/^31%/);
+    expect(replayIds()).toEqual([]);
+  });
 
   it('keeps u/0 and u/1 caches apart under the plugin while routes and replay results change', async () => {
     harness.storage.local.set(usageCacheKeyForAccount('default'), cache(99, 'default'));

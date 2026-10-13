@@ -31,7 +31,6 @@ import {
   LONG_CODE_BLOCK_MIN_LINES,
 } from '../codeBlockCollapse/engine';
 import { CODE_BLOCK_TOGGLE_CLASS } from '../codeBlockCollapse/toggle';
-import { admitPluginOwnedFeature, startOwnedFeature } from '../featureOwnerStartup';
 import { createGeminiBuiltinStartup } from '../geminiBuiltinStartup';
 import { type InitializationEntry, enterInitialization } from '../initializationEntry';
 import { createGeminiInputStartup } from '../inputStartup';
@@ -138,20 +137,9 @@ afterEach(() => {
 });
 
 describe('Gemini formula copy owned by its official plugin', () => {
-  it('admits the official plugin at the native start point instead of starting the native module', async () => {
-    expect(featureOwner('gemini', 'formulaCopy')).toBe('plugin');
-    const admission = createOfficialAdmission();
-    const startLegacy = vi.fn(async () => {});
-
-    await startOwnedFeature(admission, 'gemini', 'formulaCopy', startLegacy);
-
-    expect(startLegacy).not.toHaveBeenCalled();
-    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy)).toBe('admitted');
-  });
-
   it('keeps the official plugin off when the legacy switch is off, and runs the user’s local one', async () => {
     const admission = createOfficialAdmission();
-    await startOwnedFeature(admission, 'gemini', 'formulaCopy', async () => {});
+    admission.admit('gemini', 'formulaCopy');
     const pluginHost = host(GEMINI_URL, admission, { [FORMULA_KEY]: false }, storedLocalFormula);
     await pluginHost.start();
     await flush();
@@ -166,7 +154,7 @@ describe('Gemini formula copy owned by its official plugin', () => {
 
   it('runs the official plugin once admitted when the legacy switch was never set, and keeps the local one waiting', async () => {
     const admission = createOfficialAdmission();
-    await startOwnedFeature(admission, 'gemini', 'formulaCopy', async () => {});
+    admission.admit('gemini', 'formulaCopy');
     const pluginHost = host(GEMINI_URL, admission, {}, storedLocalFormula);
     await pluginHost.start();
     await flush();
@@ -196,7 +184,7 @@ describe('AI Studio formula copy under the master switch', () => {
     setMaster(false);
     const admission = createOfficialAdmission();
     // What initializeFeatures does on AI Studio with Voyager switched off.
-    admitPluginOwnedFeature(admission, 'aistudio', 'formulaCopy');
+    admission.admit('aistudio', 'formulaCopy');
     admission.close();
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy)).toBe('admitted');
 
@@ -691,19 +679,6 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
     admission.close();
     return { cleanupManager, builtins };
   }
-
-  it('admits the research pack plugin and starts no native research pack', async () => {
-    expect(featureOwner('gemini', 'researchPack')).toBe('plugin');
-    const admission = createOfficialAdmission();
-    const { cleanupManager, builtins } = await admitAtStartPoints(admission);
-
-    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiResearchPack)).toBe('admitted');
-    // The content script's router no longer turns the native module on: the plugin owns its switch.
-    builtins.handleStorageChange({ [RESEARCH_PACK_KEY]: { newValue: true } }, 'sync');
-    await flush();
-    expect(packPanel()).toBe(false);
-    cleanupManager.executeCleanups();
-  });
 
   it('keeps the official research pack plugin off when its switch is off and mounts it live when turned on', async () => {
     const admission = createOfficialAdmission();

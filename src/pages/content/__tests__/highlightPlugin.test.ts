@@ -14,12 +14,7 @@ import { CleanupManager } from '@/core/utils/cleanupManager';
 import { PluginHost } from '@/features/plugins/runtime/PluginHost';
 import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
-import {
-  FEATURE_OWNERS,
-  type FeatureOwner,
-  OFFICIAL_PLUGIN_IDS,
-  featureOwner,
-} from '@/features/plugins/sites/featureOwners';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
 
 import { handleHighlightRuntimeMessage } from '../../background/highlightMessages';
@@ -82,7 +77,6 @@ const RECT = {
 let harness: LifecycleHarness;
 let cleanup: CleanupManager;
 let host: PluginHost | null;
-let routeStorage: ((changes: Record<string, chrome.storage.StorageChange>) => void) | undefined;
 const releasePending: Array<() => void> = [];
 
 async function flush(): Promise<void> {
@@ -100,16 +94,10 @@ function holdScope(): () => void {
   return release;
 }
 
-async function start(enabled?: unknown, owner: FeatureOwner = 'plugin'): Promise<void> {
+async function start(enabled?: unknown): Promise<void> {
   if (enabled !== undefined) harness.storage.sync.set(StorageKeys.HIGHLIGHT_ENABLED, enabled);
-  const owners = FEATURE_OWNERS.map((entry) =>
-    entry.feature === 'highlight' ? { ...entry, owner } : entry,
-  );
-  const admission = createOfficialAdmission(owners);
-  const selection = createSelectionStartup(admission, cleanup, undefined, (site, feature) =>
-    feature === 'highlight' ? owner : featureOwner(site, feature),
-  );
-  routeStorage = (changes) => selection.handleStorageChange(changes, 'sync');
+  const admission = createOfficialAdmission();
+  const selection = createSelectionStartup(admission, cleanup);
   await selection.start();
   admission.close();
   host = new PluginHost({
@@ -127,7 +115,6 @@ async function start(enabled?: unknown, owner: FeatureOwner = 'plugin'): Promise
 function flip(enabled: unknown): void {
   harness.storage.sync.set(StorageKeys.HIGHLIGHT_ENABLED, enabled);
   const changes = { [StorageKeys.HIGHLIGHT_ENABLED]: { newValue: enabled } };
-  routeStorage?.(changes);
   harness.emitStorageChange(changes, 'sync');
 }
 
@@ -186,7 +173,6 @@ beforeEach(() => {
   harness = installLifecycleHarness();
   cleanup = new CleanupManager();
   host = null;
-  routeStorage = undefined;
   vi.mocked(accountIsolationService.resolveAccountScope)
     .mockReset()
     .mockResolvedValue(RESOLVED_SCOPE);
@@ -232,45 +218,41 @@ afterEach(async () => {
 });
 
 describe('Highlight through its registered official plugin', () => {
-  it.each(['plugin', 'legacy'] as const)(
-    'with the %s owner, only true enables highlights and off preserves annotations for re-enable',
-    async (owner) => {
-      const original = await seed();
-      const before = annotationData();
-      await start(undefined, owner);
-      for (const value of [undefined, false, 'true', 1]) {
-        flip(value);
-        await flush();
-        expect(mark()).toBeNull();
-      }
-      flip(true);
-      await flush();
-      expect(mark()?.textContent).toBe('target');
-      expect(document.querySelectorAll('.gv-highlight-mark')).toHaveLength(1);
-      expect(document.querySelectorAll('.gv-highlight-timeline-tick')).toHaveLength(1);
-      mark()!.click();
-      expect(document.querySelector<HTMLTextAreaElement>('.gv-highlight-note')?.value).toBe(
-        original.note,
-      );
-      flip(false);
+  it('only true enables highlights and off preserves annotations for re-enable', async () => {
+    const original = await seed();
+    const before = annotationData();
+    await start();
+    for (const value of [undefined, false, 'true', 1]) {
+      flip(value);
       await flush();
       expect(mark()).toBeNull();
-      expect(document.querySelector('.gv-highlight-timeline-tick')).toBeNull();
-      expect(document.querySelector('.gv-highlight-popover')).toBeNull();
-      expect(annotationData()).toEqual(before);
-      selectAnswer();
-      expect(document.querySelector('.gv-quote-btn')).not.toBeNull();
-      expect(document.querySelector('.gv-highlight-action')).toBeNull();
-      flip(true);
-      await flush();
-      expect(document.querySelectorAll('.gv-highlight-mark')).toHaveLength(1);
-      expect(document.querySelectorAll('.gv-highlight-timeline-tick')).toHaveLength(1);
-      expect(await stored()).toEqual([original]);
-      const status = host!.getStatuses().find((entry) => entry.id === ID)?.kind;
-      if (owner === 'plugin') expect(status).toBe('mounted');
-      else expect(status).not.toBe('mounted');
-    },
-  );
+    }
+    flip(true);
+    await flush();
+    expect(mark()?.textContent).toBe('target');
+    expect(document.querySelectorAll('.gv-highlight-mark')).toHaveLength(1);
+    expect(document.querySelectorAll('.gv-highlight-timeline-tick')).toHaveLength(1);
+    mark()!.click();
+    expect(document.querySelector<HTMLTextAreaElement>('.gv-highlight-note')?.value).toBe(
+      original.note,
+    );
+    flip(false);
+    await flush();
+    expect(mark()).toBeNull();
+    expect(document.querySelector('.gv-highlight-timeline-tick')).toBeNull();
+    expect(document.querySelector('.gv-highlight-popover')).toBeNull();
+    expect(annotationData()).toEqual(before);
+    selectAnswer();
+    expect(document.querySelector('.gv-quote-btn')).not.toBeNull();
+    expect(document.querySelector('.gv-highlight-action')).toBeNull();
+    flip(true);
+    await flush();
+    expect(document.querySelectorAll('.gv-highlight-mark')).toHaveLength(1);
+    expect(document.querySelectorAll('.gv-highlight-timeline-tick')).toHaveLength(1);
+    expect(await stored()).toEqual([original]);
+    const status = host!.getStatuses().find((entry) => entry.id === ID)?.kind;
+    expect(status).toBe('mounted');
+  });
 
   it('turning Highlight off mid-init attaches nothing when the account lookup arrives late', async () => {
     await seed();

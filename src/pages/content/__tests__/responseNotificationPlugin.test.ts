@@ -6,12 +6,7 @@ import { CleanupManager } from '@/core/utils/cleanupManager';
 import { PluginHost } from '@/features/plugins/runtime/PluginHost';
 import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
-import {
-  FEATURE_OWNERS,
-  type FeatureOwner,
-  OFFICIAL_PLUGIN_IDS,
-  featureOwner,
-} from '@/features/plugins/sites/featureOwners';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
 
 import { createGeminiBuiltinStartup } from '../geminiBuiltinStartup';
@@ -25,21 +20,14 @@ const PAGE_OBSERVER_SOURCE = 'gemini-voyager-response-complete-observer';
 let harness: LifecycleHarness;
 let cleanup: CleanupManager;
 let host: PluginHost | null;
-let routeStorage: ((changes: Record<string, chrome.storage.StorageChange>) => void) | undefined;
 
 async function flush(): Promise<void> {
   for (let round = 0; round < 60; round++) await Promise.resolve();
 }
 
-async function start(owner: FeatureOwner = 'plugin'): Promise<void> {
-  const owners = FEATURE_OWNERS.map((entry) =>
-    entry.feature === 'responseNotification' ? { ...entry, owner } : entry,
-  );
-  const admission = createOfficialAdmission(owners);
-  const startup = createGeminiBuiltinStartup(admission, cleanup, undefined, (site, feature) =>
-    feature === 'responseNotification' ? owner : featureOwner(site, feature),
-  );
-  routeStorage = (changes) => startup.handleStorageChange(changes, 'sync');
+async function start(): Promise<void> {
+  const admission = createOfficialAdmission();
+  const startup = createGeminiBuiltinStartup(admission, cleanup);
   await startup.startResponseNotification();
   admission.close();
   host = new PluginHost({
@@ -57,7 +45,6 @@ async function start(owner: FeatureOwner = 'plugin'): Promise<void> {
 function flip(enabled: unknown): void {
   harness.storage.sync.set(ENABLED_KEY, enabled);
   const changes = { [ENABLED_KEY]: { newValue: enabled } };
-  routeStorage?.(changes);
   harness.emitStorageChange(changes, 'sync');
 }
 
@@ -95,7 +82,6 @@ beforeEach(() => {
   harness = installLifecycleHarness();
   cleanup = new CleanupManager();
   host = null;
-  routeStorage = undefined;
   vi.spyOn(document, 'hasFocus').mockReturnValue(false);
   vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
   (chrome.runtime.sendMessage as unknown as Mock).mockResolvedValue({ ok: true });
@@ -115,96 +101,86 @@ afterEach(async () => {
 });
 
 describe('response notifications through the registered official plugin', () => {
-  it.each(['plugin', 'legacy'] as const)(
-    'with the %s owner, only true enables notifications and the live setting wins',
-    async (owner) => {
-      await start(owner);
-      for (const [index, value] of [undefined, false, 'true', 1].entries()) {
-        flip(value);
-        await flush();
-        completedRequest(index + 1);
+  it('only true enables notifications and the live setting wins', async () => {
+    await start();
+    for (const [index, value] of [undefined, false, 'true', 1].entries()) {
+      flip(value);
+      await flush();
+      completedRequest(index + 1);
+    }
+    expect(notifications()).toHaveLength(0);
+    flip(true);
+    await flush();
+    const status = host!.getStatuses().find((entry) => entry.id === ID)?.kind;
+    expect(status).toBe('mounted');
+    completedRequest(10);
+    expect(notifications()).toHaveLength(1);
+    flip(false);
+    await flush();
+    completedRequest(11);
+    expect(notifications()).toHaveLength(1);
+    flip(true);
+    await flush();
+    completedRequest(12);
+    expect(notifications()).toHaveLength(2);
+    host!.stop();
+    cleanup.executeCleanups();
+    completedRequest(13);
+    expect(notifications()).toHaveLength(2);
+  });
+
+  it('off drops a pending completion and reopening ignores its late terminal event', async () => {
+    harness.storage.sync.set(ENABLED_KEY, true);
+    await start();
+    observerMessage('request-start', 1);
+    flip(false);
+    await flush();
+    observerMessage('request-complete', 1);
+    expect(notifications()).toHaveLength(0);
+    flip(true);
+    await flush();
+    observerMessage('request-complete', 1);
+    expect(notifications()).toHaveLength(0);
+    completedRequest(2);
+    observerMessage('request-complete', 2);
+    expect(notifications()).toHaveLength(1);
+  });
+
+  it('a retired run initial read cannot enable it or disturb the successor', async () => {
+    harness.storage.sync.set(ENABLED_KEY, true);
+    let resolve!: (value: Record<string, unknown>) => void;
+    const initialRead = new Promise<Record<string, unknown>>((settle) => (resolve = settle));
+    const get = chrome.storage.sync.get as unknown as Mock;
+    const normalGet = get.getMockImplementation()!;
+    let held = false;
+    get.mockImplementation((keys: unknown, callback?: unknown) => {
+      // Hold only the actual run's single-key read; PluginHost's settings snapshot must settle.
+      if (
+        !held &&
+        typeof keys === 'object' &&
+        keys !== null &&
+        !Array.isArray(keys) &&
+        Object.keys(keys).length === 1 &&
+        ENABLED_KEY in keys
+      ) {
+        held = true;
+        return initialRead;
       }
-      expect(notifications()).toHaveLength(0);
-      flip(true);
-      await flush();
-      const status = host!.getStatuses().find((entry) => entry.id === ID)?.kind;
-      if (owner === 'plugin') expect(status).toBe('mounted');
-      else expect(status).not.toBe('mounted');
-      completedRequest(10);
-      expect(notifications()).toHaveLength(1);
-      flip(false);
-      await flush();
-      completedRequest(11);
-      expect(notifications()).toHaveLength(1);
-      flip(true);
-      await flush();
-      completedRequest(12);
-      expect(notifications()).toHaveLength(2);
-      host!.stop();
-      cleanup.executeCleanups();
-      completedRequest(13);
-      expect(notifications()).toHaveLength(2);
-    },
-  );
-
-  it.each(['plugin', 'legacy'] as const)(
-    'with the %s owner, off drops a pending completion and reopening ignores its late terminal event',
-    async (owner) => {
-      harness.storage.sync.set(ENABLED_KEY, true);
-      await start(owner);
-      observerMessage('request-start', 1);
-      flip(false);
-      await flush();
-      observerMessage('request-complete', 1);
-      expect(notifications()).toHaveLength(0);
-      flip(true);
-      await flush();
-      observerMessage('request-complete', 1);
-      expect(notifications()).toHaveLength(0);
-      completedRequest(2);
-      observerMessage('request-complete', 2);
-      expect(notifications()).toHaveLength(1);
-    },
-  );
-
-  it.each(['plugin', 'legacy'] as const)(
-    'with the %s owner, a retired run initial read cannot enable it or disturb the successor',
-    async (owner) => {
-      harness.storage.sync.set(ENABLED_KEY, true);
-      let resolve!: (value: Record<string, unknown>) => void;
-      const initialRead = new Promise<Record<string, unknown>>((settle) => (resolve = settle));
-      const get = chrome.storage.sync.get as unknown as Mock;
-      const normalGet = get.getMockImplementation()!;
-      let held = false;
-      get.mockImplementation((keys: unknown, callback?: unknown) => {
-        // Hold only the actual run's single-key read; PluginHost's settings snapshot must settle.
-        if (
-          !held &&
-          typeof keys === 'object' &&
-          keys !== null &&
-          !Array.isArray(keys) &&
-          Object.keys(keys).length === 1 &&
-          ENABLED_KEY in keys
-        ) {
-          held = true;
-          return initialRead;
-        }
-        return normalGet(keys, callback);
-      });
-      await start(owner);
-      expect(held).toBe(true);
-      completedRequest(1);
-      expect(notifications()).toHaveLength(0);
-      flip(false);
-      await flush();
-      flip(true);
-      await flush();
-      resolve({ [ENABLED_KEY]: true });
-      await flush();
-      completedRequest(2);
-      expect(notifications()).toHaveLength(1);
-    },
-  );
+      return normalGet(keys, callback);
+    });
+    await start();
+    expect(held).toBe(true);
+    completedRequest(1);
+    expect(notifications()).toHaveLength(0);
+    flip(false);
+    await flush();
+    flip(true);
+    await flush();
+    resolve({ [ENABLED_KEY]: true });
+    await flush();
+    completedRequest(2);
+    expect(notifications()).toHaveLength(1);
+  });
 
   it('scope abort stops a run before a slow ledger disposer and its successor notifies alone', async () => {
     await start();

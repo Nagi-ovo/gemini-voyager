@@ -7,12 +7,7 @@ import { CleanupManager } from '@/core/utils/cleanupManager';
 import { PluginHost } from '@/features/plugins/runtime/PluginHost';
 import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
-import {
-  FEATURE_OWNERS,
-  type FeatureOwner,
-  OFFICIAL_PLUGIN_IDS,
-  featureOwner,
-} from '@/features/plugins/sites/featureOwners';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
 
 import { createGeminiBuiltinStartup } from '../geminiBuiltinStartup';
@@ -26,23 +21,16 @@ let harness: LifecycleHarness;
 let cleanup: CleanupManager;
 let host: PluginHost | null;
 let coordinator: ReturnType<typeof sendKeys.createSendKeyCoordinator> | null;
-let routeStorage: ((changes: Record<string, chrome.storage.StorageChange>) => void) | undefined;
 
 async function flush(): Promise<void> {
   for (let round = 0; round < 60; round++) await Promise.resolve();
 }
 
-async function start(owner: FeatureOwner = 'plugin'): Promise<void> {
+async function start(): Promise<void> {
   coordinator = sendKeys.createSendKeyCoordinator('gemini');
   await coordinator.whenReady();
-  const owners = FEATURE_OWNERS.map((entry) =>
-    entry.feature === 'preventAutoScroll' ? { ...entry, owner } : entry,
-  );
-  const admission = createOfficialAdmission(owners);
-  const startup = createGeminiBuiltinStartup(admission, cleanup, undefined, (site, feature) =>
-    feature === 'preventAutoScroll' ? owner : featureOwner(site, feature),
-  );
-  routeStorage = (changes) => startup.handleStorageChange(changes, 'sync');
+  const admission = createOfficialAdmission();
+  const startup = createGeminiBuiltinStartup(admission, cleanup);
   await startup.startPreventAutoScroll();
   admission.close();
   host = new PluginHost({
@@ -60,7 +48,6 @@ async function start(owner: FeatureOwner = 'plugin'): Promise<void> {
 function flip(enabled: unknown): void {
   harness.storage.sync.set(StorageKeys.PREVENT_AUTO_SCROLL_ENABLED, enabled);
   const changes = { [StorageKeys.PREVENT_AUTO_SCROLL_ENABLED]: { newValue: enabled } };
-  routeStorage?.(changes);
   harness.emitStorageChange(changes, 'sync');
 }
 
@@ -83,7 +70,6 @@ beforeEach(() => {
   vi.spyOn(sendKeys, 'getSendKeyCoordinator').mockImplementation((site) =>
     site === 'gemini' ? coordinator : null,
   );
-  routeStorage = undefined;
   // An old plugins backup cannot turn this opt-in feature on.
   harness.storage.local.set(StorageKeys.PLUGINS_STATE, { [ID]: { enabled: true, installedAt: 1 } });
 });
@@ -103,38 +89,34 @@ afterEach(async () => {
 });
 
 describe('prevent-auto-scroll through its registered official plugin', () => {
-  it.each(['plugin', 'legacy'] as const)(
-    'with the %s owner, only true enables prevention and off keeps the core bridge installed',
-    async (owner) => {
-      await start(owner);
-      const installed = bridge();
-      expect(installed).not.toBeNull();
-      expect(
-        document.getElementById('gv-prevent-auto-scroll-script')?.getAttribute('src'),
-      ).toContain('prevent-auto-scroll.js');
-      for (const value of [undefined, false, 'true', 1]) {
-        flip(value);
-        await flush();
-        expect(bridge()).toBe(installed);
-        expect(installed.dataset.enabled).toBe('false');
-      }
-      flip(true);
-      await flush();
-      expect(installed.dataset.enabled).toBe('true');
-      const status = host!.getStatuses().find((entry) => entry.id === ID)?.kind;
-      if (owner === 'plugin') expect(status).toBe('mounted');
-      else expect(status).not.toBe('mounted');
-      flip(false);
+  it('only true enables prevention and off keeps the core bridge installed', async () => {
+    await start();
+    const installed = bridge();
+    expect(installed).not.toBeNull();
+    expect(document.getElementById('gv-prevent-auto-scroll-script')?.getAttribute('src')).toContain(
+      'prevent-auto-scroll.js',
+    );
+    for (const value of [undefined, false, 'true', 1]) {
+      flip(value);
       await flush();
       expect(bridge()).toBe(installed);
       expect(installed.dataset.enabled).toBe('false');
-      expect(document.getElementById('gv-prevent-auto-scroll-script')).not.toBeNull();
-      host!.stop();
-      cleanup.executeCleanups();
-      expect(bridge()).toBe(installed);
-      expect(installed.dataset.enabled).toBe('false');
-    },
-  );
+    }
+    flip(true);
+    await flush();
+    expect(installed.dataset.enabled).toBe('true');
+    const status = host!.getStatuses().find((entry) => entry.id === ID)?.kind;
+    expect(status).toBe('mounted');
+    flip(false);
+    await flush();
+    expect(bridge()).toBe(installed);
+    expect(installed.dataset.enabled).toBe('false');
+    expect(document.getElementById('gv-prevent-auto-scroll-script')).not.toBeNull();
+    host!.stop();
+    cleanup.executeCleanups();
+    expect(bridge()).toBe(installed);
+    expect(installed.dataset.enabled).toBe('false');
+  });
 
   it('keeps the bridge following the coordinator send mode with no prevention claim', async () => {
     await start();

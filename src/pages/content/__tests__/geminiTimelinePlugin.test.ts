@@ -5,7 +5,6 @@ import { StorageKeys } from '@/core/types/common';
 import { CleanupManager } from '@/core/utils/cleanupManager';
 import type { PluginHost } from '@/features/plugins/runtime/PluginHost';
 import type { PluginScope } from '@/features/plugins/runtime/pluginScope';
-import type { FeatureOwner } from '@/features/plugins/sites/featureOwners';
 
 import {
   type ExtensionFake,
@@ -44,20 +43,14 @@ async function flush(): Promise<void> {
   for (let round = 0; round < 60; round++) await Promise.resolve();
 }
 
-async function start(owner: FeatureOwner = 'plugin'): Promise<void> {
-  const { FEATURE_OWNERS, featureOwner } = await import('@/features/plugins/sites/featureOwners');
+async function start(): Promise<void> {
   const { createOfficialAdmission } = await import('@/features/plugins/runtime/officialAdmission');
   const { BuiltinPluginSource } = await import('@/features/plugins/sources/BuiltinPluginSource');
   const { PluginHost } = await import('@/features/plugins/runtime/PluginHost');
   const { registerBuiltinNativeHandlers } = await import('../pluginNativeRegistration');
   const { createGeminiBuiltinStartup } = await import('../geminiBuiltinStartup');
-  const owners = FEATURE_OWNERS.map((entry) =>
-    entry.feature === 'timeline' ? { ...entry, owner } : entry,
-  );
-  const admission = createOfficialAdmission(owners);
-  const startup = createGeminiBuiltinStartup(admission, cleanup, undefined, (site, feature) =>
-    feature === 'timeline' ? owner : featureOwner(site, feature),
-  );
+  const admission = createOfficialAdmission();
+  const startup = createGeminiBuiltinStartup(admission, cleanup);
   registerBuiltinNativeHandlers();
   await startup.startTimeline();
   admission.close();
@@ -175,91 +168,82 @@ afterEach(async () => {
 });
 
 describe('Gemini timeline through its registered official plugin', () => {
-  it.each(['plugin', 'legacy'] as const)(
-    'with the %s owner, native data and the default-on switch survive off/reopen without stopping core time',
-    async (owner) => {
-      await start(owner);
+  it('native data and the default-on switch survive off/reopen without stopping core time', async () => {
+    await start();
+    await settle();
+    const label = document.querySelector('.gv-timestamp');
+    expect(label).not.toBeNull();
+    expect(document.querySelectorAll(SURFACE.bar)).toHaveLength(1);
+    expect(document.querySelector(SURFACE.bar)?.classList).not.toContain('timeline-style-compact');
+    expect(starredDotLabels()).toEqual([TURNS[1].prompt]);
+    expect(dotFor(TURNS[1].prompt).dataset.level).toBe('2');
+    const saved = bytes();
+    expect(keyJ()).toBe(true);
+    await settle();
+    expect(activeDotLabel()).toBe(TURNS[1].prompt);
+    flip(false);
+    await settle();
+    expect(document.querySelector(SURFACE.bar)).toBeNull();
+    expect(keyJ()).toBe(false);
+    expect(document.querySelector('.gv-timestamp')).toBe(label);
+    expect(bytes()).toBe(saved);
+    for (const value of [undefined, 'false', 0, true]) {
+      flip(value);
       await settle();
-      const label = document.querySelector('.gv-timestamp');
-      expect(label).not.toBeNull();
       expect(document.querySelectorAll(SURFACE.bar)).toHaveLength(1);
-      expect(document.querySelector(SURFACE.bar)?.classList).not.toContain(
-        'timeline-style-compact',
-      );
-      expect(starredDotLabels()).toEqual([TURNS[1].prompt]);
-      expect(dotFor(TURNS[1].prompt).dataset.level).toBe('2');
-      const saved = bytes();
-      expect(keyJ()).toBe(true);
-      await settle();
-      expect(activeDotLabel()).toBe(TURNS[1].prompt);
-      flip(false);
-      await settle();
-      expect(document.querySelector(SURFACE.bar)).toBeNull();
-      expect(keyJ()).toBe(false);
-      expect(document.querySelector('.gv-timestamp')).toBe(label);
-      expect(bytes()).toBe(saved);
-      for (const value of [undefined, 'false', 0, true]) {
-        flip(value);
-        await settle();
-        expect(document.querySelectorAll(SURFACE.bar)).toHaveLength(1);
-      }
-      expect(starredDotLabels()).toEqual([TURNS[1].prompt]);
-      expect(dotFor(TURNS[1].prompt).dataset.level).toBe('2');
-      expect(document.querySelector('.gv-timestamp')).toBe(label);
-      expect(bytes()).toBe(saved);
-      const status = host!.getStatuses().find((entry) => entry.id === ID)?.kind;
-      if (owner === 'plugin') expect(status).toBe('mounted');
-      else expect(status).not.toBe('mounted');
-      host!.stop();
-      cleanup.executeCleanups();
-      expect(document.querySelector(SURFACE.bar)).toBeNull();
-      expect(keyJ()).toBe(false);
-      expect(document.querySelector('.gv-timestamp')).toBe(label);
-      expect(bytes()).toBe(saved);
-    },
-  );
+    }
+    expect(starredDotLabels()).toEqual([TURNS[1].prompt]);
+    expect(dotFor(TURNS[1].prompt).dataset.level).toBe('2');
+    expect(document.querySelector('.gv-timestamp')).toBe(label);
+    expect(bytes()).toBe(saved);
+    const status = host!.getStatuses().find((entry) => entry.id === ID)?.kind;
+    expect(status).toBe('mounted');
+    host!.stop();
+    cleanup.executeCleanups();
+    expect(document.querySelector(SURFACE.bar)).toBeNull();
+    expect(keyJ()).toBe(false);
+    expect(document.querySelector('.gv-timestamp')).toBe(label);
+    expect(bytes()).toBe(saved);
+  });
 
-  it.each(['plugin', 'legacy'] as const)(
-    'with the %s owner, off during the rail initial read prevents a late rail from appearing',
-    async (owner) => {
-      const get = chrome.storage.sync.get as unknown as Mock;
-      const normalGet =
-        get.getMockImplementation?.() ?? chrome.storage.sync.get.bind(chrome.storage.sync);
-      let finish!: (value: Record<string, unknown>) => void;
-      const initial = new Promise<Record<string, unknown>>((resolve) => (finish = resolve));
-      let held = false;
-      vi.spyOn(chrome.storage.sync, 'get').mockImplementation(((
-        keys: unknown,
-        callback?: unknown,
-      ) => {
-        if (
-          !held &&
-          typeof keys === 'object' &&
-          keys !== null &&
-          !Array.isArray(keys) &&
-          Object.keys(keys).length === 1 &&
-          StorageKeys.GV_TIMELINE_ENABLED in keys
-        ) {
-          held = true;
-          return initial;
-        }
-        return normalGet(keys, callback);
-      }) as typeof chrome.storage.sync.get);
-      await start(owner);
-      expect(held).toBe(true);
-      flip(false);
-      await flush();
-      finish({ [StorageKeys.GV_TIMELINE_ENABLED]: true });
-      await settle();
-      expect(document.querySelector(SURFACE.bar)).toBeNull();
-      expect(keyJ()).toBe(false);
-      const label = document.querySelector('.gv-timestamp');
-      flip(true);
-      await settle();
-      expect(document.querySelectorAll(SURFACE.bar)).toHaveLength(1);
-      expect(document.querySelector('.gv-timestamp')).toBe(label);
-    },
-  );
+  it('off during the rail initial read prevents a late rail from appearing', async () => {
+    const get = chrome.storage.sync.get as unknown as Mock;
+    const normalGet =
+      get.getMockImplementation?.() ?? chrome.storage.sync.get.bind(chrome.storage.sync);
+    let finish!: (value: Record<string, unknown>) => void;
+    const initial = new Promise<Record<string, unknown>>((resolve) => (finish = resolve));
+    let held = false;
+    vi.spyOn(chrome.storage.sync, 'get').mockImplementation(((
+      keys: unknown,
+      callback?: unknown,
+    ) => {
+      if (
+        !held &&
+        typeof keys === 'object' &&
+        keys !== null &&
+        !Array.isArray(keys) &&
+        Object.keys(keys).length === 1 &&
+        StorageKeys.GV_TIMELINE_ENABLED in keys
+      ) {
+        held = true;
+        return initial;
+      }
+      return normalGet(keys, callback);
+    }) as typeof chrome.storage.sync.get);
+    await start();
+    expect(held).toBe(true);
+    flip(false);
+    await flush();
+    finish({ [StorageKeys.GV_TIMELINE_ENABLED]: true });
+    await settle();
+    expect(document.querySelector(SURFACE.bar)).toBeNull();
+    expect(keyJ()).toBe(false);
+    const label = document.querySelector('.gv-timestamp');
+    flip(true);
+    await settle();
+    expect(document.querySelectorAll(SURFACE.bar)).toHaveLength(1);
+    expect(document.querySelector('.gv-timestamp')).toBe(label);
+  });
 
   it('disabling the plugin while its engine waits for Gemini DOM leaves core timestamps working', async () => {
     document.querySelector('main')!.remove();

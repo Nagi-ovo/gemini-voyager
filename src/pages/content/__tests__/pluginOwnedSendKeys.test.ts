@@ -134,9 +134,7 @@ afterEach(() => {
 describe('Gemini send keys owned by official plugins', () => {
   it('admits both Gemini send plugins at the native start point and starts no native send behavior', async () => {
     const admission = createOfficialAdmission();
-    const legacy = vi.fn(async () => {});
-    await startGeminiSendKeys(admission, legacy);
-    expect(legacy).not.toHaveBeenCalled();
+    await startGeminiSendKeys(admission);
     expect(admission.stateOf(OFFICIAL_SEND)).toBe('admitted');
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix)).toBe('admitted');
   });
@@ -146,7 +144,7 @@ describe('Gemini send keys owned by official plugins', () => {
     async (officialEnabled) => {
       const { input, clicks } = fixture();
       const admission = createOfficialAdmission();
-      await startGeminiSendKeys(admission, async () => {});
+      await startGeminiSendKeys(admission);
       admission.close();
       host = makeHost(admission, officialEnabled);
       await host.start();
@@ -182,7 +180,7 @@ describe('Gemini send keys owned by official plugins', () => {
     });
     enter(input);
     expect(clicks).not.toHaveBeenCalled();
-    await startGeminiSendKeys(admission, async () => {});
+    await startGeminiSendKeys(admission);
     await vi.waitFor(() => expect(mounted(OFFICIAL_SEND)).toBe(true));
     enter(input);
     expect(clicks).toHaveBeenCalledTimes(1);

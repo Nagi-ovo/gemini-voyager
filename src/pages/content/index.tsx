@@ -23,7 +23,6 @@ import { flushDraftsBeforeUnload } from './draftSave/draftUnloadFlush';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { type NativeFeature, type StopNativeFeature, mountNativeFeature } from './featureLifecycle';
-import { admitPluginOwnedFeature, startOwnedFeature } from './featureOwnerStartup';
 import { folderActivityCoachmarkStep } from './folder/activityCoachmark';
 import { startAIStudioFolderManager } from './folder/aistudio';
 import { conversationSortCoachmarkStep } from './folder/conversationSortCoachmark';
@@ -32,7 +31,6 @@ import { startFolderManager } from './folder/index';
 import { startFolderItemFontSizeAdjuster } from './folderItemFontSize/index';
 import { startFolderProject } from './folderProject/index';
 import { startFolderSpacingAdjuster } from './folderSpacing/index';
-import { startNativeFormulaCopyForContent } from './formulaCopyStartup';
 import { createGeminiBuiltinStartup } from './geminiBuiltinStartup';
 import { enterInitialization } from './initializationEntry';
 import {
@@ -102,7 +100,11 @@ const promptManager = createPromptManagerEngine(
   cleanupManager,
   pageLifetime.signal,
 );
-const geminiRenderers = createGeminiRendererStartup(officialAdmission, cleanupManager);
+const geminiRenderers = createGeminiRendererStartup(
+  officialAdmission,
+  cleanupManager,
+  pageLifetime.signal,
+);
 const geminiInputs = createGeminiInputStartup(officialAdmission, cleanupManager);
 const geminiBuiltins = createGeminiBuiltinStartup(
   officialAdmission,
@@ -235,33 +237,20 @@ async function initializeFeatures(): Promise<void> {
       // per setting.
       startFolderSpacingAdjuster('gemini');
       startFolderItemFontSizeAdjuster();
-      await settle(startGeminiChatAppearance(officialAdmission));
+      await settle(startGeminiChatAppearance(officialAdmission, pageLifetime.signal));
       startEditInputWidthAdjuster();
       startSidebarWidthAdjuster();
       startSidebarAutoHide();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       await settle(geminiInputs.startInputCollapse());
-      await startOwnedFeature(officialAdmission, 'gemini', 'hideInputHalo', async () => {
-        await settle(mountForPage(NATIVE_FEATURES.inputHaloHider));
-      });
-      await startOwnedFeature(officialAdmission, 'gemini', 'vimInput', async () => {
-        await settle(mountForPage(NATIVE_FEATURES.inputVimMode));
-      });
+      officialAdmission.admit('gemini', 'hideInputHalo');
+      officialAdmission.admit('gemini', 'vimInput');
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
-      await settle(
-        startGeminiSendKeys(officialAdmission, () =>
-          mountForPage(NATIVE_FEATURES.sendBehaviorGemini),
-        ),
-      );
+      await settle(startGeminiSendKeys(officialAdmission));
       await settle(geminiBuiltins.startPreventAutoScroll());
-      await startOwnedFeature(officialAdmission, 'gemini', 'formulaCopy', () =>
-        startNativeFormulaCopyForContent({
-          registerCleanup: (cleanup) =>
-            cleanupManager.registerCleanupFunction(cleanup, CleanupPositions.CleanupFormulaCopy),
-        }),
-      );
+      officialAdmission.admit('gemini', 'formulaCopy');
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // The selection toolbar, sent-quote styling, then Quote and Highlight.
@@ -349,11 +338,9 @@ async function initializeFeatures(): Promise<void> {
 
       if (!aiStudioEnabled) {
         console.log('[Gemini Voyager] AI Studio features disabled by user');
-        // A plugin-owned Formula Copy is admitted anyway: PluginHost follows
-        // the master switch live, so turning Voyager back on here mounts it.
-        // While the native module owns it, nothing starts, as before.
-        admitPluginOwnedFeature(officialAdmission, 'aistudio', 'formulaCopy');
-        await settle(startAIStudioSendKeys(officialAdmission, async () => {}, false));
+        // Admit while off: PluginHost follows the master live and can remount without a reload.
+        officialAdmission.admit('aistudio', 'formulaCopy');
+        await settle(startAIStudioSendKeys(officialAdmission));
         return;
       }
 
@@ -364,22 +351,11 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Formula copy support for AI Studio
-      await startOwnedFeature(officialAdmission, 'aistudio', 'formulaCopy', () =>
-        startNativeFormulaCopyForContent({
-          registerCleanup: (cleanup) =>
-            cleanupManager.registerCleanupFunction(cleanup, CleanupPositions.CleanupFormulaCopy),
-        }),
-      );
+      officialAdmission.admit('aistudio', 'formulaCopy');
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Send behavior (Enter to send)
-      await settle(
-        startAIStudioSendKeys(
-          officialAdmission,
-          () => mountForPage(NATIVE_FEATURES.sendBehaviorAiStudio),
-          true,
-        ),
-      );
+      await settle(startAIStudioSendKeys(officialAdmission));
       await delay(LIGHT_FEATURE_INIT_DELAY);
     }
   } catch (e) {
@@ -509,9 +485,8 @@ function handleVisibilityChange(): void {
     // target their own plugin platform.
     // Bind builtin "native function plugins" before the host starts, so
     // PluginHost can run them when enabled on Claude/ChatGPT.
-    // On Gemini/AI Studio a feature stays with its native module until the
-    // owner table (featureOwners.ts) hands it to a packaged official plugin;
-    // that plugin then mounts only once initializeFeatures admits it. The host
+    // Migrated Gemini/AI Studio features mount only after initializeFeatures admits them.
+    // Permanent page services retain their native lifetime. The host
     // itself follows AI Studio's master switch (runtime/surfaceSwitch.ts), so
     // "Voyager off on AI Studio" also keeps local plugins off there.
     registerBuiltinNativeHandlers();
@@ -566,9 +541,6 @@ function handleVisibilityChange(): void {
         return;
       }
 
-      geminiBuiltins.handleStorageChange(changes, areaName);
-      selectionStartup.handleStorageChange(changes, areaName);
-      geminiRenderers.handleStorageChange(changes, areaName);
       geminiInputs.handleStorageChange(changes, areaName);
     };
 

@@ -49,7 +49,6 @@ async function start(quote = true, collapse = false, highlight = false): Promise
   const selection = createSelectionStartup(admission, cleanup);
   const input = createGeminiInputStartup(admission, cleanup);
   routeStorage = (changes) => {
-    selection.handleStorageChange(changes, 'sync');
     input.handleStorageChange(changes, 'sync');
   };
   await selection.start();
