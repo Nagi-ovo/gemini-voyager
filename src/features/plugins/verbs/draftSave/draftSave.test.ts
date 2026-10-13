@@ -7,6 +7,10 @@ import { sendShortcutPrimitive } from '../sendShortcut';
 import { draftSavePrimitive } from './index';
 import { DRAFT_RESTORE_DELAY_MS, DRAFT_SAVE_DEBOUNCE_MS, SEND_INTENT_TIMEOUT_MS } from './session';
 
+// jsdom events are never trusted: `type` marks the ones a person would have caused.
+const userEvents = vi.hoisted(() => new WeakSet<Event>());
+vi.mock('@/core/utils/userEvent', () => ({ isUserEvent: (event: Event) => userEvents.has(event) }));
+
 /** The shared route watcher polls at this interval. */
 const ROUTE_POLL_MS = 400;
 
@@ -92,7 +96,9 @@ function type(text: string): void {
   const field = prompt();
   if (field instanceof HTMLTextAreaElement) field.value = text;
   else field.innerHTML = paragraphs(text);
-  field.dispatchEvent(new Event('input', { bubbles: true }));
+  const event = new Event('input', { bubbles: true });
+  userEvents.add(event);
+  field.dispatchEvent(event);
 }
 
 /** The host emptying its composer after a send: an editor transaction with no `input` event. */
@@ -261,6 +267,31 @@ describe.each(sites)('draftSave on $name', (site) => {
     await vi.advanceTimersByTimeAsync(500);
 
     expect(text()).toBe('Late draft');
+  });
+
+  it('keeps the composer empty when the user typed and cleared it before the saved draft loaded', async () => {
+    records[draftKey(adapter, 'conv:abc')] = { content: 'Old draft' };
+    mount(site.conversationPath('abc'));
+    const pendingReads: (() => void)[] = [];
+    const get = chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>;
+    get.mockImplementation(
+      (keys: string | null, callback: (items: Record<string, unknown>) => void) => {
+        pendingReads.push(() =>
+          callback(typeof keys === 'string' ? { [keys]: records[keys] } : { ...records }),
+        );
+      },
+    );
+
+    activate(adapter);
+    await vi.advanceTimersByTimeAsync(0);
+    type('Something new');
+    type('');
+    pendingReads.splice(0).forEach((resolve) => resolve());
+    await vi.advanceTimersByTimeAsync(DRAFT_RESTORE_DELAY_MS * 10 + DRAFT_SAVE_DEBOUNCE_MS);
+
+    expect(text()).toBe('');
+    // The clear reaches storage too, so a reload does not bring the old draft back.
+    expect(stored(adapter, 'conv:abc')).toBeUndefined();
   });
 
   it('keeps blank lines identical through save, restore and save again', async () => {
