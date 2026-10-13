@@ -69,6 +69,11 @@ function binding(
 }
 
 export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding>> = {
+  [OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll,
+    StorageKeys.PREVENT_AUTO_SCROLL_ENABLED,
+    onOnlyIfTrue,
+  ),
   [OFFICIAL_PLUGIN_IDS.geminiHighlight]: binding(
     OFFICIAL_PLUGIN_IDS.geminiHighlight,
     StorageKeys.HIGHLIGHT_ENABLED,

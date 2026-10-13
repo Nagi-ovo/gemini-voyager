@@ -118,23 +118,21 @@ export function startPreventAutoScrollBridge(): StopNativeFeature {
   };
 }
 
-let currentClaim: symbol | null = null;
-
 /**
  * Switch the MAIN script's prevention on and hand back its release. Only the
  * newest claim's release switches it off: a stale owner stopping late must
  * not undo a newer one.
  */
 export function claimPreventAutoScroll(): () => void {
-  const claim = Symbol('prevent-auto-scroll');
-  currentClaim = claim;
-  getBridgeElement().dataset.enabled = 'true';
+  const bridge = getBridgeElement();
+  const claim = Array.from(crypto.getRandomValues(new Uint32Array(4))).join('-');
+  // Independent content-script copies share this node, not their module-local claim state.
+  bridge.dataset.gvPreventAutoScrollClaim = claim;
+  bridge.dataset.enabled = 'true';
 
   return () => {
-    if (currentClaim !== claim) return;
-    currentClaim = null;
-    // Do not create a bridge just to switch it off.
-    const bridge = document.getElementById(GV_BRIDGE_ID);
-    if (bridge) bridge.dataset.enabled = 'false';
+    if (!bridge.isConnected || bridge.dataset.gvPreventAutoScrollClaim !== claim) return;
+    delete bridge.dataset.gvPreventAutoScrollClaim;
+    bridge.dataset.enabled = 'false';
   };
 }

@@ -4,6 +4,7 @@ import { GEMINI_DEFAULT_MODEL_MANIFEST } from './geminiDefaultModelManifest';
 import { GEMINI_FORK_MANIFEST } from './geminiForkManifest';
 import { GEMINI_HIGHLIGHT_MANIFEST } from './geminiHighlightManifest';
 import { GEMINI_INPUT_COLLAPSE_MANIFEST } from './geminiInputCollapseManifest';
+import { GEMINI_PREVENT_AUTO_SCROLL_MANIFEST } from './geminiPreventAutoScrollManifest';
 import { GEMINI_PROMPT_HISTORY_MANIFEST } from './geminiPromptHistoryManifest';
 import { GEMINI_QUOTE_REPLY_MANIFEST } from './geminiQuoteReplyManifest';
 import { GEMINI_RESEARCH_PACK_MANIFEST } from './geminiResearchPackManifest';
@@ -387,6 +388,7 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   GEMINI_USAGE_STATUS_MANIFEST,
   GEMINI_QUOTE_REPLY_MANIFEST,
   GEMINI_HIGHLIGHT_MANIFEST,
+  GEMINI_PREVENT_AUTO_SCROLL_MANIFEST,
 ];
 
 /**

@@ -134,6 +134,13 @@ vi.mock('../highlight/highlightAction', async (importOriginal) => ({
     return () => {};
   },
 }));
+vi.mock('../preventAutoScroll/bridge', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../preventAutoScroll/bridge')>()),
+  claimPreventAutoScroll: () => {
+    native.started.push('preventAutoScroll');
+    return () => {};
+  },
+}));
 
 vi.mock('@/features/formulaCopy', () => ({
   activateFormulaCopy: (scope: { effect: (run: () => () => void, label: string) => void }) => {
@@ -323,6 +330,7 @@ describe('rolling every owned feature back to its native module', () => {
     ['default model', 'defaultModel', OFFICIAL_PLUGIN_IDS.geminiDefaultModel],
     ['quote reply', 'quoteReply', OFFICIAL_PLUGIN_IDS.geminiQuoteReply],
     ['highlight', 'highlight', OFFICIAL_PLUGIN_IDS.geminiHighlight],
+    ['prevent auto-scroll', 'preventAutoScroll', OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll],
   ])(
     'starts native %s once at its Gemini start point and admits no official plugin when rolled back',
     async (_label, feature, id) => {
@@ -331,6 +339,7 @@ describe('rolling every owned feature back to its native module', () => {
         [StorageKeys.RESEARCH_PACK_ENABLED]: true,
         [StorageKeys.DEFAULT_MODEL_AUTO_APPLY]: true,
         [StorageKeys.HIGHLIGHT_ENABLED]: true,
+        [StorageKeys.PREVENT_AUTO_SCROLL_ENABLED]: true,
       });
       const admission = createOfficialAdmission();
       const cleanupManager = new CleanupManager();
@@ -338,6 +347,7 @@ describe('rolling every owned feature back to its native module', () => {
 
       if (feature === 'quoteReply' || feature === 'highlight')
         await createSelectionStartup(admission, cleanupManager).start();
+      else if (feature === 'preventAutoScroll') await builtins.startPreventAutoScroll();
       else {
         await builtins.startDefaultModel();
         await builtins.startForkAndResearchPack();

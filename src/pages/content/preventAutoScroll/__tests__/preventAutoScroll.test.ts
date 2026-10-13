@@ -3,6 +3,7 @@ import { type Mock, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StorageKeys } from '@/core/types/common';
 import { CleanupManager } from '@/core/utils/cleanupManager';
 import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
+import { featureOwner } from '@/features/plugins/sites/featureOwners';
 
 import { createGeminiBuiltinStartup } from '../../geminiBuiltinStartup';
 import { claimPreventAutoScroll, startPreventAutoScrollBridge } from '../index';
@@ -58,7 +59,12 @@ const settle = (): Promise<void> => new Promise((resolve) => setTimeout(resolve,
  */
 function startOnPage(): { started: Promise<void>; unload: () => void } {
   const cleanupManager = new CleanupManager();
-  const startup = createGeminiBuiltinStartup(createOfficialAdmission(), cleanupManager);
+  const startup = createGeminiBuiltinStartup(
+    createOfficialAdmission(),
+    cleanupManager,
+    undefined,
+    (site, feature) => (feature === 'preventAutoScroll' ? 'legacy' : featureOwner(site, feature)),
+  );
   chrome.storage.onChanged.addListener((changes, areaName) =>
     startup.handleStorageChange(changes, areaName),
   );
@@ -138,19 +144,33 @@ describe('prevent auto scroll', () => {
     expect(getBridge().dataset.enabled).toBe('false');
   });
 
-  it('an old release does not switch off a newer claim', () => {
-    startPreventAutoScrollBridge()();
-    const releaseOld = claimPreventAutoScroll();
-    const releaseNew = claimPreventAutoScroll();
-
-    releaseOld();
-    expect(getBridge().dataset.enabled).toBe('true');
-
-    releaseNew();
-    expect(getBridge().dataset.enabled).toBe('false');
-    releaseOld();
-    expect(getBridge().dataset.enabled).toBe('false');
-  });
+  it.each(['same module', 'successor content script'] as const)(
+    'an old release does not switch off a newer claim from the %s',
+    async (copy) => {
+      startPreventAutoScrollBridge()();
+      let claimOld = claimPreventAutoScroll;
+      let claimNew = claimPreventAutoScroll;
+      if (copy === 'successor content script') {
+        vi.resetModules();
+        claimOld = (await import('../bridge')).claimPreventAutoScroll;
+        vi.resetModules();
+        claimNew = (await import('../bridge')).claimPreventAutoScroll;
+      }
+      const releaseOld = claimOld();
+      const releaseNew = claimNew();
+      try {
+        releaseOld();
+        expect(getBridge().dataset.enabled).toBe('true');
+        releaseNew();
+        expect(getBridge().dataset.enabled).toBe('false');
+        releaseOld();
+        expect(getBridge().dataset.enabled).toBe('false');
+      } finally {
+        releaseOld();
+        releaseNew();
+      }
+    },
+  );
 
   it('a late initial read after release leaves the bridge off', async () => {
     const read = deferred<Record<string, unknown>>();

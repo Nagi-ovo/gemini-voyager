@@ -480,6 +480,35 @@ describe('the default model at the Gemini builtin start point', () => {
   });
 });
 
+describe('the prevent-auto-scroll bridge at its Gemini start point', () => {
+  it('admits no plugin when the bridge startup finishes after page retirement', async () => {
+    const current = page();
+    const pending = deferred<() => void>();
+    const stop = vi.fn();
+    const bridge: NativeFeature = NATIVE_FEATURES.preventAutoScrollBridge;
+    const start = vi.spyOn(bridge, 'start').mockReturnValue(pending.promise);
+    try {
+      const { admission, ownerOf } = ownedBy('plugin', ['preventAutoScroll']);
+      const builtins = createGeminiBuiltinStartup(
+        admission,
+        current.cleanupManager,
+        current.lifetime.signal,
+        ownerOf,
+      );
+      const started = builtins.startPreventAutoScroll();
+      current.retire();
+      pending.resolve(stop);
+      await started;
+      admission.close();
+      expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll)).toBe('denied');
+      expect(stop).toHaveBeenCalledOnce();
+      expect(current.cleanupManager.list()).toEqual([]);
+    } finally {
+      start.mockRestore();
+    }
+  });
+});
+
 describe('the response notification at the Gemini builtin start point', () => {
   function startup() {
     const current = page();

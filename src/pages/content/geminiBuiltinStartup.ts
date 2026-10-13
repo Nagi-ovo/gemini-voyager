@@ -137,6 +137,8 @@ export function createGeminiBuiltinStartup(
     async startPreventAutoScroll() {
       if (stopped) return;
       await mountNativeFeature(cleanupManager, NATIVE_FEATURES.preventAutoScrollBridge, lifetime);
+      // A bridge may finish after page teardown; the plugin must not be admitted by that continuation.
+      if (stopped) return;
       await startOwnedFeature(
         admission,
         'gemini',

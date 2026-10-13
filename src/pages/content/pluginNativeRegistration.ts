@@ -25,6 +25,7 @@ import {
   activateGeminiInputCollapse,
   updateGeminiInputCollapseSettings,
 } from './inputCollapse/pluginHandler';
+import { activateGeminiPreventAutoScroll } from './preventAutoScroll/pluginHandler';
 import { activateGeminiPromptHistory } from './promptHistory/pluginHandler';
 import { activateGeminiQuoteReply } from './quoteReply/pluginHandler';
 import { activateGeminiResearchPack } from './researchPack/pluginHandler';
@@ -78,6 +79,9 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   },
   'voyager.gemini-highlight': {
     activate: activateGeminiHighlight,
+  },
+  'voyager.gemini-prevent-auto-scroll': {
+    activate: activateGeminiPreventAutoScroll,
   },
 };
 

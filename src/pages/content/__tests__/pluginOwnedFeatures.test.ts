@@ -827,6 +827,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
           [StorageKeys.USAGE_STATUS_ENABLED]: true,
           [StorageKeys.QUOTE_REPLY_ENABLED]: true,
           [StorageKeys.HIGHLIGHT_ENABLED]: true,
+          [StorageKeys.PREVENT_AUTO_SCROLL_ENABLED]: true,
           ...(entryCase.customWebsites
             ? { [StorageKeys.PROMPT_CUSTOM_WEBSITES]: entryCase.customWebsites }
             : {}),
@@ -854,6 +855,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
         await createSelectionStartup(admission, cleanupManager).start();
         const builtins = createGeminiBuiltinStartup(admission, cleanupManager);
         await builtins.startUsageStatus();
+        await builtins.startPreventAutoScroll();
         await builtins.startDefaultModel();
         await builtins.startForkAndResearchPack();
       }
@@ -882,6 +884,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
         OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
         OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
         OFFICIAL_PLUGIN_IDS.geminiHighlight,
+        OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll,
       ]) {
         expect(admission.stateOf(id)).toBe('denied');
       }
@@ -894,6 +897,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
           [StorageKeys.USAGE_STATUS_ENABLED]: true,
           [StorageKeys.QUOTE_REPLY_ENABLED]: true,
           [StorageKeys.HIGHLIGHT_ENABLED]: true,
+          [StorageKeys.PREVENT_AUTO_SCROLL_ENABLED]: true,
         }).legacySettings,
         url,
       );
@@ -905,6 +909,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiUsageStatus)).not.toBe('mounted');
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiQuoteReply)).not.toBe('mounted');
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiHighlight)).not.toBe('mounted');
+      expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll)).not.toBe('mounted');
       expect(packPanel()).toBe(false);
       pluginHost.stop();
       cleanupManager.executeCleanups();
@@ -921,6 +926,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiUsageStatus)).toBe('admitted');
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiQuoteReply)).toBe('admitted');
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiHighlight)).toBe('admitted');
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll)).toBe('admitted');
     cleanupManager.executeCleanups();
   });
 });
