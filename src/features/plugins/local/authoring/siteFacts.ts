@@ -79,7 +79,7 @@ function sharedRuntimeLines(site: SiteAdapter, open: ReadonlySet<string>): strin
   const packaged = new Set<string>(packagedSitesForPatterns(site.matches));
   const settings = new Map<string, string>();
   for (const owned of FEATURE_OWNERS) {
-    if (owned.owner !== 'plugin' || !packaged.has(owned.site)) continue;
+    if (!packaged.has(owned.site)) continue;
     for (const handler of owned.handlers) {
       if (open.has(handler)) settings.set(handler, OWNED_FEATURE_SETTINGS[owned.feature]);
     }

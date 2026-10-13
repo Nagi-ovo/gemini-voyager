@@ -10,9 +10,8 @@
  * host mounts it no earlier than that. Admission is a time floor, not an
  * ordering promise: it does not wait for the features started before it.
  *
- * Every owner-table id starts `pending`. `admit` moves a plugin-owned one to
- * `admitted` (a legacy-owned feature runs natively, so admitting it is a
- * no-op and `close` denies it); `close` (initialization finished, or this instance retired) turns whatever
+ * Every owner-table id starts `pending`. `admit` moves one to `admitted`;
+ * `close` (initialization finished, or this instance retired) turns whatever
  * is still pending into `denied`, and is final: no later `admit`, including a
  * continuation that resolves after teardown, can revive it. Ids outside the
  * owner table are not governed here and always read `admitted`.
@@ -64,7 +63,7 @@ export function createOfficialAdmission(
     admit(site, feature) {
       if (closed) return;
       const entry = owners.find((owned) => owned.site === site && owned.feature === feature);
-      if (!entry || entry.owner !== 'plugin') return;
+      if (!entry) return;
       if (states.get(entry.officialPluginId) !== 'pending') return;
       states.set(entry.officialPluginId, 'admitted');
       notify();

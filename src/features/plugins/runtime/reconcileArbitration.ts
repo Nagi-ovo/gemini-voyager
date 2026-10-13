@@ -3,7 +3,7 @@
  * plugin runs, reserves its resources, or stays off as far as the user's wish
  * and the admission go, and the status of a plugin the page keeps off.
  */
-import { type FeatureOwner, ownedFeatureByPluginId } from '../sites/featureOwners';
+import { ownedFeatureByPluginId } from '../sites/featureOwners';
 import {
   type LegacySettingSnapshot,
   type WasChangedLive,
@@ -19,7 +19,7 @@ import type { PluginBlockedReason, PluginStatus } from './pluginStatus';
  * run      wanted and admitted
  * reserve  would run but for an admission still pending: holds its resources
  *          in arbitration, never mounts
- * await    a plugin-owned official plugin whose legacy switch is still being
+ * await    an owner-table official plugin whose legacy switch is still being
  *          read: whether it runs is unknown, so plugins needing its runtimes
  *          wait (`pending`) instead of taking them first; never mounts
  * skip     off
@@ -40,20 +40,17 @@ export interface WishInput {
   readonly admission: OfficialAdmission;
   /** Shared-data consumers wait on the native feature's start point, while retaining their own switch. */
   readonly admissionId?: string | null;
-  readonly ownerOf?: (id: string) => FeatureOwner | null;
+  /** Whether `id` is an owner-table official plugin. */
+  readonly isOwned?: (id: string) => boolean;
   /** Which legacy keys changed live on this page, for a binding that derives its switch. */
   readonly wasChangedLive?: WasChangedLive;
 }
 
-const ownerFromTable = (pluginId: string): FeatureOwner | null =>
-  ownedFeatureByPluginId(pluginId)?.owner ?? null;
+const ownedInTable = (pluginId: string): boolean => ownedFeatureByPluginId(pluginId) !== null;
 
 /**
- * The user's wish combined with the content script's admission. A
- * legacy-owned official plugin never runs, whatever its admission says: the
- * native module runs that feature, and `getStatuses` leaves the plugin out, so
- * mounting it would be both a double start and invisible. Plugin-owned official
- * features and shared-data consumers may reserve their start point; only a bound
+ * The user's wish combined with the content script's admission. Owner-table
+ * official features and shared-data consumers may reserve their start point; only a bound
  * official feature awaits its legacy switch. The official feature reserves once that switch has been read and
  * is on, and awaits while that read is in flight. The caller still checks the
  * page, host policy, compatibility and entitlement for `run`, `reserve` and
@@ -61,13 +58,10 @@ const ownerFromTable = (pluginId: string): FeatureOwner | null =>
  */
 export function wishVerdict(input: WishInput, id: string): WishVerdict {
   const { state, legacy, admission } = input;
-  const ownerOf = input.ownerOf ?? ownerFromTable;
-  const owner = ownerOf(id);
-  if (owner === 'legacy') return 'skip';
+  const ownedByPlugin = (input.isOwned ?? ownedInTable)(id);
   const admissionId = input.admissionId ?? id;
   const admissionState = admission.stateOf(admissionId);
   if (admissionState === 'denied') return 'skip';
-  const ownedByPlugin = owner === 'plugin';
   if (legacy === null && legacyBindingFor(id)) {
     // A failed read never turns into "missing key, default on": the plugin
     // stays off, and nobody waits for a snapshot that will not come.

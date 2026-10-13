@@ -20,7 +20,7 @@ import {
   type OfficialAdmissionController,
   createOfficialAdmission,
 } from '@/features/plugins/runtime/officialAdmission';
-import { OFFICIAL_PLUGIN_IDS, featureOwner } from '@/features/plugins/sites/featureOwners';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
 import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCatalogPluginSource';
 import type { LegacySettingSnapshot } from '@/features/plugins/storage/legacySettingBindings';
@@ -534,7 +534,6 @@ describe('Gemini prompt history and input collapse owned by their official plugi
   }
 
   it('admits the history plugin and starts no native history', async () => {
-    expect(featureOwner('gemini', 'promptHistory')).toBe('plugin');
     const admission = createOfficialAdmission();
     const cleanupManager = new CleanupManager();
     await createGeminiInputStartup(admission, cleanupManager).startPromptHistory();
@@ -569,7 +568,6 @@ describe('Gemini prompt history and input collapse owned by their official plugi
   });
 
   it('admits the collapse plugin and starts no native collapse', async () => {
-    expect(featureOwner('gemini', 'inputCollapse')).toBe('plugin');
     const admission = createOfficialAdmission();
     const cleanupManager = new CleanupManager();
     const startup = createGeminiInputStartup(admission, cleanupManager);
@@ -704,7 +702,6 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
   });
 
   it('admits the default model plugin and starts no native default model', async () => {
-    expect(featureOwner('gemini', 'defaultModel')).toBe('plugin');
     const admission = createOfficialAdmission();
     const { cleanupManager } = await admitAtStartPoints(admission);
 

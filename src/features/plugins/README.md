@@ -318,9 +318,9 @@ serves these hosts and never publishes their manifests. The official ones replac
 feature. Stage 7 retires migrated native startup callbacks and registrations; the content script
 admits each official plugin where its native module used to start, and the
 plugin follows the native setting it replaces (`storage/legacySettingBindings.ts`),
-not a plugin-list toggle. An owner-table rollback now requires reverting both stage 7
-retirement commits (startup wiring 9c2161df and native wrappers 0ae260c1) first; flipping an
-owner to `legacy` alone silently disables the feature. Permanent page services remain in `nativeFeatures.ts`; their
+not a plugin-list toggle. The owner table has no `legacy` option: rolling a feature back to its
+native module means reverting both stage 7 retirement commits (startup wiring 9c2161df and
+native wrappers 0ae260c1) and the commit that removed that option. Permanent page services remain in `nativeFeatures.ts`; their
 account bridge, send coordinator, history/message caches, selection host, sent-quote styling,
 prevent-auto-scroll bridge, fork first-send finisher and default-model stale-menu cleanup stay
 independent of optional plugin switches. The last service only removes old menu UI while the sync
@@ -470,6 +470,9 @@ Enterprise accepts neither. Composition, Process and keyCode 229 are left to the
 Local send plugins are open on Gemini and AI Studio. Disable the corresponding
 official send switch to hand the page's mode to a local plugin; the Safari fix
 remains paired with Gemini's packaged send owner.
+
+`turnNavigator` likewise claims `timeline-rail` on every site, by design: a second rail on
+ChatGPT, Claude or DeepSeek is paused as a conflict while the mounted one keeps running.
 
 `draftSave` (unreleased, `sinceEngine: 'next'`, no parameters; reads `composer` and
 `sendButton`, and stays inert without `conversationIdPattern`) is Gemini's draft auto-save on a

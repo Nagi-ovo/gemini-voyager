@@ -7,7 +7,6 @@ const OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'formulaCopy',
-    owner: 'plugin',
     officialPluginId: 'voyager.fake-formula',
     handlers: ['formulaCopy'],
     healthTracking: false,
@@ -15,7 +14,6 @@ const OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'hideInputHalo',
-    owner: 'plugin',
     officialPluginId: 'voyager.fake-halo',
     handlers: [],
     healthTracking: false,
@@ -50,30 +48,6 @@ describe('createOfficialAdmission', () => {
     admission.admit('aistudio', 'formulaCopy');
     expect(admission.stateOf('voyager.fake-formula')).toBe('pending');
     expect(listener).not.toHaveBeenCalled();
-  });
-
-  it('never admits a feature its native module still owns; close denies it', () => {
-    const owners: readonly OwnedFeature[] = [
-      ...OWNERS,
-      {
-        site: 'aistudio',
-        feature: 'formulaCopy',
-        owner: 'legacy',
-        officialPluginId: 'voyager.fake-legacy-formula',
-        handlers: ['formulaCopy'],
-        healthTracking: false,
-      },
-    ];
-    const admission = createOfficialAdmission(owners);
-    const listener = vi.fn();
-    admission.subscribe(listener);
-
-    admission.admit('aistudio', 'formulaCopy');
-    expect(admission.stateOf('voyager.fake-legacy-formula')).toBe('pending');
-    expect(listener).not.toHaveBeenCalled();
-
-    admission.close();
-    expect(admission.stateOf('voyager.fake-legacy-formula')).toBe('denied');
   });
 
   it('close denies what is still pending, keeps what was admitted, and is final', () => {

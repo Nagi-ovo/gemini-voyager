@@ -39,7 +39,7 @@ import {
   resolveSiteAdapterForUrl,
   resolveSiteOverride,
 } from '../remote/siteOverride';
-import { ownedFeatureByPluginId, tracksPluginHealth } from '../sites/featureOwners';
+import { tracksPluginHealth } from '../sites/featureOwners';
 import { hostPolicyRefusal, packagedSiteForUrl } from '../sites/hostPolicy';
 import { matchesAnyPattern } from '../sites/matchPattern';
 import { SiteRegistry } from '../sites/registry';
@@ -329,9 +329,7 @@ export class PluginHost {
    * Status of every plugin whose `matches` cover this page (plan §4.2).
    * Incompatible and blocked plugins are reported with their reason instead
    * of being hidden; the popup renders these and adds its own permission
-   * check. A packaged official plugin whose feature a native module still
-   * owns is left out, pure-CSS ones included: that module is what runs, and
-   * the plugin has nothing to report.
+   * check.
    */
   getStatuses(): readonly PluginStatus[] {
     const engine = this.engine;
@@ -341,8 +339,6 @@ export class PluginHost {
       const pinned = this.frozen.get(listed.id);
       const manifest = pinned?.mounted ?? listed;
       const pending = pinned ? { pendingVersion: pinned.pendingVersion } : {};
-      // A native module runs this feature; its plugin never starts, whatever it contributes.
-      if (ownedFeatureByPluginId(listed.id)?.owner === 'legacy') continue;
       if (hostPolicyRefusal(this.url, listed) !== null) {
         statuses.push(blockedStatus(manifest, { reason: 'host-policy' }, pending));
         continue;

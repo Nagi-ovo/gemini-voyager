@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 
-import { type FeatureOwner, OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
+import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import type { LegacySettingSnapshot } from '../storage/legacySettingBindings';
 import type { LegacyReadPhase } from './legacySnapshotFeed';
 import type { AdmissionState, OfficialAdmission } from './officialAdmission';
@@ -16,59 +16,51 @@ function admission(state: AdmissionState): OfficialAdmission {
   return { stateOf: () => state, subscribe: () => () => {} };
 }
 
-const ownedBy =
-  (owner: FeatureOwner | null) =>
-  (id: string): FeatureOwner | null =>
-    id === FORMULA_ID ? owner : null;
+const ownedWhen =
+  (owned: boolean) =>
+  (id: string): boolean =>
+    owned && id === FORMULA_ID;
 
 function verdict(
   legacy: LegacySettingSnapshot | null,
   state: AdmissionState,
-  owner: FeatureOwner | null,
+  owned: boolean,
   legacyPhase: LegacyReadPhase = legacy === null ? 'loading' : 'loaded',
 ): ReturnType<typeof wishVerdict> {
   return wishVerdict(
-    { state: {}, legacy, legacyPhase, admission: admission(state), ownerOf: ownedBy(owner) },
+    { state: {}, legacy, legacyPhase, admission: admission(state), isOwned: ownedWhen(owned) },
     FORMULA_ID,
   );
 }
 
 describe('wishVerdict', () => {
   it('reserves a pending official plugin only when every other condition already holds', () => {
-    expect(verdict(FORMULA_ON, 'pending', 'plugin')).toBe('reserve');
-    // Legacy still owns the feature: the native module runs, the plugin never will.
-    expect(verdict(FORMULA_ON, 'pending', 'legacy')).toBe('skip');
+    expect(verdict(FORMULA_ON, 'pending', true)).toBe('reserve');
     // The legacy switch reads off.
-    expect(verdict(FORMULA_OFF, 'pending', 'plugin')).toBe('skip');
+    expect(verdict(FORMULA_OFF, 'pending', true)).toBe('skip');
   });
 
   it('reserves nothing for an id the owner table does not hand to a plugin', () => {
-    expect(verdict(FORMULA_ON, 'pending', null)).toBe('skip');
-    expect(verdict(null, 'pending', null)).toBe('skip');
+    expect(verdict(FORMULA_ON, 'pending', false)).toBe('skip');
+    expect(verdict(null, 'pending', false)).toBe('skip');
   });
 
   it('awaits the legacy read for a plugin-owned official plugin, pending or admitted', () => {
-    expect(verdict(null, 'pending', 'plugin')).toBe('await');
-    expect(verdict(null, 'admitted', 'plugin')).toBe('await');
-    expect(verdict(null, 'admitted', 'legacy')).toBe('skip');
+    expect(verdict(null, 'pending', true)).toBe('await');
+    expect(verdict(null, 'admitted', true)).toBe('await');
     // Denied for good: nothing to wait for.
-    expect(verdict(null, 'denied', 'plugin')).toBe('skip');
+    expect(verdict(null, 'denied', true)).toBe('skip');
   });
 
   it('neither runs nor awaits once the legacy read has failed', () => {
-    expect(verdict(null, 'admitted', 'plugin', 'failed')).toBe('skip');
-    expect(verdict(null, 'pending', 'plugin', 'failed')).toBe('skip');
-    expect(verdict(null, 'admitted', 'plugin', 'none')).toBe('skip');
-  });
-
-  it('never runs a legacy-owned official plugin, even when something admitted it', () => {
-    expect(verdict(FORMULA_ON, 'admitted', 'legacy')).toBe('skip');
-    expect(verdict({}, 'admitted', 'legacy')).toBe('skip');
+    expect(verdict(null, 'admitted', true, 'failed')).toBe('skip');
+    expect(verdict(null, 'pending', true, 'failed')).toBe('skip');
+    expect(verdict(null, 'admitted', true, 'none')).toBe('skip');
   });
 
   it('runs once admitted and never after the admission is denied', () => {
-    expect(verdict(FORMULA_ON, 'admitted', 'plugin')).toBe('run');
-    expect(verdict(FORMULA_ON, 'denied', 'plugin')).toBe('skip');
+    expect(verdict(FORMULA_ON, 'admitted', true)).toBe('run');
+    expect(verdict(FORMULA_ON, 'denied', true)).toBe('skip');
   });
 
   it('follows the plugin state for every unbound plugin', () => {

@@ -4,17 +4,10 @@
  * the feature's original start point, and `hostPolicy` derives from this table
  * which `native` primitives a plugin may call on these sites.
  *
- * Invariants the derived allowlist relies on (keep them when editing):
- *   1. An owner is fixed for a page's whole content-script instance; it is
- *      build data, never a setting read and flipped while features run.
- *   2. Every production start point of a legacy feature is gated by this same
- *      table, not just its registry entry, so legacy and plugin never both run.
- *   3. A handler opened here, or through `EXTRA_ALLOWED_HANDLERS`, shares no
- *      exclusive resource with any feature still owned by 'legacy'. Compare the
- *      resources, not the handler names: two different handlers can drive the
- *      same singleton.
- *   4. A handler listed by several entries on one site stays closed until every
- *      entry listing it is owned by 'plugin' (`pluginOwnedHandlers` does this).
+ * Stage 7 deleted the native start paths, so a listed feature runs only as its
+ * official plugin. Rolling one back to its native module means reverting the
+ * stage 7 retirement commits (9c2161df and 0ae260c1) and the commit that
+ * removed the 'legacy' owner option; this table alone cannot do it.
  *
  * Kept free of storage keys, browser APIs and `import.meta`: the local-plugin
  * validator imports this through `hostPolicy`, and the CLI bundles that chain.
@@ -44,16 +37,11 @@ export type OwnedFeatureId =
   | 'safariEnterFix'
   | 'enterSend'
   | 'draftSave'
-  /**
-   * Stage 6: native until their own flips, which add the official id, the
-   * owner entry and the binding together. Missing from the table reads 'legacy'.
-   */
   | 'quoteReply'
   | 'highlight'
   | 'preventAutoScroll'
   | 'responseNotification'
   | 'timeline';
-export type FeatureOwner = 'legacy' | 'plugin';
 
 /** The packaged official plugin ids, by feature. */
 export const OFFICIAL_PLUGIN_IDS = {
@@ -89,9 +77,8 @@ export const OFFICIAL_PLUGIN_IDS = {
 export interface OwnedFeature {
   readonly site: PackagedSiteId;
   readonly feature: OwnedFeatureId;
-  readonly owner: FeatureOwner;
   readonly officialPluginId: string;
-  /** Primitives this feature's runtime is; opened to plugins on `site` once the plugin owns it. */
+  /** Primitives this feature's runtime is; opened to plugins on `site`. */
   readonly handlers: readonly string[];
   /**
    * Whether the plugin engine's selector health monitor (a body-subtree
@@ -102,16 +89,10 @@ export interface OwnedFeature {
   readonly healthTracking: boolean;
 }
 
-/**
- * Stage 7 deleted the native start paths, so setting an entry back to 'legacy'
- * alone silently turns the feature off. Rolling a feature back means reverting
- * the stage 7 retirement commits (9c2161df and 0ae260c1) first.
- */
 export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'timeline',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiTimeline,
     // The public rail uses the same stars/hierarchy and native start permission.
     handlers: ['turnNavigator'],
@@ -120,7 +101,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'draftSave',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiDraftSave,
     handlers: ['draftSave'],
     healthTracking: false,
@@ -128,7 +108,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'aistudio',
     feature: 'enterSend',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.aistudioEnterSend,
     handlers: ['sendShortcut'],
     healthTracking: false,
@@ -136,7 +115,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'ctrlEnterSend',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend,
     handlers: ['sendShortcut'],
     healthTracking: false,
@@ -144,7 +122,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'safariEnterFix',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix,
     handlers: [],
     healthTracking: false,
@@ -152,7 +129,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'formulaCopy',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
     handlers: ['formulaCopy'],
     healthTracking: false,
@@ -160,7 +136,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'aistudio',
     feature: 'formulaCopy',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy,
     handlers: ['formulaCopy'],
     healthTracking: false,
@@ -168,7 +143,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'vimInput',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiVimInput,
     handlers: ['vimInput'],
     healthTracking: false,
@@ -176,19 +150,15 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'hideInputHalo',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiHideInputHalo,
     handlers: [],
     healthTracking: false,
   },
   // Stage 3. Appearance opens no primitive (pure CSS, or a fixed-id builtin
-  // handler), so rolling it back never blocks a local CSS plugin. Rolled back,
-  // the Mermaid, WaveDrom and ECharts native modules still have no stop: they
-  // start once per page and leave only on unload.
+  // handler).
   {
     site: 'gemini',
     feature: 'chatFontSize',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiChatFontSize,
     handlers: [],
     healthTracking: false,
@@ -196,7 +166,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'chatLineHeight',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiChatLineHeight,
     handlers: [],
     healthTracking: false,
@@ -204,7 +173,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'chatWidth',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiChatWidth,
     handlers: [],
     healthTracking: false,
@@ -212,7 +180,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'userLatex',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiUserLatex,
     handlers: ['userLatex'],
     healthTracking: false,
@@ -220,7 +187,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'codeCollapse',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiCodeCollapse,
     handlers: ['codeCollapse'],
     healthTracking: false,
@@ -228,7 +194,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'waveDrom',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiWaveDrom,
     handlers: ['wavedrom'],
     healthTracking: false,
@@ -236,7 +201,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'echarts',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiECharts,
     handlers: ['echarts'],
     healthTracking: false,
@@ -244,7 +208,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'mermaid',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiMermaid,
     handlers: ['mermaid'],
     healthTracking: false,
@@ -256,7 +219,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'promptHistory',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiPromptHistory,
     handlers: [],
     healthTracking: false,
@@ -264,7 +226,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'inputCollapse',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiInputCollapse,
     handlers: [],
     healthTracking: false,
@@ -274,7 +235,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'researchPack',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiResearchPack,
     handlers: [],
     healthTracking: false,
@@ -282,7 +242,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'defaultModel',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
     handlers: [],
     healthTracking: false,
@@ -290,7 +249,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'fork',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiFork,
     handlers: [],
     healthTracking: false,
@@ -298,7 +256,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'usageStatus',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
     handlers: [],
     healthTracking: false,
@@ -306,7 +263,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'quoteReply',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
     handlers: [],
     healthTracking: false,
@@ -314,7 +270,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'highlight',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiHighlight,
     handlers: [],
     healthTracking: false,
@@ -322,7 +277,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'preventAutoScroll',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll,
     handlers: [],
     healthTracking: false,
@@ -330,7 +284,6 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
     feature: 'responseNotification',
-    owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
     handlers: [],
     healthTracking: false,
@@ -338,9 +291,8 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
 ];
 
 /**
- * Ids only this build may supply, whoever owns the feature today. Remote
- * catalogs can never replace, delist or impersonate them. This set never
- * shrinks when an owner entry above is flipped or retired.
+ * Ids only this build may supply. Remote catalogs can never replace, delist or
+ * impersonate them. This set never shrinks when an owner entry above is retired.
  */
 export const PACKAGED_OFFICIAL_PLUGIN_IDS: ReadonlySet<string> = new Set(
   Object.values(OFFICIAL_PLUGIN_IDS),
@@ -348,14 +300,6 @@ export const PACKAGED_OFFICIAL_PLUGIN_IDS: ReadonlySet<string> = new Set(
 
 export function isPackagedOfficialPluginId(id: string): boolean {
   return PACKAGED_OFFICIAL_PLUGIN_IDS.has(id);
-}
-
-/** The owner of `feature` on `site`; a feature missing from the table stays native. */
-export function featureOwner(site: PackagedSiteId, feature: OwnedFeatureId): FeatureOwner {
-  return (
-    FEATURE_OWNERS.find((entry) => entry.site === site && entry.feature === feature)?.owner ??
-    'legacy'
-  );
 }
 
 export function ownedFeatureByPluginId(id: string): OwnedFeature | null {
@@ -367,31 +311,10 @@ export function tracksPluginHealth(id: string): boolean {
   return ownedFeatureByPluginId(id)?.healthTracking ?? true;
 }
 
-/** Handlers a feature still owned by 'legacy' runs on `site`. */
-export function legacyOwnedHandlers(
-  site: string,
-  owners: readonly OwnedFeature[] = FEATURE_OWNERS,
-): ReadonlySet<string> {
-  return new Set(
-    owners
-      .filter((entry) => entry.site === site && entry.owner === 'legacy')
-      .flatMap((entry) => entry.handlers),
-  );
-}
-
-/**
- * Handlers the plugin owner has taken over on `site`, minus any handler a
- * legacy feature there still lists (invariant 4).
- */
+/** Handlers the official plugins on `site` have opened to every plugin there. */
 export function pluginOwnedHandlers(
   site: string,
   owners: readonly OwnedFeature[] = FEATURE_OWNERS,
 ): ReadonlySet<string> {
-  const legacy = legacyOwnedHandlers(site, owners);
-  return new Set(
-    owners
-      .filter((entry) => entry.site === site && entry.owner === 'plugin')
-      .flatMap((entry) => entry.handlers)
-      .filter((handler) => !legacy.has(handler)),
-  );
+  return new Set(owners.filter((entry) => entry.site === site).flatMap((entry) => entry.handlers));
 }

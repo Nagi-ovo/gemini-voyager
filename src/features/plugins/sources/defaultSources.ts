@@ -88,8 +88,7 @@ export function mergePluginRecords(input: MergePluginRecordsInput): SourcedPlugi
   const builtin = input.builtin.filter(official);
   const snapshot = input.snapshot.filter(official);
   // Decided by the build's stable id table, never by the owner entry or the
-  // remote manifest itself, so it holds while a feature is still 'legacy' and
-  // stays when stage 7 retires the legacy wrappers.
+  // remote manifest itself.
   const remoteRecords = input.remote.filter(
     (record) => official(record) && !isPackagedOfficialPluginId(record.manifest.id),
   );

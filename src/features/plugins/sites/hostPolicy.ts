@@ -12,10 +12,9 @@
  *   - catalog data stores (catalog outline, send times, ...): not theirs.
  *     Voyager's native timeline owns that data here, whether or not the site
  *     is described by a bundled `site.json`;
- *   - `native` ops: only public primitives listed by plugin-owned entries in
+ *   - `native` ops: only public primitives listed by entries in
  *     `featureOwners.ts`, plus `EXTRA_ALLOWED_HANDLERS`. Fixed-id builtins
- *     may own a feature without opening a public primitive; handlers still
- *     listed by a legacy owner remain closed to prevent duplicate runtimes.
+ *     may own a feature without opening a public primitive.
  *
  * The import-time check (`manifestHostPolicyIssues`) is early feedback by
  * pattern; the runtime asks again by the page's real URL (`hostPolicyRefusal`).
@@ -25,7 +24,7 @@
  */
 import type { ManifestIssue } from '../manifest/validate';
 import type { PluginManifest, SiteAdapter } from '../types';
-import { type PackagedSiteId, legacyOwnedHandlers, pluginOwnedHandlers } from './featureOwners';
+import { type PackagedSiteId, pluginOwnedHandlers } from './featureOwners';
 import { patternWithinAny } from './matchPattern';
 import {
   SHARED_TIMELINE_MATCHES,
@@ -74,9 +73,7 @@ export const PACKAGED_HOST_POLICIES: readonly PackagedHostPolicy[] = [
 
 /**
  * Primitives opened on a site although no owner entry hands them over: a new
- * capability with no native counterpart. Empty for now. An entry here obeys
- * the same rule as an owner flip (`featureOwners.ts` invariant 3), and a
- * handler a legacy feature still lists stays closed regardless.
+ * capability with no native counterpart. Empty for now.
  */
 export const EXTRA_ALLOWED_HANDLERS: Readonly<Record<PackagedSiteId, readonly string[]>> = {
   gemini: [],
@@ -146,12 +143,7 @@ export function usesCatalogDataStores(siteId: string): boolean {
 }
 
 function allowedHandlers(site: PackagedSiteId): ReadonlySet<string> {
-  const legacy = legacyOwnedHandlers(site);
-  return new Set(
-    [...pluginOwnedHandlers(site), ...EXTRA_ALLOWED_HANDLERS[site]].filter(
-      (handler) => !legacy.has(handler),
-    ),
-  );
+  return new Set([...pluginOwnedHandlers(site), ...EXTRA_ALLOWED_HANDLERS[site]]);
 }
 
 /** Whether a plugin may call the `handler` primitive on `siteId`; any site but a packaged one allows all. */

@@ -4,9 +4,7 @@ import {
   FEATURE_OWNERS,
   type OwnedFeature,
   PACKAGED_OFFICIAL_PLUGIN_IDS,
-  featureOwner,
   isPackagedOfficialPluginId,
-  legacyOwnedHandlers,
   ownedFeatureByPluginId,
   pluginOwnedHandlers,
   tracksPluginHealth,
@@ -16,7 +14,6 @@ function entry(overrides: Partial<OwnedFeature>): OwnedFeature {
   return {
     site: 'gemini',
     feature: 'formulaCopy',
-    owner: 'legacy',
     officialPluginId: 'voyager.gemini-formula-copy',
     handlers: ['formulaCopy'],
     healthTracking: false,
@@ -43,26 +40,7 @@ describe('feature owners', () => {
     expect(ownedFeatureByPluginId('voyager.formula-copy')).toBeNull();
   });
 
-  it('hands formula copy, Vim input and the halo to their official plugins', () => {
-    expect(featureOwner('gemini', 'formulaCopy')).toBe('plugin');
-    expect(featureOwner('aistudio', 'formulaCopy')).toBe('plugin');
-    expect(featureOwner('gemini', 'vimInput')).toBe('plugin');
-    expect(featureOwner('gemini', 'hideInputHalo')).toBe('plugin');
-  });
-
-  it('hands the stage 3 features to their official plugins, opening the renderer primitives on Gemini', () => {
-    const stage3 = [
-      'chatFontSize',
-      'chatLineHeight',
-      'chatWidth',
-      'userLatex',
-      'codeCollapse',
-      'waveDrom',
-      'echarts',
-      'mermaid',
-    ] as const;
-    for (const feature of stage3) expect(featureOwner('gemini', feature)).toBe('plugin');
-    expect(legacyOwnedHandlers('gemini')).toEqual(new Set());
+  it('opens the renderer primitives on Gemini', () => {
     expect(pluginOwnedHandlers('gemini')).toEqual(
       new Set([
         'formulaCopy',
@@ -94,16 +72,10 @@ describe('feature owners', () => {
       ['promptHistory', 'voyager.gemini-prompt-history'],
       ['inputCollapse', 'voyager.gemini-input-collapse'],
     ] as const) {
-      expect(featureOwner('gemini', feature)).toBe('plugin');
       expect(isPackagedOfficialPluginId(id)).toBe(true);
       expect(ownedFeatureByPluginId(id)).toMatchObject({ site: 'gemini', feature, handlers: [] });
       expect(tracksPluginHealth(id)).toBe(false);
-      expect(featureOwner('aistudio', feature)).toBe('legacy');
     }
-  });
-
-  it('treats a feature missing from the table as native', () => {
-    expect(featureOwner('aistudio', 'vimInput')).toBe('legacy');
   });
 
   it('exempts only the listed official plugins from the health monitor', () => {
@@ -114,30 +86,12 @@ describe('feature owners', () => {
 });
 
 describe('pluginOwnedHandlers', () => {
-  it('opens the handlers of plugin-owned features on their own site only', () => {
+  it('opens the handlers of owned features on their own site only', () => {
     const owners = [
-      entry({ owner: 'plugin' }),
-      entry({
-        feature: 'vimInput',
-        officialPluginId: 'voyager.gemini-vim-input',
-        handlers: ['vimInput'],
-      }),
-      entry({ site: 'aistudio', officialPluginId: 'voyager.aistudio-formula-copy' }),
+      entry({}),
+      entry({ site: 'aistudio', officialPluginId: 'voyager.aistudio-formula-copy', handlers: [] }),
     ];
     expect(pluginOwnedHandlers('gemini', owners)).toEqual(new Set(['formulaCopy']));
     expect(pluginOwnedHandlers('aistudio', owners)).toEqual(new Set());
-    expect(legacyOwnedHandlers('aistudio', owners)).toEqual(new Set(['formulaCopy']));
-  });
-
-  it('keeps a handler closed while any legacy feature on the site still lists it', () => {
-    const owners = [
-      entry({ owner: 'plugin', handlers: ['formulaCopy', 'shared'] }),
-      entry({
-        feature: 'hideInputHalo',
-        officialPluginId: 'voyager.gemini-hide-input-halo',
-        handlers: ['shared'],
-      }),
-    ];
-    expect(pluginOwnedHandlers('gemini', owners)).toEqual(new Set(['formulaCopy']));
   });
 });

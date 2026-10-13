@@ -700,6 +700,8 @@ Jesse 在 Chrome 中用验收副本实测：dark 主题，只用已有对话，�
 
 7B 仲裁：公共 turnNavigator 和固定官方 builtin 统一 claim `timeline-rail`（固定 builtin 的 opIndex -1）；冷启动官方优先、已运行者保留、慢 release 未完成前后继等待、重复 native op 拒绝。先关闭官方「显示时间线」再启 local；返回官方先关 local。popup 冲突指向既有时间线设置入口，不新增第二套总开关。真实 LocalPluginSource/BuiltinSource/PluginHost/入场/core/engine 组合验证官方→local→官方数据与 core 保留、两个 local 交接及慢 ledger、冷 pending、两缓存分别 pending 时关闭/重开、Enterprise URL/DOM、Business、custom coverage 拒绝与普通 CSS 独立可用。内部/public authoring、schema 和十语种文档同步，ar/ko/ja/ru 母语人工审查仍未完成。行为用例、变异、最终完整检查结果随本批提交记录；新 build 的最终浏览器验收仍 pending。
 
+7B 跨站 rail 认领（有意为之）：b14e7f0c 让 `turnNavigator` 在所有站点都 claim `timeline-rail`，不只 Gemini；ChatGPT/Claude/DeepSeek 上的第二条 rail 显示为冲突并暂停，在位者继续运行，与发送键 `composer-send-key-mode` 在所有站点认领的决定一致。不改代码。
+
 **7C-1 旧启动接线退役**：在原内容初始化位置直接 admit 已迁移官方功能，删除 `featureOwnerStartup` native/plugin 分支桥、appearance/renderer/input/selection/Gemini builtin 的 native callbacks、旧主开关读取与 storage forwarding；`nativeFeatures.ts` 不再登记这些 optional migrated features。保留每个入场点的 retired/abort 保护、core 挂载完成前的等待与原顺序。input collapse 的「有内容也折叠」仍是 page state，独立初读/live/晚读保护保留，因为公开 collapse API 在插件关闭时也读取它。AI Studio off 仍 admit，实际 mount 由 Host master 管。
 
 7C-1 永久 core：account/theme/health 桥、send-key coordinator、history/message timestamp page services、selection toolbar host、sent-quote styling、prevent-auto-scroll MAIN bridge、fork first-send finisher、Research Pack receiver、Saved Library/存储与同步基础服务保留。未迁移的 Gems、markdown、视觉效果、通知公告、水印与提示/文件夹/导出等原启动点继续存在。既有开关键、backup defaults、官方 IDs、星标/层级/草稿/分叉 formats 不删除。删除仅计数 legacy callbacks/toggle controller 的接线测试；实际 Host realtime switch/data/cleanup、两缓存 readiness、公共 collapse page setting、协调器和真实分叉收尾断言保留。阶段 7 退役后，本计划早期各项「只改 owner 回 legacy」回退说明不再单独适用：必须先恢复本批启动退役提交（后续删 wrapper 的提交也须恢复），再按原 owner 回退；不通过清除用户设置或数据回退。
@@ -713,6 +715,8 @@ Jesse 在 Chrome 中用验收副本实测：dark 主题，只用已有对话，�
 **7C-3 popup 重复入口收口**：专用 TimelineSettingsCard 暴露当前管理的 plugin ID，只有插件站点的时间线卡片实际可见时，才把它接管的字段传给 PluginManager。精确官方 ID 和来源同时匹配后，ChatGPT/Claude 的 timelineStyle、markerLevel，以及 DeepSeek 的 timelineStyle 从通用设置中隐藏；schema、旧 compactView alias、backup、stored values 和写入闭包不变。local、自定义 rail、未知来源、其他字段、无法用三样式卡片表达的远端选项仍留在通用设置，native Gemini/AI Studio 入口不改。来源表使用 Map，避免合法自定义 ID constructor 读到 Object.prototype 而使 popup 崩溃。
 
 7C-3 验证：实际 Popup 三站专用卡片继续写各自 plugin state 和旧 compactView；实际 local rail 的通用控件保留。Manager 的无卡片、未知来源、不同 selected rail、自定义选项、额外字段和 constructor ID 仍可编辑。descriptor、渲染 filter、selected rail、来源 gate、额外选项 gate 五项 mutation 均失败并恢复；constructor 崩溃先红后绿。完整检查结果随本批提交记录；最终树 Loaded/Live、跨浏览器与母语文档审阅仍 pending。
+
+**owner 表收口**：阶段 7 已删除全部 native 启动路径，`owner: 'legacy'` 只会静默关掉功能。删除 `owner` 字段，以及 admission、PluginHost、hostPolicy 与 authoring 中只在有 legacy 条目时才有意义的分支和测试；表中所列功能只以官方插件运行。回退到 native 模块须恢复 9c2161df、0ae260c1 和这次删除 owner 选项的提交，不能只改表；上文早期各项「只改 owner 回 legacy」说明均以此为准。
 
 **阶段 7 最终 Chrome 验收与本地收尾（2026-10-13）**：代码树为 `6f82d039`，Chrome 155.0.8059.40。7C-2 和 7C-3 的加锁完整检查分别通过 10,346 / 10,354 tests（850 files），包含 Chrome/Firefox/Safari、CLI、docs；另行 `bun run build:edge` 通过。这些构建不等同于各浏览器实机验收。本轮只新增验收记录，没有添加代码或测试。
 

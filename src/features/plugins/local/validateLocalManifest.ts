@@ -17,13 +17,12 @@
  *   - the packaged host policy (`manifestHostPolicyIssues`), checked for each
  *     native surface the patterns reach: no `theme` there (Gemini and AI Studio
  *     keep Voyager's own accent; the popup's accent picker changes it), and a
- *     `native` op only for a public primitive explicitly listed in a
- *     plugin-owned entry's handlers (`featureOwners.ts`). Fixed-id builtins
- *     may own a feature without opening a public primitive. Handlers still
- *     listed by a legacy owner remain closed to prevent duplicate runtimes.
+ *     `native` op only for a public primitive explicitly listed in an owner
+ *     entry's handlers (`featureOwners.ts`). Fixed-id builtins may own a
+ *     feature without opening a public primitive.
  *     Import, paste and the CLI enforce this; reading already stored plugins
  *     passes `hostPolicy: 'defer'` instead, so
- *     a build that closes a primitive again (an owner rolled back to 'legacy')
+ *     a build that closes a primitive again (a rolled-back owner entry)
  *     keeps the user's plugin listed and `PluginHost` reports it as
  *     `blocked: host-policy` by the page's real host. Defer skips only this
  *     site policy, never the CSS, DOM, params, namespace or other checks;
