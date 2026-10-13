@@ -1,0 +1,638 @@
+/**
+ * Pairwise combination matrix for the bundled catalog plugins of one site:
+ * two plugins touching the same thing must not step on each other.
+ *
+ * Every pair (A, B) of the site's official plugins runs through one real
+ * `DeclarativeEngine`, configured as `PluginHost` configures its own, on a
+ * fresh copy of the site's page (`pluginPairFixtures.ts`), in both enable
+ * orders:
+ *
+ *  - disable equivalence: enabling A then B and disabling A leaves the page
+ *    exactly as enabling B alone does (and the same for disabling B);
+ *  - clean teardown: disabling the second one too restores the pristine page,
+ *    so both disable orders are covered for both enable orders;
+ *  - order report: when the page with both differs between enable orders, the
+ *    difference is collected and printed, not asserted, since a last writer
+ *    may legitimately win;
+ *  - composer keys: where either plugin listens to the composer's keys,
+ *    Enter, Shift+Enter and Ctrl+Enter end the same way in both mount orders
+ *    (cancelled or not, send clicks, composer text, what reached the host),
+ *    and, unless both own those keys, the same way as with the key owner
+ *    alone (or none). Whether a draft survives is not observed here:
+ *    `verbs/draftSave/draftSave.test.ts` runs that in both mount orders.
+ *
+ * Pairs whose primitives claim one exclusive resource are left out: the host
+ * never runs them side by side. Each site's summary (pair counts, plugins
+ * with no DOM effect on the page, order findings) prints after its run;
+ * pass `--silent=false` to see it when everything passes.
+ *
+ * Timers are fake and every step advances them past the primitives' rescan,
+ * restore and send windows, so "settled" means the same thing on every run.
+ *
+ * Pages are compared through `pageSnapshot`, which normalizes only what is not
+ * observable to the page or to CSS:
+ *  - class tokens are sorted and deduplicated, and an emptied `class` counts
+ *    as absent (`classList.remove` of the last token leaves `class=""`);
+ *  - inline style is compared as its sorted declarations, since declaration
+ *    order depends on which plugin wrote first;
+ *  - the engine's one-time base stylesheet and the shared KaTeX stylesheet
+ *    (`core/utils/katexStyles.ts`) are skipped: both persist by design;
+ *  - stylesheet text is reduced to a hash and length to keep diffs readable;
+ *  - per-mount generated identifiers (`crypto.randomUUID()` instance classes,
+ *    `*-owner` claim tokens with a serial and a random suffix) become numbered
+ *    placeholders in order of appearance, so two elements sharing one id
+ *    still compare as sharing it.
+ * Attribute presence is otherwise strict (`style=""` versus no attribute
+ * counts), text field values are included, and open shadow roots are walked.
+ */
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { findComposer, readComposer } from '@/core/services/composer';
+import { startSendKeyCoordinator } from '@/core/services/composer/sendKeys/sendKeyCoordinator';
+import type { SendSiteId } from '@/core/services/composer/sendKeys/sendSitePolicies';
+import { installNativeEditingMock } from '@/tests/nativeEditing';
+
+import { requireBundledSiteAdapter } from '../../catalog/sites';
+import { PLUGIN_BASE_STYLE_ID } from '../../constants';
+import { DeclarativeEngine } from '../../runtime/declarativeEngine';
+import { claimedResources } from '../../runtime/resourceClaims';
+import { tracksPluginHealth } from '../../sites/featureOwners';
+import type { PluginManifest, SiteAdapter } from '../../types';
+import { BundledCatalogPluginSource } from '../BundledCatalogPluginSource';
+import {
+  adapterFor,
+  answerRuntimeMessages,
+  answerSyncStorageReads,
+  defaultSettings,
+} from './bundledPluginHarness';
+import { loadSitePage, sitePage } from './pluginPairFixtures';
+
+/** Longer than every primitive window: rescans (≤1s), draft restore retries (2.5s), send intent (2s). */
+const SETTLE_MS = 3_000;
+
+/** Primitives that decide what a key typed into the composer does. */
+const COMPOSER_KEY_OWNERS: ReadonlySet<string> = new Set(['sendShortcut', 'vimInput']);
+/** Primitives that also listen to composer keys, but only to observe them. */
+const COMPOSER_KEY_OBSERVERS: ReadonlySet<string> = new Set(['draftSave', 'quoteReply']);
+
+/** Bound before any test mutes the console. */
+const report = console.warn.bind(console);
+
+const SEND_SITES: ReadonlySet<string> = new Set<SendSiteId>(['gemini', 'aistudio']);
+
+export interface PairSkip {
+  /** Short plugin ids, in either order. */
+  readonly pair: readonly [string, string];
+  /** Which of the pair's checks to skip. */
+  readonly check: 'dom' | 'keys-order' | 'keys-owner';
+  /** What fails, and where the fix belongs. */
+  readonly todo: string;
+}
+
+export interface PairMatrixOptions {
+  /** Known bugs owned elsewhere: their cases are skipped and named, the rest stay asserted. */
+  readonly skip?: readonly PairSkip[];
+}
+
+interface PluginCase {
+  readonly manifest: PluginManifest;
+  /** The id without its `voyager.<site>-` prefix, for test names. */
+  readonly short: string;
+}
+
+interface OrderedPair {
+  readonly first: PluginCase;
+  readonly second: PluginCase;
+}
+
+// ---- page snapshot ----------------------------------------------------------
+
+function hash(text: string): string {
+  let value = 0x811c9dc5;
+  for (let i = 0; i < text.length; i += 1) {
+    value ^= text.charCodeAt(i);
+    value = Math.imul(value, 0x01000193);
+  }
+  return (value >>> 0).toString(16).padStart(8, '0');
+}
+
+/** Shared stylesheets kept for the document's lifetime by design, whoever added them first. */
+const DOCUMENT_LIFETIME_IDS: ReadonlySet<string> = new Set([
+  PLUGIN_BASE_STYLE_ID,
+  'gv-katex-styles',
+]);
+
+const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
+
+/** Numbers generated identifiers by first appearance within one snapshot. */
+class GeneratedIds {
+  private readonly seen = new Map<string, string>();
+
+  private placeholder(kind: string, raw: string): string {
+    let name = this.seen.get(raw);
+    if (name === undefined) {
+      name = `<${kind}#${this.seen.size + 1}>`;
+      this.seen.set(raw, name);
+    }
+    return name;
+  }
+
+  text(value: string): string {
+    return value.replace(UUID, (raw) => this.placeholder('uuid', raw));
+  }
+
+  attribute(name: string, value: string): string {
+    return name.endsWith('-owner') ? this.placeholder('owner', value) : this.text(value);
+  }
+}
+
+function attributeText(el: Element, ids: GeneratedIds): string {
+  const parts: string[] = [];
+  const attributes = Array.from(el.attributes).sort((a, b) => a.name.localeCompare(b.name));
+  for (const attribute of attributes) {
+    if (attribute.name === 'class') {
+      const tokens = [...new Set(ids.text(attribute.value).split(/\s+/).filter(Boolean))].sort();
+      if (tokens.length > 0) parts.push(`class="${tokens.join(' ')}"`);
+    } else if (attribute.name === 'style' && el instanceof HTMLElement) {
+      const declarations: string[] = [];
+      for (let i = 0; i < el.style.length; i += 1) {
+        const prop = el.style.item(i);
+        const priority = el.style.getPropertyPriority(prop);
+        const value = ids.text(el.style.getPropertyValue(prop));
+        declarations.push(`${prop}: ${value}${priority ? ' !' + priority : ''}`);
+      }
+      parts.push(`style="${declarations.sort().join('; ')}"`);
+    } else {
+      parts.push(
+        `${attribute.name}=${JSON.stringify(ids.attribute(attribute.name, attribute.value))}`,
+      );
+    }
+  }
+  if (el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement) {
+    parts.push(`:value=${JSON.stringify(el.value)}`);
+  }
+  return parts.join(' ');
+}
+
+function serialize(node: Node, depth: number, out: string[], ids: GeneratedIds): void {
+  const pad = '  '.repeat(depth);
+  if (node.nodeType === Node.TEXT_NODE) {
+    out.push(pad + JSON.stringify(ids.text(node.textContent ?? '')));
+    return;
+  }
+  if (node.nodeType === Node.COMMENT_NODE) {
+    out.push(`${pad}<!--${node.textContent ?? ''}-->`);
+    return;
+  }
+  if (!(node instanceof Element) || DOCUMENT_LIFETIME_IDS.has(node.id)) return;
+  const attributes = attributeText(node, ids);
+  out.push(`${pad}<${node.localName}${attributes ? ' ' + attributes : ''}>`);
+  if (node instanceof HTMLStyleElement) {
+    const css = ids.text(node.textContent ?? '');
+    out.push(`${pad}  css#${hash(css)} (${css.length} chars)`);
+    return;
+  }
+  if (node.shadowRoot) {
+    out.push(`${pad}  #shadow-root`);
+    for (const child of node.shadowRoot.childNodes) serialize(child, depth + 2, out, ids);
+  }
+  for (const child of node.childNodes) serialize(child, depth + 1, out, ids);
+}
+
+/** The whole document, normalized as the module comment describes; one node per line. */
+export function pageSnapshot(): string {
+  const out: string[] = [];
+  serialize(document.documentElement, 0, out, new GeneratedIds());
+  return out.join('\n');
+}
+
+function clip(line: string): string {
+  const text = line.trim();
+  return text.length > 140 ? text.slice(0, 137) + '...' : text;
+}
+
+/** The nearest enclosing element line of `lines[index]`, by indentation. */
+function parentLine(lines: readonly string[], index: number): string {
+  const depth = lines[index].length - lines[index].trimStart().length;
+  for (let i = index - 1; i >= 0; i -= 1) {
+    if (lines[i].length - lines[i].trimStart().length < depth) return lines[i];
+  }
+  return '(document)';
+}
+
+/** Whether the snapshots hold the same nodes and differ only in `<head>` child order. */
+function onlyStylesheetOrder(a: string, b: string): boolean {
+  const left = a.split('\n');
+  const right = b.split('\n');
+  if ([...left].sort().join('\n') !== [...right].sort().join('\n')) return false;
+  const body = (lines: string[]) => lines.slice(lines.findIndex((line) => line === '  <body>'));
+  return body(left).join('\n') === body(right).join('\n');
+}
+
+/** A compact account of how two snapshots differ: new nodes, or only sibling order. */
+function describeDifference(a: string, b: string, limit = 3): string {
+  const left = a.split('\n');
+  const right = b.split('\n');
+  const rightSet = new Set(right);
+  const leftSet = new Set(left);
+  const onlyLeft = left.filter((line) => !rightSet.has(line)).map((line) => `- ${clip(line)}`);
+  const onlyRight = right.filter((line) => !leftSet.has(line)).map((line) => `+ ${clip(line)}`);
+  if (onlyLeft.length > 0 || onlyRight.length > 0) {
+    return [...onlyLeft.slice(0, limit), ...onlyRight.slice(0, limit)]
+      .map((line) => `    ${line}`)
+      .join('\n');
+  }
+  const at = left.findIndex((line, index) => line !== right[index]);
+  return `    sibling order under ${clip(parentLine(left, at))}: ${clip(left[at])} vs ${clip(right[at])}`;
+}
+
+// ---- composer keys ----------------------------------------------------------
+
+interface KeyOutcome {
+  readonly key: string;
+  /** The key event was cancelled. */
+  readonly prevented: boolean;
+  /** Clicks that reached the send control. */
+  readonly sends: number;
+  readonly text: string;
+  /** Enter key events that reached a document listener the host could own. */
+  readonly hostSaw: readonly string[];
+}
+
+const KEYS: ReadonlyArray<readonly [string, KeyboardEventInit]> = [
+  ['Enter', {}],
+  ['Shift+Enter', { shiftKey: true }],
+  ['Ctrl+Enter', { ctrlKey: true }],
+];
+
+function composerField(adapter: SiteAdapter): HTMLElement {
+  const direct = findComposer(adapter, { doc: document });
+  if (direct) return direct;
+  // Gemini's composer key names the wrapper; the editable lives inside it.
+  const wrapper = document.querySelector(adapter.selectors.composer ?? '');
+  const field = wrapper?.querySelector<HTMLElement>('[contenteditable="true"], textarea');
+  if (!field) throw new Error(`${adapter.id}: the page has no composer`);
+  return field;
+}
+
+/** The composer holds `draft` with the caret at its end, as after typing it. */
+function resetComposer(field: HTMLElement): void {
+  field.focus();
+  if (field instanceof HTMLTextAreaElement) {
+    field.value = 'draft';
+    field.setSelectionRange(5, 5);
+    return;
+  }
+  field.innerHTML = '<p>draft</p>';
+  const range = document.createRange();
+  range.selectNodeContents(field.querySelector('p')!);
+  range.collapse(false);
+  const selection = document.getSelection();
+  selection?.removeAllRanges();
+  selection?.addRange(range);
+}
+
+function keyLabel(event: KeyboardEvent): string {
+  const modifiers = [event.ctrlKey && 'Ctrl', event.metaKey && 'Meta', event.shiftKey && 'Shift']
+    .filter(Boolean)
+    .join('+');
+  return modifiers ? `${modifiers}+${event.key}` : event.key;
+}
+
+// ---- matrix -----------------------------------------------------------------
+
+/**
+ * Waits for an unmount's teardown while advancing the fake clock: a scope
+ * awaits a still-pending startup (the timeline's init polls on timers), which
+ * a bare `await` would never let finish.
+ */
+async function untilReleased(released: Promise<void>): Promise<void> {
+  let done = false;
+  void released.then(() => {
+    done = true;
+  });
+  for (let waited = 0; !done && waited < 10 * SETTLE_MS; waited += 100) {
+    await vi.advanceTimersByTimeAsync(100);
+  }
+  if (!done) throw new Error('teardown did not settle');
+}
+
+function shortId(manifest: PluginManifest, siteId: string): string {
+  return manifest.id.replace(`voyager.${siteId}-`, '');
+}
+
+function handlers(manifest: PluginManifest): string[] {
+  return (manifest.contributes.domOps ?? []).flatMap((op) =>
+    op.op === 'native' ? [op.handler] : [],
+  );
+}
+
+function sharedResource(a: PluginManifest, b: PluginManifest): string | undefined {
+  const held = new Set(claimedResources(a));
+  return claimedResources(b).find((resource) => held.has(resource));
+}
+
+function skipFor(
+  skips: readonly PairSkip[],
+  check: PairSkip['check'],
+  a: string,
+  b: string,
+): PairSkip | undefined {
+  return skips.find(
+    (skip) =>
+      skip.check === check &&
+      ((skip.pair[0] === a && skip.pair[1] === b) || (skip.pair[0] === b && skip.pair[1] === a)),
+  );
+}
+
+function ownsComposerKeys(plugin: PluginCase): boolean {
+  return handlers(plugin.manifest).some((handler) => COMPOSER_KEY_OWNERS.has(handler));
+}
+
+export function definePluginPairMatrix(siteId: string, options: PairMatrixOptions = {}): void {
+  const page = sitePage(siteId);
+  const adapter = requireBundledSiteAdapter(siteId);
+  const skips = options.skip ?? [];
+
+  describe(`${siteId} plugin pairs`, async () => {
+    const manifests = (await new BundledCatalogPluginSource().list()).filter(
+      (manifest) => adapterFor(manifest).id === siteId,
+    );
+    const plugins: PluginCase[] = manifests.map((manifest) => ({
+      manifest,
+      short: shortId(manifest, siteId),
+    }));
+
+    const pairs: Array<readonly [PluginCase, PluginCase]> = [];
+    const coMountBlocked: string[] = [];
+    for (let i = 0; i < plugins.length; i += 1) {
+      for (let j = i + 1; j < plugins.length; j += 1) {
+        const resource = sharedResource(plugins[i].manifest, plugins[j].manifest);
+        // The host never runs two holders of one resource side by side (reconcileArbitration).
+        if (resource)
+          coMountBlocked.push(`${plugins[i].short} + ${plugins[j].short} (${resource})`);
+        else pairs.push([plugins[i], plugins[j]]);
+      }
+    }
+    const ordered: OrderedPair[] = pairs.flatMap(([a, b]) => [
+      { first: a, second: b },
+      { first: b, second: a },
+    ]);
+    const keyPairs = pairs.filter(([a, b]) =>
+      [a, b].some((plugin) =>
+        handlers(plugin.manifest).some(
+          (handler) => COMPOSER_KEY_OWNERS.has(handler) || COMPOSER_KEY_OBSERVERS.has(handler),
+        ),
+      ),
+    );
+
+    const engines: DeclarativeEngine[] = [];
+    const alone = new Map<string, string>();
+    const together = new Map<string, string>();
+    const silentAlone: string[] = [];
+
+    const newEngine = (): DeclarativeEngine => {
+      const engine = new DeclarativeEngine({
+        doc: document,
+        adapter,
+        shouldTrackHealth: (manifest) => tracksPluginHealth(manifest.id),
+      });
+      engines.push(engine);
+      return engine;
+    };
+    const settle = (): Promise<void> => vi.advanceTimersByTimeAsync(SETTLE_MS).then(() => {});
+    const freshPage = (): string => {
+      loadSitePage(page, adapter);
+      return pageSnapshot();
+    };
+    const enable = async (engine: DeclarativeEngine, plugin: PluginCase): Promise<void> => {
+      engine.mount(plugin.manifest, defaultSettings(plugin.manifest));
+      await settle();
+    };
+    const disable = async (engine: DeclarativeEngine, plugin: PluginCase): Promise<void> => {
+      await untilReleased(engine.unmount(plugin.manifest.id));
+      await settle();
+    };
+    /** The page with only `plugin` enabled; leaves a fresh page loaded either way. */
+    const aloneReference = async (plugin: PluginCase): Promise<string> => {
+      const cached = alone.get(plugin.manifest.id);
+      if (cached !== undefined) return cached;
+      freshPage();
+      const engine = newEngine();
+      await enable(engine, plugin);
+      const snapshot = pageSnapshot();
+      await disable(engine, plugin);
+      alone.set(plugin.manifest.id, snapshot);
+      return snapshot;
+    };
+
+    let restoreEditing: (() => void) | null = null;
+    beforeAll(async () => {
+      // The content script starts the page's send-key coordinator before any plugin.
+      if (SEND_SITES.has(siteId)) startSendKeyCoordinator(siteId as SendSiteId);
+      // Browsers have an editing engine; newline and quote insertion go through it.
+      restoreEditing = installNativeEditingMock();
+      // User LaTeX loads KaTeX lazily; a cold first import takes real time that fake timers never
+      // grant, so the first render would differ from every later one.
+      await import('katex');
+    });
+    afterAll(() => restoreEditing?.());
+
+    beforeEach(() => {
+      vi.useFakeTimers();
+      answerSyncStorageReads();
+      answerRuntimeMessages();
+      // Every mount logs, and the timeline reports the missing background on every start;
+      // the matrix prints its own summary instead.
+      for (const level of ['info', 'warn', 'error'] as const) {
+        vi.spyOn(console, level).mockImplementation(() => {});
+      }
+      for (const name of document.documentElement.getAttributeNames()) {
+        document.documentElement.removeAttribute(name);
+      }
+    });
+
+    afterEach(async () => {
+      for (const engine of engines.splice(0)) engine.unmountAll();
+      await vi.advanceTimersByTimeAsync(SETTLE_MS);
+      vi.useRealTimers();
+      vi.restoreAllMocks();
+      document.getSelection()?.removeAllRanges();
+      document.head.replaceChildren();
+      document.body.replaceChildren();
+    });
+
+    afterAll(() => {
+      const findings: string[] = [];
+      const sheetOrder: string[] = [];
+      for (const [a, b] of pairs) {
+        const ab = together.get(`${a.manifest.id}|${b.manifest.id}`);
+        const ba = together.get(`${b.manifest.id}|${a.manifest.id}`);
+        if (ab === undefined || ba === undefined || ab === ba) continue;
+        if (onlyStylesheetOrder(ab, ba)) {
+          sheetOrder.push(`${a.short} + ${b.short}`);
+          continue;
+        }
+        findings.push(
+          `  ${a.short} + ${b.short} (${a.short} first: -, ${b.short} first: +)\n` +
+            describeDifference(ab, ba),
+        );
+      }
+      const lines = [
+        `[plugin pairs] ${siteId}: ${plugins.length} plugins, ${pairs.length} pairs, ` +
+          `${keyPairs.length} composer-key pairs`,
+        coMountBlocked.length > 0
+          ? `  not co-mounted by the host: ${coMountBlocked.join('; ')}`
+          : '',
+        silentAlone.length > 0
+          ? `  no DOM effect alone on this page: ${silentAlone.join(', ')}`
+          : '',
+        sheetOrder.length > 0
+          ? `  stylesheets in enable order only, so equal-specificity ties go to the later plugin ` +
+            `(${sheetOrder.length}): ${sheetOrder.join(', ')}`
+          : '',
+        findings.length > 0
+          ? `  order-dependent pages (${findings.length}):\n${findings.join('\n')}`
+          : '  no other order-dependent pages',
+      ];
+      report(lines.filter(Boolean).join('\n'));
+    });
+
+    it('covers every bundled plugin of the site', () => {
+      expect(plugins.length).toBeGreaterThan(1);
+    });
+
+    it.each(plugins.map((plugin) => ({ plugin, name: plugin.short })))(
+      `${siteId}: $name alone renders the same on two fresh pages and tears down clean`,
+      async ({ plugin }) => {
+        const runs: string[] = [];
+        for (let run = 0; run < 2; run += 1) {
+          const pristine = freshPage();
+          const engine = newEngine();
+          await enable(engine, plugin);
+          runs.push(pageSnapshot());
+          await disable(engine, plugin);
+          expect(pageSnapshot(), 'disabling it restores the page').toEqual(pristine);
+          if (run === 0 && runs[0] === pristine) silentAlone.push(plugin.short);
+        }
+        expect(runs[1], 'a second fresh page renders the same').toEqual(runs[0]);
+        alone.set(plugin.manifest.id, runs[0]);
+      },
+    );
+
+    const disableCases = ordered.flatMap(({ first, second }) =>
+      (['first', 'second'] as const).map((released) => ({
+        first,
+        second,
+        released,
+        name:
+          released === 'first'
+            ? `enable ${first.short} → ${second.short}, disable ${first.short} then ${second.short}`
+            : `enable ${first.short} → ${second.short}, disable ${second.short} then ${first.short}`,
+      })),
+    );
+
+    for (const testCase of disableCases) {
+      const skip = skipFor(skips, 'dom', testCase.first.short, testCase.second.short);
+      const title = `${siteId}: ${testCase.name}`;
+      if (skip) {
+        it.skip(`${title} — TODO: ${skip.todo}`, () => {});
+        continue;
+      }
+      it(title, async () => {
+        const { first, second, released } = testCase;
+        const [gone, kept] = released === 'first' ? [first, second] : [second, first];
+        const keptAlone = await aloneReference(kept);
+
+        const pristine = freshPage();
+        const engine = newEngine();
+        await enable(engine, first);
+        await enable(engine, second);
+        const both = pageSnapshot();
+        const key = `${first.manifest.id}|${second.manifest.id}`;
+        if (!together.has(key)) together.set(key, both);
+
+        await disable(engine, gone);
+        expect(pageSnapshot(), `disabling ${gone.short} leaves exactly ${kept.short}`).toEqual(
+          keptAlone,
+        );
+        await disable(engine, kept);
+        expect(pageSnapshot(), 'disabling both restores the page').toEqual(pristine);
+      });
+    }
+
+    /** Enter, Shift+Enter and Ctrl+Enter in the composer with `enabled` mounted in that order. */
+    const probeKeys = async (enabled: readonly PluginCase[]): Promise<KeyOutcome[]> => {
+      freshPage();
+      const engine = newEngine();
+      for (const plugin of enabled) await enable(engine, plugin);
+      const field = composerField(adapter);
+      const button = document.querySelector<HTMLElement>(adapter.selectors.sendButton ?? '');
+      let sends = 0;
+      button?.addEventListener('click', (event) => {
+        event.preventDefault();
+        sends += 1;
+      });
+      const hostSaw: string[] = [];
+      const host = (event: KeyboardEvent): void => {
+        if (event.key === 'Enter') hostSaw.push(keyLabel(event));
+      };
+      document.addEventListener('keydown', host);
+      const results: KeyOutcome[] = [];
+      for (const [key, init] of KEYS) {
+        resetComposer(field);
+        sends = 0;
+        hostSaw.length = 0;
+        const event = new KeyboardEvent('keydown', {
+          key: 'Enter',
+          code: 'Enter',
+          keyCode: 13,
+          which: 13,
+          bubbles: true,
+          cancelable: true,
+          ...init,
+        });
+        field.dispatchEvent(event);
+        await settle();
+        results.push({
+          key,
+          prevented: event.defaultPrevented,
+          sends,
+          text: readComposer(field),
+          hostSaw: [...hostSaw],
+        });
+      }
+      document.removeEventListener('keydown', host);
+      for (const plugin of [...enabled].reverse()) await disable(engine, plugin);
+      return results;
+    };
+
+    for (const [a, b] of keyPairs) {
+      const owners = [a, b].filter(ownsComposerKeys);
+      const orderSkip = skipFor(skips, 'keys-order', a.short, b.short);
+      const orderTitle = `${siteId}: ${a.short} + ${b.short} handle Enter, Shift+Enter and Ctrl+Enter the same in both mount orders`;
+      if (orderSkip) it.skip(`${orderTitle} — TODO: ${orderSkip.todo}`, () => {});
+      else
+        it(orderTitle, async () => {
+          const ab = await probeKeys([a, b]);
+          expect(await probeKeys([b, a]), `${b.short} first ends like ${a.short} first`).toEqual(
+            ab,
+          );
+        });
+
+      // Only an owner decides what a key does: the other plugin, an observer or not
+      // listening at all, must leave the owner's outcome (or the host's) as it was.
+      if (owners.length > 1) continue;
+      const reference = owners[0]?.short ?? 'the host page';
+      const ownerSkip = skipFor(skips, 'keys-owner', a.short, b.short);
+      const ownerTitle = `${siteId}: ${a.short} + ${b.short} end Enter, Shift+Enter and Ctrl+Enter as ${reference} alone does`;
+      if (ownerSkip) it.skip(`${ownerTitle} — TODO: ${ownerSkip.todo}`, () => {});
+      else
+        it(ownerTitle, async () => {
+          const alone = await probeKeys(owners);
+          expect(await probeKeys([a, b]), `${a.short} first`).toEqual(alone);
+          expect(await probeKeys([b, a]), `${b.short} first`).toEqual(alone);
+        });
+    }
+  });
+}

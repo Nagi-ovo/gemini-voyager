@@ -3,10 +3,13 @@ import { resolve, sep } from 'node:path';
 import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DeclarativeEngine } from '../runtime/declarativeEngine';
-import { matchesAnyPattern } from '../sites/matchPattern';
-import { DEFAULT_ADAPTERS } from '../sites/registry';
-import type { PluginManifest, PluginSettingValue, SiteAdapter } from '../types';
+import type { PluginManifest, PluginSettingValue } from '../types';
 import { BundledCatalogPluginSource } from './BundledCatalogPluginSource';
+import {
+  adapterFor,
+  answerSyncStorageReads,
+  defaultSettings,
+} from './__tests__/bundledPluginHarness';
 
 /**
  * Plan §8 / P2 acceptance: every bundled declarative plugin must mount, accept
@@ -99,24 +102,6 @@ function startsPageRuntime(manifest: PluginManifest): boolean {
   );
 }
 
-function probeUrl(pattern: string): string {
-  return pattern.replace(/^(\w+):\/\/\*\./, '$1://x.').replace(/\*$/, '');
-}
-
-function adapterFor(manifest: PluginManifest): SiteAdapter {
-  const adapter = DEFAULT_ADAPTERS.find((candidate) =>
-    manifest.matches.some((pattern) => matchesAnyPattern(probeUrl(pattern), candidate.matches)),
-  );
-  if (!adapter) throw new Error(`${manifest.id}: no bundled site adapter covers its matches`);
-  return adapter;
-}
-
-function defaultSettings(manifest: PluginManifest): Record<string, PluginSettingValue> {
-  return Object.fromEntries(
-    Object.entries(manifest.contributes.settings ?? {}).map(([key, field]) => [key, field.default]),
-  );
-}
-
 /** A value different from the default for every declared setting. */
 function changedSettings(manifest: PluginManifest): Record<string, PluginSettingValue> {
   return Object.fromEntries(
@@ -150,16 +135,7 @@ function headWithoutBaseStyle(): string {
 
 let listeners: ReturnType<typeof trackListeners> | null = null;
 
-beforeEach(() => {
-  // The formula service reads its copy format through webextension-polyfill,
-  // which waits for chrome's callback: answer it, as storage would.
-  (chrome.storage.sync.get as unknown as Mock).mockImplementation(
-    (_keys: unknown, callback?: (items: Record<string, unknown>) => void) => {
-      callback?.({});
-      return Promise.resolve({});
-    },
-  );
-});
+beforeEach(answerSyncStorageReads);
 
 afterEach(() => {
   listeners?.stop();
