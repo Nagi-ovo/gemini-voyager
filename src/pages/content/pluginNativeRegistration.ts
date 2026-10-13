@@ -27,6 +27,7 @@ import {
 import { activateGeminiPromptHistory } from './promptHistory/pluginHandler';
 import { activateGeminiResearchPack } from './researchPack/pluginHandler';
 import { activateGeminiSafariEnterFix } from './sendBehavior/pluginHandler';
+import { activateGeminiUsageStatus } from './usageStatus/pluginHandler';
 
 export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = {
   'voyager.gemini-safari-enter-fix': { activate: activateGeminiSafariEnterFix },
@@ -66,6 +67,9 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   },
   'voyager.gemini-fork': {
     activate: activateGeminiFork,
+  },
+  'voyager.gemini-usage-status': {
+    activate: activateGeminiUsageStatus,
   },
 };
 

@@ -1,9 +1,8 @@
 /**
  * The native usage status module: the usage runtime plus the popup switch.
  *
- * `gvUsageStatusEnabled` only hides the pill and pauses silent refresh here;
- * while the switch is off the module still scrapes Gemini's `/usage` page into
- * the account cache, so the pill has fresh numbers when it is turned back on.
+ * `gvUsageStatusEnabled` stops collection and refresh while off, keeps saved
+ * values, and loads the account cache before collecting again when turned on.
  */
 import browser from 'webextension-polyfill';
 

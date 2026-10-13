@@ -3,7 +3,7 @@
  * official plugins: default model, fork, the research pack, prevent
  * auto-scroll and the response notification. Each asks the owner table
  * whether its native module starts here or its packaged official plugin is
- * admitted instead. Usage status joins once its owner is decided.
+ * admitted instead, as does the usage status runtime at its earlier start point.
  *
  * Fork and the research pack follow their popup switches live while their
  * native modules own them: each controller exists before its startup read, so
@@ -71,6 +71,8 @@ export interface GeminiBuiltinStartup {
   startPreventAutoScroll(): Promise<void>;
   /** The response notification run; resolves without waiting for its startup read. */
   startResponseNotification(): Promise<void>;
+  /** Usage status in the parallel content-helper group; its runtime owns the native switch. */
+  startUsageStatus(): Promise<void>;
   /** Fork, then the research pack, after the DOM enhancements. */
   startForkAndResearchPack(): Promise<void>;
   /** Route `chrome.storage.onChanged` to the switches the native modules follow. */
@@ -108,6 +110,19 @@ export function createGeminiBuiltinStartup(
   };
 
   return {
+    async startUsageStatus() {
+      if (stopped) return;
+      await startOwnedFeature(
+        admission,
+        'gemini',
+        'usageStatus',
+        async () => {
+          if (stopped) return;
+          await mountNativeFeature(cleanupManager, NATIVE_FEATURES.usageStatus, lifetime);
+        },
+        ownerOf,
+      );
+    },
     startDefaultModel: () =>
       startOwnedFeature(
         admission,

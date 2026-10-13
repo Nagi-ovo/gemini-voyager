@@ -2,8 +2,8 @@
  * The usage status runtime: account-scoped usage cache, `/usage` scraping,
  * silent refresh and the pill, for one run that lasts until `signal` aborts.
  *
- * The native module runs it with the `gvUsageStatusEnabled` switch, which only
- * hides the pill and pauses refresh while the page keeps being scraped. The
+ * The native module runs it with the `gvUsageStatusEnabled` switch, which
+ * stops collection and refresh without deleting saved values. The
  * official plugin runs it without a switch: the plugin host only mounts it
  * while the switch is on. The MAIN-world bridge (`public/usage-observer.js`)
  * stays in core; a run only adds and removes its isolated-world listener.
@@ -121,15 +121,22 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
 
   // Without a switch the plugin host only runs this while the switch is on.
   let enabled = usageSwitch === undefined;
+  let switchedLive = false;
+  let initialized = false;
+  let collecting = false;
+  let languageRevision = 0;
+  let recipeChangedLive = false;
+  let liveRecipe: unknown;
+  let positionChangedLive = false;
+  let livePosition: unknown;
   let snapshot: UsageSnapshot | null = null;
+  let snapshotRevision = 0;
   // BCP-47 locale for reset-time formatting, derived from the Voyager language.
   let uiLocale: string | undefined;
 
-  // Bumped whenever the account changes or the route leaves /usage, so a scrape
-  // or read begun for the previous page cannot land in the next account's cache.
+  // Routes and enable cycles invalidate delayed work, even when the account is unchanged.
   let routeEpoch = 0;
   let routeAccountKey = currentUsageAccountKey();
-  let routeOnUsage = isOnUsagePage();
 
   let scrapeObserver: MutationObserver | null = null;
   let scrapeTimer: number | null = null;
@@ -140,10 +147,17 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
 
   const pill = createUsagePill(() => refresh.requestReplay(true));
   const refresh = createUsageRefresh(
-    () => ({ enabled, snapshot, locale: uiLocale, generation: serial }),
+    () => ({
+      enabled: collecting && enabled && isCurrent(),
+      snapshot,
+      locale: uiLocale,
+      generation: serial,
+    }),
     (next) => {
-      if (!isCurrent()) return;
+      if (!isCurrent() || !collecting || !enabled || next.accountKey !== currentUsageAccountKey())
+        return;
       snapshot = next;
+      snapshotRevision += 1;
       void saveSnapshot(next);
       pill.render(enabled, snapshot);
     },
@@ -155,12 +169,13 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
   }
 
   function scheduleScrape(epoch: number, accountKey: string): void {
+    if (!collecting || !enabled) return;
     if (scrapeTimer !== null) return;
     scrapeTimer = window.setTimeout(() => {
       scrapeTimer = null;
       // The route poller may not have seen an account switch yet: the DOM read
       // now could still be the previous account's /usage page.
-      if (!isCurrentRoute(epoch, accountKey) || !isOnUsagePage()) return;
+      if (!collecting || !enabled || !isCurrentRoute(epoch, accountKey) || !isOnUsagePage()) return;
       const next = scrapeUsageFromDocument();
       if (!next) return; // transient empty render — keep the last good snapshot
       snapshot = mergeUsageSnapshots(
@@ -168,6 +183,7 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
         { ...next, accountKey, sourceStartedAt: next.updatedAt, regressionVerified: true },
         { allowRegression: true },
       );
+      snapshotRevision += 1;
       void saveSnapshot(snapshot);
       pill.render(enabled, snapshot);
     }, SCRAPE_DEBOUNCE_MS);
@@ -180,7 +196,7 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
    * poller has not noticed yet (pushState sends no popstate).
    */
   function setupScrapeObserver(epoch: number, accountKey: string): void {
-    if (!isCurrentRoute(epoch, accountKey) || !isOnUsagePage()) return;
+    if (!collecting || !enabled || !isCurrentRoute(epoch, accountKey) || !isOnUsagePage()) return;
 
     const root = document.querySelector('usage-metrics-window, .usage-metrics-container');
     if (!root) {
@@ -217,6 +233,62 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
     }
   }
 
+  function stopCollection(): void {
+    collecting = false;
+    teardownScrapeObserver();
+    refresh.stop();
+    if (navigationTimer !== null) {
+      clearTimeout(navigationTimer);
+      navigationTimer = null;
+    }
+  }
+
+  function clearForeignSnapshot(accountKey: string): void {
+    if (snapshot?.accountKey !== accountKey) snapshot = null;
+  }
+
+  function mergeCached(
+    next: UsageSnapshot | null,
+    accountKey: string,
+    revisionAtRead: number,
+  ): void {
+    // Live cache changes can have equal timestamps; a pending read must not overwrite them.
+    if (snapshot?.accountKey === accountKey && snapshotRevision !== revisionAtRead) return;
+    clearForeignSnapshot(accountKey);
+    if (next)
+      snapshot = mergeUsageSnapshots(snapshot, next, {
+        allowRegression: next.regressionVerified === true,
+      });
+  }
+
+  function startCollection(epoch: number, accountKey: string): void {
+    if (!initialized || !enabled || !isCurrentRoute(epoch, accountKey)) return;
+    pill.render(true, snapshot);
+    collecting = true;
+    refresh.start();
+    refresh.setEnabled(true);
+    if (isOnUsagePage()) setupScrapeObserver(epoch, accountKey);
+  }
+
+  async function reloadCache(epoch: number, accountKey: string): Promise<void> {
+    const revisionAtRead = snapshotRevision;
+    const next = await loadSnapshot(accountKey, uiLocale);
+    if (!initialized || !enabled || !isCurrentRoute(epoch, accountKey)) return;
+    mergeCached(next, accountKey, revisionAtRead);
+    startCollection(epoch, accountKey);
+  }
+
+  function applyEnabled(next: boolean): void {
+    if (enabled === next) return;
+    enabled = next;
+    routeEpoch += 1;
+    stopCollection();
+    if (!initialized) return;
+    clearForeignSnapshot(currentUsageAccountKey());
+    pill.render(enabled, snapshot);
+    if (enabled) void reloadCache(routeEpoch, currentUsageAccountKey());
+  }
+
   /** Re-localize a metric's reset label from its epoch (used on language change). */
   function reformatReset(m: UsageMetric): string {
     return typeof m.resetEpoch === 'number'
@@ -228,15 +300,14 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
     storageListener = (changes, areaName) => {
       const switched = usageSwitch?.read(changes, areaName);
       if (switched !== undefined) {
-        enabled = switched;
-        pill.render(enabled, snapshot);
-        refresh.setEnabled(enabled);
-        return;
+        switchedLive = true;
+        applyEnabled(switched);
       }
       if (changes[StorageKeys.LANGUAGE]) {
+        const revision = ++languageRevision;
         // Voyager language changed — re-localize reset dates + labels.
         void getCurrentLanguage().then((lang) => {
-          if (!isCurrent()) return;
+          if (!isCurrent() || revision !== languageRevision) return;
           uiLocale = localeFromLanguage(lang);
           if (snapshot) {
             // Reformat reset labels under the new locale.
@@ -250,7 +321,7 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
                 : null,
             };
           }
-          pill.render(enabled, snapshot);
+          if (initialized) pill.render(enabled, snapshot);
         });
       }
       const accountKey = currentUsageAccountKey();
@@ -264,18 +335,23 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
           const merged = mergeUsageSnapshots(snapshot, raw, {
             allowRegression: raw.regressionVerified === true,
           });
-          if (!snapshotEquals(merged, raw)) void saveSnapshot(merged);
+          if (collecting && enabled && !snapshotEquals(merged, raw)) void saveSnapshot(merged);
           snapshot = merged;
-          pill.render(enabled, snapshot);
+          snapshotRevision += 1;
+          if (initialized) pill.render(enabled, snapshot);
         }
       }
       if (areaName === 'local' && changes[StorageKeys.GV_USAGE_RECIPE]) {
         // Another tab calibrated the recipe — adopt it so this tab can replay too.
-        refresh.adoptRecipe(changes[StorageKeys.GV_USAGE_RECIPE].newValue);
+        recipeChangedLive = true;
+        liveRecipe = changes[StorageKeys.GV_USAGE_RECIPE].newValue;
+        if (initialized) refresh.adoptRecipe(liveRecipe);
       }
       if (areaName === 'local' && changes[StorageKeys.GV_USAGE_POS]) {
         // Another tab moved the bar — mirror its placement.
-        pill.adoptPosition(changes[StorageKeys.GV_USAGE_POS].newValue);
+        positionChangedLive = true;
+        livePosition = changes[StorageKeys.GV_USAGE_POS].newValue;
+        if (initialized) pill.adoptPosition(livePosition);
       }
     };
     browser.storage.onChanged.addListener(storageListener);
@@ -283,38 +359,24 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
 
   /** Reload the account's cache and re-aim the scraper once the route settles. */
   function handleNavigation(): void {
-    refresh.clearRegressionConfirmation();
+    if (!initialized || !enabled) return;
     if (navigationTimer !== null) clearTimeout(navigationTimer);
     const epoch = routeEpoch;
     const accountKey = currentUsageAccountKey();
     navigationTimer = window.setTimeout(() => {
       navigationTimer = null;
-      void (async () => {
-        const next = await loadSnapshot(accountKey, uiLocale);
-        if (!isCurrentRoute(epoch, accountKey)) return;
-        snapshot = next;
-        if (isOnUsagePage()) {
-          setupScrapeObserver(epoch, accountKey);
-        } else {
-          teardownScrapeObserver();
-        }
-        pill.render(enabled, snapshot);
-        if (enabled) refresh.maybeReplay();
-      })();
+      void reloadCache(epoch, accountKey);
     }, NAVIGATION_SETTLE_MS);
   }
 
   function handleRouteChange(): void {
     const accountKey = currentUsageAccountKey();
-    const onUsage = isOnUsagePage();
-    if (accountKey !== routeAccountKey || (routeOnUsage && !onUsage)) {
-      // Stop reading the old page now: waiting for the settle delay and the
-      // cache read let its DOM be scraped under the new account's key.
-      routeEpoch += 1;
-      teardownScrapeObserver();
-    }
+    // Invalidate old cache reads before waiting for the destination page to settle.
+    routeEpoch += 1;
+    stopCollection();
+    if (accountKey !== routeAccountKey) snapshot = null;
     routeAccountKey = accountKey;
-    routeOnUsage = onUsage;
+    pill.render(enabled, snapshot);
     handleNavigation();
   }
 
@@ -324,12 +386,7 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
       if (!isCurrent()) return;
       activeRun = null;
       routeEpoch += 1;
-      if (navigationTimer !== null) {
-        clearTimeout(navigationTimer);
-        navigationTimer = null;
-      }
-      teardownScrapeObserver();
-      refresh.stop();
+      stopCollection();
       pill.remove();
       stopRouteWatcher?.();
       stopRouteWatcher = null;
@@ -341,14 +398,18 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
     { once: true },
   );
 
+  // Live switches must win even while language, cache and preferences are still loading.
+  setupStorageListener();
+
   return (async () => {
     // Ensure the language is resolved before the first render so labels and
     // reset dates localize correctly (no frozen English).
     try {
+      const revision = languageRevision;
       await initI18n();
       const language = await getCurrentLanguage();
       if (!isCurrent()) return;
-      uiLocale = localeFromLanguage(language);
+      if (revision === languageRevision) uiLocale = localeFromLanguage(language);
     } catch {
       // best-effort — English fallback is acceptable
     }
@@ -357,9 +418,11 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
     if (usageSwitch) {
       const on = await usageSwitch.load();
       if (!isCurrent()) return;
-      enabled = on;
+      if (!switchedLive) enabled = on;
     }
     const loadedAccountKey = currentUsageAccountKey();
+    const loadedEpoch = routeEpoch;
+    const loadedRevision = snapshotRevision;
     const loaded = await loadSnapshot(loadedAccountKey, uiLocale);
     if (!isCurrent()) return;
     await refresh.loadRecipe();
@@ -369,18 +432,18 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
 
     // The route moved to another account during the reads: never show or merge
     // the previous account's cache here; the navigation below loads the right one.
-    const accountMoved = loadedAccountKey !== currentUsageAccountKey();
-    snapshot = accountMoved ? null : loaded;
+    const cacheCurrent = isCurrentRoute(loadedEpoch, loadedAccountKey);
+    if (cacheCurrent) mergeCached(loaded, loadedAccountKey, loadedRevision);
+    else clearForeignSnapshot(currentUsageAccountKey());
     routeAccountKey = currentUsageAccountKey();
-    routeOnUsage = isOnUsagePage();
 
-    setupStorageListener();
-    refresh.start();
-    if (isOnUsagePage()) setupScrapeObserver(routeEpoch, routeAccountKey);
+    if (recipeChangedLive) refresh.adoptRecipe(liveRecipe);
+    if (positionChangedLive) pill.adoptPosition(livePosition);
+    initialized = true;
     pill.render(enabled, snapshot);
-    if (enabled) refresh.setEnabled(true);
     stopRouteWatcher = watchRouteChanges(handleRouteChange);
-    if (accountMoved) handleNavigation();
+    if (enabled && cacheCurrent) startCollection(routeEpoch, routeAccountKey);
+    else if (enabled) handleNavigation();
   })();
 }
 

@@ -37,6 +37,15 @@ const STALE_MS = 5 * 60_000; // consider a snapshot stale after 5 min
 const HEARTBEAT_MS = 2 * 60_000; // idle re-check cadence (staleness-gated)
 const GEN_DEBOUNCE_MS = 4_000; // wait after a generation completes, then refresh
 const REGRESSION_CONFIRM_MS = 2_000;
+interface UsageCapture {
+  rpcid?: string;
+  args?: string | null;
+  body?: string;
+  accountKey?: string;
+  sourcePath?: string;
+  sourceStartedAt?: number;
+}
+
 interface UsageRecipe {
   rpcid: string;
   args: string;
@@ -57,6 +66,7 @@ export function createUsageRefresh(
 ) {
   let observerMessageHandler: ((ev: MessageEvent) => void) | null = null;
   let observerReady = false;
+  let collectionStartedAt = 0;
   let recipe: UsageRecipe | null = null;
   let replayTimer: number | null = null;
   const replayRequests = new Map<
@@ -183,9 +193,19 @@ export function createUsageRefresh(
    * the usage RPC and its numbers agree with the rendered DOM, remember the
    * {rpcid, args} recipe for silent replay and adopt the precise values.
    */
-  function handleCapture(payload: { rpcid?: string; args?: string | null; body?: string }): void {
+  function handleCapture(payload: UsageCapture | null | undefined): void {
     if (!readState().enabled || !isOnUsagePage()) return;
-    if (!payload || typeof payload.body !== 'string') return;
+    // Late bridge messages must retain the account, route and enabled lifetime that requested them.
+    if (
+      !payload ||
+      payload.accountKey !== currentUsageAccountKey() ||
+      payload.sourcePath !== location.pathname ||
+      typeof payload.sourceStartedAt !== 'number' ||
+      !Number.isFinite(payload.sourceStartedAt) ||
+      payload.sourceStartedAt < collectionStartedAt ||
+      typeof payload.body !== 'string'
+    )
+      return;
     const parsed = parseUsageRpcResponse(payload.body);
     if (!parsed) return;
 
@@ -201,7 +221,13 @@ export function createUsageRefresh(
       args: typeof payload.args === 'string' ? payload.args : '[]',
     });
     clearRegressionConfirmation();
-    applyParsed(parsed, dom?.tier, { allowRegression: true });
+    applyParsed(
+      parsed,
+      dom?.tier,
+      { allowRegression: true },
+      payload.sourceStartedAt,
+      payload.accountKey,
+    );
   }
 
   function handleReplayResult(
@@ -254,6 +280,7 @@ export function createUsageRefresh(
 
   function start(): void {
     if (observerMessageHandler) return;
+    collectionStartedAt = Date.now();
     observerMessageHandler = (ev: MessageEvent) => {
       if (ev.source !== window) return;
       const data = ev.data as { source?: string; type?: string; payload?: unknown } | null;
@@ -261,7 +288,7 @@ export function createUsageRefresh(
       if (data.type === 'ready') {
         observerReady = true;
       } else if (data.type === 'capture') {
-        handleCapture(data.payload as { rpcid?: string; args?: string | null; body?: string });
+        handleCapture(data.payload as UsageCapture | null | undefined);
       } else if (data.type === 'replay-result') {
         handleReplayResult(data.payload as { id?: number; body?: string; error?: string });
       } else if (data.type === 'generation-complete') {
@@ -287,7 +314,8 @@ export function createUsageRefresh(
 
   /** Ask the MAIN-world observer to re-issue the usage RPC with the page's tokens. */
   function requestReplay(allowRegression = false): void {
-    if (!recipe) return;
+    // Detached refresh buttons retain their callbacks after unmount; they must stay inert.
+    if (!recipe || !observerMessageHandler || !readState().enabled) return;
     setSpinning(true);
     if (spinTimer !== null) clearTimeout(spinTimer);
     spinTimer = window.setTimeout(() => {

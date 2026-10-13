@@ -80,6 +80,11 @@ function cacheWrites(key: string): unknown[] {
     );
 }
 
+function storageChange(key: string, newValue: unknown, areaName: 'local' | 'sync' = 'local'): void {
+  const listener = vi.mocked(chrome.storage.onChanged.addListener).mock.calls.at(-1)?.[0];
+  listener?.({ [key]: { newValue } }, areaName);
+}
+
 function liveStorageListeners(): number {
   return (
     vi.mocked(chrome.storage.onChanged.addListener).mock.calls.length -
@@ -271,18 +276,149 @@ describe('usage status runtime lifetime', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it('keeps scraping the usage page into the account cache while the native switch is off', async () => {
+  it('keeps stored usage while off and shows it before collecting when the native switch turns on', async () => {
     setPath('/u/2/usage');
     mountUsagePage(12);
     stopNative = await startUsageStatus();
+    document.querySelector('.gxu-currently')!.textContent = '14% used';
+    observer('capture', {
+      accountKey: 'u/2',
+      sourcePath: '/u/2/usage',
+      sourceStartedAt: Date.now(),
+      body: response(14),
+      rpcid: 'offRpc',
+      args: '[]',
+    });
+    observer('generation-complete');
+    storageChange('gvUsageCache:u/2', { ...cached(3, 'u/2'), sourceStartedAt: now - 2000 });
     await vi.advanceTimersByTimeAsync(300);
     expect(pill()).toBeNull();
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+    expect(chrome.storage.local.remove).not.toHaveBeenCalled();
+    expect(stored['gvUsageCache:u/2']).toEqual(cached(7, 'u/2'));
+    expect(replayIds()).toEqual([]);
+
+    storageChange(StorageKeys.USAGE_STATUS_ENABLED, true, 'sync');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(shownPercent()).toContain('7%');
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(300);
     expect(cacheWrites('gvUsageCache:u/2')).toEqual([
       expect.objectContaining({
         accountKey: 'u/2',
-        daily: expect.objectContaining({ percent: 12 }),
+        daily: expect.objectContaining({ percent: 14 }),
       }),
     ]);
     expect(replayIds()).toEqual([]);
+
+    vi.mocked(chrome.storage.local.set).mockClear();
+    document.querySelector('.gxu-currently')!.textContent = '15% used';
+    await vi.advanceTimersByTimeAsync(0); // queue a scrape while still enabled
+    const refreshButton = pill()!.querySelector<HTMLButtonElement>('.gv-usage-refresh')!;
+    storageChange(StorageKeys.USAGE_STATUS_ENABLED, false, 'sync');
+    refreshButton.click();
+    observer('capture', {
+      accountKey: 'u/2',
+      sourcePath: '/u/2/usage',
+      sourceStartedAt: Date.now(),
+      body: response(15),
+      rpcid: 'offRpc',
+      args: '[]',
+    });
+    observer('generation-complete');
+    await vi.advanceTimersByTimeAsync(6 * 60_000);
+    expect(pill()).toBeNull();
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+    expect(chrome.storage.local.remove).not.toHaveBeenCalled();
+    expect(replayIds()).toEqual([]);
+  });
+
+  it.each(['language', 'switch', 'cache'] as const)(
+    'keeps a live native switch change when the initial %s read finishes late',
+    async (boundary) => {
+      const initialOn = boundary !== 'switch';
+      const liveOn = !initialOn;
+      vi.mocked(chrome.storage.sync.get).mockImplementation(async () => ({
+        [StorageKeys.USAGE_STATUS_ENABLED]: initialOn,
+      }));
+      let release: () => void = () => {};
+      if (boundary === 'language') {
+        const read = pending<AppLanguage>();
+        vi.mocked(getCurrentLanguage).mockImplementationOnce(() => read.promise);
+        release = () => read.resolve('en');
+      } else if (boundary === 'switch') {
+        const read = pending<Record<string, unknown>>();
+        vi.mocked(chrome.storage.sync.get).mockImplementationOnce(() => read.promise);
+        release = () => read.resolve({ [StorageKeys.USAGE_STATUS_ENABLED]: initialOn });
+      } else {
+        const read = pending<Record<string, unknown>>();
+        vi.mocked(chrome.storage.local.get).mockImplementationOnce(() => read.promise);
+        release = () => read.resolve(stored);
+      }
+      const starting = startUsageStatus();
+      await vi.advanceTimersByTimeAsync(0);
+      storageChange(StorageKeys.USAGE_STATUS_ENABLED, liveOn, 'sync');
+      release();
+      stopNative = await starting;
+      await vi.advanceTimersByTimeAsync(300);
+      if (liveOn) expect(shownPercent()).toContain('7%');
+      else expect(pill()).toBeNull();
+      expect(replayIds()).toEqual([]);
+      expect(chrome.storage.local.set).not.toHaveBeenCalled();
+    },
+  );
+
+  it('keeps live cache and preferences when startup storage answers with older values', async () => {
+    const read = pending<Record<string, unknown>>();
+    vi.mocked(chrome.storage.local.get).mockImplementationOnce(() => read.promise);
+    const controller = new AbortController();
+    runs.push(controller);
+    const starting = startUsageStatusRuntime({ signal: controller.signal });
+    await vi.advanceTimersByTimeAsync(0);
+    storageChange('gvUsageCache:u/2', cached(20, 'u/2'));
+    storageChange(StorageKeys.GV_USAGE_RECIPE, { rpcid: 'liveRpc', args: '[1]' });
+    storageChange(StorageKeys.GV_USAGE_POS, { x: 140, y: 160 });
+    // Equal timestamps do not make the pending old read newer than this live event.
+    read.resolve({ 'gvUsageCache:u/2': cached(90, 'u/2') });
+    await starting;
+    expect(shownPercent()).toContain('20%');
+    expect(pill()!.style.left).toBe('140px');
+    pill()!.querySelector<HTMLButtonElement>('.gv-usage-refresh')!.click();
+    expect(vi.mocked(window.postMessage).mock.calls.at(-1)![0].payload).toMatchObject({
+      rpcid: 'liveRpc',
+      args: '[1]',
+    });
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+  });
+
+  it('drops a previous enable cycle cache read after the native switch turns off and on', async () => {
+    stopNative = await startUsageStatus();
+    const oldRead = pending<Record<string, unknown>>();
+    vi.mocked(chrome.storage.local.get).mockImplementationOnce(() => oldRead.promise);
+    storageChange(StorageKeys.USAGE_STATUS_ENABLED, true, 'sync');
+    storageChange(StorageKeys.USAGE_STATUS_ENABLED, false, 'sync');
+    stored['gvUsageCache:u/2'] = { ...cached(30, 'u/2'), sourceStartedAt: now + 1 };
+    storageChange(StorageKeys.USAGE_STATUS_ENABLED, true, 'sync');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(shownPercent()).toContain('30%');
+    // Even a newer timestamp from the abandoned read belongs to its old enable cycle.
+    oldRead.resolve({ 'gvUsageCache:u/2': { ...cached(90, 'u/2'), sourceStartedAt: now + 2 } });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(shownPercent()).toContain('30%');
+    expect(replayIds()).toEqual([]);
+    expect(chrome.storage.local.set).not.toHaveBeenCalled();
+  });
+
+  it('renders stale stored usage before asking the bridge to refresh on reopen', async () => {
+    stopNative = await startUsageStatus();
+    await vi.advanceTimersByTimeAsync(6 * 60_000);
+    const shownAtRequest: string[] = [];
+    vi.mocked(window.postMessage).mockImplementation((data) => {
+      if (data.type === 'replay') shownAtRequest.push(shownPercent() ?? 'missing');
+    });
+    storageChange(StorageKeys.USAGE_STATUS_ENABLED, true, 'sync');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(shownAtRequest).toEqual([expect.stringContaining('7%')]);
+    expect(replayIds()).toHaveLength(1);
   });
 });

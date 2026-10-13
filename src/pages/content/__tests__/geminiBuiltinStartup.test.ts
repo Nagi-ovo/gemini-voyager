@@ -50,6 +50,7 @@ function counter(name: string): () => () => void {
 }
 
 vi.mock('../fork/index', () => ({ startFork: () => counter('fork')() }));
+vi.mock('../usageStatus/index', () => ({ startUsageStatus: () => counter('usageStatus')() }));
 vi.mock('../defaultModel/modelLocker', () => ({
   startDefaultModelNative: () => counter('defaultModel')(),
 }));
@@ -509,29 +510,35 @@ describe('the response notification at the Gemini builtin start point', () => {
   });
 });
 
-describe('fork at its Gemini owner start point', () => {
-  it.each(['plugin', 'legacy'] as const)(
-    'starts only the %s owner and stops native fork on teardown',
-    async (owner) => {
+describe('features at their Gemini owner start points', () => {
+  it.each([
+    ['fork', 'plugin'],
+    ['fork', 'legacy'],
+    ['usageStatus', 'plugin'],
+    ['usageStatus', 'legacy'],
+  ] as const)(
+    'starts only the %s %s owner and stops the native runtime on teardown',
+    async (feature, owner) => {
       harness.storage.sync.set(FORK, true);
       const { cleanupManager, lifetime, unload } = page();
-      const { admission, ownerOf } = ownedBy(owner, ['fork']);
+      const { admission, ownerOf } = ownedBy(owner, [feature]);
       const builtins = createGeminiBuiltinStartup(
         admission,
         cleanupManager,
         lifetime.signal,
         ownerOf,
       );
-      await builtins.startForkAndResearchPack();
+      if (feature === 'fork') await builtins.startForkAndResearchPack();
+      else await builtins.startUsageStatus();
       admission.close();
 
-      expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiFork)).toBe(
-        owner === 'plugin' ? 'admitted' : 'denied',
-      );
-      expect(native.starts.fork ?? 0).toBe(owner === 'legacy' ? 1 : 0);
-      expect(native.live.fork ?? 0).toBe(owner === 'legacy' ? 1 : 0);
+      const id =
+        feature === 'fork' ? OFFICIAL_PLUGIN_IDS.geminiFork : OFFICIAL_PLUGIN_IDS.geminiUsageStatus;
+      expect(admission.stateOf(id)).toBe(owner === 'plugin' ? 'admitted' : 'denied');
+      expect(native.starts[feature] ?? 0).toBe(owner === 'legacy' ? 1 : 0);
+      expect(native.live[feature] ?? 0).toBe(owner === 'legacy' ? 1 : 0);
       unload();
-      expect(native.live.fork ?? 0).toBe(0);
+      expect(native.live[feature] ?? 0).toBe(0);
     },
   );
 });

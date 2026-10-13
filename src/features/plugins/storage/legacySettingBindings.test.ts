@@ -100,6 +100,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.RESEARCH_PACK_ENABLED,
         StorageKeys.DEFAULT_MODEL_AUTO_APPLY,
         StorageKeys.FORK_ENABLED,
+        StorageKeys.USAGE_STATUS_ENABLED,
         StorageKeys.CTRL_ENTER_SEND,
         StorageKeys.AISTUDIO_ENTER_SEND,
         StorageKeys.DRAFT_AUTO_SAVE,

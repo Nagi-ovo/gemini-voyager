@@ -69,6 +69,11 @@ function binding(
 }
 
 export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding>> = {
+  [OFFICIAL_PLUGIN_IDS.geminiUsageStatus]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
+    StorageKeys.USAGE_STATUS_ENABLED,
+    onOnlyIfTrue,
+  ),
   [OFFICIAL_PLUGIN_IDS.geminiFork]: binding(
     OFFICIAL_PLUGIN_IDS.geminiFork,
     StorageKeys.FORK_ENABLED,

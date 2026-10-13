@@ -823,6 +823,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
       (_keys: unknown, callback?: (result: Record<string, unknown>) => void) => {
         const stored = {
           [FORK_KEY]: true,
+          [StorageKeys.USAGE_STATUS_ENABLED]: true,
           ...(entryCase.customWebsites
             ? { [StorageKeys.PROMPT_CUSTOM_WEBSITES]: entryCase.customWebsites }
             : {}),
@@ -848,6 +849,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
       });
       if (entry === 'start-points') {
         const builtins = createGeminiBuiltinStartup(admission, cleanupManager);
+        await builtins.startUsageStatus();
         await builtins.startDefaultModel();
         await builtins.startForkAndResearchPack();
       }
@@ -873,13 +875,18 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
         OFFICIAL_PLUGIN_IDS.geminiResearchPack,
         OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
         OFFICIAL_PLUGIN_IDS.geminiFork,
+        OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
       ]) {
         expect(admission.stateOf(id)).toBe('denied');
       }
       const pluginHost = geminiHost(
         admission,
-        liveLegacy({ [RESEARCH_PACK_KEY]: true, [AUTO_APPLY_KEY]: true, [FORK_KEY]: true })
-          .legacySettings,
+        liveLegacy({
+          [RESEARCH_PACK_KEY]: true,
+          [AUTO_APPLY_KEY]: true,
+          [FORK_KEY]: true,
+          [StorageKeys.USAGE_STATUS_ENABLED]: true,
+        }).legacySettings,
         url,
       );
       await pluginHost.start();
@@ -887,6 +894,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiResearchPack)).not.toBe('mounted');
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).not.toBe('mounted');
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiFork)).not.toBe('mounted');
+      expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiUsageStatus)).not.toBe('mounted');
       expect(packPanel()).toBe(false);
       pluginHost.stop();
       cleanupManager.executeCleanups();
@@ -900,6 +908,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiResearchPack)).toBe('admitted');
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).toBe('admitted');
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiFork)).toBe('admitted');
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiUsageStatus)).toBe('admitted');
     cleanupManager.executeCleanups();
   });
 });

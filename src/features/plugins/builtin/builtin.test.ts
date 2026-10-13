@@ -221,6 +221,7 @@ describe('BUILTIN_PLUGINS', () => {
     ['research pack', 'voyager.gemini-research-pack'],
     ['default model', 'voyager.gemini-default-model'],
     ['fork', 'voyager.gemini-fork'],
+    ['usage status', 'voyager.gemini-usage-status'],
   ])('gives the %s manifest a name and description in all ten locales', (_label, id) => {
     const manifest = BUILTIN_PLUGINS.find((m) => m.id === id);
     // Not Gemini Enterprise or a custom host: the native module never ran there.

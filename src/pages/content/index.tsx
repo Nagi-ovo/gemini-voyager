@@ -265,7 +265,8 @@ async function initializeFeatures(): Promise<void> {
       // parallel without changing their runtime ordering.
       const parallelResults = await Promise.allSettled([
         geminiBuiltins.startResponseNotification(),
-        ...[NATIVE_FEATURES.gemsSidebar, NATIVE_FEATURES.usageStatus].map(mountForPage),
+        mountForPage(NATIVE_FEATURES.gemsSidebar),
+        geminiBuiltins.startUsageStatus(),
         geminiInputs.startDraftSave(),
         geminiInputs.startPromptHistory(),
       ]);

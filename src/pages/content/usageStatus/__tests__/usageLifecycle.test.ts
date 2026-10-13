@@ -114,11 +114,13 @@ describe('usage feature lifecycle', () => {
     expect(pill().querySelector<HTMLAnchorElement>('.gv-usage-open')?.href).toBe(
       'https://gemini.google.com/u/2/usage',
     );
+    const detachedRefresh = pill().querySelector<HTMLButtonElement>('.gv-usage-refresh')!;
     expect(replayMessages()).toHaveLength(0);
     stop!();
     stop = undefined;
     expect(document.getElementById('gv-usage-pill')).toBeNull();
     expect(vi.getTimerCount()).toBe(0);
+    detachedRefresh.click();
     observer('generation-complete');
     observer('replay-result', { body: response(20) });
     await vi.advanceTimersByTimeAsync(6 * 60_000);
@@ -184,6 +186,7 @@ describe('usage feature lifecycle', () => {
     expect(document.getElementById('gv-usage-pill')).toBeNull();
     expect(replayMessages()).toHaveLength(0);
     storageChange(StorageKeys.USAGE_STATUS_ENABLED, true, 'sync');
+    await vi.advanceTimersByTimeAsync(0);
     expect(replayMessages().at(-1)).toMatchObject({ rpcid: 'newRpc', args: '[1]' });
   });
 
@@ -221,14 +224,23 @@ describe('usage feature lifecycle', () => {
     expect(replayMessages()).toHaveLength(0);
   });
 
-  it('calibrates captures only when they agree with the rendered usage', async () => {
+  it('calibrates captures only from the current account, route and collection with matching usage', async () => {
     route.pathname = '/u/2/usage';
     document.body.innerHTML =
       '<usage-metrics-window><div class="gxu-currently">7% used</div></usage-metrics-window>';
     await start();
-    observer('capture', { body: response(50), rpcid: 'badRpc', args: '[2]' });
-    expect(chrome.storage.local.set).not.toHaveBeenCalled();
-    observer('capture', { body: response(8), rpcid: 'calibratedRpc', args: '[3]' });
+    const source = { accountKey: 'u/2', sourcePath: '/u/2/usage', sourceStartedAt: now };
+    observer('capture', { ...source, body: response(50), rpcid: 'badRpc', args: '[2]' });
+    for (const metadata of [
+      {},
+      { ...source, accountKey: 'u/3' },
+      { ...source, sourcePath: '/u/2/app' },
+      { ...source, sourceStartedAt: now - 1 },
+    ]) {
+      observer('capture', { ...metadata, body: response(8), rpcid: 'lateRpc', args: '[2]' });
+      expect(chrome.storage.local.set).not.toHaveBeenCalled();
+    }
+    observer('capture', { ...source, body: response(8), rpcid: 'calibratedRpc', args: '[3]' });
     expect(chrome.storage.local.set).toHaveBeenCalledWith({
       [StorageKeys.GV_USAGE_RECIPE]: { rpcid: 'calibratedRpc', args: '[3]' },
     });

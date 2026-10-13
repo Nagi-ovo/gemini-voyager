@@ -33,6 +33,16 @@
     return /^\/(?:u\/\d+\/)?usage(?:\/|$)/.test(location.pathname);
   }
 
+  function usageSource() {
+    var sourcePath = location.pathname;
+    var account = sourcePath.match(/^\/u\/(\d+)(?:\/|$)/);
+    return {
+      accountKey: account ? 'u/' + account[1] : 'default',
+      sourcePath: sourcePath,
+      sourceStartedAt: Date.now(),
+    };
+  }
+
   /** A Gemini message-generation request — usage changes right after one finishes. */
   function isGenRequest(url, body) {
     var urlText = String(url || '').toLowerCase();
@@ -69,7 +79,9 @@
     } catch (e) {}
   }
 
-  function capture(url, reqBody, respText) {
+  function capture(url, reqBody, respText, source) {
+    // A response that outlives an account or route change cannot belong to the new usage page.
+    if (location.pathname !== source.sourcePath) return;
     if (!onUsagePath()) return;
     if (String(url).indexOf('batchexecute') < 0) return;
     var tuple = parseReqTuple(reqBody);
@@ -77,6 +89,9 @@
       rpcid: rpcOf(url),
       args: tuple ? tuple[1] : null,
       body: typeof respText === 'string' ? respText : '',
+      accountKey: source.accountKey,
+      sourcePath: source.sourcePath,
+      sourceStartedAt: source.sourceStartedAt,
     });
   }
 
@@ -89,8 +104,9 @@
     window.fetch = function (input, init) {
       var url = typeof input === 'string' ? input : (input && input.url) || '';
       var body = init && init.body;
+      var source = url.indexOf('batchexecute') > -1 && onUsagePath() ? usageSource() : null;
       var p = origFetch.apply(this, arguments);
-      if (url.indexOf('batchexecute') > -1 && onUsagePath()) {
+      if (source) {
         p.then(
           function (r) {
             try {
@@ -99,7 +115,7 @@
                   .text()
                   .then(
                     function (t) {
-                      capture(url, body, t);
+                      capture(url, body, t, source);
                     },
                     function () {},
                   );
@@ -149,11 +165,12 @@
       xhr.send = function (body) {
         reqBody = body;
         if (typeof reqUrl === 'string' && reqUrl.indexOf('batchexecute') > -1 && onUsagePath()) {
+          var source = usageSource();
           xhr.addEventListener(
             'load',
             function () {
               try {
-                capture(reqUrl, reqBody, xhr.responseText);
+                capture(reqUrl, reqBody, xhr.responseText, source);
               } catch (e) {}
             },
             { once: true },
