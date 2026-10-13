@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { readComposer } from '@/core/services/composer';
 import * as sendKeys from '@/core/services/composer/sendKeys/sendKeyCoordinator';
+import { documentAt } from '@/tests/documentAt';
 
 import { requireBundledSiteAdapter } from '../../catalog/sites';
 import { PluginScope } from '../../runtime/pluginScope';
@@ -74,16 +75,6 @@ function activate(
     setTargetCounter: () => {},
   });
   return scope;
-}
-
-function documentAt(url: string): Document {
-  return new Proxy(document, {
-    get(target, key) {
-      if (key === 'location') return new URL(url);
-      const value: unknown = Reflect.get(target, key, target);
-      return typeof value === 'function' ? value.bind(target) : value;
-    },
-  });
 }
 
 function enter(target: HTMLElement, modifiers: KeyboardEventInit = {}): KeyboardEvent {

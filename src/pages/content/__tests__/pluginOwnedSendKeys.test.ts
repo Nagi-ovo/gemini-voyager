@@ -9,6 +9,7 @@ import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmi
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
 import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCatalogPluginSource';
+import { documentAt } from '@/tests/documentAt';
 
 import { startGeminiSendKeys } from '../inputStartup';
 import { registerBuiltinNativeHandlers } from '../pluginNativeRegistration';
@@ -35,16 +36,6 @@ const records: LocalPluginRecordMap = {
     updatedAt: 1,
   },
 };
-
-function documentAt(url: string): Document {
-  return new Proxy(document, {
-    get(target, key) {
-      if (key === 'location') return new URL(url);
-      const value: unknown = Reflect.get(target, key, target);
-      return typeof value === 'function' ? value.bind(target) : value;
-    },
-  });
-}
 
 let host: PluginHost | null = null;
 let coordinator: sendKeys.SendKeyCoordinator;

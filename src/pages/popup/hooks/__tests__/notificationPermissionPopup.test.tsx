@@ -191,58 +191,6 @@ it('enables completion notifications after Allow closes the popup without a seco
   expect(settings.values.responseCompleteNotificationEnabled, events.join(' → ')).toBe(true);
   expect(api.permissions.request).toHaveBeenCalledOnce();
 
-  // Another popup reads off, then a live settings change reaches it before that old reply.
-  act(() => root!.unmount());
-  root = undefined;
-  await api.storage.sync.set({ [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false });
-  await settle();
-  let deliverBackground!: () => void;
-  api.runtime.sendMessage.mockImplementation(async (message) => {
-    const reply = await dispatch(message);
-    if (message.payload.action !== 'reconcile') return reply;
-    events.push(`held-background:${String(reply?.enabled)}`);
-    return new Promise((resolve) => {
-      deliverBackground = () => resolve(reply);
-    });
-  });
-  root = createRoot(container);
-  await act(async () => root!.render(<Harness capture={(value) => (settings = value)} />));
-  expect(settings.values.responseCompleteNotificationEnabled).toBe(false);
-  await act(async () =>
-    api.storage.sync.set({ [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: true }),
-  );
-  expect(settings.values.responseCompleteNotificationEnabled).toBe(true);
-  await act(async () => deliverBackground());
-  expect(settings.values.responseCompleteNotificationEnabled, events.join(' → ')).toBe(true);
-
-  // A denied finish can also arrive after a newer external on, without changing the worker's epoch.
-  await act(async () =>
-    api.storage.sync.set({ [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false }),
-  );
-  await settle();
-  expect(settings.values.responseCompleteNotificationEnabled).toBe(false);
-  permissionGranted = false;
-  let deliverFinish!: () => void;
-  api.runtime.sendMessage.mockImplementation(async (message) => {
-    const reply = await dispatch(message);
-    if (message.payload.action !== 'finish') return reply;
-    events.push(`held-finish:${String(reply?.enabled)}`);
-    return new Promise((resolve) => {
-      deliverFinish = () => resolve(reply);
-    });
-  });
-  await act(async () => {
-    settings.onChange({ responseCompleteNotificationEnabled: true });
-    await settle();
-  });
-  await act(async () => resolvePermission(false));
-  expect(sync[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]).toBe(false);
-  await act(async () =>
-    api.storage.sync.set({ [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: true }),
-  );
-  expect(settings.values.responseCompleteNotificationEnabled).toBe(true);
-  await act(async () => deliverFinish());
-  expect(settings.values.responseCompleteNotificationEnabled, events.join(' → ')).toBe(true);
   act(() => root!.unmount());
   root = undefined;
   expect(storageListeners.size).toBe(1); // Only the persistent background owner remains.

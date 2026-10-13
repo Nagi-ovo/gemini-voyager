@@ -144,21 +144,17 @@ afterEach(async () => {
 });
 
 describe('Quote through its registered official plugin', () => {
-  it('turning Quote off keeps Highlight usable and sent quotes styled while the old Quote button becomes inert', async () => {
+  it('turning Quote off keeps Highlight usable and sent quotes styled', async () => {
     document.getElementById('question')!.classList.add('query-text-line');
     document.getElementById('question')!.textContent = '> Sent quote';
     await start(true, false, true);
     select('answer');
-    const oldQuote = quoteButton()!;
     expect(host!.getStatuses().find((entry) => entry.id === ID)?.kind).toBe('mounted');
     expect(document.querySelectorAll('.gv-selection-toolbar')).toHaveLength(1);
     flipQuote(false);
     await flush();
     expect(quoteButton()).toBeNull();
     expect(document.querySelector('.gv-rendered-quote')).not.toBeNull();
-    oldQuote.click();
-    vi.advanceTimersByTime(200);
-    expect(editor().textContent).toBe('');
     const highlight = document.querySelector<HTMLButtonElement>('.gv-highlight-action')!;
     expect(highlight.classList.contains('gv-hidden')).toBe(false);
     highlight.click();

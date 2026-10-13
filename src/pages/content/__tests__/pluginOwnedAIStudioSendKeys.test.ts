@@ -6,22 +6,13 @@ import { PluginHost } from '@/features/plugins/runtime/PluginHost';
 import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCatalogPluginSource';
+import { documentAt } from '@/tests/documentAt';
 
 import { startAIStudioSendKeys } from '../inputStartup';
 
 let host: PluginHost | null = null;
 let coordinator: sendKeys.SendKeyCoordinator | null = null;
 const official = OFFICIAL_PLUGIN_IDS.aistudioEnterSend;
-
-function documentAt(url: string): Document {
-  return new Proxy(document, {
-    get(target, key) {
-      if (key === 'location') return new URL(url);
-      const value: unknown = Reflect.get(target, key, target);
-      return typeof value === 'function' ? value.bind(target) : value;
-    },
-  });
-}
 
 function fixture(url: string) {
   document.body.innerHTML =
