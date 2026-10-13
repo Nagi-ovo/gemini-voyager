@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { isUserEvent } from '@/core/utils/userEvent';
+
 import {
   hasSeenCoachmark,
   markCoachmarkSeen,
@@ -7,6 +9,9 @@ import {
   runCoachmarkSequence,
   showCoachmark,
 } from '../index';
+
+// jsdom clicks are never trusted; stand them in for a person unless a test says otherwise.
+vi.mock('@/core/utils/userEvent', () => ({ isUserEvent: vi.fn(() => true) }));
 
 // In-memory sync storage so the seen-set logic is deterministic.
 const store: Record<string, unknown> = {};
@@ -354,6 +359,27 @@ describe('showCoachmark', () => {
     expect(onPageClick).not.toHaveBeenCalled();
     expect(document.querySelector('.gv-coach')).toBeTruthy();
     expect(await hasSeenCoachmark('page-stays-live')).toBe(false);
+
+    (document.querySelector('.gv-coach-close') as HTMLElement).click();
+    expect(await p).toBe('dismissed');
+  });
+
+  it("lets a plugin's programmatic send click through an open guide", async () => {
+    const anchor = document.createElement('div');
+    const sendButton = document.createElement('button');
+    const onSend = vi.fn();
+    sendButton.addEventListener('click', onSend);
+    document.body.append(anchor, sendButton);
+
+    const p = showCoachmark({ id: 'script-click', anchor: () => anchor, body: 'intro' });
+    await flush();
+    await flush();
+
+    vi.mocked(isUserEvent).mockReturnValueOnce(false);
+    sendButton.click();
+
+    expect(onSend).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('.gv-coach')).toBeTruthy();
 
     (document.querySelector('.gv-coach-close') as HTMLElement).click();
     expect(await p).toBe('dismissed');

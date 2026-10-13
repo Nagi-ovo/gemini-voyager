@@ -19,6 +19,7 @@
 import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
+import { isUserEvent } from '@/core/utils/userEvent';
 
 export type CoachmarkResult = 'confirmed' | 'enabled' | 'advanced' | 'dismissed' | 'skipped';
 
@@ -383,6 +384,8 @@ export async function showCoachmark(cfg: CoachmarkConfig): Promise<CoachmarkResu
     };
 
     const onOutside = (ev: MouseEvent) => {
+      // Only a person's click can be accidental; a plugin's own send click must still land.
+      if (!isUserEvent(ev)) return;
       const target = ev.target as HTMLElement | null;
       if (
         target &&
