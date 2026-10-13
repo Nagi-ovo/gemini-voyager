@@ -11,8 +11,8 @@ The biggest pain for developers: after discussing a solution thoroughly on the w
 ## Three Simple Steps to Synchronize
 
 1. **Install and Wake Up CoBridge**:
-   Install the **CoBridge** extension in VS Code. It serves as the core bridge connecting the web interface and your local IDE.
-   - **[Install via VS Code Marketplace](https://open-vsx.org/extension/windfall/co-bridge)**
+   Install the **CoBridge** extension in VS Code or a compatible editor. It serves as the core bridge connecting the web interface and your local IDE.
+   - **[Install from Open VSX](https://open-vsx.org/extension/windfall/co-bridge)**
 
    ![CoBridge Extension](/assets/CoBridge-extension.png)
 
@@ -20,8 +20,8 @@ The biggest pain for developers: after discussing a solution thoroughly on the w
    ![CoBridge Server On](/assets/CoBridge-on.png)
 
 2. **Handshake Connection**:
-   - Enable "Context Sync" in Voyager settings.
-   - Align the port numbers. When you see "IDE Online," they are connected.
+   - In the Voyager popup's **Context Sync** section, set **Sync Mode** to **Manual**.
+   - Make **Server Port** match the port CoBridge is using. When you see "IDE Online," they are connected.
 
    ![Context Sync Console](/assets/context-sync-console.png)
 

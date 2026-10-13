@@ -42,3 +42,7 @@ This keeps one conversation from taking up several slots in Priority or Today wh
 | Star     | A manual marker                   | Which conversations should stay marked? |
 
 Folders are useful when you need to retrieve something from the archive. Activity narrows the set of choices each time you return to Gemini. Start with a conversation that still has momentum in Priority, continue through Today or Yesterday, then switch back to the full folder tree when you need older material.
+
+## Where it works
+
+Activity is available in Gemini's folder sidebar and in ChatGPT's folder section (part of the built-in ChatGPT folders plugin).

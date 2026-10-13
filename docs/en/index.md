@@ -125,7 +125,7 @@ features:
   <a href="https://github.com/voyager-crew/voyager">
     <img src="https://raw.githubusercontent.com/voyager-crew/voyager/main/docs/public/assets/sponsors.svg" width="1000px" style="margin: 0 auto;" />
   </a>
-  <p style="margin-top: 24px; font-size: 1.05em; opacity: 0.86;">✨ We're live on Product Hunt! We'd love to hear your thoughts and feedback. ❤️</p>
+  <p style="margin-top: 24px; font-size: 1.05em; opacity: 0.86;">✨ Find us on Product Hunt — we'd love to hear your thoughts and feedback. ❤️</p>
   <div style="margin-top: 12px; display: flex; justify-content: center;">
     <a href="https://www.producthunt.com/posts/gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Voyager on Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
   </div>

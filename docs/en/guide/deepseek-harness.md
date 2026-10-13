@@ -53,7 +53,7 @@ Same tags, same favourites, same search.
 
 **The port isn't fixed.** DSH is still a developer preview, and its default port may change. If it does, just add the new one.
 
-**Only the Prompt Manager loads.** Timeline, Folders and the rest are built for Gemini and won't start on a custom site.
+**Only the Prompt Manager loads.** On a custom site like DSH, Timeline, Folders and the rest won't start. (On DeepSeek's own website, many of them are available as official plugins.)
 
 **Your prompts never leave the machine.** DSH is local, Voyager's library is local. Nothing in the chain goes out.
 

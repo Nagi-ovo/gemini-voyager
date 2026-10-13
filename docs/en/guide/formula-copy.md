@@ -1,6 +1,6 @@
 # Formula Copy
 
-Voyager makes it effortless to reuse mathematical formulas and scientific symbols. It supports one-click copying of LaTeX source code and Microsoft Word-compatible MathML format.
+Voyager makes it effortless to reuse mathematical formulas and scientific symbols. Click a formula to copy it as LaTeX, Word-ready MathML, or a Notion-friendly block.
 
 ## Introduction
 
@@ -8,11 +8,13 @@ When you ask Gemini to derive formulas or write mathematical expressions, it usu
 
 Voyager provides seamless support for this:
 
-1. **Auto-Detection**: Voyager automatically identifies LaTeX formulas rendered on the page.
-2. **Copy Button**: When you hover over a formula, a copy icon appears on its right side.
-3. **Format Options**: Click the icon to choose:
-   - **Copy LaTeX**: Copies standard LaTeX source, ideal for Overleaf, Markdown editors, etc.
-   - **Copy MathML**: Copies MathML source, the best format for pasting directly into **Microsoft Word**.
+1. **Auto-Detection**: Voyager automatically identifies formulas rendered on the page. Hovering over one shows that it's clickable.
+2. **Click to Copy**: Click an inline or block formula and it's copied right away, with a short confirmation.
+3. **Pick a Format**: In the popup, choose a **Formula copy format** ahead of time:
+   - **LaTeX**: Standard LaTeX source with dollar-sign delimiters, ideal for Overleaf, Markdown editors, etc.
+   - **LaTeX (No Dollar Sign)**: The bare LaTeX source, for editors that add their own delimiters.
+   - **MathML (Word)**: The best format for pasting directly into **Microsoft Word**.
+   - **Notion ($$ format)**: Wraps every formula in `$$`, which Notion turns into an equation.
 
 ![Formula Copy](/assets/gemini-math-copy.png)
 
@@ -26,3 +28,7 @@ Voyager provides seamless support for this:
 
 - **Academic Writing**: When writing papers in Word, have Gemini derive formulas, then use MathML copy-paste to avoid the hassle of manual entry in the Word Equation Editor.
 - **Note Taking**: When taking notes in Obsidian or Notion, simply copy the LaTeX source directly.
+
+## Where It Works
+
+On Gemini and AI Studio, turn it on with **Enable formula copying** in the popup; that switch and the copy format apply to both sites. Claude and ChatGPT get formula copy as a built-in plugin, and DeepSeek has a formula copy plugin in the [plugin catalog](/en/plugins).

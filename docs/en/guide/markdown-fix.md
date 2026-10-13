@@ -4,5 +4,5 @@ The Gemini™ web interface sometimes inserts HTML elements (such as citation so
 
 Voyager has a built-in automatic fix feature that intelligently identifies and repairs these broken bold tags, ensuring that your document renders cleanly and accurately.
 
-> [!INFO]
+> [!NOTE]
 > This feature is automatically enabled and requires no additional configuration.

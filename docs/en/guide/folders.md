@@ -22,7 +22,7 @@ It just feels right.
 - **Nested Hierarchy**: Projects have sub-projects. Create folders inside folders. Structure it _your_ way.
 - **Folder Spacing**: Adjust vertical density from compact to spacious.
   > _Note: On Mac Safari, adjustments may not be real-time; refresh the page to see the effect._
-- **Instant Sync**: Organize on your desktop. See it on your laptop.
+- **Sync Across Devices**: Organize on your desktop, then use [Cloud Sync](/en/guide/cloud-sync) to see the same folders on your laptop.
 
 ## Pro Tips
 
@@ -37,18 +37,18 @@ It just feels right.
 - **Basic Management**: Drag and drop, rename, multi-select.
 - **Smart Recognition**: Automatically detect chat types and assign icons.
 - **Nested Hierarchy**: Support for folder nesting.
-- **AI Studio Adaptive**: Advanced features coming soon to AI Studio.
-- **Google Drive Sync**: Sync folder structure to Google Drive.
-
-### Gemini Exclusive
+- **Cloud Sync**: Back up and sync your folder structure with [Cloud Sync](/en/guide/cloud-sync).
 
 #### Hide Archived Conversations
 
-Once a chat is filed into a folder, it's "done" — but by default it still takes up space in the main sidebar list. Turn on **Hide archived conversations** in the extension popup → **Folder Options** and the main list shows only what's still active. A true inbox-zero for your AI chats.
+Once a chat is filed into a folder, it's "done" — but by default it still takes up space in the main list. Turn on **Hide archived conversations** in the extension popup → **Folder Options** and the main list shows only what's still active. A true inbox-zero for your AI chats.
 
 - The first time you file a conversation into a folder, Voyager pops up a small card right in the folder area offering one-click to enable this. Dismiss it and we won't bother you again.
 - Archived conversations are **never deleted** — they stay fully accessible inside their folders.
+- On AI Studio, filed conversations are hidden from the Library table instead. Gemini and AI Studio each keep their own setting.
 - Toggle anytime from the popup.
+
+### Gemini Exclusive
 
 #### Custom Colors
 
@@ -116,3 +116,7 @@ What happens next:
 
 - **Sidebar Adjustment**: Drag to resize the sidebar width.
 - **Library Integration**: Drag directly from your Library into folders.
+
+### ChatGPT
+
+Folders also come to ChatGPT as a built-in plugin. You get a folder section in ChatGPT's sidebar plus the same floating panel. File a conversation with **Move to folder** in its menu, or drag its row onto a folder. Import, export, and the Activity view work there too. Turn it on or off from the popup's **Plugins** section.

@@ -33,26 +33,26 @@ Device identifiers, access tokens, caches, viewport coordinates, and temporary r
 
 ## How to Use
 
-1. Click the extension icon in the bottom-right corner of the Gemini™ page to open the settings panel.
+1. Click the Voyager icon in your browser's toolbar to open the popup.
 2. Locate the **Cloud Sync** section.
 3. On Safari, choose **Google Drive** or **iCloud**. Other browsers use Google Drive.
 4. For Google Drive, click **Sign in with Google** and complete authorization. For iCloud, make sure the Mac is signed in to iCloud.
-5. Click **Upload to Cloud** to sync local data, or **Download & Merge** to merge cloud data into this browser.
+5. Click **Upload** to send local data to the cloud, or **Download & Merge** to merge cloud data into this browser. **Overwrite** replaces local data with the cloud copy instead of merging, so anything you haven't uploaded is lost.
+
+With iCloud, **Delete iCloud backup** removes every Voyager backup from iCloud; local data on the Mac stays as it is.
 
 ### 💡 Quick Sync
 
-The easiest way is to click the **"Upload to Cloud"** or **"Download & Merge"** buttons at the top of the folder area in the left sidebar.
+The quickest way is the **Upload to Cloud** and **Sync from Cloud** buttons at the top of the folder area in the left sidebar.
 
 <img src="/assets/cloud-sync.png" alt="Cloud Sync Quick Buttons" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 
 ::: warning
 **Security Recommendation: Double Protection**  
-While Cloud Sync offers great convenience, we strongly recommend that you also periodically back up your core data using **local files**.
+While Cloud Sync offers great convenience, we strongly recommend that you also periodically back up your core data to **local files**.
 
-1. **Full Export**: Export a complete package containing all settings, folders, and prompts from "Backup & Restore" at the bottom of the settings panel.
-   <img src="/assets/manual-export-all.png" alt="Full Export" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-2. **Export All Folders**: Click "Export" in the "Folders" section of the settings panel to back up all your folders and conversations, excluding prompts.
-   <img src="/assets/manual-folder-export.png" alt="Export All Folders" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+1. **Folders**: Open the folder area's menu, choose **Import/Export folders**, then **Export folders** to save all your folders and conversation assignments.
+2. **Prompts**: In the Prompt Manager, click **Export** to save your prompt library.
    :::
 
 ## Cloud Sync vs. Manual Backup
@@ -68,8 +68,8 @@ While Cloud Sync offers great convenience, we strongly recommend that you also p
 ## How It Works
 
 1. **Provider**: Google Drive uses the limited `drive.file` permission, so Voyager can only access files it created. On Safari, iCloud uses the app's private CloudKit database and does not expose an Apple ID token to Voyager.
-2. **Upload**: When you click "Upload to Cloud," Voyager writes separate backup files for folders, prompts, stars, forks, timeline hierarchy, personalization settings, and plugin configuration to the selected provider. Highlight data is included when highlight cloud sync is enabled.
-3. **Download & Merge**: When you click "Download & Merge" on another device, Voyager reads those files and merges them by data type. New folders and prompts are added without duplication, cloud preferences are restored, and plugin entries are merged by plugin ID.
+2. **Upload**: When you click **Upload**, Voyager writes separate backup files for folders, prompts, stars, forks, timeline hierarchy, personalization settings, and plugin configuration to the selected provider. Highlight data is included when highlight cloud sync is enabled.
+3. **Download & Merge**: When you click **Download & Merge** on another device, Voyager reads those files and merges them by data type. New folders and prompts are added without duplication, cloud preferences are restored, and plugin entries are merged by plugin ID.
 4. **No background sync**: Sync is manual and on-demand. Voyager never syncs without your explicit action.
 
 Switching providers does not copy data between them and does not write to both providers. Upload once after switching if you want the current local data in the newly selected provider.

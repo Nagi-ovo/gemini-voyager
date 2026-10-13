@@ -1,19 +1,19 @@
 # Total Freedom
 
-Voyager Export lets you download any Google Gemini conversation as a Markdown, PDF, or JSON file. It extracts the full chat content — including code blocks, images, and formatting — giving you a permanent, portable copy of every AI conversation you have.
+Voyager Export lets you download any Gemini or ChatGPT conversation as a Markdown, PDF, JSON, or image file. It extracts the full chat content — including code blocks, images, and formatting — giving you a permanent, portable copy of every AI conversation you have.
 
 Data lock-in is the enemy.
 We believe that if you create it, you own it.
 
 ## Format Comparison
 
-| Feature     | Markdown                     | PDF                  | JSON                      |
-| ----------- | ---------------------------- | -------------------- | ------------------------- |
-| Best for    | Note apps (Obsidian, Notion) | Sharing and printing | Developers, data analysis |
-| Images      | Embedded                     | Fully included       | Base64 encoded            |
-| Code blocks | Preserved with syntax        | Rendered visually    | Raw text preserved        |
-| File size   | Smallest                     | Largest              | Medium                    |
-| Searchable  | Plain text                   | PDF reader search    | Programmatic access       |
+| Feature     | Markdown                     | PDF                  | JSON                      | Image             |
+| ----------- | ---------------------------- | -------------------- | ------------------------- | ----------------- |
+| Best for    | Note apps (Obsidian, Notion) | Sharing and printing | Developers, data analysis | Sharing on mobile |
+| Images      | Embedded                     | Fully included       | Base64 encoded            | Rendered in place |
+| Code blocks | Preserved with syntax        | Rendered visually    | Raw text preserved        | Rendered visually |
+| File size   | Smallest                     | Largest              | Medium                    | Large             |
+| Searchable  | Plain text                   | PDF reader search    | Programmatic access       | No                |
 
 ## Export Everything
 
@@ -24,6 +24,7 @@ Voyager lets you pull your data out of the cloud and into your hands.
 - **Markdown**: For your Obsidian vault or Notion. Clean, formatted text with embedded images.
 - **PDF**: For sharing or printing. Beautifully laid out, images included.
 - **JSON**: Raw data. For developers who want to build on top of their history.
+- **Image**: One long PNG, great for sharing on your phone. Pick a narrow, medium, or wide layout.
 
 ### How to Export
 
@@ -35,7 +36,7 @@ It’s your data. Do what you want with it.
 
 <div style="display: flex; gap: 20px; margin-top: 20px;">
   <div style="flex: 1; text-align: center;">
-    <p><b>Step 1: Hover Logo</b></p>
+    <p><b>Step 1: Find Export</b></p>
     <img src="/assets/gemini-export-guide-1.png" alt="Export guide step 1" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
   <div style="flex: 1; text-align: center;">
@@ -60,9 +61,9 @@ Exporting PDF on Safari requires a slightly different process (manual print):
 Gemini's Deep Research mode produces structured reports with sources, thinking steps, and citations. Voyager can export these sessions with all their metadata intact:
 
 1. Open a completed Deep Research conversation.
-2. Hover the Gemini logo and click the Export icon.
-3. Choose Markdown or PDF.
-4. The export includes the research question, thinking process, source links, and final report.
+2. Open the report's **Share & Export** menu and choose **Save Report**.
+3. Choose your format.
+4. The export includes the final report with its source links. To save the thinking process too, see [Deep Research Export](/en/guide/deep-research).
 
 This is useful for academic research, competitive analysis, and technical documentation where you need to preserve the reasoning chain and source attribution.
 

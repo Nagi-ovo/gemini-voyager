@@ -5,8 +5,10 @@ Voyager isn’t just a utility; it’s a workflow. Here is how to make the most 
 
 ## 1. The Setup
 
-If you haven't installed it yet, head over to the [Installation Guide](/guide/installation).
+If you haven't installed it yet, head over to the [Installation Guide](/en/guide/installation).
 Once installed, refresh your Gemini tab. You’ll see the difference immediately.
+
+Using Claude, ChatGPT, or DeepSeek too? Open the Voyager popup, go to **Plugins**, and turn on the plugins you want for that site. Your browser will ask for permission to access the site the first time; reload the tab if nothing shows up. Browse everything in the [plugin catalog](/en/plugins).
 
 ## 2. The Timeline
 
@@ -31,10 +33,10 @@ It feels natural, doesn't it? That’s because it is. You can nest them, rename 
 ## 4. The Vault
 
 You just wrote the perfect prompt. Don't let it disappear into the void.
-Click the **Sparkle Icon** (✨) in the input box.
+Click the floating **Voyager ball** next to the input box (drag it anywhere you like) to open the Prompt Manager.
 Save it. Tag it.
 
-Next time? Just click the icon to find and insert it.
+Next time? Just click the ball to find and insert it.
 You aren't just chatting anymore. You are building a vault of your own genius.
 
 ---
@@ -42,7 +44,7 @@ You aren't just chatting anymore. You are building a vault of your own genius.
 **You are ready.**
 Explore the specific guides for deep dives:
 
-- [Timeline Mastery](/guide/timeline)
-- [Folder Management](/guide/folders)
-- [Prompt Engineering](/guide/prompts)
-- [Data Export](/guide/export)
+- [Timeline Mastery](/en/guide/timeline)
+- [Folder Management](/en/guide/folders)
+- [Prompt Engineering](/en/guide/prompts)
+- [Data Export](/en/guide/export)

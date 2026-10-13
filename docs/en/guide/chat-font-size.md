@@ -1,9 +1,5 @@
 # Font Size
 
-::: warning
-**Coming Soon**: This feature will be available in the next version. Stay tuned.
-:::
-
 Freely adjust the font size in Gemini's chat area for the most comfortable reading experience.
 
 ## Introduction
@@ -20,5 +16,5 @@ Everyone has different font size preferences — some prefer compact text for hi
 ## How to Use
 
 1. Open the Voyager settings panel (popup).
-2. Find the **Font Size** setting and enable it.
+2. Find **Chat font size** and turn it on.
 3. Drag the slider to adjust the font size percentage — the page will preview changes in real time.
