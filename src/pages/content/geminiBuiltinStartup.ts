@@ -68,7 +68,6 @@ export function createGeminiBuiltinStartup(
       await mountNativeFeature(cleanupManager, NATIVE_FEATURES.forkLinkFinisher, lifetime);
       if (isStopped()) return;
       admission.admit('gemini', 'fork');
-      if (isStopped()) return;
       admission.admit('gemini', 'researchPack');
     },
   };

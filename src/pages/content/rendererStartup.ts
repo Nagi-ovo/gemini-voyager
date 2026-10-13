@@ -30,12 +30,8 @@ export function createGeminiRendererStartup(
     async startRenderers() {
       if (stopped || lifetime?.aborted) return;
       admission.admit('gemini', 'mermaid');
-      // Admission notifies the host synchronously; teardown there must also stop the remaining entries.
-      if (stopped || lifetime?.aborted) return;
       admission.admit('gemini', 'waveDrom');
-      if (stopped || lifetime?.aborted) return;
       admission.admit('gemini', 'echarts');
-      if (stopped || lifetime?.aborted) return;
       admission.admit('gemini', 'userLatex');
     },
   };

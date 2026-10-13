@@ -65,18 +65,4 @@ describe('Gemini renderer start points', () => {
     for (const id of RENDERER_IDS) expect(lateAdmission.stateOf(id)).toBe('denied');
     expect(cleanups.list()).toEqual([]);
   });
-
-  it('page teardown during Mermaid admission prevents later diagrams and user LaTeX from starting', async () => {
-    const admission = createOfficialAdmission();
-    const cleanups = new CleanupManager();
-    const startup = createGeminiRendererStartup(admission, cleanups);
-    admission.subscribe(() => cleanups.executeCleanups());
-
-    await startup.startRenderers();
-    admission.close();
-
-    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiMermaid)).toBe('admitted');
-    for (const id of DIAGRAM_IDS.slice(1)) expect(admission.stateOf(id)).toBe('denied');
-    expect(cleanups.list()).toEqual([]);
-  });
 });

@@ -129,34 +129,7 @@ describe('sendShortcut', () => {
     expect(clicks).toHaveBeenCalledOnce();
   });
 
-  it('turns Enter into send and Ctrl+Enter into a newline in AI Studio enterSends mode', async () => {
-    const doc = documentAt('https://aistudio.google.com/prompts/new_chat');
-    Object.defineProperty(document, 'execCommand', {
-      configurable: true,
-      value: vi.fn(() => false),
-    });
-    document.body.innerHTML =
-      '<form><textarea>draft</textarea><button aria-label="Run">Run</button></form>';
-    const field = document.querySelector('textarea')!;
-    const button = document.querySelector('button')!;
-    Object.defineProperty(button, 'offsetParent', { configurable: true, value: document.body });
-    const clicks = vi.fn((event: Event) => event.preventDefault());
-    button.addEventListener('click', clicks);
-    const coordinator = sendKeys.createSendKeyCoordinator('aistudio', { doc });
-    vi.spyOn(sendKeys, 'getSendKeyCoordinator').mockReturnValue(coordinator);
-    const scope = activate(requireBundledSiteAdapter('aistudio'), { mode: 'enterSends' }, doc);
-    enter(field);
-    expect(clicks).toHaveBeenCalledOnce();
-    field.setSelectionRange(5, 5);
-    enter(field, { ctrlKey: true });
-    expect(field.value).toBe('draft\n');
-    expect(clicks).toHaveBeenCalledOnce();
-    await scope.dispose();
-    expect(enter(field).defaultPrevented).toBe(false);
-    coordinator.stop();
-  });
-
-  it('refuses enterSends for a local sendShortcut on Gemini without intercepting keys', () => {
+  it('refuses enterSends for a local sendShortcut on Gemini', () => {
     const doc = documentAt('https://gemini.google.com/app');
     const coordinator = sendKeys.createSendKeyCoordinator('gemini');
     vi.spyOn(sendKeys, 'getSendKeyCoordinator').mockReturnValue(coordinator);

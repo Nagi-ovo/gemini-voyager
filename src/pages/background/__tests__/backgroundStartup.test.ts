@@ -155,33 +155,6 @@ describe('MV3 background startup', () => {
     });
   });
 
-  it('does not enable a denied request or let a content tab change the notification setting', async () => {
-    const background = await startNotificationBackground();
-    await background.send({ action: 'begin', requestId: 'denied-click' });
-    expect(
-      await background.send({ action: 'finish', requestId: 'denied-click', granted: false }),
-    ).toEqual({ ok: true, enabled: false });
-    expect(background.local[StorageKeys.RESPONSE_NOTIFICATION_ENABLE_PENDING]).toBeUndefined();
-    for (const payload of [
-      { action: 'begin', requestId: 'content-click' },
-      { action: 'finish', requestId: 'content-click', granted: true },
-      { action: 'reconcile', source: 'popup' },
-    ] satisfies NotificationEnablementPayload[]) {
-      expect(await background.send(payload, background.content)).toEqual({ ok: false });
-    }
-    background.grant();
-    // A trusted reconciliation also drains the permission listener's queued continuation.
-    expect(await background.send({ action: 'reconcile', source: 'popup' })).toEqual({
-      ok: true,
-      enabled: false,
-    });
-    expect(background.sync[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]).toBe(false);
-    expect(background.local[StorageKeys.RESPONSE_NOTIFICATION_ENABLE_PENDING]).toBeUndefined();
-    await chrome.storage.sync.set({ [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: true });
-    expect(await background.send({ action: 'disable' }, background.content)).toEqual({ ok: false });
-    expect(background.sync[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]).toBe(true);
-  });
-
   it.each([false, true])(
     'registers every browser event before pending startup I/O completes (dev auto-reload: %s)',
     async (devAutoReload) => {

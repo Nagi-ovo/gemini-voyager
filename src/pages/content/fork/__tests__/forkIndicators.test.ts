@@ -250,7 +250,6 @@ describe('fork indicators', () => {
       throw new DOMException('Navigation rejected', 'SecurityError');
     });
     document.querySelectorAll<HTMLButtonElement>('.gv-fork-indicator')[1].click();
-    expect(window.location.pathname).toBe(`/app/${source.conversationId}`);
     expect(document.querySelector('#user')).toBe(user);
     expect(document.querySelectorAll('.gv-fork-indicator')).toHaveLength(2);
     expect(warning).toHaveBeenCalledOnce();

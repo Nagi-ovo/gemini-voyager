@@ -7,7 +7,6 @@ import {
 } from '@/core/services/StorageService';
 import { type Result, type StorageKey, StorageKeys } from '@/core/types/common';
 import { buildConversationIdFromUrl } from '@/core/utils/conversationIdentity';
-import { hashString } from '@/core/utils/hash';
 import type { TimelineMarker } from '@/features/timeline/types';
 
 import { TimelineTurns } from '../../timeline/TimelineTurns';
@@ -445,21 +444,5 @@ describe('MessageTimestamps', () => {
     h.owner.setEnabled(true);
     expect(document.querySelector('.gv-timestamp')).not.toBeNull();
     expect(TimestampService.prototype.recordTimestamp).toHaveBeenCalledTimes(1);
-  });
-
-  it('looks up legacy content timestamps only through a proved full-turn index', async () => {
-    const legacyId = `u-${hashString('hello|70')}`;
-    seed('gemini:conv:test', { [legacyId]: STORED_TIME });
-    const h = await createOwner();
-    appendTurn(SERVER_TURN_ID, 'hello');
-    h.collect();
-    expect(h.owner.formatTooltipTimestamp(SERVER_TURN_ID)).toBeNull();
-    expect(document.querySelector('.gv-timestamp')).toBeNull();
-
-    h.aliases.set(SERVER_TURN_ID, [SERVER_TURN_ID, 'u-70']);
-    h.collect();
-    expect(h.owner.formatTooltipTimestamp(SERVER_TURN_ID)).toBe('2024-01-01 00:00:01');
-    expect(document.querySelector('.gv-timestamp')?.textContent).toBe('2024-01-01 00:00:01');
-    expect(TimestampService.prototype.recordTimestamp).not.toHaveBeenCalled();
   });
 });

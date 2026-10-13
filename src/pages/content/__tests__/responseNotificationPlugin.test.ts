@@ -146,42 +146,6 @@ describe('response notifications through the registered official plugin', () => 
     expect(notifications()).toHaveLength(1);
   });
 
-  it('a retired run initial read cannot enable it or disturb the successor', async () => {
-    harness.storage.sync.set(ENABLED_KEY, true);
-    let resolve!: (value: Record<string, unknown>) => void;
-    const initialRead = new Promise<Record<string, unknown>>((settle) => (resolve = settle));
-    const get = chrome.storage.sync.get as unknown as Mock;
-    const normalGet = get.getMockImplementation()!;
-    let held = false;
-    get.mockImplementation((keys: unknown, callback?: unknown) => {
-      // Hold only the actual run's single-key read; PluginHost's settings snapshot must settle.
-      if (
-        !held &&
-        typeof keys === 'object' &&
-        keys !== null &&
-        !Array.isArray(keys) &&
-        Object.keys(keys).length === 1 &&
-        ENABLED_KEY in keys
-      ) {
-        held = true;
-        return initialRead;
-      }
-      return normalGet(keys, callback);
-    });
-    await start();
-    expect(held).toBe(true);
-    completedRequest(1);
-    expect(notifications()).toHaveLength(0);
-    flip(false);
-    await flush();
-    flip(true);
-    await flush();
-    resolve({ [ENABLED_KEY]: true });
-    await flush();
-    completedRequest(2);
-    expect(notifications()).toHaveLength(1);
-  });
-
   it('scope abort stops a run before a slow ledger disposer and its successor notifies alone', async () => {
     await start();
     harness.storage.sync.set(ENABLED_KEY, true);

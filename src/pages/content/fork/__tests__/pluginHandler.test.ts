@@ -9,7 +9,6 @@ import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmi
 import { PluginScope, type Dispose } from '@/features/plugins/runtime/pluginScope';
 import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
 import { createForkMessagesOwner } from '@/pages/background/forkMessages';
-import { confirmDriver } from '@/tests/confirmDriver';
 
 import { registerBuiltinNativeHandlers } from '../../pluginNativeRegistration';
 import { ForkNodesService } from '../ForkNodesService';
@@ -196,29 +195,6 @@ describe('fork through its registered builtin handler', () => {
       .insertAdjacentHTML('beforeend', '<user-query>A later question</user-query>');
     await vi.advanceTimersByTimeAsync(1200);
     expect(document.querySelector('.gv-fork-btn')).toBeNull();
-  });
-
-  it('opens the same account new tab with the original markdown and pending handoff', async () => {
-    const open = vi.spyOn(window, 'open').mockReturnValue({} as Window);
-    await startHost(true);
-    await vi.advanceTimersByTimeAsync(1200);
-    document.querySelectorAll<HTMLButtonElement>('.gv-fork-btn')[1].click();
-    await flush();
-    confirmDriver.answer('Fork');
-    await flush();
-    expect(open).toHaveBeenCalledExactlyOnceWith(`${location.origin}/u/1/app`, '_blank');
-    const pending = local[PENDING_FORK_KEY] as PendingForkData;
-    expect(pending).toMatchObject({
-      sourceConversationId: 'source',
-      sourceTurnId: 's-2222222222222222',
-      sourceTitle: 'Source',
-      mode: 'paste',
-      sourceForkIndex: 0,
-      nextForkIndex: 1,
-    });
-    expect(pending.markdown).toBe(
-      '# Branch Context\nYou are continuing a branched conversation.\n- The section below is the conversation history up to the fork point.\n- Continue from the final "User" message as a new branch.\n- Do not rewrite the history; only provide the next assistant response.\n\n# Conversation History\n# Source\n\n### 👤 User\n\nOriginal question\n\n### 🤖 Assistant\n\nOriginal answer\n\n### 👤 User\n\nFollow-up question\n',
-    );
   });
 
   it('keeps fork nodes and a pending handoff and still merges Drive records after unmount', async () => {

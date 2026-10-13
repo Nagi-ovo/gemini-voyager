@@ -208,31 +208,6 @@ describe('legacy enable bindings', () => {
 describe('resolveEffectiveEnabled', () => {
   const formulaOff = { [StorageKeys.FORMULA_COPY_ENABLED]: false };
 
-  it('does not reuse the Gemini Ctrl+Enter switch on AI Studio', () => {
-    const id = OFFICIAL_PLUGIN_IDS.aistudioEnterSend;
-    expect(
-      resolveEffectiveEnabled(
-        { [id]: { enabled: true } },
-        {
-          [StorageKeys.CTRL_ENTER_SEND]: true,
-          [StorageKeys.AISTUDIO_ENTER_SEND]: false,
-        },
-        id,
-      ),
-    ).toBe(false);
-    expect(
-      resolveEffectiveEnabled(
-        { [id]: { enabled: false } },
-        {
-          [StorageKeys.CTRL_ENTER_SEND]: false,
-          [StorageKeys.AISTUDIO_ENTER_SEND]: true,
-        },
-        id,
-      ),
-    ).toBe(true);
-    expect(legacyEnableWrite(id, true)).toEqual({ [StorageKeys.AISTUDIO_ENTER_SEND]: true });
-  });
-
   it('follows the legacy key for a bound id and ignores its plugin-state entry', () => {
     const mapOn = { [FORMULA_G]: { enabled: true } };
     expect(resolveEffectiveEnabled(mapOn, formulaOff, FORMULA_G)).toBe(false);

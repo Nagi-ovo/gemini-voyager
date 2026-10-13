@@ -180,17 +180,6 @@ describe('the Gemini selection start point', () => {
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiHighlight)).toBe('denied');
   });
 
-  it('admits no Highlight if teardown lands when Quote becomes admitted', async () => {
-    const { startup, admission, unload } = page();
-    admission.subscribe(() => {
-      if (admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiQuoteReply) === 'admitted') unload();
-    });
-    await startup.start();
-    admission.close();
-    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiQuoteReply)).toBe('admitted');
-    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiHighlight)).toBe('denied');
-  });
-
   it('starts no core service or action after the lifetime aborts before cleanup', async () => {
     const { startup, admission, lifetime } = page();
     lifetime.abort();

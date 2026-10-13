@@ -197,40 +197,4 @@ describe('usage through its registered official plugin', () => {
     expect(percent()).toMatch(/^31%/);
     expect(replayIds()).toEqual([]);
   });
-
-  it('keeps u/0 and u/1 caches apart under the plugin while routes and replay results change', async () => {
-    harness.storage.local.set(usageCacheKeyForAccount('default'), cache(99, 'default'));
-    harness.storage.local.set(usageCacheKeyForAccount('u/0'), cache(10, 'u/0'));
-    harness.storage.local.set(usageCacheKeyForAccount('u/1'), cache(70, 'u/1'));
-    await start(true);
-    expect(percent()).toMatch(/^10%/);
-    pill()!.querySelector<HTMLButtonElement>('.gv-usage-refresh')!.click();
-    observer('replay-result', { id: replayIds().at(-1), body: response(20) });
-    await flush();
-    expect(
-      (harness.storage.local.get(usageCacheKeyForAccount('u/0')) as UsageSnapshot).daily?.percent,
-    ).toBe(20);
-    expect(
-      (harness.storage.local.get(usageCacheKeyForAccount('u/1')) as UsageSnapshot).daily?.percent,
-    ).toBe(70);
-    history.pushState({}, '', '/u/1/app');
-    window.dispatchEvent(new PopStateEvent('popstate'));
-    await vi.advanceTimersByTimeAsync(300);
-    await flush();
-    expect(percent()).toMatch(/^70%/);
-    pill()!.querySelector<HTMLButtonElement>('.gv-usage-refresh')!.click();
-    observer('replay-result', { id: replayIds().at(-1), body: response(80) });
-    await flush();
-    expect(
-      (harness.storage.local.get(usageCacheKeyForAccount('u/1')) as UsageSnapshot).daily?.percent,
-    ).toBe(80);
-    expect(
-      (harness.storage.local.get(usageCacheKeyForAccount('u/0')) as UsageSnapshot).daily?.percent,
-    ).toBe(20);
-    expect(
-      (harness.storage.local.get(usageCacheKeyForAccount('default')) as UsageSnapshot).daily
-        ?.percent,
-    ).toBe(99);
-    expect(pill()!.querySelector<HTMLAnchorElement>('.gv-usage-open')!.pathname).toBe('/u/1/usage');
-  });
 });

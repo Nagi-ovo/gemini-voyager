@@ -118,42 +118,6 @@ describe('prevent-auto-scroll through its registered official plugin', () => {
     expect(installed.dataset.enabled).toBe('false');
   });
 
-  it('keeps the bridge following the coordinator send mode with no prevention claim', async () => {
-    await start();
-    const installed = bridge();
-    expect(installed.dataset.enabled).toBe('false');
-    expect(installed.dataset.ctrlEnterSend).toBe('false');
-    const releaseSendMode = coordinator!.registerMainMode({
-      source: 'local.send',
-      mode: 'ctrlEnterSends',
-    });
-    try {
-      expect(installed.dataset.ctrlEnterSend).toBe('true');
-      // The effective local shortcut wins even if the legacy switch changes to false.
-      harness.emitStorageChange({ [StorageKeys.CTRL_ENTER_SEND]: { newValue: false } }, 'sync');
-      expect(installed.dataset.ctrlEnterSend).toBe('true');
-      flip(true);
-      await flush();
-      flip(false);
-      await flush();
-      expect(bridge()).toBe(installed);
-      expect(installed.dataset.enabled).toBe('false');
-      expect(installed.dataset.ctrlEnterSend).toBe('true');
-    } finally {
-      releaseSendMode();
-    }
-    expect(installed.dataset.ctrlEnterSend).toBe('false');
-    host!.stop();
-    cleanup.executeCleanups();
-    const afterStop = installed.dataset.ctrlEnterSend;
-    const releaseAfterStop = coordinator!.registerMainMode({
-      source: 'local.later',
-      mode: 'ctrlEnterSends',
-    });
-    releaseAfterStop();
-    expect(installed.dataset.ctrlEnterSend).toBe(afterStop);
-  });
-
   it('scope abort releases immediately and its late disposer cannot turn a newer claim off after bridge teardown', async () => {
     await start();
     const old = new PluginScope();

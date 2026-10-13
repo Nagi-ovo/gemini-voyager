@@ -297,23 +297,6 @@ describe('permanent services before their plugin consumers', () => {
     },
   );
 
-  it('admits no research pack if teardown lands when Fork becomes admitted', async () => {
-    const current = page();
-    const admission = createOfficialAdmission();
-    const startup = createGeminiBuiltinStartup(
-      admission,
-      current.cleanupManager,
-      current.lifetime.signal,
-    );
-    admission.subscribe(() => {
-      if (admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiFork) === 'admitted') current.unload();
-    });
-    await startup.startForkAndResearchPack();
-    admission.close();
-    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiFork)).toBe('admitted');
-    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiResearchPack)).toBe('denied');
-  });
-
   it('links a handed-off first message without a Fork UI owner, until page teardown', async () => {
     const originalUrl = location.href;
     history.replaceState({}, '', '/app');

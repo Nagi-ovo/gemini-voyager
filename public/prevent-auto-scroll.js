@@ -157,7 +157,6 @@
         event.shiftKey ||
         event.altKey ||
         event.isComposing ||
-        event.key === 'Process' ||
         event.keyCode === 229
       )
         return;

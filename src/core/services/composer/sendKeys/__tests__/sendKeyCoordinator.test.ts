@@ -79,7 +79,7 @@ afterEach(() => {
 });
 
 describe('send key coordinator', () => {
-  it.each([{ isComposing: true }, { keyCode: 229 }, { key: 'Process' }])(
+  it.each([{ isComposing: true }, { keyCode: 229 }])(
     'does not send or insert a newline when confirming an IME candidate: %j',
     (modifiers) => {
       const { input, button } = mountGeminiComposer();

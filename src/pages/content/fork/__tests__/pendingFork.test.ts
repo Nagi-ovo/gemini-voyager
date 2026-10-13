@@ -171,11 +171,6 @@ describe('pending fork handoff', () => {
     async (mode, boundary) => {
       const input = document.querySelector<HTMLElement>('[contenteditable]')!;
       input.textContent = '';
-      // jsdom has no execCommand; the paste then takes its DOM fallback.
-      Object.defineProperty(document, 'execCommand', {
-        value: vi.fn().mockReturnValue(false),
-        configurable: true,
-      });
       let releaseRemoval!: () => void;
       if (boundary === 'the storage removal') {
         vi.mocked(browser.storage.local.remove).mockReturnValueOnce(
@@ -317,10 +312,6 @@ describe('pending fork handoff', () => {
     vi.mocked(browser.storage.local.get).mockResolvedValue({
       gvPendingFork: { ...pending, createdAt: Date.now() },
     });
-    Object.defineProperty(document, 'execCommand', {
-      value: vi.fn().mockReturnValue(false),
-      configurable: true,
-    });
     stop = start();
     await flush();
     visible = true;
@@ -339,10 +330,6 @@ describe('pending fork handoff', () => {
       document.querySelector<HTMLElement>('#edit')!,
       'getBoundingClientRect',
     ).mockReturnValue({ height: 24 } as DOMRect);
-    Object.defineProperty(document, 'execCommand', {
-      value: vi.fn().mockReturnValue(false),
-      configurable: true,
-    });
     vi.mocked(browser.storage.local.get).mockResolvedValue({
       gvPendingFork: { ...pending, mode: 'paste', createdAt: Date.now() },
     });

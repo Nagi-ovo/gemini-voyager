@@ -37,7 +37,6 @@ export function createSelectionStartup(
       // Teardown can land while a permanent service mounts, before its consumers are admitted.
       if (isStopped()) return;
       admission.admit('gemini', 'quoteReply');
-      if (isStopped()) return;
       admission.admit('gemini', 'highlight');
     },
   };
