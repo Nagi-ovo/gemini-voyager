@@ -241,3 +241,94 @@ describe('DeclarativeEngine setStyle priority', () => {
     expect(declarations(box)).toEqual(host);
   });
 });
+
+describe('DeclarativeEngine variable shorthand ownership', () => {
+  it.each(['shorthand first', 'longhand first'])(
+    "disabling a variable shorthand keeps the other plugin's longhand and restores the host (%s)",
+    (order) => {
+      const { engine, box } = mountBox('border-width: 1px 3px; border-left-width: 6px;');
+      mountShorthandPair(engine, order, setStyle({ 'border-width': 'var(--width, 2px)' }));
+
+      // A host update outside the owned properties must survive both releases.
+      box.style.color = 'purple';
+      void engine.unmount('plugin.a');
+      expect(borderWidths(box)).toEqual(['5px', '3px', '1px', '6px']);
+      expect(engine.isActive('plugin.b')).toBe(true);
+
+      // This side belongs to the host again after A releases it.
+      box.style.borderRightWidth = '11px';
+      void engine.unmount('plugin.b');
+      expect(borderWidths(box)).toEqual(['1px', '11px', '1px', '6px']);
+      expect(box.style.color).toBe('purple');
+    },
+  );
+
+  it.each(['shorthand first', 'longhand first'])(
+    'disabling the longhand preserves the variable shorthand (%s)',
+    (order) => {
+      const { engine, box } = mountBox('border-width: 1px 3px;');
+      mountShorthandPair(engine, order, setStyle({ 'border-width': 'var(--width, 2px)' }));
+
+      void engine.unmount('plugin.b');
+      expect(box.style.borderWidth).toBe('var(--width, 2px)');
+
+      void engine.unmount('plugin.a');
+      expect(borderWidths(box)).toEqual(['1px', '3px', '1px', '3px']);
+    },
+  );
+
+  it('restores overlapping declarations from the same plugin after a later writer is disabled', () => {
+    const { engine, box } = mountBox('border-width: 1px 3px;');
+    engine.mount(
+      manifest(
+        'plugin.a',
+        setStyle({ 'border-width': 'var(--width, 2px)', 'border-top-width': '7px' }),
+      ),
+    );
+    const onlyA = declarations(box);
+    engine.mount(manifest('plugin.b', setStyle({ 'border-top-width': '5px' })));
+    engine.reapplyNow();
+    engine.reapplyNow();
+
+    void engine.unmount('plugin.b');
+    expect(declarations(box)).toEqual(onlyA);
+    expect(box.style.borderTopWidth).toBe('7px');
+
+    void engine.unmount('plugin.a');
+    expect(borderWidths(box)).toEqual(['1px', '3px', '1px', '3px']);
+  });
+
+  it('restores every side of a detached element after a variable shorthand and a longhand', () => {
+    const { engine, box } = mountBox('border-width: 1px 3px;');
+    mountShorthandPair(
+      engine,
+      'shorthand first',
+      setStyle({ 'border-width': 'var(--width, 2px)' }),
+    );
+
+    box.remove();
+    engine.reapplyNow();
+    expect(borderWidths(box)).toEqual(['1px', '3px', '1px', '3px']);
+
+    document.body.append(box);
+    engine.reapplyNow();
+    void engine.unmount('plugin.a');
+    expect(borderWidths(box)).toEqual(['5px', '3px', '1px', '3px']);
+    void engine.unmount('plugin.b');
+    expect(borderWidths(box)).toEqual(['1px', '3px', '1px', '3px']);
+  });
+
+  it('removes variable shorthand styles completely when the host had no style attribute', () => {
+    const { engine, box } = mountBox(null);
+    mountShorthandPair(
+      engine,
+      'shorthand first',
+      setStyle({ 'border-width': 'var(--width, 2px)' }),
+    );
+
+    void engine.unmount('plugin.a');
+    expect(box.style.borderTopWidth).toBe('5px');
+    void engine.unmount('plugin.b');
+    expect(box.hasAttribute('style')).toBe(false);
+  });
+});

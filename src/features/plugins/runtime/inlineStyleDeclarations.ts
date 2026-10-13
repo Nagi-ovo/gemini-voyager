@@ -11,6 +11,7 @@ const IMPORTANT_SUFFIX = /\s*!\s*important\s*$/i;
 export class InlineStyleParser {
   private readonly scratch: CSSStyleDeclaration;
   private readonly longhands = new Map<string, boolean>();
+  private readonly affected = new Map<string, readonly string[]>();
 
   constructor(doc: Document) {
     this.scratch = doc.createElement('span').style;
@@ -34,6 +35,23 @@ export class InlineStyleParser {
       return [[prop, value, priority]];
     }
     return declarations;
+  }
+
+  /** A shorthand's footprint is independent of its value, including unresolved var(). */
+  properties(prop: string): readonly string[] {
+    const cached = this.affected.get(prop);
+    if (cached) return cached;
+    this.scratch.cssText = '';
+    this.scratch.setProperty(prop, 'initial');
+    const expanded = Array.from({ length: this.scratch.length }, (_, i) => this.scratch.item(i));
+    // jsdom also enumerates shorthands; only retain the leaf properties they write.
+    const properties = expanded.filter((name) => {
+      this.scratch.cssText = '';
+      this.scratch.setProperty(name, 'initial');
+      return this.scratch.length <= 1;
+    });
+    this.affected.set(prop, properties);
+    return properties;
   }
 
   private readLonghands(): StyleDeclaration[] {

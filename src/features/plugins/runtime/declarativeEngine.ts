@@ -50,6 +50,7 @@ import { getPrimitive } from '../verbs/registry';
 import type { PrimitiveHandle } from '../verbs/types';
 import { HealthMonitor } from './healthMonitor';
 import { InlineStyleParser } from './inlineStyleDeclarations';
+import { InlineStyleLedger } from './inlineStyleLedger';
 import { type NativeHandler, getNativeHandler } from './nativeHandlers';
 import { PluginScope } from './pluginScope';
 
@@ -90,23 +91,14 @@ function nativeOps(manifest: PluginManifest): NativeOperation[] {
 }
 
 /**
- * One overwritten attribute/style value. `original` is the value *before any
- * plugin touched it* (captured once): `null` = attribute was absent, `''` = inline
- * style property was unset. `stack` holds each active plugin's desired value; the
+ * One overwritten attribute. `original` is the value *before any
+ * plugin touched it* (captured once): `null` = attribute was absent.
+ * `stack` holds each active plugin's desired value; the
  * top entry is the one currently written to the DOM (last writer wins).
  */
 interface OverrideLayer {
   readonly original: string | null;
-  /** Inline-style layers only: the original `!important` priority. */
-  readonly originalPriority?: string;
-  readonly stack: Array<{ id: string; value: string; priority?: string }>;
-}
-
-/** An element's inline-style layers, keyed by property. */
-interface StyleLedger {
-  /** The element had no `style` attribute before any plugin wrote one. */
-  readonly noHostAttribute: boolean;
-  readonly props: Map<string, OverrideLayer>;
+  readonly stack: Array<{ id: string; value: string }>;
 }
 
 export interface DeclarativeEngineOptions {
@@ -145,8 +137,8 @@ export class DeclarativeEngine {
   private readonly classOwners = new Map<Element, Map<string, Set<string>>>();
   /** element → attribute name → layer. */
   private readonly attrLayers = new Map<Element, Map<string, OverrideLayer>>();
-  /** element → inline-style longhand → layer (both `setStyle` and a `style` attribute). */
-  private readonly styleLayers = new Map<HTMLElement, StyleLedger>();
+  /** Shared original longhands and ordered declarations, including variable shorthands. */
+  private readonly styleLayers = new Map<HTMLElement, InlineStyleLedger>();
   /** Expands `style` attribute values and `setStyle` entries into longhands. */
   private styleParser: InlineStyleParser | null = null;
 
@@ -495,8 +487,7 @@ export class DeclarativeEngine {
 
     for (const [el, ledger] of this.styleLayers) {
       if (this.doc.contains(el)) continue;
-      for (const [prop, layer] of ledger.props) restoreStyleOriginal(el, prop, layer);
-      dropEmptyStyleAttribute(el, ledger);
+      ledger.restore();
       this.styleLayers.delete(el);
     }
   }
@@ -619,8 +610,8 @@ export class DeclarativeEngine {
                 logger.warn('Rendered plugin style rejected', { id, prop, issue });
                 continue;
               }
-              // Layers are per longhand: keyed by `margin`, restoring it would clobber
-              // another plugin's `margin-top`.
+              // Literal shorthands expand; variable shorthands retain their declaration
+              // while the ledger captures every longhand they cover before writing it.
               for (const [longhand, declared, priority] of this.styles().property(prop, value)) {
                 this.applySetStyle(id, el, longhand, declared, priority);
               }
@@ -653,17 +644,8 @@ export class DeclarativeEngine {
     value: string,
     priority = '',
   ): void {
-    const ledger = mapGet(this.styleLayers, el, () => ({
-      noHostAttribute: !el.hasAttribute('style'),
-      props: new Map<string, OverrideLayer>(),
-    }));
-    const layer = mapGet(ledger.props, prop, () => ({
-      original: el.style.getPropertyValue(prop),
-      originalPriority: el.style.getPropertyPriority(prop),
-      stack: [],
-    }));
-    pushLayerValue(layer, id, value, priority);
-    writeStyleTop(el, prop, layer);
+    const ledger = mapGet(this.styleLayers, el, () => new InlineStyleLedger(el));
+    ledger.set(id, [prop, value, priority], this.styles().properties(prop));
   }
 
   private styles(): InlineStyleParser {
@@ -699,19 +681,7 @@ export class DeclarativeEngine {
     }
 
     for (const [el, ledger] of this.styleLayers) {
-      for (const [prop, layer] of ledger.props) {
-        if (!removeLayerValue(layer, id)) continue;
-        if (layer.stack.length === 0) {
-          restoreStyleOriginal(el, prop, layer);
-          ledger.props.delete(prop);
-        } else {
-          writeStyleTop(el, prop, layer);
-        }
-      }
-      if (ledger.props.size === 0) {
-        dropEmptyStyleAttribute(el, ledger);
-        this.styleLayers.delete(el);
-      }
+      if (ledger.release(id)) this.styleLayers.delete(el);
     }
   }
 
@@ -769,9 +739,9 @@ function mapGet<K, V>(map: Map<K, V>, key: K, create: () => V): V {
 }
 
 /** Update-or-insert a plugin's desired value, moving it to the top of the stack. */
-function pushLayerValue(layer: OverrideLayer, id: string, value: string, priority?: string): void {
+function pushLayerValue(layer: OverrideLayer, id: string, value: string): void {
   removeLayerValue(layer, id);
-  layer.stack.push(priority === undefined ? { id, value } : { id, value, priority });
+  layer.stack.push({ id, value });
 }
 
 /** Remove a plugin's entry from the stack. Returns true if one was present. */
@@ -784,20 +754,4 @@ function removeLayerValue(layer: OverrideLayer, id: string): boolean {
 
 function topValue(layer: OverrideLayer): string {
   return layer.stack[layer.stack.length - 1].value;
-}
-
-function writeStyleTop(el: HTMLElement, prop: string, layer: OverrideLayer): void {
-  const top = layer.stack[layer.stack.length - 1];
-  el.style.setProperty(prop, top.value, top.priority ?? '');
-}
-
-function restoreStyleOriginal(el: HTMLElement, prop: string, layer: OverrideLayer): void {
-  // '' (or null) means the property was unset before any plugin.
-  if (!layer.original) el.style.removeProperty(prop);
-  else el.style.setProperty(prop, layer.original, layer.originalPriority ?? '');
-}
-
-/** Removing the last property leaves `style=""`; drop it when the host had none. */
-function dropEmptyStyleAttribute(el: HTMLElement, ledger: StyleLedger): void {
-  if (ledger.noHostAttribute && el.getAttribute('style') === '') el.removeAttribute('style');
 }
