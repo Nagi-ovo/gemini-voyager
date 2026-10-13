@@ -47,6 +47,8 @@ export function startMessageTimestampPageService(): StopNativeFeature {
   };
   const mount = (): void => {
     if (lifetime.signal.aborted || !hydrated || !isGeminiConversationRoute(location.href)) return;
+    // The setting is off by default; a disabled collector would still rescan Gemini on every mutation.
+    if (!enabled) return destroyCollector();
     if (!document.body) {
       bodyObserver ??= new MutationObserver(() => {
         if (!document.body) return;
@@ -58,7 +60,7 @@ export function startMessageTimestampPageService(): StopNativeFeature {
       return;
     }
     destroyCollector();
-    collector = new MessageTimestampCollector(timestamps, enabled, pendingPreviousUrl);
+    collector = new MessageTimestampCollector(timestamps, pendingPreviousUrl);
     pendingPreviousUrl = null;
     void collector.start().catch((error: unknown) => {
       console.error('[Gemini Voyager] Message timestamp collection failed:', error);
@@ -90,7 +92,8 @@ export function startMessageTimestampPageService(): StopNativeFeature {
         if (!change) return;
         settingRevision++;
         enabled = change.newValue === true;
-        collector?.setEnabled(enabled);
+        if (!enabled) destroyCollector();
+        else if (!collector && settleTimer === null) mount();
       };
       onChanged.addListener(listener);
       removeSettingsListener = () => onChanged.removeListener?.(listener);

@@ -8,6 +8,7 @@ import type { TimestampService } from './TimestampService';
 import { historyTimestampStore } from './historyTimestamps';
 
 const routeOf = (url: string): string => url.split('#')[0];
+const SCAN_THROTTLE_MS = 200;
 
 function isTimestampMutation(record: MutationRecord): boolean {
   const withinLabel = (node: Node): boolean =>
@@ -25,9 +26,10 @@ export class MessageTimestampCollector {
   private readonly source = new GeminiTimelineTurnSource(false);
   private markers: TimelineMarker[] = [];
   private observer: MutationObserver | null = null;
+  private scanTimer: number | null = null;
   private readonly timestamps: MessageTimestamps;
 
-  constructor(service: TimestampService, enabled: boolean, previousUrl: string | null) {
+  constructor(service: TimestampService, previousUrl: string | null) {
     const nativeCid = extractConversationIdFromUrl(this.url);
     this.timestamps = new MessageTimestamps(
       {
@@ -42,7 +44,8 @@ export class MessageTimestampCollector {
         },
       },
       service,
-      { enabled, previousUrl },
+      // The page service mounts a collector only while the setting is on.
+      { enabled: true, previousUrl },
     );
   }
 
@@ -67,18 +70,23 @@ export class MessageTimestampCollector {
           !root?.isConnected ||
           relevant.some((record) => root.contains(record.target)))
       )
-        this.scan();
+        this.scheduleScan();
     });
     this.observer.observe(document.body, { childList: true, subtree: true, characterData: true });
     this.scan();
   }
 
-  setEnabled(enabled: boolean): void {
-    this.timestamps.setEnabled(enabled);
-  }
-
   private get isCurrent(): boolean {
     return !this.lifetime.signal.aborted && routeOf(this.url) === routeOf(location.href);
+  }
+
+  /** Throttled, not debounced: a streaming answer mutates continuously and must not postpone scans forever. */
+  private scheduleScan(): void {
+    if (this.scanTimer !== null) return;
+    this.scanTimer = window.setTimeout(() => {
+      this.scanTimer = null;
+      this.scan();
+    }, SCAN_THROTTLE_MS);
   }
 
   private scan(): void {
@@ -94,6 +102,8 @@ export class MessageTimestampCollector {
     this.lifetime.abort();
     this.observer?.disconnect();
     this.observer = null;
+    if (this.scanTimer !== null) clearTimeout(this.scanTimer);
+    this.scanTimer = null;
     this.source.stop();
     this.timestamps.destroy();
   }

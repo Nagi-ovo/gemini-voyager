@@ -81,7 +81,7 @@ describe('independent message timestamp page service', () => {
     await settle(801);
     expect(saved()).toBeUndefined();
     page.append({ prompt: 'New turn', serverId: SECOND });
-    await settle(1);
+    await settle(201);
     expect(saved()?.conversations['gemini:conv:a']?.[`s-${SECOND}`]).toBe(Date.now() - 1);
     expect(document.querySelector('.gv-timestamp')?.textContent).toContain('2026-09-05');
   });
@@ -95,12 +95,12 @@ describe('independent message timestamp page service', () => {
     const oldMain = page.main;
     const label = document.querySelector('.gv-timestamp');
     page.render([{ prompt: 'Old turn', serverId: FIRST }]);
-    await settle(1);
+    await settle(201);
     expect(oldMain.querySelector('.gv-timestamp')).toBeNull();
     expect(document.querySelector('.gv-timestamp')).toBe(label);
     expect(label?.isConnected).toBe(true);
     page.append({ prompt: 'After remount', serverId: SECOND });
-    await settle(1);
+    await settle(201);
     expect(saved()?.conversations['gemini:conv:a']?.[`s-${SECOND}`]).toBeDefined();
     expect(document.querySelectorAll('.gv-timestamp')).toHaveLength(2);
     expect(document.querySelector('.gemini-timeline-bar')).toBeNull();
@@ -130,7 +130,7 @@ describe('independent message timestamp page service', () => {
     expect(document.querySelector('.gv-timestamp')).not.toBeNull();
     await settle(101);
     page.append({ prompt: 'New turn', serverId: SECOND });
-    await settle(1);
+    await settle(201);
     expect(saved()?.conversations['gemini:conv:a']?.[`s-${SECOND}`]).toBeDefined();
   });
 
@@ -161,7 +161,7 @@ describe('independent message timestamp page service', () => {
     expect(document.querySelector('.gv-timestamp')).toBeNull();
     await settle(802);
     page.append({ prompt: 'New B', serverId: THIRD });
-    await settle(1);
+    await settle(201);
     expect(saved()?.conversations['gemini:conv:b']?.[`s-${THIRD}`]).toBeDefined();
     expect(saved()?.conversations['gemini:conv:a']?.[`s-${THIRD}`]).toBeUndefined();
   });
@@ -173,11 +173,11 @@ describe('independent message timestamp page service', () => {
     await settle(801);
     history.pushState({}, '', '/u/1/app/b');
     page.render([{ prompt: 'B', serverId: SECOND }]);
-    await settle(1);
+    await settle(201);
     expect(saved()).toBeUndefined();
     await settle(1800);
     page.append({ prompt: 'New B', serverId: THIRD });
-    await settle(1);
+    await settle(201);
     expect(saved()?.conversations['gemini:conv:b']?.[`s-${THIRD}`]).toBeDefined();
     expect(saved()?.conversations['gemini:conv:a']).toBeUndefined();
   });
@@ -209,16 +209,16 @@ describe('independent message timestamp page service', () => {
     await api.whenMessageTimestampsReady();
     await settle(801);
     page.append({ prompt: 'New A', serverId: SECOND });
-    await settle(1);
+    await settle(201);
     expect(held).toBe(true);
     history.pushState({}, '', '/app/b');
     window.dispatchEvent(new PopStateEvent('popstate'));
     page.render([{ prompt: 'Baseline B', serverId: FIRST }]);
     await settle(1301);
     page.append({ prompt: 'New B', serverId: THIRD });
-    await settle(1);
+    await settle(201);
     finish();
-    await settle(1);
+    await settle(201);
     expect(saved()?.conversations['gemini:conv:a']?.[`s-${SECOND}`]).toBeDefined();
     expect(saved()?.conversations['gemini:conv:b']?.[`s-${THIRD}`]).toBeDefined();
   });
@@ -248,6 +248,36 @@ describe('independent message timestamp page service', () => {
       expect(saved()?.conversations['gemini:conv:a']?.[`s-${FIRST}`]).toBe(STORED_TIME);
     },
   );
+
+  it('does not watch Gemini while message times are off and starts recording once switched on', async () => {
+    ext.seed('sync', { [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: false });
+    const page = new GeminiPage([{ prompt: 'Old turn', serverId: FIRST }]);
+    const observe = vi.spyOn(MutationObserver.prototype, 'observe');
+    start();
+    await api.whenMessageTimestampsReady();
+    await settle(801);
+    expect(observe.mock.calls.some(([target]) => target === document.body)).toBe(false);
+
+    ext.external('sync', { [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: true });
+    await settle(801);
+    page.append({ prompt: 'New turn', serverId: SECOND });
+    await settle(201);
+    expect(saved()?.conversations['gemini:conv:a']?.[`s-${SECOND}`]).toBeDefined();
+  });
+
+  it('records a new turn while the answer above it keeps streaming', async () => {
+    const page = new GeminiPage([{ prompt: 'Old turn', serverId: FIRST }]);
+    start();
+    await api.whenMessageTimestampsReady();
+    await settle(801);
+    const streaming = page.main.appendChild(document.createTextNode(''));
+    page.append({ prompt: 'New turn', serverId: SECOND });
+    for (let tick = 0; tick < 10; tick++) {
+      streaming.data += 'token ';
+      await settle(50);
+    }
+    expect(saved()?.conversations['gemini:conv:a']?.[`s-${SECOND}`]).toBeDefined();
+  });
 
   it('a retired service late read and stop cannot disturb its successor labels', async () => {
     seedTime();
