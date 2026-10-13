@@ -7,6 +7,7 @@ import { toastDriver } from '@/tests/toastDriver';
 import { historyTimestampStore } from '../../timestamp/historyTimestamps';
 import type { ForkNode } from '../forkTypes';
 import { startFork } from '../index';
+import { startForkLinkFinisher } from '../linkFinisher';
 
 vi.mock('webextension-polyfill', () => ({
   default: {
@@ -24,6 +25,7 @@ vi.mock('webextension-polyfill', () => ({
 
 describe('startFork style injection', () => {
   let cleanup: (() => void) | null = null;
+  let stopCore: () => void;
   let sendMessageMock: ReturnType<typeof vi.fn>;
 
   const flushMicrotasks = async (): Promise<void> => {
@@ -35,6 +37,7 @@ describe('startFork style injection', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
+    stopCore = startForkLinkFinisher();
     document.head.innerHTML = '';
     document.body.innerHTML = '';
     sessionStorage.clear();
@@ -55,6 +58,7 @@ describe('startFork style injection', () => {
       cleanup = null;
     }
 
+    stopCore();
     vi.clearAllTimers();
     vi.useRealTimers();
     document.head.innerHTML = '';
@@ -404,9 +408,9 @@ describe('startFork style injection', () => {
     window.history.replaceState({}, '', '/app');
     document.body.innerHTML = `
       <main>
-        <rich-textarea>
+        <div class="text-input-field"><rich-textarea>
           <div id="chat-input" contenteditable="true"></div>
-        </rich-textarea>
+        </rich-textarea><button id="send" aria-label="Send">Send</button></div>
       </main>
     `;
     const uploadInput = document.querySelector<HTMLElement>('#chat-input');
@@ -426,7 +430,7 @@ describe('startFork style injection', () => {
       gvPendingFork: {
         sourceConversationId: 'conv-source',
         sourceTurnId: 'u-2',
-        sourceUrl: 'https://gemini.google.com/app/conv-source',
+        sourceUrl: `${location.origin}/app/conv-source`,
         sourceTitle: 'Source',
         forkGroupId: 'group-1',
         sourceForkIndex: 0,
@@ -471,7 +475,15 @@ describe('startFork style injection', () => {
     vi.advanceTimersByTime(1000);
     expect(hint().detail).toBe('01:29');
 
+    const sentText = input!.textContent!;
+    const sendButton = document.querySelector<HTMLButtonElement>('#send')!;
+    Object.defineProperty(sendButton, 'offsetParent', { value: document.body, configurable: true });
+    sendButton.click();
     window.history.pushState({}, '', '/app/conv-new');
+    const user = document.createElement('div');
+    user.className = 'user-query-container';
+    user.textContent = sentText;
+    document.querySelector('main')!.append(user);
     vi.advanceTimersByTime(500);
     for (let i = 0; i < 4; i++) {
       await flushMicrotasks();

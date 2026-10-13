@@ -153,6 +153,9 @@ export function createGeminiBuiltinStartup(
       ),
     async startForkAndResearchPack() {
       if (stopped) return;
+      // A pasted fork must still link after the popup switch removes its UI owner.
+      await mountNativeFeature(cleanupManager, NATIVE_FEATURES.forkLinkFinisher, lifetime);
+      if (stopped) return;
       const fork = follow(NATIVE_FEATURES.fork);
       const forkEnabled = await isForkFeatureEnabled();
       if (stopped) return;

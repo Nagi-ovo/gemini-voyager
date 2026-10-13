@@ -36,6 +36,8 @@ export enum CleanupPositions {
   CleanupRenderedQuoteStyling,
   CleanupSelectionToolbarHost,
   CleanupPreventAutoScrollBridge,
+  /** A handed-off fork link outlives the feature, but not its page or send-key coordinator. */
+  CleanupForkLinkFinisher,
   /** After every send-key registrant (the native send behavior, the plugins): they dispose first. */
   CleanupSendKeyCoordinator,
   CleanupBrandTheme,

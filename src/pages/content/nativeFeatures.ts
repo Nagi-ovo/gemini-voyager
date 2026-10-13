@@ -11,6 +11,7 @@ import { startEdgeFinalVersionNotice } from './edgeFinalVersionNotice';
 import type { NativeFeature } from './featureLifecycle';
 import { isForkFeatureEnabledValue } from './fork/featureFlag';
 import { startFork } from './fork/index';
+import { startForkLinkFinisher } from './fork/linkFinisher';
 import { startGemsHider } from './gemsHider/index';
 import { startGemsSidebar } from './gemsSidebar/index';
 import { HIGHLIGHT_TOGGLE, startHighlightAction } from './highlight/highlightAction';
@@ -244,6 +245,13 @@ export const NATIVE_FEATURES = {
     position: CleanupPositions.CleanupFork,
     start: startFork,
     toggle: { key: StorageKeys.FORK_ENABLED, isEnabled: isForkFeatureEnabledValue },
+  },
+  /** Finishes an accepted first-send handoff even after the fork switch turns off. */
+  forkLinkFinisher: {
+    id: 'fork-link-finisher',
+    position: CleanupPositions.CleanupForkLinkFinisher,
+    start: startForkLinkFinisher,
+    inertReason: 'First-send observers exist only while a pasted or uploaded fork is pending.',
   },
   researchPack: {
     id: 'research-pack',

@@ -24,6 +24,9 @@ import {
   createNativeFeatureToggle,
   mountNativeFeature,
 } from '../featureLifecycle';
+import { ForkNodesService } from '../fork/ForkNodesService';
+import { handoffPendingForkLink } from '../fork/linkFinisher';
+import { captureForkReceiver } from '../fork/receiverIdentity';
 import { type GeminiBuiltinStartup, createGeminiBuiltinStartup } from '../geminiBuiltinStartup';
 import { NATIVE_FEATURES } from '../nativeFeatures';
 import { type LifecycleHarness, installLifecycleHarness } from './lifecycleHarness';
@@ -280,6 +283,68 @@ describe('fork and research pack at the Gemini builtin start point', () => {
 
     page.unload();
     expect(native.live.fork).toBe(0);
+  });
+
+  it('links a handed-off first message after the popup turns fork off, until page teardown', async () => {
+    const originalUrl = location.href;
+    history.replaceState({}, '', '/app');
+    const { page, startup, flip } = startNative({ [FORK]: true });
+    const addNode = vi.spyOn(ForkNodesService, 'addForkNode').mockResolvedValue(true);
+    try {
+      await startup.startForkAndResearchPack();
+      const receiver = captureForkReceiver()!;
+      const options = {
+        receiver,
+        deadline: Date.now() + 60_000,
+        pendingFork: {
+          sourceConversationId: 'source',
+          sourceTurnId: 's-aabbccdd',
+          sourceUrl: `${location.origin}/app/source`,
+          sourceTitle: 'Source',
+          forkGroupId: 'handoff',
+          sourceForkIndex: 0,
+          nextForkIndex: 1,
+          markdown: 'A first message',
+          mode: 'paste' as const,
+        },
+        getConversationTitle: () => 'Branch',
+        onLinked: vi.fn(async () => {}),
+        onFinished: vi.fn(),
+      };
+      const receipt = handoffPendingForkLink(options);
+      expect(receipt).not.toBeNull();
+      flip({ [FORK]: { newValue: false } });
+      await flush();
+      receipt!.hideUi();
+      expect(native.live.fork).toBe(0);
+
+      document.body.innerHTML =
+        '<div class="text-input-field"><rich-textarea><div contenteditable="true">A first message</div></rich-textarea><button aria-label="Send message">Send</button></div>';
+      const input = document.querySelector<HTMLElement>('[contenteditable]')!;
+      Object.defineProperty(input, 'getBoundingClientRect', { value: () => ({ height: 32 }) });
+      const button = document.querySelector('button')!;
+      Object.defineProperty(button, 'offsetParent', { value: document.body });
+      button.click();
+      history.pushState({}, '', '/app/branch');
+      document.body.insertAdjacentHTML(
+        'beforeend',
+        '<div class="conversation-container" id="11223344"><user-query>A first message</user-query></div>',
+      );
+      window.dispatchEvent(new PopStateEvent('popstate'));
+      await flush();
+
+      expect(addNode.mock.calls.map(([node]) => [node.conversationId, node.turnId])).toEqual([
+        ['source', 's-aabbccdd'],
+        ['branch', 's-11223344'],
+      ]);
+      expect(options.onLinked).not.toHaveBeenCalled();
+      history.replaceState({}, '', '/app');
+      page.unload();
+      expect(handoffPendingForkLink(options)).toBeNull();
+    } finally {
+      addNode.mockRestore();
+      history.replaceState({}, '', originalUrl);
+    }
   });
 
   it('turns the research pack off and on live from the popup switch while the native module owns it', async () => {
