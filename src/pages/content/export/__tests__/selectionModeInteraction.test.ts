@@ -2,11 +2,21 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+/**
+ * Declarations of the top-level rule whose selector list is exactly `selector`.
+ * Anchored at a line start and closed by its own `}`, so neither a later rule
+ * nor an indented `@media` copy of the selector can satisfy an assertion.
+ */
+function ruleBody(css: string, selector: string): string {
+  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+  return css.match(new RegExp(`(?:^|\\n)${escaped}\\s*{([^}]*)}`))?.[1] ?? '';
+}
+
 describe('selection mode interaction', () => {
   it('pins the selection bar to the top', () => {
     const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
 
-    expect(css).toMatch(/\.gv-export-select-bar\s*{[\s\S]*top:\s*12px;/);
+    expect(ruleBody(css, '.gv-export-select-bar')).toMatch(/\btop:\s*12px;/);
   });
 
   it('supports dark-theme selectors for the export dialog', () => {
@@ -24,13 +34,11 @@ describe('selection mode interaction', () => {
 
   it('keeps logo wrapper from blocking top-bar button clicks', () => {
     const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
-    const wrapperBlock = css.match(/\.gv-logo-dropdown-wrapper\s*{([\s\S]*?)}/)?.[1] ?? '';
-    const logoBlock =
-      css
-        .match(
-          /\.gv-logo-dropdown-wrapper \[data-test-id='logo'\],\s*\.gv-logo-dropdown-wrapper \.logo\s*{([\s\S]*?)}/,
-        )
-        ?.at(1) ?? '';
+    const wrapperBlock = ruleBody(css, '.gv-logo-dropdown-wrapper');
+    const logoBlock = ruleBody(
+      css,
+      ".gv-logo-dropdown-wrapper [data-test-id='logo'], .gv-logo-dropdown-wrapper .logo",
+    );
 
     expect(wrapperBlock).toContain('pointer-events: none;');
     expect(wrapperBlock).toContain('width: fit-content;');
@@ -41,15 +49,12 @@ describe('selection mode interaction', () => {
     const css = readFileSync(resolve(process.cwd(), 'public/contentStyle.css'), 'utf8');
 
     // Check for container scroll behaviors
-    const barBlock = css.match(/\.gv-export-select-bar\s*{([\s\S]*?)}/)?.[1] ?? '';
+    const barBlock = ruleBody(css, '.gv-export-select-bar');
     expect(barBlock).toContain('overflow-x: auto;');
     expect(barBlock).toContain('scrollbar-width: none;');
 
     // Check for nowrapping and no shrinking on buttons
-    const btnBlock =
-      css.match(
-        /\.gv-export-select-all-toggle,\s*\.gv-export-select-role-btn\s*{([\s\S]*?)}/,
-      )?.[1] ?? '';
+    const btnBlock = ruleBody(css, '.gv-export-select-all-toggle, .gv-export-select-role-btn');
     expect(btnBlock).toContain('white-space: nowrap;');
     expect(btnBlock).toContain('flex-shrink: 0;');
   });
