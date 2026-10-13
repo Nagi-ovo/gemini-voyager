@@ -1,9 +1,9 @@
 /**
- * Gemini's draft auto-save (`pages/content/draftSave`) for a catalog site:
- * unsent composer text is saved per conversation after a pause in typing and
- * put back into an empty composer when that conversation opens again. A send
- * (Enter, the send button or the form, then the composer emptying) drops the
- * draft. Nothing here sends, submits or clears the composer itself.
+ * Draft auto-save for one site policy: unsent composer text is saved per
+ * conversation after a pause in typing and put back into an empty composer when
+ * that conversation opens again. A confirmed send drops the draft (catalog sites:
+ * Enter, the send button or the form, then the composer emptying; Gemini: its own
+ * send detection). Nothing here sends, submits or clears the composer itself.
  *
  * Every listener and timer is registered on the plugin's scope; disposing it
  * stops the session and leaves stored drafts in place.
@@ -41,6 +41,9 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
   let currentKey = keyHere();
   let currentIdentity = policy.restoreIdentity(doc);
   let inputRevision = 0;
+  // Gemini's send replaces the composer silently; catalog hosts fire their own input while mounting it.
+  const typedSince = (revision: number): boolean =>
+    detection.kind === 'gemini' && inputRevision !== revision;
   let geminiSend: ReturnType<typeof startGeminiDraftSendDetection> | null = null;
   /** Bumped whenever the key changes, so a timer started for one conversation stops in another. */
   let navigation = 0;
@@ -151,7 +154,7 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
       generation !== navigation ||
       keyHere() !== key ||
       policy.restoreIdentity(doc) !== identity ||
-      inputRevision !== revision
+      typedSince(revision)
     )
       return;
     const field = composer();
@@ -186,7 +189,7 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
       generation !== navigation ||
       keyHere() !== key ||
       identity !== policy.restoreIdentity(doc) ||
-      revision !== inputRevision
+      typedSince(revision)
     )
       return;
     const content = saved === null ? undefined : sanitizeDraftAt(policy, 'restore', saved).trim();

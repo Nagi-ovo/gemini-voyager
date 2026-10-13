@@ -213,6 +213,22 @@ describe.each(sites)('draftSave on $name', (site) => {
     });
   });
 
+  it('restores into a composer the host mounts late with its own empty input event', async () => {
+    records[draftKey(adapter, 'conv:abc')] = { content: 'Late draft' };
+    mount(site.conversationPath('abc'));
+    const field = prompt();
+    const parent = field.parentElement!;
+    field.remove();
+
+    activate(adapter);
+    await vi.advanceTimersByTimeAsync(0);
+    parent.appendChild(field);
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(text()).toBe('Late draft');
+  });
+
   it('keeps blank lines identical through save, restore and save again', async () => {
     mount(site.conversationPath('abc'));
     const first = activate(adapter);

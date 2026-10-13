@@ -285,7 +285,7 @@ it.each([false, true])(
   },
 );
 
-it('stopping one owner keeps the other pending save and repeated ops write one draft key', async () => {
+it('stopping one owner keeps the other pending save', async () => {
   const first = start();
   start();
   await vi.advanceTimersByTimeAsync(0);
