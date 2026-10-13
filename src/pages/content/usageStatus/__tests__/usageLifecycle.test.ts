@@ -173,6 +173,30 @@ describe('usage feature lifecycle', () => {
     });
   });
 
+  it('finishes a refresh and a post-generation refresh across a same-account conversation switch', async () => {
+    await start();
+    pill().querySelector<HTMLButtonElement>('.gv-usage-refresh')!.click();
+    navigate('/u/2/app/other-chat');
+    await vi.advanceTimersByTimeAsync(1000);
+    observer('replay-result', { id: replayMessages().at(-1)!.id, body: response(3) });
+    expect(pill().classList.contains('gv-usage-loading')).toBe(false);
+    expect(pill().querySelector('.gv-usage-pct')?.textContent).toContain('3%');
+
+    observer('generation-complete');
+    navigate('/u/2/app/third-chat');
+    await vi.advanceTimersByTimeAsync(4000);
+    expect(replayMessages()).toHaveLength(2);
+  });
+
+  it('does not leave the refresh spinner running when an account switch cancels the refresh', async () => {
+    await start();
+    pill().querySelector<HTMLButtonElement>('.gv-usage-refresh')!.click();
+    navigate('/u/3/app');
+    // Before the new account settles and starts its own refresh.
+    await vi.advanceTimersByTimeAsync(10);
+    expect(pill().classList.contains('gv-usage-loading')).toBe(false);
+  });
+
   it('debounces generation events and confirms an automatic decrease with a second fresh replay', async () => {
     await start();
     observer('generation-complete');

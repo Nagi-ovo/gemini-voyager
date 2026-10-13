@@ -309,6 +309,7 @@ export function createUsageRefresh(
     if (spinTimer !== null) {
       clearTimeout(spinTimer);
       spinTimer = null;
+      setSpinning(false);
     }
   }
 

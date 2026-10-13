@@ -371,10 +371,15 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
 
   function handleRouteChange(): void {
     const accountKey = currentUsageAccountKey();
-    // Invalidate old cache reads before waiting for the destination page to settle.
+    // Invalidate old cache reads and scrapes before waiting for the destination page to settle.
     routeEpoch += 1;
-    stopCollection();
-    if (accountKey !== routeAccountKey) snapshot = null;
+    // Same-account navigation keeps the refresh engine: stopping it froze an in-flight spinner and dropped a post-generation refresh.
+    if (accountKey !== routeAccountKey) {
+      stopCollection();
+      snapshot = null;
+    } else {
+      teardownScrapeObserver();
+    }
     routeAccountKey = accountKey;
     pill.render(enabled, snapshot);
     handleNavigation();
