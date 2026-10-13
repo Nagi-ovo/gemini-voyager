@@ -13,6 +13,8 @@ import { pickLocalized, pickLocalizedSetting } from './PluginIdentity';
 interface PluginSettingsProps {
   readonly plugin: PluginManifest;
   readonly values?: Record<string, PluginSettingValue>;
+  /** Fields already offered by a visible dedicated settings card. */
+  readonly hiddenKeys?: readonly string[];
   readonly handleSetting: (id: string, key: string, value: PluginSettingValue) => void;
   readonly handleImmediateSettings: (
     id: string,
@@ -23,6 +25,7 @@ interface PluginSettingsProps {
 export function PluginSettings({
   plugin,
   values,
+  hiddenKeys,
   handleSetting,
   handleImmediateSettings,
 }: PluginSettingsProps) {
@@ -31,11 +34,13 @@ export function PluginSettings({
   const localizedName = pickLocalized(plugin, 'name', language);
   const resolved = resolvePluginSettings(plugin, values);
   if (!settingsSchema) return null;
+  const entries = Object.entries(settingsSchema).filter(([key]) => !hiddenKeys?.includes(key));
+  if (entries.length === 0) return null;
   const writeNow = (key: string, value: PluginSettingValue) =>
     handleImmediateSettings(plugin.id, compatibleSettingWrite(plugin, { key, value }).stored);
   return (
     <div className="mt-2 space-y-2.5" role="group" aria-label={localizedName}>
-      {Object.entries(settingsSchema).map(([key, field]) => {
+      {entries.map(([key, field]) => {
         const rawValue = resolved[key];
         const localized = pickLocalizedSetting(plugin, key, field, language);
         const settingText = field.messageKeys

@@ -20,6 +20,44 @@ import { usePluginAccess } from './usePluginAccess';
 import { usePluginPreferences } from './usePluginPreferences';
 import { usePluginUpdates } from './usePluginUpdates';
 
+interface DedicatedTimelineSettings {
+  readonly pluginId: string;
+  readonly settingKeys: readonly string[];
+}
+
+// Custom catalog IDs can be object property names such as "constructor".
+const DEDICATED_TIMELINE_SOURCES = new Map<string, readonly string[]>([
+  ['voyager.chatgpt-timeline', ['builtin']],
+  ['voyager.claude-timeline', ['builtin']],
+  ['voyager.deepseek-timeline', ['bundled-catalog', 'host-catalog']],
+]);
+
+function dedicatedTimelineKeys(
+  plugin: PluginManifest,
+  sourceId: string | undefined,
+  dedicated: DedicatedTimelineSettings | undefined,
+): readonly string[] | undefined {
+  // Only the visible card's official rail loses duplicates; local rails keep their own controls.
+  if (
+    dedicated?.pluginId !== plugin.id ||
+    !sourceId ||
+    !DEDICATED_TIMELINE_SOURCES.get(plugin.id)?.includes(sourceId)
+  )
+    return undefined;
+  return dedicated.settingKeys.filter((key) => {
+    const field = plugin.contributes.settings?.[key];
+    if (!field || field.enabledBy) return false;
+    if (key === 'markerLevel') return field.type === 'boolean';
+    // A remote catalog may add choices the three-style card cannot express.
+    return (
+      key === 'timelineStyle' &&
+      field.type === 'select' &&
+      field.options?.length === 3 &&
+      field.options.every((option) => ['dots', 'compact', 'ruler'].includes(option.value))
+    );
+  });
+}
+
 export interface PluginManagerProps {
   /** Plugin manifests from bundled and remote sources (loaded by the parent). */
   readonly manifests: readonly PluginManifest[];
@@ -55,6 +93,7 @@ export interface PluginManagerProps {
    * official one can hold the runtime). Defaults to `manifests`.
    */
   readonly nameSources?: readonly PluginManifest[];
+  readonly dedicatedTimelineSettings?: DedicatedTimelineSettings;
 }
 
 /**
@@ -72,6 +111,7 @@ export function PluginManager({
   catalogHost,
   statuses,
   nameSources,
+  dedicatedTimelineSettings,
 }: PluginManagerProps) {
   const { t, language } = useLanguage();
   const { currentSiteId, currentSiteLabel } = usePluginSite(activeUrl);
@@ -249,6 +289,11 @@ export function PluginManager({
                     <PluginSettings
                       plugin={plugin}
                       values={settingsMap[plugin.id]}
+                      hiddenKeys={dedicatedTimelineKeys(
+                        plugin,
+                        sourceIds?.[plugin.id],
+                        dedicatedTimelineSettings,
+                      )}
                       handleSetting={handleSetting}
                       handleImmediateSettings={handleImmediateSettings}
                     />

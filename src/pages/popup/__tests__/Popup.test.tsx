@@ -397,6 +397,11 @@ describe('Popup settings integration', () => {
       sync[StorageKeys.GV_TIMELINE_ENABLED] = false;
       await mount();
 
+      expect(
+        container
+          .querySelector('[role="group"][aria-label="ChatGPT · Timeline"]')
+          ?.querySelector('select'),
+      ).toBeFalsy();
       const master = container.querySelector<HTMLInputElement>('#timeline-enabled')!;
       expect(master.closest('[hidden]')).not.toBeNull();
 
@@ -424,6 +429,9 @@ describe('Popup settings integration', () => {
       };
       await mount();
       const levels = container.querySelector<HTMLInputElement>('#marker-level-enabled')!;
+      expect(
+        container.querySelector(`input[aria-label="${TRANSLATIONS.en.enableMarkerLevel}"]`),
+      ).toBeNull();
       expect(levels.closest('[hidden]')).toBeNull();
       expect(levels.checked).toBe(false);
 
@@ -497,6 +505,11 @@ describe('Popup settings integration', () => {
       };
       await mount();
 
+      expect(
+        container
+          .querySelector('[role="group"][aria-label="My ChatGPT rail"]')
+          ?.querySelector('select'),
+      ).toBeTruthy();
       await act(async () => shownButton(TRANSLATIONS.en.timelineStyleCompact)!.click());
 
       const state = local[StorageKeys.PLUGINS_STATE] as Record<
@@ -521,6 +534,45 @@ describe('Popup settings integration', () => {
       expect(sync[StorageKeys.TIMELINE_POSITION]).toEqual(placed);
     });
   });
+
+  it.each([
+    ['https://claude.ai/chat/abc', 'voyager.claude-timeline', 'Claude · Timeline', true],
+    [
+      'https://chat.deepseek.com/a/chat/s/abc',
+      'voyager.deepseek-timeline',
+      'DeepSeek · Timeline',
+      false,
+    ],
+  ] as const)(
+    'offers one timeline settings entry on %s and keeps its stored values',
+    async (url, id, name, levels) => {
+      extensionApi.tabs.query.mockResolvedValue([{ id: 10, url }]);
+      local[StorageKeys.PLUGINS_STATE] = {
+        [id]: { enabled: true, installedAt: 1, settings: { timelineStyle: 'ruler' } },
+      };
+      await mount();
+      const group = container.querySelector(`[role="group"][aria-label="${name}"]`);
+      expect(group?.querySelector('select')).toBeFalsy();
+      expect(group?.querySelector('input[type="checkbox"]')).toBeFalsy();
+      const levelSwitch = container.querySelector('#marker-level-enabled');
+      expect(!!levelSwitch && !levelSwitch.closest('[hidden]')).toBe(levels);
+      const compact = [...container.querySelectorAll('button')].find(
+        (button) =>
+          button.textContent === TRANSLATIONS.en.timelineStyleCompact &&
+          !button.closest('[hidden]'),
+      );
+      expect(compact).toBeTruthy();
+      await act(async () => compact!.click());
+      const state = local[StorageKeys.PLUGINS_STATE] as Record<
+        string,
+        { settings?: Record<string, unknown> }
+      >;
+      expect(state[id]?.settings).toEqual(
+        expect.objectContaining({ timelineStyle: 'compact', compactView: true }),
+      );
+      expect(sync).not.toHaveProperty(StorageKeys.TIMELINE_STYLE);
+    },
+  );
 
   it('a timeline plugin site lets the user switch off the shortcuts its rail responds to', async () => {
     extensionApi.tabs.query.mockResolvedValue([{ id: 10, url: 'https://chatgpt.com/c/abc' }]);

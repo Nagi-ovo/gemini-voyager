@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import enMessages from '@locales/en/messages.json';
 
+import { BUILTIN_PLUGINS } from '@/features/plugins/builtin';
 import type { PluginStatus } from '@/features/plugins/runtime/pluginStatus';
 import type { PluginManifest } from '@/features/plugins/types';
 
@@ -80,6 +81,105 @@ describe('PluginManager accessible groups', () => {
         'Reading width (px)',
       );
     }
+  });
+});
+
+describe('PluginManager dedicated timeline settings', () => {
+  const official = BUILTIN_PLUGINS.find((plugin) => plugin.id === 'voyager.chatgpt-timeline')!;
+  const dedicated = { pluginId: official.id, settingKeys: ['timelineStyle', 'markerLevel'] };
+
+  it('keeps local rail controls and other catalog fields editable', async () => {
+    const catalog: PluginManifest = {
+      ...official,
+      contributes: {
+        ...official.contributes,
+        settings: {
+          ...official.contributes.settings,
+          density: { type: 'boolean', label: 'Dense rail', default: false },
+        },
+      },
+    };
+    const local: PluginManifest = { ...official, id: 'local.me.rail', name: 'My rail' };
+    const other: PluginManifest = { ...official, id: 'voyager.other-rail', name: 'Other rail' };
+    for (const plugin of [catalog, local, other])
+      pluginState.current[plugin.id] = { enabled: true, installedAt: 0 };
+    await renderManager({
+      manifests: [catalog, local, other],
+      sourceIds: { [catalog.id]: 'builtin', [local.id]: 'local', [other.id]: 'host-catalog' },
+      dedicatedTimelineSettings: dedicated,
+    });
+    const catalogGroup = container.querySelector(
+      '[role="group"][aria-label="ChatGPT · Timeline"]',
+    )!;
+    expect(catalogGroup.querySelector('select')).toBeNull();
+    expect(catalogGroup.querySelector('input[aria-label="enableMarkerLevel"]')).toBeNull();
+    const density = catalogGroup.querySelector<HTMLInputElement>('input[aria-label="Dense rail"]')!;
+    expect(density).toBeTruthy();
+    act(() => density.click());
+    expect(setPluginSettings).toHaveBeenLastCalledWith(catalog.id, { density: true });
+    for (const name of ['My rail', 'Other rail']) {
+      const group = container.querySelector(`[role="group"][aria-label="${name}"]`)!;
+      expect(group.querySelector('select')).toBeTruthy();
+      expect(group.querySelector('input[aria-label="enableMarkerLevel"]')).toBeTruthy();
+    }
+  });
+
+  it.each([
+    'no card',
+    'unknown source',
+    'another rail',
+    'extra style',
+    'custom rail named constructor',
+  ])('keeps the plugin style accessible with %s', async (scenario) => {
+    const plugin: PluginManifest =
+      scenario === 'extra style'
+        ? {
+            ...official,
+            contributes: {
+              ...official.contributes,
+              settings: {
+                ...official.contributes.settings,
+                timelineStyle: {
+                  ...official.contributes.settings!.timelineStyle,
+                  options: [
+                    ...official.contributes.settings!.timelineStyle.options!,
+                    { value: 'custom', label: 'Custom' },
+                  ],
+                },
+              },
+            },
+          }
+        : scenario === 'custom rail named constructor'
+          ? { ...official, id: 'constructor' }
+          : official;
+    pluginState.current[plugin.id] = { enabled: true, installedAt: 0 };
+    await renderManager({
+      manifests: [plugin],
+      sourceIds:
+        scenario === 'unknown source'
+          ? undefined
+          : {
+              [plugin.id]:
+                scenario === 'custom rail named constructor' ? 'host-catalog' : 'builtin',
+            },
+      dedicatedTimelineSettings:
+        scenario === 'no card'
+          ? undefined
+          : {
+              ...dedicated,
+              pluginId: scenario === 'another rail' ? 'voyager.another-rail' : plugin.id,
+            },
+    });
+    const select = container.querySelector('select')!;
+    expect(select).toBeTruthy();
+    act(() => {
+      select.value = 'compact';
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    expect(setPluginSettings).toHaveBeenLastCalledWith(plugin.id, {
+      timelineStyle: 'compact',
+      compactView: true,
+    });
   });
 });
 

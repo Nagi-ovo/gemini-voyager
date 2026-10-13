@@ -52,6 +52,7 @@ export interface CatalogTimelineSettingsInput {
 }
 
 export interface CatalogTimelineSettings {
+  readonly pluginId: string;
   readonly values: TimelineSettingsValues;
   /** Whether the timeline card offers this entry (by its search id) for the site's rail. */
   readonly offers: (settingId: string) => boolean;
@@ -138,6 +139,7 @@ export function useCatalogTimelineSettings({
 
   if (!manifest || !settings) return null;
   return {
+    pluginId: manifest.id,
     values: {
       // Catalog rails use their plugin switch, never Gemini's native rail switch.
       timelineEnabled: true,

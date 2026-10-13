@@ -180,6 +180,18 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
       {content}
     </PopupSection>
   );
+  const dedicatedTimelineSettings =
+    isPluginSite &&
+    catalogTimeline &&
+    sections.getSectionProps('timeline', { allowPluginSite: true }).visible
+      ? {
+          pluginId: catalogTimeline.pluginId,
+          settingKeys: [
+            ...(catalogTimeline.offers('timelineStyle') ? ['timelineStyle'] : []),
+            ...(catalogTimeline.offers('enableMarkerLevel') ? ['markerLevel'] : []),
+          ],
+        }
+      : undefined;
   const handleFormulaCopyEnabledChange = (enabled: boolean) => {
     formulaCopy.setEnabledFromUser(enabled);
     void writePopupSyncStorage(legacyEnableWrite(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, enabled));
@@ -304,6 +316,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
               blockedUpdates: plugins.pluginBlockedUpdates,
               catalogHost: plugins.pluginCatalogHost,
               statuses: plugins.pluginStatuses,
+              dedicatedTimelineSettings,
             }}
             exportEntry={{
               enabled: isPluginEnabled(plugins.pluginState, CHATGPT_EXPORT_PLUGIN_ID),
