@@ -142,22 +142,26 @@ export class HighlightAnnotationService {
     return this.serialize(() => this.store.getAllAccounts(options));
   }
 
-  async getAccountSnapshot(scopeInput: HighlightScope): Promise<HighlightAccountSnapshot> {
-    return this.serialize(async () => {
-      const scope = storedScope(scopeInput);
-      const index = await this.store.readIndex(scope);
-      const buckets = await this.store.readBucketsFromIndex(scope, index);
-      const records = filterRecords(
-        Array.from(buckets.values()).flatMap(({ bucket }) => Object.values(bucket.records)),
-        index.clearMarkers?.[scope.platform],
-        { includeDeleted: true },
-      );
-      return {
-        accountScope: scope,
-        clearMarker: index.clearMarkers?.[scope.platform],
-        records,
-      };
-    });
+  async getAccountSnapshot(scope: HighlightScope): Promise<HighlightAccountSnapshot> {
+    return this.serialize(() => this.getAccountSnapshotUnsafe(scope));
+  }
+
+  private async getAccountSnapshotUnsafe(
+    scopeInput: HighlightScope,
+  ): Promise<HighlightAccountSnapshot> {
+    const scope = storedScope(scopeInput);
+    const index = await this.store.readIndex(scope);
+    const buckets = await this.store.readBucketsFromIndex(scope, index);
+    const records = filterRecords(
+      Array.from(buckets.values()).flatMap(({ bucket }) => Object.values(bucket.records)),
+      index.clearMarkers?.[scope.platform],
+      { includeDeleted: true },
+    );
+    return {
+      accountScope: scope,
+      clearMarker: index.clearMarkers?.[scope.platform],
+      records,
+    };
   }
 
   /**
@@ -176,17 +180,20 @@ export class HighlightAnnotationService {
       accountId: 0,
       routeUserId: null,
     };
-    const snapshot = await this.getAccountSnapshot(legacyScope);
-    const legacyRecords = snapshot.records.filter((record) => record.platform === scope.platform);
-    if (legacyRecords.length === 0) return 0;
+    // One queued unit: separate read/import/clear steps let two accounts claim the same snapshot.
+    return this.serialize(async () => {
+      const snapshot = await this.getAccountSnapshotUnsafe(legacyScope);
+      const legacyRecords = snapshot.records.filter((record) => record.platform === scope.platform);
+      if (legacyRecords.length === 0) return 0;
 
-    const accountHash = getHighlightAccountHash(scope);
-    await this.importMerge(
-      scope,
-      legacyRecords.map((record) => ({ ...record, accountHash })),
-    );
-    await this.clearAll(legacyScope);
-    return legacyRecords.filter((record) => record.deletedAt === undefined).length;
+      const accountHash = getHighlightAccountHash(scope);
+      await this.importMergeUnsafe(
+        scope,
+        legacyRecords.map((record) => ({ ...record, accountHash })),
+      );
+      await this.clearAllUnsafe(legacyScope);
+      return legacyRecords.filter((record) => record.deletedAt === undefined).length;
+    });
   }
 
   async add(scopeInput: HighlightScope, input: HighlightCreateInput): Promise<HighlightAddResult> {
@@ -415,63 +422,63 @@ export class HighlightAnnotationService {
   }
 
   async clearAll(
-    scopeInput: HighlightScope,
+    scope: HighlightScope,
     options: { tombstone?: boolean } = {},
   ): Promise<HighlightClearResult> {
-    return this.serialize(async () => {
-      // A bounded account/platform clear marker is always kept. The option is
-      // accepted for API symmetry with remove(), but clear never retains every
-      // quote as an unbounded collection of tombstones.
-      void options;
-      const scope = storedScope(scopeInput);
-      const index = await this.store.readIndex(scope);
-      const buckets = await this.store.readBucketsFromIndex(scope, index);
-      const device = await this.store.getDeviceId();
-      const records = Array.from(buckets.values()).flatMap(({ bucket }) =>
-        Object.values(bucket.records),
-      );
-      const now = this.store.now;
-      const clearMarker: HighlightClearMarkerV1 = {
-        clearedAt: now,
-        revision: {
-          counter:
-            Math.max(
-              index.clearMarkers?.[scope.platform]?.revision.counter ?? 0,
-              ...records.map((record) => record.revision.counter),
-            ) + 1,
-          deviceId: device.id,
-        },
-        generation: {
-          counter: (index.clearMarkers?.[scope.platform]?.generation?.counter ?? 0) + 1,
-          id: this.store.generateUuid(),
-        },
-      };
-      const conversations = Object.fromEntries(
-        Object.entries(index.conversations).filter(
-          ([, entry]) => entry.platform !== scope.platform,
-        ),
-      );
-      const nextIndex: HighlightIndexV1 = {
-        ...index,
-        conversations,
-        clearMarkers: {
-          ...index.clearMarkers,
-          [scope.platform]: clearMarker,
-        },
-        updatedAt: now,
-      };
-      await this.store.commit(
-        {
-          [getHighlightIndexStorageKey(scope)]: nextIndex,
-          ...(device.needsWrite ? { [HIGHLIGHT_DEVICE_ID_KEY]: device.id } : {}),
-        },
-        Array.from(buckets.values()).map(({ key }) => key),
-      );
-      return {
-        removed: records.filter((record) => record.deletedAt === undefined).length,
-        clearMarker,
-      };
-    });
+    // A bounded account/platform clear marker is always kept. The option is
+    // accepted for API symmetry with remove(), but clear never retains every
+    // quote as an unbounded collection of tombstones.
+    void options;
+    return this.serialize(() => this.clearAllUnsafe(scope));
+  }
+
+  private async clearAllUnsafe(scopeInput: HighlightScope): Promise<HighlightClearResult> {
+    const scope = storedScope(scopeInput);
+    const index = await this.store.readIndex(scope);
+    const buckets = await this.store.readBucketsFromIndex(scope, index);
+    const device = await this.store.getDeviceId();
+    const records = Array.from(buckets.values()).flatMap(({ bucket }) =>
+      Object.values(bucket.records),
+    );
+    const now = this.store.now;
+    const clearMarker: HighlightClearMarkerV1 = {
+      clearedAt: now,
+      revision: {
+        counter:
+          Math.max(
+            index.clearMarkers?.[scope.platform]?.revision.counter ?? 0,
+            ...records.map((record) => record.revision.counter),
+          ) + 1,
+        deviceId: device.id,
+      },
+      generation: {
+        counter: (index.clearMarkers?.[scope.platform]?.generation?.counter ?? 0) + 1,
+        id: this.store.generateUuid(),
+      },
+    };
+    const conversations = Object.fromEntries(
+      Object.entries(index.conversations).filter(([, entry]) => entry.platform !== scope.platform),
+    );
+    const nextIndex: HighlightIndexV1 = {
+      ...index,
+      conversations,
+      clearMarkers: {
+        ...index.clearMarkers,
+        [scope.platform]: clearMarker,
+      },
+      updatedAt: now,
+    };
+    await this.store.commit(
+      {
+        [getHighlightIndexStorageKey(scope)]: nextIndex,
+        ...(device.needsWrite ? { [HIGHLIGHT_DEVICE_ID_KEY]: device.id } : {}),
+      },
+      Array.from(buckets.values()).map(({ key }) => key),
+    );
+    return {
+      removed: records.filter((record) => record.deletedAt === undefined).length,
+      clearMarker,
+    };
   }
 
   async clearAllAccounts(): Promise<HighlightClearAllAccountsResult> {
@@ -479,30 +486,36 @@ export class HighlightAnnotationService {
   }
 
   async importMerge(
+    scope: HighlightScope,
+    importedRecords: readonly HighlightRecordV1[],
+    options: HighlightImportMergeOptions = {},
+  ): Promise<HighlightImportStats> {
+    return this.serialize(() => this.importMergeUnsafe(scope, importedRecords, options));
+  }
+
+  private async importMergeUnsafe(
     scopeInput: HighlightScope,
     importedRecords: readonly HighlightRecordV1[],
     options: HighlightImportMergeOptions = {},
   ): Promise<HighlightImportStats> {
-    return this.serialize(async () => {
-      const scope = storedScope(scopeInput);
-      validateHighlightImport(scope, importedRecords, options.clearMarker);
-      const index = await this.store.readIndex(scope);
-      const effectiveMarker = resolveHighlightClearMarker(
-        index.clearMarkers?.[scope.platform],
-        options.clearMarker,
-      );
-      const buckets = await this.store.readImportBuckets(scope, index, importedRecords);
-      const plan = planHighlightImport(
-        scope,
-        index,
-        buckets,
-        importedRecords,
-        effectiveMarker,
-        () => this.store.now,
-      );
-      await this.store.commit(plan.setItems, plan.removeKeys);
-      return plan.getStats();
-    });
+    const scope = storedScope(scopeInput);
+    validateHighlightImport(scope, importedRecords, options.clearMarker);
+    const index = await this.store.readIndex(scope);
+    const effectiveMarker = resolveHighlightClearMarker(
+      index.clearMarkers?.[scope.platform],
+      options.clearMarker,
+    );
+    const buckets = await this.store.readImportBuckets(scope, index, importedRecords);
+    const plan = planHighlightImport(
+      scope,
+      index,
+      buckets,
+      importedRecords,
+      effectiveMarker,
+      () => this.store.now,
+    );
+    await this.store.commit(plan.setItems, plan.removeKeys);
+    return plan.getStats();
   }
 }
 

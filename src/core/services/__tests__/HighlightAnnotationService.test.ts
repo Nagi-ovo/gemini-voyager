@@ -474,6 +474,43 @@ describe('HighlightAnnotationService', () => {
     await expect(service.claimLegacyDefaultHighlights(SCOPE)).resolves.toBe(0);
   });
 
+  it('gives legacy default highlights to only one of two accounts claiming concurrently', async () => {
+    const { service } = createHarness();
+    const legacyGemini: HighlightAccountScope = {
+      platform: 'gemini',
+      accountKey: 'default',
+      accountId: 0,
+      routeUserId: null,
+    };
+    const legacyAiStudio: HighlightAccountScope = { ...legacyGemini, platform: 'aistudio' };
+    const otherScope: HighlightAccountScope = {
+      ...SCOPE,
+      accountKey: 'email:other@example.com',
+      accountId: 2,
+      routeUserId: '1',
+    };
+    await service.add(legacyGemini, input());
+    await service.add(legacyGemini, input({ conversationId: 'gemini:conv:second' }));
+    const { record: aiStudioRecord } = await service.add(
+      legacyAiStudio,
+      input({
+        conversationId: 'aistudio:prompt:abc',
+        conversationUrl: 'https://aistudio.google.com/prompts/abc',
+      }),
+    );
+
+    const claimed = await Promise.all([
+      service.claimLegacyDefaultHighlights(SCOPE),
+      service.claimLegacyDefaultHighlights(otherScope),
+    ]);
+
+    expect([...claimed].sort()).toEqual([0, 2]);
+    const owned = [await service.getAll(SCOPE), await service.getAll(otherScope)];
+    expect(owned.map((records) => records.length).sort()).toEqual([0, 2]);
+    expect(await service.getAll(legacyGemini)).toEqual([]);
+    expect(await service.getAll(legacyAiStudio)).toEqual([aiStudioRecord]);
+  });
+
   it('clears every account while retaining one bounded marker per account/platform', async () => {
     const { service, storage, advanceTime } = createHarness();
     const otherScope: HighlightAccountScope = {
