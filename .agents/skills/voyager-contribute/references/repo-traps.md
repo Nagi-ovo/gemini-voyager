@@ -32,7 +32,7 @@ Grep for the existing primitive before writing parallel logic — reviewers trea
 
 ## Theme and data correctness
 
-- Theme resolution order: `.theme-host.light-theme` / `.theme-host.dark-theme` first, generic `body`/`html`/data-theme markers second, `prefers-color-scheme` as fallback only. Write tests with _conflicting_ markers, not single signals (#859).
+- Host theme markers (`.theme-host.dark-theme`, `body.dark`, `html.dark`, …) belong only in each `site.json` `theme` descriptor; `src/pages/content/platformTheme/scheme.ts` reads it and stamps `html[data-gv-scheme]`. Voyager CSS keys off `html[data-gv-scheme='dark' | 'light']` and JS uses `getScheme()` / `subscribeScheme()`; `contentStyleTheme.test.ts` rejects host markers in CSS. Test theme logic against the descriptor with conflicting markers, not single signals (#859).
 - Theme the whole export artifact consistently — a dark diagram on a forced-white document is not dark-mode support (#847).
 - Gemini conversation IDs are namespaced (`gemini:conv:<id>`); shared code that handles raw IDs silently orphans existing starred/bookmark data (#865). Preserve `/u/<index>/...` account scope in every constructed route.
 - Prompt/folder data has multiple merge entry points (`utils/merge.ts` plus page-level Drive merges); route data-shape changes through one shared merge helper, and never drop or rename existing user records on conflict (#854).

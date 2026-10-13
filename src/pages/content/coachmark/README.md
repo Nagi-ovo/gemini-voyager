@@ -7,4 +7,4 @@ Read this when adding or changing a guide or its lifecycle.
 - A plugin-site guide starts from its plugin's own lifecycle instead, such as `src/features/plugins/builtin/chatgptFolders/chatgptFolderGuide.ts`. Those sites have no `body.gv-rtl`, so pass `rtl`, and pass a `signal` that aborts when the plugin scope is disposed.
 - Each guide needs a stable ID, side-effect-free eligibility, cleanup after partial mount failure, all 10 locales, a debug trigger and tests.
 - Skip seen or ineligible guides. Show the remaining guides continuously in registration order with `1/N` progress.
-- Confirmation advances the tour; close, Escape or an outside click exits it.
+- Confirmation advances the tour; close or Escape exits it. While a guide is open, a person's clicks elsewhere on the page are blocked and the guide stays; script clicks (such as a plugin's send) pass through (`isUserEvent` in `src/core/utils/userEvent.ts`).

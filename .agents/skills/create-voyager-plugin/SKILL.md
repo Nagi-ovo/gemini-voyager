@@ -17,7 +17,7 @@ Read only the matching implementation reference. Paths are relative to `src/feat
 | Site selectors, theme, URL matching or a new site      | [Site adapter](references/site-adapter.md)      | `catalog/sites/<site>/site.json`; existing-site updates travel remotely |
 | Behavior needing events, state or generated DOM        | [Native primitive](references/primitive.md)     | `verbs/`; packaged executable code, requires an extension release       |
 
-A new site also requires host permission and content-script registration in an extension release. A primitive needs a declarative plugin that invokes it, so read that reference too when adding the caller.
+A new site also requires an extension release: its host is an optional permission the user grants, and the content script is registered dynamically (never a static `content_scripts` or required `host_permissions` entry; see `voyager-contribute`'s [repo-traps.md](../voyager-contribute/references/repo-traps.md)). A primitive needs a declarative plugin that invokes it, so read that reference too when adding the caller.
 
 New features follow `.github/CONTRIBUTING.md`; a new primitive or site requires explicit maintainer approval of the approach. Reuse a direct maintainer instruction in the current task as approval; loading this skill grants none. A selector fix within an existing site's approved scope needs no new feature approval.
 

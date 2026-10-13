@@ -384,6 +384,8 @@ Before starting, check if the issue is already assigned to someone by looking at
 
 For an unassigned issue **without** the `community-only` or `enhancement` label, comment `/claim` to assign yourself automatically. A bot will confirm the assignment. An issue carrying either label is assigned only after a maintainer replies `/approve @your-username`.
 
+A maintainer's `/approve @username` does two things: it assigns the issue, and it adds that user to [`APPROVED_CONTRIBUTORS`](APPROVED_CONTRIBUTORS) with a commit to `main`. From then on the PR gate no longer limits their PRs, features included.
+
 ### 3. Community-only Issues
 
 Issues labeled `community-only` are reserved for verified members of the Voyager community:
@@ -400,7 +402,7 @@ If you can no longer work on an issue, comment `/unclaim` to release it for othe
 
 ### 5. Contribution Checkbox
 
-When creating issues, you can check the "I am willing to contribute code" checkbox to indicate your interest in implementing the feature or fix.
+Issues are for bugs only. When reporting one, you can check "I am willing to contribute a fix for this bug" to say you would like to fix it yourself.
 
 ---
 
@@ -488,6 +490,14 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 - `chore:` - Maintenance tasks
 - `refactor:` - Code refactoring
 - `test:` - Adding or updating tests
+- `perf:` - Performance improvements
+- `style:` - Formatting only
+- `build:` / `ci:` - Build system or CI changes
+- `deps:` - Dependency updates
+- `revert:` - Reverting a commit
+- `ux:` - User experience tweaks
+
+Headers stay within 100 characters with a lowercase scope ([`commitlint.config.cjs`](../commitlint.config.cjs)).
 
 ---
 

@@ -10,7 +10,7 @@ Check only the affected store's secret names with `gh secret list`, never their 
 
 - Chrome: `CHROME_EXTENSION_ID`, `CHROME_CLIENT_ID`, `CHROME_CLIENT_SECRET`, `CHROME_REFRESH_TOKEN`.
 - Edge: `EDGE_CLIENT_ID`, `EDGE_PRODUCT_ID`, `EDGE_API_KEY`.
-- Firefox: `AMO_JWT_ISSUER`, `AMO_JWT_SECRET`.
+- Firefox: `AMO_JWT_ISSUER`, `AMO_JWT_SECRET`, and for a code hotfix `VOYAGER_FIREFOX_OAUTH_CLIENT_SECRET` (the hotfix build fails without it).
 
 ## Chrome or Edge submission retry
 

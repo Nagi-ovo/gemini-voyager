@@ -71,10 +71,10 @@ the op through the same diagnostic path as invalid static params. Changing a
 setting disposes then reactivates templated primitive ops in order; static
 params keep the existing in-place settings update path.
 
-Catalog manifests using params tokens require `"engine": ">=next"` while this
-capability is unreleased. Publishing resolves that to engine 1.8.0; local
-plugins use `">=1.8.0"` directly. This capability's floor stays 1.8.0 after
-release, alongside any higher floor required by the primitive or its params.
+Params tokens shipped in engine 1.8.0: manifests that rely on them declare
+`"engine": ">=1.8.0"`, or a higher floor when the primitive or one of its
+params requires it. Reserve `">=next"` for primitives or params that are still
+unreleased.
 
 ## Complete when
 

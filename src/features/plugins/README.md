@@ -182,10 +182,14 @@ Engine 1.7.0 ignores `enabledBy` and leaves the control enabled, so this field
 requires no higher engine floor.
 
 `target` is a CSS selector string, or `{ "kind": "semantic", "key": "userTurn" }`
-to use the site adapter's stable selector for one of the nine semantic keys in
+to use the site adapter's stable selector for one of the eleven semantic keys in
 `sites/semanticKeys.ts`; a `site.json` may not invent a key outside that
 vocabulary. Supported ops: `addClass`,
 `setAttribute`, `setStyle`, `hide`, plus `native` (below). All are reversible.
+Inline styles are layered per longhand property: a `setStyle` value or a whole
+`style` attribute is expanded into longhands (a trailing `!important` is kept as
+priority), so turning one plugin off restores only the longhands it wrote and never
+another live plugin's value. A `var()` shorthand written with `setStyle` stays whole.
 Classes must be `gv-` prefixed (content-script rule). `setAttribute` names are an
 exact-match allowlist: `data-*`, `aria-*`, `title`, `role`, `lang`, `dir`,
 `hidden`, `tabindex`, `draggable`, `spellcheck`, `translate` and `style`; URL,
@@ -321,10 +325,12 @@ plugin follows the native setting it replaces (`storage/legacySettingBindings.ts
 not a plugin-list toggle. The owner table has no `legacy` option: rolling a feature back to its
 native module means reverting both stage 7 retirement commits (startup wiring 9c2161df and
 native wrappers 0ae260c1) and the commit that removed that option. Permanent page services remain in `nativeFeatures.ts`; their
-account bridge, send coordinator, history/message caches, selection host, sent-quote styling,
+account bridge, history/message caches, selection host, sent-quote styling,
 prevent-auto-scroll bridge, fork first-send finisher and default-model stale-menu cleanup stay
 independent of optional plugin switches. The last service only removes old menu UI while the sync
 setting is false; the plugin alone selects models and creates new stars.
+The page send-key coordinator is the one service started elsewhere:
+`startPageSendKeys` in `pages/content/inputStartup.ts` creates it before `PluginHost`.
 They resolve semantic keys through the native
 `geminiAdapter` / `aistudioAdapter` (`userTurn`, `assistantTurn`, `composer`,
 `sidebar`; the Gemini `sidebar` key also covers Voyager's folder panel, so
@@ -412,7 +418,8 @@ Shipped primitives (`verbs/<name>/contract.ts`): `formulaCopy` (since 1.3.0), `v
 defaulting to the adapter, plus the optional `conversationIdAttribute` attribute and `turnItem`
 selector since 1.5.0, and `dataBackend: "shared"` on consumer Gemini since the next engine
 release, resolved as 1.9.0 for local imports) and `userLatex` (since 1.7.0, optional `turn` selector defaulting to the
-adapter's `userTurn`; renders the LaTeX a user typed with Gemini's renderer and restores the text on
+adapter's `userTurn`, plus an optional `unit` of `leaf` (default) or `turn` since the next engine
+release; renders the LaTeX a user typed with Gemini's renderer and restores the text on
 unmount) and the code-block diagram primitives `mermaid`, `echarts` and `wavedrom` (all since
 1.7.0, optional `turn` / `codeBlock` / `code` / `codeLine` / `language` selectors defaulting to
 the adapter's `assistantTurn` and `codeBlock`). Each is Gemini's renderer core plus the shared
@@ -480,9 +487,13 @@ catalog site. It shares `pages/content/draftSave/draftStore.ts` (debounce, empty
 five newest per prefix) and the composer reader/writer in `core/services/composer/`. Drafts are
 stored in `chrome.storage.local` as `gvDraft:<siteId>:conv:<id>`, or `gvDraft:<siteId>:new` for
 every page without a conversation id, so they never meet Gemini's `gvDraft_<path>` entries.
-A draft is restored once per conversation entry and only into an empty composer; it is dropped
-when the composer empties within two seconds of Enter, the send button or a form submit, or
-when that send moves the new-chat page to its conversation. ChatGPT temporary chats save
+A draft is restored once per conversation entry and only into an empty composer; a restore
+still loading is abandoned once the person types (`core/utils/userEvent.ts` `isUserEvent`, so a
+host filling its composer while mounting does not count). A draft is dropped when the composer
+empties within two seconds of Enter, the send button or a form submit, or when that send moves
+the new-chat page to its conversation; switching from one conversation to another never counts
+as a send. While a `sendShortcut` plugin holds the composer's Enter
+(`verbs/composerEnterOwner.ts`), Enter is never read as a send: only its button click is. ChatGPT temporary chats save
 nothing. These sites have no account index in their routes, so drafts are per site and
 conversation, not per account. Unmount stops everything and keeps stored drafts.
 
@@ -506,6 +517,11 @@ existing draft) and never sends. Selections touching a user turn or the adapter'
 `features/formulaCopy/formulaSource.ts`; line prefixing and Gemini math replacement are shared
 with Gemini's quote reply in `core/utils/quotedText.ts`. A missing composer shows a toast and
 keeps the selection. Unmount removes the button, its style and every listener synchronously.
+
+`copyButton` (since 1.8.0; required `target` of `userTurn`, `assistantTurn`, `thinkingBlock`
+or `codeBlock`; optional `format`, which accepts only `text` today) places a small copy button above each
+matched element. It copies the element's visible text without Voyager's own controls and
+confirms with a toast; the element itself is left untouched.
 
 `counterBadge` (since 1.8.0; `target` is `composer` or `assistantTurn`,
 `metric` is `chars` (default), `words`, `cjkChars` or `lines`) shows a small read-only count.
@@ -650,9 +666,6 @@ The popup names a packaged official plugin in `blockedBy` by its native
 setting (Formula copy card, the Vim switch in input settings), since no plugin
 list shows it, and re-asks for statuses while a `releasing` or `pending` block
 lasts.
-
-A packaged official plugin whose feature the owner table still gives to the
-native module is left out of the statuses: the module is what runs.
 
 `needs-permission` is not in this list: the popup owns the permission flow, and
 a content script that is running already has its permission.

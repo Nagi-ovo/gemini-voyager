@@ -44,11 +44,11 @@ gh secret list -R voyager-crew/voyager --json name --jq '.[].name'
 Confirm the workflow has names for:
 
 - Safari: `APPLE_CERTIFICATE_P12_BASE64`, `APPLE_CERTIFICATE_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_APP_PROVISIONING_PROFILE_BASE64`, `APPLE_EXTENSION_PROVISIONING_PROFILE_BASE64`, `SPARKLE_PRIVATE_KEY`
-- Firefox: `AMO_JWT_ISSUER`, `AMO_JWT_SECRET`
+- Firefox: `AMO_JWT_ISSUER`, `AMO_JWT_SECRET`, `VOYAGER_FIREFOX_OAUTH_CLIENT_SECRET` (Firefox Google Drive sign-in; the build step fails without it)
 - Chrome: `CHROME_EXTENSION_ID`, `CHROME_CLIENT_ID`, `CHROME_CLIENT_SECRET`, `CHROME_REFRESH_TOKEN`
 - Edge: `EDGE_CLIENT_ID`, `EDGE_PRODUCT_ID`, `EDGE_API_KEY`
 
-Missing Safari release secrets are blocking: the GitHub Release job now waits for the Safari artifact job.
+Missing Safari release secrets are blocking: the GitHub Release job now waits for the Safari artifact job. A missing `VOYAGER_FIREFOX_OAUTH_CLIENT_SECRET` also blocks `build-and-release`, and it fails only after the Safari job has run.
 
 ## 2. Prepare the version and changelog
 
@@ -108,18 +108,16 @@ Write `zh` first, derive `en`, then translate the other eight locales while pres
 
 ## 3. Verify the final release tree
 
-Finish the version bump, 10-locale changelog, and any release fixes before running the full gates. Run lint first because it can modify files; inspect its diff. Then run the independent checks concurrently:
+Finish the version bump, 10-locale changelog, and any release fixes before running the full gates. Run lint first because it can modify files; inspect its diff. Then run the release-only check and the full PR gate on the final tree:
 
 ```bash
 bun run lint
 
 bun run plugin:release:check
-
-bun run typecheck
-bun run test
-bun run build:all
-bun run cli:build
+lockf -k /tmp/voyager-verify.lock bun run verify:pr
 ```
+
+`verify:pr` runs format, lint, typecheck, i18n, file-size and plugin checks, the full test suite, `build:all`, `cli:build` and `docs:build`.
 
 `cli:build` stamps the bumped version into `packages/create-voyager-plugin/dist/cli.mjs`; the npm publish in step 5 ships that file.
 
@@ -128,7 +126,7 @@ primitive contract, imported contract data module, baseline or catalog manifest.
 or publication; main's development tree may still contain `next`, so this gate
 is separate from `verify:pr`.
 
-Use `bun run test`, not raw `bun test`. `build:all` writes production outputs to `dist_chrome`, `dist_firefox`, and `dist_safari`; `dist_chrome_dev` is only for routine local Chrome development. Complete any additional checks required by `AGENTS.md` for the changed surfaces.
+Use `bun run test`, not raw `bun test`. `build:all` writes production outputs to `dist_chrome`, `dist_firefox`, and `dist_safari`; `dist_chrome_dev` is only for routine local Chrome development. Native and live-browser checks stay separate from `verify:pr`.
 
 A successful Chrome build does not cover Firefox's manifest transform/add-on ID or Safari's resource registration. Every top-level `public/` entry must be registered in `Voyager/Voyager.xcodeproj/project.pbxproj`; `build:all` checks that through the Safari build. Keep all three browser builds as the release gate.
 

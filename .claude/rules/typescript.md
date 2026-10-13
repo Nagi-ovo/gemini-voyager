@@ -23,4 +23,5 @@ globs: ["src/**/*.ts", "src/**/*.tsx"]
 ## Testing (Vitest + jsdom)
 - Chrome `chrome` object is globally mocked in `src/tests/setup.ts`
 - Mock specific storage: `vi.mocked(chrome.storage.sync.get).mockResolvedValue({ key: 'val' })`
+- jsdom cannot create trusted events: code that tells a person's input from a script's goes through `isUserEvent` (`src/core/utils/userEvent.ts`), and tests mock it
 - Run: `bun run test`, `bun run test <filename>`, `bun run test:coverage`

@@ -113,7 +113,7 @@ Icons should be valid [Google Material Symbols](https://fonts.google.com/icons) 
 - `code` - Coding Partner
 - `edit_note` - Writing Editor
 - `menu_book` - Storybook
-- `chess` - Chess Champ
+- `chess_pawn` - Chess Champ
 - `check_circle` - Productivity Helper
 - `sports_cricket` - Cricket
 
@@ -141,16 +141,19 @@ If you're adding support for a new official Google Gem, please submit a pull req
 
 ### Gem Detection
 
-The folder manager detects Gem conversations by analyzing the `jslog` attribute:
-
-- **Regular conversations**: `BardVeMetadataKey:[...,[id,null,0,1]]` (4 elements)
-- **Gem conversations**: `BardVeMetadataKey:[...,[id,null,0]]` (3 elements)
+Saved conversations are stored by their `/app/{hex-id}` route: the sidebar's
+`jslog` only supplies the `c_<hex>` id and no longer says whether a chat
+belongs to a Gem. A conversation is marked as a Gem one after it is opened
+from a folder: if Gemini lands on `/gem/{gem-id}/...`,
+`FolderNavigation.checkGem` records that `gemId`, and the folder shows the
+Gem's icon from then on.
 
 ### URL Generation
 
-- Regular conversations: `/app/{hex-id}`
-- Gem conversations: `/gem/{gem-id}/{hex-id}`
-- Multi-account support: `/u/{account-number}/...`
+- Saved conversations: `/app/{hex-id}`, with the current `/u/{account-number}/`
+  prefix kept unless hard account isolation is on
+- With hard isolation, the `/u/{account-number}/` prefix is rebuilt from the
+  current account at navigation time
 
 ### AI Studio History Drag Sources
 
@@ -166,10 +169,8 @@ localized untitled label.
 
 ### Icon Mapping
 
-The system uses a two-way mapping:
-
-- **Gem ID → Icon**: Used when rendering conversations in folders
-- **Icon → Gem ID**: Used when detecting Gem type from DOM elements
+`getGemIcon` maps a recorded `gemId` to its icon when a conversation renders
+in a folder; unknown Gems use `DEFAULT_GEM_ICON`.
 
 ## Future Enhancements
 

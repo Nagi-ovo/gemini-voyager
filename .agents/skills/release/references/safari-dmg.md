@@ -61,7 +61,7 @@ The extension provisioning profile must permit CloudKit and the existing iCloud 
 
 On a release tag, `build-safari-release`:
 
-1. Checks out the exact tag.
+1. Checks out the exact tag and fails unless that commit is already on `origin/main`, so push `main` before the tag.
 2. Installs Bun dependencies and builds `dist_safari`.
 3. Imports the Developer ID certificate.
 4. Decodes both provisioning profiles and records their profile names.
