@@ -29,6 +29,7 @@ import { activateGeminiPreventAutoScroll } from './preventAutoScroll/pluginHandl
 import { activateGeminiPromptHistory } from './promptHistory/pluginHandler';
 import { activateGeminiQuoteReply } from './quoteReply/pluginHandler';
 import { activateGeminiResearchPack } from './researchPack/pluginHandler';
+import { activateGeminiResponseNotification } from './responseNotification/pluginHandler';
 import { activateGeminiSafariEnterFix } from './sendBehavior/pluginHandler';
 import { activateGeminiUsageStatus } from './usageStatus/pluginHandler';
 
@@ -82,6 +83,9 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   },
   'voyager.gemini-prevent-auto-scroll': {
     activate: activateGeminiPreventAutoScroll,
+  },
+  'voyager.gemini-response-notification': {
+    activate: activateGeminiResponseNotification,
   },
 };
 

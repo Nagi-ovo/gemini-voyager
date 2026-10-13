@@ -510,16 +510,16 @@ describe('the prevent-auto-scroll bridge at its Gemini start point', () => {
 });
 
 describe('the response notification at the Gemini builtin start point', () => {
-  function startup() {
+  function startup(owner: FeatureOwner = 'legacy') {
     const current = page();
-    const { admission, ownerOf } = ownedBy('legacy', []);
+    const { admission, ownerOf } = ownedBy(owner, ['responseNotification']);
     const builtins = createGeminiBuiltinStartup(
       admission,
       current.cleanupManager,
       current.lifetime.signal,
       ownerOf,
     );
-    return { ...current, builtins };
+    return { ...current, admission, builtins };
   }
 
   it('starts one notification run while the native module owns it, and stops it on teardown', async () => {
@@ -531,12 +531,17 @@ describe('the response notification at the Gemini builtin start point', () => {
     expect(native.live.responseNotification).toBe(0);
   });
 
-  it('starts no notification run once page teardown began', async () => {
-    const { builtins, unload } = startup();
-    unload();
-    await builtins.startResponseNotification();
-    expect(native.starts.responseNotification ?? 0).toBe(0);
-  });
+  it.each(['plugin', 'legacy'] as const)(
+    'starts or admits no notification owner once page teardown began (%s)',
+    async (owner) => {
+      const { admission, builtins, unload } = startup(owner);
+      unload();
+      await builtins.startResponseNotification();
+      admission.close();
+      expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiResponseNotification)).toBe('denied');
+      expect(native.starts.responseNotification ?? 0).toBe(0);
+    },
+  );
 });
 
 describe('features at their Gemini owner start points', () => {

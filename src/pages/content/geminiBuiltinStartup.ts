@@ -153,8 +153,10 @@ export function createGeminiBuiltinStartup(
         ownerOf,
       );
     },
-    startResponseNotification: () =>
-      startOwnedFeature(
+    async startResponseNotification() {
+      // The plugin branch admits synchronously, so teardown must be checked before owner selection.
+      if (stopped) return;
+      await startOwnedFeature(
         admission,
         'gemini',
         'responseNotification',
@@ -167,7 +169,8 @@ export function createGeminiBuiltinStartup(
           );
         },
         ownerOf,
-      ),
+      );
+    },
     async startForkAndResearchPack() {
       if (stopped) return;
       // A pasted fork must still link after the popup switch removes its UI owner.

@@ -69,6 +69,11 @@ function binding(
 }
 
 export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding>> = {
+  [OFFICIAL_PLUGIN_IDS.geminiResponseNotification]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
+    StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED,
+    onOnlyIfTrue,
+  ),
   [OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll]: binding(
     OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll,
     StorageKeys.PREVENT_AUTO_SCROLL_ENABLED,
