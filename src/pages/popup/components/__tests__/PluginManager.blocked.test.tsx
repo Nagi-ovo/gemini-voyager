@@ -65,6 +65,8 @@ describe('PluginManager blocked plugins', () => {
       formulaCopyFormat: enMessages.formulaCopyFormat.message,
       inputVimMode: enMessages.inputVimMode.message,
       inputCollapseOptions: enMessages.inputCollapseOptions.message,
+      timelineEnable: enMessages.timelineEnable.message,
+      timelineOptions: enMessages.timelineOptions.message,
     };
   });
 
@@ -142,6 +144,8 @@ describe('PluginManager blocked by a packaged official plugin', () => {
       formulaCopyFormat: enMessages.formulaCopyFormat.message,
       inputVimMode: enMessages.inputVimMode.message,
       inputCollapseOptions: enMessages.inputCollapseOptions.message,
+      timelineEnable: enMessages.timelineEnable.message,
+      timelineOptions: enMessages.timelineOptions.message,
     };
   });
 
@@ -149,6 +153,7 @@ describe('PluginManager blocked by a packaged official plugin', () => {
     [OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, 'enableFormulaCopy', 'formulaCopyFormat'],
     [OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy, 'enableFormulaCopy', 'formulaCopyFormat'],
     [OFFICIAL_PLUGIN_IDS.geminiVimInput, 'inputVimMode', 'inputCollapseOptions'],
+    [OFFICIAL_PLUGIN_IDS.geminiTimeline, 'timelineEnable', 'timelineOptions'],
   ] as const)(
     'points a conflict with %s at its native switch, not at a plugin to find',
     async (blockedBy, setting, card) => {

@@ -38,6 +38,8 @@ export interface WishInput {
   /** Whether that read is still in flight; `failed` and `none` never become a snapshot. */
   readonly legacyPhase: LegacyReadPhase;
   readonly admission: OfficialAdmission;
+  /** Shared-data consumers wait on the native feature's start point, while retaining their own switch. */
+  readonly admissionId?: string | null;
   readonly ownerOf?: (id: string) => FeatureOwner | null;
   /** Which legacy keys changed live on this page, for a binding that derives its switch. */
   readonly wasChangedLive?: WasChangedLive;
@@ -50,9 +52,9 @@ const ownerFromTable = (pluginId: string): FeatureOwner | null =>
  * The user's wish combined with the content script's admission. A
  * legacy-owned official plugin never runs, whatever its admission says: the
  * native module runs that feature, and `getStatuses` leaves the plugin out, so
- * mounting it would be both a double start and invisible. Only a plugin-owned
- * official feature may reserve or await (an id outside the owner table has no
- * admission to wait for). It reserves once its legacy switch has been read and
+ * mounting it would be both a double start and invisible. Plugin-owned official
+ * features and shared-data consumers may reserve their start point; only a bound
+ * official feature awaits its legacy switch. The official feature reserves once that switch has been read and
  * is on, and awaits while that read is in flight. The caller still checks the
  * page, host policy, compatibility and entitlement for `run`, `reserve` and
  * `await`.
@@ -62,7 +64,8 @@ export function wishVerdict(input: WishInput, id: string): WishVerdict {
   const ownerOf = input.ownerOf ?? ownerFromTable;
   const owner = ownerOf(id);
   if (owner === 'legacy') return 'skip';
-  const admissionState = admission.stateOf(id);
+  const admissionId = input.admissionId ?? id;
+  const admissionState = admission.stateOf(admissionId);
   if (admissionState === 'denied') return 'skip';
   const ownedByPlugin = owner === 'plugin';
   if (legacy === null && legacyBindingFor(id)) {
@@ -71,9 +74,10 @@ export function wishVerdict(input: WishInput, id: string): WishVerdict {
     return ownedByPlugin && input.legacyPhase === 'loading' ? 'await' : 'skip';
   }
   if (admissionState === 'admitted') {
-    return isPluginWanted(state, legacy, admission, id, input.wasChangedLive) ? 'run' : 'skip';
+    // Admission grants access to core data; the consumer still follows its own plugin switch.
+    return isPluginWanted(state, legacy, ADMITTED, id, input.wasChangedLive) ? 'run' : 'skip';
   }
-  if (!ownedByPlugin) return 'skip';
+  if (!ownedByPlugin && admissionId === id) return 'skip';
   return isPluginWanted(state, legacy, ADMITTED, id, input.wasChangedLive) ? 'reserve' : 'skip';
 }
 

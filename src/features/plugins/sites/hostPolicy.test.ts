@@ -6,6 +6,7 @@ import { listPrimitiveNames } from '../verbs/registry';
 import { aistudioAdapter } from './adapters/aistudio';
 import { chatgptAdapter } from './adapters/chatgpt';
 import { geminiAdapter } from './adapters/gemini';
+import { OFFICIAL_PLUGIN_IDS } from './featureOwners';
 import {
   PACKAGED_HOST_POLICIES,
   allowedPrimitivesForSite,
@@ -19,6 +20,7 @@ import {
   packagedSiteForUrl,
   usesCatalogDataStores,
 } from './hostPolicy';
+import { sharedTimelineAdmissionId } from './sharedTimelinePolicy';
 
 const PACKAGED_HOSTS = [
   'gemini.google.com',
@@ -97,6 +99,7 @@ describe('packaged host policy', () => {
       'mermaid',
       'sendShortcut',
       'draftSave',
+      'turnNavigator',
     ]);
     const aistudioOpen = new Set(['formulaCopy', 'sendShortcut']);
     const primitives = listPrimitiveNames();
@@ -184,7 +187,7 @@ describe('manifestHostPolicyIssues', () => {
     expect(issues).toEqual([
       {
         path: 'contributes.domOps[0]',
-        message: 'the `turnNavigator` primitive is not available on Gemini in this Voyager version',
+        message: 'Gemini turnNavigator requires literal params.dataBackend: "shared"',
       },
       {
         path: 'contributes.domOps[0]',
@@ -230,6 +233,73 @@ describe('hostPolicyRefusal', () => {
       kind: 'native-op',
       handlers: ['vimInput'],
     });
+    const shared = plugin(['https://gemini.google.com/*'], {
+      domOps: [{ op: 'native', handler: 'turnNavigator', params: { dataBackend: 'shared' } }],
+    });
+    const route = 'https://gemini.google.com/u/2/gem/custom/chat';
+    expect(manifestHostPolicyIssues(shared)).toEqual([]);
+    expect(hostPolicyRefusal(route, shared)).toBeNull();
+    expect(sharedTimelineAdmissionId(route, shared)).toBe(OFFICIAL_PLUGIN_IDS.geminiTimeline);
+    expect(hostPolicyRefusal('https://business.gemini.google/app/chat', shared)).toEqual({
+      kind: 'native-op',
+      handlers: ['turnNavigator'],
+    });
+    expect(sharedTimelineAdmissionId('https://business.gemini.google/app/chat', shared)).toBeNull();
+  });
+
+  it('keeps stored shared rails from selecting catalog data, mixed sites or plugin-authored identity', () => {
+    const sharedOp = {
+      op: 'native' as const,
+      handler: 'turnNavigator',
+      params: { dataBackend: 'shared' },
+    };
+    const refused = { kind: 'native-op', handlers: ['turnNavigator'] };
+    for (const matches of [
+      ['https://business.gemini.google/*'],
+      ['https://gemini.google.com/*', 'https://claude.ai/*'],
+      ['https://gemini.google.com/*', 'https://business.gemini.google/*'],
+      ['https://claude.ai/*'],
+    ]) {
+      const shared = plugin(matches, { domOps: [sharedOp] });
+      expect(manifestHostPolicyIssues(shared).length).toBeGreaterThan(0);
+      expect(hostPolicyRefusal('https://gemini.google.com/app/chat', shared)).toEqual(refused);
+      expect(hostPolicyRefusal('https://claude.ai/chat/a', shared)).toEqual(refused);
+      expect(sharedTimelineAdmissionId('https://gemini.google.com/app/chat', shared)).toBeNull();
+    }
+    const nativeOnly = plugin(['https://gemini.google.com/*'], {
+      domOps: [nativeOp('turnNavigator')],
+    });
+    expect(hostPolicyRefusal('https://gemini.google.com/app/chat', nativeOnly)).toEqual(refused);
+    for (const [key, value] of Object.entries({
+      turn: '.fake',
+      turnItem: '.fake',
+      conversationIdPattern: '^/app/(.+)',
+      conversationIdAttribute: 'data-conversation',
+      accountIdAttributes: ['data-account'],
+    })) {
+      const shared = plugin(['https://gemini.google.com/*'], {
+        domOps: [{ ...sharedOp, params: { ...sharedOp.params, [key]: value } }],
+      });
+      expect(manifestHostPolicyIssues(shared)).toContainEqual(
+        expect.objectContaining({ path: `contributes.domOps[0].params.${key}` }),
+      );
+      expect(hostPolicyRefusal('https://gemini.google.com/u/1/app/chat', shared)).toEqual(refused);
+      expect(
+        sharedTimelineAdmissionId('https://gemini.google.com/u/1/app/chat', shared),
+      ).toBeNull();
+    }
+    expect(
+      sharedTimelineAdmissionId(
+        'https://gemini.google.com/app/chat',
+        plugin(['https://gemini.google.com/*'], { domOps: [hideOp] }),
+      ),
+    ).toBeNull();
+    expect(
+      hostPolicyRefusal(
+        'https://claude.ai/chat/a',
+        plugin(['https://claude.ai/*'], { domOps: [nativeOp('turnNavigator')] }),
+      ),
+    ).toBeNull();
   });
 
   it('refuses nothing for CSS-only plugins or on other sites', () => {

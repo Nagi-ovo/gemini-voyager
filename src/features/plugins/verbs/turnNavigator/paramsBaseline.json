@@ -1,6 +1,11 @@
 {
   "sinceEngine": "1.4.0",
   "params": {
+    "dataBackend": {
+      "type": "string",
+      "required": false,
+      "sinceEngine": "next"
+    },
     "turn": {
       "type": "selector",
       "required": false

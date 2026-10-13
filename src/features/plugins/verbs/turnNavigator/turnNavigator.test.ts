@@ -189,6 +189,22 @@ describe('turnNavigator primitive', () => {
     expect(issues({ conversationIdAttribute: 42 })).toEqual(['params.conversationIdAttribute']);
     expect(issues({ turnKey: 'data-turn-id-container' })).toEqual(['params.turnKey']);
     expect(issues({ speed: 3 })).toEqual(['params.speed']);
+    expect(
+      turnNavigatorPrimitive.validateParams({ dataBackend: 'shared', position: 'left' }),
+    ).toEqual({
+      success: true,
+      data: { dataBackend: 'shared', position: 'left' },
+    });
+    expect(issues({ dataBackend: 'catalog' })).toEqual(['params.dataBackend']);
+    for (const [key, value] of Object.entries({
+      turn: '.t',
+      turnItem: '.item',
+      conversationIdPattern: '^/c/(\\w+)',
+      conversationIdAttribute: 'data-conv',
+      accountIdAttributes: ['data-user-id'],
+    })) {
+      expect(issues({ dataBackend: 'shared', [key]: value })).toContain(`params.${key}`);
+    }
   });
 
   it('namespaces conversation ids by site so stars never mix', () => {

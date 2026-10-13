@@ -73,6 +73,22 @@ describe('plugin contract', () => {
     }
   });
 
+  it('teaches the shared Gemini rail without offering catalog identity or Business scope', () => {
+    const gemini = sites.find((site) => site.id === 'gemini')!;
+    for (const audience of audiences) {
+      const text = renderSections(buildPluginContract(gemini, { audience }).sections).join('\n');
+      expect(text).toContain('"dataBackend": "shared"');
+      expect(text).toContain(
+        'All matches must stay on that host: no Business or mixed catalog sites',
+      );
+      expect(text).toContain(
+        'do not set turn, turnItem, conversationIdPattern, conversationIdAttribute or accountIdAttributes',
+      );
+      expect(text).toContain('Enterprise and custom-website coverage');
+      expect(text).not.toContain('turnNavigator` stays unavailable');
+    }
+  });
+
   it('tells the author to say NOT POSSIBLE instead of inventing fields', () => {
     for (const audience of audiences) {
       const text = renderSections(buildPluginContract(sites[0], { audience }).sections).join('\n');

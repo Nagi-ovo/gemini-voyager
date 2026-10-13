@@ -7,15 +7,29 @@ import { TimelineTimestamps } from './TimelineTimestamps';
 
 export interface GeminiTimelineOptions {
   previousUrl?: string | null;
+  position?: 'left' | 'right';
+  scrollContainer?: string;
 }
 
 export class GeminiTimelineAdapter implements TimelineAdapter {
   readonly route = { siteId: 'gemini', url: window.location.href };
   readonly storage = createGeminiTimelineStoragePolicy(this.route.url);
-  readonly mount = { anchor: () => document.body, position: 'auto' as const };
+  readonly mount: TimelineAdapter['mount'];
   readonly turns = new GeminiTimelineTurnSource();
-  constructor(_options: GeminiTimelineOptions = {}) {}
-  viewport = geminiViewport;
+  constructor(private readonly options: GeminiTimelineOptions = {}) {
+    this.mount = { anchor: () => document.body, position: options.position ?? 'auto' };
+  }
+  viewport = (element: HTMLElement): HTMLElement => {
+    if (this.options.scrollContainer) {
+      try {
+        const viewport = document.querySelector<HTMLElement>(this.options.scrollContainer);
+        if (viewport?.contains(element)) return viewport;
+      } catch {
+        // An optional layout selector never replaces the native identity or discovery policy.
+      }
+    }
+    return geminiViewport(element);
+  };
   timestamps(state: TimelineDataSession): TimelineTimestamps {
     return new TimelineTimestamps({
       getMarkers: () => state.markers,

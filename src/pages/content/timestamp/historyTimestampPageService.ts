@@ -31,13 +31,17 @@ export function startHistoryTimestampPageService(): StopNativeFeature {
 
 /**
  * Resolves `true` once the durable identity cache is hydrated, so the first lookup already
- * knows saved aliases. Without a page service there is nothing to wait for. Resolves `false`
+ * knows saved aliases. Legacy consumers may run without a page service; public shared-data
+ * consumers require it with `requirePageService`. Resolves `false`
  * when the page retired or `signal` aborted first: the caller must not attach anything then.
  */
-export function whenHistoryTimestampsReady(signal?: AbortSignal): Promise<boolean> {
+export function whenHistoryTimestampsReady(
+  signal?: AbortSignal,
+  options: { readonly requirePageService?: boolean } = {},
+): Promise<boolean> {
   if (signal?.aborted || retired) return Promise.resolve(false);
   const session = current;
-  if (!session) return Promise.resolve(true);
+  if (!session) return Promise.resolve(options.requirePageService !== true);
   return new Promise((resolve) => {
     const finish = (ready: boolean) => {
       signal?.removeEventListener('abort', onAbort);

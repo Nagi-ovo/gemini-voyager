@@ -74,6 +74,7 @@ describe('feature owners', () => {
         'mermaid',
         'sendShortcut',
         'draftSave',
+        'turnNavigator',
       ]),
     );
     expect(pluginOwnedHandlers('aistudio')).toEqual(new Set(['formulaCopy', 'sendShortcut']));

@@ -1,13 +1,8 @@
 import { StorageKeys } from '@/core/types/common';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
-import { type RouteTimeline, runRouteTimeline } from '@/features/timeline/runRouteTimeline';
 
 import type { StopNativeFeature } from '../featureLifecycle';
-import { isGeminiConversationRoute } from './conversationRoute';
-import { TimelineManager } from './manager';
-
-/** Gemini renders a conversation after its router settles; rebuilding sooner reads the old DOM. */
-const ROUTE_SETTLE_MS = 500;
+import { type GeminiTimelineRail, startGeminiTimelineRail } from './startGeminiTimelineRail';
 
 /** Native lifecycle module: one rail per Gemini conversation route, torn down by the returned stop. */
 export function startTimeline(signal?: AbortSignal): StopNativeFeature {
@@ -15,38 +10,17 @@ export function startTimeline(signal?: AbortSignal): StopNativeFeature {
   let stopped = false;
   let enabled = false;
   let liveRevision = 0;
-  let route: RouteTimeline | null = null;
-  let lifetime: AbortController | null = null;
-  let bodyObserver: MutationObserver | null = null;
+  let rail: GeminiTimelineRail | null = null;
   const stopRail = (): void => {
-    bodyObserver?.disconnect();
-    bodyObserver = null;
-    lifetime?.abort();
-    lifetime = null;
-    route = null;
+    rail?.stop();
+    rail = null;
   };
   const reconcile = (): void => {
     if (stopped || !enabled) {
       stopRail();
       return;
     }
-    if (route) return;
-    if (!document.body) {
-      if (!bodyObserver) {
-        bodyObserver = new MutationObserver(reconcile);
-        bodyObserver.observe(document.documentElement, { childList: true, subtree: true });
-      }
-      return;
-    }
-    bodyObserver?.disconnect();
-    bodyObserver = null;
-    lifetime = new AbortController();
-    route = runRouteTimeline({
-      signal: lifetime.signal,
-      isConversationRoute: isGeminiConversationRoute,
-      settleMs: ROUTE_SETTLE_MS,
-      createEngine: (previousUrl) => new TimelineManager({ previousUrl }),
-    });
+    rail ??= startGeminiTimelineRail();
   };
   const key = StorageKeys.GV_TIMELINE_ENABLED;
   const onChange = (changes: Record<string, chrome.storage.StorageChange>, area: string): void => {

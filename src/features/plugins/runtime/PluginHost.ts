@@ -43,6 +43,7 @@ import { ownedFeatureByPluginId, tracksPluginHealth } from '../sites/featureOwne
 import { hostPolicyRefusal, packagedSiteForUrl } from '../sites/hostPolicy';
 import { matchesAnyPattern } from '../sites/matchPattern';
 import { SiteRegistry } from '../sites/registry';
+import { sharedTimelineAdmissionId } from '../sites/sharedTimelinePolicy';
 import { createDefaultPluginSources, listPluginManifests } from '../sources/defaultSources';
 import {
   type LegacySettingSnapshot,
@@ -359,6 +360,29 @@ export class PluginHost {
         statuses.push(blockedStatus(manifest, { reason: 'duplicate-claim' }, pending));
         continue;
       }
+      const admissionId = sharedTimelineAdmissionId(this.url, manifest);
+      const admissionState = admissionId ? this.admission.stateOf(admissionId) : null;
+      if (admissionState === 'denied') {
+        statuses.push(blockedStatus(manifest, { reason: 'host-policy' }, pending));
+        continue;
+      }
+      if (
+        admissionId &&
+        admissionState === 'pending' &&
+        wishVerdict(
+          {
+            state: this.state,
+            legacy: this.legacy?.current() ?? null,
+            legacyPhase: this.legacy?.phase() ?? 'none',
+            admission: this.admission,
+            admissionId,
+          },
+          manifest.id,
+        ) === 'reserve'
+      ) {
+        statuses.push(blockedStatus(manifest, { reason: 'pending', by: admissionId }, pending));
+        continue;
+      }
       const base = { id: manifest.id, version: manifest.version, ...pending };
       const block = this.blocked.get(manifest.id);
       if (engine?.isActive(manifest.id)) {
@@ -614,7 +638,14 @@ export class PluginHost {
   ): Promise<WishVerdict> {
     if (!this.surfaceOn) return 'skip';
     if (!this.targetsThisPage(manifest)) return 'skip';
-    const wish = wishVerdict({ ...wishInput, admission: this.admission }, manifest.id);
+    const wish = wishVerdict(
+      {
+        ...wishInput,
+        admission: this.admission,
+        admissionId: sharedTimelineAdmissionId(this.url, manifest),
+      },
+      manifest.id,
+    );
     if (wish === 'skip') return 'skip';
     if (duplicateResourceClaims(manifest).length > 0) return 'skip';
     const incompatibility = findIncompatibility({

@@ -99,6 +99,7 @@ describe('plugin authoring prompt contract', () => {
       'formulaCopy',
       'mermaid',
       'sendShortcut',
+      'turnNavigator',
       'userLatex',
       'vimInput',
       'wavedrom',

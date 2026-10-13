@@ -81,4 +81,23 @@ describe('wishVerdict', () => {
     expect(wishVerdict({ ...input, state }, 'local.me.formula')).toBe('run');
     expect(wishVerdict({ ...input, state: {} }, 'local.me.formula')).toBe('skip');
   });
+
+  it('a shared consumer waits for the native start point but follows its own switch even when the official rail is off', () => {
+    const id = 'local.me.shared-rail';
+    const admissionId = OFFICIAL_PLUGIN_IDS.geminiTimeline;
+    const input = {
+      state: { [id]: { enabled: true, installedAt: 1 } },
+      legacy: { [StorageKeys.GV_TIMELINE_ENABLED]: false },
+      legacyPhase: 'loaded' as const,
+      admissionId,
+    };
+    const gate = (state: AdmissionState): OfficialAdmission => ({
+      stateOf: (pluginId) => (pluginId === admissionId ? state : 'admitted'),
+      subscribe: () => () => {},
+    });
+    expect(wishVerdict({ ...input, admission: gate('pending') }, id)).toBe('reserve');
+    expect(wishVerdict({ ...input, admission: gate('denied') }, id)).toBe('skip');
+    expect(wishVerdict({ ...input, admission: gate('admitted') }, id)).toBe('run');
+    expect(wishVerdict({ ...input, state: {}, admission: gate('admitted') }, id)).toBe('skip');
+  });
 });

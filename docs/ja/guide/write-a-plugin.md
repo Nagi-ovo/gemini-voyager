@@ -60,9 +60,9 @@ JavaScript の実行、クリックやキー入力への反応、ネットワー
 - マッチするすべてのサイトが宣言しているセマンティックキーだけを使うこと
 - `addClass` 1 つにつきクラスは 1 つだけで、`gv-` で始まること
 - 設定は boolean、number、select のいずれかであること（string と color にはまだ popup の UI がありません）
-- Gemini と AI Studio では `theme` を使わず、プリミティブは各サイトが許可するものだけを使うこと: Gemini では `formulaCopy`、`vimInput`、`userLatex`、`codeCollapse`、`mermaid`、`wavedrom`、`echarts`, `sendShortcut`, `draftSave`、AI Studio では `formulaCopy`、`sendShortcut`。いずれも Voyager 標準の対応する設定と同じコードを実行する。`formulaCopy` と `vimInput`(数式コピー・入力欄 Vim モード)は、同じページで標準設定とプラグインのどちらか一方だけが動く。ページの読み込み時や、どちらも動いていないときは標準設定が優先され、その後はすでに動いている側がそのまま動き続け、もう一方は一時停止と表示される。どちらかをオフにすると、もう一方が引き継ぐ。`userLatex`、`codeCollapse`、`mermaid`、`wavedrom`、`echarts` は要素ごとに担当を取り合うため、標準設定と同時に動かせる: 相手がすでに処理している行やコードブロックには手を出さない
+- Gemini と AI Studio では `theme` を使わず、プリミティブは各サイトが許可するものだけを使うこと: Gemini では `formulaCopy`、`vimInput`、`userLatex`、`codeCollapse`、`mermaid`、`wavedrom`、`echarts`, `sendShortcut`, `draftSave`、`turnNavigator`、AI Studio では `formulaCopy`、`sendShortcut`。いずれも Voyager 標準の対応する設定と同じコードを実行する。`formulaCopy` と `vimInput`(数式コピー・入力欄 Vim モード)は、同じページで標準設定とプラグインのどちらか一方だけが動く。ページの読み込み時や、どちらも動いていないときは標準設定が優先され、その後はすでに動いている側がそのまま動き続け、もう一方は一時停止と表示される。どちらかをオフにすると、もう一方が引き継ぐ。`userLatex`、`codeCollapse`、`mermaid`、`wavedrom`、`echarts` は要素ごとに担当を取り合うため、標準設定と同時に動かせる: 相手がすでに処理している行やコードブロックには手を出さない
 
-公式機能が組み込みプラグインで動作していても、ローカルプラグインから呼び出せる公開プリミティブになるわけではありません。Gemini では「タイムラインを表示」をオフにしても、ローカルの `turnNavigator` はまだ利用できません。まず公式タイムラインと同じスター・階層データを読み書きできるようにする必要があります。
+個人向けGeminiでは、`params.dataBackend: "shared"` と `engine: ">=1.9.0"` を指定すると、ローカルの `turnNavigator` を利用できます。公式タイムラインと同じネイティブのスター・階層データを読み書きし、会話・アカウント・ターンの識別パラメーターは上書きできません。公式の「タイムラインを表示」とは競合するため、先に公式設定をオフにしてからローカルプラグインを有効にしてください。公式に戻すときは、先にローカルプラグインを無効にしてから公式設定をオンにします。Business、Enterprise、独自のサイト範囲には対応していません。
 
 翻訳（`i18n`）は任意です。
 

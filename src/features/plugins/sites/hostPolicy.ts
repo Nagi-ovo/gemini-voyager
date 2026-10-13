@@ -27,6 +27,11 @@ import type { ManifestIssue } from '../manifest/validate';
 import type { PluginManifest, SiteAdapter } from '../types';
 import { type PackagedSiteId, legacyOwnedHandlers, pluginOwnedHandlers } from './featureOwners';
 import { patternWithinAny } from './matchPattern';
+import {
+  SHARED_TIMELINE_MATCHES,
+  sharedTimelineAdmissionId,
+  sharedTimelinePolicyIssues,
+} from './sharedTimelinePolicy';
 
 export interface PackagedHostPolicy {
   readonly siteId: PackagedSiteId;
@@ -39,7 +44,7 @@ export interface PackagedHostPolicy {
 
 /** Keep in step with `manifest.json`'s first `content_scripts` entry and `host_permissions`. */
 export const GEMINI_MATCHES: readonly string[] = [
-  'https://gemini.google.com/*',
+  ...SHARED_TIMELINE_MATCHES,
   'https://business.gemini.google/*',
 ];
 
@@ -178,8 +183,7 @@ export function manifestHostPolicyIssues(
   manifest: Pick<PluginManifest, 'matches' | 'theme' | 'contributes'>,
 ): ManifestIssue[] {
   const sites = packagedSitesForPatterns(manifest.matches);
-  if (sites.length === 0) return [];
-  const issues: ManifestIssue[] = [];
+  const issues = sharedTimelinePolicyIssues(manifest, sites.includes('gemini'));
   if (manifest.theme && !sites.every(siteAllowsPluginTheme)) {
     issues.push({
       path: 'theme',
@@ -209,14 +213,21 @@ export type HostPolicyRefusal =
  */
 export function hostPolicyRefusal(
   url: string,
-  manifest: Pick<PluginManifest, 'theme' | 'contributes'>,
+  manifest: Pick<PluginManifest, 'matches' | 'theme' | 'contributes'>,
 ): HostPolicyRefusal | null {
   const site = packagedSiteForUrl(url);
-  if (site === null) return null;
-  if (manifest.theme && !siteAllowsPluginTheme(site)) return { kind: 'theme' };
+  if (site !== null && manifest.theme && !siteAllowsPluginTheme(site)) return { kind: 'theme' };
   const refused = new Set<string>();
   for (const op of manifest.contributes.domOps ?? []) {
-    if (op.op === 'native' && !allowsNativeHandler(site, op.handler)) refused.add(op.handler);
+    if (op.op !== 'native') continue;
+    // Stored imports defer site policy, so scope and native identity are checked again on the page.
+    if (
+      op.handler === 'turnNavigator' &&
+      (site === 'gemini' || op.params.dataBackend === 'shared') &&
+      sharedTimelineAdmissionId(url, manifest) === null
+    )
+      refused.add(op.handler);
+    if (site !== null && !allowsNativeHandler(site, op.handler)) refused.add(op.handler);
   }
   return refused.size > 0 ? { kind: 'native-op', handlers: [...refused] } : null;
 }

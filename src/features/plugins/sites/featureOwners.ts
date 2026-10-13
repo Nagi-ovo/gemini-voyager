@@ -118,8 +118,8 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     feature: 'timeline',
     owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiTimeline,
-    // Shared stars and hierarchy are not yet a public local-plugin capability.
-    handlers: [],
+    // The public rail uses the same stars/hierarchy and native start permission.
+    handlers: ['turnNavigator'],
     healthTracking: false,
   },
   {

@@ -4,20 +4,24 @@
  * usually needs no more than `{ "op": "native", "handler": "turnNavigator" }`.
  */
 import { logger } from '@/core/services/LoggerService';
+import { isGeminiEnterpriseEnvironment } from '@/core/utils/gemini';
 import { activateCatalogTimeline } from '@/features/timeline/adapters/catalog/activateCatalogTimeline';
 import {
   TIMELINE_STYLE_COACHMARK_ID,
   type CatalogTimelineConfig,
 } from '@/features/timeline/adapters/catalog/config';
 import { siteConversationConfig } from '@/features/timeline/adapters/catalog/conversationId';
+import { activateSharedGeminiTimeline } from '@/features/timeline/adapters/gemini/activateSharedGeminiTimeline';
 
 import type { ManifestIssue } from '../../manifest/validate';
 import { sendSiteOf } from '../../sends/trackUserSends';
 import { isSafeRegexSource } from '../../sites/safeRegex';
+import { SHARED_TIMELINE_IDENTITY_PARAMS } from '../../sites/sharedTimelinePolicy';
 import { getPrimitiveContract } from '../contracts';
 import type { Primitive } from '../types';
 
 export interface TurnNavigatorParams {
+  readonly dataBackend?: 'shared';
   readonly turn?: string;
   readonly conversationIdAttribute?: string;
   readonly accountIdAttributes?: readonly string[];
@@ -52,6 +56,7 @@ export const turnNavigatorPrimitive: Primitive<TurnNavigatorParams> = {
     }
     const issues: ManifestIssue[] = [];
     const params: {
+      dataBackend?: 'shared';
       turn?: string;
       conversationIdAttribute?: string;
       accountIdAttributes?: string[];
@@ -62,6 +67,11 @@ export const turnNavigatorPrimitive: Primitive<TurnNavigatorParams> = {
       position?: 'left' | 'right';
     } = {};
     for (const [key, value] of Object.entries(raw ?? {})) {
+      if (key === 'dataBackend') {
+        if (value === 'shared') params.dataBackend = value;
+        else issues.push({ path: 'params.dataBackend', message: 'must be "shared"' });
+        continue;
+      }
       if ((SELECTOR_PARAMS as readonly string[]).includes(key)) {
         if (!isSelector(value)) {
           issues.push({ path: `params.${key}`, message: 'must be a non-empty selector' });
@@ -116,6 +126,15 @@ export const turnNavigatorPrimitive: Primitive<TurnNavigatorParams> = {
       }
       issues.push({ path: `params.${key}`, message: 'unknown parameter' });
     }
+    if (params.dataBackend === 'shared') {
+      for (const key of SHARED_TIMELINE_IDENTITY_PARAMS) {
+        if (Object.hasOwn(raw ?? {}, key))
+          issues.push({
+            path: `params.${key}`,
+            message: 'shared data uses native conversation, account and turn identity',
+          });
+      }
+    }
     return issues.length > 0 ? { success: false, error: issues } : { success: true, data: params };
   },
 
@@ -136,6 +155,27 @@ export const turnNavigatorPrimitive: Primitive<TurnNavigatorParams> = {
       context.setTargetCounter(() => 0);
       return;
     }
+    if (
+      params.dataBackend === 'shared' &&
+      (adapter.id !== 'gemini' ||
+        location.hostname !== 'gemini.google.com' ||
+        isGeminiEnterpriseEnvironment(location, context.doc) ||
+        SHARED_TIMELINE_IDENTITY_PARAMS.some((key) => Object.hasOwn(params, key)))
+    ) {
+      logger.warn('turnNavigator: shared data requires the native Gemini consumer surface', {
+        id: context.pluginId,
+      });
+      context.setTargetCounter(() => 0);
+      return;
+    }
+    if (adapter.id === 'gemini' && params.dataBackend !== 'shared') {
+      // Native identities and stars must never enter the catalog's Gemini-looking namespace.
+      logger.warn('turnNavigator: Gemini requires the shared data backend', {
+        id: context.pluginId,
+      });
+      context.setTargetCounter(() => 0);
+      return;
+    }
     context.setTargetCounter(() => {
       try {
         return context.doc.querySelectorAll(turnSelector).length;
@@ -143,6 +183,16 @@ export const turnNavigatorPrimitive: Primitive<TurnNavigatorParams> = {
         return 0;
       }
     });
+    if (params.dataBackend === 'shared') {
+      return activateSharedGeminiTimeline(
+        scope,
+        {
+          position: params.position,
+          scrollContainer: params.scrollContainer,
+        },
+        context.settings,
+      );
+    }
     const config: CatalogTimelineConfig = {
       ...siteConversationConfig(adapter, params.conversationIdPattern),
       siteLabel: adapter.label,

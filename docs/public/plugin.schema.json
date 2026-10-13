@@ -319,7 +319,7 @@
         {
           "type": "object",
           "title": "native",
-          "description": "Invoke a first-party primitive by name. `params` is configuration, never instructions; the primitive validates its own params. The engine floor must clear the primitive's sinceEngine, and every matched site must declare the semantic keys it reads: the gates enforce both. A local plugin may not use it on Gemini or AI Studio.",
+          "description": "Invoke a first-party primitive by name. `params` is configuration, never instructions; the primitive validates its own params. The engine floor must clear the primitive's sinceEngine, and every matched site must declare the semantic keys it reads: the gates enforce both. On Gemini or AI Studio, local native ops must belong to a plugin-owned public feature. Consumer-Gemini turnNavigator requires literal dataBackend: shared, native identity and consumer-only matches; the local gate and runtime enforce this policy.",
           "required": ["op", "handler"],
           "properties": {
             "op": { "const": "native" },

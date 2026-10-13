@@ -22,6 +22,7 @@ const LOCATIONS: Readonly<Partial<Record<OwnedFeatureId, OfficialSettingLocation
   vimInput: { setting: 'inputVimMode', card: 'inputCollapseOptions' },
   promptHistory: { setting: 'promptHistoryTitle', card: 'promptManagerOptions' },
   inputCollapse: { setting: 'enableInputCollapse', card: 'inputCollapseOptions' },
+  timeline: { setting: 'timelineEnable', card: 'timelineOptions' },
 };
 
 /** The native setting behind a packaged official plugin id, or null for any other plugin. */

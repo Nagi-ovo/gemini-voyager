@@ -108,6 +108,7 @@ A primitive is behavior Voyager ships as code; a plugin can only call it by name
   - mode (string, since 1.9.0): Which Enter chord sends (default ctrlEnterSends). Gemini accepts only ctrlEnterSends; AI Studio accepts only enterSends.
 - tableCopy (sinceEngine 1.8.0): A toolbar above each table in a reply copies it as Markdown (formulas kept as LaTeX, the same table conversation export writes) or as TSV for spreadsheets. The table stays untouched; turning the plugin off removes the toolbars. Reads: assistantTurn.
 - turnNavigator (sinceEngine 1.4.0): A compact conversation timeline with starred messages and search, built on the same code as the Claude timeline. Reads: userTurn.
+  - dataBackend (string, since 1.9.0): "shared" uses Voyager’s native stars and hierarchy on consumer gemini.google.com only. Required on Gemini; omit on catalog sites. Shared mode rejects turn, turnItem, conversationIdPattern, conversationIdAttribute and accountIdAttributes overrides; native route, account and canonical turn identity remain authoritative.
   - turn (selector): User-turn elements to index; defaults to the site adapter's userTurn.
   - conversationIdAttribute (string, since 1.5.0): Attribute holding the conversation id that conversationIdPattern captures from the URL, on an ancestor of each turn or inside its turnItem. When set, it is the only thing that lets a turn be starred: the id must name the current conversation; a turn without one stays unstarrable.
   - accountIdAttributes (string[], since 1.5.0): Ordered attributes on document.documentElement identifying the loaded account. Stars hash their values together; missing values leave the star untagged.
@@ -171,7 +172,8 @@ Semantic anchors Gemini declares (use them as { "kind": "semantic", "key": … }
 
 Gemini does not declare thinkingBlock, sidePanel, headerActions, scrollContainer: a plugin that relies on one of these is refused. Use a CSS selector instead.
 
-Gemini allows only these primitives (native ops): codeCollapse, draftSave, echarts, formulaCopy, mermaid, sendShortcut, userLatex, vimInput, wavedrom. No "theme".
+Gemini allows only these primitives (native ops): codeCollapse, draftSave, echarts, formulaCopy, mermaid, sendShortcut, turnNavigator, userLatex, vimInput, wavedrom. No "theme".
+- `turnNavigator` runs the same code as Voyager’s own Show Timeline setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `turnNavigator` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
 - `draftSave` runs the same code as Voyager’s own Draft auto-save setting. Official and local draft plugins may run together and share the same `gvDraft_` full-path data. Their writes and pruning are coordinated on this page. Turning either plugin off keeps stored drafts.
 - `sendShortcut` runs the same code as Voyager’s own Ctrl/Cmd+Enter send setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `sendShortcut` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
 - `formulaCopy` runs the same code as Voyager’s own Formula copy setting. Only one of them runs on a page. When the page loads, or while neither is running, the setting goes first: with it on, a plugin calling `formulaCopy` stays paused. Whichever is already running keeps running, and turning on the other leaves that one paused (the popup says why). Turn one off to hand the feature to the other.
@@ -185,7 +187,7 @@ Gemini allows only these primitives (native ops): codeCollapse, draftSave, echar
 - The `sidebar` anchor also matches Voyager’s own folder panel (`.gv-folder-container`). To change only Gemini’s navigation rail, target `bard-sidenav` with a CSS selector.
 - On Gemini, `draftSave` shares the native drafts: keys are `gvDraft_` plus the full pathname, including `/u/<index>/` and Gem routes. Different account slots have different keys; changing email within the same slot still shares stored drafts.
 - A confirmed first send clears the source new-chat draft. Leaving without sending keeps it. Restore waits check the current route, account and input edits; page unload only makes a best-effort final save.
-- The official Gemini timeline is a fixed-id builtin, not a public primitive. Local `turnNavigator` stays unavailable even with Show Timeline off until it shares the official stars and hierarchy data.
+- On consumer gemini.google.com, `turnNavigator` requires literal `params: { "dataBackend": "shared" }` and the engine version shown in its primitive reference. All matches must stay on that host: no Business or mixed catalog sites. It shares Voyager’s existing stars, levels, collapse state and native account/turn identity; do not set turn, turnItem, conversationIdPattern, conversationIdAttribute or accountIdAttributes. Enterprise and custom-website coverage still refuse this rail at the native start point.
 
 ### Target site: AI Studio
 

@@ -5,8 +5,10 @@
  * Only runtimes proven to be one per page are listed: the formula-copy service
  * is a singleton with its own generation counter, and Vim input keeps its state
  * in module scope. Send shortcuts also claim the composer mode on every site, so conflicting
- * modes are visible instead of leaving the later listener silently inactive.
+ * modes are visible instead of leaving the later listener silently inactive. A timeline rail
+ * also owns page navigation and one visual surface, including the fixed-id Gemini builtin.
  */
+import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import type { PluginManifest } from '../types';
 
 export type ResourceId = string;
@@ -15,13 +17,14 @@ const HANDLER_RESOURCES: Readonly<Record<string, readonly ResourceId[]>> = {
   formulaCopy: ['formula-copy-service'],
   vimInput: ['vim-input-runtime'],
   sendShortcut: ['composer-send-key-mode'],
+  turnNavigator: ['timeline-rail'],
 };
 
 /** One resource claimed by one `native` op, kept per op so repeats stay visible. */
 export interface ResourceClaim {
   readonly resource: ResourceId;
   readonly handler: string;
-  /** Index of the op in `contributes.domOps`. */
+  /** Index of the op in `contributes.domOps`; -1 names a fixed builtin runtime. */
   readonly opIndex: number;
 }
 
@@ -40,6 +43,12 @@ export function opResourceClaims(manifest: PluginManifest): readonly ResourceCla
       claims.push({ resource, handler: op.handler, opIndex });
     }
   });
+  // The fixed-id rail has no native op, but still excludes another rail and holds its release.
+  if (manifest.id === OFFICIAL_PLUGIN_IDS.geminiTimeline) {
+    for (const resource of handlerResources('turnNavigator')) {
+      claims.push({ resource, handler: 'turnNavigator', opIndex: -1 });
+    }
+  }
   return claims;
 }
 

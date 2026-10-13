@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import type { DomOperation, PluginManifest } from '../types';
 import { arbitrate } from './resourceArbiter';
 import { claimedResources, duplicateResourceClaims, opResourceClaims } from './resourceClaims';
@@ -43,9 +44,8 @@ describe('resource claims', () => {
   it('derives claims from the handler only; every other primitive composes', () => {
     expect(claimedResources(plugin('a', ['formulaCopy']))).toEqual(['formula-copy-service']);
     expect(claimedResources(plugin('a', ['vimInput']))).toEqual(['vim-input-runtime']);
-    expect(
-      claimedResources(plugin('a', ['counterBadge', 'copyButton', 'collapse', 'turnNavigator'])),
-    ).toEqual([]);
+    expect(claimedResources(plugin('a', ['counterBadge', 'copyButton', 'collapse']))).toEqual([]);
+    expect(claimedResources(plugin('a', ['turnNavigator']))).toEqual(['timeline-rail']);
     expect(claimedResources(plugin('a'))).toEqual([]);
   });
 
@@ -69,6 +69,24 @@ describe('resource claims', () => {
       claims: ['nothing'],
     } as PluginManifest;
     expect(claimedResources(declared)).toEqual(['formula-copy-service']);
+  });
+
+  it('a fixed Gemini rail and a public rail exclude each other, including duplicate activation', () => {
+    const official = plugin(OFFICIAL_PLUGIN_IDS.geminiTimeline);
+    const local = plugin('local.me.shared-rail', ['turnNavigator']);
+    expect(claimedResources(official)).toEqual(claimedResources(local));
+    expect(duplicateResourceClaims(plugin(official.id, ['turnNavigator']))).toEqual([
+      'timeline-rail',
+    ]);
+    expect(arbitrate([local, official], [], NONE).blocked.get(local.id)?.by).toBe(official.id);
+    expect(arbitrate([local, official], [], new Set([local.id])).blocked.get(official.id)?.by).toBe(
+      local.id,
+    );
+    expect(
+      arbitrate([local], [], NONE, {
+        releasingBy: (resource) => (resource === 'timeline-rail' ? official.id : null),
+      }).blocked.get(local.id),
+    ).toEqual({ reason: 'releasing', by: official.id, resources: ['timeline-rail'] });
   });
 });
 

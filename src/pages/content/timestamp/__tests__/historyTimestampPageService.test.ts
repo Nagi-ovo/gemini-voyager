@@ -89,9 +89,16 @@ describe('history timestamp page service', () => {
     document.body.innerHTML = '';
   });
 
-  it('starts the history observer even when the timeline never runs', async () => {
-    stopService = startHistoryTimestampPageService();
+  it('requires the page service for shared data while history still runs without a timeline', async () => {
     await expect(whenHistoryTimestampsReady()).resolves.toBe(true);
+    await expect(whenHistoryTimestampsReady(undefined, { requirePageService: true })).resolves.toBe(
+      false,
+    );
+    expect(observerCommands(postMessage)).toEqual([]);
+    stopService = startHistoryTimestampPageService();
+    await expect(whenHistoryTimestampsReady(undefined, { requirePageService: true })).resolves.toBe(
+      true,
+    );
 
     expect(observerCommands(postMessage)).toContainEqual(
       expect.objectContaining({ type: 'configure', payload: { enabled: true } }),

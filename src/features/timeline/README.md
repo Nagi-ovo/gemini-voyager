@@ -35,6 +35,14 @@ legacy hierarchy keys and serialized formats, and verifies stored turn aliases. 
 can include an opaque account annotation captured at the press; this annotation does not filter
 Library reads. All sites use the same `TimelineState` and hierarchy owner.
 
+Local consumer-Gemini `turnNavigator` selects this native policy with literal
+`dataBackend: "shared"`; it cannot override conversation, account or turn identity.
+`adapters/gemini/activateSharedGeminiTimeline.ts` waits for the existing history and message
+page services before creating a data session. It shares the route lifetime with the official
+rail, while the plugin scope owns its switch and immediate abort. The public primitive and
+fixed builtin arbitrate one `timeline-rail` resource. Catalog sites keep their adapter and
+storage policy.
+
 The [catalog adapter](adapters/catalog/CatalogTimelineAdapter.ts) receives semantic selectors from
 `site.json` and optional `turnNavigator` manifest parameters. It retains identity and ownership
 across virtualized DOM windows. Its [storage policy](adapters/catalog/CatalogTimelineStorage.ts)
@@ -117,5 +125,5 @@ shows in the dot's tooltip only: nothing is inserted into the host's transcript.
 name no turn key and show none.
 
 The packaged `turnNavigator` primitive remains the compatibility entry point for old remote catalogs.
-Its name, parameter validator and engine floor are unchanged; both bundled and cached remote manifests
-run the shared engine. Older extension builds can continue reading these unchanged manifests.
+Existing parameters and their engine floors remain compatible; the optional shared backend has its
+own next-release floor. Both bundled and cached remote manifests run the shared engine. Older extension builds can continue reading these unchanged manifests.

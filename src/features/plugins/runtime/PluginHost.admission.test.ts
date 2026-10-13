@@ -470,3 +470,78 @@ describe('PluginHost: the legacy read runs beside start-up', () => {
     host.stop();
   });
 });
+
+describe('PluginHost: a Gemini shared rail inherits the native start point', () => {
+  const ID = 'local.me.shared-rail';
+  const shared: PluginManifest = {
+    ...official(ID, 'gv-local-shared-rail'),
+    engine: '>=next',
+    contributes: {
+      domOps: [
+        {
+          op: 'addClass',
+          target: { kind: 'css', selector: 'body' },
+          className: 'gv-local-shared-rail',
+        },
+        { op: 'native', handler: 'turnNavigator', params: { dataBackend: 'shared' } },
+      ],
+    },
+  };
+  const sharedMounted = () => document.body.classList.contains('gv-local-shared-rail');
+
+  it('waits while ordinary local CSS runs, then mounts using its own switch with the official master off', async () => {
+    mockPluginState({
+      [ID]: { enabled: true, installedAt: 1 },
+      [LOCAL_ID]: { enabled: true, installedAt: 1 },
+    });
+    const legacy = deferredLegacy();
+    const admission = createOfficialAdmission();
+    const host = geminiHost([], legacy.legacySettings, admission, {
+      localPlugins: [shared, localPlugin],
+    });
+    await host.start();
+    expect(localMounted()).toBe(true);
+    expect(sharedMounted()).toBe(false);
+    expect(host.getStatuses().find((entry) => entry.id === ID)).toMatchObject({
+      kind: 'blocked',
+      blockedReason: 'pending',
+      blockedBy: OFFICIAL_PLUGIN_IDS.geminiTimeline,
+    });
+    legacy.resolve({ [StorageKeys.GV_TIMELINE_ENABLED]: false });
+    await flush();
+    expect(sharedMounted()).toBe(false);
+    admission.admit('gemini', 'timeline');
+    await flush();
+    expect(sharedMounted()).toBe(true);
+    expect(localMounted()).toBe(true);
+    legacy.fire({ [StorageKeys.GV_TIMELINE_ENABLED]: false });
+    await flush();
+    expect(sharedMounted()).toBe(true);
+    host.stop();
+    expect(sharedMounted()).toBe(false);
+  });
+
+  it('a denied native entry blocks the shared consumer for good without blocking ordinary local CSS', async () => {
+    mockPluginState({
+      [ID]: { enabled: true, installedAt: 1 },
+      [LOCAL_ID]: { enabled: true, installedAt: 1 },
+    });
+    const legacy = deferredLegacy();
+    const admission = createOfficialAdmission();
+    const host = geminiHost([], legacy.legacySettings, admission, {
+      localPlugins: [shared, localPlugin],
+    });
+    await host.start();
+    legacy.resolve({ [StorageKeys.GV_TIMELINE_ENABLED]: false });
+    admission.close();
+    admission.admit('gemini', 'timeline');
+    await flush();
+    expect(sharedMounted()).toBe(false);
+    expect(host.getStatuses().find((entry) => entry.id === ID)).toMatchObject({
+      kind: 'blocked',
+      blockedReason: 'host-policy',
+    });
+    expect(localMounted()).toBe(true);
+    host.stop();
+  });
+});

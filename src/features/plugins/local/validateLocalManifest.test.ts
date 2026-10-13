@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { resolveEngineVersion } from '../engineVersion';
 import { validateHostCatalogFile } from '../remote/hostCatalogFile';
 import { isLocalPluginId, toLocalPluginId } from './localPluginId';
 import { validateLocalManifest } from './validateLocalManifest';
@@ -113,7 +114,7 @@ describe('validateLocalManifest', () => {
     expect(paths(authored({ theme }))).toEqual([]);
   });
 
-  it('rejects a native op on Gemini and AI Studio for a primitive no official plugin there owns', () => {
+  it('requires shared data on Gemini and keeps turn navigation closed on AI Studio', () => {
     const native = (matches: string[]) =>
       authored({
         engine: '>=1.4.0',
@@ -129,6 +130,63 @@ describe('validateLocalManifest', () => {
     expect(paths(native(['https://gemini.google.com/*']))).toEqual(['contributes.domOps[1]']);
     expect(paths(native(['https://aistudio.google.com/*']))).toEqual(['contributes.domOps[1]']);
     expect(paths(native(['https://claude.ai/*']))).toEqual([]);
+  });
+
+  it('imports only an explicit consumer shared timeline with the new engine floor and native identity', () => {
+    const input = (
+      matches: string[],
+      params: Record<string, unknown>,
+      engine = `>=${resolveEngineVersion('next')}`,
+    ) =>
+      authored({
+        matches,
+        engine,
+        contributes: { domOps: [{ op: 'native', handler: 'turnNavigator', params }] },
+      });
+    const matches = ['https://gemini.google.com/*'];
+    const shared = { dataBackend: 'shared', position: 'left' };
+    const valid = validateLocalManifest(input(matches, shared));
+    expect(valid.success ? [] : valid.error).toEqual([]);
+    if (valid.success) expect(valid.data.manifest.id).toBe('local.me.wide-chat');
+    expect(paths(input(matches, shared, '>=1.5.0'))).toContain('engine');
+    for (const scope of [
+      ['https://business.gemini.google/*'],
+      [...matches, 'https://business.gemini.google/*'],
+      [...matches, 'https://claude.ai/*'],
+      ['https://claude.ai/*'],
+    ])
+      expect(paths(input(scope, shared))).toContain('contributes.domOps[0]');
+    for (const [key, value] of Object.entries({
+      turn: '.fake',
+      turnItem: '.fake',
+      conversationIdPattern: '^/app/(.+)',
+      conversationIdAttribute: 'data-conversation',
+      accountIdAttributes: ['data-account'],
+    }))
+      expect(paths(input(matches, { ...shared, [key]: value }))).toContain(
+        `contributes.domOps[0].params.${key}`,
+      );
+    expect(
+      paths(
+        authored({
+          matches,
+          engine: `>=${resolveEngineVersion('next')}`,
+          contributes: {
+            settings: {
+              backend: {
+                type: 'select',
+                label: 'Backend',
+                default: 'shared',
+                options: [{ value: 'shared', label: 'Shared' }],
+              },
+            },
+            domOps: [
+              { op: 'native', handler: 'turnNavigator', params: { dataBackend: '{{backend}}' } },
+            ],
+          },
+        }),
+      ),
+    ).toContain('contributes.domOps[0]');
   });
 
   describe('primitives handed to official plugins on Gemini and AI Studio', () => {

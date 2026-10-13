@@ -332,8 +332,15 @@ Studio nothing mounts, and flipping it unmounts or remounts them live. Gemini
 has no page-wide master switch. Its **Show Timeline** switch controls only the
 rail and navigation shortcut lease; saved stars and hierarchy remain, and the
 message timestamp page service follows **Show Message Timestamps** independently.
-Local `turnNavigator` stays closed on Gemini until it shares the official
-star/hierarchy data policy. Watermark removal remains a core feature. The
+Local `turnNavigator` on consumer Gemini requires literal `params: { "dataBackend": "shared" }`
+(engine >=1.9.0). It reads and edits the same native stars, levels and collapse state, waits for
+both page-owned timestamp caches, and inherits the official rail’s admission. Its own plugin
+switch controls the rail independently of **Show Timeline**. Both claim `timeline-rail`: the
+official setting wins on a cold page, while a mounted holder keeps the rail until disabled.
+Turn off **Show Timeline** before enabling a local replacement; turn the local plugin off before
+returning to the official rail. Shared manifests stay within `https://gemini.google.com/*` and
+cannot override turn, route or account identity. Business, Enterprise and custom coverage
+do not admit this native-data rail. Watermark removal remains a core feature. The
 zero-request promise holds: `isEligibleCatalogHost` refuses every native host,
 so a Gemini page has no catalog host, never asks for a check and never reads a catalog cache, and
 the background refuses a forced check for them too. A minimal Gemini plugin:
@@ -396,7 +403,8 @@ Shipped primitives (`verbs/<name>/contract.ts`): `formulaCopy` (since 1.3.0), `v
 `composer` param, defaults to the adapter's `composer` selector) and `turnNavigator` (since 1.4.0,
 `turn` / `conversationIdPattern` / `scrollContainer` / `yieldWhen` / `position`, all optional and
 defaulting to the adapter, plus the optional `conversationIdAttribute` attribute and `turnItem`
-selector since 1.5.0) and `userLatex` (since 1.7.0, optional `turn` selector defaulting to the
+selector since 1.5.0, and `dataBackend: "shared"` on consumer Gemini since the next engine
+release, resolved as 1.9.0 for local imports) and `userLatex` (since 1.7.0, optional `turn` selector defaulting to the
 adapter's `userTurn`; renders the LaTeX a user typed with Gemini's renderer and restores the text on
 unmount) and the code-block diagram primitives `mermaid`, `echarts` and `wavedrom` (all since
 1.7.0, optional `turn` / `codeBlock` / `code` / `codeLine` / `language` selectors defaulting to

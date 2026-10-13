@@ -2,11 +2,14 @@
 
 Start with the owner of the behavior being changed. The fixed builtin `voyager.gemini-timeline`
 starts `index.ts` through `pluginHandler.ts` at the original heavy-feature start point, after the
-history and message timestamp page services. `index.ts` runs the shared route lifecycle
-(`runRouteTimeline`) and returns a synchronous stop; scope abort stops the rail before the plugin
-cleanup ledger drains. Rolling the owner back uses the same module through the native registry.
-The builtin opens no public primitive; local `turnNavigator` remains closed until shared data is
-exposed. `manager.ts` creates a Gemini adapter for the
+history and message timestamp page services. `index.ts` owns the native master setting, while
+`startGeminiTimelineRail.ts` owns the shared route/DOM lifetime and synchronous stop. Scope abort
+stops the rail before the plugin cleanup ledger drains. Rolling the owner back uses the same
+module through the native registry. Local `turnNavigator` with literal `dataBackend: "shared"`
+uses this rail and native data policy after both page caches are ready. It inherits the official
+admission but follows its own plugin switch. Both rails claim the same exclusive resource;
+turn off the current holder to hand over. Shared identity overrides, Business, Enterprise and
+custom-website coverage are refused. `manager.ts` creates a Gemini adapter for the
 [shared timeline engine and view](../../../features/timeline/README.md). `GeminiTimelineAdapter.ts`
 supplies native storage, the time reader and scroll viewport discovery. `GeminiTimelineTurnSource.ts`
 owns selector discovery and turn collection; only the rail's source reports native health.
