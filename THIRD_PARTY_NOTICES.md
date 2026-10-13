@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-Gemini Voyager is licensed as a whole under `GPL-3.0`. Some files and assets in
+Voyager is licensed as a whole under `GPL-3.0`. Some files and assets in
 `src/pages/content/watermarkRemover/` are adapted from third-party projects under
 the MIT License:
 

@@ -1,3 +1,5 @@
+// Model-menu locking adapts interaction ideas from Gemini Helper by urzeye
+// (https://greasyfork.org/scripts/558318-gemini-helper, https://github.com/urzeye/tampermonkey-scripts).
 import { DefaultModelPreferences } from './preferences';
 import type { DefaultModelSetting, DefaultThinkingLevel } from './preferences';
 

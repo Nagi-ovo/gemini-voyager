@@ -60,7 +60,7 @@
 
 We love AI chatbots, but sometimes we wish they had just a _bit_ more structure.
 
-That's why I built **Voyager**. It's a companion that helps you keep your AI conversations organized, accessible, and productive — whether you're on Gemini, Claude, or ChatGPT. If you're a researcher juggling dozens of threads, a developer saving code snippets, or just someone who loves order, Voyager is designed for you.
+That's why I built **Voyager**. It's a companion that helps you keep your AI conversations organized, accessible, and productive — whether you're on Gemini, Claude, ChatGPT, or DeepSeek. If you're a researcher juggling dozens of threads, a developer saving code snippets, or just someone who loves order, Voyager is designed for you.
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
@@ -81,13 +81,13 @@ That's why I built **Voyager**. It's a companion that helps you keep your AI con
 - **💡 [Prompt Vault](https://voyager.nagi.fun/en/guide/prompts)**: Save and reuse prompts across Gemini, AI Studio, and [custom websites](https://voyager.nagi.fun/en/guide/prompts#available-anywhere).
 - **☁️ [Cloud Sync](https://voyager.nagi.fun/en/guide/cloud-sync)**: Sync folders and prompts through Google Drive, or iCloud on Safari.
 - **🗑️ [Batch Delete](https://voyager.nagi.fun/en/guide/batch-delete)**: Bulk delete conversations.
-- **📐 Formula Copy**: One-click copy for LaTeX and MathML (Word) source codes.
+- **📐 [Formula Copy](https://voyager.nagi.fun/en/guide/formula-copy)**: Click a formula to copy it as LaTeX, MathML (Word), or Notion-ready math.
 - **🌦️ Visual Effects**: Add seasonal ambience with **snow**, **cinematic rain**, or **falling sakura petals** from the settings panel.
 
 ### ✨ Gemini Exclusive
 
 - **📍 [Timeline Navigation](https://voyager.nagi.fun/en/guide/timeline)**: Visual nodes to jump between messages, star key moments, and manage conversation branches.
-- **💾 [Chat Export](https://voyager.nagi.fun/en/guide/export)**: Export conversations to JSON, Markdown, or PDF with images included.
+- **💾 [Chat Export](https://voyager.nagi.fun/en/guide/export)**: Export conversations to JSON, Markdown, PDF, or an image, with images included.
 - **🧜‍♀️ [Mermaid Rendering](https://voyager.nagi.fun/en/guide/mermaid)**: Auto-render flowcharts, sequence diagrams, and other Mermaid charts.
 - **📝 [Markdown Rendering Fix](https://voyager.nagi.fun/en/guide/markdown-fix)**: Automatically fix broken bold syntax caused by Gemini's injected HTML elements.
 - **🍌 [Image Refinement](https://voyager.nagi.fun/en/guide/nanobanana)**: Lossless watermark removal for Gemini-generated images.
@@ -97,18 +97,19 @@ That's why I built **Voyager**. It's a companion that helps you keep your AI con
   - **[Prevent Auto Scroll](https://voyager.nagi.fun/en/guide/prevent-auto-scroll)**: Intercepts unwanted jumping behavior when hitting enter to send a new prompt.
   - **[Input Collapse](https://voyager.nagi.fun/en/guide/input-collapse)**: Auto-expandable input area for more reading space.
   - **[Default Model](https://voyager.nagi.fun/en/guide/default-model)**: Set your favorite model as default.
-  - **[Hide Recent Items](https://voyager.nagi.fun/en/guide/recents-hider)**: Hide "Recent" list in the sidebar to reduce distraction.
 
 ### 🔌 Claude, ChatGPT & DeepSeek
 
-Powered by the [Voyager Plugin Engine](https://voyager.nagi.fun/en/plugins), these features extend your experience beyond Gemini:
+Powered by the [Voyager Plugin Engine](https://voyager.nagi.fun/en/plugins), these features extend your experience beyond Gemini. Turn them on in the extension popup and grant access to each site:
 
-- **📍 Timeline**: Conversation sidebar with starred messages and search — the same navigation flow, now on Claude and DeepSeek.
-- **📊 Claude Usage Bar**: Track your session and weekly usage directly in the Claude interface.
-- **📐 Formula Copy**: One-click copy for LaTeX and MathML source codes (shared with Gemini; also on DeepSeek).
+- **📍 Timeline**: The same timeline, with starred messages and search, on Claude and ChatGPT; DeepSeek has it as an optional plugin.
+- **📂 ChatGPT Folders**: Organize ChatGPT conversations into folders. On by default.
+- **💾 ChatGPT Export**: Export a ChatGPT conversation as Markdown, JSON, PDF, or an image.
+- **📐 Formula Copy**: Click a formula to copy its LaTeX on Claude, ChatGPT, and DeepSeek.
+- **⌨️ Vim Input**: Vim-style modal editing and cursor navigation in the Claude, ChatGPT, and DeepSeek composers.
 - **📖 Comfortable Reading Width**: Adjust chat width for a better reading experience on Claude, ChatGPT, and DeepSeek.
+- **💬 Everyday helpers**: Quote replies, Ctrl/⌘+Enter to send, and a draft counter on Claude, ChatGPT, and DeepSeek; draft auto-save on Claude and DeepSeek.
 - **🈶 CJK Render Fix**: Fix CJK character rendering issues on Claude.
-- **⌨️ Vim Input**: Vim-style modal editing and cursor navigation in the DeepSeek composer.
 - **📜 Code Wrapping**: On DeepSeek, long code lines scroll sideways instead of wrapping, so indentation survives.
 
 ### 🧩 Any Site — Even Localhost
@@ -143,7 +144,7 @@ Add any site in the extension popup and the Prompt Manager follows you there, lo
   </a>
   &nbsp;&nbsp;
   <a href="https://github.com/voyager-crew/voyager/releases/latest/" target="_blank">
-    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari Download" height="36">
+    <img src="https://img.shields.io/badge/Safari-000000?style=for-the-badge&logo=safari&logoColor=white" alt="Safari Download (macOS)" height="36">
   </a>
 </div>
 
@@ -245,7 +246,7 @@ We welcome contributions! Whether you want to report bugs, suggest features, imp
 <summary>Development Setup</summary>
 
 ```bash
-# Install dependencies (Bun recommended)
+# Install dependencies (the scripts run on Bun; CI uses Bun 1.3.12)
 bun i
 
 # Development mode (with auto-reload)
@@ -285,7 +286,7 @@ Special thanks to all contributors for their contributions to Voyager ❤️
 
 - **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - Image Refinement is adapted from these projects. Third-party MIT notices are retained in [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
 
-- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)** - The default-model locking logic includes interaction ideas adapted from Gemini Helper, with source-level attribution retained.
+- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)** - The default-model locking logic includes interaction ideas adapted from Gemini Helper, credited in its source.
 
 - **[cordis](https://github.com/cordiverse/cordis)** - The plugin runtime's side-effect ledger (`PluginScope`) borrows its effect/disposal lifecycle design from cordis's fiber model.
 

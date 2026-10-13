@@ -7,10 +7,10 @@ npx create-voyager-plugin@latest init my-plugin --site claude
 npx create-voyager-plugin@latest check my-plugin
 ```
 
-- `init [dir] --site <site>` writes `plugin.json`, `style.css` and an `AGENTS.md` that tells a coding agent the rules for that site. The scaffold already passes `check`.
+- `init [dir] --site <site> [--force]` writes `plugin.json`, `style.css` and an `AGENTS.md` that tells a coding agent the rules for that site. The scaffold already passes `check`. It refuses to overwrite those files unless you pass `--force`.
 - `check [dir] [--json]` reads `plugin.json` and the `.css` files beside it, then runs the same checks as the popup's **Import files**. It exits 0 when the plugin would import and 1 otherwise, printing one `path: message` line per problem (`--json`: an array of `{ path, message }`).
 - `skill [--out <file>]` prints the [write-voyager-plugin skill](https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md) for every site.
-- `--version` prints the Voyager version this CLI was built from and its plugin engine version.
+- `--version` (`-v`) prints the Voyager version this CLI was built from and its plugin engine version; `--help` (`-h`) prints usage.
 
 The checks are Voyager's own source, bundled into one file with no dependencies, and the package version follows the extension's. A CLI newer than your installed Voyager may accept a plugin that needs a newer engine; an older Voyager then refuses it or leaves it off until you update.
 
