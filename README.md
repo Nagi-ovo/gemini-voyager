@@ -294,7 +294,7 @@ Special thanks to all contributors for their contributions to Voyager ❤️
 
 Projects inspired by Voyager:
 
-If your project is inspired by Voyager, forked from it, or built on top of it, feel free to open a PR to add it here.
+If your project is inspired by Voyager, forked from it, or built on top of it, share it in [Discussions](https://github.com/voyager-crew/voyager/discussions) and we'll add it here.
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - A fork of Voyager adapted for DeepSeek, bringing timeline navigation and chat management to DeepSeek users!
 
