@@ -1,42 +1,46 @@
-# Mermaid Diagram Rendering
+# Renderização de diagramas Mermaid
 
-Automatically render Mermaid code as visual diagrams.
+Renderiza automaticamente código Mermaid como diagramas visuais.
 
-## Overview
+## Visão geral
 
-When Gemini™ outputs Mermaid code blocks (flowcharts, sequence diagrams, Gantt charts, etc.), Voyager automatically detects and renders them as interactive diagrams.
+Quando o Gemini™ gera blocos de código Mermaid (fluxogramas, diagramas de sequência, gráficos de Gantt etc.), o Voyager detecta e renderiza esses blocos automaticamente como diagramas interativos.
 
-### Key Features
+### Principais recursos
 
-- **Auto-detection**: Supports `graph`, `flowchart`, `sequenceDiagram`, `gantt`, `pie`, `classDiagram`, and all major Mermaid diagram types
-- **Toggle view**: Switch between rendered diagram and source code with one click
-- **Fullscreen mode**: Click the diagram to enter fullscreen with zoom and pan support
-- **Dark mode**: Automatically adapts to page theme
+- **Detecção automática**: Suporta `graph`, `flowchart`, `sequenceDiagram`, `gantt`, `pie`, `classDiagram` e todos os principais tipos de diagrama do Mermaid
+- **Alternância de visualização**: Alterne entre o diagrama renderizado e o código-fonte com um único clique
+- **Modo tela cheia**: Clique no diagrama para entrar em tela cheia, com suporte a zoom e arrastar
+- **Modo escuro**: Adapta-se automaticamente ao tema da página
 
-## How to Use
+## Ativar ou desativar
 
-1. Ask Gemini to generate any Mermaid diagram code
-2. The code block is automatically replaced with the rendered diagram
-3. Click the **</> Code** button to view source code
-4. Click the **📊 Diagram** button to switch back to diagram view
-5. Click the diagram area to enter fullscreen
+A renderização do Mermaid já vem ativada no Gemini. Para desativar, abra o popup do Voyager e desligue **Habilitar renderização de diagramas Mermaid** em **Opções Gerais**. O recurso não está disponível no AI Studio.
 
-## Fullscreen Controls
+## Como usar
 
-- **Scroll wheel**: Zoom in/out
-- **Drag**: Pan the diagram
-- **+/-**: Toolbar zoom buttons
-- **⊙**: Reset view
-- **✕ / ESC**: Close fullscreen
+1. Peça ao Gemini para gerar qualquer código de diagrama Mermaid
+2. O bloco de código é substituído automaticamente pelo diagrama renderizado
+3. Clique no botão **</> Código** para ver o código-fonte
+4. Clique no botão **📊 Diagrama** para voltar à visualização do diagrama
+5. Clique na área do diagrama para entrar em tela cheia
 
-## Compatibilidade e Solução de Problemas
+## Controles em tela cheia
 
-::: warning Nota
+- **Roda do mouse**: Aumenta ou diminui o zoom
+- **Arrastar**: Move o diagrama
+- **+/-**: Botões de zoom da barra de ferramentas
+- **⊙**: Redefine a visualização
+- **✕ / ESC**: Fecha a tela cheia
 
-- **Limitação do Firefox**: Devido a restrições do ambiente, o Firefox usa a versão 9.2.2 e não suporta novos recursos como **Timeline** ou **Sankey**.
-- **Erros de sintaxe**: Falhas de renderização geralmente ocorrem devido a erros de sintaxis na saída do Gemini. Estamos coletando "bad cases" para implementar correções automáticas em atualizações futuras.
+## Compatibilidade e solução de problemas
+
+::: warning Atenção
+
+- **Limitação do Firefox**: Por restrições do ambiente, o Firefox traz o Mermaid 9.2.2, que não oferece suporte a recursos novos como **Timeline** ou **Sankey**.
+- **Erros de sintaxe**: Falhas de renderização costumam ser causadas por erros de sintaxe na saída do Gemini. Estamos coletando "casos ruins" para implementar correções automáticas para erros comuns de geração em atualizações futuras.
   :::
 
 <div align="center">
-  <img src="/assets/mermaid-preview.png" alt="Mermaid diagram rendering" style="max-width: 100%; border-radius: 8px;"/>
+  <img src="/assets/mermaid-preview.png" alt="Renderização de diagrama Mermaid" style="max-width: 100%; border-radius: 8px;"/>
 </div>

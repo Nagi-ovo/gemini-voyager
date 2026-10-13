@@ -1,27 +1,27 @@
 # Comunidad y Comentarios
 
-Valoramos mucho la voz de cada usuario. Ya sea que encuentres un error, tengas una sugerencia de funcionalidad o quieras compartir tu bóveda de prompts, puedes contactarnos a través de los siguientes canales.
+Valoramos la voz de cada usuario. Ya hayas encontrado un error, tengas una idea para una función o quieras compartir tu bóveda de prompts, hay varias formas de ponerte en contacto.
 
 ## 📢 Mantente Informado
 
-Sigue nuestra cuenta de X (Twitter) para obtener los últimos avances en desarrollo.
+Sigue nuestra cuenta de X (Twitter) para estar al día del desarrollo.
 
-- **Nuevas versiones**: Sé el primero en conocer las actualizaciones.
-- **Próximas funciones**: Entérate de antemano sobre las funciones que vendrán.
+- **Nuevas versiones**: sé el primero en enterarte de las actualizaciones.
+- **Avances de funciones**: un adelanto de las funciones que vienen.
 
 <div style="margin: 2rem 0;">
-  <a href="https://x.com/Nag1ovo/status/2012609459663634589" target="_blank" style="text-decoration: none;">
+  <a href="https://x.com/Nag1ovo/status/2012610584722731188" target="_blank" style="text-decoration: none;">
     <img src="https://img.shields.io/badge/Seguir-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="Seguir en X">
   </a>
 </div>
 
 ## 💬 Comunidad en Discord
 
-¡Únete a nuestro servidor de Discord y chatea con otros Voyagers!
+¡Únete a nuestro servidor de Discord y charla con otros Voyagers!
 
-- **Chat en tiempo real**: Habla directamente con otros usuarios y desarrolladores.
-- **Compartir Prompts**: Mira qué prompts están usando otros.
-- **Progreso del desarrollo**: Obtén las últimas noticias sobre nuevas funciones.
+- **Chat en tiempo real**: habla directamente con otros usuarios y con los desarrolladores.
+- **Compartir prompts**: mira cómo usan Gemini™ otros usuarios y comparte tus mejores prompts.
+- **Novedades del desarrollo**: entérate de las últimas noticias sobre próximas funciones y versiones.
 
 <div style="margin: 2rem 0;">
   <a href="https://discord.gg/TEUFxdMbGb" target="_blank" style="text-decoration: none;">
@@ -44,7 +44,7 @@ También puedes encontrarme en estas plataformas:
 
 ## 🐙 GitHub Issues
 
-Si encuentras un error (Bug) reproducible, envía un Issue en GitHub. Las solicitudes de funciones, ideas y preguntas van en Discussions, no en Issues:
+Si encuentras un error reproducible, abre un Issue en GitHub. Las solicitudes de funciones, ideas y preguntas van en Discussions, no en Issues:
 
 - [Reportar un Bug](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml)
 - [Proponer una función o idea (Discussions)](https://github.com/voyager-crew/voyager/discussions)

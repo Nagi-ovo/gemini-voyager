@@ -1,38 +1,41 @@
-# Image Refinement オプション
+# Image Refinement（透かし除去）
 
 ::: tip Safari サポート
-v1.6.0 以降、**Image Refinement** は Safari で直接動作し、フルサイズのウォーターマークなし画像をダウンロードできます。Chrome、Edge、Firefox、Safari で同じ組み込みフローを利用できます。
+v1.6.0 以降、**Image Refinement** は Safari でそのまま動作し、透かしのないフルサイズの画像をダウンロードできます。Chrome、Edge、Firefox、Safari は、現在同じ組み込みの仕組みを共有しています。
 :::
 
-**AI 画像、あるべき純粋な姿へ。**
+**AI 画像を、純粋な姿に。**
 
-Gemini™ が生成する画像には、デフォルトで目に見える透かしが入っています。これは安全上の理由によるものですが、創作活動においては、完全にクリーンな素材が必要な場合もあるでしょう。
+Gemini™ が生成する画像には、既定で目に見える透かしが入っています。これは安全のための仕組みですが、創作の場面では、まっさらな素材が必要になることもあります。
 
-## 無劣化復元
+## 劣化のない復元
 
-Image Refinement は **逆アルファブレンドアルゴリズム (Reverse Alpha Blending)** を採用しています。
+Image Refinement は **Reverse Alpha Blending（逆アルファブレンディング）** というアルゴリズムを使います。
 
-- **AI による再描画なし**: 従来の透かし除去ツールが多用する AI による塗りつぶしは、画像の細部を破壊してしまいます。
-- **ピクセル精度の復元**: 私たちは計算によって、ピクセル上の透かしの透明層を正確に取り除き、オリジナルのピクセルを 100% 復元します。
-- **品質劣化ゼロ**: 処理前後の画像は、透かし以外の部分において完全に一致します。
+- **AI による再描画ではありません**: 従来の透かし除去は、AI で該当部分を塗りつぶすことが多く、画素の細部が失われてしまいます。
+- **画素単位での復元**: 数学的な計算で、半透明の透かしの層を正確に取り除き、元の画素を 100% 復元します。
+- **画質の劣化はありません**: 処理後の画像は、透かしのない部分では元の画像とまったく同じです。
 
 ## 使い方
 
-1. **機能を有効化**: Voyager の設定パネル末尾にある「Image Refinement オプション」を見つけ、「ダウンロード時に透かしを除去」をオンにします。
-2. **自動処理**: これ以降、あなたが生成するすべての画像に対し、バックグラウンドで自動的に透かし除去処理が行われます。
-3. **直接ダウンロード**:
-   - 処理済みの画像にマウスを乗せると、🍌 ボタンが表示されます。
-   - **🍌 ボタンは標準のダウンロードボタンを完全に置き換えます**。クリックするだけで、100% 透かしのない画像を直接ダウンロードできます。
+Voyager のポップアップを開き、**Image Refinement オプション** を見つけてください。どちらのスイッチも、オンにするまではオフです。
+
+- **ダウンロード時に透かしを除去**（推奨）: Gemini のダウンロードボタンをクリックすると、保存されるファイルから透かしが除かれます。ダウンロードボタンに小さな 🍌 バッジが表示されていれば有効です。ボタン自体は引き続き Gemini のものです。
+- **プレビュー時に透かしを除去**（不安定）: 画面に表示される画像も処理します。処理が遅く、処理中に画像が一瞬ちらつくことがあります。
+
+## Gemini 自身の設定
+
+Gemini には、目に見える透かしを切り替える公式の設定が追加されつつあります。**設定 → Media watermark → Off** です。アカウントにこの項目がある場合は、そちらを使い、Voyager の透かし除去はオフにしてください。Gemini の設定のほうが確実です。Voyager はこれについて一度だけ案内を表示し、最近の画像にすでに透かしがない場合もお知らせします。まだこの項目が見つからない場合は、Voyager を引き続き使ってください。どちらの方法でも、SynthID と C2PA のメタデータは残ります。
 
 <div style="text-align: center; margin-top: 30px;">
-  <img src="/assets/nanobanana.png" alt="Image Refinement Example" style="border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); max-width: 100%;"/>
+  <img src="/assets/nanobanana.png" alt="Image Refinement のデモ" style="border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); max-width: 100%;"/>
 </div>
 
-## 特別謝辞
+## 謝辞
 
-本機能は、[journey-ad (Jad)](https://github.com/journey-ad) 氏が開発した [gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) プロジェクトに基づいています。このプロジェクトは、[allenk](https://github.com/allenk) 氏による [GeminiWatermarkTool C++ 版](https://github.com/allenk/GeminiWatermarkTool) の JavaScript 移植版です。オープンソースコミュニティへの多大なる貢献に感謝します。🧡
-保持している第三者の MIT notice は [THIRD_PARTY_NOTICES.md](https://github.com/voyager-crew/voyager/blob/main/THIRD_PARTY_NOTICES.md) に記載しています。
+この機能は、[journey-ad (Jad)](https://github.com/journey-ad) 氏の [gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) プロジェクトに基づいています。このプロジェクトは、[allenk](https://github.com/allenk) 氏による [元の C++ 実装](https://github.com/allenk/GeminiWatermarkTool) を JavaScript に移植したものです。コミュニティへの貢献に感謝します。🧡
+保持している MIT ライセンスの表示は、[THIRD_PARTY_NOTICES.md](https://github.com/voyager-crew/voyager/blob/main/THIRD_PARTY_NOTICES.md) で確認できます。
 
 ## プライバシーとセキュリティ
 
-すべての透かし除去処理は、あなたの **ブラウザ内でローカル** に完了します。画像がいかなる第三者のサーバーにアップロードされることはなく、あなたのプライバシーと創作の安全は守られます。
+すべての処理は **ブラウザの中で** 行われます。画像が第三者のサーバーにアップロードされることはありません。プライバシーと創作の安全を守ります。

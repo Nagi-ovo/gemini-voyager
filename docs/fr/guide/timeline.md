@@ -1,59 +1,95 @@
-# Voyage dans le Temps
+# Voyage dans le temps
 
-Les longues conversations sont désordonnées. Vous faites défiler vers le haut, vers le bas, vous perdez le fil.
-Voyager transforme votre conversation en une chronologie.
+La Chronologie Voyager est un système visuel de navigation dans les conversations, pour Gemini, Claude et ChatGPT. Elle associe chaque message d'une discussion à un nœud interactif, sur le côté droit de l'écran, et transforme les longues conversations IA en une carte navigable où vous pouvez sauter instantanément.
 
-Dans les paramètres de Gemini, **Afficher la chronologie** contrôle la barre de chronologie et ses raccourcis de navigation. La désactivation conserve les étoiles et la hiérarchie enregistrées. Les heures des messages dépendent séparément de **Afficher les horodatages des messages** : elles peuvent donc rester visibles même lorsque la chronologie est désactivée.
+Les longues conversations sont confuses. Vous remontez, vous redescendez, vous perdez votre place.
+Voyager transforme votre conversation en chronologie.
 
-## Visualisez la Forme de Votre Chat
+Dans les paramètres de Gemini, **Afficher la chronologie** contrôle la barre et ses raccourcis de navigation. La désactiver conserve les favoris et la hiérarchie enregistrés. Les horodatages des messages suivent séparément **Afficher les horodatages des messages**, de sorte que vous pouvez les garder visibles alors que la chronologie est désactivée.
 
-Regardez sur le côté droit de votre écran.
+## Voyez la forme de votre discussion
+
+Regardez le côté droit de votre écran.
 Chaque nœud représente un message. La chronologie visualise le rythme de votre dialogue.
 
-## La Navigation, Résolue.
+## La navigation, simplifiée
 
-- **Téléportation** : Cliquez sur un nœud pour sauter instantanément à ce message.
-- **Coup d'œil** : Survolez pour voir le contenu sans bouger.
-- **Signet** : Appui long sur un nœud pour le marquer d'une **Étoile**. C'est comme un marque-page pour votre cerveau.
-- **Niveaux (Expérimental)** : Clic droit sur un nœud pour définir différents niveaux (1-3) ou réduire les enfants. Parfait pour clarifier les conversations ramifiées.
-- **Redimensionner** : Faites glisser le bord intérieur de la timeline pour ajuster sa largeur.
-- **Clavier** : Naviguez à la vitesse de la pensée. Par défaut `j`/`k`, `gg`/`GG` pour aller au premier/dernier tour.
+- **Téléportation** : cliquez sur un nœud pour sauter instantanément à ce message.
+- **Coup d'œil** : survolez pour voir ce qu'il contient, sans bouger.
+- **Marque-page** : appuyez longuement sur un nœud pour le **mettre en favori**. C'est comme un marque-page pour votre mémoire.
+- **Niveaux (expérimental)** : cliquez droit sur un nœud pour lui attribuer un niveau (1 à 3) ou replier ses enfants. Idéal pour rendre lisibles les conversations ramifiées.
+- **Redimensionnement** : faites glisser le bord intérieur de la chronologie pour ajuster sa largeur.
+- **Clavier** : naviguez à la vitesse de la pensée. Par défaut `j`/`k`, et `gg`/`GG` pour aller au premier ou au dernier tour.
 
-![Navigation Temporelle](/assets/teaser.png)
+![Navigation dans la chronologie](/assets/teaser.png)
 
-## Étoile : Marquez vos moments clés
+## Favori : marquez vos percées
 
-Les longues conversations enfouissent des pépites. Marquez d'une étoile les moments qui comptent.
+Les longues conversations enfouissent de l'or. Mettez en favori les moments qui comptent.
 
-**Comment ça marche** : Appuyez longuement (~0.5s) sur n'importe quel nœud de la timeline. Vous le verrez s'illuminer — ce message est maintenant étoilé.
+**Fonctionnement** : appuyez longuement (environ 0,5 s) sur n'importe quel nœud de la chronologie. Il s'allume : ce message est maintenant en favori.
 
-- Appuyez longuement à nouveau pour retirer l'étoile.
-- Les nœuds étoilés restent mis en évidence pour que vous puissiez les repérer d'un coup d'œil.
-- Cliquez sur l'icône étoile dans l'en-tête de la timeline pour ouvrir le panneau **Historique des Étoiles** et voir tous vos messages marqués en un seul endroit.
+- Appuyez longuement à nouveau pour retirer le favori.
+- Les nœuds en favori restent mis en évidence pour être repérés d'un coup d'œil.
+- Retrouvez tous vos messages en favori dans la **Bibliothèque enregistrée** : cliquez sur **Voir la bibliothèque enregistrée** dans la fenêtre de Voyager, ou ouvrez-la depuis le panneau du Gestionnaire de prompts.
 
-C'est comme planter un drapeau dans la conversation — le moment d'une révélation, la réponse parfaite, ou l'endroit où vous voulez reprendre plus tard.
+Pensez-y comme à un drapeau planté dans la conversation : le moment d'une percée, la réponse parfaite, ou un passage que vous voulez reprendre plus tard.
 
 ::: tip Astuce
-Les étoiles se synchronisent entre appareils si vous avez activé la [Synchronisation Cloud](/guide/cloud-sync).
+Les favoris se synchronisent entre appareils si vous avez activé la [Synchro Cloud](/fr/guide/cloud-sync).
 :::
 
-## Encore Plus Vite au Clavier
+## Personnalisez l'apparence
 
-Vous ne voulez pas utiliser la souris ? Utilisez votre clavier.
+Sous **Options de la chronologie**, dans la fenêtre de Voyager :
+
+- **Style de la chronologie** : `Nœuds`, `Graduations` ou `Compact`.
+- **Épingler le panneau d'aperçu** : garde le panneau d'aperçu ouvert à côté de la chronologie. Sa zone de recherche filtre les messages au fil de la frappe.
+- **Chronologie déplaçable** : déplacez la chronologie n'importe où sur la page. **Réinitialiser la position de la chronologie** la remet à sa place.
+
+## Encore plus vite avec le clavier
+
+Vous ne voulez pas utiliser la souris ? Utilisez le clavier.
 
 **C'est comme activer le mode Vim dans Gemini.**
 
-### Raccourcis par Défaut
+### Raccourcis par défaut
 
-- `k` - Sauter au nœud précédent
-- `j` - Sauter au nœud suivant
-- `gg` - Sauter au premier tour
-- `GG` - Sauter au dernier tour
+- `k` - aller au nœud précédent
+- `j` - aller au nœud suivant
+- `gg` - aller au premier tour
+- `GG` - aller au dernier tour
 
-### Personnalisez-le
+### Personnalisez-les
 
-Ouvrez les paramètres de l'extension, cliquez sur une case de raccourci, appuyez sur n'importe quelle touche.
-N'importe quelle touche, n'importe quelle combinaison. `n`/`p` ? `,`/`.` ? À vous de décider.
+Ouvrez les paramètres de l'extension, cliquez sur une case de raccourci, puis appuyez sur la touche de votre choix.
+N'importe quelle touche, n'importe quelle combinaison. `n`/`p` ? `,`/`.` ? À vous de voir.
 
-**Mode Flux** : Les appuis rapides s'enchaînent de manière fluide.
-**Mode Saut** : Réponse instantanée, vitesse maximale.
+**Mode fluide** : les appuis rapides s'enchaînent sans à-coups.
+**Mode saut** : réponse instantanée, vitesse maximale.
+
+## Quand utiliser la chronologie
+
+La chronologie est la plus utile dans les conversations de plus de 10 messages, là où faire défiler devient inefficace :
+
+- **Sessions de recherche** : vous avez demandé à Gemini d'explorer un sujet sur plus de 30 tours. La chronologie vous permet de revenir à l'idée clé sans tout relire.
+- **Débogage de code** : une longue conversation de débogage où la solution est apparue au tour 47. Mettez-la en favori, retrouvez-la en un clic plus tard.
+- **Apprentissage et tutorat** : progression pas à pas sur un sujet complexe. Utilisez les niveaux pour replier les sections que vous maîtrisez.
+- **Relecture de brainstorming** : relisez une session créative pour en extraire les meilleures idées. Les favoris signalent les moments à conserver.
+
+## Chronologie ou défilement manuel
+
+| Capacité                    | Sans chronologie                      | Avec la chronologie Voyager                                 |
+| --------------------------- | ------------------------------------- | ----------------------------------------------------------- |
+| Trouver un message précis   | Remonter et redescendre sans fin      | Cliquer sur un nœud ou appuyer sur j/k                      |
+| Garder les moments clés     | Copier-coller dans des notes externes | Appui long pour mettre en favori, synchronisé dans le cloud |
+| Voir la structure           | Lire de manière séquentielle          | Une carte visuelle montre toute la forme d'un coup d'œil    |
+| Navigation au clavier       | Non disponible dans Gemini            | Touches style Vim j/k, gg/GG, entièrement personnalisables  |
+| Naviguer dans 100+ messages | Plusieurs minutes de défilement       | Saut instantané vers n'importe quel point                   |
+| Organiser les longs fils    | Aucun outil intégré                   | Niveaux (1 à 3) et enfants repliables                       |
+
+## Navigateurs pris en charge
+
+La chronologie fonctionne sur Google Gemini, ainsi que sur Claude et ChatGPT grâce aux extensions intégrées, sur Chrome, Edge, Firefox, Safari, Opera et Brave. Les raccourcis clavier, les favoris et les niveaux fonctionnent de la même façon sur toutes les plateformes. Les messages en favori se synchronisent entre appareils lorsque la [Synchro Cloud](/fr/guide/cloud-sync) est activée.
+
+La chronologie n'est pas disponible sur AI Studio. DeepSeek dispose d'une extension de chronologie facultative dans le catalogue d'extensions (elle est livrée désactivée).

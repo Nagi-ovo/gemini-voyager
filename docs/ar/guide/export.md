@@ -1,44 +1,80 @@
-# Total Freedom
+# الحرية الكاملة
 
-Data lock-in is the enemy.
-We believe that if you create it, you own it.
+يتيح لك تصدير Voyager تنزيل أي محادثة في Gemini أو ChatGPT بصيغة Markdown أو PDF أو JSON أو صورة. تستخرج الإضافة محتوى المحادثة كاملًا، بما في ذلك كتل الكود والصور والتنسيق، لتحصل على نسخة دائمة وقابلة للنقل من كل محادثة ذكاء اصطناعي.
 
-## Export Everything
+احتجاز البيانات هو العدو.
+نؤمن بأنك إذا أنشأت شيئًا فهو ملكك.
 
-Voyager lets you pull your data out of the cloud and into your hands.
+## مقارنة الصيغ
 
-### The Formats
+| الميزة       | Markdown                             | PDF               | JSON                      | صورة               |
+| ------------ | ------------------------------------ | ----------------- | ------------------------- | ------------------ |
+| الأنسب لـ    | تطبيقات الملاحظات (Obsidian وNotion) | المشاركة والطباعة | المطوّرون وتحليل البيانات | المشاركة من الهاتف |
+| الصور        | مضمّنة                               | مدرجة بالكامل     | مرمّزة بـ Base64          | معروضة في موضعها   |
+| كتل الكود    | محفوظة مع تمييز الصياغة              | معروضة بصريًا     | نص خام محفوظ              | معروضة بصريًا      |
+| حجم الملف    | الأصغر                               | الأكبر            | متوسط                     | كبير               |
+| قابلية البحث | نص عادي                              | بحث قارئ PDF      | وصول برمجي                | لا                 |
 
-- **Markdown**: لخزنة Obsidian أو Notion. نص منسّق ونظيف مع صور مضمنة.
-- **PDF**: For sharing or printing. Beautifully laid out, images included.
-- **JSON**: Raw data. For developers who want to build on top of their history.
+## صدّر كل شيء
 
-### How to Export
+يتيح لك Voyager سحب بياناتك من السحابة ووضعها بين يديك.
 
-1. انقر على زر **تصدير** في أعلى يمين الصفحة (ChatGPT وتخطيطات Gemini الحالية). في Gemini يمكنك أيضًا اختيار **تصدير سجل المحادثة** من قائمة ⋮ الخاصة بالمحادثة أو بالرد؛ وفي تخطيطات Gemini القديمة، مرّر الماوس فوق شعار Gemini لتظهر **أيقونة التصدير**.
-2. Choose your format.
-3. Done.
+### الصيغ
 
-It’s your data. Do what you want with it.
+- **Markdown**: لخزنة Obsidian أو Notion. نص منسّق ونظيف مع صور مضمّنة.
+- **PDF**: للمشاركة أو الطباعة. تخطيط أنيق وصور مدرجة.
+- **JSON**: بيانات خام للمطوّرين الذين يريدون البناء على سجلّهم.
+- **صورة**: صورة PNG طويلة واحدة، مناسبة للمشاركة من الهاتف. اختر تخطيطًا ضيقًا أو متوسطًا أو عريضًا.
+
+### طريقة التصدير
+
+1. انقر على زر **تصدير** في أعلى يمين الصفحة (في ChatGPT وفي تخطيطات Gemini الحالية). في Gemini يمكنك أيضًا اختيار **تصدير سجل المحادثة** من قائمة ⋮ الخاصة بالمحادثة أو بالرد؛ وفي تخطيطات Gemini القديمة، مرّر المؤشر فوق شعار Gemini لتظهر **أيقونة التصدير**.
+2. اختر الصيغة.
+3. تم.
+
+البيانات بياناتك. افعل بها ما تشاء.
 
 <div style="display: flex; gap: 20px; margin-top: 20px;">
   <div style="flex: 1; text-align: center;">
-    <p><b>Step 1: Hover Logo</b></p>
-    <img src="/assets/gemini-export-guide-1.png" alt="Export guide step 1" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+    <p><b>الخطوة 1: ابحث عن التصدير</b></p>
+    <img src="/assets/gemini-export-guide-1.png" alt="الخطوة 1 من دليل التصدير" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
   <div style="flex: 1; text-align: center;">
-    <p><b>Step 2: The Choice</b></p>
-    <img src="/assets/gemini-export-guide-2.png" alt="Export guide step 2" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+    <p><b>الخطوة 2: الاختيار</b></p>
+    <img src="/assets/gemini-export-guide-2.png" alt="الخطوة 2 من دليل التصدير" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
 </div>
 
-### Safari PDF Export Note
+### ملاحظة حول تصدير PDF في Safari
 
-Exporting PDF on Safari requires a slightly different process (manual print):
+يتطلب تصدير PDF في Safari خطوات مختلفة قليلًا (طباعة يدوية):
 
-1. Click the **Export** button and select PDF format.
-2. **Wait for about a second** (allow the page to prepare print styles).
-3. Press `Command + P` to open the print dialog.
-4. Select **"Save to PDF"** in the print dialog.
+1. انقر على زر **تصدير** واختر صيغة PDF.
+2. **انتظر ثانية تقريبًا** (ليُجهّز الصفحة أنماط الطباعة).
+3. اضغط `Command + P` لفتح نافذة الطباعة.
+4. اختر **"Save to PDF"** في نافذة الطباعة.
 
-<img src="/assets/safari-export-pdf.png" alt="Safari Export PDF" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 20px;"/>
+<img src="/assets/safari-export-pdf.png" alt="تصدير PDF في Safari" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 20px;"/>
+
+## تصدير Deep Research
+
+يُنتج وضع Deep Research في Gemini تقارير منظّمة تتضمن مصادر وخطوات تفكير واستشهادات. يمكن لـ Voyager تصدير هذه الجلسات مع بياناتها الوصفية كاملة:
+
+1. افتح محادثة Deep Research مكتملة.
+2. افتح قائمة **Share & Export** الخاصة بالتقرير، واختر **Save Report**.
+3. اختر الصيغة.
+4. يتضمن التصدير التقرير النهائي مع روابط مصادره. ولحفظ عملية التفكير أيضًا، راجع [تصدير Deep Research](/ar/guide/deep-research).
+
+هذا مفيد في البحث الأكاديمي والتحليل التنافسي والتوثيق التقني، حين تحتاج إلى حفظ سلسلة الاستدلال ونسب المصادر.
+
+## متى تُصدّر
+
+- **أرشفة المعرفة**: احفظ المحادثات المهمة قبل أن تضيع في سجل الدردشة.
+- **مشاركة الفريق**: صدّر جلسة تصحيح أخطاء بصيغة PDF لمشاركتها مع زملاء لا يستخدمون Gemini.
+- **بناء قاعدة معرفة**: صدّر المحادثات بصيغة Markdown ونظّمها في Obsidian أو Notion.
+- **تحليل البيانات**: استخدم تصدير JSON لتحليل أنماط المحادثات برمجيًا أو لاستخراج بيانات مهيكلة.
+- **الامتثال والتدقيق**: احتفظ بسجلات القرارات المدعومة بالذكاء الاصطناعي لمسارات التدقيق.
+
+## المنصات المدعومة
+
+يعمل التصدير على Gemini وChatGPT عبر Chrome وEdge وFirefox وSafari وOpera وBrave. وفي Safari تتطلب صيغة PDF خطوة طباعة يدوية (اضغط Command+P بعد النقر على تصدير)، أما صيغتا Markdown وJSON فما زالتا تتضمنان الصور.

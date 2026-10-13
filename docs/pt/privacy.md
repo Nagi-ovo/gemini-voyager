@@ -1,48 +1,56 @@
 # Política de Privacidade
 
-Última atualização: 7 de setembro de 2026
+Última atualização: 14 de outubro de 2026
 
-## Introdução
+## Visão geral
 
-O Voyager ("nós", "nosso" ou "nos") está comprometido em proteger a sua privacidade. Esta Política de Privacidade explica como a nossa extensão de navegador recolhe, utiliza e protege as suas informações.
+O Voyager é uma extensão de navegador que funciona primeiro no seu dispositivo (local-first), feita para organizar e aprimorar os espaços de conversa com IA compatíveis. Ele processa uma quantidade limitada de dados do usuário, apenas para oferecer os recursos que você solicita. O Voyager não mantém um backend que recebe conversas, prompts, atividade de navegação, imagens ou identificadores de conta, e não usa rastreadores de publicidade nem de análise.
 
-## Recolha e Utilização de Dados
+## Dados processados
 
-**Não recolhemos nenhuma informação pessoal.**
+Dependendo dos recursos que você usa, o Voyager pode processar:
 
-O Voyager opera inteiramente dentro do seu navegador. Todos os dados gerados ou geridos pela extensão (como pastas, modelos de prompts, mensagens favoritas e configurações) são armazenados:
+- **Conteúdo de sites e comunicações pessoais**: texto de conversas, prompts, rascunhos, imagens, links e outros conteúdos das páginas compatíveis, usados para pastas, navegação, exportação, gerenciamento de prompts, pesquisa e recursos de interface.
+- **Identificadores de conta**: um serviço compatível do Google pode expor o endereço de e-mail da conta conectada. O Voyager o converte em um identificador local da conta, para que os dados de contas diferentes continuem separados. O Voyager não envia o endereço de e-mail original para nenhum servidor.
+- **Histórico da web e atividade do usuário**: URLs de sites compatíveis, rotas de conversas e eventos limitados de página, interação e rede necessários para navegação, atalhos, indicadores de uso, notificações de conclusão de resposta e outros recursos solicitados. Esses dados não são usados para criar perfis nem para publicidade.
+- **Informações de autenticação**: um token OAuth2 com o escopo `drive.file`, somente quando você ativa explicitamente a sincronização com o Google Drive.
+- **Dados e configurações da extensão**: pastas, modelos de prompts, rascunhos, mensagens favoritas, registros de uso, estado dos plugins e preferências de interface.
 
-1. Localmente no seu dispositivo (`chrome.storage.local`)
-2. No armazenamento sincronizado do seu navegador (`chrome.storage.sync`) se disponível, para sincronizar configurações entre os seus dispositivos.
+Esses dados são armazenados localmente em `chrome.storage.local` ou, para as configurações compatíveis, em `chrome.storage.sync`. Eles permanecem no seu dispositivo ou na conta de sincronização do navegador, a menos que você use explicitamente uma das transferências descritas abaixo.
 
-Não temos acesso aos seus dados pessoais, histórico de chat ou qualquer outra informação privada. Não rastreamos o seu histórico de navegação.
+## Transferências solicitadas pelo usuário
 
-## Sincronização com Google Drive (Opcional)
+- **Sincronização com o Google Drive (opcional)**: os dados de backup selecionados são transferidos diretamente entre o seu dispositivo e o seu próprio Google Drive. Chrome, Edge e Firefox usam a API de identidade do navegador; o aplicativo Safari de distribuição direta usa o login nativo do Google e salva as credenciais no Keychain do macOS. Os dois caminhos solicitam apenas o escopo limitado `drive.file`, e os tokens OAuth não são enviados para nenhum servidor do Voyager.
+- **Sincronização com o iCloud no Safari (opcional)**: os dados de backup selecionados são transferidos pela extensão nativa do Safari diretamente para o seu banco de dados privado do CloudKit, na sua conta do iCloud. O Voyager não recebe o seu Apple ID nem um token de autenticação do iCloud, e o desenvolvedor não tem acesso aos registros desse banco privado.
+- **Exportações e imagens**: quando você pede uma exportação, o Voyager pode buscar imagens das fontes já hospedadas na própria página e pode solicitar o acesso temporário necessário para capturar o conteúdo de interface gerado. O arquivo resultante é criado para você; ele não é enviado para nenhum servidor do Voyager.
+- **Recursos públicos do projeto**: o Voyager pode solicitar recursos públicos de lançamento, comunicados ou documentação. Essas solicitações não incluem conteúdo de conversas ou prompts.
+- **Atualizações do catálogo de plugins**: em um site onde você ativou pelo menos um plugin, o Voyager pode buscar, por HTTPS, um arquivo de catálogo atualizado para esse site em `https://voyager.nagi.fun/catalog/hosts/<host do site>.json`, por exemplo `https://voyager.nagi.fun/catalog/hosts/chat.deepseek.com.json`. A verificação acontece quando uma página desse tipo é aberta ou quando a janela da extensão é aberta nela, e só se a última verificação for mais antiga que o intervalo escolhido por você (6 horas por padrão; 1 hora, 6 horas, 24 horas ou somente manual). Gemini e AI Studio usam apenas os plugins oficiais incluídos na extensão e nunca disparam uma solicitação. A solicitação é um GET simples que não envia cookies, identificadores de conta ou da extensão, nem conteúdo da página ou da conversa; como em qualquer solicitação web, o servidor vê o endereço IP de origem e o user agent do navegador, além do nome do site no caminho da URL. Nos sites com plugins, a janela da extensão oferece o interruptor "Atualizações online de plugins" e o seletor do intervalo de verificação; ambas as configurações ficam salvas no armazenamento sincronizado do navegador e são incluídas no backup de configurações. Com o interruptor desligado, o Voyager não entra em contato com o voyager.nagi.fun, a menos que você clique em "Verificar atualizações de plugins agora". Se a solicitação falhar ou o site não tiver arquivo de catálogo, continua em uso o registro de plugins incluído na extensão. Um catálogo baixado contém apenas CSS e JSON, que são validados e sanitizados antes do uso; nenhum JavaScript é baixado nem executado. Essa verificação é separada da verificação de comunicados, que tem configuração própria. O voyager.nagi.fun é uma hospedagem estática atrás de um proxy da Cloudflare; o projeto Voyager não registra nem mantém essas solicitações, e os metadados de conexão (endereço IP, User-Agent) são tratados pelos provedores de hospedagem, de acordo com as políticas de privacidade deles.
 
-Se ativar a sincronização com o Google Drive, Chrome, Edge e Firefox utilizam a API de identidade do navegador; a aplicação Safari de distribuição direta utiliza o Google Sign-In nativo e guarda as credenciais no Porta-chaves do macOS. Ambos os caminhos solicitam apenas o scope limitado `drive.file` e transferem os dados diretamente entre o seu dispositivo e **o seu próprio Google Drive**. Os tokens OAuth não são enviados para nenhum servidor Voyager.
-
-## Atualizações online do catálogo de plugins (opcional)
-
-Num site onde tenha ativado pelo menos um plugin, o Voyager pode pedir por HTTPS o ficheiro de catálogo desse site em `https://voyager.nagi.fun/catalog/hosts/<host do site>.json`, por exemplo `https://voyager.nagi.fun/catalog/hosts/chat.deepseek.com.json`. A verificação só acontece ao abrir uma página desse tipo ou ao abrir a janela da extensão nessa página, e apenas se a última verificação for mais antiga do que o intervalo que escolheu (6 horas por predefinição; 1 hora, 6 horas, 24 horas ou apenas manual). As páginas do Gemini e do AI Studio não têm plugins, pelo que nunca originam um pedido. O pedido é um GET simples que não envia cookies, identificadores de conta ou da extensão, nem conteúdo da página ou da conversa; tal como em qualquer pedido web, o servidor vê o endereço IP de origem e o user agent do navegador, além do nome de host do site no caminho do URL. Nos sites com plugins, a janela da extensão oferece um interruptor «Atualizações online de plugins» e o seletor de intervalo; ambas as definições ficam guardadas no armazenamento sincronizado do navegador e são incluídas na cópia de segurança das definições. Com o interruptor desligado, o Voyager não contacta voyager.nagi.fun a não ser que carregue em «Procurar atualizações de plugins agora». Se o pedido falhar ou o site não tiver ficheiro de catálogo, mantém-se em uso o instantâneo de plugins incluído na extensão. Um catálogo obtido contém apenas CSS e JSON, que são validados e sanitizados antes de serem usados; nunca é transferido nem executado JavaScript. voyager.nagi.fun é um alojamento estático atrás de um proxy Cloudflare; o projeto Voyager não regista nem conserva estes pedidos, e os metadados de ligação (endereço IP, User-Agent) são tratados pelos fornecedores de alojamento segundo as suas próprias políticas de privacidade.
+O Voyager não vende dados do usuário nem os transfere para publicidade, avaliação de crédito ou finalidades não relacionadas aos recursos da extensão voltados ao usuário.
 
 ## Permissões
 
-A extensão solicita as permissões mínimas necessárias para funcionar:
+- **Storage (armazenamento)**: salva dados e preferências da extensão localmente e, onde há suporte, pela sincronização do navegador. Chrome, Edge e Firefox também concedem `unlimitedStorage`, para que os dados locais não sejam cortados pela cota padrão do navegador; o Voyager ainda aplica o próprio limite de armazenamento. No Safari, essa permissão é opcional.
+- **Identity (identidade)**: autentica a sincronização opcional com o Google Drive, depois de uma ação explícita sua. A sincronização com o iCloud no Safari usa a conta iCloud do Mac, em vez desta permissão do navegador.
+- **Scripting (scripts)**: injeta apenas scripts incluídos na própria extensão nos sites compatíveis; nenhum JavaScript ou WebAssembly remoto é executado.
+- **Active tab e declarative content (aba ativa e conteúdo declarativo)**: identifica o site compatível aberto por você e exibe os controles específicos desse site. O declarative content é usado apenas no Chrome e no Edge.
+- **Alarms (alarmes)**: executa verificações periódicas de comunicados públicos de compatibilidade.
+- **Notifications (notificações, opcional)**: solicitada somente quando você ativa as notificações de conclusão de resposta.
+- **Host permissions (permissões de host)**: concedidas na instalação para Gemini, Gemini Enterprise e AI Studio, além dos domínios do Google necessários para as operações de Google Drive e de imagens que você solicita.
+- **Optional host permissions (permissões de host opcionais)**: Claude, ChatGPT, DeepSeek e sites personalizados só são acessados depois que você ativa o Voyager ou um plugin para esse site e aprova o pedido de permissão do navegador. `<all_urls>` também pode ser solicitado temporariamente quando você escolhe uma exportação que captura o conteúdo de interface gerado; se a permissão for negada, a exportação continua sem essa captura.
 
-- **Storage (Armazenamento)**: Para guardar as suas preferências, pastas, prompts, mensagens favoritas e opções de personalização da interface localmente e entre dispositivos.
-- **Identity (Identidade)**: Para a autenticação Google da funcionalidade opcional de sincronização com o Google Drive. Usado apenas quando ativa explicitamente a sincronização na nuvem.
-- **Scripting (Scripts)**: Para injetar dinamicamente scripts de conteúdo nas páginas do Gemini e em sites personalizados especificados pelo utilizador para a funcionalidade Gestor de Prompts. Apenas scripts incluídos na própria extensão são injetados — nenhum código remoto é obtido ou executado.
-- **Host Permissions (Permissões de host)** (gemini.google.com, aistudio.google.com, etc.): Para injetar scripts de conteúdo que melhoram a interface do Gemini com funcionalidades como pastas, exportação, linha do tempo e citação de resposta. Os domínios adicionais da Google (googleapis.com, accounts.google.com) são necessários para a autenticação da sincronização com o Google Drive.
-- **Optional Host Permissions (Permissões de host opcionais)** (todos os URLs): Apenas solicitadas em tempo de execução quando adiciona explicitamente sites personalizados para o Gestor de Prompts. Nunca ativadas sem a sua ação.
+## Retenção e controle pelo usuário
 
-## Serviços de Terceiros
+Os dados locais e os dados de sincronização do navegador permanecem até que você os exclua, limpe o armazenamento da extensão ou desinstale a extensão. Os backups na nuvem permanecem na conta do Google Drive ou do iCloud escolhida até que você os remova dessa conta. Você pode desativar os recursos opcionais e revogar o acesso opcional aos sites ou a autorização do Google pelas configurações do Voyager e do navegador.
 
-O Voyager não partilha intencionalmente nenhuns dados com serviços de terceiros, anunciantes ou fornecedores de análises. A única exceção são as ligações descritas acima que o próprio utilizador ativa ou desencadeia (sincronização com o Google Drive, atualizações do catálogo de plugins, etc.): o serviço ou o fornecedor de alojamento em causa pode tratar os metadados de ligação (endereço IP, User-Agent) de acordo com a sua própria política de privacidade.
+## Uso limitado das APIs do Google
 
-## Alterações a Esta Política
+O uso e a transferência de informações recebidas das APIs do Google pelo Voyager seguem a Política de Dados do Usuário da Chrome Web Store, incluindo os requisitos de Uso Limitado.
 
-Podemos atualizar a nossa Política de Privacidade ocasionalmente. Iremos notificá-lo de quaisquer alterações publicando a nova Política de Privacidade nesta página.
+## Alterações nesta política
 
-## Contacte-nos
+Podemos atualizar esta Política de Privacidade conforme o Voyager mudar. A versão mais recente e a data da atualização serão publicadas nesta página.
 
-Se tiver alguma dúvida sobre esta Política de Privacidade, por favor contacte-nos através do nosso [Repositório GitHub](https://github.com/voyager-crew/voyager).
+## Fale conosco
+
+Para dúvidas sobre privacidade, entre em contato pelo [Repositório do Voyager no GitHub](https://github.com/voyager-crew/voyager).

@@ -17,6 +17,11 @@ hero:
       text: Commencer
       link: ./guide/getting-started
 
+safariLaunch:
+  image: /assets/promotion/voyager-social-preview.png
+  alt: Votre bibliothèque de prompts sur toute interface web IA, y compris DeepSeek Harness
+  link: ./guide/deepseek-harness
+
 teaser:
   title: 'Ça marche, tout simplement.'
   description: 'Nous ne voulions pas créer une autre extension. Nous voulions créer une meilleure façon de penser.<br>Quand vous utilisez Voyager, vous arrêtez de vous battre avec l’interface pour couler avec elle.'
@@ -71,7 +76,7 @@ features:
     details: Nettoyage en masse. Sélectionnez plusieurs conversations et supprimez-les en une fois.
   - icon: ☁️
     title: Synchronisation Cloud
-    details: Toujours synchronisé. Sauvegardez dossiers et prompts sur Google Drive entre appareils.
+    details: Toujours synchronisé. Sauvegardez dossiers et prompts sur Google Drive, ou sur iCloud natif avec Safari.
   - icon: ⚡️
     title: Modèle par défaut
     details: Arrêtez de vous répéter. Basculez automatiquement vers votre modèle préféré pour les nouveaux chats.

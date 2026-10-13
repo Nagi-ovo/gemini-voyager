@@ -1,30 +1,46 @@
-# Largura do Chat
+# Deixe do Seu Jeito
 
-Utilize totalmente o seu monitor ultrawide.
+A experiência padrão já é ótima. Mas você pode querer deixá-la perfeita.
+Personalize cada detalhe.
 
-O Gemini™ restringe o conteúdo principal a uma largura fixa. O Voyager liberta isso.
-Aceda ao painel de definições e arraste o slider **"Largura do Chat"**.
+## Modo Cinema
 
-- **Alargar**: Perfeito para tabelas de código, análise de dados e janelas de ecrã dividido.
-- **Concentrar**: Estreite-o para leitura profunda sem distrações.
+Por que ver o futuro por um buraco de fechadura minúsculo?
+O Voyager permite expandir a largura do chat.
 
-<div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/gemini-chatwidth.png" alt="Ajuste de Largura do Chat" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
-</div>
+- **Largura do chat**: Um slider de 30% a 100% da janela (70% por padrão). Deixe largo para códigos e tabelas complexas, estreito para leitura.
+- **Largura da entrada de edição**: Alarga a caixa que aparece ao editar uma mensagem enviada.
+
+## Controle
+
+Clique no ícone da extensão para acessar a central de controle.
+
+- **Modo de rolagem**: `Fluxo` rola suavemente até a mensagem; `Pulo` vai até ela instantaneamente.
+- **Posição da linha do tempo**: Ative **Linha do tempo arrastável** e mova-a para onde preferir. **Redefinir Posição da Linha do Tempo** a devolve ao lugar original.
+- **Efeitos visuais**: Escolha `Neve`, `Sakura` ou `Chuva` para uma atmosfera sazonal.
 
 ## Ordem personalizada
 
-Muitas seções no popup e as que você mais usa estão lá embaixo?
+Muitas seções no popup, e as que você mais usa ficam lá embaixo?
 
-Passe o mouse sobre qualquer cartão de configuração e os botões ▲/▼ aparecerão no canto superior direito. Clique para mover um cartão para cima ou para baixo. Sua disposição é salva automaticamente.
+Passe o mouse sobre qualquer cartão de configuração e as setas ▲/▼ aparecem no canto superior direito. Clique para mover um cartão para cima ou para baixo. Seu layout é salvo automaticamente e se mantém entre sessões.
 
-## Efeitos Visuais
+## Atmosfera
 
-Escolha `Neve`, `Sakura` ou `Chuva` para uma atmosfera sazonal.
+O Voyager não se limita a ajustes utilitários. Você também pode mudar o clima da página.
 
-O Voyager não se limita a melhorias utilitárias. Pode também mudar o ambiente da página.
+- **Neve**: Flocos suaves à deriva para uma sensação calma de inverno.
+- **Sakura**: Pétalas de flor de cerejeira flutuando para um clima de primavera mais leve.
+- **Chuva**: Uma camada de chuva cinematográfica com riscos inclinados e respingos sutis.
+- **Troca suave**: Ao desativar um efeito ou trocar por outro, as partículas existentes desaparecem naturalmente.
 
-- **Neve**: Flocos suaves para uma sensação calma de inverno.
-- **Sakura**: Pétalas de flor de cerejeira flutuando para um toque primaveril mais leve.
-- **Chuva**: Uma camada de chuva cinematográfica com gotas inclinadas e salpicos subtis.
-- **Transição suave**: Ao desativar ou trocar de efeito, as partículas desaparecem naturalmente.
+<div style="display: flex; gap: 20px; margin-top: 20px;">
+  <div style="flex: 1; text-align: center;">
+    <p><b>Abrir Configurações</b></p>
+    <img src="/assets/gemini-open-settings-guide.png" alt="Guia para abrir as configurações" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  </div>
+  <div style="flex: 1; text-align: center;">
+    <p><b>Ajustar a Largura</b></p>
+    <img src="/assets/gemini-chatwidth.png" alt="Ajuste da largura do chat" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  </div>
+</div>

@@ -1,24 +1,20 @@
-# Tamaño de Fuente
+# Tamaño de fuente
 
-::: warning
-**Próximamente**: Esta función estará disponible en la próxima versión. Mantente atento.
-:::
-
-Ajusta libremente el tamaño de fuente del área de chat de Gemini para la experiencia de lectura más cómoda.
+Ajusta libremente el tamaño de fuente del área de chat de Gemini para una lectura lo más cómoda posible.
 
 ## Introducción
 
-Cada persona tiene preferencias diferentes sobre el tamaño de fuente — algunos prefieren texto compacto para mayor densidad de información, mientras que otros prefieren texto más grande para reducir la fatiga visual. Voyager te permite ajustar el tamaño de fuente del chat entre el 80% y el 150%.
+Cada persona tiene preferencias distintas de tamaño de letra: algunas prefieren un texto compacto para ver más información a la vez, y otras, uno más grande para reducir la fatiga visual. Voyager te permite ajustar el tamaño de fuente del chat entre el 80 % y el 150 %.
 
-## Características
+## Funciones
 
-- **Rango flexible**: Soporta ajuste de tamaño de fuente del 80% al 150%, cubriendo la mayoría de las necesidades de lectura.
-- **Cobertura completa**: Se aplica tanto a los mensajes del usuario como a las respuestas del modelo, incluyendo texto, listas, tablas y bloques de código.
-- **Optimización de bloques de código**: El tamaño de fuente de los bloques de código se reduce proporcionalmente de forma automática (fuente del texto × 0,875), manteniendo la jerarquía visual entre código y prosa.
-- **Efecto instantáneo**: Los cambios surten efecto inmediatamente sin necesidad de actualizar la página.
+- **Rango flexible**: permite ajustar el tamaño de fuente entre el 80 % y el 150 %, lo que cubre la mayoría de necesidades de lectura.
+- **Cobertura completa**: se aplica tanto a los mensajes del usuario como a las respuestas del modelo, incluidos el texto principal, las listas, las tablas y los bloques de código.
+- **Optimización de bloques de código**: el tamaño de fuente de los bloques de código se escala automáticamente en proporción (fuente del texto × 0,875), para mantener la jerarquía visual entre código y prosa.
+- **Efecto inmediato**: los cambios se aplican al momento, sin recargar la página.
 
-## Cómo usar
+## Cómo usarla
 
-1. Abre el panel de configuración de Voyager (popup).
-2. Encuentra la configuración de **Tamaño de Fuente** y actívala.
-3. Arrastra el deslizador para ajustar el porcentaje de tamaño de fuente — la página mostrará los cambios en tiempo real.
+1. Abre el panel de ajustes de Voyager (popup).
+2. Busca **Tamaño de fuente del chat** y actívalo.
+3. Arrastra el control deslizante para ajustar el porcentaje: la página mostrará los cambios en tiempo real.

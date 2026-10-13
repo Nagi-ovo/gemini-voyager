@@ -1,42 +1,46 @@
-# Mermaid Diagram Rendering
+# عرض مخططات Mermaid
 
-Automatically render Mermaid code as visual diagrams.
+اعرض شيفرة Mermaid تلقائيًا كمخططات مرئية.
 
-## Overview
+## نظرة عامة
 
-When Gemini™ outputs Mermaid code blocks (flowcharts, sequence diagrams, Gantt charts, etc.), Voyager automatically detects and renders them as interactive diagrams.
+عندما يُخرج Gemini™ كتل شيفرة Mermaid (مخططات انسيابية ومخططات تسلسلية ومخططات Gantt وغيرها)، يكتشفها Voyager تلقائيًا ويعرضها كمخططات تفاعلية.
 
-### Key Features
+### الميزات الرئيسية
 
-- **Auto-detection**: Supports `graph`, `flowchart`, `sequenceDiagram`, `gantt`, `pie`, `classDiagram`, and all major Mermaid diagram types
-- **Toggle view**: Switch between rendered diagram and source code with one click
-- **Fullscreen mode**: Click the diagram to enter fullscreen with zoom and pan support
-- **Dark mode**: Automatically adapts to page theme
+- **الكشف التلقائي**: يدعم `graph` و`flowchart` و`sequenceDiagram` و`gantt` و`pie` و`classDiagram`، وجميع أنواع مخططات Mermaid الرئيسية
+- **تبديل العرض**: انتقل بنقرة واحدة بين المخطط المعروض والشيفرة المصدرية
+- **وضع ملء الشاشة**: انقر على المخطط للدخول إلى ملء الشاشة مع دعم التكبير والتحريك
+- **الوضع الداكن**: يتكيف تلقائيًا مع سمة الصفحة
 
-## How to Use
+## تشغيلها أو إيقافها
 
-1. Ask Gemini to generate any Mermaid diagram code
-2. The code block is automatically replaced with the rendered diagram
-3. Click the **</> Code** button to view source code
-4. Click the **📊 Diagram** button to switch back to diagram view
-5. Click the diagram area to enter fullscreen
+عرض مخططات Mermaid مفعّل افتراضيًا في Gemini. لإيقافه، افتح نافذة Voyager المنبثقة وأوقف **تمكين عرض مخططات Mermaid** ضمن **خيارات عامة**. وهو غير متاح في AI Studio.
 
-## Fullscreen Controls
+## طريقة الاستخدام
 
-- **Scroll wheel**: Zoom in/out
-- **Drag**: Pan the diagram
-- **+/-**: Toolbar zoom buttons
-- **⊙**: Reset view
-- **✕ / ESC**: Close fullscreen
+1. اطلب من Gemini إنشاء أي شيفرة لمخطط Mermaid
+2. تُستبدل كتلة الشيفرة تلقائيًا بالمخطط المعروض
+3. انقر على زر **</> Code** لعرض الشيفرة المصدرية
+4. انقر على زر **📊 Diagram** للعودة إلى عرض المخطط
+5. انقر على منطقة المخطط للدخول إلى ملء الشاشة
 
-## التوافق وإصلاح المشكلات
+## عناصر التحكم في ملء الشاشة
+
+- **عجلة الفأرة**: تكبير/تصغير
+- **السحب**: تحريك المخطط
+- **+/-**: أزرار التكبير في شريط الأدوات
+- **⊙**: إعادة ضبط العرض
+- **✕ / ESC**: إغلاق ملء الشاشة
+
+## التوافق واستكشاف الأخطاء
 
 ::: warning ملاحظة
 
-- **قيود Firefox**: بسبب قيود البيئة، يستخدم Firefox الإصدار 9.2.2 ولا يدعم الميزات الجديدة مثل **Timeline** أو **Sankey**.
-- **أخطاء الصياغة**: غالباً ما يكون فشل المعالجة بسبب أخطاء في صياغة الكود الناتج من Gemini. نحن نقوم بجمع الحالات السيئة (Bad Cases) لإصلاح أخطاء التوليد الشائعة تلقائياً في التحديثات القادمة.
+- **قيد Firefox**: بسبب قيود البيئة، يأتي Firefox مع Mermaid الإصدار 9.2.2، الذي لا يدعم الميزات الجديدة مثل **Timeline** أو **Sankey**.
+- **أخطاء الصياغة**: غالبًا ما يعود فشل العرض إلى أخطاء في صياغة الشيفرة التي يُخرجها Gemini. نحن نجمع "الحالات السيئة" لتنفيذ إصلاحات تلقائية لأخطاء التوليد الشائعة في التحديثات القادمة.
   :::
 
 <div align="center">
-  <img src="/assets/mermaid-preview.png" alt="Mermaid diagram rendering" style="max-width: 100%; border-radius: 8px;"/>
+  <img src="/assets/mermaid-preview.png" alt="عرض مخطط Mermaid" style="max-width: 100%; border-radius: 8px;"/>
 </div>

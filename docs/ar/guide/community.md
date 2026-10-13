@@ -10,8 +10,8 @@
 - **ميزات قادمة**: احصل على نظرة خاطفة عما هو قادم.
 
 <div style="margin: 2rem 0;">
-  <a href="https://x.com/Nag1ovo/status/2012609459663634589" target="_blank" style="text-decoration: none;">
-    <img src="https://img.shields.io/badge/متابعة-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="متابعة X">
+  <a href="https://x.com/Nag1ovo/status/2012610584722731188" target="_blank" style="text-decoration: none;">
+    <img src="https://img.shields.io/badge/تابع-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="تابع على X">
   </a>
 </div>
 

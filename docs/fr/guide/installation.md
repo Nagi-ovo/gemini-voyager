@@ -1,18 +1,18 @@
 # Installation
 
-::: info Nouvelles
+::: info Nouveautés
 🍎 **L'extension native Safari est disponible !** Elle est entièrement gratuite et s'installe en un clic.
 :::
 
 Choisissez votre méthode.
 
-> ⚠️ Note : Le Gestionnaire de Prompts est la seule fonctionnalité compatible avec Gemini™ pour Entreprise.
+> ⚠️ Note : le Gestionnaire de prompts est la seule fonctionnalité compatible avec Gemini™ pour Enterprise.
 
-## 1. Stores d'Extensions (Recommandé)
+## 1. Stores d'extensions (recommandé)
 
 La façon la plus simple de commencer. Les mises à jour sont automatiques.
 
-**Chrome / Brave / Opera / Vivaldi :**
+**Chrome / Edge / Brave / Opera / Vivaldi :**
 
 [<img src="https://img.shields.io/badge/Chrome_Web_Store-Télécharger-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="Installer depuis le Chrome Web Store" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=fr)
 
@@ -20,45 +20,58 @@ La façon la plus simple de commencer. Les mises à jour sont automatiques.
 
 [<img src="https://img.shields.io/badge/Microsoft_Edge-Télécharger-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Installer depuis les modules complémentaires Microsoft Edge" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
 
-> **Utilisateurs Edge :** Voyager reste maintenu sur [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne) pour les personnes qui ont besoin d'Edge sur mobile ou tablette. Si la validation tarde, Chrome Web Store et les paquets GitHub restent disponibles.
+> **Utilisateurs d'Edge :** Voyager reste maintenu sur [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne), notamment pour les personnes qui ont besoin d'Edge sur mobile ou sur tablette. Si la validation tarde, le Chrome Web Store et les paquets manuels sur GitHub restent disponibles.
 
 **Firefox :**
 
 [<img src="https://img.shields.io/badge/Firefox_Add--ons-Télécharger-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="Installer depuis Firefox Add-ons" height="40"/>](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
 
-## 2. La Méthode Manuelle (Dernières Fonctionnalités)
+## 2. La méthode manuelle (dernières fonctionnalités)
 
-Le processus de validation des stores peut être lent. Si vous voulez la version à la pointe de la technologie immédiatement, installez-la manuellement.
+La validation des stores peut prendre du temps. Si vous voulez tout de suite la version la plus récente, installez-la manuellement.
 
 **Pour Chrome / Edge / Brave / Opera :**
 
-1. Téléchargez la dernière version de `voyager-chrome-vX.Y.Z.zip` depuis les [Releases GitHub](https://github.com/voyager-crew/voyager/releases).
+1. Téléchargez le dernier `voyager-chrome-vX.Y.Z.zip` depuis les [Releases GitHub](https://github.com/voyager-crew/voyager/releases).
 2. Décompressez le fichier.
-3. Ouvrez la page des Extensions de votre navigateur (`chrome://extensions`).
+3. Ouvrez la page des extensions de votre navigateur (`chrome://extensions`).
 4. Activez le **Mode développeur** (en haut à droite).
 5. Cliquez sur **Charger l'extension non empaquetée** et sélectionnez le dossier que vous venez de décompresser.
 
 **Pour Firefox :**
 
-1. Téléchargez la dernière version de `voyager-firefox-vX.Y.Z.xpi` depuis les [Releases](https://github.com/voyager-crew/voyager/releases).
-2. Ouvrez le Gestionnaire de modules complémentaires (`about:addons`).
-3. Glissez-déposez le fichier `.xpi` pour l'installer (ou cliquez sur l'icône d'engrenage ⚙️ -> **Installer un module depuis un fichier**).
+1. Téléchargez le dernier `voyager-firefox-vX.Y.Z.xpi` depuis les [Releases](https://github.com/voyager-crew/voyager/releases).
+2. Ouvrez le gestionnaire des modules complémentaires (`about:addons`).
+3. Glissez-déposez le fichier `.xpi` pour l'installer (ou cliquez sur l'icône d'engrenage ⚙️ → **Installer le module depuis un fichier**).
 
-> 💡 Le fichier XPI est officiellement signé par Mozilla et peut être installé de manière permanente sur toutes les versions de Firefox.
+> 💡 Le fichier XPI est signé officiellement par Mozilla et peut être installé de façon permanente dans toutes les versions de Firefox.
 
 ## 3. Safari (macOS)
 
 Safari prend désormais en charge la distribution directe ! Téléchargez l'application pré-signée :
 
+::: warning Mise à niveau depuis `Gemini Voyager.app`
+L'application principale s'appelle désormais `Voyager.app`. Comme macOS ne remplace pas une application dont le nom de fichier est différent, ne gardez pas les deux copies installées.
+
+1. Dans l'ancienne extension, ouvrez les onglets Gemini et AI Studio que vous utilisez, puis lancez **Synchro Cloud > Téléverser vers le cloud**. Si vous synchronisez vos surlignages, activez leur synchronisation avant de téléverser.
+2. Exportez la bibliothèque de prompts dans un fichier JSON local, comme solution de secours indépendante.
+3. Quittez Safari et l'application principale.
+4. Mettez `/Applications/Gemini Voyager.app` à la corbeille. Ne cliquez pas sur le bouton **Désinstaller** de Safari, et ne videz pas les données d'extension, les données de sites ou les conteneurs de Safari.
+5. Copiez `Voyager.app` dans `/Applications`, ouvrez-la une fois, puis activez Voyager dans Safari si cela vous est demandé.
+6. Vérifiez vos dossiers, vos prompts, vos réglages et vos éléments enregistrés. Si quelque chose manque, utilisez **Récupérer** ou importez le fichier JSON des prompts.
+
+Voyager conserve les identifiants existants de l'application et de l'extension, de sorte que macOS et Safari continuent de reconnaître le même produit. Ces étapes de sauvegarde sont une précaution pour les anciennes installations manuelles.
+:::
+
 1. Téléchargez la <SafariDownloadLink>dernière version Safari (.dmg)</SafariDownloadLink>.
-2. Ouvrez le fichier et suivez les instructions pour l'installer.
+2. Double-cliquez pour l'ouvrir, puis suivez les instructions pour l'installer.
 3. Double-cliquez pour lancer l'application.
 4. Activez l'extension dans **Réglages Safari > Extensions**.
 
-> 💡 La version Safari est désormais directement signée pour la distribution — pas besoin de conversion Xcode !
+> 💡 La version Safari est désormais signée directement pour la distribution : aucune conversion Xcode n'est nécessaire !
 >
-> ✅ **Prise en charge officielle de Safari** : depuis la v1.6.0, la suppression du filigrane, l'exportation d'images, la synchronisation Google Drive/iCloud, les notifications de fin de réponse et les mises à jour Sparkle sont pris en charge.
+> ✅ **Prise en charge officielle de Safari** : depuis la v1.6.0, la suppression des filigranes, l'export d'images, la synchronisation Google Drive et iCloud, les notifications de fin de réponse et les mises à jour Sparkle sont pris en charge.
 
 ---
 
-_Configuration de développement ? Si vous êtes un développeur souhaitant contribuer, consultez notre [Guide de Contribution](https://github.com/voyager-crew/voyager/blob/main/.github/CONTRIBUTING.md)._
+_Vous installez un environnement de développement ? Si vous êtes développeur et souhaitez contribuer, consultez notre [Guide de contribution](https://github.com/voyager-crew/voyager/blob/main/.github/CONTRIBUTING.md)._

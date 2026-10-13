@@ -1,47 +1,46 @@
-# A Tu Gusto
+# Hazlo tuyo
 
-Lo predeterminado ya es bueno. Pero queremos la perfección.
-Tu territorio, tus reglas.
+La experiencia predeterminada ya es excelente. Pero quizá quieras que sea perfecta.
+Personaliza cada píxel.
 
-## Modo Cine
+## Modo cine
 
-¿Por qué mirar el mundo a través de una rendija?
-Haz el cuadro de chat más grande.
+¿Para qué mirar el futuro por una rendija diminuta?
+Voyager te permite ampliar el ancho del chat.
 
-- **Pantalla Ancha**: 1400px. Escribir código, ver tablas grandes, visión completa.
-- **Enfoque**: 800px. Lectura inmersiva, sin distracciones.
-- **Libre**: Arrastra el control deslizante, tan ancho como te sientas cómodo.
+- **Ancho del chat**: un control deslizante del 30 % al 100 % de la ventana (70 % por defecto). Amplíalo para código y tablas complejas, y redúcelo para leer.
+- **Ancho del campo de edición**: amplía el cuadro que aparece al editar un mensaje enviado.
 
 ## Control
 
-Haz clic en el icono de la extensión, entra en la consola.
+Haz clic en el icono de la extensión para acceder al centro de control.
 
-- **Desplazamiento**: ¿Natural y suave, o sensación clásica?
-- **Posición**: Coloca la línea de tiempo donde te resulte más cómodo.
-- **Efectos Visuales**: Elige `Nieve`, `Sakura` o `Lluvia` para una atmósfera estacional.
+- **Modo desplazamiento**: `Flujo` lleva al mensaje con un desplazamiento suave; `Salto` va allí al instante.
+- **Posición de la línea de tiempo**: activa **Línea de tiempo arrastrable** y muévela donde te resulte cómoda. **Restablecer posición de la línea de tiempo** la devuelve a su sitio.
+- **Efectos visuales**: elige `Nieve`, `Sakura` o `Lluvia` para un ambiente de temporada.
 
 ## Orden personalizado
 
-¿Demasiadas secciones en el popup y las que más usas están enterradas al fondo?
+¿Demasiadas secciones en el popup y las que más usas quedan enterradas abajo?
 
-Pasa el ratón sobre cualquier tarjeta de configuración y aparecerán los botones ▲/▼ en la esquina superior derecha. Haz clic para mover una tarjeta arriba o abajo. Tu disposición se guarda automáticamente.
+Pasa el cursor sobre cualquier tarjeta de ajustes y aparecerán las flechas ▲/▼ en la esquina superior derecha. Haz clic para subir o bajar una tarjeta. Tu disposición se guarda automáticamente y se mantiene entre sesiones.
 
 ## Atmósfera
 
-Voyager no se limita a mejoras de utilidad. También puedes cambiar el ambiente de la página.
+Voyager no se limita a pequeños ajustes de utilidad. También puedes cambiar el ambiente de la página.
 
-- **Nieve**: Copos suaves a la deriva para una sensación invernal tranquila.
-- **Sakura**: Pétalos de flor de cerezo flotantes para un toque primaveral más ligero.
-- **Lluvia**: Una capa de lluvia cinematográfica con líneas inclinadas y sutiles salpicaduras.
-- **Cambio suave**: Al desactivar un efecto o cambiar a otro, las partículas se desvanecen naturalmente.
+- **Nieve**: copos suaves a la deriva para una sensación de invierno tranquila.
+- **Sakura**: pétalos de flor de cerezo flotando para un aire primaveral más ligero.
+- **Lluvia**: una capa de lluvia cinematográfica con trazos inclinados y salpicaduras sutiles.
+- **Cambio suave**: al desactivar un efecto o cambiar a otro, las partículas existentes se desvanecen de forma natural.
 
 <div style="display: flex; gap: 20px; margin-top: 20px;">
   <div style="flex: 1; text-align: center;">
-    <p><b>Abrir Configuración</b></p>
-    <img src="/assets/gemini-open-settings-guide.png" alt="Guía para abrir configuración" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+    <p><b>Abrir ajustes</b></p>
+    <img src="/assets/gemini-open-settings-guide.png" alt="Guía para abrir los ajustes" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
   <div style="flex: 1; text-align: center;">
-    <p><b>Ajustar Vista</b></p>
-    <img src="/assets/gemini-chatwidth.png" alt="Ajuste de ancho de chat" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+    <p><b>Ajustar el ancho</b></p>
+    <img src="/assets/gemini-chatwidth.png" alt="Ajuste del ancho del chat" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
 </div>

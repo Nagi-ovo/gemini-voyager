@@ -60,7 +60,7 @@ npx create-voyager-plugin@latest check my-plugin
 - 只使用每个匹配网站都声明了的语义锚点；
 - 每个 `addClass` 只加一个类名，并以 `gv-` 开头；
 - 只使用 boolean、number 或 select 设置（string 和 color 目前在 popup 里还没有对应控件）；
-- 在 Gemini 和 AI Studio 上不使用 `theme`；原语只能用该站点放开的：Gemini 上是 `formulaCopy`、`vimInput`、`userLatex`、`codeCollapse`、`mermaid`、`wavedrom` 和 `echarts`, `sendShortcut`, `draftSave`、`turnNavigator`，AI Studio 上是 `formulaCopy`、`sendShortcut`。它们与 Voyager 自带的对应设置是同一套代码。`formulaCopy` 和 `vimInput`（「公式复制」「输入框 Vim 模式」）在同一页面上，自带设置和插件只运行其中一个：页面刚加载、或两者都没在运行时，自带开关优先；之后谁已经在运行就继续运行，另一方显示为暂停。关掉其中一个，功能就交给另一个。`userLatex`、`codeCollapse`、`mermaid`、`wavedrom` 和 `echarts` 按元素逐个认领，可以和自带设置同时运行：对方已经处理的行或代码块留给对方。
+- 在 Gemini 和 AI Studio 上不使用 `theme`；原语只能用该站点放开的：Gemini 上是 `formulaCopy`、`vimInput`、`userLatex`、`codeCollapse`、`mermaid`、`wavedrom` 和 `echarts`、`sendShortcut`、`draftSave`、`turnNavigator`，AI Studio 上是 `formulaCopy`、`sendShortcut`。它们与 Voyager 自带的对应设置是同一套代码。`formulaCopy` 和 `vimInput`（「公式复制」「输入框 Vim 模式」）在同一页面上，自带设置和插件只运行其中一个：页面刚加载、或两者都没在运行时，自带开关优先；之后谁已经在运行就继续运行，另一方显示为暂停。关掉其中一个，功能就交给另一个。`userLatex`、`codeCollapse`、`mermaid`、`wavedrom` 和 `echarts` 按元素逐个认领，可以和自带设置同时运行：对方已经处理的行或代码块留给对方。
 
 Gemini 个人版现已支持本地 `turnNavigator`：设置 `params.dataBackend: "shared"` 和 `engine: ">=1.9.0"`，即可读写官方时间线的同一份星标和层级数据；不能重写会话、账号或轮次的身份参数。官方「显示时间线」开启时会发生冲突：先关官方开关，再启用本地插件；返回官方时，先停用本地插件，再开官方开关。Business、Enterprise 和自定义网站范围暂不开放。
 
@@ -70,10 +70,10 @@ Gemini 个人版现已支持本地 `turnNavigator`：设置 `params.dataBackend:
 
 本地插件只存在于你的浏览器里；需要换到别处时，在插件列表里导出它的 JSON。如果它对大家都有用，可以提议收进官方插件目录，流程见[插件贡献说明](./plugin-contribution.md)。
 
-发送快捷键插件在所有站点每页只能运行一个；已有插件占用发送模式时，另一个显示冲突并暂停。可选 `mode`（sinceEngine `next`）为 `ctrlEnterSends`（默认）或 `enterSends`。输入法确认键不会触发发送。Gemini 和 AI Studio 现已开放，具体模式见下文。
+发送快捷键插件在所有站点每页只能运行一个；已有插件占用发送模式时，另一个显示冲突并暂停。可选 `mode`（需要 `"engine": ">=next"`，已在 1.9.0 中发布）为 `ctrlEnterSends`（默认）或 `enterSends`。输入法确认键不会触发发送。Gemini 和 AI Studio 现已开放，具体模式见下文。
 
 Gemini 现在允许 `sendShortcut` 替代官方 Ctrl+Enter 发送；关闭官方开关后启用本地插件。只支持 `ctrlEnterSends`，Enterprise 不运行。公开的 `composerRoot` 区分主框和编辑框，`sendButton` 不包含停止按钮。
 
 AI Studio 上使用 `sendShortcut` 时必须设置 `params.mode: "enterSends"`。关闭官方 Enter 发送开关后，本地插件可以接管；Ctrl/Cmd+Enter 换行，Shift/Alt+Enter 由宿主处理。
 
-Gemini 的 `draftSave` 与官方草稿保存共用 `gvDraft_<完整 pathname>`，保留 `/u/N` 和 Gem 路径。关闭插件会保留已保存的草稿；同页多个插件可以共同使用这些记录。卸载前会尽力保存最后输入，浏览器关闭时不能保证异步存储完成。 写入和修剪只在同页协调；同一个 `/u/N` 槽位换邮箱仍共用已存草稿。
+Gemini 的 `draftSave` 与官方草稿保存共用 `gvDraft_<完整 pathname>`，保留 `/u/N` 和 Gem 路径。关闭插件会保留已保存的草稿；同页多个插件可以共同使用这些记录。卸载前会尽力保存最后输入，浏览器关闭时不能保证异步存储完成。写入和修剪只在同页协调；同一个 `/u/N` 槽位换邮箱仍共用已存草稿。

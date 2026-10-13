@@ -6,16 +6,16 @@ Con la función de **Bifurcación de Conversación**, Voyager te permite expandi
 
 ## Cómo funciona
 
-> **⚠️ Nota**: Esta es una función experimental. Primero debes habilitarla haciendo clic en el icono de la extensión en la barra de herramientas de tu navegador para abrir la ventana emergente de configuración, y activando la opción **"Habilitar bifurcación de conversación"**.
+> **⚠️ Nota**: Esta es una función experimental. Primero debes activarla haciendo clic en el icono de la extensión en la barra de herramientas de tu navegador para abrir el popup de ajustes, y activando el interruptor **Activar bifurcación de conversación**.
 
-Cada vez que desees tomar un camino diferente, simplemente pasa el cursor sobre tu pregunta y haz clic en el botón de **Bifurcación**:
+Cada vez que desees tomar un camino diferente, simplemente pasa el cursor sobre tu pregunta y haz clic en el botón **Fork**:
 
 ![Bifurcación](/assets/branching.png)
 
 Voyager captura todo el contexto desde el principio hasta ese punto y muestra un cuadro de confirmación. Elige según la longitud del contexto:
 
-- **Descargar MD** (recomendado para la mayoría de conversaciones): el campo de entrada de Gemini tiene límites de longitud, por lo que un contexto largo puede no caber si se inserta directamente. Voyager descarga un archivo Markdown con el contexto y abre una conversación nueva; arrastra el archivo `.md` a Gemini antes de que termine la cuenta atrás de 2 minutos en la esquina inferior derecha. El campo de entrada queda rellenado con una nota breve que indica que el adjunto es contexto de la conversación anterior y deja espacio para tu nueva solicitud.
-- **Fork** (mejor para conversaciones cortas): si el contexto es breve, Voyager abre una conversación nueva y rellena el campo de entrada directamente; envíalo para crear la rama.
+- **Descargar MD** (recomendado para la mayoría de conversaciones): el campo de entrada de Gemini tiene límites de longitud, por lo que un contexto largo puede no caber si se inserta directamente. Voyager descarga un archivo Markdown con el contexto y abre una conversación nueva; arrastra el archivo `.md` a Gemini antes de que termine la cuenta atrás de 2 minutos de la esquina inferior derecha. El campo de entrada se rellena con una nota breve que indica que el adjunto es el contexto de la conversación anterior, y deja **Nueva solicitud:** para tu próximo mensaje.
+- **Fork** (ideal para conversaciones cortas): si el contexto es breve, Voyager abre una conversación nueva y rellena el campo de entrada directamente; envíalo para crear la rama.
 
 Después de enviarlo, Voyager solo registra la relación de la rama. No elimina ni reescribe la conversación original.
 

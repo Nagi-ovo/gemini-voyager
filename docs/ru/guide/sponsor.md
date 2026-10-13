@@ -5,7 +5,7 @@
 
 Поддержка проектов с открытым исходным кодом в основном движется энтузиазмом (и кофе) ☕
 
-На этом сайте нет Google Ads или другой рекламы, а у расширения нет платной версии. Я также отказался от финансирования со стороны API-прокси сервисов, потому что не могу поручиться, как они обращаются с пользовательскими данными. Замысел прост: сделать инструмент, которым я сам пользуюсь каждый день и готов порекомендовать другу —— сохраняя искренность посреди общего шума.
+На этом сайте нет Google Ads или другой рекламы, а у расширения нет платной версии. Я также отказался от финансирования со стороны API-прокси сервисов, потому что не могу поручиться, как они обращаются с пользовательскими данными. Замысел прост: сделать инструмент, которым я сам пользуюсь каждый день и готов порекомендовать другу, сохраняя искренность посреди общего шума.
 
 ## Онлайн-платформы
 
@@ -14,7 +14,7 @@
     <img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee" style="height: 40px;">
   </a>
   <a href="https://github.com/sponsors/Nagi-ovo" target="_blank">
-    <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Поддержать на GitHub" style="height: 40px;">
+    <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" style="height: 40px;">
   </a>
   <a href="https://afdian.com/a/nagi-ovo" target="_blank">
     <img src="https://img.shields.io/badge/Afdian-946CE6?style=for-the-badge" alt="Afdian" style="height: 40px;">

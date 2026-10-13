@@ -1,13 +1,13 @@
-# Communauté & Feedback
+# Communauté et retours
 
-Nous apprécions la voix de chaque utilisateur. Que vous ayez trouvé un bug, une suggestion de fonctionnalité, ou que vous souhaitiez partager votre coffre-fort de prompts, il existe plusieurs façons de nous contacter.
+Nous accordons de la valeur à la voix de chaque utilisateur. Que vous ayez trouvé un bug, que vous ayez une idée de fonctionnalité ou que vous vouliez partager votre coffre-fort de prompts, plusieurs moyens sont à votre disposition pour nous joindre.
 
-## 📢 Suivre les Mises à Jour
+## 📢 Suivre les mises à jour
 
-Suivez-nous sur X (Twitter) pour obtenir les dernières mises à jour de développement.
+Suivez-nous sur X (Twitter) pour suivre les dernières évolutions du développement.
 
-- **Nouvelles Versions** : Soyez le premier informé des mises à jour.
-- **Aperçus de Fonctionnalités** : Obtenez un avant-goût des fonctionnalités à venir.
+- **Nouvelles versions** : soyez le premier informé des mises à jour.
+- **Aperçus de fonctionnalités** : découvrez en avant-première les fonctionnalités à venir.
 
 <div style="margin: 2rem 0;">
   <a href="https://x.com/Nag1ovo/status/2012610584722731188" target="_blank" style="text-decoration: none;">
@@ -17,11 +17,11 @@ Suivez-nous sur X (Twitter) pour obtenir les dernières mises à jour de dévelo
 
 ## 💬 Communauté Discord
 
-Rejoignez notre serveur Discord pour discuter avec d'autres Voyageurs !
+Rejoignez notre serveur Discord pour échanger avec d'autres Voyagers !
 
-- **Chat en Temps Réel** : Discutez directement avec d'autres utilisateurs et les développeurs.
-- **Partage de Prompts** : Voyez comment les autres utilisent Gemini™ et partagez vos meilleurs prompts.
-- **Mises à Jour de Développement** : Recevez les dernières nouvelles sur les fonctionnalités et versions à venir.
+- **Discussion en temps réel** : échangez directement avec les autres utilisateurs et les développeurs.
+- **Partage de prompts** : découvrez comment d'autres utilisent Gemini™ et partagez vos meilleurs prompts.
+- **Actualités du développement** : suivez les nouvelles des fonctionnalités et des versions à venir.
 
 <div style="margin: 2rem 0;">
   <a href="https://discord.gg/TEUFxdMbGb" target="_blank" style="text-decoration: none;">
@@ -29,7 +29,7 @@ Rejoignez notre serveur Discord pour discuter avec d'autres Voyageurs !
   </a>
 </div>
 
-## 📱 Autres Plateformes Sociales
+## 📱 Autres réseaux
 
 Vous pouvez aussi me retrouver sur ces plateformes :
 
@@ -42,11 +42,11 @@ Vous pouvez aussi me retrouver sur ces plateformes :
   </a>
 </div>
 
-## 🐙 GitHub Issues
+## 🐙 Issues GitHub
 
-Si vous avez trouvé un bug reproductible, veuillez ouvrir une issue sur GitHub. Les demandes de fonctionnalités, les idées et les questions vont dans les Discussions, pas dans les issues :
+Si vous avez trouvé un bug reproductible, ouvrez une issue sur GitHub. Les demandes de fonctionnalités, les idées et les questions vont dans les Discussions, et non dans les Issues :
 
-- [Signaler un Bug](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml)
+- [Signaler un bug](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml)
 - [Proposer une fonctionnalité ou une idée (Discussions)](https://github.com/voyager-crew/voyager/discussions)
 
 Merci de soutenir Voyager ! ❤️

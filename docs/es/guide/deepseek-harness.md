@@ -1,10 +1,10 @@
 # DeepSeek Harness
 
-El agent de programación de código abierto oficial de DeepSeek. Se ejecuta en tu máquina.
+El agente de programación de código abierto oficial de DeepSeek. Se ejecuta en tu máquina.
 
 Tiene una interfaz web, en `localhost:3080`.
 
-Una interfaz web significa que Voyager puede entrar.
+Una interfaz web significa que Voyager puede llegar hasta ella.
 
 ## Por qué funciona
 
@@ -53,7 +53,7 @@ Las mismas etiquetas, los mismos favoritos, la misma búsqueda.
 
 **El puerto no es fijo.** DSH sigue siendo una versión preliminar para desarrolladores y su puerto por defecto puede cambiar. Si cambia, añade el nuevo y listo.
 
-**Solo se carga el Gestor de Prompts.** La Línea de tiempo, las Carpetas y lo demás están hechos para Gemini y no arrancan en un sitio personalizado.
+**Solo se carga el Gestor de Prompts.** La Línea de tiempo, las Carpetas y lo demás no arrancan en un sitio personalizado. (En la web de DeepSeek, muchas de estas funciones están disponibles como plugins oficiales.)
 
 **Tus prompts nunca salen de la máquina.** DSH es local, la biblioteca de Voyager es local. Nada de la cadena sale fuera.
 

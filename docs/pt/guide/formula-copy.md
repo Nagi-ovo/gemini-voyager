@@ -1,28 +1,34 @@
-# Cópia de Fórmulas
+# Cópia de fórmulas
 
-O Voyager torna fácil a reutilização de fórmulas matemáticas e símbolos científicos. Suporta a cópia com um clique do código-fonte LaTeX e do formato MathML compatível com o Microsoft Word.
+O Voyager facilita reutilizar fórmulas matemáticas e símbolos científicos. Clique em uma fórmula para copiá-la como LaTeX, MathML pronto para o Word ou um bloco compatível com o Notion.
 
 ## Introdução
 
-Quando pede ao Gemini para derivar fórmulas ou escrever expressões matemáticas, ele geralmente apresenta-as usando LaTeX. Embora seja visualmente atraente, extrair o código-fonte para usar nos seus próprios artigos, documentos ou editores exige frequentemente um esforço manual.
+Quando você pede ao Gemini para deduzir fórmulas ou escrever expressões matemáticas, ele normalmente as renderiza usando LaTeX. Embora fiquem bonitas, extrair o código-fonte para usar em seus artigos, documentos ou editores costuma exigir trabalho manual.
 
-O Voyager oferece suporte total para isso:
+O Voyager oferece suporte integrado para isso:
 
-1. **Deteção Automática**: O Voyager identifica automaticamente as fórmulas LaTeX apresentadas na página.
-2. **Botão de Cópia**: Ao passar o rato sobre uma fórmula, aparece um ícone de cópia no lado direito.
-3. **Opções de Formato**: Clique no ícone para escolher:
-   - **Copy LaTeX**: Copia o código-fonte LaTeX padrão, ideal para Overleaf, editores Markdown, etc.
-   - **Copy MathML**: Copia o código-fonte MathML, o melhor formato para colar diretamente no **Microsoft Word**.
+1. **Detecção automática**: O Voyager identifica automaticamente as fórmulas renderizadas na página. Ao passar o mouse sobre uma delas, você vê que ela é clicável.
+2. **Clique para copiar**: Clique em uma fórmula inline ou em bloco e ela é copiada na hora, com uma breve confirmação.
+3. **Escolha um formato**: No popup, escolha antecipadamente um **Formato de cópia de fórmula**:
+   - **LaTeX**: Código-fonte LaTeX padrão com delimitadores de cifrão, ideal para Overleaf, editores Markdown etc.
+   - **LaTeX (Sem cifrão)**: O código-fonte LaTeX puro, para editores que adicionam seus próprios delimitadores.
+   - **MathML (Word)**: O melhor formato para colar diretamente no **Microsoft Word**.
+   - **Notion ($$ Formato)**: Envolve cada fórmula em `$$`, que o Notion transforma em equação.
 
-![Cópia de Fórmulas](/assets/gemini-math-copy.png)
+![Cópia de fórmulas](/assets/gemini-math-copy.png)
 
-## Características
+## Recursos
 
-- **Compatibilidade com Word**: Com o suporte MathML, pode colar fórmulas complexas geradas por IA diretamente em documentos Word, mantendo um formato editável perfeito.
-- **Preservação do Contexto**: Não copia apenas a fórmula em si, mas também preserva o seu contexto matemático.
-- **Resposta Instantânea**: Processado inteiramente de forma local para resultados imediatos.
+- **Compatibilidade com o Word**: Com o suporte a MathML, você pode colar fórmulas complexas geradas por IA diretamente em documentos do Word, mantendo a formatação editável perfeita.
+- **Preservação do contexto**: Não copia só a fórmula, mas também preserva o contexto matemático dela.
+- **Resposta instantânea**: Processado inteiramente de forma local, para resultados imediatos.
 
-## Dicas de Utilização
+## Dicas de uso
 
-- **Escrita Académica**: Ao escrever artigos no Word, peça ao Gemini para derivar fórmulas e, em seguida, utilize a cópia MathML para evitar o trabalho de introdução manual no Editor de Equações do Word.
-- **Notas**: Ao tirar notas no Obsidian ou Notion, basta copiar a fonte LaTeX diretamente.
+- **Escrita acadêmica**: Ao escrever artigos no Word, peça ao Gemini para deduzir as fórmulas e use a cópia em MathML para evitar o trabalho manual no Editor de Equações do Word.
+- **Anotações**: Ao fazer anotações no Obsidian ou no Notion, basta copiar o código-fonte LaTeX diretamente.
+
+## Onde funciona
+
+No Gemini e no AI Studio, ative com **Ativar cópia de fórmulas** no popup; essa opção e o formato de cópia valem para os dois sites. Claude e ChatGPT recebem a cópia de fórmulas como plugin integrado, e o DeepSeek tem um plugin de cópia de fórmulas no [catálogo de plugins](/pt/plugins).

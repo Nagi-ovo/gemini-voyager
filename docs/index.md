@@ -4,8 +4,8 @@ gitChangelog: false
 
 hero:
   name: 'Voyager'
-  text: '终于，它完整了。'
-  tagline: '思维有形，万物归位。'
+  text: 'AI 网页界面缺失的那一层操作系统。'
+  tagline: 'Gemini · Claude · ChatGPT · DeepSeek —— 终于，完整了。'
   image:
     src: /logo.png
     alt: Voyager Logo
@@ -23,16 +23,16 @@ safariLaunch:
   link: ./guide/deepseek-harness
 
 teaser:
-  title: '重新定义交互。'
+  title: '开箱即顺。'
   description: '我们不造扩展，我们重塑思考。<br>用 Voyager，不再是人适应界面，而是界面顺应心流。'
   image: '/assets/teaser.png'
   features:
     - title: '时间轴'
-      details: '看见对话的脉搏。<br>让线性的时间，变成可触摸的空间。'
+      details: '别滚屏，去飞。瞬间跳到对话中的任意一点。'
     - title: '文件夹'
-      details: '给思想安个家。<br>哪怕是一闪而过的念头，也值得被郑重对待。'
+      details: '终于，给你的 AI 对话配了一套文件系统。原生、直观、强大。'
     - title: '掌控权'
-      details: '数据归你。<br>打破云端的围墙，让知识真正属于你。'
+      details: '数据归你。一键导出为 JSON、Markdown 或 PDF。'
 
 features:
   - icon: 🧭
@@ -125,15 +125,15 @@ features:
   <a href="https://github.com/voyager-crew/voyager">
     <img src="https://raw.githubusercontent.com/voyager-crew/voyager/main/docs/public/assets/sponsors.svg" width="1000px" style="margin: 0 auto;" />
   </a>
-  <p style="margin-top: 24px; font-size: 1.05em; opacity: 0.86;">✨ 我们已在 Product Hunt 上线！欢迎来分享你的想法和反馈。❤️</p>
+  <p style="margin-top: 24px; font-size: 1.05em; opacity: 0.86;">✨ 在 Product Hunt 上找到我们，期待听到你的想法和反馈。❤️</p>
   <div style="margin-top: 12px; display: flex; justify-content: center;">
     <a href="https://www.producthunt.com/posts/gemini-voyager" target="_blank" rel="noopener noreferrer"><img alt="Voyager on Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1064704&amp;theme=light&amp;t=1768842096186"></a>
   </div>
 </div>
 
 <div class="vp-doc" style="text-align: center; margin: 3.5rem auto 2rem; max-width: 720px; padding: 0 16px;">
-  <p style="font-size: 1.05em; font-weight: 600; opacity: 0.86; margin: 0 0 12px;">“它不只是工具，更是伴你思维远航的伙伴。”</p>
-  <a href="./guide/getting-started" style="font-weight: 600; text-decoration: none;">探索更多 →</a>
+  <p style="font-size: 1.05em; font-weight: 600; opacity: 0.86; margin: 0 0 12px;">“它不只是工具，而是思维的一辆自行车。”</p>
+  <a href="./guide/getting-started" style="font-weight: 600; text-decoration: none;">看看还能做什么 →</a>
 </div>
 
 <!-- Fable 5 Verified badge source: https://github.com/yetone/alma-releases/issues/56 (@yetone). -->

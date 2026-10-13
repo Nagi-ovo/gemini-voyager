@@ -1,35 +1,35 @@
-# Eliminação em Lote
+# Exclusão em lote
 
-Elimine várias conversas de uma só vez no Gemini e no AI Studio, sem precisar de apagar uma a uma.
+Exclua várias conversas de uma vez no Gemini e no AI Studio, sem precisar apagar uma por uma.
 
-## Funcionalidades
+## Recursos
 
-- **Modo de Seleção Múltipla**: Pressione e segure qualquer conversa para entrar no modo de seleção múltipla e marque várias conversas para eliminar.
-- **Limpeza com um clique**: Após selecionar, clique no botão de eliminar para remover todas as conversas selecionadas de uma só vez.
-- **Feedback de Progresso**: O progresso em tempo real é exibido durante a eliminação para que saiba o estado atual.
-- **Confirmação Segura**: Um diálogo de confirmação aparece antes da eliminação para evitar operações acidentais.
+- **Modo de seleção múltipla**: Pressione e segure qualquer conversa para entrar no modo de seleção múltipla e marcar várias conversas para excluir.
+- **Limpeza com um clique**: Depois de selecionar, clique no botão de excluir para remover todas as conversas selecionadas de uma só vez.
+- **Feedback de progresso**: O progresso em tempo real é exibido durante a exclusão, para você saber o andamento.
+- **Confirmação segura**: Uma caixa de diálogo de confirmação aparece antes da exclusão, para evitar operações acidentais.
 
 <div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/batch-delete.png" alt="Eliminação em Lote" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  <img src="/assets/batch-delete.png" alt="Exclusão em lote" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>
 
-## Como Usar
+## Como usar
 
 ### Gemini
 
 1. Na lista de conversas da barra lateral, **pressione e segure** qualquer item de conversa.
-2. Após entrar no modo de seleção múltipla, aparecerão caixas de seleção no lado esquerdo de cada conversa.
-3. Marque as conversas que deseja eliminar (até 50 de uma vez).
-4. Clique no **botão Eliminar** que aparece.
-5. Clique em "Confirmar" na área de confirmação vermelha que aparece **acima da lista de pastas** para iniciar a eliminação.
+2. Depois de entrar no modo de seleção múltipla, caixas de seleção aparecem à esquerda de cada conversa.
+3. Marque as conversas que deseja excluir (até 50 por vez).
+4. Clique no **botão Excluir** que aparece.
+5. Clique em "Confirmar" na área de confirmação vermelha que aparece **acima da lista de pastas** para iniciar a exclusão.
 
 ### AI Studio
 
 1. Abra a página **Library** do AI Studio.
 2. **Pressione e segure** qualquer linha de prompt para entrar no modo de seleção múltipla.
-3. Selecione os prompts que deseja eliminar (até 50 de uma vez).
-4. Clique no **botão Eliminar** flutuante e confirme o aviso do navegador.
+3. Selecione os prompts que deseja excluir (até 50 por vez).
+4. Clique no **botão Excluir** flutuante e confirme o aviso do navegador.
 
 ::: tip Nota
-No Gemini, o painel de confirmação sobrepõe a área de pastas para evitar bloquear a lista de conversas. As operações de eliminação em lote não podem ser desfeitas, por isso prossiga com cuidado.
+No Gemini, o painel de confirmação fica sobre a área de pastas para não bloquear a lista de conversas. As operações de exclusão em lote não podem ser desfeitas, então prossiga com cuidado.
 :::

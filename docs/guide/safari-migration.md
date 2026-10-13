@@ -1,27 +1,27 @@
 # Safari 插件迁移指南
 
 ::: warning 需要手动操作一次
-从 **v1.6.0** 起，Safari 宿主 App 由「**Gemini Voyager**」更名为「**Voyager**」。macOS 按 App 名称识别程序，所以直接安装新版会和旧 App 并存，可能出现扩展重复或行为混乱。按下面几步换一次即可，之后自动更新照常。
+从 **v1.6.0** 起，Safari 宿主 App 由“**Gemini Voyager**”更名为“**Voyager**”。macOS 按 App 名称识别程序，因此直接安装新版会与旧 App 并存，可能导致扩展重复或行为异常。只需完成一次替换，之后自动更新会照常进行。
 :::
 
-## 你的数据不会丢
+## 你的数据是安全的
 
-App 的 Bundle ID 没有改变，文件夹、灵感库、云同步和所有设置都会保留。这一步只是替换 App 本体，不碰数据。
+App 的 Bundle ID 没有改变。你的文件夹、提示词库、云同步以及所有设置都会保留。这一步只替换 App 本体，不会触及你的数据。
 
 ## 迁移步骤
 
-1. **完全退出 Safari**（在 Safari 里按 `⌘Q`，不是只关窗口）。
-2. 打开「**访达 → 应用程序**」，把旧的「**Gemini Voyager.app**」拖到废纸篓。
-3. 打开新下载的 DMG，把里面的「**Voyager.app**」拖进「**应用程序**」。
-4. 重新打开 Safari →「**设置 → 扩展**」，勾选「**Voyager Extension**」。
+1. **完全退出 Safari**（在 Safari 中按 `⌘Q`，而不只是关闭窗口）。
+2. 打开 **访达 → 应用程序**，将旧的“**Gemini Voyager.app**”拖到废纸篓。
+3. 打开刚下载的 DMG，将其中的“**Voyager.app**”拖入 **应用程序**。
+4. 重新打开 Safari，进入 **设置 → 扩展**，启用“**Voyager Extension**”。
 
-## 两个别做
+## 两件事不要做
 
-- ❌ **不要同时保留两个 App**。旧的「Gemini Voyager.app」不删，两个扩展会互相打架。
-- ❌ **不要在 Safari 的「扩展」里点旧扩展的「卸载」**。那会指回旧 App，反而更乱。直接按上面第 2 步把旧 App 拖进废纸篓就行。
+- ❌ **不要同时保留两个 App**。如果旧的“Gemini Voyager.app”仍然存在，两个扩展会相互冲突。
+- ❌ **不要在 Safari 的扩展设置中点击旧扩展的“卸载”**。这会指向旧 App，只会让情况更混乱。请按照第 2 步直接把旧 App 拖到废纸篓。
 
 ## 之后
 
-换完这一次，以后 Safari 版本会通过内置的自动更新（Sparkle）升级新的「Voyager」，不用再手动换 App。
+完成这一次替换后，今后的 Safari 版本都会通过内置的自动更新器（Sparkle）更新为新的“Voyager”，无需再手动替换。
 
-有问题欢迎到 [GitHub Issues](https://github.com/voyager-crew/voyager/issues) 反馈。
+有问题？请到 [GitHub Issues](https://github.com/voyager-crew/voyager/issues) 告诉我们。

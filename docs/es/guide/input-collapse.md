@@ -1,14 +1,15 @@
-# Colapso del Cuadro de Entrada
+# Contraer la entrada
 
-Colapsa automáticamente el cuadro de entrada cuando está vacío para ganar más espacio de lectura. Haz clic en el botón colapsado para expandir y escribir.
+Contrae el área de entrada cuando está vacía para ganar más espacio de lectura. Haz clic en la barra contraída para expandirla y empezar a escribir.
 
 <div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/hide-input-area.png" alt="Colapso del cuadro de entrada" style="max-width: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  <img src="/assets/hide-input-area.png" alt="Contraer la entrada" style="max-width: 400px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>
 
-## Cómo Usar
+## Cómo usarla
 
-1. Cuando el cuadro de entrada está vacío y pierde el foco, se colapsa automáticamente en un botón tipo cápsula compacto.
-2. Haz clic en el botón cápsula para expandir el cuadro de entrada y comenzar a escribir.
-3. También puedes presionar <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>I</kbd> para expandir rápidamente el cuadro de entrada.
-4. Puedes activar o desactivar esta función en el panel de configuración (desactivado por defecto).
+1. Cuando el área de entrada está vacía y pierde el foco, se contrae automáticamente en un botón compacto con forma de píldora.
+2. Haz clic en el botón de píldora para expandir el área de entrada y empezar a escribir.
+3. También puedes pulsar <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>I</kbd> para expandir el área de entrada rápidamente.
+4. Actívala o desactívala con **Habilitar contracción de entrada** en **Opciones de entrada** del popup (desactivada por defecto).
+5. Activa también **Permitir colapso con contenido** si quieres que el área de entrada se contraiga incluso cuando contiene texto o adjuntos.

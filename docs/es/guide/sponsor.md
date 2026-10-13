@@ -5,7 +5,7 @@
 
 El mantenimiento de proyectos de código abierto se alimenta principalmente de pasión (y café) ☕
 
-Este sitio no usa Google Ads y la extensión no tiene versión de pago; tampoco acepto financiación de servicios de relay de API, porque no puedo verificar cómo tratan los datos de los usuarios. La intención es simple: crear una herramienta que yo mismo uso cada día y recomendaría a un amigo —— manteniendo la sinceridad en medio del ruido.
+Este sitio no usa Google Ads y la extensión no tiene versión de pago; tampoco acepto financiación de servicios de relay de API, porque no puedo verificar cómo tratan los datos de los usuarios. La intención es simple: crear una herramienta que yo mismo uso cada día y recomendaría a un amigo, manteniendo la sinceridad en medio del ruido.
 
 ## Plataformas en Línea
 
@@ -21,7 +21,7 @@ Este sitio no usa Google Ads y la extensión no tiene versión de pago; tampoco 
   </a>
 </div>
 
-## Donar via QR 🍵
+## Invítame un café (QR) 🍵
 
 <div class="qr-container">
   <div class="qr-item">
@@ -38,7 +38,7 @@ Este sitio no usa Google Ads y la extensión no tiene versión de pago; tampoco 
 
 ### 🎙️ Herramienta Recomendada: Typeless
 
-Recomiendo encarecidamente **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**, una herramienta de voz a texto con IA. La integré en mi flujo de trabajo diario durante el desarrollo de Voyager, lo que me ahorró una enorme cantidad de tiempo y aumentó significativamente mi productividad.
+Recomiendo mucho **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**, una herramienta de voz a texto con IA. La integré en mi flujo de trabajo diario durante el desarrollo de Voyager, lo que me ahorró una enorme cantidad de tiempo y aumentó significativamente mi productividad.
 
 > 🎁 **[Únete a través de mi enlace de referencia](https://www.typeless.com/?via=gemini-voyager)** (Código: _`gemini-voyager`_) para obtener **$5 en créditos gratis**. ¡Esto también me da créditos para seguir manteniendo este proyecto, una forma gratuita de apoyar mi trabajo! ❤️
 

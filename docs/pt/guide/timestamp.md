@@ -1,26 +1,26 @@
-# Carimbo de Data/Hora
+# Carimbo de data e hora das mensagens
 
 ::: info
-**Nota**: Esta funcionalidade está disponível na versão 1.3.7 e posteriores.
+**Nota**: Este recurso está disponível a partir da versão 1.3.7.
 :::
 
-O Voyager regista automaticamente a hora de envio de cada mensagem, ajudando-o a rastrear a linha temporal completa das suas conversas.
+O Voyager registra automaticamente o horário de envio de cada mensagem, ajudando você a acompanhar toda a linha do tempo das suas conversas.
 
 ## Introdução
 
-O Gemini não exibe nativamente a hora de envio das mensagens. À medida que as conversas se prolongam, torna-se difícil lembrar quando uma discussão particular ocorreu.
+O Gemini não mostra nativamente quando as mensagens foram enviadas. Conforme as conversas ficam mais longas, fica difícil lembrar quando determinada discussão aconteceu.
 
-O Voyager anota cada mensagem com um carimbo de data/hora preciso (formato: `AAAA-MM-DD HH:mm:ss`), tornando a linha temporal clara num relance.
+O Voyager anota cada mensagem com um carimbo de data e hora preciso (formato: `YYYY-MM-DD HH:mm:ss`), deixando a linha do tempo bem clara.
 
-## Características
+## Recursos
 
-- **Registo automático**: Os carimbos de data/hora são capturados automaticamente ao enviar — sem necessidade de ação manual.
-- **Precisão ao segundo**: Data e hora completas, perfeito para rever conversas longas.
-- **Persistência local**: Os carimbos são guardados no armazenamento local e permanecem visíveis após atualizar a página.
-- **Zero distração**: A informação temporal é apresentada discretamente sem afetar a experiência de leitura.
+- **Registro automático**: Os carimbos são capturados automaticamente no envio, sem nenhuma ação manual.
+- **Precisão de segundos**: Data e hora completas, ideais para revisar conversas longas.
+- **Persistência local**: Os carimbos ficam salvos no armazenamento local e continuam visíveis depois de atualizar a página.
+- **Zero distração**: As informações de horário aparecem de forma discreta, sem atrapalhar a leitura.
 
 ## Casos de uso
 
-- **Registos de trabalho**: Rever quando uma decisão particular foi tomada.
-- **Notas de estudo**: Marcar quando um conceito foi discutido para revisão posterior.
-- **Revisão de conversas longas**: Em conversas aprofundadas de vários dias, distinguir claramente as discussões de diferentes períodos.
+- **Registros de trabalho**: Rever quando uma decisão foi tomada.
+- **Anotações de estudo**: Marcar quando um conceito foi discutido, para revisar depois.
+- **Revisão de conversas longas**: Em discussões profundas que duram vários dias, diferenciar claramente os assuntos de cada período.

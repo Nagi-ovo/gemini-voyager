@@ -1,75 +1,75 @@
-# Exportação Deep Research
+# Exportação do Deep Research
 
-Exporte o relatório final gerado pelo Deep Research, ou guarde o seu processo completo de "pensamento" como um ficheiro Markdown.
+Exporte o relatório final gerado pelo Deep Research ou salve o processo completo de "pensamento" dele como um arquivo Markdown.
 
-## 1. Exportação de Relatório (PDF / Imagem)
+## 1. Exportação do relatório (PDF / imagem)
 
-Os relatórios gerados pelo Deep Research podem ser exportados como PDFs com formatação elegante ou como imagens individuais partilháveis (os formatos Markdown e JSON também são suportados).
+Os relatórios gerados pelo Deep Research podem ser exportados como PDFs bem formatados ou como imagens únicas para compartilhar (os formatos Markdown e JSON também são compatíveis). Abra o menu **Share & Export** do relatório e escolha **Save Report**.
 
-![Exportação de Relatório](/assets/deep-research-report-export.png)
+![Exportação do relatório](/assets/deep-research-report-export.png)
 
-## 2. Exportação do Processo de Pensamento (Markdown)
+## 2. Exportação do processo de pensamento (Markdown)
 
-Além do relatório final, também pode exportar o conteúdo completo de "pensamento" das conversas do Deep Research.
+Além do relatório final, você também pode exportar o conteúdo completo de "pensamento" das conversas do Deep Research.
 
-### Funcionalidades
+### Recursos
 
-- **Exportação num clique**: O botão de download aparece no menu da conversa (⋮)
-- **Formato estruturado**: Preserva as fases de pensamento, itens de pensamento e sites pesquisados na sua ordem original
-- **Cabeçalhos bilingues**: Ficheiros Markdown incluem cabeçalhos de secção em inglês e no seu idioma atual
-- **Nomeação automática**: Os ficheiros têm carimbo de data/hora para fácil organização (ex: `deep-research-thinking-20240128-153045.md`)
+- **Exportação com um clique**: uma opção de download aparece no menu **Share & Export** do relatório
+- **Formato estruturado**: preserva as fases de pensamento, os itens de pensamento e os sites pesquisados na ordem original
+- **Cabeçalhos legíveis**: os cabeçalhos das seções ficam em inglês; se o Voyager estiver configurado para outro idioma, cada cabeçalho mostra esse idioma junto com o inglês
+- **Nomes automáticos**: os arquivos recebem data e hora para facilitar a organização (ex.: `deep-research-thinking-20240128-153045.md`)
 
-### Como Usar
+### Como usar
 
-1. Abra uma conversa Deep Research no Gemini™
-2. Clique no botão **Partilhar e Exportar** na conversa
-3. Selecione "Transferir conteúdo de pensamento" (Download thinking content)
-4. O ficheiro Markdown será transferido automaticamente
+1. Abra uma conversa do Deep Research no Gemini™
+2. Clique no botão **Share & Export** do relatório
+3. Selecione **Baixar conteúdo de pensamento**
+4. O arquivo Markdown será baixado automaticamente
 
-![Exportação de Pensamento Deep Research](/assets/deepresearch_download_thinking.png)
+![Exportação do pensamento do Deep Research](/assets/deepresearch_download_thinking.png)
 
-### Formato do Ficheiro Exportado
+### Formato do arquivo exportado
 
-O ficheiro Markdown exportado inclui:
+O arquivo Markdown exportado inclui:
 
-- **Título**: O título da conversa
-- **Metadados**: Data/hora da exportação e número total de fases de pensamento
-- **Fases de Pensamento**: Cada fase contém:
+- **Título**: o título da conversa
+- **Metadados**: data e hora da exportação e número total de fases de pensamento
+- **Fases de pensamento**: cada fase contém:
   - Itens de pensamento (com cabeçalhos e conteúdo)
   - Sites pesquisados (com links e títulos)
 
-#### Exemplo de Estrutura
+#### Exemplo de estrutura
 
 ```markdown
-# Título da Conversa Deep Research
+# Deep Research Conversation Title
 
-**Hora de exportação / Exported At:** 2025-12-28 17:25:35
-**Total de fases / Total Phases:** 3
-
----
-
-## Fase de Pensamento 1 / Thinking Phase 1
-
-### Título do Pensamento 1
-
-Conteúdo do pensamento...
-
-### Título do Pensamento 2
-
-Conteúdo do pensamento...
-
-#### Sites Pesquisados / Researched Websites
-
-- [domain.com](https://example.com) - Título da Página
-- [another.com](https://another.com) - Outro Título
+**Exported At:** 2025-12-28 17:25:35
+**Total Phases:** 3
 
 ---
 
-## Fase de Pensamento 2 / Thinking Phase 2
+## Thinking Phase 1
+
+### Thought Title 1
+
+Thought content...
+
+### Thought Title 2
+
+Thought content...
+
+#### Researched Websites
+
+- [domain.com](https://example.com) - Page Title
+- [another.com](https://another.com) - Another Title
+
+---
+
+## Thinking Phase 2
 
 ...
 ```
 
 ## Privacidade
 
-Toda a extração e formatação ocorre 100% localmente no seu navegador. Nenhum dado é enviado para servidores externos.
+Toda a extração e formatação acontece 100% localmente no seu navegador. Nenhum dado é enviado para servidores externos.
