@@ -32,7 +32,10 @@ owns selector discovery and turn collection; only the rail's source reports nati
 | Route-scoped timestamp DOM discovery and remount observation                        | [`messageTimestampCollector`](../timestamp/messageTimestampCollector.ts)     |
 | Read-only rail timestamps and history alias refresh                                 | `TimelineTimestamps.ts`                                                      |
 
-`TimelineState` owns the marker snapshot and exposes its hierarchy owner directly. Its shared storage
+The engine reads marker snapshots and edits stars/levels through the shared `TimelineDataSession`
+interface, whose factory retains this adapter's native storage policy. `TimelineState` implements
+that route-owned session; its public hierarchy surface exposes only level/collapse reads and edits.
+Its shared storage
 listener routes hierarchy changes after star changes; `TimelineHierarchy` owns the account context
 and level/collapse maps. State owns one shared `TimelineHydration` primitive per store for readiness,
 read retries and ordering against complete active-scope snapshots. `TimelineDotLayer` owns dot elements and measured positions;

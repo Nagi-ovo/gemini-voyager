@@ -3,7 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StorageKeys } from '@/core/types/common';
 import { StarredMessagesService } from '@/features/savedLibrary/StarredMessagesService';
 import type { StarredMessage, StarredMessagesData } from '@/features/savedLibrary/starTypes';
-import { TimelineState } from '@/features/timeline/TimelineState';
+import {
+  type TimelineDataSession,
+  createTimelineDataSession,
+} from '@/features/timeline/TimelineDataSession';
 import type { TimelineMarker } from '@/features/timeline/types';
 import { createGeminiTimelineStoragePolicy } from '@/pages/content/timeline/GeminiTimelineStorage';
 
@@ -13,7 +16,7 @@ import { TimelineTurns } from '../TimelineTurns';
 const CONVERSATION_ID = 'gemini:conv:abc';
 const FIRST_ID = 's-1111111111111111';
 const TAIL_ID = 's-6060606060606060';
-const states: TimelineState[] = [];
+const states: TimelineDataSession[] = [];
 function marker(id: string, summary: string): TimelineMarker {
   return {
     id,
@@ -42,14 +45,14 @@ async function setup(
   vi.spyOn(StarredMessagesService, 'getAllStarredMessages').mockResolvedValue({
     messages: { [CONVERSATION_ID]: messages },
   });
-  const state = new TimelineState(
-    vi.fn(),
-    createGeminiTimelineStoragePolicy(window.location.href, {
+  const state = createTimelineDataSession({
+    onChange: vi.fn(),
+    policy: createGeminiTimelineStoragePolicy(window.location.href, {
       resolveCanonicalTurnId: (_cid, id) => (id.startsWith('s-') ? id : (aliases.get(id) ?? null)),
       getTurnIdAliases: (_cid, id) =>
         legacyByServer.has(id) ? [id, legacyByServer.get(id)!] : [id],
     }),
-  );
+  });
   states.push(state);
   await state.init();
   state.replaceMarkers(markers);
@@ -103,10 +106,10 @@ describe('TimelineState stars in a partially mounted conversation', () => {
       vi.spyOn(StarredMessagesService, 'getAllStarredMessages').mockResolvedValue({
         messages: { [CONVERSATION_ID]: [message(FIRST_ID, 'First'), message('u-0', 'First')] },
       });
-      const state = new TimelineState(
-        vi.fn(),
-        createGeminiTimelineStoragePolicy(location.href, cache),
-      );
+      const state = createTimelineDataSession({
+        onChange: vi.fn(),
+        policy: createGeminiTimelineStoragePolicy(location.href, cache),
+      });
       states.push(state);
       await state.init();
       state.replaceMarkers(mounted);
@@ -189,7 +192,10 @@ describe('TimelineState stars in a partially mounted conversation', () => {
       }),
     );
     read.mockResolvedValue({ messages: { [CONVERSATION_ID]: [message(FIRST_ID, 'saved')] } });
-    const state = new TimelineState(vi.fn(), createGeminiTimelineStoragePolicy());
+    const state = createTimelineDataSession({
+      onChange: vi.fn(),
+      policy: createGeminiTimelineStoragePolicy(),
+    });
     states.push(state);
     state.replaceMarkers([marker(FIRST_ID, 'saved')]);
     const initial = state.init();
@@ -283,7 +289,10 @@ describe('TimelineState stars in a partially mounted conversation', () => {
       }),
     );
     const onChange = vi.fn();
-    const state = new TimelineState(onChange, createGeminiTimelineStoragePolicy());
+    const state = createTimelineDataSession({
+      onChange,
+      policy: createGeminiTimelineStoragePolicy(),
+    });
     states.push(state);
     const init = state.init();
     state.destroy();

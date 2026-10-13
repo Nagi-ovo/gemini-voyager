@@ -2,6 +2,7 @@ import { StarredMessagesService } from '@/features/savedLibrary/StarredMessagesS
 import type { StarredMessage, StarredMessagesData } from '@/features/savedLibrary/starTypes';
 import { findMatchingStarredMessages } from '@/pages/content/timeline/starredLookup';
 
+import type { TimelineDataSession } from './TimelineDataSession';
 import { TimelineHierarchy } from './TimelineHierarchy';
 import { TimelineHydration } from './TimelineHydration';
 import { TimelineStarText } from './TimelineStarText';
@@ -10,7 +11,7 @@ import { resolveStarredDisplay } from './starredResolution';
 import type { TimelineMarker } from './types';
 
 /** Conversation-scoped stars, hierarchy and mounted-text enrichment. */
-export class TimelineState {
+export class TimelineState implements TimelineDataSession {
   readonly conversationId: string;
   readonly hierarchy: TimelineHierarchy;
   markers: TimelineMarker[] = [];

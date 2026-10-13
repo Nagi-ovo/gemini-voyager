@@ -3,10 +3,10 @@ import { applyRTLClass } from '@/core/utils/rtl';
 import { initI18n } from '@/utils/i18n';
 
 import type { TimelineAdapter, TimelineTimestampOwner } from './TimelineAdapter';
+import { type TimelineDataSession, createTimelineDataSession } from './TimelineDataSession';
 import { TimelineHierarchyGeometry } from './TimelineHierarchyGeometry';
 import { TimelineMarkerInteractions } from './TimelineMarkerInteractions';
 import { TimelineNavigation } from './TimelineNavigation';
-import { TimelineState } from './TimelineState';
 import { TimelineTooltip } from './TimelineTooltip';
 import { TimelineView } from './TimelineView';
 import {
@@ -35,7 +35,7 @@ export class TimelineEngine {
     'MarkerLevel',
     'PreviewPinned',
   ];
-  private readonly state: TimelineState;
+  private readonly state: TimelineDataSession;
   private readonly geometry: TimelineHierarchyGeometry;
   private readonly timestamps: TimelineTimestampOwner | null;
   private readonly navigation: TimelineNavigation;
@@ -55,7 +55,10 @@ export class TimelineEngine {
     private readonly adapter: TimelineAdapter,
     private readonly ownerSignal?: AbortSignal,
   ) {
-    this.state = new TimelineState(() => this.onStateChange(), adapter.storage);
+    this.state = createTimelineDataSession({
+      onChange: () => this.onStateChange(),
+      policy: adapter.storage,
+    });
     this.geometry = new TimelineHierarchyGeometry(
       () => this.state.markers,
       (id) => this.state.hierarchy.getMarkerLevel(id),

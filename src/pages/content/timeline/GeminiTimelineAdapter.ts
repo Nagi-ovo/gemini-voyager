@@ -1,5 +1,5 @@
 import type { TimelineAdapter } from '@/features/timeline/TimelineAdapter';
-import type { TimelineState } from '@/features/timeline/TimelineState';
+import type { TimelineDataSession } from '@/features/timeline/TimelineDataSession';
 
 import { createGeminiTimelineStoragePolicy } from './GeminiTimelineStorage';
 import { GeminiTimelineTurnSource } from './GeminiTimelineTurnSource';
@@ -16,7 +16,7 @@ export class GeminiTimelineAdapter implements TimelineAdapter {
   readonly turns = new GeminiTimelineTurnSource();
   constructor(_options: GeminiTimelineOptions = {}) {}
   viewport = geminiViewport;
-  timestamps(state: TimelineState): TimelineTimestamps {
+  timestamps(state: TimelineDataSession): TimelineTimestamps {
     return new TimelineTimestamps({
       getMarkers: () => state.markers,
       getTurnText: (element) => this.turns.text.getTurnTextCached(element),

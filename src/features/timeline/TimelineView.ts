@@ -1,12 +1,12 @@
 import { type TimelineStyle } from '@/core/types/common';
 import { applyRTLClass } from '@/core/utils/rtl';
 
+import type { TimelineDataSession } from './TimelineDataSession';
 import { TimelineDotLayer } from './TimelineDotLayer';
 import type { TimelineHierarchyGeometry } from './TimelineHierarchyGeometry';
 import { TimelinePreviewPanel } from './TimelinePreviewPanel';
 import { TimelineRailPlacement } from './TimelineRailPlacement';
 import { TimelineSlider } from './TimelineSlider';
-import type { TimelineState } from './TimelineState';
 import timelineStyles from './timeline.css?inline';
 import previewStyles from './timelinePreview.css?inline';
 /** Hides every rail surface until the conversation has a turn to mark. */
@@ -62,7 +62,7 @@ export class TimelineView {
   private styleElement: HTMLStyleElement | null = null;
   private readonly lifetime = new AbortController();
   constructor(
-    private readonly state: Pick<TimelineState, 'markers' | 'toggleStar'>,
+    private readonly state: Pick<TimelineDataSession, 'markers' | 'toggleStar'>,
     geometry: TimelineHierarchyGeometry,
     private readonly options: TimelineViewOptions,
   ) {

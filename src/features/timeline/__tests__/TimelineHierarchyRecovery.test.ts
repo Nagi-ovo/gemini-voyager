@@ -4,14 +4,14 @@ import { buildScopedStorageKey } from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
 import { createGeminiTimelineStoragePolicy } from '@/pages/content/timeline/GeminiTimelineStorage';
 
-import { TimelineState } from '../TimelineState';
+import { type TimelineDataSession, createTimelineDataSession } from '../TimelineDataSession';
 import type { TimelineHierarchyData } from '../hierarchyTypes';
 
 const OLD = 's-1111111111111111';
 const NEW = 's-2222222222222222';
 const CONVERSATION = 'gemini:conv:recovery';
 const KEY = StorageKeys.TIMELINE_HIERARCHY;
-const states: TimelineState[] = [];
+const states: TimelineDataSession[] = [];
 
 function outline(url: string): TimelineHierarchyData {
   return {
@@ -26,10 +26,13 @@ function outline(url: string): TimelineHierarchyData {
   };
 }
 
-function createState(url: string): TimelineState {
+function createState(url: string): TimelineDataSession {
   // The page is on the conversation whose outline the state edits.
   history.replaceState({}, '', new URL(url).pathname);
-  const state = new TimelineState(() => {}, createGeminiTimelineStoragePolicy(url));
+  const state = createTimelineDataSession({
+    onChange: () => {},
+    policy: createGeminiTimelineStoragePolicy(url),
+  });
   states.push(state);
   state.replaceMarkers(
     [OLD, NEW].map((id, index) => ({

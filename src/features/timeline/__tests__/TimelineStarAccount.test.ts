@@ -7,9 +7,9 @@ import type { StarredMessagesData } from '@/features/savedLibrary/starTypes';
 import { createStarredMessagesHandler } from '@/pages/background/starredMessages';
 import { createGeminiTimelineStoragePolicy } from '@/pages/content/timeline/GeminiTimelineStorage';
 
-import { TimelineState } from '../TimelineState';
+import { type TimelineDataSession, createTimelineDataSession } from '../TimelineDataSession';
 
-const states: TimelineState[] = [];
+const states: TimelineDataSession[] = [];
 beforeEach(() => {
   vi.restoreAllMocks();
   history.replaceState({}, '', '/u/1/app/account');
@@ -43,7 +43,10 @@ it('an unrelated Library snapshot during account lookup does not cancel a captur
   ) => {
     void handle(request)?.then(reply, (error: Error) => reply({ ok: false, error: error.message }));
   }) as typeof chrome.runtime.sendMessage);
-  const state = new TimelineState(() => {}, createGeminiTimelineStoragePolicy());
+  const state = createTimelineDataSession({
+    onChange: () => {},
+    policy: createGeminiTimelineStoragePolicy(),
+  });
   states.push(state);
   await state.init();
   state.replaceMarkers([

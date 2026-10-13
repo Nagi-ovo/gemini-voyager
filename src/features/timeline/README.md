@@ -4,24 +4,29 @@
 a turn source, viewport discovery, mount, route identity and storage policy. The engine owns state,
 hierarchy geometry, the rail,
 preview, tooltips, interactions, navigation and settings application. The same owners render Gemini,
-ChatGPT, Claude and DeepSeek.
+ChatGPT, Claude and DeepSeek. Every route obtains its data through
+[`TimelineDataSession`](TimelineDataSession.ts): a narrow interface for marker snapshots, stars,
+verified aliases and level/collapse edits. Its factory uses the existing `TimelineState` owner with
+the adapter's captured storage policy; it creates no second store or write queue. A rail's teardown
+retires its session, while already accepted hierarchy saves keep their captured destination and
+finish through the existing queue.
 
-| Behavior                                                            | Owner                                               |
-| ------------------------------------------------------------------- | --------------------------------------------------- |
-| Rail composition, styles, preview and viewport synchronization      | `TimelineView`                                      |
-| Dot geometry, dense/virtual dots, ruler wave and runner             | `TimelineDotLayer`                                  |
-| Slider scroll dragging and fade                                     | `TimelineSlider`                                    |
-| Width/position restore, migration and dragging                      | `TimelineRailPlacement`                             |
-| Preview search, pinning and hover bridge                            | `TimelinePreviewPanel`, `TimelinePreviewPress`      |
-| Tooltip delay, content and visibility                               | `TimelineTooltip`                                   |
-| Marker navigation, star long press and hierarchy menu               | `TimelineMarkerInteractions`                        |
-| Shortcuts, active turn and navigation cancellation                  | `TimelineNavigation`                                |
-| Virtualized turn homing, reversed scrollers and remembered geometry | `VirtualizedTimelineNavigation`, `scrollMotion`     |
-| Marker snapshot, star display, aliases and Library hydration        | `TimelineState`                                     |
-| Persisted stars, migration, serialized writes and cloud merges      | [Saved Library store](../savedLibrary/starStore.ts) |
-| Hierarchy edits and persistence                                     | `TimelineHierarchy`                                 |
-| Store readiness, read settlement and snapshot ordering              | `TimelineHydration`                                 |
-| Collapse layout                                                     | `TimelineHierarchyGeometry`                         |
+| Behavior                                                            | Owner                                                 |
+| ------------------------------------------------------------------- | ----------------------------------------------------- |
+| Rail composition, styles, preview and viewport synchronization      | `TimelineView`                                        |
+| Dot geometry, dense/virtual dots, ruler wave and runner             | `TimelineDotLayer`                                    |
+| Slider scroll dragging and fade                                     | `TimelineSlider`                                      |
+| Width/position restore, migration and dragging                      | `TimelineRailPlacement`                               |
+| Preview search, pinning and hover bridge                            | `TimelinePreviewPanel`, `TimelinePreviewPress`        |
+| Tooltip delay, content and visibility                               | `TimelineTooltip`                                     |
+| Marker navigation, star long press and hierarchy menu               | `TimelineMarkerInteractions`                          |
+| Shortcuts, active turn and navigation cancellation                  | `TimelineNavigation`                                  |
+| Virtualized turn homing, reversed scrollers and remembered geometry | `VirtualizedTimelineNavigation`, `scrollMotion`       |
+| Marker snapshot, star display, aliases and Library hydration        | `TimelineDataSession`, implemented by `TimelineState` |
+| Persisted stars, migration, serialized writes and cloud merges      | [Saved Library store](../savedLibrary/starStore.ts)   |
+| Hierarchy edits and persistence                                     | `TimelineHierarchy`                                   |
+| Store readiness, read settlement and snapshot ordering              | `TimelineHydration`                                   |
+| Collapse layout                                                     | `TimelineHierarchyGeometry`                           |
 
 The [Gemini adapter](../../pages/content/timeline/GeminiTimelineAdapter.ts) retains Gemini selector
 priority, stable identities and timestamps. Its small

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StorageKeys } from '@/core/types/common';
 import type { StarredMessage } from '@/features/savedLibrary/starTypes';
 
-import { TimelineState } from '../../TimelineState';
+import { type TimelineDataSession, createTimelineDataSession } from '../../TimelineDataSession';
 import type { TimelineStoragePolicy } from '../../TimelineStoragePolicy';
 import type { TimelineMarker } from '../../types';
 import { CatalogTurnOwnership } from './CatalogTurnOwnership';
@@ -33,8 +33,8 @@ const turn = { id: 'c-same', hash: 'same', summary: 'Same prompt' };
 
 let route: string;
 let ownership: CatalogTurnOwnership;
-let state: TimelineState;
-const states: TimelineState[] = [];
+let state: TimelineDataSession;
+const states: TimelineDataSession[] = [];
 const library = new Map<string, StarredMessage[]>();
 const init = () => state.init();
 
@@ -75,7 +75,7 @@ function create(
     getStoredTurnIdAliases: (id) => [id],
     getConversationTitle: () => 'B',
   };
-  state = new TimelineState(() => {}, policy);
+  state = createTimelineDataSession({ onChange: () => {}, policy });
   states.push(state);
 }
 

@@ -1,4 +1,4 @@
-import type { TimelineState } from './TimelineState';
+import type { TimelineDataSession } from './TimelineDataSession';
 import type { TimelineStoragePolicy } from './TimelineStoragePolicy';
 import type { TimelineMarker } from './types';
 
@@ -36,5 +36,5 @@ export interface TimelineAdapter {
   readonly turns: TimelineTurnSource;
   viewport(element: HTMLElement): HTMLElement;
   // Gemini's timestamp bridge subscribes to a page-lifetime history store independently of state.
-  timestamps(state: TimelineState): TimelineTimestampOwner | null;
+  timestamps(state: TimelineDataSession): TimelineTimestampOwner | null;
 }
