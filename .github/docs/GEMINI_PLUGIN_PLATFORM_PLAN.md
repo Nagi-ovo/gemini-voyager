@@ -717,3 +717,17 @@ Q2-e 最终 verify:pr 通过（10322 tests / 843 files，三浏览器构建、CL
 **7C-3 popup 重复入口收口**：专用 TimelineSettingsCard 暴露当前管理的 plugin ID，只有插件站点的时间线卡片实际可见时，才把它接管的字段传给 PluginManager。精确官方 ID 和来源同时匹配后，ChatGPT/Claude 的 timelineStyle、markerLevel，以及 DeepSeek 的 timelineStyle 从通用设置中隐藏；schema、旧 compactView alias、backup、stored values 和写入闭包不变。local、自定义 rail、未知来源、其他字段、无法用三样式卡片表达的远端选项仍留在通用设置，native Gemini/AI Studio 入口不改。来源表使用 Map，避免合法自定义 ID constructor 读到 Object.prototype 而使 popup 崩溃。
 
 7C-3 验证：实际 Popup 三站专用卡片继续写各自 plugin state 和旧 compactView；实际 local rail 的通用控件保留。Manager 的无卡片、未知来源、不同 selected rail、自定义选项、额外字段和 constructor ID 仍可编辑。descriptor、渲染 filter、selected rail、来源 gate、额外选项 gate 五项 mutation 均失败并恢复；constructor 崩溃先红后绿。完整检查结果随本批提交记录；最终树 Loaded/Live、跨浏览器与母语文档审阅仍 pending。
+
+**阶段 7 最终 Chrome 验收与本地收尾（2026-10-13）**：代码树为 `6f82d039`，Chrome 155.0.8059.40。7C-2 和 7C-3 的加锁完整检查分别通过 10,346 / 10,354 tests（850 files），包含 Chrome/Firefox/Safari、CLI、docs；另行 `bun run build:edge` 通过。这些构建不等同于各浏览器实机验收。本轮只新增验收记录，没有添加代码或测试。
+
+最终 Verify S6 构建已经重载，实际内容脚本为 `index.tsx-DuEqirmp.js`。测试源对话点击分叉 2 显示 FORK_NAV_OK，点击 1 返回 DRAFT_FIRST_OK；同页实例 `mv6i7zcv-gbfrbrtztoj` 未变，rail 始终一份。旧消息与本轮新消息的时间标签均显示。固定通知和时间线 owner 在实际 PluginHost 中为 mounted。证据保留在 `.build/codex-handoff/evidence/stage7/`；这次导航证据只覆盖主账号普通会话，消息时间开关的独立组合仍待实测。
+
+通知分层验收：自动化客户端曾使后台测试页保持 focus，早先 NOTICE_A/C 不构成有效后台生成验收。将 Rendering 的 Emulate a focused page 恢复关闭后，改用原生输入和真实窗口切换，长回答 D 与短回答 E 正常完成，各触发一次真实 `gv.responseComplete.notify`；Chrome `notifications.getAll` 分别确认一条创建成功的通知。E 的问题摘要为 `Reply only NOTICE_E.`，未复用 D。临时观察器只记录真实调用，未代发通知，MAIN/BG listener 和 probe 均已移除，测试 DevTools 已关闭。
+
+macOS 只读核验：Google Chrome 允许通知、桌面/通知中心/锁屏均开启，横幅为 Temporary；当时 Focus 显示 Do Not Disturb 为 On，Allowed Apps 为 None allowed，页面说明其余 App 将静音。这解释了当前 Chrome 已创建通知却没有桌面横幅的现象；没有改系统通知或专注模式设置，也不把系统横幅写成验收通过。关闭勿扰或允许 Chrome 后的实际横幅仍待 Jesse 确认。早先「没看到」的回复不能单独证明插件未调用通知。
+
+按 TODO §8 顺序移除 Verify S6，再恢复启用 Voyager (Dev)。原停用 Voyager 的 ID `iifacdnjakkhjjiengaffnegbndgingi` 曾加载旧验证目录，加载 `dist_chrome_dev` 后沿用该 ID，设置没有清空。Dev 初次构建成功，UI 确认版本 2.0.0、On、来源 `dist_chrome_dev`；空输入且无生成的测试页刷新后出现此 ID 的扩展资源与新页面实例。历史 Errors 使用旧 asset 文件名，不冒充新构建错误。保留 `bun run dev:chrome` watcher；用户原有会话未强制刷新，两个临时测试标签页及其独立窗口已关闭。
+
+本地清理完成：退役 worktree 和 `feat/gemini-plugin-platform` 分支、两验证目录、指定 snapshots 与 `.build/backup/` 已删除。worktree 原有未提交内容先保存为上述 evidence 目录内的 `retired-worktree.patch` 和 `retired-worktree-files.tar.gz`。保留 TODO 明列的 promo、pr1024、SPM cache、通知校验配置、codex-handoff，以及原有 33 个未跟踪 `.e2e-frames` 文件。不 push，不开 PR。
+
+最终仍 pending（负责人 Jesse，使用相应账号/硬件）：Safari IME、Firefox/Edge/Safari 实机；AI Studio `.cn` 可访问后的发送；最终插件入口的 `/u/N`、Gem、关 fork 后首句、用量/自动模型、防自动滚动、Quote/Highlight 与共享 local rail 的真实数据往返；首次通知授权与生成中关闭/停止；时间显示/时间线独立组合与 coachmark；付费生图去水印、Enterprise；ar/ko/ja/ru 母语复核。已有早期行为截图和自动化覆盖继续有效，但不替代这些最终树实机结果。代码任务和本地清理已完成，发布验收尚未全部完成。
