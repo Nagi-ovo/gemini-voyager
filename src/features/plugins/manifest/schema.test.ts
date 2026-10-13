@@ -23,7 +23,11 @@
  * The structural checker below is deliberately tiny and local: the repository
  * ships no JSON Schema validator (D17: no schema library), and adding ajv to
  * assert this would be a runtime dependency bought for one test file. It covers
- * exactly the keywords these two schemas use.
+ * exactly the keywords these two schemas use: $ref, type, const, enum, pattern,
+ * minLength/maxLength, minimum/maximum, minItems/maxItems, items, properties,
+ * additionalProperties, required, propertyNames, if/then/else, anyOf/oneOf, and
+ * `format: "regex"` (the one format they assert). Annotations such as
+ * description, default and examples carry no constraint.
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -135,6 +139,22 @@ function checkSchema(
     }
     if (typeof schema.maxLength === 'number' && value.length > schema.maxLength) {
       errors.push(`${path}: longer than ${schema.maxLength}`);
+    }
+    if (schema.format === 'regex') {
+      try {
+        new RegExp(value);
+      } catch {
+        errors.push(`${path}: not a valid regular expression`);
+      }
+    }
+  }
+
+  if (typeof value === 'number') {
+    if (typeof schema.minimum === 'number' && value < schema.minimum) {
+      errors.push(`${path}: below the minimum ${schema.minimum}`);
+    }
+    if (typeof schema.maximum === 'number' && value > schema.maximum) {
+      errors.push(`${path}: above the maximum ${schema.maximum}`);
     }
   }
 
@@ -628,7 +648,16 @@ describe('site.schema.json', () => {
     const badTheme = { ...base, theme: { hostSelector: 'html' } };
     expect(check(badTheme, siteSchema).join('\n')).toMatch(/lightSelector/);
 
-    for (const broken of [noId, badKey, badCapability, badTheme]) {
+    const negativeRevision = { ...base, catalogRevision: -1 };
+    expect(check(negativeRevision, siteSchema).join('\n')).toMatch(/catalogRevision.*minimum/);
+    const hugeRevision = { ...base, catalogRevision: Number.MAX_SAFE_INTEGER + 2 };
+    expect(check(hugeRevision, siteSchema).join('\n')).toMatch(/catalogRevision.*maximum/);
+    expect(check({ ...base, catalogRevision: 7 }, siteSchema)).toEqual([]);
+
+    const badPattern = { ...base, conversationIdPattern: '^/chat/(' };
+    expect(check(badPattern, siteSchema).join('\n')).toMatch(/conversationIdPattern.*regular/);
+
+    for (const broken of [noId, badKey, badCapability, badTheme, negativeRevision]) {
       expect(validateSiteAdapterData(broken).success).toBe(false);
     }
   });
