@@ -77,4 +77,4 @@ This is useful for academic research, competitive analysis, and technical docume
 
 ## Supported Platforms
 
-Export works on Gemini and ChatGPT across Chrome, Edge, Firefox, Safari, Opera, and Brave. On Safari, PDF export uses a manual print step (Command+P after clicking export); Markdown and JSON image extraction are supported.
+Export works on Gemini and ChatGPT across Chrome, Edge, Firefox, Safari, Opera, and Brave. On Safari, PDF export uses a manual print step (Command+P after clicking export); Markdown and JSON exports still include images.
