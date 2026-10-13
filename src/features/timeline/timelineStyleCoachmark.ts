@@ -10,7 +10,6 @@ import { StorageKeys } from '@/core/types/common';
 import {
   type CoachmarkProgress,
   type CoachmarkResult,
-  type CoachmarkSequenceStep,
   showCoachmark,
 } from '@/pages/content/coachmark';
 import { withGeminiTimelineGuideLifetime } from '@/pages/content/timeline/geminiTimelineGuideLifetime';
@@ -42,21 +41,6 @@ async function loadCompactTimelineEnabled(): Promise<boolean> {
     return got[StorageKeys.TIMELINE_STYLE] === 'compact';
   } catch {
     return false;
-  }
-}
-
-async function isGeminiCompactGuideEligible(): Promise<boolean> {
-  try {
-    const got = await browser.storage.sync.get({
-      [StorageKeys.GV_TIMELINE_ENABLED]: true,
-      [StorageKeys.TIMELINE_STYLE]: 'dots',
-    });
-    return (
-      got[StorageKeys.GV_TIMELINE_ENABLED] !== false &&
-      got[StorageKeys.TIMELINE_STYLE] !== 'compact'
-    );
-  } catch {
-    return true;
   }
 }
 
@@ -182,13 +166,6 @@ export async function maybeShowTimelineStyleCoachmark(
     });
   }, opts.signal);
 }
-
-export const timelineStyleCoachmarkStep: CoachmarkSequenceStep = {
-  id: TIMELINE_STYLE_COACHMARK_ID,
-  isEligible: async () =>
-    location.hostname === 'gemini.google.com' && (await isGeminiCompactGuideEligible()),
-  show: (progress) => maybeShowTimelineStyleCoachmark({ progress }),
-};
 
 const showDebugTimelineStyleCoachmark = () => void maybeShowTimelineStyleCoachmark({ force: true });
 

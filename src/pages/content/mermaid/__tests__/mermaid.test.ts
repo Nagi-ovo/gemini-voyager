@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { isGenericLanguageLabel } from '../../codeBlock';
-import { renderMermaid } from '../codeBlock';
+import { createMermaidErrorCard } from '../codeBlock';
 import { openFullscreen } from '../fullscreen';
-import { MermaidRenderer, resolveMermaidTheme } from '../renderer';
+import { MermaidRenderer, resolveMermaidTheme, sanitizeMermaidSvg } from '../renderer';
 import { isMermaidCode, normalizeMermaidCode, normalizeWhitespace } from '../source';
 
 // Mock the dynamic import of 'mermaid'
@@ -129,202 +129,68 @@ describe('Mermaid rendering', () => {
     );
   });
 
-  describe('rendered diagram theme marker', () => {
-    const setPageTheme = (theme: 'dark' | 'light') => {
-      document.body.className = theme === 'dark' ? 'dark-theme' : '';
-    };
-
-    const initializeTheme = async (theme: 'dark' | 'light') => {
-      setPageTheme(theme);
+  describe('renderer output', () => {
+    it('keeps the page diagram when the light export render fails', async () => {
+      document.body.className = 'dark-theme';
       await renderer.initialize();
-
       const mermaid = await getLibrary();
-      expect(mermaid.initialize).toHaveBeenLastCalledWith(
-        expect.objectContaining({ theme: theme === 'dark' ? 'dark' : 'default' }),
-      );
-    };
+      (mermaid.render as unknown as ReturnType<typeof vi.fn>)
+        .mockResolvedValueOnce({ svg: '<svg data-page-theme="dark"></svg>' })
+        .mockRejectedValueOnce(new Error('light export failed'));
 
-    const renderDiagram = async (
-      failLightExport = false,
-      source = 'flowchart TD\nA --> B\nB --> C',
-    ): Promise<HTMLElement | null> => {
-      const host = document.createElement('code-block');
-      const code = document.createElement('code');
-      host.appendChild(code);
-      document.body.appendChild(host);
+      const diagram = await renderer.render('flowchart TD\nA --> B\nB --> C');
 
+      expect(diagram).toMatchObject({ theme: 'dark', errorMessage: null, lightExportSvg: null });
+      expect(diagram?.svg).toContain('data-page-theme="dark"');
+    });
+
+    it('caps a syntax error, removes the artifacts Mermaid leaves, and shows the error as text', async () => {
+      document.body.innerHTML = '<div id="document-content">Keep me</div>';
       const mermaid = await getLibrary();
-      (mermaid.render as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-        async (_id: string, source: string) => {
-          if (source.endsWith('%%{init: {"theme":"default"}}%%')) {
-            if (failLightExport) throw new Error('light export failed');
-            return { svg: '<svg data-export-theme="light" viewBox="0 0 120 80"></svg>' };
-          }
-          return '<svg data-page-theme="active" viewBox="0 0 120 80"></svg>';
+      (mermaid.render as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(
+        async (id: string) => {
+          const errorSvg = document.createElement('div');
+          errorSvg.id = id;
+          const errorContainer = document.createElement('div');
+          errorContainer.id = 'd-error-container';
+          errorContainer.textContent = 'Syntax error';
+          document.body.append(errorSvg, errorContainer);
+          throw new Error(`<b id="gv-proof">proof</b>${'x'.repeat(120)}`);
         },
       );
 
-      await renderMermaid(code, source, renderer);
-      return host.parentElement;
-    };
+      const diagram = await renderer.render('not a diagram');
 
-    const renderIntoTheme = async (
-      initialTheme: 'dark' | 'light',
-      renderTheme: 'dark' | 'light' = initialTheme,
-    ): Promise<HTMLElement | null> => {
-      await initializeTheme(initialTheme);
-      setPageTheme(renderTheme);
-      return renderDiagram();
-    };
-
-    it('marks rendered Mermaid wrappers with the active dark theme', async () => {
-      const wrapper = await renderIntoTheme('dark');
-
-      expect(wrapper?.dataset.gvMermaidTheme).toBe('dark');
-      expect(
-        wrapper
-          ?.querySelector<HTMLTemplateElement>('template.gv-mermaid-light-export')
-          ?.content.querySelector('svg')
-          ?.getAttribute('data-export-theme'),
-      ).toBe('light');
-      const mermaid = await getLibrary();
-      const renderMock = mermaid.render as unknown as ReturnType<typeof vi.fn>;
-      expect(renderMock).toHaveBeenCalledTimes(2);
-      expect(renderMock.mock.calls[1][1]).toBe(
-        'flowchart TD\nA --> B\nB --> C\n%%{init: {"theme":"default"}}%%',
-      );
-    });
-
-    it('keeps existing frontmatter before the cross-version light theme directive', async () => {
-      await initializeTheme('dark');
-      const mermaid = await getLibrary();
-      const renderMock = mermaid.render as unknown as ReturnType<typeof vi.fn>;
-      const source = `---
-title: Existing metadata
-config:
-  theme: dark
----
-flowchart TD
-A --> B
-B --> C`;
-
-      await renderDiagram(false, source);
-
-      expect(renderMock.mock.calls[1][1]).toBe(`${source}\n%%{init: {"theme":"default"}}%%`);
-    });
-
-    it('marks rendered Mermaid wrappers with the active light theme', async () => {
-      const wrapper = await renderIntoTheme('light');
-
-      expect(wrapper?.dataset.gvMermaidTheme).toBe('light');
-      expect(wrapper?.querySelector('template.gv-mermaid-light-export')).toBeNull();
-    });
-
-    it('keeps the page diagram when light export rendering fails', async () => {
-      await initializeTheme('dark');
-
-      const wrapper = await renderDiagram(true);
-
-      expect(wrapper?.querySelector('.gv-mermaid-diagram svg')).toBeTruthy();
-      expect(wrapper?.querySelector('template.gv-mermaid-light-export')).toBeNull();
-    });
-
-    it('keeps the dark marker after the page switches to light mode', async () => {
-      const wrapper = await renderIntoTheme('dark', 'light');
-
-      expect(wrapper?.dataset.gvMermaidTheme).toBe('dark');
-    });
-
-    it('keeps the light marker after the page switches to dark mode', async () => {
-      const wrapper = await renderIntoTheme('light', 'dark');
-
-      expect(wrapper?.dataset.gvMermaidTheme).toBe('light');
-    });
-
-    it('does not share initialized themes between renderer instances', async () => {
-      await initializeTheme('dark');
-      renderer = new MermaidRenderer();
-
-      const uninitializedWrapper = await renderDiagram();
-      expect(uninitializedWrapper?.dataset.gvMermaidTheme).toBeUndefined();
-
-      await initializeTheme('light');
-      setPageTheme('dark');
-      const wrapperAfterReinitialization = await renderDiagram();
-
-      expect(wrapperAfterReinitialization?.dataset.gvMermaidTheme).toBe('light');
-    });
-
-    it('does not write a marker when Mermaid has not initialized', async () => {
-      setPageTheme('dark');
-
-      const wrapper = await renderDiagram();
-
-      expect(wrapper?.dataset.gvMermaidTheme).toBeUndefined();
-    });
-
-    it('updates the marker when Mermaid initializes again without a reset', async () => {
-      await initializeTheme('dark');
-      await initializeTheme('light');
-      setPageTheme('dark');
-
-      const wrapper = await renderDiagram();
-
-      expect(wrapper?.dataset.gvMermaidTheme).toBe('light');
-    });
-
-    it('renders Mermaid error messages as text instead of live markup', async () => {
-      const host = document.createElement('code-block');
-      const code = document.createElement('code');
-      host.appendChild(code);
-      document.body.appendChild(host);
-
-      const mermaid = await getLibrary();
-      (mermaid.render as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
-        new Error('No diagram type detected for text: <b id="gv-proof">proof</b>'),
-      );
-
-      await renderMermaid(code, 'not a diagram', renderer);
-
-      const diagram = document.querySelector<HTMLElement>('.gv-mermaid-diagram');
-      expect(diagram?.querySelector('#gv-proof')).toBeNull();
-      expect(diagram?.textContent).toContain('<b id="gv-proof">proof</b>');
+      expect(document.querySelector('[id^="mermaid-"]')).toBeNull();
+      expect(document.getElementById('d-error-container')).toBeNull();
+      expect(document.getElementById('document-content')?.textContent).toBe('Keep me');
+      expect(diagram?.errorMessage).toHaveLength(103);
+      expect(diagram?.errorMessage?.endsWith('...')).toBe(true);
+      const card = createMermaidErrorCard(diagram!.errorMessage!);
+      expect(card.querySelector('#gv-proof')).toBeNull();
+      expect(card.textContent).toContain('<b id="gv-proof">proof</b>');
     });
 
     it('sanitizes links, remote media, handlers, and escaping CSS from rendered diagrams', async () => {
-      const host = document.createElement('code-block');
-      const code = document.createElement('code');
-      host.appendChild(code);
-      document.body.appendChild(host);
-
-      const mermaid = await getLibrary();
-      (mermaid.render as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-        svg: `<svg viewBox="0 0 100 50">
+      const html = await sanitizeMermaidSvg(`<svg viewBox="0 0 100 50">
           <style>.node{position:fixed;inset:0;z-index:99}</style>
           <foreignObject><a href="https://example.invalid/phish">Verify</a><img src="https://example.invalid/pixel"></foreignObject>
           <g onload="alert(1)"><text>Safe label</text></g>
-        </svg>`,
-      });
+          <image href="https://example.invalid/pixel"/>
+        </svg>`);
+      const diagram = document.createElement('div');
+      diagram.innerHTML = html;
 
-      await renderMermaid(code, 'flowchart TD\nA --> B\nB --> C', renderer);
-
-      const diagram = document.querySelector<HTMLElement>('.gv-mermaid-diagram');
-      expect(diagram?.querySelector('a, img, script, iframe, form, input')).toBeNull();
-      expect(diagram?.innerHTML).not.toContain('example.invalid');
-      expect(diagram?.innerHTML).not.toContain('position:fixed');
-      expect(diagram?.innerHTML).not.toContain('onload');
-      expect(diagram?.textContent).toContain('Safe label');
+      expect(diagram.querySelector('a, img, image, script, iframe, form, input')).toBeNull();
+      expect(html).not.toContain('example.invalid');
+      expect(html).not.toContain('position:fixed');
+      expect(html).not.toContain('onload');
+      expect(diagram.textContent).toContain('Safe label');
     });
 
     it('preserves Mermaid theme CSS when its contained tooltip uses z-index', async () => {
-      const host = document.createElement('code-block');
-      const code = document.createElement('code');
-      host.appendChild(code);
-      document.body.appendChild(host);
-
-      const mermaid = await getLibrary();
-      (mermaid.render as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-        svg: `<svg viewBox="0 0 100 50">
+      const diagram = document.createElement('div');
+      diagram.innerHTML = await sanitizeMermaidSvg(`<svg viewBox="0 0 100 50">
           <style>
             #chart .node rect { fill: #ececff; stroke: #9370db; }
             div.mermaidTooltip { position: absolute; z-index: 100; }
@@ -333,17 +199,12 @@ B --> C`;
             <rect width="50" height="20"></rect>
             <text><tspan>Dosing &amp;amp; Distribution</tspan></text>
           </g>
-        </svg>`,
-      });
+        </svg>`);
 
-      await renderMermaid(code, 'flowchart TD\nA --> B\nB --> C', renderer);
-
-      const style = document.querySelector<HTMLStyleElement>('.gv-mermaid-diagram style');
+      const style = diagram.querySelector('style');
       expect(style?.textContent).toContain('fill: #ececff');
       expect(style?.textContent).toContain('z-index: 100');
-      expect(document.querySelector('.gv-mermaid-diagram tspan')?.textContent).toBe(
-        'Dosing & Distribution',
-      );
+      expect(diagram.querySelector('tspan')?.textContent).toBe('Dosing & Distribution');
     });
   });
 

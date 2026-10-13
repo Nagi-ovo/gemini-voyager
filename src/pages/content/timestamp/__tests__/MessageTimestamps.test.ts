@@ -215,7 +215,6 @@ describe('MessageTimestamps', () => {
     h.collect();
     expect(document.querySelector('.gv-timestamp')).toBe(timestamp);
     expect(document.querySelectorAll('.gv-timestamp')).toHaveLength(1);
-    expect(h.owner.formatTooltipTimestamp(SERVER_TURN_ID)).toBe(timestamp?.textContent);
   });
 
   it('a detached old owner re-render and stop cannot remove the successor timestamp', async () => {
@@ -302,7 +301,7 @@ describe('MessageTimestamps', () => {
       [SERVER_TURN_ID],
     );
     const timestamp = document.querySelector('.gv-timestamp');
-    expect(timestamp?.textContent).toBe(h.owner.formatTooltipTimestamp(SERVER_TURN_ID));
+    expect(timestamp?.textContent).toBe(timestampService!.formatAbsoluteTime(Date.now()));
     expect(timestamp?.nextElementSibling).toBe(row);
     await vi.advanceTimersByTimeAsync(0);
     expect(stored[StorageKeys.GV_MESSAGE_TIMESTAMPS]).toEqual({
@@ -428,7 +427,7 @@ describe('MessageTimestamps', () => {
     const h = await createOwner();
     appendTurn(SERVER_TURN_ID, 'hello');
     h.collect();
-    expect(h.owner.enabled).toBe(false);
+    expect(document.querySelector('.gv-timestamp')).toBeNull();
     expect(TimestampService.prototype.recordTimestamp).not.toHaveBeenCalled();
 
     h.owner.setEnabled(true);
@@ -439,7 +438,6 @@ describe('MessageTimestamps', () => {
 
     h.owner.setEnabled(false);
     expect(document.querySelector('.gv-timestamp')).toBeNull();
-    expect(h.owner.formatTooltipTimestamp(SERVER_TURN_ID)).toBeNull();
     expect(stored[StorageKeys.GV_MESSAGE_TIMESTAMPS]).toEqual(saved);
     h.owner.setEnabled(true);
     expect(document.querySelector('.gv-timestamp')).not.toBeNull();

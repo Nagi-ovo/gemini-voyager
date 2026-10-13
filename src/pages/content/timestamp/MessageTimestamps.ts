@@ -84,10 +84,6 @@ export class MessageTimestamps {
     });
   }
 
-  get enabled(): boolean {
-    return this.enabledValue;
-  }
-
   setEnabled(enabled: boolean): void {
     if (!this.isCurrent) return;
     this.enabledValue = enabled;
@@ -112,15 +108,6 @@ export class MessageTimestamps {
     // History writes update TimestampService memory synchronously, so this pass renders them.
     this.applyHistoryTimestamps();
     this.render();
-  }
-
-  formatTooltipTimestamp(turnId: string): string | null {
-    if (!this.enabledValue || !this.timestampService || !turnId) return null;
-    const marker = this.context.getMarkers().find((item) => item.id === turnId);
-    const timestamp = marker
-      ? this.getTimestampForMarker(marker)
-      : this.timestampService.getTimestamp(this.timestampConversationId, turnId as TurnId);
-    return timestamp == null ? null : this.timestampService.formatAbsoluteTime(timestamp);
   }
 
   private getTimestampForMarker(marker: TimelineMarker): number | null {

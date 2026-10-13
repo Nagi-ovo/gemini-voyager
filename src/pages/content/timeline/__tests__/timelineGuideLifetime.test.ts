@@ -2,11 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
-import {
-  maybeShowTimelineStyleCoachmark,
-  showTimelineStyleCoachmark,
-  timelineStyleCoachmarkStep,
-} from '@/features/timeline/timelineStyleCoachmark';
+import { showTimelineStyleCoachmark } from '@/features/timeline/timelineStyleCoachmark';
 
 import { hasSeenCoachmark } from '../../coachmark';
 import {
@@ -46,10 +42,7 @@ vi.mock('@/utils/i18n', () => ({
   initI18n: mocks.initI18n,
 }));
 
-const GUIDES = [
-  ['ruler', maybeShowRulerTimelineCoachmark, rulerTimelineCoachmarkStep],
-  ['compact', maybeShowTimelineStyleCoachmark, timelineStyleCoachmarkStep],
-] as const;
+const GUIDES = [['ruler', maybeShowRulerTimelineCoachmark, rulerTimelineCoachmarkStep]] as const;
 let page: AbortController;
 const flush = async () => {
   for (let i = 0; i < 20; i++) await Promise.resolve();
