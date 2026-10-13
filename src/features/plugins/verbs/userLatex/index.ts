@@ -111,8 +111,9 @@ export const userLatexPrimitive: Primitive<UserLatexParams> = {
       // Only up to the message: Voyager stamps gv- classes on the page (body.gv-rtl) around every message.
       for (let node: Element | null = element; node; node = node.parentElement) {
         if (node.matches(SKIP_SELECTOR)) return true;
-        // A whole turn is rendered with Voyager's own markers on it (a quote line's class).
-        if (!(wholeTurn && node === message) && node.matches(VOYAGER_SELECTOR)) return true;
+        // The turn is host content even under a gv- marker another plugin put on it (collapse's
+        // instance class), which would otherwise leave its math raw whenever that plugin mounted first.
+        if (node !== message && node.matches(VOYAGER_SELECTOR)) return true;
         if (node === message) break;
       }
       // A custom turn selector can match inside an editor, so editability looks past the message.

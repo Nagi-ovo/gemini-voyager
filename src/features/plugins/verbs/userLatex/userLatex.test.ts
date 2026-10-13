@@ -170,6 +170,14 @@ describe('userLatex primitive', () => {
     await vi.waitFor(() => expect(rendered(bubble)).toHaveLength(1));
   });
 
+  it('renders math in a ChatGPT message that collapse already folded', async () => {
+    const bubble = chatgptMessage('$x^2$');
+    bubble.classList.add('gv-collapse-1', 'gv-collapse-1-collapsed');
+    activate(sites[0].adapter);
+
+    await vi.waitFor(() => expect(rendered(bubble)).toHaveLength(1));
+  });
+
   it.each(sites)('renders a user message that arrives later on $adapter.label', async (site) => {
     activate(site.adapter);
     const message = site.message('Display: $$\\sum_i x_i$$');
