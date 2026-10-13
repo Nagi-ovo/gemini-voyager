@@ -94,6 +94,8 @@ bun run dev
 
 对于未分配、且**没有** `community-only` 或 `enhancement` 标签的 issue，评论 `/claim`，机器人会自动将你分配为负责人。带这两个标签中任意一个的 issue，必须等维护者回复 `/approve @你的用户名` 后才会分配。
 
+维护者的 `/approve @用户名` 会做两件事：分配 issue，并通过一次向 `main` 的提交把该用户加入 [`APPROVED_CONTRIBUTORS`](APPROVED_CONTRIBUTORS)。此后，PR 准入限制不再针对该用户，包括功能类 PR。
+
 ### 3. 社群专属 Issue
 
 带有 `community-only` 标签的 issue 仅供经确认的 Voyager 社群成员认领：
@@ -110,7 +112,7 @@ bun run dev
 
 ### 5. 贡献意愿复选框
 
-创建 issue 时，你可以勾选"我愿意贡献代码"复选框，表明你有兴趣实现该功能或修复。
+Issue 仅用于报告缺陷。报告缺陷时，你可以勾选"我愿意为该问题贡献修复代码 / I am willing to contribute a fix for this bug"复选框，表明你希望自己来修复它。
 
 ---
 
@@ -198,6 +200,14 @@ bun install
 - `chore:` - 维护任务
 - `refactor:` - 代码重构
 - `test:` - 添加或更新测试
+- `perf:` - 性能优化
+- `style:` - 仅格式调整
+- `build:` / `ci:` - 构建系统或 CI 变更
+- `deps:` - 依赖更新
+- `revert:` - 回滚提交
+- `ux:` - 用户体验调整
+
+标题应控制在 100 个字符以内，scope 使用小写（见 [`commitlint.config.cjs`](../commitlint.config.cjs)）。
 
 ---
 

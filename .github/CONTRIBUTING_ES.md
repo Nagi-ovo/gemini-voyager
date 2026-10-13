@@ -87,6 +87,8 @@ Antes de comenzar, verifica si el problema ya está asignado a alguien mirando l
 
 En un problema no asignado **sin** la etiqueta `community-only` ni `enhancement`, comenta `/claim` para asignártelo automáticamente. Un bot confirmará la asignación. Un problema con cualquiera de esas etiquetas solo se asigna después de que un mantenedor responda `/approve @tu-usuario`.
 
+El `/approve @usuario` de un mantenedor hace dos cosas: asigna el problema y, mediante un commit en `main`, añade a ese usuario a [`APPROVED_CONTRIBUTORS`](APPROVED_CONTRIBUTORS). A partir de ese momento, la admisión de PR ya no limita sus PR, incluidas las de funcionalidades.
+
 ### 3. Problemas exclusivos de la comunidad
 
 Los problemas con la etiqueta `community-only` están reservados para miembros verificados de la comunidad Voyager:
@@ -103,7 +105,7 @@ Si ya no puedes trabajar en un problema, comenta `/unclaim` para liberarlo para 
 
 ### 5. Casilla de Verificación de Contribución
 
-Al crear problemas, puedes marcar la casilla "I am willing to contribute code" para indicar tu interés en implementar la funcionalidad o corrección.
+Los Issues son solo para reportar errores. Al reportar uno, puedes marcar la casilla "I am willing to contribute a fix for this bug" para indicar que quieres corregirlo tú mismo.
 
 ---
 
@@ -197,6 +199,14 @@ Sigue [Conventional Commits](https://www.conventionalcommits.org/):
 - `chore:` - Tareas de mantenimiento
 - `refactor:` - Refactorización de código
 - `test:` - Agregar o actualizar pruebas
+- `perf:` - Mejoras de rendimiento
+- `style:` - Solo formato
+- `build:` / `ci:` - Cambios en el sistema de compilación o en CI
+- `deps:` - Actualizaciones de dependencias
+- `revert:` - Revertir un commit
+- `ux:` - Ajustes de experiencia de usuario
+
+Los encabezados se mantienen en 100 caracteres como máximo, con un scope en minúsculas ([`commitlint.config.cjs`](../commitlint.config.cjs)).
 
 ---
 

@@ -8,6 +8,14 @@
 >
 > Les PRs de nouvelles fonctionnalités soumises sans discussion préalable seront fermées sans examen. Merci de votre compréhension.
 
+> [!CAUTION]
+> **Ce projet n'accepte actuellement PAS de PR pour de nouvelles fonctionnalités.** Si vous avez une fonctionnalité que vous aimeriez vraiment développer, suivez ce processus :
+>
+> 1. **Ouvrez d'abord une [Discussion](https://github.com/voyager-crew/voyager/discussions/new?category=ideas)** pour discuter de votre idée et de votre approche avec le mainteneur
+> 2. **Attendez l'accord et un plan d'implémentation solide** avant d'écrire du code ou d'ouvrir une PR
+>
+> Les PR de nouvelles fonctionnalités soumises sans discussion préalable seront fermées sans revue. Merci de votre compréhension.
+
 > [!IMPORTANT]
 > **Statut du projet : Maintenance réduite.** Attendez-vous à des délais de réponse. Les PR avec tests sont prioritaires.
 
@@ -87,6 +95,8 @@ Avant de commencer, vérifiez si le ticket est déjà assigné à quelqu'un en r
 
 Pour un ticket non assigné **sans** le label `community-only` ni `enhancement`, commentez `/claim` pour vous l'assigner automatiquement. Un bot confirmera l'assignation. Un ticket portant l'un de ces labels n'est assigné qu'après un `/approve @votre-pseudo` d'un mainteneur.
 
+Le `/approve @utilisateur` d'un mainteneur fait deux choses : il assigne le ticket, et il ajoute cet utilisateur à [`APPROVED_CONTRIBUTORS`](APPROVED_CONTRIBUTORS) par un commit sur `main`. Dès lors, la restriction d'admission des PR ne s'applique plus à cette personne, y compris pour les fonctionnalités.
+
 ### 3. Tickets réservés à la communauté
 
 Les tickets portant le label `community-only` sont réservés aux membres vérifiés de la communauté Voyager :
@@ -103,7 +113,7 @@ Si vous ne pouvez plus travailler sur un ticket, commentez `/unclaim` pour le li
 
 ### 5. Case à Cocher de Contribution
 
-Lors de la création de tickets, vous pouvez cocher la case "I am willing to contribute code" pour indiquer votre intérêt à implémenter la fonctionnalité ou le correctif.
+Les tickets ne sont réservés qu'aux bugs. Lorsque vous en signalez un, vous pouvez cocher la case « I am willing to contribute a fix for this bug » (je suis prêt à contribuer un correctif pour ce bug) pour indiquer que vous souhaitez le corriger vous-même.
 
 ---
 
@@ -198,6 +208,14 @@ Suivez [Conventional Commits](https://www.conventionalcommits.org/) :
 - `chore:` - Tâches de maintenance
 - `refactor:` - Refactorisation de code
 - `test:` - Ajout ou mise à jour de tests
+- `perf:` - Améliorations de performance
+- `style:` - Mise en forme uniquement
+- `build:` / `ci:` - Changements de build ou de CI
+- `deps:` - Mises à jour de dépendances
+- `revert:` - Annulation d'un commit
+- `ux:` - Ajustements de l'expérience utilisateur
+
+Les titres restent dans la limite de 100 caractères, avec un scope en minuscules ([`commitlint.config.cjs`](../commitlint.config.cjs)).
 
 ---
 
