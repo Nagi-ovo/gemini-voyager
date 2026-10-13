@@ -216,7 +216,6 @@ export class DefaultModelAutoApply {
   private async checkAndLockModel() {
     if (!this.running) return;
     // Defaults remain visible in the cache while enforcement is paused.
-    if (!this.preferences.enabled) return;
     // Only lock on new conversation pages
     if (!this.isNewConversation()) return;
 

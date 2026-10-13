@@ -76,7 +76,7 @@ export function setupModelLockerTests() {
     const { ModelPicker } = await import('../modelPicker');
     const { createToaster } = await import('@/core/ui/toast/toaster');
     const preferences = new DefaultModelPreferences();
-    await preferences.load();
+    await preferences.reloadDefaults();
     return { preferences, picker: new ModelPicker(preferences), toaster: createToaster() };
   }
 

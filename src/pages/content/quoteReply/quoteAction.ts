@@ -1,7 +1,6 @@
-import { StorageKeys } from '@/core/types/common';
 import { getTranslationSync } from '@/utils/i18n';
 
-import type { NativeFeatureToggle, StopNativeFeature } from '../featureLifecycle';
+import type { StopNativeFeature } from '../featureLifecycle';
 import { registerSelectionAction } from '../selectionToolbar/host';
 import { insertQuotedSelection } from './quoteInsertion';
 
@@ -12,13 +11,6 @@ function createQuoteIcon(): Node {
   template.innerHTML = QUOTE_ICON;
   return template.content.firstElementChild ?? document.createTextNode('');
 }
-
-/** On unless explicitly turned off, as the popup reads it. */
-export const QUOTE_REPLY_TOGGLE: NativeFeatureToggle = {
-  key: StorageKeys.QUOTE_REPLY_ENABLED,
-  isEnabled: (value) => value !== false,
-  areas: ['sync'],
-};
 
 /** Offer Quote Reply on user and assistant selections; stop removes only this registration. */
 export function startQuoteAction(): StopNativeFeature {

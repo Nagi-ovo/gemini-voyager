@@ -81,7 +81,7 @@ afterEach(() => {
 
 describe('the page lifetime of native features', () => {
   function probe(start: NativeFeature['start']): NativeFeature {
-    return { id: 'probe', position: CleanupPositions.CleanupFork, start };
+    return { id: 'probe', position: CleanupPositions.CleanupGemsSidebar, start };
   }
 
   it('stops a native feature whose start finishes after the content script retired', async () => {

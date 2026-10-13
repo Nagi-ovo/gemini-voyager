@@ -4,8 +4,7 @@ import type { StopNativeFeature } from '../featureLifecycle';
 import { startStaleStarSweeper } from './defaultStars';
 
 /** Permanent off-state compatibility cleanup; the plugin alone owns model picking and new stars. */
-export function startDefaultModelStarCleanupPageService(signal?: AbortSignal): StopNativeFeature {
-  if (signal?.aborted) return () => {};
+export function startDefaultModelStarCleanupPageService(): StopNativeFeature {
   let stopped = false;
   let revision = 0;
   let stopSweeper: (() => void) | null = null;
@@ -40,7 +39,6 @@ export function startDefaultModelStarCleanupPageService(signal?: AbortSignal): S
   const stop = (): void => {
     if (stopped) return;
     stopped = true;
-    signal?.removeEventListener('abort', stop);
     try {
       onChanged?.removeListener(onChange);
     } finally {
@@ -48,6 +46,5 @@ export function startDefaultModelStarCleanupPageService(signal?: AbortSignal): S
       stopSweeper = null;
     }
   };
-  signal?.addEventListener('abort', stop, { once: true });
   return stop;
 }

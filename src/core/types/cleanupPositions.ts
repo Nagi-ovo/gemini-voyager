@@ -9,28 +9,14 @@ export enum CleanupPositions {
   DestroySentPromptChips,
   /** Before the Quote and Highlight actions it starts: no late startup read may mount once teardown began. */
   CleanupSelectionStartup,
-  CleanupQuoteReply,
-  /** Apart from Quote: a toggle withdraws its stop by position. */
-  CleanupHighlight,
   /** Before the input collapse it starts: no late start may mount once teardown began. */
   CleanupInputStartup,
-  CleanupInputCollapse,
-  CleanupInputVimMode,
-  CleanupInputHaloHider,
-  CleanupSendBehavior,
-  /** Save the unsent tail before native or plugin draft owners discard it. */
+  /** Save the unsent tail before the draft plugin owners discard it. */
   FlushDraftsBeforeUnload,
-  CleanupDraftSave,
-  CleanupPromptHistory,
   /** Before the features it starts: no late startup read may mount once teardown began. */
   CleanupGeminiBuiltinStartup,
-  /** The prevent-auto-scroll claim; its bridge stays until `CleanupPreventAutoScrollBridge`. */
-  CleanupPreventAutoScroll,
-  CleanupFork,
   CleanupGemsSidebar,
-  CleanupResponseCompleteNotification,
   CleanupEdgeFinalVersionNotice,
-  CleanupFormulaCopy,
   CleanupPluginHost,
   /** Page services the actions and claims above register with; they stop after them. */
   CleanupRenderedQuoteStyling,
@@ -38,7 +24,7 @@ export enum CleanupPositions {
   CleanupPreventAutoScrollBridge,
   /** A handed-off fork link outlives the feature, but not its page or send-key coordinator. */
   CleanupForkLinkFinisher,
-  /** After every send-key registrant (the native send behavior, the plugins): they dispose first. */
+  /** After every send-key registrant: the send plugins dispose first. */
   CleanupSendKeyCoordinator,
   CleanupBrandTheme,
   CleanupRemoteAnnouncements,
@@ -47,21 +33,16 @@ export enum CleanupPositions {
   CleanupChatGptJump,
   /** Before the renderers it starts: no late start may mount once teardown began. */
   CleanupRendererStartup,
-  CleanupCodeBlockCollapse,
-  CleanupUserLatex,
   CleanupMarkdownPatcher,
   CleanupDefaultModel,
-  CleanupUsageStatus,
   CleanupWatermarkNativeNotice,
   CleanupGemsHider,
   /** Abort pending and shown Gemini timeline guides before retiring their rail. */
   CleanupTimelineCoachmarks,
-  CleanupTimeline,
   /** Independent message labels stop after the rail reader, before the shared history store. */
   CleanupMessageTimestampPageService,
   CleanupNativeHealth,
   CleanupHistoryTimestampPageService,
-  CleanupResearchPack,
   CleanupResearchPackReceiver,
   RemoveStorageOnChangedListener,
   CleanupVisualEffects,

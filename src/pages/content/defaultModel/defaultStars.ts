@@ -139,7 +139,6 @@ export class DefaultStars {
   private scheduleMenuPanelInjection(menuPanel: HTMLElement) {
     // Second-line defence: even if a caller bypassed the observer-level
     // gate, never queue retry attempts when the kill switch is off.
-    if (!this.preferences.enabled) return;
     if (this.pendingMenuPanelInjections.has(menuPanel)) return;
     this.pendingMenuPanelInjections.add(menuPanel);
 
@@ -179,7 +178,7 @@ export class DefaultStars {
     // produced an inconsistent multi-is-default state because the cleanup
     // re-injection short-circuited too. See issue follow-up to the
     // default-model toggle.
-    if (!this.preferences.enabled || !this.started) {
+    if (!this.started) {
       sweepStars(menuPanel);
       return false;
     }
@@ -271,7 +270,7 @@ export class DefaultStars {
     const inlineItems = this.picker.describeMenu(menuPanel).inlineThinking;
     if (!inlineItems.length) return false;
 
-    if (!this.preferences.enabled || !this.started) {
+    if (!this.started) {
       inlineItems.forEach((item) =>
         item.querySelectorAll('.gv-default-star-btn').forEach((star) => star.remove()),
       );
@@ -321,7 +320,7 @@ export class DefaultStars {
 
   private async injectThinkingLevelStars(submenuPane: HTMLElement): Promise<boolean> {
     // Master kill switch — see comment on `injectStarButtons`.
-    if (!this.preferences.enabled || !this.started) {
+    if (!this.started) {
       sweepStars(submenuPane);
       return false;
     }
@@ -416,7 +415,7 @@ export class DefaultStars {
     // outlive the sweep. Without this guard such a click would silently
     // mutate storage even though the user has paused the feature. A star
     // left over from a stopped run gets the same treatment.
-    if (!this.preferences.enabled || !this.started) {
+    if (!this.started) {
       btn
         .closest('[role="menuitemradio"], [role="menuitem"], gem-menu-item')
         ?.querySelectorAll('.gv-default-star-btn')
@@ -573,7 +572,7 @@ export class DefaultStars {
     const modelId = modelItem ? this.picker.describeItem(modelItem).id : null;
 
     // Stale-click guard — see comment on `handleThinkingLevelStarClick`.
-    if (!this.preferences.enabled || !this.started) {
+    if (!this.started) {
       if (modelItem) {
         modelItem.querySelectorAll('.gv-default-star-btn').forEach((el) => el.remove());
       } else {

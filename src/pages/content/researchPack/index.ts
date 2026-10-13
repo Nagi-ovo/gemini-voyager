@@ -56,10 +56,6 @@ const OBSERVER_DEBOUNCE_MS = 300;
 const ADDED_FLASH_MS = 1500;
 const DOWNLOAD_URL_REVOKE_MS = 1000;
 
-export function isResearchPackEnabledValue(value: unknown): boolean {
-  return value === true;
-}
-
 function createChromeKeyResolver(): (context: ResearchPackScopeContext) => Promise<string> {
   return createResearchPackKeyResolver({
     getSync: (keys) => chrome.storage.sync.get(keys),

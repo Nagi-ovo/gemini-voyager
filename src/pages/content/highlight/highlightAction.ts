@@ -5,7 +5,7 @@ import { StorageKeys } from '@/core/types/common';
 import { type HighlightColor, isHighlightColor } from '@/core/types/highlight';
 import { getTranslationSync } from '@/utils/i18n';
 
-import type { NativeFeatureToggle, StopNativeFeature } from '../featureLifecycle';
+import type { StopNativeFeature } from '../featureLifecycle';
 import { createHighlightColorPicker } from '../quoteReply/highlightColorPicker';
 import {
   markSelectionToolbarInternalClick,
@@ -20,13 +20,6 @@ export interface HighlightActionOptions {
   readonly colorPalette?: readonly HighlightColor[];
   readonly timelineMarkersEnabled?: boolean;
 }
-
-/** Off unless explicitly turned on; its sub-settings are read by the action itself. */
-export const HIGHLIGHT_TOGGLE: NativeFeatureToggle = {
-  key: StorageKeys.HIGHLIGHT_ENABLED,
-  isEnabled: (value) => value === true,
-  areas: ['sync'],
-};
 
 const SUB_SETTING_KEYS = [
   StorageKeys.HIGHLIGHT_DEFAULT_COLOR,

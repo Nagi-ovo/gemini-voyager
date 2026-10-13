@@ -29,7 +29,6 @@ const FAST_MODEL_NAMES = new Set(['flash', 'fast', '高速', '高速モード'])
 export class DefaultModelPreferences {
   private cachedModel: DefaultModelSetting | null = null;
   private cachedThinking: DefaultThinkingLevel | null = null;
-  private autoApplyEnabled = true;
 
   public get model(): DefaultModelSetting | null {
     return this.cachedModel;
@@ -37,25 +36,6 @@ export class DefaultModelPreferences {
 
   public get thinking(): DefaultThinkingLevel | null {
     return this.cachedThinking;
-  }
-
-  public get enabled(): boolean {
-    return this.autoApplyEnabled;
-  }
-
-  public async load(): Promise<void> {
-    await this.reloadDefaults();
-    await this.loadAutoApplySwitch();
-  }
-
-  /**
-   * Only the native module reads its switch; the official plugin is mounted
-   * while the switch is on, so its preferences stay enabled.
-   */
-  public async loadAutoApplySwitch(): Promise<void> {
-    const result = await storageService.get<unknown>(StorageKeys.DEFAULT_MODEL_AUTO_APPLY);
-    // Missing key remains enabled for existing users.
-    this.autoApplyEnabled = !result.success || result.data !== false;
   }
 
   public async reloadDefaults(): Promise<{
@@ -269,29 +249,5 @@ export class DefaultModelPreferences {
   private isWordBoundedIn(needle: string, haystack: string): boolean {
     const escaped = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     return new RegExp(`(^|\\b)${escaped}(\\b|$)`, 'i').test(haystack);
-  }
-
-  public watchAutoApply(onChange: (enabled: boolean) => void): () => void {
-    const listener = (changes: Record<string, chrome.storage.StorageChange>, area: string) => {
-      if (area !== 'sync' && area !== 'local') return;
-      const change = changes[StorageKeys.DEFAULT_MODEL_AUTO_APPLY];
-      if (!change) return;
-      const next = change.newValue !== false; // missing/true → enabled
-      if (next === this.enabled) return;
-      this.autoApplyEnabled = next;
-      onChange(next);
-    };
-    try {
-      chrome.storage.onChanged.addListener(listener);
-    } catch {
-      // chrome.storage may be unavailable in certain test contexts; safe to ignore.
-    }
-    return () => {
-      try {
-        chrome.storage.onChanged.removeListener(listener);
-      } catch {
-        // Extension context may have been invalidated.
-      }
-    };
   }
 }
