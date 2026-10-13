@@ -61,4 +61,47 @@ describe('PromptImportExportService', () => {
       }),
     );
   });
+
+  describe('validatePayload', () => {
+    it('rejects an exported file with no prompts and one whose prompts are all unusable', () => {
+      expect(
+        PromptImportExportService.validatePayload({
+          format: 'gemini-voyager.prompts.v1',
+          items: [],
+        }).success,
+      ).toBe(false);
+      expect(
+        PromptImportExportService.validatePayload({
+          format: 'gemini-voyager.prompts.v1',
+          items: [{ text: '   ', tags: [] }],
+        }).success,
+      ).toBe(false);
+    });
+
+    it('accepts a legacy file that is only an items list, normalising its tags', () => {
+      const result = PromptImportExportService.validatePayload({
+        items: [{ text: 'Use TypeScript', tags: ['Code', 'Code'] }],
+      });
+
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+      expect(result.data.items).toEqual([
+        expect.objectContaining({ text: 'Use TypeScript', tags: ['code'] }),
+      ]);
+    });
+
+    it('keeps a trimmed name, and drops a blank or non-string one', () => {
+      const result = PromptImportExportService.validatePayload({
+        items: [
+          { text: 'A', name: '  Custom  ' },
+          { text: 'B', name: '   ' },
+          { text: 'C', name: 42 },
+        ],
+      });
+
+      expect(result.success).toBe(true);
+      if (!result.success) return;
+      expect(result.data.items.map((item) => item.name)).toEqual(['Custom', undefined, undefined]);
+    });
+  });
 });
