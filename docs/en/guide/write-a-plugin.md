@@ -62,6 +62,8 @@ Beyond the shared manifest checks (see [Plugin Contribution](./plugin-contributi
 - use boolean, number or select settings (string and color have no popup control yet);
 - not use a `theme` on Gemini or AI Studio, and use only the primitives each allows: `formulaCopy`, `vimInput`, `userLatex`, `codeCollapse`, `mermaid`, `wavedrom` and `echarts`, `sendShortcut`, `draftSave` on Gemini, `formulaCopy` and `sendShortcut` on AI Studio. They run the same code as Voyager's own settings. `formulaCopy` and `vimInput` (Formula copy and Input Vim mode) each run once per page, the built-in setting or a plugin, not both. When the page loads, or while neither is running, the built-in setting goes first; after that, whichever is already running keeps running and the other shows as paused. Turn one off to hand the feature to the other. `userLatex`, `codeCollapse`, `mermaid`, `wavedrom` and `echarts` claim the page element by element and run alongside the built-in setting: a line or code block the other already holds is left to it.
 
+An official feature running as a built-in plugin does not automatically become a public primitive for local plugins. On Gemini, local `turnNavigator` remains unavailable even with **Show Timeline** off; it must first share the official timeline’s stars and hierarchy data.
+
 Translations (`i18n`) are optional.
 
 ## Sharing it

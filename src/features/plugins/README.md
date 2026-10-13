@@ -287,12 +287,12 @@ plugin can only request host access an official plugin could, or none at all.
 A plugin for Gemini or AI Studio may not declare `theme` (those pages keep
 Voyager's own accent). Its `native` ops follow a capability policy per (site,
 handler) in `sites/hostPolicy.ts`, derived from the owner table
-`sites/featureOwners.ts`: a primitive opens on a site once the packaged
-official plugin there owns its feature (`formulaCopy` on Gemini and AI Studio,
-`vimInput` on Gemini), and every other primitive stays refused because a native
-Voyager module still runs it there and a second copy would fight it. A
-multi-site manifest must be legal on each site its patterns reach. Import,
-paste and the CLI enforce this policy; re-reading stored plugins
+`sites/featureOwners.ts`: only primitives explicitly listed in a plugin-owned
+entry's `handlers` open on that site. Fixed-id builtins can own a feature with
+no public primitive: Quote, Highlight, prevent auto-scroll, completion
+notifications and the Gemini timeline are such builtins. Their owner flips
+keep other native ops closed. A multi-site manifest must be legal on each site
+its patterns reach. Import, paste and the CLI enforce this policy; re-reading stored plugins
 (`LocalPluginSource`, the popup list, review-and-enable) passes
 `hostPolicy: 'defer'`, which skips only this site policy, so a build that
 closes a primitive again keeps the user's plugin and reports it
@@ -312,9 +312,9 @@ plugin's own CSS can still restyle anything on Gemini, Voyager's UI and its
 `--gv-*` variables included; only `theme` and the closed native ops are refused.
 
 **Gemini and AI Studio.** The packaged official plugins
-(`catalog/sites/{gemini,aistudio}/`) and local plugins target them; neither
-goes through the remote catalog, which never serves these hosts and never
-publishes their manifests. The official ones replace native modules feature by
+(`catalog/sites/{gemini,aistudio}/` and fixed-id entries in `builtin/`) and local
+plugins target them; neither goes through the remote catalog, which never
+serves these hosts and never publishes their manifests. The official ones replace native modules feature by
 feature: the owner table decides who runs each feature, the content script
 admits an official plugin where its native module used to start, and the
 plugin follows the native setting it replaces (`storage/legacySettingBindings.ts`),
@@ -329,9 +329,13 @@ the same reversible engine as elsewhere, and turning one off removes its
 classes and stylesheet. AI Studio's master switch (`GV_AISTUDIO_ENABLED`,
 `runtime/surfaceSwitch.ts`) governs plugins too: while Voyager is off on AI
 Studio nothing mounts, and flipping it unmounts or remounts them live. Gemini
-has no master switch. The zero-request promise
-holds: `isEligibleCatalogHost` refuses every native host, so a Gemini page has
-no catalog host, never asks for a check and never reads a catalog cache, and
+has no page-wide master switch. Its **Show Timeline** switch controls only the
+rail and navigation shortcut lease; saved stars and hierarchy remain, and the
+message timestamp page service follows **Show Message Timestamps** independently.
+Local `turnNavigator` stays closed on Gemini until it shares the official
+star/hierarchy data policy. Watermark removal remains a core feature. The
+zero-request promise holds: `isEligibleCatalogHost` refuses every native host,
+so a Gemini page has no catalog host, never asks for a check and never reads a catalog cache, and
 the background refuses a forced check for them too. A minimal Gemini plugin:
 
 ```json

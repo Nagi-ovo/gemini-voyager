@@ -79,8 +79,10 @@ For architecture or distribution changes, read `src/features/plugins/README.md` 
   `description`; the other nine sit under `i18n.<locale>` with `name`,
   `description`, `changelog` when set, and a label for every setting. A local
   plugin may omit `i18n` entirely.
-- `marketplace.json` gets the entry, and the plugin directory gets a `README.md`
-  next to the manifest. A test enforces both.
+- Public catalog plugins get a `marketplace.json` entry and a `README.md` next
+  to the manifest; a test enforces both. Packaged Gemini/AI Studio official
+  plugins stay out of the marketplace. Fixed-id builtins live in `builtin/`
+  and use the manifest/handler binding checks instead.
 - `params` is configuration, not instructions (plan §5, C1): no conditions, no
   ordering, no code. A selector-valued parameter such as `yieldWhen` is still
   data, so do not reject one on its name.
@@ -110,7 +112,7 @@ A declarative plugin for personal use needs no PR, catalog entry or release. Use
 
 - The id is stored as `local.<id>`. Local plugins never replace an official id, are merged last and are outside the remote kill switch.
 - The gate is the remote catalog's (`validateManifest`, CSS and rendered-sink guards) plus: `tier: "declarative"` only; every `addClass` class is one `gv-` name; semantic keys (targets, `requires.semantic`, what a primitive reads and what its `semanticKey` params name) must be declared by every matched site; settings are `boolean`, `number` or `select` (the popup has no string or color control); `native` ops only for shipped primitives, with params that fit `verbs/contracts.ts` and `engine` at or above their `sinceEngine`; and `matches` inside an existing plugin platform (Claude, ChatGPT, DeepSeek) or a native surface (Gemini, AI Studio). No plugin-supplied JS, ever.
-- Gemini and AI Studio take the packaged official plugins (`catalog/sites/{gemini,aistudio}/`, never published to the online catalog) and local plugins. Semantic keys resolve through the native adapters (`userTurn`, `assistantTurn`, `composer`, `sidebar`); `theme` is rejected there because those pages keep Voyager's accent. A `native` op passes only for a primitive whose feature the owner table (`sites/featureOwners.ts`) hands to a plugin on that site, checked per target site by `sites/hostPolicy.ts`; any other primitive is refused there, since Voyager runs it natively. No permission prompt: the manifest already injects these hosts. The page still makes zero catalog requests. Example that tightens your own turns on Gemini:
+- Gemini and AI Studio take the packaged official plugins (`catalog/sites/{gemini,aistudio}/`, never published to the online catalog) and local plugins. Semantic keys resolve through the native adapters (`userTurn`, `assistantTurn`, `composer`, `sidebar`); `theme` is rejected there because those pages keep Voyager's accent. A `native` op passes only for a public primitive explicitly listed in a plugin-owned entry’s `handlers` (`sites/featureOwners.ts`), checked per target site by `sites/hostPolicy.ts`. A fixed-id builtin can own a feature without opening any public primitive: Quote, Highlight, prevent auto-scroll, completion notifications and the Gemini timeline use this path. Local `turnNavigator` stays closed on Gemini until shared star/hierarchy data is exposed; watermark removal stays core. No permission prompt: the manifest already injects these hosts. The page still makes zero catalog requests. Example that tightens your own turns on Gemini:
 
   ```json
   {

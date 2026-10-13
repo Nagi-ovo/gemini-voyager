@@ -62,6 +62,8 @@ En plus des vérifications communes du manifest (voir [Contribution Plugins](./p
 - n'utiliser que des réglages boolean, number ou select (string et color n'ont pas encore de contrôle dans le popup) ;
 - ne pas utiliser de `theme` sur Gemini ou AI Studio, et n'utiliser que les primitives que chaque site autorise : `formulaCopy`, `vimInput`, `userLatex`, `codeCollapse`, `mermaid`, `wavedrom` et `echarts`, `sendShortcut`, `draftSave` sur Gemini, `formulaCopy` et `sendShortcut` sur AI Studio. Elles exécutent le même code que les réglages propres à Voyager. `formulaCopy` et `vimInput` (copie des formules et mode Vim de la zone de saisie) ne tournent qu'une fois par page : le réglage intégré ou un plugin, pas les deux. Au chargement de la page, ou tant qu'aucun des deux ne tourne, le réglage intégré passe en premier ; ensuite, celui qui tourne déjà continue et l'autre apparaît en pause. Désactivez l'un pour que l'autre prenne le relais. `userLatex`, `codeCollapse`, `mermaid`, `wavedrom` et `echarts` prennent la page élément par élément et tournent à côté du réglage intégré : une ligne ou un bloc de code que l'autre tient déjà lui est laissé.
 
+Une fonction officielle exécutée par un plugin intégré ne devient pas automatiquement une primitive publique pour les plugins locaux. Sur Gemini, le `turnNavigator` local reste indisponible même si **Afficher la chronologie** est désactivé ; il doit d’abord pouvoir lire et modifier les mêmes données d’étoiles et de hiérarchie que la chronologie officielle.
+
 Les traductions (`i18n`) sont facultatives.
 
 ## Le partager

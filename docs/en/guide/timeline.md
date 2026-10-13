@@ -5,6 +5,8 @@ Voyager Timeline is a visual conversation navigation system for Google Gemini. I
 Long conversations are messy. You scroll up, you scroll down, you lose your place.
 Voyager turns your conversation into a timeline.
 
+In Gemini settings, **Show Timeline** controls the rail and its navigation shortcuts. Turning it off keeps saved stars and hierarchy. Message time labels follow **Show Message Timestamps** independently, so you can keep them visible with the timeline off.
+
 ## See the Shape of Your Chat
 
 Look at the right side of your screen.

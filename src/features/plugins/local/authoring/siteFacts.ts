@@ -28,6 +28,7 @@ const SITE_NOTES: Readonly<Record<string, readonly string[]>> = {
     'The `sidebar` anchor also matches Voyager’s own folder panel (`.gv-folder-container`). To change only Gemini’s navigation rail, target `bard-sidenav` with a CSS selector.',
     'On Gemini, `draftSave` shares the native drafts: keys are `gvDraft_` plus the full pathname, including `/u/<index>/` and Gem routes. Different account slots have different keys; changing email within the same slot still shares stored drafts.',
     'A confirmed first send clears the source new-chat draft. Leaving without sending keeps it. Restore waits check the current route, account and input edits; page unload only makes a best-effort final save.',
+    'The official Gemini timeline is a fixed-id builtin, not a public primitive. Local `turnNavigator` stays unavailable even with Show Timeline off until it shares the official stars and hierarchy data.',
   ],
   aistudio: [
     'The `sidebar` anchor is Voyager’s own folder panel on AI Studio, not AI Studio’s navigation. Use a CSS selector for AI Studio’s own panels.',

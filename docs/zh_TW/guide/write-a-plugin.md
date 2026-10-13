@@ -62,6 +62,8 @@ npx create-voyager-plugin@latest check my-plugin
 - 只使用 boolean、number 或 select 設定（string 和 color 目前在 popup 裡還沒有對應的控制項）；
 - 在 Gemini 和 AI Studio 上不使用 `theme`；原語只能用該網站開放的：Gemini 上是 `formulaCopy`、`vimInput`、`userLatex`、`codeCollapse`、`mermaid`、`wavedrom` 和 `echarts`, `sendShortcut`, `draftSave`，AI Studio 上是 `formulaCopy`、`sendShortcut`。它們與 Voyager 內建的對應設定是同一套程式碼。`formulaCopy` 和 `vimInput`（「公式複製」「輸入框 Vim 模式」）在同一頁面上，內建設定和外掛只會執行其中一個：頁面剛載入、或兩者都沒在執行時，內建開關優先；之後誰已經在執行就繼續執行，另一方顯示為暫停。關掉其中一個，功能就交給另一個。`userLatex`、`codeCollapse`、`mermaid`、`wavedrom` 和 `echarts` 按元素逐一認領，可以和內建設定同時執行：對方已經處理的行或程式碼區塊留給對方。
 
+官方功能改由內建外掛執行，不代表本機外掛就能呼叫它的公開原語。在 Gemini 上，即使關閉「顯示時間軸」，本機 `turnNavigator` 仍無法使用；必須先讓它能讀寫官方時間軸的同一份星標與層級資料。
+
 翻譯（`i18n`）是選填的。
 
 ## 分享

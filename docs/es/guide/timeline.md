@@ -3,6 +3,8 @@
 Las conversaciones largas son un desastre. Arriba y abajo, perdido.
 Voyager convierte la conversación en una línea.
 
+En los ajustes de Gemini, **Mostrar línea de tiempo** controla la barra de la línea de tiempo y sus atajos de navegación. Al desactivarla se conservan las estrellas y la jerarquía guardadas. Las horas de los mensajes dependen por separado de **Mostrar marcas de tiempo de mensajes**, por lo que pueden seguir visibles con la línea de tiempo desactivada.
+
 ## Ver el Ritmo
 
 Mira el lado derecho de la pantalla.

@@ -3,6 +3,8 @@
 Les longues conversations sont désordonnées. Vous faites défiler vers le haut, vers le bas, vous perdez le fil.
 Voyager transforme votre conversation en une chronologie.
 
+Dans les paramètres de Gemini, **Afficher la chronologie** contrôle la barre de chronologie et ses raccourcis de navigation. La désactivation conserve les étoiles et la hiérarchie enregistrées. Les heures des messages dépendent séparément de **Afficher les horodatages des messages** : elles peuvent donc rester visibles même lorsque la chronologie est désactivée.
+
 ## Visualisez la Forme de Votre Chat
 
 Regardez sur le côté droit de votre écran.

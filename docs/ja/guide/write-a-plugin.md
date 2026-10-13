@@ -62,6 +62,8 @@ JavaScript の実行、クリックやキー入力への反応、ネットワー
 - 設定は boolean、number、select のいずれかであること（string と color にはまだ popup の UI がありません）
 - Gemini と AI Studio では `theme` を使わず、プリミティブは各サイトが許可するものだけを使うこと: Gemini では `formulaCopy`、`vimInput`、`userLatex`、`codeCollapse`、`mermaid`、`wavedrom`、`echarts`, `sendShortcut`, `draftSave`、AI Studio では `formulaCopy`、`sendShortcut`。いずれも Voyager 標準の対応する設定と同じコードを実行する。`formulaCopy` と `vimInput`(数式コピー・入力欄 Vim モード)は、同じページで標準設定とプラグインのどちらか一方だけが動く。ページの読み込み時や、どちらも動いていないときは標準設定が優先され、その後はすでに動いている側がそのまま動き続け、もう一方は一時停止と表示される。どちらかをオフにすると、もう一方が引き継ぐ。`userLatex`、`codeCollapse`、`mermaid`、`wavedrom`、`echarts` は要素ごとに担当を取り合うため、標準設定と同時に動かせる: 相手がすでに処理している行やコードブロックには手を出さない
 
+公式機能が組み込みプラグインで動作していても、ローカルプラグインから呼び出せる公開プリミティブになるわけではありません。Gemini では「タイムラインを表示」をオフにしても、ローカルの `turnNavigator` はまだ利用できません。まず公式タイムラインと同じスター・階層データを読み書きできるようにする必要があります。
+
 翻訳（`i18n`）は任意です。
 
 ## 共有する

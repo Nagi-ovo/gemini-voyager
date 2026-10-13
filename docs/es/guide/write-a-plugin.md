@@ -62,6 +62,8 @@ Además de las comprobaciones comunes del manifest (consulta [Contribuir plugins
 - usar ajustes boolean, number o select (string y color aún no tienen control en el popup);
 - no usar `theme` en Gemini ni en AI Studio, y usar solo las primitivas que cada sitio permite: `formulaCopy`, `vimInput`, `userLatex`, `codeCollapse`, `mermaid`, `wavedrom` y `echarts`, `sendShortcut`, `draftSave` en Gemini, `formulaCopy` y `sendShortcut` en AI Studio. Ejecutan el mismo código que los ajustes propios de Voyager. `formulaCopy` y `vimInput` (copiar fórmulas y modo Vim del campo de entrada) se ejecutan una sola vez por página, el ajuste integrado o un plugin, no ambos. Al cargar la página, o mientras ninguno se esté ejecutando, el ajuste integrado va primero; después, el que ya está en marcha sigue funcionando y el otro aparece en pausa. Desactiva uno para que el otro tome el relevo. `userLatex`, `codeCollapse`, `mermaid`, `wavedrom` y `echarts` reclaman la página elemento a elemento y funcionan junto al ajuste integrado: una línea o un bloque de código que el otro ya tiene se le deja a él.
 
+Que una función oficial se ejecute como plugin integrado no la convierte automáticamente en una primitiva pública para plugins locales. En Gemini, el `turnNavigator` local sigue sin estar disponible aunque desactives **Mostrar línea de tiempo**; primero debe poder leer y modificar los mismos datos de estrellas y jerarquía que la línea de tiempo oficial.
+
 Las traducciones (`i18n`) son opcionales.
 
 ## Compartirlo

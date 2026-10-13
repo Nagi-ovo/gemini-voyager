@@ -2,6 +2,8 @@
 
 O recurso de assinatura do Voyager. Uma maneira visual e espacial de navegar nas suas conversas.
 
+Nas definições do Gemini, **Mostrar linha do tempo** controla a barra da linha do tempo e os seus atalhos de navegação. Desativar esta opção mantém as estrelas e a hierarquia guardadas. As horas das mensagens seguem separadamente **Mostrar carimbos de data/hora das mensagens**, pelo que podem continuar visíveis com a linha do tempo desativada.
+
 ## O Problema
 
 As conversas de IA podem tornar-se longas. Muito longas.

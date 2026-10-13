@@ -12,9 +12,10 @@
  *   - catalog data stores (catalog outline, send times, ...): not theirs.
  *     Voyager's native timeline owns that data here, whether or not the site
  *     is described by a bundled `site.json`;
- *   - `native` ops: only the primitives whose feature a packaged plugin now
- *     owns (`featureOwners.ts`), plus `EXTRA_ALLOWED_HANDLERS`. A handler a
- *     native Voyager module still runs is refused, so two copies never fight.
+ *   - `native` ops: only public primitives listed by plugin-owned entries in
+ *     `featureOwners.ts`, plus `EXTRA_ALLOWED_HANDLERS`. Fixed-id builtins
+ *     may own a feature without opening a public primitive; handlers still
+ *     listed by a legacy owner remain closed to prevent duplicate runtimes.
  *
  * The import-time check (`manifestHostPolicyIssues`) is early feedback by
  * pattern; the runtime asks again by the page's real URL (`hostPolicyRefusal`).
