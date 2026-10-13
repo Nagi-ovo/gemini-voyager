@@ -5,8 +5,7 @@
  * The plugin's own stylesheet is the scope: the engine adds it only while the
  * plugin runs and removes it on unmount, so these rules carry no body class and
  * the plugin needs no DOM op. Theme-independent, as the halo is in both themes.
- * The native module's copy of these rules stays in public/contentStyle.css,
- * gated on body.gv-hide-input-halo, for the legacy path. */
+ */
 chat-window::before {
   background: transparent !important;
   background-image: none !important;

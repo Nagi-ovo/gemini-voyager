@@ -4,8 +4,10 @@ import { StorageKeys } from '@/core/types/common';
 import { getCurrentLanguage } from '@/utils/i18n';
 import type { AppLanguage } from '@/utils/language';
 
-import { startUsageStatus } from '../index';
 import type { UsageSnapshot } from '../usageSnapshot';
+import { flushUsagePlugin, startUsagePlugin } from './usagePluginHarness';
+
+const storageListeners = new Set<Parameters<typeof chrome.storage.onChanged.addListener>[0]>();
 
 vi.mock('webextension-polyfill', () => ({ default: chrome }));
 const language = vi.hoisted(() => ({ current: 'en' }));
@@ -53,9 +55,17 @@ function observer(type: string, payload?: unknown): void {
   );
 }
 
-function storageChange(key: string, newValue: unknown, areaName: 'local' | 'sync' = 'local'): void {
-  const listener = vi.mocked(chrome.storage.onChanged.addListener).mock.calls.at(-1)![0];
-  listener({ [key]: { newValue } }, areaName);
+async function storageChange(
+  key: string,
+  newValue: unknown,
+  areaName: 'local' | 'sync' = 'local',
+): Promise<void> {
+  if (areaName === 'local') {
+    if (newValue === undefined) delete stored[key];
+    else stored[key] = newValue;
+  }
+  for (const listener of storageListeners) listener({ [key]: { newValue } }, areaName);
+  await flushUsagePlugin();
 }
 
 function replayMessages(): Array<{ id: number; rpcid: string; args: string; sourcePath: string }> {
@@ -72,13 +82,20 @@ async function start(enabled = true): Promise<void> {
   vi.mocked(chrome.storage.sync.get).mockImplementation(async () => ({
     [StorageKeys.USAGE_STATUS_ENABLED]: enabled,
   }));
-  stop = await startUsageStatus();
+  stop = await startUsagePlugin();
 }
 
 beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(now);
   vi.clearAllMocks();
+  storageListeners.clear();
+  vi.mocked(chrome.storage.onChanged.addListener).mockImplementation((listener) =>
+    storageListeners.add(listener),
+  );
+  vi.mocked(chrome.storage.onChanged.removeListener).mockImplementation((listener) =>
+    storageListeners.delete(listener),
+  );
   language.current = 'en';
   route = {
     hostname: 'gemini.google.com',
@@ -95,9 +112,10 @@ beforeEach(() => {
   document.documentElement.lang = 'en';
 });
 
-afterEach(() => {
+afterEach(async () => {
   stop?.();
   stop = undefined;
+  await flushUsagePlugin();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
   vi.useRealTimers();
@@ -107,8 +125,6 @@ afterEach(() => {
 describe('usage feature lifecycle', () => {
   it('starts once, renders cached usage, and tears down without polling or writes', async () => {
     await start();
-    const duplicateStop = await startUsageStatus();
-    duplicateStop();
     expect(document.querySelectorAll('#gv-usage-pill')).toHaveLength(1);
     expect(pill().querySelector('.gv-usage-pct')?.textContent).toBe('7% (4h)');
     expect(pill().querySelector<HTMLAnchorElement>('.gv-usage-open')?.href).toBe(
@@ -126,7 +142,7 @@ describe('usage feature lifecycle', () => {
     await vi.advanceTimersByTimeAsync(6 * 60_000);
     expect(replayMessages()).toHaveLength(0);
     expect(chrome.storage.local.set).not.toHaveBeenCalled();
-    expect(chrome.storage.onChanged.removeListener).toHaveBeenCalledOnce();
+    expect(storageListeners.size).toBe(0);
   });
 
   it('shows an empty account-scoped link and replays the default recipe without a cache', async () => {
@@ -177,22 +193,22 @@ describe('usage feature lifecycle', () => {
   it('mirrors enable/disable and recipe changes while cancelling generation work', async () => {
     await start(false);
     expect(document.getElementById('gv-usage-pill')).toBeNull();
-    storageChange(StorageKeys.USAGE_STATUS_ENABLED, true, 'sync');
+    await storageChange(StorageKeys.USAGE_STATUS_ENABLED, true, 'sync');
     expect(pill()).not.toBeNull();
-    storageChange(StorageKeys.GV_USAGE_RECIPE, { rpcid: 'newRpc', args: '[1]' });
+    await storageChange(StorageKeys.GV_USAGE_RECIPE, { rpcid: 'newRpc', args: '[1]' });
     observer('generation-complete');
-    storageChange(StorageKeys.USAGE_STATUS_ENABLED, false, 'sync');
+    await storageChange(StorageKeys.USAGE_STATUS_ENABLED, false, 'sync');
     await vi.advanceTimersByTimeAsync(6 * 60_000);
     expect(document.getElementById('gv-usage-pill')).toBeNull();
     expect(replayMessages()).toHaveLength(0);
-    storageChange(StorageKeys.USAGE_STATUS_ENABLED, true, 'sync');
+    await storageChange(StorageKeys.USAGE_STATUS_ENABLED, true, 'sync');
     await vi.advanceTimersByTimeAsync(0);
     expect(replayMessages().at(-1)).toMatchObject({ rpcid: 'newRpc', args: '[1]' });
   });
 
   it('keeps account caches isolated and reloads them when the route changes', async () => {
     await start();
-    storageChange(StorageKeys.GV_USAGE_CACHE, cached(80, 'u/3'));
+    await storageChange(StorageKeys.GV_USAGE_CACHE, cached(80, 'u/3'));
     expect(pill().querySelector('.gv-usage-pct')?.textContent).toContain('7%');
     stored['gvUsageCache:u/3'] = cached(80, 'u/3');
     navigate('/u/3/app');
@@ -252,15 +268,15 @@ describe('usage feature lifecycle', () => {
     stored[StorageKeys.GV_USAGE_POS] = { x: 100, y: 120 };
     await start();
     expect(pill().style.left).toBe('100px');
-    storageChange(StorageKeys.GV_USAGE_POS, { x: 140, y: 160 });
+    await storageChange(StorageKeys.GV_USAGE_POS, { x: 140, y: 160 });
     expect(pill().style.top).toBe('160px');
     const timers = vi.getTimerCount();
-    storageChange('gvUsageCache:u/2', cached(10));
+    await storageChange('gvUsageCache:u/2', cached(10));
     expect(vi.getTimerCount()).toBe(timers);
     await vi.advanceTimersByTimeAsync(60_000);
     expect(pill().querySelector('.gv-usage-pct')?.textContent).toBe('10% (3h59m)');
     expect(pill().title).toBe('Updated 1m ago');
-    storageChange(StorageKeys.GV_USAGE_POS, null);
+    await storageChange(StorageKeys.GV_USAGE_POS, null);
     expect(pill().style.left).toBe('50%');
     expect(pill().style.transform).toBe('translateX(-50%)');
   });
@@ -311,7 +327,7 @@ describe('usage feature lifecycle', () => {
     await start();
     expect(pill().querySelector<HTMLElement>('.gv-usage-metric')?.title).toBe('Resets 2:00 PM');
     language.current = 'zh';
-    storageChange(StorageKeys.LANGUAGE, 'zh', 'sync');
+    await storageChange(StorageKeys.LANGUAGE, 'zh', 'sync');
     await Promise.resolve();
     await Promise.resolve();
     expect(pill().querySelector<HTMLElement>('.gv-usage-metric')?.title).toBe('Resets 14:00');
@@ -373,7 +389,7 @@ describe('usage feature lifecycle', () => {
     vi.mocked(getCurrentLanguage).mockImplementationOnce(() => pendingLanguage);
     navigate('/u/2/usage');
     await vi.advanceTimersByTimeAsync(250);
-    storageChange(StorageKeys.LANGUAGE, 'zh', 'sync');
+    await storageChange(StorageKeys.LANGUAGE, 'zh', 'sync');
     stop!();
     stop = undefined;
     expect(vi.getTimerCount()).toBe(0);

@@ -288,18 +288,16 @@ describe('Prompt history under its official plugin', () => {
   });
 
   it('keeps the first owner able to stop prompt history when a second owner starts beside it', async () => {
-    syncStore[StorageKeys.PROMPT_HISTORY_ENABLED] = true;
-    const { startPromptHistory } = await import('../index');
-    const stopNative = await startPromptHistory();
+    const first = await activated();
     await activate();
     await settle();
     expect(document.querySelectorAll('.gv-ph-trigger')).toHaveLength(1);
 
-    stopNative();
+    await first.dispose();
 
     expect(document.querySelector('.gv-ph-trigger')).toBeNull();
     const { input } = createMainComposer();
-    pressEnter(input, 'after the native module stopped');
+    pressEnter(input, 'after the first owner stopped');
     await settle();
     expect(await contents(PRIMARY_ACCOUNT_SCOPE)).toEqual([]);
   });

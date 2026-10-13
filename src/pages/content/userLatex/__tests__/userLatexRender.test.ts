@@ -1,9 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createUserLatexOwner } from '@/core/utils/userLatexSource';
+
 import {
   _resetUserLatexKatexLoader,
   _setUserLatexKatexLoaderForTest,
-  startUserLatex,
+  renderUserLatex,
 } from '../index';
 
 type KatexDefault = (typeof import('katex'))['default'];
@@ -32,7 +34,7 @@ describe('userLatex dynamic KaTeX rendering', () => {
 
   it('lazily loads KaTeX and renders math when a user message contains LaTeX', async () => {
     const el = makeUserMessage('Euler: $e^{i\\pi}+1=0$ done');
-    startUserLatex();
+    void renderUserLatex(el, { owner: createUserLatexOwner('test') });
 
     // The mocked dynamic import('katex') can span several macrotasks under
     // full-suite load, so poll instead of a single setTimeout(0) flush —
@@ -45,7 +47,7 @@ describe('userLatex dynamic KaTeX rendering', () => {
 
   it('does not load KaTeX for messages without math', async () => {
     const el = makeUserMessage('just a $ sign, no closing delimiter');
-    startUserLatex();
+    void renderUserLatex(el, { owner: createUserLatexOwner('test') });
     await flush();
 
     expect(renderToString).not.toHaveBeenCalled();
@@ -65,7 +67,7 @@ describe('userLatex dynamic KaTeX rendering', () => {
     );
 
     const el = makeUserMessage('$x^2$');
-    startUserLatex();
+    void renderUserLatex(el, { owner: createUserLatexOwner('test') });
     // Gemini re-renders this node before the dynamic import resolves.
     el.textContent = 'totally new content';
     resolveKatex();

@@ -12,8 +12,8 @@
  * the timeline and send tracking.
  *
  * Every activation claims what it renders under its own owner token, so two
- * activations (an official and a local plugin, or a plugin and the native
- * module) never render or restore each other's lines: unmount puts back only
+ * activations (for example, official and local plugins) never render or restore
+ * each other's lines: unmount puts back only
  * what this activation claimed, including lines the host detached meanwhile.
  * Nor does one claim inside or around a line the other holds, its claim still
  * waiting for KaTeX included: a whole turn over another's rendered leaf would

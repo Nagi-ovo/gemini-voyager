@@ -281,12 +281,24 @@ export function activateCodeBlockDiagram(
     }
   };
 
+  const currentTargetSource = (block: HTMLElement): string | null => {
+    if (
+      scope.isDisposed ||
+      !block.isConnected ||
+      ownedByOther(block) ||
+      !querySafe(doc, turn).some((reply) => querySafe(reply, blockSelector).includes(block))
+    )
+      return null;
+    const current = readCodeBlock(block, params);
+    return diagram.matches(current.language, current.source) ? current.source : null;
+  };
+
   /** The drawn diagram while it still shows `block`'s current source; null exports the source. */
   const exportOf = (block: HTMLElement, panel: Panel): DiagramExport | null => {
     if (panels.get(block) !== panel || panel.host.dataset.view === 'code') return null;
-    const { source } = readCodeBlock(block, params);
-    // A source that moved on since the draw (streaming) has no drawing yet.
-    if (source !== panel.source) return null;
+    const source = currentTargetSource(block);
+    // A changed source, language or reply membership no longer exports the previous drawing.
+    if (source === null || source !== panel.source) return null;
     const html = diagram.exportHtml?.(panel.target) ?? null;
     return html ? { html, text: `\`\`\`${diagram.name}\n${source}\n\`\`\`` } : null;
   };
@@ -364,6 +376,14 @@ export function activateCodeBlockDiagram(
         if (!panels.has(block)) release(block);
         return;
       }
+      // Gemini can finalize a language or replace the source while the library loads.
+      const current = currentTargetSource(block);
+      if (current === null) {
+        remove(block);
+        release(block);
+        return;
+      }
+      source = current;
       const panel = panels.get(block) ?? createPanel(block);
       panel.withdraw?.();
       panel.withdraw = null;
@@ -373,6 +393,10 @@ export function activateCodeBlockDiagram(
       const cleanup = await diagram.render(panel.target, source);
       if (panels.get(block) === panel) {
         panel.cleanup = cleanup;
+        if (currentTargetSource(block) === null) {
+          remove(block);
+          return;
+        }
         // The scheme changed while this loaded or drew, and that scan skipped the
         // block: draw it again in the new scheme, and export none of this one.
         if (ready !== prepared) {

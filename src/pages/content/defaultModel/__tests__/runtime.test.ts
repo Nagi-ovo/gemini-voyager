@@ -510,26 +510,21 @@ describe('default model runtime lifecycle', () => {
     second.stop();
   });
 
-  it('tears the native default model down on content-script handoff', async () => {
+  it('scope teardown restores menu markup and prevents stars in a later pane', async () => {
     useSyncStore({});
     history.replaceState({}, '', '/app/0123456789abcdef');
-    const { mountDefaultModelNative } = await import('../modelLocker');
-    const native = mountDefaultModelNative();
-    await native.ready;
+    const { PluginScope } = await import('@/features/plugins/runtime/pluginScope');
+    const { activateGeminiDefaultModel } = await import('../pluginHandler');
+    const scope = new PluginScope();
+    await activateGeminiDefaultModel(scope);
     const { pane, item } = buildOverlayMenu();
     const original = pane.innerHTML;
     document.body.appendChild(pane);
     await vi.advanceTimersByTimeAsync(200);
     expect(item.querySelector('.gv-default-star-btn')).not.toBeNull();
-    const switchListener = (chrome.storage.onChanged.addListener as unknown as Spy).mock.calls.at(
-      -1,
-    )?.[0];
-
-    // The retiring content script runs the stop its cleanup manager holds.
-    native.stop();
+    await scope.dispose();
 
     expect(pane.innerHTML).toBe(original);
-    expect(chrome.storage.onChanged.removeListener).toHaveBeenCalledWith(switchListener);
     expect(vi.getTimerCount()).toBe(0);
     const next = buildModelMenu([{ name: 'Flash', id: 'flash-id' }]);
     document.body.appendChild(next.panel);

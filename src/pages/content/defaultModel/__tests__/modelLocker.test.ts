@@ -4,9 +4,15 @@ import { toastDriver } from '@/tests/toastDriver';
 
 import { setupModelLockerTests } from './modelLockerHarness';
 
-describe('native default model lifecycle', () => {
-  const { startManager, mockSyncGet, changeAutoApply, mountPicker, reachFailureToast } =
-    setupModelLockerTests();
+describe('default model plugin lifecycle', () => {
+  const {
+    startManager,
+    mockSyncGet,
+    changeAutoApply,
+    mountPicker,
+    reachFailureToast,
+    holdCleanupRead,
+  } = setupModelLockerTests();
 
   describe('auto-apply kill switch', () => {
     it('does not start the lock loop when gvDefaultModelAutoApply is false', async () => {
@@ -32,7 +38,7 @@ describe('native default model lifecycle', () => {
       await startManager();
       await vi.advanceTimersByTimeAsync(1500);
       expect(picker.triggerClick).not.toHaveBeenCalled();
-      changeAutoApply(true);
+      await changeAutoApply(true);
       await vi.advanceTimersByTimeAsync(1500);
       expect(picker.triggerClick).toHaveBeenCalledTimes(1);
       expect(picker.itemClick).toHaveBeenCalledTimes(1);
@@ -52,8 +58,14 @@ describe('native default model lifecycle', () => {
       const { item } = mountPicker();
       await vi.advanceTimersByTimeAsync(500);
       expect(item.querySelector('.gv-default-star-btn')).not.toBeNull();
-      changeAutoApply(false);
+      await changeAutoApply(false, 'local');
+      expect(item.querySelector('.gv-default-star-btn')).not.toBeNull();
+      await changeAutoApply(false);
       expect(item.querySelector('.gv-default-star-btn')).toBeNull();
+      await changeAutoApply(true);
+      const reopened = mountPicker();
+      await vi.advanceTimersByTimeAsync(200);
+      expect(reopened.item.querySelectorAll('.gv-default-star-btn')).toHaveLength(1);
     });
 
     it('renders a failure toast once across repeated failed navigation sessions', async () => {
@@ -134,6 +146,40 @@ describe('native default model lifecycle', () => {
       expect(stalePane.querySelector('.gv-default-star-btn')).toBeNull();
     });
 
+    it('a late off-state read cannot sweep stars after the plugin has turned on', async () => {
+      mockSyncGet({ gvDefaultModelAutoApply: false });
+      const release = holdCleanupRead(false);
+      await startManager();
+      await changeAutoApply(true);
+      const { item } = mountPicker();
+      await vi.advanceTimersByTimeAsync(200);
+      const star = item.querySelector('.gv-default-star-btn');
+      expect(star).not.toBeNull();
+
+      release();
+      await vi.advanceTimersByTimeAsync(200);
+
+      expect(item.querySelector('.gv-default-star-btn')).toBe(star);
+    });
+
+    it('a retired page cleanup read cannot remove the successor plugin’s stars', async () => {
+      mockSyncGet({ gvDefaultModelAutoApply: false });
+      const release = holdCleanupRead(false);
+      const first = await startManager();
+      await first.stop();
+      mockSyncGet({});
+      await startManager();
+      const { item } = mountPicker();
+      await vi.advanceTimersByTimeAsync(200);
+      const star = item.querySelector('.gv-default-star-btn');
+      expect(star).not.toBeNull();
+
+      release();
+      await vi.advanceTimersByTimeAsync(200);
+
+      expect(item.querySelector('.gv-default-star-btn')).toBe(star);
+    });
+
     it('off-state click on a stale star does not write to storage', async () => {
       const setSpy = chrome.storage.sync.set as unknown as ReturnType<typeof vi.fn>;
       const removeSpy = chrome.storage.sync.remove as unknown as ReturnType<typeof vi.fn>;
@@ -144,7 +190,7 @@ describe('native default model lifecycle', () => {
       const star = item.querySelector<HTMLButtonElement>('.gv-default-star-btn')!;
       expect(star).not.toBeNull();
       panel.remove();
-      changeAutoApply(false);
+      await changeAutoApply(false);
       setSpy.mockClear();
       removeSpy.mockClear();
       star.click();
@@ -156,7 +202,7 @@ describe('native default model lifecycle', () => {
 
     it('sweeps the failure toast when the toggle flips off', async () => {
       await reachFailureToast();
-      changeAutoApply(false);
+      await changeAutoApply(false);
       expect(toastDriver.all()).toEqual([]);
     });
 
@@ -168,7 +214,7 @@ describe('native default model lifecycle', () => {
       await vi.advanceTimersByTimeAsync(1500);
       expect(triggerClick).toHaveBeenCalledTimes(1);
       expect(itemClick).toHaveBeenCalledTimes(1);
-      changeAutoApply(false);
+      await changeAutoApply(false);
       await vi.advanceTimersByTimeAsync(10000);
       expect(triggerClick).toHaveBeenCalledTimes(1);
       expect(itemClick).toHaveBeenCalledTimes(1);

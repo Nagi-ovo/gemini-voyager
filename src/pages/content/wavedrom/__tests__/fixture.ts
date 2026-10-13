@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, vi } from 'vitest';
 
-import { createWaveDromCodeBlocks } from '../codeBlock';
+import { requireBundledSiteAdapter } from '@/features/plugins/catalog/sites';
+import manifest from '@/features/plugins/catalog/sites/gemini/plugins/wavedrom/plugin.json';
+import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { wavedromPrimitive } from '@/features/plugins/verbs/wavedrom';
+
 import { createWaveDromFullscreen } from '../fullscreen';
-import { createWaveDromFeature } from '../index';
 import { createWaveDromRenderer } from '../renderer';
-import { createWaveDromView } from '../view';
 
 // Realistic dark skin tree with the bundled near-black fills (same shape as
 // the real skin — the module-level remap must rewrite these values).
@@ -54,26 +56,25 @@ vi.mock('json5', () => ({
 
 export function createWaveDromFixture() {
   let renderer: ReturnType<typeof createWaveDromRenderer>;
-  let blocks: ReturnType<typeof createWaveDromCodeBlocks>;
   let fullscreen: ReturnType<typeof createWaveDromFullscreen>;
-  let feature: ReturnType<typeof createWaveDromFeature>;
+  let scopes: PluginScope[];
 
   beforeEach(() => {
     vi.clearAllMocks();
-    document.body.innerHTML = '';
+    document.body.innerHTML = '<model-response></model-response>';
     document.body.className = '';
     document.documentElement.className = '';
     document.documentElement.removeAttribute('data-theme');
+    document.documentElement.removeAttribute('data-gv-scheme');
     renderer = createWaveDromRenderer();
     fullscreen = createWaveDromFullscreen();
-    const view = createWaveDromView(fullscreen);
-    blocks = createWaveDromCodeBlocks(renderer, view);
-    feature = createWaveDromFeature(blocks);
+    scopes = [];
   });
 
-  afterEach(() => {
-    feature.stop();
+  afterEach(async () => {
+    await Promise.all(scopes.map((scope) => scope.dispose()));
     fullscreen.close();
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
@@ -81,14 +82,29 @@ export function createWaveDromFixture() {
     get renderer() {
       return renderer;
     },
-    get blocks() {
-      return blocks;
-    },
     get fullscreen() {
       return fullscreen;
     },
-    get feature() {
-      return feature;
+    activate(): PluginScope {
+      const scope = new PluginScope();
+      scopes.push(scope);
+      const result = wavedromPrimitive.validateParams(manifest.contributes.domOps[0].params);
+      if (!result.success) throw new Error('Invalid packaged WaveDrom params');
+      wavedromPrimitive.activate(scope, result.data, {
+        doc: document,
+        adapter: requireBundledSiteAdapter('gemini'),
+        pluginId: manifest.id,
+        settings: {},
+        setTargetCounter: () => {},
+      });
+      return scope;
+    },
+    panelOf(code: Element): HTMLElement | null {
+      const sibling = code.closest('code-block')?.previousElementSibling;
+      return sibling?.matches('.gv-diagram-panel') ? (sibling as HTMLElement) : null;
+    },
+    diagramOf(code: Element): HTMLElement | null {
+      return this.panelOf(code)?.shadowRoot?.querySelector('.diagram') ?? null;
     },
   };
 }

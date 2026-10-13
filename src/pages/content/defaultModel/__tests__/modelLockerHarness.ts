@@ -1,29 +1,50 @@
-import { afterEach, beforeEach, expect, vi } from 'vitest';
+import { type Mock, afterEach, beforeEach, expect, vi } from 'vitest';
 
+import { StorageKeys } from '@/core/types/common';
 import { toastDriver } from '@/tests/toastDriver';
 
+type SyncGet = (
+  keys: unknown,
+  callback?: (items: Record<string, unknown>) => void,
+) => Promise<Record<string, unknown>>;
+
 export function setupModelLockerTests() {
-  let stopOwner: (() => void) | null = null;
+  let stopOwner: (() => void | Promise<void>) | null = null;
+  let syncStored: Record<string, unknown> = {};
+  const storageListeners = new Set<Parameters<typeof chrome.storage.onChanged.addListener>[0]>();
+
+  async function flush(): Promise<void> {
+    for (let round = 0; round < 100; round++) await Promise.resolve();
+  }
 
   beforeEach(() => {
     vi.useFakeTimers();
     vi.resetModules();
 
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
-        callback({});
-      },
-    );
+    syncStored = {};
+    storageListeners.clear();
+    vi.mocked(chrome.storage.onChanged.addListener).mockImplementation((listener) => {
+      storageListeners.add(listener);
+    });
+    vi.mocked(chrome.storage.onChanged.removeListener).mockImplementation((listener) => {
+      storageListeners.delete(listener);
+    });
+    vi.mocked(chrome.storage.local.get).mockImplementation(async () => ({}));
+    mockSyncGet(syncStored);
 
     (chrome.storage.sync.set as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_items: unknown, callback: () => void) => {
-        callback();
+      (items: Record<string, unknown>, callback?: () => void) => {
+        Object.assign(syncStored, items);
+        callback?.();
+        return Promise.resolve();
       },
     );
 
     (chrome.storage.sync.remove as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_keys: unknown, callback: () => void) => {
-        callback();
+      (keys: string | string[], callback?: () => void) => {
+        for (const key of Array.isArray(keys) ? keys : [keys]) delete syncStored[key];
+        callback?.();
+        return Promise.resolve();
       },
     );
 
@@ -40,8 +61,8 @@ export function setupModelLockerTests() {
     history.replaceState({}, '', '/');
   });
 
-  afterEach(() => {
-    stopOwner?.();
+  afterEach(async () => {
+    await stopOwner?.();
     stopOwner = null;
 
     vi.runOnlyPendingTimers();
@@ -94,11 +115,58 @@ export function setupModelLockerTests() {
   }
 
   async function startManager() {
-    const { mountDefaultModelNative } = await import('../modelLocker');
-    const native = mountDefaultModelNative();
-    stopOwner = native.stop;
-    await native.ready;
-    return native;
+    const { PluginHost } = await import('@/features/plugins/runtime/PluginHost');
+    const { createOfficialAdmission } =
+      await import('@/features/plugins/runtime/officialAdmission');
+    const { getNativeHandler, registerNativeHandler } =
+      await import('@/features/plugins/runtime/nativeHandlers');
+    const { OFFICIAL_PLUGIN_IDS } = await import('@/features/plugins/sites/featureOwners');
+    const { BuiltinPluginSource } = await import('@/features/plugins/sources/BuiltinPluginSource');
+    const { activateGeminiDefaultModel } = await import('../pluginHandler');
+    const { CleanupManager } = await import('@/core/utils/cleanupManager');
+    const { createGeminiBuiltinStartup } = await import('../../geminiBuiltinStartup');
+    const cleanup = new CleanupManager();
+    if (!getNativeHandler(OFFICIAL_PLUGIN_IDS.geminiDefaultModel))
+      registerNativeHandler(OFFICIAL_PLUGIN_IDS.geminiDefaultModel, {
+        activate: activateGeminiDefaultModel,
+      });
+    const admission = createOfficialAdmission();
+    await createGeminiBuiltinStartup(admission, cleanup).startDefaultModel();
+    admission.close();
+    const host = new PluginHost({
+      url: `https://gemini.google.com${location.pathname}${location.search}`,
+      sources: [new BuiltinPluginSource()],
+      admission,
+      doc: document,
+      isTopFrame: true,
+      requestCatalogRefresh: () => {},
+    });
+    const stop = async () => {
+      host.stop();
+      cleanup.executeCleanups();
+      await flush();
+    };
+    stopOwner = stop;
+    const ready = host.start().then(flush);
+    await ready;
+    return { stop, ready };
+  }
+
+  function holdCleanupRead(oldValue: boolean): () => void {
+    const get = chrome.storage.sync.get as unknown as Mock<SyncGet>;
+    const original = get.getMockImplementation()!;
+    let release = () => {};
+    let held = false;
+    get.mockImplementation((keys: unknown, callback?: (items: Record<string, unknown>) => void) => {
+      if (!held && keys === StorageKeys.DEFAULT_MODEL_AUTO_APPLY) {
+        held = true;
+        return new Promise<Record<string, unknown>>((resolve) => {
+          release = () => resolve({ [StorageKeys.DEFAULT_MODEL_AUTO_APPLY]: oldValue });
+        });
+      }
+      return original(keys, callback);
+    });
+    return () => release();
   }
 
   function buildThinkingSubmenu(submenuId: string) {
@@ -145,18 +213,21 @@ export function setupModelLockerTests() {
   }
 
   function mockSyncGet(stored: Record<string, unknown>) {
+    syncStored = stored;
     (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => callback(stored),
+      (_keys: unknown, callback?: (items: Record<string, unknown>) => void) => {
+        const snapshot = { ...syncStored };
+        callback?.(snapshot);
+        return Promise.resolve(snapshot);
+      },
     );
   }
 
-  function changeAutoApply(enabled: boolean) {
-    const onChangedAdd = chrome.storage.onChanged.addListener as ReturnType<typeof vi.fn>;
-    const listener = onChangedAdd.mock.calls.at(-1)?.[0] as (
-      changes: Record<string, { newValue?: unknown }>,
-      area: string,
-    ) => void;
-    listener({ gvDefaultModelAutoApply: { newValue: enabled } }, 'sync');
+  async function changeAutoApply(enabled: boolean, area: 'sync' | 'local' = 'sync') {
+    if (area === 'sync') syncStored.gvDefaultModelAutoApply = enabled;
+    for (const listener of storageListeners)
+      listener({ gvDefaultModelAutoApply: { newValue: enabled } }, area);
+    await flush();
   }
 
   function mountPicker(name = 'Pro', id = 'pro-id') {
@@ -193,6 +264,7 @@ export function setupModelLockerTests() {
     startAutoApply,
     selectModel,
     startManager,
+    holdCleanupRead,
     buildThinkingSubmenu,
     mockSyncGet,
     changeAutoApply,

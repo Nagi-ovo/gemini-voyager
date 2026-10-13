@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { StorageKeys } from '@/core/types/common';
-
 import { getTextOffset, setCaretPosition } from '../utils';
+import { startSendScope } from './sendScopeHarness';
 
 // Mock browser detection for Safari Enter Fix tests
 vi.mock('@/core/utils/browser', () => ({
@@ -121,17 +120,11 @@ function splitCurrentParagraph(input: HTMLElement): void {
   setSelection(input, input.childNodes.length);
 }
 
-describe('sendBehavior', () => {
+describe('Gemini sendShortcut on the page coordinator', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
     document.body.innerHTML = '';
-
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ [StorageKeys.CTRL_ENTER_SEND]: true });
-      },
-    );
   });
 
   afterEach(() => {
@@ -162,8 +155,7 @@ describe('sendBehavior', () => {
     const staleClickSpy = vi.spyOn(staleUpdateButton, 'click');
     const sendClickSpy = vi.spyOn(sendButton, 'click');
 
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior();
+    const { stop: cleanup } = await startSendScope();
 
     const event = fireCtrlEnter(input);
 
@@ -192,8 +184,7 @@ describe('sendBehavior', () => {
     document.body.append(inputContainer);
 
     const sendClickSpy = vi.spyOn(sendButton, 'click');
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior();
+    const { stop: cleanup } = await startSendScope();
 
     const uploadingEvent = fireCtrlEnter(input);
     expect(sendClickSpy).not.toHaveBeenCalled();
@@ -219,8 +210,7 @@ describe('sendBehavior', () => {
     inputContainer.append(input, sendButton);
     const sendClickSpy = vi.spyOn(sendButton, 'click');
 
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior();
+    const { stop: cleanup } = await startSendScope();
     try {
       document.body.append(inputContainer);
       await Promise.resolve();
@@ -259,8 +249,7 @@ describe('sendBehavior', () => {
     const staleClickSpy = vi.spyOn(staleUpdateButton, 'click');
     const sendClickSpy = vi.spyOn(sendButton, 'click');
 
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior();
+    const { stop: cleanup } = await startSendScope();
 
     const event = fireCtrlEnter(input);
 
@@ -287,8 +276,7 @@ describe('sendBehavior', () => {
 
     const updateClickSpy = vi.spyOn(updateButton, 'click');
 
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior();
+    const { stop: cleanup } = await startSendScope();
 
     const event = fireCtrlEnter(input);
 
@@ -314,8 +302,7 @@ describe('sendBehavior', () => {
 
     const buttonClickSpy = vi.spyOn(randomButton, 'click');
 
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior();
+    const { stop: cleanup } = await startSendScope();
 
     const event = fireCtrlEnter(input);
 
@@ -341,8 +328,7 @@ describe('sendBehavior', () => {
       return true;
     });
 
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior();
+    const { stop: cleanup } = await startSendScope();
 
     const event = firePlainEnter(textarea);
 
@@ -368,8 +354,7 @@ describe('sendBehavior', () => {
 
     const execCommand = mockExecCommand(() => false);
 
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior();
+    const { stop: cleanup } = await startSendScope();
 
     const event = firePlainEnter(textarea);
 
@@ -398,8 +383,7 @@ describe('sendBehavior', () => {
       return true;
     });
 
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior();
+    const { stop: cleanup } = await startSendScope();
 
     const event = firePlainEnter(input);
 
@@ -427,8 +411,7 @@ describe('sendBehavior', () => {
       return true;
     });
 
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior();
+    const { stop: cleanup } = await startSendScope();
 
     firePlainEnter(input);
 
@@ -463,16 +446,6 @@ describe('aiStudioEnterSend', () => {
     vi.resetModules();
     vi.clearAllMocks();
     document.body.innerHTML = '';
-
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({
-          [StorageKeys.CTRL_ENTER_SEND]: true,
-          [StorageKeys.AISTUDIO_ENTER_SEND]: true,
-          [StorageKeys.SAFARI_ENTER_FIX]: false,
-        });
-      },
-    );
   });
 
   afterEach(() => {
@@ -494,8 +467,7 @@ describe('aiStudioEnterSend', () => {
 
     const runClickSpy = vi.spyOn(runButton, 'click');
 
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior('aistudio');
+    const { stop: cleanup } = await startSendScope('aistudio');
 
     const event = firePlainEnter(input);
 
@@ -518,45 +490,13 @@ describe('aiStudioEnterSend', () => {
       return true;
     });
 
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior('aistudio');
+    const { stop: cleanup } = await startSendScope('aistudio');
 
     const event = fireCtrlEnter(textarea);
 
     expect(execCommand).toHaveBeenCalledWith('insertText', false, '\n');
     expect(textarea.value).toBe('hello\n');
     expect(event.defaultPrevented).toBe(true);
-
-    cleanup();
-  });
-
-  it('does not reuse the Gemini Ctrl+Enter setting on AI Studio', async () => {
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({
-          [StorageKeys.CTRL_ENTER_SEND]: true,
-          [StorageKeys.AISTUDIO_ENTER_SEND]: false,
-        });
-      },
-    );
-
-    const inputContainer = document.createElement('ms-prompt-input-wrapper');
-    const input = document.createElement('textarea');
-    const runButton = document.createElement('button');
-    runButton.setAttribute('aria-label', 'Run prompt');
-    markElementVisible(runButton);
-    inputContainer.append(input, runButton);
-    document.body.append(inputContainer);
-
-    const runClickSpy = vi.spyOn(runButton, 'click');
-
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior('aistudio');
-
-    const event = firePlainEnter(input);
-
-    expect(runClickSpy).not.toHaveBeenCalled();
-    expect(event.defaultPrevented).toBe(false);
 
     cleanup();
   });
@@ -567,16 +507,6 @@ describe('safariEnterFix', () => {
     vi.resetModules();
     vi.clearAllMocks();
     document.body.innerHTML = '';
-
-    // Enable Safari Enter Fix, disable Ctrl+Enter Send
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({
-          [StorageKeys.CTRL_ENTER_SEND]: false,
-          [StorageKeys.SAFARI_ENTER_FIX]: true,
-        });
-      },
-    );
   });
 
   afterEach(() => {
@@ -603,8 +533,7 @@ describe('safariEnterFix', () => {
 
     const sendClickSpy = vi.spyOn(sendButton, 'click');
 
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior();
+    const { stop: cleanup } = await startSendScope('gemini', { main: false, safari: true });
 
     const event = firePlainEnter(input);
 
@@ -634,8 +563,7 @@ describe('safariEnterFix', () => {
 
     const sendClickSpy = vi.spyOn(sendButton, 'click');
 
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior();
+    const { stop: cleanup } = await startSendScope('gemini', { main: false, safari: true });
 
     const event = firePlainEnter(input);
 
@@ -664,8 +592,7 @@ describe('safariEnterFix', () => {
 
     const sendClickSpy = vi.spyOn(sendButton, 'click');
 
-    const { startSendBehavior } = await import('../index');
-    const cleanup = await startSendBehavior();
+    const { stop: cleanup } = await startSendScope('gemini', { main: false, safari: true });
 
     // Fire Shift+Enter
     const event = new KeyboardEvent('keydown', {

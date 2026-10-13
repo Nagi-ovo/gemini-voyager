@@ -3,7 +3,7 @@
  * Renders LaTeX math ($...$ and $$...$$) in user-typed messages.
  *
  * `renderUserLatex` / `restoreUserLatex` are site-neutral; the `userLatex`
- * plugin primitive drives them on plugin sites. `startUserLatex` is Gemini's.
+ * public primitive drives them on Gemini and catalog sites.
  *
  * Target DOM structure (Gemini):
  *   span.user-query-bubble-with-background
@@ -12,18 +12,8 @@
  *               ├─ span.cdk-visually-hidden  ("你说" / "You said")
  *               └─ p.query-text-line.ng-star-inserted  ← processed here
  */
-import { StorageKeys } from '@/core/types/common';
 import { ensureKatexStyles } from '@/core/utils/katexStyles';
-import {
-  USER_LATEX_OWNER_ATTRIBUTE,
-  createUserLatexOwner,
-  hasUserLatexRendering,
-} from '@/core/utils/userLatexSource';
-
-import type { NativeFeatureToggle } from '../featureLifecycle';
-
-/** Selector for user message text paragraph elements. */
-const USER_MSG_SELECTOR = 'p.query-text-line';
+import { USER_LATEX_OWNER_ATTRIBUTE, hasUserLatexRendering } from '@/core/utils/userLatexSource';
 
 /**
  * Lazily loaded KaTeX instance. KaTeX is only needed when a user message
@@ -402,68 +392,4 @@ export async function renderUserLatex(
 export function restoreUserLatex(el: HTMLElement, owner: string): void {
   if (el.getAttribute(USER_LATEX_OWNER_ATTRIBUTE) !== owner) return;
   clearUserLatex(el);
-}
-
-/** Gemini's switch: on unless the user turned it off. */
-export function isUserLatexEnabledValue(value: unknown): boolean {
-  return value !== false;
-}
-
-/** The popup switch that starts and stops {@link startUserLatex} while the page lives. */
-export const USER_LATEX_TOGGLE: NativeFeatureToggle = {
-  key: StorageKeys.USER_LATEX_ENABLED,
-  isEnabled: isUserLatexEnabledValue,
-  areas: ['sync'],
-};
-
-let stopRunning: (() => void) | null = null;
-
-/** Stop Gemini's renderer if it runs; see {@link startUserLatex}. */
-export function stopUserLatex(): void {
-  stopRunning?.();
-}
-
-/**
- * Start rendering LaTeX in Gemini's user messages: messages already on the
- * page now, later ones once the page settles. The returned stop (idempotent)
- * disconnects the observer, cancels renders still waiting for KaTeX and puts
- * back only the lines this run claimed, detached ones included.
- */
-export function startUserLatex(): () => void {
-  stopUserLatex();
-  const owner = createUserLatexOwner('native');
-  const loading = new AbortController();
-  const claims = createUserLatexClaims(owner);
-  const processAll = (): void => {
-    claims.prune();
-    document.querySelectorAll<HTMLElement>(USER_MSG_SELECTOR).forEach((el) => {
-      void renderUserLatex(el, { owner, signal: loading.signal, claims });
-    });
-  };
-
-  processAll();
-
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-  const observer = new MutationObserver(() => {
-    if (debounceTimer !== null) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-      debounceTimer = null;
-      processAll();
-    }, 300);
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  const stop = (): void => {
-    if (stopRunning !== stop) return;
-    stopRunning = null;
-    observer.disconnect();
-    if (debounceTimer !== null) clearTimeout(debounceTimer);
-    debounceTimer = null;
-    // Renders still waiting for KaTeX give up first, then every claimed line goes
-    // back: a document scan would miss a line the host detached while it was ours.
-    loading.abort();
-    claims.restoreAll();
-  };
-  stopRunning = stop;
-  return stop;
 }

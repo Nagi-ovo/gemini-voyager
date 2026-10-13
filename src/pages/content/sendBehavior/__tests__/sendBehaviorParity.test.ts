@@ -1,31 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { StorageKeys } from '@/core/types/common';
+import { startSendScope } from './sendScopeHarness';
 
 vi.mock('@/core/utils/browser', () => ({
   isSafari: vi.fn(() => false),
 }));
-
-type StorageListener = (
-  changes: Record<string, chrome.storage.StorageChange>,
-  areaName: string,
-) => void;
-type SyncCallback = (result: Record<string, unknown>) => void;
-
-const storageListeners = new Set<StorageListener>();
-let pendingReads: SyncCallback[] = [];
-let storedSettings: Record<string, unknown> = {};
-let deferReads = false;
-
-function emitSyncChange(key: string, newValue: unknown): void {
-  for (const listener of storageListeners) listener({ [key]: { newValue } }, 'sync');
-}
-
-function settleReads(result: Record<string, unknown>): void {
-  const reads = pendingReads;
-  pendingReads = [];
-  reads.forEach((callback) => callback(result));
-}
 
 function markVisible(element: HTMLElement): void {
   Object.defineProperty(element, 'offsetParent', { configurable: true, value: document.body });
@@ -75,22 +54,6 @@ beforeEach(() => {
   vi.resetModules();
   vi.clearAllMocks();
   document.body.innerHTML = '';
-  storageListeners.clear();
-  pendingReads = [];
-  deferReads = false;
-  storedSettings = {};
-  vi.mocked(chrome.storage.onChanged.addListener).mockImplementation((listener) => {
-    storageListeners.add(listener as StorageListener);
-  });
-  vi.mocked(chrome.storage.onChanged.removeListener).mockImplementation((listener) => {
-    storageListeners.delete(listener as StorageListener);
-  });
-  (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-    (_defaults: Record<string, unknown>, callback: SyncCallback) => {
-      if (deferReads) pendingReads.push(callback);
-      else callback(storedSettings);
-    },
-  );
 });
 
 afterEach(() => {
@@ -100,12 +63,10 @@ afterEach(() => {
 
 describe('send behavior parity on Gemini', () => {
   it('keeps Ctrl+Shift+Enter sending and Alt+Enter as a Voyager newline on Gemini', async () => {
-    storedSettings = { [StorageKeys.CTRL_ENTER_SEND]: true };
     const execCommand = stubNewlineCommands();
     const { input, button } = mountComposer('div', 'div', 'Send message');
     const click = vi.spyOn(button, 'click');
-    const { startSendBehavior } = await import('../index');
-    const stop = await startSendBehavior('gemini');
+    const { stop } = await startSendScope();
 
     const ctrlShift = pressEnter(input, { ctrlKey: true, shiftKey: true });
     expect(click).toHaveBeenCalledTimes(1);
@@ -135,7 +96,6 @@ describe('send behavior parity on Gemini', () => {
   });
 
   it('keeps folder project instruction injection ahead of the Gemini send key', async () => {
-    storedSettings = { [StorageKeys.CTRL_ENTER_SEND]: true };
     const { input, button } = mountComposer('div', 'div', 'Send message');
     const order: string[] = [];
     const injectInstructions = (event: KeyboardEvent): void => {
@@ -151,8 +111,7 @@ describe('send behavior parity on Gemini', () => {
     });
     input.textContent = 'hello';
 
-    const { startSendBehavior } = await import('../index');
-    const stop = await startSendBehavior('gemini');
+    const { stop } = await startSendScope();
     pressEnter(input, { ctrlKey: true });
 
     expect(order).toEqual(['inject', 'send']);
@@ -163,12 +122,10 @@ describe('send behavior parity on Gemini', () => {
   });
 
   it('lets a document-capture listener registered after the send owner still see Ctrl+Enter', async () => {
-    storedSettings = { [StorageKeys.CTRL_ENTER_SEND]: true };
     const { input, button } = mountComposer('div', 'div', 'Send message');
     const click = vi.spyOn(button, 'click');
 
-    const { startSendBehavior } = await import('../index');
-    const stop = await startSendBehavior('gemini');
+    const { stop } = await startSendScope();
 
     const seen: boolean[] = [];
     const lateReader = (event: KeyboardEvent): void => {
@@ -185,11 +142,9 @@ describe('send behavior parity on Gemini', () => {
   });
 
   it("sends a slash prompt's re-dispatched Ctrl+Enter", async () => {
-    storedSettings = { [StorageKeys.CTRL_ENTER_SEND]: true };
     const { input, button } = mountComposer('div', 'div', 'Send message');
     const click = vi.spyOn(button, 'click');
-    const { startSendBehavior } = await import('../index');
-    const stop = await startSendBehavior('gemini');
+    const { stop } = await startSendScope();
 
     // Slash prompt swallows the trusted key and replays a synthetic one without keyCode.
     const replay = pressEnter(input, { ctrlKey: true });
@@ -200,56 +155,14 @@ describe('send behavior parity on Gemini', () => {
 
     stop();
   });
-
-  it('keeps the newer send switch when the startup read lands late', async () => {
-    deferReads = true;
-    const { input, button } = mountComposer('div', 'div', 'Send message');
-    const click = vi.spyOn(button, 'click');
-    const { startSendBehavior } = await import('../index');
-    const starting = startSendBehavior('gemini');
-
-    // The popup turns Ctrl+Enter send on while the startup read is still in flight.
-    emitSyncChange(StorageKeys.CTRL_ENTER_SEND, true);
-    settleReads({ [StorageKeys.CTRL_ENTER_SEND]: false });
-    const stop = await starting;
-
-    pressEnter(input, { ctrlKey: true });
-    expect(click).toHaveBeenCalledTimes(1);
-
-    stop();
-  });
-  it('keeps the stored Safari fix when only the Ctrl+Enter switch changed during the startup read', async () => {
-    const { isSafari } = await import('@/core/utils/browser');
-    vi.mocked(isSafari).mockReturnValue(true);
-    deferReads = true;
-    const { input, button } = mountComposer('div', 'div', 'Send message');
-    const click = vi.spyOn(button, 'click');
-    const { startSendBehavior } = await import('../index');
-    const starting = startSendBehavior('gemini');
-
-    emitSyncChange(StorageKeys.CTRL_ENTER_SEND, false);
-    settleReads({
-      [StorageKeys.CTRL_ENTER_SEND]: true,
-      [StorageKeys.SAFARI_ENTER_FIX]: true,
-    });
-    const stop = await starting;
-
-    pressEnter(input);
-    expect(click).toHaveBeenCalledTimes(1);
-
-    stop();
-    vi.mocked(isSafari).mockReturnValue(false);
-  });
 });
 
 describe('send behavior parity on AI Studio', () => {
   it('hands Shift+Enter and Alt+Enter to AI Studio in Enter-send mode', async () => {
-    storedSettings = { [StorageKeys.AISTUDIO_ENTER_SEND]: true };
     const execCommand = stubNewlineCommands();
     const { input, button } = mountComposer('ms-prompt-input-wrapper', 'textarea', 'Run prompt');
     const click = vi.spyOn(button, 'click');
-    const { startSendBehavior } = await import('../index');
-    const stop = await startSendBehavior('aistudio');
+    const { stop } = await startSendScope('aistudio');
 
     expect(pressEnter(input, { shiftKey: true }).defaultPrevented).toBe(false);
     expect(pressEnter(input, { altKey: true }).defaultPrevented).toBe(false);
@@ -267,41 +180,16 @@ describe('send behavior parity on AI Studio', () => {
 
     stop();
   });
-
-  it('ignores the Safari Enter fix and the Gemini switch on AI Studio', async () => {
-    const { isSafari } = await import('@/core/utils/browser');
-    vi.mocked(isSafari).mockReturnValue(true);
-    storedSettings = {
-      [StorageKeys.CTRL_ENTER_SEND]: true,
-      [StorageKeys.SAFARI_ENTER_FIX]: true,
-    };
-    const { input, button } = mountComposer('ms-prompt-input-wrapper', 'textarea', 'Run prompt');
-    const click = vi.spyOn(button, 'click');
-    const { startSendBehavior } = await import('../index');
-    const stop = await startSendBehavior('aistudio');
-
-    expect(pressEnter(input).defaultPrevented).toBe(false);
-    expect(pressEnter(input, { ctrlKey: true }).defaultPrevented).toBe(false);
-    expect(click).not.toHaveBeenCalled();
-
-    stop();
-    vi.mocked(isSafari).mockReturnValue(false);
-  });
 });
 
 describe('send behavior parity for the Safari Enter fix', () => {
   it('lets Ctrl+Enter send win over the Safari Enter fix when both are on', async () => {
     const { isSafari } = await import('@/core/utils/browser');
     vi.mocked(isSafari).mockReturnValue(true);
-    storedSettings = {
-      [StorageKeys.CTRL_ENTER_SEND]: true,
-      [StorageKeys.SAFARI_ENTER_FIX]: true,
-    };
     const execCommand = stubNewlineCommands();
     const { input, button } = mountComposer('div', 'div', 'Send message');
     const click = vi.spyOn(button, 'click');
-    const { startSendBehavior } = await import('../index');
-    const stop = await startSendBehavior('gemini');
+    const { stop, stopMain } = await startSendScope('gemini', { safari: true });
 
     pressEnter(input);
     expect(click).not.toHaveBeenCalled();
@@ -311,7 +199,7 @@ describe('send behavior parity for the Safari Enter fix', () => {
     expect(click).toHaveBeenCalledTimes(1);
 
     // Turning Ctrl+Enter off live hands plain Enter back to the Safari fix.
-    emitSyncChange(StorageKeys.CTRL_ENTER_SEND, false);
+    await stopMain();
     pressEnter(input);
     expect(click).toHaveBeenCalledTimes(2);
     expect(pressEnter(input, { altKey: true }).defaultPrevented).toBe(false);
@@ -323,14 +211,12 @@ describe('send behavior parity for the Safari Enter fix', () => {
 
 describe('send behavior on the page coordinator', () => {
   it('registers on the page coordinator and leaves it running after its own stop', async () => {
-    storedSettings = { [StorageKeys.CTRL_ENTER_SEND]: true };
     const { input, button } = mountComposer('div', 'div', 'Send message');
     const click = vi.spyOn(button, 'click');
     const { startSendKeyCoordinator } =
       await import('@/core/services/composer/sendKeys/sendKeyCoordinator');
     const page = startSendKeyCoordinator('gemini');
-    const { startSendBehavior } = await import('../index');
-    const stop = await startSendBehavior('gemini');
+    const { stop } = await startSendScope('gemini', { coordinator: page });
 
     pressEnter(input, { ctrlKey: true });
     expect(click).toHaveBeenCalledTimes(1);
@@ -345,21 +231,16 @@ describe('send behavior on the page coordinator', () => {
   });
 
   it('attaches nothing for a send behavior that starts after the page coordinator stopped', async () => {
-    storedSettings = {
-      [StorageKeys.CTRL_ENTER_SEND]: true,
-      [StorageKeys.SAFARI_ENTER_FIX]: true,
-    };
     const { input, button } = mountComposer('div', 'div', 'Send message');
     const click = vi.spyOn(button, 'click');
     const { startSendKeyCoordinator } =
       await import('@/core/services/composer/sendKeys/sendKeyCoordinator');
-    startSendKeyCoordinator('gemini').stop();
-    const { startSendBehavior } = await import('../index');
-    const stop = await startSendBehavior('gemini');
+    const page = startSendKeyCoordinator('gemini');
+    page.stop();
+    const { stop } = await startSendScope('gemini', { coordinator: page, safari: true });
 
     expect(pressEnter(input, { ctrlKey: true }).defaultPrevented).toBe(false);
     expect(click).not.toHaveBeenCalled();
     stop();
-    expect(storageListeners.size).toBe(0);
   });
 });

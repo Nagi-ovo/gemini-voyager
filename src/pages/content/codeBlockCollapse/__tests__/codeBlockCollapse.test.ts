@@ -2,19 +2,13 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CleanupPositions } from '@/core/types/cleanupPositions';
-import { StorageKeys } from '@/core/types/common';
-import { CleanupManager } from '@/core/utils/cleanupManager';
-
-import { type NativeFeature, createNativeFeatureToggle } from '../../featureLifecycle';
 import {
-  CODE_BLOCK_COLLAPSE_TOGGLE,
+  type CodeBlockCollapse,
   LONG_CODE_BLOCK_MIN_HEIGHT,
   LONG_CODE_BLOCK_MIN_LINES,
-  enhanceCodeBlock,
-  startCodeBlockCollapse,
-  stopCodeBlockCollapse,
-} from '../index';
+  createCodeBlockCollapse,
+} from '../engine';
+import { createGeminiCodeBlockSite } from '../geminiSite';
 
 const translationState = vi.hoisted(() => ({ language: 'en' }));
 
@@ -26,6 +20,7 @@ vi.mock('@/utils/i18n', () => ({
 }));
 
 let resizeCallback: ResizeObserverCallback | null = null;
+let engine: CodeBlockCollapse;
 
 function createCodeBlock({
   lines = 1,
@@ -71,10 +66,11 @@ describe('codeBlockCollapse', () => {
       },
     );
     document.body.innerHTML = '';
+    engine = createCodeBlockCollapse(createGeminiCodeBlockSite(document, 'code-block'));
   });
 
   afterEach(() => {
-    stopCodeBlockCollapse();
+    engine.stop();
     vi.unstubAllGlobals();
     vi.useRealTimers();
   });
@@ -82,7 +78,7 @@ describe('codeBlockCollapse', () => {
   it('leaves short code blocks unchanged', () => {
     const { host } = createCodeBlock({ lines: LONG_CODE_BLOCK_MIN_LINES - 1 });
 
-    enhanceCodeBlock(host);
+    engine.enhance(host);
 
     expect(host.classList.contains('gv-code-block-collapsible')).toBe(false);
     expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
@@ -91,7 +87,7 @@ describe('codeBlockCollapse', () => {
   it('adds a toggle to long blocks and keeps them expanded by default', () => {
     const { host } = createCodeBlock({ lines: LONG_CODE_BLOCK_MIN_LINES });
 
-    enhanceCodeBlock(host);
+    engine.enhance(host);
 
     const button = host.querySelector<HTMLButtonElement>('.gv-code-block-toggle')!;
     expect(button).not.toBeNull();
@@ -105,7 +101,7 @@ describe('codeBlockCollapse', () => {
 
   it('collapses and expands from the injected action', () => {
     const { host } = createCodeBlock({ lines: LONG_CODE_BLOCK_MIN_LINES });
-    enhanceCodeBlock(host);
+    engine.enhance(host);
     const button = host.querySelector<HTMLButtonElement>('.gv-code-block-toggle')!;
 
     button.click();
@@ -121,7 +117,7 @@ describe('codeBlockCollapse', () => {
   it('handles wrapped single-line code using rendered height', () => {
     const { host } = createCodeBlock({ lines: 1, height: LONG_CODE_BLOCK_MIN_HEIGHT });
 
-    enhanceCodeBlock(host);
+    engine.enhance(host);
 
     expect(host.querySelector('.gv-code-block-toggle')).not.toBeNull();
   });
@@ -131,14 +127,14 @@ describe('codeBlockCollapse', () => {
     const heightRead = vi.fn(() => 0);
     Object.defineProperty(code, 'scrollHeight', { configurable: true, get: heightRead });
 
-    enhanceCodeBlock(host);
+    engine.enhance(host);
 
     expect(heightRead).not.toHaveBeenCalled();
   });
 
   it('detects a code block that grows while Gemini is streaming', async () => {
     const { host, code } = createCodeBlock({ lines: 2 });
-    const cleanup = startCodeBlockCollapse();
+    engine.start();
     expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
 
     code.textContent = Array.from(
@@ -148,7 +144,7 @@ describe('codeBlockCollapse', () => {
     await vi.runAllTimersAsync();
 
     expect(host.querySelector('.gv-code-block-toggle')).not.toBeNull();
-    cleanup();
+    engine.stop();
   });
 
   it('does not rescan code blocks for unrelated page mutations', async () => {
@@ -161,7 +157,7 @@ describe('codeBlockCollapse', () => {
         return 0;
       },
     });
-    const cleanup = startCodeBlockCollapse();
+    engine.start();
     const readsAfterInitialScan = heightReads;
 
     const unrelated = document.createElement('div');
@@ -170,12 +166,12 @@ describe('codeBlockCollapse', () => {
     await vi.runAllTimersAsync();
 
     expect(heightReads).toBe(readsAfterInitialScan);
-    cleanup();
+    engine.stop();
   });
 
   it('re-evaluates a block when layout changes without a DOM mutation', async () => {
     const { host, code } = createCodeBlock({ lines: 1, height: 0 });
-    const cleanup = startCodeBlockCollapse();
+    engine.start();
     expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
 
     Object.defineProperty(code, 'scrollHeight', {
@@ -186,22 +182,7 @@ describe('codeBlockCollapse', () => {
     await vi.runAllTimersAsync();
 
     expect(host.querySelector('.gv-code-block-toggle')).not.toBeNull();
-    cleanup();
-  });
-
-  it('refreshes existing toggle labels after the Voyager language changes', async () => {
-    const { host } = createCodeBlock({ lines: LONG_CODE_BLOCK_MIN_LINES });
-    const cleanup = startCodeBlockCollapse();
-    const button = host.querySelector<HTMLButtonElement>('.gv-code-block-toggle')!;
-    expect(button.getAttribute('aria-label')).toBe('Collapse');
-
-    translationState.language = 'zh';
-    const listener = vi.mocked(chrome.storage.onChanged.addListener).mock.calls.at(-1)?.[0];
-    listener?.({ language: { newValue: 'zh' } }, 'sync');
-    await Promise.resolve();
-
-    expect(button.getAttribute('aria-label')).toBe('收起');
-    cleanup();
+    engine.stop();
   });
 
   it('does not interfere with Mermaid code blocks', () => {
@@ -210,88 +191,28 @@ describe('codeBlockCollapse', () => {
       language: 'Mermaid',
     });
 
-    enhanceCodeBlock(host);
+    engine.enhance(host);
 
     expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
   });
 
   it('removes injected state during cleanup', () => {
     const { host } = createCodeBlock({ lines: LONG_CODE_BLOCK_MIN_LINES });
-    startCodeBlockCollapse();
+    engine.start();
     host.querySelector<HTMLButtonElement>('.gv-code-block-toggle')!.click();
 
-    stopCodeBlockCollapse();
+    engine.stop();
 
     expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
     expect(host.classList.contains('gv-code-block-collapsible')).toBe(false);
     expect(host.classList.contains('gv-code-block-collapsed')).toBe(false);
   });
 
-  describe('popup switch', () => {
-    const feature: NativeFeature = {
-      id: 'code-block-collapse',
-      position: CleanupPositions.CleanupCodeBlockCollapse,
-      start: startCodeBlockCollapse,
-      toggle: CODE_BLOCK_COLLAPSE_TOGGLE,
-    };
-    const flip = (newValue: unknown) => ({
-      [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: { newValue },
-    });
-
-    it('reads a missing or non-false switch as on, like the plugin binding', () => {
-      expect([undefined, null, true, 'false', 0].map(CODE_BLOCK_COLLAPSE_TOGGLE.isEnabled)).toEqual(
-        [true, true, true, true, true],
-      );
-      expect(CODE_BLOCK_COLLAPSE_TOGGLE.isEnabled(false)).toBe(false);
-      expect(CODE_BLOCK_COLLAPSE_TOGGLE.areas).toEqual(['sync']);
-    });
-
-    it('turns code block collapse off and on live from the popup switch while the native module owns it', async () => {
-      const { host } = createCodeBlock({ lines: LONG_CODE_BLOCK_MIN_LINES });
-      const manager = new CleanupManager();
-      const toggle = createNativeFeatureToggle(manager, feature);
-      await toggle.applyInitial(true);
-      expect(host.querySelector('.gv-code-block-toggle')).not.toBeNull();
-
-      toggle.handleChange(flip(false), 'sync');
-      await vi.runAllTimersAsync();
-      expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
-      expect(host.hasAttribute('class')).toBe(false);
-      expect(host.hasAttribute('data-gv-code-collapse-owner')).toBe(false);
-      // Nothing follows the page while it is off.
-      host.querySelector('code')!.append('\nmore');
-      await vi.runAllTimersAsync();
-      expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
-
-      // A local-area write is not the popup's switch.
-      toggle.handleChange(flip(true), 'local');
-      await vi.runAllTimersAsync();
-      expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
-
-      toggle.handleChange(flip(undefined), 'sync');
-      await vi.runAllTimersAsync();
-      expect(host.querySelectorAll('.gv-code-block-toggle')).toHaveLength(1);
-      expect(manager.list()).toHaveLength(1);
-    });
-
-    it('keeps the switch flipped during the startup read instead of the late initial value', async () => {
-      const { host } = createCodeBlock({ lines: LONG_CODE_BLOCK_MIN_LINES });
-      const toggle = createNativeFeatureToggle(new CleanupManager(), feature);
-
-      toggle.handleChange(flip(false), 'sync');
-      await toggle.applyInitial(true);
-      await vi.runAllTimersAsync();
-
-      expect(toggle.isMounted()).toBe(false);
-      expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
-    });
-  });
-
   it('leaves a block another code collapse holds alone and takes it once released', async () => {
     const { host } = createCodeBlock({ lines: LONG_CODE_BLOCK_MIN_LINES });
     host.setAttribute('data-gv-code-collapse-owner', 'plugin');
     host.classList.add('gv-code-block-collapsible', 'gv-code-block-collapsed');
-    startCodeBlockCollapse();
+    engine.start();
 
     expect(host.querySelector('.gv-code-block-toggle')).toBeNull();
     expect(host.classList.contains('gv-code-block-collapsed')).toBe(true);

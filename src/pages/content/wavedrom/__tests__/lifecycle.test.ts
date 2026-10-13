@@ -1,164 +1,180 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { StorageKeys } from '@/core/types/common';
-
+import * as waveRenderer from '../renderer';
 import { createWaveDromFixture } from './fixture';
 
 const fixture = createWaveDromFixture();
+const WAVEJSON = '{"signal": [{"name":"clk","wave":"p..."}]}';
+const LATEST = '{"signal": [{"name":"data","wave":"x.34"}]}';
+const SVG = '<svg viewBox="0 0 100 50"><text>diagram</text></svg>';
 
-describe('runtime disable lifecycle', () => {
-  const WAVEJSON = '{"signal": [{"name":"clk","wave":"p..."}]}';
+function addWaveDromBlock(code = WAVEJSON): HTMLElement {
+  const block = document.createElement('code-block');
+  block.innerHTML =
+    '<div class="code-block-decoration"><span>wavedrom</span></div><pre><code data-test-id="code-content"></code></pre>';
+  const codeEl = block.querySelector<HTMLElement>('code')!;
+  codeEl.textContent = code;
+  document.querySelector('model-response')!.append(block);
+  return codeEl;
+}
 
-  type StorageChangeListener = (
-    changes: Record<string, { oldValue?: unknown; newValue?: unknown }>,
-    areaName: string,
-  ) => void;
+async function flush(): Promise<void> {
+  for (let i = 0; i < 10; i += 1) await Promise.resolve();
+}
 
-  const startEnabled = (): StorageChangeListener => {
-    const storageGet = chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>;
-    storageGet.mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) =>
-        callback({ [StorageKeys.WAVEDROM_ENABLED]: true }),
-    );
-    fixture.feature.start();
-    const addListener = chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>;
-    return addListener.mock.calls.at(-1)?.[0] as StorageChangeListener;
-  };
-
-  const addWaveDromBlock = (code = WAVEJSON): HTMLElement => {
-    const codeBlock = document.createElement('code-block');
-    codeBlock.innerHTML = `
-      <div class="code-block-decoration"><span>wavedrom</span></div>
-      <pre><code data-test-id="code-content"></code></pre>
-    `;
-    const codeEl = codeBlock.querySelector<HTMLElement>('code')!;
-    codeEl.textContent = code;
-    document.body.appendChild(codeBlock);
-    return codeEl;
-  };
-
-  const disable = (listener: StorageChangeListener): void => {
-    listener(
-      {
-        [StorageKeys.WAVEDROM_ENABLED]: { oldValue: true, newValue: false },
-      },
-      'sync',
-    );
-  };
-
-  const enable = (listener: StorageChangeListener): void => {
-    listener(
-      {
-        [StorageKeys.WAVEDROM_ENABLED]: { oldValue: false, newValue: true },
-      },
-      'sync',
-    );
-  };
-
-  it('clears a queued debounced render when disabled', async () => {
+describe('WaveDrom plugin scope lifecycle', () => {
+  it('clears a queued rescan when disabled', async () => {
     vi.useFakeTimers();
-    const onStorageChanged = startEnabled();
+    const scope = fixture.activate();
     addWaveDromBlock();
-    await Promise.resolve();
-    await Promise.resolve();
+    await flush();
     expect(vi.getTimerCount()).toBeGreaterThan(0);
-
-    disable(onStorageChanged);
+    await scope.dispose();
     expect(vi.getTimerCount()).toBe(0);
-    await vi.advanceTimersByTimeAsync(1000);
-
+    await vi.advanceTimersByTimeAsync(1500);
     const renderAnyMod = await import('wavedrom/render-any');
     expect(renderAnyMod.default).not.toHaveBeenCalled();
-    expect(document.querySelector('.gv-wavedrom-wrapper')).toBeNull();
+    expect(document.querySelector('.gv-diagram-panel')).toBeNull();
   });
 
   it('drops an in-flight render that resolves after disable', async () => {
-    const onStorageChanged = startEnabled();
-    const codeEl = addWaveDromBlock();
-
-    fixture.blocks.process();
-    expect(codeEl.dataset.wavedromProcessing).toBe('true');
-    disable(onStorageChanged);
-
-    await vi.waitFor(() => {
-      expect(codeEl.dataset.wavedromProcessing).toBe('false');
+    let finish!: (svg: string) => void;
+    const render = vi.fn(
+      () =>
+        new Promise<string>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    vi.spyOn(waveRenderer, 'createWaveDromRenderer').mockReturnValue({
+      load: async () => true,
+      render,
     });
-    expect(document.querySelector('.gv-wavedrom-wrapper')).toBeNull();
+    const code = addWaveDromBlock();
+    const scope = fixture.activate();
+    await vi.waitFor(() => expect(render).toHaveBeenCalledOnce());
+    await scope.dispose();
+    finish(SVG);
+    await flush();
+    expect(fixture.panelOf(code)).toBeNull();
+    expect(code.closest('code-block')?.hasAttribute('data-gv-diagram-hidden')).toBe(false);
+    expect(code.closest('code-block')?.hasAttribute('data-gv-diagram-owner')).toBe(false);
+  });
+
+  it('renders the latest source once when the block changes before the renderer is ready', async () => {
+    let ready!: (loaded: boolean) => void;
+    const render = vi.fn(async () => SVG);
+    vi.spyOn(waveRenderer, 'createWaveDromRenderer').mockReturnValue({
+      load: () =>
+        new Promise<boolean>((resolve) => {
+          ready = resolve;
+        }),
+      render,
+    });
+    const code = addWaveDromBlock();
+    fixture.activate();
+    await vi.waitFor(() => expect(ready).toBeTypeOf('function'));
+    code.textContent = LATEST;
+    ready(true);
+    await vi.waitFor(() => expect(fixture.diagramOf(code)?.querySelector('svg')).toBeTruthy(), {
+      timeout: 3000,
+    });
+    expect(render).toHaveBeenCalledOnce();
+    expect(render).toHaveBeenCalledWith(LATEST, false);
   });
 
   it('drops a stale SVG and rerenders the latest source after an await', async () => {
-    const updatedWaveJson = '{"signal": [{"name":"data","wave":"x.34"}]}';
-    const stringifyMod = await import('onml/stringify.js');
-    vi.mocked(stringifyMod.default)
-      .mockReturnValueOnce('<svg viewBox="0 0 100 50"><text>stale</text></svg>')
-      .mockReturnValueOnce('<svg viewBox="0 0 100 50"><text>latest</text></svg>');
-    const codeEl = addWaveDromBlock();
-
-    fixture.blocks.process();
-    expect(codeEl.dataset.wavedromProcessing).toBe('true');
-    codeEl.textContent = updatedWaveJson;
-
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-wavedrom-diagram')?.textContent).toContain('latest');
+    let finish!: (svg: string) => void;
+    const render = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise<string>((resolve) => {
+            finish = resolve;
+          }),
+      )
+      .mockResolvedValue('<svg viewBox="0 0 100 50"><text>latest</text></svg>');
+    vi.spyOn(waveRenderer, 'createWaveDromRenderer').mockReturnValue({
+      load: async () => true,
+      render,
     });
-    expect(document.querySelector('.gv-wavedrom-diagram')?.textContent).not.toContain('stale');
-    expect(codeEl.dataset.wavedromCode).toBe(updatedWaveJson);
-
-    const renderAnyMod = await import('wavedrom/render-any');
-    expect(renderAnyMod.default).toHaveBeenCalledTimes(2);
-    expect(renderAnyMod.default).toHaveBeenLastCalledWith(
-      expect.any(Number),
-      { signal: [{ name: 'data', wave: 'x.34' }] },
-      expect.any(Object),
-    );
+    const code = addWaveDromBlock();
+    fixture.activate();
+    await vi.waitFor(() => expect(render).toHaveBeenCalledOnce());
+    code.textContent = LATEST;
+    finish('<svg viewBox="0 0 100 50"><text>stale</text></svg>');
+    await vi.waitFor(() => expect(fixture.diagramOf(code)?.textContent).toContain('latest'), {
+      timeout: 3000,
+    });
+    expect(fixture.diagramOf(code)?.textContent).not.toContain('stale');
+    expect(render).toHaveBeenCalledTimes(2);
+    expect(render).toHaveBeenLastCalledWith(LATEST, false);
   });
 
-  it('restores rendered source and can render again after re-enable', async () => {
-    const onStorageChanged = startEnabled();
-    const codeEl = addWaveDromBlock();
-    const codeBlockHost = codeEl.closest<HTMLElement>('code-block')!;
-    const decoration = codeBlockHost.querySelector<HTMLElement>('.code-block-decoration')!;
+  it('leaves no panel for a source block removed while rendering', async () => {
+    let finish!: (svg: string) => void;
+    const render = vi.fn(
+      () =>
+        new Promise<string>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    vi.spyOn(waveRenderer, 'createWaveDromRenderer').mockReturnValue({
+      load: async () => true,
+      render,
+    });
+    const code = addWaveDromBlock();
+    const block = code.closest('code-block')!;
+    fixture.activate();
+    await vi.waitFor(() => expect(render).toHaveBeenCalledOnce());
+    block.remove();
+    finish(SVG);
+    await vi.waitFor(() => expect(document.querySelector('.gv-diagram-panel')).toBeNull(), {
+      timeout: 3000,
+    });
+    expect(block.hasAttribute('data-gv-diagram-hidden')).toBe(false);
+    expect(block.hasAttribute('data-gv-diagram-owner')).toBe(false);
+  });
+
+  it('keeps native controls and inline styles through Code view, disable and re-enable', async () => {
+    const code = addWaveDromBlock();
+    const block = code.closest<HTMLElement>('code-block')!;
+    block.setAttribute('style', 'display: block; color: red;');
+    const decoration = block.querySelector<HTMLElement>('.code-block-decoration')!;
     const nativeButtons = document.createElement('div');
     nativeButtons.className = 'buttons';
     nativeButtons.setAttribute(
       'style',
       'position: absolute; top: 8px; right: 12px; margin-top: 3px; color: red;',
     );
-    const beforeButtons = document.createElement('span');
-    beforeButtons.textContent = 'before';
-    const afterButtons = document.createElement('span');
-    afterButtons.textContent = 'after';
-    decoration.append(beforeButtons, nativeButtons, afterButtons);
+    decoration.append(
+      document.createElement('span'),
+      nativeButtons,
+      document.createElement('span'),
+    );
     const originalChildren = Array.from(decoration.childNodes);
     const originalStyle = nativeButtons.getAttribute('style');
-
-    fixture.blocks.process();
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-wavedrom-wrapper')).not.toBeNull();
-    });
-    expect(document.querySelector('.gv-wavedrom-toggle')?.contains(nativeButtons)).toBe(true);
-    expect(document.getElementById('gv-wavedrom-styles')).not.toBeNull();
-    // The toolbar sits above the timing diagram instead of floating over its waves.
-    const toggle = document.querySelector<HTMLElement>('.gv-wavedrom-toggle')!;
-    expect(document.querySelector('.gv-wavedrom-wrapper')!.firstElementChild).toBe(toggle);
-    expect(getComputedStyle(toggle).position).not.toBe('absolute');
-    fixture.fullscreen.open('<svg viewBox="0 0 50 50"><g/></svg>', '#f9fafb');
-    expect(document.querySelector('.gv-wavedrom-modal')).not.toBeNull();
-
-    disable(onStorageChanged);
-
-    expect(document.querySelector('.gv-wavedrom-wrapper')).toBeNull();
-    expect(document.querySelector('.gv-wavedrom-modal')).toBeNull();
-    expect(document.getElementById('gv-wavedrom-styles')).toBeNull();
-    expect(codeBlockHost.style.display).toBe('');
+    const originalBlockStyle = block.getAttribute('style');
+    const scope = fixture.activate();
+    await vi.waitFor(() => expect(fixture.diagramOf(code)?.querySelector('svg')).toBeTruthy());
+    const panel = fixture.panelOf(code)!;
+    panel.shadowRoot!.querySelector<HTMLButtonElement>('button[aria-pressed="false"]')!.click();
+    expect(panel.dataset.view).toBe('code');
+    expect(getComputedStyle(block).display).toBe('block');
+    expect(decoration.contains(nativeButtons)).toBe(true);
     expect(Array.from(decoration.childNodes)).toEqual(originalChildren);
     expect(nativeButtons.getAttribute('style')).toBe(originalStyle);
-    expect(codeEl.dataset.wavedromCode).toBeUndefined();
-
-    enable(onStorageChanged);
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-wavedrom-wrapper')).not.toBeNull();
-    });
-    expect(document.getElementById('gv-wavedrom-styles')).not.toBeNull();
+    panel.shadowRoot!.querySelector<HTMLButtonElement>('button[aria-pressed="false"]')!.click();
+    fixture.diagramOf(code)!.click();
+    expect(document.querySelector('.gv-wavedrom-modal')).not.toBeNull();
+    await scope.dispose();
+    expect(fixture.panelOf(code)).toBeNull();
+    expect(document.querySelector('.gv-wavedrom-modal')).toBeNull();
+    expect(document.getElementById('gv-wavedrom-styles')).toBeNull();
+    expect(block.getAttribute('style')).toBe(originalBlockStyle);
+    expect(Array.from(decoration.childNodes)).toEqual(originalChildren);
+    expect(nativeButtons.getAttribute('style')).toBe(originalStyle);
+    fixture.activate();
+    await vi.waitFor(() => expect(fixture.diagramOf(code)?.querySelector('svg')).toBeTruthy());
+    expect(block.getAttribute('style')).toBe(originalBlockStyle);
   });
 });

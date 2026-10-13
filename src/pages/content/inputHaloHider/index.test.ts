@@ -1,91 +1,112 @@
 // @vitest-environment jsdom
 // @vitest-environment-options { "url": "https://gemini.google.com/app" }
-import { type Mock, afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
-
-import { startInputHaloHider } from './index';
+import { PluginHost } from '@/features/plugins/runtime/PluginHost';
+import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
+import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCatalogPluginSource';
+import type { LegacySettingSnapshot } from '@/features/plugins/storage/legacySettingBindings';
+import type { PluginManifest } from '@/features/plugins/types';
+import { beforeValue, elementValue } from '@/tests/pseudoElementPaint';
 
 const KEY = StorageKeys.INPUT_HALO_HIDDEN;
-const CLASS = 'gv-hide-input-halo';
+const ID = OFFICIAL_PLUGIN_IDS.geminiHideInputHalo;
+let plugin: PluginManifest;
+let hosts: PluginHost[] = [];
 
-type Listener = (changes: Record<string, { newValue?: unknown }>, area: string) => void;
+function startHost(load: () => Promise<LegacySettingSnapshot>) {
+  let changed: ((changes: LegacySettingSnapshot) => void) | null = null;
+  const admission = createOfficialAdmission();
+  admission.admit('gemini', 'hideInputHalo');
+  const host = new PluginHost({
+    url: location.href,
+    doc: document,
+    admission,
+    isTopFrame: true,
+    sources: [{ id: 'bundled', list: async () => [plugin] }],
+    legacySettings: {
+      load,
+      subscribe(listener) {
+        changed = listener;
+        return () => {
+          changed = null;
+        };
+      },
+    },
+    requestCatalogRefresh: () => {},
+  });
+  hosts.push(host);
+  return { host, fire: (value: boolean) => changed?.({ [KEY]: value }) };
+}
+const mounted = () => Boolean(document.querySelector(`style[data-gv-plugin="${ID}"]`));
 
-let resolveRead: (value: Record<string, unknown>) => void = () => {};
-const listeners = new Set<Listener>();
-
-const hidden = (): boolean => document.body.classList.contains(CLASS);
-const settle = async (): Promise<void> => {
-  for (let i = 0; i < 3; i += 1) await Promise.resolve();
-};
-const emit = (newValue: unknown): void => {
-  for (const listener of listeners) listener({ [KEY]: { newValue } }, 'sync');
-};
-
-beforeEach(() => {
-  listeners.clear();
-  (chrome.storage.sync.get as unknown as Mock).mockImplementation(
-    () => new Promise((resolve) => (resolveRead = resolve)),
-  );
-  (chrome.storage.onChanged.addListener as unknown as Mock).mockImplementation((l: Listener) =>
-    listeners.add(l),
-  );
-  (chrome.storage.onChanged.removeListener as unknown as Mock).mockImplementation((l: Listener) =>
-    listeners.delete(l),
-  );
+beforeEach(async () => {
+  plugin = (await new BundledCatalogPluginSource().list()).find((item) => item.id === ID)!;
+  expect(plugin).toBeDefined();
+  document.head.replaceChildren();
+  document.body.innerHTML =
+    '<chat-window></chat-window><chat-loading-animation></chat-loading-animation><div class="nl-canvas"></div>';
+  (chrome.storage.local.get as unknown as Mock).mockResolvedValue({ gvPluginsState: {} });
 });
 
-afterEach(() => {
-  document.body.className = '';
-  (chrome.storage.sync.get as unknown as Mock).mockReset();
-  (chrome.storage.onChanged.addListener as unknown as Mock).mockReset();
-  (chrome.storage.onChanged.removeListener as unknown as Mock).mockReset();
+afterEach(async () => {
+  hosts.splice(0).forEach((host) => host.stop());
+  await vi.waitFor(() => expect(mounted()).toBe(false));
+  vi.restoreAllMocks();
+  document.head.replaceChildren();
+  document.body.replaceChildren();
 });
 
-describe('startInputHaloHider', () => {
-  it('hides the halo from the stored setting and follows it live until stopped', async () => {
-    const stop = startInputHaloHider();
-    resolveRead({ [KEY]: true });
-    await settle();
-    expect(hidden()).toBe(true);
-
-    emit(false);
-    expect(hidden()).toBe(false);
-    emit(true);
-    expect(hidden()).toBe(true);
-
-    stop();
-    expect(hidden()).toBe(false);
-    expect(listeners.size).toBe(0);
-    emit(true);
-    expect(hidden()).toBe(false);
+describe('the packaged input halo plugin', () => {
+  it('hides the halo and both blurred surfaces while on, and follows the original switch until stopped', async () => {
+    const { host, fire } = startHost(async () => ({ [KEY]: true }));
+    await host.start();
+    await vi.waitFor(() => expect(mounted()).toBe(true));
+    expect(beforeValue(document.querySelector('chat-window')!, 'background')).toBe('transparent');
+    expect(beforeValue(document.querySelector('chat-window')!, 'background-image')).toBe('none');
+    expect(elementValue(document.querySelector('chat-loading-animation')!, 'display')).toBe('none');
+    expect(elementValue(document.querySelector('.nl-canvas')!, 'display')).toBe('none');
+    fire(false);
+    await vi.waitFor(() => expect(mounted()).toBe(false));
+    fire(true);
+    await vi.waitFor(() => expect(mounted()).toBe(true));
+    host.stop();
+    await vi.waitFor(() => expect(mounted()).toBe(false));
+    fire(true);
+    expect(mounted()).toBe(false);
   });
 
-  it('stays stopped when the startup read lands after stop', async () => {
-    const stop = startInputHaloHider();
-    stop();
+  it('stays stopped when the enabled startup read lands after stop', async () => {
+    let resolveRead!: (value: LegacySettingSnapshot) => void;
+    const { host } = startHost(
+      () =>
+        new Promise((resolve) => {
+          resolveRead = resolve;
+        }),
+    );
+    const starting = host.start();
+    await vi.waitFor(() => expect(resolveRead).toBeTypeOf('function'));
+    host.stop();
     resolveRead({ [KEY]: true });
-    await settle();
-    expect(hidden()).toBe(false);
+    await starting;
+    expect(mounted()).toBe(false);
   });
 
-  it('keeps a live "show" when an older "hide" read lands after it', async () => {
-    const stop = startInputHaloHider();
-    emit(false);
+  it('keeps a live show choice when an older hide read lands after it', async () => {
+    let resolveRead!: (value: LegacySettingSnapshot) => void;
+    const { host, fire } = startHost(
+      () =>
+        new Promise((resolve) => {
+          resolveRead = resolve;
+        }),
+    );
+    const starting = host.start();
+    await vi.waitFor(() => expect(resolveRead).toBeTypeOf('function'));
+    fire(false);
     resolveRead({ [KEY]: true });
-    await settle();
-    expect(hidden()).toBe(false);
-    stop();
-  });
-
-  it('drops a wait for the body when stopped before the document is ready', async () => {
-    const body = document.body;
-    document.documentElement.removeChild(body);
-    const stop = startInputHaloHider();
-    emit(true);
-    stop();
-    document.documentElement.appendChild(body);
-    document.dispatchEvent(new Event('DOMContentLoaded'));
-    expect(hidden()).toBe(false);
+    await starting;
+    expect(mounted()).toBe(false);
   });
 });

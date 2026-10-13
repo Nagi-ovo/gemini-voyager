@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { startUserLatex } from '../../userLatex';
+import { createUserLatexOwner } from '@/core/utils/userLatexSource';
+
+import { renderUserLatex } from '../../userLatex';
 import { renderPromptMarkdown } from '../promptMarkdownLoader';
 
 beforeEach(() => {
@@ -26,7 +28,7 @@ describe('prompt math fonts', () => {
     line.className = 'query-text-line';
     line.textContent = '$\\sqrt{x}$';
     document.body.replaceChildren(line);
-    startUserLatex();
+    await renderUserLatex(line, { owner: createUserLatexOwner('font-test') });
 
     await vi.waitFor(() => expect(line.querySelector('.katex')).not.toBeNull());
     expect(document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]')?.href).toMatch(

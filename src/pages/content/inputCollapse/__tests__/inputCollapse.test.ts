@@ -36,12 +36,10 @@ function blur(container: HTMLElement): void {
 
 let stops: Array<() => void> = [];
 
-/** The native feature as its popup switch turns it on (`inputStartup.ts` follows the switch). */
+/** The actual collapse session shared by the plugin handler and public helpers. */
 async function start(whenNotEmpty = false): Promise<() => void> {
-  const { setCollapseWhenNotEmpty } = await import('../runtime');
-  const { startInputCollapse } = await import('../index');
-  setCollapseWhenNotEmpty(whenNotEmpty);
-  const stop = startInputCollapse();
+  const { startCollapseSession } = await import('../runtime');
+  const stop = startCollapseSession(whenNotEmpty);
   stops.push(stop);
   return stop;
 }

@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, vi } from 'vitest';
 
-import { createEChartsCodeBlocks } from '../codeBlock';
+import { requireBundledSiteAdapter } from '@/features/plugins/catalog/sites';
+import manifest from '@/features/plugins/catalog/sites/gemini/plugins/echarts/plugin.json';
+import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { echartsPrimitive } from '@/features/plugins/verbs/echarts';
+
 import { createEChartsFullscreen } from '../fullscreen';
-import { createEChartsFeature } from '../index';
-import { createEChartsRenderer } from '../renderer';
-import { createEChartsView } from '../view';
 
 export function makeFakeInstance() {
   return {
@@ -43,39 +44,62 @@ export const PIE_OPTION = `{
   "series": [{ "type": "pie", "data": [{ "value": 1, "name": "a" }] }]
 }`;
 
+/** Uses the real primitive; the panel lives beside the untouched host in a shadow root. */
 export function createEChartsFixture() {
-  let blocks: ReturnType<typeof createEChartsCodeBlocks>;
+  let scope: PluginScope | null = null;
   let fullscreen: ReturnType<typeof createEChartsFullscreen>;
-  let feature: ReturnType<typeof createEChartsFeature>;
-
   beforeEach(() => {
     vi.clearAllMocks();
-    document.body.innerHTML = '';
+    document.head.replaceChildren();
+    document.body.replaceChildren();
     document.body.className = '';
     document.documentElement.className = '';
     document.documentElement.removeAttribute('data-theme');
-    const renderer = createEChartsRenderer();
-    fullscreen = createEChartsFullscreen(renderer.resize);
-    const view = createEChartsView(renderer, fullscreen);
-    blocks = createEChartsCodeBlocks(renderer, view);
-    feature = createEChartsFeature(blocks, renderer);
+    document.documentElement.setAttribute('data-gv-scheme', 'light');
+    fullscreen = createEChartsFullscreen(() => {});
   });
-
-  afterEach(() => {
-    feature.stop();
+  const stop = async () => {
+    await scope?.dispose();
+    scope = null;
+  };
+  afterEach(async () => {
+    await stop();
     fullscreen.close();
     vi.useRealTimers();
+    document.documentElement.removeAttribute('data-gv-scheme');
   });
-
   return {
-    get blocks() {
-      return blocks;
+    start() {
+      if (scope) return;
+      scope = new PluginScope();
+      echartsPrimitive.activate(
+        scope,
+        { ...manifest.contributes.domOps[0].params, turn: 'body' },
+        {
+          doc: document,
+          adapter: requireBundledSiteAdapter('gemini'),
+          pluginId: manifest.id,
+          settings: {},
+          setTargetCounter: () => {},
+        },
+      );
+    },
+    stop,
+    query<T extends Element = HTMLElement>(selector: string): T | null {
+      const direct = document.querySelector<T>(selector);
+      if (direct) return direct;
+      for (const panel of document.querySelectorAll('.gv-diagram-panel')) {
+        const found = panel.shadowRoot?.querySelector<T>(selector);
+        if (found) return found;
+      }
+      return null;
     },
     get fullscreen() {
       return fullscreen;
     },
-    get feature() {
-      return feature;
-    },
   };
+}
+
+export function waitFor<T>(callback: () => T): Promise<T> {
+  return vi.waitFor(callback, { timeout: 3000 });
 }

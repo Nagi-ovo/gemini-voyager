@@ -100,6 +100,19 @@ describe('Gemini chat width plugin handler', () => {
     expect(text).not.toMatch(/\d+vw/);
   });
 
+  it('widens markdown children only inside conversation turns and leaves canvas content alone', () => {
+    document.body.innerHTML = `<main class="enable-extended-and-xl-grid">
+      <div class="conversation-container"><div class="md-content"><span id="turn-text">Turn</span></div></div>
+      <aside><div class="md-content"><span id="canvas-text">Canvas</span></div></aside>
+    </main>`;
+    activateGeminiChatWidth(scope, { widthPercent: 70 });
+    expect(elementValue(document.getElementById('turn-text')!, 'max-width')).toBe(`${px(70)}px`);
+    expect(elementValue(document.getElementById('canvas-text')!, 'max-width')).toBeNull();
+    updateGeminiChatWidthSettings({ widthPercent: 90 });
+    expect(elementValue(document.getElementById('turn-text')!, 'max-width')).toBe(`${px(90)}px`);
+    expect(elementValue(document.getElementById('canvas-text')!, 'max-width')).toBeNull();
+  });
+
   it('applies widescreen rules to Gemini table blocks and moves them with the width in place', () => {
     activateGeminiChatWidth(scope, { widthPercent: 85 });
     const style = document.getElementById(STYLE_ID);

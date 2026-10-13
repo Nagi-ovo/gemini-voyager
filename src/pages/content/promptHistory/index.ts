@@ -56,11 +56,8 @@ type StorageListener = (
 
 let isEnabled = false;
 let ctrlEnterSendEnabled = false;
-let enabledSettingRevision = 0;
 let ctrlEnterSettingRevision = 0;
 let stopRouteWatcher: (() => void) | null = null;
-/** The native module's own switch listener (`startPromptHistory` only). */
-let enabledListener: StorageListener | null = null;
 /** Refreshes the open panel when this account's history changes in another tab. */
 let historyListener: StorageListener | null = null;
 let clickListener: ((event: MouseEvent) => void) | null = null;
@@ -593,9 +590,7 @@ function removeStorageListener(listener: StorageListener | null): void {
 }
 
 // The effective key, with `gvCtrlEnterSend` as the pre-coordinator fallback.
-// It is followed while anyone holds it. The native module holds it for the
-// page, so turning its switch back on captures with a known key at once; the
-// plugin holds it while mounted.
+// It is followed while the plugin runtime is mounted.
 let sendKeyHolds = 0;
 let sendKeyGeneration = 0;
 let sendKeyListener: StorageListener | null = null;
@@ -667,15 +662,13 @@ function teardownHistoryListener(): void {
   historyListener = null;
 }
 
-/** The one running runtime; the owner table keeps the native module and the plugin apart. */
+/** The one running prompt-history runtime, owned by its plugin scope. */
 let activeRuntime: object | null = null;
 
 /**
  * Prompt history without its switch: capture, panel and route watching run
- * until `signal` aborts. The native module starts it while
- * `gvPromptHistoryEnabled` is on; the official plugin starts it while mounted.
- * Capture starts once the send key is known, as the native module only ever
- * enabled after reading it. Stopping removes listeners and UI and never
+ * until `signal` aborts. PluginHost owns `gvPromptHistoryEnabled`.
+ * Capture starts once the send key is known. Stopping removes listeners and UI and never
  * touches stored history.
  */
 export function startPromptHistoryRuntime({ signal }: { signal: AbortSignal }): Promise<void> {
@@ -719,53 +712,4 @@ export function startPromptHistoryRuntime({ signal }: { signal: AbortSignal }): 
     return Promise.resolve();
   }
   return (sendKeyLoad ?? Promise.resolve()).then(begin);
-}
-
-// The native module: `gvPromptHistoryEnabled` starts and stops the runtime.
-let nativeRuntime: AbortController | null = null;
-let releaseNativeSendKey: (() => void) | null = null;
-
-function reconcileEnabled(enabled: boolean): void {
-  if (enabled) {
-    if (nativeRuntime) return;
-    nativeRuntime = new AbortController();
-    void startPromptHistoryRuntime({ signal: nativeRuntime.signal });
-    return;
-  }
-  nativeRuntime?.abort();
-  nativeRuntime = null;
-}
-
-function setupEnabledListener(): void {
-  if (enabledListener) return;
-  enabledListener = (changes, areaName) => {
-    if (areaName !== 'sync' || !(StorageKeys.PROMPT_HISTORY_ENABLED in changes)) return;
-    enabledSettingRevision++;
-    reconcileEnabled(changes[StorageKeys.PROMPT_HISTORY_ENABLED].newValue === true);
-  };
-  addStorageListener(enabledListener);
-}
-
-function cleanup(): void {
-  reconcileEnabled(false);
-  removeStorageListener(enabledListener);
-  enabledListener = null;
-  releaseNativeSendKey?.();
-  releaseNativeSendKey = null;
-  notices.clear();
-  enabledSettingRevision = 0;
-}
-
-export async function startPromptHistory(): Promise<() => void> {
-  setupEnabledListener();
-  releaseNativeSendKey ??= holdSendKey();
-  const enabledRevisionBeforeLoad = enabledSettingRevision;
-  const [enabled] = await Promise.all([
-    loadSyncSwitch(StorageKeys.PROMPT_HISTORY_ENABLED),
-    sendKeyLoad,
-  ]);
-  if (enabledRevisionBeforeLoad === enabledSettingRevision) {
-    reconcileEnabled(enabled);
-  }
-  return cleanup;
 }

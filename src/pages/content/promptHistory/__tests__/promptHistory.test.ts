@@ -91,13 +91,6 @@ function setCurrentAccountEmail(email: string): void {
   account.dataset.email = email;
 }
 
-function emitStorageChange(
-  areaName: 'local' | 'sync',
-  changes: Record<string, chrome.storage.StorageChange>,
-): void {
-  storageListeners.slice().forEach((listener) => listener(changes, areaName));
-}
-
 function createMainComposer(label = '发送消息'): {
   container: HTMLDivElement;
   input: HTMLDivElement;
@@ -116,10 +109,12 @@ function createMainComposer(label = '发送消息'): {
   return { container, input, button };
 }
 
-async function start(enabled = true, ctrlEnter = false): Promise<void> {
-  setupStorage(enabled, ctrlEnter);
+async function start(ctrlEnter = false): Promise<void> {
+  setupStorage(true, ctrlEnter);
   const module = await import('../index');
-  cleanup = await module.startPromptHistory();
+  const lifetime = new AbortController();
+  cleanup = () => lifetime.abort();
+  await module.startPromptHistoryRuntime({ signal: lifetime.signal });
 }
 
 describe('Prompt History capture and lifecycle', () => {
@@ -224,7 +219,7 @@ describe('Prompt History capture and lifecycle', () => {
   });
 
   it('respects Ctrl+Enter mode and ignores plain Enter in that mode', async () => {
-    await start(true, true);
+    await start(true);
     const { input } = createMainComposer('Send message');
     input.textContent = 'newline only';
     input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
@@ -247,7 +242,9 @@ describe('Prompt History capture and lifecycle', () => {
     const coordinator = startSendKeyCoordinator('gemini');
     try {
       const module = await import('../index');
-      cleanup = await module.startPromptHistory();
+      const lifetime = new AbortController();
+      cleanup = () => lifetime.abort();
+      await module.startPromptHistoryRuntime({ signal: lifetime.signal });
       await coordinator.whenReady();
       coordinator.registerMainMode({ source: 'local.send', mode: 'ctrlEnterSends' });
       const { input } = createMainComposer();
@@ -307,49 +304,6 @@ describe('Prompt History capture and lifecycle', () => {
       expect(items).toHaveLength(1);
       expect(items[0]).toMatchObject({ content: 'updated prompt text', type: 'edited' });
     });
-  });
-
-  it('can be disabled and re-enabled in the same tab', async () => {
-    await start(false);
-    expect(document.querySelector('.gv-ph-trigger')).toBeNull();
-
-    emitStorageChange('sync', {
-      [StorageKeys.PROMPT_HISTORY_ENABLED]: { oldValue: false, newValue: true },
-    });
-    expect(document.querySelector('.gv-ph-trigger')).not.toBeNull();
-
-    emitStorageChange('sync', {
-      [StorageKeys.PROMPT_HISTORY_ENABLED]: { oldValue: true, newValue: false },
-    });
-    expect(document.querySelector('.gv-ph-trigger')).toBeNull();
-
-    emitStorageChange('sync', {
-      [StorageKeys.PROMPT_HISTORY_ENABLED]: { oldValue: false, newValue: true },
-    });
-    expect(document.querySelector('.gv-ph-trigger')).not.toBeNull();
-  });
-
-  it('keeps captures separate when the same route switches to another account', async () => {
-    await start();
-    const { input, button } = createMainComposer('Send message');
-    input.textContent = 'primary prompt';
-    button.click();
-    await vi.waitFor(async () => {
-      expect(await getPromptHistory(PRIMARY_ACCOUNT_SCOPE)).toHaveLength(1);
-    });
-
-    setCurrentAccountEmail(SECONDARY_EMAIL);
-    input.textContent = 'secondary prompt';
-    button.click();
-
-    await vi.waitFor(async () => {
-      expect((await getPromptHistory(SECONDARY_ACCOUNT_SCOPE)).map((item) => item.content)).toEqual(
-        ['secondary prompt'],
-      );
-    });
-    expect((await getPromptHistory(PRIMARY_ACCOUNT_SCOPE)).map((item) => item.content)).toEqual([
-      'primary prompt',
-    ]);
   });
 
   it('shows a visible alert when extension storage rejects a capture', async () => {

@@ -14,7 +14,6 @@ const adapter = requireBundledSiteAdapter('gemini');
 const originalLocation = Object.getOwnPropertyDescriptor(window, 'location')!;
 let records: Record<string, unknown>;
 let scopes: PluginScope[];
-let nativeStop: (() => void) | null = null;
 let coordinator: sendKeys.SendKeyCoordinator;
 let route: {
   pathname: string;
@@ -131,8 +130,6 @@ beforeEach(() => {
   vi.spyOn(sendKeys, 'getSendKeyCoordinator').mockReturnValue(coordinator);
 });
 afterEach(async () => {
-  nativeStop?.();
-  nativeStop = null;
   await Promise.all(scopes.map((scope) => scope.dispose()));
   coordinator.stop();
   vi.restoreAllMocks();
@@ -339,17 +336,21 @@ it('flushes the last keystrokes before plugin teardown but ordinary off keeps sa
   expect(records['gvDraft_/app']).toMatchObject({ content: 'last keystrokes' });
 });
 
-it('reads native drafts and the legacy rollback reads drafts written by the plugin', async () => {
-  const { startDraftSave } = await import('@/pages/content/draftSave');
+it('reads existing native drafts and reopens records written in the same format', async () => {
   records['gvDraft_/app'] = { content: 'native saved this', timestamp: 1, path: '/app' };
   const scope = start();
   await vi.advanceTimersByTimeAsync(0);
   expect(input.textContent).toBe('native saved this');
   type('plugin saved this');
   await pause();
+  expect(records['gvDraft_/app']).toEqual({
+    content: 'plugin saved this',
+    timestamp: expect.any(Number),
+    path: '/app',
+  });
   await scope.dispose();
   input.textContent = '';
-  nativeStop = await startDraftSave();
+  start();
   await vi.advanceTimersByTimeAsync(0);
   expect(input.textContent).toBe('plugin saved this');
 });

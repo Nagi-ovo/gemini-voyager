@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PIE_OPTION, createEChartsFixture } from './fixture';
+import { PIE_OPTION, createEChartsFixture, waitFor } from './fixture';
 
 const fixture = createEChartsFixture();
 
@@ -18,11 +18,11 @@ describe('fullscreen overlay', () => {
     codeBlock.append(decoration, codeEl);
     document.body.appendChild(codeBlock);
 
-    fixture.blocks.process();
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-echarts-diagram')).not.toBeNull();
+    fixture.start();
+    await waitFor(() => {
+      expect(fixture.query('.gv-echarts-diagram')).not.toBeNull();
     });
-    return document.querySelector('.gv-echarts-diagram') as HTMLElement;
+    return fixture.query('.gv-echarts-diagram') as HTMLElement;
   };
 
   it('moves the container into the modal, resizes it, and restores it on ESC', async () => {
@@ -30,8 +30,8 @@ describe('fullscreen overlay', () => {
     const diagramContainer = await addRenderedEChartsBlock();
     const wrapper = diagramContainer.parentElement as HTMLElement;
 
-    document.querySelector<HTMLButtonElement>('[data-action="fullscreen"]')!.click();
-    const modal = document.querySelector('.gv-echarts-modal') as HTMLElement;
+    fixture.query<HTMLButtonElement>('[aria-label="Fullscreen"]')!.click();
+    const modal = fixture.query('.gv-echarts-modal') as HTMLElement;
     expect(modal).not.toBeNull();
     expect(diagramContainer.parentElement?.classList.contains('gv-echarts-modal-card')).toBe(true);
 
@@ -44,7 +44,7 @@ describe('fullscreen overlay', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     // The modal removes itself after a 300 ms CSS transition.
     vi.advanceTimersByTime(400);
-    expect(document.querySelector('.gv-echarts-modal')).toBeNull();
+    expect(fixture.query('.gv-echarts-modal')).toBeNull();
     expect(diagramContainer.parentElement).toBe(wrapper);
     expect(fakeInstance.resize).toHaveBeenCalledTimes(2);
     vi.useRealTimers();
@@ -52,11 +52,11 @@ describe('fullscreen overlay', () => {
 
   it('exposes modal semantics, traps focus, and restores the fullscreen trigger', async () => {
     await addRenderedEChartsBlock();
-    const fullscreenBtn = document.querySelector<HTMLButtonElement>('[data-action="fullscreen"]')!;
+    const fullscreenBtn = fixture.query<HTMLButtonElement>('[aria-label="Fullscreen"]')!;
     fullscreenBtn.focus();
     fullscreenBtn.click();
 
-    const modal = document.querySelector<HTMLElement>('.gv-echarts-modal')!;
+    const modal = fixture.query<HTMLElement>('.gv-echarts-modal')!;
     const closeBtn = modal.querySelector<HTMLButtonElement>('button')!;
     expect(modal.getAttribute('role')).toBe('dialog');
     expect(modal.getAttribute('aria-modal')).toBe('true');
@@ -71,18 +71,19 @@ describe('fullscreen overlay', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
     expect(document.activeElement).toBe(closeBtn);
 
-    fixture.fullscreen.close();
-    expect(document.activeElement).toBe(fullscreenBtn);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await waitFor(() => expect(fixture.query('.gv-echarts-modal')).toBeNull());
+    expect((fullscreenBtn.getRootNode() as ShadowRoot).activeElement).toBe(fullscreenBtn);
   });
 
   it('opens a modal with the chart panel background colour', async () => {
     const diagramContainer = document.createElement('div');
     diagramContainer.style.setProperty('--gv-echarts-panel-bg', '#1a1a1a');
     fixture.fullscreen.open(diagramContainer);
-    const card = document.querySelector('.gv-echarts-modal-card') as HTMLElement;
+    const card = fixture.query('.gv-echarts-modal-card') as HTMLElement;
     expect(card).not.toBeNull();
     expect(card.style.getPropertyValue('--gv-echarts-panel-bg')).toBe('#1a1a1a');
-    expect(document.querySelector('.gv-echarts-modal-hint')).not.toBeNull();
+    expect(fixture.query('.gv-echarts-modal-hint')).not.toBeNull();
     fixture.fullscreen.close();
   });
 
@@ -91,48 +92,40 @@ describe('fullscreen overlay', () => {
 
     diagramContainer.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 
-    expect(document.querySelector('.gv-echarts-modal')).toBeNull();
+    expect(fixture.query('.gv-echarts-modal')).toBeNull();
   });
 
   it('disables fullscreen while the source view is visible', async () => {
     await addRenderedEChartsBlock();
-    const codeBtn = document.querySelector<HTMLButtonElement>('[data-view="code"]')!;
-    const fullscreenBtn = document.querySelector<HTMLButtonElement>('[data-action="fullscreen"]')!;
+    const codeBtn = fixture.query<HTMLButtonElement>('[aria-label="Code"]')!;
+    const fullscreenBtn = fixture.query<HTMLButtonElement>('[aria-label="Fullscreen"]')!;
 
     codeBtn.click();
     expect(fullscreenBtn.disabled).toBe(true);
     fullscreenBtn.click();
 
-    expect(document.querySelector('.gv-echarts-modal')).toBeNull();
+    expect(fixture.query('.gv-echarts-modal')).toBeNull();
   });
 
   it('closes the fullscreen chart and disposes it when Gemini removes its host', async () => {
-    const diagramContainer = await addRenderedEChartsBlock();
-    const wrapper = diagramContainer.parentElement as HTMLElement;
-    document.querySelector<HTMLButtonElement>('[data-action="fullscreen"]')!.click();
+    await addRenderedEChartsBlock();
+    fixture.query<HTMLButtonElement>('[aria-label="Fullscreen"]')!.click();
     const echartsMod = await import('../runtime');
     const instance = vi.mocked(echartsMod.init).mock.results.at(-1)?.value;
 
-    wrapper.remove();
-    fixture.blocks.process();
-
-    expect(document.querySelector('.gv-echarts-modal')).toBeNull();
+    document.querySelector('code-block')!.remove();
+    await waitFor(() => expect(fixture.query('.gv-echarts-modal')).toBeNull());
     expect(instance.dispose).toHaveBeenCalledTimes(1);
   });
 
   it('does not let an old close timer remove a newer modal', async () => {
     vi.useFakeTimers();
-    await addRenderedEChartsBlock();
-    document.querySelector<HTMLButtonElement>('[data-action="fullscreen"]')!.click();
+    fixture.fullscreen.open(document.createElement('div'));
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     fixture.fullscreen.close();
-
-    const secondContainer = document.createElement('div');
-    fixture.fullscreen.open(secondContainer);
+    fixture.fullscreen.open(document.createElement('div'));
     vi.advanceTimersByTime(400);
-
-    expect(document.querySelector('.gv-echarts-modal')).not.toBeNull();
+    expect(fixture.query('.gv-echarts-modal')).not.toBeNull();
     fixture.fullscreen.close();
-    vi.useRealTimers();
   });
 });

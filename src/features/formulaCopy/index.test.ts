@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 
-import { activateFormulaCopy, getFormulaCopyService, stopFormulaCopy } from './index';
+import { activateFormulaCopy, getFormulaCopyService } from './index';
 
 const storageMocks = vi.hoisted(() => ({
   get: vi.fn(),
@@ -90,7 +90,7 @@ describe('formula copy plugin lifecycle', () => {
     prepareSpy.mockRestore();
   });
 
-  it('does not activate after an explicit stop during pending preparation', async () => {
+  it('does not activate after its scope is disposed during pending preparation', async () => {
     const service = getFormulaCopyService();
     const initializeSpy = vi.spyOn(service, 'initialize');
     let resolvePrepare!: () => void;
@@ -104,12 +104,25 @@ describe('formula copy plugin lifecycle', () => {
     activateFormulaCopy(scope);
     await Promise.resolve();
 
-    stopFormulaCopy();
+    const stopping = scope.dispose();
     resolvePrepare();
-    await scope.dispose();
+    await stopping;
 
     expect(service.isServiceInitialized()).toBe(false);
     expect(initializeSpy).not.toHaveBeenCalled();
     prepareSpy.mockRestore();
+  });
+  it('releases the active service even when its format-listener removal throws', async () => {
+    const scope = new PluginScope();
+    activateFormulaCopy(scope);
+    await vi.waitFor(() => expect(getFormulaCopyService().isServiceInitialized()).toBe(true));
+    storageMocks.removeListener.mockImplementationOnce(() => {
+      throw new Error('Extension context invalidated.');
+    });
+    await scope.dispose();
+    await scope.dispose();
+    expect(getFormulaCopyService().isServiceInitialized()).toBe(false);
+    expect(document.documentElement.classList.contains('gv-formula-copy-enabled')).toBe(false);
+    expect(storageMocks.removeListener).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PIE_OPTION, createEChartsFixture } from './fixture';
+import { PIE_OPTION, createEChartsFixture, waitFor } from './fixture';
 
 const fixture = createEChartsFixture();
 
@@ -22,18 +22,18 @@ describe('safe chart rendering', () => {
 
   it('inits a canvas chart with the dark theme and merged backdrop on a dark page', async () => {
     const darkHost = document.createElement('div');
-    darkHost.className = 'theme-host dark-theme';
+    document.documentElement.setAttribute('data-gv-scheme', 'dark');
     document.body.appendChild(darkHost);
     addEChartsBlock(PIE_OPTION);
-    fixture.blocks.process();
+    fixture.start();
 
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-echarts-diagram')).not.toBeNull();
+    await waitFor(() => {
+      expect(fixture.query('.gv-echarts-diagram')).not.toBeNull();
     });
     const echartsMod = await import('../runtime');
     const initMock = vi.mocked(echartsMod.init);
     expect(initMock).toHaveBeenCalledTimes(1);
-    expect(initMock).toHaveBeenCalledWith(document.querySelector('.gv-echarts-diagram'), 'dark', {
+    expect(initMock).toHaveBeenCalledWith(fixture.query('.gv-echarts-diagram'), 'dark', {
       renderer: 'canvas',
     });
     const fakeInstance = initMock.mock.results[0]?.value;
@@ -48,16 +48,16 @@ describe('safe chart rendering', () => {
 
   it('keeps the renderer backdrop when the option supplies its own background', async () => {
     const darkHost = document.createElement('div');
-    darkHost.className = 'theme-host dark-theme';
+    document.documentElement.setAttribute('data-gv-scheme', 'dark');
     document.body.appendChild(darkHost);
     addEChartsBlock(`{
       "backgroundColor": "hotpink",
       "series": [{ "type": "pie", "data": [{ "value": 1 }] }]
     }`);
-    fixture.blocks.process();
+    fixture.start();
 
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-echarts-diagram')).not.toBeNull();
+    await waitFor(() => {
+      expect(fixture.query('.gv-echarts-diagram')).not.toBeNull();
     });
     const echartsMod = await import('../runtime');
     const fakeInstance = vi.mocked(echartsMod.init).mock.results.at(-1)?.value;
@@ -69,7 +69,7 @@ describe('safe chart rendering', () => {
 
   it('keeps the renderer backdrop in every timeline and responsive option layer', async () => {
     const darkHost = document.createElement('div');
-    darkHost.className = 'theme-host dark-theme';
+    document.documentElement.setAttribute('data-gv-scheme', 'dark');
     document.body.appendChild(darkHost);
     addEChartsBlock(`{
       "backgroundColor": "top",
@@ -82,10 +82,10 @@ describe('safe chart rendering', () => {
       "options": [{ "backgroundColor": "state", "series": [{ "data": [2] }] }],
       "media": [{ "option": { "backgroundColor": "media" } }]
     }`);
-    fixture.blocks.process();
+    fixture.start();
 
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-echarts-diagram')).not.toBeNull();
+    await waitFor(() => {
+      expect(fixture.query('.gv-echarts-diagram')).not.toBeNull();
     });
     const echartsMod = await import('../runtime');
     const fakeInstance = vi.mocked(echartsMod.init).mock.results.at(-1)?.value;
@@ -105,17 +105,17 @@ describe('safe chart rendering', () => {
 
   it('inits with no theme on a light page', async () => {
     const lightHost = document.createElement('div');
-    lightHost.className = 'theme-host light-theme';
+    document.documentElement.setAttribute('data-gv-scheme', 'light');
     document.body.appendChild(lightHost);
     addEChartsBlock(PIE_OPTION);
-    fixture.blocks.process();
+    fixture.start();
 
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-echarts-diagram')).not.toBeNull();
+    await waitFor(() => {
+      expect(fixture.query('.gv-echarts-diagram')).not.toBeNull();
     });
     const echartsMod = await import('../runtime');
     expect(vi.mocked(echartsMod.init)).toHaveBeenCalledWith(
-      document.querySelector('.gv-echarts-diagram'),
+      fixture.query('.gv-echarts-diagram'),
       undefined,
       { renderer: 'canvas' },
     );
@@ -129,10 +129,10 @@ describe('safe chart rendering', () => {
       },
       "series": { "type": "pie", "data": [{ "value": 1 }] }
     }`);
-    fixture.blocks.process();
+    fixture.start();
 
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-echarts-diagram')).not.toBeNull();
+    await waitFor(() => {
+      expect(fixture.query('.gv-echarts-diagram')).not.toBeNull();
     });
     const echartsMod = await import('../runtime');
     const fakeInstance = vi.mocked(echartsMod.init).mock.results.at(-1)?.value;
@@ -155,10 +155,10 @@ describe('safe chart rendering', () => {
         "data": [{ "value": 1 }]
       }
     }`);
-    fixture.blocks.process();
+    fixture.start();
 
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-echarts-diagram')).not.toBeNull();
+    await waitFor(() => {
+      expect(fixture.query('.gv-echarts-diagram')).not.toBeNull();
     });
     const echartsMod = await import('../runtime');
     const fakeInstance = vi.mocked(echartsMod.init).mock.results.at(-1)?.value;
@@ -187,10 +187,10 @@ describe('safe chart rendering', () => {
       "options": [{ "tooltip": { "formatter": "<b>state</b>" } }],
       "media": [{ "option": { "tooltip": { "formatter": "<b>media</b>" } } }]
     }`);
-    fixture.blocks.process();
+    fixture.start();
 
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-echarts-diagram')).not.toBeNull();
+    await waitFor(() => {
+      expect(fixture.query('.gv-echarts-diagram')).not.toBeNull();
     });
     const echartsMod = await import('../runtime');
     const fakeInstance = vi.mocked(echartsMod.init).mock.results.at(-1)?.value;
@@ -232,10 +232,10 @@ describe('safe chart rendering', () => {
       "options": [{ "title": { "text": "State", "link": "javascript:alert(3)" } }],
       "media": [{ "option": { "title": { "text": "Media", "sublink": "javascript:alert(1)" } } }]
     }`);
-    fixture.blocks.process();
+    fixture.start();
 
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-echarts-diagram')).not.toBeNull();
+    await waitFor(() => {
+      expect(fixture.query('.gv-echarts-diagram')).not.toBeNull();
     });
     const echartsMod = await import('../runtime');
     const fakeInstance = vi.mocked(echartsMod.init).mock.results.at(-1)?.value;
@@ -281,10 +281,10 @@ describe('safe chart rendering', () => {
         }
       }]
     }`);
-    fixture.blocks.process();
+    fixture.start();
 
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-echarts-diagram')).not.toBeNull();
+    await waitFor(() => {
+      expect(fixture.query('.gv-echarts-diagram')).not.toBeNull();
     });
     const echartsMod = await import('../runtime');
     const fakeInstance = vi.mocked(echartsMod.init).mock.results.at(-1)?.value;
@@ -317,10 +317,10 @@ describe('safe chart rendering', () => {
       "options": [{ "toolbox": { "feature": { "dataView": { "lang": ["state"] } } } }],
       "media": [{ "option": { "toolbox": { "feature": { "dataView": { "lang": ["media"] } } } } }]
     }`);
-    fixture.blocks.process();
+    fixture.start();
 
-    await vi.waitFor(() => {
-      expect(document.querySelector('.gv-echarts-diagram')).not.toBeNull();
+    await waitFor(() => {
+      expect(fixture.query('.gv-echarts-diagram')).not.toBeNull();
     });
     const echartsMod = await import('../runtime');
     const fakeInstance = vi.mocked(echartsMod.init).mock.results.at(-1)?.value;

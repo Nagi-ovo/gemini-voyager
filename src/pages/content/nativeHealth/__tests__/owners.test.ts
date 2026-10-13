@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 // @vitest-environment-options { "url": "https://gemini.google.com/app/0123456789abcdef" }
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 
 import { insertTextIntoChatInput } from '../../chatInput';
-import { startChatWidthAdjuster } from '../../chatWidth';
+import { activateGeminiChatWidth } from '../../chatWidth/pluginHandler';
 import {
   createSidebarRuntimeHarness,
   mountSidebar,
@@ -105,26 +107,26 @@ describe('timeline', () => {
 });
 
 describe('chat width', () => {
+  let scope: PluginScope;
+
   beforeEach(() => {
-    vi.mocked(chrome.storage.sync.get).mockImplementation(((
-      _keys: unknown,
-      callback: (value: Record<string, unknown>) => void,
-    ) => callback({ gvChatWidthEnabled: true })) as never);
+    scope = new PluginScope();
+    (chrome.storage.sync.get as unknown as Mock).mockResolvedValue({ gvChatWidthEnabled: true });
   });
 
-  afterEach(() => {
-    window.dispatchEvent(new Event('beforeunload'));
+  afterEach(async () => {
+    await scope.dispose();
   });
 
   it('reports broken when its user-turn rules match nothing in a rendered conversation', () => {
     document.body.innerHTML = RENAMED_CONVERSATION;
-    startChatWidthAdjuster();
+    activateGeminiChatWidth(scope, { widthPercent: 80 });
     expect(featuresAfterGrace()).toEqual(['chat-width:broken']);
   });
 
   it('clears its warning once user turns render on the same route', async () => {
     document.body.innerHTML = RENAMED_CONVERSATION;
-    startChatWidthAdjuster();
+    activateGeminiChatWidth(scope, { widthPercent: 80 });
     expect(featuresAfterGrace()).toEqual(['chat-width:broken']);
 
     document
@@ -139,18 +141,18 @@ describe('chat width', () => {
 
   it('stays healthy when the width rules have turns to widen', () => {
     document.body.innerHTML = KNOWN_CONVERSATION;
-    startChatWidthAdjuster();
+    activateGeminiChatWidth(scope, { widthPercent: 80 });
     expect(featuresAfterGrace()).toEqual([]);
   });
 
-  it('does not probe while chat width is off', () => {
-    vi.mocked(chrome.storage.sync.get).mockImplementation(((
-      _keys: unknown,
-      callback: (value: Record<string, unknown>) => void,
-    ) => callback({ gvChatWidthEnabled: false })) as never);
+  it('withdraws its warning while off and leaves no late probe running', async () => {
     document.body.innerHTML = RENAMED_CONVERSATION;
-    startChatWidthAdjuster();
-    expect(featuresAfterGrace()).toEqual([]);
+    activateGeminiChatWidth(scope, { widthPercent: 80 });
+    expect(featuresAfterGrace()).toEqual(['chat-width:broken']);
+    await scope.dispose();
+    document.querySelector('main')!.append(document.createElement('div'));
+    await vi.advanceTimersByTimeAsync(250 + NATIVE_HEALTH_GRACE_MS);
+    expect(nativeHealthReporter.getEntries()).toEqual([]);
   });
 });
 

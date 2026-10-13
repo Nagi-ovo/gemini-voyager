@@ -47,6 +47,8 @@ export function createGeminiBuiltinStartup(
     },
     async startDefaultModel() {
       if (isStopped()) return;
+      await mountNativeFeature(cleanupManager, NATIVE_FEATURES.defaultModelStarCleanup, lifetime);
+      if (isStopped()) return;
       admission.admit('gemini', 'defaultModel');
     },
     async startPreventAutoScroll() {

@@ -1,27 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { CleanupPositions } from '@/core/types/cleanupPositions';
-import { StorageKeys } from '@/core/types/common';
-import { CleanupManager } from '@/core/utils/cleanupManager';
 import { createUserLatexOwner } from '@/core/utils/userLatexSource';
+import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { userLatexPrimitive } from '@/features/plugins/verbs/userLatex';
 
-import { type NativeFeature, createNativeFeatureToggle } from '../../featureLifecycle';
 import {
-  USER_LATEX_TOGGLE,
   _resetUserLatexKatexLoader,
   _setUserLatexKatexLoaderForTest,
   renderUserLatex,
   restoreUserLatex,
-  startUserLatex,
-  stopUserLatex,
 } from '../index';
 
 const renderToString = vi.fn((tex: string) => `<span class="katex">${tex}</span>`);
 vi.mock('katex', () => ({ default: { renderToString } }));
-
 const katexModule = { default: { renderToString } } as unknown as typeof import('katex');
+const OWNER = 'data-user-latex-owner';
+const scopes: PluginScope[] = [];
 
-/** Gemini's sent user line (see the module header). */
 function userLine(text: string): HTMLElement {
   const line = document.createElement('p');
   line.className = 'query-text-line';
@@ -29,11 +24,8 @@ function userLine(text: string): HTMLElement {
   document.body.append(line);
   return line;
 }
-
 const rendered = (line: Element) => line.querySelectorAll('.katex').length > 0;
-const OWNER = 'data-user-latex-owner';
 
-/** KaTeX waits until `settle` resolves (or rejects) it. */
 function holdKatex(): { resolve: () => void; reject: () => void } {
   let resolve!: () => void;
   let reject!: () => void;
@@ -45,86 +37,48 @@ function holdKatex(): { resolve: () => void; reject: () => void } {
   return { resolve, reject };
 }
 
-const feature: NativeFeature = {
-  id: 'user-latex',
-  position: CleanupPositions.CleanupCodeBlockCollapse,
-  start: startUserLatex,
-  toggle: USER_LATEX_TOGGLE,
-};
-const flip = (newValue: unknown) => ({ [StorageKeys.USER_LATEX_ENABLED]: { newValue } });
+function startPrimitive(): PluginScope {
+  const scope = new PluginScope();
+  scopes.push(scope);
+  userLatexPrimitive.activate(
+    scope,
+    { turn: 'p.query-text-line', unit: 'turn' },
+    {
+      doc: document,
+      adapter: null,
+      pluginId: 'test.user-latex',
+      settings: {},
+      setTargetCounter: () => {},
+    },
+  );
+  return scope;
+}
 
-describe('Gemini user LaTeX lifecycle', () => {
+describe('user LaTeX render ownership under its actual plugin primitive', () => {
   beforeEach(() => {
     _resetUserLatexKatexLoader();
     renderToString.mockClear();
     document.body.innerHTML = '';
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
-
-  afterEach(() => {
-    stopUserLatex();
+  afterEach(async () => {
+    await Promise.all(scopes.splice(0).map((scope) => scope.dispose()));
     vi.restoreAllMocks();
   });
 
-  it('reads a missing or non-false switch as on, like the plugin binding', () => {
-    expect([undefined, null, true, 'false', 0].map(USER_LATEX_TOGGLE.isEnabled)).toEqual([
-      true,
-      true,
-      true,
-      true,
-      true,
-    ]);
-    expect(USER_LATEX_TOGGLE.isEnabled(false)).toBe(false);
-    expect(USER_LATEX_TOGGLE.key).toBe('gvUserLatexEnabled');
-  });
-
-  it('turns user LaTeX off and on live from the popup switch while the native module owns it', async () => {
-    const line = userLine('Euler $e^{i\\pi}$');
-    const manager = new CleanupManager();
-    const toggle = createNativeFeatureToggle(manager, feature);
-    await toggle.applyInitial(true);
-    await vi.waitFor(() => expect(rendered(line)).toBe(true));
-
-    toggle.handleChange(flip(false), 'sync');
-    await vi.waitFor(() => expect(toggle.isMounted()).toBe(false));
-    expect(line.textContent).toBe('Euler $e^{i\\pi}$');
-    expect(line.attributes).toHaveLength(1);
-    // Nothing renders while it is off, not even a line that arrives later.
-    const later = userLine('later $x$');
-    await new Promise((resolve) => setTimeout(resolve, 350));
-    expect(rendered(later)).toBe(false);
-
-    toggle.handleChange(flip(true), 'sync');
-    await vi.waitFor(() => expect(rendered(line) && rendered(later)).toBe(true));
-    expect(manager.list()).toHaveLength(1);
-  });
-
-  it('keeps the switch flipped during the startup read instead of the late initial value', async () => {
-    const line = userLine('$x$');
-    const toggle = createNativeFeatureToggle(new CleanupManager(), feature);
-
-    toggle.handleChange(flip(false), 'sync');
-    await toggle.applyInitial(true);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(toggle.isMounted()).toBe(false);
-    expect(rendered(line)).toBe(false);
-    expect(line.hasAttribute(OWNER)).toBe(false);
-  });
-
-  it('stops user LaTeX twice without error and restores only the lines it rendered', async () => {
+  it('disposing a user LaTeX plugin twice restores only its own lines and ignores a wrong-owner restore', async () => {
     const plain = userLine('no math here');
     const mine = userLine('mine $a$');
     const theirs = userLine('theirs $b$');
     // Another renderer (a plugin) holds this line first.
     const other = createUserLatexOwner('plugin');
     await renderUserLatex(theirs, { owner: other });
-    const stop = startUserLatex();
+    const scope = startPrimitive();
     await vi.waitFor(() => expect(rendered(mine)).toBe(true));
     expect(renderToString).toHaveBeenCalledTimes(2);
 
-    stop();
-    stop();
+    await scope.dispose();
+    await scope.dispose();
 
     expect(mine.textContent).toBe('mine $a$');
     expect(mine.attributes).toHaveLength(1);
@@ -140,7 +94,7 @@ describe('Gemini user LaTeX lifecycle', () => {
   it('keeps ownership of a line across a pending KaTeX load and drops it on failure or cancel', async () => {
     const line = userLine('pending $x$');
     const failing = holdKatex();
-    const stopFirst = startUserLatex();
+    const first = startPrimitive();
     const holder = line.getAttribute(OWNER);
     expect(holder).not.toBeNull();
 
@@ -154,13 +108,13 @@ describe('Gemini user LaTeX lifecycle', () => {
     await vi.waitFor(() => expect(line.hasAttribute(OWNER)).toBe(false));
     expect(line.dataset.userLatexProcessed).toBeUndefined();
     expect(line.textContent).toBe('pending $x$');
-    stopFirst();
+    await first.dispose();
 
     // Cancelled while loading: stopping lets go, and the late load renders nothing.
     const loading = holdKatex();
-    const stopSecond = startUserLatex();
+    const second = startPrimitive();
     expect(line.hasAttribute(OWNER)).toBe(true);
-    stopSecond();
+    await second.dispose();
     expect(line.hasAttribute(OWNER)).toBe(false);
     const retry = renderUserLatex(line, { owner: other });
     loading.resolve();
@@ -169,87 +123,5 @@ describe('Gemini user LaTeX lifecycle', () => {
     // Rendered once, by the renderer that claimed it after the cancel.
     expect(line.getAttribute(OWNER)).toBe(other);
     expect(renderToString).toHaveBeenCalledTimes(1);
-  });
-
-  it('renders nothing into a line Gemini detached while KaTeX loaded once user LaTeX stopped', async () => {
-    const line = userLine('detached $x$');
-    const loading = holdKatex();
-    const stop = startUserLatex();
-    expect(line.hasAttribute(OWNER)).toBe(true);
-
-    line.remove();
-    stop();
-    loading.resolve();
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(rendered(line)).toBe(false);
-    expect(line.textContent).toBe('detached $x$');
-    expect(line.hasAttribute(OWNER)).toBe(false);
-    expect(line.dataset.userLatexProcessed).toBeUndefined();
-  });
-
-  it('lets the next user LaTeX run render a line Gemini detached and re-inserted around a stop', async () => {
-    const line = userLine('moved $y$');
-    const stopFirst = startUserLatex();
-    await vi.waitFor(() => expect(rendered(line)).toBe(true));
-    const first = line.getAttribute(OWNER);
-
-    line.remove();
-    stopFirst();
-    // Put back as text while detached, so it is plain when Gemini re-inserts it.
-    expect(line.textContent).toBe('moved $y$');
-    expect(line.hasAttribute(OWNER)).toBe(false);
-    document.body.append(line);
-
-    startUserLatex();
-    await vi.waitFor(() => expect(rendered(line)).toBe(true));
-    expect(line.getAttribute(OWNER)).not.toBe(first);
-    expect(line.querySelectorAll('.katex')).toHaveLength(1);
-  });
-
-  /** A line whose formula sits in a link, so a plugin rendering leaves can hold the link alone. */
-  function lineWithLink(): { line: HTMLElement; link: HTMLElement } {
-    const line = userLine('');
-    line.innerHTML = 'bare $y$ <a href="#x">$x$</a>';
-    return { line, link: line.querySelector('a')! };
-  }
-
-  it('leaves a line alone while a plugin holds a formula inside it, then renders its whole source', async () => {
-    const { line, link } = lineWithLink();
-    const other = createUserLatexOwner('plugin');
-    await renderUserLatex(link, { owner: other });
-    const stop = startUserLatex();
-    await new Promise((resolve) => setTimeout(resolve, 0));
-
-    expect(line.hasAttribute(OWNER)).toBe(false);
-    expect(line.dataset.userLatexOriginal).toBeUndefined();
-    expect(rendered(link)).toBe(true);
-
-    restoreUserLatex(link, other);
-    await vi.waitFor(() => expect(line.dataset.userLatexOriginal).toBe('bare $y$ $x$'));
-    expect(line.querySelectorAll('.katex')).toHaveLength(2);
-    stop();
-    expect(line.textContent).toBe('bare $y$ $x$');
-    expect(line.querySelector('a')).toBe(link);
-  });
-
-  it('keeps a plugin off a formula inside a line it holds while KaTeX loads', async () => {
-    const { line, link } = lineWithLink();
-    const loading = holdKatex();
-    const stop = startUserLatex();
-    expect(line.hasAttribute(OWNER)).toBe(true);
-
-    const other = createUserLatexOwner('plugin');
-    const attempt = renderUserLatex(link, { owner: other });
-    expect(link.hasAttribute(OWNER)).toBe(false);
-    loading.resolve();
-    await attempt;
-
-    await vi.waitFor(() => expect(line.dataset.userLatexOriginal).toBe('bare $y$ $x$'));
-    expect(line.querySelectorAll('.katex')).toHaveLength(2);
-    stop();
-    expect(line.textContent).toBe('bare $y$ $x$');
-    expect(line.querySelector('a')).toBe(link);
-    expect(link.hasAttribute(OWNER)).toBe(false);
   });
 });

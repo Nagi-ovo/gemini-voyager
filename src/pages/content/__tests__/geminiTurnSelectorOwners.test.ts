@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getAssistantTurnSelectors, getUserTurnSelectors } from '@/core/utils/selectors';
 import { geminiAdapter } from '@/features/plugins/sites/adapters/gemini';
 
+import { buildChatWidthCss, chatWidthPx } from '../chatWidth/chatWidthCss';
 import { buildGeminiAdapter } from '../export/adapter/platform/gemini';
 import { collectForkChatPairs } from '../fork/chatPairs';
 import { collectHighlightTurns } from '../highlight/dom';
@@ -278,21 +279,8 @@ describe('Gemini turn selector owners', () => {
   describe('chat width', () => {
     let styleText = '';
 
-    beforeEach(async () => {
-      vi.resetModules();
-      document.head.innerHTML = '';
-      (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-        (_defaults: unknown, callback: (value: Record<string, unknown>) => void) => {
-          callback({ geminiChatWidth: 80, gvChatWidthEnabled: true });
-        },
-      );
-      const { startChatWidthAdjuster } = await import('../chatWidth/index');
-      startChatWidthAdjuster();
-      styleText = document.getElementById('gemini-voyager-chat-width')?.textContent ?? '';
-    });
-
-    afterEach(() => {
-      window.dispatchEvent(new Event('beforeunload'));
+    beforeEach(() => {
+      styleText = buildChatWidthCss(chatWidthPx(80));
     });
 
     function ruleSelector(comment: string): string {

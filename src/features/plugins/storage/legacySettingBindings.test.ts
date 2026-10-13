@@ -1,9 +1,6 @@
 import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
-import { isCodeBlockCollapseEnabledValue } from '@/pages/content/codeBlockCollapse';
-import { isInputCollapseEnabledValue } from '@/pages/content/inputCollapse/index';
-import { isUserLatexEnabledValue } from '@/pages/content/userLatex/index';
 
 import { legacyBoundSettings } from '../runtime/legacySnapshotFeed';
 import { FEATURE_OWNERS, OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
@@ -165,15 +162,6 @@ describe('legacy enable bindings', () => {
     },
   );
 
-  it('read the code collapse and user LaTeX switches as their native toggles do', () => {
-    for (const stored of [undefined, null, true, false, 'false', 0]) {
-      expect(legacyBindingFor(COLLAPSE)?.read(stored)).toBe(
-        isCodeBlockCollapseEnabledValue(stored),
-      );
-      expect(legacyBindingFor(LATEX)?.read(stored)).toBe(isUserLatexEnabledValue(stored));
-    }
-  });
-
   // Prompt history reads `=== true`; input collapse starts unless the key is missing or false.
   it.each([
     ['missing', undefined, false, false],
@@ -187,7 +175,6 @@ describe('legacy enable bindings', () => {
     (_l, stored, history, collapse) => {
       expect(legacyBindingFor(HISTORY)?.read(stored)).toBe(history);
       expect(legacyBindingFor(INPUT_COLLAPSE)?.read(stored)).toBe(collapse);
-      expect(isInputCollapseEnabledValue(stored)).toBe(collapse);
     },
   );
 

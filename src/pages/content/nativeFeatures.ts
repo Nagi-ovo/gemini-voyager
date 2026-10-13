@@ -2,6 +2,7 @@ import { CleanupPositions } from '@/core/types/cleanupPositions';
 
 import { startAccountContextBridge } from './accountContext';
 import { startChatGptJump } from './chatGptJump';
+import { startDefaultModelStarCleanupPageService } from './defaultModel/starCleanupPageService';
 import { startEdgeFinalVersionNotice } from './edgeFinalVersionNotice';
 import type { NativeFeature } from './featureLifecycle';
 import { startForkLinkFinisher } from './fork/linkFinisher';
@@ -85,6 +86,12 @@ export const NATIVE_FEATURES = {
     id: 'markdown-patcher',
     position: CleanupPositions.CleanupMarkdownPatcher,
     start: startMarkdownPatcher,
+  },
+  /** Removes stale menu UI while default-model selection is off; never selects a model. */
+  defaultModelStarCleanup: {
+    id: 'default-model-star-cleanup',
+    position: CleanupPositions.CleanupDefaultModel,
+    start: startDefaultModelStarCleanupPageService,
   },
   /** Turning an effect off lets it drain on screen; its module owns that lifetime. */
   visualEffects: {

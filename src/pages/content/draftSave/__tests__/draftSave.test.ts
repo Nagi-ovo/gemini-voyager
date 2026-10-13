@@ -1,31 +1,46 @@
 import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 
-import { StorageKeys } from '@/core/types/common';
+import { requireBundledSiteAdapter } from '@/features/plugins/catalog/sites';
+import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { draftSavePrimitive } from '@/features/plugins/verbs/draftSave';
 
 import { buildInstructionBlock } from '../../folderProject/instructionBlock';
 
-/** Mirrors the module's send-detection poll interval. */
 const SEND_CHECK_INTERVAL_MS = 1000;
+const adapter = requireBundledSiteAdapter('gemini');
+const originalLocation = Object.getOwnPropertyDescriptor(window, 'location')!;
+let scopes: PluginScope[] = [];
 
-type StorageChangeListener = (
-  changes: Record<string, chrome.storage.StorageChange>,
-  area: string,
-) => void;
+/** Exercise the actual primitive with Gemini's route and composer policy. */
+function startDraftPlugin(): () => Promise<void> {
+  const scope = new PluginScope();
+  scopes.push(scope);
+  const doc = new Proxy(document, {
+    get(target, key) {
+      if (key === 'location') return window.location;
+      const value: unknown = Reflect.get(target, key, target);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
+  draftSavePrimitive.activate(
+    scope,
+    {},
+    {
+      pluginId: 'local.test.draft',
+      settings: {},
+      adapter,
+      doc,
+      setTargetCounter: () => {},
+    },
+  );
+  return () => scope.dispose();
+}
 
 /** In-memory store for chrome.storage.local mock */
 let localStore: Record<string, unknown> = {};
-let storageChangeListeners: StorageChangeListener[] = [];
 
-function setupMocks(enabled: boolean) {
+function setupMocks() {
   localStore = {};
-  storageChangeListeners = [];
-
-  // Mock chrome.storage.sync.get (feature toggle)
-  (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-    (defaults: Record<string, unknown>, callback: (value: Record<string, unknown>) => void) => {
-      callback({ ...defaults, [StorageKeys.DRAFT_AUTO_SAVE]: enabled });
-    },
-  );
 
   // Mock chrome.storage.local
   (chrome.storage as unknown as Record<string, unknown>).local = {
@@ -61,20 +76,6 @@ function setupMocks(enabled: boolean) {
   Object.defineProperty(chrome.runtime, 'lastError', {
     get: () => null,
     configurable: true,
-  });
-
-  // Mock storage change listeners
-  (chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-    (listener: StorageChangeListener) => {
-      storageChangeListeners.push(listener);
-    },
-  );
-
-  (
-    chrome.storage.onChanged.removeListener as unknown as ReturnType<typeof vi.fn>
-  ).mockImplementation((listener: StorageChangeListener) => {
-    const idx = storageChangeListeners.indexOf(listener);
-    if (idx >= 0) storageChangeListeners.splice(idx, 1);
   });
 }
 
@@ -125,7 +126,6 @@ function addSentUserTurn(text: string): void {
 
 describe('draftSave', () => {
   beforeEach(() => {
-    vi.resetModules();
     vi.clearAllMocks();
     vi.useFakeTimers({ shouldAdvanceTime: true });
     document.body.innerHTML = '';
@@ -146,17 +146,20 @@ describe('draftSave', () => {
     });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await Promise.all(scopes.splice(0).map((scope) => scope.dispose()));
+    vi.restoreAllMocks();
     vi.useRealTimers();
+    Object.defineProperty(window, 'location', originalLocation);
+    document.body.replaceChildren();
   });
 
   it('saves draft on input change when enabled', async () => {
-    setupMocks(true);
+    setupMocks();
     const input = createContentEditable();
     input.textContent = '';
 
-    const { startDraftSave } = await import('../index');
-    const cleanup = await startDraftSave();
+    const cleanup = await startDraftPlugin();
 
     // Simulate typing
     input.textContent = 'Hello, this is my draft';
@@ -180,11 +183,10 @@ describe('draftSave', () => {
   });
 
   it('strips folder project instructions before saving a draft', async () => {
-    setupMocks(true);
+    setupMocks();
     const input = createContentEditable();
 
-    const { startDraftSave } = await import('../index');
-    const cleanup = await startDraftSave();
+    const cleanup = await startDraftPlugin();
 
     input.textContent = `${buildInstructionBlock('Inbox', 'Always answer tersely.')}User draft`;
     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -198,29 +200,11 @@ describe('draftSave', () => {
     cleanup();
   });
 
-  it('does not save draft when feature is disabled', async () => {
-    setupMocks(false);
-    const input = createContentEditable();
-
-    const { startDraftSave } = await import('../index');
-    const cleanup = await startDraftSave();
-
-    input.textContent = 'This should not be saved';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    vi.advanceTimersByTime(1000);
-
-    const draftKey = 'gvDraft_/app/test-conversation-123';
-    expect(localStore[draftKey]).toBeUndefined();
-
-    cleanup();
-  });
-
   it('removes draft when input becomes empty', async () => {
-    setupMocks(true);
+    setupMocks();
     const input = createContentEditable();
 
-    const { startDraftSave } = await import('../index');
-    const cleanup = await startDraftSave();
+    const cleanup = await startDraftPlugin();
 
     // Save a draft first
     input.textContent = 'Some content';
@@ -241,11 +225,10 @@ describe('draftSave', () => {
   });
 
   it('keeps a pending draft bound to the route where typing happened', async () => {
-    setupMocks(true);
+    setupMocks();
     const input = createContentEditable();
 
-    const { startDraftSave } = await import('../index');
-    const cleanup = await startDraftSave();
+    const cleanup = await startDraftPlugin();
 
     input.textContent = 'Draft from the first conversation';
     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -264,11 +247,10 @@ describe('draftSave', () => {
   });
 
   it('uses the live route when typing starts before the shared route poller catches up', async () => {
-    setupMocks(true);
+    setupMocks();
     const input = createContentEditable();
 
-    const { startDraftSave } = await import('../index');
-    const cleanup = await startDraftSave();
+    const cleanup = await startDraftPlugin();
 
     window.location.pathname = '/app/second-conversation';
     input.textContent = 'Draft typed immediately after navigation';
@@ -285,12 +267,11 @@ describe('draftSave', () => {
   });
 
   it('does not re-save sent text when the first message creates a conversation route', async () => {
-    setupMocks(true);
+    setupMocks();
     window.location.pathname = '/app';
     const { input } = createMainComposer();
 
-    const { startDraftSave } = await import('../index');
-    const cleanup = await startDraftSave();
+    const cleanup = await startDraftPlugin();
 
     input.textContent = 'Message that is about to be sent';
     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -314,7 +295,7 @@ describe('draftSave', () => {
   });
 
   it('keeps the draft when an upload blocks the send and the user leaves within two seconds', async () => {
-    setupMocks(true);
+    setupMocks();
     document.execCommand = vi.fn().mockReturnValue(false);
     window.location.pathname = '/app';
     localStore['gvDraft_/app/existing'] = {
@@ -324,8 +305,7 @@ describe('draftSave', () => {
     };
     const { input, root } = createMainComposer();
     root.append(document.createElement('progress'));
-    const { startDraftSave } = await import('../index');
-    const stop = await startDraftSave();
+    const stop = await startDraftPlugin();
     onTestFinished(stop);
 
     input.textContent = 'An unsent message with an uploading attachment';
@@ -348,10 +328,9 @@ describe('draftSave', () => {
   });
 
   it('does not delete a stored draft when the host clears the composer without sending', async () => {
-    setupMocks(true);
+    setupMocks();
     const { input } = createMainComposer();
-    const { startDraftSave } = await import('../index');
-    const stop = await startDraftSave();
+    const stop = await startDraftPlugin();
     input.textContent = 'Keep the unsent draft';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await vi.advanceTimersByTimeAsync(1000);
@@ -367,7 +346,7 @@ describe('draftSave', () => {
   it.each(['load', 'retry'])(
     'drops a late restore when the same pathname now belongs to another email during %s',
     async (stage) => {
-      setupMocks(true);
+      setupMocks();
       const key = 'gvDraft_/app/test-conversation-123';
       localStore[key] = {
         content: 'Previous account draft',
@@ -387,8 +366,7 @@ describe('draftSave', () => {
         );
         createContentEditable();
       }
-      const { startDraftSave } = await import('../index');
-      const stop = await startDraftSave();
+      const stop = await startDraftPlugin();
       await vi.advanceTimersByTimeAsync(0);
       account.dataset.email = 'next@example.com';
       answer();
@@ -402,7 +380,7 @@ describe('draftSave', () => {
   );
 
   it('does not restore an old draft after typing and sending while its load is pending', async () => {
-    setupMocks(true);
+    setupMocks();
     const key = 'gvDraft_/app/test-conversation-123';
     localStore[key] = { content: 'Old draft', timestamp: 1, path: window.location.pathname };
     let answer = () => {};
@@ -414,8 +392,7 @@ describe('draftSave', () => {
     );
     document.execCommand = vi.fn().mockReturnValue(true);
     const { input, button } = createMainComposer();
-    const { startDraftSave } = await import('../index');
-    const stop = await startDraftSave();
+    const stop = await startDraftPlugin();
     input.textContent = 'New message';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     button.click();
@@ -429,12 +406,11 @@ describe('draftSave', () => {
     stop();
   });
 
-  it('flushes the last keystrokes on unload before the legacy feature stops', async () => {
-    setupMocks(true);
+  it('flushes the last keystrokes on unload before the plugin stops', async () => {
+    setupMocks();
     const input = createContentEditable();
-    const { startDraftSave } = await import('../index');
     const { flushDraftsBeforeUnload } = await import('../draftUnloadFlush');
-    const stop = await startDraftSave();
+    const stop = await startDraftPlugin();
     input.textContent = 'Final keystrokes';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     const beforeUnload = () => {
@@ -454,19 +430,16 @@ describe('draftSave', () => {
     }
   });
 
-  it('does not flush the unsaved tail when the legacy draft switch turns off', async () => {
-    setupMocks(true);
+  it('does not flush the unsaved tail when the plugin turns off', async () => {
+    setupMocks();
     const key = 'gvDraft_/app/test-conversation-123';
     localStore[key] = { content: 'Stored draft', timestamp: 1, path: window.location.pathname };
     const input = createContentEditable();
-    const { startDraftSave } = await import('../index');
     const { flushDraftsBeforeUnload } = await import('../draftUnloadFlush');
-    const stop = await startDraftSave();
+    const stop = await startDraftPlugin();
     input.textContent = 'Unsaved tail';
     input.dispatchEvent(new Event('input', { bubbles: true }));
-    for (const listener of storageChangeListeners) {
-      listener({ [StorageKeys.DRAFT_AUTO_SAVE]: { newValue: false } }, 'sync');
-    }
+    await stop();
     flushDraftsBeforeUnload();
     await vi.advanceTimersByTimeAsync(2500);
     expect(localStore[key]).toMatchObject({ content: 'Stored draft' });
@@ -474,7 +447,7 @@ describe('draftSave', () => {
   });
 
   it('does not delete the destination draft when navigation empties the input', async () => {
-    setupMocks(true);
+    setupMocks();
     const destinationKey = 'gvDraft_/app/second-conversation';
     localStore[destinationKey] = {
       content: 'Destination draft',
@@ -485,8 +458,7 @@ describe('draftSave', () => {
     input.textContent = 'Source draft';
     document.execCommand = vi.fn().mockReturnValue(true);
 
-    const { startDraftSave } = await import('../index');
-    const cleanup = await startDraftSave();
+    const cleanup = await startDraftPlugin();
 
     // Let send detection observe non-empty content on the source route.
     vi.advanceTimersByTime(1000);
@@ -499,40 +471,9 @@ describe('draftSave', () => {
     cleanup();
   });
 
-  it('enables feature when storage setting changes to true', async () => {
-    setupMocks(false);
-    const input = createContentEditable();
-
-    const { startDraftSave } = await import('../index');
-    const cleanup = await startDraftSave();
-
-    // Feature is disabled, should not save
-    input.textContent = 'before enable';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    vi.advanceTimersByTime(1000);
-    expect(localStore['gvDraft_/app/test-conversation-123']).toBeUndefined();
-
-    // Enable via storage change
-    for (const listener of storageChangeListeners) {
-      listener({ [StorageKeys.DRAFT_AUTO_SAVE]: { oldValue: false, newValue: true } }, 'sync');
-    }
-
-    // Now typing should save
-    input.textContent = 'after enable';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    vi.advanceTimersByTime(1000);
-
-    const draft = localStore['gvDraft_/app/test-conversation-123'] as {
-      content: string;
-    };
-    expect(draft?.content).toBe('after enable');
-
-    cleanup();
-  });
-
   it('restores draft on startup when input is empty', async () => {
     vi.useRealTimers();
-    setupMocks(true);
+    setupMocks();
 
     // Pre-seed a draft
     const draftKey = 'gvDraft_/app/test-conversation-123';
@@ -548,8 +489,7 @@ describe('draftSave', () => {
     // Mock execCommand for text insertion
     document.execCommand = vi.fn().mockReturnValue(true);
 
-    const { startDraftSave } = await import('../index');
-    const cleanup = await startDraftSave();
+    const cleanup = await startDraftPlugin();
 
     // Wait for the async restore to complete (loadDraft + restore delay retries)
     await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -580,11 +520,10 @@ describe('draftSave', () => {
     }
 
     it('does not rebind or restore when a retry fires after stopping', async () => {
-      setupMocks(true);
+      setupMocks();
       seedDraft();
       document.execCommand = vi.fn().mockReturnValue(true);
-      const { startDraftSave } = await import('../index');
-      const stop = await startDraftSave();
+      const stop = await startDraftPlugin();
       await vi.advanceTimersByTimeAsync(0);
 
       // The composer has not rendered yet, so restore is waiting on a retry.
@@ -596,7 +535,7 @@ describe('draftSave', () => {
     });
 
     it('does not rebind or restore when the draft load resolves after stopping', async () => {
-      setupMocks(true);
+      setupMocks();
       seedDraft();
       document.execCommand = vi.fn().mockReturnValue(true);
       const local = chrome.storage.local as unknown as { get: ReturnType<typeof vi.fn> };
@@ -608,8 +547,7 @@ describe('draftSave', () => {
         setTimeout(() => immediateGet(key, callback), 50);
       });
       const input = createContentEditable();
-      const { startDraftSave } = await import('../index');
-      const stop = await startDraftSave();
+      const stop = await startDraftPlugin();
 
       stop();
       await vi.advanceTimersByTimeAsync(5 * 500);
@@ -620,7 +558,7 @@ describe('draftSave', () => {
 
   it('strips folder project instructions from an older stored draft on restore', async () => {
     vi.useRealTimers();
-    setupMocks(true);
+    setupMocks();
 
     localStore['gvDraft_/app/test-conversation-123'] = {
       content: `${buildInstructionBlock('Coding', 'Reply with tests first.')}Recovered user text`,
@@ -631,8 +569,7 @@ describe('draftSave', () => {
     createContentEditable();
     document.execCommand = vi.fn().mockReturnValue(true);
 
-    const { startDraftSave } = await import('../index');
-    const cleanup = await startDraftSave();
+    const cleanup = await startDraftPlugin();
 
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
@@ -641,52 +578,8 @@ describe('draftSave', () => {
     cleanup();
   });
 
-  it('ignores a slow startup read once the user has changed the setting', async () => {
-    setupMocks(true);
-    let answerStartupRead: (() => void) | null = null;
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (defaults: Record<string, unknown>, callback: (value: Record<string, unknown>) => void) => {
-        answerStartupRead = () => callback({ ...defaults, [StorageKeys.DRAFT_AUTO_SAVE]: true });
-      },
-    );
-    const input = createContentEditable();
-    input.textContent = '';
-
-    const { startDraftSave } = await import('../index');
-    const starting = startDraftSave();
-    for (const listener of storageChangeListeners) {
-      listener({ [StorageKeys.DRAFT_AUTO_SAVE]: { oldValue: false, newValue: true } }, 'sync');
-      listener({ [StorageKeys.DRAFT_AUTO_SAVE]: { oldValue: true, newValue: false } }, 'sync');
-    }
-    answerStartupRead!();
-    const cleanup = await starting;
-
-    input.textContent = 'typed after turning auto-save off';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    await vi.advanceTimersByTimeAsync(3000);
-
-    expect(Object.keys(localStore).filter((key) => key.startsWith('gvDraft_'))).toEqual([]);
-    cleanup();
-  });
-
-  it('cleans up listeners on cleanup call', async () => {
-    setupMocks(true);
-    createContentEditable();
-
-    const { startDraftSave } = await import('../index');
-    const cleanup = await startDraftSave();
-
-    const listenerCountBefore = storageChangeListeners.length;
-    expect(listenerCountBefore).toBeGreaterThan(0);
-
-    cleanup();
-
-    // Storage listener should be removed
-    expect(chrome.storage.onChanged.removeListener).toHaveBeenCalled();
-  });
-
   it('does not look up the input while unrelated content streams into the page', async () => {
-    setupMocks(true);
+    setupMocks();
     let rectReads = 0;
     const input = document.createElement('div');
     input.setAttribute('contenteditable', 'true');
@@ -698,8 +591,7 @@ describe('draftSave', () => {
       },
     });
     document.body.appendChild(input);
-    const { startDraftSave } = await import('../index');
-    const cleanup = await startDraftSave();
+    const cleanup = await startDraftPlugin();
     // Start right after a send-detection tick so the poller stays out of the window.
     await vi.advanceTimersByTimeAsync(SEND_CHECK_INTERVAL_MS);
 
@@ -720,10 +612,9 @@ describe('draftSave', () => {
   });
 
   it('follows Gemini when it replaces the chat input', async () => {
-    setupMocks(true);
+    setupMocks();
     const original = createContentEditable();
-    const { startDraftSave } = await import('../index');
-    const cleanup = await startDraftSave();
+    const cleanup = await startDraftPlugin();
 
     original.remove();
     const replacement = createContentEditable();
@@ -759,12 +650,11 @@ describe('draftSave', () => {
     }
 
     async function startWithSwitchedComposer(): Promise<HTMLElement> {
-      setupMocks(true);
+      setupMocks();
       const previous = createComposer();
       const next = createComposer();
       next.setVisible(false);
-      const { startDraftSave } = await import('../index');
-      stop = await startDraftSave();
+      stop = await startDraftPlugin();
       // Gemini hides the bound composer and reveals the other one; both stay connected.
       previous.setVisible(false);
       next.setVisible(true);
@@ -799,7 +689,7 @@ describe('draftSave', () => {
       expect(draft?.content).toBe('Inserted prompt');
     });
 
-    it('rebinds to the visible composer on the next send-detection check', async () => {
+    it('saves typing in the visible composer without a focus event', async () => {
       const next = await startWithSwitchedComposer();
 
       vi.advanceTimersByTime(SEND_CHECK_INTERVAL_MS);
@@ -816,12 +706,11 @@ describe('draftSave', () => {
       return Object.keys(localStore).filter((key) => key.startsWith('gvDraft'));
     }
 
-    it('stores four blank lines the way the native draft did', async () => {
-      setupMocks(true);
+    it('preserves the three-stage blank-line folding for existing Gemini drafts', async () => {
+      setupMocks();
       document.execCommand = vi.fn().mockReturnValue(true);
       const input = createContentEditable();
-      const { startDraftSave } = await import('../index');
-      let stop = await startDraftSave();
+      let stop = await startDraftPlugin();
 
       // Input and store each fold `\n\n` into `\n`: four newlines are stored as one.
       input.textContent = 'First\n\n\n\nSecond';
@@ -832,29 +721,28 @@ describe('draftSave', () => {
       // A refresh restores what was stored.
       stop();
       input.textContent = '';
-      stop = await startDraftSave();
+      stop = await startDraftPlugin();
       await vi.advanceTimersByTimeAsync(0);
       expect(document.execCommand).toHaveBeenLastCalledWith('insertText', false, 'First\nSecond');
       stop();
 
       // A draft stored before the input stage existed is folded once more on restore.
       localStore[draftKey] = { content: 'First\n\n\n\nSecond', timestamp: 1, path: '/app/x' };
-      stop = await startDraftSave();
+      stop = await startDraftPlugin();
       await vi.advanceTimersByTimeAsync(0);
       expect(document.execCommand).toHaveBeenLastCalledWith('insertText', false, 'First\n\nSecond');
       stop();
     });
 
     it('treats a placeholder-only input as empty', async () => {
-      setupMocks(true);
+      setupMocks();
       localStore[draftKey] = { content: 'My saved draft', timestamp: 1, path: '/app/x' };
       document.execCommand = vi.fn().mockReturnValue(true);
       const input = createContentEditable();
       input.setAttribute('data-placeholder', 'Ask Gemini');
       input.textContent = 'Ask Gemini';
 
-      const { startDraftSave } = await import('../index');
-      const stop = await startDraftSave();
+      const stop = await startDraftPlugin();
       await vi.advanceTimersByTimeAsync(0);
 
       expect(document.execCommand).toHaveBeenCalledWith('insertText', false, 'My saved draft');
@@ -862,11 +750,10 @@ describe('draftSave', () => {
     });
 
     it('keeps the gvDraft_ prefix and full pathname for Gemini drafts', async () => {
-      setupMocks(true);
+      setupMocks();
       window.location.pathname = '/u/1/gem/abc123/c9f0';
       const input = createContentEditable();
-      const { startDraftSave } = await import('../index');
-      const stop = await startDraftSave();
+      const stop = await startDraftPlugin();
 
       input.textContent = 'Draft in a Gem on the second account';
       input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -881,7 +768,7 @@ describe('draftSave', () => {
     });
 
     it('restores nothing when the page turns out to be Enterprise while the draft loads', async () => {
-      setupMocks(true);
+      setupMocks();
       onTestFinished(() => {
         document.body.className = '';
       });
@@ -897,8 +784,7 @@ describe('draftSave', () => {
         answer = () => immediateGet(key, callback);
       });
       const input = createContentEditable();
-      const { startDraftSave } = await import('../index');
-      const stop = await startDraftSave();
+      const stop = await startDraftPlugin();
 
       document.body.classList.add('enterprise-shell');
       answer();
@@ -911,14 +797,13 @@ describe('draftSave', () => {
     });
 
     it('restores nothing when the page turns out to be Enterprise before a restore retry', async () => {
-      setupMocks(true);
+      setupMocks();
       onTestFinished(() => {
         document.body.className = '';
       });
       localStore[draftKey] = { content: 'Personal draft', timestamp: 1, path: '/app/x' };
       document.execCommand = vi.fn().mockReturnValue(true);
-      const { startDraftSave } = await import('../index');
-      const stop = await startDraftSave();
+      const stop = await startDraftPlugin();
       await vi.advanceTimersByTimeAsync(0);
 
       // The composer renders only after Enterprise surfaced; the next retry finds it.
@@ -937,7 +822,7 @@ describe('draftSave', () => {
     ])(
       'writes no draft when the page turns out to be Gemini Enterprise by %s hint',
       async (_hint, turnEnterprise) => {
-        setupMocks(true);
+        setupMocks();
         onTestFinished(() => {
           document.body.className = '';
         });
@@ -945,8 +830,7 @@ describe('draftSave', () => {
         localStore[destinationKey] = { content: 'Destination', timestamp: 1, path: '/app/x' };
         document.execCommand = vi.fn().mockReturnValue(true);
         const input = createContentEditable();
-        const { startDraftSave } = await import('../index');
-        const stop = await startDraftSave();
+        const stop = await startDraftPlugin();
 
         turnEnterprise();
         input.textContent = 'Typed on Enterprise';

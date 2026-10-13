@@ -8677,26 +8677,6 @@ side-navigation-content > div.collapsed .gv-gems-expand-toggle {
   display: none !important;
 }
 
-/* ---------------------------------------------------------------------------
- * Input Halo Hider
- *
- * Hides Gemini's blue radial-gradient halo behind the input area:
- *   - chat-window::before: radial-gradient(... rgb(20, 32, 79) 50%)
- *   - chat-loading-animation > .nl-canvas: heavily-blurred color blobs that
- *     leak above the fold
- * Toggled by the popup setting `gvInputHaloHidden` via the body class set in
- * src/pages/content/inputHaloHider.
- * ------------------------------------------------------------------------- */
-body.gv-hide-input-halo chat-window::before {
-  background: transparent !important;
-  background-image: none !important;
-}
-
-body.gv-hide-input-halo chat-loading-animation,
-body.gv-hide-input-halo .nl-canvas {
-  display: none !important;
-}
-
 /* ============================================================================
    Platform-adaptive accent. On a themed platform (Claude / ChatGPT, or any
    plugin that declares `theme.brand`), src/pages/content/platformTheme injects

@@ -167,11 +167,11 @@ describe('fullscreen SVG sizing and layout', () => {
     codeEl.setAttribute('data-test-id', 'code-content');
     codeEl.textContent = '{"signal": [{"name":"clk","wave":"p..."}]}';
     codeBlock.append(decoration, codeEl);
-    document.body.appendChild(codeBlock);
+    document.querySelector('model-response')!.appendChild(codeBlock);
 
-    fixture.blocks.process();
+    fixture.activate();
     await vi.waitFor(() => {
-      expect(document.querySelector('.gv-wavedrom-diagram')).not.toBeNull();
+      expect(fixture.diagramOf(codeEl)?.querySelector('svg')).toBeTruthy();
     });
 
     const styleEl = document.getElementById('gv-wavedrom-styles') as HTMLStyleElement;

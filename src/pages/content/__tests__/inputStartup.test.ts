@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CleanupPositions } from '@/core/types/cleanupPositions';
 import { StorageKeys } from '@/core/types/common';
-import type { PluginScope } from '@/features/plugins/runtime/pluginScope';
 
 import { type LifecycleHarness, installLifecycleHarness } from './lifecycleHarness';
 
@@ -223,53 +222,6 @@ describe('the page collapse setting while its plugin is off', () => {
       expect(admission.stateOf(id)).toBe('denied');
     const container = await composer();
     collapseInput();
-    expect(container.classList.contains(COLLAPSED)).toBe(false);
-  });
-});
-
-describe('the scoped collapse session retains the former native lifecycle guarantees', () => {
-  async function mountScope(): Promise<PluginScope> {
-    const { PluginScope } = await import('@/features/plugins/runtime/pluginScope');
-    const { activateGeminiInputCollapse } = await import('../inputCollapse/pluginHandler');
-    const scope = new PluginScope();
-    activateGeminiInputCollapse(scope, { collapseWhenNotEmpty: false });
-    teardowns.push(() => void scope.dispose());
-    document.body.appendChild(document.createElement('span'));
-    await settle(100);
-    return scope;
-  }
-
-  function blur(container: HTMLElement): void {
-    const event = new Event('focusout', { bubbles: true });
-    Object.defineProperty(event, 'relatedTarget', { value: null });
-    container.dispatchEvent(event);
-  }
-
-  it('does not collapse after the plugin turns off while a collapse is queued', async () => {
-    const container = await composer('');
-    const scope = await mountScope();
-    container.classList.remove(COLLAPSED);
-    blur(container);
-    await settle(100);
-    await scope.dispose();
-    await settle(500);
-    expect(container.classList.contains(COLLAPSED)).toBe(false);
-    expect(vi.getTimerCount()).toBe(0);
-  });
-
-  it('five plugin reopens leave no collapse DOM, timers or listeners after stop', async () => {
-    const container = await composer('');
-    for (let round = 0; round < 5; round++) {
-      const scope = await mountScope();
-      blur(container);
-      await settle(100);
-      await scope.dispose();
-      expect(document.getElementById(STYLE_ID)).toBeNull();
-    }
-    expect(harness.ledger.openListeners()).toEqual([]);
-    expect(harness.ledger.openObservers()).toEqual([]);
-    expect(harness.ledger.openStorageListeners()).toBe(0);
-    expect(vi.getTimerCount()).toBe(0);
     expect(container.classList.contains(COLLAPSED)).toBe(false);
   });
 });

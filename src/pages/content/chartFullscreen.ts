@@ -1,3 +1,5 @@
+import { deepActiveElement } from '@/core/utils/composedTarget';
+
 interface ChartFullscreenOptions {
   prefix: string;
   body: HTMLElement;
@@ -20,8 +22,9 @@ export function createChartFullscreen() {
 
   function open(build: () => ChartFullscreenOptions): void {
     if (currentModal) return;
-    const previousFocus =
-      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    // Diagram controls live inside a shadow root; the document only reports their host.
+    const active = deepActiveElement();
+    const previousFocus = active instanceof HTMLElement ? active : null;
     const options = build();
     const { prefix, body, panZoom, dialogLabel } = options;
     const modal = document.createElement('div');

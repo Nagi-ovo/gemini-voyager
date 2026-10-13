@@ -321,7 +321,9 @@ plugin follows the native setting it replaces (`storage/legacySettingBindings.ts
 not a plugin-list toggle. An owner-table rollback now requires restoring the stage 7
 startup-retirement commit first. Permanent page services remain in `nativeFeatures.ts`; their
 account bridge, send coordinator, history/message caches, selection host, sent-quote styling,
-prevent-auto-scroll bridge and fork first-send finisher stay independent of optional plugin switches.
+prevent-auto-scroll bridge, fork first-send finisher and default-model stale-menu cleanup stay
+independent of optional plugin switches. The last service only removes old menu UI while the sync
+setting is false; the plugin alone selects models and creates new stars.
 They resolve semantic keys through the native
 `geminiAdapter` / `aistudioAdapter` (`userTurn`, `assistantTurn`, `composer`,
 `sidebar`; the Gemini `sidebar` key also covers Voyager's folder panel, so
