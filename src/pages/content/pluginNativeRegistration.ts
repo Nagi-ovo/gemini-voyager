@@ -19,6 +19,7 @@ import {
 
 import { activateGeminiChatWidth, updateGeminiChatWidthSettings } from './chatWidth/pluginHandler';
 import { activateGeminiDefaultModel } from './defaultModel/pluginHandler';
+import { activateGeminiFork } from './fork/pluginHandler';
 import {
   activateGeminiInputCollapse,
   updateGeminiInputCollapseSettings,
@@ -62,6 +63,9 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   // Owned by `sites/featureOwners.ts`: mounted only once the plugin owns Gemini's default model.
   'voyager.gemini-default-model': {
     activate: activateGeminiDefaultModel,
+  },
+  'voyager.gemini-fork': {
+    activate: activateGeminiFork,
   },
 };
 

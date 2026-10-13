@@ -622,9 +622,10 @@ describe('Gemini prompt history and input collapse owned by their official plugi
   });
 });
 
-describe('Gemini research pack and default model owned by their official plugins', () => {
+describe('Gemini stage 5 features owned by their official plugins', () => {
   const RESEARCH_PACK_KEY = StorageKeys.RESEARCH_PACK_ENABLED;
   const AUTO_APPLY_KEY = StorageKeys.DEFAULT_MODEL_AUTO_APPLY;
+  const FORK_KEY = StorageKeys.FORK_ENABLED;
   const packPanel = () => document.querySelector('.gv-rp-root') !== null;
   const stars = () => document.querySelectorAll('.gv-default-star-btn').length;
 
@@ -820,9 +821,12 @@ describe('Gemini research pack and default model owned by their official plugins
     const url = new URL(entryCase.url);
     (chrome.storage.sync.get as unknown as Mock).mockImplementation(
       (_keys: unknown, callback?: (result: Record<string, unknown>) => void) => {
-        const stored = entryCase.customWebsites
-          ? { [StorageKeys.PROMPT_CUSTOM_WEBSITES]: entryCase.customWebsites }
-          : {};
+        const stored = {
+          [FORK_KEY]: true,
+          ...(entryCase.customWebsites
+            ? { [StorageKeys.PROMPT_CUSTOM_WEBSITES]: entryCase.customWebsites }
+            : {}),
+        };
         callback?.(stored);
         return Promise.resolve(stored);
       },
@@ -855,7 +859,7 @@ describe('Gemini research pack and default model owned by their official plugins
   }
 
   it.each(ENTRY_CASES)(
-    'ends initialization at $label and admits neither the research pack nor the default model plugin',
+    'ends initialization at $label and admits no stage 5 plugin even when its switch is on',
     async ({ url, enterpriseDom, customWebsites, expected }) => {
       const { entry, admission, cleanupManager, ran } = await initializeAt({
         url,
@@ -868,30 +872,34 @@ describe('Gemini research pack and default model owned by their official plugins
       for (const id of [
         OFFICIAL_PLUGIN_IDS.geminiResearchPack,
         OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
+        OFFICIAL_PLUGIN_IDS.geminiFork,
       ]) {
         expect(admission.stateOf(id)).toBe('denied');
       }
       const pluginHost = geminiHost(
         admission,
-        liveLegacy({ [RESEARCH_PACK_KEY]: true, [AUTO_APPLY_KEY]: true }).legacySettings,
+        liveLegacy({ [RESEARCH_PACK_KEY]: true, [AUTO_APPLY_KEY]: true, [FORK_KEY]: true })
+          .legacySettings,
         url,
       );
       await pluginHost.start();
       await flush();
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiResearchPack)).not.toBe('mounted');
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).not.toBe('mounted');
+      expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiFork)).not.toBe('mounted');
       expect(packPanel()).toBe(false);
       pluginHost.stop();
       cleanupManager.executeCleanups();
     },
   );
 
-  it('reaches the Gemini start points on gemini.google.com and admits both plugins there', async () => {
+  it('reaches the Gemini start points on gemini.google.com and admits all stage 5 plugins there', async () => {
     const { entry, admission, cleanupManager } = await initializeAt({ url: GEMINI_URL });
 
     expect(entry).toBe('start-points');
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiResearchPack)).toBe('admitted');
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiDefaultModel)).toBe('admitted');
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiFork)).toBe('admitted');
     cleanupManager.executeCleanups();
   });
 });

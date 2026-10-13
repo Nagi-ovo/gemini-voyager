@@ -99,6 +99,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY,
         StorageKeys.RESEARCH_PACK_ENABLED,
         StorageKeys.DEFAULT_MODEL_AUTO_APPLY,
+        StorageKeys.FORK_ENABLED,
         StorageKeys.CTRL_ENTER_SEND,
         StorageKeys.AISTUDIO_ENTER_SEND,
         StorageKeys.DRAFT_AUTO_SAVE,

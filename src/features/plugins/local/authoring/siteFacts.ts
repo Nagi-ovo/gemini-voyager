@@ -57,6 +57,7 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   inputCollapse: 'Input collapse',
   researchPack: 'Research Pack',
   defaultModel: 'Auto-apply default model on new chats',
+  fork: 'Conversation fork',
   quoteReply: 'Quote Reply',
   highlight: 'Highlight',
   preventAutoScroll: 'Prevent auto-scroll to bottom',

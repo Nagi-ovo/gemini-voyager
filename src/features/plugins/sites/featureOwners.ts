@@ -42,6 +42,7 @@ export type OwnedFeatureId =
   | 'inputCollapse'
   | 'researchPack'
   | 'defaultModel'
+  | 'fork'
   | 'ctrlEnterSend'
   | 'safariEnterFix'
   | 'enterSend'
@@ -74,6 +75,7 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiInputCollapse: 'voyager.gemini-input-collapse',
   geminiResearchPack: 'voyager.gemini-research-pack',
   geminiDefaultModel: 'voyager.gemini-default-model',
+  geminiFork: 'voyager.gemini-fork',
   geminiCtrlEnterSend: 'voyager.gemini-ctrl-enter-send',
   geminiSafariEnterFix: 'voyager.gemini-safari-enter-fix',
   aistudioEnterSend: 'voyager.aistudio-enter-send',
@@ -270,6 +272,14 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     feature: 'defaultModel',
     owner: 'plugin',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'fork',
+    owner: 'plugin',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiFork,
     handlers: [],
     healthTracking: false,
   },

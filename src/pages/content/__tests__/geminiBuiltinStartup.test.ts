@@ -65,9 +65,17 @@ vi.mock('../researchPack/index', async (importOriginal) => ({
 }));
 
 /** The shipped owner table with the given Gemini features moved to `owner`, and its reader. */
-function ownedBy(owner: FeatureOwner, features: readonly OwnedFeatureId[]) {
+function ownedBy(
+  owner: FeatureOwner,
+  features: readonly OwnedFeatureId[],
+  nativeFeatures: readonly OwnedFeatureId[] = [],
+) {
   const owners = FEATURE_OWNERS.map((entry) =>
-    entry.site === 'gemini' && features.includes(entry.feature) ? { ...entry, owner } : entry,
+    entry.site === 'gemini' && nativeFeatures.includes(entry.feature)
+      ? { ...entry, owner: 'legacy' as const }
+      : entry.site === 'gemini' && features.includes(entry.feature)
+        ? { ...entry, owner }
+        : entry,
   );
   return {
     admission: createOfficialAdmission(owners),
@@ -251,7 +259,7 @@ describe('fork and research pack at the Gemini builtin start point', () => {
   } {
     for (const [key, value] of Object.entries(stored)) harness.storage.sync.set(key, value);
     const current = page();
-    const { admission, ownerOf } = ownedBy('legacy', ['researchPack']);
+    const { admission, ownerOf } = ownedBy('legacy', ['fork', 'researchPack']);
     const startup = createGeminiBuiltinStartup(
       admission,
       current.cleanupManager,
@@ -501,12 +509,39 @@ describe('the response notification at the Gemini builtin start point', () => {
   });
 });
 
+describe('fork at its Gemini owner start point', () => {
+  it.each(['plugin', 'legacy'] as const)(
+    'starts only the %s owner and stops native fork on teardown',
+    async (owner) => {
+      harness.storage.sync.set(FORK, true);
+      const { cleanupManager, lifetime, unload } = page();
+      const { admission, ownerOf } = ownedBy(owner, ['fork']);
+      const builtins = createGeminiBuiltinStartup(
+        admission,
+        cleanupManager,
+        lifetime.signal,
+        ownerOf,
+      );
+      await builtins.startForkAndResearchPack();
+      admission.close();
+
+      expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiFork)).toBe(
+        owner === 'plugin' ? 'admitted' : 'denied',
+      );
+      expect(native.starts.fork ?? 0).toBe(owner === 'legacy' ? 1 : 0);
+      expect(native.live.fork ?? 0).toBe(owner === 'legacy' ? 1 : 0);
+      unload();
+      expect(native.live.fork ?? 0).toBe(0);
+    },
+  );
+});
+
 describe('the research pack owned by its official plugin', () => {
   it('admits the research pack plugin and starts no native research pack, while fork stays native', async () => {
     harness.storage.sync.set(FORK, true);
     harness.storage.sync.set(RESEARCH_PACK, true);
     const { cleanupManager, lifetime } = page();
-    const { admission, ownerOf } = ownedBy('plugin', ['researchPack']);
+    const { admission, ownerOf } = ownedBy('plugin', ['researchPack'], ['fork']);
     const builtins = createGeminiBuiltinStartup(
       admission,
       cleanupManager,
@@ -528,7 +563,7 @@ describe('the research pack owned by its official plugin', () => {
 
   it('admits no research pack plugin when teardown lands during the fork startup read', async () => {
     const { cleanupManager, lifetime, unload } = page();
-    const { admission, ownerOf } = ownedBy('plugin', ['researchPack']);
+    const { admission, ownerOf } = ownedBy('plugin', ['researchPack'], ['fork']);
     const builtins = createGeminiBuiltinStartup(
       admission,
       cleanupManager,
