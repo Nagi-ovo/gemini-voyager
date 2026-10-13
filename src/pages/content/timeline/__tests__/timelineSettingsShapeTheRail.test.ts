@@ -7,16 +7,23 @@
  */
 import { describe, expect, it, vi } from 'vitest';
 
+import { StorageKeys } from '@/core/types/common';
+
 import {
   type GeminiTurn,
   GeminiPage,
   SURFACE,
   dotFor,
   followInlinePosition,
+  hover,
+  longPress,
+  openLevelMenu,
   reloadPage,
   settle,
   startTimelineOnPage,
+  starredDotLabels,
   timelineBar,
+  turnIdOf,
   useTimelinePage,
 } from './geminiTimelineHarness';
 
@@ -29,6 +36,84 @@ const TURNS: GeminiTurn[] = [
   { prompt: 'Second question', serverId: 'bbbbbbbbbbbbbbbb' },
   { prompt: 'Third question', serverId: 'cccccccccccccccc' },
 ];
+
+describe('the rail and message time switches are independent', () => {
+  const ext = useTimelinePage();
+  const cid = 'gemini:conv:abc123';
+
+  it('records and labels new messages with the rail closed, and reopening reads the same time', async () => {
+    ext().seed('sync', {
+      [StorageKeys.GV_TIMELINE_ENABLED]: false,
+      [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: true,
+    });
+    const page = new GeminiPage(TURNS.slice(0, 2));
+    await startTimelineOnPage();
+    expect(timelineBar()).toBeNull();
+    page.append(TURNS[2]);
+    await settle();
+    const id = turnIdOf(TURNS[2].serverId!);
+    const label = document.querySelector<HTMLElement>(`.gv-timestamp[data-gv-turn-id="${id}"]`);
+    expect(label?.textContent).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+    const times = ext().read('local', StorageKeys.GV_MESSAGE_TIMESTAMPS);
+    expect(times).toEqual({
+      version: 2,
+      conversations: { [cid]: { [id]: expect.any(Number) } },
+    });
+    ext().external('sync', { [StorageKeys.GV_TIMELINE_ENABLED]: true });
+    await settle();
+    expect(timelineBar()).not.toBeNull();
+    expect(document.querySelector(`.gv-timestamp[data-gv-turn-id="${id}"]`)).toBe(label);
+    expect(ext().read('local', StorageKeys.GV_MESSAGE_TIMESTAMPS)).toEqual(times);
+    hover(dotFor(TURNS[2].prompt));
+    await settle(400);
+    expect(document.querySelector(SURFACE.tooltip)?.textContent).toContain(label!.textContent);
+  });
+
+  it('closing and reopening the rail preserves stars and levels, while time display can stop alone', async () => {
+    ext().seed('sync', {
+      [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: true,
+      [StorageKeys.TIMELINE_MARKER_LEVEL]: true,
+    });
+    ext().seed('local', {
+      [StorageKeys.GV_MESSAGE_TIMESTAMPS]: {
+        version: 2,
+        conversations: { [cid]: { [turnIdOf(TURNS[0].serverId!)]: 1_783_370_737_000 } },
+      },
+    });
+    const page = new GeminiPage(TURNS);
+    await startTimelineOnPage();
+    const timeLabel = document.querySelector('.gv-timestamp');
+    expect(timeLabel).not.toBeNull();
+    await longPress(dotFor(TURNS[1].prompt));
+    const menu = openLevelMenu(dotFor(TURNS[1].prompt))!;
+    menu.querySelector<HTMLElement>('[data-level="2"]')!.click();
+    await settle();
+    const stars = ext().read('local', StorageKeys.SAVED_LIBRARY_STARS);
+    const hierarchy = ext().read('local', StorageKeys.TIMELINE_HIERARCHY);
+    ext().external('sync', { [StorageKeys.GV_TIMELINE_ENABLED]: false });
+    await settle();
+    expect(timelineBar()).toBeNull();
+    expect(document.querySelector('.gv-timestamp')).toBe(timeLabel);
+    expect(ext().read('local', StorageKeys.SAVED_LIBRARY_STARS)).toEqual(stars);
+    expect(ext().read('local', StorageKeys.TIMELINE_HIERARCHY)).toEqual(hierarchy);
+    ext().external('sync', { [StorageKeys.GV_TIMELINE_ENABLED]: true });
+    await settle();
+    expect(starredDotLabels()).toEqual([TURNS[1].prompt]);
+    expect(dotFor(TURNS[1].prompt).dataset.level).toBe('2');
+
+    ext().external('sync', { [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: false });
+    await settle();
+    const times = ext().read('local', StorageKeys.GV_MESSAGE_TIMESTAMPS);
+    const next = { prompt: 'Time display is off', serverId: 'dddddddddddddddd' };
+    page.append(next);
+    await settle();
+    expect(dotFor(next.prompt)).toBeDefined();
+    expect(document.querySelectorAll('.gv-timestamp')).toHaveLength(0);
+    expect(ext().read('local', StorageKeys.GV_MESSAGE_TIMESTAMPS)).toEqual(times);
+    expect(ext().read('local', StorageKeys.SAVED_LIBRARY_STARS)).toEqual(stars);
+    expect(ext().read('local', StorageKeys.TIMELINE_HIERARCHY)).toEqual(hierarchy);
+  });
+});
 
 const bar = () => {
   const element = timelineBar();

@@ -6,6 +6,7 @@ import type { ScrollMode, TimelineSettingsValues } from '../components/TimelineS
 import { type SettingSetters, applySettingsPatch } from '../utils/settingsPatch';
 
 export const TIMELINE_SETTINGS_STORAGE_DEFAULTS = {
+  [StorageKeys.GV_TIMELINE_ENABLED]: true,
   geminiTimelineScrollMode: 'flow',
   [StorageKeys.TIMELINE_STYLE]: 'dots',
   geminiTimelineHideContainer: false,
@@ -19,6 +20,7 @@ export const TIMELINE_SETTINGS_STORAGE_DEFAULTS = {
 export function useTimelinePopupSettings(
   writeSyncStorage: (payload: Record<string, unknown>) => Promise<void>,
 ) {
+  const [timelineEnabled, setTimelineEnabled] = useState(true);
   const [mode, setMode] = useState<ScrollMode>('flow');
   const [timelineStyle, setTimelineStyle] = useState<TimelineStyle>('dots');
   const [hideContainer, setHideContainer] = useState(false);
@@ -30,6 +32,7 @@ export function useTimelinePopupSettings(
 
   const setters = useMemo<SettingSetters<TimelineSettingsValues>>(
     () => ({
+      timelineEnabled: setTimelineEnabled,
       mode: setMode,
       timelineStyle: setTimelineStyle,
       hideContainer: setHideContainer,
@@ -43,6 +46,7 @@ export function useTimelinePopupSettings(
   );
 
   const hydrateFromStorage = useCallback((stored: Record<string, unknown>) => {
+    setTimelineEnabled(stored[StorageKeys.GV_TIMELINE_ENABLED] !== false);
     const mode = stored.geminiTimelineScrollMode;
     if (mode === 'jump' || mode === 'flow') setMode(mode);
     const style = stored[StorageKeys.TIMELINE_STYLE];
@@ -62,6 +66,8 @@ export function useTimelinePopupSettings(
         change.markerLevelEnabled === true ? { ...change, timelineStyle: 'dots' } : change;
       applySettingsPatch(setters, patch);
       const payload: Record<string, unknown> = {};
+      if (typeof patch.timelineEnabled === 'boolean')
+        payload[StorageKeys.GV_TIMELINE_ENABLED] = patch.timelineEnabled;
       if (patch.mode) payload.geminiTimelineScrollMode = patch.mode;
       if (patch.timelineStyle) payload[StorageKeys.TIMELINE_STYLE] = patch.timelineStyle;
       if (typeof patch.hideContainer === 'boolean')
@@ -87,6 +93,7 @@ export function useTimelinePopupSettings(
 
   return {
     values: {
+      timelineEnabled,
       mode,
       timelineStyle,
       hideContainer,

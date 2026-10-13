@@ -910,6 +910,14 @@
     "message": "Large",
     "description": "Wide edit input width label"
   },
+  "timelineEnable": {
+    "message": "Afficher la chronologie",
+    "description": "Show the Gemini timeline"
+  },
+  "timelineEnableHint": {
+    "message": "Désactiver cette option conserve les éléments enregistrés. Les horodatages des messages suivent leur propre réglage.",
+    "description": "Turning off the timeline keeps message timestamps independent and preserves saved items"
+  },
   "timelineOptions": {
     "message": "Options de la chronologie",
     "description": "Timeline options section label"

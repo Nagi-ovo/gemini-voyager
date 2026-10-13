@@ -13,6 +13,7 @@ import {
   type CoachmarkSequenceStep,
   showCoachmark,
 } from '@/pages/content/coachmark';
+import { withGeminiTimelineGuideLifetime } from '@/pages/content/timeline/geminiTimelineGuideLifetime';
 import { getTranslationSync, initI18n } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
@@ -41,6 +42,21 @@ async function loadCompactTimelineEnabled(): Promise<boolean> {
     return got[StorageKeys.TIMELINE_STYLE] === 'compact';
   } catch {
     return false;
+  }
+}
+
+async function isGeminiCompactGuideEligible(): Promise<boolean> {
+  try {
+    const got = await browser.storage.sync.get({
+      [StorageKeys.GV_TIMELINE_ENABLED]: true,
+      [StorageKeys.TIMELINE_STYLE]: 'dots',
+    });
+    return (
+      got[StorageKeys.GV_TIMELINE_ENABLED] !== false &&
+      got[StorageKeys.TIMELINE_STYLE] !== 'compact'
+    );
+  } catch {
+    return true;
   }
 }
 
@@ -150,23 +166,27 @@ export async function showTimelineStyleCoachmark({
  * and bypasses the already-enabled short-circuit.
  */
 export async function maybeShowTimelineStyleCoachmark(
-  opts: { force?: boolean; progress?: CoachmarkProgress } = {},
+  opts: { force?: boolean; progress?: CoachmarkProgress; signal?: AbortSignal } = {},
 ): Promise<CoachmarkResult> {
   if (location.hostname !== 'gemini.google.com') return 'skipped';
-  const enabled = await loadCompactTimelineEnabled();
-  return showTimelineStyleCoachmark({
-    id: TIMELINE_STYLE_COACHMARK_ID,
-    enabled,
-    force: opts.force,
-    progress: opts.progress,
-    onStyleChange: setCompactTimelineEnabled,
-  });
+  return withGeminiTimelineGuideLifetime(async (signal) => {
+    const enabled = await loadCompactTimelineEnabled();
+    return showTimelineStyleCoachmark({
+      id: TIMELINE_STYLE_COACHMARK_ID,
+      enabled,
+      force: opts.force,
+      progress: opts.progress,
+      // A retained fading guide must not write styles after its Gemini owner stops.
+      onStyleChange: (on) => (signal.aborted ? undefined : setCompactTimelineEnabled(on)),
+      signal,
+    });
+  }, opts.signal);
 }
 
 export const timelineStyleCoachmarkStep: CoachmarkSequenceStep = {
   id: TIMELINE_STYLE_COACHMARK_ID,
   isEligible: async () =>
-    location.hostname === 'gemini.google.com' && !(await loadCompactTimelineEnabled()),
+    location.hostname === 'gemini.google.com' && (await isGeminiCompactGuideEligible()),
   show: (progress) => maybeShowTimelineStyleCoachmark({ progress }),
 };
 

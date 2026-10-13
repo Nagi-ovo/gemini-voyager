@@ -14,6 +14,7 @@ import {
 const translate = (key: TranslationKey): string => key;
 
 const values: TimelineSettingsValues = {
+  timelineEnabled: true,
   timelineStyle: 'ruler',
   mode: 'jump',
   hideContainer: false,
@@ -61,6 +62,7 @@ describe('TimelineSettingsCard', () => {
   it('renders every value into its control', () => {
     render();
     const checked = (id: string) => container.querySelector<HTMLInputElement>(`#${id}`)!.checked;
+    expect(checked('timeline-enabled')).toBe(true);
     expect(checked('hide-container')).toBe(false);
     expect(checked('draggable-timeline')).toBe(true);
     expect(checked('timeline-preview-pinned')).toBe(false);
@@ -111,6 +113,54 @@ describe('TimelineSettingsCard', () => {
       container.querySelector<HTMLElement>('#hide-container')!.closest<HTMLElement>('div.group')!
         .hidden,
     ).toBe(false);
+  });
+
+  it('an off rail disables its controls but message times, auto-scroll and Saved Library still work', () => {
+    const props = render({
+      values: {
+        ...values,
+        timelineEnabled: false,
+        showMessageTimestamps: true,
+        hideContainer: true,
+      },
+    });
+    const input = (id: string) => container.querySelector<HTMLInputElement>(`#${id}`)!;
+    for (const id of [
+      'hide-container',
+      'draggable-timeline',
+      'timeline-preview-pinned',
+      'marker-level-enabled',
+    ]) {
+      expect(input(id).disabled).toBe(true);
+      act(() => input(id).click());
+    }
+    const buttons = Array.from(container.querySelectorAll('button'));
+    for (const label of [
+      'timelineStyleDots',
+      'timelineStyleCompact',
+      'timelineStyleRuler',
+      'flow',
+      'jump',
+      'resetTimelinePosition',
+    ]) {
+      const button = buttons.find((b) => b.textContent === label)!;
+      expect(button.disabled).toBe(true);
+      act(() => button.click());
+    }
+    expect(props.onChange).not.toHaveBeenCalled();
+    expect(props.onResetPosition).not.toHaveBeenCalled();
+    expect(input('hide-container').checked).toBe(true);
+    expect(input('draggable-timeline').checked).toBe(true);
+    expect(input('show-message-timestamps').disabled).toBe(false);
+    act(() => input('show-message-timestamps').click());
+    expect(props.onChange).toHaveBeenLastCalledWith({ showMessageTimestamps: false });
+    expect(input('prevent-auto-scroll').disabled).toBe(false);
+    act(() => input('prevent-auto-scroll').click());
+    expect(props.onChange).toHaveBeenLastCalledWith({ preventAutoScrollEnabled: true });
+    act(() => buttons.find((b) => b.textContent === 'viewStarredHistory')!.click());
+    expect(props.onViewStarredHistory).toHaveBeenCalledOnce();
+    act(() => input('timeline-enabled').click());
+    expect(props.onChange).toHaveBeenLastCalledWith({ timelineEnabled: true });
   });
 
   it.each(['ruler', 'compact'] as const)(

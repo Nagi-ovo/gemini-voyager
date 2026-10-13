@@ -910,6 +910,14 @@
     "message": "عريض",
     "description": "Wide edit input width label"
   },
+  "timelineEnable": {
+    "message": "إظهار الجدول الزمني",
+    "description": "Show the Gemini timeline"
+  },
+  "timelineEnableHint": {
+    "message": "عند إيقافه، تبقى العناصر المحفوظة. تتحكم إعدادات مستقلة في عرض طوابع وقت الرسائل.",
+    "description": "Turning off the timeline keeps message timestamps independent and preserves saved items"
+  },
   "timelineOptions": {
     "message": "خيارات الجدول الزمني",
     "description": "Timeline options section label"

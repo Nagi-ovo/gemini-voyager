@@ -46,6 +46,7 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS = {
   [StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS_AISTUDIO]: false,
   [StorageKeys.FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN_AISTUDIO]: false,
   [StorageKeys.TIMELINE_SCROLL_MODE]: 'flow',
+  [StorageKeys.GV_TIMELINE_ENABLED]: true,
   [StorageKeys.TIMELINE_STYLE]: 'dots',
   [StorageKeys.TIMELINE_HIDE_CONTAINER]: false,
   [StorageKeys.TIMELINE_BAR_WIDTH]: null,

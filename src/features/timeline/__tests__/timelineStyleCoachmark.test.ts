@@ -1,11 +1,17 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 
 const mocks = vi.hoisted(() => ({
   getTranslationSync: vi.fn((key: string) => key),
   initI18n: vi.fn(async () => undefined),
-  showCoachmark: vi.fn(async (_config: unknown) => 'dismissed'),
+  closeGuides: [] as (() => void)[],
+  showCoachmark: vi.fn(
+    (_config: unknown) =>
+      new Promise<string>((resolve) => {
+        mocks.closeGuides.push(() => resolve('dismissed'));
+      }),
+  ),
   storageGet: vi.fn(async (defaults?: Record<string, unknown>) => defaults ?? {}),
   storageSet: vi.fn(async () => undefined),
 }));
@@ -13,6 +19,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('webextension-polyfill', () => ({
   default: {
     storage: {
+      onChanged: { addListener: vi.fn(), removeListener: vi.fn() },
       sync: {
         get: mocks.storageGet,
         set: mocks.storageSet,
@@ -54,6 +61,12 @@ describe('compact timeline coachmark', () => {
     });
   });
 
+  afterEach(async () => {
+    for (const close of mocks.closeGuides.splice(0)) close();
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+
   it('previews the compact rail and persists the inline style toggle', async () => {
     mocks.storageGet.mockResolvedValue({ [StorageKeys.TIMELINE_STYLE]: 'dots' });
     const { maybeShowTimelineStyleCoachmark } = await import('../timelineStyleCoachmark');
@@ -61,7 +74,8 @@ describe('compact timeline coachmark', () => {
     liveTimeline.className = 'gemini-timeline-bar';
     document.body.appendChild(liveTimeline);
 
-    await maybeShowTimelineStyleCoachmark({ force: true });
+    void maybeShowTimelineStyleCoachmark({ force: true });
+    await vi.waitFor(() => expect(mocks.showCoachmark).toHaveBeenCalled());
 
     const config = mocks.showCoachmark.mock.calls[0]![0] as CapturedCoachmarkConfig;
     expect(config.id).toBe('timeline-compact-style-intro-v2');
@@ -98,7 +112,8 @@ describe('compact timeline coachmark', () => {
   async function mountGuideOver(liveTimeline: HTMLElement): Promise<CapturedCoachmarkConfig> {
     document.body.appendChild(liveTimeline);
     const { maybeShowTimelineStyleCoachmark } = await import('../timelineStyleCoachmark');
-    await maybeShowTimelineStyleCoachmark({ force: true });
+    void maybeShowTimelineStyleCoachmark({ force: true });
+    await vi.waitFor(() => expect(mocks.showCoachmark).toHaveBeenCalled());
     return mocks.showCoachmark.mock.calls[0]![0] as CapturedCoachmarkConfig;
   }
 

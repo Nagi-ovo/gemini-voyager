@@ -17,6 +17,7 @@ import {
   type CoachmarkSequenceStep,
   showCoachmark,
 } from '../coachmark';
+import { withGeminiTimelineGuideLifetime } from './geminiTimelineGuideLifetime';
 
 export const RULER_TIMELINE_COACHMARK_ID = 'timeline-ruler-style-intro-v1';
 export const RULER_TIMELINE_COACHMARK_DEBUG_EVENT = 'gv:debug:rulerTimelineCoachmark';
@@ -39,9 +40,12 @@ async function loadRulerIntroUnneeded(): Promise<boolean> {
     const got = (await browser.storage.sync.get({
       [StorageKeys.TIMELINE_STYLE]: 'dots',
       [StorageKeys.TIMELINE_MARKER_LEVEL]: false,
+      [StorageKeys.GV_TIMELINE_ENABLED]: true,
     })) as Record<string, unknown>;
     return (
-      got[StorageKeys.TIMELINE_STYLE] === 'ruler' || got[StorageKeys.TIMELINE_MARKER_LEVEL] === true
+      got[StorageKeys.GV_TIMELINE_ENABLED] === false ||
+      got[StorageKeys.TIMELINE_STYLE] === 'ruler' ||
+      got[StorageKeys.TIMELINE_MARKER_LEVEL] === true
     );
   } catch {
     return false;
@@ -73,9 +77,19 @@ function setPreviewStyle(preview: HTMLElement | null, ruler: boolean): void {
 }
 
 export async function maybeShowRulerTimelineCoachmark(
-  opts: { force?: boolean; progress?: CoachmarkProgress } = {},
+  opts: { force?: boolean; progress?: CoachmarkProgress; signal?: AbortSignal } = {},
 ): Promise<CoachmarkResult> {
   if (location.hostname !== 'gemini.google.com') return 'skipped';
+  return withGeminiTimelineGuideLifetime(
+    (signal) => showRulerTimelineCoachmark(opts, signal),
+    opts.signal,
+  );
+}
+
+async function showRulerTimelineCoachmark(
+  opts: { force?: boolean; progress?: CoachmarkProgress },
+  signal: AbortSignal,
+): Promise<CoachmarkResult> {
   if (!opts.force && (await loadRulerIntroUnneeded())) return 'skipped';
 
   try {
@@ -127,6 +141,8 @@ export async function maybeShowRulerTimelineCoachmark(
       label: t('timelineRulerCoachmarkToggle', 'Use ruler timeline'),
       initial: true,
       onChange: (on) => {
+        // The fading guide still holds this callback after off; it must not write another style.
+        if (signal.aborted) return;
         setPreviewStyle(preview?.element ?? null, on);
         return setRulerTimelineEnabled(on);
       },
@@ -135,6 +151,7 @@ export async function maybeShowRulerTimelineCoachmark(
     nextLabel: t('coachmarkNext', 'Next'),
     closeLabel: t('coachmarkClose', 'Close'),
     progress: opts.progress,
+    signal,
   });
 }
 

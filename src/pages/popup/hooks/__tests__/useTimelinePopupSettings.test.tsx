@@ -61,6 +61,7 @@ describe('useTimelinePopupSettings', () => {
       }),
     );
     expect(settings.values).toEqual({
+      timelineEnabled: true,
       mode: 'jump',
       timelineStyle: 'ruler',
       hideContainer: true,
@@ -89,6 +90,31 @@ describe('useTimelinePopupSettings', () => {
     expect(settings.values.mode).toBe('jump');
     expect(settings.values.timelineStyle).toBe('compact');
     expect(writeSyncStorage).not.toHaveBeenCalled();
+  });
+
+  it('turning the rail off writes only its switch and keeps message times and saved preferences', () => {
+    expect(settings.values.timelineEnabled).toBe(true);
+    act(() =>
+      settings.hydrateFromStorage({
+        [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: true,
+        [StorageKeys.TIMELINE_STYLE]: 'compact',
+        [StorageKeys.TIMELINE_PREVIEW_PINNED]: true,
+        gvPreventAutoScrollEnabled: true,
+      }),
+    );
+    const before = settings.values;
+    act(() => settings.onChange({ timelineEnabled: false }));
+    expect(settings.values).toEqual({ ...before, timelineEnabled: false });
+    expect(writeSyncStorage).toHaveBeenCalledExactlyOnceWith({
+      [StorageKeys.GV_TIMELINE_ENABLED]: false,
+    });
+    act(() => settings.hydrateFromStorage({ [StorageKeys.GV_TIMELINE_ENABLED]: false }));
+    expect(settings.values.timelineEnabled).toBe(false);
+    for (const value of [undefined, 'false', 0]) {
+      act(() => settings.hydrateFromStorage({ [StorageKeys.GV_TIMELINE_ENABLED]: value }));
+      expect(settings.values.timelineEnabled).toBe(true);
+    }
+    expect(settings.values.showMessageTimestamps).toBe(false);
   });
 
   it('writes sparse false changes under their existing keys without clearing other controls', () => {

@@ -37,6 +37,7 @@ import { startSendBehavior } from './sendBehavior/index';
 import { startStorageQuotaWarningToast } from './storageQuotaWarning';
 import { startTimeline } from './timeline/index';
 import { startHistoryTimestampPageService } from './timestamp/historyTimestampPageService';
+import { startMessageTimestampPageService } from './timestamp/messageTimestampPageService';
 import { startUsageStatus } from './usageStatus/index';
 import { USER_LATEX_TOGGLE, startUserLatex } from './userLatex/index';
 import { startVisualEffects } from './visualEffects';
@@ -239,6 +240,12 @@ export const NATIVE_FEATURES = {
     id: 'history-timestamp-page-service',
     position: CleanupPositions.CleanupHistoryTimestampPageService,
     start: startHistoryTimestampPageService,
+  },
+  /** Message times collect and render independently of the optional rail. */
+  messageTimestampPageService: {
+    id: 'message-timestamp-page-service',
+    position: CleanupPositions.CleanupMessageTimestampPageService,
+    start: startMessageTimestampPageService,
   },
   fork: {
     id: 'fork',

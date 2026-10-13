@@ -910,6 +910,14 @@
     "message": "宽",
     "description": "宽编辑输入框宽度标签"
   },
+  "timelineEnable": {
+    "message": "显示时间线",
+    "description": "Show the Gemini timeline"
+  },
+  "timelineEnableHint": {
+    "message": "关闭后保留收藏内容，消息时间仍由「显示消息时间」单独控制。",
+    "description": "Turning off the timeline keeps message timestamps independent and preserves saved items"
+  },
   "timelineOptions": {
     "message": "时间线选项",
     "description": "时间线选项区域标签"

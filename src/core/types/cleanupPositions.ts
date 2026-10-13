@@ -54,7 +54,11 @@ export enum CleanupPositions {
   CleanupUsageStatus,
   CleanupWatermarkNativeNotice,
   CleanupGemsHider,
+  /** Abort pending and shown Gemini timeline guides before retiring their rail. */
+  CleanupTimelineCoachmarks,
   CleanupTimeline,
+  /** Independent message labels stop after the rail reader, before the shared history store. */
+  CleanupMessageTimestampPageService,
   CleanupNativeHealth,
   CleanupHistoryTimestampPageService,
   CleanupResearchPack,

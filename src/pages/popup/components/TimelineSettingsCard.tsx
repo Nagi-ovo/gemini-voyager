@@ -12,6 +12,7 @@ export type ScrollMode = 'jump' | 'flow';
 
 /** Every timeline setting the card edits; the popup owns the state and persistence. */
 export interface TimelineSettingsValues {
+  timelineEnabled: boolean;
   timelineStyle: TimelineStyle;
   mode: ScrollMode;
   hideContainer: boolean;
@@ -66,6 +67,16 @@ export function TimelineSettingsCard({
     <Card className="p-4 transition-all hover:shadow-md">
       <CardTitle className="mb-4">{t('timelineOptions')}</CardTitle>
       <CardContent className="space-y-4 p-0">
+        <SettingToggleRow
+          id="timeline-enabled"
+          settingId="timelineEnabled"
+          label="timelineEnable"
+          hint="timelineEnableHint"
+          checked={values.timelineEnabled}
+          onChange={(timelineEnabled) => onChange({ timelineEnabled })}
+          isVisible={isVisible}
+          t={t}
+        />
         <div hidden={!isVisible('timelineStyle')}>
           <Label className="mb-2 block text-sm font-medium">{t('timelineStyle')}</Label>
           <div className="bg-secondary/60 relative grid grid-cols-3 gap-1 rounded-xl p-1">
@@ -77,7 +88,9 @@ export function TimelineSettingsCard({
               <button
                 key={option.value}
                 // Node levels have a shape only on the dots rail.
-                disabled={values.markerLevelEnabled && option.value !== 'dots'}
+                disabled={
+                  !values.timelineEnabled || (values.markerLevelEnabled && option.value !== 'dots')
+                }
                 className={`relative z-10 rounded-lg px-2 py-2 text-sm font-bold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
                   values.timelineStyle === option.value
                     ? 'text-primary-foreground'
@@ -100,10 +113,11 @@ export function TimelineSettingsCard({
             {SCROLL_MODE_OPTIONS.map((option) => (
               <button
                 key={option.value}
-                className={`relative z-10 rounded-lg px-3 py-2 text-sm font-bold transition-all duration-200 ${
+                disabled={!values.timelineEnabled}
+                className={`relative z-10 rounded-lg px-3 py-2 text-sm font-bold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
                   values.mode === option.value
                     ? 'text-primary-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
+                    : 'text-muted-foreground enabled:hover:text-foreground'
                 }`}
                 onClick={() => onChange({ mode: option.value })}
               >
@@ -118,7 +132,7 @@ export function TimelineSettingsCard({
           label="hideOuterContainer"
           hint={containerless ? 'hideOuterContainerDotsOnly' : undefined}
           checked={values.hideContainer}
-          disabled={containerless}
+          disabled={!values.timelineEnabled || containerless}
           onChange={(hideContainer) => onChange({ hideContainer })}
           isVisible={isVisible}
           t={t}
@@ -128,6 +142,7 @@ export function TimelineSettingsCard({
           settingId="draggableTimeline"
           label="draggableTimeline"
           checked={values.draggableTimeline}
+          disabled={!values.timelineEnabled}
           onChange={(draggableTimeline) => onChange({ draggableTimeline })}
           isVisible={isVisible}
           t={t}
@@ -138,6 +153,7 @@ export function TimelineSettingsCard({
           label="pinTimelinePreview"
           hint="pinTimelinePreviewHint"
           checked={values.timelinePreviewPinned}
+          disabled={!values.timelineEnabled}
           onChange={(timelinePreviewPinned) => onChange({ timelinePreviewPinned })}
           isVisible={isVisible}
           t={t}
@@ -159,6 +175,7 @@ export function TimelineSettingsCard({
           hint="enableMarkerLevelHint"
           experimental
           checked={values.markerLevelEnabled}
+          disabled={!values.timelineEnabled}
           onChange={(markerLevelEnabled) => onChange({ markerLevelEnabled })}
           isVisible={isVisible}
           t={t}
@@ -176,6 +193,7 @@ export function TimelineSettingsCard({
         />
         <Button
           hidden={!isVisible('resetTimelinePosition')}
+          disabled={!values.timelineEnabled}
           variant="outline"
           size="sm"
           className="group hover:border-primary/50 mt-2 w-full"

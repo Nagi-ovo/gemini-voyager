@@ -67,6 +67,8 @@ export const StorageKeys = {
   FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN_AISTUDIO: 'aistudioFolderHideArchivedNudgeShown',
 
   // Timeline
+  // Gemini's rail only: message timestamps keep their own opt-in switch.
+  GV_TIMELINE_ENABLED: 'gvTimelineEnabled',
   TIMELINE_SCROLL_MODE: 'geminiTimelineScrollMode',
   TIMELINE_STYLE: 'geminiTimelineStyle',
   TIMELINE_HIDE_CONTAINER: 'geminiTimelineHideContainer',

@@ -870,6 +870,14 @@
     "message": "寬",
     "description": "寬編輯輸入框寬度標籤"
   },
+  "timelineEnable": {
+    "message": "顯示時間軸",
+    "description": "Show the Gemini timeline"
+  },
+  "timelineEnableHint": {
+    "message": "關閉後保留收藏內容，訊息時間仍由「顯示訊息時間」單獨控制。",
+    "description": "Turning off the timeline keeps message timestamps independent and preserves saved items"
+  },
   "timelineOptions": {
     "message": "時間軸選項",
     "description": "時間軸選項區域標籤"

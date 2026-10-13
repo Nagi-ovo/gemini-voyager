@@ -55,7 +55,10 @@ import { createGeminiRendererStartup } from './rendererStartup';
 import { createSelectionStartup } from './selectionStartup';
 import { startSidebarAutoHide } from './sidebarAutoHide';
 import { startSidebarWidthAdjuster } from './sidebarWidth';
-import { rulerTimelineCoachmarkStep } from './timeline/rulerTimelineCoachmark';
+import {
+  maybeShowRulerTimelineCoachmark,
+  rulerTimelineCoachmarkStep,
+} from './timeline/rulerTimelineCoachmark';
 import { usageCoachmarkStep } from './usageStatus/usageCoachmark';
 import { startWatermarkNativeNotice } from './watermarkNativeNotice';
 import { restartWatermarkRemoverFeature } from './watermarkRemover/feature';
@@ -111,6 +114,11 @@ const selectionStartup = createSelectionStartup(
   cleanupManager,
   pageLifetime.signal,
 );
+const timelineCoachmarkLifetime = new AbortController();
+cleanupManager.registerCleanupFunction(
+  () => timelineCoachmarkLifetime.abort(),
+  CleanupPositions.CleanupTimelineCoachmarks,
+);
 
 // Every await in initializeFeatures goes through these, so a starter it calls
 // directly (Quote Reply, folders, export buttons, …) never runs after retirement.
@@ -137,7 +145,11 @@ function showOnboardingCoachmarksWhenChangelogIsIdle(): void {
 
   onboardingCoachmarkSequenceRunning = true;
   void runCoachmarkSequence([
-    rulerTimelineCoachmarkStep,
+    {
+      ...rulerTimelineCoachmarkStep,
+      show: (progress) =>
+        maybeShowRulerTimelineCoachmark({ progress, signal: timelineCoachmarkLifetime.signal }),
+    },
     folderActivityCoachmarkStep,
     usageCoachmarkStep,
     folderSearchCoachmarkStep,
@@ -202,6 +214,8 @@ async function initializeFeatures(): Promise<void> {
       await settle(mountForPage(NATIVE_FEATURES.nativeHealth));
       // Before the timeline and folders: they read server identities from it.
       await settle(mountForPage(NATIVE_FEATURES.historyTimestampPageService));
+      // Message time display has its own switch and remains available with the rail closed.
+      await settle(mountForPage(NATIVE_FEATURES.messageTimestampPageService));
       // Timeline is most resource-intensive, start it first
       await settle(mountForPage(NATIVE_FEATURES.timeline));
       await delay(HEAVY_FEATURE_INIT_DELAY);

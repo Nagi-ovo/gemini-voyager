@@ -910,6 +910,14 @@
     "message": "넓게",
     "description": "Wide edit input width label"
   },
+  "timelineEnable": {
+    "message": "타임라인 표시",
+    "description": "Show the Gemini timeline"
+  },
+  "timelineEnableHint": {
+    "message": "꺼도 저장된 항목은 유지됩니다. 메시지 시간은 별도 설정으로 표시 여부를 제어합니다.",
+    "description": "Turning off the timeline keeps message timestamps independent and preserves saved items"
+  },
   "timelineOptions": {
     "message": "타임라인 옵션",
     "description": "Timeline options section label"

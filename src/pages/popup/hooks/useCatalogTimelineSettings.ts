@@ -139,6 +139,8 @@ export function useCatalogTimelineSettings({
   if (!manifest || !settings) return null;
   return {
     values: {
+      // Catalog rails use their plugin switch, never Gemini's native rail switch.
+      timelineEnabled: true,
       timelineStyle: settings.style,
       mode: settings.scrollMode,
       hideContainer: settings.hideContainer,

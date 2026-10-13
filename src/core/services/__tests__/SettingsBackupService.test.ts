@@ -286,6 +286,40 @@ describe('SettingsBackupService', () => {
     });
   });
 
+  it.each(['merge', 'overwrite'] as const)(
+    'an old %s backup preserves a locally disabled rail and its independent message-time choice',
+    async (mode) => {
+      const state: Record<string, unknown> = {};
+      const area = {
+        get: vi.fn(async (defaults?: unknown) => ({
+          ...(typeof defaults === 'object' && defaults !== null ? defaults : {}),
+          ...state,
+        })),
+        set: vi.fn(async (items: Record<string, unknown>) => {
+          Object.assign(state, items);
+        }),
+      };
+      const fresh = await exportBackupableSyncSettings(area);
+      expect(fresh.data[StorageKeys.GV_TIMELINE_ENABLED]).toBe(true);
+      await restoreBackupableSyncSettings(
+        {
+          [StorageKeys.GV_TIMELINE_ENABLED]: false,
+          [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: true,
+        },
+        area,
+        mode,
+      );
+      const saved = await exportBackupableSyncSettings(area);
+      expect(saved.data[StorageKeys.GV_TIMELINE_ENABLED]).toBe(false);
+      await restoreBackupableSyncSettings({ [StorageKeys.CHAT_WIDTH]: 88 }, area, mode);
+      expect(state[StorageKeys.GV_TIMELINE_ENABLED]).toBe(false);
+      expect(state[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]).toBe(true);
+      await restoreBackupableSyncSettings({ [StorageKeys.GV_TIMELINE_ENABLED]: true }, area, mode);
+      expect(state[StorageKeys.GV_TIMELINE_ENABLED]).toBe(true);
+      expect(state[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]).toBe(true);
+    },
+  );
+
   it('backs up and restores an explicitly disabled formula-copy preference', async () => {
     const storageArea = {
       get: vi.fn().mockResolvedValue({

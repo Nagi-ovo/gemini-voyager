@@ -4,25 +4,29 @@ Start with the owner of the behavior being changed. `index.ts` is the `timeline`
 runs the shared route lifecycle (`runRouteTimeline`) and returns the stop the content script calls on
 teardown. `manager.ts` creates a Gemini adapter for the
 [shared timeline engine and view](../../../features/timeline/README.md). `GeminiTimelineAdapter.ts`
-owns selector discovery, turn collection, scroll viewport discovery and native health reporting.
+supplies native storage, the time reader and scroll viewport discovery. `GeminiTimelineTurnSource.ts`
+owns selector discovery and turn collection; only the rail's source reports native health.
 
-| Change                                                                              | Owner                                                              |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Find turns, stable IDs, prompt/response summaries                                   | `TimelineTurns.ts`                                                 |
-| Marker snapshot, star display, Library hydration and verified legacy aliases        | `TimelineState.ts`                                                 |
-| Star persistence, migration, serialized writes and cloud merges                     | [Saved Library store](../../../features/savedLibrary/starStore.ts) |
-| Scoped hierarchy persistence and level/collapse edits                               | `TimelineHierarchy.ts`                                             |
-| Collapsed positions and hidden marker geometry                                      | `TimelineHierarchyGeometry.ts`                                     |
-| Dot/preview/shortcut navigation, active turn, scrolling and navigation cancellation | `TimelineNavigation.ts`                                            |
-| Rail composition, styling, preview, viewport sync and resize debounce               | `TimelineView.ts`                                                  |
-| Marker measurements/geometry, virtual/dense dots, ruler wave and runner animation   | `TimelineDotLayer.ts`                                              |
-| Slider geometry, scroll dragging and hover fade                                     | `TimelineSlider.ts`                                                |
-| Persisted width/position restoration, migration, dragging and cached placement      | `TimelineRailPlacement.ts`                                         |
-| Preview list, search, pinning and compact hover bridge                              | `TimelinePreviewPanel.ts`                                          |
-| Preview long-press timing, cancellation and click suppression                       | `TimelinePreviewPress.ts`                                          |
-| Hover delay, tooltip content layout and visibility                                  | `TimelineTooltip.ts`                                               |
-| Marker clicks, long press and hierarchy menu                                        | `TimelineMarkerInteractions.ts`                                    |
-| Timestamp opt-in, draft adoption, history matching and timestamp DOM                | `TimelineTimestamps.ts`                                            |
+| Change                                                                              | Owner                                                                        |
+| ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Find turns, stable IDs, prompt/response summaries                                   | `TimelineTurns.ts`                                                           |
+| Marker snapshot, star display, Library hydration and verified legacy aliases        | `TimelineState.ts`                                                           |
+| Star persistence, migration, serialized writes and cloud merges                     | [Saved Library store](../../../features/savedLibrary/starStore.ts)           |
+| Scoped hierarchy persistence and level/collapse edits                               | `TimelineHierarchy.ts`                                                       |
+| Collapsed positions and hidden marker geometry                                      | `TimelineHierarchyGeometry.ts`                                               |
+| Dot/preview/shortcut navigation, active turn, scrolling and navigation cancellation | `TimelineNavigation.ts`                                                      |
+| Rail composition, styling, preview, viewport sync and resize debounce               | `TimelineView.ts`                                                            |
+| Marker measurements/geometry, virtual/dense dots, ruler wave and runner animation   | `TimelineDotLayer.ts`                                                        |
+| Slider geometry, scroll dragging and hover fade                                     | `TimelineSlider.ts`                                                          |
+| Persisted width/position restoration, migration, dragging and cached placement      | `TimelineRailPlacement.ts`                                                   |
+| Preview list, search, pinning and compact hover bridge                              | `TimelinePreviewPanel.ts`                                                    |
+| Preview long-press timing, cancellation and click suppression                       | `TimelinePreviewPress.ts`                                                    |
+| Hover delay, tooltip content layout and visibility                                  | `TimelineTooltip.ts`                                                         |
+| Marker clicks, long press and hierarchy menu                                        | `TimelineMarkerInteractions.ts`                                              |
+| Timestamp opt-in and the shared page cache                                          | [`messageTimestampPageService`](../timestamp/messageTimestampPageService.ts) |
+| Draft adoption, history matching and message label ownership                        | [`MessageTimestamps`](../timestamp/MessageTimestamps.ts)                     |
+| Route-scoped timestamp DOM discovery and remount observation                        | [`messageTimestampCollector`](../timestamp/messageTimestampCollector.ts)     |
+| Read-only rail timestamps and history alias refresh                                 | `TimelineTimestamps.ts`                                                      |
 
 `TimelineState` owns the marker snapshot and exposes its hierarchy owner directly. Its shared storage
 listener routes hierarchy changes after star changes; `TimelineHierarchy` owns the account context
@@ -35,9 +39,18 @@ update state and notify the manager.
 A native viewport rebind preserves conversation state. Conversation teardown cancels each owner's
 listeners, observers, timers and animation frames. The shared `historyTimestampStore` has page
 lifetime and one owner, [`historyTimestampPageService`](../timestamp/historyTimestampPageService.ts):
-the timestamp owner waits for it and subscribes, but never starts or stops it. Each navigation owner
+the timestamp owners wait for it and subscribe, but never start or stop it. Each navigation owner
 holds a keyboard shortcut lease and releases it on teardown. State and timestamp owners
 capture the conversation URL so delayed work retains the correct account and conversation scope.
+
+`gvTimelineEnabled` controls only the Gemini rail. Message time labels and recording belong to the
+page service and follow `gvShowMessageTimestamps` independently. Its route collectors share one
+`TimestampService`, so a delayed write from one conversation cannot replace another route's cache.
+A route change retires its old collector immediately; the next waits for Gemini's router to render.
+The collector watches the body to detect replacement of `main`, ignores its own label mutations and
+owns every label it creates, including nodes in detached roots. Rail cleanup stops neither timestamp
+page service. The rail time reader keeps an independent history subscription for alias-driven star
+refreshes even when message time display is off.
 
 Keep these less obvious boundaries intact:
 

@@ -910,6 +910,14 @@
     "message": "Larga",
     "description": "Wide edit input width label"
   },
+  "timelineEnable": {
+    "message": "Mostrar linha do tempo",
+    "description": "Show the Gemini timeline"
+  },
+  "timelineEnableHint": {
+    "message": "Ao desativar, os itens salvos são mantidos. Os horários das mensagens seguem sua própria configuração.",
+    "description": "Turning off the timeline keeps message timestamps independent and preserves saved items"
+  },
   "timelineOptions": {
     "message": "Opções da Linha do Tempo",
     "description": "Timeline options section label"

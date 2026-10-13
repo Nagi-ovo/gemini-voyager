@@ -73,6 +73,7 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ['ide vscode cursor local server code context 上下文 代码 编辑器 本地'],
   ),
   popupSectionSearchTarget('timeline', ['timelineOptions']),
+  popupSearchTarget('timeline', 'timelineEnabled', ['timelineEnable', 'timelineEnableHint']),
   popupSearchTarget('timeline', 'timelineStyle', [
     'timelineStyle',
     'timelineStyleDots',

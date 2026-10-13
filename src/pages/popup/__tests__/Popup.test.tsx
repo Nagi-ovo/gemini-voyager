@@ -178,6 +178,24 @@ describe('Popup settings integration', () => {
     });
     expect(generalReads()).toHaveLength(1);
   });
+
+  it('turning the Gemini rail off keeps message timestamps on and writes only the rail switch', async () => {
+    sync[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS] = true;
+    local[StorageKeys.GV_POPUP_SETTINGS_SEARCH_QUERY] = '显示时间线';
+    await mount();
+    const rail = container.querySelector<HTMLInputElement>('#timeline-enabled')!;
+    const times = container.querySelector<HTMLInputElement>('#show-message-timestamps')!;
+    expect(rail.closest('[hidden]')).toBeNull();
+    expect(rail.checked).toBe(true);
+    extensionApi.storage.sync.set.mockClear();
+    await act(async () => rail.click());
+    expect(rail.checked).toBe(false);
+    expect(times.checked).toBe(true);
+    expect(times.disabled).toBe(false);
+    expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+      [StorageKeys.GV_TIMELINE_ENABLED]: false,
+    });
+  });
   it('limits AI Studio to supported controls and writes isolation only for that platform', async () => {
     extensionApi.tabs.query.mockResolvedValue([
       { id: 8, url: 'https://aistudio.google.com/prompts/new_chat' },
@@ -376,7 +394,11 @@ describe('Popup settings integration', () => {
     });
 
     it('changing the timeline style changes the ChatGPT rail, not Gemini’s', async () => {
+      sync[StorageKeys.GV_TIMELINE_ENABLED] = false;
       await mount();
+
+      const master = container.querySelector<HTMLInputElement>('#timeline-enabled')!;
+      expect(master.closest('[hidden]')).not.toBeNull();
 
       await act(async () => shownButton(TRANSLATIONS.en.timelineStyleCompact)!.click());
 
@@ -384,6 +406,7 @@ describe('Popup settings integration', () => {
         expect.objectContaining({ timelineStyle: 'compact' }),
       );
       expect(sync).not.toHaveProperty(StorageKeys.TIMELINE_STYLE);
+      expect(sync[StorageKeys.GV_TIMELINE_ENABLED]).toBe(false);
     });
 
     it('choosing compact in the popup also compacts a page still running the older timeline manifest', async () => {

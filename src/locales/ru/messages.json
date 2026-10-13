@@ -910,6 +910,14 @@
     "message": "Широкая",
     "description": "Wide edit input width label"
   },
+  "timelineEnable": {
+    "message": "Показывать таймлайн",
+    "description": "Show the Gemini timeline"
+  },
+  "timelineEnableHint": {
+    "message": "При отключении сохранённые элементы остаются. Временные метки сообщений управляются отдельной настройкой.",
+    "description": "Turning off the timeline keeps message timestamps independent and preserves saved items"
+  },
   "timelineOptions": {
     "message": "Настройки таймлайна",
     "description": "Timeline options section label"

@@ -419,6 +419,7 @@ export async function settle(ms = 1000): Promise<void> {
 
 let stopTimeline: (() => void) | null = null;
 let stopHistoryService: (() => void) | null = null;
+let stopMessageTimestampService: (() => void) | null = null;
 
 /**
  * Boots the timeline the way the content script does, on the current URL: the page's history
@@ -427,8 +428,11 @@ let stopHistoryService: (() => void) | null = null;
 export async function startTimelineOnPage(): Promise<void> {
   const { startHistoryTimestampPageService } =
     await import('../../timestamp/historyTimestampPageService');
+  const { startMessageTimestampPageService } =
+    await import('../../timestamp/messageTimestampPageService');
   const { startTimeline } = await import('../index');
   stopHistoryService ??= startHistoryTimestampPageService();
+  stopMessageTimestampService ??= startMessageTimestampPageService();
   stopTimeline = startTimeline();
   await settle();
 }
@@ -450,6 +454,8 @@ export function unloadPage(): void {
   const stop = stopTimeline;
   stopTimeline = null;
   stop?.();
+  stopMessageTimestampService?.();
+  stopMessageTimestampService = null;
   const stopHistory = stopHistoryService;
   stopHistoryService = null;
   stopHistory?.();
