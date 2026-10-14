@@ -17,11 +17,6 @@ hero:
       text: 시작하기
       link: ./guide/getting-started
 
-safariLaunch:
-  image: /assets/promotion/voyager-social-preview.png
-  alt: DeepSeek Harness를 포함한 모든 웹 UI에서 쓰는 프롬프트 라이브러리
-  link: ./guide/deepseek-harness
-
 teaser:
   title: '그냥 작동합니다.'
   description: '우리는 단순히 또 다른 확장 프로그램을 만들고 싶지 않았습니다. 더 나은 사고 방식을 구축하고 싶었습니다.<br>Voyager를 사용하면 인터페이스와 싸우는 대신 대화의 흐름에 집중할 수 있습니다.'

@@ -17,11 +17,6 @@ hero:
       text: Commencer
       link: ./guide/getting-started
 
-safariLaunch:
-  image: /assets/promotion/voyager-social-preview.png
-  alt: Votre bibliothèque de prompts sur toute interface web IA, y compris DeepSeek Harness
-  link: ./guide/deepseek-harness
-
 teaser:
   title: 'Ça marche, tout simplement.'
   description: 'Nous ne voulions pas créer une autre extension. Nous voulions créer une meilleure façon de penser.<br>Quand vous utilisez Voyager, vous arrêtez de vous battre avec l’interface pour couler avec elle.'

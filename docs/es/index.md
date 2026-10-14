@@ -17,11 +17,6 @@ hero:
       text: Comenzar el viaje
       link: ./guide/getting-started
 
-safariLaunch:
-  image: /assets/promotion/voyager-social-preview.png
-  alt: Tu biblioteca de prompts en cualquier interfaz web, incluido DeepSeek Harness
-  link: ./guide/deepseek-harness
-
 teaser:
   title: 'Redefiniendo la interacción.'
   description: 'No construimos extensiones, remodelamos el pensamiento.<br>Con Voyager, no es el humano adaptándose a la interfaz, sino la interfaz fluyendo con tu mente.'

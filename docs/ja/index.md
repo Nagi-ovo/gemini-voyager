@@ -17,11 +17,6 @@ hero:
       text: 旅を始める
       link: ./guide/getting-started
 
-safariLaunch:
-  image: /assets/promotion/voyager-social-preview.png
-  alt: DeepSeek Harness を含む、あらゆる Web UI で使えるプロンプトライブラリ
-  link: ./guide/deepseek-harness
-
 teaser:
   title: 'インタラクションを再定義する。'
   description: '私たちは拡張機能を作るのではありません。思考そのものを再構築するのです。<br>Voyager があれば、人がインターフェースに合わせる必要はありません。インターフェースが、あなたの思考の流れに寄り添うのです。'

@@ -17,11 +17,6 @@ hero:
       text: Iniciar Jornada
       link: ./guide/getting-started
 
-safariLaunch:
-  image: /assets/promotion/voyager-social-preview.png
-  alt: Sua biblioteca de prompts em qualquer interface web, incluindo o DeepSeek Harness
-  link: ./guide/deepseek-harness
-
 teaser:
   title: 'Simplesmente funciona.'
   description: 'Não queríamos criar apenas mais uma extensão. Queríamos criar uma melhor forma de pensar.<br>Quando usa o Voyager, deixa de lutar contra a interface e passa a fluir com ela.'

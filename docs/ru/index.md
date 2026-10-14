@@ -17,11 +17,6 @@ hero:
       text: Начать путешествие
       link: ./guide/getting-started
 
-safariLaunch:
-  image: /assets/promotion/voyager-social-preview.png
-  alt: Ваша библиотека промптов в любом веб-интерфейсе ИИ, включая DeepSeek Harness
-  link: ./guide/deepseek-harness
-
 teaser:
   title: 'Это просто работает.'
   description: 'Мы не хотели создавать очередное расширение. Мы хотели создать лучший способ мышления.<br>Когда вы используете Voyager, вы перестаете бороться с интерфейсом и начинаете плыть вместе с ним.'

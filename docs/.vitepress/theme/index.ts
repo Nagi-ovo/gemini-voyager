@@ -9,7 +9,6 @@ import FolderViewer from './components/FolderViewer.vue';
 import HomeAskAI from './components/HomeAskAI.vue';
 import HomeFeatures from './components/HomeFeatures.vue';
 import HomeReviews from './components/HomeReviews.vue';
-import HomeSafariLaunch from './components/HomeSafariLaunch.vue';
 import HomeTeaser from './components/HomeTeaser.vue';
 import PluginStore from './components/PluginStore.vue';
 import SafariDownloadLink from './components/SafariDownloadLink.vue';
@@ -22,13 +21,12 @@ export default {
       'layout-top': () => h(AnnouncementModal),
       'home-hero-after': () => h(HomeTeaser),
       'home-features-before': () => h(HomeFeatures),
-      'home-features-after': () => [h(HomeSafariLaunch), h(HomeAskAI), h(HomeReviews)],
+      'home-features-after': () => [h(HomeAskAI), h(HomeReviews)],
     });
   },
   enhanceApp({ app }) {
     app.use(NolebaseGitChangelogPlugin);
     app.component('HomeReviews', HomeReviews);
-    app.component('HomeSafariLaunch', HomeSafariLaunch);
     app.component('HomeTeaser', HomeTeaser);
     app.component('HomeAskAI', HomeAskAI);
     app.component('SafariDownloadLink', SafariDownloadLink);

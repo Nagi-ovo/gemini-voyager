@@ -17,11 +17,6 @@ hero:
       text: 開始旅程
       link: ./guide/getting-started
 
-safariLaunch:
-  image: /assets/promotion/voyager-social-preview.png
-  alt: 在任何網頁介面上使用你的提示詞庫，包括 DeepSeek Harness
-  link: ./guide/deepseek-harness
-
 teaser:
   title: '重新定義交互。'
   description: '我們不造擴充功能，我們重塑思考。<br>用 Voyager，不再是人適應介面，而是介面順應心流。'

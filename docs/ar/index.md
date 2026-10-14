@@ -17,11 +17,6 @@ hero:
       text: ابدأ الرحلة
       link: ./guide/getting-started
 
-safariLaunch:
-  image: /assets/promotion/voyager-social-preview.png
-  alt: مكتبة المطالبات الخاصة بك على أي واجهة ويب، بما في ذلك DeepSeek Harness
-  link: ./guide/deepseek-harness
-
 teaser:
   title: 'إنه يعمل ببساطة.'
   description: 'لم نرد بناء مجرد إضافة أخرى. أردنا بناء طريقة أفضل للتفكير.<br>عندما تستخدم Voyager، تتوقف عن مصارعة الواجهة وتبدأ في الانسياب معها.'
