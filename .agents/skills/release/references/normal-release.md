@@ -12,10 +12,10 @@ Follow this reference for a new release or interrupted preparation. Resume from 
 
 ### Commit range
 
-Derive the scope from the last released tag, not from unpushed commits:
+Derive the scope from the last released tag, not from unpushed commits. Match `v*`: the repository also carries non-release tags such as `pre-oss-rewrite`.
 
 ```bash
-PREV_TAG=$(git describe --tags --abbrev=0)
+PREV_TAG=$(git describe --tags --abbrev=0 --match 'v*')
 git log "${PREV_TAG}..HEAD" --format='%h %s' --no-merges
 git rev-list --count "${PREV_TAG}..HEAD"
 ```
@@ -83,6 +83,14 @@ version, and `src/features/plugins/constants.ts` records that released engine.
 When no `next` declaration exists, the engine version stays unchanged regardless
 of the extension version. Never hand-bump the plugin engine or choose the
 engine version while authoring an unreleased primitive.
+
+When `next` declarations land after a version was already bumped,
+`plugin:release:check` fails. Run `bun run bump {VERSION}` again with the same
+version: it leaves the five version sources unchanged and stamps only the new
+declarations. The bump does not touch prose or tests: replace `>=next` in
+`docs/**` with the stamped engine, and move test fixtures that pin `>=next`
+for a capability this release ships to that engine (`>=next` now means the
+engine after it).
 
 Do not manually edit the Xcode project version during a normal release. Verify all values after the bump:
 
@@ -185,7 +193,7 @@ Publish in this order; each step depends on the one before it:
    cd packages/create-voyager-plugin && npm publish --access public
    ```
 
-   An `E403 … with these credentials` means the local token cannot publish; the user runs `npm login` and publishes again. Confirm with `npm view create-voyager-plugin version` before continuing.
+   An `E403 … with these credentials` means the local token cannot publish; the user runs `npm login` and publishes again. An `E403 … Two-factor authentication … is required` means the npm account needs 2FA enabled first. npm then stages the upload: `npm view` shows a `0.0.0-stage` placeholder for a minute or two. Wait until `npm view create-voyager-plugin version` prints `{VERSION}`, then smoke-test it in an empty directory with `npx -y create-voyager-plugin@latest init my-plugin --site claude` followed by `check my-plugin`.
 
 2. **main.** The push deploys the docs and the remote plugin catalog (`deploy-docs.yml`). Wait for that run to succeed before the tag: a new-version extension that fetches the catalog before the deploy caches the old one as authoritative for that version and hides bundled plugins missing from it until its next refresh.
 
