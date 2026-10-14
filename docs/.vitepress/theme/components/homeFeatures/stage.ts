@@ -51,7 +51,7 @@ export interface Stage {
   /** Region elements, filled in by HomeFeatureDemo once it mounts. */
   regions: Partial<Record<StageRegion, HTMLElement>>;
   view: StageView;
-  /** Scrolls a card into view; on narrow screens the cards are stacked. */
+  /** Kept for scenes; the page never scrolls on its own when a feature is clicked. */
   focus: (card: StageCard) => void;
   /** Scrolls the conversation to its end, e.g. after adding to chatTail. */
   scrollChatToEnd: () => void;
@@ -68,17 +68,8 @@ export function createStage(): Stage {
     cards: {},
     chatEl: null,
     view: defaultView(),
-    focus(card: StageCard) {
-      const el = stage.cards[card];
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      // Leave the card alone when it is already fully on screen.
-      if (r.top >= 64 && r.bottom <= window.innerHeight) return;
-      el.scrollIntoView({
-        behavior: 'smooth',
-        block: r.height > window.innerHeight - 80 ? 'start' : 'center',
-      });
-    },
+    // Clicking a feature must not move the page; scenes may still call this, and it stays a no-op.
+    focus(_card: StageCard) {},
     scrollChatToEnd() {
       const el = stage.chatEl;
       el?.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });

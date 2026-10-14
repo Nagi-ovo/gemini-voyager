@@ -95,6 +95,8 @@
 
 /* Three feature cards */
 .gvf-hero {
+  /* Scenes reflow the demo; keep the browser from scrolling the page to follow an anchor inside it. */
+  overflow-anchor: none;
   display: grid;
   grid-template-columns: 1.15fr 1fr;
   gap: 40px;
@@ -244,19 +246,17 @@
 .gvf-composer-wrap {
   position: relative;
 }
-/* The address bar keeps its height; the card below takes the rest. */
-.gvf-stage:has(> .gvf-address) {
-  grid-template-rows: auto 1fr;
+/* The address bar sits inside the card, so showing it never moves the page. */
+.gvf-tl-host.gvf-has-address {
+  grid-template-rows: auto auto 1fr auto;
 }
 .gvf-address {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 12px;
-  margin-bottom: 8px;
-  border: 1px solid var(--gvf-line);
-  border-radius: 10px;
-  background: var(--host-bg);
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--gvf-line);
+  background: var(--host-side);
   color: var(--host-muted);
   font: 12.5px/1.4 var(--vp-font-family-mono);
   animation: gvf-fade-in 0.3s ease both;

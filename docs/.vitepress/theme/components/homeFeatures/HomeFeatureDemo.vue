@@ -415,16 +415,16 @@ onBeforeUnmount(() => {
         <div class="gvf-try">{{ content.timeline.hint }}</div>
       </div>
       <div class="gvf-stage">
-        <div v-if="view.address" class="gvf-address">
-          <span class="gvf-address-dots" aria-hidden="true"><i /><i /><i /></span>
-          <span class="gvf-address-url">{{ view.address }}</span>
-        </div>
         <div
           ref="hostEl"
           class="gvf-host gvf-tl-host"
           :class="[`gvf-skin-${view.skin}`, { 'gvf-has-address': view.address }]"
           :style="{ '--gvf-chat-w': `${view.chatWidth}%`, '--gvf-font-scale': view.fontScale }"
         >
+          <div v-if="view.address" class="gvf-address">
+            <span class="gvf-address-dots" aria-hidden="true"><i /><i /><i /></span>
+            <span class="gvf-address-url">{{ view.address }}</span>
+          </div>
           <div class="gvf-topbar">
             <span class="gvf-topbar-title">{{ chat?.title }}</span>
             <span :ref="region('topbarEnd')" class="gvf-topbar-end" />
