@@ -9,6 +9,7 @@ export const OCT_2026_MODEL_IDS = {
   flashLite: '8c46e95b1a07cecc',
   flash: '56fdd199312815e2',
   pro: 'e6fa609c3fa255c0',
+  argon: 'd7a1b2c3e4f506a7',
 } as const;
 
 /** `BardVeMetadataKey` payload as Gemini now encodes it. */
@@ -74,9 +75,13 @@ export function buildOct2026Trigger(pillText = 'Flash') {
 
 export function buildOct2026Menu(
   host: HTMLElement,
-  options: { selectedModel?: keyof typeof OCT_2026_MODEL_IDS; selectedLevel?: number } = {},
+  options: {
+    selectedModel?: keyof typeof OCT_2026_MODEL_IDS;
+    selectedLevel?: number;
+    useSubmenu?: boolean;
+  } = {},
 ) {
-  const { selectedModel = 'flash', selectedLevel = 0 } = options;
+  const { selectedModel = 'flash', selectedLevel = 0, useSubmenu = false } = options;
   const modelFor = OCT_2026_MODEL_IDS[selectedModel];
 
   const popover = document.createElement('div');
@@ -111,6 +116,7 @@ export function buildOct2026Menu(
   const flashLite = modelRow('flashLite', '3.5 Flash-Lite', 'Fastest answers');
   const flash = modelRow('flash', '3.8 Flash', 'All-around help');
   const pro = modelRow('pro', '3.1 Pro', 'Advanced reasoning');
+  const argon = modelRow('argon', '4 Argon', 'Complex tasks');
 
   const divider = document.createElement('mat-divider');
   divider.setAttribute('role', 'separator');
@@ -131,14 +137,64 @@ export function buildOct2026Menu(
   const medium = levelRow(1, 'Medium', 'Balanced depth', 4);
   const high = levelRow(2, 'High', 'Extra thorough', 2);
 
-  menu.append(flashLite, flash, pro, divider, low, medium, high);
+  let submenuPane: HTMLElement | null = null;
+  let thinkingTriggerRow: (HTMLElement & { click: ReturnType<typeof vi.fn> }) | null = null;
+
+  if (useSubmenu) {
+    thinkingTriggerRow = buildRow(
+      { label: 'Thinking level', sublabel: '' },
+      {
+        'aria-haspopup': 'menu',
+        'aria-controls': 'cdk-overlay-thinking-sub',
+        value: 'thinking_level',
+      },
+    );
+
+    const subPopover = document.createElement('div');
+    subPopover.setAttribute('popover', 'manual');
+    subPopover.className = 'cdk-overlay-popover cdk-overlay-connected-position-bounding-box';
+    const subPaneEl = document.createElement('div');
+    subPaneEl.id = 'cdk-overlay-thinking-sub';
+    subPaneEl.className = 'cdk-overlay-pane';
+    const subContainer = document.createElement('div');
+    subContainer.className = 'container';
+    const subMenu = document.createElement('gem-menu');
+    subMenu.setAttribute('role', 'menu');
+    subMenu.append(low, medium, high);
+    subContainer.appendChild(subMenu);
+    subPaneEl.appendChild(subContainer);
+    subPopover.appendChild(subPaneEl);
+    submenuPane = subPaneEl;
+
+    thinkingTriggerRow.click.mockImplementation(() => {
+      if (!subPopover.isConnected) host.appendChild(subPopover);
+    });
+
+    menu.append(flashLite, flash, pro, argon, divider, thinkingTriggerRow);
+  } else {
+    menu.append(flashLite, flash, pro, argon, divider, low, medium, high);
+  }
+
   popoverMenu.appendChild(menu);
   container.appendChild(popoverMenu);
   pane.appendChild(container);
   popover.appendChild(pane);
   host.appendChild(popover);
 
-  return { popover, pane, menu, flashLite, flash, pro, low, medium, high };
+  return {
+    popover,
+    pane,
+    menu,
+    flashLite,
+    flash,
+    pro,
+    argon,
+    low,
+    medium,
+    high,
+    submenuPane,
+    thinkingTriggerRow,
+  };
 }
 
 /** Trigger plus a menu that mounts beside it when clicked, as Gemini does now. */

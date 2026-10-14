@@ -64,7 +64,9 @@ export class ModelPicker {
       ? 'inline-thinking'
       : this.isNestedThinkingLevelItem(item)
         ? 'nested-thinking'
-        : 'model';
+        : this.isThinkingLevelTriggerItem(item)
+          ? 'thinking-trigger'
+          : 'model';
     return {
       kind,
       id: this.getModelIdFromItem(item),
@@ -77,7 +79,10 @@ export class ModelPicker {
     // Table menus share generic labels; require model-specific evidence before adding stars.
     const items = Array.from(panel.querySelectorAll<HTMLElement>(MODE_ITEM_SELECTOR));
     const kind =
-      panel.matches('.cdk-overlay-pane') && this.isThinkingLevelSubmenuPane(panel)
+      (panel.matches('.cdk-overlay-pane') ||
+        panel.matches('[popover]') ||
+        panel.classList.contains('cdk-overlay-pane')) &&
+      this.isThinkingLevelSubmenuPane(panel)
         ? 'thinking'
         : panel.querySelector('[data-mode-id], .mode-title, .title-and-description')
           ? 'model'
@@ -281,7 +286,8 @@ export class ModelPicker {
     const normalize = (value: string) => value.toLowerCase().trim();
     const name = normalize(target.name);
     const items = Array.from(panel.querySelectorAll<HTMLElement>(MODE_ITEM_SELECTOR)).filter(
-      (item) => !this.isInlineExtendedThinkingToggle(item),
+      (item) =>
+        !this.isInlineExtendedThinkingToggle(item) && !this.isThinkingLevelTriggerItem(item),
     );
     const exact = items.find((item) =>
       target.kind === 'id'
@@ -334,7 +340,11 @@ export class ModelPicker {
     // 2026 redesign: the added node may be a cdk-overlay-pane containing gem-menu-item entries
     // (model menu) or the thinking-level submenu (no data-mode-id, but aria-controls'd by a
     // value="thinking_level" row that lives in a sibling overlay).
-    if (root.matches?.('.cdk-overlay-pane')) {
+    if (
+      root.matches?.('.cdk-overlay-pane') ||
+      root.matches?.('[popover]') ||
+      root.classList?.contains('cdk-overlay-pane')
+    ) {
       if (root.querySelector(NEW_LAYOUT_ITEM_SELECTOR) !== null) return root;
       if (this.isThinkingLevelSubmenuPane(root)) return root;
     }
@@ -518,19 +528,44 @@ export class ModelPicker {
 
   // ==================== Thinking level helpers (2026 redesign) ====================
 
-  /**
-   * Find the "Thinking level" submenu row in any open model picker.
-   * Detected by the stable attribute value="thinking_level" rendered by Gemini.
-   */
-  private findThinkingLevelTriggerRow(): HTMLElement | null {
-    return document.querySelector<HTMLElement>(
-      '.cdk-overlay-pane [value="thinking_level"], .cdk-overlay-pane gem-menu-item[value="thinking_level"]',
+  public isThinkingLevelTriggerItem(item: HTMLElement): boolean {
+    if (item.getAttribute('value') === 'thinking_level') return true;
+    if (item.matches('[data-test-id*="thinking-level"], [data-test-id*="thinking_level"]'))
+      return true;
+    if (item.getAttribute('data-mode-id')) return false;
+    const text = (item.textContent || '').toLowerCase().trim();
+    return (
+      text.startsWith('thinking level') ||
+      text === 'thinking' ||
+      text.includes('思考等级') ||
+      text.includes('思考程度') ||
+      text.includes('reasoning level')
     );
   }
 
   /**
-   * Resolve the submenu pane (the one containing Standard/Extended) by walking
-   * from the Thinking level row's aria-controls to the matching menu id.
+   * Find the "Thinking level" submenu row in any open model picker.
+   * Detected by attribute value="thinking_level", test-id, or localized label.
+   */
+  private findThinkingLevelTriggerRow(): HTMLElement | null {
+    const direct = document.querySelector<HTMLElement>(
+      '.cdk-overlay-pane [value="thinking_level"], .cdk-overlay-pane gem-menu-item[value="thinking_level"], ' +
+        '.cdk-overlay-pane [data-test-id*="thinking-level"], .cdk-overlay-pane [data-test-id*="thinking_level"]',
+    );
+    if (direct) return direct;
+
+    const menuPanel = this.getModeSwitchMenuPanel();
+    if (!menuPanel) return null;
+    const items = menuPanel.querySelectorAll<HTMLElement>(MODE_ITEM_SELECTOR);
+    for (const item of Array.from(items)) {
+      if (this.isThinkingLevelTriggerItem(item)) return item;
+    }
+    return null;
+  }
+
+  /**
+   * Resolve the submenu pane (the one containing Low/Medium/High or Standard/Extended).
+   * Resolves by aria-controls or searches matching overlay panes directly.
    */
   public findThinkingLevelSubmenuPane(): HTMLElement | null {
     const row = this.findThinkingLevelTriggerRow();
@@ -538,9 +573,17 @@ export class ModelPicker {
     if (controlsId) {
       const submenu = document.getElementById(controlsId);
       if (submenu) {
-        return submenu.closest<HTMLElement>('.cdk-overlay-pane') ?? submenu;
+        return submenu.closest<HTMLElement>('.cdk-overlay-pane, [popover]') ?? submenu;
       }
     }
+
+    const candidatePanes = document.querySelectorAll<HTMLElement>(
+      '.cdk-overlay-pane, [popover="manual"], .cdk-overlay-popover',
+    );
+    for (const pane of Array.from(candidatePanes)) {
+      if (this.isThinkingLevelSubmenuPane(pane)) return pane;
+    }
+
     return row?.querySelector('gem-menu-item, [role="menuitem"]') ? row : null;
   }
 
@@ -553,12 +596,42 @@ export class ModelPicker {
   private isThinkingLevelSubmenuPane(pane: HTMLElement): boolean {
     // The submenu pane never carries the trigger row itself — that lives only in the parent overlay.
     if (pane.querySelector('[value="thinking_level"]')) return false;
-    const row = this.findThinkingLevelTriggerRow();
-    const controlsId = row?.getAttribute('aria-controls');
-    if (!controlsId) return false;
-    const submenuEl = document.getElementById(controlsId);
-    if (!submenuEl) return false;
-    return pane.id === controlsId || pane.contains(submenuEl);
+    if (pane.querySelector(NEW_LAYOUT_ITEM_SELECTOR)) return false; // Contains data-mode-id (model menu)
+    const triggerRow = this.findThinkingLevelTriggerRow();
+    if (triggerRow && pane.contains(triggerRow)) return false;
+
+    // Check aria-controls linkage
+    const controlsId = triggerRow?.getAttribute('aria-controls');
+    if (controlsId) {
+      const submenuEl = document.getElementById(controlsId);
+      if (submenuEl && (pane.id === controlsId || pane.contains(submenuEl))) return true;
+    }
+
+    // Direct content heuristic: pane contains Low / Medium / High / jslog:323336 items
+    const items = pane.querySelectorAll<HTMLElement>(MODE_ITEM_SELECTOR);
+    if (!items.length) return false;
+
+    // If items carry the extended thinking jslog id (323336), it's definitely the thinking submenu
+    const hasThinkingJslog = Array.from(items).some((it) =>
+      it.getAttribute('jslog')?.includes(EXTENDED_THINKING_TOGGLE_JSLOG_ID),
+    );
+    if (hasThinkingJslog) return true;
+
+    // Check item labels/sublabels against known thinking level indicators
+    const thinkingKeywords = ['low', 'medium', 'high', 'standard', 'extended', '低', '中', '高'];
+    const thinkingSublabels = ['quick and efficient', 'balanced depth', 'extra thorough'];
+    let matchesCount = 0;
+    for (const it of Array.from(items)) {
+      const label = this.getThinkingLevelLabel(it).toLowerCase();
+      const sublabel = it.querySelector('.sublabel')?.textContent?.toLowerCase().trim() || '';
+      if (
+        thinkingKeywords.some((kw) => label === kw || label.startsWith(kw)) ||
+        thinkingSublabels.some((sub) => sublabel.includes(sub))
+      ) {
+        matchesCount++;
+      }
+    }
+    return matchesCount > 0 && matchesCount === items.length;
   }
 
   /**

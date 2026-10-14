@@ -154,4 +154,90 @@ describe("Gemini's October 2026 model menu", () => {
     expect(pro.click).toHaveBeenCalledTimes(1);
     expect(flash.click).not.toHaveBeenCalled();
   });
+
+  it('applies 4 Argon as the default model in new chats', async () => {
+    mockSyncGet({ gvDefaultModel: { id: OCT_2026_MODEL_IDS.argon, name: '4 Argon' } });
+    history.replaceState({}, '', '/app');
+    const { trigger, rows } = mountOct2026Picker('Flash');
+
+    await startAutoApply();
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(trigger.click).toHaveBeenCalled();
+    expect(rows.argon.click).toHaveBeenCalledTimes(1);
+    expect(rows.flash.click).not.toHaveBeenCalled();
+  });
+
+  it('stars 4 Argon and persists it as default model', async () => {
+    mockSyncGet({});
+    (chrome.storage.sync.set as unknown as ReturnType<typeof vi.fn>).mockClear();
+    await startStars();
+
+    const { pillContainer } = buildOct2026Trigger('Flash');
+    const rows = buildOct2026Menu(pillContainer);
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    const star = (row: HTMLElement) => row.querySelector<HTMLButtonElement>('.gv-default-star-btn');
+    expect(star(rows.argon)?.dataset.gvDefaultKind).toBe('model');
+
+    star(rows.argon)?.click();
+    await Promise.resolve();
+    expect(storageWrites()).toContainEqual({
+      gvDefaultModel: { id: OCT_2026_MODEL_IDS.argon, name: '4 Argon' },
+    });
+    expect(star(rows.argon)?.classList.contains('is-default')).toBe(true);
+  });
+
+  it('handles nested thinking level submenu: stars Low/Medium/High in the subpane and saves default', async () => {
+    mockSyncGet({});
+    (chrome.storage.sync.set as unknown as ReturnType<typeof vi.fn>).mockClear();
+    await startStars();
+
+    const { pillContainer } = buildOct2026Trigger('Argon');
+    const rows = buildOct2026Menu(pillContainer, { useSubmenu: true, selectedModel: 'argon' });
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    // Thinking level trigger row in main menu must not have a model star
+    const star = (row: HTMLElement) => row.querySelector<HTMLButtonElement>('.gv-default-star-btn');
+    expect(star(rows.thinkingTriggerRow!)).toBeNull();
+
+    // Trigger submenu open
+    rows.thinkingTriggerRow!.click();
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(500);
+
+    // Submenu rows must have thinking stars
+    for (const row of [rows.low, rows.medium, rows.high]) {
+      expect(star(row)?.dataset.gvDefaultKind).toBe('thinking');
+    }
+
+    star(rows.high)?.click();
+    await Promise.resolve();
+    expect(storageWrites()).toContainEqual({
+      gvDefaultThinkingLevel: { index: 2, label: 'High', mode: 'extended' },
+    });
+    expect(star(rows.high)?.classList.contains('is-default')).toBe(true);
+  });
+
+  it('auto-applies High thinking level by opening the Thinking level submenu', async () => {
+    mockSyncGet({
+      gvDefaultModel: { id: OCT_2026_MODEL_IDS.argon, name: '4 Argon' },
+      gvDefaultThinkingLevel: { index: 2, label: 'High', mode: 'extended' },
+    });
+    history.replaceState({}, '', '/app');
+    const { trigger: _trigger, rows } = mountOct2026Picker('Argon', {
+      useSubmenu: true,
+      selectedModel: 'argon',
+      selectedLevel: 0,
+    });
+
+    await startAutoApply();
+    await vi.advanceTimersByTimeAsync(1500);
+
+    expect(rows.thinkingTriggerRow!.click).toHaveBeenCalled();
+    expect(rows.high.click).toHaveBeenCalledTimes(1);
+    expect(rows.low.click).not.toHaveBeenCalled();
+  });
 });

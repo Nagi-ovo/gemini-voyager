@@ -171,7 +171,8 @@ export class DefaultModelPreferences {
   public isPageDefaultThinkingLevel(thinking: DefaultThinkingLevel | null): boolean {
     if (!thinking) return false;
     if (thinking.mode) return thinking.mode === 'standard';
-    return thinking.label.toLowerCase().trim() === 'standard';
+    const label = thinking.label.toLowerCase().trim();
+    return label === 'standard' || label === 'low' || label === '低';
   }
 
   /**
@@ -237,13 +238,16 @@ export class DefaultModelPreferences {
   }
 
   public thinkingMatchesLines(target: DefaultThinkingLevel, lines: string[]): boolean {
-    // Gemini omits the thinking-level line in the trigger pill when at Standard.
+    // Gemini omits the thinking-level line in the trigger pill when at Standard/Low.
     // Index 0 is not sufficient: compact pickers may contain only Extended.
     if (lines.length < 2) {
       return this.isPageDefaultThinkingLevel(target);
     }
     const thinkingLine = lines.slice(1).join(' ').toLowerCase().trim();
-    return thinkingLine === target.label.toLowerCase().trim();
+    const targetLabel = target.label.toLowerCase().trim();
+    if (thinkingLine === targetLabel) return true;
+    if (this.isWordBoundedIn(targetLabel, thinkingLine)) return true;
+    return false;
   }
 
   private isWordBoundedIn(needle: string, haystack: string): boolean {

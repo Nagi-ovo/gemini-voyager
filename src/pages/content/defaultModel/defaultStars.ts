@@ -228,17 +228,19 @@ export class DefaultStars {
       return;
     }
 
-    if (description.kind === 'nested-thinking') {
-      // Gemini now renders Standard/Extended inline under the Thinking level row.
-      // Those child rows may still carry model-like metadata, so keep them out
-      // of the model default path and let the thinking-level injector own them.
+    if (description.kind === 'nested-thinking' || description.kind === 'thinking-trigger') {
+      // Thinking rows and trigger openers must not receive a model star.
       item.querySelectorAll('.gv-default-star-btn').forEach((star) => star.remove());
       return;
     }
 
     // Skip submenu triggers (e.g. "Thinking level" → Standard/Extended in the 2026 redesign).
     // Real model rows always resolve to a stable model id; submenu rows do not.
-    if (item.getAttribute('aria-haspopup') === 'true') return;
+    if (
+      item.getAttribute('aria-haspopup') === 'true' ||
+      item.getAttribute('aria-haspopup') === 'menu'
+    )
+      return;
     if (item.getAttribute('role') === 'menuitem' && !description.id) {
       // role=menuitem without any resolvable id is either a submenu opener or a non-model entry.
       // role=menuitemradio (legacy variant) may legitimately lack data-mode-id, so we keep it.
