@@ -196,7 +196,16 @@ onBeforeUnmount(() => {
               <span class="num"
                 >−<i>b</i><span class="op">±</span
                 ><span class="sqrt"
-                  ><span class="rad">√</span
+                  ><svg
+                    class="rad"
+                    viewBox="0 0 10 24"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M0.5 14.5 L2.6 13 L5.2 23.5 L9.4 0.5 L10 0.5"
+                      vector-effect="non-scaling-stroke"
+                    /></svg
                   ><span class="under"
                     ><i>b</i><sup>2</sup><span class="op">−</span>4<i>ac</i></span
                   ></span
@@ -375,19 +384,26 @@ onBeforeUnmount(() => {
 .den {
   padding-top: 0.12em;
 }
+/* The radical is drawn, not a font glyph: a glyph's height and top never line up with the bar
+   across fonts. The SVG stretches to the radicand and its last segment meets the bar. */
 .sqrt {
   display: inline-flex;
-  align-items: flex-end;
+  align-items: stretch;
 }
 .rad {
-  font-size: 1.12em;
-  line-height: 1;
-  margin-inline-end: -0.04em;
+  flex: none;
+  width: 0.62em;
+  height: auto;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.2px;
+  stroke-linejoin: round;
+  stroke-linecap: round;
 }
 .under {
-  border-top: 1px solid currentColor;
-  padding: 0.12em 0.1em 0;
-  margin-top: 0.08em;
+  border-top: 1.2px solid currentColor;
+  padding: 0.1em 0.12em 0 0.08em;
 }
 
 /* Toast and clipboard dock at the bottom of the chat, clear of the timeline rail. */
