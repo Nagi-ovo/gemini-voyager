@@ -134,6 +134,7 @@ const rows = computed<Row[]>(() => {
 function openChat(id: string) {
   if (current.value === id) return;
   current.value = id;
+  pinned = -1;
   closePreview();
   nextTick(() => {
     if (chatEl.value) chatEl.value.scrollTop = 0;
@@ -178,6 +179,7 @@ function onDrop(row: Row) {
 const chatEl = ref<HTMLElement | null>(null);
 const railEl = ref<HTMLElement | null>(null);
 const dotTops = ref<number[]>([]);
+const spacer = ref(0);
 const active = ref(0);
 const tip = reactive({ show: false, top: 0, text: '', starred: false });
 const flashIdx = ref(-1);
@@ -189,15 +191,33 @@ function measure() {
   const rail = railEl.value;
   if (!el || !rail) return;
   const turns = [...el.querySelectorAll<HTMLElement>('.gvf-turn')];
-  const total = Math.max(el.scrollHeight, 1);
+  const col = el.firstElementChild as HTMLElement | null;
+  const contentEnd = col ? col.offsetTop + col.offsetHeight : el.scrollHeight;
+  // Room below the last turn so any turn can scroll to the top, as Gemini does; a chat that fits
+  // the viewport could otherwise never move when a dot is clicked.
+  const last = turns.at(-1);
+  spacer.value = last ? Math.max(0, el.clientHeight - (contentEnd - last.offsetTop) - 8) : 0;
+  const total = Math.max(contentEnd, 1);
   const pad = 16;
   const h = rail.clientHeight - pad * 2;
   dotTops.value = turns.map((t) => pad + (t.offsetTop / total) * h);
   syncActive();
 }
+// A clicked dot stays active until the reader scrolls on their own: a short chat often cannot
+// scroll that turn to the top, and the "at the bottom" rule below would otherwise claim it.
+let pinned = -1;
+const unpin = () => {
+  if (pinned < 0) return;
+  pinned = -1;
+  syncActive();
+};
 function syncActive() {
   const el = chatEl.value;
   if (!el) return;
+  if (pinned >= 0) {
+    active.value = pinned;
+    return;
+  }
   const turns = [...el.querySelectorAll<HTMLElement>('.gvf-turn')];
   let cur = 0;
   turns.forEach((t, i) => {
@@ -210,6 +230,8 @@ function jump(i: number) {
   const el = chatEl.value;
   const turn = el?.querySelectorAll<HTMLElement>('.gvf-turn')[i];
   if (!el || !turn) return;
+  pinned = i;
+  active.value = i;
   el.scrollTo({ top: turn.offsetTop - 8, behavior: 'smooth' });
   flashIdx.value = i;
   setTimeout(() => flashIdx.value === i && (flashIdx.value = -1), 700);
@@ -293,6 +315,7 @@ function send() {
   const p = pending.value;
   const c = chat.value;
   if (!p || !c) return;
+  pinned = -1;
   c.turns.push({
     q: p.text,
     a: promptReply(p.reply, c.source, props.content.replyLeads),
@@ -483,7 +506,14 @@ onBeforeUnmount(() => {
             <span :ref="region('topbarEnd')" class="gvf-topbar-end" />
           </div>
           <div class="gvf-convo">
-            <div ref="chatEl" class="gvf-chat" @scroll.passive="syncActive">
+            <div
+              ref="chatEl"
+              class="gvf-chat"
+              @scroll.passive="syncActive"
+              @wheel.passive="unpin"
+              @touchmove.passive="unpin"
+              @keydown="unpin"
+            >
               <div class="gvf-chat-col">
                 <div
                   v-for="(turn, i) in chat?.turns ?? []"
@@ -500,6 +530,7 @@ onBeforeUnmount(() => {
                 </div>
                 <div :ref="region('chatTail')" class="gvf-chat-tail" />
               </div>
+              <div class="gvf-chat-spacer" :style="{ height: `${spacer}px` }" aria-hidden="true" />
             </div>
             <div :ref="region('chatCover')" class="gvf-region-cover" />
             <div
