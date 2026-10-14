@@ -319,3 +319,5 @@ Voyager améliore l'expérience de chat Gemini AI avec :
 ## Licence
 
 En contribuant, vous acceptez que vos contributions soient licenciées sous la [Licence GPLv3](../LICENSE).
+
+Les plugins font exception. Un plugin est du JSON et du CSS lus par le moteur, et ne fait pas partie du cœur sous GPL : chaque dossier de plugin relève donc du champ `license` de son `plugin.json`. Choisissez `MIT` ou `GPL-3.0-or-later`. Le code de `src/features/plugins/verbs/` et le reste de l’extension restent sous GPLv3.

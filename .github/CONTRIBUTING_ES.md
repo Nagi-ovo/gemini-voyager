@@ -310,3 +310,5 @@ Voyager mejora la experiencia de chat de Gemini AI con:
 ## Licencia
 
 Al contribuir, aceptas que tus contribuciones se licenciarán bajo la [Licencia GPLv3](../LICENSE).
+
+Los plugins son la excepción. Un plugin es JSON y CSS que lee el motor, no forma parte del núcleo GPL, así que cada carpeta de plugin se rige por el campo `license` de su `plugin.json`. Elige `MIT` o `GPL-3.0-or-later`. El código de `src/features/plugins/verbs/` y el resto de la extensión siguen bajo GPLv3.

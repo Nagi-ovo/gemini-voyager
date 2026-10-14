@@ -300,6 +300,8 @@ Voyager 通过以下功能增强 Gemini AI 聊天体验：
 
 提交贡献即表示你同意你的贡献将采用 [GPLv3 许可证](../LICENSE)。
 
+插件例外。插件是由引擎读取的 JSON 和 CSS，不属于 GPL 核心，所以每个插件目录以其 `plugin.json` 的 `license` 字段为准，可选 `MIT` 或 `GPL-3.0-or-later`。`src/features/plugins/verbs/` 下的代码和扩展的其余部分仍是 GPLv3。
+
 ---
 
 # Contributing to Voyager
@@ -611,3 +613,5 @@ Voyager enhances the Gemini AI chat experience with:
 ## License
 
 By contributing, you agree that your contributions will be licensed under the [GPLv3 License](../LICENSE).
+
+Plugins are the exception. A plugin is JSON and CSS that the engine reads, not part of the GPL core, so each plugin folder is licensed by the `license` field in its `plugin.json`. Choose `MIT` or `GPL-3.0-or-later`. Code under `src/features/plugins/verbs/` and the rest of the extension stays GPLv3.
