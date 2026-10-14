@@ -41,14 +41,14 @@ export const CODE_BLOCK_DIAGRAM_PARAMS: Readonly<Record<string, PrimitiveParamSp
   copyButton: {
     type: 'boolean',
     required: false,
-    sinceEngine: 'next',
+    sinceEngine: '1.9.0',
     description:
       "Adds a Copy button to the diagram's toolbar that copies the block's source, for a host whose own copy button is inside the code block the diagram view hides. Default false.",
   },
   exportImage: {
     type: 'boolean',
     required: false,
-    sinceEngine: 'next',
+    sinceEngine: '1.9.0',
     description:
       "Lets Voyager's PNG and PDF export show the drawn diagram (Mermaid in its light theme) instead of the block's source; Markdown keeps the source, and a block still drawing or shown as code exports its source. Default false.",
   },

@@ -8,7 +8,7 @@ export const contract: PrimitiveContract = {
     dataBackend: {
       type: 'string',
       required: false,
-      sinceEngine: 'next',
+      sinceEngine: '1.9.0',
       description:
         '"shared" uses Voyager’s native stars and hierarchy on consumer gemini.google.com only. Required on Gemini; omit on catalog sites. Shared mode rejects turn, turnItem, conversationIdPattern, conversationIdAttribute and accountIdAttributes overrides; native route, account and canonical turn identity remain authoritative.',
     },

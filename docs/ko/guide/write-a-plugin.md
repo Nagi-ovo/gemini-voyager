@@ -70,7 +70,7 @@ npx create-voyager-plugin@latest check my-plugin
 
 로컬 플러그인은 내 브라우저에만 있습니다. 다른 곳으로 옮기려면 플러그인 목록에서 JSON을 내보내세요. 모두에게 도움이 될 것 같다면 공식 카탈로그에 제안할 수 있습니다. 그 절차는 [플러그인 기여 가이드](./plugin-contribution.md)에서 설명합니다.
 
-전송 단축키 플러그인은 모든 사이트에서 페이지당 하나만 실행됩니다. 한 플러그인이 전송 모드를 쥐고 있으면 다른 플러그인은 충돌을 알리고 일시 중지 상태로 남습니다. 선택 사항인 `mode`(`"engine": ">=next"` 필요, 1.9.0에서 출시)는 `ctrlEnterSends`(기본값) 또는 `enterSends`입니다. IME 입력 확정 과정에서는 전송되지 않습니다. Gemini와 AI Studio도 이를 허용하며, 지원 모드는 아래와 같습니다.
+전송 단축키 플러그인은 모든 사이트에서 페이지당 하나만 실행됩니다. 한 플러그인이 전송 모드를 쥐고 있으면 다른 플러그인은 충돌을 알리고 일시 중지 상태로 남습니다. 선택 사항인 `mode`(`"engine": ">=1.9.0"` 필요)는 `ctrlEnterSends`(기본값) 또는 `enterSends`입니다. IME 입력 확정 과정에서는 전송되지 않습니다. Gemini와 AI Studio도 이를 허용하며, 지원 모드는 아래와 같습니다.
 
 Gemini에서는 `sendShortcut`이 공식 Ctrl/Cmd+Enter 기능을 대신할 수 있습니다. 공식 스위치를 끈 다음 로컬 플러그인을 켜세요. `ctrlEnterSends`만 지원되며, Enterprise에서는 동작하지 않습니다. `composerRoot`는 기본 입력창과 편집 입력창을 모두 포함하고, `sendButton`은 중지 버튼을 제외합니다.
 

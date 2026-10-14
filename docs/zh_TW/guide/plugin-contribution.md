@@ -169,7 +169,7 @@ catalog 中的外掛只屬於單一網站資料夾，而且它的每一個 `matc
 
 - `addClass`：為目標元素加上類別。
 - `setAttribute`：設定屬性。
-- `setStyle`：設定行內樣式或 CSS 變數。值的結尾可加上 `!important`，以該優先順序套用；較舊的 Voyager 版本會捨棄這類值，因此若外掛依賴它，請將 `engine` 設為 `>=next`。`margin` 之類的簡寫會逐個長屬性追蹤，因此關閉某個外掛時，不會清除另一個外掛的 `margin-top`。
+- `setStyle`：設定行內樣式或 CSS 變數。值的結尾可加上 `!important`，以該優先順序套用；較舊的 Voyager 版本會捨棄這類值，因此若外掛依賴它，請將 `engine` 設為 `>=1.9.0`。`margin` 之類的簡寫會逐個長屬性追蹤，因此關閉某個外掛時，不會清除另一個外掛的 `margin-top`。
 - `hide`：隱藏目標元素。
 
 目標可以是 CSS 選擇器，也可以是上述的語意鍵，寫成 `{ "kind": "semantic", "key": "userTurn" }`。語意鍵通常比較穩定，但前提是目前的網站適配器已宣告該鍵。

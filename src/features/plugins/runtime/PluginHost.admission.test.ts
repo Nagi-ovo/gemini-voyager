@@ -475,7 +475,7 @@ describe('PluginHost: a Gemini shared rail inherits the native start point', () 
   const ID = 'local.me.shared-rail';
   const shared: PluginManifest = {
     ...official(ID, 'gv-local-shared-rail'),
-    engine: '>=next',
+    engine: '>=1.9.0',
     contributes: {
       domOps: [
         {

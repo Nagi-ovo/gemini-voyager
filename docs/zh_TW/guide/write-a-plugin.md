@@ -70,7 +70,7 @@ Gemini 個人版目前已支援本機 `turnNavigator`：設定 `params.dataBacke
 
 本機外掛只存在於你的瀏覽器中。若要搬到其他地方使用，請在外掛清單中匯出它的 JSON。如果它對大家都有幫助，可以提議收錄到官方外掛目錄，流程請見[外掛貢獻指南](/zh_TW/guide/plugin-contribution)。
 
-在所有網站上，每個頁面只會執行一個傳送快捷鍵外掛。當某個外掛已占用傳送模式時，另一個會顯示衝突並暫停。選填的 `mode`（需要 `"engine": ">=next"`，於 1.9.0 版發布）可為 `ctrlEnterSends`（預設）或 `enterSends`。輸入法確認鍵不會觸發傳送。Gemini 與 AI Studio 現在也開放此功能，支援的模式見下文。
+在所有網站上，每個頁面只會執行一個傳送快捷鍵外掛。當某個外掛已占用傳送模式時，另一個會顯示衝突並暫停。選填的 `mode`（需要 `"engine": ">=1.9.0"`）可為 `ctrlEnterSends`（預設）或 `enterSends`。輸入法確認鍵不會觸發傳送。Gemini 與 AI Studio 現在也開放此功能，支援的模式見下文。
 
 Gemini 現在允許 `sendShortcut` 取代官方的 Ctrl+Enter 傳送功能：請先關閉官方開關，再啟用本機外掛。目前只支援 `ctrlEnterSends`，Enterprise 不會執行。`composerRoot` 涵蓋主要輸入框與編輯輸入框；`sendButton` 不包含停止按鈕。
 

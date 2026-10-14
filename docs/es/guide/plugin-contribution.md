@@ -169,7 +169,7 @@ Los plugins declarativos admiten actualmente:
 
 - `addClass`: añade una clase a los elementos objetivo.
 - `setAttribute`: establece un atributo.
-- `setStyle`: establece estilos en línea o variables CSS. Termina el valor con `!important` para aplicarlo con esa prioridad; las versiones antiguas de Voyager descartan ese valor, así que pon `engine` en `>=next` si tu plugin lo necesita. Los atajos como `margin` se registran propiedad por propiedad, de modo que desactivar un plugin nunca borra el `margin-top` de otro plugin.
+- `setStyle`: establece estilos en línea o variables CSS. Termina el valor con `!important` para aplicarlo con esa prioridad; las versiones antiguas de Voyager descartan ese valor, así que pon `engine` en `>=1.9.0` si tu plugin lo necesita. Los atajos como `margin` se registran propiedad por propiedad, de modo que desactivar un plugin nunca borra el `margin-top` de otro plugin.
 - `hide`: oculta elementos objetivo.
 
 El objetivo puede ser un selector CSS o una de las claves semánticas de la lista anterior, escrita como `{ "kind": "semantic", "key": "userTurn" }`. Las claves semánticas suelen ser más estables, pero requieren que el adaptador del sitio actual declare esa clave.

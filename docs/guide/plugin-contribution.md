@@ -169,7 +169,7 @@ src/features/plugins/catalog/
 
 - `addClass`：为目标元素添加类名。
 - `setAttribute`：设置属性。
-- `setStyle`：设置内联样式或 CSS 变量。值以 `!important` 结尾时会以该优先级应用；旧版本的 Voyager 会丢弃这样的值，因此如果插件依赖它，请将 `engine` 设为 `>=next`。`margin` 之类的简写属性按各自的长属性分别记录，因此关闭某个插件时，不会清除另一个插件设置的 `margin-top`。
+- `setStyle`：设置内联样式或 CSS 变量。值以 `!important` 结尾时会以该优先级应用；旧版本的 Voyager 会丢弃这样的值，因此如果插件依赖它，请将 `engine` 设为 `>=1.9.0`。`margin` 之类的简写属性按各自的长属性分别记录，因此关闭某个插件时，不会清除另一个插件设置的 `margin-top`。
 - `hide`：隐藏目标元素。
 
 目标可以是 CSS 选择器，也可以是上文列出的语义键，写法为 `{ "kind": "semantic", "key": "userTurn" }`。语义键通常更稳定，但要求当前站点适配器已声明该键。

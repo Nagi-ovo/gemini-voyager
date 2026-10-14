@@ -70,7 +70,7 @@ Les traductions (`i18n`) sont facultatives.
 
 Un plugin local reste dans votre navigateur ; exportez son JSON depuis la liste des plugins pour l'emporter ailleurs. S'il peut servir à tout le monde, proposez-le pour le catalogue officiel : [Guide de contribution aux plugins](./plugin-contribution.md) décrit la marche à suivre.
 
-Sur chaque site, un seul plugin de raccourci d’envoi fonctionne par page. Si un plugin utilise déjà le mode d’envoi, un autre signale un conflit et reste en pause. Le paramètre facultatif `mode` (nécessite `"engine": ">=next"`, sorti en 1.9.0) vaut `ctrlEnterSends` (par défaut) ou `enterSends`. La validation IME n’envoie rien. Gemini et AI Studio l’autorisent désormais ; les modes pris en charge sont décrits ci-dessous.
+Sur chaque site, un seul plugin de raccourci d’envoi fonctionne par page. Si un plugin utilise déjà le mode d’envoi, un autre signale un conflit et reste en pause. Le paramètre facultatif `mode` (nécessite `"engine": ">=1.9.0"`) vaut `ctrlEnterSends` (par défaut) ou `enterSends`. La validation IME n’envoie rien. Gemini et AI Studio l’autorisent désormais ; les modes pris en charge sont décrits ci-dessous.
 
 Sur Gemini, `sendShortcut` peut remplacer l’envoi officiel Ctrl/Cmd+Entrée : désactivez son réglage puis activez le plugin local. Seul `ctrlEnterSends` est accepté ; Enterprise reste inactif. `composerRoot` couvre les champs principal et de modification ; `sendButton` exclut l’arrêt.
 

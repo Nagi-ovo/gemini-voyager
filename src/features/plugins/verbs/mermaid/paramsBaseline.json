@@ -24,12 +24,12 @@
     "copyButton": {
       "type": "boolean",
       "required": false,
-      "sinceEngine": "next"
+      "sinceEngine": "1.9.0"
     },
     "exportImage": {
       "type": "boolean",
       "required": false,
-      "sinceEngine": "next"
+      "sinceEngine": "1.9.0"
     }
   }
 }

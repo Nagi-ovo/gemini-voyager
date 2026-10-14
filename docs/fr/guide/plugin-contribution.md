@@ -169,7 +169,7 @@ Les plugins déclaratifs prennent actuellement en charge :
 
 - `addClass` : ajoute une classe aux éléments ciblés.
 - `setAttribute` : définit un attribut.
-- `setStyle` : définit des styles inline ou des variables CSS. Terminez une valeur par `!important` pour l'appliquer avec cette priorité ; les anciennes versions de Voyager ignorent une telle valeur, donc réglez `engine` sur `>=next` si votre plugin en dépend. Les raccourcis comme `margin` sont suivis longhand par longhand : désactiver un plugin n'efface jamais le `margin-top` d'un autre plugin.
+- `setStyle` : définit des styles inline ou des variables CSS. Terminez une valeur par `!important` pour l'appliquer avec cette priorité ; les anciennes versions de Voyager ignorent une telle valeur, donc réglez `engine` sur `>=1.9.0` si votre plugin en dépend. Les raccourcis comme `margin` sont suivis longhand par longhand : désactiver un plugin n'efface jamais le `margin-top` d'un autre plugin.
 - `hide` : masque les éléments ciblés.
 
 La cible peut être un sélecteur CSS ou l'une des clés sémantiques listées plus haut, écrite `{ "kind": "semantic", "key": "userTurn" }`. Les clés sémantiques sont généralement plus stables, mais elles exigent que l'adaptateur du site actuel déclare la clé.

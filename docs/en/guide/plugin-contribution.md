@@ -223,7 +223,7 @@ Declarative plugins currently support:
 
 - `addClass`: add a class to target elements.
 - `setAttribute`: set an attribute.
-- `setStyle`: set inline styles or CSS variables. End a value with `!important` to apply it with that priority; older Voyager versions drop such a value, so set `engine` to `>=next` if your plugin relies on it. Shorthands such as `margin` are tracked per longhand, so turning one plugin off never clears another plugin's `margin-top`.
+- `setStyle`: set inline styles or CSS variables. End a value with `!important` to apply it with that priority; older Voyager versions drop such a value, so set `engine` to `>=1.9.0` if your plugin relies on it. Shorthands such as `margin` are tracked per longhand, so turning one plugin off never clears another plugin's `margin-top`.
 - `hide`: hide target elements.
 
 Targets can be CSS selectors or the semantic keys listed above, written as `{ "kind": "semantic", "key": "userTurn" }`. Semantic keys are usually more stable, but they require the current site adapter to declare that key.

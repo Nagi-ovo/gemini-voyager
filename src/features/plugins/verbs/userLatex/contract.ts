@@ -14,7 +14,7 @@ export const contract: PrimitiveContract = {
     unit: {
       type: 'string',
       required: false,
-      sinceEngine: 'next',
+      sinceEngine: '1.9.0',
       description:
         "What is rendered as one piece: 'leaf' (default) renders each text-only element inside a turn; 'turn' renders each matched turn element whole, child elements and Voyager's own markers included, for a turn selector that names one line of text.",
     },

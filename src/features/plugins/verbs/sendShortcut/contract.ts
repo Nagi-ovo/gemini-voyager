@@ -8,7 +8,7 @@ export const contract: PrimitiveContract = {
     mode: {
       type: 'string',
       required: false,
-      sinceEngine: 'next',
+      sinceEngine: '1.9.0',
       description:
         'Which Enter chord sends (default ctrlEnterSends). Gemini accepts only ctrlEnterSends; AI Studio accepts only enterSends.',
     },

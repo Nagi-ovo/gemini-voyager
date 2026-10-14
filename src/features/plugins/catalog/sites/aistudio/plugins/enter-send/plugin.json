@@ -45,7 +45,7 @@
   "author": "voyager-official",
   "category": "productivity",
   "license": "GPL-3.0-or-later",
-  "engine": ">=next",
+  "engine": ">=1.9.0",
   "tier": "declarative",
   "matches": ["https://aistudio.google.com/*", "https://aistudio.google.cn/*"],
   "contributes": {

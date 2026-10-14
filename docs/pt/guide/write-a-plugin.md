@@ -70,7 +70,7 @@ As traduções (`i18n`) são opcionais.
 
 Um plugin local fica no seu navegador; exporte o JSON pela lista de plugins para levá-lo a outro lugar. Se ele puder ajudar a todos, proponha-o para o catálogo oficial: o [Guia de Contribuição de Plugins](./plugin-contribution.md) descreve esse caminho.
 
-Em todos os sites, apenas um plugin de atalho de envio roda por página. Enquanto um plugin estiver com o modo de envio, outro informa um conflito e fica pausado. O `mode` opcional (requer `"engine": ">=next"`, lançado na versão 1.9.0) pode ser `ctrlEnterSends` (padrão) ou `enterSends`. Confirmar a composição do IME não envia a mensagem. Gemini e AI Studio já permitem isso; os modos suportados estão listados abaixo.
+Em todos os sites, apenas um plugin de atalho de envio roda por página. Enquanto um plugin estiver com o modo de envio, outro informa um conflito e fica pausado. O `mode` opcional (requer `"engine": ">=1.9.0"`) pode ser `ctrlEnterSends` (padrão) ou `enterSends`. Confirmar a composição do IME não envia a mensagem. Gemini e AI Studio já permitem isso; os modos suportados estão listados abaixo.
 
 No Gemini, `sendShortcut` pode substituir o recurso oficial de Ctrl/Cmd+Enter: desligue a opção oficial e depois ative o plugin local. Só `ctrlEnterSends` é suportado; o Enterprise continua inativo. `composerRoot` cobre a entrada principal e a de edição; `sendButton` exclui o botão Parar.
 

@@ -70,7 +70,7 @@ Translations (`i18n`) are optional.
 
 A local plugin stays in your browser; export its JSON from the plugin list to move it elsewhere. If it would help everyone, propose it for the official catalog: [Plugin Contribution](./plugin-contribution.md) describes that path.
 
-Only one send shortcut plugin runs per page on every site. While a plugin holds the send mode, another reports a conflict and stays paused. Optional `mode` (needs `"engine": ">=next"`, released as 1.9.0) is `ctrlEnterSends` (default) or `enterSends`. IME confirmation does not send. Gemini and AI Studio now allow it; their supported modes are below.
+Only one send shortcut plugin runs per page on every site. While a plugin holds the send mode, another reports a conflict and stays paused. Optional `mode` (needs `"engine": ">=1.9.0"`) is `ctrlEnterSends` (default) or `enterSends`. IME confirmation does not send. Gemini and AI Studio now allow it; their supported modes are below.
 
 Gemini now allows `sendShortcut` to replace the official Ctrl/Cmd+Enter feature: turn the official switch off, then enable the local plugin. Only `ctrlEnterSends` is supported; Enterprise stays inactive. `composerRoot` covers the main and edit inputs; `sendButton` excludes Stop.
 

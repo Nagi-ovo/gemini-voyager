@@ -70,7 +70,7 @@ Gemini 个人版现已支持本地 `turnNavigator`：设置 `params.dataBackend:
 
 本地插件只存在于你的浏览器里；需要换到别处时，在插件列表里导出它的 JSON。如果它对大家都有用，可以提议收进官方插件目录，流程见[插件贡献说明](./plugin-contribution.md)。
 
-发送快捷键插件在所有站点每页只能运行一个；已有插件占用发送模式时，另一个显示冲突并暂停。可选 `mode`（需要 `"engine": ">=next"`，已在 1.9.0 中发布）为 `ctrlEnterSends`（默认）或 `enterSends`。输入法确认键不会触发发送。Gemini 和 AI Studio 现已开放，具体模式见下文。
+发送快捷键插件在所有站点每页只能运行一个；已有插件占用发送模式时，另一个显示冲突并暂停。可选 `mode`（需要 `"engine": ">=1.9.0"`）为 `ctrlEnterSends`（默认）或 `enterSends`。输入法确认键不会触发发送。Gemini 和 AI Studio 现已开放，具体模式见下文。
 
 Gemini 现在允许 `sendShortcut` 替代官方 Ctrl+Enter 发送；关闭官方开关后启用本地插件。只支持 `ctrlEnterSends`，Enterprise 不运行。公开的 `composerRoot` 区分主框和编辑框，`sendButton` 不包含停止按钮。
 
