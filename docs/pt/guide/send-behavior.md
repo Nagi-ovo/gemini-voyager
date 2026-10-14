@@ -1,21 +1,21 @@
-# Comportamento de envio
+# Comportamento de Envio
 
 ::: info
-**Nota**: Este recurso está disponível na versão 1.3.7 e posteriores.
+**Nota**: Esta funcionalidade está disponível na versão 1.3.7 e posteriores.
 :::
 
-Altere o atalho de envio para `Ctrl+Enter` (ou `⌘+Enter` no macOS), fazendo do `Enter` uma tecla de nova linha para que você possa escrever prompts de várias linhas com facilidade.
+Altere o atalho de envio para `Ctrl+Enter` (`⌘+Enter` no macOS), transformando `Enter` numa tecla de nova linha para que possa compor prompts de várias linhas com tranquilidade.
 
-## Por que este recurso
+## Porquê esta funcionalidade
 
-Por padrão, apertar `Enter` envia a mensagem imediatamente. Ao escrever prompts mais longos, colar código de várias linhas ou formatar cuidadosamente o que digita, isso costuma causar envios acidentais: você só queria pular uma linha, mas a mensagem já foi enviada.
+Por defeito, pressionar `Enter` envia a mensagem imediatamente. Ao escrever prompts mais longos, colar código de várias linhas ou formatar cuidadosamente a sua entrada, isto frequentemente leva a envios acidentais — só queria uma nova linha, mas a mensagem já foi enviada.
 
 Quando ativado:
 
-- **Enter** → Insere uma nova linha
-- **Ctrl+Enter** (macOS: **⌘+Enter**) → Envia a mensagem
+- **Enter** → Inserir nova linha
+- **Ctrl+Enter** (macOS: **⌘+Enter**) → Enviar mensagem
 
-Shift+Enter e a composição de IME mantêm o comportamento próprio do site, e Ctrl/⌘+Enter aguarda enquanto um anexo ainda está sendo enviado.
+Shift+Enter e a composição de IME mantêm o comportamento próprio do site, e Ctrl/⌘+Enter aguarda enquanto um anexo ainda está a ser carregado.
 
 ## Como ativar
 
@@ -28,7 +28,7 @@ Shift+Enter e a composição de IME mantêm o comportamento próprio do site, e 
 - **Claude, ChatGPT e DeepSeek**: instale o plugin **Ctrl/Cmd+Enter to send** para esse site no [Mercado de plugins](/pt/plugins).
 - **Safari**: se o Gemini exigir apertar Enter duas vezes para enviar, ative **Corrigir tecla Enter no Safari**.
 
-## Recursos
+## Características
 
-- **Zero sobrecarga de desempenho**: Quando desativado, nenhum listener de eventos de teclado fica ativo, sem impacto no desempenho da página.
-- **Troca instantânea**: As mudanças passam a valer logo após alternar a opção nas configurações, sem precisar recarregar a página.
+- **Zero sobrecarga de desempenho**: Quando desativado, nenhum listener de eventos de teclado está ativo — sem impacto no desempenho da página.
+- **Alternância instantânea**: As alterações entram em vigor imediatamente após ativar nas definições, sem necessidade de atualizar a página.

@@ -1,47 +1,47 @@
 ---
-title: Visualização Activity
-description: Ordene as conversas das pastas pela atividade real, para que o trabalho que ainda está em andamento apareça primeiro.
+title: Vista Activity
+description: Organize as conversas das pastas pela atividade real e mostre primeiro o trabalho que ainda está em curso.
 ---
 
-# Activity: mantenha a atenção nas conversas em andamento
+# Activity: mantenha a atenção nas conversas em curso
 
-As pastas respondem a uma pergunta: onde esta conversa pertence? À medida que o seu acervo cresce, outra pergunta surge com mais frequência: no que devo prestar atenção agora?
+As pastas respondem a uma pergunta: onde pertence esta conversa? À medida que o arquivo cresce, surge outra com mais frequência: o que deve ser visto agora?
 
-Activity é uma visualização baseada em tempo sobre as suas pastas. Clique no sino ao lado de **Pastas** para substituir a árvore de pastas por conversas ordenadas pela atividade real do chat. Ela não altera as suas pastas, as atribuições das conversas nem o estado de Estrela.
+Activity é uma vista temporal sobre as pastas. Clique no sino à direita de **Folders** para substituir temporariamente a árvore por conversas ordenadas pela atividade real. A estrutura das pastas, a associação das conversas e o estado Star não são alterados.
 
-**Inspiração de design:** esta visualização foi inspirada na barra lateral do Codex / ChatGPT Desktop, da OpenAI. O Voyager aproveita a ideia de destacar conversas que continuam ativas e a adapta para uma visualização baseada em tempo sobre as pastas do Gemini.
+**Inspiração do design:** esta vista foi inspirada na barra lateral do Codex / ChatGPT Desktop da OpenAI. O Voyager retoma a ideia de mostrar primeiro as conversas que continuam ativas e adapta-a a uma vista temporal sobre as pastas do Gemini.
 
-<img src="/assets/activity-view.png" alt="A visualização de atenção Activity na barra lateral do Gemini" style="display: block; width: 100%; max-width: 517px; margin: 24px auto; border-radius: 14px; box-shadow: 0 12px 32px rgba(0,0,0,0.12);"/>
+<img src="/assets/activity-view.png" alt="Vista Activity na barra lateral do Gemini" style="display: block; width: 100%; max-width: 517px; margin: 24px auto; border-radius: 14px; box-shadow: 0 12px 32px rgba(0,0,0,0.12);"/>
 
-## A prioridade segue a atividade recente
+## Prioridade (Priority) acompanha a atividade recente
 
-Prioridade contém conversas com um novo turno nas últimas **três horas**. Ela usa o horário real da conversa, não o momento em que você abriu ou viu o chat.
+Prioridade contém conversas com um novo turno nas últimas **três horas**. Usa a hora real da conversa, não a hora em que o chat foi aberto ou consultado.
 
-Uma conversa em Prioridade não aparece também em Hoje. Quando a janela de atividade de três horas termina, Activity a devolve automaticamente para Hoje ou para o grupo de data correspondente. Você não precisa atualizar a página.
+Uma conversa em Prioridade não aparece também em Hoje. Quando termina o período de atividade de três horas, Activity devolve-a automaticamente a Hoje ou ao grupo de data correspondente. Não é necessário atualizar a página.
 
-Estrela continua disponível como marcação manual separada. Marcar uma conversa com estrela não a move para Prioridade, e remover a estrela não tira uma conversa ativa de Prioridade.
+Star continua disponível como uma marca manual independente. Adicionar uma Star não move a conversa para Prioridade, e removê-la não retira uma conversa ativa de Prioridade.
 
 ## Uma janela curta sobre os últimos dias
 
-Abaixo de Prioridade, Activity mostra Hoje, Ontem e os dias da semana anteriores como títulos. A visualização cobre hoje e os quatro dias corridos anteriores, mantendo a lista próxima do trabalho atual.
+Abaixo de Prioridade aparecem Hoje (Today), Ontem (Yesterday) e os dias da semana anteriores. Activity abrange hoje e os quatro dias de calendário anteriores para manter a lista próxima do trabalho atual.
 
-Conversas mais antigas e entradas antigas sem horário de atividade não aparecem aqui. Elas não são ocultadas nem apagadas. Clique no sino de novo para voltar à árvore de pastas e encontrá-las no local original.
+As conversas mais antigas e os registos sem hora de atividade não aparecem aqui. Não são ocultados nem eliminados. Clique novamente no sino para voltar à árvore de pastas e encontrá-los no local original.
 
 ## Uma conversa, uma linha
 
-Uma conversa pode pertencer a mais de uma pasta. Activity reúne essas referências em uma única linha e mantém os nomes das pastas abaixo do título. Passe o mouse sobre o contexto das pastas para ver os caminhos completos.
+Uma conversa pode pertencer a várias pastas. Activity junta essas referências numa linha e mantém os nomes das pastas por baixo do título. Passe o cursor sobre essa informação para ver os caminhos completos.
 
-Assim, uma mesma conversa não ocupa várias posições em Prioridade ou em Hoje, e o contexto dos projetos continua preservado.
+Assim, a mesma conversa não ocupa vários lugares em Prioridade ou Hoje e mantém o contexto dos projetos a que pertence.
 
 ## Três sinais com funções diferentes
 
-| Sinal    | Origem                             | Pergunta que responde                     |
-| -------- | ---------------------------------- | ----------------------------------------- |
-| Pastas   | Projetos e temas que você organiza | Onde esta conversa pertence?              |
-| Activity | O último turno real da conversa    | Que trabalho avançou recentemente?        |
-| Estrela  | Uma marcação manual                | Quais conversas devem continuar marcadas? |
+| Sinal    | Origem                                   | Pergunta a que responde                 |
+| -------- | ---------------------------------------- | --------------------------------------- |
+| Pastas   | Projetos e temas organizados manualmente | Onde pertence esta conversa?            |
+| Activity | Hora do último turno real                | Que trabalho avançou recentemente?      |
+| Star     | Marca manual                             | Que conversas devem continuar marcadas? |
 
-As pastas são úteis quando você precisa recuperar algo do acervo. Activity reduz o conjunto de opções toda vez que você volta ao Gemini. Comece por uma conversa que ainda tem impulso em Prioridade, continue por Hoje ou Ontem e depois volte à árvore completa de pastas quando precisar de material mais antigo.
+As pastas ajudam a recuperar algo do arquivo. Activity reduz as opções que precisam de ser avaliadas sempre que regressa ao Gemini. Retome uma conversa que ainda tenha continuidade em Prioridade, siga para Hoje ou Ontem e volte à árvore completa quando precisar de material mais antigo.
 
 ## Onde funciona
 

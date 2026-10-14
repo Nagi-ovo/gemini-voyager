@@ -1,7 +1,7 @@
 # スポンサー
 
 > [!NOTE]
-> もし Voyager が役に立っているなら、X、Reddit、YouTube、Threads などで共有したり、ブロガーや YouTuber、「これ好きそう」と思う人に勧めてもらえると嬉しいです。シェアが増えるほど、このプロジェクトをより多くの人に届けられ、Gemini の体験改善にもつながります。ありがとう。
+> もし Voyager が役に立っているなら、X、YouTube、Reddit などで共有したり、ブロガーや YouTuber、「これ好きそう」と思う人に勧めてもらえると嬉しいです。シェアが増えるほど、このプロジェクトをより多くの人に届けられ、Gemini の体験改善にもつながります。ありがとう。
 
 オープンソースプロジェクトの維持は、主に情熱（とコーヒー）で支えられています ☕
 
@@ -21,7 +21,7 @@
   </a>
 </div>
 
-## QR コードで支援（Buy Me a Coffee）🍵
+## QR コードで支援 🍵
 
 <div class="qr-container">
   <div class="qr-item">
@@ -38,7 +38,7 @@
 
 ### 🎙️ おすすめツール: Typeless
 
-私が強くおすすめする **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)** は、Voyager の開発中に多用した AI 音声入力ツールです。日常のワークフローに組み込んでから、大幅に時間を節約でき、生産性も大きく向上しました。
+**[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)** は、私が個人的に強く推奨する AI 音声入力ツールです。Voyager の開発において日常のワークフローに組み込むことで、大幅な時間短縮と開発効率の向上を実現できました。
 
 > 🎁 **[私の招待リンクから登録](https://www.typeless.com/?via=gemini-voyager)**（招待コード：_`gemini-voyager`_）すると、**5 ドルの無料クレジット**を獲得できます。同時に、このプロジェクトの継続的な開発を支援することにも繋がります。❤️
 

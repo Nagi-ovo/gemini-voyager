@@ -1,75 +1,75 @@
 # Deep Research 匯出
 
-匯出 Deep Research 產生的最終報告，或把它完整的「思考」過程儲存為 Markdown 檔案。
+匯出 Deep Research 生成的最終報告，或將其完整的「思考」過程保存為 Markdown 文件。
 
-## 1. 報告匯出（PDF／圖片）
+## 1. 報告匯出 (PDF / 圖片)
 
-Deep Research 產生的報告可以匯出為排版精美的 PDF，或方便分享的單張圖片（也支援 Markdown 與 JSON 格式）。開啟報告的 **Share & Export** 選單，然後選擇 **儲存報告**。
+Deep Research 生成的報告支持匯出為格式精美的 PDF 或方便分享的單張圖片（同时也支持匯出為 Markdown 和 JSON 格式）。打開報告的 **Share & Export** 選單，選擇 **儲存報告** 即可。
 
 ![報告匯出](/assets/deep-research-report-export.png)
 
-## 2. 思考過程匯出（Markdown）
+## 2. 思考過程匯出 (Markdown)
 
-除了最終報告，你也可以匯出 Deep Research 對話中完整的「思考」內容。
+除了最終報告，您還可以將對話中的完整「思考」內容一鍵匯出。
 
-### 功能特色
+### 功能特性
 
-- **一鍵匯出**：報告的 **Share & Export** 選單中會出現下載選項
-- **結構化格式**：依原始順序保留思考階段、思考項目與研究過的網站
-- **易讀的標題**：章節標題為英文；若 Voyager 設定為其他語言，每個標題會同時顯示該語言與英文
-- **自動命名**：檔案名稱附有時間戳記，方便整理（例如 `deep-research-thinking-20240128-153045.md`）
+- **一鍵匯出**: 報告的 **Share & Export** 選單中會出現下載選項
+- **結構化格式**: 按原始順序保留思考階段、思考條目和研究網站
+- **易讀標題**: 章節標題為英文；若 Voyager 設為其他語言，每個標題會同時附上該語言
+- **自動命名**: 文件使用時間戳命名,便於整理 (例如:`deep-research-thinking-20240128-153045.md`)
 
-### 如何使用
+### 使用方法
 
-1. 在 Gemini™ 上開啟一則 Deep Research 對話
+1. 在 Gemini™ 上打開一個 Deep Research 對話
 2. 點擊報告的 **Share & Export** 按鈕
 3. 選擇 **下載 Thinking 內容**
-4. Markdown 檔案會自動下載
+4. Markdown 文件將自動下載
 
 ![Deep Research 思考內容匯出](/assets/deepresearch_download_thinking.png)
 
-### 匯出檔案格式
+### 匯出文件格式
 
-匯出的 Markdown 檔案包含：
+匯出的 Markdown 文件包含:
 
-- **標題**：對話標題
-- **中繼資料**：匯出時間與思考階段總數
-- **思考階段**：每個階段包含：
-  - 思考項目（含標題與內容）
-  - 研究過的網站（含連結與標題）
+- **標題**: 對話標題
+- **元數據**: 匯出時間和思考階段總數
+- **思考階段**: 每個階段包含:
+  - 思考條目 (包含標題和內容)
+  - 研究網站 (包含連結和標題)
 
-#### 範例結構
+#### 示例結構
 
 ```markdown
-# Deep Research Conversation Title
+# Deep Research 對話標題
 
-**Exported At:** 2025-12-28 17:25:35
-**Total Phases:** 3
-
----
-
-## Thinking Phase 1
-
-### Thought Title 1
-
-Thought content...
-
-### Thought Title 2
-
-Thought content...
-
-#### Researched Websites
-
-- [domain.com](https://example.com) - Page Title
-- [another.com](https://another.com) - Another Title
+**匯出時間 / Exported At:** 2025-12-28 17:25:35
+**總思考階段 / Total Phases:** 3
 
 ---
 
-## Thinking Phase 2
+## 思考階段 1 / Thinking Phase 1
+
+### 思考標題 1
+
+思考內容...
+
+### 思考標題 2
+
+思考內容...
+
+#### 研究網站 / Researched Websites
+
+- [domain.com](https://example.com) - 頁面標題
+- [another.com](https://another.com) - 另一個標題
+
+---
+
+## 思考階段 2 / Thinking Phase 2
 
 ...
 ```
 
-## 隱私
+## 隱私保護
 
-所有擷取與格式化作業 100% 在你的瀏覽器本機完成，不會將任何資料傳送到外部伺服器。
+所有提取和格式化操作都 100% 在瀏覽器本地完成。不會向外部伺服器發送任何數據。

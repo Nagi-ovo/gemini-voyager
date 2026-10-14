@@ -1,43 +1,51 @@
-# Viagem no Tempo
+# Navegação na Linha do Tempo
 
-A Linha do Tempo do Voyager é um sistema visual de navegação para conversas no Gemini, Claude e ChatGPT. Ela mapeia cada mensagem do chat em um nó interativo no lado direito da tela, transformando conversas longas com IA em um mapa navegável em que você pode pular de um ponto a outro instantaneamente.
+O recurso de assinatura do Voyager. Uma maneira visual e espacial de navegar nas suas conversas.
 
-Conversas longas são bagunçadas. Você rola para cima, rola para baixo, perde o seu lugar.
-O Voyager transforma a sua conversa em uma linha do tempo.
+Nas definições do Gemini, **Mostrar linha do tempo** controla a barra da linha do tempo e os seus atalhos de navegação. Desativar esta opção mantém as estrelas e a hierarquia guardadas. As horas das mensagens seguem separadamente **Mostrar carimbos de data/hora das mensagens**, pelo que podem continuar visíveis com a linha do tempo desativada.
 
-Nas configurações do Gemini, **Mostrar linha do tempo** controla a barra e os seus atalhos de navegação. Desativar essa opção mantém as estrelas e a hierarquia salvas. Os horários das mensagens seguem **Mostrar carimbos de data/hora das mensagens** de forma independente, então você pode mantê-los visíveis com a linha do tempo desativada.
+## O Problema
 
-## Veja a forma do seu chat
+As conversas de IA podem tornar-se longas. Muito longas.
+O scroll é lento. "Cmd+F" é desajeitado. Perde o contexto.
 
-Olhe para o lado direito da tela.
-Cada nó representa uma mensagem. A linha do tempo mostra o ritmo do seu diálogo.
+## A Solução
 
-## Navegação, resolvida.
+Olhe para a direita do ecrã. Essa é a Linha do Tempo.
+Cada ponto representa uma troca (a sua pergunta + a resposta do Gemini™).
 
-- **Teletransporte**: Clique em um nó para pular instantaneamente para aquela mensagem.
-- **Espiada**: Passe o mouse sobre um nó para ver o que há dentro sem sair do lugar.
-- **Marcador**: Pressione e segure um nó para **Marcar com estrela**. É como um marcador de livro para a sua memória.
-- **Níveis (Experimental)**: Clique com o botão direito em um nó para definir níveis (1 a 3) ou recolher os seus filhos. Ótimo para deixar conversas ramificadas mais claras.
-- **Redimensionar**: Arraste a borda interna da linha do tempo para ajustar a largura.
-- **Teclado**: Navegue na velocidade do pensamento. Padrão `j`/`k`, `gg`/`GG` para ir à primeira/última troca.
+### Interações
+
+- **Hover (Passar o rato)**: Veja uma pré-visualização instantânea do que foi discutido naquele ponto. Sem clicar, sem scroll. Apenas espreite.
+- **Clique**: Salte instantaneamente para essa mensagem. Teletransporte.
+- **Destaque de Contexto**: Enquanto faz scroll, o ponto correspondente acende-se, para que saiba sempre onde está no "mapa".
+- **Níveis (Experimental)**: Clique com o botão direito num ponto para definir níveis (1 a 3) ou recolher os seus filhos. Ótimo para tornar claras as conversas ramificadas.
+- **Redimensionar**: Arraste a borda interna da linha do tempo para ajustar sua largura.
 
 ![Navegação na Linha do Tempo](/assets/teaser.png)
 
-## Estrela: marque os seus avanços
+## Favoritos (Stars)
 
-Conversas longas escondem ouro. Marque com estrela os momentos que importam.
+Pressione longamente (~0.5s) em qualquer ponto para o **Marcar com Estrela**.
+Pontos com estrela tornam-se maiores e mais brilhantes. Use-os para marcar:
 
-**Como funciona**: Pressione e segure (cerca de 0,5 s) qualquer nó da linha do tempo. Você verá o nó acender: aquela mensagem agora está marcada com estrela.
+- O código final funcional.
+- A melhor explicação de um conceito.
+- O prompt que desbloqueou tudo.
 
-- Pressione e segure de novo para remover a estrela.
-- Os nós com estrela continuam destacados para que você os encontre de relance.
-- Veja todas as mensagens marcadas na **Biblioteca salva**: clique em **Ver biblioteca salva** no popup do Voyager ou abra-a pelo painel do Gerenciador de Prompts.
+**Como funciona**:
 
-Pense nisso como fincar uma bandeira na conversa: o momento em que você teve um insight, recebeu a resposta perfeita ou quer retomar depois.
+- Pressione longamente novamente para remover a estrela.
+- Os pontos com estrela ficam destacados para que você os encontre de relance.
+- Clique em **Ver biblioteca salva** no popup do Voyager, ou abra-a a partir do painel do Gerenciador de Prompts, para ver todas as mensagens marcadas num só lugar na **Biblioteca salva**.
 
-::: tip Dica Pro
-As estrelas sincronizam entre dispositivos se você tiver a [Sincronização na Nuvem](/pt/guide/cloud-sync) ativada.
+Pense nisso como plantar uma bandeira na conversa — o momento de uma revelação, a resposta perfeita, ou o ponto de onde quer continuar depois.
+
+::: tip Dica
+As estrelas sincronizam entre dispositivos se tiver a [Sincronização na Nuvem](/pt/guide/cloud-sync) ativada.
 :::
+
+A Linha do Tempo transforma uma parede de texto plano num mapa estruturado de conhecimento.
 
 ## Deixe com boa aparência
 

@@ -1,46 +1,46 @@
-# Renderizado de diagramas Mermaid
+# Renderizado de Gráficos Mermaid
 
-Convierte automáticamente el código Mermaid en diagramas visuales.
+Renderiza automáticamente código Mermaid en gráficos visuales.
 
-## Descripción general
+## Introducción
 
-Cuando Gemini™ genera bloques de código Mermaid (diagramas de flujo, de secuencia, de Gantt, etc.), Voyager los detecta y los renderiza automáticamente como diagramas interactivos.
+Cuando Gemini™ genera un bloque de código Mermaid (como diagramas de flujo, diagramas de secuencia, diagramas de Gantt, etc.), Voyager lo detectará y renderizará automáticamente como un gráfico interactivo.
 
-### Características principales
+### Características Principales
 
-- **Detección automática**: admite `graph`, `flowchart`, `sequenceDiagram`, `gantt`, `pie`, `classDiagram` y todos los tipos principales de diagramas Mermaid.
-- **Cambio de vista**: alterna entre el diagrama renderizado y el código fuente con un solo clic.
-- **Pantalla completa**: haz clic en el diagrama para entrar en pantalla completa, con zoom y desplazamiento.
-- **Modo oscuro**: se adapta automáticamente al tema de la página.
+- **Detección Automática**: Soporta todos los tipos principales de gráficos Mermaid como `graph`, `flowchart`, `sequenceDiagram`, `gantt`, `pie`, `classDiagram`, etc.
+- **Cambio en un Clic**: Cambia libremente entre el gráfico renderizado y el código fuente con un botón.
+- **Vista en Pantalla Completa**: Haz clic en el gráfico para entrar en el modo de pantalla completa, con soporte para zoom con la rueda y arrastre para desplazar.
+- **Modo Oscuro**: Se adapta automáticamente al tema de la página.
 
-## Activarlo o desactivarlo
+## Activar o Desactivar
 
 El renderizado de Mermaid está activado por defecto en Gemini. Para desactivarlo, abre el popup de Voyager y desactiva **Habilitar renderizado de diagramas Mermaid** en **Opciones Generales**. No está disponible en AI Studio.
 
-## Cómo usarlo
+## Cómo Usar
 
-1. Pide a Gemini que genere cualquier código de diagrama Mermaid.
-2. El bloque de código se reemplaza automáticamente por el diagrama renderizado.
-3. Haz clic en el botón **</> Code** para ver el código fuente.
-4. Haz clic en el botón **📊 Diagram** para volver a la vista de diagrama.
-5. Haz clic en el área del diagrama para verlo en pantalla completa.
+1. Pídele a Gemini que genere cualquier código de gráfico Mermaid.
+2. El bloque de código será reemplazado automáticamente por el gráfico renderizado.
+3. Haz clic en el botón **</> Code** para ver el código original.
+4. Haz clic en el botón **📊 Diagram** para volver a la vista de gráfico.
+5. Haz clic en el área del gráfico para ver en pantalla completa.
 
-## Controles en pantalla completa
+## Controles en Modo Pantalla Completa
 
-- **Rueda del ratón**: acercar o alejar.
-- **Arrastrar**: desplazar el diagrama.
-- **+/-**: botones de zoom de la barra de herramientas.
-- **⊙**: restablecer la vista.
-- **✕ / ESC**: cerrar la pantalla completa.
+- **Rueda**: Zoom en el gráfico.
+- **Arrastrar**: Mover la posición del gráfico.
+- **+/-**: Botones de zoom en la barra de herramientas.
+- **⊙**: Restablecer vista.
+- **✕ / ESC**: Cerrar pantalla completa.
 
-## Compatibilidad y solución de problemas
+## Compatibilidad y Solución de Problemas
 
 ::: warning Nota
 
-- **Limitación de Firefox**: por restricciones del entorno, Firefox incluye Mermaid 9.2.2, que no admite funciones nuevas como **Timeline** o **Sankey**.
-- **Errores de sintaxis**: los fallos de renderizado suelen deberse a errores de sintaxis en la salida de Gemini. Estamos recopilando "bad cases" para implementar parches automáticos contra los errores de generación habituales en futuras actualizaciones.
+- **Limitación de Firefox**: Debido a restricciones del entorno, Firefox usa Mermaid 9.2.2, que no admite funciones nuevas como **Timeline** o **Sankey**.
+- **Errores de sintaxis**: Los fallos de renderizado suelen deberse a errores de sintaxis en la salida de Gemini. Estamos recopilando "bad cases" para implementar parches automáticos en futuras actualizaciones.
   :::
 
 <div align="center">
-  <img src="/assets/mermaid-preview.png" alt="Renderizado de diagramas Mermaid" style="max-width: 100%; border-radius: 8px;"/>
+  <img src="/assets/mermaid-preview.png" alt="Renderizado de Gráficos Mermaid" style="max-width: 100%; border-radius: 8px;"/>
 </div>

@@ -112,7 +112,7 @@ bun run dev
 
 ### 5. 贡献意愿复选框
 
-Issue 仅用于报告缺陷。报告缺陷时，你可以勾选"我愿意为该问题贡献修复代码 / I am willing to contribute a fix for this bug"复选框，表明你希望自己来修复它。
+Issue 仅用于报告缺陷。创建 issue 时，你可以勾选"我愿意为该问题贡献修复代码 / I am willing to contribute a fix for this bug"复选框，表明你有兴趣修复该问题。
 
 ---
 

@@ -1,8 +1,8 @@
-# Correção de renderização do Markdown
+# Correção de Renderização Markdown
 
-A interface web do Gemini™ às vezes insere elementos HTML (como fontes de citação ou marcadores de destaque) no meio do texto, o que pode quebrar a sintaxe de negrito do Markdown (`**texto**`) e fazer com que o texto não apareça em negrito.
+A interface web do Gemini™ às vezes insere elementos HTML (como fontes de citações ou marcadores de destaque) no meio do texto, o que pode quebrar a sintaxe de negrito do Markdown (`**texto**`), fazendo com que o texto não seja exibido corretamente em negrito.
 
-O Voyager tem um recurso integrado de correção automática que identifica e conserta, de forma inteligente, essas tags de negrito quebradas, garantindo que seu documento seja renderizado de forma limpa e correta.
+O Voyager possui um recurso de correção automática integrado que identifica e repara de forma inteligente essas tags de negrito quebradas, garantindo que seus documentos sejam renderizados de forma limpa e precisa.
 
 > [!NOTE]
-> Este recurso é ativado automaticamente e não exige nenhuma configuração adicional.
+> Este recurso é ativado automaticamente e não requer configuração adicional.

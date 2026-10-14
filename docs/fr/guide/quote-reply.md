@@ -1,32 +1,32 @@
-# Citer et répondre
+# Réponse avec Citation
 
-Voyager propose une fonctionnalité pratique de « citation de réponse », qui rend les réponses à un contenu précis plus exactes et plus efficaces.
+Voyager offre une fonctionnalité pratique de "Réponse avec Citation", rendant les réponses à un contenu spécifique plus précises et efficaces.
 
-## Présentation
+## Introduction
 
-Dans les conversations quotidiennes, il faut souvent rebondir sur une partie précise de la réponse de l'IA, ou la contester. La méthode classique consiste à copier ce texte, puis à taper manuellement le symbole `> ` dans la zone de saisie. C'est fastidieux.
+Dans les conversations quotidiennes, nous avons souvent besoin de rebondir sur une partie spécifique de la sortie de l'IA ou de la réfuter. La méthode traditionnelle implique de copier ce texte et de taper manuellement le symbole `> ` dans la zone de saisie, ce qui est fastidieux.
 
 Voyager simplifie ce processus :
 
-1. **Sélectionner pour citer** : avec votre souris, sélectionnez n'importe quel texte de la page de conversation (votre question ou la réponse de Gemini).
-2. **Bouton flottant** : un bouton « Citer et répondre » apparaît automatiquement près du texte sélectionné.
-3. **Insertion en un clic** : cliquez sur le bouton, et le texte sélectionné est inséré dans votre zone de saisie au format standard de citation Markdown (`> contenu`).
+1. **Sélectionner pour Citer** : Utilisez votre souris pour sélectionner n'importe quel texte dans la page de conversation (que ce soit votre question ou la réponse de Gemini).
+2. **Bouton Flottant** : Un bouton "Citer et répondre" apparaîtra automatiquement près du texte sélectionné.
+3. **Insertion en Un Clic** : Cliquez sur le bouton, et le texte sélectionné sera automatiquement inséré dans votre zone de saisie au format de citation Markdown standard (`> contenu`).
 
-![Citer et répondre](/assets/quote-reply.png)
+![Réponse avec Citation](/assets/quote-reply.png)
 
-## Activer la fonctionnalité
+## Activer la Fonctionnalité
 
-Sur Gemini, la citation de réponse se contrôle avec **Activer la citation**, dans **Options générales** de la fenêtre de Voyager.
+Sur Gemini, la réponse avec citation se contrôle avec **Activer la citation**, dans **Options générales** de la popup de Voyager.
 
 Sur Claude, ChatGPT et DeepSeek, installez l'extension **Quote replies** pour ce site depuis le [Marketplace](/fr/plugins). Le bouton **Quote** apparaît alors lorsque vous sélectionnez du texte à l'intérieur d'une seule réponse de l'assistant, et la citation est ajoutée à votre brouillon sans rien envoyer.
 
-## Caractéristiques
+## Fonctionnalités
 
-- **Sensible au contexte** : Voyager repère intelligemment le contenu de la conversation pour éviter les déclenchements accidentels dans des zones sans rapport (comme la zone de saisie elle-même).
-- **Format standard** : utilise la syntaxe Markdown universelle, que Gemini comprend parfaitement, ce qui mène à des réponses plus précises.
-- **Prise en charge des lignes multiples** : si plusieurs lignes sont sélectionnées, Voyager ajoute automatiquement le symbole de citation à chacune d'elles, pour garder une mise en forme propre.
+- **Conscient du Contexte** : Identifie intelligemment le contenu de la conversation pour éviter les déclenchements accidentels dans des zones non liées (comme la zone de saisie elle-même).
+- **Format Standard** : Utilise la syntaxe Markdown universelle, que Gemini comprend parfaitement, menant à des réponses plus précises.
+- **Support Multi-lignes** : Si plusieurs lignes de texte sont sélectionnées, Voyager ajoute automatiquement des symboles de citation à chaque ligne pour garder le format propre.
 
 ## Astuces
 
-- **Approfondir un détail** : sélectionnez un concept confus dans la réponse de Gemini, cliquez sur citer, puis tapez « Explique-moi ce concept en détail. »
-- **Corriger une erreur** : sélectionnez dans la réponse un code ou des faits incorrects, citez-les, et signalez « C'est incorrect, cela devrait être... »
+- **Approfondir les détails** : Sélectionnez un concept confus dans la réponse de Gemini, cliquez sur citer, puis tapez "Veuillez expliquer ce concept en détail."
+- **Corriger les erreurs** : Sélectionnez du code ou des faits incorrects dans la réponse, citez-les, et signalez "Ceci est incorrect, cela devrait être..."

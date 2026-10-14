@@ -1,8 +1,8 @@
 <div align="center" dir="rtl">
   <img src="../docs/public/logo.png" alt="Voyager logo" width="120" height="120">
-  <h3>اجعل تجربتك مع الذكاء الاصطناعي ملكك حقًا ✨</h3>
+  <h3>اصنع تجربتك الذكية الخاصة بك ✨</h3>
   <p>
-    <b>Gemini · Claude · ChatGPT · DeepSeek — أخيراً، اكتمل</b>
+    <b>.Gemini · Claude · ChatGPT · DeepSeek — أخيراً، اكتمل</b>
   </p>
 
   <p>
@@ -52,22 +52,22 @@
   </p> -->
 
 > [!NOTE]
-> إذا كان Voyager مفيدًا لك، فلا تتردد في مشاركته على X أو Reddit أو YouTube وغيرها. كل مشاركة تساعد المزيد من الناس على اكتشاف المشروع. شكرًا لك.
+> إذا كان Voyager مفيداً لك، فشاركْه على X أو Reddit أو YouTube إلخ. كل مشاركة تساعد المزيد من الناس على اكتشاف المشروع. شكراً.
 
 ---
 
 ## 👋 لماذا Voyager؟
 
-نحب روبوتات الدردشة الذكية، لكننا نتمنى أحيانًا أن تكون أكثر تنظيمًا قليلًا.
+نحن نحب روبوتات الدردشة الذكية — Gemini و Claude و ChatGPT و DeepSeek — لكننا تمنينا أحياناً لو كانت تقدم المزيد من "التنظيم".
 
-لهذا بنيتُ **Voyager**. إنه رفيق يساعدك على تنظيم محادثات الذكاء الاصطناعي وإتاحتها وتحقيق إنتاجية أكبر معها، سواء كنت تستخدم Gemini أو Claude أو ChatGPT أو DeepSeek. إن كنت باحثًا تتابع عشرات الخيوط، أو مطورًا يحفظ مقتطفات الشيفرة، أو ببساطة شخصًا يحب الترتيب، فإن Voyager مصمم لأجلك.
+لهذا السبب قمنا ببناء **Voyager**. إنه ليس مجرد أداة؛ إنه رفيق يساعدك في الحفاظ على تنظيم محادثاتك مع الذكاء الاصطناعي وجعلها سهلة الوصول ومنتجة. سواء كنت باحثاً تدير عشرات الخيوط، أو مطوراً يحفظ مقتطفات برمجية، أو مجرد شخص يحب النظام، فإن Voyager مصمم لك.
 
 <p align="center">
   <a href="https://x.com/Nag1ovo/status/2024509398601597412?s=20" target="_blank">
     <img src="../docs/public/assets/try-voyager.png" alt="Try Voyager" width="500">
   </a>
   <br>
-  <i>خلال المشكلة التي حدثت في 18 فبراير حين تسبب تطبيق Google Gemini في جعل المحادثات التاريخية لبعض المستخدمين غير قابلة للوصول، ظل مستخدمو Voyager يرون محادثاتهم المحفوظة في مجلداتهم.</i>
+  <i>خلال المشكلة التي حدثت في 18 فبراير حيث تسبب تطبيق Google Gemini في جعل المحادثات التاريخية لبعض المستخدمين غير قابلة للوصول، تمكن مستخدمو Voyager من الاستمرار في رؤية محادثاتهم المحفوظة في مجلداتهم.</i>
 </p>
 
 ---
@@ -77,8 +77,8 @@
 ### 🌌 الميزات الأساسية (Gemini & AI Studio)
 
 - **📂 [تنظيم المجلدات](https://voyager.nagi.fun/ar/guide/folders)**: نظّم المحادثات في تسلسل هرمي للمجلدات من مستويين، مع دعم السحب والإفلات.
-  - **Gemini**: يدعم **وضع عزل الحسابات** و**ألوان المجلدات المخصصة**.
-- **💡 [مكتبة المطالبات](https://voyager.nagi.fun/ar/guide/prompts)**: احفظ المطالبات وأعد استخدامها في Gemini وAI Studio و[المواقع المخصصة](https://voyager.nagi.fun/ar/guide/prompts#تعمل-على-أي-موقع).
+  - **Gemini**: يدعم **وضع عزل الحساب** و **ألوان المجلدات المخصصة**.
+- **💡 [مستودع المطالبات](https://voyager.nagi.fun/ar/guide/prompts)**: احفظ وأعد استخدام أفضل مطالباتك في Gemini و AI Studio و[المواقع المخصصة](https://voyager.nagi.fun/ar/guide/prompts#يعمل-على-أي-موقع).
 - **☁️ [المزامنة السحابية](https://voyager.nagi.fun/ar/guide/cloud-sync)**: زامن المجلدات والمطالبات عبر Google Drive، أو iCloud على Safari.
 - **🗑️ [الحذف الجماعي](https://voyager.nagi.fun/ar/guide/batch-delete)**: احذف عدة محادثات دفعة واحدة.
 - **📐 [نسخ الصيغ](https://voyager.nagi.fun/ar/guide/formula-copy)**: انقر على أي صيغة لنسخها بصيغة LaTeX أو MathML (Word) أو كمعادلة جاهزة لـ Notion.
@@ -86,19 +86,19 @@
 
 ### ✨ ميزات Gemini الحصرية
 
-- **📍 [الانتقال عبر الجدول الزمني](https://voyager.nagi.fun/ar/guide/timeline)**: عقد مرئية للانتقال بين الرسائل، وتمييز اللحظات المهمة، وإدارة فروع المحادثة.
-- **💾 [تصدير المحادثات](https://voyager.nagi.fun/ar/guide/export)**: صدّر المحادثات إلى JSON أو Markdown أو PDF أو صورة، مع تضمين الصور.
-- **🧜‍♀️ [عرض مخططات Mermaid](https://voyager.nagi.fun/ar/guide/mermaid)**: عرض تلقائي للمخططات الانسيابية ومخططات التسلسل وغيرها من مخططات Mermaid.
-- **📝 [إصلاح عرض Markdown](https://voyager.nagi.fun/ar/guide/markdown-fix)**: إصلاح تلقائي لصياغة Markdown العريضة المكسورة بسبب عناصر HTML التي يُدرجها Gemini.
-- **🍌 [Image Refinement](https://voyager.nagi.fun/ar/guide/nanobanana)**: إزالة العلامة المائية دون فقدان الجودة للصور التي يُنشئها Gemini.
-- **🔬 [Deep Research](https://voyager.nagi.fun/ar/guide/deep-research)**: استخرج عمليات التفكير وروابط البحث من جلسات Deep Research.
-- **🛠️ أدوات متقدمة**:
-  - **[الرد باقتباس](https://voyager.nagi.fun/ar/guide/quote-reply)**: الرد مع السياق عبر تحديد النص.
-  - **[منع التمرير التلقائي](https://voyager.nagi.fun/ar/guide/prevent-auto-scroll)**: يمنع القفز غير المرغوب فيه عند الضغط على Enter لإرسال مطالبة جديدة.
-  - **[طيّ الإدخال](https://voyager.nagi.fun/ar/guide/input-collapse)**: منطقة إدخال تتوسع تلقائيًا لتوفير مساحة قراءة أكبر.
-  - **[النموذج الافتراضي](https://voyager.nagi.fun/ar/guide/default-model)**: اجعل نموذجك المفضل هو الافتراضي.
+- **📍 [تصفح الجدول الزمني](https://voyager.nagi.fun/ar/guide/timeline)**: عقد بصرية للتنقل بين الرسائل، وتمييز اللحظات الرئيسية، وإدارة فروع المحادثة.
+- **💾 [تصدير الدردشة](https://voyager.nagi.fun/ar/guide/export)**: صدّر المحادثات إلى JSON أو Markdown أو PDF أو صورة، مع تضمين الصور.
+- **🧜‍♀️ [رسم Mermaid](https://voyager.nagi.fun/ar/guide/mermaid)**: عرض تلقائي للمخططات الانسيابية ومخططات التتابع وغيرها من رسوم Mermaid.
+- **📝 [إصلاح عرض Markdown](https://voyager.nagi.fun/ar/guide/markdown-fix)**: إصلاح تلقائي لتنسيق Markdown العريض الذي تعطل بسبب عناصر HTML التي أدرجها Gemini.
+- **🍌 [Image Refinement](https://voyager.nagi.fun/ar/guide/nanobanana)**: إزالة العلامة المائية بدون فقدان الجودة للصور التي ينتجها Gemini.
+- **🔬 [البحث العميق](https://voyager.nagi.fun/ar/guide/deep-research)**: استخرج عمليات التفكير وروابط البحث من جلسات البحث العميق.
+- **🛠️ أدوات القوة**:
+  - **[الرد مع اقتباس](https://voyager.nagi.fun/ar/guide/quote-reply)**: الرد مع السياق عن طريق تحديد النص.
+  - **[منع التمرير التلقائي](https://voyager.nagi.fun/ar/guide/prevent-auto-scroll)**: يمنع الصفحة من النزول تلقائياً إلى الأسفل.
+  - **[طي الإدخال](https://voyager.nagi.fun/ar/guide/input-collapse)**: منطقة إدخال قابلة للطي تلقائياً لتوفير مساحة قراءة أكبر.
+  - **[النموذج الافتراضي](https://voyager.nagi.fun/ar/guide/default-model)**: تعيين النموذج المفضل لديك كنموذج افتراضي.
 
-### 🔌 Claude وChatGPT وDeepSeek
+### 🔌 Claude, ChatGPT & DeepSeek
 
 بفضل [محرك إضافات Voyager](https://voyager.nagi.fun/ar/plugins)، توسّع هذه الميزات تجربتك إلى ما وراء Gemini. فعّلها من النافذة المنبثقة للإضافة، وامنح الإذن لكل موقع:
 
@@ -106,31 +106,31 @@
 - **📂 مجلدات ChatGPT**: نظّم محادثات ChatGPT في مجلدات. مُفعّلة افتراضيًا.
 - **💾 تصدير ChatGPT**: صدّر محادثة ChatGPT بصيغة Markdown أو JSON أو PDF أو صورة.
 - **📐 نسخ الصيغ**: انقر على أي صيغة لنسخ LaTeX الخاص بها على Claude وChatGPT وDeepSeek.
-- **⌨️ إدخال Vim**: تحرير بنمط Vim وتنقل بالمؤشر في حقول الكتابة على Claude وChatGPT وDeepSeek.
-- **📖 عرض قراءة مريح**: اضبط عرض الدردشة لتجربة قراءة أفضل على Claude وChatGPT وDeepSeek.
+- **⌨️ إدخال بنمط Vim**: تحرير بنمط Vim وتنقل بالمؤشر في حقول الكتابة على Claude وChatGPT وDeepSeek.
+- **📖 عرض قراءة مريح**: ضبط عرض الدردشة للحصول على تجربة قراءة أفضل على Claude وChatGPT وDeepSeek.
 - **💬 أدوات يومية**: الرد باقتباس، والإرسال بـ Ctrl/⌘+Enter، وعداد للمسودات على Claude وChatGPT وDeepSeek؛ وحفظ تلقائي للمسودات على Claude وDeepSeek.
-- **🈶 إصلاح عرض CJK**: إصلاح مشكلات عرض الأحرف الصينية واليابانية والكورية على Claude.
-- **📜 التفاف الشيفرة**: في DeepSeek، تتمرر أسطر الشيفرة الطويلة أفقيًا بدلًا من التفافها، فتبقى المسافات البادئة سليمة.
+- **🈶 إصلاح عرض CJK**: إصلاح مشاكل عرض الأحرف الصينية واليابانية والكورية على Claude.
+- **📜 كود بلا التفاف**: في DeepSeek، تنزلق أسطر الكود الطويلة أفقياً بدلاً من الالتفاف، مع الحفاظ على المسافات البادئة.
 
-### 🧩 أي موقع، حتى localhost
+### 🧩 أي موقع — حتى localhost
 
-أضف أي موقع من النافذة المنبثقة للإضافة، وسيتبعك مدير المطالبات إلى هناك، بما في ذلك التطبيقات المحلية. وهذا مثال من داخل [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) الذي يعمل على `localhost:3080`:
+أضف أي موقع من النافذة المنبثقة وسيتبعك Prompt Manager إلى هناك، بما في ذلك التطبيقات المحلية. ها هو داخل [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) الذي يعمل على `localhost:3080`:
 
 <p align="center">
-  <img src="../docs/public/assets/prompt-manager-deepseek-harness.png" alt="مدير المطالبات يعمل داخل DeepSeek Harness" width="720">
+  <img src="../docs/public/assets/prompt-manager-deepseek-harness.png" alt="Prompt Manager داخل DeepSeek Harness" width="720">
 </p>
 
 ### 🎨 التخصيص
 
-- افتح النافذة المنبثقة للإضافة وابحث عن **المؤثرات البصرية** للتبديل بين `Off` و`Snow` و`Sakura` و`Rain`.
-- تُعرض التأثيرات كطبقات خفيفة تغطي الشاشة، ولا تعيق التفاعل مع الصفحة.
-- عند تبديل التأثيرات أو إيقافها، تتلاشى الجسيمات الموجودة بشكل طبيعي بدلًا من أن تختفي فجأة.
+- افتح نافذة الإضافة المنبثقة وابحث عن **التأثيرات البصرية** للتبديل بين `إيقاف`، `ثلج`، `ساكورا`، و`مطر`.
+- التأثيرات تُعرض كطبقات خفيفة بملء الشاشة ولا تعيق التفاعل مع الصفحة.
+- عند تبديل التأثيرات أو إيقافها، تتلاشى الجسيمات بشكل طبيعي بدلاً من الاختفاء المفاجئ.
 
 ---
 
 ## 📥 التثبيت
 
-> ⚠️ ملاحظة: مدير المطالبات هو الميزة الوحيدة التي تدعم Gemini for Enterprise.
+> ⚠️ ملاحظة: مدير المطالبات هو الميزة الوحيدة التي تدعم Gemini للمؤسسات.
 
 <div align="center">
   <a href="https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=readme&utm_campaign=organic_growth&utm_content=ar" target="_blank">
@@ -149,14 +149,14 @@
 </div>
 
 <p align="center">
-  <sub><b>مستخدمو Edge:</b> يواصل Voyager صيانة الإضافة ونشرها على Edge Add-ons لمن يحتاجون Edge على الهاتف أو الجهاز اللوحي. وإذا تأخرت المراجعة، تبقى متاحة نسخة Chrome Web Store وحزم GitHub اليدوية.</sub>
+  <sub><b>لمستخدمي Edge:</b> سيواصل Voyager صيانة ونشر إصدار Edge Add-ons لمن يحتاجون Edge على الهاتف أو الجهاز اللوحي. إذا تأخرت المراجعة، تبقى نسخة Chrome Web Store وحزم GitHub اليدوية متاحة.</sub>
 </p>
 
-للاطلاع على **التثبيت اليدوي** أو **بناءات التطوير**، راجع [دليل التثبيت](https://voyager.nagi.fun/ar/guide/installation).
+لـ **التثبيت اليدوي** أو **بناء التطوير**، يرجى الرجوع إلى [دليل التثبيت](https://voyager.nagi.fun/ar/guide/installation).
 
 ---
 
-## ☕ ادعم هذا المشروع
+## ☕ دعم هذا المشروع
 
 <div align="center">
   <a href="https://github.com/voyager-crew/voyager">
@@ -164,7 +164,7 @@
   </a>
 </div>
 
-إذا جعلك Voyager حياتك أسهل، ففكّر في أن تشتري لي قهوة. فذلك يساعد على استمرار التحديثات! وسيُذكر الداعمون في قسم الشكر الخاص بنا. ❤️
+إذا كان Voyager يسهل حياتك، فكر في دعوتي لتناول القهوة. يساعد ذلك في استمرار التحديثات! سيتم إدراج الداعمين في قسم الشكر الخاص بنا. ❤️
 
 <div align="center">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
@@ -174,7 +174,7 @@
     <img src="https://img.shields.io/badge/Sponsor%20me-GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor on GitHub" height="36">
   </a>
 
-  <p><b>أو ادعم عبر WeChat / Alipay / Afdian:</b></p>
+  <p><b>أو الدعم عبر WeChat / Alipay / Afdian:</b></p>
   <table align="center" border="0" cellpadding="0" cellspacing="0">
     <tr>
       <td align="center">
@@ -201,9 +201,9 @@
 
 ### 🎙️ أداة موصى بها: Typeless
 
-أوصي بشدة بـ **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**، وهي أداة لتحويل الصوت إلى نص بالذكاء الاصطناعي، استخدمتها بكثافة أثناء تطوير Voyager. وقد وفّر عليّ دمجها في سير عملي الكثير من الوقت، ورفع إنتاجيتي بشكل ملحوظ.
+أوصي بشدة بـ **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**، وهي أداة تحويل الصوت إلى نص بالذكاء الاصطناعي استخدمتها على نطاق واسع أثناء تطوير Voyager. لقد وفرت لي الكثير من الوقت وزادت من إنتاجيتي بشكل كبير.
 
-> 🎁 **[انضم عبر رابط الإحالة الخاص بي](https://www.typeless.com/?via=gemini-voyager)** (الرمز: _`gemini-voyager`_) واحصل على **رصيد مجاني بقيمة 5 دولارات**. كما يمنحني ذلك رصيدًا يساعدني على مواصلة صيانة هذا المشروع، وهي طريقة مجانية لدعم عملي! ❤️
+> 🎁 **[انضم عبر رابط الإحالة الخاص بي](https://www.typeless.com/?via=gemini-voyager)** (الكود: _`gemini-voyager`_) للحصول على **5 دولارات رصيد مجاني**. ❤️
 
 ---
 
@@ -236,11 +236,11 @@
 
 [<img src="https://devin.ai/assets/askdeepwiki.png" alt="Ask DeepWiki" height="20"/>](https://deepwiki.com/voyager-crew/voyager)
 
-نرحب بالمساهمات! سواء أردت الإبلاغ عن أخطاء، أو اقتراح ميزات، أو تحسين التوثيق، أو إرسال شيفرة:
+نرحب بالمساهمات!
 
-- **Issues**: للأخطاء القابلة لإعادة الإنتاج فقط — استخدم قالب [تقرير الخطأ](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml)
-- **Discussions**: [طلبات الميزات والأفكار والأسئلة](https://github.com/voyager-crew/voyager/discussions) — وليس Issues
-- **Pull Requests**: راجع [CONTRIBUTING.md](./CONTRIBUTING.md) للإرشادات
+- **Issues**: الأخطاء القابلة لإعادة الإنتاج فقط — استخدم نموذج [تقرير الأخطاء](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml).
+- **Discussions**: [طلبات الميزات والأفكار والأسئلة](https://github.com/voyager-crew/voyager/discussions) مكانها هنا وليس في Issues.
+- **Pull Requests**: تحقق من [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 <details>
 <summary>إعداد بيئة التطوير</summary>
@@ -266,11 +266,11 @@ bun run build:all      # Chrome + Firefox + Safari
 
 </details>
 
-شكرًا لمساعدتك في جعل Voyager أفضل! ❤️
+شكراً لمساعدتك في جعل Voyager أفضل! ❤️
 
 ### ❤️ شكر خاص
 
-شكر خاص لجميع المساهمين على إسهاماتهم في Voyager ❤️
+شكر خاص لجميع المساهمين على مساهماتهم في Voyager ❤️
 
 <a href="https://github.com/voyager-crew/voyager/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=voyager-crew/voyager&max=200&columns=14" />
@@ -280,15 +280,15 @@ bun run build:all      # Chrome + Firefox + Safari
 
 ## 🌟 الاعتمادات
 
-> Voyager مشروع جانبي صغير. أفضّل قضاء وقتي في بناء أشياء تساعد الناس، بدلًا من بناء مسارات ترحيل مصممة لجذب المستخدمين بعيدًا عن إضافات أخرى.
+> Voyager مشروع جانبي صغير. أفضّل قضاء وقتي في بناء أشياء تساعد الناس بدلاً من بناء مسارات ترحيل مصممة لجذب المستخدمين بعيدًا عن إضافات أخرى.
 
-- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - مصدر الإلهام الأصلي لهذا المشروع، وهو إضافة الجدول الزمني للتنقل في محادثات ChatGPT.
+- **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)** - مصدر الإلهام الأصلي لهذا المشروع.
 
-- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - تم تكييف Image Refinement من هذين المشروعين. وتُحفظ إشعارات MIT الخاصة بالأطراف الثالثة في [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)** - تم بناء Image Refinement بالاعتماد على هذين المشروعين. إشعارات MIT الخاصة بالأطراف الثالثة والمحفوظة موجودة في [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
-- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)** - يتضمن منطق تثبيت النموذج الافتراضي أفكار تفاعل مقتبسة من Gemini Helper، ونُسبت إليه في الشيفرة المصدرية.
+- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)** - يتضمن منطق تثبيت النموذج الافتراضي أفكارًا تفاعلية مقتبسة من Gemini Helper، مع الاحتفاظ بالإسناد على مستوى المصدر.
 
-- **[cordis](https://github.com/cordiverse/cordis)** - يقتبس سجل الآثار الجانبية في بيئة تشغيل الإضافات (`PluginScope`) تصميم دورة حياة الآثار والتخلّص منها من نموذج fiber في cordis.
+- **[cordis](https://github.com/cordiverse/cordis)** - يستلهم سجل الآثار الجانبية في بيئة تشغيل الإضافات (`PluginScope`) تصميم دورة حياة الآثار والتحرير من نموذج fiber في cordis.
 
 ## 🌍 المنظومة
 
@@ -296,9 +296,9 @@ bun run build:all      # Chrome + Firefox + Safari
 
 إذا كان مشروعك مستوحى من Voyager، أو متفرعًا عنه، أو مبنيًا عليه، فشاركه في [Discussions](https://github.com/voyager-crew/voyager/discussions) وسنضيفه هنا.
 
-- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - نسخة مشتقة من Voyager مكيّفة لـ DeepSeek، تضيف التنقل عبر الجدول الزمني وإدارة المحادثات لمستخدمي DeepSeek!
+- **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)** - نسخة مشتقة من Voyager مخصصة لـ DeepSeek.
 
-- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - إضافة لتحسين Claude.ai مستوحاة من Voyager، تتضمن التنقل عبر الجدول الزمني، وإدارة المجلدات، ومكتبة المطالبات والمزيد، مع توافق كامل لاستيراد المطالبات وتصديرها مع Voyager!
+- **[claude-nexus](https://github.com/Qiuner/claude-nexus)** - إضافة لتحسين Claude.ai مستوحاة من Voyager، تتضمن التنقّل عبر الخط الزمني، وإدارة المجلدات، ومكتبة المطالبات والمزيد، مع توافق كامل لاستيراد/تصدير المطالبات مع Voyager!
 
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)** - إضافة متصفح متقدمة تعزز Doubao بميزات التنقل المحسّن والتنظيم والإنتاجية.
 
@@ -308,10 +308,10 @@ bun run build:all      # Chrome + Firefox + Safari
 
 ## 📄 الترخيص
 
-يُوزَّع Voyager بموجب **GPL-3.0**.
-تُحفظ إشعارات MIT الخاصة بالأطراف الثالثة المتعلقة بشيفرة Image Refinement وموارده في [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+يتم توزيع Voyager بموجب **GPL-3.0**.
+إشعارات MIT الخاصة بالأطراف الثالثة والمحفوظة لشفرة Image Refinement وموارده موجودة في [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
-Gemini علامة تجارية لشركة Google LLC. Claude علامة تجارية لشركة Anthropic, PBC. ChatGPT علامة تجارية لشركة OpenAI, Inc. Voyager مشروع مستقل، وليس له أي ارتباط بهذه الشركات أو تأييد منها أو رعاية لها.
+Gemini هي علامة تجارية لشركة Google LLC. Claude هي علامة تجارية لشركة Anthropic, PBC. ChatGPT هي علامة تجارية لشركة OpenAI, Inc. Voyager مشروع مستقل وليس له أي ارتباط أو تأييد أو رعاية من هذه الشركات.
 
 ---
 
@@ -323,6 +323,6 @@ Gemini علامة تجارية لشركة Google LLC. Claude علامة تجار
      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=voyager-crew/voyager&type=date&legend=top-left" />
    </picture>
   </a>
-  <p>صُنع بكل ❤️ بواسطة Jesse Zhang</p>
-  <sub>رخصة GPLv3 © 2026</sub>
+  <p>صنع بكل ❤️ بواسطة Jesse Zhang</p>
+  <sub>رخصة GPLv3 © 2025</sub>
 </div>

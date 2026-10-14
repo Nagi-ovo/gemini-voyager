@@ -54,7 +54,7 @@ Un plugin ne peut pas exécuter de JavaScript, réagir aux clics ou aux touches,
 
 ## Règles vérifiées à l'import
 
-En plus des vérifications communes du manifest (voir [Guide de contribution aux plugins](./plugin-contribution.md)), un plugin local doit :
+En plus des vérifications communes du manifest (voir [Contribution Plugins](./plugin-contribution.md)), un plugin local doit :
 
 - ne cibler que des URL situées sur un site pris en charge par Voyager ;
 - n'utiliser que des clés sémantiques déclarées par tous les sites ciblés ;
@@ -68,7 +68,7 @@ Les traductions (`i18n`) sont facultatives.
 
 ## Le partager
 
-Un plugin local reste dans votre navigateur ; exportez son JSON depuis la liste des plugins pour l'emporter ailleurs. S'il peut servir à tout le monde, proposez-le pour le catalogue officiel : [Guide de contribution aux plugins](./plugin-contribution.md) décrit la marche à suivre.
+Un plugin local reste dans votre navigateur ; exportez son JSON depuis la liste des plugins pour l'emporter ailleurs. S'il peut servir à tout le monde, proposez-le pour le catalogue officiel : [Contribution Plugins](./plugin-contribution.md) décrit la marche à suivre.
 
 Sur chaque site, un seul plugin de raccourci d’envoi fonctionne par page. Si un plugin utilise déjà le mode d’envoi, un autre signale un conflit et reste en pause. Le paramètre facultatif `mode` (nécessite `"engine": ">=1.9.0"`) vaut `ctrlEnterSends` (par défaut) ou `enterSends`. La validation IME n’envoie rien. Gemini et AI Studio l’autorisent désormais ; les modes pris en charge sont décrits ci-dessous.
 

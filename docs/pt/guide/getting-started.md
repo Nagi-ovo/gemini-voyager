@@ -1,50 +1,50 @@
-# Bem-vindo a bordo
+# Bem-vindo a Bordo
 
-Parabéns. Você acabou de turbinar o seu intelecto.
-O Voyager não é só um utilitário; é um fluxo de trabalho. Veja como aproveitá-lo ao máximo nos primeiros 5 minutos.
+Parabéns. Acabou de melhorar o seu intelecto.
+O Voyager não é apenas um utilitário; é um fluxo de trabalho. Veja como tirar o máximo partido dele nos seus primeiros 5 minutos.
 
-## 1. A configuração
+## 1. A Configuração
 
-Se ainda não instalou, vá para o [Guia de instalação](/pt/guide/installation).
-Depois de instalado, atualize a aba do Gemini. Você vai notar a diferença imediatamente.
+Se ainda não o instalou, vá para o [Guia de Instalação](/pt/guide/installation).
+Uma vez instalado, atualize o seu separador do Gemini. Verá a diferença imediatamente.
 
 Também usa o Claude, o ChatGPT ou o DeepSeek? Abra o popup do Voyager, vá até **Plugins** e ative os plugins que quiser para esse site. Na primeira vez, o navegador vai pedir permissão para acessar o site; recarregue a aba se nada aparecer. Veja tudo no [catálogo de plugins](/pt/plugins).
 
-## 2. A linha do tempo
+## 2. A Linha do Tempo
 
-Comece uma conversa. Uma longa. Pergunte sobre a história da tipografia ou a física dos buracos negros.
+Inicie uma conversa. Uma longa. Pergunte sobre a história da tipografia ou a física dos buracos negros.
 Olhe para a direita.
 **Aquela faixa de pontos? É o seu mapa.**
 
-- **Passe o mouse** para espiar o que você disse.
-- **Clique** para se teletransportar até lá.
-- **Pressione e segure** (cerca de 0,5 s) para **marcar com estrela** um momento que quer guardar, como um marcador de livro para a sua memória.
+- **Passe o rato** para espreitar o que disse.
+- **Clique** para se teletransportar para lá.
+- **Pressione longamente** (~0.5s) para **marcar com estrela** um momento que queira guardar — um marcador para o seu cérebro.
 
-Chega de rolagem infinita. Agora você navega na velocidade do pensamento.
+Acabou-se o scroll interminável. Agora navega à velocidade do pensamento.
 
 ## 3. Organização
 
-Olhe para a lista de chats à esquerda. Percebeu algo novo?
-**As pastas.**
+Olhe para a sua lista de chats à esquerda. Nota algo novo?
+**Pastas.**
 
-Pegue um chat. Arraste-o. Solte-o em uma pasta.
-Parece natural, não é? Porque é. Você pode aninhar pastas, renomeá-las e, enfim, tirar a bagunça da cabeça.
+Pegue num chat. Arraste-o. Solte-o numa pasta.
+Parece natural, não é? É porque é. Pode aninhá-las, renomeá-las e, finalmente, limpar a desordem da sua mente.
 
-## 4. O cofre
+## 4. O Cofre
 
-Você acabou de escrever o prompt perfeito. Não deixe ele se perder no vazio.
-Clique no **botão flutuante do Voyager** ao lado da caixa de entrada (arraste-o para onde preferir) para abrir o Gerenciador de Prompts.
-Salve-o. Dê uma tag.
+Acabou de escrever o prompt perfeito. Não o deixe desaparecer no vazio.
+Clique na **bola flutuante do Voyager** junto à caixa de entrada (arraste-a para onde quiser) para abrir o Gestor de Prompts.
+Guarde-o. Etiquete-o.
 
-Da próxima vez? Basta clicar no botão para encontrar e inserir o prompt.
-Você não está apenas conversando. Está construindo um cofre da sua própria genialidade.
+Da próxima vez? Basta clicar na bola para o encontrar e inserir.
+Já não está apenas a conversar. Está a construir um cofre do seu próprio génio.
 
 ---
 
-**Você está pronto.**
-Explore os guias específicos para se aprofundar:
+**Está pronto.**
+Explore os guias específicos para mergulhos profundos:
 
-- [Domine a linha do tempo](/pt/guide/timeline)
-- [Gestão de pastas](/pt/guide/folders)
-- [Engenharia de prompts](/pt/guide/prompts)
-- [Exportação de dados](/pt/guide/export)
+- [Domínio da Linha do Tempo](/pt/guide/timeline)
+- [Gestão de Pastas](/pt/guide/folders)
+- [Engenharia de Prompts](/pt/guide/prompts)
+- [Exportação de Dados](/pt/guide/export)

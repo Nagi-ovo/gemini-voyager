@@ -1,33 +1,33 @@
-# Cópia de fórmulas
+# Cópia de Fórmulas
 
-O Voyager facilita reutilizar fórmulas matemáticas e símbolos científicos. Clique em uma fórmula para copiá-la como LaTeX, MathML pronto para o Word ou um bloco compatível com o Notion.
+O Voyager torna fácil a reutilização de fórmulas matemáticas e símbolos científicos. Clique numa fórmula para a copiar como LaTeX, MathML pronto para o Word ou um bloco compatível com o Notion.
 
 ## Introdução
 
-Quando você pede ao Gemini para deduzir fórmulas ou escrever expressões matemáticas, ele normalmente as renderiza usando LaTeX. Embora fiquem bonitas, extrair o código-fonte para usar em seus artigos, documentos ou editores costuma exigir trabalho manual.
+Quando pede ao Gemini para derivar fórmulas ou escrever expressões matemáticas, ele geralmente apresenta-as usando LaTeX. Embora seja visualmente atraente, extrair o código-fonte para usar nos seus próprios artigos, documentos ou editores exige frequentemente um esforço manual.
 
-O Voyager oferece suporte integrado para isso:
+O Voyager oferece suporte total para isso:
 
-1. **Detecção automática**: O Voyager identifica automaticamente as fórmulas renderizadas na página. Ao passar o mouse sobre uma delas, você vê que ela é clicável.
-2. **Clique para copiar**: Clique em uma fórmula inline ou em bloco e ela é copiada na hora, com uma breve confirmação.
-3. **Escolha um formato**: No popup, escolha antecipadamente um **Formato de cópia de fórmula**:
-   - **LaTeX**: Código-fonte LaTeX padrão com delimitadores de cifrão, ideal para Overleaf, editores Markdown etc.
-   - **LaTeX (Sem cifrão)**: O código-fonte LaTeX puro, para editores que adicionam seus próprios delimitadores.
+1. **Deteção Automática**: O Voyager identifica automaticamente as fórmulas apresentadas na página. Ao passar o rato sobre uma, percebe que é clicável.
+2. **Clique para Copiar**: Clique numa fórmula inline ou em bloco e ela é copiada de imediato, com uma breve confirmação.
+3. **Opções de Formato**: No popup, escolha antecipadamente um **Formato de cópia de fórmula**:
+   - **LaTeX**: Código-fonte LaTeX padrão com delimitadores de cifrão, ideal para Overleaf, editores Markdown, etc.
+   - **LaTeX (Sem cifrão)**: O código-fonte LaTeX puro, para editores que adicionam os seus próprios delimitadores.
    - **MathML (Word)**: O melhor formato para colar diretamente no **Microsoft Word**.
-   - **Notion ($$ Formato)**: Envolve cada fórmula em `$$`, que o Notion transforma em equação.
+   - **Notion ($$ Formato)**: Envolve cada fórmula em `$$`, que o Notion transforma numa equação.
 
-![Cópia de fórmulas](/assets/gemini-math-copy.png)
+![Cópia de Fórmulas](/assets/gemini-math-copy.png)
 
-## Recursos
+## Características
 
-- **Compatibilidade com o Word**: Com o suporte a MathML, você pode colar fórmulas complexas geradas por IA diretamente em documentos do Word, mantendo a formatação editável perfeita.
-- **Preservação do contexto**: Não copia só a fórmula, mas também preserva o contexto matemático dela.
-- **Resposta instantânea**: Processado inteiramente de forma local, para resultados imediatos.
+- **Compatibilidade com Word**: Com o suporte MathML, pode colar fórmulas complexas geradas por IA diretamente em documentos Word, mantendo um formato editável perfeito.
+- **Preservação do Contexto**: Não copia apenas a fórmula em si, mas também preserva o seu contexto matemático.
+- **Resposta Instantânea**: Processado inteiramente de forma local para resultados imediatos.
 
-## Dicas de uso
+## Dicas de Utilização
 
-- **Escrita acadêmica**: Ao escrever artigos no Word, peça ao Gemini para deduzir as fórmulas e use a cópia em MathML para evitar o trabalho manual no Editor de Equações do Word.
-- **Anotações**: Ao fazer anotações no Obsidian ou no Notion, basta copiar o código-fonte LaTeX diretamente.
+- **Escrita Académica**: Ao escrever artigos no Word, peça ao Gemini para derivar fórmulas e, em seguida, utilize a cópia MathML para evitar o trabalho de introdução manual no Editor de Equações do Word.
+- **Notas**: Ao tirar notas no Obsidian ou Notion, basta copiar a fonte LaTeX diretamente.
 
 ## Onde funciona
 

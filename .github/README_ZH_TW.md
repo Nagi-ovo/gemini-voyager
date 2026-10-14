@@ -1,8 +1,8 @@
 <div align="center">
   <img src="../docs/public/logo.png" alt="Voyager logo" width="120" height="120">
-  <h3>打造真正屬於你的 AI 體驗 ✨</h3>
+  <h3>打造屬於你的 AI 體驗 ✨</h3>
   <p>
-    <b>Gemini · Claude · ChatGPT · DeepSeek——終於完整。</b>
+    <b>Gemini · Claude · ChatGPT · DeepSeek，終於完整了。</b>
   </p>
 
   <p>
@@ -52,7 +52,7 @@
   </p> -->
 
 > [!NOTE]
-> 如果 Voyager 對你有幫助，歡迎分享到 X、Reddit、YouTube、Threads 等平台。每一次分享都能讓更多人發現這個專案。謝謝。
+> 如果 Voyager 有幫助，歡迎分享到 X、Facebook、YouTube、Threads、Dcard 等等。每一次分享都能讓更多人看見這個專案。謝謝。
 
 ---
 
@@ -116,14 +116,14 @@
 - **📖 舒適閱讀寬度**：在 Claude、ChatGPT 與 DeepSeek 上調整對話寬度，獲得更好的閱讀體驗。
 - **💬 日常小工具**：在 Claude、ChatGPT 與 DeepSeek 上提供引用回覆、Ctrl/⌘+Enter 傳送與草稿字數計算；Claude 與 DeepSeek 另支援草稿自動儲存。
 - **🈶 CJK 渲染修復**：修復 Claude 上中日韓文字的渲染問題。
-- **📜 程式碼換行**：在 DeepSeek 上，過長的程式碼行會改為橫向捲動，而不是換行，因此縮排得以保留。
+- **📜 程式碼不換行**：DeepSeek 上的長程式碼行改為橫向捲動，縮排不會被折斷。
 
 ### 🧩 任何網站，包括本機
 
-在擴充功能彈出視窗中新增任何網站，提示詞管理器就會跟著過去，本機應用程式也不例外。以下是它在 `localhost:3080` 上執行的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 中的樣子：
+在擴充功能彈出視窗中新增任意網站，Prompt Manager 就會跟著過去，本機應用也一樣。下圖是它執行在 `localhost:3080` 的 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) 裡：
 
 <p align="center">
-  <img src="../docs/public/assets/prompt-manager-deepseek-harness.png" alt="在 DeepSeek Harness 中執行的提示詞管理器" width="720">
+  <img src="../docs/public/assets/prompt-manager-deepseek-harness.png" alt="在 DeepSeek Harness 中執行的 Prompt Manager" width="720">
 </p>
 
 ### 🎨 個人化設定
@@ -155,7 +155,7 @@
 </div>
 
 <p align="center">
-  <sub><b>Edge 使用者：</b>考量到行動裝置與平板使用者的需求，Voyager 仍會在 Edge 增益集上持續維護。若審核延遲，Chrome 線上應用程式商店版與 GitHub 手動安裝套件仍可使用。</sub>
+  <sub><b>Edge 使用者：</b>考量到行動端和平板使用者需求，Voyager 會繼續維護並發布 Edge Add-ons 版本。若商店審核延遲，仍可暫時使用 Chrome 商店版或 GitHub 手動包。</sub>
 </p>
 
 如需 **手動安裝** 或 **開發版本建置**，請參閱[安裝指南](https://voyager.nagi.fun/zh_TW/guide/installation)。
@@ -286,15 +286,15 @@ bun run build:all      # Chrome + Firefox + Safari
 
 ## 🌟 致謝
 
-> Voyager 只是一個小型的業餘專案。比起打造那些用來把其他擴充功能的使用者拉過來的遷移路徑，我更願意把時間花在真正能幫助人的事情上。
+> Voyager 只是一個小小的 side project。比起做那些把其他擴充功能使用者遷移過來的入口，我更想把時間花在真正幫到人的事情上。
 
 - **[ChatGPT Conversation Timeline](https://github.com/Reborn14/chatgpt-conversation-timeline)**：啟發本專案的原始 ChatGPT 對話時間軸擴充功能。
 
-- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)**：Image Refinement 改編自這些專案。相關第三方 MIT 聲明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
+- **[gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) / [GeminiWatermarkTool](https://github.com/allenk/GeminiWatermarkTool)**：Image Refinement 基於這些專案適配而來，相關第三方 MIT 聲明保留在 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)。
 
-- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)**：預設模型的鎖定邏輯中，部分互動概念參考自 Gemini Helper，並已在其原始碼中註明出處。
+- **[Gemini Helper](https://greasyfork.org/scripts/558318-gemini-helper)**：預設模型鎖定功能中的部分互動邏輯參考自 Gemini Helper，並已在原始碼中保留 attribution。
 
-- **[cordis](https://github.com/cordiverse/cordis)**：外掛執行階段的副作用帳本（`PluginScope`）借鑒了 cordis 的 fiber 模型，採用其效果與釋放的生命週期設計。
+- **[cordis](https://github.com/cordiverse/cordis)**：外掛執行階段的副作用帳本（`PluginScope`）借鑒了 cordis fiber 模型的 effect／卸載生命週期設計。
 
 ## 🌍 生態系
 
@@ -304,7 +304,7 @@ bun run build:all      # Chrome + Firefox + Safari
 
 - **[DeepSeek Voyager](https://github.com/Azurboy/deepseek-voyager)**：為 DeepSeek 改編的 Voyager 分支版本，為 DeepSeek 使用者帶來時間軸導覽與對話管理功能！
 
-- **[claude-nexus](https://github.com/Qiuner/claude-nexus)**：受 Voyager 啟發的 Claude.ai 增強擴充功能，提供時間軸導覽、資料夾管理、提示詞庫等功能，並與 Voyager 的提示詞匯入／匯出完全相容！
+- **[claude-nexus](https://github.com/Qiuner/claude-nexus)**：受 Voyager 啟發的 Claude.ai 增強擴充套件，提供時間軸導覽、資料夾管理、提示詞庫等功能，並與 Voyager 的提示詞匯入/匯出完全相容！
 
 - **[Better_Doubao](https://github.com/Rex16200513/Better_Doubao)**：進階的瀏覽器擴充功能，為豆包提供增強的導覽、整理與生產力功能。
 

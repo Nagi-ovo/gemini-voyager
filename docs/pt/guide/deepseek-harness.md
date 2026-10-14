@@ -1,22 +1,22 @@
 # DeepSeek Harness
 
-O agente de programação de código aberto do próprio DeepSeek. Ele roda na sua máquina.
+O agent de programação de código aberto oficial da DeepSeek. Corre na sua máquina.
 
-Ele tem uma interface web, em `localhost:3080`.
+Tem uma interface web, em `localhost:3080`.
 
-Uma interface web significa que o Voyager consegue acessá-la.
+Uma interface web significa que o Voyager consegue entrar.
 
-## Por que funciona
+## Porque funciona
 
-O Gerenciador de Prompts do Voyager não se importa com domínios. Ele se importa com os sites que você adicionou.
+O Gestor de Prompts do Voyager não olha para domínios. Olha para os sites que você adicionou.
 
 Um endereço local também é um site.
 
-Por isso, o DeepSeek Harness não é diferente do Gemini, do Claude ou do ChatGPT: é apenas mais um lugar aonde os seus prompts podem acompanhar você.
+Por isso o DeepSeek Harness não é diferente do Gemini, do Claude ou do ChatGPT — apenas mais um sítio para onde os seus prompts o acompanham.
 
 ## Três passos
 
-### 1. Inicie o DSH
+### 1. Arranque o DSH
 
 ```bash
 npm i -g @deepseek-ai/dsh
@@ -25,38 +25,38 @@ dsh web
 
 Abra `http://localhost:3080` no navegador.
 
-### 2. Ative a opção no popup
+### 2. Ligue o interruptor no popup
 
-![Clique no ícone de quebra-cabeça na barra de ferramentas, clique em Voyager e ative o Gerenciador de Prompts em localhost:3080](/assets/dsh-enable-steps-en.png)
+![Clique no ícone de puzzle da barra de ferramentas, clique em Voyager e ligue o Gestor de Prompts em localhost:3080](/assets/dsh-enable-steps-en.png)
 
-Como você já está em `localhost:3080`, o popup oferece a opção logo no topo. Ative-a e conceda o acesso.
+Como já está em `localhost:3080`, o popup mostra-lhe essa opção logo no topo. Ligue-a e conceda o acesso.
 
-Não precisa digitar o endereço.
+Não é preciso escrever o endereço.
 
-### 3. Recarregue a página
+### 3. Atualize a página
 
 O botão flutuante aparece no canto inferior direito.
 
-![Gerenciador de Prompts rodando dentro do DeepSeek Harness](/assets/prompt-manager-deepseek-harness.png)
+![Gestor de Prompts dentro do DeepSeek Harness](/assets/prompt-manager-deepseek-harness.png)
 
-## Uma biblioteca, em todo lugar
+## Uma só biblioteca, em todo o lado
 
-Você não tem uma biblioteca separada por site. Você tem uma só, que acompanha você.
+Não tem uma biblioteca por cada site. Tem uma só, e ela acompanha-o.
 
-Cada prompt que você salvou no Gemini, no Claude ou no ChatGPT já está lá quando você abre o DSH, todos eles. Funciona também no sentido inverso: escreva um prompt dentro do DSH e ele estará esperando por você no Gemini.
+Cada prompt que guardou no Gemini, no Claude ou no ChatGPT já lá está quando abre o DSH. Todos, sem faltar nenhum. E ao contrário também: escreva um prompt dentro do DSH e ele espera por si de volta no Gemini.
 
-As mesmas tags, os mesmos favoritos, a mesma pesquisa.
+As mesmas etiquetas, os mesmos favoritos, a mesma pesquisa.
 
-![Uma biblioteca alcançando todas as interfaces](/assets/one-prompt-library.png)
+![Uma só biblioteca a chegar a todas as interfaces](/assets/one-prompt-library.png)
 
-## Algumas observações
+## Algumas notas
 
-**A porta não é fixa.** O DSH ainda está em prévia para desenvolvedores, e a porta padrão pode mudar. Se mudar, basta adicionar a nova.
+**A porta não é fixa.** O DSH ainda é uma pré-visualização para programadores e a porta predefinida pode mudar. Se mudar, basta adicionar a nova.
 
-**Só o Gerenciador de Prompts é carregado.** Em um site personalizado como o DSH, a Linha do Tempo, as Pastas e o restante não são iniciados. (No site oficial do DeepSeek, muitos deles estão disponíveis como plugins oficiais.)
+**Só o Gestor de Prompts é carregado.** Num site personalizado como o DSH, a Linha do Tempo, as Pastas e o resto não arrancam. (No site oficial da DeepSeek, muitos deles estão disponíveis como plugins oficiais.)
 
-**Seus prompts nunca saem da máquina.** O DSH é local e a biblioteca do Voyager também é local. Nada nessa cadeia é enviado para fora.
+**Os seus prompts nunca saem da máquina.** O DSH é local, a biblioteca do Voyager é local. Nada na cadeia vai para fora.
 
 ::: tip
-O mesmo método funciona para qualquer interface web local, como Open WebUI, LibreChat ou aquela que você mesmo escreveu. Adicione o endereço, recarregue a página, pronto.
+O mesmo método serve para qualquer interface web local — Open WebUI, LibreChat, a que você mesmo escreveu. Adicione o endereço, atualize, pronto.
 :::

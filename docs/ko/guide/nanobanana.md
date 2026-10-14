@@ -1,20 +1,20 @@
 # Image Refinement (워터마크 제거)
 
 ::: tip Safari 지원
-v1.6.0부터 **Image Refinement**가 Safari에서 바로 작동하며, 워터마크가 없는 전체 크기 다운로드도 지원합니다. Chrome, Edge, Firefox, Safari가 이제 같은 내장 워크플로를 공유합니다.
+v1.6.0부터 **Image Refinement**가 Safari에서 직접 작동하며, 워터마크가 제거된 전체 크기 이미지 다운로드도 지원합니다. Chrome, Edge, Firefox, Safari에서 동일한 내장 흐름을 사용할 수 있습니다.
 :::
 
-**AI 이미지를 깨끗하게.**
+**AI 이미지를 순수하게 유지하세요.**
 
-Gemini™가 생성한 이미지에는 기본적으로 눈에 보이는 워터마크가 들어갑니다. 안전을 위한 장치이지만, 창작 작업에서는 완전히 깨끗한 이미지가 필요할 때가 있습니다.
+Gemini™가 생성한 이미지에는 기본적으로 눈에 보이는 워터마크가 포함되어 있습니다. 이는 안전을 위한 조치이지만, 완벽하게 깨끗한 이미지가 필요한 창의적인 상황이 있을 수 있습니다.
 
-## 손실 없는 복원
+## 무손실 복구
 
-Image Refinement는 **역 알파 블렌딩(Reverse Alpha Blending)** 알고리즘을 사용합니다.
+Image Refinement는 **역 알파 블렌딩 (Reverse Alpha Blending)** 알고리즘을 사용합니다.
 
-- **AI 인페인팅이 아닙니다**: 기존의 워터마크 제거는 AI로 해당 영역을 "뭉개는" 경우가 많아 픽셀 세부 정보가 손상됩니다.
-- **픽셀 단위의 정확성**: 수학적 계산으로 투명한 워터마크 층만 정확히 걷어내어 원본 픽셀 100%를 복원합니다.
-- **화질 손실 없음**: 처리된 이미지는 워터마크가 없는 모든 영역이 원본과 똑같습니다.
+- **AI 인페인팅이 아닙니다**: 기존의 워터마크 제거 방식은 종종 AI를 사용하여 해당 영역을 "뭉개는" 방식을 사용하며, 이는 픽셀 세부 정보를 파괴합니다.
+- **완벽한 픽셀 복구**: 우리는 수학적 계산을 통해 투명한 워터마크 레이어를 정밀하게 제거하여 100% 원본 픽셀을 복원합니다.
+- **품질 저하 제로**: 처리된 이미지는 워터마크가 없는 모든 영역에서 원본과 동일하게 유지됩니다.
 
 ## 사용 방법
 
@@ -31,11 +31,11 @@ Gemini는 자체 표시 워터마크 스위치를 순차적으로 제공하고 �
   <img src="/assets/nanobanana.png" alt="Image Refinement 데모" style="border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); max-width: 100%;"/>
 </div>
 
-## 감사의 말
+## 감사 인사
 
-이 기능은 [journey-ad (Jad)](https://github.com/journey-ad)의 [gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) 프로젝트를 기반으로 합니다. 이 프로젝트는 [allenk](https://github.com/allenk)의 [원본 C++ 구현](https://github.com/allenk/GeminiWatermarkTool)을 JavaScript로 옮긴 것입니다. 커뮤니티에 기여해 주신 분들께 감사드립니다. 🧡
-보존해야 하는 MIT 고지는 [THIRD_PARTY_NOTICES.md](https://github.com/voyager-crew/voyager/blob/main/THIRD_PARTY_NOTICES.md)에서 확인할 수 있습니다.
+이 기능은 [journey-ad (Jad)](https://github.com/journey-ad)의 [gemini-watermark-remover](https://github.com/journey-ad/gemini-watermark-remover) 프로젝트를 기반으로 하며, 이는 [allenk](https://github.com/allenk)의 [원본 C++ 구현](https://github.com/allenk/GeminiWatermarkTool)을 JavaScript로 포팅한 것입니다. 커뮤니티에 대한 그들의 기여에 감사드립니다. 🧡
+보존된 제3자 MIT 고지는 [THIRD_PARTY_NOTICES.md](https://github.com/voyager-crew/voyager/blob/main/THIRD_PARTY_NOTICES.md)에서 확인할 수 있습니다.
 
-## 개인정보 및 보안
+## 프라이버시 및 보안
 
-모든 처리는 **사용자의 브라우저 안에서 로컬로** 이루어집니다. 이미지는 어떤 제3자 서버에도 업로드되지 않으므로 개인정보와 창작물의 보안이 지켜집니다.
+모든 처리는 **사용자의 브라우저 내에서 로컬로** 이루어집니다. 이미지는 제3자 서버로 절대 업로드되지 않으므로 프라이버시와 창의적 보안이 보장됩니다.

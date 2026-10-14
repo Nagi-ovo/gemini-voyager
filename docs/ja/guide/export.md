@@ -2,8 +2,8 @@
 
 Voyager のエクスポートを使うと、Gemini や ChatGPT の会話を Markdown、PDF、JSON、画像のいずれかの形式でダウンロードできます。コードブロック、画像、書式を含むチャットの全内容を取り出し、すべての AI 会話を、いつでも持ち運べる永続的なコピーとして残せます。
 
-データに閉じ込められることは、最大の敵です。
-作ったものは、あなたのものです。
+データに鍵をかけられるのは、最悪の体験です。
+私たちの信条はシンプルです：あなたが創ったものは、あなたのものです。
 
 ## 形式の比較
 
@@ -15,53 +15,53 @@ Voyager のエクスポートを使うと、Gemini や ChatGPT の会話を Mark
 | ファイルサイズ | 最も小さい                       | 最も大きい         | 中くらい               | 大きい                 |
 | 検索           | プレーンテキスト                 | PDF リーダーで検索 | プログラムからアクセス | 不可                   |
 
-## すべてをエクスポート
+## すべてを持ち出す
 
-Voyager は、クラウドからデータを取り出して、手元に残せるようにします。
+Voyager は、データをクラウドからあなたの手元へと引き戻す手助けをします。
 
-### 形式
+### 選べるフォーマット
 
-- **Markdown**: Obsidian の保管庫や Notion に。画像を埋め込んだ、整ったテキストです。
-- **PDF**: 共有や印刷に。レイアウトが美しく、画像も含まれます。
-- **JSON**: 生のデータです。履歴を基に何かを作りたい開発者向けです。
-- **画像**: 1 枚の長い PNG 画像で、スマートフォンでの共有に便利です。幅の狭い、中くらい、広いレイアウトから選べます。
+- **Markdown**：Obsidian や Notion へ。画像も埋め込める、クリーンで扱いやすい形式です。
+- **PDF**：共有や印刷に。画像も含まれた美しいレイアウト。
+- **JSON**：開発者向け。生のデータ、使い方はあなた次第。
+- **画像**：1 枚の長い PNG。スマートフォンでの共有にぴったりです。幅は狭い・中くらい・広いから選べます。
 
-### エクスポートの方法
+### エクスポート方法
 
-1. ページ右上の **エクスポート** ボタンをクリックします（ChatGPT と現在の Gemini のレイアウト）。Gemini では、会話や回答の ⋮ メニューから **会話履歴をエクスポート** を選ぶこともできます。古い Gemini のレイアウトでは、Gemini のロゴにカーソルを合わせると **エクスポートアイコン** が表示されます。
-2. 形式を選びます。
-3. 完了です。
+1. ページ右上の**エクスポート**ボタンをクリックします（ChatGPT と現行の Gemini レイアウト）。Gemini では、会話や回答の ⋮ メニューから**会話履歴をエクスポート**を選ぶこともできます。従来の Gemini レイアウトでは、Gemini ロゴにマウスを合わせると**エクスポートアイコン**が表示されます。
+2. フォーマットを選びます。
+3. 持ち出します。
 
-データはあなたのものです。自由に使ってください。
+あなたのデータは、あなたの意のままに。
 
 <div style="display: flex; gap: 20px; margin-top: 20px;">
   <div style="flex: 1; text-align: center;">
-    <p><b>手順 1：エクスポートを探す</b></p>
-    <img src="/assets/gemini-export-guide-1.png" alt="エクスポートガイド 手順 1" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+    <p><b>1. エクスポートを探す</b></p>
+    <img src="/assets/gemini-export-guide-1.png" alt="Export Guide Step 1" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
   <div style="flex: 1; text-align: center;">
-    <p><b>手順 2：形式を選ぶ</b></p>
-    <img src="/assets/gemini-export-guide-2.png" alt="エクスポートガイド 手順 2" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+    <p><b>2. フォーマットを選ぶ</b></p>
+    <img src="/assets/gemini-export-guide-2.png" alt="Export Guide Step 2" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
 </div>
 
-### Safari での PDF エクスポートの注意点
+### Safari PDF エクスポートに関する注意
 
-Safari で PDF をエクスポートするには、手動で印刷する少し異なる手順が必要です。
+Safari で PDF をエクスポートする手順は少し異なります（手動印刷が必要です）：
 
-1. **エクスポート** ボタンをクリックし、PDF 形式を選びます。
-2. **約 1 秒待ちます**（ページが印刷用のスタイルを準備する時間です）。
-3. `Command + P` を押して、印刷ダイアログを開きます。
-4. 印刷ダイアログで **"Save to PDF"** を選びます（日本語環境では「PDF として保存」）。
+1. **エクスポート**ボタンをクリックし、PDF 形式を選択します。
+2. **1秒ほど待ちます**（ページが印刷スタイルの準備をするため）。
+3. `Command + P` を押して印刷ダイアログを開きます。
+4. 印刷ダイアログで **"Save to PDF"**（または「PDFとして保存」）を選択します。
 
-<img src="/assets/safari-export-pdf.png" alt="Safari での PDF エクスポート" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 20px;"/>
+<img src="/assets/safari-export-pdf.png" alt="Safari Export PDF" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 20px;"/>
 
 ## Deep Research のエクスポート
 
 Gemini の Deep Research モードは、出典、思考のステップ、引用を含む構造化されたレポートを作ります。Voyager は、そのセッションをメタデータを保ったままエクスポートできます。
 
 1. 完了した Deep Research の会話を開きます。
-2. レポートの **Share & Export** メニューを開き、**レポートを保存** を選びます。
+2. レポートの **共有とエクスポート** メニューを開き、**レポートを保存** を選びます。
 3. 形式を選びます。
 4. エクスポートには、出典リンク付きの最終レポートが含まれます。思考過程も保存したい場合は、[Deep Research のエクスポート](/ja/guide/deep-research) を参照してください。
 

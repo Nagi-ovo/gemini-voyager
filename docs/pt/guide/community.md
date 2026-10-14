@@ -1,27 +1,27 @@
-# Comunidade e feedback
+# Comunidade e Feedback
 
-Valorizamos a voz de cada usuário. Seja para reportar um bug, sugerir uma funcionalidade ou compartilhar sua biblioteca de prompts, há vários caminhos para entrar em contato.
+Valorizamos a voz de cada utilizador. Quer tenha encontrado um Bug, tenha uma sugestão de funcionalidade ou queira partilhar a sua biblioteca de prompts, pode contactar-nos através dos seguintes canais.
 
-## 📢 Acompanhe as novidades
+## 📢 Siga as Novidades
 
-Siga a gente no X (Twitter) para acompanhar os últimos avanços do desenvolvimento.
+Siga a nossa conta no X (Twitter) para obter os últimos progressos de desenvolvimento.
 
-- **Novos lançamentos**: fique sabendo das atualizações em primeira mão.
-- **Prévias de funcionalidades**: veja antecipadamente o que está por vir.
+- **Novos Lançamentos**: Saiba das atualizações em primeira mão.
+- **Próximas Funcionalidades**: Espreite o que está para vir.
 
 <div style="margin: 2rem 0;">
   <a href="https://x.com/Nag1ovo/status/2012610584722731188" target="_blank" style="text-decoration: none;">
-    <img src="https://img.shields.io/badge/Seguir-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="Seguir no X">
+    <img src="https://img.shields.io/badge/Seguir-𝕏-000000?style=for-the-badge&logo=x&logoColor=white" alt="Seguir X">
   </a>
 </div>
 
-## 💬 Comunidade no Discord
+## 💬 Comunidade Discord
 
-Entre no nosso servidor do Discord para conversar com outros Voyagers!
+Junte-se ao nosso servidor Discord e troque ideias com outros Voyagers!
 
-- **Chat em tempo real**: converse diretamente com outros usuários e com os desenvolvedores.
-- **Compartilhamento de prompts**: veja como outras pessoas usam o Gemini™ e compartilhe seus melhores prompts.
-- **Novidades do desenvolvimento**: fique por dentro das próximas funcionalidades e lançamentos.
+- **Chat Instantâneo**: Fale diretamente com outros utilizadores e programadores.
+- **Partilha de Prompts**: Veja que tipos de Prompts as outras pessoas estão a usar.
+- **Progresso de Desenvolvimento**: Receba notícias sobre o desenvolvimento de novas funcionalidades.
 
 <div style="margin: 2rem 0;">
   <a href="https://discord.gg/TEUFxdMbGb" target="_blank" style="text-decoration: none;">
@@ -29,9 +29,9 @@ Entre no nosso servidor do Discord para conversar com outros Voyagers!
   </a>
 </div>
 
-## 📱 Outras redes sociais
+## 📱 Outras Plataformas Sociais
 
-Você também pode me encontrar nestas plataformas:
+Também pode encontrar-me nestas plataformas:
 
 <div style="margin: 1rem 0; display: flex; gap: 12px; flex-wrap: wrap;">
   <a href="https://www.xiaohongshu.com/user/profile/5d366136000000001101950a" target="_blank" style="text-decoration: none;">
@@ -42,11 +42,11 @@ Você também pode me encontrar nestas plataformas:
   </a>
 </div>
 
-## 🐙 Issues no GitHub
+## 🐙 GitHub Issues
 
-Se você encontrou um bug reproduzível, abra uma issue no GitHub. Pedidos de funcionalidades, ideias e dúvidas vão para as Discussions, não para as Issues:
+Se encontrou um erro (Bug) reproduzível, submeta um Issue no GitHub. Pedidos de funcionalidades, ideias e perguntas pertencem às Discussions, não aos Issues:
 
-- [Reportar um bug](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml)
-- [Sugerir uma funcionalidade ou ideia (Discussions)](https://github.com/voyager-crew/voyager/discussions)
+- [Submeter Relatório de Bug](https://github.com/voyager-crew/voyager/issues/new?template=bug_report.yml)
+- [Propor uma funcionalidade ou ideia (Discussions)](https://github.com/voyager-crew/voyager/discussions)
 
-Obrigado por apoiar o Voyager! ❤️
+Obrigado pelo seu apoio ao Voyager! ❤️

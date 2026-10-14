@@ -1,16 +1,16 @@
 # 설치
 
 ::: info 뉴스
-🍎 **Safari 네이티브 확장 프로그램이 출시되었습니다!** 완전 무료이며 클릭 한 번으로 설치할 수 있습니다.
+🍎 **Safari 네이티브 확장 프로그램이 출시되었습니다!** 완전 무료로 제공되며 클릭 한 번으로 설치할 수 있습니다.
 :::
 
-원하는 설치 방법을 고르세요.
+원하는 설치 방법을 선택하세요.
 
 > ⚠️ 참고: 프롬프트 관리자는 Gemini™ Enterprise를 지원하는 유일한 기능입니다.
 
 ## 1. 확장 프로그램 스토어 (권장)
 
-가장 간단하게 시작하는 방법입니다. 업데이트는 자동으로 이루어집니다.
+가장 간단한 시작 방법입니다. 업데이트가 자동으로 이루어집니다.
 
 **Chrome / Edge / Brave / Opera / Vivaldi:**
 
@@ -20,7 +20,7 @@
 
 [<img src="https://img.shields.io/badge/Microsoft_Edge-Download-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="Microsoft Edge 추가 기능에서 설치" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
 
-> **Edge 사용자:** Voyager는 특히 모바일이나 태블릿에서 Edge를 써야 하는 사용자를 위해 [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)에서 계속 관리됩니다. 심사가 지연되면 Chrome 웹 스토어와 GitHub 수동 패키지를 계속 이용할 수 있습니다.
+> **Edge 사용자:** 모바일이나 태블릿에서 Edge가 필요한 사용자를 위해 Voyager는 [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne) 버전을 계속 유지하고 배포합니다. 심사가 지연되면 Chrome Web Store 버전이나 GitHub 수동 패키지를 사용할 수 있습니다.
 
 **Firefox:**
 
@@ -28,27 +28,27 @@
 
 ## 2. 수동 설치 (최신 기능)
 
-웹 스토어 심사에는 시간이 걸릴 수 있습니다. 최신 버전을 바로 쓰고 싶다면 직접 설치하세요.
+웹 스토어의 심사 과정은 다소 느릴 수 있습니다. 최신 기능을 즉시 사용하고 싶다면 수동으로 설치하세요.
 
 **Chrome / Edge / Brave / Opera의 경우:**
 
 1. [GitHub Releases](https://github.com/voyager-crew/voyager/releases)에서 최신 `voyager-chrome-vX.Y.Z.zip`을 다운로드합니다.
 2. 파일의 압축을 풉니다.
 3. 브라우저의 확장 프로그램 페이지(`chrome://extensions`)를 엽니다.
-4. 오른쪽 상단의 **개발자 모드**를 켭니다.
-5. **압축해제된 확장 프로그램을 로드합니다**를 클릭하고, 방금 압축을 푼 폴더를 선택합니다.
+4. 우측 상단의 **개발자 모드**를 활성화합니다.
+5. **압축해제된 확장 프로그램을 로드합니다** 버튼을 클릭하고 압축을 푼 폴더를 선택합니다.
 
 **Firefox의 경우:**
 
 1. [Releases](https://github.com/voyager-crew/voyager/releases)에서 최신 `voyager-firefox-vX.Y.Z.xpi`를 다운로드합니다.
 2. 부가 기능 관리자(`about:addons`)를 엽니다.
-3. `.xpi` 파일을 끌어다 놓아 설치합니다. 또는 톱니바퀴 아이콘 ⚙️ → **파일에서 부가 기능 설치**를 클릭합니다.
+3. `.xpi` 파일을 드래그 앤 드롭하여 설치합니다 (또는 톱니바퀴 아이콘 ⚙️ -> **파일에서 부가 기능 설치** 클릭).
 
-> 💡 XPI 파일은 Mozilla가 공식 서명했으며, 모든 Firefox 버전에 영구적으로 설치할 수 있습니다.
+> 💡 XPI 파일은 Mozilla에 의해 공식적으로 서명되었으며 모든 Firefox 버전에서 영구적으로 설치할 수 있습니다.
 
 ## 3. Safari (macOS)
 
-Safari는 이제 직접 배포를 지원합니다! 사전 서명된 앱을 다운로드하세요.
+Safari가 이제 직접 배포를 지원합니다! 사전 서명된 앱을 다운로드하세요:
 
 ::: warning `Gemini Voyager.app`에서 업그레이드하는 경우
 이제 포함 앱의 이름은 `Voyager.app`입니다. macOS는 파일 이름이 다른 앱을 교체하지 않으므로, 두 앱을 함께 설치해 두면 안 됩니다.
@@ -64,14 +64,14 @@ Voyager는 기존 앱과 확장 프로그램의 번들 식별자를 그대로 �
 :::
 
 1. <SafariDownloadLink>최신 Safari 버전 (.dmg)</SafariDownloadLink>을 다운로드합니다.
-2. 더블 클릭해서 열고 안내에 따라 설치합니다.
-3. 더블 클릭해서 앱을 실행합니다.
-4. **Safari 설정 > 확장 프로그램**에서 확장 프로그램을 켭니다.
+2. 파일을 더블 클릭하여 안내에 따라 설치합니다.
+3. 더블 클릭하여 앱을 실행합니다.
+4. **Safari 설정 > 확장 프로그램**에서 활성화합니다.
 
-> 💡 Safari 빌드는 이제 배포용으로 직접 서명되어 있어 Xcode 변환이 필요 없습니다!
+> 💡 Safari 빌드가 직접 서명 배포를 지원합니다 — Xcode 변환이 필요 없습니다!
 >
-> ✅ **Safari 공식 지원**: v1.6.0부터 워터마크 제거, 이미지 내보내기, Google Drive/iCloud 동기화, 응답 알림, Sparkle 업데이트를 지원합니다.
+> ✅ **Safari 공식 지원**: v1.6.0부터 워터마크 제거, 이미지 내보내기, Google Drive/iCloud 동기화, 응답 완료 알림, Sparkle 자동 업데이트를 지원합니다.
 
 ---
 
-_개발 환경을 설정하려고요? 기여하려는 개발자라면 [기여 가이드](https://github.com/voyager-crew/voyager/blob/main/.github/CONTRIBUTING.md)를 확인해 보세요._
+_개발 설정이 궁금하신가요? 기여를 원하는 개발자라면 [기여 가이드](https://github.com/voyager-crew/voyager/blob/main/.github/CONTRIBUTING.md)를 확인해 보세요._

@@ -1,7 +1,7 @@
 # Image Refinement (remoção de marca d'água)
 
 ::: tip Suporte ao Safari
-Desde a v1.6.0, o **Image Refinement** funciona diretamente no Safari, incluindo downloads em tamanho real sem marca d'água. Chrome, Edge, Firefox e Safari agora compartilham o mesmo fluxo integrado.
+Desde a v1.6.0, o **Image Refinement** funciona diretamente no Safari, incluindo downloads de imagens em tamanho real sem marca d'água. Chrome, Edge, Firefox e Safari agora compartilham o mesmo fluxo integrado.
 :::
 
 **Imagens de IA, mantidas puras.**

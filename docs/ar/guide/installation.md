@@ -1,77 +1,77 @@
 # التثبيت
 
 ::: info أخبار
-🍎 **تم إطلاق إضافة Safari الأصلية!** وهي مجانية بالكامل وتدعم التثبيت بنقرة واحدة.
+🍎 **إضافة Safari الأصلية تم إطلاقها!** هي مجانية بالكامل وتدعم التثبيت بنقرة واحدة.
 :::
 
-اختر الطريقة المناسبة لك.
+اختر طريقك.
 
-> ⚠️ ملاحظة: مدير المطالبات هو الميزة الوحيدة التي تدعم Gemini™ for Enterprise.
+> ⚠️ ملاحظة: مدير المطالبات هو الميزة الوحيدة التي تدعم Gemini™ للمؤسسات.
 
 ## 1. متاجر الإضافات (موصى به)
 
-أبسط طريقة للبدء. التحديثات تُثبَّت تلقائيًا.
+أبسط طريقة للبدء. التحديثات تلقائية.
 
 **Chrome / Edge / Brave / Opera / Vivaldi:**
 
-[<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="التثبيت من متجر Chrome الإلكتروني" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=ar)
+[<img src="https://img.shields.io/badge/Chrome_Web_Store-Download-4285F4?style=for-the-badge&logo=google-chrome&logoColor=white" alt="التثبيت من سوق Chrome الإلكتروني" height="40"/>](https://chromewebstore.google.com/detail/iifacdnjakkhjjiengaffnegbndgingi?utm_source=github&utm_medium=docs&utm_campaign=organic_growth&utm_content=ar)
 
 **Microsoft Edge:**
 
-[<img src="https://img.shields.io/badge/Microsoft_Edge-Download-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="التثبيت من إضافات Microsoft Edge" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
+[<img src="https://img.shields.io/badge/Microsoft_Edge-Download-0078D7?style=for-the-badge&logo=microsoft-edge&logoColor=white" alt="التثبيت من وظائف Microsoft Edge الإضافية" height="40"/>](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)
 
-> **مستخدمو Edge:** يواصل Voyager صيانة الإضافة ونشرها على [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne)، خاصةً لمن يحتاج إلى Edge على الهاتف أو الجهاز اللوحي. وإذا تأخرت المراجعة، تبقى متاحة نسخة Chrome Web Store وحزم GitHub اليدوية.
+> **لمستخدمي Edge:** سيواصل Voyager صيانة ونشر إصدار [Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/voyager/gibmkggjijalcjinbdhcpklodjkhhlne) لمن يحتاجون Edge على الهاتف أو الجهاز اللوحي. إذا تأخرت المراجعة، تبقى نسخة Chrome Web Store وحزم GitHub اليدوية متاحة.
 
 **Firefox:**
 
 [<img src="https://img.shields.io/badge/Firefox_Add--ons-Download-FF7139?style=for-the-badge&logo=firefox&logoColor=white" alt="التثبيت من إضافات Firefox" height="40"/>](https://addons.mozilla.org/firefox/addon/gemini-voyager/)
 
-## 2. التثبيت اليدوي (أحدث الميزات)
+## 2. الطريقة اليدوية (أحدث الميزات)
 
-قد تكون مراجعة متجر الإضافات بطيئة. إذا أردت الإصدار الأحدث فورًا، فثبّته يدويًا.
+يمكن أن تكون عملية مراجعة متجر الويب بطيئة. إذا كنت تريد أحدث إصدار فوراً، فقم بالتثبيت يدوياً.
 
 **لـ Chrome / Edge / Brave / Opera:**
 
-1. نزّل أحدث ملف `voyager-chrome-vX.Y.Z.zip` من [إصدارات GitHub](https://github.com/voyager-crew/voyager/releases).
-2. فكّ ضغط الملف.
+1. قم بتنزيل أحدث `voyager-chrome-vX.Y.Z.zip` من [إصدارات GitHub](https://github.com/voyager-crew/voyager/releases).
+2. قم بفك ضغط الملف.
 3. افتح صفحة الإضافات في متصفحك (`chrome://extensions`).
-4. فعّل **وضع المطوّر** (Developer mode) من أعلى الصفحة.
-5. انقر على **Load unpacked** (تحميل غير مضغوط) واختر المجلد الذي فككت ضغطه للتو.
+4. قم بتمكين **وضع المطور** (أعلى اليسار أو اليمين حسب اللغة).
+5. انقر فوق **تحميل إضافات غير حزمة** وحدد المجلد الذي قمت بفك ضغطه للتو.
 
 **لـ Firefox:**
 
-1. نزّل أحدث ملف `voyager-firefox-vX.Y.Z.xpi` من [الإصدارات](https://github.com/voyager-crew/voyager/releases).
+1. قم بتنزيل أحدث `voyager-firefox-vX.Y.Z.xpi` من [الإصدارات](https://github.com/voyager-crew/voyager/releases).
 2. افتح مدير الإضافات (`about:addons`).
-3. اسحب ملف `.xpi` وأفلته لتثبيته (أو انقر على أيقونة الترس ⚙️ ← **Install Add-on From File**).
+3. اسحب ملف `.xpi` وأفلته للتثبيت (أو انقر فوق أيقونة الترس ⚙️ -> **تثبيت إضافة من ملف**).
 
-> 💡 ملف XPI موقّع رسميًا من Mozilla، ويمكن تثبيته بشكل دائم في جميع إصدارات Firefox.
+> 💡 ملف XPI موقع رسمياً من Mozilla ويمكن تثبيته بشكل دائم في جميع إصدارات Firefox.
 
 ## 3. Safari (macOS)
 
-أصبح Safari يدعم التوزيع المباشر! نزّل التطبيق الموقّع مسبقًا:
+Safari يدعم الآن التوزيع المباشر! قم بتنزيل التطبيق الموقع مسبقاً:
 
 ::: warning الترقية من `Gemini Voyager.app`
 صار التطبيق الحاوي يحمل اسم `Voyager.app`. ولأن macOS لا يستبدل التطبيقات التي تختلف أسماء ملفاتها، فلا تُبقِ النسختين مثبتتين معًا.
 
 1. في الإضافة القديمة، افتح تبويبات Gemini وAI Studio التي تستخدمها، ثم نفّذ **مزامنة سحابية > رفع إلى السحابة**. وإذا كنت تستخدم مزامنة التمييزات، فَفعّلها قبل الرفع.
-2. صدّر مكتبة الموجّهات كملف JSON محلي كنسخة احتياطية مستقلة.
+2. صدّر مكتبة المطالبات كملف JSON محلي كنسخة احتياطية مستقلة.
 3. أغلق Safari والتطبيق الحاوي.
 4. انقل `/Applications/Gemini Voyager.app` إلى سلة المهملات. لا تنقر على زر **إلغاء التثبيت** في Safari، ولا تمسح بيانات إضافات Safari أو بيانات المواقع أو الحاويات.
 5. انسخ `Voyager.app` إلى `/Applications`، وافتحه مرة واحدة، ثم فعّل Voyager في Safari إذا طُلب منك ذلك.
-6. تحقق من مجلداتك وموجّهاتك وإعداداتك ونجومك المحفوظة. وإذا فُقد شيء، فاستخدم **دمج** أو استورد ملف JSON الخاص بالموجّهات.
+6. تحقق من مجلداتك ومطالباتك وإعداداتك ونجومك المحفوظة. وإذا فُقد شيء، فاستخدم **دمج** أو استورد ملف JSON الخاص بالمطالبات.
 
 يحتفظ Voyager بمعرّفات الحزم الحالية للتطبيق والإضافة، لذلك يواصل macOS وSafari التعرف على الهوية نفسها للمنتج. وخطوات النسخ الاحتياطي هذه احتياط للتثبيتات اليدوية القديمة.
 :::
 
-1. نزّل <SafariDownloadLink>أحدث إصدار من Safari (.dmg)</SafariDownloadLink>.
-2. انقر مرتين لفتح الملف، واتبع التعليمات لإتمام التثبيت.
-3. انقر مرتين لتشغيل التطبيق.
-4. فعّل الإضافة من **إعدادات Safari > الإضافات**.
+1. قم بتنزيل <SafariDownloadLink>أحدث إصدار Safari (.dmg)</SafariDownloadLink>.
+2. افتح الملف واتبع تعليمات التثبيت.
+3. انقر نقراً مزدوجاً لتشغيل التطبيق.
+4. قم بالتفعيل في **إعدادات Safari > الإضافات**.
 
-> 💡 نسخة Safari موقّعة الآن مباشرةً للتوزيع، ولا تحتاج إلى تحويل بواسطة Xcode!
+> 💡 إصدار Safari موقع مباشرة للتوزيع — لا حاجة لتحويل Xcode!
 >
-> ✅ **دعم Safari الرسمي**: منذ الإصدار v1.6.0، أصبحت إزالة العلامة المائية وتصدير الصور ومزامنة Google Drive وiCloud وإشعارات اكتمال الرد وتحديثات Sparkle مدعومة.
+> ✅ **دعم Safari الرسمي**: بدءًا من v1.6.0، أصبحت إزالة العلامة المائية وتصدير الصور ومزامنة Google Drive وiCloud وإشعارات اكتمال الرد وتحديثات Sparkle مدعومة.
 
 ---
 
-_هل تريد إعداد بيئة التطوير؟ إذا كنت مطوّرًا وتريد المساهمة، فاطّلع على [دليل المساهمة](https://github.com/voyager-crew/voyager/blob/main/.github/CONTRIBUTING.md)._
+_إعداد التطوير؟ إذا كنت مطوراً وتتطلع للمساهمة، تحقق من [دليل المساهمة](https://github.com/voyager-crew/voyager/blob/main/.github/CONTRIBUTING.md) الخاص بنا._

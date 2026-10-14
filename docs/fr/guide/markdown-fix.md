@@ -1,8 +1,8 @@
-# Correction du rendu Markdown
+# Correction du Rendu Markdown
 
-L'interface web de Gemini™ insère parfois des éléments HTML (comme les sources de citation ou les marqueurs de surlignage) au milieu du texte. Cela peut casser la syntaxe Markdown du gras (`**texte**`) et empêcher le texte de s'afficher correctement en gras.
+L'interface web de Gemini™ insère parfois des éléments HTML (tels que des sources de citation ou des marqueurs de mise en évidence) dans le texte, ce qui peut briser la syntaxe Markdown pour le gras (`**texte**`), empêchant le texte de s'afficher correctement en gras.
 
-Voyager intègre une correction automatique qui repère et répare intelligemment ces balises de gras cassées, pour que vos documents s'affichent proprement et fidèlement.
+Voyager dispose d'une fonction de correction automatique intégrée qui identifie et répare intelligemment ces balises de gras corrompues, garantissant ainsi un rendu propre et précis de vos documents.
 
 > [!NOTE]
-> Cette fonctionnalité est activée automatiquement et ne nécessite aucune configuration.
+> Cette fonctionnalité est activée automatiquement et ne nécessite aucune configuration supplémentaire.

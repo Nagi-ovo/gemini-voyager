@@ -10,7 +10,7 @@ Voyager enregistre automatiquement l'heure d'envoi de chaque message, vous aidan
 
 Gemini n'affiche pas nativement l'heure d'envoi des messages. Lorsque les conversations s'allongent, il devient difficile de se rappeler quand une discussion particulière a eu lieu.
 
-Voyager annote chaque message avec un horodatage précis (format : `YYYY-MM-DD HH:mm:ss`), rendant la chronologie parfaitement lisible.
+Voyager annote chaque message avec un horodatage précis (format : `AAAA-MM-JJ HH:mm:ss`), rendant la chronologie parfaitement lisible.
 
 ## Caractéristiques
 

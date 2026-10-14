@@ -1,13 +1,26 @@
 # 贊助
 
 > [!NOTE]
-> 如果 Voyager 對你有幫助，歡迎分享到 X、Reddit、YouTube、Threads 等平台，也歡迎推薦給部落客、YouTuber，或任何你覺得可能會喜歡它的人。每一次分享都能讓更多人發現這個專案，進而改善 Gemini 的使用體驗。謝謝。
+> 如果 Voyager 有幫助，歡迎分享到 X、Facebook、YouTube、Threads、Dcard 等等，也歡迎推薦給部落客、YouTuber 或任何你覺得會喜歡它的人。每一次分享都能讓更多人看見這個專案，從而改善 Gemini 的使用體驗。謝謝。
 
-維護開源專案主要靠熱情（以及咖啡）支撐 ☕
+維護開源項目主要靠熱情（和咖啡）驅動 ☕
 
-本站沒有 Google 廣告，擴充功能也沒有付費版本。我也婉拒了 API 中轉／轉售服務的贊助，因為我無法確定它們會如何處理使用者資料。初衷很單純：打造一款我每天都在用、也很樂意推薦給朋友的工具，在喧囂的環境中保持真誠。
+本站沒有接入 Google Ads 等廣告，擴充功能本身也沒有收費的打算，中轉站的資助也婉拒了，這類服務我沒辦法確認怎麼處理使用者資料，所以不接。初心很簡單：做一個自己每天都會用、也願意推薦給朋友的工具 —— 在浮躁的氛圍裡，保持一份真誠。
 
-## 線上平台
+## 掃碼投喂 🍵
+
+<div class="qr-container">
+  <div class="qr-item">
+    <img src="/assets/wechat-sponsor.png" alt="微信支付" />
+    <span>微信支付</span>
+  </div>
+  <div class="qr-item">
+    <img src="/assets/alipay-sponsor.jpg" alt="支付寶" />
+    <span>支付寶</span>
+  </div>
+</div>
+
+## 在線平台
 
 <div class="sponsor-badges">
   <a href="https://www.buymeacoffee.com/Nag1ovo" target="_blank">
@@ -21,26 +34,13 @@
   </a>
 </div>
 
-## 請我喝杯咖啡（掃描 QR Code）🍵
-
-<div class="qr-container">
-  <div class="qr-item">
-    <img src="/assets/wechat-sponsor.png" alt="微信支付" />
-    <span>微信支付</span>
-  </div>
-  <div class="qr-item">
-    <img src="/assets/alipay-sponsor.jpg" alt="支付寶" />
-    <span>支付寶</span>
-  </div>
-</div>
-
 ---
 
-### 🎙️ 推薦工具：Typeless
+### 🎙️ 特別推薦: Typeless
 
-我非常推薦 **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**，這是一款 AI 語音轉文字工具。我在開發 Voyager 的過程中大量使用它。把它整合進日常工作流程後，為我省下了大量時間，也明顯提升了生產力。
+我非常推薦 **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)** 這款 AI 語音輸入工具。在開發 Voyager 的過程中，我將其整合進了日常工作流，極大地節省了我的時間並顯著提升了整體開發效率。
 
-> 🎁 **[透過我的推薦連結註冊](https://www.typeless.com/?via=gemini-voyager)**（邀請碼：_`gemini-voyager`_），即可獲得 **5 美元免費額度**。這也會讓我獲得額度，繼續維護這個專案，是一種免費的支持方式！❤️
+> 🎁 **[點擊我的邀請連結註冊](https://www.typeless.com/?via=gemini-voyager)**（邀請碼 _`gemini-voyager`_）即可獲得 **5 美元免費額度**，同時也能支持本項目的開發。❤️
 
 <style>
 .sponsor-badges {

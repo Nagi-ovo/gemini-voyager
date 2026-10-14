@@ -1,9 +1,9 @@
-# Libertad total
+# Libertad Total
 
 Voyager Export te permite descargar cualquier conversación de Gemini o ChatGPT como archivo Markdown, PDF, JSON o imagen. Extrae el contenido completo del chat, incluidos los bloques de código, las imágenes y el formato, y te da una copia permanente y portátil de cada conversación con IA que tengas.
 
-Los datos encerrados son el enemigo.
-Creemos que, si lo creaste, es tuyo.
+Los datos bloqueados son la peor experiencia.
+Nuestro credo es simple: lo que creas, es tuyo.
 
 ## Comparativa de formatos
 
@@ -15,46 +15,46 @@ Creemos que, si lo creaste, es tuyo.
 | Tamaño            | El más pequeño                       | El más grande              | Medio                              | Grande                   |
 | Búsqueda          | Texto plano                          | Búsqueda del lector de PDF | Acceso programático                | No                       |
 
-## Exporta todo
+## Llévatelo Todo
 
-Voyager te permite sacar tus datos de la nube y tenerlos en tus manos.
+Voyager te ayuda a bajar tus datos de la nube a tu palma.
 
-### Los formatos
+### Elige tu Formato
 
-- **Markdown**: Para tu vault de Obsidian o para Notion. Texto limpio y con formato, con las imágenes incrustadas.
-- **PDF**: Para compartir o imprimir. Maquetación cuidada, con las imágenes incluidas.
-- **JSON**: Datos en bruto. Para desarrolladores que quieran construir sobre su historial.
+- **Markdown**: Para usar en Obsidian o Notion. Limpio, con formato e imágenes integradas.
+- **PDF**: Para enviar a otros o imprimir. Maquetación hermosa, texto e imágenes.
+- **JSON**: Para desarrolladores. Datos brutos, juega con ellos como quieras.
 - **Imagen**: Un PNG largo, ideal para compartir en el móvil. Elige un diseño estrecho, medio o ancho.
 
-### Cómo exportar
+### Cómo Exportar
 
 1. Haz clic en el botón **Exportar** de la esquina superior derecha de la página (ChatGPT y los diseños actuales de Gemini). En Gemini también puedes elegir **Exportar historial de conversación** en el menú ⋮ de una conversación o de una respuesta; en los diseños antiguos de Gemini, pasa el ratón sobre el logo de Gemini para ver el **icono de exportación**.
 2. Elige el formato.
-3. Listo.
+3. Llévatelo.
 
-Son tus datos. Haz con ellos lo que quieras.
+Tus datos, tus reglas.
 
 <div style="display: flex; gap: 20px; margin-top: 20px;">
   <div style="flex: 1; text-align: center;">
-    <p><b>Paso 1: busca Exportar</b></p>
-    <img src="/assets/gemini-export-guide-1.png" alt="Guía de exportación, paso 1" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+    <p><b>1. Busca Exportar</b></p>
+    <img src="/assets/gemini-export-guide-1.png" alt="Guía de exportación paso 1" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
   <div style="flex: 1; text-align: center;">
-    <p><b>Paso 2: elige el formato</b></p>
-    <img src="/assets/gemini-export-guide-2.png" alt="Guía de exportación, paso 2" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+    <p><b>2. Elige el formato</b></p>
+    <img src="/assets/gemini-export-guide-2.png" alt="Guía de exportación paso 2" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
   </div>
 </div>
 
 ### Nota sobre la exportación a PDF en Safari
 
-En Safari, la exportación a PDF requiere un proceso algo distinto (impresión manual):
+La exportación a PDF en Safari requiere un proceso ligeramente diferente (impresión manual):
 
 1. Haz clic en el botón **Exportar** y selecciona el formato PDF.
-2. **Espera un segundo aproximadamente** (para que la página prepare los estilos de impresión).
-3. Pulsa `Command + P` para abrir el diálogo de impresión.
-4. Selecciona **"Guardar como PDF"** en el diálogo de impresión.
+2. **Espera aproximadamente un segundo** (para que la página prepare los estilos de impresión).
+3. Presiona `Command + P` para abrir el cuadro de diálogo de impresión.
+4. Selecciona **"Guardar como PDF"** (Save to PDF) en el cuadro de diálogo de impresión.
 
-<img src="/assets/safari-export-pdf.png" alt="Exportar PDF en Safari" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 20px;"/>
+<img src="/assets/safari-export-pdf.png" alt="Safari Export PDF" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 20px;"/>
 
 ## Exportación de Deep Research
 

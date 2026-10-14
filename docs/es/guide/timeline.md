@@ -1,42 +1,42 @@
-# Viaje en el tiempo
+# Viaje en el Tiempo
 
 La línea de tiempo de Voyager es un sistema visual de navegación por conversaciones para Gemini, Claude y ChatGPT. Asigna cada mensaje de un chat a un nodo interactivo en el lado derecho de la pantalla y convierte las conversaciones largas con IA en un mapa navegable por el que puedes saltar al instante.
 
-Las conversaciones largas se desordenan. Subes, bajas, pierdes el hilo.
-Voyager convierte tu conversación en una línea de tiempo.
+Las conversaciones largas son un desastre. Arriba y abajo, perdido.
+Voyager convierte la conversación en una línea.
 
-En los ajustes de Gemini, **Mostrar línea de tiempo** controla la barra y sus atajos de navegación. Si la desactivas, se conservan las estrellas guardadas y la jerarquía. Las marcas de tiempo de los mensajes dependen de **Mostrar marcas de tiempo de mensajes** por separado, así que puedes mantenerlas visibles con la línea de tiempo desactivada.
+En los ajustes de Gemini, **Mostrar línea de tiempo** controla la barra de la línea de tiempo y sus atajos de navegación. Al desactivarla se conservan las estrellas y la jerarquía guardadas. Las horas de los mensajes dependen por separado de **Mostrar marcas de tiempo de mensajes**, por lo que pueden seguir visibles con la línea de tiempo desactivada.
 
-## Mira la forma de tu chat
+## Ver el Ritmo
 
 Mira el lado derecho de la pantalla.
-Cada nodo representa un mensaje. La línea de tiempo muestra el ritmo de tu diálogo.
+Cada punto es una frase. Ese es el pulso de tu conversación.
 
-## Navegación, resuelta
+## Navegación, Paso a Paso
 
-- **Teletransporte**: Haz clic en un nodo para saltar al instante a ese mensaje.
-- **Vistazo**: Pasa el ratón por encima para ver lo que hay dentro sin moverte.
-- **Marcador**: Mantén pulsado un nodo para **Destacar** (estrella). Es como un marcador para tu memoria.
-- **Niveles (experimental)**: Haz clic derecho en un nodo para asignar niveles (1-3) o contraer sus hijos. Ideal para aclarar las conversaciones ramificadas.
-- **Ancho**: Arrastra el borde interior de la línea de tiempo para ajustar su anchura.
-- **Teclado**: Navega a la velocidad del pensamiento. Por defecto, `j`/`k`, y `gg`/`GG` para ir al primer o al último turno.
+- **Teletransporte**: Haz clic y ve, sin demoras.
+- **Vistazo**: Pasa el ratón por encima, ve el contenido sin saltar.
+- **Marcador**: Mantén presionado un nodo para **destacar**. Pon un marcador para tu cerebro.
+- **Niveles (Experimental)**: Clic derecho en un nodo para establecer niveles (1-3) o contraer hijos. Haz que las conversaciones ramificadas sean claras.
+- **Redimensionar**: Arrastra el borde interior de la línea de tiempo para ajustar su ancho.
+- **Atajos**: Vuela con el teclado. Por defecto `j`/`k` para saltar arriba/abajo, `gg`/`GG` para ir al primero/último turno.
 
-![Navegación por la línea de tiempo](/assets/teaser.png)
+![Navegación de Línea de Tiempo](/assets/teaser.png)
 
-## Destacar: marca tus momentos clave
+## Destacar: Marca tus momentos clave
 
-Las conversaciones largas esconden lo valioso. Destaca los momentos que importan.
+Las conversaciones largas entierran oro. Destaca los momentos que importan.
 
-**Cómo funciona**: mantén pulsado (unos 0,5 s) cualquier nodo de la línea de tiempo. Lo verás iluminarse: ese mensaje ya está destacado.
+**Cómo funciona**: Mantén presionado (~0.5s) cualquier nodo en la línea de tiempo. Verás que se ilumina — ese mensaje ahora está destacado.
 
-- Vuelve a mantenerlo pulsado para quitar el destacado.
-- Los nodos destacados siguen resaltados para que los localices de un vistazo.
+- Mantén presionado de nuevo para quitar la estrella.
+- Los nodos destacados permanecen resaltados para que puedas encontrarlos de un vistazo.
 - Consulta todos tus mensajes destacados en la **Biblioteca guardada**: haz clic en **Ver biblioteca guardada** en el popup de Voyager, o ábrela desde el panel del Gestor de prompts.
 
-Piensa en ello como clavar una bandera en la conversación: el momento en que tuviste una idea, la respuesta perfecta o algo a lo que quieres volver más tarde.
+Es como plantar una bandera en la conversación — el momento de una revelación, la respuesta perfecta, o donde quieres retomar después.
 
 ::: tip Consejo
-Los destacados se sincronizan entre dispositivos si tienes activada la [Sincronización en la nube](/es/guide/cloud-sync).
+Las estrellas se sincronizan entre dispositivos si tienes la [Sincronización en la Nube](/es/guide/cloud-sync) activada.
 :::
 
 ## Hazlo tuyo
@@ -44,29 +44,29 @@ Los destacados se sincronizan entre dispositivos si tienes activada la [Sincroni
 En **Opciones de Línea de Tiempo** del popup de Voyager:
 
 - **Estilo de cronología**: `Nodos`, `Escala` o `Compacto`.
-- **Fijar panel de vista previa**: mantiene abierto el panel de vista previa junto a la línea de tiempo. Su cuadro de búsqueda filtra los mensajes mientras escribes.
-- **Línea de tiempo arrastrable**: mueve la línea de tiempo a cualquier punto de la página. **Restablecer posición de la línea de tiempo** la devuelve a su lugar.
+- **Fijar panel de vista previa**: Mantiene abierto el panel de vista previa junto a la línea de tiempo. Su cuadro de búsqueda filtra los mensajes mientras escribes.
+- **Línea de tiempo arrastrable**: Mueve la línea de tiempo a cualquier punto de la página. **Restablecer posición de la línea de tiempo** la devuelve a su lugar.
 
-## Aún más rápido con el teclado
+## Teclado, Más Rápido
 
-¿Prefieres no usar el ratón? Usa el teclado.
+¿No quieres usar el ratón? Usa el teclado.
 
-**Es como activar el modo Vim en Gemini.**
+**Es como activar el Modo Vim en Gemini.**
 
-### Atajos predeterminados
+### Atajos Predeterminados
 
-- `k`: saltar al nodo anterior
-- `j`: saltar al nodo siguiente
-- `gg`: saltar al primer turno
-- `GG`: saltar al último turno
+- `k` - Saltar al nodo anterior
+- `j` - Saltar al nodo siguiente
+- `gg` - Saltar al primer turno
+- `GG` - Saltar al último turno
 
-### Personalízalos
+### Personalizar
 
-Abre los ajustes de la extensión, haz clic en un recuadro de atajo y pulsa la tecla que quieras.
-Cualquier tecla o combinación. ¿`n`/`p`? ¿`,`/`.`? Tú decides.
+Abre la configuración de la extensión, haz clic en el cuadro de atajos y presiona la tecla que quieras usar.
+Cualquier tecla, cualquier combinación. ¿`n`/`p`? ¿`,`/`.`? Tú decides.
 
-**Modo flujo**: las pulsaciones rápidas se encadenan con suavidad.
-**Modo salto**: respuesta inmediata, velocidad máxima.
+En **Modo Flujo**, presionar repetidamente pondrá en cola la animación.
+En **Modo Salto**, respuesta inmediata, velocidad máxima.
 
 ## Cuándo usar la línea de tiempo
 

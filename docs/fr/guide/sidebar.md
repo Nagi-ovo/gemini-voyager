@@ -1,25 +1,25 @@
 # Largeur de la barre latérale
 
-Les noms de dossiers sont trop longs pour être lus ?
-Ou la barre latérale prend-elle trop de place sur votre espace de discussion ?
+Les noms de dossiers sont trop longs ?
+Ou la barre latérale prend-elle trop de place ?
 
-Vous pouvez désormais ajuster librement la largeur de la barre latérale.
+Vous pouvez maintenant ajuster librement la largeur de la barre latérale.
 
-## Comment l'ajuster
+## Comment ajuster
 
-1. Ouvrez la fenêtre de Voyager (cliquez sur l'icône de l'extension dans la barre d'outils du navigateur).
-   <img src="/assets/extension-instruction.png" alt="Comment ouvrir le panneau des paramètres" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-2. Repérez le curseur **Largeur barre latérale** (sur AI Studio, il s'intitule **AI Studio Sidebar**).
+1. Ouvrez la popup de Voyager (cliquez sur l'icône de l'extension dans la barre d'outils du navigateur).
+   <img src="/assets/extension-instruction.png" alt="Comment ouvrir le panneau de configuration" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+2. Trouvez le curseur **Largeur barre latérale** (sur AI Studio, il s'intitule **AI Studio Sidebar**).
 3. Faites glisser le curseur pour choisir la largeur qui vous convient.
 
-- **Étroite** : gagnez de la place et concentrez-vous sur la conversation.
-- **Large** : lisez les noms complets des dossiers d'un coup d'œil.
+- **Étroite** : Économisez de l'espace et concentrez-vous sur la conversation.
+- **Large** : Voyez les noms de dossiers complets en un coup d'œil.
 
-## Plateformes prises en charge
+## Plateformes supportées
 
-Cette fonctionnalité prend en charge :
+Cette fonctionnalité supporte :
 
 - **Google Gemini**
 - **Google AI Studio**
 
-Vos réglages sont enregistrés automatiquement et s'appliqueront la prochaine fois que vous ouvrirez la page.
+Vos paramètres sont enregistrés automatiquement et s'appliqueront la prochaine fois que vous ouvrirez la page.

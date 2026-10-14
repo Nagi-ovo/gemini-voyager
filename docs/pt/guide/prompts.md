@@ -1,73 +1,73 @@
-# Seus ativos intelectuais: biblioteca de prompts
+# O Seu Ativo Digital: Biblioteca de Prompts
 
-Você cria um prompt perfeito. Ele resolve um problema complexo de código ou escreve um e-mail impecável.
-Você joga fora?
-Não. Você salva.
+Passou algum tempo a criar um Prompt divino que ajudou imenso.
+Usar e deitar fora?
+Não, guarde-o.
 
-## O cofre de prompts
+## Cofre de Comandos
 
-Este é o seu repositório pessoal de boas ideias.
+Este é o seu cofre de comandos.
 
-### 1. Capture
+### 1. Capturar
 
-Quando escrever algo ótimo, clique no botão flutuante do Voyager (ele fica ao lado da área de entrada por padrão, e você pode arrastá-lo para onde quiser) para abrir o **Gerenciador de Prompts**.
-Agora ele faz parte do seu cofre.
+Escreveu algo bom? Clique na **bola flutuante do Voyager** (por padrão fica ao lado da caixa de entrada, e pode arrastá-la para onde quiser) para abrir o Gestor de Prompts.
+Guarde no cofre, sinta-se seguro.
 
-### 2. Categorize
+### 2. Categorizar
 
-Adicione tags como `coding`, `email` ou `research` (separe-as com vírgulas).
-Mantenha suas ferramentas afiadas e organizadas.
+Adicione etiquetas como `código`, `email`, `académico` (separadas por vírgulas).
+As ferramentas devem ser úteis e também organizadas.
 
-### 3. Use
+### 3. Implementar
 
-Da próxima vez que precisar, não precisa digitar tudo de novo.
-Abra o gerenciador, pesquise por tag ou palavra-chave e clique para inserir.
-Um clique. Alavancagem infinita.
+Da próxima vez que precisar, não escreva tudo de novo.
+Abra a biblioteca, pesquise por etiqueta, clique para inserir.
+Chamada num clique, duplique a eficiência.
 
-![Gerenciador de Prompts](/assets/gemini-prompt-manager.png)
+![Gestor de Prompts](/assets/gemini-prompt-manager.png)
 
-## Lista compacta e notas
+## Lista compacta & notas
 
-Quando os prompts se acumulam e a lista de cartões deixa de caber, o painel se adapta:
+Quando os prompts se acumulam e a lista de cartões não cabe mais, o painel se adapta:
 
 ### Alternar visualização
 
-O botão `≡ / ▦` à direita da barra de pesquisa alterna entre **Lista compacta** (padrão) e **Visualização confortável**.
+O botão `≡ / ▦` à direita da barra de pesquisa alterna entre **Lista compacta** (padrão) e **Visão confortável**.
 
-- **Lista compacta**: um prompt por linha, cerca de 10 visíveis de uma vez; à direita ficam as tags, expandir, editar e excluir
-- **Visualização confortável**: pré-visualização completa em Markdown, ideal para uma coleção pequena
+- **Lista compacta**: um prompt por linha, ~10 visíveis de uma vez. À direita: tags · expandir · editar · excluir
+- **Visão confortável**: preview completo de Markdown, ideal para coleções pequenas
 
 ### Nome obrigatório
 
-O campo **Nome** no topo do formulário de adicionar ou editar dá a cada prompt um título curto e é obrigatório ao criar ou editar um prompt. Prompts antigos sem nome continuam disponíveis, mas precisarão de um nome na próxima vez que forem editados.
+O campo **Nome** no topo do formulário é obrigatório ao adicionar ou editar um prompt. Prompts antigos sem nome são preservados, mas precisarão de um nome na próxima edição.
 
-### Pré-visualização rápida ao passar o mouse
+### Preview rápido ao passar o mouse
 
-No modo compacto, passe o mouse sobre qualquer linha por **cerca de 250 ms** para ver o conteúdo completo em uma dica flutuante. Ela substitui a dica nativa `title` do navegador, que pode levar de 1 a 3 s para aparecer.
+No modo compacto, passe o mouse sobre qualquer linha por **~250 ms** para ver o conteúdo completo em um tooltip flutuante — substitui o tooltip nativo `title` do navegador (que pode demorar 1–3 s para aparecer).
 
 ### Inserção rápida com barra
 
-Na caixa de entrada de um chat, digite `/` seguido de parte do nome de um prompt. A lista mostra os nomes e as tags correspondentes; passe o mouse sobre um item para pré-visualizar o conteúdo completo e clique nele ou use `Tab` / `Enter` para selecioná-lo. O editor mostra o nome escolhido como um token destacado e envia o corpo completo do prompt.
+Na caixa de conversa, digite `/` seguido de parte do nome de um prompt. A lista mostra apenas os nomes e tags correspondentes; passe o mouse sobre um item para ver o conteúdo completo e selecione-o com o botão esquerdo ou com `Tab` / `Enter`. O nome aparece como um token destacado e, ao enviar, o corpo completo do prompt é usado.
 
 ![Visualização em lista compacta](/assets/gemini-prompt-manager-compact.png)
 
-## Disponível em qualquer lugar
+## Funciona em Qualquer Site
 
-O Gerenciador de Prompts agora pode ser usado em qualquer site que você escolher, não só no Gemini™ e no AI Studio.
+O Gestor de Prompts agora pode ser usado em qualquer site à sua escolha, não limitado ao Gemini™ e AI Studio.
 
-### Como ativar
+### Como Ativar
 
-No Claude, no ChatGPT e no DeepSeek, abra o popup do Voyager enquanto estiver no site e ative a chave do próprio site (por exemplo, **Ativar o Gerenciador de Prompts no Claude**). Você será solicitado a conceder acesso.
+No Claude, no ChatGPT e no DeepSeek, abra o popup do Voyager enquanto estiver no site e ative a chave do próprio site (por exemplo, **Ativar o Gerenciador de prompts no Claude**). Será solicitado a conceder acesso.
 
 Para qualquer outro site:
 
-1. Clique no ícone do Voyager na barra de extensões do navegador.
-2. Role até a seção **Gerenciador de Prompts**.
-3. Digite a URL do site (por exemplo, `chatgpt.com` ou `claude.ai`).
-4. Clique em **Adicionar site** e conceda a permissão.
-5. **Recarregue a página de destino** para ver o botão flutuante.
+1. Clique no ícone do Voyager na barra de ferramentas de extensões do navegador.
+2. Role até à secção **Gestor de Prompts**.
+3. Introduza o URL do site (ex: `chatgpt.com` ou `claude.ai`).
+4. Clique em **Adicionar Site** e conceda permissão.
+5. **Atualize a página de destino**, e verá a bola flutuante.
 
-### Sites de IA populares
+### Exemplos de Sites de IA Comuns
 
 - `chatgpt.com` - ChatGPT
 - `claude.ai` - Claude
@@ -76,10 +76,10 @@ Para qualquer outro site:
 
 ### Aplicativos locais
 
-Endereços locais também funcionam: digite `localhost:3080` ou `127.0.0.1:3080` do mesmo jeito. Por exemplo, o [DeepSeek Harness](/pt/guide/deepseek-harness) roda em `localhost:3080`, e o Gerenciador de Prompts se conecta a ele como a qualquer site hospedado.
+Endereços locais também funcionam — digite `localhost:3080` ou `127.0.0.1:3080` da mesma maneira. Por exemplo, o [DeepSeek Harness](/pt/guide/deepseek-harness) roda em `localhost:3080`, e o Gestor de Prompts se acopla como em qualquer site.
 
-![Gerenciador de Prompts rodando dentro do DeepSeek Harness](/assets/prompt-manager-deepseek-harness.png)
+![Gestor de Prompts dentro do DeepSeek Harness](/assets/prompt-manager-deepseek-harness.png)
 
 ::: tip
-Em sites que você adiciona por conta própria, **somente** o Gerenciador de Prompts é ativado. Recursos como Linha do Tempo e Pastas não são carregados ali. Claude, ChatGPT e DeepSeek são diferentes: eles recebem plugins oficiais próprios, que você pode conferir no [Mercado de plugins](/pt/plugins).
+Em sites personalizados, **apenas** a funcionalidade de Gestor de Prompts é ativada. Outras funcionalidades como Linha do Tempo, Pastas, etc., não são carregadas ali. Claude, ChatGPT e DeepSeek são diferentes: recebem plugins oficiais próprios, que pode conferir no [Mercado de plugins](/pt/plugins).
 :::

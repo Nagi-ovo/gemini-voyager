@@ -1,4 +1,4 @@
-# Política de privacidad
+# Política de Privacidad
 
 Última actualización: 14 de octubre de 2026
 
@@ -47,10 +47,10 @@ Los datos locales y los de sincronización del navegador se conservan hasta que 
 
 El uso y la transferencia de la información recibida de las API de Google por parte de Voyager cumplen la Política de datos de usuario de la Chrome Web Store, incluidos los requisitos de uso limitado.
 
-## Cambios en esta política
+## Cambios en la Política
 
-Podemos actualizar esta política de privacidad a medida que Voyager cambie. La versión más reciente y su fecha de actualización se publicarán en esta página.
+Podemos actualizar nuestra política de privacidad de vez en cuando. Le notificaremos cualquier cambio publicando la nueva política de privacidad en esta página.
 
-## Contacto
+## Contáctenos
 
-Para cualquier pregunta sobre privacidad, contáctanos a través del [repositorio de Voyager en GitHub](https://github.com/voyager-crew/voyager).
+Si tiene alguna pregunta sobre esta política de privacidad, contáctenos a través de nuestro [repositorio de GitHub](https://github.com/voyager-crew/voyager).

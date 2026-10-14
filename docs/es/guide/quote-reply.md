@@ -1,32 +1,32 @@
-# Respuesta con cita
+# Respuesta con Cita
 
-Voyager ofrece una práctica función de "Responder cita" que hace que responder a un contenido concreto sea más preciso y eficiente.
+Voyager ofrece una conveniente función de "Respuesta con Cita", haciendo que responder a contenido específico sea más preciso y eficiente.
 
 ## Introducción
 
-En las conversaciones del día a día, a menudo necesitamos hacer un seguimiento o refutar una parte concreta de la respuesta de la IA. El método tradicional consiste en copiar ese texto y escribir a mano el símbolo `> ` en el cuadro de entrada, lo que resulta tedioso.
+En las conversaciones diarias, a menudo necesitamos hacer preguntas de seguimiento o refutar una parte específica de la salida de la IA. El método tradicional es copiar ese texto y luego escribir manualmente el símbolo `> ` en el cuadro de entrada, lo cual es muy tedioso.
 
-Voyager simplifica el proceso:
+Voyager simplifica este proceso:
 
-1. **Seleccionar para citar**: Usa el ratón para seleccionar cualquier texto de la conversación (tanto tu pregunta como la respuesta de Gemini).
-2. **Botón flotante**: Aparecerá automáticamente un botón "Responder cita" junto al texto seleccionado.
-3. **Inserción con un clic**: Haz clic en el botón y el texto seleccionado se insertará automáticamente en tu cuadro de entrada con el formato de cita en bloque de Markdown (`> contenido`).
+1. **Selecciona y Cita**: En la página de conversación (ya sea tu pregunta o la respuesta de Gemini), selecciona cualquier texto con el ratón.
+2. **Botón Flotante**: Aparecerá automáticamente un botón de "Responder cita" cerca del texto seleccionado.
+3. **Inserción en un Clic**: Haz clic en el botón, y el texto seleccionado se insertará automáticamente en tu cuadro de entrada con el formato de cita estándar de Markdown (`> contenido`).
 
-![Respuesta con cita](/assets/quote-reply.png)
+![Respuesta con Cita](/assets/quote-reply.png)
 
-## Cómo activarla
+## Cómo Activarla
 
 En Gemini, la respuesta con cita se controla con **Habilitar citar al responder** en **Opciones Generales** del popup de Voyager.
 
 En Claude, ChatGPT y DeepSeek, instala para ese sitio el plugin **Quote replies** desde el [catálogo de plugins](/es/plugins). Allí, el botón "Citar" aparece cuando seleccionas texto dentro de una única respuesta del asistente, y la cita se añade a tu borrador sin enviar nada.
 
-## Funciones
+## Características
 
-- **Consciente del contexto**: identifica con inteligencia el contenido de la conversación para evitar activaciones accidentales en zonas no relacionadas (como el propio cuadro de entrada).
-- **Formato estándar**: usa la sintaxis universal de Markdown, que Gemini entiende a la perfección, para obtener respuestas más precisas.
-- **Varias líneas**: si seleccionas varias líneas de texto, Voyager añade automáticamente el símbolo de cita a cada una para mantener limpio el formato.
+- **Conciencia de Contexto**: Identifica inteligentemente el contenido de la conversación, evitando disparadores falsos en áreas irrelevantes (como el propio cuadro de entrada).
+- **Formato Estándar**: Utiliza la sintaxis universal de Markdown, que Gemini entiende perfectamente, permitiendo respuestas más precisas.
+- **Soporte Multilínea**: Si seleccionas varias líneas de texto, Voyager agregará automáticamente símbolos de cita a cada línea, manteniendo el formato limpio.
 
-## Consejos
+## Consejos de Uso
 
-- **Pedir detalles**: selecciona un concepto confuso de la respuesta de Gemini, haz clic en citar y escribe "Explica este concepto en detalle, por favor".
-- **Corregir errores**: selecciona código o datos incorrectos de la respuesta, cítalos y señala "Esto es incorrecto, debería ser...".
+- **Preguntar Detalles**: Selecciona un concepto poco claro en la respuesta de Gemini, haz clic en citar y luego escribe "Por favor, explica este concepto en detalle".
+- **Corregir Errores**: Selecciona código o hechos incorrectos en la respuesta, cita y señala "Esto es incorrecto, debería ser...".

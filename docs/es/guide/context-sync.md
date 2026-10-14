@@ -11,7 +11,7 @@ El mayor dolor de cabeza de los desarrolladores: después de discutir a fondo un
 ## Tres pasos sencillos, respiración sincronizada
 
 1. **Instalar y activar CoBridge**:
-   Instala la extensión **CoBridge** en VS Code o en un editor compatible. Es el puente central que conecta la interfaz web con tu IDE local.
+   Instala la extensión **CoBridge** en VS Code o en un editor compatible. Es el puente central que conecta la web con tu IDE local.
    - **[Instalar desde el Marketplace](https://open-vsx.org/extension/windfall/co-bridge)**
 
    ![Extensión CoBridge](/assets/CoBridge-extension.png)

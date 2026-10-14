@@ -1,11 +1,24 @@
 # 赞助
 
 > [!NOTE]
-> 如果 Voyager 对你有帮助，欢迎分享到 X、Reddit、YouTube、Threads 等平台，也欢迎推荐给博主、UP 主、YouTuber，或任何你觉得可能会喜欢它的人。每一次分享都能让更多人发现这个项目，并帮助改善 Gemini 的使用体验。谢谢。
+> 如果 Voyager 帮到了你，欢迎分享到 X、即刻、小红书、Linux.do、V2EX 等等，也欢迎推荐给博主、UP 主、YouTuber 或任何你觉得会喜欢它的人。每一次分享都能让更多人看到这个项目，从而改善 Gemini 的使用体验。谢谢。
 
-维护开源项目主要靠热情（以及咖啡）☕
+维护开源项目主要靠热情（和咖啡）驱动 ☕
 
-本站没有任何 Google 广告，插件也没有付费版本。我还婉拒了 API 中转／转售服务的赞助，因为我无法保证它们如何处理用户数据。初衷很简单：做一个我每天都在用、也乐于推荐给朋友的工具，在喧嚣的环境中保持一份真诚。
+本站没有接入 Google Ads 等广告，插件本身也没有收费的打算，中转站的资助也谢绝了，这类服务我没法确认怎么处理用户数据，所以不接。初心很简单：做一个自己每天都会用、也愿意推荐给朋友的工具 —— 在浮躁的氛围里，保持一份真诚。
+
+## 扫码投喂 🍵
+
+<div class="qr-container">
+  <div class="qr-item">
+    <img src="/assets/wechat-sponsor.png" alt="微信支付" />
+    <span>微信支付</span>
+  </div>
+  <div class="qr-item">
+    <img src="/assets/alipay-sponsor.jpg" alt="支付宝" />
+    <span>支付宝</span>
+  </div>
+</div>
 
 ## 在线平台
 
@@ -21,26 +34,13 @@
   </a>
 </div>
 
-## 扫码请我喝杯咖啡 🍵
-
-<div class="qr-container">
-  <div class="qr-item">
-    <img src="/assets/wechat-sponsor.png" alt="微信支付" />
-    <span>微信支付</span>
-  </div>
-  <div class="qr-item">
-    <img src="/assets/alipay-sponsor.jpg" alt="支付宝" />
-    <span>支付宝</span>
-  </div>
-</div>
-
 ---
 
-### 🎙️ 推荐工具：Typeless
+### 🎙️ 特别推荐: Typeless
 
-我非常推荐 **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)**，这是一款 AI 语音转文字工具，我在开发 Voyager 的过程中大量使用它。把它融入日常工作流之后，我节省了大量时间，效率也明显提升。
+我非常推荐 **[Typeless (typeless.com)](https://www.typeless.com/?via=gemini-voyager)** 这款 AI 语音输入工具。在开发 Voyager 的过程中，我将其整合进了日常工作流，极大地节省了我的时间并显著提升了整体开发效率。
 
-> 🎁 **[通过我的邀请链接注册](https://www.typeless.com/?via=gemini-voyager)**（邀请码：_`gemini-voyager`_），即可获得 **5 美元免费额度**。这同时也为我提供了维护本项目的额度，是支持我工作的一种免费方式！❤️
+> 🎁 **[点击我的邀请链接注册](https://www.typeless.com/?via=gemini-voyager)**（邀请码 _`gemini-voyager`_）即可获得 **5 美元免费额度**，同时也能支持本项目的开发。❤️
 
 <style>
 .sponsor-badges {
@@ -103,4 +103,4 @@
 
 ---
 
-感谢你的支持！每一份贡献都是我最大的鼓励 ❤️
+感谢你的支持！你的每一份贡献都是对我最大的鼓励 ❤️

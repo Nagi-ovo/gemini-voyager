@@ -1,6 +1,6 @@
 # DeepSeek Harness
 
-DeepSeek이 직접 만든 오픈소스 코딩 에이전트. 내 컴퓨터에서 돌아갑니다.
+DeepSeek이 직접 만든 오픈소스 코딩 agent. 내 컴퓨터에서 돌아갑니다.
 
 웹 화면이 있고, 주소는 `localhost:3080`입니다.
 

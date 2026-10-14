@@ -2,7 +2,7 @@
 
 Quer uma experiência de chat mais imersiva?
 
-Oferecemos o recurso **Ocultar barra lateral automaticamente**. Quando ativado, a barra lateral se recolhe sozinha quando o mouse sai da área dela e se expande de novo quando o mouse volta para lá.
+Oferecemos a funcionalidade de **Ocultar barra lateral automaticamente**. Quando ativada, a barra lateral contrai-se automaticamente quando o rato sai da área e expande-se automaticamente quando move o rato de volta para ela.
 
 ### Demonstração
 
@@ -12,8 +12,8 @@ Oferecemos o recurso **Ocultar barra lateral automaticamente**. Quando ativado, 
 
 ### Como ativar
 
-1. Abra o popup do Voyager.
-2. Ative **Ocultar barra lateral auto**. Ela fica logo abaixo do controle deslizante **Largura da barra lateral**.
-3. Para ocultar também a faixa recolhida, ative **Ocultar barra lateral completa** (essa opção também funciona sozinha).
+1. Abra o pop-up do Voyager.
+2. Ative o interruptor **Ocultar barra lateral auto**, logo abaixo do controlo deslizante **Largura da barra lateral**.
+3. Para ocultar também a faixa recolhida, ative **Ocultar barra lateral completa** (esta opção também funciona sozinha).
 
-_Observação: Este recurso atualmente é compatível apenas com o Google Gemini._
+_Nota: Esta funcionalidade suporta atualmente apenas o Google Gemini._

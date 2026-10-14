@@ -1,18 +1,14 @@
 # Resposta com Citação
 
-O Voyager tem o recurso "Resposta com Citação", que deixa as respostas a um trecho específico mais precisas e rápidas.
+Selecione para citar, assim como no Discord ou Slack.
 
-## Introdução
+Selecione qualquer texto na resposta do Gemini™, e um botão **"Citar"** aparecerá. Clique nele para inserir o conteúdo selecionado na caixa de entrada, formatado como uma citação Markdown.
 
-No dia a dia das conversas, muitas vezes precisamos continuar ou contestar uma parte específica da resposta da IA. O método tradicional é copiar esse texto e digitar manualmente o símbolo `> ` na caixa de entrada, o que é trabalhoso.
+Isso é especialmente útil para fazer perguntas de acompanhamento sobre partes específicas de uma resposta longa.
 
-O Voyager simplifica esse processo:
-
-1. **Selecione para citar**: Use o mouse para selecionar qualquer texto da conversa (seja a sua pergunta ou a resposta do Gemini).
-2. **Botão flutuante**: Um botão "Resposta com Citação" aparece automaticamente perto do texto selecionado.
-3. **Inserção com um clique**: Clique no botão e o texto selecionado é inserido automaticamente na caixa de entrada no formato de citação em bloco do Markdown (`> conteúdo`).
-
-![Resposta com Citação](/assets/quote-reply.png)
+<div style="text-align: center; margin-top: 20px;">
+  <img src="/assets/quote-reply.png" alt="Resposta com Citação" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+</div>
 
 ## Como ativar
 

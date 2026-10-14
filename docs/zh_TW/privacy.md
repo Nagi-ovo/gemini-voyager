@@ -1,6 +1,6 @@
-# 隱私權政策
+# 隱私政策
 
-最後更新：2026 年 10 月 14 日
+最後更新：2026年10月14日
 
 ## 概覽
 
@@ -20,11 +20,11 @@ Voyager 是一款本機優先的瀏覽器擴充功能，用來整理並強化支
 
 ## 使用者要求的傳輸
 
-- **Google Drive 同步（選用）**：選定的備份資料會在使用者的裝置與**其本人的 Google Drive** 之間直接傳輸。Chrome、Edge 與 Firefox 使用瀏覽器的身分識別 API；Safari 直接安裝的 App 則使用原生 Google 登入，並將憑證存放在 macOS 鑰匙圈中。兩種方式都只要求有限的 `drive.file` 範圍，OAuth 權杖不會傳送到 Voyager 伺服器。
-- **Safari 的 iCloud 同步（選用）**：選定的備份資料會由 Safari 原生擴充功能直接傳輸到使用者 iCloud 帳戶中的私有 CloudKit 資料庫。Voyager 不會接收使用者的 Apple ID 或 iCloud 驗證權杖，開發者也無法存取該私有資料庫中的記錄。
+- **Google Drive 同步（選用）**：選定的備份資料會在您的裝置與**您自己的 Google Drive**之間直接傳輸。Chrome、Edge 與 Firefox 會使用瀏覽器身分 API；Safari 直裝版則使用原生 Google Sign-In，並將憑證保存在 macOS 鑰匙圈中。兩種方式都只申請 `drive.file` 範圍；OAuth 權杖不會傳送到 Voyager 伺服器。
+- **Safari iCloud 同步（選用）**：Safari 直裝版可將選定的備份資料直接寫入您 iCloud 帳戶的私有 CloudKit 資料庫。Voyager 不會取得您的 Apple ID 或 iCloud 驗證權杖，開發者也無法存取該私有資料庫中的記錄。
 - **匯出與圖片**：使用者要求匯出時，Voyager 可能會從頁面既有的圖片來源擷取圖片，並可能要求臨時存取權限，以擷取生成的介面內容。產生的檔案是為使用者建立的，不會上傳到 Voyager 伺服器。
 - **公開專案資源**：Voyager 可能會請求公開的發行版本、公告或說明文件資源。這些請求不包含對話或提示詞內容。
-- **外掛目錄更新**：在您已啟用至少一個外掛的網站上，Voyager 可能會透過 HTTPS 從 `https://voyager.nagi.fun/catalog/hosts/<網站主機名稱>.json` 取得該網站更新後的目錄檔案，例如 `https://voyager.nagi.fun/catalog/hosts/chat.deepseek.com.json`。檢查會在開啟此類頁面時進行，或在此類頁面上開啟擴充功能彈出視窗時進行；而且只有在距離上次檢查已超過您選擇的間隔時才會執行（預設為 6 小時，可選 1 小時、6 小時、24 小時，或僅手動）。Gemini 與 AI Studio 只使用隨擴充功能打包的官方外掛，因此永遠不會觸發請求。該請求是一般的 GET 請求，不帶 Cookie、不帶帳戶或擴充功能識別碼，也不帶頁面或對話內容；和任何網路請求一樣，伺服器會看到請求端的 IP 位址與瀏覽器 User-Agent，以及網址路徑中的網站主機名稱。在有外掛的網站上，彈出視窗提供「外掛線上更新」開關與檢查間隔選擇器，兩者都儲存在瀏覽器同步儲存空間中，並包含在設定備份內。關閉該開關後，除非使用者按下「立即檢查外掛更新」，Voyager 不會連線到 voyager.nagi.fun。若請求失敗，或該網站沒有目錄檔案，會繼續使用擴充功能內附的外掛快照。取得的目錄只包含 CSS 與 JSON，使用前會經過驗證與清理；不會下載或執行任何 JavaScript。此檢查與公告檢查分開，後者有自己的設定。voyager.nagi.fun 是經由 Cloudflare 代理的靜態託管服務，Voyager 專案不記錄也不保存這些請求；連線中繼資料（IP 位址、User-Agent）由託管服務商依其各自的隱私權政策處理。
+- **外掛目錄線上更新（選用）**：在您已啟用至少一個外掛的網站上，Voyager 可能會透過 HTTPS 取得該網站的外掛目錄檔案 `https://voyager.nagi.fun/catalog/hosts/<網站主機名稱>.json`，例如 `https://voyager.nagi.fun/catalog/hosts/chat.deepseek.com.json`。檢查只會在開啟這類頁面、或在這類頁面上開啟擴充功能視窗時進行，而且距離上次檢查必須超過您選擇的間隔（預設 6 小時，可選 1 小時、6 小時、24 小時或僅手動）。Gemini 與 AI Studio 只使用隨擴充功能打包的官方外掛，因此不會產生任何請求。該請求是一般的 GET：不會帶上 Cookie，不會帶上帳戶或擴充功能識別碼，也不會帶上頁面或對話內容；與任何網路請求一樣，伺服器可以看到發出請求的 IP 位址、瀏覽器 User-Agent，以及網址路徑中的網站主機名稱。在有外掛的網站上，擴充功能視窗提供「外掛線上更新」開關與檢查間隔選項，兩項設定都保存在瀏覽器同步儲存空間中，並包含在設定備份內。關閉該開關後，除非您按下「立即檢查外掛更新」，Voyager 不會連線到 voyager.nagi.fun。若請求失敗或該網站沒有目錄檔案，擴充功能會繼續使用隨附的外掛快照。取得的目錄只包含 CSS 與 JSON，使用前會經過驗證與淨化；不會下載或執行任何 JavaScript。此檢查與公告檢查分開，後者有自己的設定。voyager.nagi.fun 是由 Cloudflare 代理的靜態託管網站，Voyager 專案不記錄、不保存這些請求；連線中繼資料（IP 位址、User-Agent）由託管方依其自身隱私政策處理。
 
 Voyager 不會出售使用者資料，也不會為了廣告、信用評估，或與擴充功能面向使用者的功能無關的目的而傳輸資料。
 
@@ -49,8 +49,8 @@ Voyager 對從 Google API 取得的資訊之使用與傳輸，符合 Chrome 線�
 
 ## 政策變更
 
-我們可能會隨 Voyager 的變動更新本隱私權政策。最新版本與其更新日期將發佈在本頁。
+我們可能會隨 Voyager 的變動不時更新隱私政策。最新版本及其更新日期將發佈在此頁面。
 
 ## 聯絡我們
 
-如有隱私相關問題，請透過 [Voyager GitHub 儲存庫](https://github.com/voyager-crew/voyager) 與我們聯絡。
+如果您對本隱私政策有任何疑問，請透過我們的 [GitHub 儲存庫](https://github.com/voyager-crew/voyager) 聯絡我們。

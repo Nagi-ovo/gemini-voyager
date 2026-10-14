@@ -21,14 +21,14 @@ O Voyager permite tirar os seus dados da nuvem e colocá-los nas suas mãos.
 
 ### Os formatos
 
-- **Markdown**: Para o seu cofre do Obsidian ou para o Notion. Texto limpo e formatado, com imagens incorporadas.
+- **Markdown**: Para o seu cofre do Obsidian ou Notion. Texto limpo e formatado com imagens incorporadas.
 - **PDF**: Para compartilhar ou imprimir. Diagramação bonita, com imagens incluídas.
 - **JSON**: Dados brutos. Para desenvolvedores que querem construir algo em cima do seu histórico.
 - **Imagem**: Um PNG longo, ótimo para compartilhar no celular. Escolha um layout estreito, médio ou largo.
 
 ### Como exportar
 
-1. Clique no botão **Exportar** no canto superior direito da página (no ChatGPT e nos layouts atuais do Gemini). No Gemini, você também pode escolher **Exportar histórico da conversa** no menu ⋮ de uma conversa ou de uma resposta; nos layouts antigos do Gemini, passe o mouse sobre o logo do Gemini para ver o ícone de exportação.
+1. Clique no botão **Exportar** no canto superior direito da página (ChatGPT e os layouts atuais do Gemini). No Gemini, você também pode escolher **Exportar histórico da conversa** no menu ⋮ de uma conversa ou de uma resposta; nos layouts antigos do Gemini, passe o mouse sobre o logo do Gemini para ver o **Ícone de Exportação**.
 2. Escolha o formato.
 3. Pronto.
 

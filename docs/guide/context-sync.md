@@ -21,7 +21,7 @@
 
 2. **握手对接**：
    - 在 Voyager 弹窗的 **上下文同步** 区域中，将 **同步模式** 设为 **手动**。
-   - 让 **服务器端口** 与 CoBridge 使用的端口一致。看到 “IDE Online” 时，说明两者已经连接。
+   - 对齐端口号：让 **服务端口** 与 CoBridge 使用的端口一致。看到 “IDE Online”，说明它们已经连上了。
 
    ![上下文同步面板](/assets/context-sync-console.png)
 

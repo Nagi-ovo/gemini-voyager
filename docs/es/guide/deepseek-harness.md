@@ -1,10 +1,10 @@
 # DeepSeek Harness
 
-El agente de programación de código abierto oficial de DeepSeek. Se ejecuta en tu máquina.
+El agent de programación de código abierto oficial de DeepSeek. Se ejecuta en tu máquina.
 
 Tiene una interfaz web, en `localhost:3080`.
 
-Una interfaz web significa que Voyager puede llegar hasta ella.
+Una interfaz web significa que Voyager puede entrar.
 
 ## Por qué funciona
 

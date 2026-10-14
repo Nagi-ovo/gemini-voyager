@@ -1,25 +1,25 @@
 # Largura da barra lateral
 
-Os nomes das pastas estão longos demais para ver?
-Ou a barra lateral está ocupando espaço demais do chat?
+Os nomes das pastas são muito longos?
+Ou a barra lateral ocupa muito espaço?
 
-Agora você pode ajustar a largura da barra lateral como quiser.
+Agora você pode ajustar livremente a largura da barra lateral.
 
 ## Como ajustar
 
 1. Abra o popup do Voyager (clique no ícone da extensão na barra de ferramentas do navegador).
    <img src="/assets/extension-instruction.png" alt="Como abrir o painel de configurações" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 2. Encontre o controle deslizante **Largura da barra lateral** (no AI Studio ele aparece como **AI Studio Sidebar**).
-3. Arraste o controle para escolher a largura que fizer mais sentido para você.
+3. Arraste o controle deslizante para escolher a largura que preferir.
 
-- **Estreita**: Economiza espaço e mantém o foco na conversa.
-- **Larga**: Permite ver os nomes completos das pastas de relance.
+- **Estreito**: Economize espaço e concentre-se na conversa.
+- **Largo**: Veja os nomes completos das pastas num piscar de olhos.
 
-## Plataformas compatíveis
+## Plataformas suportadas
 
-Este recurso funciona em:
+Este recurso suporta:
 
 - **Google Gemini**
 - **Google AI Studio**
 
-Suas configurações são salvas automaticamente e serão aplicadas na próxima vez que você abrir a página.
+Suas configurações são salvas automaticamente e aplicadas na próxima vez que você abrir a página.

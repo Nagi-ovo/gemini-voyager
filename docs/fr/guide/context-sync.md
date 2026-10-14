@@ -1,17 +1,17 @@
-# Transfert de mémoire : synchronisation du contexte (expérimental)
+# Transport de mémoire : Synchronisation du contexte (Expérimental)
 
-**Des dimensions différentes, un partage fluide**
+**Différentes dimensions, partage fluide**
 
-Élaborez la logique sur le web, et implémentez le code dans l'IDE. Voyager abat les barrières entre ces dimensions et donne instantanément à votre IDE le « processus de réflexion » du web.
+Élaborez la logique sur le web et implémentez le code dans l'IDE. Voyager brise les barrières dimensionnelles, dotant instantanément votre IDE du « processus de réflexion » du web.
 
-## Fini les allers-retours entre onglets
+## Fini les sauts d'onglets incessants
 
-Le plus grand calvaire des développeurs : après avoir discuté longuement d'une solution sur le web, vous revenez dans VS Code, Trae ou Cursor, et vous devez réexpliquer les besoins comme à un inconnu. Entre les quotas et la vitesse des réponses, le web est le « cerveau » et l'IDE les « mains ». Voyager leur permet de partager une même âme.
+Le plus grand calvaire des développeurs : après avoir discuté longuement d'une solution sur le web, vous retournez sur VS Code/Trae/Cursor et devez réexpliquer les besoins comme à un étranger. En raison des quotas et de la vitesse de réponse, le web est le « cerveau » et l'IDE les « mains ». Voyager leur permet de partager une même âme.
 
 ## Trois étapes simples pour synchroniser
 
 1. **Installer et activer CoBridge** :
-   Installez l'extension **CoBridge** dans VS Code ou dans un éditeur compatible. Elle sert de pont central entre l'interface web et votre IDE local.
+   Installez l'extension **CoBridge** dans VS Code ou dans un éditeur compatible. C'est le pont central qui relie l'interface web à votre IDE local.
    - **[Installer depuis Open VSX](https://open-vsx.org/extension/windfall/co-bridge)**
 
    ![Extension CoBridge](/assets/CoBridge-extension.png)
@@ -20,18 +20,18 @@ Le plus grand calvaire des développeurs : après avoir discuté longuement d'un
    ![Serveur CoBridge activé](/assets/CoBridge-on.png)
 
 2. **Connexion et poignée de main** :
-   - Dans la section **Synchro du contexte** de la fenêtre de Voyager, réglez **Mode** sur **Manuel**.
-   - Faites correspondre **Port du serveur** au port utilisé par CoBridge. Lorsque vous voyez « IDE en ligne », les deux sont connectés.
+   - Dans la section **Synchro du contexte** de la popup de Voyager, réglez **Mode** sur **Manuel**.
+   - Alignez **Port du serveur** sur le port utilisé par CoBridge. Lorsque vous voyez « IDE en ligne », ils sont connectés.
 
    ![Console de synchronisation du contexte](/assets/context-sync-console.png)
 
-3. **Synchronisation en un clic** : cliquez sur **Synchroniser vers l'IDE**. Qu'il s'agisse de **tableaux de données** complexes ou d'**images de référence**, tout peut être synchronisé instantanément avec votre IDE.
+3. **Synchronisation en un clic** : Cliquez sur **« Synchroniser vers l'IDE »**. Qu'il s'agisse de **tableaux de données** complexes ou d'**images de référence** intuitives, tout peut être synchronisé instantanément avec votre IDE.
 
    ![Synchronisation terminée](/assets/sync-done.png)
 
 ## Enracinement dans l'IDE
 
-Une fois la synchronisation terminée, un fichier `.cobridge/AI_CONTEXT.md` apparaît dans le répertoire de travail de votre IDE. Que ce soit Trae, Cursor ou Copilot, ces outils liront automatiquement cette « mémoire » grâce à leurs fichiers de règles respectifs.
+Une fois la synchronisation terminée, un fichier `.cobridge/AI_CONTEXT.md` apparaîtra dans le répertoire de travail de votre IDE. Que ce soit Trae, Cursor ou Copilot, ils liront automatiquement cette « mémoire » via leurs fichiers Rule respectifs.
 
 ```
 your-project/
@@ -49,17 +49,17 @@ your-project/
 
 ## Principes
 
-- **Zéro pollution** : CoBridge gère automatiquement le fichier `.gitignore`, pour que vos conversations privées ne soient jamais poussées vers les dépôts Git.
-- **Adapté à l'IA** : format Markdown complet, que l'IA de votre IDE lit aussi aisément qu'un manuel d'instructions.
-- **Conseil** : si la conversation remonte à un certain temps, faites d'abord défiler avec la [Chronologie](/fr/guide/timeline) pour permettre au web de se « remémorer » le contexte, afin d'obtenir de meilleurs résultats de synchronisation.
+- **Zéro pollution** : CoBridge gère automatiquement le fichier `.gitignore`, garantissant que vos conversations privées ne sont jamais poussées vers les dépôts Git.
+- **Adapté à l'IA** : Format Markdown complet, rendant la lecture par l'IA de votre IDE aussi fluide que celle d'un manuel d'instructions.
+- **Conseil** : Si la conversation date d'un certain temps, remontez d'abord avec la [Timeline](/fr/guide/timeline) pour permettre au web de se « remémorer » le contexte afin d'obtenir de meilleurs résultats de synchronisation.
 
 ---
 
-## Prêt pour le décollage
+## Prêt pour le Décollage
 
-**La logique est prête dans le cloud ; il ne reste plus qu'à l'enraciner localement.**
+**La réflexion est prête dans le cloud, laissez-la maintenant s'enraciner localement.**
 
-- **[Installer l'extension CoBridge](https://open-vsx.org/extension/windfall/co-bridge)** : trouvez votre portail dimensionnel et activez la « respiration synchronisée » en un clic.
-- **[Accéder au dépôt GitHub](https://github.com/Winddfall/CoBridge)** : plongez dans la logique de CoBridge, ou mettez une étoile à ce projet de « synchronisation des âmes ».
+- **[Installer l'extension CoBridge](https://open-vsx.org/extension/windfall/co-bridge)** : Trouvez votre portail dimensionnel et activez la « respiration synchronisée » en un clic.
+- **[Visiter le dépôt GitHub](https://github.com/Winddfall/CoBridge)** : Plongez dans la logique profonde de CoBridge ou donnez une Star à ce projet de « synchronisation d'âme ».
 
-> **Les LLM ne perdront plus jamais la mémoire ; prêts à l'action dès l'installation.**
+> **Les grands modèles ne perdent plus la mémoire ; prêts pour l'action immédiate.**
