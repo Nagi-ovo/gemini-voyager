@@ -38,6 +38,7 @@ export const ja: HomeFeaturesContent = {
     send: '送信',
     ball: 'プロンプトライブラリを開く',
   },
+  demo: { replay: 'もう一度', close: 'デモを終了' },
   replyLeads: {
     table: '表にまとめました：',
     summary: '3つのポイントにまとめると：',

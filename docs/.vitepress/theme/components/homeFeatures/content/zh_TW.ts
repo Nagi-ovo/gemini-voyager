@@ -34,6 +34,7 @@ export const zhTW: HomeFeaturesContent = {
     noMatch: '沒有符合「{q}」的提示詞',
   },
   composer: { placeholder: '從右邊的提示詞庫挑一則', send: '傳送', ball: '開啟提示詞庫' },
+  demo: { replay: '重播', close: '結束示範' },
   replyLeads: {
     table: '整理好了：',
     summary: '三點總結：',

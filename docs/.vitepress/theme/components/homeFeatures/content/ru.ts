@@ -38,6 +38,7 @@ export const ru: HomeFeaturesContent = {
     send: 'Отправить',
     ball: 'Открыть библиотеку промптов',
   },
+  demo: { replay: 'Повторить', close: 'Завершить демо' },
   replyLeads: {
     table: 'Вот таблица:',
     summary: 'Коротко, в трёх пунктах:',

@@ -38,6 +38,7 @@ export const ko: HomeFeaturesContent = {
     send: '전송',
     ball: '프롬프트 라이브러리 열기',
   },
+  demo: { replay: '다시 보기', close: '데모 종료' },
   replyLeads: {
     table: '표로 정리했어요:',
     summary: '세 줄 요약:',

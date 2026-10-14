@@ -34,6 +34,7 @@ export const zh: HomeFeaturesContent = {
     noMatch: '没有匹配「{q}」的提示词',
   },
   composer: { placeholder: '从右边的提示词库选一条', send: '发送', ball: '打开提示词库' },
+  demo: { replay: '重播', close: '结束演示' },
   replyLeads: {
     table: '整理好了：',
     summary: '三点总结：',

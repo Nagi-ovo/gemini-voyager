@@ -38,6 +38,7 @@ export const pt: HomeFeaturesContent = {
     send: 'Enviar',
     ball: 'Abrir a Biblioteca de Prompts',
   },
+  demo: { replay: 'Repetir', close: 'Terminar a demonstração' },
   replyLeads: {
     table: 'Aqui fica em tabela:',
     summary: 'Em três pontos:',

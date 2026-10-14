@@ -65,6 +65,8 @@ export interface HomeFeaturesContent {
     noMatch: string;
   };
   composer: { placeholder: string; send: string; ball: string };
+  /** Labels for the bar shown while a feature scene plays in the demo. */
+  demo: { replay: string; close: string };
   /** "Here it is:" style lead lines for structured replies. */
   replyLeads: { table: string; summary: string; todo: string; plain: string };
   chats: Record<string, DemoChat>;

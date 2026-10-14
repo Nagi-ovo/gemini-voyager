@@ -34,6 +34,7 @@ export const ar: HomeFeaturesContent = {
     noMatch: 'لا توجد مطالبات تطابق «{q}»',
   },
   composer: { placeholder: 'اختر مطالبة من المكتبة', send: 'إرسال', ball: 'فتح مكتبة المطالبات' },
+  demo: { replay: 'إعادة التشغيل', close: 'إنهاء العرض' },
   replyLeads: {
     table: 'إليك ذلك في جدول:',
     summary: 'في ثلاث نقاط:',

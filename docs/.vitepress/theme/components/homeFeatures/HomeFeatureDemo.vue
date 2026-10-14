@@ -1,13 +1,42 @@
 <script setup lang="ts">
 import { useData } from 'vitepress';
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  reactive,
+  ref,
+  watch,
+  type ComponentPublicInstance,
+} from 'vue';
 
 import { escapeHtml, promptReply, renderAnswer } from './answer';
+import { useStage, type StageCard, type StageRegion } from './stage';
 import type { Answer, DemoChat, DemoPrompt, HomeFeaturesContent, TreeNode } from './types';
 import { uiIcons } from './uiIcons';
 
 const props = defineProps<{ content: HomeFeaturesContent }>();
 const { isDark } = useData();
+const stage = useStage();
+const view = stage.view;
+
+/* Stage wiring: scenes teleport into these regions and drive `view`. */
+type RefEl = Element | ComponentPublicInstance | null;
+const region = (name: StageRegion) => (el: RefEl) => {
+  if (el instanceof HTMLElement) stage.regions[name] = el;
+  else delete stage.regions[name];
+};
+const card = (name: StageCard) => (el: RefEl) => {
+  if (el instanceof HTMLElement) stage.cards[name] = el;
+  else delete stage.cards[name];
+};
+// Send times for the timestamp scene: the conversation ends a few minutes ago, 3 minutes per turn.
+const sentAt = (i: number, total: number) => {
+  const d = new Date(Date.now() - (total - i) * 3 * 60_000);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 
 const icon = (name: string, size = 16) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${uiIcons[name] ?? ''}</svg>`;
@@ -344,26 +373,41 @@ watch(
   () => chat.value?.turns.length,
   () => nextTick(measure),
 );
+// Width and font changes reflow the turns; re-place the dots once the transition has settled.
+let reflowTimer: ReturnType<typeof setTimeout> | undefined;
+watch(
+  () => [view.chatWidth, view.fontScale, view.timestamps],
+  () => {
+    clearTimeout(reflowTimer);
+    reflowTimer = setTimeout(measure, 650);
+  },
+);
 onMounted(() => {
   resizeObserver = new ResizeObserver(measure);
   if (chatEl.value) resizeObserver.observe(chatEl.value);
+  // Scenes add content to the chat tail, which changes the scroll height but not the viewport.
+  const col = chatEl.value?.firstElementChild;
+  if (col) resizeObserver.observe(col);
+  stage.chatEl = chatEl.value;
   document.addEventListener('pointerdown', onDocPointerDown);
   document.addEventListener('keydown', onKey);
   nextTick(measure);
 });
 onBeforeUnmount(() => {
   resizeObserver?.disconnect();
+  stage.chatEl = null;
   document.removeEventListener('pointerdown', onDocPointerDown);
   document.removeEventListener('keydown', onKey);
   clearTimeout(holdTimer);
   clearTimeout(previewTimer);
+  clearTimeout(reflowTimer);
 });
 </script>
 
 <template>
   <div class="gvf-hero">
     <!-- Timeline: conversation, rail and composer -->
-    <article class="gvf-card">
+    <article :ref="card('timeline')" class="gvf-card">
       <div class="gvf-copy">
         <div class="gvf-eyebrow">{{ content.timeline.eyebrow }}</div>
         <h3>{{ content.timeline.title }}</h3>
@@ -371,21 +415,40 @@ onBeforeUnmount(() => {
         <div class="gvf-try">{{ content.timeline.hint }}</div>
       </div>
       <div class="gvf-stage">
-        <div ref="hostEl" class="gvf-host gvf-tl-host">
-          <div class="gvf-topbar">{{ chat?.title }}</div>
+        <div v-if="view.address" class="gvf-address">
+          <span class="gvf-address-dots" aria-hidden="true"><i /><i /><i /></span>
+          <span class="gvf-address-url">{{ view.address }}</span>
+        </div>
+        <div
+          ref="hostEl"
+          class="gvf-host gvf-tl-host"
+          :class="[`gvf-skin-${view.skin}`, { 'gvf-has-address': view.address }]"
+          :style="{ '--gvf-chat-w': `${view.chatWidth}%`, '--gvf-font-scale': view.fontScale }"
+        >
+          <div class="gvf-topbar">
+            <span class="gvf-topbar-title">{{ chat?.title }}</span>
+            <span :ref="region('topbarEnd')" class="gvf-topbar-end" />
+          </div>
           <div class="gvf-convo">
             <div ref="chatEl" class="gvf-chat" @scroll.passive="syncActive">
-              <div
-                v-for="(turn, i) in chat?.turns ?? []"
-                :key="i"
-                class="gvf-turn"
-                :class="{ flash: flashIdx === i }"
-              >
-                <div class="gvf-q">{{ turn.q }}</div>
-                <div v-if="turn.pending" class="gvf-a gvf-typing"><i /><i /><i /></div>
-                <div v-else class="gvf-a" v-html="renderAnswer(turn.a)" />
+              <div class="gvf-chat-col">
+                <div
+                  v-for="(turn, i) in chat?.turns ?? []"
+                  :key="i"
+                  class="gvf-turn"
+                  :class="{ flash: flashIdx === i }"
+                >
+                  <time v-if="view.timestamps" class="gvf-stamp">{{
+                    sentAt(i, chat?.turns.length ?? 0)
+                  }}</time>
+                  <div class="gvf-q">{{ turn.q }}</div>
+                  <div v-if="turn.pending" class="gvf-a gvf-typing"><i /><i /><i /></div>
+                  <div v-else class="gvf-a" v-html="renderAnswer(turn.a)" />
+                </div>
+                <div :ref="region('chatTail')" class="gvf-chat-tail" />
               </div>
             </div>
+            <div :ref="region('chatCover')" class="gvf-region-cover" />
             <div
               class="gvf-tl-zone"
               @pointerleave="schedulePreviewClose"
@@ -482,6 +545,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <div class="gvf-composer-wrap">
+            <div :ref="region('composerCover')" class="gvf-region-cover" />
             <div :key="composerPulse" class="gvf-composer" :class="{ filled: composerPulse > 0 }">
               <div class="gvf-composer-text" :class="{ empty: !pending }">
                 {{ pending ? pending.text : content.composer.placeholder }}
@@ -499,7 +563,9 @@ onBeforeUnmount(() => {
               </div>
             </div>
           </div>
+          <div :ref="region('hostCover')" class="gvf-region-cover gvf-host-cover" />
           <button
+            v-show="!view.hideBall"
             type="button"
             class="gvf-ball"
             :style="{ right: `${ball.right}px`, bottom: `${ball.bottom}px` }"
@@ -517,7 +583,7 @@ onBeforeUnmount(() => {
 
     <div class="gvf-right">
       <!-- Folders -->
-      <article class="gvf-card">
+      <article :ref="card('folders')" class="gvf-card">
         <div class="gvf-copy">
           <div class="gvf-eyebrow">{{ content.folders.eyebrow }}</div>
           <h3>{{ content.folders.title }}</h3>
@@ -526,6 +592,7 @@ onBeforeUnmount(() => {
         </div>
         <div class="gvf-stage">
           <div class="gvf-host gvf-fd-host">
+            <div :ref="region('foldersCover')" class="gvf-region-cover" />
             <div class="gvf-fd">
               <div class="gvf-fd-head">
                 <span class="gvf-fd-label">{{ content.folders.heading }}</span>
@@ -604,7 +671,7 @@ onBeforeUnmount(() => {
       </article>
 
       <!-- Prompt library -->
-      <article class="gvf-card">
+      <article :ref="card('prompts')" class="gvf-card">
         <div class="gvf-copy">
           <div class="gvf-eyebrow">{{ content.prompts.eyebrow }}</div>
           <h3>{{ content.prompts.title }}</h3>
@@ -613,6 +680,7 @@ onBeforeUnmount(() => {
         </div>
         <div class="gvf-stage">
           <div class="gvf-host gvf-pm-host">
+            <div :ref="region('promptsCover')" class="gvf-region-cover" />
             <div class="gvf-pm" :class="{ glow: pmGlow }">
               <div class="gvf-pm-header">
                 <span class="gvf-pm-drag" v-html="icon('grip-vertical', 12)" />
