@@ -44,7 +44,7 @@ export const en: HomeFeaturesContent = {
     send: 'Send',
     ball: 'Open the prompt library',
   },
-  demo: { replay: 'Replay', close: 'End demo' },
+  demo: { replay: 'Replay', close: 'End demo', prev: 'Previous feature', next: 'Next feature' },
   replyLeads: {
     table: 'Here it is as a table:',
     summary: 'In three points:',

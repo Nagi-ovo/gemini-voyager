@@ -44,7 +44,7 @@ export const zhTW: HomeFeaturesContent = {
     send: '傳送',
     ball: '開啟提示詞庫',
   },
-  demo: { replay: '重播', close: '結束示範' },
+  demo: { replay: '重播', close: '結束示範', prev: '上一個功能', next: '下一個功能' },
   replyLeads: {
     table: '整理好了：',
     summary: '三點總結：',

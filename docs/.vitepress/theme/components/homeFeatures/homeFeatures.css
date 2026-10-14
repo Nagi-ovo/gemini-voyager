@@ -1458,3 +1458,50 @@ button.gvf-icon-btn:hover {
     color 0.4s ease,
     transform 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
+
+/* Scene bar: step through the features without going back to the list. */
+.gvf-scene-count {
+  flex: none;
+  font-size: 12px;
+  color: var(--gvf-muted);
+  font-variant-numeric: tabular-nums;
+}
+.gvf-scene-sep {
+  flex: none;
+  width: 1px;
+  height: 18px;
+  background: var(--gvf-line);
+}
+[dir='rtl'] .gvf-scene-btn svg {
+  transform: scaleX(-1);
+}
+
+/* Desktop: the three cards fit one screen, so a 14-inch laptop sees the whole demo at once. */
+@media (min-width: 881px) {
+  .gvf-hero {
+    height: clamp(600px, calc(100svh - var(--vp-nav-height, 64px) - 72px), 860px);
+  }
+  .gvf-card {
+    min-height: 0;
+  }
+  .gvf-right {
+    grid-template-rows: minmax(0, 0.46fr) minmax(0, 0.54fr);
+    gap: 28px;
+    min-height: 0;
+  }
+  .gvf-hero .gvf-copy {
+    padding-bottom: 12px;
+    gap: 4px;
+  }
+  .gvf-hero .gvf-stage {
+    min-height: 0;
+  }
+  .gvf-tl-host {
+    min-height: 0;
+  }
+  .gvf-fd-host,
+  .gvf-pm-host {
+    height: auto;
+    min-height: 0;
+  }
+}

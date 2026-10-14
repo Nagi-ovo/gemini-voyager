@@ -44,7 +44,12 @@ export const pt: HomeFeaturesContent = {
     send: 'Enviar',
     ball: 'Abrir a Biblioteca de Prompts',
   },
-  demo: { replay: 'Repetir', close: 'Terminar a demonstração' },
+  demo: {
+    replay: 'Repetir',
+    close: 'Terminar a demonstração',
+    prev: 'Funcionalidade anterior',
+    next: 'Funcionalidade seguinte',
+  },
   replyLeads: {
     table: 'Aqui fica em tabela:',
     summary: 'Em três pontos:',

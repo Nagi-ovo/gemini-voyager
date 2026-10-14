@@ -44,7 +44,12 @@ export const ru: HomeFeaturesContent = {
     send: 'Отправить',
     ball: 'Открыть библиотеку промптов',
   },
-  demo: { replay: 'Повторить', close: 'Завершить демо' },
+  demo: {
+    replay: 'Повторить',
+    close: 'Завершить демо',
+    prev: 'Предыдущая функция',
+    next: 'Следующая функция',
+  },
   replyLeads: {
     table: 'Вот таблица:',
     summary: 'Коротко, в трёх пунктах:',

@@ -72,7 +72,7 @@ export interface HomeFeaturesContent {
     replies: string[];
   };
   /** Labels for the bar shown while a feature scene plays in the demo. */
-  demo: { replay: string; close: string };
+  demo: { replay: string; close: string; prev: string; next: string };
   /** "Here it is:" style lead lines for structured replies. */
   replyLeads: { table: string; summary: string; todo: string; plain: string };
   chats: Record<string, DemoChat>;

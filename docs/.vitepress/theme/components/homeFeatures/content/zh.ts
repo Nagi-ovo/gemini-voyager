@@ -44,7 +44,7 @@ export const zh: HomeFeaturesContent = {
     send: '发送',
     ball: '打开提示词库',
   },
-  demo: { replay: '重播', close: '结束演示' },
+  demo: { replay: '重播', close: '结束演示', prev: '上一个功能', next: '下一个功能' },
   replyLeads: {
     table: '整理好了：',
     summary: '三点总结：',

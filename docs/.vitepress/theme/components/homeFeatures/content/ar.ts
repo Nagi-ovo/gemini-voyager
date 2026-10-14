@@ -44,7 +44,12 @@ export const ar: HomeFeaturesContent = {
     send: 'إرسال',
     ball: 'فتح مكتبة المطالبات',
   },
-  demo: { replay: 'إعادة التشغيل', close: 'إنهاء العرض' },
+  demo: {
+    replay: 'إعادة التشغيل',
+    close: 'إنهاء العرض',
+    prev: 'الميزة السابقة',
+    next: 'الميزة التالية',
+  },
   replyLeads: {
     table: 'إليك ذلك في جدول:',
     summary: 'في ثلاث نقاط:',

@@ -44,7 +44,12 @@ export const es: HomeFeaturesContent = {
     send: 'Enviar',
     ball: 'Abrir la biblioteca de prompts',
   },
-  demo: { replay: 'Repetir', close: 'Terminar la demo' },
+  demo: {
+    replay: 'Repetir',
+    close: 'Terminar la demo',
+    prev: 'Función anterior',
+    next: 'Función siguiente',
+  },
   replyLeads: {
     table: 'Aquí tienes la tabla:',
     summary: 'En tres puntos:',

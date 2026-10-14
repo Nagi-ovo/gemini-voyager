@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useData } from 'vitepress';
-import { computed, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue';
 
 import HomeFeatureDemo from './homeFeatures/HomeFeatureDemo.vue';
 import { homeFeaturesContent } from './homeFeatures/content';
@@ -17,8 +17,39 @@ const content = computed(() => homeFeaturesContent[lang.value] ?? homeFeaturesCo
 const stage = createStage();
 provide(stageKey, stage);
 const sceneKey = (item: FeatureItem) => item.icon.split(',')[0];
-const active = ref<FeatureItem | null>(null);
+// Shallow, so the item stays the same object as in the list and compares equal to it.
+const active = shallowRef<FeatureItem | null>(null);
 const run = ref(0);
+
+// The scene bar steps through the list in its on-page order.
+const items = computed(() => content.value.groups.flatMap((g) => g.items));
+const index = computed(() => (active.value ? items.value.indexOf(active.value) : -1));
+function step(by: number) {
+  const n = items.value.length;
+  if (index.value >= 0) play(items.value[(index.value + by + n) % n]);
+}
+// A list click brings the demo into view only when part of it is off screen; a demo that already
+// fits stays put, so large screens never move.
+const heroEl = ref<HTMLElement | null>(null);
+function showDemo() {
+  const el = heroEl.value;
+  if (!el) return;
+  const r = el.getBoundingClientRect();
+  const nav =
+    parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--vp-nav-height')) ||
+    64;
+  const bottom = innerHeight - 60; // room for the scene bar
+  if (r.top >= nav && r.bottom <= bottom) return;
+  const room = bottom - nav;
+  const top = r.height <= room ? r.top - nav - (room - r.height) / 2 : r.top - nav - 8;
+  const smooth = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  scrollBy({ top, behavior: smooth ? 'smooth' : 'auto' });
+}
+function pick(item: FeatureItem) {
+  if (active.value === item) return stop();
+  play(item);
+  showDemo();
+}
 
 function play(item: FeatureItem) {
   // Replaying redoes the same sends, so only a different scene keeps what the last one sent.
@@ -37,7 +68,7 @@ function replay() {
 }
 stage.stop = stop;
 stage.play = (key: string) => {
-  const item = content.value.groups.flatMap((g) => g.items).find((i) => sceneKey(i) === key);
+  const item = items.value.find((i) => sceneKey(i) === key);
   if (item) play(item);
 };
 const onKey = (e: KeyboardEvent) => {
@@ -68,7 +99,9 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="gvf-root">
-    <HomeFeatureDemo :content="content" />
+    <div ref="heroEl">
+      <HomeFeatureDemo :content="content" />
+    </div>
     <div class="gvf-groups">
       <div v-for="group in content.groups" :key="group.title" class="gvf-group">
         <h4>{{ group.title }}</h4>
@@ -79,7 +112,7 @@ onBeforeUnmount(() => {
               class="gvf-feature"
               :class="{ on: active === item }"
               :aria-pressed="active === item"
-              @click="active === item ? stop() : play(item)"
+              @click="pick(item)"
             >
               <span class="gvf-ic" aria-hidden="true">
                 <span
@@ -109,7 +142,25 @@ onBeforeUnmount(() => {
     <Transition name="gvf-bar">
       <div v-if="active" class="gvf-scene-bar" role="status">
         <span class="gvf-ic" aria-hidden="true" v-html="featureIcons[sceneKey(active)]" />
+        <button
+          type="button"
+          class="gvf-scene-btn"
+          :aria-label="content.demo.prev"
+          :title="content.demo.prev"
+          @click="step(-1)"
+          v-html="svg('chevron-left')"
+        />
         <b>{{ active.name }}</b>
+        <span class="gvf-scene-count">{{ index + 1 }} / {{ items.length }}</span>
+        <button
+          type="button"
+          class="gvf-scene-btn"
+          :aria-label="content.demo.next"
+          :title="content.demo.next"
+          @click="step(1)"
+          v-html="svg('chevron-right')"
+        />
+        <span class="gvf-scene-sep" aria-hidden="true" />
         <button
           type="button"
           class="gvf-scene-btn"
