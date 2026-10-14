@@ -6,11 +6,15 @@ import type { PromptScheme } from '@/features/prompt/PromptSiteAdapter';
  * other than DeepSeek start from this.
  */
 export function detectPageScheme(): PromptScheme {
+  const gvScheme = document.documentElement?.getAttribute('data-gv-scheme');
+  if (gvScheme === 'dark' || gvScheme === 'light') {
+    return gvScheme;
+  }
   if (
     document.querySelector('.theme-host.dark-theme') ||
-    document.body.classList.contains('dark-theme') ||
-    document.documentElement.classList.contains('dark') ||
-    document.body.getAttribute('data-theme') === 'dark'
+    document.body?.classList.contains('dark-theme') ||
+    document.documentElement?.classList.contains('dark') ||
+    document.body?.getAttribute('data-theme') === 'dark'
   ) {
     return 'dark';
   }

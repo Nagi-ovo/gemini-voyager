@@ -2674,6 +2674,22 @@ html[data-gv-scheme='light'] .gv-pm-pin-divider {
     inset 0 1px 2px oklch(0 0 0 / 0.08);
 }
 
+/* Auto state — thumb in middle, cool slate/blue gradient */
+.gv-pm-theme-toggle.gv-pm-theme-auto {
+  background: linear-gradient(135deg, oklch(0.62 0.08 230), oklch(0.52 0.12 250));
+}
+
+.gv-pm-theme-toggle.gv-pm-theme-auto::before {
+  transform: translateX(9px);
+  background: white;
+  box-shadow: 0 1px 4px oklch(0 0 0 / 0.2);
+}
+
+.gv-pm-theme-toggle.gv-pm-theme-auto svg {
+  color: oklch(0.45 0.12 245);
+  transform: translateX(9px);
+}
+
 /* Dark state — vibrant purple gradient */
 .gv-pm-theme-toggle.gv-pm-theme-dark {
   background: linear-gradient(135deg, oklch(0.45 0.18 285), oklch(0.35 0.22 300));

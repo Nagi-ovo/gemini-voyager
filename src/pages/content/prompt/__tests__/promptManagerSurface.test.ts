@@ -467,6 +467,44 @@ describe('prompt manager shared feedback', () => {
     },
   );
 
+  it('updates panel theme in auto mode when page scheme changes and cycles to forced mode', async () => {
+    vi.mocked(chrome.storage.sync.get).mockImplementation(
+      storageGet({ [StorageKeys.LANGUAGE]: 'en', [StorageKeys.PROMPT_THEME]: 'auto' }),
+    );
+    document.documentElement.setAttribute('data-gv-scheme', 'light');
+    const panel = await openManager([prompt('a', 'Alpha')]);
+    expect(panel.getAttribute('data-gv-theme')).toBe('light');
+    expect(panel.getAttribute('data-gv-theme-mode')).toBe('auto');
+
+    const toggle = panel.querySelector<HTMLButtonElement>('.gv-pm-theme-toggle')!;
+    expect(toggle.classList.contains('gv-pm-theme-auto')).toBe(true);
+
+    // In auto mode, title should suggest switching to dark
+    expect(toggle.title).toBe('Switch to dark mode');
+
+    // Cycle 1: auto -> dark
+    toggle.click();
+    expect(panel.getAttribute('data-gv-theme')).toBe('dark');
+    expect(panel.getAttribute('data-gv-theme-mode')).toBe('dark');
+    expect(toggle.title).toBe('Switch to light mode');
+    expect(chrome.storage.sync.set).toHaveBeenCalledWith(
+      expect.objectContaining({ [StorageKeys.PROMPT_THEME]: 'dark' }),
+    );
+
+    // Cycle 2: dark -> light
+    toggle.click();
+    expect(panel.getAttribute('data-gv-theme')).toBe('light');
+    expect(panel.getAttribute('data-gv-theme-mode')).toBe('light');
+    expect(toggle.title).toBe('Switch to auto mode');
+
+    // Cycle 3: light -> auto
+    toggle.click();
+    expect(panel.getAttribute('data-gv-theme-mode')).toBe('auto');
+    expect(toggle.title).toBe('Switch to dark mode');
+
+    document.documentElement.removeAttribute('data-gv-scheme');
+  });
+
   it('replaces the notice, expires it after 1800 ms, and clears it on teardown', async () => {
     vi.useFakeTimers();
     vi.mocked(chrome.runtime.sendMessage).mockResolvedValue({ ok: false } as never);
