@@ -374,10 +374,6 @@
     "message": "ダークモードに切替",
     "description": "Theme toggle tooltip - switch to dark"
   },
-  "pm_theme_auto": {
-    "message": "自動モードに切替",
-    "description": "Theme toggle tooltip - switch to auto"
-  },
   "extensionVersion": {
     "message": "バージョン",
     "description": "Extension version label"
@@ -3332,6 +3328,22 @@
   "themeColorReset": {
     "message": "デフォルトに戻す",
     "description": "Reset accent colour to default"
+  },
+  "pmPanelTheme": {
+    "message": "Prompt Manager の外観",
+    "description": "Theme popover: Prompt Manager panel theme heading"
+  },
+  "pmPanelThemeAuto": {
+    "message": "ページに合わせる",
+    "description": "Theme popover: panel theme follows the page"
+  },
+  "pmPanelThemeLight": {
+    "message": "ライト",
+    "description": "Theme popover: fixed light panel theme"
+  },
+  "pmPanelThemeDark": {
+    "message": "ダーク",
+    "description": "Theme popover: fixed dark panel theme"
   },
   "promptCloudPull": {
     "message": "取得（マージ）",

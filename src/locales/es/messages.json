@@ -374,10 +374,6 @@
     "message": "Cambiar a modo oscuro",
     "description": "Theme toggle tooltip - switch to dark"
   },
-  "pm_theme_auto": {
-    "message": "Cambiar a modo automático",
-    "description": "Theme toggle tooltip - switch to auto"
-  },
   "extensionVersion": {
     "message": "Versión",
     "description": "Extension version label"
@@ -3332,6 +3328,22 @@
   "themeColorReset": {
     "message": "Restablecer valores predeterminados",
     "description": "Reset accent colour to default"
+  },
+  "pmPanelTheme": {
+    "message": "Tema de Prompt Manager",
+    "description": "Theme popover: Prompt Manager panel theme heading"
+  },
+  "pmPanelThemeAuto": {
+    "message": "Igual que la página",
+    "description": "Theme popover: panel theme follows the page"
+  },
+  "pmPanelThemeLight": {
+    "message": "Claro",
+    "description": "Theme popover: fixed light panel theme"
+  },
+  "pmPanelThemeDark": {
+    "message": "Oscuro",
+    "description": "Theme popover: fixed dark panel theme"
   },
   "promptCloudPull": {
     "message": "Descargar (combinar)",

@@ -1,29 +1,25 @@
 /**
- * The light/dark/auto switch in the Prompt Manager header.
+ * The light/dark switch in the Prompt Manager header.
  *
- * The panel starts in auto mode (following the host page/system theme), then
- * takes the user's saved choice once it is read. The theme lives on the panel
- * as `data-gv-theme`, which every surface opened from the panel copies.
+ * Until the user picks a theme, the panel follows the host page's theme as it
+ * changes. The switch saves a fixed light or dark; the popup's theme popover
+ * can set it back to `'auto'`. The theme lives on the panel as
+ * `data-gv-theme`, which every surface opened from the panel copies.
  */
 import browser from 'webextension-polyfill';
 
-import { createMonitorIcon, createMoonIcon, createSunIcon } from '@/core/icons/promptManagerIcons';
+import { createMoonIcon, createSunIcon } from '@/core/icons/promptManagerIcons';
 import { StorageKeys } from '@/core/types/common';
 import type { PromptScheme } from '@/features/prompt/PromptSiteAdapter';
 import type { TranslationKey } from '@/utils/translations';
 
 import { subscribeScheme } from '../platformTheme/scheme';
-import { writeSyncedChoice } from './promptPrefs';
+import { readSyncedChoice, writeSyncedChoice } from './promptPrefs';
 
-export type PromptThemeMode = 'auto' | 'light' | 'dark';
+const isPromptScheme = (value: unknown): value is PromptScheme =>
+  value === 'light' || value === 'dark';
 
-export function getNextPromptTheme(currentMode: PromptThemeMode): PromptThemeMode {
-  if (currentMode === 'light') return 'auto';
-  if (currentMode === 'auto') return 'dark';
-  return 'light';
-}
-
-/** Returns the toggle button; it applies the theme to `panel` from the start. */
+/** Applies the theme to `panel` from the start; `destroy` stops following the page. */
 export function createThemeToggle({
   panel,
   t,
@@ -31,89 +27,58 @@ export function createThemeToggle({
 }: {
   panel: HTMLElement;
   t: (key: TranslationKey) => string;
-  /** The host page's scheme, used until the saved choice is read, and when there is none. */
-  pageScheme: PromptScheme;
-}): HTMLButtonElement {
+  /** Reads the host page's scheme, used while no fixed theme is saved. */
+  pageScheme: () => PromptScheme;
+}): { element: HTMLButtonElement; destroy: () => void } {
   const themeToggle = document.createElement('button');
   themeToggle.className = 'gv-pm-theme-toggle';
   themeToggle.setAttribute('type', 'button');
+  let fixedTheme: PromptScheme | null = null;
+  let currentTheme = pageScheme();
 
-  let currentMode: PromptThemeMode = 'auto';
-  let currentScheme: PromptScheme = pageScheme;
-
-  function resolveSystemScheme(): PromptScheme {
-    const stamped = document.documentElement?.getAttribute('data-gv-scheme');
-    if (stamped === 'dark' || stamped === 'light') return stamped;
-    return pageScheme;
-  }
-
-  function applyTheme(mode: PromptThemeMode, scheme: PromptScheme) {
-    currentMode = mode;
-    currentScheme = scheme;
-    panel.setAttribute('data-gv-theme', scheme);
-    panel.setAttribute('data-gv-theme-mode', mode);
-
-    themeToggle.classList.toggle('gv-pm-theme-dark', mode === 'dark');
-    themeToggle.classList.toggle('gv-pm-theme-auto', mode === 'auto');
-
-    if (mode === 'auto') {
-      themeToggle.replaceChildren(createMonitorIcon(11));
-    } else if (mode === 'dark') {
-      themeToggle.replaceChildren(createMoonIcon(11));
-    } else {
-      themeToggle.replaceChildren(createSunIcon(11));
-    }
-
-    const nextMode = getNextPromptTheme(mode);
-    if (nextMode === 'auto') {
-      themeToggle.title = t('pm_theme_auto');
-    } else if (nextMode === 'dark') {
-      themeToggle.title = t('pm_theme_dark');
-    } else {
-      themeToggle.title = t('pm_theme_light');
-    }
+  function applyTheme(theme: PromptScheme) {
+    currentTheme = theme;
+    panel.setAttribute('data-gv-theme', theme);
+    themeToggle.classList.toggle('gv-pm-theme-dark', theme === 'dark');
+    themeToggle.replaceChildren(theme === 'dark' ? createMoonIcon(11) : createSunIcon(11));
+    themeToggle.title = theme === 'dark' ? t('pm_theme_light') : t('pm_theme_dark');
     themeToggle.setAttribute('aria-label', themeToggle.title);
   }
 
-  applyTheme('auto', currentScheme);
+  function applySaved(saved: unknown) {
+    fixedTheme = isPromptScheme(saved) ? saved : null;
+    applyTheme(fixedTheme ?? pageScheme());
+  }
 
-  // Keep auto theme in sync with page/system theme changes
-  const unsubscribeScheme = subscribeScheme((newScheme) => {
-    if (!panel.isConnected && !themeToggle.isConnected) {
-      unsubscribeScheme();
-      return;
-    }
-    if (currentMode === 'auto') {
-      applyTheme('auto', newScheme);
-    }
+  applyTheme(currentTheme);
+
+  const stopFollowingPage = subscribeScheme((scheme) => {
+    if (fixedTheme === null) applyTheme(scheme);
   });
 
-  // Load saved theme preference
-  (async () => {
-    try {
-      const result = await browser.storage.sync.get(StorageKeys.PROMPT_THEME);
-      const saved = result[StorageKeys.PROMPT_THEME] as PromptThemeMode | undefined;
-      if (saved === 'light' || saved === 'dark') {
-        applyTheme(saved, saved);
-      } else if (saved === 'auto') {
-        applyTheme('auto', resolveSystemScheme());
-      }
-    } catch {
-      // Ignore — keep detected theme
-    }
-  })();
+  const onStorageChanged = (changes: Record<string, browser.Storage.StorageChange>) => {
+    if (StorageKeys.PROMPT_THEME in changes) applySaved(changes[StorageKeys.PROMPT_THEME].newValue);
+  };
+  browser.storage.onChanged.addListener(onStorageChanged);
+
+  void readSyncedChoice(StorageKeys.PROMPT_THEME, isPromptScheme).then((saved) => {
+    if (saved) applySaved(saved);
+  });
 
   themeToggle.addEventListener('click', async () => {
-    const system = resolveSystemScheme();
-    const nextMode = getNextPromptTheme(currentMode);
-    const nextScheme: PromptScheme = nextMode === 'auto' ? system : nextMode;
-
+    fixedTheme = currentTheme === 'dark' ? 'light' : 'dark';
     // Enable smooth color transition on all panel children
     panel.classList.add('gv-pm-transitioning');
-    applyTheme(nextMode, nextScheme);
+    applyTheme(fixedTheme);
     setTimeout(() => panel.classList.remove('gv-pm-transitioning'), 450);
-    await writeSyncedChoice(StorageKeys.PROMPT_THEME, nextMode);
+    await writeSyncedChoice(StorageKeys.PROMPT_THEME, fixedTheme);
   });
 
-  return themeToggle;
+  return {
+    element: themeToggle,
+    destroy: () => {
+      stopFollowingPage();
+      browser.storage.onChanged.removeListener(onStorageChanged);
+    },
+  };
 }

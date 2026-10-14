@@ -315,6 +315,35 @@ describe('prompt manager starting theme', () => {
       document.documentElement.removeAttribute('data-gv-scheme');
     }
   });
+
+  it('follows page theme changes until the switch fixes a theme, and again after auto', async () => {
+    const url = 'https://gemini.google.com/app';
+    vi.stubGlobal('location', new URL(url));
+    document.body.insertAdjacentHTML('afterbegin', '<div class="theme-host light-theme"></div>');
+    const themeHost = document.querySelector('.theme-host')!;
+    const setPageTheme = (scheme: 'light' | 'dark') => {
+      themeHost.className = `theme-host ${scheme}-theme`;
+    };
+    ensureScheme(SiteRegistry.createDefault().resolveByUrl(url)?.theme ?? null);
+
+    try {
+      const panel = await openManager([prompt('a', 'Alpha')]);
+      setPageTheme('dark');
+      await vi.waitFor(() => expect(panel.getAttribute('data-gv-theme')).toBe('dark'));
+
+      panel.querySelector<HTMLButtonElement>('.gv-pm-theme-toggle')!.click();
+      setPageTheme('light');
+      setPageTheme('dark');
+      await vi.waitFor(() => expect(document.documentElement.dataset.gvScheme).toBe('dark'));
+      expect(panel.getAttribute('data-gv-theme')).toBe('light');
+
+      emitStorageChange({ [StorageKeys.PROMPT_THEME]: { newValue: 'auto' } }, 'sync');
+      expect(panel.getAttribute('data-gv-theme')).toBe('dark');
+    } finally {
+      stopScheme();
+      document.documentElement.removeAttribute('data-gv-scheme');
+    }
+  });
 });
 
 describe('Saved Library highlight scope', () => {
@@ -466,44 +495,6 @@ describe('prompt manager shared feedback', () => {
       document.documentElement.removeAttribute('data-gv-scheme');
     },
   );
-
-  it('updates panel theme in auto mode when page scheme changes and cycles to forced mode', async () => {
-    vi.mocked(chrome.storage.sync.get).mockImplementation(
-      storageGet({ [StorageKeys.LANGUAGE]: 'en', [StorageKeys.PROMPT_THEME]: 'auto' }),
-    );
-    document.documentElement.setAttribute('data-gv-scheme', 'light');
-    const panel = await openManager([prompt('a', 'Alpha')]);
-    expect(panel.getAttribute('data-gv-theme')).toBe('light');
-    expect(panel.getAttribute('data-gv-theme-mode')).toBe('auto');
-
-    const toggle = panel.querySelector<HTMLButtonElement>('.gv-pm-theme-toggle')!;
-    expect(toggle.classList.contains('gv-pm-theme-auto')).toBe(true);
-
-    // In auto mode, title should suggest switching to dark
-    expect(toggle.title).toBe('Switch to dark mode');
-
-    // Cycle 1: auto -> dark
-    toggle.click();
-    expect(panel.getAttribute('data-gv-theme')).toBe('dark');
-    expect(panel.getAttribute('data-gv-theme-mode')).toBe('dark');
-    expect(toggle.title).toBe('Switch to light mode');
-    expect(chrome.storage.sync.set).toHaveBeenCalledWith(
-      expect.objectContaining({ [StorageKeys.PROMPT_THEME]: 'dark' }),
-    );
-
-    // Cycle 2: dark -> light
-    toggle.click();
-    expect(panel.getAttribute('data-gv-theme')).toBe('light');
-    expect(panel.getAttribute('data-gv-theme-mode')).toBe('light');
-    expect(toggle.title).toBe('Switch to auto mode');
-
-    // Cycle 3: light -> auto
-    toggle.click();
-    expect(panel.getAttribute('data-gv-theme-mode')).toBe('auto');
-    expect(toggle.title).toBe('Switch to dark mode');
-
-    document.documentElement.removeAttribute('data-gv-scheme');
-  });
 
   it('replaces the notice, expires it after 1800 ms, and clears it on teardown', async () => {
     vi.useFakeTimers();

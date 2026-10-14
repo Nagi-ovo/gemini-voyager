@@ -5,6 +5,8 @@ import { Palette, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+import { type PromptPanelTheme, usePromptPanelTheme } from '../hooks/usePromptPanelTheme';
+
 interface ThemeColorButtonProps {
   /** SiteAdapter id of the active tab; null when the site is unknown. */
   siteId: string | null;
@@ -17,6 +19,12 @@ interface ThemeColorButtonProps {
   /** Persist a new override, or null to clear it back to the default. */
   onChange: (next: string | null) => void;
 }
+
+const PANEL_THEME_OPTIONS = [
+  ['auto', 'pmPanelThemeAuto'],
+  ['light', 'pmPanelThemeLight'],
+  ['dark', 'pmPanelThemeDark'],
+] as const satisfies ReadonlyArray<readonly [PromptPanelTheme, string]>;
 
 /** Normalize to a 6-digit `#rrggbb` that <input type="color"> accepts. */
 function toHex6(color: string, fallback = '#5f8f55'): string {
@@ -43,6 +51,8 @@ export const ThemeColorButton: React.FC<ThemeColorButtonProps> = ({
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+
+  const panelTheme = usePromptPanelTheme();
 
   const effective = value ?? defaultColor;
   const hasCustom = value !== null;
@@ -122,6 +132,27 @@ export const ThemeColorButton: React.FC<ThemeColorButtonProps> = ({
             <RotateCcw className="h-3 w-3" />
             {t('themeColorReset')}
           </Button>
+
+          <div className="border-border mt-3 border-t pt-3">
+            <div className="text-foreground text-sm font-semibold">{t('pmPanelTheme')}</div>
+            <div className="bg-secondary/60 mt-2 flex items-center gap-0.5 rounded-full p-1">
+              {PANEL_THEME_OPTIONS.map(([option, label]) => (
+                <button
+                  key={option}
+                  type="button"
+                  aria-pressed={panelTheme.value === option}
+                  onClick={() => panelTheme.onChange(option)}
+                  className={`flex-1 rounded-full py-1 text-xs font-medium transition-all duration-200 ${
+                    panelTheme.value === option
+                      ? 'bg-background text-foreground shadow-md'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {t(label)}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -264,10 +264,10 @@ export async function startPromptManager(
     // Version badge always opens changelog modal
     const versionBadge = createVersionBadge({ t: i18n.t, trigger, beforeOpen: closePanel });
 
-    const themeToggle = createThemeToggle({ panel, t: i18n.t, pageScheme: site.scheme() });
+    const themeToggle = createThemeToggle({ panel, t: i18n.t, pageScheme: () => site.scheme() });
 
     titleRow.appendChild(title);
-    titleRow.appendChild(themeToggle);
+    titleRow.appendChild(themeToggle.element);
     titleRow.appendChild(versionBadge.element);
 
     const controls = createEl('div', 'gv-pm-controls');
@@ -760,6 +760,7 @@ export async function startPromptManager(
           placement.destroy();
           listView.destroy();
           toaster.destroy();
+          themeToggle.destroy();
 
           chrome.storage?.onChanged?.removeListener(storageChangeHandler);
           library.dispose();

@@ -374,10 +374,6 @@
     "message": "التبديل إلى الوضع الداكن",
     "description": "Theme toggle tooltip - switch to dark"
   },
-  "pm_theme_auto": {
-    "message": "التبديل إلى الوضع التلقائي",
-    "description": "Theme toggle tooltip - switch to auto"
-  },
   "extensionVersion": {
     "message": "الإصدار",
     "description": "Extension version label"
@@ -3332,6 +3328,22 @@
   "themeColorReset": {
     "message": "إعادة التعيين إلى الافتراضي",
     "description": "Reset accent colour to default"
+  },
+  "pmPanelTheme": {
+    "message": "مظهر Prompt Manager",
+    "description": "Theme popover: Prompt Manager panel theme heading"
+  },
+  "pmPanelThemeAuto": {
+    "message": "مطابقة الصفحة",
+    "description": "Theme popover: panel theme follows the page"
+  },
+  "pmPanelThemeLight": {
+    "message": "فاتح",
+    "description": "Theme popover: fixed light panel theme"
+  },
+  "pmPanelThemeDark": {
+    "message": "داكن",
+    "description": "Theme popover: fixed dark panel theme"
   },
   "promptCloudPull": {
     "message": "سحب (دمج)",

@@ -374,10 +374,6 @@
     "message": "다크 모드로 전환",
     "description": "Theme toggle tooltip - switch to dark"
   },
-  "pm_theme_auto": {
-    "message": "자동 모드로 전환",
-    "description": "Theme toggle tooltip - switch to auto"
-  },
   "extensionVersion": {
     "message": "버전",
     "description": "Extension version label"
@@ -3332,6 +3328,22 @@
   "themeColorReset": {
     "message": "기본값으로 재설정",
     "description": "Reset accent colour to default"
+  },
+  "pmPanelTheme": {
+    "message": "Prompt Manager 테마",
+    "description": "Theme popover: Prompt Manager panel theme heading"
+  },
+  "pmPanelThemeAuto": {
+    "message": "페이지와 동일",
+    "description": "Theme popover: panel theme follows the page"
+  },
+  "pmPanelThemeLight": {
+    "message": "라이트",
+    "description": "Theme popover: fixed light panel theme"
+  },
+  "pmPanelThemeDark": {
+    "message": "다크",
+    "description": "Theme popover: fixed dark panel theme"
   },
   "promptCloudPull": {
     "message": "가져오기(병합)",
