@@ -87,3 +87,6 @@ src/pages/content/printBridge/
 gemini-voyager-formal/
 
 .codegraph/
+
+# Local browser verification screenshots
+.e2e-frames/
