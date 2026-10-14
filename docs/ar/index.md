@@ -5,7 +5,7 @@ gitChangelog: false
 hero:
   name: 'Voyager'
   text: 'نظام التشغيل المفقود لواجهات الويب الذكية.'
-  tagline: 'Gemini · Claude · ChatGPT · DeepSeek — أخيراً، اكتمل'
+  tagline: '.Gemini · Claude · ChatGPT · DeepSeek — أخيراً، اكتمل'
   image:
     src: /logo.png
     alt: شعار Voyager
@@ -76,7 +76,7 @@ features:
     details: تنظيف بالجملة. حدد محادثات متعددة واحذفها جميعاً دفعة واحدة.
   - icon: ☁️
     title: المزامنة السحابية
-    details: دائماً متصل. انسخ المجلدات والمطالبات احتياطياً عبر Google Drive، أو iCloud الأصلي على Safari.
+    details: دائماً متصل. انسخ المجلدات والمطالبات احتياطياً إلى Google Drive عبر الأجهزة.
   - icon: ⚡️
     title: النموذج الافتراضي
     details: توقف عن تكرار نفسك. التبديل التلقائي إلى نموذجك المفضل في المحادثات الجديدة.

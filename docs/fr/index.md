@@ -76,7 +76,7 @@ features:
     details: Nettoyage en masse. Sélectionnez plusieurs conversations et supprimez-les en une fois.
   - icon: ☁️
     title: Synchronisation Cloud
-    details: Toujours synchronisé. Sauvegardez dossiers et prompts sur Google Drive, ou sur iCloud natif avec Safari.
+    details: Toujours synchronisé. Sauvegardez dossiers et prompts sur Google Drive entre appareils.
   - icon: ⚡️
     title: Modèle par défaut
     details: Arrêtez de vous répéter. Basculez automatiquement vers votre modèle préféré pour les nouveaux chats.
