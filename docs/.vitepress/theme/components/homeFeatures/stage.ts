@@ -36,6 +36,8 @@ export interface StageView {
   address: string;
   /** Hides the Voyager ball. */
   hideBall: boolean;
+  /** Width in px reserved at the card's inline start for a host sidebar; the page shifts over. */
+  sideInset: number;
 }
 
 export const defaultView = (): StageView => ({
@@ -45,6 +47,7 @@ export const defaultView = (): StageView => ({
   skin: 'gemini',
   address: '',
   hideBall: false,
+  sideInset: 0,
 });
 
 export interface Stage {
@@ -60,6 +63,10 @@ export interface Stage {
   chatEl: HTMLElement | null;
   /** Plays the scene of the feature with this icon key, e.g. when a demo control maps to a feature. */
   play: (key: string) => void;
+  /** Ends the playing scene, keeping the turns it sent. */
+  stop: () => void;
+  /** Moves the turns a scene sent into the chat; set by HomeFeatureDemo, called before a scene ends. */
+  keep: () => void;
 }
 
 export const stageKey: InjectionKey<Stage> = Symbol('gvf-stage');
@@ -71,6 +78,8 @@ export function createStage(): Stage {
     chatEl: null,
     view: defaultView(),
     play: () => {},
+    stop: () => {},
+    keep: () => {},
     // Clicking a feature must not move the page; scenes may still call this, and it stays a no-op.
     focus(_card: StageCard) {},
     scrollChatToEnd() {

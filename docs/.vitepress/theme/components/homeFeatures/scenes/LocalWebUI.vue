@@ -201,7 +201,7 @@ onBeforeUnmount(() => {
 
   <!-- Messages sent from a picked prompt -->
   <Teleport v-if="stage.regions.chatTail && sent.length" :to="stage.regions.chatTail">
-    <div v-for="(t, i) in sent" :key="i" class="gvf-lw-turn">
+    <div v-for="(t, i) in sent" :key="i" class="gvf-lw-turn" data-gvf-elsewhere>
       <div class="gvf-q">{{ t.q }}</div>
       <div class="gvf-a" v-html="renderAnswer(t.a)" />
     </div>

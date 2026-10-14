@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 
 import { homeFeaturesContent } from '../content';
 import { useStage } from '../stage';
@@ -8,7 +8,7 @@ import { uiIcons } from '../uiIcons';
 
 const props = defineProps<{ name: string; detail: string; lang: string }>();
 const stage = useStage();
-stage.focus('folders');
+stage.focus('timeline');
 
 const content = computed(() => homeFeaturesContent[props.lang] ?? homeFeaturesContent['en-US']);
 
@@ -76,16 +76,28 @@ const cursor = reactive({ x: 0, y: 0, show: false });
 const timers: ReturnType<typeof setTimeout>[] = [];
 const at = (ms: number, fn: () => void) => timers.push(setTimeout(fn, ms));
 let auto = false;
-function aimAt(fx: number, fy: number) {
+
+/* Gemini's sidebar sits at the inline start of the conversation card: a full list when open,
+   its icon rail when folded. The card's page narrows beside it, as the real one does. */
+const RAIL = 56;
+const full = ref(240);
+watch(
+  open,
+  (o) => {
+    stage.view.sideInset = o ? full.value : RAIL;
+  },
+  { immediate: true },
+);
+
+/** Points the cursor at a fraction of the card; `x` is measured from the inline start. */
+function aim(fx: number, fy: number) {
   if (!root.value) return;
-  cursor.x = root.value.clientWidth * fx;
+  const w = root.value.clientWidth;
+  const x = w * fx;
+  cursor.x = getComputedStyle(root.value).direction === 'rtl' ? w - x : x;
   cursor.y = root.value.clientHeight * fy;
 }
-function aimOff(fy: number) {
-  if (!root.value) return;
-  cursor.x = root.value.clientWidth + 16;
-  cursor.y = root.value.clientHeight * fy;
-}
+const aimSide = (fy: number) => aim(RAIL / 2 / (root.value?.clientWidth || 1), fy);
 
 /* A real pointer takes over from the scripted cursor. */
 function stopScript() {
@@ -95,48 +107,41 @@ function stopScript() {
   timers.length = 0;
   cursor.show = false;
 }
-function onRealEnter(e: PointerEvent) {
-  if (e.pointerType !== 'touch') stopScript();
-}
 const sideEnter = (e: PointerEvent) => {
-  if (!auto && e.pointerType !== 'touch') hoverEnter();
+  if (e.pointerType === 'touch') return;
+  stopScript();
+  hoverEnter();
 };
 const sideLeave = (e: PointerEvent) => {
   if (!auto && e.pointerType !== 'touch') hoverLeave();
 };
-// Touch has no hover: a tap on the rail opens it, a tap on the page closes it.
-const sideTap = () => {
+// Touch has no hover: a tap on the sidebar folds or unfolds it.
+const sideTap = (e: PointerEvent) => {
+  if (e.pointerType !== 'touch') return;
   stopScript();
-  if (!open.value) open.value = true;
-};
-const pageTap = () => {
-  stopScript();
-  open.value = false;
+  open.value = !open.value;
 };
 
 onMounted(() => {
+  const w = root.value?.clientWidth ?? 600;
+  full.value = Math.round(Math.min(240, w * 0.42));
+  stage.view.sideInset = open.value ? full.value : RAIL;
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
     open.value = false;
     return;
   }
   auto = true;
-  at(200, () => aimAt(0.42, 0.45));
+  at(200, () => aim(0.18, 0.45));
   at(260, () => (cursor.show = true));
-  at(800, () => aimOff(0.55));
-  at(1300, hoverLeave);
-  at(2200, () => aimAt(0.62, 0.62));
-  at(2800, () => {
-    if (!root.value || !side.value) return;
-    // The rail sits at the inline start, which is the right edge in RTL.
-    const r = root.value.getBoundingClientRect();
-    const s = side.value.getBoundingClientRect();
-    cursor.x = s.left - r.left + s.width / 2;
-    cursor.y = r.height * 0.32;
-  });
-  at(3300, hoverEnter);
-  at(4100, () => aimOff(0.4));
+  // The pointer moves into the chat: the sidebar folds and the page widens.
+  at(900, () => aim(0.66, 0.55));
+  at(1400, hoverLeave);
+  // Back to the rail: it unfolds again.
+  at(2600, () => aimSide(0.4));
+  at(3100, hoverEnter);
+  at(4100, () => aim(0.7, 0.42));
   at(4600, hoverLeave);
-  at(5300, () => {
+  at(5400, () => {
     cursor.show = false;
     auto = false;
   });
@@ -145,84 +150,52 @@ onBeforeUnmount(() => {
   timers.forEach(clearTimeout);
   clearTimeout(enterTimer);
   clearTimeout(leaveTimer);
+  stage.view.sideInset = 0;
 });
 </script>
-
 <template>
-  <Teleport v-if="stage.regions.foldersCover" :to="stage.regions.foldersCover">
-    <div ref="root" class="gvf-sh" :class="{ open }" @pointerenter="onRealEnter">
-      <!-- The page behind the sidebar -->
-      <div class="gvf-sh-page" aria-hidden="true" @click="pageTap">
-        <div class="gvf-sh-q"><i style="width: 100%" /><i style="width: 55%" /></div>
-        <div class="gvf-sh-a">
-          <i style="width: 94%" /><i style="width: 100%" /><i style="width: 70%" />
-        </div>
-        <div class="gvf-sh-q"><i style="width: 72%" /></div>
-        <div class="gvf-sh-a"><i style="width: 88%" /><i style="width: 52%" /></div>
-      </div>
-
+  <Teleport v-if="stage.regions.hostCover" :to="stage.regions.hostCover">
+    <div ref="root" class="gvf-sh" :class="{ open }">
       <aside
         ref="side"
         class="gvf-sh-side"
+        :style="{ width: `${open ? full : RAIL}px`, '--gvf-sh-full': `${full}px` }"
         @pointerenter="sideEnter"
         @pointerleave="sideLeave"
-        @click="sideTap"
+        @pointerup="sideTap"
       >
-        <!-- Collapsed: Gemini's icon rail -->
-        <div class="gvf-sh-rail" aria-hidden="true">
+        <div class="gvf-sh-top" aria-hidden="true">
           <span class="gvf-sh-ic" v-html="menuIcon" />
           <span class="gvf-sh-ic" v-html="penIcon" />
-          <span class="gvf-sh-ic gvf-sh-gear" v-html="icon('settings', 17)" />
         </div>
 
-        <!-- Expanded: the same folder list as the card -->
+        <!-- Expanded: Voyager's folders, injected into Gemini's sidebar -->
         <div class="gvf-sh-full">
-          <div class="gvf-fd">
-            <div class="gvf-fd-head">
-              <span class="gvf-fd-label">{{ content.folders.heading }}</span>
-              <span class="gvf-icon-btn sm" v-html="icon('user', 15)" />
-              <span class="gvf-icon-btn sm" v-html="icon('folder', 15)" />
-              <span class="gvf-icon-btn sm" v-html="icon('cloud', 15)" />
-              <span class="gvf-icon-btn sm" v-html="icon('settings', 15)" />
-              <span class="gvf-icon-btn sm" v-html="icon('plus', 15)" />
-            </div>
-            <div class="gvf-fd-search">
-              <input
-                type="search"
-                readonly
-                tabindex="-1"
-                :placeholder="content.folders.searchPlaceholder"
-                :aria-label="content.folders.searchPlaceholder"
+          <div class="gvf-sh-label">{{ content.folders.heading }}</div>
+          <div
+            v-for="row in rows"
+            :key="row.key"
+            class="gvf-row"
+            :class="{ current: row.chat === content.current }"
+            :style="{ paddingInlineStart: `${10 + row.depth * 14}px` }"
+          >
+            <template v-if="row.folder">
+              <span
+                class="gvf-chev"
+                :class="{ open: row.open }"
+                v-html="icon('chevron-right', 14)"
               />
-            </div>
-            <div
-              v-for="row in rows"
-              :key="row.key"
-              class="gvf-row"
-              :class="{ current: row.chat === content.current }"
-              :style="{ paddingLeft: `${10 + row.depth * 14}px` }"
-            >
-              <template v-if="row.folder">
-                <span
-                  class="gvf-chev"
-                  :class="{ open: row.open }"
-                  v-html="icon('chevron-right', 14)"
-                />
-                <span v-html="icon(row.open ? 'folder-open' : 'folder', 14)" />
-                <span class="gvf-name">{{ row.folder }}</span>
-              </template>
-              <template v-else-if="row.chat">
-                <span v-html="icon('message-square', 14)" />
-                <span class="gvf-name">{{ content.chats[row.chat]?.title }}</span>
-                <span
-                  class="gvf-star"
-                  :class="{ on: content.chats[row.chat]?.star }"
-                  v-html="icon('star', 14)"
-                />
-              </template>
-            </div>
+              <span v-html="icon(row.open ? 'folder-open' : 'folder', 14)" />
+              <span class="gvf-name">{{ row.folder }}</span>
+            </template>
+            <template v-else-if="row.chat">
+              <span v-html="icon('message-square', 14)" />
+              <span class="gvf-name">{{ content.chats[row.chat]?.title }}</span>
+            </template>
           </div>
         </div>
+
+        <span class="gvf-sh-ic gvf-sh-gear" aria-hidden="true" v-html="icon('settings', 17)" />
       </aside>
 
       <svg
@@ -243,124 +216,58 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+/* Covers the card without taking its clicks; only the sidebar is interactive. */
 .gvf-sh {
   position: absolute;
   inset: 0;
   overflow: hidden;
-  container-type: size;
-  background: var(--host-bg);
+  pointer-events: none !important;
   color: var(--host-text);
-  --gvf-sh-bar: color-mix(in srgb, var(--host-text) 11%, transparent);
-  --gvf-sh-side-bg: var(--host-bg);
-  --gvf-sh-rail-w: 56px;
 }
-.dark .gvf-sh {
-  --gvf-sh-side-bg: var(--host-side);
-}
-
-/* Page: a conversation that re-centres in the space the sidebar gives back. */
-.gvf-sh-page {
-  position: absolute;
-  inset-block: 0;
-  inset-inline: var(--gvf-sh-rail-w) 0;
-  padding: 22px 22px 0;
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  opacity: 0;
-  transform: translateX(-12px);
-  transition:
-    opacity 0.25s ease,
-    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-[dir='rtl'] .gvf-sh-page {
-  transform: translateX(12px);
-}
-.gvf-sh:not(.open) .gvf-sh-page {
-  opacity: 1;
-  transform: none;
-  transition-delay: 0.06s;
-}
-.gvf-sh-page i {
-  display: block;
-  height: 7px;
-  border-radius: 4px;
-  background: var(--gvf-sh-bar);
-}
-.gvf-sh-q {
-  justify-self: end;
-  width: 54%;
-  display: grid;
-  gap: 6px;
-  padding: 9px 12px;
-  border-radius: 16px 4px 16px 16px;
-  background: var(--host-user);
-}
-[dir='rtl'] .gvf-sh-q {
-  border-radius: 4px 16px 16px 16px;
-}
-.gvf-sh-a {
-  display: grid;
-  gap: 7px;
-}
-
-/* Sidebar: full card width when open, Gemini's icon rail when folded. */
 .gvf-sh-side {
   position: absolute;
   inset-block: 0;
   inset-inline-start: 0;
-  width: 100%;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
-  background: var(--gvf-sh-side-bg);
-  border-inline-end: 1px solid transparent;
-  transition:
-    width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
-    border-color 0.3s ease;
+  padding: 10px 0;
+  pointer-events: auto;
+  background: var(--host-side, var(--host-bg));
+  border-inline-end: 1px solid var(--gvf-line);
+  transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .gvf-sh:not(.open) .gvf-sh-side {
-  width: var(--gvf-sh-rail-w);
-  border-color: var(--gvf-line);
   cursor: pointer;
 }
+.gvf-sh-top {
+  display: flex;
+  gap: 2px;
+  padding-inline: 10px;
+  color: var(--host-muted);
+}
 .gvf-sh-full {
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  width: 100cqw;
+  flex: 1;
+  min-height: 0;
+  width: var(--gvf-sh-full);
+  padding: 14px 6px 0;
+  overflow: hidden;
   transition: opacity 0.2s ease;
 }
 .gvf-sh:not(.open) .gvf-sh-full {
   opacity: 0;
-  pointer-events: none;
 }
-.gvf-sh-full .gvf-fd {
-  overflow: hidden;
-}
-.gvf-sh-full .gvf-fd-search input {
-  pointer-events: none;
+.gvf-sh-label {
+  padding: 0 10px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--host-muted);
 }
 .gvf-sh-full .gvf-row {
   cursor: default;
 }
-.gvf-sh-rail {
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  width: var(--gvf-sh-rail-w);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 12px 0;
-  color: var(--host-muted);
-  opacity: 0;
-  transition: opacity 0.18s ease;
-}
-.gvf-sh:not(.open) .gvf-sh-rail {
-  opacity: 1;
-  transition-delay: 0.12s;
-}
 .gvf-sh-ic {
+  flex: none;
   width: 36px;
   height: 36px;
   display: grid;
@@ -368,7 +275,8 @@ onBeforeUnmount(() => {
   border-radius: 999px;
 }
 .gvf-sh-gear {
-  margin-top: auto;
+  margin-inline-start: 10px;
+  color: var(--host-muted);
 }
 
 .gvf-sh-cursor {

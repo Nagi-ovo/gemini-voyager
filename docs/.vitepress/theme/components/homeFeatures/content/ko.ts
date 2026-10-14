@@ -24,7 +24,7 @@ export const ko: HomeFeaturesContent = {
   prompts: {
     eyebrow: '프롬프트 라이브러리',
     title: '버리지 마세요. 저장하세요.',
-    body: '한 번 저장한 프롬프트를 Gemini, ChatGPT, Claude, DeepSeek 어디서나 불러올 수 있습니다.',
+    body: '자주 쓰는 문장은 한 번만 저장하면 어떤 웹 AI에서든 불러올 수 있어요. DeepSeek Harness 같은 로컬 WebUI에서도요.',
     hint: '해 보세요: 하나를 고르면 왼쪽 입력창에 들어갑니다. 그다음 전송을 누르세요',
     add: '추가',
     searchPlaceholder: '프롬프트 또는 태그 검색',
@@ -34,7 +34,13 @@ export const ko: HomeFeaturesContent = {
     noMatch: '"{q}"와(과) 일치하는 프롬프트가 없습니다',
   },
   composer: {
-    placeholder: '프롬프트 라이브러리에서 하나 골라 보세요',
+    replies: [
+      '여기는 데모라서 미리 써 둔 말만 할 수 있어요. 그래도 방금 보낸 메시지로 타임라인에 점이 하나 생겼어요. 길게 누르면 별표를 달 수 있어요.',
+      "진짜 답은 평소 쓰는 AI에게 물어보세요. 자주 쓰는 문장이라면 프롬프트 라이브러리의 '{add}'로 저장해 두면 다음엔 한 번에 입력돼요.",
+      '알겠어요. 하나 알려 드리면, 이 대화를 폴더로 끌어다 놓으면 기록을 뒤질 필요가 없어요.',
+      '저는 정해진 데모 답변이에요. Voyager를 설치하면 이 타임라인, 폴더, 프롬프트 라이브러리가 실제로 쓰는 Gemini, ChatGPT, Claude, DeepSeek에 나타나요.',
+    ],
+    placeholder: '아무거나 물어보거나 프롬프트를 골라 보세요',
     send: '전송',
     ball: '프롬프트 라이브러리 열기',
   },

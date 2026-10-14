@@ -24,7 +24,7 @@ export const ja: HomeFeaturesContent = {
   prompts: {
     eyebrow: 'プロンプトライブラリ',
     title: 'ひらめきを、逃さない。',
-    body: 'よく使うプロンプトは一度保存すれば、Gemini・ChatGPT・Claude・DeepSeek のどこでも呼び出せます。',
+    body: 'よく使う一文は一度保存すれば、どの Web 版 AI でも呼び出せます。DeepSeek Harness のようなローカル WebUI でも。',
     hint: '試してみて：1つ選ぶと左の入力欄に入るので、そのまま送信',
     add: '追加',
     searchPlaceholder: 'プロンプトまたはタグを検索',
@@ -34,7 +34,13 @@ export const ja: HomeFeaturesContent = {
     noMatch: '「{q}」に一致するプロンプトはありません',
   },
   composer: {
-    placeholder: '右のライブラリからプロンプトを選択',
+    replies: [
+      'これはデモなので、用意された返事しかできません。でも今のメッセージで、タイムラインに新しい点が増えました。長押しするとスターを付けられます。',
+      '本当の答えは、いつもの AI に聞いてください。よく使う一文なら、プロンプトライブラリの「{add}」で保存しておけば、次からワンクリックで入力できます。',
+      '了解です。ついでにひとつ：この会話をフォルダにドラッグしておけば、履歴を探し回らずに済みます。',
+      'これは決め打ちのデモ返信です。Voyager を入れると、このタイムラインもフォルダもプロンプトライブラリも、普段使っている Gemini、ChatGPT、Claude、DeepSeek に現れます。',
+    ],
+    placeholder: 'なんでも聞いてみて。プロンプトを選んでもOK',
     send: '送信',
     ball: 'プロンプトライブラリを開く',
   },

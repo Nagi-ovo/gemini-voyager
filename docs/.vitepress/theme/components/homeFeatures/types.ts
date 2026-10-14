@@ -64,7 +64,13 @@ export interface HomeFeaturesContent {
     settings: string;
     noMatch: string;
   };
-  composer: { placeholder: string; send: string; ball: string };
+  composer: {
+    placeholder: string;
+    send: string;
+    ball: string;
+    /** Prewritten replies to free text, used in turn; `{add}` becomes the prompt library's add label. */
+    replies: string[];
+  };
   /** Labels for the bar shown while a feature scene plays in the demo. */
   demo: { replay: string; close: string };
   /** "Here it is:" style lead lines for structured replies. */

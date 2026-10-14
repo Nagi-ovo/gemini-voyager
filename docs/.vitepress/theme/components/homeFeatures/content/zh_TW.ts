@@ -24,7 +24,7 @@ export const zhTW: HomeFeaturesContent = {
   prompts: {
     eyebrow: '提示詞庫',
     title: '捕捉靈光。',
-    body: '常用的話存一次，在 Gemini、ChatGPT、Claude、DeepSeek 裡都叫得出來。',
+    body: '常用的話存一次，所有網頁版 AI 都叫得出來，連 DeepSeek Harness 這種本機 WebUI 也行。',
     hint: '試試看：點一則，它會填進左邊的輸入框，再按傳送',
     add: '新增',
     searchPlaceholder: '搜尋 prompt 或標籤',
@@ -33,7 +33,17 @@ export const zhTW: HomeFeaturesContent = {
     settings: '設定',
     noMatch: '沒有符合「{q}」的提示詞',
   },
-  composer: { placeholder: '從右邊的提示詞庫挑一則', send: '傳送', ball: '開啟提示詞庫' },
+  composer: {
+    replies: [
+      '這裡是示範，我只會說事先寫好的話。不過你剛剛那句已經在時間軸上長出一個新圓點，長按它就能加星號。',
+      '真正的回答要去網頁版 AI 問。這句話如果常用，可以按提示詞庫的「{add}」存起來，下次一點就填進輸入框。',
+      '收到。順便教你一招：把這段對話拖進資料夾，以後不用翻紀錄就找得到。',
+      '我是寫死的示範回答。裝上 Voyager，這套時間軸、資料夾和提示詞庫就會出現在你真正在用的 Gemini、ChatGPT、Claude 和 DeepSeek 裡。',
+    ],
+    placeholder: '隨便問點什麼，或挑一則提示詞',
+    send: '傳送',
+    ball: '開啟提示詞庫',
+  },
   demo: { replay: '重播', close: '結束示範' },
   replyLeads: {
     table: '整理好了：',

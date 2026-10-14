@@ -49,6 +49,8 @@ interface Turn {
   q: string;
   a: Answer;
   pending?: boolean;
+  /** A turn a feature scene sent, kept as its rendered markup once the scene ends. */
+  kept?: { q: string; a: string };
 }
 interface ChatState {
   title: string;
@@ -80,7 +82,8 @@ function reset(c: HomeFeaturesContent) {
     );
   tree.value = copy(c.tree);
   current.value = c.current;
-  pending.value = null;
+  draft.value = '';
+  freeReplies = 0;
   promptQuery.value = '';
   folderQuery.value = '';
   tag.value = '';
@@ -304,24 +307,53 @@ function schedulePreviewClose() {
   }, 260);
 }
 
-/* Composer: read-only, filled from the prompt library; replies are prewritten. */
-const pending = ref<DemoPrompt | null>(null);
-const composerPulse = ref(0);
+/* Composer: type freely or insert a prompt; replies are prewritten. */
+const draft = ref('');
+const composerEl = ref<HTMLTextAreaElement | null>(null);
+const composerPulse = ref(false);
+let freeReplies = 0;
+function fitComposer() {
+  const el = composerEl.value;
+  if (!el) return;
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight}px`;
+}
 function choose(p: DemoPrompt) {
-  pending.value = p;
-  composerPulse.value++;
+  // A scene that covers the composer would hide the insert; end it so the prompt lands in view.
+  if (stage.regions.composerCover?.children.length) stage.stop();
+  const el = composerEl.value;
+  const start = el?.selectionStart ?? draft.value.length;
+  const end = el?.selectionEnd ?? draft.value.length;
+  draft.value = draft.value.slice(0, start) + p.text + draft.value.slice(end);
+  composerPulse.value = false;
+  nextTick(() => {
+    composerPulse.value = true;
+    fitComposer();
+    el?.focus({ preventScroll: true });
+    el?.setSelectionRange(start + p.text.length, start + p.text.length);
+  });
+}
+function composerKey(e: KeyboardEvent) {
+  // Enter that confirms an IME candidate must not send.
+  if (e.key !== 'Enter' || e.shiftKey || e.isComposing || e.keyCode === 229) return;
+  e.preventDefault();
+  send();
+}
+function reply(text: string): Answer {
+  const c = chat.value!;
+  const p = allPrompts.value.find((x) => x.text && text.includes(x.text));
+  if (p) return promptReply(p.reply, c.source, props.content.replyLeads);
+  const lines = props.content.composer.replies;
+  return lines[freeReplies++ % lines.length].replace('{add}', props.content.prompts.add);
 }
 function send() {
-  const p = pending.value;
+  const text = draft.value.trim();
   const c = chat.value;
-  if (!p || !c) return;
+  if (!text || !c) return;
   pinned = -1;
-  c.turns.push({
-    q: p.text,
-    a: promptReply(p.reply, c.source, props.content.replyLeads),
-    pending: true,
-  });
-  pending.value = null;
+  c.turns.push({ q: text, a: reply(text), pending: true });
+  draft.value = '';
+  nextTick(fitComposer);
   const i = c.turns.length - 1;
   bornIdx.value = i;
   nextTick(() => {
@@ -338,6 +370,35 @@ function send() {
     });
   }, 900);
 }
+
+/* Turns a scene sent stay in the chat after it ends, as the real page would keep them. */
+function keepSceneTurns() {
+  const tail = stage.regions.chatTail;
+  const c = chat.value;
+  if (!tail || !c) return;
+  const clean = (el: Element) => {
+    const copy = el.cloneNode(true) as HTMLElement;
+    for (const n of [copy, ...copy.querySelectorAll<HTMLElement>('*')]) {
+      n.removeAttribute('role');
+      n.removeAttribute('tabindex');
+      n.classList.remove('hover');
+    }
+    return copy.innerHTML;
+  };
+  for (const q of tail.querySelectorAll('.gvf-q')) {
+    // Turns sent on another site (the local WebUI scene) do not belong to this chat.
+    if (q.closest('[data-gvf-elsewhere]')) continue;
+    const a = q.nextElementSibling;
+    if (a?.classList.contains('gvf-typing')) continue;
+    const text = [...q.childNodes].at(-1)?.textContent?.trim() || q.textContent?.trim() || '';
+    c.turns.push({
+      q: text,
+      a: '',
+      kept: { q: clean(q), a: a?.classList.contains('gvf-a') ? clean(a) : '' },
+    });
+  }
+}
+stage.keep = keepSceneTurns;
 
 /* Voyager ball: draggable; a click highlights the prompt library. */
 const hostEl = ref<HTMLElement | null>(null);
@@ -388,6 +449,14 @@ const visiblePrompts = computed(() => {
 const pmTheme = ref<'light' | 'dark' | null>(null);
 const pmDark = computed(() => (pmTheme.value ?? (isDark.value ? 'dark' : 'light')) === 'dark');
 const pmLocked = ref(false);
+const pmSwitching = ref(false);
+let switchTimer: ReturnType<typeof setTimeout> | undefined;
+function toggleTheme() {
+  pmSwitching.value = true;
+  pmTheme.value = pmDark.value ? 'light' : 'dark';
+  clearTimeout(switchTimer);
+  switchTimer = setTimeout(() => (pmSwitching.value = false), 450);
+}
 const pmComfortable = ref(false);
 const pmView = ref<'prompts' | 'starred'>('prompts');
 const adding = ref(false);
@@ -495,7 +564,11 @@ onBeforeUnmount(() => {
           ref="hostEl"
           class="gvf-host gvf-tl-host"
           :class="[`gvf-skin-${view.skin}`, { 'gvf-has-address': view.address }]"
-          :style="{ '--gvf-chat-w': `${view.chatWidth}%`, '--gvf-font-scale': view.fontScale }"
+          :style="{
+            '--gvf-chat-w': `${view.chatWidth}%`,
+            '--gvf-font-scale': view.fontScale,
+            '--gvf-side': `${view.sideInset}px`,
+          }"
         >
           <div v-if="view.address" class="gvf-address">
             <span class="gvf-address-dots" aria-hidden="true"><i /><i /><i /></span>
@@ -524,8 +597,10 @@ onBeforeUnmount(() => {
                   <time v-if="view.timestamps" class="gvf-stamp">{{
                     sentAt(i, chat?.turns.length ?? 0)
                   }}</time>
-                  <div class="gvf-q">{{ turn.q }}</div>
+                  <div v-if="turn.kept" class="gvf-q" v-html="turn.kept.q" />
+                  <div v-else class="gvf-q">{{ turn.q }}</div>
                   <div v-if="turn.pending" class="gvf-a gvf-typing"><i /><i /><i /></div>
+                  <div v-else-if="turn.kept" class="gvf-a" v-html="turn.kept.a" />
                   <div v-else class="gvf-a" v-html="renderAnswer(turn.a)" />
                 </div>
                 <div :ref="region('chatTail')" class="gvf-chat-tail" />
@@ -630,16 +705,27 @@ onBeforeUnmount(() => {
           </div>
           <div class="gvf-composer-wrap">
             <div :ref="region('composerCover')" class="gvf-region-cover" />
-            <div :key="composerPulse" class="gvf-composer" :class="{ filled: composerPulse > 0 }">
-              <div class="gvf-composer-text" :class="{ empty: !pending }">
-                {{ pending ? pending.text : content.composer.placeholder }}
-              </div>
+            <div
+              class="gvf-composer"
+              :class="{ filled: composerPulse }"
+              @animationend="composerPulse = false"
+            >
+              <textarea
+                ref="composerEl"
+                v-model="draft"
+                class="gvf-composer-text"
+                rows="1"
+                :placeholder="content.composer.placeholder"
+                :aria-label="content.composer.placeholder"
+                @input="fitComposer"
+                @keydown="composerKey"
+              />
               <div class="gvf-composer-bar">
                 <span class="gvf-icon-btn" v-html="icon('plus', 17)" />
                 <button
                   type="button"
                   class="gvf-icon-btn gvf-send"
-                  :disabled="!pending"
+                  :disabled="!draft.trim()"
                   :aria-label="content.composer.send"
                   @click="send"
                   v-html="icon('arrow-up', 17)"
@@ -769,7 +855,10 @@ onBeforeUnmount(() => {
         <div class="gvf-stage">
           <div
             class="gvf-host gvf-pm-host"
-            :class="pmDark ? 'gvf-pm-scheme-dark' : 'gvf-pm-scheme-light'"
+            :class="[
+              pmDark ? 'gvf-pm-scheme-dark' : 'gvf-pm-scheme-light',
+              { switching: pmSwitching },
+            ]"
           >
             <div :ref="region('promptsCover')" class="gvf-region-cover" />
             <div class="gvf-pm" :class="{ glow: pmGlow }">
@@ -782,8 +871,8 @@ onBeforeUnmount(() => {
                   :class="{ dark: pmDark }"
                   :aria-label="pmDark ? ui.themeLight : ui.themeDark"
                   :title="pmDark ? ui.themeLight : ui.themeDark"
-                  @click="pmTheme = pmDark ? 'light' : 'dark'"
-                  v-html="icon(pmDark ? 'moon' : 'sun', 12)"
+                  @click="toggleTheme"
+                  v-html="icon(pmDark ? 'moon' : 'sun', 11)"
                 />
                 <span class="gvf-pm-version">2.0.0</span>
                 <span class="gvf-pm-controls">

@@ -21,17 +21,21 @@ const active = ref<FeatureItem | null>(null);
 const run = ref(0);
 
 function play(item: FeatureItem) {
+  // Replaying redoes the same sends, so only a different scene keeps what the last one sent.
+  if (active.value && active.value !== item) stage.keep();
   Object.assign(stage.view, defaultView());
   active.value = item;
   run.value++;
 }
 function stop() {
+  if (active.value) stage.keep();
   active.value = null;
   Object.assign(stage.view, defaultView());
 }
 function replay() {
   if (active.value) play(active.value);
 }
+stage.stop = stop;
 stage.play = (key: string) => {
   const item = content.value.groups.flatMap((g) => g.items).find((i) => sceneKey(i) === key);
   if (item) play(item);
@@ -39,7 +43,10 @@ stage.play = (key: string) => {
 const onKey = (e: KeyboardEvent) => {
   if (e.key === 'Escape' && active.value) stop();
 };
-watch(lang, stop);
+watch(lang, () => {
+  active.value = null;
+  Object.assign(stage.view, defaultView());
+});
 
 // The visual-effects icon cycles through snow, rain and sakura.
 const frame = ref(0);

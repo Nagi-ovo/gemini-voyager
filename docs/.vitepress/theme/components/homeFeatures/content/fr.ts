@@ -24,7 +24,7 @@ export const fr: HomeFeaturesContent = {
   prompts: {
     eyebrow: 'Bibliothèque de prompts',
     title: 'Un bon prompt, ça se garde.',
-    body: 'Enregistrez un prompt une fois, retrouvez-le dans Gemini, ChatGPT, Claude et DeepSeek.',
+    body: "Enregistrez un prompt une fois et retrouvez-le dans n'importe quelle interface web d'IA, même en local comme DeepSeek Harness.",
     hint: 'Essayez : choisissez-en un, il arrive dans le champ de saisie à gauche, puis envoyez',
     add: 'Ajouter',
     searchPlaceholder: 'Rechercher des prompts ou tags',
@@ -34,7 +34,13 @@ export const fr: HomeFeaturesContent = {
     noMatch: 'Aucun prompt ne correspond à « {q} »',
   },
   composer: {
-    placeholder: 'Choisissez un prompt dans la bibliothèque',
+    replies: [
+      "Ceci est une démo : je ne connais que quelques réponses écrites d'avance. Mais votre message vient d'ajouter un point sur la timeline ; maintenez-le appuyé pour le mettre en favori.",
+      'Pour une vraie réponse, demandez à votre IA habituelle. Si vous réutilisez cette phrase, enregistrez-la avec « {add} » dans la bibliothèque : elle sera à un clic la prochaine fois.',
+      "Bien reçu. Petite astuce au passage : glissez cette conversation dans un dossier, vous n'aurez plus à fouiller l'historique.",
+      'Je suis une réponse de démo toute faite. Installez Voyager et cette timeline, ces dossiers et cette bibliothèque de prompts apparaissent dans les Gemini, ChatGPT, Claude et DeepSeek que vous utilisez vraiment.',
+    ],
+    placeholder: 'Posez une question ou choisissez un prompt',
     send: 'Envoyer',
     ball: 'Ouvrir la bibliothèque de prompts',
   },

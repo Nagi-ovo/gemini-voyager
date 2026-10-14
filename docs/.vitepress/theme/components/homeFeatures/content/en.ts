@@ -24,7 +24,7 @@ export const en: HomeFeaturesContent = {
   prompts: {
     eyebrow: 'Prompt library',
     title: 'Catch the spark.',
-    body: 'Save a prompt once and call it up in Gemini, ChatGPT, Claude and DeepSeek.',
+    body: 'Save a prompt once and call it up in any AI web UI, even local ones like DeepSeek Harness.',
     hint: 'Try it: pick one, it lands in the input on the left, then press send',
     add: 'Add',
     searchPlaceholder: 'Search prompts or tags',
@@ -34,7 +34,13 @@ export const en: HomeFeaturesContent = {
     noMatch: 'No prompts match "{q}"',
   },
   composer: {
-    placeholder: 'Pick a prompt from the library',
+    replies: [
+      'This is a demo, so I only know a few prewritten lines. But your message just grew a new dot on the timeline: press and hold it to star it.',
+      "For a real answer, ask your AI of choice. If you'll say this again, save it with “{add}” in the prompt library and it's one click away next time.",
+      "Got it. Quick tip while you're here: drag this chat into a folder and you'll never have to dig through your history for it.",
+      "I'm a canned demo reply. Install Voyager and this timeline, these folders and this prompt library show up in the Gemini, ChatGPT, Claude and DeepSeek you actually use.",
+    ],
+    placeholder: 'Ask anything, or pick a prompt',
     send: 'Send',
     ball: 'Open the prompt library',
   },

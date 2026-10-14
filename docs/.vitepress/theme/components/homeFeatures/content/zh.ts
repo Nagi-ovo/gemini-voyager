@@ -24,7 +24,7 @@ export const zh: HomeFeaturesContent = {
   prompts: {
     eyebrow: '提示词库',
     title: '捕捉灵光。',
-    body: '常用的话存一次，Gemini、ChatGPT、Claude、DeepSeek 里都能调出来。',
+    body: '常用的话存一次，所有网页版 AI 都能调出来，连 DeepSeek Harness 这样的本地 WebUI 也行。',
     hint: '试试：点一条，它会填进左边的输入栏，再按发送',
     add: '新增',
     searchPlaceholder: '搜索 prompt 或标签',
@@ -33,7 +33,17 @@ export const zh: HomeFeaturesContent = {
     settings: '设置',
     noMatch: '没有匹配「{q}」的提示词',
   },
-  composer: { placeholder: '从右边的提示词库选一条', send: '发送', ball: '打开提示词库' },
+  composer: {
+    replies: [
+      '这里是演示，我只会说预先写好的话。不过你刚才这句已经在时间轴上长出了一个新圆点，长按它就能标星。',
+      '真正的回答得去网页版 AI 里问。这句话要是常用，可以点提示词库的「{add}」存起来，下次一点就填进输入栏。',
+      '收到。顺手教你一招：把这段对话拖进文件夹，以后不用翻历史就能找到。',
+      '我是写死的演示回答。装上 Voyager，这套时间轴、文件夹和提示词库就会出现在你真正用的 Gemini、ChatGPT、Claude 和 DeepSeek 里。',
+    ],
+    placeholder: '随便问点什么，或者挑一条提示词',
+    send: '发送',
+    ball: '打开提示词库',
+  },
   demo: { replay: '重播', close: '结束演示' },
   replyLeads: {
     table: '整理好了：',
