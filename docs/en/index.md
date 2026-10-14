@@ -25,14 +25,6 @@ safariLaunch:
 teaser:
   title: 'It just works.'
   description: 'We didn’t want to build another extension. We wanted to build a better way to think.<br>When you use Voyager, you stop fighting the interface and start flowing with it.'
-  image: '/assets/teaser.png'
-  features:
-    - title: 'Timeline'
-      details: 'Don’t scroll. Fly. Jump to any point in your conversation instantly.'
-    - title: 'Folders'
-      details: 'Finally, a file system for your AI. Native, intuitive, powerful.'
-    - title: 'Freedom'
-      details: 'Your data is yours. Export to JSON, Markdown, or PDF with one click.'
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

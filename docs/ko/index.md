@@ -25,14 +25,6 @@ safariLaunch:
 teaser:
   title: '그냥 작동합니다.'
   description: '우리는 단순히 또 다른 확장 프로그램을 만들고 싶지 않았습니다. 더 나은 사고 방식을 구축하고 싶었습니다.<br>Voyager를 사용하면 인터페이스와 싸우는 대신 대화의 흐름에 집중할 수 있습니다.'
-  image: '/assets/teaser.png'
-  features:
-    - title: '타임라인'
-      details: '스크롤하지 마세요. 날아보세요. 대화의 어느 지점으로든 즉시 이동하세요.'
-    - title: '폴더'
-      details: '마침내 AI를 위한 파일 시스템이 생겼습니다. 기본적이고 직관적이며 강력합니다.'
-    - title: '자유'
-      details: '데이터는 당신의 것입니다. 클릭 한 번으로 JSON, Markdown 또는 PDF로 내보내세요.'
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

@@ -25,14 +25,6 @@ safariLaunch:
 teaser:
   title: 'インタラクションを再定義する。'
   description: '私たちは拡張機能を作るのではありません。思考そのものを再構築するのです。<br>Voyager があれば、人がインターフェースに合わせる必要はありません。インターフェースが、あなたの思考の流れに寄り添うのです。'
-  image: '/assets/teaser.png'
-  features:
-    - title: 'タイムライン'
-      details: '会話の鼓動を見る。<br>直線的な時間を、触れられる空間へと変える。'
-    - title: 'フォルダ'
-      details: '思考に家を与える。<br>一瞬の閃きでさえ、丁重に扱われる価値がある。'
-    - title: '主導権'
-      details: 'データはあなたのもの。<br>クラウドの壁を越え、知識を真にあなたの手に。'
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

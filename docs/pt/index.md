@@ -25,14 +25,6 @@ safariLaunch:
 teaser:
   title: 'Simplesmente funciona.'
   description: 'Não queríamos criar apenas mais uma extensão. Queríamos criar uma melhor forma de pensar.<br>Quando usa o Voyager, deixa de lutar contra a interface e passa a fluir com ela.'
-  image: '/assets/teaser.png'
-  features:
-    - title: 'Linha do Tempo'
-      details: 'Não faça scroll. Voe. Salte para qualquer ponto da sua conversa instantaneamente.'
-    - title: 'Pastas'
-      details: 'Finalmente, um sistema de ficheiros para a sua IA. Nativo, intuitivo, poderoso.'
-    - title: 'Liberdade'
-      details: 'Os seus dados são seus. Exporte para JSON, Markdown ou PDF com um clique.'
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

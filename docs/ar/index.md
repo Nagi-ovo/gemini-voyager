@@ -25,14 +25,6 @@ safariLaunch:
 teaser:
   title: 'إنه يعمل ببساطة.'
   description: 'لم نرد بناء مجرد إضافة أخرى. أردنا بناء طريقة أفضل للتفكير.<br>عندما تستخدم Voyager، تتوقف عن مصارعة الواجهة وتبدأ في الانسياب معها.'
-  image: '/assets/teaser.png'
-  features:
-    - title: 'الجدول الزمني'
-      details: 'لا تمرر الشاشة. حلق. اقفز إلى أي نقطة في محادثتك فوراً.'
-    - title: 'المجلدات'
-      details: 'أخيراً، نظام ملفات للذكاء الاصطناعي الخاص بك. أصلي، بديهي، وقوي.'
-    - title: 'الحرية'
-      details: 'بياناتك ملكك. قم بالتصدير إلى JSON أو Markdown أو PDF بنقرة واحدة.'
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

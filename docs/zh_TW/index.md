@@ -25,14 +25,6 @@ safariLaunch:
 teaser:
   title: '重新定義交互。'
   description: '我們不造擴充功能，我們重塑思考。<br>用 Voyager，不再是人適應介面，而是介面順應心流。'
-  image: '/assets/teaser.png'
-  features:
-    - title: '時間軸'
-      details: '看見對話的脈搏。<br>讓線性的時間，變成可觸摸的空間。'
-    - title: '資料夾'
-      details: '給思想安個家。<br>哪怕是一閃而過的念頭，也值得被鄭重對待。'
-    - title: '掌控權'
-      details: '數據歸你。<br>打破雲端的圍牆，讓知識真正屬於你。'
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

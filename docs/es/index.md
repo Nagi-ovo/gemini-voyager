@@ -25,14 +25,6 @@ safariLaunch:
 teaser:
   title: 'Redefiniendo la interacción.'
   description: 'No construimos extensiones, remodelamos el pensamiento.<br>Con Voyager, no es el humano adaptándose a la interfaz, sino la interfaz fluyendo con tu mente.'
-  image: '/assets/teaser.png'
-  features:
-    - title: 'Línea de Tiempo'
-      details: 'Ve el pulso de la conversación.<br>Haz que el tiempo lineal se convierta en espacio tangible.'
-    - title: 'Carpetas'
-      details: 'Dale un hogar a tus ideas.<br>Incluso un pensamiento fugaz merece ser tratado con seriedad.'
-    - title: 'Control'
-      details: 'Tus datos son yours.<br>Rompe los muros de la nube, haz que el conocimiento te pertenezca.'
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">

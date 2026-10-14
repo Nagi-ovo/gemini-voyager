@@ -25,14 +25,6 @@ safariLaunch:
 teaser:
   title: 'Ça marche, tout simplement.'
   description: 'Nous ne voulions pas créer une autre extension. Nous voulions créer une meilleure façon de penser.<br>Quand vous utilisez Voyager, vous arrêtez de vous battre avec l’interface pour couler avec elle.'
-  image: '/assets/teaser.png'
-  features:
-    - title: 'Chronologie'
-      details: 'Ne scrollez plus. Volez. Sautez à n’importe quel point de votre conversation instantanément.'
-    - title: 'Dossiers'
-      details: 'Enfin un système de fichiers pour votre IA. Natif, intuitif, puissant.'
-    - title: 'Liberté'
-      details: 'Vos données sont à vous. Exportez en JSON, Markdown ou PDF en un clic.'
 ---
 
 <div class="vp-doc" style="text-align: center; margin: 4rem auto 3rem; max-width: 780px; padding: 0 16px;">
