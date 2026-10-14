@@ -7,6 +7,7 @@ import { h } from 'vue';
 import AnnouncementModal from './components/AnnouncementModal.vue';
 import FolderViewer from './components/FolderViewer.vue';
 import HomeAskAI from './components/HomeAskAI.vue';
+import HomeFeatures from './components/HomeFeatures.vue';
 import HomeReviews from './components/HomeReviews.vue';
 import HomeSafariLaunch from './components/HomeSafariLaunch.vue';
 import HomeTeaser from './components/HomeTeaser.vue';
@@ -20,6 +21,7 @@ export default {
     return h(DefaultTheme.Layout, null, {
       'layout-top': () => h(AnnouncementModal),
       'home-hero-after': () => h(HomeTeaser),
+      'home-features-before': () => h(HomeFeatures),
       'home-features-after': () => [h(HomeSafariLaunch), h(HomeAskAI), h(HomeReviews)],
     });
   },
