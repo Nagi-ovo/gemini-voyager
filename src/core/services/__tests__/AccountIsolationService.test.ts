@@ -270,11 +270,11 @@ describe('AccountIsolationService', () => {
     document.body.innerHTML = `
       <div class="account-switcher-container">
         <button class="account-switcher-button">
-          <span class="account-switcher-text"> z13264500190@gmail.com </span>
+          <span class="account-switcher-text"> someone@example.com </span>
         </button>
         <alkali-accountswitcher>
           <div id="account-switcher-button">
-            <div class="button-container" aria-label="Google 账号：Nag1 (z13264500190@gmail.com)"></div>
+            <div class="button-container" aria-label="Google 账号：Test User (someone@example.com)"></div>
           </div>
         </alkali-accountswitcher>
       </div>
@@ -285,7 +285,7 @@ describe('AccountIsolationService', () => {
       document,
     );
     expect(context.routeUserId).toBeNull();
-    expect(context.email).toBe('z13264500190@gmail.com');
+    expect(context.email).toBe('someone@example.com');
   });
 
   it('detects account platform from url', () => {

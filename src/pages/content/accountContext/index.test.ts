@@ -14,7 +14,7 @@ describe('account context bridge', () => {
     };
     window.history.replaceState(null, '', '/app/conversation-without-u-route');
     document.body.innerHTML = `
-      <button aria-label="Google Account: Jesse Zhang (j3ssezhang102@gmail.com)"></button>
+      <button aria-label="Google Account: Test User (someone@example.com)"></button>
     `;
   });
 
@@ -31,7 +31,7 @@ describe('account context bridge', () => {
 
     expect(sendResponse).toHaveBeenCalledWith({
       ok: true,
-      context: { routeUserId: null, email: 'j3ssezhang102@gmail.com' },
+      context: { routeUserId: null, email: 'someone@example.com' },
     });
     cleanup();
     expect(removeListener).toHaveBeenCalledWith(listener);
