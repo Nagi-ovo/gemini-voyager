@@ -139,27 +139,20 @@ onBeforeUnmount(() => timers.forEach(clearTimeout));
 
 <style>
 /* Site skins: only the host page changes; the timeline (where the site has one) and the ball stay. */
-.gvf-tl-host.gvf-skin-claude,
-.gvf-tl-host.gvf-skin-chatgpt,
-.gvf-tl-host.gvf-skin-deepseek {
-  transition: background-color 0.4s ease;
+/* One short, symmetric transition: font and layout switch instantly, so a long color fade reads as lag. */
+.gvf-tl-host[class*='gvf-skin-'] {
+  transition: background-color 0.15s ease;
 }
-.gvf-tl-host.gvf-skin-claude .gvf-q,
-.gvf-tl-host.gvf-skin-chatgpt .gvf-q,
-.gvf-tl-host.gvf-skin-deepseek .gvf-q,
-.gvf-tl-host.gvf-skin-claude .gvf-composer,
-.gvf-tl-host.gvf-skin-chatgpt .gvf-composer,
-.gvf-tl-host.gvf-skin-deepseek .gvf-composer {
+.gvf-tl-host[class*='gvf-skin-'] .gvf-q,
+.gvf-tl-host[class*='gvf-skin-'] .gvf-composer {
   transition:
-    background-color 0.4s ease,
-    border-color 0.4s ease,
-    border-radius 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 0.4s ease;
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    border-radius 0.15s ease,
+    box-shadow 0.15s ease;
 }
-.gvf-tl-host.gvf-skin-claude .gvf-tl-zone,
-.gvf-tl-host.gvf-skin-chatgpt .gvf-tl-zone,
-.gvf-tl-host.gvf-skin-deepseek .gvf-tl-zone {
-  transition: opacity 0.35s ease;
+.gvf-tl-host[class*='gvf-skin-'] .gvf-tl-zone {
+  transition: opacity 0.15s ease;
 }
 /* Claude and ChatGPT: no timeline plugin. */
 .gvf-tl-host.gvf-skin-claude .gvf-tl-zone,

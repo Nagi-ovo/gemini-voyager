@@ -12,12 +12,14 @@ import {
 } from 'vue';
 
 import { escapeHtml, promptReply, renderAnswer } from './answer';
+import { demoUiLabels } from './content/uiLabels';
 import { useStage, type StageCard, type StageRegion } from './stage';
 import type { Answer, DemoChat, DemoPrompt, HomeFeaturesContent, TreeNode } from './types';
 import { uiIcons } from './uiIcons';
 
 const props = defineProps<{ content: HomeFeaturesContent }>();
-const { isDark } = useData();
+const { isDark, lang } = useData();
+const ui = computed(() => demoUiLabels[lang.value] ?? demoUiLabels['en-US']);
 const stage = useStage();
 const view = stage.view;
 
@@ -82,6 +84,9 @@ function reset(c: HomeFeaturesContent) {
   promptQuery.value = '';
   folderQuery.value = '';
   tag.value = '';
+  added.value = [];
+  pmView.value = 'prompts';
+  adding.value = false;
 }
 
 const chat = computed(() => chats[current.value]);
@@ -343,15 +348,63 @@ function ballUp() {
 /* Prompt library */
 const promptQuery = ref('');
 const tag = ref('');
-const tags = computed(() => [...new Set(props.content.promptList.map((p) => p.tag))]);
+const added = ref<DemoPrompt[]>([]);
+const allPrompts = computed(() => [...props.content.promptList, ...added.value]);
+const tags = computed(() => [...new Set(allPrompts.value.map((p) => p.tag).filter(Boolean))]);
 const visiblePrompts = computed(() => {
   const q = promptQuery.value.trim();
-  return props.content.promptList.filter(
+  return allPrompts.value.filter(
     (p) =>
       (!tag.value || p.tag === tag.value) &&
       (!q || p.name.includes(q) || p.tag.includes(q) || p.text.includes(q)),
   );
 });
+
+/* Prompt library controls: each mirrors the extension's own behavior. */
+// The panel follows the site theme until a theme is picked here, like the extension.
+const pmTheme = ref<'light' | 'dark' | null>(null);
+const pmDark = computed(() => (pmTheme.value ?? (isDark.value ? 'dark' : 'light')) === 'dark');
+const pmLocked = ref(false);
+const pmComfortable = ref(false);
+const pmView = ref<'prompts' | 'starred'>('prompts');
+const adding = ref(false);
+const newName = ref('');
+const addInput = ref<HTMLInputElement | null>(null);
+function startAdd() {
+  pmView.value = 'prompts';
+  adding.value = true;
+  nextTick(() => addInput.value?.focus({ preventScroll: true }));
+}
+function commitAdd() {
+  const name = newName.value.trim();
+  if (name && !allPrompts.value.some((p) => p.name === name)) {
+    added.value.push({ name, tag: tag.value, text: name, reply: 'plain' });
+  }
+  newName.value = '';
+  adding.value = false;
+}
+function cancelAdd() {
+  newName.value = '';
+  adding.value = false;
+}
+const starredRows = computed(() =>
+  Object.entries(chats).flatMap(([id, c]) =>
+    [...c.starred]
+      .sort((a, b) => a - b)
+      .map((i) => ({ id, i, title: c.title, q: c.turns[i]?.q ?? '' }))
+      .filter((r) => {
+        const q = promptQuery.value.trim();
+        return !q || r.q.includes(q) || r.title.includes(q);
+      }),
+  ),
+);
+function openStarred(id: string, i: number) {
+  openChat(id);
+  nextTick(() => {
+    measure();
+    jump(i);
+  });
+}
 
 /* Lifecycle */
 let resizeObserver: ResizeObserver | undefined;
@@ -596,10 +649,14 @@ onBeforeUnmount(() => {
             <div class="gvf-fd">
               <div class="gvf-fd-head">
                 <span class="gvf-fd-label">{{ content.folders.heading }}</span>
-                <span class="gvf-icon-btn sm" v-html="icon('user', 15)" />
-                <span class="gvf-icon-btn sm" v-html="icon('folder', 15)" />
-                <span class="gvf-icon-btn sm" v-html="icon('cloud', 15)" />
-                <span class="gvf-icon-btn sm" v-html="icon('settings', 15)" />
+                <button
+                  type="button"
+                  class="gvf-icon-btn sm"
+                  :aria-label="ui.cloud"
+                  :title="ui.cloud"
+                  @click="stage.play('cloud')"
+                  v-html="icon('cloud', 15)"
+                />
                 <button
                   type="button"
                   class="gvf-icon-btn sm"
@@ -679,21 +736,39 @@ onBeforeUnmount(() => {
           <div class="gvf-try">{{ content.prompts.hint }}</div>
         </div>
         <div class="gvf-stage">
-          <div class="gvf-host gvf-pm-host">
+          <div
+            class="gvf-host gvf-pm-host"
+            :class="pmDark ? 'gvf-pm-scheme-dark' : 'gvf-pm-scheme-light'"
+          >
             <div :ref="region('promptsCover')" class="gvf-region-cover" />
             <div class="gvf-pm" :class="{ glow: pmGlow }">
               <div class="gvf-pm-header">
-                <span class="gvf-pm-drag" v-html="icon('grip-vertical', 12)" />
+                <span v-if="!pmLocked" class="gvf-pm-drag" v-html="icon('grip-vertical', 12)" />
                 <span class="gvf-pm-title">Voyager</span>
-                <span
+                <button
+                  type="button"
                   class="gvf-pm-theme"
-                  aria-hidden="true"
-                  v-html="icon(isDark ? 'moon' : 'sun', 12)"
+                  :class="{ dark: pmDark }"
+                  :aria-label="pmDark ? ui.themeLight : ui.themeDark"
+                  :title="pmDark ? ui.themeLight : ui.themeDark"
+                  @click="pmTheme = pmDark ? 'light' : 'dark'"
+                  v-html="icon(pmDark ? 'moon' : 'sun', 12)"
                 />
                 <span class="gvf-pm-version">2.0.0</span>
                 <span class="gvf-pm-controls">
-                  <span class="gvf-pm-add">{{ content.prompts.add }}</span>
-                  <span class="gvf-pm-lock" v-html="icon('lock-open', 15)" />
+                  <button type="button" class="gvf-pm-add" @click="startAdd">
+                    {{ content.prompts.add }}
+                  </button>
+                  <button
+                    type="button"
+                    class="gvf-pm-lock"
+                    :class="{ on: pmLocked }"
+                    :aria-label="pmLocked ? ui.unlock : ui.lock"
+                    :aria-pressed="pmLocked"
+                    :title="pmLocked ? ui.unlock : ui.lock"
+                    @click="pmLocked = !pmLocked"
+                    v-html="icon(pmLocked ? 'lock' : 'lock-open', 15)"
+                  />
                 </span>
               </div>
               <div class="gvf-pm-search">
@@ -704,9 +779,16 @@ onBeforeUnmount(() => {
                   :placeholder="content.prompts.searchPlaceholder"
                   :aria-label="content.prompts.searchPlaceholder"
                 />
-                <span class="gvf-pm-view" v-html="icon('layout-grid', 15)" />
+                <button
+                  type="button"
+                  class="gvf-pm-view"
+                  :aria-label="pmComfortable ? ui.viewCompact : ui.viewComfortable"
+                  :title="pmComfortable ? ui.viewCompact : ui.viewComfortable"
+                  @click="pmComfortable = !pmComfortable"
+                  v-html="icon(pmComfortable ? 'rows-3' : 'layout-grid', 15)"
+                />
               </div>
-              <div class="gvf-chips">
+              <div v-show="pmView === 'prompts'" class="gvf-chips">
                 <button type="button" class="gvf-chip" :class="{ on: !tag }" @click="tag = ''">
                   {{ content.prompts.all }}
                 </button>
@@ -721,7 +803,23 @@ onBeforeUnmount(() => {
                   {{ t }}
                 </button>
               </div>
-              <div class="gvf-pm-list">
+              <div
+                v-if="pmView === 'prompts'"
+                class="gvf-pm-list"
+                :class="{ comfortable: pmComfortable }"
+              >
+                <div v-if="adding" class="gvf-item gvf-item-add">
+                  <input
+                    ref="addInput"
+                    v-model="newName"
+                    type="text"
+                    :placeholder="ui.namePlaceholder"
+                    :aria-label="ui.namePlaceholder"
+                    @keydown.enter.prevent="commitAdd"
+                    @keydown.esc.prevent="cancelAdd"
+                    @blur="commitAdd"
+                  />
+                </div>
                 <button
                   v-for="p in visiblePrompts"
                   :key="p.name"
@@ -730,17 +828,41 @@ onBeforeUnmount(() => {
                   @click="choose(p)"
                 >
                   <span class="gvf-item-name">{{ p.name }}</span>
-                  <span class="gvf-item-tag">{{ p.tag }}</span>
+                  <span v-if="p.tag" class="gvf-item-tag">{{ p.tag }}</span>
+                  <span v-if="pmComfortable" class="gvf-item-text">{{ p.text }}</span>
                 </button>
-                <div v-if="!visiblePrompts.length" class="gvf-pm-empty">
+                <div v-if="!visiblePrompts.length && !adding" class="gvf-pm-empty">
                   {{ fill(content.prompts.noMatch, promptQuery) }}
                 </div>
               </div>
-              <div class="gvf-pm-footer">
-                <span class="gvf-pm-saved"
-                  ><span v-html="icon('star', 14)" />{{ content.prompts.saved }}</span
+              <div v-else class="gvf-pm-list gvf-pm-starred">
+                <button
+                  v-for="row in starredRows"
+                  :key="`${row.id}-${row.i}`"
+                  type="button"
+                  class="gvf-item gvf-starred-item"
+                  :aria-label="`${ui.starredOpen}: ${row.q}`"
+                  @click="openStarred(row.id, row.i)"
                 >
-                <span class="gvf-pm-settings">⚙ {{ content.prompts.settings }}</span>
+                  <span class="gvf-starred-star" v-html="icon('star', 13)" />
+                  <span class="gvf-starred-body">
+                    <span class="gvf-item-name">{{ row.q }}</span>
+                    <span class="gvf-starred-chat">{{ row.title }}</span>
+                  </span>
+                </button>
+                <div v-if="!starredRows.length" class="gvf-pm-empty">{{ ui.starredEmpty }}</div>
+              </div>
+              <div class="gvf-pm-footer">
+                <button
+                  type="button"
+                  class="gvf-pm-saved"
+                  :aria-pressed="pmView === 'starred'"
+                  @click="pmView = pmView === 'prompts' ? 'starred' : 'prompts'"
+                >
+                  <span v-html="icon(pmView === 'prompts' ? 'star' : 'message-square', 14)" />{{
+                    pmView === 'prompts' ? content.prompts.saved : ui.backToPrompts
+                  }}
+                </button>
               </div>
             </div>
           </div>

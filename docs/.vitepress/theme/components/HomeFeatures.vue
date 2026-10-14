@@ -32,6 +32,10 @@ function stop() {
 function replay() {
   if (active.value) play(active.value);
 }
+stage.play = (key: string) => {
+  const item = content.value.groups.flatMap((g) => g.items).find((i) => sceneKey(i) === key);
+  if (item) play(item);
+};
 const onKey = (e: KeyboardEvent) => {
   if (e.key === 'Escape' && active.value) stop();
 };

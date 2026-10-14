@@ -1061,12 +1061,6 @@ button.gvf-icon-btn:hover {
 .gvf-pm-saved > span {
   display: grid;
 }
-.gvf-pm-settings {
-  font-size: 12px;
-  color: var(--host-muted);
-  padding-inline: 6px;
-}
-
 /* Feature groups */
 .gvf-groups {
   display: grid;
@@ -1238,4 +1232,176 @@ button.gvf-icon-btn:hover {
 .gvf-bar-leave-to {
   opacity: 0;
   transform: translateY(8px);
+}
+
+/* Prompt library controls */
+.gvf-pm-host button {
+  font: inherit;
+}
+.gvf-pm-theme,
+.gvf-pm-add,
+.gvf-pm-lock,
+.gvf-pm-view,
+.gvf-pm-saved {
+  border: 0;
+  cursor: pointer;
+}
+.gvf-pm-theme {
+  padding: 0 0 0 4px;
+  transition: background 0.25s ease;
+}
+.gvf-pm-theme::after {
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.gvf-pm-theme:focus-visible,
+.gvf-pm-add:focus-visible,
+.gvf-pm-lock:focus-visible,
+.gvf-pm-view:focus-visible,
+.gvf-pm-saved:focus-visible {
+  outline: 2px solid var(--gv-brand);
+  outline-offset: 2px;
+}
+.gvf-root .gvf-pm-add {
+  color: var(--gv-add-fg);
+}
+/* `.gvf-root button` resets color; the panel's controls keep their own. */
+.gvf-root .gvf-pm-lock {
+  color: var(--gv-ctrl-fg);
+}
+.gvf-root .gvf-pm-lock.on,
+.gvf-root .gvf-pm-view,
+.gvf-root .gvf-pm-saved {
+  color: var(--gv-brand);
+}
+.gvf-root .gvf-pm-theme {
+  color: var(--gv-toggle-icon);
+}
+.gvf-pm-add:hover {
+  filter: brightness(1.06);
+}
+.gvf-pm-lock {
+  padding: 0;
+  border: 1px solid var(--gv-ctrl-border);
+}
+.gvf-pm-lock.on {
+  color: var(--gv-brand);
+  border-color: color-mix(in srgb, var(--gv-brand) 45%, transparent);
+  background: var(--gv-brand-soft);
+}
+.gvf-pm-view {
+  padding: 0;
+}
+.gvf-pm-saved {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+.gvf-pm-saved:hover {
+  background: color-mix(in srgb, var(--gv-brand) 20%, transparent);
+}
+.gvf-pm-list {
+  grid-auto-rows: max-content;
+}
+/* Comfortable view adds a preview line under each name. */
+.gvf-pm-list.comfortable .gvf-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  row-gap: 2px;
+  padding-block: 8px;
+}
+.gvf-item-text {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--host-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gvf-item-add {
+  padding: 4px;
+  outline: 2px solid var(--gv-brand);
+  outline-offset: -2px;
+}
+.gvf-item-add input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 4px 6px;
+  outline: none;
+}
+.gvf-starred-item {
+  align-items: flex-start;
+}
+.gvf-starred-star {
+  display: grid;
+  padding-top: 2px;
+  color: var(--tl-star);
+}
+.gvf-starred-star svg {
+  fill: var(--tl-star);
+}
+.gvf-starred-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.gvf-starred-chat {
+  font-size: 11.5px;
+  color: var(--host-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The panel's own theme, independent of the page once picked. */
+.gvf-pm-scheme-light {
+  --gv-surface: oklch(0.995 0.002 250);
+  --gv-text: oklch(0.14 0.004 285);
+  --gv-border: oklch(0.92 0.004 250 / 0.7);
+  --gv-ctrl-bg: oklch(0.995 0.002 250);
+  --gv-ctrl-fg: oklch(0.38 0.006 250);
+  --gv-ctrl-border: oklch(0.92 0.004 250);
+  --gv-version-bg: oklch(0.95 0.004 250 / 0.6);
+  --gv-version-fg: oklch(0.4 0.006 250);
+  --gv-row: oklch(0.965 0.003 250);
+  --gv-row-hover: oklch(0.94 0.004 250);
+  --gv-chip-fg: oklch(0.45 0.1 140);
+  --gv-add-bg: var(--gv-brand);
+  --gv-add-fg: #ffffff;
+  --gv-toggle: linear-gradient(135deg, oklch(0.82 0.12 80), oklch(0.72 0.15 50));
+  --gv-toggle-icon: oklch(0.5 0.14 62);
+  --host-muted: #5f6368;
+  --tl-search-bg: rgba(120, 130, 150, 0.12);
+}
+.gvf-pm-scheme-dark {
+  --gv-surface: oklch(0.2 0.008 285);
+  --gv-text: oklch(0.92 0.004 250);
+  --gv-border: oklch(0.3 0.008 285 / 0.7);
+  --gv-ctrl-bg: oklch(0.24 0.008 285);
+  --gv-ctrl-fg: oklch(0.85 0.004 250);
+  --gv-ctrl-border: oklch(0.32 0.008 285);
+  --gv-version-bg: oklch(0.26 0.008 285);
+  --gv-version-fg: oklch(0.82 0.004 250);
+  --gv-row: oklch(0.24 0.008 285);
+  --gv-row-hover: oklch(0.28 0.008 285);
+  --gv-chip-fg: oklch(0.8 0.08 140);
+  --gv-add-bg: oklch(0.82 0.09 135);
+  --gv-add-fg: oklch(0.25 0.03 140);
+  --gv-toggle: linear-gradient(135deg, oklch(0.45 0.2 290), oklch(0.55 0.22 285));
+  --gv-toggle-icon: #ffffff;
+  --host-muted: #9aa0a6;
+  color-scheme: dark;
+}
+.gvf-pm-scheme-dark,
+.gvf-pm-scheme-light {
+  transition: background 0.25s ease;
+}
+.gvf-pm-host .gvf-pm {
+  transition:
+    box-shadow 0.3s,
+    color 0.25s ease;
 }

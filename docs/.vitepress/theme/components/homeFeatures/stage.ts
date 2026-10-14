@@ -58,6 +58,8 @@ export interface Stage {
   /** Card elements, registered by HomeFeatureDemo. */
   cards: Partial<Record<StageCard, HTMLElement>>;
   chatEl: HTMLElement | null;
+  /** Plays the scene of the feature with this icon key, e.g. when a demo control maps to a feature. */
+  play: (key: string) => void;
 }
 
 export const stageKey: InjectionKey<Stage> = Symbol('gvf-stage');
@@ -68,6 +70,7 @@ export function createStage(): Stage {
     cards: {},
     chatEl: null,
     view: defaultView(),
+    play: () => {},
     // Clicking a feature must not move the page; scenes may still call this, and it stays a no-op.
     focus(_card: StageCard) {},
     scrollChatToEnd() {
