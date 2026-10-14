@@ -3329,6 +3329,22 @@
     "message": "回復預設",
     "description": "Reset accent colour to default"
   },
+  "pmPanelTheme": {
+    "message": "Prompt Manager 外觀",
+    "description": "Theme popover: Prompt Manager panel theme heading"
+  },
+  "pmPanelThemeAuto": {
+    "message": "跟隨頁面",
+    "description": "Theme popover: panel theme follows the page"
+  },
+  "pmPanelThemeLight": {
+    "message": "淺色",
+    "description": "Theme popover: fixed light panel theme"
+  },
+  "pmPanelThemeDark": {
+    "message": "深色",
+    "description": "Theme popover: fixed dark panel theme"
+  },
   "promptCloudPull": {
     "message": "拉取（合併）",
     "description": "Button: pull (merge) prompts from Google Drive into local"

@@ -3329,6 +3329,22 @@
     "message": "Restablecer valores predeterminados",
     "description": "Reset accent colour to default"
   },
+  "pmPanelTheme": {
+    "message": "Tema de Prompt Manager",
+    "description": "Theme popover: Prompt Manager panel theme heading"
+  },
+  "pmPanelThemeAuto": {
+    "message": "Igual que la página",
+    "description": "Theme popover: panel theme follows the page"
+  },
+  "pmPanelThemeLight": {
+    "message": "Claro",
+    "description": "Theme popover: fixed light panel theme"
+  },
+  "pmPanelThemeDark": {
+    "message": "Oscuro",
+    "description": "Theme popover: fixed dark panel theme"
+  },
   "promptCloudPull": {
     "message": "Descargar (combinar)",
     "description": "Button: pull (merge) prompts from Google Drive into local"

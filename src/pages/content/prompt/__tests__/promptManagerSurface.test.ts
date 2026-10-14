@@ -315,6 +315,35 @@ describe('prompt manager starting theme', () => {
       document.documentElement.removeAttribute('data-gv-scheme');
     }
   });
+
+  it('follows page theme changes until the switch fixes a theme, and again after auto', async () => {
+    const url = 'https://gemini.google.com/app';
+    vi.stubGlobal('location', new URL(url));
+    document.body.insertAdjacentHTML('afterbegin', '<div class="theme-host light-theme"></div>');
+    const themeHost = document.querySelector('.theme-host')!;
+    const setPageTheme = (scheme: 'light' | 'dark') => {
+      themeHost.className = `theme-host ${scheme}-theme`;
+    };
+    ensureScheme(SiteRegistry.createDefault().resolveByUrl(url)?.theme ?? null);
+
+    try {
+      const panel = await openManager([prompt('a', 'Alpha')]);
+      setPageTheme('dark');
+      await vi.waitFor(() => expect(panel.getAttribute('data-gv-theme')).toBe('dark'));
+
+      panel.querySelector<HTMLButtonElement>('.gv-pm-theme-toggle')!.click();
+      setPageTheme('light');
+      setPageTheme('dark');
+      await vi.waitFor(() => expect(document.documentElement.dataset.gvScheme).toBe('dark'));
+      expect(panel.getAttribute('data-gv-theme')).toBe('light');
+
+      emitStorageChange({ [StorageKeys.PROMPT_THEME]: { newValue: 'auto' } }, 'sync');
+      expect(panel.getAttribute('data-gv-theme')).toBe('dark');
+    } finally {
+      stopScheme();
+      document.documentElement.removeAttribute('data-gv-scheme');
+    }
+  });
 });
 
 describe('Saved Library highlight scope', () => {

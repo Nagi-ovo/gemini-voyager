@@ -1,9 +1,10 @@
 /**
  * The light/dark switch in the Prompt Manager header.
  *
- * The panel starts in the host page's theme, then takes the user's saved
- * choice once it is read. The theme lives on the panel as `data-gv-theme`,
- * which every surface opened from the panel copies.
+ * Until the user picks a theme, the panel follows the host page's theme as it
+ * changes. The switch saves a fixed light or dark; the popup's theme popover
+ * can set it back to `'auto'`. The theme lives on the panel as
+ * `data-gv-theme`, which every surface opened from the panel copies.
  */
 import browser from 'webextension-polyfill';
 
@@ -12,9 +13,13 @@ import { StorageKeys } from '@/core/types/common';
 import type { PromptScheme } from '@/features/prompt/PromptSiteAdapter';
 import type { TranslationKey } from '@/utils/translations';
 
-import { writeSyncedChoice } from './promptPrefs';
+import { subscribeScheme } from '../platformTheme/scheme';
+import { readSyncedChoice, writeSyncedChoice } from './promptPrefs';
 
-/** Returns the toggle button; it applies the theme to `panel` from the start. */
+const isPromptScheme = (value: unknown): value is PromptScheme =>
+  value === 'light' || value === 'dark';
+
+/** Applies the theme to `panel` from the start; `destroy` stops following the page. */
 export function createThemeToggle({
   panel,
   t,
@@ -22,13 +27,14 @@ export function createThemeToggle({
 }: {
   panel: HTMLElement;
   t: (key: TranslationKey) => string;
-  /** The host page's scheme, used until the saved choice is read, and when there is none. */
-  pageScheme: PromptScheme;
-}): HTMLButtonElement {
+  /** Reads the host page's scheme, used while no fixed theme is saved. */
+  pageScheme: () => PromptScheme;
+}): { element: HTMLButtonElement; destroy: () => void } {
   const themeToggle = document.createElement('button');
   themeToggle.className = 'gv-pm-theme-toggle';
   themeToggle.setAttribute('type', 'button');
-  let currentTheme = pageScheme;
+  let fixedTheme: PromptScheme | null = null;
+  let currentTheme = pageScheme();
 
   function applyTheme(theme: PromptScheme) {
     currentTheme = theme;
@@ -39,29 +45,40 @@ export function createThemeToggle({
     themeToggle.setAttribute('aria-label', themeToggle.title);
   }
 
+  function applySaved(saved: unknown) {
+    fixedTheme = isPromptScheme(saved) ? saved : null;
+    applyTheme(fixedTheme ?? pageScheme());
+  }
+
   applyTheme(currentTheme);
 
-  // Load saved theme preference
-  (async () => {
-    try {
-      const result = await browser.storage.sync.get(StorageKeys.PROMPT_THEME);
-      const saved = result[StorageKeys.PROMPT_THEME];
-      if (saved === 'light' || saved === 'dark') {
-        applyTheme(saved);
-      }
-    } catch {
-      // Ignore — keep detected theme
-    }
-  })();
-
-  themeToggle.addEventListener('click', async () => {
-    const newTheme: PromptScheme = currentTheme === 'dark' ? 'light' : 'dark';
-    // Enable smooth color transition on all panel children
-    panel.classList.add('gv-pm-transitioning');
-    applyTheme(newTheme);
-    setTimeout(() => panel.classList.remove('gv-pm-transitioning'), 450);
-    await writeSyncedChoice(StorageKeys.PROMPT_THEME, newTheme);
+  const stopFollowingPage = subscribeScheme((scheme) => {
+    if (fixedTheme === null) applyTheme(scheme);
   });
 
-  return themeToggle;
+  const onStorageChanged = (changes: Record<string, browser.Storage.StorageChange>) => {
+    if (StorageKeys.PROMPT_THEME in changes) applySaved(changes[StorageKeys.PROMPT_THEME].newValue);
+  };
+  browser.storage.onChanged.addListener(onStorageChanged);
+
+  void readSyncedChoice(StorageKeys.PROMPT_THEME, isPromptScheme).then((saved) => {
+    if (saved) applySaved(saved);
+  });
+
+  themeToggle.addEventListener('click', async () => {
+    fixedTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    // Enable smooth color transition on all panel children
+    panel.classList.add('gv-pm-transitioning');
+    applyTheme(fixedTheme);
+    setTimeout(() => panel.classList.remove('gv-pm-transitioning'), 450);
+    await writeSyncedChoice(StorageKeys.PROMPT_THEME, fixedTheme);
+  });
+
+  return {
+    element: themeToggle,
+    destroy: () => {
+      stopFollowingPage();
+      browser.storage.onChanged.removeListener(onStorageChanged);
+    },
+  };
 }
