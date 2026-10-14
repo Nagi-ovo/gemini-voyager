@@ -125,7 +125,7 @@ Perform these steps after CI creates the GitHub Release (see [normal-release.md]
 ### 1. Collect data
 
 ```bash
-PREV_TAG=$(git describe --tags --abbrev=0 v{VERSION}^)
+PREV_TAG=$(git describe --tags --abbrev=0 --match 'v*' v{VERSION}^)
 git log ${PREV_TAG}..v{VERSION} --oneline        # authoritative list of commits for the tables
 gh api repos/voyager-crew/voyager/releases/generate-notes \
   -f tag_name=v{VERSION} \
