@@ -534,11 +534,24 @@ watch(
   () => [view.chatWidth, view.fontScale, view.timestamps],
   () => {
     clearTimeout(reflowTimer);
-    reflowTimer = setTimeout(measure, 650);
+    reflowTimer = setTimeout(() => {
+      reflowTimer = undefined;
+      measure();
+    }, 650);
   },
 );
+// The resize observer fires every frame of a width or font transition, and each measure re-renders
+// the dots, which reflows again: batch it to one measure per frame and leave transitions to reflowTimer.
+let measureFrame = 0;
+function scheduleMeasure() {
+  if (reflowTimer || measureFrame) return;
+  measureFrame = requestAnimationFrame(() => {
+    measureFrame = 0;
+    measure();
+  });
+}
 onMounted(() => {
-  resizeObserver = new ResizeObserver(measure);
+  resizeObserver = new ResizeObserver(scheduleMeasure);
   if (chatEl.value) resizeObserver.observe(chatEl.value);
   // Scenes add content to the chat tail, which changes the scroll height but not the viewport.
   const col = chatEl.value?.firstElementChild;
@@ -556,6 +569,7 @@ onBeforeUnmount(() => {
   clearTimeout(holdTimer);
   clearTimeout(previewTimer);
   clearTimeout(reflowTimer);
+  cancelAnimationFrame(measureFrame);
 });
 </script>
 
