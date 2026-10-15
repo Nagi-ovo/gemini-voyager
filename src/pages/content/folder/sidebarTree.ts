@@ -221,7 +221,8 @@ export const SIDEBAR_TREE_CSS = `
 .${FLOATING_PANEL_CLASS}__conv-icon {
   width: 16px;
   height: 16px;
-  margin: 3px -2px 0;
+  /* No block margin: in this align-items: center row a top margin shifts the glyph onto the text baseline. */
+  margin: 0 -2px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
