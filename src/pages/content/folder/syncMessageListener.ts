@@ -41,13 +41,18 @@ export function createSyncMessageListener(host: SyncMessageHost): SyncMessageLis
       return true;
     }
     if (type === 'gv.folders.reload' && host.reload) {
-      void host.reload().then(() => {
+      const reply = (ok: boolean) => {
         try {
-          sendResponse({ ok: true });
+          sendResponse({ ok });
         } catch {
           // The popup may have closed meanwhile.
         }
-      });
+      };
+      // A failed reload still answers: `true` promised a reply, and without one the popup's download hangs.
+      void host.reload().then(
+        () => reply(true),
+        () => reply(false),
+      );
       return true;
     }
     // An unknown message must settle the sender's promise now: `true` would

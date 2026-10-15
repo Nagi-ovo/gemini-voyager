@@ -193,6 +193,20 @@ describe('H1 — runtime message listener response contract', () => {
     expect(sendResponse).not.toHaveBeenCalled();
   });
 
+  it('answers a failed folder reload so the popup download does not hang', async () => {
+    const listener = createSyncMessageListener({
+      canEdit: () => true,
+      data: () => ({ folders: [], folderContents: {} }),
+      reload: () => Promise.reject(new Error('storage read failed')),
+    }) as unknown as MessageListener;
+    const sendResponse = vi.fn();
+
+    const result = listener({ type: 'gv.folders.reload' }, {}, sendResponse);
+
+    expect(result).toBe(true);
+    await vi.waitFor(() => expect(sendResponse).toHaveBeenCalledWith({ ok: false }));
+  });
+
   it('still answers gv.sync.requestData synchronously with return true', () => {
     const listener = syncListener();
     const sendResponse = vi.fn();
