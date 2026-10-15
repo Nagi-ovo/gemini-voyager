@@ -27,8 +27,6 @@ const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_KEY =
   'responseCompleteNotificationMessage' satisfies TranslationKey;
 const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_FALLBACK = '{site} response complete';
 const RESPONSE_COMPLETE_NOTIFICATION_SITE_PLACEHOLDER = '{site}';
-const RESPONSE_COMPLETE_NOTIFICATION_TITLE = 'Voyager';
-const RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR = ' - ';
 const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR = ': ';
 const RESPONSE_COMPLETE_NOTIFICATION_TITLE_MAX_LENGTH = 120;
 const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_MAX_LENGTH = 220;
@@ -142,9 +140,7 @@ export function createResponseNotifications() {
     ).replace(RESPONSE_COMPLETE_NOTIFICATION_SITE_PLACEHOLDER, SITE_LABELS[site]);
     const conversationTitle = normalizeNotificationText(
       details.conversationTitle,
-      RESPONSE_COMPLETE_NOTIFICATION_TITLE_MAX_LENGTH -
-        RESPONSE_COMPLETE_NOTIFICATION_TITLE.length -
-        RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR.length,
+      RESPONSE_COMPLETE_NOTIFICATION_TITLE_MAX_LENGTH,
     );
     // The site's logo already says which reply finished, so beside it the prompt stands alone;
     // without one (Safari, or a browser that cannot draw it) the text names the site.
@@ -160,9 +156,8 @@ export function createResponseNotifications() {
 
     try {
       const notificationId = `${RESPONSE_COMPLETE_NOTIFICATION_ID_PREFIX}${sender.tab?.id ?? RESPONSE_COMPLETE_UNKNOWN_TAB_ID}-${now}`;
-      const title = conversationTitle
-        ? `${RESPONSE_COMPLETE_NOTIFICATION_TITLE}${RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR}${conversationTitle}`
-        : RESPONSE_COMPLETE_NOTIFICATION_TITLE;
+      // The conversation is what the person recognizes; an untitled one is named by its site.
+      const title = conversationTitle || SITE_LABELS[site];
       const message = !userPrompt
         ? notificationMessage
         : siteIcon

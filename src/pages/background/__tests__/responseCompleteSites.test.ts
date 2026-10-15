@@ -67,7 +67,7 @@ describe('completion notifications per site', () => {
 
     expect(api.createNotification).toHaveBeenCalledWith(
       expect.any(String),
-      expect.objectContaining({ title: 'Voyager - Reply OK', message: 'ChatGPT 思考完成: say OK' }),
+      expect.objectContaining({ title: 'Reply OK', message: 'ChatGPT 思考完成: say OK' }),
     );
   });
 
@@ -81,6 +81,24 @@ describe('completion notifications per site', () => {
     expect(api.createNotification).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({ iconUrl: 'data:image/png;base64,TE9HTw==', message: 'say OK' }),
+    );
+  });
+
+  it('titles an untitled conversation with its site', async () => {
+    storeSettings({ geminiSwitch: false, chatgptPlugin: true });
+    const url = 'https://chatgpt.com/';
+
+    await createResponseNotifications().handle(
+      {
+        type: 'gv.responseComplete.notify',
+        payload: { conversationUrl: url, conversationTitle: '', userPrompt: 'say OK' },
+      },
+      { url, tab: { id: 8, url } as chrome.tabs.Tab },
+    );
+
+    expect(api.createNotification).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ title: 'ChatGPT' }),
     );
   });
 

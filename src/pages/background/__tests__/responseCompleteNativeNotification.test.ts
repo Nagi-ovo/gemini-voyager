@@ -76,7 +76,7 @@ describe('Safari response notification handoff', () => {
     expect(api.sendNativeMessage).toHaveBeenCalledWith(SAFARI_NATIVE_APP_ID, {
       action: 'deliverNotification',
       id: `gv-response-complete-42-${Date.now()}`,
-      title: 'Voyager - Scoped chat',
+      title: 'Scoped chat',
       body: 'Gemini response complete: Explain this',
       url,
     });
