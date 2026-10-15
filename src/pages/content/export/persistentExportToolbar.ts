@@ -34,10 +34,13 @@ const TOP_RIGHT_CONTROL_SELECTORS = [
 /**
  * Broad substring selectors that also match per-message buttons such as
  * "Copy prompt". Tracking hidden matches of these would put every chat turn's
- * ancestry under watch, so only visible ones count.
+ * ancestry under watch, so only visible ones count, and never ones inside a
+ * conversation turn.
  */
 const TOP_RIGHT_BROAD_SELECTORS = ['[aria-label*="pro" i]', '[aria-label*="advanced" i]'].join(',');
 const TOP_RIGHT_AVOIDANCE_SELECTORS = `${TOP_RIGHT_CONTROL_SELECTORS},${TOP_RIGHT_BROAD_SELECTORS}`;
+/** Conversation turns on Gemini (Angular hosts) and ChatGPT (role attribute). */
+const CONVERSATION_TURN_SELECTOR = 'user-query, model-response, [data-message-author-role]';
 const INTERACTIVE_SELECTOR = 'button, a[href], [role="button"]';
 const ROW_PROBE_STEP_PX = 8;
 const MAX_ROW_SHIFTS = 4;
@@ -63,6 +66,9 @@ function classifyTopRightElement(
 ): number | 'host' | 'hidden' | null {
   if (!(element instanceof HTMLElement)) return null;
   if (element === toolbarRoot || toolbarRoot.contains(element)) return null;
+  // A turn's visible "Copy prompt" scrolled into the top band is not a top-bar
+  // control; avoiding it pushed the toolbar over the message text.
+  if (element.closest(CONVERSATION_TURN_SELECTOR)) return null;
   const rect = element.getBoundingClientRect();
   if (rect.width <= 0 || rect.height <= 0) {
     return element.matches(TOP_RIGHT_CONTROL_SELECTORS) ? 'hidden' : null;

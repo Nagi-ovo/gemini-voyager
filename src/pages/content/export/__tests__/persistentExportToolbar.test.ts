@@ -336,6 +336,27 @@ describe('persistentExportToolbar', () => {
     expect(handle.root.style.getPropertyValue('--gv-persistent-export-right')).toBe('84px');
   });
 
+  it('does not move over a user message whose copy button is scrolled into the top band', async () => {
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1882);
+    const userQuery = document.createElement('user-query');
+    const copyPrompt = document.createElement('button');
+    copyPrompt.setAttribute('aria-label', 'Copy prompt');
+    mockRect(copyPrompt, { top: 40, bottom: 76, left: 1347, right: 1383, width: 36, height: 36 });
+    userQuery.appendChild(copyPrompt);
+    document.body.appendChild(userQuery);
+
+    const handle = mountPersistentExportToolbar({
+      label: 'Export',
+      tooltip: 'Export chat history',
+      onClick: vi.fn(),
+    });
+
+    await nextFrame();
+
+    expect(handle.root.style.getPropertyValue('--gv-persistent-export-right')).toBe('84px');
+    userQuery.remove();
+  });
+
   describe('bounded avoidance work', () => {
     async function settle(frames = 1): Promise<void> {
       for (let i = 0; i < frames; i++) {
