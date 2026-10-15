@@ -457,7 +457,12 @@ const visiblePrompts = computed(() => {
 /* Prompt library controls: each mirrors the extension's own behavior. */
 // The panel follows the site theme until a theme is picked here, like the extension.
 const pmTheme = ref<'light' | 'dark' | null>(null);
-const pmDark = computed(() => (pmTheme.value ?? (isDark.value ? 'dark' : 'light')) === 'dark');
+// The prerendered page is always light and hydration keeps its classes, so read the site theme once mounted.
+const hydrated = ref(false);
+onMounted(() => (hydrated.value = true));
+const pmDark = computed(
+  () => (pmTheme.value ?? (hydrated.value && isDark.value ? 'dark' : 'light')) === 'dark',
+);
 const pmLocked = ref(false);
 const pmSwitching = ref(false);
 let switchTimer: ReturnType<typeof setTimeout> | undefined;
