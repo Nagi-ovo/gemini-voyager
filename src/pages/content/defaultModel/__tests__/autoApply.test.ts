@@ -616,4 +616,116 @@ describe('DefaultModelAutoApply model enforcement', () => {
     await vi.advanceTimersByTimeAsync(25000);
     expect((proItem.click as ReturnType<typeof vi.fn>).mock.calls.length).toBe(clicksAfterBackoff);
   });
+  it('an overlapping lock tick does not reset the rejected-switch back-off', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({ gvDefaultModel: { id: 'e6fa609c3fa255c0', name: '3.1 Pro' } });
+      },
+    );
+    history.replaceState({}, '', '/u/0/app');
+
+    const pane = document.createElement('div');
+    pane.className = 'cdk-overlay-pane';
+    const proItem = document.createElement('gem-menu-item');
+    proItem.setAttribute('role', 'menuitem');
+    proItem.setAttribute('data-mode-id', 'e6fa609c3fa255c0');
+    proItem.innerHTML = `
+      <gem-menu-item-content>
+        <div class="label-container"><span class="label">3.1 Pro</span></div>
+      </gem-menu-item-content>
+    `;
+    const proClick = vi.spyOn(proItem, 'click').mockImplementation(() => {});
+    pane.appendChild(proItem);
+
+    // Gemini rejects Pro (the pill stays on Flash), and its menu takes longer
+    // to open than one lock tick: each pick is still waiting when a second
+    // would have started.
+    const selectorBtn = document.createElement('button');
+    selectorBtn.setAttribute('data-test-id', 'bard-mode-menu-button');
+    selectorBtn.textContent = 'Flash';
+    vi.spyOn(selectorBtn, 'click').mockImplementation(() => {
+      pane.remove();
+      setTimeout(() => document.body.appendChild(pane), 1200);
+    });
+    document.body.appendChild(selectorBtn);
+
+    await startAutoApply();
+    await vi.advanceTimersByTimeAsync(10000);
+
+    expect(selectorBtn.textContent).toBe('Flash');
+    expect(proClick.mock.calls.length).toBeGreaterThan(0);
+    expect(proClick.mock.calls.length).toBeLessThanOrEqual(3);
+    expect(toastDriver.messages()).toEqual(['defaultModelAutoApplyFailed']);
+
+    const clicksAfterBackoff = proClick.mock.calls.length;
+    await vi.advanceTimersByTimeAsync(25000);
+    expect(proClick).toHaveBeenCalledTimes(clicksAfterBackoff);
+  });
+
+  it('a slow menu does not let two lock ticks run at once', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({ gvDefaultModel: { id: 'e6fa609c3fa255c0', name: '3.1 Pro' } });
+      },
+    );
+    history.replaceState({}, '', '/app');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.setAttribute('data-test-id', 'bard-mode-menu-button');
+    selectorBtn.textContent = 'Flash';
+    document.body.appendChild(selectorBtn);
+
+    // Each pick takes 2.5s, as one waiting out a slow menu would.
+    const { ModelPicker } = await import('../modelPicker');
+    let inFlight = 0;
+    let mostInFlight = 0;
+    const selectModel = vi
+      .spyOn(ModelPicker.prototype, 'selectModel')
+      .mockImplementation(async () => {
+        inFlight++;
+        mostInFlight = Math.max(mostInFlight, inFlight);
+        await new Promise<void>((resolve) => setTimeout(resolve, 2500));
+        inFlight--;
+        return 'switched';
+      });
+
+    await startAutoApply();
+    await vi.advanceTimersByTimeAsync(20000);
+
+    expect(selectModel.mock.calls.length).toBeGreaterThan(1);
+    expect(mostInFlight).toBe(1);
+  });
+  it('a newer chat keeps its lock loop when an older chat’s pick answers late', async () => {
+    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      (_keys: unknown, callback: (items: Record<string, unknown>) => void) => {
+        callback({ gvDefaultModel: { id: 'pro-id', name: 'Pro' } });
+      },
+    );
+    history.replaceState({}, '', '/app');
+
+    const selectorBtn = document.createElement('button');
+    selectorBtn.setAttribute('data-test-id', 'bard-mode-menu-button');
+    selectorBtn.textContent = 'Flash';
+    document.body.appendChild(selectorBtn);
+
+    // A pick that answers whenever the test says so.
+    const { ModelPicker } = await import('../modelPicker');
+    const answers: Array<(result: 'already-selected' | 'switched') => void> = [];
+    const selectModel = vi
+      .spyOn(ModelPicker.prototype, 'selectModel')
+      .mockImplementation(() => new Promise((resolve) => answers.push(resolve)));
+
+    await startAutoApply();
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(selectModel).toHaveBeenCalledTimes(1);
+    history.pushState({}, '', '/u/1/app');
+    await vi.advanceTimersByTimeAsync(1600);
+    expect(selectModel).toHaveBeenCalledTimes(2);
+
+    // The older chat's pick would end a session; it must not end the newer one.
+    answers[0]('already-selected');
+    answers[1]('switched');
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(selectModel).toHaveBeenCalledTimes(3);
+  });
 });

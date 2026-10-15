@@ -1,10 +1,18 @@
 import type { Toaster } from '@/core/ui/toast/types';
+import { type Machine, startMachine } from '@/features/plugins/runtime/stateMachine';
 
 import { watchRouteChanges } from '../utils/routeWatcher';
+import {
+  type AutoApplyEvent,
+  type AutoApplyPorts,
+  type AutoApplyState,
+  type LockSession,
+  autoApplyTransition,
+  createAutoApplyEffects,
+  sessionOf,
+} from './autoApplyMachine';
 import { ModelPicker } from './modelPicker';
-import type { PickerInteraction } from './modelPicker';
 import { DefaultModelPreferences } from './preferences';
-import type { DefaultModelSetting, DefaultThinkingLevel } from './preferences';
 
 const CHAT_INPUT_SELECTORS = [
   'main rich-textarea [contenteditable="true"]',
@@ -24,35 +32,35 @@ const REFOCUS_DELAY_MS = 120;
 const FAILURE_TOAST_MS = 12000;
 export const AUTO_APPLY_FAILURE_CHANNEL = 'default-model-failure';
 
+/** Runs `callback` after `delayMs` unless `signal` aborts first. */
+function scheduleUntilAborted(signal: AbortSignal, callback: () => void, delayMs: number): void {
+  if (signal.aborted) return;
+  const cancel = () => window.clearTimeout(id);
+  const id = window.setTimeout(() => {
+    signal.removeEventListener('abort', cancel);
+    callback();
+  }, delayMs);
+  signal.addEventListener('abort', cancel, { once: true });
+}
+
+/** One enabled period: its lock machine and everything it attached to the page. */
+interface AutoApplyRun {
+  /**
+   * Ends the route watcher, host listeners, navigation-settle and refocus
+   * timers. Abort listeners run synchronously, so nothing is left once `stop`
+   * returns, unlike an async scope teardown.
+   */
+  readonly controller: AbortController;
+  readonly machine: Machine<AutoApplyState, AutoApplyEvent>;
+}
+
 export class DefaultModelAutoApply {
-  private checkTimer: number | null = null;
-  /** Bumped on start and stop: work queued by an earlier run sees a different value and drops out. */
-  private generation = 0;
-  private running = false;
-  /** One-shot timers of the current run (navigation settle, refocus); cleared on stop. */
-  private readonly timers = new Set<number>();
+  private run: AutoApplyRun | null = null;
   private lastCheckedPath: string | null = null;
-  private stopRouteWatcher: (() => void) | null = null;
-  private sameRouteNewChatClickHandler: ((event: Event) => void) | null = null;
-  // Track if we've already auto-selected for this navigation to prevent duplicates
-  private autoSelectSessionId: string | null = null;
-  // Track consecutive failures to stop retrying when model is unavailable
-  private consecutiveFailures = 0;
-  private readonly maxConsecutiveFailures = 3;
-  // Once we hit `maxConsecutiveFailures`, show a one-time toast suggesting
-  // the user pause the feature (until we ship a fix for the broken selector).
-  // The flag only resets when the user flips the kill switch off-then-on,
-  // so revisiting /app many times in a broken session does not spam toasts.
+  // Once a session gives up, show a one-time toast suggesting the user pause
+  // the feature. The flag lives as long as this instance, which is one enabled
+  // period, so revisiting /app many times in a broken session does not spam toasts.
   private failureToastShown = false;
-  // Tracks a model item we clicked on the previous tick. If the trigger pill is
-  // still not on that model on the next tick, Gemini likely rejected the switch
-  // (for example because that model's quota is exhausted), so we back off after
-  // a few confirmations instead of reopening the menu forever (#761).
-  private pendingModelSwitchKey: string | null = null;
-  private consecutiveRejectedModelSwitches = 0;
-  private pendingThinkingSwitchKey: string | null = null;
-  private consecutiveRejectedThinkingSwitches = 0;
-  private composerActivityHandler: ((event: Event) => void) | null = null;
   private lastComposerActivityPath: string | null = null;
   private lastComposerActivityAt = 0;
 
@@ -63,102 +71,139 @@ export class DefaultModelAutoApply {
   ) {}
 
   public start(): void {
-    this.running = true;
-    this.generation++;
-    this.subscribeToComposerActivity();
-    void this.checkAndLockModel();
+    if (this.run) return;
+    const controller = new AbortController();
+    const { signal } = controller;
+    const machine = startMachine<AutoApplyState, AutoApplyEvent>(
+      {
+        id: 'default-model-auto-apply',
+        transition: autoApplyTransition,
+        effects: createAutoApplyEffects(this.portsFor(signal)),
+      },
+      { status: 'idle' },
+    );
+    this.run = { controller, machine };
+
+    this.subscribeToComposerActivity(signal);
+    this.requestCheck();
     // One shared watcher covers browser history events and page-world SPA
     // navigations without stacking per-feature History API wrappers.
-    this.stopRouteWatcher = watchRouteChanges(() => {
+    const stopRouteWatcher = watchRouteChanges(() => {
       const currentPath = window.location.pathname;
       if (currentPath !== this.lastCheckedPath && this.isNewConversation()) {
         this.lastCheckedPath = currentPath;
-        this.checkAndLockModelWithDelay();
+        this.requestCheckAfterSettle(signal);
       }
     });
+    signal.addEventListener('abort', stopRouteWatcher, { once: true });
 
     // A click on the already-active /app new-chat link does not change href, so
     // the shared watcher cannot observe it. Keep only this semantic exception;
     // all real URL changes go through watchRouteChanges.
-    this.sameRouteNewChatClickHandler = (event) => {
-      const target = event.target instanceof Element ? event.target : null;
-      const link = target?.closest<HTMLAnchorElement>('a[href]');
-      if (!link) return;
-      try {
-        const destination = new URL(link.href, window.location.href);
-        if (destination.href === window.location.href && this.isNewConversation()) {
-          this.checkAndLockModelWithDelay();
+    document.addEventListener(
+      'click',
+      (event) => {
+        const target = event.target instanceof Element ? event.target : null;
+        const link = target?.closest<HTMLAnchorElement>('a[href]');
+        if (!link) return;
+        try {
+          const destination = new URL(link.href, window.location.href);
+          if (destination.href === window.location.href && this.isNewConversation()) {
+            this.requestCheckAfterSettle(signal);
+          }
+        } catch {
+          // Ignore malformed host links.
         }
-      } catch {
-        // Ignore malformed host links.
-      }
-    };
-    document.addEventListener('click', this.sameRouteNewChatClickHandler, true);
+      },
+      { capture: true, signal },
+    );
   }
 
   public stop(): void {
-    this.running = false;
-    this.generation++;
-    this.autoSelectSessionId = null;
-    if (this.checkTimer) {
-      clearInterval(this.checkTimer);
-      this.checkTimer = null;
-    }
-    for (const id of this.timers) window.clearTimeout(id);
-    this.timers.clear();
-
-    this.stopRouteWatcher?.();
-    this.stopRouteWatcher = null;
-
-    if (this.sameRouteNewChatClickHandler) {
-      document.removeEventListener('click', this.sameRouteNewChatClickHandler, true);
-      this.sameRouteNewChatClickHandler = null;
-    }
-
-    this.unsubscribeFromComposerActivity();
-
+    const run = this.run;
+    if (!run) return;
+    this.run = null;
+    run.controller.abort();
+    void run.machine.stop();
     this.lastComposerActivityPath = null;
     this.lastComposerActivityAt = 0;
   }
 
-  /** Runs `callback` after `delayMs` unless this run stops first. */
-  private schedule(callback: () => void, delayMs: number): void {
-    const generation = this.generation;
-    const id = window.setTimeout(() => {
-      this.timers.delete(id);
-      if (generation === this.generation) callback();
-    }, delayMs);
-    this.timers.add(id);
-  }
-
-  /**
-   * What the picker may do on behalf of one lock loop. `isCurrent` turns false
-   * when this run stops, a newer loop replaces this one, or the route changes.
-   */
-  private interactionFor(sessionId: string, lockPath: string): PickerInteraction {
-    const generation = this.generation;
-    const isCurrent = (): boolean =>
-      generation === this.generation &&
-      this.autoSelectSessionId === sessionId &&
-      window.location.pathname === lockPath;
+  private portsFor(signal: AbortSignal): AutoApplyPorts {
     return {
-      isCurrent,
+      planLock: () => this.planLock(),
+      currentPath: () => window.location.pathname,
       shouldYield: () => this.shouldYieldToUserComposerActivity(),
-      stop: () => this.stopLockTimer(),
-      failed: () => {
-        this.consecutiveFailures++;
-        this.maybeNotifyAutoApplyFailure();
-        if (this.consecutiveFailures >= this.maxConsecutiveFailures) this.stopLockTimer();
+      readPill: (session) => {
+        const lines = this.picker.readTriggerPillLines();
+        return {
+          modelOk: !session.model || this.preferences.modelMatchesLines(session.model, lines),
+          thinkingOk:
+            !session.thinking || this.preferences.thinkingMatchesLines(session.thinking, lines),
+        };
       },
-      resetFailures: () => {
-        this.consecutiveFailures = 0;
-      },
-      focusInput: () => this.focusChatInputAfterAutoSwitch(isCurrent),
+      selectModel: (target, interaction) => this.picker.selectModel(target, interaction),
+      selectThinking: (target, interaction) => this.picker.selectThinking(target, interaction),
+      focusInput: (session) => this.focusChatInputAfterAutoSwitch(signal, session),
+      notifyFailure: () => this.maybeNotifyAutoApplyFailure(),
     };
   }
 
+  /** Starts a check of the current page when it is a new conversation. */
+  private requestCheck(): void {
+    // Only lock on new conversation pages
+    if (!this.isNewConversation()) return;
+    this.lastCheckedPath = window.location.pathname;
+    this.run?.machine.send({ type: 'check' });
+  }
+
+  /** Waits briefly after an SPA navigation so the URL and pill have settled. */
+  private requestCheckAfterSettle(signal: AbortSignal): void {
+    scheduleUntilAborted(signal, () => this.requestCheck(), NAVIGATION_SETTLE_MS);
+  }
+
+  /**
+   * Loads the defaults and decides whether this new chat needs a lock session.
+   * Defaults remain visible in the cache while enforcement is paused.
+   */
+  private async planLock(): Promise<LockSession | null> {
+    const { model: targetModel, thinking: targetThinking } =
+      await this.preferences.reloadDefaults();
+    // Keep the raw value for the in-menu star display, but never *enforce*
+    // Standard: it is Gemini's built-in default thinking level, so locking to it
+    // is always a no-op that can only make the picker flash open on an
+    // already-correct chat. Treat a Standard target as "no thinking preference".
+    const enforcedThinking = this.preferences.isPageDefaultThinkingLevel(targetThinking)
+      ? null
+      : targetThinking;
+
+    if (!targetModel && !enforcedThinking) return null;
+
+    // Skip when the only target is the Flash/Fast model and there is no thinking
+    // preference left to enforce — Gemini already defaults to Flash, so a no-op
+    // lock loop just wastes ticks.
+    if (targetModel && this.preferences.isFastModel(targetModel) && !enforcedThinking) {
+      return null;
+    }
+
+    // Nothing to do when the picker already shows the starred model + thinking
+    // level. A one-line pill ("Pro") already means Pro + Standard — Gemini hides
+    // the thinking line at Standard. Bail before starting the 1s lock loop so an
+    // already-correct new chat never spins up (or briefly opens) the picker. The
+    // `lines.length` guard keeps the startup case — pill not painted yet — on
+    // the loop path.
+    const pillLines = this.picker.readTriggerPillLines();
+    if (pillLines.length) {
+      const modelOk = !targetModel || this.preferences.modelMatchesLines(targetModel, pillLines);
+      const thinkingOk =
+        !enforcedThinking || this.preferences.thinkingMatchesLines(enforcedThinking, pillLines);
+      if (modelOk && thinkingOk) return null;
+    }
+
+    return { lockPath: window.location.pathname, model: targetModel, thinking: enforcedThinking };
+  }
+
   private maybeNotifyAutoApplyFailure() {
-    if (this.consecutiveFailures < this.maxConsecutiveFailures) return;
     if (this.failureToastShown) return;
     this.failureToastShown = true;
     this.showAutoApplyFailureToast();
@@ -205,183 +250,6 @@ export class DefaultModelAutoApply {
     }
   }
 
-  /**
-   * Delayed version of checkAndLockModel for SPA navigation.
-   * Adds a small delay to ensure the URL has actually changed.
-   */
-  private checkAndLockModelWithDelay(): void {
-    this.schedule(() => void this.checkAndLockModel(), NAVIGATION_SETTLE_MS);
-  }
-
-  private async checkAndLockModel() {
-    if (!this.running) return;
-    // Defaults remain visible in the cache while enforcement is paused.
-    // Only lock on new conversation pages
-    if (!this.isNewConversation()) return;
-
-    // Update last checked path
-    this.lastCheckedPath = window.location.pathname;
-
-    const generation = this.generation;
-    const { model: targetModel, thinking: targetThinking } =
-      await this.preferences.reloadDefaults();
-    // Stopped while the defaults loaded: no lock loop may start.
-    if (generation !== this.generation) return;
-    // Keep the raw value for the in-menu star display, but never *enforce*
-    // Standard: it is Gemini's built-in default thinking level, so locking to it
-    // is always a no-op that can only make the picker flash open on an
-    // already-correct chat. Treat a Standard target as "no thinking preference".
-    const enforcedThinking = this.preferences.isPageDefaultThinkingLevel(targetThinking)
-      ? null
-      : targetThinking;
-
-    if (!targetModel && !enforcedThinking) return;
-
-    // Skip when the only target is the Flash/Fast model and there is no thinking
-    // preference left to enforce — Gemini already defaults to Flash, so a no-op
-    // lock loop just wastes ticks.
-    if (targetModel && this.preferences.isFastModel(targetModel) && !enforcedThinking) {
-      return;
-    }
-
-    // Nothing to do when the picker already shows the starred model + thinking
-    // level. A one-line pill ("Pro") already means Pro + Standard — Gemini hides
-    // the thinking line at Standard. Bail before starting the 1s lock loop so an
-    // already-correct new chat never spins up (or briefly opens) the picker. The
-    // `lines.length` guard keeps the startup case — pill not painted yet — on
-    // the loop path.
-    const pillLines = this.picker.readTriggerPillLines();
-    if (pillLines.length) {
-      const modelOk = !targetModel || this.preferences.modelMatchesLines(targetModel, pillLines);
-      const thinkingOk =
-        !enforcedThinking || this.preferences.thinkingMatchesLines(enforcedThinking, pillLines);
-      if (modelOk && thinkingOk) return;
-    }
-
-    // Generate a unique session ID to prevent duplicate selections in the same navigation
-    const lockPath = window.location.pathname;
-    const sessionId = `${lockPath}-${Date.now()}`;
-    this.autoSelectSessionId = sessionId;
-    const interaction = this.interactionFor(sessionId, lockPath);
-    // Reset failure counter for new session
-    this.consecutiveFailures = 0;
-    this.pendingModelSwitchKey = null;
-    this.consecutiveRejectedModelSwitches = 0;
-    this.pendingThinkingSwitchKey = null;
-    this.consecutiveRejectedThinkingSwitches = 0;
-
-    // Start checking loop
-    let attempts = 0;
-    const maxAttempts = 5;
-
-    if (this.checkTimer) clearInterval(this.checkTimer);
-
-    this.checkTimer = window.setInterval(async () => {
-      // Abort if session changed (e.g., user navigated away and came back)
-      if (this.autoSelectSessionId !== sessionId) {
-        this.stopLockTimer();
-        return;
-      }
-
-      attempts++;
-      if (attempts > maxAttempts) {
-        this.stopLockTimer();
-        return;
-      }
-
-      await this.tickLock(targetModel, enforcedThinking, interaction);
-    }, 1000);
-  }
-
-  /**
-   * Single tick: cheap fast-path via trigger pill text, then targeted lock if needed.
-   * Handles both model and thinking-level prefs.
-   */
-  private async tickLock(
-    targetModel: DefaultModelSetting | null,
-    targetThinking: DefaultThinkingLevel | null,
-    interaction: PickerInteraction,
-  ) {
-    if (this.shouldYieldToUserComposerActivity()) {
-      this.stopLockTimer();
-      return;
-    }
-
-    const lines = this.picker.readTriggerPillLines();
-    const modelOk = !targetModel || this.preferences.modelMatchesLines(targetModel, lines);
-    const thinkingOk =
-      !targetThinking || this.preferences.thinkingMatchesLines(targetThinking, lines);
-
-    if (modelOk && thinkingOk) {
-      this.stopLockTimer();
-      this.consecutiveFailures = 0;
-      this.pendingModelSwitchKey = null;
-      this.consecutiveRejectedModelSwitches = 0;
-      this.pendingThinkingSwitchKey = null;
-      this.consecutiveRejectedThinkingSwitches = 0;
-      return;
-    }
-
-    if (modelOk) {
-      this.pendingModelSwitchKey = null;
-      this.consecutiveRejectedModelSwitches = 0;
-    }
-
-    if (!modelOk && targetModel) {
-      const switchKey = this.getModelSwitchKey(targetModel);
-      if (this.pendingModelSwitchKey === switchKey) {
-        this.consecutiveRejectedModelSwitches++;
-        if (this.consecutiveRejectedModelSwitches >= this.maxConsecutiveFailures) {
-          this.consecutiveFailures = this.maxConsecutiveFailures;
-          this.maybeNotifyAutoApplyFailure();
-          this.stopLockTimer();
-          return;
-        }
-      }
-
-      const result = await this.picker.selectModel(targetModel, interaction);
-      // A newer loop may own the lock timer by now; acting on this result would stop it.
-      if (result === 'cancelled' || !interaction.isCurrent()) return;
-      if (result === 'switched') {
-        this.pendingModelSwitchKey = switchKey;
-      } else if (result === 'already-selected') {
-        this.pendingModelSwitchKey = null;
-        this.consecutiveRejectedModelSwitches = 0;
-        if (!thinkingOk && targetThinking) {
-          await this.picker.selectThinking(targetThinking, interaction);
-        } else {
-          this.stopLockTimer();
-        }
-      } else {
-        this.pendingModelSwitchKey = null;
-        this.consecutiveRejectedModelSwitches = 0;
-      }
-      return;
-    }
-
-    if (!thinkingOk && targetThinking) {
-      const switchKey = this.getThinkingSwitchKey(targetThinking);
-      if (this.pendingThinkingSwitchKey === switchKey) {
-        this.consecutiveRejectedThinkingSwitches++;
-        if (this.consecutiveRejectedThinkingSwitches >= this.maxConsecutiveFailures) {
-          this.consecutiveFailures = this.maxConsecutiveFailures;
-          this.maybeNotifyAutoApplyFailure();
-          this.stopLockTimer();
-          return;
-        }
-      }
-
-      const result = await this.picker.selectThinking(targetThinking, interaction);
-      if (result === 'cancelled' || !interaction.isCurrent()) return;
-      if (result === 'switched') {
-        this.pendingThinkingSwitchKey = switchKey;
-      } else {
-        this.pendingThinkingSwitchKey = null;
-        this.consecutiveRejectedThinkingSwitches = 0;
-      }
-    }
-  }
-
   private isNewConversation() {
     const path = window.location.pathname;
     // Supports multi-profile paths like /u/0/app as well as /app.
@@ -389,33 +257,25 @@ export class DefaultModelAutoApply {
     return /^\/(u\/\d+\/)?(app\/?|gem\/.*)$/.test(path);
   }
 
-  private getModelSwitchKey(model: DefaultModelSetting): string {
-    return model.kind === 'id' ? `id:${model.id}` : `name:${model.name.toLowerCase().trim()}`;
-  }
+  /** A route change or a newer session inside the delay must not focus the next page. */
+  private focusChatInputAfterAutoSwitch(signal: AbortSignal, session: LockSession): void {
+    scheduleUntilAborted(
+      signal,
+      () => {
+        const state = this.run?.machine.state;
+        if (!state || sessionOf(state) !== session) return;
+        if (window.location.pathname !== session.lockPath) return;
+        const input = this.findChatInputElement();
+        if (!input) return;
 
-  private getThinkingSwitchKey(thinking: DefaultThinkingLevel): string {
-    return `thinking:${thinking.mode ?? 'legacy'}:${thinking.index}:${thinking.label.toLowerCase().trim()}`;
-  }
-
-  private stopLockTimer() {
-    if (!this.checkTimer) return;
-    clearInterval(this.checkTimer);
-    this.checkTimer = null;
-  }
-
-  /** `isCurrent` is the lock loop's: a route change inside the delay must not focus the next page. */
-  private focusChatInputAfterAutoSwitch(isCurrent: () => boolean): void {
-    this.schedule(() => {
-      if (!isCurrent()) return;
-      const input = this.findChatInputElement();
-      if (!input) return;
-
-      try {
-        input.focus({ preventScroll: true });
-      } catch {
-        input.focus();
-      }
-    }, REFOCUS_DELAY_MS);
+        try {
+          input.focus({ preventScroll: true });
+        } catch {
+          input.focus();
+        }
+      },
+      REFOCUS_DELAY_MS,
+    );
   }
 
   private findChatInputElement(): HTMLElement | null {
@@ -430,25 +290,15 @@ export class DefaultModelAutoApply {
     return null;
   }
 
-  private subscribeToComposerActivity(): void {
-    if (this.composerActivityHandler) return;
-
-    this.composerActivityHandler = (event) => {
+  private subscribeToComposerActivity(signal: AbortSignal): void {
+    const recordActivity = (event: Event) => {
       const target = event.target instanceof HTMLElement ? event.target : null;
       if (!this.isChatInputElement(target)) return;
       this.lastComposerActivityPath = window.location.pathname;
       this.lastComposerActivityAt = Date.now();
     };
-
-    document.addEventListener('input', this.composerActivityHandler, { capture: true });
-    document.addEventListener('keydown', this.composerActivityHandler, { capture: true });
-  }
-
-  private unsubscribeFromComposerActivity(): void {
-    if (!this.composerActivityHandler) return;
-    document.removeEventListener('input', this.composerActivityHandler, { capture: true });
-    document.removeEventListener('keydown', this.composerActivityHandler, { capture: true });
-    this.composerActivityHandler = null;
+    document.addEventListener('input', recordActivity, { capture: true, signal });
+    document.addEventListener('keydown', recordActivity, { capture: true, signal });
   }
 
   private isChatInputElement(element: HTMLElement | null): boolean {

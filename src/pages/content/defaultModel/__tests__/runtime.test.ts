@@ -324,7 +324,7 @@ describe('default model runtime lifecycle', () => {
     const preferences = new DefaultModelPreferences();
     const picker = new ModelPicker(preferences);
     // A pick that answers whenever the test says so.
-    const answers: Array<(result: 'already-selected') => void> = [];
+    const answers: Array<(result: 'already-selected' | 'switched') => void> = [];
     const selectModel = vi
       .spyOn(picker, 'selectModel')
       .mockImplementation(() => new Promise((resolve) => answers.push(resolve)));
@@ -339,6 +339,8 @@ describe('default model runtime lifecycle', () => {
     expect(selectModel).toHaveBeenCalledTimes(2);
 
     answers[0]('already-selected');
+    // The newer loop ticks again only once its own pick settles; ticks never overlap.
+    answers[1]('switched');
     await vi.advanceTimersByTimeAsync(1000);
     autoApply.stop();
     toaster.destroy();
