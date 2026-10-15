@@ -24,6 +24,7 @@ vi.mock('../pendingExportState', async (importOriginal) => ({
 }));
 
 const { createExportRunner } = await import('../exportRun');
+const screenshots = await import('../generatedUiScreenshots');
 
 const dict = {
   en: {
@@ -338,6 +339,35 @@ describe('createExportRunner', () => {
       expect(mocks.exportPendingConversation).not.toHaveBeenCalled();
       expect(toastDriver.all()).toMatchObject([{ tone: 'error' }]);
     });
+  });
+
+  it('second Export click during the permission wait does not start a second export', async () => {
+    mocks.exportPendingConversation.mockResolvedValue({ success: true });
+    let grant: () => void = () => {};
+    vi.mocked(screenshots.ensureGeneratedUiScreenshotPermission).mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          grant = resolve;
+        }),
+    );
+    const runner = createExportRunner({ site: fakeSite(fakeCollector(renderMessages())) });
+
+    const running = runner.run({ format: ExportFormat.JSON }, { dict, lang: 'en' });
+    await until(() => selectionBar() !== null);
+    clickBarAction('selectAll');
+    clickBarAction('export');
+    await vi.advanceTimersByTimeAsync(50);
+    clickBarAction('export');
+    await vi.advanceTimersByTimeAsync(50);
+    expect(selectionBar()).not.toBeNull();
+    expect(screenshots.removeGeneratedUiScreenshotSections).not.toHaveBeenCalled();
+
+    grant();
+    await settle(running);
+
+    expect(mocks.exportPendingConversation).toHaveBeenCalledTimes(1);
+    expect(mocks.exportPendingConversation.mock.calls[0][1]).toHaveLength(2);
+    expect(toastDriver.all().filter((toast) => toast.tone === 'error')).toEqual([]);
   });
 
   it('cancel dismisses the selection and ends the run without exporting', async () => {

@@ -4,6 +4,7 @@ import { toastDriver } from '@/tests/toastDriver';
 
 import type { ExportMessage, ExportMessageRole } from '../conversationCollector';
 import {
+  type ExportSelectionConfirmation,
   type ExportSelectionSessionOptions,
   startExportSelectionSession,
 } from '../exportSelectionSession';
@@ -220,6 +221,103 @@ describe('startExportSelectionSession', () => {
 
     await session.done;
     expect(options.abortExport).toHaveBeenCalledTimes(1);
+    expectSelectionUiRemoved();
+  });
+
+  it('checkbox clicks after Export do not change the exported selection', async () => {
+    let takenIds: ReadonlySet<string> | null = null;
+    let grantGesture: () => void = () => {};
+    const onConfirm = vi.fn(async ({ takeSelection }: ExportSelectionConfirmation) => {
+      await new Promise<void>((resolve) => {
+        grantGesture = resolve;
+      });
+      takenIds = takeSelection();
+    });
+    const { session, messages } = start({ onConfirm, initialSelectedMessageId: '1:u' });
+
+    barButton('export').click();
+    await vi.waitFor(() => expect(onConfirm).toHaveBeenCalledTimes(1));
+    messages[1].hostElement.click();
+    document.querySelector<HTMLButtonElement>('.gv-export-msg-checkbox')!.click();
+    barButton('selectAll').click();
+    barButton('selectAI').click();
+    expect(selectedHostIds()).toEqual(['1:u']);
+
+    grantGesture();
+    await session.done;
+    expect(takenIds).toEqual(new Set(['1:u']));
+  });
+
+  it('a second Export click while the first is pending does not export again', async () => {
+    const onConfirm = vi.fn(() => new Promise<void>(() => {}));
+    const { session } = start({ onConfirm, initialSelectedMessageId: '1:u' });
+
+    barButton('export').click();
+    barButton('export').click();
+    barButton('export').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await vi.waitFor(() => expect(onConfirm).toHaveBeenCalled());
+    await Promise.resolve();
+
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    session.cancel();
+  });
+
+  it('done does not resolve while the selection bar is still mounted', async () => {
+    const onConfirm = vi.fn(async () => {});
+    const { session } = start({ onConfirm, initialSelectedMessageId: '1:u' });
+    let barMountedWhenDone: boolean | null = null;
+    void session.done.then(() => {
+      barMountedWhenDone = document.querySelector('[data-gv-export-select-bar="true"]') !== null;
+    });
+
+    barButton('export').click();
+    await session.done;
+
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    expect(barMountedWhenDone).toBe(false);
+    expectSelectionUiRemoved();
+  });
+
+  it('cancel during role resolution leaves no stuck busy state', async () => {
+    const messages = [message('a', 'unknown'), message('b', 'unknown')];
+    let finishRoles: (roles: ReadonlyMap<string, 'user' | 'assistant'>) => void = () => {};
+    const resolveRoles = vi.fn(
+      () =>
+        new Promise<ReadonlyMap<string, 'user' | 'assistant'>>((resolve) => {
+          finishRoles = resolve;
+        }),
+    );
+    const { session, options } = start({ readMessages: () => messages, resolveRoles });
+
+    barButton('selectAI').click();
+    expect(barButton('selectAll').disabled).toBe(true);
+    document.querySelector<HTMLButtonElement>('.gv-export-select-cancel-btn')!.click();
+    await session.done;
+
+    expect(options.abortExport).toHaveBeenCalledTimes(1);
+    expectSelectionUiRemoved();
+    finishRoles(new Map([['b', 'assistant']]));
+    await Promise.resolve();
+    expectSelectionUiRemoved();
+    expect(selectedHostIds()).toEqual([]);
+    expect(toastDriver.all()).toEqual([]);
+  });
+
+  it('an export aborted during role resolution removes the frozen bar', async () => {
+    const controller = new AbortController();
+    const messages = [message('a', 'unknown')];
+    const resolveRoles = vi.fn(() => new Promise<ReadonlyMap<string, 'user'>>(() => {}));
+    const { session } = start({
+      readMessages: () => messages,
+      resolveRoles,
+      signal: controller.signal,
+    });
+
+    barButton('selectUser').click();
+    expect(barButton('selectUser').disabled).toBe(true);
+    controller.abort();
+
+    await session.done;
     expectSelectionUiRemoved();
   });
 });

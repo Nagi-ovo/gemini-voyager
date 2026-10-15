@@ -12,7 +12,7 @@ from the page beforehand (`extractTurnContent` with an extractor from `createCon
 | Per-host export: label, entry points, turn source, lazy history; site registration   | `exportSite.ts`, `sites/` (+ `adapter/platformAdapters.ts`)                          |
 | Read turns and selectable messages from the page, Canvas snapshots, message ids      | `conversationCollector.ts` (+ `conversationDom.ts`, shared with fork)                |
 | One export run: preload, resume, preparation/release, final export, operation abort  | `exportRun.ts` (+ `preparedExport.ts`, `pendingExportState.ts`, `topNodePreload.ts`) |
-| Selection mode: checkboxes, bar, role filters, lazy-load refresh, Cancel/Escape      | `exportSelectionSession.ts`                                                          |
+| Selection mode: checkboxes, bar, role filters, lazy-load refresh, Cancel/Escape      | `exportSelectionSession.ts` (DOM), `exportSelectionMachine.ts` (states and effects)  |
 | ChatGPT crawl progress (turns read) and its Cancel                                   | `chatgptCrawlProgress.ts`                                                            |
 | Export turn anchor health after collection                                           | `exportRun.ts`, `exportHealth.ts`                                                    |
 | Shared cancellation checks                                                           | `exportCancellation.ts`                                                              |
