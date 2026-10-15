@@ -5,11 +5,19 @@
  * Enter, the send button or the form, then the composer emptying; Gemini: its own
  * send detection). Nothing here sends, submits or clears the composer itself.
  *
+ * Three independent axes share the session:
+ *  - restore: an explicit machine per opened conversation (`draftSessionMachine.ts`);
+ *  - save: one pending `{ key, content }` behind a debounce every input restarts;
+ *  - send: one armed intent whose timers a new send replaces.
+ * They talk through events: input and sends `touch` the restore, a send drops
+ * the pending save, and an armed intent decides whether a route change was a send.
+ *
  * Every listener and timer is registered on the plugin's scope; disposing it
  * stops the session and leaves stored drafts in place.
  */
 import { isUserEvent } from '@/core/utils/userEvent';
 import type { Dispose, PluginScope } from '@/features/plugins/runtime/pluginScope';
+import type { Machine } from '@/features/plugins/runtime/stateMachine';
 import { DraftStore, draftStoreOptions } from '@/pages/content/draftSave/draftStore';
 import { registerDraftFlush } from '@/pages/content/draftSave/draftUnloadFlush';
 import { startGeminiDraftSendDetection } from '@/pages/content/draftSave/geminiDraftSendDetection';
@@ -18,12 +26,20 @@ import { watchRouteChanges } from '@/pages/content/utils/routeWatcher';
 import { composerEnterIsOwned } from '../composerEnterOwner';
 import { NEW_CHAT_DRAFT } from './draftKey';
 import { type DraftPolicy, sanitizeDraftAt } from './draftPolicy';
+import {
+  type DraftRestoreEvent,
+  type DraftRestorePort,
+  type DraftRestoreState,
+  type DraftWriteResult,
+  draftRestoreEffects,
+  initialDraftRestoreState,
+  startDraftRestore,
+} from './draftSessionMachine';
+
+export { DRAFT_RESTORE_DELAY_MS } from './draftSessionMachine';
 
 /** Same pause as Gemini's before typing is written to storage. */
 export const DRAFT_SAVE_DEBOUNCE_MS = 1000;
-/** Same delay and retry budget as Gemini's restore while a navigated-to composer mounts. */
-export const DRAFT_RESTORE_DELAY_MS = 500;
-const RESTORE_ATTEMPTS = 5;
 /** How long a send stays armed for the composer to empty or the route to change. */
 export const SEND_INTENT_TIMEOUT_MS = 2000;
 /** Hosts clear a sent prompt with an editor transaction that fires no `input` event. */
@@ -43,16 +59,13 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
 
   let currentKey = keyHere();
   let currentIdentity = policy.restoreIdentity(doc);
-  /** Bumped by input and sends; a restore started before a bump would bring back an outdated draft. */
-  let inputRevision = 0;
   let geminiSend: ReturnType<typeof startGeminiDraftSendDetection> | null = null;
-  /** Bumped whenever the key changes, so a timer started for one conversation stops in another. */
-  let navigation = 0;
-  let restored = false;
   let lastSavedContent = '';
   let pendingSave: { key: string; content: string } | null = null;
   let cancelSaveTimer: Dispose | null = null;
   let sendIntent: SendIntent | null = null;
+  /** True only while the restore writes, so its own `input` event is not the person's. */
+  let writingDraft = false;
 
   const store = new DraftStore(
     (key, content) => {
@@ -60,6 +73,38 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
     },
     draftStoreOptions(policy, doc),
   );
+
+  const writeDraft = (content: string): DraftWriteResult => {
+    const field = composer();
+    if (!field) return 'missed';
+    // Whatever is already in the composer is the user's: never write over it.
+    if (!policy.isEmpty(field)) return 'occupied';
+    writingDraft = true;
+    try {
+      return policy.write(field, content) ? 'written' : 'missed';
+    } finally {
+      writingDraft = false;
+    }
+  };
+
+  const restorePort: DraftRestorePort = {
+    identity: () => policy.restoreIdentity(doc),
+    // The route watcher polls and an account switch keeps the route: check the live page.
+    matches: (key, identity) => keyHere() === key && policy.restoreIdentity(doc) === identity,
+    load: async (key) => {
+      const saved = await store.load(key);
+      return saved === null ? '' : sanitizeDraftAt(policy, 'restore', saved).trim();
+    },
+    stored: (content) => {
+      lastSavedContent = content;
+    },
+    write: writeDraft,
+  };
+  const restoreEffects = draftRestoreEffects(restorePort);
+  /** The current conversation's restore; started once the listeners below are in place. */
+  let restore: Machine<DraftRestoreState, DraftRestoreEvent> | null = null;
+  /** The person's input or a send after a restore began makes its draft outdated. */
+  const touch = (): void => restore?.send({ type: 'touched' });
 
   const ownComposer = (target: EventTarget | null): HTMLElement | null => {
     const field = composer();
@@ -96,7 +141,7 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
   const dropSentDraft = (key: string): void => {
     discardPendingSave(key);
     store.remove(key);
-    inputRevision += 1;
+    touch();
     clearSendIntent();
   };
 
@@ -110,7 +155,7 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
     // An empty composer sends nothing; armed, it would drop the draft typed next.
     const key = keyHere();
     if (scope.isDisposed || key === null || policy.isEmpty(field)) return;
-    inputRevision += 1;
+    touch();
     clearSendIntent();
     sendIntent = {
       key,
@@ -126,7 +171,7 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
     const field = ownComposer(event.target);
     if (!field) return;
     // Catalog hosts fire their own input while mounting the composer; only a person's outdates a restore.
-    if (detection.kind === 'gemini' || isUserEvent(event)) inputRevision += 1;
+    if (!writingDraft && (detection.kind === 'gemini' || isUserEvent(event))) touch();
     geminiSend?.checkSent();
     // The route watcher polls; the live route at the input event names the draft's conversation.
     const key = keyHere();
@@ -142,70 +187,8 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
     cancelSaveTimer = scope.timer(flushPendingSave, DRAFT_SAVE_DEBOUNCE_MS);
   };
 
-  const tryRestore = (
-    generation: number,
-    key: string,
-    content: string,
-    attempts: number,
-    identity: string,
-    revision: number,
-  ) => {
-    if (
-      scope.isDisposed ||
-      restored ||
-      generation !== navigation ||
-      keyHere() !== key ||
-      policy.restoreIdentity(doc) !== identity ||
-      inputRevision !== revision
-    )
-      return;
-    const field = composer();
-    if (field) {
-      // Whatever is already in the composer is the user's: never write over it.
-      if (!policy.isEmpty(field)) {
-        restored = true;
-        return;
-      }
-      if (policy.write(field, content)) {
-        restored = true;
-        return;
-      }
-    }
-    if (attempts > 0) {
-      scope.timer(
-        () => tryRestore(generation, key, content, attempts - 1, identity, revision),
-        DRAFT_RESTORE_DELAY_MS,
-      );
-    }
-  };
-
-  const restore = async (generation: number): Promise<void> => {
-    const key = currentKey;
-    if (key === null || restored || generation !== navigation) return;
-    const identity = policy.restoreIdentity(doc);
-    const revision = inputRevision;
-    const saved = await store.load(key);
-    if (
-      scope.isDisposed ||
-      generation !== navigation ||
-      keyHere() !== key ||
-      identity !== policy.restoreIdentity(doc)
-    )
-      return;
-    const content = saved === null ? undefined : sanitizeDraftAt(policy, 'restore', saved).trim();
-    // Track what storage holds even when the restore is skipped: a host that refills its own
-    // draft first, or a clear typed before the load, would otherwise look unchanged and keep it.
-    lastSavedContent = content ?? '';
-    // A late load must not refill an input that was typed into and then sent or cleared.
-    if (inputRevision !== revision) return;
-    if (!content) {
-      restored = true;
-      return;
-    }
-    tryRestore(generation, key, content, RESTORE_ATTEMPTS, identity, revision);
-  };
-
   const onRoute = (): void => {
+    if (scope.isDisposed) return;
     const next = keyHere();
     const nextIdentity = policy.restoreIdentity(doc);
     if (next === currentKey && nextIdentity === currentIdentity) return;
@@ -229,11 +212,10 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
     clearSendIntent();
     currentKey = next;
     currentIdentity = nextIdentity;
-    navigation += 1;
     lastSavedContent = '';
-    restored = false;
-    const generation = navigation;
-    scope.timer(() => void restore(generation), DRAFT_RESTORE_DELAY_MS);
+    // Stopping the previous restore retires its timers and its pending load.
+    void restore?.stop();
+    restore = startDraftRestore(restoreEffects, initialDraftRestoreState(next, 'afterDelay'));
   };
 
   if (detection.kind === 'gemini') {
@@ -243,9 +225,7 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
         policy,
         signal: scope.signal,
         onSent: dropSentDraft,
-        onIntent: () => {
-          inputRevision += 1;
-        },
+        onIntent: touch,
       });
       return geminiSend.stop;
     }, 'draft-save:gemini-send');
@@ -309,6 +289,9 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
     },
     'draft-save:state',
   );
-
-  void restore(navigation);
+  // Started last, once every listener is in place; the restore that is current at disable stops.
+  scope.effect(() => {
+    restore = startDraftRestore(restoreEffects, initialDraftRestoreState(currentKey, 'now'));
+    return () => restore?.stop();
+  }, 'draft-save:restore');
 }

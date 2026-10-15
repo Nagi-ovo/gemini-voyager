@@ -294,6 +294,59 @@ describe.each(sites)('draftSave on $name', (site) => {
     expect(stored(adapter, 'conv:abc')).toBeUndefined();
   });
 
+  it('a late draft load does not refill a composer cleared after it started', async () => {
+    records[draftKey(adapter, 'conv:b')] = { content: 'Old draft for B' };
+    mount(site.conversationPath('a'));
+    activate(adapter);
+    await vi.advanceTimersByTimeAsync(0);
+    const pendingReads: (() => void)[] = [];
+    const get = chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>;
+    get.mockImplementation(
+      (keys: string | null, callback: (items: Record<string, unknown>) => void) => {
+        pendingReads.push(() =>
+          callback(typeof keys === 'string' ? { [keys]: records[keys] } : { ...records }),
+        );
+      },
+    );
+
+    await navigate(site.conversationPath('b'));
+    await vi.advanceTimersByTimeAsync(DRAFT_RESTORE_DELAY_MS);
+    expect(pendingReads).toHaveLength(1);
+    type('Something new');
+    type('');
+    pendingReads.splice(0).forEach((resolve) => resolve());
+    await vi.advanceTimersByTimeAsync(DRAFT_RESTORE_DELAY_MS * 10 + DRAFT_SAVE_DEBOUNCE_MS);
+
+    expect(text()).toBe('');
+    // The clear reaches storage too, so reopening B does not bring the old draft back.
+    expect(stored(adapter, 'conv:b')).toBeUndefined();
+  });
+
+  it('exhausted restore retries leave the session settled', async () => {
+    records[draftKey(adapter, 'conv:abc')] = { content: 'Never placed' };
+    records[draftKey(adapter, 'conv:next')] = { content: 'Draft for next' };
+    mount(site.conversationPath('abc'));
+    const field = prompt();
+    const parent = field.parentElement!;
+    field.remove();
+
+    activate(adapter);
+    await vi.advanceTimersByTimeAsync(DRAFT_RESTORE_DELAY_MS * 20);
+    // The composer shows up only after the retry budget: the restore has given up on it.
+    parent.appendChild(field);
+    await vi.advanceTimersByTimeAsync(DRAFT_RESTORE_DELAY_MS * 20);
+    expect(text()).toBe('');
+
+    // The session itself keeps working: typing saves, and the next conversation restores.
+    type('Typed after the restore gave up');
+    await vi.advanceTimersByTimeAsync(DRAFT_SAVE_DEBOUNCE_MS);
+    expect(stored(adapter, 'conv:abc')).toBe('Typed after the restore gave up');
+    await navigate(site.conversationPath('next'));
+    hostClears();
+    await vi.advanceTimersByTimeAsync(DRAFT_RESTORE_DELAY_MS);
+    expect(text()).toBe('Draft for next');
+  });
+
   it('keeps blank lines identical through save, restore and save again', async () => {
     mount(site.conversationPath('abc'));
     const first = activate(adapter);
