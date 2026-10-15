@@ -47,7 +47,7 @@ iCloud를 사용하는 경우 **iCloud 백업 삭제**를 누르면 iCloud에 �
 
 가장 쉬운 방법은 왼쪽 사이드바의 폴더 영역 헤더에 있는 클라우드 아이콘을 클릭한 뒤 메뉴에서 **클라우드에 업로드** 또는 **클라우드에서 동기화**를 선택하는 것입니다.
 
-<img src="/assets/cloud-sync.png" alt="클라우드 동기화 빠른 버튼" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/cloud-sync.png" alt="클라우드 동기화 빠른 버튼" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; width: 352px; max-width: 100%;"/>
 
 ::: warning
 **보안 권장 사항: 이중 보호**  

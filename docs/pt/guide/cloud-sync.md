@@ -47,7 +47,7 @@ No iCloud, **Excluir backup do iCloud** remove todos os backups do Voyager no iC
 
 A maneira mais fácil é clicar no ícone de nuvem no cabeçalho da área de pastas, na barra lateral esquerda, e escolher **"Enviar para nuvem"** ou **"Sincronizar da nuvem"** no menu.
 
-<img src="/assets/cloud-sync.png" alt="Botões de sincronização rápida na nuvem" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/cloud-sync.png" alt="Botões de sincronização rápida na nuvem" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; width: 352px; max-width: 100%;"/>
 
 ::: warning
 **Recomendação de segurança: Proteção dupla**\

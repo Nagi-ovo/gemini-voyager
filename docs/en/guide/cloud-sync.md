@@ -47,7 +47,7 @@ With iCloud, **Delete iCloud backup** removes every Voyager backup from iCloud; 
 
 The quickest way is the cloud icon in the folder area's header in the left sidebar: click it, then choose **Upload to Cloud** or **Sync from Cloud**.
 
-<img src="/assets/cloud-sync.png" alt="Cloud Sync Quick Buttons" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/cloud-sync.png" alt="Cloud Sync Quick Buttons" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; width: 352px; max-width: 100%;"/>
 
 ::: warning
 **Security Recommendation: Double Protection**  

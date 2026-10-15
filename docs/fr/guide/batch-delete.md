@@ -10,7 +10,7 @@ Supprimez plusieurs conversations à la fois sur Gemini et AI Studio, fini la su
 - **Confirmation Sécurisée** : Une carte de confirmation s'affiche à côté du bouton Supprimer avant la suppression pour éviter les opérations accidentelles.
 
 <div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/batch-delete.png" alt="Suppression par Lot" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  <img src="/assets/batch-delete.png" alt="Suppression par Lot" style="width: 224px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>
 
 ## Comment Utiliser

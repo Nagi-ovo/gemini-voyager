@@ -45,7 +45,7 @@ Voyager 会把不同类型的数据保存为独立备份，避免某一类数据
 
 最简单的方法是点击左侧侧边栏**文件夹区域标题栏**上的云图标，在菜单中选择“上传到云端”或“从云端同步”。
 
-<img src="/assets/cloud-sync.png" alt="云同步快捷按钮" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/cloud-sync-zh.png" alt="云同步快捷按钮" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; width: 352px; max-width: 100%;"/>
 
 ::: warning
 **安全建议：双重保护**  

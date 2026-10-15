@@ -10,7 +10,7 @@
 - **تأكيد آمن**: تظهر بطاقة تأكيد بجوار زر الحذف قبل الحذف لمنع العمليات العرضية.
 
 <div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/batch-delete.png" alt="الحذف الجماعي" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  <img src="/assets/batch-delete.png" alt="الحذف الجماعي" style="width: 224px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>
 
 ## كيفية الاستخدام

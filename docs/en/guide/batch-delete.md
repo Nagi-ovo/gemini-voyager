@@ -10,7 +10,7 @@ Delete multiple conversations at once on Gemini and AI Studio, no more deleting 
 - **Safe Confirmation**: A confirmation card pops up next to the Delete button before deletion to prevent accidental operations.
 
 <div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/batch-delete.png" alt="Batch Delete" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  <img src="/assets/batch-delete.png" alt="Batch Delete" style="width: 224px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>
 
 ## How to Use

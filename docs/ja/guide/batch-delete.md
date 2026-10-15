@@ -10,7 +10,7 @@ Gemini と AI Studio で複数の会話を一度に削除し、一つずつ消�
 - **安全確認**：削除前には削除ボタンの横に確認カードが表示され、誤操作を防ぎます。
 
 <div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/batch-delete.png" alt="Batch Delete" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  <img src="/assets/batch-delete.png" alt="Batch Delete" style="width: 224px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>
 
 ## 使い方

@@ -47,7 +47,7 @@ Voyager Cloud Sync создаёт резервную копию ваших па�
 
 Самый простой способ — нажать значок облака в заголовке области папок в левой боковой панели и выбрать в меню **«Загрузить в облако»** или **«Синхронизировать из облака»**.
 
-<img src="/assets/cloud-sync.png" alt="Кнопки быстрой облачной синхронизации" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/cloud-sync.png" alt="Кнопки быстрой облачной синхронизации" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; width: 352px; max-width: 100%;"/>
 
 ::: warning
 **Рекомендация по безопасности: Двойная защита**\

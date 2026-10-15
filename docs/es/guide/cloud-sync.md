@@ -47,7 +47,7 @@ Con iCloud, **Eliminar copia de iCloud** elimina de iCloud todas las copias de s
 
 La forma más sencilla es hacer clic en el icono de nube del encabezado del área de carpetas, en la barra lateral izquierda, y elegir **"Subir a la nube"** o **"Sincronizar desde la nube"** en el menú.
 
-<img src="/assets/cloud-sync.png" alt="Botones de sincronización rápida en la nube" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/cloud-sync.png" alt="Botones de sincronización rápida en la nube" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; width: 352px; max-width: 100%;"/>
 
 ::: warning
 **Recomendación de seguridad: Protección doble**\

@@ -10,7 +10,7 @@ Elimina múltiples conversaciones a la vez en Gemini y AI Studio, sin borrarlas 
 - **Confirmación de Seguridad**: Antes de eliminar aparece una tarjeta de confirmación junto al botón de eliminar para evitar operaciones accidentales.
 
 <div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/batch-delete.png" alt="Eliminación por Lote" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  <img src="/assets/batch-delete.png" alt="Eliminación por Lote" style="width: 224px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>
 
 ## Cómo Usar

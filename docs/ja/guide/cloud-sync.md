@@ -47,7 +47,7 @@ iCloud を使っている場合、**iCloud バックアップを削除**は iClo
 
 最も簡単な方法は、左側のサイドバーの**フォルダエリアのヘッダー**にあるクラウドアイコンをクリックし、メニューから「クラウドにアップロード」または「クラウドから同期」を選ぶことです。
 
-<img src="/assets/cloud-sync.png" alt="クラウド同期クイックボタン" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/cloud-sync.png" alt="クラウド同期クイックボタン" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; width: 352px; max-width: 100%;"/>
 
 ::: warning
 **安全上の推奨事項：二重保護**\

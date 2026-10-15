@@ -10,7 +10,7 @@ Gemini와 AI Studio에서 여러 대화를 한 번에 삭제하세요. 이제 �
 - **안전한 확인**: 실수로 인한 작업을 방지하기 위해 삭제 전 삭제 버튼 옆에 확인 카드가 나타납니다.
 
 <div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/batch-delete.png" alt="일괄 삭제" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  <img src="/assets/batch-delete.png" alt="일괄 삭제" style="width: 224px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>
 
 ## 사용 방법

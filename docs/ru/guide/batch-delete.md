@@ -10,7 +10,7 @@
 - **Безопасное подтверждение**: Перед удалением рядом с кнопкой удаления появляется карточка подтверждения, чтобы предотвратить случайные операции.
 
 <div style="text-align: center; margin-top: 20px;">
-  <img src="/assets/batch-delete.png" alt="Пакетное удаление" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
+  <img src="/assets/batch-delete.png" alt="Пакетное удаление" style="width: 224px; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
 </div>
 
 ## Как использовать

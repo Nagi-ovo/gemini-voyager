@@ -47,7 +47,7 @@
 
 أسهل طريقة هي النقر على أيقونة السحابة في رأس منطقة المجلدات في الشريط الجانبي الأيسر (أو الأيمن حسب اللغة)، ثم اختيار **"رفع إلى السحابة"** أو **"مزامنة من السحابة"** من القائمة.
 
-<img src="/assets/cloud-sync.png" alt="أزرار المزامنة السريعة للسحابة" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/cloud-sync.png" alt="أزرار المزامنة السريعة للسحابة" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; width: 352px; max-width: 100%;"/>
 
 ::: warning
 **توصية أمنية: حماية مزدوجة**  

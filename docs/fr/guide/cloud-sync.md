@@ -47,7 +47,7 @@ Avec iCloud, **Supprimer la sauvegarde iCloud** retire toutes les sauvegardes Vo
 
 La façon la plus simple est de cliquer sur l'icône de nuage dans l'en-tête de la zone des dossiers, dans la barre latérale gauche, puis de choisir **"Téléverser vers le cloud"** ou **"Synchroniser depuis le cloud"** dans le menu.
 
-<img src="/assets/cloud-sync.png" alt="Boutons de synchronisation rapide Cloud" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/cloud-sync.png" alt="Boutons de synchronisation rapide Cloud" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; width: 352px; max-width: 100%;"/>
 
 ::: warning
 **Recommandation de sécurité : Double protection**\

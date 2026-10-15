@@ -47,7 +47,7 @@
 
 最簡單的方法是點擊左側側邊欄**資料夾區域標題列**上的雲朵圖示，在選單中選擇「上傳到雲端」或「從雲端同步」。
 
-<img src="/assets/cloud-sync.png" alt="雲同步快捷按鈕" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
+<img src="/assets/cloud-sync-zh.png" alt="雲同步快捷按鈕" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; width: 352px; max-width: 100%;"/>
 
 ::: warning
 **安全建議：雙重保護**  
