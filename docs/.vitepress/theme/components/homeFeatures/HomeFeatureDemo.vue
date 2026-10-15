@@ -103,10 +103,27 @@ const sorted = (nodes: NodeState[]) =>
     (a, b) =>
       Number('folder' in b) - Number('folder' in a) || Number(isStarred(b)) - Number(isStarred(a)),
   );
+// Searches ignore case: the Russian hint "кот" must find the title "Кот плохо ест".
+const fold = (text: string) => text.toLocaleLowerCase();
+const hasText = (text: string, q: string) => fold(text).includes(fold(q));
+/** Escapes `text` and wraps every case-insensitive match of `q` in <mark>. */
+function markMatches(text: string, q: string): string {
+  const hay = fold(text);
+  const needle = fold(q);
+  // Lowercasing can change a string's length; then offsets no longer line up, so skip marks.
+  if (!needle || hay.length !== text.length) return escapeHtml(text);
+  let html = '';
+  let from = 0;
+  for (let at = hay.indexOf(needle); at !== -1; at = hay.indexOf(needle, from)) {
+    html += `${escapeHtml(text.slice(from, at))}<mark>${escapeHtml(text.slice(at, at + needle.length))}</mark>`;
+    from = at + needle.length;
+  }
+  return html + escapeHtml(text.slice(from));
+}
 const matches = (n: NodeState, q: string): boolean =>
   'folder' in n
-    ? n.folder.includes(q) || n.kids.some((k) => matches(k, q))
-    : (chats[n.chat]?.title.includes(q) ?? false);
+    ? hasText(n.folder, q) || n.kids.some((k) => matches(k, q))
+    : hasText(chats[n.chat]?.title ?? '', q);
 
 interface Row {
   key: string;
@@ -280,15 +297,8 @@ const previewRows = computed(() => {
   const q = previewQuery.value.trim();
   return (chat.value?.turns ?? [])
     .map((t, i) => ({ i, q: t.q }))
-    .filter((r) => !q || r.q.includes(q))
-    .map((r) => ({
-      ...r,
-      html: q
-        ? escapeHtml(r.q)
-            .split(escapeHtml(q))
-            .join(`<mark>${escapeHtml(q)}</mark>`)
-        : escapeHtml(r.q),
-    }));
+    .filter((r) => !q || hasText(r.q, q))
+    .map((r) => ({ ...r, html: markMatches(r.q, q) }));
 });
 const cancelPreviewClose = () => clearTimeout(previewTimer);
 function openPreview() {
@@ -440,7 +450,7 @@ const visiblePrompts = computed(() => {
   return allPrompts.value.filter(
     (p) =>
       (!tag.value || p.tag === tag.value) &&
-      (!q || p.name.includes(q) || p.tag.includes(q) || p.text.includes(q)),
+      (!q || hasText(p.name, q) || hasText(p.tag, q) || hasText(p.text, q)),
   );
 });
 
@@ -486,7 +496,7 @@ const starredRows = computed(() =>
       .map((i) => ({ id, i, title: c.title, q: c.turns[i]?.q ?? '' }))
       .filter((r) => {
         const q = promptQuery.value.trim();
-        return !q || r.q.includes(q) || r.title.includes(q);
+        return !q || hasText(r.q, q) || hasText(r.title, q);
       }),
   ),
 );

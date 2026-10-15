@@ -13,8 +13,8 @@ export const es: HomeFeaturesContent = {
   folders: {
     eyebrow: 'Carpetas',
     title: 'Dale un hogar a tus ideas.',
-    body: 'Dentro de la barra lateral de Gemini. Dos niveles, chats destacados arriba y con buscador.',
-    hint: 'Pruébalo: abre otro chat · arrastra uno a una carpeta · busca «gato»',
+    body: 'Dentro de la barra lateral de Gemini y ChatGPT. Dos niveles, chats destacados arriba y con buscador.',
+    hint: 'Pruébalo: abre otro chat · arrastra uno a una carpeta · busca «gata»',
     heading: 'Carpetas',
     searchPlaceholder: 'Buscar carpetas y chats',
     newFolder: 'Nueva carpeta',
@@ -38,7 +38,7 @@ export const es: HomeFeaturesContent = {
       'Esto es una demo, así que solo sé unas cuantas frases escritas de antemano. Pero tu mensaje acaba de añadir un punto a la línea de tiempo: mantenlo pulsado para destacarlo.',
       'Para una respuesta de verdad, pregúntale a tu IA de siempre. Si vas a repetir esta frase, guárdala con «{add}» en la biblioteca de prompts y la próxima vez estará a un clic.',
       'Recibido. Un truco de paso: arrastra esta conversación a una carpeta y no tendrás que rebuscar en el historial.',
-      'Soy una respuesta de demo enlatada. Instala Voyager y esta línea de tiempo, estas carpetas y esta biblioteca de prompts aparecerán en el Gemini, ChatGPT, Claude y DeepSeek que usas de verdad.',
+      'Soy una respuesta de demo enlatada. Instala Voyager y esta línea de tiempo y esta biblioteca de prompts aparecerán en el Gemini, ChatGPT, Claude y DeepSeek que usas de verdad, y estas carpetas, en Gemini y ChatGPT.',
     ],
     placeholder: 'Pregunta lo que quieras o elige un prompt',
     send: 'Enviar',
@@ -458,7 +458,7 @@ export const es: HomeFeaturesContent = {
         {
           icon: 'corner-down-left',
           name: 'Comportamiento de envío',
-          detail: 'Enter para salto de línea, Ctrl+Enter para enviar',
+          detail: 'Enter para salto de línea, Ctrl/⌘+Enter para enviar',
         },
         {
           icon: 'star',
@@ -483,7 +483,7 @@ export const es: HomeFeaturesContent = {
         {
           icon: 'puzzle',
           name: 'Mercado de plugins',
-          detail: 'Plugins oficiales y de la comunidad en un clic',
+          detail: 'Plugins oficiales y también tus plugins locales',
         },
         {
           icon: 'globe',

@@ -13,7 +13,7 @@ export const en: HomeFeaturesContent = {
   folders: {
     eyebrow: 'Folders',
     title: 'A home for your thoughts.',
-    body: 'Right inside the Gemini sidebar. Two levels deep, starred chats on top, searchable.',
+    body: 'Right inside the Gemini and ChatGPT sidebars. Two levels deep, starred chats on top, searchable.',
     hint: 'Try it: open another chat · drag one into a folder · search "cat"',
     heading: 'Folders',
     searchPlaceholder: 'Search folders and chats',
@@ -38,7 +38,7 @@ export const en: HomeFeaturesContent = {
       'This is a demo, so I only know a few prewritten lines. But your message just grew a new dot on the timeline: press and hold it to star it.',
       "For a real answer, ask your AI of choice. If you'll say this again, save it with “{add}” in the prompt library and it's one click away next time.",
       "Got it. Quick tip while you're here: drag this chat into a folder and you'll never have to dig through your history for it.",
-      "I'm a canned demo reply. Install Voyager and this timeline, these folders and this prompt library show up in the Gemini, ChatGPT, Claude and DeepSeek you actually use.",
+      "I'm a canned demo reply. Install Voyager and this timeline and prompt library show up in the Gemini, ChatGPT, Claude and DeepSeek you actually use, and these folders in Gemini and ChatGPT.",
     ],
     placeholder: 'Ask anything, or pick a prompt',
     send: 'Send',
@@ -414,7 +414,7 @@ export const en: HomeFeaturesContent = {
         {
           icon: 'corner-down-left',
           name: 'Send behavior',
-          detail: 'Enter for a new line, Ctrl+Enter to send',
+          detail: 'Enter for a new line, Ctrl/⌘+Enter to send',
         },
         { icon: 'star', name: 'Default model', detail: 'New chats open in your usual model' },
         {
@@ -431,7 +431,7 @@ export const en: HomeFeaturesContent = {
         {
           icon: 'puzzle',
           name: 'Plugin store',
-          detail: 'Official and community plugins in one click',
+          detail: 'Official plugins, plus your own local ones',
         },
         { icon: 'globe', name: 'Works across sites', detail: 'Claude, ChatGPT and DeepSeek too' },
         {

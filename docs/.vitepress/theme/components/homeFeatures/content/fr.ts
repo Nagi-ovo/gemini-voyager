@@ -13,7 +13,7 @@ export const fr: HomeFeaturesContent = {
   folders: {
     eyebrow: 'Dossiers',
     title: 'Les dossiers, comme ils devraient l’être.',
-    body: 'Directement dans la barre latérale de Gemini. Deux niveaux, les favoris en haut, et une recherche.',
+    body: 'Directement dans la barre latérale de Gemini et de ChatGPT. Deux niveaux, les favoris en haut, et une recherche.',
     hint: 'Essayez : ouvrez une autre conversation · glissez-en une dans un dossier · cherchez « chat »',
     heading: 'Dossiers',
     searchPlaceholder: 'Rechercher des dossiers et des discussions',
@@ -38,7 +38,7 @@ export const fr: HomeFeaturesContent = {
       "Ceci est une démo : je ne connais que quelques réponses écrites d'avance. Mais votre message vient d'ajouter un point sur la timeline ; maintenez-le appuyé pour le mettre en favori.",
       'Pour une vraie réponse, demandez à votre IA habituelle. Si vous réutilisez cette phrase, enregistrez-la avec « {add} » dans la bibliothèque : elle sera à un clic la prochaine fois.',
       "Bien reçu. Petite astuce au passage : glissez cette conversation dans un dossier, vous n'aurez plus à fouiller l'historique.",
-      'Je suis une réponse de démo toute faite. Installez Voyager et cette timeline, ces dossiers et cette bibliothèque de prompts apparaissent dans les Gemini, ChatGPT, Claude et DeepSeek que vous utilisez vraiment.',
+      'Je suis une réponse de démo toute faite. Installez Voyager et cette timeline et cette bibliothèque de prompts apparaissent dans les Gemini, ChatGPT, Claude et DeepSeek que vous utilisez vraiment, et ces dossiers dans Gemini et ChatGPT.',
     ],
     placeholder: 'Posez une question ou choisissez un prompt',
     send: 'Envoyer',
@@ -462,7 +462,7 @@ export const fr: HomeFeaturesContent = {
         {
           icon: 'corner-down-left',
           name: 'Comportement d’envoi',
-          detail: 'Entrée pour aller à la ligne, Ctrl+Entrée pour envoyer',
+          detail: 'Entrée pour aller à la ligne, Ctrl/⌘+Entrée pour envoyer',
         },
         {
           icon: 'star',
@@ -487,7 +487,7 @@ export const fr: HomeFeaturesContent = {
         {
           icon: 'puzzle',
           name: 'Marketplace de plugins',
-          detail: 'Plugins officiels et communautaires, en un clic',
+          detail: 'Plugins officiels, et aussi vos plugins locaux',
         },
         { icon: 'globe', name: 'Multi-sites', detail: 'Claude, ChatGPT et DeepSeek aussi' },
         {

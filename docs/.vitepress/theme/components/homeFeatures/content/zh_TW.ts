@@ -13,7 +13,7 @@ export const zhTW: HomeFeaturesContent = {
   folders: {
     eyebrow: '資料夾',
     title: '給思想安個家。',
-    body: '就長在 Gemini 側邊欄裡，兩層巢狀，星標置頂，還能搜尋。',
+    body: '就長在 Gemini 和 ChatGPT 側邊欄裡，兩層巢狀，星標置頂，還能搜尋。',
     hint: '試試看：點另一個對話 · 拖進資料夾 · 搜尋「貓」',
     heading: '資料夾',
     searchPlaceholder: '搜尋資料夾和對話',
@@ -38,7 +38,7 @@ export const zhTW: HomeFeaturesContent = {
       '這裡是示範，我只會說事先寫好的話。不過你剛剛那句已經在時間軸上長出一個新圓點，長按它就能加星號。',
       '真正的回答要去網頁版 AI 問。這句話如果常用，可以按提示詞庫的「{add}」存起來，下次一點就填進輸入框。',
       '收到。順便教你一招：把這段對話拖進資料夾，以後不用翻紀錄就找得到。',
-      '我是寫死的示範回答。裝上 Voyager，這套時間軸、資料夾和提示詞庫就會出現在你真正在用的 Gemini、ChatGPT、Claude 和 DeepSeek 裡。',
+      '我是寫死的示範回答。裝上 Voyager，這套時間軸和提示詞庫就會出現在你真正在用的 Gemini、ChatGPT、Claude 和 DeepSeek 裡，資料夾則在 Gemini 和 ChatGPT 裡。',
     ],
     placeholder: '隨便問點什麼，或挑一則提示詞',
     send: '傳送',
@@ -332,7 +332,7 @@ export const zhTW: HomeFeaturesContent = {
       title: '簡化操作',
       items: [
         { icon: 'quote', name: '引用回覆', detail: '選取一段，直接引用追問' },
-        { icon: 'corner-down-left', name: '傳送行為', detail: 'Enter 換行，Ctrl+Enter 傳送' },
+        { icon: 'corner-down-left', name: '傳送行為', detail: 'Enter 換行，Ctrl/⌘+Enter 傳送' },
         { icon: 'star', name: '預設模型', detail: '新對話自動切到常用模型' },
         { icon: 'git-branch', name: '對話分支', detail: '從任一輪分岔，換個問法試試' },
         { icon: 'sigma', name: '公式複製', detail: '點一下就複製 LaTeX 或 Word 公式' },
@@ -341,7 +341,7 @@ export const zhTW: HomeFeaturesContent = {
     {
       title: '開放生態',
       items: [
-        { icon: 'puzzle', name: '外掛市集', detail: '官方和社群外掛，一鍵安裝' },
+        { icon: 'puzzle', name: '外掛市集', detail: '官方外掛，也能裝你自己的本機外掛' },
         { icon: 'globe', name: '多站通用', detail: 'Claude、ChatGPT、DeepSeek 也能用' },
         {
           icon: 'monitor',

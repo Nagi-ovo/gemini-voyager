@@ -13,7 +13,7 @@ export const ko: HomeFeaturesContent = {
   folders: {
     eyebrow: '폴더',
     title: '당신의 생각을 위한 파일 시스템.',
-    body: 'Gemini 사이드바 안에 그대로. 2단계 폴더, 별표 대화는 맨 위에, 검색까지.',
+    body: 'Gemini와 ChatGPT 사이드바 안에 그대로. 2단계 폴더, 별표 대화는 맨 위에, 검색까지.',
     hint: '해 보세요: 다른 대화 열기 · 폴더로 드래그 · "고양이" 검색',
     heading: '폴더',
     searchPlaceholder: '폴더 및 채팅 검색',
@@ -38,7 +38,7 @@ export const ko: HomeFeaturesContent = {
       '여기는 데모라서 미리 써 둔 말만 할 수 있어요. 그래도 방금 보낸 메시지로 타임라인에 점이 하나 생겼어요. 길게 누르면 별표를 달 수 있어요.',
       "진짜 답은 평소 쓰는 AI에게 물어보세요. 자주 쓰는 문장이라면 프롬프트 라이브러리의 '{add}'로 저장해 두면 다음엔 한 번에 입력돼요.",
       '알겠어요. 하나 알려 드리면, 이 대화를 폴더로 끌어다 놓으면 기록을 뒤질 필요가 없어요.',
-      '저는 정해진 데모 답변이에요. Voyager를 설치하면 이 타임라인, 폴더, 프롬프트 라이브러리가 실제로 쓰는 Gemini, ChatGPT, Claude, DeepSeek에 나타나요.',
+      '저는 정해진 데모 답변이에요. Voyager를 설치하면 이 타임라인과 프롬프트 라이브러리는 실제로 쓰는 Gemini, ChatGPT, Claude, DeepSeek에, 폴더는 Gemini와 ChatGPT에 나타나요.',
     ],
     placeholder: '아무거나 물어보거나 프롬프트를 골라 보세요',
     send: '전송',
@@ -379,7 +379,7 @@ export const ko: HomeFeaturesContent = {
         {
           icon: 'corner-down-left',
           name: '전송 동작',
-          detail: 'Enter는 줄바꿈, Ctrl+Enter로 전송',
+          detail: 'Enter는 줄바꿈, Ctrl/⌘+Enter로 전송',
         },
         { icon: 'star', name: '기본 모델', detail: '새 대화는 늘 쓰던 모델로 시작' },
         { icon: 'git-branch', name: '대화 분기', detail: '원하는 지점에서 갈라져 다르게 물어보기' },
@@ -389,7 +389,7 @@ export const ko: HomeFeaturesContent = {
     {
       title: '열린 생태계',
       items: [
-        { icon: 'puzzle', name: '플러그인 마켓', detail: '공식·커뮤니티 플러그인을 원클릭 설치' },
+        { icon: 'puzzle', name: '플러그인 마켓', detail: '공식 플러그인에 내 로컬 플러그인까지' },
         { icon: 'globe', name: '여러 사이트 지원', detail: 'Claude, ChatGPT, DeepSeek에서도' },
         {
           icon: 'monitor',

@@ -2,7 +2,7 @@ import type { HomeFeaturesContent } from '../types';
 
 export const zh: HomeFeaturesContent = {
   timeline: {
-    eyebrow: '时间轴',
+    eyebrow: '时间线',
     title: '别滚屏，去飞。',
     body: '右侧每个圆点是你问过的一句话。悬停看是哪句，点一下直达；在轨道上停一下，旁边会出现列表按钮，展开就是整段对话的总览，还能搜。',
     hint: '试试：点圆点 · 长按标星 · 悬停轨道打开总览',
@@ -13,7 +13,7 @@ export const zh: HomeFeaturesContent = {
   folders: {
     eyebrow: '文件夹',
     title: '给思想安个家。',
-    body: '长在 Gemini 侧栏里，两级嵌套，标星置顶，还能搜。',
+    body: '长在 Gemini 和 ChatGPT 侧栏里，两级嵌套，标星置顶，还能搜。',
     hint: '试试：点另一个对话 · 拖进文件夹 · 搜「猫」',
     heading: '文件夹',
     searchPlaceholder: '搜索文件夹和对话',
@@ -35,10 +35,10 @@ export const zh: HomeFeaturesContent = {
   },
   composer: {
     replies: [
-      '这里是演示，我只会说预先写好的话。不过你刚才这句已经在时间轴上长出了一个新圆点，长按它就能标星。',
+      '这里是演示，我只会说预先写好的话。不过你刚才这句已经在时间线上长出了一个新圆点，长按它就能标星。',
       '真正的回答得去网页版 AI 里问。这句话要是常用，可以点提示词库的「{add}」存起来，下次一点就填进输入栏。',
       '收到。顺手教你一招：把这段对话拖进文件夹，以后不用翻历史就能找到。',
-      '我是写死的演示回答。装上 Voyager，这套时间轴、文件夹和提示词库就会出现在你真正用的 Gemini、ChatGPT、Claude 和 DeepSeek 里。',
+      '我是写死的演示回答。装上 Voyager，这套时间线和提示词库就会出现在你真正用的 Gemini、ChatGPT、Claude 和 DeepSeek 里，文件夹则在 Gemini 和 ChatGPT 里。',
     ],
     placeholder: '随便问点什么，或者挑一条提示词',
     send: '发送',
@@ -332,7 +332,7 @@ export const zh: HomeFeaturesContent = {
       title: '简化操作',
       items: [
         { icon: 'quote', name: '引用回复', detail: '选中一段，直接引用追问' },
-        { icon: 'corner-down-left', name: '发送行为', detail: 'Enter 换行，Ctrl+Enter 发送' },
+        { icon: 'corner-down-left', name: '发送行为', detail: 'Enter 换行，Ctrl/⌘+Enter 发送' },
         { icon: 'star', name: '默认模型', detail: '新对话自动切到常用模型' },
         { icon: 'git-branch', name: '对话分支', detail: '从任一轮分叉，试另一种问法' },
         { icon: 'sigma', name: '公式复制', detail: '点一下复制 LaTeX 或 Word 公式' },
@@ -341,7 +341,7 @@ export const zh: HomeFeaturesContent = {
     {
       title: '开放生态',
       items: [
-        { icon: 'puzzle', name: '插件市场', detail: '官方和社区插件，一键安装' },
+        { icon: 'puzzle', name: '插件市场', detail: '官方插件，也能装你自己的本地插件' },
         { icon: 'globe', name: '多站通用', detail: 'Claude、ChatGPT、DeepSeek 也能用' },
         {
           icon: 'monitor',

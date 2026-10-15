@@ -13,7 +13,7 @@ export const pt: HomeFeaturesContent = {
   folders: {
     eyebrow: 'Pastas',
     title: 'Um sistema de ficheiros para os seus pensamentos.',
-    body: 'Mesmo dentro da barra lateral do Gemini. Dois níveis, conversas com estrela no topo e pesquisa.',
+    body: 'Mesmo dentro da barra lateral do Gemini e do ChatGPT. Dois níveis, conversas com estrela no topo e pesquisa.',
     hint: 'Experimente: abra outra conversa · arraste uma para uma pasta · pesquise «gata»',
     heading: 'Pastas',
     searchPlaceholder: 'Pesquisar pastas e conversas',
@@ -38,7 +38,7 @@ export const pt: HomeFeaturesContent = {
       'Isto é uma demonstração, por isso só sei umas frases escritas de antemão. Mas a sua mensagem acabou de criar um novo ponto na linha do tempo: mantenha-o premido para lhe dar uma estrela.',
       'Para uma resposta a sério, pergunte à sua IA habitual. Se vai repetir esta frase, guarde-a com «{add}» na biblioteca de prompts e da próxima vez fica à distância de um clique.',
       'Recebido. Uma dica de passagem: arraste esta conversa para uma pasta e deixa de ter de procurar no histórico.',
-      'Sou uma resposta de demonstração pré-escrita. Instale o Voyager e esta linha do tempo, estas pastas e esta biblioteca de prompts aparecem no Gemini, ChatGPT, Claude e DeepSeek que usa de verdade.',
+      'Sou uma resposta de demonstração pré-escrita. Instale o Voyager e esta linha do tempo e esta biblioteca de prompts aparecem no Gemini, ChatGPT, Claude e DeepSeek que usa de verdade, e estas pastas no Gemini e no ChatGPT.',
     ],
     placeholder: 'Pergunte o que quiser ou escolha um prompt',
     send: 'Enviar',
@@ -453,7 +453,7 @@ export const pt: HomeFeaturesContent = {
         {
           icon: 'corner-down-left',
           name: 'Comportamento de envio',
-          detail: 'Enter para nova linha, Ctrl+Enter para enviar',
+          detail: 'Enter para nova linha, Ctrl/⌘+Enter para enviar',
         },
         {
           icon: 'star',
@@ -478,7 +478,7 @@ export const pt: HomeFeaturesContent = {
         {
           icon: 'puzzle',
           name: 'Loja de plugins',
-          detail: 'Plugins oficiais e da comunidade num clique',
+          detail: 'Plugins oficiais e também os seus plugins locais',
         },
         {
           icon: 'globe',

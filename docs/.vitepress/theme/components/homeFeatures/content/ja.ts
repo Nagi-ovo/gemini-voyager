@@ -13,7 +13,7 @@ export const ja: HomeFeaturesContent = {
   folders: {
     eyebrow: 'フォルダ',
     title: '思考に家を与える。',
-    body: 'Gemini のサイドバーにそのまま溶け込みます。2階層まで入れ子にでき、スター付きは上に固定、検索もできます。',
+    body: 'Gemini と ChatGPT のサイドバーにそのまま溶け込みます。2階層まで入れ子にでき、スター付きは上に固定、検索もできます。',
     hint: '試してみて：別の会話をクリック · フォルダへドラッグ · 「猫」で検索',
     heading: 'フォルダ',
     searchPlaceholder: 'フォルダとチャットを検索',
@@ -38,7 +38,7 @@ export const ja: HomeFeaturesContent = {
       'これはデモなので、用意された返事しかできません。でも今のメッセージで、タイムラインに新しい点が増えました。長押しするとスターを付けられます。',
       '本当の答えは、いつもの AI に聞いてください。よく使う一文なら、プロンプトライブラリの「{add}」で保存しておけば、次からワンクリックで入力できます。',
       '了解です。ついでにひとつ：この会話をフォルダにドラッグしておけば、履歴を探し回らずに済みます。',
-      'これは決め打ちのデモ返信です。Voyager を入れると、このタイムラインもフォルダもプロンプトライブラリも、普段使っている Gemini、ChatGPT、Claude、DeepSeek に現れます。',
+      'これは決め打ちのデモ返信です。Voyager を入れると、このタイムラインとプロンプトライブラリは普段使っている Gemini、ChatGPT、Claude、DeepSeek に、フォルダは Gemini と ChatGPT に現れます。',
     ],
     placeholder: 'なんでも聞いてみて。プロンプトを選んでもOK',
     send: '送信',
@@ -395,7 +395,7 @@ export const ja: HomeFeaturesContent = {
       title: '手数を減らす',
       items: [
         { icon: 'quote', name: '引用返信', detail: '一部を選んで、そのまま引用して質問' },
-        { icon: 'corner-down-left', name: '送信動作', detail: 'Enter で改行、Ctrl+Enter で送信' },
+        { icon: 'corner-down-left', name: '送信動作', detail: 'Enter で改行、Ctrl/⌘+Enter で送信' },
         { icon: 'star', name: 'デフォルトモデル', detail: '新しい会話をいつものモデルで開始' },
         {
           icon: 'git-branch',
@@ -411,7 +411,7 @@ export const ja: HomeFeaturesContent = {
         {
           icon: 'puzzle',
           name: 'プラグインマーケット',
-          detail: '公式とコミュニティのプラグインをワンクリックで',
+          detail: '公式プラグインに加えて、自作のローカルプラグインも',
         },
         { icon: 'globe', name: 'マルチサイト対応', detail: 'Claude・ChatGPT・DeepSeek でも使える' },
         {
