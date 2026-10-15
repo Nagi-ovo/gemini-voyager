@@ -2,6 +2,7 @@ import {
   GitChangelog,
   GitChangelogMarkdownSection,
 } from '@nolebase/vitepress-plugin-git-changelog/vite';
+import { fileURLToPath } from 'node:url';
 import { type HeadConfig, defineConfig } from 'vitepress';
 
 import { ENABLED as ANNOUNCEMENT_ENABLED } from './theme/composables/announcement';
@@ -913,6 +914,15 @@ export default defineConfig({
     },
   },
   vite: {
+    resolve: {
+      alias: [
+        {
+          // Exact match only: the shim itself imports the `date-fns/locale/<code>` subpaths.
+          find: /^date-fns\/locale$/,
+          replacement: fileURLToPath(new URL('./theme/dateFnsLocales.ts', import.meta.url)),
+        },
+      ],
+    },
     plugins: [
       // vite 7 ↔ vitepress-bundled vite 5 Plugin type mismatch
       GitChangelog({

@@ -2,16 +2,14 @@ import { NolebaseGitChangelogPlugin } from '@nolebase/vitepress-plugin-git-chang
 import '@nolebase/vitepress-plugin-git-changelog/client/style.css';
 import { type Theme } from 'vitepress';
 import DefaultTheme from 'vitepress/theme';
-import { h } from 'vue';
+import { defineAsyncComponent, h } from 'vue';
 
 import AnnouncementModal from './components/AnnouncementModal.vue';
-import FolderViewer from './components/FolderViewer.vue';
 import HomeAskAI from './components/HomeAskAI.vue';
-import HomeFeatures from './components/HomeFeatures.vue';
 import HomeReviews from './components/HomeReviews.vue';
 import HomeTeaser from './components/HomeTeaser.vue';
-import PluginStore from './components/PluginStore.vue';
 import SafariDownloadLink from './components/SafariDownloadLink.vue';
+import { HomeFeaturesLazy } from './components/homeFeatures/lazy';
 import './style.css';
 
 export default {
@@ -20,7 +18,7 @@ export default {
     return h(DefaultTheme.Layout, null, {
       'layout-top': () => h(AnnouncementModal),
       'home-hero-after': () => h(HomeTeaser),
-      'home-features-before': () => h(HomeFeatures),
+      'home-features-before': () => h(HomeFeaturesLazy),
       'home-features-after': () => [h(HomeAskAI), h(HomeReviews)],
     });
   },
@@ -30,7 +28,15 @@ export default {
     app.component('HomeTeaser', HomeTeaser);
     app.component('HomeAskAI', HomeAskAI);
     app.component('SafariDownloadLink', SafariDownloadLink);
-    app.component('FolderViewer', FolderViewer);
-    app.component('PluginStore', PluginStore);
+    // Only plugins.md and data-viewer.md use these; loading them on demand keeps them (and the
+    // plugin catalog) out of every other page. SSR still renders them in place.
+    app.component(
+      'FolderViewer',
+      defineAsyncComponent(() => import('./components/FolderViewer.vue')),
+    );
+    app.component(
+      'PluginStore',
+      defineAsyncComponent(() => import('./components/PluginStore.vue')),
+    );
   },
 } satisfies Theme;

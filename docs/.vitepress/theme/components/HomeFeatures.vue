@@ -3,7 +3,7 @@ import { useData } from 'vitepress';
 import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue';
 
 import HomeFeatureDemo from './homeFeatures/HomeFeatureDemo.vue';
-import { homeFeaturesContent } from './homeFeatures/content';
+import { homeFeaturesContent, loadHomeFeaturesContent } from './homeFeatures/content';
 import { featureIcons } from './homeFeatures/featureIcons';
 import { featureScenes } from './homeFeatures/scenes';
 import { createStage, defaultView, stageKey } from './homeFeatures/stage';
@@ -11,7 +11,9 @@ import type { FeatureItem } from './homeFeatures/types';
 import { uiIcons } from './homeFeatures/uiIcons';
 
 const { lang } = useData();
-const content = computed(() => homeFeaturesContent[lang.value] ?? homeFeaturesContent['en-US']);
+// HomeFeaturesLazy loads the page's language before mounting this; a later language switch keeps
+// the current copy on screen until the new one arrives.
+const content = shallowRef(homeFeaturesContent[lang.value] ?? homeFeaturesContent['en-US']);
 
 // Clicking a feature plays its scene inside the demo above; one scene at a time.
 const stage = createStage();
@@ -74,9 +76,12 @@ stage.play = (key: string) => {
 const onKey = (e: KeyboardEvent) => {
   if (e.key === 'Escape' && active.value) stop();
 };
-watch(lang, () => {
+watch(lang, (next) => {
   active.value = null;
   Object.assign(stage.view, defaultView());
+  void loadHomeFeaturesContent(next).then((loaded) => {
+    if (lang.value === next) content.value = loaded;
+  });
 });
 
 // The visual-effects icon cycles through snow, rain and sakura.
