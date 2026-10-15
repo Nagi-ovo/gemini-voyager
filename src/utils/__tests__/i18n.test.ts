@@ -90,7 +90,7 @@ describe('getCurrentLanguage', () => {
     uiLang.mockReturnValue('en-US');
 
     await expect(getTranslation('responseCompleteNotificationMessage')).resolves.toBe(
-      'Gemini 思考完成',
+      '{site} 思考完成',
     );
   });
 });

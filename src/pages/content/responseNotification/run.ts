@@ -4,6 +4,11 @@ import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContex
 
 import type { StopNativeFeature } from '../featureLifecycle';
 import { watchRouteChanges } from '../utils/routeWatcher';
+import {
+  createResponseFingerprinter,
+  sendCompletionNotification,
+  shouldNotifyForBackgroundCompletion,
+} from './completionDelivery';
 import { ResponseCompletionDetector, type ResponseCompletionSnapshot } from './detector';
 import { FirstSendIdentity } from './firstSendIdentity';
 import { createForegroundCompletionToast } from './foregroundCompletionToast';
@@ -15,7 +20,6 @@ import {
   getLatestUserPromptSnapshot,
   getLatestAssistantResponse,
   getLatestUserPrompt,
-  getResponseFingerprint,
   hasCompletionActions,
   hasGeneratingIndicator,
   isPromptInteractionTarget,
@@ -39,31 +43,6 @@ function readPageSession(): ConversationSession {
     location.href,
     detectAccountContextFromDocument(location.href, document).email,
   );
-}
-
-function shouldNotifyForBackgroundCompletion(): boolean {
-  return document.visibilityState !== 'visible' || !document.hasFocus();
-}
-
-async function sendCompletionNotification(userPrompt: string, hideTitle = false): Promise<boolean> {
-  try {
-    const response = (await chrome.runtime?.sendMessage?.({
-      type: 'gv.responseComplete.notify',
-      payload: {
-        conversationUrl: location.href,
-        conversationTitle: hideTitle ? '' : getConversationTitle(),
-        userPrompt: userPrompt.length > 140 ? `${userPrompt.slice(0, 139)}…` : userPrompt,
-      },
-    })) as { ok?: boolean } | undefined;
-
-    return response?.ok === true;
-  } catch (error) {
-    if (isExtensionContextInvalidatedError(error)) {
-      return false;
-    }
-    console.warn(LOG_PREFIX, 'Failed to send completion notification:', error);
-    return false;
-  }
 }
 
 type PageObserverMessage = {
@@ -133,16 +112,7 @@ export function createResponseNotificationRun(
     getScrollTarget: () => latestCompletedResponse ?? getLatestAssistantResponse(),
   });
 
-  // Identical replies (two "OK"s) are still different turns, so each reply node is numbered.
-  const responseIds = new WeakMap<HTMLElement, number>();
-  let nextResponseId = 0;
-  const responseFingerprint = (response: HTMLElement): string | null => {
-    const text = getResponseFingerprint(response);
-    if (text === null) return null;
-    let id = responseIds.get(response);
-    if (id === undefined) responseIds.set(response, (id = nextResponseId++));
-    return `${id}|${text}`;
-  };
+  const responseFingerprint = createResponseFingerprinter();
 
   const snapshot = (latestResponse: HTMLElement | null): ResponseCompletionSnapshot => {
     // A hidden page never plays Gemini's typing animation, so the reply stays busy and its action
@@ -249,10 +219,11 @@ export function createResponseNotificationRun(
 
   const notifyOrQueueForegroundFallback = async (): Promise<void> => {
     const notifyEpoch = epoch;
-    const notified = await sendCompletionNotification(
-      firstSend.prompt ?? latestRequest?.prompt ?? (latestRequest ? '' : getLatestUserPrompt()),
-      firstSend.prompt !== undefined,
-    );
+    const notified = await sendCompletionNotification({
+      userPrompt:
+        firstSend.prompt ?? latestRequest?.prompt ?? (latestRequest ? '' : getLatestUserPrompt()),
+      conversationTitle: firstSend.prompt !== undefined ? '' : getConversationTitle(),
+    });
     if (!alive || !enabled) return;
     syncSession();
     // The reply belongs to a conversation the page has left: no fallback toast.

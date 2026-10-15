@@ -1,6 +1,7 @@
 import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
+import { CHATGPT_RESPONSE_NOTIFICATION_MANIFEST } from '@/features/plugins/builtin/chatgptResponseNotification/manifest';
 import { importLocalPlugin } from '@/features/plugins/local/localPluginImport';
 import { listPluginManifestsWithSources } from '@/features/plugins/sources/defaultSources';
 import type { PluginManifest } from '@/features/plugins/types';
@@ -20,6 +21,7 @@ vi.mock('webextension-polyfill', () => ({
 }));
 
 vi.mock('@/core/utils/browser', () => ({
+  getVoyagerBuildTarget: () => 'chrome',
   isFirefox: () => false,
   supportsOptionalHostPermissions: () => true,
   supportsDynamicContentScriptRegistration: () => true,
@@ -165,5 +167,50 @@ describe('enabling a local plugin from the popup', () => {
 
     expect(await setPluginEnabledWithSiteAccess(seen, true, CLAUDE, vi.fn())).toBe('write_failed');
     expect(requestMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('enabling ChatGPT completion notifications from the popup', () => {
+  const CHATGPT = 'https://chatgpt.com/c/abc';
+  const notificationsOn = (): boolean =>
+    (memory[STATE] as Record<string, { enabled: boolean }> | undefined)?.[
+      CHATGPT_RESPONSE_NOTIFICATION_MANIFEST.id
+    ]?.enabled === true;
+
+  it('asks for the notifications permission even when the site is already granted', async () => {
+    containsMock.mockImplementation(
+      async (access: { permissions?: string[] }) => !access.permissions,
+    );
+    requestMock.mockResolvedValue(true);
+
+    const outcome = await setPluginEnabledWithSiteAccess(
+      CHATGPT_RESPONSE_NOTIFICATION_MANIFEST,
+      true,
+      CHATGPT,
+      vi.fn(),
+    );
+
+    expect(outcome).toBe('enabled');
+    expect(requestMock).toHaveBeenCalledWith(
+      expect.objectContaining({ permissions: ['notifications'] }),
+    );
+    expect(notificationsOn()).toBe(true);
+  });
+
+  it('stays off when the notifications permission is refused', async () => {
+    containsMock.mockImplementation(
+      async (access: { permissions?: string[] }) => !access.permissions,
+    );
+    requestMock.mockResolvedValue(false);
+
+    const outcome = await setPluginEnabledWithSiteAccess(
+      CHATGPT_RESPONSE_NOTIFICATION_MANIFEST,
+      true,
+      CHATGPT,
+      vi.fn(),
+    );
+
+    expect(outcome).toBe('denied');
+    expect(notificationsOn()).toBe(false);
   });
 });

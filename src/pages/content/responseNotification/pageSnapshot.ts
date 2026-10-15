@@ -6,7 +6,6 @@ import { getAssistantTurnSelectors } from '@/core/utils/selectors';
  * belongs to the session it is reporting on before reading it.
  */
 
-const MAX_FINGERPRINT_TEXT_LENGTH = 400;
 const MAX_NOTIFICATION_TITLE_LENGTH = 80;
 const MAX_NOTIFICATION_PROMPT_LENGTH = 140;
 const PROMPT_SELECTORS = 'rich-textarea, textarea, [contenteditable="true"], div[role="textbox"]';
@@ -108,15 +107,6 @@ export function hasCompletionActions(response: HTMLElement): boolean {
   }
 
   return false;
-}
-
-export function getResponseFingerprint(response: HTMLElement): string | null {
-  const text = response.textContent?.replace(/\s+/g, ' ').trim() ?? '';
-  if (!text) return null;
-
-  const boundedText =
-    text.length > MAX_FINGERPRINT_TEXT_LENGTH ? text.slice(-MAX_FINGERPRINT_TEXT_LENGTH) : text;
-  return `${text.length}:${boundedText}`;
 }
 
 function normalizeNotificationText(text: string | null | undefined, maxLength: number): string {

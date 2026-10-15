@@ -2694,8 +2694,8 @@
     "description": "Safari-specific hint for response completion notifications"
   },
   "responseCompleteNotificationMessage": {
-    "message": "Gemini response complete",
-    "description": "System notification body when Gemini finishes a response"
+    "message": "{site} response complete",
+    "description": "System notification body when a site finishes a response; {site} is the site name (Gemini, ChatGPT)"
   },
   "responseCompleteForegroundToast": {
     "message": "New response completed",

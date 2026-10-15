@@ -1,10 +1,12 @@
-import browser from 'webextension-polyfill';
+import browser, { type Manifest } from 'webextension-polyfill';
 
 import {
+  getVoyagerBuildTarget,
   isFirefox,
   supportsDynamicContentScriptRegistration,
   supportsOptionalHostPermissions,
 } from '@/core/utils/browser';
+import { CHATGPT_RESPONSE_NOTIFICATION_PLUGIN_ID } from '@/features/plugins/builtin/chatgptResponseNotification/manifest';
 import { isLocalPluginId } from '@/features/plugins/local/localPluginId';
 import { enableLocalPluginIfUnchanged } from '@/features/plugins/local/localPluginStore';
 import { PLUGIN_CONTENT_SCRIPT_SYNC_MESSAGE } from '@/features/plugins/runtime/messages';
@@ -61,6 +63,18 @@ export async function hasPluginSiteAccess(
 }
 
 /**
+ * Optional API permissions a builtin plugin needs beyond host access, asked in
+ * the same gesture: Firefox allows one prompt as the gesture's first await.
+ * Safari delivers notifications through its native app, not this permission.
+ */
+function pluginApiPermissions(plugin: PluginManifest): Manifest.OptionalPermission[] {
+  return plugin.id === CHATGPT_RESPONSE_NOTIFICATION_PLUGIN_ID &&
+    getVoyagerBuildTarget() !== 'safari'
+    ? ['notifications']
+    : [];
+}
+
+/**
  * `enabled` / `disabled`: the requested state was saved. `denied`: the user
  * refused (or the browser failed) the host-access prompt. `unsupported`: this
  * browser cannot grant or inject the access the plugin needs on this site.
@@ -107,18 +121,20 @@ export async function setPluginEnabledWithSiteAccess(
 ): Promise<PluginToggleOutcome> {
   if (next) {
     const origins = pluginToOriginPatternsForActiveUrl(plugin, activeUrl);
-    if (origins.length > 0) {
+    const permissions = pluginApiPermissions(plugin);
+    const access = permissions.length > 0 ? { origins, permissions } : { origins };
+    if (origins.length > 0 || permissions.length > 0) {
       // This plugin needs host access on a site Voyager reaches only via dynamic
       // content-script registration. If the platform can't grant or inject that
       // (an old Safari/build without the required APIs, or Firefox < 128 which
       // ignores optional_host_permissions), enabling would be a silent no-op —
       // so refuse and explain, instead of a misleading toggle.
-      if (!canGrantPluginSiteAccess()) return 'unsupported';
+      if (origins.length > 0 && !canGrantPluginSiteAccess()) return 'unsupported';
       try {
         // Firefox requires permissions.request to be the first await in the
         // user gesture, so skip the contains() pre-check there.
         if (!isFirefox() && browser.permissions.contains) {
-          const alreadyGranted = await browser.permissions.contains({ origins });
+          const alreadyGranted = await browser.permissions.contains(access);
           if (!alreadyGranted) {
             // Chrome closes extension popups while showing an optional-host
             // prompt. Persist the user's intent BEFORE opening it so a
@@ -130,7 +146,7 @@ export async function setPluginEnabledWithSiteAccess(
               onEnabledChange(false);
               return persisted;
             }
-            const granted = await browser.permissions.request({ origins });
+            const granted = await browser.permissions.request(access);
             if (!granted) {
               onEnabledChange(false);
               await setPluginEnabled(plugin.id, false);
@@ -143,7 +159,7 @@ export async function setPluginEnabledWithSiteAccess(
             await requestPluginContentScriptSync();
             return 'enabled';
           }
-        } else if (!(await browser.permissions.request({ origins }))) {
+        } else if (!(await browser.permissions.request(access))) {
           return 'denied';
         }
       } catch {

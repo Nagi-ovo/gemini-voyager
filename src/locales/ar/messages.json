@@ -2694,8 +2694,8 @@
     "description": "Safari-specific hint for response completion notifications"
   },
   "responseCompleteNotificationMessage": {
-    "message": "اكتمل رد Gemini",
-    "description": "نص إشعار النظام عندما ينهي Gemini الرد"
+    "message": "اكتمل رد {site}",
+    "description": "نص إشعار النظام عندما ينهي موقع الرد؛ {site} هو اسم الموقع (Gemini أو ChatGPT)"
   },
   "responseCompleteForegroundToast": {
     "message": "اكتمل الرد الجديد",

@@ -10,13 +10,21 @@ import {
   deliverSafariNativeNotification,
   prepareSafariNativeNotifications,
 } from '@/core/utils/safariNativeNotifications';
+import {
+  CHATGPT_RESPONSE_NOTIFICATION_MANIFEST,
+  CHATGPT_RESPONSE_NOTIFICATION_PLUGIN_ID,
+} from '@/features/plugins/builtin/chatgptResponseNotification/manifest';
+import { matchesAnyPattern } from '@/features/plugins/sites/matchPattern';
+import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
+import { loadPluginState } from '@/features/plugins/storage/pluginState';
 import { getTranslation } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
 const RESPONSE_COMPLETE_NOTIFICATION_DEDUP_MS = 3000;
 const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_KEY =
   'responseCompleteNotificationMessage' satisfies TranslationKey;
-const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_FALLBACK = 'Gemini response complete';
+const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_FALLBACK = '{site} response complete';
+const RESPONSE_COMPLETE_NOTIFICATION_SITE_PLACEHOLDER = '{site}';
 const RESPONSE_COMPLETE_NOTIFICATION_TITLE = 'Voyager';
 const RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR = ' - ';
 const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR = ': ';
@@ -30,6 +38,32 @@ const RESPONSE_COMPLETE_UNKNOWN_TAB_ID = 'unknown';
 const RESPONSE_COMPLETE_TURN_LABEL_PREFIXES =
   // oxlint-disable-next-line no-misleading-character-class
   /^[\u200B\u200C\u200D\u200E\u200F\uFEFF]*(?:you said|you wrote|user message|your prompt|you asked)[:\s]*/i;
+
+type CompletionSite = 'gemini' | 'chatgpt';
+
+const SITE_LABELS: Readonly<Record<CompletionSite, string>> = {
+  gemini: 'Gemini',
+  chatgpt: 'ChatGPT',
+};
+
+/** The site a completion came from, read from the sending page, never from its payload. */
+function completionSiteOf(sender: chrome.runtime.MessageSender): CompletionSite {
+  const url = sender.url ?? sender.tab?.url;
+  return url && matchesAnyPattern(url, CHATGPT_RESPONSE_NOTIFICATION_MANIFEST.matches)
+    ? 'chatgpt'
+    : 'gemini';
+}
+
+/** Gemini follows the popup's switch; ChatGPT follows its plugin's switch. */
+async function isCompletionSwitchOn(site: CompletionSite): Promise<boolean> {
+  if (site === 'chatgpt') {
+    return isPluginEnabled(await loadPluginState(), CHATGPT_RESPONSE_NOTIFICATION_PLUGIN_ID);
+  }
+  const setting = await chrome.storage.sync.get({
+    [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
+  });
+  return setting[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] === true;
+}
 
 export function createResponseNotifications() {
   const responseCompleteNotificationLastShown = new Map<string, number>();
@@ -83,12 +117,10 @@ export function createResponseNotifications() {
     const useSafariNativeNotification = getVoyagerBuildTarget() === 'safari';
     if (!useSafariNativeNotification && !supportsExtensionNotifications()) return false;
 
-    const setting = await chrome.storage.sync.get({
-      [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
-    });
-    if (setting[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] !== true) return false;
+    const site = completionSiteOf(sender);
+    if (!(await isCompletionSwitchOn(site))) return false;
 
-    // "notifications" is an optional permission (granted from the popup toggle);
+    // "notifications" is an optional permission (granted from the popup toggle or plugin switch);
     // the namespace check above is not reliable across grant/revoke, so verify
     // explicitly before attempting to create a notification.
     if (!useSafariNativeNotification && !(await hasNotificationsPermission())) return false;
@@ -102,10 +134,12 @@ export function createResponseNotifications() {
     }
 
     responseCompleteNotificationLastShown.set(dedupKey, now);
-    const notificationMessage = await getInternalI18nMessage(
-      RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_KEY,
-      RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_FALLBACK,
-    );
+    const notificationMessage = (
+      await getInternalI18nMessage(
+        RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_KEY,
+        RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_FALLBACK,
+      )
+    ).replace(RESPONSE_COMPLETE_NOTIFICATION_SITE_PLACEHOLDER, SITE_LABELS[site]);
     const conversationTitle = normalizeNotificationText(
       details.conversationTitle,
       RESPONSE_COMPLETE_NOTIFICATION_TITLE_MAX_LENGTH -

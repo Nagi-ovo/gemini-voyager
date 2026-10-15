@@ -2694,8 +2694,8 @@
     "description": "Safari 上 Gemini 回答完成通知提示"
   },
   "responseCompleteNotificationMessage": {
-    "message": "Gemini 思考完成",
-    "description": "Gemini 完成回答时的系统通知正文"
+    "message": "{site} 思考完成",
+    "description": "站点完成回答时的系统通知正文；{site} 为站点名（Gemini、ChatGPT）"
   },
   "responseCompleteForegroundToast": {
     "message": "新回复已完成",

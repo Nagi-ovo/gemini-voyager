@@ -2694,8 +2694,8 @@
     "description": "Safari-specific hint for response completion notifications"
   },
   "responseCompleteNotificationMessage": {
-    "message": "Gemini 응답 완료",
-    "description": "Gemini가 답변을 완료했을 때의 시스템 알림 본문"
+    "message": "{site} 응답 완료",
+    "description": "사이트가 답변을 완료했을 때의 시스템 알림 본문. {site}는 사이트 이름(Gemini, ChatGPT)"
   },
   "responseCompleteForegroundToast": {
     "message": "새 응답이 완료되었습니다",
