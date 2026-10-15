@@ -343,7 +343,11 @@ export const zh: HomeFeaturesContent = {
       items: [
         { icon: 'puzzle', name: '插件市场', detail: '官方和社区插件，一键安装' },
         { icon: 'globe', name: '多站通用', detail: 'Claude、ChatGPT、DeepSeek 也能用' },
-        { icon: 'monitor', name: '本地 WebUI', detail: '提示词库也能用在 OpenCode 等本地界面' },
+        {
+          icon: 'monitor',
+          name: '本地 WebUI',
+          detail: '提示词库也能用在 DeepSeek Harness 等本地界面',
+        },
         { icon: 'code', name: '连接 IDE', detail: '把对话上下文同步给 VS Code' },
         { icon: 'panel-left-close', name: '侧栏自动隐藏', detail: '鼠标移开就收起，专心看对话' },
       ],

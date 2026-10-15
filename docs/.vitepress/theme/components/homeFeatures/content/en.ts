@@ -437,7 +437,7 @@ export const en: HomeFeaturesContent = {
         {
           icon: 'monitor',
           name: 'Local web UIs',
-          detail: 'Use the prompt library in OpenCode and other local UIs',
+          detail: 'Use the prompt library in DeepSeek Harness and other local UIs',
         },
         { icon: 'code', name: 'IDE connection', detail: 'Send chat context to VS Code' },
         {

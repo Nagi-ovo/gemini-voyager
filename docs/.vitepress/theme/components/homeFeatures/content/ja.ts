@@ -417,7 +417,7 @@ export const ja: HomeFeaturesContent = {
         {
           icon: 'monitor',
           name: 'ローカル Web UI',
-          detail: 'OpenCode などのローカル UI でもプロンプトライブラリを',
+          detail: 'DeepSeek Harness などのローカル UI でもプロンプトライブラリを',
         },
         { icon: 'code', name: 'IDE 連携', detail: '会話のコンテキストを VS Code に同期' },
         {

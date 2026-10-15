@@ -484,7 +484,7 @@ export const ru: HomeFeaturesContent = {
         {
           icon: 'monitor',
           name: 'Локальные веб-интерфейсы',
-          detail: 'Библиотека промптов в OpenCode и других локальных интерфейсах',
+          detail: 'Библиотека промптов в DeepSeek Harness и других локальных интерфейсах',
         },
         {
           icon: 'code',

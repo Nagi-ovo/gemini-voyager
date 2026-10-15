@@ -493,7 +493,7 @@ export const es: HomeFeaturesContent = {
         {
           icon: 'monitor',
           name: 'Interfaces web locales',
-          detail: 'Usa la biblioteca de prompts en OpenCode y otras interfaces locales',
+          detail: 'Usa la biblioteca de prompts en DeepSeek Harness y otras interfaces locales',
         },
         {
           icon: 'code',

@@ -343,7 +343,11 @@ export const zhTW: HomeFeaturesContent = {
       items: [
         { icon: 'puzzle', name: '外掛市集', detail: '官方和社群外掛，一鍵安裝' },
         { icon: 'globe', name: '多站通用', detail: 'Claude、ChatGPT、DeepSeek 也能用' },
-        { icon: 'monitor', name: '本機 Web UI', detail: '提示詞庫也能用在 OpenCode 等本機介面' },
+        {
+          icon: 'monitor',
+          name: '本機 Web UI',
+          detail: '提示詞庫也能用在 DeepSeek Harness 等本機介面',
+        },
         { icon: 'code', name: '連接 IDE', detail: '把對話上下文同步給 VS Code' },
         { icon: 'panel-left-close', name: '側邊欄自動收起', detail: '滑鼠移開就收起，專心看對話' },
       ],

@@ -426,7 +426,7 @@ export const ar: HomeFeaturesContent = {
         {
           icon: 'monitor',
           name: 'واجهات ويب محلية',
-          detail: 'استخدم مكتبة المطالبات في OpenCode وغيرها من الواجهات المحلية',
+          detail: 'استخدم مكتبة المطالبات في DeepSeek Harness وغيرها من الواجهات المحلية',
         },
         { icon: 'code', name: 'الربط مع IDE', detail: 'أرسل سياق المحادثة إلى VS Code' },
         {

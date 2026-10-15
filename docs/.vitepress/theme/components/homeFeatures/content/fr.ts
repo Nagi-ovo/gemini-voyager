@@ -493,7 +493,7 @@ export const fr: HomeFeaturesContent = {
         {
           icon: 'monitor',
           name: 'Interfaces web locales',
-          detail: 'La bibliothèque de prompts dans OpenCode et d’autres interfaces locales',
+          detail: 'La bibliothèque de prompts dans DeepSeek Harness et d’autres interfaces locales',
         },
         { icon: 'code', name: 'Synchro IDE', detail: 'Envoyez le contexte du chat vers VS Code' },
         {

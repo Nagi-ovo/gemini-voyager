@@ -488,7 +488,7 @@ export const pt: HomeFeaturesContent = {
         {
           icon: 'monitor',
           name: 'Interfaces web locais',
-          detail: 'Use a Biblioteca de Prompts no OpenCode e noutras interfaces locais',
+          detail: 'Use a Biblioteca de Prompts no DeepSeek Harness e noutras interfaces locais',
         },
         {
           icon: 'code',

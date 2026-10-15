@@ -394,7 +394,7 @@ export const ko: HomeFeaturesContent = {
         {
           icon: 'monitor',
           name: '로컬 웹 UI',
-          detail: 'OpenCode 같은 로컬 화면에서도 프롬프트 라이브러리를',
+          detail: 'DeepSeek Harness 같은 로컬 화면에서도 프롬프트 라이브러리를',
         },
         { icon: 'code', name: '컨텍스트 동기화', detail: '대화 컨텍스트를 VS Code로 보내기' },
         {
