@@ -412,6 +412,8 @@ export function activateCodeBlockDiagram(
         }
       } else {
         cleanup?.();
+        // A scan removed the panel mid-render and skipped the block as drawing: draw it again.
+        scheduleScan();
       }
     } catch {
       // As on Gemini, an unexpected failure shows the code again.

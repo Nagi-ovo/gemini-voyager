@@ -98,6 +98,39 @@ describe('code block diagram engine', () => {
     expect(readDiagramExport(document.querySelector('pre')!)?.html).toContain('drawn:a --> c');
   });
 
+  it('a diagram whose panel was replaced mid-render still renders once the render finishes', async () => {
+    vi.useFakeTimers();
+    const finishes: Array<() => void> = [];
+    const diagram: CodeBlockDiagram = {
+      ...fakeDiagram(Promise.resolve(true)),
+      render: (target, source) =>
+        new Promise<void>((resolve) =>
+          finishes.push(() => {
+            target.textContent = `drawn:${source}`;
+            resolve();
+          }),
+        ),
+    };
+    activateCodeBlockDiagram(newScope(), { turn: '.reply' }, context, diagram);
+    await vi.waitFor(() => expect(finishes).toHaveLength(1));
+
+    // The host re-renders around the block and drops the panel; every scan until the
+    // render finishes finds the block still drawing.
+    panels()[0].remove();
+    await vi.advanceTimersByTimeAsync(3_000);
+    expect(finishes).toHaveLength(1);
+    expect(document.querySelector('pre')!.isConnected).toBe(true);
+
+    finishes[0]();
+    await vi.advanceTimersByTimeAsync(1_500);
+    expect(finishes).toHaveLength(2);
+    finishes[1]();
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(panels()).toHaveLength(1);
+    expect(drawn()).toBe('drawn:a --> b');
+  });
+
   it('draws in the new scheme when the page scheme flips while the library still loads', async () => {
     document.documentElement.setAttribute('data-gv-scheme', 'light');
     let loadLight!: (loaded: boolean) => void;
