@@ -11,7 +11,7 @@ afterEach(() => {
   document.querySelectorAll('.gv-persistent-export-toolbar').forEach((n) => n.remove());
   document.body
     .querySelectorAll(
-      '[data-test-id="upgrade-button"], top-bar-actions, #conversation-header-actions',
+      '[data-test-id="upgrade-button"], top-bar-actions, #conversation-header-actions, user-query',
     )
     .forEach((n) => n.remove());
   vi.restoreAllMocks();
@@ -354,7 +354,6 @@ describe('persistentExportToolbar', () => {
     await nextFrame();
 
     expect(handle.root.style.getPropertyValue('--gv-persistent-export-right')).toBe('84px');
-    userQuery.remove();
   });
 
   describe('bounded avoidance work', () => {
