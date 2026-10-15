@@ -157,12 +157,7 @@ export class HighlightImportExportService {
   async exportToMarkdown(scope: HighlightScope): Promise<Result<string>> {
     try {
       const records = await this.annotations.getAll(scope);
-      const lines = [
-        '# Gemini Voyager Highlights',
-        '',
-        `Exported: ${new Date().toISOString()}`,
-        '',
-      ];
+      const lines = ['# Voyager Highlights', '', `Exported: ${new Date().toISOString()}`, ''];
 
       for (const group of groupByConversation(records)) {
         const first = group[0];

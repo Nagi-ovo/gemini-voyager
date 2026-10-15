@@ -121,7 +121,7 @@ export function formatFolderStructurePrompt(
     '6. Only output the **incremental** JSON — new folders + new conversation assignments.',
   );
   lines.push('');
-  lines.push('Output format (paste-ready for Gemini Voyager import):');
+  lines.push('Output format (paste-ready for Voyager import):');
   lines.push('');
   lines.push('```json');
   lines.push('{');

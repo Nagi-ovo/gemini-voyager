@@ -2690,7 +2690,7 @@
     "description": "Gemini 回答完成系統通知提示"
   },
   "responseCompleteNotificationHintSafari": {
-    "message": "在 Safari 上，此系統通知由 Gemini Voyager macOS App 傳送。",
+    "message": "在 Safari 上，此系統通知由 Voyager macOS App 傳送。",
     "description": "Safari 上 Gemini 回答完成通知提示"
   },
   "responseCompleteNotificationMessage": {

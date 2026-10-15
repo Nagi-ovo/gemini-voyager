@@ -2690,7 +2690,7 @@
     "description": "Gemini response completion notification hint"
   },
   "responseCompleteNotificationHintSafari": {
-    "message": "Dans Safari, l’app macOS Gemini Voyager envoie cette notification système.",
+    "message": "Dans Safari, l’app macOS Voyager envoie cette notification système.",
     "description": "Safari-specific hint for response completion notifications"
   },
   "responseCompleteNotificationMessage": {
