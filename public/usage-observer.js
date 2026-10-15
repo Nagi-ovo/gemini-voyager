@@ -183,6 +183,9 @@
 
       return xhr;
     };
+    // Page code reads XMLHttpRequest.DONE and checks instanceof; keep the native constructor's statics and prototype.
+    Object.setPrototypeOf(window.XMLHttpRequest, OrigXHR);
+    window.XMLHttpRequest.prototype = OrigXHR.prototype;
   }
 
   // --- Replay: re-issue a known usage RPC with the page's own tokens ---
