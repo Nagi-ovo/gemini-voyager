@@ -20,6 +20,8 @@ import { loadPluginState } from '@/features/plugins/storage/pluginState';
 import { getTranslation } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
+import { type NotificationSite, siteNotificationIcon } from './notificationSiteIcon';
+
 const RESPONSE_COMPLETE_NOTIFICATION_DEDUP_MS = 3000;
 const RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_KEY =
   'responseCompleteNotificationMessage' satisfies TranslationKey;
@@ -39,15 +41,13 @@ const RESPONSE_COMPLETE_TURN_LABEL_PREFIXES =
   // oxlint-disable-next-line no-misleading-character-class
   /^[\u200B\u200C\u200D\u200E\u200F\uFEFF]*(?:you said|you wrote|user message|your prompt|you asked)[:\s]*/i;
 
-type CompletionSite = 'gemini' | 'chatgpt';
-
-const SITE_LABELS: Readonly<Record<CompletionSite, string>> = {
+const SITE_LABELS: Readonly<Record<NotificationSite, string>> = {
   gemini: 'Gemini',
   chatgpt: 'ChatGPT',
 };
 
 /** The site a completion came from, read from the sending page, never from its payload. */
-function completionSiteOf(sender: chrome.runtime.MessageSender): CompletionSite {
+function completionSiteOf(sender: chrome.runtime.MessageSender): NotificationSite {
   const url = sender.url ?? sender.tab?.url;
   return url && matchesAnyPattern(url, CHATGPT_RESPONSE_NOTIFICATION_MANIFEST.matches)
     ? 'chatgpt'
@@ -55,7 +55,7 @@ function completionSiteOf(sender: chrome.runtime.MessageSender): CompletionSite 
 }
 
 /** Gemini follows the popup's switch; ChatGPT follows its plugin's switch. */
-async function isCompletionSwitchOn(site: CompletionSite): Promise<boolean> {
+async function isCompletionSwitchOn(site: NotificationSite): Promise<boolean> {
   if (site === 'chatgpt') {
     return isPluginEnabled(await loadPluginState(), CHATGPT_RESPONSE_NOTIFICATION_PLUGIN_ID);
   }
@@ -177,7 +177,9 @@ export function createResponseNotifications() {
       });
       await browser.notifications.create(notificationId, {
         type: 'basic',
-        iconUrl: chrome.runtime.getURL(RESPONSE_COMPLETE_NOTIFICATION_ICON),
+        iconUrl:
+          (await siteNotificationIcon(site)) ??
+          chrome.runtime.getURL(RESPONSE_COMPLETE_NOTIFICATION_ICON),
         title,
         message,
       });

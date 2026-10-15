@@ -69,6 +69,17 @@ describe('completion notifications per site', () => {
     );
   });
 
+  it('keeps the Voyager icon where the site mark cannot be drawn', async () => {
+    storeSettings({ geminiSwitch: false, chatgptPlugin: true });
+
+    await notifyFrom('https://chatgpt.com/c/abc');
+
+    expect(api.createNotification).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ iconUrl: 'chrome-extension://test-extension-id/icon-128.png' }),
+    );
+  });
+
   it('shows nothing for ChatGPT while its plugin is off, whatever the Gemini switch says', async () => {
     storeSettings({ geminiSwitch: true, chatgptPlugin: false });
 
