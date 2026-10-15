@@ -16,6 +16,8 @@ vi.mock('@/core/utils/browser', () => ({
 vi.mock('@/core/utils/notificationsPermission', () => ({
   hasNotificationsPermission: async () => true,
 }));
+const icon = vi.hoisted(() => ({ draw: vi.fn(async (): Promise<string | null> => null) }));
+vi.mock('../notificationSiteIcon', () => ({ siteNotificationIcon: icon.draw }));
 vi.mock('@/utils/i18n', () => ({
   getTranslation: async () => '{site} 思考完成',
 }));
@@ -66,6 +68,19 @@ describe('completion notifications per site', () => {
     expect(api.createNotification).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({ title: 'Voyager - Reply OK', message: 'ChatGPT 思考完成: say OK' }),
+    );
+  });
+
+  it('shows only the prompt beside the site logo', async () => {
+    storeSettings({ geminiSwitch: false, chatgptPlugin: true });
+    icon.draw.mockResolvedValueOnce('data:image/png;base64,TE9HTw==');
+
+    await notifyFrom('https://chatgpt.com/c/abc');
+
+    expect(icon.draw).toHaveBeenCalledWith('chatgpt');
+    expect(api.createNotification).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ iconUrl: 'data:image/png;base64,TE9HTw==', message: 'say OK' }),
     );
   });
 

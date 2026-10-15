@@ -146,11 +146,16 @@ export function createResponseNotifications() {
         RESPONSE_COMPLETE_NOTIFICATION_TITLE.length -
         RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR.length,
     );
+    // The site's logo already says which reply finished, so beside it the prompt stands alone;
+    // without one (Safari, or a browser that cannot draw it) the text names the site.
+    const siteIcon = useSafariNativeNotification ? null : await siteNotificationIcon(site);
     const userPrompt = normalizeNotificationText(
       details.userPrompt,
-      RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_MAX_LENGTH -
-        notificationMessage.length -
-        RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR.length,
+      siteIcon
+        ? RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_MAX_LENGTH
+        : RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_MAX_LENGTH -
+            notificationMessage.length -
+            RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR.length,
     );
 
     try {
@@ -158,9 +163,11 @@ export function createResponseNotifications() {
       const title = conversationTitle
         ? `${RESPONSE_COMPLETE_NOTIFICATION_TITLE}${RESPONSE_COMPLETE_NOTIFICATION_TITLE_SEPARATOR}${conversationTitle}`
         : RESPONSE_COMPLETE_NOTIFICATION_TITLE;
-      const message = userPrompt
-        ? `${notificationMessage}${RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR}${userPrompt}`
-        : notificationMessage;
+      const message = !userPrompt
+        ? notificationMessage
+        : siteIcon
+          ? userPrompt
+          : `${notificationMessage}${RESPONSE_COMPLETE_NOTIFICATION_MESSAGE_SEPARATOR}${userPrompt}`;
 
       if (useSafariNativeNotification) {
         return await deliverSafariNativeNotification({
@@ -177,9 +184,7 @@ export function createResponseNotifications() {
       });
       await browser.notifications.create(notificationId, {
         type: 'basic',
-        iconUrl:
-          (await siteNotificationIcon(site)) ??
-          chrome.runtime.getURL(RESPONSE_COMPLETE_NOTIFICATION_ICON),
+        iconUrl: siteIcon ?? chrome.runtime.getURL(RESPONSE_COMPLETE_NOTIFICATION_ICON),
         title,
         message,
       });
