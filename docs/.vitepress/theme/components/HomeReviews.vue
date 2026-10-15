@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useData } from 'vitepress';
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Vue3Marquee } from 'vue3-marquee';
 
 import reviewPoolData from '../data/reviews.json';
@@ -147,6 +147,31 @@ const rowConfig = [
   { direction: 'reverse' as const, duration: 52 },
   { direction: 'normal' as const, duration: 72 },
 ];
+
+// Pause the marquee rows while they are off screen so they stop animating
+// (and repainting) when nobody can see them.
+const marqueeStack = ref<HTMLElement | null>(null);
+const marqueeVisible = ref(false);
+let marqueeObserver: IntersectionObserver | null = null;
+
+onMounted(() => {
+  if (!marqueeStack.value || typeof IntersectionObserver === 'undefined') {
+    marqueeVisible.value = true;
+    return;
+  }
+  marqueeObserver = new IntersectionObserver(
+    (entries) => {
+      marqueeVisible.value = entries.some((entry) => entry.isIntersecting);
+    },
+    { rootMargin: '100px 0px' },
+  );
+  marqueeObserver.observe(marqueeStack.value);
+});
+
+onBeforeUnmount(() => {
+  marqueeObserver?.disconnect();
+  marqueeObserver = null;
+});
 </script>
 
 <template>
@@ -162,7 +187,15 @@ const rowConfig = [
         class="promo-card"
         style="text-decoration: none"
       >
-        <img src="/assets/try-voyager.png" alt="Try Voyager" class="promo-image" />
+        <img
+          src="/assets/try-voyager.webp"
+          alt="Try Voyager"
+          class="promo-image"
+          width="637"
+          height="670"
+          loading="lazy"
+          decoding="async"
+        />
         <div class="promo-text">{{ t.tryVoyagerText }}</div>
       </a>
 
@@ -183,9 +216,13 @@ const rowConfig = [
           class="highlight-image-link"
         >
           <img
-            src="/assets/x-recommendation.png"
+            src="/assets/x-recommendation.webp"
             alt="Recommendation from @DataChaz"
             class="highlight-image"
+            width="648"
+            height="625"
+            loading="lazy"
+            decoding="async"
           />
         </a>
       </div>
@@ -193,11 +230,12 @@ const rowConfig = [
 
     <p class="subtitle">{{ t.subtitle }}</p>
 
-    <div class="marquee-stack">
+    <div ref="marqueeStack" class="marquee-stack">
       <Vue3Marquee
         v-for="(row, rowIndex) in rows"
         :key="rowIndex"
         :pause-on-hover="true"
+        :pause="!marqueeVisible"
         :duration="rowConfig[rowIndex].duration"
         :direction="rowConfig[rowIndex].direction"
         class="marquee-row"
@@ -293,7 +331,6 @@ const rowConfig = [
   font-size: 14px;
   color: var(--vp-c-text-2);
   line-height: 1.5;
-  font-style: italic;
   text-align: center;
 }
 
@@ -345,6 +382,9 @@ const rowConfig = [
   display: flex;
   flex-direction: column;
   gap: 16px;
+  /* Skip layout/paint while far off screen; size = 3 rows x 172px + 2 gaps. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 548px;
   /* Fade both horizontal edges so cards slide in/out softly. */
   mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
   -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
@@ -430,6 +470,10 @@ const rowConfig = [
 
 /* Tablet */
 @media (max-width: 768px) {
+  .marquee-stack {
+    contain-intrinsic-size: auto 536px;
+  }
+
   .review-card {
     width: 300px;
     height: 168px;
@@ -445,6 +489,7 @@ const rowConfig = [
 
   .marquee-stack {
     gap: 12px;
+    contain-intrinsic-size: auto 492px;
     mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
     -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
   }
