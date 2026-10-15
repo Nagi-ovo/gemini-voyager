@@ -25,6 +25,8 @@ Use the available DOM/browser tools. Compare actual selectors, text, computed st
 
 A temporary element can test a new CSS rule when that rule distinguishes the build; remove the probe afterward. Use an actual new marker from this change, rather than copying an unrelated class from an old fix.
 
+Extension pages (the popup, options) are out of reach of page-scripting tools. To read or change a setting under test on the `dist_chrome_dev` build, post to the dev settings bridge from the page and await its `gv-dev-settings-result` reply; `src/pages/content/devSettingsBridge.ts` documents the request shape. Read the value first and restore it when done. It writes storage only, so popup-side steps such as permission prompts still need the person.
+
 ## Gemini shapes that make static reasoning wrong
 
 Each of these cost a wrong fix before it was measured.

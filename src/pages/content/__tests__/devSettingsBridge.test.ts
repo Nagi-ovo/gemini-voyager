@@ -1,0 +1,104 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { StorageKeys } from '@/core/types/common';
+
+import {
+  DEV_SETTINGS_REQUEST_SOURCE,
+  DEV_SETTINGS_RESULT_SOURCE,
+  startDevSettingsBridge,
+} from '../devSettingsBridge';
+
+const NOTIFY = StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED;
+
+function postFromPage(data: Record<string, unknown>, source: Window | null = window): void {
+  const event = new MessageEvent('message', { data });
+  Object.defineProperty(event, 'source', { value: source });
+  window.dispatchEvent(event);
+}
+
+describe('dev settings bridge', () => {
+  let stop: () => void;
+  let replies: Record<string, unknown>[];
+  let postMessageSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    replies = [];
+    postMessageSpy = vi.spyOn(window, 'postMessage').mockImplementation((message: unknown) => {
+      const reply = message as Record<string, unknown>;
+      if (reply.source === DEV_SETTINGS_RESULT_SOURCE) replies.push(reply);
+    });
+    vi.mocked(chrome.storage.sync.set).mockResolvedValue(undefined);
+    stop = startDevSettingsBridge();
+  });
+
+  afterEach(() => {
+    stop();
+    postMessageSpy.mockRestore();
+  });
+
+  it('turns a setting on from the page and confirms it', async () => {
+    postFromPage({
+      source: DEV_SETTINGS_REQUEST_SOURCE,
+      id: 7,
+      action: 'set',
+      values: { [NOTIFY]: true },
+    });
+
+    await vi.waitFor(() =>
+      expect(replies).toEqual([{ source: DEV_SETTINGS_RESULT_SOURCE, id: 7, ok: true }]),
+    );
+    expect(chrome.storage.sync.set).toHaveBeenCalledWith({ [NOTIFY]: true });
+  });
+
+  it('reads settings back from the requested storage area', async () => {
+    vi.mocked(chrome.storage.local.get).mockResolvedValueOnce({ [NOTIFY]: false } as never);
+
+    postFromPage({
+      source: DEV_SETTINGS_REQUEST_SOURCE,
+      id: 1,
+      action: 'get',
+      area: 'local',
+      keys: [NOTIFY],
+    });
+
+    await vi.waitFor(() =>
+      expect(replies).toEqual([
+        { source: DEV_SETTINGS_RESULT_SOURCE, id: 1, ok: true, values: { [NOTIFY]: false } },
+      ]),
+    );
+  });
+
+  it('refuses keys that are not Voyager settings and writes nothing', async () => {
+    postFromPage({
+      source: DEV_SETTINGS_REQUEST_SOURCE,
+      id: 2,
+      action: 'set',
+      values: { [NOTIFY]: true, someOtherExtensionKey: 'x' },
+    });
+
+    await vi.waitFor(() =>
+      expect(replies).toEqual([
+        {
+          source: DEV_SETTINGS_RESULT_SOURCE,
+          id: 2,
+          ok: false,
+          error: 'unknown keys: someOtherExtensionKey',
+        },
+      ]),
+    );
+    expect(chrome.storage.sync.set).not.toHaveBeenCalled();
+  });
+
+  it('ignores messages from other windows', async () => {
+    vi.mocked(chrome.storage.sync.get).mockResolvedValue({} as never);
+    postFromPage(
+      { source: DEV_SETTINGS_REQUEST_SOURCE, id: 3, action: 'set', values: { [NOTIFY]: true } },
+      null,
+    );
+    postFromPage({ source: DEV_SETTINGS_REQUEST_SOURCE, id: 4, action: 'get', keys: [] });
+
+    await vi.waitFor(() => expect(replies.map((reply) => reply.id)).toEqual([4]));
+    expect(chrome.storage.sync.set).not.toHaveBeenCalled();
+  });
+});

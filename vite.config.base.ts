@@ -55,6 +55,9 @@ export default defineConfig({
     // Chrome dev builds override this; every other build drops the dev
     // auto-reload code (src/pages/background/devAutoReload.ts) at compile time.
     'import.meta.env.VOYAGER_DEV_AUTO_RELOAD': 'false',
+    // Likewise for the page-to-storage settings bridge
+    // (src/pages/content/devSettingsBridge.ts).
+    'import.meta.env.VOYAGER_DEV_SETTINGS_BRIDGE': 'false',
     // Remote plugin catalog channel (src/features/plugins/remote/config.ts).
     // Override the origin for a preview deployment, or set
     // VOYAGER_PLUGIN_CATALOG_REMOTE=off to ship a snapshot-only build.

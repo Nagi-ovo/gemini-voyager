@@ -123,6 +123,7 @@ export default mergeConfig(
   defineConfig({
     define: {
       'import.meta.env.VOYAGER_DEV_AUTO_RELOAD': JSON.stringify(isChromeDevBuild),
+      'import.meta.env.VOYAGER_DEV_SETTINGS_BRIDGE': JSON.stringify(isChromeDevBuild),
       // A dev build shares the store version, so the published catalog would be
       // authoritative and hide bundled plugins main has not deployed yet.
       'import.meta.env.VOYAGER_PLUGIN_CATALOG_REMOTE': JSON.stringify(

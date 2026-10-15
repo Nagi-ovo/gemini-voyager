@@ -19,6 +19,7 @@ import { runCoachmarkSequence } from './coachmark';
 import { claimContentScript } from './contentScriptHandoff';
 import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
+import { startDevSettingsBridge } from './devSettingsBridge';
 import { flushDraftsBeforeUnload } from './draftSave/draftUnloadFlush';
 import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
@@ -70,6 +71,8 @@ import { restartWatermarkRemoverFeature } from './watermarkRemover/feature';
 window.addEventListener('vite:preloadError', (event) => {
   event.preventDefault();
 });
+
+if (import.meta.env.VOYAGER_DEV_SETTINGS_BRIDGE) startDevSettingsBridge();
 
 /**
  * Staggered initialization to prevent "thundering herd" problem when multiple tabs
