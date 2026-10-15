@@ -51,13 +51,19 @@ const PLATFORM_HOSTS: { key: keyof typeof PLATFORM_LOGOS | 'grok'; hosts: string
   { key: 'grok', hosts: ['grok.com', 'x.com'] },
 ];
 
+// The DeepSeek whale spans x 0–24, y 3–20.7 of its 28×28 box, so it sat up and to the left of
+// the tile's centre; this box centres it and scales it like the other 24px marks.
+const VIEWBOX_FIX: Partial<Record<keyof typeof PLATFORM_LOGOS, string>> = {
+  deepseek: '0 -0.17 24 24',
+};
+
 function platformFor(key: keyof typeof PLATFORM_LOGOS | 'grok'): Platform {
   const logo = key === 'grok' ? GROK : PLATFORM_LOGOS[key];
   return {
     key,
     label: logo.label,
     color: ('brand' in logo && logo.brand) || 'currentColor',
-    mark: { viewBox: logo.viewBox, paths: logo.paths },
+    mark: { viewBox: (key !== 'grok' && VIEWBOX_FIX[key]) || logo.viewBox, paths: logo.paths },
   };
 }
 
