@@ -19,8 +19,10 @@ const VISUALLY_HIDDEN_CLASS_FRAGMENT = 'visually-hidden';
 const INJECTED_UI_SELECTOR = '.gv-fork-btn, .gv-fork-indicator-group';
 const COMPLETION_ACTION_MAX_PARENT_DEPTH = 4;
 
+// Gemini's typing animation keeps a reply busy until it has played, which a hidden page never does.
+const TYPING_ANIMATION_SELECTOR = '[aria-busy="true"]';
+
 const GENERATING_SELECTORS = [
-  '[aria-busy="true"]',
   '[role="progressbar"]',
   '.mat-mdc-progress-spinner',
   '.mat-progress-spinner',
@@ -65,8 +67,12 @@ function isElementVisible(element: Element): boolean {
   return !!(element.offsetWidth || element.offsetHeight || element.getClientRects().length);
 }
 
-export function hasGeneratingIndicator(): boolean {
-  return GENERATING_SELECTORS.some((selector) => {
+/** `countTypingAnimation: false` asks whether Gemini is still writing, not still animating. */
+export function hasGeneratingIndicator({ countTypingAnimation = true } = {}): boolean {
+  const selectors = countTypingAnimation
+    ? [TYPING_ANIMATION_SELECTOR, ...GENERATING_SELECTORS]
+    : GENERATING_SELECTORS;
+  return selectors.some((selector) => {
     try {
       return Array.from(document.querySelectorAll(selector)).some(isElementVisible);
     } catch {

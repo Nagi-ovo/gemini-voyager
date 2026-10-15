@@ -133,14 +133,30 @@ export function createResponseNotificationRun(
     getScrollTarget: () => latestCompletedResponse ?? getLatestAssistantResponse(),
   });
 
-  const snapshot = (latestResponse: HTMLElement | null): ResponseCompletionSnapshot => ({
-    conversationKey: `${location.pathname}${location.search}`,
-    sessionEpoch: epoch,
-    hasCompletedResponse: !!latestResponse && hasCompletionActions(latestResponse),
-    isGenerating: hasGeneratingIndicator(),
-    responseFingerprint: latestResponse ? getResponseFingerprint(latestResponse) : null,
-    now: Date.now(),
-  });
+  // Identical replies (two "OK"s) are still different turns, so each reply node is numbered.
+  const responseIds = new WeakMap<HTMLElement, number>();
+  let nextResponseId = 0;
+  const responseFingerprint = (response: HTMLElement): string | null => {
+    const text = getResponseFingerprint(response);
+    if (text === null) return null;
+    let id = responseIds.get(response);
+    if (id === undefined) responseIds.set(response, (id = nextResponseId++));
+    return `${id}|${text}`;
+  };
+
+  const snapshot = (latestResponse: HTMLElement | null): ResponseCompletionSnapshot => {
+    // A hidden page never plays Gemini's typing animation, so the reply stays busy and its action
+    // buttons never render although its text is complete; there the stop button alone marks writing.
+    const hidden = document.visibilityState === 'hidden';
+    return {
+      conversationKey: `${location.pathname}${location.search}`,
+      sessionEpoch: epoch,
+      hasCompletedResponse: !!latestResponse && (hidden || hasCompletionActions(latestResponse)),
+      isGenerating: hasGeneratingIndicator({ countTypingAnimation: !hidden }),
+      responseFingerprint: latestResponse ? responseFingerprint(latestResponse) : null,
+      now: Date.now(),
+    };
+  };
 
   const clearEvaluateTimer = (): void => {
     if (evaluateTimer === null) return;

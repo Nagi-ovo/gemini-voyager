@@ -339,6 +339,54 @@ describe('response notification run', () => {
     expect(toast.showIfNeeded).toHaveBeenCalledTimes(1);
   });
 
+  /** Gemini's stop button while it writes, visible so the run counts it. */
+  function showStopButton(): HTMLButtonElement {
+    const stop = document.createElement('button');
+    stop.setAttribute('aria-label', 'Stop response');
+    Object.defineProperty(stop, 'offsetWidth', { value: 20 });
+    document.body.appendChild(stop);
+    return stop;
+  }
+
+  it('notifies a hidden-page reply whose typing animation never plays', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    const { createResponseNotificationRun } = await import('../index');
+    cleanup = await startedRun(createResponseNotificationRun);
+
+    // No network signal: the processSession channel ends no request when a reply does.
+    const stop = showStopButton();
+    await vi.advanceTimersByTimeAsync(500);
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<article data-author="assistant"><div class="markdown" aria-busy="true">OK</div></article>',
+    );
+    Object.defineProperty(document.querySelector('.markdown')!, 'offsetWidth', { value: 300 });
+    stop.remove();
+    await vi.advanceTimersByTimeAsync(5000);
+
+    expect(notifyCalls()).toHaveLength(1);
+  });
+
+  it('notifies each of two identical background replies', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    const { createResponseNotificationRun } = await import('../index');
+    cleanup = await startedRun(createResponseNotificationRun);
+
+    for (const expected of [1, 2]) {
+      const stop = showStopButton();
+      await vi.advanceTimersByTimeAsync(500);
+      document.body.insertAdjacentHTML(
+        'beforeend',
+        '<article data-author="assistant"><p>OK</p><button aria-label="Copy response">Copy</button></article>',
+      );
+      stop.remove();
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(notifyCalls()).toHaveLength(expected);
+    }
+  });
+
   it('strips hidden Gemini user labels from notification prompt summaries', async () => {
     document.body.innerHTML = `
       <div class="user-query-bubble-with-background">
