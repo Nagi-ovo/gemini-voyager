@@ -48,6 +48,10 @@
     return '';
   }
 
+  // Gemini's processSession channel (geminiweb-pa.clients6.google.com) streams
+  // replies over one long-lived GET, so no request ends with a reply and it is
+  // not matched here; the page detector in responseNotification/run.ts owns
+  // completion there.
   function isGeminiGenerationRequest(url, bodyText) {
     const absoluteUrl = toAbsoluteUrl(url);
     const normalizedUrl = absoluteUrl.toLowerCase();

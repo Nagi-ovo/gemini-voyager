@@ -54,6 +54,21 @@
     return hay.indexOf('bardfrontendservice') > -1 || hay.indexOf('assistant.lamda') > -1;
   }
 
+  // Gemini's processSession channel streams every reply over one long-lived GET,
+  // so no request ends with a reply. A prompt is the one large forward POST
+  // (about 2.5k chars; session opens and acks stay under 100), so usage is
+  // refreshed from the send instead of the reply's end.
+  var SESSION_PROMPT_MIN_CHARS = 1000;
+
+  function isSessionPromptSend(method, url, body) {
+    return (
+      String(method || '').toUpperCase() === 'POST' &&
+      String(url || '').indexOf('/v1/processSession') > -1 &&
+      typeof body === 'string' &&
+      body.length >= SESSION_PROMPT_MIN_CHARS
+    );
+  }
+
   function rpcOf(url) {
     var m = String(url).match(/rpcids=([^&]+)/);
     return m ? decodeURIComponent(m[1]) : '';
@@ -152,11 +167,13 @@
     var OrigXHR = window.XMLHttpRequest;
     window.XMLHttpRequest = function () {
       var xhr = new OrigXHR();
+      var reqMethod = '';
       var reqUrl = '';
       var reqBody = null;
 
       var origOpen = xhr.open;
-      xhr.open = function (_method, url) {
+      xhr.open = function (method, url) {
+        reqMethod = method;
         reqUrl = url;
         return origOpen.apply(xhr, arguments);
       };
@@ -177,6 +194,8 @@
           );
         } else if (isGenRequest(reqUrl, body)) {
           xhr.addEventListener('loadend', notifyGenComplete, { once: true });
+        } else if (isSessionPromptSend(reqMethod, reqUrl, body)) {
+          notifyGenComplete();
         }
         return origSend.apply(xhr, arguments);
       };

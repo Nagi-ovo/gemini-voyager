@@ -277,6 +277,33 @@ describe('usage-observer bridge', () => {
     );
   });
 
+  it('refreshes usage when a prompt is sent over the processSession channel', () => {
+    Object.defineProperty(window, 'XMLHttpRequest', {
+      value: MockXMLHttpRequest,
+      writable: true,
+      configurable: true,
+    });
+    installObserver();
+    const sessionUrl = 'https://geminiweb-pa.clients6.google.com/v1/processSession?VER=8';
+    const send = (method: string, body: string) => {
+      const xhr = new window.XMLHttpRequest() as unknown as MockXMLHttpRequest;
+      xhr.open(method, sessionUrl);
+      xhr.send(body);
+    };
+    const generationSignals = () =>
+      postMessageSpy.mock.calls.filter(
+        ([message]) => (message as { type?: string }).type === 'generation-complete',
+      ).length;
+
+    send('POST', 'count=0');
+    send('GET', '');
+    send('POST', 'x'.repeat(80));
+    expect(generationSignals()).toBe(0);
+
+    send('POST', 'x'.repeat(2600));
+    expect(generationSignals()).toBe(1);
+  });
+
   it('does not treat copy XHR batchexecute traffic as generation', () => {
     Object.defineProperty(window, 'XMLHttpRequest', {
       value: MockXMLHttpRequest,
