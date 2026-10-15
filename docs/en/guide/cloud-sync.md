@@ -4,14 +4,15 @@ Voyager Cloud Sync backs up your folders, prompt library, starred messages, and 
 
 ## What Gets Synced
 
-| Data Type            | Synced | Details                                                                      |
-| -------------------- | ------ | ---------------------------------------------------------------------------- |
-| Folder structure     | Yes    | All folders, nesting, colors, and conversation assignments                   |
-| Prompt library       | Yes    | All saved prompts with tags and folder organization                          |
-| Starred messages     | Yes    | Timeline bookmarks from any conversation                                     |
-| Extension settings   | Yes    | Cross-device preferences such as sorting, colors, and input behavior         |
-| Plugin configuration | Yes    | Install/enable state and plugin settings; site permissions remain per-device |
-| Model answers        | No     | Star backups contain user prompts, not model answers                         |
+| Data Type               | Synced | Details                                                                                  |
+| ----------------------- | ------ | ---------------------------------------------------------------------------------------- |
+| Folder structure        | Yes    | Folders on Gemini, AI Studio, and ChatGPT: nesting, colors, and conversation assignments |
+| Prompt library          | Yes    | All saved prompts with tags and folder organization                                      |
+| Starred messages        | Yes    | Timeline bookmarks from any conversation                                                 |
+| Timeline on other sites | Yes    | Timeline stars and levels on ChatGPT, Claude, and DeepSeek                               |
+| Extension settings      | Yes    | Cross-device preferences such as sorting, colors, and input behavior                     |
+| Plugin configuration    | Yes    | Install/enable state and plugin settings; site permissions remain per-device             |
+| Model answers           | No     | Star backups contain user prompts, not model answers                                     |
 
 ## Starred Data and Sync Limits
 
@@ -33,17 +34,18 @@ Device identifiers, access tokens, caches, viewport coordinates, and temporary r
 
 ## How to Use
 
-1. Click the Voyager icon in your browser's toolbar to open the popup.
+1. Open a Gemini, AI Studio, or ChatGPT tab, then click the Voyager icon in your browser's toolbar to open the popup. The **Cloud Sync** section appears only on these sites, and each site's folders sync separately.
 2. Locate the **Cloud Sync** section.
 3. On Safari, choose **Google Drive** or **iCloud**. Other browsers use Google Drive.
-4. For Google Drive, click **Sign in with Google** and complete authorization. For iCloud, make sure the Mac is signed in to iCloud.
-5. Click **Upload** to send local data to the cloud, or **Download & Merge** to merge cloud data into this browser. **Overwrite** replaces local data with the cloud copy instead of merging, so anything you haven't uploaded is lost.
+4. Set **Sync Mode** to **Manual**. It starts as **Disabled**, and the sync buttons appear only in Manual mode.
+5. For Google Drive on Safari, click **Connect Google Drive** to sign in through the Voyager app. Other browsers have no separate sign-in button: Google's authorization window opens the first time you click **Upload** or **Download & Merge**. For iCloud, make sure the Mac is signed in to iCloud.
+6. Click **Upload** to send local data to the cloud, or **Download & Merge** to merge cloud data into this browser. **Overwrite** replaces local data with the cloud copy instead of merging, so anything you haven't uploaded is lost.
 
 With iCloud, **Delete iCloud backup** removes every Voyager backup from iCloud; local data on the Mac stays as it is.
 
 ### 💡 Quick Sync
 
-The quickest way is the **Upload to Cloud** and **Sync from Cloud** buttons at the top of the folder area in the left sidebar.
+The quickest way is the cloud icon in the folder area's header in the left sidebar: click it, then choose **Upload to Cloud** or **Sync from Cloud**.
 
 <img src="/assets/cloud-sync.png" alt="Cloud Sync Quick Buttons" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 

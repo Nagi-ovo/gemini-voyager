@@ -2,13 +2,13 @@
 
 Gemini 2026 added usage limits to conversations, but to see how much you have left you have to navigate to the full `gemini.google.com/usage` page.
 
-Voyager turns your **Daily** and **Weekly** limits into a small **draggable floating bar** that lives right in the chat UI — glance at it anytime without leaving the conversation.
+Voyager turns your **5h** (a rolling 5-hour window) and **Weekly** limits into a small **draggable floating bar** that lives right in the chat UI — glance at it anytime without leaving the conversation.
 
 ![Usage Status Bar](/assets/gemini-usage-status.png)
 
 ## What it looks like
 
-A compact mini-bar: a plan badge (e.g. `PRO`), two thin progress bars (daily / weekly) with percentages, a refresh button, and a small icon that opens the native usage page. Translucent and low-key — it stays out of the way of the conversation.
+A compact mini-bar: a plan badge (e.g. `PRO`), two thin progress bars (5h / weekly) with percentages, a refresh button, and a small icon that opens the native usage page. Translucent and low-key — it stays out of the way of the conversation.
 
 ## How it works
 
@@ -22,7 +22,7 @@ A compact mini-bar: a plan badge (e.g. `PRO`), two thin progress bars (daily / w
 ## How to use
 
 1. Open the Voyager settings panel (the extension icon in your browser's toolbar).
-2. Turn on the **Usage status bar** toggle (off by default).
+2. Under **General Options**, turn on the **Usage status bar** toggle (off by default).
 3. The floating bar appears in the chat UI immediately — drag it wherever you like.
 
 ::: tip Works out of the box
@@ -36,6 +36,7 @@ Updates are **event-driven**: the bar only refreshes after your usage actually c
 ## Privacy
 
 - Both the usage numbers and the bar's position are stored **locally only** (`chrome.storage.local`) — nothing is uploaded to any server.
+- Usage is cached **per Google account**: each signed-in account (`/u/0/`, `/u/1/`, …) shows its own limits. The bar's position is shared across accounts.
 - It never reads or caches any conversation content — only the two percentages, the reset times, and the plan name.
 - Turn the toggle off and the bar is removed; the cache stays local, so re-enabling needs no reload.
 

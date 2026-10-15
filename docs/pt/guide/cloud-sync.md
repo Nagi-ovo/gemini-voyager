@@ -4,14 +4,15 @@ A Sincronização na Nuvem do Voyager faz backup das suas pastas, da biblioteca 
 
 ## O que é sincronizado
 
-| Tipo de dado              | Sincronizado | Detalhes                                                                                                  |
-| ------------------------- | ------------ | --------------------------------------------------------------------------------------------------------- |
-| Estrutura de pastas       | Sim          | Todas as pastas, aninhamento, cores e atribuições de conversas                                            |
-| Biblioteca de prompts     | Sim          | Todos os prompts salvos, com tags e organização em pastas                                                 |
-| Mensagens com estrela     | Sim          | Marcadores da linha do tempo de qualquer conversa                                                         |
-| Configurações da extensão | Sim          | Preferências que valem em todos os dispositivos, como ordenação, cores e comportamento da entrada         |
-| Configuração de plugins   | Sim          | Estado de instalação/ativação e configurações do plugin; as permissões de sites continuam por dispositivo |
-| Respostas do modelo       | Não          | Os backups de estrelas contêm prompts do usuário, não respostas do modelo                                 |
+| Tipo de dado                   | Sincronizado | Detalhes                                                                                                  |
+| ------------------------------ | ------------ | --------------------------------------------------------------------------------------------------------- |
+| Estrutura de pastas            | Sim          | Pastas do Gemini, AI Studio e ChatGPT: aninhamento, cores e atribuições de conversas                      |
+| Biblioteca de prompts          | Sim          | Todos os prompts salvos, com tags e organização em pastas                                                 |
+| Mensagens com estrela          | Sim          | Marcadores da linha do tempo de qualquer conversa                                                         |
+| Linha do tempo em outros sites | Sim          | Favoritos e níveis da linha do tempo no ChatGPT, Claude e DeepSeek                                        |
+| Configurações da extensão      | Sim          | Preferências que valem em todos os dispositivos, como ordenação, cores e comportamento da entrada         |
+| Configuração de plugins        | Sim          | Estado de instalação/ativação e configurações do plugin; as permissões de sites continuam por dispositivo |
+| Respostas do modelo            | Não          | Os backups de estrelas contêm prompts do usuário, não respostas do modelo                                 |
 
 ## Dados com estrela e limites de sincronização
 
@@ -33,17 +34,18 @@ Identificadores de dispositivo, tokens de acesso, caches, coordenadas da janela 
 
 ## Como usar
 
-1. Clique no ícone do Voyager na barra de ferramentas do navegador para abrir o popup.
+1. Abra uma aba do Gemini, AI Studio ou ChatGPT e clique no ícone do Voyager na barra de ferramentas do navegador para abrir o popup. A seção **Sincronização na Nuvem** só aparece nesses sites, e as pastas de cada site são sincronizadas separadamente.
 2. Localize a seção **Sincronização na Nuvem**.
 3. No Safari, escolha **Google Drive** ou **iCloud**. Os outros navegadores usam o Google Drive.
-4. Para o Google Drive, clique em **Entrar com Google** e conclua a autorização. Para o iCloud, verifique se o Mac está conectado ao iCloud.
-5. Clique em **Enviar** para sincronizar seus dados locais com a nuvem, ou em **Mesclar** para trazer os dados da nuvem para este navegador. **Sobrescrever** substitui os dados locais pela cópia da nuvem em vez de mesclar, então tudo o que você ainda não enviou será perdido.
+4. Defina **Modo Sincr.** como **Manual**. O padrão é **Desativado**, e os botões de sincronização só aparecem no modo Manual.
+5. Para o Google Drive no Safari, clique em **Conectar ao Google Drive** para entrar pelo app Voyager. Nos outros navegadores não há um botão de login separado: a janela de autorização do Google abre na primeira vez que você clica em **Enviar** ou **Mesclar**. Para o iCloud, verifique se o Mac está conectado ao iCloud.
+6. Clique em **Enviar** para sincronizar seus dados locais com a nuvem, ou em **Mesclar** para trazer os dados da nuvem para este navegador. **Sobrescrever** substitui os dados locais pela cópia da nuvem em vez de mesclar, então tudo o que você ainda não enviou será perdido.
 
 No iCloud, **Excluir backup do iCloud** remove todos os backups do Voyager no iCloud; os dados locais no Mac permanecem como estão.
 
 ### 💡 Sincronização rápida
 
-A maneira mais fácil é clicar nos botões **"Enviar para nuvem"** ou **"Sincronizar da nuvem"** na parte superior da área de pastas na barra lateral esquerda.
+A maneira mais fácil é clicar no ícone de nuvem no cabeçalho da área de pastas, na barra lateral esquerda, e escolher **"Enviar para nuvem"** ou **"Sincronizar da nuvem"** no menu.
 
 <img src="/assets/cloud-sync.png" alt="Botões de sincronização rápida na nuvem" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 

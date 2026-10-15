@@ -4,14 +4,15 @@ La sincronización en la nube de Voyager guarda una copia de seguridad de tus ca
 
 ## Qué se sincroniza
 
-| Tipo de dato             | Sincronizado | Detalles                                                                                                       |
-| ------------------------ | ------------ | -------------------------------------------------------------------------------------------------------------- |
-| Estructura de carpetas   | Sí           | Todas las carpetas, su anidamiento, colores y las conversaciones asignadas                                     |
-| Biblioteca de prompts    | Sí           | Todos los prompts guardados, con etiquetas y organización por carpetas                                         |
-| Mensajes destacados      | Sí           | Marcadores de la línea de tiempo de cualquier conversación                                                     |
-| Ajustes de la extensión  | Sí           | Preferencias compartidas entre dispositivos, como el orden, los colores y el comportamiento de la entrada      |
-| Configuración de plugins | Sí           | Estado de instalación y activación, y ajustes del plugin; los permisos del sitio siguen siendo por dispositivo |
-| Respuestas del modelo    | No           | Las copias de destacados contienen los prompts del usuario, no las respuestas del modelo                       |
+| Tipo de dato                    | Sincronizado | Detalles                                                                                                       |
+| ------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------- |
+| Estructura de carpetas          | Sí           | Carpetas de Gemini, AI Studio y ChatGPT: anidamiento, colores y conversaciones asignadas                       |
+| Biblioteca de prompts           | Sí           | Todos los prompts guardados, con etiquetas y organización por carpetas                                         |
+| Mensajes destacados             | Sí           | Marcadores de la línea de tiempo de cualquier conversación                                                     |
+| Línea de tiempo en otros sitios | Sí           | Destacados y niveles de la línea de tiempo en ChatGPT, Claude y DeepSeek                                       |
+| Ajustes de la extensión         | Sí           | Preferencias compartidas entre dispositivos, como el orden, los colores y el comportamiento de la entrada      |
+| Configuración de plugins        | Sí           | Estado de instalación y activación, y ajustes del plugin; los permisos del sitio siguen siendo por dispositivo |
+| Respuestas del modelo           | No           | Las copias de destacados contienen los prompts del usuario, no las respuestas del modelo                       |
 
 ## Datos destacados y límites de sincronización
 
@@ -33,17 +34,18 @@ Los identificadores de dispositivo, los tokens de acceso, las cachés, las coord
 
 ## Cómo usar
 
-1. Haz clic en el icono de Voyager en la barra de herramientas del navegador para abrir el popup.
+1. Abre una pestaña de Gemini, AI Studio o ChatGPT y haz clic en el icono de Voyager en la barra de herramientas del navegador para abrir el popup. La sección **Sincronización en Nube** solo aparece en estos sitios, y las carpetas de cada sitio se sincronizan por separado.
 2. Localiza la sección **Sincronización en Nube**.
 3. En Safari, elige **Google Drive** o **iCloud**. Los demás navegadores usan Google Drive.
-4. En Google Drive, haz clic en **Iniciar sesión con Google** y completa la autorización. En iCloud, asegúrate de que el Mac tenga la sesión de iCloud iniciada.
-5. Haz clic en **Subir** para sincronizar tus datos locales con la nube, o en **Fusionar** para traer los datos de la nube a este navegador. **Sobrescribir** sustituye los datos locales por la copia de la nube en lugar de fusionarlos, así que se pierde todo lo que no hayas subido.
+4. Cambia **Modo sinc.** a **Manual**. Empieza en **Desactivado**, y los botones de sincronización solo aparecen en modo Manual.
+5. Con Google Drive en Safari, haz clic en **Conectar Google Drive** para iniciar sesión desde la app de Voyager. Los demás navegadores no tienen un botón de inicio de sesión aparte: la ventana de autorización de Google se abre la primera vez que haces clic en **Subir** o **Fusionar**. En iCloud, asegúrate de que el Mac tenga la sesión de iCloud iniciada.
+6. Haz clic en **Subir** para sincronizar tus datos locales con la nube, o en **Fusionar** para traer los datos de la nube a este navegador. **Sobrescribir** sustituye los datos locales por la copia de la nube en lugar de fusionarlos, así que se pierde todo lo que no hayas subido.
 
 Con iCloud, **Eliminar copia de iCloud** elimina de iCloud todas las copias de seguridad de Voyager; los datos locales del Mac no cambian.
 
 ### 💡 Sincronización rápida
 
-La forma más sencilla es hacer clic en los botones **"Subir a la nube"** o **"Sincronizar desde la nube"** en la parte superior del área de carpetas en la barra lateral izquierda.
+La forma más sencilla es hacer clic en el icono de nube del encabezado del área de carpetas, en la barra lateral izquierda, y elegir **"Subir a la nube"** o **"Sincronizar desde la nube"** en el menú.
 
 <img src="/assets/cloud-sync.png" alt="Botones de sincronización rápida en la nube" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 

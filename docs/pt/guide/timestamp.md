@@ -4,19 +4,27 @@
 **Nota**: Esta funcionalidade está disponível na versão 1.3.7 e posteriores.
 :::
 
-O Voyager regista automaticamente a hora de envio de cada mensagem, ajudando-o a rastrear a linha temporal completa das suas conversas.
+O Voyager mostra a hora de envio de cada mensagem, ajudando-o a rastrear a linha temporal completa das suas conversas.
 
 ## Introdução
 
-O Gemini não exibe nativamente a hora de envio das mensagens. À medida que as conversas se prolongam, torna-se difícil lembrar quando uma discussão particular ocorreu.
+À medida que as conversas se prolongam, torna-se difícil lembrar quando uma discussão particular ocorreu.
 
-O Voyager anota cada mensagem com um carimbo de data/hora preciso (formato: `AAAA-MM-DD HH:mm:ss`), tornando a linha temporal clara num relance.
+O Voyager anota cada mensagem com um carimbo de data/hora preciso (formato: `AAAA-MM-DD HH:mm:ss`) acima da mensagem, e mostra a mesma hora ao passar o cursor sobre um ponto da linha do tempo.
+
+## Como ativar
+
+1. Abra o painel de configurações do Voyager (o ícone da extensão na barra de ferramentas do navegador).
+2. Em **Opções da Linha do Tempo**, ative **Mostrar carimbos de data/hora das mensagens** (marcado como **Experimental**, desativado por padrão).
+
+## De onde vêm as horas
+
+- **Gemini**: O Voyager lê a hora real de envio de cada mensagem a partir dos próprios dados de conversa do Gemini, por isso as horas estão corretas mesmo em conversas feitas noutro dispositivo ou antes de instalar o Voyager. Só quando essa hora não está disponível é que o Voyager recorre à hora em que viu a mensagem pela primeira vez, guardada localmente no seu navegador.
+- **ChatGPT**: O Voyager regista a hora de cada mensagem que envia enquanto a opção está ativada. Estas horas ficam guardadas localmente no seu navegador; as mensagens enviadas antes, ou a partir de outro dispositivo, não têm carimbo de data/hora.
 
 ## Características
 
-- **Registo automático**: Os carimbos de data/hora são capturados automaticamente ao enviar — sem necessidade de ação manual.
 - **Precisão ao segundo**: Data e hora completas, perfeito para rever conversas longas.
-- **Persistência local**: Os carimbos são guardados no armazenamento local e permanecem visíveis após atualizar a página.
 - **Zero distração**: A informação temporal é apresentada discretamente sem afetar a experiência de leitura.
 
 ## Casos de uso
@@ -24,3 +32,7 @@ O Voyager anota cada mensagem com um carimbo de data/hora preciso (formato: `AAA
 - **Registos de trabalho**: Rever quando uma decisão particular foi tomada.
 - **Notas de estudo**: Marcar quando um conceito foi discutido para revisão posterior.
 - **Revisão de conversas longas**: Em conversas aprofundadas de vários dias, distinguir claramente as discussões de diferentes períodos.
+
+## Plataforma
+
+**Google Gemini** (`gemini.google.com`) e **ChatGPT** (`chatgpt.com`). Não disponível no Claude nem no DeepSeek.

@@ -2,13 +2,13 @@
 
 Gemini 2026 añadió límites de uso a las conversaciones, pero para ver cuánto te queda tienes que ir a la página completa `gemini.google.com/usage`.
 
-Voyager convierte tus límites **diario** y **semanal** en una pequeña **barra flotante arrastrable** que vive justo en la interfaz del chat — échale un vistazo cuando quieras sin salir de la conversación.
+Voyager convierte tus límites de **5h** (una ventana móvil de 5 horas) y **semanal** en una pequeña **barra flotante arrastrable** que vive justo en la interfaz del chat — échale un vistazo cuando quieras sin salir de la conversación.
 
 ![Barra de estado de uso](/assets/gemini-usage-status.png)
 
 ## Cómo se ve
 
-Una mini-barra compacta: una insignia de plan (p. ej. `PRO`), dos barras de progreso finas (diaria / semanal) con porcentajes, un botón de actualizar y un pequeño icono que abre la página de uso nativa. Translúcida y discreta — se mantiene apartada de la conversación.
+Una mini-barra compacta: una insignia de plan (p. ej. `PRO`), dos barras de progreso finas (5h / semanal) con porcentajes, un botón de actualizar y un pequeño icono que abre la página de uso nativa. Translúcida y discreta — se mantiene apartada de la conversación.
 
 ## Cómo funciona
 
@@ -22,7 +22,7 @@ Una mini-barra compacta: una insignia de plan (p. ej. `PRO`), dos barras de prog
 ## Cómo usarlo
 
 1. Abre el panel de ajustes de Voyager (el icono de la extensión en la barra de herramientas del navegador).
-2. Activa el interruptor **Barra de estado de uso** (desactivado por defecto).
+2. En **Opciones Generales**, activa el interruptor **Barra de estado de uso** (desactivado por defecto).
 3. La barra flotante aparece en la interfaz del chat de inmediato — arrástrala donde quieras.
 
 ::: tip Funciona desde el primer momento
@@ -36,6 +36,7 @@ Las actualizaciones son **basadas en eventos**: la barra solo se refresca despu�
 ## Privacidad
 
 - Tanto los números de uso como la posición de la barra se guardan **solo localmente** (`chrome.storage.local`) — nada se sube a ningún servidor.
+- El uso se guarda **por cuenta de Google**: cada cuenta con sesión iniciada (`/u/0/`, `/u/1/`, …) muestra sus propios límites. La posición de la barra es compartida entre cuentas.
 - Nunca lee ni cachea el contenido de las conversaciones — solo los dos porcentajes, las horas de reinicio y el nombre del plan.
 - Desactiva el interruptor y la barra desaparece; la caché permanece local, así que volver a activarla no requiere recargar.
 

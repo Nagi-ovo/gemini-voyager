@@ -360,7 +360,7 @@ export default defineConfig({
               { text: 'エクスポート', link: '/ja/guide/export' },
               { text: '引用返信', link: '/ja/guide/quote-reply' },
               { text: '送信動作', link: '/ja/guide/send-behavior' },
-              { text: '数식コピー', link: '/ja/guide/formula-copy' },
+              { text: '数式コピー', link: '/ja/guide/formula-copy' },
               { text: 'サイドバーの幅', link: '/ja/guide/sidebar' },
             ],
           },

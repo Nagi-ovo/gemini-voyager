@@ -8,8 +8,8 @@ Tu territorio, tus reglas.
 ¿Por qué mirar el mundo a través de una rendija?
 Haz el cuadro de chat más grande.
 
-- **Ancho del chat**: Un control deslizante del 30 % al 100 % de la ventana (70 % por defecto). Amplíalo para código y tablas complejas, y redúcelo para leer.
-- **Ancho del campo de edición**: Amplía el cuadro que aparece al editar un mensaje enviado.
+- **Ancho del chat**: Primero activa el interruptor junto a **Ancho del chat**. Viene desactivado y, mientras lo está, el control deslizante permanece plegado. Después, el control va del 30 % al 100 % de la ventana (70 % por defecto). Amplíalo para código y tablas complejas, y redúcelo para leer.
+- **Ancho del campo de edición**: Activa primero su interruptor y luego amplía el cuadro que aparece al editar un mensaje enviado.
 
 ## Control
 

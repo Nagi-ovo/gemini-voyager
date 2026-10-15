@@ -6,9 +6,10 @@ La Synchro Cloud de Voyager sauvegarde vos dossiers, votre bibliothèque de prom
 
 | Type de données              | Synchronisé | Détails                                                                                                                       |
 | ---------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Structure des dossiers       | Oui         | Tous les dossiers, l'imbrication, les couleurs et le rattachement des conversations                                           |
+| Structure des dossiers       | Oui         | Dossiers de Gemini, AI Studio et ChatGPT : imbrication, couleurs et rattachement des conversations                            |
 | Bibliothèque de prompts      | Oui         | Tous les prompts enregistrés, avec leurs étiquettes et leur organisation en dossiers                                          |
 | Messages favoris             | Oui         | Signets de la chronologie, issus de n'importe quelle conversation                                                             |
+| Chronologie des autres sites | Oui         | Favoris et niveaux de la chronologie sur ChatGPT, Claude et DeepSeek                                                          |
 | Réglages de l'extension      | Oui         | Préférences à synchroniser entre appareils, comme le tri, les couleurs et le comportement de saisie                           |
 | Configuration des extensions | Oui         | État d'installation et d'activation, et réglages des extensions ; les autorisations de site restent propres à chaque appareil |
 | Réponses du modèle           | Non         | Les sauvegardes des favoris contiennent les prompts utilisateur, pas les réponses du modèle                                   |
@@ -33,17 +34,18 @@ Les identifiants d'appareil, les jetons d'accès, les caches, les coordonnées d
 
 ## Comment utiliser
 
-1. Cliquez sur l'icône Voyager dans la barre d'outils du navigateur pour ouvrir le panneau des paramètres.
+1. Ouvrez un onglet Gemini, AI Studio ou ChatGPT, puis cliquez sur l'icône Voyager dans la barre d'outils du navigateur pour ouvrir le panneau des paramètres. La section **Synchro Cloud** n'apparaît que sur ces sites, et les dossiers de chaque site se synchronisent séparément.
 2. Localisez la section **Synchro Cloud**.
 3. Sur Safari, choisissez **Google Drive** ou **iCloud**. Les autres navigateurs utilisent Google Drive.
-4. Pour Google Drive, cliquez sur **Connexion Google** et terminez l'autorisation. Pour iCloud, vérifiez que le Mac est connecté à iCloud.
-5. Cliquez sur **Envoyer** pour transférer vos données locales vers le cloud, ou sur **Récupérer** pour fusionner les données du cloud dans ce navigateur. **Remplacer** remplace les données locales par la copie du cloud au lieu de les fusionner : tout ce que vous n'avez pas encore envoyé sera perdu.
+4. Réglez **Mode** sur **Manuel**. Il est sur **Désactivé** par défaut, et les boutons de synchronisation n'apparaissent qu'en mode Manuel.
+5. Pour Google Drive sur Safari, cliquez sur **Connecter Google Drive** pour vous connecter via l'app Voyager. Les autres navigateurs n'ont pas de bouton de connexion distinct : la fenêtre d'autorisation Google s'ouvre la première fois que vous cliquez sur **Envoyer** ou **Récupérer**. Pour iCloud, vérifiez que le Mac est connecté à iCloud.
+6. Cliquez sur **Envoyer** pour transférer vos données locales vers le cloud, ou sur **Récupérer** pour fusionner les données du cloud dans ce navigateur. **Remplacer** remplace les données locales par la copie du cloud au lieu de les fusionner : tout ce que vous n'avez pas encore envoyé sera perdu.
 
 Avec iCloud, **Supprimer la sauvegarde iCloud** retire toutes les sauvegardes Voyager d'iCloud ; les données locales du Mac restent intactes.
 
 ### 💡 Synchronisation rapide
 
-La façon la plus simple est de cliquer sur les boutons **"Téléverser vers le cloud"** ou **"Synchroniser depuis le cloud"** en haut de la zone des dossiers dans la barre latérale gauche.
+La façon la plus simple est de cliquer sur l'icône de nuage dans l'en-tête de la zone des dossiers, dans la barre latérale gauche, puis de choisir **"Téléverser vers le cloud"** ou **"Synchroniser depuis le cloud"** dans le menu.
 
 <img src="/assets/cloud-sync.png" alt="Boutons de synchronisation rapide Cloud" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
 

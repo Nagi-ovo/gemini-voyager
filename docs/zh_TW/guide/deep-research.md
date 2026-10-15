@@ -4,7 +4,7 @@
 
 ## 1. 報告匯出 (PDF / 圖片)
 
-Deep Research 生成的報告支持匯出為格式精美的 PDF 或方便分享的單張圖片（同时也支持匯出為 Markdown 和 JSON 格式）。打開報告的 **Share & Export** 選單，選擇 **儲存報告** 即可。
+Deep Research 生成的報告支援匯出為格式精美的 PDF 或方便分享的單張圖片（同時也支援匯出為 Markdown 和 JSON 格式）。打開報告的 **Share & Export** 選單，選擇 **儲存報告** 即可。
 
 ![報告匯出](/assets/deep-research-report-export.png)
 

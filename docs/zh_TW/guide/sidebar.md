@@ -9,7 +9,7 @@
 
 1. 打開 Voyager 的設定彈窗（點擊瀏覽器工具列上的擴充功能圖示）。
    <img src="/assets/extension-instruction.png" alt="如何打開設定面板" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-2. 找到 **側邊欄寬度** 滑桿（在 AI Studio 上，它的名稱是 **AI Studio Sidebar**）。
+2. 找到 **側邊欄寬度**（在 AI Studio 上，它的名稱是 **AI Studio Sidebar**），打開旁邊的開關。它預設關閉，關著時滑桿會收起。
 3. 拖動滑桿，選擇您覺得最舒適的寬度。
 
 - **窄**：節省空間，專注於對話。

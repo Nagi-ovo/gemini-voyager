@@ -2,13 +2,13 @@
 
 Gemini 2026 a ajouté des limites d’usage aux conversations, mais pour voir ce qu’il vous reste, vous devez vous rendre sur la page complète `gemini.google.com/usage`.
 
-Voyager transforme vos limites **quotidienne** et **hebdomadaire** en une petite **barre flottante déplaçable** qui vit directement dans l’interface du chat — un coup d’œil à tout moment, sans quitter la conversation.
+Voyager transforme vos limites **5h** (une fenêtre glissante de 5 heures) et **hebdomadaire** en une petite **barre flottante déplaçable** qui vit directement dans l’interface du chat — un coup d’œil à tout moment, sans quitter la conversation.
 
 ![Barre de statut d’usage](/assets/gemini-usage-status.png)
 
 ## À quoi ça ressemble
 
-Une mini-barre compacte : un badge de forfait (par ex. `PRO`), deux fines barres de progression (quotidienne / hebdomadaire) avec des pourcentages, un bouton de rafraîchissement et une petite icône qui ouvre la page d’usage native. Translucide et discrète — elle reste à l’écart de la conversation.
+Une mini-barre compacte : un badge de forfait (par ex. `PRO`), deux fines barres de progression (5h / hebdomadaire) avec des pourcentages, un bouton de rafraîchissement et une petite icône qui ouvre la page d’usage native. Translucide et discrète — elle reste à l’écart de la conversation.
 
 ## Comment ça marche
 
@@ -22,7 +22,7 @@ Une mini-barre compacte : un badge de forfait (par ex. `PRO`), deux fines barres
 ## Comment l’utiliser
 
 1. Ouvrez le panneau de paramètres Voyager (l’icône de l’extension dans la barre d’outils de votre navigateur).
-2. Activez l’interrupteur **Barre d’état d’utilisation** (désactivé par défaut).
+2. Dans **Options générales**, activez l’interrupteur **Barre d’état d’utilisation** (désactivé par défaut).
 3. La barre flottante apparaît immédiatement dans l’interface du chat — déplacez-la où vous voulez.
 
 ::: tip Fonctionne sans configuration
@@ -36,6 +36,7 @@ Les mises à jour sont **pilotées par les événements** : la barre ne se rafra
 ## Confidentialité
 
 - Les chiffres d’usage et la position de la barre sont stockés **localement uniquement** (`chrome.storage.local`) — rien n’est envoyé à un quelconque serveur.
+- L’usage est mis en cache **par compte Google** : chaque compte connecté (`/u/0/`, `/u/1/`, …) affiche ses propres limites. La position de la barre est commune à tous les comptes.
 - Elle ne lit ni ne met en cache aucun contenu de conversation — seulement les deux pourcentages, les heures de réinitialisation et le nom du forfait.
 - Désactivez l’interrupteur et la barre disparaît ; le cache reste local, donc la réactiver ne nécessite aucun rechargement.
 

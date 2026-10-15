@@ -2,13 +2,13 @@
 
 O Gemini 2026 adicionou limites de uso às conversas, mas para ver quanto resta você precisa ir até a página completa `gemini.google.com/usage`.
 
-O Voyager transforma seus limites **diário** e **semanal** em uma pequena **barra flutuante arrastável** que fica bem dentro da interface do chat — dê uma olhada quando quiser, sem sair da conversa.
+O Voyager transforma seus limites de **5h** (uma janela móvel de 5 horas) e **semanal** em uma pequena **barra flutuante arrastável** que fica bem dentro da interface do chat — dê uma olhada quando quiser, sem sair da conversa.
 
 ![Barra de status de uso](/assets/gemini-usage-status.png)
 
 ## Como fica
 
-Uma mini-barra compacta: uma insígnia do plano (ex.: `PRO`), duas barras de progresso finas (diária / semanal) com porcentagens, um botão de atualizar e um pequeno ícone que abre a página de uso nativa. Translúcida e discreta — fica fora do caminho da conversa.
+Uma mini-barra compacta: uma insígnia do plano (ex.: `PRO`), duas barras de progresso finas (5h / semanal) com porcentagens, um botão de atualizar e um pequeno ícone que abre a página de uso nativa. Translúcida e discreta — fica fora do caminho da conversa.
 
 ## Como funciona
 
@@ -22,7 +22,7 @@ Uma mini-barra compacta: uma insígnia do plano (ex.: `PRO`), duas barras de pro
 ## Como usar
 
 1. Abra o painel de configurações do Voyager (o ícone da extensão na barra de ferramentas do navegador).
-2. Ative o botão **Barra de status de uso** (desativado por padrão).
+2. Em **Opções Gerais**, ative o botão **Barra de status de uso** (desativado por padrão).
 3. A barra flutuante aparece na interface do chat na hora — arraste para onde quiser.
 
 ::: tip Funciona de imediato
@@ -36,6 +36,7 @@ As atualizações são **orientadas a eventos**: a barra só atualiza depois que
 ## Privacidade
 
 - Tanto os números de uso quanto a posição da barra são armazenados **apenas localmente** (`chrome.storage.local`) — nada é enviado para qualquer servidor.
+- O uso é armazenado **por conta Google**: cada conta conectada (`/u/0/`, `/u/1/`, …) mostra seus próprios limites. A posição da barra é compartilhada entre as contas.
 - Ela nunca lê nem armazena em cache o conteúdo das conversas — apenas as duas porcentagens, os horários de reinício e o nome do plano.
 - Desative o botão e a barra é removida; o cache permanece local, então reativar não exige recarregar.
 

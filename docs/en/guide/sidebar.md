@@ -9,7 +9,7 @@ Now you can freely adjust the width of the sidebar.
 
 1. Open the Voyager popup (click the extension icon in your browser toolbar).
    <img src="/assets/extension-instruction.png" alt="How to open settings panel" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-2. Find the **Sidebar width** slider (on AI Studio it's labeled **AI Studio Sidebar**).
+2. Find **Sidebar width** (on AI Studio it's labeled **AI Studio Sidebar**) and turn on the switch next to it. It's off by default, and the slider stays collapsed until you turn it on.
 3. Drag the slider to choose the width that feels right for you.
 
 - **Narrow**: Save space and focus on the conversation.

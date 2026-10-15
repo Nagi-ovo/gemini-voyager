@@ -17,7 +17,7 @@ Each node represents a message. The timeline visualizes the rhythm of your dialo
 - **Teleport**: Click a node to jump instantly to that message.
 - **Peek**: Hover to see what's inside without moving.
 - **Bookmark**: Long-press a node to **Star** it. It's like a bookmark for your brain.
-- **Levels (Experimental)**: Right-click a node to set various levels (1-3) or collapse children. Perfect for making branched conversations clear.
+- **Levels (Experimental)**: Off by default. Turn on **Enable Node Levels** under **Timeline Options** first, then right-click a node to set its level (1-3) or collapse its children. Perfect for making branched conversations clear. Levels only show in the `Nodes` style: turning them on switches the timeline to `Nodes`, and `Ruler` and `Compact` can't be picked while levels are on.
 - **Resize**: Drag the inner edge of the timeline to adjust its width.
 - **Keyboard**: Navigate at the speed of thought. Default `j`/`k`, `gg`/`GG` to jump to first/last turn.
 
@@ -79,17 +79,17 @@ Timeline is most valuable in conversations longer than 10 messages, where scroll
 
 ## Timeline vs. Manual Scrolling
 
-| Capability                 | Without Timeline              | With Voyager Timeline                    |
-| -------------------------- | ----------------------------- | ---------------------------------------- |
-| Find a specific message    | Scroll up and down repeatedly | Click a node or press j/k                |
-| Bookmark key moments       | Copy-paste to external notes  | Long-press to star, syncs to cloud       |
-| See conversation structure | Read sequentially             | Visual map shows full shape at a glance  |
-| Keyboard navigation        | Not available in Gemini       | Vim-style j/k, gg/GG, fully customizable |
-| Navigate 100+ messages     | Minutes of scrolling          | Instant jump to any point                |
-| Organize long threads      | No built-in tools             | Levels (1-3) and collapsible children    |
+| Capability                 | Without Timeline              | With Voyager Timeline                                        |
+| -------------------------- | ----------------------------- | ------------------------------------------------------------ |
+| Find a specific message    | Scroll up and down repeatedly | Click a node or press j/k                                    |
+| Bookmark key moments       | Copy-paste to external notes  | Long-press to star, syncs to cloud                           |
+| See conversation structure | Read sequentially             | Visual map shows full shape at a glance                      |
+| Keyboard navigation        | Not available in Gemini       | Vim-style j/k, gg/GG, fully customizable                     |
+| Navigate 100+ messages     | Minutes of scrolling          | Instant jump to any point                                    |
+| Organize long threads      | No built-in tools             | Levels (1-3) and collapsible children (experimental, opt-in) |
 
 ## Supported Browsers
 
-Timeline works on Google Gemini, and on Claude and ChatGPT as built-in plugins, across Chrome, Edge, Firefox, Safari, Opera, and Brave. Keyboard shortcuts, starring, and levels work identically on all platforms. Starred messages sync across devices when [Cloud Sync](/en/guide/cloud-sync) is enabled.
+Timeline works on Google Gemini, and on Claude and ChatGPT as built-in plugins, across Chrome, Edge, Firefox, Safari, Opera, and Brave. Keyboard shortcuts and starring work the same on all three. Levels are an experimental opt-in everywhere: on Gemini, turn on **Enable Node Levels** under **Timeline Options**; on Claude and ChatGPT, turn on the same switch in the **Claude · Timeline** or **ChatGPT · Timeline** plugin settings under **Plugins**. Starred messages sync across devices when [Cloud Sync](/en/guide/cloud-sync) is enabled.
 
 Timeline is not available on AI Studio. DeepSeek has an optional timeline plugin in the plugin catalog (it ships disabled).

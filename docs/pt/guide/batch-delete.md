@@ -7,7 +7,7 @@ Elimine várias conversas de uma só vez no Gemini e no AI Studio, sem precisar 
 - **Modo de Seleção Múltipla**: Pressione e segure qualquer conversa para entrar no modo de seleção múltipla e marque várias conversas para eliminar.
 - **Limpeza com um clique**: Após selecionar, clique no botão de eliminar para remover todas as conversas selecionadas de uma só vez.
 - **Feedback de Progresso**: O progresso em tempo real é exibido durante a eliminação para que saiba o estado atual.
-- **Confirmação Segura**: Um diálogo de confirmação aparece antes da eliminação para evitar operações acidentais.
+- **Confirmação Segura**: Um cartão de confirmação aparece junto ao botão Eliminar antes da eliminação para evitar operações acidentais.
 
 <div style="text-align: center; margin-top: 20px;">
   <img src="/assets/batch-delete.png" alt="Eliminação em Lote" style="max-width: 600px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"/>
@@ -21,15 +21,15 @@ Elimine várias conversas de uma só vez no Gemini e no AI Studio, sem precisar 
 2. Após entrar no modo de seleção múltipla, aparecerão caixas de seleção no lado esquerdo de cada conversa.
 3. Marque as conversas que deseja eliminar (até 50 de uma vez).
 4. Clique no **botão Eliminar** que aparece.
-5. Clique em "Confirmar" na área de confirmação vermelha que aparece **acima da lista de pastas** para iniciar a eliminação.
+5. Clique em "Excluir" no cartão de confirmação que aparece junto ao botão Eliminar para iniciar a eliminação.
 
 ### AI Studio
 
 1. Abra a página **Library** do AI Studio.
 2. **Pressione e segure** qualquer linha de prompt para entrar no modo de seleção múltipla.
 3. Selecione os prompts que deseja eliminar (até 50 de uma vez).
-4. Clique no **botão Eliminar** flutuante e confirme o aviso do navegador.
+4. Clique no **botão Eliminar** flutuante e, em seguida, em "Excluir" no cartão de confirmação ao lado. O Voyager confirma automaticamente as caixas de diálogo de exclusão do próprio AI Studio.
 
 ::: tip Nota
-No Gemini, o painel de confirmação sobrepõe a área de pastas para evitar bloquear a lista de conversas. As operações de eliminação em lote não podem ser desfeitas, por isso prossiga com cuidado.
+As operações de eliminação em lote não podem ser desfeitas, por isso prossiga com cuidado.
 :::

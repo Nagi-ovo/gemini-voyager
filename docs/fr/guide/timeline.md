@@ -17,7 +17,7 @@ Chaque nœud représente un message. La chronologie visualise le rythme de votre
 - **Téléportation** : Cliquez sur un nœud pour sauter instantanément à ce message.
 - **Coup d'œil** : Survolez pour voir le contenu sans bouger.
 - **Signet** : Appui long sur un nœud pour le marquer d'une **Étoile**. C'est comme un marque-page pour votre cerveau.
-- **Niveaux (Expérimental)** : Clic droit sur un nœud pour définir différents niveaux (1-3) ou réduire les enfants. Parfait pour clarifier les conversations ramifiées.
+- **Niveaux (Expérimental)** : Désactivés par défaut. Activez d'abord **Activer les niveaux de nœuds** dans **Options de la chronologie**, puis faites un clic droit sur un nœud pour définir son niveau (1-3) ou réduire ses enfants. Parfait pour clarifier les conversations ramifiées. Les niveaux ne s'affichent qu'avec le style `Nœuds` : les activer bascule la chronologie sur `Nœuds`, et `Graduations` et `Compact` ne sont plus sélectionnables tant qu'ils sont actifs.
 - **Redimensionner** : Faites glisser le bord intérieur de la timeline pour ajuster sa largeur.
 - **Clavier** : Naviguez à la vitesse de la pensée. Par défaut `j`/`k`, `gg`/`GG` pour aller au premier/dernier tour.
 
@@ -86,10 +86,10 @@ La chronologie est la plus utile dans les conversations de plus de 10 messages, 
 | Voir la structure           | Lire de manière séquentielle          | Une carte visuelle montre toute la forme d'un coup d'œil        |
 | Navigation au clavier       | Non disponible dans Gemini            | Touches style Vim j/k, gg/GG, entièrement personnalisables      |
 | Naviguer dans 100+ messages | Plusieurs minutes de défilement       | Saut instantané vers n'importe quel point                       |
-| Organiser les longs fils    | Aucun outil intégré                   | Niveaux (1 à 3) et enfants repliables                           |
+| Organiser les longs fils    | Aucun outil intégré                   | Niveaux (1 à 3) et enfants repliables (expérimental, à activer) |
 
 ## Navigateurs pris en charge
 
-La chronologie fonctionne sur Google Gemini, ainsi que sur Claude et ChatGPT grâce aux extensions intégrées, sur Chrome, Edge, Firefox, Safari, Opera et Brave. Les raccourcis clavier, les étoiles et les niveaux fonctionnent de la même façon sur toutes les plateformes. Les messages étoilés se synchronisent entre appareils lorsque la [Synchro Cloud](/fr/guide/cloud-sync) est activée.
+La chronologie fonctionne sur Google Gemini, ainsi que sur Claude et ChatGPT grâce aux extensions intégrées, sur Chrome, Edge, Firefox, Safari, Opera et Brave. Les raccourcis clavier et les étoiles fonctionnent de la même façon sur les trois. Les niveaux sont partout une option expérimentale à activer : sur Gemini, activez **Activer les niveaux de nœuds** dans **Options de la chronologie** ; sur Claude et ChatGPT, activez le même interrupteur dans les réglages de **Claude · Timeline** ou **ChatGPT · Timeline**, dans la section **Extensions**. Les messages étoilés se synchronisent entre appareils lorsque la [Synchro Cloud](/fr/guide/cloud-sync) est activée.
 
 La chronologie n'est pas disponible sur AI Studio. DeepSeek dispose d'une extension de chronologie facultative dans le catalogue d'extensions (elle est livrée désactivée).

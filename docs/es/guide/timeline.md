@@ -17,7 +17,7 @@ Cada punto es una frase. Ese es el pulso de tu conversación.
 - **Teletransporte**: Haz clic y ve, sin demoras.
 - **Vistazo**: Pasa el ratón por encima, ve el contenido sin saltar.
 - **Marcador**: Mantén presionado un nodo para **destacar**. Pon un marcador para tu cerebro.
-- **Niveles (Experimental)**: Clic derecho en un nodo para establecer niveles (1-3) o contraer hijos. Haz que las conversaciones ramificadas sean claras.
+- **Niveles (Experimental)**: Desactivados por defecto. Primero activa **Habilitar niveles de nodo** en **Opciones de Línea de Tiempo**; luego haz clic derecho en un nodo para establecer su nivel (1-3) o contraer sus hijos. Haz que las conversaciones ramificadas sean claras. Los niveles solo se muestran en el estilo `Nodos`: al activarlos, la línea de tiempo cambia a `Nodos`, y `Escala` y `Compacto` no se pueden elegir mientras estén activos.
 - **Redimensionar**: Arrastra el borde interior de la línea de tiempo para ajustar su ancho.
 - **Atajos**: Vuela con el teclado. Por defecto `j`/`k` para saltar arriba/abajo, `gg`/`GG` para ir al primero/último turno.
 
@@ -79,17 +79,17 @@ La línea de tiempo es más útil en conversaciones de más de 10 mensajes, cuan
 
 ## Línea de tiempo frente a desplazamiento manual
 
-| Capacidad                            | Sin línea de tiempo              | Con la línea de tiempo de Voyager                         |
-| ------------------------------------ | -------------------------------- | --------------------------------------------------------- |
-| Encontrar un mensaje concreto        | Subir y bajar repetidamente      | Hacer clic en un nodo o pulsar j/k                        |
-| Marcar momentos clave                | Copiar y pegar en notas externas | Mantener pulsado para destacar; se sincroniza con la nube |
-| Ver la estructura de la conversación | Leer en orden                    | Un mapa visual muestra toda la forma de un vistazo        |
-| Navegación por teclado               | No disponible en Gemini          | Estilo Vim con j/k y gg/GG, totalmente personalizable     |
-| Navegar por más de 100 mensajes      | Minutos de desplazamiento        | Salto instantáneo a cualquier punto                       |
-| Organizar hilos largos               | No hay herramientas integradas   | Niveles (1-3) y los hijos pueden contraerse               |
+| Capacidad                            | Sin línea de tiempo              | Con la línea de tiempo de Voyager                                             |
+| ------------------------------------ | -------------------------------- | ----------------------------------------------------------------------------- |
+| Encontrar un mensaje concreto        | Subir y bajar repetidamente      | Hacer clic en un nodo o pulsar j/k                                            |
+| Marcar momentos clave                | Copiar y pegar en notas externas | Mantener pulsado para destacar; se sincroniza con la nube                     |
+| Ver la estructura de la conversación | Leer en orden                    | Un mapa visual muestra toda la forma de un vistazo                            |
+| Navegación por teclado               | No disponible en Gemini          | Estilo Vim con j/k y gg/GG, totalmente personalizable                         |
+| Navegar por más de 100 mensajes      | Minutos de desplazamiento        | Salto instantáneo a cualquier punto                                           |
+| Organizar hilos largos               | No hay herramientas integradas   | Niveles (1-3) y los hijos pueden contraerse (experimental, hay que activarlo) |
 
 ## Navegadores compatibles
 
-La línea de tiempo funciona en Google Gemini, y en Claude y ChatGPT como plugins integrados, en Chrome, Edge, Firefox, Safari, Opera y Brave. Los atajos de teclado, los destacados y los niveles funcionan igual en todas las plataformas. Los mensajes destacados se sincronizan entre dispositivos cuando la [Sincronización en la nube](/es/guide/cloud-sync) está activada.
+La línea de tiempo funciona en Google Gemini, y en Claude y ChatGPT como plugins integrados, en Chrome, Edge, Firefox, Safari, Opera y Brave. Los atajos de teclado y los destacados funcionan igual en las tres. Los niveles son en todas partes una opción experimental que hay que activar: en Gemini, activa **Habilitar niveles de nodo** en **Opciones de Línea de Tiempo**; en Claude y ChatGPT, activa el mismo interruptor en los ajustes de **Claude · Línea de tiempo** o **ChatGPT · Línea de tiempo**, dentro de **Complementos**. Los mensajes destacados se sincronizan entre dispositivos cuando la [Sincronización en la nube](/es/guide/cloud-sync) está activada.
 
 La línea de tiempo no está disponible en AI Studio. DeepSeek tiene un plugin de línea de tiempo opcional en el catálogo de plugins (viene desactivado).
