@@ -72,6 +72,11 @@ function binding(
 }
 
 export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding>> = {
+  [OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps,
+    StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS,
+    onOnlyIfTrue,
+  ),
   [OFFICIAL_PLUGIN_IDS.visualEffects]: {
     pluginId: OFFICIAL_PLUGIN_IDS.visualEffects,
     area: 'sync',

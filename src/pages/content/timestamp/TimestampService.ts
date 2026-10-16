@@ -81,6 +81,13 @@ export class TimestampService {
     }
   }
 
+  /** Drain accepted writes, including a follow-up snapshot dirtied during an in-flight persist. */
+  async whenPersisted(): Promise<void> {
+    while (this.pendingPersist) {
+      await this.pendingPersist.promise;
+    }
+  }
+
   async recordTimestamp(conversationId: string, turnId: TurnId, timestamp?: number): Promise<void> {
     const ts = timestamp ?? Date.now();
     const conversationTimestamps = this.getConversationTimestamps(conversationId, true);

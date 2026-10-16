@@ -160,6 +160,7 @@ describe('the page lifetime of native features', () => {
 describe('official plugins at their Gemini start points', () => {
   it.each([
     ['startTimeline', OFFICIAL_PLUGIN_IDS.geminiTimeline],
+    ['startMessageTimestamps', OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps],
     ['startMarkdownFix', OFFICIAL_PLUGIN_IDS.geminiMarkdownFix],
     ['startCanvasCopy', OFFICIAL_PLUGIN_IDS.geminiCanvasCopy],
     ['startDeepResearchExport', OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport],
@@ -206,6 +207,7 @@ describe('official plugins at their Gemini start points', () => {
     );
     current.lifetime.abort();
     await startup.startTimeline();
+    await startup.startMessageTimestamps();
     await startup.startMarkdownFix();
     await startup.startCanvasCopy();
     await startup.startDeepResearchExport();
@@ -219,6 +221,7 @@ describe('official plugins at their Gemini start points', () => {
     admission.close();
     for (const id of [
       OFFICIAL_PLUGIN_IDS.geminiTimeline,
+      OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps,
       OFFICIAL_PLUGIN_IDS.geminiMarkdownFix,
       OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
       OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,

@@ -16,7 +16,6 @@ import { startResearchPackReceiver } from './researchPack/receiver';
 import { startSelectionToolbarHost } from './selectionToolbar/host';
 import { startStorageQuotaWarningToast } from './storageQuotaWarning';
 import { startHistoryTimestampPageService } from './timestamp/historyTimestampPageService';
-import { startMessageTimestampPageService } from './timestamp/messageTimestampPageService';
 import { startWatermarkRemoverFeature } from './watermarkRemover/feature';
 
 /** Permanent page services and unmigrated native features; optional migrated features belong to PluginHost. */
@@ -104,12 +103,6 @@ export const NATIVE_FEATURES = {
     id: 'history-timestamp-page-service',
     position: CleanupPositions.CleanupHistoryTimestampPageService,
     start: startHistoryTimestampPageService,
-  },
-  /** Message times collect and render independently of the optional rail. */
-  messageTimestampPageService: {
-    id: 'message-timestamp-page-service',
-    position: CleanupPositions.CleanupMessageTimestampPageService,
-    start: startMessageTimestampPageService,
   },
   /** Finishes an accepted first-send handoff even after the fork switch turns off. */
   forkLinkFinisher: {

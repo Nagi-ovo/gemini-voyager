@@ -12,6 +12,7 @@ import { GEMINI_GEMS_SIDEBAR_MANIFEST } from './geminiGemsSidebarManifest';
 import { GEMINI_HIGHLIGHT_MANIFEST } from './geminiHighlightManifest';
 import { GEMINI_INPUT_COLLAPSE_MANIFEST } from './geminiInputCollapseManifest';
 import { GEMINI_MARKDOWN_FIX_MANIFEST } from './geminiMarkdownFixManifest';
+import { GEMINI_MESSAGE_TIMESTAMPS_MANIFEST } from './geminiMessageTimestampsManifest';
 import { GEMINI_PREVENT_AUTO_SCROLL_MANIFEST } from './geminiPreventAutoScrollManifest';
 import { GEMINI_PROMPT_HISTORY_MANIFEST } from './geminiPromptHistoryManifest';
 import { GEMINI_QUOTE_REPLY_MANIFEST } from './geminiQuoteReplyManifest';
@@ -402,6 +403,7 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   GEMINI_SIDEBAR_AUTO_HIDE_MANIFEST,
   GEMINI_SIDEBAR_FULL_HIDE_MANIFEST,
   GEMINI_MARKDOWN_FIX_MANIFEST,
+  GEMINI_MESSAGE_TIMESTAMPS_MANIFEST,
   GEMINI_CANVAS_COPY_MANIFEST,
   GEMINI_DEEP_RESEARCH_EXPORT_MANIFEST,
   GEMINI_GEMS_SIDEBAR_MANIFEST,

@@ -1,3 +1,5 @@
+import browser from 'webextension-polyfill';
+
 import { storageService } from '@/core/services/StorageService';
 import { StorageKeys } from '@/core/types/common';
 import { extractConversationIdFromUrl } from '@/core/utils/conversationIdentity';
@@ -22,13 +24,18 @@ interface MessageTimestampPage {
 }
 
 let current: MessageTimestampPage | null = null;
+let retiringWrites: Promise<void> = Promise.resolve();
 
-/** Always a page service: only gvShowMessageTimestamps controls collection and labels. */
+/** Plugin-owned in production; direct callers retain the same setting gate and stop contract. */
 export function startMessageTimestampPageService(): StopNativeFeature {
   current?.stop();
+  const previousWrites = retiringWrites;
   const lifetime = new AbortController();
   // Route collectors must share one cache: independent whole-cache persists can lose other routes.
   const timestamps = new TimestampService();
+  const cacheReady = previousWrites.then(() => {
+    if (!lifetime.signal.aborted) return timestamps.initialize();
+  });
   let enabled = false;
   let settingRevision = 0;
   let hydrated = false;
@@ -102,7 +109,8 @@ export function startMessageTimestampPageService(): StopNativeFeature {
 
   const readRevision = settingRevision;
   const ready = (async () => {
-    await timestamps.initialize();
+    // Off→on must not hydrate a stale whole-cache snapshot while the old owner is still writing.
+    await cacheReady;
     if (lifetime.signal.aborted) return;
     const setting = await storageService.get<boolean>(StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS);
     if (lifetime.signal.aborted) return;
@@ -119,6 +127,8 @@ export function startMessageTimestampPageService(): StopNativeFeature {
       if (lifetime.signal.aborted) return;
       lifetime.abort();
       destroyCollector();
+      // Initialization may still be removing legacy v1 data; retire that write before a successor reads.
+      retiringWrites = cacheReady.then(() => timestamps.whenPersisted()).catch(() => {});
       stopRoute();
       try {
         removeSettingsListener?.();
@@ -155,8 +165,11 @@ export function startMessageTimestampPageService(): StopNativeFeature {
 
 /** Readiness never starts a service and never waits for Gemini to mount a turn. */
 export function whenMessageTimestampsReady(signal?: AbortSignal): Promise<boolean> {
-  const page = current;
-  if (!page || signal?.aborted) return Promise.resolve(false);
+  if (signal?.aborted) return Promise.resolve(false);
+  // Rails need a readable cache, not a mounted labels plugin: off or late admission must not block them.
+  const ready =
+    current?.ready ??
+    retiringWrites.then(() => browser.storage.local.get(StorageKeys.GV_MESSAGE_TIMESTAMPS));
   return new Promise((resolve) => {
     const finish = (ready: boolean): void => {
       signal?.removeEventListener('abort', onAbort);
@@ -164,8 +177,8 @@ export function whenMessageTimestampsReady(signal?: AbortSignal): Promise<boolea
     };
     const onAbort = (): void => finish(false);
     signal?.addEventListener('abort', onAbort, { once: true });
-    void page.ready.then(
-      () => finish(current === page && !signal?.aborted),
+    void ready.then(
+      () => finish(!signal?.aborted),
       () => finish(false),
     );
   });

@@ -13,6 +13,7 @@ import {
   GeminiPage,
   SURFACE,
   dotFor,
+  hover,
   installExtension,
   installLayout,
   longPress,
@@ -97,9 +98,7 @@ async function setEnabled(id: string, enabled: boolean): Promise<void> {
 
 async function startCore(): Promise<void> {
   const historyService = await import('../timestamp/historyTimestampPageService');
-  const messageService = await import('../timestamp/messageTimestampPageService');
   coreStops.push(historyService.startHistoryTimestampPageService());
-  coreStops.push(messageService.startMessageTimestampPageService());
   await flush();
 }
 
@@ -237,6 +236,66 @@ afterEach(async () => {
 });
 
 describe('local Gemini timeline consumes the same data through the real plugin host', () => {
+  it('mounts the local shared rail with message timestamps off and no labels plugin started', async () => {
+    ext.seed('sync', { [StorageKeys.GV_TIMELINE_ENABLED]: false });
+    await install();
+    await startHost();
+    await startCore();
+    await admit();
+
+    expect(status('voyager.gemini-message-timestamps')?.kind).not.toBe('mounted');
+    expect(status(LOCAL)?.kind).toBe('mounted');
+    expect(document.querySelectorAll(SURFACE.bar)).toHaveLength(1);
+    expect(starredDotLabels()).toEqual([TURNS[1].prompt]);
+    expect(document.querySelector('.gv-timestamp')).toBeNull();
+    hover(dotFor(TURNS[0].prompt));
+    await settle(400);
+    expect(document.querySelector(SURFACE.tooltip)?.textContent).toBe(TURNS[0].prompt);
+  });
+
+  it('mounts the local shared rail before the enabled labels plugin and reads its later timestamps without remounting', async () => {
+    ext.seed('sync', {
+      [StorageKeys.GV_TIMELINE_ENABLED]: false,
+      [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: true,
+    });
+    ext.seed('local', {
+      [StorageKeys.GV_MESSAGE_TIMESTAMPS]: {
+        version: 2,
+        conversations: { [CID]: { [`s-${FIRST}`]: new Date(2024, 0, 1, 0, 0, 1).getTime() } },
+      },
+    });
+    await install();
+    await startHost();
+    await startCore();
+    const { createGeminiBuiltinStartup } = await import('../geminiBuiltinStartup');
+    const startup = createGeminiBuiltinStartup(admission, cleanup);
+    await startup.startTimeline();
+    await settle();
+
+    expect(status('voyager.gemini-message-timestamps')?.kind).not.toBe('mounted');
+    expect(document.querySelectorAll(SURFACE.bar)).toHaveLength(1);
+    const rail = document.querySelector(SURFACE.bar);
+    const dot = dotFor(TURNS[0].prompt);
+    expect(document.querySelector('.gv-timestamp')).toBeNull();
+    hover(dot);
+    await settle(400);
+    expect(document.querySelector(SURFACE.tooltip)?.textContent).toBe(TURNS[0].prompt);
+    dot.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }));
+
+    await startup.startMessageTimestamps();
+    admission.close();
+    await settle();
+    expect(status('voyager.gemini-message-timestamps')?.kind).toBe('mounted');
+    expect(document.querySelector('.gv-timestamp')?.textContent).toBe('2024-01-01 00:00:01');
+    expect(document.querySelector(SURFACE.bar)).toBe(rail);
+    expect(dotFor(TURNS[0].prompt)).toBe(dot);
+    hover(dot);
+    await settle(400);
+    expect(document.querySelector(SURFACE.tooltip)?.textContent).toBe(
+      `2024-01-01 00:00:01\n${TURNS[0].prompt}`,
+    );
+  });
+
   it('official off hands the rail to local; local edits survive official reopen without catalog writes', async () => {
     await install();
     await startHost();
@@ -331,7 +390,7 @@ describe('local Gemini timeline consumes the same data through the real plugin h
     expect(starredDotLabels()).toEqual([TURNS[1].prompt]);
   });
 
-  it('cold local startup waits for the actual native start point and both page services', async () => {
+  it('cold local startup waits for the actual native start point and history service and timestamp cache', async () => {
     ext.seed('sync', { [StorageKeys.GV_TIMELINE_ENABLED]: false });
     await install();
     const before = nativeData();

@@ -57,6 +57,7 @@ import {
   updateGeminiSidebarWidthSettings,
 } from './sidebarWidth/pluginHandler';
 import { activateGeminiTimeline } from './timeline/pluginHandler';
+import { activateGeminiMessageTimestamps } from './timestamp/pluginHandler';
 import { activateGeminiUsageStatus } from './usageStatus/pluginHandler';
 import { createVisualEffectsRuntime } from './visualEffects';
 
@@ -104,6 +105,7 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
     updateSettings: updateGeminiChatWidthSettings,
   },
   'voyager.gemini-markdown-fix': { activate: activateGeminiMarkdownFix },
+  'voyager.gemini-message-timestamps': { activate: activateGeminiMessageTimestamps },
   'voyager.gemini-canvas-copy': { activate: activateGeminiCanvasCopy },
   'voyager.gemini-deep-research-export': { activate: activateGeminiDeepResearchExport },
   'voyager.gemini-edit-input-width': {

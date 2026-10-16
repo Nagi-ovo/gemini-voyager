@@ -159,6 +159,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.PREVENT_AUTO_SCROLL_ENABLED,
         StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED,
         StorageKeys.GV_TIMELINE_ENABLED,
+        StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS,
         StorageKeys.CTRL_ENTER_SEND,
         StorageKeys.AISTUDIO_ENTER_SEND,
         StorageKeys.DRAFT_AUTO_SAVE,

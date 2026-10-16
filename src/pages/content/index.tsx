@@ -216,7 +216,7 @@ async function initializeFeatures(): Promise<void> {
       // Before the timeline and folders: they read server identities from it.
       await settle(mountForPage(NATIVE_FEATURES.historyTimestampPageService));
       // Message time display has its own switch and remains available with the rail closed.
-      await settle(mountForPage(NATIVE_FEATURES.messageTimestampPageService));
+      await settle(geminiBuiltins.startMessageTimestamps());
       // Timeline is most resource-intensive, start it first
       await settle(geminiBuiltins.startTimeline());
       await delay(HEAVY_FEATURE_INIT_DELAY);

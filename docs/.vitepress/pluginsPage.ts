@@ -41,6 +41,7 @@ const FEATURE_ORDER = [
   'folders',
   'gems-sidebar',
   'timeline',
+  'message-timestamps',
   'export',
   'deep-research-export',
   'canvas-copy',
@@ -133,6 +134,7 @@ export const FRESH_INSTALL_ON: ReadonlySet<string> = new Set([
 
 /** Guide pages whose slug is not the row's key. */
 const GUIDE_PAGES: Readonly<Record<string, string>> = {
+  'message-timestamps': 'timestamp',
   'deep-research-export': 'deep-research',
   'ctrl-enter-send': 'send-behavior',
   'enter-send': 'send-behavior',
