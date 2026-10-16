@@ -360,6 +360,64 @@ html[data-gv-scheme] .gemini-timeline-bar:not(.timeline-no-container)::before {
   display: none;
 }
 
+/* ===== Annotation ticks (TimelineAnnotationLayer) =====
+ * Marks other features pin to a turn, such as highlights: a short coloured
+ * stroke at the rail's edge beside that turn's dot. Explicit pointer events
+ * keep them clickable inside compact's inert track. */
+.gv-timeline-annotation {
+  position: absolute;
+  z-index: 4;
+  inset-inline-end: 1px;
+  width: 5px;
+  height: 11px;
+  margin: -5px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: var(--gv-annotation-color);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.gv-timeline-annotation:focus-visible {
+  outline: 2px solid var(--timeline-dot-active-color);
+  outline-offset: 2px;
+}
+
+/* Compact's signal grows toward the page; keep the tick on the other edge. */
+.gemini-timeline-bar.timeline-style-compact.gv-timeline-ruler-inward-right .gv-timeline-annotation {
+  inset-inline: auto;
+  left: 1px;
+}
+
+/* Ruler strokes grow inward from the middle; the annotation is a short stroke on the outer side. */
+.gemini-timeline-bar.gv-timeline-style-ruler .gv-timeline-annotation {
+  inset-inline: auto;
+  left: calc(50% + 3px);
+  width: 7px;
+  height: 3px;
+  margin: -1.5px 0 0;
+  border-radius: 9999px;
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler.gv-timeline-ruler-inward-right
+  .gv-timeline-annotation {
+  left: auto;
+  right: calc(50% + 3px);
+}
+
+.gemini-timeline-bar.gv-timeline-style-ruler .gv-timeline-annotation::before {
+  content: '';
+  position: absolute;
+  inset: -3px -2px;
+}
+
+@media (forced-colors: active) {
+  .gv-timeline-annotation {
+    background: Highlight;
+  }
+}
+
 /* ===== Timeline Context Menu ===== */
 .timeline-context-menu {
   position: fixed;

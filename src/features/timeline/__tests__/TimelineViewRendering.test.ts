@@ -8,6 +8,7 @@ import { createGeminiTimelineStoragePolicy } from '@/pages/content/timeline/Gemi
 
 import { TimelineHierarchyGeometry } from '../TimelineHierarchyGeometry';
 import { TimelineView } from '../TimelineView';
+import { timelineAnnotations } from '../timelineAnnotations';
 import type { TimelineMarker } from '../types';
 
 const fixtures: Array<{ state: TimelineState; view: TimelineView }> = [];
@@ -243,5 +244,64 @@ describe('TimelineView rendering', () => {
     expect(state.isMarkerStarred('turn-0')).toBe(true);
     expect(state.isMarkerStarred('turn-9')).toBe(false);
     expect(update.mock.lastCall?.[0][0].starred).toBe(true);
+  });
+
+  describe('annotation ticks', () => {
+    afterEach(() => timelineAnnotations.publish('test', [], () => {}));
+
+    it("places a published annotation beside its turn's marker in dots and ruler styles", () => {
+      const { view } = setup();
+      // Turns start 0, 100 and 300 px down the conversation.
+      view.measureMarkers(
+        [0, 100, 300].map((top) => {
+          const element = document.createElement('div');
+          vi.spyOn(element, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, top, 0, 0));
+          return element;
+        }),
+      );
+      view.render();
+      const activate = vi.fn();
+      timelineAnnotations.publish(
+        'test',
+        [{ id: 'note', turnId: 'turn-0', progress: 0.5, color: '#123456', label: 'Go to note' }],
+        activate,
+      );
+      const tick = () => document.querySelector<HTMLButtonElement>('.gv-timeline-annotation');
+
+      expect(tick()?.parentElement).toBe(view.ui.trackContent);
+      const [first, second] = view.yPositions;
+      expect(tick()!.style.top).toBe(`${Math.round((first + second) / 2)}px`);
+      expect(tick()!.style.getPropertyValue('--gv-annotation-color')).toBe('#123456');
+      expect(tick()!.getAttribute('aria-label')).toBe('Go to note');
+
+      view.timelineStyle = 'ruler';
+      view.applyTimelineStyle();
+      // Halfway between the first two dense ticks, at -8px and 0px from the middle.
+      expect(tick()!.style.top).toBe('calc(50% - 4px)');
+
+      tick()!.click();
+      expect(activate).toHaveBeenCalledExactlyOnceWith('note');
+
+      timelineAnnotations.publish('test', [], activate);
+      expect(tick()).toBeNull();
+    });
+
+    it('takes its ticks with it when the rail is torn down', () => {
+      const { view } = setup();
+      timelineAnnotations.publish(
+        'test',
+        [{ id: 'note', turnId: 'turn-1', progress: 0, color: 'red', label: 'Note' }],
+        () => {},
+      );
+      expect(document.querySelectorAll('.gv-timeline-annotation')).toHaveLength(1);
+
+      view.destroy();
+      timelineAnnotations.publish(
+        'test',
+        [{ id: 'note', turnId: 'turn-2', progress: 0, color: 'red', label: 'Note' }],
+        () => {},
+      );
+      expect(document.querySelector('.gv-timeline-annotation')).toBeNull();
+    });
   });
 });

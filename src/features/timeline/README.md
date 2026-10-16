@@ -27,6 +27,7 @@ finish through the existing queue.
 | Hierarchy edits and persistence                                     | `TimelineHierarchy`                                   |
 | Store readiness, read settlement and snapshot ordering              | `TimelineHydration`                                   |
 | Collapse layout                                                     | `TimelineHierarchyGeometry`                           |
+| Annotation ticks published by other features (highlights)           | `timelineAnnotations`, `TimelineAnnotationLayer`      |
 
 The [Gemini adapter](../../pages/content/timeline/GeminiTimelineAdapter.ts) retains Gemini selector
 priority, stable identities and timestamps. Its small

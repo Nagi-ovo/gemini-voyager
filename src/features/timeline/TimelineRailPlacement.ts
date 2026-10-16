@@ -92,7 +92,9 @@ export class TimelineRailPlacement {
     this.bar = bar;
     const signal = this.lifetime.signal;
     const onBarPointerDown = (ev: PointerEvent) => {
-      if ((ev.target as HTMLElement).closest('.timeline-dot, .timeline-thumb')) return;
+      const target = ev.target as HTMLElement;
+      // A press on a dot or annotation tick is a click on it, never a rail drag.
+      if (target.closest('.timeline-dot, .timeline-thumb, .gv-timeline-annotation')) return;
       // Resize takes priority over position drag, even when dragging is disabled.
       if (this.isInResizeEdge(ev)) {
         this.startResize(ev);

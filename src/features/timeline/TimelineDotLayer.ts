@@ -2,6 +2,7 @@ import type { TimelineStyle } from '@/core/types/common';
 
 import type { TimelineHierarchyGeometry } from './TimelineHierarchyGeometry';
 import { getTimelineSpringProfile } from './TimelineNavigation';
+import type { AnnotationRail } from './annotationPlacement';
 import { denseMarkerOffsets, rulerWaveTick } from './denseMarkerLayout';
 import type { DotElement, TimelineMarker } from './types';
 
@@ -393,6 +394,22 @@ export class TimelineDotLayer {
 
     const rankOffsets = denseMarkerOffsets(visibleIndices.length);
     return new Map(visibleIndices.map((markerIndex, rank) => [markerIndex, rankOffsets[rank]]));
+  }
+
+  /** The rail as drawn for the current style, so other layers share the dots' coordinates. */
+  railLayout(): AnnotationRail & { dense: boolean } {
+    const hidden = this.geometry.getHiddenMarkerIndices();
+    const dense = this.options.getStyle() !== 'dots';
+    const offsets = dense ? this.buildCompactMarkerOffsets(hidden) : null;
+    return {
+      dense,
+      hidden,
+      markerIds: this.markers.map((marker) => marker.id),
+      markerTops: this.markerTops,
+      positions: offsets
+        ? this.markers.map((_, index) => offsets.get(index) ?? 0)
+        : this.yPositions,
+    };
   }
 
   private applyDotPosition(dot: DotElement, index: number, compactOffset?: number): void {

@@ -1,6 +1,7 @@
 import { type TimelineStyle } from '@/core/types/common';
 import { applyRTLClass } from '@/core/utils/rtl';
 
+import { TimelineAnnotationLayer } from './TimelineAnnotationLayer';
 import type { TimelineDataSession } from './TimelineDataSession';
 import { TimelineDotLayer } from './TimelineDotLayer';
 import type { TimelineHierarchyGeometry } from './TimelineHierarchyGeometry';
@@ -71,6 +72,10 @@ export class TimelineView {
       getViewport: () => this.options.getViewport(),
       getActiveId: () => this.options.getActiveId(),
     });
+    this.annotationLayer = new TimelineAnnotationLayer(
+      this.dotLayer,
+      () => this.timelineStyle === 'compact',
+    );
     this.placement = new TimelineRailPlacement({
       storagePrefix: options.storagePrefix,
       getStyle: () => this.timelineStyle,
@@ -79,6 +84,7 @@ export class TimelineView {
     });
   }
   private readonly dotLayer: TimelineDotLayer;
+  private readonly annotationLayer: TimelineAnnotationLayer;
   get yPositions(): number[] {
     return this.dotLayer.yPositions;
   }
@@ -101,6 +107,7 @@ export class TimelineView {
   updateVirtualRangeAndRender(): void {
     this.applyEmptyState();
     this.dotLayer.render();
+    this.annotationLayer.render();
   }
   // Gemini's new-chat home (/app) is a conversation route with no turns; an unmarked rail there
   // read as a stray full-height bar, so nothing of the rail shows until a marker exists.
@@ -174,6 +181,7 @@ export class TimelineView {
     this.ui.track = track;
     this.ui.trackContent = content;
     this.dotLayer.mount(bar, track, content);
+    this.annotationLayer.mount(content);
 
     const slider = document.createElement('div');
     slider.className = 'timeline-left-slider';
@@ -250,6 +258,7 @@ export class TimelineView {
 
     this.lifetime.abort();
     this.resizeObserver?.disconnect();
+    this.annotationLayer.destroy();
     this.dotLayer.destroy();
     if (this.resizeIdleTimer !== null) clearTimeout(this.resizeIdleTimer);
     this.slider?.destroy();
