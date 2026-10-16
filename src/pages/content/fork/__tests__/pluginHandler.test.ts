@@ -263,8 +263,8 @@ describe('fork through its registered builtin handler', () => {
     expect(document.querySelector('#input')?.textContent).toBe('First fork request');
     expect(local[PENDING_FORK_KEY]).toBeUndefined();
     flip(false);
-    await flush();
-    expect(status()).toBe('ready');
+    // Reconcile awaits once per installed builtin, so wait for the state rather than a fixed tick count.
+    await vi.waitFor(() => expect(status()).toBe('ready'));
     document.querySelector<HTMLButtonElement>('button')!.click();
     history.pushState({}, '', '/u/1/app/branch');
     document.querySelector('main')!.innerHTML =
