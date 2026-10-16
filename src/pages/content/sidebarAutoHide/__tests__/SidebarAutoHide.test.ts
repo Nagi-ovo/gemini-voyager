@@ -148,6 +148,43 @@ describe('sidebarAutoHide', () => {
     expect(toggleSpy).toHaveBeenCalledTimes(1);
   });
 
+  it('does not collapse while the folder tree right-click menu is open', async () => {
+    const { sidenav, toggleSpy } = await installSidebar({ autoHide: true }, false);
+    const { mountPopoverLayer } = await import('@/pages/content/folder/floatingTree/popoverLayer');
+    const layer = mountPopoverLayer('');
+    const menu = document.createElement('div');
+    mockVisibleRect(menu, 188, 240);
+    layer.container.appendChild(menu);
+
+    sidenav.dispatchEvent(new Event('mouseleave'));
+    vi.advanceTimersByTime(600);
+    expect(toggleSpy).not.toHaveBeenCalled();
+
+    menu.remove();
+    sidenav.dispatchEvent(new Event('mouseleave'));
+    vi.advanceTimersByTime(600);
+    expect(toggleSpy).toHaveBeenCalledTimes(1);
+    layer.destroy();
+  });
+
+  it('does not collapse while a folder is being renamed inside the sidebar', async () => {
+    const { sidenav, toggleSpy } = await installSidebar({ autoHide: true }, false);
+    const tree = document.createElement('div');
+    sidenav.appendChild(tree);
+    const editor = document.createElement('input');
+    tree.attachShadow({ mode: 'open' }).appendChild(editor);
+    editor.focus();
+
+    sidenav.dispatchEvent(new Event('mouseleave'));
+    vi.advanceTimersByTime(600);
+    expect(toggleSpy).not.toHaveBeenCalled();
+
+    editor.blur();
+    sidenav.dispatchEvent(new Event('mouseleave'));
+    vi.advanceTimersByTime(600);
+    expect(toggleSpy).toHaveBeenCalledTimes(1);
+  });
+
   it('does not expand on quick sidebar hover pass-through', async () => {
     const sidenav = document.createElement('bard-sidenav');
     mockVisibleRect(sidenav, 320, 800);

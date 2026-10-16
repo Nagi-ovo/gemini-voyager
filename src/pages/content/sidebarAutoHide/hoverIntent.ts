@@ -1,4 +1,5 @@
 import { LAYER_ATTR } from '@/core/ui/layer';
+import { POPOVER_LAYER_HOST_CLASS } from '@/pages/content/folder/floatingTree/popoverLayer';
 
 import { getSidenavElement, isSidebarCollapsed, isSidebarVisible } from './sidebarDom';
 
@@ -15,15 +16,34 @@ const CUSTOM_POPUP_SELECTORS = [
   '.gv-folder-import-dialog',
   '.gv-folder-menu',
   '.gv-color-picker-dialog',
+  // The folder tree's right-click menu, inside a 0×0 body-level host (#1059).
+  `.${POPOVER_LAYER_HOST_CLASS}`,
 ];
 
-function isElementVisible(element: HTMLElement): boolean {
+function hasBox(element: HTMLElement): boolean {
   const style = window.getComputedStyle(element);
   if (style.display === 'none' || style.visibility === 'hidden') {
     return false;
   }
   const rect = element.getBoundingClientRect();
   return rect.width > 0 || rect.height > 0;
+}
+
+/** A shadow host may be an empty box whose popover is drawn inside it. */
+function isElementVisible(element: HTMLElement): boolean {
+  if (hasBox(element)) return true;
+  const inside = element.shadowRoot?.querySelectorAll<HTMLElement>('*') ?? [];
+  return Array.from(inside).some(hasBox);
+}
+
+/** Typing in the sidebar, such as renaming a folder inline; its tree is a shadow host. */
+function isEditingIn(sidenav: HTMLElement | null): boolean {
+  let active = document.activeElement;
+  if (!sidenav || !active || !sidenav.contains(active)) return false;
+  while (active.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+  return (
+    active instanceof HTMLElement && (active.matches('input, textarea') || active.isContentEditable)
+  );
 }
 
 interface HoverIntentCallbacks {
@@ -303,7 +323,12 @@ export function createHoverIntent(callbacks: HoverIntentCallbacks) {
     },
     reattach,
     canCollapse() {
-      return !isPaused() && !isPopupOrDialogOpen() && !isMouseOverSidebarArea();
+      return (
+        !isPaused() &&
+        !isPopupOrDialogOpen() &&
+        !isMouseOverSidebarArea() &&
+        !isEditingIn(sidenavElement)
+      );
     },
     pause: pauseAutoCollapse,
     clearPending: clearAutoHideTimers,
