@@ -1,5 +1,6 @@
 import { logger } from '@/core/services/LoggerService';
 import { createToaster } from '@/core/ui/toast/toaster';
+import { isUserEvent } from '@/core/utils/userEvent';
 import { createContentExtractor } from '@/features/export/services/DOMContentExtractor';
 import type { ChatTurn } from '@/features/export/types/export';
 import { type Dispose, PluginScope } from '@/features/plugins/runtime/pluginScope';
@@ -118,6 +119,31 @@ export async function collectTemporaryChatTurns(
   return turns;
 }
 
+const PAGE_INPUT_EVENTS = ['pointerdown', 'keydown'] as const;
+let stopWatchingDeparture: (() => void) | null = null;
+
+/**
+ * After `beforeunload`, only `pagehide` proves the page left and only the person's input
+ * proves it stayed. Raw listeners: the plugin scope is torn down on `beforeunload`.
+ */
+function watchDepartureOutcome(): void {
+  if (stopWatchingDeparture) return;
+  const stop = (): void => {
+    for (const type of PAGE_INPUT_EVENTS) document.removeEventListener(type, onInput, true);
+    window.removeEventListener('pagehide', stop, true);
+    stopWatchingDeparture = null;
+  };
+  const onInput = (event: Event): void => {
+    if (!isUserEvent(event)) return;
+    stop();
+    markHandoffPageActive();
+    void discardPendingHandoff();
+  };
+  for (const type of PAGE_INPUT_EVENTS) document.addEventListener(type, onInput, true);
+  window.addEventListener('pagehide', stop, true);
+  stopWatchingDeparture = stop;
+}
+
 // Mark hard departure before root teardown so recovery survives navigation, but not disable.
 // Keep progress mounted until departure bookkeeping finishes.
 class ChatGptTemporaryHandoffPlugin {
@@ -147,11 +173,9 @@ class ChatGptTemporaryHandoffPlugin {
       'beforeunload',
       () => {
         markHandoffPageUnloading();
-        window.setTimeout(() => {
-          if (!isHandoffPageUnloading() || document.visibilityState === 'hidden') return;
-          markHandoffPageActive();
-          void discardPendingHandoff();
-        }, 0);
+        // A visible page after beforeunload may still be loading the next document; a timer
+        // fires then and would discard the handoff that document needs to recover.
+        watchDepartureOutcome();
       },
       { capture: true },
     );

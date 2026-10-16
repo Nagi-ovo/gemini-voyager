@@ -21,6 +21,9 @@ import {
 } from './storage';
 
 const extensionStorage = vi.hoisted(() => new Map<string, unknown>());
+const userEvents = vi.hoisted(() => new WeakSet<Event>());
+
+vi.mock('@/core/utils/userEvent', () => ({ isUserEvent: (event: Event) => userEvents.has(event) }));
 
 vi.mock('webextension-polyfill', () => ({
   default: {
@@ -238,7 +241,7 @@ describe('ChatGPT temporary handoff plugin', () => {
     expect(pendingRetained()).toBe(true);
   });
 
-  it('retains recovery through beforeunload teardown and clears it when the unload is cancelled', async () => {
+  it('a handoff survives a navigation that takes longer than a task to commit', async () => {
     vi.useFakeTimers();
     history.replaceState({}, '', '/?temporary-chat=true');
     seedPending({ mode: 'inline', text: 'Continue' });
@@ -247,10 +250,35 @@ describe('ChatGPT temporary handoff plugin', () => {
 
     window.dispatchEvent(new Event('beforeunload'));
     await scope.dispose();
+    // The page stays visible while the next document loads.
+    await vi.advanceTimersByTimeAsync(5_000);
     expect(pendingRetained()).toBe(true);
 
+    window.dispatchEvent(new Event('pagehide'));
     await vi.runAllTimersAsync();
+    expect(pendingRetained()).toBe(true);
+  });
 
+  it('clears recovery once the person uses a page whose unload was cancelled', async () => {
+    vi.useFakeTimers();
+    history.replaceState({}, '', '/?temporary-chat=true');
+    seedPending({ mode: 'inline', text: 'Continue' });
+    const scope = createScope();
+    await activateChatGptTemporaryHandoff(scope);
+
+    window.dispatchEvent(new Event('beforeunload'));
+    await scope.dispose();
+    await vi.runAllTimersAsync();
+    // Scripted input is not the person.
+    document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    await vi.runAllTimersAsync();
+    expect(pendingRetained()).toBe(true);
+
+    const press = new Event('pointerdown', { bubbles: true });
+    userEvents.add(press);
+    document.body.dispatchEvent(press);
+    expectRecoveryDetachedNow();
+    await vi.runAllTimersAsync();
     expect(pendingStored()).toBe(false);
   });
 
