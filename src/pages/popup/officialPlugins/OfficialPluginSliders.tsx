@@ -4,10 +4,12 @@ import { Slider } from '@/components/ui/slider';
 import type { PluginManifest, PluginSettingValue, PluginSettings } from '@/features/plugins/types';
 import type { TranslationKey } from '@/utils/translations';
 
+import { pickLocalizedSetting } from '../components/PluginIdentity';
 import type { OfficialPluginSlider } from './officialPluginRegistry';
 
 interface SliderRowProps {
   readonly id: string;
+  readonly label: string;
   readonly presentation: OfficialPluginSlider;
   readonly min: number;
   readonly max: number;
@@ -17,15 +19,17 @@ interface SliderRowProps {
   readonly t: (key: TranslationKey) => string;
 }
 
-function SliderRow({ id, presentation, min, max, value, onCommit, t }: SliderRowProps) {
+function SliderRow({ id, label, presentation, min, max, value, onCommit, t }: SliderRowProps) {
   const [draft, setDraft] = useState(value);
   const dragging = useRef(false);
   // Follow storage (a restore, another window) except while the user holds the thumb.
   useEffect(() => {
     if (!dragging.current) setDraft(value);
   }, [value]);
-  const label = t(presentation.label);
-  const shown = `${draft}${presentation.unit}`;
+  const shown =
+    draft === 0 && presentation.zeroLabel
+      ? t(presentation.zeroLabel)
+      : `${draft}${presentation.unit}`;
   return (
     <div className="mt-2">
       <div className="mb-1 flex items-center justify-between gap-2 text-[11px]">
@@ -79,12 +83,14 @@ export function OfficialPluginSliders({
   sliders,
   settings,
   onCommit,
+  language,
   t,
 }: {
   readonly manifest: PluginManifest;
   readonly sliders: Readonly<Record<string, OfficialPluginSlider>>;
   readonly settings: PluginSettings;
   readonly onCommit: (values: Readonly<Record<string, PluginSettingValue>>) => void;
+  readonly language: string;
   readonly t: (key: TranslationKey) => string;
 }) {
   const fields = manifest.contributes.settings ?? {};
@@ -99,6 +105,11 @@ export function OfficialPluginSliders({
           <SliderRow
             key={key}
             id={`official-plugin-slider-${manifest.id.replace(/[^a-zA-Z0-9_-]/g, '-')}-${key}`}
+            label={
+              presentation.label
+                ? t(presentation.label)
+                : pickLocalizedSetting(manifest, key, field, language).label
+            }
             presentation={presentation}
             min={field.min ?? 0}
             max={field.max ?? 100}

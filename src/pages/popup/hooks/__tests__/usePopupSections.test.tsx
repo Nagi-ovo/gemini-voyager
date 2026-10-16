@@ -87,22 +87,32 @@ describe('usePopupSections', () => {
     const hydrate = sections.hydrateFromStorage;
     await act(async () =>
       hydrate({
-        [StorageKeys.GV_POPUP_SECTION_ORDER]: ['folder', 'retired', 17, 'cloudSync'],
+        // Cards that became Plugins rows stay in old saved orders; they hold no slot now.
+        [StorageKeys.GV_POPUP_SECTION_ORDER]: [
+          'folder',
+          'contextSync',
+          'formulaCopy',
+          'gemsSidebar',
+          'retired',
+          17,
+          'cloudSync',
+        ],
       }),
     );
 
     const cloudSyncOrder = Number(section('cloudSync')?.style.order);
     expect(section('folder')?.style.order).toBe('0');
     expect(cloudSyncOrder).toBeGreaterThan(0);
-    expect(Number(section('contextSync')?.style.order)).toBe(cloudSyncOrder + 2);
+    expect(Number(section('timeline')?.style.order)).toBe(cloudSyncOrder + 6);
+    expect(section('contextSync')).toBeUndefined();
     // The plugin list takes no slot until it has a row on this tab.
     expect(section('officialPlugins')).toBeUndefined();
     expect(writeSyncStorage).not.toHaveBeenCalled();
 
     await render({ nativePopupPlatform: 'aistudio' });
     expect(sections.hydrateFromStorage).toBe(hydrate);
-    expect(section('contextSync')).toBeUndefined();
-    expect(sections.getSectionProps('contextSync').order).toBe(cloudSyncOrder + 2);
+    expect(section('timeline')).toBeUndefined();
+    expect(sections.getSectionProps('timeline').order).toBe(cloudSyncOrder + 6);
     expect(browser.storage.local.get).toHaveBeenCalledTimes(1);
   });
 
@@ -113,13 +123,13 @@ describe('usePopupSections', () => {
     await act(async () =>
       sections.hydrateFromStorage({ [StorageKeys.GV_POPUP_SECTION_ORDER]: saved }),
     );
-    // contextSync and timeline are hidden on AI Studio, and the plugin list has no rows there
-    // yet; localPlugins is the next visible slot.
+    // timeline is hidden on AI Studio and the plugin list has no rows here; folderSpacing is
+    // the next visible slot.
     expect(saved.slice(1, 6)).toEqual([
-      'contextSync',
       'officialPlugins',
       'localPlugins',
       'timeline',
+      'folderSpacing',
       'cloudSync',
     ]);
     const moveUp = section('cloudSync')?.querySelector<HTMLButtonElement>(
@@ -129,16 +139,16 @@ describe('usePopupSections', () => {
     await act(async () => moveUp?.click());
 
     const expected = [...saved];
-    [expected[3], expected[5]] = [expected[5], expected[3]];
+    [expected[4], expected[5]] = [expected[5], expected[4]];
     expect(writeSyncStorage).toHaveBeenLastCalledWith({
       [StorageKeys.GV_POPUP_SECTION_ORDER]: expected,
     });
-    expect(section('cloudSync')?.style.order).toBe('6');
-    expect(section('localPlugins')?.style.order).toBe('10');
-    expect(section('contextSync')).toBeUndefined();
+    expect(section('cloudSync')?.style.order).toBe('8');
+    expect(section('folderSpacing')?.style.order).toBe('10');
+    expect(section('timeline')).toBeUndefined();
     expect(section('officialPlugins')).toBeUndefined();
-    expect(sections.getSectionProps('contextSync').order).toBe(2);
-    expect(sections.getSectionProps('officialPlugins').order).toBe(4);
+    expect(sections.getSectionProps('timeline').order).toBe(6);
+    expect(sections.getSectionProps('officialPlugins').order).toBe(2);
   });
 
   it('puts a section added since the order was saved in its default slot, not at the bottom', async () => {
@@ -154,7 +164,7 @@ describe('usePopupSections', () => {
     );
 
     const after = (id: string) => Number(section(id)?.style.order);
-    expect(after('officialPlugins')).toBe(after('contextSync') + 2);
+    expect(after('officialPlugins')).toBe(after('cloudSync') + 2);
     expect(after('nanobanana')).toBe(0);
     expect(writeSyncStorage).not.toHaveBeenCalled();
   });

@@ -3,7 +3,7 @@ import React from 'react';
 import type { TranslationKey } from '@/utils/translations';
 
 import type { PopupLayoutSettingsController } from '../hooks/usePopupLayoutSettings';
-import { FOLDER_SPACING, FOLDER_TREE_INDENT, GEMS_SIDEBAR_COUNT } from '../utils/layoutSettings';
+import { FOLDER_SPACING, FOLDER_TREE_INDENT } from '../utils/layoutSettings';
 import type { NativePopupSectionId } from '../utils/nativeSiteCapabilities';
 import WidthSlider from './WidthSlider';
 
@@ -19,7 +19,6 @@ export function PopupLayoutSettings({ settings, t, wrapSection }: PopupLayoutSet
     sidebarWidthAdjuster,
     folderSpacingAdjuster,
     folderTreeIndentAdjuster,
-    gemsSidebarCountAdjuster,
     sidebarWidthEnabled,
     onSidebarWidthEnabledChange,
   } = settings;
@@ -55,21 +54,6 @@ export function PopupLayoutSettings({ settings, t, wrapSection }: PopupLayoutSet
           valueFormatter={(v) => `${v}px`}
           onChange={folderTreeIndentAdjuster.handleChange}
           onChangeComplete={folderTreeIndentAdjuster.handleChangeComplete}
-        />,
-      )}
-      {wrapSection(
-        'gemsSidebar',
-        <WidthSlider
-          label={t('gemsSidebarCount')}
-          value={gemsSidebarCountAdjuster.width}
-          min={GEMS_SIDEBAR_COUNT.min}
-          max={GEMS_SIDEBAR_COUNT.max}
-          step={1}
-          narrowLabel={t('gemsSidebarCountOff')}
-          wideLabel={t('gemsSidebarCountMany')}
-          valueFormatter={(v) => (v === 0 ? t('gemsSidebarCountOff') : String(v))}
-          onChange={gemsSidebarCountAdjuster.handleChange}
-          onChangeComplete={gemsSidebarCountAdjuster.handleChangeComplete}
         />,
       )}
       {/* AI Studio's sidebar width; Gemini's is a row in the Plugins card. */}

@@ -20,8 +20,8 @@ The biggest pain for developers: after discussing a solution thoroughly on the w
    ![CoBridge Server On](/assets/CoBridge-on.png)
 
 2. **Handshake Connection**:
-   - In the Voyager popup's **Context Sync** section, set **Sync Mode** to **Manual**.
-   - Make **Server Port** match the port CoBridge is using. When you see "IDE Online," they are connected.
+   - In the Voyager popup, turn on **Plugins** → **Context sync**.
+   - Open the row's **Options** and make **Server Port** match the port CoBridge is using. When you see "IDE Online," they are connected.
 
    ![Context Sync Console](/assets/context-sync-console.png)
 

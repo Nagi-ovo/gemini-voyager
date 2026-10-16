@@ -2073,9 +2073,9 @@
     "message": "사이드바의 최근 Gems",
     "description": "Popup slider label — how many recent gems to show in the sidebar above Notebooks. 0 hides the section entirely."
   },
-  "gemsSidebarCountOff": {
-    "message": "끔",
-    "description": "Narrow-end label on the gems count slider (count=0, section hidden)."
+  "gemsSidebarCountHidden": {
+    "message": "숨김",
+    "description": "The 0 end of the popup's recent Gems count slider: the list is hidden, the feature stays on"
   },
   "gemsSidebarCountMany": {
     "message": "많이",

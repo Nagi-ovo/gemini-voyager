@@ -67,7 +67,7 @@ describe('PopupLayoutSettings', () => {
     render({ isAIStudio: true });
     expect(
       Array.from(container.querySelectorAll('section')).map((section) => section.dataset.section),
-    ).toEqual(['folderSpacing', 'folderTreeIndent', 'gemsSidebar', 'sidebarWidth']);
+    ).toEqual(['folderSpacing', 'folderTreeIndent', 'sidebarWidth']);
     expect(slider('folderSpacing').getAttribute('aria-valuetext')).toBe('2px');
     expect(container.querySelector('input[aria-label="chatWidth"]')).toBeNull();
     expect(chrome.storage.sync.set).not.toHaveBeenCalled();

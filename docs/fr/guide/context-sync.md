@@ -20,8 +20,8 @@ Le plus grand calvaire des développeurs : après avoir discuté longuement d'un
    ![Serveur CoBridge activé](/assets/CoBridge-on.png)
 
 2. **Connexion et poignée de main** :
-   - Dans la section **Synchro du contexte** de la popup de Voyager, réglez **Mode** sur **Manuel**.
-   - Alignez **Port du serveur** sur le port utilisé par CoBridge. Lorsque vous voyez « IDE en ligne », ils sont connectés.
+   - Dans la popup de Voyager, activez **Extensions** → **Synchronisation du contexte**.
+   - Ouvrez **Options** sur cette ligne et alignez **Port du serveur** sur le port utilisé par CoBridge. Lorsque vous voyez « IDE en ligne », ils sont connectés.
 
    ![Console de synchronisation du contexte](/assets/context-sync-console.png)
 

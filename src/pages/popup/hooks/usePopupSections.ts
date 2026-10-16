@@ -33,7 +33,6 @@ const NO_EXTRA_SEARCH_ITEMS: readonly PopupSettingsSearchItem[] = [];
 const VALUE_BADGE_SECTION_IDS = new Set<PopupSectionId>([
   'folderSpacing',
   'folderTreeIndent',
-  'gemsSidebar',
   'sidebarWidth',
 ]);
 

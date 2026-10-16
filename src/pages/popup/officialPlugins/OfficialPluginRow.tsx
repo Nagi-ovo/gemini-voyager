@@ -31,6 +31,8 @@ export type OfficialPluginControls = Partial<Record<OfficialControlId, OfficialP
 export interface OfficialPanelIo {
   readonly values: LegacySettingSnapshot;
   readonly write: (payload: Record<string, unknown>) => void;
+  /** The tab the popup was opened for, when it is not the active one (the options page). */
+  readonly sourceTabId?: number;
 }
 
 export interface OfficialPluginRowProps {
@@ -127,6 +129,7 @@ export function OfficialPluginListRow({
               sliders={entry.sliders}
               settings={settings}
               onCommit={(values) => onSettingsChange(manifest.id, values)}
+              language={language}
               t={t}
             />
           )}
@@ -161,7 +164,7 @@ export function OfficialPluginListRow({
       {enabled &&
         Panel &&
         panelIo && (
-          // Mounted only while open: a panel's polling or timers stop with it.
+          // Mounted only while on and open: polling, timers and a Sync button end with the switch.
           <div
             id={panelId}
             role="group"
@@ -170,7 +173,13 @@ export function OfficialPluginListRow({
             className="border-border/60 mt-2 border-s-2 ps-3"
           >
             {expanded && (
-              <Panel values={panelIo.values} write={panelIo.write} idPrefix={panelId} t={t} />
+              <Panel
+                values={panelIo.values}
+                write={panelIo.write}
+                sourceTabId={panelIo.sourceTabId}
+                idPrefix={panelId}
+                t={t}
+              />
             )}
           </div>
         )}

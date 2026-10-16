@@ -70,7 +70,6 @@ describe('usePopupLayoutSettings', () => {
     expect(settings.sidebarWidthAdjuster.width).toBe(280);
     expect(settings.folderSpacingAdjuster.width).toBe(2);
     expect(settings.folderTreeIndentAdjuster.width).toBe(-8);
-    expect(settings.gemsSidebarCountAdjuster.width).toBe(3);
     expect(chrome.storage.sync.set).not.toHaveBeenCalled();
   });
 
@@ -78,12 +77,10 @@ describe('usePopupLayoutSettings', () => {
     stored = {
       [StorageKeys.AISTUDIO_SIDEBAR_WIDTH]: Number.NaN,
       [StorageKeys.GV_FOLDER_TREE_INDENT]: -20,
-      [StorageKeys.GV_GEMS_SIDEBAR_COUNT]: -1,
     };
     render(true);
     expect(settings.sidebarWidthAdjuster.width).toBe(280);
     expect(settings.folderTreeIndentAdjuster.width).toBe(-8);
-    expect(settings.gemsSidebarCountAdjuster.width).toBe(0);
     expect(chrome.storage.sync.set).not.toHaveBeenCalled();
   });
 

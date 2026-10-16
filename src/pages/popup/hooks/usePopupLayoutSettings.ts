@@ -7,7 +7,6 @@ import {
   AI_STUDIO_SIDEBAR_PX,
   FOLDER_SPACING,
   FOLDER_TREE_INDENT,
-  GEMS_SIDEBAR_COUNT,
   clampNumber,
 } from '../utils/layoutSettings';
 
@@ -83,21 +82,6 @@ export function usePopupLayoutSettings({ isAIStudio }: PopupLayoutSettingsOption
     }, []),
   });
 
-  // Gems sidebar count — 0 hides the section, 1-10 controls how many recent
-  // gems show above Notebooks. Persists to chrome.storage.sync so the
-  // preference follows the user across devices.
-  const gemsSidebarCountAdjuster = useWidthAdjuster({
-    storageKey: StorageKeys.GV_GEMS_SIDEBAR_COUNT,
-    defaultValue: GEMS_SIDEBAR_COUNT.defaultValue,
-    normalize: (v) => clampNumber(v, GEMS_SIDEBAR_COUNT.min, GEMS_SIDEBAR_COUNT.max),
-    onApply: useCallback((count: number) => {
-      const clamped = clampNumber(count, GEMS_SIDEBAR_COUNT.min, GEMS_SIDEBAR_COUNT.max);
-      try {
-        chrome.storage?.sync?.set({ [StorageKeys.GV_GEMS_SIDEBAR_COUNT]: clamped });
-      } catch {}
-    }, []),
-  });
-
   const hydrateFromStorage = useCallback((stored: Record<string, unknown>) => {
     setSidebarWidthEnabled(stored[StorageKeys.SIDEBAR_WIDTH_ENABLED] === true);
   }, []);
@@ -114,7 +98,6 @@ export function usePopupLayoutSettings({ isAIStudio }: PopupLayoutSettingsOption
     sidebarWidthAdjuster,
     folderSpacingAdjuster,
     folderTreeIndentAdjuster,
-    gemsSidebarCountAdjuster,
     sidebarWidthEnabled,
     hydrateFromStorage,
     onSidebarWidthEnabledChange,

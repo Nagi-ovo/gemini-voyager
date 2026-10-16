@@ -56,22 +56,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ],
     ['backup restore drive google cloud save 云端 云同步 备份 恢复'],
   ),
-  popupSectionSearchTarget('contextSync', ['contextSync']),
-  popupSearchTarget(
-    'contextSync',
-    'controls',
-    [
-      'contextSyncDescription',
-      'syncToIDE',
-      'syncServerPort',
-      'ideOnline',
-      'ideOffline',
-      'capturing',
-      'syncedSuccess',
-      'syncMode',
-    ],
-    ['ide vscode cursor local server code context 上下文 代码 编辑器 本地'],
-  ),
   popupSectionSearchTarget('timeline', ['timelineOptions']),
   popupSearchTarget('timeline', 'timelineEnabled', ['timelineEnable', 'timelineEnableHint']),
   popupSearchTarget('timeline', 'timelineStyle', [
@@ -136,13 +120,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     'controls',
     ['folderTreeIndent', 'folderTreeIndentCompact', 'folderTreeIndentSpacious'],
     ['folder nesting tree indent hierarchy 层级 缩进 树'],
-  ),
-  popupSectionSearchTarget('gemsSidebar', ['gemsSidebarCount']),
-  popupSearchTarget(
-    'gemsSidebar',
-    'controls',
-    ['gemsSidebarCount', 'gemsSidebarCountOff', 'gemsSidebarCountMany'],
-    ['gems notebook recent side nav gem 宝石 侧边栏 最近'],
   ),
   popupSectionSearchTarget('sidebarWidth', ['sidebarWidth']),
   popupSearchTarget(

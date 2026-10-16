@@ -2073,9 +2073,9 @@
     "message": "Gems récents dans la barre latérale",
     "description": "Popup slider label — how many recent gems to show in the sidebar above Notebooks. 0 hides the section entirely."
   },
-  "gemsSidebarCountOff": {
-    "message": "Désactivé",
-    "description": "Narrow-end label on the gems count slider (count=0, section hidden)."
+  "gemsSidebarCountHidden": {
+    "message": "Masqué",
+    "description": "The 0 end of the popup's recent Gems count slider: the list is hidden, the feature stays on"
   },
   "gemsSidebarCountMany": {
     "message": "Beaucoup",

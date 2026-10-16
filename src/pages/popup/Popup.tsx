@@ -15,7 +15,6 @@ import { CHATGPT_EXPORT_PLUGIN_ID } from '@/features/plugins/builtin/chatgptExpo
 import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
 
 import { CloudSyncSettings } from './components/CloudSyncSettings';
-import { ContextSyncSettings } from './components/ContextSyncSettings';
 import { DiagnosticsExportCard } from './components/DiagnosticsExportCard';
 import { FolderSettingsCard } from './components/FolderSettingsCard';
 import { GeneralSettingsCard } from './components/GeneralSettingsCard';
@@ -312,8 +311,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             t={t}
           />
         )}
-        {/* Context Sync */}
-        {wrapSection('contextSync', <ContextSyncSettings sourceTabId={sourceTabId} />)}
         {/* Timeline Options */}
         {wrapSection(
           'timeline',
@@ -421,7 +418,11 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             onToggle={officialPlugins.setEnabled}
             onSettingsChange={officialPlugins.setSettings}
             controls={{ responseNotification: general.responseNotification }}
-            panelIo={{ values: officialPlugins.panelValues, write: officialPlugins.writePanel }}
+            panelIo={{
+              values: officialPlugins.panelValues,
+              write: officialPlugins.writePanel,
+              sourceTabId,
+            }}
             searching={sections.hasSettingsSearch}
             language={language}
             t={t}

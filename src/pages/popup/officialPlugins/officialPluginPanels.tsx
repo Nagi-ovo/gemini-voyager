@@ -6,12 +6,15 @@ import type { FormulaCopyFormat } from '@/features/formulaCopy/FormulaCopyServic
 import type { LegacySettingSnapshot } from '@/features/plugins/storage/legacySettingBindings';
 import type { TranslationKey } from '@/utils/translations';
 
+import { ContextSyncPanel } from './ContextSyncPanel';
 import type { OfficialPanelId } from './officialPluginRegistry';
 
 /** What every panel gets: its keys from the live snapshot, and the overlay's writer. */
 export interface OfficialPanelProps {
   readonly values: LegacySettingSnapshot;
   readonly write: (payload: Record<string, unknown>) => void;
+  /** The tab the popup was opened for, when it is not the active one. */
+  readonly sourceTabId?: number;
   /** The row's id, for ids unique per row. */
   readonly idPrefix: string;
   readonly t: (key: TranslationKey) => string;
@@ -94,4 +97,5 @@ export const OFFICIAL_PANELS: Readonly<
 > = {
   formulaCopy: FormulaCopyPanel,
   highlight: HighlightPanel,
+  contextSync: ContextSyncPanel,
 };

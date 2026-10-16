@@ -34,7 +34,7 @@ export interface OfficialPluginEntry {
   /** The retired settings row's label and hint, so its old search words still find the row. */
   readonly searchKeys: readonly TranslationKey[];
   /** The title of the card the row left: a remembered "General Options" search still shows it. */
-  readonly formerSectionTitle: TranslationKey;
+  readonly formerSectionTitle?: TranslationKey;
   readonly searchAliases?: readonly string[];
   readonly experimental?: boolean;
   /** Whether the row applies in this popup at all; listed everywhere its manifest matches when absent. */
@@ -54,16 +54,19 @@ export interface OfficialPluginEntry {
 
 /** How a number setting shows as a slider; the range comes from the manifest. */
 export interface OfficialPluginSlider {
-  readonly label: TranslationKey;
+  /** The manifest's localized setting label when absent. */
+  readonly label?: TranslationKey;
   readonly minLabel: TranslationKey;
   readonly maxLabel: TranslationKey;
   readonly step: number;
-  readonly unit: '%' | 'px';
+  readonly unit: '%' | 'px' | '';
+  /** What 0 reads as, when it means something other than a number. */
+  readonly zeroLabel?: TranslationKey;
   /** What a stored reading looks like on this slider, when the two differ. */
   readonly toDisplay?: (value: number) => number;
 }
 
-export type OfficialPanelId = 'formulaCopy' | 'highlight';
+export type OfficialPanelId = 'formulaCopy' | 'highlight' | 'contextSync';
 export type OfficialControlId = 'responseNotification';
 
 /**
@@ -74,6 +77,7 @@ export type OfficialControlId = 'responseNotification';
 export const OFFICIAL_PANEL_KEYS: Readonly<Record<OfficialPanelId, readonly string[]>> = {
   formulaCopy: [StorageKeys.FORMULA_COPY_FORMAT],
   highlight: [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED],
+  contextSync: [StorageKeys.CONTEXT_SYNC_PORT],
 };
 
 export const OFFICIAL_PANEL_STORAGE_KEYS: readonly string[] = [
@@ -205,6 +209,23 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     searchKeys: ['sidebarFullHide', 'sidebarFullHideHint'],
   },
   {
+    id: OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
+    group: 'appearance',
+    formerSectionTitle: 'gemsSidebarCount',
+    searchKeys: ['gemsSidebarCountHidden', 'gemsSidebarCountMany'],
+    searchAliases: ['gems notebook recent side nav gem 宝石 侧边栏 最近'],
+    sliders: {
+      // 0 hides the list only; the row's switch turns the feature off.
+      count: {
+        minLabel: 'gemsSidebarCountHidden',
+        maxLabel: 'gemsSidebarCountMany',
+        step: 1,
+        unit: '',
+        zeroLabel: 'gemsSidebarCountHidden',
+      },
+    },
+  },
+  {
     id: OFFICIAL_PLUGIN_IDS.geminiCodeCollapse,
     group: 'content',
     formerSectionTitle: 'generalOptions',
@@ -257,6 +278,13 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
       panel: 'formulaCopy',
     }),
   ),
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
+    group: 'content',
+    // New to the popup: no old row to remember, only the words someone would try.
+    searchKeys: [],
+    searchAliases: ['canvas markdown copy export 画布 复制'],
+  },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiPromptHistory,
     group: 'input',
@@ -380,6 +408,23 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     usageHint: ({ isSafariBrowser }) =>
       isSafariBrowser ? 'responseCompleteNotificationHintSafari' : null,
     control: 'responseNotification',
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiContextSync,
+    group: 'conversation',
+    formerSectionTitle: 'contextSync',
+    searchKeys: [
+      'contextSyncDescription',
+      'syncToIDE',
+      'syncServerPort',
+      'ideOnline',
+      'ideOffline',
+      'capturing',
+      'syncedSuccess',
+      'syncMode',
+    ],
+    searchAliases: ['ide vscode cursor local server code context cobridge 上下文 代码 编辑器 本地'],
+    panel: 'contextSync',
   },
 ];
 

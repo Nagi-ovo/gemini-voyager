@@ -20,8 +20,8 @@
    ![CoBridge 서버 시작](/assets/CoBridge-on.png)
 
 2. **연결 확인 (Handshake)**:
-   - Voyager 팝업의 **컨텍스트 동기화** 섹션에서 **동기화 모드**를 **수동**으로 설정합니다.
-   - **서버 포트**를 CoBridge가 사용 중인 포트와 맞춥니다. "IDE Online"이 표시되면 연결된 것입니다.
+   - Voyager 팝업에서 **플러그인** → **컨텍스트 동기화**를 켭니다.
+   - 해당 행의 **옵션**을 열고 **서버 포트**를 CoBridge가 사용 중인 포트와 맞춥니다. "IDE Online"이 표시되면 연결된 것입니다.
 
    ![컨텍스트 동기화 패널](/assets/context-sync-console.png)
 

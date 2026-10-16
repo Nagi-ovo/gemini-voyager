@@ -24,9 +24,6 @@ export const normalizePercent = (
 
 export const FOLDER_SPACING = { min: 0, max: 16, defaultValue: 2 };
 export const FOLDER_TREE_INDENT = { min: -8, max: 32, defaultValue: -8 };
-// Gems sidebar count: 0 disables the section entirely (no UI), 1-10 shows
-// that many recent gems above Notebooks.
-export const GEMS_SIDEBAR_COUNT = { min: 0, max: 10, defaultValue: 3 };
 export const CHAT_PERCENT = {
   min: 30,
   max: 100,

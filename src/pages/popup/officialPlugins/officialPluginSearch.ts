@@ -31,7 +31,9 @@ export function officialPluginSearchItems(
     id: `officialPlugins:${manifest.id}`,
     sectionId: 'officialPlugins',
     settingId: manifest.id,
-    keys: [...entry.searchKeys, entry.formerSectionTitle],
+    keys: entry.formerSectionTitle
+      ? [...entry.searchKeys, entry.formerSectionTitle]
+      : entry.searchKeys,
     aliases: [...(entry.searchAliases ?? []), ...manifestSearchText(manifest)],
   }));
 }

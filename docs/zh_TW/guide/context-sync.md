@@ -20,8 +20,8 @@
    ![CoBridge 伺服器開啟](/assets/CoBridge-on.png)
 
 2. **握手對接**：
-   - 在 Voyager 彈窗的 **上下文同步** 區塊，把 **同步模式** 設為 **手動**。
-   - 讓 **服務埠號** 對齊 CoBridge 使用的埠號。看到「IDE 線上」，說明它們已經連上了。
+   - 在 Voyager 彈窗中開啟 **外掛** → **上下文同步**。
+   - 打開該列的 **選項**，讓 **服務埠號** 對齊 CoBridge 使用的埠號。看到「IDE 線上」，說明它們已經連上了。
 
    ![上下文同步面板](/assets/context-sync-console.png)
 
