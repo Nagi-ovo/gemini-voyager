@@ -15,6 +15,8 @@ Elimina múltiples conversaciones a la vez en Gemini y AI Studio, sin borrarlas 
 
 ## Cómo Usar
 
+Está activada por defecto. Actívala o desactívala en **Complementos** → **Eliminación por lotes** (igual en Gemini y AI Studio). Necesita las carpetas: si **Opciones de Carpetas** → **Habilitar función de carpetas** está desactivado, la fila aparece atenuada hasta que lo actives.
+
 ### Gemini
 
 1. En la lista de conversaciones de la barra lateral, **mantén presionado** cualquier elemento de conversación.

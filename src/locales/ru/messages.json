@@ -2749,6 +2749,10 @@
     "message": "Параметры: {name}",
     "description": "Accessible name of an official plugin row's Options button and panel; {name} is the plugin name"
   },
+  "pluginRowNeedsSetting": {
+    "message": "Сначала включите {card} → {setting}.",
+    "description": "Under a Plugins row whose feature needs a native setting that is off. {setting} is that setting's label; {card} is the settings card that holds it."
+  },
   "pluginGroupAppearance": {
     "message": "Внешний вид",
     "description": "Heading of the plugin list group for layout and look"

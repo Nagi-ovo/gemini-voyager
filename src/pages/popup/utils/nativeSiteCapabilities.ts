@@ -14,7 +14,6 @@ export const NATIVE_POPUP_SECTION_IDS = [
   'keyboardShortcuts',
   'promptManager',
   'general',
-  'nanobanana',
 ] as const;
 
 export type NativePopupSectionId = (typeof NATIVE_POPUP_SECTION_IDS)[number];

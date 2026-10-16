@@ -155,6 +155,25 @@ const MOVED_SWITCHES = [
     key: StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS,
     missing: false,
   },
+  // With folders on (their default); the row's folder dependency has its own tests.
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiBatchDelete,
+    key: StorageKeys.BATCH_DELETE_ENABLED,
+    missing: true,
+  },
+  // Each writes both split keys and clears the legacy one; see their own tests.
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload,
+    key: StorageKeys.WATERMARK_DOWNLOAD_ENABLED,
+    missing: false,
+    pairedWrite: true,
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview,
+    key: StorageKeys.WATERMARK_PREVIEW_ENABLED,
+    missing: false,
+    pairedWrite: true,
+  },
   // Its switch runs a permission flow instead of a write; see its own tests.
   {
     id: OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
@@ -167,6 +186,7 @@ const MOVED_SWITCHES = [
   key: string;
   missing: boolean;
   control?: boolean;
+  pairedWrite?: boolean;
 }[];
 
 /** The switches each old card used to hold; none may render twice. */
@@ -198,6 +218,8 @@ const RETIRED_SWITCH_IDS = [
   'highlight-timeline-markers-enabled',
   'response-complete-notification',
   'timeline-enabled',
+  'watermark-download',
+  'watermark-preview',
 ];
 
 /** The old layout cards' sliders and switches, labelled by their card title. */
@@ -282,6 +304,8 @@ describe('the official plugin list in the popup', () => {
           OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
           OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
           OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
+          OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload,
+          OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview,
         ],
       },
       {
@@ -307,6 +331,7 @@ describe('the official plugin list in the popup', () => {
           OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
           OFFICIAL_PLUGIN_IDS.geminiTimeline,
           OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps,
+          OFFICIAL_PLUGIN_IDS.geminiBatchDelete,
           OFFICIAL_PLUGIN_IDS.geminiContextSync,
         ],
       },
@@ -347,7 +372,7 @@ describe('the official plugin list in the popup', () => {
   it('each switch writes only its old sync key and never the plugin state', async () => {
     await mount();
     for (const { id, key, missing, ...rest } of MOVED_SWITCHES) {
-      if ('control' in rest) continue;
+      if ('control' in rest || 'pairedWrite' in rest) continue;
       extensionApi.storage.sync.set.mockClear();
       await act(async () => toggle(id).click());
       expect(toggle(id).checked).toBe(!missing);
@@ -413,6 +438,11 @@ describe('the official plugin list in the popup', () => {
     ['收藏', OFFICIAL_PLUGIN_IDS.geminiTimeline],
     [TRANSLATIONS.en.draggableTimeline, OFFICIAL_PLUGIN_IDS.geminiTimeline],
     [TRANSLATIONS.zh.showMessageTimestamps, OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps],
+    ['去水印', OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload],
+    [TRANSLATIONS.en.nanobananaBadgeRecommended, OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload],
+    [TRANSLATIONS.zh.nanobananaPreviewLabel, OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview],
+    ['批量删除', OFFICIAL_PLUGIN_IDS.geminiBatchDelete],
+    ['bulk', OFFICIAL_PLUGIN_IDS.geminiBatchDelete],
   ])('an old search for "%s" still finds its row', async (query, id) => {
     local[StorageKeys.GV_POPUP_SETTINGS_SEARCH_QUERY] = query;
     await mount();
@@ -476,6 +506,14 @@ describe('the official plugin list in the popup', () => {
       TRANSLATIONS.zh.inputCollapseOptions,
       [OFFICIAL_PLUGIN_IDS.geminiInputCollapse, OFFICIAL_PLUGIN_IDS.geminiVimInput],
     ],
+    [
+      TRANSLATIONS.en.nanobananaOptions,
+      [OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload, OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview],
+    ],
+    [
+      TRANSLATIONS.zh.nanobananaOptions,
+      [OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload, OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview],
+    ],
     [TRANSLATIONS.en.chatWidth, [OFFICIAL_PLUGIN_IDS.geminiChatWidth]],
     [TRANSLATIONS.zh.chatFontSize, [OFFICIAL_PLUGIN_IDS.geminiChatFontSize]],
     [TRANSLATIONS.en.chatLineHeight, [OFFICIAL_PLUGIN_IDS.geminiChatLineHeight]],
@@ -509,6 +547,7 @@ describe('the official plugin list in the popup', () => {
         OFFICIAL_PLUGIN_IDS.visualEffects,
         OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy,
         OFFICIAL_PLUGIN_IDS.aistudioEnterSend,
+        OFFICIAL_PLUGIN_IDS.aistudioBatchDelete,
       ]);
       expect(toggle(OFFICIAL_PLUGIN_IDS.aistudioEnterSend).checked).toBe(expected);
       expect(container.querySelector('#changelog-notify-badge')).not.toBeNull();

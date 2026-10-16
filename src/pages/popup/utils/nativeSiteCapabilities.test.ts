@@ -13,7 +13,7 @@ describe('native popup site capabilities', () => {
   });
 
   it('hides unsupported Gemini-only sections on AI Studio', () => {
-    for (const sectionId of ['timeline', 'keyboardShortcuts', 'nanobanana'] as const) {
+    for (const sectionId of ['timeline', 'keyboardShortcuts'] as const) {
       expect(isNativePopupSectionAvailable('aistudio', sectionId)).toBe(false);
     }
   });

@@ -32,18 +32,9 @@ describe('the official plugin list registry', () => {
     }
   });
 
-  it('gives every packaged Gemini and AI Studio plugin a row, or names it as still on a card', () => {
-    // Migrated at runtime, their popup rows come in the next batch; until then their cards stay.
-    const stillOnACard: readonly string[] = [
-      OFFICIAL_PLUGIN_IDS.geminiBatchDelete,
-      OFFICIAL_PLUGIN_IDS.aistudioBatchDelete,
-      OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload,
-      OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview,
-    ];
+  it('gives every packaged Gemini and AI Studio plugin a row', () => {
     const listed = new Set(OFFICIAL_PLUGIN_ENTRIES.map((entry) => entry.id));
-    expect(Object.values(OFFICIAL_PLUGIN_IDS).filter((id) => !listed.has(id))).toEqual(
-      stillOnACard,
-    );
+    expect(Object.values(OFFICIAL_PLUGIN_IDS).filter((id) => !listed.has(id))).toEqual([]);
   });
 
   it('lists only plugins whose switch is their old setting, so a row never writes plugin state', () => {

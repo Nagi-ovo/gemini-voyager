@@ -28,6 +28,11 @@ export interface OfficialPluginRow extends ListedOfficialPlugin {
   readonly settings: PluginSettings;
   /** How to use it once on, for this browser. */
   readonly usageHint: TranslationKey | null;
+  /** The native setting it needs, while that setting is off. */
+  readonly unmetRequirement: {
+    readonly setting: TranslationKey;
+    readonly card: TranslationKey;
+  } | null;
 }
 
 /** Change events for the bound keys and the panels' own keys, which the overlay settles. */
@@ -71,7 +76,18 @@ export function useOfficialPluginList({
         const view = effectivePluginView(plugin.manifest, pluginState, preferences.legacy);
         const hint = plugin.entry.usageHint;
         const usageHint = typeof hint === 'function' ? hint({ isSafariBrowser }) : (hint ?? null);
-        return { ...plugin, enabled: view.enabled, settings: view.settings, usageHint };
+        const requires = plugin.entry.requires;
+        const unmetRequirement =
+          requires && !requires.met(preferences.legacy)
+            ? { setting: requires.setting, card: requires.card }
+            : null;
+        return {
+          ...plugin,
+          enabled: view.enabled,
+          settings: view.settings,
+          usageHint,
+          unmetRequirement,
+        };
       }),
     [listed, pluginState, preferences.legacy, isSafariBrowser],
   );
@@ -80,8 +96,13 @@ export function useOfficialPluginList({
   // Every listed plugin is legacy-bound (the registry contract test holds it), so its switch
   // is its old sync key and its plugin-state entry is never written.
   const setEnabled = useCallback(
-    (pluginId: string, enabled: boolean) => writePreference(legacyEnableWrite(pluginId, enabled)),
-    [writePreference],
+    (pluginId: string, enabled: boolean) => {
+      const write = listed.find((plugin) => plugin.manifest.id === pluginId)?.entry.enableWrite;
+      writePreference(
+        write ? write(enabled, preferences.legacy) : legacyEnableWrite(pluginId, enabled),
+      );
+    },
+    [writePreference, listed, preferences.legacy],
   );
   const shownLegacy = preferences.legacy;
   // A boolean writes when flipped, a slider when released (OfficialPluginSliders).

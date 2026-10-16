@@ -15,6 +15,8 @@ Delete multiple conversations at once on Gemini and AI Studio, no more deleting 
 
 ## How to Use
 
+It's on by default. Switch it under **Plugins** → **Batch delete** (same on Gemini and AI Studio). It needs folders: if **Folder Options** → **Enable folder feature** is off, the row is greyed out until you turn folders on.
+
 ### Gemini
 
 1. In the sidebar conversation list, **long-press** any conversation item.

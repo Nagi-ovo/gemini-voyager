@@ -18,10 +18,10 @@ Image Refinement utiliza un **Algoritmo de Mezcla Alfa Inversa (Reverse Alpha Bl
 
 ## Cómo Usar
 
-Abre el popup de Voyager y busca **Opciones de Image Refinement**. Los dos interruptores están desactivados hasta que los actives:
+Abre el popup de Voyager y activa las filas que quieras en **Complementos**. Ambas están desactivadas por defecto:
 
 - **Eliminar marca de agua al descargar** (recomendado): al hacer clic en el botón de descarga de Gemini, el archivo guardado no lleva marca de agua. Un pequeño distintivo 🍌 en el botón indica que está activo; el botón sigue siendo el de Gemini.
-- **Eliminar marca de agua en la vista previa** (inestable): también limpia las imágenes que se muestran en pantalla. Es más lento, y una imagen puede parpadear brevemente mientras se procesa.
+- **Eliminar marca de agua en la vista previa** (marcado como **Experimental**): también limpia las imágenes que se muestran en pantalla. Es más lento, y una imagen puede parpadear brevemente mientras se procesa.
 
 Al desactivar la eliminación al descargar, las descargas siguientes no se modifican. Una descarga que ya se está procesando termina con el ajuste que tenía al comenzar, sin guardar una segunda copia por el cambio. Al desactivar la eliminación en la vista previa, se restauran los originales solo donde aún se muestra la imagen procesada por Voyager. Las imágenes que Gemini haya cambiado después se conservan.
 

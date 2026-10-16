@@ -8,7 +8,6 @@ import { GENERAL_SETTINGS_STORAGE_DEFAULTS } from './useGeneralPopupSettings';
 import { SECTION_LAYOUT_STORAGE_DEFAULTS } from './usePopupSections';
 import { PROMPT_MANAGER_STORAGE_DEFAULTS } from './usePromptManagerSettings';
 import { VISUAL_EFFECT_STORAGE_DEFAULTS } from './useVisualEffectPopupSettings';
-import { WATERMARK_SETTINGS_STORAGE_DEFAULTS } from './useWatermarkPopupSettings';
 
 type HydrateSettings = (raw: Record<string, unknown>) => void;
 
@@ -18,7 +17,6 @@ export function usePopupSettingsHydration({
   general,
   promptManager,
   visualEffect,
-  watermark,
   sections,
   aiStudio,
 }: {
@@ -26,7 +24,6 @@ export function usePopupSettingsHydration({
   general: HydrateSettings;
   promptManager: HydrateSettings;
   visualEffect: HydrateSettings;
-  watermark: HydrateSettings;
   sections: HydrateSettings;
   aiStudio: (enabled: boolean) => void;
 }) {
@@ -38,7 +35,6 @@ export function usePopupSettingsHydration({
           ...GENERAL_SETTINGS_STORAGE_DEFAULTS,
           ...PROMPT_MANAGER_STORAGE_DEFAULTS,
           ...VISUAL_EFFECT_STORAGE_DEFAULTS,
-          ...WATERMARK_SETTINGS_STORAGE_DEFAULTS,
           ...SECTION_LAYOUT_STORAGE_DEFAULTS,
           [StorageKeys.GV_AISTUDIO_ENABLED]: true,
           [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: false,
@@ -49,7 +45,6 @@ export function usePopupSettingsHydration({
           general(raw);
           promptManager(raw);
           visualEffect(raw);
-          watermark(raw);
           sections(raw);
           aiStudio(raw[StorageKeys.GV_AISTUDIO_ENABLED] !== false);
           // The retired title setting still needs its compatibility cleanup.
@@ -61,5 +56,5 @@ export function usePopupSettingsHydration({
     } catch {
       // Keep initial values when the extension storage context is unavailable.
     }
-  }, [folder, general, promptManager, visualEffect, watermark, sections, aiStudio]);
+  }, [folder, general, promptManager, visualEffect, sections, aiStudio]);
 }

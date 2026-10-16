@@ -177,17 +177,4 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ['changelog_badge_mode', 'changelog_badge_mode_hint', 'changelog_title'],
     ['update release changelog new badge 更新 版本 更新日志 提醒'],
   ),
-  popupSectionSearchTarget('nanobanana', ['nanobananaOptions']),
-  popupSearchTarget(
-    'nanobanana',
-    'download',
-    ['nanobananaDownloadLabel', 'nanobananaDownloadHint', 'nanobananaBadgeRecommended'],
-    ['watermark image banana picture photo download 水印 图片 去水印 下载'],
-  ),
-  popupSearchTarget(
-    'nanobanana',
-    'preview',
-    ['nanobananaPreviewLabel', 'nanobananaPreviewHint', 'nanobananaBadgeUnstable'],
-    ['watermark image banana picture photo preview 水印 图片 预览'],
-  ),
 ] as const satisfies readonly PopupSettingsSearchItem[];

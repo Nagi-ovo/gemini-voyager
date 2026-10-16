@@ -2749,6 +2749,10 @@
     "message": "{name}的选项",
     "description": "Accessible name of an official plugin row's Options button and panel; {name} is the plugin name"
   },
+  "pluginRowNeedsSetting": {
+    "message": "需先开启 {card} → {setting}。",
+    "description": "Under a Plugins row whose feature needs a native setting that is off. {setting} is that setting's label; {card} is the settings card that holds it."
+  },
   "pluginGroupAppearance": {
     "message": "外观",
     "description": "Heading of the plugin list group for layout and look"

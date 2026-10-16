@@ -84,6 +84,7 @@ export function OfficialPluginListRow({
   const name = displayName(pickLocalized(manifest, 'name', language));
   const inputId = domId('official-plugin', manifest.id);
   const descriptionId = domId('official-plugin-description', manifest.id);
+  const requirementId = domId('official-plugin-requirement', manifest.id);
   const panelId = domId('official-plugin-options', manifest.id);
   const Panel = entry.panel && panelIo ? OFFICIAL_PANELS[entry.panel] : null;
   const expanded = optionsOpen ?? searching;
@@ -107,6 +108,16 @@ export function OfficialPluginListRow({
           <p id={descriptionId} className="text-muted-foreground mt-0.5 text-xs leading-snug">
             {pickLocalized(manifest, 'description', language)}
           </p>
+          {row.unmetRequirement && (
+            <p
+              id={requirementId}
+              className={`mt-1 text-xs leading-snug ${BLOCKED_NOTE_TONE_CLASS.paused}`}
+            >
+              {t('pluginRowNeedsSetting')
+                .replace('{setting}', () => t(row.unmetRequirement!.setting))
+                .replace('{card}', () => t(row.unmetRequirement!.card))}
+            </p>
+          )}
           {note && (
             <p className={`mt-1 text-xs leading-snug ${BLOCKED_NOTE_TONE_CLASS[note.tone]}`}>
               {note.text}
@@ -160,7 +171,10 @@ export function OfficialPluginListRow({
         <Switch
           id={inputId}
           checked={enabled}
-          aria-describedby={descriptionId}
+          disabled={row.unmetRequirement !== null}
+          aria-describedby={
+            row.unmetRequirement ? `${descriptionId} ${requirementId}` : descriptionId
+          }
           onChange={(event) =>
             control
               ? control.setEnabled(event.target.checked)

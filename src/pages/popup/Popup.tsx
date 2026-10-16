@@ -36,7 +36,6 @@ import { StorageQuotaCard } from './components/StorageQuotaCard';
 import { TimelineSettingsCard } from './components/TimelineSettingsCard';
 import { ToolbarPinHint } from './components/ToolbarPinHint';
 import { VisualEffectPicker } from './components/VisualEffectPicker';
-import { WatermarkSettingsCard } from './components/WatermarkSettingsCard';
 import { useActivePopupTab } from './hooks/useActivePopupTab';
 import { useCatalogTimelineSettings } from './hooks/useCatalogTimelineSettings';
 import { useFolderPopupSettings } from './hooks/useFolderPopupSettings';
@@ -57,7 +56,6 @@ import { usePopupSettingsHydration } from './hooks/usePopupSettingsHydration';
 import { usePromptDataTransfer } from './hooks/usePromptDataTransfer';
 import { usePromptManagerSettings } from './hooks/usePromptManagerSettings';
 import { useVisualEffectPopupSettings } from './hooks/useVisualEffectPopupSettings';
-import { useWatermarkPopupSettings } from './hooks/useWatermarkPopupSettings';
 import { OfficialPluginList } from './officialPlugins/OfficialPluginList';
 import { useContextSyncRequest } from './officialPlugins/useContextSyncRequest';
 import { useOfficialPluginList } from './officialPlugins/useOfficialPluginList';
@@ -139,7 +137,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     writeSyncStorage: writePopupSyncStorage,
   });
   const promptTransfer = usePromptDataTransfer(t);
-  const watermark = useWatermarkPopupSettings(writePopupSyncStorage);
   const visualEffect = useVisualEffectPopupSettings(writePopupSyncStorage);
   const folderStructureCopy = useFolderStructureCopy(language, sourceTabId);
   // Above every early return and section: a sync in flight outlives the Plugins card.
@@ -173,7 +170,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     general: general.hydrateFromStorage,
     promptManager: promptManager.hydrateFromStorage,
     visualEffect: visualEffect.hydrateFromStorage,
-    watermark: watermark.hydrateFromStorage,
     sections: sections.hydrateFromStorage,
     aiStudio: setAiStudioEnabled,
   });
@@ -393,16 +389,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
               onRequest: general.requestRemoteAnnouncementSystemPermission,
             }}
             isVisible={(settingId) => sections.shouldShowSetting('general', settingId)}
-            t={t}
-          />,
-        )}
-
-        {wrapSection(
-          'nanobanana',
-          <WatermarkSettingsCard
-            values={watermark.values}
-            onChange={watermark.onChange}
-            isVisible={(id) => sections.shouldShowSetting('nanobanana', id)}
             t={t}
           />,
         )}

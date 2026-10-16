@@ -18,10 +18,10 @@ Image Refinement uses a **Reverse Alpha Blending** algorithm.
 
 ## How to Use
 
-Open the Voyager popup and find **Image Refinement Options**. Both switches are off until you turn them on:
+Open the Voyager popup and turn on the rows you want under **Plugins**. Both are off by default:
 
 - **Remove watermark on download** (Recommended): When you click Gemini's download button, the saved file has the watermark removed. A small 🍌 badge on the download button shows it's active; the button itself is still Gemini's own.
-- **Remove watermark in preview** (Unstable): Also cleans the images shown on screen. It's slower, and an image may briefly flash while it's processed.
+- **Remove watermark in preview** (marked **Experimental**): Also cleans the images shown on screen. It's slower, and an image may briefly flash while it's processed.
 
 Turning download removal off leaves subsequent downloads untouched. A download already being processed finishes with the setting it started with, without saving a second copy because of the switch. Turning preview removal off restores the original images only where Voyager’s replacement is still displayed; images changed by Gemini afterward are left alone.
 

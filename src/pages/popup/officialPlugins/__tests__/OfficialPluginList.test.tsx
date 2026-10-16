@@ -37,7 +37,16 @@ describe('OfficialPluginList', () => {
     act(() =>
       root.render(
         <OfficialPluginList
-          rows={[{ entry, manifest: untranslated, enabled: true, settings: {}, usageHint: null }]}
+          rows={[
+            {
+              entry,
+              manifest: untranslated,
+              enabled: true,
+              settings: {},
+              usageHint: null,
+              unmetRequirement: null,
+            },
+          ]}
           statuses={[]}
           nameSources={[]}
           isVisible={() => true}

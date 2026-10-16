@@ -93,6 +93,7 @@ describe('usePopupSections', () => {
           'contextSync',
           'formulaCopy',
           'gemsSidebar',
+          'nanobanana',
           'retired',
           17,
           'cloudSync',
@@ -108,6 +109,7 @@ describe('usePopupSections', () => {
     expect(section('timeline')).toBeUndefined();
     expect(sections.getSectionProps('timeline').order).toBe(cloudSyncOrder + 6);
     expect(section('contextSync')).toBeUndefined();
+    expect(section('nanobanana')).toBeUndefined();
     // The plugin list takes no slot until it has a row on this tab.
     expect(section('officialPlugins')).toBeUndefined();
     expect(writeSyncStorage).not.toHaveBeenCalled();
@@ -168,7 +170,7 @@ describe('usePopupSections', () => {
 
     const after = (id: string) => Number(section(id)?.style.order);
     expect(after('officialPlugins')).toBe(after('cloudSync') + 2);
-    expect(after('nanobanana')).toBe(0);
+    expect(after('general')).toBe(0);
     expect(writeSyncStorage).not.toHaveBeenCalled();
   });
 

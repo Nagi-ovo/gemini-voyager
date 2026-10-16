@@ -9,8 +9,12 @@
  * `.github/docs/POPUP_PLUGIN_LIST_DESIGN.md`).
  */
 import { StorageKeys } from '@/core/types/common';
+import { resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
-import { legacyBindingKeys } from '@/features/plugins/storage/legacySettingBindings';
+import {
+  type LegacySettingSnapshot,
+  legacyBindingKeys,
+} from '@/features/plugins/storage/legacySettingBindings';
 import type { TranslationKey } from '@/utils/translations';
 
 import { GEMINI_TIMELINE_OPTION_KEYS } from '../utils/timelineSettingsValues';
@@ -51,6 +55,20 @@ export interface OfficialPluginEntry {
   readonly inlinePanel?: OfficialPanelId;
   /** A switch that is not a plain write (a permission flow); the popup supplies it. */
   readonly control?: OfficialControlId;
+  /**
+   * A native setting the feature cannot run without. While it is off the row's
+   * switch is disabled and says where to turn it on.
+   */
+  readonly requires?: {
+    readonly met: (snapshot: LegacySettingSnapshot) => boolean;
+    readonly setting: TranslationKey;
+    readonly card: TranslationKey;
+  };
+  /** The switch's sync write when one key is not enough, read against what the popup shows. */
+  readonly enableWrite?: (
+    enabled: boolean,
+    shown: LegacySettingSnapshot,
+  ) => Readonly<Record<string, unknown>>;
   /** One slider per number setting of the manifest, keyed by setting. */
   readonly sliders?: Readonly<Record<string, OfficialPluginSlider>>;
 }
@@ -102,6 +120,31 @@ export const POPUP_LEGACY_SNAPSHOT_KEYS: readonly string[] = [
 /** What a row's eligibility may depend on besides the active tab. */
 export interface OfficialPluginContext {
   readonly isSafariBrowser: boolean;
+}
+
+const BATCH_DELETE_ALIASES =
+  'batch delete bulk remove select multiple conversations chats 批量删除 多选 删除对话';
+
+/** Batch selection lives in the folder surface, which the folders switch turns off. */
+const NEEDS_FOLDERS: NonNullable<OfficialPluginEntry['requires']> = {
+  met: (snapshot) => snapshot[StorageKeys.FOLDER_ENABLED] !== false,
+  setting: 'enableFolderFeature',
+  card: 'folderOptions',
+};
+
+/**
+ * Both watermark switches are written together and the legacy key cleared, as
+ * the NanoBanana card did: a missing split key falls back to the legacy one.
+ */
+function watermarkWrite(kind: 'download' | 'preview') {
+  return (enabled: boolean, shown: LegacySettingSnapshot) => {
+    const next = { ...resolveWatermarkSettings(shown), [kind]: enabled };
+    return {
+      [StorageKeys.WATERMARK_DOWNLOAD_ENABLED]: next.download,
+      [StorageKeys.WATERMARK_PREVIEW_ENABLED]: next.preview,
+      [StorageKeys.WATERMARK_REMOVER_ENABLED]: null,
+    };
+  };
 }
 
 /** Array order is the display order within each group. */
@@ -334,6 +377,24 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     searchAliases: ['deep research export pdf markdown thinking report 深度研究 导出 思考'],
   },
   {
+    id: OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload,
+    group: 'content',
+    formerSectionTitle: 'nanobananaOptions',
+    searchKeys: ['nanobananaDownloadLabel', 'nanobananaDownloadHint', 'nanobananaBadgeRecommended'],
+    searchAliases: ['watermark image banana picture photo download 水印 图片 去水印 下载'],
+    enableWrite: watermarkWrite('download'),
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview,
+    group: 'content',
+    formerSectionTitle: 'nanobananaOptions',
+    searchKeys: ['nanobananaPreviewLabel', 'nanobananaPreviewHint', 'nanobananaBadgeUnstable'],
+    searchAliases: ['watermark image banana picture photo preview 水印 图片 预览'],
+    // The card marked it unstable.
+    experimental: true,
+    enableWrite: watermarkWrite('preview'),
+  },
+  {
     id: OFFICIAL_PLUGIN_IDS.geminiPromptHistory,
     group: 'input',
     formerSectionTitle: 'promptManagerOptions',
@@ -491,6 +552,20 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     searchKeys: ['showMessageTimestamps', 'showMessageTimestampsHint'],
     searchAliases: ['time clock sent date 时间 时间戳'],
     experimental: true,
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiBatchDelete,
+    group: 'conversation',
+    searchKeys: [],
+    searchAliases: [BATCH_DELETE_ALIASES],
+    requires: NEEDS_FOLDERS,
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.aistudioBatchDelete,
+    group: 'conversation',
+    searchKeys: [],
+    searchAliases: [BATCH_DELETE_ALIASES],
+    requires: NEEDS_FOLDERS,
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiContextSync,
