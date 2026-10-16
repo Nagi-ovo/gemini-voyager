@@ -12,12 +12,7 @@ export const NATIVE_POPUP_SECTION_IDS = [
   'folderSpacing',
   'folderTreeIndent',
   'gemsSidebar',
-  'chatWidth',
-  'chatFontSize',
-  'chatLineHeight',
-  'editInputWidth',
   'sidebarWidth',
-  'sidebarBehavior',
   'visualEffect',
   'formulaCopy',
   'keyboardShortcuts',
@@ -55,11 +50,14 @@ const AI_STUDIO_CAPABILITIES = {
   general: ['remoteAnnouncementNotification', 'changelogBadgeMode'],
 } as const satisfies Partial<Record<NativePopupSectionId, SectionCapability>>;
 
+/** Sections only AI Studio keeps: on Gemini their controls are rows of the Plugins card. */
+const AI_STUDIO_ONLY_SECTIONS: ReadonlySet<NativePopupSectionId> = new Set(['sidebarWidth']);
+
 export function isNativePopupSectionAvailable(
   platform: NativePopupPlatform,
   sectionId: NativePopupSectionId,
 ): boolean {
-  if (platform === 'gemini') return true;
+  if (platform === 'gemini') return !AI_STUDIO_ONLY_SECTIONS.has(sectionId);
   return Object.prototype.hasOwnProperty.call(AI_STUDIO_CAPABILITIES, sectionId);
 }
 
@@ -68,7 +66,7 @@ export function isNativePopupSettingAvailable(
   sectionId: NativePopupSectionId,
   settingId: string,
 ): boolean {
-  if (platform === 'gemini') return true;
+  if (platform === 'gemini') return !AI_STUDIO_ONLY_SECTIONS.has(sectionId);
 
   const capability: SectionCapability | undefined =
     AI_STUDIO_CAPABILITIES[sectionId as keyof typeof AI_STUDIO_CAPABILITIES];

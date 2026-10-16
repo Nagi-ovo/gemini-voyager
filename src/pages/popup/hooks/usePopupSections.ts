@@ -34,10 +34,6 @@ const VALUE_BADGE_SECTION_IDS = new Set<PopupSectionId>([
   'folderSpacing',
   'folderTreeIndent',
   'gemsSidebar',
-  'chatWidth',
-  'chatFontSize',
-  'chatLineHeight',
-  'editInputWidth',
   'sidebarWidth',
 ]);
 

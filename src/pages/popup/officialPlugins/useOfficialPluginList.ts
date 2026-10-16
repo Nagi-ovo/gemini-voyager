@@ -3,6 +3,7 @@ import { useCallback, useMemo } from 'react';
 import { effectivePluginView } from '@/features/plugins/storage/effectivePluginView';
 import {
   type LegacySettingSnapshot,
+  legacyBindingFor,
   legacyEnableWrite,
 } from '@/features/plugins/storage/legacySettingBindings';
 import { legacyValueWrite } from '@/features/plugins/storage/legacyValueBindings';
@@ -68,17 +69,28 @@ export function useOfficialPluginList({
     (pluginId: string, enabled: boolean) => writePreference(legacyEnableWrite(pluginId, enabled)),
     [writePreference],
   );
-  // A boolean setting writes at once, like the switch. Numbers need commit-time writes,
-  // which no listed row has yet (the registry contract test holds that).
+  const shownLegacy = preferences.legacy;
+  // A boolean writes when flipped, a slider when released (OfficialPluginSliders).
   const setSettings = useCallback(
     (pluginId: string, values: Readonly<Record<string, PluginSettingValue>>) => {
       const payload = Object.assign(
         {},
         ...Object.entries(values).map(([key, value]) => legacyValueWrite(pluginId, key, value)),
       ) as Record<string, unknown>;
+      const binding = legacyBindingFor(pluginId);
+      // A never-stored width switch reads on only while the width is customized, so moving the
+      // width back to its default would turn the row, and the page, off under the user's hand.
+      // A setting is offered only while the row is on: store that switch as shown.
+      if (
+        binding?.derive &&
+        Object.keys(payload).length > 0 &&
+        shownLegacy[binding.key] === undefined
+      ) {
+        Object.assign(payload, legacyEnableWrite(pluginId, true));
+      }
       writePreference(payload);
     },
-    [writePreference],
+    [writePreference, shownLegacy],
   );
 
   return {

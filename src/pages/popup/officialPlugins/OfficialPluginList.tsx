@@ -2,6 +2,7 @@ import React from 'react';
 
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { getModifierKey } from '@/core/utils/browser';
 import { isRTLLanguage } from '@/core/utils/rtl';
 import type { PluginStatus } from '@/features/plugins/runtime/pluginStatus';
 import type { PluginManifest, PluginSettingValue } from '@/features/plugins/types';
@@ -11,6 +12,7 @@ import { ExperimentalBadge } from '../components/ExperimentalBadge';
 import { displayName, pickLocalized } from '../components/PluginIdentity';
 import { PluginSettings } from '../components/PluginSettings';
 import { BLOCKED_NOTE_TONE_CLASS, blockedPluginNote } from '../components/pluginBlockedNote';
+import { OfficialPluginSliders } from './OfficialPluginSliders';
 import { OFFICIAL_PLUGIN_GROUPS } from './officialPluginRegistry';
 import type { OfficialPluginRow } from './useOfficialPluginList';
 
@@ -110,6 +112,11 @@ function OfficialPluginListRow({
   readonly t: (key: TranslationKey) => string;
 }) {
   const { manifest, entry, enabled, settings } = row;
+  // Number settings show as the registry's sliders, which save on release.
+  const sliderKeys = entry.sliders ? Object.keys(entry.sliders) : [];
+  const hasOtherSettings = Object.keys(manifest.contributes.settings ?? {}).some(
+    (key) => !sliderKeys.includes(key),
+  );
   const inputId = domId('official-plugin', manifest.id);
   const descriptionId = domId('official-plugin-description', manifest.id);
   const note = blockedPluginNote({
@@ -139,13 +146,28 @@ function OfficialPluginListRow({
             {note.text}
           </p>
         )}
+        {enabled && entry.usageHint && (
+          <p className="text-muted-foreground/80 mt-1 text-[11px] leading-snug">
+            {t(entry.usageHint).replace('{modifier}', getModifierKey())}
+          </p>
+        )}
         {/* Options appear only while the plugin is on; turning it off keeps their stored values. */}
-        {enabled && manifest.contributes.settings && (
+        {enabled && hasOtherSettings && (
           <PluginSettings
             plugin={manifest}
             values={settings}
+            hiddenKeys={sliderKeys}
             handleSetting={(id, key, value) => onSettingsChange(id, { [key]: value })}
             handleImmediateSettings={onSettingsChange}
+          />
+        )}
+        {enabled && entry.sliders && (
+          <OfficialPluginSliders
+            manifest={manifest}
+            sliders={entry.sliders}
+            settings={settings}
+            onCommit={(values) => onSettingsChange(manifest.id, values)}
+            t={t}
           />
         )}
       </div>

@@ -144,34 +144,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ['gemsSidebarCount', 'gemsSidebarCountOff', 'gemsSidebarCountMany'],
     ['gems notebook recent side nav gem 宝石 侧边栏 最近'],
   ),
-  popupSectionSearchTarget('chatWidth', ['chatWidth']),
-  popupSearchTarget(
-    'chatWidth',
-    'controls',
-    ['chatWidth', 'chatWidthNarrow', 'chatWidthWide'],
-    ['conversation width message width content width 宽 窄 对话宽度'],
-  ),
-  popupSectionSearchTarget('chatFontSize', ['chatFontSize']),
-  popupSearchTarget(
-    'chatFontSize',
-    'controls',
-    ['chatFontSize', 'chatFontSizeSmall', 'chatFontSizeLarge'],
-    ['font text size typography zoom 字号 字体 大小'],
-  ),
-  popupSectionSearchTarget('chatLineHeight', ['chatLineHeight']),
-  popupSearchTarget(
-    'chatLineHeight',
-    'controls',
-    ['chatLineHeight', 'chatLineHeightTight', 'chatLineHeightLoose', 'chatParagraphSpacing'],
-    ['line spacing paragraph leading readability 行高 段落 间距'],
-  ),
-  popupSectionSearchTarget('editInputWidth', ['editInputWidth']),
-  popupSearchTarget(
-    'editInputWidth',
-    'controls',
-    ['editInputWidth', 'editInputWidthNarrow', 'editInputWidthWide'],
-    ['prompt input compose editor width 输入框 编辑框 宽度'],
-  ),
   popupSectionSearchTarget('sidebarWidth', ['sidebarWidth']),
   popupSearchTarget(
     'sidebarWidth',
@@ -179,15 +151,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ['sidebarWidth', 'sidebarWidthNarrow', 'sidebarWidthWide'],
     ['side panel nav rail left width 侧边栏 宽度'],
   ),
-  popupSectionSearchTarget('sidebarBehavior', ['sidebarAutoHide']),
-  popupSearchTarget('sidebarBehavior', 'sidebarAutoHide', [
-    'sidebarAutoHide',
-    'sidebarAutoHideHint',
-  ]),
-  popupSearchTarget('sidebarBehavior', 'sidebarFullHide', [
-    'sidebarFullHide',
-    'sidebarFullHideHint',
-  ]),
   popupSectionSearchTarget('visualEffect', ['visualEffect']),
   popupSearchTarget(
     'visualEffect',

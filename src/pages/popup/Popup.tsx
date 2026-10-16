@@ -133,7 +133,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     isSafariBrowser,
     canUseSystemNotifications,
   });
-  const layout = usePopupLayoutSettings({ isAIStudio, writeSyncStorage: writePopupSyncStorage });
+  const layout = usePopupLayoutSettings({ isAIStudio });
   const promptManager = usePromptManagerSettings({
     t,
     pluginManifests: plugins.pluginManifests,
@@ -376,12 +376,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             t={t}
           />,
         )}
-        <PopupLayoutSettings
-          settings={layout}
-          t={t}
-          wrapSection={wrapSection}
-          isSettingVisible={sections.shouldShowSetting}
-        />
+        <PopupLayoutSettings settings={layout} t={t} wrapSection={wrapSection} />
         {/* Platform-neutral visual effects. Third-party sites expose this only
             after Prompt Manager or a matching plugin has activated the site. */}
         {visualEffectsAvailable &&

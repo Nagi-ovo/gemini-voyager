@@ -17,16 +17,17 @@ describe('native popup site capabilities', () => {
       'contextSync',
       'timeline',
       'gemsSidebar',
-      'chatWidth',
-      'chatFontSize',
-      'chatLineHeight',
-      'editInputWidth',
-      'sidebarBehavior',
       'keyboardShortcuts',
       'nanobanana',
     ] as const) {
       expect(isNativePopupSectionAvailable('aistudio', sectionId)).toBe(false);
     }
+  });
+
+  it("leaves AI Studio's sidebar width card off Gemini, whose width is a Plugins row", () => {
+    expect(isNativePopupSectionAvailable('gemini', 'sidebarWidth')).toBe(false);
+    expect(isNativePopupSettingAvailable('gemini', 'sidebarWidth', 'controls')).toBe(false);
+    expect(isNativePopupSectionAvailable('aistudio', 'sidebarWidth')).toBe(true);
   });
 
   it('keeps supported AI Studio sections and all of their settings', () => {

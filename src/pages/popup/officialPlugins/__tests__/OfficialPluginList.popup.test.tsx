@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { StorageKeys } from '@/core/types/common';
+import { getModifierKey } from '@/core/utils/browser';
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { TRANSLATIONS } from '@/utils/translations';
 
@@ -62,6 +63,38 @@ const MOVED_SWITCHES = [
   {
     id: OFFICIAL_PLUGIN_IDS.geminiHideInputHalo,
     key: StorageKeys.INPUT_HALO_HIDDEN,
+    missing: false,
+  },
+  // With no width stored; a stored custom width is the derived case below.
+  { id: OFFICIAL_PLUGIN_IDS.geminiChatWidth, key: StorageKeys.CHAT_WIDTH_ENABLED, missing: false },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiChatFontSize,
+    key: StorageKeys.CHAT_FONT_SIZE_ENABLED,
+    missing: false,
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiChatLineHeight,
+    key: StorageKeys.CHAT_LINE_HEIGHT_ENABLED,
+    missing: false,
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiEditInputWidth,
+    key: StorageKeys.EDIT_INPUT_WIDTH_ENABLED,
+    missing: false,
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
+    key: StorageKeys.SIDEBAR_WIDTH_ENABLED,
+    missing: false,
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide,
+    key: StorageKeys.GV_SIDEBAR_AUTO_HIDE,
+    missing: false,
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide,
+    key: StorageKeys.GV_SIDEBAR_FULL_HIDE,
     missing: false,
   },
   {
@@ -135,6 +168,18 @@ const RETIRED_SWITCH_IDS = [
   'aistudio-enter-send',
   'safari-enter-fix',
   'draft-auto-save',
+  'sidebar-auto-hide',
+  'sidebar-full-hide',
+];
+
+/** The old layout cards' sliders and switches, labelled by their card title. */
+const RETIRED_LAYOUT_LABELS = [
+  TRANSLATIONS.en.chatWidth,
+  TRANSLATIONS.en.chatFontSize,
+  TRANSLATIONS.en.chatLineHeight,
+  TRANSLATIONS.en.chatParagraphSpacing,
+  TRANSLATIONS.en.editInputWidth,
+  TRANSLATIONS.en.sidebarWidth,
 ];
 
 describe('the official plugin list in the popup', () => {
@@ -222,7 +267,16 @@ describe('the official plugin list in the popup', () => {
     expect(groups).toEqual([
       {
         heading: TRANSLATIONS.en.pluginGroupAppearance,
-        rows: [OFFICIAL_PLUGIN_IDS.geminiHideInputHalo],
+        rows: [
+          OFFICIAL_PLUGIN_IDS.geminiHideInputHalo,
+          OFFICIAL_PLUGIN_IDS.geminiChatWidth,
+          OFFICIAL_PLUGIN_IDS.geminiChatFontSize,
+          OFFICIAL_PLUGIN_IDS.geminiChatLineHeight,
+          OFFICIAL_PLUGIN_IDS.geminiEditInputWidth,
+          OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
+          OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide,
+          OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide,
+        ],
       },
       {
         heading: TRANSLATIONS.en.pluginGroupContent,
@@ -258,6 +312,9 @@ describe('the official plugin list in the popup', () => {
     ]);
     expect(new Set(listedIds()).size).toBe(listedIds().length);
     for (const id of RETIRED_SWITCH_IDS) expect(container.querySelector(`#${id}`)).toBeNull();
+    for (const label of RETIRED_LAYOUT_LABELS) {
+      expect(container.querySelector(`input[aria-label="${label}"]`), label).toBeNull();
+    }
     // The manifest name, without its site prefix, labels the switch.
     const mermaidLabel = row(OFFICIAL_PLUGIN_IDS.geminiMermaid)!.querySelector('label')!;
     expect(mermaidLabel.textContent).not.toMatch(/^Gemini/);
@@ -323,6 +380,14 @@ describe('the official plugin list in the popup', () => {
     ['回车', OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend],
     [TRANSLATIONS.en.inputVimMode, OFFICIAL_PLUGIN_IDS.geminiVimInput],
     [TRANSLATIONS.zh.draftAutoSave, OFFICIAL_PLUGIN_IDS.geminiDraftSave],
+    ['字号', OFFICIAL_PLUGIN_IDS.geminiChatFontSize],
+    ['行高', OFFICIAL_PLUGIN_IDS.geminiChatLineHeight],
+    [TRANSLATIONS.en.chatParagraphSpacing, OFFICIAL_PLUGIN_IDS.geminiChatLineHeight],
+    ['message width', OFFICIAL_PLUGIN_IDS.geminiChatWidth],
+    ['编辑框', OFFICIAL_PLUGIN_IDS.geminiEditInputWidth],
+    ['nav rail', OFFICIAL_PLUGIN_IDS.geminiSidebarWidth],
+    [TRANSLATIONS.en.sidebarAutoHide, OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide],
+    [TRANSLATIONS.zh.sidebarFullHide, OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide],
   ])('an old search for "%s" still finds its row', async (query, id) => {
     local[StorageKeys.GV_POPUP_SETTINGS_SEARCH_QUERY] = query;
     await mount();
@@ -362,6 +427,15 @@ describe('the official plugin list in the popup', () => {
     [
       TRANSLATIONS.zh.inputCollapseOptions,
       [OFFICIAL_PLUGIN_IDS.geminiInputCollapse, OFFICIAL_PLUGIN_IDS.geminiVimInput],
+    ],
+    [TRANSLATIONS.en.chatWidth, [OFFICIAL_PLUGIN_IDS.geminiChatWidth]],
+    [TRANSLATIONS.zh.chatFontSize, [OFFICIAL_PLUGIN_IDS.geminiChatFontSize]],
+    [TRANSLATIONS.en.chatLineHeight, [OFFICIAL_PLUGIN_IDS.geminiChatLineHeight]],
+    [TRANSLATIONS.en.editInputWidth, [OFFICIAL_PLUGIN_IDS.geminiEditInputWidth]],
+    [TRANSLATIONS.zh.sidebarWidth, [OFFICIAL_PLUGIN_IDS.geminiSidebarWidth]],
+    [
+      TRANSLATIONS.en.sidebarAutoHide,
+      [OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide, OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide],
     ],
   ])(
     'a remembered search for the old card title "%s" still shows its moved rows',
@@ -472,6 +546,200 @@ describe('the official plugin list in the popup', () => {
         [StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]: true,
       });
       expect(local[StorageKeys.PLUGINS_STATE]).toBeUndefined();
+    });
+  });
+
+  describe('the appearance sliders', () => {
+    const sliders = (id: string) => [
+      ...row(id)!.querySelectorAll<HTMLInputElement>('input[type="range"]'),
+    ];
+    const slider = (id: string, label: string) =>
+      sliders(id).find(
+        (input) =>
+          container.querySelector(`#${input.getAttribute('aria-labelledby')}`)?.textContent ===
+          label,
+      )!;
+    const drag = (input: HTMLInputElement, value: number) => {
+      act(() => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(
+          input,
+          value,
+        );
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    };
+    const release = async (input: HTMLInputElement) => {
+      await act(async () => input.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })));
+    };
+    const pluginStateWritten = () =>
+      extensionApi.storage.local.set.mock.calls.some(([updates]) =>
+        Object.hasOwn(updates as object, StorageKeys.PLUGINS_STATE),
+      );
+
+    it.each([
+      [
+        'a chat width of 840px (70%, the default)',
+        StorageKeys.CHAT_WIDTH,
+        840,
+        OFFICIAL_PLUGIN_IDS.geminiChatWidth,
+        false,
+      ],
+      [
+        'a chat width of 720px (60%)',
+        StorageKeys.CHAT_WIDTH,
+        720,
+        OFFICIAL_PLUGIN_IDS.geminiChatWidth,
+        true,
+      ],
+      [
+        'an edit input width of 720px (60%, the default)',
+        StorageKeys.EDIT_INPUT_WIDTH,
+        720,
+        OFFICIAL_PLUGIN_IDS.geminiEditInputWidth,
+        false,
+      ],
+      [
+        'an edit input width of 80%',
+        StorageKeys.EDIT_INPUT_WIDTH,
+        80,
+        OFFICIAL_PLUGIN_IDS.geminiEditInputWidth,
+        true,
+      ],
+      [
+        'a sidebar width of 26%',
+        StorageKeys.SIDEBAR_WIDTH,
+        26,
+        OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
+        true,
+      ],
+      [
+        'a sidebar width of 312px (the default)',
+        StorageKeys.SIDEBAR_WIDTH,
+        312,
+        OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
+        false,
+      ],
+    ] as const)(
+      'with no stored switch, %s reads on or off as the page does',
+      async (_label, widthKey, width, id, expected) => {
+        sync[widthKey] = width;
+        await mount();
+        expect(toggle(id).checked).toBe(expected);
+        expect(extensionApi.storage.sync.set).not.toHaveBeenCalled();
+      },
+    );
+
+    it('a stored off switch stays off whatever width is stored', async () => {
+      sync[StorageKeys.CHAT_WIDTH] = 32;
+      sync[StorageKeys.CHAT_WIDTH_ENABLED] = false;
+      sync[StorageKeys.SIDEBAR_WIDTH] = 26;
+      sync[StorageKeys.SIDEBAR_WIDTH_ENABLED] = false;
+      await mount();
+      expect(toggle(OFFICIAL_PLUGIN_IDS.geminiChatWidth).checked).toBe(false);
+      expect(toggle(OFFICIAL_PLUGIN_IDS.geminiSidebarWidth).checked).toBe(false);
+    });
+
+    it('shows each slider only while its row is on, with the stored value', async () => {
+      sync[StorageKeys.CHAT_FONT_SIZE] = 120;
+      await mount();
+      expect(sliders(OFFICIAL_PLUGIN_IDS.geminiChatFontSize)).toHaveLength(0);
+      expect(sliders(OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide)).toHaveLength(0);
+      await act(async () => toggle(OFFICIAL_PLUGIN_IDS.geminiChatFontSize).click());
+      const fontSize = slider(OFFICIAL_PLUGIN_IDS.geminiChatFontSize, TRANSLATIONS.en.chatFontSize);
+      expect(fontSize.value).toBe('120');
+      expect(fontSize.getAttribute('aria-valuetext')).toBe('120%');
+      await act(async () => toggle(OFFICIAL_PLUGIN_IDS.geminiChatFontSize).click());
+      expect(sliders(OFFICIAL_PLUGIN_IDS.geminiChatFontSize)).toHaveLength(0);
+      expect(sync[StorageKeys.CHAT_FONT_SIZE]).toBe(120);
+    });
+
+    it('saves a width on keyboard release, not on every step, to its old sync key only', async () => {
+      sync[StorageKeys.CHAT_WIDTH_ENABLED] = true;
+      await mount();
+      const width = slider(OFFICIAL_PLUGIN_IDS.geminiChatWidth, TRANSLATIONS.en.chatWidth);
+      drag(width, 85);
+      expect(width.getAttribute('aria-valuetext')).toBe('85%');
+      expect(extensionApi.storage.sync.set).not.toHaveBeenCalled();
+      await act(async () =>
+        width.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowRight', bubbles: true })),
+      );
+      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+        [StorageKeys.CHAT_WIDTH]: 85,
+      });
+      expect(pluginStateWritten()).toBe(false);
+    });
+
+    it('saves paragraph spacing apart from line height on pointer release', async () => {
+      sync[StorageKeys.CHAT_LINE_HEIGHT_ENABLED] = true;
+      await mount();
+      const paragraph = slider(
+        OFFICIAL_PLUGIN_IDS.geminiChatLineHeight,
+        TRANSLATIONS.en.chatParagraphSpacing,
+      );
+      drag(paragraph, 20);
+      expect(paragraph.getAttribute('aria-valuetext')).toBe('20px');
+      expect(extensionApi.storage.sync.set).not.toHaveBeenCalled();
+      await release(paragraph);
+      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+        [StorageKeys.CHAT_PARAGRAPH_SPACING]: 20,
+      });
+      expect(
+        slider(OFFICIAL_PLUGIN_IDS.geminiChatLineHeight, TRANSLATIONS.en.chatLineHeight).value,
+      ).toBe('160');
+    });
+
+    it('a width that turned its row on keeps it on when moved back to the default', async () => {
+      // No stored switch: a 60% chat width reads on, and 70% would read off again.
+      sync[StorageKeys.CHAT_WIDTH] = 60;
+      await mount();
+      const width = slider(OFFICIAL_PLUGIN_IDS.geminiChatWidth, TRANSLATIONS.en.chatWidth);
+      drag(width, 70);
+      await release(width);
+      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+        [StorageKeys.CHAT_WIDTH]: 70,
+        [StorageKeys.CHAT_WIDTH_ENABLED]: true,
+      });
+      expect(toggle(OFFICIAL_PLUGIN_IDS.geminiChatWidth).checked).toBe(true);
+    });
+
+    it('shows a stored 26% sidebar as 312px and keeps it until a new width is picked', async () => {
+      sync[StorageKeys.SIDEBAR_WIDTH] = 26;
+      sync[StorageKeys.SIDEBAR_WIDTH_ENABLED] = true;
+      await mount();
+      const width = slider(OFFICIAL_PLUGIN_IDS.geminiSidebarWidth, TRANSLATIONS.en.sidebarWidth);
+      expect(width.getAttribute('aria-valuetext')).toBe('312px');
+      expect(width.value).not.toBe('180');
+      // A click without a move writes nothing.
+      await release(width);
+      expect(extensionApi.storage.sync.set).not.toHaveBeenCalled();
+      expect(sync[StorageKeys.SIDEBAR_WIDTH]).toBe(26);
+
+      drag(width, 360);
+      await release(width);
+      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+        [StorageKeys.SIDEBAR_WIDTH]: 360,
+      });
+    });
+  });
+
+  describe('usage hints', () => {
+    const collapseHint = () =>
+      TRANSLATIONS.en.inputCollapseShortcutHint.replace('{modifier}', getModifierKey());
+
+    it.each([
+      [OFFICIAL_PLUGIN_IDS.geminiInputCollapse, StorageKeys.INPUT_COLLAPSE_ENABLED, collapseHint],
+      [
+        OFFICIAL_PLUGIN_IDS.geminiVimInput,
+        StorageKeys.INPUT_VIM_MODE,
+        () => TRANSLATIONS.en.inputVimModeHint,
+      ],
+    ] as const)('%s shows how to use it only while on', async (id, key, hint) => {
+      await mount();
+      expect(row(id)!.textContent).not.toContain(hint());
+      await act(async () => toggle(id).click());
+      expect(sync[key]).toBe(true);
+      expect(row(id)!.textContent).toContain(hint());
+      expect(hint()).not.toContain('{modifier}');
     });
   });
 });

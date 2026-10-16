@@ -40,7 +40,7 @@ describe('the official plugin list registry', () => {
     for (const entry of OFFICIAL_PLUGIN_ENTRIES) {
       const manifest = manifests.get(entry.id);
       expect(manifest, entry.id).toBeDefined();
-      // A row has no settings panel yet, so a setting nothing fills could never be changed.
+      // A row's settings write to their old keys; a setting nothing binds would never be saved.
       const declared = Object.keys(manifest!.contributes.settings ?? {}).sort();
       const bound = legacyValueBindingsFor(entry.id)
         .map((binding) => binding.settingKey)
@@ -49,17 +49,24 @@ describe('the official plugin list registry', () => {
     }
   });
 
-  it('lists only boolean settings, which a row writes at once', async () => {
-    // A number needs a commit-time write (a slider would write on every step); rows lack it yet.
+  it('gives every number setting a slider, which writes on release', async () => {
+    // The generic settings panel writes a number on every step, a sync write each.
     const manifests = await packagedManifests();
     for (const entry of OFFICIAL_PLUGIN_ENTRIES) {
       const fields = Object.entries(manifests.get(entry.id)!.contributes.settings ?? {});
-      for (const [key, field] of fields) expect(field.type, `${entry.id}.${key}`).toBe('boolean');
+      const numbers = fields.filter(([, field]) => field.type === 'number').map(([key]) => key);
+      expect(Object.keys(entry.sliders ?? {}).sort(), entry.id).toEqual(numbers.sort());
+      for (const [key, field] of fields) {
+        expect(['boolean', 'number'], `${entry.id}.${key}`).toContain(field.type);
+      }
     }
   });
 
   it('a restored settings backup keeps a never-touched switch the way it was', () => {
     // Export fills a missing key with its backup default and restore writes it back.
+    // Known gap: a width switch that was never stored reads on from a customized width
+    // (`derive`); a restore stores false over it and turns that width off. Fixing it is
+    // a SettingsBackupService change, outside the popup.
     const defaults: Readonly<Record<string, unknown>> = BACKUPABLE_SYNC_SETTINGS_DEFAULTS;
     for (const entry of OFFICIAL_PLUGIN_ENTRIES) {
       const binding = legacyBindingFor(entry.id)!;
