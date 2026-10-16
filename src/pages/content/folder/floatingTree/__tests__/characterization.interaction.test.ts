@@ -394,6 +394,17 @@ describe('Escape and focus on the folder menu', () => {
     expect(openMenu()).toBeNull();
   });
 
+  it('closes the menu on an Escape the page consumes, and only the menu', () => {
+    const { view } = mount('panel');
+    const pageEscape = vi.fn((e: Event) => e.stopPropagation());
+    document.body.addEventListener('keydown', pageEscape);
+    view.openMenuByRightClick('Beta');
+    pressEscape();
+    expect(openMenu()).toBeNull();
+    expect(pageEscape).not.toHaveBeenCalled();
+    document.body.removeEventListener('keydown', pageEscape);
+  });
+
   it.each(['aistudio', 'chatgpt'] as const)(
     '%s moves focus into a menu opened from the keyboard and back on Escape',
     (consumer) => {

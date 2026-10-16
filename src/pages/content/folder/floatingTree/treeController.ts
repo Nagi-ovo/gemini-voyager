@@ -191,11 +191,15 @@ export function mountFolderTree({
     if (layer && eventPassedThrough(e, layer.host)) return;
     apply({ contextMenu: null });
   };
+  // Capture: a host that consumes Escape (Gemini closing its overlay sidebar) left the menu
+  // floating; the open menu is the top layer, so this Escape is its alone.
   const onDocumentKeyDown = (e: KeyboardEvent) => {
-    if (contextMenu && e.key === 'Escape') apply({ contextMenu: null });
+    if (!contextMenu || e.key !== 'Escape') return;
+    e.stopPropagation();
+    apply({ contextMenu: null });
   };
   document.addEventListener('click', onDocumentClick);
-  document.addEventListener('keydown', onDocumentKeyDown);
+  document.addEventListener('keydown', onDocumentKeyDown, true);
 
   // Is the user currently typing into an inline create/rename input?
   // Focus inside the shadow root shows as the host on `document.activeElement`.
@@ -253,7 +257,7 @@ export function mountFolderTree({
     },
     destroy: () => {
       document.removeEventListener('click', onDocumentClick);
-      document.removeEventListener('keydown', onDocumentKeyDown);
+      document.removeEventListener('keydown', onDocumentKeyDown, true);
       // Unmount first so the inline form drops its document listener.
       renderFolderTree(body, null);
       if (layer) {
