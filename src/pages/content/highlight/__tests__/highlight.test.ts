@@ -8,6 +8,7 @@ import type {
   HighlightUpdatePatch,
 } from '@/core/types/highlight';
 import { isHighlightColor, normalizeHighlightColorPalette } from '@/core/types/highlight';
+import { timelineAnnotations } from '@/features/timeline/timelineAnnotations';
 
 import { historyTimestampStore } from '../../timestamp/historyTimestamps';
 import { buildHighlightAnchor, resolveHighlightAnchor } from '../anchor';
@@ -16,8 +17,12 @@ import { collectHighlightTurns, findHighlightTurn, getHighlightSelectionContext 
 import { HighlightManager } from '../manager';
 import { installConversation, makeRecord, selectText } from './fixtures';
 
-const TURN_DOT =
-  '<button class="timeline-dot" data-target-turn-id="s-1111111111111111" data-marker-index="0"></button>';
+/** What highlight has handed the timeline to draw. */
+const published = () =>
+  timelineAnnotations
+    .snapshot()
+    .filter(({ source }) => source === 'highlight')
+    .map(({ annotation }) => annotation);
 
 vi.mock('@/core/services/AccountIsolationService', () => ({
   detectAccountContextFromDocument: vi.fn(() => ({ routeUserId: '0', email: null })),
@@ -262,7 +267,7 @@ describe('HighlightManager rendering and navigation', () => {
     }
   });
 
-  it('renders persisted marks and an exact timeline tick', async () => {
+  it('renders persisted marks and publishes a timeline annotation for each', async () => {
     const response = installConversation();
     const anchor = buildHighlightAnchor(response, selectText(response, 'target'));
     if (!anchor) throw new Error('Expected anchor');
@@ -271,7 +276,9 @@ describe('HighlightManager rendering and navigation', () => {
     await manager.init();
 
     expect(document.querySelector('.gv-highlight-mark')?.textContent).toBe('target');
-    expect(document.querySelector('.gv-highlight-timeline-tick')).toBeInstanceOf(HTMLButtonElement);
+    expect(published().map(({ id, turnId }) => ({ id, turnId }))).toEqual([
+      { id: 'highlight-1', turnId: 's-1111111111111111' },
+    ]);
     expect(manager.navigateToHighlight('highlight-1', 'auto')).toBe('highlight');
     const mark = document.querySelector<HTMLElement>('.gv-highlight-mark')!;
     expect(document.activeElement).toBe(mark);
@@ -285,10 +292,19 @@ describe('HighlightManager rendering and navigation', () => {
     manager.destroy();
   });
 
-  it('renders custom colors and can hide only the timeline markers', async () => {
+  it("publishes a highlight's turn, place in it and colour, and can hide only the timeline markers", async () => {
     const response = installConversation();
     const anchor = buildHighlightAnchor(response, selectText(response, 'target'));
     if (!anchor) throw new Error('Expected anchor');
+    const turn = document.querySelector<HTMLElement>('.conversation-container')!;
+    vi.spyOn(turn, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 100, 600, 400));
+    const rects = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockImplementation(function (this: HTMLElement) {
+        return this.classList.contains('gv-highlight-mark')
+          ? new DOMRect(0, 400, 40, 20)
+          : new DOMRect();
+      });
     const manager = new HighlightManager(
       new FakeHighlightClient([makeRecord(anchor, { color: '#123456' })]),
     );
@@ -298,17 +314,25 @@ describe('HighlightManager rendering and navigation', () => {
     expect(document.querySelector<HTMLElement>('.gv-highlight-mark')?.style.backgroundColor).toBe(
       'rgba(18, 52, 86, 0.3)',
     );
-    expect(
-      document.querySelector<HTMLElement>('.gv-highlight-timeline-tick')?.style.backgroundColor,
-    ).toBe('rgb(18, 52, 86)');
+    expect(published()).toEqual([
+      {
+        id: 'highlight-1',
+        turnId: 's-1111111111111111',
+        progress: 0.75,
+        color: '#123456',
+        label: 'Open saved highlight',
+        title: 'target',
+      },
+    ]);
 
     manager.setTimelineMarkersEnabled(false);
-    expect(document.querySelector('.gv-highlight-timeline-tick')).toBeNull();
+    expect(published()).toEqual([]);
     expect(document.querySelector('.gv-highlight-mark')?.textContent).toBe('target');
 
     manager.setTimelineMarkersEnabled(true);
-    expect(document.querySelector('.gv-highlight-timeline-tick')).toBeInstanceOf(HTMLButtonElement);
+    expect(published()).toHaveLength(1);
     manager.destroy();
+    rects.mockRestore();
   });
 
   it('uses the five persistent palette slots when editing a highlight', async () => {
@@ -362,9 +386,8 @@ describe('HighlightManager rendering and navigation', () => {
     );
     expect(accountIsolationService.resolveAccountScope).toHaveBeenCalledTimes(2);
     expect(mark.classList).toContain('gv-highlight-mark-green');
-    expect(document.querySelector('.gv-highlight-timeline-tick')?.classList).toContain(
-      'gv-highlight-timeline-tick-green',
-    );
+    // Ticks use deeper preset colours than the text tints so a few pixels still read.
+    expect(published()[0]?.color).toBe('#24a148');
 
     mark.click();
     expect(document.querySelector<HTMLTextAreaElement>('.gv-highlight-note')?.value).toBe(
@@ -380,7 +403,7 @@ describe('HighlightManager rendering and navigation', () => {
     );
     expect(accountIsolationService.resolveAccountScope).toHaveBeenCalledTimes(3);
     expect(document.querySelector('.gv-highlight-popover')).toBeNull();
-    expect(document.querySelector('.gv-highlight-timeline-tick')).toBeNull();
+    expect(published()).toEqual([]);
     expect(response.textContent).toBe('Alpha target Omega');
     manager.destroy();
   });
@@ -397,7 +420,7 @@ describe('HighlightManager rendering and navigation', () => {
     await manager.init();
 
     expect(document.querySelector('.gv-highlight-mark')?.textContent).toBe('target');
-    expect(document.querySelector('.gv-highlight-timeline-tick')).toBeNull();
+    expect(published()).toEqual([]);
     manager.destroy();
   });
 
@@ -464,61 +487,6 @@ describe('HighlightManager rendering and navigation', () => {
     manager.destroy();
   });
 
-  it('moves timeline ticks when Timeline switches between classic and compact', async () => {
-    const response = installConversation();
-    const anchor = buildHighlightAnchor(response, selectText(response, 'target'));
-    if (!anchor) throw new Error('Expected anchor');
-    const manager = new HighlightManager(new FakeHighlightClient([makeRecord(anchor)]));
-    await manager.init();
-    const bar = document.querySelector<HTMLElement>('.gemini-timeline-bar');
-    const track = document.querySelector<HTMLElement>('.timeline-track-content');
-    if (!bar || !track) throw new Error('Expected timeline');
-    // A compact rail renders a marker for every visible turn.
-    track.insertAdjacentHTML('afterbegin', TURN_DOT);
-    expect(document.querySelector('.gv-highlight-timeline-tick')?.parentElement).toBe(track);
-
-    bar.classList.add('timeline-style-compact');
-    await new Promise((resolve) => window.setTimeout(resolve, 0));
-    expect(document.querySelector('.gv-highlight-timeline-tick')?.parentElement).toBe(bar);
-
-    bar.classList.remove('timeline-style-compact');
-    await new Promise((resolve) => window.setTimeout(resolve, 0));
-    expect(document.querySelector('.gv-highlight-timeline-tick')?.parentElement).toBe(track);
-
-    manager.destroy();
-  });
-
-  it('reattaches markers when Timeline replaces its DOM and follows the replacement style', async () => {
-    const response = installConversation();
-    const anchor = buildHighlightAnchor(response, selectText(response, 'target'));
-    if (!anchor) throw new Error('Expected anchor');
-    const manager = new HighlightManager(new FakeHighlightClient([makeRecord(anchor)]));
-    await manager.init();
-    const oldBar = document.querySelector<HTMLElement>('.gemini-timeline-bar')!;
-    const oldTick = oldBar.querySelector('.gv-highlight-timeline-tick')!;
-    const replacement = document.createElement('div');
-    replacement.className = 'gemini-timeline-bar';
-    replacement.innerHTML = `<div class="timeline-track-content">${TURN_DOT}</div>`;
-    oldBar.replaceWith(replacement);
-
-    await vi.waitFor(() => {
-      expect(replacement.querySelector('.gv-highlight-timeline-tick')?.parentElement).toBe(
-        replacement.firstElementChild,
-      );
-    });
-    expect(oldTick.isConnected).toBe(false);
-    expect(replacement.querySelectorAll('.gv-highlight-timeline-tick')).toHaveLength(1);
-
-    replacement.classList.add('timeline-style-compact');
-    await vi.waitFor(() => {
-      expect(replacement.querySelector('.gv-highlight-timeline-tick')?.parentElement).toBe(
-        replacement,
-      );
-    });
-    expect(replacement.querySelectorAll('.gv-highlight-timeline-tick')).toHaveLength(1);
-    manager.destroy();
-  });
-
   it('falls back to the owning turn when the quote cannot be resolved', async () => {
     const response = installConversation('Completely different response');
     const unresolved = makeRecord({
@@ -582,7 +550,7 @@ describe('HighlightManager rendering and navigation', () => {
     manager.destroy();
   });
 
-  it('removes injected marks, ticks, listeners, and styles on cleanup', async () => {
+  it('removes injected marks, timeline annotations, listeners, and styles on cleanup', async () => {
     const response = installConversation();
     const anchor = buildHighlightAnchor(response, selectText(response, 'target'));
     if (!anchor) throw new Error('Expected anchor');
@@ -592,7 +560,7 @@ describe('HighlightManager rendering and navigation', () => {
     manager.destroy();
 
     expect(document.querySelector('.gv-highlight-mark')).toBeNull();
-    expect(document.querySelector('.gv-highlight-timeline-tick')).toBeNull();
+    expect(published()).toEqual([]);
     expect(document.getElementById('gv-highlight-style')).toBeNull();
     expect(chrome.runtime.onMessage.removeListener).toHaveBeenCalled();
     expect(response.textContent).toBe('Alpha target Omega');

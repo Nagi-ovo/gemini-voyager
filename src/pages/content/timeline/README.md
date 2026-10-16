@@ -94,10 +94,11 @@ left untouched and are never read or imported.
 
 [`../highlight/manager.ts`](../highlight/manager.ts) owns account/route loading, records, text anchors
 and mutations. [`HighlightEditor`](../highlight/HighlightEditor.ts) owns the annotation popover and
-focus/listener cleanup. [`HighlightTimelineMarkers`](../highlight/HighlightTimelineMarkers.ts) owns
-highlight ticks and observes the rail's DOM contract (`.gemini-timeline-bar`,
-`.timeline-track-content`, `.timeline-style-compact`, `.gv-timeline-style-ruler`, and each rendered
-`.timeline-dot`'s `data-target-turn-id` and `data-marker-index`). A tick sits beside its turn's
-rendered marker, between it and the next one (on compact and ruler rails, a turn without a
-marker uses the nearest earlier one); marker ids come from `readServerTurnId`. Update its
-tests when that contract changes; the two managers do not call each other.
+focus/listener cleanup. [`HighlightTimelineAnnotations`](../highlight/highlightTimelineAnnotations.ts)
+publishes each visible highlight to the page-wide
+[`timelineAnnotations`](../../../features/timeline/timelineAnnotations.ts) registry as plain data:
+its turn's marker id (from `readServerTurnId`), how far down that turn the mark sits, a tick colour
+and a label. The timeline's [`TimelineAnnotationLayer`](../../../features/timeline/TimelineAnnotationLayer.ts)
+places and draws the ticks in every rail style, including collapsed and dense rails, and hands a
+click back to the publisher. Neither side reads the other's DOM, and the two managers do not call
+each other.

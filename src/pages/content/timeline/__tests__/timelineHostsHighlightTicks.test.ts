@@ -1,15 +1,15 @@
 // @vitest-environment jsdom
 // @vitest-environment-options { "url": "https://gemini.google.com/app" }
 /**
- * The DOM contract between the Gemini timeline and highlight ticks: the highlight feature finds
- * the rail by `.gemini-timeline-bar` / `.timeline-track-content` and places its ticks there (or
- * on the bar in compact style). Driven with the real timeline and the real tick renderer, so a
- * renamed or restructured rail shows up here.
+ * Highlights reach the Gemini rail only through the page's `timelineAnnotations` registry: the
+ * highlight feature publishes turn ids from `readServerTurnId` and the timeline places a tick
+ * beside the marker with that id. Driven with the real timeline and the real publisher, so a
+ * change to either side's turn identity shows up here.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { HighlightTimelineMarkers } from '../../highlight/HighlightTimelineMarkers';
 import { makeRecord } from '../../highlight/__tests__/fixtures';
+import type { HighlightTimelineAnnotations } from '../../highlight/highlightTimelineAnnotations';
 import {
   type GeminiTurn,
   GeminiPage,
@@ -18,7 +18,6 @@ import {
   navigateTo,
   settle,
   startTimelineOnPage,
-  timelineBar,
   useTimelinePage,
 } from './geminiTimelineHarness';
 
@@ -34,16 +33,24 @@ const TURNS: GeminiTurn[] = [
   },
   { prompt: 'List its limits', response: 'Small sample size.', serverId: 'bbbbbbbbbbbbbbbb' },
 ];
-const TICK = '.gv-highlight-timeline-tick';
+const TICK = '.gv-timeline-annotation';
+const tick = () => document.querySelector<HTMLElement>(TICK);
+const trackContent = () => document.querySelector(`${SURFACE.bar} ${SURFACE.trackContent}`);
 
-let highlights: HighlightTimelineMarkers | null = null;
+let highlights: HighlightTimelineAnnotations | null = null;
 afterEach(() => {
   highlights?.destroy();
   highlights = null;
 });
 
 /** The user highlighted a phrase in the second response. */
-function highlightSecondResponse(page: GeminiPage): HighlightTimelineMarkers {
+async function highlightSecondResponse(
+  page: GeminiPage,
+  onActivate: (id: string) => void = () => {},
+): Promise<HighlightTimelineAnnotations> {
+  // Loaded after the harness resets modules, so it shares the timeline's registry as on the page.
+  const { HighlightTimelineAnnotations } =
+    await import('../../highlight/highlightTimelineAnnotations');
   const response = page.response(TURNS[1].prompt);
   response.innerHTML = 'Small <mark class="gv-highlight-mark">sample size</mark>.';
   const mark = response.querySelector<HTMLElement>('mark')!;
@@ -52,12 +59,11 @@ function highlightSecondResponse(page: GeminiPage): HighlightTimelineMarkers {
     position: { start: 6, end: 17 },
     sourceTextHash: 'source',
   });
-  highlights = new HighlightTimelineMarkers(
+  highlights = new HighlightTimelineAnnotations(
     new Map([[record.id, record]]),
     new Map([[record.id, [mark]]]),
-    () => {},
+    onActivate,
   );
-  highlights.start();
   highlights.render();
   return highlights;
 }
@@ -65,34 +71,38 @@ function highlightSecondResponse(page: GeminiPage): HighlightTimelineMarkers {
 describe('highlight ticks on the timeline rail', () => {
   const ext = useTimelinePage();
 
-  it('a highlight tick is placed inside the rail track, next to the dots', async () => {
+  it('a highlight tick is placed inside the rail track, next to the dots, and opens its highlight', async () => {
     const page = new GeminiPage(TURNS);
     await startTimelineOnPage();
+    const activate = vi.fn();
 
-    highlightSecondResponse(page);
+    await highlightSecondResponse(page, activate);
 
-    const tick = document.querySelector(TICK);
-    expect(tick?.parentElement).toBe(
-      document.querySelector(`${SURFACE.bar} ${SURFACE.trackContent}`),
-    );
+    expect(tick()?.parentElement).toBe(trackContent());
+    tick()!.click();
+    expect(activate).toHaveBeenCalledWith('highlight-1');
   });
 
-  it('switching to the compact style moves the tick onto the rail itself', async () => {
+  it("switching to the compact style places the tick on the dense rail at its turn's marker", async () => {
     const page = new GeminiPage(TURNS);
     await startTimelineOnPage();
-    highlightSecondResponse(page);
+    await highlightSecondResponse(page);
 
     ext().external('sync', { geminiTimelineStyle: 'compact' });
     await settle();
 
     expect(document.querySelectorAll(TICK)).toHaveLength(1);
-    expect(document.querySelector(TICK)?.parentElement).toBe(timelineBar());
+    const secondDot = document.querySelector<HTMLElement>(
+      `${SURFACE.dot}[data-target-turn-id="s-${TURNS[1].serverId}"]`,
+    );
+    expect(secondDot).not.toBeNull();
+    expect(tick()?.style.top).toBe(secondDot!.style.top);
   });
 
   it('the tick survives the rail repainting its dots for a new turn', async () => {
     const page = new GeminiPage(TURNS);
     await startTimelineOnPage();
-    highlightSecondResponse(page);
+    await highlightSecondResponse(page);
 
     page.append({ prompt: 'Suggest a follow-up study', serverId: 'cccccccccccccccc' });
     await settle();
@@ -104,12 +114,12 @@ describe('highlight ticks on the timeline rail', () => {
   it('the tick goes away with the rail when the user leaves the conversation', async () => {
     const page = new GeminiPage(TURNS);
     await startTimelineOnPage();
-    const ticks = highlightSecondResponse(page);
+    const ticks = await highlightSecondResponse(page);
 
     await leaveConversation('/');
     ticks.render();
 
-    expect(document.querySelector(TICK)).toBeNull();
+    expect(tick()).toBeNull();
   });
 
   it('the tick can be placed on the new rail after switching conversations', async () => {
@@ -118,10 +128,8 @@ describe('highlight ticks on the timeline rail', () => {
 
     page.render(TURNS);
     await navigateTo('/app/other');
-    highlightSecondResponse(page);
+    await highlightSecondResponse(page);
 
-    expect(document.querySelector(TICK)?.parentElement).toBe(
-      document.querySelector(`${SURFACE.bar} ${SURFACE.trackContent}`),
-    );
+    expect(tick()?.parentElement).toBe(trackContent());
   });
 });

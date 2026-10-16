@@ -16,6 +16,7 @@ import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmi
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
+import { timelineAnnotations } from '@/features/timeline/timelineAnnotations';
 
 import { handleHighlightRuntimeMessage } from '../../background/highlightMessages';
 import { selectText } from '../highlight/__tests__/fixtures';
@@ -56,6 +57,8 @@ vi.mock('@/core/services/HighlightAnnotationService', async (original) => {
 });
 
 const ID = OFFICIAL_PLUGIN_IDS.geminiHighlight;
+/** Highlight ticks handed to the timeline. */
+const ticks = () => timelineAnnotations.snapshot().filter(({ source }) => source === 'highlight');
 const CONVERSATION_ID = 'gemini:conv:test';
 const SCOPE: HighlightAccountScope = {
   platform: 'gemini',
@@ -168,8 +171,7 @@ beforeEach(() => {
     <main><div class="conversation-container" id="1111111111111111">
       <div class="user-query-bubble-with-background">Question</div>
       <model-response><message-content id="answer">Alpha target Omega</message-content></model-response>
-    </div></main>
-    <div class="gemini-timeline-bar"><div class="timeline-track-content"></div></div>`;
+    </div></main>`;
   harness = installLifecycleHarness();
   cleanup = new CleanupManager();
   host = null;
@@ -231,7 +233,7 @@ describe('Highlight through its registered official plugin', () => {
     await flush();
     expect(mark()?.textContent).toBe('target');
     expect(document.querySelectorAll('.gv-highlight-mark')).toHaveLength(1);
-    expect(document.querySelectorAll('.gv-highlight-timeline-tick')).toHaveLength(1);
+    expect(ticks()).toHaveLength(1);
     mark()!.click();
     expect(document.querySelector<HTMLTextAreaElement>('.gv-highlight-note')?.value).toBe(
       original.note,
@@ -239,7 +241,7 @@ describe('Highlight through its registered official plugin', () => {
     flip(false);
     await flush();
     expect(mark()).toBeNull();
-    expect(document.querySelector('.gv-highlight-timeline-tick')).toBeNull();
+    expect(ticks()).toHaveLength(0);
     expect(document.querySelector('.gv-highlight-popover')).toBeNull();
     expect(annotationData()).toEqual(before);
     selectAnswer();
@@ -248,7 +250,7 @@ describe('Highlight through its registered official plugin', () => {
     flip(true);
     await flush();
     expect(document.querySelectorAll('.gv-highlight-mark')).toHaveLength(1);
-    expect(document.querySelectorAll('.gv-highlight-timeline-tick')).toHaveLength(1);
+    expect(ticks()).toHaveLength(1);
     expect(await stored()).toEqual([original]);
     const status = host!.getStatuses().find((entry) => entry.id === ID)?.kind;
     expect(status).toBe('mounted');
@@ -368,6 +370,6 @@ describe('Highlight through its registered official plugin', () => {
     flip(true);
     await flush();
     expect(mark()?.dataset.gvHighlightId).toBe(records[0].id);
-    expect(document.querySelectorAll('.gv-highlight-timeline-tick')).toHaveLength(1);
+    expect(ticks()).toHaveLength(1);
   });
 });

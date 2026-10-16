@@ -23,10 +23,10 @@ import {
 import { HighlightEditor } from './HighlightEditor';
 import { HighlightMarks } from './HighlightMarks';
 import { HighlightNavigation, type HighlightNavigationResult } from './HighlightNavigation';
-import { HighlightTimelineMarkers } from './HighlightTimelineMarkers';
 import { HIGHLIGHT_EXACT_MAX_BYTES, buildHighlightAnchor } from './anchor';
 import { HighlightClient, highlightClient } from './client';
 import { getHighlightSelectionContext } from './dom';
+import { HighlightTimelineAnnotations } from './highlightTimelineAnnotations';
 import { getSaveFailureMessage, translate } from './messages';
 import { type MutationIdentity, isAccountSwitch, isSameMutationPage } from './mutationIdentity';
 import { followPageAccount, readPageAccountHints } from './pageAccount';
@@ -162,43 +162,6 @@ function injectStyles(): void {
       clip-path: inset(50%);
       white-space: nowrap;
     }
-    .gv-highlight-timeline-tick {
-      position: absolute;
-      z-index: 4;
-      inset-inline-end: 1px;
-      width: 5px;
-      height: 11px;
-      margin: -5px 0 0;
-      padding: 0;
-      border: 0;
-      border-radius: 3px;
-      cursor: pointer;
-      transform: none;
-    }
-    .gv-highlight-timeline-tick:focus-visible { outline: 2px solid #0b57d0; outline-offset: 2px; }
-    /* Ruler strokes grow inward from the middle; the highlight is a short stroke on the outer side. */
-    .gemini-timeline-bar.gv-timeline-style-ruler .gv-highlight-timeline-tick {
-      inset-inline: auto;
-      left: calc(50% + 3px);
-      width: 7px;
-      height: 3px;
-      margin: -1.5px 0 0;
-      border-radius: 9999px;
-    }
-    .gemini-timeline-bar.gv-timeline-style-ruler.gv-timeline-ruler-inward-right
-      .gv-highlight-timeline-tick {
-      left: auto;
-      right: calc(50% + 3px);
-    }
-    .gemini-timeline-bar.gv-timeline-style-ruler .gv-highlight-timeline-tick::before {
-      content: '';
-      position: absolute;
-      inset: -3px -2px;
-    }
-    .gv-highlight-timeline-tick-yellow { background: #e8b400; }
-    .gv-highlight-timeline-tick-green { background: #24a148; }
-    .gv-highlight-timeline-tick-blue { background: #1a73e8; }
-    .gv-highlight-timeline-tick-pink { background: #d9468f; }
 
     .theme-host.light-theme .gv-highlight-popover,
     body[data-theme="light"] .gv-highlight-popover {
@@ -272,7 +235,6 @@ function injectStyles(): void {
     }
     @media (forced-colors: active) {
       .gv-highlight-mark { background: transparent; outline: 1px solid Highlight; }
-      .gv-highlight-timeline-tick { background: Highlight; }
     }
   `;
   document.head.appendChild(style);
@@ -347,10 +309,10 @@ export class HighlightManager {
     delete: (record) => this.deleteHighlight(record),
     announce: (message) => this.announce(message),
   });
-  private readonly timelineMarkers = new HighlightTimelineMarkers(
+  private readonly timelineAnnotations = new HighlightTimelineAnnotations(
     this.records,
     this.marks.elements,
-    (id) => this.navigateToHighlight(id),
+    (id) => void this.navigateToHighlight(id),
   );
 
   constructor(private readonly client: HighlightClient = highlightClient) {}
@@ -360,7 +322,7 @@ export class HighlightManager {
   }
 
   setTimelineMarkersEnabled(enabled: boolean): void {
-    this.timelineMarkers.setEnabled(enabled);
+    this.timelineAnnotations.setEnabled(enabled);
   }
 
   async init(): Promise<void> {
@@ -373,7 +335,6 @@ export class HighlightManager {
     document.addEventListener('keydown', this.onDocumentKeydown, true);
     window.addEventListener('hashchange', this.onHashChange);
     window.addEventListener('popstate', this.onRouteEvent);
-    this.timelineMarkers.start();
     chrome.runtime.onMessage.addListener(this.onRuntimeMessage);
 
     this.observer = new MutationObserver(() => this.scheduleRender());
@@ -626,7 +587,7 @@ export class HighlightManager {
     this.observer?.disconnect();
     try {
       this.marks.render(this.records);
-      this.timelineMarkers.render();
+      this.timelineAnnotations.render();
       this.navigation.retryPending();
     } finally {
       this.observeDocument();
@@ -637,7 +598,7 @@ export class HighlightManager {
     this.observer?.disconnect();
     try {
       this.marks.clear();
-      this.timelineMarkers.clear();
+      this.timelineAnnotations.clear();
     } finally {
       this.observeDocument();
     }
@@ -655,7 +616,7 @@ export class HighlightManager {
     if (!this.isCurrentMutation(identity)) return;
     this.records.set(updated.id, updated);
     this.marks.updateColor(updated.id, updated.color);
-    this.timelineMarkers.render();
+    this.timelineAnnotations.render();
   }
 
   private async deleteHighlight(record: HighlightRecordV1): Promise<void> {
@@ -667,7 +628,7 @@ export class HighlightManager {
     if (!this.isCurrentMutation(identity)) return;
     this.records.delete(record.id);
     this.marks.remove(record.id);
-    this.timelineMarkers.render();
+    this.timelineAnnotations.render();
   }
 
   private ensureLiveRegion(): void {
@@ -700,7 +661,7 @@ export class HighlightManager {
     this.scopeGeneration++;
     this.observer?.disconnect();
     this.observer = null;
-    this.timelineMarkers.destroy();
+    this.timelineAnnotations.destroy();
     document.removeEventListener('click', this.onDocumentClick, true);
     document.removeEventListener('keydown', this.onDocumentKeydown, true);
     window.removeEventListener('hashchange', this.onHashChange);

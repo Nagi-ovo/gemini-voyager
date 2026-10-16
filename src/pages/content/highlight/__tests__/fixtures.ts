@@ -42,9 +42,6 @@ export function installConversation(responseText = 'Alpha target Omega'): HTMLEl
         <model-response><message-content id="response"></message-content></model-response>
       </div>
     </main>
-    <div class="gemini-timeline-bar">
-      <div class="timeline-track"><div class="timeline-track-content"></div></div>
-    </div>
   `;
   const response = document.getElementById('response');
   if (!(response instanceof HTMLElement)) throw new Error('Expected response root');
