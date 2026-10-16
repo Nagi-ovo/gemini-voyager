@@ -121,6 +121,8 @@ export type ChatGptFolderSectionOptions = {
   activity?: Omit<SidebarActivityListOptions, 'store' | 'onExpire'>;
 };
 
+const POINTER_CHECK_EVENTS = ['pointermove', 'pointerdown'] as const;
+
 export class ChatGptFolderSection {
   readonly element: HTMLElement;
   /** The header row with the section's title: what the one-time guide points at. */
@@ -146,6 +148,7 @@ export class ChatGptFolderSection {
   private searchHintSeen = false;
   private filter: TreeSiteOptions['filter'];
   private pointerInside = false;
+  private stopPointerCheck: (() => void) | null = null;
   /** `data` holds open times the tree has not laid out yet. */
   private layoutHeld = false;
 
@@ -303,7 +306,7 @@ export class ChatGptFolderSection {
       if (copy !== this.element) copy.remove();
     }
     // A section dropped while hovered never hears `pointerleave`, which froze the recent order.
-    if (!this.element.isConnected) this.pointerLeft();
+    if (!this.element.isConnected && this.pointerInside) this.recheckPointer();
     const anchor = findHistoryAnchor(sidebar);
     const parent = anchor?.parentElement;
     if (!anchor || !parent) {
@@ -315,6 +318,27 @@ export class ChatGptFolderSection {
       return;
     }
     parent.insertBefore(this.element, anchor);
+  }
+
+  /**
+   * After a remount, the next pointer event says where the pointer is. Unfreezing at
+   * once would move rows under a double-click whose first click made ChatGPT re-render.
+   */
+  private recheckPointer(): void {
+    if (this.stopPointerCheck) return;
+    const doc = this.element.ownerDocument;
+    const check = (event: Event): void => {
+      stop();
+      if (!(event.target instanceof Node) || !this.element.contains(event.target)) {
+        this.pointerLeft();
+      }
+    };
+    const stop = (): void => {
+      for (const type of POINTER_CHECK_EVENTS) doc.removeEventListener(type, check, true);
+      this.stopPointerCheck = null;
+    };
+    for (const type of POINTER_CHECK_EVENTS) doc.addEventListener(type, check, true);
+    this.stopPointerCheck = stop;
   }
 
   /** The pointer is off the section: rows held for it take their new order. */
@@ -381,6 +405,7 @@ export class ChatGptFolderSection {
   }
 
   destroy(): void {
+    this.stopPointerCheck?.();
     this.activity?.clear();
     closeFolderHeaderMenu();
     this.stopDisplay();

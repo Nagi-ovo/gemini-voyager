@@ -389,12 +389,33 @@ describe('ChatGPT folder section: opening a filed chat', () => {
     sidebar.replaceSidebar();
     await nextPass();
     expect(shadow().host.isConnected).toBe(true);
+    document.body.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }));
 
     history.pushState(null, '', `/c/${ROWS[0].id}`);
     sidebar.setActive(ROWS[0].id);
     await nextPass();
 
     expect(view.outline().slice(0, 4)).toEqual(['Work', '  · Alpha', '  · Gamma', '  · Beta plan']);
+  });
+
+  it('in recent order, keeps rows still for a click that lands on the section after a remount', async () => {
+    memory.values.local.set(PREFS_KEY, { collapsed: false, sortMode: 'recent' });
+    memory.values.local.set(KEY, {
+      ...structuredClone(DATA),
+      folders: DATA.folders.map((f) => ({ ...f, isExpanded: true })),
+    });
+    const view = await activate();
+    pointer('pointerenter');
+    const before = view.outline().slice(0, 4);
+    sidebar.replaceSidebar();
+    await nextPass();
+    shadow().host.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, composed: true }));
+
+    history.pushState(null, '', `/c/${ROWS[0].id}`);
+    sidebar.setActive(ROWS[0].id);
+    await nextPass();
+
+    expect(view.outline().slice(0, 4)).toEqual(before);
   });
 
   it('records the open of a filed chat with no row in ChatGPT’s sidebar, and marks it open', async () => {
