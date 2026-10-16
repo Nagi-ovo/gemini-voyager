@@ -1,6 +1,7 @@
 import { detectAccountContextFromDocument } from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
+import type { Machine } from '@/features/plugins/runtime/stateMachine';
 
 import type { StopNativeFeature } from '../featureLifecycle';
 import { watchRouteChanges } from '../utils/routeWatcher';
@@ -9,6 +10,13 @@ import {
   sendCompletionNotification,
   shouldNotifyForBackgroundCompletion,
 } from './completionDelivery';
+import {
+  type CompletionEvent,
+  type CompletionPort,
+  type CompletionState,
+  completionEffects,
+  startCompletion,
+} from './completionMachine';
 import { ResponseCompletionDetector, type ResponseCompletionSnapshot } from './detector';
 import { FirstSendIdentity } from './firstSendIdentity';
 import { createForegroundCompletionToast } from './foregroundCompletionToast';
@@ -59,6 +67,15 @@ type PageObserverMessage = {
   };
 } | null;
 
+/** One generation and the delivery of its reply. */
+interface Generation {
+  /** `network`: a request the page observer saw start; `page`: one only the page shows. */
+  readonly owner: 'network' | 'page';
+  readonly delivery: Machine<CompletionState, CompletionEvent>;
+  /** The user turns on the page when delivery left `streaming`; null while it streams. */
+  turnsAtEnd: HTMLElement[] | null;
+}
+
 interface PendingRequest {
   epoch: number;
   previousPrompts: HTMLElement[];
@@ -101,8 +118,6 @@ export function createResponseNotificationRun(
   let latestRequest: PendingRequest | null = null;
   let promptsBeforeInteraction: HTMLElement[] | null = null;
   let hasPendingBackgroundCompletion = false;
-  let networkCompletionHandled = false;
-  let hasDeferredForegroundCompletion = false;
   let latestCompletedResponse: HTMLElement | null = null;
   const armedSessionKeys = new Set<string>();
   const firstSend = new FirstSendIdentity();
@@ -113,6 +128,56 @@ export function createResponseNotificationRun(
   });
 
   const responseFingerprint = createResponseFingerprinter();
+
+  const deliveryPort: CompletionPort = {
+    notify: () =>
+      sendCompletionNotification({
+        userPrompt:
+          firstSend.prompt ?? latestRequest?.prompt ?? (latestRequest ? '' : getLatestUserPrompt()),
+        conversationTitle: firstSend.prompt !== undefined ? '' : getConversationTitle(),
+      }),
+    // A network completion can come before its reply renders, so its toast reads the page then.
+    showToast: (reply) => {
+      latestCompletedResponse = reply ?? getLatestAssistantResponse();
+      foregroundToast.showIfNeeded(latestCompletedResponse);
+    },
+    canFlush: () => {
+      if (!enabled) return false;
+      syncSession();
+      syncGeneration();
+      return !firstSend.awaiting && !shouldNotifyForBackgroundCompletion();
+    },
+  };
+  const deliveryEffects = completionEffects(deliveryPort);
+
+  const startGeneration = (owner: Generation['owner']): Generation => {
+    const delivery = startCompletion(deliveryEffects);
+    const started: Generation = { owner, delivery, turnsAtEnd: null };
+    delivery.subscribe((_state, previous) => {
+      if (previous.status === 'streaming') started.turnsAtEnd = getUserPromptElements();
+    });
+    return started;
+  };
+  let generation = startGeneration('page');
+
+  // Each generation gets its own delivery and stops the previous one, so a deferred toast,
+  // a late notify answer or a failure of the earlier generation cannot act on this one.
+  const beginGeneration = (owner: Generation['owner']): Generation => {
+    void generation.delivery.stop();
+    generation = startGeneration(owner);
+    return generation;
+  };
+
+  /** A user turn sent after the generation ended starts a page-only one. */
+  const syncGeneration = (): void => {
+    const { turnsAtEnd } = generation;
+    if (!turnsAtEnd) return;
+    const turns = getUserPromptElements();
+    const latest = turns.at(-1);
+    // Gemini re-renders an addressed chat's turns as new nodes; only an added turn is a new send.
+    if (latest && turns.length > turnsAtEnd.length && !turnsAtEnd.includes(latest))
+      beginGeneration('page');
+  };
 
   const snapshot = (latestResponse: HTMLElement | null): ResponseCompletionSnapshot => {
     // A hidden page never plays Gemini's typing animation, so the reply stays busy and its action
@@ -141,12 +206,11 @@ export function createResponseNotificationRun(
     latestRequest = null;
     promptsBeforeInteraction = null;
     hasPendingBackgroundCompletion = false;
-    networkCompletionHandled = false;
-    hasDeferredForegroundCompletion = false;
     latestCompletedResponse = null;
     firstSend.clear();
     detector.reset();
     foregroundToast.stop();
+    beginGeneration('page');
   };
 
   const captureRequestPrompt = (): void => {
@@ -202,40 +266,10 @@ export function createResponseNotificationRun(
     armedSessionKeys.add(sessionKey(session));
   };
 
-  const flushDeferredForegroundCompletion = (): void => {
-    if (!enabled) return;
-    syncSession();
-    if (
-      firstSend.awaiting ||
-      !hasDeferredForegroundCompletion ||
-      shouldNotifyForBackgroundCompletion()
-    )
-      return;
-
-    hasDeferredForegroundCompletion = false;
-    latestCompletedResponse = getLatestAssistantResponse();
-    foregroundToast.showIfNeeded(latestCompletedResponse);
-  };
-
-  const notifyOrQueueForegroundFallback = async (): Promise<void> => {
-    const notifyEpoch = epoch;
-    const notified = await sendCompletionNotification({
-      userPrompt:
-        firstSend.prompt ?? latestRequest?.prompt ?? (latestRequest ? '' : getLatestUserPrompt()),
-      conversationTitle: firstSend.prompt !== undefined ? '' : getConversationTitle(),
-    });
-    if (!alive || !enabled) return;
-    syncSession();
-    // The reply belongs to a conversation the page has left: no fallback toast.
-    if (epoch !== notifyEpoch) return;
-    if (!notified) hasDeferredForegroundCompletion = true;
-  };
-
   const notifyBackgroundRequestCompletion = (): void => {
     // Matched requests are consumed once; the DOM may still contain only the previous answer.
-    networkCompletionHandled = true;
     detector.reset();
-    void notifyOrQueueForegroundFallback();
+    generation.delivery.send({ type: 'completed', reply: null, background: true });
   };
 
   const evaluate = (): void => {
@@ -245,8 +279,12 @@ export function createResponseNotificationRun(
 
     if (firstSend.awaiting) return;
     if (flushPendingCompletion()) return;
-    // Network-owned generations must not notify from old history or late generation UI.
-    if (pendingRequests.size > 0 || networkCompletionHandled) return;
+    if (pendingRequests.size > 0) return;
+    syncGeneration();
+    const current = generation;
+    // Network-owned generations must not notify from old history or late generation UI, but a
+    // later page-only generation still does: a new user turn replaced it in syncGeneration.
+    if (current.owner === 'network' && current.delivery.state.status !== 'streaming') return;
     const latestResponse = getLatestAssistantResponse();
     if (latestResponse && firstSend.isOldResponse(latestResponse)) return;
     const decision = detector.update(snapshot(latestResponse));
@@ -255,13 +293,15 @@ export function createResponseNotificationRun(
     if (pendingDelay !== null) scheduleEvaluate(pendingDelay);
     if (decision.type !== 'notify') return;
 
-    latestCompletedResponse = latestResponse;
-    if (shouldNotifyForBackgroundCompletion()) {
-      void notifyOrQueueForegroundFallback();
+    // The detector bounds page-only generations itself: another completion is another reply.
+    const { delivery } =
+      current.delivery.state.status === 'streaming' ? current : beginGeneration('page');
+    const background = shouldNotifyForBackgroundCompletion();
+    if (!background && shouldSuppressWithoutPromptInteraction()) {
+      delivery.send({ type: 'abandoned', reason: 'unprompted' });
       return;
     }
-    if (shouldSuppressWithoutPromptInteraction()) return;
-    foregroundToast.showIfNeeded(latestResponse);
+    delivery.send({ type: 'completed', reply: latestResponse, background });
   };
 
   function scheduleEvaluate(delay = EVALUATE_DEBOUNCE_MS): void {
@@ -323,7 +363,7 @@ export function createResponseNotificationRun(
       promptsBeforeInteraction = null;
       pendingRequests.set(requestId, latestRequest);
       hasPendingBackgroundCompletion = false;
-      networkCompletionHandled = false;
+      beginGeneration('network');
       firstSend.clear();
       captureRequestPrompt();
       if (source.conversationId === null) {
@@ -362,7 +402,7 @@ export function createResponseNotificationRun(
       if (data.payload?.outcome !== 'success') {
         // Failed/aborted streams must not finish later through stale DOM completion controls.
         hasPendingBackgroundCompletion = false;
-        networkCompletionHandled = true;
+        generation.delivery.send({ type: 'abandoned', reason: 'failed' });
         detector.reset();
         firstSend.clear();
         clearEvaluateTimer();
@@ -379,8 +419,6 @@ export function createResponseNotificationRun(
     session = readPageSession();
     injectPageObserver();
     window.addEventListener('message', handlePageObserverMessage);
-    window.addEventListener('focus', flushDeferredForegroundCompletion);
-    document.addEventListener('visibilitychange', flushDeferredForegroundCompletion);
     document.addEventListener('input', handlePromptInteraction, true);
     document.addEventListener('keydown', handlePromptInteraction, true);
     stopRouteWatch = watchRouteChanges(() => {
@@ -407,8 +445,6 @@ export function createResponseNotificationRun(
 
   const stopObserver = (): void => {
     window.removeEventListener('message', handlePageObserverMessage);
-    window.removeEventListener('focus', flushDeferredForegroundCompletion);
-    document.removeEventListener('visibilitychange', flushDeferredForegroundCompletion);
     document.removeEventListener('input', handlePromptInteraction, true);
     document.removeEventListener('keydown', handlePromptInteraction, true);
     stopRouteWatch?.();
@@ -460,6 +496,7 @@ export function createResponseNotificationRun(
     enabled = false;
     signal?.removeEventListener('abort', stop);
     stopObserver();
+    void generation.delivery.stop();
     try {
       chrome.storage?.onChanged?.removeListener(storageListener);
     } catch {}

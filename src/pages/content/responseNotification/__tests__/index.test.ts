@@ -600,6 +600,62 @@ describe('response notification run', () => {
     expect(toast.showIfNeeded).not.toHaveBeenCalled();
   });
 
+  it('a deferred fallback toast does not fire once the next generation has started', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    const first = deferred<{ ok: boolean }>();
+    (chrome.runtime.sendMessage as unknown as Mock).mockReturnValueOnce(first.promise);
+    const { createResponseNotificationRun } = await import('../index');
+    cleanup = await startedRun(createResponseNotificationRun);
+    dispatchPageObserverMessage('request-start', 1);
+    dispatchPageObserverMessage('request-complete', 1);
+    expect(notifyCalls()).toHaveLength(1);
+
+    // Back before the background answered, so no focus event follows the failed answer.
+    returnToTab();
+    first.resolve({ ok: false });
+    await vi.advanceTimersByTimeAsync(0);
+    dispatchPageObserverMessage('request-start', 2);
+    const stop = showStopButton();
+    await vi.advanceTimersByTimeAsync(500);
+    // Away and back while the second reply is still being written.
+    window.dispatchEvent(new Event('focus'));
+    expect(toast.showIfNeeded).not.toHaveBeenCalled();
+
+    // The second generation's own fallback still shows when the user comes back.
+    vi.mocked(document.hasFocus).mockReturnValue(false);
+    (chrome.runtime.sendMessage as unknown as Mock).mockResolvedValueOnce({ ok: false });
+    stop.remove();
+    dispatchPageObserverMessage('request-complete', 2);
+    await vi.advanceTimersByTimeAsync(0);
+    returnToTab();
+    expect(toast.showIfNeeded).toHaveBeenCalledTimes(1);
+  });
+
+  it('a page-only generation after a network-owned one still notifies', async () => {
+    vi.useFakeTimers();
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('hidden');
+    const { createResponseNotificationRun } = await import('../index');
+    cleanup = await startedRun(createResponseNotificationRun);
+    dispatchPageObserverMessage('request-start', 1);
+    dispatchPageObserverMessage('request-complete', 1);
+    expect(notifyCalls()).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(5000);
+
+    // The next prompt goes over a channel the page observer does not see: only the page shows it.
+    document.body.insertAdjacentHTML('beforeend', '<user-query>Next question</user-query>');
+    const stop = showStopButton();
+    await vi.advanceTimersByTimeAsync(1000);
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<article data-author="assistant"><p>Next answer</p><button aria-label="Copy response">Copy</button></article>',
+    );
+    stop.remove();
+    await vi.advanceTimersByTimeAsync(5000);
+
+    expect(notifyCalls()).toHaveLength(2);
+  });
+
   it("a retired run's late setting read neither starts it nor disturbs its successor", async () => {
     const oldRead = deferred<Record<string, unknown>>();
     (chrome.storage.sync.get as unknown as Mock).mockReturnValueOnce(oldRead.promise);

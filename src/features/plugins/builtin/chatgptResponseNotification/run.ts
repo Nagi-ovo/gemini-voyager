@@ -4,6 +4,11 @@ import {
   sendCompletionNotification,
   shouldNotifyForBackgroundCompletion,
 } from '@/pages/content/responseNotification/completionDelivery';
+import {
+  type CompletionPort,
+  completionEffects,
+  startCompletion,
+} from '@/pages/content/responseNotification/completionMachine';
 import { ResponseCompletionDetector } from '@/pages/content/responseNotification/detector';
 import { createForegroundCompletionToast } from '@/pages/content/responseNotification/foregroundCompletionToast';
 import { watchRouteChanges } from '@/pages/content/utils/routeWatcher';
@@ -52,11 +57,8 @@ export function createChatGptResponseNotificationRun({
   let promptSent = false;
   // The latest reply when the generation began; a dictation or a stop with no new text is no reply.
   let replyAtStart: string | null = null;
-  // The user pressed stop: that generation ends without a notification.
-  let stoppedByUser = false;
   // A labelled stop control was seen this generation, so its going away marks the end.
   let sawLabelledStop = false;
-  let hasDeferredForegroundCompletion = false;
   let latestCompletedReply: HTMLElement | null = null;
 
   const detector = new ResponseCompletionDetector();
@@ -64,6 +66,31 @@ export function createChatGptResponseNotificationRun({
   const foregroundToast = createForegroundCompletionToast({
     getScrollTarget: () => latestCompletedReply ?? page.getLatestReply(),
   });
+
+  const deliveryEffects = completionEffects({
+    notify: (reply) =>
+      sendCompletionNotification({
+        conversationTitle: getChatGptConversationTitle(),
+        userPrompt: page.getPromptForReply(reply),
+      }),
+    showToast: (reply) => {
+      latestCompletedReply = reply;
+      foregroundToast.showIfNeeded(reply);
+    },
+    canFlush: () => {
+      syncConversation();
+      return !shouldNotifyForBackgroundCompletion();
+    },
+  } satisfies CompletionPort);
+  // One delivery per generation: the next one stops it, with its stop or deferred toast.
+  let delivery = startCompletion(deliveryEffects);
+
+  /** A generation starts; a delivery still streaming is as good as a fresh one. */
+  const beginGeneration = (): void => {
+    if (delivery.state.status === 'streaming') return;
+    void delivery.stop();
+    delivery = startCompletion(deliveryEffects);
+  };
 
   const clearEvaluateTimer = (): void => {
     if (evaluateTimer === null) return;
@@ -76,12 +103,11 @@ export function createChatGptResponseNotificationRun({
     wasGenerating = false;
     promptSent = false;
     replyAtStart = null;
-    stoppedByUser = false;
     sawLabelledStop = false;
-    hasDeferredForegroundCompletion = false;
     latestCompletedReply = null;
     detector.reset();
     foregroundToast.stop();
+    beginGeneration();
   };
 
   const syncConversation = (): void => {
@@ -94,24 +120,6 @@ export function createChatGptResponseNotificationRun({
     leaveConversation();
   };
 
-  const notifyOrQueueForegroundFallback = async (reply: HTMLElement): Promise<void> => {
-    const notifyEpoch = epoch;
-    const notified = await sendCompletionNotification({
-      conversationTitle: getChatGptConversationTitle(),
-      userPrompt: page.getPromptForReply(reply),
-    });
-    if (!alive || epoch !== notifyEpoch) return;
-    if (!notified) hasDeferredForegroundCompletion = true;
-  };
-
-  const flushDeferredForegroundCompletion = (): void => {
-    if (!alive) return;
-    syncConversation();
-    if (!hasDeferredForegroundCompletion || shouldNotifyForBackgroundCompletion()) return;
-    hasDeferredForegroundCompletion = false;
-    foregroundToast.showIfNeeded(latestCompletedReply ?? page.getLatestReply());
-  };
-
   const isGenerating = (): boolean =>
     page.hasLabelledStopControl() || (promptSent && page.isAwaitingReply());
 
@@ -121,17 +129,9 @@ export function createChatGptResponseNotificationRun({
     syncConversation();
 
     const generating = isGenerating();
-    if (stoppedByUser) {
-      if (generating) return;
-      stoppedByUser = false;
-      wasGenerating = false;
-      promptSent = false;
-      detector.reset();
-      return;
-    }
-
     const reply = page.getLatestReply();
     if (generating && !wasGenerating) {
+      beginGeneration();
       replyAtStart = reply ? getReplyIdentity(reply) : null;
       sawLabelledStop = false;
     }
@@ -156,13 +156,7 @@ export function createChatGptResponseNotificationRun({
     // The page may go quiet before the stability window ends, so recheck without a mutation.
     if (pendingDelay !== null) scheduleEvaluate(pendingDelay);
     if (decision.type !== 'notify' || !reply) return;
-
-    latestCompletedReply = reply;
-    if (shouldNotifyForBackgroundCompletion()) {
-      void notifyOrQueueForegroundFallback(reply);
-      return;
-    }
-    foregroundToast.showIfNeeded(reply);
+    delivery.send({ type: 'completed', reply, background: shouldNotifyForBackgroundCompletion() });
   };
 
   function scheduleEvaluate(delay = EVALUATE_DEBOUNCE_MS): void {
@@ -175,28 +169,39 @@ export function createChatGptResponseNotificationRun({
     evaluateTimer = window.setTimeout(evaluate, delay);
   }
 
+  const noteSend = (): void => {
+    promptSent = true;
+    // Whatever reply a stopped generation left is not this send's; an empty Enter adds none.
+    if (delivery.state.status === 'ended' && delivery.state.reason === 'stopped') {
+      const reply = page.getLatestReply();
+      replyAtStart = reply ? getReplyIdentity(reply) : null;
+    }
+    // A send right after stop, before any check saw the stop end, is a new generation.
+    beginGeneration();
+  };
+
   const handleSendGesture = (event: Event): void => {
-    if (page.isSendGesture(event)) promptSent = true;
+    if (page.isSendGesture(event)) noteSend();
   };
 
   // A reply streaming in view under an unknown label no longer reads as generating, so a stop
-  // click is taken whenever it lands; with no generation underway the next check just clears it.
+  // click is taken whenever it lands; the next generation's delivery replaces it.
   const handleClick = (event: Event): void => {
     if (page.isSendGesture(event)) {
-      promptSent = true;
+      noteSend();
       return;
     }
-    if (!page.isStopControlTarget(event.target)) return;
-    stoppedByUser = true;
-    detector.reset();
+    if (page.isStopControlTarget(event.target))
+      delivery.send({ type: 'abandoned', reason: 'stopped' });
   };
 
   // A short reply can show and drop the stop control between two checks (a hidden tab's timers
   // wait at least a second), so the start is latched as soon as a mutation shows it.
   const noteGenerationStart = (): void => {
-    if (wasGenerating || stoppedByUser) return;
+    if (wasGenerating) return;
     syncConversation();
     if (!isGenerating()) return;
+    beginGeneration();
     const reply = page.getLatestReply();
     replyAtStart = reply ? getReplyIdentity(reply) : null;
     sawLabelledStop = page.hasLabelledStopControl();
@@ -226,8 +231,6 @@ export function createChatGptResponseNotificationRun({
     syncConversation();
     scheduleEvaluate();
   });
-  window.addEventListener('focus', flushDeferredForegroundCompletion);
-  document.addEventListener('visibilitychange', flushDeferredForegroundCompletion);
   document.addEventListener('click', handleClick, true);
   document.addEventListener('keydown', handleSendGesture, true);
   scheduleEvaluate(STARTUP_DELAY_MS);
@@ -238,13 +241,12 @@ export function createChatGptResponseNotificationRun({
     signal?.removeEventListener('abort', stop);
     observer.disconnect();
     stopRouteWatch();
-    window.removeEventListener('focus', flushDeferredForegroundCompletion);
-    document.removeEventListener('visibilitychange', flushDeferredForegroundCompletion);
     document.removeEventListener('click', handleClick, true);
     document.removeEventListener('keydown', handleSendGesture, true);
     clearEvaluateTimer();
     detector.reset();
     foregroundToast.stop();
+    void delivery.stop();
   };
   signal?.addEventListener('abort', stop, { once: true });
   return stop;

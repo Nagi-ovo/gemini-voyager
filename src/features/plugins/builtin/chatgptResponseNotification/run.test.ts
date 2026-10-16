@@ -369,6 +369,78 @@ describe('ChatGPT response completion notification', () => {
     expect(notifyCalls()).toHaveLength(0);
   });
 
+  it('a prompt sent right after stop is not silenced', async () => {
+    const page = mountPage();
+    stopRun = createChatGptResponseNotificationRun();
+    await settle(1500);
+
+    const turn = sendPrompt(page, 'write a long essay');
+    const stop = showStop(page.form);
+    await settle(1000);
+    landReply(turn, 'A partial');
+    stop.click();
+    await settle(1000);
+    stop.remove();
+    // Sent before the next check sees the stop control gone.
+    await settle(100);
+    await generate(page, 'reply with just OK', 'OK');
+
+    expect(notifyCalls()).toHaveLength(1);
+    expect(notifyCalls()[0].payload.userPrompt).toBe('reply with just OK');
+  });
+
+  it('an Enter that sends nothing after stop does not announce the stopped reply', async () => {
+    const page = mountPage();
+    stopRun = createChatGptResponseNotificationRun();
+    await settle(1500);
+
+    const turn = sendPrompt(page, 'write a long essay');
+    const stop = showStop(page.form);
+    await settle(1000);
+    landReply(turn, 'A partial');
+    stop.click();
+    await settle(1000);
+    stop.remove();
+    await settle(100);
+    page.form
+      .querySelector('[data-composer-markdown]')!
+      .dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await settle();
+
+    expect(notifyCalls()).toHaveLength(0);
+  });
+
+  it('a deferred fallback toast does not fire once the next generation has started', async () => {
+    const page = mountPage();
+    stopRun = createChatGptResponseNotificationRun();
+    await settle(1500);
+    let answer!: (response: { ok: boolean }) => void;
+    (chrome.runtime.sendMessage as unknown as Mock).mockImplementationOnce(
+      () => new Promise((resolve) => (answer = resolve)),
+    );
+    await generate(page, 'first question', 'First answer');
+    expect(notifyCalls()).toHaveLength(1);
+
+    // Back before the background answered, so no focus event follows the failed answer.
+    setPageState('visible', true);
+    answer({ ok: false });
+    await settle(10);
+    const turn = sendPrompt(page, 'second question');
+    const stop = showStop(page.form);
+    await settle(1000);
+    // Away and back while the second reply is still being written.
+    window.dispatchEvent(new Event('focus'));
+    expect(toast.showIfNeeded).not.toHaveBeenCalled();
+
+    landReply(turn, 'Second answer');
+    stop.remove();
+    await settle();
+    expect(toast.showIfNeeded).toHaveBeenCalledTimes(1);
+    expect(toast.showIfNeeded).toHaveBeenCalledWith(
+      turn.querySelector('[data-chatgpt-selection-message-id]'),
+    );
+  });
+
   it('keeps a new chat’s generation while ChatGPT assigns its address', async () => {
     window.history.replaceState(null, '', '/');
     const page = mountPage();
