@@ -81,5 +81,5 @@ Claude、ChatGPT、DeepSeek では、そのサイトを開いた状態で Voyage
 ![DeepSeek Harness 内で動作するプロンプトマネージャー](/assets/prompt-manager-deepseek-harness.png)
 
 ::: tip
-自分で追加したウェブサイトでは、**プロンプトマネージャー機能のみ** が有効になります。タイムラインやフォルダなどの機能は読み込まれません。Claude、ChatGPT、DeepSeek は別で、それぞれ専用の公式プラグインがあり、[マーケットプレイス](/ja/plugins) で確認できます。
+自分で追加したウェブサイトでは、**プロンプトマネージャー機能のみ** が有効になります。タイムラインやフォルダなどの機能は読み込まれません。Claude、ChatGPT、DeepSeek は別で、それぞれ専用の公式プラグインがあり、[マーケットプレイス](/ja/guide/plugins) で確認できます。
 :::

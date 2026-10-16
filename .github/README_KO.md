@@ -100,7 +100,7 @@
 
 ### 🔌 Claude, ChatGPT & DeepSeek
 
-[Voyager 플러그인 엔진](https://voyager.nagi.fun/ko/plugins)을 기반으로, 이 기능들은 Gemini를 넘어 사용 경험을 확장합니다. 확장 프로그램 팝업에서 켜고, 각 사이트에 대한 접근을 허용하세요.
+[Voyager 플러그인 엔진](https://voyager.nagi.fun/ko/guide/plugins)을 기반으로, 이 기능들은 Gemini를 넘어 사용 경험을 확장합니다. 확장 프로그램 팝업에서 켜고, 각 사이트에 대한 접근을 허용하세요.
 
 - **📍 타임라인**: Claude와 ChatGPT에서 별표 메시지와 검색을 갖춘 같은 타임라인을 제공합니다. DeepSeek에서는 선택 사항인 플러그인으로 제공됩니다.
 - **📂 ChatGPT 폴더**: ChatGPT 대화를 폴더로 정리합니다. 기본으로 켜져 있습니다.

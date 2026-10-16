@@ -13,6 +13,9 @@ on:
       - 'scripts/lib/catalogRevision.ts'
       - 'src/features/plugins/catalog/**'
       - 'src/features/plugins/sites/**'
+      # The guide's plugin table lists the builtins and marks the default-on ones.
+      - 'src/features/plugins/builtin/**'
+      - 'src/features/plugins/storage/pluginDefaults.ts'
       # The changelog pages are built from the in-product release notes.
       - 'src/pages/content/changelog/notes/**'
       - 'src/pages/content/changelog/noteSections.ts'

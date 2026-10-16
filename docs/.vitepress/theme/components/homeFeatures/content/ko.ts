@@ -389,7 +389,7 @@ export const ko: HomeFeaturesContent = {
     {
       title: '열린 생태계',
       items: [
-        { icon: 'puzzle', name: '플러그인 마켓', detail: '공식 플러그인에 내 로컬 플러그인까지' },
+        { icon: 'puzzle', name: '플러그인', detail: '공식 플러그인에 내 로컬 플러그인까지' },
         { icon: 'globe', name: '여러 사이트 지원', detail: 'Claude, ChatGPT, DeepSeek에서도' },
         {
           icon: 'monitor',

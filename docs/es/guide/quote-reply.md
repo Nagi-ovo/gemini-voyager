@@ -18,7 +18,7 @@ Voyager simplifica este proceso:
 
 En Gemini, la respuesta con cita se controla con **Habilitar citar al responder** en **Opciones Generales** del popup de Voyager.
 
-En Claude, ChatGPT y DeepSeek, instala para ese sitio el plugin **Quote replies** desde el [catálogo de plugins](/es/plugins). Allí, el botón "Citar" aparece cuando seleccionas texto dentro de una única respuesta del asistente, y la cita se añade a tu borrador sin enviar nada.
+En Claude, ChatGPT y DeepSeek, instala para ese sitio el plugin **Quote replies** desde el [catálogo de plugins](/es/guide/plugins). Allí, el botón "Citar" aparece cuando seleccionas texto dentro de una única respuesta del asistente, y la cita se añade a tu borrador sin enviar nada.
 
 ## Características
 

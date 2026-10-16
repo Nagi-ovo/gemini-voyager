@@ -126,9 +126,9 @@
   }
 }
 
-/* Changelog pages (`docs/.vitepress/changelog.ts`): a platform's mark sits
-   beside its name at text size, as in the extension's own release notes. */
-.vp-doc .gv-changelog-logo {
+/* Generated pages (`docs/.vitepress/changelog.ts`, `pluginsPage.ts`): a platform's
+   mark sits beside its name at text size, as in the extension's own release notes. */
+.vp-doc .gv-site-mark {
   display: inline;
   width: 1em;
   height: 1em;
@@ -140,4 +140,25 @@
   margin-top: -8px;
   color: var(--vp-c-text-2);
   font-size: 14px;
+}
+
+/* Plugin table (`docs/.vitepress/pluginsPage.ts`). */
+.vp-doc .gv-plugins-default {
+  margin-inline-start: 6px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--vp-c-brand-soft);
+  color: var(--vp-c-brand-1);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.vp-doc .gv-plugins-tick {
+  color: var(--vp-c-brand-1);
+  font-weight: 700;
+}
+
+.vp-doc .gv-plugins-disclaimer {
+  color: var(--vp-c-text-3);
+  font-size: 12px;
 }

@@ -486,7 +486,7 @@ export const fr: HomeFeaturesContent = {
       items: [
         {
           icon: 'puzzle',
-          name: 'Marketplace de plugins',
+          name: 'Plugins',
           detail: 'Plugins officiels, et aussi vos plugins locaux',
         },
         { icon: 'globe', name: 'Multi-sites', detail: 'Claude, ChatGPT et DeepSeek aussi' },

@@ -57,7 +57,7 @@ describe('site changelog', () => {
       () => false,
     );
 
-    expect(page).toMatch(/<svg class="gv-changelog-logo" [^>]*>.*<\/svg>Gemini/);
+    expect(page).toMatch(/<svg class="gv-site-mark" [^>]*>.*<\/svg>Gemini/);
     expect(page).toContain('![Banner](/assets/promotion/Promo-Banner.png)');
     expect(page).toContain('<time datetime="2026-10-14">October 14, 2026</time>');
   });

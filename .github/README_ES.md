@@ -100,7 +100,7 @@ Por eso creamos **Voyager**. No es solo una herramienta; es un compañero que te
 
 ### 🔌 Claude, ChatGPT & DeepSeek
 
-Gracias al [motor de plugins de Voyager](https://voyager.nagi.fun/es/plugins), estas funciones amplían tu experiencia más allá de Gemini. Actívalas en el popup de la extensión y concede acceso a cada sitio:
+Gracias al [motor de plugins de Voyager](https://voyager.nagi.fun/es/guide/plugins), estas funciones amplían tu experiencia más allá de Gemini. Actívalas en el popup de la extensión y concede acceso a cada sitio:
 
 - **📍 Timeline**: la misma línea de tiempo, con mensajes destacados y búsqueda, en Claude y ChatGPT; DeepSeek la ofrece como plugin opcional.
 - **📂 Carpetas de ChatGPT**: organiza las conversaciones de ChatGPT en carpetas. Activado por defecto.

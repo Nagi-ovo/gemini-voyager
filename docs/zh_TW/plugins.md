@@ -1,10 +1,19 @@
 ---
-layout: page
-sidebar: false
-aside: false
-gitChangelog: false
-title: 外掛市集
-description: Voyager 官方外掛市集 —— 宣告式外掛把順手體驗帶到更多 AI 網站，全部免費、自動更新。
+head:
+  - - meta
+    - name: robots
+      content: noindex
 ---
 
-<PluginStore />
+# 外掛一覽
+
+[外掛一覽](/zh_TW/guide/plugins)
+
+<script setup>
+import { inBrowser } from 'vitepress';
+
+// The plugin marketplace became the guide's plugin table; old links land there.
+if (inBrowser) {
+  window.location.replace('/zh_TW/guide/plugins');
+}
+</script>

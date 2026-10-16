@@ -18,7 +18,7 @@ Voyager simplifie ce processus :
 
 Sur Gemini, la réponse avec citation se contrôle avec **Activer la citation**, dans **Options générales** de la popup de Voyager.
 
-Sur Claude, ChatGPT et DeepSeek, installez l'extension **Quote replies** pour ce site depuis le [Marketplace](/fr/plugins). Le bouton **Quote** apparaît alors lorsque vous sélectionnez du texte à l'intérieur d'une seule réponse de l'assistant, et la citation est ajoutée à votre brouillon sans rien envoyer.
+Sur Claude, ChatGPT et DeepSeek, installez l'extension **Quote replies** pour ce site depuis le [liste des plugins](/fr/guide/plugins). Le bouton **Quote** apparaît alors lorsque vous sélectionnez du texte à l'intérieur d'une seule réponse de l'assistant, et la citation est ajoutée à votre brouillon sans rien envoyer.
 
 ## Fonctionnalités
 

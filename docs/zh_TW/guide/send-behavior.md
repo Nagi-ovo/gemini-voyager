@@ -25,7 +25,7 @@ Shift+Enter 與輸入法組字仍維持網站原本的行為；附件還在上�
 ## 其他網站
 
 - **AI Studio** 剛好相反：打開 **AI Studio Enter 傳送**，就是用 `Enter` 傳送、`Ctrl/⌘+Enter` 換行。
-- **Claude、ChatGPT 與 DeepSeek**：請從[外掛市集](/zh_TW/plugins)安裝該網站的 **Ctrl/Cmd+Enter 傳送** 外掛。
+- **Claude、ChatGPT 與 DeepSeek**：請從[外掛市集](/zh_TW/guide/plugins)安裝該網站的 **Ctrl/Cmd+Enter 傳送** 外掛。
 - **Safari**：如果在 Gemini 中要按兩次 Enter 才能傳送，請打開 **修復 Safari Enter 鍵**。
 
 ## 功能特點

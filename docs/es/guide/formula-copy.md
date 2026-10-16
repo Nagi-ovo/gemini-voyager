@@ -31,4 +31,4 @@ Voyager proporciona un soporte fluido para esto:
 
 ## Dónde funciona
 
-En Gemini y AI Studio, actívala con **Activar la copia de fórmulas** en el popup; ese interruptor y el formato de copia se aplican a ambos sitios. Claude y ChatGPT tienen la copia de fórmulas como plugin integrado, y DeepSeek tiene un plugin de copia de fórmulas en el [catálogo de plugins](/es/plugins).
+En Gemini y AI Studio, actívala con **Activar la copia de fórmulas** en el popup; ese interruptor y el formato de copia se aplican a ambos sitios. Claude y ChatGPT tienen la copia de fórmulas como plugin integrado, y DeepSeek tiene un plugin de copia de fórmulas en el [catálogo de plugins](/es/guide/plugins).

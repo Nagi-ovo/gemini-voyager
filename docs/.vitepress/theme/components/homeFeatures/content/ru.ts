@@ -473,7 +473,7 @@ export const ru: HomeFeaturesContent = {
       items: [
         {
           icon: 'puzzle',
-          name: 'Магазин плагинов',
+          name: 'Плагины',
           detail: 'Официальные плагины, а также ваши локальные',
         },
         {

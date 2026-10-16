@@ -100,7 +100,7 @@
 
 ### 🔌 Claude, ChatGPT & DeepSeek
 
-通过 [Voyager 插件引擎](https://voyager.nagi.fun/plugins)，这些功能让你的体验延伸到 Gemini 之外。在扩展弹窗中开启它们，并分别授权每个网站：
+通过 [Voyager 插件引擎](https://voyager.nagi.fun/guide/plugins)，这些功能让你的体验延伸到 Gemini 之外。在扩展弹窗中开启它们，并分别授权每个网站：
 
 - **📍 时间线**: 在 Claude 和 ChatGPT 上提供同样的时间线，支持星标消息和搜索；DeepSeek 上则是可选插件。
 - **📂 ChatGPT 文件夹**: 将 ChatGPT 对话整理到文件夹中。默认开启。

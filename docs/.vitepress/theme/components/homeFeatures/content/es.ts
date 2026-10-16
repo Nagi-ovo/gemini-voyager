@@ -482,7 +482,7 @@ export const es: HomeFeaturesContent = {
       items: [
         {
           icon: 'puzzle',
-          name: 'Mercado de plugins',
+          name: 'Plugins',
           detail: 'Plugins oficiales y también tus plugins locales',
         },
         {

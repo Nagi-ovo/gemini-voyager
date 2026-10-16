@@ -103,7 +103,6 @@ export default defineConfig({
           ...announcementNav('重要通知'),
           { text: '首页', link: '/' },
           { text: '指南', link: '/guide/installation' },
-          { text: '插件市场', link: '/plugins' },
           { text: '数据查看器', link: '/data-viewer' },
         ],
         sidebar: [
@@ -159,7 +158,7 @@ export default defineConfig({
           },
           {
             text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: '浏览插件', link: '/plugins' }],
+            items: [{ text: '插件一览', link: '/guide/plugins' }],
           },
           {
             text: '本地 Web UI',
@@ -183,7 +182,6 @@ export default defineConfig({
           ...announcementNav('重要通知'),
           { text: '首頁', link: '/zh_TW/' },
           { text: '指南', link: '/zh_TW/guide/installation' },
-          { text: '外掛市集', link: '/zh_TW/plugins' },
           { text: '資料查看器', link: '/zh_TW/data-viewer' },
         ],
         sidebar: [
@@ -239,7 +237,7 @@ export default defineConfig({
           },
           {
             text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: '瀏覽外掛', link: '/zh_TW/plugins' }],
+            items: [{ text: '外掛一覽', link: '/zh_TW/guide/plugins' }],
           },
           {
             text: '本機 Web UI',
@@ -264,7 +262,6 @@ export default defineConfig({
           ...announcementNav('Notice'),
           { text: 'Home', link: '/en/' },
           { text: 'Guide', link: '/en/guide/installation' },
-          { text: 'Marketplace', link: '/en/plugins' },
           { text: 'Data Viewer', link: '/en/data-viewer' },
         ],
         sidebar: [
@@ -320,7 +317,7 @@ export default defineConfig({
           },
           {
             text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: 'Browse Plugins', link: '/en/plugins' }],
+            items: [{ text: 'Plugins', link: '/en/guide/plugins' }],
           },
           {
             text: 'Local Web UI',
@@ -344,7 +341,6 @@ export default defineConfig({
           ...announcementNav('お知らせ'),
           { text: 'ホーム', link: '/ja/' },
           { text: 'ガイド', link: '/ja/guide/installation' },
-          { text: 'マーケット', link: '/ja/plugins' },
           { text: 'データビューア', link: '/ja/data-viewer' },
         ],
         sidebar: [
@@ -400,7 +396,7 @@ export default defineConfig({
           },
           {
             text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: 'プラグインを見る', link: '/ja/plugins' }],
+            items: [{ text: 'プラグイン一覧', link: '/ja/guide/plugins' }],
           },
           {
             text: 'ローカル Web UI',
@@ -424,7 +420,6 @@ export default defineConfig({
           ...announcementNav('공지'),
           { text: '홈', link: '/ko/' },
           { text: '가이드', link: '/ko/guide/installation' },
-          { text: '마켓플레이스', link: '/ko/plugins' },
           { text: '데이터 뷰어', link: '/ko/data-viewer' },
         ],
         sidebar: [
@@ -480,7 +475,7 @@ export default defineConfig({
           },
           {
             text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: '플러그인 둘러보기', link: '/ko/plugins' }],
+            items: [{ text: '플러그인 목록', link: '/ko/guide/plugins' }],
           },
           {
             text: '로컬 Web UI',
@@ -504,7 +499,6 @@ export default defineConfig({
           ...announcementNav('Annonce'),
           { text: 'Accueil', link: '/fr/' },
           { text: 'Guide', link: '/fr/guide/installation' },
-          { text: 'Marketplace', link: '/fr/plugins' },
           { text: 'Visionneuse', link: '/fr/data-viewer' },
         ],
         sidebar: [
@@ -560,7 +554,7 @@ export default defineConfig({
           },
           {
             text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: 'Parcourir les plugins', link: '/fr/plugins' }],
+            items: [{ text: 'Plugins', link: '/fr/guide/plugins' }],
           },
           {
             text: 'Interface Web locale',
@@ -584,7 +578,6 @@ export default defineConfig({
           ...announcementNav('Aviso'),
           { text: 'Inicio', link: '/es/' },
           { text: 'Guía', link: '/es/guide/installation' },
-          { text: 'Mercado', link: '/es/plugins' },
           { text: 'Visor', link: '/es/data-viewer' },
         ],
         sidebar: [
@@ -646,7 +639,7 @@ export default defineConfig({
           },
           {
             text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: 'Explorar plugins', link: '/es/plugins' }],
+            items: [{ text: 'Plugins', link: '/es/guide/plugins' }],
           },
           {
             text: 'Interfaz Web local',
@@ -670,7 +663,6 @@ export default defineConfig({
           ...announcementNav('Aviso'),
           { text: 'Início', link: '/pt/' },
           { text: 'Guia', link: '/pt/guide/installation' },
-          { text: 'Mercado', link: '/pt/plugins' },
           { text: 'Visualizador', link: '/pt/data-viewer' },
         ],
         sidebar: [
@@ -726,7 +718,7 @@ export default defineConfig({
           },
           {
             text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: 'Explorar plugins', link: '/pt/plugins' }],
+            items: [{ text: 'Plugins', link: '/pt/guide/plugins' }],
           },
           {
             text: 'Interface Web local',
@@ -751,7 +743,6 @@ export default defineConfig({
           ...announcementNav('إعلان'),
           { text: 'الرئيسية', link: '/ar/' },
           { text: 'الدليل', link: '/ar/guide/installation' },
-          { text: 'سوق الإضافات', link: '/ar/plugins' },
           { text: 'عارض البيانات', link: '/ar/data-viewer' },
         ],
         sidebar: [
@@ -807,7 +798,7 @@ export default defineConfig({
           },
           {
             text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: 'تصفح الإضافات', link: '/ar/plugins' }],
+            items: [{ text: 'الإضافات', link: '/ar/guide/plugins' }],
           },
           {
             text: 'واجهة ويب محلية',
@@ -831,7 +822,6 @@ export default defineConfig({
           ...announcementNav('Объявление'),
           { text: 'Главная', link: '/ru/' },
           { text: 'Руководство', link: '/ru/guide/installation' },
-          { text: 'Маркетплейс', link: '/ru/plugins' },
           { text: 'Просмотр', link: '/ru/data-viewer' },
         ],
         sidebar: [
@@ -893,7 +883,7 @@ export default defineConfig({
           },
           {
             text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: 'Обзор плагинов', link: '/ru/plugins' }],
+            items: [{ text: 'Плагины', link: '/ru/guide/plugins' }],
           },
           {
             text: 'Локальный веб-интерфейс',

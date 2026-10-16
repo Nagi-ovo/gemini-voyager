@@ -417,7 +417,7 @@ export const ar: HomeFeaturesContent = {
     {
       title: 'منظومة مفتوحة',
       items: [
-        { icon: 'puzzle', name: 'متجر الإضافات', detail: 'إضافات رسمية، وإضافاتك المحلية أيضًا' },
+        { icon: 'puzzle', name: 'الإضافات', detail: 'إضافات رسمية، وإضافاتك المحلية أيضًا' },
         {
           icon: 'globe',
           name: 'على مواقع أخرى',

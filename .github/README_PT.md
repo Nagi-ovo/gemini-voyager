@@ -106,7 +106,7 @@ Para um guia completo, visite a nossa [Documentação](https://voyager.nagi.fun/
 
 ### 🔌 Claude, ChatGPT & DeepSeek
 
-Com o [Mecanismo de plugins do Voyager](https://voyager.nagi.fun/pt/plugins), estes recursos levam sua experiência além do Gemini. Ative-os no popup da extensão e conceda acesso a cada site:
+Com o [Mecanismo de plugins do Voyager](https://voyager.nagi.fun/pt/guide/plugins), estes recursos levam sua experiência além do Gemini. Ative-os no popup da extensão e conceda acesso a cada site:
 
 - **📍 Timeline**: A mesma linha do tempo, com mensagens marcadas e pesquisa, no Claude e no ChatGPT; o DeepSeek a tem como plugin opcional.
 - **📂 Pastas do ChatGPT**: Organize as conversas do ChatGPT em pastas. Ativado por padrão.

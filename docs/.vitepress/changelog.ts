@@ -140,9 +140,10 @@ export function releasedNotes(notes: ReleaseNote[], currentVersion: string): Rel
     .sort((a, b) => compareVersions(b.version, a.version));
 }
 
-function logoSvg(logo: PlatformLogo): string {
+/** A platform's mark at text size, for generated pages. */
+export function platformMarkSvg(logo: PlatformLogo): string {
   const paths = logo.paths.map((d) => `<path d="${d}"/>`).join('');
-  return `<svg class="gv-changelog-logo" viewBox="${logo.viewBox}" fill="${logo.brand ?? 'currentColor'}" aria-hidden="true" focusable="false">${paths}</svg>`;
+  return `<svg class="gv-site-mark" viewBox="${logo.viewBox}" fill="${logo.brand ?? 'currentColor'}" aria-hidden="true" focusable="false">${paths}</svg>`;
 }
 
 /**
@@ -173,7 +174,7 @@ export function renderChangelog(
       extractLocalizedContent(note.raw, locale.note)
         .replace(PROMOTION_IMAGE, '$1')
         .replace(LOGO_MARKER, (_marker, id: keyof typeof PLATFORM_LOGOS) =>
-          logoSvg(PLATFORM_LOGOS[id]),
+          platformMarkSvg(PLATFORM_LOGOS[id]),
         ),
       locale.prefix,
       pageExists,

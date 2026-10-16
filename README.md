@@ -100,7 +100,7 @@ That's why I built **Voyager**. It's a companion that helps you keep your AI con
 
 ### 🔌 Claude, ChatGPT & DeepSeek
 
-Powered by the [Voyager Plugin Engine](https://voyager.nagi.fun/en/plugins), these features extend your experience beyond Gemini. Turn them on in the extension popup and grant access to each site:
+Powered by the [Voyager Plugin Engine](https://voyager.nagi.fun/en/guide/plugins), these features extend your experience beyond Gemini. Turn them on in the extension popup and grant access to each site:
 
 - **📍 Timeline**: The same timeline, with starred messages and search, on Claude and ChatGPT; DeepSeek has it as an optional plugin.
 - **📂 ChatGPT Folders**: Organize ChatGPT conversations into folders. On by default.

@@ -81,5 +81,5 @@
 ![在 DeepSeek Harness 中執行的提示詞管理器](/assets/prompt-manager-deepseek-harness.png)
 
 ::: tip
-在您自行添加的網站上，**僅**激活提示詞管理器功能。時間線、資料夾等其他功能不會加載。Claude、ChatGPT 和 DeepSeek 不同：它們有各自的官方外掛，可以在[外掛市集](/zh_TW/plugins)中瀏覽。
+在您自行添加的網站上，**僅**激活提示詞管理器功能。時間線、資料夾等其他功能不會加載。Claude、ChatGPT 和 DeepSeek 不同：它們有各自的官方外掛，可以在[外掛市集](/zh_TW/guide/plugins)中瀏覽。
 :::

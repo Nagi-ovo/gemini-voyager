@@ -5,16 +5,15 @@ head:
       content: noindex
 ---
 
-# 插件市场
+# 插件一览
 
-这个页面是旧链接兼容页。简体中文插件市场现在位于根路径：
-
-[打开插件市场](/plugins)
+[插件一览](/guide/plugins)
 
 <script setup>
 import { inBrowser } from 'vitepress';
 
+// The plugin marketplace became the guide's plugin table; old links land there.
 if (inBrowser) {
-  window.location.replace('/plugins');
+  window.location.replace('/guide/plugins');
 }
 </script>

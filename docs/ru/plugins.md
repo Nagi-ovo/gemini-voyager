@@ -1,10 +1,19 @@
 ---
-layout: page
-sidebar: false
-aside: false
-gitChangelog: false
-title: Маркетплейс плагинов
-description: Официальный маркетплейс плагинов Voyager — декларативные плагины, расширяющие Voyager на другие сайты ИИ. Бесплатно и с автообновлением.
+head:
+  - - meta
+    - name: robots
+      content: noindex
 ---
 
-<PluginStore />
+# Плагины
+
+[Плагины](/ru/guide/plugins)
+
+<script setup>
+import { inBrowser } from 'vitepress';
+
+// The plugin marketplace became the guide's plugin table; old links land there.
+if (inBrowser) {
+  window.location.replace('/ru/guide/plugins');
+}
+</script>

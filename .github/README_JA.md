@@ -100,7 +100,7 @@ AI チャットボット — Gemini、Claude、ChatGPT、DeepSeek — は強力�
 
 ### 🔌 Claude, ChatGPT & DeepSeek
 
-[Voyager プラグインエンジン](https://voyager.nagi.fun/ja/plugins)を基盤に、これらの機能で Gemini の外でも体験を広げます。拡張機能のポップアップでオンにし、各サイトへのアクセスを許可してください。
+[Voyager プラグインエンジン](https://voyager.nagi.fun/ja/guide/plugins)を基盤に、これらの機能で Gemini の外でも体験を広げます。拡張機能のポップアップでオンにし、各サイトへのアクセスを許可してください。
 
 - **📍 タイムライン**: Claude と ChatGPT では、スター付きメッセージと検索を備えた同じタイムラインが使えます。DeepSeek では、オプションのプラグインとして提供されています。
 - **📂 ChatGPT フォルダ**: ChatGPT の会話をフォルダに整理できます。既定でオンです。

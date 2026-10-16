@@ -410,7 +410,7 @@ export const ja: HomeFeaturesContent = {
       items: [
         {
           icon: 'puzzle',
-          name: 'プラグインマーケット',
+          name: 'プラグイン',
           detail: '公式プラグインに加えて、自作のローカルプラグインも',
         },
         { icon: 'globe', name: 'マルチサイト対応', detail: 'Claude・ChatGPT・DeepSeek でも使える' },

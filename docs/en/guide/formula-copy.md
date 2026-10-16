@@ -31,4 +31,4 @@ Voyager provides seamless support for this:
 
 ## Where It Works
 
-On Gemini and AI Studio, turn it on with **Enable formula copying** in the popup; that switch and the copy format apply to both sites. Claude and ChatGPT get formula copy as a built-in plugin, and DeepSeek has a formula copy plugin in the [plugin catalog](/en/plugins).
+On Gemini and AI Studio, turn it on with **Enable formula copying** in the popup; that switch and the copy format apply to both sites. Claude and ChatGPT get formula copy as a built-in plugin, and DeepSeek has a formula copy plugin in the [plugin catalog](/en/guide/plugins).

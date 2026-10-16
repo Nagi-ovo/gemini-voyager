@@ -1,10 +1,19 @@
 ---
-layout: page
-sidebar: false
-aside: false
-gitChangelog: false
-title: Plugin Marketplace
-description: Voyager's official plugin marketplace — declarative plugins that extend Voyager to more AI sites. All free, auto-updating.
+head:
+  - - meta
+    - name: robots
+      content: noindex
 ---
 
-<PluginStore />
+# Plugins
+
+[Plugins](/en/guide/plugins)
+
+<script setup>
+import { inBrowser } from 'vitepress';
+
+// The plugin marketplace became the guide's plugin table; old links land there.
+if (inBrowser) {
+  window.location.replace('/en/guide/plugins');
+}
+</script>

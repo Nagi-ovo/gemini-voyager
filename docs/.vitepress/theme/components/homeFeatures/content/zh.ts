@@ -341,7 +341,7 @@ export const zh: HomeFeaturesContent = {
     {
       title: '开放生态',
       items: [
-        { icon: 'puzzle', name: '插件市场', detail: '官方插件，也能装你自己的本地插件' },
+        { icon: 'puzzle', name: '插件', detail: '官方插件，也能装你自己的本地插件' },
         { icon: 'globe', name: '多站通用', detail: 'Claude、ChatGPT、DeepSeek 也能用' },
         {
           icon: 'monitor',

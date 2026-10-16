@@ -81,5 +81,5 @@ Local addresses work too — enter `localhost:3080` or `127.0.0.1:3080` the same
 ![Prompt Manager running inside DeepSeek Harness](/assets/prompt-manager-deepseek-harness.png)
 
 ::: tip
-On websites you add yourself, **only** the Prompt Manager is activated. Features like Timeline and Folders don't load there. Claude, ChatGPT, and DeepSeek are different: they get their own official plugins, which you can browse in the [Marketplace](/en/plugins).
+On websites you add yourself, **only** the Prompt Manager is activated. Features like Timeline and Folders don't load there. Claude, ChatGPT, and DeepSeek are different: they get their own official plugins, which you can browse in the [plugin list](/en/guide/plugins).
 :::

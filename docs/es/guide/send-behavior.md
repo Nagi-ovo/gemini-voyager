@@ -25,7 +25,7 @@ Shift+Enter y la composición de IME mantienen el comportamiento propio del siti
 ## Otros sitios
 
 - **AI Studio** funciona al revés: activa **Enter para enviar en AI Studio** para enviar con `Enter` y añadir una nueva línea con `Ctrl/⌘+Enter`.
-- **Claude, ChatGPT y DeepSeek**: instala para ese sitio el plugin **Ctrl/Cmd+Enter to send** desde el [catálogo de plugins](/es/plugins).
+- **Claude, ChatGPT y DeepSeek**: instala para ese sitio el plugin **Ctrl/Cmd+Enter to send** desde el [catálogo de plugins](/es/guide/plugins).
 - **Safari**: si Gemini necesita pulsar Enter dos veces para enviar, activa **Corregir tecla Enter en Safari**.
 
 ## Características

@@ -31,4 +31,4 @@ Voyager offre un support transparent pour cela :
 
 ## Où cela fonctionne
 
-Sur Gemini et AI Studio, activez-la avec **Activer la copie des formules** dans la popup ; cet interrupteur et le format de copie s'appliquent aux deux sites. Claude et ChatGPT bénéficient de la copie de formules grâce à une extension intégrée, et DeepSeek dispose d'une extension de copie de formules dans le [catalogue d'extensions](/fr/plugins).
+Sur Gemini et AI Studio, activez-la avec **Activer la copie des formules** dans la popup ; cet interrupteur et le format de copie s'appliquent aux deux sites. Claude et ChatGPT bénéficient de la copie de formules grâce à une extension intégrée, et DeepSeek dispose d'une extension de copie de formules dans le [catalogue d'extensions](/fr/guide/plugins).

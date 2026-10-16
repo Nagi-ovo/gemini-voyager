@@ -1,10 +1,19 @@
 ---
-layout: page
-sidebar: false
-aside: false
-gitChangelog: false
-title: سوق الإضافات
-description: سوق إضافات Voyager الرسمي — إضافات تعريفية توسّع Voyager إلى مزيد من مواقع الذكاء الاصطناعي. مجانية وتُحدَّث تلقائيًا.
+head:
+  - - meta
+    - name: robots
+      content: noindex
 ---
 
-<PluginStore />
+# الإضافات
+
+[الإضافات](/ar/guide/plugins)
+
+<script setup>
+import { inBrowser } from 'vitepress';
+
+// The plugin marketplace became the guide's plugin table; old links land there.
+if (inBrowser) {
+  window.location.replace('/ar/guide/plugins');
+}
+</script>

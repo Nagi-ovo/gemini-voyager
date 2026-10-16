@@ -477,7 +477,7 @@ export const pt: HomeFeaturesContent = {
       items: [
         {
           icon: 'puzzle',
-          name: 'Loja de plugins',
+          name: 'Plugins',
           detail: 'Plugins oficiais e também os seus plugins locais',
         },
         {

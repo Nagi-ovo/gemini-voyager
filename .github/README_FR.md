@@ -100,7 +100,7 @@ C'est pourquoi nous avons créé **Voyager**. Plus qu'un simple outil, c'est un 
 
 ### 🔌 Claude, ChatGPT & DeepSeek
 
-Grâce au [moteur d'extensions Voyager](https://voyager.nagi.fun/fr/plugins), ces fonctionnalités étendent votre expérience au-delà de Gemini. Activez-les dans la fenêtre de l'extension et accordez l'accès à chaque site :
+Grâce au [moteur d'extensions Voyager](https://voyager.nagi.fun/fr/guide/plugins), ces fonctionnalités étendent votre expérience au-delà de Gemini. Activez-les dans la fenêtre de l'extension et accordez l'accès à chaque site :
 
 - **📍 Timeline** : la même chronologie, avec les messages en favori et la recherche, sur Claude et ChatGPT ; DeepSeek la propose comme extension facultative.
 - **📂 Dossiers ChatGPT** : rangez vos conversations ChatGPT dans des dossiers. Activé par défaut.

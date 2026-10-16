@@ -430,7 +430,7 @@ export const en: HomeFeaturesContent = {
       items: [
         {
           icon: 'puzzle',
-          name: 'Plugin store',
+          name: 'Plugins',
           detail: 'Official plugins, plus your own local ones',
         },
         { icon: 'globe', name: 'Works across sites', detail: 'Claude, ChatGPT and DeepSeek too' },

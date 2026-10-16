@@ -81,5 +81,5 @@ Les adresses locales fonctionnent aussi — saisissez `localhost:3080` ou `127.0
 ![Gestionnaire de Prompts dans DeepSeek Harness](/assets/prompt-manager-deepseek-harness.png)
 
 ::: tip
-Sur les sites web que vous ajoutez vous-même, **seule** la fonctionnalité Gestionnaire de Prompts est activée. Les autres fonctionnalités comme la Chronologie et les Dossiers ne s'y chargent pas. Claude, ChatGPT et DeepSeek sont différents : ils disposent de leurs propres extensions officielles, à parcourir dans le [Marketplace](/fr/plugins).
+Sur les sites web que vous ajoutez vous-même, **seule** la fonctionnalité Gestionnaire de Prompts est activée. Les autres fonctionnalités comme la Chronologie et les Dossiers ne s'y chargent pas. Claude, ChatGPT et DeepSeek sont différents : ils disposent de leurs propres extensions officielles, à parcourir dans le [liste des plugins](/fr/guide/plugins).
 :::

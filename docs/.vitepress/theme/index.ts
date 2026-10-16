@@ -28,15 +28,11 @@ export default {
     app.component('HomeTeaser', HomeTeaser);
     app.component('HomeAskAI', HomeAskAI);
     app.component('SafariDownloadLink', SafariDownloadLink);
-    // Only plugins.md and data-viewer.md use these; loading them on demand keeps them (and the
-    // plugin catalog) out of every other page. SSR still renders them in place.
+    // Only data-viewer.md uses it; loading it on demand keeps it out of every other page.
+    // SSR still renders it in place.
     app.component(
       'FolderViewer',
       defineAsyncComponent(() => import('./components/FolderViewer.vue')),
-    );
-    app.component(
-      'PluginStore',
-      defineAsyncComponent(() => import('./components/PluginStore.vue')),
     );
   },
 } satisfies Theme;

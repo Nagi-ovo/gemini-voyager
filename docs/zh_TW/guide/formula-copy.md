@@ -31,4 +31,4 @@ Voyager 為此提供了無縫支持：
 
 ## 適用範圍
 
-在 Gemini 與 AI Studio 上，請在彈窗中開啟 **啟用公式複製**；此開關與複製格式會同時套用於兩個網站。Claude 與 ChatGPT 以內建外掛的形式提供公式複製，DeepSeek 則可在[外掛市集](/zh_TW/plugins)中安裝公式複製外掛。
+在 Gemini 與 AI Studio 上，請在彈窗中開啟 **啟用公式複製**；此開關與複製格式會同時套用於兩個網站。Claude 與 ChatGPT 以內建外掛的形式提供公式複製，DeepSeek 則可在[外掛市集](/zh_TW/guide/plugins)中安裝公式複製外掛。

@@ -106,7 +106,7 @@
 
 ### 🔌 Claude、ChatGPT 與 DeepSeek
 
-這些功能由 [Voyager 外掛引擎](https://voyager.nagi.fun/zh_TW/plugins) 驅動，讓你的體驗延伸到 Gemini 之外。請在擴充功能彈出視窗中開啟，並授權存取各網站：
+這些功能由 [Voyager 外掛引擎](https://voyager.nagi.fun/zh_TW/guide/plugins) 驅動，讓你的體驗延伸到 Gemini 之外。請在擴充功能彈出視窗中開啟，並授權存取各網站：
 
 - **📍 時間軸**：在 Claude 與 ChatGPT 上提供相同的時間軸，支援星號訊息與搜尋；DeepSeek 則以選用外掛的形式提供。
 - **📂 ChatGPT 資料夾**：將 ChatGPT 對話整理到資料夾中。預設開啟。

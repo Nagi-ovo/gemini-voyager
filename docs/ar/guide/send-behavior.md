@@ -25,7 +25,7 @@
 ## المواقع الأخرى
 
 - **AI Studio** يعمل بالعكس: فعّل **Enter للإرسال في AI Studio** لترسل بالضغط على `Enter`، وتضيف سطراً جديداً بـ `Ctrl/⌘+Enter`.
-- **Claude وChatGPT وDeepSeek**: ثبّت إضافة **Ctrl/Cmd+Enter to send** الخاصة بكل موقع من [المتجر](/ar/plugins).
+- **Claude وChatGPT وDeepSeek**: ثبّت إضافة **Ctrl/Cmd+Enter to send** الخاصة بكل موقع من [قائمة الإضافات](/ar/guide/plugins).
 - **Safari**: إذا كان Gemini يحتاج إلى الضغط على Enter مرتين للإرسال، ففعّل **إصلاح مفتاح Enter في Safari**.
 
 ## الميزات
