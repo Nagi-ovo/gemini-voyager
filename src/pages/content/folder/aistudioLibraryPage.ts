@@ -1,13 +1,13 @@
 /**
  * Folder features on AI Studio's /library page: table rows as drag sources,
- * multi-select with batch delete, and the floating drop zone. The manager
+ * and the floating drop zone. The manager
  * attaches it on /library and detaches it on the way out.
  */
-import type { ToastTone, Toaster } from '@/core/ui/toast/types';
+import type { ToastTone } from '@/core/ui/toast/types';
 import type { FolderCommands } from '@/features/folder/commands/folderCommands';
 
+import { aistudioBatchDeleteService } from '../batchDelete/aistudio';
 import { mountLibraryDropZone, type LibraryDropZone } from './aistudioLibraryDropZone';
-import { LibrarySelection } from './aistudioLibrarySelection';
 import { bindLibraryRows, watchLibraryTable } from './aistudioLibraryTable';
 import { newFolderId } from './aistudioTree';
 import type { Folder, FolderData } from './types';
@@ -25,18 +25,13 @@ export type LibraryPageHost = {
   /** Re-syncs which rows hide as archived. */
   applyHideArchived: () => void;
   notify: (message: string, tone: ToastTone) => void;
-  /** The manager's toaster, for the batch delete progress. */
-  toaster: Toaster;
 };
 
 export class LibraryPage {
-  private readonly selection: LibrarySelection;
   private stopTableWatch: (() => void) | null = null;
   private dropZone: LibraryDropZone | null = null;
 
-  constructor(private readonly host: LibraryPageHost) {
-    this.selection = new LibrarySelection(host.t, host.notify, host.toaster);
-  }
+  constructor(private readonly host: LibraryPageHost) {}
 
   /** Binds the table (now and as it changes) and mounts the drop zone. Idempotent. */
   attach(): void {
@@ -44,18 +39,19 @@ export class LibraryPage {
     this.bindRows();
     this.mountDropZone();
     this.host.applyHideArchived();
+    aistudioBatchDeleteService.attach(this);
   }
 
-  /** Leaving /library: the selection ends and the body-wide table watch stops. */
+  /** Leaving /library stops the body-wide table watch. */
   detach(): void {
-    if (this.selection.isActive) this.selection.exit();
+    aistudioBatchDeleteService.detach(this);
     this.stopTableWatch?.();
     this.stopTableWatch = null;
   }
 
   /** Another account's prompts must not stay selected or listed as targets. */
   releaseAccount(): void {
-    if (this.selection.isActive) this.selection.exit();
+    aistudioBatchDeleteService.reset();
     document.querySelector('.gv-library-folder-list')?.replaceChildren();
   }
 
@@ -70,18 +66,18 @@ export class LibraryPage {
   }
 
   destroy(): void {
+    aistudioBatchDeleteService.detach(this);
     this.stopTableWatch?.();
     this.stopTableWatch = null;
     this.dropZone?.destroy();
     this.dropZone = null;
-    this.selection.destroy();
   }
 
   private bindRows(): void {
-    bindLibraryRows((row) => this.selection.bindRow(row));
-    // New rows pick up the current hide-archived state and selection.
+    bindLibraryRows();
+    aistudioBatchDeleteService.refresh();
+    // New rows pick up the current hide-archived state.
     this.host.applyHideArchived();
-    this.selection.refresh();
   }
 
   /** The drop zone lists folders, so an empty library gets its first one. */

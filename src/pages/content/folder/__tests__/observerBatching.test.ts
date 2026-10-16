@@ -3,11 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { accountIsolationService } from '@/core/services/AccountIsolationService';
 import type { FolderData } from '@/core/types/folder';
 
+import { startGeminiBatchDelete } from '../../batchDelete/gemini';
 import type { FolderSidebarRuntime } from '../FolderSidebarRuntime';
 import type { FolderStore } from '../FolderStore';
 import { FolderManager } from '../manager';
 import * as storageAdapters from '../storage/FolderStorageAdapter';
 import { mountSidebar, setLayout } from './sidebarRuntimeHarness';
+
+vi.mock('webextension-polyfill', () => ({ default: chrome }));
 
 vi.mock('@/utils/i18n', () => ({
   getTranslationSync: (key: string) => key,
@@ -69,6 +72,7 @@ function clickDeleteDialogButton(testId = 'confirm-delete-button'): void {
 /** Owner timing/confirmation cases live beside NativeSidebarObserver and NativeConversationMenus. */
 describe('FolderManager native sidebar integration', () => {
   let manager: FolderManager;
+  let stopBatchDelete: (() => Promise<void>) | null = null;
   let owners: ManagerOwners;
   let writes: FolderData[];
   let sidebar: HTMLElement;
@@ -132,7 +136,9 @@ describe('FolderManager native sidebar integration', () => {
     expect(owners.sidebarRuntime.sidebar).toBe(sidebar);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await stopBatchDelete?.();
+    stopBatchDelete = null;
     manager.destroy();
     document.body.innerHTML = '';
     localStorage.clear();
@@ -264,6 +270,20 @@ describe('FolderManager native sidebar integration', () => {
   });
 
   it('uses lr26 title-text for every selected native conversation drag payload', async () => {
+    stopBatchDelete = startGeminiBatchDelete();
+    vi.mocked(chrome.storage.sync.get).mockImplementation(
+      async (_keys: unknown, callback?: (items: unknown) => void) => {
+        callback?.({});
+        return {};
+      },
+    );
+    vi.mocked(chrome.storage.local.get).mockImplementation(
+      async (_keys: unknown, callback?: (items: unknown) => void) => {
+        callback?.({});
+        return {};
+      },
+    );
+    await manager.init();
     const first = createConversationEl('aaaabbbb', 'First selected chat');
     const second = createConversationEl('ccccdddd', 'Second selected chat');
     sidebar.append(first, second);

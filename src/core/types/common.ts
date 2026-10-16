@@ -49,6 +49,7 @@ export const StorageKeys = {
   // The ChatGPT sidebar folder section's collapse and conversation order on this device.
   CHATGPT_FOLDER_SECTION: 'gvChatGptFolderSection',
   FOLDER_ENABLED: 'geminiFolderEnabled',
+  BATCH_DELETE_ENABLED: 'gvBatchDeleteEnabled',
   FOLDER_HIDE_ARCHIVED_CONVERSATIONS: 'geminiFolderHideArchivedConversations',
   FOLDER_HIDE_ARCHIVED_NUDGE_SHOWN: 'geminiFolderHideArchivedNudgeShown',
   FOLDER_SEARCH_ENABLED: 'gvFolderSearchEnabled',

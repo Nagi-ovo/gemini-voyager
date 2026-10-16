@@ -14,6 +14,7 @@ import { initI18n } from '@/utils/i18n';
 
 import { startAIStudioSidebarLayout } from './aistudioSidebarStartup';
 import { startGeminiChatAppearance } from './appearanceStartup';
+import { admitBatchDelete } from './batchDeleteStartup';
 import { startChangelog } from './changelog/index';
 import { runCoachmarkSequence } from './coachmark';
 import { claimContentScript } from './contentScriptHandoff';
@@ -221,6 +222,7 @@ async function initializeFeatures(): Promise<void> {
       await settle(geminiBuiltins.startTimeline());
       await delay(HEAVY_FEATURE_INIT_DELAY);
 
+      admitBatchDelete(officialAdmission, 'gemini', pageLifetime.signal);
       const folderManager = await adopt(startFolderManager(), (manager) => manager?.destroy());
       if (folderManager) {
         cleanupManager.registerCleanupFunction(
@@ -342,6 +344,7 @@ async function initializeFeatures(): Promise<void> {
       }
 
       startAIStudioSidebarLayout(officialAdmission);
+      admitBatchDelete(officialAdmission, 'aistudio', pageLifetime.signal);
       startAIStudioFolderManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
 

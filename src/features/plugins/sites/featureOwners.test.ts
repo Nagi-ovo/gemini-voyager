@@ -81,6 +81,20 @@ describe('feature owners', () => {
     }
   });
 
+  it.each(['gemini', 'aistudio'])(
+    'keeps %s batch deletion private to its packaged runtime',
+    (site) => {
+      const id = `voyager.${site}-batch-delete`;
+      expect(isPackagedOfficialPluginId(id)).toBe(true);
+      expect(ownedFeatureByPluginId(id)).toMatchObject({
+        site,
+        feature: 'batchDelete',
+        handlers: [],
+        healthTracking: false,
+      });
+    },
+  );
+
   it('owns AI Studio sidebar layout independently without opening a public primitive', () => {
     const id = 'voyager.aistudio-sidebar-width';
     expect(isPackagedOfficialPluginId(id)).toBe(true);

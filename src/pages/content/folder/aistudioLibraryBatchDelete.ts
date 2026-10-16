@@ -40,8 +40,12 @@ function isVisible(element: HTMLElement): boolean {
 }
 
 /** Polls `find` until it clicks something or the wait runs out. */
-async function pollAndClick(find: () => HTMLElement | null): Promise<boolean> {
+async function pollAndClick(
+  find: () => HTMLElement | null,
+  isCurrent: () => boolean,
+): Promise<boolean> {
   for (let elapsed = 0; elapsed < TIMING.MAX_BUTTON_WAIT_TIME;) {
+    if (!isCurrent()) return false;
     const target = find();
     if (target) {
       target.click();
@@ -107,19 +111,24 @@ function findConfirmButton(keywords: string[]): HTMLElement | null {
 }
 
 /** One deletion: open the row's menu, choose Delete, confirm. False when the row or menu fails. */
-async function deletePrompt(conversationId: string, keywords: string[]): Promise<boolean> {
+async function deletePrompt(
+  conversationId: string,
+  keywords: string[],
+  isCurrent: () => boolean,
+): Promise<boolean> {
+  if (!isCurrent()) return false;
   const moreButton =
     findLibraryPromptRow(conversationId)?.querySelector<HTMLElement>(MORE_BUTTON_SELECTOR);
   if (!moreButton) return false;
 
   moreButton.click();
   await delay(TIMING.MENU_APPEAR_DELAY);
-  if (!(await pollAndClick(() => findDeleteMenuItem(keywords)))) {
-    document.querySelector<HTMLElement>('.cdk-overlay-backdrop')?.click();
+  if (!(await pollAndClick(() => findDeleteMenuItem(keywords), isCurrent))) {
+    if (isCurrent()) document.querySelector<HTMLElement>('.cdk-overlay-backdrop')?.click();
     return false;
   }
   await delay(TIMING.DIALOG_APPEAR_DELAY);
-  await pollAndClick(() => findConfirmButton(keywords));
+  if (!(await pollAndClick(() => findConfirmButton(keywords), isCurrent))) return false;
   await delay(TIMING.DELETION_COMPLETE_DELAY);
   return true;
 }
@@ -133,7 +142,10 @@ export class LibraryBatchDeleter {
     private readonly toaster: Toaster,
   ) {}
 
-  async run(conversationIds: readonly string[]): Promise<BatchDeleteResult> {
+  async run(
+    conversationIds: readonly string[],
+    isCurrent: () => boolean = () => true,
+  ): Promise<BatchDeleteResult> {
     const keywords = (this.t('batch_delete_match_patterns') || '')
       .split(/[,，、；;]+/)
       .map((value) => value.trim().toLowerCase())
@@ -142,9 +154,18 @@ export class LibraryBatchDeleter {
     try {
       this.showProgress(0, conversationIds.length);
       for (let index = 0; index < conversationIds.length; index++) {
+        if (!isCurrent()) {
+          result.failedCount += conversationIds.length - index;
+          break;
+        }
         this.showProgress(index + 1, conversationIds.length);
-        if (await deletePrompt(conversationIds[index], keywords)) result.successCount++;
-        else result.failedCount++;
+        try {
+          if (await deletePrompt(conversationIds[index], keywords, isCurrent))
+            result.successCount++;
+          else result.failedCount++;
+        } catch {
+          result.failedCount++;
+        }
         if (index < conversationIds.length - 1) await delay(TIMING.DELAY_BETWEEN_DELETIONS);
       }
     } finally {

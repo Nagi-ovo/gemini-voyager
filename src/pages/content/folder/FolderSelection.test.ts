@@ -179,6 +179,7 @@ describe('FolderSelection toolbar lifetime', () => {
           row.setAttribute('jslog', JSON.stringify([conversation.conversationId]));
           sidebar.appendChild(row);
           harness.selection.makeConversationDraggable(row);
+          harness.batchSelection.refresh();
           return row;
         });
       const first =
@@ -195,6 +196,7 @@ describe('FolderSelection toolbar lifetime', () => {
         source === 'native' ? nativeRows(replacementSidebar.sidebar) : [];
       await harness.runtime.remount();
       harness.selection.mount();
+      harness.batchSelection.refresh();
       const panel = harness.runtime.panel!;
       expect(panel).not.toBe(oldPanel);
       expect(panel.classList.contains('gv-multi-select-mode')).toBe(true);
@@ -230,6 +232,7 @@ describe('FolderSelection toolbar lifetime', () => {
     conversation.setAttribute('jslog', '["c_abc123"]');
     document.body.appendChild(conversation);
     harness.selection.makeConversationDraggable(conversation);
+    harness.batchSelection.refresh();
     expect(document.querySelector('[data-test-id="overflow-container"]')).toBeNull();
     expect(harness.runtime.panel).toBeNull();
 
@@ -259,6 +262,7 @@ describe('FolderSelection toolbar lifetime', () => {
     conversation.setAttribute('jslog', '["c_abc123"]');
     document.body.appendChild(conversation);
     harness.selection.makeConversationDraggable(conversation);
+    harness.batchSelection.refresh();
     pointer(conversation, 'mousedown', 0, 0);
     await vi.advanceTimersByTimeAsync(500);
     pointer(conversation, 'mouseup', 0, 0);
@@ -269,6 +273,7 @@ describe('FolderSelection toolbar lifetime', () => {
     restored.sidebar.appendChild(conversation);
     await harness.runtime.start('sidebar');
     harness.selection.mount();
+    harness.batchSelection.refresh();
     const panel = harness.runtime.panel!;
     expect(floatingHost.isConnected).toBe(false);
     expect(document.querySelectorAll('[data-multi-select-indicator="true"]')).toHaveLength(1);

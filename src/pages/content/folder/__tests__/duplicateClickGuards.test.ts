@@ -4,6 +4,7 @@ import browser from 'webextension-polyfill';
 import { accountIsolationService } from '@/core/services/AccountIsolationService';
 import { StorageKeys } from '@/core/types/common';
 
+import { startGeminiBatchDelete } from '../../batchDelete/gemini';
 import { deepActiveElement } from '../floatingTree/__tests__/treeDriver';
 import { FolderManager } from '../manager';
 import { createFolderViewHarness, resetFolderViewBrowserMocks } from './folderViewHarness';
@@ -44,6 +45,7 @@ function mountNativeSidebar(conversationId: string = 'c_abc123'): HTMLElement {
 
 describe('folder duplicate click guards', () => {
   let manager: FolderManager | null = null;
+  let stopBatchDelete: (() => Promise<void>) | null = null;
   let harness: Awaited<ReturnType<typeof createFolderViewHarness>> | null = null;
   const createFolder = () =>
     harness!.runtime.panel!.querySelector<HTMLButtonElement>('.gv-folder-add-btn')!.click();
@@ -65,7 +67,9 @@ describe('folder duplicate click guards', () => {
     vi.spyOn(accountIsolationService, 'isIsolationEnabled').mockResolvedValue(false);
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    await stopBatchDelete?.();
+    stopBatchDelete = null;
     harness?.destroy();
     harness = null;
     manager?.destroy();
@@ -238,6 +242,7 @@ describe('folder duplicate click guards', () => {
   });
 
   it('wires native long-press multi-select when floating mode starts first', async () => {
+    stopBatchDelete = startGeminiBatchDelete();
     manager = new FolderManager();
     vi.mocked(browser.storage.sync.get).mockResolvedValue({
       [StorageKeys.FOLDER_FLOATING_MODE_ENABLED]: true,

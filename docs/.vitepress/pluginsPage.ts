@@ -39,6 +39,7 @@ const SITE_HOSTS: Readonly<Record<PluginSite, readonly string[]>> = {
 /** Rows in reading order: the features people come for first. Unlisted ones follow. */
 const FEATURE_ORDER = [
   'folders',
+  'batch-delete',
   'gems-sidebar',
   'timeline',
   'message-timestamps',
@@ -114,6 +115,8 @@ const NATIVE_FEATURES: Readonly<Record<string, readonly PluginSite[]>> = {
  * this build cannot import; the tests check this list against those bindings.
  */
 export const FRESH_INSTALL_ON: ReadonlySet<string> = new Set([
+  OFFICIAL_PLUGIN_IDS.geminiBatchDelete,
+  OFFICIAL_PLUGIN_IDS.aistudioBatchDelete,
   OFFICIAL_PLUGIN_IDS.geminiTimeline,
   OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
   OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,

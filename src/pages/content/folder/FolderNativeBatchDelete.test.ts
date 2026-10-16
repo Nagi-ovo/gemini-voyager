@@ -85,6 +85,7 @@ describe('native batch deletion lifetime', () => {
     if (withAction) addMoreButton(row, id);
     harness.runtime.sidebar!.appendChild(row);
     harness.selection.makeConversationDraggable(row);
+    harness.batchSelection.refresh();
     return row;
   }
 
@@ -123,13 +124,13 @@ describe('native batch deletion lifetime', () => {
 
   it('deletes nothing when multi-select ends while it asks', async () => {
     await selectBoth();
-    harness.selection.reset();
+    harness.batchSelection.reset();
     expect(confirmDriver.isOpen()).toBe(false);
     await vi.advanceTimersByTimeAsync(6000);
     expect(deleted).toEqual([]);
   });
 
-  it.each(['destroy', 'disable'] as const)(
+  it.each(['destroy', 'folder disable'] as const)(
     'stops the remaining batch and result UI after %s during the inter-item wait',
     async (action) => {
       const notify = vi.spyOn(harness.feedback, 'showNotification');
@@ -138,7 +139,7 @@ describe('native batch deletion lifetime', () => {
       expect(deleted).toEqual([FIRST_ID]);
       if (action === 'destroy') harness.destroy();
       else {
-        harness.selection.reset();
+        harness.batchSelection.reset();
         harness.runtime.stop();
       }
       const timer = vi.spyOn(window, 'setTimeout');
@@ -149,18 +150,23 @@ describe('native batch deletion lifetime', () => {
     },
   );
 
-  it('keeps a replacement batch active when the cancelled batch finishes unwinding', async () => {
+  it('keeps a replacement batch active after the cancelled run releases its native waits', async () => {
     const notify = vi.spyOn(harness.feedback, 'showNotification');
     await startBatch();
-    harness.selection.reset();
+    harness.batchSelection.reset();
     document.querySelectorAll('.cdk-overlay-container').forEach((overlay) => overlay.remove());
     const next = harness.runtime.sidebar!.querySelectorAll<HTMLElement>(
       '[data-test-id="conversation"]',
     )[1];
     next.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
-    // Start the new batch before the old cancelled Promise continuation runs.
     vi.advanceTimersByTime(500);
     next.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    expect(selectedCount()).toBe('1 selected');
+    document.querySelector<HTMLButtonElement>('.gv-multi-select-delete-btn')!.click();
+    expect(confirmDriver.isOpen()).toBe(false);
+    // Selection is immediate, but confirmation waits for the cancelled run to release its claim.
+    await vi.advanceTimersByTimeAsync(0);
+    expect(selectedCount()).toBe('1 selected');
     document.querySelector<HTMLButtonElement>('.gv-multi-select-delete-btn')!.click();
     confirmDriver.answer('pm_delete');
     await vi.advanceTimersByTimeAsync(0);

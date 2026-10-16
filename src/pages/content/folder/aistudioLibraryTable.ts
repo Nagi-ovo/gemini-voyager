@@ -80,17 +80,13 @@ function bindRowDrag(row: HTMLElement, anchor: HTMLAnchorElement): void {
   });
 }
 
-/**
- * Makes every not-yet-bound prompt row drag its prompt with its title, and
- * hands each newly bound row to `onBound` for the row's other behaviour.
- */
-export function bindLibraryRows(onBound: (row: HTMLElement) => void): void {
+/** Makes every not-yet-bound prompt row drag its prompt with its title. */
+export function bindLibraryRows(): void {
   for (const row of getLibraryPromptRows() as BoundRow[]) {
     const anchor = promptAnchor(row);
     if (!anchor || row._gvLibraryDragBound) continue;
     row._gvLibraryDragBound = true;
     bindRowDrag(row, anchor);
-    onBound(row);
   }
 }
 

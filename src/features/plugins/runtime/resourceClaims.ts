@@ -49,6 +49,13 @@ export function opResourceClaims(manifest: PluginManifest): readonly ResourceCla
       claims.push({ resource, handler: 'turnNavigator', opIndex: -1 });
     }
   }
+  // A confirmed batch drains after disable; re-enable must wait for that destructive run.
+  if (
+    manifest.id === OFFICIAL_PLUGIN_IDS.geminiBatchDelete ||
+    manifest.id === OFFICIAL_PLUGIN_IDS.aistudioBatchDelete
+  ) {
+    claims.push({ resource: 'batch-delete-run', handler: 'batchDelete', opIndex: -1 });
+  }
   return claims;
 }
 

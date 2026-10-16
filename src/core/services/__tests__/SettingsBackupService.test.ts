@@ -41,6 +41,16 @@ describe('SettingsBackupService', () => {
     );
   });
 
+  it('restores the batch delete choice without changing folder availability or filling older backups', async () => {
+    expect(BACKUPABLE_SYNC_SETTINGS_DEFAULTS[StorageKeys.BATCH_DELETE_ENABLED]).toBe(true);
+    const set = vi.fn().mockResolvedValue(undefined);
+    const storage = { get: vi.fn().mockResolvedValue({}), set };
+    await restoreBackupableSyncSettings({ [StorageKeys.FOLDER_ENABLED]: false }, storage);
+    expect(set).toHaveBeenLastCalledWith({ [StorageKeys.FOLDER_ENABLED]: false });
+    await restoreBackupableSyncSettings({ [StorageKeys.BATCH_DELETE_ENABLED]: false }, storage);
+    expect(set).toHaveBeenLastCalledWith({ [StorageKeys.BATCH_DELETE_ENABLED]: false });
+  });
+
   it('backs up AI Studio sidebar enable state independently and preserves it with older backups', async () => {
     expect(BACKUPABLE_SYNC_SETTINGS_DEFAULTS[StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED]).toBe(
       true,

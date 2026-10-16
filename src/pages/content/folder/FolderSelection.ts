@@ -1,22 +1,19 @@
-import { extractRouteUserIdFromPath } from '@/core/services/AccountIsolationService';
 import { askConfirm } from '@/core/ui/confirm';
 import type { FolderCommands } from '@/features/folder/commands/folderCommands';
 import { getTranslationSyncUnsafe as t } from '@/utils/i18n';
 
+import { LONG_PRESS_MS, MAX_BATCH_DELETE_COUNT } from '../batchDelete/constants';
 import type { FolderFeedback } from './FolderFeedback';
 import type { FolderNavigation } from './FolderNavigation';
 import type { FolderSidebarRuntime } from './FolderSidebarRuntime';
 import type { FolderStore } from './FolderStore';
-import type { NativeConversationMenus } from './NativeConversationMenus';
 import type { TreeActions } from './floatingTree/shared';
-import { deleteNativeConversations } from './nativeBatchDelete';
 import {
   type NativeRowSelection,
   bindNativeConversationRow,
   findConversationElement,
   setLightweightDragImage,
 } from './nativeConversationDrag';
-import { extractConversationId } from './nativeConversationIds';
 import { getNativeConversationElements } from './nativeSidebarDom';
 import {
   SelectionToolbarHost,
@@ -33,21 +30,9 @@ export interface FolderSelectionOptions {
   navigation: Pick<FolderNavigation, 'highlightActiveConversation'>;
   feedback: Pick<FolderFeedback, 'showNotification'>;
   toolbar: SelectionToolbarOptions;
-  /**
-   * Deletes the page's own selected chats in a batch. Only a site whose native
-   * rows join the selection (`makeConversationDraggable`) has it.
-   */
-  nativeDelete?: {
-    activation: () => number;
-    menus: Pick<NativeConversationMenus, 'deleteConversation'>;
-    feedback: Pick<
-      FolderFeedback,
-      | 'showBatchDeleteProgress'
-      | 'updateBatchDeleteProgress'
-      | 'hideBatchDeleteProgress'
-      | 'showNotification'
-    >;
-  };
+  /** The admitted plugin's current native selection, for dragging selected chats into folders. */
+  nativeSelection?: () => NativeRowSelection | null;
+  onFinishNativeDrop?: () => void;
   getContext(): {
     accountIsolationEnabled: boolean;
     isDestroyed: boolean;
@@ -68,11 +53,6 @@ const VOYAGER_LAYER_SELECTOR = [
   '.gv-color-picker-dialog',
 ].join(', ');
 
-const LONG_PRESS_MS = 500;
-const MAX_BATCH_DELETE_COUNT = 50;
-/** Delay before refreshing the page after a native batch delete. */
-const PAGE_REFRESH_DELAY_MS = 1500;
-
 function debug(level: 'log' | 'warn', ...args: unknown[]): void {
   try {
     if (localStorage.getItem('gvFolderDebug') === '1') console[level]('[FolderManager]', ...args);
@@ -85,14 +65,13 @@ function debug(level: 'log' | 'warn', ...args: unknown[]): void {
 export class FolderSelection {
   private selectedConversations: Set<string> = new Set();
   private isMultiSelectMode: boolean = false;
-  private multiSelectSource: 'folder' | 'native' | null = null;
+  private multiSelectSource: 'folder' | null = null;
   private multiSelectFolderId: string | null = null;
   private longPressTimeout: number | null = null;
   /** The folder chat whose long press entered multi-select; its own release click is swallowed. */
   private longPressRow: { conversationId: string; folderId: string } | null = null;
   private outsideClickHandler: ((e: MouseEvent) => void) | null = null;
   private releaseEscape: (() => void) | null = null;
-  private batchDeleteController: AbortController | null = null;
   /** Aborted when multi-select ends, which answers its open confirm with null. */
   private selectionSession = new AbortController();
   private readonly timers = new Set<number>();
@@ -136,11 +115,6 @@ export class FolderSelection {
   }
 
   reset(): void {
-    if (this.batchDeleteController) {
-      this.batchDeleteController.abort();
-      this.batchDeleteController = null;
-      this.options.nativeDelete?.feedback.hideBatchDeleteProgress();
-    }
     for (const timer of this.timers) window.clearTimeout(timer);
     this.timers.clear();
     for (const image of this.dragImages) image.remove();
@@ -157,7 +131,8 @@ export class FolderSelection {
 
   /** Lets a Gemini sidebar row join the selection and be dragged into folders. */
   makeConversationDraggable(element: HTMLElement): void {
-    bindNativeConversationRow(element, this.nativeRows);
+    this.options.nativeSelection?.()?.bindRow?.(element);
+    bindNativeConversationRow(element, () => this.options.nativeSelection?.() ?? this.nativeRows);
   }
 
   private createNativeRowSelection(): NativeRowSelection {
@@ -166,11 +141,11 @@ export class FolderSelection {
       longPressMs: LONG_PRESS_MS,
       schedule: (callback, delay) => this.schedule(callback, delay),
       clearTimer: (timer) => this.clearTimer(timer),
-      isBatchDeleting: () => this.batchDeleteController !== null,
+      isBatchDeleting: () => false,
       isMultiSelectMode: () => this.isMultiSelectMode,
       isSelected: (id) => this.selectedConversations.has(id),
       selectedIds: () => Array.from(this.selectedConversations),
-      enterMultiSelect: (id) => this.enterMultiSelectMode(id, 'native'),
+      enterMultiSelect: () => {},
       toggle: (id) => this.toggleConversationSelection(id),
       selectOnly: (id) => {
         this.clearSelection();
@@ -197,10 +172,9 @@ export class FolderSelection {
   }
 
   /** Whether multi-select still holds exactly `ids` from `source`, as when a confirm opened. */
-  private holdsSelection(source: 'folder' | 'native', ids: readonly string[]): boolean {
+  private holdsSelection(ids: readonly string[]): boolean {
     return (
       this.isMultiSelectMode &&
-      this.multiSelectSource === source &&
       ids.length === this.selectedConversations.size &&
       ids.every((id) => this.selectedConversations.has(id))
     );
@@ -218,7 +192,7 @@ export class FolderSelection {
       signal: this.selectionSession.signal,
     });
     if (answer !== 'remove' || this.options.getContext().isDestroyed) return;
-    if (!this.holdsSelection('folder', ids) || this.multiSelectFolderId !== folderId) return;
+    if (!this.holdsSelection(ids) || this.multiSelectFolderId !== folderId) return;
 
     // Remove all selected conversations from the folder
     if (!this.options.store.data.folderContents[folderId]) return;
@@ -228,61 +202,6 @@ export class FolderSelection {
     // Exit multi-select mode and refresh
     this.exitMultiSelectMode();
     debug('log', `Batch deleted ${ids.length} conversations from folder ${folderId}`);
-  }
-
-  private async batchDeleteNativeConversations(anchor: HTMLElement): Promise<void> {
-    const native = this.options.nativeDelete;
-    if (!native || this.options.getContext().isDestroyed) return;
-    if (this.batchDeleteController) {
-      debug('log', 'Batch delete already in progress');
-      return;
-    }
-
-    const ids = Array.from(this.selectedConversations);
-    if (ids.length === 0) return;
-    const activation = native.activation();
-    const routeUserId = extractRouteUserIdFromPath(window.location.pathname) ?? '0';
-    const sameContext = () =>
-      !this.options.getContext().isDestroyed &&
-      native.activation() === activation &&
-      (extractRouteUserIdFromPath(window.location.pathname) ?? '0') === routeUserId;
-    const answer = await askConfirm({
-      message: t('batch_delete_confirm').replace('{count}', String(ids.length)),
-      anchor,
-      tone: 'danger',
-      choices: [{ id: 'delete', label: t('pm_delete') }],
-      signal: this.selectionSession.signal,
-    });
-    if (answer !== 'delete' || this.batchDeleteController || !sameContext()) return;
-    if (!this.holdsSelection('native', ids)) return;
-
-    const controller = new AbortController();
-    this.batchDeleteController = controller;
-    const isCurrent = () => !controller.signal.aborted && sameContext();
-
-    try {
-      const deleted = await deleteNativeConversations({
-        conversationIds: ids,
-        signal: controller.signal,
-        isCurrent,
-        deleteConversation: (id, signal) => native.menus.deleteConversation(id, signal),
-        feedback: native.feedback,
-      });
-      if (deleted === null) return;
-      this.exitMultiSelectMode();
-      // Gemini's list only drops deleted chats on a reload.
-      if (deleted > 0) {
-        debug('log', 'Refreshing page after batch delete');
-        this.schedule(() => {
-          if (isCurrent()) window.location.reload();
-        }, PAGE_REFRESH_DELAY_MS);
-      }
-    } finally {
-      if (this.batchDeleteController === controller) {
-        this.batchDeleteController = null;
-        native.feedback.hideBatchDeleteProgress();
-      }
-    }
   }
 
   private clearSelection(): void {
@@ -318,31 +237,19 @@ export class FolderSelection {
     // Only update UI for the source where multi-select was initiated
     if (this.multiSelectSource === 'folder') {
       this.options.onFolderSelectionChange();
-    } else if (this.multiSelectSource === 'native') {
-      // Only update native conversation elements (Recent section)
-      const nativeConvs = getNativeConversationElements(this.options.runtime.sidebar);
-      nativeConvs.forEach((el) => {
-        const convId = extractConversationId(el as HTMLElement);
-        if (convId) {
-          el.classList.toggle('gv-conversation-selected', this.selectedConversations.has(convId));
-        }
-      });
     }
 
     // Update the selection count
     this.updateMultiSelectModeUI();
   }
 
-  private enterMultiSelectMode(
-    initialConversationId?: string,
-    source: 'folder' | 'native' = 'native',
-    folderId?: string,
-  ): void {
-    debug('log', 'Entering multi-select mode', { source, folderId });
+  private enterMultiSelectMode(initialConversationId?: string, folderId?: string): void {
+    this.options.onFinishNativeDrop?.();
+    debug('log', 'Entering multi-select mode', { folderId });
     this.isMultiSelectMode = true;
     this.selectionSession.abort();
     this.selectionSession = new AbortController();
-    this.multiSelectSource = source;
+    this.multiSelectSource = 'folder';
     this.multiSelectFolderId = folderId || null;
 
     // Select the conversation that triggered the long-press
@@ -460,7 +367,6 @@ export class FolderSelection {
       source,
       onDelete: (anchor) => {
         if (source === 'folder') void this.batchDeleteConversations(anchor);
-        else void this.batchDeleteNativeConversations(anchor);
       },
       onExit: () => this.exitMultiSelectMode(),
     });
@@ -527,7 +433,7 @@ export class FolderSelection {
     this.longPressTimeout = this.schedule(() => {
       this.longPressTimeout = null;
       this.longPressRow = { conversationId, folderId };
-      this.enterMultiSelectMode(conversationId, 'folder', folderId);
+      this.enterMultiSelectMode(conversationId, folderId);
     }, LONG_PRESS_MS);
   }
 
@@ -590,6 +496,7 @@ export class FolderSelection {
 
   /** A drop used the dragged selection. */
   finishDrop(): void {
+    this.options.onFinishNativeDrop?.();
     this.exitMultiSelectMode();
   }
 }

@@ -3,6 +3,7 @@ import browser from 'webextension-polyfill';
 
 import { accountIsolationService } from '@/core/services/AccountIsolationService';
 
+import { GeminiBatchDeleteSelection } from '../../batchDelete/geminiSelection';
 import { FolderFeedback } from '../FolderFeedback';
 import { FolderNavigation } from '../FolderNavigation';
 import { FolderSelection } from '../FolderSelection';
@@ -40,6 +41,7 @@ export async function createFolderViewHarness(data: FolderData) {
   let treeView: FolderSidebarView;
   let runtime: FolderSidebarRuntime;
   let selection: FolderSelection;
+  let batchSelection: GeminiBatchDeleteSelection;
   const onRefresh = vi.fn(() => {
     if (!runtime.panel) return;
     treeView.render();
@@ -56,6 +58,7 @@ export async function createFolderViewHarness(data: FolderData) {
       headerMenus.close();
       transfer.closeImportDialog();
       selection.reset();
+      batchSelection?.reset();
       treeView.render();
     } else if (reason === 'data') {
       onRefresh();
@@ -124,12 +127,14 @@ export async function createFolderViewHarness(data: FolderData) {
     onPanelMount: () => {
       treeView.mount();
       selection.mount();
+      batchSelection?.refresh();
       navigation.highlightActiveConversation();
       navigation.bind();
     },
     onPanelUnmount: () => {
       treeView.unmount();
       selection.unmount();
+      batchSelection?.unmount();
       navigation.unbind();
       feedback.hideTooltip();
       dialogs.closeAll();
@@ -147,12 +152,26 @@ export async function createFolderViewHarness(data: FolderData) {
     navigation,
     feedback,
     toolbar: { host: () => runtime.panel, placement: 'floating', icon: ligatureIcon },
-    nativeDelete: { activation: () => store.activation, menus: nativeMenus, feedback },
+    nativeSelection: () => batchSelection?.nativeRows ?? null,
+    onFinishNativeDrop: () => batchSelection?.exit(),
     onFolderSelectionChange: () => treeView.refreshSite(),
     getContext: () => ({
       accountIsolationEnabled: store.accountIsolationEnabled,
       isDestroyed: destroyed,
     }),
+  });
+  batchSelection = new GeminiBatchDeleteSelection({
+    runtime,
+    toolbar: { host: () => runtime.panel, placement: 'floating', icon: ligatureIcon },
+    activation: () => store.activation,
+    menus: nativeMenus,
+    feedback,
+    getContext: () => ({
+      isDestroyed: destroyed,
+      accountIsolationEnabled: store.accountIsolationEnabled,
+    }),
+    onEnter: () => selection.reset(),
+    onExit: () => navigation.highlightActiveConversation(),
   });
   const transfer = new FolderTransferController({
     getContext: () => ({ session: store.session, activation: store.activation, data: store.data }),
@@ -192,6 +211,7 @@ export async function createFolderViewHarness(data: FolderData) {
     treeView,
     runtime,
     selection,
+    batchSelection,
     navigation,
     dialogs,
     transfer,
@@ -210,6 +230,8 @@ export async function createFolderViewHarness(data: FolderData) {
     destroy: () => {
       if (destroyed) return;
       destroyed = context.isDestroyed = true;
+      batchSelection.reset();
+      void batchSelection.stop();
       runtime.stop();
       selection.reset();
       navigation.destroy();

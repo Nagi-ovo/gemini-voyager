@@ -1,6 +1,8 @@
 import { type PluginManifest, hasNativeOps } from '../types';
+import { AISTUDIO_BATCH_DELETE_MANIFEST } from './aistudioBatchDeleteManifest';
 import { AISTUDIO_SIDEBAR_WIDTH_MANIFEST } from './aistudioSidebarWidthManifest';
 import { CHATGPT_RESPONSE_NOTIFICATION_MANIFEST } from './chatgptResponseNotification/manifest';
+import { GEMINI_BATCH_DELETE_MANIFEST } from './geminiBatchDeleteManifest';
 import { GEMINI_CANVAS_COPY_MANIFEST } from './geminiCanvasCopyManifest';
 import { GEMINI_CHAT_WIDTH_MANIFEST } from './geminiChatWidthManifest';
 import { GEMINI_CONTEXT_SYNC_MANIFEST } from './geminiContextSyncManifest';
@@ -49,6 +51,8 @@ export const CHATGPT_CONVERSATION_ID_ATTRIBUTE = 'data-chatgpt-selection-convers
  */
 export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   VISUAL_EFFECTS_MANIFEST,
+  GEMINI_BATCH_DELETE_MANIFEST,
+  AISTUDIO_BATCH_DELETE_MANIFEST,
   {
     id: 'voyager.formula-copy',
     name: 'Formula Copy',

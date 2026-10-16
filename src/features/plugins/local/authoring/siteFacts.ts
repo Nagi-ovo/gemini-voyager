@@ -52,6 +52,7 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   editInputWidth: 'Edit input width',
   sidebarWidth: 'Sidebar width',
   aistudioSidebarWidth: 'AI Studio sidebar width',
+  batchDelete: 'Batch delete',
   sidebarAutoHide: 'Auto-hide sidebar',
   sidebarFullHide: 'Fully hide sidebar',
   markdownFix: 'Markdown rendering fix',

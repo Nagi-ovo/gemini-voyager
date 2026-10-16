@@ -126,7 +126,6 @@ export class AIStudioFolderManager {
     placeDrop: (event, folderId) => this.placeDroppedPrompt(event, folderId),
     applyHideArchived: () => this.applyHideArchived(),
     notify: this.notify,
-    toaster: this.toaster,
   });
   private readonly hideArchived = new HideArchivedSetting();
   private readonly dialogs = createFolderDialogs();

@@ -2,19 +2,47 @@
  * Multi-select on /library rows: a long press starts it, clicks then toggle
  * rows, and a floating bar counts the selection and offers batch delete.
  */
+import { detectAccountContextFromDocument } from '@/core/services/AccountIsolationService';
 import { askConfirm } from '@/core/ui/confirm';
 import { isVoyagerLayerEvent } from '@/core/ui/layer';
 import type { ToastTone, Toaster } from '@/core/ui/toast/types';
+import { type Stay, startMachine } from '@/features/plugins/runtime/stateMachine';
 
+import { LONG_PRESS_MS, MAX_BATCH_DELETE_COUNT } from '../batchDelete/constants';
+import { type AccountHints, isDifferentAccount } from '../selectionToolbar/pageIdentity';
+import { watchRouteChanges } from '../utils/routeWatcher';
 import { LibraryBatchDeleter } from './aistudioLibraryBatchDelete';
 import { getLibraryPromptRows, isLibraryPath, libraryPromptData } from './aistudioLibraryTable';
 
-const LONG_PRESS_MS = 500;
-const MAX_BATCH_DELETE_COUNT = 50;
 const PAGE_REFRESH_DELAY_MS = 1500;
 const SELECTED_ROW_CLASS = 'gv-library-row-selected';
 
-type SelectableRow = HTMLElement & { _gvLibraryMultiSelectBound?: boolean };
+type SelectionPhase =
+  | { status: 'idle' }
+  | { status: 'selecting' }
+  | { status: 'confirming' }
+  | { status: 'deleting' };
+type SelectionEvent = { type: 'select' | 'confirm' | 'accept' | 'cancel' | 'exit' | 'finish' };
+
+function transition(state: SelectionPhase, event: SelectionEvent): SelectionPhase {
+  if (state.status === 'deleting') return event.type === 'finish' ? { status: 'idle' } : state;
+  if (event.type === 'exit') return { status: 'idle' };
+  if (event.type === 'select' && state.status === 'idle') return { status: 'selecting' };
+  if (event.type === 'confirm' && state.status === 'selecting') return { status: 'confirming' };
+  if (event.type === 'accept' && state.status === 'confirming') return { status: 'deleting' };
+  if (event.type === 'cancel' && state.status === 'confirming') return { status: 'selecting' };
+  return state;
+}
+
+interface LibraryDeleteContext extends AccountHints {
+  readonly pathname: string;
+}
+
+/** A changed route or signed-in account retires the destructive DOM context. */
+function libraryDeleteContext(): LibraryDeleteContext {
+  const context = detectAccountContextFromDocument(location.href, document);
+  return { pathname: location.pathname, routeUserId: context.routeUserId, email: context.email };
+}
 
 function createIcon(name: string): HTMLSpanElement {
   const span = document.createElement('span');
@@ -31,13 +59,43 @@ function onControl(event: Event): boolean {
 export class LibrarySelection {
   private readonly selected = new Set<string>();
   private active = false;
-  private deleting = false;
+  private readonly phase = startMachine<SelectionPhase, SelectionEvent>(
+    {
+      id: 'aistudio-batch-delete',
+      transition,
+      effects: {
+        confirming: (stay) => {
+          this.confirmSignal = stay.signal;
+          this.watchRunContext(stay);
+        },
+        deleting: (stay) => this.watchRunContext(stay),
+      },
+    },
+    { status: 'idle' },
+  );
+  private readonly rows = new Map<HTMLElement, () => void>();
+  private pending: Promise<void> = Promise.resolve();
+  private enabled = true;
+  private get deleting(): boolean {
+    return this.phase.state.status === 'deleting';
+  }
+
+  get hasConfirmedRun(): boolean {
+    return this.deleting;
+  }
+
+  /** Teardown waits for an already accepted run before a replacement activation can start. */
+  get settled(): Promise<void> {
+    return this.pending;
+  }
   private host: HTMLElement | null = null;
   private outsideClick: ((event: MouseEvent) => void) | null = null;
-  /** Aborted when the selection ends, which answers its open confirm with null. */
-  private session = new AbortController();
-  /** Bumped by destroy(); the manager reuses this selection when re-enabled. */
+  /** The confirming stay owns cancellation and makes late answers inert. */
+  private confirmSignal: AbortSignal | null = null;
+  /** Bumped by teardown so an old run cannot refresh a replacement activation. */
   private lifetime = 0;
+  private contextEpoch = 0;
+  private runContext: LibraryDeleteContext | null = null;
   private refreshTimer: number | null = null;
   private readonly deleter: LibraryBatchDeleter;
 
@@ -54,9 +112,10 @@ export class LibrarySelection {
   }
 
   /** Long press starts selecting from this row; while selecting, a click toggles it. */
-  bindRow(row: SelectableRow): void {
-    if (row._gvLibraryMultiSelectBound) return;
-    row._gvLibraryMultiSelectBound = true;
+  bindRow(row: HTMLElement): void {
+    if (this.rows.has(row)) return;
+    this.enabled = true;
+    const listeners = new AbortController();
     let longPressed = false;
     let timer: number | null = null;
     const clearPress = () => {
@@ -64,23 +123,41 @@ export class LibrarySelection {
       timer = null;
     };
 
-    row.addEventListener('mousedown', (event) => {
-      if (event.button !== 0 || onControl(event)) return;
-      const data = libraryPromptData(row);
-      if (!data) return;
-      longPressed = false;
-      clearPress();
-      timer = window.setTimeout(() => {
-        longPressed = true;
-        this.enter(data.conversationId);
-      }, LONG_PRESS_MS);
-    });
-    row.addEventListener('mouseup', clearPress);
-    row.addEventListener('mouseleave', clearPress);
+    row.addEventListener(
+      'mousedown',
+      (event) => {
+        if (
+          !this.enabled ||
+          this.deleting ||
+          this.phase.state.status === 'confirming' ||
+          event.button !== 0 ||
+          onControl(event)
+        )
+          return;
+        const data = libraryPromptData(row);
+        if (!data) return;
+        longPressed = false;
+        clearPress();
+        timer = window.setTimeout(() => {
+          longPressed = true;
+          this.enter(data.conversationId);
+        }, LONG_PRESS_MS);
+      },
+      { signal: listeners.signal },
+    );
+    row.addEventListener('mouseup', clearPress, { signal: listeners.signal });
+    row.addEventListener('mouseleave', clearPress, { signal: listeners.signal });
+    row.addEventListener('dragstart', clearPress, { signal: listeners.signal });
     row.addEventListener(
       'click',
       (event) => {
-        if (onControl(event) || this.deleting) return;
+        if (
+          !this.enabled ||
+          onControl(event) ||
+          this.deleting ||
+          this.phase.state.status === 'confirming'
+        )
+          return;
         if (longPressed) {
           event.preventDefault();
           event.stopPropagation();
@@ -93,13 +170,17 @@ export class LibrarySelection {
         event.stopPropagation();
         this.toggle(data.conversationId);
       },
-      true,
+      { capture: true, signal: listeners.signal },
     );
+    this.rows.set(row, () => {
+      clearPress();
+      listeners.abort();
+    });
   }
 
   exit(): void {
+    this.phase.send({ type: 'exit' });
     this.active = false;
-    this.session.abort();
     this.removeOutsideClick();
     this.selected.clear();
     this.refresh();
@@ -107,6 +188,12 @@ export class LibrarySelection {
 
   /** Marks selected rows and syncs the floating bar with the selection. */
   refresh(): void {
+    for (const [row, stop] of this.rows) {
+      if (row.isConnected) continue;
+      stop();
+      row.classList.remove(SELECTED_ROW_CLASS);
+      this.rows.delete(row);
+    }
     for (const row of getLibraryPromptRows()) {
       const data = libraryPromptData(row);
       row.classList.toggle(SELECTED_ROW_CLASS, !!data && this.selected.has(data.conversationId));
@@ -125,7 +212,18 @@ export class LibrarySelection {
     if (actions.childElementCount === 0) actions.append(...this.actionButtons());
   }
 
+  invalidateContext(): void {
+    this.contextEpoch++;
+    this.destroy();
+  }
+
   destroy(): void {
+    this.enabled = false;
+    for (const [row, stop] of this.rows) {
+      stop();
+      row.classList.remove(SELECTED_ROW_CLASS);
+    }
+    this.rows.clear();
     this.lifetime++;
     if (this.refreshTimer !== null) clearTimeout(this.refreshTimer);
     this.refreshTimer = null;
@@ -133,12 +231,13 @@ export class LibrarySelection {
     this.removeOutsideClick();
     this.host?.remove();
     this.host = null;
-    this.deleter.hideProgress();
+    if (!this.deleting) this.deleter.hideProgress();
   }
 
   private enter(conversationId: string): void {
+    if (!this.enabled || this.deleting || this.phase.state.status === 'confirming') return;
+    this.phase.send({ type: 'select' });
     this.active = true;
-    this.session = new AbortController();
     this.selected.add(conversationId);
     this.refresh();
     this.addOutsideClick();
@@ -167,7 +266,10 @@ export class LibrarySelection {
     deleteButton.className = 'gv-multi-select-action-btn gv-multi-select-delete-btn';
     deleteButton.title = this.t('batch_delete_button');
     deleteButton.appendChild(createIcon('delete'));
-    deleteButton.addEventListener('click', () => void this.deleteSelected(deleteButton));
+    deleteButton.addEventListener('click', () => {
+      if (this.phase.state.status !== 'selecting') return;
+      this.pending = this.deleteSelected(deleteButton);
+    });
 
     const exitButton = document.createElement('button');
     exitButton.className = 'gv-multi-select-action-btn gv-multi-select-exit-btn';
@@ -239,22 +341,39 @@ export class LibrarySelection {
   }
 
   private async deleteSelected(anchor: HTMLElement): Promise<void> {
-    if (this.deleting || this.selected.size === 0) return;
+    if (!this.enabled || this.phase.state.status !== 'selecting' || this.selected.size === 0)
+      return;
+    this.runContext = libraryDeleteContext();
+    this.phase.send({ type: 'confirm' });
     const ids = Array.from(this.selected);
     const lifetime = this.lifetime;
+    const contextEpoch = this.contextEpoch;
+    const signal = this.confirmSignal!;
     const answer = await askConfirm({
       message: this.t('batch_delete_confirm').replace('{count}', String(ids.length)),
       anchor,
       tone: 'danger',
       choices: [{ id: 'confirm', label: this.t('pm_delete') }],
-      signal: this.session.signal,
+      signal,
     });
-    if (answer !== 'confirm' || this.deleting) return;
+    if (signal.aborted) return;
+    if (
+      answer !== 'confirm' ||
+      !this.enabled ||
+      !this.checkRunContext() ||
+      this.contextEpoch !== contextEpoch
+    ) {
+      this.phase.send({ type: 'cancel' });
+      return;
+    }
 
-    this.deleting = true;
-    const { successCount, failedCount } = await this.deleter.run(ids).finally(() => {
-      this.deleting = false;
-    });
+    this.phase.send({ type: 'accept' });
+    // Plugin disable retires the UI, not the immutable set the user already confirmed.
+    const { successCount, failedCount } = await this.deleter
+      .run(ids, () => this.checkRunContext() && this.contextEpoch === contextEpoch)
+      .finally(() => {
+        this.phase.send({ type: 'finish' });
+      });
     if (failedCount === 0) {
       this.notify(
         this.t('batch_delete_success').replace('{count}', String(successCount)),
@@ -267,8 +386,41 @@ export class LibrarySelection {
       this.notify(message, 'warning');
     }
     this.exit();
+    // Disabling mid-run finishes the accepted work but must not reload after its UI is gone.
     // AI Studio's table does not drop deleted rows on its own.
     if (successCount > 0 && this.isCurrent(lifetime)) this.scheduleRefresh(lifetime);
+  }
+
+  private checkRunContext(): boolean {
+    const captured = this.runContext;
+    if (!captured) return false;
+    const current = libraryDeleteContext();
+    if (captured.pathname !== current.pathname || isDifferentAccount(captured, current)) {
+      this.runContext = null;
+      this.invalidateContext();
+      return false;
+    }
+    // Header replacement can temporarily hide the email; retain the last real account evidence.
+    this.runContext = { ...current, email: current.email ?? captured.email };
+    return true;
+  }
+
+  private watchRunContext(stay: Stay<SelectionPhase, SelectionEvent>): void {
+    const check = () => {
+      if (!stay.signal.aborted) this.checkRunContext();
+    };
+    stay.scope.observe(
+      document.documentElement,
+      {
+        attributes: true,
+        attributeFilter: ['aria-label', 'data-email', 'title', 'alt', 'href'],
+        characterData: true,
+        childList: true,
+        subtree: true,
+      },
+      check,
+    );
+    stay.scope.effect(() => watchRouteChanges(check));
   }
 
   /** Still mounted and on /library: a reload anywhere else would discard an open prompt. */

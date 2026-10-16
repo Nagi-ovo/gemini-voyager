@@ -9,7 +9,7 @@ import { createTranslator } from '@/utils/i18n';
 
 import { AIStudioFolderManager } from '../aistudio';
 import { LibrarySelection } from '../aistudioLibrarySelection';
-import { bindLibraryRows, watchLibraryTable } from '../aistudioLibraryTable';
+import { bindLibraryRows, getLibraryPromptRows, watchLibraryTable } from '../aistudioLibraryTable';
 import { buildFolderPanel } from '../aistudioPanel';
 import { bindPromptDragSources, watchPromptHistory } from '../aistudioPromptHistory';
 import { mutationAddsPromptLinks, parseDragDataPayload } from '../aistudioPromptLinks';
@@ -346,7 +346,8 @@ describe('AIStudio prompt binding performance guards', () => {
     const second = createLibraryPromptRow('library222', 'Second Library Prompt');
     const selection = new LibrarySelection(createTranslator(), vi.fn(), createToaster());
 
-    bindLibraryRows((row) => selection.bindRow(row));
+    bindLibraryRows();
+    for (const row of getLibraryPromptRows()) selection.bindRow(row);
 
     first.row.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
     await vi.advanceTimersByTimeAsync(500);
@@ -373,7 +374,8 @@ describe('AIStudio prompt binding performance guards', () => {
     const doomed = createLibraryPromptRow('library444', 'Doomed Prompt');
     const notify = vi.fn();
     const selection = new LibrarySelection(createTranslator(), notify, createToaster());
-    bindLibraryRows((row) => selection.bindRow(row));
+    bindLibraryRows();
+    for (const row of getLibraryPromptRows()) selection.bindRow(row);
     doomed.row.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
     await vi.advanceTimersByTimeAsync(500);
     await vi.advanceTimersByTimeAsync(0);

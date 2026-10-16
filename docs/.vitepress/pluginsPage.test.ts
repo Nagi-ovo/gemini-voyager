@@ -245,6 +245,25 @@ describe('plugin table', () => {
     }
   });
 
+  it('links the default-on batch delete row to every localized guide on both sites', () => {
+    const manifests = BUILTIN_PLUGINS.filter(
+      (plugin) =>
+        plugin.id === OFFICIAL_PLUGIN_IDS.geminiBatchDelete ||
+        plugin.id === OFFICIAL_PLUGIN_IDS.aistudioBatchDelete,
+    );
+    const rows = featureRows(builtinPlugins(manifests));
+    expect(ticked(rows)).toEqual([['batch-delete', ['aistudio', 'gemini']]]);
+    for (const entry of PLUGINS_LOCALES) {
+      const prefix = entry.prefix ? `/${entry.prefix}` : '';
+      const exists = (path: string) => existsSync(resolve('docs', `.${path}.md`));
+      const page = renderPluginsPage(entry, rows, FRESH_INSTALL_ON, exists);
+      const plugin = rows[0].plugins.gemini![0];
+      const name = (plugin.i18n?.[entry.manifest]?.name ?? plugin.name).replace(/^Gemini · /, '');
+      const label = `[${name}](${prefix}/guide/batch-delete)`;
+      expect(cells(page, label)).toEqual(['on', 'on', '', '', '']);
+    }
+  });
+
   it('shows sidebar width on by default only for AI Studio, with existing localized guide links', () => {
     const sidebarPlugins = BUILTIN_PLUGINS.filter((plugin) =>
       [

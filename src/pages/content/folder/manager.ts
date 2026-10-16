@@ -2,6 +2,7 @@ import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContex
 import { isSaved } from '@/features/folder/commands/folderCommands';
 import { initI18n } from '@/utils/i18n';
 
+import { geminiBatchDeleteService } from '../batchDelete/gemini';
 import { FolderFeedback } from './FolderFeedback';
 import { FolderNavigation } from './FolderNavigation';
 import { FolderSelection } from './FolderSelection';
@@ -153,11 +154,13 @@ export class FolderManager {
     onPanelMount: () => {
       this.treeView.mount();
       this.selection.mount();
+      this.batchDelete?.refresh();
       this.navigation.highlightActiveConversation();
       this.navigation.bind();
     },
     onPanelUnmount: (reason) => {
       this.selection.unmount();
+      this.batchDelete?.unmount();
       this.treeView.unmount();
       this.navigation.unbind();
       this.feedback.hideTooltip();
@@ -194,17 +197,32 @@ export class FolderManager {
       placement: 'floating',
       icon: ligatureIcon,
     },
-    nativeDelete: {
-      activation: () => this.store.activation,
-      menus: this.nativeConversationMenus,
-      feedback: this.feedback,
-    },
+    nativeSelection: () => this.batchDelete?.selection() ?? null,
+    onFinishNativeDrop: () => this.batchDelete?.exit(),
     onFolderSelectionChange: () => this.treeView.refreshSite(),
     getContext: () => ({
       accountIsolationEnabled: this.store.accountIsolationEnabled,
       isDestroyed: this.isDestroyed,
     }),
   });
+  private batchDelete: ReturnType<typeof geminiBatchDeleteService.register> | null = null;
+
+  private attachBatchDelete(): void {
+    this.batchDelete ??= geminiBatchDeleteService.register({
+      runtime: this.sidebarRuntime,
+      toolbar: { host: () => this.sidebarRuntime.panel, placement: 'floating', icon: ligatureIcon },
+      activation: () => this.store.activation,
+      menus: this.nativeConversationMenus,
+      feedback: this.feedback,
+      getContext: () => ({
+        isDestroyed: this.isDestroyed,
+        accountIsolationEnabled: this.store.accountIsolationEnabled,
+      }),
+      onEnter: () => this.selection.reset(),
+      onExit: () => this.navigation.highlightActiveConversation(),
+    });
+  }
+
   private readonly treeView: FolderSidebarView = new FolderSidebarView({
     store: this.store,
     commands: this.commands,
@@ -253,6 +271,8 @@ export class FolderManager {
         return;
       }
 
+      this.attachBatchDelete();
+
       // Two mounting strategies:
       //  - Floating mode (opt-in): body-level floating panel, skip sidebar.
       //  - Default: inject the folder panel into Gemini's sidebar.
@@ -273,6 +293,8 @@ export class FolderManager {
 
   destroy(): void {
     this.isDestroyed = true;
+    this.batchDelete?.destroy();
+    this.batchDelete = null;
     for (const cleanup of this.lifetimeCleanup.splice(0)) cleanup();
     this.selection.reset();
     this.treeView.unmount();
@@ -309,6 +331,8 @@ export class FolderManager {
   }
 
   private teardownMountedFolderRuntime(): void {
+    this.batchDelete?.destroy();
+    this.batchDelete = null;
     this.selection.reset();
     this.treeView.unmount();
     this.navigation.destroy();
@@ -405,6 +429,7 @@ export class FolderManager {
   }
 
   private resetForAccountChange(): void {
+    this.batchDelete?.reset();
     this.nativeSidebarObserver.clearTitleSync();
     this.treeView.clearRenderContext();
     this.navigation.cancel();
@@ -477,6 +502,7 @@ export class FolderManager {
       return;
     }
     folderDebug('Folder feature enabled');
+    this.attachBatchDelete();
     void this.store.initializeConversationActivityTracking();
 
     if (this.floatingModeEnabled) {

@@ -15,6 +15,7 @@
 
 export type PackagedSiteId = 'gemini' | 'aistudio';
 export type OwnedFeatureId =
+  | 'batchDelete'
   | 'formulaCopy'
   | 'vimInput'
   | 'hideInputHalo'
@@ -57,6 +58,8 @@ export type OwnedFeatureId =
 /** The packaged official plugin ids, by feature. */
 export const OFFICIAL_PLUGIN_IDS = {
   visualEffects: 'voyager.visual-effects',
+  geminiBatchDelete: 'voyager.gemini-batch-delete',
+  aistudioBatchDelete: 'voyager.aistudio-batch-delete',
   geminiFormulaCopy: 'voyager.gemini-formula-copy',
   aistudioFormulaCopy: 'voyager.aistudio-formula-copy',
   geminiVimInput: 'voyager.gemini-vim-input',
@@ -123,6 +126,20 @@ export interface OwnedFeature {
 }
 
 export const FEATURE_OWNERS: readonly OwnedFeature[] = [
+  {
+    site: 'gemini',
+    feature: 'batchDelete',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiBatchDelete,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'aistudio',
+    feature: 'batchDelete',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.aistudioBatchDelete,
+    handlers: [],
+    healthTracking: false,
+  },
   {
     site: 'gemini',
     feature: 'gemsSidebar',

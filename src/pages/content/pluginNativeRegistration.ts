@@ -22,6 +22,10 @@ import {
   activateAIStudioSidebarWidth,
   updateAIStudioSidebarWidthSettings,
 } from './aistudioSidebarWidth/pluginHandler';
+import {
+  activateAIStudioBatchDelete,
+  activateGeminiBatchDelete,
+} from './batchDelete/pluginHandler';
 import { activateGeminiCanvasCopy } from './canvasExport/pluginHandler';
 import { activateGeminiChatWidth, updateGeminiChatWidthSettings } from './chatWidth/pluginHandler';
 import { activateGeminiContextSync } from './contextSync/pluginHandler';
@@ -67,6 +71,8 @@ export const NATIVE_HANDLER_FACTORIES = {
 } as const;
 
 export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = {
+  'voyager.gemini-batch-delete': { activate: activateGeminiBatchDelete },
+  'voyager.aistudio-batch-delete': { activate: activateAIStudioBatchDelete },
   'voyager.gemini-context-sync': { activate: activateGeminiContextSync },
   'voyager.gemini-gems-sidebar': {
     activate: activateGeminiGemsSidebar,

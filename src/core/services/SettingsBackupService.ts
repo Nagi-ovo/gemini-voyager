@@ -143,6 +143,7 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS = {
   [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: false,
   [StorageKeys.GV_POPUP_SECTION_ORDER]: null,
   [StorageKeys.FOLDER_ENABLED]: true,
+  [StorageKeys.BATCH_DELETE_ENABLED]: true,
   [StorageKeys.FOLDER_HIDE_ARCHIVED_CONVERSATIONS]: false,
   [StorageKeys.FOLDER_PROJECT_ENABLED]: false,
   [StorageKeys.CONTEXT_SYNC_ENABLED]: false,

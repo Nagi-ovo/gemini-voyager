@@ -71,11 +71,27 @@ function binding(
   return { pluginId, area: 'sync', key, read, write: storeBoolean };
 }
 
+/** Batch selection still needs the native folder surface, even after opting in explicitly. */
+function batchDeleteBinding(pluginId: string): LegacyEnableBinding {
+  return {
+    ...binding(pluginId, StorageKeys.BATCH_DELETE_ENABLED, onUnlessFalse),
+    derive: (snapshot) =>
+      onUnlessFalse(snapshotValue(snapshot, StorageKeys.BATCH_DELETE_ENABLED)) &&
+      onUnlessFalse(snapshotValue(snapshot, StorageKeys.FOLDER_ENABLED)),
+  };
+}
+
 export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding>> = {
   [OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps]: binding(
     OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps,
     StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS,
     onOnlyIfTrue,
+  ),
+  [OFFICIAL_PLUGIN_IDS.geminiBatchDelete]: batchDeleteBinding(
+    OFFICIAL_PLUGIN_IDS.geminiBatchDelete,
+  ),
+  [OFFICIAL_PLUGIN_IDS.aistudioBatchDelete]: batchDeleteBinding(
+    OFFICIAL_PLUGIN_IDS.aistudioBatchDelete,
   ),
   [OFFICIAL_PLUGIN_IDS.visualEffects]: {
     pluginId: OFFICIAL_PLUGIN_IDS.visualEffects,

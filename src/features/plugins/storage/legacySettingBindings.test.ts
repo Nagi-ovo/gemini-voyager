@@ -70,6 +70,30 @@ afterEach(() => {
 });
 
 describe('legacy enable bindings', () => {
+  it.each([OFFICIAL_PLUGIN_IDS.geminiBatchDelete, OFFICIAL_PLUGIN_IDS.aistudioBatchDelete])(
+    'keeps %s on by default only while its native folder surface is available',
+    (id) => {
+      for (const folder of [undefined, false, true]) {
+        for (const enabled of [undefined, false, true]) {
+          const snapshot = {
+            [StorageKeys.FOLDER_ENABLED]: folder,
+            [StorageKeys.BATCH_DELETE_ENABLED]: enabled,
+          };
+          const expected = folder !== false && enabled !== false;
+          expect(resolveEffectiveEnabled({ [id]: { enabled: !expected } }, snapshot, id)).toBe(
+            expected,
+          );
+          expect(resolveEffectiveEnabled({}, snapshot, id, () => true)).toBe(expected);
+        }
+      }
+      expect(legacyEnableWrite(id, false)).toEqual({ [StorageKeys.BATCH_DELETE_ENABLED]: false });
+      expect(legacyEnableWrite(id, true)).toEqual({ [StorageKeys.BATCH_DELETE_ENABLED]: true });
+      expect(
+        resolveEffectiveSettings(manifest(id), { [id]: { settings: { stray: true } } }),
+      ).toEqual({});
+    },
+  );
+
   it('keeps AI Studio on independently of the Gemini switch and stale plugin state', () => {
     const id = OFFICIAL_PLUGIN_IDS.aistudioSidebarWidth;
     for (const value of [undefined, true, false]) {
@@ -134,6 +158,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.AISTUDIO_SIDEBAR_WIDTH,
         StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED,
         StorageKeys.FOLDER_ENABLED,
+        StorageKeys.BATCH_DELETE_ENABLED,
         StorageKeys.GV_SIDEBAR_AUTO_HIDE,
         StorageKeys.GV_SIDEBAR_FULL_HIDE,
         StorageKeys.MARKDOWN_FIX_ENABLED,

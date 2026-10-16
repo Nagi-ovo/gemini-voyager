@@ -9,6 +9,8 @@ const ROW_MENU_BUTTON =
 
 /** What a native sidebar row needs from the selection that owns its state. */
 export type NativeRowSelection = {
+  /** Bind a row discovered by the folder sidebar observer, including floating-mode startup. */
+  bindRow?: (element: HTMLElement) => void;
   longPressMs: number;
   schedule: (callback: () => void, delay: number) => number;
   clearTimer: (timer: number) => void;
@@ -151,70 +153,72 @@ function onDragStart(
   element.style.opacity = '0.5';
 }
 
-/**
- * Makes a Gemini sidebar row draggable into folders: a long press enters
- * multi-select, clicks then toggle rows, and a drag carries the selection.
- * Binding the same row again does nothing.
- */
-export function bindNativeConversationRow(
+/** Plugin-owned native selection listeners, released even when Gemini retains the row. */
+export function bindNativeConversationSelection(
   element: HTMLElement,
   selection: NativeRowSelection,
+): () => void {
+  let longPressTriggered = false;
+  let longPressTimer: number | null = null;
+  const cancelLongPress = () => {
+    if (longPressTimer !== null) selection.clearTimer(longPressTimer);
+    longPressTimer = null;
+  };
+  const press = (e: MouseEvent) => {
+    if (e.button !== 0 || selection.isBatchDeleting()) return;
+    if (e.target instanceof Element && e.target.closest(ROW_MENU_BUTTON)) return;
+    longPressTriggered = false;
+    cancelLongPress();
+    longPressTimer = selection.schedule(() => {
+      longPressTimer = null;
+      longPressTriggered = true;
+      selection.enterMultiSelect(extractConversationId(element));
+    }, selection.longPressMs);
+  };
+  const click = (e: MouseEvent) => {
+    if (e.target instanceof Element && e.target.closest(ROW_MENU_BUTTON)) return;
+    if (selection.isBatchDeleting()) return;
+    if (longPressTriggered) {
+      e.preventDefault();
+      e.stopPropagation();
+      longPressTriggered = false;
+      return;
+    }
+    if (!selection.isMultiSelectMode()) return;
+    e.preventDefault();
+    e.stopPropagation();
+    selection.toggle(extractConversationId(element));
+    selection.refresh();
+  };
+  element.addEventListener('mousedown', press);
+  element.addEventListener('mouseup', cancelLongPress);
+  element.addEventListener('mouseleave', cancelLongPress);
+  element.addEventListener('dragstart', cancelLongPress);
+  element.addEventListener('click', click, true);
+  return () => {
+    cancelLongPress();
+    element.removeEventListener('mousedown', press);
+    element.removeEventListener('mouseup', cancelLongPress);
+    element.removeEventListener('mouseleave', cancelLongPress);
+    element.removeEventListener('dragstart', cancelLongPress);
+    element.removeEventListener('click', click, true);
+  };
+}
+
+/** Folder-owned drag support survives turning the batch selection plugin off. */
+export function bindNativeConversationRow(
+  element: HTMLElement,
+  getSelection: () => NativeRowSelection,
 ): void {
-  // The row can be offered more than once (sidebar success path + document
-  // sweep on fallback, MutationObserver re-entry, route change re-scans).
   if (element.dataset.gvConvDragAttached === 'true') return;
   element.dataset.gvConvDragAttached = 'true';
   element.draggable = true;
   element.style.cursor = 'grab';
-
-  let longPressTriggered = false;
-  let longPressTimer: number | null = null;
-  const cancelLongPress = () => {
-    if (longPressTimer) selection.clearTimer(longPressTimer);
-    longPressTimer = null;
-  };
-
-  element.addEventListener('mousedown', (e) => {
-    if (e.button !== 0) return;
-    longPressTriggered = false;
-    const conversationId = extractConversationId(element);
-    longPressTimer = selection.schedule(() => {
-      longPressTriggered = true;
-      selection.enterMultiSelect(conversationId);
-      element.classList.add(SELECTED_CLASS);
-    }, selection.longPressMs);
-  });
-  element.addEventListener('mouseup', cancelLongPress);
-  element.addEventListener('mouseleave', cancelLongPress);
-
-  // Capture phase, to intercept before Gemini navigates.
-  element.addEventListener(
-    'click',
-    (e) => {
-      // The row's ⋮ menu must open (batch delete clicks it programmatically),
-      // and a running batch delete drives every click through Gemini's menus.
-      if (e.target instanceof Element && e.target.closest(ROW_MENU_BUTTON)) return;
-      if (selection.isBatchDeleting()) return;
-      if (longPressTriggered) {
-        e.preventDefault();
-        e.stopPropagation();
-        longPressTriggered = false;
-        return;
-      }
-      if (!selection.isMultiSelectMode()) return;
-      e.preventDefault();
-      e.stopPropagation();
-      const conversationId = extractConversationId(element);
-      selection.toggle(conversationId);
-      element.classList.toggle(SELECTED_CLASS, selection.isSelected(conversationId));
-      selection.refresh();
-    },
-    true,
+  element.addEventListener('dragstart', (event) =>
+    onDragStart(element, getSelection(), event, () => {}),
   );
-
-  element.addEventListener('dragstart', (e) => onDragStart(element, selection, e, cancelLongPress));
-
   element.addEventListener('dragend', () => {
+    const selection = getSelection();
     if (selection.selectedIds().length > 1) setSelectedOpacity(selection, '1');
     else element.style.opacity = '1';
     selection.endDrag();
