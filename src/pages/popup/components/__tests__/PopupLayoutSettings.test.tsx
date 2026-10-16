@@ -63,7 +63,8 @@ describe('PopupLayoutSettings', () => {
     container.querySelector<HTMLInputElement>(`input[type="range"][aria-label="${label}"]`)!;
 
   it('renders the layout sections that stay outside the Plugins card, each once', () => {
-    render();
+    // On AI Studio, where the sidebar width card remains (Gemini's is a Plugins row).
+    render({ isAIStudio: true });
     expect(
       Array.from(container.querySelectorAll('section')).map((section) => section.dataset.section),
     ).toEqual(['folderSpacing', 'folderTreeIndent', 'gemsSidebar', 'sidebarWidth']);
