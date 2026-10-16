@@ -13,6 +13,7 @@ import {
 const FONT_SIZE_ID = 'voyager.gemini-chat-font-size';
 const LINE_HEIGHT_ID = 'voyager.gemini-chat-line-height';
 const WIDTH_ID = 'voyager.gemini-chat-width';
+const EDIT_WIDTH_ID = 'voyager.gemini-edit-input-width';
 
 describe('legacy value bindings', () => {
   it('falls back to the default for a non-numeric or non-finite stored value on the first read', () => {
@@ -55,6 +56,20 @@ describe('legacy value bindings', () => {
     });
   });
 
+  it('reads the edit input width as its native module did, defaulting to 60 %', () => {
+    const read = (stored: unknown) =>
+      deriveLegacyValueSettings(EDIT_WIDTH_ID, { [StorageKeys.EDIT_INPUT_WIDTH]: stored });
+    for (const stored of [undefined, null, '80', Number.NaN]) {
+      expect(read(stored)).toEqual({ widthPercent: 60 });
+    }
+    expect(read(82.4)).toEqual({ widthPercent: 82 });
+    expect(read(960)).toEqual({ widthPercent: 80 });
+    expect(read(12)).toEqual({ widthPercent: 30 });
+    // The native listener ignored a live width that was not a number.
+    expect(acceptsLegacyLiveChange(StorageKeys.EDIT_INPUT_WIDTH, '80')).toBe(false);
+    expect(acceptsLegacyLiveChange(StorageKeys.EDIT_INPUT_WIDTH, 80)).toBe(true);
+  });
+
   it('gives an id without value bindings no settings', () => {
     expect(deriveLegacyValueSettings('voyager.gemini-hide-input-halo', { anything: 1 })).toEqual(
       {},
@@ -78,6 +93,7 @@ describe('legacy value bindings', () => {
         StorageKeys.CHAT_LINE_HEIGHT,
         StorageKeys.CHAT_PARAGRAPH_SPACING,
         StorageKeys.CHAT_WIDTH,
+        StorageKeys.EDIT_INPUT_WIDTH,
         StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY,
       ].sort(),
     );

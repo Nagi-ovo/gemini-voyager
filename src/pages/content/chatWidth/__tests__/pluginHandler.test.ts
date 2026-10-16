@@ -10,6 +10,10 @@ import { StorageKeys } from '@/core/types/common';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { elementValue } from '@/tests/pseudoElementPaint';
 
+import {
+  EDIT_INPUT_WIDTH_STYLE_ID,
+  activateGeminiEditInputWidth,
+} from '../../editInputWidth/pluginHandler';
 import { nativeHealthReporter } from '../../nativeHealth';
 import { activateGeminiChatWidth, updateGeminiChatWidthSettings } from '../pluginHandler';
 
@@ -171,13 +175,9 @@ describe('Gemini chat width plugin handler', () => {
         <div class="overlay-container" data-filedrop-id="chat-window-input-container"></div>
       </file-drop-indicator></input-container></main>`;
     const overlay = document.querySelector('.overlay-container')!;
-    vi.mocked(chrome.storage.sync.get).mockImplementation(((
-      _keys: unknown,
-      callback: (value: Record<string, unknown>) => void,
-    ) => callback({ geminiEditInputWidth: 80, gvEditInputWidthEnabled: true })) as never);
-    const { startEditInputWidthAdjuster } = await import('../../editInputWidth');
-    startEditInputWidthAdjuster();
-    const editInput = document.getElementById('gemini-voyager-edit-input-width')!;
+    const editScope = new PluginScope();
+    activateGeminiEditInputWidth(editScope, { widthPercent: 80 });
+    const editInput = document.getElementById(EDIT_INPUT_WIDTH_STYLE_ID)!;
     const editInputWidth = elementValue(overlay, 'max-width');
     expect(editInputWidth).not.toBeNull();
 
@@ -190,7 +190,7 @@ describe('Gemini chat width plugin handler', () => {
     // Alone, the chat width rule does size the overlay.
     editInput.remove();
     expect(elementValue(overlay, 'max-width')).toBe(`${px(85)}px`);
-    window.dispatchEvent(new Event('beforeunload'));
+    await editScope.dispose();
   });
 
   it('re-applies after Gemini re-renders and keeps nothing alive after teardown', async () => {

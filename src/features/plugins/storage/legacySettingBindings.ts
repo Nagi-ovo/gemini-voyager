@@ -16,7 +16,7 @@
 import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
 import { isSafari } from '@/core/utils/browser';
-import { isChatWidthSwitchOn } from '@/core/utils/chatAppearanceValues';
+import { isChatWidthSwitchOn, isEditInputWidthSwitchOn } from '@/core/utils/chatAppearanceValues';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
 import { resolvePluginSettings } from '../runtime/resolvePluginSettings';
@@ -170,6 +170,21 @@ export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding
         storedWidth: snapshotValue(snapshot, StorageKeys.CHAT_WIDTH),
         switchChangedLive: wasChangedLive(StorageKeys.CHAT_WIDTH_ENABLED),
         widthChangedLive: wasChangedLive(StorageKeys.CHAT_WIDTH),
+      }),
+  },
+  // The same upgrade rule as chat width: a never-stored switch follows a customized first width.
+  [OFFICIAL_PLUGIN_IDS.geminiEditInputWidth]: {
+    ...binding(
+      OFFICIAL_PLUGIN_IDS.geminiEditInputWidth,
+      StorageKeys.EDIT_INPUT_WIDTH_ENABLED,
+      onOnlyIfTrue,
+    ),
+    derive: (snapshot, wasChangedLive) =>
+      isEditInputWidthSwitchOn({
+        storedSwitch: snapshotValue(snapshot, StorageKeys.EDIT_INPUT_WIDTH_ENABLED),
+        storedWidth: snapshotValue(snapshot, StorageKeys.EDIT_INPUT_WIDTH),
+        switchChangedLive: wasChangedLive(StorageKeys.EDIT_INPUT_WIDTH_ENABLED),
+        widthChangedLive: wasChangedLive(StorageKeys.EDIT_INPUT_WIDTH),
       }),
   },
   [OFFICIAL_PLUGIN_IDS.geminiUserLatex]: binding(

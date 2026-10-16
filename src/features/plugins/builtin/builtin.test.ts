@@ -180,6 +180,28 @@ describe('BUILTIN_PLUGINS', () => {
     );
   });
 
+  it('scopes the Gemini edit input width builtin to gemini.google.com and binds it to its handler', () => {
+    const width = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.gemini-edit-input-width');
+    // Not Gemini Enterprise or a custom host: the native module never ran there.
+    expect(width?.matches).toEqual(['https://gemini.google.com/*']);
+    expect(width?.contributes.domOps).toBeUndefined();
+    expect(width?.contributes.settings?.widthPercent).toMatchObject({
+      type: 'number',
+      default: 60,
+      min: 30,
+      max: 100,
+    });
+    for (const locale of ['zh', 'zh_TW', 'ja', 'ko', 'fr', 'es', 'pt', 'ru', 'ar'] as const) {
+      expect(width?.i18n?.[locale]?.name, locale).toBeTruthy();
+      expect(width?.i18n?.[locale]?.description, locale).not.toBe(width?.description);
+      expect(width?.i18n?.[locale]?.settings?.widthPercent?.label, locale).toBeTruthy();
+    }
+    expect(NATIVE_BUILTIN_PLUGIN_IDS).toContain('voyager.gemini-edit-input-width');
+    expect(NATIVE_HANDLER_BINDINGS['voyager.gemini-edit-input-width']?.updateSettings).toBeTypeOf(
+      'function',
+    );
+  });
+
   it('scopes the Gemini prompt history builtin to gemini.google.com with no settings of its own', () => {
     const history = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.gemini-prompt-history');
     // Not Gemini Enterprise or a custom host: the native module never ran there.

@@ -274,6 +274,12 @@ const STAGE3_PLUGINS: readonly Stage3Plugin[] = [
     drawn: () => document.getElementById('gv-plugin-chat-width') !== null,
   },
   {
+    kind: 'edit input width',
+    id: OFFICIAL_PLUGIN_IDS.geminiEditInputWidth,
+    switchKey: StorageKeys.EDIT_INPUT_WIDTH_ENABLED,
+    drawn: () => document.getElementById('gv-plugin-edit-input-width') !== null,
+  },
+  {
     kind: 'userLatex',
     id: OFFICIAL_PLUGIN_IDS.geminiUserLatex,
     switchKey: StorageKeys.USER_LATEX_ENABLED,

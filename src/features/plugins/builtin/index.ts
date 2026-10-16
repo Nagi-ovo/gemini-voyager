@@ -2,6 +2,7 @@ import { type PluginManifest, hasNativeOps } from '../types';
 import { CHATGPT_RESPONSE_NOTIFICATION_MANIFEST } from './chatgptResponseNotification/manifest';
 import { GEMINI_CHAT_WIDTH_MANIFEST } from './geminiChatWidthManifest';
 import { GEMINI_DEFAULT_MODEL_MANIFEST } from './geminiDefaultModelManifest';
+import { GEMINI_EDIT_INPUT_WIDTH_MANIFEST } from './geminiEditInputWidthManifest';
 import { GEMINI_FORK_MANIFEST } from './geminiForkManifest';
 import { GEMINI_HIGHLIGHT_MANIFEST } from './geminiHighlightManifest';
 import { GEMINI_INPUT_COLLAPSE_MANIFEST } from './geminiInputCollapseManifest';
@@ -384,6 +385,7 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   CHATGPT_RESPONSE_NOTIFICATION_MANIFEST,
   GEMINI_SAFARI_ENTER_FIX_MANIFEST,
   GEMINI_CHAT_WIDTH_MANIFEST,
+  GEMINI_EDIT_INPUT_WIDTH_MANIFEST,
   GEMINI_PROMPT_HISTORY_MANIFEST,
   GEMINI_INPUT_COLLAPSE_MANIFEST,
   GEMINI_RESEARCH_PACK_MANIFEST,

@@ -21,7 +21,6 @@ import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
 import { startDevSettingsBridge } from './devSettingsBridge';
 import { flushDraftsBeforeUnload } from './draftSave/draftUnloadFlush';
-import { startEditInputWidthAdjuster } from './editInputWidth/index';
 import { startExportButton } from './export/index';
 import { type NativeFeature, type StopNativeFeature, mountNativeFeature } from './featureLifecycle';
 import { folderActivityCoachmarkStep } from './folder/activityCoachmark';
@@ -241,7 +240,6 @@ async function initializeFeatures(): Promise<void> {
       startFolderSpacingAdjuster('gemini');
       startFolderItemFontSizeAdjuster();
       await settle(startGeminiChatAppearance(officialAdmission, pageLifetime.signal));
-      startEditInputWidthAdjuster();
       startSidebarWidthAdjuster();
       startSidebarAutoHide();
       await delay(LIGHT_FEATURE_INIT_DELAY);

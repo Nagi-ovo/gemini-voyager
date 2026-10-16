@@ -26,6 +26,7 @@ import {
   normalizeChatFontSizePercent,
   normalizeChatLineHeightPercent,
   normalizeChatWidthPercent,
+  normalizeEditInputWidthPercent,
   normalizeParagraphSpacingPx,
 } from '@/core/utils/chatAppearanceValues';
 
@@ -82,6 +83,9 @@ export const LEGACY_VALUE_BINDINGS: LegacyValueBindingTable = {
   ],
   [OFFICIAL_PLUGIN_IDS.geminiChatWidth]: [
     numberBinding('widthPercent', StorageKeys.CHAT_WIDTH, normalizeChatWidthPercent),
+  ],
+  [OFFICIAL_PLUGIN_IDS.geminiEditInputWidth]: [
+    numberBinding('widthPercent', StorageKeys.EDIT_INPUT_WIDTH, normalizeEditInputWidthPercent),
   ],
   [OFFICIAL_PLUGIN_IDS.geminiInputCollapse]: [
     trueOnlyBinding('collapseWhenNotEmpty', StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY),

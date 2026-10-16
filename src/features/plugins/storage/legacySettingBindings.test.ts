@@ -22,6 +22,7 @@ const HALO = OFFICIAL_PLUGIN_IDS.geminiHideInputHalo;
 const FONT = OFFICIAL_PLUGIN_IDS.geminiChatFontSize;
 const SPACING = OFFICIAL_PLUGIN_IDS.geminiChatLineHeight;
 const WIDTH = OFFICIAL_PLUGIN_IDS.geminiChatWidth;
+const EDIT_WIDTH = OFFICIAL_PLUGIN_IDS.geminiEditInputWidth;
 const LATEX = OFFICIAL_PLUGIN_IDS.geminiUserLatex;
 const COLLAPSE = OFFICIAL_PLUGIN_IDS.geminiCodeCollapse;
 const HISTORY = OFFICIAL_PLUGIN_IDS.geminiPromptHistory;
@@ -86,6 +87,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.CHAT_FONT_SIZE_ENABLED,
         StorageKeys.CHAT_LINE_HEIGHT_ENABLED,
         StorageKeys.CHAT_WIDTH_ENABLED,
+        StorageKeys.EDIT_INPUT_WIDTH_ENABLED,
         StorageKeys.USER_LATEX_ENABLED,
         StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED,
         StorageKeys.WAVEDROM_ENABLED,
@@ -111,6 +113,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.CHAT_LINE_HEIGHT,
         StorageKeys.CHAT_PARAGRAPH_SPACING,
         StorageKeys.CHAT_WIDTH,
+        StorageKeys.EDIT_INPUT_WIDTH,
       ].sort(),
     );
     expect(legacyBindingFor(FORMULA_G)?.key).toBe(legacyBindingFor(FORMULA_A)?.key);
@@ -242,6 +245,50 @@ describe('resolveEffectiveEnabled', () => {
     expect(resolveEffectiveEnabled({ [WIDTH]: { enabled: true } }, switchedOff, WIDTH)).toBe(false);
     // The popup's own reading stays the single stored switch.
     expect(legacyBindingFor(WIDTH)?.read(undefined)).toBe(false);
+  });
+
+  // The native edit input width module read its switch once: stored wins, else a customized width.
+  it.each([
+    ['never touched', {}, false],
+    ['a width left at the default', { [StorageKeys.EDIT_INPUT_WIDTH]: 60 }, false],
+    ['a customized width and no switch', { [StorageKeys.EDIT_INPUT_WIDTH]: 85 }, true],
+    // 720 px of the old 1200 px baseline is the 60 % default: not customized.
+    ['an old px width that reads as the default', { [StorageKeys.EDIT_INPUT_WIDTH]: 720 }, false],
+    ['an old px width that reads as customized', { [StorageKeys.EDIT_INPUT_WIDTH]: 960 }, true],
+    ['a non-number width', { [StorageKeys.EDIT_INPUT_WIDTH]: '85' }, false],
+    [
+      'an explicit off beside a customized width',
+      { [StorageKeys.EDIT_INPUT_WIDTH]: 85, [StorageKeys.EDIT_INPUT_WIDTH_ENABLED]: false },
+      false,
+    ],
+    ['an explicit on', { [StorageKeys.EDIT_INPUT_WIDTH_ENABLED]: true }, true],
+    ['a non-boolean switch', { [StorageKeys.EDIT_INPUT_WIDTH_ENABLED]: 'true' }, false],
+  ])('keeps the edit input width %s as the native module decided', (_label, stored, on) => {
+    // A stale plugins-state entry never overrides the native keys.
+    expect(resolveEffectiveEnabled({ [EDIT_WIDTH]: { enabled: !on } }, stored, EDIT_WIDTH)).toBe(
+      on,
+    );
+  });
+
+  it('stops deriving the edit input width switch from the width once the page sees a live change', () => {
+    const customized = { [StorageKeys.EDIT_INPUT_WIDTH]: 85 };
+    const changed = (key: string) => (seen: string) => seen === key;
+    expect(
+      resolveEffectiveEnabled({}, customized, EDIT_WIDTH, changed(StorageKeys.EDIT_INPUT_WIDTH)),
+    ).toBe(false);
+    expect(
+      resolveEffectiveEnabled(
+        {},
+        customized,
+        EDIT_WIDTH,
+        changed(StorageKeys.EDIT_INPUT_WIDTH_ENABLED),
+      ),
+    ).toBe(false);
+    // The popup's own reading and write stay the single stored switch.
+    expect(legacyBindingFor(EDIT_WIDTH)?.read(undefined)).toBe(false);
+    expect(legacyEnableWrite(EDIT_WIDTH, false)).toEqual({
+      [StorageKeys.EDIT_INPUT_WIDTH_ENABLED]: false,
+    });
   });
 
   it('ignores stored plugin-state settings and enabled flags for the two official ids', () => {

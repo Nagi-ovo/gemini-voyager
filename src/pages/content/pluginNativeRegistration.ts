@@ -20,6 +20,10 @@ import {
 
 import { activateGeminiChatWidth, updateGeminiChatWidthSettings } from './chatWidth/pluginHandler';
 import { activateGeminiDefaultModel } from './defaultModel/pluginHandler';
+import {
+  activateGeminiEditInputWidth,
+  updateGeminiEditInputWidthSettings,
+} from './editInputWidth/pluginHandler';
 import { activateGeminiFork } from './fork/pluginHandler';
 import { activateGeminiHighlight } from './highlight/pluginHandler';
 import {
@@ -57,6 +61,10 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   'voyager.gemini-chat-width': {
     activate: activateGeminiChatWidth,
     updateSettings: updateGeminiChatWidthSettings,
+  },
+  'voyager.gemini-edit-input-width': {
+    activate: activateGeminiEditInputWidth,
+    updateSettings: updateGeminiEditInputWidthSettings,
   },
   // Owned by `sites/featureOwners.ts`: mounted only once the plugin owns Gemini's prompt history.
   'voyager.gemini-prompt-history': {

@@ -22,6 +22,7 @@ export type OwnedFeatureId =
   /** Line height and paragraph spacing: one switch, one plugin. */
   | 'chatLineHeight'
   | 'chatWidth'
+  | 'editInputWidth'
   | 'userLatex'
   | 'codeCollapse'
   | 'waveDrom'
@@ -52,6 +53,7 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiChatFontSize: 'voyager.gemini-chat-font-size',
   geminiChatLineHeight: 'voyager.gemini-chat-line-height',
   geminiChatWidth: 'voyager.gemini-chat-width',
+  geminiEditInputWidth: 'voyager.gemini-edit-input-width',
   geminiUserLatex: 'voyager.gemini-user-latex',
   geminiCodeCollapse: 'voyager.gemini-code-collapse',
   geminiWaveDrom: 'voyager.gemini-wavedrom',
@@ -174,6 +176,14 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     site: 'gemini',
     feature: 'chatWidth',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiChatWidth,
+    handlers: [],
+    healthTracking: false,
+  },
+  // A fixed-id builtin like chat width: its runtime is first-party CSS, no primitive.
+  {
+    site: 'gemini',
+    feature: 'editInputWidth',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiEditInputWidth,
     handlers: [],
     healthTracking: false,
   },
