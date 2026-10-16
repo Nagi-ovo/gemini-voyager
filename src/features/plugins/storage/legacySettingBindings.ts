@@ -84,7 +84,7 @@ function batchDeleteBinding(pluginId: string): LegacyEnableBinding {
 
 export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding>> = {
   // legacyEnableWrite writes one split key, and a missing sibling resolves to on: a popup row for
-  // either switch must write both split keys and clear the legacy key, as useWatermarkPopupSettings does.
+  // either switch writes both split keys and clears the legacy key (popup watermarkWrite).
   [OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload]: {
     ...binding(
       OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload,
