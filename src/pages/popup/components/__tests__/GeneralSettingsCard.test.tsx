@@ -15,9 +15,6 @@ const translate = (key: TranslationKey): string => key;
 
 const values: GeneralSettingsValues = {
   persistentExportToolbarEnabled: false,
-  highlightEnabled: false,
-  highlightTimelineMarkersEnabled: true,
-  responseCompleteNotificationEnabled: false,
   remoteAnnouncementEnabled: true,
   changelogBadgeMode: false,
 };
@@ -44,7 +41,6 @@ describe('GeneralSettingsCard', () => {
     const props: GeneralSettingsCardProps = {
       values,
       onChange: vi.fn(),
-      isSafariBrowser: false,
       remoteAnnouncementPermissionCta: { visible: false, onRequest: vi.fn() },
       isVisible: () => true,
       t: translate,
@@ -83,28 +79,18 @@ describe('GeneralSettingsCard', () => {
       'hide-input-halo',
       'default-model-auto-apply',
       'research-pack-enabled',
+      'highlights-enabled',
+      'highlight-timeline-markers-enabled',
+      'response-complete-notification',
     ]) {
       expect(container.querySelector(`#${id}`)).toBeNull();
     }
   });
 
-  it('keeps the retired tab-title row disabled and gates timeline markers on highlights', () => {
+  it('keeps the retired tab-title row disabled', () => {
     render();
     expect(input('tab-title-update').disabled).toBe(true);
     expect(input('tab-title-update').checked).toBe(false);
-    expect(input('highlight-timeline-markers-enabled').disabled).toBe(true);
-
-    render({ values: { ...values, highlightEnabled: true } });
-    expect(input('highlight-timeline-markers-enabled').disabled).toBe(false);
-  });
-
-  it('switches the completion hint on Safari', () => {
-    render();
-    expect(container.textContent).toContain('responseCompleteNotificationHint');
-    expect(container.textContent).not.toContain('responseCompleteNotificationHintSafari');
-
-    render({ isSafariBrowser: true });
-    expect(container.textContent).toContain('responseCompleteNotificationHintSafari');
   });
 
   it('shows the announcement permission call-to-action only when asked', () => {

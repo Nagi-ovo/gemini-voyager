@@ -2741,6 +2741,14 @@
     "message": "Activa o desactiva las funciones de Voyager. Las opciones de cada función aparecen cuando está activada.",
     "description": "Popup subtitle of the official plugin list on Gemini and AI Studio"
   },
+  "pluginRowOptions": {
+    "message": "Opciones",
+    "description": "Button under an official plugin row in the popup that shows or hides its extra options"
+  },
+  "pluginRowOptionsFor": {
+    "message": "Opciones de {name}",
+    "description": "Accessible name of an official plugin row's Options button and panel; {name} is the plugin name"
+  },
   "pluginGroupAppearance": {
     "message": "Apariencia",
     "description": "Heading of the plugin list group for layout and look"

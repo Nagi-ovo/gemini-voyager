@@ -2741,6 +2741,14 @@
     "message": "Turn Voyager features on or off. A feature's options appear once it is on.",
     "description": "Popup subtitle of the official plugin list on Gemini and AI Studio"
   },
+  "pluginRowOptions": {
+    "message": "Options",
+    "description": "Button under an official plugin row in the popup that shows or hides its extra options"
+  },
+  "pluginRowOptionsFor": {
+    "message": "{name} options",
+    "description": "Accessible name of an official plugin row's Options button and panel; {name} is the plugin name"
+  },
   "pluginGroupAppearance": {
     "message": "Appearance",
     "description": "Heading of the plugin list group for layout and look"

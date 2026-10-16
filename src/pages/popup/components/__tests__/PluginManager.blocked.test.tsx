@@ -30,7 +30,7 @@ const holder: PluginManifest = {
   i18n: { zh: { name: '我的公式复制' } },
 };
 
-/** The packaged official plugin, which no plugin list shows: its switch is a native setting. */
+/** A packaged official plugin, listed as a row of the popup's Plugins card. */
 const officialFormula: PluginManifest = {
   ...widthPlugin,
   id: OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
@@ -86,8 +86,8 @@ describe('PluginManager blocked plugins', () => {
     ['releasing', { blockedBy: holder.id }, enMessages.pluginBlockedReleasing.message],
     [
       'pending',
-      { blockedBy: OFFICIAL_PLUGIN_IDS.geminiFormulaCopy },
-      en('pluginBlockedPending').replace('{name}', en('enableFormulaCopy')),
+      { blockedBy: OFFICIAL_PLUGIN_IDS.geminiTimeline },
+      en('pluginBlockedPending').replace('{name}', en('timelineEnable')),
     ],
   ] as const)(
     'explains a %s block and leaves the toggle movable whether the plugin is on or off',
@@ -153,11 +153,7 @@ describe('PluginManager blocked by a packaged official plugin', () => {
     };
   });
 
-  it.each([
-    [OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, 'enableFormulaCopy', 'formulaCopyFormat'],
-    [OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy, 'enableFormulaCopy', 'formulaCopyFormat'],
-    [OFFICIAL_PLUGIN_IDS.geminiTimeline, 'timelineEnable', 'timelineOptions'],
-  ] as const)(
+  it.each([[OFFICIAL_PLUGIN_IDS.geminiTimeline, 'timelineEnable', 'timelineOptions']] as const)(
     'points a conflict with %s at its native switch, not at a plugin to find',
     async (blockedBy, setting, card) => {
       await renderManager({
@@ -172,6 +168,24 @@ describe('PluginManager blocked by a packaged official plugin', () => {
       );
       expect(container.textContent).not.toContain('Gemini · Formula Copy');
       expect(pluginToggle().disabled).toBe(false);
+    },
+  );
+
+  it.each([OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy])(
+    'points a conflict with %s at its Plugins row, named without the site',
+    async (blockedBy) => {
+      const named = { ...officialFormula, id: blockedBy };
+      await renderManager({
+        nameSources: [widthPlugin, named],
+        statuses: [{ ...BLOCKED, blockedReason: 'conflict', blockedBy }],
+      });
+
+      expect(container.textContent).toContain(
+        en('pluginBlockedByOfficialSetting')
+          .replace('{setting}', 'Formula Copy')
+          .replace('{card}', en('pluginsTitle')),
+      );
+      expect(container.textContent).not.toContain('Gemini · Formula Copy');
     },
   );
 

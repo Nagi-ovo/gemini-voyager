@@ -2741,6 +2741,14 @@
     "message": "开关 Voyager 的各项功能。功能开启后会显示它的选项。",
     "description": "Popup subtitle of the official plugin list on Gemini and AI Studio"
   },
+  "pluginRowOptions": {
+    "message": "选项",
+    "description": "Button under an official plugin row in the popup that shows or hides its extra options"
+  },
+  "pluginRowOptionsFor": {
+    "message": "{name}的选项",
+    "description": "Accessible name of an official plugin row's Options button and panel; {name} is the plugin name"
+  },
   "pluginGroupAppearance": {
     "message": "外观",
     "description": "Heading of the plugin list group for layout and look"

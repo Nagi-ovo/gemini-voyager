@@ -17,7 +17,6 @@ export interface OfficialSettingLocation {
 }
 
 const LOCATIONS: Readonly<Partial<Record<OwnedFeatureId, OfficialSettingLocation>>> = {
-  formulaCopy: { setting: 'enableFormulaCopy', card: 'formulaCopyFormat' },
   timeline: { setting: 'timelineEnable', card: 'timelineOptions' },
 };
 

@@ -166,17 +166,21 @@ describe('Popup settings integration', () => {
     expect(generalReads()).toHaveLength(1);
     expect(generalReads()[0][0]).toMatchObject({
       [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED]: true,
-      [StorageKeys.HIGHLIGHT_ENABLED]: false,
-      [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
+      [StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED]: true,
     });
-    const highlights = container.querySelector<HTMLInputElement>('#highlights-enabled')!;
-    expect(highlights.checked).toBe(false);
+    // Highlights and completion notifications are Plugins rows, read from the live snapshot.
+    expect(generalReads()[0][0]).not.toHaveProperty(StorageKeys.HIGHLIGHT_ENABLED);
+    expect(generalReads()[0][0]).not.toHaveProperty(
+      StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED,
+    );
+    const toolbar = container.querySelector<HTMLInputElement>('#persistent-export-toolbar')!;
+    expect(toolbar.checked).toBe(true);
     expect(extensionApi.storage.sync.set).not.toHaveBeenCalled();
 
-    await act(async () => highlights.click());
-    expect(highlights.checked).toBe(true);
+    await act(async () => toolbar.click());
+    expect(toolbar.checked).toBe(false);
     expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
-      [StorageKeys.HIGHLIGHT_ENABLED]: true,
+      [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED]: false,
     });
     expect(generalReads()).toHaveLength(1);
   });
@@ -322,15 +326,14 @@ describe('Popup settings integration', () => {
     sync[StorageKeys.INPUT_VIM_MODE] = true;
     await mount();
 
-    const formulaRow = container.querySelector('#formula-copy-enabled')!.closest('.group')!;
+    const formulaRow = container.querySelector(pluginRow(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy))!;
     expect(formulaRow.textContent).toContain(
       TRANSLATIONS.en.officialFeaturePausedByLocal.replace('{name}', 'My formula copy'),
     );
-    expect(container.textContent).toContain(TRANSLATIONS.en.formulaCopyScopeNote);
     const vimRow = container.querySelector(pluginRow(OFFICIAL_PLUGIN_IDS.geminiVimInput))!;
     expect(vimRow.textContent).toContain(TRANSLATIONS.en.pluginBlockedReleasing);
     expect(vimRow.querySelector<HTMLInputElement>('input')!.disabled).toBe(false);
-    // The official plugins are driven by these cards, not listed as plugins.
+    // The official plugins are rows of the Plugins card, not listed as plugins.
     expect(container.querySelector('input[aria-label="My formula copy"]')).not.toBeNull();
     for (const name of [
       'Gemini · Formula Copy',

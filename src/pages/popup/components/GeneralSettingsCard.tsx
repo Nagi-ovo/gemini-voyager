@@ -11,9 +11,6 @@ import { SettingToggleRow } from './SettingToggleRow';
 /** Every general toggle the card edits; the popup owns the state and persistence. */
 export interface GeneralSettingsValues {
   persistentExportToolbarEnabled: boolean;
-  highlightEnabled: boolean;
-  highlightTimelineMarkersEnabled: boolean;
-  responseCompleteNotificationEnabled: boolean;
   remoteAnnouncementEnabled: boolean;
   changelogBadgeMode: boolean;
 }
@@ -22,8 +19,6 @@ export interface GeneralSettingsCardProps {
   values: GeneralSettingsValues;
   /** One key per call; the popup decides how each key is persisted. */
   onChange: (patch: Partial<GeneralSettingsValues>) => void;
-  /** Safari routes completion notifications through the native app, so its hint differs. */
-  isSafariBrowser: boolean;
   /** Shown under the announcements row until system notifications are granted. */
   remoteAnnouncementPermissionCta: { visible: boolean; onRequest: () => void };
   /** Site capability and settings-search gate, keyed by the setting's search id. */
@@ -34,7 +29,6 @@ export interface GeneralSettingsCardProps {
 export function GeneralSettingsCard({
   values,
   onChange,
-  isSafariBrowser,
   remoteAnnouncementPermissionCta,
   isVisible,
   t,
@@ -87,30 +81,6 @@ export function GeneralSettingsCard({
           'persistentExportToolbarEnabled',
           'persistentExportToolbar',
           'persistentExportToolbarHint',
-        )}
-        {row(
-          'highlights-enabled',
-          'enableHighlights',
-          'highlightEnabled',
-          'enableHighlights',
-          'enableHighlightsHint',
-        )}
-        {row(
-          'highlight-timeline-markers-enabled',
-          'showHighlightTimelineMarkers',
-          'highlightTimelineMarkersEnabled',
-          'showHighlightTimelineMarkers',
-          'showHighlightTimelineMarkersHint',
-          { disabled: !values.highlightEnabled },
-        )}
-        {row(
-          'response-complete-notification',
-          'responseCompleteNotification',
-          'responseCompleteNotificationEnabled',
-          'responseCompleteNotification',
-          isSafariBrowser
-            ? 'responseCompleteNotificationHintSafari'
-            : 'responseCompleteNotificationHint',
         )}
         {row(
           'remote-announcement-notification',

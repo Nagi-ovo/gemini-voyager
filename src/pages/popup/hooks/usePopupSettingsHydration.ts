@@ -24,7 +24,6 @@ export function usePopupSettingsHydration({
   visualEffect,
   watermark,
   sections,
-  formulaCopy,
   aiStudio,
 }: {
   timeline: HydrateSettings;
@@ -35,7 +34,6 @@ export function usePopupSettingsHydration({
   visualEffect: HydrateSettings;
   watermark: HydrateSettings;
   sections: HydrateSettings;
-  formulaCopy: (enabled: unknown, format: unknown) => void;
   aiStudio: (enabled: boolean) => void;
 }) {
   useEffect(() => {
@@ -50,8 +48,6 @@ export function usePopupSettingsHydration({
           ...VISUAL_EFFECT_STORAGE_DEFAULTS,
           ...WATERMARK_SETTINGS_STORAGE_DEFAULTS,
           ...SECTION_LAYOUT_STORAGE_DEFAULTS,
-          [StorageKeys.FORMULA_COPY_ENABLED]: true,
-          [StorageKeys.FORMULA_COPY_FORMAT]: 'latex',
           [StorageKeys.GV_AISTUDIO_ENABLED]: true,
           [StorageKeys.TAB_TITLE_UPDATE_ENABLED]: false,
         },
@@ -65,7 +61,6 @@ export function usePopupSettingsHydration({
           visualEffect(raw);
           watermark(raw);
           sections(raw);
-          formulaCopy(raw[StorageKeys.FORMULA_COPY_ENABLED], raw[StorageKeys.FORMULA_COPY_FORMAT]);
           aiStudio(raw[StorageKeys.GV_AISTUDIO_ENABLED] !== false);
           // The retired title setting still needs its compatibility cleanup.
           if (raw[StorageKeys.TAB_TITLE_UPDATE_ENABLED] !== false) {
@@ -85,7 +80,6 @@ export function usePopupSettingsHydration({
     visualEffect,
     watermark,
     sections,
-    formulaCopy,
     aiStudio,
   ]);
 }

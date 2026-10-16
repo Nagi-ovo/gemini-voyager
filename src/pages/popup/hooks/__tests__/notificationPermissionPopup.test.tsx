@@ -1,4 +1,4 @@
-import React, { act, useEffect } from 'react';
+import React, { act, useEffect, useState } from 'react';
 import { type Root, createRoot } from 'react-dom/client';
 
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -7,11 +7,7 @@ import { StorageKeys } from '@/core/types/common';
 import type { NotificationEnablementPayload } from '@/core/utils/notificationEnablement';
 import { createNotificationEnablement } from '@/pages/background/notificationEnablement';
 
-import {
-  GENERAL_SETTINGS_STORAGE_DEFAULTS,
-  type GeneralPopupSettings,
-  useGeneralPopupSettings,
-} from '../useGeneralPopupSettings';
+import { type GeneralPopupSettings, useGeneralPopupSettings } from '../useGeneralPopupSettings';
 
 const api = vi.hoisted(() => ({
   runtime: {
@@ -32,33 +28,37 @@ const api = vi.hoisted(() => ({
 }));
 vi.mock('webextension-polyfill', () => ({ default: api }));
 
+const NOTIFICATION_KEY = StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED;
+
 function Harness({
   capture,
-  bulkRead,
+  storedRead,
 }: {
   capture: (settings: GeneralPopupSettings) => void;
-  bulkRead?: Promise<Record<string, unknown>>;
+  /** The popup snapshot's first reading of the switch. */
+  storedRead?: Promise<Record<string, unknown>>;
 }) {
+  const [stored, setStored] = useState<boolean | undefined>(undefined);
   const settings = useGeneralPopupSettings({
     isSafariBrowser: false,
     canUseSystemNotifications: true,
     writeSyncStorage: (payload) => api.storage.sync.set(payload),
+    storedResponseNotification: stored,
   });
   useEffect(() => {
     capture(settings);
   }, [capture, settings]);
-  const { hydrateFromStorage } = settings;
   useEffect(() => {
     let active = true;
-    void (bulkRead ?? api.storage.sync.get(GENERAL_SETTINGS_STORAGE_DEFAULTS)).then(
+    void (storedRead ?? api.storage.sync.get([NOTIFICATION_KEY])).then(
       (raw: Record<string, unknown>) => {
-        if (active) hydrateFromStorage(raw);
+        if (active) setStored(raw[NOTIFICATION_KEY] === true);
       },
     );
     return () => {
       active = false;
     };
-  }, [bulkRead, hydrateFromStorage]);
+  }, [storedRead]);
   return null;
 }
 
@@ -153,7 +153,7 @@ it('enables completion notifications after Allow closes the popup without a seco
   let settings!: GeneralPopupSettings;
   await act(async () => root!.render(<Harness capture={(value) => (settings = value)} />));
   await act(async () => {
-    settings.onChange({ responseCompleteNotificationEnabled: true });
+    settings.responseNotification.setEnabled(true);
     await settle();
   });
   expect(api.permissions.request).toHaveBeenCalledOnce();
@@ -161,8 +161,8 @@ it('enables completion notifications after Allow closes the popup without a seco
   events.push('popup-unmount');
   act(() => root!.unmount());
   root = undefined;
-  // The reopening popup starts its bulk read before the worker observes Allow.
-  const olderBulkSnapshot = await api.storage.sync.get(GENERAL_SETTINGS_STORAGE_DEFAULTS);
+  // The reopening popup starts its read before the worker observes Allow.
+  const olderBulkSnapshot = await api.storage.sync.get([NOTIFICATION_KEY]);
   events.push(
     `bulk-read:${String(olderBulkSnapshot[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED])}`,
   );
@@ -184,11 +184,11 @@ it('enables completion notifications after Allow closes the popup without a seco
   expect(events).not.toContain('message:finish');
   root = createRoot(container);
   await act(async () =>
-    root!.render(<Harness bulkRead={heldBulk} capture={(value) => (settings = value)} />),
+    root!.render(<Harness storedRead={heldBulk} capture={(value) => (settings = value)} />),
   );
   events.push('bulk-delivery:false');
   await act(async () => deliverBulk());
-  expect(settings.values.responseCompleteNotificationEnabled, events.join(' → ')).toBe(true);
+  expect(settings.responseNotification.enabled, events.join(' → ')).toBe(true);
   expect(api.permissions.request).toHaveBeenCalledOnce();
 
   act(() => root!.unmount());

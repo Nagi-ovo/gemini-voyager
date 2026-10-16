@@ -2741,6 +2741,14 @@
     "message": "Voyager の各機能をオン・オフします。オンにした機能には、その設定が表示されます。",
     "description": "Popup subtitle of the official plugin list on Gemini and AI Studio"
   },
+  "pluginRowOptions": {
+    "message": "オプション",
+    "description": "Button under an official plugin row in the popup that shows or hides its extra options"
+  },
+  "pluginRowOptionsFor": {
+    "message": "{name} のオプション",
+    "description": "Accessible name of an official plugin row's Options button and panel; {name} is the plugin name"
+  },
   "pluginGroupAppearance": {
     "message": "外観",
     "description": "Heading of the plugin list group for layout and look"

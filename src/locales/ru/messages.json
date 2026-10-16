@@ -2741,6 +2741,14 @@
     "message": "Включайте и выключайте функции Voyager. Настройки функции появляются, когда она включена.",
     "description": "Popup subtitle of the official plugin list on Gemini and AI Studio"
   },
+  "pluginRowOptions": {
+    "message": "Параметры",
+    "description": "Button under an official plugin row in the popup that shows or hides its extra options"
+  },
+  "pluginRowOptionsFor": {
+    "message": "Параметры: {name}",
+    "description": "Accessible name of an official plugin row's Options button and panel; {name} is the plugin name"
+  },
   "pluginGroupAppearance": {
     "message": "Внешний вид",
     "description": "Heading of the plugin list group for layout and look"

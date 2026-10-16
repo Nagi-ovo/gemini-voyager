@@ -141,7 +141,25 @@ const MOVED_SWITCHES = [
   { id: OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend, key: StorageKeys.CTRL_ENTER_SEND, missing: false },
   { id: OFFICIAL_PLUGIN_IDS.geminiVimInput, key: StorageKeys.INPUT_VIM_MODE, missing: false },
   { id: OFFICIAL_PLUGIN_IDS.geminiDraftSave, key: StorageKeys.DRAFT_AUTO_SAVE, missing: false },
-] as const;
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
+    key: StorageKeys.FORMULA_COPY_ENABLED,
+    missing: true,
+  },
+  { id: OFFICIAL_PLUGIN_IDS.geminiHighlight, key: StorageKeys.HIGHLIGHT_ENABLED, missing: false },
+  // Its switch runs a permission flow instead of a write; see its own tests.
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
+    key: StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED,
+    missing: false,
+    control: true,
+  },
+] as const satisfies readonly {
+  id: string;
+  key: string;
+  missing: boolean;
+  control?: boolean;
+}[];
 
 /** Moved switches that only show on one site or browser, each checked on its own tab. */
 const AI_STUDIO = 'https://aistudio.google.com/prompts/new_chat';
@@ -170,6 +188,10 @@ const RETIRED_SWITCH_IDS = [
   'draft-auto-save',
   'sidebar-auto-hide',
   'sidebar-full-hide',
+  'formula-copy-enabled',
+  'highlights-enabled',
+  'highlight-timeline-markers-enabled',
+  'response-complete-notification',
 ];
 
 /** The old layout cards' sliders and switches, labelled by their card title. */
@@ -286,6 +308,7 @@ describe('the official plugin list in the popup', () => {
           OFFICIAL_PLUGIN_IDS.geminiMermaid,
           OFFICIAL_PLUGIN_IDS.geminiWaveDrom,
           OFFICIAL_PLUGIN_IDS.geminiECharts,
+          OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
         ],
       },
       {
@@ -307,6 +330,8 @@ describe('the official plugin list in the popup', () => {
           OFFICIAL_PLUGIN_IDS.geminiResearchPack,
           OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
           OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
+          OFFICIAL_PLUGIN_IDS.geminiHighlight,
+          OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
         ],
       },
     ]);
@@ -340,7 +365,8 @@ describe('the official plugin list in the popup', () => {
 
   it('each switch writes only its old sync key and never the plugin state', async () => {
     await mount();
-    for (const { id, key, missing } of MOVED_SWITCHES) {
+    for (const { id, key, missing, ...rest } of MOVED_SWITCHES) {
+      if ('control' in rest) continue;
       extensionApi.storage.sync.set.mockClear();
       await act(async () => toggle(id).click());
       expect(toggle(id).checked).toBe(!missing);
@@ -388,6 +414,11 @@ describe('the official plugin list in the popup', () => {
     ['nav rail', OFFICIAL_PLUGIN_IDS.geminiSidebarWidth],
     [TRANSLATIONS.en.sidebarAutoHide, OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide],
     [TRANSLATIONS.zh.sidebarFullHide, OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide],
+    ['公式', OFFICIAL_PLUGIN_IDS.geminiFormulaCopy],
+    [TRANSLATIONS.en.formulaCopyFormatUnicodeMath, OFFICIAL_PLUGIN_IDS.geminiFormulaCopy],
+    [TRANSLATIONS.en.showHighlightTimelineMarkers, OFFICIAL_PLUGIN_IDS.geminiHighlight],
+    [TRANSLATIONS.zh.enableHighlights, OFFICIAL_PLUGIN_IDS.geminiHighlight],
+    ['推送', OFFICIAL_PLUGIN_IDS.geminiResponseNotification],
   ])('an old search for "%s" still finds its row', async (query, id) => {
     local[StorageKeys.GV_POPUP_SETTINGS_SEARCH_QUERY] = query;
     await mount();
@@ -410,8 +441,12 @@ describe('the official plugin list in the popup', () => {
         OFFICIAL_PLUGIN_IDS.geminiResearchPack,
         OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
         OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
+        OFFICIAL_PLUGIN_IDS.geminiHighlight,
+        OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
       ],
     ],
+    [TRANSLATIONS.en.formulaCopyFormat, [OFFICIAL_PLUGIN_IDS.geminiFormulaCopy]],
+    [TRANSLATIONS.zh.formulaCopyFormat, [OFFICIAL_PLUGIN_IDS.geminiFormulaCopy]],
     [TRANSLATIONS.en.folderOptions, [OFFICIAL_PLUGIN_IDS.geminiFork]],
     [TRANSLATIONS.en.promptManagerOptions, [OFFICIAL_PLUGIN_IDS.geminiPromptHistory]],
     [TRANSLATIONS.en.timelineOptions, [OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll]],
@@ -451,12 +486,15 @@ describe('the official plugin list in the popup', () => {
     ['false', false, false],
     ['true', true, true],
   ] as const)(
-    'on AI Studio, lists only Enter send and shows a %s stored switch as the page reads it',
+    'on AI Studio, lists Enter send and formula copy and shows a %s stored switch as the page reads it',
     async (_label, stored, expected) => {
       extensionApi.tabs.query.mockResolvedValue([{ id: 8, url: AI_STUDIO }]);
       if (stored !== undefined) sync[StorageKeys.AISTUDIO_ENTER_SEND] = stored;
       await mount();
-      expect(listedIds()).toEqual([OFFICIAL_PLUGIN_IDS.aistudioEnterSend]);
+      expect(listedIds()).toEqual([
+        OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy,
+        OFFICIAL_PLUGIN_IDS.aistudioEnterSend,
+      ]);
       expect(toggle(OFFICIAL_PLUGIN_IDS.aistudioEnterSend).checked).toBe(expected);
       expect(container.querySelector('#changelog-notify-badge')).not.toBeNull();
     },
@@ -740,6 +778,158 @@ describe('the official plugin list in the popup', () => {
       expect(sync[key]).toBe(true);
       expect(row(id)!.textContent).toContain(hint());
       expect(hint()).not.toContain('{modifier}');
+    });
+  });
+
+  describe('rows with options', () => {
+    const optionsButton = (id: string) =>
+      row(id)!.querySelector<HTMLButtonElement>('button[aria-expanded]');
+    const openOptions = async (id: string) => {
+      await act(async () => optionsButton(id)!.click());
+    };
+    const radio = (id: string, label: string) =>
+      [...row(id)!.querySelectorAll<HTMLInputElement>('input[type="radio"]')].find(
+        (input) => input.closest('label')!.textContent === label,
+      )!;
+    const storageListener = () => {
+      const calls = extensionApi.storage.onChanged.addListener.mock.calls;
+      return (changes: Record<string, { newValue?: unknown }>) =>
+        act(async () => {
+          for (const [listener] of calls)
+            (listener as (c: unknown, a: string) => void)(changes, 'sync');
+        });
+    };
+
+    it('offers Options only while the row is on, collapsed until asked', async () => {
+      sync[StorageKeys.FORMULA_COPY_ENABLED] = false;
+      await mount();
+      expect(optionsButton(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy)).toBeNull();
+      await act(async () => toggle(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy).click());
+      const button = optionsButton(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy)!;
+      expect(button.getAttribute('aria-expanded')).toBe('false');
+      expect(button.getAttribute('aria-label')).toBe(
+        TRANSLATIONS.en.pluginRowOptionsFor.replace('{name}', 'Formula Copy'),
+      );
+      expect(
+        row(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy)!.querySelector('input[type="radio"]'),
+      ).toBeNull();
+      await openOptions(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy);
+      expect(button.getAttribute('aria-expanded')).toBe('true');
+      const panel = container.querySelector(`#${button.getAttribute('aria-controls')}`)!;
+      expect(panel.textContent).toContain(TRANSLATIONS.en.formulaCopyScopeNote);
+      await openOptions(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy);
+      expect(
+        row(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy)!.querySelector('input[type="radio"]'),
+      ).toBeNull();
+    });
+
+    it('shows the stored formula format and writes only the format key', async () => {
+      sync[StorageKeys.FORMULA_COPY_FORMAT] = 'unicodemath';
+      await mount();
+      await openOptions(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy);
+      const id = OFFICIAL_PLUGIN_IDS.geminiFormulaCopy;
+      expect(radio(id, TRANSLATIONS.en.formulaCopyFormatUnicodeMath).checked).toBe(true);
+      await act(async () => radio(id, TRANSLATIONS.en.formulaCopyFormatNotion).click());
+      expect(radio(id, TRANSLATIONS.en.formulaCopyFormatNotion).checked).toBe(true);
+      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+        [StorageKeys.FORMULA_COPY_FORMAT]: 'notion',
+      });
+      expect(local[StorageKeys.PLUGINS_STATE]).toBeUndefined();
+    });
+
+    it('a format stored elsewhere while the popup is open shows at once', async () => {
+      await mount();
+      await openOptions(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy);
+      const id = OFFICIAL_PLUGIN_IDS.geminiFormulaCopy;
+      expect(radio(id, TRANSLATIONS.en.formulaCopyFormatLatex).checked).toBe(true);
+      await storageListener()({ [StorageKeys.FORMULA_COPY_FORMAT]: { newValue: 'no-dollar' } });
+      expect(radio(id, TRANSLATIONS.en.formulaCopyFormatNoDollar).checked).toBe(true);
+    });
+
+    it('on AI Studio, the formula row edits the same shared switch and format', async () => {
+      extensionApi.tabs.query.mockResolvedValue([{ id: 8, url: AI_STUDIO }]);
+      await mount();
+      const id = OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy;
+      expect(toggle(id).checked).toBe(true);
+      await openOptions(id);
+      await act(async () => radio(id, TRANSLATIONS.en.formulaCopyFormatNotion).click());
+      await act(async () => toggle(id).click());
+      expect(extensionApi.storage.sync.set.mock.calls.map(([payload]) => payload)).toEqual([
+        { [StorageKeys.FORMULA_COPY_FORMAT]: 'notion' },
+        { [StorageKeys.FORMULA_COPY_ENABLED]: false },
+      ]);
+    });
+
+    it.each([
+      ['missing', undefined, true],
+      ['false', false, false],
+      ['true', true, true],
+    ] as const)(
+      'shows a %s stored highlight marker switch as the highlight runtime reads it',
+      async (_label, stored, expected) => {
+        sync[StorageKeys.HIGHLIGHT_ENABLED] = true;
+        if (stored !== undefined) sync[StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED] = stored;
+        await mount();
+        await openOptions(OFFICIAL_PLUGIN_IDS.geminiHighlight);
+        const markers = row(OFFICIAL_PLUGIN_IDS.geminiHighlight)!.querySelector<HTMLInputElement>(
+          `input[aria-label="${TRANSLATIONS.en.showHighlightTimelineMarkers}"]`,
+        )!;
+        expect(markers.checked).toBe(expected);
+        await act(async () => markers.click());
+        expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+          [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: !expected,
+        });
+      },
+    );
+
+    it('a search that lists a row with options opens them', async () => {
+      local[StorageKeys.GV_POPUP_SETTINGS_SEARCH_QUERY] = TRANSLATIONS.en.formulaCopyFormatNotion;
+      await mount();
+      const button = optionsButton(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy)!;
+      expect(button.getAttribute('aria-expanded')).toBe('true');
+      expect(
+        radio(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, TRANSLATIONS.en.formulaCopyFormatNotion),
+      ).toBeDefined();
+    });
+  });
+
+  describe('the completion notification row', () => {
+    const id = OFFICIAL_PLUGIN_IDS.geminiResponseNotification;
+
+    it('asks for permission from the click instead of writing the switch', async () => {
+      await mount();
+      expect(toggle(id).checked).toBe(false);
+      extensionApi.runtime.sendMessage.mockClear();
+      act(() => toggle(id).click());
+      // Chrome may close the popup for its prompt: the intent goes out before any await.
+      expect(extensionApi.runtime.sendMessage).toHaveBeenCalledWith(
+        expect.objectContaining({ payload: expect.objectContaining({ action: 'begin' }) }),
+      );
+      expect(toggle(id).checked).toBe(true);
+      await act(async () => {});
+      expect(
+        extensionApi.storage.sync.set.mock.calls.some(([payload]) =>
+          Object.hasOwn(payload as object, StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED),
+        ),
+      ).toBe(false);
+    });
+
+    it('says on Safari that the macOS app sends the notification, while it is on', async () => {
+      browserTarget.safari = true;
+      sync[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] = true;
+      await mount();
+      expect(toggle(id).checked).toBe(true);
+      expect(row(id)!.textContent).toContain(
+        TRANSLATIONS.en.responseCompleteNotificationHintSafari,
+      );
+    });
+
+    it('gives no Safari hint in other browsers', async () => {
+      sync[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] = true;
+      await mount();
+      expect(row(id)!.textContent).not.toContain(
+        TRANSLATIONS.en.responseCompleteNotificationHintSafari,
+      );
     });
   });
 });

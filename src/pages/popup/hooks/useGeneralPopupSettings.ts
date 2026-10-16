@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { StorageKeys } from '@/core/types/common';
 import { requestNotificationEnablement } from '@/core/utils/notificationEnablement';
@@ -10,23 +10,17 @@ import { requestSafariNativeNotificationPermission } from '@/core/utils/safariNa
 
 import type { GeneralSettingsValues } from '../components/GeneralSettingsCard';
 
+// Highlights and completion notifications are official plugin rows now; their stored
+// values come from the popup's live snapshot, not this one-time read.
 export const GENERAL_SETTINGS_STORAGE_DEFAULTS = {
   [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED]: true,
-  [StorageKeys.HIGHLIGHT_ENABLED]: false,
-  [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: true,
-  [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
   [StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED]: true,
 };
 
-type PlainGeneralSettings = Omit<
-  GeneralSettingsValues,
-  'changelogBadgeMode' | 'responseCompleteNotificationEnabled'
->;
+type PlainGeneralSettings = Omit<GeneralSettingsValues, 'changelogBadgeMode'>;
 
 const PLAIN_SETTING_STORAGE_KEYS = {
   persistentExportToolbarEnabled: StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED,
-  highlightEnabled: StorageKeys.HIGHLIGHT_ENABLED,
-  highlightTimelineMarkersEnabled: StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED,
   remoteAnnouncementEnabled: StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED,
 } satisfies Record<keyof PlainGeneralSettings, string>;
 
@@ -34,12 +28,22 @@ export interface GeneralPopupSettingsOptions {
   writeSyncStorage: (payload: Record<string, unknown>) => Promise<void>;
   isSafariBrowser: boolean;
   canUseSystemNotifications: boolean;
+  /** The stored completion-notification switch from the live snapshot; undefined until read. */
+  storedResponseNotification: boolean | undefined;
+}
+
+/** The completion-notification switch: shown value and its permission flow. */
+export interface ResponseNotificationControl {
+  enabled: boolean;
+  /** Runs the permission flow from the click itself (Firefox needs it first in the gesture). */
+  setEnabled: (enabled: boolean) => void;
 }
 
 export interface GeneralPopupSettings {
   values: GeneralSettingsValues;
   onChange: (patch: Partial<GeneralSettingsValues>) => void;
   hydrateFromStorage: (raw: Record<string, unknown>) => void;
+  responseNotification: ResponseNotificationControl;
   remoteAnnouncementPermissionGranted: boolean;
   requestRemoteAnnouncementSystemPermission: () => Promise<void>;
 }
@@ -48,12 +52,10 @@ export function useGeneralPopupSettings({
   writeSyncStorage,
   isSafariBrowser,
   canUseSystemNotifications,
+  storedResponseNotification,
 }: GeneralPopupSettingsOptions): GeneralPopupSettings {
   const [plainSettings, setPlainSettings] = useState<PlainGeneralSettings>({
     persistentExportToolbarEnabled: true,
-    // Preserve the initial render; the bulk storage read defaults highlights off.
-    highlightEnabled: true,
-    highlightTimelineMarkersEnabled: true,
     remoteAnnouncementEnabled: true,
   });
   const [changelogBadgeMode, setChangelogBadgeMode] = useState(false);
@@ -134,24 +136,23 @@ export function useGeneralPopupSettings({
     };
   }, [canUseSystemNotifications]);
 
-  const hydrateFromStorage = useCallback(
-    (raw: Record<string, unknown>): void => {
-      setPlainSettings({
-        persistentExportToolbarEnabled:
-          raw[StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED] !== false,
-        highlightEnabled: raw[StorageKeys.HIGHLIGHT_ENABLED] === true,
-        highlightTimelineMarkersEnabled:
-          raw[StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED] !== false,
-        remoteAnnouncementEnabled: raw[StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED] !== false,
-      });
-      if (isSafariBrowser || !notificationUi.current.supersedesHydration) {
-        setResponseCompleteNotificationEnabled(
-          raw[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] === true,
-        );
-      }
-    },
-    [isSafariBrowser],
-  );
+  const hydrateFromStorage = useCallback((raw: Record<string, unknown>): void => {
+    setPlainSettings({
+      persistentExportToolbarEnabled: raw[StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED] !== false,
+      remoteAnnouncementEnabled: raw[StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED] !== false,
+    });
+  }, []);
+
+  // The stored switch, as the live snapshot reports it. Its first reading must not undo what a
+  // click or the popup's reconciliation already showed; every later reading is a real change.
+  const firstStoredReading = useRef(true);
+  useEffect(() => {
+    if (storedResponseNotification === undefined) return;
+    const first = firstStoredReading.current;
+    firstStoredReading.current = false;
+    if (first && !isSafariBrowser && notificationUi.current.supersedesHydration) return;
+    setResponseCompleteNotificationEnabled(storedResponseNotification);
+  }, [storedResponseNotification, isSafariBrowser]);
 
   const handleChangelogBadgeModeChange = useCallback((checked: boolean): void => {
     setChangelogBadgeMode(checked);
@@ -223,15 +224,8 @@ export function useGeneralPopupSettings({
 
   const onChange = useCallback(
     (patch: Partial<GeneralSettingsValues>): void => {
-      const {
-        changelogBadgeMode: badgeMode,
-        responseCompleteNotificationEnabled: nextResponseNotificationEnabled,
-        ...rest
-      } = patch;
+      const { changelogBadgeMode: badgeMode, ...rest } = patch;
       if (badgeMode !== undefined) handleChangelogBadgeModeChange(badgeMode);
-      if (nextResponseNotificationEnabled !== undefined) {
-        void handleResponseCompleteNotificationChange(nextResponseNotificationEnabled);
-      }
       if (Object.keys(rest).length === 0) return;
 
       const nextSettings: Partial<PlainGeneralSettings> = {};
@@ -247,17 +241,26 @@ export function useGeneralPopupSettings({
       setPlainSettings((current) => ({ ...current, ...nextSettings }));
       void writeSyncStorage(payload);
     },
-    [handleChangelogBadgeModeChange, handleResponseCompleteNotificationChange, writeSyncStorage],
+    [handleChangelogBadgeModeChange, writeSyncStorage],
+  );
+
+  const setResponseNotificationEnabled = useCallback(
+    (next: boolean): void => void handleResponseCompleteNotificationChange(next),
+    [handleResponseCompleteNotificationChange],
+  );
+  const responseNotification = useMemo(
+    () => ({
+      enabled: responseCompleteNotificationEnabled,
+      setEnabled: setResponseNotificationEnabled,
+    }),
+    [responseCompleteNotificationEnabled, setResponseNotificationEnabled],
   );
 
   return {
-    values: {
-      ...plainSettings,
-      changelogBadgeMode,
-      responseCompleteNotificationEnabled,
-    },
+    values: { ...plainSettings, changelogBadgeMode },
     onChange,
     hydrateFromStorage,
+    responseNotification,
     remoteAnnouncementPermissionGranted,
     requestRemoteAnnouncementSystemPermission,
   };

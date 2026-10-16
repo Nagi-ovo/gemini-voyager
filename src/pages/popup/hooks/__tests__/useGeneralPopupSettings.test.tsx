@@ -93,6 +93,7 @@ describe('useGeneralPopupSettings', () => {
           writeSyncStorage={writeSyncStorage}
           isSafariBrowser={false}
           canUseSystemNotifications={true}
+          storedResponseNotification={undefined}
           {...overrides}
           capture={(next) => (settings = next)}
         />,
@@ -100,19 +101,16 @@ describe('useGeneralPopupSettings', () => {
     });
   };
 
-  it('keeps initial highlights on, then applies the bulk defaults without reading or writing sync', async () => {
+  it('applies the bulk defaults without reading or writing sync', async () => {
     await render();
-    expect(settings.values.highlightEnabled).toBe(true);
     act(() => settings.hydrateFromStorage(GENERAL_SETTINGS_STORAGE_DEFAULTS));
 
     expect(settings.values).toEqual({
       persistentExportToolbarEnabled: true,
-      highlightEnabled: false,
-      highlightTimelineMarkersEnabled: true,
-      responseCompleteNotificationEnabled: false,
       remoteAnnouncementEnabled: true,
       changelogBadgeMode: false,
     });
+    expect(settings.responseNotification.enabled).toBe(false);
     expect(chrome.storage.sync.get).not.toHaveBeenCalled();
     expect(writeSyncStorage).not.toHaveBeenCalled();
     expect(chrome.storage.local.set).not.toHaveBeenCalled();
@@ -124,22 +122,15 @@ describe('useGeneralPopupSettings', () => {
     act(() =>
       settings.hydrateFromStorage({
         [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED]: false,
-        [StorageKeys.HIGHLIGHT_ENABLED]: true,
-        [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: false,
-        [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: true,
         [StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED]: false,
       }),
     );
     expect(settings.values).toEqual({
       persistentExportToolbarEnabled: false,
-      highlightEnabled: true,
-      highlightTimelineMarkersEnabled: false,
-      responseCompleteNotificationEnabled: true,
       remoteAnnouncementEnabled: false,
       changelogBadgeMode: false,
     });
-    act(() => settings.hydrateFromStorage({ [StorageKeys.HIGHLIGHT_ENABLED]: 'true' }));
-    expect(settings.values.highlightEnabled).toBe(false);
+    act(() => settings.hydrateFromStorage({}));
     expect(settings.values.persistentExportToolbarEnabled).toBe(true);
     expect(writeSyncStorage).not.toHaveBeenCalled();
     expect(ensureNotificationsPermission).not.toHaveBeenCalled();
@@ -148,22 +139,15 @@ describe('useGeneralPopupSettings', () => {
   it('persists only the changed plain settings and retains other values', async () => {
     await render();
     const before = settings.values;
-    act(() =>
-      settings.onChange({ persistentExportToolbarEnabled: false, highlightEnabled: false }),
-    );
-    expect(settings.values).toEqual({
-      ...before,
-      persistentExportToolbarEnabled: false,
-      highlightEnabled: false,
-    });
+    act(() => settings.onChange({ persistentExportToolbarEnabled: false }));
+    expect(settings.values).toEqual({ ...before, persistentExportToolbarEnabled: false });
     expect(writeSyncStorage).toHaveBeenLastCalledWith({
       [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED]: false,
-      [StorageKeys.HIGHLIGHT_ENABLED]: false,
     });
-    act(() => settings.onChange({ highlightTimelineMarkersEnabled: false }));
+    act(() => settings.onChange({ remoteAnnouncementEnabled: false }));
     expect(settings.values.persistentExportToolbarEnabled).toBe(false);
     expect(writeSyncStorage).toHaveBeenLastCalledWith({
-      [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: false,
+      [StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED]: false,
     });
     expect(writeSyncStorage).toHaveBeenCalledTimes(2);
     expect(chrome.storage.local.set).not.toHaveBeenCalled();
@@ -197,8 +181,8 @@ describe('useGeneralPopupSettings', () => {
 
   it('does not persist completion notifications when permission is denied', async () => {
     await render();
-    await act(async () => settings.onChange({ responseCompleteNotificationEnabled: true }));
-    expect(settings.values.responseCompleteNotificationEnabled).toBe(false);
+    await act(async () => settings.responseNotification.setEnabled(true));
+    expect(settings.responseNotification.enabled).toBe(false);
     expect(settings.remoteAnnouncementPermissionGranted).toBe(false);
     expect(writeSyncStorage).not.toHaveBeenCalled();
     expect(requestSafariNativeNotificationPermission).not.toHaveBeenCalled();
@@ -208,11 +192,11 @@ describe('useGeneralPopupSettings', () => {
     const permission = deferred<boolean>();
     vi.mocked(ensureNotificationsPermission).mockReturnValue(permission.promise);
     await render();
-    act(() => settings.onChange({ responseCompleteNotificationEnabled: true }));
+    act(() => settings.responseNotification.setEnabled(true));
     expect(ensureNotificationsPermission).toHaveBeenCalledOnce();
     expect(writeSyncStorage).not.toHaveBeenCalled();
     await act(async () => permission.resolve(true));
-    expect(settings.values.responseCompleteNotificationEnabled).toBe(true);
+    expect(settings.responseNotification.enabled).toBe(true);
     expect(settings.remoteAnnouncementPermissionGranted).toBe(true);
     expect(writeSyncStorage).not.toHaveBeenCalled();
   });
@@ -226,11 +210,11 @@ describe('useGeneralPopupSettings', () => {
     });
     vi.mocked(ensureNotificationsPermission).mockReturnValue(permission.promise);
     await render();
-    act(() => settings.onChange({ responseCompleteNotificationEnabled: true }));
+    act(() => settings.responseNotification.setEnabled(true));
     // Even an unresolved message must not move Firefox's permissions.request out of this gesture.
     expect(ensureNotificationsPermission).toHaveBeenCalledOnce();
     await act(async () => permission.resolve(true));
-    expect(settings.values.responseCompleteNotificationEnabled).toBe(true);
+    expect(settings.responseNotification.enabled).toBe(true);
     expect(writeSyncStorage).not.toHaveBeenCalled();
   });
 
@@ -238,11 +222,11 @@ describe('useGeneralPopupSettings', () => {
     const permission = deferred<boolean>();
     vi.mocked(ensureNotificationsPermission).mockReturnValue(permission.promise);
     await render();
-    act(() => settings.onChange({ responseCompleteNotificationEnabled: true }));
-    act(() => settings.onChange({ responseCompleteNotificationEnabled: false }));
+    act(() => settings.responseNotification.setEnabled(true));
+    act(() => settings.responseNotification.setEnabled(false));
     await act(async () => permission.resolve(true));
-    act(() => settings.hydrateFromStorage(GENERAL_SETTINGS_STORAGE_DEFAULTS));
-    expect(settings.values.responseCompleteNotificationEnabled).toBe(false);
+    await render({ storedResponseNotification: false });
+    expect(settings.responseNotification.enabled).toBe(false);
     expect(writeSyncStorage).not.toHaveBeenCalled();
   });
 
@@ -252,9 +236,9 @@ describe('useGeneralPopupSettings', () => {
       payload.action === 'reconcile' ? reconcile.promise : { ok: true },
     );
     await render();
-    act(() => settings.onChange({ responseCompleteNotificationEnabled: false }));
+    act(() => settings.responseNotification.setEnabled(false));
     await act(async () => reconcile.resolve({ ok: true, enabled: true }));
-    expect(settings.values.responseCompleteNotificationEnabled).toBe(false);
+    expect(settings.responseNotification.enabled).toBe(false);
     expect(writeSyncStorage).not.toHaveBeenCalled();
   });
 
@@ -264,12 +248,12 @@ describe('useGeneralPopupSettings', () => {
       const permission = deferred<boolean>();
       vi.mocked(requestSafariNativeNotificationPermission).mockReturnValue(permission.promise);
       await render({ isSafariBrowser: true, canUseSystemNotifications: false });
-      act(() => settings.onChange({ responseCompleteNotificationEnabled: true }));
-      expect(settings.values.responseCompleteNotificationEnabled).toBe(true);
+      act(() => settings.responseNotification.setEnabled(true));
+      expect(settings.responseNotification.enabled).toBe(true);
       expect(requestSafariNativeNotificationPermission).toHaveBeenCalledOnce();
       expect(ensureNotificationsPermission).not.toHaveBeenCalled();
       await act(async () => permission.resolve(granted));
-      expect(settings.values.responseCompleteNotificationEnabled).toBe(granted);
+      expect(settings.responseNotification.enabled).toBe(granted);
       expect(settings.remoteAnnouncementPermissionGranted).toBe(false);
       expect(writeSyncStorage).not.toHaveBeenCalled();
     },
@@ -278,12 +262,9 @@ describe('useGeneralPopupSettings', () => {
   it.each([false, true])(
     'disables completion notifications without asking permission (Safari=%s)',
     async (isSafariBrowser) => {
-      await render({ isSafariBrowser });
-      act(() =>
-        settings.hydrateFromStorage({ [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: true }),
-      );
-      await act(async () => settings.onChange({ responseCompleteNotificationEnabled: false }));
-      expect(settings.values.responseCompleteNotificationEnabled).toBe(false);
+      await render({ isSafariBrowser, storedResponseNotification: true });
+      await act(async () => settings.responseNotification.setEnabled(false));
+      expect(settings.responseNotification.enabled).toBe(false);
       if (isSafariBrowser) {
         expect(writeSyncStorage).toHaveBeenCalledExactlyOnceWith({
           [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
@@ -296,14 +277,33 @@ describe('useGeneralPopupSettings', () => {
 
   it('stores completion notifications off when the background cannot take the disable', async () => {
     vi.mocked(requestNotificationEnablement).mockResolvedValue({ ok: false });
-    await render();
-    act(() =>
-      settings.hydrateFromStorage({ [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: true }),
-    );
-    await act(async () => settings.onChange({ responseCompleteNotificationEnabled: false }));
+    await render({ storedResponseNotification: true });
+    await act(async () => settings.responseNotification.setEnabled(false));
     expect(writeSyncStorage).toHaveBeenCalledExactlyOnceWith({
       [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
     });
+  });
+
+  it.each([false, true])(
+    'follows the stored switch from the live snapshot (Safari=%s)',
+    async (isSafariBrowser) => {
+      await render({ isSafariBrowser, storedResponseNotification: false });
+      expect(settings.responseNotification.enabled).toBe(false);
+      // A restore or another window: Safari's popup has no listener of its own.
+      await render({ isSafariBrowser, storedResponseNotification: true });
+      expect(settings.responseNotification.enabled).toBe(true);
+      await render({ isSafariBrowser, storedResponseNotification: false });
+      expect(settings.responseNotification.enabled).toBe(false);
+      expect(writeSyncStorage).not.toHaveBeenCalled();
+    },
+  );
+
+  it('a first stored reading does not undo what the reconciliation already showed', async () => {
+    vi.mocked(requestNotificationEnablement).mockResolvedValue({ ok: true, enabled: true });
+    await render();
+    expect(settings.responseNotification.enabled).toBe(true);
+    await render({ storedResponseNotification: false });
+    expect(settings.responseNotification.enabled).toBe(true);
   });
 
   it('checks announcement permission only when supported and ignores an obsolete read', async () => {
@@ -322,7 +322,7 @@ describe('useGeneralPopupSettings', () => {
     vi.mocked(hasNotificationsPermission).mockResolvedValue(true);
     await render();
     expect(settings.remoteAnnouncementPermissionGranted).toBe(true);
-    expect(settings.values.responseCompleteNotificationEnabled).toBe(false);
+    expect(settings.responseNotification.enabled).toBe(false);
     expect(writeSyncStorage).not.toHaveBeenCalled();
   });
 
@@ -333,7 +333,7 @@ describe('useGeneralPopupSettings', () => {
     vi.mocked(ensureNotificationsPermission).mockResolvedValue(true);
     await act(async () => settings.requestRemoteAnnouncementSystemPermission());
     expect(settings.remoteAnnouncementPermissionGranted).toBe(true);
-    expect(settings.values.responseCompleteNotificationEnabled).toBe(false);
+    expect(settings.responseNotification.enabled).toBe(false);
     expect(writeSyncStorage).not.toHaveBeenCalled();
   });
 });

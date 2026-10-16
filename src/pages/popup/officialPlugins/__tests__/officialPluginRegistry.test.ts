@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { BACKUPABLE_SYNC_SETTINGS_DEFAULTS } from '@/core/services/SettingsBackupService';
-import { isPackagedOfficialPluginId } from '@/features/plugins/sites/featureOwners';
+import {
+  OFFICIAL_PLUGIN_IDS,
+  isPackagedOfficialPluginId,
+} from '@/features/plugins/sites/featureOwners';
 import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
 import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCatalogPluginSource';
 import { legacyBindingFor } from '@/features/plugins/storage/legacySettingBindings';
@@ -68,7 +71,11 @@ describe('the official plugin list registry', () => {
     // (`derive`); a restore stores false over it and turns that width off. Fixing it is
     // a SettingsBackupService change, outside the popup.
     const defaults: Readonly<Record<string, unknown>> = BACKUPABLE_SYNC_SETTINGS_DEFAULTS;
+    // The background stores the highlight switch on first run (migrateOptionalHighlightSetting),
+    // so its key is never missing for long; its backup default (on) never meets a missing key.
+    const storedOnFirstRun = new Set<string>([OFFICIAL_PLUGIN_IDS.geminiHighlight]);
     for (const entry of OFFICIAL_PLUGIN_ENTRIES) {
+      if (storedOnFirstRun.has(entry.id)) continue;
       const binding = legacyBindingFor(entry.id)!;
       expect(Object.hasOwn(defaults, binding.key), binding.key).toBe(true);
       expect(binding.read(defaults[binding.key]), entry.id).toBe(binding.read(undefined));

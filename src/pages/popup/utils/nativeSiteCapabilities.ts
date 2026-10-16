@@ -14,7 +14,6 @@ export const NATIVE_POPUP_SECTION_IDS = [
   'gemsSidebar',
   'sidebarWidth',
   'visualEffect',
-  'formulaCopy',
   'keyboardShortcuts',
   'promptManager',
   'general',
@@ -38,7 +37,6 @@ const AI_STUDIO_CAPABILITIES = {
   folderSpacing: true,
   sidebarWidth: true,
   visualEffect: true,
-  formulaCopy: true,
   promptManager: [
     'hidePromptManager',
     'promptTriggerMascotLogo',

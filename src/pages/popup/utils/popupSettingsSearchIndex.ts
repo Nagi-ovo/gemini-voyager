@@ -165,26 +165,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ],
     ['animation background sakura rain effects off snow 动效 背景 樱花 下雨 下雪 关闭'],
   ),
-  popupSectionSearchTarget('formulaCopy', ['formulaCopyFormat', 'enableFormulaCopy']),
-  popupSearchTarget(
-    'formulaCopy',
-    'formulaCopyEnabled',
-    ['enableFormulaCopy', 'enableFormulaCopyHint'],
-    ['enable disable toggle math equation latex copy formula 开启 关闭 数学 公式 复制'],
-  ),
-  popupSearchTarget(
-    'formulaCopy',
-    'formulaCopyFormat',
-    [
-      'formulaCopyFormat',
-      'formulaCopyFormatHint',
-      'formulaCopyFormatLatex',
-      'formulaCopyFormatUnicodeMath',
-      'formulaCopyFormatNoDollar',
-      'formulaCopyFormatNotion',
-    ],
-    ['math equation latex unicode notion copy formula 数学 公式 复制'],
-  ),
   popupSectionSearchTarget('keyboardShortcuts', ['keyboardShortcuts']),
   popupSearchTarget(
     'keyboardShortcuts',
@@ -246,21 +226,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     'persistentExportToolbar',
     'persistentExportToolbarHint',
   ]),
-  popupSearchTarget('general', 'enableHighlights', ['enableHighlights', 'enableHighlightsHint']),
-  popupSearchTarget('general', 'showHighlightTimelineMarkers', [
-    'showHighlightTimelineMarkers',
-    'showHighlightTimelineMarkersHint',
-  ]),
-  popupSearchTarget(
-    'general',
-    'responseCompleteNotification',
-    [
-      'responseCompleteNotification',
-      'responseCompleteNotificationHint',
-      'responseCompleteNotificationHintSafari',
-    ],
-    ['notification alert reminder notice 通知 提醒 推送'],
-  ),
   popupSearchTarget('general', 'remoteAnnouncementNotification', [
     'remoteAnnouncementNotification',
     'remoteAnnouncementNotificationHint',

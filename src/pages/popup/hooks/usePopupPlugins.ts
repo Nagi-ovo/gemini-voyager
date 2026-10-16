@@ -38,6 +38,7 @@ import {
 } from '@/features/plugins/storage/pluginState';
 import type { PluginManifest, SiteAdapter } from '@/features/plugins/types';
 
+import { POPUP_LEGACY_SNAPSHOT_KEYS } from '../officialPlugins/officialPluginRegistry';
 import { isSelfClearingBlock } from '../utils/releasingStatus';
 
 // A plugin waiting for a runtime to shut down, or for the official plugin's
@@ -201,12 +202,13 @@ export function usePopupPlugins({
     let active = true;
     // Subscribe first: a change that lands during the read wins over it.
     let touched: LegacySettingSnapshot = {};
+    // The official plugin list's option panels show their own keys from the same snapshot.
     const unsubscribe = subscribeLegacySettings((changed) => {
       if (!active) return;
       touched = { ...touched, ...changed };
       setLegacySettings((current) => ({ ...current, ...changed }));
-    });
-    loadLegacySettingSnapshot().then(
+    }, POPUP_LEGACY_SNAPSHOT_KEYS);
+    loadLegacySettingSnapshot(POPUP_LEGACY_SNAPSHOT_KEYS).then(
       (loaded) => {
         if (!active) return;
         setLegacySettings({ ...loaded, ...touched });

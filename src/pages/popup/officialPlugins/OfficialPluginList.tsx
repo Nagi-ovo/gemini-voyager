@@ -1,18 +1,16 @@
 import React from 'react';
 
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { getModifierKey } from '@/core/utils/browser';
 import { isRTLLanguage } from '@/core/utils/rtl';
 import type { PluginStatus } from '@/features/plugins/runtime/pluginStatus';
 import type { PluginManifest, PluginSettingValue } from '@/features/plugins/types';
 import type { TranslationKey } from '@/utils/translations';
 
-import { ExperimentalBadge } from '../components/ExperimentalBadge';
-import { displayName, pickLocalized } from '../components/PluginIdentity';
-import { PluginSettings } from '../components/PluginSettings';
-import { BLOCKED_NOTE_TONE_CLASS, blockedPluginNote } from '../components/pluginBlockedNote';
-import { OfficialPluginSliders } from './OfficialPluginSliders';
+import {
+  OfficialPluginListRow,
+  type OfficialPanelIo,
+  type OfficialPluginControls,
+} from './OfficialPluginRow';
 import { OFFICIAL_PLUGIN_GROUPS } from './officialPluginRegistry';
 import type { OfficialPluginRow } from './useOfficialPluginList';
 
@@ -29,14 +27,14 @@ export interface OfficialPluginListProps {
     pluginId: string,
     values: Readonly<Record<string, PluginSettingValue>>,
   ) => void;
+  /** Switches the popup drives itself, by registry control id. */
+  readonly controls?: OfficialPluginControls;
+  /** What the rows' option panels read and write. */
+  readonly panelIo?: OfficialPanelIo;
+  /** A settings search is on, so rows with options show them open. */
+  readonly searching?: boolean;
   readonly language: string;
   readonly t: (key: TranslationKey) => string;
-}
-
-type RowActions = Pick<OfficialPluginListProps, 'onToggle' | 'onSettingsChange'>;
-
-function domId(prefix: string, pluginId: string): string {
-  return `${prefix}-${pluginId.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 }
 
 /**
@@ -51,6 +49,9 @@ export function OfficialPluginList({
   isVisible,
   onToggle,
   onSettingsChange,
+  controls,
+  panelIo,
+  searching = false,
   language,
   t,
 }: OfficialPluginListProps) {
@@ -81,6 +82,9 @@ export function OfficialPluginList({
                     row={row}
                     status={statuses.find((entry) => entry.id === row.manifest.id)}
                     nameSources={nameSources}
+                    control={row.entry.control ? controls?.[row.entry.control] : undefined}
+                    panelIo={panelIo}
+                    searching={searching}
                     onToggle={onToggle}
                     onSettingsChange={onSettingsChange}
                     language={language}
@@ -93,90 +97,5 @@ export function OfficialPluginList({
         })}
       </CardContent>
     </Card>
-  );
-}
-
-function OfficialPluginListRow({
-  row,
-  status,
-  nameSources,
-  onToggle,
-  onSettingsChange,
-  language,
-  t,
-}: RowActions & {
-  readonly row: OfficialPluginRow;
-  readonly status: PluginStatus | undefined;
-  readonly nameSources: readonly PluginManifest[];
-  readonly language: string;
-  readonly t: (key: TranslationKey) => string;
-}) {
-  const { manifest, entry, enabled, settings } = row;
-  // Number settings show as the registry's sliders, which save on release.
-  const sliderKeys = entry.sliders ? Object.keys(entry.sliders) : [];
-  const hasOtherSettings = Object.keys(manifest.contributes.settings ?? {}).some(
-    (key) => !sliderKeys.includes(key),
-  );
-  const inputId = domId('official-plugin', manifest.id);
-  const descriptionId = domId('official-plugin-description', manifest.id);
-  const note = blockedPluginNote({
-    status,
-    manifests: nameSources,
-    language,
-    t,
-    conflictKey: 'officialFeaturePausedByLocal',
-  });
-  return (
-    <li
-      data-official-plugin={manifest.id}
-      className="flex items-start justify-between gap-3 py-2.5"
-    >
-      <div className="min-w-0 flex-1 text-start">
-        <div className="flex items-center gap-1">
-          <label htmlFor={inputId} className="cursor-pointer text-sm font-medium">
-            <bdi>{displayName(pickLocalized(manifest, 'name', language))}</bdi>
-          </label>
-          {entry.experimental && <ExperimentalBadge title={t('experimentalLabel')} />}
-        </div>
-        <p id={descriptionId} className="text-muted-foreground mt-0.5 text-xs leading-snug">
-          {pickLocalized(manifest, 'description', language)}
-        </p>
-        {note && (
-          <p className={`mt-1 text-xs leading-snug ${BLOCKED_NOTE_TONE_CLASS[note.tone]}`}>
-            {note.text}
-          </p>
-        )}
-        {enabled && entry.usageHint && (
-          <p className="text-muted-foreground/80 mt-1 text-[11px] leading-snug">
-            {t(entry.usageHint).replace('{modifier}', getModifierKey())}
-          </p>
-        )}
-        {/* Options appear only while the plugin is on; turning it off keeps their stored values. */}
-        {enabled && hasOtherSettings && (
-          <PluginSettings
-            plugin={manifest}
-            values={settings}
-            hiddenKeys={sliderKeys}
-            handleSetting={(id, key, value) => onSettingsChange(id, { [key]: value })}
-            handleImmediateSettings={onSettingsChange}
-          />
-        )}
-        {enabled && entry.sliders && (
-          <OfficialPluginSliders
-            manifest={manifest}
-            sliders={entry.sliders}
-            settings={settings}
-            onCommit={(values) => onSettingsChange(manifest.id, values)}
-            t={t}
-          />
-        )}
-      </div>
-      <Switch
-        id={inputId}
-        checked={enabled}
-        aria-describedby={descriptionId}
-        onChange={(event) => onToggle(manifest.id, event.target.checked)}
-      />
-    </li>
   );
 }

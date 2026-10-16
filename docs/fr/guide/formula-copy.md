@@ -10,7 +10,7 @@ Voyager offre un support transparent pour cela :
 
 1. **Détection Automatique** : Voyager identifie automatiquement les formules affichées sur la page. Lorsque vous survolez une formule, elle indique qu'elle est cliquable.
 2. **Copie au Clic** : Cliquez sur une formule en ligne ou en bloc, et elle est copiée aussitôt, avec une brève confirmation.
-3. **Choix du Format** : Dans la popup, choisissez à l'avance un **Format de copie de formule** :
+3. **Choix du Format** : Dans la popup, ouvrez **Extensions** → **Copie de formules** → **Options** et choisissez à l'avance un format de copie :
    - **LaTeX** : Copie le code source LaTeX standard avec délimiteurs en dollars, idéal pour Overleaf, les éditeurs Markdown, etc.
    - **LaTeX (Sans dollars)** : Copie le code source LaTeX brut, pour les éditeurs qui ajoutent leurs propres délimiteurs.
    - **MathML (Word)** : Le meilleur format pour coller directement dans **Microsoft Word**.
@@ -31,4 +31,4 @@ Voyager offre un support transparent pour cela :
 
 ## Où cela fonctionne
 
-Sur Gemini et AI Studio, activez-la avec **Activer la copie des formules** dans la popup ; cet interrupteur et le format de copie s'appliquent aux deux sites. Claude et ChatGPT bénéficient de la copie de formules grâce à une extension intégrée, et DeepSeek dispose d'une extension de copie de formules dans le [catalogue d'extensions](/fr/guide/plugins).
+Sur Gemini et AI Studio, activez-la avec **Extensions** → **Copie de formules** dans la popup ; le format de copie se règle dans **Options** sur cette ligne. Cet interrupteur et le format de copie s'appliquent aux deux sites. Claude et ChatGPT bénéficient de la copie de formules grâce à une extension intégrée, et DeepSeek dispose d'une extension de copie de formules dans le [catalogue d'extensions](/fr/guide/plugins).

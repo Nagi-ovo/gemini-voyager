@@ -8,7 +8,9 @@
  * row, so one switch never shows twice (see
  * `.github/docs/POPUP_PLUGIN_LIST_DESIGN.md`).
  */
+import { StorageKeys } from '@/core/types/common';
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
+import { legacyBindingKeys } from '@/features/plugins/storage/legacySettingBindings';
 import type { TranslationKey } from '@/utils/translations';
 
 import { sidebarWidthForDisplay } from './sidebarWidthDisplay';
@@ -41,7 +43,11 @@ export interface OfficialPluginEntry {
    * How to use the feature once it is on (a shortcut, the keys it takes), shown
    * under the description while the row is on. `{modifier}` reads Ctrl or ⌘.
    */
-  readonly usageHint?: TranslationKey;
+  readonly usageHint?: TranslationKey | ((context: OfficialPluginContext) => TranslationKey | null);
+  /** Options the manifest can't declare, behind the row's Options button while it is on. */
+  readonly panel?: OfficialPanelId;
+  /** A switch that is not a plain write (a permission flow); the popup supplies it. */
+  readonly control?: OfficialControlId;
   /** One slider per number setting of the manifest, keyed by setting. */
   readonly sliders?: Readonly<Record<string, OfficialPluginSlider>>;
 }
@@ -56,6 +62,28 @@ export interface OfficialPluginSlider {
   /** What a stored reading looks like on this slider, when the two differ. */
   readonly toDisplay?: (value: number) => number;
 }
+
+export type OfficialPanelId = 'formulaCopy' | 'highlight';
+export type OfficialControlId = 'responseNotification';
+
+/**
+ * The sync keys each panel shows. The runtime reads them itself (no value
+ * binding pushes them as plugin settings), so only the popup's snapshot
+ * carries them, for the panels to show live.
+ */
+export const OFFICIAL_PANEL_KEYS: Readonly<Record<OfficialPanelId, readonly string[]>> = {
+  formulaCopy: [StorageKeys.FORMULA_COPY_FORMAT],
+  highlight: [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED],
+};
+
+export const OFFICIAL_PANEL_STORAGE_KEYS: readonly string[] = [
+  ...new Set(Object.values(OFFICIAL_PANEL_KEYS).flat()),
+];
+
+/** What the popup's legacy snapshot reads and follows: every binding key plus the panels' own. */
+export const POPUP_LEGACY_SNAPSHOT_KEYS: readonly string[] = [
+  ...new Set([...legacyBindingKeys(), ...OFFICIAL_PANEL_STORAGE_KEYS]),
+];
 
 /** What a row's eligibility may depend on besides the active tab. */
 export interface OfficialPluginContext {
@@ -210,6 +238,25 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     searchKeys: ['enableEchartsRendering', 'enableEchartsRenderingHint'],
     searchAliases: ['echarts chart diagram'],
   },
+  // Two ids, one switch and one format: each site lists its own, with the same panel.
+  ...[OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy].map(
+    (id): OfficialPluginEntry => ({
+      id,
+      group: 'content',
+      formerSectionTitle: 'formulaCopyFormat',
+      searchKeys: [
+        'enableFormulaCopy',
+        'enableFormulaCopyHint',
+        'formulaCopyFormatHint',
+        'formulaCopyFormatLatex',
+        'formulaCopyFormatUnicodeMath',
+        'formulaCopyFormatNoDollar',
+        'formulaCopyFormatNotion',
+      ],
+      searchAliases: ['math equation latex unicode notion copy formula 数学 公式 复制'],
+      panel: 'formulaCopy',
+    }),
+  ),
   {
     id: OFFICIAL_PLUGIN_IDS.geminiPromptHistory,
     group: 'input',
@@ -305,6 +352,34 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     formerSectionTitle: 'generalOptions',
     searchKeys: ['usageStatusToggle', 'usageStatusToggleHint'],
     searchAliases: ['usage quota limit 用量 限额'],
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiHighlight,
+    group: 'conversation',
+    formerSectionTitle: 'generalOptions',
+    searchKeys: [
+      'enableHighlights',
+      'enableHighlightsHint',
+      'showHighlightTimelineMarkers',
+      'showHighlightTimelineMarkersHint',
+    ],
+    searchAliases: ['highlight marker color 高亮 标记 颜色'],
+    panel: 'highlight',
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
+    group: 'conversation',
+    formerSectionTitle: 'generalOptions',
+    searchKeys: [
+      'responseCompleteNotification',
+      'responseCompleteNotificationHint',
+      'responseCompleteNotificationHintSafari',
+    ],
+    searchAliases: ['notification alert reminder notice 通知 提醒 推送'],
+    // Safari delivers it through the Voyager macOS app, which the row should say.
+    usageHint: ({ isSafariBrowser }) =>
+      isSafariBrowser ? 'responseCompleteNotificationHintSafari' : null,
+    control: 'responseNotification',
   },
 ];
 

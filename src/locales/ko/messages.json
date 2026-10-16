@@ -2741,6 +2741,14 @@
     "message": "Voyager 기능을 켜고 끕니다. 기능을 켜면 해당 옵션이 나타납니다.",
     "description": "Popup subtitle of the official plugin list on Gemini and AI Studio"
   },
+  "pluginRowOptions": {
+    "message": "옵션",
+    "description": "Button under an official plugin row in the popup that shows or hides its extra options"
+  },
+  "pluginRowOptionsFor": {
+    "message": "{name} 옵션",
+    "description": "Accessible name of an official plugin row's Options button and panel; {name} is the plugin name"
+  },
   "pluginGroupAppearance": {
     "message": "모양",
     "description": "Heading of the plugin list group for layout and look"

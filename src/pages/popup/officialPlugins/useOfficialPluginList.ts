@@ -5,13 +5,19 @@ import {
   type LegacySettingSnapshot,
   legacyBindingFor,
   legacyEnableWrite,
+  subscribeLegacySettings,
 } from '@/features/plugins/storage/legacySettingBindings';
 import { legacyValueWrite } from '@/features/plugins/storage/legacyValueBindings';
 import type { PluginStateMap } from '@/features/plugins/storage/pluginState';
 import type { PluginManifest, PluginSettingValue, PluginSettings } from '@/features/plugins/types';
+import { type TranslationKey } from '@/utils/translations';
 
 import { writePopupSyncStorageChecked } from '../utils/popupStorage';
-import { OFFICIAL_PLUGIN_ENTRIES, type OfficialPluginContext } from './officialPluginRegistry';
+import {
+  POPUP_LEGACY_SNAPSHOT_KEYS,
+  OFFICIAL_PLUGIN_ENTRIES,
+  type OfficialPluginContext,
+} from './officialPluginRegistry';
 import { type ListedOfficialPlugin, officialPluginSearchItems } from './officialPluginSearch';
 import { useLegacyPreferenceWrites } from './useLegacyPreferenceWrites';
 
@@ -20,7 +26,13 @@ export interface OfficialPluginRow extends ListedOfficialPlugin {
   readonly enabled: boolean;
   /** The manifest settings, read from their old keys the way the page reads them. */
   readonly settings: PluginSettings;
+  /** How to use it once on, for this browser. */
+  readonly usageHint: TranslationKey | null;
 }
+
+/** Change events for the bound keys and the panels' own keys, which the overlay settles. */
+const subscribeShownKeys = (callback: (changed: LegacySettingSnapshot) => void) =>
+  subscribeLegacySettings(callback, POPUP_LEGACY_SNAPSHOT_KEYS);
 
 export interface OfficialPluginListOptions {
   /** Manifests whose matches cover the active tab. */
@@ -44,7 +56,7 @@ export function useOfficialPluginList({
   write = writePopupSyncStorageChecked,
 }: OfficialPluginListOptions) {
   const { isSafariBrowser } = context;
-  const preferences = useLegacyPreferenceWrites({ legacy, write });
+  const preferences = useLegacyPreferenceWrites({ legacy, write, subscribe: subscribeShownKeys });
   const listed = useMemo<readonly ListedOfficialPlugin[]>(() => {
     const byId = new Map(manifests.map((manifest) => [manifest.id, manifest]));
     return OFFICIAL_PLUGIN_ENTRIES.flatMap((entry) => {
@@ -57,9 +69,11 @@ export function useOfficialPluginList({
     () =>
       listed.map((plugin) => {
         const view = effectivePluginView(plugin.manifest, pluginState, preferences.legacy);
-        return { ...plugin, enabled: view.enabled, settings: view.settings };
+        const hint = plugin.entry.usageHint;
+        const usageHint = typeof hint === 'function' ? hint({ isSafariBrowser }) : (hint ?? null);
+        return { ...plugin, enabled: view.enabled, settings: view.settings, usageHint };
       }),
-    [listed, pluginState, preferences.legacy],
+    [listed, pluginState, preferences.legacy, isSafariBrowser],
   );
   const searchItems = useMemo(() => officialPluginSearchItems(listed), [listed]);
   const { writePreference } = preferences;
@@ -100,5 +114,8 @@ export function useOfficialPluginList({
     searchItems,
     setEnabled,
     setSettings,
+    // What the option panels show and write: their keys, through the same overlay.
+    panelValues: preferences.legacy,
+    writePanel: writePreference,
   };
 }

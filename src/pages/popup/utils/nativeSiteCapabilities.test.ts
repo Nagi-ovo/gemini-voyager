@@ -36,21 +36,9 @@ describe('native popup site capabilities', () => {
       'folderSpacing',
       'sidebarWidth',
       'visualEffect',
-      'formulaCopy',
     ] as const) {
       expect(isNativePopupSectionAvailable('aistudio', sectionId)).toBe(true);
       expect(isNativePopupSettingAvailable('aistudio', sectionId, 'any-setting')).toBe(true);
-    }
-  });
-
-  it('keeps both formula-copy controls available on Gemini and AI Studio', () => {
-    for (const platform of ['gemini', 'aistudio'] as const) {
-      expect(isNativePopupSettingAvailable(platform, 'formulaCopy', 'formulaCopyEnabled')).toBe(
-        true,
-      );
-      expect(isNativePopupSettingAvailable(platform, 'formulaCopy', 'formulaCopyFormat')).toBe(
-        true,
-      );
     }
   });
 

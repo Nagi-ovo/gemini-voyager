@@ -10,7 +10,7 @@ Voyager provides seamless support for this:
 
 1. **Auto-Detection**: Voyager automatically identifies formulas rendered on the page. Hovering over one shows that it's clickable.
 2. **Click to Copy**: Click an inline or block formula and it's copied right away, with a short confirmation.
-3. **Pick a Format**: In the popup, choose a **Formula copy format** ahead of time:
+3. **Pick a Format**: In the popup, open **Plugins** → **Formula Copy** → **Options** and choose a copy format ahead of time:
    - **LaTeX**: Standard LaTeX source with dollar-sign delimiters, ideal for Overleaf, Markdown editors, etc.
    - **LaTeX (No Dollar Sign)**: The bare LaTeX source, for editors that add their own delimiters.
    - **MathML (Word)**: The best format for pasting directly into **Microsoft Word**.
@@ -31,4 +31,4 @@ Voyager provides seamless support for this:
 
 ## Where It Works
 
-On Gemini and AI Studio, turn it on with **Enable formula copying** in the popup; that switch and the copy format apply to both sites. Claude and ChatGPT get formula copy as a built-in plugin, and DeepSeek has a formula copy plugin in the [plugin catalog](/en/guide/plugins).
+On Gemini and AI Studio, turn it on with **Plugins** → **Formula Copy** in the popup; the copy format is under the row's **Options**. That switch and the copy format apply to both sites. Claude and ChatGPT get formula copy as a built-in plugin, and DeepSeek has a formula copy plugin in the [plugin catalog](/en/guide/plugins).

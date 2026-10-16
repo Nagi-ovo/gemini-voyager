@@ -11,22 +11,17 @@ import {
   supportsExtensionNotifications,
 } from '@/core/utils/browser';
 import { getFolderPlatformForHost } from '@/features/folder/platforms';
-import type { FormulaCopyFormat } from '@/features/formulaCopy/FormulaCopyService';
 import { CHATGPT_EXPORT_PLUGIN_ID } from '@/features/plugins/builtin/chatgptExport/openMessage';
-import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
-import { legacyEnableWrite } from '@/features/plugins/storage/legacySettingBindings';
 import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
 
 import { CloudSyncSettings } from './components/CloudSyncSettings';
 import { ContextSyncSettings } from './components/ContextSyncSettings';
 import { DiagnosticsExportCard } from './components/DiagnosticsExportCard';
 import { FolderSettingsCard } from './components/FolderSettingsCard';
-import { FormulaCopySettings } from './components/FormulaCopySettings';
 import { GeneralSettingsCard } from './components/GeneralSettingsCard';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
 import { NativeHealthNotice } from './components/NativeHealthNotice';
 import { NativeLocalPluginsSection } from './components/NativeLocalPluginsSection';
-import { OfficialFeatureStatus } from './components/OfficialFeatureStatus';
 import { PluginSiteSettings } from './components/PluginSiteSettings';
 import { PopupFooter } from './components/PopupFooter';
 import { PopupHeader } from './components/PopupHeader';
@@ -46,7 +41,6 @@ import { useActivePopupTab } from './hooks/useActivePopupTab';
 import { useCatalogTimelineSettings } from './hooks/useCatalogTimelineSettings';
 import { useFolderPopupSettings } from './hooks/useFolderPopupSettings';
 import { useFolderStructureCopy } from './hooks/useFolderStructureCopy';
-import { useFormulaCopyPopupSettings } from './hooks/useFormulaCopyPopupSettings';
 import { useGeneralPopupSettings } from './hooks/useGeneralPopupSettings';
 import { useNativeHealth } from './hooks/useNativeHealth';
 import { usePopupBrandTheme } from './hooks/usePopupBrandTheme';
@@ -132,6 +126,9 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     writeSyncStorage: writePopupSyncStorage,
     isSafariBrowser,
     canUseSystemNotifications,
+    storedResponseNotification: plugins.legacySettingsLoaded
+      ? plugins.legacySettings[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] === true
+      : undefined,
   });
   const layout = usePopupLayoutSettings({ isAIStudio });
   const promptManager = usePromptManagerSettings({
@@ -143,7 +140,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const promptTransfer = usePromptDataTransfer(t);
   const watermark = useWatermarkPopupSettings(writePopupSyncStorage);
   const visualEffect = useVisualEffectPopupSettings(writePopupSyncStorage);
-  const formulaCopy = useFormulaCopyPopupSettings();
   const folderStructureCopy = useFolderStructureCopy(language, sourceTabId);
   const visualEffectsAvailable = canUseVisualEffects({
     isPluginSite,
@@ -172,7 +168,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     visualEffect: visualEffect.hydrateFromStorage,
     watermark: watermark.hydrateFromStorage,
     sections: sections.hydrateFromStorage,
-    formulaCopy: formulaCopy.hydrateFromStorage,
     aiStudio: setAiStudioEnabled,
   });
   usePopupScrollRestoration({
@@ -199,24 +194,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           ],
         }
       : undefined;
-  const handleFormulaCopyEnabledChange = (enabled: boolean) => {
-    formulaCopy.setEnabledFromUser(enabled);
-    void writePopupSyncStorage(legacyEnableWrite(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, enabled));
-  };
-  // Why the official plugin behind a native setting is paused on this page, if it is.
-  const officialStatus = (pluginId: string) => (
-    <OfficialFeatureStatus
-      pluginId={pluginId}
-      statuses={plugins.pluginStatuses}
-      manifests={plugins.siteScopedManifests}
-      language={language}
-      t={t}
-    />
-  );
-  const handleFormulaCopyFormatChange = (format: FormulaCopyFormat) => {
-    formulaCopy.setFormatFromUser(format);
-    void writePopupSyncStorage({ [StorageKeys.FORMULA_COPY_FORMAT]: format });
-  };
   if (showStarredHistory)
     return (
       <StarredHistory sourceTabId={sourceTabId} onClose={() => setShowStarredHistory(false)} />
@@ -390,25 +367,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             { allowPluginSite: true },
           )}
 
-        {/* Formula Copy Options */}
-        {wrapSection(
-          'formulaCopy',
-          <FormulaCopySettings
-            enabled={formulaCopy.enabled}
-            format={formulaCopy.format}
-            onEnabledChange={handleFormulaCopyEnabledChange}
-            onFormatChange={handleFormulaCopyFormatChange}
-            showEnabled={sections.shouldShowSetting('formulaCopy', 'formulaCopyEnabled')}
-            showFormat={sections.shouldShowSetting('formulaCopy', 'formulaCopyFormat')}
-            enabledNote={officialStatus(
-              isAIStudio
-                ? OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy
-                : OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
-            )}
-            t={t}
-          />,
-        )}
-
         {/* Keyboard Shortcuts: global, so catalog timeline rails listen to them too. */}
         {wrapSection('keyboardShortcuts', <KeyboardShortcutSettings />, {
           allowPluginSite: catalogTimeline !== null,
@@ -430,7 +388,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           <GeneralSettingsCard
             values={general.values}
             onChange={general.onChange}
-            isSafariBrowser={isSafariBrowser}
             remoteAnnouncementPermissionCta={{
               visible:
                 general.values.remoteAnnouncementEnabled &&
@@ -463,6 +420,9 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             isVisible={(pluginId) => sections.shouldShowSetting('officialPlugins', pluginId)}
             onToggle={officialPlugins.setEnabled}
             onSettingsChange={officialPlugins.setSettings}
+            controls={{ responseNotification: general.responseNotification }}
+            panelIo={{ values: officialPlugins.panelValues, write: officialPlugins.writePanel }}
+            searching={sections.hasSettingsSearch}
             language={language}
             t={t}
           />,
