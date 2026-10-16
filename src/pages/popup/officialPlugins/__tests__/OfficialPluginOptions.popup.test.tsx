@@ -264,6 +264,8 @@ describe('official plugin rows with options', () => {
       row(id)!.querySelector<HTMLInputElement>(
         `#${optionsButton(id)!.getAttribute('aria-controls')}-port`,
       );
+    const isSyncRequest = (message: unknown) =>
+      (message as { action?: string } | undefined)?.action === 'sync_to_ide';
     const syncButton = () =>
       [...row(id)!.querySelectorAll('button')].find(
         (button) => button.textContent === TRANSLATIONS.en.syncToIDE,
@@ -306,6 +308,32 @@ describe('official plugin rows with options', () => {
       await act(async () => emitSyncChange({ [StorageKeys.CONTEXT_SYNC_ENABLED]: false }));
       expect(toggle(id).checked).toBe(false);
       expect(syncButton()).toBeUndefined();
+    });
+
+    it('a slow sync keeps its button disabled and its result across closing Options', async () => {
+      sync[StorageKeys.CONTEXT_SYNC_ENABLED] = true;
+      let answer: (response: unknown) => void = () => {};
+      extensionApi.tabs.sendMessage.mockImplementation((_tabId: number, message: unknown) =>
+        isSyncRequest(message) ? new Promise((resolve) => (answer = resolve)) : Promise.resolve(),
+      );
+      await mount();
+      await openOptions(id);
+      await act(async () => syncButton()!.click());
+      expect(row(id)!.textContent).toContain(TRANSLATIONS.en.capturing);
+      await openOptions(id);
+      expect(syncButton()).toBeUndefined();
+      await openOptions(id);
+      // Reopened, and the IDE answers the probe: still the first request, not a new one.
+      await act(async () => {});
+      expect(syncButton()!.disabled).toBe(true);
+      expect(row(id)!.textContent).toContain(TRANSLATIONS.en.capturing);
+      await act(async () => syncButton()!.click());
+      expect(
+        extensionApi.tabs.sendMessage.mock.calls.filter(([, message]) => isSyncRequest(message)),
+      ).toHaveLength(1);
+      await act(async () => answer({ status: 'error', message: 'Server busy' }));
+      expect(row(id)!.textContent).toContain('Server busy');
+      expect(syncButton()!.disabled).toBe(false);
     });
 
     it('asks the Gemini tab to send its context', async () => {

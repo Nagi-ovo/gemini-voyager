@@ -8,13 +8,14 @@ import type { TranslationKey } from '@/utils/translations';
 
 import { ContextSyncPanel } from './ContextSyncPanel';
 import type { OfficialPanelId } from './officialPluginRegistry';
+import type { ContextSyncRequest } from './useContextSyncRequest';
 
 /** What every panel gets: its keys from the live snapshot, and the overlay's writer. */
 export interface OfficialPanelProps {
   readonly values: LegacySettingSnapshot;
   readonly write: (payload: Record<string, unknown>) => void;
-  /** The tab the popup was opened for, when it is not the active one. */
-  readonly sourceTabId?: number;
+  /** Context Sync's request, kept above the panel so it outlives a collapse. */
+  readonly contextSync?: ContextSyncRequest;
   /** The row's id, for ids unique per row. */
   readonly idPrefix: string;
   readonly t: (key: TranslationKey) => string;

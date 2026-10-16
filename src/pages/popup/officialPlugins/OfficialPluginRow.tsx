@@ -16,6 +16,7 @@ import { BLOCKED_NOTE_TONE_CLASS, blockedPluginNote } from '../components/plugin
 import { OfficialPluginSliders } from './OfficialPluginSliders';
 import { OFFICIAL_PANELS } from './officialPluginPanels';
 import type { OfficialControlId } from './officialPluginRegistry';
+import type { ContextSyncRequest } from './useContextSyncRequest';
 import type { OfficialPluginRow as Row } from './useOfficialPluginList';
 
 /** A switch the popup drives itself, such as one behind a permission prompt. */
@@ -33,6 +34,8 @@ export interface OfficialPanelIo {
   readonly write: (payload: Record<string, unknown>) => void;
   /** The tab the popup was opened for, when it is not the active one (the options page). */
   readonly sourceTabId?: number;
+  /** Context Sync's request state, owned by the list so collapsing Options keeps it. */
+  readonly contextSync?: ContextSyncRequest;
 }
 
 export interface OfficialPluginRowProps {
@@ -176,7 +179,7 @@ export function OfficialPluginListRow({
               <Panel
                 values={panelIo.values}
                 write={panelIo.write}
-                sourceTabId={panelIo.sourceTabId}
+                contextSync={panelIo.contextSync}
                 idPrefix={panelId}
                 t={t}
               />
