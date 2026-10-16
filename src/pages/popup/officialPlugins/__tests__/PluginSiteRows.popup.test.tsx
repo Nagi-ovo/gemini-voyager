@@ -129,6 +129,19 @@ describe.each(['en', 'ar'] as const)('the plugin card on a plugin site (%s)', (l
       expect(toggle(id)).toBeTruthy();
     });
 
+    it('a granted page shows it even when a plugin’s companion frame origin is not granted', async () => {
+      // Claude reading width also asks for its artifact frame's origin; the page script needs
+      // only claude.ai, which is what the background registers.
+      local[StorageKeys.PLUGINS_STATE] = {
+        'voyager.claude-reading-width': { enabled: true, installedAt: 1 },
+      };
+      extensionApi.permissions.contains.mockImplementation(async ({ origins }) =>
+        origins.every((origin: string) => origin === 'https://claude.ai/*'),
+      );
+      await mount(CLAUDE);
+      expect(toggle(id)).toBeTruthy();
+    });
+
     it('a page Voyager cannot run on still lists the shared choice', async () => {
       sync[StorageKeys.GV_VISUAL_EFFECT] = 'sakura';
       await mount('chrome://newtab/');
