@@ -152,6 +152,20 @@
   padding-inline: 8px;
 }
 
+/* Feature names read as one column of text; a faint underline marks the ones
+   with a guide page, and they take the brand colour on hover. */
+.vp-doc .gv-plugins-table td:first-child a {
+  color: inherit;
+  font-weight: inherit;
+  text-decoration: underline dotted var(--vp-c-text-3);
+  text-underline-offset: 4px;
+}
+
+.vp-doc .gv-plugins-table td:first-child a:hover {
+  color: var(--vp-c-brand-1);
+  text-decoration-color: currentColor;
+}
+
 .vp-doc .gv-plugins-table th .gv-site-mark {
   display: block;
   width: 1.25em;
