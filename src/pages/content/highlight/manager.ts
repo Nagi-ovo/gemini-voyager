@@ -176,6 +176,25 @@ function injectStyles(): void {
       transform: none;
     }
     .gv-highlight-timeline-tick:focus-visible { outline: 2px solid #0b57d0; outline-offset: 2px; }
+    /* Ruler strokes grow inward from the middle; the highlight is a short stroke on the outer side. */
+    .gemini-timeline-bar.gv-timeline-style-ruler .gv-highlight-timeline-tick {
+      inset-inline: auto;
+      left: calc(50% + 3px);
+      width: 7px;
+      height: 3px;
+      margin: -1.5px 0 0;
+      border-radius: 9999px;
+    }
+    .gemini-timeline-bar.gv-timeline-style-ruler.gv-timeline-ruler-inward-right
+      .gv-highlight-timeline-tick {
+      left: auto;
+      right: calc(50% + 3px);
+    }
+    .gemini-timeline-bar.gv-timeline-style-ruler .gv-highlight-timeline-tick::before {
+      content: '';
+      position: absolute;
+      inset: -3px -2px;
+    }
     .gv-highlight-timeline-tick-yellow { background: #e8b400; }
     .gv-highlight-timeline-tick-green { background: #24a148; }
     .gv-highlight-timeline-tick-blue { background: #1a73e8; }

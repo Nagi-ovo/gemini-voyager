@@ -16,6 +16,9 @@ import { collectHighlightTurns, findHighlightTurn, getHighlightSelectionContext 
 import { HighlightManager } from '../manager';
 import { installConversation, makeRecord, selectText } from './fixtures';
 
+const TURN_DOT =
+  '<button class="timeline-dot" data-target-turn-id="s-1111111111111111" data-marker-index="0"></button>';
+
 vi.mock('@/core/services/AccountIsolationService', () => ({
   detectAccountContextFromDocument: vi.fn(() => ({ routeUserId: '0', email: null })),
   accountIsolationService: {
@@ -470,6 +473,8 @@ describe('HighlightManager rendering and navigation', () => {
     const bar = document.querySelector<HTMLElement>('.gemini-timeline-bar');
     const track = document.querySelector<HTMLElement>('.timeline-track-content');
     if (!bar || !track) throw new Error('Expected timeline');
+    // A compact rail renders a marker for every visible turn.
+    track.insertAdjacentHTML('afterbegin', TURN_DOT);
     expect(document.querySelector('.gv-highlight-timeline-tick')?.parentElement).toBe(track);
 
     bar.classList.add('timeline-style-compact');
@@ -493,7 +498,7 @@ describe('HighlightManager rendering and navigation', () => {
     const oldTick = oldBar.querySelector('.gv-highlight-timeline-tick')!;
     const replacement = document.createElement('div');
     replacement.className = 'gemini-timeline-bar';
-    replacement.innerHTML = '<div class="timeline-track-content"></div>';
+    replacement.innerHTML = `<div class="timeline-track-content">${TURN_DOT}</div>`;
     oldBar.replaceWith(replacement);
 
     await vi.waitFor(() => {

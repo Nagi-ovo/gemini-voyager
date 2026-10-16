@@ -96,5 +96,8 @@ left untouched and are never read or imported.
 and mutations. [`HighlightEditor`](../highlight/HighlightEditor.ts) owns the annotation popover and
 focus/listener cleanup. [`HighlightTimelineMarkers`](../highlight/HighlightTimelineMarkers.ts) owns
 highlight ticks and observes the rail's DOM contract (`.gemini-timeline-bar`,
-`.timeline-track-content`, `.timeline-style-compact`). Update its tests when that contract changes;
-the two managers do not call each other.
+`.timeline-track-content`, `.timeline-style-compact`, `.gv-timeline-style-ruler`, and each rendered
+`.timeline-dot`'s `data-target-turn-id` and `data-marker-index`). A tick sits beside its turn's
+rendered marker, between it and the next one (on compact and ruler rails, a turn without a
+marker uses the nearest earlier one); marker ids come from `readServerTurnId`. Update its
+tests when that contract changes; the two managers do not call each other.
