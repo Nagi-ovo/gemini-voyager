@@ -57,6 +57,7 @@ import {
 import { usePopupSettingsHydration } from './hooks/usePopupSettingsHydration';
 import { usePromptDataTransfer } from './hooks/usePromptDataTransfer';
 import { usePromptManagerSettings } from './hooks/usePromptManagerSettings';
+import { useSitePluginRuns } from './hooks/useSitePluginRuns';
 import { OfficialPluginList } from './officialPlugins/OfficialPluginList';
 import { PluginSiteOfficialRows } from './officialPlugins/PluginSiteOfficialRows';
 import { useContextSyncRequest } from './officialPlugins/useContextSyncRequest';
@@ -76,11 +77,21 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const [aiStudioEnabled, setAiStudioEnabled] = useState(true);
   const tab = useActivePopupTab(sourceTabId);
   const plugins = usePopupPlugins(tab);
+  // A page no manifest can match (chrome://, file://) still lists the effect: it is one shared
+  // choice, and applies on the next page that can show it.
+  const officialManifests = useMemo(() => {
+    const scoped = plugins.siteScopedManifests;
+    if (scoped.some((plugin) => plugin.id === OFFICIAL_PLUGIN_IDS.visualEffects)) return scoped;
+    const effects = plugins.pluginManifests.find(
+      (plugin) => plugin.id === OFFICIAL_PLUGIN_IDS.visualEffects,
+    );
+    return effects ? [...scoped, effects] : scoped;
+  }, [plugins.siteScopedManifests, plugins.pluginManifests]);
   const nativeHealth = useNativeHealth(tab.activeTabId, tab.activeUrl);
   const isAIStudio = tab.activeAccountPlatform === 'aistudio';
   const isSafariBrowser = getVoyagerBuildTarget() === 'safari' || isSafari();
   const officialPlugins = useOfficialPluginList({
-    manifests: plugins.siteScopedManifests,
+    manifests: officialManifests,
     pluginState: plugins.pluginState,
     legacy: plugins.legacySettings,
     legacyLoaded: plugins.legacySettingsLoaded,
@@ -144,12 +155,16 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const contextSync = useContextSyncRequest(sourceTabId);
   // The effect runs only where Voyager's content script does: on a plugin site, once Prompt
   // Manager or a matching plugin has been enabled there. Until then its row is left out.
+  const sitePluginRuns = useSitePluginRuns({
+    activeUrl: tab.activeUrl,
+    manifests: plugins.siteScopedManifests,
+    pluginState: plugins.pluginState,
+  });
   const visualEffectsAvailable = canUseVisualEffects({
     isPluginSite,
     activeSiteDomain,
     customWebsites: promptManager.customWebsites,
-    sitePluginIds: plugins.siteScopedManifests.map((plugin) => plugin.id),
-    pluginState: plugins.pluginState,
+    sitePluginRuns,
   });
   const sections = usePopupSections({
     // Plugin sites hide native sections through `isPluginSite`; keep the full allowlist for the
@@ -186,11 +201,12 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
       ? {
           pluginId: catalogTimeline.pluginId,
           settingKeys: catalogTimelineSettingKeys(catalogTimeline),
-          render: (ownedSettingKeys: readonly string[], name: string) => (
+          render: (ownedSettingKeys: readonly string[], name: string, enabled: boolean) => (
             <CatalogTimelineOptions
               timeline={catalogTimeline}
               ownedSettingKeys={ownedSettingKeys}
               name={name}
+              railEnabled={enabled}
               onViewStarredHistory={() => setShowStarredHistory(true)}
               language={language}
               t={t}

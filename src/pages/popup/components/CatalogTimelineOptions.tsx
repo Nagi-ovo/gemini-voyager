@@ -17,21 +17,26 @@ export interface CatalogTimelineOptionsProps {
   readonly ownedSettingKeys: readonly string[];
   /** The rail plugin's name, for the disclosure's label. */
   readonly name: string;
+  /** Whether the rail plugin is on; while off only its shared entries can change. */
+  readonly railEnabled: boolean;
   readonly onViewStarredHistory: () => void;
   readonly language: string;
   readonly t: (key: TranslationKey) => string;
 }
 
 /**
- * A plugin site's timeline options under its rail's plugin row, as Gemini's
- * timeline row has them: collapsed behind Options, shown only while the rail is
- * on. Message times are the rail's own display option on these sites; the key
- * is Gemini's, shared by design.
+ * A plugin site's timeline options under its rail's plugin row, collapsed
+ * behind Options. Unlike Gemini's panel they stay reachable while the rail is
+ * off: the Saved Library and message times are shared preferences with no other
+ * entry on these sites, so they stay live, and the rail's own controls show
+ * disabled with their saved values. Message times are the rail's display option
+ * here; the key is Gemini's, shared by design.
  */
 export function CatalogTimelineOptions({
   timeline,
   ownedSettingKeys,
   name,
+  railEnabled,
   onViewStarredHistory,
   language,
   t,
@@ -63,7 +68,7 @@ export function CatalogTimelineOptions({
       {open && (
         <div id={panelId} className="border-border/60 mt-2 space-y-4 border-t pt-3">
           <TimelineOptions
-            values={timeline.values}
+            values={{ ...timeline.values, timelineEnabled: railEnabled }}
             onChange={timeline.onChange}
             onResetPosition={timeline.resetPosition}
             onViewStarredHistory={onViewStarredHistory}

@@ -21,7 +21,12 @@ export const extensionApi = {
     sendMessage: vi.fn(),
     onMessage: { addListener: vi.fn(), removeListener: vi.fn() },
   },
-  permissions: { contains: vi.fn(), request: vi.fn() },
+  permissions: {
+    contains: vi.fn(),
+    request: vi.fn(),
+    onAdded: { addListener: vi.fn(), removeListener: vi.fn() },
+    onRemoved: { addListener: vi.fn(), removeListener: vi.fn() },
+  },
   notifications: { create: vi.fn() },
   i18n: { getUILanguage: vi.fn(() => 'en'), getMessage: vi.fn((key: string) => key) },
 };

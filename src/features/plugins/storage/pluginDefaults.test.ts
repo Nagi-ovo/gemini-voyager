@@ -1,7 +1,6 @@
 import { type Mock, beforeEach, describe, expect, it } from 'vitest';
 
 import { loadEnabledPlugins } from '@/pages/background/enabledPlugins';
-import { canUseVisualEffects } from '@/pages/popup/utils/visualEffectsAvailability';
 
 import { BUILTIN_PLUGINS } from '../builtin';
 import { hasEnabledPluginForUrl } from '../remote/hostCatalogPolicy';
@@ -74,19 +73,9 @@ describe('ChatGPT folders is on by default', () => {
     expect(writtenState()[EXPORT].enabled).toBe(false);
   });
 
-  it('never by itself offers visual effects or makes Voyager contact the catalog host', () => {
+  // Whether it offers visual effects depends on granted access: see useSitePluginRuns.
+  it('never by itself makes Voyager contact the catalog host', () => {
     const folders = BUILTIN_PLUGINS.filter((plugin) => plugin.id === FOLDERS);
-    const effects = (pluginState: Parameters<typeof canUseVisualEffects>[0]['pluginState']) =>
-      canUseVisualEffects({
-        isPluginSite: true,
-        activeSiteDomain: 'chatgpt.com',
-        customWebsites: [],
-        sitePluginIds: [FOLDERS],
-        pluginState,
-      });
-    // No host access may have been granted, so no content script may run there.
-    expect(effects({})).toBe(false);
-    expect(effects({ [FOLDERS]: { enabled: true, installedAt: 1 } })).toBe(true);
     expect(hasEnabledPluginForUrl(folders, {}, 'https://chatgpt.com/')).toBe(false);
     expect(
       hasEnabledPluginForUrl(

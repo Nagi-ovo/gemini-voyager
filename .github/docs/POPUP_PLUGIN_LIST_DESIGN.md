@@ -116,9 +116,9 @@ manifest 的一句话描述（本地化）
 
 这些站点的官方插件没有 legacy 绑定，列表已能开关。Batch 7 起每个功能只有一处：
 
-- **Timeline rail**：Claude、ChatGPT 的 rail 是 `timelineManifest` builtin，DeepSeek 的是 catalog 插件，自定义站点可能是本地插件；它们都不在 `OFFICIAL_PLUGIN_IDS` 里，所以不做成官方行，而是让 rail 自己的插件行承载选项。`PluginManager` 的 `timelineRail` 在 `useCatalogTimelineSettings` 选中的那条 rail 的行下面挂一个 Options 折叠面板（`CatalogTimelineOptions`，和 Gemini 的 Timeline 面板同一套 `TimelineOptions`），只在 rail 开启时出现；行开关就是 rail 的唯一开关。样式和层级只在 `DEDICATED_TIMELINE_SOURCES`（官方来源）把它们从行内设置里拿走时才进面板，本地 rail 继续用自己的控件，不会出现两个样式选择。`TimelineSettingsCard` 和 `'timeline'` section 删除。
+- **Timeline rail**：Claude、ChatGPT 的 rail 是 `timelineManifest` builtin，DeepSeek 的是 catalog 插件，自定义站点可能是本地插件；它们都不在 `OFFICIAL_PLUGIN_IDS` 里，所以不做成官方行，而是让 rail 自己的插件行承载选项。`PluginManager` 的 `timelineRail` 在 `useCatalogTimelineSettings` 选中的那条 rail 的行下面挂一个 Options 折叠面板（`CatalogTimelineOptions`，和 Gemini 的 Timeline 面板同一套 `TimelineOptions`）；行开关就是 rail 的唯一开关。和 Gemini 不同，rail 关闭时面板也在：收藏库和消息时间是共享偏好，在这些站点没有别的入口，所以保持可用；样式、层级和重置位置描述的是一条没画出来的 rail，按 `TimelineOptions` 既有的关闭规则显示为禁用、保留已存的值。样式和层级只在 `DEDICATED_TIMELINE_SOURCES`（官方来源）把它们从行内设置里拿走时才进面板，本地 rail 继续用自己的控件，不会出现两个样式选择。`TimelineSettingsCard` 和 `'timeline'` section 删除。
 - **消息时间**：在能记录发送时间的站点（目前是 ChatGPT），它是 rail 面板里的显示选项。键仍是 `gvShowMessageTimestamps`，与 Gemini 的 Message timestamps 行共用，这是有意的：同一个人对"显示消息时间"只有一个偏好。
-- **Visual effects**：`voyager.visual-effects` 匹配所有 http(s) 页面。插件站在插件卡顶部列出同一个 `OfficialPluginListRow`（`PluginSiteOfficialRows`），读写同一组键；`PluginManager` 继续跳过这个 id。只有 Voyager 能在该站运行（Prompt Manager 或某个匹配插件已开启，`canUseVisualEffects`）时才列出，因为在那之前没有内容脚本能放特效。chrome:// 等非 http 页面不匹配 manifest，也就没有这一行，那里本来也注入不了。`VisualEffectPicker` 卡片、`useVisualEffectPopupSettings` 和 `'visualEffect'` section 删除，`visualEffectOff` 文案随之移除。
+- **Visual effects**：`voyager.visual-effects` 匹配所有 http(s) 页面。插件站在插件卡顶部列出同一个 `OfficialPluginListRow`（`PluginSiteOfficialRows`），读写同一组键；`PluginManager` 继续跳过这个 id。只有 Voyager 能在该站运行时才列出（`canUseVisualEffects`）：Prompt Manager 覆盖该站，或某个开启的插件（主动开启或默认开启，比如 ChatGPT folders）已拿到该站的 host 权限（`useSitePluginRuns`，授权或撤销后即时重查），因为在那之前没有内容脚本能放特效。chrome:// 等不匹配任何 manifest 的页面在回退设置里照样列出这一行：它是一个共享选择，下一个能运行它的页面就会生效。`VisualEffectPicker` 卡片、`useVisualEffectPopupSettings` 和 `'visualEffect'` section 删除，`visualEffectOff` 文案随之移除。行和运行时一样用 `resolveVisualEffect` 读值：`{gvVisualEffect:'off', gvSnowEffect:true}` 显示为关（任何字符串都优先于旧的雪花布尔值），旧卡片在这种组合下显示 Snow，与页面实际不符。
 
 ### 2.5 本地插件
 
@@ -287,7 +287,7 @@ export interface OfficialPluginEntry {
 | 4    | 已完成 | Formula copy（G + A）、Highlight、Response notification；随后迁入的 Canvas copy、Gems sidebar（数量 0 = 隐藏列表）、Context Sync（卡片成为面板，同步请求由 `Popup` 持有）、Deep Research export、Markdown fix、Visual effects（Gemini / AI Studio 一行，其他站点保留卡片）也已成行                                                                                                                         |
 | 5    | 已完成 | Timeline 成为"对话"组的一行，选项（样式、滚动模式、隐藏容器、可拖动、固定预览、层级、重置位置、收藏历史）在它的面板里，分段选择改为 `radiogroup`、不再用 `left` 计算（§2.7）；Message timestamps 单独一行。AI Studio sidebar width 成行（未存开关时跟随文件夹开关，宽度写入不再顺带写开关）。`officialFeatureSetting.ts` 随最后一个 `LOCATIONS` 条目删除                                                   |
 | 6    | 已完成 | Batch delete（G + A）成为"对话"组的一行，默认开；文件夹开关关掉时开关置灰，行下提示去 Folder Options → Enable folder feature 打开（`requires`）。NanoBanana 两行放进"内容"组而非 §2 表里的"对话"组（它处理的是回复里的图片），Preview 行用 Experimental 徽标代替原来的 Unstable；任一开关都写两个拆分键并清掉旧的共享键（`enableWrite`，取代 `useWatermarkPopupSettings`）。NanoBanana 卡片和 section 删除 |
-| 7    | 已完成 | §2.4 的跟进：插件站 rail 的选项成为它插件行下的 Options 面板（rail 关闭时不出现，收藏库也随之只在 rail 开启时可达，与 Gemini 一致），消息时间是其中一项；Visual effects 在插件站插件卡里成行。`TimelineSettingsCard`、`VisualEffectPicker` 卡片及 `'timeline'`、`'visualEffect'` section 删除，旧排序里的这两个槽位按惯例丢弃                                                                              |
+| 7    | 已完成 | §2.4 的跟进：插件站 rail 的选项成为它插件行下的 Options 面板（rail 关闭时收藏库和消息时间仍可用，其余显示为禁用），消息时间是其中一项；Visual effects 在插件站插件卡里成行，chrome:// 等页面在回退设置里也有这一行。`TimelineSettingsCard`、`VisualEffectPicker` 卡片及 `'timeline'`、`'visualEffect'` section 删除，旧排序里的这两个槽位按惯例丢弃                                                        |
 
 ---
 
@@ -316,7 +316,7 @@ export interface OfficialPluginEntry {
 | --- | ---------------------------------------------------- | ------------------------------------------------------------------------------- |
 | 1   | Gemini 现在 26 行，下一波后约 38 行                  | 分组 + 搜索足够；某组超过约 12 行时再考虑可折叠组                               |
 | 2   | 行名用 manifest 名还是旧卡片标签                     | **已定**：一律用 manifest 名；旧标签作搜索词                                    |
-| 3   | 选项只在开启时出现，旧 Timeline 卡关闭时显示禁用控件 | 只在开启时出现；Gemini 的收藏历史另有入口，插件站的随 rail 开启出现             |
+| 3   | 选项只在开启时出现，旧 Timeline 卡关闭时显示禁用控件 | Gemini 只在开启时出现，收藏历史另有入口；插件站 rail 关闭时面板仍在，收藏库可用 |
 | 4   | Timeline 卡拆掉后消息时间放哪里                      | **已定**：不临时放 General；Batch 5 排在消息时间运行时迁移之后，那一行只搬一次  |
 | 5   | Formula copy 两站共用一个开关                        | 保持共用，面板里写明范围；分站开关是另一个产品决定                              |
 | 6   | 快捷键与 Timeline 相关                               | 保持独立卡片：全局生效，也驱动插件站 rail                                       |

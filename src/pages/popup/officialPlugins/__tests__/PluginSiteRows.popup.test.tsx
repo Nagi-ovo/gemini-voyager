@@ -118,6 +118,30 @@ describe.each(['en', 'ar'] as const)('the plugin card on a plugin site (%s)', (l
       expect(row(id)).toBeNull();
       expect(container.querySelector('button[aria-pressed]')).toBeNull();
     });
+
+    it('appears once a default-on plugin gets the site’s access, without reopening', async () => {
+      // ChatGPT folders is on by default, but runs only after its host access is granted.
+      await mount(CHATGPT);
+      expect(row(id)).toBeNull();
+      extensionApi.permissions.contains.mockResolvedValue(true);
+      const [onGranted] = extensionApi.permissions.onAdded.addListener.mock.calls.at(-1)!;
+      await act(async () => (onGranted as () => void)());
+      expect(toggle(id)).toBeTruthy();
+    });
+
+    it('a page Voyager cannot run on still lists the shared choice', async () => {
+      sync[StorageKeys.GV_VISUAL_EFFECT] = 'sakura';
+      await mount('chrome://newtab/');
+      expect(toggle(id).checked).toBe(true);
+      expect(
+        row(id)!.closest('ul')!.parentElement!.closest('[dir]')?.getAttribute('dir') ?? null,
+      ).toBe(rtl);
+      await act(async () => toggle(id).click());
+      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+        [StorageKeys.GV_VISUAL_EFFECT]: 'off',
+        [StorageKeys.GV_SNOW_EFFECT]: false,
+      });
+    });
   });
 
   describe('the timeline rail', () => {
@@ -146,9 +170,24 @@ describe.each(['en', 'ar'] as const)('the plugin card on a plugin site (%s)', (l
       expect(labels).toContain(text.viewStarredHistory);
     });
 
-    it('offers no options while the rail is off', async () => {
-      await mount(CLAUDE);
-      expect(optionsButton()).toBeNull();
+    it('while the rail is off, its Options still open the Saved Library and message times', async () => {
+      await mount(CHATGPT);
+      await act(async () => optionsButton()!.click());
+      const shownButton = (label: string) =>
+        [...container.querySelectorAll<HTMLButtonElement>('button')].find(
+          (button) => button.textContent === label && !button.closest('[hidden]'),
+        );
+      // The rail's own controls keep their values but wait for the rail.
+      expect(shownButton(text.timelineStyleCompact)!.disabled).toBe(true);
+      expect(shownButton(text.resetTimelinePosition)!.disabled).toBe(true);
+      expect(timesSwitch()!.disabled).toBe(false);
+      await act(async () => timesSwitch()!.click());
+      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+        [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: true,
+      });
+      expect(local[StorageKeys.PLUGINS_STATE]).toBeUndefined();
+      await act(async () => shownButton(text.viewStarredHistory)!.click());
+      expect(container.textContent).not.toContain(text.pluginsTitle);
     });
 
     it.each([

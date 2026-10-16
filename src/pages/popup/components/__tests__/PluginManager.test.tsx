@@ -130,15 +130,17 @@ describe('PluginManager timeline rail options', () => {
     expect(container.querySelector('[data-testid="rail-options"]')!.textContent).toBe('My rail: ');
   });
 
-  it('shows no rail options while the rail is off', async () => {
-    const render = vi.fn(() => <p data-testid="rail-options" />);
+  it('still offers the rail options while the rail is off, and says it is off', async () => {
+    const render = vi.fn((_owned: readonly string[], _name: string, on: boolean) => (
+      <p data-testid="rail-options">{String(on)}</p>
+    ));
     pluginState.current[official.id] = { enabled: false, installedAt: 0 };
     await renderManager({
       manifests: [official],
       sourceIds: { [official.id]: 'builtin' },
       timelineRail: { ...dedicated, render },
     });
-    expect(container.querySelector('[data-testid="rail-options"]')).toBeNull();
+    expect(container.querySelector('[data-testid="rail-options"]')!.textContent).toBe('false');
   });
 
   it('keeps local rail controls and other catalog fields editable', async () => {

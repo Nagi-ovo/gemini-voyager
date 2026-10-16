@@ -7,8 +7,7 @@ describe('canUseVisualEffects', () => {
     isPluginSite: true,
     activeSiteDomain: 'claude.ai',
     customWebsites: [] as string[],
-    sitePluginIds: ['voyager.claude-usage'],
-    pluginState: {},
+    sitePluginRuns: false,
   };
 
   it('keeps visual effects available on native sites', () => {
@@ -25,18 +24,11 @@ describe('canUseVisualEffects', () => {
     ).toBe(true);
   });
 
-  it('enables them when a matching plugin is active', () => {
-    expect(
-      canUseVisualEffects({
-        ...base,
-        pluginState: {
-          'voyager.claude-usage': { enabled: true, installedAt: 1 },
-        },
-      }),
-    ).toBe(true);
+  it('enables them when a plugin that is on holds the site’s access', () => {
+    expect(canUseVisualEffects({ ...base, sitePluginRuns: true })).toBe(true);
   });
 
-  it('does not expose them before the third-party site is enabled', () => {
+  it('does not expose them before Voyager runs on the third-party site', () => {
     expect(canUseVisualEffects(base)).toBe(false);
   });
 });

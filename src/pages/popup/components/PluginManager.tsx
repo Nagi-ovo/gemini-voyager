@@ -26,8 +26,15 @@ export interface TimelineRailOptions {
   readonly pluginId: string;
   /** Plugin settings the options can edit, so the row's own controls may leave them out. */
   readonly settingKeys: readonly string[];
-  /** The options, given the settings the row left out for them and the plugin's name. */
-  readonly render: (ownedSettingKeys: readonly string[], name: string) => ReactNode;
+  /**
+   * The options, given the settings the row left out for them, the plugin's name and whether
+   * the rail is on: its shared entries (Saved Library, message times) work while it is off.
+   */
+  readonly render: (
+    ownedSettingKeys: readonly string[],
+    name: string,
+    enabled: boolean,
+  ) => ReactNode;
 }
 
 // Custom catalog IDs can be object property names such as "constructor".
@@ -308,9 +315,8 @@ export function PluginManager({
                     />
                   )}
 
-                  {enabled &&
-                    timelineRail?.pluginId === plugin.id &&
-                    timelineRail.render(railKeys ?? [], localizedName)}
+                  {timelineRail?.pluginId === plugin.id &&
+                    timelineRail.render(railKeys ?? [], localizedName, enabled)}
 
                   {deniedId === plugin.id && (
                     <p className="mt-1 text-[11px] text-red-500">{t('pluginPermissionDenied')}</p>
