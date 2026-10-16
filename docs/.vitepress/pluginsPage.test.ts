@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { OFFICIAL_PLUGIN_IDS } from '../../src/features/plugins/sites/featureOwners';
+import { resolveEffectiveEnabled } from '../../src/features/plugins/storage/legacySettingBindings';
 import type { PluginManifest } from '../../src/features/plugins/types';
 import {
+  FRESH_INSTALL_ON,
   PLUGINS_LOCALES,
   type SitePlugin,
   builtinPlugins,
@@ -9,7 +12,7 @@ import {
   renderPluginsPage,
 } from './pluginsPage';
 
-const manifest = (id: string, name: string, matches: string[], zh?: string): PluginManifest =>
+const manifest = (id: string, name: string, matches: string[] = [], zh?: string): PluginManifest =>
   ({
     id,
     name,
@@ -19,61 +22,173 @@ const manifest = (id: string, name: string, matches: string[], zh?: string): Plu
 
 const locale = (code: string) => PLUGINS_LOCALES.find((entry) => entry.manifest === code)!;
 
+const ticked = (rows: ReturnType<typeof featureRows>) =>
+  rows.map((row) => [row.feature, [...Object.keys(row.plugins), ...row.native].sort()]);
+
+/** The table's cells for the row whose name is `name`, Gemini first. */
+const cells = (page: string, name: string) => {
+  const line = page.split('\n').find((entry) => entry.startsWith(`| **${name}`));
+  if (!line) return undefined;
+  return line
+    .split(' | ')
+    .slice(1)
+    .map((cell) => cell.replace(/ \|$/, '').trim())
+    .map((cell) => (cell.includes('gv-plugins-on') ? 'on' : cell.includes('✓') ? '✓' : ''));
+};
+
+const noPages = () => false;
+
 describe('plugin table', () => {
   it('gives a feature one row with a tick on every site that has it', () => {
     const rows = featureRows([
-      { site: 'claude', feature: 'quote-reply', manifest: manifest('a', 'Claude · Quote', []) },
-      { site: 'deepseek', feature: 'quote-reply', manifest: manifest('b', 'DeepSeek · Quote', []) },
-      { site: 'deepseek', feature: 'vim-input', manifest: manifest('c', 'DeepSeek · Vim', []) },
-      { site: 'chatgpt', feature: 'input-vim', manifest: manifest('d', 'Vim', []) },
+      { site: 'claude', feature: 'quote-reply', manifest: manifest('a', 'Claude · Quote') },
+      { site: 'gemini', feature: 'quote-reply', manifest: manifest('b', 'Gemini · Quote') },
+      { site: 'deepseek', feature: 'vim-input', manifest: manifest('c', 'DeepSeek · Vim') },
+      { site: 'chatgpt', feature: 'input-vim', manifest: manifest('d', 'Vim') },
     ]);
 
-    expect(rows.map((row) => [row.feature, Object.keys(row.plugins).sort()])).toEqual([
-      ['quote-reply', ['claude', 'deepseek']],
+    expect(ticked(rows)).toEqual([
+      ['quote-reply', ['claude', 'gemini']],
       ['input-vim', ['chatgpt', 'deepseek']],
     ]);
   });
 
-  it('files a builtin under every listed site it matches, and none for Gemini', () => {
+  it("folds Gemini's split plugins into the cross-site row and keeps Mermaid apart", () => {
+    const rows = featureRows([
+      { site: 'chatgpt', feature: 'reading-typography', manifest: manifest('a', 'Typography') },
+      { site: 'gemini', feature: 'chat-font-size', manifest: manifest('b', 'Gemini · Size') },
+      { site: 'gemini', feature: 'chat-line-height', manifest: manifest('c', 'Gemini · Spacing') },
+      { site: 'chatgpt', feature: 'diagram-rendering', manifest: manifest('d', 'Diagrams') },
+      { site: 'gemini', feature: 'echarts', manifest: manifest('e', 'Gemini · ECharts') },
+      { site: 'gemini', feature: 'wavedrom', manifest: manifest('f', 'Gemini · WaveDrom') },
+      { site: 'gemini', feature: 'mermaid', manifest: manifest('g', 'Gemini · Mermaid') },
+    ]);
+
+    expect(ticked(rows)).toEqual([
+      ['reading-typography', ['chatgpt', 'gemini']],
+      ['mermaid', ['gemini']],
+      ['diagram-rendering', ['chatgpt', 'gemini']],
+    ]);
+  });
+
+  it('files a builtin under every site it matches, Gemini and AI Studio included', () => {
     const plugins = builtinPlugins([
       manifest('voyager.formula-copy', 'Formula Copy', [
         'https://claude.ai/*',
         'https://chatgpt.com/*',
       ]),
-      manifest('voyager.chatgpt-folders', 'ChatGPT · Folders', ['https://chatgpt.com/*']),
       manifest('voyager.gemini-timeline', 'Gemini · Timeline', ['https://gemini.google.com/*']),
+      manifest('voyager.aistudio-x', 'AI Studio · X', ['https://aistudio.google.com/*']),
     ]);
 
     expect(plugins.map(({ site, feature }) => `${site}:${feature}`)).toEqual([
       'chatgpt:formula-copy',
       'claude:formula-copy',
-      'chatgpt:folders',
+      'gemini:timeline',
+      'aistudio:x',
     ]);
   });
 
-  it("names a row in the page's language without the site prefix and flags default-on plugins", () => {
+  it('leaves out the Safari Enter fix', () => {
+    const rows = featureRows([
+      {
+        site: 'gemini',
+        feature: 'safari-enter-fix',
+        manifest: manifest(OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix, 'Gemini · Fix Enter'),
+      },
+    ]);
+
+    expect(rows).toEqual([]);
+  });
+
+  it('ticks native folders and export on rows a plugin already has, and adds no row for them', () => {
+    const folders: SitePlugin = {
+      site: 'chatgpt',
+      feature: 'folders',
+      manifest: manifest('voyager.chatgpt-folders', 'ChatGPT · Folders'),
+    };
+
+    expect(ticked(featureRows([folders]))).toEqual([
+      ['folders', ['aistudio', 'chatgpt', 'gemini']],
+    ]);
+    expect(featureRows([])).toEqual([]);
+  });
+
+  it("names a row from the first of ChatGPT, Claude, DeepSeek, then Gemini, in the page's language", () => {
     const plugins: SitePlugin[] = [
       {
-        site: 'chatgpt',
-        feature: 'folders',
-        manifest: manifest('voyager.chatgpt-folders', 'ChatGPT · Folders', [], 'ChatGPT · 文件夹'),
+        site: 'gemini',
+        feature: 'code-collapse',
+        manifest: manifest('g', 'Gemini · Code Block Collapse', [], 'Gemini · 代码块折叠'),
       },
       {
         site: 'deepseek',
-        feature: 'wrap-code',
-        manifest: manifest('voyager.deepseek-wrap-code', 'DeepSeek · Wrap code', []),
+        feature: 'code-collapse',
+        manifest: manifest('d', 'DeepSeek · Code Folding', [], 'DeepSeek · 代码折叠'),
+      },
+      {
+        site: 'gemini',
+        feature: 'fork',
+        manifest: manifest('f', 'Gemini · Conversation forks', [], 'Gemini · 对话分叉'),
       },
     ];
 
+    const page = renderPluginsPage(locale('zh'), featureRows(plugins), new Set(), noPages);
+
+    expect(cells(page, '代码折叠')).toEqual(['✓', '', '', '', '✓']);
+    expect(cells(page, '对话分叉')).toEqual(['✓', '', '', '', '']);
+    expect(page).not.toContain('代码块折叠');
+  });
+
+  it('marks on-by-default per site, not per row', () => {
+    const plugins: SitePlugin[] = [
+      { site: 'gemini', feature: 'timeline', manifest: manifest('g', 'Gemini · Timeline') },
+      { site: 'claude', feature: 'timeline', manifest: manifest('c', 'Claude · Timeline') },
+      { site: 'gemini', feature: 'echarts', manifest: manifest('e', 'Gemini · ECharts') },
+      { site: 'gemini', feature: 'wavedrom', manifest: manifest('w', 'Gemini · WaveDrom') },
+      { site: 'chatgpt', feature: 'export', manifest: manifest('x', 'ChatGPT · Export') },
+    ];
+
     const page = renderPluginsPage(
-      locale('zh'),
+      locale('en'),
       featureRows(plugins),
-      new Set(['voyager.chatgpt-folders']),
+      new Set(['g', 'e']),
+      noPages,
     );
 
-    expect(page).toMatch(
-      /\| \*\*文件夹\*\* <span class="gv-plugins-default">默认开启<\/span> \| <span[^|]*✓<\/span> \|  \|  \|/,
+    expect(cells(page, 'Timeline')).toEqual(['on', '', '', '✓', '']);
+    // One of Gemini's two diagram plugins is still off: the reader has to switch it on.
+    expect(cells(page, 'ECharts')).toEqual(['✓', '', '', '', '']);
+    // Gemini's native export runs without a switch.
+    expect(cells(page, 'Export')).toEqual(['on', '', '✓', '', '']);
+  });
+
+  it("links a row to its guide page in the page's locale only where that page exists", () => {
+    const plugins: SitePlugin[] = [
+      { site: 'chatgpt', feature: 'timeline', manifest: manifest('t', 'ChatGPT · Timeline') },
+      { site: 'claude', feature: 'ctrl-enter-send', manifest: manifest('s', 'Claude · Send') },
+      { site: 'deepseek', feature: 'wrap-code', manifest: manifest('w', 'DeepSeek · Wrap') },
+    ];
+    const pages = new Set(['/guide/timeline', '/guide/send-behavior', '/ja/guide/send-behavior']);
+    const exists = (path: string) => pages.has(path);
+
+    const zh = renderPluginsPage(locale('zh'), featureRows(plugins), new Set(), exists);
+    const ja = renderPluginsPage(locale('ja'), featureRows(plugins), new Set(), exists);
+
+    expect(zh).toContain('| **[Timeline](/guide/timeline)** |');
+    expect(zh).toContain('| **[Send](/guide/send-behavior)** |');
+    expect(zh).toContain('| **Wrap** |');
+    expect(ja).toContain('| **Timeline** |');
+    expect(ja).toContain('| **[Send](/ja/guide/send-behavior)** |');
+  });
+
+  it('claims on-by-default for exactly the official plugins a fresh install runs', () => {
+    const shown = Object.values(OFFICIAL_PLUGIN_IDS).filter(
+      (id) => id !== OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix,
     );
-    expect(page).toMatch(/\| \*\*Wrap code\*\* \|  \|  \| <span[^|]*✓<\/span> \|/);
+
+    for (const id of shown) {
+      expect([id, FRESH_INSTALL_ON.has(id)]).toEqual([id, resolveEffectiveEnabled({}, {}, id)]);
+    }
   });
 });

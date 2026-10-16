@@ -142,20 +142,46 @@
   font-size: 14px;
 }
 
-/* Plugin table (`docs/.vitepress/pluginsPage.ts`). */
-.vp-doc .gv-plugins-default {
-  margin-inline-start: 6px;
-  padding: 1px 6px;
-  border-radius: 6px;
-  background: var(--vp-c-brand-soft);
-  color: var(--vp-c-brand-1);
-  font-size: 12px;
+/* Plugin table (`docs/.vitepress/pluginsPage.ts`). Narrow site columns, each
+   mark above its name, leave the feature names room for one line. */
+.vp-doc .gv-plugins-table th {
   white-space: nowrap;
+}
+
+.vp-doc .gv-plugins-table :is(th, td):not(:first-child) {
+  padding-inline: 8px;
+}
+
+.vp-doc .gv-plugins-table th .gv-site-mark {
+  display: block;
+  width: 1.25em;
+  height: 1.25em;
+  margin: 0 auto 2px;
 }
 
 .vp-doc .gv-plugins-tick {
   color: var(--vp-c-brand-1);
   font-weight: 700;
+}
+
+/* A plugin that runs without the reader switching it on. */
+.vp-doc .gv-plugins-on {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5em;
+  height: 1.5em;
+  border-radius: 50%;
+  /* The theme's green brand has no matching `--vp-c-brand-soft`. */
+  background: color-mix(in srgb, var(--vp-c-brand-1) 18%, transparent);
+}
+
+.vp-doc .gv-plugins-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--vp-c-text-2);
+  font-size: 14px;
 }
 
 .vp-doc .gv-plugins-disclaimer {
