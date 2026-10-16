@@ -51,6 +51,13 @@ export default defineConfig({
     hostname: siteUrl,
   },
 
+  // Changelog pages are generated per locale (`[lang]/changelog.paths.ts`); their
+  // description rides on the route params since the template's front matter is shared.
+  transformPageData(pageData) {
+    const description = pageData.params?.description;
+    if (typeof description === 'string') pageData.description = description;
+  },
+
   transformHead({ pageData }) {
     const head: HeadConfig[] = [];
     const pagePath = pageData.relativePath.replace(/\.md$/, '.html').replace(/index\.html$/, '');
@@ -97,6 +104,7 @@ export default defineConfig({
           { text: '首页', link: '/' },
           { text: '指南', link: '/guide/installation' },
           { text: '插件市场', link: '/plugins' },
+          { text: '更新日志', link: '/changelog' },
           { text: '数据查看器', link: '/data-viewer' },
         ],
         sidebar: [
@@ -176,6 +184,7 @@ export default defineConfig({
           { text: '首頁', link: '/zh_TW/' },
           { text: '指南', link: '/zh_TW/guide/installation' },
           { text: '外掛市集', link: '/zh_TW/plugins' },
+          { text: '更新日誌', link: '/zh_TW/changelog' },
           { text: '資料查看器', link: '/zh_TW/data-viewer' },
         ],
         sidebar: [
@@ -256,6 +265,7 @@ export default defineConfig({
           { text: 'Home', link: '/en/' },
           { text: 'Guide', link: '/en/guide/installation' },
           { text: 'Marketplace', link: '/en/plugins' },
+          { text: 'Changelog', link: '/en/changelog' },
           { text: 'Data Viewer', link: '/en/data-viewer' },
         ],
         sidebar: [
@@ -335,6 +345,7 @@ export default defineConfig({
           { text: 'ホーム', link: '/ja/' },
           { text: 'ガイド', link: '/ja/guide/installation' },
           { text: 'マーケット', link: '/ja/plugins' },
+          { text: '更新履歴', link: '/ja/changelog' },
           { text: 'データビューア', link: '/ja/data-viewer' },
         ],
         sidebar: [
@@ -414,6 +425,7 @@ export default defineConfig({
           { text: '홈', link: '/ko/' },
           { text: '가이드', link: '/ko/guide/installation' },
           { text: '마켓플레이스', link: '/ko/plugins' },
+          { text: '변경 로그', link: '/ko/changelog' },
           { text: '데이터 뷰어', link: '/ko/data-viewer' },
         ],
         sidebar: [
@@ -493,6 +505,7 @@ export default defineConfig({
           { text: 'Accueil', link: '/fr/' },
           { text: 'Guide', link: '/fr/guide/installation' },
           { text: 'Marketplace', link: '/fr/plugins' },
+          { text: 'Nouveautés', link: '/fr/changelog' },
           { text: 'Visionneuse', link: '/fr/data-viewer' },
         ],
         sidebar: [
@@ -572,6 +585,7 @@ export default defineConfig({
           { text: 'Inicio', link: '/es/' },
           { text: 'Guía', link: '/es/guide/installation' },
           { text: 'Mercado', link: '/es/plugins' },
+          { text: 'Novedades', link: '/es/changelog' },
           { text: 'Visor', link: '/es/data-viewer' },
         ],
         sidebar: [
@@ -657,6 +671,7 @@ export default defineConfig({
           { text: 'Início', link: '/pt/' },
           { text: 'Guia', link: '/pt/guide/installation' },
           { text: 'Mercado', link: '/pt/plugins' },
+          { text: 'Novidades', link: '/pt/changelog' },
           { text: 'Visualizador', link: '/pt/data-viewer' },
         ],
         sidebar: [
@@ -737,6 +752,7 @@ export default defineConfig({
           { text: 'الرئيسية', link: '/ar/' },
           { text: 'الدليل', link: '/ar/guide/installation' },
           { text: 'سوق الإضافات', link: '/ar/plugins' },
+          { text: 'سجل التغييرات', link: '/ar/changelog' },
           { text: 'عارض البيانات', link: '/ar/data-viewer' },
         ],
         sidebar: [
@@ -816,6 +832,7 @@ export default defineConfig({
           { text: 'Главная', link: '/ru/' },
           { text: 'Руководство', link: '/ru/guide/installation' },
           { text: 'Маркетплейс', link: '/ru/plugins' },
+          { text: 'Изменения', link: '/ru/changelog' },
           { text: 'Просмотр', link: '/ru/data-viewer' },
         ],
         sidebar: [

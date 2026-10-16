@@ -13,10 +13,19 @@ on:
       - 'scripts/lib/catalogRevision.ts'
       - 'src/features/plugins/catalog/**'
       - 'src/features/plugins/sites/**'
+      # The changelog pages are built from the in-product release notes.
+      - 'src/pages/content/changelog/notes/**'
+      - 'src/pages/content/changelog/noteSections.ts'
+      - 'src/core/icons/platformLogos.ts'
       - 'package.json'
       - 'package-lock.json'
       - 'bun.lock'
       - 'CNAME'
+  # A release bumps package.json with the workflow's own token, which starts no
+  # push run; this puts the new version on the changelog pages right away.
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
   schedule:
     - cron: '17 3 * * *'
   workflow_dispatch:

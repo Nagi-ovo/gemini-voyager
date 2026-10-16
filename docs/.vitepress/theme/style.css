@@ -125,3 +125,19 @@
     animation: none;
   }
 }
+
+/* Changelog pages (`docs/.vitepress/changelog.ts`): a platform's mark sits
+   beside its name at text size, as in the extension's own release notes. */
+.vp-doc .gv-changelog-logo {
+  display: inline;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin-inline-end: 0.28em;
+}
+
+.vp-doc .gv-changelog-date {
+  margin-top: -8px;
+  color: var(--vp-c-text-2);
+  font-size: 14px;
+}
