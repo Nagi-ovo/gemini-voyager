@@ -59,6 +59,7 @@ function manifest(
 }
 
 beforeEach(() => {
+  localStorage.clear();
   syncGet().mockReset();
   addListener().mockReset();
   removeListener().mockReset();
@@ -69,6 +70,24 @@ afterEach(() => {
 });
 
 describe('legacy enable bindings', () => {
+  it('keeps AI Studio on independently of the Gemini switch and stale plugin state', () => {
+    const id = OFFICIAL_PLUGIN_IDS.aistudioSidebarWidth;
+    for (const value of [undefined, true, false]) {
+      expect(
+        resolveEffectiveEnabled(
+          { [id]: { enabled: false } },
+          {
+            [StorageKeys.SIDEBAR_WIDTH_ENABLED]: false,
+            [StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED]: value,
+          },
+          id,
+        ),
+      ).toBe(value !== false);
+    }
+    expect(legacyEnableWrite(id, false)).toEqual({
+      [StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED]: false,
+    });
+  });
   it('derives sidebar width only from a customized initial width and preserves explicit switches', () => {
     const id = OFFICIAL_PLUGIN_IDS.geminiSidebarWidth;
     const key = StorageKeys.SIDEBAR_WIDTH_ENABLED;
@@ -112,6 +131,9 @@ describe('legacy enable bindings', () => {
         StorageKeys.EDIT_INPUT_WIDTH_ENABLED,
         StorageKeys.SIDEBAR_WIDTH_ENABLED,
         StorageKeys.SIDEBAR_WIDTH,
+        StorageKeys.AISTUDIO_SIDEBAR_WIDTH,
+        StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED,
+        StorageKeys.FOLDER_ENABLED,
         StorageKeys.GV_SIDEBAR_AUTO_HIDE,
         StorageKeys.GV_SIDEBAR_FULL_HIDE,
         StorageKeys.MARKDOWN_FIX_ENABLED,
@@ -413,13 +435,36 @@ describe('resolveEffectiveSettings', () => {
 });
 
 describe('loadLegacySettingSnapshot', () => {
-  it('reads only the binding keys and keeps missing keys missing', async () => {
+  it('uses the local width only for failed or invalid sync reads, then the 360px fallback', async () => {
+    const key = StorageKeys.AISTUDIO_SIDEBAR_WIDTH;
+    localStorage.setItem(key, '425');
+    syncGet().mockResolvedValue({});
+    expect((await loadLegacySettingSnapshot())[key]).toBe(280);
+    syncGet().mockResolvedValue({ [key]: 399 });
+    expect((await loadLegacySettingSnapshot())[key]).toBe(399);
+    for (const invalid of [100, 601, '400', null, NaN]) {
+      syncGet().mockResolvedValue({ [key]: invalid });
+      expect((await loadLegacySettingSnapshot())[key]).toBe(425);
+    }
+    syncGet().mockRejectedValue(new Error('sync unavailable'));
+    expect((await loadLegacySettingSnapshot())[key]).toBe(425);
+    localStorage.setItem(key, '700');
+    expect((await loadLegacySettingSnapshot())[key]).toBe(360);
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+    expect((await loadLegacySettingSnapshot())[key]).toBe(360);
+  });
+  it('reads binding keys and preserves missing switches while resolving AI Studio width fallback', async () => {
     syncGet().mockResolvedValue({
       [StorageKeys.INPUT_VIM_MODE]: true,
       [StorageKeys.FORMULA_COPY_FORMAT]: 'mathml',
     });
     const snapshot = await loadLegacySettingSnapshot();
-    expect(snapshot).toEqual({ [StorageKeys.INPUT_VIM_MODE]: true });
+    expect(snapshot).toEqual({
+      [StorageKeys.INPUT_VIM_MODE]: true,
+      [StorageKeys.AISTUDIO_SIDEBAR_WIDTH]: 280,
+    });
     expect(Object.prototype.hasOwnProperty.call(snapshot, StorageKeys.FORMULA_COPY_ENABLED)).toBe(
       false,
     );
@@ -434,7 +479,7 @@ describe('loadLegacySettingSnapshot', () => {
   it('falls back to the native defaults on any other read failure', async () => {
     syncGet().mockRejectedValue(new Error('QUOTA_BYTES quota exceeded'));
     const snapshot = await loadLegacySettingSnapshot();
-    expect(snapshot).toEqual({});
+    expect(snapshot).toEqual({ [StorageKeys.AISTUDIO_SIDEBAR_WIDTH]: 360 });
     expect(resolveEffectiveEnabled({}, snapshot, FORMULA_G)).toBe(true);
     expect(resolveEffectiveEnabled({}, snapshot, VIM)).toBe(false);
   });

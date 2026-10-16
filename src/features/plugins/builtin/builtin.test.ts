@@ -234,6 +234,30 @@ describe('BUILTIN_PLUGINS', () => {
     }
   });
 
+  it('ships AI Studio sidebar width on both hosts with a fixed native binding and localized settings', () => {
+    const id = 'voyager.aistudio-sidebar-width';
+    const width = BUILTIN_PLUGINS.find((manifest) => manifest.id === id);
+    expect(width?.matches).toEqual([
+      'https://aistudio.google.com/*',
+      'https://aistudio.google.cn/*',
+    ]);
+    expect(width?.contributes.domOps).toBeUndefined();
+    expect(width?.contributes.settings?.widthPx).toMatchObject({
+      type: 'number',
+      default: 280,
+      min: 240,
+      max: 600,
+    });
+    expect(NATIVE_BUILTIN_PLUGIN_IDS).toContain(id);
+    expect(NATIVE_HANDLER_BINDINGS[id]?.activate).toBeTypeOf('function');
+    expect(NATIVE_HANDLER_BINDINGS[id]?.updateSettings).toBeTypeOf('function');
+    for (const locale of ['zh', 'zh_TW', 'ja', 'ko', 'fr', 'es', 'pt', 'ru', 'ar'] as const) {
+      expect(width?.i18n?.[locale]?.name, locale).toContain('AI Studio');
+      expect(width?.i18n?.[locale]?.description, locale).not.toBe(width?.description);
+      expect(width?.i18n?.[locale]?.settings?.widthPx?.label, locale).toBeTruthy();
+    }
+  });
+
   it('scopes the Gemini prompt history builtin to gemini.google.com with no settings of its own', () => {
     const history = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.gemini-prompt-history');
     // Not Gemini Enterprise or a custom host: the native module never ran there.

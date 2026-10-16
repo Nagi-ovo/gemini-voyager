@@ -68,6 +68,7 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS = {
   [StorageKeys.SIDEBAR_WIDTH]: 312,
   [StorageKeys.SIDEBAR_WIDTH_ENABLED]: false,
   [StorageKeys.AISTUDIO_SIDEBAR_WIDTH]: 280,
+  [StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED]: true,
   [StorageKeys.PROMPT_PANEL_LOCKED]: false,
   [StorageKeys.PROMPT_PANEL_POSITION]: null,
   [StorageKeys.PROMPT_TRIGGER_POSITION]: null,

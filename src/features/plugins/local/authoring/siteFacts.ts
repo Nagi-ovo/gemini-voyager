@@ -51,6 +51,7 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   chatWidth: 'Chat width',
   editInputWidth: 'Edit input width',
   sidebarWidth: 'Sidebar width',
+  aistudioSidebarWidth: 'AI Studio sidebar width',
   sidebarAutoHide: 'Auto-hide sidebar',
   sidebarFullHide: 'Fully hide sidebar',
   markdownFix: 'Markdown rendering fix',

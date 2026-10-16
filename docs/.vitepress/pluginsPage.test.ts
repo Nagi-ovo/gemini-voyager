@@ -245,17 +245,18 @@ describe('plugin table', () => {
     }
   });
 
-  it('shows three independent sidebar rows, off by default, linking to existing localized guides', () => {
+  it('shows sidebar width on by default only for AI Studio, with existing localized guide links', () => {
     const sidebarPlugins = BUILTIN_PLUGINS.filter((plugin) =>
       [
         'voyager.gemini-sidebar-width',
+        'voyager.aistudio-sidebar-width',
         'voyager.gemini-sidebar-auto-hide',
         'voyager.gemini-sidebar-full-hide',
       ].includes(plugin.id),
     );
     const rows = featureRows(builtinPlugins(sidebarPlugins));
     expect(ticked(rows)).toEqual([
-      ['sidebar-width', ['gemini']],
+      ['sidebar-width', ['aistudio', 'gemini']],
       ['sidebar-auto-hide', ['gemini']],
       ['sidebar-full-hide', ['gemini']],
     ]);
@@ -270,7 +271,13 @@ describe('plugin table', () => {
         const guide = row.feature === 'sidebar-width' ? 'sidebar' : 'sidebar-auto-hide';
         const label = `[${name}](${prefix}/guide/${guide})`;
         expect(page).toContain(`| **${label}** |`);
-        expect(cells(page, label)).toEqual(['✓', '', '', '', '']);
+        expect(cells(page, label)).toEqual([
+          '✓',
+          row.feature === 'sidebar-width' ? 'on' : '',
+          '',
+          '',
+          '',
+        ]);
       }
     }
   });

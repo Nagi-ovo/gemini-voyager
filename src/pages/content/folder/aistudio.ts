@@ -17,6 +17,7 @@ import type { ToastTone } from '@/core/ui/toast/types';
 import { isSaved } from '@/features/folder/commands/folderCommands';
 import { createTranslator, initI18n } from '@/utils/i18n';
 
+import { VALID_PATH } from '../aistudioSidebarPaths';
 import { watchRouteChanges } from '../utils/routeWatcher';
 import type { FolderDataSession } from './FolderDataSession';
 import { FolderRepository } from './FolderRepository';
@@ -40,7 +41,6 @@ import {
   watchPromptHistory,
 } from './aistudioPromptHistory';
 import { currentPromptId, readPromptDragData } from './aistudioPromptLinks';
-import { SIDEBAR_WIDTH_KEY, SidebarWidth } from './aistudioSidebarWidth';
 import { AIStudioTransfer } from './aistudioTransfer';
 import { type AIStudioTree, aistudioTreeActions, mountAIStudioTree } from './aistudioTree';
 import type { TreeActions } from './floatingTree/shared';
@@ -53,7 +53,6 @@ import { createSyncMessageListener } from './syncMessageListener';
 import { readSyncTooltip } from './syncTooltip';
 import type { FolderData } from './types';
 
-const VALID_PATH = /^\/(prompts|library)(\/|$)/;
 /** Errors and warnings stay longer than a confirmation. */
 const NOTICE_MS: Record<ToastTone, number> = {
   info: 3000,
@@ -130,7 +129,6 @@ export class AIStudioFolderManager {
     toaster: this.toaster,
   });
   private readonly hideArchived = new HideArchivedSetting();
-  private readonly sidebarWidth = new SidebarWidth();
   private readonly dialogs = createFolderDialogs();
   private container: HTMLElement | null = null;
   private historyRoot: HTMLElement | null = null;
@@ -188,7 +186,6 @@ export class AIStudioFolderManager {
     await this.hideArchived.load();
     await this.account.loadIsolationSetting();
     await this.account.refresh(true);
-    await this.sidebarWidth.load();
     this.setupStorageListener();
     this.repository.watchStorage(); // Else a stale tab's next save overwrites other writers.
     this.startAccountPolling();
@@ -257,8 +254,6 @@ export class AIStudioFolderManager {
     this.stopBodyPopovers ??= watchBodyPromptPopovers();
     this.highlightActiveConversation();
     this.installRouteChangeListener();
-    this.sidebarWidth.apply(true);
-    this.cleanupFns.push(this.sidebarWidth.mountResizeHandle());
     if (isLibraryPage) this.library.attach();
   }
 
@@ -447,9 +442,6 @@ export class AIStudioFolderManager {
         void this.account
           .readIsolationSetting()
           .then((enabled) => this.handleAccountIsolationToggle(enabled));
-      }
-      if (changes[SIDEBAR_WIDTH_KEY]) {
-        this.sidebarWidth.applyStoredWidth(changes[SIDEBAR_WIDTH_KEY].newValue);
       }
       if (this.hideArchived.applyStorageChanges(changes)) {
         this.applyHideArchived();

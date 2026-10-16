@@ -104,6 +104,7 @@ export const StorageKeys = {
   SIDEBAR_WIDTH: 'geminiSidebarWidth',
   SIDEBAR_WIDTH_ENABLED: 'gvSidebarWidthEnabled',
   AISTUDIO_SIDEBAR_WIDTH: 'gvAIStudioSidebarWidth',
+  AISTUDIO_SIDEBAR_WIDTH_ENABLED: 'gvAIStudioSidebarWidthEnabled',
 
   // Prompt Manager
   PROMPT_ITEMS: 'gvPromptItems',

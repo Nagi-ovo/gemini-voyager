@@ -12,6 +12,7 @@ import { resolvePluginPlatformId } from '@/features/plugins/sites/registry';
 import { SiteRegistry } from '@/features/plugins/sites/registry';
 import { initI18n } from '@/utils/i18n';
 
+import { startAIStudioSidebarLayout } from './aistudioSidebarStartup';
 import { startGeminiChatAppearance } from './appearanceStartup';
 import { startChangelog } from './changelog/index';
 import { runCoachmarkSequence } from './coachmark';
@@ -334,11 +335,13 @@ async function initializeFeatures(): Promise<void> {
       if (!aiStudioEnabled) {
         console.log('[Gemini Voyager] AI Studio features disabled by user');
         // Admit while off: PluginHost follows the master live and can remount without a reload.
+        startAIStudioSidebarLayout(officialAdmission);
         officialAdmission.admit('aistudio', 'formulaCopy');
         await settle(startAIStudioSendKeys(officialAdmission));
         return;
       }
 
+      startAIStudioSidebarLayout(officialAdmission);
       startAIStudioFolderManager();
       await delay(HEAVY_FEATURE_INIT_DELAY);
 

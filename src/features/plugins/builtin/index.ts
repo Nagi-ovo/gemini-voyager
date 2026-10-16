@@ -1,4 +1,5 @@
 import { type PluginManifest, hasNativeOps } from '../types';
+import { AISTUDIO_SIDEBAR_WIDTH_MANIFEST } from './aistudioSidebarWidthManifest';
 import { CHATGPT_RESPONSE_NOTIFICATION_MANIFEST } from './chatgptResponseNotification/manifest';
 import { GEMINI_CANVAS_COPY_MANIFEST } from './geminiCanvasCopyManifest';
 import { GEMINI_CHAT_WIDTH_MANIFEST } from './geminiChatWidthManifest';
@@ -397,6 +398,7 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   GEMINI_CHAT_WIDTH_MANIFEST,
   GEMINI_EDIT_INPUT_WIDTH_MANIFEST,
   GEMINI_SIDEBAR_WIDTH_MANIFEST,
+  AISTUDIO_SIDEBAR_WIDTH_MANIFEST,
   GEMINI_SIDEBAR_AUTO_HIDE_MANIFEST,
   GEMINI_SIDEBAR_FULL_HIDE_MANIFEST,
   GEMINI_MARKDOWN_FIX_MANIFEST,

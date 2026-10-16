@@ -22,6 +22,7 @@
  * the CLI bundle (it imports `StorageKeys`): `hostPolicy` must not import it.
  */
 import { StorageKeys } from '@/core/types/common';
+import { normalizeAIStudioSidebarWidth } from '@/core/utils/aistudioSidebarWidthValues';
 import {
   normalizeChatFontSizePercent,
   normalizeChatLineHeightPercent,
@@ -86,6 +87,9 @@ export const LEGACY_VALUE_BINDINGS: LegacyValueBindingTable = {
         resolveVisualEffect(stored, snapshot?.[StorageKeys.GV_SNOW_EFFECT]),
       acceptsLiveChange: always,
     },
+  ],
+  [OFFICIAL_PLUGIN_IDS.aistudioSidebarWidth]: [
+    numberBinding('widthPx', StorageKeys.AISTUDIO_SIDEBAR_WIDTH, normalizeAIStudioSidebarWidth),
   ],
   [OFFICIAL_PLUGIN_IDS.geminiGemsSidebar]: [
     {

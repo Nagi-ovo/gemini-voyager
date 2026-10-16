@@ -15,6 +15,7 @@
  */
 import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
+import { readInitialAIStudioSidebarWidth } from '@/core/utils/aistudioSidebarWidthValues';
 import { isSafari } from '@/core/utils/browser';
 import { isChatWidthSwitchOn, isEditInputWidthSwitchOn } from '@/core/utils/chatAppearanceValues';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
@@ -82,6 +83,20 @@ export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding
         snapshot[StorageKeys.GV_VISUAL_EFFECT],
         snapshot[StorageKeys.GV_SNOW_EFFECT],
       ) !== 'off',
+  },
+  [OFFICIAL_PLUGIN_IDS.aistudioSidebarWidth]: {
+    ...binding(
+      OFFICIAL_PLUGIN_IDS.aistudioSidebarWidth,
+      StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED,
+      onUnlessFalse,
+    ),
+    derive: (snapshot) => {
+      const stored = snapshotValue(snapshot, StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED);
+      // Until explicitly set, preserve the folder-owned layout switch, including live changes.
+      return typeof stored === 'boolean'
+        ? stored
+        : onUnlessFalse(snapshotValue(snapshot, StorageKeys.FOLDER_ENABLED));
+    },
   },
   [OFFICIAL_PLUGIN_IDS.geminiGemsSidebar]: binding(
     OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
@@ -310,6 +325,7 @@ export function legacyBindingKeys(): readonly string[] {
     ...new Set([
       ...Object.values(LEGACY_ENABLE_BINDINGS).map((entry) => entry.key),
       ...legacyValueKeys(),
+      StorageKeys.FOLDER_ENABLED,
     ]),
   ];
 }
@@ -377,28 +393,36 @@ function syncArea(): chrome.storage.SyncStorageArea | undefined {
 }
 
 /**
- * Read every binding key from sync storage; a missing key stays missing.
+ * Read every binding key from sync storage; missing switches stay missing.
  * An invalidated extension context rejects (the caller must not mount on a
  * guessed default). Any other failure is logged and read as "all missing",
- * the defaults the native modules have always fallen back to.
+ * the defaults the native modules have always fallen back to. AI Studio width
+ * resolves its localStorage fallback here so a failed read differs from a missing key.
  */
 export async function loadLegacySettingSnapshot(
   keys: readonly string[] = legacyBindingKeys(),
 ): Promise<LegacySettingSnapshot> {
   const sync = syncArea();
-  if (!sync) return {};
+  const fallback = () => ({
+    [StorageKeys.AISTUDIO_SIDEBAR_WIDTH]: readInitialAIStudioSidebarWidth(undefined, false),
+  });
+  if (!sync) return fallback();
   let stored: Record<string, unknown> | undefined;
   try {
     stored = await sync.get<Record<string, unknown>>([...keys]);
   } catch (error) {
     if (isExtensionContextInvalidatedError(error)) throw error;
     logger.warn('loadLegacySettingSnapshot failed', { error: String(error) });
-    return {};
+    return fallback();
   }
   const snapshot: Record<string, unknown> = {};
   for (const key of keys) {
     if (stored && Object.prototype.hasOwnProperty.call(stored, key)) snapshot[key] = stored[key];
   }
+  // Unlike most settings, AI Studio distinguishes a missing sync key from a failed read.
+  snapshot[StorageKeys.AISTUDIO_SIDEBAR_WIDTH] = readInitialAIStudioSidebarWidth(
+    snapshot[StorageKeys.AISTUDIO_SIDEBAR_WIDTH],
+  );
   return snapshot;
 }
 

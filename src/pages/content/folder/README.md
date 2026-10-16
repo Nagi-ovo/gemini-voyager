@@ -77,8 +77,11 @@ runtime-message listeners. The other modules take explicit host callbacks, never
 | Account scope                       | [`aistudioAccountScope.ts`](aistudioAccountScope.ts): isolation setting, `/u/<n>`+email fingerprint, 1200 ms poll                               |
 | Left-nav prompt history             | [`aistudioPromptHistory.ts`](aistudioPromptHistory.ts), [`aistudioPromptLinks.ts`](aistudioPromptLinks.ts): drag sources, titles, active prompt |
 | /library page                       | [`aistudioLibraryPage.ts`](aistudioLibraryPage.ts) over table, selection, batch delete and drop-zone modules                                    |
-| Hide archived, sidebar width        | [`aistudioHideArchived.ts`](aistudioHideArchived.ts), [`aistudioSidebarWidth.ts`](aistudioSidebarWidth.ts)                                      |
+| Hide archived                       | [`aistudioHideArchived.ts`](aistudioHideArchived.ts)                                                                                            |
 | Drive sync, import/export, messages | [`aistudioTransfer.ts`](aistudioTransfer.ts), [`aistudioImport.ts`](aistudioImport.ts)                                                          |
+
+Sidebar width is owned separately by the official [`aistudioSidebarWidth/pluginHandler.ts`](../aistudioSidebarWidth/pluginHandler.ts)
+plugin. Turning it off restores native nav layout and leaves the folder manager running.
 
 ## Adding Support for New Gems
 

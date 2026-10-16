@@ -80,6 +80,17 @@ describe('feature owners', () => {
     }
   });
 
+  it('owns AI Studio sidebar layout independently without opening a public primitive', () => {
+    const id = 'voyager.aistudio-sidebar-width';
+    expect(isPackagedOfficialPluginId(id)).toBe(true);
+    expect(ownedFeatureByPluginId(id)).toMatchObject({
+      site: 'aistudio',
+      feature: 'aistudioSidebarWidth',
+      handlers: [],
+      healthTracking: false,
+    });
+  });
+
   it('exempts only the listed official plugins from the health monitor', () => {
     expect(tracksPluginHealth('voyager.gemini-vim-input')).toBe(false);
     expect(tracksPluginHealth('voyager.chatgpt-folders')).toBe(true);

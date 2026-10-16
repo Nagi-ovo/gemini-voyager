@@ -24,6 +24,7 @@ export type OwnedFeatureId =
   | 'chatWidth'
   | 'editInputWidth'
   | 'sidebarWidth'
+  | 'aistudioSidebarWidth'
   | 'sidebarAutoHide'
   | 'sidebarFullHide'
   | 'markdownFix'
@@ -69,6 +70,7 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiCanvasCopy: 'voyager.gemini-canvas-copy',
   geminiDeepResearchExport: 'voyager.gemini-deep-research-export',
   geminiSidebarWidth: 'voyager.gemini-sidebar-width',
+  aistudioSidebarWidth: 'voyager.aistudio-sidebar-width',
   geminiSidebarAutoHide: 'voyager.gemini-sidebar-auto-hide',
   geminiSidebarFullHide: 'voyager.gemini-sidebar-full-hide',
   geminiUserLatex: 'voyager.gemini-user-latex',
@@ -232,6 +234,13 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     site: 'gemini',
     feature: 'sidebarWidth',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'aistudio',
+    feature: 'aistudioSidebarWidth',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.aistudioSidebarWidth,
     handlers: [],
     healthTracking: false,
   },

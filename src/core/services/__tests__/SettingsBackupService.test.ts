@@ -41,6 +41,27 @@ describe('SettingsBackupService', () => {
     );
   });
 
+  it('backs up AI Studio sidebar enable state independently and preserves it with older backups', async () => {
+    expect(BACKUPABLE_SYNC_SETTINGS_DEFAULTS[StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED]).toBe(
+      true,
+    );
+    const set = vi.fn().mockResolvedValue(undefined);
+    const storage = { get: vi.fn().mockResolvedValue({}), set };
+    await restoreBackupableSyncSettings({ [StorageKeys.AISTUDIO_SIDEBAR_WIDTH]: 420 }, storage);
+    expect(set).toHaveBeenLastCalledWith({ [StorageKeys.AISTUDIO_SIDEBAR_WIDTH]: 420 });
+    await restoreBackupableSyncSettings(
+      {
+        [StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED]: false,
+        [StorageKeys.SIDEBAR_WIDTH_ENABLED]: true,
+      },
+      storage,
+    );
+    expect(set).toHaveBeenLastCalledWith({
+      [StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED]: false,
+      [StorageKeys.SIDEBAR_WIDTH_ENABLED]: true,
+    });
+  });
+
   it('keeps ChatGPT folder content in its local separate file and outside settings restore', async () => {
     const folderData = { folders: [], folderContents: {} };
     const settingsStorage = {

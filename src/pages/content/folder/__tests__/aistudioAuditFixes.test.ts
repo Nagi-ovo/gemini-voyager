@@ -354,7 +354,8 @@ describe('M11 — destroy() lifecycle teardown', () => {
     expect(vi.getTimerCount()).toBeGreaterThan(0);
     expect(document.querySelector('.gv-folder-container')).not.toBeNull();
     expect(document.querySelector('.gv-library-drop-zone')).not.toBeNull();
-    expect(document.querySelector('.gv-sidebar-resize-handle')).not.toBeNull();
+    // Layout belongs to its official plugin; native folders work without that plugin.
+    expect(document.querySelector('.gv-sidebar-resize-handle')).toBeNull();
 
     internals.destroy();
 

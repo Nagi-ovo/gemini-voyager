@@ -18,6 +18,10 @@ import {
   verifyNativeHandlerBindings,
 } from '@/features/plugins/runtime/nativeHandlers';
 
+import {
+  activateAIStudioSidebarWidth,
+  updateAIStudioSidebarWidthSettings,
+} from './aistudioSidebarWidth/pluginHandler';
 import { activateGeminiCanvasCopy } from './canvasExport/pluginHandler';
 import { activateGeminiChatWidth, updateGeminiChatWidthSettings } from './chatWidth/pluginHandler';
 import { activateGeminiContextSync } from './contextSync/pluginHandler';
@@ -70,6 +74,10 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   'voyager.gemini-sidebar-width': {
     activate: activateGeminiSidebarWidth,
     updateSettings: updateGeminiSidebarWidthSettings,
+  },
+  'voyager.aistudio-sidebar-width': {
+    activate: activateAIStudioSidebarWidth,
+    updateSettings: updateAIStudioSidebarWidthSettings,
   },
   'voyager.gemini-sidebar-auto-hide': { activate: activateGeminiSidebarAutoHide },
   'voyager.gemini-sidebar-full-hide': { activate: activateGeminiSidebarFullHide },

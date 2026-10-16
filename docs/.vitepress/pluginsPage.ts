@@ -121,6 +121,7 @@ export const FRESH_INSTALL_ON: ReadonlySet<string> = new Set([
   OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
   OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
   OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy,
+  OFFICIAL_PLUGIN_IDS.aistudioSidebarWidth,
   OFFICIAL_PLUGIN_IDS.geminiUserLatex,
   OFFICIAL_PLUGIN_IDS.geminiCodeCollapse,
   OFFICIAL_PLUGIN_IDS.geminiWaveDrom,
