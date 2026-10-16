@@ -2162,7 +2162,7 @@
     "description": "Progress message while generating image export"
   },
   "deepResearchSaveReport": {
-    "message": "Save Report",
+    "message": "Сохранить отчёт",
     "description": "Deep Research save report button"
   },
   "deepResearchSaveReportTooltip": {
