@@ -1,6 +1,6 @@
 # Popup 官方插件列表设计
 
-状态：Batch 1–7 已完成（见 §4.4）；`featureOwners.ts` 里的每个 Gemini / AI Studio 官方插件都已是 Plugins 卡里的一行，插件站也不再有第二个开关或卡片：Visual effects 和 timeline rail 的选项都在该站插件卡的行里。下文 §1 记录的是迁移前的基线 `main@754c03c2`。Codex 复审结论 "implement after changes"，本版已吸收全部 P2/P3。
+状态：Batch 1–8 已完成（见 §4.4）；`featureOwners.ts` 里的每个 Gemini / AI Studio 官方插件都已是某张主题卡里的一行（Batch 8 把单张 Plugins 卡拆成八张主题卡，选项直接显示在行下），插件站也不再有第二个开关或卡片：Visual effects 和 timeline rail 的选项都在该站插件卡的行里。下文 §1 记录的是迁移前的基线 `main@754c03c2`。Codex 复审结论 "implement after changes"，本版已吸收全部 P2/P3。
 
 **目标**：每个可选功能都是官方插件，用户只在 popup 的插件列表里开关它。核心数据功能（文件夹、Prompt Manager、云同步、对话导出、备份、账号隔离）保持 native，保留各自卡片。
 
@@ -49,45 +49,50 @@
 
 - 一个功能一个开关，开关就是那一行；不在任何卡片里留第二个。
 - 顺序固定，开关不会让行移动。
-- 行在开启前保持精简：设置和 Options 只在开启时出现（与 `PluginManager.tsx:288-300` 一致）。
-- 靠搜索而不是嵌套：组标题只是标题，不可折叠。
+- 行在开启前保持精简：设置和选项只在开启时出现，直接显示在行下（Batch 8 起不再有 Options 按钮）。
+- 靠搜索而不是嵌套：每个主题是一张普通卡片，标题和其他卡片同一种 `CardTitle`，不可折叠；不加图标、计数或标签。
 - 行显示的是**保存的偏好**，不是当前页面的运行状态（见 §3.1）。页面实际状态只通过 tab 回报的状态说明体现（暂停、等待）。
 
 ### 2.2 Gemini
 
 ```
 ┌──────────────────────────────────────────┐
-│ [ 搜索设置…                           ]  │
+│ Voyager                     ☾  🎨  🌐     │ ← 顶部固定：半透明背景 + 模糊，
+│ [ 🔍 搜索设置，比如“宽度”“时间线”     ]  │   底部一条细线
+│ 云同步  版面  侧栏  时间线  内容  图表 … │ ← 目录：一行纯文字链接，可横向滚动；
+├──────────────────────────────────────────┤   搜索时隐藏
 │ ┌ 云同步 ──────────────────────────────┐ │
-│ ┌ 插件 ───────────────────────────── ▲▼ ┐ │
-│ │ 开关 Voyager 的各项功能。开启后显示  │ │
-│ │ 对应选项。                           │ │
-│ │ 外观                                 │ │
+│ ┌ 存储 ────────────────────────────────┐ │
+│ ┌ 页面版面 ─────────────────────── ▲▼ ┐ │
 │ │ 对话区域宽度                   [●━]  │ │
 │ │ 按屏幕宽度的比例加宽对话区域…        │ │
-│ │ 窄 ├────────●──────┤ 宽        70    │ │
-│ │ 内容                                 │ │
-│ │ 公式复制                       [●━]  │ │
-│ │ › 选项                               │ │
-│ │ 对话                                 │ │
-│ │ 时间线                         [●━]  │ │
-│ │ ⏸ 本页已暂停：你的本地插件"My rail"  │ │
-│ │   已在做这件事…                      │ │
-│ │ › 选项                               │ │
+│ │ 对话区域宽度                    70%  │ │ ← 开启时选项直接在行下
+│ │ 窄 ├────────●──────┤ 宽              │ │
+│ │ 隐藏输入框光晕                 [━○]  │ │
 │ └──────────────────────────────────────┘ │
+│ ┌ 侧栏 ┐ ┌ 时间线 ┐ ┌ 回答内容 ┐ ┌ 图表 ┐ │
+│ ┌ 导出与图片 ┐ ┌ 输入 ┐ ┌ 对话管理 ┐     │
 │ ┌ 本地插件 ────────────────────────  ▾ ┐ │
-│ ┌ 时间线 / 文件夹 / … 其余核心卡片     ┐ │
+│ ┌ 文件夹 / 提示词 / 快捷键 / 通用 …    ┐ │
+│                                          │
+│ ┃ 已关闭「Mermaid 图表」        撤销 ┃   │ ← 用户拨动行开关后 4 秒的撤销提示
 └──────────────────────────────────────────┘
 ```
 
-**分组**来自 popup 内的可信表，不来自 manifest（所有官方 manifest 的 `category` 只有 `readability`/`productivity`，且文档插件表也读它）。组内顺序固定：
+**主题卡**来自 popup 内的可信表（registry 的 `topic`，`OFFICIAL_PLUGIN_TOPICS`），不来自 manifest（所有官方 manifest 的 `category` 只有 `readability`/`productivity`，且文档插件表也读它）。每个主题是一个独立的 popup section（`OFFICIAL_PLUGIN_TOPIC_IDS`），所以能各自排序、在搜索中各自隐藏、被目录定位。卡内顺序固定：
 
-| 组   | 现在的行（Gemini）                                                                                                                | 以后加入                                                           |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| 外观 | Hide input halo；Batch 3 起：Chat width、Chat font size、Line height、Edit input width                                            | Sidebar width、Auto-hide、Full hide、Gems sidebar、Visual effects  |
-| 内容 | Code collapse、User LaTeX、Mermaid、WaveDrom、ECharts；Batch 4 起：Formula copy                                                   | Markdown fix、Canvas copy、Deep Research 菜单                      |
-| 输入 | Prompt history、Quote reply；Batch 2 起：Input collapse、Ctrl+Enter、Safari fix、Vim、Draft save                                  | —                                                                  |
-| 对话 | Prevent auto-scroll、Fork、Research pack、Default model、Usage status；Batch 4、5 起：Highlights、Response notification、Timeline | Message timestamps、Context Sync、Batch delete、NanoBanana（2 行） |
+| 主题卡（目录名）   | Gemini 的行                                                                                                 | AI Studio 的行 |
+| ------------------ | ----------------------------------------------------------------------------------------------------------- | -------------- |
+| 页面版面（版面）   | Chat width、Chat font size、Chat line height、Edit input width、Hide input halo、Visual effects             | Visual effects |
+| 侧栏               | Sidebar width、Auto-hide、Full hide、Recent Gems（置灰）                                                    | Sidebar width  |
+| 时间线             | Timeline、Message timestamps、Prevent auto-scroll、Highlight                                                | —              |
+| 回答内容（内容）   | Code collapse、User LaTeX、Formula copy、Markdown fix                                                       | Formula copy   |
+| 图表               | Mermaid、WaveDrom、ECharts                                                                                  | —              |
+| 导出与图片（导出） | Canvas copy、Deep Research export、Watermark download、Watermark preview                                    | —              |
+| 输入               | Ctrl/Cmd+Enter、Safari Enter fix（仅 Safari）、Vim、Input collapse、Prompt history、Draft save、Quote reply | Enter send     |
+| 对话管理（对话）   | Fork、Batch delete、Default model、Research pack、Usage status、Response notification、Context Sync         | Batch delete   |
+
+没有行的主题卡不渲染，也不占排序位置。插件站（Claude、ChatGPT 等）不变：Visual effects 仍是该站插件卡里的一行（§2.4）。
 
 全部迁完后 Gemini 26 行（非 Safari 25 行），AI Studio 2 行。
 
@@ -97,16 +102,17 @@
 名称  [实验性]                            [开关]
 manifest 的一句话描述（本地化）
 <状态说明：仅暂停 / 等待时>
-<manifest 设置：仅开启时，行内>
-› 选项   ← 仅开启且有自定义面板时
+<选项：仅开启时，行下整宽显示（manifest 设置、滑块、自定义面板）>
 ```
 
 - 名称和描述一律用 manifest（`displayName` 去掉 `Gemini ·` 前缀，`components/PluginIdentity.tsx:61-63`）；旧卡片标签只作搜索词。
 - Gemini / AI Studio 的打包官方插件（`isPackagedOfficialPluginId`，`featureOwners.ts`）不显示来源块：版本、来源标签、主页、changelog、"已更新"徽标（`PluginIdentity.tsx:209-275`）。它们只随 Voyager 一起更新。`voyager.chatgpt-*` 等插件站 builtin 保留来源块。
 - 状态说明复用 `blockedPluginNote`，`conflictKey: 'officialFeaturePausedByLocal'`（与 `OfficialFeatureStatus.tsx:34-40` 一致）。
-- 卡片描述新增一个键 `pluginsNativeDescription`（10 个语言）：现有 `pluginsDescription` 讲的是站点权限和 voyager.nagi.fun 更新，不适用于这里。
+- `pluginsTitle` 和 `pluginsNativeDescription` 不再显示，只作为每张主题卡的搜索词保留：记得旧 Plugins 卡的搜索仍会列出全部主题卡。
 
-**搜索**：打 "光晕"、"字号"、"ruler" 时只显示插件卡里命中的行。命中有自定义面板的行时直接展开它的选项；行关闭时只显示行，不显示选项（"开启前不显示选项"优先）。
+**搜索**：打 "光晕"、"字号"、"ruler" 时只显示命中的行和它们所在的主题卡，没有命中行的卡片隐藏；主题卡标题（任何语言）命中时列出整张卡。行开启时选项照常显示在行下，关闭时只显示行。搜索期间目录隐藏。
+
+**撤销**：用户拨动主题卡里某行的开关后，popup 底部出现 4 秒的 `role="status"` 提示「已关闭「名称」 · 撤销」，指针或焦点停在提示上时暂停计时；撤销经同一条写入路径写回原值（含 `enableWrite` 成对写入和通知的权限流程）。滑块、分段和面板里的选项不提示。不用页面的 `createToaster`：它的位置为宿主页面让位，主题跟随宿主页面而不是 popup。
 
 ### 2.3 AI Studio
 
@@ -131,7 +137,8 @@ manifest 的一句话描述（本地化）
 ### 2.7 无障碍与 RTL
 
 - 行开关 `aria-label` 为插件名，`aria-describedby` 指向描述；组是带标题的 `section`，行是列表项。
-- 选项按钮：可见名称"选项"，`aria-label` 带插件名（每个唯一），`aria-expanded`、`aria-controls` 指向面板 id。收起时焦点回到按钮；搜索过滤掉当前焦点所在的行时，焦点保持在搜索框（过滤由输入触发，焦点本来就在搜索框）。
+- 行下的选项是 `role="group"`，`aria-label` 带插件名（每个唯一）。搜索过滤掉当前焦点所在的行时，焦点保持在搜索框（过滤由输入触发，焦点本来就在搜索框）。
+- 目录是 `<nav aria-label="跳到">` 里的 `<button>`，有可见焦点环；滚动时给目标卡片留出固定标题栏的高度，`prefers-reduced-motion` 时不做平滑滚动。阿拉伯语下目录和撤销提示镜像。
 - 分段选择（Timeline 样式、滚动模式）：迁入面板时改为 `role="radiogroup"`/`radio` + `aria-checked`，或按钮加 `aria-pressed`；不再只靠颜色表达选中。
 - Arabic RTL：行和面板只用 logical 属性（`ps-*`、`ms-*`、`text-start`）。Timeline 现在用物理 `left` 计算浮动高亮（`TimelineSettingsCard.tsx:85`、`:111`），迁入时改为直接给选中按钮画背景，去掉位置计算。
 
@@ -198,7 +205,7 @@ Highlight 标记做成面板而不是 value binding：运行时自己 live 读�
 ```ts
 export interface OfficialPluginEntry {
   readonly id: string; // OFFICIAL_PLUGIN_IDS.*
-  readonly group: OfficialPluginGroup; // 'appearance' | 'content' | 'input' | 'conversation'
+  readonly topic: OfficialPluginTopicId; // 主题卡，也是 popup section id，如 'pluginsLayout'
   /** 从被退役的 popupSettingsSearchIndex 条目原样搬来，含旧 section 标题键。 */
   readonly searchKeys: readonly TranslationKey[];
   readonly searchAliases?: readonly string[];
@@ -210,7 +217,7 @@ export interface OfficialPluginEntry {
 }
 ```
 
-数组顺序就是组内显示顺序。面板组件放在 `officialPluginPanels.tsx`，从行拿 `enabled`，从快照拿持久值，从旧 hook 拿动作。
+数组顺序就是卡内显示顺序。面板组件放在 `officialPluginPanels.tsx`，从行拿 `enabled`，从快照拿持久值，从旧 hook 拿动作。
 
 ### 3.4 三个特例
 
@@ -226,8 +233,8 @@ export interface OfficialPluginEntry {
 
 ### 3.6 搜索与定位
 
-- **搜索目标**：`usePopupSections` 接收动态条目 `officialPlugins:<pluginId>`，只为实际列出的行生成（与行使用同一资格判断）。语料 = manifest 所有语言的名称和描述 + registry `searchKeys` / `searchAliases`，经 `buildSettingsSearchCorpus`（`src/pages/popup/utils/settingsSearch.ts:85-90`）。旧条目的 `keys` 和别名原样搬进 registry，旧查询继续命中。
-- **Section**：新 id `officialPlugins` 替换永远隐藏的 `plugins`，默认放在 `localPlugins` 前。已存顺序不需要迁移：新 id 插在默认前驱之后（`usePopupSections.ts:47-55`），不存在的 id 在读取时被丢弃（`:112-116`）。之后删除各功能 section id 同样安全。AI Studio 白名单加 `officialPlugins: true`；没有行时卡片隐藏。
+- **搜索目标**：`usePopupSections` 接收动态条目 `<topicId>:<pluginId>`，以及每张有行的主题卡一个 section 条目（`pluginsTitle`、`pluginsNativeDescription` 和主题标题；不含较短的目录名，以免“Chats”之类的词把整张卡拉进常见搜索），只为实际列出的行生成（与行使用同一资格判断）。语料 = manifest 所有语言的名称和描述 + registry `searchKeys` / `searchAliases`，经 `buildSettingsSearchCorpus`（`src/pages/popup/utils/settingsSearch.ts:85-90`）。旧条目的 `keys` 和别名原样搬进 registry，旧查询继续命中。
+- **Section**（Batch 8 起）：八个主题 id 替换单个 `officialPlugins`，默认紧跟 `cloudSync`；已存顺序里的 `officialPlugins` 在读取时原地展开成八个主题 id，移动过 Plugins 卡的用户保留原位置。没有行的主题不可见，排序时被跳过。AI Studio 白名单逐个列出八个主题。以下是 Batch 1 时的记录：新 id `officialPlugins` 替换永远隐藏的 `plugins`，默认放在 `localPlugins` 前。已存顺序不需要迁移：新 id 插在默认前驱之后（`usePopupSections.ts:47-55`），不存在的 id 在读取时被丢弃（`:112-116`）。之后删除各功能 section id 同样安全。AI Studio 白名单加 `officialPlugins: true`；没有行时卡片隐藏。
 - **Batch 5 的 Timeline section**：Gemini 上 `timeline` 同时移除可见性、搜索目标和排序占位，否则"上移"会与不可见的 Timeline 交换，残留搜索目标还会让"无结果"不显示。插件站 rail 的 Timeline 卡改用独立的显示条件，不再借 Gemini 的 section。消息时间迁走时，搜索谓词一起迁。
 - **定位提示**：旧 `LOCATIONS` 与 `officialFeatureSetting.ts` 已移除；`pluginBlockedNote.ts` 的 `officialSwitch` 现在通过 registry 找到官方插件，使用 manifest 行名与 `pluginsTitle` 指向同一 popup 的 Plugins 卡片。保留十语种 `pluginBlockedByOfficialSetting`，`src/pages/popup/components/pluginBlockedNote.ts:86` 仍用它说明应关闭哪一行；它不再指向旧设置卡片。
 - **从页面定位**：默认模型失败提示会打开 popup（`src/pages/content/defaultModel/autoApply.ts:221-247`）。建议在 `gv.openPopup` 前把插件名写入 local 的 `gvPopupSettingsSearchQuery`，popup 打开时已经过滤到那一行（`usePopupSections.ts:82-99` 会恢复它）。
@@ -242,7 +249,7 @@ export interface OfficialPluginEntry {
 
   Registry 契约测试为每个列出的 id 检查"备份默认值经 binding 读取 = 缺失时的读取"。Batch 1 的 13 项全部一致。Batch 3、4 加入上述 id 时测试会失败，届时二选一：修备份（缺失保持缺失），或在测试里显式记录为已知限制。建议修备份，单独一个提交。
 
-- 本设计不新增存储键（选项展开状态只在内存中）。没有旧键的新功能，按 §7.12 加默认开启的 sync 键 + 绑定，于是 Gemini / AI Studio 官方插件全部以 sync 为准，`gvPluginsState` 只服务本地插件和插件站。
+- 本设计不新增存储键（Batch 8 起选项随开关显示，没有展开状态）。没有旧键的新功能，按 §7.12 加默认开启的 sync 键 + 绑定，于是 Gemini / AI Studio 官方插件全部以 sync 为准，`gvPluginsState` 只服务本地插件和插件站。
 
 ---
 
@@ -288,6 +295,7 @@ export interface OfficialPluginEntry {
 | 5    | 已完成 | Timeline 成为"对话"组的一行，选项（样式、滚动模式、隐藏容器、可拖动、固定预览、层级、重置位置、收藏历史）在它的面板里，分段选择改为 `radiogroup`、不再用 `left` 计算（§2.7）；Message timestamps 单独一行。AI Studio sidebar width 成行（未存开关时跟随文件夹开关，宽度写入不再顺带写开关）。`officialFeatureSetting.ts` 随最后一个 `LOCATIONS` 条目删除                                                   |
 | 6    | 已完成 | Batch delete（G + A）成为"对话"组的一行，默认开；文件夹开关关掉时开关置灰，行下提示去 Folder Options → Enable folder feature 打开（`requires`）。NanoBanana 两行放进"内容"组而非 §2 表里的"对话"组（它处理的是回复里的图片），Preview 行用 Experimental 徽标代替原来的 Unstable；任一开关都写两个拆分键并清掉旧的共享键（`enableWrite`，取代 `useWatermarkPopupSettings`）。NanoBanana 卡片和 section 删除 |
 | 7    | 已完成 | §2.4 的跟进：插件站 rail 的选项成为它插件行下的 Options 面板（rail 关闭时收藏库和消息时间仍可用，其余显示为禁用），消息时间是其中一项；Visual effects 在插件站插件卡里成行，chrome:// 等页面在回退设置里也有这一行。`TimelineSettingsCard`、`VisualEffectPicker` 卡片及 `'timeline'`、`'visualEffect'` section 删除，旧排序里的这两个槽位按惯例丢弃                                                        |
+| 8    | 已完成 | 单张 Plugins 卡拆成八张主题卡（§2.2），标题用普通 `CardTitle`；选项在开启时直接显示在行下，Options 按钮删除；标题栏和搜索框固定在顶部，搜索框下方是纯文字目录；行开关拨动后有 4 秒撤销提示。已存顺序里的 `officialPlugins` 原地展开；被官方插件挡住的本地插件提示改为指向主题卡。插件站 rail 的 Options 面板不变                                                                                           |
 
 ---
 
@@ -297,12 +305,12 @@ export interface OfficialPluginEntry {
 
 **Popup**（本设计让这一部分变成机械步骤）：
 
-1. 在 `src/pages/popup/officialPlugins/officialPluginRegistry.ts` 加条目：组、位置、从 `utils/popupSettingsSearchIndex.ts` 搬来的 `searchKeys` / `searchAliases`（含旧 section 标题键）；按 §3.3 需要时才加 `eligible`、`experimental`、`panel`、`control`。
+1. 在 `src/pages/popup/officialPlugins/officialPluginRegistry.ts` 加条目：主题卡、位置、从 `utils/popupSettingsSearchIndex.ts` 搬来的 `searchKeys` / `searchAliases`（含旧 section 标题键）；按 §3.3 需要时才加 `eligible`、`experimental`、`panel`、`control`。
 2. 需要时在 `officialPluginPanels.tsx` 加面板：复用旧卡片 JSX，`enabled` 从行来，持久值从快照来，按 §2.7 补 a11y/RTL。
 3. 删除旧界面：卡片行或 `wrapSection` 调用、hook 状态、`*_STORAGE_DEFAULTS` 键、`nativeSiteCapabilities.ts` 的 section id / AI Studio 白名单 / `VALUE_BADGE_SECTION_IDS`、搜索条目；旧 `officialFeatureSetting.ts` 已随 `LOCATIONS` 清空删除，无需新增定位表。
 4. 文案：只删除仅被已删行使用、且没有作为 `searchKeys` 或 manifest `messageKeys` 保留的键，10 个语言一起删；`bun run i18n:check`。
 5. 测试：把 id 加进 缺失 / false / true 表，迁移卡片测试的断言；契约测试负责其余。
-6. 文档：该功能 guide 的所有语言版本写明 popup 的「**Plugins 卡片标题** → **manifest 行名**」，两者都使用各语言实际文案。
+6. 文档：该功能 guide 的所有语言版本写明 popup 的「**主题卡标题** → **manifest 行名**」，两者都使用各语言实际文案。
 
 **已完成示例：Edit input width**（`voyager.gemini-edit-input-width`）。运行时在 §7.12 8-1 完成，popup 随 Batch 3 迁入「外观」组。Registry 保留原 section 标题、搜索词和 `widthPercent` 滑块，开关与数值分别经 `legacyEnableWrite`、`legacyValueWrite` 写原键；旧卡片控件、hook 状态和 section 已移除。备份默认值对缺失开关的影响仍是 §3.7 记录的既有限制。
 
@@ -314,14 +322,14 @@ export interface OfficialPluginEntry {
 
 | #   | 问题                                                 | 结论                                                                            |
 | --- | ---------------------------------------------------- | ------------------------------------------------------------------------------- |
-| 1   | Gemini 现在 26 行，下一波后约 38 行                  | 分组 + 搜索足够；某组超过约 12 行时再考虑可折叠组                               |
+| 1   | Gemini 现在 26 行，下一波后约 38 行                  | **已做**（Batch 8）：八张主题卡 + 目录 + 搜索；不做可折叠组                     |
 | 2   | 行名用 manifest 名还是旧卡片标签                     | **已定**：一律用 manifest 名；旧标签作搜索词                                    |
 | 3   | 选项只在开启时出现，旧 Timeline 卡关闭时显示禁用控件 | Gemini 只在开启时出现，收藏历史另有入口；插件站 rail 关闭时面板仍在，收藏库可用 |
 | 4   | Timeline 卡拆掉后消息时间放哪里                      | **已定**：不临时放 General；Batch 5 排在消息时间运行时迁移之后，那一行只搬一次  |
 | 5   | Formula copy 两站共用一个开关                        | 保持共用，面板里写明范围；分站开关是另一个产品决定                              |
 | 6   | 快捷键与 Timeline 相关                               | 保持独立卡片：全局生效，也驱动插件站 rail                                       |
 | 7   | 插件站 rail 在行旁边另有 Timeline 卡                 | **已做**（Batch 7）：卡片删除，选项在 rail 插件行的 Options 里                  |
-| 8   | 选项展开状态要不要持久化                             | 暂不；滑块在行内，少用的面板默认收起                                            |
+| 8   | 选项展开状态要不要持久化                             | 不需要（Batch 8）：选项随开关显示，没有展开状态                                 |
 | 9   | Visual effects 跨站                                  | **已做**（Batch 7）：每个站点各一行，绑定同一个键；卡片删除                     |
 | 10  | 降级                                                 | 天然安全：不搬数据，旧版本读同样的键                                            |
 | 11  | 备份补默认值改变缺失语义                             | 既有限制；建议在 Batch 3 前单独修                                               |

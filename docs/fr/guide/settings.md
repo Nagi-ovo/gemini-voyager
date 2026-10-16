@@ -8,22 +8,24 @@ Personnalisez chaque pixel.
 Pourquoi voir le futur à travers un petit trou de serrure ?
 Voyager vous permet d'étendre la largeur du chat.
 
-- **Largeur du chat** : Activez d'abord **Extensions** → **Largeur du chat** dans la popup. Il est désactivé par défaut, et le curseur n'apparaît sous la ligne qu'une fois activé. Le curseur va ensuite de 30 % à 100 % de la fenêtre (70 % par défaut). Élargissez pour le codage et les tableaux complexes, réduisez pour la lecture.
-- **Largeur de l'éditeur** : Activez d'abord **Extensions** → **Largeur de l'éditeur**, puis élargissez la zone qui apparaît lorsque vous modifiez un message envoyé.
+- **Largeur du chat** : Activez d'abord **Mise en page** → **Largeur du chat** dans la popup. Il est désactivé par défaut, et le curseur n'apparaît sous la ligne qu'une fois activé. Le curseur va ensuite de 30 % à 100 % de la fenêtre (70 % par défaut). Élargissez pour le codage et les tableaux complexes, réduisez pour la lecture.
+- **Largeur de l'éditeur** : Activez d'abord **Mise en page** → **Largeur de l'éditeur**, puis élargissez la zone qui apparaît lorsque vous modifiez un message envoyé.
 
 ## Contrôle
 
 Cliquez sur l'icône de l'extension pour accéder au centre de contrôle.
 
-- **Mode défilement** : dans **Extensions** → **Afficher la chronologie** → **Options**, `Flux` défile en douceur jusqu'au message ; `Saut` y va instantanément.
-- **Position de la Chronologie** : Dans **Extensions** → **Afficher la chronologie** → **Options**, activez **Chronologie déplaçable** et mettez-la où cela semble juste. **Réinitialiser la position de la chronologie** la remet à sa place.
-- **Effets Visuels** : sur Gemini et AI Studio, activez **Extensions** → **Effets visuels**, puis choisissez `Neige`, `Sakura` ou `Pluie` sous la ligne ; désactivez-la pour couper l’effet. Sur les autres sites (Claude, ChatGPT, DeepSeek et sites personnalisés), la même ligne se trouve dans la carte **Extensions** du site, dès que Voyager y est actif (Gestionnaire de prompts ou extension activée pour ce site).
+- **Mode défilement** : dans **Chronologie** → **Afficher la chronologie**, `Flux` défile en douceur jusqu'au message ; `Saut` y va instantanément.
+- **Position de la Chronologie** : Dans **Chronologie** → **Afficher la chronologie**, activez **Chronologie déplaçable** et mettez-la où cela semble juste. **Réinitialiser la position de la chronologie** la remet à sa place.
+- **Effets Visuels** : sur Gemini et AI Studio, activez **Mise en page** → **Effets visuels**, puis choisissez `Neige`, `Sakura` ou `Pluie` sous la ligne ; désactivez-la pour couper l’effet. Sur les autres sites (Claude, ChatGPT, DeepSeek et sites personnalisés), la même ligne se trouve dans la carte **Extensions** du site, dès que Voyager y est actif (Gestionnaire de prompts ou extension activée pour ce site).
 
 ## Ordre personnalisé
 
 Trop de sections dans le popup et celles que vous utilisez le plus sont tout en bas ?
 
 Survolez une carte de paramètres pour voir les boutons ▲/▼ en haut à droite. Cliquez pour déplacer une carte vers le haut ou le bas. Votre disposition est sauvegardée automatiquement et conservée d'une session à l'autre.
+
+Les fonctionnalités sont regroupées en cartes par thème (Mise en page, Barre latérale, Chronologie, Contenu des réponses…), et les options d'une fonctionnalité s'affichent juste sous son interrupteur une fois activée. Le champ de recherche et la ligne de noms de cartes en dessous restent en haut pendant le défilement ; cliquez sur un nom pour aller à cette carte. Un interrupteur basculé par erreur ? Appuyez sur **Annuler** dans le message en bas.
 
 ## Atmosphère
 

@@ -11,6 +11,8 @@ export interface PopupSectionReorderControls {
 }
 
 export interface PopupSectionProps {
+  /** The wrapper's DOM id, for the table of contents to scroll to. */
+  anchorId?: string;
   visible: boolean;
   order: number;
   reorder?: PopupSectionReorderControls;
@@ -18,10 +20,10 @@ export interface PopupSectionProps {
 }
 
 /** A section's placement and controls; state and filtering belong to usePopupSections. */
-export function PopupSection({ visible, order, reorder, children }: PopupSectionProps) {
+export function PopupSection({ anchorId, visible, order, reorder, children }: PopupSectionProps) {
   if (!visible) return null;
   return (
-    <div style={{ order }} className="group/reorder relative">
+    <div id={anchorId} style={{ order }} className="group/reorder relative">
       {reorder && <SectionReorderControls {...reorder} />}
       {children}
     </div>

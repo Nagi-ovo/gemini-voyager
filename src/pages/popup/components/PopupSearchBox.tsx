@@ -7,29 +7,30 @@ import type { TranslationKey } from '@/utils/translations';
 export interface PopupSearchBoxProps {
   query: string;
   onChange: (query: string) => void;
+  dir?: 'rtl';
   t: (key: TranslationKey) => string;
 }
 
-export function PopupSearchBox({ query, onChange, t }: PopupSearchBoxProps) {
+export function PopupSearchBox({ query, onChange, dir, t }: PopupSearchBoxProps) {
   return (
-    <div style={{ order: -3 }} className="relative">
+    <div className="relative" dir={dir}>
       <Search
-        className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+        className="text-muted-foreground pointer-events-none absolute start-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2"
         aria-hidden="true"
       />
       <input
         type="search"
         value={query}
         onChange={(event) => onChange(event.target.value)}
-        placeholder={t('popupSettingsSearchPlaceholder')}
+        placeholder={t('popupSettingsSearchExamples')}
         aria-label={t('popupSettingsSearchPlaceholder')}
-        className="bg-card border-border focus:ring-primary/40 w-full rounded-lg border py-2 pr-9 pl-9 text-sm shadow-sm transition-all outline-none focus:ring-2 [&::-webkit-search-cancel-button]:hidden"
+        className={`bg-card border-border focus:ring-primary/40 placeholder:text-muted-foreground h-11 w-full rounded-xl border ps-10 text-sm shadow-sm transition-all outline-none focus:ring-2 [&::-webkit-search-cancel-button]:hidden ${query ? 'pe-10' : 'pe-3'}`}
       />
       {query && (
         <button
           type="button"
           onClick={() => onChange('')}
-          className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md transition-colors"
+          className="text-muted-foreground hover:text-foreground absolute end-2.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md transition-colors"
           aria-label={t('popupSettingsSearchClear')}
           title={t('popupSettingsSearchClear')}
         >

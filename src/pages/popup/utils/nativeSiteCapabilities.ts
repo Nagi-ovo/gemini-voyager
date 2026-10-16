@@ -2,9 +2,30 @@ export type NativePopupPlatform = 'gemini' | 'aistudio';
 
 export const POPUP_SECTION_SEARCH_SETTING_ID = '__section';
 
+/**
+ * The official plugin list's topic cards, in their default order. Each is a
+ * section of its own, so it reorders, hides in a search and anchors the table
+ * of contents like any other card.
+ */
+export const OFFICIAL_PLUGIN_TOPIC_IDS = [
+  'pluginsLayout',
+  'pluginsSidebar',
+  'pluginsTimeline',
+  'pluginsContent',
+  'pluginsCharts',
+  'pluginsExport',
+  'pluginsInput',
+  'pluginsConversations',
+] as const;
+
+export type OfficialPluginTopicId = (typeof OFFICIAL_PLUGIN_TOPIC_IDS)[number];
+
+/** The single Plugins card the topic cards replaced; a saved order may still hold its slot. */
+export const RETIRED_OFFICIAL_PLUGINS_SECTION_ID = 'officialPlugins';
+
 export const NATIVE_POPUP_SECTION_IDS = [
   'cloudSync',
-  'officialPlugins',
+  ...OFFICIAL_PLUGIN_TOPIC_IDS,
   'localPlugins',
   'folder',
   'folderSpacing',
@@ -25,7 +46,15 @@ type SectionCapability = true | readonly string[];
  */
 const AI_STUDIO_CAPABILITIES = {
   cloudSync: true,
-  officialPlugins: true,
+  // A topic shows only once it has a row this tab lists (usePopupSections).
+  pluginsLayout: true,
+  pluginsSidebar: true,
+  pluginsTimeline: true,
+  pluginsContent: true,
+  pluginsCharts: true,
+  pluginsExport: true,
+  pluginsInput: true,
+  pluginsConversations: true,
   localPlugins: true,
   folder: ['enableFolderFeature', 'hideArchivedConversations', 'enableAccountIsolation'],
   folderSpacing: true,
@@ -39,6 +68,10 @@ const AI_STUDIO_CAPABILITIES = {
   ],
   general: ['remoteAnnouncementNotification', 'changelogBadgeMode'],
 } as const satisfies Partial<Record<NativePopupSectionId, SectionCapability>>;
+
+export function isOfficialPluginTopicId(id: string): id is OfficialPluginTopicId {
+  return (OFFICIAL_PLUGIN_TOPIC_IDS as readonly string[]).includes(id);
+}
 
 export function isNativePopupSectionAvailable(
   platform: NativePopupPlatform,

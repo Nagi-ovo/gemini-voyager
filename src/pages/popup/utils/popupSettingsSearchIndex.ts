@@ -137,12 +137,8 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ],
     ['prompt library vault snippets templates websites 提示词 指令 宝库 网站 模板'],
   ),
-  // Each listed plugin is its own target, built from its manifest (officialPluginSearch.ts).
-  popupSectionSearchTarget(
-    'officialPlugins',
-    ['pluginsTitle', 'pluginsNativeDescription'],
-    ['plugin plugins add-on features 插件 功能'],
-  ),
+  // Each topic card and each listed plugin is its own target, built from what the list shows
+  // (officialPluginSearch.ts).
   popupSectionSearchTarget('general', ['generalOptions']),
   popupSearchTarget('general', 'enableTabTitleUpdate', [
     'enableTabTitleUpdate',

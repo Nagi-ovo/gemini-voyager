@@ -260,42 +260,66 @@ describe('the official plugin list in the popup', () => {
   const toggle = (id: string) => popupRows(container).toggle(id);
   const listedIds = () => popupRows(container).listedIds();
 
-  it('lists every moved switch once, in four groups, and no old card repeats one', async () => {
+  it('lists every moved switch once, in eight topic cards, and no old card repeats one', async () => {
     await mount();
-    const groups = [...container.querySelectorAll<HTMLElement>('section[aria-labelledby]')]
-      .filter((section) => section.querySelector('[data-official-plugin]'))
-      .map((section) => ({
-        heading: section.querySelector('h4')!.textContent,
-        rows: [...section.querySelectorAll<HTMLElement>('[data-official-plugin]')].map(
+    const cards = [...container.querySelectorAll<HTMLElement>('[data-plugin-topic]')].map(
+      (card) => ({
+        title: card.querySelector('h3')!.textContent,
+        rows: [...card.querySelectorAll<HTMLElement>('[data-official-plugin]')].map(
           (element) => element.dataset.officialPlugin,
         ),
-      }));
-    expect(groups).toEqual([
+      }),
+    );
+    expect(cards).toEqual([
       {
-        heading: TRANSLATIONS.en.pluginGroupAppearance,
+        title: TRANSLATIONS.en.pluginTopicLayout,
         rows: [
-          OFFICIAL_PLUGIN_IDS.geminiHideInputHalo,
           OFFICIAL_PLUGIN_IDS.geminiChatWidth,
           OFFICIAL_PLUGIN_IDS.geminiChatFontSize,
           OFFICIAL_PLUGIN_IDS.geminiChatLineHeight,
           OFFICIAL_PLUGIN_IDS.geminiEditInputWidth,
-          OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
-          OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide,
-          OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide,
-          OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
+          OFFICIAL_PLUGIN_IDS.geminiHideInputHalo,
           OFFICIAL_PLUGIN_IDS.visualEffects,
         ],
       },
       {
-        heading: TRANSLATIONS.en.pluginGroupContent,
+        title: TRANSLATIONS.en.pluginTopicSidebar,
+        rows: [
+          OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
+          OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide,
+          OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide,
+          OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
+        ],
+      },
+      {
+        title: TRANSLATIONS.en.pluginTopicTimeline,
+        rows: [
+          OFFICIAL_PLUGIN_IDS.geminiTimeline,
+          OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps,
+          OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll,
+          OFFICIAL_PLUGIN_IDS.geminiHighlight,
+        ],
+      },
+      {
+        title: TRANSLATIONS.en.pluginTopicContent,
         rows: [
           OFFICIAL_PLUGIN_IDS.geminiCodeCollapse,
           OFFICIAL_PLUGIN_IDS.geminiUserLatex,
+          OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
+          OFFICIAL_PLUGIN_IDS.geminiMarkdownFix,
+        ],
+      },
+      {
+        title: TRANSLATIONS.en.pluginTopicCharts,
+        rows: [
           OFFICIAL_PLUGIN_IDS.geminiMermaid,
           OFFICIAL_PLUGIN_IDS.geminiWaveDrom,
           OFFICIAL_PLUGIN_IDS.geminiECharts,
-          OFFICIAL_PLUGIN_IDS.geminiMarkdownFix,
-          OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
+        ],
+      },
+      {
+        title: TRANSLATIONS.en.pluginTopicExport,
+        rows: [
           OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
           OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
           OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload,
@@ -303,33 +327,33 @@ describe('the official plugin list in the popup', () => {
         ],
       },
       {
-        heading: TRANSLATIONS.en.pluginGroupInput,
+        title: TRANSLATIONS.en.pluginTopicInput,
         rows: [
-          OFFICIAL_PLUGIN_IDS.geminiPromptHistory,
-          OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
-          OFFICIAL_PLUGIN_IDS.geminiInputCollapse,
           OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend,
           OFFICIAL_PLUGIN_IDS.geminiVimInput,
+          OFFICIAL_PLUGIN_IDS.geminiInputCollapse,
+          OFFICIAL_PLUGIN_IDS.geminiPromptHistory,
           OFFICIAL_PLUGIN_IDS.geminiDraftSave,
+          OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
         ],
       },
       {
-        heading: TRANSLATIONS.en.pluginGroupConversation,
+        title: TRANSLATIONS.en.pluginTopicConversations,
         rows: [
-          OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll,
           OFFICIAL_PLUGIN_IDS.geminiFork,
-          OFFICIAL_PLUGIN_IDS.geminiResearchPack,
-          OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
-          OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
-          OFFICIAL_PLUGIN_IDS.geminiHighlight,
-          OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
-          OFFICIAL_PLUGIN_IDS.geminiTimeline,
-          OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps,
           OFFICIAL_PLUGIN_IDS.geminiBatchDelete,
+          OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
+          OFFICIAL_PLUGIN_IDS.geminiResearchPack,
+          OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
+          OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
           OFFICIAL_PLUGIN_IDS.geminiContextSync,
         ],
       },
     ]);
+    // The single Plugins card is gone: no card is titled Plugins any more.
+    expect(
+      [...container.querySelectorAll('h3')].map((heading) => heading.textContent),
+    ).not.toContain(TRANSLATIONS.en.pluginsTitle);
     // The old Context Sync card is gone, and nothing offers a sync while its row is off.
     expect(
       [...container.querySelectorAll('h3')].map((heading) => heading.textContent),
@@ -536,12 +560,20 @@ describe('the official plugin list in the popup', () => {
       extensionApi.tabs.query.mockResolvedValue([{ id: 8, url: AI_STUDIO }]);
       if (stored !== undefined) sync[StorageKeys.AISTUDIO_ENTER_SEND] = stored;
       await mount();
-      expect(listedIds()).toEqual([
-        OFFICIAL_PLUGIN_IDS.aistudioSidebarWidth,
-        OFFICIAL_PLUGIN_IDS.visualEffects,
-        OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy,
-        OFFICIAL_PLUGIN_IDS.aistudioEnterSend,
-        OFFICIAL_PLUGIN_IDS.aistudioBatchDelete,
+      // Each in its topic card: layout, sidebar, answer content, input, conversations.
+      expect(
+        [...container.querySelectorAll<HTMLElement>('[data-plugin-topic]')].map((card) => [
+          card.dataset.pluginTopic,
+          [...card.querySelectorAll<HTMLElement>('[data-official-plugin]')].map(
+            (element) => element.dataset.officialPlugin,
+          ),
+        ]),
+      ).toEqual([
+        ['pluginsLayout', [OFFICIAL_PLUGIN_IDS.visualEffects]],
+        ['pluginsSidebar', [OFFICIAL_PLUGIN_IDS.aistudioSidebarWidth]],
+        ['pluginsContent', [OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy]],
+        ['pluginsInput', [OFFICIAL_PLUGIN_IDS.aistudioEnterSend]],
+        ['pluginsConversations', [OFFICIAL_PLUGIN_IDS.aistudioBatchDelete]],
       ]);
       expect(toggle(OFFICIAL_PLUGIN_IDS.aistudioEnterSend).checked).toBe(expected);
       expect(container.querySelector('#changelog-notify-badge')).not.toBeNull();

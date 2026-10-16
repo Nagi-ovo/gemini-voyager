@@ -58,7 +58,7 @@ function FormulaCopyPanel({ values, write, idPrefix, t }: OfficialPanelProps) {
               value={option.value}
               checked={format === option.value}
               onChange={() => write({ [StorageKeys.FORMULA_COPY_FORMAT]: option.value })}
-              className="h-3.5 w-3.5"
+              className="accent-primary h-3.5 w-3.5"
             />
             <span className="text-xs">{t(option.label)}</span>
           </label>

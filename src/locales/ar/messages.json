@@ -99,6 +99,10 @@
     "message": "البحث في الإعدادات",
     "description": "Popup settings search input placeholder"
   },
+  "popupSettingsSearchExamples": {
+    "message": "ابحث، مثل «عرض» أو «الجدول الزمني»",
+    "description": "Placeholder of the popup settings search, with two example searches"
+  },
   "popupSettingsSearchClear": {
     "message": "مسح البحث",
     "description": "Popup settings search clear button label"
@@ -2753,21 +2757,97 @@
     "message": "فعّل أولًا {card} ← {setting}.",
     "description": "Under a Plugins row whose feature needs a native setting that is off. {setting} is that setting's label; {card} is the settings card that holds it."
   },
-  "pluginGroupAppearance": {
-    "message": "المظهر",
-    "description": "Heading of the plugin list group for layout and look"
+  "pluginTopicLayout": {
+    "message": "تخطيط الصفحة",
+    "description": "Title of the popup card for page layout features (widths, font size, spacing, effects)"
   },
-  "pluginGroupContent": {
+  "pluginTopicLayoutShort": {
+    "message": "التخطيط",
+    "description": "Table-of-contents link to the page layout card"
+  },
+  "pluginTopicSidebar": {
+    "message": "الشريط الجانبي",
+    "description": "Title of the popup card for sidebar features"
+  },
+  "pluginTopicSidebarShort": {
+    "message": "الشريط الجانبي",
+    "description": "Table-of-contents link to the sidebar card"
+  },
+  "pluginTopicTimeline": {
+    "message": "الجدول الزمني",
+    "description": "Title of the popup card for timeline features"
+  },
+  "pluginTopicTimelineShort": {
+    "message": "الجدول الزمني",
+    "description": "Table-of-contents link to the timeline card"
+  },
+  "pluginTopicContent": {
+    "message": "محتوى الإجابات",
+    "description": "Title of the popup card for features that change how answers display"
+  },
+  "pluginTopicContentShort": {
     "message": "المحتوى",
-    "description": "Heading of the plugin list group for how message content renders and copies"
+    "description": "Table-of-contents link to the answer content card"
   },
-  "pluginGroupInput": {
+  "pluginTopicCharts": {
+    "message": "المخططات",
+    "description": "Title of the popup card for chart and diagram rendering"
+  },
+  "pluginTopicChartsShort": {
+    "message": "المخططات",
+    "description": "Table-of-contents link to the charts card"
+  },
+  "pluginTopicExport": {
+    "message": "التصدير والصور",
+    "description": "Title of the popup card for export, copy and image features"
+  },
+  "pluginTopicExportShort": {
+    "message": "التصدير",
+    "description": "Table-of-contents link to the export and images card"
+  },
+  "pluginTopicInput": {
     "message": "الإدخال",
-    "description": "Heading of the plugin list group for the message input box"
+    "description": "Title of the popup card for input box features"
   },
-  "pluginGroupConversation": {
-    "message": "المحادثة",
-    "description": "Heading of the plugin list group for working with a conversation"
+  "pluginTopicInputShort": {
+    "message": "الإدخال",
+    "description": "Table-of-contents link to the input card"
+  },
+  "pluginTopicConversations": {
+    "message": "المحادثات",
+    "description": "Title of the popup card for conversation management features"
+  },
+  "pluginTopicConversationsShort": {
+    "message": "المحادثات",
+    "description": "Table-of-contents link to the conversations card"
+  },
+  "popupTocLabel": {
+    "message": "انتقل إلى",
+    "description": "Accessible name of the popup row of links that jump to each settings card"
+  },
+  "popupTocShortcuts": {
+    "message": "الاختصارات",
+    "description": "Table-of-contents link to the keyboard shortcuts card"
+  },
+  "popupTocPrompts": {
+    "message": "المطالبات",
+    "description": "Table-of-contents link to the Prompt Manager card"
+  },
+  "popupTocGeneral": {
+    "message": "عام",
+    "description": "Table-of-contents link to the General Options card"
+  },
+  "pluginToggleToastOn": {
+    "message": "تم تشغيل «{name}»",
+    "description": "Toast after the user turns a feature on in the popup; {name} is the feature name"
+  },
+  "pluginToggleToastOff": {
+    "message": "تم إيقاف «{name}»",
+    "description": "Toast after the user turns a feature off in the popup; {name} is the feature name"
+  },
+  "pluginToggleUndo": {
+    "message": "تراجع",
+    "description": "Button in the toast that puts the switch back"
   },
   "pluginViewSource": {
     "message": "المصدر",

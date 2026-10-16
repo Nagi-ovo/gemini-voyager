@@ -1,6 +1,4 @@
-import React, { useState } from 'react';
-
-import { ChevronDown } from 'lucide-react';
+import React from 'react';
 
 import { Switch } from '@/components/ui/switch';
 import { getModifierKey } from '@/core/utils/browser';
@@ -38,15 +36,23 @@ export interface OfficialPanelIo {
   readonly openStarredHistory?: () => void;
 }
 
+/** What a user's flip of a row's switch did, for an undo offer. */
+export interface OfficialPluginFlip {
+  readonly pluginId: string;
+  /** The row's shown name. */
+  readonly name: string;
+  readonly enabled: boolean;
+}
+
 export interface OfficialPluginRowProps {
   readonly row: Row;
   readonly status: PluginStatus | undefined;
   readonly nameSources: readonly PluginManifest[];
   readonly control: OfficialPluginControl | undefined;
   readonly panelIo: OfficialPanelIo | undefined;
-  /** A settings search is on: a listed row with options shows them open. */
-  readonly searching: boolean;
   readonly onToggle: (pluginId: string, enabled: boolean) => void;
+  /** Told after the user flips the switch, once the write is under way. */
+  readonly onFlipped?: (flip: OfficialPluginFlip) => void;
   readonly onSettingsChange: (
     pluginId: string,
     values: Readonly<Record<string, PluginSettingValue>>,
@@ -65,8 +71,8 @@ export function OfficialPluginListRow({
   nameSources,
   control,
   panelIo,
-  searching,
   onToggle,
+  onFlipped,
   onSettingsChange,
   language,
   t,
@@ -82,8 +88,6 @@ export function OfficialPluginListRow({
           .replace('{setting}', () => t(requirement.setting))
           .replace('{card}', () => t(requirement.card))
     : null;
-  // Collapsed until asked for; a search that lists the row opens it, unless the user closed it.
-  const [optionsOpen, setOptionsOpen] = useState<boolean | null>(null);
   // Number settings show as the registry's sliders, which save on release.
   const sliderKeys = entry.sliders ? Object.keys(entry.sliders) : [];
   const InlinePanel = entry.inlinePanel && panelIo ? OFFICIAL_PANELS[entry.inlinePanel] : null;
@@ -96,7 +100,10 @@ export function OfficialPluginListRow({
   const requirementId = domId('official-plugin-requirement', manifest.id);
   const panelId = domId('official-plugin-options', manifest.id);
   const Panel = entry.panel && panelIo ? OFFICIAL_PANELS[entry.panel] : null;
-  const expanded = optionsOpen ?? searching;
+  // Options show under the row while it is on, as the old cards showed them; off keeps their values.
+  const hasOptions =
+    enabled &&
+    (hasOtherSettings || InlinePanel !== null || entry.sliders !== undefined || Panel !== null);
   const note = blockedPluginNote({
     status,
     manifests: nameSources,
@@ -138,8 +145,30 @@ export function OfficialPluginListRow({
               {t(usageHint).replace('{modifier}', getModifierKey())}
             </p>
           )}
-          {/* Options appear only while the plugin is on; turning it off keeps their stored values. */}
-          {enabled && hasOtherSettings && (
+        </div>
+        <Switch
+          id={inputId}
+          checked={enabled}
+          disabled={row.unmetRequirement !== null}
+          aria-describedby={
+            row.unmetRequirement ? `${descriptionId} ${requirementId}` : descriptionId
+          }
+          onChange={(event) => {
+            const next = event.target.checked;
+            if (control) control.setEnabled(next);
+            else onToggle(manifest.id, next);
+            onFlipped?.({ pluginId: manifest.id, name, enabled: next });
+          }}
+        />
+      </div>
+      {hasOptions && (
+        <div
+          id={panelId}
+          role="group"
+          aria-label={t('pluginRowOptionsFor').replace('{name}', () => name)}
+          className="mt-1"
+        >
+          {hasOtherSettings && (
             <PluginSettings
               plugin={manifest}
               values={settings}
@@ -148,10 +177,10 @@ export function OfficialPluginListRow({
               handleImmediateSettings={onSettingsChange}
             />
           )}
-          {enabled && InlinePanel && panelIo && (
+          {InlinePanel && panelIo && (
             <InlinePanel values={panelIo.values} write={panelIo.write} idPrefix={panelId} t={t} />
           )}
-          {enabled && entry.sliders && (
+          {entry.sliders && (
             <OfficialPluginSliders
               manifest={manifest}
               sliders={entry.sliders}
@@ -161,49 +190,9 @@ export function OfficialPluginListRow({
               t={t}
             />
           )}
-          {enabled && Panel && (
-            <button
-              type="button"
-              aria-expanded={expanded}
-              aria-controls={panelId}
-              aria-label={t('pluginRowOptionsFor').replace('{name}', name)}
-              onClick={() => setOptionsOpen(!expanded)}
-              className="text-primary mt-1.5 inline-flex items-center gap-0.5 text-xs font-medium hover:underline"
-            >
-              {t('pluginRowOptions')}
-              <ChevronDown
-                aria-hidden="true"
-                className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`}
-              />
-            </button>
-          )}
-        </div>
-        <Switch
-          id={inputId}
-          checked={enabled}
-          disabled={row.unmetRequirement !== null}
-          aria-describedby={
-            row.unmetRequirement ? `${descriptionId} ${requirementId}` : descriptionId
-          }
-          onChange={(event) =>
-            control
-              ? control.setEnabled(event.target.checked)
-              : onToggle(manifest.id, event.target.checked)
-          }
-        />
-      </div>
-      {enabled &&
-        Panel &&
-        panelIo && (
-          // Mounted only while on and open: polling, timers and a Sync button end with the switch.
-          <div
-            id={panelId}
-            role="group"
-            hidden={!expanded}
-            aria-label={t('pluginRowOptionsFor').replace('{name}', name)}
-            className="border-border/60 mt-2 border-s-2 ps-3"
-          >
-            {expanded && (
+          {/* Mounted only while on: polling, timers and a Sync button end with the switch. */}
+          {Panel && panelIo && (
+            <div className="mt-3">
               <Panel
                 values={panelIo.values}
                 write={panelIo.write}
@@ -212,9 +201,10 @@ export function OfficialPluginListRow({
                 idPrefix={panelId}
                 t={t}
               />
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
+      )}
     </li>
   );
 }

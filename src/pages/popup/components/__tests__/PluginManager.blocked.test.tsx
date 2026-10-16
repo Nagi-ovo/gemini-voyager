@@ -76,6 +76,9 @@ describe('PluginManager blocked plugins', () => {
       enableFormulaCopy: enMessages.enableFormulaCopy.message,
       formulaCopyFormat: enMessages.formulaCopyFormat.message,
       pluginsTitle: enMessages.pluginsTitle.message,
+      pluginTopicTimeline: enMessages.pluginTopicTimeline.message,
+      pluginTopicContent: enMessages.pluginTopicContent.message,
+      pluginTopicInput: enMessages.pluginTopicInput.message,
     };
   });
 
@@ -152,10 +155,13 @@ describe('PluginManager blocked by a packaged official plugin', () => {
       enableFormulaCopy: enMessages.enableFormulaCopy.message,
       formulaCopyFormat: enMessages.formulaCopyFormat.message,
       pluginsTitle: enMessages.pluginsTitle.message,
+      pluginTopicTimeline: enMessages.pluginTopicTimeline.message,
+      pluginTopicContent: enMessages.pluginTopicContent.message,
+      pluginTopicInput: enMessages.pluginTopicInput.message,
     };
   });
 
-  it('points a conflict with the Gemini timeline at its Plugins row', async () => {
+  it('points a conflict with the Gemini timeline at its row in the Timeline card', async () => {
     await renderManager({
       nameSources: [widthPlugin, officialTimeline],
       statuses: [{ ...BLOCKED, blockedReason: 'conflict', blockedBy: officialTimeline.id }],
@@ -164,13 +170,13 @@ describe('PluginManager blocked by a packaged official plugin', () => {
     expect(container.textContent).toContain(
       en('pluginBlockedByOfficialSetting')
         .replace('{setting}', 'Show Timeline')
-        .replace('{card}', en('pluginsTitle')),
+        .replace('{card}', en('pluginTopicTimeline')),
     );
     expect(pluginToggle().disabled).toBe(false);
   });
 
   it.each([OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy])(
-    'points a conflict with %s at its Plugins row, named without the site',
+    'points a conflict with %s at its row in the Answer content card, named without the site',
     async (blockedBy) => {
       const named = { ...officialFormula, id: blockedBy };
       await renderManager({
@@ -181,13 +187,13 @@ describe('PluginManager blocked by a packaged official plugin', () => {
       expect(container.textContent).toContain(
         en('pluginBlockedByOfficialSetting')
           .replace('{setting}', 'Formula Copy')
-          .replace('{card}', en('pluginsTitle')),
+          .replace('{card}', en('pluginTopicContent')),
       );
       expect(container.textContent).not.toContain('Gemini · Formula Copy');
     },
   );
 
-  it('points a conflict with a plugin listed in the Plugins card at its row there', async () => {
+  it('points a conflict with a plugin listed in a topic card at its row there', async () => {
     await renderManager({
       nameSources: [widthPlugin, officialVim],
       statuses: [
@@ -198,7 +204,7 @@ describe('PluginManager blocked by a packaged official plugin', () => {
     expect(container.textContent).toContain(
       en('pluginBlockedByOfficialSetting')
         .replace('{setting}', 'Vim Input')
-        .replace('{card}', en('pluginsTitle')),
+        .replace('{card}', en('pluginTopicInput')),
     );
     expect(pluginToggle().disabled).toBe(false);
   });

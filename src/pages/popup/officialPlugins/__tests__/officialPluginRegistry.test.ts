@@ -14,7 +14,8 @@ import {
 import { legacyValueBindingsFor } from '@/features/plugins/storage/legacyValueBindings';
 import { TRANSLATIONS } from '@/utils/translations';
 
-import { OFFICIAL_PLUGIN_ENTRIES, OFFICIAL_PLUGIN_GROUPS } from '../officialPluginRegistry';
+import { OFFICIAL_PLUGIN_TOPIC_IDS } from '../../utils/nativeSiteCapabilities';
+import { OFFICIAL_PLUGIN_ENTRIES, OFFICIAL_PLUGIN_TOPICS } from '../officialPluginRegistry';
 
 async function packagedManifests() {
   const lists = await Promise.all([
@@ -25,14 +26,14 @@ async function packagedManifests() {
 }
 
 describe('the official plugin list registry', () => {
-  it('lists each packaged official plugin at most once, in a known group', () => {
+  it('lists each packaged official plugin at most once, in a topic card', () => {
     const ids = OFFICIAL_PLUGIN_ENTRIES.map((entry) => entry.id);
     expect(new Set(ids).size).toBe(ids.length);
-    const groups = new Set(OFFICIAL_PLUGIN_GROUPS.map((group) => group.id));
     for (const entry of OFFICIAL_PLUGIN_ENTRIES) {
       expect(isPackagedOfficialPluginId(entry.id), entry.id).toBe(true);
-      expect(groups.has(entry.group), entry.id).toBe(true);
     }
+    // Every topic is a popup section, so it reorders and anchors like any card.
+    expect(OFFICIAL_PLUGIN_TOPICS.map((topic) => topic.id)).toEqual([...OFFICIAL_PLUGIN_TOPIC_IDS]);
   });
 
   it('gives every packaged Gemini and AI Studio plugin a row', () => {
@@ -97,8 +98,11 @@ describe('the official plugin list registry', () => {
     }
   });
 
-  it('names every group and every old search word in English', () => {
-    for (const group of OFFICIAL_PLUGIN_GROUPS) expect(TRANSLATIONS.en[group.label]).toBeTruthy();
+  it('names every topic and every old search word in English', () => {
+    for (const topic of OFFICIAL_PLUGIN_TOPICS) {
+      expect(TRANSLATIONS.en[topic.title], topic.id).toBeTruthy();
+      expect(TRANSLATIONS.en[topic.tocLabel], topic.id).toBeTruthy();
+    }
     for (const entry of OFFICIAL_PLUGIN_ENTRIES) {
       for (const key of entry.searchKeys) expect(TRANSLATIONS.en[key], key).toBeTruthy();
     }

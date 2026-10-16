@@ -99,6 +99,10 @@
     "message": "Search settings",
     "description": "Popup settings search input placeholder"
   },
+  "popupSettingsSearchExamples": {
+    "message": "Search, e.g. “width”, “timeline”",
+    "description": "Placeholder of the popup settings search, with two example searches"
+  },
   "popupSettingsSearchClear": {
     "message": "Clear search",
     "description": "Popup settings search clear button label"
@@ -2753,21 +2757,97 @@
     "message": "Turn on {card} → {setting} first.",
     "description": "Under a Plugins row whose feature needs a native setting that is off. {setting} is that setting's label; {card} is the settings card that holds it."
   },
-  "pluginGroupAppearance": {
-    "message": "Appearance",
-    "description": "Heading of the plugin list group for layout and look"
+  "pluginTopicLayout": {
+    "message": "Page layout",
+    "description": "Title of the popup card for page layout features (widths, font size, spacing, effects)"
   },
-  "pluginGroupContent": {
+  "pluginTopicLayoutShort": {
+    "message": "Layout",
+    "description": "Table-of-contents link to the page layout card"
+  },
+  "pluginTopicSidebar": {
+    "message": "Sidebar",
+    "description": "Title of the popup card for sidebar features"
+  },
+  "pluginTopicSidebarShort": {
+    "message": "Sidebar",
+    "description": "Table-of-contents link to the sidebar card"
+  },
+  "pluginTopicTimeline": {
+    "message": "Timeline",
+    "description": "Title of the popup card for timeline features"
+  },
+  "pluginTopicTimelineShort": {
+    "message": "Timeline",
+    "description": "Table-of-contents link to the timeline card"
+  },
+  "pluginTopicContent": {
+    "message": "Answer content",
+    "description": "Title of the popup card for features that change how answers display"
+  },
+  "pluginTopicContentShort": {
     "message": "Content",
-    "description": "Heading of the plugin list group for how message content renders and copies"
+    "description": "Table-of-contents link to the answer content card"
   },
-  "pluginGroupInput": {
+  "pluginTopicCharts": {
+    "message": "Charts",
+    "description": "Title of the popup card for chart and diagram rendering"
+  },
+  "pluginTopicChartsShort": {
+    "message": "Charts",
+    "description": "Table-of-contents link to the charts card"
+  },
+  "pluginTopicExport": {
+    "message": "Export & images",
+    "description": "Title of the popup card for export, copy and image features"
+  },
+  "pluginTopicExportShort": {
+    "message": "Export",
+    "description": "Table-of-contents link to the export and images card"
+  },
+  "pluginTopicInput": {
     "message": "Input",
-    "description": "Heading of the plugin list group for the message input box"
+    "description": "Title of the popup card for input box features"
   },
-  "pluginGroupConversation": {
-    "message": "Conversation",
-    "description": "Heading of the plugin list group for working with a conversation"
+  "pluginTopicInputShort": {
+    "message": "Input",
+    "description": "Table-of-contents link to the input card"
+  },
+  "pluginTopicConversations": {
+    "message": "Conversations",
+    "description": "Title of the popup card for conversation management features"
+  },
+  "pluginTopicConversationsShort": {
+    "message": "Chats",
+    "description": "Table-of-contents link to the conversations card"
+  },
+  "popupTocLabel": {
+    "message": "Jump to",
+    "description": "Accessible name of the popup row of links that jump to each settings card"
+  },
+  "popupTocShortcuts": {
+    "message": "Shortcuts",
+    "description": "Table-of-contents link to the keyboard shortcuts card"
+  },
+  "popupTocPrompts": {
+    "message": "Prompts",
+    "description": "Table-of-contents link to the Prompt Manager card"
+  },
+  "popupTocGeneral": {
+    "message": "General",
+    "description": "Table-of-contents link to the General Options card"
+  },
+  "pluginToggleToastOn": {
+    "message": "Turned on “{name}”",
+    "description": "Toast after the user turns a feature on in the popup; {name} is the feature name"
+  },
+  "pluginToggleToastOff": {
+    "message": "Turned off “{name}”",
+    "description": "Toast after the user turns a feature off in the popup; {name} is the feature name"
+  },
+  "pluginToggleUndo": {
+    "message": "Undo",
+    "description": "Button in the toast that puts the switch back"
   },
   "pluginViewSource": {
     "message": "Source",

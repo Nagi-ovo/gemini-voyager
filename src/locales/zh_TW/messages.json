@@ -99,6 +99,10 @@
     "message": "搜尋設定",
     "description": "Popup 設定搜尋框佔位符"
   },
+  "popupSettingsSearchExamples": {
+    "message": "搜尋設定，例如「寬度」「時間軸」",
+    "description": "Placeholder of the popup settings search, with two example searches"
+  },
   "popupSettingsSearchClear": {
     "message": "清除搜尋",
     "description": "Popup 設定搜尋清除按鈕標籤"
@@ -2753,21 +2757,97 @@
     "message": "需先開啟 {card} → {setting}。",
     "description": "Under a Plugins row whose feature needs a native setting that is off. {setting} is that setting's label; {card} is the settings card that holds it."
   },
-  "pluginGroupAppearance": {
-    "message": "外觀",
-    "description": "Heading of the plugin list group for layout and look"
+  "pluginTopicLayout": {
+    "message": "頁面版面",
+    "description": "Title of the popup card for page layout features (widths, font size, spacing, effects)"
   },
-  "pluginGroupContent": {
+  "pluginTopicLayoutShort": {
+    "message": "版面",
+    "description": "Table-of-contents link to the page layout card"
+  },
+  "pluginTopicSidebar": {
+    "message": "側欄",
+    "description": "Title of the popup card for sidebar features"
+  },
+  "pluginTopicSidebarShort": {
+    "message": "側欄",
+    "description": "Table-of-contents link to the sidebar card"
+  },
+  "pluginTopicTimeline": {
+    "message": "時間軸",
+    "description": "Title of the popup card for timeline features"
+  },
+  "pluginTopicTimelineShort": {
+    "message": "時間軸",
+    "description": "Table-of-contents link to the timeline card"
+  },
+  "pluginTopicContent": {
+    "message": "回答內容",
+    "description": "Title of the popup card for features that change how answers display"
+  },
+  "pluginTopicContentShort": {
     "message": "內容",
-    "description": "Heading of the plugin list group for how message content renders and copies"
+    "description": "Table-of-contents link to the answer content card"
   },
-  "pluginGroupInput": {
+  "pluginTopicCharts": {
+    "message": "圖表",
+    "description": "Title of the popup card for chart and diagram rendering"
+  },
+  "pluginTopicChartsShort": {
+    "message": "圖表",
+    "description": "Table-of-contents link to the charts card"
+  },
+  "pluginTopicExport": {
+    "message": "匯出與圖片",
+    "description": "Title of the popup card for export, copy and image features"
+  },
+  "pluginTopicExportShort": {
+    "message": "匯出",
+    "description": "Table-of-contents link to the export and images card"
+  },
+  "pluginTopicInput": {
     "message": "輸入",
-    "description": "Heading of the plugin list group for the message input box"
+    "description": "Title of the popup card for input box features"
   },
-  "pluginGroupConversation": {
+  "pluginTopicInputShort": {
+    "message": "輸入",
+    "description": "Table-of-contents link to the input card"
+  },
+  "pluginTopicConversations": {
+    "message": "對話管理",
+    "description": "Title of the popup card for conversation management features"
+  },
+  "pluginTopicConversationsShort": {
     "message": "對話",
-    "description": "Heading of the plugin list group for working with a conversation"
+    "description": "Table-of-contents link to the conversations card"
+  },
+  "popupTocLabel": {
+    "message": "跳至",
+    "description": "Accessible name of the popup row of links that jump to each settings card"
+  },
+  "popupTocShortcuts": {
+    "message": "快速鍵",
+    "description": "Table-of-contents link to the keyboard shortcuts card"
+  },
+  "popupTocPrompts": {
+    "message": "提示詞",
+    "description": "Table-of-contents link to the Prompt Manager card"
+  },
+  "popupTocGeneral": {
+    "message": "一般",
+    "description": "Table-of-contents link to the General Options card"
+  },
+  "pluginToggleToastOn": {
+    "message": "已開啟「{name}」",
+    "description": "Toast after the user turns a feature on in the popup; {name} is the feature name"
+  },
+  "pluginToggleToastOff": {
+    "message": "已關閉「{name}」",
+    "description": "Toast after the user turns a feature off in the popup; {name} is the feature name"
+  },
+  "pluginToggleUndo": {
+    "message": "復原",
+    "description": "Button in the toast that puts the switch back"
   },
   "pluginViewSource": {
     "message": "原始碼",

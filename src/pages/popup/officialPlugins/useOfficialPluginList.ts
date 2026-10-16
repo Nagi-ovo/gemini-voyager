@@ -18,6 +18,7 @@ import {
   OFFICIAL_PLUGIN_ENTRIES,
   type OfficialPluginContext,
   type OfficialPluginEntry,
+  type OfficialPluginTopicId,
 } from './officialPluginRegistry';
 import { type ListedOfficialPlugin, officialPluginSearchItems } from './officialPluginSearch';
 import { useLegacyPreferenceWrites } from './useLegacyPreferenceWrites';
@@ -87,6 +88,12 @@ export function useOfficialPluginList({
     [listed, pluginState, preferences.legacy, isSafariBrowser],
   );
   const searchItems = useMemo(() => officialPluginSearchItems(listed), [listed]);
+  // Rows wait for the first read: a default must not flash over a stored choice.
+  const available = legacyLoaded && rows.length > 0;
+  const topics = useMemo<ReadonlySet<OfficialPluginTopicId>>(
+    () => new Set(available ? listed.map(({ entry }) => entry.topic) : []),
+    [available, listed],
+  );
   const { writePreference } = preferences;
   // Every listed plugin is legacy-bound (the registry contract test holds it), so its switch
   // is its old sync key and its plugin-state entry is never written.
@@ -126,8 +133,9 @@ export function useOfficialPluginList({
   );
 
   return {
-    // Rows wait for the first read: a default must not flash over a stored choice.
-    available: legacyLoaded && rows.length > 0,
+    available,
+    /** The topic cards that have a row on this tab. */
+    topics,
     rows,
     searchItems,
     setEnabled,

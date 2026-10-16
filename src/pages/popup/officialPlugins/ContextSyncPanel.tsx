@@ -18,10 +18,10 @@ function storedPort(value: unknown): number {
 
 /**
  * Context Sync's port, IDE status and Sync button. Mounted only while its row
- * is on and open, so the status polling and a Sync button never outlive the
+ * is on and shown, so the status polling and a Sync button never outlive the
  * switch (the row is the old Disabled / Manual mode). The sync request itself
- * lives above the panel (`useContextSyncRequest`), so closing Options mid-sync
- * keeps it pending and its result.
+ * lives above the panel (`useContextSyncRequest`), so a search that hides the
+ * row mid-sync keeps it pending and its result.
  */
 export function ContextSyncPanel({ values, write, contextSync, idPrefix, t }: OfficialPanelProps) {
   const port = storedPort(values[StorageKeys.CONTEXT_SYNC_PORT]);

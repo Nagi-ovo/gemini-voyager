@@ -99,6 +99,10 @@
     "message": "Buscar ajustes",
     "description": "Popup settings search input placeholder"
   },
+  "popupSettingsSearchExamples": {
+    "message": "Buscar: «ancho», «línea de tiempo»",
+    "description": "Placeholder of the popup settings search, with two example searches"
+  },
   "popupSettingsSearchClear": {
     "message": "Borrar búsqueda",
     "description": "Popup settings search clear button label"
@@ -2753,21 +2757,97 @@
     "message": "Activa primero {card} → {setting}.",
     "description": "Under a Plugins row whose feature needs a native setting that is off. {setting} is that setting's label; {card} is the settings card that holds it."
   },
-  "pluginGroupAppearance": {
-    "message": "Apariencia",
-    "description": "Heading of the plugin list group for layout and look"
+  "pluginTopicLayout": {
+    "message": "Diseño de la página",
+    "description": "Title of the popup card for page layout features (widths, font size, spacing, effects)"
   },
-  "pluginGroupContent": {
+  "pluginTopicLayoutShort": {
+    "message": "Diseño",
+    "description": "Table-of-contents link to the page layout card"
+  },
+  "pluginTopicSidebar": {
+    "message": "Barra lateral",
+    "description": "Title of the popup card for sidebar features"
+  },
+  "pluginTopicSidebarShort": {
+    "message": "Barra lateral",
+    "description": "Table-of-contents link to the sidebar card"
+  },
+  "pluginTopicTimeline": {
+    "message": "Línea de tiempo",
+    "description": "Title of the popup card for timeline features"
+  },
+  "pluginTopicTimelineShort": {
+    "message": "Línea de tiempo",
+    "description": "Table-of-contents link to the timeline card"
+  },
+  "pluginTopicContent": {
+    "message": "Contenido de las respuestas",
+    "description": "Title of the popup card for features that change how answers display"
+  },
+  "pluginTopicContentShort": {
     "message": "Contenido",
-    "description": "Heading of the plugin list group for how message content renders and copies"
+    "description": "Table-of-contents link to the answer content card"
   },
-  "pluginGroupInput": {
+  "pluginTopicCharts": {
+    "message": "Gráficos",
+    "description": "Title of the popup card for chart and diagram rendering"
+  },
+  "pluginTopicChartsShort": {
+    "message": "Gráficos",
+    "description": "Table-of-contents link to the charts card"
+  },
+  "pluginTopicExport": {
+    "message": "Exportación e imágenes",
+    "description": "Title of the popup card for export, copy and image features"
+  },
+  "pluginTopicExportShort": {
+    "message": "Exportar",
+    "description": "Table-of-contents link to the export and images card"
+  },
+  "pluginTopicInput": {
     "message": "Entrada",
-    "description": "Heading of the plugin list group for the message input box"
+    "description": "Title of the popup card for input box features"
   },
-  "pluginGroupConversation": {
-    "message": "Conversación",
-    "description": "Heading of the plugin list group for working with a conversation"
+  "pluginTopicInputShort": {
+    "message": "Entrada",
+    "description": "Table-of-contents link to the input card"
+  },
+  "pluginTopicConversations": {
+    "message": "Conversaciones",
+    "description": "Title of the popup card for conversation management features"
+  },
+  "pluginTopicConversationsShort": {
+    "message": "Chats",
+    "description": "Table-of-contents link to the conversations card"
+  },
+  "popupTocLabel": {
+    "message": "Ir a",
+    "description": "Accessible name of the popup row of links that jump to each settings card"
+  },
+  "popupTocShortcuts": {
+    "message": "Atajos",
+    "description": "Table-of-contents link to the keyboard shortcuts card"
+  },
+  "popupTocPrompts": {
+    "message": "Prompts",
+    "description": "Table-of-contents link to the Prompt Manager card"
+  },
+  "popupTocGeneral": {
+    "message": "General",
+    "description": "Table-of-contents link to the General Options card"
+  },
+  "pluginToggleToastOn": {
+    "message": "Se activó «{name}»",
+    "description": "Toast after the user turns a feature on in the popup; {name} is the feature name"
+  },
+  "pluginToggleToastOff": {
+    "message": "Se desactivó «{name}»",
+    "description": "Toast after the user turns a feature off in the popup; {name} is the feature name"
+  },
+  "pluginToggleUndo": {
+    "message": "Deshacer",
+    "description": "Button in the toast that puts the switch back"
   },
   "pluginViewSource": {
     "message": "Código",

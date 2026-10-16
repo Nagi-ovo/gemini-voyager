@@ -8,7 +8,11 @@ import { StorageKeys } from '@/core/types/common';
 import { TRANSLATIONS, type TranslationKey } from '@/utils/translations';
 
 import { PopupSection } from '../../components/PopupSection';
-import { NATIVE_POPUP_SECTION_IDS } from '../../utils/nativeSiteCapabilities';
+import {
+  NATIVE_POPUP_SECTION_IDS,
+  OFFICIAL_PLUGIN_TOPIC_IDS,
+  isOfficialPluginTopicId,
+} from '../../utils/nativeSiteCapabilities';
 import { usePopupSections, type PopupSectionsOptions } from '../usePopupSections';
 
 vi.mock('webextension-polyfill', () => ({
@@ -105,30 +109,31 @@ describe('usePopupSections', () => {
     const cloudSyncOrder = Number(section('cloudSync')?.style.order);
     expect(section('folder')?.style.order).toBe('0');
     expect(cloudSyncOrder).toBeGreaterThan(0);
-    expect(Number(section('localPlugins')?.style.order)).toBe(cloudSyncOrder + 4);
+    // The eight topic cards keep their default slots after Cloud Sync.
+    expect(Number(section('localPlugins')?.style.order)).toBe(cloudSyncOrder + 18);
     expect(section('contextSync')).toBeUndefined();
     expect(section('nanobanana')).toBeUndefined();
-    // The plugin list takes no slot until it has a row on this tab.
-    expect(section('officialPlugins')).toBeUndefined();
+    // A topic card takes no slot until it has a row on this tab.
+    expect(section('pluginsLayout')).toBeUndefined();
     expect(writeSyncStorage).not.toHaveBeenCalled();
 
     await render({ nativePopupPlatform: 'aistudio' });
     expect(sections.hydrateFromStorage).toBe(hydrate);
-    expect(Number(section('localPlugins')?.style.order)).toBe(cloudSyncOrder + 4);
+    expect(Number(section('localPlugins')?.style.order)).toBe(cloudSyncOrder + 18);
     expect(browser.storage.local.get).toHaveBeenCalledTimes(1);
   });
 
   it('moves between visible sections while preserving hidden platform and plugin slots', async () => {
     await render({ nativePopupPlatform: 'aistudio' });
     const initial = NATIVE_POPUP_SECTION_IDS.filter((id) => id !== 'cloudSync' && id !== 'folder');
-    const saved = ['folder', ...initial.slice(0, 3), 'cloudSync', ...initial.slice(3)];
+    const saved = ['folder', ...initial.slice(0, 10), 'cloudSync', ...initial.slice(10)];
     await act(async () =>
       sections.hydrateFromStorage({ [StorageKeys.GV_POPUP_SECTION_ORDER]: saved }),
     );
-    // The plugin list has no rows here and the tree indent is hidden on AI Studio; folderSpacing
-    // is the visible slot above Cloud Sync.
-    expect(saved.slice(1, 6)).toEqual([
-      'officialPlugins',
+    // The topic cards have no rows here and the tree indent is hidden on AI Studio;
+    // folderSpacing is the visible slot above Cloud Sync.
+    expect(saved.slice(8, 13)).toEqual([
+      'pluginsConversations',
       'localPlugins',
       'folderSpacing',
       'cloudSync',
@@ -141,24 +146,24 @@ describe('usePopupSections', () => {
     await act(async () => moveUp?.click());
 
     const expected = [...saved];
-    [expected[3], expected[4]] = [expected[4], expected[3]];
+    [expected[10], expected[11]] = [expected[11], expected[10]];
     expect(writeSyncStorage).toHaveBeenLastCalledWith({
       [StorageKeys.GV_POPUP_SECTION_ORDER]: expected,
     });
-    expect(section('cloudSync')?.style.order).toBe('6');
-    expect(section('folderSpacing')?.style.order).toBe('8');
+    expect(section('cloudSync')?.style.order).toBe('20');
+    expect(section('folderSpacing')?.style.order).toBe('22');
     expect(section('folderTreeIndent')).toBeUndefined();
-    expect(section('officialPlugins')).toBeUndefined();
-    expect(sections.getSectionProps('folderTreeIndent').order).toBe(10);
-    expect(sections.getSectionProps('officialPlugins').order).toBe(2);
+    expect(section('pluginsLayout')).toBeUndefined();
+    expect(sections.getSectionProps('folderTreeIndent').order).toBe(24);
+    expect(sections.getSectionProps('pluginsLayout').order).toBe(2);
   });
 
   it('puts a section added since the order was saved in its default slot, not at the bottom', async () => {
-    await render({ officialPluginsAvailable: true });
+    await render({ officialPluginTopics: new Set(OFFICIAL_PLUGIN_TOPIC_IDS) });
     // An order saved before the plugin list existed, reversed, still holding the retired
     // 'plugins' slot.
     const saved = [
-      ...NATIVE_POPUP_SECTION_IDS.filter((id) => id !== 'officialPlugins'),
+      ...NATIVE_POPUP_SECTION_IDS.filter((id) => !isOfficialPluginTopicId(id)),
       'plugins',
     ].reverse();
     await act(async () =>
@@ -166,8 +171,30 @@ describe('usePopupSections', () => {
     );
 
     const after = (id: string) => Number(section(id)?.style.order);
-    expect(after('officialPlugins')).toBe(after('cloudSync') + 2);
+    expect(after('pluginsLayout')).toBe(after('cloudSync') + 2);
+    expect(after('pluginsConversations')).toBe(after('cloudSync') + 16);
     expect(after('general')).toBe(0);
+    expect(writeSyncStorage).not.toHaveBeenCalled();
+  });
+
+  it('puts the topic cards where a saved order kept the single Plugins card', async () => {
+    await render({ officialPluginTopics: new Set(OFFICIAL_PLUGIN_TOPIC_IDS) });
+    // Someone moved Plugins below their folder options before it was split.
+    await act(async () =>
+      sections.hydrateFromStorage({
+        [StorageKeys.GV_POPUP_SECTION_ORDER]: [
+          'cloudSync',
+          'folder',
+          'officialPlugins',
+          'localPlugins',
+          'general',
+        ],
+      }),
+    );
+    const order = sections.displayedSections;
+    const first = order.indexOf('pluginsLayout');
+    expect(order.indexOf('folder')).toBeLessThan(first);
+    expect(order.slice(first, first + 9)).toEqual([...OFFICIAL_PLUGIN_TOPIC_IDS, 'localPlugins']);
     expect(writeSyncStorage).not.toHaveBeenCalled();
   });
 

@@ -99,6 +99,10 @@
     "message": "設定を検索",
     "description": "Popup settings search input placeholder"
   },
+  "popupSettingsSearchExamples": {
+    "message": "検索例：「幅」「タイムライン」",
+    "description": "Placeholder of the popup settings search, with two example searches"
+  },
   "popupSettingsSearchClear": {
     "message": "検索をクリア",
     "description": "Popup settings search clear button label"
@@ -2753,21 +2757,97 @@
     "message": "{card} → {setting} をオンにすると使えます。",
     "description": "Under a Plugins row whose feature needs a native setting that is off. {setting} is that setting's label; {card} is the settings card that holds it."
   },
-  "pluginGroupAppearance": {
-    "message": "外観",
-    "description": "Heading of the plugin list group for layout and look"
+  "pluginTopicLayout": {
+    "message": "ページレイアウト",
+    "description": "Title of the popup card for page layout features (widths, font size, spacing, effects)"
   },
-  "pluginGroupContent": {
-    "message": "コンテンツ",
-    "description": "Heading of the plugin list group for how message content renders and copies"
+  "pluginTopicLayoutShort": {
+    "message": "レイアウト",
+    "description": "Table-of-contents link to the page layout card"
   },
-  "pluginGroupInput": {
+  "pluginTopicSidebar": {
+    "message": "サイドバー",
+    "description": "Title of the popup card for sidebar features"
+  },
+  "pluginTopicSidebarShort": {
+    "message": "サイドバー",
+    "description": "Table-of-contents link to the sidebar card"
+  },
+  "pluginTopicTimeline": {
+    "message": "タイムライン",
+    "description": "Title of the popup card for timeline features"
+  },
+  "pluginTopicTimelineShort": {
+    "message": "タイムライン",
+    "description": "Table-of-contents link to the timeline card"
+  },
+  "pluginTopicContent": {
+    "message": "回答の表示",
+    "description": "Title of the popup card for features that change how answers display"
+  },
+  "pluginTopicContentShort": {
+    "message": "回答",
+    "description": "Table-of-contents link to the answer content card"
+  },
+  "pluginTopicCharts": {
+    "message": "図表",
+    "description": "Title of the popup card for chart and diagram rendering"
+  },
+  "pluginTopicChartsShort": {
+    "message": "図表",
+    "description": "Table-of-contents link to the charts card"
+  },
+  "pluginTopicExport": {
+    "message": "エクスポートと画像",
+    "description": "Title of the popup card for export, copy and image features"
+  },
+  "pluginTopicExportShort": {
+    "message": "エクスポート",
+    "description": "Table-of-contents link to the export and images card"
+  },
+  "pluginTopicInput": {
     "message": "入力",
-    "description": "Heading of the plugin list group for the message input box"
+    "description": "Title of the popup card for input box features"
   },
-  "pluginGroupConversation": {
+  "pluginTopicInputShort": {
+    "message": "入力",
+    "description": "Table-of-contents link to the input card"
+  },
+  "pluginTopicConversations": {
+    "message": "会話の管理",
+    "description": "Title of the popup card for conversation management features"
+  },
+  "pluginTopicConversationsShort": {
     "message": "会話",
-    "description": "Heading of the plugin list group for working with a conversation"
+    "description": "Table-of-contents link to the conversations card"
+  },
+  "popupTocLabel": {
+    "message": "移動先",
+    "description": "Accessible name of the popup row of links that jump to each settings card"
+  },
+  "popupTocShortcuts": {
+    "message": "ショートカット",
+    "description": "Table-of-contents link to the keyboard shortcuts card"
+  },
+  "popupTocPrompts": {
+    "message": "プロンプト",
+    "description": "Table-of-contents link to the Prompt Manager card"
+  },
+  "popupTocGeneral": {
+    "message": "一般",
+    "description": "Table-of-contents link to the General Options card"
+  },
+  "pluginToggleToastOn": {
+    "message": "「{name}」をオンにしました",
+    "description": "Toast after the user turns a feature on in the popup; {name} is the feature name"
+  },
+  "pluginToggleToastOff": {
+    "message": "「{name}」をオフにしました",
+    "description": "Toast after the user turns a feature off in the popup; {name} is the feature name"
+  },
+  "pluginToggleUndo": {
+    "message": "元に戻す",
+    "description": "Button in the toast that puts the switch back"
   },
   "pluginViewSource": {
     "message": "ソース",

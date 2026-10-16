@@ -28,9 +28,9 @@ async function targetTab(sourceTabId: number | undefined): Promise<chrome.tabs.T
 }
 
 /**
- * The Context Sync request, owned by the Popup itself: closing Options, or a
- * search that hides the whole Plugins card, keeps a slow sync pending with its
- * result, so its button cannot start a second request meanwhile. A result
+ * The Context Sync request, owned by the Popup itself: a search that hides its
+ * row or its whole card keeps a slow sync pending with its result, so its
+ * button cannot start a second request meanwhile. A result
  * stays until the panel has shown it (the panel times its dismissal).
  */
 export function useContextSyncRequest(sourceTabId: number | undefined): ContextSyncRequest {

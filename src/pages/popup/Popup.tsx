@@ -10,6 +10,7 @@ import {
   isSafari,
   supportsExtensionNotifications,
 } from '@/core/utils/browser';
+import { isRTLLanguage } from '@/core/utils/rtl';
 import { getFolderPlatformForHost } from '@/features/folder/platforms';
 import { CHATGPT_EXPORT_PLUGIN_ID } from '@/features/plugins/builtin/chatgptExport/openMessage';
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
@@ -29,12 +30,14 @@ import { PopupHeader } from './components/PopupHeader';
 import { PopupLayoutSettings } from './components/PopupLayoutSettings';
 import { PopupSearchBox } from './components/PopupSearchBox';
 import { PopupSection } from './components/PopupSection';
+import { PopupToc } from './components/PopupToc';
 import { PopupUpdateBanner } from './components/PopupUpdateBanner';
 import { PromptManagerSettingsCard } from './components/PromptManagerSettingsCard';
 import { StarredHistory } from './components/StarredHistory';
 import { StorageManager } from './components/StorageManager';
 import { StorageQuotaCard } from './components/StorageQuotaCard';
 import { ToolbarPinHint } from './components/ToolbarPinHint';
+import { UndoToast } from './components/UndoToast';
 import { useActivePopupTab } from './hooks/useActivePopupTab';
 import {
   catalogTimelineSettingKeys,
@@ -58,7 +61,8 @@ import { usePopupSettingsHydration } from './hooks/usePopupSettingsHydration';
 import { usePromptDataTransfer } from './hooks/usePromptDataTransfer';
 import { usePromptManagerSettings } from './hooks/usePromptManagerSettings';
 import { useSitePluginRuns } from './hooks/useSitePluginRuns';
-import { OfficialPluginList } from './officialPlugins/OfficialPluginList';
+import { useUndoToast } from './hooks/useUndoToast';
+import { OfficialPluginCards } from './officialPlugins/OfficialPluginCards';
 import { PluginSiteOfficialRows } from './officialPlugins/PluginSiteOfficialRows';
 import { useContextSyncRequest } from './officialPlugins/useContextSyncRequest';
 import { useOfficialPluginList } from './officialPlugins/useOfficialPluginList';
@@ -151,7 +155,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   });
   const promptTransfer = usePromptDataTransfer(t);
   const folderStructureCopy = useFolderStructureCopy(language, sourceTabId);
-  // Above every early return and section: a sync in flight outlives the Plugins card.
+  // Above every early return and section: a sync in flight outlives its card.
   const contextSync = useContextSyncRequest(sourceTabId);
   // The effect runs only where Voyager's content script does: on a plugin site, once Prompt
   // Manager or a matching plugin has been enabled there. Until then its row is left out.
@@ -171,7 +175,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     // sections they still show (Cloud Sync, shortcuts) instead of treating them as AI Studio.
     nativePopupPlatform: tab.activeAccountPlatform ?? 'gemini',
     isPluginSite,
-    officialPluginsAvailable: officialPlugins.available,
+    officialPluginTopics: officialPlugins.topics,
     officialPluginSearchItems: officialPlugins.searchItems,
     t,
     writeSyncStorage: writePopupSyncStorage,
@@ -190,6 +194,8 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     showStarredHistory,
     showStorageManager,
   });
+  const undoToast = useUndoToast();
+  const rtl = isRTLLanguage(language) ? 'rtl' : undefined;
   const wrapSection = (id: PopupSectionId, content: ReactNode, options?: PopupSectionOptions) => (
     <PopupSection key={id} {...sections.getSectionProps(id, options)}>
       {content}
@@ -239,17 +245,24 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     );
   return (
     <div className="bg-background text-foreground w-[360px]" style={theme.style}>
-      <PopupHeader themePicker={theme.picker} t={t} />
-      <div className="flex flex-col gap-4 p-5">
-        {/* Below the search box, above the update banner (order -2, earlier in DOM). */}
-        <ToolbarPinHint style={{ order: -2 }} />
+      <PopupHeader themePicker={theme.picker} t={t}>
         {!isPluginSite && (
-          <PopupSearchBox
-            query={sections.settingsSearchQuery}
-            onChange={sections.updateSettingsSearchQuery}
-            t={t}
-          />
+          <>
+            <PopupSearchBox
+              query={sections.settingsSearchQuery}
+              onChange={sections.updateSettingsSearchQuery}
+              dir={rtl}
+              t={t}
+            />
+            {!sections.hasSettingsSearch && (
+              <PopupToc sections={sections.displayedSections} dir={rtl} t={t} />
+            )}
+          </>
         )}
+      </PopupHeader>
+      <div className="flex flex-col gap-4 p-5">
+        {/* First under the header, above the update banner (order -2, earlier in DOM). */}
+        <ToolbarPinHint style={{ order: -2 }} />
         {!isPluginSite && sections.hasSettingsSearch && !sections.hasVisibleSearchResults && (
           <Card style={{ order: -2.5 }} className="p-4 text-center" role="status">
             <p className="text-muted-foreground text-sm">{t('popupSettingsSearchNoResults')}</p>
@@ -404,28 +417,26 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           />,
         )}
 
-        {/* Official plugins on Gemini / AI Studio: one switch per feature. */}
-        {wrapSection(
-          'officialPlugins',
-          <OfficialPluginList
-            rows={officialPlugins.rows}
-            statuses={plugins.pluginStatuses}
-            nameSources={plugins.siteScopedManifests}
-            isVisible={(pluginId) => sections.shouldShowSetting('officialPlugins', pluginId)}
-            onToggle={officialPlugins.setEnabled}
-            onSettingsChange={officialPlugins.setSettings}
-            controls={{ responseNotification: general.responseNotification }}
-            panelIo={{
-              values: officialPlugins.panelValues,
-              write: officialPlugins.writePanel,
-              contextSync,
-              openStarredHistory: () => setShowStarredHistory(true),
-            }}
-            searching={sections.hasSettingsSearch}
-            language={language}
-            t={t}
-          />,
-        )}
+        {/* Official plugins on Gemini / AI Studio: one switch per feature, in topic cards. */}
+        <OfficialPluginCards
+          rows={officialPlugins.rows}
+          statuses={plugins.pluginStatuses}
+          nameSources={plugins.siteScopedManifests}
+          isVisible={(topic, pluginId) => sections.shouldShowSetting(topic, pluginId)}
+          onToggle={officialPlugins.setEnabled}
+          onSettingsChange={officialPlugins.setSettings}
+          controls={{ responseNotification: general.responseNotification }}
+          panelIo={{
+            values: officialPlugins.panelValues,
+            write: officialPlugins.writePanel,
+            contextSync,
+            openStarredHistory: () => setShowStarredHistory(true),
+          }}
+          onUndoOffer={undoToast.show}
+          wrapSection={wrapSection}
+          language={language}
+          t={t}
+        />
         {/* Gemini / AI Studio have no plugin page; local plugins get one section here. */}
         {wrapSection(
           'localPlugins',
@@ -456,6 +467,14 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           plugins={plugins.diagnosticPlugins}
         />
       </PopupFooter>
+      <UndoToast
+        offer={undoToast.offer}
+        undoLabel={t('pluginToggleUndo')}
+        onUndo={undoToast.undo}
+        onHold={undoToast.hold}
+        onRelease={undoToast.release}
+        dir={rtl}
+      />
     </div>
   );
 }

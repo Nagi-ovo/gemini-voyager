@@ -2,7 +2,10 @@ import type { PluginStatus } from '@/features/plugins/runtime/pluginStatus';
 import type { PluginManifest } from '@/features/plugins/types';
 import type { TranslationKey } from '@/utils/translations';
 
-import { officialPluginEntry } from '../officialPlugins/officialPluginRegistry';
+import {
+  officialPluginEntry,
+  officialPluginTopic,
+} from '../officialPlugins/officialPluginRegistry';
 import { isReleasingStatus } from '../utils/releasingStatus';
 import { displayName, pickLocalized } from './PluginIdentity';
 
@@ -31,7 +34,7 @@ export function pluginDisplayName(
 
 /**
  * Where the user switches official plugin `id` off: its row in the popup's
- * Plugins card. Null for any other plugin.
+ * topic card. Null for any other plugin.
  */
 function officialSwitch(
   id: string,
@@ -39,10 +42,11 @@ function officialSwitch(
   language: string,
   t: (key: TranslationKey) => string,
 ): { readonly setting: string; readonly card: string } | null {
-  if (officialPluginEntry(id)) {
+  const entry = officialPluginEntry(id);
+  if (entry) {
     return {
       setting: displayName(pluginDisplayName(id, manifests, language)),
-      card: t('pluginsTitle'),
+      card: t(officialPluginTopic(entry.topic).title),
     };
   }
   return null;

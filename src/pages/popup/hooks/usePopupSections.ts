@@ -10,9 +10,12 @@ import {
   NATIVE_POPUP_SECTION_IDS,
   type NativePopupPlatform,
   type NativePopupSectionId,
+  OFFICIAL_PLUGIN_TOPIC_IDS,
   POPUP_SECTION_SEARCH_SETTING_ID,
+  RETIRED_OFFICIAL_PLUGINS_SECTION_ID,
   isNativePopupSectionAvailable,
   isNativePopupSettingAvailable,
+  isOfficialPluginTopicId,
 } from '../utils/nativeSiteCapabilities';
 import {
   POPUP_SETTINGS_SEARCH_ITEMS,
@@ -30,7 +33,24 @@ export const SECTION_LAYOUT_STORAGE_DEFAULTS = { [StorageKeys.GV_POPUP_SECTION_O
 
 const DEFAULT_SECTION_ORDER: readonly PopupSectionId[] = NATIVE_POPUP_SECTION_IDS;
 const NO_EXTRA_SEARCH_ITEMS: readonly PopupSettingsSearchItem[] = [];
+const NO_TOPICS: ReadonlySet<PopupSectionId> = new Set();
 const VALUE_BADGE_SECTION_IDS = new Set<PopupSectionId>(['folderSpacing', 'folderTreeIndent']);
+
+/** The DOM id of a section's wrapper, which the table of contents scrolls to. */
+export function popupSectionAnchorId(id: PopupSectionId): string {
+  return `gv-popup-section-${id}`;
+}
+
+/**
+ * The single Plugins card became the topic cards: an order saved before then
+ * gets them in its slot, so a user who moved the Plugins card keeps them there.
+ */
+function withTopicsForRetiredPluginsCard(saved: readonly unknown[]): unknown[] {
+  if (OFFICIAL_PLUGIN_TOPIC_IDS.some((id) => saved.includes(id))) return [...saved];
+  return saved.flatMap((id) =>
+    id === RETIRED_OFFICIAL_PLUGINS_SECTION_ID ? [...OFFICIAL_PLUGIN_TOPIC_IDS] : [id],
+  );
+}
 
 /**
  * A saved order predates any section added since it was written. Each missing
@@ -50,8 +70,8 @@ function withMissingSections(saved: readonly PopupSectionId[]): PopupSectionId[]
 export interface PopupSectionsOptions {
   nativePopupPlatform: NativePopupPlatform;
   isPluginSite: boolean;
-  /** Whether the official plugin list has rows on this tab; an empty list takes no slot. */
-  officialPluginsAvailable?: boolean;
+  /** The topic cards with a listed row on this tab; an empty topic takes no slot. */
+  officialPluginTopics?: ReadonlySet<PopupSectionId>;
   /** One search target per listed official plugin, built from what the list shows. */
   officialPluginSearchItems?: readonly PopupSettingsSearchItem[];
   t: (key: TranslationKey) => string;
@@ -68,7 +88,7 @@ export interface PopupSectionOptions {
 export function usePopupSections({
   nativePopupPlatform,
   isPluginSite,
-  officialPluginsAvailable = false,
+  officialPluginTopics = NO_TOPICS,
   officialPluginSearchItems = NO_EXTRA_SEARCH_ITEMS,
   t,
   writeSyncStorage,
@@ -107,7 +127,7 @@ export function usePopupSections({
     const storedOrder = stored[StorageKeys.GV_POPUP_SECTION_ORDER];
     if (!Array.isArray(storedOrder)) return;
     const validIds = new Set<string>(NATIVE_POPUP_SECTION_IDS);
-    const filtered = storedOrder.filter(
+    const filtered = withTopicsForRetiredPluginsCard(storedOrder).filter(
       (id: unknown): id is PopupSectionId => typeof id === 'string' && validIds.has(id),
     );
     setSectionOrder(withMissingSections(filtered));
@@ -115,11 +135,11 @@ export function usePopupSections({
 
   const isSectionVisible = useCallback(
     (id: PopupSectionId): boolean => {
-      // The plugin list needs a row on this tab.
-      if (id === 'officialPlugins' && !officialPluginsAvailable) return false;
+      // A topic card needs a row on this tab.
+      if (isOfficialPluginTopicId(id) && !officialPluginTopics.has(id)) return false;
       return isNativePopupSectionAvailable(nativePopupPlatform, id);
     },
-    [nativePopupPlatform, officialPluginsAvailable],
+    [nativePopupPlatform, officialPluginTopics],
   );
   const visibleSections = useMemo(
     () => sectionOrder.filter(isSectionVisible),
@@ -190,6 +210,7 @@ export function usePopupSections({
     id: PopupSectionId,
     options: PopupSectionOptions = {},
   ): Omit<PopupSectionProps, 'children'> => ({
+    anchorId: popupSectionAnchorId(id),
     // Plugin sites hide native search controls, so permitted sections ignore the saved query.
     visible:
       (!isPluginSite || options.allowPluginSite === true) &&
@@ -219,6 +240,8 @@ export function usePopupSections({
     updateSettingsSearchQuery,
     hasSettingsSearch,
     hasVisibleSearchResults: displayedSections.length > 0,
+    /** The sections on screen, in display order. */
+    displayedSections,
     shouldShowSetting,
     hydrateFromStorage,
     getSectionProps,

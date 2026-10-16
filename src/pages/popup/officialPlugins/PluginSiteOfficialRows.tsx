@@ -51,7 +51,6 @@ export function PluginSiteOfficialRows({
           nameSources={nameSources}
           control={undefined}
           panelIo={panelIo}
-          searching={false}
           onToggle={onToggle}
           onSettingsChange={onSettingsChange}
           language={language}
