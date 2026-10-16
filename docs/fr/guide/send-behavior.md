@@ -20,7 +20,7 @@ Maj+Entrée et la saisie IME gardent le comportement propre au site, et Ctrl/⌘
 ## Comment activer
 
 1. Ouvrez la popup de Voyager.
-2. Dans **Options de saisie**, activez **Ctrl+Entrée pour envoyer** (affiché **⌘+Entrée pour envoyer** sur macOS).
+2. Activez **Extensions** → **Ctrl/Cmd+Entrée pour envoyer**.
 
 ## Autres sites
 

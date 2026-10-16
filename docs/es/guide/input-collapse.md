@@ -11,5 +11,5 @@ Colapsa automáticamente el cuadro de entrada cuando está vacío para ganar má
 1. Cuando el cuadro de entrada está vacío y pierde el foco, se colapsa automáticamente en un botón tipo cápsula compacto.
 2. Haz clic en el botón cápsula para expandir el cuadro de entrada y comenzar a escribir.
 3. También puedes presionar <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>I</kbd> para expandir rápidamente el cuadro de entrada.
-4. Puedes activar o desactivar esta función con **Habilitar contracción de entrada** en **Opciones de entrada** del popup (desactivado por defecto).
+4. Puedes activar o desactivar esta función con **Complementos** → **Contraer la entrada** en el popup (desactivado por defecto).
 5. Activa también **Permitir colapso con contenido** si quieres que el cuadro de entrada se colapse incluso cuando contiene texto o adjuntos.

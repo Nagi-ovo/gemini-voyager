@@ -11,5 +11,5 @@ Réduisez la zone de saisie lorsqu'elle est vide pour gagner plus d'espace de le
 1. Lorsque la zone de saisie est vide et perd le focus, elle se réduit automatiquement en un bouton compact.
 2. Cliquez sur le bouton pour étendre la zone de saisie et commencer à taper.
 3. Vous pouvez aussi appuyer sur <kbd>Ctrl</kbd>/<kbd>⌘</kbd>+<kbd>I</kbd> pour agrandir rapidement la zone de saisie.
-4. Vous pouvez activer ou désactiver cette fonctionnalité avec **Activer la réduction de l'entrée**, dans **Options de saisie** de la popup (désactivé par défaut).
+4. Vous pouvez activer ou désactiver cette fonctionnalité avec **Extensions** → **Repli de la zone de saisie** dans la popup (désactivé par défaut).
 5. Activez aussi **Autoriser le repli avec contenu** si vous voulez que la zone de saisie se réduise même lorsqu'elle contient du texte ou des pièces jointes.

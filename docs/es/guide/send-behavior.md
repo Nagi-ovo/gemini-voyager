@@ -20,7 +20,7 @@ Shift+Enter y la composición de IME mantienen el comportamiento propio del siti
 ## Cómo activar
 
 1. Abre el popup de Voyager.
-2. En **Opciones de entrada**, activa **Ctrl+Enter para enviar** (aparece como **⌘+Enter para enviar** en macOS).
+2. Activa **Complementos** → **Ctrl/Cmd+Enter para enviar**.
 
 ## Otros sitios
 
