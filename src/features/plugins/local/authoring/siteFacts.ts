@@ -54,6 +54,8 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   sidebarAutoHide: 'Auto-hide sidebar',
   sidebarFullHide: 'Fully hide sidebar',
   canvasCopy: 'Canvas copy as Markdown',
+  gemsSidebar: 'Recent Gems in sidebar',
+  contextSync: 'Context Sync',
   userLatex: 'Render LaTeX in my messages',
   codeCollapse: 'Collapse long code blocks',
   waveDrom: 'WaveDrom timing diagram rendering',

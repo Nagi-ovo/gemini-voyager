@@ -70,6 +70,16 @@ function binding(
 }
 
 export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding>> = {
+  [OFFICIAL_PLUGIN_IDS.geminiGemsSidebar]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
+    StorageKeys.GV_GEMS_SIDEBAR_ENABLED,
+    onUnlessFalse,
+  ),
+  [OFFICIAL_PLUGIN_IDS.geminiContextSync]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiContextSync,
+    StorageKeys.CONTEXT_SYNC_ENABLED,
+    onOnlyIfTrue,
+  ),
   [OFFICIAL_PLUGIN_IDS.geminiSidebarWidth]: {
     ...binding(
       OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,

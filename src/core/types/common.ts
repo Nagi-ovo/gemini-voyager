@@ -201,9 +201,10 @@ export const StorageKeys = {
   // Device-local projection for the Gemini folder panel. `folders` preserves
   // the tree; `activity` groups filed conversations by their latest real turn.
   FOLDERS_VIEW_MODE: 'gvFoldersViewMode',
-  // How many recent gems to show as an expandable section in the sidebar.
-  // 0 disables the feature entirely (no section injected); 1-10 shows that
-  // many items. Cached gem list lives in `GV_GEMS_LIST_CACHE`.
+  // Default-on master switch for the Gems list, scraping and pin controls.
+  GV_GEMS_SIDEBAR_ENABLED: 'gvGemsSidebarEnabled',
+  // Recent Gems count (0–10, default 3). Zero hides the list; it does not stop
+  // the module. Cached gems live in `GV_GEMS_LIST_CACHE`.
   GV_GEMS_SIDEBAR_COUNT: 'gvGemsSidebarCount',
   // Local cache of the Gems list scraped from /gems/view. Stored as
   // { items: GemMetadata[]; cachedAt: number }. Falls into local (not sync)

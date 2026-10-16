@@ -16,7 +16,6 @@ import { startGeminiChatAppearance } from './appearanceStartup';
 import { startChangelog } from './changelog/index';
 import { runCoachmarkSequence } from './coachmark';
 import { claimContentScript } from './contentScriptHandoff';
-import { startContextSync } from './contextSync';
 import { startDeepResearchExport } from './deepResearch/index';
 import { startDevSettingsBridge } from './devSettingsBridge';
 import { flushDraftsBeforeUnload } from './draftSave/draftUnloadFlush';
@@ -256,7 +255,7 @@ async function initializeFeatures(): Promise<void> {
       // Independent content helpers can initialize in the same idle slice.
       await settle(mountForPage(NATIVE_FEATURES.watermarkRemover));
       startDeepResearchExport();
-      startContextSync();
+      await settle(geminiBuiltins.startContextSync());
       await settle(mountForPage(NATIVE_FEATURES.gemsHider));
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
@@ -264,7 +263,7 @@ async function initializeFeatures(): Promise<void> {
       // parallel without changing their runtime ordering.
       const parallelResults = await Promise.allSettled([
         geminiBuiltins.startResponseNotification(),
-        mountForPage(NATIVE_FEATURES.gemsSidebar),
+        geminiBuiltins.startGemsSidebar(),
         geminiBuiltins.startUsageStatus(),
         geminiInputs.startDraftSave(),
         geminiInputs.startPromptHistory(),

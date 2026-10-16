@@ -113,6 +113,9 @@ describe('legacy enable bindings', () => {
         StorageKeys.GV_SIDEBAR_AUTO_HIDE,
         StorageKeys.GV_SIDEBAR_FULL_HIDE,
         StorageKeys.CANVAS_COPY_ENABLED,
+        StorageKeys.GV_GEMS_SIDEBAR_ENABLED,
+        StorageKeys.GV_GEMS_SIDEBAR_COUNT,
+        StorageKeys.CONTEXT_SYNC_ENABLED,
         StorageKeys.USER_LATEX_ENABLED,
         StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED,
         StorageKeys.WAVEDROM_ENABLED,
@@ -166,6 +169,12 @@ describe('legacy enable bindings', () => {
       );
       expect(legacyBindingFor(OFFICIAL_PLUGIN_IDS.geminiCanvasCopy)?.read(stored)).toBe(
         defaultModel,
+      );
+      expect(legacyBindingFor(OFFICIAL_PLUGIN_IDS.geminiGemsSidebar)?.read(stored)).toBe(
+        defaultModel,
+      );
+      expect(legacyBindingFor(OFFICIAL_PLUGIN_IDS.geminiContextSync)?.read(stored)).toBe(
+        researchPack,
       );
       expect(legacyBindingFor('voyager.gemini-default-model')?.read(stored)).toBe(defaultModel);
       expect(legacyBindingFor(OFFICIAL_PLUGIN_IDS.geminiTimeline)?.read(stored)).toBe(defaultModel);

@@ -27,6 +27,8 @@ export type OwnedFeatureId =
   | 'sidebarAutoHide'
   | 'sidebarFullHide'
   | 'canvasCopy'
+  | 'gemsSidebar'
+  | 'contextSync'
   | 'userLatex'
   | 'codeCollapse'
   | 'waveDrom'
@@ -58,6 +60,8 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiChatLineHeight: 'voyager.gemini-chat-line-height',
   geminiChatWidth: 'voyager.gemini-chat-width',
   geminiEditInputWidth: 'voyager.gemini-edit-input-width',
+  geminiGemsSidebar: 'voyager.gemini-gems-sidebar',
+  geminiContextSync: 'voyager.gemini-context-sync',
   geminiCanvasCopy: 'voyager.gemini-canvas-copy',
   geminiSidebarWidth: 'voyager.gemini-sidebar-width',
   geminiSidebarAutoHide: 'voyager.gemini-sidebar-auto-hide',
@@ -100,6 +104,20 @@ export interface OwnedFeature {
 }
 
 export const FEATURE_OWNERS: readonly OwnedFeature[] = [
+  {
+    site: 'gemini',
+    feature: 'gemsSidebar',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'contextSync',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiContextSync,
+    handlers: [],
+    healthTracking: false,
+  },
   {
     site: 'gemini',
     feature: 'timeline',

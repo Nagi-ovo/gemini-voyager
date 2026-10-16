@@ -6,7 +6,7 @@
  * list in chrome.storage.sync so the sidebar injector can render
  * pinned gems first, in pin order (the order they were pinned).
  *
- * Because the scraper (in index.ts) also observes the same
+ * Because the scraper (in pluginHandler.ts) also observes the same
  * `[data-test-id="your-gems-list"]` container, this module relies on
  * the scraper's existing MutationObserver — a separate re-injection
  * cycle is triggered after each scrape.
@@ -16,20 +16,23 @@ import { StorageKeys } from '@/core/types/common';
 const PIN_BTN_CLASS = 'gv-gem-pin-toggle';
 const PIN_STYLE_ID = 'gv-gem-pin-style';
 
-let styledInjected = false;
-let currentPinned: string[] = [];
-// Bumped by removePinButtons so an injection still reading pinned ids stays out.
-let pinRun = 0;
+/** Each activation owns its pins; late reads cannot inject into a successor. */
+export function createGemsPinControls(signal: AbortSignal) {
+  const buttons = new Map<HTMLElement, () => void>();
+  let styledInjected = false;
+  let currentPinned: string[] = [];
+  let stopped = false;
+  const isStopped = () => stopped || signal.aborted;
 
-/**
- * Inject a small style sheet that sizes and colours the pin toggle
- * to match Gemini's native action buttons (Share, Edit, More).
- */
-function injectStyle(): void {
-  if (styledInjected) return;
-  const style = document.createElement('style');
-  style.id = PIN_STYLE_ID;
-  style.textContent = `
+  /**
+   * Inject a small style sheet that sizes and colours the pin toggle
+   * to match Gemini's native action buttons (Share, Edit, More).
+   */
+  function injectStyle(): void {
+    if (styledInjected) return;
+    const style = document.createElement('style');
+    style.id = PIN_STYLE_ID;
+    style.textContent = `
     .${PIN_BTN_CLASS} {
       display: inline-flex;
       align-items: center;
@@ -55,178 +58,198 @@ function injectStyle(): void {
       color: #d2e3fc;
     }
   `;
-  document.head.appendChild(style);
-  styledInjected = true;
-}
-
-/** Load pinned ids from chrome.storage.sync. */
-async function loadPinned(): Promise<string[]> {
-  try {
-    const result = await chrome.storage?.sync?.get({ [StorageKeys.GV_GEMS_PINNED]: [] });
-    const raw = result?.[StorageKeys.GV_GEMS_PINNED];
-    return Array.isArray(raw) ? raw.filter((id): id is string => typeof id === 'string') : [];
-  } catch {
-    return [];
+    document.head.appendChild(style);
+    styledInjected = true;
   }
-}
 
-/** Persist pinned ids to chrome.storage.sync. */
-async function savePinned(ids: string[]): Promise<void> {
-  try {
-    await chrome.storage?.sync?.set({ [StorageKeys.GV_GEMS_PINNED]: ids });
-  } catch {
-    // harmless
-  }
-}
-
-/** Extract gem id from a row's anchor href. */
-function gemIdFromRow(row: Element): string | null {
-  const anchor = row.querySelector<HTMLAnchorElement>('a.bot-row, a[href*="/gem/"]');
-  if (!anchor) return null;
-  const href = anchor.getAttribute('href');
-  if (!href) return null;
-  const match = href.match(/\/gem\/([^/?#]+)/);
-  return match?.[1] ?? null;
-}
-
-const SVG_FILLED =
-  '<path d="m640-480 80 80v80H520v240l-40 40-40-40v-240H240v-80l80-80v-280h-40v-80h400v80h-40v280Z"/>';
-const SVG_OUTLINE =
-  '<path d="m640-480 80 80v80H520v240l-40 40-40-40v-240H240v-80l80-80v-280h-40v-80h400v80h-40v280Zm-286 80h252l-46-46v-314H400v314l-46 46Z"/>';
-const SVG_WRAP = (inner: string) =>
-  `<svg viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true" width="18" height="18">${inner}</svg>`;
-
-function toggleBtn(btn: HTMLElement, pinned: boolean): void {
-  btn.classList.toggle('gv-pinned', pinned);
-  btn.title = pinned ? 'Unpin from sidebar' : 'Pin to sidebar';
-  btn.setAttribute('aria-label', pinned ? 'Unpin gem' : 'Pin gem');
-  btn.innerHTML = SVG_WRAP(pinned ? SVG_FILLED : SVG_OUTLINE);
-}
-
-function createPinButton(id: string, isPinned: boolean): HTMLElement {
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = PIN_BTN_CLASS;
-  btn.dataset.gemId = id;
-  toggleBtn(btn, isPinned);
-
-  btn.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    const wasPinned = btn.classList.contains('gv-pinned');
-    let next = [...currentPinned];
-
-    if (wasPinned) {
-      next = next.filter((gid) => gid !== id);
-    } else {
-      // Append to the end — first pinned gem stays at the top.
-      next = [...next.filter((gid) => gid !== id), id];
+  /** Load pinned ids from chrome.storage.sync. */
+  async function loadPinned(): Promise<string[]> {
+    try {
+      const result = await chrome.storage?.sync?.get({ [StorageKeys.GV_GEMS_PINNED]: [] });
+      const raw = result?.[StorageKeys.GV_GEMS_PINNED];
+      return Array.isArray(raw) ? raw.filter((id): id is string => typeof id === 'string') : [];
+    } catch {
+      return [];
     }
+  }
 
-    currentPinned = next;
-    await savePinned(next);
-    toggleBtn(btn, !wasPinned);
-  });
+  /** Persist pinned ids to chrome.storage.sync. */
+  async function savePinned(ids: string[]): Promise<void> {
+    try {
+      await chrome.storage?.sync?.set({ [StorageKeys.GV_GEMS_PINNED]: ids });
+    } catch {
+      // harmless
+    }
+  }
 
-  // Prevent Gemini's action-bar tooltip delegation from catching
-  // hover events on our button (it would show "Share" or similar).
-  btn.addEventListener('mouseover', (e) => e.stopImmediatePropagation());
-  btn.addEventListener('mouseout', (e) => e.stopImmediatePropagation());
-
-  return btn;
-}
-
-/**
- * Iterate every `bot-list-row` on the page and inject a pin toggle
- * button if one doesn't already exist. Idempotent — safe to call
- * repeatedly (e.g. after a DOM mutation).
- */
-export async function injectPinButtons(): Promise<void> {
-  const run = pinRun;
-  const pinned = await loadPinned();
-  // The sidebar stopped during the read: the style would stay behind with nothing to clean it.
-  if (run !== pinRun) return;
-  injectStyle();
-  currentPinned = pinned;
-  const pinnedSet = new Set(currentPinned);
-
-  const list = document.querySelector('[data-test-id="your-gems-list"]');
-  if (!list) return;
-
-  const rows = list.querySelectorAll('bot-list-row');
-  for (const row of rows) {
-    if (row.querySelector(`.${PIN_BTN_CLASS}`)) continue;
-
-    const id = gemIdFromRow(row);
-    if (!id) continue;
-
-    const btn = createPinButton(id, pinnedSet.has(id));
-
-    // Insert the pin button as a sibling of the anchor, before the
-    // native action bar.  The anchor is a flex container so the button
-    // naturally aligns to the right when its parent is flex.
+  /** Extract gem id from a row's anchor href. */
+  function gemIdFromRow(row: Element): string | null {
     const anchor = row.querySelector<HTMLAnchorElement>('a.bot-row, a[href*="/gem/"]');
-    if (anchor?.parentElement) {
-      // Insert right after the anchor's own content wrapper
-      anchor.parentElement.insertBefore(btn, anchor.nextElementSibling);
-    } else {
-      row.insertBefore(btn, row.firstChild);
+    if (!anchor) return null;
+    const href = anchor.getAttribute('href');
+    if (!href) return null;
+    const match = href.match(/\/gem\/([^/?#]+)/);
+    return match?.[1] ?? null;
+  }
+
+  const SVG_FILLED =
+    '<path d="m640-480 80 80v80H520v240l-40 40-40-40v-240H240v-80l80-80v-280h-40v-80h400v80h-40v280Z"/>';
+  const SVG_OUTLINE =
+    '<path d="m640-480 80 80v80H520v240l-40 40-40-40v-240H240v-80l80-80v-280h-40v-80h400v80h-40v280Zm-286 80h252l-46-46v-314H400v314l-46 46Z"/>';
+  const SVG_WRAP = (inner: string) =>
+    `<svg viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true" width="18" height="18">${inner}</svg>`;
+
+  function toggleBtn(btn: HTMLElement, pinned: boolean): void {
+    btn.classList.toggle('gv-pinned', pinned);
+    btn.title = pinned ? 'Unpin from sidebar' : 'Pin to sidebar';
+    btn.setAttribute('aria-label', pinned ? 'Unpin gem' : 'Pin gem');
+    btn.innerHTML = SVG_WRAP(pinned ? SVG_FILLED : SVG_OUTLINE);
+  }
+
+  function createPinButton(id: string, isPinned: boolean): HTMLElement {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = PIN_BTN_CLASS;
+    btn.dataset.gemId = id;
+    toggleBtn(btn, isPinned);
+
+    const click = async (e: MouseEvent): Promise<void> => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      if (isStopped()) return;
+      const wasPinned = btn.classList.contains('gv-pinned');
+      let next = [...currentPinned];
+
+      if (wasPinned) {
+        next = next.filter((gid) => gid !== id);
+      } else {
+        // Append to the end — first pinned gem stays at the top.
+        next = [...next.filter((gid) => gid !== id), id];
+      }
+
+      currentPinned = next;
+      await savePinned(next);
+      if (!isStopped()) toggleBtn(btn, !wasPinned);
+    };
+    btn.addEventListener('click', click);
+
+    // Prevent Gemini's action-bar tooltip delegation from catching
+    // hover events on our button (it would show "Share" or similar).
+    const stopHover = (e: MouseEvent): void => e.stopImmediatePropagation();
+    btn.addEventListener('mouseover', stopHover);
+    btn.addEventListener('mouseout', stopHover);
+    buttons.set(btn, () => {
+      btn.removeEventListener('click', click);
+      btn.removeEventListener('mouseover', stopHover);
+      btn.removeEventListener('mouseout', stopHover);
+      btn.remove();
+    });
+
+    return btn;
+  }
+
+  /**
+   * Iterate every `bot-list-row` on the page and inject a pin toggle
+   * button if one doesn't already exist. Idempotent — safe to call
+   * repeatedly (e.g. after a DOM mutation).
+   */
+  async function injectPinButtons(): Promise<void> {
+    if (isStopped()) return;
+    const pinned = await loadPinned();
+    // The sidebar stopped during the read: the style would stay behind with nothing to clean it.
+    if (isStopped()) return;
+    for (const [button, remove] of buttons) {
+      if (!button.isConnected) {
+        remove();
+        buttons.delete(button);
+      }
+    }
+    injectStyle();
+    currentPinned = pinned;
+    const pinnedSet = new Set(currentPinned);
+
+    const list = document.querySelector('[data-test-id="your-gems-list"]');
+    if (!list) return;
+
+    const rows = list.querySelectorAll('bot-list-row');
+    for (const row of rows) {
+      if (row.querySelector(`.${PIN_BTN_CLASS}`)) continue;
+
+      const id = gemIdFromRow(row);
+      if (!id) continue;
+
+      const btn = createPinButton(id, pinnedSet.has(id));
+
+      // Insert the pin button as a sibling of the anchor, before the
+      // native action bar.  The anchor is a flex container so the button
+      // naturally aligns to the right when its parent is flex.
+      const anchor = row.querySelector<HTMLAnchorElement>('a.bot-row, a[href*="/gem/"]');
+      if (anchor?.parentElement) {
+        // Insert right after the anchor's own content wrapper
+        anchor.parentElement.insertBefore(btn, anchor.nextElementSibling);
+      } else {
+        row.insertBefore(btn, row.firstChild);
+      }
     }
   }
-}
 
-/** Remove every pin toggle and its style; a pending injection is dropped. */
-export function removePinButtons(): void {
-  pinRun += 1;
-  document.querySelectorAll(`.${PIN_BTN_CLASS}`).forEach((btn) => btn.remove());
-  document.getElementById(PIN_STYLE_ID)?.remove();
-  styledInjected = false;
-}
-
-type PinnedChangesListener = (
-  changes: Record<string, chrome.storage.StorageChange>,
-  areaName: string,
-) => void;
-
-let pinnedChangesListener: PinnedChangesListener | null = null;
-
-function onPinnedStorageChanged(
-  changes: Record<string, chrome.storage.StorageChange>,
-  areaName: string,
-): void {
-  if (areaName !== 'sync') return;
-  if (!changes[StorageKeys.GV_GEMS_PINNED]) return;
-  const raw = changes[StorageKeys.GV_GEMS_PINNED].newValue;
-  currentPinned = Array.isArray(raw)
-    ? raw.filter((id: unknown): id is string => typeof id === 'string')
-    : [];
-  const pinnedSet = new Set(currentPinned);
-  document.querySelectorAll(`.${PIN_BTN_CLASS}`).forEach((btn) => {
-    const id = (btn as HTMLElement).dataset.gemId;
-    if (!id) return;
-    toggleBtn(btn as HTMLElement, pinnedSet.has(id));
-  });
-}
-
-/**
- * Listen for cross-tab changes to GV_GEMS_PINNED so the pin state
- * stays in sync if another window modifies it.
- *
- * Returns an unlisten function; the caller (gemsSidebar/index.ts) invokes it
- * from its cleanup so the listener doesn't outlive the feature. Idempotent —
- * a second call replaces the previous registration instead of stacking.
- */
-export function listenPinnedChanges(): () => void {
-  if (pinnedChangesListener) {
-    chrome.storage?.onChanged?.removeListener(pinnedChangesListener);
+  /** Remove every pin toggle and its style; a pending injection is dropped. */
+  function removePinButtons(): void {
+    stopped = true;
+    // Gemini may retain a detached list; document queries would leave its dead pins behind.
+    for (const remove of buttons.values()) remove();
+    buttons.clear();
+    document.getElementById(PIN_STYLE_ID)?.remove();
+    styledInjected = false;
   }
-  pinnedChangesListener = onPinnedStorageChanged;
-  chrome.storage?.onChanged?.addListener(onPinnedStorageChanged);
-  return () => {
-    chrome.storage?.onChanged?.removeListener(onPinnedStorageChanged);
-    if (pinnedChangesListener === onPinnedStorageChanged) {
-      pinnedChangesListener = null;
+
+  type PinnedChangesListener = (
+    changes: Record<string, chrome.storage.StorageChange>,
+    areaName: string,
+  ) => void;
+
+  let pinnedChangesListener: PinnedChangesListener | null = null;
+
+  function onPinnedStorageChanged(
+    changes: Record<string, chrome.storage.StorageChange>,
+    areaName: string,
+  ): void {
+    if (isStopped() || areaName !== 'sync') return;
+    if (!changes[StorageKeys.GV_GEMS_PINNED]) return;
+    const raw = changes[StorageKeys.GV_GEMS_PINNED].newValue;
+    currentPinned = Array.isArray(raw)
+      ? raw.filter((id: unknown): id is string => typeof id === 'string')
+      : [];
+    const pinnedSet = new Set(currentPinned);
+    buttons.forEach((_remove, btn) => {
+      const id = btn.dataset.gemId;
+      if (!id) return;
+      toggleBtn(btn, pinnedSet.has(id));
+    });
+  }
+
+  /**
+   * Listen for cross-tab changes to GV_GEMS_PINNED so the pin state
+   * stays in sync if another window modifies it.
+   *
+   * Returns an unlisten function; the caller (gemsSidebar/pluginHandler.ts) invokes it
+   * from its cleanup so the listener doesn't outlive the feature. Idempotent —
+   * a second call replaces the previous registration instead of stacking.
+   */
+  function listenPinnedChanges(): () => void {
+    if (pinnedChangesListener) {
+      chrome.storage?.onChanged?.removeListener(pinnedChangesListener);
     }
-  };
+    pinnedChangesListener = onPinnedStorageChanged;
+    chrome.storage?.onChanged?.addListener(onPinnedStorageChanged);
+    return () => {
+      chrome.storage?.onChanged?.removeListener(onPinnedStorageChanged);
+      if (pinnedChangesListener === onPinnedStorageChanged) {
+        pinnedChangesListener = null;
+      }
+    };
+  }
+
+  return { inject: injectPinButtons, stop: removePinButtons, watch: listenPinnedChanges };
 }

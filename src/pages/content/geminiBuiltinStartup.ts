@@ -11,6 +11,10 @@ import { mountNativeFeature } from './featureLifecycle';
 import { NATIVE_FEATURES } from './nativeFeatures';
 
 export interface GeminiBuiltinStartup {
+  /** Context capture at its original content-helper start point. */
+  startContextSync(): Promise<void>;
+  /** Recent Gems in the parallel content-helper group. */
+  startGemsSidebar(): Promise<void>;
   /** The rail at its original heavy-feature start point, after the independent page services. */
   startTimeline(): Promise<void>;
   /** Canvas share-menu copy, after the conversation export button. */
@@ -39,6 +43,14 @@ export function createGeminiBuiltinStartup(
   const isStopped = (): boolean => stopped || lifetime?.aborted === true;
 
   return {
+    async startContextSync() {
+      if (isStopped()) return;
+      admission.admit('gemini', 'contextSync');
+    },
+    async startGemsSidebar() {
+      if (isStopped()) return;
+      admission.admit('gemini', 'gemsSidebar');
+    },
     async startTimeline() {
       if (isStopped()) return;
       admission.admit('gemini', 'timeline');

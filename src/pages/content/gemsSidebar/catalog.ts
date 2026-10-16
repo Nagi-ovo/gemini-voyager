@@ -1,3 +1,8 @@
+import {
+  DEFAULT_GEMS_SIDEBAR_COUNT,
+  normalizeGemsSidebarCount,
+} from '@/core/utils/gemsSidebarValues';
+
 /** Single gem as we cache and render it. Keep this small — chrome.storage. */
 export interface GemMetadata {
   /** Slug parsed out of `/gem/<id>`. Doubles as a stable React-style key. */
@@ -25,8 +30,7 @@ export interface GemMruEntry extends GemMetadata {
 }
 
 const MRU_CAP = 20;
-export const DEFAULT_COUNT = 3;
-const MAX_COUNT = 10;
+export const DEFAULT_COUNT = DEFAULT_GEMS_SIDEBAR_COUNT;
 
 /**
  * Parse the rendered Gems management page into the cache schema.
@@ -256,11 +260,7 @@ export function selectVisibleGems(
   return [...pinnedGems, ...fill.slice(0, fillCount)];
 }
 
-export function clampCount(raw: unknown): number {
-  const n = typeof raw === 'number' ? raw : Number(raw);
-  if (!Number.isFinite(n)) return DEFAULT_COUNT;
-  return Math.max(0, Math.min(MAX_COUNT, Math.floor(n)));
-}
+export const clampCount = normalizeGemsSidebarCount;
 
 /** Narrow a raw storage value to the pinned-ids shape (string[]). */
 export function sanitizePinnedIds(raw: unknown): string[] {

@@ -15,7 +15,6 @@ export enum CleanupPositions {
   FlushDraftsBeforeUnload,
   /** Before the features it starts: no late startup read may mount once teardown began. */
   CleanupGeminiBuiltinStartup,
-  CleanupGemsSidebar,
   CleanupEdgeFinalVersionNotice,
   CleanupPluginHost,
   /** Page services the actions and claims above register with; they stop after them. */

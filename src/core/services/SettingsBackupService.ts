@@ -119,6 +119,7 @@ export const BACKUPABLE_SYNC_SETTINGS_DEFAULTS = {
   [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO]: null,
   [StorageKeys.GV_SIDEBAR_AUTO_HIDE]: false,
   [StorageKeys.GV_SIDEBAR_FULL_HIDE]: false,
+  [StorageKeys.GV_GEMS_SIDEBAR_ENABLED]: true,
   [StorageKeys.GV_GEMS_SIDEBAR_COUNT]: 3,
   [StorageKeys.USAGE_STATUS_ENABLED]: false,
   [StorageKeys.COACHMARKS_SEEN]: [],

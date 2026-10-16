@@ -39,6 +39,7 @@ const SITE_HOSTS: Readonly<Record<PluginSite, readonly string[]>> = {
 /** Rows in reading order: the features people come for first. Unlisted ones follow. */
 const FEATURE_ORDER = [
   'folders',
+  'gems-sidebar',
   'timeline',
   'export',
   'canvas-copy',
@@ -64,6 +65,7 @@ const FEATURE_ORDER = [
   'diagram-rendering',
   'fork',
   'research-pack',
+  'context-sync',
   'default-model',
   'usage-status',
   'temporary-handoff',
@@ -111,6 +113,7 @@ export const FRESH_INSTALL_ON: ReadonlySet<string> = new Set([
   OFFICIAL_PLUGIN_IDS.geminiTimeline,
   OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
   OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
+  OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
   OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
   OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy,
   OFFICIAL_PLUGIN_IDS.geminiUserLatex,

@@ -12,6 +12,7 @@ export function createGemsSidebarView(
   visibleGems: () => GemMetadata[],
   toggleExpanded: () => Promise<void>,
 ) {
+  let stopped = false;
   let stopAnchorWatch: (() => void) | null = null;
   let enforceRafId: number | null = null;
   let positionRetryTimer: number | null = null;
@@ -183,7 +184,7 @@ export function createGemsSidebarView(
   }
 
   function scheduleEnforce(): void {
-    if (enforceRafId !== null) return;
+    if (stopped || enforceRafId !== null) return;
     enforceRafId = window.requestAnimationFrame(() => {
       enforceRafId = null;
       enforcePosition();
@@ -196,7 +197,7 @@ export function createGemsSidebarView(
    * visible entry, so the observer calls it only when the anchor may have moved.
    */
   function enforcePosition(): void {
-    if (getCount() <= 0) return;
+    if (stopped || getCount() <= 0) return;
     const gemsEntry = findGemsNavEntry();
     if (!gemsEntry || !gemsEntry.parentElement) return;
 
@@ -217,7 +218,7 @@ export function createGemsSidebarView(
   }
 
   function setupPositionEnforcer(): void {
-    if (getCount() <= 0) return;
+    if (stopped || getCount() <= 0) return;
 
     const overflow = document.querySelector('[data-test-id="overflow-container"]');
     if (!overflow) {
@@ -261,6 +262,7 @@ export function createGemsSidebarView(
   }
 
   function refreshInjector(): void {
+    if (stopped) return;
     if (getCount() <= 0) {
       cleanupSection();
       teardownPositionEnforcer();
@@ -275,6 +277,7 @@ export function createGemsSidebarView(
     refresh: refreshInjector,
     refreshExpanded: refreshExpandedState,
     stop() {
+      stopped = true;
       teardownPositionEnforcer();
       cleanupSection();
     },

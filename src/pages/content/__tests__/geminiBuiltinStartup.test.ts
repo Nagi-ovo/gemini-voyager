@@ -81,7 +81,7 @@ afterEach(() => {
 
 describe('the page lifetime of native features', () => {
   function probe(start: NativeFeature['start']): NativeFeature {
-    return { id: 'probe', position: CleanupPositions.CleanupGemsSidebar, start };
+    return { id: 'probe', position: CleanupPositions.CleanupGemsHider, start };
   }
 
   it('stops a native feature whose start finishes after the content script retired', async () => {
@@ -161,6 +161,8 @@ describe('official plugins at their Gemini start points', () => {
   it.each([
     ['startTimeline', OFFICIAL_PLUGIN_IDS.geminiTimeline],
     ['startCanvasCopy', OFFICIAL_PLUGIN_IDS.geminiCanvasCopy],
+    ['startGemsSidebar', OFFICIAL_PLUGIN_IDS.geminiGemsSidebar],
+    ['startContextSync', OFFICIAL_PLUGIN_IDS.geminiContextSync],
     ['startDefaultModel', OFFICIAL_PLUGIN_IDS.geminiDefaultModel],
     ['startResponseNotification', OFFICIAL_PLUGIN_IDS.geminiResponseNotification],
     ['startUsageStatus', OFFICIAL_PLUGIN_IDS.geminiUsageStatus],
@@ -203,6 +205,8 @@ describe('official plugins at their Gemini start points', () => {
     current.lifetime.abort();
     await startup.startTimeline();
     await startup.startCanvasCopy();
+    await startup.startGemsSidebar();
+    await startup.startContextSync();
     await startup.startDefaultModel();
     await startup.startResponseNotification();
     await startup.startUsageStatus();
@@ -212,6 +216,8 @@ describe('official plugins at their Gemini start points', () => {
     for (const id of [
       OFFICIAL_PLUGIN_IDS.geminiTimeline,
       OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
+      OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
+      OFFICIAL_PLUGIN_IDS.geminiContextSync,
       OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
       OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
       OFFICIAL_PLUGIN_IDS.geminiUsageStatus,

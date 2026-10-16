@@ -7,7 +7,6 @@ import { startEdgeFinalVersionNotice } from './edgeFinalVersionNotice';
 import type { NativeFeature } from './featureLifecycle';
 import { startForkLinkFinisher } from './fork/linkFinisher';
 import { startGemsHider } from './gemsHider/index';
-import { startGemsSidebar } from './gemsSidebar/index';
 import { startMarkdownPatcher } from './markdownPatcher/index';
 import { startNativeHealth } from './nativeHealth/index';
 import { startBrandTheme } from './platformTheme';
@@ -76,11 +75,6 @@ export const NATIVE_FEATURES = {
     id: 'rendered-quote-styling',
     position: CleanupPositions.CleanupRenderedQuoteStyling,
     start: startRenderedQuoteStyling,
-  },
-  gemsSidebar: {
-    id: 'gems-sidebar',
-    position: CleanupPositions.CleanupGemsSidebar,
-    start: startGemsSidebar,
   },
   markdownPatcher: {
     id: 'markdown-patcher',

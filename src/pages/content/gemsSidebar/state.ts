@@ -29,16 +29,21 @@ const MRU_CAPTURE_RETRY_MS = 400;
 const MRU_CAPTURE_MAX_ATTEMPTS = 6;
 
 /** Owns persisted data, settings, cross-tab changes and bounded page-identity capture. */
-export function createGemsState(refreshInjector: () => void, refreshExpandedState: () => void) {
-  let currentCount = 0;
+export function createGemsState(
+  refreshInjector: () => void,
+  refreshExpandedState: () => void,
+  initialCount: unknown = DEFAULT_COUNT,
+  signal?: AbortSignal,
+) {
+  let currentCount = clampCount(initialCount);
   let currentCache: GemCacheEnvelope = { items: [], cachedAt: 0 };
   let currentMru: GemMruEntry[] = [];
   let currentPinned: string[] = [];
   let expanded = true;
   let mruRetryTimer: number | null = null;
   let mruCaptureAttempts = 0;
-  // Bumped by stop so a write that finishes afterwards leaves the sidebar alone.
-  let run = 0;
+  let stopped = false;
+  const isStopped = () => stopped || signal?.aborted === true;
   let storageListener:
     | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
     | null = null;
@@ -52,6 +57,7 @@ export function createGemsState(refreshInjector: () => void, refreshExpandedStat
    * consumer, so not refreshing it is safe.
    */
   async function saveCache(items: GemMetadata[]): Promise<void> {
+    if (isStopped()) return;
     const accountSegment = currentAccountSegment();
     if (
       currentCache.accountSegment === accountSegment &&
@@ -63,15 +69,17 @@ export function createGemsState(refreshInjector: () => void, refreshExpandedStat
     const deletedIds = canPruneCatalogDeletes(currentCache.accountSegment, accountSegment)
       ? deletedCatalogGemIds(currentCache.items, items)
       : new Set();
-    const startedIn = run;
     try {
       await browser.storage.local.set({ [StorageKeys.GV_GEMS_LIST_CACHE]: envelope });
+      // An accepted storage write cannot be cancelled; never start its follow-up pruning after off.
+      if (isStopped() || currentAccountSegment() !== accountSegment) return;
       currentCache = envelope;
       if (deletedIds.size > 0) {
         const nextMru = currentMru.filter((entry) => !deletedIds.has(entry.id));
         if (nextMru.length !== currentMru.length) {
           currentMru = nextMru;
           await saveMru(currentMru);
+          if (isStopped() || currentAccountSegment() !== accountSegment) return;
         }
 
         const nextPinned = currentPinned.filter((id) => !deletedIds.has(id));
@@ -79,8 +87,7 @@ export function createGemsState(refreshInjector: () => void, refreshExpandedStat
           currentPinned = nextPinned;
           await browser.storage.sync.set({ [StorageKeys.GV_GEMS_PINNED]: currentPinned });
         }
-        // The pruning completes the accepted cache write; only the UI refresh belongs to the run.
-        if (startedIn === run) refreshInjector();
+        if (!isStopped()) refreshInjector();
       }
     } catch (error) {
       console.warn('[GemsSidebar] Failed to persist gems cache:', error);
@@ -121,6 +128,7 @@ export function createGemsState(refreshInjector: () => void, refreshExpandedStat
   }
 
   async function saveMru(entries: GemMruEntry[]): Promise<void> {
+    if (isStopped()) return;
     try {
       await browser.storage.local.set({ [StorageKeys.GV_GEMS_MRU]: { entries } });
     } catch (error) {
@@ -143,7 +151,7 @@ export function createGemsState(refreshInjector: () => void, refreshExpandedStat
    * page.
    */
   function recordGemUsageFromPage(): void {
-    if (currentCount <= 0) return;
+    if (isStopped() || currentCount <= 0) return;
     if (!parseGemHref(location.pathname)) {
       clearMruRetry();
       return;
@@ -183,6 +191,7 @@ export function createGemsState(refreshInjector: () => void, refreshExpandedStat
   }
 
   async function toggleExpanded(): Promise<void> {
+    if (isStopped()) return;
     expanded = !expanded;
     refreshExpandedState();
     try {
@@ -201,37 +210,36 @@ export function createGemsState(refreshInjector: () => void, refreshExpandedStat
   async function loadInitialState(): Promise<void> {
     try {
       const sync = await browser.storage.sync.get({
-        [StorageKeys.GV_GEMS_SIDEBAR_COUNT]: DEFAULT_COUNT,
         [StorageKeys.GV_GEMS_PINNED]: [],
       });
-      currentCount = clampCount(sync[StorageKeys.GV_GEMS_SIDEBAR_COUNT]);
+      if (isStopped()) return;
       currentPinned = sanitizePinnedIds(sync[StorageKeys.GV_GEMS_PINNED]);
     } catch (error) {
-      console.warn('[GemsSidebar] Failed to load sidebar count:', error);
-      currentCount = DEFAULT_COUNT;
+      console.warn('[GemsSidebar] Failed to load pinned gems:', error);
+      if (isStopped()) return;
       currentPinned = [];
     }
 
     try {
       const local = await browser.storage.local.get({ [EXPANDED_STORAGE_KEY]: true });
+      if (isStopped()) return;
       expanded = (local as Record<string, unknown>)[EXPANDED_STORAGE_KEY] !== false;
     } catch {
       expanded = true;
     }
 
-    currentCache = await loadCache();
-    currentMru = await loadMru();
+    if (isStopped()) return;
+    const cache = await loadCache();
+    if (isStopped()) return;
+    currentCache = cache;
+    const mru = await loadMru();
+    if (!isStopped()) currentMru = mru;
   }
 
   function setupStorageListener(): void {
+    if (isStopped()) return;
     storageListener = (changes, areaName) => {
-      if (areaName === 'sync' && changes[StorageKeys.GV_GEMS_SIDEBAR_COUNT]) {
-        const next = clampCount(changes[StorageKeys.GV_GEMS_SIDEBAR_COUNT].newValue);
-        if (next !== currentCount) {
-          currentCount = next;
-          refreshInjector();
-        }
-      }
+      if (isStopped()) return;
       if (areaName === 'sync' && changes[StorageKeys.GV_GEMS_PINNED]) {
         currentPinned = sanitizePinnedIds(changes[StorageKeys.GV_GEMS_PINNED].newValue);
         refreshInjector();
@@ -267,6 +275,13 @@ export function createGemsState(refreshInjector: () => void, refreshExpandedStat
 
   return {
     load: loadInitialState,
+    setCount(value: unknown) {
+      if (isStopped()) return;
+      const next = clampCount(value);
+      if (next === currentCount) return;
+      currentCount = next;
+      refreshInjector();
+    },
     watch: setupStorageListener,
     saveCache,
     recordUsage: recordGemUsageFromPage,
@@ -279,7 +294,7 @@ export function createGemsState(refreshInjector: () => void, refreshExpandedStat
       return expanded;
     },
     stop() {
-      run += 1;
+      stopped = true;
       clearMruRetry();
       if (storageListener) {
         browser.storage.onChanged.removeListener(storageListener);

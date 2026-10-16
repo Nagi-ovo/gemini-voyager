@@ -20,7 +20,7 @@ function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
 function feature(start: NativeFeature['start']): NativeFeature {
   return {
     id: 'probe',
-    position: CleanupPositions.CleanupGemsSidebar,
+    position: CleanupPositions.CleanupGemsHider,
     start,
     toggle: { key: 'gvProbe', isEnabled: (value) => value === true },
   };
@@ -35,7 +35,7 @@ describe('mountNativeFeature', () => {
       feature(() => stop),
     );
 
-    expect(manager.list()).toEqual([{ pos: CleanupPositions.CleanupGemsSidebar, func: stop }]);
+    expect(manager.list()).toEqual([{ pos: CleanupPositions.CleanupGemsHider, func: stop }]);
     manager.executeCleanups();
     expect(stop).toHaveBeenCalledOnce();
   });
@@ -86,7 +86,7 @@ describe('createNativeFeatureToggle', () => {
     toggle.handleChange({ gvProbe: { newValue: true } }, 'sync');
     await drain();
     expect(start).toHaveBeenCalledTimes(2);
-    expect(manager.list()).toEqual([{ pos: CleanupPositions.CleanupGemsSidebar, func: nextStop }]);
+    expect(manager.list()).toEqual([{ pos: CleanupPositions.CleanupGemsHider, func: nextStop }]);
 
     manager.executeCleanups();
     expect(throwingStop).toHaveBeenCalledOnce();
@@ -213,7 +213,7 @@ describe('createNativeFeatureToggle', () => {
     expect(() =>
       createNativeFeatureToggle(new CleanupManager(), {
         id: 'plain',
-        position: CleanupPositions.CleanupGemsSidebar,
+        position: CleanupPositions.CleanupGemsHider,
         start: () => () => {},
       }),
     ).toThrow(/needs a toggle/);

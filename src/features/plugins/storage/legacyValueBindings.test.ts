@@ -17,6 +17,23 @@ const WIDTH_ID = 'voyager.gemini-chat-width';
 const EDIT_WIDTH_ID = 'voyager.gemini-edit-input-width';
 
 describe('legacy value bindings', () => {
+  it('keeps zero Gems hidden and binds live counts to the existing sync key', () => {
+    const id = 'voyager.gemini-gems-sidebar';
+    const key = StorageKeys.GV_GEMS_SIDEBAR_COUNT;
+    for (const [stored, count] of [
+      [undefined, 3],
+      [0, 0],
+      [2.6, 2],
+      [-1, 0],
+      [20, 10],
+    ] as const) {
+      expect(deriveLegacyValueSettings(id, { [key]: stored })).toEqual({ count });
+    }
+    expect(legacyValueWrite(id, 'count', 0)).toEqual({ [key]: 0 });
+    expect(acceptsLegacyLiveChange(key, 0)).toBe(true);
+    expect(acceptsLegacyLiveChange(key, undefined)).toBe(true);
+    expect(acceptsLegacyLiveChange(key, '3')).toBe(true);
+  });
   it('falls back to the default for a non-numeric or non-finite stored value on the first read', () => {
     for (const stored of [undefined, null, '120', true, Number.NaN, Number.POSITIVE_INFINITY]) {
       expect(
@@ -131,6 +148,7 @@ describe('legacy value bindings', () => {
         StorageKeys.CHAT_WIDTH,
         StorageKeys.EDIT_INPUT_WIDTH,
         StorageKeys.SIDEBAR_WIDTH,
+        StorageKeys.GV_GEMS_SIDEBAR_COUNT,
         StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY,
       ].sort(),
     );

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
+import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 
 const storageState = vi.hoisted(() => ({
   catalog: [] as Array<{ id: string; href: string; name: string }>,
@@ -99,8 +100,13 @@ describe('gems sidebar position enforcer', () => {
   });
 
   async function start(): Promise<void> {
-    const { startGemsSidebar } = await import('../index');
-    stop = await startGemsSidebar();
+    const { activateGeminiGemsSidebar } = await import('../pluginHandler');
+    const scope = new PluginScope();
+    stop = () => {
+      void scope.dispose();
+    };
+    activateGeminiGemsSidebar(scope, { count: 3 });
+    for (let i = 0; i < 12; i++) await Promise.resolve();
     await settle();
   }
 

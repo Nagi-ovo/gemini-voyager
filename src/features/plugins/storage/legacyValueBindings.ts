@@ -29,6 +29,7 @@ import {
   normalizeEditInputWidthPercent,
   normalizeParagraphSpacingPx,
 } from '@/core/utils/chatAppearanceValues';
+import { normalizeGemsSidebarCount } from '@/core/utils/gemsSidebarValues';
 import { normalizeSidebarWidth } from '@/core/utils/sidebarWidthValues';
 
 import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
@@ -70,6 +71,15 @@ function trueOnlyBinding(settingKey: string, legacyKey: string): LegacyValueBind
  * keeps reading its settings from `gvPluginsState`.
  */
 export const LEGACY_VALUE_BINDINGS: LegacyValueBindingTable = {
+  [OFFICIAL_PLUGIN_IDS.geminiGemsSidebar]: [
+    {
+      settingKey: 'count',
+      legacyKey: StorageKeys.GV_GEMS_SIDEBAR_COUNT,
+      read: normalizeGemsSidebarCount,
+      // Native count changes also coerced strings and reset to 3 on key removal.
+      acceptsLiveChange: always,
+    },
+  ],
   [OFFICIAL_PLUGIN_IDS.geminiSidebarWidth]: [
     {
       settingKey: 'widthPx',

@@ -35,15 +35,17 @@ export function createGemsScraper(
   saveCache: (items: GemMetadata[]) => Promise<void>,
   injectPins: () => Promise<void>,
 ) {
+  let active = false;
   let scrapeObserver: MutationObserver | null = null;
   let scrapeTimer: number | null = null;
   let scrapeRetryTimer: number | null = null;
   const SCRAPE_DEBOUNCE_MS = 300;
 
   function scheduleScrape(): void {
-    if (scrapeTimer !== null) return;
+    if (!active || scrapeTimer !== null) return;
     scrapeTimer = window.setTimeout(() => {
       scrapeTimer = null;
+      if (!active) return;
       const items = scrapeGemsFromDocument();
       if (items.length === 0) return; // don't clobber cache on transient empty render
       void saveCache(items);
@@ -54,7 +56,7 @@ export function createGemsScraper(
   }
 
   function setupScrapeObserver(): void {
-    if (!isGemsViewPathname(location.pathname)) return;
+    if (!active || !isGemsViewPathname(location.pathname)) return;
 
     // Re-scrape whenever the visible gem list changes — covers reorder, rename,
     // create, delete. Cheap because we debounce + early-exit on empty matches.
@@ -94,6 +96,7 @@ export function createGemsScraper(
   }
 
   function teardownScrapeObserver(): void {
+    active = false;
     if (scrapeObserver) {
       scrapeObserver.disconnect();
       scrapeObserver = null;
@@ -108,5 +111,11 @@ export function createGemsScraper(
     }
   }
 
-  return { start: setupScrapeObserver, stop: teardownScrapeObserver };
+  return {
+    start() {
+      active = true;
+      setupScrapeObserver();
+    },
+    stop: teardownScrapeObserver,
+  };
 }

@@ -202,6 +202,27 @@ describe('BUILTIN_PLUGINS', () => {
     );
   });
 
+  it('ships recent Gems with the existing count range and all localized setting labels', () => {
+    const id = 'voyager.gemini-gems-sidebar';
+    const manifest = BUILTIN_PLUGINS.find((m) => m.id === id);
+    expect(manifest?.matches).toEqual(['https://gemini.google.com/*']);
+    expect(manifest?.contributes.domOps).toBeUndefined();
+    expect(manifest?.contributes.settings?.count).toMatchObject({
+      type: 'number',
+      default: 3,
+      min: 0,
+      max: 10,
+    });
+    expect(NATIVE_BUILTIN_PLUGIN_IDS).toContain(id);
+    expect(NATIVE_HANDLER_BINDINGS[id]?.updateSettings).toBeTypeOf('function');
+    expect(legacyValueBindingsFor(id).map((entry) => entry.settingKey)).toEqual(['count']);
+    for (const locale of ['zh', 'zh_TW', 'ja', 'ko', 'fr', 'es', 'pt', 'ru', 'ar'] as const) {
+      expect(manifest?.i18n?.[locale]?.name, locale).toBeTruthy();
+      expect(manifest?.i18n?.[locale]?.description, locale).toBeTruthy();
+      expect(manifest?.i18n?.[locale]?.settings?.count?.label, locale).toBeTruthy();
+    }
+  });
+
   it('ships sidebar width for Gemini with localized settings', () => {
     const id = 'voyager.gemini-sidebar-width';
     const width = BUILTIN_PLUGINS.find((m) => m.id === id);
@@ -252,6 +273,7 @@ describe('BUILTIN_PLUGINS', () => {
 
   it.each([
     ['canvas copy', 'voyager.gemini-canvas-copy'],
+    ['context sync', 'voyager.gemini-context-sync'],
     ['auto-hide sidebar', 'voyager.gemini-sidebar-auto-hide'],
     ['fully hide sidebar', 'voyager.gemini-sidebar-full-hide'],
     ['research pack', 'voyager.gemini-research-pack'],

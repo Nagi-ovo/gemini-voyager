@@ -20,12 +20,17 @@ import {
 
 import { activateGeminiCanvasCopy } from './canvasExport/pluginHandler';
 import { activateGeminiChatWidth, updateGeminiChatWidthSettings } from './chatWidth/pluginHandler';
+import { activateGeminiContextSync } from './contextSync/pluginHandler';
 import { activateGeminiDefaultModel } from './defaultModel/pluginHandler';
 import {
   activateGeminiEditInputWidth,
   updateGeminiEditInputWidthSettings,
 } from './editInputWidth/pluginHandler';
 import { activateGeminiFork } from './fork/pluginHandler';
+import {
+  activateGeminiGemsSidebar,
+  updateGeminiGemsSidebarSettings,
+} from './gemsSidebar/pluginHandler';
 import { activateGeminiHighlight } from './highlight/pluginHandler';
 import {
   activateGeminiInputCollapse,
@@ -49,6 +54,11 @@ import { activateGeminiTimeline } from './timeline/pluginHandler';
 import { activateGeminiUsageStatus } from './usageStatus/pluginHandler';
 
 export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = {
+  'voyager.gemini-context-sync': { activate: activateGeminiContextSync },
+  'voyager.gemini-gems-sidebar': {
+    activate: activateGeminiGemsSidebar,
+    updateSettings: updateGeminiGemsSidebarSettings,
+  },
   'voyager.gemini-sidebar-width': {
     activate: activateGeminiSidebarWidth,
     updateSettings: updateGeminiSidebarWidthSettings,

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import browser from 'webextension-polyfill';
 
 import { StorageKeys } from '@/core/types/common';
+import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 
 import type { GemMetadata } from '../catalog';
 import { createGemsState } from '../state';
@@ -104,9 +105,14 @@ describe('gems sidebar lifecycle', () => {
     document.head.innerHTML = '';
   });
 
-  async function start(): Promise<() => void> {
-    const { startGemsSidebar } = await import('../index');
-    stop = await startGemsSidebar();
+  async function start(count = 3): Promise<() => void> {
+    const { activateGeminiGemsSidebar } = await import('../pluginHandler');
+    const scope = new PluginScope();
+    stop = () => {
+      void scope.dispose();
+    };
+    activateGeminiGemsSidebar(scope, { count });
+    for (let i = 0; i < 12; i++) await Promise.resolve();
     await flush();
     return stop;
   }
@@ -145,8 +151,39 @@ describe('gems sidebar lifecycle', () => {
     expect(document.getElementById('gv-gem-pin-style')).not.toBeNull();
   });
 
+  it('removes pins from detached Gemini lists so reattached lists get working buttons after re-enable', async () => {
+    window.history.pushState({}, '', '/gems/view');
+    mountGemsList();
+    const firstStop = await start();
+    const list = document.querySelector('[data-test-id="your-gems-list"]')!;
+    const oldButton = list.querySelector<HTMLButtonElement>('.gv-gem-pin-toggle')!;
+    list.remove();
+    firstStop();
+
+    expect(list.querySelectorAll('.gv-gem-pin-toggle')).toHaveLength(0);
+    const oldClick = new MouseEvent('click', { cancelable: true });
+    oldButton.dispatchEvent(oldClick);
+    expect(oldClick.defaultPrevented).toBe(false);
+    const hover = vi.fn();
+    oldButton.addEventListener('mouseover', hover);
+    oldButton.dispatchEvent(new MouseEvent('mouseover'));
+    expect(hover).toHaveBeenCalledOnce();
+    expect(chrome.storage.sync.set).not.toHaveBeenCalled();
+
+    document.body.appendChild(list);
+    expect(pinButtons()).toHaveLength(0);
+    await start();
+    expect(pinButtons()).toHaveLength(2);
+    const newButton = list.querySelector<HTMLButtonElement>('.gv-gem-pin-toggle')!;
+    expect(newButton).not.toBe(oldButton);
+    newButton.click();
+    await flush();
+    expect(chrome.storage.sync.set).toHaveBeenCalledWith({ [StorageKeys.GV_GEMS_PINNED]: ['g1'] });
+    expect(newButton.classList.contains('gv-pinned')).toBe(true);
+  });
+
   it('does not refresh the sidebar after stop when a cache write or navigation was pending', async () => {
-    // Cache write: the write and its pruning finish, the sidebar is not touched.
+    // An already-submitted write finishes, but off prevents its follow-up work.
     window.history.pushState({}, '', '/gems/view');
     const refreshSidebar = vi.fn();
     const state = createGemsState(refreshSidebar, () => {});
@@ -219,5 +256,108 @@ describe('gems sidebar lifecycle', () => {
       (browser.storage.sync.set as unknown as Mock).mock.calls.length,
       (chrome.storage.sync.set as unknown as Mock).mock.calls.length,
     ]).toEqual(writesBeforeStop);
+  });
+
+  it('keeps count-zero lists hidden while pins and catalog scraping remain enabled', async () => {
+    window.history.pushState({}, '', '/gems/view');
+    mountSidebar();
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      `
+      <div data-test-id="your-gems-list">
+        <bot-list-row><a class="bot-row" href="/gem/g1"><span class="title-container">Writer</span></a></bot-list-row>
+      </div>`,
+    );
+    await start(0);
+    await wait(350);
+
+    expect(document.querySelector('.gv-gems-inline-list')).toBeNull();
+    expect(pinButtons()).toHaveLength(1);
+    expect(browser.storage.local.set).toHaveBeenCalledWith({
+      [StorageKeys.GV_GEMS_LIST_CACHE]: expect.objectContaining({
+        items: [expect.objectContaining({ id: 'g1', name: 'Writer' })],
+      }),
+    });
+  });
+
+  it('updates count live without restarting storage reads and hides pinned gems at zero', async () => {
+    mountSidebar();
+    (browser.storage.sync.get as unknown as Mock).mockResolvedValueOnce({
+      [StorageKeys.GV_GEMS_PINNED]: ['g1'],
+    });
+    await start(1);
+    const reads = (browser.storage.sync.get as unknown as Mock).mock.calls.length;
+    const { updateGeminiGemsSidebarSettings } = await import('../pluginHandler');
+    expect(document.querySelectorAll('.gv-gems-item')).toHaveLength(1);
+    updateGeminiGemsSidebarSettings({ count: 2 });
+    expect(document.querySelectorAll('.gv-gems-item')).toHaveLength(2);
+    updateGeminiGemsSidebarSettings({ count: 0 });
+    expect(document.querySelector('.gv-gems-inline-list')).toBeNull();
+    expect(document.querySelector('.gv-gems-expand-toggle')).toBeNull();
+    updateGeminiGemsSidebarSettings({ count: 1 });
+    expect(document.querySelectorAll('.gv-gems-item')).toHaveLength(1);
+    expect((browser.storage.sync.get as unknown as Mock).mock.calls.length).toBe(reads);
+  });
+
+  it('drops a late initial load after off without listeners, DOM or writes', async () => {
+    window.history.pushState({}, '', '/gems/view');
+    mountGemsList();
+    const loaded = deferred<Record<string, unknown>>();
+    (browser.storage.sync.get as unknown as Mock).mockReturnValueOnce(loaded.promise);
+    const stopSidebar = await start();
+    const writes = (browser.storage.local.set as unknown as Mock).mock.calls.length;
+    stopSidebar();
+    loaded.resolve({ [StorageKeys.GV_GEMS_PINNED]: ['g1'] });
+    await flush();
+    await wait(350);
+
+    expect(browser.storage.onChanged.addListener).not.toHaveBeenCalled();
+    expect(chrome.storage.onChanged.addListener).not.toHaveBeenCalled();
+    expect(pinButtons()).toHaveLength(0);
+    expect((browser.storage.local.set as unknown as Mock).mock.calls.length).toBe(writes);
+  });
+
+  it('keeps a live count change made while initial storage loads', async () => {
+    mountSidebar();
+    const loaded = deferred<Record<string, unknown>>();
+    (browser.storage.sync.get as unknown as Mock).mockReturnValueOnce(loaded.promise);
+    await start(3);
+    const { updateGeminiGemsSidebarSettings } = await import('../pluginHandler');
+    updateGeminiGemsSidebarSettings({ count: 0 });
+    loaded.resolve({ [StorageKeys.GV_GEMS_SIDEBAR_COUNT]: 3 });
+    for (let i = 0; i < 16; i++) await Promise.resolve();
+    expect(document.querySelector('.gv-gems-inline-list')).toBeNull();
+  });
+
+  it('drops late scrape completion after off without pruning stored pins or MRU', async () => {
+    window.history.pushState({}, '', '/gems/view');
+    (browser.storage.sync.get as unknown as Mock).mockResolvedValueOnce({
+      [StorageKeys.GV_GEMS_PINNED]: ['g2'],
+    });
+    (browser.storage.local.get as unknown as Mock)
+      .mockImplementationOnce(async () => ({
+        gvGemsSidebarExpanded: true,
+      }))
+      .mockImplementationOnce(async () => ({
+        [StorageKeys.GV_GEMS_LIST_CACHE]: { items: [gem('g1'), gem('g2')], cachedAt: 1 },
+      }))
+      .mockImplementationOnce(async () => ({
+        [StorageKeys.GV_GEMS_MRU]: { entries: [{ ...gem('g2'), lastUsedAt: 1 }] },
+      }));
+    const refresh = vi.fn();
+    const state = createGemsState(refresh, () => {});
+    await state.load();
+    const written = deferred<void>();
+    (browser.storage.local.set as unknown as Mock).mockReturnValueOnce(written.promise);
+    const pending = state.saveCache([gem('g1')]);
+    state.stop();
+    written.resolve();
+    await pending;
+
+    expect(browser.storage.local.set).toHaveBeenCalledTimes(1);
+    expect(browser.storage.sync.set).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+    await state.saveCache([gem('late')]);
+    expect(browser.storage.local.set).toHaveBeenCalledTimes(1);
   });
 });
