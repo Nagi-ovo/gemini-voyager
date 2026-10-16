@@ -16,9 +16,7 @@
  */
 import { logger } from '@/core/services/LoggerService';
 import { createToaster } from '@/core/ui/toast/toaster';
-import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { fetchImageViaExtensionRuntime } from '@/core/utils/runtimeImageFetch';
-import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 
 import { recordWatermarkPresence } from '../watermarkNativeNotice/cleanStreak';
 import { createDownloadFeedback } from './downloadFeedback';
@@ -29,10 +27,13 @@ import { WatermarkEngine } from './watermarkEngine';
 let engine: WatermarkEngine | null = null;
 let enginePromise: Promise<WatermarkEngine> | null = null;
 let lifecycleGeneration = 0;
+let healthGeneration = 0;
 let downloadRemovalEnabled = false;
 let previewRemovalEnabled = false;
 
 let bridgeObserver: MutationObserver | null = null;
+const healthOwners = new Set<symbol>();
+const controlOwners = { download: new Set<symbol>(), preview: new Set<symbol>() };
 
 /**
  * Fetch image via background script to bypass CORS
@@ -143,6 +144,7 @@ async function inspectImageRequest(
   bridge: HTMLElement,
 ): Promise<void> {
   if (!intentToken) return;
+  const generation = healthGeneration;
   const previewFingerprintPromise = feedback.takePreview(intentToken);
   if (!previewFingerprintPromise) return;
 
@@ -150,6 +152,7 @@ async function inspectImageRequest(
     const previewFingerprint = await previewFingerprintPromise;
     if (!previewFingerprint) return;
     const image = await loadBridgeImage(base64);
+    if (generation !== healthGeneration) return;
     const result = health.compare(previewFingerprint, image);
     if (result?.corrupted) {
       bridge.dataset.status = JSON.stringify({
@@ -173,45 +176,41 @@ async function processImageRequest(
   bridge: HTMLElement,
   intentToken?: string,
 ): Promise<void> {
-  // Engine init is async (loads two PNG assets). The bridge observer is
-  // installed BEFORE the await on engine creation, so requests can land here
-  // before the engine is ready — queue on enginePromise instead of failing
-  // fast (otherwise users who click download right after the content script
-  // re-injects, e.g. after a /u/0/ → /u/1/ account switch, see the toast
-  // stuck for ~30s while the MAIN-world interceptor times out).
-  if (!engine && enginePromise) {
-    try {
-      await enginePromise;
-    } catch {
-      // engine init failed — fall through to the "not initialized" path
-    }
-  }
-  if (!engine) {
-    bridge.dataset.response = JSON.stringify({
-      requestId,
-      error: 'Watermark engine not initialized',
-    });
+  const generation = healthGeneration;
+  // A content-script handoff must still answer accepted downloads; only health side effects retire.
+  let downloadEngine: WatermarkEngine;
+  try {
+    const acceptedEngine = engine ?? (await enginePromise);
+    if (!acceptedEngine) throw new Error('Watermark engine not initialized');
+    downloadEngine = acceptedEngine;
+  } catch (error) {
+    bridge.dataset.response = JSON.stringify({ requestId, error: String(error) });
     return;
   }
 
   try {
     const img = await loadBridgeImage(base64);
-    const previewFingerprintPromise = intentToken ? feedback.takePreview(intentToken) : undefined;
+    const previewFingerprintPromise =
+      generation === healthGeneration && intentToken
+        ? feedback.takePreview(intentToken)
+        : undefined;
     const previewFingerprint = previewFingerprintPromise ? await previewFingerprintPromise : null;
-    const healthResult = previewFingerprint ? health.compare(previewFingerprint, img) : null;
+    const healthResult =
+      generation === healthGeneration && previewFingerprint
+        ? health.compare(previewFingerprint, img)
+        : null;
 
     // Process image to remove watermark
-    const processedCanvas = await engine.removeWatermarkFromImage(
-      img,
-      (presence) => void recordWatermarkPresence(presence),
-    );
+    const processedCanvas = await downloadEngine.removeWatermarkFromImage(img, (presence) => {
+      if (generation === healthGeneration) void recordWatermarkPresence(presence);
+    });
     const processedDataUrl = processedCanvas.toDataURL('image/png');
 
     // Send response via bridge element
     bridge.dataset.response = JSON.stringify({
       requestId,
       base64: processedDataUrl,
-      corrupted: healthResult?.corrupted === true,
+      corrupted: generation === healthGeneration && healthResult?.corrupted === true,
     });
   } catch (error) {
     console.error('[Gemini Voyager] Failed to process image:', error);
@@ -219,141 +218,93 @@ async function processImageRequest(
   }
 }
 
+/** The engine is mode-independent; retiring a control never cancels its load. */
+function ensureEngine(): Promise<WatermarkEngine> {
+  if (engine) return Promise.resolve(engine);
+  if (!enginePromise) {
+    enginePromise = WatermarkEngine.create().then(
+      (loaded) => {
+        engine = loaded;
+        return loaded;
+      },
+      (error: unknown) => {
+        enginePromise = null;
+        throw error;
+      },
+    );
+  }
+  return enginePromise;
+}
+
 /**
- * Read the latest settings and configure the watermark runtime.
- * Reconfiguration tears down preview work every time, but keeps an unchanged
- * download runtime alive so an in-flight native download cannot lose its
- * bridge request, intent, or feedback sequence.
+ * Core image-health inspection owns the bridge independently of both plugins.
+ * Keep it mounted at the native start point so accepted downloads can finish
+ * after download removal is disabled, without duplicating the native request.
  */
-async function configureWatermarkRemover(reconfigure: boolean): Promise<void> {
-  const generation = ++lifecycleGeneration;
-  let awaitedEngine: Promise<WatermarkEngine> | null = null;
-
-  try {
-    // Initialize bridge element first (so it exists when fetch interceptor loads)
-    getBridgeElement();
-
-    // Resolve the two split flags (with legacy fallback)
-    const result = await chrome.storage?.sync?.get([...WATERMARK_STORAGE_KEYS]);
-    const { download: downloadEnabled, preview: previewEnabled } = resolveWatermarkSettings(
-      result ?? null,
-    );
-    if (generation !== lifecycleGeneration) return;
-
-    if (reconfigure) {
-      teardownWatermarkRemover(downloadRemovalEnabled && downloadEnabled);
+export function startWatermarkImageHealth(): () => void {
+  const owner = Symbol('watermark-image-health');
+  if (healthOwners.size === 0) healthGeneration += 1;
+  healthOwners.add(owner);
+  notifyFetchInterceptor(downloadRemovalEnabled);
+  feedback.start();
+  setupFetchInterceptorBridge();
+  return () => {
+    if (!healthOwners.delete(owner) || healthOwners.size > 0) return;
+    healthGeneration += 1;
+    bridgeObserver?.disconnect();
+    bridgeObserver = null;
+    feedback.stop();
+    const bridge = document.getElementById(GV_BRIDGE_ID);
+    if (bridge) {
+      bridge.dataset.enabled = 'false';
+      bridge.removeAttribute('data-download-intent-expires-at');
+      bridge.removeAttribute('data-download-intent-token');
     }
+  };
+}
 
-    downloadRemovalEnabled = downloadEnabled;
-    previewRemovalEnabled = previewEnabled;
-    notifyFetchInterceptor(downloadEnabled);
-
-    // Download health inspection is independent of watermark removal. Keep
-    // the click intent, bridge, and warning listener alive even when both
-    // removal modes are off; Gemini's native response stays untouched.
-    feedback.start();
-    setupFetchInterceptorBridge();
-
-    if (!downloadEnabled && !previewEnabled) {
-      logger.debug('[Gemini Voyager] Watermark remover is disabled');
-      return;
-    }
-
-    logger.debug(
-      `[Gemini Voyager] Initializing watermark remover (download=${downloadEnabled}, preview=${previewEnabled})`,
-    );
-
-    if (downloadEnabled) {
-      // The indicator is only a readiness cue; downloads already queue through
-      // the bridge while the engine assets load. Show it immediately and watch
-      // for buttons Gemini mounts during that loading window.
+/**
+ * Acquire one independent plugin control. Scope cleanup changes admission for
+ * future work synchronously; it does not cancel a download already accepted by
+ * MAIN. That pipeline is a one-shot sequential promise, not an interruptible
+ * state machine: tying its phases to the plugin scope would discard its response.
+ */
+export function acquireWatermarkControl(mode: 'download' | 'preview'): () => void {
+  const owners = controlOwners[mode];
+  const owner = Symbol(`watermark-${mode}`);
+  owners.add(owner);
+  if (owners.size === 1) {
+    if (mode === 'download') {
+      downloadRemovalEnabled = true;
+      notifyFetchInterceptor(true);
       previews.watchIndicators();
+    } else {
+      previewRemovalEnabled = true;
+      lifecycleGeneration += 1;
     }
-
-    if (!enginePromise) {
-      enginePromise = WatermarkEngine.create();
-    }
-    awaitedEngine = enginePromise;
-    // The loaded engine does not depend on the mode, so even a superseded run
-    // keeps it: a download queued on the load resumes before the newer run does.
-    engine = engine ?? (await awaitedEngine);
-    if (generation !== lifecycleGeneration) return;
-
-    if (previewEnabled) {
-      previews.start();
-    }
-
-    logger.debug('[Gemini Voyager] Watermark remover ready');
-  } catch (error) {
-    // Forget only the load this run awaited; clearing a newer run's pending
-    // load would answer the downloads queued on it with "not initialized".
-    if (!engine && awaitedEngine !== null && enginePromise === awaitedEngine) {
-      enginePromise = null;
-    }
-    if (generation !== lifecycleGeneration) return;
-    if (isExtensionContextInvalidatedError(error)) {
-      return;
-    }
-    console.error('[Gemini Voyager] Watermark remover initialization failed:', error);
+    const generation = lifecycleGeneration;
+    void ensureEngine().then(
+      () => {
+        if (mode === 'preview' && previewRemovalEnabled && generation === lifecycleGeneration) {
+          previews.start();
+        }
+      },
+      (error: unknown) => {
+        logger.error('[Gemini Voyager] Watermark engine initialization failed', { error });
+      },
+    );
   }
-}
-
-/**
- * Start the watermark remover.
- */
-export function startWatermarkRemover(): Promise<void> {
-  return configureWatermarkRemover(false);
-}
-
-/**
- * Re-read storage and apply the latest watermark mode to the current page.
- * The shared generation guard makes rapid restarts
- * latest-wins even while the engine is still loading.
- */
-export async function restartWatermarkRemover(): Promise<void> {
-  await configureWatermarkRemover(true);
-}
-
-/**
- * Tear down preview work and, unless it is unchanged and still enabled, the
- * download runtime. Keeping download state is what makes preview-only toggles
- * safe while a native download is already in progress.
- */
-function teardownWatermarkRemover(preserveDownloadRuntime: boolean): void {
-  const keepDownloadRuntime = preserveDownloadRuntime && downloadRemovalEnabled;
-  previewRemovalEnabled = false;
-
-  previews.stop();
-
-  if (keepDownloadRuntime) return;
-
-  downloadRemovalEnabled = false;
-  bridgeObserver?.disconnect();
-  bridgeObserver = null;
-  feedback.stop();
-
-  // Tell the MAIN-world fetch interceptor watermark mutation is off. It may
-  // still clone a user-initiated native download for the read-only health check.
-  // Only if the bridge already exists — don't create one just to disable it
-  // (stop runs on every page's beforeunload, including where it never started).
-  const existingBridge = document.getElementById(GV_BRIDGE_ID);
-  if (existingBridge) {
-    existingBridge.dataset.enabled = 'false';
-    existingBridge.removeAttribute('data-download-intent-expires-at');
-    existingBridge.removeAttribute('data-download-intent-token');
-  }
-
-  document
-    .querySelectorAll<HTMLElement>('.nanobanana-indicator')
-    .forEach((indicator) => indicator.remove());
-}
-
-/**
- * Fully tear down the watermark remover. Safe to call when nothing was started.
- * Wired into the content-script beforeunload teardown so document observers,
- * the MAIN-world bridge, and global listeners cannot outlive the page.
- */
-export function stopWatermarkRemover(): void {
-  lifecycleGeneration += 1;
-  teardownWatermarkRemover(false);
+  return () => {
+    if (!owners.delete(owner) || owners.size > 0) return;
+    if (mode === 'download') {
+      // MAIN wrappers cannot be removed. Every new request consults this flag.
+      downloadRemovalEnabled = false;
+      notifyFetchInterceptor(false);
+      previews.stopIndicators();
+    } else {
+      previewRemovalEnabled = false;
+      lifecycleGeneration += 1;
+      previews.stopPreviews();
+    }
+  };
 }

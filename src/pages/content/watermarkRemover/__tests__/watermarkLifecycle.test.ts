@@ -11,6 +11,9 @@ import {
 
 const engineCreate = vi.hoisted(() => vi.fn());
 const fetchImageViaExtensionRuntime = vi.hoisted(() => vi.fn());
+const recordWatermarkPresence = vi.hoisted(() => vi.fn());
+
+vi.mock('../../watermarkNativeNotice/cleanStreak', () => ({ recordWatermarkPresence }));
 
 vi.mock('@/utils/i18n', () => ({
   getTranslationSync: (key: string) => key,
@@ -69,21 +72,27 @@ async function settleAsyncWork(): Promise<void> {
 
 /** Each import after `vi.resetModules()` is a separate content-script copy with its own state. */
 async function loadContentScriptCopy(): Promise<{
-  shell: typeof import('../feature');
   runtime: typeof import('../index');
 }> {
   vi.resetModules();
   const runtime = await import('../index');
-  const shell = await import('../feature');
-  return { shell, runtime };
+  return { runtime };
 }
 
 function asNativeFeature(start: () => StopNativeFeature): NativeFeature {
   return { id: 'watermark-remover', position: CleanupPositions.StopWatermarkRemover, start };
 }
 
-describe('watermark remover feature shell', () => {
-  let settings: Record<string, unknown>;
+function startOwners(runtime: typeof import('../index')): () => void {
+  const stopHealth = runtime.startWatermarkImageHealth();
+  const stopDownload = runtime.acquireWatermarkControl('download');
+  return () => {
+    stopDownload();
+    stopHealth();
+  };
+}
+
+describe('watermark runtime owners', () => {
   const stops: StopNativeFeature[] = [];
 
   beforeEach(() => {
@@ -91,8 +100,8 @@ describe('watermark remover feature shell', () => {
     document.head.innerHTML = '';
     document.body.innerHTML = '';
     document.getElementById('gv-watermark-bridge')?.remove();
-    settings = { gvWatermarkDownloadEnabled: true, gvWatermarkPreviewEnabled: false };
     engineCreate.mockReset();
+    recordWatermarkPresence.mockReset();
     fetchImageViaExtensionRuntime.mockReset();
     fetchImageViaExtensionRuntime.mockResolvedValue({
       base64: 'cHJldmlldw==',
@@ -124,7 +133,6 @@ describe('watermark remover feature shell', () => {
     vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue(
       'data:image/png;base64,cHJvY2Vzc2Vk',
     );
-    vi.mocked(chrome.storage.sync.get).mockImplementation(async () => ({ ...settings }));
   });
 
   afterEach(() => {
@@ -146,7 +154,7 @@ describe('watermark remover feature shell', () => {
     const oldLifetime = new AbortController();
     const oldMount = mountNativeFeature(
       oldManager,
-      asNativeFeature(oldCopy.shell.startWatermarkRemoverFeature),
+      asNativeFeature(() => startOwners(oldCopy.runtime)),
       oldLifetime.signal,
     );
     await vi.waitFor(() => expect(engineCreate).toHaveBeenCalledTimes(1));
@@ -161,7 +169,7 @@ describe('watermark remover feature shell', () => {
     stops.push(
       await mountNativeFeature(
         newManager,
-        asNativeFeature(newCopy.shell.startWatermarkRemoverFeature),
+        asNativeFeature(() => startOwners(newCopy.runtime)),
         new AbortController().signal,
       ),
     );
@@ -198,14 +206,74 @@ describe('watermark remover feature shell', () => {
     expect(newEngine.removeWatermarkFromImage).toHaveBeenCalledTimes(1);
   });
 
+  it.each(['engine load', 'processing', 'engine error', 'processing error'])(
+    'a content-script handoff during an accepted download still answers MAIN (%s)',
+    async (phase) => {
+      const engineLoad = deferred<TestEngine>();
+      const processing = deferred<HTMLCanvasElement>();
+      const oldEngine = createEngine();
+      oldEngine.removeWatermarkFromImage.mockImplementation(
+        async (_image: HTMLImageElement, report: (presence: string) => void) => {
+          const canvas = await processing.promise;
+          report('none');
+          if (phase === 'processing error') throw new Error('processing failed');
+          return canvas;
+        },
+      );
+      engineCreate.mockReturnValueOnce(
+        engineLoad.promise.then((loaded) => {
+          if (phase === 'engine error') throw new Error('engine failed');
+          return loaded;
+        }),
+      );
+      const oldCopy = await loadContentScriptCopy();
+      const oldManager = new CleanupManager();
+      stops.push(
+        await mountNativeFeature(
+          oldManager,
+          asNativeFeature(() => startOwners(oldCopy.runtime)),
+          new AbortController().signal,
+        ),
+      );
+      const bridge = getBridge();
+      bridge.dataset.request = JSON.stringify({
+        requestId: 'accepted-before-handoff',
+        base64: 'data:image/png;base64,b3JpZ2luYWw=',
+      });
+      await vi.waitFor(() => expect(bridge.dataset.request).toBeUndefined());
+      if (phase.startsWith('processing')) {
+        engineLoad.resolve(oldEngine);
+        await vi.waitFor(() => expect(oldEngine.removeWatermarkFromImage).toHaveBeenCalledOnce());
+      }
+
+      oldManager.executeCleanups();
+      engineCreate.mockResolvedValueOnce(createEngine());
+      const newCopy = await loadContentScriptCopy();
+      stops.push(startOwners(newCopy.runtime));
+      engineLoad.resolve(oldEngine);
+      processing.resolve(document.createElement('canvas'));
+
+      await vi.waitFor(() => {
+        const response = JSON.parse(bridge.dataset.response ?? '{}');
+        expect(response.requestId).toBe('accepted-before-handoff');
+        if (phase.endsWith('error')) expect(response.error).toMatch(/failed/);
+        else expect(response.base64).toBe('data:image/png;base64,cHJvY2Vzc2Vk');
+      });
+      expect(oldEngine.removeWatermarkFromImage).toHaveBeenCalledTimes(
+        phase === 'engine error' ? 0 : 1,
+      );
+      expect(recordWatermarkPresence).not.toHaveBeenCalled();
+      expect(bridge.dataset.enabled).toBe('true');
+    },
+  );
+
   it('stop is available synchronously before the engine loads', async () => {
     const engineLoad = deferred<TestEngine>();
     engineCreate.mockReturnValueOnce(engineLoad.promise);
-    settings.gvWatermarkPreviewEnabled = true;
     const { host } = createDownloadHost();
-    const { shell } = await loadContentScriptCopy();
+    const { runtime } = await loadContentScriptCopy();
 
-    const stop = shell.startWatermarkRemoverFeature();
+    const stop = startOwners(runtime);
     expect(typeof stop).toBe('function');
     await vi.waitFor(() => expect(engineCreate).toHaveBeenCalledTimes(1));
     expect(getBridge().dataset.enabled).toBe('true');
@@ -218,85 +286,25 @@ describe('watermark remover feature shell', () => {
     expect(host.querySelector('.nanobanana-indicator')).toBeNull();
   });
 
-  it('a settings change during a download keeps the download runtime', async () => {
-    const engine = createEngine();
-    engineCreate.mockResolvedValue(engine);
-    const { button } = createDownloadHost();
-    const { shell, runtime } = await loadContentScriptCopy();
-
-    const stop = shell.startWatermarkRemoverFeature();
-    stops.push(stop);
-    await settleAsyncWork();
-    button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    const bridge = getBridge();
-    const intentToken = bridge.dataset.downloadIntentToken;
-    expect(intentToken).toBeDefined();
-
-    // The storage router restarts the runtime when only the preview mode changes.
-    settings.gvWatermarkPreviewEnabled = true;
-    await runtime.restartWatermarkRemover();
-
-    expect(bridge.dataset.enabled).toBe('true');
-    expect(bridge.dataset.downloadIntentToken).toBe(intentToken);
-    bridge.dataset.request = JSON.stringify({
-      requestId: 'download-across-restart',
-      base64: 'data:image/png;base64,b3JpZ2luYWw=',
-      intentToken,
-    });
-    await vi.waitFor(() =>
-      expect(JSON.parse(bridge.dataset.response ?? '{}')).toMatchObject({
-        requestId: 'download-across-restart',
-        base64: 'data:image/png;base64,cHJvY2Vzc2Vk',
-      }),
-    );
-
-    // The shell's stop still owns the restarted runtime.
-    stop();
-    expect(bridge.dataset.enabled).toBe('false');
-    expect(bridge.dataset.downloadIntentToken).toBeUndefined();
-  });
-
-  it('a settings change after stop does not bring the runtime back', async () => {
+  it('a released download owner cannot stop its successor or duplicate listeners', async () => {
     engineCreate.mockResolvedValue(createEngine());
     const { host, button } = createDownloadHost();
-    const { shell } = await loadContentScriptCopy();
-    const stop = shell.startWatermarkRemoverFeature();
-    await settleAsyncWork();
-    stop();
-
-    settings.gvWatermarkPreviewEnabled = true;
-    await shell.restartWatermarkRemoverFeature();
+    const { runtime } = await loadContentScriptCopy();
+    stops.push(runtime.startWatermarkImageHealth());
+    const earlierStop = runtime.acquireWatermarkControl('download');
+    earlierStop();
+    stops.push(runtime.acquireWatermarkControl('download'));
+    earlierStop();
     await settleAsyncWork();
     button.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-
-    expect(getBridge().dataset.enabled).toBe('false');
-    expect(getBridge().dataset.downloadIntentToken).toBeUndefined();
-    expect(host.querySelector('.nanobanana-indicator')).toBeNull();
+    expect(getBridge().dataset.enabled).toBe('true');
+    expect(host.querySelectorAll('.nanobanana-indicator')).toHaveLength(1);
+    expect(getBridge().dataset.downloadIntentToken).toMatch(/_1$/);
   });
 
-  it('a settings change before startup starts nothing', async () => {
-    const { shell } = await loadContentScriptCopy();
-
-    await shell.restartWatermarkRemoverFeature();
-
+  it('an unacquired runtime installs nothing', async () => {
+    await loadContentScriptCopy();
     expect(document.getElementById('gv-watermark-bridge')).toBeNull();
     expect(engineCreate).not.toHaveBeenCalled();
-  });
-
-  it('a stop from an earlier start does not stop a later one', async () => {
-    engineCreate.mockResolvedValue(createEngine());
-    const { host } = createDownloadHost();
-    const { shell } = await loadContentScriptCopy();
-
-    const earlierStop = shell.startWatermarkRemoverFeature();
-    await settleAsyncWork();
-    earlierStop();
-    stops.push(shell.startWatermarkRemoverFeature());
-    await settleAsyncWork();
-
-    earlierStop();
-
-    expect(getBridge().dataset.enabled).toBe('true');
-    expect(host.querySelector('.nanobanana-indicator')).not.toBeNull();
   });
 });

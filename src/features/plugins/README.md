@@ -294,7 +294,7 @@ handler) in `sites/hostPolicy.ts`, derived from the owner table
 `sites/featureOwners.ts`: only primitives explicitly listed in a plugin-owned
 entry's `handlers` open on that site. Fixed-id builtins can own a feature with
 no public primitive: Quote, Highlight, prevent auto-scroll, completion
-notifications and the Gemini timeline are such builtins. Their owner flips
+notifications and NanoBanana’s two controls are such builtins. Their owner flips
 keep other native ops closed. A multi-site manifest must be legal on each site
 its patterns reach. Import, paste and the CLI enforce this policy; re-reading stored plugins
 (`LocalPluginSource`, the popup list, review-and-enable) passes
@@ -346,6 +346,35 @@ has no page-wide master switch. Its **Show Timeline** switch controls only the
 rail and navigation shortcut lease; saved stars and hierarchy remain, and the
 message timestamp page service follows **Show Message Timestamps** independently.
 
+**NanoBanana watermark removal.** Two packaged fixed-ID builtins,
+`voyager.gemini-watermark-download` and `voyager.gemini-watermark-preview`, map
+one-to-one to the existing popup switches and are admitted at the former native
+start point. Both derive enablement through `core/utils/watermarkSettings.ts`:
+`gvWatermarkDownloadEnabled` and `gvWatermarkPreviewEnabled` take precedence if
+either holds a boolean, with an unset sibling retaining the historical `true`
+default; otherwise `geminiWatermarkRemoverEnabled` controls both, and no saved
+preference means both are off. The popup writes the same keys; none are copied
+into `gvPluginsState`. Neither builtin opens a public native primitive or adds
+permissions. The shared image worker and download bridge remain packaged
+services. Safari keeps its static MAIN-world hooks, asynchronous extension-message
+routing and authenticated page-fetch fallback; full-size browser downloads keep
+using that path. There is no dedicated watermark-processing Swift channel.
+
+Disabling preview invalidates pending DOM writes. It restores the original
+`src`/`srcset` pair only while `src` still equals Voyager’s blob URL and `srcset`
+is still absent. If the host changed either attribute, the current pair stays
+intact. A blob URL is revoked only once `src` no longer references it; a host
+`srcset` may still fall back to that blob, which is retained until document unload.
+Disabling download removal stops accepting new removal work immediately;
+already-accepted downloads finish once with their setting at acceptance, including
+across an off/on cycle. Static MAIN-world hooks cannot be unregistered: their
+removal path checks the current setting and stays inert when off. Independent
+read-only watermark health inspection may continue while removal is off.
+The accepted download is a one-shot promise with one response and the existing
+timeout fallback, independent of either activation’s lease. It does not gain a
+`startMachine`: no intermediate phase is cancelled by the switch, and aborting
+a state scope here would lose the response an accepted request still needs.
+
 **Shared Visual effects.** `voyager.visual-effects` is one packaged builtin on every
 already-injected page, including authorized Prompt Manager custom sites. It is admitted
 before normal initialization and excluded from plugin subframes, as its native predecessor
@@ -367,8 +396,7 @@ official setting wins on a cold page, while a mounted holder keeps the rail unti
 Turn off **Show Timeline** before enabling a local replacement; turn the local plugin off before
 returning to the official rail. Shared manifests stay within `https://gemini.google.com/*` and
 cannot override turn, route or account identity. Business, Enterprise and custom coverage
-do not admit this native-data rail. Watermark removal remains a core feature. The
-zero-request promise holds: `isEligibleCatalogHost` refuses every native host,
+do not admit this native-data rail. The zero-request promise holds: `isEligibleCatalogHost` refuses every native host,
 so a Gemini page has no catalog host, never asks for a check and never reads a catalog cache, and
 the background refuses a forced check for them too. A minimal Gemini plugin:
 

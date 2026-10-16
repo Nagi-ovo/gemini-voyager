@@ -23,6 +23,8 @@ Abra o popup do Voyager e encontre **Opções Image Refinement**. As duas chaves
 - **Remover marca d'água ao baixar** (recomendado): Quando você clica no botão de download do Gemini, o arquivo salvo fica sem a marca d'água. Um pequeno selo 🍌 no botão de download indica que a função está ativa; o botão em si continua sendo o do Gemini.
 - **Remover marca d'água na pré-visualização** (instável): Também limpa as imagens exibidas na tela. É mais lento, e uma imagem pode piscar brevemente enquanto é processada.
 
+Ao desativar a remoção no download, os próximos downloads deixam de ser modificados. Um download que já está sendo processado termina com a configuração inicial, sem salvar uma segunda cópia por causa da mudança. Ao desativar a remoção na pré-visualização, as imagens originais são restauradas somente onde a versão processada pelo Voyager ainda está sendo exibida. Imagens alteradas depois pelo Gemini são preservadas.
+
 ## Opção integrada do Gemini
 
 O Gemini está liberando a própria chave de marca d'água visível: **Configurações → Media watermark → Off**. Se a sua conta tiver essa opção, use-a e desative a remoção de marca d'água do Voyager; a opção do Gemini é mais confiável. O Voyager mostra um aviso único sobre isso e informa quando suas imagens recentes já vêm sem marca d'água. Se você ainda não encontrar a chave, continue usando o Voyager. Os metadados SynthID e C2PA permanecem de qualquer forma.

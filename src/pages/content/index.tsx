@@ -5,7 +5,6 @@ import {
   hasValidExtensionContext,
   isExtensionContextInvalidatedError,
 } from '@/core/utils/extensionContext';
-import { WATERMARK_STORAGE_KEYS } from '@/core/utils/watermarkSettings';
 import { startPluginHost } from '@/features/plugins';
 import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmission';
 import { resolvePluginPlatformId } from '@/features/plugins/sites/registry';
@@ -57,7 +56,6 @@ import {
 import { usageCoachmarkStep } from './usageStatus/usageCoachmark';
 import { admitVisualEffectsForPage } from './visualEffectsStartup';
 import { startWatermarkNativeNotice } from './watermarkNativeNotice';
-import { restartWatermarkRemoverFeature } from './watermarkRemover/feature';
 
 // Suppress Vite's CSS preload errors in the Chrome extension content script context.
 // Dynamic imports (e.g., mermaid) trigger Vite's __vitePreload helper which tries to
@@ -256,7 +254,7 @@ async function initializeFeatures(): Promise<void> {
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // Independent content helpers can initialize in the same idle slice.
-      await settle(mountForPage(NATIVE_FEATURES.watermarkRemover));
+      await settle(geminiBuiltins.startWatermarkRemover());
       await settle(geminiBuiltins.startDeepResearchExport());
       await settle(geminiBuiltins.startContextSync());
       await settle(mountForPage(NATIVE_FEATURES.gemsHider));
@@ -530,14 +528,6 @@ function handleVisibilityChange(): void {
       changes: Record<string, chrome.storage.StorageChange>,
       areaName: string,
     ) => {
-      // Only a running watermark feature restarts: not before Gemini's startup, not after its stop.
-      if (
-        areaName === 'sync' &&
-        WATERMARK_STORAGE_KEYS.some((key) => Object.prototype.hasOwnProperty.call(changes, key))
-      ) {
-        void restartWatermarkRemoverFeature();
-      }
-
       if (
         (areaName !== 'sync' && areaName !== 'local') ||
         location.hostname !== 'gemini.google.com'

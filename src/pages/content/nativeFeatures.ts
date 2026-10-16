@@ -16,7 +16,7 @@ import { startResearchPackReceiver } from './researchPack/receiver';
 import { startSelectionToolbarHost } from './selectionToolbar/host';
 import { startStorageQuotaWarningToast } from './storageQuotaWarning';
 import { startHistoryTimestampPageService } from './timestamp/historyTimestampPageService';
-import { startWatermarkRemoverFeature } from './watermarkRemover/feature';
+import { startWatermarkImageHealth } from './watermarkRemover';
 
 /** Permanent page services and unmigrated native features; optional migrated features belong to PluginHost. */
 export const NATIVE_FEATURES = {
@@ -79,14 +79,11 @@ export const NATIVE_FEATURES = {
     position: CleanupPositions.CleanupDefaultModel,
     start: startDefaultModelStarCleanupPageService,
   },
-  /**
-   * No `toggle`: three keys decide the mode, and a settings change must keep an
-   * in-flight download, so `index.tsx` routes those changes to a restart.
-   */
-  watermarkRemover: {
-    id: 'watermark-remover',
+  /** Read-only image health and the permanent MAIN bridge outlive either removal switch. */
+  watermarkImageHealth: {
+    id: 'watermark-image-health',
     position: CleanupPositions.StopWatermarkRemover,
-    start: startWatermarkRemoverFeature,
+    start: startWatermarkImageHealth,
   },
   gemsHider: {
     id: 'gems-hider',

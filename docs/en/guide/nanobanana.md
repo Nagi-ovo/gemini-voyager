@@ -23,6 +23,8 @@ Open the Voyager popup and find **Image Refinement Options**. Both switches are 
 - **Remove watermark on download** (Recommended): When you click Gemini's download button, the saved file has the watermark removed. A small 🍌 badge on the download button shows it's active; the button itself is still Gemini's own.
 - **Remove watermark in preview** (Unstable): Also cleans the images shown on screen. It's slower, and an image may briefly flash while it's processed.
 
+Turning download removal off leaves subsequent downloads untouched. A download already being processed finishes with the setting it started with, without saving a second copy because of the switch. Turning preview removal off restores the original images only where Voyager’s replacement is still displayed; images changed by Gemini afterward are left alone.
+
 ## Gemini's Built-in Option
 
 Gemini is rolling out its own visible-watermark switch: **Settings → Media watermark → Off**. If your account has it, use it and turn off Voyager's watermark removal; Gemini's option is more reliable. Voyager shows a one-time notice about it, and tells you when your recent images already come without the watermark. If you can't find the switch yet, keep using Voyager. SynthID and C2PA metadata remain either way.

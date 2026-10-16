@@ -64,6 +64,10 @@ import { activateGeminiTimeline } from './timeline/pluginHandler';
 import { activateGeminiMessageTimestamps } from './timestamp/pluginHandler';
 import { activateGeminiUsageStatus } from './usageStatus/pluginHandler';
 import { createVisualEffectsRuntime } from './visualEffects';
+import {
+  activateGeminiWatermarkDownload,
+  activateGeminiWatermarkPreview,
+} from './watermarkRemover/pluginHandler';
 
 /** Page-owned runtimes may outlive an activation while their particles drain. */
 export const NATIVE_HANDLER_FACTORIES = {
@@ -73,6 +77,8 @@ export const NATIVE_HANDLER_FACTORIES = {
 export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = {
   'voyager.gemini-batch-delete': { activate: activateGeminiBatchDelete },
   'voyager.aistudio-batch-delete': { activate: activateAIStudioBatchDelete },
+  'voyager.gemini-watermark-download': { activate: activateGeminiWatermarkDownload },
+  'voyager.gemini-watermark-preview': { activate: activateGeminiWatermarkPreview },
   'voyager.gemini-context-sync': { activate: activateGeminiContextSync },
   'voyager.gemini-gems-sidebar': {
     activate: activateGeminiGemsSidebar,

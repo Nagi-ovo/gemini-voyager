@@ -144,6 +144,9 @@ describe('legacy enable bindings', () => {
   it('list each storage key once, switches and slider values, with both formula ids sharing one switch', () => {
     expect([...legacyBindingKeys()].sort()).toEqual(
       [
+        StorageKeys.WATERMARK_DOWNLOAD_ENABLED,
+        StorageKeys.WATERMARK_PREVIEW_ENABLED,
+        StorageKeys.WATERMARK_REMOVER_ENABLED,
         StorageKeys.GV_VISUAL_EFFECT,
         StorageKeys.GV_SNOW_EFFECT,
         StorageKeys.FORMULA_COPY_ENABLED,

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { startWatermarkRemover, stopWatermarkRemover } from '../index';
 import { WatermarkEngine } from '../watermarkEngine';
+import { startWatermarkRemover, stopWatermarkRemover } from './runtimeHarness';
 
 vi.mock('@/utils/i18n', () => ({
   getTranslationSync: (key: string) => key,

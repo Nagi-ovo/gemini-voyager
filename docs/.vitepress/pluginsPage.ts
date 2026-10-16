@@ -46,6 +46,8 @@ const FEATURE_ORDER = [
   'export',
   'deep-research-export',
   'canvas-copy',
+  'watermark-download',
+  'watermark-preview',
   'response-notification',
   'quote-reply',
   'highlight',
@@ -137,6 +139,8 @@ export const FRESH_INSTALL_ON: ReadonlySet<string> = new Set([
 
 /** Guide pages whose slug is not the row's key. */
 const GUIDE_PAGES: Readonly<Record<string, string>> = {
+  'watermark-download': 'nanobanana',
+  'watermark-preview': 'nanobanana',
   'message-timestamps': 'timestamp',
   'deep-research-export': 'deep-research',
   'ctrl-enter-send': 'send-behavior',

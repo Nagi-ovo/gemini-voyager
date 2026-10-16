@@ -1,7 +1,7 @@
 export enum CleanupPositions {
   RemoveUnhandledRejectionEventListener,
   RemoveErrorEventListener,
-  /** The watermark feature shell (`watermarkRemover/feature.ts`); its stop exists before the engine loads. */
+  /** Synchronously retire image health and the bridge before any delayed engine continuation. */
   StopWatermarkRemover,
   DestroyFolderManagerInstance,
   DestroyPromptManagerInstance,

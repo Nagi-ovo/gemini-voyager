@@ -23,7 +23,7 @@ vi.mock('../watermarkEngine', () => ({
   },
 }));
 
-type WatermarkRuntime = typeof import('../index');
+type WatermarkRuntime = typeof import('./runtimeHarness');
 
 const createPixels = (value: number): Uint8ClampedArray => {
   const pixels = new Uint8ClampedArray(32 * 32 * 4);
@@ -112,7 +112,7 @@ describe('watermarkRemover corrupted download detection', () => {
   });
 
   it('falls back to extension fetch when Gemini preview taints the canvas', async () => {
-    runtime = await import('../index');
+    runtime = await import('./runtimeHarness');
 
     const host = document.createElement('generated-image');
     const preview = document.createElement('img');

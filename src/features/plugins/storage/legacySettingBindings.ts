@@ -21,6 +21,7 @@ import { isChatWidthSwitchOn, isEditInputWidthSwitchOn } from '@/core/utils/chat
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { isSidebarWidthSwitchOn } from '@/core/utils/sidebarWidthValues';
 import { resolveVisualEffect } from '@/core/utils/visualEffectValues';
+import { WATERMARK_STORAGE_KEYS, resolveWatermarkSettings } from '@/core/utils/watermarkSettings';
 
 import { resolvePluginSettings } from '../runtime/resolvePluginSettings';
 import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
@@ -82,6 +83,20 @@ function batchDeleteBinding(pluginId: string): LegacyEnableBinding {
 }
 
 export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding>> = {
+  // legacyEnableWrite writes one split key, and a missing sibling resolves to on: a popup row for
+  // either switch must write both split keys and clear the legacy key, as useWatermarkPopupSettings does.
+  [OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload]: {
+    ...binding(
+      OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload,
+      WATERMARK_STORAGE_KEYS[0],
+      onOnlyIfTrue,
+    ),
+    derive: (snapshot) => resolveWatermarkSettings(snapshot).download,
+  },
+  [OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview]: {
+    ...binding(OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview, WATERMARK_STORAGE_KEYS[1], onOnlyIfTrue),
+    derive: (snapshot) => resolveWatermarkSettings(snapshot).preview,
+  },
   [OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps]: binding(
     OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps,
     StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS,
@@ -346,6 +361,7 @@ export function legacyBindingKeys(): readonly string[] {
     ...new Set([
       ...Object.values(LEGACY_ENABLE_BINDINGS).map((entry) => entry.key),
       ...legacyValueKeys(),
+      ...WATERMARK_STORAGE_KEYS,
       StorageKeys.FOLDER_ENABLED,
     ]),
   ];

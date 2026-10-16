@@ -32,6 +32,8 @@ export type OwnedFeatureId =
   | 'messageTimestamps'
   | 'canvasCopy'
   | 'deepResearchExport'
+  | 'watermarkDownload'
+  | 'watermarkPreview'
   | 'gemsSidebar'
   | 'contextSync'
   | 'userLatex'
@@ -73,6 +75,8 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiMarkdownFix: 'voyager.gemini-markdown-fix',
   geminiMessageTimestamps: 'voyager.gemini-message-timestamps',
   geminiCanvasCopy: 'voyager.gemini-canvas-copy',
+  geminiWatermarkDownload: 'voyager.gemini-watermark-download',
+  geminiWatermarkPreview: 'voyager.gemini-watermark-preview',
   geminiDeepResearchExport: 'voyager.gemini-deep-research-export',
   geminiSidebarWidth: 'voyager.gemini-sidebar-width',
   aistudioSidebarWidth: 'voyager.aistudio-sidebar-width',
@@ -137,6 +141,20 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     site: 'aistudio',
     feature: 'batchDelete',
     officialPluginId: OFFICIAL_PLUGIN_IDS.aistudioBatchDelete,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'watermarkDownload',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'watermarkPreview',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview,
     handlers: [],
     healthTracking: false,
   },

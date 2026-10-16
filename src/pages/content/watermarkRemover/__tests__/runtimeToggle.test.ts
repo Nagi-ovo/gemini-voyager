@@ -25,7 +25,7 @@ vi.mock('../watermarkEngine', () => ({
   },
 }));
 
-type WatermarkRuntime = typeof import('../index');
+type WatermarkRuntime = typeof import('./runtimeHarness');
 
 const createDownloadHost = (): HTMLElement => {
   const host = document.createElement('download-generated-image-button');
@@ -110,7 +110,7 @@ describe('watermarkRemover runtime toggle', () => {
 
   it('reconfigures the current page and reuses the initialized engine', async () => {
     engineCreate.mockResolvedValue(createEngine());
-    runtime = await import('../index');
+    runtime = await import('./runtimeHarness');
     const host = createDownloadHost();
 
     await runtime.startWatermarkRemover();
@@ -141,7 +141,7 @@ describe('watermarkRemover runtime toggle', () => {
     await runtime.restartWatermarkRemover();
 
     expect(bridge?.dataset.enabled).toBe('false');
-    expect(bridge?.dataset.downloadIntentExpiresAt).toBeUndefined();
+    expect(bridge?.dataset.downloadIntentExpiresAt).toBeDefined();
     expect(host.querySelector('.nanobanana-indicator')).toBeNull();
 
     settings.gvWatermarkDownloadEnabled = true;
@@ -152,11 +152,11 @@ describe('watermarkRemover runtime toggle', () => {
     expect(engineCreate).toHaveBeenCalledTimes(1);
   });
 
-  it('clears delayed download feedback when the runtime stops', async () => {
+  it('clears delayed download feedback when the core health runtime stops', async () => {
     vi.useFakeTimers();
     try {
       engineCreate.mockResolvedValue(createEngine());
-      runtime = await import('../index');
+      runtime = await import('./runtimeHarness');
       const button = document.createElement('button');
       document.body.appendChild(button);
 
@@ -167,7 +167,7 @@ describe('watermarkRemover runtime toggle', () => {
       expect(toastDriver.all()).toHaveLength(1);
 
       settings.gvWatermarkDownloadEnabled = false;
-      await runtime.restartWatermarkRemover();
+      runtime.stopWatermarkRemover();
 
       expect(toastDriver.all()).toHaveLength(0);
       const bridge = document.getElementById('gv-watermark-bridge') as HTMLElement | null;
@@ -182,7 +182,7 @@ describe('watermarkRemover runtime toggle', () => {
 
   it('preserves an active download while only preview removal changes', async () => {
     engineCreate.mockResolvedValue(createEngine());
-    runtime = await import('../index');
+    runtime = await import('./runtimeHarness');
     const button = document.createElement('button');
     document.body.appendChild(button);
 
@@ -236,7 +236,7 @@ describe('watermarkRemover runtime toggle', () => {
         resolveEngine = resolveEnginePromise;
       }),
     );
-    runtime = await import('../index');
+    runtime = await import('./runtimeHarness');
     const host = createDownloadHost();
 
     settings.gvWatermarkDownloadEnabled = true;
@@ -262,7 +262,7 @@ describe('watermarkRemover runtime toggle', () => {
         }),
     );
     engineCreate.mockResolvedValue({ removeWatermarkFromImage });
-    runtime = await import('../index');
+    runtime = await import('./runtimeHarness');
     const image = createPreviewImage();
     const originalSrc = image.src;
 
@@ -279,7 +279,7 @@ describe('watermarkRemover runtime toggle', () => {
     expect(URL.createObjectURL).not.toHaveBeenCalled();
   });
 
-  it('retries stale preview work when the latest lifecycle still enables previews', async () => {
+  it('keeps preview work independent when only download removal changes', async () => {
     let resolveFirstRemoval: (canvas: HTMLCanvasElement) => void = () => undefined;
     const removeWatermarkFromImage = vi
       .fn()
@@ -291,7 +291,7 @@ describe('watermarkRemover runtime toggle', () => {
       )
       .mockResolvedValue(createProcessedCanvas());
     engineCreate.mockResolvedValue({ removeWatermarkFromImage });
-    runtime = await import('../index');
+    runtime = await import('./runtimeHarness');
     const image = createPreviewImage();
 
     settings.gvWatermarkPreviewEnabled = true;
@@ -302,7 +302,7 @@ describe('watermarkRemover runtime toggle', () => {
     await runtime.restartWatermarkRemover();
     resolveFirstRemoval(createProcessedCanvas());
 
-    await vi.waitFor(() => expect(removeWatermarkFromImage).toHaveBeenCalledTimes(2));
+    await vi.waitFor(() => expect(removeWatermarkFromImage).toHaveBeenCalledTimes(1));
     await vi.waitFor(() => expect(image.dataset.watermarkProcessed).toBe('true'));
     expect(image.src).toBe('blob:processed-preview');
     expect(URL.createObjectURL).toHaveBeenCalledTimes(1);
@@ -311,14 +311,13 @@ describe('watermarkRemover runtime toggle', () => {
   it('processes a replacement source after preview removal is re-enabled', async () => {
     const activeEngine = createEngine();
     engineCreate.mockResolvedValue(activeEngine);
-    runtime = await import('../index');
+    runtime = await import('./runtimeHarness');
     const image = createPreviewImage();
 
     settings.gvWatermarkPreviewEnabled = true;
     await runtime.startWatermarkRemover();
     await vi.waitFor(() => expect(image.dataset.watermarkProcessed).toBe('true'));
 
-    const processedSrc = image.src;
     expect(image.dataset.watermarkOriginalSrc).toBe(
       'https://lh3.googleusercontent.com/generated=s1024',
     );
@@ -327,7 +326,7 @@ describe('watermarkRemover runtime toggle', () => {
     settings.gvWatermarkPreviewEnabled = false;
     await runtime.restartWatermarkRemover();
 
-    expect(image.src).toBe(processedSrc);
+    expect(image.src).toBe('https://lh3.googleusercontent.com/generated=s1024');
     expect(image.dataset.watermarkProcessed).toBeUndefined();
     expect(image.dataset.watermarkOriginalSrc).toBeUndefined();
     expect(image.dataset.processedUrl).toBeUndefined();
@@ -341,5 +340,66 @@ describe('watermarkRemover runtime toggle', () => {
     expect(image.dataset.watermarkOriginalSrc).toBe(
       'https://lh3.googleusercontent.com/replacement=s1024',
     );
+  });
+  it('restores its original src and srcset and releases the processed blob on preview off', async () => {
+    engineCreate.mockResolvedValue(createEngine());
+    runtime = await import('./runtimeHarness');
+    const image = createPreviewImage();
+    const originalSrc = image.src;
+    image.srcset = `${originalSrc} 2x`;
+    const revoke = vi.spyOn(URL, 'revokeObjectURL');
+    settings.gvWatermarkPreviewEnabled = true;
+    await runtime.startWatermarkRemover();
+    await vi.waitFor(() => expect(image.dataset.watermarkProcessed).toBe('true'));
+    expect(image.hasAttribute('srcset')).toBe(false);
+    settings.gvWatermarkPreviewEnabled = false;
+    await runtime.restartWatermarkRemover();
+    expect(image.src).toBe(originalSrc);
+    expect(image.srcset).toBe(`${originalSrc} 2x`);
+    expect(revoke).toHaveBeenCalledWith('blob:processed-preview');
+  });
+
+  it.each(['src', 'srcset'] as const)(
+    'does not overwrite a newer host %s when preview switches off',
+    async (attribute) => {
+      engineCreate.mockResolvedValue(createEngine());
+      runtime = await import('./runtimeHarness');
+      const image = createPreviewImage();
+      const revoke = vi.spyOn(URL, 'revokeObjectURL');
+      settings.gvWatermarkPreviewEnabled = true;
+      await runtime.startWatermarkRemover();
+      await vi.waitFor(() => expect(image.dataset.watermarkProcessed).toBe('true'));
+      const replacement = 'https://lh3.googleusercontent.com/new-image=s512';
+      image.setAttribute(attribute, replacement);
+      settings.gvWatermarkPreviewEnabled = false;
+      await runtime.restartWatermarkRemover();
+      expect(image.getAttribute(attribute)).toBe(replacement);
+      if (attribute === 'srcset') {
+        expect(image.src).toBe('blob:processed-preview');
+        expect(revoke).not.toHaveBeenCalled();
+      } else expect(revoke).toHaveBeenCalledWith('blob:processed-preview');
+    },
+  );
+
+  it('does not overwrite a host image that changes during preview processing', async () => {
+    let finishRemoval!: (canvas: HTMLCanvasElement) => void;
+    const remove = vi.fn(
+      () =>
+        new Promise<HTMLCanvasElement>((resolve) => {
+          finishRemoval = resolve;
+        }),
+    );
+    engineCreate.mockResolvedValue({ removeWatermarkFromImage: remove });
+    runtime = await import('./runtimeHarness');
+    const image = createPreviewImage();
+    settings.gvWatermarkPreviewEnabled = true;
+    await runtime.startWatermarkRemover();
+    await vi.waitFor(() => expect(remove).toHaveBeenCalledTimes(1));
+    image.src = 'https://example.com/host-replacement.png';
+    finishRemoval(createProcessedCanvas());
+    await vi.waitFor(() => expect(image.dataset.watermarkProcessed).toBeUndefined());
+    expect(image.src).toBe('https://example.com/host-replacement.png');
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+    expect(remove).toHaveBeenCalledTimes(1);
   });
 });

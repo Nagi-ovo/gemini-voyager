@@ -26,6 +26,8 @@ import { GEMINI_SIDEBAR_FULL_HIDE_MANIFEST } from './geminiSidebarFullHideManife
 import { GEMINI_SIDEBAR_WIDTH_MANIFEST } from './geminiSidebarWidthManifest';
 import { GEMINI_TIMELINE_MANIFEST } from './geminiTimelineManifest';
 import { GEMINI_USAGE_STATUS_MANIFEST } from './geminiUsageStatusManifest';
+import { GEMINI_WATERMARK_DOWNLOAD_MANIFEST } from './geminiWatermarkDownloadManifest';
+import { GEMINI_WATERMARK_PREVIEW_MANIFEST } from './geminiWatermarkPreviewManifest';
 import { timelineManifest } from './timelineManifest';
 import { VISUAL_EFFECTS_MANIFEST } from './visualEffectsManifest';
 
@@ -410,6 +412,8 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   GEMINI_MESSAGE_TIMESTAMPS_MANIFEST,
   GEMINI_CANVAS_COPY_MANIFEST,
   GEMINI_DEEP_RESEARCH_EXPORT_MANIFEST,
+  GEMINI_WATERMARK_DOWNLOAD_MANIFEST,
+  GEMINI_WATERMARK_PREVIEW_MANIFEST,
   GEMINI_GEMS_SIDEBAR_MANIFEST,
   GEMINI_CONTEXT_SYNC_MANIFEST,
   GEMINI_PROMPT_HISTORY_MANIFEST,

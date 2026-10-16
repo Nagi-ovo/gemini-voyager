@@ -159,6 +159,8 @@ describe('the page lifetime of native features', () => {
 
 describe('official plugins at their Gemini start points', () => {
   it.each([
+    ['startWatermarkRemover', OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload],
+    ['startWatermarkRemover', OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview],
     ['startTimeline', OFFICIAL_PLUGIN_IDS.geminiTimeline],
     ['startMessageTimestamps', OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps],
     ['startMarkdownFix', OFFICIAL_PLUGIN_IDS.geminiMarkdownFix],
@@ -206,6 +208,7 @@ describe('official plugins at their Gemini start points', () => {
       current.lifetime.signal,
     );
     current.lifetime.abort();
+    await startup.startWatermarkRemover();
     await startup.startTimeline();
     await startup.startMessageTimestamps();
     await startup.startMarkdownFix();
@@ -220,6 +223,8 @@ describe('official plugins at their Gemini start points', () => {
     await startup.startForkAndResearchPack();
     admission.close();
     for (const id of [
+      OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload,
+      OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview,
       OFFICIAL_PLUGIN_IDS.geminiTimeline,
       OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps,
       OFFICIAL_PLUGIN_IDS.geminiMarkdownFix,
@@ -241,6 +246,11 @@ describe('official plugins at their Gemini start points', () => {
 
 describe('permanent services before their plugin consumers', () => {
   it.each([
+    [
+      'watermarkImageHealth',
+      'startWatermarkRemover',
+      [OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload, OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview],
+    ],
     [
       'preventAutoScrollBridge',
       'startPreventAutoScroll',
@@ -280,6 +290,11 @@ describe('permanent services before their plugin consumers', () => {
   });
 
   it.each([
+    [
+      'watermarkImageHealth',
+      'startWatermarkRemover',
+      [OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload, OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview],
+    ],
     [
       'preventAutoScrollBridge',
       'startPreventAutoScroll',

@@ -57,6 +57,8 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   sidebarFullHide: 'Fully hide sidebar',
   markdownFix: 'Markdown rendering fix',
   messageTimestamps: 'Message timestamps',
+  watermarkDownload: 'Remove watermark on download',
+  watermarkPreview: 'Remove watermark in preview',
   canvasCopy: 'Canvas copy as Markdown',
   deepResearchExport: 'Deep Research export',
   gemsSidebar: 'Recent Gems in sidebar',

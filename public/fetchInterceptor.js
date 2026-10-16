@@ -207,6 +207,7 @@
 
     // Check if this is a Gemini download request (specifically rd-gg-dl for downloads)
     if (url && typeof url === 'string' && GEMINI_DOWNLOAD_PATTERN.test(url)) {
+      // Snapshot at acceptance: later toggles affect new downloads, never this response.
       const watermarkRemoverEnabled = isWatermarkRemoverEnabled();
       const downloadIntentToken = consumeDownloadIntent();
       if (!downloadIntentToken) {
@@ -290,6 +291,14 @@
             const requestId = 'gv_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             const bridge = getBridgeElement();
 
+            let timeoutId;
+            let settled = false;
+            const finish = () => {
+              settled = true;
+              observer.disconnect();
+              clearTimeout(timeoutId);
+            };
+
             // Watch for response via MutationObserver (works across worlds in Firefox)
             const observer = new MutationObserver(() => {
               const response = bridge.dataset.response;
@@ -297,7 +306,7 @@
                 try {
                   const data = JSON.parse(response);
                   if (data.requestId === requestId) {
-                    observer.disconnect();
+                    finish();
                     bridge.removeAttribute('data-response');
 
                     if (data.error) reject(new Error(data.error));
@@ -317,18 +326,22 @@
             // Send request via DOM bridge
             const reader = new FileReader();
             reader.onloadend = () => {
+              if (settled) return;
               bridge.dataset.request = JSON.stringify({
                 requestId,
                 intentToken: downloadIntentToken,
                 base64: reader.result,
               });
             };
-            reader.onerror = () => reject(new Error('Failed to read blob'));
+            reader.onerror = () => {
+              finish();
+              reject(new Error('Failed to read blob'));
+            };
             reader.readAsDataURL(blob);
 
             // Timeout for watermark processing
-            setTimeout(() => {
-              observer.disconnect();
+            timeoutId = setTimeout(() => {
+              finish();
               reject(new Error('Processing timeout'));
             }, WATERMARK_PROCESSING_TIMEOUT_MS);
           });

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { toastDriver } from '@/tests/toastDriver';
 import { setCachedLanguage } from '@/utils/i18n';
 
-import { startWatermarkRemover, stopWatermarkRemover } from '../index';
+import { startWatermarkRemover, stopWatermarkRemover } from './runtimeHarness';
 
 async function settle(): Promise<void> {
   await Promise.resolve();

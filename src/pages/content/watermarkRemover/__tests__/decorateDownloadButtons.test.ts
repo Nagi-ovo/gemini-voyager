@@ -25,7 +25,7 @@ describe('watermark preview surface download indicators', () => {
   });
 
   afterEach(() => {
-    previews.stop();
+    previews.stopIndicators();
     vi.useRealTimers();
   });
 
@@ -39,7 +39,7 @@ describe('watermark preview surface download indicators', () => {
     document.body.append(host);
     await Promise.resolve();
 
-    previews.stop();
+    previews.stopIndicators();
     await vi.advanceTimersByTimeAsync(100);
     expect(indicator(host)).toBeNull();
 

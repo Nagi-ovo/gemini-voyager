@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { toastDriver } from '@/tests/toastDriver';
 
-import { startWatermarkRemover, stopWatermarkRemover } from '../index';
+import { startWatermarkRemover, stopWatermarkRemover } from './runtimeHarness';
 
 vi.mock('@/utils/i18n', () => ({
   getTranslationSync: (key: string) => key,

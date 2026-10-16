@@ -11,6 +11,8 @@ import { mountNativeFeature } from './featureLifecycle';
 import { NATIVE_FEATURES } from './nativeFeatures';
 
 export interface GeminiBuiltinStartup {
+  /** Permanent image health bridge, then the two independent removal controls. */
+  startWatermarkRemover(): Promise<void>;
   /** Message timestamps after the native history service, independently of the rail. */
   startMessageTimestamps(): Promise<void>;
   /** Markdown repair at its original DOM-enhancement start point. */
@@ -49,6 +51,13 @@ export function createGeminiBuiltinStartup(
   const isStopped = (): boolean => stopped || lifetime?.aborted === true;
 
   return {
+    async startWatermarkRemover() {
+      if (isStopped()) return;
+      await mountNativeFeature(cleanupManager, NATIVE_FEATURES.watermarkImageHealth, lifetime);
+      if (isStopped()) return;
+      admission.admit('gemini', 'watermarkDownload');
+      admission.admit('gemini', 'watermarkPreview');
+    },
     async startMessageTimestamps() {
       if (isStopped()) return;
       admission.admit('gemini', 'messageTimestamps');

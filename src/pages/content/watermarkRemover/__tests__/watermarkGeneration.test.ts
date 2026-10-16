@@ -23,7 +23,7 @@ vi.mock('../watermarkEngine', () => ({
   },
 }));
 
-type WatermarkRuntime = typeof import('../index');
+type WatermarkRuntime = typeof import('./runtimeHarness');
 type FakeEngine = { removeWatermarkFromImage: ReturnType<typeof vi.fn> };
 
 const PROCESSED_DATA_URL = 'data:image/png;base64,cHJvY2Vzc2Vk';
@@ -137,7 +137,7 @@ describe('watermarkRemover lifecycle generation', () => {
   it('a superseded run whose engine loads late does not bring back its preview mode', async () => {
     const engineLoad = deferred<FakeEngine>();
     engineCreate.mockReturnValue(engineLoad.promise);
-    runtime = await import('../index');
+    runtime = await import('./runtimeHarness');
     const host = createDownloadHost();
     const preview = createPreviewImage();
 
@@ -173,7 +173,7 @@ describe('watermarkRemover lifecycle generation', () => {
     vi.mocked(chrome.storage.sync.get).mockImplementationOnce(() => oldRead.promise);
     const engineLoad = deferred<FakeEngine>();
     engineCreate.mockReturnValue(engineLoad.promise);
-    runtime = await import('../index');
+    runtime = await import('./runtimeHarness');
     const host = createDownloadHost();
 
     const oldStart = runtime.startWatermarkRemover();
@@ -201,7 +201,7 @@ describe('watermarkRemover lifecycle generation', () => {
   it('a settings change while the engine loads still completes the queued download', async () => {
     const engineLoad = deferred<FakeEngine>();
     engineCreate.mockReturnValue(engineLoad.promise);
-    runtime = await import('../index');
+    runtime = await import('./runtimeHarness');
     const host = createDownloadHost();
 
     const start = runtime.startWatermarkRemover();

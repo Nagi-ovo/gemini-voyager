@@ -23,6 +23,8 @@ Ouvrez la popup de Voyager et repérez **Options Image Refinement**. Les deux in
 - **Retirer le filigrane au téléchargement** (recommandé) : lorsque vous cliquez sur le bouton de téléchargement de Gemini, le fichier enregistré n'a plus de filigrane. Un petit badge 🍌 sur le bouton indique que la fonction est active ; le bouton reste celui de Gemini.
 - **Retirer le filigrane dans l'aperçu** (instable) : nettoie aussi les images affichées à l'écran. C'est plus lent, et une image peut scintiller brièvement pendant son traitement.
 
+Si vous désactivez la suppression au téléchargement, les téléchargements suivants ne sont plus modifiés. Un téléchargement déjà en cours de traitement se termine avec le réglage de départ, sans enregistrer une seconde copie à cause du changement. Désactiver la suppression dans l’aperçu rétablit les originaux uniquement là où l’image traitée par Voyager est encore affichée. Les images modifiées entre-temps par Gemini sont conservées.
+
 ## L'option intégrée de Gemini
 
 Gemini déploie son propre interrupteur pour le filigrane visible : **Paramètres → Media watermark → Off**. Si votre compte le propose, utilisez-le et désactivez la suppression de filigrane de Voyager : l'option de Gemini est plus fiable. Voyager affiche une seule fois une notification à ce sujet, et vous indique lorsque vos images récentes sont déjà livrées sans filigrane. Si vous ne trouvez pas encore cet interrupteur, continuez à utiliser Voyager. Les métadonnées SynthID et C2PA restent présentes dans tous les cas.

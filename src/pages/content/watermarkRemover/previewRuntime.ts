@@ -5,7 +5,7 @@ import { DOWNLOAD_ICON_SELECTOR } from './downloadButton';
 import type { WatermarkEngine } from './watermarkEngine';
 
 /**
- * Preview writes and indicators share one DOM-observation lifetime. The caller
+ * Preview writes and indicators share the preview observer while it runs. The caller
  * invalidates the generation/preview flag before stop; pending images then release
  * their queue slots and retry only when the latest state still enables previews.
  * watchIndicators runs before engine readiness; start upgrades to preview processing.
@@ -25,14 +25,27 @@ export function createWatermarkPreviews({
   health: { rememberPreview: (image: HTMLImageElement, sourceSrc: string) => void };
 }) {
   const processingQueue = new Set<HTMLImageElement>();
+  const replacements = new Map<
+    HTMLImageElement,
+    {
+      originalSrc: string | null;
+      originalSrcset: string | null;
+      processedUrl: string;
+    }
+  >();
   let previewObserver: MutationObserver | null = null;
   let indicatorObserver: MutationObserver | null = null;
-  const pendingDebounceTimeouts = new Set<ReturnType<typeof setTimeout>>();
+  const previewTimeouts = new Set<ReturnType<typeof setTimeout>>();
+  const indicatorTimeouts = new Set<ReturnType<typeof setTimeout>>();
 
   /**
    * Debounce function to limit execution frequency
    */
-  const debounce = <T extends (...args: unknown[]) => void>(func: T, wait: number): T => {
+  const debounce = <T extends (...args: unknown[]) => void>(
+    func: T,
+    wait: number,
+    pendingDebounceTimeouts: Set<ReturnType<typeof setTimeout>>,
+  ): T => {
     let timeout: ReturnType<typeof setTimeout> | null = null;
     return ((...args: unknown[]) => {
       if (timeout) {
@@ -70,22 +83,37 @@ export function createWatermarkPreviews({
       (img) => isValidGeminiImage(img) && img.dataset.watermarkProcessed !== 'true',
     );
 
-  /**
-   * Clear preview bookkeeping without restoring the current image source.
-   * Gemini can reuse an existing <img> for a later generated image, so stale
-   * processed markers must not prevent the replacement source from being handled
-   * after preview removal is re-enabled.
-   */
-  const clearPreviewImageState = (): void => {
-    document
-      .querySelectorAll<HTMLImageElement>(
-        'img[data-watermark-processed], img[data-watermark-original-src]',
-      )
-      .forEach((img) => {
+  /** Restore only attributes still owned by this runtime; never overwrite Gemini's newer image. */
+  const restorePreview = (img: HTMLImageElement): void => {
+    const replacement = replacements.get(img);
+    if (replacement) {
+      if (
+        img.getAttribute('src') === replacement.processedUrl &&
+        img.getAttribute('srcset') === null
+      ) {
+        if (replacement.originalSrc === null) img.removeAttribute('src');
+        else img.setAttribute('src', replacement.originalSrc);
+        if (img.getAttribute('srcset') === null && replacement.originalSrcset !== null) {
+          img.setAttribute('srcset', replacement.originalSrcset);
+        }
+      }
+      if (img.dataset.processedUrl === replacement.processedUrl) {
         delete img.dataset.watermarkProcessed;
         delete img.dataset.watermarkOriginalSrc;
         delete img.dataset.processedUrl;
-      });
+      }
+      // A host-owned srcset may still fall back to our src; keep that blob valid.
+      if (img.getAttribute('src') !== replacement.processedUrl)
+        URL.revokeObjectURL(replacement.processedUrl);
+      replacements.delete(img);
+    }
+  };
+
+  const restorePreviews = (): void => {
+    for (const img of replacements.keys()) restorePreview(img);
+    for (const img of processingQueue) {
+      if (img.dataset.watermarkProcessed === 'processing') delete img.dataset.watermarkProcessed;
+    }
   };
 
   /**
@@ -158,7 +186,12 @@ export function createWatermarkPreviews({
     let stale = false;
     const isStale = (): boolean => {
       const state = getState();
-      stale = generation !== state.generation || !state.previewEnabled;
+      stale =
+        generation !== state.generation ||
+        !state.previewEnabled ||
+        !imgElement.isConnected ||
+        imgElement.src !== originalSrc ||
+        imgElement.getAttribute('srcset') !== originalSrcset;
       return stale;
     };
 
@@ -166,6 +199,8 @@ export function createWatermarkPreviews({
     imgElement.dataset.watermarkProcessed = 'processing';
 
     const originalSrc = imgElement.src;
+    const originalSrcAttribute = imgElement.getAttribute('src');
+    const originalSrcset = imgElement.getAttribute('srcset');
     try {
       health.rememberPreview(imgElement, originalSrc);
 
@@ -175,17 +210,23 @@ export function createWatermarkPreviews({
       if (isStale()) return;
 
       // Process image to remove watermark
-      const processedCanvas = await engine.removeWatermarkFromImage(
-        normalSizeImg,
-        (presence) => void recordWatermarkPresence(presence),
-      );
+      const processedCanvas = await engine.removeWatermarkFromImage(normalSizeImg, (presence) => {
+        if (!isStale()) void recordWatermarkPresence(presence);
+      });
       if (isStale()) return;
       const processedBlob = await canvasToBlob(processedCanvas);
       if (isStale()) return;
 
       // Replace image source with processed blob URL
       const processedUrl = URL.createObjectURL(processedBlob);
+      replacements.set(imgElement, {
+        originalSrc: originalSrcAttribute,
+        originalSrcset,
+        processedUrl,
+      });
       imgElement.dataset.watermarkOriginalSrc = originalSrc;
+      // Native srcset would override the cleaned src; restore it only while still owned.
+      imgElement.removeAttribute('srcset');
       imgElement.src = processedUrl;
       imgElement.dataset.watermarkProcessed = 'true';
       imgElement.dataset.processedUrl = processedUrl; // Store for reference
@@ -208,7 +249,12 @@ export function createWatermarkPreviews({
         // A full restart can invalidate this task while leaving preview removal
         // enabled (for example, when only the download toggle changed). Retry
         // after releasing the queue slot so the latest lifecycle owns the write.
-        if (getState().previewEnabled && imgElement.isConnected && isValidGeminiImage(imgElement)) {
+        if (
+          getState().previewEnabled &&
+          imgElement.isConnected &&
+          isValidGeminiImage(imgElement) &&
+          imgElement.src.includes('googleusercontent.com')
+        ) {
           void processImage(imgElement);
         }
       }
@@ -219,6 +265,11 @@ export function createWatermarkPreviews({
    * Process all Gemini-generated images on the page (preview path)
    */
   const processAllImages = (): void => {
+    if (!getState().previewEnabled) return;
+    // Gemini detaches old conversations; release their images and owned blobs promptly.
+    for (const img of replacements.keys()) {
+      if (!img.isConnected) restorePreview(img);
+    }
     const images = findGeminiImages();
     images.forEach(processImage);
 
@@ -241,6 +292,7 @@ export function createWatermarkPreviews({
    * Also independent of the img src (blob: vs googleusercontent.com).
    */
   const decorateDownloadButtons = (): void => {
+    if (!getState().downloadEnabled) return;
     const hosts = document.querySelectorAll<HTMLElement>('download-generated-image-button');
     hosts.forEach((host) => {
       const button = host.querySelector<HTMLButtonElement>('button');
@@ -253,7 +305,7 @@ export function createWatermarkPreviews({
    */
   const setupMutationObserver = (): void => {
     if (previewObserver) return;
-    const debouncedProcess = debounce(processAllImages, 100);
+    const debouncedProcess = debounce(processAllImages, 100, previewTimeouts);
     previewObserver = new MutationObserver(debouncedProcess);
     previewObserver.observe(document.body, {
       childList: true,
@@ -270,8 +322,8 @@ export function createWatermarkPreviews({
    * preview observer can take over.
    */
   const setupIndicatorObserver = (): void => {
-    if (indicatorObserver) return;
-    const debouncedDecorate = debounce(decorateDownloadButtons, 100);
+    if (indicatorObserver || previewObserver) return;
+    const debouncedDecorate = debounce(decorateDownloadButtons, 100, indicatorTimeouts);
     indicatorObserver = new MutationObserver(debouncedDecorate);
     indicatorObserver.observe(document.body, {
       childList: true,
@@ -286,23 +338,33 @@ export function createWatermarkPreviews({
     setupIndicatorObserver();
   };
 
-  const start = (): void => {
-    // The preview observer takes over late-button decoration after the engine loads.
+  const stopIndicatorObserver = (): void => {
     indicatorObserver?.disconnect();
     indicatorObserver = null;
+    for (const timeout of indicatorTimeouts) clearTimeout(timeout);
+    indicatorTimeouts.clear();
+  };
+
+  const start = (): void => {
+    // The preview pass decorates downloads too, so one body observer covers both controls.
+    stopIndicatorObserver();
     processAllImages();
     setupMutationObserver();
   };
 
-  const stop = (): void => {
+  const stopPreviews = (): void => {
     previewObserver?.disconnect();
-    indicatorObserver?.disconnect();
     previewObserver = null;
-    indicatorObserver = null;
-    for (const timeout of pendingDebounceTimeouts) clearTimeout(timeout);
-    pendingDebounceTimeouts.clear();
-    clearPreviewImageState();
+    for (const timeout of previewTimeouts) clearTimeout(timeout);
+    previewTimeouts.clear();
+    restorePreviews();
+    if (getState().downloadEnabled) watchIndicators();
   };
 
-  return { watchIndicators, start, stop };
+  const stopIndicators = (): void => {
+    stopIndicatorObserver();
+    document.querySelectorAll('.nanobanana-indicator').forEach((indicator) => indicator.remove());
+  };
+
+  return { watchIndicators, start, stopPreviews, stopIndicators };
 }

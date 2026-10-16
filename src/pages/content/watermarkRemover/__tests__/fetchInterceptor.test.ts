@@ -247,6 +247,48 @@ describe('fetchInterceptor (MAIN world script)', () => {
     });
   });
 
+  it('finishes an accepted download once after off and leaves new requests native', async () => {
+    const bridge = createEnabledBridge();
+    bridge.dataset.downloadIntentExpiresAt = String(Date.now() + 1000);
+    let finishFetch!: (response: Response) => void;
+    originalFetch.mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          finishFetch = resolve;
+        }),
+    );
+    installInterceptor();
+    const accepted = window.fetch(GEMINI_DOWNLOAD_URL);
+    bridge.dataset.enabled = 'false';
+    bridge.dataset.downloadIntentExpiresAt = String(Date.now() + 1000);
+    const native = await window.fetch(GEMINI_DOWNLOAD_URL);
+    expect(await native.text()).toBe('ok');
+    finishFetch(createMockFetchResponse('original'));
+    const request = JSON.parse(await waitForBridgeRequest(bridge)) as { requestId: string };
+    bridge.dataset.response = JSON.stringify({
+      requestId: request.requestId,
+      base64: 'data:image/png;base64,cHJvY2Vzc2Vk',
+    });
+    expect((await accepted).status).toBe(200);
+    expect(
+      originalFetch.mock.calls.filter(([url]) => String(url).includes('googleusercontent.com')),
+    ).toEqual([['https://lh3.googleusercontent.com/rd-gg-dl/example=s0'], [GEMINI_DOWNLOAD_URL]]);
+    expect(JSON.parse(bridge.dataset.status ?? '{}').type).toBe('SUCCESS');
+  });
+
+  it('does not wrap fetch twice across off and on', async () => {
+    const bridge = createEnabledBridge();
+    installInterceptor();
+    const firstHook = window.fetch;
+    bridge.dataset.enabled = 'false';
+    installInterceptor();
+    bridge.dataset.enabled = 'true';
+    installInterceptor();
+    expect(window.fetch).toBe(firstHook);
+    await window.fetch(GEMINI_DOWNLOAD_URL);
+    expect(originalFetch).toHaveBeenCalledExactlyOnceWith(GEMINI_DOWNLOAD_URL);
+  });
+
   it('reports Google corruption when the watermark processor detects a preview mismatch', async () => {
     const bridge = createEnabledBridge();
     bridge.dataset.downloadIntentExpiresAt = String(Date.now() + 1000);
