@@ -8,8 +8,8 @@ Personnalisez chaque pixel.
 Pourquoi voir le futur à travers un petit trou de serrure ?
 Voyager vous permet d'étendre la largeur du chat.
 
-- **Largeur du chat** : Activez d'abord l'interrupteur à côté de **Largeur du chat**. Il est désactivé par défaut, et le curseur reste replié tant qu'il l'est. Le curseur va ensuite de 30 % à 100 % de la fenêtre (70 % par défaut). Élargissez pour le codage et les tableaux complexes, réduisez pour la lecture.
-- **Largeur de l'éditeur** : Activez d'abord son interrupteur, puis élargissez la zone qui apparaît lorsque vous modifiez un message envoyé.
+- **Largeur du chat** : Activez d'abord **Extensions** → **Largeur du chat** dans la popup. Il est désactivé par défaut, et le curseur n'apparaît sous la ligne qu'une fois activé. Le curseur va ensuite de 30 % à 100 % de la fenêtre (70 % par défaut). Élargissez pour le codage et les tableaux complexes, réduisez pour la lecture.
+- **Largeur de l'éditeur** : Activez d'abord **Extensions** → **Largeur de l'éditeur**, puis élargissez la zone qui apparaît lorsque vous modifiez un message envoyé.
 
 ## Contrôle
 

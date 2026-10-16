@@ -9,7 +9,7 @@ Vous pouvez maintenant ajuster librement la largeur de la barre latérale.
 
 1. Ouvrez la popup de Voyager (cliquez sur l'icône de l'extension dans la barre d'outils du navigateur).
    <img src="/assets/extension-instruction.png" alt="Comment ouvrir le panneau de configuration" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-2. Trouvez **Largeur barre latérale** (sur AI Studio, il s'intitule **AI Studio Sidebar**) et activez l'interrupteur à côté. Il est désactivé par défaut, et le curseur reste replié tant que vous ne l'activez pas.
+2. Sur Gemini, activez **Extensions** → **Largeur de la barre latérale** (sur AI Studio, utilisez la carte **AI Studio Sidebar**). Il est désactivé par défaut, et le curseur apparaît sous la ligne une fois activé.
 3. Faites glisser le curseur pour choisir la largeur qui vous convient.
 
 - **Étroite** : Économisez de l'espace et concentrez-vous sur la conversation.

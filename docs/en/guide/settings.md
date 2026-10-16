@@ -8,8 +8,8 @@ Customize every pixel.
 Why view the future through a tiny keyhole?
 Voyager lets you expand the chat width.
 
-- **Chat width**: Turn on the switch next to **Chat width** first. It's off by default, and the slider stays collapsed until you do. The slider then goes from 30% to 100% of the window (70% by default). Go wide for code and complex tables, narrow for reading.
-- **Edit input width**: Turn on its switch first, then widen the box you get when editing a sent message.
+- **Chat width**: In the popup, turn on **Plugins** → **Chat Width** first. It's off by default, and the slider shows under the row once it's on. The slider then goes from 30% to 100% of the window (70% by default). Go wide for code and complex tables, narrow for reading.
+- **Edit input width**: Turn on **Plugins** → **Edit input width** first, then widen the box you get when editing a sent message.
 
 ## Control
 

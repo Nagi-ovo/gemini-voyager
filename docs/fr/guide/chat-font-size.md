@@ -16,5 +16,5 @@ Chacun a des préférences différentes en matière de taille de police — cert
 ## Comment utiliser
 
 1. Ouvrez le panneau de paramètres de Voyager (popup).
-2. Trouvez le paramètre **Taille de police du chat** et activez-le.
+2. Activez **Extensions** → **Taille de police du chat** ; le curseur apparaît sous la ligne une fois activé.
 3. Faites glisser le curseur pour ajuster le pourcentage de taille de police — la page prévisualisera les changements en temps réel.

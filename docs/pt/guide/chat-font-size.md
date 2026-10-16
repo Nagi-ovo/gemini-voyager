@@ -16,5 +16,5 @@ Cada pessoa tem preferências diferentes quanto ao tamanho da fonte — alguns p
 ## Como usar
 
 1. Abra o painel de definições do Voyager (popup).
-2. Encontre **Tamanho da fonte do chat** e ative-o.
+2. Ative **Plugins** → **Tamanho da fonte do chat**; o cursor aparece por baixo da linha depois de ativado.
 3. Arraste o cursor para ajustar a percentagem do tamanho da fonte — a página mostrará as alterações em tempo real.

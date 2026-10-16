@@ -16,5 +16,5 @@ Everyone has different font size preferences — some prefer compact text for hi
 ## How to Use
 
 1. Open the Voyager settings panel (popup).
-2. Find **Chat font size** and turn it on.
+2. Turn on **Plugins** → **Chat Font Size**; the slider shows under the row once it's on.
 3. Drag the slider to adjust the font size percentage — the page will preview changes in real time.

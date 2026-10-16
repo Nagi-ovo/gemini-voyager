@@ -13,7 +13,7 @@ Oferecemos a funcionalidade de **Ocultar barra lateral automaticamente**. Quando
 ### Como ativar
 
 1. Abra o pop-up do Voyager.
-2. Ative o interruptor **Ocultar barra lateral auto**, logo abaixo do controlo deslizante **Largura da barra lateral**.
-3. Para ocultar também a faixa recolhida, ative **Ocultar barra lateral completa** (esta opção também funciona sozinha).
+2. Ative **Plugins** → **Ocultar automaticamente a barra lateral**.
+3. Para ocultar também a faixa recolhida, ative **Plugins** → **Ocultar completamente a barra lateral** (esta opção também funciona sozinha).
 
 _Nota: Esta funcionalidade suporta atualmente apenas o Google Gemini._

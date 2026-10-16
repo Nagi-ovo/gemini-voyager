@@ -9,7 +9,7 @@ Ahora puedes ajustar libremente el ancho de la barra lateral.
 
 1. Abre el panel de configuración de Voyager (haz clic en el icono de la extensión en la barra de herramientas del navegador).
    <img src="/assets/extension-instruction.png" alt="Cómo abrir el panel de configuración" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-2. Busca la opción **Ancho de la barra lateral** (en AI Studio aparece con el nombre **AI Studio Sidebar**) y activa el interruptor que tiene al lado. Viene desactivado y, mientras lo está, el control deslizante permanece plegado.
+2. En Gemini, activa **Complementos** → **Ancho de la barra lateral** (en AI Studio, usa la tarjeta **AI Studio Sidebar**). Viene desactivado y, una vez activado, el control deslizante aparece bajo la fila.
 3. Arrastra el control deslizante para elegir el ancho que prefieras.
 
 - **Estrecho**: Ahorra espacio y concéntrate en la conversación.

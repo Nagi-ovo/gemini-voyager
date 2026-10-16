@@ -9,7 +9,7 @@
 
 1. Voyager のポップアップを開きます（ブラウザのツールバーにある拡張機能アイコンをクリック）。
    <img src="/assets/extension-instruction.png" alt="設定パネルの開き方" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-2. **サイドバーの幅**（AI Studio では **AI Studio Sidebar** という表示です）を見つけ、横のスイッチをオンにします。デフォルトはオフで、オフの間はスライダーが折りたたまれています。
+2. Gemini では **プラグイン** → **サイドバーの幅** をオンにします（AI Studio では **AI Studio Sidebar** カードを使います）。デフォルトはオフで、オンにすると行の下にスライダーが表示されます。
 3. スライダーをドラッグして、最適な幅を選択してください。
 
 - **狭い**: スペースを節約し、会話に集中できます。
