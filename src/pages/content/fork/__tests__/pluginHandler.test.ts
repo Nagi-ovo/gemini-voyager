@@ -188,8 +188,7 @@ describe('fork through its registered builtin handler', () => {
     await vi.advanceTimersByTimeAsync(1200);
     expect(document.querySelectorAll('.gv-fork-btn')).toHaveLength(2);
     flip(false);
-    await flush();
-    expect(document.querySelector('.gv-fork-btn')).toBeNull();
+    await vi.waitFor(() => expect(document.querySelector('.gv-fork-btn')).toBeNull());
     document
       .querySelector('main')!
       .insertAdjacentHTML('beforeend', '<user-query>A later question</user-query>');
@@ -223,7 +222,7 @@ describe('fork through its registered builtin handler', () => {
     await startHost(true);
     await vi.advanceTimersByTimeAsync(1200);
     flip(false);
-    await flush();
+    await vi.waitFor(() => expect(status()).toBe('ready'));
     expect(local[PENDING_FORK_KEY]).toEqual(saved[PENDING_FORK_KEY]);
     expect(local[StorageKeys.FORK_NODES]).toEqual(saved[StorageKeys.FORK_NODES]);
     const cloud: ForkNode = {
