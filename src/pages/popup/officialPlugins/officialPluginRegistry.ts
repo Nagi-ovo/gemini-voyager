@@ -56,14 +56,15 @@ export interface OfficialPluginEntry {
   /** A switch that is not a plain write (a permission flow); the popup supplies it. */
   readonly control?: OfficialControlId;
   /**
-   * A native setting the feature cannot run without. While it is off the row's
-   * switch is disabled and says where to turn it on.
+   * A prerequisite the feature cannot run without. An unmet setting disables
+   * the switch; a note explains an unavailable feature and shows it off.
    */
   readonly requires?: {
     readonly met: (snapshot: LegacySettingSnapshot) => boolean;
-    readonly setting: TranslationKey;
-    readonly card: TranslationKey;
-  };
+  } & (
+    | { readonly setting: TranslationKey; readonly card: TranslationKey }
+    | { readonly note: TranslationKey }
+  );
   /** The switch's sync write when one key is not enough, read against what the popup shows. */
   readonly enableWrite?: (
     enabled: boolean,
@@ -282,8 +283,9 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     id: OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
     group: 'appearance',
     formerSectionTitle: 'gemsSidebarCount',
-    searchKeys: ['gemsSidebarCountHidden', 'gemsSidebarCountMany'],
+    searchKeys: ['gemsSidebarCountHidden', 'gemsSidebarCountMany', 'gemsSidebarUnavailableHint'],
     searchAliases: ['gems notebook recent side nav gem 宝石 侧边栏 最近'],
+    requires: { met: () => false, note: 'gemsSidebarUnavailableHint' },
     sliders: {
       // 0 hides the list only; the row's switch turns the feature off.
       count: {

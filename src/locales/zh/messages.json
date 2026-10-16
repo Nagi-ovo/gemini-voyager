@@ -2069,6 +2069,10 @@
     "message": "更宽",
     "description": "较宽的子文件夹缩进标签"
   },
+  "gemsSidebarUnavailableHint": {
+    "message": "Gemini 新版侧栏把 Gems 收进了「更多」菜单，这个功能暂时不起作用。",
+    "description": "Why the Recent Gems popup row is disabled on Gemini’s redesigned sidebar."
+  },
   "gemsSidebarCount": {
     "message": "侧栏中显示的最近 Gems",
     "description": "Popup slider label — how many recent gems to show in the sidebar above Notebooks. 0 hides the section entirely."

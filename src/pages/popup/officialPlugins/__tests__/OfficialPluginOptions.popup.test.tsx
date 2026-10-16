@@ -426,37 +426,44 @@ describe('official plugin rows with options', () => {
     const id = OFFICIAL_PLUGIN_IDS.geminiGemsSidebar;
     const count = () => row(id)!.querySelector<HTMLInputElement>('input[type="range"]');
 
-    it('reads a stored count of 0 as a hidden list, with the row still on', async () => {
-      sync[StorageKeys.GV_GEMS_SIDEBAR_COUNT] = 0;
-      await mount();
-      expect(toggle(id).checked).toBe(true);
-      expect(count()!.value).toBe('0');
-      expect(count()!.getAttribute('aria-valuetext')).toBe(TRANSLATIONS.en.gemsSidebarCountHidden);
-      expect(row(id)!.textContent).toContain(TRANSLATIONS.en.gemsSidebarCountHidden);
-      expect(row(id)!.textContent).not.toMatch(/\bOff\b/);
-    });
+    it.each([undefined, false, true])(
+      'keeps Recent Gems disabled and off with stored enabled=%s, without writing on click',
+      async (stored) => {
+        if (stored !== undefined) sync[StorageKeys.GV_GEMS_SIDEBAR_ENABLED] = stored;
+        sync[StorageKeys.GV_GEMS_SIDEBAR_COUNT] = 6;
+        await mount();
+        expect(toggle(id).disabled).toBe(true);
+        expect(toggle(id).checked).toBe(false);
+        expect(count()).toBeNull();
+        expect(optionsButton(id)).toBeNull();
+        expect(row(id)!.textContent).toContain(TRANSLATIONS.en.gemsSidebarUnavailableHint);
+        const describedBy = toggle(id).getAttribute('aria-describedby')!.split(' ');
+        expect(describedBy.map((id) => document.getElementById(id)!.textContent)).toContain(
+          TRANSLATIONS.en.gemsSidebarUnavailableHint,
+        );
+        extensionApi.storage.sync.set.mockClear();
+        extensionApi.storage.local.set.mockClear();
+        await act(async () => {
+          toggle(id).click();
+          row(id)!.querySelector<HTMLLabelElement>('label')!.click();
+        });
+        expect(toggle(id).checked).toBe(false);
+        expect(extensionApi.storage.sync.set).not.toHaveBeenCalled();
+        expect(extensionApi.storage.local.set).not.toHaveBeenCalled();
+        expect(sync[StorageKeys.GV_GEMS_SIDEBAR_ENABLED]).toBe(stored);
+        expect(sync[StorageKeys.GV_GEMS_SIDEBAR_COUNT]).toBe(6);
+      },
+    );
 
-    it('saves the count on release, to its old key only', async () => {
+    it('remains searchable with its controls hidden after settings change elsewhere', async () => {
+      local[StorageKeys.GV_POPUP_SETTINGS_SEARCH_QUERY] = 'notebook';
       await mount();
-      expect(count()!.getAttribute('aria-valuetext')).toBe('3');
-      drag(count()!, 5);
-      expect(extensionApi.storage.sync.set).not.toHaveBeenCalled();
-      await act(async () => count()!.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })));
-      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
-        [StorageKeys.GV_GEMS_SIDEBAR_COUNT]: 5,
-      });
-      expect(pluginStateWritten()).toBe(false);
-    });
-
-    it('turns off with its switch, keeping the stored count', async () => {
-      sync[StorageKeys.GV_GEMS_SIDEBAR_COUNT] = 6;
-      await mount();
-      await act(async () => toggle(id).click());
+      expect(row(id)).not.toBeNull();
+      await act(async () => emitSyncChange({ [StorageKeys.GV_GEMS_SIDEBAR_ENABLED]: true }));
+      expect(toggle(id).disabled).toBe(true);
+      expect(toggle(id).checked).toBe(false);
       expect(count()).toBeNull();
-      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
-        [StorageKeys.GV_GEMS_SIDEBAR_ENABLED]: false,
-      });
-      expect(sync[StorageKeys.GV_GEMS_SIDEBAR_COUNT]).toBe(6);
+      expect(optionsButton(id)).toBeNull();
     });
   });
 

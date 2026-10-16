@@ -72,7 +72,16 @@ export function OfficialPluginListRow({
   t,
 }: OfficialPluginRowProps) {
   const { manifest, entry, settings, usageHint } = row;
-  const enabled = control ? control.enabled : row.enabled;
+  const requirement = row.unmetRequirement;
+  const unavailable = requirement !== null && 'note' in requirement;
+  const enabled = !unavailable && (control ? control.enabled : row.enabled);
+  const requirementNote = requirement
+    ? 'note' in requirement
+      ? t(requirement.note)
+      : t('pluginRowNeedsSetting')
+          .replace('{setting}', () => t(requirement.setting))
+          .replace('{card}', () => t(requirement.card))
+    : null;
   // Collapsed until asked for; a search that lists the row opens it, unless the user closed it.
   const [optionsOpen, setOptionsOpen] = useState<boolean | null>(null);
   // Number settings show as the registry's sliders, which save on release.
@@ -98,9 +107,12 @@ export function OfficialPluginListRow({
   return (
     <li data-official-plugin={manifest.id} className="py-2.5">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1 text-start">
+        <div className={`min-w-0 flex-1 text-start ${unavailable ? 'opacity-50' : ''}`}>
           <div className="flex items-center gap-1">
-            <label htmlFor={inputId} className="cursor-pointer text-sm font-medium">
+            <label
+              htmlFor={inputId}
+              className={`text-sm font-medium ${unavailable ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+            >
               <bdi>{name}</bdi>
             </label>
             {entry.experimental && <ExperimentalBadge title={t('experimentalLabel')} />}
@@ -108,14 +120,12 @@ export function OfficialPluginListRow({
           <p id={descriptionId} className="text-muted-foreground mt-0.5 text-xs leading-snug">
             {pickLocalized(manifest, 'description', language)}
           </p>
-          {row.unmetRequirement && (
+          {requirementNote && (
             <p
               id={requirementId}
-              className={`mt-1 text-xs leading-snug ${BLOCKED_NOTE_TONE_CLASS.paused}`}
+              className={`mt-1 text-xs leading-snug ${unavailable ? BLOCKED_NOTE_TONE_CLASS.waiting : BLOCKED_NOTE_TONE_CLASS.paused}`}
             >
-              {t('pluginRowNeedsSetting')
-                .replace('{setting}', () => t(row.unmetRequirement!.setting))
-                .replace('{card}', () => t(row.unmetRequirement!.card))}
+              {requirementNote}
             </p>
           )}
           {note && (

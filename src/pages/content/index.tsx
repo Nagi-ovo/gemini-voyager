@@ -257,7 +257,7 @@ async function initializeFeatures(): Promise<void> {
       await settle(geminiBuiltins.startWatermarkRemover());
       await settle(geminiBuiltins.startDeepResearchExport());
       await settle(geminiBuiltins.startContextSync());
-      await settle(mountForPage(NATIVE_FEATURES.gemsHider));
+      // Gemini moved Gems into the More menu, so the old sidebar hider no longer has a target.
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       // These modules only share the extension storage API and can hydrate in

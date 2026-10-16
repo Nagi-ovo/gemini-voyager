@@ -2069,6 +2069,10 @@
     "message": "أوسع",
     "description": "Wide subfolder indentation label"
   },
+  "gemsSidebarUnavailableHint": {
+    "message": "نقل الشريط الجانبي الجديد في Gemini قسم Gems إلى قائمة «المزيد»، لذا لا تعمل هذه الميزة حاليًا.",
+    "description": "Why the Recent Gems popup row is disabled on Gemini’s redesigned sidebar."
+  },
   "gemsSidebarCount": {
     "message": "عدد Gems الحديثة في الشريط الجانبي",
     "description": "Popup slider label — how many recent gems to show in the sidebar above Notebooks. 0 hides the section entirely."

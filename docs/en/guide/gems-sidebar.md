@@ -1,5 +1,9 @@
 # Recent Gems in the sidebar
 
+::: info Currently unavailable
+Gemini's new sidebar moved Gems into the More menu and no longer has a Gems entry. This feature does not appear for now, and its switch in the Voyager popup is greyed out.
+:::
+
 Gemini's 2026 redesign first moved Gems behind the settings menu, then quietly put a nav entry back in the sidebar — but it's just a link that bounces you to `/gems/view`.
 
 Voyager lets that native Gems entry "expand" into a list of your gems, right there in the sidebar: pinned gems first, then the ones you used most recently.

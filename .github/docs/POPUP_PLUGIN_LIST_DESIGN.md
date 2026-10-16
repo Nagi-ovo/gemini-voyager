@@ -306,7 +306,7 @@ export interface OfficialPluginEntry {
 
 **已完成示例：Edit input width**（`voyager.gemini-edit-input-width`）。运行时在 §7.12 8-1 完成，popup 随 Batch 3 迁入「外观」组。Registry 保留原 section 标题、搜索词和 `widthPercent` 滑块，开关与数值分别经 `legacyEnableWrite`、`legacyValueWrite` 写原键；旧卡片控件、hook 状态和 section 已移除。备份默认值对缺失开关的影响仍是 §3.7 记录的既有限制。
 
-其余列出的功能也已完成：Auto-hide / Full hide 两行共用一个 controller；Gems sidebar 的 count=0 只隐藏列表，总开关独立；AI Studio sidebar width 使用独立开关键，缺失时跟随文件夹开关；Visual effects 通过 enum binding 保留跨站共享选择，每个站点各一行（Batch 7 起插件站也是）；Context Sync 的端口、状态和同步按钮在行下的面板里；NanoBanana 两行沿用 `src/core/utils/watermarkSettings.ts` 的 resolver。插件站 rail 的选项已在 Batch 7 挂到 rail 的插件行下（§2.4）。
+其余列出的功能也已完成：Auto-hide / Full hide 两行共用一个 controller；Gems sidebar 因 Gemini 新版侧栏将 Gems 收入「更多」菜单而暂不显示，popup 行置灰并显示为关闭；旧 Gems hider 停止启动，模块和 `gvGemsHidden` 保留；AI Studio sidebar width 使用独立开关键，缺失时跟随文件夹开关；Visual effects 通过 enum binding 保留跨站共享选择，每个站点各一行（Batch 7 起插件站也是）；Context Sync 的端口、状态和同步按钮在行下的面板里；NanoBanana 两行沿用 `src/core/utils/watermarkSettings.ts` 的 resolver。插件站 rail 的选项已在 Batch 7 挂到 rail 的插件行下（§2.4）。
 
 ---
 

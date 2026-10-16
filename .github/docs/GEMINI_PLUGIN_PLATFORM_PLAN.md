@@ -749,7 +749,7 @@ macOS 只读核验：Google Chrome 允许通知、桌面/通知中心/锁屏均�
 
 Popup Plugins 列表现已为每个打包的官方插件登记一行，按当前站点和浏览器资格显示；实现清单见 `src/pages/popup/officialPlugins/officialPluginRegistry.ts`，控件、旧键写入与后续接入规则见 [Popup 官方插件列表设计](POPUP_PLUGIN_LIST_DESIGN.md)。下述各批的「不改 popup」只记录当时的运行时迁移范围，列表迁移现已完成。
 
-旧布局的 Gems hider 暂时保留 native：目前没有可验证的旧布局可供测试，不在缺少验收依据时迁移。它没有 popup 开关，继续使用 local `gvGemsHidden`；这是明确保留项，与已插件化的 Gems 侧栏分开。
+Gemini 新版侧栏已将 Gems 收入「更多」菜单：Gems 侧栏暂不显示，popup 行置灰并显示为关闭，不改存储设置或插件 runtime；旧 Gems hider 停止启动，保留模块、单测和 local `gvGemsHidden`。
 
 **8-1 编辑输入框宽度（首个模板）**：在阶段 7 之后迁移的第一项，按聊天宽度 builtin 的形状完成，同批退役 native 入口，不经过 legacy owner 过渡（owner 字段已删除）。选它作模板的原因：有 popup 开关和旧 sync 键、自身生命周期、无业务数据、无 MAIN/Safari bridge，且有聊天宽度这一完全同构的先例。消息时间（共享 `TimestampService` 缓存，且本地 shared rail 依赖其 readiness）、Markdown 修补（无开关，stop 不还原 DOM，导出与 fork 读修补后内容）和 Gems 侧栏（count 滑块不是总开关）留后续批次。
 

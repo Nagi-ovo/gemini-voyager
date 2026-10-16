@@ -1,5 +1,9 @@
 # 侧边栏 Gems 列表
 
+::: info 暂时不可用
+Gemini 新版侧栏把 Gems 收进了「更多」菜单，不再显示 Gems 入口。此功能暂时不会显示，Voyager 设置面板中的开关也已置灰。
+:::
+
 Gemini 2026 改版把 Gems 折腾到了"设置 → Gems"再回到 sidebar 顶部，但它只是一个跳转入口，点一下就把你扔到 `/gems/view` 整页里。
 
 Voyager 让 Gemini 原生的 Gems 入口"长出"一个 gems 子列表，直接在侧边栏里点开就用：置顶的排在最前，其余按最近使用排序。

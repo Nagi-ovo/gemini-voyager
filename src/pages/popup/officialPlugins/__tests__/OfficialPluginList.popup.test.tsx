@@ -138,12 +138,6 @@ const MOVED_SWITCHES = [
     key: StorageKeys.CANVAS_COPY_ENABLED,
     missing: true,
   },
-  // The switch alone: a count of 0 hides the list but leaves it on (see its slider tests).
-  {
-    id: OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
-    key: StorageKeys.GV_GEMS_SIDEBAR_ENABLED,
-    missing: true,
-  },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiContextSync,
     key: StorageKeys.CONTEXT_SYNC_ENABLED,

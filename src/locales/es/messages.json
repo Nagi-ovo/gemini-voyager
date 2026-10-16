@@ -2069,6 +2069,10 @@
     "message": "Ancha",
     "description": "Wide subfolder indentation label"
   },
+  "gemsSidebarUnavailableHint": {
+    "message": "La nueva barra lateral de Gemini ha movido Gems al menú «Más», así que esta función no tiene efecto por ahora.",
+    "description": "Why the Recent Gems popup row is disabled on Gemini’s redesigned sidebar."
+  },
   "gemsSidebarCount": {
     "message": "Gems recientes en la barra lateral",
     "description": "Popup slider label — how many recent gems to show in the sidebar above Notebooks. 0 hides the section entirely."

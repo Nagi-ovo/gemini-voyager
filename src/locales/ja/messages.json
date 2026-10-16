@@ -2069,6 +2069,10 @@
     "message": "広い",
     "description": "広いサブフォルダインデントラベル"
   },
+  "gemsSidebarUnavailableHint": {
+    "message": "Geminiの新しいサイドバーではGemsが「その他」メニューに移動したため、この機能は現在使えません。",
+    "description": "Why the Recent Gems popup row is disabled on Gemini’s redesigned sidebar."
+  },
   "gemsSidebarCount": {
     "message": "サイドバーの最近の Gems",
     "description": "Popup slider label — how many recent gems to show in the sidebar above Notebooks. 0 hides the section entirely."

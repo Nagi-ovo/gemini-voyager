@@ -6,7 +6,6 @@ import { startDefaultModelStarCleanupPageService } from './defaultModel/starClea
 import { startEdgeFinalVersionNotice } from './edgeFinalVersionNotice';
 import type { NativeFeature } from './featureLifecycle';
 import { startForkLinkFinisher } from './fork/linkFinisher';
-import { startGemsHider } from './gemsHider/index';
 import { startNativeHealth } from './nativeHealth/index';
 import { startBrandTheme } from './platformTheme';
 import { startPreventAutoScrollBridge } from './preventAutoScroll/index';
@@ -84,11 +83,6 @@ export const NATIVE_FEATURES = {
     id: 'watermark-image-health',
     position: CleanupPositions.StopWatermarkRemover,
     start: startWatermarkImageHealth,
-  },
-  gemsHider: {
-    id: 'gems-hider',
-    position: CleanupPositions.CleanupGemsHider,
-    start: startGemsHider,
   },
   nativeHealth: {
     id: 'native-health',

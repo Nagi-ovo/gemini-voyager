@@ -17,6 +17,7 @@ import {
   POPUP_LEGACY_SNAPSHOT_KEYS,
   OFFICIAL_PLUGIN_ENTRIES,
   type OfficialPluginContext,
+  type OfficialPluginEntry,
 } from './officialPluginRegistry';
 import { type ListedOfficialPlugin, officialPluginSearchItems } from './officialPluginSearch';
 import { useLegacyPreferenceWrites } from './useLegacyPreferenceWrites';
@@ -28,11 +29,8 @@ export interface OfficialPluginRow extends ListedOfficialPlugin {
   readonly settings: PluginSettings;
   /** How to use it once on, for this browser. */
   readonly usageHint: TranslationKey | null;
-  /** The native setting it needs, while that setting is off. */
-  readonly unmetRequirement: {
-    readonly setting: TranslationKey;
-    readonly card: TranslationKey;
-  } | null;
+  /** Why the feature is unavailable, or the native setting it needs while off. */
+  readonly unmetRequirement: NonNullable<OfficialPluginEntry['requires']> | null;
 }
 
 /** Change events for the bound keys and the panels' own keys, which the overlay settles. */
@@ -77,10 +75,7 @@ export function useOfficialPluginList({
         const hint = plugin.entry.usageHint;
         const usageHint = typeof hint === 'function' ? hint({ isSafariBrowser }) : (hint ?? null);
         const requires = plugin.entry.requires;
-        const unmetRequirement =
-          requires && !requires.met(preferences.legacy)
-            ? { setting: requires.setting, card: requires.card }
-            : null;
+        const unmetRequirement = requires && !requires.met(preferences.legacy) ? requires : null;
         return {
           ...plugin,
           enabled: view.enabled,

@@ -1,5 +1,9 @@
 # Gems recientes en la barra lateral
 
+::: info No disponible por ahora
+La nueva barra lateral de Gemini ha movido Gems al menú «Más» y ya no tiene una entrada de Gems. Por ahora, esta función no se muestra y su interruptor en la ventana emergente de Voyager está desactivado y en gris.
+:::
+
 El rediseño de Gemini 2026 primero movió los Gems al menú de ajustes, y luego añadió silenciosamente una entrada de navegación en la parte superior de la barra lateral — pero es solo un enlace que te lleva a `/gems/view`.
 
 Voyager hace que esa entrada nativa de Gems se "expanda" en una lista de tus gems, directamente en la barra lateral: primero los gems fijados y después los que has usado más recientemente.
