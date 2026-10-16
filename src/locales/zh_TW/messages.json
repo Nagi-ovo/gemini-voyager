@@ -2733,6 +2733,26 @@
     "message": "啟用強化其他 AI 網站的外掛。開啟時會要求該網站的存取權限。已啟用的外掛會向 voyager.nagi.fun 檢查更新。",
     "description": "Popup subtitle explaining the plugin list"
   },
+  "pluginsNativeDescription": {
+    "message": "開關 Voyager 的各項功能。功能開啟後會顯示它的選項。",
+    "description": "Popup subtitle of the official plugin list on Gemini and AI Studio"
+  },
+  "pluginGroupAppearance": {
+    "message": "外觀",
+    "description": "Heading of the plugin list group for layout and look"
+  },
+  "pluginGroupContent": {
+    "message": "內容",
+    "description": "Heading of the plugin list group for how message content renders and copies"
+  },
+  "pluginGroupInput": {
+    "message": "輸入",
+    "description": "Heading of the plugin list group for the message input box"
+  },
+  "pluginGroupConversation": {
+    "message": "對話",
+    "description": "Heading of the plugin list group for working with a conversation"
+  },
   "pluginViewSource": {
     "message": "原始碼",
     "description": "Link label to a plugin source/repo"

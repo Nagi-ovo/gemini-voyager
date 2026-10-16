@@ -1,18 +1,34 @@
 import browser from 'webextension-polyfill';
 
-/** Preserve the popup's polyfill-first storage path and callback API fallback. */
-export async function writePopupSyncStorage(payload: Record<string, unknown>): Promise<void> {
+/**
+ * Write to sync storage and report whether the write landed. Keeps the popup's
+ * polyfill-first path and its callback API fallback, which checks
+ * `runtime.lastError` instead of assuming success.
+ */
+export async function writePopupSyncStorageChecked(
+  payload: Record<string, unknown>,
+): Promise<boolean> {
   try {
     await browser.storage.sync.set(payload);
-    return;
+    return true;
   } catch {
     // The polyfill may be unavailable in this extension-page context.
   }
-  await new Promise<void>((resolve) => {
+  return new Promise<boolean>((resolve) => {
     try {
-      chrome.storage?.sync?.set(payload, () => resolve());
+      const sync = chrome.storage?.sync;
+      if (!sync) {
+        resolve(false);
+        return;
+      }
+      sync.set(payload, () => resolve(!chrome.runtime?.lastError));
     } catch {
-      resolve();
+      resolve(false);
     }
   });
+}
+
+/** Preserve the popup's polyfill-first storage path and callback API fallback. */
+export async function writePopupSyncStorage(payload: Record<string, unknown>): Promise<void> {
+  await writePopupSyncStorageChecked(payload);
 }

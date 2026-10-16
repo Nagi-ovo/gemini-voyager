@@ -5,6 +5,7 @@ export const POPUP_SECTION_SEARCH_SETTING_ID = '__section';
 export const NATIVE_POPUP_SECTION_IDS = [
   'cloudSync',
   'contextSync',
+  'officialPlugins',
   'localPlugins',
   'timeline',
   'folder',
@@ -22,7 +23,6 @@ export const NATIVE_POPUP_SECTION_IDS = [
   'keyboardShortcuts',
   'inputCollapse',
   'promptManager',
-  'plugins',
   'general',
   'nanobanana',
 ] as const;
@@ -38,6 +38,7 @@ type SectionCapability = true | readonly string[];
  */
 const AI_STUDIO_CAPABILITIES = {
   cloudSync: true,
+  officialPlugins: true,
   localPlugins: true,
   folder: ['enableFolderFeature', 'hideArchivedConversations', 'enableAccountIsolation'],
   folderSpacing: true,

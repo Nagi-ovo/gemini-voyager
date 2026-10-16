@@ -63,17 +63,6 @@ export function PromptManagerSettingsCard({
           t={t}
         />
         <SettingToggleRow
-          id="prompt-history-enabled"
-          settingId="promptHistoryEnabled"
-          label="promptHistoryTitle"
-          hint="promptHistoryEnabledHint"
-          checked={values.promptHistoryEnabled}
-          onChange={(promptHistoryEnabled) => onChange({ promptHistoryEnabled })}
-          isVisible={isVisible}
-          unmountWhenHidden
-          t={t}
-        />
-        <SettingToggleRow
           id="slash-prompt-enabled"
           settingId="slashPromptEnabled"
           label="slashPromptEnabled"

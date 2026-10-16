@@ -149,8 +149,6 @@ export function useCatalogTimelineSettings({
       draggableTimeline: settings.draggable,
       timelinePreviewPinned: settings.previewPinned,
       markerLevelEnabled: settings.markerLevel,
-      // A Gemini-only feature; its row is never offered here.
-      preventAutoScrollEnabled: false,
       showMessageTimestamps: recordsSends && messageTimestamps.enabled,
     },
     offers: (settingId) =>

@@ -2733,6 +2733,26 @@
     "message": "Enable plugins that enhance other AI sites. Turning one on asks for permission to access that site. Enabled plugins check voyager.nagi.fun for updates.",
     "description": "Popup subtitle explaining the plugin list"
   },
+  "pluginsNativeDescription": {
+    "message": "Turn Voyager features on or off. A feature's options appear once it is on.",
+    "description": "Popup subtitle of the official plugin list on Gemini and AI Studio"
+  },
+  "pluginGroupAppearance": {
+    "message": "Appearance",
+    "description": "Heading of the plugin list group for layout and look"
+  },
+  "pluginGroupContent": {
+    "message": "Content",
+    "description": "Heading of the plugin list group for how message content renders and copies"
+  },
+  "pluginGroupInput": {
+    "message": "Input",
+    "description": "Heading of the plugin list group for the message input box"
+  },
+  "pluginGroupConversation": {
+    "message": "Conversation",
+    "description": "Heading of the plugin list group for working with a conversation"
+  },
   "pluginViewSource": {
     "message": "Source",
     "description": "Link label to a plugin source/repo"

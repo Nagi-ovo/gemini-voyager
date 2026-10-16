@@ -63,7 +63,6 @@ describe('useFolderPopupSettings', () => {
         [StorageKeys.FOLDER_FLOATING_OPEN_ON_START]: false,
         geminiFolderHideArchivedConversations: true,
         [StorageKeys.FOLDER_SEARCH_ENABLED]: false,
-        [StorageKeys.FORK_ENABLED]: true,
         [StorageKeys.FOLDER_PROJECT_ENABLED]: true,
         [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: true,
       }),
@@ -74,7 +73,6 @@ describe('useFolderPopupSettings', () => {
       floatingOpenOnStart: false,
       hideArchivedConversations: true,
       folderSearchEnabled: false,
-      forkEnabled: true,
       folderProjectEnabled: true,
     });
     expect(settings.accountIsolationEnabled).toBe(true);
@@ -137,7 +135,6 @@ describe('useFolderPopupSettings', () => {
       settings.hydrateFromStorage({
         geminiFolderEnabled: true,
         geminiFolderHideArchivedConversations: true,
-        [StorageKeys.FORK_ENABLED]: true,
         [StorageKeys.FOLDER_PROJECT_ENABLED]: true,
       }),
     );

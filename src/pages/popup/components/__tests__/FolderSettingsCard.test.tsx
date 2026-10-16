@@ -19,7 +19,6 @@ const values: FolderSettingsValues = {
   floatingOpenOnStart: true,
   hideArchivedConversations: false,
   folderSearchEnabled: true,
-  forkEnabled: false,
   folderProjectEnabled: false,
 };
 
@@ -62,12 +61,11 @@ describe('FolderSettingsCard', () => {
     const input = (id: string) => container.querySelector<HTMLInputElement>(`#${id}`)!;
     expect(input('folder-enabled').checked).toBe(true);
     expect(input('folder-search-enabled').checked).toBe(true);
-    expect(input('fork-enabled').checked).toBe(false);
     expect(input('account-isolation-enabled').checked).toBe(true);
     expect(container.textContent).toContain('Gemini');
 
-    act(() => input('fork-enabled').click());
-    expect(props.onChange).toHaveBeenLastCalledWith({ forkEnabled: true });
+    act(() => input('folder-search-enabled').click());
+    expect(props.onChange).toHaveBeenLastCalledWith({ folderSearchEnabled: false });
 
     act(() => input('account-isolation-enabled').click());
     expect(props.accountIsolation.onChange).toHaveBeenCalledWith(false);

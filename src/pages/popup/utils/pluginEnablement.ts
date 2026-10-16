@@ -11,8 +11,14 @@ import { isLocalPluginId } from '@/features/plugins/local/localPluginId';
 import { enableLocalPluginIfUnchanged } from '@/features/plugins/local/localPluginStore';
 import { PLUGIN_CONTENT_SCRIPT_SYNC_MESSAGE } from '@/features/plugins/runtime/messages';
 import { pluginToOriginPatternsForActiveUrl } from '@/features/plugins/runtime/siteRegistration';
+import {
+  legacyBindingFor,
+  legacyEnableWrite,
+} from '@/features/plugins/storage/legacySettingBindings';
 import { setPluginEnabled } from '@/features/plugins/storage/pluginState';
 import type { PluginManifest } from '@/features/plugins/types';
+
+import { writePopupSyncStorageChecked } from './popupStorage';
 
 /**
  * Ask the background service to reconcile dynamic plugin content scripts after
@@ -80,7 +86,8 @@ function pluginApiPermissions(plugin: PluginManifest): Manifest.OptionalPermissi
  * browser cannot grant or inject the access the plugin needs on this site.
  * `changed`: a local plugin's content changed (re-imported elsewhere) after the
  * user saw it, so it stays off until they review the new content.
- * `write_failed`: a local plugin's enable could not be stored; it stays off.
+ * `write_failed`: the new state could not be stored (a local plugin's enable, or
+ * a legacy-bound official plugin's sync key); the previous state stays.
  */
 export type PluginToggleOutcome =
   | 'enabled'
@@ -89,6 +96,18 @@ export type PluginToggleOutcome =
   | 'unsupported'
   | 'changed'
   | 'write_failed';
+
+/**
+ * Store an enable flag where the plugin reads it: a legacy-bound official
+ * plugin ignores its `gvPluginsState` entry, so its switch is the old sync key.
+ */
+async function writeEnabled(plugin: PluginManifest, enabled: boolean): Promise<boolean> {
+  if (legacyBindingFor(plugin.id)) {
+    return writePopupSyncStorageChecked(legacyEnableWrite(plugin.id, enabled));
+  }
+  await setPluginEnabled(plugin.id, enabled);
+  return true;
+}
 
 /**
  * Persist the enable state. A local plugin is switched on only while its
@@ -103,8 +122,7 @@ async function persistEnabled(
     const result = await enableLocalPluginIfUnchanged(plugin);
     return result === 'enabled' ? 'saved' : result;
   }
-  await setPluginEnabled(plugin.id, enabled);
-  return 'saved';
+  return (await writeEnabled(plugin, enabled)) ? 'saved' : 'write_failed';
 }
 
 /**
@@ -149,7 +167,7 @@ export async function setPluginEnabledWithSiteAccess(
             const granted = await browser.permissions.request(access);
             if (!granted) {
               onEnabledChange(false);
-              await setPluginEnabled(plugin.id, false);
+              await writeEnabled(plugin, false);
               return 'denied';
             }
             // Edge can resolve the request without reliably delivering the
@@ -164,7 +182,7 @@ export async function setPluginEnabledWithSiteAccess(
         }
       } catch {
         onEnabledChange(false);
-        await setPluginEnabled(plugin.id, false);
+        await writeEnabled(plugin, false);
         return 'denied';
       }
     }
@@ -172,7 +190,7 @@ export async function setPluginEnabledWithSiteAccess(
   onEnabledChange(next);
   const persisted = await persistEnabled(plugin, next);
   if (persisted !== 'saved') {
-    onEnabledChange(false);
+    onEnabledChange(!next);
     return persisted;
   }
   return next ? 'enabled' : 'disabled';

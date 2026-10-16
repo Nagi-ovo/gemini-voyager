@@ -65,7 +65,6 @@ describe('usePromptManagerSettings', () => {
     expect(settings.values).toEqual({
       hidePromptManager: true,
       promptTriggerMascotLogo: true,
-      promptHistoryEnabled: true,
       slashPromptEnabled: false,
       promptInsertOnClickEnabled: true,
     });
@@ -78,21 +77,20 @@ describe('usePromptManagerSettings', () => {
     expect(settings.values).toEqual({
       hidePromptManager: false,
       promptTriggerMascotLogo: false,
-      promptHistoryEnabled: false,
       slashPromptEnabled: true,
       promptInsertOnClickEnabled: false,
     });
-    act(() => settings.onChange({ promptHistoryEnabled: true }));
-    expect(settings.values.promptHistoryEnabled).toBe(true);
+    act(() => settings.onChange({ promptTriggerMascotLogo: true }));
+    expect(settings.values.promptTriggerMascotLogo).toBe(true);
     expect(settings.values.slashPromptEnabled).toBe(true);
-    expect(write).toHaveBeenCalledWith({ [StorageKeys.PROMPT_HISTORY_ENABLED]: true });
+    expect(write).toHaveBeenCalledWith({ [StorageKeys.PROMPT_TRIGGER_MASCOT_LOGO]: true });
     act(() =>
       settings.hydrateFromStorage({
-        [StorageKeys.PROMPT_HISTORY_ENABLED]: 'true',
+        [StorageKeys.PROMPT_TRIGGER_MASCOT_LOGO]: 'true',
         [StorageKeys.PROMPT_INSERT_ON_CLICK]: 1,
       }),
     );
-    expect(settings.values.promptHistoryEnabled).toBe(false);
+    expect(settings.values.promptTriggerMascotLogo).toBe(false);
     expect(settings.values.promptInsertOnClickEnabled).toBe(false);
   });
 });

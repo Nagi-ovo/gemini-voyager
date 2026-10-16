@@ -67,6 +67,8 @@ import { usePromptManagerSettings } from './hooks/usePromptManagerSettings';
 import { useTimelinePopupSettings } from './hooks/useTimelinePopupSettings';
 import { useVisualEffectPopupSettings } from './hooks/useVisualEffectPopupSettings';
 import { useWatermarkPopupSettings } from './hooks/useWatermarkPopupSettings';
+import { OfficialPluginList } from './officialPlugins/OfficialPluginList';
+import { useOfficialPluginList } from './officialPlugins/useOfficialPluginList';
 import { writePopupSyncStorage } from './utils/popupStorage';
 import { isPluginPopupSite } from './utils/siteMode';
 import { canUseVisualEffects } from './utils/visualEffectsAvailability';
@@ -82,6 +84,12 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const [aiStudioEnabled, setAiStudioEnabled] = useState(true);
   const tab = useActivePopupTab(sourceTabId);
   const plugins = usePopupPlugins(tab);
+  const officialPlugins = useOfficialPluginList({
+    manifests: plugins.siteScopedManifests,
+    pluginState: plugins.pluginState,
+    legacy: plugins.legacySettings,
+    legacyLoaded: plugins.legacySettingsLoaded,
+  });
   const nativeHealth = useNativeHealth(tab.activeTabId, tab.activeUrl);
   const isAIStudio = tab.activeAccountPlatform === 'aistudio';
   const isSafariBrowser = getVoyagerBuildTarget() === 'safari' || isSafari();
@@ -152,6 +160,8 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     nativePopupPlatform: tab.activeAccountPlatform ?? 'gemini',
     isPluginSite,
     visualEffectsAvailable,
+    officialPluginsAvailable: officialPlugins.available,
+    officialPluginSearchItems: officialPlugins.searchItems,
     t,
     writeSyncStorage: writePopupSyncStorage,
   });
@@ -470,6 +480,19 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           />,
         )}
 
+        {/* Official plugins on Gemini / AI Studio: one switch per feature. */}
+        {wrapSection(
+          'officialPlugins',
+          <OfficialPluginList
+            rows={officialPlugins.rows}
+            statuses={plugins.pluginStatuses}
+            nameSources={plugins.siteScopedManifests}
+            isVisible={(pluginId) => sections.shouldShowSetting('officialPlugins', pluginId)}
+            onToggle={officialPlugins.setEnabled}
+            language={language}
+            t={t}
+          />,
+        )}
         {/* Gemini / AI Studio have no plugin page; local plugins get one section here. */}
         {wrapSection(
           'localPlugins',

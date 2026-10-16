@@ -2733,6 +2733,26 @@
     "message": "启用增强其他 AI 网站的插件。开启时会请求该网站的访问权限。已启用的插件会向 voyager.nagi.fun 检查更新。",
     "description": "Popup subtitle explaining the plugin list"
   },
+  "pluginsNativeDescription": {
+    "message": "开关 Voyager 的各项功能。功能开启后会显示它的选项。",
+    "description": "Popup subtitle of the official plugin list on Gemini and AI Studio"
+  },
+  "pluginGroupAppearance": {
+    "message": "外观",
+    "description": "Heading of the plugin list group for layout and look"
+  },
+  "pluginGroupContent": {
+    "message": "内容",
+    "description": "Heading of the plugin list group for how message content renders and copies"
+  },
+  "pluginGroupInput": {
+    "message": "输入",
+    "description": "Heading of the plugin list group for the message input box"
+  },
+  "pluginGroupConversation": {
+    "message": "对话",
+    "description": "Heading of the plugin list group for working with a conversation"
+  },
   "pluginViewSource": {
     "message": "源码",
     "description": "Link label to a plugin source/repo"

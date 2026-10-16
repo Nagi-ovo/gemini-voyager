@@ -2733,6 +2733,26 @@
     "message": "Activez des extensions qui améliorent d'autres sites d'IA. En activer une demande l'autorisation pour ce site. Les extensions activées recherchent des mises à jour sur voyager.nagi.fun.",
     "description": "Popup subtitle explaining the plugin list"
   },
+  "pluginsNativeDescription": {
+    "message": "Activez ou désactivez les fonctions de Voyager. Les options d’une fonction s’affichent une fois qu’elle est activée.",
+    "description": "Popup subtitle of the official plugin list on Gemini and AI Studio"
+  },
+  "pluginGroupAppearance": {
+    "message": "Apparence",
+    "description": "Heading of the plugin list group for layout and look"
+  },
+  "pluginGroupContent": {
+    "message": "Contenu",
+    "description": "Heading of the plugin list group for how message content renders and copies"
+  },
+  "pluginGroupInput": {
+    "message": "Saisie",
+    "description": "Heading of the plugin list group for the message input box"
+  },
+  "pluginGroupConversation": {
+    "message": "Conversation",
+    "description": "Heading of the plugin list group for working with a conversation"
+  },
   "pluginViewSource": {
     "message": "Source",
     "description": "Link label to a plugin source/repo"

@@ -18,7 +18,6 @@ export interface TimelineSettingsValues {
   hideContainer: boolean;
   draggableTimeline: boolean;
   timelinePreviewPinned: boolean;
-  preventAutoScrollEnabled: boolean;
   markerLevelEnabled: boolean;
   showMessageTimestamps: boolean;
 }
@@ -155,16 +154,6 @@ export function TimelineSettingsCard({
           checked={values.timelinePreviewPinned}
           disabled={!values.timelineEnabled}
           onChange={(timelinePreviewPinned) => onChange({ timelinePreviewPinned })}
-          isVisible={isVisible}
-          t={t}
-        />
-        <SettingToggleRow
-          id="prevent-auto-scroll"
-          settingId="preventAutoScroll"
-          label="preventAutoScroll"
-          hint="preventAutoScrollHint"
-          checked={values.preventAutoScrollEnabled}
-          onChange={(preventAutoScrollEnabled) => onChange({ preventAutoScrollEnabled })}
           isVisible={isVisible}
           t={t}
         />

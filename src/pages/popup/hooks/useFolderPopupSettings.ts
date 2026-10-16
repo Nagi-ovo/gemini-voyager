@@ -20,7 +20,6 @@ export const FOLDER_SETTINGS_STORAGE_DEFAULTS = {
   [StorageKeys.FOLDER_FLOATING_OPEN_ON_START]: true,
   geminiFolderHideArchivedConversations: false,
   [StorageKeys.FOLDER_SEARCH_ENABLED]: true,
-  [StorageKeys.FORK_ENABLED]: false,
   [StorageKeys.FOLDER_PROJECT_ENABLED]: false,
   [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED]: false,
   [StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_GEMINI]: null,
@@ -40,7 +39,6 @@ export function useFolderPopupSettings({
   const [floatingOpenOnStart, setFloatingOpenOnStart] = useState(true);
   const [hideArchivedConversations, setHideArchivedConversations] = useState(false);
   const [folderSearchEnabled, setFolderSearchEnabled] = useState(true);
-  const [forkEnabled, setForkEnabled] = useState(false);
   const [folderProjectEnabled, setFolderProjectEnabled] = useState(false);
   const [accountIsolationByPlatform, setAccountIsolationByPlatform] = useState<
     Record<AccountPlatform, boolean>
@@ -53,7 +51,6 @@ export function useFolderPopupSettings({
       floatingOpenOnStart: setFloatingOpenOnStart,
       hideArchivedConversations: setHideArchivedConversations,
       folderSearchEnabled: setFolderSearchEnabled,
-      forkEnabled: setForkEnabled,
       folderProjectEnabled: setFolderProjectEnabled,
     }),
     [],
@@ -65,7 +62,6 @@ export function useFolderPopupSettings({
     setFloatingOpenOnStart(stored[StorageKeys.FOLDER_FLOATING_OPEN_ON_START] !== false);
     setHideArchivedConversations(!!stored.geminiFolderHideArchivedConversations);
     setFolderSearchEnabled(stored[StorageKeys.FOLDER_SEARCH_ENABLED] !== false);
-    setForkEnabled(stored[StorageKeys.FORK_ENABLED] === true);
     setFolderProjectEnabled(stored[StorageKeys.FOLDER_PROJECT_ENABLED] === true);
 
     const legacyIsolationEnabled = stored[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED] === true;
@@ -97,8 +93,6 @@ export function useFolderPopupSettings({
         payload.geminiFolderHideArchivedConversations = patch.hideArchivedConversations;
       if (typeof patch.folderSearchEnabled === 'boolean')
         payload[StorageKeys.FOLDER_SEARCH_ENABLED] = patch.folderSearchEnabled;
-      if (typeof patch.forkEnabled === 'boolean')
-        payload[StorageKeys.FORK_ENABLED] = patch.forkEnabled;
       if (typeof patch.folderProjectEnabled === 'boolean')
         payload[StorageKeys.FOLDER_PROJECT_ENABLED] = patch.folderProjectEnabled;
       void writeSyncStorage(payload);
@@ -122,7 +116,6 @@ export function useFolderPopupSettings({
       floatingOpenOnStart,
       hideArchivedConversations,
       folderSearchEnabled,
-      forkEnabled,
       folderProjectEnabled,
     },
     accountIsolationEnabled: activeAccountPlatform

@@ -2733,6 +2733,26 @@
     "message": "다른 AI 사이트를 향상하는 플러그인을 활성화합니다. 켜면 해당 사이트 접근 권한을 요청합니다. 활성화된 플러그인은 voyager.nagi.fun에서 업데이트를 확인합니다.",
     "description": "Popup subtitle explaining the plugin list"
   },
+  "pluginsNativeDescription": {
+    "message": "Voyager 기능을 켜고 끕니다. 기능을 켜면 해당 옵션이 나타납니다.",
+    "description": "Popup subtitle of the official plugin list on Gemini and AI Studio"
+  },
+  "pluginGroupAppearance": {
+    "message": "모양",
+    "description": "Heading of the plugin list group for layout and look"
+  },
+  "pluginGroupContent": {
+    "message": "콘텐츠",
+    "description": "Heading of the plugin list group for how message content renders and copies"
+  },
+  "pluginGroupInput": {
+    "message": "입력",
+    "description": "Heading of the plugin list group for the message input box"
+  },
+  "pluginGroupConversation": {
+    "message": "대화",
+    "description": "Heading of the plugin list group for working with a conversation"
+  },
   "pluginViewSource": {
     "message": "소스",
     "description": "Link label to a plugin source/repo"

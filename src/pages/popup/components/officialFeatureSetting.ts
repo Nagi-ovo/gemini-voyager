@@ -20,7 +20,6 @@ const LOCATIONS: Readonly<Partial<Record<OwnedFeatureId, OfficialSettingLocation
   safariEnterFix: { setting: 'safariEnterFix', card: 'inputCollapseOptions' },
   formulaCopy: { setting: 'enableFormulaCopy', card: 'formulaCopyFormat' },
   vimInput: { setting: 'inputVimMode', card: 'inputCollapseOptions' },
-  promptHistory: { setting: 'promptHistoryTitle', card: 'promptManagerOptions' },
   inputCollapse: { setting: 'enableInputCollapse', card: 'inputCollapseOptions' },
   timeline: { setting: 'timelineEnable', card: 'timelineOptions' },
 };

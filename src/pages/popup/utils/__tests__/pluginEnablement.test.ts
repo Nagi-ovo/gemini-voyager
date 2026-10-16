@@ -3,6 +3,8 @@ import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vite
 import { StorageKeys } from '@/core/types/common';
 import { CHATGPT_RESPONSE_NOTIFICATION_MANIFEST } from '@/features/plugins/builtin/chatgptResponseNotification/manifest';
 import { importLocalPlugin } from '@/features/plugins/local/localPluginImport';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
+import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCatalogPluginSource';
 import { listPluginManifestsWithSources } from '@/features/plugins/sources/defaultSources';
 import type { PluginManifest } from '@/features/plugins/types';
 
@@ -212,5 +214,66 @@ describe('enabling ChatGPT completion notifications from the popup', () => {
 
     expect(outcome).toBe('denied');
     expect(notificationsOn()).toBe(false);
+  });
+});
+
+describe('switching a Gemini official plugin whose switch is an old setting', () => {
+  const GEMINI = 'https://gemini.google.com/app';
+  let syncMemory: Record<string, unknown>;
+
+  async function mermaidManifest(): Promise<PluginManifest> {
+    const packaged = await new BundledCatalogPluginSource().list();
+    const manifest = packaged.find(({ id }) => id === OFFICIAL_PLUGIN_IDS.geminiMermaid);
+    if (!manifest) throw new Error('mermaid manifest not packaged');
+    return manifest;
+  }
+
+  beforeEach(() => {
+    syncMemory = {};
+    (chrome.storage.sync.set as unknown as Mock).mockImplementation(
+      (items: Record<string, unknown>, callback?: () => void) => {
+        Object.assign(syncMemory, items);
+        callback?.();
+      },
+    );
+  });
+
+  afterEach(() => {
+    (chrome.storage.sync.set as unknown as Mock).mockReset();
+    (chrome.runtime as { lastError?: unknown }).lastError = undefined;
+  });
+
+  it('writes the old sync key and leaves the plugin state alone', async () => {
+    const onChange = vi.fn();
+    const outcome = await setPluginEnabledWithSiteAccess(
+      await mermaidManifest(),
+      false,
+      GEMINI,
+      onChange,
+    );
+    expect(outcome).toBe('disabled');
+    expect(syncMemory).toEqual({ [StorageKeys.MERMAID_ENABLED]: false });
+    expect(memory[STATE]).toBeUndefined();
+    expect(containsMock).not.toHaveBeenCalled();
+    expect(onChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it('reports a failed write and shows the previous state again', async () => {
+    (chrome.storage.sync.set as unknown as Mock).mockImplementation(
+      (_items: Record<string, unknown>, callback?: () => void) => {
+        (chrome.runtime as { lastError?: unknown }).lastError = { message: 'quota' };
+        callback?.();
+      },
+    );
+    const onChange = vi.fn();
+    const outcome = await setPluginEnabledWithSiteAccess(
+      await mermaidManifest(),
+      false,
+      GEMINI,
+      onChange,
+    );
+    expect(outcome).toBe('write_failed');
+    expect(onChange).toHaveBeenLastCalledWith(true);
+    expect(memory[STATE]).toBeUndefined();
   });
 });

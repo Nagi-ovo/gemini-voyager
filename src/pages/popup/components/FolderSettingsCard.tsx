@@ -16,7 +16,6 @@ export interface FolderSettingsValues {
   floatingOpenOnStart: boolean;
   hideArchivedConversations: boolean;
   folderSearchEnabled: boolean;
-  forkEnabled: boolean;
   folderProjectEnabled: boolean;
 }
 
@@ -117,17 +116,6 @@ export function FolderSettingsCard({
           label="showFolderSearch"
           checked={values.folderSearchEnabled}
           onChange={(folderSearchEnabled) => onChange({ folderSearchEnabled })}
-          isVisible={isVisible}
-          t={t}
-        />
-        <SettingToggleRow
-          id="fork-enabled"
-          settingId="enableForkFeature"
-          label="enableForkFeature"
-          hint="enableForkFeatureHint"
-          experimental
-          checked={values.forkEnabled}
-          onChange={(forkEnabled) => onChange({ forkEnabled })}
           isVisible={isVisible}
           t={t}
         />

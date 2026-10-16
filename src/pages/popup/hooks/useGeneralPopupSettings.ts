@@ -7,57 +7,27 @@ import {
   hasNotificationsPermission,
 } from '@/core/utils/notificationsPermission';
 import { requestSafariNativeNotificationPermission } from '@/core/utils/safariNativeNotifications';
-import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
-import {
-  LEGACY_ENABLE_BINDINGS,
-  legacyEnableWrite,
-} from '@/features/plugins/storage/legacySettingBindings';
 
 import type { GeneralSettingsValues } from '../components/GeneralSettingsCard';
-import { useEchartsPopupSettings } from './useEchartsPopupSettings';
-import { useWaveDromPopupSettings } from './useWaveDromPopupSettings';
-
-const HALO_ID = OFFICIAL_PLUGIN_IDS.geminiHideInputHalo;
 
 export const GENERAL_SETTINGS_STORAGE_DEFAULTS = {
   [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED]: true,
-  [StorageKeys.MERMAID_ENABLED]: true,
-  [StorageKeys.WAVEDROM_ENABLED]: true,
-  [StorageKeys.ECHARTS_ENABLED]: true,
-  [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: true,
-  [StorageKeys.USER_LATEX_ENABLED]: true,
-  [StorageKeys.QUOTE_REPLY_ENABLED]: true,
   [StorageKeys.HIGHLIGHT_ENABLED]: false,
   [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: true,
   [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
   [StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED]: true,
-  [StorageKeys.USAGE_STATUS_ENABLED]: false,
-  [StorageKeys.INPUT_HALO_HIDDEN]: false,
-  [StorageKeys.DEFAULT_MODEL_AUTO_APPLY]: true,
-  [StorageKeys.RESEARCH_PACK_ENABLED]: false,
 };
 
 type PlainGeneralSettings = Omit<
   GeneralSettingsValues,
-  | 'wavedromEnabled'
-  | 'echartsEnabled'
-  | 'changelogBadgeMode'
-  | 'responseCompleteNotificationEnabled'
+  'changelogBadgeMode' | 'responseCompleteNotificationEnabled'
 >;
 
 const PLAIN_SETTING_STORAGE_KEYS = {
   persistentExportToolbarEnabled: StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED,
-  mermaidEnabled: StorageKeys.MERMAID_ENABLED,
-  codeBlockCollapseEnabled: StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED,
-  userLatexEnabled: StorageKeys.USER_LATEX_ENABLED,
-  quoteReplyEnabled: StorageKeys.QUOTE_REPLY_ENABLED,
   highlightEnabled: StorageKeys.HIGHLIGHT_ENABLED,
   highlightTimelineMarkersEnabled: StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED,
   remoteAnnouncementEnabled: StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED,
-  usageStatusEnabled: StorageKeys.USAGE_STATUS_ENABLED,
-  inputHaloHidden: StorageKeys.INPUT_HALO_HIDDEN,
-  defaultModelAutoApplyEnabled: StorageKeys.DEFAULT_MODEL_AUTO_APPLY,
-  researchPackEnabled: StorageKeys.RESEARCH_PACK_ENABLED,
 } satisfies Record<keyof PlainGeneralSettings, string>;
 
 export interface GeneralPopupSettingsOptions {
@@ -81,29 +51,11 @@ export function useGeneralPopupSettings({
 }: GeneralPopupSettingsOptions): GeneralPopupSettings {
   const [plainSettings, setPlainSettings] = useState<PlainGeneralSettings>({
     persistentExportToolbarEnabled: true,
-    mermaidEnabled: true,
-    codeBlockCollapseEnabled: true,
-    userLatexEnabled: true,
-    quoteReplyEnabled: true,
     // Preserve the initial render; the bulk storage read defaults highlights off.
     highlightEnabled: true,
     highlightTimelineMarkersEnabled: true,
     remoteAnnouncementEnabled: true,
-    usageStatusEnabled: false,
-    inputHaloHidden: false,
-    defaultModelAutoApplyEnabled: true,
-    researchPackEnabled: false,
   });
-  const {
-    enabled: wavedromEnabled,
-    hydrateFromStorage: hydrateWavedromEnabled,
-    setEnabledFromUser: setWavedromEnabledFromUser,
-  } = useWaveDromPopupSettings(writeSyncStorage);
-  const {
-    enabled: echartsEnabled,
-    hydrateFromStorage: hydrateEchartsEnabled,
-    setEnabledFromUser: setEchartsEnabledFromUser,
-  } = useEchartsPopupSettings(writeSyncStorage);
   const [changelogBadgeMode, setChangelogBadgeMode] = useState(false);
   const [responseCompleteNotificationEnabled, setResponseCompleteNotificationEnabled] =
     useState(false);
@@ -187,28 +139,18 @@ export function useGeneralPopupSettings({
       setPlainSettings({
         persistentExportToolbarEnabled:
           raw[StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED] !== false,
-        mermaidEnabled: raw[StorageKeys.MERMAID_ENABLED] !== false,
-        codeBlockCollapseEnabled: raw[StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED] !== false,
-        userLatexEnabled: raw[StorageKeys.USER_LATEX_ENABLED] !== false,
-        quoteReplyEnabled: raw[StorageKeys.QUOTE_REPLY_ENABLED] !== false,
         highlightEnabled: raw[StorageKeys.HIGHLIGHT_ENABLED] === true,
         highlightTimelineMarkersEnabled:
           raw[StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED] !== false,
         remoteAnnouncementEnabled: raw[StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED] !== false,
-        usageStatusEnabled: raw[StorageKeys.USAGE_STATUS_ENABLED] === true,
-        inputHaloHidden: LEGACY_ENABLE_BINDINGS[HALO_ID].read(raw[StorageKeys.INPUT_HALO_HIDDEN]),
-        defaultModelAutoApplyEnabled: raw[StorageKeys.DEFAULT_MODEL_AUTO_APPLY] !== false,
-        researchPackEnabled: raw[StorageKeys.RESEARCH_PACK_ENABLED] === true,
       });
-      hydrateWavedromEnabled(raw[StorageKeys.WAVEDROM_ENABLED]);
-      hydrateEchartsEnabled(raw[StorageKeys.ECHARTS_ENABLED]);
       if (isSafariBrowser || !notificationUi.current.supersedesHydration) {
         setResponseCompleteNotificationEnabled(
           raw[StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED] === true,
         );
       }
     },
-    [hydrateEchartsEnabled, hydrateWavedromEnabled, isSafariBrowser],
+    [isSafariBrowser],
   );
 
   const handleChangelogBadgeModeChange = useCallback((checked: boolean): void => {
@@ -282,14 +224,10 @@ export function useGeneralPopupSettings({
   const onChange = useCallback(
     (patch: Partial<GeneralSettingsValues>): void => {
       const {
-        wavedromEnabled: nextWavedromEnabled,
-        echartsEnabled: nextEchartsEnabled,
         changelogBadgeMode: badgeMode,
         responseCompleteNotificationEnabled: nextResponseNotificationEnabled,
         ...rest
       } = patch;
-      if (nextWavedromEnabled !== undefined) setWavedromEnabledFromUser(nextWavedromEnabled);
-      if (nextEchartsEnabled !== undefined) setEchartsEnabledFromUser(nextEchartsEnabled);
       if (badgeMode !== undefined) handleChangelogBadgeModeChange(badgeMode);
       if (nextResponseNotificationEnabled !== undefined) {
         void handleResponseCompleteNotificationChange(nextResponseNotificationEnabled);
@@ -304,26 +242,17 @@ export function useGeneralPopupSettings({
         const value = rest[key];
         if (typeof value !== 'boolean') continue;
         nextSettings[key] = value;
-        if (key === 'inputHaloHidden') Object.assign(payload, legacyEnableWrite(HALO_ID, value));
-        else payload[PLAIN_SETTING_STORAGE_KEYS[key]] = value;
+        payload[PLAIN_SETTING_STORAGE_KEYS[key]] = value;
       }
       setPlainSettings((current) => ({ ...current, ...nextSettings }));
       void writeSyncStorage(payload);
     },
-    [
-      handleChangelogBadgeModeChange,
-      handleResponseCompleteNotificationChange,
-      setEchartsEnabledFromUser,
-      setWavedromEnabledFromUser,
-      writeSyncStorage,
-    ],
+    [handleChangelogBadgeModeChange, handleResponseCompleteNotificationChange, writeSyncStorage],
   );
 
   return {
     values: {
       ...plainSettings,
-      wavedromEnabled,
-      echartsEnabled,
       changelogBadgeMode,
       responseCompleteNotificationEnabled,
     },

@@ -11,21 +11,11 @@ import { SettingToggleRow } from './SettingToggleRow';
 /** Every general toggle the card edits; the popup owns the state and persistence. */
 export interface GeneralSettingsValues {
   persistentExportToolbarEnabled: boolean;
-  mermaidEnabled: boolean;
-  wavedromEnabled: boolean;
-  echartsEnabled: boolean;
-  codeBlockCollapseEnabled: boolean;
-  userLatexEnabled: boolean;
-  quoteReplyEnabled: boolean;
   highlightEnabled: boolean;
   highlightTimelineMarkersEnabled: boolean;
   responseCompleteNotificationEnabled: boolean;
   remoteAnnouncementEnabled: boolean;
   changelogBadgeMode: boolean;
-  usageStatusEnabled: boolean;
-  inputHaloHidden: boolean;
-  defaultModelAutoApplyEnabled: boolean;
-  researchPackEnabled: boolean;
 }
 
 export interface GeneralSettingsCardProps {
@@ -99,56 +89,6 @@ export function GeneralSettingsCard({
           'persistentExportToolbarHint',
         )}
         {row(
-          'research-pack-enabled',
-          'enableResearchPack',
-          'researchPackEnabled',
-          'researchPackEnable',
-          'researchPackEnableHint',
-          { experimental: true },
-        )}
-        {row(
-          'mermaid-enabled',
-          'enableMermaidRendering',
-          'mermaidEnabled',
-          'enableMermaidRendering',
-          'enableMermaidRenderingHint',
-        )}
-        {row(
-          'wavedrom-enabled',
-          'enableWaveDromRendering',
-          'wavedromEnabled',
-          'enableWaveDromRendering',
-          'enableWaveDromRenderingHint',
-        )}
-        {row(
-          'echarts-enabled',
-          'enableEchartsRendering',
-          'echartsEnabled',
-          'enableEchartsRendering',
-          'enableEchartsRenderingHint',
-        )}
-        {row(
-          'code-block-collapse-enabled',
-          'enableCodeBlockCollapse',
-          'codeBlockCollapseEnabled',
-          'enableCodeBlockCollapse',
-          'enableCodeBlockCollapseHint',
-        )}
-        {row(
-          'user-latex-enabled',
-          'enableUserLatexRendering',
-          'userLatexEnabled',
-          'enableUserLatexRendering',
-          'enableUserLatexRenderingHint',
-        )}
-        {row(
-          'quote-reply-enabled',
-          'enableQuoteReply',
-          'quoteReplyEnabled',
-          'enableQuoteReply',
-          'enableQuoteReplyHint',
-        )}
-        {row(
           'highlights-enabled',
           'enableHighlights',
           'highlightEnabled',
@@ -198,27 +138,6 @@ export function GeneralSettingsCard({
           'changelogBadgeMode',
           'changelog_badge_mode',
           'changelog_badge_mode_hint',
-        )}
-        {row(
-          'usage-status-enabled',
-          'usageStatusToggle',
-          'usageStatusEnabled',
-          'usageStatusToggle',
-          'usageStatusToggleHint',
-        )}
-        {row(
-          'input-halo-hidden',
-          'hideInputHalo',
-          'inputHaloHidden',
-          'hideInputHalo',
-          'hideInputHaloHint',
-        )}
-        {row(
-          'default-model-auto-apply',
-          'enableDefaultModelAutoApply',
-          'defaultModelAutoApplyEnabled',
-          'enableDefaultModelAutoApply',
-          'enableDefaultModelAutoApplyHint',
         )}
       </CardContent>
     </Card>

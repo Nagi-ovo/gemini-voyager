@@ -36,6 +36,8 @@ const extensionApi = vi.hoisted(() => ({
 // Keep Popup and its settings components/hooks real; replace only browser APIs.
 vi.mock('webextension-polyfill', () => ({ default: extensionApi }));
 
+const MERMAID_SWITCH = `[data-official-plugin="${OFFICIAL_PLUGIN_IDS.geminiMermaid}"] input`;
+
 function readStorage(keys: unknown, stored: Record<string, unknown>): Record<string, unknown> {
   if (typeof keys === 'string') return { [keys]: stored[keys] };
   if (Array.isArray(keys)) return Object.fromEntries(keys.map((key) => [key, stored[key]]));
@@ -156,25 +158,24 @@ describe('Popup settings integration', () => {
     const generalReads = () =>
       extensionApi.storage.sync.get.mock.calls.filter(
         ([keys]) =>
-          keys && typeof keys === 'object' && Object.hasOwn(keys, StorageKeys.MERMAID_ENABLED),
+          keys &&
+          typeof keys === 'object' &&
+          Object.hasOwn(keys, StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED),
       );
     expect(generalReads()).toHaveLength(1);
     expect(generalReads()[0][0]).toMatchObject({
-      [StorageKeys.MERMAID_ENABLED]: true,
+      [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED]: true,
       [StorageKeys.HIGHLIGHT_ENABLED]: false,
-      [StorageKeys.WAVEDROM_ENABLED]: true,
-      [StorageKeys.ECHARTS_ENABLED]: true,
       [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: false,
     });
-    const mermaid = container.querySelector<HTMLInputElement>('#mermaid-enabled')!;
-    expect(mermaid.checked).toBe(false);
-    expect(container.querySelector<HTMLInputElement>('#highlights-enabled')!.checked).toBe(false);
+    const highlights = container.querySelector<HTMLInputElement>('#highlights-enabled')!;
+    expect(highlights.checked).toBe(false);
     expect(extensionApi.storage.sync.set).not.toHaveBeenCalled();
 
-    await act(async () => mermaid.click());
-    expect(mermaid.checked).toBe(true);
+    await act(async () => highlights.click());
+    expect(highlights.checked).toBe(true);
     expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
-      [StorageKeys.MERMAID_ENABLED]: true,
+      [StorageKeys.HIGHLIGHT_ENABLED]: true,
     });
     expect(generalReads()).toHaveLength(1);
   });
@@ -208,7 +209,7 @@ describe('Popup settings integration', () => {
     expect(container.querySelector('#folder-enabled')).not.toBeNull();
     expect(container.querySelector('#hide-container')).toBeNull();
     expect(container.querySelector('#input-vim-mode')).toBeNull();
-    expect(container.querySelector('#mermaid-enabled')).toBeNull();
+    expect(container.querySelector(MERMAID_SWITCH)).toBeNull();
     expect(container.querySelector('#changelog-notify-badge')).not.toBeNull();
     const isolation = container.querySelector<HTMLInputElement>('#account-isolation-enabled')!;
     expect(isolation.checked).toBe(true);
@@ -229,7 +230,7 @@ describe('Popup settings integration', () => {
     expect(container.querySelector('input[type="file"]')).not.toBeNull();
     expect(container.querySelector('input[type="search"]')).toBeNull();
     expect(container.querySelector('#folder-enabled')).toBeNull();
-    expect(container.querySelector('#mermaid-enabled')).toBeNull();
+    expect(container.querySelector(MERMAID_SWITCH)).toBeNull();
     expect(container.querySelector('button[aria-pressed]')).toBeNull();
     await act(async () => enablePrompts.click());
     expect(enablePrompts.checked).toBe(true);
@@ -639,7 +640,7 @@ describe('Popup settings integration', () => {
       search.dispatchEvent(new Event('input', { bubbles: true }));
     });
     expect(container.querySelector('#input-collapse-enabled')).toBeNull();
-    expect(container.querySelector('#mermaid-enabled')).not.toBeNull();
+    expect(container.querySelector(MERMAID_SWITCH)).not.toBeNull();
     const clear = Array.from(container.querySelectorAll('button')).find(
       (button) => button.getAttribute('aria-label') === TRANSLATIONS.en.popupSettingsSearchClear,
     )!;
@@ -652,7 +653,9 @@ describe('Popup settings integration', () => {
     ).toBe(true);
     const bulkReads = extensionApi.storage.sync.get.mock.calls.filter(
       ([keys]) =>
-        keys && typeof keys === 'object' && Object.hasOwn(keys, StorageKeys.MERMAID_ENABLED),
+        keys &&
+        typeof keys === 'object' &&
+        Object.hasOwn(keys, StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED),
     );
     expect(bulkReads).toHaveLength(1);
   });
@@ -663,7 +666,7 @@ describe('Popup settings integration', () => {
     expect(container.querySelector<HTMLInputElement>('input[type="search"]')!.value).toBe(
       'Mermaid',
     );
-    expect(container.querySelector('#mermaid-enabled')).not.toBeNull();
+    expect(container.querySelector(MERMAID_SWITCH)).not.toBeNull();
     expect(container.textContent).not.toContain(TRANSLATIONS.en.cloudSync);
 
     await act(async () => root.unmount());
@@ -676,7 +679,7 @@ describe('Popup settings integration', () => {
     ).toBeNull();
     expect(container.querySelector('#prompt-manager-site-enabled')).not.toBeNull();
     expect(container.textContent).toContain(TRANSLATIONS.en.cloudSync);
-    expect(container.querySelector('#mermaid-enabled')).toBeNull();
+    expect(container.querySelector(MERMAID_SWITCH)).toBeNull();
 
     await act(async () => root.unmount());
     root = createRoot(container);

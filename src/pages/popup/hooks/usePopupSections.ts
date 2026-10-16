@@ -16,6 +16,7 @@ import {
 } from '../utils/nativeSiteCapabilities';
 import {
   POPUP_SETTINGS_SEARCH_ITEMS,
+  type PopupSettingsSearchItem,
   type PopupSettingsSearchTargetId,
 } from '../utils/popupSettingsSearchIndex';
 import {
@@ -28,6 +29,7 @@ export type PopupSectionId = NativePopupSectionId;
 export const SECTION_LAYOUT_STORAGE_DEFAULTS = { [StorageKeys.GV_POPUP_SECTION_ORDER]: null };
 
 const DEFAULT_SECTION_ORDER: readonly PopupSectionId[] = NATIVE_POPUP_SECTION_IDS;
+const NO_EXTRA_SEARCH_ITEMS: readonly PopupSettingsSearchItem[] = [];
 const VALUE_BADGE_SECTION_IDS = new Set<PopupSectionId>([
   'folderSpacing',
   'folderTreeIndent',
@@ -58,6 +60,10 @@ export interface PopupSectionsOptions {
   nativePopupPlatform: NativePopupPlatform;
   isPluginSite: boolean;
   visualEffectsAvailable: boolean;
+  /** Whether the official plugin list has rows on this tab; an empty list takes no slot. */
+  officialPluginsAvailable?: boolean;
+  /** One search target per listed official plugin, built from what the list shows. */
+  officialPluginSearchItems?: readonly PopupSettingsSearchItem[];
   t: (key: TranslationKey) => string;
   writeSyncStorage: (payload: Record<string, unknown>) => Promise<void>;
 }
@@ -73,6 +79,8 @@ export function usePopupSections({
   nativePopupPlatform,
   isPluginSite,
   visualEffectsAvailable,
+  officialPluginsAvailable = false,
+  officialPluginSearchItems = NO_EXTRA_SEARCH_ITEMS,
   t,
   writeSyncStorage,
 }: PopupSectionsOptions) {
@@ -118,35 +126,40 @@ export function usePopupSections({
 
   const isSectionVisible = useCallback(
     (id: PopupSectionId): boolean => {
-      // Plugins are pinned separately; visual effects also require an activated site.
-      if (id === 'plugins' || (id === 'visualEffect' && !visualEffectsAvailable)) return false;
+      // Visual effects require an activated site; the plugin list needs a row on this tab.
+      if (id === 'visualEffect' && !visualEffectsAvailable) return false;
+      if (id === 'officialPlugins' && !officialPluginsAvailable) return false;
       return isNativePopupSectionAvailable(nativePopupPlatform, id);
     },
-    [nativePopupPlatform, visualEffectsAvailable],
+    [nativePopupPlatform, visualEffectsAvailable, officialPluginsAvailable],
   );
   const visibleSections = useMemo(
     () => sectionOrder.filter(isSectionVisible),
     [sectionOrder, isSectionVisible],
   );
   const hasSettingsSearch = settingsSearchQuery.trim().length > 0;
+  const searchItems = useMemo<readonly PopupSettingsSearchItem[]>(
+    () => [...POPUP_SETTINGS_SEARCH_ITEMS, ...officialPluginSearchItems],
+    [officialPluginSearchItems],
+  );
   const settingsSearchMatches = useMemo(
     () =>
       getSettingsSearchMatches(
-        POPUP_SETTINGS_SEARCH_ITEMS.filter((item) =>
+        searchItems.filter((item) =>
           isNativePopupSettingAvailable(nativePopupPlatform, item.sectionId, item.settingId),
         ),
         settingsSearchQuery,
       ),
-    [nativePopupPlatform, settingsSearchQuery],
+    [nativePopupPlatform, searchItems, settingsSearchQuery],
   );
   const settingsSearchSections = useMemo(() => {
     if (!hasSettingsSearch) return new Set<PopupSectionId>(visibleSections);
     const sections = new Set<PopupSectionId>();
-    for (const item of POPUP_SETTINGS_SEARCH_ITEMS) {
+    for (const item of searchItems) {
       if (settingsSearchMatches.has(item.id)) sections.add(item.sectionId);
     }
     return sections;
-  }, [hasSettingsSearch, settingsSearchMatches, visibleSections]);
+  }, [hasSettingsSearch, searchItems, settingsSearchMatches, visibleSections]);
   const displayedSections = hasSettingsSearch
     ? visibleSections.filter((id) => settingsSearchSections.has(id))
     : visibleSections;

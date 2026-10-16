@@ -57,8 +57,8 @@ export function platformBadge(
   return null;
 }
 
-/** Strip a redundant "Claude · " / "ChatGPT · " platform prefix (the logo shows it). */
-function displayName(name: string): string {
+/** Strip a redundant site prefix ("Claude · ", "Gemini · "): the logo or the list already says it. */
+export function displayName(name: string): string {
   return name.replace(/^(Claude|ChatGPT|Gemini|AI Studio|DeepSeek)\s*[·:|]\s*/i, '');
 }
 

@@ -20,7 +20,6 @@ const values: TimelineSettingsValues = {
   hideContainer: false,
   draggableTimeline: true,
   timelinePreviewPinned: false,
-  preventAutoScrollEnabled: false,
   markerLevelEnabled: true,
   showMessageTimestamps: false,
 };
@@ -66,7 +65,6 @@ describe('TimelineSettingsCard', () => {
     expect(checked('hide-container')).toBe(false);
     expect(checked('draggable-timeline')).toBe(true);
     expect(checked('timeline-preview-pinned')).toBe(false);
-    expect(checked('prevent-auto-scroll')).toBe(false);
     expect(checked('marker-level-enabled')).toBe(true);
     expect(checked('show-message-timestamps')).toBe(false);
 
@@ -154,9 +152,6 @@ describe('TimelineSettingsCard', () => {
     expect(input('show-message-timestamps').disabled).toBe(false);
     act(() => input('show-message-timestamps').click());
     expect(props.onChange).toHaveBeenLastCalledWith({ showMessageTimestamps: false });
-    expect(input('prevent-auto-scroll').disabled).toBe(false);
-    act(() => input('prevent-auto-scroll').click());
-    expect(props.onChange).toHaveBeenLastCalledWith({ preventAutoScrollEnabled: true });
     act(() => buttons.find((b) => b.textContent === 'viewStarredHistory')!.click());
     expect(props.onViewStarredHistory).toHaveBeenCalledOnce();
     act(() => input('timeline-enabled').click());

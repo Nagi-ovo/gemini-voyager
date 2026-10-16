@@ -28,7 +28,6 @@ describe('PromptManagerSettingsCard', () => {
         values: {
           hidePromptManager: false,
           promptTriggerMascotLogo: false,
-          promptHistoryEnabled: true,
           slashPromptEnabled: true,
           promptInsertOnClickEnabled: false,
         },
@@ -70,7 +69,6 @@ describe('PromptManagerSettingsCard', () => {
     const input = (id: string) => container.querySelector<HTMLInputElement>(`#${id}`)!;
     expect(input('hide-prompt-manager').checked).toBe(false);
     expect(input('prompt-trigger-mascot-logo').checked).toBe(false);
-    expect(input('prompt-history-enabled').checked).toBe(true);
     expect(input('slash-prompt-enabled').checked).toBe(true);
     expect(input('prompt-insert-on-click').checked).toBe(false);
     act(() => input('prompt-trigger-mascot-logo').click());
@@ -121,10 +119,10 @@ describe('PromptManagerSettingsCard', () => {
     expect(props.transfer.onExport).toHaveBeenCalledOnce();
     render({
       isPluginSite: true,
-      isVisible: (id) => !['promptHistoryEnabled', 'promptDataMigration'].includes(id),
+      isVisible: (id) => !['promptTriggerMascotLogo', 'promptDataMigration'].includes(id),
     });
     expect(container.textContent).not.toContain('geminiOnlyNotice');
-    expect(container.querySelector('#prompt-history-enabled')).toBeNull();
+    expect(container.querySelector('#prompt-trigger-mascot-logo')).toBeNull();
     expect(container.querySelector('input[type="file"]')).toBeNull();
     expect(container.querySelector('#slash-prompt-enabled')).not.toBeNull();
     render({ isVisible: (id) => id !== 'customWebsites' });

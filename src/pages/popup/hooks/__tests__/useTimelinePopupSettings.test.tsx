@@ -57,7 +57,6 @@ describe('useTimelinePopupSettings', () => {
         [StorageKeys.TIMELINE_PREVIEW_PINNED]: true,
         geminiTimelineMarkerLevel: true,
         [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: true,
-        gvPreventAutoScrollEnabled: true,
       }),
     );
     expect(settings.values).toEqual({
@@ -69,7 +68,6 @@ describe('useTimelinePopupSettings', () => {
       timelinePreviewPinned: true,
       markerLevelEnabled: true,
       showMessageTimestamps: true,
-      preventAutoScrollEnabled: true,
     });
     expect(writeSyncStorage).not.toHaveBeenCalled();
   });
@@ -99,7 +97,6 @@ describe('useTimelinePopupSettings', () => {
         [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: true,
         [StorageKeys.TIMELINE_STYLE]: 'compact',
         [StorageKeys.TIMELINE_PREVIEW_PINNED]: true,
-        gvPreventAutoScrollEnabled: true,
       }),
     );
     const before = settings.values;

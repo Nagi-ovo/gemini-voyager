@@ -95,7 +95,8 @@ describe('usePopupSections', () => {
     expect(section('folder')?.style.order).toBe('0');
     expect(cloudSyncOrder).toBeGreaterThan(0);
     expect(Number(section('contextSync')?.style.order)).toBe(cloudSyncOrder + 2);
-    expect(section('plugins')).toBeUndefined();
+    // The plugin list takes no slot until it has a row on this tab.
+    expect(section('officialPlugins')).toBeUndefined();
     expect(writeSyncStorage).not.toHaveBeenCalled();
 
     await render({ nativePopupPlatform: 'aistudio' });
@@ -108,12 +109,19 @@ describe('usePopupSections', () => {
   it('moves between visible sections while preserving hidden platform and plugin slots', async () => {
     await render({ nativePopupPlatform: 'aistudio' });
     const initial = NATIVE_POPUP_SECTION_IDS.filter((id) => id !== 'cloudSync' && id !== 'folder');
-    const saved = ['folder', ...initial.slice(0, 3), 'cloudSync', ...initial.slice(3)];
+    const saved = ['folder', ...initial.slice(0, 4), 'cloudSync', ...initial.slice(4)];
     await act(async () =>
       sections.hydrateFromStorage({ [StorageKeys.GV_POPUP_SECTION_ORDER]: saved }),
     );
-    // contextSync and timeline are hidden on AI Studio; localPlugins is the next visible slot.
-    expect(saved.slice(1, 5)).toEqual(['contextSync', 'localPlugins', 'timeline', 'cloudSync']);
+    // contextSync and timeline are hidden on AI Studio, and the plugin list has no rows there
+    // yet; localPlugins is the next visible slot.
+    expect(saved.slice(1, 6)).toEqual([
+      'contextSync',
+      'officialPlugins',
+      'localPlugins',
+      'timeline',
+      'cloudSync',
+    ]);
     const moveUp = section('cloudSync')?.querySelector<HTMLButtonElement>(
       `button[aria-label="${translate('moveSectionUp')}"]`,
     );
@@ -121,26 +129,34 @@ describe('usePopupSections', () => {
     await act(async () => moveUp?.click());
 
     const expected = [...saved];
-    [expected[2], expected[4]] = [expected[4], expected[2]];
+    [expected[3], expected[5]] = [expected[5], expected[3]];
     expect(writeSyncStorage).toHaveBeenLastCalledWith({
       [StorageKeys.GV_POPUP_SECTION_ORDER]: expected,
     });
-    expect(section('cloudSync')?.style.order).toBe('4');
-    expect(section('localPlugins')?.style.order).toBe('8');
+    expect(section('cloudSync')?.style.order).toBe('6');
+    expect(section('localPlugins')?.style.order).toBe('10');
     expect(section('contextSync')).toBeUndefined();
+    expect(section('officialPlugins')).toBeUndefined();
     expect(sections.getSectionProps('contextSync').order).toBe(2);
+    expect(sections.getSectionProps('officialPlugins').order).toBe(4);
   });
 
   it('puts a section added since the order was saved in its default slot, not at the bottom', async () => {
-    await render();
-    const saved = [...NATIVE_POPUP_SECTION_IDS].filter((id) => id !== 'localPlugins').reverse();
+    await render({ officialPluginsAvailable: true });
+    // An order saved before the plugin list existed, reversed, still holding the retired
+    // 'plugins' slot.
+    const saved = [
+      ...NATIVE_POPUP_SECTION_IDS.filter((id) => id !== 'officialPlugins'),
+      'plugins',
+    ].reverse();
     await act(async () =>
       sections.hydrateFromStorage({ [StorageKeys.GV_POPUP_SECTION_ORDER]: saved }),
     );
 
     const after = (id: string) => Number(section(id)?.style.order);
-    expect(after('localPlugins')).toBe(after('contextSync') + 2);
+    expect(after('officialPlugins')).toBe(after('contextSync') + 2);
     expect(after('nanobanana')).toBe(0);
+    expect(writeSyncStorage).not.toHaveBeenCalled();
   });
 
   it('filters rows, expands matching section titles and restores reordering after clearing', async () => {

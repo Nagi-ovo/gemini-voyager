@@ -25,10 +25,10 @@ import {
   listPluginManifestsWithSources,
   refreshPluginManifestsWithSources,
 } from '@/features/plugins/sources/defaultSources';
+import { effectivePluginView } from '@/features/plugins/storage/effectivePluginView';
 import {
   type LegacySettingSnapshot,
   loadLegacySettingSnapshot,
-  resolveEffectiveEnabled,
   subscribeLegacySettings,
 } from '@/features/plugins/storage/legacySettingBindings';
 import {
@@ -76,8 +76,10 @@ export function usePopupPlugins({
   const [pluginsRefreshing, setPluginsRefreshing] = useState<boolean>(false);
   // The legacy switches packaged official plugins follow instead of their
   // plugin-state entry, and a counter bumped when AI Studio's master switch
-  // flips: either change can mount or unmount plugins in the active tab.
+  // flips: either change can mount or unmount plugins in the active tab. The
+  // official plugin list reads the same live copy.
   const [legacySettings, setLegacySettings] = useState<LegacySettingSnapshot>({});
+  const [legacySettingsLoaded, setLegacySettingsLoaded] = useState(false);
   const [surfaceRevision, setSurfaceRevision] = useState(0);
 
   // Plugins whose match patterns cover the active tab's URL. A plugin only ever
@@ -101,7 +103,7 @@ export function usePopupPlugins({
           id: plugin.id,
           version: plugin.version,
           source: diagnosticPluginSourceFromId(pluginSourceIds[plugin.id]),
-          enabled: resolveEffectiveEnabled(pluginState, legacySettings, plugin.id),
+          enabled: effectivePluginView(plugin, pluginState, legacySettings).enabled,
           settingsSchema: plugin.contributes.settings,
           settings: bound ?? state?.settings,
           ...(bound ? { basis: STORAGE_DERIVED_BASIS } : {}),
@@ -206,7 +208,9 @@ export function usePopupPlugins({
     });
     loadLegacySettingSnapshot().then(
       (loaded) => {
-        if (active) setLegacySettings({ ...loaded, ...touched });
+        if (!active) return;
+        setLegacySettings({ ...loaded, ...touched });
+        setLegacySettingsLoaded(true);
       },
       () => {
         // Extension context gone: the popup is closing anyway.
@@ -281,6 +285,8 @@ export function usePopupPlugins({
     pluginStatuses,
     pluginState,
     pluginStateLoaded,
+    legacySettings,
+    legacySettingsLoaded,
     pluginsLoading,
     pluginsRefreshing,
     pluginCatalogHost,

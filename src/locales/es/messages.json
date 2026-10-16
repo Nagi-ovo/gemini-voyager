@@ -2733,6 +2733,26 @@
     "message": "Activa complementos que mejoran otros sitios de IA. Al activar uno se pedirá permiso para ese sitio. Los complementos activados buscan actualizaciones en voyager.nagi.fun.",
     "description": "Popup subtitle explaining the plugin list"
   },
+  "pluginsNativeDescription": {
+    "message": "Activa o desactiva las funciones de Voyager. Las opciones de cada función aparecen cuando está activada.",
+    "description": "Popup subtitle of the official plugin list on Gemini and AI Studio"
+  },
+  "pluginGroupAppearance": {
+    "message": "Apariencia",
+    "description": "Heading of the plugin list group for layout and look"
+  },
+  "pluginGroupContent": {
+    "message": "Contenido",
+    "description": "Heading of the plugin list group for how message content renders and copies"
+  },
+  "pluginGroupInput": {
+    "message": "Entrada",
+    "description": "Heading of the plugin list group for the message input box"
+  },
+  "pluginGroupConversation": {
+    "message": "Conversación",
+    "description": "Heading of the plugin list group for working with a conversation"
+  },
   "pluginViewSource": {
     "message": "Código",
     "description": "Link label to a plugin source/repo"

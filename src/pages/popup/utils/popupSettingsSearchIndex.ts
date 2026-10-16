@@ -8,7 +8,7 @@ import type { SettingsSearchItem } from './settingsSearch';
 
 export type PopupSettingsSearchTargetId = `${PopupSectionId}:${string}`;
 
-interface PopupSettingsSearchItem extends SettingsSearchItem<PopupSettingsSearchTargetId> {
+export interface PopupSettingsSearchItem extends SettingsSearchItem<PopupSettingsSearchTargetId> {
   sectionId: PopupSectionId;
   settingId: string;
 }
@@ -87,10 +87,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     'pinTimelinePreview',
     'pinTimelinePreviewHint',
   ]),
-  popupSearchTarget('timeline', 'preventAutoScroll', [
-    'preventAutoScroll',
-    'preventAutoScrollHint',
-  ]),
   popupSearchTarget('timeline', 'enableMarkerLevel', [
     'enableMarkerLevel',
     'enableMarkerLevelHint',
@@ -118,7 +114,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
   ]),
   popupSearchTarget('folder', 'hideArchivedConversations', ['hideArchivedConversations']),
   popupSearchTarget('folder', 'showFolderSearch', ['showFolderSearch'], ['search 查找 搜索']),
-  popupSearchTarget('folder', 'enableForkFeature', ['enableForkFeature', 'enableForkFeatureHint']),
   popupSearchTarget('folder', 'enableAccountIsolation', [
     'enableAccountIsolation',
     'enableAccountIsolationHint',
@@ -264,10 +259,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ['promptTriggerMascotLogo', 'promptTriggerMascotLogoHint'],
     ['mascot kanban 看板娘 logo'],
   ),
-  popupSearchTarget('promptManager', 'promptHistoryEnabled', [
-    'promptHistoryTitle',
-    'promptHistoryEnabledHint',
-  ]),
   popupSearchTarget(
     'promptManager',
     'slashPromptEnabled',
@@ -296,20 +287,11 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ],
     ['prompt library vault snippets templates websites 提示词 指令 宝库 网站 模板'],
   ),
-  popupSectionSearchTarget('plugins', ['pluginsTitle']),
-  popupSearchTarget(
-    'plugins',
-    'controls',
-    [
-      'pluginsDescription',
-      'pluginsEmpty',
-      'pluginsRefresh',
-      'pluginViewSource',
-      'pluginsOnlineUpdates',
-      'pluginsOnlineUpdatesHint',
-      'pluginsCheckInterval',
-    ],
-    ['extension plugin marketplace add-on catalog update 插件 市场 扩展 目录 更新'],
+  // Each listed plugin is its own target, built from its manifest (officialPluginSearch.ts).
+  popupSectionSearchTarget(
+    'officialPlugins',
+    ['pluginsTitle', 'pluginsNativeDescription'],
+    ['plugin plugins add-on features 插件 功能'],
   ),
   popupSectionSearchTarget('general', ['generalOptions']),
   popupSearchTarget('general', 'enableTabTitleUpdate', [
@@ -320,41 +302,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     'persistentExportToolbar',
     'persistentExportToolbarHint',
   ]),
-  popupSearchTarget(
-    'general',
-    'enableResearchPack',
-    ['researchPackEnable', 'researchPackEnableHint'],
-    ['research pack markdown sources citations carry chatgpt claude 研究 资料包 引用 来源'],
-  ),
-  popupSearchTarget('general', 'enableMermaidRendering', [
-    'enableMermaidRendering',
-    'enableMermaidRenderingHint',
-  ]),
-  popupSearchTarget(
-    'general',
-    'enableWaveDromRendering',
-    ['enableWaveDromRendering', 'enableWaveDromRenderingHint'],
-    ['wavedrom wavejson timing diagram'],
-  ),
-  popupSearchTarget(
-    'general',
-    'enableEchartsRendering',
-    ['enableEchartsRendering', 'enableEchartsRenderingHint'],
-    ['echarts chart diagram'],
-  ),
-  popupSearchTarget(
-    'general',
-    'enableCodeBlockCollapse',
-    ['enableCodeBlockCollapse', 'enableCodeBlockCollapseHint'],
-    ['code block collapse fold expand 代码块 折叠 展开'],
-  ),
-  popupSearchTarget(
-    'general',
-    'enableUserLatexRendering',
-    ['enableUserLatexRendering', 'enableUserLatexRenderingHint'],
-    ['latex math formula katex 公式 数学'],
-  ),
-  popupSearchTarget('general', 'enableQuoteReply', ['enableQuoteReply', 'enableQuoteReplyHint']),
   popupSearchTarget('general', 'enableHighlights', ['enableHighlights', 'enableHighlightsHint']),
   popupSearchTarget('general', 'showHighlightTimelineMarkers', [
     'showHighlightTimelineMarkers',
@@ -381,22 +328,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ['changelog_badge_mode', 'changelog_badge_mode_hint', 'changelog_title'],
     ['update release changelog new badge 更新 版本 更新日志 提醒'],
   ),
-  popupSearchTarget(
-    'general',
-    'usageStatusToggle',
-    ['usageStatusToggle', 'usageStatusToggleHint'],
-    ['usage quota limit 用量 限额'],
-  ),
-  popupSearchTarget(
-    'general',
-    'hideInputHalo',
-    ['hideInputHalo', 'hideInputHaloHint'],
-    ['halo ripple 光晕 水波纹'],
-  ),
-  popupSearchTarget('general', 'enableDefaultModelAutoApply', [
-    'enableDefaultModelAutoApply',
-    'enableDefaultModelAutoApplyHint',
-  ]),
   popupSectionSearchTarget('nanobanana', ['nanobananaOptions']),
   popupSearchTarget(
     'nanobanana',

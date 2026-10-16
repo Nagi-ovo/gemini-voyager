@@ -107,21 +107,11 @@ describe('useGeneralPopupSettings', () => {
 
     expect(settings.values).toEqual({
       persistentExportToolbarEnabled: true,
-      mermaidEnabled: true,
-      wavedromEnabled: true,
-      echartsEnabled: true,
-      codeBlockCollapseEnabled: true,
-      userLatexEnabled: true,
-      quoteReplyEnabled: true,
       highlightEnabled: false,
       highlightTimelineMarkersEnabled: true,
       responseCompleteNotificationEnabled: false,
       remoteAnnouncementEnabled: true,
       changelogBadgeMode: false,
-      usageStatusEnabled: false,
-      inputHaloHidden: false,
-      defaultModelAutoApplyEnabled: true,
-      researchPackEnabled: false,
     });
     expect(chrome.storage.sync.get).not.toHaveBeenCalled();
     expect(writeSyncStorage).not.toHaveBeenCalled();
@@ -134,145 +124,49 @@ describe('useGeneralPopupSettings', () => {
     act(() =>
       settings.hydrateFromStorage({
         [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED]: false,
-        [StorageKeys.MERMAID_ENABLED]: false,
-        [StorageKeys.WAVEDROM_ENABLED]: false,
-        [StorageKeys.ECHARTS_ENABLED]: false,
-        [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: false,
-        [StorageKeys.USER_LATEX_ENABLED]: false,
-        [StorageKeys.QUOTE_REPLY_ENABLED]: false,
         [StorageKeys.HIGHLIGHT_ENABLED]: true,
         [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: false,
         [StorageKeys.RESPONSE_COMPLETE_NOTIFICATION_ENABLED]: true,
         [StorageKeys.REMOTE_ANNOUNCEMENTS_ENABLED]: false,
-        [StorageKeys.USAGE_STATUS_ENABLED]: true,
-        [StorageKeys.INPUT_HALO_HIDDEN]: true,
-        [StorageKeys.DEFAULT_MODEL_AUTO_APPLY]: false,
-        [StorageKeys.RESEARCH_PACK_ENABLED]: true,
       }),
     );
     expect(settings.values).toEqual({
       persistentExportToolbarEnabled: false,
-      mermaidEnabled: false,
-      wavedromEnabled: false,
-      echartsEnabled: false,
-      codeBlockCollapseEnabled: false,
-      userLatexEnabled: false,
-      quoteReplyEnabled: false,
       highlightEnabled: true,
       highlightTimelineMarkersEnabled: false,
       responseCompleteNotificationEnabled: true,
       remoteAnnouncementEnabled: false,
       changelogBadgeMode: false,
-      usageStatusEnabled: true,
-      inputHaloHidden: true,
-      defaultModelAutoApplyEnabled: false,
-      researchPackEnabled: true,
     });
     act(() => settings.hydrateFromStorage({ [StorageKeys.HIGHLIGHT_ENABLED]: 'true' }));
     expect(settings.values.highlightEnabled).toBe(false);
-    expect(settings.values.mermaidEnabled).toBe(true);
+    expect(settings.values.persistentExportToolbarEnabled).toBe(true);
     expect(writeSyncStorage).not.toHaveBeenCalled();
     expect(ensureNotificationsPermission).not.toHaveBeenCalled();
-  });
-
-  it.each([
-    ['missing', undefined, false],
-    ['false', false, false],
-    ['true', true, true],
-    ['the string "true"', 'true', false],
-    ['1', 1, false],
-    ['null', null, false],
-  ])('reads a %s halo setting the way the page does', async (_label, stored, expected) => {
-    await render();
-    act(() => settings.onChange({ inputHaloHidden: !expected }));
-    act(() => settings.hydrateFromStorage({ [StorageKeys.INPUT_HALO_HIDDEN]: stored }));
-    expect(settings.values.inputHaloHidden).toBe(expected);
-  });
-
-  it.each([
-    ['missing', undefined, true],
-    ['false', false, false],
-    ['true', true, true],
-    ['the string "false"', 'false', true],
-    ['null', null, true],
-  ])(
-    'reads a %s code collapse or user LaTeX switch the way the page does',
-    async (_label, stored, expected) => {
-      await render();
-      act(() =>
-        settings.onChange({ codeBlockCollapseEnabled: !expected, userLatexEnabled: !expected }),
-      );
-      act(() =>
-        settings.hydrateFromStorage({
-          [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: stored,
-          [StorageKeys.USER_LATEX_ENABLED]: stored,
-        }),
-      );
-      expect(settings.values.codeBlockCollapseEnabled).toBe(expected);
-      expect(settings.values.userLatexEnabled).toBe(expected);
-    },
-  );
-
-  it('shows a stored off for code collapse and user LaTeX after the bulk read', async () => {
-    const stored = {
-      [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: false,
-      [StorageKeys.USER_LATEX_ENABLED]: false,
-    };
-    // chrome.storage `get(defaults)` answers only the keys it was asked for.
-    const read = Object.fromEntries(
-      Object.entries(GENERAL_SETTINGS_STORAGE_DEFAULTS).map(([key, fallback]) => [
-        key,
-        key in stored ? stored[key as keyof typeof stored] : fallback,
-      ]),
-    );
-    await render();
-    act(() => settings.hydrateFromStorage(read));
-    expect(settings.values.codeBlockCollapseEnabled).toBe(false);
-    expect(settings.values.userLatexEnabled).toBe(false);
-  });
-
-  it('writes the code collapse and user LaTeX switches to their sync keys', async () => {
-    await render();
-    act(() => settings.onChange({ codeBlockCollapseEnabled: false }));
-    expect(writeSyncStorage).toHaveBeenLastCalledWith({
-      [StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED]: false,
-    });
-    act(() => settings.onChange({ userLatexEnabled: false }));
-    expect(writeSyncStorage).toHaveBeenLastCalledWith({ [StorageKeys.USER_LATEX_ENABLED]: false });
-    expect(settings.values.codeBlockCollapseEnabled).toBe(false);
-    expect(settings.values.userLatexEnabled).toBe(false);
-    expect(chrome.storage.local.set).not.toHaveBeenCalled();
   });
 
   it('persists only the changed plain settings and retains other values', async () => {
     await render();
     const before = settings.values;
-    act(() => settings.onChange({ mermaidEnabled: false, inputHaloHidden: true }));
-    expect(settings.values).toEqual({ ...before, mermaidEnabled: false, inputHaloHidden: true });
-    expect(writeSyncStorage).toHaveBeenLastCalledWith({
-      [StorageKeys.MERMAID_ENABLED]: false,
-      [StorageKeys.INPUT_HALO_HIDDEN]: true,
+    act(() =>
+      settings.onChange({ persistentExportToolbarEnabled: false, highlightEnabled: false }),
+    );
+    expect(settings.values).toEqual({
+      ...before,
+      persistentExportToolbarEnabled: false,
+      highlightEnabled: false,
     });
-    act(() => settings.onChange({ persistentExportToolbarEnabled: false }));
-    expect(settings.values.mermaidEnabled).toBe(false);
-    expect(settings.values.inputHaloHidden).toBe(true);
     expect(writeSyncStorage).toHaveBeenLastCalledWith({
       [StorageKeys.PERSISTENT_EXPORT_TOOLBAR_ENABLED]: false,
+      [StorageKeys.HIGHLIGHT_ENABLED]: false,
+    });
+    act(() => settings.onChange({ highlightTimelineMarkersEnabled: false }));
+    expect(settings.values.persistentExportToolbarEnabled).toBe(false);
+    expect(writeSyncStorage).toHaveBeenLastCalledWith({
+      [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED]: false,
     });
     expect(writeSyncStorage).toHaveBeenCalledTimes(2);
     expect(chrome.storage.local.set).not.toHaveBeenCalled();
-  });
-
-  it('preserves rendering choices made before the bulk storage read finishes', async () => {
-    await render();
-    act(() => settings.onChange({ wavedromEnabled: false, echartsEnabled: false }));
-    act(() => settings.hydrateFromStorage(GENERAL_SETTINGS_STORAGE_DEFAULTS));
-    expect(settings.values.wavedromEnabled).toBe(false);
-    expect(settings.values.echartsEnabled).toBe(false);
-    expect(writeSyncStorage.mock.calls).toEqual([
-      [{ [StorageKeys.WAVEDROM_ENABLED]: false }],
-      [{ [StorageKeys.ECHARTS_ENABLED]: false }],
-    ]);
   });
 
   it('reads badge mode from local and clears the dismissed version only when enabling it', async () => {

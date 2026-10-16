@@ -13,7 +13,6 @@ export const TIMELINE_SETTINGS_STORAGE_DEFAULTS = {
   geminiTimelineDraggable: false,
   [StorageKeys.TIMELINE_PREVIEW_PINNED]: false,
   geminiTimelineMarkerLevel: false,
-  gvPreventAutoScrollEnabled: false,
   [StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS]: false,
 };
 
@@ -28,7 +27,6 @@ export function useTimelinePopupSettings(
   const [timelinePreviewPinned, setTimelinePreviewPinned] = useState(false);
   const [markerLevelEnabled, setMarkerLevelEnabled] = useState(false);
   const [showMessageTimestamps, setShowMessageTimestamps] = useState(false);
-  const [preventAutoScrollEnabled, setPreventAutoScrollEnabled] = useState(false);
 
   const setters = useMemo<SettingSetters<TimelineSettingsValues>>(
     () => ({
@@ -40,7 +38,6 @@ export function useTimelinePopupSettings(
       timelinePreviewPinned: setTimelinePreviewPinned,
       markerLevelEnabled: setMarkerLevelEnabled,
       showMessageTimestamps: setShowMessageTimestamps,
-      preventAutoScrollEnabled: setPreventAutoScrollEnabled,
     }),
     [],
   );
@@ -56,7 +53,6 @@ export function useTimelinePopupSettings(
     setTimelinePreviewPinned(stored[StorageKeys.TIMELINE_PREVIEW_PINNED] === true);
     setMarkerLevelEnabled(!!stored.geminiTimelineMarkerLevel);
     setShowMessageTimestamps(stored[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS] === true);
-    setPreventAutoScrollEnabled(stored.gvPreventAutoScrollEnabled === true);
   }, []);
 
   const onChange = useCallback(
@@ -80,8 +76,6 @@ export function useTimelinePopupSettings(
         payload.geminiTimelineMarkerLevel = patch.markerLevelEnabled;
       if (typeof patch.showMessageTimestamps === 'boolean')
         payload[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS] = patch.showMessageTimestamps;
-      if (typeof patch.preventAutoScrollEnabled === 'boolean')
-        payload.gvPreventAutoScrollEnabled = patch.preventAutoScrollEnabled;
       void writeSyncStorage(payload);
     },
     [setters, writeSyncStorage],
@@ -101,7 +95,6 @@ export function useTimelinePopupSettings(
       timelinePreviewPinned,
       markerLevelEnabled,
       showMessageTimestamps,
-      preventAutoScrollEnabled,
     },
     hydrateFromStorage,
     onChange,

@@ -15,21 +15,11 @@ const translate = (key: TranslationKey): string => key;
 
 const values: GeneralSettingsValues = {
   persistentExportToolbarEnabled: false,
-  mermaidEnabled: true,
-  wavedromEnabled: false,
-  echartsEnabled: false,
-  codeBlockCollapseEnabled: true,
-  userLatexEnabled: false,
-  quoteReplyEnabled: true,
   highlightEnabled: false,
   highlightTimelineMarkersEnabled: true,
   responseCompleteNotificationEnabled: false,
   remoteAnnouncementEnabled: true,
   changelogBadgeMode: false,
-  usageStatusEnabled: true,
-  inputHaloHidden: false,
-  defaultModelAutoApplyEnabled: false,
-  researchPackEnabled: false,
 };
 
 describe('GeneralSettingsCard', () => {
@@ -70,39 +60,32 @@ describe('GeneralSettingsCard', () => {
 
   it('renders every value and reports one key per change', () => {
     const props = render();
-    expect(input('mermaid-enabled').checked).toBe(true);
-    expect(input('quote-reply-enabled').checked).toBe(true);
-    expect(input('usage-status-enabled').checked).toBe(true);
-    expect(input('default-model-auto-apply').checked).toBe(false);
+    expect(input('persistent-export-toolbar').checked).toBe(false);
+    expect(input('remote-announcement-notification').checked).toBe(true);
 
-    act(() => input('wavedrom-enabled').click());
-    expect(props.onChange).toHaveBeenLastCalledWith({ wavedromEnabled: true });
+    act(() => input('persistent-export-toolbar').click());
+    expect(props.onChange).toHaveBeenLastCalledWith({ persistentExportToolbarEnabled: true });
     act(() => input('changelog-notify-badge').click());
     expect(props.onChange).toHaveBeenLastCalledWith({ changelogBadgeMode: true });
     expect(props.onChange).toHaveBeenCalledTimes(2);
   });
 
-  it('shows the code collapse and user LaTeX switches and reports their own keys', () => {
-    const props = render();
-    expect(input('code-block-collapse-enabled').checked).toBe(true);
-    expect(input('user-latex-enabled').checked).toBe(false);
-    expect(container.textContent).toContain('enableCodeBlockCollapseHint');
-    expect(container.textContent).toContain('enableUserLatexRenderingHint');
-
-    act(() => input('code-block-collapse-enabled').click());
-    expect(props.onChange).toHaveBeenLastCalledWith({ codeBlockCollapseEnabled: false });
-    act(() => input('user-latex-enabled').click());
-    expect(props.onChange).toHaveBeenLastCalledWith({ userLatexEnabled: true });
-  });
-
-  it('offers the research pack as an experimental opt-in', () => {
-    const props = render();
-    const toggle = input('research-pack-enabled');
-    expect(toggle.checked).toBe(false);
-    expect(container.textContent).toContain('researchPackEnableHint');
-
-    act(() => toggle.click());
-    expect(props.onChange).toHaveBeenLastCalledWith({ researchPackEnabled: true });
+  it('leaves the switches that moved to the plugin list out of the card', () => {
+    render();
+    for (const id of [
+      'mermaid-enabled',
+      'wavedrom-enabled',
+      'echarts-enabled',
+      'code-block-collapse-enabled',
+      'user-latex-enabled',
+      'quote-reply-enabled',
+      'usage-status-enabled',
+      'hide-input-halo',
+      'default-model-auto-apply',
+      'research-pack-enabled',
+    ]) {
+      expect(container.querySelector(`#${id}`)).toBeNull();
+    }
   });
 
   it('keeps the retired tab-title row disabled and gates timeline markers on highlights', () => {
@@ -138,9 +121,9 @@ describe('GeneralSettingsCard', () => {
   });
 
   it('leaves rows out of the DOM when the site or search rules them out', () => {
-    render({ isVisible: (settingId) => settingId !== 'enableMermaidRendering' });
-    expect(container.querySelector('#mermaid-enabled')).toBeNull();
-    expect(container.querySelector('#quote-reply-enabled')).not.toBeNull();
+    render({ isVisible: (settingId) => settingId !== 'persistentExportToolbar' });
+    expect(container.querySelector('#persistent-export-toolbar')).toBeNull();
+    expect(container.querySelector('#remote-announcement-notification')).not.toBeNull();
 
     render({ isVisible: (settingId) => settingId !== 'enableTabTitleUpdate' });
     expect(container.querySelector('#tab-title-update')).toBeNull();

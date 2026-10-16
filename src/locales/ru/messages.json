@@ -2733,6 +2733,26 @@
     "message": "Включайте плагины, улучшающие другие сайты ИИ. При включении запрашивается доступ к этому сайту. Включённые плагины проверяют обновления на voyager.nagi.fun.",
     "description": "Popup subtitle explaining the plugin list"
   },
+  "pluginsNativeDescription": {
+    "message": "Включайте и выключайте функции Voyager. Настройки функции появляются, когда она включена.",
+    "description": "Popup subtitle of the official plugin list on Gemini and AI Studio"
+  },
+  "pluginGroupAppearance": {
+    "message": "Внешний вид",
+    "description": "Heading of the plugin list group for layout and look"
+  },
+  "pluginGroupContent": {
+    "message": "Содержимое",
+    "description": "Heading of the plugin list group for how message content renders and copies"
+  },
+  "pluginGroupInput": {
+    "message": "Ввод",
+    "description": "Heading of the plugin list group for the message input box"
+  },
+  "pluginGroupConversation": {
+    "message": "Диалог",
+    "description": "Heading of the plugin list group for working with a conversation"
+  },
   "pluginViewSource": {
     "message": "Исходник",
     "description": "Link label to a plugin source/repo"
