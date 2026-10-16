@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { type Ref } from 'react';
 
 import type { ShownUndoOffer } from '../hooks/useUndoToast';
 
@@ -6,9 +6,11 @@ export interface UndoToastProps {
   readonly offer: ShownUndoOffer | null;
   readonly undoLabel: string;
   readonly onUndo: () => void;
-  /** The pointer or focus rests on the toast: keep it up. */
-  readonly onHold: () => void;
-  readonly onRelease: () => void;
+  /** Whether the pointer rests on the toast; it stays up meanwhile. */
+  readonly onHover: (hovered: boolean) => void;
+  /** Whether focus is inside the toast; it stays up meanwhile. */
+  readonly onFocusInside: (focused: boolean) => void;
+  readonly containerRef: Ref<HTMLDivElement>;
   readonly dir?: 'rtl';
 }
 
@@ -19,17 +21,27 @@ export interface UndoToastProps {
  * page's theme, not the popup's. The status region stays mounted so a screen
  * reader hears each new offer.
  */
-export function UndoToast({ offer, undoLabel, onUndo, onHold, onRelease, dir }: UndoToastProps) {
+export function UndoToast({
+  offer,
+  undoLabel,
+  onUndo,
+  onHover,
+  onFocusInside,
+  containerRef,
+  dir,
+}: UndoToastProps) {
   return (
     <div className="pointer-events-none sticky bottom-0 z-30 h-0">
-      <div role="status" dir={dir} className="absolute inset-x-5 bottom-4">
+      <div ref={containerRef} role="status" dir={dir} className="absolute inset-x-5 bottom-4">
         {offer && (
           <div
             key={offer.id}
-            onMouseEnter={onHold}
-            onMouseLeave={onRelease}
-            onFocus={onHold}
-            onBlur={onRelease}
+            onMouseEnter={() => onHover(true)}
+            onMouseLeave={() => onHover(false)}
+            onFocus={() => onFocusInside(true)}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) onFocusInside(false);
+            }}
             className="bg-foreground text-background pointer-events-auto flex items-center gap-3 rounded-xl px-4 py-3 text-[13px] leading-snug shadow-lg"
           >
             <span className="min-w-0 flex-1">{offer.message}</span>

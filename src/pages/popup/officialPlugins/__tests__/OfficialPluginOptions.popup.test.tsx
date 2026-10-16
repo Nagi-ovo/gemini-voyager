@@ -550,6 +550,17 @@ describe('official plugin rows with options', () => {
     beforeEach(() => {
       // The local CoBridge server answers, so the panel reads the IDE as online.
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }));
+      // The panel probes the server only while it is on screen; here it always is.
+      vi.stubGlobal(
+        'IntersectionObserver',
+        class {
+          constructor(private readonly notify: (entries: { isIntersecting: boolean }[]) => void) {}
+          observe() {
+            this.notify([{ isIntersecting: true }]);
+          }
+          disconnect() {}
+        },
+      );
     });
 
     it('turns on with its own switch and shows the stored port in its options', async () => {

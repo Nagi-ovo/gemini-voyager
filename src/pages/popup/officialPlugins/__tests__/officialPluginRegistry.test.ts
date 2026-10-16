@@ -10,12 +10,17 @@ import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCa
 import {
   LEGACY_ENABLE_BINDINGS,
   legacyBindingFor,
+  legacyEnableWrite,
 } from '@/features/plugins/storage/legacySettingBindings';
 import { legacyValueBindingsFor } from '@/features/plugins/storage/legacyValueBindings';
 import { TRANSLATIONS } from '@/utils/translations';
 
 import { OFFICIAL_PLUGIN_TOPIC_IDS } from '../../utils/nativeSiteCapabilities';
-import { OFFICIAL_PLUGIN_ENTRIES, OFFICIAL_PLUGIN_TOPICS } from '../officialPluginRegistry';
+import {
+  OFFICIAL_PLUGIN_ENTRIES,
+  OFFICIAL_PLUGIN_TOPICS,
+  POPUP_LEGACY_SNAPSHOT_KEYS,
+} from '../officialPluginRegistry';
 
 async function packagedManifests() {
   const lists = await Promise.all([
@@ -106,5 +111,19 @@ describe('the official plugin list registry', () => {
     for (const entry of OFFICIAL_PLUGIN_ENTRIES) {
       for (const key of entry.searchKeys) expect(TRANSLATIONS.en[key], key).toBeTruthy();
     }
+  });
+
+  // Undo puts back each written key as the popup showed it; a key it does not follow would read
+  // unstored and be removed.
+  it('follows every key a switch flip writes, so its undo can put each one back', () => {
+    const followed = new Set(POPUP_LEGACY_SNAPSHOT_KEYS);
+    const written = OFFICIAL_PLUGIN_ENTRIES.flatMap((entry) =>
+      [true, false].flatMap((enabled) =>
+        Object.keys(
+          entry.enableWrite ? entry.enableWrite(enabled, {}) : legacyEnableWrite(entry.id, enabled),
+        ),
+      ),
+    );
+    expect(written.filter((key) => !followed.has(key))).toEqual([]);
   });
 });

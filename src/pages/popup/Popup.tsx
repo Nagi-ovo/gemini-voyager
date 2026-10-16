@@ -424,6 +424,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           nameSources={plugins.siteScopedManifests}
           isVisible={(topic, pluginId) => sections.shouldShowSetting(topic, pluginId)}
           onToggle={officialPlugins.setEnabled}
+          onFlip={officialPlugins.flipEnabled}
           onSettingsChange={officialPlugins.setSettings}
           controls={{ responseNotification: general.responseNotification }}
           panelIo={{
@@ -471,8 +472,9 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         offer={undoToast.offer}
         undoLabel={t('pluginToggleUndo')}
         onUndo={undoToast.undo}
-        onHold={undoToast.hold}
-        onRelease={undoToast.release}
+        onHover={undoToast.setHovered}
+        onFocusInside={undoToast.setFocused}
+        containerRef={undoToast.containerRef}
         dir={rtl}
       />
     </div>

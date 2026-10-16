@@ -36,14 +36,6 @@ export interface OfficialPanelIo {
   readonly openStarredHistory?: () => void;
 }
 
-/** What a user's flip of a row's switch did, for an undo offer. */
-export interface OfficialPluginFlip {
-  readonly pluginId: string;
-  /** The row's shown name. */
-  readonly name: string;
-  readonly enabled: boolean;
-}
-
 export interface OfficialPluginRowProps {
   readonly row: Row;
   readonly status: PluginStatus | undefined;
@@ -51,14 +43,14 @@ export interface OfficialPluginRowProps {
   readonly control: OfficialPluginControl | undefined;
   readonly panelIo: OfficialPanelIo | undefined;
   readonly onToggle: (pluginId: string, enabled: boolean) => void;
-  /** Told after the user flips the switch, once the write is under way. */
-  readonly onFlipped?: (flip: OfficialPluginFlip) => void;
   readonly onSettingsChange: (
     pluginId: string,
     values: Readonly<Record<string, PluginSettingValue>>,
   ) => void;
   readonly language: string;
   readonly t: (key: TranslationKey) => string;
+  /** The row's own spacing; a list with rules between rows pads each row. */
+  readonly className?: string;
 }
 
 export function domId(prefix: string, pluginId: string): string {
@@ -72,10 +64,10 @@ export function OfficialPluginListRow({
   control,
   panelIo,
   onToggle,
-  onFlipped,
   onSettingsChange,
   language,
   t,
+  className = 'py-2.5',
 }: OfficialPluginRowProps) {
   const { manifest, entry, settings, usageHint } = row;
   const requirement = row.unmetRequirement;
@@ -112,7 +104,7 @@ export function OfficialPluginListRow({
     conflictKey: 'officialFeaturePausedByLocal',
   });
   return (
-    <li data-official-plugin={manifest.id} className="py-2.5">
+    <li data-official-plugin={manifest.id} className={className}>
       <div className="flex items-start justify-between gap-3">
         <div className={`min-w-0 flex-1 text-start ${unavailable ? 'opacity-50' : ''}`}>
           <div className="flex items-center gap-1">
@@ -153,12 +145,11 @@ export function OfficialPluginListRow({
           aria-describedby={
             row.unmetRequirement ? `${descriptionId} ${requirementId}` : descriptionId
           }
-          onChange={(event) => {
-            const next = event.target.checked;
-            if (control) control.setEnabled(next);
-            else onToggle(manifest.id, next);
-            onFlipped?.({ pluginId: manifest.id, name, enabled: next });
-          }}
+          onChange={(event) =>
+            control
+              ? control.setEnabled(event.target.checked)
+              : onToggle(manifest.id, event.target.checked)
+          }
         />
       </div>
       {hasOptions && (

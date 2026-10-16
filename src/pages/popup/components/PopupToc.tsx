@@ -26,12 +26,25 @@ function prefersReducedMotion(): boolean {
   );
 }
 
-/** Bring a section's card to the top of the popup, just below the sticky header. */
+/**
+ * Bring a section's card to the top of the popup, just below the sticky
+ * header, and move focus to its title so the keyboard continues from there.
+ */
 export function scrollToPopupSection(id: PopupSectionId, header: HTMLElement | null): void {
   const target = document.getElementById(popupSectionAnchorId(id));
   if (!target) return;
+  // A card without a title (the collapsed Local plugins card) takes focus itself.
+  const landing = target.querySelector<HTMLElement>('h2, h3') ?? target;
+  if (!landing.hasAttribute('tabindex')) landing.setAttribute('tabindex', '-1');
+  landing.focus({ preventScroll: true });
   target.style.scrollMarginTop = `${(header?.offsetHeight ?? 0) + SCROLL_GAP_PX}px`;
   target.scrollIntoView({ block: 'start', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+}
+
+/** Fades the trailing edge, so a row that runs past it reads as scrollable. */
+function trailingFade(dir: 'rtl' | undefined): React.CSSProperties {
+  const mask = `linear-gradient(to ${dir === 'rtl' ? 'left' : 'right'}, #000 calc(100% - 28px), transparent)`;
+  return { maskImage: mask, WebkitMaskImage: mask };
 }
 
 export interface PopupTocProps {
@@ -52,6 +65,7 @@ export function PopupToc({ sections, dir, t }: PopupTocProps) {
     <nav
       aria-label={t('popupTocLabel')}
       dir={dir}
+      style={trailingFade(dir)}
       className="-mx-5 mt-2 overflow-x-auto px-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       <ul className="flex gap-4 py-1 whitespace-nowrap">

@@ -12,7 +12,7 @@ import type { PluginStateMap } from '@/features/plugins/storage/pluginState';
 import type { PluginManifest, PluginSettingValue, PluginSettings } from '@/features/plugins/types';
 import { type TranslationKey } from '@/utils/translations';
 
-import { writePopupSyncStorageChecked } from '../utils/popupStorage';
+import { writePopupSyncChangesChecked } from '../utils/popupStorage';
 import {
   POPUP_LEGACY_SNAPSHOT_KEYS,
   OFFICIAL_PLUGIN_ENTRIES,
@@ -38,6 +38,12 @@ export interface OfficialPluginRow extends ListedOfficialPlugin {
 const subscribeShownKeys = (callback: (changed: LegacySettingSnapshot) => void) =>
   subscribeLegacySettings(callback, POPUP_LEGACY_SNAPSHOT_KEYS);
 
+/** A switch flip's sync write, and how to put back what it replaced. */
+export interface OfficialPluginFlipWrite {
+  readonly written: Readonly<Record<string, unknown>>;
+  readonly restore: () => void;
+}
+
 export interface OfficialPluginListOptions {
   /** Manifests whose matches cover the active tab. */
   readonly manifests: readonly PluginManifest[];
@@ -57,7 +63,7 @@ export function useOfficialPluginList({
   legacy,
   legacyLoaded,
   context,
-  write = writePopupSyncStorageChecked,
+  write = writePopupSyncChangesChecked,
 }: OfficialPluginListOptions) {
   const { isSafariBrowser } = context;
   const preferences = useLegacyPreferenceWrites({ legacy, write, subscribe: subscribeShownKeys });
@@ -97,14 +103,34 @@ export function useOfficialPluginList({
   const { writePreference } = preferences;
   // Every listed plugin is legacy-bound (the registry contract test holds it), so its switch
   // is its old sync key and its plugin-state entry is never written.
-  const setEnabled = useCallback(
-    (pluginId: string, enabled: boolean) => {
+  const enablePayload = useCallback(
+    (pluginId: string, enabled: boolean): Record<string, unknown> => {
       const write = listed.find((plugin) => plugin.manifest.id === pluginId)?.entry.enableWrite;
-      writePreference(
-        write ? write(enabled, preferences.legacy) : legacyEnableWrite(pluginId, enabled),
-      );
+      return {
+        ...(write ? write(enabled, preferences.legacy) : legacyEnableWrite(pluginId, enabled)),
+      };
     },
-    [writePreference, listed, preferences.legacy],
+    [listed, preferences.legacy],
+  );
+  const setEnabled = useCallback(
+    (pluginId: string, enabled: boolean) => writePreference(enablePayload(pluginId, enabled)),
+    [writePreference, enablePayload],
+  );
+  /**
+   * Flip a switch and keep what it replaced: every key the flip writes, as the
+   * popup showed it, so putting it back restores an effect choice, a legacy
+   * key or an unstored key exactly (undefined removes the key).
+   */
+  const flipEnabled = useCallback(
+    (pluginId: string, enabled: boolean): OfficialPluginFlipWrite => {
+      const written = enablePayload(pluginId, enabled);
+      const replaced = Object.fromEntries(
+        Object.keys(written).map((key) => [key, preferences.legacy[key]]),
+      );
+      writePreference(written);
+      return { written, restore: () => writePreference(replaced) };
+    },
+    [writePreference, enablePayload, preferences.legacy],
   );
   const shownLegacy = preferences.legacy;
   // A boolean writes when flipped, a slider when released (OfficialPluginSliders).
@@ -139,6 +165,7 @@ export function useOfficialPluginList({
     rows,
     searchItems,
     setEnabled,
+    flipEnabled,
     setSettings,
     // What the option panels show and write: their keys, through the same overlay.
     panelValues: preferences.legacy,

@@ -112,7 +112,7 @@ manifest 的一句话描述（本地化）
 
 **搜索**：打 "光晕"、"字号"、"ruler" 时只显示命中的行和它们所在的主题卡，没有命中行的卡片隐藏；主题卡标题（任何语言）命中时列出整张卡。行开启时选项照常显示在行下，关闭时只显示行。搜索期间目录隐藏。
 
-**撤销**：用户拨动主题卡里某行的开关后，popup 底部出现 4 秒的 `role="status"` 提示「已关闭「名称」 · 撤销」，指针或焦点停在提示上时暂停计时；撤销经同一条写入路径写回原值（含 `enableWrite` 成对写入和通知的权限流程）。滑块、分段和面板里的选项不提示。不用页面的 `createToaster`：它的位置为宿主页面让位，主题跟随宿主页面而不是 popup。
+**撤销**：用户拨动主题卡里某行的开关后，popup 底部出现 4 秒的 `role="status"` 提示「已关闭「名称」 · 撤销」，指针悬停或焦点在提示内时不自动关闭（两者分开记录），提示带着焦点关闭时焦点回到被拨动的开关。拨动时记下这次写入涉及的每个键在 popup 里显示的原值和是否存在，撤销经同一条写入路径原样写回：Visual effects 回到原来的 Rain 等选择而不是默认的 Snow，原本没有的键再次删除（`writePopupSyncChangesChecked` 把 `undefined` 当作删除），只有旧 `WATERMARK_REMOVER_ENABLED` 的水印状态也能还原；通知行经它自己的权限流程拨回。这些键在拨动后又被改动（行下选项、别的窗口、恢复备份）时提示立即撤回，避免撤销覆盖更新的选择。滑块、分段和面板里的选项不提示。不用页面的 `createToaster`：它的位置为宿主页面让位，主题跟随宿主页面而不是 popup。
 
 ### 2.3 AI Studio
 
@@ -138,7 +138,7 @@ manifest 的一句话描述（本地化）
 
 - 行开关 `aria-label` 为插件名，`aria-describedby` 指向描述；组是带标题的 `section`，行是列表项。
 - 行下的选项是 `role="group"`，`aria-label` 带插件名（每个唯一）。搜索过滤掉当前焦点所在的行时，焦点保持在搜索框（过滤由输入触发，焦点本来就在搜索框）。
-- 目录是 `<nav aria-label="跳到">` 里的 `<button>`，有可见焦点环；滚动时给目标卡片留出固定标题栏的高度，`prefers-reduced-motion` 时不做平滑滚动。阿拉伯语下目录和撤销提示镜像。
+- 目录是 `<nav aria-label="跳到">` 里的 `<button>`，有可见焦点环；滚动时给目标卡片留出固定标题栏的高度，`prefers-reduced-motion` 时不做平滑滚动。选中后焦点移到目标卡片的标题（`tabindex=-1`，`preventScroll`），键盘从那里继续。目录行尾有渐隐遮罩（RTL 时在左侧）。主题卡内的行之间不画分隔线，只靠间距。阿拉伯语下目录和撤销提示镜像。
 - 分段选择（Timeline 样式、滚动模式）：迁入面板时改为 `role="radiogroup"`/`radio` + `aria-checked`，或按钮加 `aria-pressed`；不再只靠颜色表达选中。
 - Arabic RTL：行和面板只用 logical 属性（`ps-*`、`ms-*`、`text-start`）。Timeline 现在用物理 `left` 计算浮动高亮（`TimelineSettingsCard.tsx:85`、`:111`），迁入时改为直接给选中按钮画背景，去掉位置计算。
 
@@ -314,7 +314,7 @@ export interface OfficialPluginEntry {
 
 **已完成示例：Edit input width**（`voyager.gemini-edit-input-width`）。运行时在 §7.12 8-1 完成，popup 随 Batch 3 迁入「外观」组。Registry 保留原 section 标题、搜索词和 `widthPercent` 滑块，开关与数值分别经 `legacyEnableWrite`、`legacyValueWrite` 写原键；旧卡片控件、hook 状态和 section 已移除。备份默认值对缺失开关的影响仍是 §3.7 记录的既有限制。
 
-其余列出的功能也已完成：Auto-hide / Full hide 两行共用一个 controller；Gems sidebar 因 Gemini 新版侧栏将 Gems 收入「更多」菜单而暂不显示，popup 行置灰并显示为关闭；旧 Gems hider 停止启动，模块和 `gvGemsHidden` 保留；AI Studio sidebar width 使用独立开关键，缺失时跟随文件夹开关；Visual effects 通过 enum binding 保留跨站共享选择，每个站点各一行（Batch 7 起插件站也是）；Context Sync 的端口、状态和同步按钮在行下的面板里；NanoBanana 两行沿用 `src/core/utils/watermarkSettings.ts` 的 resolver。插件站 rail 的选项已在 Batch 7 挂到 rail 的插件行下（§2.4）。
+其余列出的功能也已完成：Auto-hide / Full hide 两行共用一个 controller；Gems sidebar 因 Gemini 新版侧栏将 Gems 收入「更多」菜单而暂不显示，popup 行置灰并显示为关闭；旧 Gems hider 停止启动，模块和 `gvGemsHidden` 保留；AI Studio sidebar width 使用独立开关键，缺失时跟随文件夹开关；Visual effects 通过 enum binding 保留跨站共享选择，每个站点各一行（Batch 7 起插件站也是）；Context Sync 的端口、状态和同步按钮在行下的面板里，面板进入视口后才开始探测本地服务器（旧卡片在 popup 打开且功能开启时就轮询，现在面板不用点 Options 就显示，因此改为可见时才探测）；NanoBanana 两行沿用 `src/core/utils/watermarkSettings.ts` 的 resolver。插件站 rail 的选项已在 Batch 7 挂到 rail 的插件行下（§2.4）。
 
 ---
 

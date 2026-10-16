@@ -10,7 +10,13 @@ import { TRANSLATIONS } from '@/utils/translations';
 
 import Popup from '../../Popup';
 import { UNDO_TOAST_MS } from '../../hooks/useUndoToast';
-import { AI_STUDIO, extensionApi, popupRows, resetPopupBrowser } from './popupHarness';
+import {
+  AI_STUDIO,
+  emitSyncChange,
+  extensionApi,
+  popupRows,
+  resetPopupBrowser,
+} from './popupHarness';
 
 // Keep Popup, its hooks and the packaged manifests real; replace only browser APIs.
 vi.mock('webextension-polyfill', async () => ({
@@ -114,6 +120,9 @@ describe('the official plugin topic cards', () => {
       expect(scrolled).toHaveLength(1);
       expect(scrolled[0].element.contains(row(OFFICIAL_PLUGIN_IDS.geminiMermaid))).toBe(true);
       expect(scrolled[0].options).toEqual({ block: 'start', behavior: 'smooth' });
+      // Keyboard users land on the card, not back in the header.
+      expect(document.activeElement?.textContent).toBe(en.pluginTopicCharts);
+      expect(scrolled[0].element.contains(document.activeElement)).toBe(true);
 
       vi.stubGlobal(
         'matchMedia',
@@ -180,19 +189,23 @@ describe('the official plugin topic cards', () => {
   });
 
   describe('the undo offer', () => {
-    it('after a flip, puts the stored value back through the same write', async () => {
+    const undoButton = () =>
+      [...(toast()?.querySelectorAll('button') ?? [])].find(
+        (button) => button.textContent === en.pluginToggleUndo,
+      );
+    const pressUndo = async () => {
+      await act(async () => undoButton()!.click());
+    };
+
+    it('puts back a stored value through the same write', async () => {
       const id = OFFICIAL_PLUGIN_IDS.geminiMermaid;
+      sync[StorageKeys.MERMAID_ENABLED] = true;
       await mount();
-      expect(toggle(id).checked).toBe(true);
       await act(async () => toggle(id).click());
-      expect(sync[StorageKeys.MERMAID_ENABLED]).toBe(false);
       expect(toast()!.textContent).toContain(
         en.pluginToggleToastOff.replace('{name}', rowName(id)),
       );
-      const undo = [...toast()!.querySelectorAll('button')].find(
-        (button) => button.textContent === en.pluginToggleUndo,
-      )!;
-      await act(async () => undo.click());
+      await pressUndo();
       expect(extensionApi.storage.sync.set.mock.calls.map(([payload]) => payload)).toEqual([
         { [StorageKeys.MERMAID_ENABLED]: false },
         { [StorageKeys.MERMAID_ENABLED]: true },
@@ -201,16 +214,70 @@ describe('the official plugin topic cards', () => {
       expect(toast()).toBeNull();
     });
 
-    it('undoes a paired write as a pair', async () => {
-      const id = OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview;
-      sync[StorageKeys.WATERMARK_DOWNLOAD_ENABLED] = true;
-      sync[StorageKeys.WATERMARK_PREVIEW_ENABLED] = false;
+    it('leaves a key that was never stored unstored again', async () => {
+      const id = OFFICIAL_PLUGIN_IDS.geminiMermaid;
       await mount();
       await act(async () => toggle(id).click());
-      expect(toast()!.textContent).toContain(en.pluginToggleToastOn.replace('{name}', rowName(id)));
-      await act(async () => toast()!.querySelector('button')!.click());
-      expect(sync[StorageKeys.WATERMARK_DOWNLOAD_ENABLED]).toBe(true);
-      expect(sync[StorageKeys.WATERMARK_PREVIEW_ENABLED]).toBe(false);
+      expect(sync[StorageKeys.MERMAID_ENABLED]).toBe(false);
+      await pressUndo();
+      expect(Object.hasOwn(sync, StorageKeys.MERMAID_ENABLED)).toBe(false);
+      expect(toggle(id).checked).toBe(true);
+    });
+
+    it('puts back the chosen effect, not the default one', async () => {
+      const id = OFFICIAL_PLUGIN_IDS.visualEffects;
+      sync[StorageKeys.GV_VISUAL_EFFECT] = 'rain';
+      await mount();
+      await act(async () => toggle(id).click());
+      expect(sync[StorageKeys.GV_VISUAL_EFFECT]).toBe('off');
+      await pressUndo();
+      expect(sync[StorageKeys.GV_VISUAL_EFFECT]).toBe('rain');
+      // The legacy snow flag the switch cleared was never stored, so it is gone again.
+      expect(Object.hasOwn(sync, StorageKeys.GV_SNOW_EFFECT)).toBe(false);
+    });
+
+    it('puts back an effect that only the old snow flag held', async () => {
+      sync[StorageKeys.GV_SNOW_EFFECT] = true;
+      await mount();
+      expect(toggle(OFFICIAL_PLUGIN_IDS.visualEffects).checked).toBe(true);
+      await act(async () => toggle(OFFICIAL_PLUGIN_IDS.visualEffects).click());
+      await pressUndo();
+      expect(sync).toEqual({ [StorageKeys.GV_SNOW_EFFECT]: true });
+      expect(toggle(OFFICIAL_PLUGIN_IDS.visualEffects).checked).toBe(true);
+    });
+
+    it('puts back watermark switches that only the legacy key held', async () => {
+      sync[StorageKeys.WATERMARK_REMOVER_ENABLED] = true;
+      await mount();
+      await act(async () => toggle(OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload).click());
+      expect(sync[StorageKeys.WATERMARK_REMOVER_ENABLED]).toBeNull();
+      await pressUndo();
+      expect(sync).toEqual({ [StorageKeys.WATERMARK_REMOVER_ENABLED]: true });
+      expect(toggle(OFFICIAL_PLUGIN_IDS.geminiWatermarkDownload).checked).toBe(true);
+      expect(toggle(OFFICIAL_PLUGIN_IDS.geminiWatermarkPreview).checked).toBe(true);
+    });
+
+    it('is withdrawn once an option under the row changes what the flip wrote', async () => {
+      sync[StorageKeys.GV_VISUAL_EFFECT] = 'off';
+      await mount();
+      await act(async () => toggle(OFFICIAL_PLUGIN_IDS.visualEffects).click());
+      expect(undoButton()).toBeDefined();
+      const rain = [
+        ...row(OFFICIAL_PLUGIN_IDS.visualEffects)!.querySelectorAll<HTMLButtonElement>('button'),
+      ].find((button) => button.textContent?.includes(en.visualEffectRain))!;
+      await act(async () => rain.click());
+      expect(toast()).toBeNull();
+      expect(sync[StorageKeys.GV_VISUAL_EFFECT]).toBe('rain');
+    });
+
+    it('is withdrawn when the same key changes elsewhere', async () => {
+      const id = OFFICIAL_PLUGIN_IDS.geminiECharts;
+      sync[StorageKeys.ECHARTS_ENABLED] = true;
+      await mount();
+      await act(async () => toggle(id).click());
+      expect(undoButton()).toBeDefined();
+      await act(async () => emitSyncChange({ [StorageKeys.ECHARTS_ENABLED]: true }));
+      expect(toast()).toBeNull();
     });
 
     it('closes by itself after a few seconds, without writing', async () => {
@@ -225,6 +292,23 @@ describe('the official plugin topic cards', () => {
       expect(extensionApi.storage.sync.set).toHaveBeenCalledTimes(1);
     });
 
+    it('stays while focus is inside, even after the pointer leaves, and hands focus back', async () => {
+      const id = OFFICIAL_PLUGIN_IDS.geminiECharts;
+      await mount();
+      vi.useFakeTimers();
+      await act(async () => toggle(id).click());
+      const card = undoButton()!.parentElement!;
+      await act(async () => undoButton()!.focus());
+      await act(async () => {
+        card.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+        card.dispatchEvent(new MouseEvent('mouseout', { bubbles: true }));
+      });
+      await act(async () => vi.advanceTimersByTime(UNDO_TOAST_MS * 3));
+      expect(undoButton()).toBeDefined();
+      await pressUndo();
+      expect(document.activeElement).toBe(toggle(id));
+    });
+
     it('is not offered for an option under a row', async () => {
       await mount();
       const notion = [
@@ -235,6 +319,30 @@ describe('the official plugin topic cards', () => {
       await act(async () => notion.click());
       expect(sync[StorageKeys.FORMULA_COPY_FORMAT]).toBe('notion');
       expect(toast()).toBeNull();
+    });
+  });
+
+  describe('the context sync options', () => {
+    it('probe the local server only once they are on screen', async () => {
+      sync[StorageKeys.CONTEXT_SYNC_ENABLED] = true;
+      const fetch = vi.fn().mockResolvedValue({ ok: true });
+      vi.stubGlobal('fetch', fetch);
+      const observers: ((entries: { isIntersecting: boolean }[]) => void)[] = [];
+      vi.stubGlobal(
+        'IntersectionObserver',
+        class {
+          constructor(callback: (entries: { isIntersecting: boolean }[]) => void) {
+            observers.push(callback);
+          }
+          observe() {}
+          disconnect() {}
+        },
+      );
+      await mount();
+      expect(row(OFFICIAL_PLUGIN_IDS.geminiContextSync)!.textContent).toContain(en.syncServerPort);
+      expect(fetch).not.toHaveBeenCalled();
+      await act(async () => observers.forEach((notify) => notify([{ isIntersecting: true }])));
+      expect(fetch).toHaveBeenCalledTimes(1);
     });
   });
 });

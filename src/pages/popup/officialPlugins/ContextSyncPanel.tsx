@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { StorageKeys } from '@/core/types/common';
@@ -22,12 +22,20 @@ function storedPort(value: unknown): number {
  * switch (the row is the old Disabled / Manual mode). The sync request itself
  * lives above the panel (`useContextSyncRequest`), so a search that hides the
  * row mid-sync keeps it pending and its result.
+ *
+ * The local server is probed only while the panel is on screen. The card this
+ * replaced probed whenever the popup opened with the feature on; the panel now
+ * shows without an Options click, so opening the popup alone should not start
+ * polling localhost.
  */
 export function ContextSyncPanel({ values, write, contextSync, idPrefix, t }: OfficialPanelProps) {
   const port = storedPort(values[StorageKeys.CONTEXT_SYNC_PORT]);
   // What the field shows while typing; a cleared field is not a port to save.
   const [draft, setDraft] = useState(String(port));
   const [isOnline, setIsOnline] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  // Without IntersectionObserver there is no telling, so the panel probes as the old card did.
+  const [onScreen, setOnScreen] = useState(() => typeof IntersectionObserver === 'undefined');
   const syncing = contextSync?.syncing ?? false;
   const status = contextSync?.status ?? null;
   const dismiss = contextSync?.dismiss;
@@ -55,10 +63,21 @@ export function ContextSyncPanel({ values, write, contextSync, idPrefix, t }: Of
   }, [port]);
 
   useEffect(() => {
+    const root = rootRef.current;
+    if (!root || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver((entries) =>
+      setOnScreen(entries.some((entry) => entry.isIntersecting)),
+    );
+    observer.observe(root);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!onScreen) return;
     void checkConnection();
     const interval = setInterval(() => void checkConnection(), POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [checkConnection]);
+  }, [checkConnection, onScreen]);
 
   const handlePortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const text = event.target.value;
@@ -72,7 +91,7 @@ export function ContextSyncPanel({ values, write, contextSync, idPrefix, t }: Of
 
   const portId = `${idPrefix}-port`;
   return (
-    <div className="space-y-2.5">
+    <div ref={rootRef} className="space-y-2.5">
       <p className="text-muted-foreground text-[11px] leading-snug">
         {t('contextSyncDescription')}
       </p>

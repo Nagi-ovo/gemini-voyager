@@ -79,6 +79,13 @@ export function resetPopupBrowser(): {
         return Promise.resolve();
       },
     );
+    extensionApi.storage[area].remove.mockImplementation(
+      (keys: string | string[], callback?: unknown) => {
+        for (const key of Array.isArray(keys) ? keys : [keys]) delete stored[key];
+        if (typeof callback === 'function') callback();
+        return Promise.resolve();
+      },
+    );
     extensionApi.storage[area].getBytesInUse.mockResolvedValue(0);
   }
   extensionApi.runtime.getManifest.mockReturnValue({

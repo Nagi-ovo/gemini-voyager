@@ -7,6 +7,8 @@ export interface UndoOffer {
   readonly message: string;
   /** Puts back what the change replaced, through the same write the change used. */
   readonly undo: () => void;
+  /** Where focus goes when the offer closes while it holds focus: the control that changed. */
+  readonly returnFocus?: () => HTMLElement | null;
 }
 
 export interface ShownUndoOffer extends UndoOffer {
@@ -14,15 +16,22 @@ export interface ShownUndoOffer extends UndoOffer {
   readonly id: number;
 }
 
+/** Closes this offer if it is still the one shown; a later offer is left alone. */
+export type WithdrawUndoOffer = () => void;
+
 /**
- * One undo offer at a time: a newer one replaces it, it closes by itself after
- * `durationMs`, and it waits while the user hovers or focuses it.
+ * One undo offer at a time: a newer one replaces it, and it closes by itself
+ * after `durationMs` unless the pointer rests on it or focus is inside it.
  */
 export function useUndoToast(durationMs: number = UNDO_TOAST_MS) {
   const [offer, setOffer] = useState<ShownUndoOffer | null>(null);
   const offerRef = useRef<ShownUndoOffer | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nextId = useRef(0);
+  const hovered = useRef(false);
+  const focused = useRef(false);
+  /** The toast's element, to tell whether it holds focus as it closes. */
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const stopTimer = useCallback(() => {
     if (timer.current !== null) clearTimeout(timer.current);
@@ -31,23 +40,34 @@ export function useUndoToast(durationMs: number = UNDO_TOAST_MS) {
 
   const dismiss = useCallback(() => {
     stopTimer();
+    const closing = offerRef.current;
+    const heldFocus =
+      containerRef.current !== null && containerRef.current.contains(document.activeElement);
     offerRef.current = null;
+    hovered.current = false;
+    focused.current = false;
     setOffer(null);
+    // Focus would otherwise drop to the page once the focused toast is gone.
+    if (heldFocus) closing?.returnFocus?.()?.focus();
   }, [stopTimer]);
 
   const startTimer = useCallback(() => {
     stopTimer();
+    if (!offerRef.current || hovered.current || focused.current) return;
     timer.current = setTimeout(dismiss, durationMs);
   }, [dismiss, durationMs, stopTimer]);
 
   const show = useCallback(
-    (next: UndoOffer) => {
+    (next: UndoOffer): WithdrawUndoOffer => {
       const shown = { ...next, id: ++nextId.current };
       offerRef.current = shown;
       setOffer(shown);
       startTimer();
+      return () => {
+        if (offerRef.current?.id === shown.id) dismiss();
+      };
     },
-    [startTimer],
+    [dismiss, startTimer],
   );
 
   const undo = useCallback(() => {
@@ -56,12 +76,22 @@ export function useUndoToast(durationMs: number = UNDO_TOAST_MS) {
     current?.undo();
   }, [dismiss]);
 
-  const hold = useCallback(() => stopTimer(), [stopTimer]);
-  const release = useCallback(() => {
-    if (offerRef.current) startTimer();
-  }, [startTimer]);
+  const setHovered = useCallback(
+    (value: boolean) => {
+      hovered.current = value;
+      startTimer();
+    },
+    [startTimer],
+  );
+  const setFocused = useCallback(
+    (value: boolean) => {
+      focused.current = value;
+      startTimer();
+    },
+    [startTimer],
+  );
 
   useEffect(() => stopTimer, [stopTimer]);
 
-  return { offer, show, dismiss, undo, hold, release };
+  return { offer, show, dismiss, undo, setHovered, setFocused, containerRef };
 }
