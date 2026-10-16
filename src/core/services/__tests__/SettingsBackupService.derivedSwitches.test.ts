@@ -1,0 +1,235 @@
+import { describe, expect, it, vi } from 'vitest';
+
+import { StorageKeys } from '@/core/types/common';
+import * as browser from '@/core/utils/browser';
+import { resolveVisualEffect } from '@/core/utils/visualEffectValues';
+import { WATERMARK_STORAGE_KEYS } from '@/core/utils/watermarkSettings';
+import {
+  LEGACY_ENABLE_BINDINGS,
+  resolveEffectiveEnabled,
+} from '@/features/plugins/storage/legacySettingBindings';
+
+import {
+  BACKUPABLE_SYNC_SETTINGS_DEFAULTS,
+  exportBackupableSyncSettings,
+  restoreBackupableSyncSettings,
+} from '../SettingsBackupService';
+
+function storageWith(state: Record<string, unknown>) {
+  return {
+    get: vi.fn().mockImplementation(async (keys: string[] | Record<string, unknown>) => {
+      const result: Record<string, unknown> = Array.isArray(keys) ? {} : { ...keys };
+      for (const key of Array.isArray(keys) ? keys : Object.keys(keys)) {
+        if (Object.hasOwn(state, key)) result[key] = state[key];
+      }
+      return result;
+    }),
+    set: vi.fn(async (items: Record<string, unknown>) => {
+      Object.assign(state, items);
+    }),
+  };
+}
+
+describe('settings backups preserve derived switches', () => {
+  it('does not enable the AI Studio width and handle after exporting with folders off', async () => {
+    for (const folders of [false, true, undefined]) {
+      for (const enabled of [undefined, false, true]) {
+        const state: Record<string, unknown> = {};
+        if (folders !== undefined) state[StorageKeys.FOLDER_ENABLED] = folders;
+        if (enabled !== undefined) state[StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED] = enabled;
+        const area = storageWith(state);
+        const { data } = await exportBackupableSyncSettings(area);
+
+        expect
+          .soft(data[StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED])
+          .toBe(enabled ?? folders !== false);
+        expect(area.get).toHaveBeenCalledTimes(1);
+        expect(area.set).not.toHaveBeenCalled();
+      }
+    }
+  });
+
+  it.each([
+    [StorageKeys.CHAT_WIDTH_ENABLED, StorageKeys.CHAT_WIDTH, 70, 85],
+    [StorageKeys.EDIT_INPUT_WIDTH_ENABLED, StorageKeys.EDIT_INPUT_WIDTH, 60, 85],
+    [StorageKeys.SIDEBAR_WIDTH_ENABLED, StorageKeys.SIDEBAR_WIDTH, 312, 390],
+  ] as const)(
+    'does not turn off a customized width when %s has never been saved',
+    async (key, widthKey, defaultWidth, customWidth) => {
+      for (const width of [customWidth, defaultWidth, undefined]) {
+        for (const enabled of [undefined, false, true]) {
+          const state: Record<string, unknown> = {};
+          if (width !== undefined) state[widthKey] = width;
+          if (enabled !== undefined) state[key] = enabled;
+          const area = storageWith(state);
+          const { data } = await exportBackupableSyncSettings(area);
+
+          expect.soft(data[key]).toBe(enabled ?? width === customWidth);
+          expect(data[widthKey]).toBe(width ?? defaultWidth);
+          expect(area.get).toHaveBeenCalledTimes(1);
+          expect(area.set).not.toHaveBeenCalled();
+        }
+      }
+    },
+  );
+
+  it('keeps batch delete following folders after a backup made with folders off', async () => {
+    const source: Record<string, unknown> = { [StorageKeys.FOLDER_ENABLED]: false };
+    const { data } = await exportBackupableSyncSettings(storageWith(source));
+    const restored: Record<string, unknown> = {};
+    await restoreBackupableSyncSettings(data, storageWith(restored), 'overwrite');
+    restored[StorageKeys.FOLDER_ENABLED] = true;
+    const binding = LEGACY_ENABLE_BINDINGS['voyager.gemini-batch-delete'];
+
+    expect(binding.derive!(restored, () => false)).toBe(true);
+  });
+
+  it('does not turn off legacy snow or replace a saved effect when exporting settings', async () => {
+    for (const effect of [
+      undefined,
+      'off',
+      'snow',
+      'sakura',
+      'rain',
+      'unknown',
+      null,
+      false,
+      true,
+    ]) {
+      for (const snow of [false, true]) {
+        const state: Record<string, unknown> = { [StorageKeys.GV_SNOW_EFFECT]: snow };
+        if (effect !== undefined) state[StorageKeys.GV_VISUAL_EFFECT] = effect;
+        const { data } = await exportBackupableSyncSettings(storageWith(state));
+
+        expect
+          .soft(data[StorageKeys.GV_VISUAL_EFFECT])
+          .toBe(effect === undefined ? (snow ? 'snow' : 'off') : effect);
+        expect(data[StorageKeys.GV_SNOW_EFFECT]).toBe(snow);
+        expect
+          .soft(
+            resolveVisualEffect(
+              data[StorageKeys.GV_VISUAL_EFFECT],
+              data[StorageKeys.GV_SNOW_EFFECT],
+            ),
+          )
+          .toBe(resolveVisualEffect(effect, snow));
+      }
+    }
+  });
+
+  it('does not change any derived feature state after a settings export and restore', async () => {
+    const variants = (key: string, values: readonly unknown[]): Record<string, unknown>[] =>
+      values.map((value) => (value === undefined ? {} : { [key]: value }));
+    const watermarkInputs = (sibling: string) =>
+      variants(StorageKeys.WATERMARK_REMOVER_ENABLED, [undefined, false, true, null]).flatMap(
+        (legacy) =>
+          variants(sibling, [undefined, false, true, null]).map((split) => ({
+            ...legacy,
+            ...split,
+          })),
+      );
+    const inputs: Record<string, Record<string, unknown>[]> = {
+      [StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED]: variants(StorageKeys.FOLDER_ENABLED, [
+        undefined,
+        false,
+        true,
+      ]),
+      [StorageKeys.BATCH_DELETE_ENABLED]: variants(StorageKeys.FOLDER_ENABLED, [
+        undefined,
+        false,
+        true,
+      ]),
+      [StorageKeys.CHAT_WIDTH_ENABLED]: variants(StorageKeys.CHAT_WIDTH, [
+        undefined,
+        70,
+        85,
+        840,
+        960,
+        '85',
+        null,
+      ]),
+      [StorageKeys.EDIT_INPUT_WIDTH_ENABLED]: variants(StorageKeys.EDIT_INPUT_WIDTH, [
+        undefined,
+        60,
+        85,
+        720,
+        960,
+        '85',
+        null,
+      ]),
+      [StorageKeys.SIDEBAR_WIDTH_ENABLED]: variants(StorageKeys.SIDEBAR_WIDTH, [
+        undefined,
+        312,
+        390,
+        26,
+        '390',
+        'invalid',
+        null,
+      ]),
+      [StorageKeys.GV_VISUAL_EFFECT]: variants(StorageKeys.GV_SNOW_EFFECT, [
+        undefined,
+        false,
+        true,
+      ]),
+      [StorageKeys.SAFARI_ENTER_FIX]: [{}],
+      [StorageKeys.WATERMARK_DOWNLOAD_ENABLED]: watermarkInputs(
+        StorageKeys.WATERMARK_PREVIEW_ENABLED,
+      ),
+      [StorageKeys.WATERMARK_PREVIEW_ENABLED]: watermarkInputs(
+        StorageKeys.WATERMARK_DOWNLOAD_ENABLED,
+      ),
+    };
+    const derivedBindings = Object.values(LEGACY_ENABLE_BINDINGS).filter((entry) => entry.derive);
+    const derivedKeys = new Set(
+      derivedBindings
+        .filter((entry) => !WATERMARK_STORAGE_KEYS.some((key) => key === entry.key))
+        .map((entry) => entry.key),
+    );
+    const safari = vi.spyOn(browser, 'isSafari');
+    try {
+      for (const isSafari of [false, true]) {
+        safari.mockReturnValue(isSafari);
+        for (const mode of ['merge', 'overwrite'] as const) {
+          for (const bound of derivedBindings) {
+            expect(inputs[bound.key], `inputs for ${bound.pluginId}`).toBeDefined();
+            for (const input of inputs[bound.key]) {
+              for (const stored of [undefined, false, true, null]) {
+                const source = {
+                  ...input,
+                  ...(stored === undefined ? {} : { [bound.key]: stored }),
+                };
+                const before = resolveEffectiveEnabled({}, source, bound.pluginId);
+                const area = storageWith(source);
+                const { data } = await exportBackupableSyncSettings(area);
+                expect(area.get).toHaveBeenCalledTimes(1);
+                expect(area.set).not.toHaveBeenCalled();
+                if (stored !== undefined) expect(data[bound.key]).toBe(stored);
+
+                // Other keys retain their existing defaults and stored values, including watermark nulls.
+                for (const [key, value] of Object.entries(BACKUPABLE_SYNC_SETTINGS_DEFAULTS)) {
+                  if (!derivedKeys.has(key))
+                    expect(data[key]).toEqual(Object.hasOwn(source, key) ? source[key] : value);
+                }
+
+                const restored: Record<string, unknown> = {};
+                await restoreBackupableSyncSettings(
+                  JSON.parse(JSON.stringify(data)),
+                  storageWith(restored),
+                  mode,
+                );
+                expect
+                  .soft(
+                    resolveEffectiveEnabled({}, restored, bound.pluginId),
+                    `${bound.pluginId}, ${mode}, Safari=${isSafari}, source=${JSON.stringify(source)}`,
+                  )
+                  .toBe(before);
+              }
+            }
+          }
+        }
+      }
+    } finally {
+      safari.mockRestore();
+    }
+  });
+});

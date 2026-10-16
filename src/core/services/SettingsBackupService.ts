@@ -3,6 +3,7 @@ import { DEFAULT_HIGHLIGHT_COLOR_PALETTE } from '@/core/types/highlight';
 import type { SettingsExportPayload } from '@/core/types/sync';
 import { EXTENSION_VERSION } from '@/core/utils/version';
 import { WATERMARK_STORAGE_KEYS } from '@/core/utils/watermarkSettings';
+import { LEGACY_ENABLE_BINDINGS } from '@/features/plugins/storage/legacySettingBindings';
 
 export type BackupableSyncSettings = Record<string, unknown>;
 export type SettingsRestoreMode = 'merge' | 'overwrite';
@@ -532,7 +533,9 @@ function getStorageArea(storageArea?: StorageAreaLike): StorageAreaLike {
 
   return {
     get: async (keys?: unknown) =>
-      typeof keys === 'object' && keys !== null ? (keys as Record<string, unknown>) : {},
+      typeof keys === 'object' && keys !== null && !Array.isArray(keys)
+        ? (keys as Record<string, unknown>)
+        : {},
     set: async () => undefined,
   } as StorageAreaLike;
 }
@@ -561,8 +564,28 @@ export async function loadBackupableSyncSettings(
   storageArea?: StorageAreaLike,
 ): Promise<BackupableSyncSettings> {
   const area = getStorageArea(storageArea);
-  const result = await area.get(BACKUPABLE_SYNC_SETTINGS_DEFAULTS);
-  return filterBackupableSyncSettings(result);
+  const snapshot = await area.get<Record<string, unknown>>(BACKUPABLE_SYNC_SETTINGS_KEYS);
+  const settings: BackupableSyncSettings = { ...BACKUPABLE_SYNC_SETTINGS_DEFAULTS, ...snapshot };
+  for (const bound of Object.values(LEGACY_ENABLE_BINDINGS)) {
+    if (
+      !bound.derive ||
+      !Object.prototype.hasOwnProperty.call(BACKUPABLE_SYNC_SETTINGS_DEFAULTS, bound.key) ||
+      Object.prototype.hasOwnProperty.call(snapshot, bound.key)
+    )
+      continue;
+    // Watermark nulls already preserve the resolver's state and mean "no saved choice" on restore.
+    if (WATERMARK_STORAGE_KEYS.some((key) => key === bound.key)) continue;
+    const effective = bound.derive(snapshot, () => false);
+    const defaults: Readonly<Record<string, unknown>> = BACKUPABLE_SYNC_SETTINGS_DEFAULTS;
+    const withDefault = bound.derive(
+      { ...snapshot, [bound.key]: defaults[bound.key] },
+      () => false,
+    );
+    // Write the derived value only where the static default would change what the page uses now;
+    // a gate such as batch delete's folders dependency must stay a default, or it would stick off.
+    if (effective !== withDefault) settings[bound.key] = bound.write(effective);
+  }
+  return filterBackupableSyncSettings(settings);
 }
 
 export async function exportBackupableSyncSettings(

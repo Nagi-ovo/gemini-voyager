@@ -206,7 +206,7 @@ describe('SettingsBackupService', () => {
 
     const payload = await exportBackupableSyncSettings(storageArea);
 
-    expect(storageArea.get).toHaveBeenCalledWith(BACKUPABLE_SYNC_SETTINGS_DEFAULTS);
+    expect(storageArea.get).toHaveBeenCalledTimes(1);
     expect(payload).toEqual({
       format: 'gemini-voyager.settings.v1',
       exportedAt: expect.any(String),
