@@ -1,55 +1,16 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback } from 'react';
 
 import { StorageKeys } from '@/core/types/common';
 import { useWidthAdjuster } from '@/hooks/useWidthAdjuster';
 
-import {
-  AI_STUDIO_SIDEBAR_PX,
-  FOLDER_SPACING,
-  FOLDER_TREE_INDENT,
-  clampNumber,
-} from '../utils/layoutSettings';
+import { FOLDER_SPACING, FOLDER_TREE_INDENT, clampNumber } from '../utils/layoutSettings';
 
-// Gemini's chat, edit input and sidebar appearance rows live in the Plugins card,
-// which reads the live legacy snapshot; this card keeps only AI Studio's sidebar width.
-export const LAYOUT_SETTINGS_STORAGE_DEFAULTS = {
-  [StorageKeys.SIDEBAR_WIDTH_ENABLED]: false,
-};
-
+// The appearance and sidebar width rows live in the Plugins card; this keeps the folder sliders.
 export interface PopupLayoutSettingsOptions {
   isAIStudio: boolean;
 }
 
 export function usePopupLayoutSettings({ isAIStudio }: PopupLayoutSettingsOptions) {
-  const [sidebarWidthEnabled, setSidebarWidthEnabled] = useState(false);
-
-  // AI Studio's sidebar width; Gemini's is the sidebar width row in the Plugins card.
-  const sidebarConfig = useMemo(
-    () => ({
-      key: StorageKeys.AISTUDIO_SIDEBAR_WIDTH,
-      min: AI_STUDIO_SIDEBAR_PX.min,
-      max: AI_STUDIO_SIDEBAR_PX.max,
-      def: AI_STUDIO_SIDEBAR_PX.defaultValue,
-      norm: (v: number) => clampNumber(v, AI_STUDIO_SIDEBAR_PX.min, AI_STUDIO_SIDEBAR_PX.max),
-    }),
-    [],
-  );
-
-  const sidebarWidthAdjuster = useWidthAdjuster({
-    storageKey: sidebarConfig.key,
-    defaultValue: sidebarConfig.def,
-    normalize: sidebarConfig.norm,
-    onApply: useCallback(
-      (widthPx: number) => {
-        const clamped = sidebarConfig.norm(widthPx);
-        try {
-          chrome.storage?.sync?.set({ [sidebarConfig.key]: clamped });
-        } catch {}
-      },
-      [sidebarConfig],
-    ),
-  });
-
   // Folder spacing adjuster (Context-aware: Gemini vs AI Studio)
   const folderSpacingKey = isAIStudio
     ? StorageKeys.GV_AISTUDIO_FOLDER_SPACING
@@ -82,25 +43,9 @@ export function usePopupLayoutSettings({ isAIStudio }: PopupLayoutSettingsOption
     }, []),
   });
 
-  const hydrateFromStorage = useCallback((stored: Record<string, unknown>) => {
-    setSidebarWidthEnabled(stored[StorageKeys.SIDEBAR_WIDTH_ENABLED] === true);
-  }, []);
-
-  const onSidebarWidthEnabledChange = useCallback((enabled: boolean) => {
-    setSidebarWidthEnabled(enabled);
-    try {
-      chrome.storage?.sync?.set({ [StorageKeys.SIDEBAR_WIDTH_ENABLED]: enabled });
-    } catch {}
-  }, []);
-
   return {
-    sidebarConfig,
-    sidebarWidthAdjuster,
     folderSpacingAdjuster,
     folderTreeIndentAdjuster,
-    sidebarWidthEnabled,
-    hydrateFromStorage,
-    onSidebarWidthEnabledChange,
   };
 }
 

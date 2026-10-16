@@ -18,19 +18,8 @@ describe('native popup site capabilities', () => {
     }
   });
 
-  it("leaves AI Studio's sidebar width card off Gemini, whose width is a Plugins row", () => {
-    expect(isNativePopupSectionAvailable('gemini', 'sidebarWidth')).toBe(false);
-    expect(isNativePopupSettingAvailable('gemini', 'sidebarWidth', 'controls')).toBe(false);
-    expect(isNativePopupSectionAvailable('aistudio', 'sidebarWidth')).toBe(true);
-  });
-
   it('keeps supported AI Studio sections and all of their settings', () => {
-    for (const sectionId of [
-      'cloudSync',
-      'folderSpacing',
-      'sidebarWidth',
-      'visualEffect',
-    ] as const) {
+    for (const sectionId of ['cloudSync', 'folderSpacing', 'visualEffect'] as const) {
       expect(isNativePopupSectionAvailable('aistudio', sectionId)).toBe(true);
       expect(isNativePopupSettingAvailable('aistudio', sectionId, 'any-setting')).toBe(true);
     }

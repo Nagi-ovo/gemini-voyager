@@ -172,7 +172,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     timeline: timeline.hydrateFromStorage,
     folder: folder.hydrateFromStorage,
     general: general.hydrateFromStorage,
-    layout: layout.hydrateFromStorage,
     promptManager: promptManager.hydrateFromStorage,
     visualEffect: visualEffect.hydrateFromStorage,
     watermark: watermark.hydrateFromStorage,

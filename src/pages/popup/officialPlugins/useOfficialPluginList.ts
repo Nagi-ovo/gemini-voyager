@@ -92,13 +92,16 @@ export function useOfficialPluginList({
         ...Object.entries(values).map(([key, value]) => legacyValueWrite(pluginId, key, value)),
       ) as Record<string, unknown>;
       const binding = legacyBindingFor(pluginId);
-      // A never-stored width switch reads on only while the width is customized, so moving the
-      // width back to its default would turn the row, and the page, off under the user's hand.
-      // A setting is offered only while the row is on: store that switch as shown.
+      // A never-stored Gemini width switch reads on only while the width is customized, so moving
+      // the width back to its default would turn the row, and the page, off under the user's hand.
+      // A setting is offered only while the row is on: store that switch as shown, but only when
+      // this write would flip it (AI Studio's follows the folders switch, not its width).
       if (
         binding?.derive &&
         Object.keys(payload).length > 0 &&
-        shownLegacy[binding.key] === undefined
+        shownLegacy[binding.key] === undefined &&
+        // The popup has no page lifetime: nothing here was changed live.
+        !binding.derive({ ...shownLegacy, ...payload }, () => false)
       ) {
         Object.assign(payload, legacyEnableWrite(pluginId, true));
       }

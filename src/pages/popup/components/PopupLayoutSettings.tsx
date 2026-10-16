@@ -14,14 +14,7 @@ export interface PopupLayoutSettingsProps {
 }
 
 export function PopupLayoutSettings({ settings, t, wrapSection }: PopupLayoutSettingsProps) {
-  const {
-    sidebarConfig,
-    sidebarWidthAdjuster,
-    folderSpacingAdjuster,
-    folderTreeIndentAdjuster,
-    sidebarWidthEnabled,
-    onSidebarWidthEnabledChange,
-  } = settings;
+  const { folderSpacingAdjuster, folderTreeIndentAdjuster } = settings;
 
   return (
     <>
@@ -54,24 +47,6 @@ export function PopupLayoutSettings({ settings, t, wrapSection }: PopupLayoutSet
           valueFormatter={(v) => `${v}px`}
           onChange={folderTreeIndentAdjuster.handleChange}
           onChangeComplete={folderTreeIndentAdjuster.handleChangeComplete}
-        />,
-      )}
-      {/* AI Studio's sidebar width; Gemini's is a row in the Plugins card. */}
-      {wrapSection(
-        'sidebarWidth',
-        <WidthSlider
-          label="AI Studio Sidebar"
-          value={sidebarWidthAdjuster.width}
-          min={sidebarConfig.min}
-          max={sidebarConfig.max}
-          step={8}
-          narrowLabel={t('sidebarWidthNarrow')}
-          wideLabel={t('sidebarWidthWide')}
-          valueFormatter={(v) => `${v}px`}
-          onChange={sidebarWidthAdjuster.handleChange}
-          onChangeComplete={sidebarWidthAdjuster.handleChangeComplete}
-          enabled={sidebarWidthEnabled}
-          onToggle={onSidebarWidthEnabledChange}
         />,
       )}
     </>

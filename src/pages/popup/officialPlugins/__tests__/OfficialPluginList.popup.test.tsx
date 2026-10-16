@@ -477,6 +477,7 @@ describe('the official plugin list in the popup', () => {
       if (stored !== undefined) sync[StorageKeys.AISTUDIO_ENTER_SEND] = stored;
       await mount();
       expect(listedIds()).toEqual([
+        OFFICIAL_PLUGIN_IDS.aistudioSidebarWidth,
         OFFICIAL_PLUGIN_IDS.visualEffects,
         OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy,
         OFFICIAL_PLUGIN_IDS.aistudioEnterSend,

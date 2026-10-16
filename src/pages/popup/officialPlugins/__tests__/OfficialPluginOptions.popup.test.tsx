@@ -220,6 +220,74 @@ describe('official plugin rows with options', () => {
     });
   });
 
+  describe("AI Studio's sidebar width row", () => {
+    const id = OFFICIAL_PLUGIN_IDS.aistudioSidebarWidth;
+    const width = () => row(id)!.querySelector<HTMLInputElement>('input[type="range"]');
+    const onAIStudio = () => extensionApi.tabs.query.mockResolvedValue([{ id: 8, url: AI_STUDIO }]);
+
+    it.each([
+      ['missing, folders missing', {}, true],
+      ['missing, folders on', { [StorageKeys.FOLDER_ENABLED]: true }, true],
+      ['missing, folders off', { [StorageKeys.FOLDER_ENABLED]: false }, false],
+      [
+        'false, folders on',
+        { [StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED]: false, [StorageKeys.FOLDER_ENABLED]: true },
+        false,
+      ],
+      [
+        'true, folders off',
+        { [StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED]: true, [StorageKeys.FOLDER_ENABLED]: false },
+        true,
+      ],
+    ] as const)(
+      'shows a switch stored %s the way the page reads it',
+      async (_label, stored, on) => {
+        onAIStudio();
+        Object.assign(sync, stored);
+        await mount();
+        expect(toggle(id).checked).toBe(on);
+        expect(width() !== null).toBe(on);
+      },
+    );
+
+    it('while its switch is unstored, follows the folders switch live', async () => {
+      onAIStudio();
+      await mount();
+      expect(toggle(id).checked).toBe(true);
+      await act(async () => emitSyncChange({ [StorageKeys.FOLDER_ENABLED]: false }));
+      expect(toggle(id).checked).toBe(false);
+    });
+
+    it('its first switch write stores only its own key', async () => {
+      onAIStudio();
+      await mount();
+      await act(async () => toggle(id).click());
+      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+        [StorageKeys.AISTUDIO_SIDEBAR_WIDTH_ENABLED]: false,
+      });
+      expect(sync[StorageKeys.FOLDER_ENABLED]).toBeUndefined();
+      expect(pluginStateWritten()).toBe(false);
+    });
+
+    it('keeps the old 240-600 px range and saves only the width on release', async () => {
+      onAIStudio();
+      await mount();
+      expect([width()!.min, width()!.max, width()!.value]).toEqual(['240', '600', '280']);
+      drag(width()!, 400);
+      expect(extensionApi.storage.sync.set).not.toHaveBeenCalled();
+      await act(async () => width()!.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })));
+      // The unstored switch still follows the folders, so the width alone is written.
+      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+        [StorageKeys.AISTUDIO_SIDEBAR_WIDTH]: 400,
+      });
+    });
+
+    it('is not a Gemini row', async () => {
+      await mount();
+      expect(row(id)).toBeNull();
+    });
+  });
+
   describe('the recent Gems row', () => {
     const id = OFFICIAL_PLUGIN_IDS.geminiGemsSidebar;
     const count = () => row(id)!.querySelector<HTMLInputElement>('input[type="range"]');

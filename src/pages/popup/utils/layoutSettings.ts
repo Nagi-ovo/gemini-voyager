@@ -50,12 +50,6 @@ export const SIDEBAR_PX = {
   max: Math.round(pxFromPercent(SIDEBAR_PERCENT.max)),
   defaultValue: Math.round(pxFromPercent(SIDEBAR_PERCENT.defaultValue)),
 };
-export const AI_STUDIO_SIDEBAR_PX = {
-  min: 240,
-  max: 600,
-  defaultValue: 280,
-};
-
 const clampSidebarPx = (value: number) => clampNumber(value, SIDEBAR_PX.min, SIDEBAR_PX.max);
 export const normalizeSidebarPx = (value: number) => {
   if (!Number.isFinite(value)) return SIDEBAR_PX.defaultValue;

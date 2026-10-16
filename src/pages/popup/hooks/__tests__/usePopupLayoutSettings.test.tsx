@@ -6,7 +6,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { StorageKeys } from '@/core/types/common';
 
 import {
-  LAYOUT_SETTINGS_STORAGE_DEFAULTS,
   type PopupLayoutSettingsController,
   usePopupLayoutSettings,
 } from '../usePopupLayoutSettings';
@@ -63,62 +62,38 @@ describe('usePopupLayoutSettings', () => {
     container.remove();
   });
 
-  it('hydrates the bulk defaults without enabling adjustments or writing storage', () => {
+  it('starts the folder sliders at their defaults without writing storage', () => {
     render(true);
-    act(() => settings.hydrateFromStorage(LAYOUT_SETTINGS_STORAGE_DEFAULTS));
-    expect(settings.sidebarWidthEnabled).toBe(false);
-    expect(settings.sidebarWidthAdjuster.width).toBe(280);
     expect(settings.folderSpacingAdjuster.width).toBe(2);
     expect(settings.folderTreeIndentAdjuster.width).toBe(-8);
     expect(chrome.storage.sync.set).not.toHaveBeenCalled();
   });
 
   it('bounds stored numeric controls', () => {
-    stored = {
-      [StorageKeys.AISTUDIO_SIDEBAR_WIDTH]: Number.NaN,
-      [StorageKeys.GV_FOLDER_TREE_INDENT]: -20,
-    };
+    stored = { [StorageKeys.GV_FOLDER_TREE_INDENT]: -20 };
     render(true);
-    expect(settings.sidebarWidthAdjuster.width).toBe(280);
     expect(settings.folderTreeIndentAdjuster.width).toBe(-8);
     expect(chrome.storage.sync.set).not.toHaveBeenCalled();
   });
 
-  it("saves AI Studio's sidebar width and folder spacing without touching Gemini's", () => {
+  it("saves AI Studio's folder spacing without touching Gemini's", () => {
     stored = {
-      [StorageKeys.SIDEBAR_WIDTH]: 360,
-      [StorageKeys.AISTUDIO_SIDEBAR_WIDTH]: 496,
       [StorageKeys.GV_FOLDER_SPACING]: 4,
       [StorageKeys.GV_AISTUDIO_FOLDER_SPACING]: 8,
     };
     render();
     expect(settings.folderSpacingAdjuster.width).toBe(4);
     render(true);
-    expect(settings.sidebarWidthAdjuster.width).toBe(496);
     expect(settings.folderSpacingAdjuster.width).toBe(8);
     act(() => {
-      settings.sidebarWidthAdjuster.handleChange(1000);
-      settings.sidebarWidthAdjuster.handleChangeComplete();
       settings.folderSpacingAdjuster.handleChange(20);
       settings.folderSpacingAdjuster.handleChangeComplete();
     });
     expect(vi.mocked(chrome.storage.sync.set).mock.calls).toEqual([
-      [{ [StorageKeys.AISTUDIO_SIDEBAR_WIDTH]: 600 }],
       [{ [StorageKeys.GV_AISTUDIO_FOLDER_SPACING]: 16 }],
     ]);
     render();
     expect(settings.folderSpacingAdjuster.width).toBe(4);
-    expect(chrome.storage.sync.set).toHaveBeenCalledTimes(2);
-  });
-
-  it('stores an explicit off under the shared sidebar width switch', () => {
-    render(true);
-    act(() => settings.hydrateFromStorage({ [StorageKeys.SIDEBAR_WIDTH_ENABLED]: true }));
-    expect(settings.sidebarWidthEnabled).toBe(true);
-    act(() => settings.onSidebarWidthEnabledChange(false));
-    expect(settings.sidebarWidthEnabled).toBe(false);
-    expect(chrome.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
-      [StorageKeys.SIDEBAR_WIDTH_ENABLED]: false,
-    });
+    expect(chrome.storage.sync.set).toHaveBeenCalledTimes(1);
   });
 });

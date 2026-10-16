@@ -200,6 +200,23 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     },
   },
   {
+    // AI Studio's own pixel width; until its switch is stored it follows the folders switch.
+    id: OFFICIAL_PLUGIN_IDS.aistudioSidebarWidth,
+    group: 'appearance',
+    formerSectionTitle: 'sidebarWidth',
+    searchKeys: ['sidebarWidth', 'sidebarWidthNarrow', 'sidebarWidthWide'],
+    searchAliases: ['side panel nav rail left width 侧边栏 宽度'],
+    sliders: {
+      widthPx: {
+        label: 'sidebarWidth',
+        minLabel: 'sidebarWidthNarrow',
+        maxLabel: 'sidebarWidthWide',
+        step: 8,
+        unit: 'px',
+      },
+    },
+  },
+  {
     id: OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide,
     group: 'appearance',
     formerSectionTitle: 'sidebarAutoHide',

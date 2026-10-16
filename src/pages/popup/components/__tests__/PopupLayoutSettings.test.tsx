@@ -63,22 +63,13 @@ describe('PopupLayoutSettings', () => {
     container.querySelector<HTMLInputElement>(`input[type="range"][aria-label="${label}"]`)!;
 
   it('renders the layout sections that stay outside the Plugins card, each once', () => {
-    // On AI Studio, where the sidebar width card remains (Gemini's is a Plugins row).
+    // Both sites' sidebar widths are Plugins rows; only the folder sliders remain here.
     render({ isAIStudio: true });
     expect(
       Array.from(container.querySelectorAll('section')).map((section) => section.dataset.section),
-    ).toEqual(['folderSpacing', 'folderTreeIndent', 'sidebarWidth']);
+    ).toEqual(['folderSpacing', 'folderTreeIndent']);
     expect(slider('folderSpacing').getAttribute('aria-valuetext')).toBe('2px');
     expect(container.querySelector('input[aria-label="chatWidth"]')).toBeNull();
-    expect(chrome.storage.sync.set).not.toHaveBeenCalled();
-  });
-
-  it('shows the AI Studio sidebar label, bounds and default', () => {
-    render({ isAIStudio: true });
-    const sidebar = slider('AI Studio Sidebar');
-    expect(sidebar.value).toBe('280');
-    expect(sidebar.min).toBe('240');
-    expect(sidebar.max).toBe('600');
     expect(chrome.storage.sync.set).not.toHaveBeenCalled();
   });
 });

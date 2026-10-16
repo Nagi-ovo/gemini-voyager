@@ -5,7 +5,6 @@ import { StorageKeys } from '@/core/types/common';
 import { writePopupSyncStorage } from '../utils/popupStorage';
 import { FOLDER_SETTINGS_STORAGE_DEFAULTS } from './useFolderPopupSettings';
 import { GENERAL_SETTINGS_STORAGE_DEFAULTS } from './useGeneralPopupSettings';
-import { LAYOUT_SETTINGS_STORAGE_DEFAULTS } from './usePopupLayoutSettings';
 import { SECTION_LAYOUT_STORAGE_DEFAULTS } from './usePopupSections';
 import { PROMPT_MANAGER_STORAGE_DEFAULTS } from './usePromptManagerSettings';
 import { TIMELINE_SETTINGS_STORAGE_DEFAULTS } from './useTimelinePopupSettings';
@@ -19,7 +18,6 @@ export function usePopupSettingsHydration({
   timeline,
   folder,
   general,
-  layout,
   promptManager,
   visualEffect,
   watermark,
@@ -29,7 +27,6 @@ export function usePopupSettingsHydration({
   timeline: HydrateSettings;
   folder: HydrateSettings;
   general: HydrateSettings;
-  layout: HydrateSettings;
   promptManager: HydrateSettings;
   visualEffect: HydrateSettings;
   watermark: HydrateSettings;
@@ -43,7 +40,6 @@ export function usePopupSettingsHydration({
           ...TIMELINE_SETTINGS_STORAGE_DEFAULTS,
           ...FOLDER_SETTINGS_STORAGE_DEFAULTS,
           ...GENERAL_SETTINGS_STORAGE_DEFAULTS,
-          ...LAYOUT_SETTINGS_STORAGE_DEFAULTS,
           ...PROMPT_MANAGER_STORAGE_DEFAULTS,
           ...VISUAL_EFFECT_STORAGE_DEFAULTS,
           ...WATERMARK_SETTINGS_STORAGE_DEFAULTS,
@@ -56,7 +52,6 @@ export function usePopupSettingsHydration({
           timeline(raw);
           folder(raw);
           general(raw);
-          layout(raw);
           promptManager(raw);
           visualEffect(raw);
           watermark(raw);
@@ -71,15 +66,5 @@ export function usePopupSettingsHydration({
     } catch {
       // Keep initial values when the extension storage context is unavailable.
     }
-  }, [
-    timeline,
-    folder,
-    general,
-    layout,
-    promptManager,
-    visualEffect,
-    watermark,
-    sections,
-    aiStudio,
-  ]);
+  }, [timeline, folder, general, promptManager, visualEffect, watermark, sections, aiStudio]);
 }

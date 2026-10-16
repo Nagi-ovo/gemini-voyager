@@ -30,11 +30,7 @@ export const SECTION_LAYOUT_STORAGE_DEFAULTS = { [StorageKeys.GV_POPUP_SECTION_O
 
 const DEFAULT_SECTION_ORDER: readonly PopupSectionId[] = NATIVE_POPUP_SECTION_IDS;
 const NO_EXTRA_SEARCH_ITEMS: readonly PopupSettingsSearchItem[] = [];
-const VALUE_BADGE_SECTION_IDS = new Set<PopupSectionId>([
-  'folderSpacing',
-  'folderTreeIndent',
-  'sidebarWidth',
-]);
+const VALUE_BADGE_SECTION_IDS = new Set<PopupSectionId>(['folderSpacing', 'folderTreeIndent']);
 
 /**
  * A saved order predates any section added since it was written. Each missing

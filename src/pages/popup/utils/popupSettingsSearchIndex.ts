@@ -121,13 +121,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ['folderTreeIndent', 'folderTreeIndentCompact', 'folderTreeIndentSpacious'],
     ['folder nesting tree indent hierarchy 层级 缩进 树'],
   ),
-  popupSectionSearchTarget('sidebarWidth', ['sidebarWidth']),
-  popupSearchTarget(
-    'sidebarWidth',
-    'controls',
-    ['sidebarWidth', 'sidebarWidthNarrow', 'sidebarWidthWide'],
-    ['side panel nav rail left width 侧边栏 宽度'],
-  ),
   popupSectionSearchTarget('visualEffect', ['visualEffect']),
   popupSearchTarget(
     'visualEffect',
