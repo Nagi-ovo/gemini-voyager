@@ -58,6 +58,7 @@ const FEATURE_ORDER = [
   'prompt-history',
   'composer-counter',
   'reading-width',
+  'edit-input-width',
   'sidebar-width',
   'sidebar-auto-hide',
   'sidebar-full-hide',
@@ -146,6 +147,8 @@ const GUIDE_PAGES: Readonly<Record<string, string>> = {
   'ctrl-enter-send': 'send-behavior',
   'enter-send': 'send-behavior',
   'reading-typography': 'chat-font-size',
+  'edit-input-width': 'settings',
+  'visual-effects': 'settings',
   'sidebar-width': 'sidebar',
   'sidebar-full-hide': 'sidebar-auto-hide',
 };

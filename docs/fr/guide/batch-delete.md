@@ -15,7 +15,7 @@ Supprimez plusieurs conversations à la fois sur Gemini et AI Studio, fini la su
 
 ## Comment Utiliser
 
-Elle est activée par défaut. Basculez-la sous **Plugins** → **Suppression groupée** (identique sur Gemini et AI Studio). Elle nécessite les dossiers : si **Options des dossiers** → **Activer les dossiers** est désactivé, la ligne reste grisée jusqu'à ce que vous les activiez.
+Elle est activée par défaut. Basculez-la sous **Extensions** → **Suppression groupée** (identique sur Gemini et AI Studio). Elle nécessite les dossiers : si **Options des dossiers** → **Activer les dossiers** est désactivé, la ligne reste grisée jusqu'à ce que vous les activiez.
 
 ### Gemini
 

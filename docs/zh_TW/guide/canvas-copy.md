@@ -2,7 +2,7 @@
 
 Voyager 在 Gemini Canvas 的匯出選單中加入 **複製為 Markdown**，將文件內容複製到剪貼簿，方便貼到筆記或 Markdown 編輯器。
 
-此功能預設開啟，不需設定。
+此功能預設開啟，不需設定。如需關閉，請開啟 Voyager 彈出視窗，關閉**外掛** → **Canvas 複製為 Markdown**。
 
 ## 使用方式
 

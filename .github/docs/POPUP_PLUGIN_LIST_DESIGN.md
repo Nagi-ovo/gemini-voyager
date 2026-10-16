@@ -225,7 +225,7 @@ export interface OfficialPluginEntry {
 - **搜索目标**：`usePopupSections` 接收动态条目 `officialPlugins:<pluginId>`，只为实际列出的行生成（与行使用同一资格判断）。语料 = manifest 所有语言的名称和描述 + registry `searchKeys` / `searchAliases`，经 `buildSettingsSearchCorpus`（`src/pages/popup/utils/settingsSearch.ts:85-90`）。旧条目的 `keys` 和别名原样搬进 registry，旧查询继续命中。
 - **Section**：新 id `officialPlugins` 替换永远隐藏的 `plugins`，默认放在 `localPlugins` 前。已存顺序不需要迁移：新 id 插在默认前驱之后（`usePopupSections.ts:47-55`），不存在的 id 在读取时被丢弃（`:112-116`）。之后删除各功能 section id 同样安全。AI Studio 白名单加 `officialPlugins: true`；没有行时卡片隐藏。
 - **Batch 5 的 Timeline section**：Gemini 上 `timeline` 同时移除可见性、搜索目标和排序占位，否则"上移"会与不可见的 Timeline 交换，残留搜索目标还会让"无结果"不显示。插件站 rail 的 Timeline 卡改用独立的显示条件，不再借 Gemini 的 section。消息时间迁走时，搜索谓词一起迁。
-- **定位提示**：每次迁移删掉对应的 `LOCATIONS` 条目，`pluginBlockedNote` 退回到 `pluginDisplayName`（`pluginBlockedNote.ts:73-75`），说出的是同一 popup 里看得到的行名。`LOCATIONS` 清空后删除该模块、10 个语言的 `pluginBlockedByOfficialSetting` 和 `OfficialFeatureStatus.tsx`。
+- **定位提示**：旧 `LOCATIONS` 与 `officialFeatureSetting.ts` 已移除；`pluginBlockedNote.ts` 的 `officialSwitch` 现在通过 registry 找到官方插件，使用 manifest 行名与 `pluginsTitle` 指向同一 popup 的 Plugins 卡片。保留十语种 `pluginBlockedByOfficialSetting`，`src/pages/popup/components/pluginBlockedNote.ts:86` 仍用它说明应关闭哪一行；它不再指向旧设置卡片。
 - **从页面定位**：默认模型失败提示会打开 popup（`src/pages/content/defaultModel/autoApply.ts:221-247`）。建议在 `gv.openPopup` 前把插件名写入 local 的 `gvPopupSettingsSearchQuery`，popup 打开时已经过滤到那一行（`usePopupSections.ts:82-99` 会恢复它）。
 
 ### 3.7 备份、恢复、云同步
@@ -296,14 +296,14 @@ export interface OfficialPluginEntry {
 
 1. 在 `src/pages/popup/officialPlugins/officialPluginRegistry.ts` 加条目：组、位置、从 `utils/popupSettingsSearchIndex.ts` 搬来的 `searchKeys` / `searchAliases`（含旧 section 标题键）；按 §3.3 需要时才加 `eligible`、`experimental`、`panel`、`control`。
 2. 需要时在 `officialPluginPanels.tsx` 加面板：复用旧卡片 JSX，`enabled` 从行来，持久值从快照来，按 §2.7 补 a11y/RTL。
-3. 删除旧界面：卡片行或 `wrapSection` 调用、hook 状态、`*_STORAGE_DEFAULTS` 键、`nativeSiteCapabilities.ts` 的 section id / AI Studio 白名单 / `VALUE_BADGE_SECTION_IDS`、搜索条目、`officialFeatureSetting.ts` 条目。
+3. 删除旧界面：卡片行或 `wrapSection` 调用、hook 状态、`*_STORAGE_DEFAULTS` 键、`nativeSiteCapabilities.ts` 的 section id / AI Studio 白名单 / `VALUE_BADGE_SECTION_IDS`、搜索条目；旧 `officialFeatureSetting.ts` 已随 `LOCATIONS` 清空删除，无需新增定位表。
 4. 文案：只删除仅被已删行使用、且没有作为 `searchKeys` 或 manifest `messageKeys` 保留的键，10 个语言一起删；`bun run i18n:check`。
 5. 测试：把 id 加进 缺失 / false / true 表，迁移卡片测试的断言；契约测试负责其余。
-6. 文档：该功能 guide 的所有语言版本改成"**插件** → **<名称>**"（现有措辞指向卡片，例如 `docs/en/guide/mermaid.md:18`、`send-behavior.md:23`、`timeline.md:20`、`:44`、`:93`）。
+6. 文档：该功能 guide 的所有语言版本写明 popup 的「**Plugins 卡片标题** → **manifest 行名**」，两者都使用各语言实际文案。
 
-**示例：Edit input width**（`voyager.gemini-edit-input-width`）。运行时已在 §7.12 8-1 完成，只剩 popup 移动，随 Batch 3 与其他滑块一起：registry 加"外观"条目（`searchKeys` 来自 `popupSettingsSearchIndex.ts` 的 `editInputWidth` 条目）；manifest 已声明 `widthPercent`，value binding 已有（`legacyValueBindings.ts`），只需 `legacyValueWrite` 支持它；删除 `PopupLayoutSettings.tsx:232-247`、`usePopupLayoutSettings.ts` 里 edit input 的调节器和开关，以及 `editInputWidth` section id 和它的徽标条目；备份默认值 `EDIT_INPUT_WIDTH_ENABLED: false` 会被契约测试拦下（§3.7）。
+**已完成示例：Edit input width**（`voyager.gemini-edit-input-width`）。运行时在 §7.12 8-1 完成，popup 随 Batch 3 迁入「外观」组。Registry 保留原 section 标题、搜索词和 `widthPercent` 滑块，开关与数值分别经 `legacyEnableWrite`、`legacyValueWrite` 写原键；旧卡片控件、hook 状态和 section 已移除。备份默认值对缺失开关的影响仍是 §3.7 记录的既有限制。
 
-其余待迁功能的要点（来自审计）：Auto-hide / Full hide 两行共用一个 controller；Gems sidebar 的 count 0 不能变成"开"；AI Studio sidebar width 需要新的开关键；Visual effects 需要枚举绑定，且跨站共享一个选择（届时再扩展 value binding 的类型）；Context Sync 是一个包含端口、状态和同步按钮的面板；NanoBanana 两行，沿用 `src/core/utils/watermarkSettings.ts` 的 resolver。
+其余列出的功能也已完成：Auto-hide / Full hide 两行共用一个 controller；Gems sidebar 的 count=0 只隐藏列表，总开关独立；AI Studio sidebar width 使用独立开关键，缺失时跟随文件夹开关；Visual effects 通过 enum binding 保留跨站共享选择，Gemini / AI Studio 成行，其他站点保留卡片；Context Sync 的端口、状态和同步按钮在行下的面板里；NanoBanana 两行沿用 `src/core/utils/watermarkSettings.ts` 的 resolver。插件站 rail 的 `TimelineSettingsCard` 面板登记仍按 §4.4 跟进。
 
 ---
 

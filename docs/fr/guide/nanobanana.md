@@ -18,7 +18,7 @@ Image Refinement utilise un algorithme de **Mélange Alpha Inversé**.
 
 ## Comment Utiliser
 
-Ouvrez la popup de Voyager et activez les lignes de votre choix sous **Plugins**. Les deux sont désactivées par défaut :
+Ouvrez la popup de Voyager et activez les lignes de votre choix sous **Extensions**. Les deux sont désactivées par défaut :
 
 - **Retirer le filigrane au téléchargement** (recommandé) : lorsque vous cliquez sur le bouton de téléchargement de Gemini, le fichier enregistré n'a plus de filigrane. Un petit badge 🍌 sur le bouton indique que la fonction est active ; le bouton reste celui de Gemini.
 - **Retirer le filigrane dans l'aperçu** (marqué **Expérimental**) : nettoie aussi les images affichées à l'écran. C'est plus lent, et une image peut scintiller brièvement pendant son traitement.

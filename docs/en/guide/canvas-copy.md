@@ -2,7 +2,7 @@
 
 Voyager adds **Copy as Markdown** to the Export menu in Gemini Canvas. Copy the document to your clipboard, then paste it into your notes or a Markdown editor.
 
-This feature is on by default and needs no setup.
+This feature is on by default and needs no setup. To turn it off, open the Voyager popup and switch off **Plugins** → **Canvas copy as Markdown**.
 
 ## How to use it
 

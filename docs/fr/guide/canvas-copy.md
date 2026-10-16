@@ -2,7 +2,7 @@
 
 Voyager ajoute **Copier en Markdown** au menu Exporter de Gemini Canvas. Copiez le document dans le presse-papiers, puis collez-le dans vos notes ou dans un éditeur Markdown.
 
-Cette fonction est activée par défaut et ne nécessite aucun réglage.
+Cette fonction est activée par défaut et ne nécessite aucun réglage. Pour la désactiver, ouvrez la popup de Voyager et désactivez **Extensions** → **Copier Canvas en Markdown**.
 
 ## Utilisation
 

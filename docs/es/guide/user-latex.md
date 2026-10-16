@@ -6,6 +6,8 @@
 
 Renderiza automáticamente las fórmulas LaTeX en los mensajes del usuario como notación matemática.
 
+Activa o desactiva esta función en la ventana emergente de Voyager, en **Complementos** → **LaTeX en tus mensajes**.
+
 ## Descripción general
 
 Cuando usas sintaxis LaTeX en el chat de Gemini™ (por ejemplo, `$E=mc^2$` o `$$\int_0^1 x^2 dx$$`), Voyager detecta y renderiza automáticamente fórmulas matemáticas elegantes.

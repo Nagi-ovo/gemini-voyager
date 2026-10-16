@@ -321,8 +321,8 @@ plugins target them; neither goes through the remote catalog, which never
 serves these hosts and never publishes their manifests. The official ones replace native modules feature by
 feature. Stage 7 retires migrated native startup callbacks and registrations; the content script
 admits each official plugin where its native module used to start, and the
-plugin follows the native setting it replaces (`storage/legacySettingBindings.ts`),
-not a plugin-list toggle. The owner table has no `legacy` option: rolling a feature back to its
+plugin follows the native setting it replaces (`storage/legacySettingBindings.ts`).
+Its row in the popup **Plugins** list writes those legacy-bound keys. The owner table has no `legacy` option: rolling a feature back to its
 native module means reverting both stage 7 retirement commits (startup wiring 9c2161df and
 native wrappers 0ae260c1) and the commit that removed that option. Permanent page services remain in `nativeFeatures.ts`; their
 account bridge, history/message caches, selection host, sent-quote styling,
@@ -344,7 +344,31 @@ classes and stylesheet. AI Studio's master switch (`GV_AISTUDIO_ENABLED`,
 Studio ordinary plugins do not mount, and flipping it unmounts or remounts them live. Gemini
 has no page-wide master switch. Its **Show Timeline** switch controls only the
 rail and navigation shortcut lease; saved stars and hierarchy remain, and the
-message timestamp page service follows **Show Message Timestamps** independently.
+message timestamp labels plugin follows **Show Message Timestamps** independently;
+history and turn identity remain page services.
+
+The packaged owners in [`sites/featureOwners.ts`](sites/featureOwners.ts) and
+the builtins in [`builtin/index.ts`](builtin/index.ts) cover:
+
+- Gemini: Chat width, edit input width, font size, line height and paragraph spacing, sidebar width,
+  sidebar auto-hide, sidebar full hide, Gems sidebar count, hide input halo; formula copy, Canvas
+  copy, Deep Research export, user LaTeX, code collapse, Mermaid, WaveDrom, ECharts, Markdown fix,
+  watermark download and preview; Vim input, prompt history, input collapse, Ctrl+Enter send, Safari
+  Enter fix, draft save, quote reply; timeline, message timestamps, highlights, prevent auto-scroll,
+  response notifications, batch delete, research pack, default model, fork, usage status, context
+  sync.
+- AI Studio: Formula copy, Enter send, sidebar width, batch delete.
+- ChatGPT: Formula copy, Vim input, timeline, conversation export, temporary chat handoff, folders,
+  response notifications.
+- Claude: Formula copy, Vim input, timeline.
+- Shared: Visual effects on already-injected pages, including authorized Prompt Manager custom
+  sites.
+
+Other sites' declarative plugins live in `catalog/sites/`. Every packaged Gemini / AI Studio
+official plugin has a popup row in the
+[`officialPluginRegistry.ts`](../../pages/popup/officialPlugins/officialPluginRegistry.ts).
+For the next migration, follow the [plan §7.12 recipe](../../../.github/docs/GEMINI_PLUGIN_PLATFORM_PLAN.md#712-剩余小功能迁移2026-10-16)
+and the [popup design §5](../../../.github/docs/POPUP_PLUGIN_LIST_DESIGN.md#5-以后每项迁移的步骤).
 
 **NanoBanana watermark removal.** Two packaged fixed-ID builtins,
 `voyager.gemini-watermark-download` and `voyager.gemini-watermark-preview`, map
@@ -382,8 +406,9 @@ was. It remains independent of AI Studio's master switch. Its `<all_urls>` runti
 adds no host permission or content-script registration, and its fixed ID never requests an
 origin grant. `gvVisualEffect` is authoritative across sites: any string takes precedence
 (unknown strings render nothing), otherwise `gvSnowEffect === true` selects snow. The trusted
-enum value binding fills `effect`; nothing is copied into `gvPluginsState`. The current popup
-card keeps writing those keys. `legacyEnableWrite` selects snow when enabled and `off` when
+enum value binding fills `effect`; nothing is copied into `gvPluginsState`. On Gemini and
+AI Studio, the popup **Plugins** list row writes those legacy-bound keys; other sites keep
+the Visual Effects card. `legacyEnableWrite` selects snow when enabled and `off` when
 disabled; both clear the legacy boolean. No previous effect is remembered. PluginScope owns
 the activation's selection while the page holds renderers through a graceful drain; re-enable
 resumes them, and page teardown destroys canvases, renderer frames and workers immediately.
