@@ -471,10 +471,10 @@ describe('official plugin rows with options', () => {
       [...row(id)!.querySelectorAll<HTMLButtonElement>('button[aria-pressed]')].find(
         (button) => button.textContent === label,
       )!;
-    // The card's Off button; the row has none.
-    const cardOffButton = () =>
-      [...container.querySelectorAll<HTMLButtonElement>('button[aria-pressed]')].find(
-        (button) => button.textContent === TRANSLATIONS.en.visualEffectOff,
+    // Effect choices anywhere but under the row: the retired card's.
+    const choicesOffTheRow = () =>
+      [...container.querySelectorAll('button[aria-pressed]')].filter(
+        (button) => !row(id)?.contains(button),
       );
 
     it.each([
@@ -487,7 +487,7 @@ describe('official plugin rows with options', () => {
       async (_label, stored, on) => {
         Object.assign(sync, stored);
         await mount();
-        expect(cardOffButton()).toBeUndefined();
+        expect(choicesOffTheRow()).toEqual([]);
         expect(toggle(id).checked).toBe(on);
         expect(row(id)!.querySelectorAll('button[aria-pressed]').length).toBe(on ? 3 : 0);
       },
@@ -531,18 +531,19 @@ describe('official plugin rows with options', () => {
       extensionApi.tabs.query.mockResolvedValue([{ id: 8, url: AI_STUDIO }]);
       sync[StorageKeys.GV_VISUAL_EFFECT] = 'rain';
       await mount();
-      expect(cardOffButton()).toBeUndefined();
+      expect(choicesOffTheRow()).toEqual([]);
       expect(toggle(id).checked).toBe(true);
     });
 
-    it('a custom site keeps the Visual Effects card, Off included', async () => {
+    it('a custom site lists the same row in its plugin card, and no card', async () => {
       extensionApi.tabs.query.mockResolvedValue([{ id: 9, url: 'https://example.com/chat' }]);
       extensionApi.permissions.contains.mockResolvedValue(true);
       sync[StorageKeys.PROMPT_CUSTOM_WEBSITES] = ['example.com'];
+      sync[StorageKeys.GV_VISUAL_EFFECT] = 'rain';
       await mount();
-      expect(row(id)).toBeNull();
-      expect(cardOffButton()).toBeDefined();
-      expect(container.textContent).toContain(TRANSLATIONS.en.visualEffectHint);
+      expect(toggle(id).checked).toBe(true);
+      expect(choicesOffTheRow()).toEqual([]);
+      expect(container.textContent).not.toContain(TRANSLATIONS.en.visualEffectHint);
     });
   });
 

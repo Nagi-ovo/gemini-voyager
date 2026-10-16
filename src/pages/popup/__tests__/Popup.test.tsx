@@ -115,6 +115,12 @@ describe('Popup settings integration', () => {
       );
     });
   };
+  // A plugin site's rail options open under its plugin row, as Gemini's timeline row's do.
+  const openRailOptions = async (name: string) => {
+    const label = TRANSLATIONS.en.pluginRowOptionsFor.replace('{name}', name);
+    const button = container.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!;
+    await act(async () => button.click());
+  };
 
   it('hydrates the badge inside General Options and toggles only local preferences', async () => {
     await mount();
@@ -238,6 +244,12 @@ describe('Popup settings integration', () => {
     expect(container.querySelector('input[type="search"]')).toBeNull();
     expect(container.querySelector('#folder-enabled')).toBeNull();
     expect(container.querySelector(MERMAID_SWITCH)).toBeNull();
+    const effectsSwitch = () =>
+      container.querySelector<HTMLInputElement>(
+        `${pluginRow(OFFICIAL_PLUGIN_IDS.visualEffects)} input[aria-describedby]`,
+      );
+    // No content script runs here yet, so the effect has nothing to run in.
+    expect(effectsSwitch()).toBeNull();
     expect(container.querySelector('button[aria-pressed]')).toBeNull();
     await act(async () => enablePrompts.click());
     expect(enablePrompts.checked).toBe(true);
@@ -245,7 +257,11 @@ describe('Popup settings integration', () => {
     expect(extensionApi.permissions.request).toHaveBeenCalledExactlyOnceWith({
       origins: ['https://*.claude.ai/*', 'http://*.claude.ai/*'],
     });
-    expect(container.querySelectorAll('button[aria-pressed]')).toHaveLength(4);
+    expect(effectsSwitch()!.checked).toBe(false);
+    expect(container.querySelector('button[aria-pressed]')).toBeNull();
+    await act(async () => effectsSwitch()!.click());
+    expect(sync[StorageKeys.GV_VISUAL_EFFECT]).toBe('snow');
+    expect(container.querySelectorAll('button[aria-pressed]')).toHaveLength(3);
     expect(container.querySelectorAll('button[aria-pressed="true"]')).toHaveLength(1);
   });
 
@@ -369,23 +385,30 @@ describe('Popup settings integration', () => {
       extensionApi.tabs.query.mockResolvedValue([{ id: 10, url }]);
       await mount();
     };
+    local[StorageKeys.PLUGINS_STATE] = {
+      'voyager.chatgpt-timeline': { enabled: true, installedAt: 1 },
+    };
     extensionApi.tabs.query.mockResolvedValue([{ id: 10, url: 'https://chatgpt.com/c/abc' }]);
     await mount();
+    // Under the rail's own row, behind Options.
+    expect(starredHistoryEntry()).toBeUndefined();
+    await openRailOptions('ChatGPT · Timeline');
     expect(shown(starredHistoryEntry())).toBe(true);
-    // The ChatGPT timeline plugin declares no container setting, so the card does not offer one.
+    // The ChatGPT timeline plugin declares no container setting, so its options leave it out.
     expect(shown(container.querySelector('#hide-container'))).toBe(false);
     await act(async () => starredHistoryEntry()!.click());
-    expect(container.textContent).not.toContain(TRANSLATIONS.en.timelineOptions);
+    expect(container.textContent).not.toContain(TRANSLATIONS.en.pluginsTitle);
 
     local[StorageKeys.GV_POPUP_SETTINGS_SEARCH_QUERY] = 'Mermaid';
     await remount('https://chatgpt.com/c/abc');
+    await openRailOptions('ChatGPT · Timeline');
     expect(shown(starredHistoryEntry())).toBe(true);
 
     await remount('https://example.com/');
     expect(starredHistoryEntry()).toBeUndefined();
   });
 
-  describe('the timeline card on a ChatGPT tab', () => {
+  describe('the rail options on a ChatGPT tab', () => {
     const PLUGIN_ID = 'voyager.chatgpt-timeline';
     const shownButton = (label: string) =>
       [...container.querySelectorAll('button')].find(
@@ -396,21 +419,27 @@ describe('Popup settings integration', () => {
         local[StorageKeys.PLUGINS_STATE] as Record<string, { settings?: Record<string, unknown> }>
       )?.[PLUGIN_ID]?.settings;
 
+    const mountWithOptions = async () => {
+      await mount();
+      await openRailOptions('ChatGPT · Timeline');
+    };
+
     beforeEach(() => {
       extensionApi.tabs.query.mockResolvedValue([{ id: 10, url: 'https://chatgpt.com/c/abc' }]);
+      local[StorageKeys.PLUGINS_STATE] = { [PLUGIN_ID]: { enabled: true, installedAt: 1 } };
     });
 
     it('changing the timeline style changes the ChatGPT rail, not Gemini’s', async () => {
       sync[StorageKeys.GV_TIMELINE_ENABLED] = false;
-      await mount();
+      await mountWithOptions();
 
       expect(
         container
           .querySelector('[role="group"][aria-label="ChatGPT · Timeline"]')
           ?.querySelector('select'),
       ).toBeFalsy();
-      const master = container.querySelector<HTMLInputElement>('#timeline-enabled')!;
-      expect(master.closest('[hidden]')).not.toBeNull();
+      // The plugin row is the rail's only switch.
+      expect(container.querySelector('#timeline-enabled')).toBeNull();
 
       await act(async () => shownButton(TRANSLATIONS.en.timelineStyleCompact)!.click());
 
@@ -422,7 +451,7 @@ describe('Popup settings integration', () => {
     });
 
     it('choosing compact in the popup also compacts a page still running the older timeline manifest', async () => {
-      await mount();
+      await mountWithOptions();
 
       await act(async () => shownButton(TRANSLATIONS.en.timelineStyleCompact)!.click());
 
@@ -434,7 +463,7 @@ describe('Popup settings integration', () => {
       local[StorageKeys.PLUGINS_STATE] = {
         [PLUGIN_ID]: { enabled: true, installedAt: 1, settings: { timelineStyle: 'compact' } },
       };
-      await mount();
+      await mountWithOptions();
       const levels = container.querySelector<HTMLInputElement>('#marker-level-enabled')!;
       expect(
         container.querySelector(`input[aria-label="${TRANSLATIONS.en.enableMarkerLevel}"]`),
@@ -451,8 +480,8 @@ describe('Popup settings integration', () => {
       expect(sync).not.toHaveProperty('geminiTimelineMarkerLevel');
     });
 
-    it('a ChatGPT send can show its time: the card offers the message-times switch on ChatGPT', async () => {
-      await mount();
+    it('a ChatGPT send can show its time: the rail options offer the message-times switch on ChatGPT', async () => {
+      await mountWithOptions();
       const times = container.querySelector<HTMLInputElement>('#show-message-timestamps')!;
       expect(times.closest('[hidden]')).toBeNull();
       expect(times.checked).toBe(false);
@@ -466,13 +495,17 @@ describe('Popup settings integration', () => {
 
     it('a timeline site that cannot record sends does not offer the message-times switch', async () => {
       extensionApi.tabs.query.mockResolvedValue([{ id: 10, url: 'https://claude.ai/chat/abc' }]);
+      local[StorageKeys.PLUGINS_STATE] = {
+        'voyager.claude-timeline': { enabled: true, installedAt: 1 },
+      };
       await mount();
+      await openRailOptions('Claude · Timeline');
 
       const times = container.querySelector<HTMLInputElement>('#show-message-timestamps');
       expect(!times || !!times.closest('[hidden]')).toBe(true);
     });
 
-    it('the timeline card edits the timeline that is actually running on the page', async () => {
+    it('a local rail keeps its own style control and gets no second one', async () => {
       const IMPORTED_ID = 'local.me.chatgpt-rail';
       local[StorageKeys.PLUGIN_LOCAL_MANIFESTS] = {
         [IMPORTED_ID]: {
@@ -511,13 +544,19 @@ describe('Popup settings integration', () => {
         [IMPORTED_ID]: { enabled: true, installedAt: 1 },
       };
       await mount();
+      await openRailOptions('My ChatGPT rail');
 
-      expect(
-        container
-          .querySelector('[role="group"][aria-label="My ChatGPT rail"]')
-          ?.querySelector('select'),
-      ).toBeTruthy();
-      await act(async () => shownButton(TRANSLATIONS.en.timelineStyleCompact)!.click());
+      const select = container
+        .querySelector('[role="group"][aria-label="My ChatGPT rail"]')
+        ?.querySelector<HTMLSelectElement>('select');
+      expect(select).toBeTruthy();
+      expect(shownButton(TRANSLATIONS.en.timelineStyleCompact)).toBeUndefined();
+      // Its options still hold what the rail does not declare.
+      expect(shownButton(TRANSLATIONS.en.resetTimelinePosition)).toBeTruthy();
+      await act(async () => {
+        select!.value = 'compact';
+        select!.dispatchEvent(new Event('change', { bubbles: true }));
+      });
 
       const state = local[StorageKeys.PLUGINS_STATE] as Record<
         string,
@@ -533,7 +572,7 @@ describe('Popup settings integration', () => {
       const placed = { version: 2, topPercent: 30, leftPercent: 80 };
       sync['gvTimeline:chatgpt:Position'] = placed;
       sync[StorageKeys.TIMELINE_POSITION] = placed;
-      await mount();
+      await mountWithOptions();
 
       await act(async () => shownButton(TRANSLATIONS.en.resetTimelinePosition)!.click());
 
@@ -558,6 +597,7 @@ describe('Popup settings integration', () => {
         [id]: { enabled: true, installedAt: 1, settings: { timelineStyle: 'ruler' } },
       };
       await mount();
+      await openRailOptions(name);
       const group = container.querySelector(`[role="group"][aria-label="${name}"]`);
       expect(group?.querySelector('select')).toBeFalsy();
       expect(group?.querySelector('input[type="checkbox"]')).toBeFalsy();

@@ -50,7 +50,6 @@ function withMissingSections(saved: readonly PopupSectionId[]): PopupSectionId[]
 export interface PopupSectionsOptions {
   nativePopupPlatform: NativePopupPlatform;
   isPluginSite: boolean;
-  visualEffectsAvailable: boolean;
   /** Whether the official plugin list has rows on this tab; an empty list takes no slot. */
   officialPluginsAvailable?: boolean;
   /** One search target per listed official plugin, built from what the list shows. */
@@ -69,7 +68,6 @@ export interface PopupSectionOptions {
 export function usePopupSections({
   nativePopupPlatform,
   isPluginSite,
-  visualEffectsAvailable,
   officialPluginsAvailable = false,
   officialPluginSearchItems = NO_EXTRA_SEARCH_ITEMS,
   t,
@@ -117,14 +115,11 @@ export function usePopupSections({
 
   const isSectionVisible = useCallback(
     (id: PopupSectionId): boolean => {
-      // Visual effects require an activated site; the plugin list needs a row on this tab.
-      if (id === 'visualEffect' && !visualEffectsAvailable) return false;
+      // The plugin list needs a row on this tab.
       if (id === 'officialPlugins' && !officialPluginsAvailable) return false;
-      // Only a plugin site's timeline rail has a card; Gemini's timeline is a Plugins row.
-      if (id === 'timeline' && !isPluginSite) return false;
       return isNativePopupSectionAvailable(nativePopupPlatform, id);
     },
-    [nativePopupPlatform, isPluginSite, visualEffectsAvailable, officialPluginsAvailable],
+    [nativePopupPlatform, officialPluginsAvailable],
   );
   const visibleSections = useMemo(
     () => sectionOrder.filter(isSectionVisible),

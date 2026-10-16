@@ -8,18 +8,18 @@ import {
 
 describe('native popup site capabilities', () => {
   it('keeps the complete settings surface on Gemini', () => {
-    expect(isNativePopupSectionAvailable('gemini', 'timeline')).toBe(true);
-    expect(isNativePopupSettingAvailable('gemini', 'timeline', 'timelineStyle')).toBe(true);
+    expect(isNativePopupSectionAvailable('gemini', 'keyboardShortcuts')).toBe(true);
+    expect(isNativePopupSettingAvailable('gemini', 'folder', 'enableForkFeature')).toBe(true);
   });
 
   it('hides unsupported Gemini-only sections on AI Studio', () => {
-    for (const sectionId of ['timeline', 'keyboardShortcuts'] as const) {
+    for (const sectionId of ['keyboardShortcuts', 'folderTreeIndent'] as const) {
       expect(isNativePopupSectionAvailable('aistudio', sectionId)).toBe(false);
     }
   });
 
   it('keeps supported AI Studio sections and all of their settings', () => {
-    for (const sectionId of ['cloudSync', 'folderSpacing', 'visualEffect'] as const) {
+    for (const sectionId of ['cloudSync', 'folderSpacing'] as const) {
       expect(isNativePopupSectionAvailable('aistudio', sectionId)).toBe(true);
       expect(isNativePopupSettingAvailable('aistudio', sectionId, 'any-setting')).toBe(true);
     }
@@ -63,7 +63,11 @@ describe('native popup site capabilities', () => {
       isNativePopupSettingAvailable('aistudio', 'folder', POPUP_SECTION_SEARCH_SETTING_ID),
     ).toBe(true);
     expect(
-      isNativePopupSettingAvailable('aistudio', 'timeline', POPUP_SECTION_SEARCH_SETTING_ID),
+      isNativePopupSettingAvailable(
+        'aistudio',
+        'keyboardShortcuts',
+        POPUP_SECTION_SEARCH_SETTING_ID,
+      ),
     ).toBe(false);
   });
 });

@@ -7,6 +7,8 @@ Voyager convierte la conversación en una línea.
 
 En Gemini, **Complementos** → **Mostrar línea de tiempo** controla la barra de la línea de tiempo y sus atajos de navegación. Al desactivarla se conservan las estrellas y la jerarquía guardadas. Las horas de los mensajes dependen por separado de **Complementos** → **Marcas de tiempo de mensajes**, por lo que pueden seguir visibles con la línea de tiempo desactivada.
 
+En Claude, ChatGPT y DeepSeek, la barra es el complemento de línea de tiempo de ese sitio: actívalo en **Complementos** y sus **Opciones** incluyen el estilo, los niveles de nodo (donde se ofrecen), **Restablecer posición de la línea de tiempo** y **Ver biblioteca guardada**, además de las marcas de tiempo de mensajes en ChatGPT.
+
 ## Ver el Ritmo
 
 Mira el lado derecho de la pantalla.

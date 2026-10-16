@@ -19,7 +19,7 @@ Clique no ícone da extensão para acessar a central de controle.
 
 - **Modo de rolagem**: em **Plugins** → **Mostrar linha do tempo** → **Opções**, `Fluxo` rola suavemente até a mensagem; `Pulo` vai até ela instantaneamente.
 - **Posição da linha do tempo**: Em **Plugins** → **Mostrar linha do tempo** → **Opções**, ative **Linha do tempo arrastável** e mova-a para onde preferir. **Redefinir Posição da Linha do Tempo** a devolve ao lugar original.
-- **Efeitos visuais**: no Gemini e no AI Studio, ative **Plugins** → **Efeitos visuais** e escolha `Neve`, `Sakura` ou `Chuva` por baixo da linha; desative-a para desligar o efeito. Os outros sites mantêm o cartão Efeitos visuais.
+- **Efeitos visuais**: no Gemini e no AI Studio, ative **Plugins** → **Efeitos visuais** e escolha `Neve`, `Sakura` ou `Chuva` por baixo da linha; desative-a para desligar o efeito. Nos outros sites (Claude, ChatGPT, DeepSeek e sites personalizados), a mesma linha fica no cartão **Plugins** desse site, assim que o Voyager funciona lá (Gestor de prompts ou um plugin ativado para o site).
 
 ## Ordem personalizada
 
@@ -29,7 +29,7 @@ Passe o mouse sobre qualquer cartão de configuração e os botões ▲/▼ apar
 
 ## Efeitos Visuais
 
-No Gemini e no AI Studio, ative **Plugins** → **Efeitos visuais** e escolha `Neve`, `Sakura` ou `Chuva` por baixo da linha para uma atmosfera sazonal. Os outros sites mantêm o cartão Efeitos visuais.
+No Gemini e no AI Studio, ative **Plugins** → **Efeitos visuais** e escolha `Neve`, `Sakura` ou `Chuva` por baixo da linha para uma atmosfera sazonal. Nos outros sites (Claude, ChatGPT, DeepSeek e sites personalizados), a mesma linha fica no cartão **Plugins** desse site, assim que o Voyager funciona lá (Gestor de prompts ou um plugin ativado para o site).
 
 O Voyager não se limita a melhorias utilitárias. Pode também mudar o ambiente da página.
 

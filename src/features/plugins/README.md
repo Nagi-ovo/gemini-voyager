@@ -406,9 +406,10 @@ was. It remains independent of AI Studio's master switch. Its `<all_urls>` runti
 adds no host permission or content-script registration, and its fixed ID never requests an
 origin grant. `gvVisualEffect` is authoritative across sites: any string takes precedence
 (unknown strings render nothing), otherwise `gvSnowEffect === true` selects snow. The trusted
-enum value binding fills `effect`; nothing is copied into `gvPluginsState`. On Gemini and
-AI Studio, the popup **Plugins** list row writes those legacy-bound keys; other sites keep
-the Visual Effects card. `legacyEnableWrite` selects snow when enabled and `off` when
+enum value binding fills `effect`; nothing is copied into `gvPluginsState`. The popup's
+**Plugins** row writes those legacy-bound keys on every site: in the Plugins list on Gemini and
+AI Studio, and in a plugin site's plugin card once Voyager can run there (a site enabled for
+Prompt Manager or a plugin). `legacyEnableWrite` selects snow when enabled and `off` when
 disabled; both clear the legacy boolean. No previous effect is remembered. PluginScope owns
 the activation's selection while the page holds renderers through a graceful drain; re-enable
 resumes them, and page teardown destroys canvases, renderer frames and workers immediately.

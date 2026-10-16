@@ -1,6 +1,6 @@
 # Popup 官方插件列表设计
 
-状态：Batch 1–6 已完成（见 §4.4）；`featureOwners.ts` 里的每个 Gemini / AI Studio 官方插件都已是 Plugins 卡里的一行。下文 §1 记录的是迁移前的基线 `main@754c03c2`。Codex 复审结论 "implement after changes"，本版已吸收全部 P2/P3。
+状态：Batch 1–7 已完成（见 §4.4）；`featureOwners.ts` 里的每个 Gemini / AI Studio 官方插件都已是 Plugins 卡里的一行，插件站也不再有第二个开关或卡片：Visual effects 和 timeline rail 的选项都在该站插件卡的行里。下文 §1 记录的是迁移前的基线 `main@754c03c2`。Codex 复审结论 "implement after changes"，本版已吸收全部 P2/P3。
 
 **目标**：每个可选功能都是官方插件，用户只在 popup 的插件列表里开关它。核心数据功能（文件夹、Prompt Manager、云同步、对话导出、备份、账号隔离）保持 native，保留各自卡片。
 
@@ -114,7 +114,11 @@ manifest 的一句话描述（本地化）
 
 ### 2.4 ChatGPT / Claude / DeepSeek
 
-本项目不改。这些站点的官方插件没有 legacy 绑定，列表已能开关。Batch 5 之后的跟进：把 Timeline 面板也登记给这些 rail，删除 `dedicatedTimelineSettings` 和 `DEDICATED_TIMELINE_SOURCES`（`PluginManager.tsx:23-59`、`Popup.tsx:183-194`）。
+这些站点的官方插件没有 legacy 绑定，列表已能开关。Batch 7 起每个功能只有一处：
+
+- **Timeline rail**：Claude、ChatGPT 的 rail 是 `timelineManifest` builtin，DeepSeek 的是 catalog 插件，自定义站点可能是本地插件；它们都不在 `OFFICIAL_PLUGIN_IDS` 里，所以不做成官方行，而是让 rail 自己的插件行承载选项。`PluginManager` 的 `timelineRail` 在 `useCatalogTimelineSettings` 选中的那条 rail 的行下面挂一个 Options 折叠面板（`CatalogTimelineOptions`，和 Gemini 的 Timeline 面板同一套 `TimelineOptions`），只在 rail 开启时出现；行开关就是 rail 的唯一开关。样式和层级只在 `DEDICATED_TIMELINE_SOURCES`（官方来源）把它们从行内设置里拿走时才进面板，本地 rail 继续用自己的控件，不会出现两个样式选择。`TimelineSettingsCard` 和 `'timeline'` section 删除。
+- **消息时间**：在能记录发送时间的站点（目前是 ChatGPT），它是 rail 面板里的显示选项。键仍是 `gvShowMessageTimestamps`，与 Gemini 的 Message timestamps 行共用，这是有意的：同一个人对"显示消息时间"只有一个偏好。
+- **Visual effects**：`voyager.visual-effects` 匹配所有 http(s) 页面。插件站在插件卡顶部列出同一个 `OfficialPluginListRow`（`PluginSiteOfficialRows`），读写同一组键；`PluginManager` 继续跳过这个 id。只有 Voyager 能在该站运行（Prompt Manager 或某个匹配插件已开启，`canUseVisualEffects`）时才列出，因为在那之前没有内容脚本能放特效。chrome:// 等非 http 页面不匹配 manifest，也就没有这一行，那里本来也注入不了。`VisualEffectPicker` 卡片、`useVisualEffectPopupSettings` 和 `'visualEffect'` section 删除，`visualEffectOff` 文案随之移除。
 
 ### 2.5 本地插件
 
@@ -283,8 +287,7 @@ export interface OfficialPluginEntry {
 | 4    | 已完成 | Formula copy（G + A）、Highlight、Response notification；随后迁入的 Canvas copy、Gems sidebar（数量 0 = 隐藏列表）、Context Sync（卡片成为面板，同步请求由 `Popup` 持有）、Deep Research export、Markdown fix、Visual effects（Gemini / AI Studio 一行，其他站点保留卡片）也已成行                                                                                                                         |
 | 5    | 已完成 | Timeline 成为"对话"组的一行，选项（样式、滚动模式、隐藏容器、可拖动、固定预览、层级、重置位置、收藏历史）在它的面板里，分段选择改为 `radiogroup`、不再用 `left` 计算（§2.7）；Message timestamps 单独一行。AI Studio sidebar width 成行（未存开关时跟随文件夹开关，宽度写入不再顺带写开关）。`officialFeatureSetting.ts` 随最后一个 `LOCATIONS` 条目删除                                                   |
 | 6    | 已完成 | Batch delete（G + A）成为"对话"组的一行，默认开；文件夹开关关掉时开关置灰，行下提示去 Folder Options → Enable folder feature 打开（`requires`）。NanoBanana 两行放进"内容"组而非 §2 表里的"对话"组（它处理的是回复里的图片），Preview 行用 Experimental 徽标代替原来的 Unstable；任一开关都写两个拆分键并清掉旧的共享键（`enableWrite`，取代 `useWatermarkPopupSettings`）。NanoBanana 卡片和 section 删除 |
-
-剩余跟进：`TimelineSettingsCard` 现在只服务插件站 rail（`'timeline'` section 只在插件站可见），§2.4 的面板登记完成后再删除它和 `dedicatedTimelineSettings`。
+| 7    | 已完成 | §2.4 的跟进：插件站 rail 的选项成为它插件行下的 Options 面板（rail 关闭时不出现，收藏库也随之只在 rail 开启时可达，与 Gemini 一致），消息时间是其中一项；Visual effects 在插件站插件卡里成行。`TimelineSettingsCard`、`VisualEffectPicker` 卡片及 `'timeline'`、`'visualEffect'` section 删除，旧排序里的这两个槽位按惯例丢弃                                                                              |
 
 ---
 
@@ -303,7 +306,7 @@ export interface OfficialPluginEntry {
 
 **已完成示例：Edit input width**（`voyager.gemini-edit-input-width`）。运行时在 §7.12 8-1 完成，popup 随 Batch 3 迁入「外观」组。Registry 保留原 section 标题、搜索词和 `widthPercent` 滑块，开关与数值分别经 `legacyEnableWrite`、`legacyValueWrite` 写原键；旧卡片控件、hook 状态和 section 已移除。备份默认值对缺失开关的影响仍是 §3.7 记录的既有限制。
 
-其余列出的功能也已完成：Auto-hide / Full hide 两行共用一个 controller；Gems sidebar 的 count=0 只隐藏列表，总开关独立；AI Studio sidebar width 使用独立开关键，缺失时跟随文件夹开关；Visual effects 通过 enum binding 保留跨站共享选择，Gemini / AI Studio 成行，其他站点保留卡片；Context Sync 的端口、状态和同步按钮在行下的面板里；NanoBanana 两行沿用 `src/core/utils/watermarkSettings.ts` 的 resolver。插件站 rail 的 `TimelineSettingsCard` 面板登记仍按 §4.4 跟进。
+其余列出的功能也已完成：Auto-hide / Full hide 两行共用一个 controller；Gems sidebar 的 count=0 只隐藏列表，总开关独立；AI Studio sidebar width 使用独立开关键，缺失时跟随文件夹开关；Visual effects 通过 enum binding 保留跨站共享选择，每个站点各一行（Batch 7 起插件站也是）；Context Sync 的端口、状态和同步按钮在行下的面板里；NanoBanana 两行沿用 `src/core/utils/watermarkSettings.ts` 的 resolver。插件站 rail 的选项已在 Batch 7 挂到 rail 的插件行下（§2.4）。
 
 ---
 
@@ -313,13 +316,13 @@ export interface OfficialPluginEntry {
 | --- | ---------------------------------------------------- | ------------------------------------------------------------------------------- |
 | 1   | Gemini 现在 26 行，下一波后约 38 行                  | 分组 + 搜索足够；某组超过约 12 行时再考虑可折叠组                               |
 | 2   | 行名用 manifest 名还是旧卡片标签                     | **已定**：一律用 manifest 名；旧标签作搜索词                                    |
-| 3   | 选项只在开启时出现，旧 Timeline 卡关闭时显示禁用控件 | 只在开启时出现；收藏历史另有入口                                                |
+| 3   | 选项只在开启时出现，旧 Timeline 卡关闭时显示禁用控件 | 只在开启时出现；Gemini 的收藏历史另有入口，插件站的随 rail 开启出现             |
 | 4   | Timeline 卡拆掉后消息时间放哪里                      | **已定**：不临时放 General；Batch 5 排在消息时间运行时迁移之后，那一行只搬一次  |
 | 5   | Formula copy 两站共用一个开关                        | 保持共用，面板里写明范围；分站开关是另一个产品决定                              |
 | 6   | 快捷键与 Timeline 相关                               | 保持独立卡片：全局生效，也驱动插件站 rail                                       |
-| 7   | 插件站 rail 在行旁边另有 Timeline 卡                 | Batch 5 之后跟进，登记同一面板                                                  |
+| 7   | 插件站 rail 在行旁边另有 Timeline 卡                 | **已做**（Batch 7）：卡片删除，选项在 rail 插件行的 Options 里                  |
 | 8   | 选项展开状态要不要持久化                             | 暂不；滑块在行内，少用的面板默认收起                                            |
-| 9   | Visual effects 跨站                                  | 迁移时在每个站点各列一行，绑定同一个键；在那之前保留卡片                        |
+| 9   | Visual effects 跨站                                  | **已做**（Batch 7）：每个站点各一行，绑定同一个键；卡片删除                     |
 | 10  | 降级                                                 | 天然安全：不搬数据，旧版本读同样的键                                            |
 | 11  | 备份补默认值改变缺失语义                             | 既有限制；建议在 Batch 3 前单独修                                               |
 | 12  | 从页面定位                                           | 只给默认模型失败提示做搜索词交接；Prompt Manager 的"打开设置"指向核心卡，不需要 |

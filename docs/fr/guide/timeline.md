@@ -7,6 +7,8 @@ Voyager transforme votre conversation en une chronologie.
 
 Sur Gemini, **Extensions** → **Afficher la chronologie** contrôle la barre de chronologie et ses raccourcis de navigation. La désactivation conserve les étoiles et la hiérarchie enregistrées. Les heures des messages dépendent séparément de **Extensions** → **Horodatage des messages** : elles peuvent donc rester visibles même lorsque la chronologie est désactivée.
 
+Sur Claude, ChatGPT et DeepSeek, la barre est l’extension de chronologie du site : activez-la dans **Extensions** ; ses **Options** regroupent le style, les niveaux de nœuds (lorsqu’ils sont proposés), **Réinitialiser la position de la chronologie** et **Voir la bibliothèque enregistrée**, ainsi que les horodatages des messages sur ChatGPT.
+
 ## Visualisez la Forme de Votre Chat
 
 Regardez sur le côté droit de votre écran.

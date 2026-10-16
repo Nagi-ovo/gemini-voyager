@@ -91,20 +91,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ['folderTreeIndent', 'folderTreeIndentCompact', 'folderTreeIndentSpacious'],
     ['folder nesting tree indent hierarchy 层级 缩进 树'],
   ),
-  popupSectionSearchTarget('visualEffect', ['visualEffect']),
-  popupSearchTarget(
-    'visualEffect',
-    'controls',
-    [
-      'visualEffect',
-      'visualEffectHint',
-      'visualEffectOff',
-      'visualEffectSnow',
-      'visualEffectSakura',
-      'visualEffectRain',
-    ],
-    ['animation background sakura rain effects off snow 动效 背景 樱花 下雨 下雪 关闭'],
-  ),
   popupSectionSearchTarget('keyboardShortcuts', ['keyboardShortcuts']),
   popupSearchTarget(
     'keyboardShortcuts',

@@ -18,10 +18,10 @@ import type {
 } from '@/features/plugins/types';
 import { readTimelineSettings, timelineSettingKey } from '@/features/timeline/timelineSettings';
 
-import type { TimelineSettingsValues } from '../components/TimelineSettingsCard';
+import type { TimelineSettingsValues } from '../components/TimelineOptions';
 
-/** Card search ids backed by a timeline plugin setting of the same meaning. */
-const PLUGIN_SETTING_FOR_CARD: Readonly<Record<string, string>> = {
+/** Option search ids backed by a timeline plugin setting of the same meaning. */
+export const PLUGIN_SETTING_FOR_CARD: Readonly<Record<string, string>> = {
   timelineStyle: 'timelineStyle',
   enableMarkerLevel: 'markerLevel',
 };
@@ -54,14 +54,14 @@ export interface CatalogTimelineSettingsInput {
 export interface CatalogTimelineSettings {
   readonly pluginId: string;
   readonly values: TimelineSettingsValues;
-  /** Whether the timeline card offers this entry (by its search id) for the site's rail. */
+  /** Whether the rail's options offer this entry (by its search id) for the site's rail. */
   readonly offers: (settingId: string) => boolean;
   readonly onChange: (patch: Partial<TimelineSettingsValues>) => void;
   readonly resetPosition: () => void;
 }
 
 /**
- * The timeline card's model on a site whose rail is a timeline plugin: values come from that
+ * The rail options' model on a site whose rail is a timeline plugin: values come from that
  * plugin's settings, edits are written to them, and the reset clears the site's own rail position.
  * Null when no timeline plugin covers the active tab.
  */
@@ -159,4 +159,11 @@ export function useCatalogTimelineSettings({
     onChange,
     resetPosition,
   };
+}
+
+/** The rail plugin's settings its options can edit in place of the plugin row's own controls. */
+export function catalogTimelineSettingKeys(timeline: CatalogTimelineSettings): readonly string[] {
+  return Object.entries(PLUGIN_SETTING_FOR_CARD)
+    .filter(([optionId]) => timeline.offers(optionId))
+    .map(([, pluginKey]) => pluginKey);
 }

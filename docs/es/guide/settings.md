@@ -17,7 +17,7 @@ Haz clic en el icono de la extensión, entra en la consola.
 
 - **Desplazamiento**: en **Complementos** → **Mostrar línea de tiempo** → **Opciones**, `Flujo` lleva al mensaje con un desplazamiento suave; `Salto` va allí al instante.
 - **Posición**: En **Complementos** → **Mostrar línea de tiempo** → **Opciones**, activa **Línea de tiempo arrastrable** y coloca la línea de tiempo donde te resulte más cómodo. **Restablecer posición de la línea de tiempo** la devuelve a su sitio.
-- **Efectos Visuales**: en Gemini y AI Studio, activa **Complementos** → **Efectos visuales** y elige `Nieve`, `Sakura` o `Lluvia` debajo de esa fila; desactívala para quitar el efecto. Los demás sitios conservan la tarjeta de Efectos visuales.
+- **Efectos Visuales**: en Gemini y AI Studio, activa **Complementos** → **Efectos visuales** y elige `Nieve`, `Sakura` o `Lluvia` debajo de esa fila; desactívala para quitar el efecto. En los demás sitios (Claude, ChatGPT, DeepSeek y sitios personalizados), la misma fila está en la tarjeta **Complementos** de ese sitio, una vez que Voyager funciona allí (Prompt Manager o un complemento activado para el sitio).
 
 ## Orden personalizado
 

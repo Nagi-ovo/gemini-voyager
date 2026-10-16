@@ -2257,10 +2257,6 @@
     "message": "Agrega ambiente estacional a la pagina",
     "description": "Visual effect feature hint"
   },
-  "visualEffectOff": {
-    "message": "Desactivado",
-    "description": "Visual effect off option"
-  },
   "visualEffectSnow": {
     "message": "Nieve",
     "description": "Visual effect snow option"

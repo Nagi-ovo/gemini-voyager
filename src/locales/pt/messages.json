@@ -2257,10 +2257,6 @@
     "message": "Adicione um clima sazonal a pagina",
     "description": "Visual effect feature hint"
   },
-  "visualEffectOff": {
-    "message": "Desligado",
-    "description": "Visual effect off option"
-  },
   "visualEffectSnow": {
     "message": "Neve",
     "description": "Visual effect snow option"

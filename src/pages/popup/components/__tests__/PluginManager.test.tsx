@@ -97,9 +97,49 @@ describe('PluginManager accessible groups', () => {
   });
 });
 
-describe('PluginManager dedicated timeline settings', () => {
+describe('PluginManager timeline rail options', () => {
   const official = BUILTIN_PLUGINS.find((plugin) => plugin.id === 'voyager.chatgpt-timeline')!;
-  const dedicated = { pluginId: official.id, settingKeys: ['timelineStyle', 'markerLevel'] };
+  const dedicated = {
+    pluginId: official.id,
+    settingKeys: ['timelineStyle', 'markerLevel'],
+    render: () => null,
+  };
+
+  it('opens the rail options under its own row only while it is on, with the settings it took', async () => {
+    const render = vi.fn((owned: readonly string[], name: string) => (
+      <p data-testid="rail-options">{`${name}: ${owned.join(',')}`}</p>
+    ));
+    const local: PluginManifest = { ...official, id: 'local.me.rail', name: 'My rail' };
+    pluginState.current[official.id] = { enabled: true, installedAt: 0 };
+    pluginState.current[local.id] = { enabled: true, installedAt: 0 };
+    await renderManager({
+      manifests: [official, local],
+      sourceIds: { [official.id]: 'builtin', [local.id]: 'local' },
+      timelineRail: { ...dedicated, render },
+    });
+    expect(
+      [...container.querySelectorAll('[data-testid="rail-options"]')].map((el) => el.textContent),
+    ).toEqual(['ChatGPT · Timeline: timelineStyle,markerLevel']);
+
+    // A local rail keeps its own controls, so the options take none of them.
+    await renderManager({
+      manifests: [local],
+      sourceIds: { [local.id]: 'local' },
+      timelineRail: { ...dedicated, pluginId: local.id, render },
+    });
+    expect(container.querySelector('[data-testid="rail-options"]')!.textContent).toBe('My rail: ');
+  });
+
+  it('shows no rail options while the rail is off', async () => {
+    const render = vi.fn(() => <p data-testid="rail-options" />);
+    pluginState.current[official.id] = { enabled: false, installedAt: 0 };
+    await renderManager({
+      manifests: [official],
+      sourceIds: { [official.id]: 'builtin' },
+      timelineRail: { ...dedicated, render },
+    });
+    expect(container.querySelector('[data-testid="rail-options"]')).toBeNull();
+  });
 
   it('keeps local rail controls and other catalog fields editable', async () => {
     const catalog: PluginManifest = {
@@ -119,7 +159,7 @@ describe('PluginManager dedicated timeline settings', () => {
     await renderManager({
       manifests: [catalog, local, other],
       sourceIds: { [catalog.id]: 'builtin', [local.id]: 'local', [other.id]: 'host-catalog' },
-      dedicatedTimelineSettings: dedicated,
+      timelineRail: dedicated,
     });
     const catalogGroup = container.querySelector(
       '[role="group"][aria-label="ChatGPT · Timeline"]',
@@ -175,7 +215,7 @@ describe('PluginManager dedicated timeline settings', () => {
               [plugin.id]:
                 scenario === 'custom rail named constructor' ? 'host-catalog' : 'builtin',
             },
-      dedicatedTimelineSettings:
+      timelineRail:
         scenario === 'no card'
           ? undefined
           : {

@@ -5,11 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { TranslationKey } from '@/utils/translations';
 
-import { VisualEffectPicker } from '../VisualEffectPicker';
+import { VisualEffectChoices } from '../VisualEffectChoices';
 
 const translate = (key: TranslationKey): string => key;
 
-describe('VisualEffectPicker', () => {
+describe('VisualEffectChoices', () => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -27,15 +27,15 @@ describe('VisualEffectPicker', () => {
     container.remove();
   });
 
-  it('offers the four effects, marks the active one and reports a pick', () => {
+  it('offers the three effects, marks the active one and reports a pick', () => {
     const onChange = vi.fn();
     act(() => {
-      root.render(<VisualEffectPicker value="sakura" onChange={onChange} t={translate} />);
+      root.render(<VisualEffectChoices value="sakura" onChange={onChange} t={translate} />);
     });
 
+    // Off is the row's switch, not a choice.
     const buttons = Array.from(container.querySelectorAll('button'));
     expect(buttons.map((b) => b.textContent)).toEqual([
-      'visualEffectOff',
       'visualEffectSnow',
       'visualEffectSakura',
       'visualEffectRain',
@@ -45,16 +45,16 @@ describe('VisualEffectPicker', () => {
     ).toEqual(['visualEffectSakura']);
     expect(buttons.every((b) => b.querySelector('svg'))).toBe(true);
 
-    act(() => buttons[3].click());
+    act(() => buttons[2].click());
     expect(onChange).toHaveBeenCalledWith('rain');
   });
 
   it('exposes only the current effect as pressed as the selection changes', () => {
-    const effects = ['off', 'snow', 'sakura', 'rain'] as const;
+    const effects = ['snow', 'sakura', 'rain'] as const;
 
     for (const effect of effects) {
       act(() => {
-        root.render(<VisualEffectPicker value={effect} onChange={vi.fn()} t={translate} />);
+        root.render(<VisualEffectChoices value={effect} onChange={vi.fn()} t={translate} />);
       });
 
       const buttons = Array.from(container.querySelectorAll('button'));

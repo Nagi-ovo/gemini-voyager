@@ -7,6 +7,8 @@ Voyager turns your conversation into a timeline.
 
 On Gemini, **Plugins** → **Show Timeline** controls the rail and its navigation shortcuts. Turning it off keeps saved stars and hierarchy. Message time labels follow **Plugins** → **Message timestamps** independently, so you can keep them visible with the timeline off.
 
+On Claude, ChatGPT, and DeepSeek, the rail is that site's timeline plugin: turn it on under **Plugins**, and its **Options** hold the style, node levels (where offered), **Reset Timeline Position**, and **View Saved Library**, plus message timestamps on ChatGPT.
+
 ## See the Shape of Your Chat
 
 Look at the right side of your screen.

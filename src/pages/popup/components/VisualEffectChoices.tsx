@@ -2,16 +2,7 @@ import React from 'react';
 
 import type { TranslationKey } from '@/utils/translations';
 
-import { Card, CardContent } from '../../../components/ui/card';
-import { Label } from '../../../components/ui/label';
-
 export type VisualEffect = 'off' | 'snow' | 'sakura' | 'rain';
-
-export interface VisualEffectPickerProps {
-  value: VisualEffect;
-  onChange: (value: VisualEffect) => void;
-  t: (key: TranslationKey) => string;
-}
 
 const STROKE = {
   width: 14,
@@ -24,16 +15,6 @@ const STROKE = {
 } as const;
 
 const OPTIONS: readonly { value: VisualEffect; label: TranslationKey; icon: React.ReactNode }[] = [
-  {
-    value: 'off',
-    label: 'visualEffectOff',
-    icon: (
-      <svg {...STROKE} strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-      </svg>
-    ),
-  },
   {
     value: 'snow',
     label: 'visualEffectSnow',
@@ -96,22 +77,19 @@ export interface VisualEffectChoicesProps {
   value: VisualEffect;
   onChange: (value: VisualEffect) => void;
   t: (key: TranslationKey) => string;
-  /** Leave out Off where a switch already turns the effect off. */
-  withoutOff?: boolean;
   className?: string;
 }
 
-/** The segmented effect buttons, shared by the card and the Plugins row. */
+/** The effect buttons under the Visual effects row; Off is the row's switch. */
 export function VisualEffectChoices({
   value,
   onChange,
   t,
-  withoutOff = false,
   className = '',
 }: VisualEffectChoicesProps) {
   return (
     <div className={`bg-secondary/60 flex items-center gap-0.5 rounded-full p-1 ${className}`}>
-      {OPTIONS.filter((option) => !withoutOff || option.value !== 'off').map((option) => (
+      {OPTIONS.map((option) => (
         <button
           key={option.value}
           type="button"
@@ -128,20 +106,5 @@ export function VisualEffectChoices({
         </button>
       ))}
     </div>
-  );
-}
-
-/** Segmented picker for the platform-neutral fullscreen effect (snow, sakura, rain). */
-export function VisualEffectPicker({ value, onChange, t }: VisualEffectPickerProps) {
-  return (
-    <Card className="p-4 transition-all hover:shadow-md">
-      <CardContent className="p-0">
-        <div className="flex-1">
-          <Label className="text-sm font-medium">{t('visualEffect')}</Label>
-          <p className="text-muted-foreground mt-1 text-xs">{t('visualEffectHint')}</p>
-        </div>
-        <VisualEffectChoices value={value} onChange={onChange} t={t} className="mt-3" />
-      </CardContent>
-    </Card>
   );
 }

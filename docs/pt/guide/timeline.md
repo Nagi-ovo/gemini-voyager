@@ -4,6 +4,8 @@ O recurso de assinatura do Voyager. Uma maneira visual e espacial de navegar nas
 
 No Gemini, **Plugins** → **Mostrar linha do tempo** controla a barra da linha do tempo e os seus atalhos de navegação. Desativar esta opção mantém as estrelas e a hierarquia guardadas. As horas das mensagens seguem separadamente **Plugins** → **Data e hora das mensagens**, pelo que podem continuar visíveis com a linha do tempo desativada.
 
+No Claude, no ChatGPT e no DeepSeek, a barra é o plugin de linha do tempo desse site: ative-o em **Plugins** e as suas **Opções** incluem o estilo, os níveis de nó (onde disponíveis), **Redefinir Posição da Linha do Tempo** e **Ver biblioteca salva**, além dos carimbos de data/hora das mensagens no ChatGPT.
+
 ## O Problema
 
 As conversas de IA podem tornar-se longas. Muito longas.

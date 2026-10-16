@@ -2257,10 +2257,6 @@
     "message": "Ajoutez une ambiance saisonniere a la page",
     "description": "Visual effect feature hint"
   },
-  "visualEffectOff": {
-    "message": "Desactive",
-    "description": "Visual effect off option"
-  },
   "visualEffectSnow": {
     "message": "Neige",
     "description": "Visual effect snow option"

@@ -2257,10 +2257,6 @@
     "message": "أضف أجواء موسمية للصفحة",
     "description": "Visual effect feature hint"
   },
-  "visualEffectOff": {
-    "message": "إيقاف",
-    "description": "Visual effect off option"
-  },
   "visualEffectSnow": {
     "message": "ثلج",
     "description": "Visual effect snow option"

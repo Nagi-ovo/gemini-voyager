@@ -725,7 +725,7 @@ Jesse 在 Chrome 中用验收副本实测：dark 主题，只用已有对话，�
 
 7C-2 图表迁移发现并修复两项实际行为缺口：公共 diagram primitive 在异步库加载完成后重新确认当前 block 的回复归属、语言、owner 与最新源码，失效目标撤销渲染；共享全屏层捕获 Shadow DOM 内真正的焦点，关闭后返回原按钮。ECharts 的语言晚定型、WaveDrom 的加载期间源码更新与 Shadow DOM 焦点恢复三项变异均失败，源码已精确恢复；既有图表解析、安全、生命周期和 fullscreen 断言随实际 primitive 保留。
 
-**7C-3 popup 重复入口收口**：专用 TimelineSettingsCard 暴露当前管理的 plugin ID，只有插件站点的时间线卡片实际可见时，才把它接管的字段传给 PluginManager。精确官方 ID 和来源同时匹配后，ChatGPT/Claude 的 timelineStyle、markerLevel，以及 DeepSeek 的 timelineStyle 从通用设置中隐藏；schema、旧 compactView alias、backup、stored values 和写入闭包不变。local、自定义 rail、未知来源、其他字段、无法用三样式卡片表达的远端选项仍留在通用设置，native Gemini/AI Studio 入口不改。来源表使用 Map，避免合法自定义 ID constructor 读到 Object.prototype 而使 popup 崩溃。
+**7C-3 popup 重复入口收口**：专用 TimelineSettingsCard 暴露当前管理的 plugin ID，只有插件站点的时间线卡片实际可见时，才把它接管的字段传给 PluginManager。精确官方 ID 和来源同时匹配后，ChatGPT/Claude 的 timelineStyle、markerLevel，以及 DeepSeek 的 timelineStyle 从通用设置中隐藏；schema、旧 compactView alias、backup、stored values 和写入闭包不变。local、自定义 rail、未知来源、其他字段、无法用三样式卡片表达的远端选项仍留在通用设置，native Gemini/AI Studio 入口不改。来源表使用 Map，避免合法自定义 ID constructor 读到 Object.prototype 而使 popup 崩溃。Popup 插件列表重构的 Batch 7 删除了这张卡片：同样的字段改由 rail 插件行下的 Options 面板接管（`PluginManager` 的 `timelineRail`），来源匹配规则不变。
 
 7C-3 验证：实际 Popup 三站专用卡片继续写各自 plugin state 和旧 compactView；实际 local rail 的通用控件保留。Manager 的无卡片、未知来源、不同 selected rail、自定义选项、额外字段和 constructor ID 仍可编辑。descriptor、渲染 filter、selected rail、来源 gate、额外选项 gate 五项 mutation 均失败并恢复；constructor 崩溃先红后绿。完整检查结果随本批提交记录；最终树 Loaded/Live、跨浏览器与母语文档审阅仍 pending。
 

@@ -15,6 +15,7 @@ import { CHATGPT_EXPORT_PLUGIN_ID } from '@/features/plugins/builtin/chatgptExpo
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
 
+import { CatalogTimelineOptions } from './components/CatalogTimelineOptions';
 import { CloudSyncSettings } from './components/CloudSyncSettings';
 import { DiagnosticsExportCard } from './components/DiagnosticsExportCard';
 import { FolderSettingsCard } from './components/FolderSettingsCard';
@@ -33,11 +34,12 @@ import { PromptManagerSettingsCard } from './components/PromptManagerSettingsCar
 import { StarredHistory } from './components/StarredHistory';
 import { StorageManager } from './components/StorageManager';
 import { StorageQuotaCard } from './components/StorageQuotaCard';
-import { TimelineSettingsCard } from './components/TimelineSettingsCard';
 import { ToolbarPinHint } from './components/ToolbarPinHint';
-import { VisualEffectPicker } from './components/VisualEffectPicker';
 import { useActivePopupTab } from './hooks/useActivePopupTab';
-import { useCatalogTimelineSettings } from './hooks/useCatalogTimelineSettings';
+import {
+  catalogTimelineSettingKeys,
+  useCatalogTimelineSettings,
+} from './hooks/useCatalogTimelineSettings';
 import { useFolderPopupSettings } from './hooks/useFolderPopupSettings';
 import { useFolderStructureCopy } from './hooks/useFolderStructureCopy';
 import { useGeneralPopupSettings } from './hooks/useGeneralPopupSettings';
@@ -55,8 +57,8 @@ import {
 import { usePopupSettingsHydration } from './hooks/usePopupSettingsHydration';
 import { usePromptDataTransfer } from './hooks/usePromptDataTransfer';
 import { usePromptManagerSettings } from './hooks/usePromptManagerSettings';
-import { useVisualEffectPopupSettings } from './hooks/useVisualEffectPopupSettings';
 import { OfficialPluginList } from './officialPlugins/OfficialPluginList';
+import { PluginSiteOfficialRows } from './officialPlugins/PluginSiteOfficialRows';
 import { useContextSyncRequest } from './officialPlugins/useContextSyncRequest';
 import { useOfficialPluginList } from './officialPlugins/useOfficialPluginList';
 import { writePopupSyncStorage } from './utils/popupStorage';
@@ -103,7 +105,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
 
   // These owners remain mounted while search hides cards or an auxiliary view opens.
   // A catalog rail runs on its timeline plugin's settings and its own placement keys, so the
-  // timeline card edits those on such a site instead of Gemini's.
+  // options under its plugin row edit those on such a site instead of Gemini's.
   const catalogTimeline = useCatalogTimelineSettings({
     activeUrl: tab.activeUrl,
     siteOverride: plugins.pluginSiteOverride,
@@ -137,29 +139,23 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     writeSyncStorage: writePopupSyncStorage,
   });
   const promptTransfer = usePromptDataTransfer(t);
-  const visualEffect = useVisualEffectPopupSettings(writePopupSyncStorage);
   const folderStructureCopy = useFolderStructureCopy(language, sourceTabId);
   // Above every early return and section: a sync in flight outlives the Plugins card.
   const contextSync = useContextSyncRequest(sourceTabId);
-  // Where the Plugins card lists the effect (Gemini / AI Studio), its row replaces this card.
-  const visualEffectRowShown =
-    !isPluginSite &&
-    officialPlugins.rows.some((row) => row.manifest.id === OFFICIAL_PLUGIN_IDS.visualEffects);
-  const visualEffectsAvailable =
-    !visualEffectRowShown &&
-    canUseVisualEffects({
-      isPluginSite,
-      activeSiteDomain,
-      customWebsites: promptManager.customWebsites,
-      sitePluginIds: plugins.siteScopedManifests.map((plugin) => plugin.id),
-      pluginState: plugins.pluginState,
-    });
+  // The effect runs only where Voyager's content script does: on a plugin site, once Prompt
+  // Manager or a matching plugin has been enabled there. Until then its row is left out.
+  const visualEffectsAvailable = canUseVisualEffects({
+    isPluginSite,
+    activeSiteDomain,
+    customWebsites: promptManager.customWebsites,
+    sitePluginIds: plugins.siteScopedManifests.map((plugin) => plugin.id),
+    pluginState: plugins.pluginState,
+  });
   const sections = usePopupSections({
     // Plugin sites hide native sections through `isPluginSite`; keep the full allowlist for the
-    // sections they still show (visual effects) instead of treating them as AI Studio.
+    // sections they still show (Cloud Sync, shortcuts) instead of treating them as AI Studio.
     nativePopupPlatform: tab.activeAccountPlatform ?? 'gemini',
     isPluginSite,
-    visualEffectsAvailable,
     officialPluginsAvailable: officialPlugins.available,
     officialPluginSearchItems: officialPlugins.searchItems,
     t,
@@ -169,7 +165,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     folder: folder.hydrateFromStorage,
     general: general.hydrateFromStorage,
     promptManager: promptManager.hydrateFromStorage,
-    visualEffect: visualEffect.hydrateFromStorage,
     sections: sections.hydrateFromStorage,
     aiStudio: setAiStudioEnabled,
   });
@@ -185,18 +180,31 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
       {content}
     </PopupSection>
   );
-  const dedicatedTimelineSettings =
-    isPluginSite &&
-    catalogTimeline &&
-    sections.getSectionProps('timeline', { allowPluginSite: true }).visible
+  // A plugin site's rail is a row of its plugin list; its options open under that row.
+  const timelineRail =
+    isPluginSite && catalogTimeline
       ? {
           pluginId: catalogTimeline.pluginId,
-          settingKeys: [
-            ...(catalogTimeline.offers('timelineStyle') ? ['timelineStyle'] : []),
-            ...(catalogTimeline.offers('enableMarkerLevel') ? ['markerLevel'] : []),
-          ],
+          settingKeys: catalogTimelineSettingKeys(catalogTimeline),
+          render: (ownedSettingKeys: readonly string[], name: string) => (
+            <CatalogTimelineOptions
+              timeline={catalogTimeline}
+              ownedSettingKeys={ownedSettingKeys}
+              name={name}
+              onViewStarredHistory={() => setShowStarredHistory(true)}
+              language={language}
+              t={t}
+            />
+          ),
         }
       : undefined;
+  // Official rows whose manifest covers a plugin site (Visual effects), beside its plugins.
+  const pluginSiteOfficialRows =
+    isPluginSite && officialPlugins.available
+      ? officialPlugins.rows.filter(
+          (row) => row.manifest.id !== OFFICIAL_PLUGIN_IDS.visualEffects || visualEffectsAvailable,
+        )
+      : [];
   if (showStarredHistory)
     return (
       <StarredHistory sourceTabId={sourceTabId} onClose={() => setShowStarredHistory(false)} />
@@ -303,7 +311,22 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
               blockedUpdates: plugins.pluginBlockedUpdates,
               catalogHost: plugins.pluginCatalogHost,
               statuses: plugins.pluginStatuses,
-              dedicatedTimelineSettings,
+              timelineRail,
+              officialRows: (
+                <PluginSiteOfficialRows
+                  rows={pluginSiteOfficialRows}
+                  statuses={plugins.pluginStatuses}
+                  nameSources={plugins.siteScopedManifests}
+                  onToggle={officialPlugins.setEnabled}
+                  onSettingsChange={officialPlugins.setSettings}
+                  panelIo={{
+                    values: officialPlugins.panelValues,
+                    write: officialPlugins.writePanel,
+                  }}
+                  language={language}
+                  t={t}
+                />
+              ),
             }}
             exportEntry={{
               enabled: isPluginEnabled(plugins.pluginState, CHATGPT_EXPORT_PLUGIN_ID),
@@ -314,21 +337,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             }}
             t={t}
           />
-        )}
-        {/* A plugin site's timeline rail; Gemini's timeline is a Plugins row. */}
-        {wrapSection(
-          'timeline',
-          catalogTimeline && (
-            <TimelineSettingsCard
-              values={catalogTimeline.values}
-              onChange={catalogTimeline.onChange}
-              onResetPosition={catalogTimeline.resetPosition}
-              isVisible={catalogTimeline.offers}
-              onViewStarredHistory={() => setShowStarredHistory(true)}
-              t={t}
-            />
-          ),
-          { allowPluginSite: catalogTimeline !== null },
         )}
         {/* Folder Options */}
         {wrapSection(
@@ -347,19 +355,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           />,
         )}
         <PopupLayoutSettings settings={layout} t={t} wrapSection={wrapSection} />
-        {/* Visual effects off Gemini / AI Studio. Third-party sites expose this only
-            after Prompt Manager or a matching plugin has activated the site. */}
-        {visualEffectsAvailable &&
-          wrapSection(
-            'visualEffect',
-            <VisualEffectPicker
-              value={visualEffect.value}
-              onChange={visualEffect.onChange}
-              t={t}
-            />,
-            { allowPluginSite: true },
-          )}
-
         {/* Keyboard Shortcuts: global, so catalog timeline rails listen to them too. */}
         {wrapSection('keyboardShortcuts', <KeyboardShortcutSettings />, {
           allowPluginSite: catalogTimeline !== null,

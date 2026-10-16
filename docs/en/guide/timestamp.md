@@ -17,6 +17,8 @@ Voyager annotates each message with a precise timestamp (format: `YYYY-MM-DD HH:
 1. Open the Voyager settings panel (the extension icon in your browser's toolbar).
 2. Turn on **Plugins** → **Message timestamps** (marked **Experimental**, off by default).
 
+On ChatGPT, turn on **Plugins** → **ChatGPT · Timeline**, then under its **Options** turn on **Show Message Timestamps** — the same setting as Gemini's row.
+
 ## Where the times come from
 
 - **Gemini**: Voyager reads each message's real send time from Gemini's own conversation data, so times are correct even for conversations you had on another device or before installing Voyager. Only when that time is unavailable does Voyager fall back to the time it first saw the message, kept locally in your browser.

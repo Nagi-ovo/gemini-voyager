@@ -2257,10 +2257,6 @@
     "message": "为页面增添季节氛围",
     "description": "Visual effect feature hint"
   },
-  "visualEffectOff": {
-    "message": "关闭",
-    "description": "Visual effect off option"
-  },
   "visualEffectSnow": {
     "message": "飘雪",
     "description": "Visual effect snow option"

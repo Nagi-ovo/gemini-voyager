@@ -7,7 +7,7 @@ import type { FormulaCopyFormat } from '@/features/formulaCopy/FormulaCopyServic
 import type { LegacySettingSnapshot } from '@/features/plugins/storage/legacySettingBindings';
 import type { TranslationKey } from '@/utils/translations';
 
-import { VisualEffectChoices } from '../components/VisualEffectPicker';
+import { VisualEffectChoices } from '../components/VisualEffectChoices';
 import { ContextSyncPanel } from './ContextSyncPanel';
 import { TimelinePanel } from './TimelinePanel';
 import type { OfficialPanelId } from './officialPluginRegistry';
@@ -100,7 +100,7 @@ function HighlightPanel({ values, write, idPrefix, t }: OfficialPanelProps) {
 
 /**
  * The effect to show while the row is on (Off is its switch). Picking writes the
- * pair the Visual Effects card has always written, clearing the legacy snow flag.
+ * pair the retired Visual Effects card wrote, clearing the legacy snow flag.
  */
 function VisualEffectPanel({ values, write, t }: OfficialPanelProps) {
   const effect = resolveVisualEffect(
@@ -110,7 +110,6 @@ function VisualEffectPanel({ values, write, t }: OfficialPanelProps) {
   return (
     <VisualEffectChoices
       value={effect}
-      withoutOff
       onChange={(next) =>
         write({ [StorageKeys.GV_VISUAL_EFFECT]: next, [StorageKeys.GV_SNOW_EFFECT]: false })
       }

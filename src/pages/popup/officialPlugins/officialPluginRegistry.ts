@@ -296,7 +296,7 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     },
   },
   {
-    // One shared choice on every site; elsewhere the popup keeps its Visual Effects card.
+    // One shared choice on every site. A plugin site lists this row in its own plugin card.
     id: OFFICIAL_PLUGIN_IDS.visualEffects,
     group: 'appearance',
     formerSectionTitle: 'visualEffect',

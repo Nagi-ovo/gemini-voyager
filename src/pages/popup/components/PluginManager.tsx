@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { type ReactNode, useMemo } from 'react';
 
 import type { PluginStatus } from '@/features/plugins/runtime/pluginStatus';
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
@@ -21,9 +21,13 @@ import { usePluginAccess } from './usePluginAccess';
 import { usePluginPreferences } from './usePluginPreferences';
 import { usePluginUpdates } from './usePluginUpdates';
 
-interface DedicatedTimelineSettings {
+/** The site's timeline rail: its options open under its plugin row. */
+export interface TimelineRailOptions {
   readonly pluginId: string;
+  /** Plugin settings the options can edit, so the row's own controls may leave them out. */
   readonly settingKeys: readonly string[];
+  /** The options, given the settings the row left out for them and the plugin's name. */
+  readonly render: (ownedSettingKeys: readonly string[], name: string) => ReactNode;
 }
 
 // Custom catalog IDs can be object property names such as "constructor".
@@ -36,7 +40,7 @@ const DEDICATED_TIMELINE_SOURCES = new Map<string, readonly string[]>([
 function dedicatedTimelineKeys(
   plugin: PluginManifest,
   sourceId: string | undefined,
-  dedicated: DedicatedTimelineSettings | undefined,
+  dedicated: TimelineRailOptions | undefined,
 ): readonly string[] | undefined {
   // Only the visible card's official rail loses duplicates; local rails keep their own controls.
   if (
@@ -94,7 +98,9 @@ export interface PluginManagerProps {
    * official one can hold the runtime). Defaults to `manifests`.
    */
   readonly nameSources?: readonly PluginManifest[];
-  readonly dedicatedTimelineSettings?: DedicatedTimelineSettings;
+  readonly timelineRail?: TimelineRailOptions;
+  /** Official plugin rows that also cover this site, listed ahead of its plugins. */
+  readonly officialRows?: ReactNode;
 }
 
 /**
@@ -112,7 +118,8 @@ export function PluginManager({
   catalogHost,
   statuses,
   nameSources,
-  dedicatedTimelineSettings,
+  timelineRail,
+  officialRows,
 }: PluginManagerProps) {
   const { t, language } = useLanguage();
   const { currentSiteId, currentSiteLabel } = usePluginSite(activeUrl);
@@ -193,7 +200,10 @@ export function PluginManager({
           </p>
         )}
 
+        {officialRows}
+
         {manifests.map((plugin) => {
+          // Listed as an official row (officialRows) where the effect can run.
           if (plugin.id === OFFICIAL_PLUGIN_IDS.visualEffects) return null;
           const enabled = enabledMap[plugin.id] === true;
           const isOpen = !collapsed.has(plugin.id);
@@ -223,6 +233,7 @@ export function PluginManager({
                 return null;
             }
           })();
+          const railKeys = dedicatedTimelineKeys(plugin, sourceIds?.[plugin.id], timelineRail);
           const blockedNote = blockedPluginNote({
             status,
             manifests: nameSources ?? manifests,
@@ -291,15 +302,15 @@ export function PluginManager({
                     <PluginSettings
                       plugin={plugin}
                       values={settingsMap[plugin.id]}
-                      hiddenKeys={dedicatedTimelineKeys(
-                        plugin,
-                        sourceIds?.[plugin.id],
-                        dedicatedTimelineSettings,
-                      )}
+                      hiddenKeys={railKeys}
                       handleSetting={handleSetting}
                       handleImmediateSettings={handleImmediateSettings}
                     />
                   )}
+
+                  {enabled &&
+                    timelineRail?.pluginId === plugin.id &&
+                    timelineRail.render(railKeys ?? [], localizedName)}
 
                   {deniedId === plugin.id && (
                     <p className="mt-1 text-[11px] text-red-500">{t('pluginPermissionDenied')}</p>

@@ -27,7 +27,7 @@ function Harness({
   return NATIVE_POPUP_SECTION_IDS.map((id) => (
     <PopupSection
       key={id}
-      {...sections.getSectionProps(id, { allowPluginSite: id === 'visualEffect' })}
+      {...sections.getSectionProps(id, { allowPluginSite: id === 'keyboardShortcuts' })}
     >
       <span data-section={id}>{id}</span>
     </PopupSection>
@@ -49,7 +49,6 @@ describe('usePopupSections', () => {
         <Harness
           nativePopupPlatform="gemini"
           isPluginSite={false}
-          visualEffectsAvailable
           t={translate}
           writeSyncStorage={writeSyncStorage}
           {...options}
@@ -94,6 +93,8 @@ describe('usePopupSections', () => {
           'formulaCopy',
           'gemsSidebar',
           'nanobanana',
+          'timeline',
+          'visualEffect',
           'retired',
           17,
           'cloudSync',
@@ -105,9 +106,6 @@ describe('usePopupSections', () => {
     expect(section('folder')?.style.order).toBe('0');
     expect(cloudSyncOrder).toBeGreaterThan(0);
     expect(Number(section('localPlugins')?.style.order)).toBe(cloudSyncOrder + 4);
-    // Gemini's timeline is a Plugins row now; the card's slot stays for plugin-site rails.
-    expect(section('timeline')).toBeUndefined();
-    expect(sections.getSectionProps('timeline').order).toBe(cloudSyncOrder + 6);
     expect(section('contextSync')).toBeUndefined();
     expect(section('nanobanana')).toBeUndefined();
     // The plugin list takes no slot until it has a row on this tab.
@@ -116,26 +114,25 @@ describe('usePopupSections', () => {
 
     await render({ nativePopupPlatform: 'aistudio' });
     expect(sections.hydrateFromStorage).toBe(hydrate);
-    expect(section('timeline')).toBeUndefined();
-    expect(sections.getSectionProps('timeline').order).toBe(cloudSyncOrder + 6);
+    expect(Number(section('localPlugins')?.style.order)).toBe(cloudSyncOrder + 4);
     expect(browser.storage.local.get).toHaveBeenCalledTimes(1);
   });
 
   it('moves between visible sections while preserving hidden platform and plugin slots', async () => {
     await render({ nativePopupPlatform: 'aistudio' });
     const initial = NATIVE_POPUP_SECTION_IDS.filter((id) => id !== 'cloudSync' && id !== 'folder');
-    const saved = ['folder', ...initial.slice(0, 4), 'cloudSync', ...initial.slice(4)];
+    const saved = ['folder', ...initial.slice(0, 3), 'cloudSync', ...initial.slice(3)];
     await act(async () =>
       sections.hydrateFromStorage({ [StorageKeys.GV_POPUP_SECTION_ORDER]: saved }),
     );
-    // timeline is hidden on AI Studio and the plugin list has no rows here; folderSpacing is
-    // the next visible slot.
+    // The plugin list has no rows here and the tree indent is hidden on AI Studio; folderSpacing
+    // is the visible slot above Cloud Sync.
     expect(saved.slice(1, 6)).toEqual([
       'officialPlugins',
       'localPlugins',
-      'timeline',
       'folderSpacing',
       'cloudSync',
+      'folderTreeIndent',
     ]);
     const moveUp = section('cloudSync')?.querySelector<HTMLButtonElement>(
       `button[aria-label="${translate('moveSectionUp')}"]`,
@@ -144,15 +141,15 @@ describe('usePopupSections', () => {
     await act(async () => moveUp?.click());
 
     const expected = [...saved];
-    [expected[4], expected[5]] = [expected[5], expected[4]];
+    [expected[3], expected[4]] = [expected[4], expected[3]];
     expect(writeSyncStorage).toHaveBeenLastCalledWith({
       [StorageKeys.GV_POPUP_SECTION_ORDER]: expected,
     });
-    expect(section('cloudSync')?.style.order).toBe('8');
-    expect(section('folderSpacing')?.style.order).toBe('10');
-    expect(section('timeline')).toBeUndefined();
+    expect(section('cloudSync')?.style.order).toBe('6');
+    expect(section('folderSpacing')?.style.order).toBe('8');
+    expect(section('folderTreeIndent')).toBeUndefined();
     expect(section('officialPlugins')).toBeUndefined();
-    expect(sections.getSectionProps('timeline').order).toBe(6);
+    expect(sections.getSectionProps('folderTreeIndent').order).toBe(10);
     expect(sections.getSectionProps('officialPlugins').order).toBe(2);
   });
 
@@ -207,27 +204,19 @@ describe('usePopupSections', () => {
     expect(section('folder')).toBeTruthy();
     expect(sections.shouldShowSetting('folder', 'enableFolderFeature')).toBe(true);
     expect(sections.shouldShowSetting('folder', 'enableForkFeature')).toBe(false);
-    expect(section('timeline')).toBeUndefined();
 
     await search(translate('enableMermaidRendering'));
     expect(sections.shouldShowSetting('general', 'enableMermaidRendering')).toBe(false);
     expect(sections.hasVisibleSearchResults).toBe(false);
   });
 
-  it('requires plugin-site allowance and visual availability without losing layout slots', async () => {
+  it('requires plugin-site allowance without losing layout slots', async () => {
     await render({ isPluginSite: true });
     expect(section('cloudSync')).toBeUndefined();
     expect(sections.getSectionProps('cloudSync').order).toBe(0);
-    expect(sections.getSectionProps('visualEffect').visible).toBe(false);
-    expect(section('visualEffect')).toBeTruthy();
+    expect(section('keyboardShortcuts')).toBeTruthy();
     expect(container.querySelectorAll('[data-section]')).toHaveLength(1);
     expect(container.querySelector('button')).toBeNull();
-
-    await render({ isPluginSite: true, visualEffectsAvailable: false });
-    expect(section('visualEffect')).toBeUndefined();
-    expect(sections.getSectionProps('visualEffect', { allowPluginSite: true }).order).toBe(
-      NATIVE_POPUP_SECTION_IDS.indexOf('visualEffect') * 2,
-    );
   });
 
   it('restores an asynchronous local query and ignores a read completed after unmount', async () => {

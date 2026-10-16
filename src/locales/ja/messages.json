@@ -2257,10 +2257,6 @@
     "message": "ページに季節の雰囲気を演出",
     "description": "Visual effect feature hint"
   },
-  "visualEffectOff": {
-    "message": "オフ",
-    "description": "Visual effect off option"
-  },
   "visualEffectSnow": {
     "message": "雪",
     "description": "Visual effect snow option"

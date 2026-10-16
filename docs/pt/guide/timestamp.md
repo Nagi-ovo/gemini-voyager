@@ -17,6 +17,8 @@ O Voyager anota cada mensagem com um carimbo de data/hora preciso (formato: `AAA
 1. Abra o painel de configurações do Voyager (o ícone da extensão na barra de ferramentas do navegador).
 2. Ative **Plugins** → **Data e hora das mensagens** (marcado como **Experimental**, desativado por padrão).
 
+No ChatGPT, ative **Plugins** → **ChatGPT · Linha do tempo** e, em **Opções**, ative **Mostrar carimbos de data/hora das mensagens**: é a mesma definição da linha do Gemini.
+
 ## De onde vêm as horas
 
 - **Gemini**: O Voyager lê a hora real de envio de cada mensagem a partir dos próprios dados de conversa do Gemini, por isso as horas estão corretas mesmo em conversas feitas noutro dispositivo ou antes de instalar o Voyager. Só quando essa hora não está disponível é que o Voyager recorre à hora em que viu a mensagem pela primeira vez, guardada localmente no seu navegador.

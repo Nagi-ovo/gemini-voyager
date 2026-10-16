@@ -17,6 +17,8 @@ Voyager annote chaque message avec un horodatage précis (format : `AAAA-MM-JJ H
 1. Ouvrez le panneau de paramètres Voyager (l’icône de l’extension dans la barre d’outils de votre navigateur).
 2. Activez **Extensions** → **Horodatage des messages** (marqué **Expérimental**, désactivé par défaut).
 
+Sur ChatGPT, activez **Extensions** → **ChatGPT · Timeline**, puis, sous ses **Options**, activez **Afficher les horodatages des messages** : c’est le même réglage que la ligne de Gemini.
+
 ## D'où viennent les heures
 
 - **Gemini** : Voyager lit l'heure d'envoi réelle de chaque message dans les données de conversation de Gemini lui-même ; les heures sont donc justes même pour les conversations menées sur un autre appareil ou avant l'installation de Voyager. Ce n'est que lorsque cette heure est indisponible que Voyager se rabat sur l'heure à laquelle il a vu le message pour la première fois, conservée localement dans votre navigateur.

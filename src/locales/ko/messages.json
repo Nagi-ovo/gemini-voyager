@@ -2257,10 +2257,6 @@
     "message": "페이지에 계절 분위기 연출",
     "description": "Visual effect feature hint"
   },
-  "visualEffectOff": {
-    "message": "끄기",
-    "description": "Visual effect off option"
-  },
   "visualEffectSnow": {
     "message": "눈",
     "description": "Visual effect snow option"

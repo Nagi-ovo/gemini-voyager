@@ -6,10 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { TranslationKey } from '@/utils/translations';
 
 import {
-  TimelineSettingsCard,
-  type TimelineSettingsCardProps,
+  TimelineOptions,
+  type TimelineOptionsProps,
   type TimelineSettingsValues,
-} from '../TimelineSettingsCard';
+} from '../TimelineOptions';
 
 const translate = (key: TranslationKey): string => key;
 
@@ -24,7 +24,7 @@ const values: TimelineSettingsValues = {
   showMessageTimestamps: false,
 };
 
-describe('TimelineSettingsCard', () => {
+describe('TimelineOptions', () => {
   let container: HTMLDivElement;
   let root: Root;
 
@@ -42,8 +42,8 @@ describe('TimelineSettingsCard', () => {
     container.remove();
   });
 
-  const render = (overrides: Partial<TimelineSettingsCardProps> = {}) => {
-    const props: TimelineSettingsCardProps = {
+  const render = (overrides: Partial<TimelineOptionsProps> = {}) => {
+    const props: TimelineOptionsProps = {
       values,
       onChange: vi.fn(),
       onResetPosition: vi.fn(),
@@ -53,7 +53,7 @@ describe('TimelineSettingsCard', () => {
       ...overrides,
     };
     act(() => {
-      root.render(<TimelineSettingsCard {...props} />);
+      root.render(<TimelineOptions {...props} />);
     });
     return props;
   };
@@ -61,7 +61,6 @@ describe('TimelineSettingsCard', () => {
   it('renders every value into its control', () => {
     render();
     const checked = (id: string) => container.querySelector<HTMLInputElement>(`#${id}`)!.checked;
-    expect(checked('timeline-enabled')).toBe(true);
     expect(checked('hide-container')).toBe(false);
     expect(checked('draggable-timeline')).toBe(true);
     expect(checked('timeline-preview-pinned')).toBe(false);
@@ -154,8 +153,6 @@ describe('TimelineSettingsCard', () => {
     expect(props.onChange).toHaveBeenLastCalledWith({ showMessageTimestamps: false });
     act(() => buttons.find((b) => b.textContent === 'viewStarredHistory')!.click());
     expect(props.onViewStarredHistory).toHaveBeenCalledOnce();
-    act(() => input('timeline-enabled').click());
-    expect(props.onChange).toHaveBeenLastCalledWith({ timelineEnabled: true });
   });
 
   it.each(['ruler', 'compact'] as const)(
