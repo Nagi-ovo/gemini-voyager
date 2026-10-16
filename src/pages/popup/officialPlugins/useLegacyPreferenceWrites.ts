@@ -9,8 +9,9 @@ import {
 interface PendingValue {
   readonly value: unknown;
   readonly revision: number;
-  /** How many change events the key had seen when the write landed; null while in flight. */
-  readonly landedAtChange: number | null;
+  /** How many change events the key had seen when the write started. */
+  readonly startedAtChange: number;
+  readonly landed: boolean;
 }
 
 type PendingValues = Readonly<Record<string, PendingValue>>;
@@ -41,8 +42,9 @@ export interface LegacyPreferenceWritesOptions {
  * - a failed write drops the value, so the stored one shows again;
  * - a landed write drops it once the snapshot holds it, at once for a no-op
  *   write that raises no change event;
- * - a landed write whose key then changes at all (a restore, another window,
- *   even back to the old value) gives way to the snapshot;
+ * - otherwise a landed write gives way to the snapshot as soon as the key has
+ *   changed since the write started (a restore, another window, even back to
+ *   the old value), whether that change came before or after its receipt;
  * - a newer write to the same key supersedes an older one still in flight.
  * Waiting for a change event alone would leave a no-op or failed write
  * covering the stored value for the popup's whole life, and comparing values
@@ -56,7 +58,7 @@ export function useLegacyPreferenceWrites({
   const [pending, setPending] = useState<PendingValues>({});
   const [changeCounts, setChangeCounts] = useState<ChangeCounts>({});
   const revision = useRef(0);
-  // Read when a write lands, which can happen between renders.
+  // Read when a write starts, from an event handler between renders.
   const changeCountsNow = useRef<ChangeCounts>({});
 
   useEffect(
@@ -74,9 +76,10 @@ export function useLegacyPreferenceWrites({
     setPending((current) => {
       let next = current;
       for (const [key, entry] of Object.entries(current)) {
-        if (entry.landedAtChange === null) continue;
+        if (!entry.landed) continue;
         const stored = Object.hasOwn(legacy, key) ? legacy[key] : undefined;
-        if (sameValue(stored, entry.value) || (changeCounts[key] ?? 0) !== entry.landedAtChange) {
+        // Counted from the write's start: a restore that beat a late receipt must still win.
+        if (sameValue(stored, entry.value) || (changeCounts[key] ?? 0) !== entry.startedAtChange) {
           next = withoutKey(next, key);
         }
       }
@@ -91,8 +94,14 @@ export function useLegacyPreferenceWrites({
       const own = ++revision.current;
       setPending((current) => {
         const next: Record<string, PendingValue> = { ...current };
-        for (const key of keys)
-          next[key] = { value: payload[key], revision: own, landedAtChange: null };
+        for (const key of keys) {
+          next[key] = {
+            value: payload[key],
+            revision: own,
+            startedAtChange: changeCountsNow.current[key] ?? 0,
+            landed: false,
+          };
+        }
         return next;
       });
       void write({ ...payload })
@@ -105,10 +114,7 @@ export function useLegacyPreferenceWrites({
               // A newer write to this key owns its settlement.
               if (!entry || entry.revision !== own) continue;
               next = landed
-                ? {
-                    ...next,
-                    [key]: { ...entry, landedAtChange: changeCountsNow.current[key] ?? 0 },
-                  }
+                ? { ...next, [key]: { ...entry, landed: true } }
                 : withoutKey(next, key);
             }
             return next;

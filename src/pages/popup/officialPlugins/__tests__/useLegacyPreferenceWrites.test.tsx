@@ -149,6 +149,17 @@ describe('useLegacyPreferenceWrites', () => {
     expect(shown()).toBe(false);
   });
 
+  it('a restore that lands before a late write receipt is not hidden by the written value', async () => {
+    const receipt = deferred();
+    write.mockReturnValueOnce(receipt.promise);
+    await act(async () => writes.writePreference({ [KEY]: true }));
+    await storageChanged({ [KEY]: true });
+    // A settings restore rewrites the key before the write's own receipt comes back.
+    await storageChanged({ [KEY]: false });
+    await act(async () => receipt.resolve(true));
+    expect(shown()).toBe(false);
+  });
+
   it('a change to another key does not settle this one', async () => {
     await act(async () => writes.writePreference({ [KEY]: true }));
     await storageChanged({ geminiWaveDromEnabled: false });
