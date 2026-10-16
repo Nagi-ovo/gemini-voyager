@@ -111,12 +111,6 @@ export default defineConfig({
             items: [
               { text: '安装', link: '/guide/installation' },
               { text: '快速上手', link: '/guide/getting-started' },
-              { text: '赞助', link: '/guide/sponsor' },
-              { text: '交流与反馈', link: '/guide/community' },
-              { text: '插件贡献说明', link: '/guide/plugin-contribution' },
-              { text: '编写自己的插件', link: '/guide/write-a-plugin' },
-              { text: '受 Voyager 启发的项目', link: '/guide/ecosystem' },
-              { text: '更新日志', link: '/changelog' },
             ],
           },
           {
@@ -157,12 +151,25 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: '插件一览', link: '/guide/plugins' }],
+            text: '插件',
+            items: [
+              { text: '插件一览', link: '/guide/plugins' },
+              { text: '编写自己的插件', link: '/guide/write-a-plugin' },
+              { text: '插件贡献说明', link: '/guide/plugin-contribution' },
+            ],
           },
           {
             text: '本地 Web UI',
             items: [{ text: 'DeepSeek Harness', link: '/guide/deepseek-harness' }],
+          },
+          {
+            text: '更多',
+            items: [
+              { text: '交流与反馈', link: '/guide/community' },
+              { text: '赞助', link: '/guide/sponsor' },
+              { text: '受 Voyager 启发的项目', link: '/guide/ecosystem' },
+              { text: '更新日志', link: '/changelog' },
+            ],
           },
         ],
         footer: {
@@ -190,12 +197,6 @@ export default defineConfig({
             items: [
               { text: '安裝', link: '/zh_TW/guide/installation' },
               { text: '快速開始', link: '/zh_TW/guide/getting-started' },
-              { text: '贊助', link: '/zh_TW/guide/sponsor' },
-              { text: '社群', link: '/zh_TW/guide/community' },
-              { text: '外掛貢獻說明', link: '/zh_TW/guide/plugin-contribution' },
-              { text: '撰寫自己的外掛', link: '/zh_TW/guide/write-a-plugin' },
-              { text: '受 Voyager 啟發的項目', link: '/zh_TW/guide/ecosystem' },
-              { text: '更新日誌', link: '/zh_TW/changelog' },
             ],
           },
           {
@@ -236,12 +237,25 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: '外掛一覽', link: '/zh_TW/guide/plugins' }],
+            text: '外掛',
+            items: [
+              { text: '外掛一覽', link: '/zh_TW/guide/plugins' },
+              { text: '撰寫自己的外掛', link: '/zh_TW/guide/write-a-plugin' },
+              { text: '外掛貢獻說明', link: '/zh_TW/guide/plugin-contribution' },
+            ],
           },
           {
             text: '本機 Web UI',
             items: [{ text: 'DeepSeek Harness', link: '/zh_TW/guide/deepseek-harness' }],
+          },
+          {
+            text: '更多',
+            items: [
+              { text: '社群', link: '/zh_TW/guide/community' },
+              { text: '贊助', link: '/zh_TW/guide/sponsor' },
+              { text: '受 Voyager 啟發的項目', link: '/zh_TW/guide/ecosystem' },
+              { text: '更新日誌', link: '/zh_TW/changelog' },
+            ],
           },
         ],
         footer: {
@@ -270,12 +284,6 @@ export default defineConfig({
             items: [
               { text: 'Installation', link: '/en/guide/installation' },
               { text: 'Getting Started', link: '/en/guide/getting-started' },
-              { text: 'Sponsor', link: '/en/guide/sponsor' },
-              { text: 'Community', link: '/en/guide/community' },
-              { text: 'Plugin Contribution', link: '/en/guide/plugin-contribution' },
-              { text: 'Write Your Own Plugin', link: '/en/guide/write-a-plugin' },
-              { text: 'Ecosystem', link: '/en/guide/ecosystem' },
-              { text: 'Changelog', link: '/en/changelog' },
             ],
           },
           {
@@ -316,12 +324,25 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: 'Plugins', link: '/en/guide/plugins' }],
+            text: 'Plugins',
+            items: [
+              { text: 'All plugins', link: '/en/guide/plugins' },
+              { text: 'Write Your Own Plugin', link: '/en/guide/write-a-plugin' },
+              { text: 'Plugin Contribution', link: '/en/guide/plugin-contribution' },
+            ],
           },
           {
             text: 'Local Web UI',
             items: [{ text: 'DeepSeek Harness', link: '/en/guide/deepseek-harness' }],
+          },
+          {
+            text: 'More',
+            items: [
+              { text: 'Community', link: '/en/guide/community' },
+              { text: 'Sponsor', link: '/en/guide/sponsor' },
+              { text: 'Ecosystem', link: '/en/guide/ecosystem' },
+              { text: 'Changelog', link: '/en/changelog' },
+            ],
           },
         ],
         footer: {
@@ -349,12 +370,6 @@ export default defineConfig({
             items: [
               { text: 'インストール', link: '/ja/guide/installation' },
               { text: 'クイックスタート', link: '/ja/guide/getting-started' },
-              { text: 'スポンサー', link: '/ja/guide/sponsor' },
-              { text: 'コミュニティ', link: '/ja/guide/community' },
-              { text: 'プラグイン貢献ガイド', link: '/ja/guide/plugin-contribution' },
-              { text: '自分でプラグインを作る', link: '/ja/guide/write-a-plugin' },
-              { text: 'エコシステム', link: '/ja/guide/ecosystem' },
-              { text: '更新履歴', link: '/ja/changelog' },
             ],
           },
           {
@@ -395,12 +410,25 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: 'プラグイン一覧', link: '/ja/guide/plugins' }],
+            text: 'プラグイン',
+            items: [
+              { text: 'プラグイン一覧', link: '/ja/guide/plugins' },
+              { text: '自分でプラグインを作る', link: '/ja/guide/write-a-plugin' },
+              { text: 'プラグイン貢献ガイド', link: '/ja/guide/plugin-contribution' },
+            ],
           },
           {
             text: 'ローカル Web UI',
             items: [{ text: 'DeepSeek Harness', link: '/ja/guide/deepseek-harness' }],
+          },
+          {
+            text: 'その他',
+            items: [
+              { text: 'コミュニティ', link: '/ja/guide/community' },
+              { text: 'スポンサー', link: '/ja/guide/sponsor' },
+              { text: 'エコシステム', link: '/ja/guide/ecosystem' },
+              { text: '更新履歴', link: '/ja/changelog' },
+            ],
           },
         ],
         footer: {
@@ -428,12 +456,6 @@ export default defineConfig({
             items: [
               { text: '설치', link: '/ko/guide/installation' },
               { text: '시작하기', link: '/ko/guide/getting-started' },
-              { text: '후원', link: '/ko/guide/sponsor' },
-              { text: '커뮤니티', link: '/ko/guide/community' },
-              { text: '플러그인 기여 가이드', link: '/ko/guide/plugin-contribution' },
-              { text: '직접 플러그인 만들기', link: '/ko/guide/write-a-plugin' },
-              { text: '에코시스템', link: '/ko/guide/ecosystem' },
-              { text: '변경 로그', link: '/ko/changelog' },
             ],
           },
           {
@@ -474,12 +496,25 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: '플러그인 목록', link: '/ko/guide/plugins' }],
+            text: '플러그인',
+            items: [
+              { text: '플러그인 목록', link: '/ko/guide/plugins' },
+              { text: '직접 플러그인 만들기', link: '/ko/guide/write-a-plugin' },
+              { text: '플러그인 기여 가이드', link: '/ko/guide/plugin-contribution' },
+            ],
           },
           {
             text: '로컬 Web UI',
             items: [{ text: 'DeepSeek Harness', link: '/ko/guide/deepseek-harness' }],
+          },
+          {
+            text: '더 보기',
+            items: [
+              { text: '커뮤니티', link: '/ko/guide/community' },
+              { text: '후원', link: '/ko/guide/sponsor' },
+              { text: '에코시스템', link: '/ko/guide/ecosystem' },
+              { text: '변경 로그', link: '/ko/changelog' },
+            ],
           },
         ],
         footer: {
@@ -507,12 +542,6 @@ export default defineConfig({
             items: [
               { text: 'Installation', link: '/fr/guide/installation' },
               { text: 'Commencer', link: '/fr/guide/getting-started' },
-              { text: 'Sponsor', link: '/fr/guide/sponsor' },
-              { text: 'Communauté', link: '/fr/guide/community' },
-              { text: 'Contribution Plugins', link: '/fr/guide/plugin-contribution' },
-              { text: 'Écrire son propre plugin', link: '/fr/guide/write-a-plugin' },
-              { text: 'Écosystème', link: '/fr/guide/ecosystem' },
-              { text: 'Nouveautés', link: '/fr/changelog' },
             ],
           },
           {
@@ -553,12 +582,25 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: 'Plugins', link: '/fr/guide/plugins' }],
+            text: 'Plugins',
+            items: [
+              { text: 'Tous les plugins', link: '/fr/guide/plugins' },
+              { text: 'Écrire son propre plugin', link: '/fr/guide/write-a-plugin' },
+              { text: 'Contribution Plugins', link: '/fr/guide/plugin-contribution' },
+            ],
           },
           {
             text: 'Interface Web locale',
             items: [{ text: 'DeepSeek Harness', link: '/fr/guide/deepseek-harness' }],
+          },
+          {
+            text: 'Plus',
+            items: [
+              { text: 'Communauté', link: '/fr/guide/community' },
+              { text: 'Sponsor', link: '/fr/guide/sponsor' },
+              { text: 'Écosystème', link: '/fr/guide/ecosystem' },
+              { text: 'Nouveautés', link: '/fr/changelog' },
+            ],
           },
         ],
         footer: {
@@ -586,12 +628,6 @@ export default defineConfig({
             items: [
               { text: 'Instalación', link: '/es/guide/installation' },
               { text: 'Comenzar', link: '/es/guide/getting-started' },
-              { text: 'Patrocinar', link: '/es/guide/sponsor' },
-              { text: 'Comunidad', link: '/es/guide/community' },
-              { text: 'Contribuir plugins', link: '/es/guide/plugin-contribution' },
-              { text: 'Escribe tu propio plugin', link: '/es/guide/write-a-plugin' },
-              { text: 'Ecosistema', link: '/es/guide/ecosystem' },
-              { text: 'Novedades', link: '/es/changelog' },
             ],
           },
           {
@@ -638,12 +674,25 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: 'Plugins', link: '/es/guide/plugins' }],
+            text: 'Plugins',
+            items: [
+              { text: 'Todos los plugins', link: '/es/guide/plugins' },
+              { text: 'Escribe tu propio plugin', link: '/es/guide/write-a-plugin' },
+              { text: 'Contribuir plugins', link: '/es/guide/plugin-contribution' },
+            ],
           },
           {
             text: 'Interfaz Web local',
             items: [{ text: 'DeepSeek Harness', link: '/es/guide/deepseek-harness' }],
+          },
+          {
+            text: 'Más',
+            items: [
+              { text: 'Comunidad', link: '/es/guide/community' },
+              { text: 'Patrocinar', link: '/es/guide/sponsor' },
+              { text: 'Ecosistema', link: '/es/guide/ecosystem' },
+              { text: 'Novedades', link: '/es/changelog' },
+            ],
           },
         ],
         footer: {
@@ -671,12 +720,6 @@ export default defineConfig({
             items: [
               { text: 'Instalação', link: '/pt/guide/installation' },
               { text: 'Começar', link: '/pt/guide/getting-started' },
-              { text: 'Patrocinar', link: '/pt/guide/sponsor' },
-              { text: 'Comunidade', link: '/pt/guide/community' },
-              { text: 'Contribuir plugins', link: '/pt/guide/plugin-contribution' },
-              { text: 'Escreva o seu próprio plugin', link: '/pt/guide/write-a-plugin' },
-              { text: 'Ecossistema', link: '/pt/guide/ecosystem' },
-              { text: 'Novidades', link: '/pt/changelog' },
             ],
           },
           {
@@ -717,12 +760,25 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: 'Plugins', link: '/pt/guide/plugins' }],
+            text: 'Plugins',
+            items: [
+              { text: 'Todos os plugins', link: '/pt/guide/plugins' },
+              { text: 'Escreva o seu próprio plugin', link: '/pt/guide/write-a-plugin' },
+              { text: 'Contribuir plugins', link: '/pt/guide/plugin-contribution' },
+            ],
           },
           {
             text: 'Interface Web local',
             items: [{ text: 'DeepSeek Harness', link: '/pt/guide/deepseek-harness' }],
+          },
+          {
+            text: 'Mais',
+            items: [
+              { text: 'Comunidade', link: '/pt/guide/community' },
+              { text: 'Patrocinar', link: '/pt/guide/sponsor' },
+              { text: 'Ecossistema', link: '/pt/guide/ecosystem' },
+              { text: 'Novidades', link: '/pt/changelog' },
+            ],
           },
         ],
         footer: {
@@ -751,12 +807,6 @@ export default defineConfig({
             items: [
               { text: 'التثبيت', link: '/ar/guide/installation' },
               { text: 'البدء', link: '/ar/guide/getting-started' },
-              { text: 'رعاية', link: '/ar/guide/sponsor' },
-              { text: 'المجتمع', link: '/ar/guide/community' },
-              { text: 'المساهمة في الإضافات', link: '/ar/guide/plugin-contribution' },
-              { text: 'اكتب إضافتك الخاصة', link: '/ar/guide/write-a-plugin' },
-              { text: 'المنظومة', link: '/ar/guide/ecosystem' },
-              { text: 'سجل التغييرات', link: '/ar/changelog' },
             ],
           },
           {
@@ -797,12 +847,25 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: 'الإضافات', link: '/ar/guide/plugins' }],
+            text: 'الإضافات',
+            items: [
+              { text: 'كل الإضافات', link: '/ar/guide/plugins' },
+              { text: 'اكتب إضافتك الخاصة', link: '/ar/guide/write-a-plugin' },
+              { text: 'المساهمة في الإضافات', link: '/ar/guide/plugin-contribution' },
+            ],
           },
           {
             text: 'واجهة ويب محلية',
             items: [{ text: 'DeepSeek Harness', link: '/ar/guide/deepseek-harness' }],
+          },
+          {
+            text: 'المزيد',
+            items: [
+              { text: 'المجتمع', link: '/ar/guide/community' },
+              { text: 'رعاية', link: '/ar/guide/sponsor' },
+              { text: 'المنظومة', link: '/ar/guide/ecosystem' },
+              { text: 'سجل التغييرات', link: '/ar/changelog' },
+            ],
           },
         ],
         footer: {
@@ -830,12 +893,6 @@ export default defineConfig({
             items: [
               { text: 'Установка', link: '/ru/guide/installation' },
               { text: 'Начало работы', link: '/ru/guide/getting-started' },
-              { text: 'Поддержать', link: '/ru/guide/sponsor' },
-              { text: 'Сообщество', link: '/ru/guide/community' },
-              { text: 'Участие в плагинах', link: '/ru/guide/plugin-contribution' },
-              { text: 'Создание своего плагина', link: '/ru/guide/write-a-plugin' },
-              { text: 'Экосистема', link: '/ru/guide/ecosystem' },
-              { text: 'Изменения', link: '/ru/changelog' },
             ],
           },
           {
@@ -882,12 +939,25 @@ export default defineConfig({
             ],
           },
           {
-            text: 'Claude, ChatGPT & DeepSeek',
-            items: [{ text: 'Плагины', link: '/ru/guide/plugins' }],
+            text: 'Плагины',
+            items: [
+              { text: 'Все плагины', link: '/ru/guide/plugins' },
+              { text: 'Создание своего плагина', link: '/ru/guide/write-a-plugin' },
+              { text: 'Участие в плагинах', link: '/ru/guide/plugin-contribution' },
+            ],
           },
           {
             text: 'Локальный веб-интерфейс',
             items: [{ text: 'DeepSeek Harness', link: '/ru/guide/deepseek-harness' }],
+          },
+          {
+            text: 'Ещё',
+            items: [
+              { text: 'Сообщество', link: '/ru/guide/community' },
+              { text: 'Поддержать', link: '/ru/guide/sponsor' },
+              { text: 'Экосистема', link: '/ru/guide/ecosystem' },
+              { text: 'Изменения', link: '/ru/changelog' },
+            ],
           },
         ],
         footer: {

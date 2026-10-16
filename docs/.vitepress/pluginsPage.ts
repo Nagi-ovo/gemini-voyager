@@ -92,7 +92,7 @@ export const PLUGINS_LOCALES: readonly PluginsLocale[] = [
   {
     manifest: 'en',
     prefix: 'en',
-    title: 'Plugins',
+    title: 'All plugins',
     intro:
       'Open the Voyager popup on a Claude, ChatGPT or DeepSeek page, turn a plugin on and allow access to the site. Updates arrive automatically.',
     feature: 'Feature',
@@ -125,7 +125,7 @@ export const PLUGINS_LOCALES: readonly PluginsLocale[] = [
   {
     manifest: 'fr',
     prefix: 'fr',
-    title: 'Plugins',
+    title: 'Tous les plugins',
     intro:
       'Ouvrez la fenêtre de Voyager sur une page Claude, ChatGPT ou DeepSeek, activez un plugin et autorisez l’accès au site. Les mises à jour arrivent automatiquement.',
     feature: 'Fonction',
@@ -136,7 +136,7 @@ export const PLUGINS_LOCALES: readonly PluginsLocale[] = [
   {
     manifest: 'es',
     prefix: 'es',
-    title: 'Plugins',
+    title: 'Todos los plugins',
     intro:
       'Abre la ventana de Voyager en una página de Claude, ChatGPT o DeepSeek, activa un plugin y permite el acceso al sitio. Las actualizaciones llegan automáticamente.',
     feature: 'Función',
@@ -147,7 +147,7 @@ export const PLUGINS_LOCALES: readonly PluginsLocale[] = [
   {
     manifest: 'pt',
     prefix: 'pt',
-    title: 'Plugins',
+    title: 'Todos os plugins',
     intro:
       'Abra a janela do Voyager numa página do Claude, ChatGPT ou DeepSeek, ative um plugin e permita o acesso ao site. As atualizações chegam automaticamente.',
     feature: 'Funcionalidade',
@@ -158,7 +158,7 @@ export const PLUGINS_LOCALES: readonly PluginsLocale[] = [
   {
     manifest: 'ar',
     prefix: 'ar',
-    title: 'الإضافات',
+    title: 'كل الإضافات',
     intro:
       'افتح نافذة Voyager على صفحة Claude أو ChatGPT أو DeepSeek، ثم فعّل الإضافة واسمح بالوصول إلى الموقع. تصل التحديثات تلقائيًا.',
     feature: 'الميزة',
@@ -169,7 +169,7 @@ export const PLUGINS_LOCALES: readonly PluginsLocale[] = [
   {
     manifest: 'ru',
     prefix: 'ru',
-    title: 'Плагины',
+    title: 'Все плагины',
     intro:
       'Откройте всплывающее окно Voyager на странице Claude, ChatGPT или DeepSeek, включите плагин и разрешите доступ к сайту. Обновления приходят автоматически.',
     feature: 'Функция',
