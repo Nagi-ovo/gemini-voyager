@@ -1877,6 +1877,10 @@
     "message": "컨텍스트 동기화",
     "description": "Context Sync title"
   },
+  "contextSyncDisabled": {
+    "message": "컨텍스트 동기화가 꺼져 있습니다.",
+    "description": "Error shown when Context Sync is disabled"
+  },
   "contextSyncDescription": {
     "message": "대화 컨텍스트를 로컬 IDE 와 동기화합니다",
     "description": "Context Sync description"

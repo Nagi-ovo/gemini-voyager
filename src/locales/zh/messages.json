@@ -1877,6 +1877,10 @@
     "message": "上下文同步",
     "description": "上下文同步标题"
   },
+  "contextSyncDisabled": {
+    "message": "上下文同步已关闭。",
+    "description": "Error shown when Context Sync is disabled"
+  },
   "contextSyncDescription": {
     "message": "将对话上下文同步到本地 IDE",
     "description": "上下文同步描述"

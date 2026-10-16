@@ -1,6 +1,7 @@
 import { logger } from '@/core/services/LoggerService';
 import { SyncService } from '@/features/contextSync/services/SyncService';
 import type { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { getTranslationSync } from '@/utils/i18n';
 
 import { ContextCaptureService } from './capture';
 
@@ -19,7 +20,8 @@ export function activateGeminiContextSync(scope: PluginScope): void {
       }
       // A queued callback from a removed listener must not start another capture.
       if (scope.isDisposed) {
-        sendResponse({ status: 'error', message: 'Context Sync is disabled.' });
+        // The popup displays this message verbatim, so use the current app language.
+        sendResponse({ status: 'error', message: getTranslationSync('contextSyncDisabled') });
         return;
       }
       // Disabling removes admission, but must not strand an already accepted popup request.

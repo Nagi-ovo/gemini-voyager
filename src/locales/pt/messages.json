@@ -1877,6 +1877,10 @@
     "message": "Sincronização de Contexto",
     "description": "Context Sync title"
   },
+  "contextSyncDisabled": {
+    "message": "A sincronização de contexto está desativada.",
+    "description": "Error shown when Context Sync is disabled"
+  },
   "contextSyncDescription": {
     "message": "Sincronize o contexto do chat com seu IDE local",
     "description": "Context Sync description"

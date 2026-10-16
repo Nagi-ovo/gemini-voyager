@@ -1877,6 +1877,10 @@
     "message": "コンテキスト同期",
     "description": "Context Sync title"
   },
+  "contextSyncDisabled": {
+    "message": "コンテキスト同期は無効になっています。",
+    "description": "Error shown when Context Sync is disabled"
+  },
   "contextSyncDescription": {
     "message": "チャットのコンテキストをローカル IDE に同期します",
     "description": "Context Sync description"

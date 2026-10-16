@@ -1877,6 +1877,10 @@
     "message": "مزامنة السياق",
     "description": "Context Sync title"
   },
+  "contextSyncDisabled": {
+    "message": "مزامنة السياق معطّلة.",
+    "description": "Error shown when Context Sync is disabled"
+  },
   "contextSyncDescription": {
     "message": "مزامنة سياق الدردشة مع IDE المحلي الخاص بك",
     "description": "Context Sync description"

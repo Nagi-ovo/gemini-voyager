@@ -1877,6 +1877,10 @@
     "message": "Синхронизация контекста",
     "description": "Context Sync title"
   },
+  "contextSyncDisabled": {
+    "message": "Синхронизация контекста отключена.",
+    "description": "Error shown when Context Sync is disabled"
+  },
   "contextSyncDescription": {
     "message": "Синхронизируйте контекст чата с вашей локальной IDE",
     "description": "Context Sync description"

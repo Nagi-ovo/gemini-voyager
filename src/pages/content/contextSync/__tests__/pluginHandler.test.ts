@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { DialogNode } from '@/features/contextSync/types';
 import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import { setCachedLanguage } from '@/utils/i18n';
 
 import { activateGeminiContextSync } from '../pluginHandler';
 
@@ -32,6 +33,7 @@ async function settle() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  setCachedLanguage('en');
   listeners = new Set();
   vi.mocked(chrome.runtime.onMessage.addListener).mockImplementation((listener) => {
     listeners.add(listener);
@@ -46,6 +48,7 @@ beforeEach(() => {
 
 afterEach(async () => {
   await scope.dispose();
+  setCachedLanguage('en');
 });
 
 describe('Gemini Context Sync plugin handler', () => {
@@ -70,7 +73,7 @@ describe('Gemini Context Sync plugin handler', () => {
     expect(respond).not.toHaveBeenCalled();
   });
 
-  it('off removes request admission and refuses a queued callback without capturing', async () => {
+  it('off refuses queued callbacks in the current app language without capturing', async () => {
     activateGeminiContextSync(scope);
     const staleListener = Array.from(listeners)[0];
     await scope.dispose();
@@ -80,6 +83,13 @@ describe('Gemini Context Sync plugin handler', () => {
     expect(respond).toHaveBeenCalledWith({
       status: 'error',
       message: 'Context Sync is disabled.',
+    });
+    setCachedLanguage('zh');
+    respond.mockClear();
+    expect(staleListener({ action: 'sync_to_ide' }, {}, respond)).toBeUndefined();
+    expect(respond).toHaveBeenCalledWith({
+      status: 'error',
+      message: '上下文同步已关闭。',
     });
     expect(captureDialogue).not.toHaveBeenCalled();
     expect(syncToIDE).not.toHaveBeenCalled();

@@ -320,6 +320,35 @@ describe('SettingsBackupService', () => {
     },
   );
 
+  it('keeps Gems sidebar enabled by default or explicitly disabled when a backup lacks its setting', async () => {
+    for (const mode of ['merge', 'overwrite'] as const) {
+      for (const currentValue of [undefined, false]) {
+        const state: Record<string, unknown> =
+          currentValue === undefined ? {} : { [StorageKeys.GV_GEMS_SIDEBAR_ENABLED]: currentValue };
+        const area = {
+          get: vi.fn(async (defaults?: unknown) => ({
+            ...(typeof defaults === 'object' && defaults !== null ? defaults : {}),
+            ...state,
+          })),
+          set: vi.fn(async (items: Record<string, unknown>) => {
+            Object.assign(state, items);
+          }),
+        };
+
+        await restoreBackupableSyncSettings({ [StorageKeys.CHAT_WIDTH]: 88 }, area, mode);
+
+        expect(state[StorageKeys.CHAT_WIDTH]).toBe(88);
+        if (currentValue === undefined) {
+          expect(state).not.toHaveProperty(StorageKeys.GV_GEMS_SIDEBAR_ENABLED);
+        } else {
+          expect(state[StorageKeys.GV_GEMS_SIDEBAR_ENABLED]).toBe(false);
+        }
+        const { data } = await exportBackupableSyncSettings(area);
+        expect(data[StorageKeys.GV_GEMS_SIDEBAR_ENABLED]).toBe(currentValue ?? true);
+      }
+    }
+  });
+
   it('backs up and restores an explicitly disabled formula-copy preference', async () => {
     const storageArea = {
       get: vi.fn().mockResolvedValue({
