@@ -6,7 +6,7 @@
 - Section headers per locale
 - Commit → entry filtering rules
 - Style guide
-- Optional closing note
+- Optional opening quote
 - Template skeleton (copy-ready)
 - Authoring order — Chinese first
 - Reality check before saving
@@ -65,18 +65,18 @@ Rule of thumb: if a user couldn't see or feel the change, skip it.
 - **Screenshots are supported — use one for the headline feature.** `img` is on the sanitizer allow-list and `.gv-changelog-body img` already styles it (full width, rounded, click-to-zoom lightbox). If the release ships a visual feature that the docs already screenshot, append the image to that bullet in every locale with localized alt text: `![{alt}](https://github.com/voyager-crew/voyager/raw/main/docs/public/assets/{file}.png)`. The raw URL only resolves once the docs commit is on `main` — verify with `curl -sIL -o /dev/null -w '%{http_code}'` before shipping. One screenshot per release at most; a wall of images buries the text.
 - Translations should feel native. Arabic is RTL — don't worry about it in the raw file (the viewer handles direction), just get the text right.
 
-## Optional closing note
+## Optional opening quote
 
 **Ask the maintainer first whether they already have a line in mind.** Do this before searching for candidates — they often do, and their pick will fit the release better than anything a search surfaces. Only go looking yourself if they say they have nothing.
 
-Do **not** force a decorative quote into every release. Changelog notes are product communication first; a closing note is optional and should be omitted unless it genuinely fits the release.
+Do **not** force a decorative quote into every release. Changelog notes are product communication first; a quote is optional and should be omitted unless it genuinely fits the release.
 
-Use a closing note only when it passes all of these checks:
+Use a quote only when it passes all of these checks:
 
 - **Direct fit**: it matches the release theme without explanation. For security, privacy, or permission releases, the line should be about responsibility, restraint, trust, or care — not just something vaguely warm.
 - **High recognition**: a casual fan or general reader is likely to recognize the line or at least the source. Prefer iconic lines, not quiet one-off dialogue from a minor scene.
 - **Source confidence**: the wording and attribution can be verified from a reliable source. Avoid fan quote lists unless a better source confirms it.
-- **Tone fit**: it should feel like a small closing wink or reflection, not a motivational poster, sermon, ad, or inside joke.
+- **Tone fit**: it should feel like a small wink or reflection, not a motivational poster, sermon, ad, or inside joke.
 - **Localization fit**: it can be translated naturally in all 10 locales without getting awkward.
 
 Before writing it into the changelog, collect 3–5 candidates in scratch notes and reject anything that:
@@ -89,21 +89,23 @@ Before writing it into the changelog, collect 3–5 candidates in scratch notes 
 
 Prefer no quote over an obscure or merely searchable quote.
 
-If you add one, use a thematic break followed by one blockquoted, italic line in every locale:
+If you add one, open every locale's body with one blockquoted, italic line, right under its `<!-- lang:xx -->` marker and above the first section:
 
 ```markdown
----
+<!-- lang:en -->
 
 > _"{the quote}" — {Character}, 《{Work Title}》_
+
+### What's New
 ```
 
-When a closing note is used:
+When a quote is used:
 
 - Verify it with WebSearch or another reliable source. Do not rely on memory, fan quote lists alone, or aggregator paraphrases.
 - Confirm it has not been used before with `grep -rh '^>' src/pages/content/changelog/notes/`.
 - Use one line across all 10 locales. Use official/known translations where they exist; otherwise translate naturally.
-- Renders fine in the viewer: `blockquote`, `em`, and `hr` are on the sanitizer allow-list in `src/pages/content/changelog/index.ts` — don't introduce other raw HTML.
-- The line sits at the bottom of each locale's body.
+- Renders fine in the viewer: `blockquote` and `em` are on the sanitizer allow-list in `src/pages/content/changelog/index.ts` — don't introduce other raw HTML.
+- The line opens each locale's body, in every release that has one; the site's changelog pages list releases one after another, so a quote at the bottom reads as the start of the next release.
 
 ## Template skeleton
 
@@ -200,4 +202,4 @@ Fill every locale — all 10 are non-negotiable. Write **Chinese first**, render
 - No locale is missing a section that another locale has.
 - Optional-feature markers are present in all 10 where they appear in English.
 - No commit-speak leaked in (avoid things like "implement X" or "refactor Y to be more Z" — those are internal descriptions).
-- If an optional closing note is present, it appears in all 10 locales, is verified, is new vs. prior release notes, and clearly fits the release. If it feels decorative or obscure, remove it.
+- If an optional quote is present, it opens the body in all 10 locales, is verified, is new vs. prior release notes, and clearly fits the release. If it feels decorative or obscure, remove it.
