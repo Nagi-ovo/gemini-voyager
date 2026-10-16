@@ -77,6 +77,19 @@ describe('PluginHost', () => {
     expect(document.body.classList.contains('gv-plugin-active')).toBe(false);
   });
 
+  it('does not mount an enabled scripted plugin, since no scripted runtime exists', async () => {
+    mockState({ 'voyager.test': { enabled: true, installedAt: 1 } });
+    const scripted: PluginManifest = { ...manifest(['https://claude.ai/*']), tier: 'scripted' };
+    const host = new PluginHost({
+      url: 'https://claude.ai/chat/1',
+      sources: [new StaticSource([scripted])],
+      doc: document,
+    });
+
+    await host.start();
+    expect(document.body.classList.contains('gv-plugin-active')).toBe(false);
+  });
+
   it('does not mount a plugin that does not match the URL', async () => {
     mockState({ 'voyager.test': { enabled: true, installedAt: 1 } });
     const host = new PluginHost({

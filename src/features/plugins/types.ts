@@ -200,9 +200,9 @@ export interface PluginContributions {
 /**
  * `declarative` = data only (CSS + JSON), interpreted by the engine. Store-safe
  * everywhere, remote-loadable, non-derivative.
- * `scripted` = ships JS; must run via `chrome.userScripts` (gated behind the
+ * `scripted` = ships JS; would run via `chrome.userScripts` (gated behind the
  * user's "Allow User Scripts" toggle) and is unavailable on Safari. Reserved for
- * an advanced tier; the v1 engine applies only its declarative contributions.
+ * an advanced tier with no runtime yet: the host skips such a plugin entirely.
  */
 export type PluginTier = 'declarative' | 'scripted';
 

@@ -29,7 +29,6 @@
 import { logger } from '@/core/services/LoggerService';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
-import { isScriptedTierSupported } from '../capabilities';
 import { LocalEntitlementProvider } from '../entitlement/LocalEntitlementProvider';
 import { subscribeLocalPlugins } from '../local/localPluginStore';
 import { subscribeHostCatalog } from '../remote/hostCatalogCache';
@@ -659,10 +658,9 @@ export class PluginHost {
       });
       return 'skip';
     }
-    if (manifest.tier === 'scripted' && !isScriptedTierSupported()) {
-      logger.warn('Scripted plugin skipped: tier unsupported on this platform', {
-        id: manifest.id,
-      });
+    // No scripted runtime exists yet, so a scripted plugin never runs, on any browser.
+    if (manifest.tier === 'scripted') {
+      logger.warn('Scripted plugin skipped: no scripted runtime yet', { id: manifest.id });
       return 'skip';
     }
     const entitlement = await this.entitlement.getState(manifest.id);

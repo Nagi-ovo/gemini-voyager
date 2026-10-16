@@ -72,7 +72,7 @@
     "tier": {
       "type": "string",
       "enum": ["declarative", "scripted"],
-      "description": "`declarative` ships only data (CSS + JSON) interpreted by the bundled engine. `scripted` is reserved for a later advanced tier; the v1 engine applies only its declarative contributions."
+      "description": "`declarative` ships only data (CSS + JSON) interpreted by the bundled engine. `scripted` is reserved for a later advanced tier with no runtime yet; a scripted plugin is skipped entirely."
     },
     "matches": {
       "type": "array",
