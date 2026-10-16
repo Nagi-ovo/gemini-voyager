@@ -645,7 +645,7 @@ for every plugin that targets the page instead of quietly filtering it:
 | Kind             | Meaning                                 | Popup                                         |
 | ---------------- | --------------------------------------- | --------------------------------------------- |
 | `needs-engine`   | `engine` range above this build         | toggle disabled, "needs Voyager ≥ x.y"        |
-| `needs-handler`  | a primitive this build does not ship    | toggle disabled, "update Voyager"             |
+| `needs-handler`  | a primitive or runtime it lacks         | toggle disabled, "update Voyager"             |
 | `needs-semantic` | the site adapter lacks a key it needs   | toggle disabled, names the site               |
 | `ready`          | compatible, not mounted yet             | normal toggle                                 |
 | `mounted`        | enabled and running on this page        | normal toggle                                 |

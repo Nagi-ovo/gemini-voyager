@@ -658,11 +658,6 @@ export class PluginHost {
       });
       return 'skip';
     }
-    // No scripted runtime exists yet, so a scripted plugin never runs, on any browser.
-    if (manifest.tier === 'scripted') {
-      logger.warn('Scripted plugin skipped: no scripted runtime yet', { id: manifest.id });
-      return 'skip';
-    }
     const entitlement = await this.entitlement.getState(manifest.id);
     return entitlement === 'locked' ? 'skip' : wish;
   }

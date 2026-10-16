@@ -77,7 +77,7 @@ describe('PluginHost', () => {
     expect(document.body.classList.contains('gv-plugin-active')).toBe(false);
   });
 
-  it('does not mount an enabled scripted plugin, since no scripted runtime exists', async () => {
+  it('does not mount an enabled scripted plugin and tells the popup to update Voyager', async () => {
     mockState({ 'voyager.test': { enabled: true, installedAt: 1 } });
     const scripted: PluginManifest = { ...manifest(['https://claude.ai/*']), tier: 'scripted' };
     const host = new PluginHost({
@@ -88,6 +88,7 @@ describe('PluginHost', () => {
 
     await host.start();
     expect(document.body.classList.contains('gv-plugin-active')).toBe(false);
+    expect(host.getStatuses()).toEqual([expect.objectContaining({ kind: 'needs-handler' })]);
   });
 
   it('does not mount a plugin that does not match the URL', async () => {

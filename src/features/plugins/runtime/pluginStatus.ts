@@ -6,7 +6,8 @@
  * disabled toggle WITH a reason:
  *
  *   needs-engine     the manifest's `engine` range is above this build
- *   needs-handler    a primitive it invokes is not in this build
+ *   needs-handler    a primitive it invokes, or the scripted runtime it needs,
+ *                    is not in this build
  *   needs-semantic   the site adapter lacks a semantic key it relies on
  *   ready            compatible, not enabled (or enabled and not yet mounted)
  *   mounted          enabled and running on this page
@@ -65,7 +66,7 @@ export interface PluginStatus {
   readonly kind: PluginStatusKind;
   /** For needs-engine: the range the manifest asks for. */
   readonly requiredEngine?: string;
-  /** For needs-handler: primitives this build does not ship. */
+  /** For needs-handler: primitives this build does not ship (none for a scripted plugin). */
   readonly missingHandlers?: readonly string[];
   /** For needs-semantic: keys the site adapter does not define. */
   readonly missingSemantic?: readonly string[];
@@ -136,6 +137,8 @@ export function findIncompatibility(input: CompatibilityInput): PluginIncompatib
   if (!engineSatisfied(requiredEngine, input.engineVersion ?? EFFECTIVE_PLUGIN_ENGINE_VERSION)) {
     return { ...base, kind: 'needs-engine', requiredEngine };
   }
+  // No build ships a scripted runtime yet; the popup then says to update instead of offering a dead toggle.
+  if (manifest.tier === 'scripted') return { ...base, kind: 'needs-handler' };
   const missingHandlers = requiredHandlers(manifest).filter((name) => !input.hasPrimitive(name));
   if (missingHandlers.length > 0) {
     return { ...base, kind: 'needs-handler', missingHandlers };

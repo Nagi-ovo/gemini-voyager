@@ -202,7 +202,7 @@ export interface PluginContributions {
  * everywhere, remote-loadable, non-derivative.
  * `scripted` = ships JS; would run via `chrome.userScripts` (gated behind the
  * user's "Allow User Scripts" toggle) and is unavailable on Safari. Reserved for
- * an advanced tier with no runtime yet: the host skips such a plugin entirely.
+ * an advanced tier with no runtime yet: such a plugin reports `needs-handler`.
  */
 export type PluginTier = 'declarative' | 'scripted';
 
