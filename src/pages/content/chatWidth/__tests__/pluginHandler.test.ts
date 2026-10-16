@@ -256,6 +256,34 @@ describe('Gemini chat width plugin handler', () => {
     expect(chrome.storage.sync.set).not.toHaveBeenCalled();
   });
 
+  it('a live switch removal is not turned back on while the host has not torn the plugin down', async () => {
+    // A pre-switch customized width: the first read records the derived on.
+    const stored = fakeSync({ [WIDTH]: 85 });
+    activateGeminiChatWidth(scope, { widthPercent: 85 });
+    await settle();
+    expect(stored[SWITCH]).toBe(true);
+    expect(chrome.storage.sync.set).toHaveBeenCalledTimes(1);
+
+    // The user removes the switch; the host has not unmounted the plugin yet.
+    delete stored[SWITCH];
+    storageChange({ [SWITCH]: { newValue: undefined } }, 'sync');
+    await settle();
+    expect(SWITCH in stored).toBe(false);
+    expect(chrome.storage.sync.set).toHaveBeenCalledTimes(1);
+  });
+
+  it('a switch removed during the first read is not derived back on by the read that replaces it', async () => {
+    const reads = heldSyncReads();
+    activateGeminiChatWidth(scope, { widthPercent: 85 });
+    expect(reads.pending()).toBe(1);
+    storageChange({ [SWITCH]: { newValue: undefined } }, 'sync');
+    expect(reads.pending()).toBe(2);
+    // Both reads see a missing switch beside a customized width; neither may record it as on.
+    await reads.answer(0, { [WIDTH]: 85 });
+    await reads.answer(1, { [WIDTH]: 85 });
+    expect(chrome.storage.sync.set).not.toHaveBeenCalled();
+  });
+
   it('writes nothing after the chat width plugin was torn down or the extension context died', async () => {
     let answer: (value: Record<string, unknown>) => void = () => {};
     vi.mocked(chrome.storage.sync.get).mockImplementation(

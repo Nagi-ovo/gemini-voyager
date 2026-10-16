@@ -741,3 +741,19 @@ macOS 只读核验：Google Chrome 允许通知、桌面/通知中心/锁屏均�
 - 启动：`appearanceStartup.ts` 在聊天外观之后 admit `editInputWidth`，即原 `startEditInputWidthAdjuster()` 的位置，继承 Enterprise / custom coverage 早退和后台标签延迟；`index.tsx` 删除 native 调用，`editInputWidth/index.ts` 删除，CSS 移入 `editInputWidthCss.ts`，运行时在 `editInputWidth/pluginHandler.ts`，登记于 `pluginNativeRegistration.ts`。
 - Popup：开关和滑块仍在布局卡片，写原键；Gemini 没有官方插件列表，这次不新增。让插件列表显示官方插件是独立的跨功能改动（列表需读 effective legacy snapshot、开关走 `legacyEnableWrite`、数值走可信旧键写入，并同时容纳既有 26 项）。
 - 测试：handler 单测迁入原 CSS 回归（#887、#955、编辑按钮错位、border-box），新增原位更新、class 变化重挂、关闭即清理、两种回写与 revision、销毁/context 失效不写；真实 BuiltinPluginSource + PluginHost + snapshot feed 覆盖从未设置、显式关、显式开、旧版派生开启并回写、实时开关与滑块、未 admission 不运行、入场点本身不绘制样式也不监听存储。derive 与 admission 两类变异各自让对应用例失败后恢复。
+
+**8-1 复审修复**：插件开启、宽度已自定义时，live 删除开关会让 listener 的新一次读取把「开关缺失」重新当作升级用户，在 host 卸载插件之前写回 `true`，覆盖用户的关闭。聊天宽度 handler 有同样问题，一并修复。回写流程抽为 `src/features/plugins/runtime/legacyWriteBack.ts` 的 `startLegacyWriteBack(scope, { keys, plan, label })`：它持有 revision、`storage.onChanged`、重读、scope 销毁与 extension context 守卫；`plan(stored, { firstRead })` 是纯函数，只有本次 activation 第一次且未被取代的读取 `firstRead` 为 true，派生开启只在这时记录。两个 handler 只保留各自的 CSS、observer 与 health probe。按症状命名的回归（live 删除不被写回、首读期间删除后替代读取不派生、host 延迟卸载）在去掉 `firstRead` 守卫时全部失败；debounce 期间关闭再开启只留一个 stylesheet、observer 与 storage listener 不增长、滑块仍原位更新，改用不受 scope 管理的 timer 时失败。选 revision 而不是 `startMachine`：只有「读取在途」一个阶段，每次变化都要在同一阶段重启读取，正是 `.github/docs/STATE_MACHINE_PLAN.md` §3 所说运行时不建模的同态重启。
+
+**后续迁移模板（按顺序）**：
+
+1. 有滑块时在 `src/core/utils/chatAppearanceValues.ts`（或同类 values 模块）加范围、normalize 与派生函数，native、binding、handler 共用。
+2. `src/features/plugins/builtin/gemini<Feature>Manifest.ts`：相对路径 import、`matches: ['https://gemini.google.com/*']`、九个非英语 locale 的 `i18n`（含 setting 文案），只声明 host 会填的 settings；登记到 `builtin/index.ts`。Gemini 特有代码用固定 ID builtin；纯 CSS 或已有公开 primitive 才用 `catalog/sites/gemini/plugins/*/plugin.json`。
+3. `src/features/plugins/sites/featureOwners.ts`：`OwnedFeatureId`、`OFFICIAL_PLUGIN_IDS`、owner 条目（`handlers: []` 除非确实要向本地插件开放 primitive）；typecheck 会要求补 `local/authoring/siteFacts.ts`。
+4. `storage/legacySettingBindings.ts` 照抄 native 的读取（native 由多个键决定时加 `derive`），`storage/legacyValueBindings.ts` 映射数值；不写入 `gvPluginsState`。
+5. `src/pages/content/<feature>/pluginHandler.ts`：效果都挂在 `PluginScope` 上（`effect`、`observe`、`timer`、`onChromeEvent`）；native 有回写时用 `startLegacyWriteBack`，派生开启只在 `firstRead` 记录，`updateSettings` 里调 `recheck()`；登记到 `pluginNativeRegistration.ts`。
+6. 在原 native 启动点 `admission.admit('gemini', '<feature>')`，删除 `index.tsx` 的 native 调用、`NATIVE_FEATURES` 条目和 native 模块；依赖的常驻 page service 保留。
+7. 测试：handler 单测迁入旧回归；真实 `BuiltinPluginSource` + `PluginHost` 覆盖从未设置、显式关、显式开、派生开启、live 开关与数值、live 删除、debounce 期间关再开、未 admission、入场点本身不运行；更新各 binding、builtin、startup 与 `pluginOwnedFeatures` 用例；对 binding、admission 与关键守卫各做一次变异确认失败。
+8. 本计划 §7.3 加一行、§7.12 加一段；只有开关位置变化时才改 guide。
+9. `test:changed`、`typecheck`、`lint:check`、`i18n:check`、`plugin:check`、`filesize:check`、`skills:build`（确认无差异），提交后加锁 `verify:pr`。
+
+**何时用 `startMachine`，何时只用 `PluginScope`**：功能只是挂载与拆除（样式、observer、监听、去抖）时，`PluginScope` 足够，关闭即整体拆除。功能有一个异步结果可能比所在阶段活得更久、而且关闭插件时这个结果必须按阶段决定去留时，用 `startMachine`，每个阶段一个 scope，离开阶段即作废迟到的回调：例如批量删除（确认中、执行中、部分完成）、NanoBanana 正在进行的下载（已接受的下载要完成，未开始的要取消）、Context Sync 的连接（连接中、已连接、断开重试）、Deep Research 导出（菜单打开、导出进行中）。同一阶段内每次事件都要重启的计时或读取（去抖、本 helper 的重读）不放进状态机，用 revision 或 `scope.timer` 重新计时。

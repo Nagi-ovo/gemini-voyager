@@ -9,28 +9,21 @@
  * Differences from the native module: nothing observes the page while the
  * feature is off, and nothing is written back while it is off.
  *
- * While on, the handler keeps the two writes the native module made, as an
- * idempotent normalization of what is stored, never as a one-time event:
- *   - a switch never stored beside a customized width is stored as on (the
- *     host derived "on" from that width; storing it keeps the popup in step);
+ * While on, the handler keeps the two writes the native module made
+ * (`startLegacyWriteBack` owns the flow and its guards):
+ *   - a switch never stored beside a customized width is stored as on, from
+ *     the activation's first read only (the host derived "on" from that read);
  *   - an old px width, or one out of range, is stored as its percent.
- * Each write re-reads storage first and writes only what still needs it, so a
- * choice the popup stored meanwhile wins. A read that a newer width or switch
- * change overtook (a host update, or this page's own storage listener) is
- * dropped: its answer may predate that change, and only the latest read may
- * write. Nothing is written once the plugin is torn down or the extension
- * context is gone, and the host never waits on these writes.
  */
-import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
 import {
   isCustomizedChatWidth,
   normalizeChatWidthPercent,
 } from '@/core/utils/chatAppearanceValues';
 import {
-  hasValidExtensionContext,
-  isExtensionContextInvalidatedError,
-} from '@/core/utils/extensionContext';
+  type LegacyWriteBackCheck,
+  startLegacyWriteBack,
+} from '@/features/plugins/runtime/legacyWriteBack';
 import type { Dispose, PluginScope } from '@/features/plugins/runtime/pluginScope';
 import type { PluginSettings } from '@/features/plugins/types';
 
@@ -51,20 +44,22 @@ function widthPercentOf(settings: PluginSettings): number {
   return normalizeChatWidthPercent(settings.widthPercent);
 }
 
-function chromeStorage(): typeof chrome.storage | undefined {
-  return (globalThis as { chrome?: typeof chrome }).chrome?.storage;
-}
-
 /**
- * Rewrites what `stored` says only where it still needs normalizing; null
- * when it needs nothing.
+ * What `stored` still needs rewritten; null when it needs nothing. The switch
+ * is recorded only from the first read: the host derived "on" from that
+ * storage, and a later missing switch is a live removal, not an upgrade.
  */
-function normalizationWrites(
-  stored: Record<string, unknown> | undefined,
+export function planChatWidthWrites(
+  stored: Readonly<Record<string, unknown>>,
+  { firstRead }: LegacyWriteBackCheck,
 ): Record<string, unknown> | null {
-  const width = stored?.[StorageKeys.CHAT_WIDTH];
+  const width = stored[StorageKeys.CHAT_WIDTH];
   const writes: Record<string, unknown> = {};
-  if (stored?.[StorageKeys.CHAT_WIDTH_ENABLED] === undefined && isCustomizedChatWidth(width)) {
+  if (
+    firstRead &&
+    stored[StorageKeys.CHAT_WIDTH_ENABLED] === undefined &&
+    isCustomizedChatWidth(width)
+  ) {
     writes[StorageKeys.CHAT_WIDTH_ENABLED] = true;
   }
   if (typeof width === 'number' && normalizeChatWidthPercent(width) !== width) {
@@ -72,10 +67,6 @@ function normalizationWrites(
   }
   return Object.keys(writes).length > 0 ? writes : null;
 }
-
-const NORMALIZED_KEYS: readonly string[] = [StorageKeys.CHAT_WIDTH, StorageKeys.CHAT_WIDTH_ENABLED];
-
-type StorageChanges = Record<string, chrome.storage.StorageChange>;
 
 export function activateGeminiChatWidth(scope: PluginScope, settings: PluginSettings): void {
   let widthPercent = widthPercentOf(settings);
@@ -110,39 +101,18 @@ export function activateGeminiChatWidth(scope: PluginScope, settings: PluginSett
     });
   }
 
-  // Every width or switch change starts a fresh read and voids the ones still
-  // out: an old px width read before the user picked 90 % must not write 80 %.
-  let revision = 0;
-  const normalize = async (): Promise<void> => {
-    const mine = ++revision;
-    const sync = chromeStorage()?.sync;
-    if (!sync || scope.isDisposed || !hasValidExtensionContext()) return;
-    try {
-      const stored = await sync.get<Record<string, unknown>>([...NORMALIZED_KEYS]);
-      if (mine !== revision || scope.isDisposed || !hasValidExtensionContext()) return;
-      const writes = normalizationWrites(stored);
-      if (writes) await sync.set(writes);
-    } catch (error) {
-      if (isExtensionContextInvalidatedError(error)) return;
-      logger.warn('Chat width settings could not be normalized', { error: String(error) });
-    }
-  };
-
-  const onChanged = chromeStorage()?.onChanged;
-  if (onChanged) {
-    // Faster than the host's update and covers the switch, which never reaches `update`.
-    scope.onChromeEvent(onChanged, (changes: StorageChanges, areaName: string) => {
-      if (scope.isDisposed || areaName !== 'sync') return;
-      if (NORMALIZED_KEYS.some((key) => key in changes)) void normalize();
-    });
-  }
+  const writeBack = startLegacyWriteBack(scope, {
+    keys: [StorageKeys.CHAT_WIDTH, StorageKeys.CHAT_WIDTH_ENABLED],
+    plan: planChatWidthWrites,
+    label: 'Chat width',
+  });
 
   const run: ChatWidthRun = {
     update(next) {
       if (scope.isDisposed) return;
       widthPercent = widthPercentOf(next);
       apply();
-      void normalize();
+      writeBack.recheck();
     },
   };
   scope.effect(() => {
@@ -151,8 +121,6 @@ export function activateGeminiChatWidth(scope: PluginScope, settings: PluginSett
       runs.delete(run);
     };
   }, 'chat-width:settings');
-
-  void normalize();
 }
 
 export function updateGeminiChatWidthSettings(settings: PluginSettings): void {

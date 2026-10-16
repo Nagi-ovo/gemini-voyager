@@ -10,26 +10,21 @@
  * the page while the feature is off, turning it off removes the stylesheet at
  * once (not only on unload), and nothing is written back while it is off.
  *
- * While on, the handler keeps the two writes the native module made, as an
- * idempotent normalization of what is stored:
- *   - a switch never stored beside a customized width is stored as on (the
- *     host derived "on" from that width; storing it keeps the popup in step);
+ * While on, the handler keeps the two writes the native module made
+ * (`startLegacyWriteBack` owns the flow and its guards):
+ *   - a switch never stored beside a customized width is stored as on, from
+ *     the activation's first read only (the host derived "on" from that read);
  *   - an old px width, or one out of range, is stored as its percent.
- * Each write re-reads storage first and writes only what still needs it, and
- * a read that a newer width or switch change overtook is dropped, so a choice
- * the popup stored meanwhile wins. Nothing is written once the plugin is torn
- * down or the extension context is gone.
  */
-import { logger } from '@/core/services/LoggerService';
 import { StorageKeys } from '@/core/types/common';
 import {
   isCustomizedEditInputWidth,
   normalizeEditInputWidthPercent,
 } from '@/core/utils/chatAppearanceValues';
 import {
-  hasValidExtensionContext,
-  isExtensionContextInvalidatedError,
-} from '@/core/utils/extensionContext';
+  type LegacyWriteBackCheck,
+  startLegacyWriteBack,
+} from '@/features/plugins/runtime/legacyWriteBack';
 import type { Dispose, PluginScope } from '@/features/plugins/runtime/pluginScope';
 import type { PluginSettings } from '@/features/plugins/types';
 
@@ -45,18 +40,20 @@ interface EditInputWidthRun {
 /** The running activation(s); the engine sends setting changes to the handler, not to a scope. */
 const runs = new Set<EditInputWidthRun>();
 
-function chromeStorage(): typeof chrome.storage | undefined {
-  return (globalThis as { chrome?: typeof chrome }).chrome?.storage;
-}
-
-/** What `stored` still needs rewritten; null when it needs nothing. */
-function normalizationWrites(
-  stored: Record<string, unknown> | undefined,
+/**
+ * What `stored` still needs rewritten; null when it needs nothing. The switch
+ * is recorded only from the first read: the host derived "on" from that
+ * storage, and a later missing switch is a live removal, not an upgrade.
+ */
+export function planEditInputWidthWrites(
+  stored: Readonly<Record<string, unknown>>,
+  { firstRead }: LegacyWriteBackCheck,
 ): Record<string, unknown> | null {
-  const width = stored?.[StorageKeys.EDIT_INPUT_WIDTH];
+  const width = stored[StorageKeys.EDIT_INPUT_WIDTH];
   const writes: Record<string, unknown> = {};
   if (
-    stored?.[StorageKeys.EDIT_INPUT_WIDTH_ENABLED] === undefined &&
+    firstRead &&
+    stored[StorageKeys.EDIT_INPUT_WIDTH_ENABLED] === undefined &&
     isCustomizedEditInputWidth(width)
   ) {
     writes[StorageKeys.EDIT_INPUT_WIDTH_ENABLED] = true;
@@ -66,13 +63,6 @@ function normalizationWrites(
   }
   return Object.keys(writes).length > 0 ? writes : null;
 }
-
-const NORMALIZED_KEYS: readonly string[] = [
-  StorageKeys.EDIT_INPUT_WIDTH,
-  StorageKeys.EDIT_INPUT_WIDTH_ENABLED,
-];
-
-type StorageChanges = Record<string, chrome.storage.StorageChange>;
 
 export function activateGeminiEditInputWidth(scope: PluginScope, settings: PluginSettings): void {
   let widthPercent = normalizeEditInputWidthPercent(settings.widthPercent);
@@ -108,39 +98,18 @@ export function activateGeminiEditInputWidth(scope: PluginScope, settings: Plugi
     );
   }
 
-  // Every width or switch change starts a fresh read and voids the ones still
-  // out: an old px width read before the user picked 90 % must not write 60 %.
-  let revision = 0;
-  const normalize = async (): Promise<void> => {
-    const mine = ++revision;
-    const sync = chromeStorage()?.sync;
-    if (!sync || scope.isDisposed || !hasValidExtensionContext()) return;
-    try {
-      const stored = await sync.get<Record<string, unknown>>([...NORMALIZED_KEYS]);
-      if (mine !== revision || scope.isDisposed || !hasValidExtensionContext()) return;
-      const writes = normalizationWrites(stored);
-      if (writes) await sync.set(writes);
-    } catch (error) {
-      if (isExtensionContextInvalidatedError(error)) return;
-      logger.warn('Edit input width settings could not be normalized', { error: String(error) });
-    }
-  };
-
-  const onChanged = chromeStorage()?.onChanged;
-  if (onChanged) {
-    // Faster than the host's update and covers the switch, which never reaches `update`.
-    scope.onChromeEvent(onChanged, (changes: StorageChanges, areaName: string) => {
-      if (scope.isDisposed || areaName !== 'sync') return;
-      if (NORMALIZED_KEYS.some((key) => key in changes)) void normalize();
-    });
-  }
+  const writeBack = startLegacyWriteBack(scope, {
+    keys: [StorageKeys.EDIT_INPUT_WIDTH, StorageKeys.EDIT_INPUT_WIDTH_ENABLED],
+    plan: planEditInputWidthWrites,
+    label: 'Edit input width',
+  });
 
   const run: EditInputWidthRun = {
     update(next) {
       if (scope.isDisposed) return;
       widthPercent = normalizeEditInputWidthPercent(next.widthPercent);
       apply();
-      void normalize();
+      writeBack.recheck();
     },
   };
   scope.effect(() => {
@@ -149,8 +118,6 @@ export function activateGeminiEditInputWidth(scope: PluginScope, settings: Plugi
       runs.delete(run);
     };
   }, 'edit-input-width:settings');
-
-  void normalize();
 }
 
 export function updateGeminiEditInputWidthSettings(settings: PluginSettings): void {

@@ -56,6 +56,14 @@ function popupWrites(values: Record<string, unknown>): void {
   harness.emitStorageChange(changes, 'sync');
 }
 
+/** A popup reset that removes the key, announced as a change with no new value. */
+function popupRemoves(key: string): void {
+  harness.storage.sync.delete(key);
+  harness.emitStorageChange({ [key]: { newValue: undefined } }, 'sync');
+}
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const sheet = (): HTMLStyleElement | null =>
   document.getElementById(EDIT_INPUT_WIDTH_STYLE_ID) as HTMLStyleElement | null;
 const statusOf = (): string | undefined =>
@@ -145,6 +153,50 @@ describe('Gemini edit input width through its registered official plugin', () =>
     expect(harness.ledger.openObservers()).toEqual([]);
     // Off keeps the width the user chose.
     expect(harness.storage.sync.get(WIDTH)).toBe(45);
+  });
+
+  it('a live switch removal turns a derived-on width off and is not written back as on', async () => {
+    harness.storage.sync.set(WIDTH, 85);
+    await start();
+    expect(statusOf()).toBe('mounted');
+    await vi.waitFor(() => expect(harness.storage.sync.get(SWITCH)).toBe(true));
+
+    // The plugin and the host hear the removal together; the host unmounts after the handler reads.
+    popupRemoves(SWITCH);
+    await flush();
+    await wait(20);
+    expect(statusOf()).not.toBe('mounted');
+    expect(sheet()).toBeNull();
+    expect(harness.storage.sync.has(SWITCH)).toBe(false);
+  });
+
+  it('off within the reapply debounce and on again leaves one stylesheet and no extra watchers', async () => {
+    harness.storage.sync.set(SWITCH, true);
+    harness.storage.sync.set(WIDTH, 70);
+    await start();
+    const observers = harness.ledger.openObservers().length;
+    const listeners = harness.ledger.openStorageListeners();
+    expect(sheet()).not.toBeNull();
+
+    // A Gemini mutation arms the 200 ms reapply; the switch goes off before it fires.
+    document.querySelector('main')!.append(document.createElement('div'));
+    await flush();
+    popupWrites({ [SWITCH]: false });
+    await flush();
+    expect(sheet()).toBeNull();
+    await wait(250);
+    expect(sheet()).toBeNull();
+
+    popupWrites({ [SWITCH]: true });
+    await flush();
+    expect(document.querySelectorAll(`#${EDIT_INPUT_WIDTH_STYLE_ID}`)).toHaveLength(1);
+    expect(harness.ledger.openObservers()).toHaveLength(observers);
+    expect(harness.ledger.openStorageListeners()).toBe(listeners);
+
+    popupWrites({ [WIDTH]: 50 });
+    await flush();
+    expect(document.querySelectorAll(`#${EDIT_INPUT_WIDTH_STYLE_ID}`)).toHaveLength(1);
+    expect(sheet()?.textContent).toContain('max-width: 50vw !important');
   });
 
   it('does not run on a page whose start point never admitted it', async () => {
