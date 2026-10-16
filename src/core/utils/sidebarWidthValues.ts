@@ -1,4 +1,5 @@
-import { type ChatWidthSwitchInput, isWidthSwitchOn } from '@/core/utils/chatAppearanceValues';
+// Relative: the docs build loads this through the plugin table and has no `@/` alias.
+import { type ChatWidthSwitchInput, isWidthSwitchOn } from './chatAppearanceValues';
 
 export const SIDEBAR_WIDTH_PX = { default: 312, min: 180, max: 540 } as const;
 export const DEFAULT_SIDEBAR_WIDTH = SIDEBAR_WIDTH_PX.default;
