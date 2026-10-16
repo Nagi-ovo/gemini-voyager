@@ -19,7 +19,7 @@ Clique no ícone da extensão para acessar a central de controle.
 
 - **Modo de rolagem**: `Fluxo` rola suavemente até a mensagem; `Pulo` vai até ela instantaneamente.
 - **Posição da linha do tempo**: Ative **Linha do tempo arrastável** e mova-a para onde preferir. **Redefinir Posição da Linha do Tempo** a devolve ao lugar original.
-- **Efeitos visuais**: Escolha `Neve`, `Sakura` ou `Chuva` para uma atmosfera sazonal.
+- **Efeitos visuais**: no Gemini e no AI Studio, ative **Plugins** → **Efeitos visuais** e escolha `Neve`, `Sakura` ou `Chuva` por baixo da linha; desative-a para desligar o efeito. Os outros sites mantêm o cartão Efeitos visuais.
 
 ## Ordem personalizada
 
@@ -29,7 +29,7 @@ Passe o mouse sobre qualquer cartão de configuração e os botões ▲/▼ apar
 
 ## Efeitos Visuais
 
-Escolha `Neve`, `Sakura` ou `Chuva` para uma atmosfera sazonal.
+No Gemini e no AI Studio, ative **Plugins** → **Efeitos visuais** e escolha `Neve`, `Sakura` ou `Chuva` por baixo da linha para uma atmosfera sazonal. Os outros sites mantêm o cartão Efeitos visuais.
 
 O Voyager não se limita a melhorias utilitárias. Pode também mudar o ambiente da página.
 

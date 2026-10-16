@@ -77,9 +77,10 @@ export function OfficialPluginListRow({
   const [optionsOpen, setOptionsOpen] = useState<boolean | null>(null);
   // Number settings show as the registry's sliders, which save on release.
   const sliderKeys = entry.sliders ? Object.keys(entry.sliders) : [];
-  const hasOtherSettings = Object.keys(manifest.contributes.settings ?? {}).some(
-    (key) => !sliderKeys.includes(key),
-  );
+  const InlinePanel = entry.inlinePanel && panelIo ? OFFICIAL_PANELS[entry.inlinePanel] : null;
+  const hasOtherSettings =
+    !entry.inlinePanel &&
+    Object.keys(manifest.contributes.settings ?? {}).some((key) => !sliderKeys.includes(key));
   const name = displayName(pickLocalized(manifest, 'name', language));
   const inputId = domId('official-plugin', manifest.id);
   const descriptionId = domId('official-plugin-description', manifest.id);
@@ -125,6 +126,9 @@ export function OfficialPluginListRow({
               handleSetting={(id, key, value) => onSettingsChange(id, { [key]: value })}
               handleImmediateSettings={onSettingsChange}
             />
+          )}
+          {enabled && InlinePanel && panelIo && (
+            <InlinePanel values={panelIo.values} write={panelIo.write} idPrefix={panelId} t={t} />
           )}
           {enabled && entry.sliders && (
             <OfficialPluginSliders

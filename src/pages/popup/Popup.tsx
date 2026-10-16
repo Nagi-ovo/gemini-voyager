@@ -12,6 +12,7 @@ import {
 } from '@/core/utils/browser';
 import { getFolderPlatformForHost } from '@/features/folder/platforms';
 import { CHATGPT_EXPORT_PLUGIN_ID } from '@/features/plugins/builtin/chatgptExport/openMessage';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
 
 import { CloudSyncSettings } from './components/CloudSyncSettings';
@@ -140,13 +141,19 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const watermark = useWatermarkPopupSettings(writePopupSyncStorage);
   const visualEffect = useVisualEffectPopupSettings(writePopupSyncStorage);
   const folderStructureCopy = useFolderStructureCopy(language, sourceTabId);
-  const visualEffectsAvailable = canUseVisualEffects({
-    isPluginSite,
-    activeSiteDomain,
-    customWebsites: promptManager.customWebsites,
-    sitePluginIds: plugins.siteScopedManifests.map((plugin) => plugin.id),
-    pluginState: plugins.pluginState,
-  });
+  // Where the Plugins card lists the effect (Gemini / AI Studio), its row replaces this card.
+  const visualEffectRowShown =
+    !isPluginSite &&
+    officialPlugins.rows.some((row) => row.manifest.id === OFFICIAL_PLUGIN_IDS.visualEffects);
+  const visualEffectsAvailable =
+    !visualEffectRowShown &&
+    canUseVisualEffects({
+      isPluginSite,
+      activeSiteDomain,
+      customWebsites: promptManager.customWebsites,
+      sitePluginIds: plugins.siteScopedManifests.map((plugin) => plugin.id),
+      pluginState: plugins.pluginState,
+    });
   const sections = usePopupSections({
     // Plugin sites hide native sections through `isPluginSite`; keep the full allowlist for the
     // sections they still show (visual effects) instead of treating them as AI Studio.
@@ -351,7 +358,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
           />,
         )}
         <PopupLayoutSettings settings={layout} t={t} wrapSection={wrapSection} />
-        {/* Platform-neutral visual effects. Third-party sites expose this only
+        {/* Visual effects off Gemini / AI Studio. Third-party sites expose this only
             after Prompt Manager or a matching plugin has activated the site. */}
         {visualEffectsAvailable &&
           wrapSection(

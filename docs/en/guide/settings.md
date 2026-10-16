@@ -17,7 +17,7 @@ Click the extension icon to access the control center.
 
 - **Scroll mode**: `Flow` scrolls smoothly to the message; `Jump` goes there instantly.
 - **Timeline position**: Turn on **Draggable Timeline** and move it where it feels right. **Reset Timeline Position** puts it back.
-- **Visual Effects**: Pick `Snow`, `Sakura`, or `Rain` for a seasonal atmosphere.
+- **Visual Effects**: On Gemini and AI Studio, switch on **Plugins** → **Visual effects**, then pick `Snow`, `Sakura`, or `Rain` under the row; switch it off to turn the effect off. Other sites keep the Visual Effects card.
 
 ## Custom Order
 

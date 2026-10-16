@@ -59,6 +59,8 @@ describe('the official plugin list registry', () => {
       const fields = Object.entries(manifests.get(entry.id)!.contributes.settings ?? {});
       const numbers = fields.filter(([, field]) => field.type === 'number').map(([key]) => key);
       expect(Object.keys(entry.sliders ?? {}).sort(), entry.id).toEqual(numbers.sort());
+      // A row with its own inline control shows that instead of the generic settings.
+      if (entry.inlinePanel) continue;
       for (const [key, field] of fields) {
         expect(['boolean', 'number'], `${entry.id}.${key}`).toContain(field.type);
       }

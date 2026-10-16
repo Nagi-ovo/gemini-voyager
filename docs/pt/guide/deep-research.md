@@ -2,6 +2,9 @@
 
 Exporte o relatório final gerado pelo Deep Research, ou guarde o seu processo completo de "pensamento" como um ficheiro Markdown.
 
+> [!NOTE]
+> Este plugin oficial está incluído no Voyager e vem ativado por predefinição. Clique no ícone da extensão na barra de ferramentas do navegador e use **Plugins** → **Exportar Deep Research** no pop-up para o ativar ou desativar. Ao desativá-lo, as suas entradas desaparecem de imediato do menu **Partilhar e Exportar**.
+
 ## 1. Exportação de Relatório (PDF / Imagem)
 
 Os relatórios gerados pelo Deep Research podem ser exportados como PDFs com formatação elegante ou como imagens individuais partilháveis (os formatos Markdown e JSON também são suportados). Abra o menu **Partilhar e Exportar** do relatório e escolha **Save Report**.

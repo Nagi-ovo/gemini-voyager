@@ -2,10 +2,12 @@ import React from 'react';
 
 import { Switch } from '@/components/ui/switch';
 import { StorageKeys } from '@/core/types/common';
+import { resolveVisualEffect } from '@/core/utils/visualEffectValues';
 import type { FormulaCopyFormat } from '@/features/formulaCopy/FormulaCopyService';
 import type { LegacySettingSnapshot } from '@/features/plugins/storage/legacySettingBindings';
 import type { TranslationKey } from '@/utils/translations';
 
+import { VisualEffectChoices } from '../components/VisualEffectPicker';
 import { ContextSyncPanel } from './ContextSyncPanel';
 import type { OfficialPanelId } from './officialPluginRegistry';
 import type { ContextSyncRequest } from './useContextSyncRequest';
@@ -93,10 +95,33 @@ function HighlightPanel({ values, write, idPrefix, t }: OfficialPanelProps) {
   );
 }
 
+/**
+ * The effect to show while the row is on (Off is its switch). Picking writes the
+ * pair the Visual Effects card has always written, clearing the legacy snow flag.
+ */
+function VisualEffectPanel({ values, write, t }: OfficialPanelProps) {
+  const effect = resolveVisualEffect(
+    values[StorageKeys.GV_VISUAL_EFFECT],
+    values[StorageKeys.GV_SNOW_EFFECT],
+  );
+  return (
+    <VisualEffectChoices
+      value={effect}
+      withoutOff
+      onChange={(next) =>
+        write({ [StorageKeys.GV_VISUAL_EFFECT]: next, [StorageKeys.GV_SNOW_EFFECT]: false })
+      }
+      t={t}
+      className="mt-2"
+    />
+  );
+}
+
 export const OFFICIAL_PANELS: Readonly<
   Record<OfficialPanelId, (props: OfficialPanelProps) => React.ReactElement>
 > = {
   formulaCopy: FormulaCopyPanel,
   highlight: HighlightPanel,
   contextSync: ContextSyncPanel,
+  visualEffect: VisualEffectPanel,
 };

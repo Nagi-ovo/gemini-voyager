@@ -46,6 +46,8 @@ export interface OfficialPluginEntry {
   readonly usageHint?: TranslationKey | ((context: OfficialPluginContext) => TranslationKey | null);
   /** Options the manifest can't declare, behind the row's Options button while it is on. */
   readonly panel?: OfficialPanelId;
+  /** A control that replaces the manifest's own settings, shown under the row while it is on. */
+  readonly inlinePanel?: OfficialPanelId;
   /** A switch that is not a plain write (a permission flow); the popup supplies it. */
   readonly control?: OfficialControlId;
   /** One slider per number setting of the manifest, keyed by setting. */
@@ -66,7 +68,7 @@ export interface OfficialPluginSlider {
   readonly toDisplay?: (value: number) => number;
 }
 
-export type OfficialPanelId = 'formulaCopy' | 'highlight' | 'contextSync';
+export type OfficialPanelId = 'formulaCopy' | 'highlight' | 'contextSync' | 'visualEffect';
 export type OfficialControlId = 'responseNotification';
 
 /**
@@ -78,6 +80,7 @@ export const OFFICIAL_PANEL_KEYS: Readonly<Record<OfficialPanelId, readonly stri
   formulaCopy: [StorageKeys.FORMULA_COPY_FORMAT],
   highlight: [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED],
   contextSync: [StorageKeys.CONTEXT_SYNC_PORT],
+  visualEffect: [StorageKeys.GV_VISUAL_EFFECT, StorageKeys.GV_SNOW_EFFECT],
 };
 
 export const OFFICIAL_PANEL_STORAGE_KEYS: readonly string[] = [
@@ -226,6 +229,15 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     },
   },
   {
+    // One shared choice on every site; elsewhere the popup keeps its Visual Effects card.
+    id: OFFICIAL_PLUGIN_IDS.visualEffects,
+    group: 'appearance',
+    formerSectionTitle: 'visualEffect',
+    searchKeys: ['visualEffectHint', 'visualEffectSnow', 'visualEffectSakura', 'visualEffectRain'],
+    searchAliases: ['snow sakura rain particles atmosphere 雪 樱花 雨 特效'],
+    inlinePanel: 'visualEffect',
+  },
+  {
     id: OFFICIAL_PLUGIN_IDS.geminiCodeCollapse,
     group: 'content',
     formerSectionTitle: 'generalOptions',
@@ -259,6 +271,12 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     searchKeys: ['enableEchartsRendering', 'enableEchartsRenderingHint'],
     searchAliases: ['echarts chart diagram'],
   },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiMarkdownFix,
+    group: 'content',
+    searchKeys: [],
+    searchAliases: ['markdown rendering format bold asterisk fix 渲染 格式 修复 加粗'],
+  },
   // Two ids, one switch and one format: each site lists its own, with the same panel.
   ...[OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy].map(
     (id): OfficialPluginEntry => ({
@@ -284,6 +302,12 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     // New to the popup: no old row to remember, only the words someone would try.
     searchKeys: [],
     searchAliases: ['canvas markdown copy export 画布 复制'],
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
+    group: 'content',
+    searchKeys: [],
+    searchAliases: ['deep research export pdf markdown thinking report 深度研究 导出 思考'],
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiPromptHistory,

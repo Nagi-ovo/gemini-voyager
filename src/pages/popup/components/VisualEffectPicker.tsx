@@ -92,6 +92,45 @@ const OPTIONS: readonly { value: VisualEffect; label: TranslationKey; icon: Reac
   },
 ];
 
+export interface VisualEffectChoicesProps {
+  value: VisualEffect;
+  onChange: (value: VisualEffect) => void;
+  t: (key: TranslationKey) => string;
+  /** Leave out Off where a switch already turns the effect off. */
+  withoutOff?: boolean;
+  className?: string;
+}
+
+/** The segmented effect buttons, shared by the card and the Plugins row. */
+export function VisualEffectChoices({
+  value,
+  onChange,
+  t,
+  withoutOff = false,
+  className = '',
+}: VisualEffectChoicesProps) {
+  return (
+    <div className={`bg-secondary/60 flex items-center gap-0.5 rounded-full p-1 ${className}`}>
+      {OPTIONS.filter((option) => !withoutOff || option.value !== 'off').map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          aria-pressed={value === option.value}
+          onClick={() => onChange(option.value)}
+          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-bold transition-all duration-200 ${
+            value === option.value
+              ? 'bg-background text-foreground shadow-md'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          {option.icon}
+          <span>{t(option.label)}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** Segmented picker for the platform-neutral fullscreen effect (snow, sakura, rain). */
 export function VisualEffectPicker({ value, onChange, t }: VisualEffectPickerProps) {
   return (
@@ -101,24 +140,7 @@ export function VisualEffectPicker({ value, onChange, t }: VisualEffectPickerPro
           <Label className="text-sm font-medium">{t('visualEffect')}</Label>
           <p className="text-muted-foreground mt-1 text-xs">{t('visualEffectHint')}</p>
         </div>
-        <div className="bg-secondary/60 mt-3 flex items-center gap-0.5 rounded-full p-1">
-          {OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              aria-pressed={value === option.value}
-              onClick={() => onChange(option.value)}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-bold transition-all duration-200 ${
-                value === option.value
-                  ? 'bg-background text-foreground shadow-md'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {option.icon}
-              <span>{t(option.label)}</span>
-            </button>
-          ))}
-        </div>
+        <VisualEffectChoices value={value} onChange={onChange} t={t} className="mt-3" />
       </CardContent>
     </Card>
   );

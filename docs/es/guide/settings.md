@@ -17,7 +17,7 @@ Haz clic en el icono de la extensión, entra en la consola.
 
 - **Desplazamiento**: `Flujo` lleva al mensaje con un desplazamiento suave; `Salto` va allí al instante.
 - **Posición**: Activa **Línea de tiempo arrastrable** y coloca la línea de tiempo donde te resulte más cómodo. **Restablecer posición de la línea de tiempo** la devuelve a su sitio.
-- **Efectos Visuales**: Elige `Nieve`, `Sakura` o `Lluvia` para una atmósfera estacional.
+- **Efectos Visuales**: en Gemini y AI Studio, activa **Complementos** → **Efectos visuales** y elige `Nieve`, `Sakura` o `Lluvia` debajo de esa fila; desactívala para quitar el efecto. Los demás sitios conservan la tarjeta de Efectos visuales.
 
 ## Orden personalizado
 

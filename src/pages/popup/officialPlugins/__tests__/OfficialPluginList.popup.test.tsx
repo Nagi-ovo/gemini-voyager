@@ -83,6 +83,16 @@ const MOVED_SWITCHES = [
   { id: OFFICIAL_PLUGIN_IDS.geminiWaveDrom, key: StorageKeys.WAVEDROM_ENABLED, missing: true },
   { id: OFFICIAL_PLUGIN_IDS.geminiECharts, key: StorageKeys.ECHARTS_ENABLED, missing: true },
   {
+    id: OFFICIAL_PLUGIN_IDS.geminiMarkdownFix,
+    key: StorageKeys.MARKDOWN_FIX_ENABLED,
+    missing: true,
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
+    key: StorageKeys.DEEP_RESEARCH_EXPORT_ENABLED,
+    missing: true,
+  },
+  {
     id: OFFICIAL_PLUGIN_IDS.geminiPromptHistory,
     key: StorageKeys.PROMPT_HISTORY_ENABLED,
     missing: false,
@@ -250,6 +260,7 @@ describe('the official plugin list in the popup', () => {
           OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide,
           OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide,
           OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
+          OFFICIAL_PLUGIN_IDS.visualEffects,
         ],
       },
       {
@@ -260,8 +271,10 @@ describe('the official plugin list in the popup', () => {
           OFFICIAL_PLUGIN_IDS.geminiMermaid,
           OFFICIAL_PLUGIN_IDS.geminiWaveDrom,
           OFFICIAL_PLUGIN_IDS.geminiECharts,
+          OFFICIAL_PLUGIN_IDS.geminiMarkdownFix,
           OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
           OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
+          OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
         ],
       },
       {
@@ -383,6 +396,10 @@ describe('the official plugin list in the popup', () => {
     ['宝石', OFFICIAL_PLUGIN_IDS.geminiGemsSidebar],
     ['notebook', OFFICIAL_PLUGIN_IDS.geminiGemsSidebar],
     ['canvas', OFFICIAL_PLUGIN_IDS.geminiCanvasCopy],
+    [TRANSLATIONS.en.visualEffectSakura, OFFICIAL_PLUGIN_IDS.visualEffects],
+    ['樱花', OFFICIAL_PLUGIN_IDS.visualEffects],
+    ['thinking', OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport],
+    ['markdown', OFFICIAL_PLUGIN_IDS.geminiMarkdownFix],
   ])('an old search for "%s" still finds its row', async (query, id) => {
     local[StorageKeys.GV_POPUP_SETTINGS_SEARCH_QUERY] = query;
     await mount();
@@ -413,6 +430,7 @@ describe('the official plugin list in the popup', () => {
     [TRANSLATIONS.en.contextSync, [OFFICIAL_PLUGIN_IDS.geminiContextSync]],
     [TRANSLATIONS.zh.contextSync, [OFFICIAL_PLUGIN_IDS.geminiContextSync]],
     [TRANSLATIONS.en.gemsSidebarCount, [OFFICIAL_PLUGIN_IDS.geminiGemsSidebar]],
+    [TRANSLATIONS.en.visualEffect, [OFFICIAL_PLUGIN_IDS.visualEffects]],
     [TRANSLATIONS.zh.formulaCopyFormat, [OFFICIAL_PLUGIN_IDS.geminiFormulaCopy]],
     [TRANSLATIONS.en.folderOptions, [OFFICIAL_PLUGIN_IDS.geminiFork]],
     [TRANSLATIONS.en.promptManagerOptions, [OFFICIAL_PLUGIN_IDS.geminiPromptHistory]],
@@ -459,6 +477,7 @@ describe('the official plugin list in the popup', () => {
       if (stored !== undefined) sync[StorageKeys.AISTUDIO_ENTER_SEND] = stored;
       await mount();
       expect(listedIds()).toEqual([
+        OFFICIAL_PLUGIN_IDS.visualEffects,
         OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy,
         OFFICIAL_PLUGIN_IDS.aistudioEnterSend,
       ]);

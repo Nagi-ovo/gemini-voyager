@@ -258,6 +258,92 @@ describe('official plugin rows with options', () => {
     });
   });
 
+  describe('the visual effects row', () => {
+    const id = OFFICIAL_PLUGIN_IDS.visualEffects;
+    const choices = () =>
+      [...row(id)!.querySelectorAll<HTMLButtonElement>('button[aria-pressed]')].map((button) => [
+        button.textContent,
+        button.getAttribute('aria-pressed'),
+      ]);
+    const choice = (label: string) =>
+      [...row(id)!.querySelectorAll<HTMLButtonElement>('button[aria-pressed]')].find(
+        (button) => button.textContent === label,
+      )!;
+    // The card's Off button; the row has none.
+    const cardOffButton = () =>
+      [...container.querySelectorAll<HTMLButtonElement>('button[aria-pressed]')].find(
+        (button) => button.textContent === TRANSLATIONS.en.visualEffectOff,
+      );
+
+    it.each([
+      ['missing', {}, false],
+      ['off', { [StorageKeys.GV_VISUAL_EFFECT]: 'off' }, false],
+      ['legacy snow', { [StorageKeys.GV_SNOW_EFFECT]: true }, true],
+      ['sakura', { [StorageKeys.GV_VISUAL_EFFECT]: 'sakura' }, true],
+    ] as const)(
+      'replaces the old card on Gemini and reads a %s stored effect as the page does',
+      async (_label, stored, on) => {
+        Object.assign(sync, stored);
+        await mount();
+        expect(cardOffButton()).toBeUndefined();
+        expect(toggle(id).checked).toBe(on);
+        expect(row(id)!.querySelectorAll('button[aria-pressed]').length).toBe(on ? 3 : 0);
+      },
+    );
+
+    it('offers Snow, Sakura and Rain under the row, since Off is its switch', async () => {
+      sync[StorageKeys.GV_SNOW_EFFECT] = true;
+      await mount();
+      expect(choices()).toEqual([
+        [TRANSLATIONS.en.visualEffectSnow, 'true'],
+        [TRANSLATIONS.en.visualEffectSakura, 'false'],
+        [TRANSLATIONS.en.visualEffectRain, 'false'],
+      ]);
+    });
+
+    it('picking an effect writes the pair the card always wrote', async () => {
+      sync[StorageKeys.GV_VISUAL_EFFECT] = 'snow';
+      await mount();
+      await act(async () => choice(TRANSLATIONS.en.visualEffectRain).click());
+      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+        [StorageKeys.GV_VISUAL_EFFECT]: 'rain',
+        [StorageKeys.GV_SNOW_EFFECT]: false,
+      });
+      expect(choice(TRANSLATIONS.en.visualEffectRain).getAttribute('aria-pressed')).toBe('true');
+      expect(pluginStateWritten()).toBe(false);
+    });
+
+    it('its switch turns the effect off, and on again as Snow', async () => {
+      sync[StorageKeys.GV_VISUAL_EFFECT] = 'sakura';
+      await mount();
+      await act(async () => toggle(id).click());
+      await act(async () => toggle(id).click());
+      expect(extensionApi.storage.sync.set.mock.calls.map(([payload]) => payload)).toEqual([
+        { [StorageKeys.GV_VISUAL_EFFECT]: 'off', [StorageKeys.GV_SNOW_EFFECT]: false },
+        { [StorageKeys.GV_VISUAL_EFFECT]: 'snow', [StorageKeys.GV_SNOW_EFFECT]: false },
+      ]);
+      expect(choice(TRANSLATIONS.en.visualEffectSnow).getAttribute('aria-pressed')).toBe('true');
+    });
+
+    it('is a row on AI Studio too', async () => {
+      extensionApi.tabs.query.mockResolvedValue([{ id: 8, url: AI_STUDIO }]);
+      sync[StorageKeys.GV_VISUAL_EFFECT] = 'rain';
+      await mount();
+      expect(cardOffButton()).toBeUndefined();
+      expect(toggle(id).checked).toBe(true);
+    });
+
+    it('a custom site keeps the Visual Effects card, Off included', async () => {
+      extensionApi.tabs.query.mockResolvedValue([{ id: 9, url: 'https://example.com/chat' }]);
+      extensionApi.permissions.contains.mockResolvedValue(true);
+      sync[StorageKeys.PROMPT_CUSTOM_WEBSITES] = ['example.com'];
+      await mount();
+      expect(row(id)).toBeNull();
+      expect(cardOffButton()).toBeDefined();
+      expect(container.textContent).toContain(TRANSLATIONS.en.visualEffectHint);
+    });
+  });
+
   describe('the context sync row', () => {
     const id = OFFICIAL_PLUGIN_IDS.geminiContextSync;
     const port = () =>
