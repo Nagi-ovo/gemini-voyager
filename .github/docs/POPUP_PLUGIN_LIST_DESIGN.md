@@ -1,370 +1,314 @@
-# Popup plugin list for official plugins: design
+# Popup 官方插件列表设计
 
-Status: proposal, no code changed. Base: `main@a7408277`. Written in English (the brief's language); sibling plans in this folder are Chinese.
+状态：Batch 1 实施中，其余为方案。基线：`main@754c03c2`。Codex 复审结论 "implement after changes"，本版已吸收全部 P2/P3。
 
-**Goal.** Each optional Voyager feature is an official plugin, switched on or off in one place: the popup's plugin list. Core data features (folders, Prompt Manager, cloud sync, conversation export, backup, account isolation) stay native and keep their cards.
+**目标**：每个可选功能都是官方插件，用户只在 popup 的插件列表里开关它。核心数据功能（文件夹、Prompt Manager、云同步、对话导出、备份、账号隔离）保持 native，保留各自卡片。
 
-**Summary of the design.**
-
-1. The popup already holds the state the list needs. `usePopupPlugins` keeps a live `gvPluginsState` map and a live legacy-key snapshot, and resolves the effective enable flag and settings for diagnostics (`src/pages/popup/hooks/usePopupPlugins.ts:90-111`, `:198-219`). The list row should read that same view. The missing piece is a **write path**: legacy-bound ids write their sync keys, every other id writes `gvPluginsState`.
-2. Gemini and AI Studio get one **Plugins** card: grouped rows, filtered by the existing search box, with the same row component everywhere. A row's simple values are manifest settings shown inline. Anything else goes into a small **Options** panel taken from a trusted popup registry.
-3. Migration moves rows one batch at a time, and old and new rows never coexist. No value is copied into `gvPluginsState`, so every user's settings stay exactly as they are.
+**一句话方案**：列表行读 popup 已有的那份 live sync 快照，用已有的 effective resolver 解析；唯一新增的机制是写入路径（legacy 绑定写旧 sync 键，其余写 `gvPluginsState`）和一个按存储键结算的乐观覆盖层。迁移按整行分批移动，不复制任何用户数据。
 
 ---
 
-## 1. Current state
+## 1. 现状
 
-### 1.1 How the popup is organised per site
+### 1.1 各站点的 popup
 
-| Site                        | What the popup shows                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Gemini                      | The search box (`src/pages/popup/Popup.tsx:235`), health notice, update banner and storage card. After them come 21 reorderable sections, in the saved order or in `NATIVE_POPUP_SECTION_IDS` (`src/pages/popup/utils/nativeSiteCapabilities.ts:5-28`). The order is persisted in `gvPopupSectionOrder` (`src/pages/popup/hooks/usePopupSections.ts:168-186`). The `plugins` section id exists but is always hidden (`usePopupSections.ts:122`). Local plugins get their own collapsed section (`Popup.tsx:474-487`). It filters to local ids only (`src/pages/popup/components/NativeLocalPluginsSection.tsx:30`).                                                                                                                                                   |
-| AI Studio                   | The same surface through an allowlist (`nativeSiteCapabilities.ts:39-57`): cloud sync, local plugins, a subset of folder, folder spacing, sidebar width, visual effect, formula copy, the `enterSend` row of the input card, and subsets of Prompt Manager and General. A master switch card sits on top (`Popup.tsx:261-290`). Turning it off unmounts every plugin on the page (`src/features/plugins/runtime/surfaceSwitch.ts:1-9`).                                                                                                                                                                                                                                                                                                                               |
-| ChatGPT / Claude / DeepSeek | Plugin-site mode (`src/pages/popup/utils/siteMode.ts:22-34`), with no search box. Shows cloud sync where folders run (`Popup.tsx:292-296`), then `PluginSiteSettings`: the ChatGPT export card, the per-site Prompt Manager switch, prompt transfer, and **one `PluginManager` listing official, catalog and local plugins together**, followed by the import panel (`src/pages/popup/components/PluginSiteSettings.tsx:41-90`). On a site whose rail offers style or levels, the Timeline card and shortcuts card are shown too, and the duplicated rail fields are hidden from the row (`Popup.tsx:183-194`, `:334-355`, `:411-413`; `src/pages/popup/components/PluginManager.tsx:29-59`). Visual effects appear once the site is activated (`Popup.tsx:380-389`). |
+| 站点                        | popup 内容                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Gemini                      | 搜索框（`src/pages/popup/Popup.tsx:235`）、健康提示、更新横幅、存储卡；之后是 21 个可排序 section，顺序存在 `gvPopupSectionOrder`（`src/pages/popup/utils/nativeSiteCapabilities.ts:5-28`，`src/pages/popup/hooks/usePopupSections.ts:168-186`）。`plugins` section id 存在但永远隐藏（`usePopupSections.ts:122`）。本地插件单独一个折叠 section（`Popup.tsx:474-487`），只显示本地 id（`src/pages/popup/components/NativeLocalPluginsSection.tsx:30`）。 |
+| AI Studio                   | 同一界面，经白名单裁剪（`nativeSiteCapabilities.ts:39-57`）；顶部有总开关卡（`Popup.tsx:261-290`），关闭时页面卸载所有插件（`src/features/plugins/runtime/surfaceSwitch.ts:1-9`）。                                                                                                                                                                                                                                                                       |
+| ChatGPT / Claude / DeepSeek | 插件站模式（`src/pages/popup/utils/siteMode.ts:22-34`），无搜索框。`PluginSiteSettings` 里一个 `PluginManager` 混列官方、目录和本地插件，下接导入面板（`src/pages/popup/components/PluginSiteSettings.tsx:41-90`）。有 rail 的站点另显示 Timeline 卡和快捷键卡（`Popup.tsx:183-194`、`:334-355`、`:411-413`）。                                                                                                                                           |
 
-The generic row controls in `PluginManager` read and write `gvPluginsState` only (`src/pages/popup/components/usePluginPreferences.ts:20-34`, `:69-99`; `src/pages/popup/utils/pluginEnablement.ts:98-108`). Legacy-bound official plugins ignore their entries there (`src/features/plugins/storage/legacySettingBindings.ts:5-10`). Removing the local-only filter would therefore show switches that do nothing.
+`PluginManager` 的通用控件只读写 `gvPluginsState`（`src/pages/popup/components/usePluginPreferences.ts:20-34`、`:69-99`；`src/pages/popup/utils/pluginEnablement.ts:98-108`），而 legacy 绑定的官方插件忽略那里的条目（`src/features/plugins/storage/legacySettingBindings.ts:5-10`）。所以只去掉本地过滤，列表上的开关不会生效。
 
-The old cards hydrate once from one bulk read and do not follow storage changes (`src/pages/popup/hooks/usePopupSettingsHydration.ts:57-74`). If one switch is shown in two places, the second copy goes stale within the same popup session, so duplicates are not a safe transition state.
+旧卡片只在打开时批量读一次，不跟随存储变化（`src/pages/popup/hooks/usePopupSettingsHydration.ts:57-74`）。同一个开关出现在两处时，另一处会过期，因此过渡期不能有重复开关。
 
-### 1.2 Where each migrated feature is switched today
+### 1.2 已迁功能今天在哪里开关
 
-26 feature ids map to 27 site entries (`src/features/plugins/sites/featureOwners.ts:92-291`). Formula Copy has one Gemini entry and one AI Studio entry. Paths below drop the `src/pages/popup/` prefix.
+`featureOwners.ts` 现有 27 个 feature、28 个站点条目（`src/features/plugins/sites/featureOwners.ts`）；Formula Copy 在 Gemini、AI Studio 各一条。下表路径省略 `src/pages/popup/`。
 
-| Feature (official id `voyager.…`)   | Switch today                                                                   | Advanced controls / special flow                                                                                                                                                                                                                                           | Write path today                                                                                        |
-| ----------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Timeline (`gemini-timeline`)        | `components/TimelineSettingsCard.tsx:70`                                       | Style, scroll mode, hide container, draggable, pin preview, levels, reset position and starred history (`TimelineSettingsCard.tsx:80-229`). Message timestamps (`:183`) belongs to a separate, not yet migrated feature.                                                   | `hooks/useTimelinePopupSettings.ts:62-92`                                                               |
-| Prevent auto-scroll                 | `TimelineSettingsCard.tsx:161`                                                 | none                                                                                                                                                                                                                                                                       | `useTimelinePopupSettings.ts:83`                                                                        |
-| Draft save                          | `components/InputSettingsCard.tsx:185`                                         | Status note (`Popup.tsx:425`)                                                                                                                                                                                                                                              | `hooks/useInputPopupSettings.ts:61-76`                                                                  |
-| Ctrl+Enter send (G), Enter send (A) | `InputSettingsCard.tsx:122` (one row, label and key picked per site)           | Status note (`Popup.tsx:426-430`)                                                                                                                                                                                                                                          | same                                                                                                    |
-| Safari Enter fix                    | `InputSettingsCard.tsx:162`, **Safari only**                                   | none                                                                                                                                                                                                                                                                       | same                                                                                                    |
-| Vim input                           | `InputSettingsCard.tsx:100`                                                    | Status note (`Popup.tsx:424`)                                                                                                                                                                                                                                              | `useInputPopupSettings.ts:69` (`legacyEnableWrite`)                                                     |
-| Input collapse                      | `InputSettingsCard.tsx:49`                                                     | "Collapse when not empty" sub-switch, shown only when on (`:76-99`)                                                                                                                                                                                                        | `useInputPopupSettings.ts:61-76`                                                                        |
-| Formula copy (G + A)                | `components/FormulaCopySettings.tsx:46`                                        | Format radios (`:69-95`) and scope note (`:45`). **One switch and one format for both sites** (`hooks/useFormulaCopyPopupSettings.ts:7-8`).                                                                                                                                | `Popup.tsx:195-212`                                                                                     |
-| Chat width                          | `components/PopupLayoutSettings.tsx:172` (WidthSlider with toggle)             | Percent slider; an unset switch follows a customised width (`hooks/usePopupLayoutSettings.ts:22-31`)                                                                                                                                                                       | `usePopupLayoutSettings.ts:68-90`, `:268-273` (direct `chrome.storage.sync.set`)                        |
-| Chat font size                      | `PopupLayoutSettings.tsx:189`                                                  | Slider                                                                                                                                                                                                                                                                     | `usePopupLayoutSettings.ts:95-101`, `:275-280`                                                          |
-| Chat line height                    | `PopupLayoutSettings.tsx:206`                                                  | Line-height and paragraph-spacing sliders (`:221-228`)                                                                                                                                                                                                                     | `usePopupLayoutSettings.ts:108-127`, `:282-287`                                                         |
-| Mermaid / WaveDrom / ECharts        | `components/GeneralSettingsCard.tsx:109`, `:116`, `:123`                       | none                                                                                                                                                                                                                                                                       | `hooks/useGeneralPopupSettings.ts:282-320`; `useWaveDromPopupSettings.ts`, `useEchartsPopupSettings.ts` |
-| Code collapse / User LaTeX          | `GeneralSettingsCard.tsx:130`, `:137`                                          | none                                                                                                                                                                                                                                                                       | same                                                                                                    |
-| Quote reply                         | `GeneralSettingsCard.tsx:144`                                                  | none                                                                                                                                                                                                                                                                       | same                                                                                                    |
-| Highlight                           | `GeneralSettingsCard.tsx:151`                                                  | "Timeline markers" sub-switch (`:158`, default on). The runtime reads the key itself, live (`src/pages/content/highlight/highlightAction.ts:57-61`).                                                                                                                       | same                                                                                                    |
-| Response notification               | `GeneralSettingsCard.tsx:166`                                                  | **Permission flow.** Chrome hands off intent before the first await, Firefox makes the permission request the first await, Safari uses the native app (`useGeneralPopupSettings.ts:119-157`, `:228-274`). Hint text differs on Safari (`GeneralSettingsCard.tsx:171-173`). | `useGeneralPopupSettings.ts:228-274`                                                                    |
-| Usage status / Hide input halo      | `GeneralSettingsCard.tsx:202`, `:209`                                          | Halo is inverted: `true` hides it, which means the feature is on (`legacySettingBindings.ts:147-152`)                                                                                                                                                                      | `useGeneralPopupSettings.ts:307`                                                                        |
-| Default model / Research pack       | `GeneralSettingsCard.tsx:216`, `:101` (experimental)                           | none                                                                                                                                                                                                                                                                       | `useGeneralPopupSettings.ts:282-320`                                                                    |
-| Fork                                | `components/FolderSettingsCard.tsx:123-133` (experimental), inside a core card | none                                                                                                                                                                                                                                                                       | `hooks/useFolderPopupSettings.ts:100-101`                                                               |
-| Prompt history                      | `components/PromptManagerSettingsCard.tsx:65-75`, inside a core card           | none                                                                                                                                                                                                                                                                       | `hooks/usePromptManagerSettings.ts:27`                                                                  |
+| 功能（`voyager.…`）                                                                                                             | 现在的开关                                                            | 高级控件 / 特殊流程                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Timeline                                                                                                                        | `components/TimelineSettingsCard.tsx:70`                              | 样式、滚动模式、隐藏容器、可拖动、固定预览、层级、重置位置、收藏历史（`:80-229`）；消息时间（`:183`）是另一个未迁功能                                    |
+| Prevent auto-scroll                                                                                                             | `TimelineSettingsCard.tsx:161`                                        | 无                                                                                                                                                       |
+| Draft save、Ctrl+Enter（G）/ Enter（A）、Safari Enter fix（仅 Safari，`:162`）、Vim、Input collapse                             | `components/InputSettingsCard.tsx:185`、`:122`、`:162`、`:100`、`:49` | Input collapse 的"有内容也可折叠"子开关，仅开启时显示（`:76-99`）                                                                                        |
+| Formula copy（G + A）                                                                                                           | `components/FormulaCopySettings.tsx:46`                               | 格式单选（`:69-95`）、范围说明（`:45`）；两站共用一个开关和一个格式（`hooks/useFormulaCopyPopupSettings.ts:7-8`）                                        |
+| Chat width、Chat font size、Chat line height、Edit input width                                                                  | `components/PopupLayoutSettings.tsx:172`、`:189`、`:206`、`:231`      | 滑块；宽度类"开关未存过时跟随自定义宽度"（`hooks/usePopupLayoutSettings.ts:22-31`）                                                                      |
+| Mermaid、WaveDrom、ECharts、Code collapse、User LaTeX、Quote reply、Usage status、Hide input halo、Default model、Research pack | `components/GeneralSettingsCard.tsx:101-222`                          | Halo 是反向键：`true` 隐藏光晕，即功能开启（`legacySettingBindings.ts:147-152`）                                                                         |
+| Highlight                                                                                                                       | `GeneralSettingsCard.tsx:151`                                         | "时间线标记"子开关（`:158`，默认开），运行时自己 live 读这个键（`src/pages/content/highlight/highlightAction.ts:57-61`）                                 |
+| Response notification                                                                                                           | `GeneralSettingsCard.tsx:166`                                         | 权限流程：Chrome 首个 await 前交出意图，Firefox 权限请求必须是首个 await，Safari 走 native app（`hooks/useGeneralPopupSettings.ts:119-157`、`:228-274`） |
+| Fork                                                                                                                            | `components/FolderSettingsCard.tsx:123-133`（核心卡里）               | 无                                                                                                                                                       |
+| Prompt history                                                                                                                  | `components/PromptManagerSettingsCard.tsx:65-75`（核心卡里）          | 无                                                                                                                                                       |
 
-The "locate setting" hints point at these cards. When a local plugin is blocked by an official one, `pluginBlockedNote` names the official plugin's _card and switch_ (`components/pluginBlockedNote.ts:63-82`) through `officialSettingLocation` (`components/officialFeatureSetting.ts:16-26`, nine features). Notes under the old rows explain when a local plugin is running the feature instead (`components/OfficialFeatureStatus.tsx:24-45`, wired at `Popup.tsx:200-208`). No coachmark targets a popup card (`src/pages/content/coachmark/` has no popup reference).
+"定位设置"提示也指向这些卡片：本地插件被官方插件挡住时，`pluginBlockedNote` 说出官方插件所在的卡片和开关名（`components/pluginBlockedNote.ts:63-82`，经 `components/officialFeatureSetting.ts:16-26`）。旧行下的"被本地插件暂停"说明由 `OfficialFeatureStatus` 提供（`Popup.tsx:200-208`）。Coachmark 不指向 popup 卡片。
 
 ---
 
-## 2. Target UX
+## 2. 目标 UX
 
-### 2.1 Principles
+### 2.1 原则
 
-- **One switch per feature, and it is the row.** No feature keeps a second switch in a card.
-- **Fixed order.** Rows never move when they are toggled, so the user's spatial memory holds.
-- **A row stays small until it is on.** Options appear only for an enabled plugin, which matches `PluginManager.tsx:288-300` today.
-- **Search, not nesting.** The existing search box finds rows; groups are plain headings and do not collapse.
+- 一个功能一个开关，开关就是那一行；不在任何卡片里留第二个。
+- 顺序固定，开关不会让行移动。
+- 行在开启前保持精简：设置和 Options 只在开启时出现（与 `PluginManager.tsx:288-300` 一致）。
+- 靠搜索而不是嵌套：组标题只是标题，不可折叠。
+- 行显示的是**保存的偏好**，不是当前页面的运行状态（见 §3.1）。页面实际状态只通过 tab 回报的状态说明体现（暂停、等待）。
 
-### 2.2 Gemini (end state for the 26 migrated features)
+### 2.2 Gemini
 
 ```
 ┌──────────────────────────────────────────┐
-│ Voyager                               ◐  │
-│ [ Search settings…                    ]  │
-│ ┌ Cloud sync ──────────────────────────┐ │
-│ ┌ Storage ─────────────────────────────┐ │
-│ ┌ Folders ─────────────── (no Fork) ───┐ │
-│ ┌ Prompt Manager ──── (no history) ────┐ │
-│ ┌ Plugins ───────────────────────── ▲▼ ┐ │
-│ │ Turn Voyager features on or off.     │ │
-│ │ Options appear when a feature is on. │ │
-│ │                                      │ │
-│ │ APPEARANCE                           │ │
-│ │ Chat Width                     [●━]  │ │
-│ │ Widen the conversation as a share…   │ │
-│ │ Chat width (%)                  70   │ │
-│ │ Narrow ├────────●──────┤ Wide        │ │
-│ │ ──────────────────────────────────── │ │
-│ │ Chat Font Size                 [━○]  │ │
-│ │ Set the text size of chat messages…  │ │
-│ │ ──────────────────────────────────── │ │
-│ │ CONTENT                              │ │
-│ │ Formula Copy                   [●━]  │ │
-│ │ Click a formula to copy it…          │ │
-│ │ › Options                            │ │
-│ │ ──────────────────────────────────── │ │
-│ │ CONVERSATION                         │ │
-│ │ Timeline                       [●━]  │ │
-│ │ Navigate long chats from a rail…     │ │
-│ │ ⏸ Paused on this page: your local    │ │
-│ │   plugin "My rail" already does this │ │
-│ │ › Options                            │ │
+│ [ 搜索设置…                           ]  │
+│ ┌ 云同步 ──────────────────────────────┐ │
+│ ┌ 插件 ───────────────────────────── ▲▼ ┐ │
+│ │ 开关 Voyager 的各项功能。开启后显示  │ │
+│ │ 对应选项。                           │ │
+│ │ 外观                                 │ │
+│ │ 对话区域宽度                   [●━]  │ │
+│ │ 按屏幕宽度的比例加宽对话区域…        │ │
+│ │ 窄 ├────────●──────┤ 宽        70    │ │
+│ │ 内容                                 │ │
+│ │ 公式复制                       [●━]  │ │
+│ │ › 选项                               │ │
+│ │ 对话                                 │ │
+│ │ 时间线                         [●━]  │ │
+│ │ ⏸ 本页已暂停：你的本地插件"My rail"  │ │
+│ │   已在做这件事…                      │ │
+│ │ › 选项                               │ │
 │ └──────────────────────────────────────┘ │
-│ ┌ Local plugins ──────────────────── ▾ ┐ │
-│ ┌ General ───── (export bar, notices) ─┐ │
-│ ┌ Keyboard shortcuts ──────────────────┐ │
+│ ┌ 本地插件 ────────────────────────  ▾ ┐ │
+│ ┌ 时间线 / 文件夹 / … 其余核心卡片     ┐ │
 └──────────────────────────────────────────┘
 ```
 
-**Groups** come from a trusted popup table, not from the manifest. Manifest `category` is `readability` or `productivity` for all 26, and the docs plugin table reads it too. Rows keep a fixed order within each group:
+**分组**来自 popup 内的可信表，不来自 manifest（所有官方 manifest 的 `category` 只有 `readability`/`productivity`，且文档插件表也读它）。组内顺序固定：
 
-| Group        | Rows now (Gemini)                                                                                                  | Joins later                                                                         |
-| ------------ | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
-| Appearance   | Chat width, Chat font size, Line height and spacing, Hide input halo                                               | Edit input width, Sidebar width, Auto-hide, Full hide, Gems sidebar, Visual effects |
-| Content      | Code collapse, Formula copy, LaTeX in your messages, Mermaid, WaveDrom, ECharts                                    | Markdown fix, Canvas copy as Markdown, Deep Research menu                           |
-| Input        | Input collapse, Ctrl+Enter to send, Safari Enter fix (Safari), Vim mode, Draft save, Prompt history, Quote reply   | none yet                                                                            |
-| Conversation | Timeline, Prevent auto-scroll, Highlights, Fork, Research pack, Default model, Usage status, Response notification | Message timestamps, Context Sync, Batch delete, NanoBanana (2 rows)                 |
+| 组   | 现在的行（Gemini）                                                                                                                | 以后加入                                                           |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| 外观 | Hide input halo；Batch 3 起：Chat width、Chat font size、Line height、Edit input width                                            | Sidebar width、Auto-hide、Full hide、Gems sidebar、Visual effects  |
+| 内容 | Code collapse、User LaTeX、Mermaid、WaveDrom、ECharts；Batch 4 起：Formula copy                                                   | Markdown fix、Canvas copy、Deep Research 菜单                      |
+| 输入 | Prompt history、Quote reply；Batch 2 起：Input collapse、Ctrl+Enter、Safari fix、Vim、Draft save                                  | —                                                                  |
+| 对话 | Prevent auto-scroll、Fork、Research pack、Default model、Usage status；Batch 4、5 起：Highlights、Response notification、Timeline | Message timestamps、Context Sync、Batch delete、NanoBanana（2 行） |
 
-That gives 25 rows on Gemini (24 on browsers without Safari's fix) and two on AI Studio.
+全部迁完后 Gemini 26 行（非 Safari 25 行），AI Studio 2 行。
 
-**A row shows:**
-
-```
-Name  [Experimental]                      [switch]
-One-sentence description (manifest, localized)
-<status note, only when paused / waiting>
-<manifest settings inline, only when on>
-› Options   ← only when on and a custom panel exists
-```
-
-- The name and description come from the manifest. `displayName` already strips the `Gemini ·` prefix (`components/PluginIdentity.tsx:61-63`). Old card labels such as "Enable Mermaid diagram rendering" survive as search keys only.
-- Packaged official rows (`isPackagedOfficialPluginId`, `featureOwners.ts:297-303`: the Gemini and AI Studio ids only, so `voyager.chatgpt-*` builtins keep theirs) **drop the provenance block**: no version, source label, homepage, changelog or "updated" badge (`PluginIdentity.tsx:209-275`). Those plugins update only with Voyager itself.
-- Status notes reuse the row's existing `blockedPluginNote` with `conflictKey: 'officialFeaturePausedByLocal'`, which is what `OfficialFeatureStatus` passes today (`OfficialFeatureStatus.tsx:34-40`). Packaged ids never get `needs-*` or `host-policy` statuses (`OfficialFeatureStatus.tsx:32`), and their health monitor is off (`featureOwners.ts:84-89`). In practice the only notes are "paused by local" and "waiting".
-- **Options** is a disclosure held in memory and closed by default. It opens on its own while a search query matches something inside it. No new storage key.
-- The card description is new: `pluginsDescription` talks about site permissions and voyager.nagi.fun updates (en `messages.json`), which is wrong here. Adding one key (`pluginsNativeDescription`) means all 10 locales.
-
-### 2.3 Search
-
-Typing "ruler" or "字号" shows only the Plugins section, holding only the matching rows. A match inside Options opens it:
+**一行包含**：
 
 ```
-[ ruler                                 ]
-┌ Plugins ──────────────────────────────┐
-│ CONVERSATION                          │
-│ Timeline                        [●━]  │
-│ ▾ Options                             │
-│   Style   ( Nodes | Ruler | Compact ) │
-└───────────────────────────────────────┘
+名称  [实验性]                            [开关]
+manifest 的一句话描述（本地化）
+<状态说明：仅暂停 / 等待时>
+<manifest 设置：仅开启时，行内>
+› 选项   ← 仅开启且有自定义面板时
 ```
 
-### 2.4 AI Studio
+- 名称和描述一律用 manifest（`displayName` 去掉 `Gemini ·` 前缀，`components/PluginIdentity.tsx:61-63`）；旧卡片标签只作搜索词。
+- Gemini / AI Studio 的打包官方插件（`isPackagedOfficialPluginId`，`featureOwners.ts`）不显示来源块：版本、来源标签、主页、changelog、"已更新"徽标（`PluginIdentity.tsx:209-275`）。它们只随 Voyager 一起更新。`voyager.chatgpt-*` 等插件站 builtin 保留来源块。
+- 状态说明复用 `blockedPluginNote`，`conflictKey: 'officialFeaturePausedByLocal'`（与 `OfficialFeatureStatus.tsx:34-40` 一致）。
+- 卡片描述新增一个键 `pluginsNativeDescription`（10 个语言）：现有 `pluginsDescription` 讲的是站点权限和 voyager.nagi.fun 更新，不适用于这里。
 
-```
-┌ Enable on AI Studio ─────────── [●━] ┐   ← master switch stays on top
-┌ Plugins ─────────────────────────────┐
-│ CONTENT                              │
-│ Formula Copy                   [●━]  │
-│ › Options  (format; "applies to      │
-│            Gemini and AI Studio")    │
-│ INPUT                                │
-│ Enter to send                  [━○]  │
-└──────────────────────────────────────┘
-┌ Local plugins ───────────────────  ▾ ┐
-```
+**搜索**：打 "光晕"、"字号"、"ruler" 时只显示插件卡里命中的行。命中有自定义面板的行时直接展开它的选项；行关闭时只显示行，不显示选项（"开启前不显示选项"优先）。
 
-The master switch keeps priority over every row (`surfaceSwitch.ts:1-9`). Rows stay editable while it is off, as cards are today.
+### 2.3 AI Studio
 
-### 2.5 ChatGPT, Claude, DeepSeek
+总开关卡留在顶部，优先于所有行（`surfaceSwitch.ts:1-9`）；关闭期间行仍可编辑，与今天的卡片一致。插件卡在 Batch 2 出现 Enter send，Batch 4 出现 Formula copy（选项里写明"同时作用于 Gemini 和 AI Studio"）。没有任何行时整张卡隐藏。
 
-No change in this project. Their list already shows official plugins with working toggles, because those ids are not legacy-bound. They get the new row component and the effective-state wiring for free, since unbound ids resolve exactly as before. A later follow-up registers the Timeline panel (§3.3) for their rails as well, then deletes `dedicatedTimelineSettings` and `DEDICATED_TIMELINE_SOURCES` (`PluginManager.tsx:23-59`, `Popup.tsx:183-194`).
+### 2.4 ChatGPT / Claude / DeepSeek
 
-### 2.6 Local plugins stay distinct
+本项目不改。这些站点的官方插件没有 legacy 绑定，列表已能开关。Batch 5 之后的跟进：把 Timeline 面板也登记给这些 rail，删除 `dedicatedTimelineSettings` 和 `DEDICATED_TIMELINE_SOURCES`（`PluginManager.tsx:23-59`、`Popup.tsx:183-194`）。
 
-On Gemini and AI Studio, local plugins stay in their own collapsed **Local plugins** section with its import card (`NativeLocalPluginsSection.tsx:23-62`). Its default slot moves right below Plugins. Local rows keep the full `PluginIdentity`, with the "Local" label, version and review semantics (`pluginEnablement.ts:98-108`). `nameSources` lets a local row name the official plugin that holds a runtime, and that name now matches a visible row.
+### 2.5 本地插件
 
-### 2.7 What stays in non-plugin cards (Gemini, end state)
+本地插件继续单独一个折叠的"本地插件" section（`NativeLocalPluginsSection.tsx:23-62`），保留完整身份信息、"本地"标签和审核语义（`pluginEnablement.ts:98-108`）。默认顺序把它放在插件卡正下方。已经保存过顺序的用户，`localPlugins` 留在原位（只有新 section 按默认前驱插入，`usePopupSections.ts:47-55`），这是保留用户顺序的正常结果。
 
-Cloud sync and storage; Folders (minus Fork), folder spacing and tree indent; Prompt Manager (minus Prompt history); Keyboard shortcuts; General (persistent export toolbar, remote announcements with their permission CTA, changelog badge, and the disabled tab-title row). On AI Studio the master switch also stays. Context Sync, NanoBanana, visual effects and the remaining layout sliders keep their cards until their own migration. Each then leaves its card through the recipe in §5.
+### 2.6 留在非插件卡片的内容（Gemini 终态）
+
+云同步与存储；文件夹（不含 Fork）、文件夹间距与缩进；Prompt Manager（不含 Prompt history）；快捷键；通用（常驻导出栏、远程公告及其权限按钮、更新日志徽标、已禁用的标签标题行）；AI Studio 另有总开关。Context Sync、NanoBanana、视觉效果和其余布局滑块在各自迁移前保留卡片。
+
+### 2.7 无障碍与 RTL
+
+- 行开关 `aria-label` 为插件名，`aria-describedby` 指向描述；组是带标题的 `section`，行是列表项。
+- 选项按钮：可见名称"选项"，`aria-label` 带插件名（每个唯一），`aria-expanded`、`aria-controls` 指向面板 id。收起时焦点回到按钮；搜索过滤掉当前焦点所在的行时，焦点保持在搜索框（过滤由输入触发，焦点本来就在搜索框）。
+- 分段选择（Timeline 样式、滚动模式）：迁入面板时改为 `role="radiogroup"`/`radio` + `aria-checked`，或按钮加 `aria-pressed`；不再只靠颜色表达选中。
+- Arabic RTL：行和面板只用 logical 属性（`ps-*`、`ms-*`、`text-start`）。Timeline 现在用物理 `left` 计算浮动高亮（`TimelineSettingsCard.tsx:85`、`:111`），迁入时改为直接给选中按钮画背景，去掉位置计算。
 
 ---
 
-## 3. Architecture
+## 3. 架构
 
-### 3.1 One effective view, read and write
+### 3.1 唯一的 live 快照与读取
 
 ```
  gvPluginsState (local) ─┐
- legacy sync keys ───────┤ usePopupPlugins: pluginState + legacySettings (live, subscribe-then-read)
+ legacy sync 键 ─────────┤ usePopupPlugins：pluginState + legacySettings
+                         │ （先订阅后读取，live；唯一持有者）
                          ▼
-   effectivePluginView(manifest, state, legacy)                       ← one resolver
-     enabled  = resolveEffectiveEnabled(state, legacy, id)            legacySettingBindings.ts:248
-     settings = legacyBoundSettings(id, legacy)                       legacySnapshotFeed.ts:161
-                ?? resolveEffectiveSettings(manifest, state)          legacySettingBindings.ts:269
-     authority = legacyBindingFor(id) ? 'legacy' : 'plugin-state'
+   effectivePluginView(manifest, state, legacy)        ← 唯一 resolver
+     enabled  = resolveEffectiveEnabled(state, legacy, id)    legacySettingBindings.ts:248
+     settings = legacyBoundSettings(id, legacy)               legacySnapshotFeed.ts:161
+                ?? resolveEffectiveSettings(manifest, state)  legacySettingBindings.ts:269
                          │
-          ┌──────────────┼───────────────────────────┐
-     diagnostics    plugin list row             (PluginHost already uses the
- (usePopupPlugins   (PluginManager)              same functions: isPluginWanted,
-  .ts:90-111)                                    legacySnapshotFeed.ts:144-167)
+        ┌────────────────┼──────────────────────┐
+     诊断导出        插件列表的行、面板、     PluginHost 用同样的函数
+ (usePopupPlugins    通知 override           （isPluginWanted，
+  .ts:90-111)                                 legacySnapshotFeed.ts:144-167）
 ```
 
-**Read.** Extract the two lines diagnostics already runs (`usePopupPlugins.ts:99-106`) into `effectivePluginView` in `src/features/plugins/storage/`. Diagnostics, the list and the host then resolve through the same functions. The popup passes no `wasChangedLive`, so a derived switch (chat width, Safari fix) is read the same way the old popup read it (`usePopupLayoutSettings.ts:22-31`, `legacySettingBindings.ts:122-130`, `:164-174`).
+- **一个持有者**：`usePopupPlugins` 已经以"先订阅、后读取"维护 `legacySettings`（`usePopupPlugins.ts:198-219`），它是唯一的 live 快照。行、面板和通知 override 的持久值全部来自它。快照的键集合是 `legacyBindingKeys()` 加上 registry 声明的面板键（面板键只给 UI 读，不进 runtime value binding）。
+- **旧 hook 只保留动作**：权限流程、按钮动作和瞬时状态（如通知请求进行中）。不再保留它们自己的持久值副本，因为那份副本一次性读取，restore 后会过期（`useFormulaCopyPopupSettings.ts:40`、`useTimelinePopupSettings.ts:48`）。这同时修掉一个迁移回归：如果通知的 hydration 默认值被删掉，Safari 会把已存的 `true` 显示成关（`useGeneralPopupSettings.ts:120`、`:205`），改为从快照读之后不再依赖那份默认值。
+- **保存的偏好，不是页面状态**：popup 调 resolver 时不传 `wasChangedLive`，所以它不猜页面历史。页面可能因 live 变化而不同：例如页面首读宽度 70、开关缺失，之后外部只写入宽度 90，popup 推导为开，当前页仍为关（`src/core/utils/chatAppearanceValues.ts` 的派生规则）；数值键被删除时，页面保留最后的值，popup 回到默认值。诊断导出早已把这类值标为 storage-derived（`usePopupPlugins.ts:94-98`）。测试只断言行等于保存的偏好，不断言页面状态。
 
-**Write.** This is the only new mechanism:
+### 3.2 写入
 
-| Write                                      | Bound id (`legacyBindingFor`)                                                             | Unbound id (local, plugin sites)                         |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| Enable                                     | `writePopupSyncStorage(legacyEnableWrite(id, next))` (`legacySettingBindings.ts:281-285`) | `setPluginEnabled`, as today (`pluginEnablement.ts:106`) |
-| Manifest setting backed by a value binding | new `legacyValueWrite(id, key, value)`: `{ [legacyKey]: binding.write(value) }`           | `setPluginSetting(s)`, as today                          |
-| Manifest setting without a value binding   | not allowed: the contract test fails (§4.3)                                               | n/a                                                      |
-| Anything a custom panel owns               | the panel's existing hook, unchanged                                                      | n/a                                                      |
+| 写入                                | 绑定的 id（`legacyBindingFor`）                                                   | 未绑定的 id                 |
+| ----------------------------------- | --------------------------------------------------------------------------------- | --------------------------- |
+| 开关                                | `legacyEnableWrite(id, next)`（`legacySettingBindings.ts:281-285`），经严格写入器 | `setPluginEnabled`，不变    |
+| 有 value binding 的 manifest 设置   | 新增 `legacyValueWrite(id, key, value)`：`{ [legacyKey]: normalize(value) }`      | `setPluginSetting(s)`，不变 |
+| 没有 value binding 的 manifest 设置 | 不允许（registry 契约测试失败）                                                   | —                           |
+| 面板拥有的键                        | 面板动作直接写该键                                                                | —                           |
 
-Concrete changes:
+- **严格写入器**：`writePopupSyncStorage` 会吞掉失败，callback fallback 也不检查 `runtime.lastError`（`src/pages/popup/utils/popupStorage.ts:4-18`）。新增 `writePopupSyncStorageChecked`，返回成功与否；原函数改为调用它，行为不变。
+- **乐观覆盖层**按存储键和写入 revision 管理，由写入结果和最新快照共同结算，不只等 change event：
+  1. 写入失败：清除覆盖，显示快照（真实值）。
+  2. 写入成功且快照已等于写入值（包括 no-op 写入，不会有 event）：清除。
+  3. 写入成功、快照还是旧值：保留，直到该键的下一次快照变化；那时无论等于写入值，还是外部写入了别的值，都清除（快照优先）。
+  4. 同一个键又有新写入：revision 递增，旧写入的结算被忽略（迟到的旧写入不会覆盖新状态）。
 
-- `legacyValueBindings.ts:36-45`: add `write: (value) => unknown` to `LegacyValueBinding`. Number bindings write their own normalize, which is what the old hooks did before `set` (`usePopupLayoutSettings.ts:76-88`, `:101`, `:114`, `:127`). Widen `read` from `number | boolean` to `PluginSettingValue`, so that a later enum (visual effects) needs no new type. Add `onUnlessFalse` boolean bindings beside `trueOnlyBinding` (`:61-64`) for runtime-consumed sub-switches that default on.
-- `pluginEnablement.ts`: route `persistEnabled` (`:98-108`) and the two rollbacks (`:152`, `:167`) through one `writeEnabled(plugin, enabled)`. A bound id never reaches a host prompt: `pluginToOriginPatternsForActiveUrl` returns `[]` on statically injected hosts (`src/features/plugins/runtime/siteRegistration.ts:108`), and `pluginApiPermissions` only names the ChatGPT notification id (`pluginEnablement.ts:70-75`).
-- `usePluginPreferences.ts`: `enabledMap` and `settingsMap` come from `effectivePluginView` and no longer from `gvPluginsState` alone (`:20-34`). `handleSetting` and `handleImmediateSettings` (`:69-99`) route by authority and keep the 200 ms debounce and flush-on-close (`:102-113`). Optimistic values sit in a small pending overlay that clears when the matching storage change arrives. The subscribe-then-read loader moves from `usePopupPlugins.ts:198-219` into a shared `useLegacySettingSnapshot` hook, so both callers use the same code.
-- All popup writes go through `writePopupSyncStorage` (`utils/popupStorage.ts:4-18`). The direct `chrome.storage.sync.set` calls in the layout hook leave together with their adjusters.
+  外部 restore 与本地未结算写入冲突时，最新快照胜出。
 
-**Invariant.** The list never writes `gvPluginsState` for a bound id, and no value is copied there. That keeps the order-independence promised at `legacySettingBindings.ts:5-10`.
+- **开关路由**：`pluginEnablement.ts` 的 `persistEnabled` 和两处回滚（`:152`、`:167`）统一经 `writeEnabled(plugin, enabled)`，绑定 id 写旧键。绑定 id 不会触发主机权限提示：静态注入站点上 `pluginToOriginPatternsForActiveUrl` 返回 `[]`（`src/features/plugins/runtime/siteRegistration.ts:108`），`pluginApiPermissions` 只认 ChatGPT 通知 id（`pluginEnablement.ts:70-75`）。
+- **滑块在提交时立即保存**：pointer 或键盘提交（`onValueCommit`）时写入，拖动中只改本地草稿，与现在的 `WidthSlider.tsx:59-62` 一致。不用"200 ms 防抖 + 关闭时 flush"：popup 关闭时不会执行 React cleanup（`src/pages/popup/index.tsx` 关闭时不调用 `root.unmount()`），flush 不可靠。
+- **不变量**：列表从不为绑定 id 写 `gvPluginsState`，也不复制任何值进去，保持 `legacySettingBindings.ts:5-10` 承诺的"恢复顺序无关"。
 
-### 3.2 Which controls a row gets
+### 3.3 行的控件怎么声明
 
-Use the simplest rule that holds:
+| 控件类型                                                                    | 声明方式                                                                                                    | 例子                                                                                                                                                           |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 运行时作为插件设置接收的标量（handler 有 `updateSettings`，或可以接受重启） | manifest `contributes.settings` + value binding，由 `PluginSettings` 行内渲染；boolean 立即写，数值提交时写 | Chat / Edit input width、字号、行高（`legacyValueBindings.ts`）；`collapseWhenNotEmpty`（`geminiInputCollapseManifest.ts:80-89`，用 `messageKeys` 保持旧文案） |
+| 运行时自己读存储的值、schema 表达不了的枚举、跨站说明、动作按钮             | popup registry 里的自定义面板，放在"选项"后                                                                 | Timeline、Formula copy 格式与范围说明、Highlight 时间线标记                                                                                                    |
+| 不是普通写入的开启流程（权限）                                              | registry 里的控制 override                                                                                  | Response notification                                                                                                                                          |
 
-| The control is…                                                                                                             | Declare it as                                                                        | Examples                                                                                                                                                                            |
-| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A scalar **the runtime takes as a plugin setting** (the handler has `updateSettings`, or a restart on change is acceptable) | Manifest `contributes.settings` + value binding, rendered inline by `PluginSettings` | Chat width, font size, line height and spacing (`legacyValueBindings.ts:71-85`); `collapseWhenNotEmpty` (`geminiInputCollapseManifest.ts:80-89`, `messageKeys` for the old wording) |
-| Anything the runtime **reads from storage itself**, enums the schema can't carry yet, cross-site notes, action buttons      | Custom panel in the popup registry, behind **Options**                               | Timeline, Formula copy format and scope note, Highlight timeline markers                                                                                                            |
-| An **enable flow** that is not a plain write (permissions)                                                                  | Control override in the registry                                                     | Response notification                                                                                                                                                               |
+Highlight 标记做成面板而不是 value binding：运行时自己 live 读这个键（`highlightAction.ts:57-61`），handler 没有 `updateSettings`（`src/pages/content/pluginNativeRegistration.ts`），绑定后每次切换都会推送设置变化，引擎默认整套销毁再激活（`src/features/plugins/runtime/declarativeEngine.ts:351-358`）。Timeline 同理。
 
-Why Highlight markers is a panel and not a value binding: the highlight runtime listens to that key itself (`highlightAction.ts:57-61`), and its handler has no `updateSettings` (`src/pages/content/pluginNativeRegistration.ts:87-88`). A bound value would push a settings change on every toggle, and the engine's default response is a full dispose and re-activate (`src/features/plugins/runtime/declarativeEngine.ts:351-358`). Timeline has the same shape (`pluginNativeRegistration.ts:39`).
-
-**Registry.** New file `src/pages/popup/officialPlugins/officialPluginRegistry.ts`. It is data only, and the only place that knows popup presentation:
+**Registry**：`src/pages/popup/officialPlugins/officialPluginRegistry.ts`，纯数据，是唯一知道 popup 呈现方式的地方：
 
 ```ts
-export type OfficialPluginGroup = 'appearance' | 'content' | 'input' | 'conversation';
-
 export interface OfficialPluginEntry {
   readonly id: string; // OFFICIAL_PLUGIN_IDS.*
-  readonly group: OfficialPluginGroup;
-  /** Moved verbatim from the retired popupSettingsSearchIndex.ts entry. */
-  readonly searchKeys?: readonly TranslationKey[];
+  readonly group: OfficialPluginGroup; // 'appearance' | 'content' | 'input' | 'conversation'
+  /** 从被退役的 popupSettingsSearchIndex 条目原样搬来，含旧 section 标题键。 */
+  readonly searchKeys: readonly TranslationKey[];
   readonly searchAliases?: readonly string[];
   readonly experimental?: boolean;
-  /** Row eligibility beyond `matches`, e.g. Safari-only. */
-  readonly eligible?: (env: PopupEnv) => boolean;
-  /** Key into OFFICIAL_PLUGIN_PANELS. */
-  readonly panel?: OfficialPanelId;
-  /** Key into the control overrides: the hook owns read + write of the switch. */
-  readonly control?: OfficialControlId;
+  /** matches 之外的资格，如仅 Safari；搜索索引用同一判断。 */
+  readonly eligible?: (env: OfficialPluginEnv) => boolean;
+  readonly panel?: OfficialPanelId; // Batch 4 起
+  readonly control?: OfficialControlId; // Batch 4 起
 }
-/** Array order = display order within a group. */
-export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [...];
 ```
 
-`officialPluginPanels.tsx` maps `OfficialPanelId` to a component. Each panel is the old card's JSX without its enable row. A panel receives `enabled` from the row's effective view; the old hook's own copy of the flag is not used. `TimelineSettingsCard.tsx:92`, `:116` and others disable controls from `values.timelineEnabled`, and that hook copy goes stale once the switch lives in the row. Panels keep using the hook owners that `Popup.tsx` already mounts (`Popup.tsx:105-141`). `Popup.tsx` passes them as one `officialControls` object built in a small `useOfficialPluginControls` hook, so `Popup.tsx` gets shorter overall.
+数组顺序就是组内显示顺序。面板组件放在 `officialPluginPanels.tsx`，从行拿 `enabled`，从快照拿持久值，从旧 hook 拿动作。
 
-### 3.3 The three special cases among the 26
+### 3.4 三个特例
 
-- **Timeline.** Panel = `TimelineSettingsCard.tsx:80-229` without the enable row (`:70`), Prevent auto-scroll (`:161`, its own plugin) and message timestamps (`:183`, a separate feature). Reset position and starred history stay in it. Starred history also stays reachable while Timeline is off, through Storage → Manage → highlights (`Popup.tsx:217-226`).
-- **Formula copy.** One panel serves both ids. It shows the format radios (`FormulaCopySettings.tsx:69-95`) and the scope note (`:45`). Both ids share `FORMULA_COPY_ENABLED` and the format key (`legacySettingBindings.ts:131-141`), so toggling on AI Studio flips Gemini too, and the note says so.
-- **Response notification.** The override takes `{ enabled, setEnabled, hint }` from `useGeneralPopupSettings` and keeps its revision guards and the per-browser order (`useGeneralPopupSettings.ts:112-157`, `:228-274`). The row's `onChange` calls `setEnabled` **synchronously**, with no await before it, so Firefox still gets the permission request as the gesture's first await (`:250-251`).
+- **Timeline**：面板 = `TimelineSettingsCard.tsx:80-229` 去掉开关行、Prevent auto-scroll（独立插件）和消息时间（独立功能）；保留重置位置和收藏历史。Timeline 关闭时，收藏历史仍可从 存储 → 管理 → 高亮 进入（`Popup.tsx:217-226`）。
+- **Formula copy**：两个 id 共用一个面板（格式单选 + 范围说明）；两站共用开关和格式（`legacySettingBindings.ts:131-141`），在 AI Studio 关掉 Gemini 也会关，说明里写明。
+- **Response notification**：override 从快照读 `enabled`，开关时**同步**调用原流程，不在前面插任何 await：Firefox 权限请求仍是首个 await（`useGeneralPopupSettings.ts:250-251`），Chrome 保留后台意图交接（`:247-249`），Safari 保留 native 权限路径（`:230-234`）和 Safari 文案。请求进行中的瞬时状态仍由 hook 持有。
 
-### 3.4 Browser differences
+### 3.5 浏览器差异
 
-- **Safari.** Safari Enter fix is listed only when `eligible` returns true there (it is shown today only on Safari, `InputSettingsCard.tsx:162`), and the binding's `derive` already checks `isSafari()`. The notification override uses the native-app permission (`useGeneralPopupSettings.ts:230-234`) and the Safari hint (`GeneralSettingsCard.tsx:171-173`). Icons come from `lucide-react` as in `NativeLocalPluginsSection.tsx:3`; no new Material Symbols glyphs.
-- **Firefox.** No await may come before a permission request (`pluginEnablement.ts:134-136`, `useGeneralPopupSettings.ts:250`). Bound toggles request nothing.
-- **Chrome and Edge.** The popup may close while a prompt is open. The notification override already persists intent first (`useGeneralPopupSettings.ts:247-249`). Host-access plugins on plugin sites keep `setPluginEnabledWithSiteAccess` unchanged.
+- Safari：Safari Enter fix 只在 `eligible` 为真时列出（今天只在 Safari 显示，`InputSettingsCard.tsx:162`），绑定的 `derive` 也检查 `isSafari()`。图标用 `lucide-react`，不新增 Material Symbols。
+- Firefox：权限请求前不能有 await（`pluginEnablement.ts:134-136`）；绑定 id 的开关不请求权限。
+- Chrome / Edge：权限提示期间 popup 可能关闭；通知 override 已先持久化意图。
 
-### 3.5 Settings search and locate hints
+### 3.6 搜索与定位
 
-- **Search targets.** `usePopupSections` takes extra items `officialPlugins:<pluginId>`, generated from manifests plus the registry. The corpus is the manifest name and description in every locale, setting labels, registry `searchKeys` and `searchAliases`, all through `buildSettingsSearchCorpus` (`utils/settingsSearch.ts:85-90`). Moving the old `keys` and aliases (for example `popupSettingsSearchIndex.ts:159-165`, "字号 字体") into `searchKeys` and `searchAliases` keeps every old query working. The list hides rows with `shouldShowSetting('officialPlugins', id)`.
-- **Section.** A new section id `officialPlugins` takes the place of the always-hidden `plugins` (`usePopupSections.ts:122`, `nativeSiteCapabilities.ts:25`). In the default order it sits right before `localPlugins`, which moves next to it. Saved orders need no migration. `withMissingSections` inserts a new id after its default predecessor (`usePopupSections.ts:47-55`), and hydration drops ids that no longer exist (`:112-116`). The same filtering makes it safe to delete each per-feature section id later. AI Studio gets `officialPlugins: true` in its allowlist (`nativeSiteCapabilities.ts:39-57`). The `plugins` search entries (`popupSettingsSearchIndex.ts:299-313`) are retargeted.
-- **Locate hints.** Each migration deletes that feature's `LOCATIONS` entry (`officialFeatureSetting.ts:16-26`). `pluginBlockedNote` then falls through to `pluginDisplayName` (`pluginBlockedNote.ts:73-75`, `:78-80`), which names a row the user can now see in the same popup. Once `LOCATIONS` is empty, delete the module, the `pluginBlockedByOfficialSetting` key in all 10 locales, and `OfficialFeatureStatus.tsx`.
-- **From the page.** The default-model failure toast opens the popup (`src/pages/content/defaultModel/autoApply.ts:221-247`). Recommendation: before `gv.openPopup`, write the plugin's name to `gvPopupSettingsSearchQuery` in local storage, so the popup opens filtered to that row. The popup already restores this key (`usePopupSections.ts:82-99`). Coachmarks need no change.
+- **搜索目标**：`usePopupSections` 接收动态条目 `officialPlugins:<pluginId>`，只为实际列出的行生成（与行使用同一资格判断）。语料 = manifest 所有语言的名称和描述 + registry `searchKeys` / `searchAliases`，经 `buildSettingsSearchCorpus`（`src/pages/popup/utils/settingsSearch.ts:85-90`）。旧条目的 `keys` 和别名原样搬进 registry，旧查询继续命中。
+- **Section**：新 id `officialPlugins` 替换永远隐藏的 `plugins`，默认放在 `localPlugins` 前。已存顺序不需要迁移：新 id 插在默认前驱之后（`usePopupSections.ts:47-55`），不存在的 id 在读取时被丢弃（`:112-116`）。之后删除各功能 section id 同样安全。AI Studio 白名单加 `officialPlugins: true`；没有行时卡片隐藏。
+- **Batch 5 的 Timeline section**：Gemini 上 `timeline` 同时移除可见性、搜索目标和排序占位，否则"上移"会与不可见的 Timeline 交换，残留搜索目标还会让"无结果"不显示。插件站 rail 的 Timeline 卡改用独立的显示条件，不再借 Gemini 的 section。消息时间迁走时，搜索谓词一起迁。
+- **定位提示**：每次迁移删掉对应的 `LOCATIONS` 条目，`pluginBlockedNote` 退回到 `pluginDisplayName`（`pluginBlockedNote.ts:73-75`），说出的是同一 popup 里看得到的行名。`LOCATIONS` 清空后删除该模块、10 个语言的 `pluginBlockedByOfficialSetting` 和 `OfficialFeatureStatus.tsx`。
+- **从页面定位**：默认模型失败提示会打开 popup（`src/pages/content/defaultModel/autoApply.ts:221-247`）。建议在 `gv.openPopup` 前把插件名写入 local 的 `gvPopupSettingsSearchQuery`，popup 打开时已经过滤到那一行（`usePopupSections.ts:82-99` 会恢复它）。
 
-### 3.6 Backup, restore, cloud sync
+### 3.7 备份、恢复、云同步
 
-- **Legacy keys** are in `chrome.storage.sync`. They ride the settings backup and the Drive settings file with their existing defaults (for example `src/core/services/SettingsBackupService.ts:103`). The list follows them live, so a restore while the popup is open updates the rows, which the one-shot cards could not do.
-- **`gvPluginsState`** has its own Drive file (`SettingsBackupService.ts:467-471`). It is ignored for bound ids and never written for them, so restoring settings and plugins in either order cannot disagree.
-- **New official features without a legacy key** get a default-on **sync** enable key and a binding, as the audit recommends and as Code collapse and User LaTeX already do. Every Gemini and AI Studio official plugin then has a single authority (sync), and `gvPluginsState` stays for local plugins and plugin-site plugins.
-- **Storage keys.** This design adds none. The Options disclosure lives in memory. `gvPopupSectionOrder` keeps its format.
+- 旧键在 `chrome.storage.sync`，随设置备份和 Drive 设置文件走。列表 live 跟随，打开 popup 时恢复也会立即更新行。
+- `gvPluginsState` 有自己的 Drive 文件（`src/core/services/SettingsBackupService.ts:467-471`）；对绑定 id 既被忽略也从不写入，两份文件以任何顺序恢复都不会矛盾。
+- **既有限制（不是本次迁移引入）**：设置备份导出时给缺失的键补默认值（`BACKUPABLE_SYNC_SETTINGS_DEFAULTS`，`SettingsBackupService.ts:40-140`），恢复时写回。补的值和 binding 对缺失的解读不一致时，恢复会改变偏好：
+  - `CHAT_WIDTH_ENABLED` / `EDIT_INPUT_WIDTH_ENABLED` 补 `false`：开关缺失但宽度已自定义（派生为开）的用户，恢复后变关。
+  - `HIGHLIGHT_ENABLED` 补 `true`，binding 是"只有 true 才开"：从未开过的用户恢复后变开。
 
----
+  Registry 契约测试为每个列出的 id 检查"备份默认值经 binding 读取 = 缺失时的读取"。Batch 1 的 13 项全部一致。Batch 3、4 加入上述 id 时测试会失败，届时二选一：修备份（缺失保持缺失），或在测试里显式记录为已知限制。建议修备份，单独一个提交。
 
-## 4. Migration of the 26 existing features
-
-### 4.1 Rules for every batch
-
-- A batch moves **whole rows**: the registry entry is added, and the old row, its hook state, its `*_STORAGE_DEFAULTS` key, its search entry, its `LOCATIONS` entry and any section left empty are removed, all in one commit. One key never has two switches in the same popup (§1.1).
-- Nothing is written on upgrade. Users keep their keys exactly as stored.
-- Runtime code is untouched: these 26 already run as plugins, so every batch is a popup-only change.
-
-### 4.2 Order
-
-| Batch                                             | Moves                                                                                                                                                                                                 | Removed from the popup                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **1. List and simple booleans** (13)              | Infrastructure (§3.1, §3.5) plus Mermaid, WaveDrom, ECharts, Code collapse, User LaTeX, Quote reply, Usage status, Hide halo, Default model, Research pack, Prevent auto-scroll, Fork, Prompt history | 10 General rows (`GeneralSettingsCard.tsx:101-222`, keeping the export toolbar, announcements, changelog and tab title); `useWaveDromPopupSettings.ts`, `useEchartsPopupSettings.ts`; Prevent auto-scroll from the shared Timeline card (rails never offer it, `useCatalogTimelineSettings.ts:152-153`); Fork from Folders; Prompt history from Prompt Manager                                                               |
-| **2. Input** (6)                                  | Input collapse (manifest sub-switch inline), Vim, Ctrl+Enter (G), Enter send (A), Safari fix (`eligible`), Draft save                                                                                 | `InputSettingsCard.tsx` and `useInputPopupSettings.ts` entirely; the `inputCollapse` section and its AI Studio allowlist entry; three `OfficialFeatureStatus` notes (`Popup.tsx:424-430`)                                                                                                                                                                                                                                    |
-| **3. Appearance sliders** (3)                     | Chat width, Font size, Line height and spacing (manifest settings + `legacyValueWrite`)                                                                                                               | Three sections, their `VALUE_BADGE_SECTION_IDS` entries (`usePopupSections.ts:31-40`), and their adjusters and toggles in `usePopupLayoutSettings.ts`                                                                                                                                                                                                                                                                        |
-| **4. Panels and flows** (4 ids, 3 rows on Gemini) | Formula copy G + A (panel), Highlight (markers panel), Response notification (override)                                                                                                               | `FormulaCopySettings.tsx`, `useFormulaCopyPopupSettings.ts`, the `formulaCopy` section, `Popup.tsx:195-212`; the Highlight, markers and notification rows in General                                                                                                                                                                                                                                                         |
-| **5. Timeline** (1)                               | Timeline (panel)                                                                                                                                                                                      | `TimelineSettingsCard` on Gemini. On Gemini, "Show message timestamps" moves to the General card as a native row until that feature migrates; the shared card keeps the row for rails that offer it (`useCatalogTimelineSettings.ts:156-158`) (it must stay reachable while Timeline is off; today it is never disabled, `TimelineSettingsCard.tsx:183-193`). The `timeline` section stays for plugin-site rails until §2.5. |
-
-The batches go from least to most coupled. Batch 1 proves both default polarities and the routed write path with no UI special cases. Batch 3 adds value writes, Batch 4 adds panels and permission flows, and Timeline comes last because it has the most controls.
-
-### 4.3 Tests
-
-Each batch extends one table-driven popup test (render `Popup` on Gemini, and on AI Studio where it applies):
-
-- **Missing, false, true.** For each moved id, the row's switch equals what the page would run: `resolveEffectiveEnabled(state, legacy, id)`, the function `PluginHost` uses through `isPluginWanted` (`legacySnapshotFeed.ts:144-155`). Three cases need their own assertions: the inverted halo (`true` means on), input collapse treating a missing key as off (`legacySettingBindings.ts:59-60`, `:205-209`), and chat width (unset switch + customised width shows on).
-- **Write shape.** Toggling writes exactly the old sync payload (for example `{ gvMermaidEnabled: false }`) and never calls `setPluginEnabled`, so `gvPluginsState` is unchanged. Sliders write the normalised value to the legacy key.
-- **Cross-site and browser.** Formula copy toggled on AI Studio changes the Gemini row. Safari fix is absent off Safari. Notification denied leaves the row off, and on Firefox no await comes before the permission request.
-- **Search.** Old queries still find their rows ("字号" finds Chat font size; "ruler" opens Timeline Options).
-- **Saved order.** A stored order containing removed section ids hydrates with the remaining sections in the same relative order.
-- **Contract test** (`officialPluginRegistry.test.ts`, a static contract, allowed by AGENTS.md): every registry id is a packaged official id and appears once. Every manifest setting of a bound id has a value binding unless the id has a panel. After Batch 5, every Gemini and AI Studio `FEATURE_OWNERS` entry has a registry entry.
-- **Existing tests.** Move their assertions with the controls: `GeneralSettingsCard.test.tsx`, `InputSettingsCard.integration.test.tsx`, `PopupLayoutSettings.test.tsx`, `FormulaCopySettings.test.tsx`, `TimelineSettingsCard.test.tsx`, `OfficialFeatureStatus.test.tsx`, `NativeLocalPluginsSection.test.tsx`, `Popup.test.tsx`, `settingsSearch.test.ts`. Delete those that exist only for deleted components.
-
-Each batch is a popup UI change, so it also gets a dev-build check with `verify-in-browser` (popup on Gemini and AI Studio, light and dark), then `verify:pr` on the final tree.
+- 本设计不新增存储键（选项展开状态只在内存中）。没有旧键的新功能，按 §7.12 加默认开启的 sync 键 + 绑定，于是 Gemini / AI Studio 官方插件全部以 sync 为准，`gvPluginsState` 只服务本地插件和插件站。
 
 ---
 
-## 5. Recipe for each later migration
+## 4. 26 项（含 Edit input width 共 27 项）的迁移
 
-Example: **Edit input width** (`voyager.gemini-edit-input-width`). Runtime steps follow the audit; popup steps follow this design.
+### 4.1 每批的规则
 
-**Runtime** (unchanged pattern, see the Chat width template):
+- 一批移动**整行**：加 registry 条目，同时删除旧行、旧 hook 状态、`*_STORAGE_DEFAULTS` 键、旧搜索条目、`LOCATIONS` 条目，以及因此变空的 section，全部在一个提交里。同一个键在一个 popup 里永远只有一个开关。
+- 升级时不写任何东西，用户的键保持原样。
+- 运行时代码不动（这些功能已经以插件运行），每批只改 popup。
+- 依赖：只有 Batch 1 阻塞后续的运行时迁移；Batch 2–5 可以与运行时迁移交错进行。Batch 5（Timeline）排在消息时间完成运行时迁移之后，让那一行只搬一次。
 
-1. Manifest: `src/features/plugins/builtin/geminiEditInputWidthManifest.ts`, registered in `builtin/index.ts`, or a catalog `src/features/plugins/catalog/sites/gemini/plugins/<id>/plugin.json` for pure CSS.
-2. Owner: `src/features/plugins/sites/featureOwners.ts` (id, `OwnedFeatureId`, entry).
-3. Bindings: `src/features/plugins/storage/legacySettingBindings.ts` (enable, with `derive` if the switch depends on a customised value) and `legacyValueBindings.ts` (runtime-consumed values, with `read` **and** `write`). A feature with no old switch gets a new default-on sync key in `StorageKeys`, plus `SettingsBackupService.ts` defaults.
-4. Handler: `src/pages/content/<feature>/pluginHandler.ts` (with `updateSettings` if it has value bindings), registered in `src/pages/content/pluginNativeRegistration.ts`. Admission at the original start point (for example `src/pages/content/appearanceStartup.ts`), with the native start removed.
+### 4.2 顺序
 
-**Popup** (the part this design makes mechanical):
+| 批次                                         | 移动                                                                                                                                                                                                                  | 从 popup 删除                                                                                                                                                                                                                                                                                                                       |
+| -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1. 列表 + 简单开关**（13）                 | 基础设施（§3.1、§3.2 的开关写入与覆盖层、§3.6）+ Mermaid、WaveDrom、ECharts、Code collapse、User LaTeX、Quote reply、Usage status、Hide halo、Default model、Research pack、Prevent auto-scroll、Fork、Prompt history | General 卡 10 行（保留导出栏、Highlight 及标记、通知、公告、更新日志、标签标题）；`useWaveDromPopupSettings.ts`、`useEchartsPopupSettings.ts`；共享 Timeline 卡里的 Prevent auto-scroll（rail 从不提供它，`useCatalogTimelineSettings.ts:152-153`）；文件夹卡的 Fork；Prompt Manager 卡的 Prompt history；`LOCATIONS.promptHistory` |
+| **2. 输入**（6）                             | Input collapse（子开关行内，需 boolean 立即写 + `legacyValueWrite`）、Vim、Ctrl+Enter（G）、Enter send（A）、Safari fix（`eligible`）、Draft save                                                                     | 整个 `InputSettingsCard.tsx` 和 `useInputPopupSettings.ts`；`inputCollapse` section 及其 AI Studio 白名单项；三处 `OfficialFeatureStatus`（`Popup.tsx:424-430`）                                                                                                                                                                    |
+| **3. 外观滑块**（4）                         | Chat width、字号、行高与段距、Edit input width（manifest 设置 + 提交时写）                                                                                                                                            | 四个 section、它们的 `VALUE_BADGE_SECTION_IDS` 条目、`usePopupLayoutSettings.ts` 里对应的调节器和开关                                                                                                                                                                                                                               |
+| **4. 面板与流程**（4 个 id，Gemini 上 3 行） | Formula copy G + A（面板）、Highlight（标记面板）、Response notification（override）                                                                                                                                  | `FormulaCopySettings.tsx`、`useFormulaCopyPopupSettings.ts`、`formulaCopy` section、`Popup.tsx:195-212`；General 卡的 Highlight、标记、通知行                                                                                                                                                                                       |
+| **5. Timeline**（1）                         | Timeline（面板，含 §2.7 的 a11y/RTL 修正）                                                                                                                                                                            | Gemini 的 Timeline 卡及其 section 可见性、搜索目标、排序占位；插件站 rail 卡改独立显示条件                                                                                                                                                                                                                                          |
 
-5. Add an entry to `src/pages/popup/officialPlugins/officialPluginRegistry.ts`: group, position, and `searchKeys` and `searchAliases` moved from the feature's entry in `utils/popupSettingsSearchIndex.ts`. Add `eligible`, `experimental`, `panel` or `control` only when §3.2 calls for them.
-6. Only if needed, add the panel to `officialPluginPanels.tsx`, reusing the old card JSX with `enabled` taken from props.
-7. Delete the old surface: the row or `wrapSection` call (for Edit input width, `components/PopupLayoutSettings.tsx:231-247`); its state, adjuster and `*_STORAGE_DEFAULTS` key (`hooks/usePopupLayoutSettings.ts:42`, `:45`, `:134-155`, `:289-294`); the section id in `utils/nativeSiteCapabilities.ts`, the AI Studio allowlist and `VALUE_BADGE_SECTION_IDS`; the search entry; and any `officialFeatureSetting.ts` entry.
-8. Locales: remove keys used only by the deleted row, in all 10 locales, and keep any key listed in `searchKeys` or a manifest's `messageKeys`. Run `bun run i18n:check`.
-9. Tests: add the id to the missing/false/true table and move the card test's assertions. The contract test then checks the rest.
-10. Docs: every locale copy of the feature's guide (`docs/*/guide/<feature>.md`) says "**Plugins** → **<name>**" instead of the card name. Today's wording names cards: `docs/en/guide/mermaid.md:18`, `send-behavior.md:23`, `timeline.md:20`, `:44`, `:93`.
+### 4.3 测试
 
-Notes on the features still to migrate, from the audit:
+每批扩展同一张表驱动的 popup 测试（Gemini；适用时加 AI Studio）：
 
-- Auto-hide and full hide: two rows over one controller.
-- Gems sidebar: count 0 must not turn into "on".
-- AI Studio sidebar width: a new enable key, because the shared `gvSidebarWidthEnabled` is not what that runtime reads.
-- Visual effects: an enum binding (§3.1), and one shared choice across sites.
-- Context Sync: a panel holding port, status and Sync.
-- NanoBanana: two rows following the resolver in `src/core/utils/watermarkSettings.ts`.
+- **缺失 / false / true**：每个移动的 id，行的开关等于保存的偏好 `resolveEffectiveEnabled(state, legacy, id)`。反向的 halo（`true` = 开）、Input collapse 缺失 = 关、宽度派生单独断言。
+- **写入形状**：开关只写旧 sync 载荷（例如 `{ gvMermaidEnabled: false }`），不调用 `setPluginEnabled`，`gvPluginsState` 不变。
+- **覆盖层**：no-op 写入、写入失败、迟到的旧写入、写入未结算时外部恢复，四种情况都显示正确值。
+- **搜索连续性**：旧查询仍命中（Batch 1："光晕"找到 Hide input halo、"代码块"找到 Code collapse；Batch 3："字号"找到字号）。
+- **已存顺序**：含已删除 section id 的顺序能正常读取，其余 section 相对顺序不变。
+- **Registry 契约**（静态契约测试，AGENTS.md 允许）：每个 id 是打包官方 id 且只出现一次；绑定 id 的每个 manifest 设置都有 value binding，否则必须有面板；备份默认值的缺失语义一致（§3.7）。Batch 5 后所有 Gemini / AI Studio owner 都有条目。
+- **旧测试**：有价值的断言随控件迁移（`GeneralSettingsCard.test.tsx`、`FolderSettingsCard.test.tsx`、`PromptManagerSettingsCard.test.tsx`、`TimelineSettingsCard.test.tsx`、各 hook 测试、`usePopupSections.test.tsx` 等），只删除为已删代码存在的测试。
+
+每批都是 popup UI 变化，另需在 dev 构建上实测（Gemini 和 AI Studio，亮色、暗色、Arabic），最终树跑 `verify:pr`。
 
 ---
 
-## 6. Risks and open questions
+## 5. 以后每项迁移的步骤
 
-| #   | Question / risk                                                                                           | Recommendation                                                                                                                                                                                       |
-| --- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Gemini has 25 rows now and about 38 after the next wave. Is it too long?                                  | Groups plus the existing search are enough. Don't add collapsible groups; reconsider only if the next wave makes a group exceed about 12 rows.                                                       |
-| 2   | Row names come from manifests ("Chat Width") instead of old labels ("Enable Mermaid diagram rendering").  | Use manifest names everywhere (row, diagnostics, blocked notes, docs table). Old labels stay as search keys.                                                                                         |
-| 3   | Options appear only when the plugin is on, while the old Timeline card showed disabled controls when off. | Show them only when on, which matches `PluginManager.tsx:288-300` and keeps the list short. Starred history stays reachable through Storage → Manage.                                                |
-| 4   | Message timestamps needs a home when the Timeline card goes away.                                         | Park it as a native General row in Batch 5 and move it when it migrates. Don't block Timeline on that riskier migration.                                                                             |
-| 5   | Formula copy is one switch for two sites.                                                                 | Keep it shared, with the scope note in the panel. Separate switches per site would be a product and data change, not part of this refactor.                                                          |
-| 6   | Keyboard shortcuts relate to Timeline.                                                                    | Keep them as a separate card. They are global and drive catalog rails too (`Popup.tsx:410-413`).                                                                                                     |
-| 7   | Plugin-site rails show the Timeline card next to their own row.                                           | Do it as a follow-up after Batch 5: register the Timeline panel for those ids and delete `dedicatedTimelineSettings`.                                                                                |
-| 8   | Should the Options disclosure state persist?                                                              | Not now. Sliders stay inline, and rarely-used panels can stay closed. Add a device-local key only if users ask.                                                                                      |
-| 9   | Visual effects is a cross-site setting shown on plugin sites too.                                         | When it migrates, list it as one row on every site, bound to the same key, after the enum binding lands. Until then it keeps its card.                                                               |
-| 10  | Downgrade safety.                                                                                         | Safe by construction: no data moves, so an older build reads the same keys.                                                                                                                          |
-| 11  | The AI Studio master switch is off while the user edits rows.                                             | Same as today: rows stay editable and take effect when the switch is on. No extra note.                                                                                                              |
-| 12  | `usePluginPreferences` and `usePopupPlugins` each load plugin state.                                      | This is existing duplication. Share the legacy loader now (§3.1) and lift both into one owner later only if it gets in the way.                                                                      |
-| 13  | Locate from the page.                                                                                     | Use the search-query handoff (§3.5) for the default-model toast only. The Prompt Manager "open settings" entry (`src/pages/content/prompt/index.ts:712`) points at a core card, so it needs nothing. |
+**运行时**：按 `GEMINI_PLUGIN_PLATFORM_PLAN.md` §7.12 的"后续迁移模板"执行，此处不重复。
+
+**Popup**（本设计让这一部分变成机械步骤）：
+
+1. 在 `src/pages/popup/officialPlugins/officialPluginRegistry.ts` 加条目：组、位置、从 `utils/popupSettingsSearchIndex.ts` 搬来的 `searchKeys` / `searchAliases`（含旧 section 标题键）；按 §3.3 需要时才加 `eligible`、`experimental`、`panel`、`control`。
+2. 需要时在 `officialPluginPanels.tsx` 加面板：复用旧卡片 JSX，`enabled` 从行来，持久值从快照来，按 §2.7 补 a11y/RTL。
+3. 删除旧界面：卡片行或 `wrapSection` 调用、hook 状态、`*_STORAGE_DEFAULTS` 键、`nativeSiteCapabilities.ts` 的 section id / AI Studio 白名单 / `VALUE_BADGE_SECTION_IDS`、搜索条目、`officialFeatureSetting.ts` 条目。
+4. 文案：只删除仅被已删行使用、且没有作为 `searchKeys` 或 manifest `messageKeys` 保留的键，10 个语言一起删；`bun run i18n:check`。
+5. 测试：把 id 加进 缺失 / false / true 表，迁移卡片测试的断言；契约测试负责其余。
+6. 文档：该功能 guide 的所有语言版本改成"**插件** → **<名称>**"（现有措辞指向卡片，例如 `docs/en/guide/mermaid.md:18`、`send-behavior.md:23`、`timeline.md:20`、`:44`、`:93`）。
+
+**示例：Edit input width**（`voyager.gemini-edit-input-width`）。运行时已在 §7.12 8-1 完成，只剩 popup 移动，随 Batch 3 与其他滑块一起：registry 加"外观"条目（`searchKeys` 来自 `popupSettingsSearchIndex.ts` 的 `editInputWidth` 条目）；manifest 已声明 `widthPercent`，value binding 已有（`legacyValueBindings.ts`），只需 `legacyValueWrite` 支持它；删除 `PopupLayoutSettings.tsx:232-247`、`usePopupLayoutSettings.ts` 里 edit input 的调节器和开关，以及 `editInputWidth` section id 和它的徽标条目；备份默认值 `EDIT_INPUT_WIDTH_ENABLED: false` 会被契约测试拦下（§3.7）。
+
+其余待迁功能的要点（来自审计）：Auto-hide / Full hide 两行共用一个 controller；Gems sidebar 的 count 0 不能变成"开"；AI Studio sidebar width 需要新的开关键；Visual effects 需要枚举绑定，且跨站共享一个选择（届时再扩展 value binding 的类型）；Context Sync 是一个包含端口、状态和同步按钮的面板；NanoBanana 两行，沿用 `src/core/utils/watermarkSettings.ts` 的 resolver。
+
+---
+
+## 6. 已定事项与剩余问题
+
+| #   | 问题                                                 | 结论                                                                            |
+| --- | ---------------------------------------------------- | ------------------------------------------------------------------------------- |
+| 1   | Gemini 现在 26 行，下一波后约 38 行                  | 分组 + 搜索足够；某组超过约 12 行时再考虑可折叠组                               |
+| 2   | 行名用 manifest 名还是旧卡片标签                     | **已定**：一律用 manifest 名；旧标签作搜索词                                    |
+| 3   | 选项只在开启时出现，旧 Timeline 卡关闭时显示禁用控件 | 只在开启时出现；收藏历史另有入口                                                |
+| 4   | Timeline 卡拆掉后消息时间放哪里                      | **已定**：不临时放 General；Batch 5 排在消息时间运行时迁移之后，那一行只搬一次  |
+| 5   | Formula copy 两站共用一个开关                        | 保持共用，面板里写明范围；分站开关是另一个产品决定                              |
+| 6   | 快捷键与 Timeline 相关                               | 保持独立卡片：全局生效，也驱动插件站 rail                                       |
+| 7   | 插件站 rail 在行旁边另有 Timeline 卡                 | Batch 5 之后跟进，登记同一面板                                                  |
+| 8   | 选项展开状态要不要持久化                             | 暂不；滑块在行内，少用的面板默认收起                                            |
+| 9   | Visual effects 跨站                                  | 迁移时在每个站点各列一行，绑定同一个键；在那之前保留卡片                        |
+| 10  | 降级                                                 | 天然安全：不搬数据，旧版本读同样的键                                            |
+| 11  | 备份补默认值改变缺失语义                             | 既有限制；建议在 Batch 3 前单独修                                               |
+| 12  | 从页面定位                                           | 只给默认模型失败提示做搜索词交接；Prompt Manager 的"打开设置"指向核心卡，不需要 |
