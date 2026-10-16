@@ -21,6 +21,7 @@ import {
 import { activateGeminiCanvasCopy } from './canvasExport/pluginHandler';
 import { activateGeminiChatWidth, updateGeminiChatWidthSettings } from './chatWidth/pluginHandler';
 import { activateGeminiContextSync } from './contextSync/pluginHandler';
+import { activateGeminiDeepResearchExport } from './deepResearch/pluginHandler';
 import { activateGeminiDefaultModel } from './defaultModel/pluginHandler';
 import {
   activateGeminiEditInputWidth,
@@ -88,6 +89,7 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
     updateSettings: updateGeminiChatWidthSettings,
   },
   'voyager.gemini-canvas-copy': { activate: activateGeminiCanvasCopy },
+  'voyager.gemini-deep-research-export': { activate: activateGeminiDeepResearchExport },
   'voyager.gemini-edit-input-width': {
     activate: activateGeminiEditInputWidth,
     updateSettings: updateGeminiEditInputWidthSettings,

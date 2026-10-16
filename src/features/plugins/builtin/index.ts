@@ -3,6 +3,7 @@ import { CHATGPT_RESPONSE_NOTIFICATION_MANIFEST } from './chatgptResponseNotific
 import { GEMINI_CANVAS_COPY_MANIFEST } from './geminiCanvasCopyManifest';
 import { GEMINI_CHAT_WIDTH_MANIFEST } from './geminiChatWidthManifest';
 import { GEMINI_CONTEXT_SYNC_MANIFEST } from './geminiContextSyncManifest';
+import { GEMINI_DEEP_RESEARCH_EXPORT_MANIFEST } from './geminiDeepResearchExportManifest';
 import { GEMINI_DEFAULT_MODEL_MANIFEST } from './geminiDefaultModelManifest';
 import { GEMINI_EDIT_INPUT_WIDTH_MANIFEST } from './geminiEditInputWidthManifest';
 import { GEMINI_FORK_MANIFEST } from './geminiForkManifest';
@@ -396,6 +397,7 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   GEMINI_SIDEBAR_AUTO_HIDE_MANIFEST,
   GEMINI_SIDEBAR_FULL_HIDE_MANIFEST,
   GEMINI_CANVAS_COPY_MANIFEST,
+  GEMINI_DEEP_RESEARCH_EXPORT_MANIFEST,
   GEMINI_GEMS_SIDEBAR_MANIFEST,
   GEMINI_CONTEXT_SYNC_MANIFEST,
   GEMINI_PROMPT_HISTORY_MANIFEST,

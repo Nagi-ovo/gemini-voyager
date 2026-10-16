@@ -42,6 +42,7 @@ const FEATURE_ORDER = [
   'gems-sidebar',
   'timeline',
   'export',
+  'deep-research-export',
   'canvas-copy',
   'response-notification',
   'quote-reply',
@@ -113,6 +114,7 @@ export const FRESH_INSTALL_ON: ReadonlySet<string> = new Set([
   OFFICIAL_PLUGIN_IDS.geminiTimeline,
   OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
   OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
+  OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
   OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
   OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
   OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy,
@@ -127,6 +129,7 @@ export const FRESH_INSTALL_ON: ReadonlySet<string> = new Set([
 
 /** Guide pages whose slug is not the row's key. */
 const GUIDE_PAGES: Readonly<Record<string, string>> = {
+  'deep-research-export': 'deep-research',
   'ctrl-enter-send': 'send-behavior',
   'enter-send': 'send-behavior',
   'reading-typography': 'chat-font-size',

@@ -113,6 +113,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.GV_SIDEBAR_AUTO_HIDE,
         StorageKeys.GV_SIDEBAR_FULL_HIDE,
         StorageKeys.CANVAS_COPY_ENABLED,
+        StorageKeys.DEEP_RESEARCH_EXPORT_ENABLED,
         StorageKeys.GV_GEMS_SIDEBAR_ENABLED,
         StorageKeys.GV_GEMS_SIDEBAR_COUNT,
         StorageKeys.CONTEXT_SYNC_ENABLED,
@@ -166,6 +167,9 @@ describe('legacy enable bindings', () => {
       );
       expect(legacyBindingFor(OFFICIAL_PLUGIN_IDS.geminiResponseNotification)?.read(stored)).toBe(
         researchPack,
+      );
+      expect(legacyBindingFor(OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport)?.read(stored)).toBe(
+        defaultModel,
       );
       expect(legacyBindingFor(OFFICIAL_PLUGIN_IDS.geminiCanvasCopy)?.read(stored)).toBe(
         defaultModel,
@@ -276,6 +280,23 @@ describe('resolveEffectiveEnabled', () => {
       {},
     );
   });
+
+  it.each([
+    ['missing', {}, true],
+    ['off', { [StorageKeys.DEEP_RESEARCH_EXPORT_ENABLED]: false }, false],
+    ['on', { [StorageKeys.DEEP_RESEARCH_EXPORT_ENABLED]: true }, true],
+    ['removed', { [StorageKeys.DEEP_RESEARCH_EXPORT_ENABLED]: undefined }, true],
+  ] as const)(
+    'keeps Deep Research export %s authoritative over plugin state',
+    (_label, snapshot, on) => {
+      const id = OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport;
+      expect(resolveEffectiveEnabled({ [id]: { enabled: !on } }, snapshot, id)).toBe(on);
+      expect(legacyEnableWrite(id, on)).toEqual({ [StorageKeys.DEEP_RESEARCH_EXPORT_ENABLED]: on });
+      expect(
+        resolveEffectiveSettings(manifest(id), { [id]: { settings: { stray: true } } }),
+      ).toEqual({});
+    },
+  );
 
   it('uses the production default when the key is missing or was removed', () => {
     expect(resolveEffectiveEnabled({}, {}, FORMULA_G)).toBe(true);

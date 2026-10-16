@@ -11,6 +11,8 @@ import { mountNativeFeature } from './featureLifecycle';
 import { NATIVE_FEATURES } from './nativeFeatures';
 
 export interface GeminiBuiltinStartup {
+  /** Deep Research export menu entries at their original content-helper start point. */
+  startDeepResearchExport(): Promise<void>;
   /** Context capture at its original content-helper start point. */
   startContextSync(): Promise<void>;
   /** Recent Gems in the parallel content-helper group. */
@@ -43,6 +45,10 @@ export function createGeminiBuiltinStartup(
   const isStopped = (): boolean => stopped || lifetime?.aborted === true;
 
   return {
+    async startDeepResearchExport() {
+      if (isStopped()) return;
+      admission.admit('gemini', 'deepResearchExport');
+    },
     async startContextSync() {
       if (isStopped()) return;
       admission.admit('gemini', 'contextSync');

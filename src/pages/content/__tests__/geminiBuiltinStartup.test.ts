@@ -161,6 +161,7 @@ describe('official plugins at their Gemini start points', () => {
   it.each([
     ['startTimeline', OFFICIAL_PLUGIN_IDS.geminiTimeline],
     ['startCanvasCopy', OFFICIAL_PLUGIN_IDS.geminiCanvasCopy],
+    ['startDeepResearchExport', OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport],
     ['startGemsSidebar', OFFICIAL_PLUGIN_IDS.geminiGemsSidebar],
     ['startContextSync', OFFICIAL_PLUGIN_IDS.geminiContextSync],
     ['startDefaultModel', OFFICIAL_PLUGIN_IDS.geminiDefaultModel],
@@ -205,6 +206,7 @@ describe('official plugins at their Gemini start points', () => {
     current.lifetime.abort();
     await startup.startTimeline();
     await startup.startCanvasCopy();
+    await startup.startDeepResearchExport();
     await startup.startGemsSidebar();
     await startup.startContextSync();
     await startup.startDefaultModel();
@@ -216,6 +218,7 @@ describe('official plugins at their Gemini start points', () => {
     for (const id of [
       OFFICIAL_PLUGIN_IDS.geminiTimeline,
       OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
+      OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
       OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
       OFFICIAL_PLUGIN_IDS.geminiContextSync,
       OFFICIAL_PLUGIN_IDS.geminiDefaultModel,

@@ -27,6 +27,7 @@ export type OwnedFeatureId =
   | 'sidebarAutoHide'
   | 'sidebarFullHide'
   | 'canvasCopy'
+  | 'deepResearchExport'
   | 'gemsSidebar'
   | 'contextSync'
   | 'userLatex'
@@ -63,6 +64,7 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiGemsSidebar: 'voyager.gemini-gems-sidebar',
   geminiContextSync: 'voyager.gemini-context-sync',
   geminiCanvasCopy: 'voyager.gemini-canvas-copy',
+  geminiDeepResearchExport: 'voyager.gemini-deep-research-export',
   geminiSidebarWidth: 'voyager.gemini-sidebar-width',
   geminiSidebarAutoHide: 'voyager.gemini-sidebar-auto-hide',
   geminiSidebarFullHide: 'voyager.gemini-sidebar-full-hide',
@@ -231,6 +233,13 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     site: 'gemini',
     feature: 'sidebarFullHide',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'deepResearchExport',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
     handlers: [],
     healthTracking: false,
   },

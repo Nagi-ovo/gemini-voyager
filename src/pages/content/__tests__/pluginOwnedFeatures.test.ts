@@ -820,6 +820,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
           [FORK_KEY]: true,
           [StorageKeys.GV_GEMS_SIDEBAR_ENABLED]: true,
           [StorageKeys.CONTEXT_SYNC_ENABLED]: true,
+          [StorageKeys.DEEP_RESEARCH_EXPORT_ENABLED]: true,
           [StorageKeys.USAGE_STATUS_ENABLED]: true,
           [StorageKeys.QUOTE_REPLY_ENABLED]: true,
           [StorageKeys.HIGHLIGHT_ENABLED]: true,
@@ -852,6 +853,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
         const builtins = createGeminiBuiltinStartup(admission, cleanupManager);
         await builtins.startTimeline();
         await builtins.startCanvasCopy();
+        await builtins.startDeepResearchExport();
         await builtins.startGemsSidebar();
         await builtins.startContextSync();
         await builtins.startUsageStatus();
@@ -884,6 +886,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
         OFFICIAL_PLUGIN_IDS.geminiFork,
         OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
         OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
+        OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
         OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
         OFFICIAL_PLUGIN_IDS.geminiContextSync,
         OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
@@ -902,6 +905,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
           [FORK_KEY]: true,
           [StorageKeys.GV_GEMS_SIDEBAR_ENABLED]: true,
           [StorageKeys.CONTEXT_SYNC_ENABLED]: true,
+          [StorageKeys.DEEP_RESEARCH_EXPORT_ENABLED]: true,
           [StorageKeys.USAGE_STATUS_ENABLED]: true,
           [StorageKeys.QUOTE_REPLY_ENABLED]: true,
           [StorageKeys.HIGHLIGHT_ENABLED]: true,
@@ -925,6 +929,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiTimeline)).not.toBe('mounted');
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiGemsSidebar)).not.toBe('mounted');
       expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiContextSync)).not.toBe('mounted');
+      expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport)).not.toBe('mounted');
       expect(packPanel()).toBe(false);
       pluginHost.stop();
       cleanupManager.executeCleanups();
@@ -946,6 +951,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiTimeline)).toBe('admitted');
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiGemsSidebar)).toBe('admitted');
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiContextSync)).toBe('admitted');
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport)).toBe('admitted');
     cleanupManager.executeCleanups();
   });
 });

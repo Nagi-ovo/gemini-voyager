@@ -195,6 +195,24 @@ describe('plugin table', () => {
     }
   });
 
+  it('links Deep Research export to its existing guide in every locale, on by default', () => {
+    const manifests = BUILTIN_PLUGINS.filter(
+      (plugin) => plugin.id === OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
+    );
+    const rows = featureRows(builtinPlugins(manifests));
+    expect(ticked(rows)).toEqual([['deep-research-export', ['gemini']]]);
+    for (const entry of PLUGINS_LOCALES) {
+      const prefix = entry.prefix ? `/${entry.prefix}` : '';
+      const exists = (path: string) => existsSync(resolve('docs', `.${path}.md`));
+      const page = renderPluginsPage(entry, rows, FRESH_INSTALL_ON, exists);
+      const plugin = manifests[0];
+      const name = (plugin.i18n?.[entry.manifest]?.name ?? plugin.name).replace(/^Gemini · /, '');
+      const label = `[${name}](${prefix}/guide/deep-research)`;
+      expect(page).toContain(`| **${label}** |`);
+      expect(cells(page, label)).toEqual(['on', '', '', '', '']);
+    }
+  });
+
   it('links Gems and Context Sync in all locales with their distinct defaults', () => {
     const manifests = BUILTIN_PLUGINS.filter(
       (plugin) =>

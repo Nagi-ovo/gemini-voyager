@@ -314,6 +314,8 @@ export const StorageKeys = {
   // Export
   // Default on: Canvas copy predates its sync switch.
   CANVAS_COPY_ENABLED: 'gvCanvasCopyEnabled',
+  // Default on: controls only the Deep Research export menu entries.
+  DEEP_RESEARCH_EXPORT_ENABLED: 'gvDeepResearchExportEnabled',
   EXPORT_IMAGE_WIDTH: 'gvExportImageWidth',
   EXPORT_SPEAKER_LABELS: 'gvExportSpeakerLabels',
   // Fallback top-right export toolbar shown when Gemini's logo (the normal

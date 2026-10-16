@@ -1,16 +1,33 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { StorageKeys } from '@/core/types/common';
 import { ConversationExportService } from '@/features/export/services/ConversationExportService';
+import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { toastDriver } from '@/tests/toastDriver';
-import type { AppLanguage } from '@/utils/language';
+import { setCachedLanguage } from '@/utils/i18n';
 
-import {
-  applyDeepResearchDownloadButtonI18n,
-  applyDeepResearchSaveReportButtonI18n,
-  injectDownloadButton,
-  isDeepResearchReportMenuPanel,
-} from '../menuButton';
+import { isDeepResearchReportMenuPanel } from '../menuButton';
+import { activateGeminiDeepResearchExport } from '../pluginHandler';
+
+let scope: PluginScope;
+beforeEach(() => {
+  scope = new PluginScope();
+  setCachedLanguage('en');
+});
+afterEach(async () => {
+  await scope.dispose();
+  document.body.replaceChildren();
+});
+
+async function injectDownloadButton(panel: HTMLElement): Promise<void> {
+  if (!document.querySelector('deep-research-immersive-panel')) {
+    document.body.append(document.createElement('deep-research-immersive-panel'));
+  }
+  activateGeminiDeepResearchExport(scope);
+  await vi.waitFor(() =>
+    expect(panel.querySelector('.gv-deep-research-save-report')).not.toBeNull(),
+  );
+}
 
 vi.mock('@/features/export/services/ImageExportPreferenceService', () => ({
   getSavedImageExportWidth: async () => 800,
@@ -113,7 +130,7 @@ function createDeepResearchReportMenuPanel(
   return panel;
 }
 
-describe('applyDeepResearchDownloadButtonI18n', () => {
+describe('Deep Research export menu handler', () => {
   it('identifies deep research report share/export menu panel', () => {
     const panel = document.createElement('div');
     panel.className = 'mat-mdc-menu-panel';
@@ -217,79 +234,16 @@ describe('applyDeepResearchDownloadButtonI18n', () => {
     expect(isDeepResearchReportMenuPanel(panel)).toBe(false);
   });
 
-  it('updates label and tooltip according to language', () => {
-    const button = document.createElement('button');
-    const span = document.createElement('span');
-    span.className = 'mat-mdc-menu-item-text';
-    span.textContent = ' placeholder';
-    button.appendChild(span);
-
-    const dict: Record<AppLanguage, Record<string, string>> = {
-      en: { deepResearchDownload: 'Download', deepResearchDownloadTooltip: 'Download (MD)' },
-      zh: { deepResearchDownload: '下载', deepResearchDownloadTooltip: '下载（MD）' },
-      zh_TW: { deepResearchDownload: '下載', deepResearchDownloadTooltip: '下載（MD）' },
-      ja: {
-        deepResearchDownload: 'ダウンロード',
-        deepResearchDownloadTooltip: 'ダウンロード（MD）',
-      },
-      fr: { deepResearchDownload: 'Télécharger', deepResearchDownloadTooltip: 'Télécharger (MD)' },
-      es: { deepResearchDownload: 'Descargar', deepResearchDownloadTooltip: 'Descargar (MD)' },
-      pt: { deepResearchDownload: 'Baixar', deepResearchDownloadTooltip: 'Baixar (MD)' },
-      ar: { deepResearchDownload: 'تحميل', deepResearchDownloadTooltip: 'تحميل (MD)' },
-      ru: { deepResearchDownload: 'Скачать', deepResearchDownloadTooltip: 'Скачать (MD)' },
-      ko: { deepResearchDownload: '다운로드', deepResearchDownloadTooltip: '다운로드 (MD)' },
-    };
-
-    applyDeepResearchDownloadButtonI18n(button, dict, 'ja');
-
-    expect(button.title).toBe('ダウンロード（MD）');
-    expect(button.getAttribute('aria-label')).toBe('ダウンロード（MD）');
-    expect(span.textContent).toBe('ダウンロード');
-  });
-
-  it('updates save report label and tooltip according to language', () => {
-    const button = document.createElement('button');
-    const span = document.createElement('span');
-    span.className = 'mat-mdc-menu-item-text';
-    span.textContent = ' placeholder';
-    button.appendChild(span);
-
-    const dict: Record<AppLanguage, Record<string, string>> = {
-      en: { deepResearchSaveReport: 'Save report', deepResearchSaveReportTooltip: 'Save report' },
-      zh: { deepResearchSaveReport: '保存报告', deepResearchSaveReportTooltip: '保存报告' },
-      zh_TW: { deepResearchSaveReport: '儲存報告', deepResearchSaveReportTooltip: '儲存報告' },
-      ja: {
-        deepResearchSaveReport: 'レポートを保存',
-        deepResearchSaveReportTooltip: 'レポートを保存',
-      },
-      fr: {
-        deepResearchSaveReport: 'Enregistrer le rapport',
-        deepResearchSaveReportTooltip: 'Enregistrer le rapport',
-      },
-      es: {
-        deepResearchSaveReport: 'Guardar informe',
-        deepResearchSaveReportTooltip: 'Guardar informe',
-      },
-      pt: {
-        deepResearchSaveReport: 'Salvar relatório',
-        deepResearchSaveReportTooltip: 'Salvar relatório',
-      },
-      ar: { deepResearchSaveReport: 'حفظ التقرير', deepResearchSaveReportTooltip: 'حفظ التقرير' },
-      ru: {
-        deepResearchSaveReport: 'Сохранить отчет',
-        deepResearchSaveReportTooltip: 'Сохранить отчет',
-      },
-      ko: {
-        deepResearchSaveReport: '보고서 저장',
-        deepResearchSaveReportTooltip: '보고서 저장',
-      },
-    };
-
-    applyDeepResearchSaveReportButtonI18n(button, dict, 'zh');
-
-    expect(button.title).toBe('保存报告');
-    expect(button.getAttribute('aria-label')).toBe('保存报告');
-    expect(span.textContent).toBe('保存报告');
+  it('updates both labels and tooltips from the cached language while the menu is open', async () => {
+    const panel = createDeepResearchReportMenuPanel();
+    await injectDownloadButton(panel);
+    setCachedLanguage('zh');
+    const download = panel.querySelector<HTMLElement>('.gv-deep-research-download')!;
+    const report = panel.querySelector<HTMLElement>('.gv-deep-research-save-report')!;
+    expect(download.textContent).toContain('下载');
+    expect(download.getAttribute('aria-label')).toBe(download.title);
+    expect(report.textContent).toContain('保存报告');
+    expect(report.getAttribute('aria-label')).toBe(report.title);
   });
 
   it('injects deep research export buttons using native menu item style baseline', async () => {

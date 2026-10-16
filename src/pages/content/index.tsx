@@ -16,7 +16,6 @@ import { startGeminiChatAppearance } from './appearanceStartup';
 import { startChangelog } from './changelog/index';
 import { runCoachmarkSequence } from './coachmark';
 import { claimContentScript } from './contentScriptHandoff';
-import { startDeepResearchExport } from './deepResearch/index';
 import { startDevSettingsBridge } from './devSettingsBridge';
 import { flushDraftsBeforeUnload } from './draftSave/draftUnloadFlush';
 import { startExportButton } from './export/index';
@@ -254,7 +253,7 @@ async function initializeFeatures(): Promise<void> {
 
       // Independent content helpers can initialize in the same idle slice.
       await settle(mountForPage(NATIVE_FEATURES.watermarkRemover));
-      startDeepResearchExport();
+      await settle(geminiBuiltins.startDeepResearchExport());
       await settle(geminiBuiltins.startContextSync());
       await settle(mountForPage(NATIVE_FEATURES.gemsHider));
       await delay(LIGHT_FEATURE_INIT_DELAY);

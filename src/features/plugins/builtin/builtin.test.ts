@@ -273,6 +273,7 @@ describe('BUILTIN_PLUGINS', () => {
 
   it.each([
     ['canvas copy', 'voyager.gemini-canvas-copy'],
+    ['Deep Research export', 'voyager.gemini-deep-research-export'],
     ['context sync', 'voyager.gemini-context-sync'],
     ['auto-hide sidebar', 'voyager.gemini-sidebar-auto-hide'],
     ['fully hide sidebar', 'voyager.gemini-sidebar-full-hide'],

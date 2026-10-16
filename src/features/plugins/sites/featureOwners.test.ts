@@ -67,10 +67,11 @@ describe('feature owners', () => {
     }
   });
 
-  it('hands prompt history and input collapse to fixed-id builtins that open no primitive', () => {
+  it('hands feature-specific runtimes to fixed-id builtins that open no primitive', () => {
     for (const [feature, id] of [
       ['promptHistory', 'voyager.gemini-prompt-history'],
       ['inputCollapse', 'voyager.gemini-input-collapse'],
+      ['deepResearchExport', 'voyager.gemini-deep-research-export'],
     ] as const) {
       expect(isPackagedOfficialPluginId(id)).toBe(true);
       expect(ownedFeatureByPluginId(id)).toMatchObject({ site: 'gemini', feature, handlers: [] });
