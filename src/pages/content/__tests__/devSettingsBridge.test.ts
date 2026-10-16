@@ -69,6 +69,22 @@ describe('dev settings bridge', () => {
     );
   });
 
+  it('deletes listed settings so a never-set setting can be reproduced', async () => {
+    postFromPage({ source: DEV_SETTINGS_REQUEST_SOURCE, id: 3, action: 'remove', keys: [NOTIFY] });
+
+    await vi.waitFor(() =>
+      expect(replies).toEqual([{ source: DEV_SETTINGS_RESULT_SOURCE, id: 3, ok: true }]),
+    );
+    expect(chrome.storage.sync.remove).toHaveBeenCalledWith([NOTIFY]);
+  });
+
+  it('refuses a remove without a key list instead of clearing every setting', async () => {
+    postFromPage({ source: DEV_SETTINGS_REQUEST_SOURCE, id: 4, action: 'remove' });
+
+    await vi.waitFor(() => expect(replies).toMatchObject([{ id: 4, ok: false }]));
+    expect(chrome.storage.sync.remove).not.toHaveBeenCalled();
+  });
+
   it('refuses keys that are not Voyager settings and writes nothing', async () => {
     postFromPage({
       source: DEV_SETTINGS_REQUEST_SOURCE,

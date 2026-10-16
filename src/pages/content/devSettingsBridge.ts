@@ -9,7 +9,8 @@
  *   window.postMessage({ source: 'gv-dev-settings', id: 1, action: 'set',
  *     values: { gvResponseCompleteNotificationEnabled: true } }, location.origin);
  *
- * `get` reads the listed keys (every known key when `keys` is omitted). `area`
+ * `get` reads the listed keys (every known key when `keys` is omitted), and
+ * `remove` deletes them, which is how a never-set setting is reproduced. `area`
  * is `'sync'` (default) or `'local'`. The reply is posted back with source
  * `'gv-dev-settings-result'` and the same `id`. Writes reach storage only:
  * popup-side steps such as permission prompts do not run.
@@ -52,9 +53,10 @@ export async function handleDevSettingsRequest(
   if (!area) return { ok: false, error: 'area must be "sync" or "local"' };
   const storage: chrome.storage.StorageArea = chrome.storage[area];
 
-  if (request.action === 'get') {
+  if (request.action === 'get' || request.action === 'remove') {
+    const removing = request.action === 'remove';
     const keys =
-      request.keys === undefined
+      request.keys === undefined && !removing
         ? [...KNOWN_KEYS]
         : Array.isArray(request.keys) && request.keys.every((key) => typeof key === 'string')
           ? request.keys
@@ -62,7 +64,9 @@ export async function handleDevSettingsRequest(
     if (!keys) return { ok: false, error: 'keys must be a list of setting names' };
     const rejected = unknownKeys(keys);
     if (rejected.length) return { ok: false, error: `unknown keys: ${rejected.join(', ')}` };
-    return { ok: true, values: await storage.get<Record<string, unknown>>(keys) };
+    if (!removing) return { ok: true, values: await storage.get<Record<string, unknown>>(keys) };
+    await storage.remove(keys);
+    return { ok: true };
   }
 
   if (request.action === 'set') {
@@ -73,7 +77,7 @@ export async function handleDevSettingsRequest(
     return { ok: true };
   }
 
-  return { ok: false, error: 'action must be "get" or "set"' };
+  return { ok: false, error: 'action must be "get", "set" or "remove"' };
 }
 
 export function startDevSettingsBridge(): () => void {
