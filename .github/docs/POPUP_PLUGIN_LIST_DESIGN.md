@@ -126,7 +126,7 @@ manifest 的一句话描述（本地化）
 
 ### 2.6 留在非插件卡片的内容（Gemini 终态）
 
-云同步与存储；文件夹（不含 Fork）、文件夹间距与缩进；Prompt Manager（不含 Prompt history）；快捷键；通用（常驻导出栏、远程公告及其权限按钮、更新日志徽标、已禁用的标签标题行）；AI Studio 另有总开关。Context Sync、NanoBanana、视觉效果和其余布局滑块在各自迁移前保留卡片。
+云同步与存储；文件夹（不含 Fork）、文件夹间距与缩进；Prompt Manager（不含 Prompt history）；快捷键；通用（常驻导出栏、远程公告及其权限按钮、更新日志徽标、已禁用的标签标题行）；AI Studio 另有总开关。Context Sync、NanoBanana、视觉效果和其余布局滑块在各自迁移前保留卡片（现均已成行，见 §4.4）。
 
 ### 2.7 无障碍与 RTL
 
@@ -284,7 +284,7 @@ export interface OfficialPluginEntry {
 | 批次 | 状态   | 备注                                                                                                                                                                                                                                                                                                                                                                                                       |
 | ---- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1–3  | 已完成 |                                                                                                                                                                                                                                                                                                                                                                                                            |
-| 4    | 已完成 | Formula copy（G + A）、Highlight、Response notification；随后迁入的 Canvas copy、Gems sidebar（数量 0 = 隐藏列表）、Context Sync（卡片成为面板，同步请求由 `Popup` 持有）、Deep Research export、Markdown fix、Visual effects（Gemini / AI Studio 一行，其他站点保留卡片）也已成行                                                                                                                         |
+| 4    | 已完成 | Formula copy（G + A）、Highlight、Response notification；随后迁入的 Canvas copy、Gems sidebar（数量 0 = 隐藏列表）、Context Sync（卡片成为面板，同步请求由 `Popup` 持有）、Deep Research export、Markdown fix、Visual effects（Gemini / AI Studio 一行；其他站点的卡片在 Batch 7 也改成行）也已成行                                                                                                        |
 | 5    | 已完成 | Timeline 成为"对话"组的一行，选项（样式、滚动模式、隐藏容器、可拖动、固定预览、层级、重置位置、收藏历史）在它的面板里，分段选择改为 `radiogroup`、不再用 `left` 计算（§2.7）；Message timestamps 单独一行。AI Studio sidebar width 成行（未存开关时跟随文件夹开关，宽度写入不再顺带写开关）。`officialFeatureSetting.ts` 随最后一个 `LOCATIONS` 条目删除                                                   |
 | 6    | 已完成 | Batch delete（G + A）成为"对话"组的一行，默认开；文件夹开关关掉时开关置灰，行下提示去 Folder Options → Enable folder feature 打开（`requires`）。NanoBanana 两行放进"内容"组而非 §2 表里的"对话"组（它处理的是回复里的图片），Preview 行用 Experimental 徽标代替原来的 Unstable；任一开关都写两个拆分键并清掉旧的共享键（`enableWrite`，取代 `useWatermarkPopupSettings`）。NanoBanana 卡片和 section 删除 |
 | 7    | 已完成 | §2.4 的跟进：插件站 rail 的选项成为它插件行下的 Options 面板（rail 关闭时收藏库和消息时间仍可用，其余显示为禁用），消息时间是其中一项；Visual effects 在插件站插件卡里成行，chrome:// 等页面在回退设置里也有这一行。`TimelineSettingsCard`、`VisualEffectPicker` 卡片及 `'timeline'`、`'visualEffect'` section 删除，旧排序里的这两个槽位按惯例丢弃                                                        |

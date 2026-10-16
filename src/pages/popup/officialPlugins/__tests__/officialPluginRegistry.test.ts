@@ -7,7 +7,10 @@ import {
 } from '@/features/plugins/sites/featureOwners';
 import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
 import { BundledCatalogPluginSource } from '@/features/plugins/sources/BundledCatalogPluginSource';
-import { legacyBindingFor } from '@/features/plugins/storage/legacySettingBindings';
+import {
+  LEGACY_ENABLE_BINDINGS,
+  legacyBindingFor,
+} from '@/features/plugins/storage/legacySettingBindings';
 import { legacyValueBindingsFor } from '@/features/plugins/storage/legacyValueBindings';
 import { TRANSLATIONS } from '@/utils/translations';
 
@@ -35,6 +38,11 @@ describe('the official plugin list registry', () => {
   it('gives every packaged Gemini and AI Studio plugin a row', () => {
     const listed = new Set(OFFICIAL_PLUGIN_ENTRIES.map((entry) => entry.id));
     expect(Object.values(OFFICIAL_PLUGIN_IDS).filter((id) => !listed.has(id))).toEqual([]);
+  });
+
+  it('gives every plugin bound to an old setting a row, so none is left without a switch', () => {
+    const listed = new Set(OFFICIAL_PLUGIN_ENTRIES.map((entry) => entry.id));
+    expect(Object.keys(LEGACY_ENABLE_BINDINGS).filter((id) => !listed.has(id))).toEqual([]);
   });
 
   it('lists only plugins whose switch is their old setting, so a row never writes plugin state', () => {
