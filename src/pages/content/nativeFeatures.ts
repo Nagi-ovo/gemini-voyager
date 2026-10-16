@@ -18,7 +18,6 @@ import { startSelectionToolbarHost } from './selectionToolbar/host';
 import { startStorageQuotaWarningToast } from './storageQuotaWarning';
 import { startHistoryTimestampPageService } from './timestamp/historyTimestampPageService';
 import { startMessageTimestampPageService } from './timestamp/messageTimestampPageService';
-import { startVisualEffects } from './visualEffects';
 import { startWatermarkRemoverFeature } from './watermarkRemover/feature';
 
 /** Permanent page services and unmigrated native features; optional migrated features belong to PluginHost. */
@@ -86,12 +85,6 @@ export const NATIVE_FEATURES = {
     id: 'default-model-star-cleanup',
     position: CleanupPositions.CleanupDefaultModel,
     start: startDefaultModelStarCleanupPageService,
-  },
-  /** Turning an effect off lets it drain on screen; its module owns that lifetime. */
-  visualEffects: {
-    id: 'visual-effects',
-    position: CleanupPositions.CleanupVisualEffects,
-    start: startVisualEffects,
   },
   /**
    * No `toggle`: three keys decide the mode, and a settings change must keep an

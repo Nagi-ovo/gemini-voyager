@@ -1,7 +1,7 @@
 /**
- * The single wiring table between builtin plugin manifests (BUILTIN_PLUGINS)
+ * The wiring tables between builtin plugin manifests (BUILTIN_PLUGINS)
  * and their first-party native handlers. Kept as data so a test can compare
- * its keys against NATIVE_BUILTIN_PLUGIN_IDS — adding a manifest without a
+ * their keys against NATIVE_BUILTIN_PLUGIN_IDS — adding a manifest without a
  * handler (or vice versa) fails the suite instead of shipping a dead toggle.
  */
 import { NATIVE_BUILTIN_PLUGIN_IDS } from '@/features/plugins/builtin';
@@ -53,6 +53,12 @@ import {
 } from './sidebarWidth/pluginHandler';
 import { activateGeminiTimeline } from './timeline/pluginHandler';
 import { activateGeminiUsageStatus } from './usageStatus/pluginHandler';
+import { createVisualEffectsRuntime } from './visualEffects';
+
+/** Page-owned runtimes may outlive an activation while their particles drain. */
+export const NATIVE_HANDLER_FACTORIES = {
+  'voyager.visual-effects': createVisualEffectsRuntime,
+} as const;
 
 export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = {
   'voyager.gemini-context-sync': { activate: activateGeminiContextSync },
@@ -135,9 +141,17 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
  * Register every builtin native handler and verify the two-way manifest ↔
  * handler binding. Must run unconditionally, before `startPluginHost()`.
  */
-export function registerBuiltinNativeHandlers(): void {
+export function registerBuiltinNativeHandlers(): () => void {
+  const pageRuntimes = Object.entries(NATIVE_HANDLER_FACTORIES).map(([id, create]) => {
+    const runtime = create();
+    registerNativeHandler(id, runtime.handler);
+    return runtime;
+  });
   for (const [id, handler] of Object.entries(NATIVE_HANDLER_BINDINGS)) {
     registerNativeHandler(id, handler);
   }
   verifyNativeHandlerBindings(NATIVE_BUILTIN_PLUGIN_IDS);
+  return () => {
+    for (const runtime of pageRuntimes) runtime.destroy();
+  };
 }

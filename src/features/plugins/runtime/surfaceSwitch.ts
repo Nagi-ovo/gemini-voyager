@@ -4,9 +4,8 @@
  * toggle stored in `chrome.storage.sync`, on by default); Gemini has no
  * equivalent and plugin platforms are governed by each plugin's own toggle.
  *
- * `PluginHost` mounts nothing while the switch is off and follows it live:
- * turning it off unmounts every plugin on the page, turning it on mounts the
- * enabled ones again.
+ * `PluginHost` follows it live for ordinary plugins. Shared Visual effects
+ * keeps its native, pre-initialization behavior independent of this switch.
  */
 import { StorageKeys } from '@/core/types/common';
 

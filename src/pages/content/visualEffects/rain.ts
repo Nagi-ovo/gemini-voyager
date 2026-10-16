@@ -20,12 +20,9 @@
  *   atmosphere of Shinjuku Gyoen in the rain.
  */
 
-import type { StopNativeFeature } from '../featureLifecycle';
+import type { VisualEffectRenderer } from './types';
 
 const CANVAS_ID = 'gv-rain-effect-canvas';
-const STORAGE_KEY = 'gvVisualEffect';
-const LEGACY_KEY = 'gvSnowEffect';
-const EFFECT_VALUE = 'rain';
 
 /** Wind angle in radians (~8° from vertical) */
 const WIND_ANGLE = 0.14;
@@ -83,319 +80,254 @@ interface Splash {
   expandSpeed: number;
 }
 
-/** Effect lifecycle: off → active ⇄ draining → off */
-let state: 'off' | 'active' | 'draining' = 'off';
-let canvas: HTMLCanvasElement | null = null;
-let ctx: CanvasRenderingContext2D | null = null;
-let animationFrameId: number | null = null;
-let drops: Raindrop[] = [];
-let splashes: Splash[] = [];
-let resizeHandler: (() => void) | null = null;
-let visibilityHandler: (() => void) | null = null;
+export function createRainRenderer(): VisualEffectRenderer {
+  /** Effect lifecycle: off → active ⇄ draining → off */
+  let state: 'off' | 'active' | 'draining' = 'off';
+  let canvas: HTMLCanvasElement | null = null;
+  let ctx: CanvasRenderingContext2D | null = null;
+  let animationFrameId: number | null = null;
+  let drops: Raindrop[] = [];
+  let splashes: Splash[] = [];
+  let resizeHandler: (() => void) | null = null;
+  let visibilityHandler: (() => void) | null = null;
 
-function rand(min: number, max: number): number {
-  return min + Math.random() * (max - min);
-}
-
-function createDrop(
-  canvasWidth: number,
-  canvasHeight: number,
-  layer: (typeof LAYERS)[number],
-  randomY: boolean,
-  canSplash: boolean,
-): Raindrop {
-  return {
-    x: Math.random() * (canvasWidth + 100) - 50,
-    y: randomY ? Math.random() * canvasHeight : -(Math.random() * canvasHeight * 0.3),
-    length: rand(layer.length[0], layer.length[1]),
-    speed: rand(layer.speed[0], layer.speed[1]),
-    opacity: rand(layer.opacity[0], layer.opacity[1]),
-    lineWidth: rand(layer.width[0], layer.width[1]),
-    canSplash,
-  };
-}
-
-function initDrops(width: number, height: number): void {
-  const items: Raindrop[] = [];
-  for (let li = 0; li < LAYERS.length; li++) {
-    const layer = LAYERS[li];
-    const canSplash = li >= 1; // mid + near
-    for (let i = 0; i < layer.count; i++) {
-      items.push(createDrop(width, height, layer, true, canSplash));
-    }
+  function rand(min: number, max: number): number {
+    return min + Math.random() * (max - min);
   }
-  drops = items;
-  splashes = [];
-}
 
-function spawnSplash(x: number, y: number): void {
-  if (splashes.length >= MAX_SPLASHES) return;
-  splashes.push({
-    x,
-    y,
-    radius: 0.5,
-    maxRadius: rand(3, 8),
-    opacity: rand(0.15, 0.3),
-    fadeSpeed: rand(0.004, 0.01),
-    expandSpeed: rand(0.15, 0.4),
-  });
-}
+  function createDrop(
+    canvasWidth: number,
+    canvasHeight: number,
+    layer: (typeof LAYERS)[number],
+    randomY: boolean,
+    canSplash: boolean,
+  ): Raindrop {
+    return {
+      x: Math.random() * (canvasWidth + 100) - 50,
+      y: randomY ? Math.random() * canvasHeight : -(Math.random() * canvasHeight * 0.3),
+      length: rand(layer.length[0], layer.length[1]),
+      speed: rand(layer.speed[0], layer.speed[1]),
+      opacity: rand(layer.opacity[0], layer.opacity[1]),
+      lineWidth: rand(layer.width[0], layer.width[1]),
+      canSplash,
+    };
+  }
 
-function updateAndDraw(_time: number): void {
-  if (!ctx || !canvas) return;
+  function initDrops(width: number, height: number): void {
+    const items: Raindrop[] = [];
+    for (let li = 0; li < LAYERS.length; li++) {
+      const layer = LAYERS[li];
+      const canSplash = li >= 1; // mid + near
+      for (let i = 0; i < layer.count; i++) {
+        items.push(createDrop(width, height, layer, true, canSplash));
+      }
+    }
+    drops = items;
+    splashes = [];
+  }
 
-  const { width, height } = canvas;
-  ctx.clearRect(0, 0, width, height);
+  function spawnSplash(x: number, y: number): void {
+    if (splashes.length >= MAX_SPLASHES) return;
+    splashes.push({
+      x,
+      y,
+      radius: 0.5,
+      maxRadius: rand(3, 8),
+      opacity: rand(0.15, 0.3),
+      fadeSpeed: rand(0.004, 0.01),
+      expandSpeed: rand(0.15, 0.4),
+    });
+  }
 
-  // --- Draw rain streaks ---
-  ctx.lineCap = 'round';
+  function updateAndDraw(_time: number): void {
+    if (!ctx || !canvas) return;
 
-  let currentOpacity = -1;
-  let currentWidth = -1;
-  let visibleDropCount = 0;
+    const { width, height } = canvas;
+    ctx.clearRect(0, 0, width, height);
 
-  for (const d of drops) {
-    const prevY = d.y;
+    // --- Draw rain streaks ---
+    ctx.lineCap = 'round';
 
-    // Move
-    d.x += d.speed * WIND_DX;
-    d.y += d.speed * WIND_DY;
+    let currentOpacity = -1;
+    let currentWidth = -1;
+    let visibleDropCount = 0;
 
-    // Off-screen bottom
-    if (d.y > height + d.length) {
-      if (state === 'draining') {
-        // Spawn one final splash as the drop exits (only on first crossing)
-        if (prevY <= height + d.length && d.canSplash && Math.random() < 0.35) {
+    for (const d of drops) {
+      const prevY = d.y;
+
+      // Move
+      d.x += d.speed * WIND_DX;
+      d.y += d.speed * WIND_DY;
+
+      // Off-screen bottom
+      if (d.y > height + d.length) {
+        if (state === 'draining') {
+          // Spawn one final splash as the drop exits (only on first crossing)
+          if (prevY <= height + d.length && d.canSplash && Math.random() < 0.35) {
+            spawnSplash(d.x, height - 1);
+          }
+          continue;
+        }
+        // Normal: recycle + splash
+        if (d.canSplash && Math.random() < 0.35) {
           spawnSplash(d.x, height - 1);
         }
+        d.y = -(d.length + Math.random() * height * 0.2);
+        d.x = Math.random() * (width + 100) - 50;
+      }
+
+      // Off-screen right (wind pushes drops rightward)
+      if (d.x > width + 50) {
+        if (state === 'draining') {
+          continue;
+        }
+        d.x = -50;
+      }
+
+      visibleDropCount++;
+
+      // Batch strokeStyle
+      const qo = Math.round(d.opacity * 30) / 30;
+      if (qo !== currentOpacity) {
+        currentOpacity = qo;
+        ctx.strokeStyle = `rgba(180,200,220,${currentOpacity})`;
+      }
+      const qw = Math.round(d.lineWidth * 4) / 4;
+      if (qw !== currentWidth) {
+        currentWidth = qw;
+        ctx.lineWidth = currentWidth;
+      }
+
+      ctx.beginPath();
+      ctx.moveTo(d.x, d.y);
+      ctx.lineTo(d.x + d.length * WIND_DX, d.y + d.length * WIND_DY);
+      ctx.stroke();
+    }
+
+    // --- Draw splashes ---
+    ctx.lineWidth = 0.6;
+    for (let i = splashes.length - 1; i >= 0; i--) {
+      const s = splashes[i];
+      s.radius += s.expandSpeed;
+      s.opacity -= s.fadeSpeed;
+
+      if (s.opacity <= 0 || s.radius >= s.maxRadius) {
+        splashes.splice(i, 1);
         continue;
       }
-      // Normal: recycle + splash
-      if (d.canSplash && Math.random() < 0.35) {
-        spawnSplash(d.x, height - 1);
-      }
-      d.y = -(d.length + Math.random() * height * 0.2);
-      d.x = Math.random() * (width + 100) - 50;
+
+      ctx.strokeStyle = `rgba(180,200,220,${s.opacity})`;
+      ctx.beginPath();
+      ctx.ellipse(s.x, s.y, s.radius, s.radius * 0.35, 0, 0, Math.PI * 2);
+      ctx.stroke();
     }
 
-    // Off-screen right (wind pushes drops rightward)
-    if (d.x > width + 50) {
-      if (state === 'draining') {
-        continue;
-      }
-      d.x = -50;
+    // All drops off-screen and all splashes faded — finish draining
+    if (state === 'draining' && visibleDropCount === 0 && splashes.length === 0) {
+      finalizeDrain();
+      return;
     }
 
-    visibleDropCount++;
+    animationFrameId = requestAnimationFrame(updateAndDraw);
+  }
 
-    // Batch strokeStyle
-    const qo = Math.round(d.opacity * 30) / 30;
-    if (qo !== currentOpacity) {
-      currentOpacity = qo;
-      ctx.strokeStyle = `rgba(180,200,220,${currentOpacity})`;
+  function resizeCanvas(): void {
+    if (!canvas) return;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function startAnimation(): void {
+    if (animationFrameId !== null) return;
+    animationFrameId = requestAnimationFrame(updateAndDraw);
+  }
+
+  function stopAnimation(): void {
+    if (animationFrameId !== null) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
     }
-    const qw = Math.round(d.lineWidth * 4) / 4;
-    if (qw !== currentWidth) {
-      currentWidth = qw;
-      ctx.lineWidth = currentWidth;
-    }
-
-    ctx.beginPath();
-    ctx.moveTo(d.x, d.y);
-    ctx.lineTo(d.x + d.length * WIND_DX, d.y + d.length * WIND_DY);
-    ctx.stroke();
   }
 
-  // --- Draw splashes ---
-  ctx.lineWidth = 0.6;
-  for (let i = splashes.length - 1; i >= 0; i--) {
-    const s = splashes[i];
-    s.radius += s.expandSpeed;
-    s.opacity -= s.fadeSpeed;
-
-    if (s.opacity <= 0 || s.radius >= s.maxRadius) {
-      splashes.splice(i, 1);
-      continue;
-    }
-
-    ctx.strokeStyle = `rgba(180,200,220,${s.opacity})`;
-    ctx.beginPath();
-    ctx.ellipse(s.x, s.y, s.radius, s.radius * 0.35, 0, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  // All drops off-screen and all splashes faded — finish draining
-  if (state === 'draining' && visibleDropCount === 0 && splashes.length === 0) {
-    finalizeDrain();
-    return;
-  }
-
-  animationFrameId = requestAnimationFrame(updateAndDraw);
-}
-
-function resizeCanvas(): void {
-  if (!canvas) return;
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-
-function startAnimation(): void {
-  if (animationFrameId !== null) return;
-  animationFrameId = requestAnimationFrame(updateAndDraw);
-}
-
-function stopAnimation(): void {
-  if (animationFrameId !== null) {
-    cancelAnimationFrame(animationFrameId);
-    animationFrameId = null;
-  }
-}
-
-function handleVisibilityChange(): void {
-  if (document.visibilityState === 'visible') {
-    startAnimation();
-  } else {
-    stopAnimation();
-  }
-}
-
-function enable(): void {
-  if (state === 'active') return;
-  if (state === 'draining') {
-    // Cancel drain — resume normal drop recycling
-    state = 'active';
-    return;
-  }
-  state = 'active';
-
-  canvas = document.createElement('canvas');
-  canvas.id = CANVAS_ID;
-  canvas.style.cssText =
-    'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483647;';
-  document.documentElement.appendChild(canvas);
-
-  ctx = canvas.getContext('2d');
-  if (!ctx) {
-    forceDisable();
-    return;
-  }
-
-  resizeCanvas();
-  initDrops(canvas.width, canvas.height);
-  if (document.visibilityState === 'visible') startAnimation();
-
-  resizeHandler = resizeCanvas;
-  window.addEventListener('resize', resizeHandler);
-
-  visibilityHandler = handleVisibilityChange;
-  document.addEventListener('visibilitychange', visibilityHandler);
-}
-
-/**
- * Graceful disable: stop spawning new drops and let existing ones
- * fall off with final splash ripples.
- */
-function disable(): void {
-  if (state !== 'active') return;
-  state = 'draining';
-}
-
-/** Complete the drain: remove canvas and clean up all resources. */
-function finalizeDrain(): void {
-  state = 'off';
-  stopAnimation();
-
-  if (resizeHandler) {
-    window.removeEventListener('resize', resizeHandler);
-    resizeHandler = null;
-  }
-
-  if (visibilityHandler) {
-    document.removeEventListener('visibilitychange', visibilityHandler);
-    visibilityHandler = null;
-  }
-
-  if (canvas) {
-    canvas.remove();
-    canvas = null;
-  }
-
-  ctx = null;
-  drops = [];
-  splashes = [];
-}
-
-/** Immediate disable: remove everything without draining (e.g. page unload). */
-function forceDisable(): void {
-  if (state === 'off') return;
-  finalizeDrain();
-}
-
-function resolveEffect(res: Record<string, unknown>): string {
-  if (typeof res[STORAGE_KEY] === 'string') return res[STORAGE_KEY] as string;
-  if (res[LEGACY_KEY] === true) return 'snow';
-  return 'off';
-}
-
-/** Stop of the newest `startRainEffect` run, which owns the canvas. */
-let stopActiveRun: StopNativeFeature | null = null;
-
-/**
- * Follow the `gvVisualEffect` setting until the returned stop runs. Turning
- * the setting off drains the effect; stop removes the canvas and every
- * listener at once.
- */
-export function startRainEffect(): StopNativeFeature {
-  // A second start replaces the first instead of stacking listeners on one canvas.
-  stopActiveRun?.();
-  let stopped = false;
-
-  const handleStorageChange = (
-    changes: Record<string, chrome.storage.StorageChange>,
-    area: string,
-  ): void => {
-    if (area !== 'sync' || !changes[STORAGE_KEY]) return;
-    if (changes[STORAGE_KEY].newValue === EFFECT_VALUE) {
-      enable();
+  function handleVisibilityChange(): void {
+    if (document.visibilityState === 'visible') {
+      startAnimation();
     } else {
-      disable();
+      stopAnimation();
     }
-  };
-  const handleBeforeUnload = (): void => {
-    forceDisable();
-  };
-
-  try {
-    chrome.storage?.sync?.get({ [STORAGE_KEY]: null, [LEGACY_KEY]: false }, (res) => {
-      // The read can land after stop; enabling then would leave a canvas no stop removes.
-      if (stopped) return;
-      if (resolveEffect(res) === EFFECT_VALUE) enable();
-    });
-  } catch (error) {
-    console.error('[Gemini Voyager] Failed to get rain effect setting:', error);
   }
 
-  try {
-    chrome.storage?.onChanged?.addListener(handleStorageChange);
-  } catch (error) {
-    console.error('[Gemini Voyager] Failed to add storage listener for rain effect:', error);
+  function enable(): void {
+    if (state === 'active') return;
+    if (state === 'draining') {
+      // Cancel drain — resume normal drop recycling
+      state = 'active';
+      return;
+    }
+    state = 'active';
+
+    canvas = document.createElement('canvas');
+    canvas.id = CANVAS_ID;
+    canvas.style.cssText =
+      'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483647;';
+    document.documentElement.appendChild(canvas);
+
+    ctx = canvas.getContext('2d');
+    if (!ctx) {
+      forceDisable();
+      return;
+    }
+
+    resizeCanvas();
+    initDrops(canvas.width, canvas.height);
+    if (document.visibilityState === 'visible') startAnimation();
+
+    resizeHandler = resizeCanvas;
+    window.addEventListener('resize', resizeHandler);
+
+    visibilityHandler = handleVisibilityChange;
+    document.addEventListener('visibilitychange', visibilityHandler);
   }
 
-  window.addEventListener('beforeunload', handleBeforeUnload);
+  /**
+   * Graceful disable: stop spawning new drops and let existing ones
+   * fall off with final splash ripples.
+   */
+  function disable(): void {
+    if (state !== 'active') return;
+    state = 'draining';
+  }
 
-  const stop = (): void => {
-    // Already stopped, or replaced: a late stop must not remove the newer run's canvas.
-    if (stopActiveRun !== stop) return;
-    stopActiveRun = null;
-    stopped = true;
-    forceDisable();
-    window.removeEventListener('beforeunload', handleBeforeUnload);
-    try {
-      chrome.storage?.onChanged?.removeListener(handleStorageChange);
-    } catch {
-      // An orphaned content script's chrome.* throws; its listener is already dead.
+  /** Complete the drain: remove canvas and clean up all resources. */
+  function finalizeDrain(): void {
+    state = 'off';
+    stopAnimation();
+
+    if (resizeHandler) {
+      window.removeEventListener('resize', resizeHandler);
+      resizeHandler = null;
     }
-  };
-  stopActiveRun = stop;
-  return stop;
+
+    if (visibilityHandler) {
+      document.removeEventListener('visibilitychange', visibilityHandler);
+      visibilityHandler = null;
+    }
+
+    if (canvas) {
+      canvas.remove();
+      canvas = null;
+    }
+
+    ctx = null;
+    drops = [];
+    splashes = [];
+  }
+
+  /** Immediate disable: remove everything without draining (e.g. page unload). */
+  function forceDisable(): void {
+    if (state === 'off') return;
+    finalizeDrain();
+  }
+
+  return { enable, drain: disable, destroy: forceDisable };
 }

@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { VisualEffectRenderer } from '../types';
+
+let renderers: VisualEffectRenderer[] = [];
+
 import { isFirefox } from '@/core/utils/browser';
 
 vi.mock('@/core/utils/browser', () => ({
@@ -103,7 +107,8 @@ describe('sakuraEffect', () => {
   });
 
   afterEach(() => {
-    window.dispatchEvent(new Event('beforeunload'));
+    for (const renderer of renderers) renderer.destroy();
+    renderers = [];
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
     vi.useRealTimers();
@@ -122,15 +127,11 @@ describe('sakuraEffect', () => {
     return { frame: frame!, channel: FakeMessageChannel.instances[0], postMessage };
   }
 
-  it('creates canvas when enabled via gvVisualEffect storage', async () => {
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'sakura' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+  it('creates a non-interactive fullscreen canvas', async () => {
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
 
     const canvas = document.getElementById('gv-sakura-effect-canvas');
     expect(canvas).not.toBeNull();
@@ -139,186 +140,112 @@ describe('sakuraEffect', () => {
     expect(canvas?.style.position).toBe('fixed');
   });
 
-  it('does not create canvas when visual effect is snow', async () => {
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'snow' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+  it('does not create a canvas before selection', async () => {
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
 
     expect(document.getElementById('gv-sakura-effect-canvas')).toBeNull();
   });
 
-  it('does not create canvas when visual effect is off', async () => {
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'off' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+  it('draining an idle renderer creates no canvas', async () => {
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.drain();
 
     expect(document.getElementById('gv-sakura-effect-canvas')).toBeNull();
   });
 
-  it('begins graceful drain when disabled via storage change (canvas persists)', async () => {
-    let storageListener: ((changes: Record<string, unknown>, area: string) => void) | null = null;
-
-    (
-      chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>
-    ).mockImplementation((listener: (changes: Record<string, unknown>, area: string) => void) => {
-      storageListener = listener;
-    });
-
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'sakura' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+  it('keeps the canvas while particles drain', async () => {
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
 
     expect(document.getElementById('gv-sakura-effect-canvas')).not.toBeNull();
 
     // Canvas persists during drain
-    storageListener!({ gvVisualEffect: { newValue: 'off', oldValue: 'sakura' } }, 'sync');
+    renderer.drain();
 
     expect(document.getElementById('gv-sakura-effect-canvas')).not.toBeNull();
   });
 
-  it('creates canvas when enabled via storage change', async () => {
-    let storageListener: ((changes: Record<string, unknown>, area: string) => void) | null = null;
-
-    (
-      chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>
-    ).mockImplementation((listener: (changes: Record<string, unknown>, area: string) => void) => {
-      storageListener = listener;
-    });
-
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'off' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+  it('creates a canvas only after selection', async () => {
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
 
     expect(document.getElementById('gv-sakura-effect-canvas')).toBeNull();
 
-    storageListener!({ gvVisualEffect: { newValue: 'sakura', oldValue: 'off' } }, 'sync');
+    renderer.enable();
 
     expect(document.getElementById('gv-sakura-effect-canvas')).not.toBeNull();
   });
 
-  it('switches from snow to sakura via storage change', async () => {
-    let storageListener: ((changes: Record<string, unknown>, area: string) => void) | null = null;
-
-    (
-      chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>
-    ).mockImplementation((listener: (changes: Record<string, unknown>, area: string) => void) => {
-      storageListener = listener;
-    });
-
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'off' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+  it('starts after an idle drain', async () => {
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.drain();
 
     // Switch to sakura
-    storageListener!({ gvVisualEffect: { newValue: 'sakura', oldValue: 'snow' } }, 'sync');
+    renderer.enable();
     expect(document.getElementById('gv-sakura-effect-canvas')).not.toBeNull();
   });
 
-  it('cleans up on beforeunload', async () => {
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'sakura' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+  it('cleans up on page teardown', async () => {
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
 
     expect(document.getElementById('gv-sakura-effect-canvas')).not.toBeNull();
 
-    window.dispatchEvent(new Event('beforeunload'));
+    for (const renderer of renderers) renderer.destroy();
+    renderers = [];
 
     expect(document.getElementById('gv-sakura-effect-canvas')).toBeNull();
   });
 
-  it('cleans up on beforeunload even during drain', async () => {
-    let storageListener: ((changes: Record<string, unknown>, area: string) => void) | null = null;
-
-    (
-      chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>
-    ).mockImplementation((listener: (changes: Record<string, unknown>, area: string) => void) => {
-      storageListener = listener;
-    });
-
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'sakura' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+  it('cleans up on page teardown even during drain', async () => {
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
 
     // Enter drain mode
-    storageListener!({ gvVisualEffect: { newValue: 'off', oldValue: 'sakura' } }, 'sync');
+    renderer.drain();
     expect(document.getElementById('gv-sakura-effect-canvas')).not.toBeNull();
 
-    // Force cleanup via beforeunload
-    window.dispatchEvent(new Event('beforeunload'));
+    // Page teardown bypasses the drain.
+    for (const renderer of renderers) renderer.destroy();
+    renderers = [];
     expect(document.getElementById('gv-sakura-effect-canvas')).toBeNull();
   });
 
-  it('cancels drain when re-enabled via storage change', async () => {
-    let storageListener: ((changes: Record<string, unknown>, area: string) => void) | null = null;
+  it('resumes the same canvas when enabled during drain', async () => {
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
 
-    (
-      chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>
-    ).mockImplementation((listener: (changes: Record<string, unknown>, area: string) => void) => {
-      storageListener = listener;
-    });
-
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'sakura' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
-
+    const canvas = document.getElementById('gv-sakura-effect-canvas');
     // Enter drain mode
-    storageListener!({ gvVisualEffect: { newValue: 'off', oldValue: 'sakura' } }, 'sync');
+    renderer.drain();
     expect(document.getElementById('gv-sakura-effect-canvas')).not.toBeNull();
 
     // Re-enable — cancels drain, canvas stays
-    storageListener!({ gvVisualEffect: { newValue: 'sakura', oldValue: 'off' } }, 'sync');
-    expect(document.getElementById('gv-sakura-effect-canvas')).not.toBeNull();
+    renderer.enable();
+    expect(document.getElementById('gv-sakura-effect-canvas')).toBe(canvas);
+    expect(document.querySelectorAll('#gv-sakura-effect-canvas')).toHaveLength(1);
   });
 
   it('draws the full sprite-backed sakura profile outside Firefox', async () => {
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'sakura' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
 
     runAnimationFrame(16);
 
@@ -329,14 +256,10 @@ describe('sakuraEffect', () => {
   it('keeps the full profile when Firefox must use the main-thread fallback', async () => {
     vi.mocked(isFirefox).mockReturnValue(true);
     vi.stubGlobal('MessageChannel', undefined);
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'sakura' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
 
     runAnimationFrame(16);
     expect(mockCtx.drawImage).toHaveBeenCalledTimes(88);
@@ -353,14 +276,10 @@ describe('sakuraEffect', () => {
       configurable: true,
       value: 3,
     });
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'sakura' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
 
     const canvas = document.getElementById('gv-sakura-effect-canvas') as HTMLCanvasElement | null;
     expect(canvas?.width).toBe(window.innerWidth);
@@ -369,14 +288,10 @@ describe('sakuraEffect', () => {
   });
 
   it('never drops particles or skips frames after repeated long frame intervals', async () => {
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'sakura' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
 
     runAnimationFrame(16);
     runAnimationFrame(50);
@@ -390,14 +305,10 @@ describe('sakuraEffect', () => {
   it('connects Firefox to the extension-origin worker renderer', async () => {
     vi.mocked(isFirefox).mockReturnValue(true);
     installWorkerFrameHarness();
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'sakura' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
 
     expect(document.getElementById('gv-sakura-effect-canvas')).toBeNull();
     const { frame, channel, postMessage } = connectWorkerFrame();
@@ -430,47 +341,27 @@ describe('sakuraEffect', () => {
   it('ignores a stale worker drain completion after Sakura is re-enabled', async () => {
     vi.mocked(isFirefox).mockReturnValue(true);
     installWorkerFrameHarness();
-    let storageListener:
-      | ((changes: Record<string, chrome.storage.StorageChange>, area: string) => void)
-      | null = null;
-    (
-      chrome.storage.onChanged.addListener as unknown as ReturnType<typeof vi.fn>
-    ).mockImplementation(
-      (listener: (changes: Record<string, chrome.storage.StorageChange>, area: string) => void) => {
-        storageListener = listener;
-      },
-    );
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'sakura' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
-
-    const { channel } = connectWorkerFrame();
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
+    const { frame, channel } = connectWorkerFrame();
     const initMessage = channel.port1.postMessage.mock.calls[0][0] as { sessionId: number };
     channel.port1.emit({ type: 'ready', sessionId: initMessage.sessionId });
-
-    storageListener!({ gvVisualEffect: { newValue: 'off', oldValue: 'sakura' } }, 'sync');
-    const drainingMessage = channel.port1.postMessage.mock.calls.at(-1)?.[0] as {
-      type: string;
+    renderer.drain();
+    const staleDrainMessage = channel.port1.postMessage.mock.calls.at(-1)?.[0] as {
       drainId: number;
     };
-    expect(drainingMessage.type).toBe('set-mode');
-
-    storageListener!({ gvVisualEffect: { newValue: 'sakura', oldValue: 'off' } }, 'sync');
+    renderer.enable();
     channel.port1.emit({
       type: 'drained',
       sessionId: initMessage.sessionId,
-      drainId: drainingMessage.drainId,
+      drainId: staleDrainMessage.drainId,
     });
-
-    expect(document.getElementById('gv-sakura-effect-frame')).not.toBeNull();
+    expect(document.getElementById('gv-sakura-effect-frame')).toBe(frame);
+    expect(FakeMessageChannel.instances).toHaveLength(1);
     expect(channel.port1.close).not.toHaveBeenCalled();
-
-    storageListener!({ gvVisualEffect: { newValue: 'off', oldValue: 'sakura' } }, 'sync');
+    renderer.drain();
     const latestDrainMessage = channel.port1.postMessage.mock.calls.at(-1)?.[0] as {
       drainId: number;
     };
@@ -479,23 +370,42 @@ describe('sakuraEffect', () => {
       sessionId: initMessage.sessionId,
       drainId: latestDrainMessage.drainId,
     });
-
     expect(document.getElementById('gv-sakura-effect-frame')).toBeNull();
+    expect(channel.port1.postMessage).toHaveBeenLastCalledWith({
+      type: 'dispose',
+      sessionId: initMessage.sessionId,
+    });
     expect(channel.port1.close).toHaveBeenCalledTimes(1);
+  });
+
+  it('disposes the Firefox worker frame immediately on page teardown during drain', async () => {
+    vi.mocked(isFirefox).mockReturnValue(true);
+    installWorkerFrameHarness();
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
+    const { channel } = connectWorkerFrame();
+    const initMessage = channel.port1.postMessage.mock.calls[0][0] as { sessionId: number };
+    renderer.drain();
+    renderer.destroy();
+    expect(document.getElementById('gv-sakura-effect-frame')).toBeNull();
+    expect(channel.port1.postMessage).toHaveBeenLastCalledWith({
+      type: 'dispose',
+      sessionId: initMessage.sessionId,
+    });
+    expect(channel.port1.close).toHaveBeenCalledTimes(1);
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('falls back safely if the extension renderer reports a fatal error', async () => {
     vi.mocked(isFirefox).mockReturnValue(true);
     installWorkerFrameHarness();
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'sakura' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
 
     const { channel } = connectWorkerFrame();
     const initMessage = channel.port1.postMessage.mock.calls[0][0] as { sessionId: number };
@@ -516,14 +426,10 @@ describe('sakuraEffect', () => {
     vi.mocked(isFirefox).mockReturnValue(true);
     installWorkerFrameHarness();
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvVisualEffect: 'sakura' });
-      },
-    );
-
-    const { startSakuraEffect } = await import('../sakura');
-    startSakuraEffect();
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
     const { channel } = connectWorkerFrame();
     vi.advanceTimersByTime(3_000);
 

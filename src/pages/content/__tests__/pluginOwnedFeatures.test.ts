@@ -426,7 +426,11 @@ describe('Gemini stage 3 features owned by their official plugins', () => {
     await flush();
 
     expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiCodeCollapse)).toBe('denied');
-    expect(pluginHost.getStatuses().map((status) => status.id)).toEqual([localCollapse]);
+    expect(pluginHost.getStatuses().map((status) => status.id)).toEqual([
+      OFFICIAL_PLUGIN_IDS.visualEffects,
+      localCollapse,
+    ]);
+    expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.visualEffects)).not.toBe('mounted');
     expect(kindOf(pluginHost, localCollapse)).toBe('mounted');
     const block = document.querySelector('code-block')!;
     expect(block.getAttribute(CODE_COLLAPSE_OWNER_ATTRIBUTE)).not.toBeNull();
@@ -505,7 +509,11 @@ describe('Gemini stage 3 features owned by their official plugins', () => {
       await flush();
 
       expect(admission.stateOf(officialId)).toBe('denied');
-      expect(pluginHost.getStatuses().map((status) => status.id)).toEqual([localId]);
+      expect(pluginHost.getStatuses().map((status) => status.id)).toEqual([
+        OFFICIAL_PLUGIN_IDS.visualEffects,
+        localId,
+      ]);
+      expect(kindOf(pluginHost, OFFICIAL_PLUGIN_IDS.visualEffects)).not.toBe('mounted');
       expect(kindOf(pluginHost, localId)).toBe('mounted');
       if (drawn) expect(drawn()).toBe(true);
 

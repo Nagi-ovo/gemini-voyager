@@ -18,6 +18,7 @@
  */
 import {
   FEATURE_OWNERS,
+  SHARED_FEATURE_OWNERS,
   type OwnedFeature,
   type OwnedFeatureId,
   type PackagedSiteId,
@@ -33,6 +34,8 @@ export interface OfficialAdmission {
 
 export interface OfficialAdmissionController extends OfficialAdmission {
   admit(site: PackagedSiteId, feature: OwnedFeatureId): void;
+  /** Cross-site features start before the native surface's initialization gate. */
+  admitShared(feature: (typeof SHARED_FEATURE_OWNERS)[number]['feature']): void;
   /** Deny every id still pending; terminal and idempotent. */
   close(): void;
 }
@@ -41,7 +44,7 @@ export function createOfficialAdmission(
   owners: readonly OwnedFeature[] = FEATURE_OWNERS,
 ): OfficialAdmissionController {
   const states = new Map<string, AdmissionState>(
-    owners.map((entry) => [entry.officialPluginId, 'pending']),
+    [...owners, ...SHARED_FEATURE_OWNERS].map((entry) => [entry.officialPluginId, 'pending']),
   );
   const listeners = new Set<() => void>();
   let closed = false;
@@ -68,6 +71,13 @@ export function createOfficialAdmission(
       states.set(entry.officialPluginId, 'admitted');
       notify();
     },
+    admitShared(feature) {
+      if (closed) return;
+      const entry = SHARED_FEATURE_OWNERS.find((owned) => owned.feature === feature);
+      if (!entry || states.get(entry.officialPluginId) !== 'pending') return;
+      states.set(entry.officialPluginId, 'admitted');
+      notify();
+    },
     close() {
       if (closed) return;
       closed = true;
@@ -83,7 +93,7 @@ export function createOfficialAdmission(
 }
 
 const OWNED_PLUGIN_IDS: ReadonlySet<string> = new Set(
-  FEATURE_OWNERS.map((entry) => entry.officialPluginId),
+  [...FEATURE_OWNERS, ...SHARED_FEATURE_OWNERS].map((entry) => entry.officialPluginId),
 );
 
 /**

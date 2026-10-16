@@ -1,17 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { isFirefox } from '@/core/utils/browser';
+import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 
 import { type LifecycleHarness, installLifecycleHarness } from '../../__tests__/lifecycleHarness';
 import { claimContentScript } from '../../contentScriptHandoff';
-import type { StopNativeFeature } from '../../featureLifecycle';
+import type { VisualEffectsRuntime } from '../index';
 
 vi.mock('@/core/utils/browser', () => ({
   isFirefox: vi.fn(() => false),
 }));
 
 type GlobalWithFlag = typeof globalThis & { __gvVisualEffectsStarted?: unknown };
-type ReadCallback = (result: Record<string, unknown>) => void;
 
 const EFFECTS = [
   { value: 'snow', elementId: 'gv-snow-effect-canvas' },
@@ -26,13 +26,7 @@ function effectNodes(): Element[] {
   return Array.from(document.querySelectorAll(EFFECT_SELECTOR));
 }
 
-function setVisualEffect(harness: LifecycleHarness, value: string): void {
-  const oldValue = harness.storage.sync.get('gvVisualEffect');
-  harness.storage.sync.set('gvVisualEffect', value);
-  harness.emitStorageChange({ gvVisualEffect: { oldValue, newValue: value } }, 'sync');
-}
-
-describe('startVisualEffects', () => {
+describe('visual effects plugin handler', () => {
   const originalInnerHeight = window.innerHeight;
   let harness: LifecycleHarness;
   let frames: Map<number, FrameRequestCallback>;
@@ -117,165 +111,171 @@ describe('startVisualEffects', () => {
     });
   });
 
-  it('initializes all effects only once in a content-script world', async () => {
-    const { startVisualEffects } = await import('../index');
+  async function activate(runtime: VisualEffectsRuntime, effect: string): Promise<PluginScope> {
+    const scope = new PluginScope();
+    await runtime.handler.activate?.(scope, { effect }, null);
+    return scope;
+  }
 
-    startVisualEffects();
-    startVisualEffects();
-
-    expect(chrome.storage.sync.get).toHaveBeenCalledTimes(3);
-    expect(chrome.storage.onChanged.addListener).toHaveBeenCalledTimes(3);
+  it('draws nothing before the host admits an activation and never reads storage', async () => {
+    const { createVisualEffectsRuntime } = await import('../index');
+    const runtime = createVisualEffectsRuntime();
+    runtime.handler.updateSettings?.({ effect: 'snow' });
+    expect(effectNodes()).toEqual([]);
+    expect(chrome.storage.sync.get).not.toHaveBeenCalled();
+    expect(chrome.storage.onChanged.addListener).not.toHaveBeenCalled();
+    runtime.destroy();
+    expect(openListeners()).toEqual([]);
   });
 
-  it('removes the effect canvas and every listener when visual effects stop', async () => {
-    const { startVisualEffects } = await import('../index');
+  it('removes every renderer and listener immediately when the page stops', async () => {
+    const { createVisualEffectsRuntime } = await import('../index');
     const cases = [
       ...EFFECTS.map((effect) => ({ ...effect, firefox: false })),
-      // Firefox draws sakura in an extension frame with a ready timeout.
       { value: 'sakura', elementId: 'gv-sakura-effect-frame', firefox: true },
     ];
-
     for (const effect of cases) {
       vi.mocked(isFirefox).mockReturnValue(effect.firefox);
-      harness.storage.sync.set('gvVisualEffect', effect.value);
-
-      const stop = startVisualEffects();
+      const runtime = createVisualEffectsRuntime();
+      const scope = await activate(runtime, effect.value);
       expect(document.getElementById(effect.elementId), effect.elementId).not.toBeNull();
-
-      stop();
-
+      await scope.dispose();
+      expect(document.getElementById(effect.elementId), effect.elementId).not.toBeNull();
+      runtime.destroy();
       expect(effectNodes(), effect.elementId).toEqual([]);
       expect(openListeners(), effect.elementId).toEqual([]);
-      expect(harness.ledger.openStorageListeners(), effect.elementId).toBe(0);
       expect(frames.size, effect.elementId).toBe(0);
       expect(vi.getTimerCount(), effect.elementId).toBe(0);
     }
   });
 
-  it('does not re-enable an effect when the initial read lands after stop', async () => {
-    const pendingReads: ReadCallback[] = [];
-    vi.mocked(chrome.storage.sync.get).mockImplementation(((
-      _defaults: unknown,
-      callback: ReadCallback,
-    ) => {
-      pendingReads.push(callback);
-    }) as unknown as typeof chrome.storage.sync.get);
-    const { startVisualEffects } = await import('../index');
-
-    const stop = startVisualEffects();
-    stop();
-    expect(pendingReads).toHaveLength(EFFECTS.length);
-    for (const callback of pendingReads) {
-      for (const effect of EFFECTS) callback({ gvVisualEffect: effect.value });
-    }
-
+  it('ignores late activation and settings after page teardown', async () => {
+    const { createVisualEffectsRuntime } = await import('../index');
+    const runtime = createVisualEffectsRuntime();
+    runtime.destroy();
+    const scope = await activate(runtime, 'snow');
+    runtime.handler.updateSettings?.({ effect: 'rain' });
+    await scope.dispose();
     expect(effectNodes()).toEqual([]);
     expect(openListeners()).toEqual([]);
     expect(frames.size).toBe(0);
   });
 
-  it('keeps a new effect run alive when an older run stops late', async () => {
-    // Each effect module on its own: a replaced run's stop leaves the newer run's effect.
-    const modules = [
-      { start: (await import('../snow')).startSnowEffect, ...EFFECTS[0] },
-      { start: (await import('../sakura')).startSakuraEffect, ...EFFECTS[1] },
-      { start: (await import('../rain')).startRainEffect, ...EFFECTS[2] },
-    ];
-    for (const effect of modules) {
-      harness.storage.sync.set('gvVisualEffect', effect.value);
-      const stopOlder = effect.start();
-      const stopNewer = effect.start();
+  it('allows reactivation after beforeunload when the page remains alive', async () => {
+    const { createVisualEffectsRuntime } = await import('../index');
+    const runtime = createVisualEffectsRuntime();
+    const first = await activate(runtime, 'snow');
+    expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
 
-      stopOlder();
-
-      expect(document.getElementById(effect.elementId), effect.value).not.toBeNull();
-      expect(harness.ledger.openStorageListeners(), effect.value).toBe(1);
-      stopNewer();
-      expect(effectNodes(), effect.value).toEqual([]);
-    }
-
-    // The shell: a stop of the previous page lifetime must not free the world either.
-    harness.storage.sync.set('gvVisualEffect', 'snow');
-    const { startVisualEffects } = await import('../index');
-    const stopOlder = startVisualEffects();
-    stopOlder();
-    const stopNewer = startVisualEffects();
-
-    stopOlder();
-
-    expect(effectNodes()).toHaveLength(1);
-    expect(harness.ledger.openStorageListeners()).toBe(3);
-    vi.resetModules();
-    const anotherCopy = await import('../index');
-    anotherCopy.startVisualEffects();
-    expect(effectNodes()).toHaveLength(1);
-    expect(harness.ledger.openStorageListeners()).toBe(3);
-
-    stopNewer();
+    window.dispatchEvent(new Event('beforeunload'));
     expect(effectNodes()).toEqual([]);
+    await first.dispose();
+    const second = await activate(runtime, 'snow');
+    expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
+
+    await second.dispose();
+    runtime.destroy();
+    expect(openListeners()).toEqual([]);
+  });
+
+  it('does not let an older activation drain the newer activation', async () => {
+    const { createVisualEffectsRuntime } = await import('../index');
+    const runtime = createVisualEffectsRuntime();
+    const older = await activate(runtime, 'snow');
+    const newer = await activate(runtime, 'snow');
+    await older.dispose();
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 40 });
+    window.dispatchEvent(new Event('resize'));
+    runFrames(2_000, () => effectNodes().length === 0);
+    expect(effectNodes()).toHaveLength(1);
+    await newer.dispose();
+    runFrames(2_000, () => effectNodes().length === 0);
+    expect(effectNodes()).toEqual([]);
+    runtime.destroy();
+  });
+
+  it('shares one effect owner across duplicate content-script bundles', async () => {
+    const { createVisualEffectsRuntime } = await import('../index');
+    const older = createVisualEffectsRuntime();
+    await activate(older, 'snow');
+    vi.resetModules();
+    const duplicate = (await import('../index')).createVisualEffectsRuntime();
+    await activate(duplicate, 'rain');
+    duplicate.destroy();
+    expect(effectNodes().map((node) => node.id)).toEqual(['gv-snow-effect-canvas']);
+    older.destroy();
+    const newer = createVisualEffectsRuntime();
+    await activate(newer, 'rain');
+    older.destroy();
+    expect(effectNodes().map((node) => node.id)).toEqual(['gv-rain-effect-canvas']);
+    newer.destroy();
   });
 
   it('starts no second effect after a content-script handoff', async () => {
-    harness.storage.sync.set('gvVisualEffect', 'snow');
     const releases: (() => void)[] = [];
-
-    // The earlier copy claims the page, then mounts its effects.
-    let stopEarlier: StopNativeFeature = () => {};
+    let earlier: VisualEffectsRuntime | undefined;
     releases.push(
       claimContentScript(
-        () => stopEarlier(),
+        () => earlier?.destroy(),
         () => true,
       ),
     );
-    stopEarlier = (await import('../index')).startVisualEffects();
+    earlier = (await import('../index')).createVisualEffectsRuntime();
+    await activate(earlier, 'snow');
     expect(effectNodes()).toHaveLength(1);
-
-    // A re-injected copy: fresh module state, same world. Claiming retires the earlier copy.
     vi.resetModules();
-    const later = await import('../index');
     releases.push(
       claimContentScript(
         () => {},
         () => false,
       ),
     );
-    const stopLater = later.startVisualEffects();
-
-    expect(effectNodes()).toHaveLength(1);
-    expect(harness.ledger.openStorageListeners()).toBe(3);
-    setVisualEffect(harness, 'rain');
-    expect(effectNodes().map((node) => node.id)).toEqual([
-      'gv-snow-effect-canvas',
-      'gv-rain-effect-canvas',
-    ]);
-
-    stopLater();
+    const later = (await import('../index')).createVisualEffectsRuntime();
+    await activate(later, 'rain');
+    expect(effectNodes().map((node) => node.id)).toEqual(['gv-rain-effect-canvas']);
+    later.destroy();
     for (const release of releases) release();
     expect(effectNodes()).toEqual([]);
     expect(openListeners()).toEqual([]);
   });
 
-  it('keeps draining the snow when the popup turns it off while the page lives', async () => {
-    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 40 });
-    harness.storage.sync.set('gvVisualEffect', 'snow');
-    const { startVisualEffects } = await import('../index');
-    const stop = startVisualEffects();
+  it.each(EFFECTS)(
+    'off drains $value and on during drain resumes the same renderer',
+    async (effect) => {
+      Object.defineProperty(window, 'innerHeight', { configurable: true, value: 40 });
+      const { createVisualEffectsRuntime } = await import('../index');
+      const runtime = createVisualEffectsRuntime();
+      const first = await activate(runtime, effect.value);
+      const node = document.getElementById(effect.elementId);
+      expect(node).not.toBeNull();
+      await first.dispose();
+      expect(document.getElementById(effect.elementId)).toBe(node);
+      const second = await activate(runtime, effect.value);
+      expect(document.getElementById(effect.elementId)).toBe(node);
+      expect(effectNodes()).toHaveLength(1);
+      await second.dispose();
+      runFrames(2_000, () => effectNodes().length === 0);
+      expect(effectNodes()).toEqual([]);
+      runtime.destroy();
+      expect(openListeners()).toEqual([]);
+      expect(frames.size).toBe(0);
+    },
+  );
 
-    setVisualEffect(harness, 'off');
-
-    // Turning it off is not a stop: the flakes keep falling and the run keeps listening.
-    expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
-    expect(harness.ledger.openStorageListeners()).toBe(3);
-    runFrames(2_000, () => document.getElementById('gv-snow-effect-canvas') === null);
-    expect(document.getElementById('gv-snow-effect-canvas')).toBeNull();
-
-    setVisualEffect(harness, 'snow');
-    expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
-
-    // A stop mid-drain removes the canvas at once.
-    setVisualEffect(harness, 'off');
-    stop();
+  it('switches kinds while the previous renderer drains and tears down all of them', async () => {
+    const { createVisualEffectsRuntime } = await import('../index');
+    const runtime = createVisualEffectsRuntime();
+    const scope = await activate(runtime, 'snow');
+    for (const effect of ['sakura', 'rain', 'snow']) {
+      runtime.handler.updateSettings?.({ effect });
+    }
+    expect(effectNodes()).toHaveLength(3);
+    expect(document.querySelectorAll('#gv-snow-effect-canvas')).toHaveLength(1);
+    window.dispatchEvent(new Event('beforeunload'));
     expect(effectNodes()).toEqual([]);
+    expect(frames.size).toBe(0);
+    await scope.dispose();
+    runtime.destroy();
     expect(openListeners()).toEqual([]);
   });
 });

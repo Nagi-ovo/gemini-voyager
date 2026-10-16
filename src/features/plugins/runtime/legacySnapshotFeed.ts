@@ -23,6 +23,7 @@
  * plugin keeps the last value, as the native module's listener did.
  */
 import { logger } from '@/core/services/LoggerService';
+import { StorageKeys } from '@/core/types/common';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 
 import {
@@ -46,6 +47,14 @@ export interface LegacySettingsSource {
 export const DEFAULT_LEGACY_SETTINGS: LegacySettingsSource = {
   load: loadLegacySettingSnapshot,
   subscribe: subscribeLegacySettings,
+};
+
+const VISUAL_EFFECT_KEYS = [StorageKeys.GV_VISUAL_EFFECT, StorageKeys.GV_SNOW_EFFECT];
+
+/** Only the shared effect follows legacy settings on plugin and custom sites. */
+export const DEFAULT_VISUAL_EFFECT_SETTINGS: LegacySettingsSource = {
+  load: () => loadLegacySettingSnapshot(VISUAL_EFFECT_KEYS),
+  subscribe: (callback) => subscribeLegacySettings(callback, VISUAL_EFFECT_KEYS),
 };
 
 /**

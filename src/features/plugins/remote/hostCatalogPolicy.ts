@@ -10,6 +10,7 @@
  *     extension version).
  */
 import { isLocalPluginId } from '../local/localPluginId';
+import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import { allowsRemoteCatalog } from '../sites/hostPolicy';
 import { matchesAnyPattern } from '../sites/matchPattern';
 import type { PluginStateMap } from '../storage/pluginState';
@@ -108,6 +109,8 @@ export function hasEnabledPluginForUrl(
   return manifests.some(
     (manifest) =>
       !isLocalPluginId(manifest.id) &&
+      // Shared effects cannot fetch a catalog for an arbitrary custom website.
+      manifest.id !== OFFICIAL_PLUGIN_IDS.visualEffects &&
       state[manifest.id]?.enabled === true &&
       matchesAnyPattern(url, manifest.matches),
   );
@@ -148,6 +151,7 @@ export function hasEnabledPluginForHost(
   return manifests.some(
     (manifest) =>
       !isLocalPluginId(manifest.id) &&
+      manifest.id !== OFFICIAL_PLUGIN_IDS.visualEffects &&
       state[manifest.id]?.enabled === true &&
       manifest.matches.some((pattern) => patternTargetsHost(pattern, host)),
   );

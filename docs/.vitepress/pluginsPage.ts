@@ -76,6 +76,7 @@ const FEATURE_ORDER = [
   'wrap-code',
   'copy-thinking',
   'hide-input-halo',
+  'visual-effects',
   'cjk-render-fix',
 ];
 
@@ -277,6 +278,9 @@ export interface FeatureRow {
 }
 
 function siteOf(manifest: PluginManifest): PluginSite[] {
+  // This shared builtin also covers already-authorized custom sites. Its broad
+  // runtime match grants no access; these are the five columns shown here.
+  if (manifest.id === OFFICIAL_PLUGIN_IDS.visualEffects) return [...PLUGIN_SITES];
   return PLUGIN_SITES.filter((site) =>
     manifest.matches.some((match) => SITE_HOSTS[site].some((host) => match.includes(`//${host}/`))),
   );

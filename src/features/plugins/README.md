@@ -341,10 +341,24 @@ script and grants these hosts, so enabling one needs no permission prompt and
 the same reversible engine as elsewhere, and turning one off removes its
 classes and stylesheet. AI Studio's master switch (`GV_AISTUDIO_ENABLED`,
 `runtime/surfaceSwitch.ts`) governs plugins too: while Voyager is off on AI
-Studio nothing mounts, and flipping it unmounts or remounts them live. Gemini
+Studio ordinary plugins do not mount, and flipping it unmounts or remounts them live. Gemini
 has no page-wide master switch. Its **Show Timeline** switch controls only the
 rail and navigation shortcut lease; saved stars and hierarchy remain, and the
 message timestamp page service follows **Show Message Timestamps** independently.
+
+**Shared Visual effects.** `voyager.visual-effects` is one packaged builtin on every
+already-injected page, including authorized Prompt Manager custom sites. It is admitted
+before normal initialization and excluded from plugin subframes, as its native predecessor
+was. It remains independent of AI Studio's master switch. Its `<all_urls>` runtime match
+adds no host permission or content-script registration, and its fixed ID never requests an
+origin grant. `gvVisualEffect` is authoritative across sites: any string takes precedence
+(unknown strings render nothing), otherwise `gvSnowEffect === true` selects snow. The trusted
+enum value binding fills `effect`; nothing is copied into `gvPluginsState`. The current popup
+card keeps writing those keys. `legacyEnableWrite` selects snow when enabled and `off` when
+disabled; both clear the legacy boolean. No previous effect is remembered. PluginScope owns
+the activation's selection while the page holds renderers through a graceful drain; re-enable
+resumes them, and page teardown destroys canvases, renderer frames and workers immediately.
+
 Local `turnNavigator` on consumer Gemini requires literal `params: { "dataBackend": "shared" }`
 (engine >=1.9.0). It reads and edits the same native stars, levels and collapse state, waits for
 both page-owned timestamp caches, and inherits the official rail’s admission. Its own plugin

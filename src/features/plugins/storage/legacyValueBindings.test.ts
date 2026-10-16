@@ -142,6 +142,8 @@ describe('legacy value bindings', () => {
   it('lists each value key once', () => {
     expect([...legacyValueKeys()].sort()).toEqual(
       [
+        StorageKeys.GV_VISUAL_EFFECT,
+        StorageKeys.GV_SNOW_EFFECT,
         StorageKeys.CHAT_FONT_SIZE,
         StorageKeys.CHAT_LINE_HEIGHT,
         StorageKeys.CHAT_PARAGRAPH_SPACING,

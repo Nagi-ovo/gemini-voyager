@@ -19,6 +19,7 @@ import { isSafari } from '@/core/utils/browser';
 import { isChatWidthSwitchOn, isEditInputWidthSwitchOn } from '@/core/utils/chatAppearanceValues';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
 import { isSidebarWidthSwitchOn } from '@/core/utils/sidebarWidthValues';
+import { resolveVisualEffect } from '@/core/utils/visualEffectValues';
 
 import { resolvePluginSettings } from '../runtime/resolvePluginSettings';
 import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
@@ -70,6 +71,18 @@ function binding(
 }
 
 export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding>> = {
+  [OFFICIAL_PLUGIN_IDS.visualEffects]: {
+    pluginId: OFFICIAL_PLUGIN_IDS.visualEffects,
+    area: 'sync',
+    key: StorageKeys.GV_VISUAL_EFFECT,
+    read: (stored) => resolveVisualEffect(stored) !== 'off',
+    write: (enabled) => (enabled ? 'snow' : 'off'),
+    derive: (snapshot) =>
+      resolveVisualEffect(
+        snapshot[StorageKeys.GV_VISUAL_EFFECT],
+        snapshot[StorageKeys.GV_SNOW_EFFECT],
+      ) !== 'off',
+  },
   [OFFICIAL_PLUGIN_IDS.geminiGemsSidebar]: binding(
     OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
     StorageKeys.GV_GEMS_SIDEBAR_ENABLED,
@@ -337,10 +350,19 @@ export function resolveEffectiveSettings(
   return resolvePluginSettings(manifest, entry?.settings);
 }
 
-/** The sync-storage write that switches bound plugin `id` on or off. */
+/**
+ * The sync-storage write that switches bound plugin `id` on or off.
+ * Enabling Visual effects selects snow; disabling selects off.
+ */
 export function legacyEnableWrite(id: string, enabled: boolean): Readonly<Record<string, unknown>> {
   const bound = legacyBindingFor(id);
   if (!bound) throw new Error(`No legacy setting binding for plugin "${id}"`);
+  if (id === OFFICIAL_PLUGIN_IDS.visualEffects) {
+    return {
+      [StorageKeys.GV_VISUAL_EFFECT]: bound.write(enabled),
+      [StorageKeys.GV_SNOW_EFFECT]: false,
+    };
+  }
   return { [bound.key]: bound.write(enabled) };
 }
 
@@ -355,10 +377,11 @@ function syncArea(): chrome.storage.SyncStorageArea | undefined {
  * guessed default). Any other failure is logged and read as "all missing",
  * the defaults the native modules have always fallen back to.
  */
-export async function loadLegacySettingSnapshot(): Promise<LegacySettingSnapshot> {
+export async function loadLegacySettingSnapshot(
+  keys: readonly string[] = legacyBindingKeys(),
+): Promise<LegacySettingSnapshot> {
   const sync = syncArea();
   if (!sync) return {};
-  const keys = legacyBindingKeys();
   let stored: Record<string, unknown> | undefined;
   try {
     stored = await sync.get<Record<string, unknown>>([...keys]);
@@ -381,11 +404,11 @@ export async function loadLegacySettingSnapshot(): Promise<LegacySettingSnapshot
  */
 export function subscribeLegacySettings(
   callback: (changed: LegacySettingSnapshot) => void,
+  keys: readonly string[] = legacyBindingKeys(),
 ): () => void {
   const g = globalThis as { chrome?: typeof chrome };
   const onChanged = g.chrome?.storage?.onChanged;
   if (!onChanged) return () => {};
-  const keys = legacyBindingKeys();
 
   const listener = (changes: Record<string, chrome.storage.StorageChange>, area: string): void => {
     if (area !== 'sync') return;

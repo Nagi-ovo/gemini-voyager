@@ -53,6 +53,7 @@ export type OwnedFeatureId =
 
 /** The packaged official plugin ids, by feature. */
 export const OFFICIAL_PLUGIN_IDS = {
+  visualEffects: 'voyager.visual-effects',
   geminiFormulaCopy: 'voyager.gemini-formula-copy',
   aistudioFormulaCopy: 'voyager.aistudio-formula-copy',
   geminiVimInput: 'voyager.gemini-vim-input',
@@ -89,6 +90,16 @@ export const OFFICIAL_PLUGIN_IDS = {
   aistudioEnterSend: 'voyager.aistudio-enter-send',
   geminiDraftSave: 'voyager.gemini-draft-save',
 } as const;
+
+/** Page-wide features admitted before site-specific initialization, with no public primitive. */
+export const SHARED_FEATURE_OWNERS = [
+  {
+    feature: 'visualEffects',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.visualEffects,
+    handlers: [],
+    healthTracking: false,
+  },
+] as const;
 
 export interface OwnedFeature {
   readonly site: PackagedSiteId;
@@ -381,7 +392,11 @@ export function ownedFeatureByPluginId(id: string): OwnedFeature | null {
 
 /** False only for official plugins whose owner entry opts out of the health monitor. */
 export function tracksPluginHealth(id: string): boolean {
-  return ownedFeatureByPluginId(id)?.healthTracking ?? true;
+  return (
+    SHARED_FEATURE_OWNERS.find((entry) => entry.officialPluginId === id)?.healthTracking ??
+    ownedFeatureByPluginId(id)?.healthTracking ??
+    true
+  );
 }
 
 /** Handlers the official plugins on `site` have opened to every plugin there. */

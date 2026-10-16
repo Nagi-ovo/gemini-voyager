@@ -17,12 +17,9 @@
  * - ~160 particles total — negligible GPU/CPU overhead
  */
 
-import type { StopNativeFeature } from '../featureLifecycle';
+import type { VisualEffectRenderer } from './types';
 
 const CANVAS_ID = 'gv-snow-effect-canvas';
-const STORAGE_KEY = 'gvVisualEffect';
-const LEGACY_KEY = 'gvSnowEffect';
-const EFFECT_VALUE = 'snow';
 
 /**
  * Three layers simulate depth-of-field:
@@ -57,270 +54,199 @@ interface Snowflake {
   phase: number;
 }
 
-/** Effect lifecycle: off → active ⇄ draining → off */
-let state: 'off' | 'active' | 'draining' = 'off';
-let canvas: HTMLCanvasElement | null = null;
-let ctx: CanvasRenderingContext2D | null = null;
-let animationFrameId: number | null = null;
-let snowflakes: Snowflake[] = [];
-let resizeHandler: (() => void) | null = null;
-let visibilityHandler: (() => void) | null = null;
+export function createSnowRenderer(): VisualEffectRenderer {
+  /** Effect lifecycle: off → active ⇄ draining → off */
+  let state: 'off' | 'active' | 'draining' = 'off';
+  let canvas: HTMLCanvasElement | null = null;
+  let ctx: CanvasRenderingContext2D | null = null;
+  let animationFrameId: number | null = null;
+  let snowflakes: Snowflake[] = [];
+  let resizeHandler: (() => void) | null = null;
+  let visibilityHandler: (() => void) | null = null;
 
-/** Random float in [min, max) */
-function rand(min: number, max: number): number {
-  return min + Math.random() * (max - min);
-}
-
-function createSnowflake(
-  canvasWidth: number,
-  canvasHeight: number,
-  layer: (typeof LAYERS)[number],
-  randomY: boolean,
-): Snowflake {
-  return {
-    x: Math.random() * canvasWidth,
-    y: randomY ? Math.random() * canvasHeight : -(Math.random() * canvasHeight),
-    radius: rand(layer.radius[0], layer.radius[1]),
-    opacity: rand(layer.opacity[0], layer.opacity[1]),
-    speedY: rand(layer.speed[0], layer.speed[1]),
-    drift: rand(layer.drift[0], layer.drift[1]),
-    driftFreq: rand(0.0003, 0.0012),
-    phase: Math.random() * Math.PI * 2,
-  };
-}
-
-function initSnowflakes(width: number, height: number): void {
-  const flakes: Snowflake[] = [];
-  for (const layer of LAYERS) {
-    for (let i = 0; i < layer.count; i++) {
-      flakes.push(createSnowflake(width, height, layer, true));
-    }
+  /** Random float in [min, max) */
+  function rand(min: number, max: number): number {
+    return min + Math.random() * (max - min);
   }
-  // Sort by opacity so we can batch fillStyle changes during draw
-  flakes.sort((a, b) => a.opacity - b.opacity);
-  snowflakes = flakes;
-}
 
-function updateAndDraw(time: number): void {
-  if (!ctx || !canvas) return;
+  function createSnowflake(
+    canvasWidth: number,
+    canvasHeight: number,
+    layer: (typeof LAYERS)[number],
+    randomY: boolean,
+  ): Snowflake {
+    return {
+      x: Math.random() * canvasWidth,
+      y: randomY ? Math.random() * canvasHeight : -(Math.random() * canvasHeight),
+      radius: rand(layer.radius[0], layer.radius[1]),
+      opacity: rand(layer.opacity[0], layer.opacity[1]),
+      speedY: rand(layer.speed[0], layer.speed[1]),
+      drift: rand(layer.drift[0], layer.drift[1]),
+      driftFreq: rand(0.0003, 0.0012),
+      phase: Math.random() * Math.PI * 2,
+    };
+  }
 
-  const { width, height } = canvas;
-  ctx.clearRect(0, 0, width, height);
-
-  let currentOpacity = -1;
-  let visibleCount = 0;
-
-  for (const flake of snowflakes) {
-    flake.y += flake.speedY;
-    flake.x += Math.sin(flake.phase + time * flake.driftFreq) * flake.drift;
-
-    // Recycle when off-screen bottom (or skip during drain)
-    if (flake.y > height + flake.radius) {
-      if (state === 'draining') {
-        continue;
+  function initSnowflakes(width: number, height: number): void {
+    const flakes: Snowflake[] = [];
+    for (const layer of LAYERS) {
+      for (let i = 0; i < layer.count; i++) {
+        flakes.push(createSnowflake(width, height, layer, true));
       }
-      flake.y = -flake.radius;
-      flake.x = Math.random() * width;
+    }
+    // Sort by opacity so we can batch fillStyle changes during draw
+    flakes.sort((a, b) => a.opacity - b.opacity);
+    snowflakes = flakes;
+  }
+
+  function updateAndDraw(time: number): void {
+    if (!ctx || !canvas) return;
+
+    const { width, height } = canvas;
+    ctx.clearRect(0, 0, width, height);
+
+    let currentOpacity = -1;
+    let visibleCount = 0;
+
+    for (const flake of snowflakes) {
+      flake.y += flake.speedY;
+      flake.x += Math.sin(flake.phase + time * flake.driftFreq) * flake.drift;
+
+      // Recycle when off-screen bottom (or skip during drain)
+      if (flake.y > height + flake.radius) {
+        if (state === 'draining') {
+          continue;
+        }
+        flake.y = -flake.radius;
+        flake.x = Math.random() * width;
+      }
+
+      visibleCount++;
+
+      // Wrap horizontal
+      if (flake.x > width + flake.radius) {
+        flake.x = -flake.radius;
+      } else if (flake.x < -flake.radius) {
+        flake.x = width + flake.radius;
+      }
+
+      // Batch fillStyle: only update when opacity changes (quantised to 2 decimals)
+      const quantised = Math.round(flake.opacity * 50) / 50;
+      if (quantised !== currentOpacity) {
+        currentOpacity = quantised;
+        ctx.fillStyle = `rgba(255,255,255,${currentOpacity})`;
+      }
+
+      ctx.beginPath();
+      ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    visibleCount++;
-
-    // Wrap horizontal
-    if (flake.x > width + flake.radius) {
-      flake.x = -flake.radius;
-    } else if (flake.x < -flake.radius) {
-      flake.x = width + flake.radius;
+    // All particles have left the viewport — finish draining
+    if (state === 'draining' && visibleCount === 0) {
+      finalizeDrain();
+      return;
     }
 
-    // Batch fillStyle: only update when opacity changes (quantised to 2 decimals)
-    const quantised = Math.round(flake.opacity * 50) / 50;
-    if (quantised !== currentOpacity) {
-      currentOpacity = quantised;
-      ctx.fillStyle = `rgba(255,255,255,${currentOpacity})`;
+    animationFrameId = requestAnimationFrame(updateAndDraw);
+  }
+
+  function resizeCanvas(): void {
+    if (!canvas) return;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function startAnimation(): void {
+    if (animationFrameId !== null) return;
+    animationFrameId = requestAnimationFrame(updateAndDraw);
+  }
+
+  function stopAnimation(): void {
+    if (animationFrameId !== null) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
     }
-
-    ctx.beginPath();
-    ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
-    ctx.fill();
   }
 
-  // All particles have left the viewport — finish draining
-  if (state === 'draining' && visibleCount === 0) {
-    finalizeDrain();
-    return;
-  }
-
-  animationFrameId = requestAnimationFrame(updateAndDraw);
-}
-
-function resizeCanvas(): void {
-  if (!canvas) return;
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-
-function startAnimation(): void {
-  if (animationFrameId !== null) return;
-  animationFrameId = requestAnimationFrame(updateAndDraw);
-}
-
-function stopAnimation(): void {
-  if (animationFrameId !== null) {
-    cancelAnimationFrame(animationFrameId);
-    animationFrameId = null;
-  }
-}
-
-function handleVisibilityChange(): void {
-  if (document.visibilityState === 'visible') {
-    startAnimation();
-  } else {
-    stopAnimation();
-  }
-}
-
-function enable(): void {
-  if (state === 'active') return;
-  if (state === 'draining') {
-    // Cancel drain — resume normal particle recycling
-    state = 'active';
-    return;
-  }
-  state = 'active';
-
-  canvas = document.createElement('canvas');
-  canvas.id = CANVAS_ID;
-  canvas.style.cssText =
-    'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483647;';
-  document.documentElement.appendChild(canvas);
-
-  ctx = canvas.getContext('2d');
-  if (!ctx) {
-    forceDisable();
-    return;
-  }
-
-  resizeCanvas();
-  initSnowflakes(canvas.width, canvas.height);
-  if (document.visibilityState === 'visible') startAnimation();
-
-  resizeHandler = resizeCanvas;
-  window.addEventListener('resize', resizeHandler);
-
-  visibilityHandler = handleVisibilityChange;
-  document.addEventListener('visibilitychange', visibilityHandler);
-}
-
-/**
- * Graceful disable: stop spawning new snowflakes and let existing ones
- * fall off the bottom of the viewport naturally.
- */
-function disable(): void {
-  if (state !== 'active') return;
-  state = 'draining';
-}
-
-/** Complete the drain: remove canvas and clean up all resources. */
-function finalizeDrain(): void {
-  state = 'off';
-  stopAnimation();
-
-  if (resizeHandler) {
-    window.removeEventListener('resize', resizeHandler);
-    resizeHandler = null;
-  }
-
-  if (visibilityHandler) {
-    document.removeEventListener('visibilitychange', visibilityHandler);
-    visibilityHandler = null;
-  }
-
-  if (canvas) {
-    canvas.remove();
-    canvas = null;
-  }
-
-  ctx = null;
-  snowflakes = [];
-}
-
-/** Immediate disable: remove everything without draining (e.g. page unload). */
-function forceDisable(): void {
-  if (state === 'off') return;
-  finalizeDrain();
-}
-
-function resolveEffect(res: Record<string, unknown>): string {
-  if (typeof res[STORAGE_KEY] === 'string') return res[STORAGE_KEY] as string;
-  // Backward compat: old boolean snow key -> 'snow'
-  if (res[LEGACY_KEY] === true) return 'snow';
-  return 'off';
-}
-
-/** Stop of the newest `startSnowEffect` run, which owns the canvas. */
-let stopActiveRun: StopNativeFeature | null = null;
-
-/**
- * Follow the `gvVisualEffect` setting until the returned stop runs. Turning
- * the setting off drains the flakes; stop removes the canvas and every
- * listener at once.
- */
-export function startSnowEffect(): StopNativeFeature {
-  // A second start replaces the first instead of stacking listeners on one canvas.
-  stopActiveRun?.();
-  let stopped = false;
-
-  const handleStorageChange = (
-    changes: Record<string, chrome.storage.StorageChange>,
-    area: string,
-  ): void => {
-    if (area !== 'sync' || !changes[STORAGE_KEY]) return;
-    if (changes[STORAGE_KEY].newValue === EFFECT_VALUE) {
-      enable();
+  function handleVisibilityChange(): void {
+    if (document.visibilityState === 'visible') {
+      startAnimation();
     } else {
-      disable();
+      stopAnimation();
     }
-  };
-  // Immediate cleanup on page unload (no need to drain)
-  const handleBeforeUnload = (): void => {
-    forceDisable();
-  };
-
-  // 1) Read initial setting
-  try {
-    chrome.storage?.sync?.get({ [STORAGE_KEY]: null, [LEGACY_KEY]: false }, (res) => {
-      // The read can land after stop; enabling then would leave a canvas no stop removes.
-      if (stopped) return;
-      if (resolveEffect(res) === EFFECT_VALUE) {
-        enable();
-      }
-    });
-  } catch (e) {
-    console.error('[Gemini Voyager] Failed to get snow effect setting:', e);
   }
 
-  // 2) Respond to storage changes
-  try {
-    chrome.storage?.onChanged?.addListener(handleStorageChange);
-  } catch (e) {
-    console.error('[Gemini Voyager] Failed to add storage listener for snow effect:', e);
+  function enable(): void {
+    if (state === 'active') return;
+    if (state === 'draining') {
+      // Cancel drain — resume normal particle recycling
+      state = 'active';
+      return;
+    }
+    state = 'active';
+
+    canvas = document.createElement('canvas');
+    canvas.id = CANVAS_ID;
+    canvas.style.cssText =
+      'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483647;';
+    document.documentElement.appendChild(canvas);
+
+    ctx = canvas.getContext('2d');
+    if (!ctx) {
+      forceDisable();
+      return;
+    }
+
+    resizeCanvas();
+    initSnowflakes(canvas.width, canvas.height);
+    if (document.visibilityState === 'visible') startAnimation();
+
+    resizeHandler = resizeCanvas;
+    window.addEventListener('resize', resizeHandler);
+
+    visibilityHandler = handleVisibilityChange;
+    document.addEventListener('visibilitychange', visibilityHandler);
   }
 
-  window.addEventListener('beforeunload', handleBeforeUnload);
+  /**
+   * Graceful disable: stop spawning new snowflakes and let existing ones
+   * fall off the bottom of the viewport naturally.
+   */
+  function disable(): void {
+    if (state !== 'active') return;
+    state = 'draining';
+  }
 
-  const stop = (): void => {
-    // Already stopped, or replaced: a late stop must not remove the newer run's canvas.
-    if (stopActiveRun !== stop) return;
-    stopActiveRun = null;
-    stopped = true;
-    forceDisable();
-    window.removeEventListener('beforeunload', handleBeforeUnload);
-    try {
-      chrome.storage?.onChanged?.removeListener(handleStorageChange);
-    } catch {
-      // An orphaned content script's chrome.* throws; its listener is already dead.
+  /** Complete the drain: remove canvas and clean up all resources. */
+  function finalizeDrain(): void {
+    state = 'off';
+    stopAnimation();
+
+    if (resizeHandler) {
+      window.removeEventListener('resize', resizeHandler);
+      resizeHandler = null;
     }
-  };
-  stopActiveRun = stop;
-  return stop;
+
+    if (visibilityHandler) {
+      document.removeEventListener('visibilitychange', visibilityHandler);
+      visibilityHandler = null;
+    }
+
+    if (canvas) {
+      canvas.remove();
+      canvas = null;
+    }
+
+    ctx = null;
+    snowflakes = [];
+  }
+
+  /** Immediate disable: remove everything without draining (e.g. page unload). */
+  function forceDisable(): void {
+    if (state === 'off') return;
+    finalizeDrain();
+  }
+
+  return { enable, drain: disable, destroy: forceDisable };
 }

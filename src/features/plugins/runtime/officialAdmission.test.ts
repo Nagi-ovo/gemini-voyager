@@ -84,6 +84,26 @@ describe('createOfficialAdmission', () => {
       expect(admission.stateOf(id)).toBe('pending');
     }
   });
+
+  it('admits shared effects before surface initialization and retains admission when it closes', () => {
+    const admission = createOfficialAdmission();
+    const listener = vi.fn();
+    admission.subscribe(listener);
+    admission.admitShared('visualEffects');
+    admission.admitShared('visualEffects');
+    expect(listener).toHaveBeenCalledTimes(1);
+    admission.close();
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.visualEffects)).toBe('admitted');
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.geminiFormulaCopy)).toBe('denied');
+  });
+
+  it('keeps shared effects denied when a plugin subframe closes without admitting them', () => {
+    const admission = createOfficialAdmission(OWNERS);
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.visualEffects)).toBe('pending');
+    admission.close();
+    admission.admitShared('visualEffects');
+    expect(admission.stateOf(OFFICIAL_PLUGIN_IDS.visualEffects)).toBe('denied');
+  });
 });
 
 describe('CLOSED_ADMISSION', () => {

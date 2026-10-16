@@ -375,15 +375,15 @@ describe('PluginHost: official plugins bound to legacy switches', () => {
     host.stop();
   });
 
-  it('reads no legacy setting off Gemini / AI Studio', async () => {
+  it('follows the shared legacy settings feed off Gemini / AI Studio without blocking startup', async () => {
     mockPluginState({});
     const legacy = deferredLegacy();
     const host = geminiHost([], legacy.legacySettings, createOfficialAdmission(), {
       url: 'https://claude.ai/chat/1',
     });
     await host.start();
-    expect(legacy.load).not.toHaveBeenCalled();
-    expect(legacy.isSubscribed()).toBe(false);
+    expect(legacy.load).toHaveBeenCalledOnce();
+    expect(legacy.isSubscribed()).toBe(true);
     host.stop();
   });
 

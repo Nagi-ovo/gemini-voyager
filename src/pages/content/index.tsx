@@ -53,6 +53,7 @@ import {
   rulerTimelineCoachmarkStep,
 } from './timeline/rulerTimelineCoachmark';
 import { usageCoachmarkStep } from './usageStatus/usageCoachmark';
+import { admitVisualEffectsForPage } from './visualEffectsStartup';
 import { startWatermarkNativeNotice } from './watermarkNativeNotice';
 import { restartWatermarkRemoverFeature } from './watermarkRemover/feature';
 
@@ -446,7 +447,11 @@ function handleVisibilityChange(): void {
     // dependency. Keep them out of embedded plugin frames: those frames only
     // need the declarative plugin host and would otherwise render a duplicate
     // effect above their parent page.
-    if (!isPluginSubframe) void mountForPage(NATIVE_FEATURES.visualEffects);
+    cleanupManager.registerCleanupFunction(
+      registerBuiltinNativeHandlers(),
+      CleanupPositions.CleanupVisualEffects,
+    );
+    admitVisualEffectsForPage(officialAdmission, isPluginSubframe);
 
     // Answer the background's ping so injectPluginScriptIntoOpenTabs can tell
     // a live content script from a missing/orphaned one and skip re-injecting
@@ -483,7 +488,6 @@ function handleVisibilityChange(): void {
     // Permanent page services retain their native lifetime. The host
     // itself follows AI Studio's master switch (runtime/surfaceSwitch.ts), so
     // "Voyager off on AI Studio" also keeps local plugins off there.
-    registerBuiltinNativeHandlers();
     cleanupManager.registerCleanupFunction(
       startPluginHost({ admission: officialAdmission }),
       CleanupPositions.CleanupPluginHost,

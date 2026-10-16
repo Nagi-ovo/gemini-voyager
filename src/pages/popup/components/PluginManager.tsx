@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 
 import type { PluginStatus } from '@/features/plugins/runtime/pluginStatus';
+import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import type { BlockedPluginUpdate } from '@/features/plugins/sources/defaultSources';
 import type { PluginManifest } from '@/features/plugins/types';
 
@@ -193,6 +194,7 @@ export function PluginManager({
         )}
 
         {manifests.map((plugin) => {
+          if (plugin.id === OFFICIAL_PLUGIN_IDS.visualEffects) return null;
           const enabled = enabledMap[plugin.id] === true;
           const isOpen = !collapsed.has(plugin.id);
           const hosts = siteHostsFromMatches(plugin.matches);

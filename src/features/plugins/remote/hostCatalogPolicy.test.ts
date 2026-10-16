@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { VISUAL_EFFECTS_MANIFEST } from '../builtin/visualEffectsManifest';
 import type { PluginManifest } from '../types';
 import type { HostCatalogCacheEntry } from './hostCatalogCache';
 import {
@@ -17,6 +18,13 @@ import {
 } from './hostCatalogPolicy';
 
 const HOUR = 60 * 60 * 1000;
+
+it('a stale visual-effects plugin-state entry does not trigger a custom-site catalog request', () => {
+  const manifests = [VISUAL_EFFECTS_MANIFEST];
+  const stale = { [VISUAL_EFFECTS_MANIFEST.id]: { enabled: true, installedAt: 1 } };
+  expect(hasEnabledPluginForUrl(manifests, stale, 'https://custom.example/chat')).toBe(false);
+  expect(hasEnabledPluginForHost(manifests, stale, 'custom.example')).toBe(false);
+});
 
 function entry(overrides: Partial<HostCatalogCacheEntry> = {}): HostCatalogCacheEntry {
   return {

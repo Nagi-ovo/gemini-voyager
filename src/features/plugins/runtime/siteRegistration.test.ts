@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import type { PluginManifest } from '../types';
 import {
   partitionPluginOriginPatterns,
@@ -52,6 +53,23 @@ describe('pluginToOriginPatternsForActiveUrl', () => {
     'https://claude.ai/*',
     'https://*.frame.claudeusercontent.com/*',
   ]);
+
+  it('never requests a host grant or new injection for the shared visual effects builtin', () => {
+    const visualEffects = { ...mk(['<all_urls>']), id: OFFICIAL_PLUGIN_IDS.visualEffects };
+    expect(pluginsToOriginPatterns([visualEffects])).toEqual([]);
+    for (const url of [
+      undefined,
+      'https://gemini.google.com/app',
+      'https://aistudio.google.com/prompts',
+      'https://chatgpt.com/c/1',
+      'https://claude.ai/chat/1',
+      'https://chat.deepseek.com/a/chat/s/1',
+      'http://localhost:3000/',
+      'https://custom.example/',
+    ]) {
+      expect(pluginToOriginPatternsForActiveUrl(visualEffects, url)).toEqual([]);
+    }
+  });
 
   it('requests only the currently open ChatGPT origin', () => {
     expect(

@@ -3,7 +3,7 @@ import { type Mock, afterEach, beforeEach, describe, expect, it, vi } from 'vite
 import { StorageKeys } from '@/core/types/common';
 
 import { legacyBoundSettings } from '../runtime/legacySnapshotFeed';
-import { FEATURE_OWNERS, OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
+import { FEATURE_OWNERS, OFFICIAL_PLUGIN_IDS, SHARED_FEATURE_OWNERS } from '../sites/featureOwners';
 import type { PluginManifest } from '../types';
 import {
   legacyBindingFor,
@@ -90,7 +90,7 @@ describe('legacy enable bindings', () => {
   });
 
   it('bind every official feature to a legacy key', () => {
-    for (const owned of FEATURE_OWNERS) {
+    for (const owned of [...FEATURE_OWNERS, ...SHARED_FEATURE_OWNERS]) {
       expect(legacyBindingFor(owned.officialPluginId)?.area).toBe('sync');
     }
     expect(legacyBindingFor('voyager.chatgpt-folders')).toBeNull();
@@ -101,6 +101,8 @@ describe('legacy enable bindings', () => {
   it('list each storage key once, switches and slider values, with both formula ids sharing one switch', () => {
     expect([...legacyBindingKeys()].sort()).toEqual(
       [
+        StorageKeys.GV_VISUAL_EFFECT,
+        StorageKeys.GV_SNOW_EFFECT,
         StorageKeys.FORMULA_COPY_ENABLED,
         StorageKeys.INPUT_VIM_MODE,
         StorageKeys.INPUT_HALO_HIDDEN,

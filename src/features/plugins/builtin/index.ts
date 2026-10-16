@@ -22,6 +22,7 @@ import { GEMINI_SIDEBAR_WIDTH_MANIFEST } from './geminiSidebarWidthManifest';
 import { GEMINI_TIMELINE_MANIFEST } from './geminiTimelineManifest';
 import { GEMINI_USAGE_STATUS_MANIFEST } from './geminiUsageStatusManifest';
 import { timelineManifest } from './timelineManifest';
+import { VISUAL_EFFECTS_MANIFEST } from './visualEffectsManifest';
 
 /** ChatGPT stamps the owning conversation id on each rendered reply. */
 export const CHATGPT_CONVERSATION_ID_ATTRIBUTE = 'data-chatgpt-selection-conversation-id';
@@ -44,6 +45,7 @@ export const CHATGPT_CONVERSATION_ID_ATTRIBUTE = 'data-chatgpt-selection-convers
  * as on by default; the user turns the rest on in the popup.
  */
 export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
+  VISUAL_EFFECTS_MANIFEST,
   {
     id: 'voyager.formula-copy',
     name: 'Formula Copy',

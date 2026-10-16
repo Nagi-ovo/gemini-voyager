@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import enMessages from '@locales/en/messages.json';
 
 import { BUILTIN_PLUGINS } from '@/features/plugins/builtin';
+import { VISUAL_EFFECTS_MANIFEST } from '@/features/plugins/builtin/visualEffectsManifest';
 import type { PluginStatus } from '@/features/plugins/runtime/pluginStatus';
 import type { PluginManifest } from '@/features/plugins/types';
 
@@ -60,6 +61,18 @@ describe('PluginManager setting persistence', () => {
 });
 
 describe('PluginManager accessible groups', () => {
+  it('omits the visual effects row on Claude while keeping other plugin rows', async () => {
+    await renderManager({
+      manifests: [VISUAL_EFFECTS_MANIFEST, widthPlugin],
+      activeUrl: 'https://claude.ai/',
+    });
+
+    expect(container.querySelector('input[aria-label="Test · Width"]')).not.toBeNull();
+    expect(container.textContent).not.toContain(VISUAL_EFFECTS_MANIFEST.name);
+    expect(container.querySelector('input[aria-label="Visual effects"]')).toBeNull();
+    expect(container.querySelector('select')).toBeNull();
+  });
+
   it('groups identically named controls under their owning plugins', async () => {
     const second: PluginManifest = {
       ...widthPlugin,

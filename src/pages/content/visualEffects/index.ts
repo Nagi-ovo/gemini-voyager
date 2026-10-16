@@ -1,45 +1,84 @@
-import type { StopNativeFeature } from '../featureLifecycle';
-import { startRainEffect } from './rain';
-import { startSakuraEffect } from './sakura';
-import { startSnowEffect } from './snow';
+import type { NativeHandler } from '@/features/plugins/runtime/nativeHandlers';
+import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+import type { PluginSettings } from '@/features/plugins/types';
+
+import { createRainRenderer } from './rain';
+import { createSakuraRenderer } from './sakura';
+import { createSnowRenderer } from './snow';
+import type { VisualEffectKind, VisualEffectRenderer } from './types';
 
 const STARTED_KEY = '__gvVisualEffectsStarted';
+type VisualEffectsGlobal = typeof globalThis & { [STARTED_KEY]?: unknown };
 
-/**
- * Holds the owner token of the run that started the effects. A second copy of
- * this bundle evaluated in the same world shares `globalThis` but not module
- * state, so the token is what keeps it from drawing a second effect. Older
- * builds stored `true` and never cleared it; that still reads as taken.
- */
-type VisualEffectsGlobal = typeof globalThis & {
-  [STARTED_KEY]?: unknown;
-};
-
-const NOOP_STOP: StopNativeFeature = () => {};
-
-/**
- * Start the platform-neutral visual effects once in the current content-script
- * world. The content script is only injected on native Voyager sites or sites
- * already enabled through Prompt Manager / plugins, so no extra host access is
- * needed here.
- *
- * The returned stop removes every effect and listener at once and frees the
- * world for the next start (a content-script handoff). Turning the setting
- * off from the popup is not a stop: the effects keep listening and drain.
- */
-export function startVisualEffects(): StopNativeFeature {
-  const scope = globalThis as VisualEffectsGlobal;
-  if (scope[STARTED_KEY]) return NOOP_STOP;
-  const owner = {};
-  scope[STARTED_KEY] = owner;
-
-  const stops = [startSnowEffect(), startSakuraEffect(), startRainEffect()];
-
-  return () => {
-    for (const stop of stops) stop();
-    // A late stop from an earlier run must not free the world a newer run holds.
-    if (scope[STARTED_KEY] === owner) delete scope[STARTED_KEY];
-  };
+export interface VisualEffectsRuntime {
+  handler: NativeHandler;
+  destroy(): void;
 }
 
-export { startRainEffect, startSakuraEffect, startSnowEffect };
+/**
+ * The page owns renderers; a plugin activation only owns their selected effect.
+ * Keeping these lifetimes separate lets off drain and a new on resume the same
+ * particles. The existing renderer drain state already owns that transition;
+ * a second state machine would duplicate it.
+ * No settings are read here: the trusted builtin bindings own that decision.
+ */
+export function createVisualEffectsRuntime(): VisualEffectsRuntime {
+  const world = globalThis as VisualEffectsGlobal;
+  if (world[STARTED_KEY]) return { handler: {}, destroy: () => {} };
+  const owner = {};
+  world[STARTED_KEY] = owner;
+  const pageScope = new PluginScope();
+  const renderers: Record<VisualEffectKind, VisualEffectRenderer> = {
+    snow: createSnowRenderer(),
+    sakura: createSakuraRenderer(),
+    rain: createRainRenderer(),
+  };
+  let activation: object | null = null;
+
+  const select = (settings: PluginSettings): void => {
+    if (pageScope.isDisposed) return;
+    for (const [kind, renderer] of Object.entries(renderers)) {
+      if (settings.effect === kind) renderer.enable();
+      else renderer.drain();
+    }
+  };
+  const destroy = (): void => {
+    void pageScope.dispose();
+  };
+  const destroyRenderers = (): void => {
+    for (const renderer of Object.values(renderers)) renderer.destroy();
+  };
+  pageScope.effect(() => {
+    // Cancelled unloads and bfcache restores must leave the page scope available for reactivation.
+    window.addEventListener('beforeunload', destroyRenderers);
+    return () => {
+      activation = null;
+      destroyRenderers();
+      window.removeEventListener('beforeunload', destroyRenderers);
+      // An older page's late cleanup must never release a newer page's owner.
+      if (world[STARTED_KEY] === owner) delete world[STARTED_KEY];
+    };
+  }, 'visual effects page lifetime');
+
+  return {
+    handler: {
+      activate(scope, settings) {
+        if (pageScope.isDisposed) return;
+        const token = {};
+        activation = token;
+        scope.effect(() => {
+          select(settings);
+          return () => {
+            if (activation !== token) return;
+            activation = null;
+            select({ effect: 'off' });
+          };
+        }, 'visual effects selection');
+      },
+      updateSettings(settings) {
+        if (activation) select(settings);
+      },
+    },
+    destroy,
+  };
+}

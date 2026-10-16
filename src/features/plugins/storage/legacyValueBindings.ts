@@ -31,6 +31,7 @@ import {
 } from '@/core/utils/chatAppearanceValues';
 import { normalizeGemsSidebarCount } from '@/core/utils/gemsSidebarValues';
 import { normalizeSidebarWidth } from '@/core/utils/sidebarWidthValues';
+import { type VisualEffect, resolveVisualEffect } from '@/core/utils/visualEffectValues';
 
 import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import type { PluginSettings } from '../types';
@@ -42,7 +43,12 @@ export interface LegacyValueBinding {
   /** The sync storage key the native module reads. */
   readonly legacyKey: string;
   /** The native module's reading of the stored value; `read(undefined)` is the default. */
-  readonly read: (stored: unknown) => number | boolean;
+  readonly read: (
+    stored: unknown,
+    snapshot?: LegacySettingSnapshot,
+  ) => number | boolean | VisualEffect;
+  /** Extra legacy inputs for a trusted enum resolver, never plugin-supplied keys. */
+  readonly additionalKeys?: readonly string[];
   /** Whether a live change to `legacyKey` replaces the current value (the native listener's test). */
   readonly acceptsLiveChange: (value: unknown) => boolean;
 }
@@ -71,6 +77,16 @@ function trueOnlyBinding(settingKey: string, legacyKey: string): LegacyValueBind
  * keeps reading its settings from `gvPluginsState`.
  */
 export const LEGACY_VALUE_BINDINGS: LegacyValueBindingTable = {
+  [OFFICIAL_PLUGIN_IDS.visualEffects]: [
+    {
+      settingKey: 'effect',
+      legacyKey: StorageKeys.GV_VISUAL_EFFECT,
+      additionalKeys: [StorageKeys.GV_SNOW_EFFECT],
+      read: (stored, snapshot) =>
+        resolveVisualEffect(stored, snapshot?.[StorageKeys.GV_SNOW_EFFECT]),
+      acceptsLiveChange: always,
+    },
+  ],
   [OFFICIAL_PLUGIN_IDS.geminiGemsSidebar]: [
     {
       settingKey: 'count',
@@ -125,7 +141,9 @@ export function legacyValueKeys(
 ): readonly string[] {
   return [
     ...new Set(
-      Object.values(table).flatMap((bindings) => bindings.map((entry) => entry.legacyKey)),
+      Object.values(table).flatMap((bindings) =>
+        bindings.flatMap((entry) => [entry.legacyKey, ...(entry.additionalKeys ?? [])]),
+      ),
     ),
   ];
 }
@@ -136,12 +154,12 @@ export function deriveLegacyValueSettings(
   legacy: LegacySettingSnapshot,
   table: LegacyValueBindingTable = LEGACY_VALUE_BINDINGS,
 ): PluginSettings {
-  const settings: Record<string, number | boolean> = {};
+  const settings: Record<string, number | boolean | VisualEffect> = {};
   for (const entry of legacyValueBindingsFor(id, table)) {
     const stored = Object.prototype.hasOwnProperty.call(legacy, entry.legacyKey)
       ? legacy[entry.legacyKey]
       : undefined;
-    settings[entry.settingKey] = entry.read(stored);
+    settings[entry.settingKey] = entry.read(stored, legacy);
   }
   return settings;
 }
@@ -161,7 +179,8 @@ export function legacyValueWrite(
   const entry = legacyValueBindingsFor(id, table).find(
     (candidate) => candidate.settingKey === settingKey,
   );
-  return entry ? { [entry.legacyKey]: entry.read(value) } : null;
+  if (!entry) return null;
+  return { [entry.legacyKey]: entry.read(value) };
 }
 
 /**

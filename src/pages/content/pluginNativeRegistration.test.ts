@@ -6,7 +6,11 @@ import {
   resetNativeHandlersForTests,
 } from '@/features/plugins/runtime/nativeHandlers';
 
-import { NATIVE_HANDLER_BINDINGS, registerBuiltinNativeHandlers } from './pluginNativeRegistration';
+import {
+  NATIVE_HANDLER_BINDINGS,
+  NATIVE_HANDLER_FACTORIES,
+  registerBuiltinNativeHandlers,
+} from './pluginNativeRegistration';
 
 afterEach(() => {
   resetNativeHandlersForTests();
@@ -17,15 +21,16 @@ describe('pluginNativeRegistration', () => {
     // A BUILTIN_PLUGINS entry without a handler is a dead toggle; a handler
     // without a manifest is unreachable. Both directions must fail here, at
     // test time, not as a runtime log line.
-    expect(Object.keys(NATIVE_HANDLER_BINDINGS).sort()).toEqual(
-      [...NATIVE_BUILTIN_PLUGIN_IDS].sort(),
-    );
+    expect(
+      [...Object.keys(NATIVE_HANDLER_BINDINGS), ...Object.keys(NATIVE_HANDLER_FACTORIES)].sort(),
+    ).toEqual([...NATIVE_BUILTIN_PLUGIN_IDS].sort());
   });
 
   it('registerBuiltinNativeHandlers registers a handler for every native id', () => {
-    registerBuiltinNativeHandlers();
+    const stop = registerBuiltinNativeHandlers();
     for (const id of NATIVE_BUILTIN_PLUGIN_IDS) {
       expect(getNativeHandler(id)).toBeDefined();
     }
+    stop();
   });
 });

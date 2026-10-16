@@ -23,6 +23,7 @@
  */
 import { logger } from '@/core/services/LoggerService';
 
+import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import { isStaticallyInjectedHost } from '../sites/hostPolicy';
 import { matchesAnyPattern } from '../sites/matchPattern';
 import type { PluginManifest } from '../types';
@@ -100,6 +101,8 @@ export function pluginToOriginPatternsForActiveUrl(
   manifest: PluginManifest,
   activeUrl?: string,
 ): string[] {
+  // This shared feature only follows existing injection; enabling it never grants a host.
+  if (manifest.id === OFFICIAL_PLUGIN_IDS.visualEffects) return [];
   if (activeUrl && matchesAnyPattern(activeUrl, manifest.matches)) {
     try {
       const url = new URL(activeUrl);

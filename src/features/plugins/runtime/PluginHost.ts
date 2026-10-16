@@ -38,7 +38,7 @@ import {
   resolveSiteAdapterForUrl,
   resolveSiteOverride,
 } from '../remote/siteOverride';
-import { tracksPluginHealth } from '../sites/featureOwners';
+import { OFFICIAL_PLUGIN_IDS, tracksPluginHealth } from '../sites/featureOwners';
 import { hostPolicyRefusal, packagedSiteForUrl } from '../sites/hostPolicy';
 import { matchesAnyPattern } from '../sites/matchPattern';
 import { SiteRegistry } from '../sites/registry';
@@ -62,6 +62,7 @@ import { hasPrimitive } from '../verbs/registry';
 import { DeclarativeEngine } from './declarativeEngine';
 import {
   DEFAULT_LEGACY_SETTINGS,
+  DEFAULT_VISUAL_EFFECT_SETTINGS,
   type LegacySettingsSource,
   type LegacySnapshotFeed,
   legacyBoundSettings,
@@ -94,7 +95,8 @@ export interface PluginHostOptions {
   readonly isTopFrame?: boolean;
   /**
    * The site's master switch (AI Studio's "Voyager on AI Studio"); while it is
-   * off nothing mounts. Defaults to `surfaceSwitchForUrl(url)`.
+   * off only the shared visual effects may mount, preserving their early native
+   * lifetime. Defaults to `surfaceSwitchForUrl(url)`.
    */
   readonly surfaceSwitch?: SurfaceSwitch | null;
   /**
@@ -102,7 +104,7 @@ export interface PluginHostOptions {
    * (`officialAdmission.ts`). Defaults to `CLOSED_ADMISSION`: none ever does.
    */
   readonly admission?: OfficialAdmission;
-  /** Injectable for tests; the legacy keys official plugins follow, read on Gemini / AI Studio only. */
+  /** Injectable for tests; native surfaces read every binding, other pages only shared visual keys. */
   readonly legacySettings?: LegacySettingsSource;
 }
 
@@ -156,7 +158,7 @@ export class PluginHost {
   private readonly admission: OfficialAdmission;
   private readonly legacySettings: LegacySettingsSource;
   private unsubscribeAdmission: (() => void) | null = null;
-  /** Legacy switches of bound official plugins; null off Gemini / AI Studio. */
+  /** Legacy switches of bound official plugins, narrowed to shared keys off native surfaces. */
   private legacy: LegacySnapshotFeed | null = null;
   /** Whether the site's master switch lets plugins run (always true without one). */
   private surfaceOn = true;
@@ -196,7 +198,9 @@ export class PluginHost {
     this.surfaceSwitch =
       options.surfaceSwitch === undefined ? surfaceSwitchForUrl(this.url) : options.surfaceSwitch;
     this.admission = options.admission ?? CLOSED_ADMISSION;
-    this.legacySettings = options.legacySettings ?? DEFAULT_LEGACY_SETTINGS;
+    this.legacySettings =
+      options.legacySettings ??
+      (packagedSiteForUrl(this.url) ? DEFAULT_LEGACY_SETTINGS : DEFAULT_VISUAL_EFFECT_SETTINGS);
   }
 
   get activeAdapter(): SiteAdapter | null {
@@ -249,11 +253,9 @@ export class PluginHost {
       const requeue = (): void => {
         if (this.generation === gen) void this.enqueue(() => this.reconcile(gen));
       };
-      // Only the packaged sites run official plugins bound to legacy switches;
-      // unbound plugins never wait on that read, whose landing requeues.
-      this.legacy = packagedSiteForUrl(this.url)
-        ? openLegacySnapshotFeed(this.legacySettings, requeue)
-        : null;
+      // Visual effects shares its legacy choice on every already-injected page;
+      // non-native pages read only those keys. Unbound plugins never wait on it.
+      this.legacy = openLegacySnapshotFeed(this.legacySettings, requeue);
       this.unsubscribeAdmission = this.admission.subscribe(requeue);
       this.unsubscribeState = subscribePluginState((next) => {
         if (this.generation !== gen) return;
@@ -261,8 +263,8 @@ export class PluginHost {
         this.state = next;
         void this.enqueue(() => this.reconcile(gen));
       });
-      // The site's master switch follows the same pattern: off unmounts every
-      // plugin on the page, on mounts the enabled ones again.
+      // The site's master switch follows the same pattern for surface plugins;
+      // shared visual effects retain their independent early lifetime.
       let surfaceFromListener: boolean | null = null;
       const surfaceSwitch = this.surfaceSwitch;
       if (surfaceSwitch) {
@@ -631,7 +633,8 @@ export class PluginHost {
     manifest: PluginManifest,
     wishInput: Omit<WishInput, 'admission'>,
   ): Promise<WishVerdict> {
-    if (!this.surfaceOn) return 'skip';
+    // Visual effects already ran before AI Studio's master gate in native startup.
+    if (!this.surfaceOn && manifest.id !== OFFICIAL_PLUGIN_IDS.visualEffects) return 'skip';
     if (!this.targetsThisPage(manifest)) return 'skip';
     const wish = wishVerdict(
       {
