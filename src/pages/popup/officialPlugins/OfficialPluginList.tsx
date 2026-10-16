@@ -12,7 +12,6 @@ import {
   type OfficialPluginControls,
 } from './OfficialPluginRow';
 import { OFFICIAL_PLUGIN_GROUPS } from './officialPluginRegistry';
-import { useContextSyncRequest } from './useContextSyncRequest';
 import type { OfficialPluginRow } from './useOfficialPluginList';
 
 export interface OfficialPluginListProps {
@@ -56,9 +55,6 @@ export function OfficialPluginList({
   language,
   t,
 }: OfficialPluginListProps) {
-  // Owned here, not by the collapsible panel, so a slow sync survives closing Options.
-  const contextSync = useContextSyncRequest(panelIo?.sourceTabId);
-  const rowPanelIo = panelIo ? { ...panelIo, contextSync } : undefined;
   return (
     // The popup itself sets no direction, so the card mirrors itself for RTL languages.
     <Card
@@ -87,7 +83,7 @@ export function OfficialPluginList({
                     status={statuses.find((entry) => entry.id === row.manifest.id)}
                     nameSources={nameSources}
                     control={row.entry.control ? controls?.[row.entry.control] : undefined}
-                    panelIo={rowPanelIo}
+                    panelIo={panelIo}
                     searching={searching}
                     onToggle={onToggle}
                     onSettingsChange={onSettingsChange}

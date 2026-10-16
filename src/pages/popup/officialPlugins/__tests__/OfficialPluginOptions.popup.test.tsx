@@ -422,6 +422,63 @@ describe('official plugin rows with options', () => {
       expect(syncButton()!.disabled).toBe(false);
     });
 
+    const deferSync = () => {
+      const pending = { answer: (_response: unknown) => {} };
+      extensionApi.tabs.sendMessage.mockImplementation((_tabId: number, message: unknown) =>
+        isSyncRequest(message)
+          ? new Promise((resolve) => (pending.answer = resolve))
+          : Promise.resolve(),
+      );
+      return pending;
+    };
+    const syncRequests = () =>
+      extensionApi.tabs.sendMessage.mock.calls.filter(([, message]) => isSyncRequest(message));
+    const typeSearch = async (query: string) => {
+      const box = container.querySelector<HTMLInputElement>('input[type="search"]')!;
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(box, query);
+        box.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    };
+
+    it('a search that hides the Plugins card mid-sync does not allow a second sync', async () => {
+      sync[StorageKeys.CONTEXT_SYNC_ENABLED] = true;
+      const pending = deferSync();
+      await mount();
+      await openOptions(id);
+      await act(async () => syncButton()!.click());
+      await typeSearch(TRANSLATIONS.en.pinTimelinePreview);
+      expect(row(id)).toBeNull();
+      await typeSearch('');
+      await openOptions(id);
+      await act(async () => {});
+      expect(syncButton()!.disabled).toBe(true);
+      await act(async () => syncButton()!.click());
+      expect(syncRequests()).toHaveLength(1);
+      await act(async () => pending.answer({ status: 'success' }));
+      expect(row(id)!.textContent).toContain(TRANSLATIONS.en.syncedSuccess);
+    });
+
+    it('a success that lands while Options is closed waits to be seen, then fades', async () => {
+      sync[StorageKeys.CONTEXT_SYNC_ENABLED] = true;
+      const pending = deferSync();
+      await mount();
+      await openOptions(id);
+      await act(async () => syncButton()!.click());
+      await openOptions(id);
+      vi.useFakeTimers();
+      try {
+        await act(async () => pending.answer({ status: 'success' }));
+        await act(async () => vi.advanceTimersByTime(10_000));
+        await openOptions(id);
+        expect(row(id)!.textContent).toContain(TRANSLATIONS.en.syncedSuccess);
+        await act(async () => vi.advanceTimersByTime(3_000));
+        expect(row(id)!.textContent).not.toContain(TRANSLATIONS.en.syncedSuccess);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it('asks the Gemini tab to send its context', async () => {
       sync[StorageKeys.CONTEXT_SYNC_ENABLED] = true;
       extensionApi.tabs.sendMessage.mockResolvedValue({ status: 'success' });

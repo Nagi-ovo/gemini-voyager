@@ -32,9 +32,7 @@ export type OfficialPluginControls = Partial<Record<OfficialControlId, OfficialP
 export interface OfficialPanelIo {
   readonly values: LegacySettingSnapshot;
   readonly write: (payload: Record<string, unknown>) => void;
-  /** The tab the popup was opened for, when it is not the active one (the options page). */
-  readonly sourceTabId?: number;
-  /** Context Sync's request state, owned by the list so collapsing Options keeps it. */
+  /** Context Sync's request state, owned by the Popup so hiding the card keeps it. */
   readonly contextSync?: ContextSyncRequest;
 }
 

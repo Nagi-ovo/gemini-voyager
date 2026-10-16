@@ -10,6 +10,7 @@ const MIN_PORT = 1;
 const MAX_PORT = 65535;
 const POLL_INTERVAL_MS = 5000;
 const PROBE_TIMEOUT_MS = 200;
+const SUCCESS_MESSAGE_MS = 3000;
 
 function storedPort(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : DEFAULT_PORT;
@@ -29,6 +30,14 @@ export function ContextSyncPanel({ values, write, contextSync, idPrefix, t }: Of
   const [isOnline, setIsOnline] = useState(false);
   const syncing = contextSync?.syncing ?? false;
   const status = contextSync?.status ?? null;
+  const dismiss = contextSync?.dismiss;
+
+  // A success fades only after it has been on screen; one that landed while closed waits.
+  useEffect(() => {
+    if (status?.kind !== 'ok' || !dismiss) return;
+    const timer = setTimeout(() => dismiss(status), SUCCESS_MESSAGE_MS);
+    return () => clearTimeout(timer);
+  }, [status, dismiss]);
 
   useEffect(() => setDraft(String(port)), [port]);
 

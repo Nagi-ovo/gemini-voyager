@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import type { TranslationKey } from '@/utils/translations';
-
-const SUCCESS_MESSAGE_MS = 3000;
 
 export type ContextSyncStatus =
   | { readonly kind: 'info' | 'ok'; readonly key: TranslationKey }
@@ -13,6 +11,8 @@ export interface ContextSyncRequest {
   readonly syncing: boolean;
   readonly status: ContextSyncStatus | null;
   readonly sync: () => void;
+  /** Clear `shown` once it has been read, unless a newer status replaced it. */
+  readonly dismiss: (shown: ContextSyncStatus) => void;
 }
 
 async function targetTab(sourceTabId: number | undefined): Promise<chrome.tabs.Tab | undefined> {
@@ -28,20 +28,15 @@ async function targetTab(sourceTabId: number | undefined): Promise<chrome.tabs.T
 }
 
 /**
- * The Context Sync request, owned above the collapsible Options panel: a slow
- * sync keeps its pending state and result while the panel is closed and
- * reopened, so its button cannot start a second request meanwhile.
+ * The Context Sync request, owned by the Popup itself: closing Options, or a
+ * search that hides the whole Plugins card, keeps a slow sync pending with its
+ * result, so its button cannot start a second request meanwhile. A result
+ * stays until the panel has shown it (the panel times its dismissal).
  */
 export function useContextSyncRequest(sourceTabId: number | undefined): ContextSyncRequest {
   const [syncing, setSyncing] = useState(false);
   const [status, setStatus] = useState<ContextSyncStatus | null>(null);
   const inFlight = useRef(false);
-
-  useEffect(() => {
-    if (status?.kind !== 'ok') return;
-    const timer = setTimeout(() => setStatus(null), SUCCESS_MESSAGE_MS);
-    return () => clearTimeout(timer);
-  }, [status]);
 
   const sync = useCallback(() => {
     if (inFlight.current) return;
@@ -64,5 +59,10 @@ export function useContextSyncRequest(sourceTabId: number | undefined): ContextS
     })();
   }, [sourceTabId]);
 
-  return { syncing, status, sync };
+  const dismiss = useCallback(
+    (shown: ContextSyncStatus) => setStatus((current) => (current === shown ? null : current)),
+    [],
+  );
+
+  return { syncing, status, sync, dismiss };
 }

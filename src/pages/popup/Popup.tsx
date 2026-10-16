@@ -60,6 +60,7 @@ import { useTimelinePopupSettings } from './hooks/useTimelinePopupSettings';
 import { useVisualEffectPopupSettings } from './hooks/useVisualEffectPopupSettings';
 import { useWatermarkPopupSettings } from './hooks/useWatermarkPopupSettings';
 import { OfficialPluginList } from './officialPlugins/OfficialPluginList';
+import { useContextSyncRequest } from './officialPlugins/useContextSyncRequest';
 import { useOfficialPluginList } from './officialPlugins/useOfficialPluginList';
 import { writePopupSyncStorage } from './utils/popupStorage';
 import { isPluginPopupSite } from './utils/siteMode';
@@ -141,6 +142,8 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const watermark = useWatermarkPopupSettings(writePopupSyncStorage);
   const visualEffect = useVisualEffectPopupSettings(writePopupSyncStorage);
   const folderStructureCopy = useFolderStructureCopy(language, sourceTabId);
+  // Above every early return and section: a sync in flight outlives the Plugins card.
+  const contextSync = useContextSyncRequest(sourceTabId);
   // Where the Plugins card lists the effect (Gemini / AI Studio), its row replaces this card.
   const visualEffectRowShown =
     !isPluginSite &&
@@ -428,7 +431,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             panelIo={{
               values: officialPlugins.panelValues,
               write: officialPlugins.writePanel,
-              sourceTabId,
+              contextSync,
             }}
             searching={sections.hasSettingsSearch}
             language={language}
