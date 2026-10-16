@@ -169,10 +169,7 @@ export class ChatGptFolderSection {
     this.element.setAttribute('role', 'region');
     this.element.setAttribute('aria-label', t('floatingPanelTitle'));
     this.element.addEventListener('pointerenter', () => (this.pointerInside = true));
-    this.element.addEventListener('pointerleave', () => {
-      this.pointerInside = false;
-      if (this.layoutHeld) this.update(this.data);
-    });
+    this.element.addEventListener('pointerleave', () => this.pointerLeft());
 
     // ChatGPT's own sections collapse from their heading; its name stays the button's name.
     const header = createFolderHeader({
@@ -305,6 +302,8 @@ export class ChatGptFolderSection {
     for (const copy of sidebar.querySelectorAll(`.${FOLDER_SECTION_CLASS}`)) {
       if (copy !== this.element) copy.remove();
     }
+    // A section dropped while hovered never hears `pointerleave`, which froze the recent order.
+    if (!this.element.isConnected) this.pointerLeft();
     const anchor = findHistoryAnchor(sidebar);
     const parent = anchor?.parentElement;
     if (!anchor || !parent) {
@@ -316,6 +315,12 @@ export class ChatGptFolderSection {
       return;
     }
     parent.insertBefore(this.element, anchor);
+  }
+
+  /** The pointer is off the section: rows held for it take their new order. */
+  private pointerLeft(): void {
+    this.pointerInside = false;
+    if (this.layoutHeld) this.update(this.data);
   }
 
   update(data: FolderData): void {

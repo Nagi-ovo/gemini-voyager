@@ -377,6 +377,26 @@ describe('ChatGPT folder section: opening a filed chat', () => {
     expect(view.outline().slice(0, 4)).toEqual(['Work', '  · Beta plan', '  · Gamma', '  · Alpha']);
   });
 
+  it('in recent order, does not freeze after ChatGPT remounts its sidebar under the pointer', async () => {
+    memory.values.local.set(PREFS_KEY, { collapsed: false, sortMode: 'recent' });
+    memory.values.local.set(KEY, {
+      ...structuredClone(DATA),
+      folders: DATA.folders.map((f) => ({ ...f, isExpanded: true })),
+    });
+    const view = await activate();
+    pointer('pointerenter');
+    // The dropped section never hears `pointerleave`; the watcher puts it back.
+    sidebar.replaceSidebar();
+    await nextPass();
+    expect(shadow().host.isConnected).toBe(true);
+
+    history.pushState(null, '', `/c/${ROWS[0].id}`);
+    sidebar.setActive(ROWS[0].id);
+    await nextPass();
+
+    expect(view.outline().slice(0, 4)).toEqual(['Work', '  · Alpha', '  · Gamma', '  · Beta plan']);
+  });
+
   it('records the open of a filed chat with no row in ChatGPT’s sidebar, and marks it open', async () => {
     memory.values.local.set(PREFS_KEY, { collapsed: false, sortMode: 'recent' });
     const data = structuredClone(DATA);
