@@ -11,6 +11,8 @@ import { mountNativeFeature } from './featureLifecycle';
 import { NATIVE_FEATURES } from './nativeFeatures';
 
 export interface GeminiBuiltinStartup {
+  /** Markdown repair at its original DOM-enhancement start point. */
+  startMarkdownFix(): Promise<void>;
   /** Deep Research export menu entries at their original content-helper start point. */
   startDeepResearchExport(): Promise<void>;
   /** Context capture at its original content-helper start point. */
@@ -45,6 +47,10 @@ export function createGeminiBuiltinStartup(
   const isStopped = (): boolean => stopped || lifetime?.aborted === true;
 
   return {
+    async startMarkdownFix() {
+      if (isStopped()) return;
+      admission.admit('gemini', 'markdownFix');
+    },
     async startDeepResearchExport() {
       if (isStopped()) return;
       admission.admit('gemini', 'deepResearchExport');

@@ -71,6 +71,7 @@ describe('feature owners', () => {
     for (const [feature, id] of [
       ['promptHistory', 'voyager.gemini-prompt-history'],
       ['inputCollapse', 'voyager.gemini-input-collapse'],
+      ['markdownFix', 'voyager.gemini-markdown-fix'],
       ['deepResearchExport', 'voyager.gemini-deep-research-export'],
     ] as const) {
       expect(isPackagedOfficialPluginId(id)).toBe(true);

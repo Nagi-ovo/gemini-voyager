@@ -7,7 +7,6 @@ import { startEdgeFinalVersionNotice } from './edgeFinalVersionNotice';
 import type { NativeFeature } from './featureLifecycle';
 import { startForkLinkFinisher } from './fork/linkFinisher';
 import { startGemsHider } from './gemsHider/index';
-import { startMarkdownPatcher } from './markdownPatcher/index';
 import { startNativeHealth } from './nativeHealth/index';
 import { startBrandTheme } from './platformTheme';
 import { startPreventAutoScrollBridge } from './preventAutoScroll/index';
@@ -74,11 +73,6 @@ export const NATIVE_FEATURES = {
     id: 'rendered-quote-styling',
     position: CleanupPositions.CleanupRenderedQuoteStyling,
     start: startRenderedQuoteStyling,
-  },
-  markdownPatcher: {
-    id: 'markdown-patcher',
-    position: CleanupPositions.CleanupMarkdownPatcher,
-    start: startMarkdownPatcher,
   },
   /** Removes stale menu UI while default-model selection is off; never selects a model. */
   defaultModelStarCleanup: {

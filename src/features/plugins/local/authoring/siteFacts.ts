@@ -53,6 +53,7 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   sidebarWidth: 'Sidebar width',
   sidebarAutoHide: 'Auto-hide sidebar',
   sidebarFullHide: 'Fully hide sidebar',
+  markdownFix: 'Markdown rendering fix',
   canvasCopy: 'Canvas copy as Markdown',
   deepResearchExport: 'Deep Research export',
   gemsSidebar: 'Recent Gems in sidebar',

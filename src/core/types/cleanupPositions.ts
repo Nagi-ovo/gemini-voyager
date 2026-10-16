@@ -32,7 +32,6 @@ export enum CleanupPositions {
   CleanupChatGptJump,
   /** Before the renderers it starts: no late start may mount once teardown began. */
   CleanupRendererStartup,
-  CleanupMarkdownPatcher,
   CleanupDefaultModel,
   CleanupWatermarkNativeNotice,
   CleanupGemsHider,

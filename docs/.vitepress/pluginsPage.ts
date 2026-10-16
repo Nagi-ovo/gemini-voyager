@@ -77,6 +77,7 @@ const FEATURE_ORDER = [
   'copy-thinking',
   'hide-input-halo',
   'visual-effects',
+  'markdown-fix',
   'cjk-render-fix',
 ];
 
@@ -115,6 +116,7 @@ export const FRESH_INSTALL_ON: ReadonlySet<string> = new Set([
   OFFICIAL_PLUGIN_IDS.geminiTimeline,
   OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
   OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
+  OFFICIAL_PLUGIN_IDS.geminiMarkdownFix,
   OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
   OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
   OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,

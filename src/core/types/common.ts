@@ -311,6 +311,9 @@ export const StorageKeys = {
   RESEARCH_PACK_ENABLED: 'gvResearchPackEnabled',
   RESEARCH_PACK: 'gvResearchPack',
 
+  // Default on: Markdown repair predates its sync switch.
+  MARKDOWN_FIX_ENABLED: 'gvMarkdownFixEnabled',
+
   // Export
   // Default on: Canvas copy predates its sync switch.
   CANVAS_COPY_ENABLED: 'gvCanvasCopyEnabled',

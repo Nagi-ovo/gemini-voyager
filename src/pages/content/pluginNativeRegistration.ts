@@ -37,6 +37,7 @@ import {
   activateGeminiInputCollapse,
   updateGeminiInputCollapseSettings,
 } from './inputCollapse/pluginHandler';
+import { activateGeminiMarkdownFix } from './markdownPatcher/pluginHandler';
 import { activateGeminiPreventAutoScroll } from './preventAutoScroll/pluginHandler';
 import { activateGeminiPromptHistory } from './promptHistory/pluginHandler';
 import { activateGeminiQuoteReply } from './quoteReply/pluginHandler';
@@ -94,6 +95,7 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
     activate: activateGeminiChatWidth,
     updateSettings: updateGeminiChatWidthSettings,
   },
+  'voyager.gemini-markdown-fix': { activate: activateGeminiMarkdownFix },
   'voyager.gemini-canvas-copy': { activate: activateGeminiCanvasCopy },
   'voyager.gemini-deep-research-export': { activate: activateGeminiDeepResearchExport },
   'voyager.gemini-edit-input-width': {

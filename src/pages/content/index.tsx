@@ -276,7 +276,7 @@ async function initializeFeatures(): Promise<void> {
 
       // DOM enhancements install observers/listeners but do not need separate
       // idle waits between each initializer.
-      await settle(mountForPage(NATIVE_FEATURES.markdownPatcher));
+      await settle(geminiBuiltins.startMarkdownFix());
       await settle(geminiRenderers.startCodeBlockCollapse());
       await settle(geminiBuiltins.startDefaultModel());
       startExportButton();

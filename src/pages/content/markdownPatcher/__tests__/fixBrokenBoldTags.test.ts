@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { fixBrokenBoldTags, startMarkdownPatcher } from '../index';
+import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+
+import { fixBrokenBoldTags } from '../index';
+import { activateGeminiMarkdownFix } from '../pluginHandler';
 
 describe('fixBrokenBoldTags', () => {
   let container: HTMLDivElement;
@@ -28,7 +31,8 @@ describe('fixBrokenBoldTags', () => {
 
   it('debounces mutation scans on the streaming path', async () => {
     vi.useFakeTimers();
-    const stop = startMarkdownPatcher();
+    const scope = new PluginScope();
+    activateGeminiMarkdownFix(scope);
     try {
       const streamed = document.createElement('div');
       streamed.textContent = 'Streamed **bold text**';
@@ -41,7 +45,7 @@ describe('fixBrokenBoldTags', () => {
       await vi.advanceTimersByTimeAsync(1);
       expect(streamed.querySelector('strong')?.textContent).toBe('bold text');
     } finally {
-      stop();
+      await scope.dispose();
       vi.useRealTimers();
     }
   });

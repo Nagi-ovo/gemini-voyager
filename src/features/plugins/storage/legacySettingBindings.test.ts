@@ -114,6 +114,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.SIDEBAR_WIDTH,
         StorageKeys.GV_SIDEBAR_AUTO_HIDE,
         StorageKeys.GV_SIDEBAR_FULL_HIDE,
+        StorageKeys.MARKDOWN_FIX_ENABLED,
         StorageKeys.CANVAS_COPY_ENABLED,
         StorageKeys.DEEP_RESEARCH_EXPORT_ENABLED,
         StorageKeys.GV_GEMS_SIDEBAR_ENABLED,

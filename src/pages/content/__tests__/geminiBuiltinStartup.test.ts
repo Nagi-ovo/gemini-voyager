@@ -160,6 +160,7 @@ describe('the page lifetime of native features', () => {
 describe('official plugins at their Gemini start points', () => {
   it.each([
     ['startTimeline', OFFICIAL_PLUGIN_IDS.geminiTimeline],
+    ['startMarkdownFix', OFFICIAL_PLUGIN_IDS.geminiMarkdownFix],
     ['startCanvasCopy', OFFICIAL_PLUGIN_IDS.geminiCanvasCopy],
     ['startDeepResearchExport', OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport],
     ['startGemsSidebar', OFFICIAL_PLUGIN_IDS.geminiGemsSidebar],
@@ -205,6 +206,7 @@ describe('official plugins at their Gemini start points', () => {
     );
     current.lifetime.abort();
     await startup.startTimeline();
+    await startup.startMarkdownFix();
     await startup.startCanvasCopy();
     await startup.startDeepResearchExport();
     await startup.startGemsSidebar();
@@ -217,6 +219,7 @@ describe('official plugins at their Gemini start points', () => {
     admission.close();
     for (const id of [
       OFFICIAL_PLUGIN_IDS.geminiTimeline,
+      OFFICIAL_PLUGIN_IDS.geminiMarkdownFix,
       OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
       OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport,
       OFFICIAL_PLUGIN_IDS.geminiGemsSidebar,
@@ -372,37 +375,5 @@ describe('permanent services before their plugin consumers', () => {
       addNode.mockRestore();
       history.replaceState({}, '', originalUrl);
     }
-  });
-});
-
-describe('the markdown patcher on the page lifetime', () => {
-  function reply(text: string): HTMLElement {
-    const response = document.createElement('model-response');
-    const paragraph = document.createElement('p');
-    paragraph.textContent = text;
-    response.appendChild(paragraph);
-    document.body.appendChild(response);
-    return response;
-  }
-
-  it('stops patching new replies after a content-script handoff', async () => {
-    vi.useFakeTimers();
-    const { cleanupManager, lifetime, retire } = page();
-    await mountNativeFeature(cleanupManager, NATIVE_FEATURES.markdownPatcher, lifetime.signal);
-
-    const patched = reply('before **bold** after');
-    await vi.advanceTimersByTimeAsync(150);
-    expect(patched.querySelector('strong')?.textContent).toBe('bold');
-
-    retire();
-    const unpatched = reply('before **bold** after');
-    await vi.advanceTimersByTimeAsync(150);
-
-    expect(unpatched.querySelector('strong')).toBeNull();
-    expect(unpatched.textContent).toBe('before **bold** after');
-    // A reply it already fixed stays fixed: the rewrite is not undone.
-    expect(patched.querySelector('strong')?.textContent).toBe('bold');
-    expect(harness.ledger.openObservers()).toEqual([]);
-    expect(vi.getTimerCount()).toBe(0);
   });
 });
