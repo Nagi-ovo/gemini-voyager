@@ -78,6 +78,7 @@ export function createHoverIntent(callbacks: HoverIntentCallbacks) {
       window.clearTimeout(leaveTimeoutId);
       leaveTimeoutId = null;
     }
+    // A stale 500ms deadline could otherwise collapse a re-enabled run.
     if (initialCollapseTimeoutId !== null) {
       window.clearTimeout(initialCollapseTimeoutId);
       initialCollapseTimeoutId = null;

@@ -115,7 +115,7 @@ export function isEditInputWidthSwitchOn(input: ChatWidthSwitchInput): boolean {
   return isWidthSwitchOn(input, isCustomizedEditInputWidth);
 }
 
-function isWidthSwitchOn(
+export function isWidthSwitchOn(
   input: ChatWidthSwitchInput,
   isCustomized: (stored: unknown) => boolean,
 ): boolean {

@@ -1,4 +1,4 @@
-import type { ChatWidthSwitchInput } from '@/core/utils/chatAppearanceValues';
+import { type ChatWidthSwitchInput, isWidthSwitchOn } from '@/core/utils/chatAppearanceValues';
 
 export const SIDEBAR_WIDTH_PX = { default: 312, min: 180, max: 540 } as const;
 export const DEFAULT_SIDEBAR_WIDTH = SIDEBAR_WIDTH_PX.default;
@@ -21,7 +21,5 @@ export function isCustomizedSidebarWidth(stored: unknown): boolean {
 }
 
 export function isSidebarWidthSwitchOn(input: ChatWidthSwitchInput): boolean {
-  if (input.storedSwitch !== undefined) return input.storedSwitch === true;
-  if (input.switchChangedLive || input.widthChangedLive) return false;
-  return isCustomizedSidebarWidth(input.storedWidth);
+  return isWidthSwitchOn(input, isCustomizedSidebarWidth);
 }

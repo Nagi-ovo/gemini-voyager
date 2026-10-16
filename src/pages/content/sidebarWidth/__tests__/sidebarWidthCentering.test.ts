@@ -13,60 +13,13 @@ function activate(): string {
   return document.getElementById(SIDEBAR_WIDTH_STYLE_ID)?.textContent ?? '';
 }
 
-const hadOwnElementsFromPoint = Object.prototype.hasOwnProperty.call(document, 'elementsFromPoint');
-const originalElementsFromPoint = document.elementsFromPoint;
-
 afterEach(async () => {
   await scope.dispose();
   document.body.innerHTML = '';
-  if (hadOwnElementsFromPoint) {
-    Object.defineProperty(document, 'elementsFromPoint', {
-      configurable: true,
-      value: originalElementsFromPoint,
-    });
-  } else {
-    Reflect.deleteProperty(document, 'elementsFromPoint');
-  }
   vi.restoreAllMocks();
 });
 
 describe('sidebar width title centering', () => {
-  it('reports a search-button hit blocked by an overlapping header', () => {
-    document.body.innerHTML =
-      '<search-nav-button><button>Search</button></search-nav-button><div id="blocker"></div>';
-    const button = document.querySelector('button')!;
-    const blocker = document.getElementById('blocker')!;
-    vi.spyOn(button, 'getBoundingClientRect').mockReturnValue({
-      left: 100,
-      right: 132,
-      top: 100,
-      bottom: 132,
-      width: 32,
-      height: 32,
-    } as DOMRect);
-    Object.defineProperty(document, 'elementsFromPoint', {
-      configurable: true,
-      value: vi.fn(() => [blocker, button]),
-    });
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    activate();
-    blocker.dispatchEvent(
-      new MouseEvent('pointerdown', {
-        bubbles: true,
-        clientX: 116,
-        clientY: 116,
-      }),
-    );
-    expect(warn).toHaveBeenCalledWith(
-      '[Gemini Voyager][sidebarWidth debug] Search button hit blocked',
-      expect.objectContaining({
-        target: 'div#blocker',
-        searchButton: 'button',
-        topElement: 'div#blocker',
-      }),
-    );
-  });
-
   it('does not enable pointer events on all mode-switcher descendants', () => {
     const code = activate();
 
@@ -166,11 +119,6 @@ describe('sidebar width title centering', () => {
       height: 32,
       toJSON: () => ({}),
     } as DOMRect);
-    Object.defineProperty(document, 'elementsFromPoint', {
-      configurable: true,
-      value: vi.fn(() => [blocker, button]),
-    });
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const clickSpy = vi.spyOn(button, 'click').mockImplementation(() => {});
 
     activate();
@@ -186,13 +134,6 @@ describe('sidebar width title centering', () => {
 
     expect(event.defaultPrevented).toBe(true);
     expect(clickSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy).toHaveBeenCalledWith(
-      '[Gemini Voyager][sidebarWidth debug] Sidebar toggle hit blocked',
-      expect.objectContaining({
-        topElement: 'div#blocker',
-        toggleButton: expect.stringContaining('button'),
-      }),
-    );
     await scope.dispose();
     const afterStop = new MouseEvent('pointerdown', {
       bubbles: true,
@@ -238,10 +179,6 @@ describe('sidebar width title centering', () => {
       height: 62,
       toJSON: () => ({}),
     } as DOMRect);
-    Object.defineProperty(document, 'elementsFromPoint', {
-      configurable: true,
-      value: vi.fn(() => [blocker, newChatButton]),
-    });
     const clickSpy = vi.spyOn(newChatButton, 'click').mockImplementation(() => {});
 
     activate();

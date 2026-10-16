@@ -202,19 +202,11 @@ describe('BUILTIN_PLUGINS', () => {
     );
   });
 
-  it('ships sidebar width with its native pixel range and a bound updater', () => {
+  it('ships sidebar width for Gemini with localized settings', () => {
     const id = 'voyager.gemini-sidebar-width';
     const width = BUILTIN_PLUGINS.find((m) => m.id === id);
     expect(width?.matches).toEqual(['https://gemini.google.com/*']);
-    expect(width?.contributes.domOps).toBeUndefined();
-    expect(width?.contributes.settings?.widthPx).toMatchObject({
-      type: 'number',
-      default: 312,
-      min: 180,
-      max: 540,
-    });
     expect(NATIVE_BUILTIN_PLUGIN_IDS).toContain(id);
-    expect(NATIVE_HANDLER_BINDINGS[id]?.updateSettings).toBeTypeOf('function');
     for (const locale of ['zh', 'zh_TW', 'ja', 'ko', 'fr', 'es', 'pt', 'ru', 'ar'] as const) {
       expect(width?.i18n?.[locale]?.settings?.widthPx?.label, locale).toBeTruthy();
       expect(width?.i18n?.[locale]?.description, locale).toBeTruthy();

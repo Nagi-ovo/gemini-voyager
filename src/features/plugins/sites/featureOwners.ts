@@ -102,27 +102,6 @@ export interface OwnedFeature {
 export const FEATURE_OWNERS: readonly OwnedFeature[] = [
   {
     site: 'gemini',
-    feature: 'sidebarWidth',
-    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
-    handlers: [],
-    healthTracking: false,
-  },
-  {
-    site: 'gemini',
-    feature: 'sidebarAutoHide',
-    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide,
-    handlers: [],
-    healthTracking: false,
-  },
-  {
-    site: 'gemini',
-    feature: 'sidebarFullHide',
-    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide,
-    handlers: [],
-    healthTracking: false,
-  },
-  {
-    site: 'gemini',
     feature: 'timeline',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiTimeline,
     // The public rail uses the same stars/hierarchy and native start permission.
@@ -213,6 +192,27 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     site: 'gemini',
     feature: 'editInputWidth',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiEditInputWidth,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'sidebarWidth',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'sidebarAutoHide',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'sidebarFullHide',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide,
     handlers: [],
     healthTracking: false,
   },
