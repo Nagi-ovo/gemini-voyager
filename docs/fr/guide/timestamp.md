@@ -15,7 +15,7 @@ Voyager annote chaque message avec un horodatage précis (format : `AAAA-MM-JJ H
 ## Comment l'activer
 
 1. Ouvrez le panneau de paramètres Voyager (l’icône de l’extension dans la barre d’outils de votre navigateur).
-2. Dans **Options de la chronologie**, activez **Afficher les horodatages des messages** (marqué **Expérimental**, désactivé par défaut).
+2. Activez **Extensions** → **Horodatage des messages** (marqué **Expérimental**, désactivé par défaut).
 
 ## D'où viennent les heures
 

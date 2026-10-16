@@ -37,6 +37,12 @@ const officialFormula: PluginManifest = {
   name: 'Gemini · Formula Copy',
 };
 
+const officialTimeline: PluginManifest = {
+  ...widthPlugin,
+  id: OFFICIAL_PLUGIN_IDS.geminiTimeline,
+  name: 'Gemini · Show Timeline',
+};
+
 const officialVim: PluginManifest = {
   ...widthPlugin,
   id: OFFICIAL_PLUGIN_IDS.geminiVimInput,
@@ -70,8 +76,6 @@ describe('PluginManager blocked plugins', () => {
       enableFormulaCopy: enMessages.enableFormulaCopy.message,
       formulaCopyFormat: enMessages.formulaCopyFormat.message,
       pluginsTitle: enMessages.pluginsTitle.message,
-      timelineEnable: enMessages.timelineEnable.message,
-      timelineOptions: enMessages.timelineOptions.message,
     };
   });
 
@@ -87,14 +91,14 @@ describe('PluginManager blocked plugins', () => {
     [
       'pending',
       { blockedBy: OFFICIAL_PLUGIN_IDS.geminiTimeline },
-      en('pluginBlockedPending').replace('{name}', en('timelineEnable')),
+      en('pluginBlockedPending').replace('{name}', 'Show Timeline'),
     ],
   ] as const)(
     'explains a %s block and leaves the toggle movable whether the plugin is on or off',
     async (blockedReason, extra, expected) => {
       const props = {
         statuses: [{ ...BLOCKED, blockedReason, ...extra }],
-        nameSources: [widthPlugin, holder],
+        nameSources: [widthPlugin, holder, officialTimeline],
       };
       await rerender(true, props);
       expect(container.textContent).toContain(expected);
@@ -148,28 +152,22 @@ describe('PluginManager blocked by a packaged official plugin', () => {
       enableFormulaCopy: enMessages.enableFormulaCopy.message,
       formulaCopyFormat: enMessages.formulaCopyFormat.message,
       pluginsTitle: enMessages.pluginsTitle.message,
-      timelineEnable: enMessages.timelineEnable.message,
-      timelineOptions: enMessages.timelineOptions.message,
     };
   });
 
-  it.each([[OFFICIAL_PLUGIN_IDS.geminiTimeline, 'timelineEnable', 'timelineOptions']] as const)(
-    'points a conflict with %s at its native switch, not at a plugin to find',
-    async (blockedBy, setting, card) => {
-      await renderManager({
-        nameSources: [widthPlugin, officialFormula],
-        statuses: [{ ...BLOCKED, blockedReason: 'conflict', blockedBy }],
-      });
+  it('points a conflict with the Gemini timeline at its Plugins row', async () => {
+    await renderManager({
+      nameSources: [widthPlugin, officialTimeline],
+      statuses: [{ ...BLOCKED, blockedReason: 'conflict', blockedBy: officialTimeline.id }],
+    });
 
-      expect(container.textContent).toContain(
-        en('pluginBlockedByOfficialSetting')
-          .replace('{setting}', en(setting))
-          .replace('{card}', en(card)),
-      );
-      expect(container.textContent).not.toContain('Gemini · Formula Copy');
-      expect(pluginToggle().disabled).toBe(false);
-    },
-  );
+    expect(container.textContent).toContain(
+      en('pluginBlockedByOfficialSetting')
+        .replace('{setting}', 'Show Timeline')
+        .replace('{card}', en('pluginsTitle')),
+    );
+    expect(pluginToggle().disabled).toBe(false);
+  });
 
   it.each([OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy])(
     'points a conflict with %s at its Plugins row, named without the site',

@@ -288,6 +288,140 @@ describe('official plugin rows with options', () => {
     });
   });
 
+  describe('the timeline row', () => {
+    const id = OFFICIAL_PLUGIN_IDS.geminiTimeline;
+    const radios = (group: string) =>
+      [
+        ...row(id)!.querySelectorAll<HTMLButtonElement>(
+          `[role="radiogroup"][aria-label="${group}"] [role="radio"]`,
+        ),
+      ].map((radio) => [radio.textContent, radio.getAttribute('aria-checked'), radio.disabled]);
+    const radio = (group: string, label: string) =>
+      row(id)!.querySelector<HTMLButtonElement>(
+        `[role="radiogroup"][aria-label="${group}"] [role="radio"]:nth-child(${
+          [
+            TRANSLATIONS.en.timelineStyleDots,
+            TRANSLATIONS.en.timelineStyleRuler,
+            TRANSLATIONS.en.timelineStyleCompact,
+          ].indexOf(label) + 1
+        })`,
+      )!;
+    const option = (inputId: string) => row(id)!.querySelector<HTMLInputElement>(`#${inputId}`)!;
+    const button = (label: string) =>
+      [...row(id)!.querySelectorAll('button')].find((candidate) => candidate.textContent === label);
+
+    it('replaces the Gemini timeline card, its options under the row', async () => {
+      await mount();
+      expect(container.querySelector('#timeline-enabled')).toBeNull();
+      expect(
+        [...container.querySelectorAll('h3')].map((heading) => heading.textContent),
+      ).not.toContain(TRANSLATIONS.en.timelineOptions);
+      expect(toggle(id).checked).toBe(true);
+      await openOptions(id);
+      expect(option('draggable-timeline')).not.toBeNull();
+      // Message times are a row of their own, so the panel does not repeat them.
+      expect(row(id)!.querySelector('#show-message-timestamps')).toBeNull();
+    });
+
+    it('shows the stored style and scroll mode as checked radios', async () => {
+      sync[StorageKeys.TIMELINE_STYLE] = 'compact';
+      sync.geminiTimelineScrollMode = 'jump';
+      await mount();
+      await openOptions(id);
+      expect(radios(TRANSLATIONS.en.timelineStyle)).toEqual([
+        [TRANSLATIONS.en.timelineStyleDots, 'false', false],
+        [TRANSLATIONS.en.timelineStyleRuler, 'false', false],
+        [TRANSLATIONS.en.timelineStyleCompact, 'true', false],
+      ]);
+      expect(radios(TRANSLATIONS.en.scrollMode)).toEqual([
+        [TRANSLATIONS.en.flow, 'false', false],
+        [TRANSLATIONS.en.jump, 'true', false],
+      ]);
+      // Off dots there is no container to hide.
+      expect(option('hide-container').disabled).toBe(true);
+    });
+
+    it('writes each option under its old key', async () => {
+      await mount();
+      await openOptions(id);
+      await act(async () =>
+        radio(TRANSLATIONS.en.timelineStyle, TRANSLATIONS.en.timelineStyleRuler).click(),
+      );
+      await act(async () => option('draggable-timeline').click());
+      expect(extensionApi.storage.sync.set.mock.calls.map(([payload]) => payload)).toEqual([
+        { [StorageKeys.TIMELINE_STYLE]: 'ruler' },
+        { geminiTimelineDraggable: true },
+      ]);
+      expect(pluginStateWritten()).toBe(false);
+    });
+
+    it('node levels allow only dots, and turning them on writes dots with them', async () => {
+      sync[StorageKeys.TIMELINE_STYLE] = 'ruler';
+      await mount();
+      await openOptions(id);
+      await act(async () => option('marker-level-enabled').click());
+      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+        geminiTimelineMarkerLevel: true,
+        [StorageKeys.TIMELINE_STYLE]: 'dots',
+      });
+      expect(
+        radios(TRANSLATIONS.en.timelineStyle).map(([, checked, disabled]) => [checked, disabled]),
+      ).toEqual([
+        ['true', false],
+        ['false', true],
+        ['false', true],
+      ]);
+    });
+
+    it('resets only the saved position and opens the Saved Library', async () => {
+      await mount();
+      await openOptions(id);
+      await act(async () => button(TRANSLATIONS.en.resetTimelinePosition)!.click());
+      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+        geminiTimelinePosition: null,
+      });
+      await act(async () => button(TRANSLATIONS.en.viewStarredHistory)!.click());
+      expect(row(id)).toBeNull();
+    });
+
+    it.each(['ruler', '收藏', TRANSLATIONS.zh.timelineOptions])(
+      'a search for "%s" lists the row with its options open',
+      async (query) => {
+        local[StorageKeys.GV_POPUP_SETTINGS_SEARCH_QUERY] = query;
+        await mount();
+        expect(optionsButton(id)!.getAttribute('aria-expanded')).toBe('true');
+        expect(option('draggable-timeline')).not.toBeNull();
+      },
+    );
+  });
+
+  describe('in other languages', () => {
+    it('names the rows and Options from the Chinese manifests and messages', async () => {
+      sync[StorageKeys.LANGUAGE] = 'zh';
+      await mount();
+      const label = (pluginId: string) => row(pluginId)!.querySelector('label')!.textContent;
+      expect(label(OFFICIAL_PLUGIN_IDS.geminiTimeline)).toBe('显示时间线');
+      expect(label(OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps)).toBe('消息时间戳');
+      expect(optionsButton(OFFICIAL_PLUGIN_IDS.geminiTimeline)!.textContent).toBe(
+        TRANSLATIONS.zh.pluginRowOptions,
+      );
+    });
+
+    it('mirrors the Plugins card for Arabic, on Gemini and AI Studio', async () => {
+      sync[StorageKeys.LANGUAGE] = 'ar';
+      await mount();
+      const card = () => row(OFFICIAL_PLUGIN_IDS.geminiTimeline)!.closest('[dir]');
+      expect(card()!.getAttribute('dir')).toBe('rtl');
+      await act(async () => root.unmount());
+      root = createRoot(container);
+      extensionApi.tabs.query.mockResolvedValue([{ id: 8, url: AI_STUDIO }]);
+      await mount();
+      expect(
+        row(OFFICIAL_PLUGIN_IDS.aistudioSidebarWidth)!.closest('[dir]')!.getAttribute('dir'),
+      ).toBe('rtl');
+    });
+  });
+
   describe('the recent Gems row', () => {
     const id = OFFICIAL_PLUGIN_IDS.geminiGemsSidebar;
     const count = () => row(id)!.querySelector<HTMLInputElement>('input[type="range"]');

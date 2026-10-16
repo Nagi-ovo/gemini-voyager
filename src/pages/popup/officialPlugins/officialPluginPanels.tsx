@@ -9,6 +9,7 @@ import type { TranslationKey } from '@/utils/translations';
 
 import { VisualEffectChoices } from '../components/VisualEffectPicker';
 import { ContextSyncPanel } from './ContextSyncPanel';
+import { TimelinePanel } from './TimelinePanel';
 import type { OfficialPanelId } from './officialPluginRegistry';
 import type { ContextSyncRequest } from './useContextSyncRequest';
 
@@ -18,6 +19,8 @@ export interface OfficialPanelProps {
   readonly write: (payload: Record<string, unknown>) => void;
   /** Context Sync's request, kept above the panel so it outlives a collapse. */
   readonly contextSync?: ContextSyncRequest;
+  /** Opens the Saved Library (starred messages) view of the popup. */
+  readonly openStarredHistory?: () => void;
   /** The row's id, for ids unique per row. */
   readonly idPrefix: string;
   readonly t: (key: TranslationKey) => string;
@@ -124,4 +127,5 @@ export const OFFICIAL_PANELS: Readonly<
   highlight: HighlightPanel,
   contextSync: ContextSyncPanel,
   visualEffect: VisualEffectPanel,
+  timeline: TimelinePanel,
 };

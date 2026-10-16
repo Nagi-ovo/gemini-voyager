@@ -13,6 +13,7 @@ import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { legacyBindingKeys } from '@/features/plugins/storage/legacySettingBindings';
 import type { TranslationKey } from '@/utils/translations';
 
+import { GEMINI_TIMELINE_OPTION_KEYS } from '../utils/timelineSettingsValues';
 import { sidebarWidthForDisplay } from './sidebarWidthDisplay';
 
 export type OfficialPluginGroup = 'appearance' | 'content' | 'input' | 'conversation';
@@ -68,7 +69,12 @@ export interface OfficialPluginSlider {
   readonly toDisplay?: (value: number) => number;
 }
 
-export type OfficialPanelId = 'formulaCopy' | 'highlight' | 'contextSync' | 'visualEffect';
+export type OfficialPanelId =
+  | 'formulaCopy'
+  | 'highlight'
+  | 'contextSync'
+  | 'visualEffect'
+  | 'timeline';
 export type OfficialControlId = 'responseNotification';
 
 /**
@@ -81,6 +87,7 @@ export const OFFICIAL_PANEL_KEYS: Readonly<Record<OfficialPanelId, readonly stri
   highlight: [StorageKeys.HIGHLIGHT_TIMELINE_MARKERS_ENABLED],
   contextSync: [StorageKeys.CONTEXT_SYNC_PORT],
   visualEffect: [StorageKeys.GV_VISUAL_EFFECT, StorageKeys.GV_SNOW_EFFECT],
+  timeline: GEMINI_TIMELINE_OPTION_KEYS,
 };
 
 export const OFFICIAL_PANEL_STORAGE_KEYS: readonly string[] = [
@@ -449,6 +456,41 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     usageHint: ({ isSafariBrowser }) =>
       isSafariBrowser ? 'responseCompleteNotificationHintSafari' : null,
     control: 'responseNotification',
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiTimeline,
+    group: 'conversation',
+    formerSectionTitle: 'timelineOptions',
+    searchKeys: [
+      'timelineEnable',
+      'timelineEnableHint',
+      'timelineStyle',
+      'timelineStyleDots',
+      'timelineStyleRuler',
+      'timelineStyleCompact',
+      'scrollMode',
+      'flow',
+      'jump',
+      'hideOuterContainer',
+      'draggableTimeline',
+      'pinTimelinePreview',
+      'pinTimelinePreviewHint',
+      'enableMarkerLevel',
+      'enableMarkerLevelHint',
+      'resetTimelinePosition',
+      'viewStarredHistory',
+    ],
+    searchAliases: ['timeline rail navigation bookmark star history 时间线 导航 收藏 历史'],
+    panel: 'timeline',
+  },
+  {
+    // Independent of the rail: message times show with the timeline off too.
+    id: OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps,
+    group: 'conversation',
+    formerSectionTitle: 'timelineOptions',
+    searchKeys: ['showMessageTimestamps', 'showMessageTimestampsHint'],
+    searchAliases: ['time clock sent date 时间 时间戳'],
+    experimental: true,
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiContextSync,

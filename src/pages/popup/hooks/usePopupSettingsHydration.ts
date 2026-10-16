@@ -7,7 +7,6 @@ import { FOLDER_SETTINGS_STORAGE_DEFAULTS } from './useFolderPopupSettings';
 import { GENERAL_SETTINGS_STORAGE_DEFAULTS } from './useGeneralPopupSettings';
 import { SECTION_LAYOUT_STORAGE_DEFAULTS } from './usePopupSections';
 import { PROMPT_MANAGER_STORAGE_DEFAULTS } from './usePromptManagerSettings';
-import { TIMELINE_SETTINGS_STORAGE_DEFAULTS } from './useTimelinePopupSettings';
 import { VISUAL_EFFECT_STORAGE_DEFAULTS } from './useVisualEffectPopupSettings';
 import { WATERMARK_SETTINGS_STORAGE_DEFAULTS } from './useWatermarkPopupSettings';
 
@@ -15,7 +14,6 @@ type HydrateSettings = (raw: Record<string, unknown>) => void;
 
 /** One startup snapshot shared by all setting owners; callbacks remain stable across UI changes. */
 export function usePopupSettingsHydration({
-  timeline,
   folder,
   general,
   promptManager,
@@ -24,7 +22,6 @@ export function usePopupSettingsHydration({
   sections,
   aiStudio,
 }: {
-  timeline: HydrateSettings;
   folder: HydrateSettings;
   general: HydrateSettings;
   promptManager: HydrateSettings;
@@ -37,7 +34,6 @@ export function usePopupSettingsHydration({
     try {
       chrome.storage?.sync?.get(
         {
-          ...TIMELINE_SETTINGS_STORAGE_DEFAULTS,
           ...FOLDER_SETTINGS_STORAGE_DEFAULTS,
           ...GENERAL_SETTINGS_STORAGE_DEFAULTS,
           ...PROMPT_MANAGER_STORAGE_DEFAULTS,
@@ -49,7 +45,6 @@ export function usePopupSettingsHydration({
         },
         (result) => {
           const raw = result ?? {};
-          timeline(raw);
           folder(raw);
           general(raw);
           promptManager(raw);
@@ -66,5 +61,5 @@ export function usePopupSettingsHydration({
     } catch {
       // Keep initial values when the extension storage context is unavailable.
     }
-  }, [timeline, folder, general, promptManager, visualEffect, watermark, sections, aiStudio]);
+  }, [folder, general, promptManager, visualEffect, watermark, sections, aiStudio]);
 }

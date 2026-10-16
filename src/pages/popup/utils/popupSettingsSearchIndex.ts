@@ -56,36 +56,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ],
     ['backup restore drive google cloud save 云端 云同步 备份 恢复'],
   ),
-  popupSectionSearchTarget('timeline', ['timelineOptions']),
-  popupSearchTarget('timeline', 'timelineEnabled', ['timelineEnable', 'timelineEnableHint']),
-  popupSearchTarget('timeline', 'timelineStyle', [
-    'timelineStyle',
-    'timelineStyleDots',
-    'timelineStyleRuler',
-    'timelineStyleCompact',
-  ]),
-  popupSearchTarget('timeline', 'scrollMode', ['scrollMode', 'flow', 'jump']),
-  popupSearchTarget('timeline', 'hideOuterContainer', ['hideOuterContainer']),
-  popupSearchTarget('timeline', 'draggableTimeline', ['draggableTimeline']),
-  popupSearchTarget('timeline', 'pinTimelinePreview', [
-    'pinTimelinePreview',
-    'pinTimelinePreviewHint',
-  ]),
-  popupSearchTarget('timeline', 'enableMarkerLevel', [
-    'enableMarkerLevel',
-    'enableMarkerLevelHint',
-  ]),
-  popupSearchTarget('timeline', 'showMessageTimestamps', [
-    'showMessageTimestamps',
-    'showMessageTimestampsHint',
-  ]),
-  popupSearchTarget('timeline', 'resetTimelinePosition', ['resetTimelinePosition']),
-  popupSearchTarget(
-    'timeline',
-    'viewStarredHistory',
-    ['viewStarredHistory'],
-    ['bookmark star history 收藏 历史'],
-  ),
   popupSectionSearchTarget('folder', ['folderOptions']),
   popupSearchTarget('folder', 'enableFolderFeature', ['enableFolderFeature']),
   popupSearchTarget('folder', 'enableFolderFloatingMode', [

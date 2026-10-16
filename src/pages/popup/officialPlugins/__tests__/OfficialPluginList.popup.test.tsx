@@ -149,6 +149,12 @@ const MOVED_SWITCHES = [
     key: StorageKeys.CONTEXT_SYNC_ENABLED,
     missing: false,
   },
+  { id: OFFICIAL_PLUGIN_IDS.geminiTimeline, key: StorageKeys.GV_TIMELINE_ENABLED, missing: true },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps,
+    key: StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS,
+    missing: false,
+  },
   // Its switch runs a permission flow instead of a write; see its own tests.
   {
     id: OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
@@ -191,6 +197,7 @@ const RETIRED_SWITCH_IDS = [
   'highlights-enabled',
   'highlight-timeline-markers-enabled',
   'response-complete-notification',
+  'timeline-enabled',
 ];
 
 /** The old layout cards' sliders and switches, labelled by their card title. */
@@ -298,6 +305,8 @@ describe('the official plugin list in the popup', () => {
           OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
           OFFICIAL_PLUGIN_IDS.geminiHighlight,
           OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
+          OFFICIAL_PLUGIN_IDS.geminiTimeline,
+          OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps,
           OFFICIAL_PLUGIN_IDS.geminiContextSync,
         ],
       },
@@ -400,6 +409,10 @@ describe('the official plugin list in the popup', () => {
     ['樱花', OFFICIAL_PLUGIN_IDS.visualEffects],
     ['thinking', OFFICIAL_PLUGIN_IDS.geminiDeepResearchExport],
     ['markdown', OFFICIAL_PLUGIN_IDS.geminiMarkdownFix],
+    ['ruler', OFFICIAL_PLUGIN_IDS.geminiTimeline],
+    ['收藏', OFFICIAL_PLUGIN_IDS.geminiTimeline],
+    [TRANSLATIONS.en.draggableTimeline, OFFICIAL_PLUGIN_IDS.geminiTimeline],
+    [TRANSLATIONS.zh.showMessageTimestamps, OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps],
   ])('an old search for "%s" still finds its row', async (query, id) => {
     local[StorageKeys.GV_POPUP_SETTINGS_SEARCH_QUERY] = query;
     await mount();
@@ -434,7 +447,22 @@ describe('the official plugin list in the popup', () => {
     [TRANSLATIONS.zh.formulaCopyFormat, [OFFICIAL_PLUGIN_IDS.geminiFormulaCopy]],
     [TRANSLATIONS.en.folderOptions, [OFFICIAL_PLUGIN_IDS.geminiFork]],
     [TRANSLATIONS.en.promptManagerOptions, [OFFICIAL_PLUGIN_IDS.geminiPromptHistory]],
-    [TRANSLATIONS.en.timelineOptions, [OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll]],
+    [
+      TRANSLATIONS.en.timelineOptions,
+      [
+        OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll,
+        OFFICIAL_PLUGIN_IDS.geminiTimeline,
+        OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps,
+      ],
+    ],
+    [
+      TRANSLATIONS.zh.timelineOptions,
+      [
+        OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll,
+        OFFICIAL_PLUGIN_IDS.geminiTimeline,
+        OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps,
+      ],
+    ],
     [
       TRANSLATIONS.en.inputCollapseOptions,
       [

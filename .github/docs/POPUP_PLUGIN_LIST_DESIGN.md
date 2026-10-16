@@ -1,6 +1,6 @@
 # Popup 官方插件列表设计
 
-状态：Batch 1 实施中，其余为方案。基线：`main@754c03c2`。Codex 复审结论 "implement after changes"，本版已吸收全部 P2/P3。
+状态：Batch 1–5 已完成（见 §4.4）；`featureOwners.ts` 里只剩 Batch delete（G + A）和 NanoBanana（2 个）还在卡片上，等下一批成行。下文 §1 记录的是迁移前的基线 `main@754c03c2`。Codex 复审结论 "implement after changes"，本版已吸收全部 P2/P3。
 
 **目标**：每个可选功能都是官方插件，用户只在 popup 的插件列表里开关它。核心数据功能（文件夹、Prompt Manager、云同步、对话导出、备份、账号隔离）保持 native，保留各自卡片。
 
@@ -274,6 +274,16 @@ export interface OfficialPluginEntry {
 - **旧测试**：有价值的断言随控件迁移（`GeneralSettingsCard.test.tsx`、`FolderSettingsCard.test.tsx`、`PromptManagerSettingsCard.test.tsx`、`TimelineSettingsCard.test.tsx`、各 hook 测试、`usePopupSections.test.tsx` 等），只删除为已删代码存在的测试。
 
 每批都是 popup UI 变化，另需在 dev 构建上实测（Gemini 和 AI Studio，亮色、暗色、Arabic），最终树跑 `verify:pr`。
+
+### 4.4 进度
+
+| 批次 | 状态   | 备注                                                                                                                                                                                                                                                                                                                                                     |
+| ---- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1–3  | 已完成 |                                                                                                                                                                                                                                                                                                                                                          |
+| 4    | 已完成 | Formula copy（G + A）、Highlight、Response notification；随后迁入的 Canvas copy、Gems sidebar（数量 0 = 隐藏列表）、Context Sync（卡片成为面板，同步请求由 `Popup` 持有）、Deep Research export、Markdown fix、Visual effects（Gemini / AI Studio 一行，其他站点保留卡片）也已成行                                                                       |
+| 5    | 已完成 | Timeline 成为"对话"组的一行，选项（样式、滚动模式、隐藏容器、可拖动、固定预览、层级、重置位置、收藏历史）在它的面板里，分段选择改为 `radiogroup`、不再用 `left` 计算（§2.7）；Message timestamps 单独一行。AI Studio sidebar width 成行（未存开关时跟随文件夹开关，宽度写入不再顺带写开关）。`officialFeatureSetting.ts` 随最后一个 `LOCATIONS` 条目删除 |
+
+剩余跟进：`TimelineSettingsCard` 现在只服务插件站 rail（`'timeline'` section 只在插件站可见），§2.4 的面板登记完成后再删除它和 `dedicatedTimelineSettings`。
 
 ---
 

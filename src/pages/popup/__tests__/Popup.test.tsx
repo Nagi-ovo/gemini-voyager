@@ -187,11 +187,11 @@ describe('Popup settings integration', () => {
 
   it('turning the Gemini rail off keeps message timestamps on and writes only the rail switch', async () => {
     sync[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS] = true;
-    local[StorageKeys.GV_POPUP_SETTINGS_SEARCH_QUERY] = '显示时间线';
     await mount();
-    const rail = container.querySelector<HTMLInputElement>('#timeline-enabled')!;
-    const times = container.querySelector<HTMLInputElement>('#show-message-timestamps')!;
-    expect(rail.closest('[hidden]')).toBeNull();
+    const toggle = (id: string) =>
+      container.querySelector<HTMLInputElement>(`${pluginRow(id)} input[aria-describedby]`)!;
+    const rail = toggle(OFFICIAL_PLUGIN_IDS.geminiTimeline);
+    const times = toggle(OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps);
     expect(rail.checked).toBe(true);
     extensionApi.storage.sync.set.mockClear();
     await act(async () => rail.click());

@@ -103,7 +103,10 @@ describe('usePopupSections', () => {
     const cloudSyncOrder = Number(section('cloudSync')?.style.order);
     expect(section('folder')?.style.order).toBe('0');
     expect(cloudSyncOrder).toBeGreaterThan(0);
-    expect(Number(section('timeline')?.style.order)).toBe(cloudSyncOrder + 6);
+    expect(Number(section('localPlugins')?.style.order)).toBe(cloudSyncOrder + 4);
+    // Gemini's timeline is a Plugins row now; the card's slot stays for plugin-site rails.
+    expect(section('timeline')).toBeUndefined();
+    expect(sections.getSectionProps('timeline').order).toBe(cloudSyncOrder + 6);
     expect(section('contextSync')).toBeUndefined();
     // The plugin list takes no slot until it has a row on this tab.
     expect(section('officialPlugins')).toBeUndefined();
@@ -171,17 +174,17 @@ describe('usePopupSections', () => {
 
   it('filters rows, expands matching section titles and restores reordering after clearing', async () => {
     await render();
-    await search(translate('pinTimelinePreview'));
+    await search(translate('enableFolderFloatingModeHint'));
     expect(sections.hasSettingsSearch).toBe(true);
     expect(sections.hasVisibleSearchResults).toBe(true);
-    expect(section('timeline')).toBeTruthy();
-    expect(sections.shouldShowSetting('timeline', 'pinTimelinePreview')).toBe(true);
-    expect(sections.shouldShowSetting('timeline', 'hideOuterContainer')).toBe(false);
+    expect(section('folder')).toBeTruthy();
+    expect(sections.shouldShowSetting('folder', 'enableFolderFloatingMode')).toBe(true);
+    expect(sections.shouldShowSetting('folder', 'enableFolderFeature')).toBe(false);
     expect(container.querySelector('button')).toBeNull();
 
-    await search(translate('timelineOptions'));
-    expect(sections.shouldShowSetting('timeline', 'hideOuterContainer')).toBe(true);
-    expect(sections.shouldShowSetting('timeline', 'showMessageTimestamps')).toBe(true);
+    await search(translate('folderOptions'));
+    expect(sections.shouldShowSetting('folder', 'enableFolderFeature')).toBe(true);
+    expect(sections.shouldShowSetting('folder', 'enableFolderFloatingMode')).toBe(true);
 
     await search('zzzzzzunknownsettingzzzzzz');
     expect(sections.hasVisibleSearchResults).toBe(false);

@@ -56,7 +56,6 @@ import {
 import { usePopupSettingsHydration } from './hooks/usePopupSettingsHydration';
 import { usePromptDataTransfer } from './hooks/usePromptDataTransfer';
 import { usePromptManagerSettings } from './hooks/usePromptManagerSettings';
-import { useTimelinePopupSettings } from './hooks/useTimelinePopupSettings';
 import { useVisualEffectPopupSettings } from './hooks/useVisualEffectPopupSettings';
 import { useWatermarkPopupSettings } from './hooks/useWatermarkPopupSettings';
 import { OfficialPluginList } from './officialPlugins/OfficialPluginList';
@@ -105,7 +104,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const release = usePopupReleaseInfo(isSafariBrowser);
 
   // These owners remain mounted while search hides cards or an auxiliary view opens.
-  const timeline = useTimelinePopupSettings(writePopupSyncStorage);
   // A catalog rail runs on its timeline plugin's settings and its own placement keys, so the
   // timeline card edits those on such a site instead of Gemini's.
   const catalogTimeline = useCatalogTimelineSettings({
@@ -114,9 +112,11 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     manifests: plugins.siteScopedManifests,
     pluginState: plugins.pluginState,
     writeSyncStorage: writePopupSyncStorage,
+    // Every timeline shares Gemini's message-times switch, which is its own Plugins row there.
     messageTimestamps: {
-      enabled: timeline.values.showMessageTimestamps,
-      set: (enabled) => timeline.onChange({ showMessageTimestamps: enabled }),
+      enabled: officialPlugins.panelValues[StorageKeys.GV_SHOW_MESSAGE_TIMESTAMPS] === true,
+      set: (enabled) =>
+        officialPlugins.setEnabled(OFFICIAL_PLUGIN_IDS.geminiMessageTimestamps, enabled),
     },
   });
   const folder = useFolderPopupSettings({
@@ -169,7 +169,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     writeSyncStorage: writePopupSyncStorage,
   });
   usePopupSettingsHydration({
-    timeline: timeline.hydrateFromStorage,
     folder: folder.hydrateFromStorage,
     general: general.hydrateFromStorage,
     promptManager: promptManager.hydrateFromStorage,
@@ -320,27 +319,19 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             t={t}
           />
         )}
-        {/* Timeline Options */}
+        {/* A plugin site's timeline rail; Gemini's timeline is a Plugins row. */}
         {wrapSection(
           'timeline',
-          <TimelineSettingsCard
-            {...(isPluginSite && catalogTimeline
-              ? {
-                  values: catalogTimeline.values,
-                  onChange: catalogTimeline.onChange,
-                  onResetPosition: catalogTimeline.resetPosition,
-                  isVisible: catalogTimeline.offers,
-                }
-              : {
-                  values: timeline.values,
-                  onChange: timeline.onChange,
-                  onResetPosition: timeline.resetPosition,
-                  isVisible: (settingId: string) =>
-                    !isPluginSite && sections.shouldShowSetting('timeline', settingId),
-                })}
-            onViewStarredHistory={() => setShowStarredHistory(true)}
-            t={t}
-          />,
+          catalogTimeline && (
+            <TimelineSettingsCard
+              values={catalogTimeline.values}
+              onChange={catalogTimeline.onChange}
+              onResetPosition={catalogTimeline.resetPosition}
+              isVisible={catalogTimeline.offers}
+              onViewStarredHistory={() => setShowStarredHistory(true)}
+              t={t}
+            />
+          ),
           { allowPluginSite: catalogTimeline !== null },
         )}
         {/* Folder Options */}
@@ -431,6 +422,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
               values: officialPlugins.panelValues,
               write: officialPlugins.writePanel,
               contextSync,
+              openStarredHistory: () => setShowStarredHistory(true),
             }}
             searching={sections.hasSettingsSearch}
             language={language}

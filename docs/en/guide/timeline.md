@@ -5,7 +5,7 @@ Voyager Timeline is a visual conversation navigation system for Gemini, Claude, 
 Long conversations are messy. You scroll up, you scroll down, you lose your place.
 Voyager turns your conversation into a timeline.
 
-In Gemini settings, **Show Timeline** controls the rail and its navigation shortcuts. Turning it off keeps saved stars and hierarchy. Message time labels follow **Show Message Timestamps** independently, so you can keep them visible with the timeline off.
+On Gemini, **Plugins** → **Show Timeline** controls the rail and its navigation shortcuts. Turning it off keeps saved stars and hierarchy. Message time labels follow **Plugins** → **Message timestamps** independently, so you can keep them visible with the timeline off.
 
 ## See the Shape of Your Chat
 
@@ -17,7 +17,7 @@ Each node represents a message. The timeline visualizes the rhythm of your dialo
 - **Teleport**: Click a node to jump instantly to that message.
 - **Peek**: Hover to see what's inside without moving.
 - **Bookmark**: Long-press a node to **Star** it. It's like a bookmark for your brain.
-- **Levels (Experimental)**: Off by default. Turn on **Enable Node Levels** under **Timeline Options** first, then right-click a node to set its level (1-3) or collapse its children. Perfect for making branched conversations clear. Levels only show in the `Nodes` style: turning them on switches the timeline to `Nodes`, and `Ruler` and `Compact` can't be picked while levels are on.
+- **Levels (Experimental)**: Off by default. Turn on **Enable Node Levels** under **Plugins** → **Show Timeline** → **Options** first, then right-click a node to set its level (1-3) or collapse its children. Perfect for making branched conversations clear. Levels only show in the `Nodes` style: turning them on switches the timeline to `Nodes`, and `Ruler` and `Compact` can't be picked while levels are on.
 - **Resize**: Drag the inner edge of the timeline to adjust its width.
 - **Keyboard**: Navigate at the speed of thought. Default `j`/`k`, `gg`/`GG` to jump to first/last turn.
 
@@ -31,7 +31,7 @@ Long conversations bury gold. Star the moments that matter.
 
 - Long-press again to unstar.
 - Starred nodes stay highlighted so you can spot them at a glance.
-- See all your starred messages in the **Saved Library**: click **View Saved Library** in the Voyager popup, or open it from the Prompt Manager panel.
+- See all your starred messages in the **Saved Library**: click **View Saved Library** under **Plugins** → **Show Timeline** → **Options** in the Voyager popup, or open it from the Prompt Manager panel.
 
 Think of it as planting a flag in the conversation — the moment you had a breakthrough, got the perfect answer, or want to pick up later.
 
@@ -41,7 +41,7 @@ Stars sync across devices if you have [Cloud Sync](/en/guide/cloud-sync) enabled
 
 ## Make It Look Right
 
-Under **Timeline Options** in the Voyager popup:
+In the Voyager popup, open **Plugins** → **Show Timeline** → **Options** (it shows only while the row is on):
 
 - **Timeline style**: `Nodes`, `Ruler`, or `Compact`.
 - **Pin preview panel**: Keep the preview panel open beside the timeline. Its search box filters messages as you type.
@@ -90,6 +90,6 @@ Timeline is most valuable in conversations longer than 10 messages, where scroll
 
 ## Supported Browsers
 
-Timeline works on Google Gemini, and on Claude and ChatGPT as built-in plugins, across Chrome, Edge, Firefox, Safari, Opera, and Brave. Keyboard shortcuts and starring work the same on all three. Levels are an experimental opt-in everywhere: on Gemini, turn on **Enable Node Levels** under **Timeline Options**; on Claude and ChatGPT, turn on the same switch in the **Claude · Timeline** or **ChatGPT · Timeline** plugin settings under **Plugins**. Starred messages sync across devices when [Cloud Sync](/en/guide/cloud-sync) is enabled.
+Timeline works on Google Gemini, and on Claude and ChatGPT as built-in plugins, across Chrome, Edge, Firefox, Safari, Opera, and Brave. Keyboard shortcuts and starring work the same on all three. Levels are an experimental opt-in everywhere: on Gemini, turn on **Enable Node Levels** under **Plugins** → **Show Timeline** → **Options**; on Claude and ChatGPT, turn on the same switch in the **Claude · Timeline** or **ChatGPT · Timeline** plugin settings under **Plugins**. Starred messages sync across devices when [Cloud Sync](/en/guide/cloud-sync) is enabled.
 
 Timeline is not available on AI Studio. DeepSeek has an optional timeline plugin in the plugin catalog (it ships disabled).

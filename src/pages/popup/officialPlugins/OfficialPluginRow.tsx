@@ -34,6 +34,8 @@ export interface OfficialPanelIo {
   readonly write: (payload: Record<string, unknown>) => void;
   /** Context Sync's request state, owned by the Popup so hiding the card keeps it. */
   readonly contextSync?: ContextSyncRequest;
+  /** Opens the popup's Saved Library view. */
+  readonly openStarredHistory?: () => void;
 }
 
 export interface OfficialPluginRowProps {
@@ -182,6 +184,7 @@ export function OfficialPluginListRow({
                 values={panelIo.values}
                 write={panelIo.write}
                 contextSync={panelIo.contextSync}
+                openStarredHistory={panelIo.openStarredHistory}
                 idPrefix={panelId}
                 t={t}
               />

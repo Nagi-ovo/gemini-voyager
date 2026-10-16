@@ -120,9 +120,11 @@ export function usePopupSections({
       // Visual effects require an activated site; the plugin list needs a row on this tab.
       if (id === 'visualEffect' && !visualEffectsAvailable) return false;
       if (id === 'officialPlugins' && !officialPluginsAvailable) return false;
+      // Only a plugin site's timeline rail has a card; Gemini's timeline is a Plugins row.
+      if (id === 'timeline' && !isPluginSite) return false;
       return isNativePopupSectionAvailable(nativePopupPlatform, id);
     },
-    [nativePopupPlatform, visualEffectsAvailable, officialPluginsAvailable],
+    [nativePopupPlatform, isPluginSite, visualEffectsAvailable, officialPluginsAvailable],
   );
   const visibleSections = useMemo(
     () => sectionOrder.filter(isSectionVisible),

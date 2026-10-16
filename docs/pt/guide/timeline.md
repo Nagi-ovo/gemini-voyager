@@ -2,7 +2,7 @@
 
 O recurso de assinatura do Voyager. Uma maneira visual e espacial de navegar nas suas conversas.
 
-Nas definições do Gemini, **Mostrar linha do tempo** controla a barra da linha do tempo e os seus atalhos de navegação. Desativar esta opção mantém as estrelas e a hierarquia guardadas. As horas das mensagens seguem separadamente **Mostrar carimbos de data/hora das mensagens**, pelo que podem continuar visíveis com a linha do tempo desativada.
+No Gemini, **Plugins** → **Mostrar linha do tempo** controla a barra da linha do tempo e os seus atalhos de navegação. Desativar esta opção mantém as estrelas e a hierarquia guardadas. As horas das mensagens seguem separadamente **Plugins** → **Data e hora das mensagens**, pelo que podem continuar visíveis com a linha do tempo desativada.
 
 ## O Problema
 
@@ -19,7 +19,7 @@ Cada ponto representa uma troca (a sua pergunta + a resposta do Gemini™).
 - **Hover (Passar o rato)**: Veja uma pré-visualização instantânea do que foi discutido naquele ponto. Sem clicar, sem scroll. Apenas espreite.
 - **Clique**: Salte instantaneamente para essa mensagem. Teletransporte.
 - **Destaque de Contexto**: Enquanto faz scroll, o ponto correspondente acende-se, para que saiba sempre onde está no "mapa".
-- **Níveis (Experimental)**: Desligados por padrão. Ative primeiro **Habilitar níveis de nó** em **Opções da Linha do Tempo** e depois clique com o botão direito num ponto para definir o seu nível (1 a 3) ou recolher os seus filhos. Ótimo para tornar claras as conversas ramificadas. Os níveis só aparecem no estilo `Nós`: ao ativá-los, a linha do tempo muda para `Nós`, e `Régua` e `Compacto` ficam indisponíveis enquanto estiverem ativos.
+- **Níveis (Experimental)**: Desligados por padrão. Ative primeiro **Habilitar níveis de nó** em **Plugins** → **Mostrar linha do tempo** → **Opções** e depois clique com o botão direito num ponto para definir o seu nível (1 a 3) ou recolher os seus filhos. Ótimo para tornar claras as conversas ramificadas. Os níveis só aparecem no estilo `Nós`: ao ativá-los, a linha do tempo muda para `Nós`, e `Régua` e `Compacto` ficam indisponíveis enquanto estiverem ativos.
 - **Redimensionar**: Arraste a borda interna da linha do tempo para ajustar sua largura.
 
 ![Navegação na Linha do Tempo](/assets/teaser.png)
@@ -37,7 +37,7 @@ Pontos com estrela tornam-se maiores e mais brilhantes. Use-os para marcar:
 
 - Pressione longamente novamente para remover a estrela.
 - Os pontos com estrela ficam destacados para que você os encontre de relance.
-- Clique em **Ver biblioteca salva** no popup do Voyager, ou abra-a a partir do painel do Gerenciador de Prompts, para ver todas as mensagens marcadas num só lugar na **Biblioteca salva**.
+- Clique em **Ver biblioteca salva** no popup do Voyager, em **Plugins** → **Mostrar linha do tempo** → **Opções**, ou abra-a a partir do painel do Gerenciador de Prompts, para ver todas as mensagens marcadas num só lugar na **Biblioteca salva**.
 
 Pense nisso como plantar uma bandeira na conversa — o momento de uma revelação, a resposta perfeita, ou o ponto de onde quer continuar depois.
 
@@ -49,7 +49,7 @@ A Linha do Tempo transforma uma parede de texto plano num mapa estruturado de co
 
 ## Deixe com boa aparência
 
-Em **Opções da Linha do Tempo** no popup do Voyager:
+No popup do Voyager, abra **Plugins** → **Mostrar linha do tempo** → **Opções** (só aparece com a linha ativada):
 
 - **Estilo da linha do tempo**: `Nós`, `Régua` ou `Compacto`.
 - **Fixar painel de pré-visualização**: Mantém o painel de pré-visualização aberto ao lado da linha do tempo. A caixa de pesquisa dele filtra as mensagens enquanto você digita.
@@ -98,6 +98,6 @@ A linha do tempo é mais útil em conversas com mais de 10 mensagens, em que rol
 
 ## Navegadores compatíveis
 
-A linha do tempo funciona no Google Gemini e, como plugins integrados, no Claude e no ChatGPT, nos navegadores Chrome, Edge, Firefox, Safari, Opera e Brave. Atalhos de teclado e estrelas funcionam da mesma forma nas três. Os níveis são, em todas, uma opção experimental que precisa ser ativada: no Gemini, ative **Habilitar níveis de nó** em **Opções da Linha do Tempo**; no Claude e no ChatGPT, ative o mesmo interruptor nas definições de **Claude · Linha do tempo** ou **ChatGPT · Linha do tempo**, na secção **Plugins**. As mensagens com estrela são sincronizadas entre dispositivos quando a [Sincronização na Nuvem](/pt/guide/cloud-sync) está ativada.
+A linha do tempo funciona no Google Gemini e, como plugins integrados, no Claude e no ChatGPT, nos navegadores Chrome, Edge, Firefox, Safari, Opera e Brave. Atalhos de teclado e estrelas funcionam da mesma forma nas três. Os níveis são, em todas, uma opção experimental que precisa ser ativada: no Gemini, ative **Habilitar níveis de nó** em **Plugins** → **Mostrar linha do tempo** → **Opções**; no Claude e no ChatGPT, ative o mesmo interruptor nas definições de **Claude · Linha do tempo** ou **ChatGPT · Linha do tempo**, na secção **Plugins**. As mensagens com estrela são sincronizadas entre dispositivos quando a [Sincronização na Nuvem](/pt/guide/cloud-sync) está ativada.
 
 A linha do tempo não está disponível no AI Studio. O DeepSeek tem um plugin opcional de linha do tempo no catálogo de plugins (ele vem desativado).

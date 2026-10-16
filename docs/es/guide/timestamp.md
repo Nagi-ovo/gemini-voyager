@@ -15,7 +15,7 @@ Voyager anota cada mensaje con una marca de tiempo precisa (formato: `AAAA-MM-DD
 ## Cómo activarlo
 
 1. Abre el panel de ajustes de Voyager (el icono de la extensión en la barra de herramientas del navegador).
-2. En **Opciones de Línea de Tiempo**, activa **Mostrar marcas de tiempo de mensajes** (marcado como **Experimental**, desactivado por defecto).
+2. Activa **Complementos** → **Marcas de tiempo de mensajes** (marcado como **Experimental**, desactivado por defecto).
 
 ## De dónde salen las horas
 

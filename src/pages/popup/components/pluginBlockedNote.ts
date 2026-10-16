@@ -5,7 +5,6 @@ import type { TranslationKey } from '@/utils/translations';
 import { officialPluginEntry } from '../officialPlugins/officialPluginRegistry';
 import { isReleasingStatus } from '../utils/releasingStatus';
 import { displayName, pickLocalized } from './PluginIdentity';
-import { officialSettingLocation } from './officialFeatureSetting';
 
 /** How a blocked note reads: a pause the user can resolve, or a wait that ends by itself. */
 export type BlockedNoteTone = 'paused' | 'waiting';
@@ -32,8 +31,7 @@ export function pluginDisplayName(
 
 /**
  * Where the user switches official plugin `id` off: its row in the popup's
- * Plugins card, or the native settings card that still holds it. Null for any
- * other plugin.
+ * Plugins card. Null for any other plugin.
  */
 function officialSwitch(
   id: string,
@@ -47,8 +45,7 @@ function officialSwitch(
       card: t('pluginsTitle'),
     };
   }
-  const location = officialSettingLocation(id);
-  return location ? { setting: t(location.setting), card: t(location.card) } : null;
+  return null;
 }
 
 export interface BlockedNoteInput {

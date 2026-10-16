@@ -15,7 +15,7 @@ Voyager annotates each message with a precise timestamp (format: `YYYY-MM-DD HH:
 ## How to enable
 
 1. Open the Voyager settings panel (the extension icon in your browser's toolbar).
-2. Under **Timeline Options**, turn on **Show Message Timestamps** (marked **Experimental**, off by default).
+2. Turn on **Plugins** → **Message timestamps** (marked **Experimental**, off by default).
 
 ## Where the times come from
 

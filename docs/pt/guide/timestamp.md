@@ -15,7 +15,7 @@ O Voyager anota cada mensagem com um carimbo de data/hora preciso (formato: `AAA
 ## Como ativar
 
 1. Abra o painel de configurações do Voyager (o ícone da extensão na barra de ferramentas do navegador).
-2. Em **Opções da Linha do Tempo**, ative **Mostrar carimbos de data/hora das mensagens** (marcado como **Experimental**, desativado por padrão).
+2. Ative **Plugins** → **Data e hora das mensagens** (marcado como **Experimental**, desativado por padrão).
 
 ## De onde vêm as horas
 

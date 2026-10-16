@@ -17,8 +17,8 @@ Aceda ao popup e ative primeiro **Plugins** → **Largura do chat**: vem desliga
 
 Clique no ícone da extensão para acessar a central de controle.
 
-- **Modo de rolagem**: `Fluxo` rola suavemente até a mensagem; `Pulo` vai até ela instantaneamente.
-- **Posição da linha do tempo**: Ative **Linha do tempo arrastável** e mova-a para onde preferir. **Redefinir Posição da Linha do Tempo** a devolve ao lugar original.
+- **Modo de rolagem**: em **Plugins** → **Mostrar linha do tempo** → **Opções**, `Fluxo` rola suavemente até a mensagem; `Pulo` vai até ela instantaneamente.
+- **Posição da linha do tempo**: Em **Plugins** → **Mostrar linha do tempo** → **Opções**, ative **Linha do tempo arrastável** e mova-a para onde preferir. **Redefinir Posição da Linha do Tempo** a devolve ao lugar original.
 - **Efeitos visuais**: no Gemini e no AI Studio, ative **Plugins** → **Efeitos visuais** e escolha `Neve`, `Sakura` ou `Chuva` por baixo da linha; desative-a para desligar o efeito. Os outros sites mantêm o cartão Efeitos visuais.
 
 ## Ordem personalizada
