@@ -17,7 +17,8 @@ const Switch = React.forwardRef<HTMLInputElement, SwitchProps>(
         <div
           className={cn(
             'bg-input peer-focus:ring-ring peer h-6 w-11 rounded-full shadow-inner transition-colors duration-200 peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:outline-none',
-            "after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-md after:transition-all after:duration-200 after:content-[''] peer-checked:after:translate-x-full",
+            // Logical inset and a mirrored slide: under dir="rtl" the off knob sits on the right.
+            "after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow-md after:transition-all after:duration-200 after:content-[''] peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full",
             'peer-checked:bg-primary',
             className,
           )}
