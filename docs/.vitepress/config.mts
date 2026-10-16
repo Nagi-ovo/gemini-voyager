@@ -104,7 +104,6 @@ export default defineConfig({
           { text: '首页', link: '/' },
           { text: '指南', link: '/guide/installation' },
           { text: '插件市场', link: '/plugins' },
-          { text: '更新日志', link: '/changelog' },
           { text: '数据查看器', link: '/data-viewer' },
         ],
         sidebar: [
@@ -118,6 +117,7 @@ export default defineConfig({
               { text: '插件贡献说明', link: '/guide/plugin-contribution' },
               { text: '编写自己的插件', link: '/guide/write-a-plugin' },
               { text: '受 Voyager 启发的项目', link: '/guide/ecosystem' },
+              { text: '更新日志', link: '/changelog' },
             ],
           },
           {
@@ -170,7 +170,7 @@ export default defineConfig({
           message:
             '本项目开源。欢迎在 <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> 上给一颗 ⭐ 支持。',
           copyright:
-            '基于 GPLv3 协议发布 | Copyright © 2026 Jesse Zhang | <a href="/privacy">隐私政策</a>',
+            '基于 GPLv3 协议发布 | Copyright © 2026 Jesse Zhang | <a href="/privacy">隐私政策</a> | <a href="/changelog">更新日志</a>',
         },
       },
     },
@@ -184,7 +184,6 @@ export default defineConfig({
           { text: '首頁', link: '/zh_TW/' },
           { text: '指南', link: '/zh_TW/guide/installation' },
           { text: '外掛市集', link: '/zh_TW/plugins' },
-          { text: '更新日誌', link: '/zh_TW/changelog' },
           { text: '資料查看器', link: '/zh_TW/data-viewer' },
         ],
         sidebar: [
@@ -198,6 +197,7 @@ export default defineConfig({
               { text: '外掛貢獻說明', link: '/zh_TW/guide/plugin-contribution' },
               { text: '撰寫自己的外掛', link: '/zh_TW/guide/write-a-plugin' },
               { text: '受 Voyager 啟發的項目', link: '/zh_TW/guide/ecosystem' },
+              { text: '更新日誌', link: '/zh_TW/changelog' },
             ],
           },
           {
@@ -250,7 +250,7 @@ export default defineConfig({
           message:
             '開源專案。如果您喜歡，請在 <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> 上給我們一顆 ⭐。',
           copyright:
-            'GPLv3 授權 | Copyright © 2026 Jesse Zhang | <a href="/zh_TW/privacy">隱私政策</a>',
+            'GPLv3 授權 | Copyright © 2026 Jesse Zhang | <a href="/zh_TW/privacy">隱私政策</a> | <a href="/zh_TW/changelog">更新日誌</a>',
         },
       },
     },
@@ -265,7 +265,6 @@ export default defineConfig({
           { text: 'Home', link: '/en/' },
           { text: 'Guide', link: '/en/guide/installation' },
           { text: 'Marketplace', link: '/en/plugins' },
-          { text: 'Changelog', link: '/en/changelog' },
           { text: 'Data Viewer', link: '/en/data-viewer' },
         ],
         sidebar: [
@@ -279,6 +278,7 @@ export default defineConfig({
               { text: 'Plugin Contribution', link: '/en/guide/plugin-contribution' },
               { text: 'Write Your Own Plugin', link: '/en/guide/write-a-plugin' },
               { text: 'Ecosystem', link: '/en/guide/ecosystem' },
+              { text: 'Changelog', link: '/en/changelog' },
             ],
           },
           {
@@ -331,7 +331,7 @@ export default defineConfig({
           message:
             'Open source project. Star us on <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> if you like it ⭐.',
           copyright:
-            'Released under the GPLv3 License | Copyright © 2026 Jesse Zhang | <a href="/en/privacy">Privacy Policy</a>',
+            'Released under the GPLv3 License | Copyright © 2026 Jesse Zhang | <a href="/en/privacy">Privacy Policy</a> | <a href="/en/changelog">Changelog</a>',
         },
       },
     },
@@ -345,7 +345,6 @@ export default defineConfig({
           { text: 'ホーム', link: '/ja/' },
           { text: 'ガイド', link: '/ja/guide/installation' },
           { text: 'マーケット', link: '/ja/plugins' },
-          { text: '更新履歴', link: '/ja/changelog' },
           { text: 'データビューア', link: '/ja/data-viewer' },
         ],
         sidebar: [
@@ -359,6 +358,7 @@ export default defineConfig({
               { text: 'プラグイン貢献ガイド', link: '/ja/guide/plugin-contribution' },
               { text: '自分でプラグインを作る', link: '/ja/guide/write-a-plugin' },
               { text: 'エコシステム', link: '/ja/guide/ecosystem' },
+              { text: '更新履歴', link: '/ja/changelog' },
             ],
           },
           {
@@ -411,7 +411,7 @@ export default defineConfig({
           message:
             'オープンソースプロジェクトです。<a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> でスター ⭐ をつけて応援してください。',
           copyright:
-            'GPLv3 ライセンス | Copyright © 2026 Jesse Zhang | <a href="/ja/privacy">プライバシーポリシー</a>',
+            'GPLv3 ライセンス | Copyright © 2026 Jesse Zhang | <a href="/ja/privacy">プライバシーポリシー</a> | <a href="/ja/changelog">更新履歴</a>',
         },
       },
     },
@@ -425,7 +425,6 @@ export default defineConfig({
           { text: '홈', link: '/ko/' },
           { text: '가이드', link: '/ko/guide/installation' },
           { text: '마켓플레이스', link: '/ko/plugins' },
-          { text: '변경 로그', link: '/ko/changelog' },
           { text: '데이터 뷰어', link: '/ko/data-viewer' },
         ],
         sidebar: [
@@ -439,6 +438,7 @@ export default defineConfig({
               { text: '플러그인 기여 가이드', link: '/ko/guide/plugin-contribution' },
               { text: '직접 플러그인 만들기', link: '/ko/guide/write-a-plugin' },
               { text: '에코시스템', link: '/ko/guide/ecosystem' },
+              { text: '변경 로그', link: '/ko/changelog' },
             ],
           },
           {
@@ -491,7 +491,7 @@ export default defineConfig({
           message:
             '오픈 소스 프로젝트입니다. 마음에 드신다면 <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a>에서 ⭐를 눌러주세요.',
           copyright:
-            'GPLv3 라이선스 하에 배포됨 | Copyright © 2026 Jesse Zhang | <a href="/ko/privacy">개인정보 처리방침</a>',
+            'GPLv3 라이선스 하에 배포됨 | Copyright © 2026 Jesse Zhang | <a href="/ko/privacy">개인정보 처리방침</a> | <a href="/ko/changelog">변경 로그</a>',
         },
       },
     },
@@ -505,7 +505,6 @@ export default defineConfig({
           { text: 'Accueil', link: '/fr/' },
           { text: 'Guide', link: '/fr/guide/installation' },
           { text: 'Marketplace', link: '/fr/plugins' },
-          { text: 'Nouveautés', link: '/fr/changelog' },
           { text: 'Visionneuse', link: '/fr/data-viewer' },
         ],
         sidebar: [
@@ -519,6 +518,7 @@ export default defineConfig({
               { text: 'Contribution Plugins', link: '/fr/guide/plugin-contribution' },
               { text: 'Écrire son propre plugin', link: '/fr/guide/write-a-plugin' },
               { text: 'Écosystème', link: '/fr/guide/ecosystem' },
+              { text: 'Nouveautés', link: '/fr/changelog' },
             ],
           },
           {
@@ -571,7 +571,7 @@ export default defineConfig({
           message:
             'Projet Open Source. Mettez une ⭐ sur <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> si vous aimez.',
           copyright:
-            'Licence GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/fr/privacy">Politique de Confidentialité</a>',
+            'Licence GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/fr/privacy">Politique de Confidentialité</a> | <a href="/fr/changelog">Nouveautés</a>',
         },
       },
     },
@@ -585,7 +585,6 @@ export default defineConfig({
           { text: 'Inicio', link: '/es/' },
           { text: 'Guía', link: '/es/guide/installation' },
           { text: 'Mercado', link: '/es/plugins' },
-          { text: 'Novedades', link: '/es/changelog' },
           { text: 'Visor', link: '/es/data-viewer' },
         ],
         sidebar: [
@@ -599,6 +598,7 @@ export default defineConfig({
               { text: 'Contribuir plugins', link: '/es/guide/plugin-contribution' },
               { text: 'Escribe tu propio plugin', link: '/es/guide/write-a-plugin' },
               { text: 'Ecosistema', link: '/es/guide/ecosystem' },
+              { text: 'Novedades', link: '/es/changelog' },
             ],
           },
           {
@@ -657,7 +657,7 @@ export default defineConfig({
           message:
             'Proyecto de Código Abierto. Danos una ⭐ en <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> si te gusta.',
           copyright:
-            'Licencia GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/es/privacy">Política de Privacidad</a>',
+            'Licencia GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/es/privacy">Política de Privacidad</a> | <a href="/es/changelog">Novedades</a>',
         },
       },
     },
@@ -671,7 +671,6 @@ export default defineConfig({
           { text: 'Início', link: '/pt/' },
           { text: 'Guia', link: '/pt/guide/installation' },
           { text: 'Mercado', link: '/pt/plugins' },
-          { text: 'Novidades', link: '/pt/changelog' },
           { text: 'Visualizador', link: '/pt/data-viewer' },
         ],
         sidebar: [
@@ -685,6 +684,7 @@ export default defineConfig({
               { text: 'Contribuir plugins', link: '/pt/guide/plugin-contribution' },
               { text: 'Escreva o seu próprio plugin', link: '/pt/guide/write-a-plugin' },
               { text: 'Ecossistema', link: '/pt/guide/ecosystem' },
+              { text: 'Novidades', link: '/pt/changelog' },
             ],
           },
           {
@@ -737,7 +737,7 @@ export default defineConfig({
           message:
             'Projeto Open Source. Dê uma ⭐ no <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> se você gostar.',
           copyright:
-            'Licença GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/pt/privacy">Política de Privacidade</a>',
+            'Licença GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/pt/privacy">Política de Privacidade</a> | <a href="/pt/changelog">Novidades</a>',
         },
       },
     },
@@ -752,7 +752,6 @@ export default defineConfig({
           { text: 'الرئيسية', link: '/ar/' },
           { text: 'الدليل', link: '/ar/guide/installation' },
           { text: 'سوق الإضافات', link: '/ar/plugins' },
-          { text: 'سجل التغييرات', link: '/ar/changelog' },
           { text: 'عارض البيانات', link: '/ar/data-viewer' },
         ],
         sidebar: [
@@ -766,6 +765,7 @@ export default defineConfig({
               { text: 'المساهمة في الإضافات', link: '/ar/guide/plugin-contribution' },
               { text: 'اكتب إضافتك الخاصة', link: '/ar/guide/write-a-plugin' },
               { text: 'المنظومة', link: '/ar/guide/ecosystem' },
+              { text: 'سجل التغييرات', link: '/ar/changelog' },
             ],
           },
           {
@@ -818,7 +818,7 @@ export default defineConfig({
           message:
             'مشروع مفتوح المصدر. امنحنا ⭐ على <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a> إذا أعجبك.',
           copyright:
-            'رخصة GPLv3 | حقوق النشر © 2026 Jesse Zhang | <a href="/ar/privacy">سياسة الخصوصية</a>',
+            'رخصة GPLv3 | حقوق النشر © 2026 Jesse Zhang | <a href="/ar/privacy">سياسة الخصوصية</a> | <a href="/ar/changelog">سجل التغييرات</a>',
         },
       },
     },
@@ -832,7 +832,6 @@ export default defineConfig({
           { text: 'Главная', link: '/ru/' },
           { text: 'Руководство', link: '/ru/guide/installation' },
           { text: 'Маркетплейс', link: '/ru/plugins' },
-          { text: 'Изменения', link: '/ru/changelog' },
           { text: 'Просмотр', link: '/ru/data-viewer' },
         ],
         sidebar: [
@@ -846,6 +845,7 @@ export default defineConfig({
               { text: 'Участие в плагинах', link: '/ru/guide/plugin-contribution' },
               { text: 'Создание своего плагина', link: '/ru/guide/write-a-plugin' },
               { text: 'Экосистема', link: '/ru/guide/ecosystem' },
+              { text: 'Изменения', link: '/ru/changelog' },
             ],
           },
           {
@@ -904,7 +904,7 @@ export default defineConfig({
           message:
             'Проект с открытым исходным кодом. Поставьте ⭐ на <a href="https://github.com/voyager-crew/voyager" target="_blank">GitHub</a>, если вам нравится.',
           copyright:
-            'Лицензия GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/ru/privacy">Политика конфиденциальности</a>',
+            'Лицензия GPLv3 | Copyright © 2026 Jesse Zhang | <a href="/ru/privacy">Политика конфиденциальности</a> | <a href="/ru/changelog">Изменения</a>',
         },
       },
     },
