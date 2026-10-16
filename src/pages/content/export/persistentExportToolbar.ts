@@ -13,6 +13,11 @@ const TOOLBAR_CLASS = 'gv-persistent-export-toolbar';
 const BUTTON_CLASS = 'gv-persistent-export-btn';
 const ICON_CLASS = 'gv-persistent-export-icon';
 const LABEL_CLASS = 'gv-persistent-export-label';
+const HIDDEN_CLASS = 'gv-hidden';
+const CANVAS_OWNER_SELECTOR = 'inline-preview, immersive-panel';
+const CANVAS_CONTENT_SELECTOR = 'immersive-editor, code-immersive-panel';
+const CANVAS_STRUCTURE_SELECTOR = `${CANVAS_OWNER_SELECTOR}, ${CANVAS_CONTENT_SELECTOR}`;
+const INACTIVE_CANVAS_SELECTOR = 'deep-research-immersive-panel, [hidden], [aria-hidden="true"]';
 const DEFAULT_RIGHT_OFFSET_PX = 84;
 const TOP_RIGHT_GAP_PX = 12;
 const TOP_RIGHT_MAX_Y_PX = 96;
@@ -83,6 +88,7 @@ function classifyTopRightElement(
 
 type TopRightMeasurement = {
   offset: number;
+  canvas: HTMLElement[];
   /** Avoided controls plus full-width hosts whose children can push them left. */
   watched: HTMLElement[];
   /** Zero-size matches: kept out of the offset, but an ancestor can reveal them. */
@@ -92,8 +98,14 @@ type TopRightMeasurement = {
 function measureTopRightControls(toolbarRoot: HTMLElement): TopRightMeasurement {
   const watched: HTMLElement[] = [];
   const hidden: HTMLElement[] = [];
+  const canvas: HTMLElement[] = [];
   let leftMost: number | null = null;
-  for (const element of Array.from(document.querySelectorAll(TOP_RIGHT_AVOIDANCE_SELECTORS))) {
+  const selector = `${TOP_RIGHT_AVOIDANCE_SELECTORS},${CANVAS_CONTENT_SELECTOR}`;
+  for (const element of Array.from(document.querySelectorAll<HTMLElement>(selector))) {
+    if (element.matches(CANVAS_CONTENT_SELECTOR)) {
+      canvas.push(element);
+      continue;
+    }
     const left = classifyTopRightElement(element, toolbarRoot);
     if (left === null) continue;
     if (left === 'hidden') {
@@ -110,8 +122,8 @@ function measureTopRightControls(toolbarRoot: HTMLElement): TopRightMeasurement 
           DEFAULT_RIGHT_OFFSET_PX,
           Math.ceil(window.innerWidth - leftMost + TOP_RIGHT_GAP_PX),
         );
-  if (!usesRowAvoidance(toolbarRoot)) return { offset, watched, hidden };
-  return { offset: avoidControlsInRow(toolbarRoot, offset, watched), watched, hidden };
+  if (!usesRowAvoidance(toolbarRoot)) return { offset, watched, hidden, canvas };
+  return { offset: avoidControlsInRow(toolbarRoot, offset, watched), watched, hidden, canvas };
 }
 
 function usesRowAvoidance(toolbarRoot: HTMLElement): boolean {
@@ -152,13 +164,14 @@ function avoidControlsInRow(
   return right;
 }
 
-/** The top-right elements found by the last measurement, for filtering mutations. */
+/** Top-right controls and Canvas content from the last update, for filtering mutations. */
 type MeasuredControls = {
   watched: ReadonlySet<Element>;
   /** Every watched element plus its ancestors: attribute changes there can hide or move it. */
   watchedAndAncestors: ReadonlySet<Node>;
   /** Every hidden match plus its ancestors: attribute changes there can reveal it. */
   hiddenAndAncestors: ReadonlySet<Node>;
+  canvasAndAncestors: ReadonlySet<Node>;
 };
 
 function collectWithAncestors(elements: readonly HTMLElement[]): Set<Node> {
@@ -175,11 +188,13 @@ function collectWithAncestors(elements: readonly HTMLElement[]): Set<Node> {
 function indexMeasuredControls(
   watched: readonly HTMLElement[],
   hidden: readonly HTMLElement[] = [],
+  canvas: readonly HTMLElement[] = [],
 ): MeasuredControls {
   return {
     watched: new Set(watched),
     watchedAndAncestors: collectWithAncestors(watched),
     hiddenAndAncestors: collectWithAncestors(hidden),
+    canvasAndAncestors: collectWithAncestors(canvas),
   };
 }
 
@@ -211,8 +226,8 @@ function mutationsMayMoveTopRightControls(
   if (!toolbarRoot.isConnected) return true;
   // Row avoidance hit-tests unlabeled controls, so any new one may land under the toolbar.
   const addedSelector = usesRowAvoidance(toolbarRoot)
-    ? `${TOP_RIGHT_AVOIDANCE_SELECTORS},${INTERACTIVE_SELECTOR}`
-    : TOP_RIGHT_AVOIDANCE_SELECTORS;
+    ? `${TOP_RIGHT_AVOIDANCE_SELECTORS},${CANVAS_STRUCTURE_SELECTOR},${INTERACTIVE_SELECTOR}`
+    : `${TOP_RIGHT_AVOIDANCE_SELECTORS},${CANVAS_STRUCTURE_SELECTOR}`;
   for (const mutation of mutations) {
     const target = mutation.target;
     // The toolbar's own offset writes and label updates.
@@ -220,6 +235,7 @@ function mutationsMayMoveTopRightControls(
     if (mutation.type === 'attributes') {
       if (measured.watchedAndAncestors.has(target)) return true;
       if (measured.hiddenAndAncestors.has(target)) return true;
+      if (measured.canvasAndAncestors.has(target)) return true;
       if (isInsideWatchedElement(target, measured)) return true;
       if (target instanceof Element && target.matches(TOP_RIGHT_AVOIDANCE_SELECTORS)) return true;
       continue;
@@ -230,6 +246,7 @@ function mutationsMayMoveTopRightControls(
     }
     for (const node of Array.from(mutation.removedNodes)) {
       if (measured.watchedAndAncestors.has(node)) return true;
+      if (containsMatch(node, CANVAS_STRUCTURE_SELECTOR)) return true;
     }
   }
   return false;
@@ -249,8 +266,17 @@ function installToolbarAvoidance(root: HTMLDivElement): void {
       activeAvoidanceCleanup?.();
       return;
     }
-    const { offset, watched, hidden } = measureTopRightControls(root);
-    measured = indexMeasuredControls(watched, hidden);
+    const { offset, watched, hidden, canvas } = measureTopRightControls(root);
+    // Fullscreen Canvas puts Collapse under this pill; its own Export menu remains available.
+    root.classList.toggle(
+      HIDDEN_CLASS,
+      canvas.some(
+        (editor) =>
+          editor.closest(CANVAS_OWNER_SELECTOR)?.matches('immersive-panel') &&
+          !editor.closest(INACTIVE_CANVAS_SELECTOR),
+      ),
+    );
+    measured = indexMeasuredControls(watched, hidden, canvas);
     const next = `${offset}px`;
     if (next === appliedOffset) return;
     appliedOffset = next;
