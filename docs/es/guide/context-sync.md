@@ -20,8 +20,8 @@ El mayor dolor de cabeza de los desarrolladores: después de discutir a fondo un
    ![Servidor CoBridge activado](/assets/CoBridge-on.png)
 
 2. **Conexión y saludo**:
-   - En el popup de Voyager, activa **Complementos** → **Sincronización de contexto**.
-   - Abre **Opciones** en esa fila y haz que **Puerto del servidor** coincida con el puerto que usa CoBridge. Cuando veas "IDE en línea", significa que están conectados.
+   - En el popup de Voyager, activa **Conversaciones** → **Sincronización de contexto**.
+   - En las opciones que aparecen debajo de la fila al activarla, haz que **Puerto del servidor** coincida con el puerto que usa CoBridge. Cuando veas "IDE en línea", significa que están conectados.
 
    ![Consola de sincronización de contexto](/assets/context-sync-console.png)
 

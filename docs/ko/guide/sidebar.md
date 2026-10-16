@@ -9,7 +9,7 @@
 
 1. Voyager 팝업을 엽니다 (브라우저 툴바의 확장 프로그램 아이콘 클릭).
    <img src="/assets/extension-instruction.png" alt="설정 패널 여는 방법" style="border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 10px; max-width: 600px;"/>
-2. Gemini에서는 **플러그인** → **사이드바 너비**를 켭니다(AI Studio에서도 같은 행이며, 직접 설정하기 전에는 폴더 스위치를 따라갑니다). Gemini에서는 기본값이 꺼짐이며, 켜면 해당 행 아래에 슬라이더가 나타납니다.
+2. Gemini에서는 **사이드바** → **사이드바 너비**를 켭니다(AI Studio에서도 같은 행이며, 직접 설정하기 전에는 폴더 스위치를 따라갑니다). Gemini에서는 기본값이 꺼짐이며, 켜면 해당 행 아래에 슬라이더가 나타납니다.
 3. 슬라이더를 드래그하여 자신에게 적합한 너비를 선택합니다.
 
 - **좁게 (Narrow)**: 공간을 절약하고 대화에 집중하세요.

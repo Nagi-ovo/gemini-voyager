@@ -6,7 +6,7 @@
 
 Renderiza automaticamente fórmulas LaTeX nas mensagens do utilizador como notação matemática.
 
-Ative ou desative esta funcionalidade no popup do Voyager, em **Plugins** → **LaTeX nas suas mensagens**.
+Ative ou desative esta funcionalidade no popup do Voyager, em **Conteúdo das respostas** → **LaTeX nas suas mensagens**.
 
 ## Visão geral
 

@@ -19,7 +19,7 @@ Voyager lets that native Gems entry "expand" into a list of your gems, right the
 ## How to use it
 
 1. Open the Voyager popup (extension icon in the toolbar).
-2. Make sure **Plugins** → **Recent Gems in sidebar** is on (it is on by default). While it is on, a count slider shows under the row. It shows 3 gems by default.
+2. Make sure **Sidebar** → **Recent Gems in sidebar** is on (it is on by default). While it is on, a count slider shows under the row. It shows 3 gems by default.
 3. Drag to the count you want (1–10). **`0` only hides the recent-Gems list** — it doesn't turn the feature off. To turn it off, switch the row off.
 
 To pin one of your own gems, open `gemini.google.com/gems/view` and click the pin button on its row (**Pin to sidebar**). Click it again to unpin.

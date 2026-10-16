@@ -5,7 +5,7 @@ La Chronologie Voyager est un système visuel de navigation dans les conversatio
 Les longues conversations sont désordonnées. Vous faites défiler vers le haut, vers le bas, vous perdez le fil.
 Voyager transforme votre conversation en une chronologie.
 
-Sur Gemini, **Extensions** → **Afficher la chronologie** contrôle la barre de chronologie et ses raccourcis de navigation. La désactivation conserve les étoiles et la hiérarchie enregistrées. Les heures des messages dépendent séparément de **Extensions** → **Horodatage des messages** : elles peuvent donc rester visibles même lorsque la chronologie est désactivée.
+Sur Gemini, **Chronologie** → **Afficher la chronologie** contrôle la barre de chronologie et ses raccourcis de navigation. La désactivation conserve les étoiles et la hiérarchie enregistrées. Les heures des messages dépendent séparément de **Chronologie** → **Horodatage des messages** : elles peuvent donc rester visibles même lorsque la chronologie est désactivée.
 
 Sur Claude, ChatGPT et DeepSeek, la barre est l’extension de chronologie du site : activez-la dans **Extensions** ; ses **Options** regroupent le style, les niveaux de nœuds (lorsqu’ils sont proposés), **Réinitialiser la position de la chronologie** et **Voir la bibliothèque enregistrée**, ainsi que les horodatages des messages sur ChatGPT.
 
@@ -19,7 +19,7 @@ Chaque nœud représente un message. La chronologie visualise le rythme de votre
 - **Téléportation** : Cliquez sur un nœud pour sauter instantanément à ce message.
 - **Coup d'œil** : Survolez pour voir le contenu sans bouger.
 - **Signet** : Appui long sur un nœud pour le marquer d'une **Étoile**. C'est comme un marque-page pour votre cerveau.
-- **Niveaux (Expérimental)** : Désactivés par défaut. Activez d'abord **Activer les niveaux de nœuds** dans **Extensions** → **Afficher la chronologie** → **Options**, puis faites un clic droit sur un nœud pour définir son niveau (1-3) ou réduire ses enfants. Parfait pour clarifier les conversations ramifiées. Les niveaux ne s'affichent qu'avec le style `Nœuds` : les activer bascule la chronologie sur `Nœuds`, et `Graduations` et `Compact` ne sont plus sélectionnables tant qu'ils sont actifs.
+- **Niveaux (Expérimental)** : Désactivés par défaut. Activez d'abord **Activer les niveaux de nœuds** sous **Chronologie** → **Afficher la chronologie**, une fois la ligne activée, puis faites un clic droit sur un nœud pour définir son niveau (1-3) ou réduire ses enfants. Parfait pour clarifier les conversations ramifiées. Les niveaux ne s'affichent qu'avec le style `Nœuds` : les activer bascule la chronologie sur `Nœuds`, et `Graduations` et `Compact` ne sont plus sélectionnables tant qu'ils sont actifs.
 - **Redimensionner** : Faites glisser le bord intérieur de la timeline pour ajuster sa largeur.
 - **Clavier** : Naviguez à la vitesse de la pensée. Par défaut `j`/`k`, `gg`/`GG` pour aller au premier/dernier tour.
 
@@ -33,7 +33,7 @@ Les longues conversations enfouissent des pépites. Marquez d'une étoile les mo
 
 - Appuyez longuement à nouveau pour retirer l'étoile.
 - Les nœuds étoilés restent mis en évidence pour que vous puissiez les repérer d'un coup d'œil.
-- Retrouvez tous vos messages marqués en un seul endroit dans la **Bibliothèque enregistrée** : cliquez sur **Voir la bibliothèque enregistrée** dans la popup de Voyager, sous **Extensions** → **Afficher la chronologie** → **Options**, ou ouvrez-la depuis le panneau du Gestionnaire de Prompts.
+- Retrouvez tous vos messages marqués en un seul endroit dans la **Bibliothèque enregistrée** : cliquez sur **Voir la bibliothèque enregistrée** dans la popup de Voyager, sous **Chronologie** → **Afficher la chronologie**, une fois la ligne activée, ou ouvrez-la depuis le panneau du Gestionnaire de Prompts.
 
 C'est comme planter un drapeau dans la conversation — le moment d'une révélation, la réponse parfaite, ou l'endroit où vous voulez reprendre plus tard.
 
@@ -43,7 +43,7 @@ Les étoiles se synchronisent entre appareils si vous avez activé la [Synchroni
 
 ## Personnalisez l'apparence
 
-Dans la popup de Voyager, ouvrez **Extensions** → **Afficher la chronologie** → **Options** (visible seulement quand la ligne est activée) :
+Dans la popup de Voyager, activez **Chronologie** → **Afficher la chronologie** pour voir ses options sous la ligne :
 
 - **Style de la chronologie** : `Nœuds`, `Graduations` ou `Compact`.
 - **Épingler le panneau d’aperçu** : garde le panneau d'aperçu ouvert à côté de la chronologie. Sa zone de recherche filtre les messages au fil de la frappe.
@@ -92,6 +92,6 @@ La chronologie est la plus utile dans les conversations de plus de 10 messages, 
 
 ## Navigateurs pris en charge
 
-La chronologie fonctionne sur Google Gemini, ainsi que sur Claude et ChatGPT grâce aux extensions intégrées, sur Chrome, Edge, Firefox, Safari, Opera et Brave. Les raccourcis clavier et les étoiles fonctionnent de la même façon sur les trois. Les niveaux sont partout une option expérimentale à activer : sur Gemini, activez **Activer les niveaux de nœuds** dans **Extensions** → **Afficher la chronologie** → **Options** ; sur Claude et ChatGPT, activez le même interrupteur dans les réglages de **Claude · Timeline** ou **ChatGPT · Timeline**, dans la section **Extensions**. Les messages étoilés se synchronisent entre appareils lorsque la [Synchro Cloud](/fr/guide/cloud-sync) est activée.
+La chronologie fonctionne sur Google Gemini, ainsi que sur Claude et ChatGPT grâce aux extensions intégrées, sur Chrome, Edge, Firefox, Safari, Opera et Brave. Les raccourcis clavier et les étoiles fonctionnent de la même façon sur les trois. Les niveaux sont partout une option expérimentale à activer : sur Gemini, activez **Activer les niveaux de nœuds** sous **Chronologie** → **Afficher la chronologie**, une fois la ligne activée ; sur Claude et ChatGPT, activez le même interrupteur dans les réglages de **Claude · Timeline** ou **ChatGPT · Timeline**, dans la section **Extensions**. Les messages étoilés se synchronisent entre appareils lorsque la [Synchro Cloud](/fr/guide/cloud-sync) est activée.
 
 La chronologie n'est pas disponible sur AI Studio. DeepSeek dispose d'une extension de chronologie facultative dans le catalogue d'extensions (elle est livrée désactivée).

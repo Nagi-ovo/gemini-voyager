@@ -13,7 +13,7 @@ Nous proposons une fonctionnalité de **Masquage automatique de la barre latéra
 ### Comment activer
 
 1. Ouvrez la popup de Voyager.
-2. Activez **Extensions** → **Masquer automatiquement la barre latérale**.
-3. Pour masquer aussi la barre réduite, activez **Extensions** → **Masquer complètement la barre latérale** (il fonctionne aussi seul).
+2. Activez **Barre latérale** → **Masquer automatiquement la barre latérale**.
+3. Pour masquer aussi la barre réduite, activez **Barre latérale** → **Masquer complètement la barre latérale** (il fonctionne aussi seul).
 
 _Remarque : Cette fonctionnalité ne prend actuellement en charge que Google Gemini._

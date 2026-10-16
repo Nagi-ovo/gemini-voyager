@@ -22,7 +22,7 @@ Una mini-barra compacta: una insignia de plan (p. ej. `PRO`), dos barras de prog
 ## Cómo usarlo
 
 1. Abre el panel de ajustes de Voyager (el icono de la extensión en la barra de herramientas del navegador).
-2. En **Complementos** → **Barra de uso**, activa el interruptor (desactivado por defecto).
+2. En **Conversaciones** → **Barra de uso**, activa el interruptor (desactivado por defecto).
 3. La barra flotante aparece en la interfaz del chat de inmediato — arrástrala donde quieras.
 
 ::: tip Funciona desde el primer momento

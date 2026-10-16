@@ -19,7 +19,7 @@ Voyager fait en sorte que cette entrée native Gems « se déploie » en une lis
 ## Comment l'utiliser
 
 1. Ouvrez le popup Voyager (icône de l'extension dans la barre d'outils).
-2. Vérifiez que **Extensions** → **Gems récents dans la barre latérale** est activé (c'est le cas par défaut). Tant qu'il est activé, un curseur de nombre apparaît sous la ligne ; il affiche 3 gems par défaut.
+2. Vérifiez que **Barre latérale** → **Gems récents dans la barre latérale** est activé (c'est le cas par défaut). Tant qu'il est activé, un curseur de nombre apparaît sous la ligne ; il affiche 3 gems par défaut.
 3. Faites glisser jusqu'au nombre souhaité (1–10). **`0` masque seulement la liste des Gems récents** ; cela ne désactive pas la fonctionnalité. Pour la désactiver, coupez l'interrupteur de la ligne.
 
 Pour épingler l'un de vos gems, ouvrez `gemini.google.com/gems/view` et cliquez sur le bouton d'épingle de sa ligne (**Pin to sidebar**). Cliquez à nouveau pour le désépingler.

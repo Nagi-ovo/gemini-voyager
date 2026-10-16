@@ -15,7 +15,7 @@ Quando o Gemini™ gera blocos de código Mermaid (fluxogramas, diagramas de seq
 
 ## Ativar ou desativar
 
-A renderização do Mermaid já vem ativada no Gemini. Para desativar, abra o popup do Voyager e desligue **Plugins** → **Diagramas Mermaid**. O recurso não está disponível no AI Studio.
+A renderização do Mermaid já vem ativada no Gemini. Para desativar, abra o popup do Voyager e desligue **Gráficos** → **Diagramas Mermaid**. O recurso não está disponível no AI Studio.
 
 ## Como usar
 

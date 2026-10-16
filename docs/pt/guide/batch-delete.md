@@ -15,7 +15,7 @@ Elimine várias conversas de uma só vez no Gemini e no AI Studio, sem precisar 
 
 ## Como Usar
 
-Vem ativada por padrão. Ative ou desative em **Plugins** → **Exclusão em lote** (igual no Gemini e no AI Studio). Ela precisa de pastas: se **Opções de Pasta** → **Habilitar recurso de pasta** estiver desligado, a linha fica esmaecida até você ativar as pastas.
+Vem ativada por padrão. Ative ou desative em **Conversas** → **Exclusão em lote** (igual no Gemini e no AI Studio). Ela precisa de pastas: se **Opções de Pasta** → **Habilitar recurso de pasta** estiver desligado, a linha fica esmaecida até você ativar as pastas.
 
 ### Gemini
 

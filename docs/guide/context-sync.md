@@ -20,8 +20,8 @@
    ![CoBridge服务器开启](/assets/CoBridge-on.png)
 
 2. **握手对接**：
-   - 在 Voyager 弹窗中开启 **插件** → **上下文同步**。
-   - 打开该行的 **选项**，对齐端口号：让 **服务端口** 与 CoBridge 使用的端口一致。看到 “IDE Online”，说明它们已经连上了。
+   - 在 Voyager 弹窗中开启 **对话管理** → **上下文同步**。
+   - 开启后，在该行下方对齐端口号：让 **服务端口** 与 CoBridge 使用的端口一致。看到 “IDE Online”，说明它们已经连上了。
 
    ![上下文同步面板](/assets/context-sync-console.png)
 

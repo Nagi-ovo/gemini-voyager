@@ -6,7 +6,7 @@
 
 Rendu automatique des formules LaTeX dans les messages utilisateur en notation mathématique.
 
-Activez ou désactivez cette fonction dans la popup de Voyager, sous **Extensions** → **LaTeX dans vos messages**.
+Activez ou désactivez cette fonction dans la popup de Voyager, sous **Contenu des réponses** → **LaTeX dans vos messages**.
 
 ## Présentation
 

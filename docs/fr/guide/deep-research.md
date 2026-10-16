@@ -3,7 +3,7 @@
 Exportez le rapport final généré par Deep Research ou enregistrez son processus de "réflexion" complet sous forme de fichier Markdown.
 
 > [!NOTE]
-> Ce plugin officiel est inclus dans Voyager et activé par défaut. Cliquez sur l’icône de l’extension dans la barre d’outils du navigateur, puis utilisez **Extensions** → **Export Deep Research** dans la fenêtre contextuelle pour l’activer ou le désactiver. Une fois désactivé, ses entrées disparaissent aussitôt du menu **Partager et exporter**.
+> Ce plugin officiel est inclus dans Voyager et activé par défaut. Cliquez sur l’icône de l’extension dans la barre d’outils du navigateur, puis utilisez **Export et images** → **Export Deep Research** dans la fenêtre contextuelle pour l’activer ou le désactiver. Une fois désactivé, ses entrées disparaissent aussitôt du menu **Partager et exporter**.
 
 ## 1. Exportation de rapport (PDF / Image)
 

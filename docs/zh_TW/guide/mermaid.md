@@ -15,7 +15,7 @@
 
 ## 開啟或關閉
 
-Gemini 上的 Mermaid 圖表渲染預設開啟。如需關閉，打開 Voyager 彈窗，在 **外掛** → **Mermaid 圖表** 中關閉它。AI Studio 不支援此功能。
+Gemini 上的 Mermaid 圖表渲染預設開啟。如需關閉，打開 Voyager 彈窗，在 **圖表** → **Mermaid 圖表** 中關閉它。AI Studio 不支援此功能。
 
 ## 使用方法
 

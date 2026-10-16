@@ -20,7 +20,7 @@ Shift+Enter and IME composition keep the site's own behavior, and Ctrl/⌘+Enter
 ## How to Enable
 
 1. Open the Voyager popup.
-2. Turn on **Plugins** → **Ctrl/Cmd+Enter to send**.
+2. Turn on **Input** → **Ctrl/Cmd+Enter to send**.
 
 ## Other Sites
 

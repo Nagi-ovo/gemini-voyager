@@ -5,7 +5,7 @@ La línea de tiempo de Voyager es un sistema visual de navegación por conversac
 Las conversaciones largas son un desastre. Arriba y abajo, perdido.
 Voyager convierte la conversación en una línea.
 
-En Gemini, **Complementos** → **Mostrar línea de tiempo** controla la barra de la línea de tiempo y sus atajos de navegación. Al desactivarla se conservan las estrellas y la jerarquía guardadas. Las horas de los mensajes dependen por separado de **Complementos** → **Marcas de tiempo de mensajes**, por lo que pueden seguir visibles con la línea de tiempo desactivada.
+En Gemini, **Línea de tiempo** → **Mostrar línea de tiempo** controla la barra de la línea de tiempo y sus atajos de navegación. Al desactivarla se conservan las estrellas y la jerarquía guardadas. Las horas de los mensajes dependen por separado de **Línea de tiempo** → **Marcas de tiempo de mensajes**, por lo que pueden seguir visibles con la línea de tiempo desactivada.
 
 En Claude, ChatGPT y DeepSeek, la barra es el complemento de línea de tiempo de ese sitio: actívalo en **Complementos** y sus **Opciones** incluyen el estilo, los niveles de nodo (donde se ofrecen), **Restablecer posición de la línea de tiempo** y **Ver biblioteca guardada**, además de las marcas de tiempo de mensajes en ChatGPT.
 
@@ -19,7 +19,7 @@ Cada punto es una frase. Ese es el pulso de tu conversación.
 - **Teletransporte**: Haz clic y ve, sin demoras.
 - **Vistazo**: Pasa el ratón por encima, ve el contenido sin saltar.
 - **Marcador**: Mantén presionado un nodo para **destacar**. Pon un marcador para tu cerebro.
-- **Niveles (Experimental)**: Desactivados por defecto. Primero activa **Habilitar niveles de nodo** en **Complementos** → **Mostrar línea de tiempo** → **Opciones**; luego haz clic derecho en un nodo para establecer su nivel (1-3) o contraer sus hijos. Haz que las conversaciones ramificadas sean claras. Los niveles solo se muestran en el estilo `Nodos`: al activarlos, la línea de tiempo cambia a `Nodos`, y `Escala` y `Compacto` no se pueden elegir mientras estén activos.
+- **Niveles (Experimental)**: Desactivados por defecto. Primero activa **Habilitar niveles de nodo** debajo de **Línea de tiempo** → **Mostrar línea de tiempo**, con la fila activada; luego haz clic derecho en un nodo para establecer su nivel (1-3) o contraer sus hijos. Haz que las conversaciones ramificadas sean claras. Los niveles solo se muestran en el estilo `Nodos`: al activarlos, la línea de tiempo cambia a `Nodos`, y `Escala` y `Compacto` no se pueden elegir mientras estén activos.
 - **Redimensionar**: Arrastra el borde interior de la línea de tiempo para ajustar su ancho.
 - **Atajos**: Vuela con el teclado. Por defecto `j`/`k` para saltar arriba/abajo, `gg`/`GG` para ir al primero/último turno.
 
@@ -33,7 +33,7 @@ Las conversaciones largas entierran oro. Destaca los momentos que importan.
 
 - Mantén presionado de nuevo para quitar la estrella.
 - Los nodos destacados permanecen resaltados para que puedas encontrarlos de un vistazo.
-- Consulta todos tus mensajes destacados en la **Biblioteca guardada**: haz clic en **Ver biblioteca guardada** en el popup de Voyager, dentro de **Complementos** → **Mostrar línea de tiempo** → **Opciones**, o ábrela desde el panel del Gestor de prompts.
+- Consulta todos tus mensajes destacados en la **Biblioteca guardada**: haz clic en **Ver biblioteca guardada** en el popup de Voyager, debajo de **Línea de tiempo** → **Mostrar línea de tiempo**, con la fila activada, o ábrela desde el panel del Gestor de prompts.
 
 Es como plantar una bandera en la conversación — el momento de una revelación, la respuesta perfecta, o donde quieres retomar después.
 
@@ -43,7 +43,7 @@ Las estrellas se sincronizan entre dispositivos si tienes la [Sincronización en
 
 ## Hazlo tuyo
 
-En el popup de Voyager, abre **Complementos** → **Mostrar línea de tiempo** → **Opciones** (solo aparece mientras la fila está activada):
+En el popup de Voyager, activa **Línea de tiempo** → **Mostrar línea de tiempo** para ver sus opciones debajo de la fila:
 
 - **Estilo de cronología**: `Nodos`, `Escala` o `Compacto`.
 - **Fijar panel de vista previa**: Mantiene abierto el panel de vista previa junto a la línea de tiempo. Su cuadro de búsqueda filtra los mensajes mientras escribes.
@@ -92,6 +92,6 @@ La línea de tiempo es más útil en conversaciones de más de 10 mensajes, cuan
 
 ## Navegadores compatibles
 
-La línea de tiempo funciona en Google Gemini, y en Claude y ChatGPT como plugins integrados, en Chrome, Edge, Firefox, Safari, Opera y Brave. Los atajos de teclado y los destacados funcionan igual en las tres. Los niveles son en todas partes una opción experimental que hay que activar: en Gemini, activa **Habilitar niveles de nodo** en **Complementos** → **Mostrar línea de tiempo** → **Opciones**; en Claude y ChatGPT, activa el mismo interruptor en los ajustes de **Claude · Línea de tiempo** o **ChatGPT · Línea de tiempo**, dentro de **Complementos**. Los mensajes destacados se sincronizan entre dispositivos cuando la [Sincronización en la nube](/es/guide/cloud-sync) está activada.
+La línea de tiempo funciona en Google Gemini, y en Claude y ChatGPT como plugins integrados, en Chrome, Edge, Firefox, Safari, Opera y Brave. Los atajos de teclado y los destacados funcionan igual en las tres. Los niveles son en todas partes una opción experimental que hay que activar: en Gemini, activa **Habilitar niveles de nodo** debajo de **Línea de tiempo** → **Mostrar línea de tiempo**, con la fila activada; en Claude y ChatGPT, activa el mismo interruptor en los ajustes de **Claude · Línea de tiempo** o **ChatGPT · Línea de tiempo**, dentro de **Complementos**. Los mensajes destacados se sincronizan entre dispositivos cuando la [Sincronización en la nube](/es/guide/cloud-sync) está activada.
 
 La línea de tiempo no está disponible en AI Studio. DeepSeek tiene un plugin de línea de tiempo opcional en el catálogo de plugins (viene desactivado).

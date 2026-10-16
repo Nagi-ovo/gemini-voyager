@@ -22,7 +22,7 @@ A compact mini-bar: a plan badge (e.g. `PRO`), two thin progress bars (5h / week
 ## How to use
 
 1. Open the Voyager settings panel (the extension icon in your browser's toolbar).
-2. Under **Plugins** → **Usage Status**, turn on the toggle (off by default).
+2. Under **Conversations** → **Usage Status**, turn on the toggle (off by default).
 3. The floating bar appears in the chat UI immediately — drag it wherever you like.
 
 ::: tip Works out of the box

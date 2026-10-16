@@ -10,7 +10,7 @@ Voyager proporciona un soporte fluido para esto:
 
 1. **Detección Automática**: Voyager identifica automáticamente las fórmulas representadas en la página. Al pasar el cursor sobre una, se ve que se puede hacer clic.
 2. **Clic para Copiar**: Haz clic en una fórmula en línea o en bloque y se copia de inmediato, con una breve confirmación.
-3. **Elige un Formato**: En el popup, abre **Complementos** → **Copia de fórmulas** → **Opciones** y elige de antemano el formato de copia:
+3. **Elige un Formato**: En el popup, activa **Contenido de las respuestas** → **Copia de fórmulas** y elige el formato de copia debajo de la fila:
    - **LaTeX**: Código fuente LaTeX estándar con delimitadores de signo de dólar, ideal para Overleaf, editores de Markdown, etc.
    - **LaTeX (Sin signo de dólar)**: El código LaTeX sin delimitadores, para editores que añaden los suyos propios.
    - **MathML (Word)**: El mejor formato para pegar directamente en **Microsoft Word**.
@@ -31,4 +31,4 @@ Voyager proporciona un soporte fluido para esto:
 
 ## Dónde funciona
 
-En Gemini y AI Studio, actívala con **Complementos** → **Copia de fórmulas** en el popup; el formato de copia está en **Opciones** de esa fila. Ese interruptor y el formato de copia se aplican a ambos sitios. Claude y ChatGPT tienen la copia de fórmulas como plugin integrado, y DeepSeek tiene un plugin de copia de fórmulas en el [catálogo de plugins](/es/guide/plugins).
+En Gemini y AI Studio, actívala con **Contenido de las respuestas** → **Copia de fórmulas** en el popup; el formato de copia aparece debajo de esa fila cuando está activada. Ese interruptor y el formato de copia se aplican a ambos sitios. Claude y ChatGPT tienen la copia de fórmulas como plugin integrado, y DeepSeek tiene un plugin de copia de fórmulas en el [catálogo de plugins](/es/guide/plugins).

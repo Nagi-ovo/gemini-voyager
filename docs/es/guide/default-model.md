@@ -27,4 +27,4 @@ Establece un modelo de Gemini™ preferido como predeterminado para evitar el ca
 5. Para que los chats nuevos empiecen también con extended thinking, haz clic en la estrella junto a **Extended thinking** en el mismo menú.
 6. Para deshabilitarlo, simplemente haz clic en el icono de estrella llena nuevamente.
 
-Para pausarlo sin perder tu elección, desactiva **Complementos** → **Modelo predeterminado** en el popup de Voyager.
+Para pausarlo sin perder tu elección, desactiva **Conversaciones** → **Modelo predeterminado** en el popup de Voyager.

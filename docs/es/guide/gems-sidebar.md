@@ -19,7 +19,7 @@ Voyager hace que esa entrada nativa de Gems se "expanda" en una lista de tus gem
 ## Cómo usarlo
 
 1. Abre el popup de Voyager (icono de la extensión en la barra de herramientas).
-2. Comprueba que **Complementos** → **Gems recientes en la barra lateral** esté activado (lo está por defecto). Mientras esté activado, debajo de la fila aparece un deslizador de cantidad; por defecto muestra 3 gems.
+2. Comprueba que **Barra lateral** → **Gems recientes en la barra lateral** esté activado (lo está por defecto). Mientras esté activado, debajo de la fila aparece un deslizador de cantidad; por defecto muestra 3 gems.
 3. Arrastra al número que quieras (1–10). **`0` solo oculta la lista de Gems recientes**; no desactiva la función. Para desactivarla, apaga el interruptor de la fila.
 
 Para fijar uno de tus gems, abre `gemini.google.com/gems/view` y haz clic en el botón de fijar de su fila (**Pin to sidebar**). Haz clic de nuevo para quitarlo.

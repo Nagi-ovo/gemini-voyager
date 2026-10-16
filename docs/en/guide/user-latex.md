@@ -6,7 +6,7 @@
 
 Automatically render LaTeX formulas in user messages as math notation.
 
-Turn this feature on or off in the Voyager popup under **Plugins** → **LaTeX in Your Messages**.
+Turn this feature on or off in the Voyager popup under **Answer content** → **LaTeX in Your Messages**.
 
 ## Overview
 

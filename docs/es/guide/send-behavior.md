@@ -20,7 +20,7 @@ Shift+Enter y la composición de IME mantienen el comportamiento propio del siti
 ## Cómo activar
 
 1. Abre el popup de Voyager.
-2. Activa **Complementos** → **Ctrl/Cmd+Enter para enviar**.
+2. Activa **Entrada** → **Ctrl/Cmd+Enter para enviar**.
 
 ## Otros sitios
 

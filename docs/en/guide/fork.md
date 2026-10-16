@@ -6,7 +6,7 @@ With the **Conversation Fork** feature, Voyager allows you to branch out your th
 
 ## How it Works
 
-> **⚠️ Note**: This is an experimental feature. You need to enable it first by clicking the extension icon in your browser toolbar to open the settings popup, and turning on **Plugins** → **Conversation forks**.
+> **⚠️ Note**: This is an experimental feature. You need to enable it first by clicking the extension icon in your browser toolbar to open the settings popup, and turning on **Conversations** → **Conversation forks**.
 
 Whenever you want to take a different path, simply hover over your prompt and click the **Fork** button:
 

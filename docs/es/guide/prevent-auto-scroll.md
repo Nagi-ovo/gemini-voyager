@@ -6,10 +6,10 @@ La función **Evitar desplazamiento automático** intercepta este comportamiento
 
 - Cuando te has desplazado hacia arriba para leer el historial, el sistema bloquea el salto de la página hacia abajo.
 - Gemini todavía puede saltar al último mensaje justo después de abrir o cambiar de chat; la protección se aplica mientras lees dentro de un chat.
-- Esta característica está **deshabilitada** por defecto. Puedes activarla manualmente en la ventana emergente de la extensión, en **Complementos** → **Evitar desplazamiento automático**.
+- Esta característica está **deshabilitada** por defecto. Puedes activarla manualmente en la ventana emergente de la extensión, en **Línea de tiempo** → **Evitar desplazamiento automático**.
 
 ## Cómo habilitarlo
 
 1. Haz clic en el icono de la extensión Voyager en tu navegador para abrir las opciones.
-2. Ubica la tarjeta **Complementos**.
+2. Ubica la tarjeta **Línea de tiempo**.
 3. Activa el interruptor **Evitar desplazamiento automático**.

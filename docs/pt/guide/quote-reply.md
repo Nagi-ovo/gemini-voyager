@@ -12,7 +12,7 @@ Isso é especialmente útil para fazer perguntas de acompanhamento sobre partes 
 
 ## Como ativar
 
-No Gemini, a resposta com citação é controlada por **Plugins** → **Responder Citação** no popup do Voyager.
+No Gemini, a resposta com citação é controlada por **Entrada** → **Responder Citação** no popup do Voyager.
 
 No Claude, ChatGPT e DeepSeek, instale o plugin **Quote replies** para esse site no [lista de plugins](/pt/guide/plugins). Lá, o botão **Quote** aparece quando você seleciona texto dentro de uma única resposta do assistente, e a citação é adicionada ao seu rascunho sem enviar nada.
 
