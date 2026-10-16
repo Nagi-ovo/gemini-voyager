@@ -2,11 +2,10 @@
  * The usage status runtime: account-scoped usage cache, `/usage` scraping,
  * silent refresh and the pill, for one run that lasts until `signal` aborts.
  *
- * The native module runs it with the `gvUsageStatusEnabled` switch, which
- * stops collection and refresh without deleting saved values. The
- * official plugin runs it without a switch: the plugin host only mounts it
- * while the switch is on. The MAIN-world bridge (`public/usage-observer.js`)
- * stays in core; a run only adds and removes its isolated-world listener.
+ * The official plugin runs it, and the plugin host only mounts it while the
+ * `gvUsageStatusEnabled` switch is on, so a run never reads that switch. The
+ * MAIN-world bridge (`public/usage-observer.js`) stays in core; a run only adds
+ * and removes its isolated-world listener.
  */
 import browser from 'webextension-polyfill';
 
@@ -37,22 +36,7 @@ const logger = LoggerService.getInstance().createChild('UsageStatus');
 
 type StorageChanges = Record<string, chrome.storage.StorageChange>;
 
-/**
- * How the native module's switch reaches a run. The official plugin passes
- * none, so its run never reads the switch and always shows the pill.
- */
-export interface UsageStatusSwitch {
-  load(): Promise<boolean>;
-  /** The switch's new value when `changes` carry it, otherwise `undefined`. */
-  read(changes: StorageChanges, areaName: string): boolean | undefined;
-}
-
-interface UsageStatusRunOptions {
-  signal: AbortSignal;
-  usageSwitch?: UsageStatusSwitch;
-}
-
-/** The one running run; the owner table keeps the native module and the plugin apart. */
+/** The one running run; a second start is refused. */
 let activeRun: object | null = null;
 let runSerial = 0;
 
@@ -108,7 +92,7 @@ async function loadSnapshot(
  * Stopping removes the pill, listeners, observers and timers; it never deletes
  * the usage cache, recipe or pill position.
  */
-export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): Promise<void> {
+export function startUsageStatusRuntime({ signal }: { signal: AbortSignal }): Promise<void> {
   if (signal.aborted) return Promise.resolve();
   if (activeRun) {
     logger.error('Usage status is already running; the second start is ignored');
@@ -119,9 +103,6 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
   const serial = ++runSerial;
   const isCurrent = (): boolean => activeRun === run;
 
-  // Without a switch the plugin host only runs this while the switch is on.
-  let enabled = usageSwitch === undefined;
-  let switchedLive = false;
   let initialized = false;
   let collecting = false;
   let languageRevision = 0;
@@ -134,7 +115,7 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
   // BCP-47 locale for reset-time formatting, derived from the Voyager language.
   let uiLocale: string | undefined;
 
-  // Routes and enable cycles invalidate delayed work, even when the account is unchanged.
+  // Routes invalidate delayed work, even when the account is unchanged.
   let routeEpoch = 0;
   let routeAccountKey = currentUsageAccountKey();
 
@@ -148,18 +129,17 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
   const pill = createUsagePill(() => refresh.requestReplay(true));
   const refresh = createUsageRefresh(
     () => ({
-      enabled: collecting && enabled && isCurrent(),
+      enabled: collecting && isCurrent(),
       snapshot,
       locale: uiLocale,
       generation: serial,
     }),
     (next) => {
-      if (!isCurrent() || !collecting || !enabled || next.accountKey !== currentUsageAccountKey())
-        return;
+      if (!isCurrent() || !collecting || next.accountKey !== currentUsageAccountKey()) return;
       snapshot = next;
       snapshotRevision += 1;
       void saveSnapshot(next);
-      pill.render(enabled, snapshot);
+      pill.render(true, snapshot);
     },
     pill.setSpinning,
   );
@@ -169,13 +149,13 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
   }
 
   function scheduleScrape(epoch: number, accountKey: string): void {
-    if (!collecting || !enabled) return;
+    if (!collecting) return;
     if (scrapeTimer !== null) return;
     scrapeTimer = window.setTimeout(() => {
       scrapeTimer = null;
       // The route poller may not have seen an account switch yet: the DOM read
       // now could still be the previous account's /usage page.
-      if (!collecting || !enabled || !isCurrentRoute(epoch, accountKey) || !isOnUsagePage()) return;
+      if (!collecting || !isCurrentRoute(epoch, accountKey) || !isOnUsagePage()) return;
       const next = scrapeUsageFromDocument();
       if (!next) return; // transient empty render — keep the last good snapshot
       snapshot = mergeUsageSnapshots(
@@ -185,7 +165,7 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
       );
       snapshotRevision += 1;
       void saveSnapshot(snapshot);
-      pill.render(enabled, snapshot);
+      pill.render(true, snapshot);
     }, SCRAPE_DEBOUNCE_MS);
   }
 
@@ -196,7 +176,7 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
    * poller has not noticed yet (pushState sends no popstate).
    */
   function setupScrapeObserver(epoch: number, accountKey: string): void {
-    if (!collecting || !enabled || !isCurrentRoute(epoch, accountKey) || !isOnUsagePage()) return;
+    if (!collecting || !isCurrentRoute(epoch, accountKey) || !isOnUsagePage()) return;
 
     const root = document.querySelector('usage-metrics-window, .usage-metrics-container');
     if (!root) {
@@ -262,7 +242,7 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
   }
 
   function startCollection(epoch: number, accountKey: string): void {
-    if (!initialized || !enabled || !isCurrentRoute(epoch, accountKey)) return;
+    if (!initialized || !isCurrentRoute(epoch, accountKey)) return;
     pill.render(true, snapshot);
     collecting = true;
     refresh.start();
@@ -273,20 +253,9 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
   async function reloadCache(epoch: number, accountKey: string): Promise<void> {
     const revisionAtRead = snapshotRevision;
     const next = await loadSnapshot(accountKey, uiLocale);
-    if (!initialized || !enabled || !isCurrentRoute(epoch, accountKey)) return;
+    if (!initialized || !isCurrentRoute(epoch, accountKey)) return;
     mergeCached(next, accountKey, revisionAtRead);
     startCollection(epoch, accountKey);
-  }
-
-  function applyEnabled(next: boolean): void {
-    if (enabled === next) return;
-    enabled = next;
-    routeEpoch += 1;
-    stopCollection();
-    if (!initialized) return;
-    clearForeignSnapshot(currentUsageAccountKey());
-    pill.render(enabled, snapshot);
-    if (enabled) void reloadCache(routeEpoch, currentUsageAccountKey());
   }
 
   /** Re-localize a metric's reset label from its epoch (used on language change). */
@@ -298,11 +267,6 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
 
   function setupStorageListener(): void {
     storageListener = (changes, areaName) => {
-      const switched = usageSwitch?.read(changes, areaName);
-      if (switched !== undefined) {
-        switchedLive = true;
-        applyEnabled(switched);
-      }
       if (changes[StorageKeys.LANGUAGE]) {
         const revision = ++languageRevision;
         // Voyager language changed — re-localize reset dates + labels.
@@ -321,7 +285,7 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
                 : null,
             };
           }
-          if (initialized) pill.render(enabled, snapshot);
+          if (initialized) pill.render(true, snapshot);
         });
       }
       const accountKey = currentUsageAccountKey();
@@ -335,10 +299,10 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
           const merged = mergeUsageSnapshots(snapshot, raw, {
             allowRegression: raw.regressionVerified === true,
           });
-          if (collecting && enabled && !snapshotEquals(merged, raw)) void saveSnapshot(merged);
+          if (collecting && !snapshotEquals(merged, raw)) void saveSnapshot(merged);
           snapshot = merged;
           snapshotRevision += 1;
-          if (initialized) pill.render(enabled, snapshot);
+          if (initialized) pill.render(true, snapshot);
         }
       }
       if (areaName === 'local' && changes[StorageKeys.GV_USAGE_RECIPE]) {
@@ -359,7 +323,7 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
 
   /** Reload the account's cache and re-aim the scraper once the route settles. */
   function handleNavigation(): void {
-    if (!initialized || !enabled) return;
+    if (!initialized) return;
     if (navigationTimer !== null) clearTimeout(navigationTimer);
     const epoch = routeEpoch;
     const accountKey = currentUsageAccountKey();
@@ -381,7 +345,7 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
       teardownScrapeObserver();
     }
     routeAccountKey = accountKey;
-    pill.render(enabled, snapshot);
+    pill.render(true, snapshot);
     handleNavigation();
   }
 
@@ -403,7 +367,7 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
     { once: true },
   );
 
-  // Live switches must win even while language, cache and preferences are still loading.
+  // Live cache and preference changes must win even while their startup reads are pending.
   setupStorageListener();
 
   return (async () => {
@@ -420,11 +384,6 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
     }
     if (!isCurrent()) return;
 
-    if (usageSwitch) {
-      const on = await usageSwitch.load();
-      if (!isCurrent()) return;
-      if (!switchedLive) enabled = on;
-    }
     const loadedAccountKey = currentUsageAccountKey();
     const loadedEpoch = routeEpoch;
     const loadedRevision = snapshotRevision;
@@ -445,17 +404,9 @@ export function runUsageStatus({ signal, usageSwitch }: UsageStatusRunOptions): 
     if (recipeChangedLive) refresh.adoptRecipe(liveRecipe);
     if (positionChangedLive) pill.adoptPosition(livePosition);
     initialized = true;
-    pill.render(enabled, snapshot);
+    pill.render(true, snapshot);
     stopRouteWatcher = watchRouteChanges(handleRouteChange);
-    if (enabled && cacheCurrent) startCollection(routeEpoch, routeAccountKey);
-    else if (enabled) handleNavigation();
+    if (cacheCurrent) startCollection(routeEpoch, routeAccountKey);
+    else handleNavigation();
   })();
-}
-
-/**
- * Usage status as the official plugin runs it: no switch is read, the pill
- * shows for as long as `signal` is live.
- */
-export function startUsageStatusRuntime({ signal }: { signal: AbortSignal }): Promise<void> {
-  return runUsageStatus({ signal });
 }
