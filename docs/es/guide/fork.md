@@ -6,7 +6,7 @@ Con la función de **Bifurcación de Conversación**, Voyager te permite expandi
 
 ## Cómo funciona
 
-> **⚠️ Nota**: Esta es una función experimental. Primero debes habilitarla haciendo clic en el icono de la extensión en la barra de herramientas de tu navegador para abrir la ventana emergente de configuración, y activando la opción **"Activar bifurcación de conversación"**.
+> **⚠️ Nota**: Esta es una función experimental. Primero debes habilitarla haciendo clic en el icono de la extensión en la barra de herramientas de tu navegador para abrir la ventana emergente de configuración, y activando **Complementos** → **Bifurcaciones de conversación**.
 
 Cada vez que desees tomar un camino diferente, simplemente pasa el cursor sobre tu pregunta y haz clic en el botón **Fork**:
 

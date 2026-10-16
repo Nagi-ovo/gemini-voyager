@@ -27,4 +27,4 @@ Définissez un modèle Gemini™ préféré par défaut pour éviter de changer 
 5. Pour démarrer aussi les nouvelles conversations avec la réflexion approfondie, cliquez sur l'étoile à côté de **Réflexion approfondie** dans le même menu.
 6. Pour annuler, cliquez simplement à nouveau sur l'icône de l'étoile pleine.
 
-Pour la mettre en pause sans perdre votre choix, désactivez **Appliquer le modèle par défaut aux nouveaux chats** dans la popup de Voyager.
+Pour la mettre en pause sans perdre votre choix, désactivez **Extensions** → **Modèle par défaut** dans la popup de Voyager.

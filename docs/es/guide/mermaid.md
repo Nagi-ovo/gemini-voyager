@@ -15,7 +15,7 @@ Cuando Gemini™ genera un bloque de código Mermaid (como diagramas de flujo, d
 
 ## Activar o Desactivar
 
-El renderizado de Mermaid está activado por defecto en Gemini. Para desactivarlo, abre el popup de Voyager y desactiva **Habilitar renderizado de diagramas Mermaid** en **Opciones Generales**. No está disponible en AI Studio.
+El renderizado de Mermaid está activado por defecto en Gemini. Para desactivarlo, abre el popup de Voyager y desactiva **Complementos** → **Diagramas Mermaid**. No está disponible en AI Studio.
 
 ## Cómo Usar
 

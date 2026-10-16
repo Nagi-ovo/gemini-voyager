@@ -6,7 +6,7 @@ Com a funcionalidade de **Bifurcação de Conversa**, o Voyager permite-lhe expa
 
 ## Como Funciona
 
-> **⚠️ Nota**: Esta é uma funcionalidade experimental. Primeiro, precisa de a ativar clicando no ícone da extensão na barra de ferramentas do seu navegador para abrir o pop-up de configurações, e ativando o interruptor **Ativar ramificação de conversa**.
+> **⚠️ Nota**: Esta é uma funcionalidade experimental. Primeiro, precisa de a ativar clicando no ícone da extensão na barra de ferramentas do seu navegador para abrir o pop-up de configurações, e ativando **Plugins** → **Ramificações de conversa**.
 
 Sempre que quiser seguir um caminho diferente, passe o rato sobre a sua pergunta e clique no botão **Fork**:
 

@@ -15,7 +15,7 @@ When Gemini™ outputs Mermaid code blocks (flowcharts, sequence diagrams, Gantt
 
 ## Turn It On or Off
 
-Mermaid rendering is on by default on Gemini. To turn it off, open the Voyager popup and switch off **Enable Mermaid diagram rendering** under **General Options**. It isn't available on AI Studio.
+Mermaid rendering is on by default on Gemini. To turn it off, open the Voyager popup and switch off **Plugins** → **Mermaid diagrams**. It isn't available on AI Studio.
 
 ## How to Use
 

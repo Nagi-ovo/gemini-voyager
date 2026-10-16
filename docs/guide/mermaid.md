@@ -15,7 +15,7 @@
 
 ## 开启或关闭
 
-Mermaid 渲染在 Gemini 上默认开启。如需关闭，请打开 Voyager 弹窗，在 **通用选项** 下关闭 **启用 Mermaid 图表渲染**。AI Studio 上不提供此功能。
+Mermaid 渲染在 Gemini 上默认开启。如需关闭，请打开 Voyager 弹窗，在 **插件** → **Mermaid 图表** 中关闭它。AI Studio 上不提供此功能。
 
 ## 使用方法
 

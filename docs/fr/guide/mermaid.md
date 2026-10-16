@@ -15,7 +15,7 @@ Lorsque Gemini™ produit des blocs de code Mermaid (organigrammes, diagrammes d
 
 ## Activer ou Désactiver
 
-Le rendu Mermaid est activé par défaut sur Gemini. Pour le désactiver, ouvrez la popup de Voyager et désactivez **Activer le rendu Mermaid** dans **Options générales**. Il n'est pas disponible sur AI Studio.
+Le rendu Mermaid est activé par défaut sur Gemini. Pour le désactiver, ouvrez la popup de Voyager et désactivez **Extensions** → **Diagrammes Mermaid**. Il n'est pas disponible sur AI Studio.
 
 ## Comment Utiliser
 

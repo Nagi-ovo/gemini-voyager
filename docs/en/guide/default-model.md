@@ -27,4 +27,4 @@ Set a preferred Gemini™ model as your default to avoid manual switching for ev
 5. To start new chats with extended thinking as well, click the star next to **Extended thinking** in the same menu.
 6. To unset, simply click the filled star icon again.
 
-To pause it without losing your choice, turn off **Auto-apply default model on new chats** in the Voyager popup.
+To pause it without losing your choice, turn off **Plugins** → **Default Model** in the Voyager popup.

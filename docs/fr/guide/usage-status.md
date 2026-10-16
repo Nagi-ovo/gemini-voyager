@@ -22,7 +22,7 @@ Une mini-barre compacte : un badge de forfait (par ex. `PRO`), deux fines barres
 ## Comment l’utiliser
 
 1. Ouvrez le panneau de paramètres Voyager (l’icône de l’extension dans la barre d’outils de votre navigateur).
-2. Dans **Options générales**, activez l’interrupteur **Barre d’état d’utilisation** (désactivé par défaut).
+2. Dans **Extensions** → **Barre d'utilisation**, activez l’interrupteur (désactivé par défaut).
 3. La barre flottante apparaît immédiatement dans l’interface du chat — déplacez-la où vous voulez.
 
 ::: tip Fonctionne sans configuration

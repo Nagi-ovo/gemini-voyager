@@ -6,7 +6,7 @@ Avec la fonctionnalité de **Bifurcation**, Voyager vous permet de développer v
 
 ## Comment ça marche
 
-> **⚠️ Remarque** : Il s'agit d'une fonctionnalité expérimentale. Vous devez d'abord l'activer en cliquant sur l'icône de l'extension dans votre barre d'outils pour ouvrir la fenêtre contextuelle des paramètres, et en activant le commutateur **"Activer le fork de conversation"**.
+> **⚠️ Remarque** : Il s'agit d'une fonctionnalité expérimentale. Vous devez d'abord l'activer en cliquant sur l'icône de l'extension dans votre barre d'outils pour ouvrir la fenêtre contextuelle des paramètres, et en activant le commutateur **Extensions** → **Forks de conversation**.
 
 Chaque fois que vous souhaitez emprunter un chemin différent, survolez simplement votre question et cliquez sur le bouton **Fork** :
 

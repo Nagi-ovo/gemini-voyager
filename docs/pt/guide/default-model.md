@@ -27,4 +27,4 @@ Defina um modelo Gemini™ preferido como padrão para evitar a troca manual a c
 5. Para que os novos chats também comecem com o Extended thinking, clique na estrela ao lado de **Extended thinking** no mesmo menu.
 6. Para desativar, basta clicar no ícone de estrela preenchida novamente.
 
-Para pausar sem perder a sua escolha, desative **Aplicar modelo padrão em novos chats** no popup do Voyager.
+Para pausar sem perder a sua escolha, desative **Plugins** → **Modelo padrão** no popup do Voyager.

@@ -15,7 +15,7 @@ Gemini™가 Mermaid 코드 블록(플로우차트, 시퀀스 다이어그램, �
 
 ## 켜기 또는 끄기
 
-Gemini에서는 Mermaid 렌더링이 기본으로 켜져 있습니다. 끄려면 Voyager 팝업을 열고 **일반 옵션** 아래의 **Mermaid 다이어그램 렌더링 활성화**를 끄세요. AI Studio에서는 사용할 수 없습니다.
+Gemini에서는 Mermaid 렌더링이 기본으로 켜져 있습니다. 끄려면 Voyager 팝업을 열고 **플러그인** → **Mermaid 다이어그램**을 끄세요. AI Studio에서는 사용할 수 없습니다.
 
 ## 사용 방법
 
