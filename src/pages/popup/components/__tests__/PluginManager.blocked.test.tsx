@@ -37,6 +37,12 @@ const officialFormula: PluginManifest = {
   name: 'Gemini · Formula Copy',
 };
 
+const officialVim: PluginManifest = {
+  ...widthPlugin,
+  id: OFFICIAL_PLUGIN_IDS.geminiVimInput,
+  name: 'Gemini · Vim Input',
+};
+
 const en = (key: keyof typeof enMessages): string => enMessages[key].message;
 
 function pluginToggle(): HTMLInputElement {
@@ -63,8 +69,7 @@ describe('PluginManager blocked plugins', () => {
       pluginBlockedPending: enMessages.pluginBlockedPending.message,
       enableFormulaCopy: enMessages.enableFormulaCopy.message,
       formulaCopyFormat: enMessages.formulaCopyFormat.message,
-      inputVimMode: enMessages.inputVimMode.message,
-      inputCollapseOptions: enMessages.inputCollapseOptions.message,
+      pluginsTitle: enMessages.pluginsTitle.message,
       timelineEnable: enMessages.timelineEnable.message,
       timelineOptions: enMessages.timelineOptions.message,
     };
@@ -142,8 +147,7 @@ describe('PluginManager blocked by a packaged official plugin', () => {
       pluginBlockedPending: enMessages.pluginBlockedPending.message,
       enableFormulaCopy: enMessages.enableFormulaCopy.message,
       formulaCopyFormat: enMessages.formulaCopyFormat.message,
-      inputVimMode: enMessages.inputVimMode.message,
-      inputCollapseOptions: enMessages.inputCollapseOptions.message,
+      pluginsTitle: enMessages.pluginsTitle.message,
       timelineEnable: enMessages.timelineEnable.message,
       timelineOptions: enMessages.timelineOptions.message,
     };
@@ -152,7 +156,6 @@ describe('PluginManager blocked by a packaged official plugin', () => {
   it.each([
     [OFFICIAL_PLUGIN_IDS.geminiFormulaCopy, 'enableFormulaCopy', 'formulaCopyFormat'],
     [OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy, 'enableFormulaCopy', 'formulaCopyFormat'],
-    [OFFICIAL_PLUGIN_IDS.geminiVimInput, 'inputVimMode', 'inputCollapseOptions'],
     [OFFICIAL_PLUGIN_IDS.geminiTimeline, 'timelineEnable', 'timelineOptions'],
   ] as const)(
     'points a conflict with %s at its native switch, not at a plugin to find',
@@ -172,15 +175,32 @@ describe('PluginManager blocked by a packaged official plugin', () => {
     },
   );
 
+  it('points a conflict with a plugin listed in the Plugins card at its row there', async () => {
+    await renderManager({
+      nameSources: [widthPlugin, officialVim],
+      statuses: [
+        { ...BLOCKED, blockedReason: 'conflict', blockedBy: OFFICIAL_PLUGIN_IDS.geminiVimInput },
+      ],
+    });
+
+    expect(container.textContent).toContain(
+      en('pluginBlockedByOfficialSetting')
+        .replace('{setting}', 'Vim Input')
+        .replace('{card}', en('pluginsTitle')),
+    );
+    expect(pluginToggle().disabled).toBe(false);
+  });
+
   it('says a pending block clears by itself, naming the switch being read', async () => {
     await renderManager({
+      nameSources: [widthPlugin, officialVim],
       statuses: [
         { ...BLOCKED, blockedReason: 'pending', blockedBy: OFFICIAL_PLUGIN_IDS.geminiVimInput },
       ],
     });
 
     expect(container.textContent).toContain(
-      en('pluginBlockedPending').replace('{name}', en('inputVimMode')),
+      en('pluginBlockedPending').replace('{name}', 'Vim Input'),
     );
     expect(container.textContent).not.toContain('{name}');
   });

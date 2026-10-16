@@ -49,6 +49,15 @@ describe('the official plugin list registry', () => {
     }
   });
 
+  it('lists only boolean settings, which a row writes at once', async () => {
+    // A number needs a commit-time write (a slider would write on every step); rows lack it yet.
+    const manifests = await packagedManifests();
+    for (const entry of OFFICIAL_PLUGIN_ENTRIES) {
+      const fields = Object.entries(manifests.get(entry.id)!.contributes.settings ?? {});
+      for (const [key, field] of fields) expect(field.type, `${entry.id}.${key}`).toBe('boolean');
+    }
+  });
+
   it('a restored settings backup keeps a never-touched switch the way it was', () => {
     // Export fills a missing key with its backup default and restore writes it back.
     const defaults: Readonly<Record<string, unknown>> = BACKUPABLE_SYNC_SETTINGS_DEFAULTS;

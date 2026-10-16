@@ -23,7 +23,6 @@ import { DiagnosticsExportCard } from './components/DiagnosticsExportCard';
 import { FolderSettingsCard } from './components/FolderSettingsCard';
 import { FormulaCopySettings } from './components/FormulaCopySettings';
 import { GeneralSettingsCard } from './components/GeneralSettingsCard';
-import { InputSettingsCard } from './components/InputSettingsCard';
 import { KeyboardShortcutSettings } from './components/KeyboardShortcutSettings';
 import { NativeHealthNotice } from './components/NativeHealthNotice';
 import { NativeLocalPluginsSection } from './components/NativeLocalPluginsSection';
@@ -49,7 +48,6 @@ import { useFolderPopupSettings } from './hooks/useFolderPopupSettings';
 import { useFolderStructureCopy } from './hooks/useFolderStructureCopy';
 import { useFormulaCopyPopupSettings } from './hooks/useFormulaCopyPopupSettings';
 import { useGeneralPopupSettings } from './hooks/useGeneralPopupSettings';
-import { useInputPopupSettings } from './hooks/useInputPopupSettings';
 import { useNativeHealth } from './hooks/useNativeHealth';
 import { usePopupBrandTheme } from './hooks/usePopupBrandTheme';
 import { usePopupLayoutSettings } from './hooks/usePopupLayoutSettings';
@@ -84,15 +82,16 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
   const [aiStudioEnabled, setAiStudioEnabled] = useState(true);
   const tab = useActivePopupTab(sourceTabId);
   const plugins = usePopupPlugins(tab);
+  const nativeHealth = useNativeHealth(tab.activeTabId, tab.activeUrl);
+  const isAIStudio = tab.activeAccountPlatform === 'aistudio';
+  const isSafariBrowser = getVoyagerBuildTarget() === 'safari' || isSafari();
   const officialPlugins = useOfficialPluginList({
     manifests: plugins.siteScopedManifests,
     pluginState: plugins.pluginState,
     legacy: plugins.legacySettings,
     legacyLoaded: plugins.legacySettingsLoaded,
+    context: { isSafariBrowser },
   });
-  const nativeHealth = useNativeHealth(tab.activeTabId, tab.activeUrl);
-  const isAIStudio = tab.activeAccountPlatform === 'aistudio';
-  const isSafariBrowser = getVoyagerBuildTarget() === 'safari' || isSafari();
   const canUseSystemNotifications = supportsExtensionNotifications();
   const currentPlatformLabel = isAIStudio ? t('platformAIStudio') : t('platformGemini');
   const isPluginSite = isPluginPopupSite(tab.activeUrl, plugins.siteScopedManifests);
@@ -134,7 +133,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     isSafariBrowser,
     canUseSystemNotifications,
   });
-  const input = useInputPopupSettings(writePopupSyncStorage);
   const layout = usePopupLayoutSettings({ isAIStudio, writeSyncStorage: writePopupSyncStorage });
   const promptManager = usePromptManagerSettings({
     t,
@@ -169,7 +167,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     timeline: timeline.hydrateFromStorage,
     folder: folder.hydrateFromStorage,
     general: general.hydrateFromStorage,
-    input: input.hydrateFromStorage,
     layout: layout.hydrateFromStorage,
     promptManager: promptManager.hydrateFromStorage,
     visualEffect: visualEffect.hydrateFromStorage,
@@ -423,25 +420,6 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
         })}
 
         {wrapSection(
-          'inputCollapse',
-          <InputSettingsCard
-            values={input.values}
-            onChange={input.onChange}
-            isAIStudio={isAIStudio}
-            isSafariBrowser={isSafariBrowser}
-            currentPlatformLabel={currentPlatformLabel}
-            isVisible={(id) => sections.shouldShowSetting('inputCollapse', id)}
-            vimModeNote={officialStatus(OFFICIAL_PLUGIN_IDS.geminiVimInput)}
-            draftNote={isAIStudio ? undefined : officialStatus(OFFICIAL_PLUGIN_IDS.geminiDraftSave)}
-            sendModeNote={officialStatus(
-              isAIStudio
-                ? OFFICIAL_PLUGIN_IDS.aistudioEnterSend
-                : OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend,
-            )}
-            t={t}
-          />,
-        )}
-        {wrapSection(
           'promptManager',
           <PromptManagerSettingsCard
             settings={promptManager}
@@ -489,6 +467,7 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
             nameSources={plugins.siteScopedManifests}
             isVisible={(pluginId) => sections.shouldShowSetting('officialPlugins', pluginId)}
             onToggle={officialPlugins.setEnabled}
+            onSettingsChange={officialPlugins.setSettings}
             language={language}
             t={t}
           />,

@@ -5,7 +5,6 @@ import { StorageKeys } from '@/core/types/common';
 import { writePopupSyncStorage } from '../utils/popupStorage';
 import { FOLDER_SETTINGS_STORAGE_DEFAULTS } from './useFolderPopupSettings';
 import { GENERAL_SETTINGS_STORAGE_DEFAULTS } from './useGeneralPopupSettings';
-import { INPUT_SETTINGS_STORAGE_DEFAULTS } from './useInputPopupSettings';
 import { LAYOUT_SETTINGS_STORAGE_DEFAULTS } from './usePopupLayoutSettings';
 import { SECTION_LAYOUT_STORAGE_DEFAULTS } from './usePopupSections';
 import { PROMPT_MANAGER_STORAGE_DEFAULTS } from './usePromptManagerSettings';
@@ -20,7 +19,6 @@ export function usePopupSettingsHydration({
   timeline,
   folder,
   general,
-  input,
   layout,
   promptManager,
   visualEffect,
@@ -32,7 +30,6 @@ export function usePopupSettingsHydration({
   timeline: HydrateSettings;
   folder: HydrateSettings;
   general: HydrateSettings;
-  input: HydrateSettings;
   layout: HydrateSettings;
   promptManager: HydrateSettings;
   visualEffect: HydrateSettings;
@@ -48,7 +45,6 @@ export function usePopupSettingsHydration({
           ...TIMELINE_SETTINGS_STORAGE_DEFAULTS,
           ...FOLDER_SETTINGS_STORAGE_DEFAULTS,
           ...GENERAL_SETTINGS_STORAGE_DEFAULTS,
-          ...INPUT_SETTINGS_STORAGE_DEFAULTS,
           ...LAYOUT_SETTINGS_STORAGE_DEFAULTS,
           ...PROMPT_MANAGER_STORAGE_DEFAULTS,
           ...VISUAL_EFFECT_STORAGE_DEFAULTS,
@@ -64,7 +60,6 @@ export function usePopupSettingsHydration({
           timeline(raw);
           folder(raw);
           general(raw);
-          input(raw);
           layout(raw);
           promptManager(raw);
           visualEffect(raw);
@@ -85,7 +80,6 @@ export function usePopupSettingsHydration({
     timeline,
     folder,
     general,
-    input,
     layout,
     promptManager,
     visualEffect,

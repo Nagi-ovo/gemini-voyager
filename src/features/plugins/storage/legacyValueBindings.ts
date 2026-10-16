@@ -137,6 +137,24 @@ export function deriveLegacyValueSettings(
 }
 
 /**
+ * The sync write that stores manifest setting `settingKey` of bound official
+ * plugin `id`: its legacy key, holding the value as the native module reads
+ * it. `null` when no value binding fills that setting, which is never a
+ * plugin-state write: a bound id ignores its `gvPluginsState` settings.
+ */
+export function legacyValueWrite(
+  id: string,
+  settingKey: string,
+  value: unknown,
+  table: LegacyValueBindingTable = LEGACY_VALUE_BINDINGS,
+): Readonly<Record<string, unknown>> | null {
+  const entry = legacyValueBindingsFor(id, table).find(
+    (candidate) => candidate.settingKey === settingKey,
+  );
+  return entry ? { [entry.legacyKey]: entry.read(value) } : null;
+}
+
+/**
  * Whether a live change of `key` to `value` reaches the snapshot. A key no
  * value binding reads (an on/off switch) always does.
  */

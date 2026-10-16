@@ -2,8 +2,9 @@ import type { PluginStatus } from '@/features/plugins/runtime/pluginStatus';
 import type { PluginManifest } from '@/features/plugins/types';
 import type { TranslationKey } from '@/utils/translations';
 
+import { officialPluginEntry } from '../officialPlugins/officialPluginRegistry';
 import { isReleasingStatus } from '../utils/releasingStatus';
-import { pickLocalized } from './PluginIdentity';
+import { displayName, pickLocalized } from './PluginIdentity';
 import { officialSettingLocation } from './officialFeatureSetting';
 
 /** How a blocked note reads: a pause the user can resolve, or a wait that ends by itself. */
@@ -27,6 +28,27 @@ export function pluginDisplayName(
 ): string {
   const manifest = manifests.find((plugin) => plugin.id === id);
   return manifest ? pickLocalized(manifest, 'name', language) : id;
+}
+
+/**
+ * Where the user switches official plugin `id` off: its row in the popup's
+ * Plugins card, or the native settings card that still holds it. Null for any
+ * other plugin.
+ */
+function officialSwitch(
+  id: string,
+  manifests: readonly PluginManifest[],
+  language: string,
+  t: (key: TranslationKey) => string,
+): { readonly setting: string; readonly card: string } | null {
+  if (officialPluginEntry(id)) {
+    return {
+      setting: displayName(pluginDisplayName(id, manifests, language)),
+      card: t('pluginsTitle'),
+    };
+  }
+  const location = officialSettingLocation(id);
+  return location ? { setting: t(location.setting), card: t(location.card) } : null;
 }
 
 export interface BlockedNoteInput {
@@ -62,11 +84,11 @@ export function blockedPluginNote({
       return { text: t('pluginBlockedDuplicateClaim'), tone: 'paused' };
     case 'conflict': {
       if (!status.blockedBy) return null;
-      const official = officialSettingLocation(status.blockedBy);
+      const official = officialSwitch(status.blockedBy, manifests, language, t);
       if (official) {
         const text = t('pluginBlockedByOfficialSetting')
-          .replace('{setting}', () => t(official.setting))
-          .replace('{card}', () => t(official.card));
+          .replace('{setting}', () => official.setting)
+          .replace('{card}', () => official.card);
         return { text, tone: 'paused' };
       }
       const name = pluginDisplayName(status.blockedBy, manifests, language);
@@ -75,9 +97,9 @@ export function blockedPluginNote({
     }
     case 'pending': {
       if (!status.blockedBy) return null;
-      const official = officialSettingLocation(status.blockedBy);
+      const official = officialSwitch(status.blockedBy, manifests, language, t);
       const name = official
-        ? t(official.setting)
+        ? official.setting
         : pluginDisplayName(status.blockedBy, manifests, language);
       return { text: t('pluginBlockedPending').replace('{name}', () => name), tone: 'waiting' };
     }

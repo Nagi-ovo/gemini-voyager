@@ -21,7 +21,6 @@ export const NATIVE_POPUP_SECTION_IDS = [
   'visualEffect',
   'formulaCopy',
   'keyboardShortcuts',
-  'inputCollapse',
   'promptManager',
   'general',
   'nanobanana',
@@ -45,7 +44,6 @@ const AI_STUDIO_CAPABILITIES = {
   sidebarWidth: true,
   visualEffect: true,
   formulaCopy: true,
-  inputCollapse: ['enterSend'],
   promptManager: [
     'hidePromptManager',
     'promptTriggerMascotLogo',

@@ -229,25 +229,6 @@ export const POPUP_SETTINGS_SEARCH_ITEMS = [
     ['enableShortcuts', 'previousNode', 'nextNode', 'firstNode', 'lastNode', 'resetShortcuts'],
     ['hotkey keybinding vim navigation keyboard 快捷键 键盘 热键'],
   ),
-  popupSectionSearchTarget('inputCollapse', ['inputCollapseOptions']),
-  popupSearchTarget('inputCollapse', 'enableInputCollapse', [
-    'enableInputCollapse',
-    'enableInputCollapseHint',
-    'inputCollapseShortcutHint',
-  ]),
-  popupSearchTarget('inputCollapse', 'allowCollapseWhenNotEmpty', [
-    'allowCollapseWhenNotEmpty',
-    'allowCollapseWhenNotEmptyHint',
-  ]),
-  popupSearchTarget('inputCollapse', 'inputVimMode', ['inputVimMode', 'inputVimModeHint']),
-  popupSearchTarget(
-    'inputCollapse',
-    'enterSend',
-    ['ctrlEnterSend', 'ctrlEnterSendHint', 'aistudioEnterSend', 'aistudioEnterSendHint'],
-    ['send enter return 发送 回车'],
-  ),
-  popupSearchTarget('inputCollapse', 'safariEnterFix', ['safariEnterFix', 'safariEnterFixHint']),
-  popupSearchTarget('inputCollapse', 'draftAutoSave', ['draftAutoSave', 'draftAutoSaveHint']),
   popupSectionSearchTarget('promptManager', ['promptManagerOptions']),
   popupSearchTarget('promptManager', 'hidePromptManager', [
     'hidePromptManager',

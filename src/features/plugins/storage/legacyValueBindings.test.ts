@@ -8,6 +8,7 @@ import {
   acceptsLegacyLiveChange,
   deriveLegacyValueSettings,
   legacyValueKeys,
+  legacyValueWrite,
 } from './legacyValueBindings';
 
 const FONT_SIZE_ID = 'voyager.gemini-chat-font-size';
@@ -91,6 +92,18 @@ describe('legacy value bindings', () => {
     expect(acceptsLegacyLiveChange(StorageKeys.SIDEBAR_WIDTH, null)).toBe(true);
     expect(acceptsLegacyLiveChange(StorageKeys.SIDEBAR_WIDTH, Number.NaN)).toBe(false);
     expect(acceptsLegacyLiveChange(StorageKeys.SIDEBAR_WIDTH, 400)).toBe(true);
+  });
+
+  it('stores a setting under its old key as the native module will read it back', () => {
+    expect(legacyValueWrite('voyager.gemini-input-collapse', 'collapseWhenNotEmpty', true)).toEqual(
+      { [StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]: true },
+    );
+    expect(legacyValueWrite(FONT_SIZE_ID, 'fontSize', 400)).toEqual({
+      [StorageKeys.CHAT_FONT_SIZE]: 150,
+    });
+    // No binding fills it, so there is nothing to write (and never a plugin-state write).
+    expect(legacyValueWrite(FONT_SIZE_ID, 'lineHeight', 120)).toBeNull();
+    expect(legacyValueWrite('voyager.gemini-mermaid', 'anything', true)).toBeNull();
   });
 
   it('gives an id without value bindings no settings', () => {

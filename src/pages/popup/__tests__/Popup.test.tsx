@@ -37,6 +37,7 @@ const extensionApi = vi.hoisted(() => ({
 vi.mock('webextension-polyfill', () => ({ default: extensionApi }));
 
 const MERMAID_SWITCH = `[data-official-plugin="${OFFICIAL_PLUGIN_IDS.geminiMermaid}"] input`;
+const pluginRow = (id: string) => `[data-official-plugin="${id}"]`;
 
 function readStorage(keys: unknown, stored: Record<string, unknown>): Record<string, unknown> {
   if (typeof keys === 'string') return { [keys]: stored[keys] };
@@ -205,10 +206,12 @@ describe('Popup settings integration', () => {
     sync[StorageKeys.GV_ACCOUNT_ISOLATION_ENABLED_AISTUDIO] = true;
     await mount();
     expect(container.querySelector('#aistudio-enabled')).not.toBeNull();
-    expect(container.querySelector('#aistudio-enter-send')).not.toBeNull();
+    expect(
+      container.querySelector(pluginRow(OFFICIAL_PLUGIN_IDS.aistudioEnterSend)),
+    ).not.toBeNull();
     expect(container.querySelector('#folder-enabled')).not.toBeNull();
     expect(container.querySelector('#hide-container')).toBeNull();
-    expect(container.querySelector('#input-vim-mode')).toBeNull();
+    expect(container.querySelector(pluginRow(OFFICIAL_PLUGIN_IDS.geminiVimInput))).toBeNull();
     expect(container.querySelector(MERMAID_SWITCH)).toBeNull();
     expect(container.querySelector('#changelog-notify-badge')).not.toBeNull();
     const isolation = container.querySelector<HTMLInputElement>('#account-isolation-enabled')!;
@@ -324,9 +327,9 @@ describe('Popup settings integration', () => {
       TRANSLATIONS.en.officialFeaturePausedByLocal.replace('{name}', 'My formula copy'),
     );
     expect(container.textContent).toContain(TRANSLATIONS.en.formulaCopyScopeNote);
-    const vimRow = container.querySelector('#input-vim-mode')!.closest('.group')!;
+    const vimRow = container.querySelector(pluginRow(OFFICIAL_PLUGIN_IDS.geminiVimInput))!;
     expect(vimRow.textContent).toContain(TRANSLATIONS.en.pluginBlockedReleasing);
-    expect(container.querySelector<HTMLInputElement>('#input-vim-mode')!.disabled).toBe(false);
+    expect(vimRow.querySelector<HTMLInputElement>('input')!.disabled).toBe(false);
     // The official plugins are driven by these cards, not listed as plugins.
     expect(container.querySelector('input[aria-label="My formula copy"]')).not.toBeNull();
     for (const name of [
@@ -623,14 +626,18 @@ describe('Popup settings integration', () => {
     expect(extensionApi.storage.sync.set).not.toHaveBeenCalled();
   });
 
-  it('retains dependent input settings when search hides and then restores their card', async () => {
+  it('retains dependent input settings when search hides and then restores their row', async () => {
     await mount();
-    await act(async () =>
-      container.querySelector<HTMLInputElement>('#input-collapse-enabled')!.click(),
-    );
-    await act(async () =>
-      container.querySelector<HTMLInputElement>('#input-collapse-when-not-empty')!.click(),
-    );
+    const collapseRow = () =>
+      container.querySelector(pluginRow(OFFICIAL_PLUGIN_IDS.geminiInputCollapse));
+    const collapseSwitch = () =>
+      collapseRow()?.querySelector<HTMLInputElement>('input[aria-describedby]') ?? null;
+    const whenNotEmpty = () =>
+      collapseRow()?.querySelector<HTMLInputElement>(
+        `input[aria-label="${TRANSLATIONS.en.allowCollapseWhenNotEmpty}"]`,
+      ) ?? null;
+    await act(async () => collapseSwitch()!.click());
+    await act(async () => whenNotEmpty()!.click());
     const search = container.querySelector<HTMLInputElement>('input[type="search"]')!;
     await act(async () => {
       Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(
@@ -639,18 +646,14 @@ describe('Popup settings integration', () => {
       );
       search.dispatchEvent(new Event('input', { bubbles: true }));
     });
-    expect(container.querySelector('#input-collapse-enabled')).toBeNull();
+    expect(collapseRow()).toBeNull();
     expect(container.querySelector(MERMAID_SWITCH)).not.toBeNull();
     const clear = Array.from(container.querySelectorAll('button')).find(
       (button) => button.getAttribute('aria-label') === TRANSLATIONS.en.popupSettingsSearchClear,
     )!;
     await act(async () => clear.click());
-    expect(container.querySelector<HTMLInputElement>('#input-collapse-enabled')!.checked).toBe(
-      true,
-    );
-    expect(
-      container.querySelector<HTMLInputElement>('#input-collapse-when-not-empty')!.checked,
-    ).toBe(true);
+    expect(collapseSwitch()!.checked).toBe(true);
+    expect(whenNotEmpty()!.checked).toBe(true);
     const bulkReads = extensionApi.storage.sync.get.mock.calls.filter(
       ([keys]) =>
         keys &&

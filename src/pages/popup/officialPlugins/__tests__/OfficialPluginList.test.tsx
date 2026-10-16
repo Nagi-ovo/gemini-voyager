@@ -37,11 +37,12 @@ describe('OfficialPluginList', () => {
     act(() =>
       root.render(
         <OfficialPluginList
-          rows={[{ entry, manifest: untranslated, enabled: true }]}
+          rows={[{ entry, manifest: untranslated, enabled: true, settings: {} }]}
           statuses={[]}
           nameSources={[]}
           isVisible={() => true}
           onToggle={vi.fn()}
+          onSettingsChange={vi.fn()}
           language={language}
           t={translate}
         />,

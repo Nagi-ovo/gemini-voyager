@@ -33,6 +33,13 @@ export interface OfficialPluginEntry {
   readonly formerSectionTitle: TranslationKey;
   readonly searchAliases?: readonly string[];
   readonly experimental?: boolean;
+  /** Whether the row applies in this popup at all; listed everywhere its manifest matches when absent. */
+  readonly eligible?: (context: OfficialPluginContext) => boolean;
+}
+
+/** What a row's eligibility may depend on besides the active tab. */
+export interface OfficialPluginContext {
+  readonly isSafariBrowser: boolean;
 }
 
 /** Array order is the display order within each group. */
@@ -89,6 +96,52 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
     group: 'input',
     formerSectionTitle: 'generalOptions',
     searchKeys: ['enableQuoteReply', 'enableQuoteReplyHint'],
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiInputCollapse,
+    group: 'input',
+    formerSectionTitle: 'inputCollapseOptions',
+    searchKeys: [
+      'enableInputCollapse',
+      'enableInputCollapseHint',
+      'inputCollapseShortcutHint',
+      'allowCollapseWhenNotEmpty',
+      'allowCollapseWhenNotEmptyHint',
+    ],
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend,
+    group: 'input',
+    formerSectionTitle: 'inputCollapseOptions',
+    searchKeys: ['ctrlEnterSend', 'ctrlEnterSendHint'],
+    searchAliases: ['send enter return ctrl cmd 发送 回车'],
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.aistudioEnterSend,
+    group: 'input',
+    formerSectionTitle: 'inputCollapseOptions',
+    searchKeys: ['aistudioEnterSend', 'aistudioEnterSendHint'],
+    searchAliases: ['send enter return 发送 回车'],
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix,
+    group: 'input',
+    formerSectionTitle: 'inputCollapseOptions',
+    searchKeys: ['safariEnterFix', 'safariEnterFixHint'],
+    // The fix only runs in Safari (its binding's derive), so other browsers never offered it.
+    eligible: ({ isSafariBrowser }) => isSafariBrowser,
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiVimInput,
+    group: 'input',
+    formerSectionTitle: 'inputCollapseOptions',
+    searchKeys: ['inputVimMode', 'inputVimModeHint'],
+  },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiDraftSave,
+    group: 'input',
+    formerSectionTitle: 'inputCollapseOptions',
+    searchKeys: ['draftAutoSave', 'draftAutoSaveHint'],
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll,

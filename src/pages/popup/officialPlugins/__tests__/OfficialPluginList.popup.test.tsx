@@ -33,6 +33,12 @@ const extensionApi = vi.hoisted(() => ({
 // Keep Popup, its hooks and the packaged manifests real; replace only browser APIs.
 vi.mock('webextension-polyfill', () => ({ default: extensionApi }));
 
+const browserTarget = vi.hoisted(() => ({ safari: false }));
+vi.mock('@/core/utils/browser', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/core/utils/browser')>()),
+  isSafari: () => browserTarget.safari,
+}));
+
 function readStorage(keys: unknown, stored: Record<string, unknown>): Record<string, unknown> {
   if (typeof keys === 'string') return { [keys]: stored[keys] };
   if (Array.isArray(keys)) return Object.fromEntries(keys.map((key) => [key, stored[key]]));
@@ -94,7 +100,18 @@ const MOVED_SWITCHES = [
     key: StorageKeys.USAGE_STATUS_ENABLED,
     missing: false,
   },
+  {
+    id: OFFICIAL_PLUGIN_IDS.geminiInputCollapse,
+    key: StorageKeys.INPUT_COLLAPSE_ENABLED,
+    missing: false,
+  },
+  { id: OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend, key: StorageKeys.CTRL_ENTER_SEND, missing: false },
+  { id: OFFICIAL_PLUGIN_IDS.geminiVimInput, key: StorageKeys.INPUT_VIM_MODE, missing: false },
+  { id: OFFICIAL_PLUGIN_IDS.geminiDraftSave, key: StorageKeys.DRAFT_AUTO_SAVE, missing: false },
 ] as const;
+
+/** Moved switches that only show on one site or browser, each checked on its own tab. */
+const AI_STUDIO = 'https://aistudio.google.com/prompts/new_chat';
 
 /** The switches each old card used to hold; none may render twice. */
 const RETIRED_SWITCH_IDS = [
@@ -111,6 +128,13 @@ const RETIRED_SWITCH_IDS = [
   'research-pack-enabled',
   'default-model-auto-apply',
   'usage-status-enabled',
+  'input-collapse-enabled',
+  'input-collapse-when-not-empty',
+  'input-vim-mode',
+  'ctrl-enter-send',
+  'aistudio-enter-send',
+  'safari-enter-fix',
+  'draft-auto-save',
 ];
 
 describe('the official plugin list in the popup', () => {
@@ -124,6 +148,7 @@ describe('the official plugin list in the popup', () => {
     vi.clearAllMocks();
     vi.stubGlobal('chrome', extensionApi);
     extensionApi.runtime.lastError = undefined;
+    browserTarget.safari = false;
     local = {};
     sync = {};
     for (const [area, stored] of [
@@ -176,7 +201,9 @@ describe('the official plugin list in the popup', () => {
 
   const row = (id: string) =>
     container.querySelector<HTMLLIElement>(`[data-official-plugin="${id}"]`);
-  const toggle = (id: string) => row(id)!.querySelector<HTMLInputElement>('input')!;
+  // The row's own switch; an enabled row's inline settings hold switches too.
+  const toggle = (id: string) =>
+    row(id)!.querySelector<HTMLInputElement>('input[aria-describedby]')!;
   const listedIds = () =>
     [...container.querySelectorAll<HTMLElement>('[data-official-plugin]')].map(
       (element) => element.dataset.officialPlugin,
@@ -209,7 +236,14 @@ describe('the official plugin list in the popup', () => {
       },
       {
         heading: TRANSLATIONS.en.pluginGroupInput,
-        rows: [OFFICIAL_PLUGIN_IDS.geminiPromptHistory, OFFICIAL_PLUGIN_IDS.geminiQuoteReply],
+        rows: [
+          OFFICIAL_PLUGIN_IDS.geminiPromptHistory,
+          OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
+          OFFICIAL_PLUGIN_IDS.geminiInputCollapse,
+          OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend,
+          OFFICIAL_PLUGIN_IDS.geminiVimInput,
+          OFFICIAL_PLUGIN_IDS.geminiDraftSave,
+        ],
       },
       {
         heading: TRANSLATIONS.en.pluginGroupConversation,
@@ -285,6 +319,10 @@ describe('the official plugin list in the popup', () => {
     ['用量', OFFICIAL_PLUGIN_IDS.geminiUsageStatus],
     [TRANSLATIONS.en.enableQuoteReply, OFFICIAL_PLUGIN_IDS.geminiQuoteReply],
     [TRANSLATIONS.zh.enableForkFeature, OFFICIAL_PLUGIN_IDS.geminiFork],
+    [TRANSLATIONS.en.allowCollapseWhenNotEmpty, OFFICIAL_PLUGIN_IDS.geminiInputCollapse],
+    ['回车', OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend],
+    [TRANSLATIONS.en.inputVimMode, OFFICIAL_PLUGIN_IDS.geminiVimInput],
+    [TRANSLATIONS.zh.draftAutoSave, OFFICIAL_PLUGIN_IDS.geminiDraftSave],
   ])('an old search for "%s" still finds its row', async (query, id) => {
     local[StorageKeys.GV_POPUP_SETTINGS_SEARCH_QUERY] = query;
     await mount();
@@ -312,6 +350,19 @@ describe('the official plugin list in the popup', () => {
     [TRANSLATIONS.en.folderOptions, [OFFICIAL_PLUGIN_IDS.geminiFork]],
     [TRANSLATIONS.en.promptManagerOptions, [OFFICIAL_PLUGIN_IDS.geminiPromptHistory]],
     [TRANSLATIONS.en.timelineOptions, [OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll]],
+    [
+      TRANSLATIONS.en.inputCollapseOptions,
+      [
+        OFFICIAL_PLUGIN_IDS.geminiInputCollapse,
+        OFFICIAL_PLUGIN_IDS.geminiCtrlEnterSend,
+        OFFICIAL_PLUGIN_IDS.geminiVimInput,
+        OFFICIAL_PLUGIN_IDS.geminiDraftSave,
+      ],
+    ],
+    [
+      TRANSLATIONS.zh.inputCollapseOptions,
+      [OFFICIAL_PLUGIN_IDS.geminiInputCollapse, OFFICIAL_PLUGIN_IDS.geminiVimInput],
+    ],
   ])(
     'a remembered search for the old card title "%s" still shows its moved rows',
     async (query, ids) => {
@@ -321,13 +372,106 @@ describe('the official plugin list in the popup', () => {
     },
   );
 
-  it('takes no slot on AI Studio, which has no listed plugin yet', async () => {
-    extensionApi.tabs.query.mockResolvedValue([
-      { id: 8, url: 'https://aistudio.google.com/prompts/new_chat' },
-    ]);
+  it.each([
+    ['missing', undefined, false],
+    ['false', false, false],
+    ['true', true, true],
+  ] as const)(
+    'on AI Studio, lists only Enter send and shows a %s stored switch as the page reads it',
+    async (_label, stored, expected) => {
+      extensionApi.tabs.query.mockResolvedValue([{ id: 8, url: AI_STUDIO }]);
+      if (stored !== undefined) sync[StorageKeys.AISTUDIO_ENTER_SEND] = stored;
+      await mount();
+      expect(listedIds()).toEqual([OFFICIAL_PLUGIN_IDS.aistudioEnterSend]);
+      expect(toggle(OFFICIAL_PLUGIN_IDS.aistudioEnterSend).checked).toBe(expected);
+      expect(container.querySelector('#changelog-notify-badge')).not.toBeNull();
+    },
+  );
+
+  it('the AI Studio Enter send switch writes only its own sync key', async () => {
+    extensionApi.tabs.query.mockResolvedValue([{ id: 8, url: AI_STUDIO }]);
     await mount();
-    expect(listedIds()).toEqual([]);
-    expect(container.textContent).not.toContain(TRANSLATIONS.en.pluginsNativeDescription);
-    expect(container.querySelector('#changelog-notify-badge')).not.toBeNull();
+    await act(async () => toggle(OFFICIAL_PLUGIN_IDS.aistudioEnterSend).click());
+    expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+      [StorageKeys.AISTUDIO_ENTER_SEND]: true,
+    });
+    expect(sync[StorageKeys.CTRL_ENTER_SEND]).toBeUndefined();
+  });
+
+  it('offers the Safari Enter fix only in Safari', async () => {
+    await mount();
+    expect(row(OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix)).toBeNull();
+
+    await act(async () => root.unmount());
+    root = createRoot(container);
+    browserTarget.safari = true;
+    await mount();
+    expect(listedIds()).toContain(OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix);
+  });
+
+  it.each([
+    ['missing', undefined, false],
+    ['false', false, false],
+    ['true', true, true],
+  ] as const)(
+    'shows a %s stored Safari Enter fix the way the page reads it, and writes only its key',
+    async (_label, stored, expected) => {
+      browserTarget.safari = true;
+      if (stored !== undefined) sync[StorageKeys.SAFARI_ENTER_FIX] = stored;
+      await mount();
+      expect(toggle(OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix).checked).toBe(expected);
+      await act(async () => toggle(OFFICIAL_PLUGIN_IDS.geminiSafariEnterFix).click());
+      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+        [StorageKeys.SAFARI_ENTER_FIX]: !expected,
+      });
+    },
+  );
+
+  describe('the input collapse row', () => {
+    const withContent = () =>
+      row(OFFICIAL_PLUGIN_IDS.geminiInputCollapse)!.querySelector<HTMLInputElement>(
+        `input[aria-label="${TRANSLATIONS.en.allowCollapseWhenNotEmpty}"]`,
+      );
+
+    it.each([
+      ['missing', undefined, false],
+      ['false', false, false],
+      ['true', true, true],
+    ] as const)(
+      'shows a %s stored "collapse with content" the way the page reads it',
+      async (_label, stored, expected) => {
+        sync[StorageKeys.INPUT_COLLAPSE_ENABLED] = true;
+        if (stored !== undefined) sync[StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY] = stored;
+        await mount();
+        expect(withContent()!.checked).toBe(expected);
+      },
+    );
+
+    it('offers "collapse with content" only while collapse is on, keeping its stored value', async () => {
+      sync[StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY] = true;
+      await mount();
+      expect(withContent()).toBeNull();
+
+      await act(async () => toggle(OFFICIAL_PLUGIN_IDS.geminiInputCollapse).click());
+      expect(withContent()!.checked).toBe(true);
+      await act(async () => toggle(OFFICIAL_PLUGIN_IDS.geminiInputCollapse).click());
+      expect(withContent()).toBeNull();
+      expect(sync[StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]).toBe(true);
+      expect(extensionApi.storage.sync.set.mock.calls.map(([payload]) => payload)).toEqual([
+        { [StorageKeys.INPUT_COLLAPSE_ENABLED]: true },
+        { [StorageKeys.INPUT_COLLAPSE_ENABLED]: false },
+      ]);
+    });
+
+    it('writes "collapse with content" at once to its old sync key, not the plugin state', async () => {
+      sync[StorageKeys.INPUT_COLLAPSE_ENABLED] = true;
+      await mount();
+      await act(async () => withContent()!.click());
+      expect(withContent()!.checked).toBe(true);
+      expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+        [StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY]: true,
+      });
+      expect(local[StorageKeys.PLUGINS_STATE]).toBeUndefined();
+    });
   });
 });

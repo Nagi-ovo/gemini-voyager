@@ -4,7 +4,11 @@ import {
 } from '@/features/plugins/sites/featureOwners';
 import type { TranslationKey } from '@/utils/translations';
 
-/** Where a packaged official plugin is switched on and off: a native setting, not the plugin list. */
+/**
+ * Where a packaged official plugin not yet listed in the popup's Plugins card
+ * is switched on and off: a native settings card. A listed plugin's switch is
+ * its row there (`officialPluginRegistry.ts`).
+ */
 export interface OfficialSettingLocation {
   /** The switch's label. */
   readonly setting: TranslationKey;
@@ -12,15 +16,8 @@ export interface OfficialSettingLocation {
   readonly card: TranslationKey;
 }
 
-// The halo holds no page-wide runtime, so it never keeps another plugin waiting.
 const LOCATIONS: Readonly<Partial<Record<OwnedFeatureId, OfficialSettingLocation>>> = {
-  enterSend: { setting: 'aistudioEnterSend', card: 'inputCollapseOptions' },
-  draftSave: { setting: 'draftAutoSave', card: 'inputCollapseOptions' },
-  ctrlEnterSend: { setting: 'ctrlEnterSend', card: 'inputCollapseOptions' },
-  safariEnterFix: { setting: 'safariEnterFix', card: 'inputCollapseOptions' },
   formulaCopy: { setting: 'enableFormulaCopy', card: 'formulaCopyFormat' },
-  vimInput: { setting: 'inputVimMode', card: 'inputCollapseOptions' },
-  inputCollapse: { setting: 'enableInputCollapse', card: 'inputCollapseOptions' },
   timeline: { setting: 'timelineEnable', card: 'timelineOptions' },
 };
 

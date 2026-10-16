@@ -4,11 +4,12 @@ import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { isRTLLanguage } from '@/core/utils/rtl';
 import type { PluginStatus } from '@/features/plugins/runtime/pluginStatus';
-import type { PluginManifest } from '@/features/plugins/types';
+import type { PluginManifest, PluginSettingValue } from '@/features/plugins/types';
 import type { TranslationKey } from '@/utils/translations';
 
 import { ExperimentalBadge } from '../components/ExperimentalBadge';
 import { displayName, pickLocalized } from '../components/PluginIdentity';
+import { PluginSettings } from '../components/PluginSettings';
 import { BLOCKED_NOTE_TONE_CLASS, blockedPluginNote } from '../components/pluginBlockedNote';
 import { OFFICIAL_PLUGIN_GROUPS } from './officialPluginRegistry';
 import type { OfficialPluginRow } from './useOfficialPluginList';
@@ -22,9 +23,15 @@ export interface OfficialPluginListProps {
   /** Site capability and settings-search gate, keyed by plugin id. */
   readonly isVisible: (pluginId: string) => boolean;
   readonly onToggle: (pluginId: string, enabled: boolean) => void;
+  readonly onSettingsChange: (
+    pluginId: string,
+    values: Readonly<Record<string, PluginSettingValue>>,
+  ) => void;
   readonly language: string;
   readonly t: (key: TranslationKey) => string;
 }
+
+type RowActions = Pick<OfficialPluginListProps, 'onToggle' | 'onSettingsChange'>;
 
 function domId(prefix: string, pluginId: string): string {
   return `${prefix}-${pluginId.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
@@ -41,6 +48,7 @@ export function OfficialPluginList({
   nameSources,
   isVisible,
   onToggle,
+  onSettingsChange,
   language,
   t,
 }: OfficialPluginListProps) {
@@ -72,6 +80,7 @@ export function OfficialPluginList({
                     status={statuses.find((entry) => entry.id === row.manifest.id)}
                     nameSources={nameSources}
                     onToggle={onToggle}
+                    onSettingsChange={onSettingsChange}
                     language={language}
                     t={t}
                   />
@@ -90,17 +99,17 @@ function OfficialPluginListRow({
   status,
   nameSources,
   onToggle,
+  onSettingsChange,
   language,
   t,
-}: {
+}: RowActions & {
   readonly row: OfficialPluginRow;
   readonly status: PluginStatus | undefined;
   readonly nameSources: readonly PluginManifest[];
-  readonly onToggle: (pluginId: string, enabled: boolean) => void;
   readonly language: string;
   readonly t: (key: TranslationKey) => string;
 }) {
-  const { manifest, entry, enabled } = row;
+  const { manifest, entry, enabled, settings } = row;
   const inputId = domId('official-plugin', manifest.id);
   const descriptionId = domId('official-plugin-description', manifest.id);
   const note = blockedPluginNote({
@@ -129,6 +138,15 @@ function OfficialPluginListRow({
           <p className={`mt-1 text-xs leading-snug ${BLOCKED_NOTE_TONE_CLASS[note.tone]}`}>
             {note.text}
           </p>
+        )}
+        {/* Options appear only while the plugin is on; turning it off keeps their stored values. */}
+        {enabled && manifest.contributes.settings && (
+          <PluginSettings
+            plugin={manifest}
+            values={settings}
+            handleSetting={(id, key, value) => onSettingsChange(id, { [key]: value })}
+            handleImmediateSettings={onSettingsChange}
+          />
         )}
       </div>
       <Switch

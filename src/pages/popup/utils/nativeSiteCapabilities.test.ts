@@ -62,8 +62,10 @@ describe('native popup site capabilities', () => {
       true,
     );
     expect(isNativePopupSettingAvailable('aistudio', 'folder', 'enableForkFeature')).toBe(false);
-    expect(isNativePopupSettingAvailable('aistudio', 'inputCollapse', 'enterSend')).toBe(true);
-    expect(isNativePopupSettingAvailable('aistudio', 'inputCollapse', 'inputVimMode')).toBe(false);
+    expect(isNativePopupSettingAvailable('aistudio', 'general', 'changelogBadgeMode')).toBe(true);
+    expect(isNativePopupSettingAvailable('aistudio', 'general', 'persistentExportToolbar')).toBe(
+      false,
+    );
     expect(isNativePopupSettingAvailable('aistudio', 'promptManager', 'hidePromptManager')).toBe(
       true,
     );
