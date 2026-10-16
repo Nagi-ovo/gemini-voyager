@@ -199,6 +199,57 @@ describe('TimelineSettingsCard', () => {
     expect(styleButton('timelineStyleRuler').disabled).toBe(false);
   });
 
+  describe('from the keyboard', () => {
+    const radios = (group: string) => [
+      ...container.querySelectorAll<HTMLButtonElement>(
+        `[role="radiogroup"][aria-label="${group}"] [role="radio"]`,
+      ),
+    ];
+    const press = (target: HTMLElement, key: string) =>
+      act(() => {
+        target.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true }));
+      });
+
+    it('each group is one Tab stop, on the checked radio', () => {
+      render({ values: { ...values, markerLevelEnabled: false } });
+      expect(radios('timelineStyle').map((radio) => radio.tabIndex)).toEqual([-1, 0, -1]);
+      expect(radios('scrollMode').map((radio) => radio.tabIndex)).toEqual([-1, 0]);
+    });
+
+    it('arrows pick the next radio, wrap, and take focus with them', () => {
+      const props = render({ values: { ...values, markerLevelEnabled: false } });
+      const [dots, ruler, compact] = radios('timelineStyle');
+      press(ruler, 'ArrowRight');
+      expect(props.onChange).toHaveBeenLastCalledWith({ timelineStyle: 'compact' });
+      expect(document.activeElement).toBe(compact);
+      press(ruler, 'ArrowLeft');
+      expect(props.onChange).toHaveBeenLastCalledWith({ timelineStyle: 'dots' });
+      expect(document.activeElement).toBe(dots);
+      const [flow, jump] = radios('scrollMode');
+      press(jump, 'ArrowDown');
+      expect(props.onChange).toHaveBeenLastCalledWith({ mode: 'flow' });
+      expect(document.activeElement).toBe(flow);
+    });
+
+    it('skips disabled radios, so node levels keep the keyboard on dots', () => {
+      const props = render({
+        values: { ...values, timelineStyle: 'dots', markerLevelEnabled: true },
+      });
+      const [dots] = radios('timelineStyle');
+      press(dots, 'ArrowRight');
+      press(dots, 'End');
+      expect(props.onChange).not.toHaveBeenCalled();
+    });
+
+    it('in a right-to-left page, the left arrow moves forward', () => {
+      const props = render({ values: { ...values, markerLevelEnabled: false } });
+      container.setAttribute('dir', 'rtl');
+      press(radios('timelineStyle')[1], 'ArrowLeft');
+      expect(props.onChange).toHaveBeenLastCalledWith({ timelineStyle: 'compact' });
+      container.removeAttribute('dir');
+    });
+  });
+
   it('marks the experimental rows with the shared badge', () => {
     render();
     const badges = Array.from(container.querySelectorAll('[title="experimentalLabel"]'));

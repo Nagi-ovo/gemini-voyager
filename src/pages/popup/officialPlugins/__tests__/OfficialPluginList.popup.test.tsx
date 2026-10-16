@@ -755,6 +755,49 @@ describe('the official plugin list in the popup', () => {
       expect(toggle(OFFICIAL_PLUGIN_IDS.geminiChatWidth).checked).toBe(true);
     });
 
+    it.each([
+      [
+        OFFICIAL_PLUGIN_IDS.geminiChatWidth,
+        'chatWidth',
+        StorageKeys.CHAT_WIDTH,
+        88,
+        90,
+        StorageKeys.CHAT_WIDTH_ENABLED,
+      ],
+      [
+        OFFICIAL_PLUGIN_IDS.geminiEditInputWidth,
+        'editInputWidth',
+        StorageKeys.EDIT_INPUT_WIDTH,
+        88,
+        90,
+        StorageKeys.EDIT_INPUT_WIDTH_ENABLED,
+      ],
+      [
+        OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
+        'sidebarWidth',
+        StorageKeys.SIDEBAR_WIDTH,
+        400,
+        456,
+        StorageKeys.SIDEBAR_WIDTH_ENABLED,
+      ],
+    ] as const)(
+      '%s: moving a custom width to another stores the unstored switch with it',
+      async (id, label, widthKey, stored, next, switchKey) => {
+        // An open page reads an unstored width switch off once the width changes live, so the
+        // width alone would leave the row on here and the page off.
+        sync[widthKey] = stored;
+        await mount();
+        expect(toggle(id).checked).toBe(true);
+        const width = slider(id, TRANSLATIONS.en[label]);
+        drag(width, next);
+        await release(width);
+        expect(extensionApi.storage.sync.set).toHaveBeenCalledExactlyOnceWith({
+          [widthKey]: next,
+          [switchKey]: true,
+        });
+      },
+    );
+
     it('shows a stored 26% sidebar as 312px and keeps it until a new width is picked', async () => {
       sync[StorageKeys.SIDEBAR_WIDTH] = 26;
       sync[StorageKeys.SIDEBAR_WIDTH_ENABLED] = true;

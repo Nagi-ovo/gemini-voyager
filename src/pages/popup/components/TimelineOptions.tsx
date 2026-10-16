@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 import type { TimelineStyle } from '@/core/types/common';
 import type { TranslationKey } from '@/utils/translations';
@@ -63,6 +63,35 @@ function SegmentedChoice<T extends string>({
   onChange,
   t,
 }: SegmentedChoiceProps<T>) {
+  const buttons = useRef<(HTMLButtonElement | null)[]>([]);
+  const enabled = options.map((option) => !isDisabled(option.value));
+  // One Tab stop: the checked radio, or the first enabled one when the checked one is not.
+  const checkedIndex = options.findIndex((option) => option.value === value);
+  const tabStop = enabled[checkedIndex] ? checkedIndex : enabled.indexOf(true);
+
+  // Arrows move the choice to the next enabled radio and wrap, as native radios do.
+  const onKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, from: number) => {
+    const rtl = event.currentTarget.closest('[dir]')?.getAttribute('dir') === 'rtl';
+    const forward = rtl ? 'ArrowLeft' : 'ArrowRight';
+    const backward = rtl ? 'ArrowRight' : 'ArrowLeft';
+    let step = 0;
+    if (event.key === forward || event.key === 'ArrowDown') step = 1;
+    else if (event.key === backward || event.key === 'ArrowUp') step = -1;
+    else if (event.key !== 'Home' && event.key !== 'End') return;
+    event.preventDefault();
+    const order =
+      step === 0
+        ? options.map((_, index) => index)
+        : options.map(
+            (_, offset) => (from + step * (offset + 1) + options.length * 2) % options.length,
+          );
+    const candidates = order.filter((index) => enabled[index]);
+    const next = event.key === 'End' ? candidates[candidates.length - 1] : candidates[0];
+    if (next === undefined || next === from) return;
+    buttons.current[next]?.focus();
+    onChange(options[next].value);
+  };
+
   return (
     <div role="radiogroup" aria-label={label}>
       <p aria-hidden="true" className="mb-2 text-sm font-medium">
@@ -72,21 +101,26 @@ function SegmentedChoice<T extends string>({
         className="bg-secondary/60 grid gap-1 rounded-xl p-1"
         style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
       >
-        {options.map((option) => {
+        {options.map((option, index) => {
           const checked = value === option.value;
           return (
             <button
               key={option.value}
+              ref={(element) => {
+                buttons.current[index] = element;
+              }}
               type="button"
               role="radio"
               aria-checked={checked}
-              disabled={isDisabled(option.value)}
+              tabIndex={index === tabStop ? 0 : -1}
+              disabled={!enabled[index]}
               className={`rounded-lg px-2 py-2 text-sm font-bold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 ${
                 checked
                   ? 'bg-primary text-primary-foreground shadow-sm'
                   : 'text-muted-foreground enabled:hover:text-foreground'
               }`}
               onClick={() => onChange(option.value)}
+              onKeyDown={(event) => onKeyDown(event, index)}
             >
               {t(option.label)}
             </button>
