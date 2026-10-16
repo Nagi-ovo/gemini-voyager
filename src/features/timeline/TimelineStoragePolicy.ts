@@ -10,6 +10,8 @@ export interface TimelineStoragePolicy {
   readonly stars: {
     readonly matchLegacyConversations: boolean;
     readonly resolveAccount: () => Promise<string | undefined>;
+    /** Whether the page still shows this conversation; once it leaves, only its own turns star. */
+    readonly showsConversation?: () => boolean;
   };
   readonly hierarchy: {
     readonly extensionKey: string;

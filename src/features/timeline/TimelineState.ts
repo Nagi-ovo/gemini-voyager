@@ -24,6 +24,8 @@ export class TimelineState implements TimelineDataSession {
   private readonly hierarchyHydration = new TimelineHydration(() => this.isCurrent);
   private starDisplayOverride = new Map<string, boolean>();
   private starStorageIdsByMarkerId = new Map<string, string[]>();
+  /** Turns collected while the page showed this conversation. */
+  private readonly ownTurnIds = new Set<string>();
   private onChromeStorageChanged:
     | ((changes: Record<string, chrome.storage.StorageChange>, areaName: string) => void)
     | null = null;
@@ -46,6 +48,9 @@ export class TimelineState implements TimelineDataSession {
   private get isCurrent(): boolean {
     return !this.destroyed && this.policy.isCurrent();
   }
+  private showsConversation(): boolean {
+    return this.policy.stars.showsConversation?.() ?? true;
+  }
   private canEdit(id: string): boolean {
     return this.policy.canEdit(this.markerMap.get(id), id);
   }
@@ -64,6 +69,7 @@ export class TimelineState implements TimelineDataSession {
     this.markers = markers;
     this.markerMap.clear();
     for (const marker of markers) this.markerMap.set(marker.id, marker);
+    if (this.showsConversation()) for (const marker of markers) this.ownTurnIds.add(marker.id);
     this.recomputeStarredDisplay();
     for (const marker of markers) marker.starred = this.isMarkerStarred(marker.id);
     this.starText.mount(markers);
@@ -215,6 +221,8 @@ export class TimelineState implements TimelineDataSession {
     // A mounted `u-N` is only the current DOM-window index. Even when a cache
     // exists, it is not evidence that this node is full-conversation turn N.
     if (!this.isCurrent || !this.canEdit(id)) return;
+    // After the page leaves, the old rail rescans the next chat; its turns are not this conversation's.
+    if (!this.showsConversation() && !this.ownTurnIds.has(id)) return;
 
     const marker = this.markerMap.get(id);
     // A press captures its message before an initial read can yield to a route or DOM change.

@@ -253,6 +253,31 @@ describe('starring a turn from the Gemini timeline', () => {
   });
 });
 
+describe('starring across a route change', () => {
+  const ext = useTimelinePage();
+
+  it('a star pressed on the next chat during a route change is not filed under the previous one', async () => {
+    const page = new GeminiPage(TURNS);
+    await startTimelineOnPage();
+    // Let the route poller tick so the in-app navigation below waits a full poll to be noticed.
+    await settle(200);
+
+    // Gemini switches chats in-app and renders the next one at once; the old rail rescans it.
+    const next: GeminiTurn = { prompt: 'Other chat opener', serverId: 'eeeeeeeeeeeeeeee' };
+    history.pushState(null, '', '/app/def456');
+    page.viewport.replaceChildren();
+    page.append(next);
+    await settle(250);
+    await longPress(dotFor(next.prompt));
+    await settle(2000);
+
+    const stored = ext().read<SavedLibrary>('local', SAVED_LIBRARY_KEY)?.messages ?? {};
+    expect(Object.values(stored).flat()).not.toContainEqual(
+      expect.objectContaining({ turnId: turnIdOf(next.serverId!) }),
+    );
+  });
+});
+
 describe('stars stay attached to their turn (turn identity)', () => {
   const ext = useTimelinePage();
 
