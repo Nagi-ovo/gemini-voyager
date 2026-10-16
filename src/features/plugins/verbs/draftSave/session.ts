@@ -292,6 +292,10 @@ export function startSiteDraftSave(scope: PluginScope, policy: DraftPolicy, doc:
   // Started last, once every listener is in place; the restore that is current at disable stops.
   scope.effect(() => {
     restore = startDraftRestore(restoreEffects, initialDraftRestoreState(currentKey, 'now'));
-    return () => restore?.stop();
+    const stopRestore = () => restore?.stop();
+    // Stop when disposal begins, not when the ledger reaches this entry: a load settling while
+    // earlier entries tear down would write a draft into a composer the plugin no longer owns.
+    scope.signal.addEventListener('abort', () => void stopRestore(), { once: true });
+    return stopRestore;
   }, 'draft-save:restore');
 }

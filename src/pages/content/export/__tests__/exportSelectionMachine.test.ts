@@ -174,11 +174,17 @@ describe('exportSelectionTransition', () => {
       { type: 'selectRole', role: 'assistant' },
       { type: 'exportClicked' },
       refresh(known.slice(1)),
-      { type: 'refreshTick', sameConversation: false, messages: [] },
     ] as const) {
       expect(exportSelectionTransition(confirming, event)).toBe(confirming);
     }
     expect(run(confirming, { type: 'selectionTaken' })).toEqual({ status: 'exporting' });
+  });
+
+  it('leaving the conversation during the permission wait ends the session', () => {
+    const confirming = run(selecting(), { type: 'toggle', id: '1:u' }, { type: 'exportClicked' });
+    expect(run(confirming, { type: 'refreshTick', sameConversation: false, messages: [] })).toEqual(
+      { status: 'ended', reason: 'routeChanged' },
+    );
   });
 
   it('ends when the export settles, whether or not the selection was taken', () => {

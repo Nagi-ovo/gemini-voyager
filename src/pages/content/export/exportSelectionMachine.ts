@@ -144,8 +144,8 @@ function endOnCancel(
 ): ExportSelectionState | null {
   if (event.type === 'cancel') return { status: 'ended', reason: 'cancelled' };
   if (event.type === 'externalCancel') return { status: 'ended', reason: 'external' };
-  const watchesRoute = state.status === 'selecting' || state.status === 'resolvingRoles';
-  if (event.type === 'refreshTick' && !event.sameConversation && watchesRoute) {
+  // Every status that still shows the bar ends on a route change, including the permission wait.
+  if (event.type === 'refreshTick' && !event.sameConversation && hasSelectionUi(state)) {
     return { status: 'ended', reason: 'routeChanged' };
   }
   return null;
@@ -336,6 +336,7 @@ export function exportSelectionMachine(
       },
       confirming: (stay) => {
         watchCancel(stay, deps.signal);
+        watchRefresh(stay, deps);
         // Start onConfirm outside this event's drain: a takeSelection call made
         // before its first await must have removed the UI when it returns.
         void Promise.resolve()

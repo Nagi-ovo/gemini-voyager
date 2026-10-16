@@ -182,6 +182,26 @@ describe('startMachine', () => {
     expect(machine.state).toEqual({ status: 'loading', attempt: 1 });
   });
 
+  it('a send from the abort of the state being left does not reach the next state', () => {
+    const m = start({
+      loading: (stay) => stay.signal.addEventListener('abort', () => stay.send({ type: 'load' })),
+    });
+    m.send({ type: 'load' });
+    m.send({ type: 'reset' });
+    expect(m.state).toEqual({ status: 'idle' });
+  });
+
+  it('a stop from the teardown of the state being left starts no later state', () => {
+    const readyEntered = vi.fn();
+    const m = start({
+      loading: (stay) => stay.signal.addEventListener('abort', () => void m.stop()),
+      ready: readyEntered,
+    });
+    m.send({ type: 'load' });
+    m.send({ type: 'loaded', value: 'x' });
+    expect(readyEntered).not.toHaveBeenCalled();
+  });
+
   it('stop awaits async teardown of every stay and ignores later events', async () => {
     let finishTeardown!: () => void;
     const m = start({

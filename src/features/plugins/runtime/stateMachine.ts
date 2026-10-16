@@ -92,9 +92,12 @@ export function startMachine<S extends MachineState, E extends MachineEvent>(
   const teardowns = new Set<Promise<void>>();
 
   const endStay = () => {
-    if (!stay) return;
-    const teardown = stay.scope.dispose();
+    const ending = stay;
+    if (!ending) return;
+    // Retire the stay before disposing: dispose fires its abort listeners synchronously,
+    // and one that sends must not reach the next state.
     stay = null;
+    const teardown = ending.scope.dispose();
     teardowns.add(teardown);
     void teardown.then(() => teardowns.delete(teardown));
   };
@@ -142,6 +145,8 @@ export function startMachine<S extends MachineState, E extends MachineEvent>(
     current = next;
     if (next.status !== previous.status) {
       endStay();
+      // A teardown of the state just left may have stopped the machine.
+      if (stopped) return;
       enter(next);
     } else if (stay) {
       stay.state = next;

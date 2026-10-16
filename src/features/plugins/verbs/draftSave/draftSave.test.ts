@@ -602,6 +602,33 @@ describe.each(sites)('draftSave on $name', (site) => {
     await vi.advanceTimersByTimeAsync(SEND_INTENT_TIMEOUT_MS + DRAFT_SAVE_DEBOUNCE_MS);
     expect(stored(adapter, 'conv:abc')).toBe('Saved earlier');
   });
+
+  it('a draft load that settles while the plugin is disabled writes nothing', async () => {
+    records[draftKey(adapter, 'conv:abc')] = { content: 'Saved earlier' };
+    mount(site.conversationPath('abc'));
+    const pendingReads: (() => void)[] = [];
+    const get = chrome.storage.local.get as unknown as ReturnType<typeof vi.fn>;
+    get.mockImplementation(
+      (keys: string | null, callback: (items: Record<string, unknown>) => void) => {
+        pendingReads.push(() =>
+          callback(typeof keys === 'string' ? { [keys]: records[keys] } : { ...records }),
+        );
+      },
+    );
+    const scope = activate(adapter);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(pendingReads.length).toBeGreaterThan(0);
+    // Something registered later tears down slowly, so disposal is still under way.
+    let finishSlowTeardown!: () => void;
+    scope.effect(() => () => new Promise<void>((resolve) => (finishSlowTeardown = resolve)));
+
+    const disposing = scope.dispose();
+    pendingReads.splice(0).forEach((resolve) => resolve());
+    await vi.advanceTimersByTimeAsync(DRAFT_RESTORE_DELAY_MS * 10);
+    finishSlowTeardown();
+    await disposing;
+    expect(text()).toBe('');
+  });
 });
 
 describe('draftSave storage', () => {
