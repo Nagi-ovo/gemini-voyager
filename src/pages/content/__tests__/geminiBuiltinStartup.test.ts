@@ -160,6 +160,7 @@ describe('the page lifetime of native features', () => {
 describe('official plugins at their Gemini start points', () => {
   it.each([
     ['startTimeline', OFFICIAL_PLUGIN_IDS.geminiTimeline],
+    ['startCanvasCopy', OFFICIAL_PLUGIN_IDS.geminiCanvasCopy],
     ['startDefaultModel', OFFICIAL_PLUGIN_IDS.geminiDefaultModel],
     ['startResponseNotification', OFFICIAL_PLUGIN_IDS.geminiResponseNotification],
     ['startUsageStatus', OFFICIAL_PLUGIN_IDS.geminiUsageStatus],
@@ -201,6 +202,7 @@ describe('official plugins at their Gemini start points', () => {
     );
     current.lifetime.abort();
     await startup.startTimeline();
+    await startup.startCanvasCopy();
     await startup.startDefaultModel();
     await startup.startResponseNotification();
     await startup.startUsageStatus();
@@ -209,6 +211,7 @@ describe('official plugins at their Gemini start points', () => {
     admission.close();
     for (const id of [
       OFFICIAL_PLUGIN_IDS.geminiTimeline,
+      OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
       OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
       OFFICIAL_PLUGIN_IDS.geminiResponseNotification,
       OFFICIAL_PLUGIN_IDS.geminiUsageStatus,

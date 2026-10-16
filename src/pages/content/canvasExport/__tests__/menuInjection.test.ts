@@ -107,21 +107,15 @@ describe('isCanvasShareMenuPanel', () => {
 });
 
 describe('injectCanvasCopyMarkdownButton', () => {
-  it('injects a new menu item with the requested label and wires onClick', () => {
+  it('injects a new menu item with the requested label', () => {
     const { panel } = setupCanvasContext();
-    let clicked = 0;
     const btn = injectCanvasCopyMarkdownButton(panel, {
       label: 'Copy as Markdown',
       tooltip: 'Copy Canvas content as Markdown',
-      onClick: () => {
-        clicked += 1;
-      },
     });
     expect(btn).not.toBeNull();
     expect(btn?.classList.contains(CANVAS_MARKDOWN_BUTTON_CLASS)).toBe(true);
     expect(btn?.textContent).toContain('Copy as Markdown');
-    btn?.click();
-    expect(clicked).toBe(1);
   });
 
   it('returns the same button on repeated injection and refreshes the label', () => {
@@ -129,12 +123,10 @@ describe('injectCanvasCopyMarkdownButton', () => {
     const first = injectCanvasCopyMarkdownButton(panel, {
       label: 'Copy as Markdown',
       tooltip: 'tooltip-1',
-      onClick: () => {},
     });
     const second = injectCanvasCopyMarkdownButton(panel, {
       label: 'Neue Beschriftung',
       tooltip: 'tooltip-2',
-      onClick: () => {},
     });
     expect(second).toBe(first);
     expect(second?.getAttribute('aria-label')).toBe('tooltip-2');
@@ -147,7 +139,6 @@ describe('injectCanvasCopyMarkdownButton', () => {
     const result = injectCanvasCopyMarkdownButton(panel, {
       label: 'X',
       tooltip: 'X',
-      onClick: () => {},
     });
     expect(result).toBeNull();
   });

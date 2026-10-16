@@ -13,7 +13,6 @@ import { SiteRegistry } from '@/features/plugins/sites/registry';
 import { initI18n } from '@/utils/i18n';
 
 import { startGeminiChatAppearance } from './appearanceStartup';
-import { startCanvasExport } from './canvasExport/index';
 import { startChangelog } from './changelog/index';
 import { runCoachmarkSequence } from './coachmark';
 import { claimContentScript } from './contentScriptHandoff';
@@ -286,7 +285,7 @@ async function initializeFeatures(): Promise<void> {
       await settle(geminiRenderers.startCodeBlockCollapse());
       await settle(geminiBuiltins.startDefaultModel());
       startExportButton();
-      void startCanvasExport();
+      await settle(geminiBuiltins.startCanvasCopy());
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       await settle(geminiBuiltins.startForkAndResearchPack());

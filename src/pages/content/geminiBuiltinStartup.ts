@@ -13,6 +13,8 @@ import { NATIVE_FEATURES } from './nativeFeatures';
 export interface GeminiBuiltinStartup {
   /** The rail at its original heavy-feature start point, after the independent page services. */
   startTimeline(): Promise<void>;
+  /** Canvas share-menu copy, after the conversation export button. */
+  startCanvasCopy(): Promise<void>;
   /** Default model, among the DOM enhancements. */
   startDefaultModel(): Promise<void>;
   /** The permanent prevent-auto-scroll bridge, then its plugin claim. */
@@ -44,6 +46,10 @@ export function createGeminiBuiltinStartup(
     async startUsageStatus() {
       if (isStopped()) return;
       admission.admit('gemini', 'usageStatus');
+    },
+    async startCanvasCopy() {
+      if (isStopped()) return;
+      admission.admit('gemini', 'canvasCopy');
     },
     async startDefaultModel() {
       if (isStopped()) return;

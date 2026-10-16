@@ -1,5 +1,6 @@
 import { type PluginManifest, hasNativeOps } from '../types';
 import { CHATGPT_RESPONSE_NOTIFICATION_MANIFEST } from './chatgptResponseNotification/manifest';
+import { GEMINI_CANVAS_COPY_MANIFEST } from './geminiCanvasCopyManifest';
 import { GEMINI_CHAT_WIDTH_MANIFEST } from './geminiChatWidthManifest';
 import { GEMINI_DEFAULT_MODEL_MANIFEST } from './geminiDefaultModelManifest';
 import { GEMINI_EDIT_INPUT_WIDTH_MANIFEST } from './geminiEditInputWidthManifest';
@@ -386,6 +387,7 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   GEMINI_SAFARI_ENTER_FIX_MANIFEST,
   GEMINI_CHAT_WIDTH_MANIFEST,
   GEMINI_EDIT_INPUT_WIDTH_MANIFEST,
+  GEMINI_CANVAS_COPY_MANIFEST,
   GEMINI_PROMPT_HISTORY_MANIFEST,
   GEMINI_INPUT_COLLAPSE_MANIFEST,
   GEMINI_RESEARCH_PACK_MANIFEST,

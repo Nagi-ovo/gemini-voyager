@@ -23,6 +23,7 @@ export type OwnedFeatureId =
   | 'chatLineHeight'
   | 'chatWidth'
   | 'editInputWidth'
+  | 'canvasCopy'
   | 'userLatex'
   | 'codeCollapse'
   | 'waveDrom'
@@ -54,6 +55,7 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiChatLineHeight: 'voyager.gemini-chat-line-height',
   geminiChatWidth: 'voyager.gemini-chat-width',
   geminiEditInputWidth: 'voyager.gemini-edit-input-width',
+  geminiCanvasCopy: 'voyager.gemini-canvas-copy',
   geminiUserLatex: 'voyager.gemini-user-latex',
   geminiCodeCollapse: 'voyager.gemini-code-collapse',
   geminiWaveDrom: 'voyager.gemini-wavedrom',
@@ -184,6 +186,13 @@ export const FEATURE_OWNERS: readonly OwnedFeature[] = [
     site: 'gemini',
     feature: 'editInputWidth',
     officialPluginId: OFFICIAL_PLUGIN_IDS.geminiEditInputWidth,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'canvasCopy',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
     handlers: [],
     healthTracking: false,
   },

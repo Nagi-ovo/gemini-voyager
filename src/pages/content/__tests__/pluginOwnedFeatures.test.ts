@@ -833,6 +833,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
         await createSelectionStartup(admission, cleanupManager).start();
         const builtins = createGeminiBuiltinStartup(admission, cleanupManager);
         await builtins.startTimeline();
+        await builtins.startCanvasCopy();
         await builtins.startUsageStatus();
         await builtins.startPreventAutoScroll();
         await builtins.startResponseNotification();
@@ -862,6 +863,7 @@ describe('Gemini stage 5 features owned by their official plugins', () => {
         OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
         OFFICIAL_PLUGIN_IDS.geminiFork,
         OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
+        OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
         OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
         OFFICIAL_PLUGIN_IDS.geminiHighlight,
         OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll,

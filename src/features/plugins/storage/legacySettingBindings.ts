@@ -187,6 +187,11 @@ export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding
         widthChangedLive: wasChangedLive(StorageKeys.EDIT_INPUT_WIDTH),
       }),
   },
+  [OFFICIAL_PLUGIN_IDS.geminiCanvasCopy]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
+    StorageKeys.CANVAS_COPY_ENABLED,
+    onUnlessFalse,
+  ),
   [OFFICIAL_PLUGIN_IDS.geminiUserLatex]: binding(
     OFFICIAL_PLUGIN_IDS.geminiUserLatex,
     StorageKeys.USER_LATEX_ENABLED,

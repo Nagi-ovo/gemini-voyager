@@ -240,6 +240,7 @@ describe('BUILTIN_PLUGINS', () => {
   });
 
   it.each([
+    ['canvas copy', 'voyager.gemini-canvas-copy'],
     ['research pack', 'voyager.gemini-research-pack'],
     ['default model', 'voyager.gemini-default-model'],
     ['fork', 'voyager.gemini-fork'],

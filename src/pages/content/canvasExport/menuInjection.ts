@@ -1,4 +1,7 @@
-import { createMenuItemFromNativeTemplate } from '../shared/nativeMenuItemTemplate';
+import {
+  createMenuItemFromNativeTemplate,
+  updateMenuItemTemplateLabel,
+} from '../shared/nativeMenuItemTemplate';
 
 const MENU_PANEL_SELECTOR = '.mat-mdc-menu-panel[role="menu"]';
 const EXPANDED_MENU_TRIGGER_SELECTOR = '[aria-haspopup="menu"][aria-expanded="true"]';
@@ -8,7 +11,6 @@ export const CANVAS_MARKDOWN_BUTTON_CLASS = 'gv-canvas-copy-markdown-btn';
 export type CanvasMenuInjectionOptions = {
   label: string;
   tooltip: string;
-  onClick: () => void;
 };
 
 function parseControlledIds(trigger: HTMLElement): string[] {
@@ -54,7 +56,7 @@ export function isCanvasShareMenuPanel(menuPanel: HTMLElement): boolean {
   return !!trigger.closest(CANVAS_SHARE_WRAPPER_SELECTOR);
 }
 
-function closeMenuOverlay(menuPanel: HTMLElement): void {
+export function closeCanvasMenuOverlay(menuPanel: HTMLElement): void {
   const backdrops = document.querySelectorAll<HTMLElement>('.cdk-overlay-backdrop');
   const backdrop = backdrops.length > 0 ? backdrops[backdrops.length - 1] : null;
   if (backdrop) {
@@ -82,10 +84,7 @@ export function injectCanvasCopyMarkdownButton(
     `.${CANVAS_MARKDOWN_BUTTON_CLASS}`,
   ) as HTMLElement | null;
   if (existing) {
-    existing.title = options.tooltip || options.label;
-    existing.setAttribute('aria-label', options.tooltip || options.label);
-    const text = existing.querySelector('.mat-mdc-menu-item-text') as HTMLElement | null;
-    if (text) text.textContent = options.label;
+    updateMenuItemTemplateLabel(existing, options.label, options.tooltip);
     return existing;
   }
 
@@ -98,13 +97,6 @@ export function injectCanvasCopyMarkdownButton(
     excludedClassNames: [CANVAS_MARKDOWN_BUTTON_CLASS, 'share-button'],
   });
   if (!button) return null;
-
-  button.addEventListener('click', (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    options.onClick();
-    closeMenuOverlay(menuPanel);
-  });
 
   menuContent.appendChild(button);
   return button;

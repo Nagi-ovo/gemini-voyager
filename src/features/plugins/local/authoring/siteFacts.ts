@@ -50,6 +50,7 @@ const OWNED_FEATURE_SETTINGS: Readonly<Record<OwnedFeatureId, string>> = {
   chatLineHeight: 'Chat spacing',
   chatWidth: 'Chat width',
   editInputWidth: 'Edit input width',
+  canvasCopy: 'Canvas copy as Markdown',
   userLatex: 'Render LaTeX in my messages',
   codeCollapse: 'Collapse long code blocks',
   waveDrom: 'WaveDrom timing diagram rendering',

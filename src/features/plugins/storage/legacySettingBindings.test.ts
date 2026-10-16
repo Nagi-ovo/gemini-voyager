@@ -88,6 +88,7 @@ describe('legacy enable bindings', () => {
         StorageKeys.CHAT_LINE_HEIGHT_ENABLED,
         StorageKeys.CHAT_WIDTH_ENABLED,
         StorageKeys.EDIT_INPUT_WIDTH_ENABLED,
+        StorageKeys.CANVAS_COPY_ENABLED,
         StorageKeys.USER_LATEX_ENABLED,
         StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED,
         StorageKeys.WAVEDROM_ENABLED,
@@ -138,6 +139,9 @@ describe('legacy enable bindings', () => {
       );
       expect(legacyBindingFor(OFFICIAL_PLUGIN_IDS.geminiResponseNotification)?.read(stored)).toBe(
         researchPack,
+      );
+      expect(legacyBindingFor(OFFICIAL_PLUGIN_IDS.geminiCanvasCopy)?.read(stored)).toBe(
+        defaultModel,
       );
       expect(legacyBindingFor('voyager.gemini-default-model')?.read(stored)).toBe(defaultModel);
       expect(legacyBindingFor(OFFICIAL_PLUGIN_IDS.geminiTimeline)?.read(stored)).toBe(defaultModel);
@@ -217,6 +221,20 @@ describe('resolveEffectiveEnabled', () => {
     const mapOff = { [VIM]: { enabled: false } };
     expect(resolveEffectiveEnabled(mapOff, { [StorageKeys.INPUT_VIM_MODE]: true }, VIM)).toBe(true);
     expect(resolveEffectiveEnabled({ [HALO]: { enabled: true } }, {}, HALO)).toBe(false);
+  });
+
+  it.each([
+    ['missing', {}, true],
+    ['off', { [StorageKeys.CANVAS_COPY_ENABLED]: false }, false],
+    ['on', { [StorageKeys.CANVAS_COPY_ENABLED]: true }, true],
+    ['removed', { [StorageKeys.CANVAS_COPY_ENABLED]: undefined }, true],
+  ] as const)('keeps Canvas copy %s authoritative over plugin state', (_label, snapshot, on) => {
+    const id = OFFICIAL_PLUGIN_IDS.geminiCanvasCopy;
+    expect(resolveEffectiveEnabled({ [id]: { enabled: !on } }, snapshot, id)).toBe(on);
+    expect(legacyEnableWrite(id, on)).toEqual({ [StorageKeys.CANVAS_COPY_ENABLED]: on });
+    expect(resolveEffectiveSettings(manifest(id), { [id]: { settings: { stray: true } } })).toEqual(
+      {},
+    );
   });
 
   it('uses the production default when the key is missing or was removed', () => {

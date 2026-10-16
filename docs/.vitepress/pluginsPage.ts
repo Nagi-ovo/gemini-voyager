@@ -41,6 +41,7 @@ const FEATURE_ORDER = [
   'folders',
   'timeline',
   'export',
+  'canvas-copy',
   'response-notification',
   'quote-reply',
   'highlight',
@@ -106,6 +107,7 @@ const NATIVE_FEATURES: Readonly<Record<string, readonly PluginSite[]>> = {
 export const FRESH_INSTALL_ON: ReadonlySet<string> = new Set([
   OFFICIAL_PLUGIN_IDS.geminiTimeline,
   OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
+  OFFICIAL_PLUGIN_IDS.geminiCanvasCopy,
   OFFICIAL_PLUGIN_IDS.geminiFormulaCopy,
   OFFICIAL_PLUGIN_IDS.aistudioFormulaCopy,
   OFFICIAL_PLUGIN_IDS.geminiUserLatex,

@@ -311,6 +311,8 @@ export const StorageKeys = {
   RESEARCH_PACK: 'gvResearchPack',
 
   // Export
+  // Default on: Canvas copy predates its sync switch.
+  CANVAS_COPY_ENABLED: 'gvCanvasCopyEnabled',
   EXPORT_IMAGE_WIDTH: 'gvExportImageWidth',
   EXPORT_SPEAKER_LABELS: 'gvExportSpeakerLabels',
   // Fallback top-right export toolbar shown when Gemini's logo (the normal

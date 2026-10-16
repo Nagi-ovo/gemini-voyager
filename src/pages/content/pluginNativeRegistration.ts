@@ -18,6 +18,7 @@ import {
   verifyNativeHandlerBindings,
 } from '@/features/plugins/runtime/nativeHandlers';
 
+import { activateGeminiCanvasCopy } from './canvasExport/pluginHandler';
 import { activateGeminiChatWidth, updateGeminiChatWidthSettings } from './chatWidth/pluginHandler';
 import { activateGeminiDefaultModel } from './defaultModel/pluginHandler';
 import {
@@ -62,6 +63,7 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
     activate: activateGeminiChatWidth,
     updateSettings: updateGeminiChatWidthSettings,
   },
+  'voyager.gemini-canvas-copy': { activate: activateGeminiCanvasCopy },
   'voyager.gemini-edit-input-width': {
     activate: activateGeminiEditInputWidth,
     updateSettings: updateGeminiEditInputWidthSettings,
