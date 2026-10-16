@@ -41,9 +41,10 @@ const machine = startMachine<State, Event>(
 ```
 
 - `transition(state, event)` 是纯函数，返回同一个对象表示忽略该事件。测试写成「状态 + 事件 → 状态」，不需要 DOM。
-- `effects` 按 `status` 建表。进入某个状态时运行对应的 effect；它在 `stay.scope` 上注册的 timer、listener、DOM 和异步任务会在离开时全部拆除。
+- `effects` 按 `status` 建表。进入某个状态时运行对应的 effect；它在 `stay.scope` 上注册的 timer、listener、DOM 和异步任务会在离开后全部拆除。
 - 事件逐个按顺序处理。effect 或订阅者里调用的 `send` 会进入队列，不会重入。
-- 离开状态后，该状态的 `stay.send` 失效。过期的 timer、listener、promise 无法再推动状态机，模块不需要再手写 generation 计数或 `destroyed` 标记。
+- 离开状态的同时，该状态的 `stay.send` 失效、`stay.signal` 中止。过期的 timer、listener、promise 无法再推动状态机，模块不需要再手写 generation 计数。
+- scope 里的清理函数随后按顺序执行，只有第一个在下一个状态的 effect 启动前完成。所以回调里如果不只是 `send`，还会写 DOM 或调用页面，要先检查 `stay.signal.aborted`。
 - 只有 `status` 变化才会重启 effect。同一状态内的数据更新（比如尝试次数）不打断正在运行的 effect，effect 通过 `stay.state()` 读取最新数据。
 - transition 抛错时丢弃该事件，effect 抛错时保留它已经注册的效果直到离开；两者都记日志，队列继续处理。
 - `stop()` 结束当前状态，等到所有状态的效果都拆除后才 resolve，可以直接接到 `featureLifecycle` 的 stop 上。

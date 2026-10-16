@@ -94,15 +94,15 @@ describe('startMachine', () => {
     const m = start({
       loading: (stay) => {
         stay.send({ type: 'loaded', value: 'sync' });
-        // Still registering: the scope must not be disposed under us.
-        stay.scope.effect(() => () => void seen.push('loading torn down'));
+        // Still registering: a scope disposed under us would throw here.
+        stay.scope.effect(() => () => {});
         seen.push('loading entered');
       },
       ready: () => void seen.push('ready entered'),
     });
     m.send({ type: 'load' });
     expect(m.state).toEqual({ status: 'ready', value: 'sync' });
-    expect(seen).toEqual(['loading entered', 'loading torn down', 'ready entered']);
+    expect(seen).toEqual(['loading entered', 'ready entered']);
   });
 
   it('an effect of the initial state may send while entering', () => {

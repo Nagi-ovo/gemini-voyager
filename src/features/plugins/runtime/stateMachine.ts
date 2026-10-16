@@ -8,14 +8,17 @@
  *    is tested as `state + event -> state` with no fixtures.
  *  - `effects` is keyed by `status`. The effect for a status runs when the
  *    machine enters that status, and everything it registers on `stay.scope`
- *    is torn down when the machine leaves it.
+ *    is torn down after the machine leaves it.
  *
  * Runtime guarantees:
  *  - Events are handled one at a time, in order. `send` from a transition's
  *    effect or a subscriber is queued, never re-entrant.
- *  - `stay.send` goes dead when its stay ends. A timer, listener or promise
- *    that fires after the machine moved on cannot steer it, so a module needs
- *    no generation counter or `destroyed` flag for that.
+ *  - Leaving a status kills its `stay.send` and aborts its `stay.signal` at
+ *    once. A timer, listener or promise that fires after the machine moved on
+ *    cannot steer it, so a module needs no generation counter for that.
+ *  - The scope's disposers run in order after that, only the first of them
+ *    before the next status's effect starts. A callback that does more than
+ *    `send` (writes the DOM, calls the page) checks `stay.signal.aborted`.
  *  - Effects restart only when `status` changes. A transition that keeps the
  *    status and updates data (an attempt counter) leaves the running effects
  *    alone; they read the current data through `stay.state()`.

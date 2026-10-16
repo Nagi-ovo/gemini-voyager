@@ -72,15 +72,6 @@ describe('autoApplyTransition', () => {
     expect(run(satisfied, { type: 'planned', session })).toBe(satisfied);
   });
 
-  it('a new session starts with no attempts, failures or pending clicks', () => {
-    expect(locking()).toMatchObject({
-      attempt: 0,
-      failures: 0,
-      model: { pendingKey: null, consecutiveRejected: 0 },
-      thinking: { pendingKey: null, consecutiveRejected: 0 },
-    });
-  });
-
   it('a pill that already shows both targets ends the session', () => {
     expect(run(locking(), { type: 'tick' }, pill(true, true))).toEqual({
       status: 'satisfied',

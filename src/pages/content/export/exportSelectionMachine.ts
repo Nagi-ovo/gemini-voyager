@@ -270,8 +270,12 @@ function watchCancel(stay: SessionStay, signal: AbortSignal | undefined): void {
   if (signal) stay.scope.on(signal, 'abort', () => stay.send({ type: 'externalCancel' }));
 }
 
-/** Follow lazy-loaded messages and route changes while the selection can change. */
-function watchRefresh(stay: SessionStay, deps: ExportSelectionEffectDeps): void {
+/** Follow route changes, and lazy-loaded messages while the selection can still change. */
+function watchRefresh(
+  stay: SessionStay,
+  deps: ExportSelectionEffectDeps,
+  { followMessages }: { followMessages: boolean },
+): void {
   let scheduled = false;
   const refresh = () => {
     scheduled = false;
@@ -280,6 +284,8 @@ function watchRefresh(stay: SessionStay, deps: ExportSelectionEffectDeps): void 
       stay.send({ type: 'refreshTick', sameConversation: false, messages: [] });
       return;
     }
+    // A frozen selection binds no checkbox to messages that load meanwhile.
+    if (!followMessages) return;
     try {
       const messages = toSelectionMessages(deps.bindMessages());
       stay.send({ type: 'refreshTick', sameConversation: true, messages });
@@ -313,11 +319,11 @@ export function exportSelectionMachine(
     effects: {
       selecting: (stay) => {
         watchCancel(stay, deps.signal);
-        watchRefresh(stay, deps);
+        watchRefresh(stay, deps, { followMessages: true });
       },
       resolvingRoles: (stay) => {
         watchCancel(stay, deps.signal);
-        watchRefresh(stay, deps);
+        watchRefresh(stay, deps, { followMessages: true });
         const { messages } = stay.state();
         const resolveRoles = deps.resolveRoles;
         if (!resolveRoles) {
@@ -336,7 +342,7 @@ export function exportSelectionMachine(
       },
       confirming: (stay) => {
         watchCancel(stay, deps.signal);
-        watchRefresh(stay, deps);
+        watchRefresh(stay, deps, { followMessages: false });
         // Start onConfirm outside this event's drain: a takeSelection call made
         // before its first await must have removed the UI when it returns.
         void Promise.resolve()
