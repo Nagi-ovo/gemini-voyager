@@ -29,6 +29,8 @@ export interface OfficialPluginEntry {
   readonly group: OfficialPluginGroup;
   /** The retired settings row's label and hint, so its old search words still find the row. */
   readonly searchKeys: readonly TranslationKey[];
+  /** The title of the card the row left: a remembered "General Options" search still shows it. */
+  readonly formerSectionTitle: TranslationKey;
   readonly searchAliases?: readonly string[];
   readonly experimental?: boolean;
 }
@@ -38,62 +40,73 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
   {
     id: OFFICIAL_PLUGIN_IDS.geminiHideInputHalo,
     group: 'appearance',
+    formerSectionTitle: 'generalOptions',
     searchKeys: ['hideInputHalo', 'hideInputHaloHint'],
     searchAliases: ['halo ripple 光晕 水波纹'],
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiCodeCollapse,
     group: 'content',
+    formerSectionTitle: 'generalOptions',
     searchKeys: ['enableCodeBlockCollapse', 'enableCodeBlockCollapseHint'],
     searchAliases: ['code block collapse fold expand 代码块 折叠 展开'],
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiUserLatex,
     group: 'content',
+    formerSectionTitle: 'generalOptions',
     searchKeys: ['enableUserLatexRendering', 'enableUserLatexRenderingHint'],
     searchAliases: ['latex math formula katex 公式 数学'],
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiMermaid,
     group: 'content',
+    formerSectionTitle: 'generalOptions',
     searchKeys: ['enableMermaidRendering', 'enableMermaidRenderingHint'],
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiWaveDrom,
     group: 'content',
+    formerSectionTitle: 'generalOptions',
     searchKeys: ['enableWaveDromRendering', 'enableWaveDromRenderingHint'],
     searchAliases: ['wavedrom wavejson timing diagram'],
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiECharts,
     group: 'content',
+    formerSectionTitle: 'generalOptions',
     searchKeys: ['enableEchartsRendering', 'enableEchartsRenderingHint'],
     searchAliases: ['echarts chart diagram'],
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiPromptHistory,
     group: 'input',
+    formerSectionTitle: 'promptManagerOptions',
     searchKeys: ['promptHistoryTitle', 'promptHistoryEnabledHint'],
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
     group: 'input',
+    formerSectionTitle: 'generalOptions',
     searchKeys: ['enableQuoteReply', 'enableQuoteReplyHint'],
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll,
     group: 'conversation',
+    formerSectionTitle: 'timelineOptions',
     searchKeys: ['preventAutoScroll', 'preventAutoScrollHint'],
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiFork,
     group: 'conversation',
+    formerSectionTitle: 'folderOptions',
     searchKeys: ['enableForkFeature', 'enableForkFeatureHint'],
     experimental: true,
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiResearchPack,
     group: 'conversation',
+    formerSectionTitle: 'generalOptions',
     searchKeys: ['researchPackEnable', 'researchPackEnableHint'],
     searchAliases: [
       'research pack markdown sources citations carry chatgpt claude 研究 资料包 引用 来源',
@@ -103,11 +116,13 @@ export const OFFICIAL_PLUGIN_ENTRIES: readonly OfficialPluginEntry[] = [
   {
     id: OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
     group: 'conversation',
+    formerSectionTitle: 'generalOptions',
     searchKeys: ['enableDefaultModelAutoApply', 'enableDefaultModelAutoApplyHint'],
   },
   {
     id: OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
     group: 'conversation',
+    formerSectionTitle: 'generalOptions',
     searchKeys: ['usageStatusToggle', 'usageStatusToggleHint'],
     searchAliases: ['usage quota limit 用量 限额'],
   },

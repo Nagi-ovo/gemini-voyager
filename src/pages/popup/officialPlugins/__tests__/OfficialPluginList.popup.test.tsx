@@ -293,6 +293,34 @@ describe('the official plugin list in the popup', () => {
     expect(listedIds().length).toBeLessThan(MOVED_SWITCHES.length);
   });
 
+  it.each([
+    [
+      TRANSLATIONS.en.generalOptions,
+      [
+        OFFICIAL_PLUGIN_IDS.geminiHideInputHalo,
+        OFFICIAL_PLUGIN_IDS.geminiCodeCollapse,
+        OFFICIAL_PLUGIN_IDS.geminiUserLatex,
+        OFFICIAL_PLUGIN_IDS.geminiMermaid,
+        OFFICIAL_PLUGIN_IDS.geminiWaveDrom,
+        OFFICIAL_PLUGIN_IDS.geminiECharts,
+        OFFICIAL_PLUGIN_IDS.geminiQuoteReply,
+        OFFICIAL_PLUGIN_IDS.geminiResearchPack,
+        OFFICIAL_PLUGIN_IDS.geminiDefaultModel,
+        OFFICIAL_PLUGIN_IDS.geminiUsageStatus,
+      ],
+    ],
+    [TRANSLATIONS.en.folderOptions, [OFFICIAL_PLUGIN_IDS.geminiFork]],
+    [TRANSLATIONS.en.promptManagerOptions, [OFFICIAL_PLUGIN_IDS.geminiPromptHistory]],
+    [TRANSLATIONS.en.timelineOptions, [OFFICIAL_PLUGIN_IDS.geminiPreventAutoScroll]],
+  ])(
+    'a remembered search for the old card title "%s" still shows its moved rows',
+    async (query, ids) => {
+      local[StorageKeys.GV_POPUP_SETTINGS_SEARCH_QUERY] = query;
+      await mount();
+      for (const id of ids) expect(row(id), id).not.toBeNull();
+    },
+  );
+
   it('takes no slot on AI Studio, which has no listed plugin yet', async () => {
     extensionApi.tabs.query.mockResolvedValue([
       { id: 8, url: 'https://aistudio.google.com/prompts/new_chat' },
