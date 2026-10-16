@@ -4,151 +4,88 @@ import {
   CANVAS_MARKDOWN_BUTTON_CLASS,
   findCanvasProseMirrorRoot,
   injectCanvasCopyMarkdownButton,
-  isCanvasShareMenuPanel,
+  isCanvasExportMenuPanel,
 } from '../menuInjection';
+import { canvasFixture, setup } from './fixtures';
 
-function createNativeMenuItem(label: string): HTMLButtonElement {
-  const btn = document.createElement('button');
-  btn.className = 'mat-mdc-menu-item';
-  btn.setAttribute('role', 'menuitem');
-  const icon = document.createElement('mat-icon');
-  icon.setAttribute('fonticon', 'share');
-  icon.setAttribute('aria-hidden', 'true');
-  const text = document.createElement('span');
-  text.className = 'mat-mdc-menu-item-text';
-  text.textContent = label;
-  btn.appendChild(icon);
-  btn.appendChild(text);
-  return btn;
-}
-
-function createCanvasSharePanel(panelId: string): HTMLElement {
-  const panel = document.createElement('div');
-  panel.className = 'mat-mdc-menu-panel';
-  panel.setAttribute('role', 'menu');
-  panel.id = panelId;
-  const content = document.createElement('div');
-  content.className = 'mat-mdc-menu-content';
-  content.appendChild(createNativeMenuItem('Share'));
-  content.appendChild(createNativeMenuItem('Export to Docs'));
-  content.appendChild(createNativeMenuItem('Copy contents'));
-  panel.appendChild(content);
-  return panel;
-}
-
-function createCanvasTrigger(panelId: string): HTMLElement {
-  // Angular structure: <share-button data-test-id="consolidated-share-button"><button ...>
-  const wrapper = document.createElement('share-button');
-  wrapper.setAttribute('data-test-id', 'consolidated-share-button');
-  const button = document.createElement('button');
-  button.setAttribute('aria-haspopup', 'menu');
-  button.setAttribute('aria-expanded', 'true');
-  button.setAttribute('aria-controls', panelId);
-  button.setAttribute('data-test-id', 'share-button');
-  wrapper.appendChild(button);
-  return wrapper;
-}
-
-function setupCanvasContext(): { panel: HTMLElement; trigger: HTMLElement } {
-  const immersive = document.createElement('immersive-editor');
-  const proseMirror = document.createElement('div');
-  proseMirror.className = 'ProseMirror';
-  proseMirror.innerHTML = '<h1>Doc</h1><p>Hello <strong>world</strong></p>';
-  immersive.appendChild(proseMirror);
-  document.body.appendChild(immersive);
-
-  const trigger = createCanvasTrigger('menu-canvas-1');
-  document.body.appendChild(trigger);
-
-  const panel = createCanvasSharePanel('menu-canvas-1');
-  document.body.appendChild(panel);
-  return { panel, trigger };
-}
+const labels = { label: 'Copy as Markdown', tooltip: 'Copy Canvas content as Markdown' };
 
 afterEach(() => {
   document.body.innerHTML = '';
 });
 
-describe('isCanvasShareMenuPanel', () => {
-  it('returns true for canvas share menu panel with immersive-editor present', () => {
-    const { panel } = setupCanvasContext();
-    expect(isCanvasShareMenuPanel(panel)).toBe(true);
+describe('Canvas Export menu', () => {
+  it('recognizes download_md independently of translated labels', () => {
+    const panel = setup();
+    panel.querySelector('.label')!.textContent = 'Télécharger';
+    document.querySelector('button')!.setAttribute('aria-label', 'Exporter');
+    expect(isCanvasExportMenuPanel(panel)).toBe(true);
+    panel.querySelector('[value="download_md"]')!.setAttribute('value', 'other');
+    expect(isCanvasExportMenuPanel(panel)).toBe(false);
   });
 
-  it('returns false when deep-research-immersive-panel is present', () => {
-    const { panel } = setupCanvasContext();
-    const dr = document.createElement('deep-research-immersive-panel');
-    document.body.appendChild(dr);
-    expect(isCanvasShareMenuPanel(panel)).toBe(false);
+  it('excludes Deep Research and menus with no associated Canvas', () => {
+    const panel = setup();
+    document.body.append(document.createElement('deep-research-immersive-panel'));
+    expect(injectCanvasCopyMarkdownButton(panel, labels)).toBeNull();
+    document.querySelector('deep-research-immersive-panel')!.remove();
+    document.querySelector('inline-preview')!.remove();
+    expect(injectCanvasCopyMarkdownButton(panel, labels)).toBeNull();
   });
 
-  it('returns false when no immersive-editor is on the page', () => {
-    const trigger = createCanvasTrigger('menu-canvas-2');
-    document.body.appendChild(trigger);
-    const panel = createCanvasSharePanel('menu-canvas-2');
-    document.body.appendChild(panel);
-    expect(isCanvasShareMenuPanel(panel)).toBe(false);
+  it.each(['inline-preview', 'immersive-panel'])(
+    'resolves the controlling trigger inside %s with two editors',
+    (owner) => {
+      const panel = setup(true, owner);
+      const expected = document.querySelector('.ProseMirror');
+      document.body.insertAdjacentHTML('afterbegin', canvasFixture('inline-preview', 'other-menu'));
+      expect(findCanvasProseMirrorRoot(panel)).toBe(expected);
+    },
+  );
+
+  it('uses a locally nested menu owner when the trigger has no ARIA association', () => {
+    const panel = setup();
+    document.querySelector('gem-button')!.removeAttribute('aria-controls');
+    document.querySelector('inline-preview')!.append(panel);
+    expect(findCanvasProseMirrorRoot(panel)).toBe(document.querySelector('.ProseMirror'));
   });
 
-  it('returns false when trigger is not a consolidated-share-button', () => {
-    const immersive = document.createElement('immersive-editor');
-    document.body.appendChild(immersive);
-    const wrapper = document.createElement('div');
-    const button = document.createElement('button');
-    button.setAttribute('aria-haspopup', 'menu');
-    button.setAttribute('aria-expanded', 'true');
-    button.setAttribute('aria-controls', 'menu-canvas-3');
-    wrapper.appendChild(button);
-    document.body.appendChild(wrapper);
-    const panel = createCanvasSharePanel('menu-canvas-3');
-    document.body.appendChild(panel);
-    expect(isCanvasShareMenuPanel(panel)).toBe(false);
-  });
-});
-
-describe('injectCanvasCopyMarkdownButton', () => {
-  it('injects a new menu item with the requested label', () => {
-    const { panel } = setupCanvasContext();
-    const btn = injectCanvasCopyMarkdownButton(panel, {
-      label: 'Copy as Markdown',
-      tooltip: 'Copy Canvas content as Markdown',
-    });
-    expect(btn).not.toBeNull();
-    expect(btn?.classList.contains(CANVAS_MARKDOWN_BUTTON_CLASS)).toBe(true);
-    expect(btn?.textContent).toContain('Copy as Markdown');
+  it('does not guess the first editor for an unassociated portal menu', () => {
+    const panel = setup();
+    document.querySelector('gem-button')!.removeAttribute('aria-controls');
+    expect(injectCanvasCopyMarkdownButton(panel, labels)).toBeNull();
   });
 
-  it('returns the same button on repeated injection and refreshes the label', () => {
-    const { panel } = setupCanvasContext();
-    const first = injectCanvasCopyMarkdownButton(panel, {
-      label: 'Copy as Markdown',
-      tooltip: 'tooltip-1',
-    });
+  it('clones native structure after .md without inheriting its action or active state', () => {
+    const panel = setup();
+    const download = panel.querySelector('[value="download_md"]')!;
+    const button = injectCanvasCopyMarkdownButton(panel, labels)!;
+    expect(button.tagName).toBe('GEM-MENU-ITEM');
+    expect(download.nextElementSibling).toBe(button);
+    expect(button.querySelector('gem-menu-item-content .label')?.textContent).toBe(labels.label);
+    expect(button.querySelector('mat-icon')?.getAttribute('fonticon')).toBe('content_copy');
+    expect(button.querySelector('mat-icon')?.classList.contains('google-symbols')).toBe(true);
+    expect(button.getAttribute('aria-label')).toBe(labels.tooltip);
+    expect(button.getAttribute('arialabel')).toBe(labels.tooltip);
+    expect(button.getAttribute('role')).toBe('menuitem');
+    expect(button.tabIndex).toBe(-1);
+    expect(button.matches('.active, [value], [jslog], [data-active]')).toBe(false);
+    expect(button.querySelector('.active, [value], [jslog], [data-active]')).toBeNull();
+    expect(download.matches('.active[value="download_md"][jslog]')).toBe(true);
+    expect(download.querySelector('.active')).not.toBeNull();
+  });
+
+  it('refreshes labels on repeated injection without duplication', () => {
+    const panel = setup();
+    const first = injectCanvasCopyMarkdownButton(panel, labels);
     const second = injectCanvasCopyMarkdownButton(panel, {
-      label: 'Neue Beschriftung',
-      tooltip: 'tooltip-2',
+      label: 'Copier',
+      tooltip: 'Copier le Canvas',
     });
     expect(second).toBe(first);
-    expect(second?.getAttribute('aria-label')).toBe('tooltip-2');
-    expect(second?.textContent).toContain('Neue Beschriftung');
-  });
-
-  it('returns null when the panel is not a canvas share menu', () => {
-    const panel = document.createElement('div');
-    document.body.appendChild(panel);
-    const result = injectCanvasCopyMarkdownButton(panel, {
-      label: 'X',
-      tooltip: 'X',
-    });
-    expect(result).toBeNull();
-  });
-});
-
-describe('findCanvasProseMirrorRoot', () => {
-  it('returns the ProseMirror root inside immersive-editor', () => {
-    setupCanvasContext();
-    const root = findCanvasProseMirrorRoot();
-    expect(root).not.toBeNull();
-    expect(root?.className).toBe('ProseMirror');
+    expect(panel.querySelectorAll(`.${CANVAS_MARKDOWN_BUTTON_CLASS}`)).toHaveLength(1);
+    expect(second?.getAttribute('aria-label')).toBe('Copier le Canvas');
+    expect(second?.getAttribute('arialabel')).toBe('Copier le Canvas');
+    expect(second?.querySelector('.label')?.textContent).toBe('Copier');
   });
 });

@@ -9,6 +9,7 @@ import { createOfficialAdmission } from '@/features/plugins/runtime/officialAdmi
 import { OFFICIAL_PLUGIN_IDS } from '@/features/plugins/sites/featureOwners';
 import { BuiltinPluginSource } from '@/features/plugins/sources/BuiltinPluginSource';
 
+import { fillMenu, setup as canvasMenu } from '../canvasExport/__tests__/fixtures';
 import { CANVAS_MARKDOWN_BUTTON_CLASS } from '../canvasExport/menuInjection';
 import { createGeminiBuiltinStartup } from '../geminiBuiltinStartup';
 import { registerBuiltinNativeHandlers } from '../pluginNativeRegistration';
@@ -26,28 +27,12 @@ vi.mock('@/utils/i18n', async (importOriginal) => ({
 
 const ID = OFFICIAL_PLUGIN_IDS.geminiCanvasCopy;
 const SWITCH = StorageKeys.CANVAS_COPY_ENABLED;
-const NATIVE_ITEM = `
-  <button class="mat-mdc-menu-item" role="menuitem">
-    <mat-icon>share</mat-icon><span class="mat-mdc-menu-item-text">Share</span>
-  </button>`;
 let harness: LifecycleHarness;
 let cleanupManager: CleanupManager;
 let host: PluginHost | null;
 
 async function flush(): Promise<void> {
   for (let round = 0; round < 60; round++) await Promise.resolve();
-}
-
-function canvasMenu(withNativeItem = true): HTMLElement {
-  document.body.innerHTML = `
-    <immersive-editor><div class="ProseMirror"><h1>Canvas draft</h1><p>A paragraph.</p></div></immersive-editor>
-    <share-button data-test-id="consolidated-share-button">
-      <button aria-haspopup="menu" aria-expanded="true" aria-controls="canvas-share-menu">Share</button>
-    </share-button>
-    <div id="canvas-share-menu" class="mat-mdc-menu-panel" role="menu">
-      <div class="mat-mdc-menu-content">${withNativeItem ? NATIVE_ITEM : ''}</div>
-    </div>`;
-  return document.getElementById('canvas-share-menu')!;
 }
 
 const buttons = (): NodeListOf<HTMLElement> =>
@@ -178,7 +163,7 @@ describe('Gemini Canvas copy through its registered official plugin', () => {
 
     host!.stop();
     await flush();
-    panel.querySelector('.mat-mdc-menu-content')!.innerHTML = NATIVE_ITEM;
+    fillMenu(panel);
     await vi.advanceTimersByTimeAsync(1_000);
 
     expect(buttons()).toHaveLength(0);

@@ -3,9 +3,9 @@ import {
   updateMenuItemTemplateLabel,
 } from '../shared/nativeMenuItemTemplate';
 
-const MENU_PANEL_SELECTOR = '.mat-mdc-menu-panel[role="menu"]';
-const EXPANDED_MENU_TRIGGER_SELECTOR = '[aria-haspopup="menu"][aria-expanded="true"]';
-const CANVAS_SHARE_WRAPPER_SELECTOR = 'share-button[data-test-id="consolidated-share-button"]';
+export const CANVAS_MENU_SELECTOR = 'gem-menu[role="menu"]';
+const DOWNLOAD_ITEM_SELECTOR = 'gem-menu-item[value="download_md"]';
+const CANVAS_OWNER_SELECTOR = 'inline-preview, immersive-panel';
 export const CANVAS_MARKDOWN_BUTTON_CLASS = 'gv-canvas-copy-markdown-btn';
 
 export type CanvasMenuInjectionOptions = {
@@ -13,91 +13,125 @@ export type CanvasMenuInjectionOptions = {
   tooltip: string;
 };
 
-function parseControlledIds(trigger: HTMLElement): string[] {
-  const raw = `${trigger.getAttribute('aria-controls') || ''} ${
-    trigger.getAttribute('aria-owns') || ''
-  }`;
-  return raw
-    .split(/\s+/)
-    .map((x) => x.trim())
-    .filter(Boolean);
+export function findCanvasProseMirrorRoot(menuPanel: HTMLElement): HTMLElement | null {
+  if (document.querySelector('deep-research-immersive-panel')) return null;
+  const trigger = menuPanel.id
+    ? Array.from(document.querySelectorAll<HTMLElement>('[aria-controls], [aria-owns]')).find(
+        (element) =>
+          `${element.getAttribute('aria-controls') || ''} ${element.getAttribute('aria-owns') || ''}`
+            .split(/\s+/)
+            .includes(menuPanel.id),
+      )
+    : null;
+  // Inline and expanded Canvas editors coexist; a document-wide query copies the wrong one.
+  const owner = (trigger || menuPanel).closest(CANVAS_OWNER_SELECTOR);
+  return owner?.querySelector<HTMLElement>('immersive-editor .ProseMirror') ?? null;
 }
 
-function resolveExpandedMenuTrigger(menuPanel: HTMLElement): HTMLElement | null {
-  const triggers = Array.from(
-    document.querySelectorAll<HTMLElement>(EXPANDED_MENU_TRIGGER_SELECTOR),
+export function isCanvasExportMenuPanel(menuPanel: HTMLElement): boolean {
+  return (
+    menuPanel.matches(CANVAS_MENU_SELECTOR) &&
+    !!menuPanel.querySelector(DOWNLOAD_ITEM_SELECTOR) &&
+    !!findCanvasProseMirrorRoot(menuPanel)
   );
-  if (triggers.length === 0) return null;
-  const panelId = menuPanel.id;
-  if (panelId) {
-    const matched = triggers.find((trigger) => parseControlledIds(trigger).includes(panelId));
-    if (matched) return matched;
-  }
-  return triggers[triggers.length - 1] || null;
-}
-
-function findMenuContent(menuPanel: HTMLElement): HTMLElement | null {
-  return menuPanel.querySelector('.mat-mdc-menu-content') as HTMLElement | null;
-}
-
-export function isCanvasContext(): boolean {
-  if (document.querySelector('deep-research-immersive-panel')) return false;
-  return !!document.querySelector('immersive-editor');
-}
-
-export function isCanvasShareMenuPanel(menuPanel: HTMLElement): boolean {
-  if (!menuPanel.matches(MENU_PANEL_SELECTOR)) return false;
-  if (menuPanel.classList.contains('gds-mode-switch-menu')) return false;
-  if (!findMenuContent(menuPanel)) return false;
-  if (!isCanvasContext()) return false;
-
-  const trigger = resolveExpandedMenuTrigger(menuPanel);
-  if (!trigger) return false;
-  return !!trigger.closest(CANVAS_SHARE_WRAPPER_SELECTOR);
 }
 
 export function closeCanvasMenuOverlay(menuPanel: HTMLElement): void {
-  const backdrops = document.querySelectorAll<HTMLElement>('.cdk-overlay-backdrop');
-  const backdrop = backdrops.length > 0 ? backdrops[backdrops.length - 1] : null;
-  if (backdrop) {
-    backdrop.click();
-    return;
-  }
-  try {
-    menuPanel.remove();
-  } catch {}
+  // Let Gemini dispose its popover and restore trigger focus rather than removing host DOM.
+  menuPanel.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      key: 'Escape',
+      code: 'Escape',
+      keyCode: 27,
+      bubbles: true,
+      cancelable: true,
+    }),
+  );
 }
 
-export function findCanvasProseMirrorRoot(): HTMLElement | null {
-  return document.querySelector<HTMLElement>('immersive-editor .ProseMirror');
+export function updateCanvasCopyLabel(
+  button: HTMLElement,
+  options: CanvasMenuInjectionOptions,
+): void {
+  updateMenuItemTemplateLabel(button, options.label, options.tooltip);
+  button.setAttribute('arialabel', options.tooltip);
 }
 
 export function injectCanvasCopyMarkdownButton(
   menuPanel: HTMLElement,
   options: CanvasMenuInjectionOptions,
 ): HTMLElement | null {
-  if (!isCanvasShareMenuPanel(menuPanel)) return null;
-  const menuContent = findMenuContent(menuPanel);
-  if (!menuContent) return null;
-
-  const existing = menuContent.querySelector(
-    `.${CANVAS_MARKDOWN_BUTTON_CLASS}`,
-  ) as HTMLElement | null;
+  if (!isCanvasExportMenuPanel(menuPanel)) return null;
+  const downloadItem = menuPanel.querySelector<HTMLElement>(DOWNLOAD_ITEM_SELECTOR)!;
+  const existing = menuPanel.querySelector<HTMLElement>(`.${CANVAS_MARKDOWN_BUTTON_CLASS}`);
   if (existing) {
-    updateMenuItemTemplateLabel(existing, options.label, options.tooltip);
+    updateCanvasCopyLabel(existing, options);
     return existing;
   }
 
   const button = createMenuItemFromNativeTemplate({
-    menuContent,
+    menuContent: menuPanel,
     injectedClassName: CANVAS_MARKDOWN_BUTTON_CLASS,
     iconName: 'content_copy',
     label: options.label,
     tooltip: options.tooltip,
-    excludedClassNames: [CANVAS_MARKDOWN_BUTTON_CLASS, 'share-button'],
   });
   if (!button) return null;
-
-  menuContent.appendChild(button);
+  // Cloning Angular markup must not retain the source item's action or active styling.
+  for (const element of [button, ...button.querySelectorAll<HTMLElement>('*')]) {
+    element.classList.remove('active');
+    element.removeAttribute('jslog');
+    element.removeAttribute('value');
+    element.removeAttribute('data-active');
+  }
+  button.setAttribute('tabindex', '-1');
+  button.setAttribute('leadingicon', 'content_copy');
+  updateCanvasCopyLabel(button, options);
+  downloadItem.after(button);
   return button;
+}
+
+function menuItems(menuPanel: HTMLElement): HTMLElement[] {
+  return Array.from(
+    menuPanel.querySelectorAll<HTMLElement>('gem-menu-item[role="menuitem"]'),
+  ).filter((item) => item.getAttribute('aria-disabled') !== 'true');
+}
+
+function focusMenuItem(items: HTMLElement[], target: HTMLElement): void {
+  for (const item of items) {
+    const active = item === target;
+    item.tabIndex = active ? 0 : -1;
+    item.classList.toggle('active', active);
+    item.setAttribute('data-active', String(active));
+    item.querySelector('gem-menu-item-content')?.classList.toggle('active', active);
+  }
+  target.focus();
+}
+
+export function removeCanvasCopyMarkdownButton(button: HTMLElement): void {
+  const panel = button.closest<HTMLElement>(CANVAS_MENU_SELECTOR);
+  if (panel && button.contains(document.activeElement)) {
+    const items = menuItems(panel);
+    const nativeItem = items.find((item) => item !== button);
+    // Disabling while Copy is focused must leave a reachable native menu item.
+    if (nativeItem) focusMenuItem(items, nativeItem);
+  }
+  button.remove();
+}
+
+export function navigateCanvasMenu(menuPanel: HTMLElement, event: KeyboardEvent): void {
+  if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+  const items = menuItems(menuPanel);
+  const current = items.findIndex((item) => item.contains(document.activeElement));
+  if (current < 0 || items.length === 0) return;
+  const next =
+    event.key === 'Home'
+      ? 0
+      : event.key === 'End'
+        ? items.length - 1
+        : (current + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+  // Angular's menu registry does not include cloned items, so include ours in arrow navigation.
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  focusMenuItem(items, items[next]);
 }

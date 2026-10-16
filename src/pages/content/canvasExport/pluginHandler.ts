@@ -5,16 +5,18 @@ import type { Dispose, PluginScope } from '@/features/plugins/runtime/pluginScop
 import { getTranslation, getTranslationSync, onCachedLanguageChange } from '@/utils/i18n';
 import type { TranslationKey } from '@/utils/translations';
 
-import { updateMenuItemTemplateLabel } from '../shared/nativeMenuItemTemplate';
 import { convertCanvasDomToMarkdown } from './markdownConverter';
 import {
   CANVAS_MARKDOWN_BUTTON_CLASS,
+  CANVAS_MENU_SELECTOR,
   closeCanvasMenuOverlay,
   findCanvasProseMirrorRoot,
   injectCanvasCopyMarkdownButton,
+  navigateCanvasMenu,
+  removeCanvasCopyMarkdownButton,
+  updateCanvasCopyLabel,
 } from './menuInjection';
 
-const MENU_PANEL_SELECTOR = '.mat-mdc-menu-panel[role="menu"]';
 const MENU_INJECTION_RETRY_LIMIT = 8;
 const MENU_INJECTION_RETRY_DELAY_MS = 80;
 
@@ -34,7 +36,7 @@ export function activateGeminiCanvasCopy(scope: PluginScope): void {
 
   const clearButtons = (): void => {
     for (const [button, release] of buttons) {
-      button.remove();
+      removeCanvasCopyMarkdownButton(button);
       void release();
     }
     buttons.clear();
@@ -49,9 +51,9 @@ export function activateGeminiCanvasCopy(scope: PluginScope): void {
     if (!scope.isDisposed) showExportNotice(message, { tone });
   };
 
-  const copy = async (): Promise<void> => {
+  const copy = async (panel: HTMLElement): Promise<void> => {
     if (scope.isDisposed) return;
-    const root = findCanvasProseMirrorRoot();
+    const root = findCanvasProseMirrorRoot(panel);
     const markdown = root ? convertCanvasDomToMarkdown(root).trim() : '';
     if (!markdown) {
       await notice('canvasExportEmpty', 'warning');
@@ -71,7 +73,7 @@ export function activateGeminiCanvasCopy(scope: PluginScope): void {
     if (scope.isDisposed) return;
     labels = readLabels();
     for (const button of buttons.keys()) {
-      updateMenuItemTemplateLabel(button, labels.label, labels.tooltip);
+      updateCanvasCopyLabel(button, labels);
     }
   };
   scope.effect(() => onCachedLanguageChange(refreshLabels), 'canvas-copy:language');
@@ -91,14 +93,36 @@ export function activateGeminiCanvasCopy(scope: PluginScope): void {
             if (retriesLeft > 0) schedule(panel, retriesLeft - 1);
             return;
           }
-          const releaseClick = scope.on(button, 'click', (event) => {
+          const activate = (event: Event): void => {
             if (scope.isDisposed) return;
             event.preventDefault();
-            event.stopPropagation();
-            void copy();
+            event.stopImmediatePropagation();
+            void copy(panel);
             closeCanvasMenuOverlay(panel);
+          };
+          const releaseClick = scope.on(button, 'click', activate);
+          const releaseKey = scope.on(button, 'keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              if (!event.repeat) activate(event);
+              else {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+              }
+            }
           });
-          buttons.set(button, releaseClick);
+          const releaseNavigation = scope.on(
+            panel,
+            'keydown',
+            (event) => {
+              if (!scope.isDisposed) navigateCanvasMenu(panel, event);
+            },
+            { capture: true },
+          );
+          buttons.set(button, () => {
+            void releaseClick();
+            void releaseKey();
+            void releaseNavigation();
+          });
         },
         retriesLeft === MENU_INJECTION_RETRY_LIMIT ? 30 : MENU_INJECTION_RETRY_DELAY_MS,
       ),
@@ -116,7 +140,7 @@ export function activateGeminiCanvasCopy(scope: PluginScope): void {
     for (const [button, release] of buttons) {
       if (!button.isConnected) {
         // Gemini can retain detached overlays; remove our node and its click listener too.
-        button.remove();
+        removeCanvasCopyMarkdownButton(button);
         void release();
         buttons.delete(button);
       }
@@ -124,11 +148,13 @@ export function activateGeminiCanvasCopy(scope: PluginScope): void {
     for (const mutation of mutations) {
       for (const node of mutation.addedNodes) {
         if (!(node instanceof HTMLElement)) continue;
-        const closest = node.closest<HTMLElement>(MENU_PANEL_SELECTOR);
+        const closest = node.closest<HTMLElement>(CANVAS_MENU_SELECTOR);
         if (closest) schedule(closest);
-        node.querySelectorAll<HTMLElement>(MENU_PANEL_SELECTOR).forEach((panel) => schedule(panel));
+        node
+          .querySelectorAll<HTMLElement>(CANVAS_MENU_SELECTOR)
+          .forEach((panel) => schedule(panel));
       }
     }
   });
-  document.querySelectorAll<HTMLElement>(MENU_PANEL_SELECTOR).forEach((panel) => schedule(panel));
+  document.querySelectorAll<HTMLElement>(CANVAS_MENU_SELECTOR).forEach((panel) => schedule(panel));
 }

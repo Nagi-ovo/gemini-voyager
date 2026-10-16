@@ -7,6 +7,7 @@ import { getTranslation, setCachedLanguage } from '@/utils/i18n';
 import { type LifecycleHarness, installLifecycleHarness } from '../../__tests__/lifecycleHarness';
 import { CANVAS_MARKDOWN_BUTTON_CLASS } from '../menuInjection';
 import { activateGeminiCanvasCopy } from '../pluginHandler';
+import { canvasFixture, fillMenu, setup } from './fixtures';
 
 vi.mock('@/utils/i18n', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/utils/i18n')>()),
@@ -21,23 +22,6 @@ const buttons = () => document.querySelectorAll<HTMLElement>(selector);
 const flush = async () => {
   for (let i = 0; i < 12; i++) await Promise.resolve();
 };
-
-function setup(ready = true): HTMLElement {
-  document.body.innerHTML = `
-    <immersive-editor><div class="ProseMirror"><h1>Document</h1><p>Hello <strong>world</strong></p></div></immersive-editor>
-    <share-button data-test-id="consolidated-share-button">
-      <button aria-haspopup="menu" aria-expanded="true" aria-controls="canvas-menu"></button>
-    </share-button>
-    <div id="canvas-menu" class="mat-mdc-menu-panel" role="menu"></div>`;
-  const panel = document.getElementById('canvas-menu')!;
-  if (ready) fillMenu(panel);
-  return panel;
-}
-
-function fillMenu(panel: HTMLElement): void {
-  panel.innerHTML =
-    '<div class="mat-mdc-menu-content"><button class="mat-mdc-menu-item" role="menuitem"><mat-icon fonticon="share"></mat-icon><span class="mat-mdc-menu-item-text">Share</span></button></div>';
-}
 
 async function mount(): Promise<void> {
   activateGeminiCanvasCopy(scope);
@@ -69,8 +53,12 @@ afterEach(async () => {
 });
 
 describe('Canvas copy plugin lifecycle', () => {
-  it('copies converted Markdown once and closes the share menu', async () => {
-    setup();
+  it('copies converted Markdown once and requests native Export menu dismissal', async () => {
+    const panel = setup();
+    const dismiss = vi.fn((event: KeyboardEvent) => {
+      if (event.key === 'Escape') panel.remove();
+    });
+    panel.addEventListener('keydown', dismiss);
     await mount();
     expect(buttons()).toHaveLength(1);
     buttons()[0].click();
@@ -80,6 +68,80 @@ describe('Canvas copy plugin lifecycle', () => {
     );
     expect(document.getElementById('canvas-menu')).toBeNull();
     expect(showExportNotice).toHaveBeenCalledWith('canvasExportCopied', { tone: 'success' });
+  });
+
+  it.each(['inline-preview', 'immersive-panel'])(
+    'copies the %s that opened Export when two editors exist',
+    async (owner) => {
+      setup(true, owner);
+      document.body.insertAdjacentHTML(
+        'afterbegin',
+        canvasFixture(
+          owner === 'inline-preview' ? 'immersive-panel' : 'inline-preview',
+          'other-menu',
+        ),
+      );
+      document.querySelector('.ProseMirror')!.textContent = 'Wrong document';
+      await mount();
+      buttons()[0].click();
+      expect(navigator.clipboard.writeText).toHaveBeenCalledExactlyOnceWith(
+        '# Document\n\nHello **world**',
+      );
+    },
+  );
+
+  it.each(['Enter', ' '])('reaches Copy with ArrowDown and activates with %s once', async (key) => {
+    const panel = setup();
+    await mount();
+    const native = panel.querySelector<HTMLElement>('[value="download_md"]')!;
+    native.focus();
+    native.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }),
+    );
+    expect(document.activeElement).toBe(buttons()[0]);
+    buttons()[0].dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+    );
+    expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps native menu actions intact and navigates in both directions', async () => {
+    const panel = setup();
+    await mount();
+    const download = panel.querySelector<HTMLElement>('[value="download_md"]')!;
+    const drive = panel.querySelector<HTMLElement>('[value="export_md_drive"]')!;
+    const nativeAction = vi.fn();
+    drive.addEventListener('click', nativeAction);
+    const press = (key: string) =>
+      document.activeElement!.dispatchEvent(
+        new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+      );
+    drive.focus();
+    press('ArrowUp');
+    expect(document.activeElement).toBe(buttons()[0]);
+    press('ArrowUp');
+    expect(document.activeElement).toBe(download);
+    press('End');
+    expect(document.activeElement).toBe(drive);
+    press('Home');
+    expect(document.activeElement).toBe(download);
+    drive.click();
+    expect(nativeAction).toHaveBeenCalledTimes(1);
+    expect(navigator.clipboard.writeText).not.toHaveBeenCalled();
+  });
+
+  it('does not bubble Copy activation into Gemini download handlers or repeat it', async () => {
+    const panel = setup();
+    await mount();
+    const hostAction = vi.fn();
+    panel.addEventListener('click', hostAction);
+    panel.addEventListener('keydown', hostAction);
+    buttons()[0].click();
+    buttons()[0].dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', repeat: true, bubbles: true, cancelable: true }),
+    );
+    expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(1);
+    expect(hostAction.mock.calls.map(([event]) => event.key)).toEqual(['Escape']);
   });
 
   it('warns about empty Canvas content without writing the clipboard', async () => {
@@ -143,6 +205,24 @@ describe('Canvas copy plugin lifecycle', () => {
     expect(harness.ledger.openStorageListeners()).toBe(0);
     expect(harness.ledger.openListeners({ includeDetached: true })).toHaveLength(0);
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('disabling while Copy is focused leaves the native Export menu keyboard reachable', async () => {
+    const panel = setup();
+    await mount();
+    const download = panel.querySelector<HTMLElement>('[value="download_md"]')!;
+    download.focus();
+    download.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    expect(document.activeElement).toBe(buttons()[0]);
+    const disposal = scope.dispose();
+    expect(buttons()).toHaveLength(0);
+    expect(document.activeElement).toBe(download);
+    expect(download.tabIndex).toBe(0);
+    expect(download.classList.contains('active')).toBe(true);
+    expect(download.querySelector('gem-menu-item-content')?.classList.contains('active')).toBe(
+      true,
+    );
+    await disposal;
   });
 
   it('teardown during a pending retry cannot inject later', async () => {
