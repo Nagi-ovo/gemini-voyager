@@ -2,6 +2,7 @@ import React from 'react';
 
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { isRTLLanguage } from '@/core/utils/rtl';
 import type { PluginStatus } from '@/features/plugins/runtime/pluginStatus';
 import type { PluginManifest } from '@/features/plugins/types';
 import type { TranslationKey } from '@/utils/translations';
@@ -44,7 +45,11 @@ export function OfficialPluginList({
   t,
 }: OfficialPluginListProps) {
   return (
-    <Card className="p-4 transition-all hover:shadow-md">
+    // The popup itself sets no direction, so the card mirrors itself for RTL languages.
+    <Card
+      className="p-4 transition-all hover:shadow-md"
+      dir={isRTLLanguage(language) ? 'rtl' : undefined}
+    >
       <CardTitle className="mb-2">{t('pluginsTitle')}</CardTitle>
       <CardContent className="space-y-4 p-0">
         <p className="text-muted-foreground text-xs">{t('pluginsNativeDescription')}</p>
@@ -113,7 +118,7 @@ function OfficialPluginListRow({
       <div className="min-w-0 flex-1 text-start">
         <div className="flex items-center gap-1">
           <label htmlFor={inputId} className="cursor-pointer text-sm font-medium">
-            {displayName(pickLocalized(manifest, 'name', language))}
+            <bdi>{displayName(pickLocalized(manifest, 'name', language))}</bdi>
           </label>
           {entry.experimental && <ExperimentalBadge title={t('experimentalLabel')} />}
         </div>
