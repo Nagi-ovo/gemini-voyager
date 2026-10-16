@@ -27,9 +27,16 @@ export class TimelineTurns {
   ): TimelineMarker[] {
     let elements = this.filterTopLevel(Array.from(container.querySelectorAll(selector)));
     if (elements.length === 0) return [];
-    const firstOffset = elements[0].offsetTop;
-    elements = this.dedupeByTextAndOffset(elements, firstOffset);
-    const span = Math.max(1, elements[elements.length - 1].offsetTop - firstOffset);
+    // `offsetTop` is relative to each turn's own positioned wrapper, the same for every turn, so
+    // repeated prompts ("continue") collapsed into one marker; measure within the conversation.
+    const contentTop = container.getBoundingClientRect().top - container.scrollTop;
+    const offsets = new Map(
+      elements.map((element) => [element, element.getBoundingClientRect().top - contentTop]),
+    );
+    const offsetOf = (element: HTMLElement): number => offsets.get(element) ?? 0;
+    const firstOffset = offsetOf(elements[0]);
+    elements = this.dedupeByTextAndOffset(elements, firstOffset, offsetOf);
+    const span = Math.max(1, offsetOf(elements[elements.length - 1]) - firstOffset);
     const summaries = this.collectAssistantSummaries(elements, container);
     const owners = this.collectExistingTurnIdOwners(elements);
     const previousOwners = this.collectPreviousMarkerElementsById(previousMarkers);
@@ -39,7 +46,7 @@ export class TimelineTurns {
       element,
       summary: this.getTurnTextCached(element),
       assistantSummary: summaries.get(element) ?? '',
-      baseN: Math.max(0, Math.min(1, (element.offsetTop - firstOffset) / span)),
+      baseN: Math.max(0, Math.min(1, (offsetOf(element) - firstOffset) / span)),
       starred: false,
     }));
   }
@@ -210,14 +217,18 @@ export class TimelineTurns {
   /**
    * Performance-optimized deduplication with cached text normalization
    */
-  private dedupeByTextAndOffset(elements: HTMLElement[], firstTurnOffset: number): HTMLElement[] {
+  private dedupeByTextAndOffset(
+    elements: HTMLElement[],
+    firstTurnOffset: number,
+    offsetOf: (element: HTMLElement) => number,
+  ): HTMLElement[] {
     const seen = new Set<string>();
     const out: HTMLElement[] = [];
 
     for (const el of elements) {
       const normalizedText = this.getTurnTextCached(el);
 
-      const offsetFromStart = (el.offsetTop || 0) - firstTurnOffset;
+      const offsetFromStart = offsetOf(el) - firstTurnOffset;
       const key = `${normalizedText}|${Math.round(offsetFromStart)}`;
 
       if (seen.has(key)) continue;

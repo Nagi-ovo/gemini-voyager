@@ -36,6 +36,22 @@ describe('TimelineTurns turn ids', () => {
     vi.restoreAllMocks();
   });
 
+  it('gives every repeated prompt its own marker, though each sits at the same offset in its wrapper', () => {
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    // Gemini wraps each turn in its own positioned box, so `offsetTop` is the same for all.
+    const repeats = [0, 300, 600].map((top) => {
+      const turn = createUserTurn('continue', top);
+      Object.defineProperty(turn, 'offsetTop', { value: 24, configurable: true });
+      return turn;
+    });
+    container.append(...repeats);
+
+    const markers = new TimelineTurns().collect(container, '.user');
+    expect(markers.map((marker) => marker.element)).toEqual(repeats);
+    expect(markers.map((marker) => marker.baseN)).toEqual([0, 0.5, 1]);
+  });
+
   it('keeps existing turn ids unique when older turns are prepended', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
