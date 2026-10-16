@@ -10,10 +10,13 @@ const APPEARANCE_IDS = [
   OFFICIAL_PLUGIN_IDS.geminiChatFontSize,
   OFFICIAL_PLUGIN_IDS.geminiChatLineHeight,
   OFFICIAL_PLUGIN_IDS.geminiEditInputWidth,
+  OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
+  OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide,
+  OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide,
 ];
 
 describe('Gemini chat appearance start points', () => {
-  it('admits width, font size, line-height with paragraph spacing and edit input width at the layout start point', async () => {
+  it('admits chat and sidebar appearance at the layout start point', async () => {
     const admission = createOfficialAdmission();
     for (const id of APPEARANCE_IDS) expect(admission.stateOf(id)).toBe('pending');
 

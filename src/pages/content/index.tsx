@@ -50,8 +50,6 @@ import { resolvePromptSiteAdapter } from './prompt/resolvePromptSiteAdapter';
 import { slashPromptCoachmarkStep } from './prompt/slashPromptCoachmark';
 import { createGeminiRendererStartup } from './rendererStartup';
 import { createSelectionStartup } from './selectionStartup';
-import { startSidebarAutoHide } from './sidebarAutoHide';
-import { startSidebarWidthAdjuster } from './sidebarWidth';
 import {
   maybeShowRulerTimelineCoachmark,
   rulerTimelineCoachmarkStep,
@@ -239,8 +237,6 @@ async function initializeFeatures(): Promise<void> {
       startFolderSpacingAdjuster('gemini');
       startFolderItemFontSizeAdjuster();
       await settle(startGeminiChatAppearance(officialAdmission, pageLifetime.signal));
-      startSidebarWidthAdjuster();
-      startSidebarAutoHide();
       await delay(LIGHT_FEATURE_INIT_DELAY);
 
       await settle(geminiInputs.startInputCollapse());

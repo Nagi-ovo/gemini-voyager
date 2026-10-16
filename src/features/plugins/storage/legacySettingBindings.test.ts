@@ -69,6 +69,26 @@ afterEach(() => {
 });
 
 describe('legacy enable bindings', () => {
+  it('derives sidebar width only from a customized initial width and preserves explicit switches', () => {
+    const id = OFFICIAL_PLUGIN_IDS.geminiSidebarWidth;
+    const key = StorageKeys.SIDEBAR_WIDTH_ENABLED;
+    const value = StorageKeys.SIDEBAR_WIDTH;
+    const stale = { [id]: { enabled: true, settings: { widthPx: 500 } } };
+    expect(resolveEffectiveEnabled(stale, {}, id)).toBe(false);
+    expect(resolveEffectiveEnabled(stale, { [value]: 312 }, id)).toBe(false);
+    for (const stored of [26, 390, '390']) {
+      expect(resolveEffectiveEnabled(stale, { [value]: stored }, id)).toBe(true);
+      expect(resolveEffectiveEnabled(stale, { [value]: stored, [key]: false }, id)).toBe(false);
+      expect(
+        resolveEffectiveEnabled(stale, { [value]: stored }, id, (changed) => changed === key),
+      ).toBe(false);
+      expect(
+        resolveEffectiveEnabled(stale, { [value]: stored }, id, (changed) => changed === value),
+      ).toBe(false);
+    }
+    expect(legacyEnableWrite(id, false)).toEqual({ [key]: false });
+  });
+
   it('bind every official feature to a legacy key', () => {
     for (const owned of FEATURE_OWNERS) {
       expect(legacyBindingFor(owned.officialPluginId)?.area).toBe('sync');
@@ -88,6 +108,10 @@ describe('legacy enable bindings', () => {
         StorageKeys.CHAT_LINE_HEIGHT_ENABLED,
         StorageKeys.CHAT_WIDTH_ENABLED,
         StorageKeys.EDIT_INPUT_WIDTH_ENABLED,
+        StorageKeys.SIDEBAR_WIDTH_ENABLED,
+        StorageKeys.SIDEBAR_WIDTH,
+        StorageKeys.GV_SIDEBAR_AUTO_HIDE,
+        StorageKeys.GV_SIDEBAR_FULL_HIDE,
         StorageKeys.CANVAS_COPY_ENABLED,
         StorageKeys.USER_LATEX_ENABLED,
         StorageKeys.CODE_BLOCK_COLLAPSE_ENABLED,
@@ -162,7 +186,14 @@ describe('legacy enable bindings', () => {
   ])(
     'read a stored %s for the stage 3 switches as production does',
     (_l, stored, appearance, on) => {
-      for (const id of [FONT, SPACING, WIDTH])
+      for (const id of [
+        FONT,
+        SPACING,
+        WIDTH,
+        OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
+        OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide,
+        OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide,
+      ])
         expect(legacyBindingFor(id)?.read(stored)).toBe(appearance);
       for (const id of [LATEX, COLLAPSE, ...DIAGRAMS])
         expect(legacyBindingFor(id)?.read(stored)).toBe(on);

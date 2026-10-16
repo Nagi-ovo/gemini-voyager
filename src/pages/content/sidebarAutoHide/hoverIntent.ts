@@ -54,6 +54,7 @@ interface HoverIntentCallbacks {
 }
 
 export function createHoverIntent(callbacks: HoverIntentCallbacks) {
+  let initialCollapseTimeoutId: number | null = null;
   let enterTimeoutId: number | null = null;
   let leaveTimeoutId: number | null = null;
   let sidenavElement: HTMLElement | null = null;
@@ -76,6 +77,10 @@ export function createHoverIntent(callbacks: HoverIntentCallbacks) {
     if (leaveTimeoutId !== null) {
       window.clearTimeout(leaveTimeoutId);
       leaveTimeoutId = null;
+    }
+    if (initialCollapseTimeoutId !== null) {
+      window.clearTimeout(initialCollapseTimeoutId);
+      initialCollapseTimeoutId = null;
     }
     resetPredictiveState();
   }
@@ -314,7 +319,8 @@ export function createHoverIntent(callbacks: HoverIntentCallbacks) {
       detachPredictiveListener();
     },
     scheduleInitialCollapse() {
-      setTimeout(() => {
+      initialCollapseTimeoutId = window.setTimeout(() => {
+        initialCollapseTimeoutId = null;
         if (!callbacks.isEnabled()) return;
         if (sidenavElement && !sidenavElement.matches(':hover') && !isPopupOrDialogOpen()) {
           callbacks.collapse();

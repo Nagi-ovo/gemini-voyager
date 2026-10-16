@@ -23,6 +23,9 @@ export type OwnedFeatureId =
   | 'chatLineHeight'
   | 'chatWidth'
   | 'editInputWidth'
+  | 'sidebarWidth'
+  | 'sidebarAutoHide'
+  | 'sidebarFullHide'
   | 'canvasCopy'
   | 'userLatex'
   | 'codeCollapse'
@@ -56,6 +59,9 @@ export const OFFICIAL_PLUGIN_IDS = {
   geminiChatWidth: 'voyager.gemini-chat-width',
   geminiEditInputWidth: 'voyager.gemini-edit-input-width',
   geminiCanvasCopy: 'voyager.gemini-canvas-copy',
+  geminiSidebarWidth: 'voyager.gemini-sidebar-width',
+  geminiSidebarAutoHide: 'voyager.gemini-sidebar-auto-hide',
+  geminiSidebarFullHide: 'voyager.gemini-sidebar-full-hide',
   geminiUserLatex: 'voyager.gemini-user-latex',
   geminiCodeCollapse: 'voyager.gemini-code-collapse',
   geminiWaveDrom: 'voyager.gemini-wavedrom',
@@ -94,6 +100,27 @@ export interface OwnedFeature {
 }
 
 export const FEATURE_OWNERS: readonly OwnedFeature[] = [
+  {
+    site: 'gemini',
+    feature: 'sidebarWidth',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'sidebarAutoHide',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide,
+    handlers: [],
+    healthTracking: false,
+  },
+  {
+    site: 'gemini',
+    feature: 'sidebarFullHide',
+    officialPluginId: OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide,
+    handlers: [],
+    healthTracking: false,
+  },
   {
     site: 'gemini',
     feature: 'timeline',

@@ -1,14 +1,23 @@
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { startSidebarWidthAdjuster } from '../index';
+import { PluginScope } from '@/features/plugins/runtime/pluginScope';
+
+import { activateGeminiSidebarWidth, SIDEBAR_WIDTH_STYLE_ID } from '../pluginHandler';
+
+let scope: PluginScope;
+beforeEach(() => {
+  scope = new PluginScope();
+});
+function activate(): string {
+  activateGeminiSidebarWidth(scope, { widthPx: 400 });
+  return document.getElementById(SIDEBAR_WIDTH_STYLE_ID)?.textContent ?? '';
+}
 
 const hadOwnElementsFromPoint = Object.prototype.hasOwnProperty.call(document, 'elementsFromPoint');
 const originalElementsFromPoint = document.elementsFromPoint;
 
-afterEach(() => {
-  window.dispatchEvent(new Event('beforeunload'));
+afterEach(async () => {
+  await scope.dispose();
   document.body.innerHTML = '';
   if (hadOwnElementsFromPoint) {
     Object.defineProperty(document, 'elementsFromPoint', {
@@ -22,34 +31,52 @@ afterEach(() => {
 });
 
 describe('sidebar width title centering', () => {
-  it('does not enable pointer events on all mode-switcher descendants', () => {
-    const code = readFileSync(
-      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
-      'utf8',
+  it('reports a search-button hit blocked by an overlapping header', () => {
+    document.body.innerHTML =
+      '<search-nav-button><button>Search</button></search-nav-button><div id="blocker"></div>';
+    const button = document.querySelector('button')!;
+    const blocker = document.getElementById('blocker')!;
+    vi.spyOn(button, 'getBoundingClientRect').mockReturnValue({
+      left: 100,
+      right: 132,
+      top: 100,
+      bottom: 132,
+      width: 32,
+      height: 32,
+    } as DOMRect);
+    Object.defineProperty(document, 'elementsFromPoint', {
+      configurable: true,
+      value: vi.fn(() => [blocker, button]),
+    });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    activate();
+    blocker.dispatchEvent(
+      new MouseEvent('pointerdown', {
+        bubbles: true,
+        clientX: 116,
+        clientY: 116,
+      }),
     );
+    expect(warn).toHaveBeenCalledWith(
+      '[Gemini Voyager][sidebarWidth debug] Search button hit blocked',
+      expect.objectContaining({
+        target: 'div#blocker',
+        searchButton: 'button',
+        topElement: 'div#blocker',
+      }),
+    );
+  });
+
+  it('does not enable pointer events on all mode-switcher descendants', () => {
+    const code = activate();
 
     expect(code).not.toContain('#app-root > main > div > bard-mode-switcher * {');
     expect(code).toContain('#app-root > main > div > bard-mode-switcher :is(');
     expect(code).toContain("[role='button']");
   });
 
-  it('adds search-button hit-test diagnostics for blocked clicks', () => {
-    const code = readFileSync(
-      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
-      'utf8',
-    );
-
-    expect(code).toContain("window.addEventListener('pointerdown'");
-    expect(code).toContain('document.elementsFromPoint');
-    expect(code).toContain('[Gemini Voyager][sidebarWidth debug] Search button hit blocked');
-    expect(code).toContain("document.querySelector<HTMLElement>('search-nav-button button')");
-  });
-
   it('keeps top-bar-actions container transparent while preserving search button clicks', () => {
-    const code = readFileSync(
-      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
-      'utf8',
-    );
+    const code = activate();
 
     expect(code).toContain('.top-bar-actions {');
     expect(code).toContain('top-bar-actions .top-bar-actions');
@@ -65,10 +92,7 @@ describe('sidebar width title centering', () => {
   });
 
   it('keeps custom sidebar toggle hosts clickable inside transparent top-bar actions', () => {
-    const code = readFileSync(
-      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
-      'utf8',
-    );
+    const code = activate();
 
     expect(code).toContain('top-bar-actions side-nav-sparkle-button');
     expect(code).toContain('top-bar-actions side-nav-sparkle-button button');
@@ -79,30 +103,20 @@ describe('sidebar width title centering', () => {
   });
 
   it('does not visually lift the in-sidenav toggle above the fixed top-bar-actions overlay', () => {
-    const code = readFileSync(
-      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
-      'utf8',
-    );
+    const code = activate();
 
     expect(code).not.toContain('bard-sidenav side-navigation-content > div > button');
-    expect(code).toContain('bard-sidenav .close-sidenav-button');
-    expect(code).toContain('bard-sidenav button[aria-label="Close sidebar"]');
-    expect(code).toContain('bard-sidenav button[aria-label="Open sidebar"]');
-    expect(code).toContain("new Set(['side_nav', 'side_nav_expand'])");
     expect(code).not.toContain('bard-sidenav button:has(mat-icon[fonticon="side_nav"])');
     expect(code).not.toContain('bard-sidenav button:has(mat-icon[fonticon="side_nav_expand"])');
     expect(code).not.toContain('z-index: 20 !important;');
 
-    const injectedStyle = code.match(/return `([\s\S]*?)`;/)?.[1] ?? '';
+    const injectedStyle = code;
     expect(injectedStyle).not.toContain('close-sidenav-button');
     expect(injectedStyle).not.toContain('position: relative !important;');
   });
 
   it("lets Gemini's default-offset side-nav menu button pass through to the real close button", () => {
-    const code = readFileSync(
-      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
-      'utf8',
-    );
+    const code = activate();
 
     expect(code).toContain('chat-app-side-nav-menu-button {');
     expect(code).toContain('chat-app-side-nav-menu-button side-nav-sparkle-button');
@@ -119,28 +133,9 @@ describe('sidebar width title centering', () => {
       code.indexOf('top-bar-actions :is('),
     );
     expect(code).toContain('pointer-events: none !important;');
-    expect(code).not.toContain("window.addEventListener('click'");
   });
 
-  it('forwards blocked sidebar toggle hits to the real in-sidenav button', () => {
-    const code = readFileSync(
-      resolve(process.cwd(), 'src/pages/content/sidebarWidth/index.ts'),
-      'utf8',
-    );
-
-    expect(code).toContain('function setupSidebarToggleHitGuard()');
-    expect(code).toContain('SIDEBAR_TOGGLE_BUTTON_SELECTOR');
-    expect(code).toContain('getVisibleSidebarToggleButtons()');
-    expect(code).toContain("window.addEventListener('pointerdown', onPointerDownCapture, true)");
-    expect(code).toContain('document.elementsFromPoint');
-    expect(code).toContain('[Gemini Voyager][sidebarWidth debug] Sidebar toggle hit blocked');
-    expect(code).toContain('event.preventDefault()');
-    expect(code).toContain('event.stopImmediatePropagation()');
-    expect(code).toContain('toggleButton.click()');
-    expect(code).toContain('setupSidebarToggleHitGuard();');
-  });
-
-  it('clicks the real sidebar toggle when an overlay receives the center hit', () => {
+  it('clicks the real sidebar toggle when an overlay receives the center hit and stops on disposal', async () => {
     document.body.innerHTML = `
       <bard-sidenav>
         <side-navigation-content>
@@ -178,7 +173,7 @@ describe('sidebar width title centering', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const clickSpy = vi.spyOn(button, 'click').mockImplementation(() => {});
 
-    startSidebarWidthAdjuster();
+    activate();
 
     const event = new MouseEvent('pointerdown', {
       bubbles: true,
@@ -198,6 +193,17 @@ describe('sidebar width title centering', () => {
         toggleButton: expect.stringContaining('button'),
       }),
     );
+    await scope.dispose();
+    const afterStop = new MouseEvent('pointerdown', {
+      bubbles: true,
+      cancelable: true,
+      clientX: 116,
+      clientY: 116,
+      button: 0,
+    });
+    blocker.dispatchEvent(afterStop);
+    expect(afterStop.defaultPrevented).toBe(false);
+    expect(clickSpy).toHaveBeenCalledTimes(1);
   });
 
   it('does not treat regular side-nav buttons as sidebar toggles', () => {
@@ -238,7 +244,7 @@ describe('sidebar width title centering', () => {
     });
     const clickSpy = vi.spyOn(newChatButton, 'click').mockImplementation(() => {});
 
-    startSidebarWidthAdjuster();
+    activate();
 
     const event = new MouseEvent('pointerdown', {
       bubbles: true,

@@ -37,10 +37,24 @@ import { activateGeminiQuoteReply } from './quoteReply/pluginHandler';
 import { activateGeminiResearchPack } from './researchPack/pluginHandler';
 import { activateGeminiResponseNotification } from './responseNotification/pluginHandler';
 import { activateGeminiSafariEnterFix } from './sendBehavior/pluginHandler';
+import {
+  activateGeminiSidebarAutoHide,
+  activateGeminiSidebarFullHide,
+} from './sidebarAutoHide/pluginHandler';
+import {
+  activateGeminiSidebarWidth,
+  updateGeminiSidebarWidthSettings,
+} from './sidebarWidth/pluginHandler';
 import { activateGeminiTimeline } from './timeline/pluginHandler';
 import { activateGeminiUsageStatus } from './usageStatus/pluginHandler';
 
 export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = {
+  'voyager.gemini-sidebar-width': {
+    activate: activateGeminiSidebarWidth,
+    updateSettings: updateGeminiSidebarWidthSettings,
+  },
+  'voyager.gemini-sidebar-auto-hide': { activate: activateGeminiSidebarAutoHide },
+  'voyager.gemini-sidebar-full-hide': { activate: activateGeminiSidebarFullHide },
   'voyager.gemini-timeline': { activate: activateGeminiTimeline },
   'voyager.gemini-safari-enter-fix': { activate: activateGeminiSafariEnterFix },
   // formula-copy, input-vim and claude-timeline invoke primitives through a

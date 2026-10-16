@@ -1,6 +1,36 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { PluginScope } from '@/features/plugins/runtime/pluginScope';
 import { confirmDriver } from '@/tests/confirmDriver';
+
+const scopes: PluginScope[] = [];
+
+async function activateHide(settings: { autoHide?: boolean; fullHide?: boolean }) {
+  const { activateGeminiSidebarAutoHide, activateGeminiSidebarFullHide } =
+    await import('../pluginHandler');
+  const active: Partial<Record<'gvSidebarAutoHide' | 'gvSidebarFullHide', PluginScope>> = {};
+  const activate = (key: 'gvSidebarAutoHide' | 'gvSidebarFullHide') => {
+    if (active[key]) return;
+    const scope = new PluginScope();
+    scopes.push(scope);
+    active[key] = scope;
+    if (key === 'gvSidebarAutoHide') activateGeminiSidebarAutoHide(scope);
+    else activateGeminiSidebarFullHide(scope);
+  };
+  if (settings.autoHide) activate('gvSidebarAutoHide');
+  if (settings.fullHide) activate('gvSidebarFullHide');
+  return (changes: Record<string, { newValue: boolean }>, area = 'sync') => {
+    if (area !== 'sync') return;
+    for (const key of ['gvSidebarAutoHide', 'gvSidebarFullHide'] as const) {
+      if (!changes[key]) continue;
+      if (changes[key].newValue) activate(key);
+      else {
+        void active[key]?.dispose();
+        delete active[key];
+      }
+    }
+  };
+}
 
 function mockVisibleRect(element: HTMLElement, width: number = 300, height: number = 600): void {
   vi.spyOn(element, 'getBoundingClientRect').mockReturnValue({
@@ -35,21 +65,8 @@ async function installSidebar(
       .classList.toggle('collapsed');
   });
   toggleButton.addEventListener('click', toggleSpy);
-  (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-    (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-      callback({
-        gvSidebarAutoHide: settings.autoHide === true,
-        gvSidebarFullHide: settings.fullHide === true,
-      });
-    },
-  );
   const api = await import('../index');
-  api.startSidebarAutoHide();
-  const listener = vi.mocked(chrome.storage.onChanged.addListener).mock.calls.at(-1)![0];
-  const changeSettings = (
-    changes: Record<string, { newValue: boolean }>,
-    area: 'sync' | 'local' = 'sync',
-  ) => listener(changes, area);
+  const changeSettings = await activateHide(settings);
   return { sidenav, content, toggleButton, toggleSpy, changeSettings, ...api };
 }
 
@@ -62,8 +79,8 @@ describe('sidebarAutoHide', () => {
     document.body.className = '';
   });
 
-  afterEach(() => {
-    window.dispatchEvent(new Event('beforeunload'));
+  afterEach(async () => {
+    await Promise.all(scopes.splice(0).map((scope) => scope.dispose()));
     vi.useRealTimers();
   });
 
@@ -80,14 +97,7 @@ describe('sidebarAutoHide', () => {
     toggleButton.addEventListener('click', toggleSpy);
     document.body.appendChild(toggleButton);
 
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvSidebarAutoHide: true });
-      },
-    );
-
-    const { startSidebarAutoHide } = await import('../index');
-    startSidebarAutoHide();
+    await activateHide({ autoHide: true });
 
     const colorPicker = document.createElement('div');
     colorPicker.className = 'gv-color-picker-dialog';
@@ -119,14 +129,7 @@ describe('sidebarAutoHide', () => {
     toggleButton.addEventListener('click', toggleSpy);
     document.body.appendChild(toggleButton);
 
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvSidebarAutoHide: true });
-      },
-    );
-
-    const { startSidebarAutoHide } = await import('../index');
-    startSidebarAutoHide();
+    await activateHide({ autoHide: true });
 
     const { askConfirm } = await import('@/core/ui/confirm');
     const answer = askConfirm({
@@ -202,14 +205,7 @@ describe('sidebarAutoHide', () => {
     toggleButton.addEventListener('click', toggleSpy);
     document.body.appendChild(toggleButton);
 
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvSidebarAutoHide: true });
-      },
-    );
-
-    const { startSidebarAutoHide } = await import('../index');
-    startSidebarAutoHide();
+    await activateHide({ autoHide: true });
 
     sidenav.dispatchEvent(new Event('mouseenter'));
     vi.advanceTimersByTime(80); // shorter than new ENTER_DELAY_MS (150ms) — timer must not fire
@@ -237,14 +233,7 @@ describe('sidebarAutoHide', () => {
     });
     document.body.appendChild(toggleButton);
 
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvSidebarFullHide: true });
-      },
-    );
-
-    const { startSidebarAutoHide } = await import('../index');
-    startSidebarAutoHide();
+    await activateHide({ fullHide: true });
 
     vi.advanceTimersByTime(300);
     expect(document.documentElement.classList.contains('gv-sidebar-full-hide-collapsed')).toBe(
@@ -282,14 +271,7 @@ describe('sidebarAutoHide', () => {
     toggleButton.addEventListener('click', toggleSpy);
     document.body.appendChild(toggleButton);
 
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvSidebarAutoHide: false, gvSidebarFullHide: true });
-      },
-    );
-
-    const { startSidebarAutoHide } = await import('../index');
-    startSidebarAutoHide();
+    await activateHide({ autoHide: false, fullHide: true });
 
     vi.advanceTimersByTime(300);
     const edgeTrigger = document.getElementById('gv-sidebar-edge-trigger');
@@ -322,14 +304,7 @@ describe('sidebarAutoHide', () => {
     toggleButton.addEventListener('click', toggleSpy);
     document.body.appendChild(toggleButton);
 
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvSidebarAutoHide: true, gvSidebarFullHide: true });
-      },
-    );
-
-    const { startSidebarAutoHide } = await import('../index');
-    startSidebarAutoHide();
+    await activateHide({ autoHide: true, fullHide: true });
 
     // Advance past the 500ms initial-collapse timer (enable()) so it fires on an already-collapsed
     // sidebar (no-op). This prevents it from interfering after the edge trigger expand.
@@ -369,14 +344,8 @@ describe('sidebarAutoHide', () => {
     toggleButton.addEventListener('click', toggleSpy);
     document.body.appendChild(toggleButton);
 
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvSidebarAutoHide: true, gvSidebarFullHide: true });
-      },
-    );
-
-    const { keepSidebarExpanded, startSidebarAutoHide } = await import('../index');
-    startSidebarAutoHide();
+    const { keepSidebarExpanded } = await import('../index');
+    await activateHide({ autoHide: true, fullHide: true });
 
     expect(document.documentElement.classList.contains('gv-sidebar-full-hide-collapsed')).toBe(
       true,
@@ -444,14 +413,7 @@ describe('sidebarAutoHide', () => {
     });
     document.body.appendChild(toggleButton);
 
-    (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-      (_defaults: Record<string, unknown>, callback: (result: Record<string, unknown>) => void) => {
-        callback({ gvSidebarAutoHide: true, gvSidebarFullHide: true });
-      },
-    );
-
-    const { startSidebarAutoHide } = await import('../index');
-    startSidebarAutoHide();
+    await activateHide({ autoHide: true, fullHide: true });
 
     expect(document.getElementById('gv-sidebar-full-hide-style')).not.toBeNull();
 
@@ -505,17 +467,7 @@ describe('sidebarAutoHide', () => {
       toggleButton.addEventListener('click', toggleSpy);
       document.body.appendChild(toggleButton);
 
-      (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-        (
-          _defaults: Record<string, unknown>,
-          callback: (result: Record<string, unknown>) => void,
-        ) => {
-          callback({ gvSidebarAutoHide: true });
-        },
-      );
-
-      const { startSidebarAutoHide } = await import('../index');
-      startSidebarAutoHide();
+      await activateHide({ autoHide: true });
 
       // Let initial collapse timer fire (sidebar already collapsed → no-op)
       vi.advanceTimersByTime(600);
@@ -553,17 +505,7 @@ describe('sidebarAutoHide', () => {
       toggleButton.addEventListener('click', toggleSpy);
       document.body.appendChild(toggleButton);
 
-      (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-        (
-          _defaults: Record<string, unknown>,
-          callback: (result: Record<string, unknown>) => void,
-        ) => {
-          callback({ gvSidebarAutoHide: true });
-        },
-      );
-
-      const { startSidebarAutoHide } = await import('../index');
-      startSidebarAutoHide();
+      await activateHide({ autoHide: true });
 
       vi.advanceTimersByTime(600);
 
@@ -596,17 +538,7 @@ describe('sidebarAutoHide', () => {
       toggleButton.addEventListener('click', toggleSpy);
       document.body.appendChild(toggleButton);
 
-      (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-        (
-          _defaults: Record<string, unknown>,
-          callback: (result: Record<string, unknown>) => void,
-        ) => {
-          callback({ gvSidebarAutoHide: false, gvSidebarFullHide: true });
-        },
-      );
-
-      const { startSidebarAutoHide } = await import('../index');
-      startSidebarAutoHide();
+      await activateHide({ autoHide: false, fullHide: true });
 
       vi.advanceTimersByTime(300);
       vi.spyOn(performance, 'now').mockReturnValueOnce(2500).mockReturnValueOnce(2560);
@@ -638,17 +570,7 @@ describe('sidebarAutoHide', () => {
       toggleButton.addEventListener('click', toggleSpy);
       document.body.appendChild(toggleButton);
 
-      (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-        (
-          _defaults: Record<string, unknown>,
-          callback: (result: Record<string, unknown>) => void,
-        ) => {
-          callback({ gvSidebarAutoHide: true });
-        },
-      );
-
-      const { startSidebarAutoHide } = await import('../index');
-      startSidebarAutoHide();
+      await activateHide({ autoHide: true });
 
       vi.advanceTimersByTime(600);
 
@@ -696,20 +618,10 @@ describe('sidebarAutoHide', () => {
       visibleBtn.addEventListener('click', visibleSpy);
       document.body.appendChild(visibleBtn);
 
-      (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-        (
-          _defaults: Record<string, unknown>,
-          callback: (result: Record<string, unknown>) => void,
-        ) => {
-          callback({ gvSidebarAutoHide: true });
-        },
-      );
-
       const invisibleSpy = vi.fn();
       invisibleBtn.addEventListener('click', invisibleSpy);
 
-      const { startSidebarAutoHide } = await import('../index');
-      startSidebarAutoHide();
+      await activateHide({ autoHide: true });
 
       // Initial-collapse timer fires at 500ms; that's enough for one click.
       // The crucial assertion is that it lands on the visible button, never
@@ -738,17 +650,7 @@ describe('sidebarAutoHide', () => {
       localizedBtn.addEventListener('click', spy);
       document.body.appendChild(localizedBtn);
 
-      (chrome.storage.sync.get as unknown as ReturnType<typeof vi.fn>).mockImplementation(
-        (
-          _defaults: Record<string, unknown>,
-          callback: (result: Record<string, unknown>) => void,
-        ) => {
-          callback({ gvSidebarAutoHide: true });
-        },
-      );
-
-      const { startSidebarAutoHide } = await import('../index');
-      startSidebarAutoHide();
+      await activateHide({ autoHide: true });
 
       vi.advanceTimersByTime(600);
 
@@ -757,15 +659,13 @@ describe('sidebarAutoHide', () => {
       expect(spy).toHaveBeenCalled();
     });
   });
-  it('changes auto-hide and full-hide independently and ignores local settings events', async () => {
+  it('releasing either plugin preserves the remaining controller', async () => {
     const { sidenav, toggleSpy, changeSettings } = await installSidebar({
       autoHide: true,
       fullHide: true,
     });
     vi.advanceTimersByTime(600);
     const edge = document.getElementById('gv-sidebar-edge-trigger')!;
-    expect(edge.style.display).toBe('block');
-    changeSettings({ gvSidebarAutoHide: { newValue: false } }, 'local');
     expect(edge.style.display).toBe('block');
     changeSettings({ gvSidebarAutoHide: { newValue: false } });
     expect(edge.style.display).toBe('none');
@@ -868,5 +768,102 @@ describe('sidebarAutoHide', () => {
     vi.advanceTimersByTime(1300);
     expect(content.classList.contains('collapsed')).toBe(false);
     expect(toggleSpy).toHaveBeenCalledOnce();
+  });
+
+  it.each([{ autoHide: true }, { fullHide: true }])(
+    'honors a coachmark lease with only %j active and across off→on',
+    async (settings) => {
+      const { sidenav, content, keepSidebarExpanded, changeSettings } =
+        await installSidebar(settings);
+      const key = settings.autoHide ? 'gvSidebarAutoHide' : 'gvSidebarFullHide';
+      const release = keepSidebarExpanded();
+      expect(content.classList.contains('collapsed')).toBe(false);
+      changeSettings({ [key]: { newValue: false } });
+      await Promise.resolve();
+      changeSettings({ [key]: { newValue: true } });
+      sidenav.dispatchEvent(new Event('mouseleave'));
+      vi.advanceTimersByTime(700);
+      expect(content.classList.contains('collapsed')).toBe(false);
+      expect(document.documentElement.classList.contains('gv-sidebar-full-hide-collapsed')).toBe(
+        false,
+      );
+      release();
+      release();
+      if (settings.autoHide) {
+        sidenav.dispatchEvent(new Event('mouseleave'));
+        vi.advanceTimersByTime(400);
+        expect(content.classList.contains('collapsed')).toBe(true);
+      } else {
+        content.classList.add('collapsed');
+        vi.advanceTimersByTime(1000);
+        expect(document.documentElement.classList.contains('gv-sidebar-full-hide-collapsed')).toBe(
+          true,
+        );
+      }
+    },
+  );
+
+  it('keeps duplicate owners alive until their last scope releases', async () => {
+    const { sidenav, toggleSpy, changeSettings } = await installSidebar({ autoHide: true });
+    const releaseSecond = await activateHide({ autoHide: true });
+    changeSettings({ gvSidebarAutoHide: { newValue: false } });
+    expect(document.getElementById('gv-sidebar-auto-hide-style')).not.toBeNull();
+    sidenav.dispatchEvent(new Event('mouseenter'));
+    vi.advanceTimersByTime(150);
+    expect(toggleSpy).toHaveBeenCalledOnce();
+    releaseSecond({ gvSidebarAutoHide: { newValue: false } });
+    expect(document.getElementById('gv-sidebar-auto-hide-style')).toBeNull();
+  });
+
+  it('off→on cancels the old initial collapse deadline and does not duplicate listeners', async () => {
+    const added = vi.spyOn(document, 'addEventListener');
+    const removed = vi.spyOn(document, 'removeEventListener');
+    const { content, toggleSpy, changeSettings } = await installSidebar({ autoHide: true }, false);
+    vi.advanceTimersByTime(300);
+    changeSettings({ gvSidebarAutoHide: { newValue: false } });
+    changeSettings({ gvSidebarAutoHide: { newValue: true } });
+    vi.advanceTimersByTime(200);
+    // The previous activation's 500ms deadline must not collapse the new run.
+    expect(content.classList.contains('collapsed')).toBe(false);
+    vi.advanceTimersByTime(300);
+    expect(toggleSpy).toHaveBeenCalledOnce();
+    for (const event of ['click', 'mousemove']) {
+      const live = added.mock.calls.filter(
+        ([type, handler]) =>
+          type === event &&
+          !removed.mock.calls.some(
+            ([removedType, removedHandler]) => removedType === type && removedHandler === handler,
+          ),
+      );
+      expect(live).toHaveLength(1);
+    }
+    expect(document.querySelectorAll('#gv-sidebar-auto-hide-style')).toHaveLength(1);
+  });
+
+  it('last release cancels hover, resize, transition reconciliation and detached edge listeners', async () => {
+    const { sidenav, toggleSpy, changeSettings } = await installSidebar({
+      autoHide: true,
+      fullHide: true,
+    });
+    const edge = document.getElementById('gv-sidebar-edge-trigger')!;
+    edge.dispatchEvent(new Event('mouseenter'));
+    vi.advanceTimersByTime(150);
+    window.dispatchEvent(new Event('resize'));
+    vi.advanceTimersByTime(200);
+    changeSettings({
+      gvSidebarAutoHide: { newValue: false },
+      gvSidebarFullHide: { newValue: false },
+    });
+    await Promise.all(scopes.map((scope) => scope.dispose()));
+    toggleSpy.mockClear();
+    edge.dispatchEvent(new Event('mouseenter'));
+    sidenav.dispatchEvent(new Event('mouseenter'));
+    window.dispatchEvent(new Event('resize'));
+    vi.advanceTimersByTime(2000);
+    expect(toggleSpy).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+    expect(document.getElementById('gv-sidebar-edge-trigger')).toBeNull();
+    expect(document.getElementById('gv-sidebar-auto-hide-style')).toBeNull();
+    expect(document.getElementById('gv-sidebar-full-hide-style')).toBeNull();
   });
 });

@@ -52,6 +52,9 @@ const FEATURE_ORDER = [
   'prompt-history',
   'composer-counter',
   'reading-width',
+  'sidebar-width',
+  'sidebar-auto-hide',
+  'sidebar-full-hide',
   'reading-typography',
   'input-vim',
   'input-collapse',
@@ -124,6 +127,8 @@ const GUIDE_PAGES: Readonly<Record<string, string>> = {
   'ctrl-enter-send': 'send-behavior',
   'enter-send': 'send-behavior',
   'reading-typography': 'chat-font-size',
+  'sidebar-width': 'sidebar',
+  'sidebar-full-hide': 'sidebar-auto-hide',
 };
 
 interface PluginsLocale {

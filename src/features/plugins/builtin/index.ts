@@ -13,6 +13,9 @@ import { GEMINI_QUOTE_REPLY_MANIFEST } from './geminiQuoteReplyManifest';
 import { GEMINI_RESEARCH_PACK_MANIFEST } from './geminiResearchPackManifest';
 import { GEMINI_RESPONSE_NOTIFICATION_MANIFEST } from './geminiResponseNotificationManifest';
 import { GEMINI_SAFARI_ENTER_FIX_MANIFEST } from './geminiSafariEnterFixManifest';
+import { GEMINI_SIDEBAR_AUTO_HIDE_MANIFEST } from './geminiSidebarAutoHideManifest';
+import { GEMINI_SIDEBAR_FULL_HIDE_MANIFEST } from './geminiSidebarFullHideManifest';
+import { GEMINI_SIDEBAR_WIDTH_MANIFEST } from './geminiSidebarWidthManifest';
 import { GEMINI_TIMELINE_MANIFEST } from './geminiTimelineManifest';
 import { GEMINI_USAGE_STATUS_MANIFEST } from './geminiUsageStatusManifest';
 import { timelineManifest } from './timelineManifest';
@@ -387,6 +390,9 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
   GEMINI_SAFARI_ENTER_FIX_MANIFEST,
   GEMINI_CHAT_WIDTH_MANIFEST,
   GEMINI_EDIT_INPUT_WIDTH_MANIFEST,
+  GEMINI_SIDEBAR_WIDTH_MANIFEST,
+  GEMINI_SIDEBAR_AUTO_HIDE_MANIFEST,
+  GEMINI_SIDEBAR_FULL_HIDE_MANIFEST,
   GEMINI_CANVAS_COPY_MANIFEST,
   GEMINI_PROMPT_HISTORY_MANIFEST,
   GEMINI_INPUT_COLLAPSE_MANIFEST,

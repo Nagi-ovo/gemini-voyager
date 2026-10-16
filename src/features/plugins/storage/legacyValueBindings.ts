@@ -29,6 +29,7 @@ import {
   normalizeEditInputWidthPercent,
   normalizeParagraphSpacingPx,
 } from '@/core/utils/chatAppearanceValues';
+import { normalizeSidebarWidth } from '@/core/utils/sidebarWidthValues';
 
 import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
 import type { PluginSettings } from '../types';
@@ -69,6 +70,15 @@ function trueOnlyBinding(settingKey: string, legacyKey: string): LegacyValueBind
  * keeps reading its settings from `gvPluginsState`.
  */
 export const LEGACY_VALUE_BINDINGS: LegacyValueBindingTable = {
+  [OFFICIAL_PLUGIN_IDS.geminiSidebarWidth]: [
+    {
+      settingKey: 'widthPx',
+      legacyKey: StorageKeys.SIDEBAR_WIDTH,
+      read: normalizeSidebarWidth,
+      // The sidebar's native listener coerced finite values, including old numeric strings.
+      acceptsLiveChange: (value) => Number.isFinite(Number(value)),
+    },
+  ],
   [OFFICIAL_PLUGIN_IDS.geminiChatFontSize]: [
     numberBinding('fontSize', StorageKeys.CHAT_FONT_SIZE, normalizeChatFontSizePercent),
   ],

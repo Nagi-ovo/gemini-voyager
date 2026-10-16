@@ -1,4 +1,4 @@
-/** Gemini's chat appearance and edit input width are admitted at their original layout start point. */
+/** Gemini's chat and sidebar appearance are admitted at their original layout start point. */
 import type { OfficialAdmissionController } from '@/features/plugins/runtime/officialAdmission';
 
 export async function startGeminiChatAppearance(
@@ -12,4 +12,7 @@ export async function startGeminiChatAppearance(
   admission.admit('gemini', 'chatLineHeight');
   // The native edit input width adjuster started right after the chat appearance.
   admission.admit('gemini', 'editInputWidth');
+  admission.admit('gemini', 'sidebarWidth');
+  admission.admit('gemini', 'sidebarAutoHide');
+  admission.admit('gemini', 'sidebarFullHide');
 }

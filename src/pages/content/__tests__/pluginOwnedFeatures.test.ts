@@ -256,6 +256,22 @@ const codeToggle = () =>
 
 const STAGE3_PLUGINS: readonly Stage3Plugin[] = [
   {
+    kind: 'sidebar width',
+    id: OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
+    switchKey: StorageKeys.SIDEBAR_WIDTH_ENABLED,
+    drawn: () => document.getElementById('gv-sidebar-width-style') !== null,
+  },
+  {
+    kind: 'auto-hide sidebar',
+    id: OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide,
+    switchKey: StorageKeys.GV_SIDEBAR_AUTO_HIDE,
+  },
+  {
+    kind: 'fully hide sidebar',
+    id: OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide,
+    switchKey: StorageKeys.GV_SIDEBAR_FULL_HIDE,
+  },
+  {
     kind: 'chat font size',
     id: OFFICIAL_PLUGIN_IDS.geminiChatFontSize,
     switchKey: StorageKeys.CHAT_FONT_SIZE_ENABLED,

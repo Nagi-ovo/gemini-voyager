@@ -18,6 +18,7 @@ import { StorageKeys } from '@/core/types/common';
 import { isSafari } from '@/core/utils/browser';
 import { isChatWidthSwitchOn, isEditInputWidthSwitchOn } from '@/core/utils/chatAppearanceValues';
 import { isExtensionContextInvalidatedError } from '@/core/utils/extensionContext';
+import { isSidebarWidthSwitchOn } from '@/core/utils/sidebarWidthValues';
 
 import { resolvePluginSettings } from '../runtime/resolvePluginSettings';
 import { OFFICIAL_PLUGIN_IDS } from '../sites/featureOwners';
@@ -69,6 +70,30 @@ function binding(
 }
 
 export const LEGACY_ENABLE_BINDINGS: Readonly<Record<string, LegacyEnableBinding>> = {
+  [OFFICIAL_PLUGIN_IDS.geminiSidebarWidth]: {
+    ...binding(
+      OFFICIAL_PLUGIN_IDS.geminiSidebarWidth,
+      StorageKeys.SIDEBAR_WIDTH_ENABLED,
+      onOnlyIfTrue,
+    ),
+    derive: (snapshot, wasChangedLive) =>
+      isSidebarWidthSwitchOn({
+        storedSwitch: snapshotValue(snapshot, StorageKeys.SIDEBAR_WIDTH_ENABLED),
+        storedWidth: snapshotValue(snapshot, StorageKeys.SIDEBAR_WIDTH),
+        switchChangedLive: wasChangedLive(StorageKeys.SIDEBAR_WIDTH_ENABLED),
+        widthChangedLive: wasChangedLive(StorageKeys.SIDEBAR_WIDTH),
+      }),
+  },
+  [OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiSidebarAutoHide,
+    StorageKeys.GV_SIDEBAR_AUTO_HIDE,
+    onOnlyIfTrue,
+  ),
+  [OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide]: binding(
+    OFFICIAL_PLUGIN_IDS.geminiSidebarFullHide,
+    StorageKeys.GV_SIDEBAR_FULL_HIDE,
+    onOnlyIfTrue,
+  ),
   [OFFICIAL_PLUGIN_IDS.geminiTimeline]: binding(
     OFFICIAL_PLUGIN_IDS.geminiTimeline,
     StorageKeys.GV_TIMELINE_ENABLED,

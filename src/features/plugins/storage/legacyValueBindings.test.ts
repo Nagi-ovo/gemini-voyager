@@ -70,6 +70,29 @@ describe('legacy value bindings', () => {
     expect(acceptsLegacyLiveChange(StorageKeys.EDIT_INPUT_WIDTH, 80)).toBe(true);
   });
 
+  it('preserves native sidebar coercion, pixel bounds and legacy percentages', () => {
+    const read = (stored: unknown) =>
+      deriveLegacyValueSettings('voyager.gemini-sidebar-width', {
+        [StorageKeys.SIDEBAR_WIDTH]: stored,
+      });
+    for (const [stored, expected] of [
+      [undefined, 312],
+      ['400', 400],
+      [null, 15],
+      [26, 26],
+      [46, 180],
+      [700, 540],
+      [Number.NaN, 312],
+    ]) {
+      expect(read(stored)).toEqual({ widthPx: expected });
+    }
+    expect(acceptsLegacyLiveChange(StorageKeys.SIDEBAR_WIDTH, undefined)).toBe(false);
+    expect(acceptsLegacyLiveChange(StorageKeys.SIDEBAR_WIDTH, '400')).toBe(true);
+    expect(acceptsLegacyLiveChange(StorageKeys.SIDEBAR_WIDTH, null)).toBe(true);
+    expect(acceptsLegacyLiveChange(StorageKeys.SIDEBAR_WIDTH, Number.NaN)).toBe(false);
+    expect(acceptsLegacyLiveChange(StorageKeys.SIDEBAR_WIDTH, 400)).toBe(true);
+  });
+
   it('gives an id without value bindings no settings', () => {
     expect(deriveLegacyValueSettings('voyager.gemini-hide-input-halo', { anything: 1 })).toEqual(
       {},
@@ -94,6 +117,7 @@ describe('legacy value bindings', () => {
         StorageKeys.CHAT_PARAGRAPH_SPACING,
         StorageKeys.CHAT_WIDTH,
         StorageKeys.EDIT_INPUT_WIDTH,
+        StorageKeys.SIDEBAR_WIDTH,
         StorageKeys.INPUT_COLLAPSE_WHEN_NOT_EMPTY,
       ].sort(),
     );

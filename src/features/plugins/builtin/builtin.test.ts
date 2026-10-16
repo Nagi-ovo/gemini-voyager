@@ -202,6 +202,25 @@ describe('BUILTIN_PLUGINS', () => {
     );
   });
 
+  it('ships sidebar width with its native pixel range and a bound updater', () => {
+    const id = 'voyager.gemini-sidebar-width';
+    const width = BUILTIN_PLUGINS.find((m) => m.id === id);
+    expect(width?.matches).toEqual(['https://gemini.google.com/*']);
+    expect(width?.contributes.domOps).toBeUndefined();
+    expect(width?.contributes.settings?.widthPx).toMatchObject({
+      type: 'number',
+      default: 312,
+      min: 180,
+      max: 540,
+    });
+    expect(NATIVE_BUILTIN_PLUGIN_IDS).toContain(id);
+    expect(NATIVE_HANDLER_BINDINGS[id]?.updateSettings).toBeTypeOf('function');
+    for (const locale of ['zh', 'zh_TW', 'ja', 'ko', 'fr', 'es', 'pt', 'ru', 'ar'] as const) {
+      expect(width?.i18n?.[locale]?.settings?.widthPx?.label, locale).toBeTruthy();
+      expect(width?.i18n?.[locale]?.description, locale).toBeTruthy();
+    }
+  });
+
   it('scopes the Gemini prompt history builtin to gemini.google.com with no settings of its own', () => {
     const history = BUILTIN_PLUGINS.find((m) => m.id === 'voyager.gemini-prompt-history');
     // Not Gemini Enterprise or a custom host: the native module never ran there.
@@ -241,6 +260,8 @@ describe('BUILTIN_PLUGINS', () => {
 
   it.each([
     ['canvas copy', 'voyager.gemini-canvas-copy'],
+    ['auto-hide sidebar', 'voyager.gemini-sidebar-auto-hide'],
+    ['fully hide sidebar', 'voyager.gemini-sidebar-full-hide'],
     ['research pack', 'voyager.gemini-research-pack'],
     ['default model', 'voyager.gemini-default-model'],
     ['fork', 'voyager.gemini-fork'],

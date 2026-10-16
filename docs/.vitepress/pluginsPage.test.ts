@@ -1,5 +1,8 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import { BUILTIN_PLUGINS } from '../../src/features/plugins/builtin';
 import { OFFICIAL_PLUGIN_IDS } from '../../src/features/plugins/sites/featureOwners';
 import { resolveEffectiveEnabled } from '../../src/features/plugins/storage/legacySettingBindings';
 import type { PluginManifest } from '../../src/features/plugins/types';
@@ -189,6 +192,36 @@ describe('plugin table', () => {
 
     for (const id of shown) {
       expect([id, FRESH_INSTALL_ON.has(id)]).toEqual([id, resolveEffectiveEnabled({}, {}, id)]);
+    }
+  });
+
+  it('shows three independent sidebar rows, off by default, linking to existing localized guides', () => {
+    const sidebarPlugins = BUILTIN_PLUGINS.filter((plugin) =>
+      [
+        'voyager.gemini-sidebar-width',
+        'voyager.gemini-sidebar-auto-hide',
+        'voyager.gemini-sidebar-full-hide',
+      ].includes(plugin.id),
+    );
+    const rows = featureRows(builtinPlugins(sidebarPlugins));
+    expect(ticked(rows)).toEqual([
+      ['sidebar-width', ['gemini']],
+      ['sidebar-auto-hide', ['gemini']],
+      ['sidebar-full-hide', ['gemini']],
+    ]);
+
+    for (const entry of PLUGINS_LOCALES) {
+      const prefix = entry.prefix ? `/${entry.prefix}` : '';
+      const exists = (path: string) => existsSync(resolve('docs', `.${path}.md`));
+      const page = renderPluginsPage(entry, rows, FRESH_INSTALL_ON, exists);
+      for (const row of rows) {
+        const plugin = row.plugins.gemini![0];
+        const name = (plugin.i18n?.[entry.manifest]?.name ?? plugin.name).replace(/^Gemini · /, '');
+        const guide = row.feature === 'sidebar-width' ? 'sidebar' : 'sidebar-auto-hide';
+        const label = `[${name}](${prefix}/guide/${guide})`;
+        expect(page).toContain(`| **${label}** |`);
+        expect(cells(page, label)).toEqual(['✓', '', '', '', '']);
+      }
     }
   });
 });
