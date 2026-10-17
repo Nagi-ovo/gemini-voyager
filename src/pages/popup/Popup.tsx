@@ -169,6 +169,9 @@ export default function Popup({ sourceTabId }: PopupProps = {}) {
     activeSiteDomain,
     customWebsites: promptManager.customWebsites,
     sitePluginRuns,
+    pageRunsEffect: plugins.pluginStatuses.some(
+      (status) => status.id === OFFICIAL_PLUGIN_IDS.visualEffects,
+    ),
   });
   const sections = usePopupSections({
     // Plugin sites hide native sections through `isPluginSite`; keep the full allowlist for the

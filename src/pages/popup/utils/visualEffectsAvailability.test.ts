@@ -8,6 +8,7 @@ describe('canUseVisualEffects', () => {
     activeSiteDomain: 'claude.ai',
     customWebsites: [] as string[],
     sitePluginRuns: false,
+    pageRunsEffect: false,
   };
 
   it('keeps visual effects available on native sites', () => {
@@ -26,6 +27,10 @@ describe('canUseVisualEffects', () => {
 
   it('enables them when a plugin that is on holds the site’s access', () => {
     expect(canUseVisualEffects({ ...base, sitePluginRuns: true })).toBe(true);
+  });
+
+  it('keeps the row while the page still runs the effect after its last plugin is turned off', () => {
+    expect(canUseVisualEffects({ ...base, pageRunsEffect: true })).toBe(true);
   });
 
   it('does not expose them before Voyager runs on the third-party site', () => {
