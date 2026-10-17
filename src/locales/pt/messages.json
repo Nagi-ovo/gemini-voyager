@@ -975,7 +975,7 @@
     "description": "Secondary button that dismisses the nudge"
   },
   "hideArchivedNudgeFootnote": {
-    "message": "Você pode alterar isso a qualquer momento no popup da extensão → Opções de pastas.",
+    "message": "Você pode alterar isso a qualquer momento no popup da extensão → Opções de Pasta.",
     "description": "Footnote explaining where to toggle the setting later"
   },
   "floatingPanelTitle": {
@@ -1578,7 +1578,7 @@
     "description": "Inline badge warning that the preview-time watermark removal option is unstable"
   },
   "nanobananaDownloadTooltip": {
-    "message": "Baixar imagem sem marca d'água (Image Refinement)",
+    "message": "Baixar imagem sem marca d'água",
     "description": "Download button tooltip"
   },
   "deepResearchDownload": {
@@ -2006,15 +2006,15 @@
     "description": "Hint text under the default-model auto-apply toggle"
   },
   "defaultModelAutoApplyFailed": {
-    "message": "Não foi possível aplicar o modelo padrão 3 vezes seguidas. O menu do Gemini pode ter mudado — você pode pausar esta função por enquanto.",
+    "message": "Não foi possível aplicar o modelo padrão 3 vezes seguidas. O menu do Gemini pode ter mudado — você pode desativar esta função por enquanto.",
     "description": "Toast body when the model locker hits its consecutive-failure threshold"
   },
   "defaultModelAutoApplyFailedAction": {
-    "message": "Pausar nas configurações",
+    "message": "Desativar nas configurações",
     "description": "Action button label on the auto-apply failure toast"
   },
   "defaultModelAutoApplyFailedFallback": {
-    "message": "Clique no ícone do Voyager na barra de ferramentas para abrir o painel e pause esta função.",
+    "message": "Clique no ícone do Voyager na barra de ferramentas para abrir o painel e desative “Modelo padrão” em “Conversas”.",
     "description": "Fallback message shown when programmatic popup open fails (e.g. Firefox)"
   },
   "setAsDefaultThinkingLevel": {
@@ -2747,15 +2747,15 @@
   },
   "pluginRowOptions": {
     "message": "Opções",
-    "description": "Button under an official plugin row in the popup that shows or hides its extra options"
+    "description": "Button under the timeline plugin's row in the popup on sites other than Gemini and AI Studio (such as ChatGPT or Claude); shows or hides the timeline options"
   },
   "pluginRowOptionsFor": {
     "message": "Opções de {name}",
-    "description": "Accessible name of an official plugin row's Options button and panel; {name} is the plugin name"
+    "description": "Accessible name of a plugin's options: the timeline row's Options button and panel on sites other than Gemini and AI Studio, and the group of options shown under an official plugin row while it is on. {name} is the plugin name"
   },
   "pluginRowNeedsSetting": {
     "message": "Ative primeiro {card} → {setting}.",
-    "description": "Under a Plugins row whose feature needs a native setting that is off. {setting} is that setting's label; {card} is the settings card that holds it."
+    "description": "Under an official plugin row in one of the popup's topic cards, when its feature needs another setting that is off; the row's switch stays disabled until then. {setting} is that setting's label; {card} is the settings card that holds it."
   },
   "pluginTopicLayout": {
     "message": "Layout da página",

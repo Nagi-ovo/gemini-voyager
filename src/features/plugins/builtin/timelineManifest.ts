@@ -30,8 +30,8 @@ const LOCALIZED: Readonly<
     styles: { dots: '节点', compact: '紧凑索引', ruler: '刻度' },
   },
   zh_TW: {
-    name: (site) => `${site} · 時間線`,
-    description: (site) => `為 ${site} 加入緊湊的對話時間線，支援星標訊息與搜尋。`,
+    name: (site) => `${site} · 時間軸`,
+    description: (site) => `為 ${site} 加入緊湊的對話時間軸，支援星標訊息與搜尋。`,
     styleLabel: '時間軸樣式',
     styles: { dots: '節點', compact: '精簡索引', ruler: '刻度' },
   },

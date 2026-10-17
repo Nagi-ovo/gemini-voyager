@@ -9,11 +9,11 @@ export const GEMINI_TIMELINE_MANIFEST: PluginManifest = {
   i18n: {
     zh: {
       name: 'Gemini · 显示时间线',
-      description: '关闭后保留收藏内容，消息时间仍由「显示消息时间」单独控制。',
+      description: '关闭后保留收藏内容，消息时间仍由「消息时间戳」单独控制。',
     },
     zh_TW: {
       name: 'Gemini · 顯示時間軸',
-      description: '關閉後保留收藏內容，訊息時間仍由「顯示訊息時間」單獨控制。',
+      description: '關閉後保留收藏內容，訊息時間仍由「訊息時間戳記」單獨控制。',
     },
     ja: {
       name: 'Gemini · タイムラインを表示',

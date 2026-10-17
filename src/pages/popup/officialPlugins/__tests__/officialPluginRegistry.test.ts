@@ -88,9 +88,9 @@ describe('the official plugin list registry', () => {
 
   it('a restored settings backup keeps a never-touched switch the way it was', () => {
     // Export fills a missing key with its backup default and restore writes it back.
-    // Known gap: a width switch that was never stored reads on from a customized width
-    // (`derive`); a restore stores false over it and turns that width off. Fixing it is
-    // a SettingsBackupService change, outside the popup.
+    // A width switch that was never stored reads on from a customized width (`derive`);
+    // export writes that derived value instead of the default (`loadBackupableSyncSettings`),
+    // so this check covers the plain defaults.
     const defaults: Readonly<Record<string, unknown>> = BACKUPABLE_SYNC_SETTINGS_DEFAULTS;
     // The background stores the highlight switch on first run (migrateOptionalHighlightSetting),
     // so its key is never missing for long; its backup default (on) never meets a missing key.

@@ -216,9 +216,10 @@ export class DefaultModelAutoApply {
       durationMs: FAILURE_TOAST_MS,
       message:
         chrome.i18n.getMessage('defaultModelAutoApplyFailed') ||
-        'Default model auto-apply failed 3 times in a row. Gemini may have changed its menu layout.',
+        "Default model couldn't auto-apply after 3 tries. Gemini may have changed its menu — you can turn this feature off for now.",
       action: {
-        label: chrome.i18n.getMessage('defaultModelAutoApplyFailedAction') || 'Pause in settings',
+        label:
+          chrome.i18n.getMessage('defaultModelAutoApplyFailedAction') || 'Turn off in settings',
         run: (handle) => {
           void this.requestOpenPopup().then((opened) => {
             if (opened) {
@@ -230,7 +231,7 @@ export class DefaultModelAutoApply {
             handle.update({
               message:
                 chrome.i18n.getMessage('defaultModelAutoApplyFailedFallback') ||
-                'Open the extension popup from your toolbar to pause this feature.',
+                'Click the Voyager icon in your toolbar to open the popup, then turn off “Default Model” in “Conversations”.',
               action: undefined,
             });
           });

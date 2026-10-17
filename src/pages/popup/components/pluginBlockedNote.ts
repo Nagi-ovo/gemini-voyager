@@ -66,8 +66,8 @@ export interface BlockedNoteInput {
  * Why a `blocked` plugin does not run on this page, or null for any other
  * status. A blocked plugin keeps the user's on/off, so this is a note beside a
  * usable toggle, never a reason to disable it. A packaged official plugin in
- * `blockedBy` is named by the native setting that switches it, since it never
- * appears in a plugin list.
+ * `blockedBy` is named by its row and the topic card that holds it, where the
+ * user switches it off.
  */
 export function blockedPluginNote({
   status,

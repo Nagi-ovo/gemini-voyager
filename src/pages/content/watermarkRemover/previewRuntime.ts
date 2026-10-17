@@ -137,8 +137,7 @@ export function createWatermarkPreviews({
     indicator.className = 'nanobanana-indicator';
     indicator.textContent = '🍌';
     indicator.title =
-      chrome.i18n.getMessage('nanobananaDownloadTooltip') ||
-      'Image Refinement: Downloads will be processed automatically';
+      chrome.i18n.getMessage('nanobananaDownloadTooltip') || 'Download unwatermarked image';
 
     Object.assign(indicator.style, {
       position: 'absolute',

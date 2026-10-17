@@ -919,7 +919,7 @@
     "description": "Show the Gemini timeline"
   },
   "timelineEnableHint": {
-    "message": "关闭后保留收藏内容，消息时间仍由「显示消息时间」单独控制。",
+    "message": "关闭后保留收藏内容，消息时间仍由「消息时间戳」单独控制。",
     "description": "Turning off the timeline keeps message timestamps independent and preserves saved items"
   },
   "timelineOptions": {
@@ -1578,7 +1578,7 @@
     "description": "预览时去水印开关旁的不稳定标签"
   },
   "nanobananaDownloadTooltip": {
-    "message": "下载无水印图片 (Image Refinement)",
+    "message": "下载无水印图片",
     "description": "Download button tooltip"
   },
   "deepResearchDownload": {
@@ -2010,11 +2010,11 @@
     "description": "Toast body when the model locker hits its consecutive-failure threshold"
   },
   "defaultModelAutoApplyFailedAction": {
-    "message": "去设置里暂停",
+    "message": "去设置里关闭",
     "description": "Action button label on the auto-apply failure toast"
   },
   "defaultModelAutoApplyFailedFallback": {
-    "message": "请点击工具栏上的 Voyager 图标打开设置面板，然后关闭此功能。",
+    "message": "请点击工具栏上的 Voyager 图标打开设置面板，然后在“对话管理”中关闭“默认模型”。",
     "description": "Fallback message shown when programmatic popup open fails (e.g. Firefox)"
   },
   "setAsDefaultThinkingLevel": {
@@ -2747,15 +2747,15 @@
   },
   "pluginRowOptions": {
     "message": "选项",
-    "description": "Button under an official plugin row in the popup that shows or hides its extra options"
+    "description": "Button under the timeline plugin's row in the popup on sites other than Gemini and AI Studio (such as ChatGPT or Claude); shows or hides the timeline options"
   },
   "pluginRowOptionsFor": {
     "message": "{name}的选项",
-    "description": "Accessible name of an official plugin row's Options button and panel; {name} is the plugin name"
+    "description": "Accessible name of a plugin's options: the timeline row's Options button and panel on sites other than Gemini and AI Studio, and the group of options shown under an official plugin row while it is on. {name} is the plugin name"
   },
   "pluginRowNeedsSetting": {
     "message": "需先开启 {card} → {setting}。",
-    "description": "Under a Plugins row whose feature needs a native setting that is off. {setting} is that setting's label; {card} is the settings card that holds it."
+    "description": "Under an official plugin row in one of the popup's topic cards, when its feature needs another setting that is off; the row's switch stays disabled until then. {setting} is that setting's label; {card} is the settings card that holds it."
   },
   "pluginTopicLayout": {
     "message": "页面版面",
