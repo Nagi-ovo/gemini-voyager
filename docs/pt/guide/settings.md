@@ -1,4 +1,9 @@
-# Largura do Chat
+# À Sua Maneira
+
+A experiência padrão já é ótima. Mas talvez a queira perfeita.
+Personalize cada pixel.
+
+## Modo Cinema
 
 Utilize totalmente o seu monitor ultrawide.
 
@@ -30,8 +35,6 @@ Passe o mouse sobre qualquer cartão de configuração e os botões ▲/▼ apar
 Os recursos ficam agrupados em cartões por tema (Layout da página, Barra lateral, Linha do tempo, Conteúdo das respostas etc.), e as opções de um recurso aparecem logo abaixo do interruptor quando ele está ativado. A caixa de pesquisa e a linha de nomes de cartões abaixo dela ficam no topo enquanto você rola; clique em um nome para ir até esse cartão. Mudou um interruptor sem querer? Toque em **Desfazer** na mensagem que aparece embaixo.
 
 ## Efeitos Visuais
-
-No Gemini e no AI Studio, ative **Layout da página** → **Efeitos visuais** e escolha `Neve`, `Sakura` ou `Chuva` por baixo da linha para uma atmosfera sazonal. Nos outros sites (Claude, ChatGPT, DeepSeek e sites personalizados), a mesma linha fica no cartão **Plugins** desse site, assim que o Voyager funciona lá (Gestor de prompts ou um plugin ativado para o site).
 
 O Voyager não se limita a melhorias utilitárias. Pode também mudar o ambiente da página.
 

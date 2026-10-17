@@ -22,7 +22,7 @@ Voyager 的插件系统优先支持声明式插件：用 `plugin.json` 描述插
 
 ```
 src/features/plugins/catalog/
-  marketplace.json                        文档站插件市场读取的索引
+  marketplace.json                        手动维护的站点插件索引，由测试校验
   sites/<site>/site.json                  站点适配器（数据形式）
   sites/<site>/plugins/<id>/plugin.json   一个声明式插件
   sites/<site>/plugins/<id>/style.css     它的样式
@@ -31,7 +31,7 @@ src/features/plugins/catalog/
 
 发现过程是自动的：`catalog/sites/index.ts` 用 `import.meta.glob` 找出每个 `site.json` 和每个 `plugin.json`，所以新增站点或插件就是新增文件，没有映射表需要维护。
 
-`marketplace.json` 不是那张映射表，它只是文档站插件市场读取的索引；有测试保证它和自动发现的结果一致，所以新插件还要在里面加一条，`source` 写 catalog 相对路径，例如 `sites/deepseek/plugins/reading-width/plugin.json`。`sites/gemini/` 和 `sites/aistudio/` 下的插件是例外：它们随 Voyager 打包，不进 `marketplace.json`。
+`marketplace.json` 不是那张映射表，它只是手动维护的站点插件索引；有测试保证它和自动发现的结果一致，所以新插件还要在里面加一条（`bun run plugin:new` 会替你追加），`source` 写 catalog 相对路径，例如 `sites/deepseek/plugins/reading-width/plugin.json`。`sites/gemini/` 和 `sites/aistudio/` 下的插件是例外：它们随 Voyager 打包，不进 `marketplace.json`。文档站的[插件一览](/guide/plugins)直接从磁盘读取各插件的清单，不读这个文件。
 
 插件的 `matches` 必须落在所属站点的 `matches` 范围内；越界的插件会让构建失败。
 
@@ -92,7 +92,7 @@ catalog 里的插件属于单个站点文件夹，它的每个 `matches` 都必�
 
 ## 避免重复插件
 
-提交前请先看插件市场和已有官方插件。如果已经有一个好用的插件，优先给它提改进 PR，而不是再做一个类似插件。
+提交前请先在[插件一览](/guide/plugins)里看看已有的官方插件。如果已经有一个好用的插件，优先给它提改进 PR，而不是再做一个类似插件。
 
 重复插件只有在有明显提升时才值得接受，例如：
 
@@ -101,7 +101,7 @@ catalog 里的插件属于单个站点文件夹，它的每个 `matches` 都必�
 - 有明显更好的性能、可访问性或维护性。
 - 提供了不同但足够清晰的用户体验，而不只是换名字或微调样式。
 
-这样插件市场会更干净，用户也更容易选择。
+这样插件列表会更干净，用户也更容易选择。
 
 ## 最小示例
 

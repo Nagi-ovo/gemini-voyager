@@ -25,18 +25,19 @@ const pluginNames: Record<string, [string, string, string]> = {
   'ar-SA': ['حجم خط الدردشة', 'تباعد الدردشة', 'إدخال Vim'],
   'ru-RU': ['Размер шрифта чата', 'Интервалы чата', 'Ввод Vim'],
 };
-/* Popup strings: pluginsTitle and pluginSourceBundled from src/locales. */
+/* Popup topic card titles, pluginTopicLayout and pluginTopicInput from src/locales:
+   on Gemini, font size and spacing sit in Page layout and Vim Input in Input. */
 const popupCopy: Record<string, [string, string]> = {
-  'en-US': ['Plugins', 'Bundled'],
-  'zh-CN': ['插件', '预装'],
-  'zh-TW': ['外掛', '預裝'],
-  'ja-JP': ['プラグイン', '同梱'],
-  'ko-KR': ['플러그인', '기본 포함'],
-  'fr-FR': ['Extensions', 'Fournie'],
-  'es-ES': ['Complementos', 'Incluido'],
-  'pt-PT': ['Plugins', 'Incluído'],
-  'ar-SA': ['الإضافات', 'مرفقة'],
-  'ru-RU': ['Плагины', 'В комплекте'],
+  'en-US': ['Page layout', 'Input'],
+  'zh-CN': ['页面版面', '输入'],
+  'zh-TW': ['頁面版面', '輸入'],
+  'ja-JP': ['ページレイアウト', '入力'],
+  'ko-KR': ['페이지 레이아웃', '입력'],
+  'fr-FR': ['Mise en page', 'Saisie'],
+  'es-ES': ['Diseño de la página', 'Entrada'],
+  'pt-PT': ['Layout da página', 'Entrada'],
+  'ar-SA': ['تخطيط الصفحة', 'الإدخال'],
+  'ru-RU': ['Макет страницы', 'Ввод'],
 };
 const names = computed(() => pluginNames[props.lang] ?? pluginNames['en-US']);
 const copy = computed(() => popupCopy[props.lang] ?? popupCopy['en-US']);
@@ -45,6 +46,8 @@ const icon = (name: string, size = 16) =>
   `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${uiIcons[name] ?? ''}</svg>`;
 
 const [FONT, SPACING, VIM] = [0, 1, 2];
+/* Rows by topic card, in the order of popupCopy. */
+const topics = [[FONT, SPACING], [VIM]];
 const on = reactive([false, false, false]);
 const popOpen = ref(false);
 
@@ -59,7 +62,11 @@ watch(
 
 const root = ref<HTMLElement | null>(null);
 const extBtn = ref<HTMLElement | null>(null);
-const switches = ref<HTMLElement[]>([]);
+// Indexed by row, so the scripted cursor finds each switch across the two cards.
+const switches: HTMLElement[] = [];
+function setSwitch(i: number, el: unknown) {
+  if (el instanceof HTMLElement) switches[i] = el;
+}
 const cursor = reactive({ x: 0, y: 0, show: false, down: false });
 
 const timers: ReturnType<typeof setTimeout>[] = [];
@@ -109,11 +116,11 @@ onMounted(() => {
   at(220, () => (cursor.show = true));
   at(400, () => aim(extBtn.value));
   at(950, () => press(() => (popOpen.value = true)));
-  at(1350, () => aim(switches.value[FONT]));
+  at(1350, () => aim(switches[FONT]));
   at(1900, () => press(() => (on[FONT] = true)));
-  at(2250, () => aim(switches.value[SPACING]));
+  at(2250, () => aim(switches[SPACING]));
   at(2800, () => press(() => (on[SPACING] = true)));
-  at(3150, () => aim(switches.value[VIM]));
+  at(3150, () => aim(switches[VIM]));
   at(3700, () => press(() => (on[VIM] = true)));
   at(4100, () => aimAt(0.3, 0.62));
   at(4650, () => press(() => (popOpen.value = false)));
@@ -151,26 +158,24 @@ onBeforeUnmount(() => {
           <img src="/logo.png" alt="" width="16" height="16" draggable="false" />
           <b>Voyager</b>
         </div>
-        <div class="gvf-ps-pop-title">{{ copy[0] }}</div>
-        <div v-for="(n, i) in names" :key="i" class="gvf-ps-card" :class="{ on: on[i] }">
-          <div class="gvf-ps-card-text">
-            <b>{{ n }}</b>
-            <span class="gvf-ps-meta"
-              ><em>{{ copy[1] }}</em
-              ><code>1.0.0</code></span
-            >
+        <template v-for="(rows, t) in topics" :key="t">
+          <div class="gvf-ps-pop-title">{{ copy[t] }}</div>
+          <div v-for="i in rows" :key="i" class="gvf-ps-card" :class="{ on: on[i] }">
+            <div class="gvf-ps-card-text">
+              <b>{{ names[i] }}</b>
+            </div>
+            <button
+              :ref="(el) => setSwitch(i, el)"
+              type="button"
+              role="switch"
+              class="gvf-ps-switch"
+              :aria-checked="on[i]"
+              :aria-label="names[i]"
+              :tabindex="popOpen ? 0 : -1"
+              @click="on[i] = !on[i]"
+            />
           </div>
-          <button
-            ref="switches"
-            type="button"
-            role="switch"
-            class="gvf-ps-switch"
-            :aria-checked="on[i]"
-            :aria-label="n"
-            :tabindex="popOpen ? 0 : -1"
-            @click="on[i] = !on[i]"
-          />
-        </div>
+        </template>
       </div>
 
       <svg
@@ -231,7 +236,7 @@ onBeforeUnmount(() => {
   background: color-mix(in srgb, var(--host-text) 9%, transparent);
 }
 
-/* Extension popup with the plugin list */
+/* Extension popup with two topic cards */
 .gvf-ps-pop {
   position: absolute;
   top: 46px;
@@ -303,25 +308,6 @@ onBeforeUnmount(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.gvf-ps-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 10.5px;
-  line-height: 1.3;
-  color: var(--gvf-muted);
-}
-.gvf-ps-meta em {
-  font-style: normal;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: var(--gv-chip-bg);
-  color: var(--gv-chip-fg);
-  font-weight: 600;
-}
-.gvf-ps-meta code {
-  font: 10.5px/1.3 var(--vp-font-family-mono);
 }
 .gvf-ps-switch {
   flex: none;

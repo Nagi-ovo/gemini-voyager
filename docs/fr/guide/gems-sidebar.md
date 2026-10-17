@@ -18,6 +18,8 @@ Voyager fait en sorte que cette entrée native Gems « se déploie » en une lis
 
 ## Comment l'utiliser
 
+Pour l'instant, sa ligne est grisée dans la carte **Barre latérale** du popup et ne peut pas être activée. Quand la barre latérale de Gemini aura de nouveau une entrée Gems et que la fonctionnalité pourra fonctionner, voici comment la régler :
+
 1. Ouvrez le popup Voyager (icône de l'extension dans la barre d'outils).
 2. Vérifiez que **Barre latérale** → **Gems récents dans la barre latérale** est activé (c'est le cas par défaut). Tant qu'il est activé, un curseur de nombre apparaît sous la ligne ; il affiche 3 gems par défaut.
 3. Faites glisser jusqu'au nombre souhaité (1–10). **`0` masque seulement la liste des Gems récents** ; cela ne désactive pas la fonctionnalité. Pour la désactiver, coupez l'interrupteur de la ligne.
@@ -41,7 +43,7 @@ Donc si vous ajoutez un gem depuis un autre appareil, Voyager ne le saura pas «
 - L'instantané de la liste de gems et l'historique d'utilisation récente restent dans le **stockage local du navigateur** (`chrome.storage.local`).
 - La valeur du curseur et les identifiants des gems épinglés sont enregistrés avec vos autres réglages Voyager dans le **stockage de synchronisation du navigateur**, ce qui les suit sur les appareils connectés au même profil de navigateur. Les noms et les icônes ne sont jamais synchronisés.
 - Nous ne lisons ni ne mettons en cache le contenu des conversations du gem — uniquement le nom, la description, le lien et la première lettre pour l'avatar.
-- Désactiver la fonctionnalité (nombre = 0) laisse les données locales en place, donc réactiver est instantané.
+- Désactiver la ligne laisse les données locales en place, donc la réactiver est instantané.
 
 ## Plateforme
 

@@ -17,7 +17,7 @@ O Voyager anota cada mensagem com um carimbo de data/hora preciso (formato: `AAA
 1. Abra o painel de configurações do Voyager (o ícone da extensão na barra de ferramentas do navegador).
 2. Ative **Linha do tempo** → **Data e hora das mensagens** (marcado como **Experimental**, desativado por padrão).
 
-No ChatGPT, ative **Plugins** → **ChatGPT · Linha do tempo** e, em **Opções**, ative **Mostrar carimbos de data/hora das mensagens**: é a mesma definição da linha do Gemini.
+No ChatGPT, ative **Plugins** → **Linha do tempo** e, em **Opções**, ative **Mostrar carimbos de data/hora das mensagens**: é a mesma definição da linha do Gemini.
 
 ## De onde vêm as horas
 

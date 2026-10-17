@@ -92,6 +92,6 @@ Voyager 把對話變成一條線。
 
 ## 支援的瀏覽器
 
-時間軸可用於 Google Gemini；Claude 與 ChatGPT 則透過內建外掛提供。支援 Chrome、Edge、Firefox、Safari、Opera 與 Brave。快捷鍵與星號標記在這三個平台上的行為一致。層級在各平台都是需要手動開啟的實驗性功能：在 Gemini 上，開啟 **時間軸** → **顯示時間軸**，再在該列下方打開 **啟用節點層級**；在 Claude 與 ChatGPT 上，到 **外掛** 裡 **Claude · 時間線** 或 **ChatGPT · 時間線** 的設定中打開同一個開關。啟用 [雲端同步](/zh_TW/guide/cloud-sync) 後，星號訊息會在不同裝置之間同步。
+時間軸可用於 Google Gemini；Claude 與 ChatGPT 則透過內建外掛提供。支援 Chrome、Edge、Firefox、Safari、Opera 與 Brave。快捷鍵與星號標記在這三個平台上的行為一致。層級在各平台都是需要手動開啟的實驗性功能：在 Gemini 上，開啟 **時間軸** → **顯示時間軸**，再在該列下方打開 **啟用節點層級**；在 Claude 與 ChatGPT 上，到 **外掛** 裡 **時間軸** 的設定中打開同一個開關。啟用 [雲端同步](/zh_TW/guide/cloud-sync) 後，星號訊息會在不同裝置之間同步。
 
 AI Studio 不提供時間軸。DeepSeek 在外掛目錄中有一個選用的時間軸外掛（預設為停用）。

@@ -18,7 +18,7 @@ Voyager 简化了这一流程：
 
 在 Gemini 上，引用回复由 Voyager 弹窗中 **输入** → **引用回复** 控制。
 
-在 Claude、ChatGPT 和 DeepSeek 上，请从[插件目录](/guide/plugins)为对应网站安装 **引用回复** 插件。安装后，当你在单条 AI 回复内选中文字时会出现 **Quote** 按钮，引用内容会被添加到草稿中，而不会直接发送。
+在 Claude、ChatGPT 和 DeepSeek 上，在该网站打开 Voyager 弹窗，在 **插件** 卡片里开启 **引用回复**（各网站的插件见[插件一览](/guide/plugins)）。开启后，当你在单条 AI 回复内选中文字时会出现 **Quote** 按钮，引用内容会被添加到草稿中，而不会直接发送。
 
 ## 特性
 

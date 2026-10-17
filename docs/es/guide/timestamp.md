@@ -17,7 +17,7 @@ Voyager anota cada mensaje con una marca de tiempo precisa (formato: `AAAA-MM-DD
 1. Abre el panel de ajustes de Voyager (el icono de la extensión en la barra de herramientas del navegador).
 2. Activa **Línea de tiempo** → **Marcas de tiempo de mensajes** (marcado como **Experimental**, desactivado por defecto).
 
-En ChatGPT, activa **Complementos** → **ChatGPT · Línea de tiempo** y, en sus **Opciones**, activa **Mostrar marcas de tiempo de mensajes**: es el mismo ajuste que la fila de Gemini.
+En ChatGPT, activa **Complementos** → **Línea de tiempo** y, en sus **Opciones**, activa **Mostrar marcas de tiempo de mensajes**: es el mismo ajuste que la fila de Gemini.
 
 ## De dónde salen las horas
 

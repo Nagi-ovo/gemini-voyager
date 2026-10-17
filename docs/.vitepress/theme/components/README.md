@@ -14,13 +14,13 @@ Download the <SafariDownloadLink>latest Safari version</SafariDownloadLink>.
 
 1. On mount, it reads a cached version from `localStorage` (kept for 10 minutes) or fetches the latest release from the GitHub API
 2. Extracts the version number from the tag name
-3. Links to `https://github.com/voyager-crew/voyager/releases/tag/v{version}`, or to `releases/latest` when the lookup fails
-4. If the API call fails, it falls back to version `1.2.4`
+3. Links to `https://github.com/voyager-crew/voyager/releases/tag/v{version}`
+4. If the API call fails, it links to `https://github.com/voyager-crew/voyager/releases/latest` instead and sets the slot's `error` prop; the `version` slot prop then keeps its placeholder, so check `error` before showing it
 
 ## Features
 
 - ✅ Automatic version detection
-- ✅ Fallback to default version on error
+- ✅ Falls back to the latest-release page on error
 - ✅ Loading state support
 - ✅ Customizable link text via slot
 - ✅ Works in all VitePress markdown files

@@ -18,6 +18,8 @@ O Voyager faz com que essa entrada nativa de Gems "se expanda" em uma lista dos 
 
 ## Como usar
 
+Por enquanto, a linha dele aparece em cinza no cartão **Barra lateral** do popup e não pode ser ativada. Quando a barra lateral do Gemini voltar a ter uma entrada de Gems e o recurso puder funcionar, configure assim:
+
 1. Abra o popup do Voyager (ícone da extensão na barra de ferramentas).
 2. Confirme que **Barra lateral** → **Gems recentes na barra lateral** está ativado (vem ativado por padrão). Enquanto estiver ativado, um controle deslizante de quantidade aparece abaixo da linha; ele mostra 3 gems por padrão.
 3. Arraste até o número desejado (1–10). **`0` apenas oculta a lista de Gems recentes**; não desativa o recurso. Para desativá-lo, desligue a chave da linha.
@@ -41,7 +43,7 @@ Então, se você adicionar um gem de outro dispositivo, o Voyager não saberá "
 - O snapshot da lista de gems e o histórico de uso recente permanecem no **armazenamento local do navegador** (`chrome.storage.local`).
 - O valor do controle deslizante e os IDs dos gems fixados são salvos junto com as outras configurações do Voyager no **armazenamento sincronizado do navegador**, então te acompanham entre dispositivos conectados ao mesmo perfil do navegador. Nomes e ícones nunca são sincronizados.
 - Não lemos nem cacheamos o conteúdo das conversas do gem — apenas o nome, descrição, link e primeira letra para o avatar.
-- Desativar o recurso (contagem = 0) deixa os dados locais no lugar, então reativar é instantâneo.
+- Desativar a linha deixa os dados locais no lugar, então reativá-la é instantâneo.
 
 ## Plataforma
 

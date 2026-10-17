@@ -22,7 +22,7 @@ Les plugins officiels fournis avec l'extension vivent sous `src/features/plugins
 
 ```
 src/features/plugins/catalog/
-  marketplace.json                        index lu par le magasin de la documentation
+  marketplace.json                        index des plugins de site, tenu à la main et vérifié par un test
   sites/<site>/site.json                  l'adaptateur de site, sous forme de données
   sites/<site>/plugins/<id>/plugin.json   un plugin déclaratif
   sites/<site>/plugins/<id>/style.css     ses styles
@@ -31,7 +31,7 @@ src/features/plugins/catalog/
 
 La découverte est automatique : `catalog/sites/index.ts` trouve chaque `site.json` et chaque `plugin.json` avec `import.meta.glob`. Ajouter un site ou un plugin revient donc à ajouter des fichiers, sans table de correspondance à modifier.
 
-`marketplace.json` n'est pas cette table : c'est seulement l'index que lit le magasin de plugins de la documentation. Un test le garde synchronisé avec la découverte, donc un nouveau plugin doit aussi y figurer. Son `source` est le chemin relatif au catalog, par exemple `sites/deepseek/plugins/reading-width/plugin.json`. Les plugins sous `sites/gemini/` et `sites/aistudio/` font exception : ils sont livrés dans Voyager et restent hors de `marketplace.json`.
+`marketplace.json` n'est pas cette table : c'est seulement un index des plugins de site, tenu à la main. Un test le garde synchronisé avec la découverte, donc un nouveau plugin doit aussi y figurer (`bun run plugin:new` ajoute l'entrée pour vous). Son `source` est le chemin relatif au catalog, par exemple `sites/deepseek/plugins/reading-width/plugin.json`. Les plugins sous `sites/gemini/` et `sites/aistudio/` font exception : ils sont livrés dans Voyager et restent hors de `marketplace.json`. La page [Tous les plugins](/fr/guide/plugins) de la documentation lit directement les manifests sur le disque, pas ce fichier.
 
 Les `matches` d'un plugin doivent rester à l'intérieur des `matches` de son site. Un plugin qui déborde fait échouer le build.
 
@@ -90,7 +90,7 @@ Règle rapide :
 
 ## Éviter les doublons
 
-Avant de proposer un plugin, vérifiez le marketplace et les plugins officiels existants. Si un bon plugin existe déjà, améliorez-le plutôt que d'en créer un similaire.
+Avant de proposer un plugin, parcourez les plugins officiels existants dans [Tous les plugins](/fr/guide/plugins). Si un bon plugin existe déjà, améliorez-le plutôt que d'en créer un similaire.
 
 Un doublon ne vaut la peine que s'il apporte une amélioration claire, par exemple :
 
@@ -99,7 +99,7 @@ Un doublon ne vaut la peine que s'il apporte une amélioration claire, par exemp
 - Il améliore clairement les performances, l'accessibilité ou la maintenabilité.
 - Il propose une expérience utilisateur réellement différente, pas seulement un nouveau nom ou quelques styles.
 
-Cela garde le marketplace lisible et aide les utilisateurs à choisir.
+Cela garde la liste des plugins lisible et aide les utilisateurs à choisir.
 
 ## Exemple minimal
 

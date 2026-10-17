@@ -88,7 +88,6 @@ Para um guia completo, visite a nossa [Documentação](https://voyager.nagi.fun/
 - **☁️ [Sincronização na Nuvem](https://voyager.nagi.fun/pt/guide/cloud-sync)**: Sincronize pastas e prompts pelo Google Drive ou pelo iCloud no Safari.
 - **🗑️ [Exclusão em lote](https://voyager.nagi.fun/pt/guide/batch-delete)**: Exclua conversas em massa.
 - **📐 [Cópia de Fórmulas](https://voyager.nagi.fun/pt/guide/formula-copy)**: Clique em uma fórmula para copiá-la como LaTeX, MathML (Word) ou em formato pronto para o Notion.
-- **🌦️ Efeitos Visuais**: Adicione um ambiente sazonal com **neve**, **chuva cinematográfica** ou **pétalas de sakura** a partir do painel de configurações.
 
 ### ✨ Recursos Exclusivos do Gemini
 
@@ -128,7 +127,8 @@ Adicione qualquer site no popup e o Prompt Manager vai junto, incluindo aplicati
 
 ### 🎨 Personalização
 
-- Abra o popup da extensão e encontre **Efeitos Visuais** para alternar entre `Desligado`, `Neve`, `Sakura` e `Chuva`.
+- **🌦️ Efeitos visuais**: Adicione um ambiente sazonal com **neve**, **chuva cinematográfica** ou **pétalas de sakura** em qualquer site onde o Voyager funcione.
+- No Gemini e no AI Studio, abra o popup da extensão, ative **Layout da página** → **Efeitos visuais** e escolha `Neve`, `Sakura` ou `Chuva` abaixo da linha; desative-a para desligar o efeito. No Claude, no ChatGPT, no DeepSeek e em sites personalizados, a mesma linha fica no cartão **Plugins** desse site.
 - Os efeitos são renderizados como sobreposições leves em tela cheia e não bloqueiam a interação com a página.
 - Ao trocar de efeito ou desativar, as partículas desaparecem naturalmente em vez de sumir abruptamente.
 

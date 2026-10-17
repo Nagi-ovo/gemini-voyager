@@ -82,7 +82,6 @@ That's why I built **Voyager**. It's a companion that helps you keep your AI con
 - **☁️ [Cloud Sync](https://voyager.nagi.fun/en/guide/cloud-sync)**: Sync folders and prompts through Google Drive, or iCloud on Safari.
 - **🗑️ [Batch Delete](https://voyager.nagi.fun/en/guide/batch-delete)**: Bulk delete conversations.
 - **📐 [Formula Copy](https://voyager.nagi.fun/en/guide/formula-copy)**: Click a formula to copy it as LaTeX, MathML (Word), or Notion-ready math.
-- **🌦️ Visual Effects**: Add seasonal ambience with **snow**, **cinematic rain**, or **falling sakura petals** from the settings panel.
 
 ### ✨ Gemini Exclusive
 
@@ -122,7 +121,8 @@ Add any site in the extension popup and the Prompt Manager follows you there, lo
 
 ### 🎨 Personalization
 
-- Open the extension popup and find **Visual Effects** to switch between `Off`, `Snow`, `Sakura`, and `Rain`.
+- **🌦️ Visual Effects**: Add seasonal ambience with **snow**, **cinematic rain**, or **falling sakura petals** on every site where Voyager runs.
+- On Gemini and AI Studio, open the extension popup, switch on **Page layout** → **Visual effects**, then pick `Snow`, `Sakura`, or `Rain` under the row; switch it off to turn the effect off. On Claude, ChatGPT, DeepSeek, and custom sites, the same row sits in that site's **Plugins** card.
 - Effects are rendered as lightweight full-screen overlays and do not block page interaction.
 - When you switch effects or turn them off, existing particles drain out naturally instead of disappearing abruptly.
 

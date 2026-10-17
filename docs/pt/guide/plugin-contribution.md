@@ -22,7 +22,7 @@ Os plugins oficiais incluídos ficam em `src/features/plugins/catalog/`, com um 
 
 ```
 src/features/plugins/catalog/
-  marketplace.json                        índice lido pela loja da documentação
+  marketplace.json                        índice dos plugins de site, mantido à mão e verificado por um teste
   sites/<site>/site.json                  o adaptador de site, como dados
   sites/<site>/plugins/<id>/plugin.json   um plugin declarativo
   sites/<site>/plugins/<id>/style.css     os seus estilos
@@ -31,7 +31,7 @@ src/features/plugins/catalog/
 
 A descoberta é automática: `catalog/sites/index.ts` encontra cada `site.json` e cada `plugin.json` com `import.meta.glob`, por isso acrescentar um site ou um plugin é acrescentar ficheiros. Não há tabela de mapeamento para editar.
 
-`marketplace.json` não é essa tabela: é apenas o índice lido pela loja de plugins da documentação. Um teste mantém-no sincronizado com a descoberta, portanto um plugin novo também precisa de uma entrada aí. O `source` é o caminho relativo ao catalog, por exemplo `sites/deepseek/plugins/reading-width/plugin.json`. Os plugins em `sites/gemini/` e `sites/aistudio/` são a exceção: vão dentro do Voyager e ficam fora do `marketplace.json`.
+`marketplace.json` não é essa tabela: é apenas um índice dos plugins de site, mantido à mão. Um teste mantém-no sincronizado com a descoberta, portanto um plugin novo também precisa de uma entrada aí (o `bun run plugin:new` acrescenta-a por si). O `source` é o caminho relativo ao catalog, por exemplo `sites/deepseek/plugins/reading-width/plugin.json`. Os plugins em `sites/gemini/` e `sites/aistudio/` são a exceção: vão dentro do Voyager e ficam fora do `marketplace.json`. A página [Todos os plugins](/pt/guide/plugins) da documentação lê os manifests diretamente do disco, não este ficheiro.
 
 Os `matches` de um plugin têm de ficar dentro dos `matches` do seu site. Um plugin que saia desse âmbito faz a build falhar.
 
@@ -123,7 +123,7 @@ Regra rápida:
 
 ## Evitar plugins duplicados
 
-Antes de submeter, verifique o marketplace e os plugins oficiais existentes. Se já houver um bom plugin, melhore-o em vez de criar outro semelhante.
+Antes de submeter, verifique os plugins oficiais existentes em [Todos os plugins](/pt/guide/plugins). Se já houver um bom plugin, melhore-o em vez de criar outro semelhante.
 
 Um duplicado só deve ser aceite quando traz uma melhoria clara, por exemplo:
 
@@ -132,7 +132,7 @@ Um duplicado só deve ser aceite quando traz uma melhoria clara, por exemplo:
 - Tem melhor desempenho, acessibilidade ou manutenção de forma clara.
 - Oferece uma experiência de utilizador diferente e útil, não apenas outro nome ou pequenas alterações de estilo.
 
-Assim o marketplace fica mais limpo e os utilizadores escolhem melhor.
+Assim a lista de plugins fica mais limpa e os utilizadores escolhem melhor.
 
 ## Exemplo mínimo
 

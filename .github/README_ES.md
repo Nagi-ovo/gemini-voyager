@@ -82,7 +82,6 @@ Por eso creamos **Voyager**. No es solo una herramienta; es un compañero que te
 - **☁️ [Sincronización en la Nube](https://voyager.nagi.fun/es/guide/cloud-sync)**: Sincroniza carpetas y prompts a través de Google Drive, o de iCloud en Safari.
 - **🗑️ [Eliminación por lotes](https://voyager.nagi.fun/es/guide/batch-delete)**: Elimina conversaciones en bloque.
 - **📐 [Copia de Fórmulas](https://voyager.nagi.fun/es/guide/formula-copy)**: Haz clic en una fórmula para copiarla como LaTeX, como MathML (Word) o como math listo para Notion.
-- **🌦️ Efectos Visuales**: Añade un ambiente estacional con **nieve**, **lluvia cinematográfica** o **pétalos de sakura** desde el panel de configuración.
 
 ### ✨ Funciones Exclusivas de Gemini
 
@@ -122,7 +121,8 @@ Añade cualquier sitio desde el popup y el Prompt Manager te acompaña allí, ta
 
 ### 🎨 Personalización
 
-- Abre el popup de la extensión y busca **Efectos Visuales** para cambiar entre `Apagado`, `Nieve`, `Sakura` y `Lluvia`.
+- **🌦️ Efectos visuales**: Añade un ambiente estacional con **nieve**, **lluvia cinematográfica** o **pétalos de sakura** en cada sitio donde funcione Voyager.
+- En Gemini y AI Studio, abre el popup de la extensión, activa **Diseño de la página** → **Efectos visuales** y elige `Nieve`, `Sakura` o `Lluvia` debajo de esa fila; desactívala para quitar el efecto. En Claude, ChatGPT, DeepSeek y los sitios personalizados, la misma fila está en la tarjeta **Complementos** de ese sitio.
 - Los efectos se renderizan como capas ligeras a pantalla completa y no bloquean la interacción con la página.
 - Al cambiar de efecto o desactivarlo, las partículas se desvanecen naturalmente en lugar de desaparecer abruptamente.
 

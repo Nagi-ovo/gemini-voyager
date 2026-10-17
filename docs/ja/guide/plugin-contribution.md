@@ -22,7 +22,7 @@ Voyager のプラグインシステムは、宣言的なプラグインを優先
 
 ```
 src/features/plugins/catalog/
-  marketplace.json                        ドキュメントのプラグインストアが読む索引
+  marketplace.json                        手で管理するサイトプラグインの索引（テストで検証）
   sites/<site>/site.json                  データとしてのサイトアダプタ
   sites/<site>/plugins/<id>/plugin.json   宣言的プラグイン
   sites/<site>/plugins/<id>/style.css     そのスタイル
@@ -31,7 +31,7 @@ src/features/plugins/catalog/
 
 検出は自動です。`catalog/sites/index.ts` が `import.meta.glob` で各 `site.json` と各 `plugin.json` を見つけるため、サイトやプラグインの追加はファイルの追加だけで済み、書き換えるべき対応表はありません。
 
-`marketplace.json` はその対応表ではなく、ドキュメントのプラグインストアが読む索引です。テストが検出結果との一致を保証しているので、新しいプラグインはここにも 1 件追加します。`source` は catalog からの相対パスで、たとえば `sites/deepseek/plugins/reading-width/plugin.json` です。ただし `sites/gemini/` と `sites/aistudio/` の下のプラグインは例外で、Voyager に同梱されるため `marketplace.json` には載せません。
+`marketplace.json` はその対応表ではなく、手で管理しているサイトプラグインの索引です。テストが検出結果との一致を保証しているので、新しいプラグインはここにも 1 件追加します（`bun run plugin:new` が追記してくれます）。`source` は catalog からの相対パスで、たとえば `sites/deepseek/plugins/reading-width/plugin.json` です。ただし `sites/gemini/` と `sites/aistudio/` の下のプラグインは例外で、Voyager に同梱されるため `marketplace.json` には載せません。ドキュメントの [プラグイン一覧](/ja/guide/plugins) はこのファイルではなく、ディスク上の各マニフェストを直接読みます。
 
 プラグインの `matches` は、それが置かれているサイトの `matches` の内側に収まっていなければなりません。はみ出したプラグインはビルドを失敗させます。
 
@@ -92,7 +92,7 @@ DeepSeek のような新しいプラットフォームを追加する場合は�
 
 ## 重複プラグインを避ける
 
-提出前にプラグインマーケットと既存の公式プラグインを確認してください。すでによいプラグインがある場合は、似たものを新しく作るより、そのプラグインを改善する PR を優先してください。
+提出前に [プラグイン一覧](/ja/guide/plugins) で既存の公式プラグインを確認してください。すでによいプラグインがある場合は、似たものを新しく作るより、そのプラグインを改善する PR を優先してください。
 
 重複プラグインが受け入れられるのは、次のような明確な改善がある場合です。
 
@@ -101,7 +101,7 @@ DeepSeek のような新しいプラットフォームを追加する場合は�
 - パフォーマンス、アクセシビリティ、保守性が明確に向上している。
 - 名前や細かなスタイル変更だけではなく、十分に異なる有用な体験を提供する。
 
-これによりマーケットが整理され、ユーザーも選びやすくなります。
+これによりプラグイン一覧が整理され、ユーザーも選びやすくなります。
 
 ## 最小例
 

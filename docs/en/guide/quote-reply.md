@@ -18,7 +18,7 @@ Voyager simplifies this process:
 
 On Gemini, quote reply is controlled by **Input** → **Quote Reply** in the Voyager popup.
 
-On Claude, ChatGPT, and DeepSeek, install the **Quote replies** plugin for that site from the [plugin list](/en/guide/plugins). There the **Quote** button appears when you select text inside a single assistant reply, and the quote is added to your draft without sending anything.
+On Claude, ChatGPT, and DeepSeek, open the Voyager popup on that site and turn on **Quote replies** in the **Plugins** card ([All plugins](/en/guide/plugins) lists what each site offers). Then the **Quote** button appears when you select text inside a single assistant reply, and the quote is added to your draft without sending anything.
 
 ## Features
 

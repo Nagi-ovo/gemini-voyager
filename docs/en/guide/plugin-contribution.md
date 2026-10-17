@@ -23,7 +23,7 @@ directory per plugin platform:
 
 ```
 src/features/plugins/catalog/
-  marketplace.json                        index read by the docs plugin store
+  marketplace.json                        hand-kept site plugin index, checked by a test
   sites/<site>/site.json                  the site adapter, as data
   sites/<site>/plugins/<id>/plugin.json   a declarative plugin
   sites/<site>/plugins/<id>/style.css     its styles
@@ -34,12 +34,14 @@ Discovery is automatic: `catalog/sites/index.ts` finds every `site.json` and
 every `plugin.json` with `import.meta.glob`, so adding a site or a plugin means
 adding files. There is no mapping table to edit.
 
-`marketplace.json` is not that mapping table. It is only the index the
-documentation plugin store reads, and a test keeps it in sync with discovery, so
-a new plugin also needs an entry there. Its `source` is the catalog-relative
-path, for example `sites/deepseek/plugins/reading-width/plugin.json`. Plugins
-under `sites/gemini/` and `sites/aistudio/` are the exception: they ship inside
-Voyager and stay out of `marketplace.json`.
+`marketplace.json` is not that mapping table. It is a hand-kept index of the
+site plugins, and a test keeps it in sync with discovery, so a new plugin also
+needs an entry there (`bun run plugin:new` appends it for you). Its `source` is
+the catalog-relative path, for example
+`sites/deepseek/plugins/reading-width/plugin.json`. Plugins under `sites/gemini/`
+and `sites/aistudio/` are the exception: they ship inside Voyager and stay out
+of `marketplace.json`. The [All plugins](/en/guide/plugins) table reads the
+manifests from disk, not this file.
 
 A plugin's `matches` must stay inside the `matches` of the site it lives under.
 A plugin that reaches outside its own site fails the build.
@@ -146,7 +148,7 @@ Quick rule:
 
 ## Avoid duplicate plugins
 
-Before submitting, check the plugin marketplace and existing official plugins. If a good plugin already exists, improve it instead of creating a similar one.
+Before submitting, check the existing official plugins in [All plugins](/en/guide/plugins). If a good plugin already exists, improve it instead of creating a similar one.
 
 A duplicate plugin is only worth accepting when it has a clear improvement, such as:
 
@@ -155,7 +157,7 @@ A duplicate plugin is only worth accepting when it has a clear improvement, such
 - It has clearly better performance, accessibility, or maintainability.
 - It offers a different and meaningful user experience, not just a renamed or lightly restyled copy.
 
-This keeps the marketplace clean and helps users choose.
+This keeps the plugin list lean and helps users choose.
 
 ## Minimal example
 

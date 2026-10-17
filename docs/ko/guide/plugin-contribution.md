@@ -22,7 +22,7 @@ Voyager의 플러그인 시스템은 선언형 플러그인을 우선합니다. 
 
 ```
 src/features/plugins/catalog/
-  marketplace.json                        문서 플러그인 스토어가 읽는 색인
+  marketplace.json                        직접 관리하는 사이트 플러그인 색인(테스트로 검증)
   sites/<site>/site.json                  데이터로 표현한 사이트 어댑터
   sites/<site>/plugins/<id>/plugin.json   선언형 플러그인
   sites/<site>/plugins/<id>/style.css     해당 스타일
@@ -31,7 +31,7 @@ src/features/plugins/catalog/
 
 탐색은 자동입니다. `catalog/sites/index.ts`가 `import.meta.glob`으로 모든 `site.json`과 `plugin.json`을 찾으므로, 사이트나 플러그인을 추가하는 일은 파일을 추가하는 일입니다. 손으로 관리하는 매핑 표는 없습니다.
 
-`marketplace.json`은 그 매핑 표가 아니라 문서 플러그인 스토어가 읽는 색인입니다. 테스트가 탐색 결과와의 동기화를 강제하므로 새 플러그인은 여기에도 항목을 추가해야 합니다. `source`는 catalog 기준 상대 경로이며, 예를 들어 `sites/deepseek/plugins/reading-width/plugin.json`입니다. 단, `sites/gemini/`와 `sites/aistudio/` 아래 플러그인은 예외입니다. 이들은 Voyager에 함께 포함되어 배포되므로 `marketplace.json`에 넣지 않습니다.
+`marketplace.json`은 그 매핑 표가 아니라 직접 관리하는 사이트 플러그인 색인입니다. 테스트가 탐색 결과와의 동기화를 강제하므로 새 플러그인은 여기에도 항목을 추가해야 합니다(`bun run plugin:new`가 대신 추가해 줍니다). `source`는 catalog 기준 상대 경로이며, 예를 들어 `sites/deepseek/plugins/reading-width/plugin.json`입니다. 단, `sites/gemini/`와 `sites/aistudio/` 아래 플러그인은 예외입니다. 이들은 Voyager에 함께 포함되어 배포되므로 `marketplace.json`에 넣지 않습니다. 문서의 [플러그인 목록](/ko/guide/plugins)은 이 파일이 아니라 디스크에 있는 매니페스트를 직접 읽습니다.
 
 플러그인의 `matches`는 그 플러그인이 속한 사이트의 `matches` 안에 있어야 합니다. 범위를 벗어나면 빌드가 실패합니다.
 
@@ -90,7 +90,7 @@ DeepSeek 같은 새 플랫폼을 추가할 때는 어댑터 작업을 플랫폼 
 
 ## 중복 플러그인 피하기
 
-제출 전 플러그인 마켓플레이스와 기존 공식 플러그인을 확인하세요. 이미 좋은 플러그인이 있다면 비슷한 것을 새로 만들기보다 기존 플러그인을 개선하는 PR을 우선하세요.
+제출 전 [플러그인 목록](/ko/guide/plugins)에서 기존 공식 플러그인을 확인하세요. 이미 좋은 플러그인이 있다면 비슷한 것을 새로 만들기보다 기존 플러그인을 개선하는 PR을 우선하세요.
 
 중복 플러그인은 다음처럼 명확한 개선이 있을 때만 받을 가치가 있습니다.
 
@@ -99,7 +99,7 @@ DeepSeek 같은 새 플랫폼을 추가할 때는 어댑터 작업을 플랫폼 
 - 성능, 접근성, 유지보수성이 명확히 더 좋습니다.
 - 이름이나 스타일을 조금 바꾼 수준이 아니라 충분히 다른 사용자 경험을 제공합니다.
 
-이렇게 해야 마켓플레이스가 깔끔해지고 사용자가 선택하기 쉬워집니다.
+이렇게 해야 플러그인 목록이 깔끔해지고 사용자가 선택하기 쉬워집니다.
 
 ## 최소 예시
 

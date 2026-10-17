@@ -18,6 +18,8 @@ Voyager lets that native Gems entry "expand" into a list of your gems, right the
 
 ## How to use it
 
+For now its row in the popup's **Sidebar** card is greyed out and can't be turned on. Once Gemini's sidebar has a Gems entry again and the feature can run, set it up like this:
+
 1. Open the Voyager popup (extension icon in the toolbar).
 2. Make sure **Sidebar** → **Recent Gems in sidebar** is on (it is on by default). While it is on, a count slider shows under the row. It shows 3 gems by default.
 3. Drag to the count you want (1–10). **`0` only hides the recent-Gems list** — it doesn't turn the feature off. To turn it off, switch the row off.
@@ -41,7 +43,7 @@ So if you add a gem from another device, Voyager won't "magically" know. Open it
 - The gems list snapshot and recent-use history stay in **local browser storage** (`chrome.storage.local`).
 - The slider value and the IDs of pinned gems are saved with your other Voyager settings in **browser sync storage**, so they follow you across devices signed into the same browser profile. Names and icons are never synced.
 - We don't read or cache the gem's conversation content — just the name, description, link, and first letter for the avatar.
-- Disabling the feature (count = 0) leaves the local data in place, so re-enabling is instant.
+- Turning the row off leaves the local data in place, so turning it back on is instant.
 
 ## Platform
 

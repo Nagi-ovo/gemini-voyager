@@ -92,6 +92,6 @@ Timeline is most valuable in conversations longer than 10 messages, where scroll
 
 ## Supported Browsers
 
-Timeline works on Google Gemini, and on Claude and ChatGPT as built-in plugins, across Chrome, Edge, Firefox, Safari, Opera, and Brave. Keyboard shortcuts and starring work the same on all three. Levels are an experimental opt-in everywhere: on Gemini, turn on **Enable Node Levels** below **Timeline** → **Show Timeline** once the row is on; on Claude and ChatGPT, turn on the same switch in the **Claude · Timeline** or **ChatGPT · Timeline** plugin settings under **Plugins**. Starred messages sync across devices when [Cloud Sync](/en/guide/cloud-sync) is enabled.
+Timeline works on Google Gemini, and on Claude and ChatGPT as built-in plugins, across Chrome, Edge, Firefox, Safari, Opera, and Brave. Keyboard shortcuts and starring work the same on all three. Levels are an experimental opt-in everywhere: on Gemini, turn on **Enable Node Levels** below **Timeline** → **Show Timeline** once the row is on; on Claude and ChatGPT, turn on the same switch in the **Timeline** plugin settings under **Plugins**. Starred messages sync across devices when [Cloud Sync](/en/guide/cloud-sync) is enabled.
 
 Timeline is not available on AI Studio. DeepSeek has an optional timeline plugin in the plugin catalog (it ships disabled).

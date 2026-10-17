@@ -22,7 +22,7 @@ Los plugins oficiales incluidos viven en `src/features/plugins/catalog/`, con un
 
 ```
 src/features/plugins/catalog/
-  marketplace.json                        índice que lee la tienda de la documentación
+  marketplace.json                        índice de plugins de sitio, mantenido a mano y verificado por un test
   sites/<site>/site.json                  el adaptador de sitio, como datos
   sites/<site>/plugins/<id>/plugin.json   un plugin declarativo
   sites/<site>/plugins/<id>/style.css     sus estilos
@@ -31,7 +31,7 @@ src/features/plugins/catalog/
 
 El descubrimiento es automático: `catalog/sites/index.ts` encuentra cada `site.json` y cada `plugin.json` con `import.meta.glob`, así que añadir un sitio o un plugin es añadir archivos. No hay tabla de mapeo que editar.
 
-`marketplace.json` no es esa tabla: es solo el índice que lee la tienda de plugins de la documentación. Un test lo mantiene sincronizado con el descubrimiento, por lo que un plugin nuevo también necesita una entrada allí. Su `source` es la ruta relativa al catalog, por ejemplo `sites/deepseek/plugins/reading-width/plugin.json`. Los plugins de `sites/gemini/` y `sites/aistudio/` son la excepción: van incluidos dentro de Voyager y no aparecen en `marketplace.json`.
+`marketplace.json` no es esa tabla: es solo un índice de los plugins de sitio que se mantiene a mano. Un test lo mantiene sincronizado con el descubrimiento, por lo que un plugin nuevo también necesita una entrada allí (`bun run plugin:new` la añade por ti). Su `source` es la ruta relativa al catalog, por ejemplo `sites/deepseek/plugins/reading-width/plugin.json`. Los plugins de `sites/gemini/` y `sites/aistudio/` son la excepción: van incluidos dentro de Voyager y no aparecen en `marketplace.json`. La página [Todos los plugins](/es/guide/plugins) de la documentación lee los manifests directamente del disco, no este archivo.
 
 Los `matches` de un plugin deben quedar dentro de los `matches` de su sitio. Un plugin que se sale de ese ámbito hace fallar la compilación.
 
@@ -92,7 +92,7 @@ Regla rápida:
 
 ## Evitar plugins duplicados
 
-Antes de enviar, revisa el marketplace y los plugins oficiales existentes. Si ya hay un buen plugin, mejora ese plugin en vez de crear uno similar.
+Antes de enviar, revisa los plugins oficiales existentes en [Todos los plugins](/es/guide/plugins). Si ya hay un buen plugin, mejora ese plugin en vez de crear uno similar.
 
 Un duplicado solo merece aceptarse si aporta una mejora clara, por ejemplo:
 
@@ -101,7 +101,7 @@ Un duplicado solo merece aceptarse si aporta una mejora clara, por ejemplo:
 - Mejora claramente el rendimiento, la accesibilidad o el mantenimiento.
 - Ofrece una experiencia de usuario distinta y útil, no solo otro nombre o pequeños cambios de estilo.
 
-Así el marketplace se mantiene limpio y los usuarios pueden elegir mejor.
+Así la lista de plugins se mantiene limpia y los usuarios pueden elegir mejor.
 
 ## Ejemplo mínimo
 

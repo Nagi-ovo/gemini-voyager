@@ -92,6 +92,6 @@ Voyager 把对话变成一条线。
 
 ## 支持的浏览器
 
-时间线支持 Google Gemini，并以内置插件的形式支持 Claude 和 ChatGPT，覆盖 Chrome、Edge、Firefox、Safari、Opera 和 Brave。快捷键和星标在这三个平台上的表现一致。层级在各平台都是需要手动开启的实验性功能：在 Gemini 上，开启 **时间线** → **显示时间线** 后，在该行下方打开 **启用节点层级**；在 Claude 和 ChatGPT 上，到 **插件** 里 **Claude · 时间线** 或 **ChatGPT · 时间线** 的设置中打开同一个开关。开启 [云同步](/guide/cloud-sync) 后，加星的消息会在多台设备之间同步。
+时间线支持 Google Gemini，并以内置插件的形式支持 Claude 和 ChatGPT，覆盖 Chrome、Edge、Firefox、Safari、Opera 和 Brave。快捷键和星标在这三个平台上的表现一致。层级在各平台都是需要手动开启的实验性功能：在 Gemini 上，开启 **时间线** → **显示时间线** 后，在该行下方打开 **启用节点层级**；在 Claude 和 ChatGPT 上，到 **插件** 里 **时间线** 的设置中打开同一个开关。开启 [云同步](/guide/cloud-sync) 后，加星的消息会在多台设备之间同步。
 
 AI Studio 上没有时间线。DeepSeek 在插件目录中提供了一个可选的时间线插件（默认未启用）。

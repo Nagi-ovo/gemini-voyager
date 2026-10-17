@@ -82,7 +82,6 @@ C'est pourquoi nous avons créé **Voyager**. Plus qu'un simple outil, c'est un 
 - **☁️ [Synchronisation Cloud](https://voyager.nagi.fun/fr/guide/cloud-sync)** : synchronisez dossiers et prompts via Google Drive, ou via iCloud sur Safari.
 - **🗑️ [Suppression par lot](https://voyager.nagi.fun/fr/guide/batch-delete)** : supprimez les conversations en masse.
 - **📐 [Copie de Formules](https://voyager.nagi.fun/fr/guide/formula-copy)** : cliquez sur une formule pour la copier en LaTeX, en MathML (Word) ou en notation mathématique prête pour Notion.
-- **🌦️ Effets Visuels** : Ajoutez une ambiance saisonnière avec **neige**, **pluie cinématique** ou **pétales de sakura** depuis le panneau de paramètres.
 
 ### ✨ Fonctions Exclusives Gemini
 
@@ -122,7 +121,8 @@ Ajoutez n'importe quel site depuis la popup et le Prompt Manager vous y suit, ap
 
 ### 🎨 Personnalisation
 
-- Ouvrez le popup de l'extension et recherchez **Effets Visuels** pour basculer entre `Désactivé`, `Neige`, `Sakura` et `Pluie`.
+- **🌦️ Effets visuels** : Ajoutez une ambiance saisonnière avec **neige**, **pluie cinématique** ou **pétales de sakura** sur chaque site où Voyager est actif.
+- Sur Gemini et AI Studio, ouvrez le popup de l'extension, activez **Mise en page** → **Effets visuels**, puis choisissez `Neige`, `Sakura` ou `Pluie` sous la ligne ; désactivez-la pour couper l'effet. Sur Claude, ChatGPT, DeepSeek et les sites personnalisés, la même ligne se trouve dans la carte **Extensions** du site.
 - Les effets sont rendus sous forme de couches légères plein écran qui ne bloquent pas l'interaction avec la page.
 - Lors du changement d'effet ou de la désactivation, les particules s'estompent naturellement au lieu de disparaître brusquement.
 

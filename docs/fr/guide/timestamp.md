@@ -17,7 +17,7 @@ Voyager annote chaque message avec un horodatage précis (format : `AAAA-MM-JJ H
 1. Ouvrez le panneau de paramètres Voyager (l’icône de l’extension dans la barre d’outils de votre navigateur).
 2. Activez **Chronologie** → **Horodatage des messages** (marqué **Expérimental**, désactivé par défaut).
 
-Sur ChatGPT, activez **Extensions** → **ChatGPT · Timeline**, puis, sous ses **Options**, activez **Afficher les horodatages des messages** : c’est le même réglage que la ligne de Gemini.
+Sur ChatGPT, activez **Extensions** → **Timeline**, puis, sous ses **Options**, activez **Afficher les horodatages des messages** : c’est le même réglage que la ligne de Gemini.
 
 ## D'où viennent les heures
 

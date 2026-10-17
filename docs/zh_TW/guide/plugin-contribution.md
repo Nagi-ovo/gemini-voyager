@@ -22,7 +22,7 @@ Voyager 的外掛系統優先支援宣告式外掛：用 `plugin.json` 描述外
 
 ```
 src/features/plugins/catalog/
-  marketplace.json                        文件站外掛市集讀取的索引
+  marketplace.json                        手動維護的網站外掛索引，由測試檢查
   sites/<site>/site.json                  網站適配器（資料形式）
   sites/<site>/plugins/<id>/plugin.json   一個宣告式外掛
   sites/<site>/plugins/<id>/style.css     它的樣式
@@ -31,7 +31,7 @@ src/features/plugins/catalog/
 
 尋找流程是自動的：`catalog/sites/index.ts` 用 `import.meta.glob` 找出每個 `site.json` 和每個 `plugin.json`，所以新增網站或外掛就是新增檔案，沒有對照表需要維護。
 
-`marketplace.json` 不是那張對照表，它只是文件站外掛市集讀取的索引；有測試確保它和自動尋找的結果一致，所以新外掛也要在裡面加一筆，`source` 寫 catalog 相對路徑，例如 `sites/deepseek/plugins/reading-width/plugin.json`。`sites/gemini/` 和 `sites/aistudio/` 下的外掛是例外：它們隨 Voyager 一起發布，不列入 `marketplace.json`。
+`marketplace.json` 不是那張對照表，它只是手動維護的網站外掛索引；有測試確保它和自動尋找的結果一致，所以新外掛也要在裡面加一筆（`bun run plugin:new` 會幫你追加），`source` 寫 catalog 相對路徑，例如 `sites/deepseek/plugins/reading-width/plugin.json`。`sites/gemini/` 和 `sites/aistudio/` 下的外掛是例外：它們隨 Voyager 一起發布，不列入 `marketplace.json`。文件站的[外掛一覽](/zh_TW/guide/plugins)直接從磁碟讀取各外掛的清單，不讀這個檔案。
 
 外掛的 `matches` 必須落在所屬網站的 `matches` 範圍內；越界的外掛會讓建置失敗。
 
@@ -90,7 +90,7 @@ catalog 裡的外掛屬於單一網站資料夾，它的每個 `matches` 都必�
 
 ## 避免重複外掛
 
-提交前請先看外掛市集和已有官方外掛。如果已經有一個好用的外掛，優先為它提交改進 PR，而不是再做一個類似外掛。
+提交前請先在[外掛一覽](/zh_TW/guide/plugins)看看已有的官方外掛。如果已經有一個好用的外掛，優先為它提交改進 PR，而不是再做一個類似外掛。
 
 重複外掛只有在有明顯提升時才值得接受，例如：
 
@@ -99,7 +99,7 @@ catalog 裡的外掛屬於單一網站資料夾，它的每個 `matches` 都必�
 - 有明顯更好的效能、可存取性或維護性。
 - 提供了不同但足夠清楚的使用者體驗，而不只是換名字或微調樣式。
 
-這樣外掛市集會更乾淨，使用者也更容易選擇。
+這樣外掛列表會更乾淨，使用者也更容易選擇。
 
 ## 最小範例
 
