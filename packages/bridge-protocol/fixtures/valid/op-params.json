@@ -40,6 +40,14 @@
     }
   },
   {
+    "name": "ready ensuring work mode before a close",
+    "kind": "opParams",
+    "op": "conversation.ready",
+    "input": {
+      "ensureMode": "work"
+    }
+  },
+  {
     "name": "inspect",
     "kind": "opParams",
     "op": "model.inspect",

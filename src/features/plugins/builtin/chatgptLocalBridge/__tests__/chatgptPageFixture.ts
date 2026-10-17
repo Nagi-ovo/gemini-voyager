@@ -11,7 +11,10 @@
  *   "ChatGPT 说："; `[data-talvt-turn-state]` inside the item reads `complete`
  *   once the turn has finished, and the reply's action row follows it;
  * - sending a new chat moves the route `/` → `/c/local-chatgpt:<uuid>` →
- *   `/c/<id>`.
+ *   `/c/<id>`;
+ * - the chat/work switch is two role-less buttons reading exactly 「聊天」 and
+ *   「工作」, each with a `data-state`; the composer's label names the mode
+ *   (「询问 ChatGPT」 / 「使用 ChatGPT Work」).
  *
  * Every page event the bridge causes is counted, so a test can prove that a
  * stopped op caused none.
@@ -49,6 +52,23 @@ export interface PageEvents {
   readonly focus: number;
 }
 
+export type FixtureMode = 'chat' | 'work';
+
+export interface PageOptions {
+  readonly route?: string;
+  readonly turns?: readonly FixtureTurn[];
+  readonly mode?: FixtureMode;
+  /** `measured` (default) as seen live; `no-state` drops `data-state`; `none` renders no switch. */
+  readonly modeSwitch?: 'measured' | 'no-state' | 'none';
+  /** Whether a click on a mode button changes the mode (default true). */
+  readonly switchWorks?: boolean;
+}
+
+const MODE_LABELS: Readonly<Record<FixtureMode, string>> = {
+  chat: '询问 ChatGPT',
+  work: '使用 ChatGPT Work',
+};
+
 export interface ChatGptPageFixture {
   readonly composer: HTMLElement;
   readonly form: HTMLFormElement;
@@ -59,6 +79,7 @@ export interface ChatGptPageFixture {
   addTurn(turn: FixtureTurn): HTMLElement;
   setReply(key: string, reply: ReplyState): void;
   showStopControl(shown: boolean): void;
+  mode(): FixtureMode;
   sendBehavior: SendBehavior;
 }
 
@@ -103,19 +124,18 @@ function renderTurn(turn: FixtureTurn): HTMLElement {
   return item;
 }
 
-export function mountChatGptPage(
-  options: { route?: string; turns?: readonly FixtureTurn[] } = {},
-): ChatGptPageFixture {
+export function mountChatGptPage(options: PageOptions = {}): ChatGptPageFixture {
   history.replaceState(null, '', options.route ?? '/');
   document.title = 'ChatGPT';
   document.body.innerHTML = `
     <div data-app-shell-active-page="true">
+      <header data-gv-fixture-header></header>
       <main>
         <div data-app-action-timeline-scroll role="presentation">
           <div data-chatgpt-conversation-selection-target><div data-gv-fixture-list></div></div>
         </div>
         <form data-chatgpt-composer>
-          <div id="prompt-textarea" contenteditable="true" role="textbox" aria-label="询问 ChatGPT"><p></p></div>
+          <div id="prompt-textarea" contenteditable="true" role="textbox"><p></p></div>
           <input type="file" multiple />
           <span data-gv-fixture-voice><button type="button" aria-label="听写"><svg><use href="#mic"></use></svg></button></span>
           <button type="submit" aria-label="发送" disabled><svg><use href="#send"></use></svg></button>
@@ -130,6 +150,33 @@ export function mountChatGptPage(
   const sendButton = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
   const list = document.querySelector<HTMLElement>('[data-gv-fixture-list]')!;
   const counts = { execCommand: 0, clicks: 0, focus: 0 };
+
+  let mode: FixtureMode = options.mode ?? 'chat';
+  composer.setAttribute('aria-label', MODE_LABELS[mode]);
+  const switchKind = options.modeSwitch ?? 'measured';
+  if (switchKind !== 'none') {
+    const header = document.querySelector<HTMLElement>('[data-gv-fixture-header]')!;
+    header.innerHTML =
+      '<div><span><button type="button">聊天</button></span><span><button type="button">工作</button></span></div>';
+    const buttons = Array.from(header.querySelectorAll<HTMLButtonElement>('button'));
+    const paint = (): void => {
+      if (switchKind !== 'measured') return;
+      buttons[0].setAttribute('data-state', mode === 'chat' ? 'on' : 'off');
+      buttons[1].setAttribute('data-state', mode === 'work' ? 'on' : 'off');
+    };
+    paint();
+    buttons.forEach((button, index) =>
+      button.addEventListener('click', () => {
+        if (options.switchWorks === false) return;
+        // ChatGPT re-labels the composer a moment after the click.
+        setTimeout(() => {
+          mode = index === 0 ? 'chat' : 'work';
+          composer.setAttribute('aria-label', MODE_LABELS[mode]);
+          paint();
+        }, 300);
+      }),
+    );
+  }
 
   const paragraph = (): HTMLParagraphElement => composer.querySelector('p')!;
   const syncButton = (): void => {
@@ -160,6 +207,7 @@ export function mountChatGptPage(
     list,
     sendBehavior: {},
     events: () => ({ ...counts }),
+    mode: () => mode,
     setDraft(text) {
       paragraph().textContent = text;
       syncButton();

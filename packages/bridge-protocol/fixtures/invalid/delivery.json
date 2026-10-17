@@ -14,7 +14,7 @@
       ],
       "policy": {
         "revision": 1,
-        "allowed": true
+        "state": "allowed"
       }
     },
     "issuePath": "inflight[0].state"
@@ -34,10 +34,25 @@
       "inflight": [],
       "policy": {
         "revision": 1,
-        "allowed": true
+        "state": "allowed"
       }
     },
     "issuePath": "capabilities.ops[0].name"
+  },
+  {
+    "name": "policy reported as a bare boolean",
+    "kind": "pollRequest",
+    "input": {
+      "capabilities": {
+        "ops": []
+      },
+      "inflight": [],
+      "policy": {
+        "revision": 1,
+        "allowed": false
+      }
+    },
+    "issuePath": "policy.state"
   },
   {
     "name": "unknown op in a task",

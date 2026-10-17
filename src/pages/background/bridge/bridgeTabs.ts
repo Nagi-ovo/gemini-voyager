@@ -70,6 +70,8 @@ export interface BridgeTabs {
   isActive(tabId: number): Promise<boolean>;
   exists(tabId: number): Promise<boolean>;
   send(holder: ContentHolder, message: unknown): Promise<unknown>;
+  /** Ask whatever document the tab holds to say hello again; never throws. */
+  requestHello(tabId: number): Promise<void>;
   /**
    * A hello from the recorded bridge tab: store its document identity. Returns
    * the record as it was before, or null when the sender is not the bridge tab.
@@ -120,6 +122,13 @@ export function createBridgeTabs(deps: {
         message,
         holder.documentId ? { documentId: holder.documentId } : undefined,
       ),
+    requestHello: async (tabId) => {
+      try {
+        await api.sendMessage(tabId, { type: 'gv.bridge.hello.request' });
+      } catch {
+        // Not loaded yet: its own hello follows once the bridge mounts.
+      }
+    },
     acceptHello: async (sender, docNonce) => {
       if (!isBridgeContentSender(sender)) return null;
       const previous = await store.getTab();

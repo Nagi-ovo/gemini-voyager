@@ -20,7 +20,11 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
 function setup(
-  options: { session?: Record<string, unknown>; local?: Record<string, unknown> } = {},
+  options: {
+    session?: Record<string, unknown>;
+    local?: Record<string, unknown>;
+    onlineUpdatesEnabled?: boolean;
+  } = {},
 ) {
   const session = testArea(options.session);
   const local = testArea(options.local);
@@ -47,21 +51,29 @@ function setup(
     const route = routes[path];
     return route ? route(body) : json({ ok: true, data: {} });
   });
+  const settings = { onlineUpdatesEnabled: options.onlineUpdatesEnabled ?? true };
+  /** What the online-update switch read when each catalog check ran. */
+  const refreshes: boolean[] = [];
   const owner = createBridgeOwner({
     session,
     local,
     tabs: page.api,
     fetch: fetchImpl as unknown as typeof fetch,
     hasOrigin: async (pattern) => origins.has(pattern),
-    refreshCatalog: async () => {},
-    loadOnlineUpdatesEnabled: async () => true,
+    refreshCatalog: async () => {
+      refreshes.push(settings.onlineUpdatesEnabled);
+    },
+    loadOnlineUpdatesEnabled: async () => settings.onlineUpdatesEnabled,
+    saveOnlineUpdatesEnabled: async (enabled) => {
+      settings.onlineUpdatesEnabled = enabled;
+    },
     alarms: { get: async () => undefined, create: vi.fn(), clear: vi.fn(async () => true) },
     browser: 'chrome',
     sleep: async () => {},
   });
   const send = async (message: Record<string, unknown>, sender = popup) =>
     (await owner.handleMessage(message, sender)) as Record<string, unknown>;
-  return { session, local, page, origins, routes, requests, owner, send };
+  return { session, local, page, origins, routes, requests, owner, send, settings, refreshes };
 }
 
 describe('bridge owner', () => {
@@ -125,6 +137,29 @@ describe('bridge owner', () => {
     expect(t.session.values[BRIDGE_SESSION_KEYS.pairIntent]).toBeUndefined();
   });
 
+  it('pairs once when two requests bring the same code at the same time', async () => {
+    const t = setup();
+    t.origins.add('http://127.0.0.1/*');
+    const message = { type: 'gv.bridge.pair', port: 47321, code: '12345678' };
+    const [first, second] = await Promise.all([t.send(message), t.send(message)]);
+
+    expect(t.requests.filter((r) => r.path === '/v1/pair')).toHaveLength(1);
+    expect(first).toEqual({ ok: true, data: { serverId: 'srv1' } });
+    expect(second).toEqual(first);
+  });
+
+  it('turns online updates on before it checks the catalog for a stale policy', async () => {
+    const t = setup({ onlineUpdatesEnabled: false });
+    const reply = await t.send({ type: 'gv.bridge.enableRefresh' });
+
+    expect(t.settings.onlineUpdatesEnabled).toBe(true);
+    expect(t.refreshes).toEqual([true]);
+    expect(reply).toEqual({ ok: true, data: { policy: 'allowed' } });
+    expect(await t.send({ type: 'gv.bridge.status' })).toMatchObject({
+      data: { onlineUpdatesEnabled: true },
+    });
+  });
+
   it('names the side to upgrade when the protocol ranges do not meet', async () => {
     const t = setup();
     t.origins.add('http://127.0.0.1/*');
@@ -180,7 +215,7 @@ describe('bridge owner', () => {
     const poll = t.requests.find((r) => r.path === '/v1/ext/poll');
     expect(poll?.body).toMatchObject({
       inflight: [],
-      policy: { allowed: true },
+      policy: { state: 'allowed' },
       capabilities: { ops: expect.arrayContaining([{ name: 'composer.send', v: 1 }]) },
     });
     expect(t.local.values[StorageKeys.BRIDGE_PAIRING]).toBeUndefined();

@@ -54,12 +54,26 @@ export interface ConversationCloseParams {
 export interface ConversationCloseResult {
   /** False when the person had already closed the tab; that is not a failure. */
   readonly closed: boolean;
+  /**
+   * Present when the bridge had switched the tab's mode (see
+   * `ConversationReadyResult.switchedMode`) and tried to switch it back before
+   * closing; false when that could not be confirmed. The tab closes either way.
+   */
+  readonly restoredMode?: boolean;
 }
 
 // conversation.ready
 
+/** The modes a page can be switched to; `unknown` is only ever an observation. */
+export type SwitchableMode = Exclude<ChatMode, 'unknown'>;
+
 export interface ConversationReadyParams {
   readonly expect?: { readonly conversationId?: string };
+  /**
+   * The mode the page must end in; defaults to `chat`. A page positively seen
+   * in the other mode is switched with its own mode control, under a lease.
+   */
+  readonly ensureMode?: SwitchableMode;
 }
 
 export interface ConversationReadyResult {
@@ -68,6 +82,8 @@ export interface ConversationReadyResult {
   readonly loggedIn: boolean;
   readonly mode: ChatMode;
   readonly evidence: Evidence;
+  /** Present when this op switched the page's mode; `from` is what to restore later. */
+  readonly switchedMode?: { readonly from: SwitchableMode; readonly to: SwitchableMode };
 }
 
 // model.inspect (read-only: never opens the menu)

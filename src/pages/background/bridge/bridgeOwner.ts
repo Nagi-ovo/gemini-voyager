@@ -22,7 +22,9 @@ import {
   type BridgeBrowser,
   type ErrorCode,
   OP_VERSIONS,
+  bridgeError,
   type OpCapability,
+  type PolicyState,
   type UpgradeSide,
 } from '@/features/bridge/protocol';
 import { BUNDLED_SITE_ADAPTERS } from '@/features/plugins/catalog/sites';
@@ -30,7 +32,10 @@ import {
   hostCatalogStorageKey,
   loadHostCatalogCache,
 } from '@/features/plugins/remote/hostCatalogCache';
-import { loadPluginCatalogSettings } from '@/features/plugins/remote/hostCatalogSettings';
+import {
+  loadPluginCatalogSettings,
+  savePluginCatalogSettings,
+} from '@/features/plugins/remote/hostCatalogSettings';
 import { isPluginEnabled } from '@/features/plugins/storage/pluginDefaults';
 
 import { createBridgeClient } from './bridgeClient';
@@ -64,6 +69,8 @@ export interface BridgeOwnerEnv {
   readonly hasOrigin: (pattern: string) => Promise<boolean>;
   readonly refreshCatalog: () => Promise<unknown>;
   readonly loadOnlineUpdatesEnabled: () => Promise<boolean>;
+  /** Write the "plugin online updates" switch the catalog refresher obeys. */
+  readonly saveOnlineUpdatesEnabled: (enabled: boolean) => Promise<void>;
   readonly alarms?: {
     get(name: string): Promise<unknown>;
     create(name: string, info: { periodInMinutes: number }): Promise<void> | void;
@@ -90,7 +97,7 @@ export interface BridgeOwner {
   idle(): Promise<void>;
 }
 
-const policyLabel = (verdict: PolicyVerdict): BridgeStatusData['policy'] =>
+const policyLabel = (verdict: PolicyVerdict): PolicyState =>
   verdict.state === 'allowed' ? 'allowed' : verdict.code === 'policy-stale' ? 'stale' : 'denied';
 
 function isUpgradeSide(value: unknown): value is UpgradeSide {
@@ -217,7 +224,7 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
         {
           capabilities: { ops },
           inflight: await dispatcher.inflight(),
-          policy: { revision: verdict.revision ?? 0, allowed: verdict.state === 'allowed' },
+          policy: { revision: verdict.revision ?? 0, state: policyLabel(verdict) },
         },
         pollAbort.signal,
       );
@@ -332,6 +339,16 @@ export function createBridgeOwner(env: BridgeOwnerEnv): BridgeOwner {
       return { ok: true, data: { unpaired: true } };
     },
     enableRefresh: async () => {
+      // The refresher obeys the switch, so it has to be on before the check can run.
+      try {
+        await env.saveOnlineUpdatesEnabled(true);
+      } catch (error) {
+        logger.warn('Bridge could not turn on online plugin updates', { error: String(error) });
+        return {
+          ok: false,
+          error: bridgeError('policy-stale', 'Online plugin updates could not be turned on.'),
+        };
+      }
       await policy.refresh();
       void wake();
       return { ok: true, data: { policy: policyLabel((await policy.status()).verdict) } };
@@ -433,6 +450,8 @@ export function startBridgeOwner(options: {
       (await chrome.permissions?.contains({ origins: [pattern] })) === true,
     refreshCatalog: () => options.refreshCatalog(BRIDGE_POLICY_HOST),
     loadOnlineUpdatesEnabled: async () => (await loadPluginCatalogSettings()).onlineUpdatesEnabled,
+    saveOnlineUpdatesEnabled: (enabled) =>
+      savePluginCatalogSettings({ onlineUpdatesEnabled: enabled }),
     alarms: chrome.alarms
       ? {
           get: (name) => chrome.alarms.get(name),

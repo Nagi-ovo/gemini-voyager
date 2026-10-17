@@ -80,19 +80,34 @@ export interface BridgeLeaseProbeMessage {
   type: 'gv.bridge.lease.probe';
   leaseId: string;
 }
-/** Stops a running op on the page; the op terminates with zero further page events. */
+/**
+ * Stops a running op on the page; the op terminates with zero further page
+ * events, and a later `op.start` for the same task is refused. Answered with
+ * {@link BridgeOpCancelReply}.
+ */
 export interface BridgeOpCancelMessage {
   type: 'gv.bridge.op.cancel';
   taskId: string;
   reason: 'cli-cancel' | 'job-timeout' | 'policy-denied' | 'unpaired';
 }
+/**
+ * Asks the page to send its `gv.bridge.hello` again: the first one can arrive
+ * before the background has recorded the tab it just opened.
+ */
+export interface BridgeHelloRequestMessage {
+  type: 'gv.bridge.hello.request';
+}
 
 /** Synchronous replies from the content runtime. */
 export interface BridgeOpStartAck {
   accepted: boolean;
-  reason?: 'doc-mismatch' | 'busy' | 'not-attached';
+  reason?: 'doc-mismatch' | 'busy' | 'not-attached' | 'cancelled';
 }
 export interface BridgeLeaseProbeReply {
+  stopped: boolean;
+}
+/** `stopped: true`: this document will cause no further page event for the task. */
+export interface BridgeOpCancelReply {
   stopped: boolean;
 }
 
@@ -111,10 +126,16 @@ export type BridgeContentToBackgroundMessage =
 export type BridgeBackgroundToContentMessage =
   | BridgeOpStartMessage
   | BridgeLeaseProbeMessage
-  | BridgeOpCancelMessage;
+  | BridgeOpCancelMessage
+  | BridgeHelloRequestMessage;
 
-/** Ops that dispatch page events and therefore need a lease (spec §3.2). */
+/**
+ * Ops that dispatch page events and therefore need a lease (spec §3.2).
+ * `conversation.ready` clicks the page's own mode switch when the tab is in
+ * the other mode, so it is leased too; it refuses a hidden tab only then.
+ */
 export const LEASED_OPS: ReadonlySet<OpName> = new Set<OpName>([
+  'conversation.ready',
   'model.select',
   'composer.attach',
   'composer.send',

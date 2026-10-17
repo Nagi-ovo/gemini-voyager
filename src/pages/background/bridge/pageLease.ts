@@ -55,6 +55,8 @@ export const LEASE_PROBE_TIMEOUT_MS = 2_000;
 
 /** Lease length per page-event op (spec §3.2). */
 export const LEASE_DURATION_MS: Readonly<Partial<Record<OpName, number>>> = {
+  // Up to 30 s for the app shell, then at most one mode switch and its confirmation.
+  'conversation.ready': 40_000,
   'model.select': 25_000,
   'composer.attach': 120_000,
   'composer.send': 30_000,

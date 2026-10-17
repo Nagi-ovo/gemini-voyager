@@ -44,6 +44,33 @@
     }
   },
   {
+    "name": "ready after switching from work",
+    "kind": "opResult",
+    "op": "conversation.ready",
+    "input": {
+      "url": "https://chatgpt.com/",
+      "conversationId": null,
+      "loggedIn": true,
+      "mode": "chat",
+      "evidence": {
+        "composerLabels": ["询问 ChatGPT"]
+      },
+      "switchedMode": {
+        "from": "work",
+        "to": "chat"
+      }
+    }
+  },
+  {
+    "name": "close after restoring the mode",
+    "kind": "opResult",
+    "op": "conversation.close",
+    "input": {
+      "closed": true,
+      "restoredMode": false
+    }
+  },
+  {
     "name": "inspect",
     "kind": "opResult",
     "op": "model.inspect",

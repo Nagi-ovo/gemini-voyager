@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Wire types and validators shared by the Voyager extension and voyager serve",
-  "license": "GPL-3.0",
+  "license": "MIT",
   "author": "Jesse Zhang",
   "repository": {
     "type": "git",

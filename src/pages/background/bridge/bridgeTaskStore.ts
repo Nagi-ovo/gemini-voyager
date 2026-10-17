@@ -12,7 +12,14 @@
  * only describe sync and local storage.
  */
 import { StorageKeys } from '@/core/types/common';
-import { type OpName, type TaskResultRequest, isOpName } from '@/features/bridge/protocol';
+import {
+  type ErrorCode,
+  type OpName,
+  type SwitchableMode,
+  type TaskResultRequest,
+  isErrorCode,
+  isOpName,
+} from '@/features/bridge/protocol';
 
 export const BRIDGE_SESSION_KEYS = {
   lease: 'gvBridgePageLease',
@@ -61,10 +68,22 @@ export interface BridgeTaskRecord {
   readonly documentId?: string;
   readonly docNonce?: string;
   readonly leaseId?: string;
-  /** `conversation.open` only: waiting for the new tab's hello, then for its ready result. */
-  readonly phase?: 'awaiting-hello' | 'ready';
+  /**
+   * `conversation.open`: waiting for the new tab's hello, then for its ready
+   * result. `conversation.close`: switching the tab back to the mode it had,
+   * then closing it.
+   */
+  readonly phase?: BridgeTaskPhase;
   readonly expectConversationId?: string;
+  /**
+   * Set once the task is being stopped (abort, …), with the code it ends with.
+   * The task stays in flight until its document confirms it stopped or is gone.
+   */
+  readonly cancelling?: ErrorCode;
 }
+
+export type BridgeTaskPhase = 'awaiting-hello' | 'ready' | 'restoring-mode' | 'closing';
+const PHASES: readonly BridgeTaskPhase[] = ['awaiting-hello', 'ready', 'restoring-mode', 'closing'];
 
 export interface BridgeTabRecord {
   readonly tabId: number;
@@ -73,6 +92,8 @@ export interface BridgeTabRecord {
   readonly openedAt: number;
   readonly docNonce?: string;
   readonly documentId?: string;
+  /** The mode a bridge op switched this tab away from; restored before the tab closes. */
+  readonly restoreMode?: SwitchableMode;
 }
 
 export interface OutboxEntry {
@@ -109,8 +130,9 @@ export function parseTaskRecord(raw: unknown): BridgeTaskRecord | null {
     optional(raw.documentId, isText) &&
     optional(raw.docNonce, isText) &&
     optional(raw.leaseId, isText) &&
-    (raw.phase === undefined || raw.phase === 'awaiting-hello' || raw.phase === 'ready') &&
-    optional(raw.expectConversationId, isText);
+    (raw.phase === undefined || PHASES.includes(raw.phase as BridgeTaskPhase)) &&
+    optional(raw.expectConversationId, isText) &&
+    (raw.cancelling === undefined || isErrorCode(raw.cancelling));
   return ok ? (raw as unknown as BridgeTaskRecord) : null;
 }
 
@@ -121,7 +143,8 @@ export function parseTabRecord(raw: unknown): BridgeTabRecord | null {
     isText(raw.jobId) &&
     isInt(raw.openedAt) &&
     optional(raw.docNonce, isText) &&
-    optional(raw.documentId, isText);
+    optional(raw.documentId, isText) &&
+    (raw.restoreMode === undefined || raw.restoreMode === 'chat' || raw.restoreMode === 'work');
   return ok ? (raw as unknown as BridgeTabRecord) : null;
 }
 
@@ -136,13 +159,24 @@ function parseOutbox(raw: unknown): OutboxEntry[] {
 export interface BridgeTaskStore {
   getTask(): Promise<BridgeTaskRecord | null>;
   setTask(record: BridgeTaskRecord): Promise<void>;
-  /** Update the record only while it still belongs to `taskId`; returns the new record. */
+  /**
+   * Update the record only while it still belongs to `taskId` and `when` (if
+   * given) holds for it, in one step; returns the new record, else null.
+   */
   updateTask(
     taskId: string,
     patch: Partial<Omit<BridgeTaskRecord, 'taskId'>>,
+    when?: (current: BridgeTaskRecord) => boolean,
   ): Promise<BridgeTaskRecord | null>;
   /** Clear the record only while it still belongs to `taskId`; true when this call cleared it. */
   clearTask(taskId: string): Promise<boolean>;
+  /**
+   * End the task: queue its result in the outbox, then clear its record, in
+   * one step, so a poll always finds the task in one of the two. Null when
+   * the record no longer belongs to `taskId`; `stored: false` when the result
+   * did not fit the outbox (it is then reported without a stored copy).
+   */
+  finishTask(entry: OutboxEntry): Promise<{ stored: boolean } | null>;
   getTab(): Promise<BridgeTabRecord | null>;
   setTab(record: BridgeTabRecord): Promise<void>;
   updateTab(tabId: number, patch: Partial<Omit<BridgeTabRecord, 'tabId'>>): Promise<void>;
@@ -172,14 +206,26 @@ export function createBridgeTaskStore(areas: {
     (await area.get(key))[key];
   const getTask = async () => parseTaskRecord(await read(session, K.task));
   const getTab = async () => parseTabRecord(await read(session, K.tab));
+  /** Unserialized; callers hold the chain. */
+  const pushOutbox = async (entry: OutboxEntry): Promise<boolean> => {
+    const entries = parseOutbox(await read(local, StorageKeys.BRIDGE_OUTBOX)).filter(
+      (existing) => existing.taskId !== entry.taskId,
+    );
+    const next = [...entries, entry];
+    if (next.length > OUTBOX_MAX_ENTRIES) return false;
+    if (new TextEncoder().encode(JSON.stringify(next)).length > OUTBOX_MAX_BYTES) return false;
+    await local.set({ [StorageKeys.BRIDGE_OUTBOX]: next });
+    return true;
+  };
 
   return {
     getTask,
     setTask: (record) => serial(() => session.set({ [K.task]: record })),
-    updateTask: (taskId, patch) =>
+    updateTask: (taskId, patch, when) =>
       serial(async () => {
         const current = await getTask();
         if (!current || current.taskId !== taskId) return null;
+        if (when && !when(current)) return null;
         const next = { ...current, ...patch, taskId };
         await session.set({ [K.task]: next });
         return next;
@@ -190,6 +236,14 @@ export function createBridgeTaskStore(areas: {
         if (!current || current.taskId !== taskId) return false;
         await session.remove(K.task);
         return true;
+      }),
+    finishTask: (entry) =>
+      serial(async () => {
+        const current = await getTask();
+        if (!current || current.taskId !== entry.taskId) return null;
+        const stored = await pushOutbox(entry);
+        await session.remove(K.task);
+        return { stored };
       }),
     getTab,
     setTab: (record) => serial(() => session.set({ [K.tab]: record })),
@@ -215,17 +269,7 @@ export function createBridgeTaskStore(areas: {
         return true;
       }),
     listOutbox: async () => parseOutbox(await read(local, StorageKeys.BRIDGE_OUTBOX)),
-    pushOutbox: (entry) =>
-      serial(async () => {
-        const entries = parseOutbox(await read(local, StorageKeys.BRIDGE_OUTBOX)).filter(
-          (existing) => existing.taskId !== entry.taskId,
-        );
-        const next = [...entries, entry];
-        if (next.length > OUTBOX_MAX_ENTRIES) return false;
-        if (new TextEncoder().encode(JSON.stringify(next)).length > OUTBOX_MAX_BYTES) return false;
-        await local.set({ [StorageKeys.BRIDGE_OUTBOX]: next });
-        return true;
-      }),
+    pushOutbox: (entry) => serial(() => pushOutbox(entry)),
     removeOutbox: (taskId) =>
       serial(async () => {
         const entries = parseOutbox(await read(local, StorageKeys.BRIDGE_OUTBOX));

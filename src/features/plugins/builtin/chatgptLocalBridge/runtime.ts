@@ -29,6 +29,7 @@ import {
 import {
   type BridgeGrant,
   type BridgeLeaseProbeReply,
+  type BridgeOpCancelReply,
   type BridgeOpOutcome,
   type BridgeOpStartAck,
   LEASED_OPS,
@@ -55,6 +56,7 @@ import { runTurnsWaitReply } from './ops/turnsWaitReply';
 
 export const DETACH_GRACE_MS = 3_000;
 const OUTCOME_CACHE_SIZE = 16;
+const CANCELLED_MEMORY = 16;
 const DONE_RETRY_DELAYS_MS = [1_000, 3_000] as const;
 const TOAST_MS = 20_000;
 const USER_INPUT_EVENTS = ['keydown', 'beforeinput', 'paste', 'drop', 'pointerdown'] as const;
@@ -72,7 +74,10 @@ interface RunningOp {
 export interface BridgeRuntime {
   attach(adapter: SiteAdapter | null): void;
   detach(): void;
-  /** Stop the op running `taskId`, if any; zero page events follow. */
+  /**
+   * Stop the op running `taskId`, if any, and refuse it later; zero page
+   * events follow. True when an op was running it.
+   */
   abort(taskId: string, reason?: string): boolean;
   /** For tests and the message listener: the synchronous replies the background reads. */
   handleOpStart(task: BridgeTask, grant: BridgeGrant): BridgeOpStartAck;
@@ -136,6 +141,8 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
   let lastUserInputAt = Number.NEGATIVE_INFINITY;
   let toaster: Toaster | null = null;
   const outcomes = new Map<string, BridgeOpOutcome>();
+  /** Tasks cancelled here; an `op.start` for one (it can arrive after its cancel) is refused. */
+  const cancelled = new Set<string>();
 
   const activity: ComposerActivity = {
     hadRecentUserInput: (ms) => now() - lastUserInputAt < ms,
@@ -270,7 +277,14 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
       sendResponse(runtime.handleLeaseProbe(message.leaseId));
     } else if (message.type === 'gv.bridge.op.cancel' && typeof message.taskId === 'string') {
       const reason = typeof message.reason === 'string' ? message.reason : 'cancelled';
-      sendResponse({ stopped: runtime.abort(message.taskId, reason) });
+      runtime.abort(message.taskId, reason);
+      // A running op is terminated (no page event follows) and a later op.start is refused,
+      // so this document is done with the task whether or not it was running it.
+      const reply: BridgeOpCancelReply = { stopped: true };
+      sendResponse(reply);
+    } else if (message.type === 'gv.bridge.hello.request') {
+      if (attached) void deliver({ type: 'gv.bridge.hello', docNonce: getDocNonce() }, false);
+      sendResponse({ attached });
     }
     return false;
   };
@@ -316,6 +330,11 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
       }, DETACH_GRACE_MS);
     },
     abort(taskId, reason = 'cancelled') {
+      cancelled.add(taskId);
+      for (const oldest of cancelled) {
+        if (cancelled.size <= CANCELLED_MEMORY) break;
+        cancelled.delete(oldest);
+      }
       if (running?.taskId !== taskId) return false;
       running.ctx.terminate('cancelled', 'The task was cancelled.', { reason });
       return true;
@@ -323,6 +342,8 @@ export function createBridgeRuntime(options: BridgeRuntimeOptions = {}): BridgeR
     handleOpStart(task, grant) {
       if (!isOwnDocNonce(grant.docNonce)) return { accepted: false, reason: 'doc-mismatch' };
       if (running?.taskId === task.taskId) return { accepted: true };
+      // The cancel can overtake its op.start: the task must then never begin.
+      if (cancelled.has(task.taskId)) return { accepted: false, reason: 'cancelled' };
       const known = outcomes.get(task.taskId);
       if (known) {
         finish(task.taskId, known);

@@ -181,11 +181,12 @@ export function createBridgePairing(deps: BridgePairingDeps): BridgePairing {
     const key = `${read.port}:${read.code}`;
     const earlier = used.get(key);
     if (earlier) return earlier;
-    // Whoever pairs first consumes the intent, so a later grant cannot replay it.
-    await deps.session.remove(INTENT);
-    const started = run(read.port, read.code).catch((error: unknown) =>
-      fail('server-unreachable', String(error)),
-    );
+    // Registered before the first await: a concurrent caller with this code must find it.
+    const started = (async () => {
+      // Whoever pairs first consumes the intent, so a later grant cannot replay it.
+      await deps.session.remove(INTENT);
+      return run(read.port, read.code);
+    })().catch((error: unknown) => fail('server-unreachable', String(error)));
     used.set(key, started);
     while (used.size > USED_CODE_MEMORY) used.delete(used.keys().next().value as string);
     return started;

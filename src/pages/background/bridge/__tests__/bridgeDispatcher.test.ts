@@ -4,7 +4,7 @@ import { StorageKeys } from '@/core/types/common';
 import type { ErrorCode, OpName, ValidatedBridgeTask } from '@/features/bridge/protocol';
 import type { HostCatalogCacheEntry } from '@/features/plugins/remote/hostCatalogCache';
 
-import { createBridgeDispatcher } from '../bridgeDispatcher';
+import { type DispatcherConfig, createBridgeDispatcher } from '../bridgeDispatcher';
 import { BRIDGE_PLUGIN_ID, createBridgePolicy } from '../bridgePolicy';
 import { createBridgeTabs } from '../bridgeTabs';
 import { BRIDGE_SESSION_KEYS, createBridgeTaskStore } from '../bridgeTaskStore';
@@ -70,6 +70,7 @@ function setup(options: SetupOptions = {}) {
   const tabs = createBridgeTabs({ store, api: page.api, now });
   const make = (
     checkOp: (op: OpName) => Promise<{ code: ErrorCode; message: string } | null> = policy.checkOp,
+    config?: Partial<DispatcherConfig>,
   ) =>
     createBridgeDispatcher({
       store,
@@ -80,6 +81,7 @@ function setup(options: SetupOptions = {}) {
       connection: async () => ({ port: 47321, token: 't' }),
       ready: async () => {},
       now,
+      ...(config ? { config } : {}),
     });
   const dispatcher = make();
   /** A loaded bridge tab whose document said hello. */
@@ -107,6 +109,7 @@ function setup(options: SetupOptions = {}) {
     advance: (ms: number) => {
       clock += ms;
     },
+    now,
   };
 }
 
@@ -304,12 +307,204 @@ describe('bridge dispatcher', () => {
     });
   });
 
-  it('gives up on a tab whose page never says hello', async () => {
+  it('gives up on a tab whose page never says hello once the task deadline passed', async () => {
     const t = setup();
     await t.dispatcher.onTask(task('conversation.open', 'T1'));
-    t.advance(30_001);
+    t.advance(59_000);
+    await t.dispatcher.tick();
+    expect(t.resultOf('T1')).toBeUndefined();
+    t.advance(1_001);
     await t.dispatcher.tick();
     expect(t.resultOf('T1')?.error?.code).toBe('timeout');
+  });
+
+  it('spends one deadline across the catalog check, the hello and the ready step', async () => {
+    const t = setup();
+    const startedAt = t.now();
+    t.policy.refreshIfOld.mockImplementationOnce(async () => t.advance(15_000));
+    await t.dispatcher.onTask(task('conversation.open', 'T1'));
+    expect((await t.dispatcher.current())?.deadline).toBe(startedAt + 60_000);
+    const tabId = (await t.store.getTab())!.tabId;
+
+    t.advance(25_000);
+    await t.dispatcher.onHello(contentSender(tabId), 'doc-9');
+    const [start] = t.page.starts();
+    expect(start.message.grant).toMatchObject({ deadline: startedAt + 60_000 });
+    expect(start.message.task).toMatchObject({ op: 'conversation.ready', deadlineMs: 20_000 });
+  });
+
+  it('starts the ready step even when the page said hello before its tab was recorded', async () => {
+    const t = setup();
+    const create = vi.mocked(t.page.api.create).getMockImplementation()!;
+    let early: Promise<boolean> | undefined;
+    vi.mocked(t.page.api.create).mockImplementationOnce(async (props) => {
+      const tab = await create(props);
+      early = t.dispatcher.onHello(contentSender(tab!.id!, 'DOC'), 'doc-9');
+      await early;
+      return tab;
+    });
+    let repeated: Promise<boolean> | undefined;
+    t.page.state.onMessage = (tabId, message) => {
+      if (message.type !== 'gv.bridge.hello.request') return { accepted: true };
+      repeated = t.dispatcher.onHello(contentSender(tabId, 'DOC'), 'doc-9');
+      return { attached: true };
+    };
+    await t.dispatcher.onTask(task('conversation.open', 'T1'));
+    expect(await early).toBe(false); // too early: the tab was not recorded yet
+    await repeated;
+
+    const [start] = t.page.starts();
+    expect(start.message.task).toMatchObject({ taskId: 'T1', op: 'conversation.ready' });
+  });
+
+  it('switches a tab it moved out of work mode back before closing it', async () => {
+    const t = setup();
+    await t.dispatcher.onTask(task('conversation.open', 'T1'));
+    const tabId = (await t.store.getTab())!.tabId;
+    await t.dispatcher.onHello(contentSender(tabId), 'doc-9');
+    const open = t.page.starts()[0].message;
+    expect(open.task).toMatchObject({ params: { ensureMode: 'chat' } });
+    expect(open.grant).toMatchObject({ leaseId: expect.any(String) });
+    const switched = { ...READY, switchedMode: { from: 'work', to: 'chat' } };
+    await t.dispatcher.onDone(contentSender(tabId), {
+      taskId: 'T1',
+      docNonce: 'doc-9',
+      outcome: { ok: true, data: switched },
+    });
+    expect(t.resultOf('T1')).toMatchObject({ ok: true, data: { ready: switched } });
+
+    const close = { ...task('conversation.close', 'T2'), params: { tabId } } as ValidatedBridgeTask;
+    await t.dispatcher.onTask(close);
+    const restore = t.page.starts()[1].message;
+    expect(restore.task).toMatchObject({ taskId: 'T2', params: { ensureMode: 'work' } });
+    expect(restore.grant).toMatchObject({ leaseId: expect.any(String) });
+    expect(t.page.tabs.has(tabId)).toBe(true);
+
+    await t.dispatcher.onDone(contentSender(tabId), {
+      taskId: 'T2',
+      docNonce: 'doc-9',
+      outcome: { ok: true, data: { ...READY, mode: 'work' } },
+    });
+    expect(t.resultOf('T2')).toEqual({ ok: true, data: { closed: true, restoredMode: true } });
+    expect(t.page.tabs.has(tabId)).toBe(false);
+    expect(await t.lease.current()).toBeNull();
+  });
+
+  it('still closes the tab when its mode cannot be switched back', async () => {
+    const t = setup();
+    const tabId = await t.bridgeTab();
+    await t.store.updateTab(tabId, { restoreMode: 'work' });
+    const close = { ...task('conversation.close', 'T2'), params: { tabId } } as ValidatedBridgeTask;
+    await t.dispatcher.onTask(close);
+    await t.dispatcher.onDone(contentSender(tabId), {
+      taskId: 'T2',
+      docNonce: 'doc-1',
+      outcome: {
+        ok: false,
+        error: { code: 'mode-unavailable', category: 'user-action', message: 'no switch' },
+      },
+    });
+    expect(t.resultOf('T2')).toEqual({ ok: true, data: { closed: true, restoredMode: false } });
+    expect(t.page.tabs.has(tabId)).toBe(false);
+  });
+
+  it('keeps a finished task in flight until the server has taken its result', async () => {
+    const t = setup();
+    const tabId = await t.bridgeTab();
+    await t.dispatcher.onTask(task('turns.read', 'T1'));
+    let answer!: () => void;
+    t.server.client.result.mockImplementationOnce(async (_c, taskId, body) => {
+      t.server.calls.push({ kind: 'result', taskId, body });
+      await new Promise<void>((resolve) => {
+        answer = resolve;
+      });
+      return { ok: true, status: 200, data: {} };
+    });
+    const done = t.dispatcher.onDone(contentSender(tabId), {
+      taskId: 'T1',
+      docNonce: 'doc-1',
+      outcome: { ok: true, data: READ },
+    });
+    await vi.waitFor(() => expect(t.server.results()).toHaveLength(1));
+    // A poll that leaves while the result is on its way must still list the task.
+    expect(await t.dispatcher.inflight()).toEqual([{ taskId: 'T1', state: 'running' }]);
+
+    answer();
+    await done;
+    expect(await t.dispatcher.inflight()).toEqual([]);
+    expect(t.local.values[StorageKeys.BRIDGE_OUTBOX]).toBeUndefined();
+  });
+
+  it('hands over a result whose worker stopped while reporting it', async () => {
+    const t = setup();
+    const tabId = await t.bridgeTab();
+    await t.dispatcher.onTask(task('turns.read', 'T1'));
+    // The worker is stopped mid-POST: this request never answers.
+    t.server.client.result.mockImplementationOnce(() => new Promise(() => {}));
+    void t.dispatcher.onDone(contentSender(tabId), {
+      taskId: 'T1',
+      docNonce: 'doc-1',
+      outcome: { ok: true, data: READ },
+    });
+    await vi.waitFor(() => expect(t.server.client.result).toHaveBeenCalledTimes(1));
+
+    const restarted = t.make();
+    expect(await restarted.inflight()).toEqual([{ taskId: 'T1', state: 'running' }]);
+    expect(await restarted.drainOutbox()).toBe(true);
+    expect(t.resultOf('T1')).toEqual({ ok: true, data: READ });
+    expect(await restarted.inflight()).toEqual([]);
+  });
+
+  it('reports a cancelled op only once its page confirms it stopped', async () => {
+    const t = setup();
+    await t.bridgeTab();
+    await t.dispatcher.onTask(task('composer.send', 'T1'));
+    let stopped = false;
+    t.page.state.onMessage = (_tabId, message) =>
+      message.type === 'gv.bridge.op.cancel' ? { stopped } : { accepted: true };
+    const cancels = () => t.page.sent.filter((s) => s.message.type === 'gv.bridge.op.cancel');
+
+    await t.dispatcher.onAbort('T1', 'cancelled');
+    expect(t.resultOf('T1')).toBeUndefined();
+    expect(await t.dispatcher.inflight()).toEqual([{ taskId: 'T1', state: 'running' }]);
+
+    // The server repeats its abort; the watchdog asks too. Each only asks the page again.
+    await t.dispatcher.onAbort('T1', 'cancelled');
+    await t.dispatcher.tick();
+    expect(cancels()).toHaveLength(3);
+    expect(t.page.starts()).toHaveLength(1);
+    expect(t.resultOf('T1')).toBeUndefined();
+
+    stopped = true;
+    await t.dispatcher.onAbort('T1', 'cancelled');
+    expect(t.resultOf('T1')?.error?.code).toBe('cancelled');
+    expect(await t.lease.current()).toBeNull();
+    expect(await t.dispatcher.inflight()).toEqual([]);
+  });
+
+  it('keeps polling when a frozen page never answers the cancel', async () => {
+    const t = setup();
+    await t.bridgeTab();
+    await t.dispatcher.onTask(task('composer.send', 'T1'));
+    t.page.state.onMessage = (_tabId, message) =>
+      message.type === 'gv.bridge.op.cancel' ? new Promise(() => {}) : { accepted: true };
+    // Resolving at all is the point: the poll loop awaits this call.
+    await t.make(undefined, { cancelReplyTimeoutMs: 20 }).onAbort('T1', 'cancelled');
+    expect(t.resultOf('T1')).toBeUndefined();
+    expect(await t.dispatcher.inflight()).toEqual([{ taskId: 'T1', state: 'running' }]);
+  });
+
+  it('reports a cancelled op once its tab is gone', async () => {
+    const t = setup();
+    const tabId = await t.bridgeTab();
+    await t.dispatcher.onTask(task('composer.send', 'T1'));
+    t.page.state.onMessage = (_tabId, message) =>
+      message.type === 'gv.bridge.op.cancel' ? { stopped: false } : { accepted: true };
+    await t.dispatcher.onAbort('T1', 'cancelled');
+    expect(t.resultOf('T1')).toBeUndefined();
+
+    await t.dispatcher.onTabRemoved(tabId);
+    expect(t.resultOf('T1')?.error?.code).toBe('cancelled');
   });
 
   it('closes only the tab this job opened', async () => {

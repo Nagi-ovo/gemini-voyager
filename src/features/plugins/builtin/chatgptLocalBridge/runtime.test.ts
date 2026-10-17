@@ -125,12 +125,52 @@ describe('Local Bridge runtime: op.start', () => {
     const fromPageTab = { id: chrome.runtime.id, tab: { id: 3 } as chrome.tabs.Tab };
     listener({ type: 'gv.bridge.lease.probe', leaseId: 'l' }, fromPageTab, reply);
     expect(reply).not.toHaveBeenCalled();
-    // A cancel for a task this document is not running stops nothing.
     const cancel = { type: 'gv.bridge.op.cancel', taskId: 't', reason: 'cli-cancel' };
     listener(cancel, fromPageTab, reply);
     expect(reply).not.toHaveBeenCalled();
+    // Not running it, and refusing it from now on: the document is done with the task.
     listener(cancel, { id: chrome.runtime.id }, reply);
-    expect(reply).toHaveBeenCalledWith({ stopped: false });
+    expect(reply).toHaveBeenCalledWith({ stopped: true });
+  });
+
+  it('never starts a task whose cancel overtook its op.start', async () => {
+    const { getDocNonce } = await import('./docIdentity');
+    bridge.runtime.abort('task-late', 'cli-cancel');
+    const ack = bridge.runtime.handleOpStart(
+      {
+        taskId: 'task-late',
+        jobId: 'job-1',
+        op: 'composer.send',
+        opVersion: 1,
+        params: { text: 'hi' },
+        deadlineMs: 30_000,
+        issuedAt: Date.now(),
+      },
+      { docNonce: getDocNonce(), deadline: Date.now() + 30_000, leaseId: 'lease-1' },
+    );
+    expect(ack).toEqual({ accepted: false, reason: 'cancelled' });
+    await vi.advanceTimersByTimeAsync(2_000);
+    expect(bridge.runtime.runningTaskId).toBeNull();
+    noPageEvents();
+  });
+
+  it('says hello again when the background asks, so an early hello is not lost', () => {
+    const addListener = vi.mocked(chrome.runtime.onMessage.addListener);
+    addListener.mockClear();
+    const sent: Record<string, unknown>[] = [];
+    createBridgeRuntime({
+      send: async (message) => {
+        sent.push(message);
+      },
+    }).attach(null);
+    const listener = addListener.mock.calls.at(-1)?.[0] as (
+      message: unknown,
+      sender: chrome.runtime.MessageSender,
+      reply: (response: unknown) => void,
+    ) => boolean;
+    sent.length = 0;
+    listener({ type: 'gv.bridge.hello.request' }, { id: chrome.runtime.id }, vi.fn());
+    expect(sent).toEqual([{ type: 'gv.bridge.hello', docNonce: expect.any(String) }]);
   });
 });
 

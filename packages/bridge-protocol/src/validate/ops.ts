@@ -16,6 +16,7 @@ import {
   type OpName,
   type OpParamsMap,
   type OpResultMap,
+  type SwitchableMode,
   type WaitReplyProgress,
 } from '../ops';
 import {
@@ -45,6 +46,7 @@ import {
 } from '../read';
 
 const CHAT_MODES: readonly ChatMode[] = ['chat', 'work', 'unknown'];
+const SWITCHABLE_MODES: readonly SwitchableMode[] = ['chat', 'work'];
 const HTTPS_URL = { pattern: /^https:\/\//, maxLength: 4096 } as const;
 const TURN_KEY = { maxLength: 256 } as const;
 const LABEL = { maxLength: 200, allowEmpty: true } as const;
@@ -107,14 +109,35 @@ const readModelSelection: Reader<ModelSelection> = (raw, path, issues) => {
   };
 };
 
+const readSwitchedMode: Reader<NonNullable<ConversationReadyResult['switchedMode']>> = (
+  raw,
+  path,
+  issues,
+) => {
+  const rec = readObject(raw, path, issues);
+  const from = requireLiteral(rec, 'from', path, issues, SWITCHABLE_MODES);
+  const to = requireLiteral(rec, 'to', path, issues, SWITCHABLE_MODES);
+  if (from === to) fail(issues, path, 'from and to must differ');
+  return { from, to };
+};
+
 const readReady: Reader<ConversationReadyResult> = (raw, path, issues) => {
   const rec = readObject(raw, path, issues);
+  const mode = requireLiteral(rec, 'mode', path, issues, CHAT_MODES);
+  const switchedMode =
+    rec.switchedMode === undefined
+      ? undefined
+      : readSwitchedMode(rec.switchedMode, at(path, 'switchedMode'), issues);
+  if (switchedMode && switchedMode.to !== mode) {
+    fail(issues, at(path, 'switchedMode'), 'to must be the reported mode');
+  }
   return {
     url: requireString(rec, 'url', path, issues, HTTPS_URL),
     conversationId: nullableString(rec, 'conversationId', path, issues, { pattern: ID_PATTERN }),
     loggedIn: requireBoolean(rec, 'loggedIn', path, issues),
-    mode: requireLiteral(rec, 'mode', path, issues, CHAT_MODES),
+    mode,
     evidence: requireRecord(rec, 'evidence', path, issues),
+    ...(switchedMode === undefined ? {} : { switchedMode }),
   };
 };
 
@@ -136,13 +159,15 @@ const PARAM_READERS: { readonly [K in OpName]: Reader<OpParamsMap[K]> } = {
   },
   'conversation.ready': (raw, path, issues) => {
     const rec = readObject(raw, path, issues);
-    if (rec.expect === undefined) return {};
+    const ensureMode = optionalLiteral(rec, 'ensureMode', path, issues, SWITCHABLE_MODES);
+    const withMode = ensureMode === undefined ? {} : { ensureMode };
+    if (rec.expect === undefined) return withMode;
     const expectPath = at(path, 'expect');
     const expect = readObject(rec.expect, expectPath, issues);
     const conversationId = optionalString(expect, 'conversationId', expectPath, issues, {
       pattern: ID_PATTERN,
     });
-    return { expect: conversationId === undefined ? {} : { conversationId } };
+    return { expect: conversationId === undefined ? {} : { conversationId }, ...withMode };
   },
   'model.inspect': (raw, path, issues) => {
     readObject(raw, path, issues);
@@ -242,7 +267,11 @@ const RESULT_READERS: { readonly [K in OpName]: Reader<OpResultMap[K]> } = {
   },
   'conversation.close': (raw, path, issues) => {
     const rec = readObject(raw, path, issues);
-    return { closed: requireBoolean(rec, 'closed', path, issues) };
+    const restoredMode = optionalBoolean(rec, 'restoredMode', path, issues);
+    return {
+      closed: requireBoolean(rec, 'closed', path, issues),
+      ...(restoredMode === undefined ? {} : { restoredMode }),
+    };
   },
   'conversation.ready': readReady,
   'model.inspect': (raw, path, issues) => {

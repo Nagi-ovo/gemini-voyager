@@ -49,6 +49,23 @@
     "issuePath": "evidence"
   },
   {
+    "name": "ready whose switch disagrees with its mode",
+    "kind": "opResult",
+    "op": "conversation.ready",
+    "input": {
+      "url": "https://chatgpt.com/",
+      "conversationId": null,
+      "loggedIn": true,
+      "mode": "work",
+      "evidence": {},
+      "switchedMode": {
+        "from": "work",
+        "to": "chat"
+      }
+    },
+    "issuePath": "switchedMode"
+  },
+  {
     "name": "select without observed",
     "kind": "opResult",
     "op": "model.select",

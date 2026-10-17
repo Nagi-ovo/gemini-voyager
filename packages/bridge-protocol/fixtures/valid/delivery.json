@@ -18,7 +18,7 @@
       "inflight": [],
       "policy": {
         "revision": 2637,
-        "allowed": true
+        "state": "allowed"
       }
     }
   },
@@ -37,7 +37,21 @@
       ],
       "policy": {
         "revision": 2637,
-        "allowed": false
+        "state": "stale"
+      }
+    }
+  },
+  {
+    "name": "poll while the remote policy denies the bridge",
+    "kind": "pollRequest",
+    "input": {
+      "capabilities": {
+        "ops": []
+      },
+      "inflight": [],
+      "policy": {
+        "revision": 2638,
+        "state": "denied"
       }
     }
   },

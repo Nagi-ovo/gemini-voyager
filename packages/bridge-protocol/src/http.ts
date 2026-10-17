@@ -123,11 +123,24 @@ export interface OpCapability {
 
 export type InflightState = 'acked' | 'running';
 
+/**
+ * Where the extension's bridge policy stands (spec §3.5). `denied` and `stale`
+ * are told apart so the server can report `policy-denied` or `policy-stale`.
+ */
+export type PolicyState = 'allowed' | 'denied' | 'stale';
+
+export const POLICY_STATES: readonly PolicyState[] = ['allowed', 'denied', 'stale'];
+
+export interface PolicyReport {
+  readonly revision: number;
+  readonly state: PolicyState;
+}
+
 export interface PollRequest {
   /** Ops the code supports, intersected with the ops the policy allows. */
   readonly capabilities: { readonly ops: readonly OpCapability[] };
   readonly inflight: readonly { readonly taskId: string; readonly state: InflightState }[];
-  readonly policy: { readonly revision: number; readonly allowed: boolean };
+  readonly policy: PolicyReport;
 }
 
 /** Wire form of a task; `params` is checked against `op` on arrival. */
@@ -217,7 +230,7 @@ export interface StatusResponse {
     readonly lastPollAt: number | null;
     readonly version: string | null;
     readonly browser: BridgeBrowser | null;
-    readonly policy: { readonly revision: number; readonly allowed: boolean } | null;
+    readonly policy: PolicyReport | null;
   };
   readonly activeJob?: { readonly jobId: string; readonly op?: OpName };
   readonly serverVersion: string;

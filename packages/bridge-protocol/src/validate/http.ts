@@ -8,6 +8,7 @@ import {
   PAIRING_CODE_PATTERN,
   PAIRING_TOKEN_PATTERN,
   MAX_BLOB_CHUNK_BYTES,
+  POLICY_STATES,
   type BlobChunkRange,
   type BlobCommitResponse,
   type BlobCreateRequest,
@@ -211,7 +212,7 @@ const READERS: { readonly [K in MessageKind]: Reader<MessageMap[K]> } = {
       ),
       policy: {
         revision: requireInt(policy, 'revision', policyPath, issues),
-        allowed: requireBoolean(policy, 'allowed', policyPath, issues),
+        state: requireLiteral(policy, 'state', policyPath, issues, POLICY_STATES),
       },
     };
   },

@@ -37,6 +37,15 @@
     "issuePath": "tabId"
   },
   {
+    "name": "ready ensuring an unknown mode",
+    "kind": "opParams",
+    "op": "conversation.ready",
+    "input": {
+      "ensureMode": "unknown"
+    },
+    "issuePath": "ensureMode"
+  },
+  {
     "name": "preset and model together",
     "kind": "opParams",
     "op": "model.select",
