@@ -34,9 +34,12 @@ export function createVisualEffectsRuntime(): VisualEffectsRuntime {
     rain: createRainRenderer(),
   };
   let activation: object | null = null;
+  /** The selection in force, so a page restored from the back/forward cache shows it again. */
+  let selected: PluginSettings = { effect: 'off' };
 
   const select = (settings: PluginSettings): void => {
     if (pageScope.isDisposed) return;
+    selected = settings;
     for (const [kind, renderer] of Object.entries(renderers)) {
       if (settings.effect === kind) renderer.enable();
       else renderer.drain();
@@ -48,13 +51,24 @@ export function createVisualEffectsRuntime(): VisualEffectsRuntime {
   const destroyRenderers = (): void => {
     for (const renderer of Object.values(renderers)) renderer.destroy();
   };
+  // pagehide, not beforeunload: a cancelled "Leave site?" fires beforeunload and the page stays,
+  // which left the effect gone while the setting said on. A page entering the back/forward cache
+  // drops its renderers (no worker or frame kept frozen) and gets its selection back on pageshow.
+  // A real unload needs no teardown: the document goes away with them.
+  const suspend = (event: PageTransitionEvent): void => {
+    if (event.persisted) destroyRenderers();
+  };
+  const restore = (event: PageTransitionEvent): void => {
+    if (event.persisted && activation) select(selected);
+  };
   pageScope.effect(() => {
-    // Cancelled unloads and bfcache restores must leave the page scope available for reactivation.
-    window.addEventListener('beforeunload', destroyRenderers);
+    window.addEventListener('pagehide', suspend);
+    window.addEventListener('pageshow', restore);
     return () => {
       activation = null;
       destroyRenderers();
-      window.removeEventListener('beforeunload', destroyRenderers);
+      window.removeEventListener('pagehide', suspend);
+      window.removeEventListener('pageshow', restore);
       // An older page's late cleanup must never release a newer page's owner.
       if (world[STARTED_KEY] === owner) delete world[STARTED_KEY];
     };

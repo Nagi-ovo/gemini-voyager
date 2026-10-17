@@ -1,5 +1,5 @@
 /**
- * Sakura (Cherry Blossom) effect for Gemini.
+ * Sakura (Cherry Blossom) effect.
  *
  * Firefox content scripts cannot reliably create moz-extension:// workers
  * directly (Mozilla bug 1334891). The Firefox path therefore renders inside a
@@ -9,13 +9,15 @@
  */
 import { isFirefox } from '@/core/utils/browser';
 
-import { SAKURA_BASE_FRAME_MS, SAKURA_MAX_DPR, SakuraScene } from './sakuraScene';
+import { type Scheme, getScheme, subscribeScheme } from '../platformTheme/scheme';
+import { type EffectActivity, watchEffectActivity } from './effectClock';
+import { SAKURA_MAX_DPR, SakuraScene } from './sakuraScene';
 import {
   SAKURA_RENDERER_CONNECT_MESSAGE,
   type SakuraRendererCommand,
   type SakuraWorkerEvent,
 } from './sakuraWorkerProtocol';
-import type { VisualEffectRenderer } from './types';
+import { EFFECT_CANVAS_STYLE, EFFECT_Z_INDEX, type VisualEffectRenderer } from './types';
 
 const CANVAS_ID = 'gv-sakura-effect-canvas';
 const RENDERER_FRAME_ID = 'gv-sakura-effect-frame';
@@ -37,7 +39,6 @@ export function createSakuraRenderer(): VisualEffectRenderer {
   let workerUnavailableForPage = false;
   let mainScene: SakuraScene | null = null;
   let mainAnimationFrameId: number | null = null;
-  let mainLastDrawTime = 0;
   let sessionCounter = 0;
   let currentSessionId = 0;
   let drainCounter = 0;
@@ -46,14 +47,14 @@ export function createSakuraRenderer(): VisualEffectRenderer {
   let viewportHeight = 1;
   let renderDpr = 1;
   let resizeHandler: (() => void) | null = null;
-  let visibilityHandler: (() => void) | null = null;
+  let activity: EffectActivity | null = null;
+  let unsubscribeScheme: (() => void) | null = null;
 
   function createEffectCanvas(): HTMLCanvasElement {
     const nextCanvas = document.createElement('canvas');
     nextCanvas.id = CANVAS_ID;
     nextCanvas.dataset.gvSakuraRenderer = 'main-thread';
-    nextCanvas.style.cssText =
-      'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2147483647;';
+    nextCanvas.style.cssText = EFFECT_CANVAS_STYLE;
     document.documentElement.appendChild(nextCanvas);
     return nextCanvas;
   }
@@ -157,11 +158,7 @@ export function createSakuraRenderer(): VisualEffectRenderer {
   }
 
   function startMainAnimation(): void {
-    if (
-      rendererMode !== 'main-thread' ||
-      mainAnimationFrameId !== null ||
-      document.visibilityState !== 'visible'
-    ) {
+    if (rendererMode !== 'main-thread' || mainAnimationFrameId !== null || !activity?.isRunning()) {
       return;
     }
     mainAnimationFrameId = requestAnimationFrame(updateAndDrawOnMainThread);
@@ -171,11 +168,7 @@ export function createSakuraRenderer(): VisualEffectRenderer {
     mainAnimationFrameId = null;
     if (rendererMode !== 'main-thread' || !mainScene || state === 'off') return;
 
-    const elapsedMs = mainLastDrawTime > 0 ? time - mainLastDrawTime : SAKURA_BASE_FRAME_MS;
-    mainLastDrawTime = time;
-    const visibleCount = mainScene.renderFrame(time, elapsedMs, state === 'draining');
-
-    if (state === 'draining' && visibleCount === 0) {
+    if (mainScene.renderFrame(time) === 'drained' && state === 'draining') {
       finalizeDrain();
       return;
     }
@@ -192,9 +185,11 @@ export function createSakuraRenderer(): VisualEffectRenderer {
       canvas,
       context,
       createSpriteCanvas: () => document.createElement('canvas'),
+      scheme: getScheme(),
     });
     mainScene.initialize(viewportWidth, viewportHeight, renderDpr);
-    mainLastDrawTime = 0;
+    // A worker that failed mid-drain hands over a drain, not a fresh scene.
+    mainScene.setDraining(state === 'draining');
     rendererMode = 'main-thread';
     startMainAnimation();
     return true;
@@ -270,7 +265,8 @@ export function createSakuraRenderer(): VisualEffectRenderer {
         width: viewportWidth,
         height: viewportHeight,
         dpr: renderDpr,
-        visible: document.visibilityState === 'visible',
+        running: activity?.isRunning() ?? false,
+        scheme: getScheme(),
         mode: state === 'draining' ? 'draining' : 'active',
         drainId: currentDrainId,
       });
@@ -289,8 +285,7 @@ export function createSakuraRenderer(): VisualEffectRenderer {
       frame.dataset.gvSakuraRenderer = 'worker-pending';
       frame.setAttribute('aria-hidden', 'true');
       frame.setAttribute('tabindex', '-1');
-      frame.style.cssText =
-        'position:fixed;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:transparent;z-index:2147483647;';
+      frame.style.cssText = `position:fixed;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:transparent;z-index:${EFFECT_Z_INDEX};`;
       frame.src = `${chrome.runtime.getURL(RENDERER_PAGE_PATH)}#${encodeURIComponent(channelId)}`;
 
       rendererMode = 'worker-frame';
@@ -317,29 +312,33 @@ export function createSakuraRenderer(): VisualEffectRenderer {
     }
   }
 
-  function handleVisibilityChange(): void {
-    const visible = document.visibilityState === 'visible';
-
+  function handleActivityChange(running: boolean): void {
     if (rendererMode === 'worker-frame') {
       if (rendererPort) {
-        postRendererCommand({
-          type: 'visibility',
-          sessionId: currentSessionId,
-          visible,
-        });
+        postRendererCommand({ type: 'running', sessionId: currentSessionId, running });
       }
       return;
     }
 
-    if (visible) {
-      mainLastDrawTime = 0;
+    if (running) {
+      mainScene?.resetTimeBase();
       startMainAnimation();
     } else {
       stopMainAnimation();
     }
   }
 
+  function handleSchemeChange(scheme: Scheme): void {
+    if (rendererMode === 'worker-frame') {
+      if (rendererPort)
+        postRendererCommand({ type: 'scheme', sessionId: currentSessionId, scheme });
+      return;
+    }
+    mainScene?.setScheme(scheme);
+  }
+
   function enable(): void {
+    activity?.preview();
     if (state === 'active') return;
 
     if (state === 'draining') {
@@ -355,6 +354,7 @@ export function createSakuraRenderer(): VisualEffectRenderer {
           });
         }
       } else {
+        mainScene?.setDraining(false);
         startMainAnimation();
       }
       return;
@@ -364,7 +364,8 @@ export function createSakuraRenderer(): VisualEffectRenderer {
     rendererMode = 'none';
     currentSessionId = ++sessionCounter;
     currentDrainId = ++drainCounter;
-    mainLastDrawTime = 0;
+    activity = watchEffectActivity(handleActivityChange);
+    activity.preview();
     viewportWidth = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
     viewportHeight = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
     renderDpr = Math.max(1, Math.min(window.devicePixelRatio || 1, SAKURA_MAX_DPR));
@@ -376,17 +377,17 @@ export function createSakuraRenderer(): VisualEffectRenderer {
 
     resizeHandler = updateViewportMetrics;
     window.addEventListener('resize', resizeHandler);
-
-    visibilityHandler = handleVisibilityChange;
-    document.addEventListener('visibilitychange', visibilityHandler);
+    unsubscribeScheme = subscribeScheme(handleSchemeChange);
   }
 
-  /** Stop recycling petals and let the existing full-quality scene drain. */
+  /** Stop recycling petals and let the existing full-quality scene fall out quickly. */
   function disable(): void {
     if (state !== 'active') return;
 
     state = 'draining';
     currentDrainId = ++drainCounter;
+    activity?.preview();
+    mainScene?.setDraining(true);
     if (rendererMode === 'worker-frame' && rendererPort) {
       postRendererCommand({
         type: 'set-mode',
@@ -409,15 +410,14 @@ export function createSakuraRenderer(): VisualEffectRenderer {
       resizeHandler = null;
     }
 
-    if (visibilityHandler) {
-      document.removeEventListener('visibilitychange', visibilityHandler);
-      visibilityHandler = null;
-    }
+    activity?.stop();
+    activity = null;
+    unsubscribeScheme?.();
+    unsubscribeScheme = null;
 
     canvas?.remove();
     canvas = null;
     rendererMode = 'none';
-    mainLastDrawTime = 0;
     viewportWidth = 1;
     viewportHeight = 1;
     renderDpr = 1;

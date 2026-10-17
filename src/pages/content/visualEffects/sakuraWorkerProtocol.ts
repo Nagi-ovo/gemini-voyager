@@ -1,3 +1,5 @@
+import type { Scheme } from '../platformTheme/scheme';
+
 export const SAKURA_RENDERER_CONNECT_MESSAGE = 'gv-sakura-renderer-connect';
 
 type SakuraInitState = {
@@ -5,7 +7,9 @@ type SakuraInitState = {
   width: number;
   height: number;
   dpr: number;
-  visible: boolean;
+  /** The page decides when to animate (tab visible, window focused or previewing). */
+  running: boolean;
+  scheme: Scheme;
   mode: 'active' | 'draining';
   drainId: number;
 };
@@ -28,9 +32,14 @@ type SakuraRuntimeCommand =
       dpr: number;
     }
   | {
-      type: 'visibility';
+      type: 'running';
       sessionId: number;
-      visible: boolean;
+      running: boolean;
+    }
+  | {
+      type: 'scheme';
+      sessionId: number;
+      scheme: Scheme;
     }
   | {
       type: 'set-mode';

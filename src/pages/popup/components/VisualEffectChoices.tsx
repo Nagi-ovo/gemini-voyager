@@ -1,8 +1,7 @@
 import React from 'react';
 
+import type { VisualEffect } from '@/core/utils/visualEffectValues';
 import type { TranslationKey } from '@/utils/translations';
-
-export type VisualEffect = 'off' | 'snow' | 'sakura' | 'rain';
 
 const STROKE = {
   width: 14,

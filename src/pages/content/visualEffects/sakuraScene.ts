@@ -1,10 +1,12 @@
 /**
  * Browser-independent Sakura scene used by both the page fallback and the
  * Firefox OffscreenCanvas worker. Keeping the simulation here prevents the two
- * render paths from drifting visually.
+ * render paths from drifting visually: frame pacing, the drain ramp, resize
+ * remapping and the light/dark palettes all live here or in `effectClock`.
  */
+import type { Scheme } from '../platformTheme/scheme';
+import { EffectClock, remapToViewport } from './effectClock';
 
-export const SAKURA_BASE_FRAME_MS = 1000 / 60;
 export const SAKURA_MAX_DPR = 1;
 export const SAKURA_SPRITE_SIZE = 48;
 const SAKURA_SPRITE_SHAPE_HALF_SIZE = 18;
@@ -26,22 +28,46 @@ const SAKURA_LAYERS: readonly SakuraLayer[] = [
   { count: 16, size: [7.5, 11], speed: [0.4, 0.75], opacity: [0.4, 0.65], drift: [0.5, 1.0] },
 ] as const;
 
-export const FULL_SAKURA_PARTICLE_COUNT = SAKURA_LAYERS.reduce(
-  (total, layer) => total + layer.count,
-  0,
-);
+interface PetalColor {
+  /** `hsla(…,` prefix; the alpha and closing paren are appended. */
+  fill: string;
+  /** Optional outline baked into the sprite. */
+  edge?: string;
+}
 
-/** Somei-yoshino palette: extremely pale pinks, almost white. */
-const SAKURA_PALETTE = [
-  'hsla(350,50%,94%,',
-  'hsla(348,55%,92%,',
-  'hsla(345,60%,90%,',
-  'hsla(340,50%,92%,',
-  'hsla(346,65%,88%,',
-  'hsla(342,45%,93%,',
-  'hsla(352,40%,95%,',
-  'hsla(338,55%,89%,',
-] as const;
+/**
+ * Somei-yoshino palettes, same length so a petal keeps its colour index.
+ * Dark pages get extremely pale pinks, almost white. On a light page those
+ * vanish, so petals turn a deeper pink with a slightly darker edge.
+ */
+const SAKURA_PALETTES: Record<Scheme, readonly PetalColor[]> = {
+  dark: [
+    { fill: 'hsla(350,50%,94%,' },
+    { fill: 'hsla(348,55%,92%,' },
+    { fill: 'hsla(345,60%,90%,' },
+    { fill: 'hsla(340,50%,92%,' },
+    { fill: 'hsla(346,65%,88%,' },
+    { fill: 'hsla(342,45%,93%,' },
+    { fill: 'hsla(352,40%,95%,' },
+    { fill: 'hsla(338,55%,89%,' },
+  ],
+  light: [
+    { fill: 'hsla(350,72%,80%,', edge: 'hsla(350,60%,64%,0.8)' },
+    { fill: 'hsla(348,75%,78%,', edge: 'hsla(348,62%,62%,0.8)' },
+    { fill: 'hsla(345,78%,76%,', edge: 'hsla(345,64%,60%,0.8)' },
+    { fill: 'hsla(340,70%,78%,', edge: 'hsla(340,58%,62%,0.8)' },
+    { fill: 'hsla(346,80%,74%,', edge: 'hsla(346,66%,58%,0.8)' },
+    { fill: 'hsla(342,68%,80%,', edge: 'hsla(342,56%,64%,0.8)' },
+    { fill: 'hsla(352,65%,82%,', edge: 'hsla(352,54%,66%,0.8)' },
+    { fill: 'hsla(338,76%,75%,', edge: 'hsla(338,62%,59%,0.8)' },
+  ],
+};
+const PALETTE_SIZE = SAKURA_PALETTES.dark.length;
+/** Sprite outline width, in sprite pixels (the petal shape is 36 px tall there). */
+const SPRITE_EDGE_WIDTH = 1.5;
+
+/** What one call to `renderFrame` did. */
+export type SakuraFrame = 'skipped' | 'running' | 'drained';
 
 interface Petal {
   x: number;
@@ -72,6 +98,7 @@ export interface SakuraSceneOptions {
   context: SakuraContext;
   createSpriteCanvas: () => SakuraSpriteCanvas;
   random?: () => number;
+  scheme?: Scheme;
 }
 
 function rand(random: () => number, min: number, max: number): number {
@@ -92,37 +119,43 @@ function tracePetal(context: SakuraContext, size: number): void {
 }
 
 /**
- * Full-quality Sakura simulation. There are deliberately no low-particle or
- * low-frame-rate profiles here: performance isolation belongs in the worker,
- * not in a visibly degraded animation mode.
+ * Full-quality Sakura simulation. There are deliberately no low-particle
+ * profiles here: performance isolation belongs in the worker, not in a visibly
+ * degraded animation mode. Like every effect it draws at most 60 fps, with
+ * time-based motion, so a faster display only skips ticks.
  */
 export class SakuraScene {
   private readonly canvas: SakuraCanvas;
   private readonly context: SakuraContext;
   private readonly createSpriteCanvas: () => SakuraSpriteCanvas;
   private readonly random: () => number;
+  private readonly clock = new EffectClock();
 
   private petals: Petal[] = [];
   private petalSprites: Array<SakuraSpriteCanvas | null> = [];
+  private scheme: Scheme;
   private viewportWidth = 1;
   private viewportHeight = 1;
   private renderDpr = 1;
+  private pendingSize: { width: number; height: number; dpr: number } | null = null;
 
   constructor(options: SakuraSceneOptions) {
     this.canvas = options.canvas;
     this.context = options.context;
     this.createSpriteCanvas = options.createSpriteCanvas;
     this.random = options.random ?? Math.random;
+    this.scheme = options.scheme ?? 'dark';
   }
 
   initialize(width: number, height: number, dpr: number): void {
     this.buildPetalSprites();
-    this.resize(width, height, dpr);
     this.petals = [];
+    this.pendingSize = null;
+    this.applySize(width, height, dpr);
 
     for (const layer of SAKURA_LAYERS) {
       for (let index = 0; index < layer.count; index += 1) {
-        this.petals.push(this.createPetal(layer, true));
+        this.petals.push(this.createPetal(layer));
       }
     }
     this.petals.sort(
@@ -130,7 +163,33 @@ export class SakuraScene {
     );
   }
 
+  /**
+   * Record a new viewport. It is applied on the next drawn frame, so a burst
+   * of resize events resets the canvas once and never between two draws.
+   */
   resize(width: number, height: number, dpr: number): void {
+    this.pendingSize = { width, height, dpr };
+  }
+
+  /** Swap palettes; sprites are re-rendered only when the scheme actually changes. */
+  setScheme(scheme: Scheme): void {
+    if (scheme === this.scheme) return;
+    this.scheme = scheme;
+    if (this.petalSprites.length > 0) this.buildPetalSprites();
+  }
+
+  /** Start accelerating petals out, or cancel a drain and return to resting speed. */
+  setDraining(draining: boolean): void {
+    if (draining) this.clock.startDrain();
+    else this.clock.revive();
+  }
+
+  /** Call after a pause so the next frame takes one normal step. */
+  resetTimeBase(): void {
+    this.clock.resetTimeBase();
+  }
+
+  private applySize(width: number, height: number, dpr: number): void {
     const nextWidth = Math.max(1, width);
     const nextHeight = Math.max(1, height);
     const nextDpr = Math.max(1, Math.min(dpr || 1, SAKURA_MAX_DPR));
@@ -147,6 +206,7 @@ export class SakuraScene {
       return;
     }
 
+    remapToViewport(this.petals, this.viewportWidth, this.viewportHeight, nextWidth, nextHeight);
     this.viewportWidth = nextWidth;
     this.viewportHeight = nextHeight;
     this.renderDpr = nextDpr;
@@ -155,11 +215,24 @@ export class SakuraScene {
     this.context.setTransform(nextDpr, 0, 0, nextDpr, 0, 0);
   }
 
-  /** Draw one display frame and return the number of petals still on-screen. */
-  renderFrame(time: number, elapsedMs: number, draining: boolean): number {
-    const frameScale = Math.min(2.5, Math.max(0.5, elapsedMs / SAKURA_BASE_FRAME_MS));
+  /**
+   * Advance and draw one display frame at rAF time `time`. Returns `skipped`
+   * when the 60 fps cap leaves this tick undrawn, and `drained` once a drain
+   * has cleared the screen or reached its time cap.
+   */
+  renderFrame(time: number): SakuraFrame {
+    const dt = this.clock.advance(time);
+    if (dt === null) return 'skipped';
+    if (this.pendingSize) {
+      const { width, height, dpr } = this.pendingSize;
+      this.pendingSize = null;
+      this.applySize(width, height, dpr);
+    }
+
     const width = this.viewportWidth;
     const height = this.viewportHeight;
+    const draining = this.clock.draining;
+    const fade = this.clock.fadeAlpha();
 
     this.context.setTransform(this.renderDpr, 0, 0, this.renderDpr, 0, 0);
     this.context.clearRect(0, 0, width, height);
@@ -167,12 +240,12 @@ export class SakuraScene {
     let visibleCount = 0;
 
     for (const petal of this.petals) {
-      petal.y += petal.speedY * frameScale;
+      petal.y += this.clock.fallSpeed(petal.speedY, height) * dt;
       petal.x +=
         (Math.sin(petal.phase + time * petal.driftFreq) * petal.drift +
           Math.sin(petal.phase * 2.7 + time * petal.flutterFreq) * petal.flutter) *
-        frameScale;
-      petal.rotation += petal.rotationSpeed * frameScale;
+        dt;
+      petal.rotation += petal.rotationSpeed * dt;
 
       if (petal.y > height + petal.size * 2) {
         if (draining) continue;
@@ -188,10 +261,11 @@ export class SakuraScene {
         petal.x = width + petal.size * 2;
       }
 
-      this.drawPetal(petal, time);
+      this.drawPetal(petal, time, fade);
     }
 
-    return visibleCount;
+    if (draining && (visibleCount === 0 || this.clock.drainExpired())) return 'drained';
+    return 'running';
   }
 
   dispose(): void {
@@ -199,16 +273,10 @@ export class SakuraScene {
     this.petalSprites = [];
   }
 
-  getParticleCount(): number {
-    return this.petals.length;
-  }
-
-  private createPetal(layer: SakuraLayer, randomY: boolean): Petal {
+  private createPetal(layer: SakuraLayer): Petal {
     return {
       x: this.random() * this.viewportWidth,
-      y: randomY
-        ? this.random() * this.viewportHeight
-        : -(this.random() * this.viewportHeight * 0.4),
+      y: this.random() * this.viewportHeight,
       size: rand(this.random, layer.size[0], layer.size[1]),
       opacity: rand(this.random, layer.opacity[0], layer.opacity[1]),
       speedY: rand(this.random, layer.speed[0], layer.speed[1]),
@@ -223,12 +291,12 @@ export class SakuraScene {
       wobbleSpeed: rand(this.random, 0.0006, 0.002),
       wobbleBase: rand(this.random, 0.6, 0.9),
       wobbleAmp: rand(this.random, 0.15, 0.35),
-      colorIdx: Math.floor(this.random() * SAKURA_PALETTE.length),
+      colorIdx: Math.floor(this.random() * PALETTE_SIZE),
     };
   }
 
   private buildPetalSprites(): void {
-    this.petalSprites = SAKURA_PALETTE.map((fillPrefix) => {
+    this.petalSprites = SAKURA_PALETTES[this.scheme].map((color) => {
       const sprite = this.createSpriteCanvas();
       sprite.width = SAKURA_SPRITE_SIZE;
       sprite.height = SAKURA_SPRITE_SIZE;
@@ -236,15 +304,20 @@ export class SakuraScene {
       if (!spriteContext) return null;
 
       spriteContext.clearRect(0, 0, SAKURA_SPRITE_SIZE, SAKURA_SPRITE_SIZE);
-      spriteContext.fillStyle = `${fillPrefix}1)`;
+      spriteContext.fillStyle = `${color.fill}1)`;
       spriteContext.translate(SAKURA_SPRITE_SIZE / 2, SAKURA_SPRITE_SIZE / 2);
       tracePetal(spriteContext, SAKURA_SPRITE_SHAPE_HALF_SIZE);
       spriteContext.fill();
+      if (color.edge) {
+        spriteContext.strokeStyle = color.edge;
+        spriteContext.lineWidth = SPRITE_EDGE_WIDTH;
+        spriteContext.stroke();
+      }
       return sprite;
     });
   }
 
-  private drawPetal(petal: Petal, time: number): void {
+  private drawPetal(petal: Petal, time: number, fade: number): void {
     const wobble =
       petal.wobbleBase + Math.sin(petal.wobblePhase + time * petal.wobbleSpeed) * petal.wobbleAmp;
     const sprite = this.petalSprites[petal.colorIdx];
@@ -257,7 +330,7 @@ export class SakuraScene {
     if (sprite) {
       const spriteScale = petal.size / SAKURA_SPRITE_SHAPE_HALF_SIZE;
       const spriteDrawSize = SAKURA_SPRITE_SIZE * spriteScale;
-      this.context.globalAlpha = petal.opacity;
+      this.context.globalAlpha = petal.opacity * fade;
       this.context.drawImage(
         sprite,
         -spriteDrawSize / 2,
@@ -266,8 +339,9 @@ export class SakuraScene {
         spriteDrawSize,
       );
     } else {
-      const quantizedOpacity = Math.round(petal.opacity * 20) / 20;
-      this.context.fillStyle = SAKURA_PALETTE[petal.colorIdx] + quantizedOpacity + ')';
+      const quantizedOpacity = (Math.round(petal.opacity * 20) / 20) * fade;
+      this.context.fillStyle =
+        SAKURA_PALETTES[this.scheme][petal.colorIdx].fill + quantizedOpacity + ')';
       tracePetal(this.context, petal.size);
       this.context.fill();
     }

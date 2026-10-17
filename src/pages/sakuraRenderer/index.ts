@@ -8,12 +8,6 @@ import {
 
 const canvas = document.getElementById('gv-sakura-effect-canvas') as HTMLCanvasElement | null;
 const channelId = decodeURIComponent(window.location.hash.slice(1));
-const ALLOWED_PARENT_ORIGINS = new Set([
-  'https://gemini.google.com',
-  'https://business.gemini.google',
-  'https://aistudio.google.com',
-  'https://aistudio.google.cn',
-]);
 
 let rendererPort: MessagePort | null = null;
 let renderWorker: Worker | null = null;
@@ -134,14 +128,18 @@ function connect(port: MessagePort): void {
   port.start();
 }
 
+// Effects run on every supported and custom site, so the parent origin is not a useful
+// allowlist. The connection is bound to the page that embedded this frame and to the
+// random channel id it put in our URL.
 window.addEventListener('message', (event) => {
   const data = event.data as { type?: unknown; channelId?: unknown } | null;
   if (
     rendererPort ||
+    !channelId ||
+    event.source !== window.parent ||
     !data ||
     data.type !== SAKURA_RENDERER_CONNECT_MESSAGE ||
     data.channelId !== channelId ||
-    !ALLOWED_PARENT_ORIGINS.has(event.origin) ||
     event.ports.length !== 1
   ) {
     return;

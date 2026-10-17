@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
-import { SAKURA_BASE_FRAME_MS, SAKURA_SPRITE_SIZE, SakuraScene } from './sakuraScene';
+import { EFFECT_FRAME_MS } from './effectClock';
+import { SAKURA_SPRITE_SIZE, SakuraScene } from './sakuraScene';
 import type { SakuraWorkerCommand, SakuraWorkerEvent } from './sakuraWorkerProtocol';
 
 type WorkerScope = {
@@ -22,9 +23,8 @@ const workerScope = globalThis as unknown as WorkerScope;
 let sessionId = 0;
 let scene: SakuraScene | null = null;
 let mode: 'idle' | 'active' | 'draining' | 'disposed' = 'idle';
-let visible = true;
+let running = true;
 let currentDrainId = 0;
-let lastDrawTime = 0;
 let scheduledFrame: ScheduledFrame | null = null;
 
 function postEvent(event: SakuraWorkerEvent): void {
@@ -51,7 +51,6 @@ function disposeRenderer(closeWorker: boolean): void {
   scene?.dispose();
   scene = null;
   mode = 'disposed';
-  lastDrawTime = 0;
 
   if (closeWorker) workerScope.close?.();
 }
@@ -67,7 +66,7 @@ function fail(error: unknown): void {
 }
 
 function shouldAnimate(): boolean {
-  return visible && scene !== null && (mode === 'active' || mode === 'draining');
+  return running && scene !== null && (mode === 'active' || mode === 'draining');
 }
 
 function scheduleNextFrame(): void {
@@ -83,7 +82,7 @@ function scheduleNextFrame(): void {
 
   scheduledFrame = {
     kind: 'timer',
-    handle: workerScope.setTimeout(() => renderFrame(performance.now()), SAKURA_BASE_FRAME_MS),
+    handle: workerScope.setTimeout(() => renderFrame(performance.now()), EFFECT_FRAME_MS),
   };
 }
 
@@ -92,11 +91,7 @@ function renderFrame(time: number): void {
   if (!shouldAnimate() || !scene) return;
 
   try {
-    const elapsedMs = lastDrawTime > 0 ? time - lastDrawTime : SAKURA_BASE_FRAME_MS;
-    lastDrawTime = time;
-    const visibleCount = scene.renderFrame(time, elapsedMs, mode === 'draining');
-
-    if (mode === 'draining' && visibleCount === 0) {
+    if (scene.renderFrame(time) === 'drained') {
       mode = 'idle';
       postEvent({ type: 'drained', sessionId, drainId: currentDrainId });
       return;
@@ -128,12 +123,13 @@ function initialize(command: Extract<SakuraWorkerCommand, { type: 'init' }>): vo
       canvas: command.canvas,
       context,
       createSpriteCanvas: () => new OffscreenCanvas(SAKURA_SPRITE_SIZE, SAKURA_SPRITE_SIZE),
+      scheme: command.scheme,
     });
     scene.initialize(command.width, command.height, command.dpr);
-    visible = command.visible;
+    running = command.running;
     mode = command.mode;
+    scene.setDraining(mode === 'draining');
     currentDrainId = command.drainId;
-    lastDrawTime = 0;
 
     postEvent({ type: 'ready', sessionId });
     scheduleNextFrame();
@@ -155,19 +151,25 @@ function handleCommand(command: SakuraWorkerCommand): void {
       scene.resize(command.width, command.height, command.dpr);
       break;
 
-    case 'visibility':
-      visible = command.visible;
-      if (!visible) {
+    case 'running':
+      if (command.running === running) break;
+      running = command.running;
+      if (!running) {
         cancelScheduledFrame();
       } else {
-        lastDrawTime = 0;
+        scene.resetTimeBase();
         scheduleNextFrame();
       }
+      break;
+
+    case 'scheme':
+      scene.setScheme(command.scheme);
       break;
 
     case 'set-mode':
       currentDrainId = command.drainId;
       mode = command.mode;
+      scene.setDraining(mode === 'draining');
       scheduleNextFrame();
       break;
 

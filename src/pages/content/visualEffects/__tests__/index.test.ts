@@ -31,6 +31,7 @@ describe('visual effects plugin handler', () => {
   let harness: LifecycleHarness;
   let frames: Map<number, FrameRequestCallback>;
   let nextFrameId: number;
+  let now: number;
 
   function openListeners(): string[] {
     return harness.ledger.openListeners();
@@ -40,8 +41,13 @@ describe('visual effects plugin handler', () => {
     for (let i = 0; i < limit && !until(); i += 1) {
       const pending = [...frames.entries()];
       frames.clear();
-      for (const [, callback] of pending) callback(i * 16);
+      now += 1000 / 60;
+      for (const [, callback] of pending) callback(now);
     }
+  }
+
+  function pageTransition(type: 'pagehide' | 'pageshow', persisted: boolean): void {
+    window.dispatchEvent(new PageTransitionEvent(type, { persisted }));
   }
 
   beforeEach(() => {
@@ -52,6 +58,7 @@ describe('visual effects plugin handler', () => {
     delete (globalThis as GlobalWithFlag).__gvVisualEffectsStarted;
     document.body.innerHTML = '';
     Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true);
 
     const context = {
       clearRect: vi.fn(),
@@ -84,6 +91,7 @@ describe('visual effects plugin handler', () => {
 
     frames = new Map();
     nextFrameId = 1;
+    now = 0;
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
       const id = nextFrameId++;
       frames.set(id, callback);
@@ -97,7 +105,7 @@ describe('visual effects plugin handler', () => {
   });
 
   afterEach(() => {
-    window.dispatchEvent(new Event('beforeunload'));
+    pageTransition('pagehide', true);
     // Effects append to <html>, so a failing case must not leak its canvas into the next one.
     for (const node of effectNodes()) node.remove();
     harness.restore();
@@ -161,21 +169,54 @@ describe('visual effects plugin handler', () => {
     expect(frames.size).toBe(0);
   });
 
-  it('allows reactivation after beforeunload when the page remains alive', async () => {
+  it('keeps the effect through a cancelled unload', async () => {
     const { createVisualEffectsRuntime } = await import('../index');
     const runtime = createVisualEffectsRuntime();
-    const first = await activate(runtime, 'snow');
-    expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
+    await activate(runtime, 'snow');
+    const canvas = document.getElementById('gv-snow-effect-canvas');
 
+    // "Leave site?" then Stay: beforeunload fired, the page never hid.
     window.dispatchEvent(new Event('beforeunload'));
-    expect(effectNodes()).toEqual([]);
-    await first.dispose();
-    const second = await activate(runtime, 'snow');
-    expect(document.getElementById('gv-snow-effect-canvas')).not.toBeNull();
+    expect(document.getElementById('gv-snow-effect-canvas')).toBe(canvas);
+    expect(frames.size).toBe(1);
+    runtime.destroy();
+  });
 
-    await second.dispose();
+  it('restores the selected effect when the page returns from the back/forward cache', async () => {
+    const { createVisualEffectsRuntime } = await import('../index');
+    const runtime = createVisualEffectsRuntime();
+    const scope = await activate(runtime, 'snow');
+    runtime.handler.updateSettings?.({ effect: 'rain' });
+
+    pageTransition('pagehide', true);
+    expect(effectNodes()).toEqual([]);
+    expect(frames.size).toBe(0);
+
+    pageTransition('pageshow', true);
+    expect(effectNodes().map((node) => node.id)).toEqual(['gv-rain-effect-canvas']);
+    expect(frames.size).toBe(1);
+
+    // The page scope survives, so a later off still drains normally.
+    await scope.dispose();
+    runFrames(2_000, () => effectNodes().length === 0);
+    expect(effectNodes()).toEqual([]);
     runtime.destroy();
     expect(openListeners()).toEqual([]);
+  });
+
+  it('a real unload or a first page load starts nothing extra', async () => {
+    const { createVisualEffectsRuntime } = await import('../index');
+    const runtime = createVisualEffectsRuntime();
+    const scope = await activate(runtime, 'snow');
+    pageTransition('pagehide', false);
+    expect(effectNodes()).toHaveLength(1);
+    pageTransition('pageshow', false);
+    expect(effectNodes()).toHaveLength(1);
+    await scope.dispose();
+    pageTransition('pagehide', true);
+    pageTransition('pageshow', true);
+    expect(effectNodes()).toEqual([]);
+    runtime.destroy();
   });
 
   it('does not let an older activation drain the newer activation', async () => {
@@ -271,7 +312,7 @@ describe('visual effects plugin handler', () => {
     }
     expect(effectNodes()).toHaveLength(3);
     expect(document.querySelectorAll('#gv-snow-effect-canvas')).toHaveLength(1);
-    window.dispatchEvent(new Event('beforeunload'));
+    pageTransition('pagehide', true);
     expect(effectNodes()).toEqual([]);
     expect(frames.size).toBe(0);
     await scope.dispose();

@@ -14,6 +14,7 @@ describe('snowEffect', () => {
       configurable: true,
       value: 'visible',
     });
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true);
 
     // Mock canvas context
     const mockCtx = {
@@ -21,6 +22,7 @@ describe('snowEffect', () => {
       beginPath: vi.fn(),
       arc: vi.fn(),
       fill: vi.fn(),
+      moveTo: vi.fn(),
       fillStyle: '',
     };
 
@@ -32,6 +34,7 @@ describe('snowEffect', () => {
   afterEach(() => {
     for (const renderer of renderers) renderer.destroy();
     renderers = [];
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 

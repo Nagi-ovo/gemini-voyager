@@ -14,6 +14,7 @@ describe('rainEffect', () => {
       configurable: true,
       value: 'visible',
     });
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true);
 
     const mockCtx = {
       clearRect: vi.fn(),
@@ -36,6 +37,7 @@ describe('rainEffect', () => {
   afterEach(() => {
     for (const renderer of renderers) renderer.destroy();
     renderers = [];
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 

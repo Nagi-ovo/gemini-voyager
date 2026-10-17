@@ -18,6 +18,7 @@ type MockCanvasContext = {
   quadraticCurveTo: ReturnType<typeof vi.fn>;
   closePath: ReturnType<typeof vi.fn>;
   fill: ReturnType<typeof vi.fn>;
+  stroke: ReturnType<typeof vi.fn>;
   save: ReturnType<typeof vi.fn>;
   restore: ReturnType<typeof vi.fn>;
   translate: ReturnType<typeof vi.fn>;
@@ -26,6 +27,8 @@ type MockCanvasContext = {
   setTransform: ReturnType<typeof vi.fn>;
   drawImage: ReturnType<typeof vi.fn>;
   fillStyle: string;
+  strokeStyle: string;
+  lineWidth: number;
   globalAlpha: number;
 };
 
@@ -71,6 +74,8 @@ describe('sakuraEffect', () => {
     animationFrameCallback = null;
     FakeMessageChannel.instances = [];
     vi.mocked(isFirefox).mockReturnValue(false);
+    Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' });
+    vi.spyOn(document, 'hasFocus').mockReturnValue(true);
 
     Object.defineProperty(window, 'devicePixelRatio', {
       configurable: true,
@@ -85,6 +90,7 @@ describe('sakuraEffect', () => {
       quadraticCurveTo: vi.fn(),
       closePath: vi.fn(),
       fill: vi.fn(),
+      stroke: vi.fn(),
       save: vi.fn(),
       restore: vi.fn(),
       translate: vi.fn(),
@@ -93,6 +99,8 @@ describe('sakuraEffect', () => {
       setTransform: vi.fn(),
       drawImage: vi.fn(),
       fillStyle: '',
+      strokeStyle: '',
+      lineWidth: 1,
       globalAlpha: 1,
     };
 
@@ -267,7 +275,11 @@ describe('sakuraEffect', () => {
     runAnimationFrame(32);
     expect(mockCtx.drawImage).toHaveBeenCalledTimes(176);
 
+    // 10 ms after the last draw is a faster-than-60 Hz tick: skipped, not dropped petals.
     runAnimationFrame(42);
+    expect(mockCtx.drawImage).toHaveBeenCalledTimes(176);
+
+    runAnimationFrame(49);
     expect(mockCtx.drawImage).toHaveBeenCalledTimes(264);
   });
 
@@ -315,12 +327,13 @@ describe('sakuraEffect', () => {
     const initMessage = channel.port1.postMessage.mock.calls[0][0] as {
       type: string;
       sessionId: number;
-      visible: boolean;
+      running: boolean;
       mode: string;
     };
     expect(initMessage).toMatchObject({
       type: 'init',
-      visible: true,
+      running: true,
+      scheme: 'light',
       mode: 'active',
     });
     expect(postMessage).toHaveBeenCalledWith(
@@ -336,6 +349,34 @@ describe('sakuraEffect', () => {
     vi.advanceTimersByTime(3_000);
     expect(document.getElementById('gv-sakura-effect-frame')).toBe(frame);
     expect(channel.port1.close).not.toHaveBeenCalled();
+  });
+
+  it('tells the worker to pause while the window is unfocused and to resume on focus', async () => {
+    vi.mocked(isFirefox).mockReturnValue(true);
+    installWorkerFrameHarness();
+    const { createSakuraRenderer } = await import('../sakura');
+    const renderer = createSakuraRenderer();
+    renderers.push(renderer);
+    renderer.enable();
+    const { channel } = connectWorkerFrame();
+    const { sessionId } = channel.port1.postMessage.mock.calls[0][0] as { sessionId: number };
+
+    vi.mocked(document.hasFocus).mockReturnValue(false);
+    window.dispatchEvent(new Event('blur'));
+    vi.advanceTimersByTime(0);
+    expect(channel.port1.postMessage).toHaveBeenLastCalledWith({
+      type: 'running',
+      sessionId,
+      running: false,
+    });
+
+    vi.mocked(document.hasFocus).mockReturnValue(true);
+    window.dispatchEvent(new Event('focus'));
+    expect(channel.port1.postMessage).toHaveBeenLastCalledWith({
+      type: 'running',
+      sessionId,
+      running: true,
+    });
   });
 
   it('ignores a stale worker drain completion after Sakura is re-enabled', async () => {
