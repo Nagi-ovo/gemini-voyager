@@ -4148,5 +4148,141 @@
   },
   "savedLibraryRefresh": {
     "message": "更新"
+  },
+  "bridgeCardTitle": {
+    "message": "ローカルブリッジ",
+    "description": "Title of the popup card that pairs ChatGPT with the local voyager CLI"
+  },
+  "bridgeCardHint": {
+    "message": "このパソコンのツールが、このブラウザの ChatGPT を使えるようにします。ターミナルで voyager pair を実行し、表示されたコードを入力してください。",
+    "description": "Bridge card hint shown before pairing"
+  },
+  "bridgeCodeLabel": {
+    "message": "ペアリングコード",
+    "description": "Label of the pairing code field"
+  },
+  "bridgePortLabel": {
+    "message": "ポート",
+    "description": "Label of the local server port field"
+  },
+  "bridgeAdvanced": {
+    "message": "詳細設定",
+    "description": "Toggle that shows the bridge's advanced options"
+  },
+  "bridgePair": {
+    "message": "ペアリング",
+    "description": "Button that pairs the browser with the local server"
+  },
+  "bridgePairing": {
+    "message": "ペアリング中…",
+    "description": "Pair button label while pairing is in progress"
+  },
+  "bridgeUnpair": {
+    "message": "ペアリング解除",
+    "description": "Button that removes the pairing"
+  },
+  "bridgeUnpairConfirm": {
+    "message": "このブラウザのペアリングを解除しますか？再びペアリングするまで、このパソコンのツールはここで ChatGPT を使えません。",
+    "description": "Confirmation before removing the pairing"
+  },
+  "bridgeStatusChecking": {
+    "message": "ブリッジを確認しています…",
+    "description": "Shown while the popup waits for the bridge status"
+  },
+  "bridgeStatusConnected": {
+    "message": "サーバー {server} に接続済み",
+    "description": "Bridge status when the local server answers; {server} is the start of its id"
+  },
+  "bridgeStatusWaiting": {
+    "message": "サーバー {server} とペアリング済みです。voyager serve を待っています…",
+    "description": "Bridge status when paired but the first contact has not happened yet; {server} is the start of its id"
+  },
+  "bridgeStatusOffline": {
+    "message": "voyager serve に接続できません。ターミナルで起動してください。",
+    "description": "Bridge status when the paired local server stopped answering"
+  },
+  "bridgeLastContact": {
+    "message": "最終通信 {time}",
+    "description": "When the local server last answered; {time} is a local time"
+  },
+  "bridgeNeedsAccess": {
+    "message": "Voyager に 127.0.0.1 へのアクセス権がないため、voyager serve に接続できません。",
+    "description": "Shown when the paired bridge lost its 127.0.0.1 permission"
+  },
+  "bridgeAllowAccess": {
+    "message": "アクセスを許可",
+    "description": "Button that asks again for 127.0.0.1 access"
+  },
+  "bridgePolicyDenied": {
+    "message": "Voyager は現在ブリッジを停止しています。次回の更新後にもう一度お試しください。",
+    "description": "Shown when Voyager's remote rules switched the bridge off"
+  },
+  "bridgePolicyStale": {
+    "message": "ブリッジのルールが古くなっています。Voyager がまもなく更新します。",
+    "description": "Shown when the bridge rules are outdated and a refresh is pending"
+  },
+  "bridgePolicyNeedsUpdates": {
+    "message": "ブリッジのルールが古く、オンライン更新がオフになっています。ブリッジを使い続けるにはオンにしてください。",
+    "description": "Shown when the bridge rules are outdated and online updates are off"
+  },
+  "bridgeTurnOnUpdates": {
+    "message": "オンライン更新をオンにする",
+    "description": "Button that turns online updates on so the bridge rules can refresh"
+  },
+  "bridgePolicyChecking": {
+    "message": "ブリッジのルールを確認しています…",
+    "description": "Shown while the bridge rules have not been checked yet"
+  },
+  "bridgeActiveTask": {
+    "message": "ジョブ {job} の {op} を実行中",
+    "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
+  },
+  "bridgeUnsupportedSafari": {
+    "message": "Safari ではまだローカルブリッジを使えません。",
+    "description": "Shown in Safari, which the local bridge does not support yet"
+  },
+  "bridgeUnsupportedFirefox": {
+    "message": "ローカルブリッジには Firefox 128 以降が必要です。",
+    "description": "Shown in Firefox older than 128, which cannot grant 127.0.0.1 access"
+  },
+  "bridgeErrorCode": {
+    "message": "voyager pair に表示された 8 桁のコードを入力してください。",
+    "description": "Pairing error: the code is not eight digits"
+  },
+  "bridgeErrorPort": {
+    "message": "1〜65535 のポート番号を入力してください。",
+    "description": "Pairing error: the port is not a valid number"
+  },
+  "bridgeErrorPermission": {
+    "message": "ペアリングには 127.0.0.1 へのアクセスが必要です。もう一度試して許可してください。",
+    "description": "Pairing error: the 127.0.0.1 permission was refused"
+  },
+  "bridgeErrorUnreachable": {
+    "message": "このポートで voyager serve に接続できません。起動していることを確認して、もう一度お試しください。",
+    "description": "Pairing error: nothing answered on the given port"
+  },
+  "bridgeErrorRejected": {
+    "message": "このコードは使えませんでした。voyager pair を実行して新しいコードを取得してください。",
+    "description": "Pairing error: the server refused the code"
+  },
+  "bridgeErrorUpgradeExtension": {
+    "message": "この voyager CLI には新しい Voyager が必要です。拡張機能を更新してから、もう一度ペアリングしてください。",
+    "description": "Pairing error: the CLI needs a newer extension"
+  },
+  "bridgeErrorUpgradeCli": {
+    "message": "この Voyager には新しい voyager CLI が必要です。CLI を更新してから、もう一度ペアリングしてください。",
+    "description": "Pairing error: the extension needs a newer CLI"
+  },
+  "bridgeErrorNoResponse": {
+    "message": "Voyager から応答がありません。ポップアップを開き直して、ペアリングが完了したか確認してください。",
+    "description": "Pairing error: the background did not answer"
+  },
+  "bridgeErrorGeneric": {
+    "message": "うまくいきませんでした。voyager pair で新しいコードを取得して、もう一度お試しください。",
+    "description": "Bridge error with no more specific message"
+  },
+  "bridgeErrorAction": {
+    "message": "うまくいきませんでした。もう一度お試しください。",
+    "description": "Error after unpairing or turning on updates failed"
   }
 }

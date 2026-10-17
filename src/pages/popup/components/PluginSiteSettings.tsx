@@ -6,7 +6,9 @@ import { Switch } from '@/components/ui/switch';
 import { CHATGPT_EXPORT_PLUGIN_ID } from '@/features/plugins/builtin/chatgptExport/openMessage';
 import type { TranslationKey } from '@/utils/translations';
 
+import { CHATGPT_LOCAL_BRIDGE_PLUGIN_ID } from '../hooks/useBridgeStatus';
 import type { PromptDataTransferController } from '../hooks/usePromptDataTransfer';
+import { ChatGptBridgeCard } from './ChatGptBridgeCard';
 import { ChatGptExportCard } from './ChatGptExportCard';
 import { LocalPluginsPanel } from './LocalPluginsPanel';
 import { PluginManager } from './PluginManager';
@@ -38,8 +40,13 @@ export function PluginSiteSettings({
 }) {
   // Listed only where the exporter's `matches` cover the active tab (ChatGPT).
   const exportPlugin = plugins.manifests.find((plugin) => plugin.id === CHATGPT_EXPORT_PLUGIN_ID);
+  // Likewise ChatGPT-only; the card itself stays hidden until the builtin is on.
+  const hasBridgePlugin = plugins.manifests.some(
+    (plugin) => plugin.id === CHATGPT_LOCAL_BRIDGE_PLUGIN_ID,
+  );
   return (
     <>
+      {hasBridgePlugin && <ChatGptBridgeCard t={t} />}
       {exportPlugin && exportEntry && (
         <ChatGptExportCard
           plugin={exportPlugin}

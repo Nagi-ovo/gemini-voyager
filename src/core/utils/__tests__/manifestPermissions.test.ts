@@ -13,6 +13,7 @@ type ManifestPermissions = {
   };
   permissions?: string[];
   optional_permissions?: string[];
+  optional_host_permissions?: string[];
   content_scripts?: Array<{
     js?: string[];
     run_at?: string;
@@ -75,11 +76,22 @@ afterAll(() => {
 describe('manifest permissions', () => {
   it('keeps all-site access optional', () => {
     expect(manifestChrome.host_permissions).not.toContain('<all_urls>');
+    // Deliberate addition: the local bridge reaches `voyager serve` on 127.0.0.1,
+    // granted only from its pairing gesture (approved by the maintainer).
     expect(manifestChrome.optional_host_permissions).toEqual([
       'https://chatgpt.com/*',
+      'http://127.0.0.1/*',
       '<all_urls>',
     ]);
     expect(manifestDev.optional_host_permissions).toEqual(manifestChrome.optional_host_permissions);
+  });
+
+  it('keeps loopback access opt-in', () => {
+    expect(manifestChrome.host_permissions).not.toContain('http://127.0.0.1/*');
+    expect(firefoxManifest.optional_host_permissions).toContain('http://127.0.0.1/*');
+    // Safari does not run the local bridge in v1.
+    expect(safariManifest.optional_host_permissions).not.toContain('http://127.0.0.1/*');
+    expect(safariManifest.optional_host_permissions).toContain('https://chatgpt.com/*');
   });
 
   it('keeps ChatGPT host access opt-in', () => {

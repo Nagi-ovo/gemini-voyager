@@ -4148,5 +4148,141 @@
   },
   "savedLibraryRefresh": {
     "message": "تحديث"
+  },
+  "bridgeCardTitle": {
+    "message": "الجسر المحلي",
+    "description": "Title of the popup card that pairs ChatGPT with the local voyager CLI"
+  },
+  "bridgeCardHint": {
+    "message": "يتيح للأدوات على هذا الكمبيوتر استخدام ChatGPT في هذا المتصفح. شغّل voyager pair في الطرفية، ثم أدخل الرمز الذي يظهر.",
+    "description": "Bridge card hint shown before pairing"
+  },
+  "bridgeCodeLabel": {
+    "message": "رمز الاقتران",
+    "description": "Label of the pairing code field"
+  },
+  "bridgePortLabel": {
+    "message": "المنفذ",
+    "description": "Label of the local server port field"
+  },
+  "bridgeAdvanced": {
+    "message": "متقدم",
+    "description": "Toggle that shows the bridge's advanced options"
+  },
+  "bridgePair": {
+    "message": "اقتران",
+    "description": "Button that pairs the browser with the local server"
+  },
+  "bridgePairing": {
+    "message": "جارٍ الاقتران…",
+    "description": "Pair button label while pairing is in progress"
+  },
+  "bridgeUnpair": {
+    "message": "إلغاء الاقتران",
+    "description": "Button that removes the pairing"
+  },
+  "bridgeUnpairConfirm": {
+    "message": "هل تريد إلغاء اقتران هذا المتصفح؟ لن تتمكن الأدوات على هذا الكمبيوتر من استخدام ChatGPT هنا حتى تعيد الاقتران.",
+    "description": "Confirmation before removing the pairing"
+  },
+  "bridgeStatusChecking": {
+    "message": "جارٍ التحقق من الجسر…",
+    "description": "Shown while the popup waits for the bridge status"
+  },
+  "bridgeStatusConnected": {
+    "message": "متصل بالخادم {server}",
+    "description": "Bridge status when the local server answers; {server} is the start of its id"
+  },
+  "bridgeStatusWaiting": {
+    "message": "مقترن بالخادم {server}. في انتظار voyager serve…",
+    "description": "Bridge status when paired but the first contact has not happened yet; {server} is the start of its id"
+  },
+  "bridgeStatusOffline": {
+    "message": "تعذّر الوصول إلى voyager serve. شغّله في الطرفية.",
+    "description": "Bridge status when the paired local server stopped answering"
+  },
+  "bridgeLastContact": {
+    "message": "آخر اتصال {time}",
+    "description": "When the local server last answered; {time} is a local time"
+  },
+  "bridgeNeedsAccess": {
+    "message": "لم يعد لدى Voyager إذن الوصول إلى 127.0.0.1، لذا لا يمكنه الوصول إلى voyager serve.",
+    "description": "Shown when the paired bridge lost its 127.0.0.1 permission"
+  },
+  "bridgeAllowAccess": {
+    "message": "السماح بالوصول",
+    "description": "Button that asks again for 127.0.0.1 access"
+  },
+  "bridgePolicyDenied": {
+    "message": "أوقف Voyager الجسر مؤقتًا. تحقّق مجددًا بعد التحديث القادم.",
+    "description": "Shown when Voyager's remote rules switched the bridge off"
+  },
+  "bridgePolicyStale": {
+    "message": "قواعد الجسر قديمة. سيحدّثها Voyager قريبًا.",
+    "description": "Shown when the bridge rules are outdated and a refresh is pending"
+  },
+  "bridgePolicyNeedsUpdates": {
+    "message": "قواعد الجسر قديمة والتحديثات عبر الإنترنت متوقفة. فعّلها لمواصلة استخدام الجسر.",
+    "description": "Shown when the bridge rules are outdated and online updates are off"
+  },
+  "bridgeTurnOnUpdates": {
+    "message": "تفعيل التحديثات عبر الإنترنت",
+    "description": "Button that turns online updates on so the bridge rules can refresh"
+  },
+  "bridgePolicyChecking": {
+    "message": "جارٍ التحقق من قواعد الجسر…",
+    "description": "Shown while the bridge rules have not been checked yet"
+  },
+  "bridgeActiveTask": {
+    "message": "جارٍ تنفيذ {op} للمهمة {job}",
+    "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
+  },
+  "bridgeUnsupportedSafari": {
+    "message": "الجسر المحلي غير متاح في Safari بعد.",
+    "description": "Shown in Safari, which the local bridge does not support yet"
+  },
+  "bridgeUnsupportedFirefox": {
+    "message": "يتطلب الجسر المحلي Firefox 128 أو أحدث.",
+    "description": "Shown in Firefox older than 128, which cannot grant 127.0.0.1 access"
+  },
+  "bridgeErrorCode": {
+    "message": "أدخل الرمز المكوّن من 8 أرقام الذي يعرضه voyager pair.",
+    "description": "Pairing error: the code is not eight digits"
+  },
+  "bridgeErrorPort": {
+    "message": "أدخل منفذًا من 1 إلى 65535.",
+    "description": "Pairing error: the port is not a valid number"
+  },
+  "bridgeErrorPermission": {
+    "message": "يحتاج الاقتران إلى الوصول إلى 127.0.0.1. حاول مجددًا واسمح به.",
+    "description": "Pairing error: the 127.0.0.1 permission was refused"
+  },
+  "bridgeErrorUnreachable": {
+    "message": "تعذّر الوصول إلى voyager serve على هذا المنفذ. تأكّد من تشغيله، ثم حاول مجددًا.",
+    "description": "Pairing error: nothing answered on the given port"
+  },
+  "bridgeErrorRejected": {
+    "message": "لم يعمل هذا الرمز. شغّل voyager pair للحصول على رمز جديد.",
+    "description": "Pairing error: the server refused the code"
+  },
+  "bridgeErrorUpgradeExtension": {
+    "message": "يحتاج voyager CLI هذا إلى إصدار أحدث من Voyager. حدّث الإضافة، ثم أعد الاقتران.",
+    "description": "Pairing error: the CLI needs a newer extension"
+  },
+  "bridgeErrorUpgradeCli": {
+    "message": "يحتاج Voyager هذا إلى إصدار أحدث من voyager CLI. حدّث CLI، ثم أعد الاقتران.",
+    "description": "Pairing error: the extension needs a newer CLI"
+  },
+  "bridgeErrorNoResponse": {
+    "message": "لم يستجب Voyager. أعد فتح هذه النافذة لمعرفة ما إذا اكتمل الاقتران.",
+    "description": "Pairing error: the background did not answer"
+  },
+  "bridgeErrorGeneric": {
+    "message": "لم ينجح ذلك. شغّل voyager pair للحصول على رمز جديد وحاول مجددًا.",
+    "description": "Bridge error with no more specific message"
+  },
+  "bridgeErrorAction": {
+    "message": "لم ينجح ذلك. حاول مجددًا.",
+    "description": "Error after unpairing or turning on updates failed"
   }
 }

@@ -4148,5 +4148,141 @@
   },
   "savedLibraryRefresh": {
     "message": "새로고침"
+  },
+  "bridgeCardTitle": {
+    "message": "로컬 브리지",
+    "description": "Title of the popup card that pairs ChatGPT with the local voyager CLI"
+  },
+  "bridgeCardHint": {
+    "message": "이 컴퓨터의 도구가 이 브라우저에서 ChatGPT를 사용할 수 있게 합니다. 터미널에서 voyager pair를 실행한 뒤 표시된 코드를 입력하세요.",
+    "description": "Bridge card hint shown before pairing"
+  },
+  "bridgeCodeLabel": {
+    "message": "페어링 코드",
+    "description": "Label of the pairing code field"
+  },
+  "bridgePortLabel": {
+    "message": "포트",
+    "description": "Label of the local server port field"
+  },
+  "bridgeAdvanced": {
+    "message": "고급",
+    "description": "Toggle that shows the bridge's advanced options"
+  },
+  "bridgePair": {
+    "message": "페어링",
+    "description": "Button that pairs the browser with the local server"
+  },
+  "bridgePairing": {
+    "message": "페어링 중…",
+    "description": "Pair button label while pairing is in progress"
+  },
+  "bridgeUnpair": {
+    "message": "페어링 해제",
+    "description": "Button that removes the pairing"
+  },
+  "bridgeUnpairConfirm": {
+    "message": "이 브라우저의 페어링을 해제할까요? 다시 페어링할 때까지 이 컴퓨터의 도구는 여기서 ChatGPT를 사용할 수 없습니다.",
+    "description": "Confirmation before removing the pairing"
+  },
+  "bridgeStatusChecking": {
+    "message": "브리지를 확인하는 중…",
+    "description": "Shown while the popup waits for the bridge status"
+  },
+  "bridgeStatusConnected": {
+    "message": "서버 {server}에 연결됨",
+    "description": "Bridge status when the local server answers; {server} is the start of its id"
+  },
+  "bridgeStatusWaiting": {
+    "message": "서버 {server}와 페어링됨. voyager serve를 기다리는 중…",
+    "description": "Bridge status when paired but the first contact has not happened yet; {server} is the start of its id"
+  },
+  "bridgeStatusOffline": {
+    "message": "voyager serve에 연결할 수 없습니다. 터미널에서 실행하세요.",
+    "description": "Bridge status when the paired local server stopped answering"
+  },
+  "bridgeLastContact": {
+    "message": "마지막 연결 {time}",
+    "description": "When the local server last answered; {time} is a local time"
+  },
+  "bridgeNeedsAccess": {
+    "message": "Voyager에 127.0.0.1 접근 권한이 없어 voyager serve에 연결할 수 없습니다.",
+    "description": "Shown when the paired bridge lost its 127.0.0.1 permission"
+  },
+  "bridgeAllowAccess": {
+    "message": "접근 허용",
+    "description": "Button that asks again for 127.0.0.1 access"
+  },
+  "bridgePolicyDenied": {
+    "message": "Voyager가 브리지를 잠시 껐습니다. 다음 업데이트 후 다시 확인하세요.",
+    "description": "Shown when Voyager's remote rules switched the bridge off"
+  },
+  "bridgePolicyStale": {
+    "message": "브리지 규칙이 오래되었습니다. Voyager가 곧 새로 고칩니다.",
+    "description": "Shown when the bridge rules are outdated and a refresh is pending"
+  },
+  "bridgePolicyNeedsUpdates": {
+    "message": "브리지 규칙이 오래되었고 온라인 업데이트가 꺼져 있습니다. 브리지를 계속 쓰려면 켜세요.",
+    "description": "Shown when the bridge rules are outdated and online updates are off"
+  },
+  "bridgeTurnOnUpdates": {
+    "message": "온라인 업데이트 켜기",
+    "description": "Button that turns online updates on so the bridge rules can refresh"
+  },
+  "bridgePolicyChecking": {
+    "message": "브리지 규칙을 확인하는 중…",
+    "description": "Shown while the bridge rules have not been checked yet"
+  },
+  "bridgeActiveTask": {
+    "message": "작업 {job}의 {op} 실행 중",
+    "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
+  },
+  "bridgeUnsupportedSafari": {
+    "message": "Safari에서는 아직 로컬 브리지를 사용할 수 없습니다.",
+    "description": "Shown in Safari, which the local bridge does not support yet"
+  },
+  "bridgeUnsupportedFirefox": {
+    "message": "로컬 브리지는 Firefox 128 이상이 필요합니다.",
+    "description": "Shown in Firefox older than 128, which cannot grant 127.0.0.1 access"
+  },
+  "bridgeErrorCode": {
+    "message": "voyager pair에 표시된 8자리 코드를 입력하세요.",
+    "description": "Pairing error: the code is not eight digits"
+  },
+  "bridgeErrorPort": {
+    "message": "1~65535 사이의 포트를 입력하세요.",
+    "description": "Pairing error: the port is not a valid number"
+  },
+  "bridgeErrorPermission": {
+    "message": "페어링하려면 127.0.0.1 접근 권한이 필요합니다. 다시 시도하고 허용하세요.",
+    "description": "Pairing error: the 127.0.0.1 permission was refused"
+  },
+  "bridgeErrorUnreachable": {
+    "message": "이 포트에서 voyager serve에 연결할 수 없습니다. 실행 중인지 확인한 뒤 다시 시도하세요.",
+    "description": "Pairing error: nothing answered on the given port"
+  },
+  "bridgeErrorRejected": {
+    "message": "이 코드는 사용할 수 없습니다. voyager pair를 실행해 새 코드를 받으세요.",
+    "description": "Pairing error: the server refused the code"
+  },
+  "bridgeErrorUpgradeExtension": {
+    "message": "이 voyager CLI에는 최신 Voyager가 필요합니다. 확장 프로그램을 업데이트한 뒤 다시 페어링하세요.",
+    "description": "Pairing error: the CLI needs a newer extension"
+  },
+  "bridgeErrorUpgradeCli": {
+    "message": "이 Voyager에는 최신 voyager CLI가 필요합니다. CLI를 업데이트한 뒤 다시 페어링하세요.",
+    "description": "Pairing error: the extension needs a newer CLI"
+  },
+  "bridgeErrorNoResponse": {
+    "message": "Voyager가 응답하지 않습니다. 팝업을 다시 열어 페어링이 끝났는지 확인하세요.",
+    "description": "Pairing error: the background did not answer"
+  },
+  "bridgeErrorGeneric": {
+    "message": "실패했습니다. voyager pair로 새 코드를 받아 다시 시도하세요.",
+    "description": "Bridge error with no more specific message"
+  },
+  "bridgeErrorAction": {
+    "message": "실패했습니다. 다시 시도하세요.",
+    "description": "Error after unpairing or turning on updates failed"
   }
 }

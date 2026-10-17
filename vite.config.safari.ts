@@ -115,6 +115,10 @@ export const safariManifest = {
       'unlimitedStorage',
     ]),
   ),
+  // The local bridge is not supported on Safari yet, so it never asks for loopback access.
+  optional_host_permissions: (
+    (manifest as { optional_host_permissions?: string[] }).optional_host_permissions ?? []
+  ).filter((origin) => origin !== 'http://127.0.0.1/*'),
   // Safari applies the page CSP to DOM-injected extension scripts. Native
   // MAIN-world content scripts bypass that CSP and run early enough to observe
   // Gemini's initial network requests. Keep one file per entry because Safari

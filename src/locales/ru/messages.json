@@ -4148,5 +4148,141 @@
   },
   "savedLibraryRefresh": {
     "message": "Обновить"
+  },
+  "bridgeCardTitle": {
+    "message": "Локальный мост",
+    "description": "Title of the popup card that pairs ChatGPT with the local voyager CLI"
+  },
+  "bridgeCardHint": {
+    "message": "Позволяет инструментам на этом компьютере работать с ChatGPT в этом браузере. Запустите voyager pair в терминале и введите показанный код.",
+    "description": "Bridge card hint shown before pairing"
+  },
+  "bridgeCodeLabel": {
+    "message": "Код сопряжения",
+    "description": "Label of the pairing code field"
+  },
+  "bridgePortLabel": {
+    "message": "Порт",
+    "description": "Label of the local server port field"
+  },
+  "bridgeAdvanced": {
+    "message": "Дополнительно",
+    "description": "Toggle that shows the bridge's advanced options"
+  },
+  "bridgePair": {
+    "message": "Подключить",
+    "description": "Button that pairs the browser with the local server"
+  },
+  "bridgePairing": {
+    "message": "Подключение…",
+    "description": "Pair button label while pairing is in progress"
+  },
+  "bridgeUnpair": {
+    "message": "Отключить",
+    "description": "Button that removes the pairing"
+  },
+  "bridgeUnpairConfirm": {
+    "message": "Отключить этот браузер? Инструменты на этом компьютере не смогут работать с ChatGPT здесь, пока вы не подключите его снова.",
+    "description": "Confirmation before removing the pairing"
+  },
+  "bridgeStatusChecking": {
+    "message": "Проверка моста…",
+    "description": "Shown while the popup waits for the bridge status"
+  },
+  "bridgeStatusConnected": {
+    "message": "Подключено к серверу {server}",
+    "description": "Bridge status when the local server answers; {server} is the start of its id"
+  },
+  "bridgeStatusWaiting": {
+    "message": "Подключено к серверу {server}. Ожидание voyager serve…",
+    "description": "Bridge status when paired but the first contact has not happened yet; {server} is the start of its id"
+  },
+  "bridgeStatusOffline": {
+    "message": "Нет связи с voyager serve. Запустите его в терминале.",
+    "description": "Bridge status when the paired local server stopped answering"
+  },
+  "bridgeLastContact": {
+    "message": "Последняя связь {time}",
+    "description": "When the local server last answered; {time} is a local time"
+  },
+  "bridgeNeedsAccess": {
+    "message": "У Voyager больше нет доступа к 127.0.0.1, поэтому он не может связаться с voyager serve.",
+    "description": "Shown when the paired bridge lost its 127.0.0.1 permission"
+  },
+  "bridgeAllowAccess": {
+    "message": "Разрешить доступ",
+    "description": "Button that asks again for 127.0.0.1 access"
+  },
+  "bridgePolicyDenied": {
+    "message": "Voyager временно отключил мост. Проверьте снова после следующего обновления.",
+    "description": "Shown when Voyager's remote rules switched the bridge off"
+  },
+  "bridgePolicyStale": {
+    "message": "Правила моста устарели. Voyager скоро их обновит.",
+    "description": "Shown when the bridge rules are outdated and a refresh is pending"
+  },
+  "bridgePolicyNeedsUpdates": {
+    "message": "Правила моста устарели, а онлайн-обновления отключены. Включите их, чтобы продолжить пользоваться мостом.",
+    "description": "Shown when the bridge rules are outdated and online updates are off"
+  },
+  "bridgeTurnOnUpdates": {
+    "message": "Включить онлайн-обновления",
+    "description": "Button that turns online updates on so the bridge rules can refresh"
+  },
+  "bridgePolicyChecking": {
+    "message": "Проверка правил моста…",
+    "description": "Shown while the bridge rules have not been checked yet"
+  },
+  "bridgeActiveTask": {
+    "message": "Выполняется {op} для задания {job}",
+    "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
+  },
+  "bridgeUnsupportedSafari": {
+    "message": "Локальный мост пока недоступен в Safari.",
+    "description": "Shown in Safari, which the local bridge does not support yet"
+  },
+  "bridgeUnsupportedFirefox": {
+    "message": "Для локального моста нужен Firefox 128 или новее.",
+    "description": "Shown in Firefox older than 128, which cannot grant 127.0.0.1 access"
+  },
+  "bridgeErrorCode": {
+    "message": "Введите 8-значный код из voyager pair.",
+    "description": "Pairing error: the code is not eight digits"
+  },
+  "bridgeErrorPort": {
+    "message": "Введите порт от 1 до 65535.",
+    "description": "Pairing error: the port is not a valid number"
+  },
+  "bridgeErrorPermission": {
+    "message": "Для подключения нужен доступ к 127.0.0.1. Попробуйте ещё раз и разрешите его.",
+    "description": "Pairing error: the 127.0.0.1 permission was refused"
+  },
+  "bridgeErrorUnreachable": {
+    "message": "Не удаётся связаться с voyager serve на этом порту. Убедитесь, что он запущен, и попробуйте снова.",
+    "description": "Pairing error: nothing answered on the given port"
+  },
+  "bridgeErrorRejected": {
+    "message": "Этот код не подошёл. Запустите voyager pair, чтобы получить новый.",
+    "description": "Pairing error: the server refused the code"
+  },
+  "bridgeErrorUpgradeExtension": {
+    "message": "Этой версии voyager CLI нужен более новый Voyager. Обновите расширение и подключитесь снова.",
+    "description": "Pairing error: the CLI needs a newer extension"
+  },
+  "bridgeErrorUpgradeCli": {
+    "message": "Этому Voyager нужна более новая voyager CLI. Обновите CLI и подключитесь снова.",
+    "description": "Pairing error: the extension needs a newer CLI"
+  },
+  "bridgeErrorNoResponse": {
+    "message": "Voyager не ответил. Откройте это окно снова, чтобы проверить, завершилось ли подключение.",
+    "description": "Pairing error: the background did not answer"
+  },
+  "bridgeErrorGeneric": {
+    "message": "Не получилось. Запустите voyager pair, чтобы получить новый код, и попробуйте снова.",
+    "description": "Bridge error with no more specific message"
+  },
+  "bridgeErrorAction": {
+    "message": "Не получилось. Попробуйте снова.",
+    "description": "Error after unpairing or turning on updates failed"
   }
 }

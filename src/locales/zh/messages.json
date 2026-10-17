@@ -4148,5 +4148,141 @@
   },
   "savedLibraryRefresh": {
     "message": "刷新"
+  },
+  "bridgeCardTitle": {
+    "message": "本地桥接",
+    "description": "Title of the popup card that pairs ChatGPT with the local voyager CLI"
+  },
+  "bridgeCardHint": {
+    "message": "让这台电脑上的工具通过这个浏览器使用 ChatGPT。在终端运行 voyager pair，再填入它显示的配对码。",
+    "description": "Bridge card hint shown before pairing"
+  },
+  "bridgeCodeLabel": {
+    "message": "配对码",
+    "description": "Label of the pairing code field"
+  },
+  "bridgePortLabel": {
+    "message": "端口",
+    "description": "Label of the local server port field"
+  },
+  "bridgeAdvanced": {
+    "message": "高级",
+    "description": "Toggle that shows the bridge's advanced options"
+  },
+  "bridgePair": {
+    "message": "配对",
+    "description": "Button that pairs the browser with the local server"
+  },
+  "bridgePairing": {
+    "message": "正在配对…",
+    "description": "Pair button label while pairing is in progress"
+  },
+  "bridgeUnpair": {
+    "message": "取消配对",
+    "description": "Button that removes the pairing"
+  },
+  "bridgeUnpairConfirm": {
+    "message": "要取消这个浏览器的配对吗？重新配对之前，这台电脑上的工具无法在这里使用 ChatGPT。",
+    "description": "Confirmation before removing the pairing"
+  },
+  "bridgeStatusChecking": {
+    "message": "正在检查桥接…",
+    "description": "Shown while the popup waits for the bridge status"
+  },
+  "bridgeStatusConnected": {
+    "message": "已连接服务器 {server}",
+    "description": "Bridge status when the local server answers; {server} is the start of its id"
+  },
+  "bridgeStatusWaiting": {
+    "message": "已与服务器 {server} 配对，正在等待 voyager serve…",
+    "description": "Bridge status when paired but the first contact has not happened yet; {server} is the start of its id"
+  },
+  "bridgeStatusOffline": {
+    "message": "连不上 voyager serve。请在终端里启动它。",
+    "description": "Bridge status when the paired local server stopped answering"
+  },
+  "bridgeLastContact": {
+    "message": "上次联系 {time}",
+    "description": "When the local server last answered; {time} is a local time"
+  },
+  "bridgeNeedsAccess": {
+    "message": "Voyager 已没有 127.0.0.1 的访问权限，无法连接 voyager serve。",
+    "description": "Shown when the paired bridge lost its 127.0.0.1 permission"
+  },
+  "bridgeAllowAccess": {
+    "message": "允许访问",
+    "description": "Button that asks again for 127.0.0.1 access"
+  },
+  "bridgePolicyDenied": {
+    "message": "Voyager 暂时关闭了桥接。请在下次更新后再试。",
+    "description": "Shown when Voyager's remote rules switched the bridge off"
+  },
+  "bridgePolicyStale": {
+    "message": "桥接规则已过期，Voyager 稍后会自动刷新。",
+    "description": "Shown when the bridge rules are outdated and a refresh is pending"
+  },
+  "bridgePolicyNeedsUpdates": {
+    "message": "桥接规则已过期，而在线更新已关闭。打开在线更新才能继续使用桥接。",
+    "description": "Shown when the bridge rules are outdated and online updates are off"
+  },
+  "bridgeTurnOnUpdates": {
+    "message": "打开在线更新",
+    "description": "Button that turns online updates on so the bridge rules can refresh"
+  },
+  "bridgePolicyChecking": {
+    "message": "正在检查桥接规则…",
+    "description": "Shown while the bridge rules have not been checked yet"
+  },
+  "bridgeActiveTask": {
+    "message": "正在为任务 {job} 执行 {op}",
+    "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
+  },
+  "bridgeUnsupportedSafari": {
+    "message": "Safari 暂不支持本地桥接。",
+    "description": "Shown in Safari, which the local bridge does not support yet"
+  },
+  "bridgeUnsupportedFirefox": {
+    "message": "本地桥接需要 Firefox 128 或更高版本。",
+    "description": "Shown in Firefox older than 128, which cannot grant 127.0.0.1 access"
+  },
+  "bridgeErrorCode": {
+    "message": "请输入 voyager pair 显示的 8 位配对码。",
+    "description": "Pairing error: the code is not eight digits"
+  },
+  "bridgeErrorPort": {
+    "message": "请输入 1 到 65535 之间的端口。",
+    "description": "Pairing error: the port is not a valid number"
+  },
+  "bridgeErrorPermission": {
+    "message": "配对需要 127.0.0.1 的访问权限。请重试并允许。",
+    "description": "Pairing error: the 127.0.0.1 permission was refused"
+  },
+  "bridgeErrorUnreachable": {
+    "message": "这个端口上连不上 voyager serve。请确认它正在运行，然后重试。",
+    "description": "Pairing error: nothing answered on the given port"
+  },
+  "bridgeErrorRejected": {
+    "message": "这个配对码无效。请重新运行 voyager pair 获取新码。",
+    "description": "Pairing error: the server refused the code"
+  },
+  "bridgeErrorUpgradeExtension": {
+    "message": "这个 voyager CLI 需要更新版本的 Voyager。请更新扩展后重新配对。",
+    "description": "Pairing error: the CLI needs a newer extension"
+  },
+  "bridgeErrorUpgradeCli": {
+    "message": "这个 Voyager 需要更新版本的 voyager CLI。请更新 CLI 后重新配对。",
+    "description": "Pairing error: the extension needs a newer CLI"
+  },
+  "bridgeErrorNoResponse": {
+    "message": "Voyager 没有响应。请重新打开弹窗，看看配对是否已完成。",
+    "description": "Pairing error: the background did not answer"
+  },
+  "bridgeErrorGeneric": {
+    "message": "操作没有成功。请重新运行 voyager pair 获取新码后再试。",
+    "description": "Bridge error with no more specific message"
+  },
+  "bridgeErrorAction": {
+    "message": "操作没有成功，请重试。",
+    "description": "Error after unpairing or turning on updates failed"
   }
 }

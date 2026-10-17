@@ -4148,5 +4148,141 @@
   },
   "savedLibraryRefresh": {
     "message": "Refresh"
+  },
+  "bridgeCardTitle": {
+    "message": "Local bridge",
+    "description": "Title of the popup card that pairs ChatGPT with the local voyager CLI"
+  },
+  "bridgeCardHint": {
+    "message": "Let tools on this computer use ChatGPT in this browser. Run voyager pair in a terminal, then enter the code it shows.",
+    "description": "Bridge card hint shown before pairing"
+  },
+  "bridgeCodeLabel": {
+    "message": "Pairing code",
+    "description": "Label of the pairing code field"
+  },
+  "bridgePortLabel": {
+    "message": "Port",
+    "description": "Label of the local server port field"
+  },
+  "bridgeAdvanced": {
+    "message": "Advanced",
+    "description": "Toggle that shows the bridge's advanced options"
+  },
+  "bridgePair": {
+    "message": "Pair",
+    "description": "Button that pairs the browser with the local server"
+  },
+  "bridgePairing": {
+    "message": "Pairing…",
+    "description": "Pair button label while pairing is in progress"
+  },
+  "bridgeUnpair": {
+    "message": "Unpair",
+    "description": "Button that removes the pairing"
+  },
+  "bridgeUnpairConfirm": {
+    "message": "Unpair this browser? Tools on this computer can’t use ChatGPT here until you pair again.",
+    "description": "Confirmation before removing the pairing"
+  },
+  "bridgeStatusChecking": {
+    "message": "Checking the bridge…",
+    "description": "Shown while the popup waits for the bridge status"
+  },
+  "bridgeStatusConnected": {
+    "message": "Connected to server {server}",
+    "description": "Bridge status when the local server answers; {server} is the start of its id"
+  },
+  "bridgeStatusWaiting": {
+    "message": "Paired with server {server}. Waiting for voyager serve…",
+    "description": "Bridge status when paired but the first contact has not happened yet; {server} is the start of its id"
+  },
+  "bridgeStatusOffline": {
+    "message": "Can’t reach voyager serve. Start it in a terminal.",
+    "description": "Bridge status when the paired local server stopped answering"
+  },
+  "bridgeLastContact": {
+    "message": "Last contact {time}",
+    "description": "When the local server last answered; {time} is a local time"
+  },
+  "bridgeNeedsAccess": {
+    "message": "Voyager no longer has access to 127.0.0.1, so it can’t reach voyager serve.",
+    "description": "Shown when the paired bridge lost its 127.0.0.1 permission"
+  },
+  "bridgeAllowAccess": {
+    "message": "Allow access",
+    "description": "Button that asks again for 127.0.0.1 access"
+  },
+  "bridgePolicyDenied": {
+    "message": "Voyager has turned the bridge off for now. Check again after the next update.",
+    "description": "Shown when Voyager's remote rules switched the bridge off"
+  },
+  "bridgePolicyStale": {
+    "message": "Bridge rules are out of date. Voyager will refresh them shortly.",
+    "description": "Shown when the bridge rules are outdated and a refresh is pending"
+  },
+  "bridgePolicyNeedsUpdates": {
+    "message": "Bridge rules are out of date and online updates are off. Turn them on to keep using the bridge.",
+    "description": "Shown when the bridge rules are outdated and online updates are off"
+  },
+  "bridgeTurnOnUpdates": {
+    "message": "Turn on online updates",
+    "description": "Button that turns online updates on so the bridge rules can refresh"
+  },
+  "bridgePolicyChecking": {
+    "message": "Checking bridge rules…",
+    "description": "Shown while the bridge rules have not been checked yet"
+  },
+  "bridgeActiveTask": {
+    "message": "Running {op} for job {job}",
+    "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
+  },
+  "bridgeUnsupportedSafari": {
+    "message": "The local bridge isn’t available in Safari yet.",
+    "description": "Shown in Safari, which the local bridge does not support yet"
+  },
+  "bridgeUnsupportedFirefox": {
+    "message": "The local bridge needs Firefox 128 or later.",
+    "description": "Shown in Firefox older than 128, which cannot grant 127.0.0.1 access"
+  },
+  "bridgeErrorCode": {
+    "message": "Enter the 8-digit code from voyager pair.",
+    "description": "Pairing error: the code is not eight digits"
+  },
+  "bridgeErrorPort": {
+    "message": "Enter a port from 1 to 65535.",
+    "description": "Pairing error: the port is not a valid number"
+  },
+  "bridgeErrorPermission": {
+    "message": "Pairing needs access to 127.0.0.1. Try again and allow it.",
+    "description": "Pairing error: the 127.0.0.1 permission was refused"
+  },
+  "bridgeErrorUnreachable": {
+    "message": "Can’t reach voyager serve on this port. Check that it’s running, then try again.",
+    "description": "Pairing error: nothing answered on the given port"
+  },
+  "bridgeErrorRejected": {
+    "message": "That code didn’t work. Run voyager pair for a new one.",
+    "description": "Pairing error: the server refused the code"
+  },
+  "bridgeErrorUpgradeExtension": {
+    "message": "This voyager CLI needs a newer Voyager. Update the extension, then pair again.",
+    "description": "Pairing error: the CLI needs a newer extension"
+  },
+  "bridgeErrorUpgradeCli": {
+    "message": "This Voyager needs a newer voyager CLI. Update the CLI, then pair again.",
+    "description": "Pairing error: the extension needs a newer CLI"
+  },
+  "bridgeErrorNoResponse": {
+    "message": "Voyager didn’t answer. Reopen this popup to see whether pairing finished.",
+    "description": "Pairing error: the background did not answer"
+  },
+  "bridgeErrorGeneric": {
+    "message": "That didn’t work. Run voyager pair for a new code and try again.",
+    "description": "Bridge error with no more specific message"
+  },
+  "bridgeErrorAction": {
+    "message": "That didn’t work. Try again.",
+    "description": "Error after unpairing or turning on updates failed"
   }
 }

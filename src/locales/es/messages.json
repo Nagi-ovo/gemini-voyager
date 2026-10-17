@@ -4148,5 +4148,141 @@
   },
   "savedLibraryRefresh": {
     "message": "Actualizar"
+  },
+  "bridgeCardTitle": {
+    "message": "Puente local",
+    "description": "Title of the popup card that pairs ChatGPT with the local voyager CLI"
+  },
+  "bridgeCardHint": {
+    "message": "Permite que las herramientas de este equipo usen ChatGPT en este navegador. Ejecuta voyager pair en una terminal e introduce el código que muestra.",
+    "description": "Bridge card hint shown before pairing"
+  },
+  "bridgeCodeLabel": {
+    "message": "Código de vinculación",
+    "description": "Label of the pairing code field"
+  },
+  "bridgePortLabel": {
+    "message": "Puerto",
+    "description": "Label of the local server port field"
+  },
+  "bridgeAdvanced": {
+    "message": "Avanzado",
+    "description": "Toggle that shows the bridge's advanced options"
+  },
+  "bridgePair": {
+    "message": "Vincular",
+    "description": "Button that pairs the browser with the local server"
+  },
+  "bridgePairing": {
+    "message": "Vinculando…",
+    "description": "Pair button label while pairing is in progress"
+  },
+  "bridgeUnpair": {
+    "message": "Desvincular",
+    "description": "Button that removes the pairing"
+  },
+  "bridgeUnpairConfirm": {
+    "message": "¿Desvincular este navegador? Las herramientas de este equipo no podrán usar ChatGPT aquí hasta que vuelvas a vincularlo.",
+    "description": "Confirmation before removing the pairing"
+  },
+  "bridgeStatusChecking": {
+    "message": "Comprobando el puente…",
+    "description": "Shown while the popup waits for the bridge status"
+  },
+  "bridgeStatusConnected": {
+    "message": "Conectado al servidor {server}",
+    "description": "Bridge status when the local server answers; {server} is the start of its id"
+  },
+  "bridgeStatusWaiting": {
+    "message": "Vinculado con el servidor {server}. Esperando a voyager serve…",
+    "description": "Bridge status when paired but the first contact has not happened yet; {server} is the start of its id"
+  },
+  "bridgeStatusOffline": {
+    "message": "No se puede conectar con voyager serve. Inícialo en una terminal.",
+    "description": "Bridge status when the paired local server stopped answering"
+  },
+  "bridgeLastContact": {
+    "message": "Último contacto {time}",
+    "description": "When the local server last answered; {time} is a local time"
+  },
+  "bridgeNeedsAccess": {
+    "message": "Voyager ya no tiene acceso a 127.0.0.1, así que no puede conectar con voyager serve.",
+    "description": "Shown when the paired bridge lost its 127.0.0.1 permission"
+  },
+  "bridgeAllowAccess": {
+    "message": "Permitir acceso",
+    "description": "Button that asks again for 127.0.0.1 access"
+  },
+  "bridgePolicyDenied": {
+    "message": "Voyager ha desactivado el puente por ahora. Vuelve a comprobarlo tras la próxima actualización.",
+    "description": "Shown when Voyager's remote rules switched the bridge off"
+  },
+  "bridgePolicyStale": {
+    "message": "Las reglas del puente están desactualizadas. Voyager las actualizará en breve.",
+    "description": "Shown when the bridge rules are outdated and a refresh is pending"
+  },
+  "bridgePolicyNeedsUpdates": {
+    "message": "Las reglas del puente están desactualizadas y las actualizaciones en línea están desactivadas. Actívalas para seguir usando el puente.",
+    "description": "Shown when the bridge rules are outdated and online updates are off"
+  },
+  "bridgeTurnOnUpdates": {
+    "message": "Activar actualizaciones en línea",
+    "description": "Button that turns online updates on so the bridge rules can refresh"
+  },
+  "bridgePolicyChecking": {
+    "message": "Comprobando las reglas del puente…",
+    "description": "Shown while the bridge rules have not been checked yet"
+  },
+  "bridgeActiveTask": {
+    "message": "Ejecutando {op} para el trabajo {job}",
+    "description": "The step the bridge is running now; {op} is a step name, {job} a job id"
+  },
+  "bridgeUnsupportedSafari": {
+    "message": "El puente local aún no está disponible en Safari.",
+    "description": "Shown in Safari, which the local bridge does not support yet"
+  },
+  "bridgeUnsupportedFirefox": {
+    "message": "El puente local requiere Firefox 128 o posterior.",
+    "description": "Shown in Firefox older than 128, which cannot grant 127.0.0.1 access"
+  },
+  "bridgeErrorCode": {
+    "message": "Introduce el código de 8 dígitos que muestra voyager pair.",
+    "description": "Pairing error: the code is not eight digits"
+  },
+  "bridgeErrorPort": {
+    "message": "Introduce un puerto entre 1 y 65535.",
+    "description": "Pairing error: the port is not a valid number"
+  },
+  "bridgeErrorPermission": {
+    "message": "La vinculación necesita acceso a 127.0.0.1. Inténtalo de nuevo y permítelo.",
+    "description": "Pairing error: the 127.0.0.1 permission was refused"
+  },
+  "bridgeErrorUnreachable": {
+    "message": "No se puede conectar con voyager serve en este puerto. Comprueba que esté en ejecución e inténtalo de nuevo.",
+    "description": "Pairing error: nothing answered on the given port"
+  },
+  "bridgeErrorRejected": {
+    "message": "Ese código no ha funcionado. Ejecuta voyager pair para obtener uno nuevo.",
+    "description": "Pairing error: the server refused the code"
+  },
+  "bridgeErrorUpgradeExtension": {
+    "message": "Esta CLI de voyager necesita una versión más reciente de Voyager. Actualiza la extensión y vuelve a vincular.",
+    "description": "Pairing error: the CLI needs a newer extension"
+  },
+  "bridgeErrorUpgradeCli": {
+    "message": "Este Voyager necesita una versión más reciente de la CLI de voyager. Actualiza la CLI y vuelve a vincular.",
+    "description": "Pairing error: the extension needs a newer CLI"
+  },
+  "bridgeErrorNoResponse": {
+    "message": "Voyager no ha respondido. Vuelve a abrir esta ventana para ver si la vinculación terminó.",
+    "description": "Pairing error: the background did not answer"
+  },
+  "bridgeErrorGeneric": {
+    "message": "No ha funcionado. Ejecuta voyager pair para obtener un código nuevo e inténtalo de nuevo.",
+    "description": "Bridge error with no more specific message"
+  },
+  "bridgeErrorAction": {
+    "message": "No ha funcionado. Inténtalo de nuevo.",
+    "description": "Error after unpairing or turning on updates failed"
   }
 }

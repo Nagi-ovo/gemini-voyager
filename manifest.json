@@ -41,7 +41,7 @@
     "https://lh3.google.com/*",
     "https://*.ggpht.com/*"
   ],
-  "optional_host_permissions": ["https://chatgpt.com/*", "<all_urls>"],
+  "optional_host_permissions": ["https://chatgpt.com/*", "http://127.0.0.1/*", "<all_urls>"],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; worker-src 'self'"
   },
