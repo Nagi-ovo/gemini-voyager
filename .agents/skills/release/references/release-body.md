@@ -34,6 +34,7 @@ Two prior iterations didn't work:
 Current layout:
 
 - **English tables at the top** (the GitHub release page audience skews global; EN gets first-screen real estate).
+- **The release quote, when the in-product notes open with one.** Copy the `en` quote line verbatim above the English tables (below a hero image, if any) and the `zh` line right under `## 中文版`. Every release since 1.5.1 carries its quote this way.
 - **Chinese section rendered directly below**, separated by a thin `---` divider and an `## 中文版` heading. Both languages are visible without interaction.
 - **Drop the "Implemented in" / "实现" column when every row is `direct commit by @Nagi-ovo`** — that column is pure noise when 100% owner-attributed. Inline the `closes #NNN` reference into the description for the rare row that needs it. Add a single trailer line `_All changes by @Nagi-ovo unless noted._` (and `_除特别注明外，均由 @Nagi-ovo 提交。_` in the ZH section) below each language's tables.
 - **Keep the column when external contributors landed PRs in this release** — attribution matters more than column-drop savings. Each PR row reads `PR #NNN by @author`; owner rows read `—` or are dropped to a footer note.
