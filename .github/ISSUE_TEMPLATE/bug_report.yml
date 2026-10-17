@@ -81,6 +81,7 @@ body:
         - Google AI Studio
         - ChatGPT
         - Claude
+        - DeepSeek
         - Extension popup / background
         - Other
     validations:

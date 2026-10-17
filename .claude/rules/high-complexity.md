@@ -9,6 +9,7 @@ globs:
     'src/features/export/**',
     'src/pages/content/folder/**',
     'src/pages/content/export/**',
+    'src/features/plugins/storage/**',
   ]
 ---
 
@@ -22,6 +23,7 @@ globs:
 | `AccountIsolationService`                  | Hard account isolation for multi-account.                                                                                                                           | Integrates with Drive sync.                         |
 | `features/folder` + `pages/content/folder` | Drag-and-drop + cloud sync UI. DOM manipulation + state sync.                                                                                                       | Watch for infinite loops.                           |
 | `features/export` + `pages/content/export` | JSON/MD/PDF/Image export + Deep Research.                                                                                                                           | Fragile to host UI changes. Multi-browser compat.   |
+| `features/plugins/storage`                | Plugin on/off and settings. The legacy bindings decide which store is authoritative for each plugin, and so what backup and restore keep. | A bound id ignores `gvPluginsState`; keep both backups restorable in either order. |
 
 ## Changes to behavior or data
 

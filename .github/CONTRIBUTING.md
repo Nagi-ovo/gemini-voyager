@@ -273,7 +273,7 @@ bun install
 
 ## 项目范围
 
-Voyager 通过以下功能增强 Gemini AI 聊天体验：
+Voyager 在 Gemini、AI Studio、ChatGPT、Claude 和 DeepSeek 上增强 AI 聊天体验，功能包括：
 
 - 时间线导航
 - 文件夹组织
@@ -587,7 +587,7 @@ Use valid [Google Material Symbols](https://fonts.google.com/icons) icon names:
 
 ## Project Scope
 
-Voyager enhances the Gemini AI chat experience with:
+Voyager enhances AI chat on Gemini, AI Studio, ChatGPT, Claude and DeepSeek with:
 
 - Timeline navigation
 - Folder organization

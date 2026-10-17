@@ -1,8 +1,8 @@
 # 显式状态机：改造范围与插件路线
 
-日期：2026-10-16。状态：阶段 A 已在 main 实现，并对 `verbs/`、`builtin/`、`src/pages/content/` 做过全量审计；阶段 B 未启动，启动条件见 §4。
+日期：2026-10-16；更新：2026-10-17。状态：阶段 A 已在 main 实现，并对 `verbs/`、`builtin/`、`src/pages/content/` 做过全量审计；之后两站批量删除迁移（`GEMINI_PLUGIN_PLATFORM_PLAN.md` §7.12 8-10）也用上了同一运行时，见 §3。阶段 B 未启动，启动条件见 §4。
 
-**结论：先在包内 TypeScript 里给有生命周期的功能提供一套状态机运行时，并用四个真实模块验证；暂不让插件 JSON 表达状态。** 这套运行时已经承担了「按状态拥有和清理效果、事件串行、过期回调失效」这些最难的部分。以后如果真要让插件用 JSON 组合有状态的行为（阶段 B），只需要把 JSON 转移表编译成同一个 `transition` 签名，再补齐来源感知和约束修订。scripted tier（`chrome.userScripts`）被 AMO 政策挡住，不作为状态化插件的出路。
+**结论：先在包内 TypeScript 里给有生命周期的功能提供一套状态机运行时，并用四个真实模块验证（之后又有两站批量删除共六个）；暂不让插件 JSON 表达状态。** 这套运行时已经承担了「按状态拥有和清理效果、事件串行、过期回调失效」这些最难的部分。以后如果真要让插件用 JSON 组合有状态的行为（阶段 B），只需要把 JSON 转移表编译成同一个 `transition` 签名，再补齐来源感知和约束修订。scripted tier（`chrome.userScripts`）被 AMO 政策挡住，不作为状态化插件的出路。
 
 ## 1. 为什么做
 
@@ -60,6 +60,13 @@ const machine = startMachine<State, Event>(
 | 草稿恢复：`draftSessionMachine.ts` + `session.ts`                               | 每个对话一台：`waiting \| loading{touched} \| writing{retriesLeft} \| settled{outcome}`                | 6 参数守卫换成状态和 `touched` 事件；重试耗尽成为可区分的 `settled{exhausted}`。保存去抖和发送意图是正交的两条轴，保持原样                                      | `a late draft load does not refill a composer cleared after it started`、`exhausted restore retries leave the session settled`                                                                                         |
 | 回复通知：`completionMachine.ts`，Gemini 与 ChatGPT 的 `run.ts` 共用            | 每轮生成一台：`streaming \| notifying \| deferred \| showing \| ended{reason}`                         | 开新一轮就停掉上一台，旧的回退 toast、stop 和网络已处理标记随之失效；删掉 `notifyEpoch`、两个 flush 函数和常驻 focus 监听。检测逻辑留在各自的 run 里            | `a deferred fallback toast does not fire once the next generation has started`、`a prompt sent right after stop is not silenced`、`a page-only generation after a network-owned one still notifies`                    |
 
+阶段 A 之后接入的模块（8-10 批量删除）：
+
+| 模块                                                     | 状态                                                    | 用途                                                                                                                       | 关键测试                                                                                                                                   |
+| -------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Gemini 批量删除：`batchDelete/geminiSelection.ts`        | `idle \| selecting \| confirming{ids} \| deleting{ids}` | 关闭插件时撤掉选择 UI 和尚未接受的确认；已接受的确认冻结目标集合，删除阶段独立于选择 UI 的卸载收尾；账号或页面变化作废确认 | `invalidates a confirmation when dragging makes another chat the only selected row`、`stops account scans after confirmation is cancelled` |
+| AI Studio 批量删除：`folder/aistudioLibrarySelection.ts` | `idle \| selecting \| confirming \| deleting`           | 同上，用于 `/library` 行；确认与删除阶段监视路由和账号上下文                                                               | `folder/__tests__/aistudioLibraryBatchDeleteReload.test.ts`                                                                                |
+
 `runtime.test.ts` 里「旧对话迟到的选择结果不能停掉新对话的循环」那条测试原来依赖 tick 重叠才出现第 3 次调用，现在改为先让新循环自己的选择返回，再断言循环仍在继续。
 
 使用中发现的边界：运行时只在 `status` 变化时重启 effect。需要「同一状态重新计时」的场景（每次输入重启的去抖、重新布防的发送意图）不适合放进同一台机器；草稿恢复的做法是每个对话起一台新机器。
@@ -94,3 +101,4 @@ const machine = startMachine<State, Event>(
 - Chrome：只允许运行用户自己提供的脚本，不能通过目录分发第三方 JS。Chrome 138 起需要用户为每个扩展单独打开「Allow User Scripts」开关；Safari 没有等价 API。
 - 能成立的只有「用户自行导入 JS，仅支持 Chrome/Edge」这一种形态，粗估 14–20 工程日，用户门槛高，目前没有需求证据。
 - 顺带发现：`src/features/plugins/capabilities.ts:19` 在 content script 里检测 `chrome.userScripts`，而 content script 访问不到这个 API，所以检测结果恒为 false。目前 scripted 插件都会被跳过，没有实际影响，本轮不修。
+  - 后记（703581ed）：已解决，`capabilities.ts` 已删除。

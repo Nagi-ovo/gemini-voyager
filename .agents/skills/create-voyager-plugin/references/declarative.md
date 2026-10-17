@@ -18,8 +18,9 @@ bun run plugin:new <id-segment> --site <site>             # write it
 The scaffold creates `plugin.json` (id `voyager.<site>-<segment>`, `matches`
 copied from the site, `engine` pinned to this build), a `style.css` scoped under
 `gv-plugin-<site>-<segment>`, a `README.md` skeleton, and appends the
-`marketplace.json` entry. It refuses to overwrite an existing directory and
-lists the known sites when `--site` is unknown.
+`marketplace.json` entry that `catalog/sites/index.test.ts` requires (the
+site's plugin table reads manifests, not that file). It refuses to overwrite
+an existing directory and lists the known sites when `--site` is unknown.
 
 Then replace every `TODO`: the English `name` and `description` first, then the
 nine other locales, then the real CSS and DOM ops. Add `contributes.settings`
@@ -78,6 +79,6 @@ unreleased.
 
 ## Complete when
 
-The directory holds a manifest, CSS and README; `plugin:check`, focused tests and `catalog:build` pass; `marketplace.json` lists it; and all ten locales are real translations. Verify light and dark behavior plus a non-zero target match count on a real conversation, or visible before/after evidence for pure CSS without countable targets.
+The directory holds a manifest, CSS and README; `plugin:check`, focused tests and `catalog:build` pass; `marketplace.json` lists it (the index test checks this); and all ten locales are real translations. Verify light and dark behavior plus a non-zero target match count on a real conversation, or visible before/after evidence for pure CSS without countable targets.
 
 When preparing a PR, also complete the PR checks and include the evidence specified in [SKILL.md](../SKILL.md).

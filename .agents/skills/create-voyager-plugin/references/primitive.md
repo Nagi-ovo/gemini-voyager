@@ -42,7 +42,13 @@ and usually lands in the same PR.
    every side effect on the `PluginScope` so unmount pays it all back, and
    report the element count through `context.setTargetCounter` so the health
    signal works. `verifyPrimitiveRegistry()` names a folder whose contract and
-   implementation disagree.
+   implementation disagree. A phase that can be interrupted while async work
+   is still out (draft restore, for one) runs on `startMachine`
+   (`runtime/stateMachine.ts`, one scope per status;
+   `.github/docs/STATE_MACHINE_PLAN.md` says when it is worth it). A runtime
+   that can exist only once per page lists its resource in
+   `runtime/resourceClaims.ts`, so `runtime/resourceArbiter.ts` blocks a
+   second holder instead of letting two run.
 3. `verbs/<name>/paramsBaseline.json`: `sinceEngine` and each param's `type`
    and `required`; use `"sinceEngine": "next"` for an unpublished primitive or
    param. The release bump stamps these versions along with the contracts.

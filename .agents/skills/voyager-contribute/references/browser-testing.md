@@ -8,7 +8,7 @@ Report only the highest level actually completed:
 
 - **Build**: the command succeeds and the expected artifact exists.
 - **Loaded**: that artifact is enabled once in the browser with no manifest or load error.
-- **Live**: after reloading the extension and target tab, the changed workflow works and existing state remains intact.
+- **Live**: after reloading the extension and target tab, the changed workflow works and existing state remains intact. The `dist_chrome_dev` build reloads itself after each dev build, so there only the tab needs refreshing; the [verify-in-browser](../../verify-in-browser/SKILL.md) skill covers confirming the loaded build.
 
 A build, unit test, or code inspection is not `Loaded` or `Live` evidence.
 For `Loaded` or `Live`, record the browser name, exact version, scenario, result, and redacted evidence.
@@ -27,12 +27,12 @@ Missing hardware or access may be covered by another contributor. Record `Needs 
 
 ## Artifacts
 
-| Browser | Command                                        | Load target                                                                          |
-| ------- | ---------------------------------------------- | ------------------------------------------------------------------------------------ |
-| Chrome  | `bun run dev:chrome` or `bun run build:chrome` | `dist_chrome_dev` for routine development; `dist_chrome` for production verification |
-| Edge    | `bun run build:edge`                           | `dist_edge`                                                                          |
-| Firefox | `bun run build:firefox`                        | `dist_firefox/manifest.json` via `about:debugging`                                   |
-| Safari  | `bun run build:safari`                         | `dist_safari`; then follow the `update-safari-extension` skill                       |
+| Browser | Command                                        | Load target                                                                                                                              |
+| ------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Chrome  | `bun run dev:chrome` or `bun run build:chrome` | `dist_chrome_dev` for routine development (load once; it reloads itself after each dev build); `dist_chrome` for production verification |
+| Edge    | `bun run build:edge`                           | `dist_edge`                                                                                                                              |
+| Firefox | `bun run build:firefox`                        | `dist_firefox/manifest.json` via `about:debugging`                                                                                       |
+| Safari  | `bun run build:safari`                         | `dist_safari`; then follow the `update-safari-extension` skill                                                                           |
 
 `bun run build:all` and `bun run verify:pr` exclude Edge (the Edge zip step needs the external `zip` executable, which Windows lacks by default — CI's `Build (edge)` covers it). `bun run build:browsers` includes the Edge package build.
 

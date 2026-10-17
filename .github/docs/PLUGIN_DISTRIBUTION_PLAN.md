@@ -1,6 +1,6 @@
 # Voyager 插件分发架构方案（决策完成版）
 
-日期：2026-09-07。状态：设计已批准，评审轮次已收口（新增 D16–D20，§11–§13 同步更新），等待「implement」指令。基线：`origin/main` = 18041a07，DeepSeek stack #981–#991 已合并。
+日期：2026-09-07。状态：设计已批准，评审轮次已收口（新增 D16–D20，§11–§13 同步更新）；P1–P4 已实现，记录见 §14。基线：`origin/main` = 18041a07，DeepSeek stack #981–#991 已合并。
 
 ## 0. 一句话
 
@@ -270,6 +270,7 @@ Claude、ChatGPT 的现有 builtin 清单改写为使用原语的 JSON，随本�
 ### P2（分支 `feat/plugin-catalog-sites-p2`，基于 P1，2026-09-07）
 
 - 目录重排为 `catalog/sites/<site>/{site.json, plugins/<id>/}`；`catalog/sites/index.ts` 用 `import.meta.glob` 自动发现站点与插件，手工映射表删除。`marketplace.json` 保留为文档站插件商店的索引，测试保证它与发现结果一致（后续可改为读取已发布目录的索引）。
+  - 后记：文档站插件商店后来换成按 manifest 生成的插件表（`docs/.vitepress/pluginsPage.ts`），不再读 `marketplace.json`；它只留给 `catalog/sites/index.test.ts` 与 `plugin:new`。
 - Claude / ChatGPT / DeepSeek 适配器数据化为 `site.json`，TS 文件只剩薄壳；Gemini / AI Studio 是原生站点、选择器来自第一方代码，保持 TS（D14 本就不进目录）。
   - 后记（插件平台阶段 1，2026-10）：Gemini / AI Studio 适配器也已数据化为包内 `catalog/sites/{gemini,aistudio}/site.json`，TS 文件同样只剩薄壳；值与原 TS 逐字对等，Gemini 的 `userTurn`/`assistantTurn` 由对等测试绑定到 `core/gemini/turnSelectors.ts`，timeline 等有序消费者仍读那里。「包内数据化」不等于远端分发：这两个站点不发布 host 文件、不列入 `marketplace.json`、不接受远端覆盖，后台也不因有了 `site.json` 就允许它们写 catalog outline / send time。D14 不变。
 - 语义键词汇表 `sites/semanticKeys.ts`；`site.json` 校验器 `sites/siteAdapterData.ts`（手写 guard，D17）拒绝词汇表之外的键；`conversationIdPattern` 作为适配器字段。

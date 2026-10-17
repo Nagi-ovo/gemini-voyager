@@ -64,6 +64,18 @@ EntitlementProvider  ─► entitled?         │  styles + domOps, reversible, 
 - **`runtime/PluginHost.ts`** — orchestrator. Loads manifests, checks
   match-URL + enabled + engine-range + entitlement, mounts/unmounts, reacts to
   state changes. All dependencies injected → fully unit-testable.
+- **`runtime/officialAdmission.ts`** — when each packaged Gemini/AI Studio
+  official plugin may mount: the content script admits it where its native
+  module used to start, and `close` denies whatever is still pending.
+- **`runtime/resourceClaims.ts`, `resourceArbiter.ts`, `reconcileArbitration.ts`,
+  `releaseLedger.ts`** — exclusive page resources (`timeline-rail`, the composer
+  send mode, …): which plugin holds each, why the others are `blocked`, and
+  waiting until a released runtime has really shut down.
+- **`runtime/stateMachine.ts`** — `startMachine`, the runtime for features with
+  interruptible phases: a pure `transition`, one `PluginScope` per status, late
+  callbacks from a left status ignored. Used by export selection, default
+  model, draft restore, reply notifications and both batch deletes; see
+  [the state machine plan](../../../.github/docs/STATE_MACHINE_PLAN.md).
 - **`manifest/validate.ts`** — turns `unknown` into a typed manifest or a list of
   issues. Remote catalog plugins are untrusted; bundled catalog plugins use
   the same validator so official data cannot drift from the runtime contract.
@@ -84,7 +96,7 @@ EntitlementProvider  ─► entitled?         │  styles + domOps, reversible, 
 
 ```
 catalog/
-  marketplace.json                        index for the docs plugin store
+  marketplace.json                        list of public catalog plugins (tests, plugin:new)
   sites/index.ts                          import.meta.glob discovery
   sites/<site>/site.json                  the site adapter, as data
   sites/<site>/plugins/<id>/plugin.json   a declarative plugin
@@ -103,12 +115,14 @@ Gemini and AI Studio are validated like the rest but never published: the host
 policy (`allowsRemoteCatalog`) keeps their four hosts out of the per-host
 catalog, and their plugins stay out of `marketplace.json`.
 
-`catalog/marketplace.json` is **not** that mapping table. It is only the index
-the docs plugin-store page reads at build time, and a test keeps it in sync with discovery,
-so a new plugin also needs an entry there whose `source` is the catalog-relative
-path (`sites/deepseek/plugins/reading-width/plugin.json`). Plugins under
-`sites/gemini/` and `sites/aistudio/` are the exception: they ship inside
-Voyager and are not listed.
+`catalog/marketplace.json` is **not** that mapping table, and no page reads it:
+the site's plugin table is built from the manifests themselves
+(`docs/.vitepress/pluginsPage.ts`, which lists the Gemini and AI Studio
+packaged plugins too). It stays as the list of public catalog plugins that
+`catalog/sites/index.test.ts` keeps in sync with discovery and `plugin:new`
+appends to, so a new plugin still needs an entry whose `source` is the
+catalog-relative path (`sites/deepseek/plugins/reading-width/plugin.json`).
+Plugins under `sites/gemini/` and `sites/aistudio/` are not listed.
 
 ## Authoring a declarative plugin
 
@@ -145,7 +159,7 @@ An official plugin is authored as files under its platform's directory:
 2. Create `catalog/sites/<site>/plugins/<id>/` with `plugin.json`, `style.css`
    and a short `README.md`.
 3. Keep the plugin's `matches` inside the site's `matches` (D18).
-4. Add the entry to `catalog/marketplace.json` so the docs plugin store lists it.
+4. Add the entry to `catalog/marketplace.json` (`plugin:new` does it for you).
 5. Run the suite: discovery, D18 and the marketplace index are all asserted in
    `catalog/sites/index.test.ts`.
 
@@ -206,9 +220,12 @@ A user can run a declarative plugin they wrote without publishing it:
    as `{ "css": "..." }`). Any lowercase reverse-dotted `id` works; it is stored
    as `local.<id>`.
 2. Open the popup and find **Local plugins**: on Claude, ChatGPT or DeepSeek it
-   sits on the plugin page; on Gemini and AI Studio it is the last entry of the
-   settings (collapsed until opened, or until a local plugin targets the page,
-   which then also shows its toggle and settings). Choose **Import files** (pick
+   sits on the plugin page; on Gemini and AI Studio it is a settings card
+   (collapsed until opened, or until a local plugin targets the page, which
+   then also shows its toggle and settings). By default it follows cloud sync
+   and the eight plugin topic cards and comes before folders through general
+   (`NATIVE_POPUP_SECTION_IDS` in `pages/popup/utils/nativeSiteCapabilities.ts`);
+   users can reorder it. Choose **Import files** (pick
    the manifest together with its `.css` files) or **Paste JSON** (a manifest
    with its CSS inlined).
 3. A rejected import lists every problem as `path: message` and leaves the
@@ -322,7 +339,7 @@ serves these hosts and never publishes their manifests. The official ones replac
 feature. Stage 7 retires migrated native startup callbacks and registrations; the content script
 admits each official plugin where its native module used to start, and the
 plugin follows the native setting it replaces (`storage/legacySettingBindings.ts`).
-Its row in the popup **Plugins** list writes those legacy-bound keys. The owner table has no `legacy` option: rolling a feature back to its
+Its row in a popup topic card writes those legacy-bound keys. The owner table has no `legacy` option: rolling a feature back to its
 native module means reverting both stage 7 retirement commits (startup wiring 9c2161df and
 native wrappers 0ae260c1) and the commit that removed that option. Permanent page services remain in `nativeFeatures.ts`; their
 account bridge, history/message caches, selection host, sent-quote styling,
@@ -332,9 +349,9 @@ setting is false; the plugin alone selects models and creates new stars.
 The page send-key coordinator is the one service started elsewhere:
 `startPageSendKeys` in `pages/content/inputStartup.ts` creates it before `PluginHost`.
 They resolve semantic keys through the native
-`geminiAdapter` / `aistudioAdapter` (`userTurn`, `assistantTurn`, `composer`,
-`sidebar`; the Gemini `sidebar` key also covers Voyager's folder panel, so
-prefer a precise CSS selector there). The manifest already injects the content
+`geminiAdapter` / `aistudioAdapter`, which expose the keys their packaged
+`site.json` declares (the Gemini `sidebar` key also covers Voyager's folder
+panel, so prefer a precise CSS selector there). The manifest already injects the content
 script and grants these hosts, so enabling one needs no permission prompt and
 `pluginsToOriginPatterns` leaves their origins out of dynamic registration
 (registering them would inject Voyager twice). `PluginHost` mounts them with
@@ -356,7 +373,9 @@ the builtins in [`builtin/index.ts`](builtin/index.ts) cover:
   watermark download and preview; Vim input, prompt history, input collapse, Ctrl+Enter send, Safari
   Enter fix, draft save, quote reply; timeline, message timestamps, highlights, prevent auto-scroll,
   response notifications, batch delete, research pack, default model, fork, usage status, context
-  sync.
+  sync. The Gems sidebar row is greyed out in the popup: its registry entry `requires` an
+  unmet condition with the `gemsSidebarUnavailableHint` note, because Gemini moved Gems into its
+  More menu. The plugin and its code are kept.
 - AI Studio: Formula copy, Enter send, sidebar width, batch delete.
 - ChatGPT: Formula copy, Vim input, timeline, conversation export, temporary chat handoff, folders,
   response notifications.
@@ -407,9 +426,9 @@ adds no host permission or content-script registration, and its fixed ID never r
 origin grant. `gvVisualEffect` is authoritative across sites: any string takes precedence
 (unknown strings render nothing), otherwise `gvSnowEffect === true` selects snow. The trusted
 enum value binding fills `effect`; nothing is copied into `gvPluginsState`. The popup's
-**Plugins** row writes those legacy-bound keys on every site: in the Plugins list on Gemini and
-AI Studio, and in a plugin site's plugin card once Voyager can run there (a site enabled for
-Prompt Manager or a plugin). `legacyEnableWrite` selects snow when enabled and `off` when
+Visual effects row writes those legacy-bound keys on every site: in the Page layout topic
+card on Gemini and AI Studio, and in a plugin site's plugin card once Voyager can run there
+(a site enabled for Prompt Manager or a plugin). `legacyEnableWrite` selects snow when enabled and `off` when
 disabled; both clear the legacy boolean. No previous effect is remembered. PluginScope owns
 the activation's selection while the page holds renderers through a graceful drain; re-enable
 resumes them, and page teardown destroys canvases, renderer frames and workers immediately.
@@ -484,10 +503,8 @@ Shipped primitives (`verbs/<name>/contract.ts`): `formulaCopy` (since 1.3.0), `v
 `composer` param, defaults to the adapter's `composer` selector) and `turnNavigator` (since 1.4.0,
 `turn` / `conversationIdPattern` / `scrollContainer` / `yieldWhen` / `position`, all optional and
 defaulting to the adapter, plus the optional `conversationIdAttribute` attribute and `turnItem`
-selector since 1.5.0, and `dataBackend: "shared"` on consumer Gemini since the next engine
-release, resolved as 1.9.0 for local imports) and `userLatex` (since 1.7.0, optional `turn` selector defaulting to the
-adapter's `userTurn`, plus an optional `unit` of `leaf` (default) or `turn` since the next engine
-release; renders the LaTeX a user typed with Gemini's renderer and restores the text on
+selector since 1.5.0, and `dataBackend: "shared"` on consumer Gemini since 1.9.0) and `userLatex` (since 1.7.0, optional `turn` selector defaulting to the
+adapter's `userTurn`, plus an optional `unit` of `leaf` (default) or `turn` since 1.9.0; renders the LaTeX a user typed with Gemini's renderer and restores the text on
 unmount) and the code-block diagram primitives `mermaid`, `echarts` and `wavedrom` (all since
 1.7.0, optional `turn` / `codeBlock` / `code` / `codeLine` / `language` selectors defaulting to
 the adapter's `assistantTurn` and `codeBlock`). Each is Gemini's renderer core plus the shared
@@ -539,7 +556,7 @@ using `"params": { "target": "userTurn", "maxPx": "{{maxHeight}}", "startCollaps
 
 `sendShortcut` claims one composer send mode per page on every site: a second plugin
 reports a conflict while the current holder keeps running. The optional `mode`
-(since the next engine, 1.9.0 for local imports) is `ctrlEnterSends` (default) or `enterSends`. Gemini only accepts
+(since 1.9.0) is `ctrlEnterSends` (default) or `enterSends`. Gemini only accepts
 the default, AI Studio only the latter, via the packaged page coordinator; Gemini
 Enterprise accepts neither. Composition, Process and keyCode 229 are left to the IME.
 Local send plugins are open on Gemini and AI Studio. Disable the corresponding
@@ -730,10 +747,11 @@ for every plugin that targets the page instead of quietly filtering it:
 | `releasing`       | next in line, waiting for `blockedBy` to finish shutting the runtime down                     | by itself                           |
 | `pending`         | `blockedBy`, an official plugin needing the same runtime, is still reading its native setting | by itself, once the read lands      |
 
-The popup names a packaged official plugin in `blockedBy` by its native
-setting (Formula copy card, the Vim switch in input settings), since no plugin
-list shows it, and re-asks for statuses while a `releasing` or `pending` block
-lasts.
+The popup names a packaged official plugin in `blockedBy` by its row and the
+topic card that holds it (`officialSwitch` in
+`pages/popup/components/pluginBlockedNote.ts`: the manifest name plus the
+card title, such as Vim Input under Input), and re-asks for statuses while a
+`releasing` or `pending` block lasts.
 
 `needs-permission` is not in this list: the popup owns the permission flow, and
 a content script that is running already has its permission.
@@ -782,8 +800,8 @@ AI Studio official plugins are native-op manifests over the same primitive.
 Maintain bundled official plugins in this repository; the retired
 `../voyager-plugins` marketplace is no longer a source. `bun run catalog:build`
 generates the remote catalog published by the docs deploy. See the
-[distribution design](../../../.github/docs/PLUGIN_DISTRIBUTION_PLAN.md). Making Gemini and AI
-Studio plugin platforms too is planned in the
+[distribution design](../../../.github/docs/PLUGIN_DISTRIBUTION_PLAN.md). Gemini and AI
+Studio became plugin platforms too, as recorded in the
 [Gemini plugin platform plan](../../../.github/docs/GEMINI_PLUGIN_PLATFORM_PLAN.md).
 
 ## Remote host catalog (`remote/`)

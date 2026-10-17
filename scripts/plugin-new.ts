@@ -4,7 +4,7 @@
  *
  * Creates `catalog/sites/<site>/plugins/<id-segment>/` with a manifest, a
  * scoped placeholder stylesheet and a README skeleton, then appends the entry
- * `catalog/marketplace.json` needs so the docs plugin store lists it. Nothing
+ * `catalog/marketplace.json` needs so the site plugin index lists it. Nothing
  * else registers a plugin: `catalog/sites/index.ts` discovers the files.
  *
  * The manifest copies `matches` straight from the site's `site.json`, so the
@@ -94,7 +94,7 @@ export interface ScaffoldResult {
   readonly marketplaceEntry: MarketplaceEntry;
   /**
    * False for a packaged native site (Gemini / AI Studio): its official
-   * plugins ship with the extension and the plugin store does not list them.
+   * plugins ship with the extension and marketplace.json does not list them.
    */
   readonly marketplaceListed: boolean;
   /** False when an entry with the same name was already there, or when not listed. */

@@ -1,5 +1,11 @@
 # Changelog
 
+> [!NOTE]
+> This file stopped at 0.6.1 and is kept only as history. Release notes now live in
+> [`src/pages/content/changelog/notes/`](../../src/pages/content/changelog/notes/), one file per
+> version in all 10 locales, and are published on the site's changelog pages
+> ([English](https://voyager.nagi.fun/en/changelog), [简体中文](https://voyager.nagi.fun/changelog)).
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),

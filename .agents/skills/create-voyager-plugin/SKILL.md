@@ -11,17 +11,22 @@ metadata:
 
 Read only the matching implementation reference. Paths are relative to `src/features/plugins/`.
 
-| Change                                                 | Reference                                       | Distribution                                                            |
-| ------------------------------------------------------ | ----------------------------------------------- | ----------------------------------------------------------------------- |
-| CSS/JSON plugin using DOM ops or an existing primitive | [Declarative plugin](references/declarative.md) | `catalog/sites/<site>/plugins/<id>/`; bundled and remote                |
-| Site selectors, theme, URL matching or a new site      | [Site adapter](references/site-adapter.md)      | `catalog/sites/<site>/site.json`; existing-site updates travel remotely |
-| Behavior needing events, state or generated DOM        | [Native primitive](references/primitive.md)     | `verbs/`; packaged executable code, requires an extension release       |
+| Change                                                 | Reference                                                        | Distribution                                                            |
+| ------------------------------------------------------ | ---------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| CSS/JSON plugin using DOM ops or an existing primitive | [Declarative plugin](references/declarative.md)                  | `catalog/sites/<site>/plugins/<id>/`; bundled and remote                |
+| Site selectors, theme, URL matching or a new site      | [Site adapter](references/site-adapter.md)                       | `catalog/sites/<site>/site.json`; existing-site updates travel remotely |
+| Behavior needing events, state or generated DOM        | [Native primitive](references/primitive.md)                      | `verbs/`; packaged executable code, requires an extension release       |
+| A native Gemini/AI Studio feature becoming a plugin    | [Official plugin](#convert-a-native-gemini-or-ai-studio-feature) | `builtin/`; packaged only, never in the remote catalog                  |
 
 A new site also requires an extension release: its host is an optional permission the user grants, and the content script is registered dynamically (never a static `content_scripts` or required `host_permissions` entry; see `voyager-contribute`'s [repo-traps.md](../voyager-contribute/references/repo-traps.md)). A primitive needs a declarative plugin that invokes it, so read that reference too when adding the caller.
 
 New features follow `.github/CONTRIBUTING.md`; a new primitive or site requires explicit maintainer approval of the approach. Reuse a direct maintainer instruction in the current task as approval; loading this skill grants none. A selector fix within an existing site's approved scope needs no new feature approval.
 
 For architecture or distribution changes, read `src/features/plugins/README.md` and `.github/docs/PLUGIN_DISTRIBUTION_PLAN.md`. PR preparation uses `voyager-contribute`; live checks use `verify-in-browser` (Safari loading uses `update-safari-extension`).
+
+## Convert a native Gemini or AI Studio feature
+
+A native feature becomes a packaged official plugin that keeps its old setting as its switch: a fixed-id builtin for feature code, or `catalog/sites/{gemini,aistudio}/plugins/` when pure CSS or a shipped primitive covers it. Touch, in order: `builtin/<site><Feature>Manifest.ts` (registered in `builtin/index.ts`), the owner entry in `sites/featureOwners.ts` (`handlers: []` unless a public primitive is deliberately opened), the enable binding in `storage/legacySettingBindings.ts` and any value bindings in `storage/legacyValueBindings.ts`, the handler on `PluginScope` (`src/pages/content/<feature>/pluginHandler.ts`), `admission.admit(...)` at the native start point in place of the native call (`runtime/officialAdmission.ts`), and the popup row in `src/pages/popup/officialPlugins/officialPluginRegistry.ts`. Read the **Gemini and AI Studio** paragraph of `src/features/plugins/README.md`, the migration template in `.github/docs/GEMINI_PLUGIN_PLATFORM_PLAN.md` §7.12 and the popup steps in `.github/docs/POPUP_PLUGIN_LIST_DESIGN.md` §5.
 
 ## Shared constraints
 
@@ -79,10 +84,13 @@ For architecture or distribution changes, read `src/features/plugins/README.md` 
   `description`; the other nine sit under `i18n.<locale>` with `name`,
   `description`, `changelog` when set, and a label for every setting. A local
   plugin may omit `i18n` entirely.
-- Public catalog plugins get a `marketplace.json` entry and a `README.md` next
-  to the manifest; a test enforces both. Packaged Gemini/AI Studio official
-  plugins stay out of the marketplace. Fixed-id builtins live in `builtin/`
-  and use the manifest/handler binding checks instead.
+- Public catalog plugins get a `README.md` next to the manifest and a
+  `marketplace.json` entry (`plugin:new` appends it); `catalog/sites/index.test.ts`
+  enforces both. The site's plugin table reads the manifests
+  (`docs/.vitepress/pluginsPage.ts`), not `marketplace.json`. Packaged
+  Gemini/AI Studio official plugins stay out of `marketplace.json` but appear
+  in that table. Fixed-id builtins live in `builtin/` and use the
+  manifest/handler binding checks instead.
 - `params` is configuration, not instructions (plan §5, C1): no conditions, no
   ordering, no code. A selector-valued parameter such as `yieldWhen` is still
   data, so do not reject one on its name.
@@ -108,11 +116,11 @@ For architecture or distribution changes, read `src/features/plugins/README.md` 
 
 ## Write your own plugin locally
 
-A declarative plugin for personal use needs no PR, catalog entry or release. Users and their agents start from the public skill, [write-voyager-plugin](https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md) (source: `docs/public/skills/write-voyager-plugin/SKILL.md`, generated by `bun run skills:build` from `src/features/plugins/local/authoring/`; regenerate it after changing a primitive, a site's anchors or the local gate), and check offline with `npx create-voyager-plugin check <dir>` (`packages/create-voyager-plugin/`, the same gate bundled). Write `plugin.json` and its `.css` as that skill describes, then in the popup open **Local plugins** (on Claude, ChatGPT and DeepSeek it is on the plugin page; on Gemini and AI Studio it is the last entry of the settings) and use **Import files** (manifest plus its `.css` files) or **Paste JSON** (CSS inlined).
+A declarative plugin for personal use needs no PR, catalog entry or release. Users and their agents start from the public skill, [write-voyager-plugin](https://voyager.nagi.fun/skills/write-voyager-plugin/SKILL.md) (source: `docs/public/skills/write-voyager-plugin/SKILL.md`, generated by `bun run skills:build` from `src/features/plugins/local/authoring/`; regenerate it after changing a primitive, a site's anchors or the local gate), and check offline with `npx create-voyager-plugin check <dir>` (`packages/create-voyager-plugin/`, the same gate bundled). Write `plugin.json` and its `.css` as that skill describes, then in the popup open **Local plugins** (on Claude, ChatGPT and DeepSeek it is on the plugin page; on Gemini and AI Studio it is a settings card that by default follows cloud sync and the eight plugin topic cards, `NATIVE_POPUP_SECTION_IDS` in `src/pages/popup/utils/nativeSiteCapabilities.ts`, and users can reorder it) and use **Import files** (manifest plus its `.css` files) or **Paste JSON** (CSS inlined).
 
 - The id is stored as `local.<id>`. Local plugins never replace an official id, are merged last and are outside the remote kill switch.
 - The gate is the remote catalog's (`validateManifest`, CSS and rendered-sink guards) plus: `tier: "declarative"` only; every `addClass` class is one `gv-` name; semantic keys (targets, `requires.semantic`, what a primitive reads and what its `semanticKey` params name) must be declared by every matched site; settings are `boolean`, `number` or `select` (the popup has no string or color control); `native` ops only for shipped primitives, with params that fit `verbs/contracts.ts` and `engine` at or above their `sinceEngine`; and `matches` inside an existing plugin platform (Claude, ChatGPT, DeepSeek) or a native surface (Gemini, AI Studio). No plugin-supplied JS, ever.
-- Gemini and AI Studio take the packaged official plugins (`catalog/sites/{gemini,aistudio}/`, never published to the online catalog) and local plugins. Semantic keys resolve through the native adapters (`userTurn`, `assistantTurn`, `composer`, `sidebar`); `theme` is rejected there because those pages keep Voyager's accent. A `native` op passes only for a public primitive explicitly listed in a plugin-owned entry’s `handlers` (`sites/featureOwners.ts`), checked per target site by `sites/hostPolicy.ts`. A fixed-id builtin can own a feature without opening any public primitive: Quote, Highlight, prevent auto-scroll, completion notifications use this path. The fixed Gemini timeline also opens `turnNavigator` for local consumer-Gemini plugins with literal `params: { "dataBackend": "shared" }` and engine >=1.9.0. It shares native stars, levels and collapse state, and refuses turn/route/account identity overrides, Business, Enterprise and custom coverage. Turn off **Show Timeline** before enabling the local replacement; turn the local plugin off before returning to the official rail. Both claim one `timeline-rail` resource, with cold-page official priority and an incumbent holder until disabled; watermark removal stays core. No permission prompt: the manifest already injects these hosts. The page still makes zero catalog requests. Example that tightens your own turns on Gemini:
+- Gemini and AI Studio take the packaged official plugins (`catalog/sites/{gemini,aistudio}/`, never published to the online catalog) and local plugins. Semantic keys resolve through the native adapters (the keys each packaged `catalog/sites/{gemini,aistudio}/site.json` declares); `theme` is rejected there because those pages keep Voyager's accent. A `native` op passes only for a public primitive explicitly listed in a plugin-owned entry’s `handlers` (`sites/featureOwners.ts`), checked per target site by `sites/hostPolicy.ts`. A fixed-id builtin can own a feature without opening any public primitive: Quote, Highlight, prevent auto-scroll, completion notifications use this path. The fixed Gemini timeline also opens `turnNavigator` for local consumer-Gemini plugins with literal `params: { "dataBackend": "shared" }` and engine >=1.9.0. It shares native stars, levels and collapse state, and refuses turn/route/account identity overrides, Business, Enterprise and custom coverage. Turn off **Show Timeline** before enabling the local replacement; turn the local plugin off before returning to the official rail. Both claim one `timeline-rail` resource, with cold-page official priority and an incumbent holder until disabled. Watermark removal is two such builtins, `voyager.gemini-watermark-download` and `voyager.gemini-watermark-preview`, with no public primitive. No permission prompt: the manifest already injects these hosts. The page still makes zero catalog requests. Example that tightens your own turns on Gemini:
 
   ```json
   {

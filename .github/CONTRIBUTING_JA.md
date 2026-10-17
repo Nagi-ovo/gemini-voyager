@@ -281,7 +281,7 @@ import { parseData } from './parser';
 
 ## プロジェクトの範囲
 
-Voyager は、次の機能によって Gemini の AI チャット体験を拡張します。
+Voyager は、次の機能によって Gemini、AI Studio、ChatGPT、Claude、DeepSeek の AI チャット体験を拡張します。
 
 - タイムラインのナビゲーション
 - フォルダによる整理

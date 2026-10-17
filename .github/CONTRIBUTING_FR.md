@@ -293,7 +293,7 @@ Utilisez des noms d'icônes valides de [Google Material Symbols](https://fonts.g
 
 ## Portée du Projet
 
-Voyager améliore l'expérience de chat Gemini AI avec :
+Voyager améliore le chat IA sur Gemini, AI Studio, ChatGPT, Claude et DeepSeek avec :
 
 - Navigation par chronologie
 - Organisation par dossiers

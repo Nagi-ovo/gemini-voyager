@@ -284,7 +284,7 @@ Usa nombres de iconos válidos de [Google Material Symbols](https://fonts.google
 
 ## Alcance del Proyecto
 
-Voyager mejora la experiencia de chat de Gemini AI con:
+Voyager mejora el chat con IA en Gemini, AI Studio, ChatGPT, Claude y DeepSeek con:
 
 - Navegación por línea de tiempo
 - Organización de carpetas

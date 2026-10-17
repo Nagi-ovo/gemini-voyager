@@ -25,10 +25,10 @@
 <!-- The fewest structural views that explain the change: a file tree of responsibilities, a call or data-flow tree, or key types. Use `diff` blocks for changed shapes, plain blocks for new ones. Not a file-by-file changelog. -->
 <!-- 用最少的结构图讲清改动：职责文件树、调用/数据流树或关键类型。改动的结构用 `diff` 块，新结构用普通代码块。不要逐文件罗列。 -->
 
-### Related Issue / 相关 Issue
+### Related Issue or Discussion / 相关 Issue 或 Discussion
 
-<!-- Link the issue this PR resolves (e.g., Closes #123). FOR NEW FEATURES: You MUST open an Issue for discussion first. PRs submitted without prior discussion will be closed. -->
-<!-- 链接此 PR 解决的 issue（例如：Closes #123）。对于新功能：请务必先开启一个 Issue 进行讨论，未经讨论直接提交的 PR 会被关闭。 -->
+<!-- Link the issue this PR resolves (e.g., Closes #123). FOR NEW FEATURES: link the Discussion where a maintainer approved the approach (see CONTRIBUTING). Feature PRs without prior discussion will be closed. -->
+<!-- 链接此 PR 解决的 issue（例如：Closes #123）。对于新功能：请链接维护者已批准方案的 Discussion（见 CONTRIBUTING），未经讨论直接提交的新功能 PR 会被关闭。 -->
 
 - [ ] If the issue is labeled `community-only` or `enhancement`, I was assigned after maintainer approval before starting. / 如果 Issue 带有 `community-only` 或 `enhancement` 标签，我已在开始前获得维护者确认并被分配。
 

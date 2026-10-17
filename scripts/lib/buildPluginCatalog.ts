@@ -14,8 +14,8 @@
  *
  * `src/features/plugins/catalog/sites/index.ts` discovers the same files with
  * `import.meta.glob`, which does not exist under Bun — hence the disk walk here
- * rather than an import. `marketplace.json` is an index for the docs plugin
- * store only and is deliberately not read.
+ * rather than an import. `marketplace.json` is a hand-kept index of the site
+ * plugins, checked by tests and appended by `plugin:new`, and is deliberately not read.
  *
  * Every `site.json` passes `validateSiteAdapterData`, every `plugin.json` passes
  * `validateManifest` with its `contributes.styles[].file` inlined as `css`, and

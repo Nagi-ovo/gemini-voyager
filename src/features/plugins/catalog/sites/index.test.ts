@@ -101,18 +101,18 @@ describe('bundled catalog discovery', () => {
     }
   });
 
-  it('keeps marketplace.json (the docs plugin-store index) in sync with discovery', () => {
+  it('keeps marketplace.json (the site plugin index) in sync with discovery', () => {
     const index = JSON.parse(readFileSync(resolve(catalogDir, 'marketplace.json'), 'utf8')) as {
       plugins: { name: string; source: string }[];
     };
     const listed = index.plugins.map((plugin) => plugin.source);
-    // Gemini and AI Studio official plugins ship inside Voyager and are not offered in the store.
+    // Gemini and AI Studio official plugins ship inside Voyager and are not in the index.
     const storePaths = pluginPaths.filter((path) => usesCatalogDataStores(path.split('/')[1]));
     for (const path of storePaths) {
       const name = readManifest(path).id.replace(/^voyager\./, '');
       expect(
         listed,
-        `Add ${JSON.stringify({ name, source: path, official: true })} to src/features/plugins/catalog/marketplace.json so the docs plugin store lists it.`,
+        `Add ${JSON.stringify({ name, source: path, official: true })} to src/features/plugins/catalog/marketplace.json so the index lists it.`,
       ).toContain(path);
     }
     expect(new Set(index.plugins.map((plugin) => plugin.name)).size).toBe(index.plugins.length);

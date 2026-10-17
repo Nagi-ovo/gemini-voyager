@@ -94,7 +94,7 @@
 
 没有行的主题卡不渲染，也不占排序位置。插件站（Claude、ChatGPT 等）不变：Visual effects 仍是该站插件卡里的一行（§2.4）。
 
-全部迁完后 Gemini 26 行（非 Safari 25 行），AI Studio 2 行。
+按当前 registry 计（含置灰的 Recent Gems）：Gemini 39 行（非 Safari 38 行），AI Studio 5 行（Visual effects、Sidebar width、Formula copy、Enter send、Batch delete）。以 `officialPluginRegistry.ts` 为准。
 
 **一行包含**：
 
@@ -200,22 +200,7 @@ manifest 的一句话描述（本地化）
 
 Highlight 标记做成面板而不是 value binding：运行时自己 live 读这个键（`highlightAction.ts:57-61`），handler 没有 `updateSettings`（`src/pages/content/pluginNativeRegistration.ts`），绑定后每次切换都会推送设置变化，引擎默认整套销毁再激活（`src/features/plugins/runtime/declarativeEngine.ts:351-358`）。Timeline 同理。
 
-**Registry**：`src/pages/popup/officialPlugins/officialPluginRegistry.ts`，纯数据，是唯一知道 popup 呈现方式的地方：
-
-```ts
-export interface OfficialPluginEntry {
-  readonly id: string; // OFFICIAL_PLUGIN_IDS.*
-  readonly topic: OfficialPluginTopicId; // 主题卡，也是 popup section id，如 'pluginsLayout'
-  /** 从被退役的 popupSettingsSearchIndex 条目原样搬来，含旧 section 标题键。 */
-  readonly searchKeys: readonly TranslationKey[];
-  readonly searchAliases?: readonly string[];
-  readonly experimental?: boolean;
-  /** matches 之外的资格，如仅 Safari；搜索索引用同一判断。 */
-  readonly eligible?: (env: OfficialPluginEnv) => boolean;
-  readonly panel?: OfficialPanelId; // Batch 4 起
-  readonly control?: OfficialControlId; // Batch 4 起
-}
-```
+**Registry**：`src/pages/popup/officialPlugins/officialPluginRegistry.ts`，纯数据，是唯一知道 popup 呈现方式的地方。字段以该文件的 `OfficialPluginEntry` 为准（主题卡 `topic`、`searchKeys` / `searchAliases`、`formerSectionTitle`、`experimental`、`eligible`、`usageHint`、`panel` / `inlinePanel`、`control`、`requires`、`enableWrite`、`sliders`）；`eligible` 与 `usageHint` 收到的是同文件的 `OfficialPluginContext`（目前只有 `isSafariBrowser`），不再是早期草案里的 `OfficialPluginEnv`。
 
 数组顺序就是卡内显示顺序。面板组件放在 `officialPluginPanels.tsx`，从行拿 `enabled`，从快照拿持久值，从旧 hook 拿动作。
 
@@ -236,18 +221,20 @@ export interface OfficialPluginEntry {
 - **搜索目标**：`usePopupSections` 接收动态条目 `<topicId>:<pluginId>`，以及每张有行的主题卡一个 section 条目（`pluginsTitle`、`pluginsNativeDescription` 和主题标题；不含较短的目录名，以免“Chats”之类的词把整张卡拉进常见搜索），只为实际列出的行生成（与行使用同一资格判断）。语料 = manifest 所有语言的名称和描述 + registry `searchKeys` / `searchAliases`，经 `buildSettingsSearchCorpus`（`src/pages/popup/utils/settingsSearch.ts:85-90`）。旧条目的 `keys` 和别名原样搬进 registry，旧查询继续命中。
 - **Section**（Batch 8 起）：八个主题 id 替换单个 `officialPlugins`，默认紧跟 `cloudSync`；已存顺序里的 `officialPlugins` 在读取时原地展开成八个主题 id，移动过 Plugins 卡的用户保留原位置。没有行的主题不可见，排序时被跳过。AI Studio 白名单逐个列出八个主题。以下是 Batch 1 时的记录：新 id `officialPlugins` 替换永远隐藏的 `plugins`，默认放在 `localPlugins` 前。已存顺序不需要迁移：新 id 插在默认前驱之后（`usePopupSections.ts:47-55`），不存在的 id 在读取时被丢弃（`:112-116`）。之后删除各功能 section id 同样安全。AI Studio 白名单加 `officialPlugins: true`；没有行时卡片隐藏。
 - **Batch 5 的 Timeline section**：Gemini 上 `timeline` 同时移除可见性、搜索目标和排序占位，否则"上移"会与不可见的 Timeline 交换，残留搜索目标还会让"无结果"不显示。插件站 rail 的 Timeline 卡改用独立的显示条件，不再借 Gemini 的 section。消息时间迁走时，搜索谓词一起迁。
-- **定位提示**：旧 `LOCATIONS` 与 `officialFeatureSetting.ts` 已移除；`pluginBlockedNote.ts` 的 `officialSwitch` 现在通过 registry 找到官方插件，使用 manifest 行名与 `pluginsTitle` 指向同一 popup 的 Plugins 卡片。保留十语种 `pluginBlockedByOfficialSetting`，`src/pages/popup/components/pluginBlockedNote.ts:86` 仍用它说明应关闭哪一行；它不再指向旧设置卡片。
+- **定位提示**：旧 `LOCATIONS` 与 `officialFeatureSetting.ts` 已移除；`pluginBlockedNote.ts` 的 `officialSwitch` 现在通过 registry 找到官方插件，用 manifest 行名加该行所在主题卡的标题（`officialPluginTopic(entry.topic).title`）指向那一行。保留十语种 `pluginBlockedByOfficialSetting`，`src/pages/popup/components/pluginBlockedNote.ts:86` 仍用它说明应关闭哪一行；它不再指向旧设置卡片。
 - **从页面定位**：默认模型失败提示会打开 popup（`src/pages/content/defaultModel/autoApply.ts:221-247`）。建议在 `gv.openPopup` 前把插件名写入 local 的 `gvPopupSettingsSearchQuery`，popup 打开时已经过滤到那一行（`usePopupSections.ts:82-99` 会恢复它）。
 
 ### 3.7 备份、恢复、云同步
 
 - 旧键在 `chrome.storage.sync`，随设置备份和 Drive 设置文件走。列表 live 跟随，打开 popup 时恢复也会立即更新行。
 - `gvPluginsState` 有自己的 Drive 文件（`src/core/services/SettingsBackupService.ts:467-471`）；对绑定 id 既被忽略也从不写入，两份文件以任何顺序恢复都不会矛盾。
-- **既有限制（不是本次迁移引入）**：设置备份导出时给缺失的键补默认值（`BACKUPABLE_SYNC_SETTINGS_DEFAULTS`，`SettingsBackupService.ts:40-140`），恢复时写回。补的值和 binding 对缺失的解读不一致时，恢复会改变偏好：
+- **原有限制（不是本次迁移引入，已修，见本条后记）**：设置备份导出时给缺失的键补默认值（`BACKUPABLE_SYNC_SETTINGS_DEFAULTS`，`SettingsBackupService.ts:40-140`），恢复时写回。补的值和 binding 对缺失的解读不一致时，恢复会改变偏好：
   - `CHAT_WIDTH_ENABLED` / `EDIT_INPUT_WIDTH_ENABLED` 补 `false`：开关缺失但宽度已自定义（派生为开）的用户，恢复后变关。
   - `HIGHLIGHT_ENABLED` 补 `true`，binding 是"只有 true 才开"：从未开过的用户恢复后变开。
 
   Registry 契约测试为每个列出的 id 检查"备份默认值经 binding 读取 = 缺失时的读取"。Batch 1 的 13 项全部一致。Batch 3、4 加入上述 id 时测试会失败，届时二选一：修备份（缺失保持缺失），或在测试里显式记录为已知限制。建议修备份，单独一个提交。
+
+  后记（04cea801）：已修备份。`loadBackupableSyncSettings` 遇到缺失的、带 `derive` 的绑定键时，只要静态默认值会改变页面当前的实际读取，就导出派生后的有效值，宽度开关不再在恢复后变关。Highlight 不会遇到缺失：background 首次运行就写入该键（`migrateOptionalHighlightSetting`）。
 
 - 本设计不新增存储键（Batch 8 起选项随开关显示，没有展开状态）。没有旧键的新功能，按 §7.12 加默认开启的 sync 键 + 绑定，于是 Gemini / AI Studio 官方插件全部以 sync 为准，`gvPluginsState` 只服务本地插件和插件站。
 
@@ -305,14 +292,14 @@ export interface OfficialPluginEntry {
 
 **Popup**（本设计让这一部分变成机械步骤）：
 
-1. 在 `src/pages/popup/officialPlugins/officialPluginRegistry.ts` 加条目：主题卡、位置、从 `utils/popupSettingsSearchIndex.ts` 搬来的 `searchKeys` / `searchAliases`（含旧 section 标题键）；按 §3.3 需要时才加 `eligible`、`experimental`、`panel`、`control`。
+1. 在 `src/pages/popup/officialPlugins/officialPluginRegistry.ts` 加条目：主题卡、位置、从 `utils/popupSettingsSearchIndex.ts` 搬来的 `searchKeys` / `searchAliases`（含旧 section 标题键）；按 §3.3 需要时才加 `eligible`、`experimental`、`panel`、`control` 等字段（完整字段见该文件的 `OfficialPluginEntry`）。
 2. 需要时在 `officialPluginPanels.tsx` 加面板：复用旧卡片 JSX，`enabled` 从行来，持久值从快照来，按 §2.7 补 a11y/RTL。
 3. 删除旧界面：卡片行或 `wrapSection` 调用、hook 状态、`*_STORAGE_DEFAULTS` 键、`nativeSiteCapabilities.ts` 的 section id / AI Studio 白名单 / `VALUE_BADGE_SECTION_IDS`、搜索条目；旧 `officialFeatureSetting.ts` 已随 `LOCATIONS` 清空删除，无需新增定位表。
 4. 文案：只删除仅被已删行使用、且没有作为 `searchKeys` 或 manifest `messageKeys` 保留的键，10 个语言一起删；`bun run i18n:check`。
 5. 测试：把 id 加进 缺失 / false / true 表，迁移卡片测试的断言；契约测试负责其余。
 6. 文档：该功能 guide 的所有语言版本写明 popup 的「**主题卡标题** → **manifest 行名**」，两者都使用各语言实际文案。
 
-**已完成示例：Edit input width**（`voyager.gemini-edit-input-width`）。运行时在 §7.12 8-1 完成，popup 随 Batch 3 迁入「外观」组。Registry 保留原 section 标题、搜索词和 `widthPercent` 滑块，开关与数值分别经 `legacyEnableWrite`、`legacyValueWrite` 写原键；旧卡片控件、hook 状态和 section 已移除。备份默认值对缺失开关的影响仍是 §3.7 记录的既有限制。
+**已完成示例：Edit input width**（`voyager.gemini-edit-input-width`）。运行时在 §7.12 8-1 完成，popup 随 Batch 3 迁入「外观」组。Registry 保留原 section 标题、搜索词和 `widthPercent` 滑块，开关与数值分别经 `legacyEnableWrite`、`legacyValueWrite` 写原键；旧卡片控件、hook 状态和 section 已移除。备份默认值对缺失开关的影响已按 §3.7 后记修复。
 
 其余列出的功能也已完成：Auto-hide / Full hide 两行共用一个 controller；Gems sidebar 因 Gemini 新版侧栏将 Gems 收入「更多」菜单而暂不显示，popup 行置灰并显示为关闭；旧 Gems hider 停止启动，模块和 `gvGemsHidden` 保留；AI Studio sidebar width 使用独立开关键，缺失时跟随文件夹开关；Visual effects 通过 enum binding 保留跨站共享选择，每个站点各一行（Batch 7 起插件站也是）；Context Sync 的端口、状态和同步按钮在行下的面板里，面板进入视口后才开始探测本地服务器（旧卡片在 popup 打开且功能开启时就轮询，现在面板不用点 Options 就显示，因此改为可见时才探测）；NanoBanana 两行沿用 `src/core/utils/watermarkSettings.ts` 的 resolver。插件站 rail 的选项已在 Batch 7 挂到 rail 的插件行下（§2.4）。
 
@@ -332,5 +319,5 @@ export interface OfficialPluginEntry {
 | 8   | 选项展开状态要不要持久化                             | 不需要（Batch 8）：选项随开关显示，没有展开状态                                 |
 | 9   | Visual effects 跨站                                  | **已做**（Batch 7）：每个站点各一行，绑定同一个键；卡片删除                     |
 | 10  | 降级                                                 | 天然安全：不搬数据，旧版本读同样的键                                            |
-| 11  | 备份补默认值改变缺失语义                             | 既有限制；建议在 Batch 3 前单独修                                               |
+| 11  | 备份补默认值改变缺失语义                             | **已修**（04cea801）：缺失的派生开关按有效值导出，见 §3.7                       |
 | 12  | 从页面定位                                           | 只给默认模型失败提示做搜索词交接；Prompt Manager 的"打开设置"指向核心卡，不需要 |

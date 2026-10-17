@@ -202,6 +202,8 @@ Publish in this order; each step depends on the one before it:
    gh run list --workflow deploy-docs.yml --limit 1
    ```
 
+   After that run succeeds, check that the site's changelog shows the new version: `curl -s https://voyager.nagi.fun/en/changelog | grep -c 'v{VERSION}'` prints a non-zero count (the page has a `## v{VERSION}` heading per release, built from the in-product notes once `package.json` reaches that version). Zero means the deploy did not pick up the bump or the note; fix that before the tag.
+
 3. **Tag.** The tag starts the store release.
 
    ```bash

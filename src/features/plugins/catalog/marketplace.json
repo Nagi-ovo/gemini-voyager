@@ -6,7 +6,7 @@
     "name": "voyager-official",
     "url": "https://github.com/voyager-crew/voyager"
   },
-  "description": "Index of the bundled official plugins for the docs plugin store. The extension discovers sites/*/site.json and sites/*/plugins/*/plugin.json itself; keep this list in sync (a test enforces it).",
+  "description": "Hand-kept index of the bundled official site plugins (Gemini and AI Studio excluded). The extension discovers sites/*/site.json and sites/*/plugins/*/plugin.json itself; keep this list in sync (a test enforces it, and bun run plugin:new appends to it).",
   "plugins": [
     {
       "name": "claude-cjk-render-fix",

@@ -38,14 +38,14 @@
 
 ### UI：复用现有 DOM UI，不重写
 
-复用 `src/pages/content/prompt/index.ts`（2478 行）的面板本体，新增扩展页面入口 `promptWindow`（Vite 多页面，四浏览器共享）。需要拆的 4 个 Gemini 耦合点：
+复用 `src/pages/content/prompt/` 的面板本体（`index.ts` 现约 790 行，列表、编辑、标签、触发球等已拆到同目录模块），新增扩展页面入口 `promptWindow`（Vite 多页面，四浏览器共享）。需要拆的 4 个 Gemini 耦合点：
 
-| 耦合点       | 现状                                         | 窗口内处理                                |
-| ------------ | -------------------------------------------- | ----------------------------------------- |
-| 主题探测     | `detectPageTheme()` 读 Gemini 页面           | 改读扩展主题设置 / `prefers-color-scheme` |
-| 触发球吸附   | `placeTriggerNextToHost()` 挂在 Gemini UI 旁 | 窗口内直接不渲染触发球                    |
-| 插入聊天框   | 内容脚本内直接操作 DOM                       | 改为发消息给 background 转发              |
-| 收藏条目跳转 | 页内 SPA 导航                                | 改为 `tabs.create` 开标签页               |
+| 耦合点       | 现状                                                               | 窗口内处理                                |
+| ------------ | ------------------------------------------------------------------ | ----------------------------------------- |
+| 主题探测     | `detectPageScheme()`（`pageScheme.ts`）读宿主页面                  | 改读扩展主题设置 / `prefers-color-scheme` |
+| 触发球吸附   | `mountPromptTrigger()`（`promptTrigger.ts`）默认挂在 Gemini 按钮旁 | 窗口内直接不渲染触发球                    |
+| 插入聊天框   | 内容脚本内直接操作 DOM                                             | 改为发消息给 background 转发              |
+| 收藏条目跳转 | 页内 SPA 导航                                                      | 改为 `tabs.create` 开标签页               |
 
 功能完整复刻：搜索（打开自动聚焦搜索框）、标签筛选、新建/编辑/删除、重名非阻塞提醒、鼠标+键盘选择、浅色/深色主题、10 语言。
 
