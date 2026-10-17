@@ -17,7 +17,8 @@
  * rather than an import. `marketplace.json` is a hand-kept index of the site
  * plugins, checked by tests and appended by `plugin:new`, and is deliberately not read.
  *
- * Every `site.json` passes `validateSiteAdapterData`, every `plugin.json` passes
+ * Every `site.json` passes `validateSiteAdapterData` with no optional-section
+ * issue (`readSiteAdapterData`), every `plugin.json` passes
  * `validateManifest` with its `contributes.styles[].file` inlined as `css`, and
  * a plugin may not target a URL its own site does not cover (plan D18). On top
  * of that, the primitive checks from plan §5 / §8 run here: a plugin may only
@@ -52,7 +53,10 @@ import {
 import { allowsRemoteCatalog } from '../../src/features/plugins/sites/hostPolicy';
 import { matchesAnyPattern } from '../../src/features/plugins/sites/matchPattern';
 import type { SiteAdapterData } from '../../src/features/plugins/sites/siteAdapterData';
-import { siteAdapterToData } from '../../src/features/plugins/sites/siteAdapterData';
+import {
+  readSiteAdapterData,
+  siteAdapterToData,
+} from '../../src/features/plugins/sites/siteAdapterData';
 import { resolveStyleFileContributions } from '../../src/features/plugins/sources/styleFiles';
 import type { PluginManifest, SiteAdapter } from '../../src/features/plugins/types';
 import { getCatalogRevision } from './catalogRevision';
@@ -107,11 +111,21 @@ interface CatalogSite {
   readonly plugins: readonly PluginManifest[];
 }
 
-/** Read and validate `sites/<siteDir>/site.json`. Throws on anything unusable. */
+/**
+ * Read and validate `sites/<siteDir>/site.json`. Throws on anything unusable,
+ * including a problem in an optional section (`modelPicker`, `bridge`): clients
+ * drop such a section quietly, so publishing one would ship a capability no
+ * client turns on, or a bridge policy that denies everything.
+ */
 function readSiteAdapter(catalogDir: string, siteDir: string): SiteAdapter {
   const sitePath = join(catalogDir, 'sites', siteDir, 'site.json');
-  const load = loadSiteAdapter(sitePath, siteDir, relative(catalogDir, sitePath));
+  const displayPath = relative(catalogDir, sitePath);
+  const load = loadSiteAdapter(sitePath, siteDir, displayPath);
   if (!load.adapter) throw new Error(load.issues.join('\n'));
+  const { sectionIssues } = readSiteAdapterData(JSON.parse(readFileSync(sitePath, 'utf8')));
+  if (sectionIssues.length > 0) {
+    throw new Error(`${displayPath}: invalid site.json section\n${formatIssues(sectionIssues)}`);
+  }
   return load.adapter;
 }
 

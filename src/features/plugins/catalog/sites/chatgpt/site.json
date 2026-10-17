@@ -21,5 +21,20 @@
   "brandColor": "#0ea5e9",
   "capabilities": ["chat", "sidebar", "composer", "darkMode"],
   "conversationIdPattern": "^(?:/u/[^/]+)?(?:/g/[^/]+)?/c/([^/?#]+)",
-  "turnKeyAttributes": ["data-turn-key", "data-message-id"]
+  "turnKeyAttributes": ["data-turn-key", "data-message-id"],
+  "bridge": {
+    "format": 1,
+    "allow": [
+      "conversation.open",
+      "conversation.ready",
+      "conversation.close",
+      "model.inspect",
+      "model.select",
+      "composer.attach",
+      "composer.send",
+      "turns.waitReply",
+      "turns.read",
+      "files.download"
+    ]
+  }
 }

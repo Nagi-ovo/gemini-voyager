@@ -62,7 +62,12 @@ export async function loadSiteOverrideForHost(
   return siteAdapterFromEntry(await loadHostCatalogCache(host), extensionVersion);
 }
 
-/** Two adapters describe the same site when their data is identical. */
+/**
+ * Two adapters describe the same site when their data is identical. `bridge`
+ * is left out on purpose: the background reads the bridge policy from the
+ * cache itself, and comparing it here would remount every plugin on the site
+ * whenever the policy changed.
+ */
 export function isSameSiteAdapter(a: SiteAdapter | null, b: SiteAdapter | null): boolean {
   if (a === b) return true;
   if (!a || !b) return false;
@@ -76,6 +81,7 @@ export function isSameSiteAdapter(a: SiteAdapter | null, b: SiteAdapter | null):
     // The send tracker reads turn keys through this list; a change must rebuild it.
     JSON.stringify(a.turnKeyAttributes ?? []) === JSON.stringify(b.turnKeyAttributes ?? []) &&
     JSON.stringify(a.theme) === JSON.stringify(b.theme) &&
-    JSON.stringify([...a.capabilities].sort()) === JSON.stringify([...b.capabilities].sort())
+    JSON.stringify([...a.capabilities].sort()) === JSON.stringify([...b.capabilities].sort()) &&
+    JSON.stringify(a.modelPicker ?? null) === JSON.stringify(b.modelPicker ?? null)
   );
 }

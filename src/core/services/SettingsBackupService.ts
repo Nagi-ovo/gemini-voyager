@@ -518,6 +518,21 @@ export const NON_SETTINGS_BACKUP_POLICIES = {
     disposition: 'device-local',
     reason: 'Rolling observation counter rebuilt from the images seen on this device.',
   },
+  [StorageKeys.BRIDGE_PAIRING]: {
+    storage: 'local',
+    disposition: 'device-local',
+    reason: 'Bridge pairing secret: the token pairs this browser profile with one local server.',
+  },
+  [StorageKeys.BRIDGE_POLICY_HIGH_WATER]: {
+    storage: 'local',
+    disposition: 'device-local',
+    reason: 'Bridge policy high-water mark; restoring an older one could re-allow a revoked op.',
+  },
+  [StorageKeys.BRIDGE_OUTBOX]: {
+    storage: 'local',
+    disposition: 'device-local',
+    reason: "Bridge results waiting for this device's local server; meaningless elsewhere.",
+  },
 } as const satisfies Record<NonSettingsStorageKey, NonSettingsBackupPolicy>;
 
 export const BACKUPABLE_SYNC_SETTINGS_KEYS = Object.keys(BACKUPABLE_SYNC_SETTINGS_DEFAULTS);

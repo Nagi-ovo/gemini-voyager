@@ -15,6 +15,7 @@ function connectLauncherToBackground(): void {
     handleStarredMessage: () => null,
     handleForkMessage: () => null,
     handleCloudSyncMessage: () => null,
+    handleBridgeMessage: () => null,
     announcements: {
       getPendingAnnouncements: async () => [],
       acknowledgeAnnouncement: async () => {},

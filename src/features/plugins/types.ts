@@ -17,6 +17,9 @@
 
 import type { TranslationKey } from '@/utils/translations';
 
+import type { BridgePolicySection } from './sites/sections/bridgePolicyData';
+import type { ModelPickerSection } from './sites/sections/modelPickerData';
+
 // ---------------------------------------------------------------------------
 // Sites
 // ---------------------------------------------------------------------------
@@ -80,6 +83,18 @@ export interface SiteAdapter {
    * a send produced from older ones mounting; omit them where the site has none.
    */
   readonly turnKeyAttributes?: readonly string[];
+  /**
+   * Data for the Local Bridge `model.select` op. Optional and isolated: a bad
+   * section is dropped without invalidating the adapter (`sectionIssues`).
+   */
+  readonly modelPicker?: ModelPickerSection;
+  /**
+   * Local Bridge kill switch: the ops this site's remote policy allows. Read by
+   * the background's `bridgePolicy` straight from the catalog cache; content
+   * code never consults it, and it is deliberately not part of
+   * `isSameSiteAdapter`, so a policy change does not remount every plugin.
+   */
+  readonly bridge?: BridgePolicySection;
 }
 
 // ---------------------------------------------------------------------------

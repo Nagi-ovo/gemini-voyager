@@ -406,6 +406,17 @@ export const StorageKeys = {
   // colour for the whole Voyager UI on that site; a site WITHOUT an entry falls
   // back to its default (Gemini = Everforest sage; others = adapter brandColor).
   ACCENT_COLORS: 'gvAccentColors',
+
+  // Local Bridge (src/pages/background/bridge/). All three are chrome.storage.local,
+  // written by the background only and never synced or backed up.
+  // Pairing with `voyager serve`: { serverId, port, token, pairedAt }. The token is
+  // a secret: read only in the background, never sent to a content script.
+  BRIDGE_PAIRING: 'gvBridgePairing',
+  // Highest bridge policy revision accepted so far: { revision, allow: OpName[] }.
+  // Lets a later, older catalog never re-allow what a newer one denied.
+  BRIDGE_POLICY_HIGH_WATER: 'gvBridgePolicyHighWater',
+  // Op results the server could not take yet (JSON only, at most 5 / 1 MiB).
+  BRIDGE_OUTBOX: 'gvBridgeOutbox',
 } as const;
 
 export type StorageKey = (typeof StorageKeys)[keyof typeof StorageKeys];

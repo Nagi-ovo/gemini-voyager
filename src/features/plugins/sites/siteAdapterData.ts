@@ -18,6 +18,12 @@ import type { Result } from '@/core/types/common';
 import type { ManifestIssue } from '../manifest/validate';
 import type { SiteAdapter, SiteCapability, SiteThemeDescriptor } from '../types';
 import { isSafeRegexSource } from './safeRegex';
+import {
+  type BridgePolicySection,
+  bridgePolicySectionToData,
+  readBridgePolicySection,
+} from './sections/bridgePolicyData';
+import { type ModelPickerSection, readModelPickerSection } from './sections/modelPickerData';
 import { isSemanticSelectorKey } from './semanticKeys';
 
 /** JSON-serializable adapter: `capabilities` is an array instead of a Set. */
@@ -32,6 +38,8 @@ export interface SiteAdapterData {
   readonly capabilities: readonly SiteCapability[];
   readonly conversationIdPattern?: string;
   readonly turnKeyAttributes?: readonly string[];
+  readonly modelPicker?: ModelPickerSection;
+  readonly bridge?: BridgePolicySection;
 }
 
 const SITE_CAPABILITIES = ['chat', 'sidebar', 'composer', 'darkMode'] as const;
@@ -156,16 +164,38 @@ function readSelectors(raw: unknown, issues: ManifestIssue[]): Record<string, st
   return selectors;
 }
 
+export interface SiteAdapterDataRead {
+  readonly result: Result<SiteAdapter, ManifestIssue[]>;
+  /**
+   * Problems in the optional sections (`modelPicker`, `bridge`). They never
+   * fail `result`: the broken section is left off the adapter, so selector
+   * fixes keep reaching clients while only that capability is unavailable (a
+   * missing `bridge` denies the bridge). Publishing fails on any of them.
+   */
+  readonly sectionIssues: readonly ManifestIssue[];
+}
+
 /**
  * Validate a `site.json` document. Selector keys outside the vocabulary and
  * malformed fields are reported as issues; the result is usable only when the
  * issue list is empty (a partially valid adapter must never mask a typo).
  */
 export function validateSiteAdapterData(input: unknown): Result<SiteAdapter, ManifestIssue[]> {
+  return readSiteAdapterData(input).result;
+}
+
+/** `validateSiteAdapterData` plus the optional-section issues it leaves out of the verdict. */
+export function readSiteAdapterData(input: unknown): SiteAdapterDataRead {
   if (!isRecord(input)) {
-    return { success: false, error: [{ path: '', message: 'site must be an object' }] };
+    return {
+      result: { success: false, error: [{ path: '', message: 'site must be an object' }] },
+      sectionIssues: [],
+    };
   }
   const issues: ManifestIssue[] = [];
+  const modelPickerRead = readModelPickerSection(input.modelPicker);
+  const bridgeRead = readBridgePolicySection(input.bridge);
+  const sectionIssues = [...modelPickerRead.issues, ...bridgeRead.issues];
 
   if (!nonEmptyString(input.id) || !SITE_ID_PATTERN.test(input.id)) {
     issues.push({ path: 'id', message: 'must match ^[a-z][a-z0-9-]*$' });
@@ -240,27 +270,33 @@ export function validateSiteAdapterData(input: unknown): Result<SiteAdapter, Man
     });
   }
 
-  if (issues.length > 0 || !theme) return { success: false, error: issues };
+  if (issues.length > 0 || !theme)
+    return { result: { success: false, error: issues }, sectionIssues };
 
   return {
-    success: true,
-    data: {
-      ...(typeof input.catalogRevision === 'number'
-        ? { catalogRevision: input.catalogRevision }
-        : {}),
-      id: input.id as string,
-      label: input.label as string,
-      matches: (input.matches as string[]).slice(),
-      selectors,
-      theme,
-      ...(typeof input.brandColor === 'string' ? { brandColor: input.brandColor } : {}),
-      capabilities,
-      ...(typeof input.conversationIdPattern === 'string'
-        ? { conversationIdPattern: input.conversationIdPattern }
-        : {}),
-      ...(Array.isArray(input.turnKeyAttributes)
-        ? { turnKeyAttributes: (input.turnKeyAttributes as string[]).slice() }
-        : {}),
+    sectionIssues,
+    result: {
+      success: true,
+      data: {
+        ...(typeof input.catalogRevision === 'number'
+          ? { catalogRevision: input.catalogRevision }
+          : {}),
+        id: input.id as string,
+        label: input.label as string,
+        matches: (input.matches as string[]).slice(),
+        selectors,
+        theme,
+        ...(typeof input.brandColor === 'string' ? { brandColor: input.brandColor } : {}),
+        capabilities,
+        ...(typeof input.conversationIdPattern === 'string'
+          ? { conversationIdPattern: input.conversationIdPattern }
+          : {}),
+        ...(Array.isArray(input.turnKeyAttributes)
+          ? { turnKeyAttributes: (input.turnKeyAttributes as string[]).slice() }
+          : {}),
+        ...(modelPickerRead.modelPicker ? { modelPicker: modelPickerRead.modelPicker } : {}),
+        ...(bridgeRead.policy ? { bridge: bridgeRead.policy } : {}),
+      },
     },
   };
 }
@@ -280,5 +316,8 @@ export function siteAdapterToData(adapter: SiteAdapter): SiteAdapterData {
       ? { conversationIdPattern: adapter.conversationIdPattern }
       : {}),
     ...(adapter.turnKeyAttributes ? { turnKeyAttributes: [...adapter.turnKeyAttributes] } : {}),
+    // Without these the refresher's cache write would silently drop the sections.
+    ...(adapter.modelPicker ? { modelPicker: { ...adapter.modelPicker } } : {}),
+    ...(adapter.bridge ? { bridge: bridgePolicySectionToData(adapter.bridge) } : {}),
   };
 }

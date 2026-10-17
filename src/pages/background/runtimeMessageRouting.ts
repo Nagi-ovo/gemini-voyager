@@ -163,6 +163,17 @@ const HANDLED_BACKGROUND_MESSAGE_TYPES = new Set([
   'gv.openPopup',
   'gv.syncToIDE',
   'gv.checkSyncStatus',
+  // Local Bridge (bridge/bridgeRuntimeMessages.ts checks each sender)
+  'gv.bridge.pairIntent',
+  'gv.bridge.pair',
+  'gv.bridge.unpair',
+  'gv.bridge.status',
+  'gv.bridge.enableRefresh',
+  'gv.bridge.hello',
+  'gv.bridge.op.progress',
+  'gv.bridge.op.done',
+  'gv.bridge.blob.read',
+  'gv.bridge.blob.write',
 ]);
 
 export function isHandledBackgroundRuntimeMessage(message: unknown): boolean {

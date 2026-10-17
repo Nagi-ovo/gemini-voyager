@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
+import { isSameSiteAdapter } from '../remote/siteOverride';
 import {
   isValidSelectorSyntax,
+  readSiteAdapterData,
   siteAdapterToData,
   validateSiteAdapterData,
 } from './siteAdapterData';
@@ -137,5 +139,54 @@ describe('validateSiteAdapterData', () => {
     expect(result.data.brandColor).toBeUndefined();
     expect(result.data.capabilities.size).toBe(0);
     expect(result.data.conversationIdPattern).toBeUndefined();
+  });
+});
+
+describe('optional site sections', () => {
+  const BRIDGE = { format: 1, allow: ['conversation.open', 'composer.send'] };
+
+  it('keeps a valid bridge policy through the cache round trip', () => {
+    const result = validateSiteAdapterData({ ...VALID, bridge: BRIDGE });
+    if (!result.success) throw new Error('fixture must validate');
+    expect(result.data.bridge).toEqual(BRIDGE);
+    const reread = validateSiteAdapterData(siteAdapterToData(result.data));
+    expect(reread.success && reread.data.bridge).toEqual(BRIDGE);
+  });
+
+  it.each([
+    ['not an object', 'allow-everything'],
+    ['an unknown format', { format: 2, allow: ['composer.send'] }],
+    ['allow that is not a list', { format: 1, allow: 'composer.send' }],
+    ['a duplicate op', { format: 1, allow: ['composer.send', 'composer.send'] }],
+    ['a non-string op', { format: 1, allow: [1] }],
+  ])('drops a bridge policy with %s but still updates the site', (_label, bridge) => {
+    const read = readSiteAdapterData({ ...VALID, bridge });
+    expect(read.result.success).toBe(true);
+    if (!read.result.success) return;
+    expect(read.result.data.bridge).toBeUndefined();
+    expect(read.result.data.selectors).toEqual(VALID.selectors);
+    expect(read.sectionIssues.length).toBeGreaterThan(0);
+  });
+
+  it('skips an op this build does not know, without dropping the rest', () => {
+    const read = readSiteAdapterData({
+      ...VALID,
+      bridge: { format: 1, allow: ['composer.send', 'canvas.paint'] },
+    });
+    expect(read.result.success && read.result.data.bridge?.allow).toEqual(['composer.send']);
+    expect(read.sectionIssues.map((issue) => issue.path)).toEqual(['bridge.allow[1]']);
+  });
+
+  it('drops a modelPicker section no format of which this build reads', () => {
+    const read = readSiteAdapterData({ ...VALID, modelPicker: { format: 1 } });
+    expect(read.result.success && read.result.data.modelPicker).toBeUndefined();
+    expect(read.sectionIssues.map((issue) => issue.path)).toEqual(['modelPicker']);
+  });
+
+  it('does not treat a bridge policy change as a different adapter, so plugins stay mounted', () => {
+    const before = validateSiteAdapterData({ ...VALID, bridge: BRIDGE });
+    const after = validateSiteAdapterData({ ...VALID, bridge: { format: 1, allow: [] } });
+    if (!before.success || !after.success) throw new Error('fixtures must validate');
+    expect(isSameSiteAdapter(before.data, after.data)).toBe(true);
   });
 });

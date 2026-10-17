@@ -21,6 +21,7 @@ const PLUGIN_CONTENT_SCRIPT_ID = 'gv-plugin-content-script';
 const PLUGIN_EMBEDDED_CONTENT_SCRIPT_ID = 'gv-plugin-embedded-content-script';
 const CLAUDE_USAGE_MAIN_SCRIPT_ID = 'gv-plugin-claude-usage-main';
 const CUSTOM_WEBSITE_KEY = 'gvPromptCustomWebsites';
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '[::1]']);
 
 export function createSiteAccessRegistration() {
   const MANIFEST_DEFAULT_DOMAINS = new Set(
@@ -90,6 +91,8 @@ export function createSiteAccessRegistration() {
     const domains = origins
       .map(patternToDomain)
       .filter((d): d is string => !!d)
+      // The Local Bridge pairing grants http://127.0.0.1/*; loopback is never a prompt site.
+      .filter((d) => !LOOPBACK_HOSTS.has(d))
       .filter((d) => !MANIFEST_DEFAULT_DOMAINS.has(d))
       .filter((d) => !pluginSiteDomains.has(d));
     return Array.from(new Set(domains));

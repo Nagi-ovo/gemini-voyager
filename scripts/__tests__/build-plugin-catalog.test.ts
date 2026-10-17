@@ -64,6 +64,8 @@ interface FixtureOverrides {
   readonly manifest?: Record<string, unknown>;
   /** Merged into the site adapter's semantic selectors. */
   readonly selectors?: Record<string, string>;
+  /** Merged into the site adapter itself (optional sections). */
+  readonly site?: Record<string, unknown>;
 }
 
 /**
@@ -83,6 +85,7 @@ function makeFixtureCatalog(overrides: FixtureOverrides = {}): string {
     theme: { hostSelector: 'html', lightSelector: 'html.light', darkSelector: 'html.dark' },
     capabilities: ['chat'],
     conversationIdPattern: '^/c/([^/?#]+)',
+    ...overrides.site,
   });
   writeJson(join(pluginDir, 'plugin.json'), {
     id: 'demo.widen',
@@ -355,6 +358,36 @@ describe('build-plugin-catalog', () => {
     const file = readHostFile(outDir, 'demo.example');
     expect((file.site as Record<string, unknown>).id).toBe('demo');
     expect(validateHostCatalogFile(file, 'demo.example')?.issues).toEqual([]);
+  });
+
+  it('publishes a bridge policy that a client reads back with the same allow list', async () => {
+    const outDir = makeTempDir();
+    const catalogDir = makeFixtureCatalog({
+      site: { bridge: { format: 1, allow: ['conversation.open', 'composer.send'] } },
+    });
+    await build(outDir, catalogDir);
+
+    const validation = validateHostCatalogFile(
+      readHostFile(outDir, 'demo.example'),
+      'demo.example',
+    );
+    expect(validation?.issues).toEqual([]);
+    expect(validation?.site?.bridge).toEqual({
+      format: 1,
+      allow: ['conversation.open', 'composer.send'],
+    });
+  });
+
+  it.each([
+    ['an unknown policy format', { bridge: { format: 2, allow: [] } }, /bridge\.format/],
+    ['a misspelled op', { bridge: { format: 1, allow: ['composer.sned'] } }, /bridge\.allow\[0\]/],
+    ['an unsupported modelPicker section', { modelPicker: { format: 1 } }, /modelPicker/],
+  ])('fails the build on %s, which clients would silently drop', async (_label, site, pattern) => {
+    const outDir = makeTempDir();
+    const catalogDir = makeFixtureCatalog({ site });
+
+    await expect(build(outDir, catalogDir)).rejects.toThrow(pattern);
+    expect(existsSync(join(outDir, 'hosts', 'demo.example.json'))).toBe(false);
   });
 
   it('fails the build when a plugin targets a host its site does not cover', async () => {

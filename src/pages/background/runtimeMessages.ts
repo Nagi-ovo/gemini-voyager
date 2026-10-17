@@ -34,6 +34,7 @@ export function registerBackgroundRuntimeMessages(owners: {
   handleStarredMessage: MessageHandler;
   handleForkMessage(message: BackgroundRuntimeMessage): Promise<unknown> | null;
   handleCloudSyncMessage: MessageHandler;
+  handleBridgeMessage: MessageHandler;
   announcements: {
     getPendingAnnouncements(): Promise<unknown>;
     acknowledgeAnnouncement(id: string): Promise<void>;
@@ -59,6 +60,12 @@ export function registerBackgroundRuntimeMessages(owners: {
       try {
         if (isRuntimeImageMessage(message)) {
           sendResponse(await handleRuntimeImageMessage(message, sender));
+          return;
+        }
+
+        const bridgeResponse = owners.handleBridgeMessage(message, sender);
+        if (bridgeResponse) {
+          sendResponse(await bridgeResponse);
           return;
         }
 

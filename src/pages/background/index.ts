@@ -11,6 +11,7 @@ import {
   disableRetiredTabTitleUpdateSetting,
   migrateOptionalHighlightSetting,
 } from './backgroundSettings';
+import { startBridgeOwner } from './bridge/bridgeOwner';
 import { createCloudSyncMessageHandler } from './cloudSyncMessages';
 import { startDevAutoReload } from './devAutoReload';
 import { createForkMessagesOwner } from './forkMessages';
@@ -46,6 +47,10 @@ startChatGptTemporaryHandoffBackgroundService();
 startStorageQuotaWarningBackgroundService();
 startResearchPackOwner();
 startQueueOwners();
+// Local Bridge to `voyager serve`: inert until the builtin is on and a pairing exists.
+const handleBridgeMessage = startBridgeOwner({
+  refreshCatalog: (host) => hostCatalogRefresher.refresh(host),
+});
 
 if (getVoyagerBuildTarget() === 'safari') {
   responseNotifications.connectNativeOpenConversationPort();
@@ -96,5 +101,6 @@ registerBackgroundRuntimeMessages({
   handleStarredMessage,
   handleForkMessage: forkMessages.handle,
   handleCloudSyncMessage,
+  handleBridgeMessage,
   announcements: remoteAnnouncementService,
 });
