@@ -1,0 +1,215 @@
+// @vitest-environment jsdom
+// @vitest-environment-options { "url": "https://chatgpt.com/c/conv-1" }
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { type ChatGptPageFixture, mountChatGptPage } from '../__tests__/chatgptPageFixture';
+import { type Harness, createHarness, errorCode } from '../__tests__/harness';
+import { BAR_CONFIRM_CYCLES, PROGRESS_EVERY_MS } from './turnsWaitReply';
+
+const toasts = vi.hoisted(() => ({ show: vi.fn() }));
+
+vi.mock('@/utils/i18n', () => ({ getCurrentLanguage: vi.fn(async () => 'en') }));
+vi.mock('@/core/ui/toast/toaster', () => ({
+  createToaster: () => ({
+    show: toasts.show,
+    dismiss: vi.fn(),
+    setAnchor: vi.fn(),
+    clear: vi.fn(),
+    destroy: vi.fn(),
+  }),
+}));
+
+let page: ChatGptPageFixture;
+let bridge: Harness;
+const WAIT = { conversationId: 'conv-1', afterUserTurnKey: 'turn-1' } as const;
+
+beforeEach(() => {
+  vi.useFakeTimers();
+  Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+  toasts.show.mockClear();
+  page = mountChatGptPage({ route: '/c/conv-1' });
+  page.addTurn({
+    key: 'turn-0',
+    user: 'earlier',
+    reply: { text: 'old answer', turnState: 'complete', actions: true },
+  });
+  page.addTurn({ key: 'turn-1', user: 'explain this function' });
+  bridge = createHarness();
+});
+
+afterEach(() => {
+  const running = bridge.runtime.runningTaskId;
+  if (running) bridge.runtime.abort(running);
+  vi.useRealTimers();
+});
+
+/** The reply's digest resolves outside the fake clock. */
+async function readOutcome(): Promise<ReturnType<Harness['outcome']>> {
+  await vi.waitFor(() => expect(bridge.outcome()).toBeDefined());
+  return bridge.outcome();
+}
+
+describe('Local Bridge turns.waitReply', () => {
+  it('does not finish on a reply that is still being written, even with its action row showing', async () => {
+    bridge.start('turns.waitReply', WAIT);
+    page.setReply('turn-1', {
+      text: 'Thinking about',
+      turnState: 'streaming',
+      actions: true,
+      replyId: 'r-1',
+    });
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(bridge.outcome()).toBeUndefined();
+
+    // Finished state without its action row is not proof either.
+    page.setReply('turn-1', { text: 'The answer.', turnState: 'complete', replyId: 'r-1' });
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(bridge.outcome()).toBeUndefined();
+
+    page.setReply('turn-1', {
+      text: 'The answer.',
+      turnState: 'complete',
+      actions: true,
+      replyId: 'r-1',
+    });
+    await vi.advanceTimersByTimeAsync((BAR_CONFIRM_CYCLES + 2) * 1_000);
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { assistantTurnKey: 'r-1', status: 'complete' },
+    });
+  });
+
+  it('does not take an action row that flashes on a quiet, unfinished reply as the end', async () => {
+    bridge.start('turns.waitReply', WAIT);
+    page.setReply('turn-1', { text: 'Let me think.', replyId: 'r-1' });
+    await vi.advanceTimersByTimeAsync(5_000);
+    page.setReply('turn-1', { text: 'Let me think.', actions: true, replyId: 'r-1' });
+    await vi.advanceTimersByTimeAsync((BAR_CONFIRM_CYCLES - 1) * 1_000);
+    page.setReply('turn-1', { text: 'Let me think.', replyId: 'r-1' });
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(bridge.outcome()).toBeUndefined();
+  });
+
+  it('waits out text that keeps changing and a stop control before finishing', async () => {
+    bridge.start('turns.waitReply', { ...WAIT, stableMs: 1_500 });
+    page.showStopControl(true);
+    for (let second = 0; second < 6; second += 1) {
+      page.setReply('turn-1', { text: `part ${second}`, actions: true, replyId: 'r-1' });
+      await vi.advanceTimersByTimeAsync(1_000);
+    }
+    expect(bridge.outcome()).toBeUndefined();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(bridge.outcome()).toBeUndefined();
+
+    page.showStopControl(false);
+    await vi.advanceTimersByTimeAsync((BAR_CONFIRM_CYCLES + 2) * 1_000);
+    expect(bridge.outcome()?.ok).toBe(true);
+  });
+
+  it(
+    'waits through a long thinking phase, reporting progress every 15 s',
+    { timeout: 30_000 },
+    async () => {
+      bridge.start('turns.waitReply', WAIT);
+      await vi.advanceTimersByTimeAsync(30 * 60_000);
+      expect(bridge.outcome()).toBeUndefined();
+      const progress = bridge.progress();
+      expect(progress.length).toBeGreaterThanOrEqual((30 * 60_000) / PROGRESS_EVERY_MS - 1);
+      expect(progress[0]).toMatchObject({ phase: 'thinking', textLength: 0 });
+
+      page.setReply('turn-1', { text: 'Done.', turnState: 'complete', actions: true });
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(bridge.outcome()).toMatchObject({ ok: true, data: { assistantTurnKey: 'turn-1-r' } });
+    },
+  );
+
+  it('ends with challenge and a toast when a verification page replaces the thread', async () => {
+    bridge.start('turns.waitReply', WAIT);
+    await vi.advanceTimersByTimeAsync(5_000);
+    document.title = 'Just a moment...';
+    document.body.innerHTML = '<iframe src="https://challenges.cloudflare.com/x"></iframe>';
+    await vi.advanceTimersByTimeAsync(500);
+    expect(errorCode(bridge.outcome())).toBe('challenge');
+    expect(toasts.show).toHaveBeenCalledTimes(1);
+  });
+
+  it('times out with the conversation id so the job can be harvested later', async () => {
+    bridge.start('turns.waitReply', { ...WAIT, timeoutMs: 60_000 });
+    await vi.advanceTimersByTimeAsync(61_000);
+    const outcome = bridge.outcome();
+    expect(errorCode(outcome)).toBe('timeout');
+    expect(outcome?.ok === false && outcome.error.details).toMatchObject({
+      conversationId: 'conv-1',
+    });
+  });
+
+  it('refuses to watch another conversation than the tab shows', async () => {
+    bridge.start('turns.waitReply', { ...WAIT, conversationId: 'conv-2' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(errorCode(bridge.outcome())).toBe('unverified');
+  });
+});
+
+describe('Local Bridge turns.read', () => {
+  it('reads the reply as Markdown without the localized role heading', async () => {
+    page.setReply('turn-1', {
+      text: 'Use `map` here.',
+      turnState: 'complete',
+      actions: true,
+      replyId: 'r-1',
+    });
+    bridge.start('turns.read', { conversationId: 'conv-1', assistantTurnKey: 'r-1' });
+    const outcome = await readOutcome();
+    expect(outcome?.ok).toBe(true);
+    if (!outcome?.ok) return;
+    const data = outcome.data as { markdown: string; messageId: string; textSha256: string };
+    expect(data.markdown).toContain('Use `map` here.');
+    expect(data.markdown).not.toContain('ChatGPT 说');
+    expect(data.messageId).toBe('r-1');
+    expect(data.textSha256).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('leaves the heading out when it sits inside the reply element too', async () => {
+    page.setReply('turn-1', { text: 'Inner.', turnState: 'complete', replyId: 'r-1' });
+    const reply = document.querySelector('[data-chatgpt-selection-message-id="r-1"]')!;
+    const heading = document.querySelector('h4[data-conversation-role]')!;
+    reply.prepend(heading);
+    bridge.start('turns.read', { conversationId: 'conv-1', assistantTurnKey: 'r-1' });
+    const outcome = await readOutcome();
+    expect(outcome?.ok && (outcome.data as { markdown: string }).markdown).toBe('Inner.');
+    expect(reply.querySelector('h4')).not.toBeNull();
+  });
+
+  it('refuses a reply that is still being written', async () => {
+    page.setReply('turn-1', { text: 'partial', turnState: 'streaming', replyId: 'r-1' });
+    bridge.start('turns.read', { conversationId: 'conv-1', assistantTurnKey: 'r-1' });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(errorCode(bridge.outcome())).toBe('unverified');
+  });
+});
+
+describe('Local Bridge conversation.ready', () => {
+  it('reports a signed-in chat-mode page and its conversation', async () => {
+    bridge.start('conversation.ready', { expect: { conversationId: 'conv-1' } });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(bridge.outcome()).toMatchObject({
+      ok: true,
+      data: { conversationId: 'conv-1', loggedIn: true, mode: 'chat' },
+    });
+  });
+
+  it('reads an unknown composer label as an unknown mode', async () => {
+    page.composer.setAttribute('aria-label', 'Ask anything');
+    bridge.start('conversation.ready', {});
+    await vi.advanceTimersByTimeAsync(0);
+    expect(bridge.outcome()).toMatchObject({ ok: true, data: { mode: 'unknown' } });
+  });
+
+  it('reports login-required when the page offers a login instead of a composer', async () => {
+    page.form.remove();
+    document.body.insertAdjacentHTML('beforeend', '<a href="/auth/login">Log in</a>');
+    bridge.start('conversation.ready', {});
+    await vi.advanceTimersByTimeAsync(0);
+    expect(errorCode(bridge.outcome())).toBe('login-required');
+  });
+});

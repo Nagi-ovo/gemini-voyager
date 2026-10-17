@@ -80,6 +80,12 @@ export interface BridgeLeaseProbeMessage {
   type: 'gv.bridge.lease.probe';
   leaseId: string;
 }
+/** Stops a running op on the page; the op terminates with zero further page events. */
+export interface BridgeOpCancelMessage {
+  type: 'gv.bridge.op.cancel';
+  taskId: string;
+  reason: 'cli-cancel' | 'job-timeout' | 'policy-denied' | 'unpaired';
+}
 
 /** Synchronous replies from the content runtime. */
 export interface BridgeOpStartAck {
@@ -102,7 +108,10 @@ export type BridgeContentToBackgroundMessage =
   | BridgeOpDoneMessage
   | BridgeBlobReadMessage
   | BridgeBlobWriteMessage;
-export type BridgeBackgroundToContentMessage = BridgeOpStartMessage | BridgeLeaseProbeMessage;
+export type BridgeBackgroundToContentMessage =
+  | BridgeOpStartMessage
+  | BridgeLeaseProbeMessage
+  | BridgeOpCancelMessage;
 
 /** Ops that dispatch page events and therefore need a lease (spec §3.2). */
 export const LEASED_OPS: ReadonlySet<OpName> = new Set<OpName>([

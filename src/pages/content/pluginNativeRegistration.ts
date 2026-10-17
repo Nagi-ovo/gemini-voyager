@@ -10,6 +10,7 @@ import {
   stopChatGptExportPlugin,
 } from '@/features/plugins/builtin/chatgptExport/runtime';
 import { activateChatGptFolders } from '@/features/plugins/builtin/chatgptFolders';
+import { activateChatGptLocalBridge } from '@/features/plugins/builtin/chatgptLocalBridge';
 import { activateChatGptResponseNotification } from '@/features/plugins/builtin/chatgptResponseNotification';
 import { activateChatGptTemporaryHandoff } from '@/features/plugins/builtin/chatgptTemporaryHandoff';
 import {
@@ -110,6 +111,9 @@ export const NATIVE_HANDLER_BINDINGS: Readonly<Record<string, NativeHandler>> = 
   },
   'voyager.chatgpt-response-notification': {
     activate: activateChatGptResponseNotification,
+  },
+  'voyager.chatgpt-local-bridge': {
+    activate: activateChatGptLocalBridge,
   },
   // Owned by `sites/featureOwners.ts`: mounted only once the plugin owns Gemini's chat width.
   'voyager.gemini-chat-width': {

@@ -1,6 +1,7 @@
 import { type PluginManifest, hasNativeOps } from '../types';
 import { AISTUDIO_BATCH_DELETE_MANIFEST } from './aistudioBatchDeleteManifest';
 import { AISTUDIO_SIDEBAR_WIDTH_MANIFEST } from './aistudioSidebarWidthManifest';
+import { CHATGPT_LOCAL_BRIDGE_MANIFEST } from './chatgptLocalBridge/manifest';
 import { CHATGPT_RESPONSE_NOTIFICATION_MANIFEST } from './chatgptResponseNotification/manifest';
 import { GEMINI_BATCH_DELETE_MANIFEST } from './geminiBatchDeleteManifest';
 import { GEMINI_CANVAS_COPY_MANIFEST } from './geminiCanvasCopyManifest';
@@ -401,6 +402,7 @@ export const BUILTIN_PLUGINS: readonly PluginManifest[] = [
     },
   },
   CHATGPT_RESPONSE_NOTIFICATION_MANIFEST,
+  CHATGPT_LOCAL_BRIDGE_MANIFEST,
   GEMINI_SAFARI_ENTER_FIX_MANIFEST,
   GEMINI_CHAT_WIDTH_MANIFEST,
   GEMINI_EDIT_INPUT_WIDTH_MANIFEST,
