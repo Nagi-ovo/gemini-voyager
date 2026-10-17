@@ -11,6 +11,8 @@ type NativeArchivedRowsOptions = {
   isHidingArchived(): boolean;
   /** `pass` shares one membership lookup across the rows of one sweep. */
   isInFolders(conversationId: string, pass: object): boolean;
+  /** A row the setting just hid (it was visible before this apply). */
+  onRowHidden?(row: HTMLElement): void;
 };
 
 /** Hides Gemini's native sidebar rows for chats already filed in a folder (hide-archived). */
@@ -38,7 +40,10 @@ export class NativeArchivedRows {
       }
       return;
     }
-    this.setArchived(conv, this.options.isInFolders(extractConversationId(conv), pass));
+    const wasArchived = conv.classList.contains(ARCHIVED_CLASS);
+    const isArchived = this.options.isInFolders(extractConversationId(conv), pass);
+    this.setArchived(conv, isArchived);
+    if (isArchived && !wasArchived) this.options.onRowHidden?.(conv);
   }
 
   /** Shows a hidden row while its native menu is used; the returned function hides it again. */

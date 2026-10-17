@@ -29,6 +29,7 @@ import { HideArchivedNudgeState } from './hideArchivedNudgeState';
 import { createLegacyFolderCommands } from './legacyFolderCommands';
 import { NativeArchivedRows } from './nativeArchivedRows';
 import { extractNativeConversationTitle } from './nativeConversationTitles';
+import { createNativePaginationNudge } from './nativeListPagination';
 import { findNativeConversationElement, getNativeConversationElements } from './nativeSidebarDom';
 import { ligatureIcon } from './selectionToolbar';
 import type { ConversationReference, Folder } from './types';
@@ -106,10 +107,12 @@ export class FolderManager {
     getSortMode: () => this.treeView.sortMode,
     removeFloatingHost: () => this.selection.removeFloatingHost(),
   });
+  private readonly paginationNudge = createNativePaginationNudge();
   private readonly archivedRows = new NativeArchivedRows({
     getSidebar: () => this.sidebarRuntime.sidebar,
     isHidingArchived: () => this.hideArchivedConversations,
     isInFolders: (id, pass) => this.store.isConversationInFolders(id, pass),
+    onRowHidden: (row) => this.paginationNudge.rowHidden(row),
   });
   private readonly hideArchivedNudge = new HideArchivedNudgeState({
     isHidingArchived: () => this.hideArchivedConversations,
@@ -300,6 +303,7 @@ export class FolderManager {
     this.treeView.unmount();
     this.navigation.destroy();
     this.sidebarRuntime.stop();
+    this.paginationNudge.cancel();
     this.store.destroy();
     this.feedback.destroy();
   }
@@ -339,6 +343,7 @@ export class FolderManager {
     this.store.flushPendingSaveData();
     this.store.teardownConversationActivityTracking();
     this.sidebarRuntime.stop();
+    this.paginationNudge.cancel();
   }
 
   private async openNativeRenameForFolderConversation(
