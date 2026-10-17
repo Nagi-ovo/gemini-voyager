@@ -87,5 +87,5 @@ For Chrome development, run `bun run dev:chrome` and load `dist_chrome_dev` once
 - Use `gh` as the source of truth for GitHub issues, PRs and comments.
 - When asked to push without branch/PR instructions, fast-forward `origin/main`. Never force-push unless explicitly requested.
 - Commit as `<type>(<scope>): <imperative summary>`: lowercase feature scope, preferably lowercase summary, no trailing period, at most 100 header characters. Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`, `build`, `ci`, `perf`, `style`, `revert`, `deps`, `ux`.
-- Link related issues/discussions with `Fixes #xxx` or `Closes #xxx` in the commit body or PR description. Codex commits include `Co-authored-by: Codex <codex@users.noreply.github.com>`.
+- Link related issues/discussions with `Fixes #xxx` or `Closes #xxx` in the commit body or PR description.
 - After an issue fix has landed, and when posting is authorized, comment briefly in the reporter's language: the fix has landed, it will be in the next version, and they can reopen if it persists.

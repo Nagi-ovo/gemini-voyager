@@ -1,4 +1,8 @@
 {
+  "attribution": {
+    "commit": "Co-Authored-By: Claude <noreply@anthropic.com>",
+    "pr": ""
+  },
   "permissions": {
     "deny": [
       "Read(./.entire/metadata/**)"
