@@ -12,7 +12,7 @@ export const VISUAL_EFFECTS_MANIFEST: PluginManifest = {
   description: 'Add falling snow, cherry blossoms or rain, with one shared choice across sites.',
   i18n: {
     zh: {
-      name: '视觉效果',
+      name: '视觉特效',
       description: '为页面添加飘雪、樱花或雨滴，所有网站共用同一个选择。',
       settings: {
         effect: {
@@ -22,7 +22,7 @@ export const VISUAL_EFFECTS_MANIFEST: PluginManifest = {
       },
     },
     zh_TW: {
-      name: '視覺效果',
+      name: '視覺特效',
       description: '為頁面加入飄雪、櫻花或雨滴，所有網站共用同一個選擇。',
       settings: {
         effect: {
@@ -53,7 +53,7 @@ export const VISUAL_EFFECTS_MANIFEST: PluginManifest = {
       settings: {
         effect: {
           label: 'Effet',
-          options: { off: 'Désactivé', snow: 'Neige', sakura: 'Fleurs de cerisier', rain: 'Pluie' },
+          options: { off: 'Désactivé', snow: 'Neige', sakura: 'Sakura', rain: 'Pluie' },
         },
       },
     },
@@ -67,7 +67,7 @@ export const VISUAL_EFFECTS_MANIFEST: PluginManifest = {
           options: {
             off: 'Desactivado',
             snow: 'Nieve',
-            sakura: 'Flores de cerezo',
+            sakura: 'Sakura',
             rain: 'Lluvia',
           },
         },
@@ -83,7 +83,7 @@ export const VISUAL_EFFECTS_MANIFEST: PluginManifest = {
           options: {
             off: 'Desativado',
             snow: 'Neve',
-            sakura: 'Flores de cerejeira',
+            sakura: 'Sakura',
             rain: 'Chuva',
           },
         },
@@ -101,7 +101,7 @@ export const VISUAL_EFFECTS_MANIFEST: PluginManifest = {
       },
     },
     ar: {
-      name: 'تأثيرات بصرية',
+      name: 'المؤثرات البصرية',
       description:
         'أضف الثلج أو بتلات الكرز المتساقطة أو المطر، باختيار واحد مشترك بين جميع المواقع.',
       settings: {

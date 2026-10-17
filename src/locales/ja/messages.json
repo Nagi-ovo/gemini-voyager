@@ -2258,7 +2258,7 @@
     "description": "深層研究の調査済みウェブサイトセクションヘッダー"
   },
   "visualEffect": {
-    "message": "ビジュアルエフェクト",
+    "message": "視覚効果",
     "description": "Visual effect selector label"
   },
   "visualEffectHint": {
