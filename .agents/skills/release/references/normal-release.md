@@ -127,7 +127,7 @@ lockf -k /tmp/voyager-verify.lock bun run verify:pr
 
 `verify:pr` runs format, lint, typecheck, i18n, file-size and plugin checks, the full test suite, `build:all`, `cli:build` and `docs:build`.
 
-`cli:build` stamps the bumped version into `packages/create-voyager-plugin/dist/cli.mjs`; the npm publish in step 5 ships that file.
+`cli:build` stamps the bumped version into `packages/create-voyager-plugin/dist/cli.mjs`; the `publish-cli` job of `deploy-docs.yml` rebuilds and publishes that file when the release commit reaches `main` (step 5).
 
 `plugin:release:check` fails if any raw `next` engine declaration remains in a
 primitive contract, imported contract data module, baseline or catalog manifest. Run it before release builds
@@ -187,24 +187,18 @@ Check the concrete tag and commit against the authorization boundaries in [SKILL
 
 Publish in this order; each step depends on the one before it:
 
-1. **npm.** Pushing `main` deploys the docs and the public `write-voyager-plugin` skill, which tell users to run `npx create-voyager-plugin@latest`, so `create-voyager-plugin@{VERSION}` must already be on npm. Publishing is the user's action: give them the command and wait for its output.
-
-   ```bash
-   cd packages/create-voyager-plugin && npm publish --access public
-   ```
-
-   An `E403 … with these credentials` means the local token cannot publish; the user runs `npm login` and publishes again. An `E403 … Two-factor authentication … is required` means the npm account needs 2FA enabled first. npm then stages the upload: `npm view` shows a `0.0.0-stage` placeholder for a minute or two. Wait until `npm view create-voyager-plugin version` prints `{VERSION}`, then smoke-test it in an empty directory with `npx -y create-voyager-plugin@latest init my-plugin --site claude` followed by `check my-plugin`.
-
-2. **main.** The push deploys the docs and the remote plugin catalog (`deploy-docs.yml`). Wait for that run to succeed before the tag: a new-version extension that fetches the catalog before the deploy caches the old one as authoritative for that version and hides bundled plugins missing from it until its next refresh.
+1. **main, which publishes npm first.** The docs and the public `write-voyager-plugin` skill tell users to run `npx create-voyager-plugin@latest`, so `deploy-docs.yml` runs its `publish-cli` job before building the docs: when `create-voyager-plugin@{VERSION}` is not on npm yet, it builds the CLI, publishes it through npm Trusted Publishing (OIDC, no token or 2FA prompt), and on every run waits until `npm view` reports `{VERSION}` as `latest` and smoke-tests `init` and `check`. The same push then deploys the docs and the remote plugin catalog. Wait for the whole run to succeed before the tag: a new-version extension that fetches the catalog before the deploy caches the old one as authoritative for that version and hides bundled plugins missing from it until its next refresh.
 
    ```bash
    git push origin main
    gh run list --workflow deploy-docs.yml --limit 1
    ```
 
-   After that run succeeds, check that the site's changelog shows the new version: `curl -s https://voyager.nagi.fun/en/changelog | grep -c 'v{VERSION}'` prints a non-zero count (the page has a `## v{VERSION}` heading per release, built from the in-product notes once `package.json` reaches that version). Zero means the deploy did not pick up the bump or the note; fix that before the tag.
+   A failed `publish-cli` blocks the docs deploy, which is the intent. An `ENEEDAUTH` or `E403`/`E404` on publish can mean the package's Trusted Publisher on npmjs.com no longer matches `voyager-crew/voyager`, `deploy-docs.yml` and direct publishing; check the job's npm log for the CLI version, the OIDC exchange and registry or network errors before the user changes that setting and re-runs the workflow. Manual recovery is the user's action: `cd packages/create-voyager-plugin && npm publish --access public`, after which a re-run skips the publish.
 
-3. **Tag.** The tag starts the store release.
+   After that run succeeds, check that npm and the site agree: `npm view create-voyager-plugin version` prints `{VERSION}`, and `curl -s https://voyager.nagi.fun/en/changelog | grep -c 'v{VERSION}'` prints a non-zero count (the page has a `## v{VERSION}` heading per release, built from the in-product notes once `package.json` reaches that version). Zero means the deploy did not pick up the bump or the note; fix that before the tag.
+
+2. **Tag.** The tag starts the store release.
 
    ```bash
    git push origin "v{VERSION}"
