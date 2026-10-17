@@ -1,0 +1,32 @@
+[
+  {
+    "name": "plugin name with a path",
+    "kind": "jobSubmitRequest",
+    "input": {
+      "plugin": "../ask",
+      "command": "ask",
+      "input": {}
+    },
+    "issuePath": "plugin"
+  },
+  {
+    "name": "call with an unknown op",
+    "kind": "callRequest",
+    "input": {
+      "op": "ask",
+      "params": {}
+    },
+    "issuePath": "op"
+  },
+  {
+    "name": "call params checked against the op",
+    "kind": "callRequest",
+    "input": {
+      "op": "turns.read",
+      "params": {
+        "conversationId": "abc"
+      }
+    },
+    "issuePath": "params.assistantTurnKey"
+  }
+]

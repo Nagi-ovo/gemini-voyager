@@ -1,0 +1,159 @@
+[
+  {
+    "name": "open",
+    "kind": "opResult",
+    "op": "conversation.open",
+    "input": {
+      "tabId": 42,
+      "url": "https://chatgpt.com/",
+      "documentId": "8C3A1F0E9B2D4C6A8E0F1A2B3C4D5E6F",
+      "docNonce": "0b9e6a52-3c1d-4e8f-9a7b-1c2d3e4f5a6b",
+      "ready": {
+        "url": "https://chatgpt.com/",
+        "conversationId": null,
+        "loggedIn": true,
+        "mode": "chat",
+        "evidence": {
+          "placeholder": "chat",
+          "modeStorage": null
+        }
+      }
+    }
+  },
+  {
+    "name": "close",
+    "kind": "opResult",
+    "op": "conversation.close",
+    "input": {
+      "closed": false
+    }
+  },
+  {
+    "name": "ready",
+    "kind": "opResult",
+    "op": "conversation.ready",
+    "input": {
+      "url": "https://chatgpt.com/",
+      "conversationId": null,
+      "loggedIn": true,
+      "mode": "chat",
+      "evidence": {
+        "placeholder": "chat",
+        "modeStorage": null
+      }
+    }
+  },
+  {
+    "name": "inspect",
+    "kind": "opResult",
+    "op": "model.inspect",
+    "input": {
+      "triggerText": "Pro",
+      "triggerEffortAttr": null,
+      "triggerExpanded": false,
+      "mode": "chat"
+    }
+  },
+  {
+    "name": "select",
+    "kind": "opResult",
+    "op": "model.select",
+    "input": {
+      "changed": true,
+      "previous": {
+        "modelId": null,
+        "modelLabel": "Thinking",
+        "effortIndex": null,
+        "effortMax": null
+      },
+      "observed": {
+        "modelId": "gpt-6",
+        "modelLabel": "GPT-6",
+        "effortIndex": 4,
+        "effortMax": 4
+      },
+      "evidence": {}
+    }
+  },
+  {
+    "name": "attach",
+    "kind": "opResult",
+    "op": "composer.attach",
+    "input": {
+      "attached": [
+        {
+          "name": "proj.zip",
+          "method": "paste"
+        }
+      ],
+      "evidence": {
+        "stableMs": 1500
+      }
+    }
+  },
+  {
+    "name": "send",
+    "kind": "opResult",
+    "op": "composer.send",
+    "input": {
+      "conversationId": "abc-123",
+      "url": "https://chatgpt.com/c/abc-123",
+      "userTurnKey": "t-7"
+    }
+  },
+  {
+    "name": "wait reply",
+    "kind": "opResult",
+    "op": "turns.waitReply",
+    "input": {
+      "assistantTurnKey": "t-8",
+      "status": "complete",
+      "elapsedMs": 612000,
+      "evidence": {
+        "stopControl": false
+      }
+    }
+  },
+  {
+    "name": "read",
+    "kind": "opResult",
+    "op": "turns.read",
+    "input": {
+      "markdown": "OK",
+      "turnKey": "t-8",
+      "textSha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "files": [
+        {
+          "kind": "sandbox",
+          "label": "summary.csv",
+          "href": "sandbox:/mnt/data/summary.csv",
+          "controlRef": "turn-3:file-0"
+        }
+      ]
+    }
+  },
+  {
+    "name": "download to a blob",
+    "kind": "opResult",
+    "op": "files.download",
+    "input": {
+      "blobId": "blob_2",
+      "name": "summary.csv",
+      "size": 512,
+      "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "mime": "text/csv"
+    }
+  },
+  {
+    "name": "download to a path",
+    "kind": "opResult",
+    "op": "files.download",
+    "input": {
+      "path": "/Users/me/Downloads/summary.csv",
+      "name": "summary.csv",
+      "size": 512,
+      "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "mime": "text/csv"
+    }
+  }
+]

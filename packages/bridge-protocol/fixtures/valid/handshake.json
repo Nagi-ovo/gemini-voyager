@@ -1,0 +1,57 @@
+[
+  {
+    "name": "extension hello",
+    "kind": "helloRequest",
+    "input": {
+      "client": "extension",
+      "version": "2.0.1",
+      "protocol": {
+        "min": 1,
+        "max": 1
+      }
+    }
+  },
+  {
+    "name": "cli hello with a wider range",
+    "kind": "helloRequest",
+    "input": {
+      "client": "cli",
+      "version": "0.1.0",
+      "protocol": {
+        "min": 1,
+        "max": 3
+      }
+    }
+  },
+  {
+    "name": "hello response",
+    "kind": "helloResponse",
+    "input": {
+      "serverId": "srv_8f2c",
+      "serverVersion": "0.1.0",
+      "protocol": {
+        "min": 1,
+        "max": 1,
+        "selected": 1
+      },
+      "paired": false
+    }
+  },
+  {
+    "name": "pair request",
+    "kind": "pairRequest",
+    "input": {
+      "code": "12345678",
+      "browser": "chrome",
+      "extensionVersion": "2.0.1"
+    }
+  },
+  {
+    "name": "pair response",
+    "kind": "pairResponse",
+    "input": {
+      "token": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA_-z",
+      "serverId": "srv_8f2c"
+    }
+  }
+]

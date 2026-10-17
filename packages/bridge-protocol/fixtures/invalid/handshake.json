@@ -1,0 +1,78 @@
+[
+  {
+    "name": "root is not an object",
+    "kind": "helloRequest",
+    "input": [],
+    "issuePath": "$"
+  },
+  {
+    "name": "inverted protocol range",
+    "kind": "helloRequest",
+    "input": {
+      "client": "extension",
+      "version": "2.0.1",
+      "protocol": {
+        "min": 2,
+        "max": 1
+      }
+    },
+    "issuePath": "protocol"
+  },
+  {
+    "name": "unknown client",
+    "kind": "helloRequest",
+    "input": {
+      "client": "browser",
+      "version": "2.0.1",
+      "protocol": {
+        "min": 1,
+        "max": 1
+      }
+    },
+    "issuePath": "client"
+  },
+  {
+    "name": "selected outside the range",
+    "kind": "helloResponse",
+    "input": {
+      "serverId": "srv",
+      "serverVersion": "0.1.0",
+      "protocol": {
+        "min": 1,
+        "max": 1,
+        "selected": 2
+      },
+      "paired": true
+    },
+    "issuePath": "protocol.selected"
+  },
+  {
+    "name": "pairing code as displayed, not normalized",
+    "kind": "pairRequest",
+    "input": {
+      "code": "1234-5678",
+      "browser": "chrome",
+      "extensionVersion": "2.0.1"
+    },
+    "issuePath": "code"
+  },
+  {
+    "name": "unsupported browser",
+    "kind": "pairRequest",
+    "input": {
+      "code": "12345678",
+      "browser": "safari",
+      "extensionVersion": "2.0.1"
+    },
+    "issuePath": "browser"
+  },
+  {
+    "name": "short token",
+    "kind": "pairResponse",
+    "input": {
+      "token": "abc",
+      "serverId": "srv"
+    },
+    "issuePath": "token"
+  }
+]

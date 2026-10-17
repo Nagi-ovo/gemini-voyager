@@ -1,0 +1,152 @@
+[
+  {
+    "name": "server-side state in inflight",
+    "kind": "pollRequest",
+    "input": {
+      "capabilities": {
+        "ops": []
+      },
+      "inflight": [
+        {
+          "taskId": "T1",
+          "state": "dispatched"
+        }
+      ],
+      "policy": {
+        "revision": 1,
+        "allowed": true
+      }
+    },
+    "issuePath": "inflight[0].state"
+  },
+  {
+    "name": "unknown op capability",
+    "kind": "pollRequest",
+    "input": {
+      "capabilities": {
+        "ops": [
+          {
+            "name": "ask",
+            "v": 1
+          }
+        ]
+      },
+      "inflight": [],
+      "policy": {
+        "revision": 1,
+        "allowed": true
+      }
+    },
+    "issuePath": "capabilities.ops[0].name"
+  },
+  {
+    "name": "unknown op in a task",
+    "kind": "pollResponse",
+    "input": {
+      "kind": "task",
+      "task": {
+        "taskId": "T4",
+        "jobId": "J1",
+        "op": "ask",
+        "opVersion": 1,
+        "params": {
+          "text": "Reply with OK"
+        },
+        "deadlineMs": 30000,
+        "issuedAt": 1792200000000
+      }
+    },
+    "issuePath": "task.op"
+  },
+  {
+    "name": "task params that do not fit the op",
+    "kind": "pollResponse",
+    "input": {
+      "kind": "task",
+      "task": {
+        "taskId": "T4",
+        "jobId": "J1",
+        "op": "composer.send",
+        "opVersion": 1,
+        "params": {
+          "text": ""
+        },
+        "deadlineMs": 30000,
+        "issuedAt": 1792200000000
+      }
+    },
+    "issuePath": "task.params.text"
+  },
+  {
+    "name": "task id that would escape a URL path",
+    "kind": "pollResponse",
+    "input": {
+      "kind": "task",
+      "task": {
+        "taskId": "../T4",
+        "jobId": "J1",
+        "op": "composer.send",
+        "opVersion": 1,
+        "params": {
+          "text": "Reply with OK"
+        },
+        "deadlineMs": 30000,
+        "issuedAt": 1792200000000
+      }
+    },
+    "issuePath": "task.taskId"
+  },
+  {
+    "name": "abort with an unknown reason",
+    "kind": "pollResponse",
+    "input": {
+      "kind": "abort",
+      "taskId": "T4",
+      "reason": "user"
+    },
+    "issuePath": "reason"
+  },
+  {
+    "name": "progress without seq",
+    "kind": "taskProgress",
+    "input": {
+      "event": {}
+    },
+    "issuePath": "seq"
+  },
+  {
+    "name": "category that does not match the code",
+    "kind": "taskResult",
+    "input": {
+      "ok": false,
+      "error": {
+        "code": "send-unverified",
+        "category": "transient",
+        "message": "x"
+      }
+    },
+    "issuePath": "error.category"
+  },
+  {
+    "name": "unknown error code",
+    "kind": "taskResult",
+    "input": {
+      "ok": false,
+      "error": {
+        "code": "oops",
+        "category": "data",
+        "message": "x"
+      }
+    },
+    "issuePath": "error.code"
+  },
+  {
+    "name": "ok that is not a boolean",
+    "kind": "taskResult",
+    "input": {
+      "ok": "true",
+      "data": {}
+    },
+    "issuePath": "ok"
+  }
+]

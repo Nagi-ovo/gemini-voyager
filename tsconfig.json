@@ -33,6 +33,8 @@
     "src",
     "packages/create-voyager-plugin/src",
     "packages/create-voyager-plugin/test",
+    "packages/bridge-protocol/src",
+    "packages/bridge-protocol/test",
     "utils",
     "vite.config.base.ts",
     "vite.config.chrome.ts",

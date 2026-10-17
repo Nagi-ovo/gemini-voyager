@@ -1,0 +1,238 @@
+[
+  {
+    "name": "open with both new and an id",
+    "kind": "opParams",
+    "op": "conversation.open",
+    "input": {
+      "new": true,
+      "conversationId": "abc"
+    },
+    "issuePath": "$"
+  },
+  {
+    "name": "open with new false",
+    "kind": "opParams",
+    "op": "conversation.open",
+    "input": {
+      "new": false
+    },
+    "issuePath": "new"
+  },
+  {
+    "name": "conversation id with a path",
+    "kind": "opParams",
+    "op": "conversation.open",
+    "input": {
+      "conversationId": "../settings"
+    },
+    "issuePath": "conversationId"
+  },
+  {
+    "name": "negative tab id",
+    "kind": "opParams",
+    "op": "conversation.close",
+    "input": {
+      "tabId": -1
+    },
+    "issuePath": "tabId"
+  },
+  {
+    "name": "preset and model together",
+    "kind": "opParams",
+    "op": "model.select",
+    "input": {
+      "target": {
+        "preset": "pro",
+        "mode": "chat",
+        "model": "gpt-6"
+      }
+    },
+    "issuePath": "target"
+  },
+  {
+    "name": "effort and effortIndex together",
+    "kind": "opParams",
+    "op": "model.select",
+    "input": {
+      "target": {
+        "mode": "chat",
+        "model": "gpt-6",
+        "effort": "pro",
+        "effortIndex": 4
+      }
+    },
+    "issuePath": "target"
+  },
+  {
+    "name": "work mode target",
+    "kind": "opParams",
+    "op": "model.select",
+    "input": {
+      "target": {
+        "mode": "work",
+        "model": "gpt-6"
+      }
+    },
+    "issuePath": "target.mode"
+  },
+  {
+    "name": "no blobs",
+    "kind": "opParams",
+    "op": "composer.attach",
+    "input": {
+      "blobs": []
+    },
+    "issuePath": "blobs"
+  },
+  {
+    "name": "eleven blobs",
+    "kind": "opParams",
+    "op": "composer.attach",
+    "input": {
+      "blobs": [
+        {
+          "blobId": "b0",
+          "name": "proj.zip",
+          "size": 2048,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mime": "application/zip"
+        },
+        {
+          "blobId": "b1",
+          "name": "proj.zip",
+          "size": 2048,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mime": "application/zip"
+        },
+        {
+          "blobId": "b2",
+          "name": "proj.zip",
+          "size": 2048,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mime": "application/zip"
+        },
+        {
+          "blobId": "b3",
+          "name": "proj.zip",
+          "size": 2048,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mime": "application/zip"
+        },
+        {
+          "blobId": "b4",
+          "name": "proj.zip",
+          "size": 2048,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mime": "application/zip"
+        },
+        {
+          "blobId": "b5",
+          "name": "proj.zip",
+          "size": 2048,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mime": "application/zip"
+        },
+        {
+          "blobId": "b6",
+          "name": "proj.zip",
+          "size": 2048,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mime": "application/zip"
+        },
+        {
+          "blobId": "b7",
+          "name": "proj.zip",
+          "size": 2048,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mime": "application/zip"
+        },
+        {
+          "blobId": "b8",
+          "name": "proj.zip",
+          "size": 2048,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mime": "application/zip"
+        },
+        {
+          "blobId": "b9",
+          "name": "proj.zip",
+          "size": 2048,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mime": "application/zip"
+        },
+        {
+          "blobId": "b10",
+          "name": "proj.zip",
+          "size": 2048,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mime": "application/zip"
+        }
+      ]
+    },
+    "issuePath": "blobs"
+  },
+  {
+    "name": "blob name with a slash",
+    "kind": "opParams",
+    "op": "composer.attach",
+    "input": {
+      "blobs": [
+        {
+          "blobId": "blob_1",
+          "name": "a/b.zip",
+          "size": 2048,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mime": "application/zip"
+        }
+      ]
+    },
+    "issuePath": "blobs[0].name"
+  },
+  {
+    "name": "blob sha256 too short",
+    "kind": "opParams",
+    "op": "composer.attach",
+    "input": {
+      "blobs": [
+        {
+          "blobId": "blob_1",
+          "name": "proj.zip",
+          "size": 2048,
+          "sha256": "abc",
+          "mime": "application/zip"
+        }
+      ]
+    },
+    "issuePath": "blobs[0].sha256"
+  },
+  {
+    "name": "empty text",
+    "kind": "opParams",
+    "op": "composer.send",
+    "input": {
+      "text": ""
+    },
+    "issuePath": "text"
+  },
+  {
+    "name": "wait longer than 180 minutes",
+    "kind": "opParams",
+    "op": "turns.waitReply",
+    "input": {
+      "conversationId": "abc",
+      "afterUserTurnKey": "t-7",
+      "timeoutMs": 10800001
+    },
+    "issuePath": "timeoutMs"
+  },
+  {
+    "name": "download without a candidate",
+    "kind": "opParams",
+    "op": "files.download",
+    "input": {
+      "conversationId": "abc",
+      "assistantTurnKey": "t-8"
+    },
+    "issuePath": "candidate"
+  }
+]

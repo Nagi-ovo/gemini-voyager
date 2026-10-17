@@ -1,0 +1,33 @@
+[
+  {
+    "name": "ask job",
+    "kind": "jobSubmitRequest",
+    "input": {
+      "plugin": "ask",
+      "command": "ask",
+      "input": {
+        "prompt": "Reply with OK"
+      }
+    }
+  },
+  {
+    "name": "scoped plugin",
+    "kind": "jobSubmitRequest",
+    "input": {
+      "plugin": "@someone/voyager-plugin-x",
+      "command": "run",
+      "input": null
+    }
+  },
+  {
+    "name": "call",
+    "kind": "callRequest",
+    "input": {
+      "op": "turns.read",
+      "params": {
+        "conversationId": "68f1c2a0-1b2c-8000-9a1b-0123456789ab",
+        "assistantTurnKey": "t-8"
+      }
+    }
+  }
+]

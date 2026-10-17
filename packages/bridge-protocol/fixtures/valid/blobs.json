@@ -1,0 +1,38 @@
+[
+  {
+    "name": "blob create",
+    "kind": "blobCreateRequest",
+    "input": {
+      "jobId": "J1",
+      "taskId": "T7",
+      "name": "summary.csv",
+      "size": 512,
+      "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "mime": "text/csv"
+    }
+  },
+  {
+    "name": "blob create response",
+    "kind": "blobCreateResponse",
+    "input": {
+      "blobId": "blob_2"
+    }
+  },
+  {
+    "name": "4 MiB chunk",
+    "kind": "blobChunkRange",
+    "input": {
+      "offset": 0,
+      "length": 4194304
+    }
+  },
+  {
+    "name": "blob commit",
+    "kind": "blobCommitResponse",
+    "input": {
+      "blobId": "blob_2",
+      "size": 512,
+      "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    }
+  }
+]

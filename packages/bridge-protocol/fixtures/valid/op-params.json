@@ -1,0 +1,144 @@
+[
+  {
+    "name": "open new",
+    "kind": "opParams",
+    "op": "conversation.open",
+    "input": {
+      "new": true
+    }
+  },
+  {
+    "name": "open existing",
+    "kind": "opParams",
+    "op": "conversation.open",
+    "input": {
+      "conversationId": "68f1c2a0-1b2c-8000-9a1b-0123456789ab"
+    }
+  },
+  {
+    "name": "close",
+    "kind": "opParams",
+    "op": "conversation.close",
+    "input": {
+      "tabId": 42
+    }
+  },
+  {
+    "name": "ready without expectation",
+    "kind": "opParams",
+    "op": "conversation.ready",
+    "input": {}
+  },
+  {
+    "name": "ready expecting a conversation",
+    "kind": "opParams",
+    "op": "conversation.ready",
+    "input": {
+      "expect": {
+        "conversationId": "abc-123"
+      }
+    }
+  },
+  {
+    "name": "inspect",
+    "kind": "opParams",
+    "op": "model.inspect",
+    "input": {}
+  },
+  {
+    "name": "select preset",
+    "kind": "opParams",
+    "op": "model.select",
+    "input": {
+      "target": {
+        "preset": "pro"
+      },
+      "capturePrevious": true
+    }
+  },
+  {
+    "name": "select model and effort",
+    "kind": "opParams",
+    "op": "model.select",
+    "input": {
+      "target": {
+        "mode": "chat",
+        "model": "gpt-6",
+        "effort": "pro"
+      }
+    }
+  },
+  {
+    "name": "restore by effort index",
+    "kind": "opParams",
+    "op": "model.select",
+    "input": {
+      "target": {
+        "mode": "chat",
+        "model": "gpt-6",
+        "effortIndex": 2
+      }
+    }
+  },
+  {
+    "name": "attach",
+    "kind": "opParams",
+    "op": "composer.attach",
+    "input": {
+      "blobs": [
+        {
+          "blobId": "blob_1",
+          "name": "proj.zip",
+          "size": 2048,
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "mime": "application/zip"
+        }
+      ],
+      "method": "auto"
+    }
+  },
+  {
+    "name": "send",
+    "kind": "opParams",
+    "op": "composer.send",
+    "input": {
+      "text": "Reply with OK",
+      "expectAttachments": ["proj.zip"]
+    }
+  },
+  {
+    "name": "wait reply",
+    "kind": "opParams",
+    "op": "turns.waitReply",
+    "input": {
+      "conversationId": "abc-123",
+      "afterUserTurnKey": "t-7",
+      "timeoutMs": 5400000,
+      "stableMs": 1500
+    }
+  },
+  {
+    "name": "read",
+    "kind": "opParams",
+    "op": "turns.read",
+    "input": {
+      "conversationId": "abc-123",
+      "assistantTurnKey": "t-8"
+    }
+  },
+  {
+    "name": "download",
+    "kind": "opParams",
+    "op": "files.download",
+    "input": {
+      "conversationId": "abc-123",
+      "assistantTurnKey": "t-8",
+      "candidate": {
+        "kind": "sandbox",
+        "label": "summary.csv",
+        "href": "sandbox:/mnt/data/summary.csv",
+        "controlRef": "turn-3:file-0"
+      }
+    }
+  }
+]

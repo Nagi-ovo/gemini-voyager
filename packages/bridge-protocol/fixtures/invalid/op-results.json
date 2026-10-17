@@ -1,0 +1,111 @@
+[
+  {
+    "name": "open at a plain http URL",
+    "kind": "opResult",
+    "op": "conversation.open",
+    "input": {
+      "tabId": 1,
+      "url": "http://chatgpt.com/",
+      "docNonce": "n1",
+      "ready": {
+        "url": "https://chatgpt.com/",
+        "conversationId": null,
+        "loggedIn": true,
+        "mode": "chat",
+        "evidence": {
+          "placeholder": "chat",
+          "modeStorage": null
+        }
+      }
+    },
+    "issuePath": "url"
+  },
+  {
+    "name": "ready with an unknown mode",
+    "kind": "opResult",
+    "op": "conversation.ready",
+    "input": {
+      "url": "https://chatgpt.com/",
+      "conversationId": null,
+      "loggedIn": true,
+      "mode": "auto",
+      "evidence": {
+        "placeholder": "chat",
+        "modeStorage": null
+      }
+    },
+    "issuePath": "mode"
+  },
+  {
+    "name": "ready without evidence",
+    "kind": "opResult",
+    "op": "conversation.ready",
+    "input": {
+      "url": "https://chatgpt.com/",
+      "conversationId": null,
+      "loggedIn": true,
+      "mode": "chat"
+    },
+    "issuePath": "evidence"
+  },
+  {
+    "name": "select without observed",
+    "kind": "opResult",
+    "op": "model.select",
+    "input": {
+      "changed": true,
+      "evidence": {}
+    },
+    "issuePath": "observed"
+  },
+  {
+    "name": "partial reply reported as a result",
+    "kind": "opResult",
+    "op": "turns.waitReply",
+    "input": {
+      "assistantTurnKey": "t-8",
+      "status": "partial",
+      "elapsedMs": 1,
+      "evidence": {}
+    },
+    "issuePath": "status"
+  },
+  {
+    "name": "read with a bad text hash",
+    "kind": "opResult",
+    "op": "turns.read",
+    "input": {
+      "markdown": "OK",
+      "turnKey": "t-8",
+      "textSha256": "x",
+      "files": []
+    },
+    "issuePath": "textSha256"
+  },
+  {
+    "name": "download with both blob and path",
+    "kind": "opResult",
+    "op": "files.download",
+    "input": {
+      "blobId": "b",
+      "path": "/tmp/x",
+      "name": "x",
+      "size": 1,
+      "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "mime": "text/plain"
+    },
+    "issuePath": "$"
+  },
+  {
+    "name": "download with neither blob nor path",
+    "kind": "opResult",
+    "op": "files.download",
+    "input": {
+      "name": "x",
+      "size": 1,
+      "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "mime": "text/plain"
+    },
+    "issuePath": "$"
+  }
+]

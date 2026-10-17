@@ -1,0 +1,33 @@
+[
+  {
+    "name": "chunk over 4 MiB",
+    "kind": "blobChunkRange",
+    "input": {
+      "offset": 0,
+      "length": 4194305
+    },
+    "issuePath": "length"
+  },
+  {
+    "name": "empty chunk",
+    "kind": "blobChunkRange",
+    "input": {
+      "offset": 0,
+      "length": 0
+    },
+    "issuePath": "length"
+  },
+  {
+    "name": "upper-case sha256",
+    "kind": "blobCreateRequest",
+    "input": {
+      "jobId": "J1",
+      "taskId": "T7",
+      "name": "a.csv",
+      "size": 1,
+      "sha256": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "mime": "text/csv"
+    },
+    "issuePath": "sha256"
+  }
+]
